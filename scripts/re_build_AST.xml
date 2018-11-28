@@ -36,4 +36,10 @@
 
 	</target>
 
+	<target name='Paclet.ast.postbuild' extensionOf='Paclet.postbuild'>
+		<copy todir='${files_directory}'>
+			<fileset dir='${build.dir}${file.separator}paclet${file.separator}AST' />
+		</copy>
+	</target>
+
 </project>
