@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
-<project name='AST' basedir='.'>
+<project name='ast' basedir='.'>
 
-	<property name='component' value='AST' />
+	<property name='component' value='ast' />
 
 	<property environment='env' />
 	<import file='${env.RE_ANTLIBRARY_HOME}/ant-lib.xml' />
@@ -10,21 +10,21 @@
 		Paclet (platform-specific) 
 	-->
 
-	<target name='Paclet.AST.init.custom' extensionOf='Paclet.init.custom'>
+	<target name='Paclet.ast.init.custom' extensionOf='Paclet.init.custom'>
 
 		<!-- - CMake generates makefiles here -->
 		<property name='build.dir' value='${checkout_directory}${file.separator}${component}${file.separator}build' />
 
 	</target>
 
-	<target name='Paclet.AST.prebuild' extensionOf='Paclet.prebuild'>
+	<target name='Paclet.ast.prebuild' extensionOf='Paclet.prebuild'>
 
 		<delete dir='${build.dir}' />
         <mkdir dir='${build.dir}' />
 
 	</target>
 
-	<target name='Paclet.AST.execute' extensionOf='Paclet.execute'>
+	<target name='Paclet.ast.execute' extensionOf='Paclet.execute'>
 
 		<exec dir='${build.dir}' executable='${cmake.exe}' failonerror='true'>
 			<arg line='-DWOLFRAMKERNEL=${mathExe} ..' />
