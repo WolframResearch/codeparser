@@ -53,8 +53,6 @@ Test[
 
 (*
 Testing \space
-
-\space is parsed as space, akin to \t being parsed as tab
 *)
 Test[
 	ParseString["\\(\\ \\)"]
@@ -77,6 +75,18 @@ Test[
 ]
 
 
+
+
+
+(*
+Malformed \[] characters
+Unrecognized \[] characters
+*)
+Test[
+	ParseString["\"\\[.*\\]\""]
+	,
+	StringNode["\"\\[.*\\]\""]
+]
 
 
 

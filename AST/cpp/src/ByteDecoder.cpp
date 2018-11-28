@@ -8,7 +8,7 @@
 #include <iomanip>
 #include <iostream>
 
-ByteDecoder::ByteDecoder(std::istream &In, bool singleLine) : In(In), singleLine(singleLine), eof(false) {}
+ByteDecoder::ByteDecoder(std::istream &In, bool singleLine) : In(In), singleLine(singleLine), eof(false), byteQueue() {}
 
 SourceCharacter ByteDecoder::nextSourceCharacter() {
     

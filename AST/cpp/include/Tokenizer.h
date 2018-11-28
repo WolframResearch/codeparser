@@ -15,9 +15,10 @@ class Tokenizer {
     
     bool _stringifyNextToken;
     Token cur;
-    
-    std::vector<std::pair<WLCharacter, SourceLocation>> characterQueue;
     bool currentCached;
+
+    std::vector<std::pair<WLCharacter, SourceLocation>> characterQueue;
+    
     WLCharacter _currentWLCharacter;
     SourceLocation _currentSourceLocation;
 

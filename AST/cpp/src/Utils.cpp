@@ -142,7 +142,7 @@ int toBaseDigit(int c) {
 
 std::string ASTSourceString(SourceSpan span) {
     std::ostringstream ss;
-    ss << SYMBOL_SOURCE->name();
+    ss << SYMBOL_SOURCE.name();
     ss << "->{";
     ss << span.start.string();
     ss << ", ";

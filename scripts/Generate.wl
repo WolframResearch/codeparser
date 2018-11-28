@@ -603,9 +603,10 @@ symbols = Union[Join[DownValues[PrefixOperatorToSymbol][[All, 2]],
     ]]
 
 symbolHeader = Flatten[{"
+
     #pragma once
     
-    #include \"Token.h\"\[IndentingNewLine]
+    #include \"Token.h\"
     #include <string>
     #include <utility>
     
@@ -617,23 +618,23 @@ symbolHeader = Flatten[{"
     
     bool operator==(const Symbol& lhs, const Symbol& rhs);
     
-    Symbol* PostfixOperatorToSymbol(Token Type);
-    Symbol* PrefixOperatorToSymbol(Token Type);
-    Symbol* InfixOperatorToSymbol(Token);
-    Symbol* GroupOpenerToSymbol(Token);
+    const Symbol& PostfixOperatorToSymbol(Token Type);
+    const Symbol& PrefixOperatorToSymbol(Token Type);
+    const Symbol& InfixOperatorToSymbol(Token);
+    const Symbol& GroupOpenerToSymbol(Token);
     Token GroupOpenerToCloser(Token);
-    Symbol* GroupCloserToSymbol(Token);
-    Symbol* GroupOpenerToMissingCloserSymbol(Token);
-    Symbol* GroupCloserToMissingOpenerSymbol(Token);
+    const Symbol& GroupCloserToSymbol(Token);
+    const Symbol& GroupOpenerToMissingCloserSymbol(Token);
+    const Symbol& GroupCloserToMissingOpenerSymbol(Token);
     
-    std::string SymbolToPrefixOperatorString(Symbol*);
-    std::string SymbolToPostfixOperatorString(Symbol*);
-    std::string SymbolToInfixOperatorString(Symbol*);
-    std::pair<std::string, std::string> SymbolToGroupPair(Symbol*);
-    std::pair<Symbol*, Symbol*> SymbolToTernaryOperatorPair(Symbol*);
+    std::string SymbolToPrefixOperatorString(const Symbol&);
+    std::string SymbolToPostfixOperatorString(const Symbol&);
+    std::string SymbolToInfixOperatorString(const Symbol&);
+    std::pair<std::string, std::string> SymbolToGroupPair(const Symbol&);
+    std::pair<const Symbol&, const Symbol&> SymbolToTernaryOperatorPair(const Symbol&);
     
     ",
-    Row[{"extern", " ", "Symbol*", " ", "SYMBOL_"<>ToUpperCase[ToString[#]], ";"}]& /@ symbols
+    Row[{"extern", " ", "const", " ", "Symbol&", " ", "SYMBOL_"<>ToUpperCase[ToString[#]], ";"}]& /@ symbols
     }]
 
 Print["exporting Symbol.h"]
@@ -662,40 +663,41 @@ symbolSource = Flatten[{"
          return Name;
      }
      
-     "} ~Join~ (Row[{"Symbol*", " ", "SYMBOL_"<>ToUpperCase[ToString[#]], " ",
-          "=", " ", "new Symbol(\"", ToString[#, InputForm], "\")", ";"}]& /@symbols)
+     "} ~Join~ {
 
-    ~Join~ {
-     "Symbol* PrefixOperatorToSymbol(Token Type) { switch (Type) {",
+      Row[{"const", " ", "Symbol&", " ", "SYMBOL_"<>ToUpperCase[ToString[#]], " ", "=", " ", "Symbol(\"", ToString[#, InputForm], "\")", ";"}]& /@ symbols
+
+      } ~Join~ {
+     "const Symbol& PrefixOperatorToSymbol(Token Type) { switch (Type) {",
      Append[
       Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", 
           "SYMBOL_"<>ToUpperCase[ToString[#[[2]]]], ";"}]&, 
        DownValues[PrefixOperatorToSymbol]], 
-      "default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return nullptr;"],
+      "default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return SYMBOL_INTERNALINVALID;"],
      "} }"
      } ~Join~ {
-     "Symbol* PostfixOperatorToSymbol(Token Type) { switch (Type) {",
+     "const Symbol& PostfixOperatorToSymbol(Token Type) { switch (Type) {",
      Append[
       Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", 
           "SYMBOL_"<>ToUpperCase[ToString[#[[2]]]], ";"}]&, 
        DownValues[PostfixOperatorToSymbol]], 
-      "default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return nullptr;"],
+      "default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return SYMBOL_INTERNALINVALID;"],
      "} }"
      } ~Join~ {
-     "Symbol* InfixOperatorToSymbol(Token Type) { switch (Type) {",
+     "const Symbol& InfixOperatorToSymbol(Token Type) { switch (Type) {",
      Append[
       Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", 
           "SYMBOL_"<>ToUpperCase[ToString[#[[2]]]], ";"}]&, 
        DownValues[InfixOperatorToSymbol]], 
-      "default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return nullptr;"],
+      "default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return SYMBOL_INTERNALINVALID;"],
      "} }"
      } ~Join~ {
-     "Symbol* GroupOpenerToSymbol(Token Type) { switch (Type) {",
+     "const Symbol& GroupOpenerToSymbol(Token Type) { switch (Type) {",
      Append[
       Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", 
           "SYMBOL_"<>ToUpperCase[ToString[#[[2]]]], ";"}]&, 
        DownValues[GroupOpenerToSymbol]], 
-      "default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return nullptr;"],
+      "default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return SYMBOL_INTERNALINVALID;"],
      "} }"
      } ~Join~ {
      "Token GroupOpenerToCloser(Token Type) { switch (Type) {",
@@ -705,34 +707,33 @@ symbolSource = Flatten[{"
       "default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return TOKEN_UNKNOWN;"],
      "} }"
      } ~Join~ {
-     "Symbol* GroupCloserToSymbol(Token Type) { switch (Type) {",
+     "const Symbol& GroupCloserToSymbol(Token Type) { switch (Type) {",
      Append[
       Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", 
           "SYMBOL_"<>ToUpperCase[ToString[#[[2]]]], ";"}]&, 
        DownValues[GroupCloserToSymbol]], 
-      "default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return nullptr;"],
+      "default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return SYMBOL_INTERNALINVALID;"],
      "} }"
      } ~Join~ {
-     "Symbol* GroupOpenerToMissingCloserSymbol(Token Type) { switch (Type) {",
+     "const Symbol& GroupOpenerToMissingCloserSymbol(Token Type) { switch (Type) {",
      Append[
       Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", 
           "SYMBOL_"<>ToUpperCase[ToString[#[[2]]]], ";"}]&, 
        DownValues[GroupOpenerToMissingCloserSymbol]], 
-      "default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return nullptr;"],
+      "default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return SYMBOL_INTERNALINVALID;"],
      "} }"
      } ~Join~ {
-     "Symbol* GroupCloserToMissingOpenerSymbol(Token Type) { switch (Type) {",
+     "const Symbol& GroupCloserToMissingOpenerSymbol(Token Type) { switch (Type) {",
      Append[
       Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", 
           "SYMBOL_"<>ToUpperCase[ToString[#[[2]]]], ";"}]&, 
        DownValues[GroupCloserToMissingOpenerSymbol]], 
-      "default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return nullptr;"],
+      "default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return SYMBOL_INTERNALINVALID;"],
      "} }"
      } ~Join~ {
-     "std::pair<std::string, std::string> SymbolToGroupPair(Symbol* Sym) {",
+     "std::pair<std::string, std::string> SymbolToGroupPair(const Symbol& Sym) {",
      Append[
-      Row[{"if (*Sym == ", "*", 
-          "SYMBOL_"<>ToUpperCase[ToString[#[[1, 1, 1]]]], ")", " ", 
+      Row[{"if (Sym == ", "SYMBOL_"<>ToUpperCase[ToString[#[[1, 1, 1]]]], ")", " ", 
           "{ return std::make_pair(std::string(", 
           AST`Utils`escapeString[#[[2, 1]]], "), std::string(", 
           AST`Utils`escapeString[#[[2, 2]]], "));", "}"}]& /@ 
@@ -740,39 +741,35 @@ symbolSource = Flatten[{"
       "return std::make_pair(std::string(\"XXX\"), std::string(\"XXX\"));"],
      "}"
      } ~Join~ {
-     "std::string SymbolToInfixOperatorString(Symbol* Sym) {",
+     "std::string SymbolToInfixOperatorString(const Symbol& Sym) {",
      Append[
-      Row[{"if (*Sym == ", "*", 
-          "SYMBOL_"<>ToUpperCase[ToString[#[[1, 1, 1]]]], ")", " ", 
+      Row[{"if (Sym == ", "SYMBOL_"<>ToUpperCase[ToString[#[[1, 1, 1]]]], ")", " ", 
           "{ return ", AST`Utils`escapeString[#[[2]]], ";", "}"}]& /@ 
        DownValues[SymbolToInfixOperatorString], "return \"XXX\";"],
      "}"
      } ~Join~ {
-     "std::string SymbolToPrefixOperatorString(Symbol* Sym) {",
+     "std::string SymbolToPrefixOperatorString(const Symbol& Sym) {",
      Append[
-      Row[{"if (*Sym == ", "*", 
-          "SYMBOL_"<>ToUpperCase[ToString[#[[1, 1, 1]]]], ")", " ", 
+      Row[{"if (Sym == ", "SYMBOL_"<>ToUpperCase[ToString[#[[1, 1, 1]]]], ")", " ", 
           "{ return ", AST`Utils`escapeString[#[[2]]], ";", "}"}]& /@ 
        DownValues[SymbolToPrefixOperatorString], "return \"XXX\";"],
      "}"
      } ~Join~ {
-     "std::string SymbolToPostfixOperatorString(Symbol* Sym) {",
+     "std::string SymbolToPostfixOperatorString(const Symbol& Sym) {",
      Append[
-      Row[{"if (*Sym == ", "*", 
-          "SYMBOL_"<>ToUpperCase[ToString[#[[1, 1, 1]]]], ")", " ", 
+      Row[{"if (Sym == ", "SYMBOL_"<>ToUpperCase[ToString[#[[1, 1, 1]]]], ")", " ", 
           "{ return ", AST`Utils`escapeString[#[[2]]], ";", "}"}]& /@ 
        DownValues[SymbolToPostfixOperatorString], "return \"XXX\";"],
      "}"
      } ~Join~ {
-     "std::pair<Symbol*, Symbol*> SymbolToTernaryOperatorPair(Symbol* Sym) {",
+     "std::pair<const Symbol&, const Symbol&> SymbolToTernaryOperatorPair(const Symbol& Sym) {",
      Append[
-      Row[{"if (*Sym == ", "*", 
-          "SYMBOL_"<>ToUpperCase[ToString[#[[1, 1, 1]]]], ")", " ", 
+      Row[{"if (Sym == ", "SYMBOL_"<>ToUpperCase[ToString[#[[1, 1, 1]]]], ")", " ", 
           "{ return std::make_pair(", 
           "SYMBOL_"<>ToUpperCase[ToString[#[[2, 1]]]], ", ", 
           "SYMBOL_"<>ToUpperCase[ToString[#[[2, 2]]]], ");", "}"}]& /@ 
        DownValues[SymbolToTernaryOperatorPair], 
-      "return std::make_pair(nullptr, nullptr);"],
+      "return std::make_pair(SYMBOL_INTERNALINVALID, SYMBOL_INTERNALINVALID);"],
      "}"
      }
    ]
@@ -802,8 +799,6 @@ toInputFormStringHeader = Flatten[{"
     #include <string>
     
     std::string ToInputFormString(std::shared_ptr<Node>);
-    
-    std::string ErrorTokenToInputFormString(Token);
     
     "}]
 

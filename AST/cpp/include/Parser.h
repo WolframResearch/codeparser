@@ -25,6 +25,9 @@ private:
     
     int groupDepth;
     bool insideColon;
+    bool currentCached;
+    Token _currentToken;
+    std::string _currentTokenString;
 
     std::map<Token, PrefixParselet *> mPrefixParselets;
     std::map<Token, InfixParselet *> mInfixParselets;
@@ -32,9 +35,6 @@ private:
     std::map<Token, CleanupParselet *> mCleanupParselets;
     
     std::vector<std::pair<Token, std::string>> tokenQueue;
-    bool currentCached;
-    Token _currentToken;
-    std::string _currentTokenString;
 
     void registerTokenType(Token, Parselet *);
     void registerPrefixTokenType(Token);
@@ -88,9 +88,7 @@ class ParserScoper {
     bool b;
     
 public:
-    ParserScoper() {
-        b = TheParser->isInsideColon1();
-    }
+    ParserScoper() : b(TheParser->isInsideColon1()) {}
     
     ~ParserScoper() {
         TheParser->setInsideColon1(b);

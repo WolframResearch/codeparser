@@ -21,7 +21,8 @@ bool isContiguous(SourceSpan a, SourceSpan b) {
     return isContiguous(a.end, b.start);
 }
 
-SourceManager::SourceManager() : eof(false), SourceLoc{1, 0} {}
+SourceManager::SourceManager() : eof(false), SourceLoc{1, 0}, TokenStartLoc{0, 0}, TokenEndLoc{0, 0},
+    WLCharacterStartLoc{0, 0}, WLCharacterEndLoc{0, 0}, CurLineWidth(0) {}
 
 void SourceManager::advanceSourceLocation(SourceCharacter c) {
     

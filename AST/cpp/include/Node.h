@@ -6,7 +6,7 @@
 
 #include <string>
 #include <vector>
-
+#include <memory>
 
 class Node;
 
@@ -311,10 +311,10 @@ public:
 //
 
 class PrefixNode : public Node {
-    Symbol* Op;
+    const Symbol& Op;
     SourceSpan TokSpan;
 public:
-    PrefixNode(Symbol* Op, SourceSpan TokSpan, std::shared_ptr<Node> Operand) : Node({Operand}), Op(Op), TokSpan(TokSpan) {}
+    PrefixNode(const Symbol& Op, SourceSpan TokSpan, std::shared_ptr<Node> Operand) : Node({Operand}), Op(Op), TokSpan(TokSpan) {}
     
     std::string string() override;
     
@@ -328,10 +328,10 @@ public:
 };
 
 class BinaryNode : public Node {
-    Symbol* Op;
+    const Symbol& Op;
     std::vector<SyntaxIssue> Issues;
 public:
-    BinaryNode(Symbol* Op, std::shared_ptr<Node> Left, std::shared_ptr<Node> Right, std::vector<SyntaxIssue> Issues) : Node({Left, Right}), Op(Op), Issues(Issues) {}
+    BinaryNode(const Symbol& Op, std::shared_ptr<Node> Left, std::shared_ptr<Node> Right, std::vector<SyntaxIssue> Issues) : Node({Left, Right}), Op(Op), Issues(Issues) {}
 
     std::string string() override;
     
@@ -347,16 +347,16 @@ public:
         return getArgs()[1];
     }
     
-    Symbol* getOp() {
+    const Symbol& getOp() {
         return Op;
     }
 };
 
 class InfixNode : public Node {
-    Symbol* Op;
+    const Symbol& Op;
     std::vector<SyntaxIssue> Issues;
 public:
-    InfixNode(Symbol* Op, std::vector<std::shared_ptr<Node>> Args, std::vector<SyntaxIssue> Issues) : Node(Args), Op(Op), Issues(Issues) {}
+    InfixNode(const Symbol& Op, std::vector<std::shared_ptr<Node>> Args, std::vector<SyntaxIssue> Issues) : Node(Args), Op(Op), Issues(Issues) {}
     
     std::string string() override;
     
@@ -367,10 +367,10 @@ public:
 
 
 class TernaryNode : public Node {
-    Symbol* Op;
+    const Symbol& Op;
     std::vector<SyntaxIssue> Issues;
 public:
-    TernaryNode(Symbol* Op, std::shared_ptr<Node> Left, std::shared_ptr<Node> Middle, std::shared_ptr<Node> Right, std::vector<SyntaxIssue> Issues) : Node({Left, Middle, Right}), Op(Op), Issues(Issues) {}
+    TernaryNode(const Symbol& Op, std::shared_ptr<Node> Left, std::shared_ptr<Node> Middle, std::shared_ptr<Node> Right, std::vector<SyntaxIssue> Issues) : Node({Left, Middle, Right}), Op(Op), Issues(Issues) {}
     
     std::string string() override;
     
@@ -392,12 +392,12 @@ public:
 };
 
 class PostfixNode : public Node {
-    Symbol* Op;
+    const Symbol& Op;
     SourceSpan TokSpan;
     int DerivativeOrder;
     std::vector<SyntaxIssue> Issues;
 public:
-    PostfixNode(Symbol* Op, SourceSpan TokSpan, int DerivativeOrder, std::shared_ptr<Node> Operand, std::vector<SyntaxIssue> Issues) : Node({Operand}), Op(Op), TokSpan(TokSpan), DerivativeOrder(DerivativeOrder), Issues(Issues) {}
+    PostfixNode(const Symbol& Op, SourceSpan TokSpan, int DerivativeOrder, std::shared_ptr<Node> Operand, std::vector<SyntaxIssue> Issues) : Node({Operand}), Op(Op), TokSpan(TokSpan), DerivativeOrder(DerivativeOrder), Issues(Issues) {}
     
     std::string string() override;
     
@@ -450,13 +450,13 @@ public:
 };
 
 class GroupNode : public Node {
-    Symbol* Op;
+    const Symbol& Op;
     SourceSpan OpenerTokSpan;
     SourceSpan CloserTokSpan;
     std::vector<SyntaxIssue> Issues;
 public:
     
-    GroupNode(Symbol* Op, SourceSpan OpenerTokSpan, SourceSpan CloserTokSpan, std::vector<std::shared_ptr<Node>> Args, std::vector<SyntaxIssue> Issues) : Node(Args), Op(Op), OpenerTokSpan(OpenerTokSpan), CloserTokSpan(CloserTokSpan), Issues(Issues) {}
+    GroupNode(const Symbol& Op, SourceSpan OpenerTokSpan, SourceSpan CloserTokSpan, std::vector<std::shared_ptr<Node>> Args, std::vector<SyntaxIssue> Issues) : Node(Args), Op(Op), OpenerTokSpan(OpenerTokSpan), CloserTokSpan(CloserTokSpan), Issues(Issues) {}
     
     std::string string() override;
     
@@ -468,7 +468,7 @@ public:
     
     SourceSpan getSourceSpan() override;
     
-    Symbol* getOp() {
+    const Symbol& getOp() {
         return Op;
     }
     

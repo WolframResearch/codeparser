@@ -60,8 +60,6 @@ class CharacterDecoder {
     
 public:
     CharacterDecoder();
-    
-    void init();
 
     WLCharacter nextWLCharacter(NextCharacterPolicy policy = POLICY_PRESERVE_WHITESPACE_AFTER_LINE_CONTINUATION);
 

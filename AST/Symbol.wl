@@ -98,6 +98,8 @@ TagUnset,
 
 TernaryTilde,
 
+InternalInvalid,
+
 Nothing
 }
 
@@ -570,6 +572,7 @@ SymbolToTernaryOperatorPair[TagSetDelayed] = {TernarySlashColon, SetDelayed}
 SymbolToTernaryOperatorPair[TagUnset] = {TernarySlashColon, Unset}
 SymbolToTernaryOperatorPair[TernaryTilde] = {TernaryTilde, TernaryTilde}
 SymbolToTernaryOperatorPair[Span] = {Span, Span}
+SymbolToTernaryOperatorPair[MessageName] = {MessageName, MessageName}
 
 End[]
 

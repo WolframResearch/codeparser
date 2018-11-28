@@ -235,7 +235,7 @@ if(MSVC)
 	)
 else()
 	target_compile_options(wl-ast
-		PRIVATE -Wextra -Wall -Wno-unused-parameter -Wno-unused-function
+		PRIVATE -Wextra -Wall -Weffc++ -Wno-unused-parameter -Wno-unused-function -Wno-comment
 	)
 endif(MSVC)
 

@@ -2,6 +2,7 @@
 #pragma once
 
 #include <vector>
+#include <istream>
 
 typedef int SourceCharacter;
 
@@ -9,7 +10,6 @@ class ByteDecoder {
     
     std::istream &In;
     bool singleLine;
-    
     bool eof;
     
     std::vector<unsigned char> byteQueue;

@@ -112,41 +112,15 @@ std::shared_ptr<Node> ErrorParselet::parse() {
     
     auto Issues = TheParser->getIssues();
     
-    switch (TokIn) {
-        case ERROR_UNHANDLEDCHARACTER:
-        case ERROR_UNHANDLEDLINEARSYNTAX:
-        case ERROR_EXPONENT:
-        case ERROR_EMPTYSTRING: {
-            
-            auto Str = TheParser->getString();
-            
-            TheParser->nextToken(POLICY_PRESERVE_TOPLEVEL_NEWLINES);
-            
-            return std::make_shared<SyntaxErrorNode>(TokIn, std::vector<std::shared_ptr<Node>> { std::make_shared<InternalTokenNode>(Str, Span) }, Issues);
-        }
-        case TOKEN_EOF: {
-            
-            auto Str = TheParser->getString();
-            
-            return std::make_shared<SyntaxErrorNode>(ERROR_UNEXPECTEDEOF, std::vector<std::shared_ptr<Node>> { std::make_shared<InternalTokenNode>(Str, Span) }, Issues);
-        }
-        default: {
-            //
-            // Everything else
-            //
-            
-            auto Str = TheParser->getString();
-            
-            TheParser->nextToken(POLICY_PRESERVE_TOPLEVEL_NEWLINES);
-            
-            return std::make_shared<SyntaxErrorNode>(ERROR_UNEXPECTEDTOKEN, std::vector<std::shared_ptr<Node>> { std::make_shared<InternalTokenNode>(Str, Span) }, Issues);
-        }
-    }
+    auto Str = TheParser->getString();
+    
+    TheParser->nextToken(POLICY_PRESERVE_TOPLEVEL_NEWLINES);
+    
+    return std::make_shared<SyntaxErrorNode>(TokIn, std::vector<std::shared_ptr<Node>> { std::make_shared<InternalTokenNode>(Str, Span) }, Issues);
 }
 
 std::shared_ptr<Node> CleanupRestParselet::parse(std::shared_ptr<Node> Left) {
     
-    // Clear String
     auto Str = TheParser->getString();
     
     auto Span = TheSourceManager->getTokenSpan();
@@ -534,7 +508,7 @@ std::shared_ptr<Node> GroupParselet::parse() {
                 
                 Issues.push_back(Issue);
 
-                auto NullNode = std::make_shared<SymbolNode>(SYMBOL_NULL->name(), Span, std::vector<SyntaxIssue>());
+                auto NullNode = std::make_shared<SymbolNode>(SYMBOL_NULL.name(), Span, std::vector<SyntaxIssue>());
                 
                 Args.push_back(NullNode);
             }
@@ -560,7 +534,7 @@ std::shared_ptr<Node> GroupParselet::parse() {
                 
                 Issues.push_back(Issue);
 
-                auto NullNode = std::make_shared<SymbolNode>(SYMBOL_NULL->name(), Span, std::vector<SyntaxIssue>());
+                auto NullNode = std::make_shared<SymbolNode>(SYMBOL_NULL.name(), Span, std::vector<SyntaxIssue>());
                 
                 Args.push_back(NullNode);
             }
@@ -649,7 +623,7 @@ std::shared_ptr<Node> OpenSquareCallParselet::parse(std::shared_ptr<Node> Left) 
     
     if (auto GroupExpr = std::dynamic_pointer_cast<GroupNode>(Right)) {
         
-        if (*GroupExpr->getOp() == *SYMBOL_GROUPSQUARE) {
+        if (GroupExpr->getOp() == SYMBOL_GROUPSQUARE) {
             
             auto Args = GroupExpr->getArgs();
             
@@ -659,7 +633,7 @@ std::shared_ptr<Node> OpenSquareCallParselet::parse(std::shared_ptr<Node> Left) 
                 auto Arg = Args[0];
                 
                 if (auto GroupArg = std::dynamic_pointer_cast<GroupNode>(Arg)) {
-                    if (*GroupArg->getOp() == *SYMBOL_GROUPSQUARE) {
+                    if (GroupArg->getOp() == SYMBOL_GROUPSQUARE) {
                         
                         auto GroupArgIssues = GroupArg->getIssues();
 
@@ -723,7 +697,7 @@ std::shared_ptr<Node> LeftDoubleBracketCallParselet::parse(std::shared_ptr<Node>
     
     if (auto GroupExpr = std::dynamic_pointer_cast<GroupNode>(Right)) {
         
-        if (*GroupExpr->getOp() == *SYMBOL_GROUPDOUBLEBRACKET) {
+        if (GroupExpr->getOp() == SYMBOL_GROUPDOUBLEBRACKET) {
             
             auto GroupExprIssues = GroupExpr->getIssues();
 
@@ -911,7 +885,7 @@ std::shared_ptr<Node> SemicolonSemicolonParselet::parse() {
         
         if (auto BinOp = std::dynamic_pointer_cast<BinaryNode>(operand)) {
             
-            if (*BinOp->getOp() == *SYMBOL_SPAN) {
+            if (BinOp->getOp() == SYMBOL_SPAN) {
                 
                 auto SpanOpSource = BinOp->getSourceSpan();
                 auto SpanOpLeft = BinOp->getLeft();
@@ -965,7 +939,7 @@ std::shared_ptr<Node> SemicolonSemicolonParselet::parse(std::shared_ptr<Node> Le
         
         if (auto BinLeft = std::dynamic_pointer_cast<BinaryNode>(Left)) {
             
-            if (*BinLeft->getOp() == *SYMBOL_SPAN) {
+            if (BinLeft->getOp() == SYMBOL_SPAN) {
                 
                 auto LeftSpanLeft = BinLeft->getLeft();
                 auto LeftSpanRight = BinLeft->getRight();
@@ -976,7 +950,7 @@ std::shared_ptr<Node> SemicolonSemicolonParselet::parse(std::shared_ptr<Node> Le
         
         if (auto BinRight = std::dynamic_pointer_cast<BinaryNode>(Right)) {
             
-            if (*BinRight->getOp() == *SYMBOL_SPAN) {
+            if (BinRight->getOp() == SYMBOL_SPAN) {
                 
                 auto RightSpanSource = BinRight->getSourceSpan();
                 auto RightSpanLeft = BinRight->getLeft();
@@ -1082,7 +1056,7 @@ precedence_t ColonParselet::getColonPrecedence(std::shared_ptr<Node> Left) {
     }
     
     if (auto BinaryLeft = std::dynamic_pointer_cast<BinaryNode>(Left)) {
-        if (*BinaryLeft->getOp() == *SYMBOL_PATTERN) {
+        if (BinaryLeft->getOp() == SYMBOL_PATTERN) {
             return PRECEDENCE_OPTIONALCOLON;
         }
     }
@@ -1127,7 +1101,7 @@ std::shared_ptr<Node> ColonParselet::parse(std::shared_ptr<Node> Left) {
         
     } else if (auto BinaryLeft = std::dynamic_pointer_cast<BinaryNode>(Left)) {
         
-        if (*BinaryLeft->getOp() == *SYMBOL_PATTERN) {
+        if (BinaryLeft->getOp() == SYMBOL_PATTERN) {
             
             auto prec = getColonPrecedence(Left);
             auto Right = TheParser->parse(prec);
@@ -1158,15 +1132,15 @@ std::shared_ptr<Node> SlashColonParselet::parse(std::shared_ptr<Node> Left) {
     
     if (auto BinaryMiddle = std::dynamic_pointer_cast<BinaryNode>(Middle)) {
         
-        if (*BinaryMiddle->getOp() == *SYMBOL_SET) {
+        if (BinaryMiddle->getOp() == SYMBOL_SET) {
             
             return std::make_shared<TernaryNode>(SYMBOL_TAGSET, Left, BinaryMiddle->getLeft(), BinaryMiddle->getRight(), Issues);
             
-        } else if (*BinaryMiddle->getOp() == *SYMBOL_SETDELAYED) {
+        } else if (BinaryMiddle->getOp() == SYMBOL_SETDELAYED) {
             
             return std::make_shared<TernaryNode>(SYMBOL_TAGSETDELAYED, Left, BinaryMiddle->getLeft(), BinaryMiddle->getRight(), Issues);
             
-        } else if (*BinaryMiddle->getOp() == *SYMBOL_UNSET) {
+        } else if (BinaryMiddle->getOp() == SYMBOL_UNSET) {
             
             return std::make_shared<TernaryNode>(SYMBOL_TAGUNSET, Left, BinaryMiddle->getLeft(), BinaryMiddle->getRight(), Issues);
         }
@@ -1215,7 +1189,7 @@ std::shared_ptr<Node> LinearSyntaxOpenParenParselet::parse() {
             
             if (auto SubOpenParen = std::dynamic_pointer_cast<GroupNode>(Sub)) {
                 
-                if (*SubOpenParen->getOp() == *SYMBOL_GROUPLINEARSYNTAXPAREN) {
+                if (SubOpenParen->getOp() == SYMBOL_GROUPLINEARSYNTAXPAREN) {
                     
                     Tokens.push_back(SubOpenParen);
                     

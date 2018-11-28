@@ -21,13 +21,13 @@ struct SyntaxIssue {
 
     std::string string() {
         std::ostringstream ss;
-        ss << SYMBOL_SYNTAXISSUE->name();
+        ss << SYMBOL_SYNTAXISSUE.name();
         ss << "[";
         ss << stringEscape(Msg);
         ss << ", ";
         ss << stringEscape(Severity);
         ss << ",<|";
-        ss << SYMBOL_SOURCE->name();
+        ss << SYMBOL_SOURCE.name();
         ss << "->{";
         ss << Span.start.string();
         ss << ", ";

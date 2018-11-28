@@ -220,7 +220,7 @@ void printCharacters() {
 
         auto Span = TheSourceManager->getWLCharacterSpan();
 
-        std::cout << SYMBOL_CHARACTER->name();
+        std::cout << SYMBOL_CHARACTER.name();
         std::cout << "[";
         std::cout << c;
         std::cout << ", ";
@@ -234,6 +234,15 @@ void printCharacters() {
 
         if (c == EOF) {
             break;
+        }
+        
+        auto Issues = TheCharacterDecoder->getIssues();
+        if (!Issues.empty()) {
+            auto I = Issues.begin();
+            for (; I < Issues.end(); I++) {
+                std::cout << (*I).string();
+                std::cout << ", ";
+            }
         }
         
         TheCharacterDecoder->nextWLCharacter();
@@ -258,7 +267,7 @@ void printTokens() {
 
         auto Span = TheSourceManager->getTokenSpan();
 
-        std::cout << SYMBOL_TOKEN->name();
+        std::cout << SYMBOL_TOKEN.name();
         std::cout << "[";
         std::cout << stringEscape(TokenToString(Tok));
         std::cout << ", ";

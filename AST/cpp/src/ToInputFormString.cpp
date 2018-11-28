@@ -3,21 +3,6 @@
 
 #include <cassert>
 
-
-
-
-std::string ErrorTokenToInputFormString(Token Tok) {
-
-    assert(isError(Tok));
-
-    auto Str = TokenToString(Tok);
-
-    auto index = std::string("ERROR_").size();
-    return std::string("Error`") + Str.substr(index);
-}
-
-
-
 std::string SymbolNode::inputform() {
     return Str;
 }
@@ -32,9 +17,9 @@ std::string NumberNode::inputform() {
 
 std::string SyntaxErrorNode::inputform() {
     std::ostringstream ss;
-    ss << SYMBOL_SYNTAXERRORNODE->name();
+    ss << SYMBOL_SYNTAXERRORNODE.name();
     ss << "[";
-    ss << ErrorTokenToInputFormString(Tok);
+    ss << TokenToString(Tok);
     ss << ", ";
     ss << ASTArgsString();
     ss << ", <|";
@@ -127,7 +112,7 @@ std::string BinaryNode::inputform() {
 
     s << Left->inputform();
 
-    if (*Op == *SYMBOL_MESSAGENAME) {
+    if (Op == SYMBOL_MESSAGENAME) {
         //
         // So also remove the space between a and :: in a::b.
         // This is just a nicety for balance.
@@ -139,7 +124,7 @@ std::string BinaryNode::inputform() {
 
     s << SymbolToInfixOperatorString(Op);
 
-    if (*Op == *SYMBOL_MESSAGENAME) {
+    if (Op == SYMBOL_MESSAGENAME) {
         //
         // a::b needs to have no space between :: and b
         //
@@ -158,7 +143,7 @@ std::string InfixNode::inputform() {
     auto Args = getArgs();
 
     std::ostringstream s;
-    if (*Op == *SYMBOL_PLUS) {
+    if (Op == SYMBOL_PLUS) {
         if (!Args.empty()) {
             auto I = Args.begin();
             s << (*I)->inputform();
@@ -180,7 +165,7 @@ std::string InfixNode::inputform() {
             }
             s << (*I)->inputform();
         }
-    } else if (*Op == *SYMBOL_INFIXIMPLICITTIMES) {
+    } else if (Op == SYMBOL_INFIXIMPLICITTIMES) {
         if (!Args.empty()) {
             auto I = Args.begin();
             auto LastIt = Args.end();
@@ -245,7 +230,7 @@ std::string PostfixNode::inputform() {
 
     s << Operand->inputform();
     
-    if (*Op == *SYMBOL_DERIVATIVE) {
+    if (Op == SYMBOL_DERIVATIVE) {
         
         for (int i = 0; i < DerivativeOrder; i++) {
             s << SymbolToPostfixOperatorString(SYMBOL_DERIVATIVE);
@@ -253,18 +238,18 @@ std::string PostfixNode::inputform() {
         
     } else {
         
-        if (*Op == *SYMBOL_REPEATED ||
-            *Op == *SYMBOL_REPEATEDNULL ||
-            *Op == *SYMBOL_REPEATEDNULL) {
+        if (Op == SYMBOL_REPEATED ||
+            Op == SYMBOL_REPEATEDNULL ||
+            Op == SYMBOL_REPEATEDNULL) {
             
             s << " ";
         }
         
         s << SymbolToPostfixOperatorString(Op);
         
-        if (*Op == *SYMBOL_COMPOUNDEXPRESSION ||
-            *Op == *SYMBOL_REPEATED ||
-            *Op == *SYMBOL_REPEATEDNULL) {
+        if (Op == SYMBOL_COMPOUNDEXPRESSION ||
+            Op == SYMBOL_REPEATED ||
+            Op == SYMBOL_REPEATEDNULL) {
             
             //
             // prevent a; ; from printing as a;;
@@ -305,7 +290,7 @@ std::string GroupNode::internalInputform() {
     auto Args = getArgs();
 
     std::ostringstream ss;
-    if (*Op == *SYMBOL_GROUPLINEARSYNTAXPAREN) {
+    if (Op == SYMBOL_GROUPLINEARSYNTAXPAREN) {
         if (!Args.empty()) {
             auto I = Args.begin();
             auto LastIt = Args.end();

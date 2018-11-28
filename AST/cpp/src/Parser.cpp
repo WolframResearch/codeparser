@@ -8,7 +8,8 @@
 #include <iostream>
 
 
-Parser::Parser() : groupDepth(0), insideColon(false) { }
+Parser::Parser() : groupDepth(0), insideColon(false), currentCached(false), _currentToken(), _currentTokenString(),
+    mPrefixParselets(), mInfixParselets(), mPostfixParselets(), mCleanupParselets(), tokenQueue() {}
 
 void Parser::init() {
     
@@ -235,14 +236,6 @@ void Parser::init() {
     registerTokenType(OPERATOR_LONGNAME_RIGHTDOUBLEBRACKET, new GroupMissingOpenerParselet(OPERATOR_LONGNAME_RIGHTDOUBLEBRACKET));
     registerTokenType(OPERATOR_LONGNAME_RIGHTBRACKETINGBAR, new GroupMissingOpenerParselet(OPERATOR_LONGNAME_RIGHTBRACKETINGBAR));
     registerTokenType(OPERATOR_LONGNAME_RIGHTDOUBLEBRACKETINGBAR, new GroupMissingOpenerParselet(OPERATOR_LONGNAME_RIGHTBRACKETINGBAR));
-    
-    //
-    // Cleanup: The rest of a long name like \\[Bad]
-    //
-    registerTokenType(OPERATOR_OPENSQUARE, new CleanupRestParselet());
-    registerTokenType(ERROR_UNHANDLEDCHARACTER, new CleanupRestParselet());
-    registerTokenType(TOKEN_SYMBOL, new CleanupRestParselet());
-    registerTokenType(OPERATOR_COMMA, new CleanupRestParselet());
     
     
     //
@@ -484,6 +477,7 @@ std::shared_ptr<Node>Parser::parse(precedence_t Precedence) {
     
     Token token = currentToken();
     
+    assert(token != TOKEN_UNKNOWN);
     assert(token != TOKEN_COMMENT);
     assert(token != TOKEN_NEWLINE);
     assert(token != TOKEN_SPACE);
@@ -581,11 +575,14 @@ std::shared_ptr<Node> Parser::cleanup(std::shared_ptr<Node> Left) {
         
         Token token = currentToken();
         
-        if (token == TOKEN_EOF) {
+        //
+        // Some newline inbetween toplevel expressions
+        //
+        if (token == TOKEN_NEWLINE) {
             return Cleaned;
         }
         
-        if (token == TOKEN_NEWLINE) {
+        if (token == TOKEN_EOF) {
             return Cleaned;
         }
         
@@ -594,11 +591,16 @@ std::shared_ptr<Node> Parser::cleanup(std::shared_ptr<Node> Left) {
             auto I = mCleanupParselets.find(token);
             if (I == mCleanupParselets.end()) {
                 
-                assert(false);
-                return Left;
+                //
+                // If no other cleanup parselet is found, then rely on this
+                //
+                
+                cleanup = new CleanupRestParselet();
+                
+            } else {
+                
+                cleanup = I->second;
             }
-            
-            cleanup = I->second;
         }
         
         Cleaned = cleanup->parse(Cleaned);

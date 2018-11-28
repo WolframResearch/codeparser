@@ -103,6 +103,12 @@ std::string WLCharacterToString(WLCharacter c) {
                     break;
             }
             
+        } else if (c == EOF) {
+            
+            //
+            // Do not return a string for EOF
+            //
+            
         } else {
             
             String << "\\:" << std::setfill('0') << std::setw(4) << std::hex << c << std::dec;
@@ -137,10 +143,10 @@ std::string WLCharacterToString(WLCharacter c) {
     return String.str();
 }
 
-CharacterDecoder::CharacterDecoder() {}
+CharacterDecoder::CharacterDecoder() : c(0), characterQueue(), Issues() {}
 
 //
-// Sets c to be a useful character
+// Returns a useful character
 //
 // Keeps track of character counts
 //
@@ -216,8 +222,7 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextCharacterPolicy policy) {
             // return here
             //
             // nextCharacter() is called recursively if there is a line continuation,
-            // but we want some functions to only be called once, e.g., populateUnicode()
-            // which is at the bottom of nextCharacter()
+            // but we want some functions to only be called once
             //
             return c;
         }
@@ -438,11 +443,13 @@ void CharacterDecoder::handleLongName(SourceLocation CharacterStart) {
         Loc = CharacterStart;
         Loc = Loc + 1;
         characterQueue.push_back(std::make_pair('[', Loc));
-        Loc = Loc + 1;
         for (size_t i = 0; i < LongNameStr.size(); i++) {
             auto l = LongNameStr[i];
+            Loc = Loc + 1;
             characterQueue.push_back(std::make_pair(l, Loc));
         }
+        Loc = Loc + 1;
+        characterQueue.push_back(std::make_pair(c, Loc));
         
         c = '\\';
         

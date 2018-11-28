@@ -8,7 +8,8 @@
 #include <iomanip>
 #include <cassert>
 
-Tokenizer::Tokenizer() : _stringifyNextToken(false), cur(TOKEN_UNKNOWN), currentCached(false) {}
+Tokenizer::Tokenizer() : _stringifyNextToken(false), cur(TOKEN_UNKNOWN), currentCached(false), characterQueue(),
+    _currentWLCharacter(0), _currentSourceLocation{0, 0}, String(), Issues() {}
 
 void Tokenizer::init(bool skipFirstLine) {
 
@@ -118,7 +119,9 @@ Token Tokenizer::nextToken() {
             
         default: {
             
-            // everything else involving Unicode or errors
+            //
+            // Everything else involving Unicode or errors
+            //
             
             if (isLetterlikeCodePoint(c)) {
                 
@@ -154,6 +157,11 @@ Token Tokenizer::nextToken() {
             } else {
                 
                 String << WLCharacterToString(c);
+                
+                // Clear Issues
+                auto Tmp = TheCharacterDecoder->getIssues();
+                
+                std::copy(Tmp.begin(), Tmp.end(), std::back_inserter(Issues));
                 
                 c = nextWLCharacter();
 
@@ -207,6 +215,9 @@ void Tokenizer::setCurrentWLCharacter(WLCharacter current, SourceLocation Loc) {
 }
 
 Token Tokenizer::currentToken() {
+    
+    assert(cur != TOKEN_UNKNOWN);
+    
     return cur;
 }
 
@@ -273,11 +284,6 @@ Token Tokenizer::handleLinearSyntax() {
     return cur;
 }
 
-//
-// Do not bother decoding \:zzz into a character inside handleComment
-//
-// People are allowed to have weird stuff in comments
-//
 Token Tokenizer::handleComment() {
     // comment is already started
     
@@ -290,10 +296,10 @@ Token Tokenizer::handleComment() {
     
     auto depth = 1;
 
-    c = TheByteDecoder->nextSourceCharacter();
+    c = nextWLCharacter();
     
     if (c == EOF) {
-        return TOKEN_EOF;
+        return ERROR_UNTERMINATEDCOMMENT;
     }
     
     while (true) {
@@ -302,20 +308,20 @@ Token Tokenizer::handleComment() {
             
             String.put(c);
             
-            c = TheByteDecoder->nextSourceCharacter();
+            c = nextWLCharacter();
             
             if (c == EOF) {
-                return TOKEN_EOF;
+                return ERROR_UNTERMINATEDCOMMENT;
             }
             
             if (c == '*') {
                 
                 String.put(c);
                 
-                c = TheByteDecoder->nextSourceCharacter();
+                c = nextWLCharacter();
                 
                 if (c == EOF) {
-                    return TOKEN_EOF;
+                    return ERROR_UNTERMINATEDCOMMENT;
                 }
                 
                 depth = depth + 1;
@@ -325,10 +331,10 @@ Token Tokenizer::handleComment() {
             
             String.put(c);
 
-            c = TheByteDecoder->nextSourceCharacter();
+            c = nextWLCharacter();
             
             if (c == EOF) {
-                return TOKEN_EOF;
+                return ERROR_UNTERMINATEDCOMMENT;
             }
             
             if (c == ')') {
@@ -349,12 +355,10 @@ Token Tokenizer::handleComment() {
                     
                 } else {
                     
-                    // Still in comments, we do not care about characters
-                    
-                    c = TheByteDecoder->nextSourceCharacter();
+                    c = nextWLCharacter();
                     
                     if (c == EOF) {
-                        return TOKEN_EOF;
+                        return ERROR_UNTERMINATEDCOMMENT;
                     }
                 }
             }
@@ -362,11 +366,15 @@ Token Tokenizer::handleComment() {
         } else {
             
             String.put(c);
-
-            c = TheByteDecoder->nextSourceCharacter();
+            
+            // Clear Issues
+            // We do not care about issues inside of comments
+            TheCharacterDecoder->getIssues();
+            
+            c = nextWLCharacter();
             
             if (c == EOF) {
-                return TOKEN_EOF;
+                return ERROR_UNTERMINATEDCOMMENT;
             }
         }
         
@@ -529,7 +537,7 @@ Token Tokenizer::handleString() {
             
             if (c == EOF) {
                 
-                return TOKEN_EOF;
+                return ERROR_UNTERMINATEDSTRING;
                 
             } else if (c == '"') {
                 
@@ -554,7 +562,7 @@ Token Tokenizer::handleString() {
 
                     auto Span = TheSourceManager->getWLCharacterSpan();
 
-                    auto Issue = SyntaxIssue("Linear syntax character in string", SEVERITY_WARNING, Span);
+                    auto Issue = SyntaxIssue("Linear syntax character in string: " + WLCharacterToString(c), SEVERITY_REMARK, Span);
 
                     Issues.push_back(Issue);
                 }
