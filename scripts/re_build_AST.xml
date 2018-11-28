@@ -13,8 +13,7 @@
 	<target name='Paclet.AST.init.custom' extensionOf='Paclet.init.custom'>
 
 		<!-- - CMake generates makefiles here -->
-		<property name='build.dir' 
-			value='${checkout_directory}${file.separator}${component}${file.separator}${component}${file.separator}$build' />
+		<property name='build.dir' value='${checkout_directory}${file.separator}${component}${file.separator}build' />
 
 	</target>
 
