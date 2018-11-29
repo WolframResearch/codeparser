@@ -70,7 +70,7 @@
 			Unset[$MessagePrePrint];
 			Needs["PacletManager`"];
 
-			src = FileNameJoin[{AntProperty["files_directory"], "ast"}];
+			src = AntProperty["files_directory"];
 			dest = FileNameJoin[AntProperty["output_directory"]];
 			PackPaclet[src, dest];
 
