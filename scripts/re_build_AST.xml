@@ -7,7 +7,7 @@
 	<import file='${env.RE_ANTLIBRARY_HOME}/ant-lib.xml' />
 
 	<!--
-		NativeLibrary (platform-specific) 
+		Native libraries (platform-specific)
 	-->
 
 	<target name='NativeLibrary.ast.init.custom' extensionOf='NativeLibrary.init.custom'>
@@ -40,6 +40,47 @@
 		<copy todir='${files_directory}'>
 			<fileset dir='${build.dir}${file.separator}paclet${file.separator}AST' />
 		</copy>
+	</target>
+
+	<!--
+		Paclet (all platforms)
+	-->
+
+	<target name='Paclet.ast.init.custom' extensionOf='Paclet.init.custom'>
+
+		<!--
+			Prevent Paclet.clean from deleting files_directory,
+			since CopyAndUnarchiveArtifact just put all the paclet
+			files in there....
+		-->
+
+		<property name='keep.files_directory' value='true' />
+
+	</target>
+
+	<target name='Paclet.ast.prebuild' extensionOf='Paclet.prebuild' />
+
+	<target name='Paclet.ast.execute' extensionOf='Paclet.execute'>
+
+		<mathematica exe='${mathExe}' fresh='true' quit='true'><![CDATA[
+
+			Print["$Version: ", $Version];
+			Print["$InstallationDirectory: ", $InstallationDirectory];
+
+			Unset[$MessagePrePrint];
+			Needs["PacletManager`"];
+
+			src = FileNameJoin[{AntProperty["files_directory"], "ast"}];
+			dest = FileNameJoin[AntProperty["output_directory"]];
+			PackPaclet[src, dest];
+
+			SetDirectory[dest]
+			If [TrueQ[FileExistsQ[FileNames["ast*.paclet"][[1]]]],
+				Print[FileNames["ast*.paclet"][[1]] " ... OK"],
+				AntFail["Paclet not produced" ]];
+
+		]]></mathematica>
+
 	</target>
 
 </project>
