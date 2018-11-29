@@ -7,24 +7,24 @@
 	<import file='${env.RE_ANTLIBRARY_HOME}/ant-lib.xml' />
 
 	<!--
-		Paclet (platform-specific) 
+		NativeLibrary (platform-specific) 
 	-->
 
-	<target name='Paclet.ast.init.custom' extensionOf='Paclet.init.custom'>
+	<target name='NativeLibrary.ast.init.custom' extensionOf='NativeLibrary.init.custom'>
 
 		<!-- - CMake generates makefiles here -->
 		<property name='build.dir' value='${checkout_directory}${file.separator}${component}${file.separator}build' />
 
 	</target>
 
-	<target name='Paclet.ast.prebuild' extensionOf='Paclet.prebuild'>
+	<target name='NativeLibrary.ast.prebuild' extensionOf='NativeLibrary.prebuild'>
 
 		<delete dir='${build.dir}' />
         <mkdir dir='${build.dir}' />
 
 	</target>
 
-	<target name='Paclet.ast.execute' extensionOf='Paclet.execute'>
+	<target name='NativeLibrary.ast.execute' extensionOf='NativeLibrary.execute'>
 
 		<exec dir='${build.dir}' executable='${cmake.exe}' failonerror='true'>
 			<arg line='-DWOLFRAMKERNEL=${mathExe} ..' />
@@ -36,7 +36,7 @@
 
 	</target>
 
-	<target name='Paclet.ast.postbuild' extensionOf='Paclet.postbuild'>
+	<target name='NativeLibrary.ast.postbuild' extensionOf='NativeLibrary.postbuild'>
 		<copy todir='${files_directory}'>
 			<fileset dir='${build.dir}${file.separator}paclet${file.separator}AST' />
 		</copy>
