@@ -43,9 +43,9 @@
 		</copy>
 
 		<!-- Set execute bit *.wl files.' -->
-		<chmod perm='ugo+rx' type='file' os='unix'>
-			<fileset dir='${files_directory}${file.separator}ASTResources${file.separator}${system_id}'>
-				<include name='*.wl'/>
+		<chmod perm='ugo+rx' type='file' osfamily='unix'>
+			<fileset dir='${files_directory}${file.separator}ASTResources'>
+				<include name='**/*.wl'/>
 			</fileset>
 		</chmod>
 		
