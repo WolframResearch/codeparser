@@ -37,9 +37,18 @@
 	</target>
 
 	<target name='NativeLibrary.ast.postbuild' extensionOf='NativeLibrary.postbuild'>
+
 		<copy todir='${files_directory}'>
 			<fileset dir='${build.dir}${file.separator}paclet${file.separator}AST' />
 		</copy>
+
+		<!-- Set execute bit *.wl files.' -->
+		<chmod perm='ugo+rx' type='file' os='unix'>
+			<fileset dir='${files_directory}${file.separator}ASTResources${file.separator}${system_id}'>
+				<include name='*.wl'/>
+			</fileset>
+		</chmod>
+		
 	</target>
 
 	<!--
