@@ -10,35 +10,72 @@
 
 typedef int WLCharacter;
 
+#define WLCHARACTER_EOF -1
 //
 // These are the actual code points for linear syntax
 //
-// LINEARSYNTAX_SPACE does not have a dedicated code point in WL
+#define WLCHARACTER_LINEARSYNTAX_BANG 0xf7c1
+#define WLCHARACTER_LINEARSYNTAX_PERCENT 0xf7c5
+#define WLCHARACTER_LINEARSYNTAX_AMP 0xf7c7
+#define WLCHARACTER_LINEARSYNTAX_OPENPAREN 0xf7c9
+#define WLCHARACTER_LINEARSYNTAX_CLOSEPAREN 0xf7c0
+#define WLCHARACTER_LINEARSYNTAX_STAR 0xf7c8
+#define WLCHARACTER_LINEARSYNTAX_PLUS 0xf7cb
+#define WLCHARACTER_LINEARSYNTAX_SLASH 0xf7cc
+#define WLCHARACTER_LINEARSYNTAX_AT 0xf7c2
+#define WLCHARACTER_LINEARSYNTAX_CARET 0xf7c6
+#define WLCHARACTER_LINEARSYNTAX_UNDER 0xf7ca
+#define WLCHARACTER_LINEARSYNTAX_BACKTICK 0xf7cd
 //
-#define LINEARSYNTAX_BANG 0xf7c1
-#define LINEARSYNTAX_PERCENT 0xf7c5
-#define LINEARSYNTAX_AMP 0xf7c7
-#define LINEARSYNTAX_OPENPAREN 0xf7c9
-#define LINEARSYNTAX_CLOSEPAREN 0xf7c0
-#define LINEARSYNTAX_STAR 0xf7c8
-#define LINEARSYNTAX_PLUS 0xf7cb
-#define LINEARSYNTAX_SLASH 0xf7cc
-#define LINEARSYNTAX_AT 0xf7c2
-#define LINEARSYNTAX_CARET 0xf7c6
-#define LINEARSYNTAX_UNDER 0xf7ca
-#define LINEARSYNTAX_BACKTICK 0xf7cd
-#define LINEARSYNTAX_SPACE -2
+// LINEARSYNTAX_SPACE does not have a dedicated code point in WL
+// So invent one here.
+//
+#define WLCHARACTER_LINEARSYNTAX_SPACE -2
+//
+// Something like 1 + \[Bad] would be:
+// '1', ' ', '+', ' ', CHARACTER_ERROR_UNRECOGNIZED
+//
+#define WLCHARACTER_ERROR_UNRECOGNIZED -3
+//
+// Something like 1 + \:123 would be:
+// '1', ' ', '+', ' ', CHARACTER_ERROR_MALFORMED
+//
+#define WLCHARACTER_ERROR_MALFORMED -4
+
 
 bool isLinearSyntax(WLCharacter);
 
 std::string WLCharacterToString(WLCharacter c);
 
-enum NextCharacterPolicy {
 
-    POLICY_PRESERVE_WHITESPACE_AFTER_LINE_CONTINUATION,
+
+enum NextCharacterPolicyBits {
     
-    POLICY_DO_NOT_PRESERVE_WHITESPACE_AFTER_LINE_CONTINUATION,
+    //
+    // Preserve whitespace after line continuation
+    //
+    // ToExpression["0.\\\n  6"] evaluates to 0.6 (whitespace is NOT preserved)
+    //
+    // But ToExpression["\"0.\\\n  6\""] evalautes to "0.  6" (whitespace IS preserved)
+    //
+    PRESERVE_WS_AFTER_LC = 0x01,
+
+    //
+    // Convert character escapes to a single character
+    //
+    // Given the 8 bytes \ [ A l p h a ], should the next character
+    // be 0x03b1 (the code point for Alpha character) or 0x005c (the code point for backslash character) ?
+    //
+    CONVERT_ESCAPES_TO_SINGLE = 0x02
 };
+
+typedef int NextCharacterPolicy;
+
+const NextCharacterPolicy TOPLEVEL       = CONVERT_ESCAPES_TO_SINGLE | (PRESERVE_WS_AFTER_LC & 0);
+const NextCharacterPolicy INSIDE_NUMBER = TOPLEVEL;
+const NextCharacterPolicy INSIDE_STRING  = (CONVERT_ESCAPES_TO_SINGLE & 0) | PRESERVE_WS_AFTER_LC;
+const NextCharacterPolicy INSIDE_COMMENT = (CONVERT_ESCAPES_TO_SINGLE & 0) | PRESERVE_WS_AFTER_LC;
+
 
 //
 // CharacterDecoder is given a stream of integers that represent Unicode code points and decodes
@@ -52,16 +89,18 @@ class CharacterDecoder {
     
     std::vector<SyntaxIssue> Issues;
     
-    void handleLongName(SourceLocation CharacterStart);
-    void handle4Hex(SourceLocation CharacterStart);
-    void handle2Hex(SourceLocation CharacterStart);
-    void handleOctal(SourceLocation CharacterStart);
-    void handle6Hex(SourceLocation CharacterStart);
+    void handleLongName(SourceLocation CharacterStart, NextCharacterPolicy policy);
+    void handle2Hex(SourceLocation CharacterStart, NextCharacterPolicy policy);
+    void handle4Hex(SourceLocation CharacterStart, NextCharacterPolicy policy);
+    void handle6Hex(SourceLocation CharacterStart, NextCharacterPolicy policy);
+    void handleOctal(SourceLocation CharacterStart, NextCharacterPolicy policy);
+
+    void leaveAlone(SourceLocation CharacterStart, std::vector<WLCharacter>);
     
 public:
     CharacterDecoder();
 
-    WLCharacter nextWLCharacter(NextCharacterPolicy policy = POLICY_PRESERVE_WHITESPACE_AFTER_LINE_CONTINUATION);
+    WLCharacter nextWLCharacter(NextCharacterPolicy policy = TOPLEVEL);
 
     WLCharacter currentWLCharacter();
 

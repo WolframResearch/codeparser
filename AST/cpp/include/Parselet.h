@@ -53,18 +53,6 @@ public:
     virtual ~PostfixParselet() {}
 };
 
-class CleanupParselet : virtual public Parselet {
-public:
-    //
-    // Commonly referred to as LED method in the literature
-    //
-    virtual std::shared_ptr<Node> parse(std::shared_ptr<Node> Left) = 0;
-    
-    virtual precedence_t getPrecedence() = 0;
-    
-    virtual ~CleanupParselet() {}
-};
-
 
 //
 // Atom and Atom-like parselets
@@ -95,26 +83,6 @@ public:
     precedence_t getPrecedence() override {
         return PRECEDENCE_HIGHEST;
     }
-};
-
-class ErrorParselet : public PrefixParselet {
-public:
-    std::shared_ptr<Node> parse() override;
-    
-    precedence_t getPrecedence() override {
-        return PRECEDENCE_HIGHEST;
-    }
-};
-
-class CleanupRestParselet : public CleanupParselet {
-public:
-   CleanupRestParselet() {}
-   
-   std::shared_ptr<Node> parse(std::shared_ptr<Node> Left) override;
-   
-   precedence_t getPrecedence() override {
-       return PRECEDENCE_HIGHEST;
-   }
 };
 
 class UnderParselet : public PrefixParselet {
@@ -247,7 +215,7 @@ public:
 
 
 //
-// Group parselets
+// Call parselets
 //
 
 class OpenSquareCallParselet : public InfixParselet {
@@ -280,6 +248,11 @@ public:
     }
 };
 
+
+//
+// Group parselets
+//
+
 class GroupParselet : public PrefixParselet {
     Token Opener;
 public:
@@ -290,18 +263,6 @@ public:
     precedence_t getPrecedence() override {
         return PRECEDENCE_HIGHEST;
     }
-};
-
-class GroupMissingOpenerParselet : public CleanupParselet {
-   Token Closer;
-public:
-   GroupMissingOpenerParselet(Token Closer) : Closer(Closer) {}
-   
-   std::shared_ptr<Node> parse(std::shared_ptr<Node> Left) override;
-   
-   precedence_t getPrecedence() override {
-       return PRECEDENCE_HIGHEST;
-   }
 };
 
 
@@ -326,13 +287,13 @@ public:
 };
 
 
-class SemicolonParselet : public InfixParselet, PostfixParselet {
+class SemiParselet : public InfixParselet, PostfixParselet {
 public:
     
     std::shared_ptr<Node> parse(std::shared_ptr<Node> left) override;
     
     precedence_t getPrecedence() override {
-        return PRECEDENCE_SEMICOLON;
+        return PRECEDENCE_SEMI;
     }
     
     bool isRight() override {
@@ -345,7 +306,7 @@ public:
 // Deliberately not extending PrefixOperatorParselet and InfixOperatorParselet because I don't feel like bothering with
 // multiple inheritance
 //
-class SemicolonSemicolonParselet : public PrefixParselet, public InfixParselet {
+class SemiSemiParselet : public PrefixParselet, public InfixParselet {
 public:
     
     std::shared_ptr<Node> parse() override;
@@ -353,7 +314,7 @@ public:
     std::shared_ptr<Node> parse(std::shared_ptr<Node> left) override;
     
     precedence_t getPrecedence() override {
-        return PRECEDENCE_SEMICOLONSEMICOLON;
+        return PRECEDENCE_SEMISEMI;
     }
     
     //
@@ -433,5 +394,51 @@ public:
     EqualParselet() : BinaryOperatorParselet(PRECEDENCE_EQUAL, true) {}
     std::shared_ptr<Node> parse(std::shared_ptr<Node> left) override;
 };
+
+
+
+
+
+
+//
+// Error handling and cleanup
+//
+
+class CleanupParselet : virtual public Parselet {
+public:
+    //
+    // Commonly referred to as LED method in the literature
+    //
+    virtual std::shared_ptr<Node> parse(std::shared_ptr<Node> Left) = 0;
+    
+    virtual precedence_t getPrecedence() = 0;
+    
+    virtual ~CleanupParselet() {}
+};
+
+class ErrorParselet : public PrefixParselet {
+public:
+    std::shared_ptr<Node> parse() override;
+    
+    precedence_t getPrecedence() override {
+        return PRECEDENCE_HIGHEST;
+    }
+};
+
+class CleanupRestParselet : public CleanupParselet {
+public:
+   CleanupRestParselet() {}
+   
+   std::shared_ptr<Node> parse(std::shared_ptr<Node> Left) override;
+   
+   precedence_t getPrecedence() override {
+       return PRECEDENCE_HIGHEST;
+   }
+};
+
+
+
+
+
 
 

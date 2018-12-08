@@ -126,4 +126,9 @@ SourceLocation SourceManager::getSourceLocation() {
     return SourceLoc;
 }
 
+size_t SourceManager::getCurrentLineWidth() {
+
+    return CurLineWidth;
+}
+
 SourceManager *TheSourceManager = nullptr;

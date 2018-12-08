@@ -61,7 +61,8 @@ CallNode,
 PartNode,
 InternalMinusNode,
 InternalTokenNode,
-FileNode
+FileNode,
+CallMissingCloserNode
 }
 
 $Options = {
@@ -162,230 +163,41 @@ Nothing
 
 
 
-
-PrefixOperatorToSymbol[Operator`BANG] = Not
-PrefixOperatorToSymbol[Operator`PLUSPLUS] = PreIncrement
-PrefixOperatorToSymbol[Operator`LESSLESS] = Get
-PrefixOperatorToSymbol[Operator`MINUSMINUS] = PreDecrement
-PrefixOperatorToSymbol[Operator`PLUS] = Plus
-PrefixOperatorToSymbol[Operator`MINUS] = Minus
-PrefixOperatorToSymbol[Operator`LONGNAME`SQRT] = Sqrt
-PrefixOperatorToSymbol[Operator`LONGNAME`NOT] = Not
-   
-PrefixOperatorToSymbol[Operator`LONGNAME`PLUSMINUS] = PlusMinus
-PrefixOperatorToSymbol[Operator`LONGNAME`SUM] = Sum
-PrefixOperatorToSymbol[Operator`LONGNAME`MINUSPLUS] = MinusPlus
-PrefixOperatorToSymbol[Operator`LONGNAME`DIFFERENTIALD] = DifferentialD
-PrefixOperatorToSymbol[Operator`LONGNAME`MINUS] = Minus
-PrefixOperatorToSymbol[Operator`LONGNAME`DEL] = Del
-PrefixOperatorToSymbol[Operator`LONGNAME`SQUARE] = Square
-
-PrefixOperatorToSymbol[Operator`LINEARSYNTAX`BANG] = LinearSyntaxBang
-
-
-
-
-PostfixOperatorToSymbol[Operator`DOTDOT] = Repeated
-PostfixOperatorToSymbol[Operator`BANG] = Factorial
-PostfixOperatorToSymbol[Operator`MINUSMINUS] = Decrement
-PostfixOperatorToSymbol[Operator`PLUSPLUS] = Increment
-PostfixOperatorToSymbol[Operator`DOTDOTDOT] = RepeatedNull
-PostfixOperatorToSymbol[Operator`AMP] = Function
-PostfixOperatorToSymbol[Operator`BANGBANG] = Factorial2
-PostfixOperatorToSymbol[Operator`TICK] = Derivative
-   
-PostfixOperatorToSymbol[Operator`LONGNAME`TRANSPOSE] = Transpose
-PostfixOperatorToSymbol[Operator`LONGNAME`CONJUGATE] = Conjugate
-PostfixOperatorToSymbol[Operator`LONGNAME`CONJUGATETRANSPOSE] = ConjugateTranspose
-PostfixOperatorToSymbol[Operator`LONGNAME`HERMITIANCONJUGATE] = PostfixHermitianConjugate
-
-
-InfixOperatorToSymbol[Operator`PLUS] = Plus
-InfixOperatorToSymbol[Operator`STAR] = Times
-InfixOperatorToSymbol[Operator`SLASHAT] = Map
-InfixOperatorToSymbol[Operator`EQUAL] = Set
-InfixOperatorToSymbol[Operator`CARET] = Power
-InfixOperatorToSymbol[Operator`COLONEQUAL] = SetDelayed
-InfixOperatorToSymbol[Operator`MINUSGREATER] = Rule
-InfixOperatorToSymbol[Operator`QUESTION] = PatternTest
-InfixOperatorToSymbol[Operator`ATAT] = Apply
-InfixOperatorToSymbol[Operator`EQUALEQUAL] = Equal
-InfixOperatorToSymbol[Operator`AMPAMP] = And
-InfixOperatorToSymbol[Operator`GREATER] = Greater
-InfixOperatorToSymbol[Operator`BAR] = Alternatives
-InfixOperatorToSymbol[Operator`SLASHSEMICOLON] = Condition
-InfixOperatorToSymbol[Operator`LESSEQUAL] = LessEqual
-InfixOperatorToSymbol[Operator`BARBAR] = Or
-InfixOperatorToSymbol[Operator`EQUALEQUALEQUAL] = SameQ
-InfixOperatorToSymbol[Operator`SLASHDOT] = ReplaceAll
-InfixOperatorToSymbol[Operator`COLONGREATER] = RuleDelayed
-InfixOperatorToSymbol[Operator`LESSGREATER] = StringJoin
-InfixOperatorToSymbol[Operator`EQUALBANGEQUAL] = UnsameQ
-InfixOperatorToSymbol[Operator`GREATEREQUAL] = GreaterEqual
-InfixOperatorToSymbol[Operator`SLASHSLASHDOT] = ReplaceRepeated
-InfixOperatorToSymbol[Operator`LESS] = Less
-InfixOperatorToSymbol[Operator`PLUSEQUAL] = AddTo
-InfixOperatorToSymbol[Operator`TILDETILDE] = StringExpression
-InfixOperatorToSymbol[Operator`BANGEQUAL] = Unequal
-InfixOperatorToSymbol[Operator`DOT] = Dot
-InfixOperatorToSymbol[Operator`STAREQUAL] = TimesBy
-InfixOperatorToSymbol[Operator`MINUSEQUAL] = SubtractFrom
-InfixOperatorToSymbol[Operator`SLASHEQUAL] = DivideBy
-InfixOperatorToSymbol[Operator`CARETEQUAL] = UpSet
-InfixOperatorToSymbol[Operator`SLASHSTAR] = RightComposition
-InfixOperatorToSymbol[Operator`ATSTAR] = Composition
-InfixOperatorToSymbol[Operator`CARETCOLONEQUAL] = UpSetDelayed
-InfixOperatorToSymbol[Operator`STARSTAR] = NonCommutativeMultiply
-If[$VersionNumber >= 11.1, InfixOperatorToSymbol[Operator`LESSMINUSGREATER] = TwoWayRule]
-InfixOperatorToSymbol[Operator`SLASHSLASHAT] = MapAll
-InfixOperatorToSymbol[Operator`COLONCOLON] = MessageName
-InfixOperatorToSymbol[Operator`GREATERGREATER] = Put
-InfixOperatorToSymbol[Operator`SLASHSLASH] = BinarySlashSlash
-InfixOperatorToSymbol[Operator`MINUS] = Subtract
-InfixOperatorToSymbol[Operator`SLASH] = Divide
-InfixOperatorToSymbol[Operator`SEMICOLONSEMICOLON] = Span
-InfixOperatorToSymbol[Operator`AT] = BinaryAt
-InfixOperatorToSymbol[Operator`ATATAT] = BinaryAtAtAt
-InfixOperatorToSymbol[Operator`SEMICOLON] = CompoundExpression
-InfixOperatorToSymbol[Operator`FAKE`EQUALDOT] = Unset
-   
-InfixOperatorToSymbol[Operator`FAKE`IMPLICITTIMES] = InfixImplicitTimes
-InfixOperatorToSymbol[Operator`FAKE`PATTERNCOLON] = Pattern
-InfixOperatorToSymbol[Operator`FAKE`OPTIONALCOLON] = Optional
-   
-InfixOperatorToSymbol[Operator`LONGNAME`ELEMENT] = Element
-InfixOperatorToSymbol[Operator`LONGNAME`RIGHTTEEARROW] = RightTeeArrow
-InfixOperatorToSymbol[Operator`LONGNAME`TILDETILDE] = TildeTilde
-InfixOperatorToSymbol[Operator`LONGNAME`SUBSETEQUAL] = SubsetEqual
-InfixOperatorToSymbol[Operator`LONGNAME`SUBSET] = Subset
-InfixOperatorToSymbol[Operator`LONGNAME`IMPLIES] = Implies
-InfixOperatorToSymbol[Operator`LONGNAME`NOTTILDETILDE] = NotTildeTilde
-InfixOperatorToSymbol[Operator`LONGNAME`PLUSMINUS] = PlusMinus
-InfixOperatorToSymbol[Operator`LONGNAME`EQUIVALENT] = Equivalent
-InfixOperatorToSymbol[Operator`LONGNAME`LEFTTRIANGLEEQUAL] = LeftTriangleEqual
-InfixOperatorToSymbol[Operator`LONGNAME`TILDEEQUAL] = TildeEqual
-InfixOperatorToSymbol[Operator`LONGNAME`SUPERSETEQUAL] = SupersetEqual
-InfixOperatorToSymbol[Operator`LONGNAME`TILDEFULLEQUAL] = TildeFullEqual
-InfixOperatorToSymbol[Operator`LONGNAME`DIRECTEDEDGE] = DirectedEdge
-InfixOperatorToSymbol[Operator`LONGNAME`NOTELEMENT] = NotElement
-InfixOperatorToSymbol[Operator`LONGNAME`NOTTILDEFULLEQUAL] = NotTildeFullEqual
-InfixOperatorToSymbol[Operator`LONGNAME`CIRCLEDOT] = CircleDot
-InfixOperatorToSymbol[Operator`LONGNAME`TIMES] = Times
-InfixOperatorToSymbol[Operator`LONGNAME`RULE] = Rule
-InfixOperatorToSymbol[Operator`LONGNAME`EQUAL] = Equal
-InfixOperatorToSymbol[Operator`LONGNAME`LESSEQUAL] = LessEqual
-InfixOperatorToSymbol[Operator`LONGNAME`RULEDELAYED] = RuleDelayed
-InfixOperatorToSymbol[Operator`LONGNAME`UNDIRECTEDEDGE] = UndirectedEdge
-InfixOperatorToSymbol[Operator`LONGNAME`FUNCTION] = Function
-InfixOperatorToSymbol[Operator`LONGNAME`XOR] = Xor
-InfixOperatorToSymbol[Operator`LONGNAME`DISTRIBUTED] = Distributed
-InfixOperatorToSymbol[Operator`LONGNAME`CONDITIONED] = Conditioned
-InfixOperatorToSymbol[Operator`LONGNAME`UNION] = Union
-InfixOperatorToSymbol[Operator`LONGNAME`INTERSECTION] = Intersection
-InfixOperatorToSymbol[Operator`LONGNAME`AND] = And
-InfixOperatorToSymbol[Operator`LONGNAME`OR] = Or
-InfixOperatorToSymbol[Operator`LONGNAME`NOTEQUAL] = Unequal
-InfixOperatorToSymbol[Operator`LONGNAME`TENSORWEDGE] = TensorWedge
-InfixOperatorToSymbol[Operator`LONGNAME`CENTERDOT] = CenterDot
-InfixOperatorToSymbol[Operator`LONGNAME`CROSS] = Cross
-InfixOperatorToSymbol[Operator`LONGNAME`GREATERTILDE] = GreaterTilde
-InfixOperatorToSymbol[Operator`LONGNAME`PROPORTIONAL] = Proportional
-InfixOperatorToSymbol[Operator`LONGNAME`LESSLESS] = LessLess
-InfixOperatorToSymbol[Operator`LONGNAME`CONGRUENT] = Congruent
-InfixOperatorToSymbol[Operator`LONGNAME`TILDE] = Tilde
-InfixOperatorToSymbol[Operator`LONGNAME`MINUSPLUS] = MinusPlus
-InfixOperatorToSymbol[Operator`LONGNAME`DOUBLELONGLEFTRIGHTARROW] = DoubleLongLeftRightArrow
-InfixOperatorToSymbol[Operator`LONGNAME`RIGHTARROW] = RightArrow
-InfixOperatorToSymbol[Operator`LONGNAME`SMALLCIRCLE] = SmallCircle
-InfixOperatorToSymbol[Operator`LONGNAME`DOUBLELONGRIGHTARROW] = DoubleLongRightArrow
-InfixOperatorToSymbol[Operator`LONGNAME`DIVIDES] = Divisible
-InfixOperatorToSymbol[Operator`LONGNAME`LEFTRIGHTARROW] = LeftRightArrow
-InfixOperatorToSymbol[Operator`LONGNAME`VERTICALSEPARATOR] = VerticalSeparator
-InfixOperatorToSymbol[Operator`LONGNAME`LONGRIGHTARROW] = LongRightArrow
-If[$VersionNumber >= 11.1, InfixOperatorToSymbol[Operator`LONGNAME`TWOWAYRULE] = TwoWayRule]
-InfixOperatorToSymbol[Operator`LONGNAME`INVISIBLEAPPLICATION] = BinaryInvisibleApplication
-InfixOperatorToSymbol[Operator`LONGNAME`BACKSLASH] = Backslash
-InfixOperatorToSymbol[Operator`LONGNAME`DIAMOND] = Diamond
-InfixOperatorToSymbol[Operator`LONGNAME`WEDGE] = Wedge
-InfixOperatorToSymbol[Operator`LONGNAME`VEE] = Vee
-InfixOperatorToSymbol[Operator`LONGNAME`CIRCLETIMES] = CircleTimes
-InfixOperatorToSymbol[Operator`LONGNAME`STAR] = Star
-InfixOperatorToSymbol[Operator`LONGNAME`VERTICALTILDE] = VerticalTilde
-InfixOperatorToSymbol[Operator`LONGNAME`COPRODUCT] = Coproduct
-InfixOperatorToSymbol[Operator`LONGNAME`CAP] = Cap
-InfixOperatorToSymbol[Operator`LONGNAME`CUP] = Cup
-InfixOperatorToSymbol[Operator`LONGNAME`CIRCLEPLUS] = CirclePlus
-InfixOperatorToSymbol[Operator`LONGNAME`CIRCLEMINUS] = CircleMinus
-
-
-GroupOpenerToSymbol[Operator`OPENCURLY] = List
-GroupOpenerToSymbol[Operator`LESSBAR] = Association
-GroupOpenerToSymbol[Operator`LONGNAME`LEFTANGLEBRACKET] = AngleBracket
-GroupOpenerToSymbol[Operator`LONGNAME`LEFTCEILING] = Ceiling
-GroupOpenerToSymbol[Operator`LONGNAME`LEFTFLOOR] = Floor
-GroupOpenerToSymbol[Operator`LONGNAME`LEFTDOUBLEBRACKET] = GroupDoubleBracket
-GroupOpenerToSymbol[Operator`OPENSQUARE] = GroupSquare
-GroupOpenerToSymbol[Operator`LONGNAME`LEFTBRACKETINGBAR] = BracketingBar
-GroupOpenerToSymbol[Operator`LONGNAME`LEFTDOUBLEBRACKETINGBAR] = DoubleBracketingBar
-GroupOpenerToSymbol[Operator`OPENPAREN] = GroupParen
-GroupOpenerToSymbol[Operator`LINEARSYNTAX`OPENPAREN] = GroupLinearSyntaxParen
-
-GroupOpenerToCloser[Operator`OPENCURLY] = Operator`CLOSECURLY
-GroupOpenerToCloser[Operator`LESSBAR] = Operator`BARGREATER
-GroupOpenerToCloser[Operator`LONGNAME`LEFTANGLEBRACKET] = Operator`LONGNAME`RIGHTANGLEBRACKET
-GroupOpenerToCloser[Operator`LONGNAME`LEFTCEILING] = Operator`LONGNAME`RIGHTCEILING
-GroupOpenerToCloser[Operator`LONGNAME`LEFTFLOOR] = Operator`LONGNAME`RIGHTFLOOR
-GroupOpenerToCloser[Operator`LONGNAME`LEFTDOUBLEBRACKET] = Operator`LONGNAME`RIGHTDOUBLEBRACKET
-GroupOpenerToCloser[Operator`OPENSQUARE] = Operator`CLOSESQUARE
-GroupOpenerToCloser[Operator`LONGNAME`LEFTBRACKETINGBAR] = Operator`LONGNAME`RIGHTBRACKETINGBAR
-GroupOpenerToCloser[Operator`LONGNAME`LEFTDOUBLEBRACKETINGBAR] = Operator`LONGNAME`RIGHTDOUBLEBRACKETINGBAR
-GroupOpenerToCloser[Operator`OPENPAREN] = Operator`CLOSEPAREN
-GroupOpenerToCloser[Operator`LINEARSYNTAX`OPENPAREN] = Operator`LINEARSYNTAX`CLOSEPAREN
-
-GroupCloserToSymbol[Operator`CLOSECURLY] = List
-GroupCloserToSymbol[Operator`BARGREATER] = Association
-GroupCloserToSymbol[Operator`LONGNAME`RIGHTANGLEBRACKET] = AngleBracket
-GroupCloserToSymbol[Operator`LONGNAME`RIGHTCEILING] = Ceiling
-GroupCloserToSymbol[Operator`LONGNAME`RIGHTFLOOR] = Floor
-GroupCloserToSymbol[Operator`LONGNAME`RIGHTDOUBLEBRACKET] = GroupDoubleBracket
-GroupCloserToSymbol[Operator`CLOSESQUARE] = GroupSquare
-GroupCloserToSymbol[Operator`LONGNAME`RIGHTBRACKETINGBAR] = BracketingBar
-GroupCloserToSymbol[Operator`LONGNAME`RIGHTDOUBLEBRACKETINGBAR] = DoubleBracketingBar
-GroupCloserToSymbol[Operator`CLOSEPAREN] = GroupParen
-GroupCloserToSymbol[Operator`LINEARSYNTAX`CLOSEPAREN] = GroupLinearSyntaxParen
-
-GroupOpenerToMissingCloserSymbol[Operator`OPENCURLY] = GroupMissingCloserList
-GroupOpenerToMissingCloserSymbol[Operator`LESSBAR] = GroupMissingCloserAssociation
-GroupOpenerToMissingCloserSymbol[Operator`LONGNAME`LEFTANGLEBRACKET] = GroupMissingCloserAngleBracket
-GroupOpenerToMissingCloserSymbol[Operator`LONGNAME`LEFTCEILING] = GroupMissingCloserCeiling
-GroupOpenerToMissingCloserSymbol[Operator`LONGNAME`LEFTFLOOR] = GroupMissingCloserFloor
-GroupOpenerToMissingCloserSymbol[Operator`LONGNAME`LEFTDOUBLEBRACKET] = GroupMissingCloserDoubleBracket
-GroupOpenerToMissingCloserSymbol[Operator`OPENSQUARE] = GroupMissingCloserSquare
-GroupOpenerToMissingCloserSymbol[Operator`LONGNAME`LEFTBRACKETINGBAR] = GroupMissingCloserBracketingBar
-GroupOpenerToMissingCloserSymbol[Operator`LONGNAME`LEFTDOUBLEBRACKETINGBAR] = GroupMissingCloserDoubleBracketingBar
-GroupOpenerToMissingCloserSymbol[Operator`OPENPAREN] = GroupMissingCloserParen
-GroupOpenerToMissingCloserSymbol[Operator`LINEARSYNTAX`OPENPAREN] = GroupMissingCloserLinearSyntaxParen
-
-GroupCloserToMissingOpenerSymbol[Operator`CLOSECURLY] = GroupMissingOpenerList
-GroupCloserToMissingOpenerSymbol[Operator`BARGREATER] = GroupMissingOpenerAssociation
-GroupCloserToMissingOpenerSymbol[Operator`LONGNAME`RIGHTANGLEBRACKET] = GroupMissingOpenerAngleBracket
-GroupCloserToMissingOpenerSymbol[Operator`LONGNAME`RIGHTCEILING] = GroupMissingOpenerCeiling
-GroupCloserToMissingOpenerSymbol[Operator`LONGNAME`RIGHTFLOOR] = GroupMissingOpenerFloor
-GroupCloserToMissingOpenerSymbol[Operator`LONGNAME`RIGHTDOUBLEBRACKET] = GroupMissingOpenerDoubleBracket
-GroupCloserToMissingOpenerSymbol[Operator`CLOSESQUARE] = GroupMissingOpenerSquare
-GroupCloserToMissingOpenerSymbol[Operator`LONGNAME`RIGHTBRACKETINGBAR] = GroupMissingOpenerBracketingBar
-GroupCloserToMissingOpenerSymbol[Operator`LONGNAME`RIGHTDOUBLEBRACKETINGBAR] = GroupMissingOpenerDoubleBracketingBar
-GroupCloserToMissingOpenerSymbol[Operator`CLOSEPAREN] = GroupMissingOpenerParen
-GroupCloserToMissingOpenerSymbol[Operator`LINEARSYNTAX`CLOSEPAREN] = GroupMissingOpenerLinearSyntaxParen
-
-
-
-
 (*
 These are nice strings, appropriate for using in other source languages.
 So they are escaped accordingly.
 *)
 
+
+
+
+
+
+
+PrefixOperatorToSymbol[Token`Operator`Bang] = Not
+PrefixOperatorToSymbol[Token`Operator`PlusPlus] = PreIncrement
+PrefixOperatorToSymbol[Token`Operator`LessLess] = Get
+PrefixOperatorToSymbol[Token`Operator`MinusMinus] = PreDecrement
+PrefixOperatorToSymbol[Token`Operator`Plus] = Plus
+PrefixOperatorToSymbol[Token`Operator`Minus] = Minus
+
+PrefixOperatorToSymbol[Token`Operator`LongName`Sqrt] = Sqrt
+PrefixOperatorToSymbol[Token`Operator`LongName`Not] = Not
+PrefixOperatorToSymbol[Token`Operator`LongName`PlusMinus] = PlusMinus
+PrefixOperatorToSymbol[Token`Operator`LongName`Sum] = Sum
+PrefixOperatorToSymbol[Token`Operator`LongName`MinusPlus] = MinusPlus
+PrefixOperatorToSymbol[Token`Operator`LongName`DifferentialD] = DifferentialD
+PrefixOperatorToSymbol[Token`Operator`LongName`Minus] = Minus
+PrefixOperatorToSymbol[Token`Operator`LongName`Del] = Del
+PrefixOperatorToSymbol[Token`Operator`LongName`Square] = Square
+PrefixOperatorToSymbol[Token`Operator`LongName`Integral] = Integral
+PrefixOperatorToSymbol[Token`Operator`LongName`ContourIntegral] = ContourIntegral
+PrefixOperatorToSymbol[Token`Operator`LongName`DoubleContourIntegral] = DoubleContourIntegral
+PrefixOperatorToSymbol[Token`Operator`LongName`ClockwiseContourIntegral] = ClockwiseContourIntegral
+PrefixOperatorToSymbol[Token`Operator`LongName`CounterClockwiseContourIntegral] = CounterClockwiseContourIntegral
+PrefixOperatorToSymbol[Token`Operator`LongName`Product] = Product
+
+PrefixOperatorToSymbol[Token`Operator`LinearSyntax`Bang] = LinearSyntaxBang
 
 SymbolToPrefixOperatorString[Not] = "!"
 SymbolToPrefixOperatorString[Minus] = "-"
@@ -394,115 +206,42 @@ SymbolToPrefixOperatorString[PreDecrement] = "--"
 SymbolToPrefixOperatorString[Plus] = "+"
 SymbolToPrefixOperatorString[LinearSyntaxBang] = "\\!"
 SymbolToPrefixOperatorString[Get] = "<<"
-
 SymbolToPrefixOperatorString[Sqrt] = "\\[Sqrt]"
 SymbolToPrefixOperatorString[PlusMinus] = "\\[PlusMinus]"
 SymbolToPrefixOperatorString[MinusPlus] = "\\[MinusPlus]"
 SymbolToPrefixOperatorString[DifferentialD] = "\\[DifferentialD]"
-
-
-SymbolToInfixOperatorString[Map] = "/@"
-SymbolToInfixOperatorString[Set] = "="
-SymbolToInfixOperatorString[SetDelayed] = ":="
-SymbolToInfixOperatorString[Rule] = "->"
-SymbolToInfixOperatorString[PatternTest] = "?"
-SymbolToInfixOperatorString[MessageName] = "::"
-SymbolToInfixOperatorString[Divide] = "/"
-SymbolToInfixOperatorString[Pattern] = ":"
-SymbolToInfixOperatorString[Apply] = "@@"
-SymbolToInfixOperatorString[Equal] = "=="
-SymbolToInfixOperatorString[Condition] = "/;"
-SymbolToInfixOperatorString[Greater] = ">"
-SymbolToInfixOperatorString[LessEqual] = "<="
-SymbolToInfixOperatorString[SameQ] = "==="
-(* extra space *)
-SymbolToInfixOperatorString[ReplaceAll] = "/. "
-SymbolToInfixOperatorString[RuleDelayed] = ":>"
-SymbolToInfixOperatorString[Span] = ";;"
-SymbolToInfixOperatorString[GreaterEqual] = ">="
-SymbolToInfixOperatorString[BinaryAt] = "@"
-SymbolToInfixOperatorString[Power] = "^"
-SymbolToInfixOperatorString[UnsameQ] = "=!="
-SymbolToInfixOperatorString[BinaryAtAtAt] = "@@@"
-SymbolToInfixOperatorString[BinarySlashSlash] = "//"
-SymbolToInfixOperatorString[Less] = "<"
-SymbolToInfixOperatorString[ReplaceRepeated] = "//."
-SymbolToInfixOperatorString[AddTo] = "+="
-SymbolToInfixOperatorString[Optional] = ":"
-SymbolToInfixOperatorString[Unequal] = "!="
-(* extra space *)
-SymbolToInfixOperatorString[Dot] = " . "
-SymbolToInfixOperatorString[SubtractFrom] = "-="
-SymbolToInfixOperatorString[TimesBy] = "*="
-SymbolToInfixOperatorString[DivideBy] = "/="
-SymbolToInfixOperatorString[Composition] = "@*"
-SymbolToInfixOperatorString[UpSetDelayed] = "^:="
-SymbolToInfixOperatorString[UpSet] = "^="
-SymbolToInfixOperatorString[RightComposition] = "/*"
-SymbolToInfixOperatorString[MapAll] = "//@"
-SymbolToInfixOperatorString[Put] = ">>"
-SymbolToInfixOperatorString[Unset] = "=."
-SymbolToInfixOperatorString[TernarySlashColon] = "/:"
-SymbolToInfixOperatorString[TernaryTilde] = "~"
-
-SymbolToInfixOperatorString[Element] = "\\[Element]"
-SymbolToInfixOperatorString[SubsetEqual] = "\\[SubsetEqual]"
-SymbolToInfixOperatorString[RightTeeArrow] = "\\[RightTeeArrow]"
-SymbolToInfixOperatorString[LeftTriangleEqual] = "\\[LeftTriangleEqual]"
-SymbolToInfixOperatorString[TildeFullEqual] = "\\[TildeFullEqual]"
-SymbolToInfixOperatorString[NotTildeFullEqual] = "\\[NotTildeFullEqual]"
-SymbolToInfixOperatorString[TildeTilde] = "\\[TildeTilde]"
-SymbolToInfixOperatorString[NotTildeTilde] = "\\[NotTildeTilde]"
-SymbolToInfixOperatorString[TildeEqual] = "\\[TildeEqual]"
-SymbolToInfixOperatorString[Subset] = "\\[Subset]"
-SymbolToInfixOperatorString[PlusMinus] = "\\[PlusMinus]"
-SymbolToInfixOperatorString[NotElement] = "\\[NotElement]"
-SymbolToInfixOperatorString[Implies] = "\\[Implies]"
-SymbolToInfixOperatorString[Equivalent] = "\\[Equivalent]"
-SymbolToInfixOperatorString[DirectedEdge] = "\\[DirectedEdge]"
-SymbolToInfixOperatorString[SupersetEqual] = "\\[SupersetEqual]"
-If[$VersionNumber >= 11.1, SymbolToInfixOperatorString[TwoWayRule] = "\\[TwoWayRule]"]
-SymbolToInfixOperatorString[UndirectedEdge] = "\\[UndirectedEdge]"
-SymbolToInfixOperatorString[Xor] = "\\[Xor]"
-SymbolToInfixOperatorString[Function] = "\\[Function]"
-SymbolToInfixOperatorString[Intersection] = "\\[Intersection]"
-SymbolToInfixOperatorString[Union] = "\\[Union]"
-SymbolToInfixOperatorString[Distributed] = "\\[Distributed]"
-SymbolToInfixOperatorString[Conditioned] = "\\[Conditioned]"
-SymbolToInfixOperatorString[CircleDot] = "\\[CircleDot]"
-SymbolToInfixOperatorString[TensorWedge] = "\\[TensorWedge]"
-SymbolToInfixOperatorString[CenterDot] = "\\[CenterDot]"
-SymbolToInfixOperatorString[Cross] = "\\[Cross]"
-SymbolToInfixOperatorString[GreaterTilde] = "\\[GreaterTilde]"
-SymbolToInfixOperatorString[Proportional] = "\\[Proportional]"
-SymbolToInfixOperatorString[LessLess] = "\\[LessLess]"
-SymbolToInfixOperatorString[Congruent] = "\\[Congruent]"
-SymbolToInfixOperatorString[Tilde] = "\\[Tilde]"
-SymbolToInfixOperatorString[MinusPlus] = "\\[MinusPlus]"
-SymbolToInfixOperatorString[DoubleLongLeftRightArrow] = "\\[DoubleLongLeftRightArrow]"
-SymbolToInfixOperatorString[RightArrow] = "\\[RightArrow]"
-SymbolToInfixOperatorString[SmallCircle] = "\\[SmallCircle]"
-SymbolToInfixOperatorString[DoubleLongRightArrow] = "\\[DoubleLongRightArrow]"
-SymbolToInfixOperatorString[Divisible] = "\\[Divides]"
-SymbolToInfixOperatorString[LeftRightArrow] = "\\[LeftRightArrow]"
-SymbolToInfixOperatorString[VerticalSeparator] = "\\[VerticalSeparator]"
-SymbolToInfixOperatorString[LongRightArrow] = "\\[LongRightArrow]"
-SymbolToInfixOperatorString[BinaryInvisibleApplication] = "\\[InvisibleApplication]"
-
-
-(* extra space *)
-SymbolToInfixOperatorString[CompoundExpression] = "; "
-SymbolToInfixOperatorString[Times] = "*"
-SymbolToInfixOperatorString[Alternatives] = "|"
-SymbolToInfixOperatorString[And] = "&&"
-SymbolToInfixOperatorString[Or] = "||"
-SymbolToInfixOperatorString[InfixImplicitTimes] = " "
-SymbolToInfixOperatorString[StringJoin] = "<>"
-SymbolToInfixOperatorString[StringExpression] = "~~"
-SymbolToInfixOperatorString[NonCommutativeMultiply] = "**"
+SymbolToPrefixOperatorString[Integral] = "\\[Integral]"
+SymbolToPrefixOperatorString[ContourIntegral] = "\\[ContourIntegral]"
+SymbolToPrefixOperatorString[DoubleContourIntegral] = "\\[DoubleContourIntegral]"
+SymbolToPrefixOperatorString[ClockwiseContourIntegral] = "\\[ClockwiseContourIntegral]"
+SymbolToPrefixOperatorString[CounterClockwiseContourIntegral] = "\\[CounterClockwiseContourIntegral]"
+SymbolToPrefixOperatorString[Sum] = "\\[Sum]"
+SymbolToPrefixOperatorString[Product] = "\\[Product]"
+SymbolToPrefixOperatorString[Square] = "\\[Square]"
+SymbolToPrefixOperatorString[Del] = "\\[Del]"
 
 
 
+
+
+
+
+
+
+
+PostfixOperatorToSymbol[Token`Operator`DotDot] = Repeated
+PostfixOperatorToSymbol[Token`Operator`Bang] = Factorial
+PostfixOperatorToSymbol[Token`Operator`MinusMinus] = Decrement
+PostfixOperatorToSymbol[Token`Operator`PlusPlus] = Increment
+PostfixOperatorToSymbol[Token`Operator`DotDotDot] = RepeatedNull
+PostfixOperatorToSymbol[Token`Operator`Amp] = Function
+PostfixOperatorToSymbol[Token`Operator`BangBang] = Factorial2
+PostfixOperatorToSymbol[Token`Operator`Tick] = Derivative
+   
+PostfixOperatorToSymbol[Token`Operator`LongName`Transpose] = Transpose
+PostfixOperatorToSymbol[Token`Operator`LongName`Conjugate] = Conjugate
+PostfixOperatorToSymbol[Token`Operator`LongName`ConjugateTranspose] = ConjugateTranspose
+PostfixOperatorToSymbol[Token`Operator`LongName`HermitianConjugate] = PostfixHermitianConjugate
 
 SymbolToPostfixOperatorString[Function] = "&"
 (* extra space *)
@@ -515,11 +254,328 @@ SymbolToPostfixOperatorString[RepeatedNull] = " ... "
 SymbolToPostfixOperatorString[Factorial] = "! "
 (* extra space *)
 SymbolToPostfixOperatorString[Factorial2] = "!! "
+(* not used *)
+SymbolToPostfixOperatorString[Derivative] = "INVALID"
 
 SymbolToPostfixOperatorString[Transpose] = "\\[Transpose]"
 SymbolToPostfixOperatorString[Conjugate] = "\\[Conjugate]"
+SymbolToPostfixOperatorString[ConjugateTranspose] = "\\[ConjugateTranspose]"
+SymbolToPostfixOperatorString[PostfixHermitianConjugate] = "\\[HermitianConjugate]"
 
 
+
+
+
+
+
+
+
+(*
+Binary
+*)
+BinaryOperatorToSymbol[Token`Operator`SlashAt] = Map
+BinaryOperatorToSymbol[Token`Operator`Equal] = Set
+BinaryOperatorToSymbol[Token`Operator`Caret] = Power
+BinaryOperatorToSymbol[Token`Operator`ColonEqual] = SetDelayed
+BinaryOperatorToSymbol[Token`Operator`MinusGreater] = Rule
+BinaryOperatorToSymbol[Token`Operator`Question] = PatternTest
+BinaryOperatorToSymbol[Token`Operator`AtAt] = Apply
+BinaryOperatorToSymbol[Token`Operator`EqualEqual] = Equal
+BinaryOperatorToSymbol[Token`Operator`Greater] = Greater
+BinaryOperatorToSymbol[Token`Operator`SlashSemi] = Condition
+BinaryOperatorToSymbol[Token`Operator`LessEqual] = LessEqual
+BinaryOperatorToSymbol[Token`Operator`EqualEqualEqual] = SameQ
+BinaryOperatorToSymbol[Token`Operator`SlashDot] = ReplaceAll
+BinaryOperatorToSymbol[Token`Operator`ColonGreater] = RuleDelayed
+BinaryOperatorToSymbol[Token`Operator`EqualBangEqual] = UnsameQ
+BinaryOperatorToSymbol[Token`Operator`GreaterEqual] = GreaterEqual
+BinaryOperatorToSymbol[Token`Operator`SlashSlashDot] = ReplaceRepeated
+BinaryOperatorToSymbol[Token`Operator`Less] = Less
+BinaryOperatorToSymbol[Token`Operator`PlusEqual] = AddTo
+BinaryOperatorToSymbol[Token`Operator`BangEqual] = Unequal
+BinaryOperatorToSymbol[Token`Operator`StarEqual] = TimesBy
+BinaryOperatorToSymbol[Token`Operator`MinusEqual] = SubtractFrom
+BinaryOperatorToSymbol[Token`Operator`SlashEqual] = DivideBy
+BinaryOperatorToSymbol[Token`Operator`CaretEqual] = UpSet
+BinaryOperatorToSymbol[Token`Operator`SlashStar] = RightComposition
+BinaryOperatorToSymbol[Token`Operator`AtStar] = Composition
+BinaryOperatorToSymbol[Token`Operator`CaretColonEqual] = UpSetDelayed
+If[$VersionNumber >= 11.1, ToExpression["BinaryOperatorToSymbol[Token`Operator`LessMinusGreater] = TwoWayRule"]]
+BinaryOperatorToSymbol[Token`Operator`SlashSlashAt] = MapAll
+BinaryOperatorToSymbol[Token`Operator`ColonColon] = MessageName
+BinaryOperatorToSymbol[Token`Operator`GreaterGreater] = Put
+BinaryOperatorToSymbol[Token`Operator`SlashSlash] = BinarySlashSlash
+BinaryOperatorToSymbol[Token`Operator`Slash] = Divide
+BinaryOperatorToSymbol[Token`Operator`SemiSemi] = Span
+BinaryOperatorToSymbol[Token`Operator`At] = BinaryAt
+BinaryOperatorToSymbol[Token`Operator`AtAtAt] = BinaryAtAtAt
+
+BinaryOperatorToSymbol[Token`Operator`Fake`EqualDot] = Unset
+BinaryOperatorToSymbol[Token`Operator`Fake`PatternColon] = Pattern
+BinaryOperatorToSymbol[Token`Operator`Fake`OptionalColon] = Optional
+   
+BinaryOperatorToSymbol[Token`Operator`LongName`Element] = Element
+BinaryOperatorToSymbol[Token`Operator`LongName`RightTeeArrow] = RightTeeArrow
+BinaryOperatorToSymbol[Token`Operator`LongName`TildeTilde] = TildeTilde
+BinaryOperatorToSymbol[Token`Operator`LongName`SubsetEqual] = SubsetEqual
+BinaryOperatorToSymbol[Token`Operator`LongName`Subset] = Subset
+BinaryOperatorToSymbol[Token`Operator`LongName`Implies] = Implies
+BinaryOperatorToSymbol[Token`Operator`LongName`NotTildeTilde] = NotTildeTilde
+BinaryOperatorToSymbol[Token`Operator`LongName`PlusMinus] = PlusMinus
+BinaryOperatorToSymbol[Token`Operator`LongName`Equivalent] = Equivalent
+BinaryOperatorToSymbol[Token`Operator`LongName`LeftTriangleEqual] = LeftTriangleEqual
+BinaryOperatorToSymbol[Token`Operator`LongName`TildeEqual] = TildeEqual
+BinaryOperatorToSymbol[Token`Operator`LongName`SupersetEqual] = SupersetEqual
+BinaryOperatorToSymbol[Token`Operator`LongName`TildeFullEqual] = TildeFullEqual
+BinaryOperatorToSymbol[Token`Operator`LongName`DirectedEdge] = DirectedEdge
+BinaryOperatorToSymbol[Token`Operator`LongName`NotElement] = NotElement
+BinaryOperatorToSymbol[Token`Operator`LongName`NotTildeFullEqual] = NotTildeFullEqual
+BinaryOperatorToSymbol[Token`Operator`LongName`CircleDot] = CircleDot
+BinaryOperatorToSymbol[Token`Operator`LongName`Rule] = Rule
+BinaryOperatorToSymbol[Token`Operator`LongName`Equal] = Equal
+BinaryOperatorToSymbol[Token`Operator`LongName`LessEqual] = LessEqual
+BinaryOperatorToSymbol[Token`Operator`LongName`RuleDelayed] = RuleDelayed
+BinaryOperatorToSymbol[Token`Operator`LongName`UndirectedEdge] = UndirectedEdge
+BinaryOperatorToSymbol[Token`Operator`LongName`Function] = Function
+BinaryOperatorToSymbol[Token`Operator`LongName`Distributed] = Distributed
+BinaryOperatorToSymbol[Token`Operator`LongName`Conditioned] = Conditioned
+BinaryOperatorToSymbol[Token`Operator`LongName`Union] = Union
+BinaryOperatorToSymbol[Token`Operator`LongName`Intersection] = Intersection
+BinaryOperatorToSymbol[Token`Operator`LongName`NotEqual] = Unequal
+BinaryOperatorToSymbol[Token`Operator`LongName`TensorWedge] = TensorWedge
+BinaryOperatorToSymbol[Token`Operator`LongName`CenterDot] = CenterDot
+BinaryOperatorToSymbol[Token`Operator`LongName`Cross] = Cross
+BinaryOperatorToSymbol[Token`Operator`LongName`GreaterTilde] = GreaterTilde
+BinaryOperatorToSymbol[Token`Operator`LongName`Proportional] = Proportional
+BinaryOperatorToSymbol[Token`Operator`LongName`LessLess] = LessLess
+BinaryOperatorToSymbol[Token`Operator`LongName`Congruent] = Congruent
+BinaryOperatorToSymbol[Token`Operator`LongName`Tilde] = Tilde
+BinaryOperatorToSymbol[Token`Operator`LongName`MinusPlus] = MinusPlus
+BinaryOperatorToSymbol[Token`Operator`LongName`DoubleLongLeftRightArrow] = DoubleLongLeftRightArrow
+BinaryOperatorToSymbol[Token`Operator`LongName`RightArrow] = RightArrow
+BinaryOperatorToSymbol[Token`Operator`LongName`SmallCircle] = SmallCircle
+BinaryOperatorToSymbol[Token`Operator`LongName`DoubleLongRightArrow] = DoubleLongRightArrow
+BinaryOperatorToSymbol[Token`Operator`LongName`Divides] = Divisible
+BinaryOperatorToSymbol[Token`Operator`LongName`LeftRightArrow] = LeftRightArrow
+BinaryOperatorToSymbol[Token`Operator`LongName`VerticalSeparator] = VerticalSeparator
+BinaryOperatorToSymbol[Token`Operator`LongName`LongRightArrow] = LongRightArrow
+If[$VersionNumber >= 11.1, ToExpression["BinaryOperatorToSymbol[Token`Operator`LongName`TwoWayRule] = TwoWayRule"]]
+BinaryOperatorToSymbol[Token`Operator`LongName`InvisibleApplication] = BinaryInvisibleApplication
+BinaryOperatorToSymbol[Token`Operator`LongName`Backslash] = Backslash
+BinaryOperatorToSymbol[Token`Operator`LongName`Diamond] = Diamond
+BinaryOperatorToSymbol[Token`Operator`LongName`Wedge] = Wedge
+BinaryOperatorToSymbol[Token`Operator`LongName`Vee] = Vee
+BinaryOperatorToSymbol[Token`Operator`LongName`CircleTimes] = CircleTimes
+BinaryOperatorToSymbol[Token`Operator`LongName`Star] = Star
+BinaryOperatorToSymbol[Token`Operator`LongName`VerticalTilde] = VerticalTilde
+BinaryOperatorToSymbol[Token`Operator`LongName`Coproduct] = Coproduct
+BinaryOperatorToSymbol[Token`Operator`LongName`Cap] = Cap
+BinaryOperatorToSymbol[Token`Operator`LongName`Cup] = Cup
+BinaryOperatorToSymbol[Token`Operator`LongName`CirclePlus] = CirclePlus
+BinaryOperatorToSymbol[Token`Operator`LongName`CircleMinus] = CircleMinus
+BinaryOperatorToSymbol[Token`Operator`LongName`RightTriangle] = RightTriangle
+BinaryOperatorToSymbol[Token`Operator`LongName`LeftTriangle] = LeftTriangle
+BinaryOperatorToSymbol[Token`Operator`LongName`Times] = Times
+BinaryOperatorToSymbol[Token`Operator`LongName`And] = And
+BinaryOperatorToSymbol[Token`Operator`LongName`Or] = Or
+BinaryOperatorToSymbol[Token`Operator`LongName`Xor] = Xor
+BinaryOperatorToSymbol[Token`Operator`LongName`Nand] = Nand
+BinaryOperatorToSymbol[Token`Operator`LongName`Nor] = Nor
+BinaryOperatorToSymbol[Token`Operator`LongName`ImplicitPlus] = InfixImplicitPlus
+
+SymbolToBinaryOperatorString[Map] = "/@"
+SymbolToBinaryOperatorString[Set] = "="
+SymbolToBinaryOperatorString[SetDelayed] = ":="
+SymbolToBinaryOperatorString[Rule] = "->"
+SymbolToBinaryOperatorString[PatternTest] = "?"
+SymbolToBinaryOperatorString[MessageName] = "::"
+SymbolToBinaryOperatorString[Divide] = "/"
+SymbolToBinaryOperatorString[Pattern] = ":"
+SymbolToBinaryOperatorString[Apply] = "@@"
+SymbolToBinaryOperatorString[Equal] = "=="
+SymbolToBinaryOperatorString[Condition] = "/;"
+SymbolToBinaryOperatorString[Greater] = ">"
+SymbolToBinaryOperatorString[LessEqual] = "<="
+SymbolToBinaryOperatorString[SameQ] = "==="
+(* extra space *)
+SymbolToBinaryOperatorString[ReplaceAll] = "/. "
+SymbolToBinaryOperatorString[RuleDelayed] = ":>"
+SymbolToBinaryOperatorString[Span] = ";;"
+SymbolToBinaryOperatorString[GreaterEqual] = ">="
+SymbolToBinaryOperatorString[BinaryAt] = "@"
+SymbolToBinaryOperatorString[Power] = "^"
+SymbolToBinaryOperatorString[UnsameQ] = "=!="
+SymbolToBinaryOperatorString[BinaryAtAtAt] = "@@@"
+SymbolToBinaryOperatorString[BinarySlashSlash] = "//"
+SymbolToBinaryOperatorString[Less] = "<"
+SymbolToBinaryOperatorString[ReplaceRepeated] = "//."
+SymbolToBinaryOperatorString[AddTo] = "+="
+SymbolToBinaryOperatorString[Optional] = ":"
+SymbolToBinaryOperatorString[Unequal] = "!="
+SymbolToBinaryOperatorString[SubtractFrom] = "-="
+SymbolToBinaryOperatorString[TimesBy] = "*="
+SymbolToBinaryOperatorString[DivideBy] = "/="
+SymbolToBinaryOperatorString[Composition] = "@*"
+SymbolToBinaryOperatorString[UpSetDelayed] = "^:="
+SymbolToBinaryOperatorString[UpSet] = "^="
+SymbolToBinaryOperatorString[RightComposition] = "/*"
+SymbolToBinaryOperatorString[MapAll] = "//@"
+SymbolToBinaryOperatorString[Put] = ">>"
+SymbolToBinaryOperatorString[Unset] = "=."
+
+SymbolToBinaryOperatorString[Element] = "\\[Element]"
+SymbolToBinaryOperatorString[SubsetEqual] = "\\[SubsetEqual]"
+SymbolToBinaryOperatorString[RightTeeArrow] = "\\[RightTeeArrow]"
+SymbolToBinaryOperatorString[LeftTriangleEqual] = "\\[LeftTriangleEqual]"
+SymbolToBinaryOperatorString[TildeFullEqual] = "\\[TildeFullEqual]"
+SymbolToBinaryOperatorString[NotTildeFullEqual] = "\\[NotTildeFullEqual]"
+SymbolToBinaryOperatorString[TildeTilde] = "\\[TildeTilde]"
+SymbolToBinaryOperatorString[NotTildeTilde] = "\\[NotTildeTilde]"
+SymbolToBinaryOperatorString[TildeEqual] = "\\[TildeEqual]"
+SymbolToBinaryOperatorString[Subset] = "\\[Subset]"
+SymbolToBinaryOperatorString[PlusMinus] = "\\[PlusMinus]"
+SymbolToBinaryOperatorString[NotElement] = "\\[NotElement]"
+SymbolToBinaryOperatorString[Implies] = "\\[Implies]"
+SymbolToBinaryOperatorString[Equivalent] = "\\[Equivalent]"
+SymbolToBinaryOperatorString[DirectedEdge] = "\\[DirectedEdge]"
+SymbolToBinaryOperatorString[SupersetEqual] = "\\[SupersetEqual]"
+If[$VersionNumber >= 11.1, ToExpression["SymbolToBinaryOperatorString[TwoWayRule] = \"\\\\[TwoWayRule]\""]]
+SymbolToBinaryOperatorString[UndirectedEdge] = "\\[UndirectedEdge]"
+SymbolToBinaryOperatorString[Function] = "\\[Function]"
+SymbolToBinaryOperatorString[Intersection] = "\\[Intersection]"
+SymbolToBinaryOperatorString[Union] = "\\[Union]"
+SymbolToBinaryOperatorString[Distributed] = "\\[Distributed]"
+SymbolToBinaryOperatorString[Conditioned] = "\\[Conditioned]"
+SymbolToBinaryOperatorString[CircleDot] = "\\[CircleDot]"
+SymbolToBinaryOperatorString[TensorWedge] = "\\[TensorWedge]"
+SymbolToBinaryOperatorString[CenterDot] = "\\[CenterDot]"
+SymbolToBinaryOperatorString[Cross] = "\\[Cross]"
+SymbolToBinaryOperatorString[GreaterTilde] = "\\[GreaterTilde]"
+SymbolToBinaryOperatorString[Proportional] = "\\[Proportional]"
+SymbolToBinaryOperatorString[LessLess] = "\\[LessLess]"
+SymbolToBinaryOperatorString[Congruent] = "\\[Congruent]"
+SymbolToBinaryOperatorString[Tilde] = "\\[Tilde]"
+SymbolToBinaryOperatorString[MinusPlus] = "\\[MinusPlus]"
+SymbolToBinaryOperatorString[DoubleLongLeftRightArrow] = "\\[DoubleLongLeftRightArrow]"
+SymbolToBinaryOperatorString[RightArrow] = "\\[RightArrow]"
+SymbolToBinaryOperatorString[SmallCircle] = "\\[SmallCircle]"
+SymbolToBinaryOperatorString[DoubleLongRightArrow] = "\\[DoubleLongRightArrow]"
+SymbolToBinaryOperatorString[Divisible] = "\\[Divides]"
+SymbolToBinaryOperatorString[LeftRightArrow] = "\\[LeftRightArrow]"
+SymbolToBinaryOperatorString[VerticalSeparator] = "\\[VerticalSeparator]"
+SymbolToBinaryOperatorString[LongRightArrow] = "\\[LongRightArrow]"
+SymbolToBinaryOperatorString[BinaryInvisibleApplication] = "\\[InvisibleApplication]"
+SymbolToBinaryOperatorString[CirclePlus] = "\\[CirclePlus]"
+SymbolToBinaryOperatorString[RightTriangle] = "\\[RightTriangle]"
+SymbolToBinaryOperatorString[CircleTimes] = "\\[CircleTimes]"
+SymbolToBinaryOperatorString[LeftTriangle] = "\\[LeftTriangle]"
+SymbolToBinaryOperatorString[Backslash] = "\\[Backslash]"
+SymbolToBinaryOperatorString[Cap] = "\\[Cap]"
+SymbolToBinaryOperatorString[CircleMinus] = "\\[CircleMinus]"
+SymbolToBinaryOperatorString[Coproduct] = "\\[Coproduct]"
+SymbolToBinaryOperatorString[Cup] = "\\[Cup]"
+SymbolToBinaryOperatorString[Diamond] = "\\[Diamond]"
+SymbolToBinaryOperatorString[Star] = "\\[Star]"
+SymbolToBinaryOperatorString[Vee] = "\\[Vee]"
+SymbolToBinaryOperatorString[VerticalTilde] = "\\[VerticalTilde]"
+SymbolToBinaryOperatorString[Wedge] = "\\[Wedge]"
+SymbolToBinaryOperatorString[And] = "\\[And]"
+SymbolToBinaryOperatorString[Nand] = "\\[Nand]"
+SymbolToBinaryOperatorString[Nor] = "\\[Nor]"
+SymbolToBinaryOperatorString[Or] = "\\[Or]"
+SymbolToBinaryOperatorString[Times] = "\\[Times]"
+SymbolToBinaryOperatorString[Xor] = "\\[Xor]"
+SymbolToBinaryOperatorString[InfixImplicitPlus] = "\\[ImplicitPlus]"
+
+
+(*
+Infix
+*)
+InfixOperatorToSymbol[Token`Operator`Semi] = CompoundExpression
+InfixOperatorToSymbol[Token`Operator`Plus] = Plus
+InfixOperatorToSymbol[Token`Operator`Star] = Times
+InfixOperatorToSymbol[Token`Operator`StarStar] = NonCommutativeMultiply
+InfixOperatorToSymbol[Token`Operator`Dot] = Dot
+InfixOperatorToSymbol[Token`Operator`AmpAmp] = And
+InfixOperatorToSymbol[Token`Operator`Bar] = Alternatives
+InfixOperatorToSymbol[Token`Operator`BarBar] = Or
+InfixOperatorToSymbol[Token`Operator`LessGreater] = StringJoin
+InfixOperatorToSymbol[Token`Operator`TildeTilde] = StringExpression
+
+InfixOperatorToSymbol[Token`Operator`Fake`ImplicitTimes] = InfixImplicitTimes
+
+(* not used *)
+SymbolToInfixOperatorString[Plus] = "INVALID"
+(* extra space *)
+SymbolToInfixOperatorString[CompoundExpression] = "; "
+(*
+No SymbolToInfixOperatorString[Plus] because it is handled specially (for InternalMinusNode)
+*)
+SymbolToInfixOperatorString[Times] = "*"
+SymbolToInfixOperatorString[InfixImplicitTimes] = " "
+SymbolToInfixOperatorString[NonCommutativeMultiply] = "**"
+(* extra space *)
+SymbolToInfixOperatorString[Dot] = " . "
+SymbolToInfixOperatorString[Alternatives] = "|"
+SymbolToInfixOperatorString[And] = "&&"
+SymbolToInfixOperatorString[Or] = "||"
+SymbolToInfixOperatorString[StringJoin] = "<>"
+SymbolToInfixOperatorString[StringExpression] = "~~"
+
+
+
+
+
+SymbolToTernaryPair[TagSet] = {TernarySlashColon, Set}
+SymbolToTernaryPair[TagSetDelayed] = {TernarySlashColon, SetDelayed}
+SymbolToTernaryPair[TagUnset] = {TernarySlashColon, Unset}
+SymbolToTernaryPair[TernaryTilde] = {TernaryTilde, TernaryTilde}
+SymbolToTernaryPair[Span] = {Span, Span}
+SymbolToTernaryPair[MessageName] = {MessageName, MessageName}
+
+SymbolToTernaryOperatorString[MessageName] = "::"
+SymbolToTernaryOperatorString[TernaryTilde] = "~"
+SymbolToTernaryOperatorString[TernarySlashColon] = "/:"
+SymbolToTernaryOperatorString[Set] = "="
+SymbolToTernaryOperatorString[SetDelayed] = ":="
+SymbolToTernaryOperatorString[Span] = ";;"
+SymbolToTernaryOperatorString[Unset] = "=."
+
+
+
+
+
+
+GroupOpenerToSymbol[Token`Operator`OpenCurly] = List
+GroupOpenerToSymbol[Token`Operator`LessBar] = Association
+GroupOpenerToSymbol[Token`Operator`OpenSquare] = GroupSquare
+GroupOpenerToSymbol[Token`Operator`OpenParen] = GroupParen
+
+GroupOpenerToSymbol[Token`Operator`LongName`LeftAngleBracket] = AngleBracket
+GroupOpenerToSymbol[Token`Operator`LongName`LeftCeiling] = Ceiling
+GroupOpenerToSymbol[Token`Operator`LongName`LeftFloor] = Floor
+GroupOpenerToSymbol[Token`Operator`LongName`LeftDoubleBracket] = GroupDoubleBracket
+GroupOpenerToSymbol[Token`Operator`LongName`LeftBracketingBar] = BracketingBar
+GroupOpenerToSymbol[Token`Operator`LongName`LeftDoubleBracketingBar] = DoubleBracketingBar
+GroupOpenerToSymbol[Token`Operator`LongName`LeftAssociation] = Association
+
+GroupOpenerToSymbol[Token`Operator`LinearSyntax`OpenParen] = GroupLinearSyntaxParen
+
+
+GroupCloserToSymbol[Token`Operator`CloseCurly] = List
+GroupCloserToSymbol[Token`Operator`BarGreater] = Association
+GroupCloserToSymbol[Token`Operator`CloseSquare] = GroupSquare
+GroupCloserToSymbol[Token`Operator`CloseParen] = GroupParen
+
+GroupCloserToSymbol[Token`Operator`LongName`RightAngleBracket] = AngleBracket
+GroupCloserToSymbol[Token`Operator`LongName`RightCeiling] = Ceiling
+GroupCloserToSymbol[Token`Operator`LongName`RightFloor] = Floor
+GroupCloserToSymbol[Token`Operator`LongName`RightDoubleBracket] = GroupDoubleBracket
+GroupCloserToSymbol[Token`Operator`LongName`RightBracketingBar] = BracketingBar
+GroupCloserToSymbol[Token`Operator`LongName`RightDoubleBracketingBar] = DoubleBracketingBar
+GroupCloserToSymbol[Token`Operator`LongName`RightAssociation] = Association
+
+GroupCloserToSymbol[Token`Operator`LinearSyntax`CloseParen] = GroupLinearSyntaxParen
 
 
 SymbolToGroupPair[List] = {"{", "}"}
@@ -567,12 +623,59 @@ SymbolToGroupPair[GroupMissingOpenerLinearSyntaxParen] = {"", "\\)"}
 SymbolToGroupPair[GroupMissingCloserLinearSyntaxParen] = {"\\(", ""}
 
 
-SymbolToTernaryOperatorPair[TagSet] = {TernarySlashColon, Set}
-SymbolToTernaryOperatorPair[TagSetDelayed] = {TernarySlashColon, SetDelayed}
-SymbolToTernaryOperatorPair[TagUnset] = {TernarySlashColon, Unset}
-SymbolToTernaryOperatorPair[TernaryTilde] = {TernaryTilde, TernaryTilde}
-SymbolToTernaryOperatorPair[Span] = {Span, Span}
-SymbolToTernaryOperatorPair[MessageName] = {MessageName, MessageName}
+
+GroupOpenerToCloser[Token`Operator`OpenCurly] = Token`Operator`CloseCurly
+GroupOpenerToCloser[Token`Operator`LessBar] = Token`Operator`BarGreater
+GroupOpenerToCloser[Token`Operator`OpenSquare] = Token`Operator`CloseSquare
+GroupOpenerToCloser[Token`Operator`OpenParen] = Token`Operator`CloseParen
+
+GroupOpenerToCloser[Token`Operator`LongName`LeftAngleBracket] = Token`Operator`LongName`RightAngleBracket
+GroupOpenerToCloser[Token`Operator`LongName`LeftCeiling] = Token`Operator`LongName`RightCeiling
+GroupOpenerToCloser[Token`Operator`LongName`LeftFloor] = Token`Operator`LongName`RightFloor
+GroupOpenerToCloser[Token`Operator`LongName`LeftDoubleBracket] = Token`Operator`LongName`RightDoubleBracket
+GroupOpenerToCloser[Token`Operator`LongName`LeftBracketingBar] = Token`Operator`LongName`RightBracketingBar
+GroupOpenerToCloser[Token`Operator`LongName`LeftDoubleBracketingBar] = Token`Operator`LongName`RightDoubleBracketingBar
+GroupOpenerToCloser[Token`Operator`LongName`LeftAssociation] = Token`Operator`LongName`RightAssociation
+
+GroupOpenerToCloser[Token`Operator`LinearSyntax`OpenParen] = Token`Operator`LinearSyntax`CloseParen
+
+
+
+
+GroupOpenerToMissingCloserSymbol[Token`Operator`OpenCurly] = GroupMissingCloserList
+GroupOpenerToMissingCloserSymbol[Token`Operator`LessBar] = GroupMissingCloserAssociation
+GroupOpenerToMissingCloserSymbol[Token`Operator`OpenSquare] = GroupMissingCloserSquare
+GroupOpenerToMissingCloserSymbol[Token`Operator`OpenParen] = GroupMissingCloserParen
+
+GroupOpenerToMissingCloserSymbol[Token`Operator`LongName`LeftAngleBracket] = GroupMissingCloserAngleBracket
+GroupOpenerToMissingCloserSymbol[Token`Operator`LongName`LeftCeiling] = GroupMissingCloserCeiling
+GroupOpenerToMissingCloserSymbol[Token`Operator`LongName`LeftFloor] = GroupMissingCloserFloor
+GroupOpenerToMissingCloserSymbol[Token`Operator`LongName`LeftDoubleBracket] = GroupMissingCloserDoubleBracket
+GroupOpenerToMissingCloserSymbol[Token`Operator`LongName`LeftBracketingBar] = GroupMissingCloserBracketingBar
+GroupOpenerToMissingCloserSymbol[Token`Operator`LongName`LeftDoubleBracketingBar] = GroupMissingCloserDoubleBracketingBar
+GroupOpenerToMissingCloserSymbol[Token`Operator`LongName`LeftAssociation] = GroupMissingCloserAssociation
+
+GroupOpenerToMissingCloserSymbol[Token`Operator`LinearSyntax`OpenParen] = GroupMissingCloserLinearSyntaxParen
+
+GroupCloserToMissingOpenerSymbol[Token`Operator`CloseCurly] = GroupMissingOpenerList
+GroupCloserToMissingOpenerSymbol[Token`Operator`BarGreater] = GroupMissingOpenerAssociation
+GroupCloserToMissingOpenerSymbol[Token`Operator`CloseSquare] = GroupMissingOpenerSquare
+GroupCloserToMissingOpenerSymbol[Token`Operator`CloseParen] = GroupMissingOpenerParen
+
+GroupCloserToMissingOpenerSymbol[Token`Operator`LongName`RightAngleBracket] = GroupMissingOpenerAngleBracket
+GroupCloserToMissingOpenerSymbol[Token`Operator`LongName`RightCeiling] = GroupMissingOpenerCeiling
+GroupCloserToMissingOpenerSymbol[Token`Operator`LongName`RightFloor] = GroupMissingOpenerFloor
+GroupCloserToMissingOpenerSymbol[Token`Operator`LongName`RightDoubleBracket] = GroupMissingOpenerDoubleBracket
+GroupCloserToMissingOpenerSymbol[Token`Operator`LongName`RightBracketingBar] = GroupMissingOpenerBracketingBar
+GroupCloserToMissingOpenerSymbol[Token`Operator`LongName`RightDoubleBracketingBar] = GroupMissingOpenerDoubleBracketingBar
+GroupCloserToMissingOpenerSymbol[Token`Operator`LongName`RightAssociation] = GroupMissingOpenerAssociation
+
+GroupCloserToMissingOpenerSymbol[Token`Operator`LinearSyntax`CloseParen] = GroupMissingOpenerLinearSyntaxParen
+
+
+
+
+
 
 End[]
 

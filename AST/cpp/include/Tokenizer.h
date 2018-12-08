@@ -46,7 +46,7 @@ class Tokenizer {
     
     Token handleDot();
 
-    WLCharacter nextWLCharacter(NextCharacterPolicy policy = POLICY_PRESERVE_WHITESPACE_AFTER_LINE_CONTINUATION);
+    WLCharacter nextWLCharacter(NextCharacterPolicy policy = TOPLEVEL);
 
     WLCharacter currentWLCharacter();
     void setCurrentWLCharacter(WLCharacter, SourceLocation);

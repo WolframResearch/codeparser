@@ -434,6 +434,20 @@ public:
     SourceSpan getSourceSpan() override;
 };
 
+class CallMissingCloserNode : public Node {
+    std::shared_ptr<Node> Head;
+    SourceSpan OpenerTokSpan;
+    std::vector<SyntaxIssue> Issues;
+public:
+    CallMissingCloserNode(std::shared_ptr<Node> Head, SourceSpan OpenerTokSpan, std::vector<std::shared_ptr<Node>> Args, std::vector<SyntaxIssue> Issues) : Node(Args), Head(Head), OpenerTokSpan(OpenerTokSpan), Issues(Issues) {}
+    
+    std::string string() override;
+    
+    std::string inputform() override;
+    
+    SourceSpan getSourceSpan() override;
+};
+
 class PartNode : public Node {
     std::shared_ptr<Node> Head;
     SourceSpan OpenerTokSpan;

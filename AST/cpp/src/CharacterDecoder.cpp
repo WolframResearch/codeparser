@@ -7,142 +7,6 @@
 #include <iomanip>
 #include <cassert>
 
-
-bool isLinearSyntax(WLCharacter c) {
-switch (c) {
-    case LINEARSYNTAX_BANG:
-    case LINEARSYNTAX_PERCENT:
-    case LINEARSYNTAX_AMP:
-    case LINEARSYNTAX_OPENPAREN:
-    case LINEARSYNTAX_CLOSEPAREN:
-    case LINEARSYNTAX_STAR:
-    case LINEARSYNTAX_PLUS:
-    case LINEARSYNTAX_SLASH:
-    case LINEARSYNTAX_AT:
-    case LINEARSYNTAX_CARET:
-    case LINEARSYNTAX_UNDER:
-    case LINEARSYNTAX_BACKTICK:
-    case LINEARSYNTAX_SPACE:
-        return true;
-    default:
-        return false;
-}
-}
-
-std::string WLCharacterToString(WLCharacter c) {
-    
-    std::ostringstream String;
-    
-    if (c >= 0x80 || c < 0) {
-        
-        //
-        // non-ASCII
-        //
-        
-        if (CodePointToLongNameMap.find(c) != CodePointToLongNameMap.end()) {
-            
-            String.put('\\');
-            String.put('[');
-            String << CodePointToLongNameMap[c];
-            String.put(']');
-            
-        } else if (isLinearSyntax(c)) {
-            
-            switch (c) {
-                case LINEARSYNTAX_BANG:
-                    String.put('\\');
-                    String.put('!');
-                    break;
-                case LINEARSYNTAX_PERCENT:
-                    String.put('\\');
-                    String.put('%');
-                    break;
-                case LINEARSYNTAX_AMP:
-                    String.put('\\');
-                    String.put('&');
-                    break;
-                case LINEARSYNTAX_OPENPAREN:
-                    String.put('\\');
-                    String.put('(');
-                    break;
-                case LINEARSYNTAX_CLOSEPAREN:
-                    String.put('\\');
-                    String.put(')');
-                    break;
-                case LINEARSYNTAX_STAR:
-                    String.put('\\');
-                    String.put('*');
-                    break;
-                case LINEARSYNTAX_PLUS:
-                    String.put('\\');
-                    String.put('+');
-                    break;
-                case LINEARSYNTAX_SLASH:
-                    String.put('\\');
-                    String.put('/');
-                    break;
-                case LINEARSYNTAX_AT:
-                    String.put('\\');
-                    String.put('@');
-                    break;
-                case LINEARSYNTAX_CARET:
-                    String.put('\\');
-                    String.put('^');
-                    break;
-                case LINEARSYNTAX_UNDER:
-                    String.put('\\');
-                    String.put('_');
-                    break;
-                case LINEARSYNTAX_BACKTICK:
-                    String.put('\\');
-                    String.put('`');
-                    break;
-                case LINEARSYNTAX_SPACE:
-                    String.put('\\');
-                    String.put(' ');
-                    break;
-            }
-            
-        } else if (c == EOF) {
-            
-            //
-            // Do not return a string for EOF
-            //
-            
-        } else {
-            
-            String << "\\:" << std::setfill('0') << std::setw(4) << std::hex << c << std::dec;
-        }
-        
-    } else if (isSpace(c)) {
-        
-        // ASCII
-        //
-        // \n, \r, \t, or (space) and it is ok to write directly
-        //
-        
-        String.put(c);
-        
-    } else if (isControl(c)) {
-        
-        // ASCII
-        //
-        // something nasty like '\0'
-        //
-        
-        String << "\\:" << std::setfill('0') << std::setw(4) << std::hex << c << std::dec;
-        
-    } else {
-        
-        // ASCII
-        //
-        
-        String.put(c);
-    }
-    
-    return String.str();
-}
-
 CharacterDecoder::CharacterDecoder() : c(0), characterQueue(), Issues() {}
 
 //
@@ -201,6 +65,17 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextCharacterPolicy policy) {
     c = TheByteDecoder->nextSourceCharacter();
     
     switch (c) {
+        case '\r': {
+            
+            //
+            // Ignore \r as part of line continuation
+            //
+            
+            nextWLCharacter();
+            while (c == '\r') {
+                nextWLCharacter();
+            }
+        }
         case '\n': {
         
             //
@@ -212,7 +87,7 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextCharacterPolicy policy) {
             //
             // Process the white space and glue together pieces
             //
-            if (policy != POLICY_PRESERVE_WHITESPACE_AFTER_LINE_CONTINUATION) {
+            if ((policy & PRESERVE_WS_AFTER_LC) != PRESERVE_WS_AFTER_LC) {
                 while (c == ' ' || c == '\t') {
                     nextWLCharacter();
                 }
@@ -228,160 +103,237 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextCharacterPolicy policy) {
         }
         case '[': {
             
-            handleLongName(CharacterStart);
+            handleLongName(CharacterStart, policy);
         }
             break;
         case ':': {
             
-            handle4Hex(CharacterStart);
+            handle4Hex(CharacterStart, policy);
         }
             break;
         case '.': {
             
-            handle2Hex(CharacterStart);
+            handle2Hex(CharacterStart, policy);
         }
             break;
         case '|': {
             
-            handle6Hex(CharacterStart);
+            handle6Hex(CharacterStart, policy);
         }
             break;
         case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': {
             
-            handleOctal(CharacterStart);
+            handleOctal(CharacterStart, policy);
         }
             break;
-        // Simple escaped characters
         //
-        // C++ also has \a and \v, but Wolfram Language does not have \a nor \v
+        // Simple escaped characters
+        // \b \f \n \r \t
         //
         case 'b': {
-
-            c = '\b';
+            if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
+                c = '\b';
+            } else {
+                leaveAlone(CharacterStart, {'\\', c});
+            }
         }
             break;
         case 'f': {
-
-            c = '\f';
+            if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
+                c = '\f';
+            } else {
+                leaveAlone(CharacterStart, {'\\', c});
+            }
         }
             break;
         case 'n': {
-
-            c = '\n';
+            if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
+                c = '\n';
+            } else {
+                leaveAlone(CharacterStart, {'\\', c});
+            }
         }
             break;
         case 'r': {
-
-            c = '\r';
+            if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
+                c = '\r';
+            } else {
+                leaveAlone(CharacterStart, {'\\', c});
+            }
         }
             break;
         case 't': {
-
-            c = '\t';
+            if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
+                c = '\t';
+            } else {
+                leaveAlone(CharacterStart, {'\\', c});
+            }
         }
             break;
         case '"': case '\\': case '<': case '>': {
             
             //
-            // Special string characters: Leave alone
+            // Special string characters
+            // Can only appear in strings so always leave alone
             //
-            // What is \< and \> ?
+            // What are \< and \> ?
             // https://mathematica.stackexchange.com/questions/105018/what-are-and-delimiters-in-box-expressions
             // https://stackoverflow.com/q/6065887
             //
             
-            auto Loc = CharacterStart;
-            Loc = Loc + 1;
-            
-            characterQueue.push_back(std::make_pair(c, Loc));
-            
-            c = '\\';
-            
-            TheSourceManager->setSourceLocation(CharacterStart);
-            TheSourceManager->setWLCharacterStart();
+            leaveAlone(CharacterStart, {'\\', c});
         }
             break;
         case '!': {
-            c = LINEARSYNTAX_BANG;
+            if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
+                c = WLCHARACTER_LINEARSYNTAX_BANG;
+            } else {
+                leaveAlone(CharacterStart, {'\\', c});
+            }
         }
             break;
         case '%': {
-            c = LINEARSYNTAX_PERCENT;
+            if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
+                c = WLCHARACTER_LINEARSYNTAX_PERCENT;
+            } else {
+                leaveAlone(CharacterStart, {'\\', c});
+            }
         }
             break;
         case '&': {
-            c = LINEARSYNTAX_AMP;
+            if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
+                c = WLCHARACTER_LINEARSYNTAX_AMP;
+            } else {
+                leaveAlone(CharacterStart, {'\\', c});
+            }
         }
             break;
         case '(': {
-            c = LINEARSYNTAX_OPENPAREN;
+            if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
+                c = WLCHARACTER_LINEARSYNTAX_OPENPAREN;
+            } else {
+                leaveAlone(CharacterStart, {'\\', c});
+            }
         }
             break;
         case ')': {
-            c = LINEARSYNTAX_CLOSEPAREN;
+            if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
+                c = WLCHARACTER_LINEARSYNTAX_CLOSEPAREN;
+            } else {
+                leaveAlone(CharacterStart, {'\\', c});
+            }
         }
             break;
         case '*': {
-            c = LINEARSYNTAX_STAR;
+            if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
+                c = WLCHARACTER_LINEARSYNTAX_STAR;
+            } else {
+                leaveAlone(CharacterStart, {'\\', c});
+            }
         }
             break;
         case '+': {
-            c = LINEARSYNTAX_PLUS;
+            if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
+                c = WLCHARACTER_LINEARSYNTAX_PLUS;
+            } else {
+                leaveAlone(CharacterStart, {'\\', c});
+            }
         }
             break;
         case '/': {
-            c = LINEARSYNTAX_SLASH;
+            if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
+                c = WLCHARACTER_LINEARSYNTAX_SLASH;
+            } else {
+                leaveAlone(CharacterStart, {'\\', c});
+            }
         }
             break;
         case '@': {
-            c = LINEARSYNTAX_AT;
+            if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
+                c = WLCHARACTER_LINEARSYNTAX_AT;
+            } else {
+                leaveAlone(CharacterStart, {'\\', c});
+            }
         }
             break;
         case '^': {
-            c = LINEARSYNTAX_CARET;
+            if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
+                c = WLCHARACTER_LINEARSYNTAX_CARET;
+            } else {
+                leaveAlone(CharacterStart, {'\\', c});
+            }
         }
             break;
         case '_': {
-            c = LINEARSYNTAX_UNDER;
+            if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
+                c = WLCHARACTER_LINEARSYNTAX_UNDER;
+            } else {
+                leaveAlone(CharacterStart, {'\\', c});
+            }
         }
             break;
         case '`': {
-            c = LINEARSYNTAX_BACKTICK;
+            if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
+                c = WLCHARACTER_LINEARSYNTAX_BACKTICK;
+            } else {
+                leaveAlone(CharacterStart, {'\\', c});
+            }
         }
             break;
         case ' ': {
-            c = LINEARSYNTAX_SPACE;
+            if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
+                c = WLCHARACTER_LINEARSYNTAX_SPACE;
+            } else {
+                leaveAlone(CharacterStart, {'\\', c});
+            }
         }
             break;
         default: {
             
             //
-            // Anything else: Leave alone and also warn
+            // Anything else
             //
 
-            auto Loc = TheSourceManager->getSourceLocation();
+            if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
 
-            auto Issue = SyntaxIssue("Unrecognized escaped character: \\" + WLCharacterToString(c), SEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
+                c = WLCHARACTER_ERROR_MALFORMED;
 
-            Issues.push_back(Issue);
-            
+            } else {
+
+                auto Loc = TheSourceManager->getSourceLocation();
+
+                auto Issue = SyntaxIssue(TAG_SYNTAXERROR, "Unrecognized character \\" + WLCharacterToString(c) + ". Did you mean " + WLCharacterToString(c) + " or \\\\" + WLCharacterToString(c) + "?", SEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
+
+                Issues.push_back(Issue);
 
 
-            Loc = CharacterStart;
-            Loc = Loc + 1;
-            
-            characterQueue.push_back(std::make_pair(c, Loc));
-            
-            c = '\\';
-            
-            TheSourceManager->setSourceLocation(CharacterStart);
-            TheSourceManager->setWLCharacterStart();
+                leaveAlone(CharacterStart, {'\\', c});
+            }
         }
     }
 
     TheSourceManager->setWLCharacterEnd();
 
     return c;
+}
+
+void CharacterDecoder::leaveAlone(SourceLocation CharacterStart, std::vector<WLCharacter> chars) {
+
+    assert(!chars.empty());
+
+    auto first = chars[0];
+
+    auto Loc = CharacterStart;
+    for (size_t i = 1; i < chars.size(); i++) {
+        auto l = chars[i];
+        Loc = Loc + 1;
+        characterQueue.push_back(std::make_pair(l, Loc));
+    }
+    
+    c = first;
+    
+    TheSourceManager->setSourceLocation(CharacterStart);
+    TheSourceManager->setWLCharacterStart();
 }
 
 WLCharacter CharacterDecoder::currentWLCharacter() {
@@ -391,7 +343,7 @@ WLCharacter CharacterDecoder::currentWLCharacter() {
 //
 // c is set to the next WL character
 //
-void CharacterDecoder::handleLongName(SourceLocation CharacterStart) {
+void CharacterDecoder::handleLongName(SourceLocation CharacterStart, NextCharacterPolicy policy) {
     
     assert(c == '[');
     
@@ -432,100 +384,87 @@ void CharacterDecoder::handleLongName(SourceLocation CharacterStart) {
     auto LongNameStr = LongName.str();
     
     if (!wellFormed) {
-        
-        auto Loc = TheSourceManager->getSourceLocation();
-        
-        auto Issue = SyntaxIssue("Unrecognized character: \\[" + LongNameStr + WLCharacterToString(c), SEVERITY_ERROR, SourceSpan{Loc, Loc});
-        
-        Issues.push_back(Issue);
-        
-        
-        Loc = CharacterStart;
-        Loc = Loc + 1;
-        characterQueue.push_back(std::make_pair('[', Loc));
-        for (size_t i = 0; i < LongNameStr.size(); i++) {
-            auto l = LongNameStr[i];
-            Loc = Loc + 1;
-            characterQueue.push_back(std::make_pair(l, Loc));
-        }
-        Loc = Loc + 1;
-        characterQueue.push_back(std::make_pair(c, Loc));
-        
-        c = '\\';
-        
-        TheSourceManager->setSourceLocation(CharacterStart);
-        TheSourceManager->setWLCharacterStart();
-        
-    } else if (LongNameStr == "RawDoubleQuote") {
-        // \[RawDoubleQuote]
 
-        //
-        // insert \" instead of just "
-        //
+        if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
+
+            c = WLCHARACTER_ERROR_MALFORMED;
+
+        } else {
+
+            auto Loc = TheSourceManager->getSourceLocation();
         
-        auto Loc = CharacterStart;
-        characterQueue.push_back(std::make_pair('"', Loc));
-        
-        c = '\\';
-        
-        TheSourceManager->setSourceLocation(CharacterStart);
-        TheSourceManager->setWLCharacterStart();
-        
-    } else if (LongNameStr == "RawBackslash") {
-        // \[RawBackslash]
-        
-        //
-        // insert \\ instead of just \
-        //
-        
-        auto Loc = CharacterStart;
-        characterQueue.push_back(std::make_pair('\\', Loc));
-        
-        c = '\\';
-        
-        TheSourceManager->setSourceLocation(CharacterStart);
-        TheSourceManager->setWLCharacterStart();
-        
-   } else {
+            auto Issue = SyntaxIssue(TAG_SYNTAXERROR, "Unrecognized character: \\[" + LongNameStr + WLCharacterToString(c) + ". Did you mean [" + LongNameStr + WLCharacterToString(c) + " or \\\\[" + LongNameStr + WLCharacterToString(c) + "?", SEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
+            
+            Issues.push_back(Issue);
+
+
+            std::vector<WLCharacter> chars;
+            chars.push_back('\\');
+            chars.push_back('[');
+            for (size_t i = 0; i < LongNameStr.size(); i++) {
+                chars.push_back(LongNameStr[i]);
+            }
+            chars.push_back(c);
+
+            leaveAlone(CharacterStart, chars);
+        }
+
+    } else {
         
         auto it = LongNameToCodePointMap.find(LongNameStr);
         if (it != LongNameToCodePointMap.end()) {
             
-            c = it->second;
+            if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
+
+                c = it->second;
+
+            } else {
+
+                std::vector<WLCharacter> chars;
+                chars.push_back('\\');
+                chars.push_back('[');
+                for (size_t i = 0; i < LongNameStr.size(); i++) {
+                    chars.push_back(LongNameStr[i]);
+                }
+                chars.push_back(']');
+
+                leaveAlone(CharacterStart, chars);
+            }
             
         } else {
             
             //
             // Unrecognized
             //
-            
-            auto Loc = TheSourceManager->getSourceLocation();
-            
-            auto Issue = SyntaxIssue("Unrecognized character: \\[" + LongNameStr, SEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
-            
-            Issues.push_back(Issue);
-            
-            Loc = CharacterStart;
-            characterQueue.push_back(std::make_pair('\\', Loc));
-            Loc = Loc + 1;
-            characterQueue.push_back(std::make_pair('[', Loc));
-            for (size_t i = 0; i < LongNameStr.size(); i++) {
-                auto l = LongNameStr[i];
-                Loc = Loc + 1;
-                characterQueue.push_back(std::make_pair(l, Loc));
+
+            if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
+
+                c = WLCHARACTER_ERROR_UNRECOGNIZED;
+
+            } else {
+
+                auto Loc = TheSourceManager->getSourceLocation();
+                
+                auto Issue = SyntaxIssue(TAG_SYNTAXERROR, "Unrecognized character: \\[" + LongNameStr + WLCharacterToString(c) + "]. Did you mean [" + LongNameStr + WLCharacterToString(c) + "] or \\\\[" + LongNameStr + WLCharacterToString(c) + "]?", SEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
+                
+                Issues.push_back(Issue);
+
+
+                std::vector<WLCharacter> chars;
+                chars.push_back('\\');
+                chars.push_back('[');
+                for (size_t i = 0; i < LongNameStr.size(); i++) {
+                    chars.push_back(LongNameStr[i]);
+                }
+                chars.push_back(']');
+
+                leaveAlone(CharacterStart, chars);
             }
-            Loc = Loc + 1;
-            characterQueue.push_back(std::make_pair(']', Loc));
-            
-            c = '\\';
-            
-            TheSourceManager->setSourceLocation(CharacterStart);
-            TheSourceManager->setWLCharacterStart();
         }
     }
 }
 
-void CharacterDecoder::handle4Hex(SourceLocation CharacterStart) {
+void CharacterDecoder::handle4Hex(SourceLocation CharacterStart, NextCharacterPolicy policy) {
     
     assert(c == ':');
     
@@ -546,29 +485,32 @@ void CharacterDecoder::handle4Hex(SourceLocation CharacterStart) {
             //
             // Something like \:z
             //
-            
-            auto HexStr = Hex.str();
-            
-            auto Loc = TheSourceManager->getSourceLocation();
-            
-            auto Issue = SyntaxIssue("Unrecognized character: \\:" + HexStr + WLCharacterToString(c), SEVERITY_ERROR, SourceSpan{Loc, Loc});
 
-            Issues.push_back(Issue);
+            if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
 
-            Loc = CharacterStart;
-            characterQueue.push_back(std::make_pair('\\', Loc));
-            Loc = Loc + 1;
-            characterQueue.push_back(std::make_pair(':', Loc));
-            for (size_t i = 0; i < HexStr.size(); i++) {
-                auto l = HexStr[i];
-                Loc = Loc + 1;
-                characterQueue.push_back(std::make_pair(l, Loc));
+                c = WLCHARACTER_ERROR_MALFORMED;
+
+            } else {
+
+                auto HexStr = Hex.str();
+            
+                auto Loc = TheSourceManager->getSourceLocation();
+                
+                auto Issue = SyntaxIssue(TAG_SYNTAXERROR, "Unrecognized character: \\:" + HexStr + WLCharacterToString(c) + ". Did you mean :" + HexStr + WLCharacterToString(c) + " or \\\\:" + HexStr + WLCharacterToString(c) + "?", SEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
+
+                Issues.push_back(Issue);
+
+
+                std::vector<WLCharacter> chars;
+                chars.push_back('\\');
+                chars.push_back(':');
+                for (size_t i = 0; i < HexStr.size(); i++) {
+                    chars.push_back(HexStr[i]);
+                }
+                chars.push_back(c);
+
+                leaveAlone(CharacterStart, chars);
             }
-            
-            c = '\\';
-
-            TheSourceManager->setSourceLocation(CharacterStart);
-            TheSourceManager->setWLCharacterStart();
             
             return;
         }
@@ -576,40 +518,24 @@ void CharacterDecoder::handle4Hex(SourceLocation CharacterStart) {
     
     auto HexStr = Hex.str();
     
-    if (HexStr == "0022") {
-        // \[RawDoubleQuote]
+    if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
 
-        //
-        // insert \" instead of just "
-        //
-        
-        auto Loc = CharacterStart;
-        characterQueue.push_back(std::make_pair('"', Loc));
-        
-        c = '\\';
-        
-    } else if (HexStr == "005c") {
-        // \[RawBackslash]
-
-        //
-        // insert \\ instead of just \
-        //
-
-        auto Loc = CharacterStart;
-        characterQueue.push_back(std::make_pair('\\', Loc));
-
-        c = '\\';
-        
-        TheSourceManager->setSourceLocation(CharacterStart);
-        TheSourceManager->setWLCharacterStart();
-        
-   } else {
-        
         c = parseInteger(HexStr, 16);
+
+    } else {
+
+        std::vector<WLCharacter> chars;
+        chars.push_back('\\');
+        chars.push_back(':');
+        for (size_t i = 0; i < HexStr.size(); i++) {
+            chars.push_back(HexStr[i]);
+        }
+
+        leaveAlone(CharacterStart, chars);
     }
 }
 
-void CharacterDecoder::handle2Hex(SourceLocation CharacterStart) {
+void CharacterDecoder::handle2Hex(SourceLocation CharacterStart, NextCharacterPolicy policy) {
     
     assert(c == '.');
     
@@ -631,22 +557,31 @@ void CharacterDecoder::handle2Hex(SourceLocation CharacterStart) {
             // Something like \.z
             //
             
-            auto HexStr = Hex.str();
-            
-            auto Loc = TheSourceManager->getSourceLocation();
-            
-            auto Issue = SyntaxIssue("Unrecognized character: \\." + HexStr + WLCharacterToString(c), SEVERITY_ERROR, SourceSpan{Loc, Loc});
+            if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
 
-            Issues.push_back(Issue);
+                c = WLCHARACTER_ERROR_MALFORMED;
 
-            characterQueue.push_back(std::make_pair('\\', Loc));
-            characterQueue.push_back(std::make_pair('.', Loc));
-            for (size_t i = 0; i < HexStr.size(); i++) {
-                auto l = HexStr[i];
-                characterQueue.push_back(std::make_pair(l, Loc));
+            } else {
+
+                auto HexStr = Hex.str();
+            
+                auto Loc = TheSourceManager->getSourceLocation();
+                
+                auto Issue = SyntaxIssue(TAG_SYNTAXERROR, "Unrecognized character: \\." + HexStr + WLCharacterToString(c) + ". Did you mean ." + HexStr + WLCharacterToString(c) + " or \\\\." + HexStr + WLCharacterToString(c) + "?", SEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
+
+                Issues.push_back(Issue);
+
+
+                std::vector<WLCharacter> chars;
+                chars.push_back('\\');
+                chars.push_back('.');
+                for (size_t i = 0; i < HexStr.size(); i++) {
+                    chars.push_back(HexStr[i]);
+                }
+                chars.push_back(c);
+
+                leaveAlone(CharacterStart, chars);
             }
-            
-            c = '\\';
 
             return;
         }
@@ -654,43 +589,24 @@ void CharacterDecoder::handle2Hex(SourceLocation CharacterStart) {
     
     auto HexStr = Hex.str();
     
-    if (HexStr == "22") {
-        // \[RawDoubleQuote]
+    if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
 
-        //
-        // insert \" instead of just "
-        //
-        
-        auto Loc = CharacterStart;
-        characterQueue.push_back(std::make_pair('"', Loc));
-        
-        c = '\\';
-        
-        TheSourceManager->setSourceLocation(CharacterStart);
-        TheSourceManager->setWLCharacterStart();
-        
-    } else if (HexStr == "5c") {
-        // \[RawBackslash]
-
-        //
-        // insert \\ instead of just \
-        //
-        
-        auto Loc = CharacterStart;
-        characterQueue.push_back(std::make_pair('\\', Loc));
-        
-        c = '\\';
-        
-        TheSourceManager->setSourceLocation(CharacterStart);
-        TheSourceManager->setWLCharacterStart();
-        
-   } else {
-        
         c = parseInteger(HexStr, 16);
+
+    } else {
+
+        std::vector<WLCharacter> chars;
+        chars.push_back('\\');
+        chars.push_back('.');
+        for (size_t i = 0; i < HexStr.size(); i++) {
+            chars.push_back(HexStr[i]);
+        }
+
+        leaveAlone(CharacterStart, chars);
     }
 }
 
-void CharacterDecoder::handleOctal(SourceLocation CharacterStart) {
+void CharacterDecoder::handleOctal(SourceLocation CharacterStart, NextCharacterPolicy policy) {
     
     assert(isOctal(c));
     
@@ -714,24 +630,30 @@ void CharacterDecoder::handleOctal(SourceLocation CharacterStart) {
             // Something like \z
             //
             
-            auto OctalStr = Octal.str();
-            
-            auto Loc = TheSourceManager->getSourceLocation();
-            
-            auto Issue = SyntaxIssue("Unrecognized character: \\" + OctalStr = WLCharacterToString(c), SEVERITY_ERROR, SourceSpan{Loc, Loc});
+            if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
 
-            Issues.push_back(Issue);
+                c = WLCHARACTER_ERROR_MALFORMED;
 
-            characterQueue.push_back(std::make_pair('\\', Loc));
-            for (size_t i = 0; i < OctalStr.size(); i++) {
-                auto l = OctalStr[i];
-                characterQueue.push_back(std::make_pair(l, Loc));
+            } else {
+
+                auto OctalStr = Octal.str();
+            
+                auto Loc = TheSourceManager->getSourceLocation();
+                
+                auto Issue = SyntaxIssue(TAG_SYNTAXERROR, "Unrecognized character: \\" + OctalStr + WLCharacterToString(c) + ". Did you mean " + OctalStr + WLCharacterToString(c) + " or \\\\" + OctalStr + WLCharacterToString(c) + "?", SEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
+
+                Issues.push_back(Issue);
+
+
+                std::vector<WLCharacter> chars;
+                chars.push_back('\\');
+                for (size_t i = 0; i < OctalStr.size(); i++) {
+                    chars.push_back(OctalStr[i]);
+                }
+                chars.push_back(c);
+
+                leaveAlone(CharacterStart, chars);
             }
-            
-            c = '\\';
-            
-            TheSourceManager->setSourceLocation(CharacterStart);
-            TheSourceManager->setWLCharacterStart();
             
             return;
         }
@@ -739,43 +661,23 @@ void CharacterDecoder::handleOctal(SourceLocation CharacterStart) {
     
     auto OctalStr = Octal.str();
     
-    if (OctalStr == "042") {
-        // \[RawDoubleQuote]
+    if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
 
-        //
-        // insert \" instead of just "
-        //
-        
-        auto Loc = CharacterStart;
-        characterQueue.push_back(std::make_pair('"', Loc));
-        
-        c = '\\';
-        
-        TheSourceManager->setSourceLocation(CharacterStart);
-        TheSourceManager->setWLCharacterStart();
-        
-    } else if (OctalStr == "134") {
-        // \[RawBackslash]
-
-        //
-        // insert \\ instead of just \
-        //
-
-        auto Loc = CharacterStart;
-        characterQueue.push_back(std::make_pair('\\', Loc));
-
-        c = '\\';
-        
-        TheSourceManager->setSourceLocation(CharacterStart);
-        TheSourceManager->setWLCharacterStart();
-        
-   } else {
-        
         c = parseInteger(OctalStr, 8);
+
+    } else {
+
+        std::vector<WLCharacter> chars;
+        chars.push_back('\\');
+        for (size_t i = 0; i < OctalStr.size(); i++) {
+            chars.push_back(OctalStr[i]);
+        }
+
+        leaveAlone(CharacterStart, chars);
     }
 }
 
-void CharacterDecoder::handle6Hex(SourceLocation CharacterStart) {
+void CharacterDecoder::handle6Hex(SourceLocation CharacterStart, NextCharacterPolicy policy) {
     
     assert(c == '|');
     
@@ -797,25 +699,31 @@ void CharacterDecoder::handle6Hex(SourceLocation CharacterStart) {
             // Something like \|z
             //
             
-            auto HexStr = Hex.str();
+            if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
+
+                c = WLCHARACTER_ERROR_MALFORMED;
+
+            } else {
+
+                auto HexStr = Hex.str();
             
-            auto Loc = TheSourceManager->getSourceLocation();
+                auto Loc = TheSourceManager->getSourceLocation();
 
-            auto Issue = SyntaxIssue("Unrecognized character: \\|" + HexStr + WLCharacterToString(c), SEVERITY_ERROR, SourceSpan{Loc, Loc});
+                auto Issue = SyntaxIssue(TAG_SYNTAXERROR, "Unrecognized character: \\|" + HexStr + WLCharacterToString(c) + ". Did you mean |" + HexStr + WLCharacterToString(c) + " or \\\\|" + HexStr + WLCharacterToString(c) + "?", SEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
 
-            Issues.push_back(Issue);
+                Issues.push_back(Issue);
 
-            characterQueue.push_back(std::make_pair('\\', Loc));
-            characterQueue.push_back(std::make_pair('|', Loc));
-            for (size_t i = 0; i < HexStr.size(); i++) {
-                auto l = HexStr[i];
-                characterQueue.push_back(std::make_pair(l, Loc));
+
+                std::vector<WLCharacter> chars;
+                chars.push_back('\\');
+                chars.push_back('|');
+                for (size_t i = 0; i < HexStr.size(); i++) {
+                    chars.push_back(HexStr[i]);
+                }
+                chars.push_back(c);
+
+                leaveAlone(CharacterStart, chars);
             }
-            
-            c = '\\';
-            
-            TheSourceManager->setSourceLocation(CharacterStart);
-            TheSourceManager->setWLCharacterStart();
             
             return;
         }
@@ -823,39 +731,20 @@ void CharacterDecoder::handle6Hex(SourceLocation CharacterStart) {
     
     auto HexStr = Hex.str();
     
-    if (HexStr == "000022") {
-        // \[RawDoubleQuote]
+    if ((policy & CONVERT_ESCAPES_TO_SINGLE) == CONVERT_ESCAPES_TO_SINGLE) {
 
-        //
-        // insert \" instead of just "
-        //
-        
-        auto Loc = CharacterStart;
-        characterQueue.push_back(std::make_pair('"', Loc));
-        
-        c = '\\';
-        
-        TheSourceManager->setSourceLocation(CharacterStart);
-        TheSourceManager->setWLCharacterStart();
-        
-    } else if (HexStr == "00005c") {
-        // \[RawBackslash]
-
-        //
-        // insert \\ instead of just \
-        //
-
-        auto Loc = CharacterStart;
-        characterQueue.push_back(std::make_pair('\\', Loc));
-
-        c = '\\';
-
-        TheSourceManager->setSourceLocation(CharacterStart);
-        TheSourceManager->setWLCharacterStart();
-        
-   } else {
-        
         c = parseInteger(HexStr, 16);
+
+    } else {
+
+        std::vector<WLCharacter> chars;
+        chars.push_back('\\');
+        chars.push_back('|');
+        for (size_t i = 0; i < HexStr.size(); i++) {
+            chars.push_back(HexStr[i]);
+        }
+
+        leaveAlone(CharacterStart, chars);
     }
 }
 
@@ -869,3 +758,190 @@ std::vector<SyntaxIssue> CharacterDecoder::getIssues() {
 }
 
 CharacterDecoder *TheCharacterDecoder = nullptr;
+
+
+
+
+
+
+
+
+bool isLinearSyntax(WLCharacter c) {
+switch (c) {
+    case WLCHARACTER_LINEARSYNTAX_BANG:
+    case WLCHARACTER_LINEARSYNTAX_PERCENT:
+    case WLCHARACTER_LINEARSYNTAX_AMP:
+    case WLCHARACTER_LINEARSYNTAX_OPENPAREN:
+    case WLCHARACTER_LINEARSYNTAX_CLOSEPAREN:
+    case WLCHARACTER_LINEARSYNTAX_STAR:
+    case WLCHARACTER_LINEARSYNTAX_PLUS:
+    case WLCHARACTER_LINEARSYNTAX_SLASH:
+    case WLCHARACTER_LINEARSYNTAX_AT:
+    case WLCHARACTER_LINEARSYNTAX_CARET:
+    case WLCHARACTER_LINEARSYNTAX_UNDER:
+    case WLCHARACTER_LINEARSYNTAX_BACKTICK:
+    case WLCHARACTER_LINEARSYNTAX_SPACE:
+        return true;
+    default:
+        return false;
+}
+}
+
+std::string WLCharacterToString(WLCharacter c) {
+    
+    std::ostringstream String;
+    
+    if (c >= 0x80 || c < 0) {
+        
+        //
+        // non-ASCII
+        //
+        
+        if (CodePointToLongNameMap.find(c) != CodePointToLongNameMap.end()) {
+            
+            String.put('\\');
+            String.put('[');
+            String << CodePointToLongNameMap[c];
+            String.put(']');
+            
+        } else if (isLinearSyntax(c)) {
+            
+            switch (c) {
+                case WLCHARACTER_LINEARSYNTAX_BANG:
+                    String.put('\\');
+                    String.put('!');
+                    break;
+                case WLCHARACTER_LINEARSYNTAX_PERCENT:
+                    String.put('\\');
+                    String.put('%');
+                    break;
+                case WLCHARACTER_LINEARSYNTAX_AMP:
+                    String.put('\\');
+                    String.put('&');
+                    break;
+                case WLCHARACTER_LINEARSYNTAX_OPENPAREN:
+                    String.put('\\');
+                    String.put('(');
+                    break;
+                case WLCHARACTER_LINEARSYNTAX_CLOSEPAREN:
+                    String.put('\\');
+                    String.put(')');
+                    break;
+                case WLCHARACTER_LINEARSYNTAX_STAR:
+                    String.put('\\');
+                    String.put('*');
+                    break;
+                case WLCHARACTER_LINEARSYNTAX_PLUS:
+                    String.put('\\');
+                    String.put('+');
+                    break;
+                case WLCHARACTER_LINEARSYNTAX_SLASH:
+                    String.put('\\');
+                    String.put('/');
+                    break;
+                case WLCHARACTER_LINEARSYNTAX_AT:
+                    String.put('\\');
+                    String.put('@');
+                    break;
+                case WLCHARACTER_LINEARSYNTAX_CARET:
+                    String.put('\\');
+                    String.put('^');
+                    break;
+                case WLCHARACTER_LINEARSYNTAX_UNDER:
+                    String.put('\\');
+                    String.put('_');
+                    break;
+                case WLCHARACTER_LINEARSYNTAX_BACKTICK:
+                    String.put('\\');
+                    String.put('`');
+                    break;
+                case WLCHARACTER_LINEARSYNTAX_SPACE:
+                    String.put('\\');
+                    String.put(' ');
+                    break;
+            }
+            
+        } else if (c == WLCHARACTER_EOF) {
+            
+            //
+            // Do not return a string for EOF
+            //
+            
+        } else if (c == WLCHARACTER_ERROR_UNRECOGNIZED) {
+            
+            String << "WLCHARACTER_ERROR_UNRECOGNIZED";
+            
+        } else if (c == WLCHARACTER_ERROR_MALFORMED) {
+            
+            String << "WLCHARACTER_ERROR_MALFORMED";
+            
+        } else {
+            
+            assert(c > 0);
+
+            String << "\\:" << std::setfill('0') << std::setw(4) << std::hex << c << std::dec;
+        }
+        
+    } else if (isSpace(c)) {
+        
+        // ASCII
+        //
+        // \f, \n, \r, \t, or (space) and it is ok to write directly
+        //
+        
+        switch (c) {
+            case '\f':
+                String.put('\\');
+                String.put('f');
+                break;
+            case '\n':
+                String.put('\\');
+                String.put('n');
+                break;
+            case '\r':
+                String.put('\\');
+                String.put('r');
+                break;
+            case '\t':
+                String.put('\\');
+                String.put('t');
+                break;
+            case '\v':
+                //
+                // \v is space, but there is no WL syntax for it
+                //
+                String << "\\:" << std::setfill('0') << std::setw(4) << std::hex << c << std::dec;
+                break;
+            default:
+                String.put(c);
+                break;
+        }
+        
+    } else if (isControl(c)) {
+        
+        // ASCII
+        //
+        // something nasty like '\0'
+        //
+        
+        if (c == '\b') {
+            String.put('\\');
+            String.put('b');
+        } else {
+            String << "\\:" << std::setfill('0') << std::setw(4) << std::hex << c << std::dec;
+        }
+        
+    } else {
+        
+        // ASCII
+        //
+        
+        String.put(c);
+    }
+    
+    return String.str();
+}
+
+
+
+

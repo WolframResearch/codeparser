@@ -6,7 +6,7 @@ Range 0x000
 *)
 "RawTab",
 "NewLine",
-"RawReturn",(*0x000d*)
+"RawReturn", (*0x000d*)
 "RawEscape",
 "RawSpace",
 "RawExclamation",

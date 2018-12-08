@@ -5,7 +5,11 @@ project(ast)
 
 set(PACLET "AST")
 
-set(PACLET_VERSION "0.5" CACHE STRING "Paclet Version")
+message(STATUS "PACLET: ${PACLET}")
+
+set(PACLET_VERSION "0.6" CACHE STRING "Paclet Version")
+
+message(STATUS "PACLET_VERSION: ${PACLET_VERSION}")
 
 set(WOLFRAMKERNEL /Applications/Mathematica.app/Contents/MacOS/WolframKernel CACHE FILEPATH "Path to WolframKernel")
 
@@ -99,18 +103,18 @@ set(BUILT_DOCUMENTATION_NOTEBOOKS
 # get $VersionNumber
 execute_process(
 	COMMAND ${WOLFRAMKERNEL} -noinit -script ${CMAKE_SOURCE_DIR}/scripts/VersionNumber.wl
-	OUTPUT_VARIABLE VERSIONNUMBER
+	OUTPUT_VARIABLE VERSION_NUMBER
 	OUTPUT_STRIP_TRAILING_WHITESPACE
 	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 
-message(STATUS "VERSIONNUMBER: ${VERSIONNUMBER}")
+message(STATUS "VERSION_NUMBER: ${VERSION_NUMBER}")
 
-if("${VERSIONNUMBER}" STREQUAL "")
+if("${VERSION_NUMBER}" STREQUAL "")
 message(FATAL_ERROR "Wolfram Kernel failed")
 endif()
 
-if(NOT ${VERSIONNUMBER} GREATER_EQUAL 1100)
+if(NOT ${VERSION_NUMBER} GREATER_EQUAL 1100)
 message(FATAL_ERROR "Wolfram Kernel must be at least version 11.0")
 endif()
 
@@ -194,11 +198,13 @@ target_include_directories(wl-ast
 	PRIVATE ${CMAKE_BINARY_DIR}/generated/cpp/include
 )
 
-set(MAXEXPRESSIONDEPTH 50 CACHE STRING "Maximum depth allowed by the parser")
+set(MAX_EXPRESSION_DEPTH 50 CACHE STRING "Maximum depth allowed by the parser")
+
+message(STATUS "MAX_EXPRESSION_DEPTH: ${MAX_EXPRESSION_DEPTH}")
 
 target_compile_definitions(wl-ast
-	PRIVATE VERSIONNUMBER=${VERSIONNUMBER}
-	PRIVATE MAXEXPRESSIONDEPTH=${MAXEXPRESSIONDEPTH}
+	PRIVATE VERSION_NUMBER=${VERSION_NUMBER}
+	PRIVATE MAX_EXPRESSION_DEPTH=${MAX_EXPRESSION_DEPTH}
 )
 
 # get $SystemID

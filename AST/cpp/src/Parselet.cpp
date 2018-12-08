@@ -28,7 +28,7 @@ std::shared_ptr<Node> SymbolParselet::parse() {
     
     auto Tok = TheParser->nextToken(POLICY_PRESERVE_EVERYTHING);
     
-    if (Tok == OPERATOR_UNDER) {
+    if (Tok == TOKEN_OPERATOR_UNDER) {
         
         auto underParselet = new UnderParselet();
         
@@ -40,7 +40,7 @@ std::shared_ptr<Node> SymbolParselet::parse() {
         
         return std::make_shared<PatternBlankNode>(Sym, Sym2, SourceSpan{SymbolSpan.start, Under->getSourceSpan().end});
         
-    } else if (Tok == OPERATOR_UNDERUNDER) {
+    } else if (Tok == TOKEN_OPERATOR_UNDERUNDER) {
         
         auto underParselet = new UnderUnderParselet();
         
@@ -52,7 +52,7 @@ std::shared_ptr<Node> SymbolParselet::parse() {
         
         return std::make_shared<PatternBlankSequenceNode>(Sym, Sym2, SourceSpan{SymbolSpan.start, Under->getSourceSpan().end});
         
-    } else if (Tok == OPERATOR_UNDERUNDERUNDER) {
+    } else if (Tok == TOKEN_OPERATOR_UNDERUNDERUNDER) {
         
         auto underParselet = new UnderUnderUnderParselet();
         
@@ -64,7 +64,7 @@ std::shared_ptr<Node> SymbolParselet::parse() {
         
         return std::make_shared<PatternBlankNullSequenceNode>(Sym, Sym2, SourceSpan{SymbolSpan.start, Under->getSourceSpan().end});
         
-    } else if (Tok == OPERATOR_UNDERDOT) {
+    } else if (Tok == TOKEN_OPERATOR_UNDERDOT) {
         
         auto UnderSpan = TheSourceManager->getTokenSpan();
         
@@ -102,57 +102,6 @@ std::shared_ptr<Node> StringParselet::parse() {
     TheParser->nextToken(POLICY_PRESERVE_TOPLEVEL_NEWLINES);
     
     return std::make_shared<StringNode>(Str, Span, Issues);
-}
-
-std::shared_ptr<Node> ErrorParselet::parse() {
-    
-    auto TokIn = TheParser->currentToken();
-    
-    auto Span = TheSourceManager->getTokenSpan();
-    
-    auto Issues = TheParser->getIssues();
-    
-    auto Str = TheParser->getString();
-    
-    TheParser->nextToken(POLICY_PRESERVE_TOPLEVEL_NEWLINES);
-    
-    return std::make_shared<SyntaxErrorNode>(TokIn, std::vector<std::shared_ptr<Node>> { std::make_shared<InternalTokenNode>(Str, Span) }, Issues);
-}
-
-std::shared_ptr<Node> CleanupRestParselet::parse(std::shared_ptr<Node> Left) {
-    
-    auto Str = TheParser->getString();
-    
-    auto Span = TheSourceManager->getTokenSpan();
-    
-    auto Tok = TheParser->nextToken();
-    
-    std::vector<std::shared_ptr<Node>> Tokens;
-    
-    Tokens.push_back(Left);
-    Tokens.push_back(std::make_shared<InternalTokenNode>(Str, Span));
-    
-    while (true) {
-        
-        if (Tok == TOKEN_EOF) {
-            
-            break;
-            
-        } else {
-            
-            Str = TheParser->getString();
-            
-            Span = TheSourceManager->getTokenSpan();
-            
-            Tokens.push_back(std::make_shared<InternalTokenNode>(Str, Span));
-            
-            Tok = TheParser->nextToken();
-        }
-    }
-
-    auto group = std::make_shared<SyntaxErrorNode>(ERROR_REST, Tokens, std::vector<SyntaxIssue>());
-
-    return group;
 }
 
 std::shared_ptr<Node> UnderParselet::parse() {
@@ -287,7 +236,6 @@ std::shared_ptr<Node> PercentParselet::parse() {
 
 std::shared_ptr<Node> PrefixOperatorParselet::parse() {
     
-    // Clear String
     auto Str = TheParser->getString();
     
     auto Issues = TheParser->getIssues();
@@ -302,25 +250,25 @@ std::shared_ptr<Node> PrefixOperatorParselet::parse() {
     
     auto operand = TheParser->parse(prec);
     
-    if (Span.end.Line != operand->getSourceSpan().start.Line) {
+    // Too noisy
+    // if (Span.end.Line != operand->getSourceSpan().start.Line) {
 
-        auto Issue = SyntaxIssue(Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Span.end, operand->getSourceSpan().start}));
+    //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Span.start, operand->getSourceSpan().end}));
     
-        Issues.push_back(Issue);
-    }
+    //     Issues.push_back(Issue);
+    // }
     
     return std::make_shared<PrefixNode>(PrefixOperatorToSymbol(TokIn), Span, operand);
 }
 
 std::shared_ptr<Node> BinaryOperatorParselet::parse(std::shared_ptr<Node> Left) {
-    
-    // Clear String
-    TheParser->getString();
-    
-    auto Issues = TheParser->getIssues();
 
     auto TokIn = TheParser->currentToken();
     
+    auto Str = TheParser->getString();
+    
+    auto Issues = TheParser->getIssues();
+
     auto precedence = getPrecedence();
     if (precedence == PRECEDENCE_UNUSED) {
         assert(false);
@@ -333,34 +281,39 @@ std::shared_ptr<Node> BinaryOperatorParselet::parse(std::shared_ptr<Node> Left) 
     
     auto Right = TheParser->parse(recalculatedPrecedence);
     
+    // Too noisy
     // if (Left->getSourceSpan().end.Line != Span.start.Line) {
 
-    //     auto Issue = SyntaxIssue(TokenToString(TokIn) + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Left->getSourceSpan().end, Span.start}));
+    //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Left->getSourceSpan().start, Span.end}));
     
     //     Issues.push_back(Issue);
     // }
 
+    // Too noisy
     // if (Span.end.Line != Right->getSourceSpan().start.Line) {
         
-    //     auto Issue = SyntaxIssue(TokenToString(TokIn) + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Span.end, Right->getSourceSpan().start}));
+    //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Span.start, Right->getSourceSpan().end}));
     
     //     Issues.push_back(Issue);
     // }
     
-    return std::make_shared<BinaryNode>(InfixOperatorToSymbol(TokIn), Left, Right, Issues);
+    return std::make_shared<BinaryNode>(BinaryOperatorToSymbol(TokIn), Left, Right, Issues);
 }
 
 std::shared_ptr<Node> InfixOperatorParselet::parse(std::shared_ptr<Node> Left) {
     
+    auto Str = TheParser->getString();
+
     auto TokIn = TheParser->currentToken();
     
     auto Issues = TheParser->getIssues();
 
-    auto Span = TheSourceManager->getTokenSpan();
+    // auto Span = TheSourceManager->getTokenSpan();
     
+    // Too noisy
     // if (Left->getSourceSpan().end.Line != Span.start.Line) {
 
-    //     auto Issue = SyntaxIssue(TokenToString(TokIn) + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Left->getSourceSpan().end, Span.start}));
+    //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Left->getSourceSpan().start, Span.end}));
     
     //     Issues.push_back(Issue);
     // }
@@ -377,18 +330,18 @@ std::shared_ptr<Node> InfixOperatorParselet::parse(std::shared_ptr<Node> Left) {
         
         if (Tok == TokIn) {
             
-            // Clear String
-            TheParser->getString();
+            auto Str = TheParser->getString();
             
-            Span = TheSourceManager->getTokenSpan();
+            // auto Span = TheSourceManager->getTokenSpan();
             
             TheParser->nextToken();
             
             auto operand = TheParser->parse(recalculatedPrecedence);
             
+            // Too noisy
             // if (Span.end.Line != operand->getSourceSpan().start.Line) {
                 
-            //     auto Issue = SyntaxIssue(TokenToString(TokIn) + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Span.end, operand->getSourceSpan().start}));
+            //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Span.start, operand->getSourceSpan().end}));
             
             //     Issues.push_back(Issue);
             // }
@@ -405,7 +358,6 @@ std::shared_ptr<Node> InfixOperatorParselet::parse(std::shared_ptr<Node> Left) {
 
 std::shared_ptr<Node> PostfixOperatorParselet::parse(std::shared_ptr<Node> Operand) {
     
-    // Clear String
     auto Str = TheParser->getString();
     
     auto Issues = TheParser->getIssues();
@@ -416,12 +368,13 @@ std::shared_ptr<Node> PostfixOperatorParselet::parse(std::shared_ptr<Node> Opera
     
     TheParser->nextToken(POLICY_PRESERVE_TOPLEVEL_NEWLINES);
     
-    if (Operand->getSourceSpan().end.Line != Span.start.Line) {
+    // Too noisy
+    // if (Operand->getSourceSpan().end.Line != Span.start.Line) {
 
-        auto Issue = SyntaxIssue(Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Operand->getSourceSpan().end, Span.start}));
+    //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Operand->getSourceSpan().start, Span.end}));
     
-        Issues.push_back(Issue);
-    }
+    //     Issues.push_back(Issue);
+    // }
     
     return std::make_shared<PostfixNode>(PostfixOperatorToSymbol(TokIn), Span, 0, Operand, Issues);
 }
@@ -441,7 +394,6 @@ std::shared_ptr<Node> GroupParselet::parse() {
     
     TheParser->setInsideColon1(false);
     TheParser->incrementGroupDepth();
-//    TheParser->disableGroupMissingOpenerParselet(Opener);
     
     auto OpenerSpan = TheSourceManager->getTokenSpan();
     
@@ -459,7 +411,6 @@ std::shared_ptr<Node> GroupParselet::parse() {
         auto CloserSpan = TheSourceManager->getTokenSpan();
         
         TheParser->decrementGroupDepth();
-//        TheParser->enableGroupMissingOpenerParselet(Opener);
         
         TheParser->nextToken(POLICY_PRESERVE_TOPLEVEL_NEWLINES);
         
@@ -489,7 +440,7 @@ std::shared_ptr<Node> GroupParselet::parse() {
             
             auto GroupSymbol = GroupOpenerToSymbol(Opener);
             auto GroupPair = SymbolToGroupPair(GroupSymbol);
-            auto Issue = SyntaxIssue("Missing group closer: " + GroupPair.second, SEVERITY_FATAL, SourceSpan{OpenerSpan.start, EOFSpan.end});
+            auto Issue = SyntaxIssue(TAG_SYNTAXERROR, "Missing group closer: " + GroupPair.second, SEVERITY_FATAL, SourceSpan{OpenerSpan.start, EOFSpan.end});
                 
             Issues.push_back(Issue);
 
@@ -504,7 +455,7 @@ std::shared_ptr<Node> GroupParselet::parse() {
                 
                 auto Span = TheSourceManager->getTokenSpan();
                 
-                auto Issue = SyntaxIssue("Comma encountered with no adjacent expression. The expression will be treated as Null", SEVERITY_ERROR, Span);
+                auto Issue = SyntaxIssue(TAG_SYNTAXERROR, "Comma encountered with no adjacent expression. The expression will be treated as Null", SEVERITY_ERROR, Span);
                 
                 Issues.push_back(Issue);
 
@@ -524,13 +475,13 @@ std::shared_ptr<Node> GroupParselet::parse() {
     
             break;
             
-        } else if (Tok == OPERATOR_COMMA) {
+        } else if (Tok == TOKEN_OPERATOR_COMMA) {
             
             if (!eatTheNextComma) {
                 
                 auto Span = TheSourceManager->getTokenSpan();
                 
-                auto Issue = SyntaxIssue("Comma encountered with no adjacent expression. The expression will be treated as Null", SEVERITY_ERROR, Span);
+                auto Issue = SyntaxIssue(TAG_SYNTAXERROR, "Comma encountered with no adjacent expression. The expression will be treated as Null", SEVERITY_ERROR, Span);
                 
                 Issues.push_back(Issue);
 
@@ -553,11 +504,6 @@ std::shared_ptr<Node> GroupParselet::parse() {
             
             auto operand = TheParser->parse(PRECEDENCE_LOWEST);
             
-            // if (auto ErrorOperand = std::dynamic_pointer_cast<SyntaxErrorNode>(operand)) {
-                
-            //     return operand;
-            // }
-            
             Args.push_back(operand);
             
             eatTheNextComma = true;
@@ -571,36 +517,6 @@ std::shared_ptr<Node> GroupParselet::parse() {
     return group;
 }
 
-std::shared_ptr<Node> GroupMissingOpenerParselet::parse(std::shared_ptr<Node> Left) {
-    
-    ParserScoper Scoper;
-    
-    // Clear String
-    TheParser->getString();
-    
-    TheParser->setInsideColon1(false);
-    TheParser->incrementGroupDepth();
-    
-    auto CloserSpan = TheSourceManager->getTokenSpan();
-    
-    TheParser->nextToken();
-    
-    std::vector<SyntaxIssue> Issues;
-    
-    auto LeftSpan = Left->getSourceSpan();
-    
-    auto GroupSymbol = GroupCloserToSymbol(Closer);
-    auto GroupPair = SymbolToGroupPair(GroupSymbol);
-    auto Issue = SyntaxIssue("Missing group opener: " + GroupPair.first, SEVERITY_FATAL, SourceSpan{LeftSpan.start, CloserSpan.end});
-    
-    Issues.push_back(Issue);
-    
-    
-    auto group = std::make_shared<GroupNode>(GroupCloserToMissingOpenerSymbol(Closer), SourceSpan{LeftSpan.start, LeftSpan.start}, CloserSpan, std::vector<std::shared_ptr<Node>> { Left }, Issues);
-    
-    return group;
-}
-
 std::shared_ptr<Node> OpenSquareCallParselet::parse(std::shared_ptr<Node> Left) {
     
     // Clear String
@@ -610,20 +526,18 @@ std::shared_ptr<Node> OpenSquareCallParselet::parse(std::shared_ptr<Node> Left) 
 
     auto Right = TheParser->parse(PRECEDENCE_HIGHEST);
     
-    if (std::dynamic_pointer_cast<SyntaxErrorNode>(Right)) {
-        return Right;
-    }
-    
-    if (Left->getSourceSpan().end.Line != Right->getSourceSpan().start.Line) {
+    // Too noisy
+    // if (Left->getSourceSpan().end.Line != Right->getSourceSpan().start.Line) {
 
-        auto Issue = SyntaxIssue("Head and brackets are not on same line", SEVERITY_REMARK,(SourceSpan{Left->getSourceSpan().end, Right->getSourceSpan().start}));
+    //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, "Head and brackets are not on same line", SEVERITY_REMARK,(SourceSpan{Left->getSourceSpan().start, Right->getSourceSpan().end}));
     
-        Issues.push_back(Issue);
-    }
+    //     Issues.push_back(Issue);
+    // }
     
     if (auto GroupExpr = std::dynamic_pointer_cast<GroupNode>(Right)) {
         
-        if (GroupExpr->getOp() == SYMBOL_GROUPSQUARE) {
+        if (GroupExpr->getOp() == SYMBOL_GROUPSQUARE ||
+            GroupExpr->getOp() == SYMBOL_GROUPMISSINGCLOSERSQUARE) {
             
             auto Args = GroupExpr->getArgs();
             
@@ -645,13 +559,13 @@ std::shared_ptr<Node> OpenSquareCallParselet::parse(std::shared_ptr<Node> Left) 
                         
                         if (!isContiguous(Outer.start, Inner.start)) {
                             
-                            auto Issue = SyntaxIssue("Brackets for Part are not contiguous", SEVERITY_REMARK, (SourceSpan{Outer.start, Inner.start}));
+                            auto Issue = SyntaxIssue(TAG_NOTCONTIGUOUS, "Part brackets [[ are not contiguous", SEVERITY_REMARK, (SourceSpan{Outer.start, Inner.start}));
                             
                             Issues.push_back(Issue);
                         }
                         if (!isContiguous(Inner.end, Outer.end)) {
 
-                            auto Issue = SyntaxIssue("Brackets for Part are not contiguous", SEVERITY_REMARK, (SourceSpan{Inner.end, Outer.end}));
+                            auto Issue = SyntaxIssue(TAG_NOTCONTIGUOUS, "Part brackets ]] are not contiguous", SEVERITY_REMARK, (SourceSpan{Inner.end, Outer.end}));
                         
                             Issues.push_back(Issue);
                         }
@@ -661,18 +575,24 @@ std::shared_ptr<Node> OpenSquareCallParselet::parse(std::shared_ptr<Node> Left) 
                 }
             }
             
-            return std::make_shared<CallNode>(Left, GroupExpr->getOpenerTokSpan(), GroupExpr->getCloserTokSpan(), GroupExpr->getArgs(), GroupExpr->getIssues());
-            
+            if (GroupExpr->getOp() == SYMBOL_GROUPSQUARE) {
+                
+                return std::make_shared<CallNode>(Left, GroupExpr->getOpenerTokSpan(), GroupExpr->getCloserTokSpan(), GroupExpr->getArgs(), GroupExpr->getIssues());
+                
+            } else {
+                
+                //
+                // Something like a[ or a[1,2
+                //
+                
+                assert(GroupExpr->getOp() == SYMBOL_GROUPMISSINGCLOSERSQUARE);
+                
+                return std::make_shared<CallMissingCloserNode>(Left, GroupExpr->getOpenerTokSpan(), GroupExpr->getArgs(), GroupExpr->getIssues());
+            }
         }
-        
-        //
-        // Something like GroupMissingCloseSquare
-        //
-        return GroupExpr;
-        
     }
         
-    return std::make_shared<SyntaxErrorNode>(ERROR_INTERNAL, std::vector<std::shared_ptr<Node>> { Right }, Issues);
+    return std::make_shared<SyntaxErrorNode>(TOKEN_ERROR_INTERNAL, std::vector<std::shared_ptr<Node>> { Right }, Issues);
 }
 
 std::shared_ptr<Node> LeftDoubleBracketCallParselet::parse(std::shared_ptr<Node> Left) {
@@ -683,17 +603,14 @@ std::shared_ptr<Node> LeftDoubleBracketCallParselet::parse(std::shared_ptr<Node>
     auto Issues = TheParser->getIssues();
 
     auto Right = TheParser->parse(PRECEDENCE_HIGHEST);
-    
-    if (std::dynamic_pointer_cast<SyntaxErrorNode>(Right)) {
-        return Right;
-    }
 
-    if (Left->getSourceSpan().end.Line != Right->getSourceSpan().start.Line) {
+    // Too noisy
+    // if (Left->getSourceSpan().end.Line != Right->getSourceSpan().start.Line) {
 
-        auto Issue = SyntaxIssue("Head and double brackets are not on same line", SEVERITY_REMARK, (SourceSpan{Left->getSourceSpan().end, Right->getSourceSpan().start}));
+    //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, "Head and double brackets are not on same line", SEVERITY_REMARK, (SourceSpan{Left->getSourceSpan().start, Right->getSourceSpan().end}));
         
-        Issues.push_back(Issue);
-    }
+    //     Issues.push_back(Issue);
+    // }
     
     if (auto GroupExpr = std::dynamic_pointer_cast<GroupNode>(Right)) {
         
@@ -724,7 +641,19 @@ std::shared_ptr<Node> LeftDoubleBracketCallParselet::parse(std::shared_ptr<Node>
 
 std::shared_ptr<Node> InfixPlusParselet::parse(std::shared_ptr<Node> Left) {
     
+    auto Str = TheParser->getString();
+
     auto Issues = TheParser->getIssues();
+
+    // auto Span = TheSourceManager->getTokenSpan();
+
+    // Too noisy
+    // if (Left->getSourceSpan().end.Line != Span.start.Line) {
+
+    //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Left->getSourceSpan().start, Span.end}));
+    
+    //     Issues.push_back(Issue);
+    // }
 
     auto recalculatedPrecedence = static_cast<precedence_t>(getPrecedence() - (isRight() ? 1 : 0));
     
@@ -736,26 +665,40 @@ std::shared_ptr<Node> InfixPlusParselet::parse(std::shared_ptr<Node> Left) {
         
         auto Tok = TheParser->currentToken();
         
-        if (Tok == OPERATOR_PLUS) {
-            
-            // Clear String
-            TheParser->getString();
+        auto Str = TheParser->getString();
+
+        // auto Span = TheSourceManager->getTokenSpan();
+
+        if (Tok == TOKEN_OPERATOR_PLUS) {
             
             TheParser->nextToken();
             
             auto operand = TheParser->parse(recalculatedPrecedence);
             
+            // Too noisy
+            // if (Span.end.Line != operand->getSourceSpan().start.Line) {
+        
+            //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Span.start, operand->getSourceSpan().end}));
+            
+            //     Issues.push_back(Issue);
+            // }
+
             Args.push_back(operand);
             
-        } else if (Tok == OPERATOR_MINUS) {
-            
-            // Clear String
-            TheParser->getString();
+        } else if (Tok == TOKEN_OPERATOR_MINUS) {
             
             TheParser->nextToken();
             
             auto operand = TheParser->parse(recalculatedPrecedence);
             
+            // Too noisy
+            // if (Span.end.Line != operand->getSourceSpan().start.Line) {
+        
+            //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Span.start, operand->getSourceSpan().end}));
+            
+            //     Issues.push_back(Issue);
+            // }
+
             auto Loc = operand->getSourceSpan();
             
             auto minus = std::make_shared<InternalMinusNode>(operand, Loc);
@@ -770,12 +713,21 @@ std::shared_ptr<Node> InfixPlusParselet::parse(std::shared_ptr<Node> Left) {
     return std::make_shared<InfixNode>(SYMBOL_PLUS, Args, Issues);
 }
 
-std::shared_ptr<Node> SemicolonParselet::parse(std::shared_ptr<Node> Left) {
+std::shared_ptr<Node> SemiParselet::parse(std::shared_ptr<Node> Left) {
+
+    auto Str = TheParser->getString();
     
-    // Clear String
-    TheParser->getString();
-    
+    auto Span = TheSourceManager->getTokenSpan();
+
     auto Issues = TheParser->getIssues();
+
+    // Too noisy
+    // if (Left->getSourceSpan().end.Line != Span.start.Line) {
+
+    //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Left->getSourceSpan().start, Span.end}));
+    
+    //     Issues.push_back(Issue);
+    // }
 
     auto recalculatedPrecedence = static_cast<precedence_t>(getPrecedence() - (isRight() ? 1 : 0));
     
@@ -786,18 +738,20 @@ std::shared_ptr<Node> SemicolonParselet::parse(std::shared_ptr<Node> Left) {
     
     Args.push_back(Left);
     
-    bool eatTheNextSemiColon = false;
-    bool lastWasSemiColon = true;
+    bool eatTheNextSemi = false;
+    bool lastWasSemi = true;
     
     while (true) {
         
         Tok = TheParser->currentToken();
         
+        Span = TheSourceManager->getTokenSpan();
+
         if (Tok == TOKEN_NEWLINE) {
             
-            if (lastWasSemiColon) {
+            if (lastWasSemi) {
                 
-                auto Span = TheSourceManager->getTokenSpan();
+                Span = TheSourceManager->getTokenSpan();
                 
                 auto Empty = std::make_shared<InternalEmptyNode>(Span);
                 
@@ -806,15 +760,15 @@ std::shared_ptr<Node> SemicolonParselet::parse(std::shared_ptr<Node> Left) {
             
             break;
 
-        } else if (Tok == OPERATOR_SEMICOLON) {
+        } else if (Tok == TOKEN_OPERATOR_SEMI) {
             
             //
             // something like a; ; parses as CompoundExpression[a, Null, Null]
             //
             
-            if (!eatTheNextSemiColon) {
+            if (!eatTheNextSemi) {
                 
-                auto Span = TheSourceManager->getTokenSpan();
+                Span = TheSourceManager->getTokenSpan();
                 
                 auto Empty = std::make_shared<InternalEmptyNode>(Span);
                 
@@ -826,14 +780,14 @@ std::shared_ptr<Node> SemicolonParselet::parse(std::shared_ptr<Node> Left) {
             
             TheParser->nextToken(POLICY_PRESERVE_TOPLEVEL_NEWLINES);
             
-            eatTheNextSemiColon = false;
-            lastWasSemiColon = true;
+            eatTheNextSemi = false;
+            lastWasSemi = true;
             
         } else if (!TheParser->isPossibleBeginningOfExpression(Tok)) {
             
-            if (lastWasSemiColon) {
+            if (lastWasSemi) {
                 
-                auto Span = TheSourceManager->getTokenSpan();
+                Span = TheSourceManager->getTokenSpan();
                 
                 auto Empty = std::make_shared<InternalEmptyNode>(Span);
                 
@@ -846,14 +800,18 @@ std::shared_ptr<Node> SemicolonParselet::parse(std::shared_ptr<Node> Left) {
            
             auto operand = TheParser->parse(recalculatedPrecedence);
             
-            if (std::dynamic_pointer_cast<SyntaxErrorNode>(operand)) {
-                return operand;
-            }
+            // Too noisy
+            // if (Span.end.Line != operand->getSourceSpan().start.Line) {
+                
+            //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Span.start, operand->getSourceSpan().end}));
             
+            //     Issues.push_back(Issue);
+            // }
+
             Args.push_back(operand);
             
-            eatTheNextSemiColon = true;
-            lastWasSemiColon = false;
+            eatTheNextSemi = true;
+            lastWasSemi = false;
         }
     }
     
@@ -862,16 +820,15 @@ std::shared_ptr<Node> SemicolonParselet::parse(std::shared_ptr<Node> Left) {
 
 
 // prefix
-std::shared_ptr<Node> SemicolonSemicolonParselet::parse() {
+std::shared_ptr<Node> SemiSemiParselet::parse() {
     
-    // Clear String
-    TheParser->getString();
+    auto Str = TheParser->getString();
     
+    auto PrefixSpan = TheSourceManager->getTokenSpan();
+
     auto Issues = TheParser->getIssues();
 
     auto recalculatedPrecedence = static_cast<precedence_t>(getPrecedence() - (isRight() ? 1 : 0));
-    
-    auto PrefixSpan = TheSourceManager->getTokenSpan();
     
     auto Tok = TheParser->nextToken(POLICY_PRESERVE_TOPLEVEL_NEWLINES);
     
@@ -879,10 +836,14 @@ std::shared_ptr<Node> SemicolonSemicolonParselet::parse() {
         
         auto operand = TheParser->parse(recalculatedPrecedence);
         
-        if (std::dynamic_pointer_cast<SyntaxErrorNode>(operand)) {
-            return operand;
-        }
+        // Too noisy
+        // if (PrefixSpan.end.Line != operand->getSourceSpan().start.Line) {
+                
+        //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{PrefixSpan.start, operand->getSourceSpan().end}));
         
+        //     Issues.push_back(Issue);
+        // }
+
         if (auto BinOp = std::dynamic_pointer_cast<BinaryNode>(operand)) {
             
             if (BinOp->getOp() == SYMBOL_SPAN) {
@@ -902,7 +863,6 @@ std::shared_ptr<Node> SemicolonSemicolonParselet::parse() {
                     auto NewRight = std::make_shared<BinaryNode>(SYMBOL_SPAN, std::make_shared<InternalEmptyNode>(SpanOpSource), std::make_shared<InternalEmptyNode>(SpanOpSource), std::vector<SyntaxIssue>());
                     
                     return std::make_shared<BinaryNode>(SYMBOL_INFIXIMPLICITTIMES, NewLeft, NewRight, Issues);
-                    
                 }
                     
                 return std::make_shared<TernaryNode>(SYMBOL_SPAN, std::make_shared<InternalEmptyNode>(PrefixSpan), SpanOpLeft, SpanOpRight, Issues);
@@ -916,12 +876,21 @@ std::shared_ptr<Node> SemicolonSemicolonParselet::parse() {
 }
 
 // infix
-std::shared_ptr<Node> SemicolonSemicolonParselet::parse(std::shared_ptr<Node> Left) {
+std::shared_ptr<Node> SemiSemiParselet::parse(std::shared_ptr<Node> Left) {
+
+    auto Str = TheParser->getString();
     
-    // Clear String
-    TheParser->getString();
-    
+    // auto Span = TheSourceManager->getTokenSpan();
+
     auto Issues = TheParser->getIssues();
+
+    // Too noisy
+    // if (Left->getSourceSpan().end.Line != Span.start.Line) {
+
+    //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Left->getSourceSpan().start, Span.end}));
+    
+    //     Issues.push_back(Issue);
+    // }
 
     auto recalculatedPrecedence = static_cast<precedence_t>(getPrecedence() - (isRight() ? 1 : 0));
     
@@ -933,10 +902,14 @@ std::shared_ptr<Node> SemicolonSemicolonParselet::parse(std::shared_ptr<Node> Le
         
         auto Right = TheParser->parse(recalculatedPrecedence);
         
-        if (std::dynamic_pointer_cast<SyntaxErrorNode>(Right)) {
-            return Right;
-        }
+        // Too noisy
+        // if (InfixSpan.end.Line != Right->getSourceSpan().start.Line) {
+                
+        //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{InfixSpan.start, Right->getSourceSpan().end}));
         
+        //     Issues.push_back(Issue);
+        // }
+
         if (auto BinLeft = std::dynamic_pointer_cast<BinaryNode>(Left)) {
             
             if (BinLeft->getOp() == SYMBOL_SPAN) {
@@ -967,7 +940,6 @@ std::shared_ptr<Node> SemicolonSemicolonParselet::parse(std::shared_ptr<Node> Le
                     auto NewRight = std::make_shared<BinaryNode>(SYMBOL_SPAN, std::make_shared<InternalEmptyNode>(RightSpanSource), std::make_shared<InternalEmptyNode>(RightSpanSource), std::vector<SyntaxIssue>());
                     
                     return std::make_shared<BinaryNode>(SYMBOL_INFIXIMPLICITTIMES, NewLeft, NewRight, Issues);
-                    
                 }
                     
                 return std::make_shared<TernaryNode>(SYMBOL_SPAN, Left, RightSpanLeft, RightSpanRight, Issues);
@@ -984,23 +956,26 @@ std::shared_ptr<Node> SemicolonSemicolonParselet::parse(std::shared_ptr<Node> Le
 
 
 std::shared_ptr<Node> TildeParselet::parse(std::shared_ptr<Node> Left) {
+
+    auto TildeStr = TheParser->getString();
     
-    // Clear String
-    TheParser->getString();
-    
+    auto FirstTildeSpan = TheSourceManager->getTokenSpan();
+
     auto Issues = TheParser->getIssues();
 
+    // Too noisy
+    // if (Left->getSourceSpan().end.Line != FirstTildeSpan.start.Line) {
+
+    //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, TildeStr + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Left->getSourceSpan().start, FirstTildeSpan.end}));
+    
+    //     Issues.push_back(Issue);
+    // }
+
     auto prec = getPrecedence();
-    
-    // auto FirstTildeSpan = TheSourceManager->getTokenSpan();
-    
+
     TheParser->nextToken();
     
     auto Middle = TheParser->parse(prec);
-    
-    if (std::dynamic_pointer_cast<SyntaxErrorNode>(Middle)) {
-        return Middle;
-    }
     
     // auto MiddleSpan = Middle->getSourceSpan();
 
@@ -1010,31 +985,35 @@ std::shared_ptr<Node> TildeParselet::parse(std::shared_ptr<Node> Left) {
     
     auto SecondTildeSpan = TheSourceManager->getTokenSpan();
 
-    TheParser->nextToken();
+    // Too noisy
+    // if (Middle->getSourceSpan().end.Line != SecondTildeSpan.start.Line) {
+                
+    //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Middle->getSourceSpan().start, SecondTildeSpan.end}));
     
-    if (Tok != OPERATOR_TILDE) {
-        return std::make_shared<SyntaxErrorNode>(ERROR_EXPECTEDTILDE, std::vector<std::shared_ptr<Node>> { std::make_shared<InternalTokenNode>(Str, SecondTildeSpan) }, Issues);
-    }
-    
-    auto Right = TheParser->parse(prec);
-    
-    if (std::dynamic_pointer_cast<SyntaxErrorNode>(Right)) {
-        return Right;
-    }
-    
-    // if (!isContiguous(FirstTildeSpan.end, MiddleSpan.start)) {
-                            
-    //     auto Issue = SyntaxIssue("~ and Expr are not contiguous", SEVERITY_REMARK, (SourceSpan{FirstTildeSpan.end, MiddleSpan.start}));
-        
-    //     Issues.push_back(Issue);
-    // }
-    // if (!isContiguous(MiddleSpan.end, SecondTildeSpan.start)) {
-                            
-    //     auto Issue = SyntaxIssue("Expr and ~ are not contiguous", SEVERITY_REMARK, (SourceSpan{MiddleSpan.end, SecondTildeSpan.start}));
-        
     //     Issues.push_back(Issue);
     // }
 
+    TheParser->nextToken();
+    
+    if (Tok != TOKEN_OPERATOR_TILDE) {
+        
+        auto Issues = TheParser->getIssues();
+        
+        return std::make_shared<SyntaxErrorNode>(TOKEN_ERROR_EXPECTEDTILDE,
+            std::vector<std::shared_ptr<Node>> { Left, std::make_shared<InternalTokenNode>(TildeStr, FirstTildeSpan),
+                Middle, std::make_shared<InternalTokenNode>(Str, SecondTildeSpan) }, Issues);
+    }
+    
+    auto Right = TheParser->parse(prec);
+
+    // Too noisy
+    // if (SecondTildeSpan.end.Line != Right->getSourceSpan().start.Line) {
+                
+    //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{SecondTildeSpan.start, Right->getSourceSpan().end}));
+    
+    //     Issues.push_back(Issue);
+    // }
+    
     return std::make_shared<TernaryNode>(SYMBOL_TERNARYTILDE, Left, Middle, Right, Issues);
 }
 
@@ -1049,15 +1028,15 @@ precedence_t ColonParselet::getColonPrecedence(std::shared_ptr<Node> Left) {
     
     if (TheParser->isInsideColon1()) {
         if (std::dynamic_pointer_cast<SymbolNode>(Left)) {
-            return PRECEDENCE_PATTERNCOLON;
+            return PRECEDENCE_FAKE_PATTERNCOLON;
         }
         
-        return PRECEDENCE_OPTIONALCOLON;
+        return PRECEDENCE_FAKE_OPTIONALCOLON;
     }
     
     if (auto BinaryLeft = std::dynamic_pointer_cast<BinaryNode>(Left)) {
         if (BinaryLeft->getOp() == SYMBOL_PATTERN) {
-            return PRECEDENCE_OPTIONALCOLON;
+            return PRECEDENCE_FAKE_OPTIONALCOLON;
         }
     }
     
@@ -1066,11 +1045,20 @@ precedence_t ColonParselet::getColonPrecedence(std::shared_ptr<Node> Left) {
 
 std::shared_ptr<Node> ColonParselet::parse(std::shared_ptr<Node> Left) {
     
-    // Clear String
-    TheParser->getString();
+    auto Str = TheParser->getString();
+    
+    auto Span = TheSourceManager->getTokenSpan();
     
     auto Issues = TheParser->getIssues();
     
+    // Too noisy
+    // if (Left->getSourceSpan().end.Line != Span.start.Line) {
+
+    //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Left->getSourceSpan().start, Span.end}));
+    
+    //     Issues.push_back(Issue);
+    // }
+
     TheParser->nextToken();
     
     if (std::dynamic_pointer_cast<SymbolNode>(Left)) {
@@ -1085,6 +1073,14 @@ std::shared_ptr<Node> ColonParselet::parse(std::shared_ptr<Node> Left) {
         
         TheParser->setInsideColon1(false);
         
+        // Too noisy
+        // if (Span.end.Line != Right->getSourceSpan().start.Line) {
+                
+        //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Span.start, Right->getSourceSpan().end}));
+        
+        //     Issues.push_back(Issue);
+        // }
+
         return std::make_shared<BinaryNode>(SYMBOL_PATTERN, Left, Right, Issues);
         
     } else if (std::dynamic_pointer_cast<PatternBlankNode>(Left) ||
@@ -1097,6 +1093,14 @@ std::shared_ptr<Node> ColonParselet::parse(std::shared_ptr<Node> Left) {
         auto prec = getColonPrecedence(Left);
         auto Right = TheParser->parse(prec);
         
+        // Too noisy
+        // if (Span.end.Line != Right->getSourceSpan().start.Line) {
+                
+        //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Span.start, Right->getSourceSpan().end}));
+        
+        //     Issues.push_back(Issue);
+        // }
+
         return std::make_shared<BinaryNode>(SYMBOL_OPTIONAL, Left, Right, Issues);
         
     } else if (auto BinaryLeft = std::dynamic_pointer_cast<BinaryNode>(Left)) {
@@ -1106,19 +1110,36 @@ std::shared_ptr<Node> ColonParselet::parse(std::shared_ptr<Node> Left) {
             auto prec = getColonPrecedence(Left);
             auto Right = TheParser->parse(prec);
             
+            // Too noisy
+            // if (Span.end.Line != Right->getSourceSpan().start.Line) {
+                
+            //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Span.start, Right->getSourceSpan().end}));
+            
+            //     Issues.push_back(Issue);
+            // }
+
             return std::make_shared<BinaryNode>(SYMBOL_OPTIONAL, Left, Right, Issues);
         }  
     }
     
-    return std::make_shared<SyntaxErrorNode>(ERROR_EXPECTEDSYMBOLORPATTERN, std::vector<std::shared_ptr<Node>> { Left }, Issues);
+    return std::make_shared<SyntaxErrorNode>(TOKEN_ERROR_EXPECTEDSYMBOLORPATTERN, std::vector<std::shared_ptr<Node>> { Left, std::make_shared<InternalTokenNode>(Str, Span) }, Issues);
 }
 
 std::shared_ptr<Node> SlashColonParselet::parse(std::shared_ptr<Node> Left) {
+
+    auto Str = TheParser->getString();
     
-    // Clear String
-    TheParser->getString();
-    
+    // auto Span = TheSourceManager->getTokenSpan();
+
     auto Issues = TheParser->getIssues();
+
+    // Too noisy
+    // if (Left->getSourceSpan().end.Line != Span.start.Line) {
+
+    //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Left->getSourceSpan().start, Span.end}));
+    
+    //     Issues.push_back(Issue);
+    // }
 
     auto recalculatedPrecedence = static_cast<precedence_t>(getPrecedence() - 1);
     
@@ -1126,10 +1147,14 @@ std::shared_ptr<Node> SlashColonParselet::parse(std::shared_ptr<Node> Left) {
     
     auto Middle = TheParser->parse(recalculatedPrecedence);
     
-    if (std::dynamic_pointer_cast<SyntaxErrorNode>(Middle)) {
-        return Middle;
-    }
+    // Too noisy
+    // if (Span.end.Line != Middle->getSourceSpan().start.Line) {
+                
+    //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Span.start, Middle->getSourceSpan().end}));
     
+    //     Issues.push_back(Issue);
+    // }
+
     if (auto BinaryMiddle = std::dynamic_pointer_cast<BinaryNode>(Middle)) {
         
         if (BinaryMiddle->getOp() == SYMBOL_SET) {
@@ -1146,7 +1171,7 @@ std::shared_ptr<Node> SlashColonParselet::parse(std::shared_ptr<Node> Left) {
         }
     }
     
-    return std::make_shared<SyntaxErrorNode>(ERROR_MISMATCHEDSLASHCOLON, std::vector<std::shared_ptr<Node>> { Middle }, Issues);
+    return std::make_shared<SyntaxErrorNode>(TOKEN_ERROR_MISMATCHEDSLASHCOLON, std::vector<std::shared_ptr<Node>> { Middle }, Issues);
 }
 
 
@@ -1156,6 +1181,8 @@ std::shared_ptr<Node> LinearSyntaxOpenParenParselet::parse() {
     
     // Clear String
     TheParser->getString();
+    
+    auto Issues = TheParser->getIssues();
     
     std::vector<std::shared_ptr<Node>> Tokens;
     
@@ -1179,17 +1206,14 @@ std::shared_ptr<Node> LinearSyntaxOpenParenParselet::parse() {
             
             return group;
             
-        } else if (Tok == OPERATOR_LINEARSYNTAX_OPENPAREN) {
+        } else if (Tok == TOKEN_OPERATOR_LINEARSYNTAX_OPENPAREN) {
             
             auto Sub = this->parse();
             
-            if (std::dynamic_pointer_cast<SyntaxErrorNode>(Sub)) {
-                return Sub;
-            }
-            
             if (auto SubOpenParen = std::dynamic_pointer_cast<GroupNode>(Sub)) {
                 
-                if (SubOpenParen->getOp() == SYMBOL_GROUPLINEARSYNTAXPAREN) {
+                if (SubOpenParen->getOp() == SYMBOL_GROUPLINEARSYNTAXPAREN ||
+                    SubOpenParen->getOp() == SYMBOL_GROUPMISSINGCLOSERLINEARSYNTAXPAREN) {
                     
                     Tokens.push_back(SubOpenParen);
                     
@@ -1203,7 +1227,7 @@ std::shared_ptr<Node> LinearSyntaxOpenParenParselet::parse() {
                 assert(false);
             }
             
-        } else if (Tok == OPERATOR_LINEARSYNTAX_CLOSEPAREN) {
+        } else if (Tok == TOKEN_OPERATOR_LINEARSYNTAX_CLOSEPAREN) {
             
             // Clear String
             TheParser->getString();
@@ -1218,15 +1242,19 @@ std::shared_ptr<Node> LinearSyntaxOpenParenParselet::parse() {
             
             auto Str = TheParser->getString();
             
+            auto Tmp = TheParser->getIssues();
+            
             auto Span = TheSourceManager->getTokenSpan();
             
             Tokens.push_back(std::make_shared<InternalTokenNode>(Str, Span));
+            
+            std::copy(Tmp.begin(), Tmp.end(), std::back_inserter(Issues));
             
             Tok = TheParser->nextToken();
         }
     }
     
-    return std::make_shared<GroupNode>(SYMBOL_GROUPLINEARSYNTAXPAREN, OpenerSpan, CloserSpan, Tokens, std::vector<SyntaxIssue>());
+    return std::make_shared<GroupNode>(SYMBOL_GROUPLINEARSYNTAXPAREN, OpenerSpan, CloserSpan, Tokens, Issues);
 }
 
 
@@ -1241,33 +1269,51 @@ std::shared_ptr<Node> TickParselet::parse(std::shared_ptr<Node> Operand) {
     
     TheParser->nextToken(POLICY_PRESERVE_TOPLEVEL_NEWLINES);
     
-    if (Operand->getSourceSpan().end.Line != Span.start.Line) {
+    // Too noisy
+    // if (Operand->getSourceSpan().end.Line != Span.start.Line) {
     
-        auto Issue = SyntaxIssue(Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Operand->getSourceSpan().end, Span.start}));
+    //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Operand->getSourceSpan().start, Span.end}));
     
-        Issues.push_back(Issue);
-    }
+    //     Issues.push_back(Issue);
+    // }
     
     return std::make_shared<PostfixNode>(SYMBOL_DERIVATIVE, Span, Str.size(), Operand, Issues);
 }
 
 
 std::shared_ptr<Node> MessageNameParselet::parse(std::shared_ptr<Node> Left) {
+
+    auto Str = TheParser->getString();
     
-    // Clear String
-    TheParser->getString();
-    
+    // auto Span = TheSourceManager->getTokenSpan();
+
     auto Issues = TheParser->getIssues();
 
-    auto prec = getPrecedence();
+    // Too noisy
+    // if (Left->getSourceSpan().end.Line != Span.start.Line) {
+
+    //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Left->getSourceSpan().start, Span.end}));
     
+    //     Issues.push_back(Issue);
+    // }
+
+    auto prec = getPrecedence();
+
     TheParser->nextToken();
     
     auto Middle = TheParser->parse(prec);
     
+    // Too noisy
+    // if (Span.end.Line != Middle->getSourceSpan().start.Line) {
+                
+    //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Span.start, Middle->getSourceSpan().end}));
+    
+    //     Issues.push_back(Issue);
+    // }
+
     auto Tok = TheParser->currentToken();
     
-    if (Tok == OPERATOR_COLONCOLON) {
+    if (Tok == TOKEN_OPERATOR_COLONCOLON) {
         
         // Clear String
         TheParser->getString();
@@ -1276,6 +1322,14 @@ std::shared_ptr<Node> MessageNameParselet::parse(std::shared_ptr<Node> Left) {
         
         auto Right = TheParser->parse(prec);
         
+        // Too noisy
+        // if (Span.end.Line != Right->getSourceSpan().start.Line) {
+                
+        //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Span.start, Right->getSourceSpan().end}));
+        
+        //     Issues.push_back(Issue);
+        // }
+
         return std::make_shared<TernaryNode>(SYMBOL_MESSAGENAME, Left, Middle, Right, Issues);
     }
 
@@ -1283,19 +1337,28 @@ std::shared_ptr<Node> MessageNameParselet::parse(std::shared_ptr<Node> Left) {
 }
 
 std::shared_ptr<Node> EqualParselet::parse(std::shared_ptr<Node> Left) {
+
+    auto Str = TheParser->getString();
     
-    // Clear String
-    TheParser->getString();
-    
+    // auto Span = TheSourceManager->getTokenSpan();
+
     auto Issues = TheParser->getIssues();
+
+    // Too noisy
+    // if (Left->getSourceSpan().end.Line != Span.start.Line) {
+
+    //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Left->getSourceSpan().start, Span.end}));
+    
+    //     Issues.push_back(Issue);
+    // }
 
     auto recalculatedPrecedence = static_cast<precedence_t>(getPrecedence() - (isRight() ? 1 : 0));
     
-    auto EqualSpan = TheSourceManager->getTokenSpan();
+    // auto EqualSpan = TheSourceManager->getTokenSpan();
     
     auto Tok = TheParser->nextToken();
     
-    if (Tok == OPERATOR_DOT) {
+    if (Tok == TOKEN_OPERATOR_DOT) {
         
         //
         // May be this: a = .
@@ -1304,13 +1367,14 @@ std::shared_ptr<Node> EqualParselet::parse(std::shared_ptr<Node> Left) {
         
         auto DotSpan = TheSourceManager->getTokenSpan();
         
-        if (!isContiguous(EqualSpan, DotSpan)) {
+        // Too noisy
+        // if (!isContiguous(EqualSpan, DotSpan)) {
 
-            auto Issue = SyntaxIssue(std::string("= and . are not contiguous"), SEVERITY_REMARK, (SourceSpan{EqualSpan.start, DotSpan.end}));
+        //     auto Issue = SyntaxIssue(TAG_NOTCONTIGUOUS, std::string("= and . are not contiguous"), SEVERITY_REMARK, (SourceSpan{EqualSpan.start, DotSpan.end}));
         
-            Issues.push_back(Issue);
-        }
-        
+        //     Issues.push_back(Issue);
+        // }
+
         // Clear String
         TheParser->getString();
         
@@ -1323,9 +1387,85 @@ std::shared_ptr<Node> EqualParselet::parse(std::shared_ptr<Node> Left) {
     
     auto Right = TheParser->parse(recalculatedPrecedence);
     
-    if (std::dynamic_pointer_cast<SyntaxErrorNode>(Right)) {
-        return Right;
-    }
+    // Too noisy
+    // if (Span.end.Line != Right->getSourceSpan().start.Line) {
+                
+    //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Span.start, Right->getSourceSpan().end}));
+    
+    //     Issues.push_back(Issue);
+    // }
     
     return std::make_shared<BinaryNode>(SYMBOL_SET, Left, Right, Issues);
 }
+
+
+
+
+
+
+
+//
+// Error handling and Cleanup
+//
+
+std::shared_ptr<Node> ErrorParselet::parse() {
+    
+    auto TokIn = TheParser->currentToken();
+    
+    auto Span = TheSourceManager->getTokenSpan();
+    
+    auto Issues = TheParser->getIssues();
+    
+    auto Str = TheParser->getString();
+    
+    TheParser->nextToken(POLICY_PRESERVE_TOPLEVEL_NEWLINES);
+    
+    return std::make_shared<SyntaxErrorNode>(TokIn, std::vector<std::shared_ptr<Node>> { std::make_shared<InternalTokenNode>(Str, Span) }, Issues);
+}
+
+std::shared_ptr<Node> CleanupRestParselet::parse(std::shared_ptr<Node> Left) {
+    
+    auto Str = TheParser->getString();
+    
+    auto Span = TheSourceManager->getTokenSpan();
+    
+    auto Tok = TheParser->nextToken();
+    
+    auto Issues = TheParser->getIssues();
+    
+    std::vector<std::shared_ptr<Node>> Tokens;
+    
+    Tokens.push_back(Left);
+    Tokens.push_back(std::make_shared<InternalTokenNode>(Str, Span));
+    
+    while (true) {
+        
+        if (Tok == TOKEN_EOF) {
+            
+            break;
+            
+        } else {
+            
+            Str = TheParser->getString();
+            
+            Span = TheSourceManager->getTokenSpan();
+            
+            Tokens.push_back(std::make_shared<InternalTokenNode>(Str, Span));
+            
+            auto Tmp = TheParser->getIssues();
+            
+            std::copy(Tmp.begin(), Tmp.end(), std::back_inserter(Issues));
+            
+            Tok = TheParser->nextToken();
+        }
+    }
+
+    auto group = std::make_shared<SyntaxErrorNode>(TOKEN_ERROR_REST, Tokens, Issues);
+
+    return group;
+}
+
+
+
+
+

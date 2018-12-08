@@ -8,8 +8,8 @@
 #include <iostream>
 
 struct SourceLocation {
-    int Line;
-    int Col;
+    size_t Line;
+    size_t Col;
     
     std::string string() const {
         return "{" + std::to_string(Line) + ", " + std::to_string(Col) + "}";
@@ -19,11 +19,11 @@ struct SourceLocation {
         os << "{" << Line << ", " << Col << "}";
     }
 
-    SourceLocation operator+(int i) {
+    SourceLocation operator+(size_t i) {
         return SourceLocation{Line, Col+i};
     }
 
-    SourceLocation operator-(int i) {
+    SourceLocation operator-(size_t i) {
         return SourceLocation{Line, Col-i};
     }
 };
@@ -61,7 +61,7 @@ class SourceManager {
     SourceLocation WLCharacterStartLoc;
     SourceLocation WLCharacterEndLoc;
     
-    int CurLineWidth;
+    size_t CurLineWidth;
     
 public:
     SourceManager();
@@ -84,6 +84,8 @@ public:
 
     void setSourceLocation(SourceLocation Loc);
     SourceLocation getSourceLocation();
+
+    size_t getCurrentLineWidth();
 };
 
 extern SourceManager *TheSourceManager;

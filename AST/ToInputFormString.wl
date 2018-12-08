@@ -60,10 +60,7 @@ ToInputFormString[PrefixNode[op_, {operand_}, _]] :=
 
 
 ToInputFormString[BinaryNode[op_, {left_, right_}, _]] :=
-	ToInputFormString[left] <> SymbolToInfixOperatorString[op] <> ToInputFormString[right]
-
-ToInputFormString[BinaryNode[MessageName, {left_, right_}, _]] :=
-	ToInputFormString[left] <> SymbolToInfixOperatorString[MessageName] <> ToInputFormString[right]
+	ToInputFormString[left] <> SymbolToBinaryOperatorString[op] <> ToInputFormString[right]
 
 
 
@@ -79,11 +76,16 @@ Module[{},
 			{" + ", ToInputFormString[#]}])& /@ Rest[nodes]}]
 ]
 
+ToInputFormString[InternalMinusNode[_, {operand_}, _]] :=
+	ToInputFormString[operand]
+
+
 
 
 ToInputFormString[TernaryNode[op_, {left_, middle_, right_}, opts_]] :=
-Module[{pair = SymbolToTernaryOperatorPair[op]},
-	StringJoin[{ToInputFormString[left], SymbolToInfixOperatorString[pair[[1]]], ToInputFormString[middle], SymbolToInfixOperatorString[pair[[2]]], ToInputFormString[right]}]
+Module[{pair = SymbolToTernaryPair[op]},
+	ToInputFormString[left] <> SymbolToTernaryOperatorString[pair[[1]]] <> ToInputFormString[middle] <>
+		SymbolToTernaryOperatorString[pair[[2]]] <> ToInputFormString[right]
 ]
 
 
@@ -91,12 +93,15 @@ ToInputFormString[PostfixNode[op_, {operand_}, opts_]] :=
 	ToInputFormString[operand] <> SymbolToPostfixOperatorString[op]
 
 ToInputFormString[PostfixNode[Derivative, {operand_}, opts_]] :=
-	StringJoin[{ToInputFormString[operand], Table["'", opts[DerivativeOrder]]}]
+	ToInputFormString[operand] <> Table["'", opts[DerivativeOrder]]
 
 
 
 ToInputFormString[CallNode[op_, nodes_, opts_]] :=
 	ToInputFormString[op] <> ToInputFormString[GroupNode[GroupSquare, nodes, opts]]
+
+ToInputFormString[CallMissingCloserNode[op_, nodes_, opts_]] :=
+	ToInputFormString[op] <> ToInputFormString[GroupNode[GroupMissingCloserSquare, nodes, opts]]
 
 ToInputFormString[PartNode[op_, nodes_, opts_]] :=
 	ToInputFormString[op] <> ToInputFormString[GroupNode[GroupDoubleBracket, nodes, opts]]
@@ -106,15 +111,18 @@ Module[{pair = SymbolToGroupPair[op]},
 	StringJoin[{pair[[1]], Riffle[ToInputFormString /@ nodes, ", "], pair[[2]]}]
 ]
 
-ToInputFormString[GroupNode[GroupLinearSyntaxParen, nodes_, opts_]] :=
-Module[{pair = SymbolToGroupPair[GroupLinearSyntaxParen]},
+ToInputFormString[GroupNode[op:GroupLinearSyntaxParen, nodes_, opts_]] :=
+Module[{pair = SymbolToGroupPair[op]},
+	StringJoin[{pair[[1]], ToInputFormString /@ nodes, pair[[2]]}]
+]
+
+ToInputFormString[GroupNode[op:GroupMissingCloserLinearSyntaxParen, nodes_, opts_]] :=
+Module[{pair = SymbolToGroupPair[op]},
 	StringJoin[{pair[[1]], ToInputFormString /@ nodes, pair[[2]]}]
 ]
 
 
 
-ToInputFormString[InternalMinusNode[_, {operand_}, _]] :=
-	ToInputFormString[operand]
 
 ToInputFormString[InternalTokenNode[str_, _, _]] :=
 	str

@@ -3,12 +3,15 @@ BeginPackage["AST`"]
 
 (* functions *)
 
-ParseString
-ParseFile
+ParseString::usage = "ParseString[string] returns an AST by interpreting string as WL input. \
+Note: If there are multiple expressions in string, then only the last expression is returned. \
+ParseString[string, h] wraps the output with h and allows multiple expressions to be returned."
 
+ParseFile::usage = "ParseFile[file] returns an AST by interpreting file as WL input."
 
-TokenizeString
-TokenizeFile
+TokenizeString::usage = "TokenizeString[string] returns a list of tokens by interpreting string as WL input."
+
+TokenizeFile::usage = "TokenizeFile[file] returns a list of tokens by interpreting file as WL input."
 
 
 
@@ -23,6 +26,7 @@ DeclarationName
 
 PrefixOperatorToSymbol
 PostfixOperatorToSymbol
+BinaryOperatorToSymbol
 InfixOperatorToSymbol
 GroupOpenerToSymbol
 GroupOpenerToCloser
@@ -32,14 +36,44 @@ GroupCloserToMissingOpenerSymbol
 
 
 SymbolToPrefixOperatorString
-SymbolToInfixOperatorString
 SymbolToPostfixOperatorString
+SymbolToBinaryOperatorString
+SymbolToInfixOperatorString
+SymbolToTernaryOperatorString
 SymbolToGroupPair
-SymbolToTernaryOperatorPair
+SymbolToTernaryPair
 
 
 
 (* non-System symbols *)
+
+(*
+
+There are some System symbols that are only created when expressions are parsed:
+
+e.g., HermitianConjugate and ImplicitPlus are System symbols that do not exist until expressions
+are parsed:
+
+In[1]:= Names["HermitianConjugate"]
+Out[1]= {}
+In[2]:= ToExpression["a\\[HermitianConjugate]",InputForm,Hold]//FullForm
+Out[2]//FullForm= Hold[ConjugateTranspose[a]]
+In[3]:= Names["HermitianConjugate"]
+Out[3]= {HermitianConjugate}
+
+In[1]:= Names["ImplicitPlus"]
+Out[1]= {}
+In[2]:= ToExpression["a\\[ImplicitPlus]b",InputForm,Hold]//FullForm
+Out[2]//FullForm= Hold[Plus[a,b]]
+In[3]:= Names["ImplicitPlus"]
+Out[3]= {ImplicitPlus}
+
+These are not documented symbols, so they are apparently side-effects of parsing.
+
+We want to avoid any confusion about this, so we introduce our own symbols here:
+AST`PostfixHermitianConjugate and AST`InfixImplicitPlus
+
+*)
 
 (*Token*)
 Token
@@ -58,6 +92,7 @@ BinaryAt
 BinaryInvisibleApplication
 BinaryAtAtAt
 InfixImplicitTimes
+InfixImplicitPlus
 TernaryTilde
 TernarySlashColon
 LinearSyntaxBang
@@ -157,6 +192,8 @@ InternalTokenNode
 
 FileNode
 
+CallMissingCloserNode
+
 
 InternalInvalid
 
@@ -177,26 +214,22 @@ packageDir = DirectoryName[FindFile["AST`"]]
 exe = FileNameJoin[{packageDir, "ASTResources", $SystemID, "wl-ast"}]
 
 
-ParseString[s_String] :=
-	parseString[s]
+ParseString[s_String, h_:Automatic] :=
+	parseString[s, h]
 
 TokenizeString[s_String] :=
-	parseString[s, "Tokenize"->True]
+	parseString[s, Automatic, "Tokenize"->True]
 
 
 Options[parseString] = {
 	"Tokenize" -> False
 }
 
-parseString[sIn_String, OptionsPattern[]] :=
+parseString[sIn_String, h_, OptionsPattern[]] :=
 Catch[
 Module[{s = sIn, res, out, actualAST, multiBytes, tokenize},
 
 	tokenize = OptionValue["Tokenize"];
-
-	If[StringContainsQ[sIn, "\n"],
-		Throw[Failure["NewlinesNotYetSupported", <|"Input"->sIn|>]]
-	];
 
 	(*
 	RunProcess cannot handle strings > 2^16.
@@ -217,9 +250,18 @@ Module[{s = sIn, res, out, actualAST, multiBytes, tokenize},
 			"MultiByteCharacters"->AST`Utils`escapeString[FromCharacterCode[#]]& /@ Take[multiBytes, UpTo[10]]|>]]
 	];
 
-	res = RunProcess[{exe, Sequence@@If[tokenize, {"-format", "tokens"}, {}], "-noPrompt"}, All, s];
+	res = RunProcess[{
+		exe,
+		Sequence@@If[tokenize, {"-format", "tokens"}, {}],
+		"-noPrompt",
+		"-nonInteractive"
+		}, All, s];
 
-	res = handleResult[res];
+	If[FailureQ[res],
+		Throw[res]
+	];
+
+	res = handleResult[res, h];
 
 	If[FailureQ[res],
 		Throw[res]
@@ -248,20 +290,41 @@ Options[parseFile] = {
 }
 
 
-parseFile[full_String, OptionsPattern[]] :=
+parseFile[fullIn_String, OptionsPattern[]] :=
 Catch[
-Module[{res, actualAST, tryString, actual, skipFirstLine = False, shebangWarn = False, opts, issues, tokenize},
+Module[{full, res, actualAST, tryString, actual, skipFirstLine = False, shebangWarn = False, opts, issues, tokenize},
 
 	tokenize = OptionValue["Tokenize"];
+
+	(*
+	We want to expand anything like ~ before passing to external process
+	*)
+	full = AbsoluteFileName[fullIn];
+	If[FailureQ[full],
+		Throw[full]
+	];
 
 	If[FileType[full] =!= File,
 		Throw[Failure["NotAFile", <|"FileName"->full|>]]
 	];
 
+	(*
+	figure out if first line is special
+	*)
 	If[FileByteCount[full] > 0,
-		firstLine = Import[full, {"Lines", 1}];
+		Quiet[
+			(*
+			Importing a file containing only \n gives a slew of different messages and fails
+			bug 363161
+			Remove this Quiet when bug is resolved
+			*)
+			firstLine = Import[full, {"Lines", 1}];
+			If[FailureQ[firstLine],
+				Throw[Failure["CannotImportLines", <|"FileName"->full|>]]
+			]
+		];
 		Which[
-			firstLine === "(*!1N!*)mcm",
+			firstLine == "(*!1N!*)mcm",
 			Throw[Failure["EncodedFile", <|"FileName"->full|>]]
 			,
 			StringStartsQ[firstLine, "#!"],
@@ -272,9 +335,18 @@ Module[{res, actualAST, tryString, actual, skipFirstLine = False, shebangWarn = 
 		];
 	];
 
-	res = RunProcess[{exe, Sequence@@If[tokenize, {"-format", "tokens"}, {}], If[skipFirstLine, "-skipFirstLine", Nothing], "-file", full}, All];
+	res = RunProcess[{
+			exe,
+			Sequence@@If[tokenize, {"-format", "tokens"}, {}],
+			Sequence@@If[skipFirstLine, {"-skipFirstLine"}, {}],
+			"-file", full
+		}, All];
 
-	res = handleResult[res];
+	If[FailureQ[res],
+		Throw[res]
+	];
+
+	res = handleResult[res, Automatic];
 
 	If[FailureQ[res],
 		res = Failure[res[[1]], Join[res[[2]], <|"FileName"->full|>]];
@@ -292,7 +364,7 @@ Module[{res, actualAST, tryString, actual, skipFirstLine = False, shebangWarn = 
 	res
 ]]
 
-handleResult[res_] :=
+handleResult[res_Association, h_] :=
 Catch[
 Module[{ast},
 
@@ -300,8 +372,10 @@ Module[{ast},
 		Print[res]
 	];
 
-	If[!empty[res["StandardError"]],
-		Print[res["StandardError"]]
+	If[$Debug,
+		If[!empty[res["StandardError"]],
+			Print[res["StandardError"]]
+		]
 	];
 
 	(*
@@ -317,7 +391,11 @@ Module[{ast},
 	Put AST` on path even if it is not on path originally
 	*)
 	Block[{$ContextPath = {"AST`", "System`"}},
-		ast = ToExpression[res["StandardOutput"], InputForm]
+		If[h === Automatic,
+			ast = ToExpression[res["StandardOutput"], InputForm]
+			,
+			ast = ToExpression[res["StandardOutput"], InputForm, h]
+		]
 	];
 
 	ast

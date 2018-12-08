@@ -6,6 +6,8 @@ char
 
 empty
 
+drop
+
 Begin["`Private`"]
 
 escapeString[s_] :=
@@ -28,6 +30,21 @@ empty[l_List] := Length[l] == 0
 empty[a_Association] := Length[a] == 0
 
 empty[s_String] := s == ""
+
+
+
+(*
+drop the prefix from the string s
+*)
+drop[s_, prefix_] :=
+Which[
+  prefix == "", s,
+  StringStartsQ[s, prefix], StringDrop[s, StringLength[prefix]],
+  True, s
+]
+
+
+
 
 End[]
 

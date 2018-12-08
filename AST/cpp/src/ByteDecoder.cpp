@@ -7,8 +7,9 @@
 #include <sstream>
 #include <iomanip>
 #include <iostream>
+#include <cassert>
 
-ByteDecoder::ByteDecoder(std::istream &In, bool singleLine) : In(In), singleLine(singleLine), eof(false), byteQueue() {}
+ByteDecoder::ByteDecoder(std::istream &In, bool interactive) : In(In), interactive(interactive), eof(false), byteQueue() {}
 
 SourceCharacter ByteDecoder::nextSourceCharacter() {
     
@@ -25,7 +26,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter() {
     
     TheSourceManager->advanceSourceLocation(c);
     
-    if (singleLine && TheSourceManager->getSourceLocation().Line > 1) {
+    if (interactive && TheSourceManager->getSourceLocation().Line > 1) {
         eof = true;
         return EOF;
     }
@@ -51,13 +52,6 @@ unsigned char ByteDecoder::nextByte() {
     
     auto b = In.get();
     
-    //
-    // Discard all \r that are read in
-    //
-    while (b == '\r') {
-        b = In.get();
-    }
-    
     if (In.eof()) {
         eof = true;
     }
@@ -69,61 +63,18 @@ unsigned char ByteDecoder::nextByte() {
     return b;
 }
 
-unsigned char ByteDecoder::invalidUTF8(unsigned char tmp) {
-    
-    auto Loc = TheSourceManager->getSourceLocation();
-    
-    // Has not advanced yet at this point
-    Loc.Col++;
-    
-//    WARNING_MACRO("Invalid UTF8 sequence '" + makePrintable(tmp) + "'  Treating bytes as extended ASCII characters.", SEVERITY_REMARK, (SourceSpan{Loc,Loc}));
-    
-    return tmp;
-}
+unsigned char ByteDecoder::leaveAlone(std::vector<unsigned char> bytes) {
 
-unsigned char ByteDecoder::invalidUTF8(unsigned char firstByte, unsigned char tmp) {
-    
-    auto Loc = TheSourceManager->getSourceLocation();
-    
-    // Has not advanced yet at this point
-    Loc.Col++;
-    
-//    WARNING_MACRO("Invalid UTF8 sequence '" + makePrintable(firstByte) + "' '" + makePrintable(tmp) + "'  Treating bytes as extended ASCII characters.", SEVERITY_REMARK, (SourceSpan{Loc,Loc}));
-    
-    byteQueue.push_back(tmp);
-    
-    return firstByte;
-}
+    assert(!bytes.empty());
 
-unsigned char ByteDecoder::invalidUTF8(unsigned char firstByte, unsigned char secondByte, unsigned char tmp) {
+    auto first = bytes[0];
 
-    auto Loc = TheSourceManager->getSourceLocation();
+    for (size_t i = 1; i < bytes.size(); i++) {
+        auto b = bytes[i];
+        byteQueue.push_back(b);
+    }
 
-    // Has not advanced yet at this point
-    Loc.Col++;
-
-//    WARNING_MACRO("Invalid UTF8 sequence '" + makePrintable(firstByte) + "' '" + makePrintable(secondByte) + "' '" + makePrintable(tmp) + "'  Treating bytes as extended ASCII characters.", SEVERITY_REMARK, (SourceSpan{Loc,Loc}));
-
-    byteQueue.push_back(secondByte);
-    byteQueue.push_back(tmp);
-
-    return firstByte;
-}
-
-unsigned char ByteDecoder::invalidUTF8(unsigned char firstByte, unsigned char secondByte, unsigned char thirdByte, unsigned char tmp) {
-    
-    auto Loc = TheSourceManager->getSourceLocation();
-    
-    // Has not advanced yet at this point
-    Loc.Col++;
-    
-//    WARNING_MACRO("Invalid UTF8 sequence '" + makePrintable(firstByte) + "' '" + makePrintable(secondByte) + "' '" + makePrintable(thirdByte) + "' '" + makePrintable(tmp) + "'  Treating bytes as extended ASCII characters.", SEVERITY_REMARK, (SourceSpan{Loc,Loc}));
-    
-    byteQueue.push_back(secondByte);
-    byteQueue.push_back(thirdByte);
-    byteQueue.push_back(tmp);
-    
-    return firstByte;
+    return first;
 }
 
 //
@@ -152,7 +103,9 @@ SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
         // UTF8 encoding
         if (!((tmp & 0xc0) == 0x80)) {
             
-            return invalidUTF8(firstByte, tmp);
+            // Invalid UTF8
+
+            return leaveAlone({firstByte, tmp});
         }
         
         // Valid
@@ -176,7 +129,9 @@ SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
         // UTF8 encoding
         if (!((tmp & 0xc0) == 0x80)) {
             
-            return invalidUTF8(firstByte, tmp);
+            // Invalid UTF8
+
+            return leaveAlone({firstByte, tmp});
         }
         
         // Continue
@@ -188,7 +143,9 @@ SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
         // UTF8 encoding
         if (!((tmp & 0xc0) == 0x80)) {
             
-            return invalidUTF8(firstByte, secondByte, tmp);
+            // Invalid UTF8
+
+            return leaveAlone({firstByte, secondByte, tmp});
         }
         
         // Valid
@@ -210,7 +167,9 @@ SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
         // UTF8 encoding
         if (!((tmp & 0xc0) == 0x80)) {
             
-            return invalidUTF8(firstByte, tmp);
+            // Invalid UTF8
+
+            return leaveAlone({firstByte, tmp});
         }
         
         // Continue
@@ -222,7 +181,9 @@ SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
         // UTF8 encoding
         if (!((tmp & 0xc0) == 0x80)) {
             
-            return invalidUTF8(firstByte, secondByte, tmp);
+            // Invalid UTF8
+
+            return leaveAlone({firstByte, secondByte, tmp});
         }
         
         // Continue
@@ -234,7 +195,9 @@ SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
         // UTF8 encoding
         if (!((tmp & 0xc0) == 0x80)) {
             
-            return invalidUTF8(firstByte, secondByte, thirdByte, tmp);
+            // Invalid UTF8
+
+            return leaveAlone({firstByte, secondByte, thirdByte, tmp});
         }
         
         // Valid
@@ -249,7 +212,7 @@ SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
         // Not a valid UTF8 prefix, so just assume 8-bit extended ASCII
         //
         
-        return invalidUTF8(cIn);
+        return leaveAlone({cIn});
     }
 }
 

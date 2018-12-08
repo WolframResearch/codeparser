@@ -533,6 +533,69 @@ SourceSpan CallNode::getSourceSpan() {
     return SourceSpan{Head->getSourceSpan().start, ArgsGroup->getSourceSpan().end};
 }
 
+std::string CallMissingCloserNode::string() {
+
+    auto Args = getArgs();
+    
+    SourceSpan CloserSpan;
+    if (Args.empty()) {
+        
+        CloserSpan = OpenerTokSpan;
+        
+    } else {
+        
+        auto Last = Args[Args.size()-1];
+        
+        CloserSpan = Last->getSourceSpan();
+    }
+    
+    std::ostringstream ss;
+    auto ArgsGroup = std::make_shared<GroupNode>(SYMBOL_GROUPSQUARE, OpenerTokSpan, CloserSpan, Args, std::vector<SyntaxIssue>());
+    ss << SYMBOL_CALLMISSINGCLOSERNODE.name();
+    ss << "[";
+    ss << Head->string();
+    ss << ", ";
+    ss << ArgsGroup->ASTArgsString();
+    ss << ", <|";
+    ss << ASTSourceString(getSourceSpan());
+    if (!Issues.empty()) {
+        ss << ", ";
+        ss << SYMBOL_SYNTAXISSUES.name();
+        ss << "->{";
+        auto I = Issues.begin();
+        auto LastIt = Issues.end();
+        LastIt--;
+        for (; I < LastIt; I++) {
+            ss << (*I).string();
+            ss << ", ";
+        }
+        ss << (*I).string();
+        ss << "}";
+    }
+    ss << "|>";
+    ss << "]";
+    return ss.str();
+}
+
+SourceSpan CallMissingCloserNode::getSourceSpan() {
+
+    auto Args = getArgs();
+
+    SourceSpan CloserSpan;
+    if (Args.empty()) {
+        
+        CloserSpan = OpenerTokSpan;
+        
+    } else {
+        
+        auto Last = Args[Args.size()-1];
+        
+        CloserSpan = Last->getSourceSpan();
+    }
+    
+    return SourceSpan{Head->getSourceSpan().start, CloserSpan.end };
+}
+
 std::string PartNode::string() {
 
     auto Args = getArgs();

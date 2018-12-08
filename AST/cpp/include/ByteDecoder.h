@@ -9,7 +9,7 @@ typedef int SourceCharacter;
 class ByteDecoder {
     
     std::istream &In;
-    bool singleLine;
+    bool interactive;
     bool eof;
     
     std::vector<unsigned char> byteQueue;
@@ -17,15 +17,12 @@ class ByteDecoder {
     unsigned char nextByte();
     
     SourceCharacter decodeBytes(unsigned char);
-    
-    unsigned char invalidUTF8(unsigned char tmp);
-    unsigned char invalidUTF8(unsigned char firstByte, unsigned char tmp);
-    unsigned char invalidUTF8(unsigned char firstByte, unsigned char secondByte, unsigned char tmp);
-    unsigned char invalidUTF8(unsigned char firstByte, unsigned char secondByte, unsigned char thirdByte, unsigned char tmp);
+
+    unsigned char leaveAlone(std::vector<unsigned char> bytes);
     
 public:
     
-    ByteDecoder(std::istream &In, bool singleLine);
+    ByteDecoder(std::istream &In, bool interactive);
     
     SourceCharacter nextSourceCharacter();
 };

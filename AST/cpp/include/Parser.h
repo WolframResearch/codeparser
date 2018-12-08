@@ -36,6 +36,8 @@ private:
     
     std::vector<std::pair<Token, std::string>> tokenQueue;
 
+    std::vector<SyntaxIssue> Issues;
+    
     void registerTokenType(Token, Parselet *);
     void registerPrefixTokenType(Token);
     

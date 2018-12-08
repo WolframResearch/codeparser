@@ -22,13 +22,22 @@ enum Format {
 
 void printCharacters();
 void printTokens();
+std::vector<std::shared_ptr<Node>> parseExpressions(bool interactive);
 
 int main(int argc, char *argv[]) {
     
     Format format = FORMAT_AST;
     bool prompt = true;
     bool skipFirstLine = false;
-    bool singleLine = true;
+
+    //
+    // interactive: running interactively on the command-line and prints a single expression (because EOF never arrives)
+    // so EOF is faked with a newline
+    // This means currently that interactive use is limited to a single line
+    //
+    // nonInteractive: a finite string is sent on stdin and EOF arrives
+    //
+    bool interactive = true;
     std::string file;
     
     for (int i = 1; i < argc; i++) {
@@ -52,13 +61,13 @@ int main(int argc, char *argv[]) {
             i++;
             file = std::string(argv[i]);
             prompt = false;
-            singleLine = false;
+            interactive = false;
         } else if (arg == "-noprompt" || arg == "-noPrompt") {
             prompt = false;
         } else if (arg == "-skipfirstline" || arg == "-skipFirstLine") {
             skipFirstLine = true;
-        } else if (arg == "-multiline" || arg == "-multiLine") {
-            singleLine = false;
+        } else if (arg == "-noninteractive" || arg == "-nonInteractive") {
+            interactive = false;
         } else {
             return 1;
         }
@@ -68,8 +77,12 @@ int main(int argc, char *argv[]) {
         
         std::ifstream ifs(file, std::ifstream::in);
         
+        if (ifs.fail()) {
+            return 1;
+        }
+
         TheSourceManager = new SourceManager();
-        TheByteDecoder = new ByteDecoder(ifs, singleLine);
+        TheByteDecoder = new ByteDecoder(ifs, interactive);
         TheCharacterDecoder = new CharacterDecoder();
         
         if (format == FORMAT_CHARACTERS) {
@@ -89,30 +102,7 @@ int main(int argc, char *argv[]) {
             TheParser = new Parser();
             TheParser->init();
             
-            std::vector<std::shared_ptr<Node>> nodes;
-            
-            while (true) {
-                
-                auto peek = TheParser->currentToken();
-                
-                while (peek == TOKEN_NEWLINE) {
-                    peek = TheParser->nextToken();
-                }
-                
-                if (peek != TOKEN_EOF) {
-                    
-                    auto Expr = TheParser->parseTopLevel();
-                    
-                    nodes.push_back(Expr);
-                }
-
-                peek = TheParser->currentToken();
-                
-                if (peek == TOKEN_EOF) {
-                    break;
-                }
-                
-            } // while (true)
+            auto nodes = parseExpressions(interactive);
             
             auto FN = std::make_shared<FileNode>(nodes);
             
@@ -122,6 +112,7 @@ int main(int argc, char *argv[]) {
                     break;
                 case FORMAT_AST:
                     std::cout << FN->string();
+                    FN->string();
                     break;
                 case FORMAT_TOKENS:
                     // handled elsewhere
@@ -142,7 +133,7 @@ int main(int argc, char *argv[]) {
         }
         
         TheSourceManager = new SourceManager();
-        TheByteDecoder = new ByteDecoder(std::cin, singleLine);
+        TheByteDecoder = new ByteDecoder(std::cin, interactive);
         TheCharacterDecoder = new CharacterDecoder();
         
         if (format == FORMAT_CHARACTERS) {
@@ -162,29 +153,17 @@ int main(int argc, char *argv[]) {
             TheParser = new Parser();
             TheParser->init();
             
-            auto peek = TheParser->currentToken();
+            auto nodes = parseExpressions(interactive);
             
-            while (peek == TOKEN_NEWLINE) {
-                peek = TheParser->nextToken();
-            }
-            
-            if (peek != TOKEN_EOF) {
-                
-                auto Expr = TheParser->parseTopLevel();
-                
-                peek = TheParser->currentToken();
-                
-                assert(peek == TOKEN_EOF);
-                
-                assert(TheParser->getString().empty());
-                assert(TheParser->getIssues().empty());
-                
+            for (std::shared_ptr<Node> node : nodes) {
                 switch (format) {
                     case FORMAT_INPUTFORM:
-                        std::cout << Expr->inputform();
+                        std::cout << node->inputform();
+                        std::cout << "\n";
                         break;
                     case FORMAT_AST:
-                        std::cout << Expr->string();
+                        std::cout << node->string();
+                        std::cout << "\n";
                         break;
                     case FORMAT_TOKENS:
                         // handled elsewhere
@@ -195,10 +174,6 @@ int main(int argc, char *argv[]) {
                         ;
                         break;
                 }
-            }
-            
-            if (prompt) {
-                std::cout << "\n\n";
             }
         }
     }
@@ -232,7 +207,7 @@ void printCharacters() {
 
         std::cout << ",\n";
 
-        if (c == EOF) {
+        if (c == WLCHARACTER_EOF) {
             break;
         }
         
@@ -269,7 +244,7 @@ void printTokens() {
 
         std::cout << SYMBOL_TOKEN.name();
         std::cout << "[";
-        std::cout << stringEscape(TokenToString(Tok));
+        std::cout << TokenToString(Tok);
         std::cout << ", ";
         std::cout << stringEscape(Str);
         std::cout << ", <|";
@@ -288,6 +263,49 @@ void printTokens() {
 
     std::cout << "Nothing\n";
     std::cout << "}\n";
+}
+
+std::vector<std::shared_ptr<Node>> parseExpressions(bool interactive) {
+
+    std::vector<std::shared_ptr<Node>> nodes;
+            
+    while (true) {
+        
+        auto peek = TheParser->currentToken();
+        
+        while (peek == TOKEN_NEWLINE) {
+            peek = TheParser->nextToken();
+        }
+        
+        if (peek != TOKEN_EOF) {
+            
+            auto Expr = TheParser->parseTopLevel();
+            
+            assert(TheParser->getString().empty());
+            assert(TheParser->getIssues().empty());
+
+            nodes.push_back(Expr);
+        }
+
+        //
+        // This is running on command-line, so only parse first expression
+        //
+        if (interactive) {
+            break;
+        }
+
+        peek = TheParser->currentToken();
+        
+        if (peek == TOKEN_EOF) {
+            break;
+        }
+        
+    } // while (true)
+
+    assert(TheParser->getString().empty());
+    assert(TheParser->getIssues().empty());
+
+    return nodes;
 }
 
 

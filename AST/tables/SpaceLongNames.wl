@@ -1,6 +1,9 @@
 {
 "InvisibleSpace",
+"NoBreak",
 "NonBreakingSpace",
 "NegativeThinSpace",
+"ThickSpace",
+"ThinSpace",
 Nothing
 }

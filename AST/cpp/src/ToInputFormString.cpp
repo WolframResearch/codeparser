@@ -122,7 +122,7 @@ std::string BinaryNode::inputform() {
         s << " ";
     }
 
-    s << SymbolToInfixOperatorString(Op);
+    s << SymbolToBinaryOperatorString(Op);
 
     if (Op == SYMBOL_MESSAGENAME) {
         //
@@ -211,11 +211,11 @@ std::string TernaryNode::inputform() {
 
     s << Left->inputform();
 
-    s << SymbolToInfixOperatorString(p.first);
+    s << SymbolToTernaryOperatorString(p.first);
 
     s << Middle->inputform();
 
-    s << SymbolToInfixOperatorString(p.second);
+    s << SymbolToTernaryOperatorString(p.second);
 
     s << Right->inputform();
 
@@ -270,6 +270,29 @@ std::string CallNode::inputform() {
     std::ostringstream ss;
     ss << Head->inputform();
     auto ArgsGroup = std::make_shared<GroupNode>(SYMBOL_GROUPSQUARE, OpenerTokSpan, CloserTokSpan, Args, std::vector<SyntaxIssue>());
+    ss << ArgsGroup->inputform();
+    return ss.str();
+}
+
+std::string CallMissingCloserNode::inputform() {
+    
+    auto Args = getArgs();
+    
+    SourceSpan CloserSpan;
+    if (Args.empty()) {
+        
+        CloserSpan = OpenerTokSpan;
+        
+    } else {
+        
+        auto Last = Args[Args.size()-1];
+        
+        CloserSpan = Last->getSourceSpan();
+    }
+    
+    std::ostringstream ss;
+    ss << Head->inputform();
+    auto ArgsGroup = std::make_shared<GroupNode>(SYMBOL_GROUPSQUARE, OpenerTokSpan, CloserSpan, Args, std::vector<SyntaxIssue>());
     ss << ArgsGroup->inputform();
     return ss.str();
 }
