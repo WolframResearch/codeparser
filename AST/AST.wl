@@ -366,7 +366,7 @@ Module[{full, res, actualAST, tryString, actual, skipFirstLine = False, shebangW
 
 handleResult[res_Association, h_] :=
 Catch[
-Module[{ast},
+Module[{input, ast},
 
 	If[$Debug,
 		Print[res]
@@ -387,14 +387,23 @@ Module[{ast},
 		Throw[Failure["ExitCode", <|"ExitCode"->res["ExitCode"]|>]]
 	];
 
+	input = res["StandardOutput"];
+
+	(*
+	work-around bug 363889
+	*)
+	If[$OperatingSystem == "Windows",
+		input = StringReplace[input, "\r" -> ""];
+	];
+
 	(*
 	Put AST` on path even if it is not on path originally
 	*)
 	Block[{$ContextPath = {"AST`", "System`"}},
 		If[h === Automatic,
-			ast = ToExpression[res["StandardOutput"], InputForm]
+			ast = ToExpression[input, InputForm]
 			,
-			ast = ToExpression[res["StandardOutput"], InputForm, h]
+			ast = ToExpression[input, InputForm, h]
 		]
 	];
 
