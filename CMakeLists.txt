@@ -237,7 +237,9 @@ set_target_properties(wl-ast PROPERTIES
 #
 if(MSVC)
 	target_compile_options(wl-ast
-		PRIVATE /W3 /EHsc
+		# specify /MT to statically link runtime on Windows
+		# This prevents "The program can't start because ucrtbased.dll is missing from your computer" error on Windows 7
+		PRIVATE /W3 /EHsc /MT
 	)
 else()
 	target_compile_options(wl-ast
