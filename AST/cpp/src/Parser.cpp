@@ -8,8 +8,8 @@
 #include <iostream>
 
 
-Parser::Parser() : groupDepth(0), insideColon(false), currentCached(false), _currentToken(), _currentTokenString(),
-    mPrefixParselets(), mInfixParselets(), mPostfixParselets(), mCleanupParselets(), tokenQueue(), Issues() {}
+Parser::Parser() : groupDepth(0), currentCached(false), _currentToken(), _currentTokenString(),
+    mPrefixParselets(), mInfixParselets(), mPostfixParselets(), mContextSensitiveParselets(), tokenQueue(), Issues() {}
 
 void Parser::init() {
     
@@ -21,13 +21,10 @@ void Parser::init() {
     registerTokenType(TOKEN_SYMBOL, new SymbolParselet());
     registerTokenType(TOKEN_NUMBER, new NumberParselet());
     registerTokenType(TOKEN_STRING, new StringParselet());
-    registerTokenType(TOKEN_OPERATOR_UNDER, new UnderParselet());
-    registerTokenType(TOKEN_OPERATOR_UNDERUNDER, new UnderUnderParselet());
-    registerTokenType(TOKEN_OPERATOR_UNDERUNDERUNDER, new UnderUnderUnderParselet());
-    registerTokenType(TOKEN_OPERATOR_UNDERDOT, new UnderDotParselet());
     registerTokenType(TOKEN_OPERATOR_HASH, new HashParselet());
     registerTokenType(TOKEN_OPERATOR_HASHHASH, new HashHashParselet());
     registerTokenType(TOKEN_OPERATOR_PERCENT, new PercentParselet());
+    
     
     //
     // Prefix
@@ -54,13 +51,29 @@ void Parser::init() {
     registerTokenType(TOKEN_OPERATOR_LONGNAME_CLOCKWISECONTOURINTEGRAL, new PrefixOperatorParselet(PRECEDENCE_LONGNAME_CLOCKWISECONTOURINTEGRAL));
     registerTokenType(TOKEN_OPERATOR_LONGNAME_COUNTERCLOCKWISECONTOURINTEGRAL, new PrefixOperatorParselet(PRECEDENCE_LONGNAME_COUNTERCLOCKWISECONTOURINTEGRAL));
     registerTokenType(TOKEN_OPERATOR_LONGNAME_PRODUCT, new PrefixOperatorParselet(PRECEDENCE_LONGNAME_PRODUCT));
+    registerTokenType(TOKEN_OPERATOR_LONGNAME_INVISIBLEPREFIXSCRIPTBASE, new PrefixOperatorParselet(PRECEDENCE_LONGNAME_INVISIBLEPREFIXSCRIPTBASE));
 
     registerTokenType(TOKEN_OPERATOR_LINEARSYNTAX_BANG, new PrefixOperatorParselet(PRECEDENCE_LINEARSYNTAX_BANG));
     
+
     //
     // Binary
     //
-    registerTokenType(TOKEN_OPERATOR_SLASH, new BinaryOperatorParselet(PRECEDENCE_SLASH, false));
+
+    // inequality operators
+    registerTokenType(TOKEN_OPERATOR_EQUALEQUAL, new BinaryOperatorParselet(PRECEDENCE_EQUALEQUAL, false));
+    registerTokenType(TOKEN_OPERATOR_BANGEQUAL, new BinaryOperatorParselet(PRECEDENCE_BANGEQUAL, false));
+    registerTokenType(TOKEN_OPERATOR_LESS, new BinaryOperatorParselet(PRECEDENCE_LESS, false));
+    registerTokenType(TOKEN_OPERATOR_GREATER, new BinaryOperatorParselet(PRECEDENCE_GREATER, false));
+    registerTokenType(TOKEN_OPERATOR_LESSEQUAL, new BinaryOperatorParselet(PRECEDENCE_LESSEQUAL, false));
+    registerTokenType(TOKEN_OPERATOR_GREATEREQUAL, new BinaryOperatorParselet(PRECEDENCE_GREATEREQUAL, false));
+
+    // other flattening operators
+    registerTokenType(TOKEN_OPERATOR_EQUALEQUALEQUAL, new BinaryOperatorParselet(PRECEDENCE_EQUALEQUALEQUAL, false));
+    registerTokenType(TOKEN_OPERATOR_EQUALBANGEQUAL, new BinaryOperatorParselet(PRECEDENCE_EQUALBANGEQUAL, false));
+    registerTokenType(TOKEN_OPERATOR_ATSTAR, new BinaryOperatorParselet(PRECEDENCE_ATSTAR, false));
+    registerTokenType(TOKEN_OPERATOR_SLASHSTAR, new BinaryOperatorParselet(PRECEDENCE_SLASHSTAR, false));
+    
     registerTokenType(TOKEN_OPERATOR_CARET, new BinaryOperatorParselet(PRECEDENCE_CARET, true));
     registerTokenType(TOKEN_OPERATOR_CARETEQUAL, new BinaryOperatorParselet(PRECEDENCE_CARETEQUAL, true));
     registerTokenType(TOKEN_OPERATOR_CARETCOLONEQUAL, new BinaryOperatorParselet(PRECEDENCE_CARETCOLONEQUAL, true));
@@ -81,16 +94,6 @@ void Parser::init() {
     registerTokenType(TOKEN_OPERATOR_ATATAT, new BinaryOperatorParselet(PRECEDENCE_ATATAT, true));
     registerTokenType(TOKEN_OPERATOR_SLASHSLASH, new BinaryOperatorParselet(PRECEDENCE_SLASHSLASH, false));
     registerTokenType(TOKEN_OPERATOR_COLONEQUAL, new BinaryOperatorParselet(PRECEDENCE_COLONEQUAL, true));
-    registerTokenType(TOKEN_OPERATOR_EQUALBANGEQUAL, new BinaryOperatorParselet(PRECEDENCE_EQUALBANGEQUAL, false));
-    registerTokenType(TOKEN_OPERATOR_EQUALEQUALEQUAL, new BinaryOperatorParselet(PRECEDENCE_EQUALEQUALEQUAL, false));
-    registerTokenType(TOKEN_OPERATOR_SLASHSTAR, new BinaryOperatorParselet(PRECEDENCE_SLASHSTAR, false));
-    registerTokenType(TOKEN_OPERATOR_ATSTAR, new BinaryOperatorParselet(PRECEDENCE_ATSTAR, false));
-    registerTokenType(TOKEN_OPERATOR_LESSEQUAL, new BinaryOperatorParselet(PRECEDENCE_LESSEQUAL, false));
-    registerTokenType(TOKEN_OPERATOR_LESS, new BinaryOperatorParselet(PRECEDENCE_LESS, false));
-    registerTokenType(TOKEN_OPERATOR_GREATER, new BinaryOperatorParselet(PRECEDENCE_GREATER, false));
-    registerTokenType(TOKEN_OPERATOR_GREATEREQUAL, new BinaryOperatorParselet(PRECEDENCE_GREATEREQUAL, false));
-    registerTokenType(TOKEN_OPERATOR_EQUALEQUAL, new BinaryOperatorParselet(PRECEDENCE_EQUALEQUAL, false));
-    registerTokenType(TOKEN_OPERATOR_BANGEQUAL, new BinaryOperatorParselet(PRECEDENCE_BANGEQUAL, false));
     registerTokenType(TOKEN_OPERATOR_GREATERGREATER, new BinaryOperatorParselet(PRECEDENCE_GREATERGREATER, false));
     registerTokenType(TOKEN_OPERATOR_QUESTION, new BinaryOperatorParselet(PRECEDENCE_INFIX_QUESTION, false));
     
@@ -157,13 +160,6 @@ void Parser::init() {
     registerTokenType(TOKEN_OPERATOR_LONGNAME_CIRCLEMINUS, new BinaryOperatorParselet(PRECEDENCE_LONGNAME_CIRCLEMINUS, false));
     registerTokenType(TOKEN_OPERATOR_LONGNAME_RIGHTTRIANGLE, new BinaryOperatorParselet(PRECEDENCE_LONGNAME_RIGHTTRIANGLE, false));
     registerTokenType(TOKEN_OPERATOR_LONGNAME_LEFTTRIANGLE, new BinaryOperatorParselet(PRECEDENCE_LONGNAME_LEFTTRIANGLE, false));
-    registerTokenType(TOKEN_OPERATOR_LONGNAME_TIMES, new BinaryOperatorParselet(PRECEDENCE_LONGNAME_TIMES, false));
-    registerTokenType(TOKEN_OPERATOR_LONGNAME_AND, new BinaryOperatorParselet(PRECEDENCE_LONGNAME_AND, false));
-    registerTokenType(TOKEN_OPERATOR_LONGNAME_OR, new BinaryOperatorParselet(PRECEDENCE_LONGNAME_OR, false));
-    registerTokenType(TOKEN_OPERATOR_LONGNAME_XOR, new BinaryOperatorParselet(PRECEDENCE_LONGNAME_XOR, false));
-    registerTokenType(TOKEN_OPERATOR_LONGNAME_NAND, new BinaryOperatorParselet(PRECEDENCE_LONGNAME_NAND, false));
-    registerTokenType(TOKEN_OPERATOR_LONGNAME_NOR, new BinaryOperatorParselet(PRECEDENCE_LONGNAME_NOR, false));
-    registerTokenType(TOKEN_OPERATOR_LONGNAME_IMPLICITPLUS, new BinaryOperatorParselet(PRECEDENCE_LONGNAME_IMPLICITPLUS, false));
     
     //
     // Infix
@@ -172,18 +168,12 @@ void Parser::init() {
     //
     // These may not necessarily correspond to Flat functions in WL.
     //
-    // Note that OPERATOR_PLUS and OPERATOR_MINUS are not here.
-    // This is because OPERATOR_PLUS and OPERATOR_MINUS are handled specially. Expressions like a + b - c are considered to be 1
-    // infix + expression. Treating them as 1 expression helps to prevent Expresion Depth Errors that can happen when a + b - c is
-    // considered to be a + node nested inside of a - node.
-    //
-    // I could have done the same thing for OPERATOR_STAR and OPERATOR_SLASH, but in practice there are not that many expressions
-    // that mix * and / enough to hit the Depth limit.
-    //
-    // Also, we need to keep OPERATOR_STAR and OPERATOR_FAKE_IMPLICITTIMES separate in the AST.
-    //
+    registerTokenType(TOKEN_OPERATOR_PLUS, new InfixOperatorParselet(PRECEDENCE_INFIX_PLUS));
+    registerTokenType(TOKEN_OPERATOR_MINUS, new InfixOperatorParselet(PRECEDENCE_INFIX_MINUS));
+
     registerTokenType(TOKEN_OPERATOR_STAR, new InfixOperatorParselet(PRECEDENCE_STAR));
-    registerTokenType(TOKEN_OPERATOR_FAKE_IMPLICITTIMES, new InfixOperatorParselet(PRECEDENCE_FAKE_IMPLICITTIMES));
+    registerTokenType(TOKEN_OPERATOR_SLASH, new InfixOperatorParselet(PRECEDENCE_SLASH));
+    
     registerTokenType(TOKEN_OPERATOR_DOT, new InfixOperatorParselet(PRECEDENCE_DOT));
     registerTokenType(TOKEN_OPERATOR_STARSTAR, new InfixOperatorParselet(PRECEDENCE_STARSTAR));
     registerTokenType(TOKEN_OPERATOR_AMPAMP, new InfixOperatorParselet(PRECEDENCE_AMPAMP));
@@ -192,6 +182,18 @@ void Parser::init() {
     registerTokenType(TOKEN_OPERATOR_LESSGREATER, new InfixOperatorParselet(PRECEDENCE_LESSGREATER));
     registerTokenType(TOKEN_OPERATOR_TILDETILDE, new InfixOperatorParselet(PRECEDENCE_TILDETILDE));
     
+    registerTokenType(TOKEN_OPERATOR_LONGNAME_IMPLICITPLUS, new InfixOperatorParselet(PRECEDENCE_LONGNAME_IMPLICITPLUS));
+    registerTokenType(TOKEN_OPERATOR_LONGNAME_TIMES, new InfixOperatorParselet(PRECEDENCE_LONGNAME_TIMES));
+    registerTokenType(TOKEN_OPERATOR_LONGNAME_INVISIBLETIMES, new InfixOperatorParselet(PRECEDENCE_LONGNAME_INVISIBLETIMES));
+
+    registerTokenType(TOKEN_OPERATOR_LONGNAME_AND, new InfixOperatorParselet(PRECEDENCE_LONGNAME_AND));
+    registerTokenType(TOKEN_OPERATOR_LONGNAME_OR, new InfixOperatorParselet(PRECEDENCE_LONGNAME_OR));
+    registerTokenType(TOKEN_OPERATOR_LONGNAME_XOR, new InfixOperatorParselet(PRECEDENCE_LONGNAME_XOR));
+    registerTokenType(TOKEN_OPERATOR_LONGNAME_NAND, new InfixOperatorParselet(PRECEDENCE_LONGNAME_NAND));
+    registerTokenType(TOKEN_OPERATOR_LONGNAME_NOR, new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOR));
+
+    registerTokenType(TOKEN_OPERATOR_FAKE_IMPLICITTIMES, new InfixOperatorParselet(PRECEDENCE_FAKE_IMPLICITTIMES));
+
 
     //
     // Postfix
@@ -208,13 +210,14 @@ void Parser::init() {
     registerTokenType(TOKEN_OPERATOR_LONGNAME_CONJUGATE, new PostfixOperatorParselet(PRECEDENCE_LONGNAME_CONGRUENT));
     registerTokenType(TOKEN_OPERATOR_LONGNAME_CONJUGATETRANSPOSE, new PostfixOperatorParselet(PRECEDENCE_LONGNAME_CONJUGATETRANSPOSE));
     registerTokenType(TOKEN_OPERATOR_LONGNAME_HERMITIANCONJUGATE, new PostfixOperatorParselet(PRECEDENCE_LONGNAME_HERMITIANCONJUGATE));
+    registerTokenType(TOKEN_OPERATOR_LONGNAME_INVISIBLEPOSTFIXSCRIPTBASE, new PrefixOperatorParselet(PRECEDENCE_LONGNAME_INVISIBLEPOSTFIXSCRIPTBASE));
+
     
     //
     // Calls
     //
-    registerTokenType(TOKEN_OPERATOR_OPENSQUARE, new OpenSquareCallParselet());
-
-    registerTokenType(TOKEN_OPERATOR_LONGNAME_LEFTDOUBLEBRACKET, new LeftDoubleBracketCallParselet());
+    registerTokenType(TOKEN_OPERATOR_OPENSQUARE, new CallParselet(TOKEN_OPERATOR_OPENSQUARE));
+    registerTokenType(TOKEN_OPERATOR_LONGNAME_LEFTDOUBLEBRACKET, new CallParselet(TOKEN_OPERATOR_LONGNAME_LEFTDOUBLEBRACKET));
 
 
     //
@@ -237,9 +240,12 @@ void Parser::init() {
     // Special
     //
     
-    // a + b - c parses as one infix expression
-    registerTokenType(TOKEN_OPERATOR_PLUS, new InfixPlusParselet());
-    registerTokenType(TOKEN_OPERATOR_MINUS, new InfixPlusParselet());
+    // atom-like and infix
+    registerTokenType(TOKEN_OPERATOR_UNDER, new UnderParselet());
+    registerTokenType(TOKEN_OPERATOR_UNDERUNDER, new UnderUnderParselet());
+    registerTokenType(TOKEN_OPERATOR_UNDERUNDERUNDER, new UnderUnderUnderParselet());
+    // atom-like and postfix
+    registerTokenType(TOKEN_OPERATOR_UNDERDOT, new UnderDotParselet());
     
     // infix, prefix, postfix, everythingfix, and also binary and ternary
     registerTokenType(TOKEN_OPERATOR_SEMISEMI, new SemiSemiParselet());
@@ -253,13 +259,13 @@ void Parser::init() {
     // token is variable length
     registerTokenType(TOKEN_OPERATOR_TICK, new TickParselet());
     
-    // ternary
+    // ternary, with different possibilities for second operator
     registerTokenType(TOKEN_OPERATOR_SLASHCOLON, new SlashColonParselet());
     
     // infix and postfix
     registerTokenType(TOKEN_OPERATOR_SEMI, new SemiParselet());
     
-    // punt on parsing box syntax, reads token with no parsing
+    // punt on parsing box syntax, reads tokens with no parsing
     registerTokenType(TOKEN_OPERATOR_LINEARSYNTAX_OPENPAREN, new LinearSyntaxOpenParenParselet());
     
     // binary and ternary
@@ -297,14 +303,14 @@ void Parser::registerTokenType(Token token, Parselet *parselet) {
         
         mPostfixParselets[token] = Postfix;
     }
-    
-    if (auto Cleanup = dynamic_cast<CleanupParselet *>(parselet)) {
+
+    if (auto ContextSensitive = dynamic_cast<ContextSensitiveParselet *>(parselet)) {
         
-        if (mCleanupParselets.find(token) != mCleanupParselets.end()) {
+        if (mContextSensitiveParselets.find(token) != mContextSensitiveParselets.end()) {
             assert(false);
         }
         
-        mCleanupParselets[token] = Cleanup;
+        mContextSensitiveParselets[token] = ContextSensitive;
     }
 }
 
@@ -423,11 +429,25 @@ bool Parser::isPossibleBeginningOfExpression(Token Tok) {
     return false;
 }
 
-precedence_t Parser::getCurrentTokenPrecedence(Token TokIn, std::shared_ptr<Node> Left) {
+ContextSensitiveParselet* Parser::findContextSensitiveParselet(Token Tok) {
+    auto I = mContextSensitiveParselets.find(Tok);
+    assert(I != mContextSensitiveParselets.end());
+    return I->second;
+}
+
+precedence_t Parser::getCurrentTokenPrecedence(Token TokIn, ParserContext Ctxt) {
     
     if (isError(TokIn)) {
         return PRECEDENCE_LOWEST;
     }
+    
+//    if (TokIn == TOKEN_OPERATOR_COLON) {
+//        if (Ctxt.InsideColonParselet) {
+//            return PRECEDENCE_FAKE_OPTIONALCOLON;
+//        } else {
+//            return PRECEDENCE_FAKE_PATTERNCOLON;
+//        }
+//    }
     
     auto I = mInfixParselets.find(TokIn);
     if (I != mInfixParselets.end()) {
@@ -435,10 +455,10 @@ precedence_t Parser::getCurrentTokenPrecedence(Token TokIn, std::shared_ptr<Node
         auto parselet = I->second;
         
         // ColonParselet.getPrecedence is context sensitive
-        if (auto colonParselet = dynamic_cast<ColonParselet *>(parselet)) {
-            auto prec = colonParselet->getColonPrecedence(Left);
-            return prec;
-        }
+//        if (auto colonParselet = dynamic_cast<ColonParselet *>(parselet)) {
+//            auto prec = colonParselet->getColonPrecedence(Left);
+//            return prec;
+//        }
         
         return parselet->getPrecedence();
     }
@@ -454,7 +474,7 @@ precedence_t Parser::getCurrentTokenPrecedence(Token TokIn, std::shared_ptr<Node
     if (mPrefixParselets.find(TokIn) != mPrefixParselets.end()) {
         
         //
-        // Make up a source string for this token. For OPERATOR_FAKE_IMPLICITTIMES, this string is ""
+        // Make up a source string for this token. For TOKEN_OPERATOR_FAKE_IMPLICITTIMES, this string is ""
         //
         
         setCurrentToken(TOKEN_OPERATOR_FAKE_IMPLICITTIMES, "");
@@ -469,14 +489,18 @@ precedence_t Parser::getCurrentTokenPrecedence(Token TokIn, std::shared_ptr<Node
 
 std::shared_ptr<Node>Parser::parseTopLevel() {
     
-    auto Expr = parse(PRECEDENCE_LOWEST);
+    auto Expr = parse({0, PRECEDENCE_LOWEST, false});
     
-    Expr = cleanup(Expr);
+    Expr = cleanup(Expr, {0, PRECEDENCE_LOWEST, false});
     
     return Expr;
 }
 
-std::shared_ptr<Node>Parser::parse(precedence_t Precedence) {
+std::shared_ptr<Node>Parser::parse(ParserContext Ctxt) {
+    
+    auto DepthIn = Ctxt.Depth;
+    auto PrecedenceIn = Ctxt.Precedence;
+    auto InsideColonParseletIn = Ctxt.InsideColonParselet;
     
     Token token = currentToken();
     
@@ -485,15 +509,24 @@ std::shared_ptr<Node>Parser::parse(precedence_t Precedence) {
     assert(token != TOKEN_NEWLINE);
     assert(token != TOKEN_SPACE);
     
+    if (DepthIn == MAX_EXPRESSION_DEPTH) {
+        
+        auto Span = TheSourceManager->getTokenSpan();
+        
+        auto Issue = SyntaxIssue(TAG_MAXEXPRESSIONDEPTH, std::string("Max expression depth reached. Consider breaking up into smaller expressions."), SEVERITY_WARNING, Span);
+        
+        Issues.push_back(Issue);
+    }
+    
     if (isError(token) ||
         token == TOKEN_EOF ||
         !isPossibleBeginningOfExpression(token)) {
         
         auto errorParselet = new ErrorParselet();
         
-        auto Error = errorParselet->parse();
+        auto Error = errorParselet->parse(Ctxt);
         
-        Error = cleanup(Error);
+        Error = cleanup(Error, Ctxt);
         
         return Error;
     }
@@ -509,22 +542,16 @@ std::shared_ptr<Node>Parser::parse(precedence_t Precedence) {
         prefix = I->second;
     }
     
-    Left = prefix->parse();
+    Left = prefix->parse({DepthIn+1, PrecedenceIn, InsideColonParseletIn});
     
-    token = currentToken();
-    auto depth = 1;
-    auto maxDepthReached = false;
-    while (Precedence < getCurrentTokenPrecedence(token, Left)) {
+    while (true) {
         
-        if (depth > MAX_EXPRESSION_DEPTH && !maxDepthReached) {
-            
-            maxDepthReached = true;
-
-            auto Span = TheSourceManager->getTokenSpan();
-
-            auto Issue = SyntaxIssue(TAG_MAXEXPRESSIONDEPTH, std::string("Max expression depth reached. Consider breaking up into smaller expressions."), SEVERITY_WARNING, Span);
+        token = currentToken();
         
-            Issues.push_back(Issue);
+        auto TokenPrecedence = getCurrentTokenPrecedence(token, Ctxt);
+        
+        if (PrecedenceIn >= TokenPrecedence) {
+            break;
         }
         
         //
@@ -538,7 +565,7 @@ std::shared_ptr<Node>Parser::parse(precedence_t Precedence) {
             InfixParselet *infix;
             infix = I->second;
             
-            Left = infix->parse(Left);
+            Left = infix->parse(Left, {DepthIn+1, TokenPrecedence, InsideColonParseletIn});
             
         } else {
             
@@ -549,7 +576,7 @@ std::shared_ptr<Node>Parser::parse(precedence_t Precedence) {
             PostfixParselet *post;
             post = P->second;
             
-            Left = post->parse(Left);
+            Left = post->parse(Left, {DepthIn+1, TokenPrecedence, InsideColonParseletIn});
         }
         
         token = currentToken();
@@ -562,8 +589,6 @@ std::shared_ptr<Node>Parser::parse(precedence_t Precedence) {
             break;
         }
         
-        depth++;
-        
     } // while (Precedence < getCurrentTokenPrecedence(token, Left))
     
     return Left;
@@ -572,7 +597,7 @@ std::shared_ptr<Node>Parser::parse(precedence_t Precedence) {
 //
 // Cleanup the rest of the input
 //
-std::shared_ptr<Node> Parser::cleanup(std::shared_ptr<Node> Left) {
+std::shared_ptr<Node> Parser::cleanup(std::shared_ptr<Node> Left, ParserContext Ctxt) {
     
     auto Cleaned = Left;
     
@@ -591,24 +616,9 @@ std::shared_ptr<Node> Parser::cleanup(std::shared_ptr<Node> Left) {
             return Cleaned;
         }
         
-        CleanupParselet *cleanup;
-        {
-            auto I = mCleanupParselets.find(token);
-            if (I == mCleanupParselets.end()) {
-                
-                //
-                // If no other cleanup parselet is found, then rely on this
-                //
-                
-                cleanup = new CleanupRestParselet();
-                
-            } else {
-                
-                cleanup = I->second;
-            }
-        }
+        auto cleanup = new CleanupRestParselet();
         
-        Cleaned = cleanup->parse(Cleaned);
+        Cleaned = cleanup->parse(Cleaned, Ctxt);
     }
 }
 

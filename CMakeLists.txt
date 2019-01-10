@@ -7,7 +7,7 @@ set(PACLET "AST")
 
 message(STATUS "PACLET: ${PACLET}")
 
-set(PACLET_VERSION "0.6.1" CACHE STRING "Paclet Version")
+set(PACLET_VERSION "0.7" CACHE STRING "Paclet Version")
 
 message(STATUS "PACLET_VERSION: ${PACLET_VERSION}")
 
@@ -19,11 +19,13 @@ set(BUILD_DOCS OFF CACHE BOOL "Build documentation")
 
 set(WL_SOURCES
 	${CMAKE_SOURCE_DIR}/PacletInfo.m
+	${CMAKE_SOURCE_DIR}/AST/Abstract.wl
 	${CMAKE_SOURCE_DIR}/AST/AST.wl
 	${CMAKE_SOURCE_DIR}/AST/DeclarationName.wl
 	${CMAKE_SOURCE_DIR}/AST/Node.wl
 	${CMAKE_SOURCE_DIR}/AST/Symbol.wl
 	${CMAKE_SOURCE_DIR}/AST/ToInputFormString.wl
+	${CMAKE_SOURCE_DIR}/AST/ToFullFormString.wl
 	${CMAKE_SOURCE_DIR}/AST/Utils.wl
 )
 
@@ -53,10 +55,13 @@ set(WL_DATA_SOURCES
 )
 
 set(GENERATED_WL_SOURCES
-	${CMAKE_BINARY_DIR}/paclet/${PACLET}/LongNameDefines.wl
-	${CMAKE_BINARY_DIR}/paclet/${PACLET}/LongNameMap.wl
-	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Precedence.wl
-	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Token.wl
+	# not used right now ${CMAKE_BINARY_DIR}/paclet/${PACLET}/LongNameDefines.wl
+	# not used right now ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Precedence.wl
+	# not used right now ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Token.wl
+)
+
+set(GENERATED_WL_DATA_SOURCES
+	${CMAKE_BINARY_DIR}/generated/wl/LongNameMap.wl
 )
 
 set(GENERATED_CPP_INCLUDES
@@ -78,17 +83,30 @@ set(GENERATED_CPP_SOURCES
 
 set(GENERATED_SOURCES
 	${GENERATED_WL_SOURCES}
+	${GENERATED_WL_DATA_SOURCES}
 	${GENERATED_CPP_INCLUDES}
 	${GENERATED_CPP_SOURCES}
 )
 
 set(DOCUMENTATION_NOTEBOOKS
 	${CMAKE_SOURCE_DIR}/AST/Documentation/English/ReferencePages/Symbols/ParseString.nb
+	${CMAKE_SOURCE_DIR}/AST/Documentation/English/ReferencePages/Symbols/ParseFile.nb
+	${CMAKE_SOURCE_DIR}/AST/Documentation/English/ReferencePages/Symbols/ConcreteParseString.nb
+	${CMAKE_SOURCE_DIR}/AST/Documentation/English/ReferencePages/Symbols/ConcreteParseFile.nb
 	${CMAKE_SOURCE_DIR}/AST/Documentation/English/Tutorials/Examples.nb
 )
 
 set(BUILT_DOCUMENTATION_NOTEBOOKS
+	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/English/Index/_0.cfs
+	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/English/Index/segments.gen
+	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/English/Index/segments_3
 	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/English/ReferencePages/Symbols/ParseString.nb
+	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/English/ReferencePages/Symbols/ParseFile.nb
+	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/English/ReferencePages/Symbols/ConcreteParseString.nb
+	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/English/ReferencePages/Symbols/ConcreteParseFile.nb
+	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/English/SpellIndex/_0.cfs
+	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/English/SpellIndex/segments.gen
+	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/English/SpellIndex/segments_3
 	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/English/Tutorials/Examples.nb
 )
 
@@ -111,11 +129,11 @@ execute_process(
 message(STATUS "VERSION_NUMBER: ${VERSION_NUMBER}")
 
 if("${VERSION_NUMBER}" STREQUAL "")
-message(FATAL_ERROR "Wolfram Kernel failed")
+	message(FATAL_ERROR "Wolfram Kernel failed")
 endif()
 
 if(NOT ${VERSION_NUMBER} GREATER_EQUAL 1100)
-message(FATAL_ERROR "Wolfram Kernel must be at least version 11.0")
+	message(FATAL_ERROR "Wolfram Kernel must be at least version 11.0")
 endif()
 
 
@@ -175,6 +193,7 @@ add_custom_command(
 	DEPENDS
 		${CMAKE_SOURCE_DIR}/scripts/Generate.wl
 		${WL_DATA_SOURCES}
+		# it may be overkill to depend on all WL sources, but it keeps things simple
 		${WL_SOURCES}
 	COMMAND ${WOLFRAMKERNEL} -noinit -script ${CMAKE_SOURCE_DIR}/scripts/Generate.wl -buildDir ${CMAKE_BINARY_DIR}
 	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
@@ -198,13 +217,16 @@ target_include_directories(wl-ast
 	PRIVATE ${CMAKE_BINARY_DIR}/generated/cpp/include
 )
 
-set(MAX_EXPRESSION_DEPTH 50 CACHE STRING "Maximum depth allowed by the parser")
+set(MAX_EXPRESSION_DEPTH 100 CACHE STRING "Maximum depth allowed by the parser")
+set(MAX_EXPRESSION_BREADTH 1000 CACHE STRING "Maximum breadth allowed by the parser")
 
 message(STATUS "MAX_EXPRESSION_DEPTH: ${MAX_EXPRESSION_DEPTH}")
+message(STATUS "MAX_EXPRESSION_BREADTH: ${MAX_EXPRESSION_BREADTH}")
 
 target_compile_definitions(wl-ast
 	PRIVATE VERSION_NUMBER=${VERSION_NUMBER}
 	PRIVATE MAX_EXPRESSION_DEPTH=${MAX_EXPRESSION_DEPTH}
+	PRIVATE MAX_EXPRESSION_BREADTH=${MAX_EXPRESSION_BREADTH}
 )
 
 # get $SystemID
@@ -263,7 +285,13 @@ add_custom_target(docs
 )
 
 set(DOCS_APPPATH /Applications/Eclipse.app/Contents/Eclipse/configuration/org.eclipse.osgi/525/0/.cp/MathematicaSource/ CACHE PATH "Path of MathematicaSource inside Workbench installation")
+
+message(STATUS "DOCS_APPPATH: ${DOCS_APPPATH}")
+
 set(DOCS_JLINKPATH /Applications/Mathematica.app/Contents/SystemFiles/Links/JLink/ CACHE PATH "Path of JLink")
+
+message(STATUS "DOCS_JLINKPATH: ${DOCS_JLINKPATH}")
+
 
 #
 # build the docs

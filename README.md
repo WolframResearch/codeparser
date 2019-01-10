@@ -16,11 +16,7 @@ the syntax that was used in the original source code.
 
 So FullForm is not sufficient for representing WL source code syntax.
 
-The AST package introduces functions Parse and ParseFile for parsing WL source code and returning a tree structure that represents the original source code.
-
-For example, `ParseString["1 + 1"]` returns `InfixNode[Plus, {NumberNode["1", {}, <|Source->{{1,1},{1,1}}|>], NumberNode["1", {}, <|Source->{{1,5},{1,5}}|>]}, <|Source->{{1,1},{1,5}}|>]`
-
-And `ParseString["Plus[1, 1]"]` returns `CallNode[SymbolNode["Plus", {}, <|Source->{{1,1},{1,4}}|>], {NumberNode["1", {}, <|Source->{{1,6},{1,6}}|>], NumberNode["1", {}, <|Source->{{1,9},{1,9}}|>]}, <|Source->{{1,1},{1,10}}|>]`
+The AST package introduces functions for parsing WL source code and returning a tree structure that represents the original source code.
 
 
 
@@ -42,16 +38,14 @@ The AST source layout has the following structure.
 
 ```
 ast/
-  cpp/
-    include/
-    src/
+  AST/
+    cpp/
+      include/
+      src/
+    Documentation/
+    tables/
   scripts/
     Generate.wl
-    Pack.wl
-    SystemID.wl
-  tables/
-  wl/
-    AST/
   CMakeLists.txt
   README.md
 ```
@@ -62,15 +56,9 @@ The scripts directory contains scripts for building AST.
 
 Generate.wl generates C++ and WL source code.
 
-Pack.wl builds the .paclet file.
-
-SystemID.wl prints $SystemID.
-
-
-
 The tables directory contains data for building AST.
 
-The wl directory contains WL source code.
+The AST directory contains WL source code.
 
 CMakeLists.txt is the CMake file for building AST.
 
@@ -85,7 +73,7 @@ CMakeLists.txt is the CMake file for building AST.
 
 ## Installing AST
 
-Call PacletInstall with the path to newly built .paclet file.
+Call PacletInstall with the path to the built .paclet file.
 
 ```
 In[1]:= PacletInstall["/path/to/built/AST.paclet"]
@@ -120,5 +108,24 @@ InfixNode[Plus, {NumberNode["1", {}, <|Source->{{1, 1}, {1, 1}}|>], NumberNode["
 
 >>>
 ```
+
+
+
+## Troubleshooting
+
+### Strange behavior on Windows
+
+After installing the AST paclet on Windows, you may see strange behavior such as the kernel and front end crashing or the wl-ast executable disppearing.
+
+This is most likely due to Antivirus software such as Bitdefender incorrectly flagging the wl-ast.exe executable as a virus.
+
+Make sure to whitelist wl-ast.exe to prevent Antivirus software from flagging this paclet as a virus.
+
+<!--- bug 236253 --->
+
+
+
+
+
 
 

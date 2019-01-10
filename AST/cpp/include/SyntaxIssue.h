@@ -12,6 +12,7 @@
 #define TAG_SYNTAXAMBIGUITY "SyntaxAmbiguity"
 #define TAG_NOTCONTIGUOUS "NotContiguous"
 #define TAG_MAXEXPRESSIONDEPTH "MaxExpressionDepth"
+#define TAG_MAXEXPRESSIONBREADTH "MaxExpressionBreadth"
 
 #define SEVERITY_REMARK "Remark"
 #define SEVERITY_WARNING "Warning"

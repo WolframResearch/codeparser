@@ -1,7 +1,5 @@
 BeginPackage["AST`Node`"]
 
-
-
 Begin["`Private`"]
 
 Needs["AST`"]
@@ -30,6 +28,30 @@ ToNode[number] returns a NumberNode
 *)
 ToNode[s_Integer] := NumberNode[ToString[s, InputForm], {}, <||>]
 ToNode[s_Real] := NumberNode[ToString[s, InputForm], {}, <||>]
+
+
+ToNode[args___] := Failure["Unhandled", <|"Function"->ToNode, "Arguments"->HoldForm[{args}]|>]
+
+
+
+FromNode[SymbolNode[s_, {}, _]] :=
+	Symbol[s]
+
+(*
+No simple way to convert "\"123\"" to "123"
+*)
+FromNode[StringNode[s_, {}, _]] :=
+	ToExpression[s]
+
+(*
+No simple way to convert "123.456``7" to 123.456``7
+*)
+FromNode[NumberNode[s_, {}, _]] :=
+	ToExpression[s]
+
+
+FromNode[args___] := Failure["Unhandled", <|"Function"->FromNode, "Arguments"->HoldForm[{args}]|>]
+
 
 
 End[]

@@ -132,6 +132,8 @@ Token Tokenizer::nextToken() {
                 
             } else if (isSpaceCodePoint(c)) {
                 
+                String << WLCharacterToString(c);
+                
                 c = nextWLCharacter();
                 
                 cur = TOKEN_SPACE;
@@ -139,12 +141,16 @@ Token Tokenizer::nextToken() {
                 
             } else if (isNewlineCodePoint(c)) {
                 
+                String << WLCharacterToString(c);
+                
                 c = nextWLCharacter();
                 
                 cur = TOKEN_NEWLINE;
                 break;
                 
             } else if (isCommaCodePoint(c)) {
+                
+                String << WLCharacterToString(c);
                 
                 c = nextWLCharacter();
                 
@@ -292,7 +298,8 @@ Token Tokenizer::handleComment() {
     auto c = currentWLCharacter();
 
     assert(c == '*');
-    
+    assert(String.str().empty());
+
     String.put('(');
     String.put('*');
     
@@ -570,6 +577,7 @@ Token Tokenizer::handleString() {
 
             } else {
 
+                // too noisy
                 // if (c == '\n') {
 
                 //     auto Span = TheSourceManager->getWLCharacterSpan();
@@ -681,6 +689,8 @@ Token Tokenizer::handleNumber() {
         }
     }
     
+    c = currentWLCharacter();
+    
     if (c == '.') {
         
         if (!handleFractionalPart(base)) {
@@ -752,6 +762,8 @@ Token Tokenizer::handleNumber() {
                     //
                     // Something like 1.2``->3
                     //
+                    
+                    String.put(s);
                     
                     cur = TOKEN_ERROR_EXPECTEDACCURACY;
                     return cur;
@@ -889,7 +901,7 @@ bool Tokenizer::handleFractionalPart(int base) {
         auto DigitLoc = Loc;
         DigitLoc.Col--;
 
-        auto Issue = SyntaxIssue(TAG_SYNTAXAMBIGUITY, "Put a space between number and . to reduce ambiguity", SEVERITY_REMARK, (SourceSpan{DigitLoc,Loc}));
+        auto Issue = SyntaxIssue(TAG_SYNTAXAMBIGUITY, "Put a space before the . to reduce ambiguity", SEVERITY_REMARK, (SourceSpan{DigitLoc,Loc}));
         
         Issues.push_back(Issue);
 
@@ -900,20 +912,35 @@ bool Tokenizer::handleFractionalPart(int base) {
         setCurrentWLCharacter('.', Loc);
         
         
-        return false;
+        return false; 
+    }
+
+    String.put('.');
+
+    if (isDigitOrAlpha(c)) {
         
-    } else {
-        
-        String.put('.');
-        
-        if (isDigitOrAlpha(c)) {
-            
-            if (!handleDigitsOrAlpha(base)) {
-                return false;
-            }
+        if (!handleDigitsOrAlpha(base)) {
+            return false;
         }
     }
     
+    c = currentWLCharacter();
+
+    if (c == '.') {
+
+        //
+        // Something like 1.2.3
+        //
+
+        auto Loc2 = TheSourceManager->getSourceLocation();
+        auto Loc1 = Loc2;
+        Loc1.Col--;
+
+        auto Issue = SyntaxIssue(TAG_SYNTAXAMBIGUITY, "Put a space before the . to reduce ambiguity", SEVERITY_ERROR, (SourceSpan{Loc1,Loc2}));
+        
+        Issues.push_back(Issue);
+    }
+
     return true;
 }
 
@@ -1466,7 +1493,22 @@ Token Tokenizer::handleOperator() {
             
             c = nextWLCharacter();
             
-            if (isDigitOrAlphaOrDollar(c)) {
+            //
+            // A slot that starts with a digit goes down one path
+            // And a slot that starts with a letter does down another path
+            //
+            // Make sure e.g. #1a is not parsd as SlotNode["#1a"]
+            //
+            
+            if (isDigit(c)) {
+                
+                Operator = TOKEN_OPERATOR_HASH;
+                
+                handleDigits();
+                
+                return Operator;
+                
+            } else if (isAlphaOrDollar(c)) {
                 
                 Operator = TOKEN_OPERATOR_HASH;
                 

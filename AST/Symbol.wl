@@ -39,18 +39,20 @@ $Nodes = {
 SymbolNode,
 StringNode,
 NumberNode,
-SyntaxErrorNode,
+
 BlankNode,
 BlankSequenceNode,
 BlankNullSequenceNode,
+OptionalDefaultNode,
 PatternBlankNode,
 PatternBlankSequenceNode,
 PatternBlankNullSequenceNode,
-OptionalDefaultNode,
+OptionalDefaultPatternNode,
+
 SlotNode,
 SlotSequenceNode,
 OutNode,
-InternalEmptyNode,
+(*InternalEmptyNode,*)
 PrefixNode,
 BinaryNode,
 TernaryNode,
@@ -58,11 +60,19 @@ InfixNode,
 PostfixNode,
 GroupNode,
 CallNode,
-PartNode,
-InternalMinusNode,
+
 InternalTokenNode,
+InternalAllNode,
+InternalDotNode,
+InternalNullNode,
+InternalOneNode,
+
+
 FileNode,
+
+SyntaxErrorNode,
 CallMissingCloserNode
+
 }
 
 $Options = {
@@ -73,24 +83,26 @@ SyntaxIssues
 
 
 $Miscellaneous = {
+All,
 (* when parsing f[1,] then we need to parse as f[1,Null] *)
 Null,
 SyntaxIssue,
 
 (* for Nodes *)
 File,
-InternalMinus,
-InternalEmpty,
+
 Out,
 Slot,
 SlotSequence,
-OptionalDefault,
+
 Blank,
 BlankSequence,
 BlankNullSequence,
+OptionalDefault,
 PatternBlank,
 PatternBlankSequence,
 PatternBlankNullSequence,
+OptionalDefaultPattern,
 
 TernarySlashColon,
 TagSet,
@@ -99,7 +111,10 @@ TagUnset,
 
 TernaryTilde,
 
+(*InternalEmpty,*)
 InternalInvalid,
+
+HoldForm[Nothing],
 
 Nothing
 }
@@ -109,7 +124,7 @@ Token
 }
 
 $Characters = {
-Character
+WLCharacter
 }
 
 $Groups = {
@@ -196,15 +211,18 @@ PrefixOperatorToSymbol[Token`Operator`LongName`DoubleContourIntegral] = DoubleCo
 PrefixOperatorToSymbol[Token`Operator`LongName`ClockwiseContourIntegral] = ClockwiseContourIntegral
 PrefixOperatorToSymbol[Token`Operator`LongName`CounterClockwiseContourIntegral] = CounterClockwiseContourIntegral
 PrefixOperatorToSymbol[Token`Operator`LongName`Product] = Product
+PrefixOperatorToSymbol[Token`Operator`LongName`InvisiblePrefixScriptBase] = PrefixInvisiblePrefixScriptBase
 
-PrefixOperatorToSymbol[Token`Operator`LinearSyntax`Bang] = LinearSyntaxBang
+PrefixOperatorToSymbol[Token`Operator`LinearSyntax`Bang] = PrefixLinearSyntaxBang
 
 SymbolToPrefixOperatorString[Not] = "!"
-SymbolToPrefixOperatorString[Minus] = "-"
+(* extra space, prevent confusion with --, with e.g., - - 12.34 *)
+SymbolToPrefixOperatorString[Minus] = " -"
 SymbolToPrefixOperatorString[PreIncrement] = "++"
 SymbolToPrefixOperatorString[PreDecrement] = "--"
-SymbolToPrefixOperatorString[Plus] = "+"
-SymbolToPrefixOperatorString[LinearSyntaxBang] = "\\!"
+(* extra space *)
+SymbolToPrefixOperatorString[Plus] = " +"
+SymbolToPrefixOperatorString[PrefixLinearSyntaxBang] = "\\!"
 SymbolToPrefixOperatorString[Get] = "<<"
 SymbolToPrefixOperatorString[Sqrt] = "\\[Sqrt]"
 SymbolToPrefixOperatorString[PlusMinus] = "\\[PlusMinus]"
@@ -219,6 +237,7 @@ SymbolToPrefixOperatorString[Sum] = "\\[Sum]"
 SymbolToPrefixOperatorString[Product] = "\\[Product]"
 SymbolToPrefixOperatorString[Square] = "\\[Square]"
 SymbolToPrefixOperatorString[Del] = "\\[Del]"
+SymbolToPrefixOperatorString[PrefixInvisiblePrefixScriptBase] = "\\[InvisiblePrefixScriptBase]"
 
 
 
@@ -242,9 +261,11 @@ PostfixOperatorToSymbol[Token`Operator`LongName`Transpose] = Transpose
 PostfixOperatorToSymbol[Token`Operator`LongName`Conjugate] = Conjugate
 PostfixOperatorToSymbol[Token`Operator`LongName`ConjugateTranspose] = ConjugateTranspose
 PostfixOperatorToSymbol[Token`Operator`LongName`HermitianConjugate] = PostfixHermitianConjugate
+PostfixOperatorToSymbol[Token`Operator`LongName`InvisiblePostfixScriptBase] = PostfixInvisiblePostfixScriptBase
 
-SymbolToPostfixOperatorString[Function] = "&"
-(* extra space *)
+(* extra space , for e.g. a& & b *)
+SymbolToPostfixOperatorString[Function] = "& "
+(* extra space on both sides, for e.g. 0. .. *)
 SymbolToPostfixOperatorString[Repeated] = " .. "
 SymbolToPostfixOperatorString[Increment] = "++"
 SymbolToPostfixOperatorString[Decrement] = "--"
@@ -261,7 +282,7 @@ SymbolToPostfixOperatorString[Transpose] = "\\[Transpose]"
 SymbolToPostfixOperatorString[Conjugate] = "\\[Conjugate]"
 SymbolToPostfixOperatorString[ConjugateTranspose] = "\\[ConjugateTranspose]"
 SymbolToPostfixOperatorString[PostfixHermitianConjugate] = "\\[HermitianConjugate]"
-
+SymbolToPostfixOperatorString[PostfixInvisiblePostfixScriptBase] = "\\[InvisiblePostfixScriptBase]"
 
 
 
@@ -273,6 +294,20 @@ SymbolToPostfixOperatorString[PostfixHermitianConjugate] = "\\[HermitianConjugat
 (*
 Binary
 *)
+(* inequality operators *)
+BinaryOperatorToSymbol[Token`Operator`EqualEqual] = Equal
+BinaryOperatorToSymbol[Token`Operator`BangEqual] = Unequal
+BinaryOperatorToSymbol[Token`Operator`Less] = Less
+BinaryOperatorToSymbol[Token`Operator`Greater] = Greater
+BinaryOperatorToSymbol[Token`Operator`LessEqual] = LessEqual
+BinaryOperatorToSymbol[Token`Operator`GreaterEqual] = GreaterEqual
+
+(* other flattening operators *)
+BinaryOperatorToSymbol[Token`Operator`EqualEqualEqual] = SameQ
+BinaryOperatorToSymbol[Token`Operator`EqualBangEqual] = UnsameQ
+BinaryOperatorToSymbol[Token`Operator`AtStar] = Composition
+BinaryOperatorToSymbol[Token`Operator`SlashStar] = RightComposition
+
 BinaryOperatorToSymbol[Token`Operator`SlashAt] = Map
 BinaryOperatorToSymbol[Token`Operator`Equal] = Set
 BinaryOperatorToSymbol[Token`Operator`Caret] = Power
@@ -280,32 +315,21 @@ BinaryOperatorToSymbol[Token`Operator`ColonEqual] = SetDelayed
 BinaryOperatorToSymbol[Token`Operator`MinusGreater] = Rule
 BinaryOperatorToSymbol[Token`Operator`Question] = PatternTest
 BinaryOperatorToSymbol[Token`Operator`AtAt] = Apply
-BinaryOperatorToSymbol[Token`Operator`EqualEqual] = Equal
-BinaryOperatorToSymbol[Token`Operator`Greater] = Greater
 BinaryOperatorToSymbol[Token`Operator`SlashSemi] = Condition
-BinaryOperatorToSymbol[Token`Operator`LessEqual] = LessEqual
-BinaryOperatorToSymbol[Token`Operator`EqualEqualEqual] = SameQ
 BinaryOperatorToSymbol[Token`Operator`SlashDot] = ReplaceAll
 BinaryOperatorToSymbol[Token`Operator`ColonGreater] = RuleDelayed
-BinaryOperatorToSymbol[Token`Operator`EqualBangEqual] = UnsameQ
-BinaryOperatorToSymbol[Token`Operator`GreaterEqual] = GreaterEqual
 BinaryOperatorToSymbol[Token`Operator`SlashSlashDot] = ReplaceRepeated
-BinaryOperatorToSymbol[Token`Operator`Less] = Less
 BinaryOperatorToSymbol[Token`Operator`PlusEqual] = AddTo
-BinaryOperatorToSymbol[Token`Operator`BangEqual] = Unequal
 BinaryOperatorToSymbol[Token`Operator`StarEqual] = TimesBy
 BinaryOperatorToSymbol[Token`Operator`MinusEqual] = SubtractFrom
 BinaryOperatorToSymbol[Token`Operator`SlashEqual] = DivideBy
 BinaryOperatorToSymbol[Token`Operator`CaretEqual] = UpSet
-BinaryOperatorToSymbol[Token`Operator`SlashStar] = RightComposition
-BinaryOperatorToSymbol[Token`Operator`AtStar] = Composition
 BinaryOperatorToSymbol[Token`Operator`CaretColonEqual] = UpSetDelayed
 If[$VersionNumber >= 11.1, ToExpression["BinaryOperatorToSymbol[Token`Operator`LessMinusGreater] = TwoWayRule"]]
 BinaryOperatorToSymbol[Token`Operator`SlashSlashAt] = MapAll
 BinaryOperatorToSymbol[Token`Operator`ColonColon] = MessageName
 BinaryOperatorToSymbol[Token`Operator`GreaterGreater] = Put
 BinaryOperatorToSymbol[Token`Operator`SlashSlash] = BinarySlashSlash
-BinaryOperatorToSymbol[Token`Operator`Slash] = Divide
 BinaryOperatorToSymbol[Token`Operator`SemiSemi] = Span
 BinaryOperatorToSymbol[Token`Operator`At] = BinaryAt
 BinaryOperatorToSymbol[Token`Operator`AtAtAt] = BinaryAtAtAt
@@ -375,13 +399,20 @@ BinaryOperatorToSymbol[Token`Operator`LongName`CirclePlus] = CirclePlus
 BinaryOperatorToSymbol[Token`Operator`LongName`CircleMinus] = CircleMinus
 BinaryOperatorToSymbol[Token`Operator`LongName`RightTriangle] = RightTriangle
 BinaryOperatorToSymbol[Token`Operator`LongName`LeftTriangle] = LeftTriangle
-BinaryOperatorToSymbol[Token`Operator`LongName`Times] = Times
-BinaryOperatorToSymbol[Token`Operator`LongName`And] = And
-BinaryOperatorToSymbol[Token`Operator`LongName`Or] = Or
-BinaryOperatorToSymbol[Token`Operator`LongName`Xor] = Xor
-BinaryOperatorToSymbol[Token`Operator`LongName`Nand] = Nand
-BinaryOperatorToSymbol[Token`Operator`LongName`Nor] = Nor
-BinaryOperatorToSymbol[Token`Operator`LongName`ImplicitPlus] = InfixImplicitPlus
+
+(* inequality operators *)
+SymbolToBinaryOperatorString[Equal] = "=="
+SymbolToBinaryOperatorString[Unequal] = "!="
+SymbolToBinaryOperatorString[Less] = "<"
+SymbolToBinaryOperatorString[Greater] = ">"
+SymbolToBinaryOperatorString[LessEqual] = "<="
+SymbolToBinaryOperatorString[GreaterEqual] = ">="
+
+(* other flattening operators *)
+SymbolToBinaryOperatorString[SameQ] = "==="
+SymbolToBinaryOperatorString[UnsameQ] = "=!="
+SymbolToBinaryOperatorString[Composition] = "@*"
+SymbolToBinaryOperatorString[RightComposition] = "/*"
 
 SymbolToBinaryOperatorString[Map] = "/@"
 SymbolToBinaryOperatorString[Set] = "="
@@ -389,39 +420,30 @@ SymbolToBinaryOperatorString[SetDelayed] = ":="
 SymbolToBinaryOperatorString[Rule] = "->"
 SymbolToBinaryOperatorString[PatternTest] = "?"
 SymbolToBinaryOperatorString[MessageName] = "::"
-SymbolToBinaryOperatorString[Divide] = "/"
 SymbolToBinaryOperatorString[Pattern] = ":"
 SymbolToBinaryOperatorString[Apply] = "@@"
-SymbolToBinaryOperatorString[Equal] = "=="
 SymbolToBinaryOperatorString[Condition] = "/;"
-SymbolToBinaryOperatorString[Greater] = ">"
-SymbolToBinaryOperatorString[LessEqual] = "<="
-SymbolToBinaryOperatorString[SameQ] = "==="
-(* extra space *)
+(* extra space, ending in . *)
 SymbolToBinaryOperatorString[ReplaceAll] = "/. "
 SymbolToBinaryOperatorString[RuleDelayed] = ":>"
 SymbolToBinaryOperatorString[Span] = ";;"
-SymbolToBinaryOperatorString[GreaterEqual] = ">="
 SymbolToBinaryOperatorString[BinaryAt] = "@"
 SymbolToBinaryOperatorString[Power] = "^"
-SymbolToBinaryOperatorString[UnsameQ] = "=!="
 SymbolToBinaryOperatorString[BinaryAtAtAt] = "@@@"
 SymbolToBinaryOperatorString[BinarySlashSlash] = "//"
-SymbolToBinaryOperatorString[Less] = "<"
-SymbolToBinaryOperatorString[ReplaceRepeated] = "//."
+(* extra space, ending in . *)
+SymbolToBinaryOperatorString[ReplaceRepeated] = "//. "
 SymbolToBinaryOperatorString[AddTo] = "+="
 SymbolToBinaryOperatorString[Optional] = ":"
-SymbolToBinaryOperatorString[Unequal] = "!="
 SymbolToBinaryOperatorString[SubtractFrom] = "-="
 SymbolToBinaryOperatorString[TimesBy] = "*="
 SymbolToBinaryOperatorString[DivideBy] = "/="
-SymbolToBinaryOperatorString[Composition] = "@*"
 SymbolToBinaryOperatorString[UpSetDelayed] = "^:="
 SymbolToBinaryOperatorString[UpSet] = "^="
-SymbolToBinaryOperatorString[RightComposition] = "/*"
 SymbolToBinaryOperatorString[MapAll] = "//@"
 SymbolToBinaryOperatorString[Put] = ">>"
-SymbolToBinaryOperatorString[Unset] = "=."
+(* extra space, ending in . *)
+SymbolToBinaryOperatorString[Unset] = "=. "
 
 SymbolToBinaryOperatorString[Element] = "\\[Element]"
 SymbolToBinaryOperatorString[SubsetEqual] = "\\[SubsetEqual]"
@@ -479,21 +501,26 @@ SymbolToBinaryOperatorString[Star] = "\\[Star]"
 SymbolToBinaryOperatorString[Vee] = "\\[Vee]"
 SymbolToBinaryOperatorString[VerticalTilde] = "\\[VerticalTilde]"
 SymbolToBinaryOperatorString[Wedge] = "\\[Wedge]"
-SymbolToBinaryOperatorString[And] = "\\[And]"
-SymbolToBinaryOperatorString[Nand] = "\\[Nand]"
-SymbolToBinaryOperatorString[Nor] = "\\[Nor]"
-SymbolToBinaryOperatorString[Or] = "\\[Or]"
-SymbolToBinaryOperatorString[Times] = "\\[Times]"
-SymbolToBinaryOperatorString[Xor] = "\\[Xor]"
-SymbolToBinaryOperatorString[InfixImplicitPlus] = "\\[ImplicitPlus]"
-
 
 (*
 Infix
 *)
 InfixOperatorToSymbol[Token`Operator`Semi] = CompoundExpression
+
+(* Plus and Times *)
 InfixOperatorToSymbol[Token`Operator`Plus] = Plus
+InfixOperatorToSymbol[Token`Operator`Minus] = Minus
+
+InfixOperatorToSymbol[Token`Operator`LongName`ImplicitPlus] = InfixImplicitPlus
+
 InfixOperatorToSymbol[Token`Operator`Star] = Times
+InfixOperatorToSymbol[Token`Operator`Slash] = Divide
+
+InfixOperatorToSymbol[Token`Operator`Fake`ImplicitTimes] = ImplicitTimes
+
+InfixOperatorToSymbol[Token`Operator`LongName`Times] = InfixTimes
+InfixOperatorToSymbol[Token`Operator`LongName`InvisibleTimes] = InfixInvisibleTimes
+
 InfixOperatorToSymbol[Token`Operator`StarStar] = NonCommutativeMultiply
 InfixOperatorToSymbol[Token`Operator`Dot] = Dot
 InfixOperatorToSymbol[Token`Operator`AmpAmp] = And
@@ -502,17 +529,41 @@ InfixOperatorToSymbol[Token`Operator`BarBar] = Or
 InfixOperatorToSymbol[Token`Operator`LessGreater] = StringJoin
 InfixOperatorToSymbol[Token`Operator`TildeTilde] = StringExpression
 
-InfixOperatorToSymbol[Token`Operator`Fake`ImplicitTimes] = InfixImplicitTimes
+(* inequality operators *)
+InfixOperatorToSymbol[Token`Operator`EqualEqual] = Equal
+InfixOperatorToSymbol[Token`Operator`BangEqual] = Unequal
+InfixOperatorToSymbol[Token`Operator`Less] = Less
+InfixOperatorToSymbol[Token`Operator`Greater] = Greater
+InfixOperatorToSymbol[Token`Operator`LessEqual] = LessEqual
+InfixOperatorToSymbol[Token`Operator`GreaterEqual] = GreaterEqual
 
-(* not used *)
-SymbolToInfixOperatorString[Plus] = "INVALID"
+(* other flattening operators *)
+InfixOperatorToSymbol[Token`Operator`EqualEqualEqual] = SameQ
+InfixOperatorToSymbol[Token`Operator`EqualBangEqual] = UnsameQ
+InfixOperatorToSymbol[Token`Operator`AtStar] = Composition
+InfixOperatorToSymbol[Token`Operator`SlashStar] = RightComposition
+
+InfixOperatorToSymbol[Token`Operator`LongName`And] = And
+InfixOperatorToSymbol[Token`Operator`LongName`Or] = Or
+InfixOperatorToSymbol[Token`Operator`LongName`Xor] = Xor
+InfixOperatorToSymbol[Token`Operator`LongName`Nand] = Nand
+InfixOperatorToSymbol[Token`Operator`LongName`Nor] = Nor
+
 (* extra space *)
-SymbolToInfixOperatorString[CompoundExpression] = "; "
-(*
-No SymbolToInfixOperatorString[Plus] because it is handled specially (for InternalMinusNode)
-*)
+SymbolToInfixOperatorString[CompoundExpression] = " ; "
+
+(* Plus and Times *)
+(* extra space, prevent 9.8` + 3 from turning into 9.8`+3 *)
+SymbolToInfixOperatorString[Plus] = " + "
+SymbolToInfixOperatorString[Minus] = " - "
+SymbolToInfixOperatorString[InfixImplicitPlus] = "\\[ImplicitPlus]"
+
 SymbolToInfixOperatorString[Times] = "*"
-SymbolToInfixOperatorString[InfixImplicitTimes] = " "
+SymbolToInfixOperatorString[Divide] = "/"
+SymbolToInfixOperatorString[ImplicitTimes] = " "
+SymbolToInfixOperatorString[InfixInvisibleTimes] = "\\[InvisibleTimes]"
+SymbolToInfixOperatorString[InfixTimes] = "\\[Times]"
+
 SymbolToInfixOperatorString[NonCommutativeMultiply] = "**"
 (* extra space *)
 SymbolToInfixOperatorString[Dot] = " . "
@@ -522,9 +573,35 @@ SymbolToInfixOperatorString[Or] = "||"
 SymbolToInfixOperatorString[StringJoin] = "<>"
 SymbolToInfixOperatorString[StringExpression] = "~~"
 
+(* inequality operators *)
+SymbolToInfixOperatorString[Equal] = "=="
+SymbolToInfixOperatorString[Unequal] = "!="
+SymbolToInfixOperatorString[Less] = "<"
+SymbolToInfixOperatorString[Greater] = ">"
+SymbolToInfixOperatorString[LessEqual] = "<="
+SymbolToInfixOperatorString[GreaterEqual] = ">="
+
+(* other flattening operators *)
+SymbolToInfixOperatorString[SameQ] = "==="
+SymbolToInfixOperatorString[UnsameQ] = "=!="
+SymbolToInfixOperatorString[Composition] = "@*"
+SymbolToInfixOperatorString[RightComposition] = "/*"
+
+SymbolToInfixOperatorString[Nand] = "\\[Nand]"
+SymbolToInfixOperatorString[Nor] = "\\[Nor]"
+SymbolToInfixOperatorString[Xor] = "\\[Xor]"
 
 
 
+(*
+Ternary
+*)
+TernaryOperatorsToSymbol[Token`Operator`SlashColon, Token`Operator`Equal] = TagSet
+TernaryOperatorsToSymbol[Token`Operator`SlashColon, Token`Operator`ColonEqual] = TagSetDelayed
+TernaryOperatorsToSymbol[Token`Operator`SlashColon, Token`Operator`Fake`EqualDot] = TagUnset
+TernaryOperatorsToSymbol[Token`Operator`Tilde, Token`Operator`Tilde] = TernaryTilde
+TernaryOperatorsToSymbol[Token`Operator`SemiSemi, Token`Operator`SemiSemi] = Span
+TernaryOperatorsToSymbol[Token`Operator`ColonColon, Token`Operator`ColonColon] = MessageName
 
 SymbolToTernaryPair[TagSet] = {TernarySlashColon, Set}
 SymbolToTernaryPair[TagSetDelayed] = {TernarySlashColon, SetDelayed}
@@ -539,7 +616,8 @@ SymbolToTernaryOperatorString[TernarySlashColon] = "/:"
 SymbolToTernaryOperatorString[Set] = "="
 SymbolToTernaryOperatorString[SetDelayed] = ":="
 SymbolToTernaryOperatorString[Span] = ";;"
-SymbolToTernaryOperatorString[Unset] = "=."
+(* extra space, ending in . *)
+SymbolToTernaryOperatorString[Unset] = "=. "
 
 
 

@@ -104,15 +104,39 @@ int main(int argc, char *argv[]) {
             
             auto nodes = parseExpressions(interactive);
             
-            auto FN = std::make_shared<FileNode>(nodes);
+            // auto FN = std::make_shared<FileNode>(nodes);
             
             switch (format) {
                 case FORMAT_INPUTFORM:
-                    std::cout << FN->inputform();
+                    // std::cout << FN->inputform();
+
+                    if (!nodes.empty()) {
+                        auto I = nodes.begin();
+                        auto LastIt = nodes.end();
+                        LastIt--;
+                        for (; I < LastIt; I++) {
+                            std::cout << (*I)->inputform();
+                            std::cout << "\n";
+                        }
+                        
+                        std::cout << (*I)->inputform();
+                    }
+
                     break;
                 case FORMAT_AST:
-                    std::cout << FN->string();
-                    FN->string();
+                    // std::cout << FN->string();
+
+                    if (!nodes.empty()) {
+                        auto I = nodes.begin();
+                        auto LastIt = nodes.end();
+                        LastIt--;
+                        for (; I < LastIt; I++) {
+                            std::cout << (*I)->string();
+                            std::cout << "\n";
+                        }
+                        std::cout << (*I)->string();
+                    }
+
                     break;
                 case FORMAT_TOKENS:
                     // handled elsewhere
@@ -195,7 +219,7 @@ void printCharacters() {
 
         auto Span = TheSourceManager->getWLCharacterSpan();
 
-        std::cout << SYMBOL_CHARACTER.name();
+        std::cout << SYMBOL_WLCHARACTER.name();
         std::cout << "[";
         std::cout << c;
         std::cout << ", ";
@@ -232,7 +256,7 @@ void printTokens() {
 
     TheTokenizer->nextToken();
 
-    std::cout << "{\n";
+    // std::cout << "{\n";
 
     while (true) {
         
@@ -252,7 +276,8 @@ void printTokens() {
         std::cout << "|>";
         std::cout << "]";
 
-        std::cout << ",\n";
+        // std::cout << ",\n";
+        std::cout << "\n";
 
         if (Tok == TOKEN_EOF) {
             break;
@@ -261,8 +286,9 @@ void printTokens() {
         TheTokenizer->nextToken();
     }
 
-    std::cout << "Nothing\n";
-    std::cout << "}\n";
+    // std::cout << SYMBOL_NOTHING.name();
+    // std::cout << "\n";
+    // std::cout << "}\n";
 }
 
 std::vector<std::shared_ptr<Node>> parseExpressions(bool interactive) {

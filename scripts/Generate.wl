@@ -8,6 +8,7 @@ wolfram -script scripts/Generate.wl -buildDir /path/to/build/dir
 will generate additional required files in these directories:
 
 /path/to/build/dir/generated/cpp
+/path/to/build/dir/generated/wl
 /path/to/build/dir/paclet/AST
 
 *)
@@ -52,6 +53,7 @@ generatedCPPDir = FileNameJoin[{buildDir, "generated", "cpp"}]
 generatedCPPIncludeDir = FileNameJoin[{generatedCPPDir, "include"}]
 generatedCPPSrcDir = FileNameJoin[{generatedCPPDir, "src"}]
 
+generatedWLDir = FileNameJoin[{buildDir, "generated", "wl"}]
 
 pacletASTDir = FileNameJoin[{buildDir, "paclet", "AST"}]
 
@@ -120,6 +122,7 @@ Quiet[CreateDirectory[generatedCPPIncludeDir], CreateDirectory::filex]
 
 Quiet[CreateDirectory[generatedCPPSrcDir], CreateDirectory::filex]
 
+Quiet[CreateDirectory[generatedWLDir], CreateDirectory::filex]
 
 
 (* LongNameDefines *)
@@ -146,8 +149,17 @@ Print["Message while generating LongNameDefines"];
 Quit[1]
 ]
 
+
+longNameDefinesCPPHeader = {
+"
+//
+// AUTO GENERATED FILE
+// DO NOT MODIFY
+//
+"} ~Join~ defines ~Join~ {""}
+
 Print["exporting LongNameDefines.h"]
-res = Export[FileNameJoin[{generatedCPPIncludeDir, "LongNameDefines.h"}], defines, "Text"]
+res = Export[FileNameJoin[{generatedCPPIncludeDir, "LongNameDefines.h"}], longNameDefinesCPPHeader, "Text"]
 
 If[FailureQ[res],
   Print[res];
@@ -163,14 +175,29 @@ Print["Message while generating LongNameDefines"];
 Quit[1]
 ]
 
+(*
+
+LongNameDefines.wl is not used right now
+
+longNameDefinesWL = {
+"
+(*
+AUTO GENERATED FILE
+DO NOT MODIFY
+*)
+"} ~Join~ sets ~Join~ {
+"
+Null
+"}
+
 Print["exporting LongNameDefines.wl"]
-res = Export[FileNameJoin[{pacletASTDir, "LongNameDefines.wl"}], sets, "Text"]
+res = Export[FileNameJoin[{pacletASTDir, "LongNameDefines.wl"}], longNameDefinesWL, "Text"]
 
 If[FailureQ[res],
   Print[res];
   Quit[1]
 ]
-
+*)
 
 
 
@@ -178,17 +205,26 @@ If[FailureQ[res],
 Print["generating LongNameMap"]
 
 longNameToCodePointMap = {
-"std::map <std::string, int> LongNameToCodePointMap {"} ~Join~ (Row[{"{", AST`Utils`escapeString[#], ",", toEnum["WLCharacter`LongName`"<>#], "}", ","}]& /@ importedLongNames) ~Join~ {"};"}
+"std::map <std::string, int> LongNameToCodePointMap {"} ~Join~ (Row[{"{", AST`Utils`escapeString[#], ",", " ", toEnum["WLCharacter`LongName`"<>#], "}", ","}]& /@ importedLongNames) ~Join~ {"};", ""}
 
 codePointToLongNameMap = {
-"std::map <int, std::string> CodePointToLongNameMap {"} ~Join~ (Row[{"{", toEnum["WLCharacter`LongName`"<>#], ",", AST`Utils`escapeString[#], "}", ","}] & /@ importedLongNames)~Join~{"};"}
+"std::map <int, std::string> CodePointToLongNameMap {"} ~Join~ (Row[{"{", toEnum["WLCharacter`LongName`"<>#], ",", " ", AST`Utils`escapeString[#], "}", ","}] & /@ importedLongNames)~Join~{"};", ""}
+
+longNameMapCPPSource = {
+"
+//
+// AUTO GENERATED FILE
+// DO NOT MODIFY
+//
+
+#include \"LongNameMap.h\"
+#include \"LongNameDefines.h\"
+#include <map>
+#include <string>
+"} ~Join~ longNameToCodePointMap ~Join~ codePointToLongNameMap
 
 Print["exporting LongNameMap.cpp"]
-res = Export[
- FileNameJoin[{generatedCPPSrcDir, "LongNameMap.cpp"}], 
- Column[{"#include \"LongNameMap.h\"", 
-    "#include \"LongNameDefines.h\"", "#include <map>", 
-    "#include <string>"} ~Join~ longNameToCodePointMap ~Join~ codePointToLongNameMap], "String"]
+res = Export[FileNameJoin[{generatedCPPSrcDir, "LongNameMap.cpp"}], Column[longNameMapCPPSource], "String"]
 
 If[FailureQ[res],
   Print[res];
@@ -196,12 +232,22 @@ If[FailureQ[res],
 ]
 
 
+longNameMapCPPHeader = {
+"
+//
+// AUTO GENERATED FILE
+// DO NOT MODIFY
+//
+
+#include <map>
+#include <string>
+
+extern std::map<std::string, int>LongNameToCodePointMap;
+extern std::map<int, std::string>CodePointToLongNameMap;
+"}
+
 Print["exporting LongNameMap.h"]
-res = Export[
- FileNameJoin[{generatedCPPIncludeDir, "LongNameMap.h"}], 
- Column[{"#include <map>", "#include <string>", 
-   "extern std::map<std::string, int>LongNameToCodePointMap;", 
-   "extern std::map<int, std::string>CodePointToLongNameMap;"}], "String"]
+res = Export[FileNameJoin[{generatedCPPIncludeDir, "LongNameMap.h"}], Column[longNameMapCPPHeader], "String"]
 
 If[FailureQ[res],
   Print[res];
@@ -210,18 +256,29 @@ If[FailureQ[res],
 
 
 longNameToCodePointAssociation = {
-"LongNameToCodePointAssociation = <|"} ~Join~ (Row[{AST`Utils`escapeString[#], "->", "WLCharacter`LongName`" <> #, ","}]& /@ 
+"LongNameToCodePointAssociation = <|"} ~Join~ (Row[{AST`Utils`escapeString[#], " -> ", "WLCharacter`LongName`" <> #, ","}]& /@ 
      importedLongNames) ~Join~ {"Nothing"} ~Join~ {"|>"}
 
 codePointToLongNameAssociation = {
-"CodePointToLongNameAssociation = <|"} ~Join~ (Row[{"WLCharacter`LongName`" <> #, "->", AST`Utils`escapeString[#], ","}]& /@ 
+"CodePointToLongNameAssociation = <|"} ~Join~ (Row[{"WLCharacter`LongName`" <> #, " -> ", AST`Utils`escapeString[#], ","}]& /@ 
      importedLongNames) ~Join~ {"Nothing"} ~Join~ {"|>"}
 
+
+
+
+longNameMapWL = {
+"
+(*
+AUTO GENERATED FILE
+DO NOT MODIFY
+*)
+"} ~Join~ longNameToCodePointAssociation ~Join~ {""} ~Join~ codePointToLongNameAssociation ~Join~ {
+"
+Null
+"}
+
 Print["exporting LongNameMap.wl"]
-res = Export[
- FileNameJoin[{pacletASTDir, "LongNameMap.wl"}], 
- Column[longNameToCodePointAssociation ~Join~
-   codePointToLongNameAssociation ~Join~ {"Null"}], "String"]
+res = Export[FileNameJoin[{generatedWLDir, "LongNameMap.wl"}], Column[longNameMapWL], "String"]
 
 If[FailureQ[res],
   Print[res];
@@ -237,8 +294,7 @@ If[FailureQ[res],
 (* CodePoint *)
 Print["generating CodePoint"]
 
-importedLetterlikeLongNames = 
-  Get[FileNameJoin[{tablesDir, "LetterlikeLongNames.wl"}]]
+importedLetterlikeLongNames = Get[FileNameJoin[{tablesDir, "LetterlikeLongNames.wl"}]]
 
 If[FailureQ[importedLetterlikeLongNames],
   Print[importedLetterlikeLongNames];
@@ -250,8 +306,7 @@ If[!DuplicateFreeQ[importedLetterlikeLongNames],
   Quit[1]
 ]
 
-importedOperatorLongNames = 
-  Get[FileNameJoin[{tablesDir, "OperatorLongNames.wl"}]]
+importedOperatorLongNames = Get[FileNameJoin[{tablesDir, "OperatorLongNames.wl"}]]
 
 If[FailureQ[importedOperatorLongNames],
   Print[importedOperatorLongNames];
@@ -263,8 +318,7 @@ If[!DuplicateFreeQ[importedOperatorLongNames],
   Quit[1]
 ]
 
-importedCommaLongNames = 
-  Get[FileNameJoin[{tablesDir, "CommaLongNames.wl"}]]
+importedCommaLongNames = Get[FileNameJoin[{tablesDir, "CommaLongNames.wl"}]]
 
 If[FailureQ[importedCommaLongNames],
   Print[importedCommaLongNames];
@@ -276,8 +330,7 @@ If[!DuplicateFreeQ[importedCommaLongNames],
   Quit[1]
 ]
 
-importedNewlineLongNames = 
-  Get[FileNameJoin[{tablesDir, "NewlineLongNames.wl"}]]
+importedNewlineLongNames = Get[FileNameJoin[{tablesDir, "NewlineLongNames.wl"}]]
 
 If[FailureQ[importedNewlineLongNames],
   Print[importedNewlineLongNames];
@@ -289,8 +342,7 @@ If[!DuplicateFreeQ[importedNewlineLongNames],
   Quit[1]
 ]
 
-importedSpaceLongNames = 
-  Get[FileNameJoin[{tablesDir, "SpaceLongNames.wl"}]]
+importedSpaceLongNames = Get[FileNameJoin[{tablesDir, "SpaceLongNames.wl"}]]
 
 If[FailureQ[importedSpaceLongNames],
   Print[importedSpaceLongNames];
@@ -302,8 +354,7 @@ If[!DuplicateFreeQ[importedSpaceLongNames],
   Quit[1]
 ]
 
-importedStrangeLetterlikeCodePoints = 
-  Get[FileNameJoin[{tablesDir, "StrangeLetterlikeCodePoints.wl"}]]
+importedStrangeLetterlikeCodePoints = Get[FileNameJoin[{tablesDir, "StrangeLetterlikeCodePoints.wl"}]]
 
 If[FailureQ[importedStrangeLetterlikeCodePoints],
   Print[importedStrangeLetterlikeCodePoints];
@@ -317,26 +368,30 @@ If[!DuplicateFreeQ[importedStrangeLetterlikeCodePoints],
 
 
 
-codePointHeader = {"
-   #include \"Token.h\"
-   
-   #include <string>
-   
-   bool isLetterlikeCodePoint(int i);
-   bool isStrangeLetterlikeCodePoint(int i);
-   bool isOperatorCodePoint(int i);
-   bool isSpaceCodePoint(int i);
-   bool isNewlineCodePoint(int i);
-   bool isCommaCodePoint(int i);
-   
-   Token LongNameCodePointToOperator(int c);
-   int LongNameOperatorToCodePoint(Token t);
-   "}
+codePointCPPHeader = {
+"
+//
+// AUTO GENERATED FILE
+// DO NOT MODIFY
+//
+
+#include \"Token.h\"
+
+#include <string>
+
+bool isLetterlikeCodePoint(int i);
+bool isStrangeLetterlikeCodePoint(int i);
+bool isOperatorCodePoint(int i);
+bool isSpaceCodePoint(int i);
+bool isNewlineCodePoint(int i);
+bool isCommaCodePoint(int i);
+
+Token LongNameCodePointToOperator(int c);
+int LongNameOperatorToCodePoint(Token t);
+"}
 
 Print["exporting CodePoint.h"]
-res = Export[
- FileNameJoin[{generatedCPPIncludeDir, "CodePoint.h"}], 
- Column[codePointHeader], "String"]
+res = Export[FileNameJoin[{generatedCPPIncludeDir, "CodePoint.h"}], Column[codePointCPPHeader], "String"]
 
 If[FailureQ[res],
   Print[res];
@@ -345,80 +400,90 @@ If[FailureQ[res],
 
 
 letterlikeSource = 
-  Flatten[{"std::unordered_set<int> letterlikeCodePoints {", 
-    Row[{toEnum["WLCharacter`LongName`"<>#], ","}]& /@ importedLetterlikeLongNames, 
-    Row[{#, ","}]& /@ importedStrangeLetterlikeCodePoints, "};", 
-    "bool isLetterlikeCodePoint(int i) { return letterlikeCodePoints.find(i) != letterlikeCodePoints.end();}"}]
+  {"std::unordered_set<int> letterlikeCodePoints {"} ~Join~
+    (Row[{toEnum["WLCharacter`LongName`"<>#], ","}]& /@ importedLetterlikeLongNames) ~Join~ 
+    (Row[{#, ","}]& /@ importedStrangeLetterlikeCodePoints) ~Join~
+    {"};", "",
+    "bool isLetterlikeCodePoint(int i) { return letterlikeCodePoints.find(i) != letterlikeCodePoints.end();}", ""}
 
 strangeLetterlikeSource = 
-  Flatten[{"std::unordered_set<int> strangeLetterlikeCodePoints {", 
-    Row[{#, ","}]& /@ importedStrangeLetterlikeCodePoints, "};" , 
-    "bool isStrangeLetterlikeCodePoint(int i) { return strangeLetterlikeCodePoints.find(i) != strangeLetterlikeCodePoints.end();}"}]
+  {"std::unordered_set<int> strangeLetterlikeCodePoints {"} ~Join~
+    (Row[{#, ","}]& /@ importedStrangeLetterlikeCodePoints) ~Join~
+    {"};", "",
+    "bool isStrangeLetterlikeCodePoint(int i) { return strangeLetterlikeCodePoints.find(i) != strangeLetterlikeCodePoints.end();}", ""}
 
 operatorSource = 
-  Flatten[{"std::unordered_set<int> operatorCodePoints {", 
-    Row[{toEnum["WLCharacter`LongName`"<>#], ","}]& /@ importedOperatorLongNames, "};" , 
-    "bool isOperatorCodePoint(int i) { return operatorCodePoints.find(i) != operatorCodePoints.end(); }"}]
+  {"std::unordered_set<int> operatorCodePoints {"} ~Join~
+    (Row[{toEnum["WLCharacter`LongName`"<>#], ","}]& /@ importedOperatorLongNames) ~Join~
+    {"};", "",
+    "bool isOperatorCodePoint(int i) { return operatorCodePoints.find(i) != operatorCodePoints.end(); }", ""}
 
 spaceSource = 
-  Flatten[{"std::unordered_set<int> spaceCodePoints {", 
-    Row[{toEnum["WLCharacter`LongName`"<>#], ","}]& /@ importedSpaceLongNames, "};", 
-    "bool isSpaceCodePoint(int i) { return spaceCodePoints.find(i) != spaceCodePoints.end(); }"}]
+  {"std::unordered_set<int> spaceCodePoints {"} ~Join~
+    (Row[{toEnum["WLCharacter`LongName`"<>#], ","}]& /@ importedSpaceLongNames) ~Join~
+    {"};", "",
+    "bool isSpaceCodePoint(int i) { return spaceCodePoints.find(i) != spaceCodePoints.end(); }", ""}
 
 newlineSource = 
-  Flatten[{"std::unordered_set<int> newlineCodePoints {", 
-    Row[{toEnum["WLCharacter`LongName`"<>#], ","}]& /@ importedNewlineLongNames, "};", 
-    "bool isNewlineCodePoint(int i) { return newlineCodePoints.find(i) != newlineCodePoints.end();}"}]
+  {"std::unordered_set<int> newlineCodePoints {"} ~Join~
+    (Row[{toEnum["WLCharacter`LongName`"<>#], ","}]& /@ importedNewlineLongNames) ~Join~
+    {"};", "",
+    "bool isNewlineCodePoint(int i) { return newlineCodePoints.find(i) != newlineCodePoints.end();}", ""}
 
 commaSource = 
-  Flatten[{"std::unordered_set<int> commaCodePoints {", 
-    Row[{toEnum["WLCharacter`LongName`"<>#], ","}]& /@ importedCommaLongNames, "};", 
-    "bool isCommaCodePoint(int i) { return commaCodePoints.find(i) != commaCodePoints.end(); }"}]
+  {"std::unordered_set<int> commaCodePoints {"} ~Join~
+    (Row[{toEnum["WLCharacter`LongName`"<>#], ","}]& /@ importedCommaLongNames) ~Join~
+    {"};", "",
+    "bool isCommaCodePoint(int i) { return commaCodePoints.find(i) != commaCodePoints.end(); }", ""}
 
 LongNameCodePointToOperatorSource = 
-  Flatten[{"Token LongNameCodePointToOperator(int c) {
-        switch (c) {",
-    Row[{"case", " ", toEnum["WLCharacter`LongName`"<>#], ":", " ", "return", " ", 
-        toEnum["Token`Operator`LongName`"<>#], ";"}]& /@ 
-     importedOperatorLongNames
-    ,
-    "        default:
-                std::cerr << \"Need to add operator: 0x\" << std::setfill('0') << std::setw(4) << std::hex << c << std::dec << \"\\n\";
-                assert(false && \"Need to add operator\");
-                return TOKEN_ERROR_INTERNAL;
-        }
-    }"}]
+  {"Token LongNameCodePointToOperator(int c) {
+switch (c) {"} ~Join~
+    (Row[{"case", " ", toEnum["WLCharacter`LongName`"<>#], ":", " ", "return", " ", 
+        toEnum["Token`Operator`LongName`"<>#], ";"}]& /@ importedOperatorLongNames) ~Join~
+    {"default:
+std::cerr << \"Need to add operator: 0x\" << std::setfill('0') << std::setw(4) << std::hex << c << std::dec << \"\\n\";
+assert(false && \"Need to add operator\");
+return TOKEN_ERROR_INTERNAL;
+}
+}"}
 
 LongNameOperatorToCodePointSource = 
-  Flatten[{"int LongNameOperatorToCodePoint(Token t) {
-        switch (t) {",
-    Row[{"case", " ", toEnum["Token`Operator`LongName`"<>#], ":", " ", "return",
-         " ", toEnum["WLCharacter`LongName`"<>#], ";"}]& /@ importedOperatorLongNames
-    ,
-    "        default:
-                std::cerr << \"Need to add operator: 0x\" << std::setfill('0') << std::setw(4) << std::hex << t << std::dec << \"\\n\";
-                assert(false && \"Need to add operator\");
-                return TOKEN_ERROR_INTERNAL;
-        }
-    }"}]
+  {"
+int LongNameOperatorToCodePoint(Token t) {
+switch (t) {"} ~Join~
+    (Row[{"case", " ", toEnum["Token`Operator`LongName`"<>#], ":", " ", "return",
+         " ", toEnum["WLCharacter`LongName`"<>#], ";"}]& /@ importedOperatorLongNames) ~Join~
+{"default:
+std::cerr << \"Need to add operator: 0x\" << std::setfill('0') << std::setw(4) << std::hex << t << std::dec << \"\\n\";
+assert(false && \"Need to add operator\");
+return TOKEN_ERROR_INTERNAL;
+}
+}
+"}
 
-codePointSource = Column[Join[{
-     "#include \"CodePoint.h\"
-     
-     #include \"LongNameDefines.h\"
-     
-     #include <unordered_set>
-     #include <iostream>
-     #include <iomanip>
-     #include <cassert>"}, letterlikeSource, strangeLetterlikeSource, 
+codePointCPPSource = Join[{
+"
+//
+// AUTO GENERATED FILE
+// DO NOT MODIFY
+//
+
+#include \"CodePoint.h\"
+
+#include \"LongNameDefines.h\"
+
+#include <unordered_set>
+#include <iostream>
+#include <iomanip>
+#include <cassert>
+"}, letterlikeSource, strangeLetterlikeSource, 
     operatorSource, spaceSource, newlineSource, commaSource, 
     LongNameCodePointToOperatorSource, 
-    LongNameOperatorToCodePointSource]]
+    LongNameOperatorToCodePointSource]
 
 Print["exporting CodePoint.cpp"]
-res = Export[
- FileNameJoin[{generatedCPPSrcDir, 
-   "CodePoint.cpp"}], codePointSource, "String"]
+res = Export[FileNameJoin[{generatedCPPSrcDir, "CodePoint.cpp"}], Column[codePointCPPSource], "String"]
 
 If[FailureQ[res],
   Print[res];
@@ -464,18 +529,28 @@ KeyValueMap[(
      True, cur = enumMap[#2]];
     AssociateTo[enumMap, #1 -> cur]) &, joined]
 
-Print["exporting Token.h"]
-res = Export[
- FileNameJoin[{generatedCPPIncludeDir, "Token.h"}], 
- Column[{"#pragma once", "#include <string>", "enum Token {"} ~Join~
+
+tokenCPPHeader = {
+"
+//
+// AUTO GENERATED FILE
+// DO NOT MODIFY
+//
+
+#pragma once
+
+#include <string>
+
+enum Token {"} ~Join~
    KeyValueMap[(Row[{toEnum[#], " = ", #2, ","}])&, enumMap] ~Join~
-   {"};"} ~Join~
+   {"};", ""} ~Join~
    {"std::string TokenToString(Token type);",
    "bool isOperator(Token type);",
-   "bool isError(Token type);"}]
-  ,
-  "String"
-]
+   "bool isError(Token type);",
+   ""}
+
+Print["exporting Token.h"]
+res = Export[FileNameJoin[{generatedCPPIncludeDir, "Token.h"}], Column[tokenCPPHeader], "String"]
 
 If[FailureQ[res],
   Print[res];
@@ -484,17 +559,18 @@ If[FailureQ[res],
 
 
 
-
+tokenWL = {
+"
+(*
+AUTO GENERATED FILE
+DO NOT MODIFY
+*)
+"} ~Join~ {"<|"} ~Join~
+ (KeyValueMap[(Row[{#1, " -> ", #2, ","}])&, enumMap]) ~Join~
+ {"Nothing", "|>", ""}
 
 Print["exporting Token.wl"]
-res = Export[
- FileNameJoin[{pacletASTDir, "Token.wl"}], 
- Column[{"<|"} ~Join~
- (KeyValueMap[(Row[{#1, " -> ", #2, ","}])&, enumMap]) ~Join~
- {"Nothing", "|>"}]
- ,
- "String"
-]
+res = Export[FileNameJoin[{pacletASTDir, "Token.wl"}], Column[tokenWL], "String"]
 
 If[FailureQ[res],
   Print[res];
@@ -503,7 +579,7 @@ If[FailureQ[res],
 
 
 
-res = Get[FileNameJoin[{pacletASTDir, "LongNameMap.wl"}]]
+res = Get[FileNameJoin[{generatedWLDir, "LongNameMap.wl"}]]
 
 If[FailureQ[res],
   Print[res];
@@ -535,10 +611,18 @@ joined = tokenStrings ~Join~ operatorMacros
 
 cases = KeyValueMap[Row[{"case ", toEnum[#1], ": return ", #2, ";"}]&, joined]
 
-Print["exporting Token.cpp"]
-res = Export[
- FileNameJoin[{generatedCPPSrcDir, "Token.cpp"}], 
- Column[{"#include \"Token.h\"", "#include <iostream>", "#include <cassert>"} ~Join~
+
+tokenCPPSource = {
+"
+//
+// AUTO GENERATED FILE
+// DO NOT MODIFY
+//
+
+#include \"Token.h\"
+#include <iostream>
+#include <cassert>
+"} ~Join~
     {"std::string TokenToString(Token Tok) {"} ~Join~
     {"switch (Tok) {"} ~Join~
     cases ~Join~
@@ -546,13 +630,13 @@ res = Export[
     {"std::cerr << \"Unhandled token type: \" << std::to_string(Tok) << \"\\n\"; assert(false && \"Unhandled token type\"); return \"\";"} ~Join~
     {"}"} ~Join~
     {"}"} ~Join~
+    {""} ~Join~
     {"bool isOperator(Token Tok) { return TOKEN_OPERATOR_FIRST <= Tok && Tok < TOKEN_OPERATOR_END; }"} ~Join~
     {"bool isError(Token Tok) { return TOKEN_ERROR_FIRST <= Tok && Tok < TOKEN_ERROR_END; }"} ~Join~
-    {}
-  ]
-  ,
-  "String"
-]
+    {""}
+
+Print["exporting Token.cpp"]
+res = Export[FileNameJoin[{generatedCPPSrcDir, "Token.cpp"}], Column[tokenCPPSource], "String"]
 
 If[FailureQ[res],
   Print[res];
@@ -604,15 +688,24 @@ KeyValueMap[
   cur = #2]&, enumMap]
 
 
-Print["exporting Precedence.h"]
-res = Export[
- FileNameJoin[{generatedCPPIncludeDir, "Precedence.h"}], 
- Column[{"#pragma once", "enum precedence_t {"} ~Join~
+precedenceCPPHeader = {
+"
+//
+// AUTO GENERATED FILE
+// DO NOT MODIFY
+//
+
+#pragma once
+
+enum precedence_t {"} ~Join~
    KeyValueMap[(Row[{toEnum[#1], " = ",
     Which[
       NumberQ[#2], Floor[#2],
       #2 === Indeterminate, -1
-    ], ","}]) &, enumMap] ~Join~ {"};"} ~Join~ {}], "String"]
+    ], ","}]) &, enumMap] ~Join~ {"};", ""}
+
+Print["exporting Precedence.h"]
+res = Export[FileNameJoin[{generatedCPPIncludeDir, "Precedence.h"}], Column[precedenceCPPHeader], "String"]
 
 If[FailureQ[res],
   Print[res];
@@ -620,11 +713,16 @@ If[FailureQ[res],
 ]
 
 
+precedenceWL = Column[{
+"
+(*
+AUTO GENERATED FILE
+DO NOT MODIFY
+*)
+"} ~Join~ {"<|"} ~Join~ (KeyValueMap[(Row[{#1, " -> ", #2, ","}]) &, enumMap]) ~Join~ {"Nothing", "|>", ""}]
 
 Print["exporting Precedence.wl"]
-res = Export[
- FileNameJoin[{pacletASTDir, "Precedence.wl"}], 
- Column[{"<|"} ~Join~ (KeyValueMap[(Row[{#1, " -> ", #2, ","}]) &, enumMap]) ~Join~ {"Nothing", "|>"}], "String"]
+res = Export[FileNameJoin[{pacletASTDir, "Precedence.wl"}], precedenceWL, "String"]
 
 If[FailureQ[res],
   Print[res];
@@ -686,6 +784,13 @@ If[Union[DownValues[InfixOperatorToSymbol][[All, 2]]] =!= Union[DownValues[Symbo
 (*
 sanity check Ternary operators
 *)
+If[Union[DownValues[TernaryOperatorsToSymbol][[All, 2]]] =!= Union[DownValues[SymbolToTernaryPair][[All, 1, 1, 1]]],
+  Print["TernaryOperatorsToSymbol and SymbolToTernaryPair do not match"];
+  Print["TernaryOperatorsToSymbol: ", Union[DownValues[TernaryOperatorsToSymbol][[All, 2]]]];
+  Print["SymbolToTernaryPair:      ", Union[DownValues[SymbolToTernaryPair][[All, 1, 1, 1]]]];
+  Quit[1]
+]
+
 If[Union[Flatten[DownValues[SymbolToTernaryPair][[All, 2]]]] =!= Union[DownValues[SymbolToTernaryOperatorString][[All, 1, 1, 1]]],
   Print["SymbolToTernaryPair and SymbolToTernaryOperatorString do not match"];
   Print["SymbolToTernaryPair:           ", Union[Flatten[DownValues[SymbolToTernaryPair][[All, 2]]]]];
@@ -727,51 +832,55 @@ symbols = Union[Join[DownValues[PrefixOperatorToSymbol][[All, 2]],
     AST`Symbol`$Characters
     ]]
 
-symbolHeader = Flatten[{"
+symbolCPPHeader = {
+"
+//
+// AUTO GENERATED FILE
+// DO NOT MODIFY
+//
 
-    #pragma once
-    
-    #include \"Token.h\"
-    #include <string>
-    #include <utility>
-    
-    class Symbol {
-    std::string Name;
-    public:Symbol(std::string Name):Name(Name) {}
-    std::string name() const;
-    };
-    
-    bool operator==(const Symbol& lhs, const Symbol& rhs);
-    
-    const Symbol& PostfixOperatorToSymbol(Token Type);
-    const Symbol& PrefixOperatorToSymbol(Token Type);
-    const Symbol& BinaryOperatorToSymbol(Token Type);
-    const Symbol& InfixOperatorToSymbol(Token);
-    const Symbol& TernaryOperatorToSymbol(Token);
-    const Symbol& GroupOpenerToSymbol(Token);
+#pragma once
 
-    Token GroupOpenerToCloser(Token);
-    
-    const Symbol& GroupCloserToSymbol(Token);
-    const Symbol& GroupOpenerToMissingCloserSymbol(Token);
-    const Symbol& GroupCloserToMissingOpenerSymbol(Token);
-    
-    std::string SymbolToPrefixOperatorString(const Symbol&);
-    std::string SymbolToPostfixOperatorString(const Symbol&);
-    std::string SymbolToBinaryOperatorString(const Symbol&);
-    std::string SymbolToInfixOperatorString(const Symbol&);
-    std::string SymbolToTernaryOperatorString(const Symbol&);
+#include \"Token.h\"
 
-    std::pair<std::string, std::string> SymbolToGroupPair(const Symbol&);
-    std::pair<const Symbol&, const Symbol&> SymbolToTernaryOperatorPair(const Symbol&);
-    
-    ",
-    Row[{"extern", " ", "const", " ", "Symbol&", " ", toEnum["Symbol`"<>ToString[#]], ";"}]& /@ symbols
-    }]
+#include <string>
+#include <utility>
+
+class Symbol {
+  std::string Name;
+  public:Symbol(std::string Name):Name(Name) {}
+  std::string name() const;
+};
+
+bool operator==(const Symbol& lhs, const Symbol& rhs);
+
+const Symbol& PostfixOperatorToSymbol(Token);
+const Symbol& PrefixOperatorToSymbol(Token);
+const Symbol& BinaryOperatorToSymbol(Token);
+const Symbol& InfixOperatorToSymbol(Token);
+const Symbol& TernaryOperatorsToSymbol(Token, Token);
+const Symbol& GroupOpenerToSymbol(Token);
+
+Token GroupOpenerToCloser(Token);
+
+const Symbol& GroupCloserToSymbol(Token);
+const Symbol& GroupOpenerToMissingCloserSymbol(Token);
+const Symbol& GroupCloserToMissingOpenerSymbol(Token);
+
+std::string SymbolToPrefixOperatorString(const Symbol&);
+std::string SymbolToPostfixOperatorString(const Symbol&);
+std::string SymbolToBinaryOperatorString(const Symbol&);
+std::string SymbolToInfixOperatorString(const Symbol&);
+std::string SymbolToTernaryOperatorString(const Symbol&);
+
+std::pair<std::string, std::string> SymbolToGroupPair(const Symbol&);
+std::pair<const Symbol&, const Symbol&> SymbolToTernaryOperatorPair(const Symbol&);
+"} ~Join~
+(Row[{"extern", " ", "const", " ", "Symbol&", " ", toEnum["Symbol`"<>ToString[#]], ";"}]& /@ symbols) ~Join~
+{""}
 
 Print["exporting Symbol.h"]
-res = Export[FileNameJoin[{generatedCPPIncludeDir, "Symbol.h"}], 
- Column[symbolHeader], "String"]
+res = Export[FileNameJoin[{generatedCPPIncludeDir, "Symbol.h"}], Column[symbolCPPHeader], "String"]
 
 If[FailureQ[res],
   Print[res];
@@ -780,145 +889,163 @@ If[FailureQ[res],
 
 
 
-symbolSource = Flatten[{"
-     
-     #include \"Symbol.h\"
-     
-     #include <cassert>
-     #include <iostream>
-     
-     bool operator==(const Symbol& lhs, const Symbol& rhs) {
-         return lhs.name() == rhs.name();
-     }
-     
-     std::string Symbol::name() const {
-         return Name;
-     }
-     
-     "} ~Join~ {
+symbolCPPSource = {
+"
+//
+// AUTO GENERATED FILE
+// DO NOT MODIFY
+//
 
-      Row[{"const", " ", "Symbol&", " ", toEnum["Symbol`"<>ToString[#]], " ", "=", " ", "Symbol(\"", ToString[#, InputForm], "\")", ";"}]& /@ symbols
+#include \"Symbol.h\"
 
-      } ~Join~ {
-     "const Symbol& PrefixOperatorToSymbol(Token Type) { switch (Type) {",
-     Append[
-      Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", toEnum["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PrefixOperatorToSymbol]], 
-      "default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toEnum["Symbol`"<>ToString[InternalInvalid]] <> ";"],
-     "} }"
-     } ~Join~ {
-     "const Symbol& PostfixOperatorToSymbol(Token Type) { switch (Type) {",
-     Append[
-      Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", toEnum["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PostfixOperatorToSymbol]], 
-      "default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toEnum["Symbol`"<>ToString[InternalInvalid]] <> ";"],
-     "} }"
-     } ~Join~ {
-     "const Symbol& BinaryOperatorToSymbol(Token Type) { switch (Type) {",
-     Append[
-      Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", toEnum["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[BinaryOperatorToSymbol]], 
-      "default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toEnum["Symbol`"<>ToString[InternalInvalid]] <> ";"],
-     "} }"
-     } ~Join~ {
-     "const Symbol& InfixOperatorToSymbol(Token Type) { switch (Type) {",
-     Append[
-      Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", toEnum["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[InfixOperatorToSymbol]], 
-      "default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toEnum["Symbol`"<>ToString[InternalInvalid]] <> ";"],
-     "} }"
-     } ~Join~ {
-     "const Symbol& TernaryOperatorToSymbol(Token Type) { switch (Type) {",
-     Append[
-      Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", toEnum["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[TernaryOperatorToSymbol]], 
-      "default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toEnum["Symbol`"<>ToString[InternalInvalid]] <> ";"],
-     "} }"
-     } ~Join~ {
-     "const Symbol& GroupOpenerToSymbol(Token Type) { switch (Type) {",
-     Append[
-      Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", toEnum["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[GroupOpenerToSymbol]], 
-      "default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toEnum["Symbol`"<>ToString[InternalInvalid]] <> ";"],
-     "} }"
-     } ~Join~ {
-     "Token GroupOpenerToCloser(Token Type) { switch (Type) {",
-     Append[
-      Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", toEnum[#[[2]]], ";"}]&, DownValues[GroupOpenerToCloser]], 
-      "default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return TOKEN_UNKNOWN;"],
-     "} }"
-     } ~Join~ {
-     "const Symbol& GroupCloserToSymbol(Token Type) { switch (Type) {",
-     Append[
-      Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", toEnum["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[GroupCloserToSymbol]], 
-      "default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toEnum["Symbol`"<>ToString[InternalInvalid]] <> ";"],
-     "} }"
-     } ~Join~ {
-     "const Symbol& GroupOpenerToMissingCloserSymbol(Token Type) { switch (Type) {",
-     Append[
-      Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", toEnum["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[GroupOpenerToMissingCloserSymbol]], 
-      "default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toEnum["Symbol`"<>ToString[InternalInvalid]] <> ";"],
-     "} }"
-     } ~Join~ {
-     "const Symbol& GroupCloserToMissingOpenerSymbol(Token Type) { switch (Type) {",
-     Append[
-      Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", toEnum["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[GroupCloserToMissingOpenerSymbol]], 
-      "default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toEnum["Symbol`"<>ToString[InternalInvalid]] <> ";"],
-     "} }"
-     } ~Join~ {
-     "std::pair<std::string, std::string> SymbolToGroupPair(const Symbol& Sym) {",
-     Append[
-      Row[{"if (Sym == ", toEnum["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
+#include <cassert>
+#include <iostream>
+
+bool operator==(const Symbol& lhs, const Symbol& rhs) {
+   return lhs.name() == rhs.name();
+}
+
+std::string Symbol::name() const {
+   return Name;
+}
+"} ~Join~ 
+
+    (Row[{"const", " ", "Symbol&", " ", toEnum["Symbol`"<>ToString[#]], " ", "=", " ", "Symbol(\"", ToString[#], "\")", ";"}]& /@ symbols) ~Join~
+
+      {""} ~Join~
+
+      {"const Symbol& PrefixOperatorToSymbol(Token Type) {\nswitch (Type) {"} ~Join~
+     
+     Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", toEnum["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PrefixOperatorToSymbol]] ~Join~ 
+      {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toEnum["Symbol`"<>ToString[InternalInvalid]] <> ";",
+      "}\n}"} ~Join~
+
+     {""} ~Join~
+
+     {"const Symbol& PostfixOperatorToSymbol(Token Type) {\nswitch (Type) {"} ~Join~
+     
+      Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", toEnum["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PostfixOperatorToSymbol]] ~Join~
+      {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toEnum["Symbol`"<>ToString[InternalInvalid]] <> ";",
+     "}\n}"} ~Join~
+
+     {""} ~Join~
+
+     {"const Symbol& BinaryOperatorToSymbol(Token Type) {\nswitch (Type) {"} ~Join~
+     
+      Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", toEnum["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[BinaryOperatorToSymbol]] ~Join~
+      {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toEnum["Symbol`"<>ToString[InternalInvalid]] <> ";",
+     "}\n}"} ~Join~
+
+     {""} ~Join~
+
+     {"const Symbol& InfixOperatorToSymbol(Token Type) {\nswitch (Type) {"} ~Join~
+     
+      Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", toEnum["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[InfixOperatorToSymbol]] ~Join~
+      {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toEnum["Symbol`"<>ToString[InternalInvalid]] <> ";",
+     "}\n}"} ~Join~
+
+     {""} ~Join~
+
+     {"const Symbol& TernaryOperatorsToSymbol(Token Type1, Token Type2) {"} ~Join~
+
+     (*
+      cannot use C++ switch statements with 2 arguments, so just do a series of if statements
+     *)
+     Map[Row[{"if (Type1 == ", toEnum[#[[1, 1, 1]]], " && Type2 == ", toEnum[#[[1, 1, 2]]], ") {", "return", " ", toEnum["Symbol`"<>ToString[#[[2]]]], ";", "}"}]&, DownValues[TernaryOperatorsToSymbol]] ~Join~
+      {"std::cerr << \"Unhandled Tokens: \" << TokenToString(Type1) << \" \" << TokenToString(Type2) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toEnum["Symbol`"<>ToString[InternalInvalid]] <> ";",
+     "}"} ~Join~
+
+     {""} ~Join~
+
+     {"const Symbol& GroupOpenerToSymbol(Token Type) {\nswitch (Type) {"} ~Join~
+      Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", toEnum["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[GroupOpenerToSymbol]] ~Join~
+      {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toEnum["Symbol`"<>ToString[InternalInvalid]] <> ";",
+     "}\n}"} ~Join~
+
+     {""} ~Join~
+
+     {"Token GroupOpenerToCloser(Token Type) {\nswitch (Type) {"} ~Join~
+      Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", toEnum[#[[2]]], ";"}]&, DownValues[GroupOpenerToCloser]] ~Join~
+      {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return TOKEN_UNKNOWN;",
+     "}\n}"} ~Join~
+
+     {""} ~Join~
+
+     {"const Symbol& GroupCloserToSymbol(Token Type) {\nswitch (Type) {"} ~Join~
+      Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", toEnum["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[GroupCloserToSymbol]] ~Join~
+      {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toEnum["Symbol`"<>ToString[InternalInvalid]] <> ";",
+     "}\n}"} ~Join~
+
+     {""} ~Join~
+
+     {"const Symbol& GroupOpenerToMissingCloserSymbol(Token Type) {\nswitch (Type) {"} ~Join~
+      Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", toEnum["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[GroupOpenerToMissingCloserSymbol]] ~Join~
+      {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toEnum["Symbol`"<>ToString[InternalInvalid]] <> ";",
+     "}\n}"} ~Join~
+
+     {""} ~Join~
+
+     {"const Symbol& GroupCloserToMissingOpenerSymbol(Token Type) {\nswitch (Type) {"} ~Join~
+      Map[Row[{"case", " ", toEnum[#[[1, 1, 1]]], ":", " ", "return", " ", toEnum["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[GroupCloserToMissingOpenerSymbol]] ~Join~ 
+      {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toEnum["Symbol`"<>ToString[InternalInvalid]] <> ";",
+     "}\n}"} ~Join~
+
+     {""} ~Join~
+     {"std::pair<std::string, std::string> SymbolToGroupPair(const Symbol& Sym) {"} ~Join~
+      (Row[{"if (Sym == ", toEnum["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
           "{ return std::make_pair(std::string(", 
           AST`Utils`escapeString[#[[2, 1]]], "), std::string(", 
-          AST`Utils`escapeString[#[[2, 2]]], "));", "}"}]& /@ 
-       DownValues[SymbolToGroupPair], 
-      "return std::make_pair(std::string(\"XXX\"), std::string(\"XXX\"));"],
-     "}"
-     } ~Join~ {
-     "std::string SymbolToPrefixOperatorString(const Symbol& Sym) {",
-     Append[
-      Row[{"if (Sym == ", toEnum["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
-          "{ return ", AST`Utils`escapeString[#[[2]]], ";", "}"}]& /@ 
-       DownValues[SymbolToPrefixOperatorString], "return \"XXX\";"],
-     "}"
-     } ~Join~ {
-     "std::string SymbolToPostfixOperatorString(const Symbol& Sym) {",
-     Append[
-      Row[{"if (Sym == ", toEnum["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
-          "{ return ", AST`Utils`escapeString[#[[2]]], ";", "}"}]& /@ 
-       DownValues[SymbolToPostfixOperatorString], "return \"XXX\";"],
-     "}"
-     } ~Join~ {
-     "std::string SymbolToBinaryOperatorString(const Symbol& Sym) {",
-     Append[
-      Row[{"if (Sym == ", toEnum["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
-          "{ return ", AST`Utils`escapeString[#[[2]]], ";", "}"}]& /@ 
-       DownValues[SymbolToBinaryOperatorString], "return \"XXX\";"],
-     "}"
-     } ~Join~ {
-     "std::string SymbolToInfixOperatorString(const Symbol& Sym) {",
-     Append[
-      Row[{"if (Sym == ", toEnum["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
-          "{ return ", AST`Utils`escapeString[#[[2]]], ";", "}"}]& /@ 
-       DownValues[SymbolToInfixOperatorString], "return \"XXX\";"],
-     "}"
-     } ~Join~ {
-     "std::string SymbolToTernaryOperatorString(const Symbol& Sym) {",
-     Append[
-      Row[{"if (Sym == ", toEnum["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
-          "{ return ", AST`Utils`escapeString[#[[2]]], ";", "}"}]& /@ 
-       DownValues[SymbolToTernaryOperatorString], "return \"XXX\";"],
-     "}"
-     } ~Join~ {
-     "std::pair<const Symbol&, const Symbol&> SymbolToTernaryOperatorPair(const Symbol& Sym) {",
-     Append[
-      Row[{"if (Sym == ", toEnum["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
+          AST`Utils`escapeString[#[[2, 2]]], "));", "}"}]& /@ DownValues[SymbolToGroupPair]) ~Join~ 
+      {"return std::make_pair(std::string(\"XXX\"), std::string(\"XXX\"));",
+     "}"} ~Join~
+
+     {""} ~Join~
+     {"std::string SymbolToPrefixOperatorString(const Symbol& Sym) {"} ~Join~
+      (Row[{"if (Sym == ", toEnum["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
+          "{ return ", AST`Utils`escapeString[#[[2]]], ";", "}"}]& /@ DownValues[SymbolToPrefixOperatorString]) ~Join~
+      {"return \"XXX\";",
+      "}",
+     ""} ~Join~
+
+     {"std::string SymbolToPostfixOperatorString(const Symbol& Sym) {"} ~Join~
+      (Row[{"if (Sym == ", toEnum["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
+          "{ return ", AST`Utils`escapeString[#[[2]]], ";", "}"}]& /@ DownValues[SymbolToPostfixOperatorString]) ~Join~
+      {"return \"XXX\";",
+     "}"} ~Join~
+     {""} ~Join~
+
+     {"std::string SymbolToBinaryOperatorString(const Symbol& Sym) {"} ~Join~
+      (Row[{"if (Sym == ", toEnum["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
+          "{ return ", AST`Utils`escapeString[#[[2]]], ";", "}"}]& /@ DownValues[SymbolToBinaryOperatorString]) ~Join~
+      {"return \"XXX\";",
+     "}",
+     ""} ~Join~
+
+     {"std::string SymbolToInfixOperatorString(const Symbol& Sym) {"} ~Join~
+      (Row[{"if (Sym == ", toEnum["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
+          "{ return ", AST`Utils`escapeString[#[[2]]], ";", "}"}]& /@ DownValues[SymbolToInfixOperatorString]) ~Join~
+      {"return \"XXX\";",
+     "}",
+     ""} ~Join~
+
+     {"std::string SymbolToTernaryOperatorString(const Symbol& Sym) {"} ~Join~
+      (Row[{"if (Sym == ", toEnum["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
+          "{ return ", AST`Utils`escapeString[#[[2]]], ";", "}"}]& /@ DownValues[SymbolToTernaryOperatorString]) ~Join~
+      {"return \"XXX\";",
+     "}",
+     ""} ~Join~
+
+     {"std::pair<const Symbol&, const Symbol&> SymbolToTernaryOperatorPair(const Symbol& Sym) {"} ~Join~
+      (Row[{"if (Sym == ", toEnum["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
           "{ return std::make_pair(", 
           toEnum["Symbol`"<>ToString[#[[2, 1]]]], ", ", 
-          toEnum["Symbol`"<>ToString[#[[2, 2]]]], ");", "}"}]& /@ 
-       DownValues[SymbolToTernaryOperatorPair], 
-      "return std::make_pair(" <> toEnum["Symbol`"<>ToString[InternalInvalid]] <> ", " <> toEnum["Symbol`"<>ToString[InternalInvalid]] <> ");"],
-     "}"
-     }
-   ]
+          toEnum["Symbol`"<>ToString[#[[2, 2]]]], ");", "}"}]& /@ DownValues[SymbolToTernaryOperatorPair]) ~Join~
+      {"return std::make_pair(" <> toEnum["Symbol`"<>ToString[InternalInvalid]] <> ", " <> toEnum["Symbol`"<>ToString[InternalInvalid]] <> ");",
+     "}",
+     ""}
 
 Print["exporting Symbol.cpp"]
-res = Export[FileNameJoin[{generatedCPPSrcDir, "Symbol.cpp"}], Column[symbolSource], "String"]
+res = Export[FileNameJoin[{generatedCPPSrcDir, "Symbol.cpp"}], Column[symbolCPPSource], "String"]
 
 If[FailureQ[res],
   Print[res];
@@ -934,21 +1061,24 @@ If[FailureQ[res],
 (* ToInputFormString *)
 Print["generating ToInputFormString"]
 
-toInputFormStringHeader = Flatten[{"
-    #pragma once
-    
-    #include \"Token.h\"
-    
-    #include <string>
-    
-    std::string ToInputFormString(std::shared_ptr<Node>);
-    
-    "}]
+toInputFormStringCPPHeader = {
+"
+//
+// AUTO GENERATED FILE
+// DO NOT MODIFY
+//
+
+#pragma once
+
+#include \"Token.h\"
+
+#include <string>
+
+std::string ToInputFormString(std::shared_ptr<Node>);
+"}
 
 Print["exporting ToInputFormString.h"]
-res = Export[
- FileNameJoin[{generatedCPPIncludeDir, 
-   "ToInputFormString.h"}], Column[toInputFormStringHeader], "String"]
+res = Export[FileNameJoin[{generatedCPPIncludeDir, "ToInputFormString.h"}], Column[toInputFormStringCPPHeader], "String"]
 
 If[FailureQ[res],
   Print[res];

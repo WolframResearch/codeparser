@@ -15,70 +15,6 @@ std::string NumberNode::inputform() {
     return Str;
 }
 
-std::string SyntaxErrorNode::inputform() {
-    std::ostringstream ss;
-    ss << SYMBOL_SYNTAXERRORNODE.name();
-    ss << "[";
-    ss << TokenToString(Tok);
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << "|>";
-    ss << "]";
-    return ss.str();
-}
-
-std::string BlankNode::inputform() {
-    
-    auto Sym2 = getSym2();
-
-    return "_" + Sym2->inputform();
-}
-
-std::string BlankSequenceNode::inputform() {
-
-    auto Sym2 = getSym2();
-
-    return "__" + Sym2->inputform();
-}
-
-std::string BlankNullSequenceNode::inputform() {
-
-    auto Sym2 = getSym2();
-
-    return "___" + Sym2->inputform();
-}
-
-std::string PatternBlankNode::inputform() {
-
-    auto Sym1 = getSym1();
-    auto Sym2 = getSym2();
-
-    return Sym1->inputform()+"_"+Sym2->inputform();
-}
-
-std::string PatternBlankSequenceNode::inputform() {
-
-    auto Sym1 = getSym1();
-    auto Sym2 = getSym2();
-
-    return Sym1->inputform()+"__"+Sym2->inputform();
-}
-
-std::string PatternBlankNullSequenceNode::inputform() {
-
-    auto Sym1 = getSym1();
-    auto Sym2 = getSym2();
-
-    return Sym1->inputform()+"___"+Sym2->inputform();
-}
-
-std::string OptionalDefaultNode::inputform() {
-
-    auto Sym1 = getSym1();
-
-    return Sym1->inputform() + "_.";
-}
 
 std::string SlotNode::inputform() {
     return Str;
@@ -92,9 +28,7 @@ std::string OutNode::inputform() {
     return Str;
 }
 
-std::string InternalEmptyNode::inputform() {
-    return "";
-}
+
 
 std::string PrefixNode::inputform() {
 
@@ -143,59 +77,19 @@ std::string InfixNode::inputform() {
     auto Args = getArgs();
 
     std::ostringstream s;
-    if (Op == SYMBOL_PLUS) {
-        if (!Args.empty()) {
-            auto I = Args.begin();
+    if (!Args.empty()) {
+        auto I = Args.begin();
+        auto LastIt = Args.end();
+        LastIt--;
+        for (; I < LastIt; I++) {
             s << (*I)->inputform();
-            I++;
-            auto LastIt = Args.end();
-            LastIt--;
-            for (; I < LastIt; I++) {
-                if (std::dynamic_pointer_cast<InternalMinusNode>(*I)) {
-                    s << " ";
-                    s << SymbolToInfixOperatorString(SYMBOL_MINUS);
-                    s << " ";
-                    s << (*I)->inputform();
-                } else {
-                    s << " ";
-                    s << SymbolToInfixOperatorString(SYMBOL_PLUS);
-                    s << " ";
-                    s << (*I)->inputform();
-                }
-            }
-            s << (*I)->inputform();
+            s << " ";
+            s << SymbolToInfixOperatorString(Op);
+            s << " ";
         }
-    } else if (Op == SYMBOL_INFIXIMPLICITTIMES) {
-        if (!Args.empty()) {
-            auto I = Args.begin();
-            auto LastIt = Args.end();
-            LastIt--;
-            for (; I < LastIt; I++) {
-                s << (*I)->inputform();
-                //
-                // No need for 3 spaces when 1 will do
-                //
-                s << SymbolToInfixOperatorString(SYMBOL_INFIXIMPLICITTIMES);
-                //
-                // No need for 3 spaces when 1 will do
-                //
-            }
-            s << (*I)->inputform();
-        }
-    } else {
-        if (!Args.empty()) {
-            auto I = Args.begin();
-            auto LastIt = Args.end();
-            LastIt--;
-            for (; I < LastIt; I++) {
-                s << (*I)->inputform();
-                s << " ";
-                s << SymbolToInfixOperatorString(Op);
-                s << " ";
-            }
-            s << (*I)->inputform();
-        }
+        s << (*I)->inputform();
     }
+
     return s.str();
 }
 
@@ -265,46 +159,21 @@ std::string PostfixNode::inputform() {
 
 std::string CallNode::inputform() {
 
-    auto Args = getArgs();
+    auto Body = std::dynamic_pointer_cast<GroupNode>(getArgs()[0]);
 
     std::ostringstream ss;
     ss << Head->inputform();
-    auto ArgsGroup = std::make_shared<GroupNode>(SYMBOL_GROUPSQUARE, OpenerTokSpan, CloserTokSpan, Args, std::vector<SyntaxIssue>());
-    ss << ArgsGroup->inputform();
+    ss << Body->inputform();
     return ss.str();
 }
 
 std::string CallMissingCloserNode::inputform() {
     
-    auto Args = getArgs();
-    
-    SourceSpan CloserSpan;
-    if (Args.empty()) {
-        
-        CloserSpan = OpenerTokSpan;
-        
-    } else {
-        
-        auto Last = Args[Args.size()-1];
-        
-        CloserSpan = Last->getSourceSpan();
-    }
+    auto Body = std::dynamic_pointer_cast<GroupNode>(getArgs()[0]);
     
     std::ostringstream ss;
     ss << Head->inputform();
-    auto ArgsGroup = std::make_shared<GroupNode>(SYMBOL_GROUPSQUARE, OpenerTokSpan, CloserSpan, Args, std::vector<SyntaxIssue>());
-    ss << ArgsGroup->inputform();
-    return ss.str();
-}
-
-std::string PartNode::inputform() {
-
-    auto Args = getArgs();
-
-    std::ostringstream ss;
-    ss << Head->inputform();
-    auto ArgsGroup = std::make_shared<GroupNode>(SYMBOL_GROUPDOUBLEBRACKET, OpenerTokSpan, CloserTokSpan, Args, std::vector<SyntaxIssue>());
-    ss << ArgsGroup->inputform();
+    ss << Body->inputform();
     return ss.str();
 }
 
@@ -361,36 +230,97 @@ std::string GroupNode::inputform() {
 // Special expressions
 //
 
-std::string InternalMinusNode::inputform() {
+std::string BlankNode::inputform() {
+    
+    auto Sym2 = getSym2();
 
-    auto Operand = getOperand();
-
-    return Operand->inputform();
+    return "_" + Sym2->inputform();
 }
+
+std::string BlankSequenceNode::inputform() {
+
+    auto Sym2 = getSym2();
+
+    return "__" + Sym2->inputform();
+}
+
+std::string BlankNullSequenceNode::inputform() {
+
+    auto Sym2 = getSym2();
+
+    return "___" + Sym2->inputform();
+}
+
+std::string OptionalDefaultNode::inputform() {
+
+    return "_.";
+}
+
+std::string PatternBlankNode::inputform() {
+
+    auto Sym1 = getSym1();
+    auto Sym2 = getSym2();
+
+    return Sym1->inputform()+"_"+Sym2->inputform();
+}
+
+std::string PatternBlankSequenceNode::inputform() {
+
+    auto Sym1 = getSym1();
+    auto Sym2 = getSym2();
+
+    return Sym1->inputform()+"__"+Sym2->inputform();
+}
+
+std::string PatternBlankNullSequenceNode::inputform() {
+
+    auto Sym1 = getSym1();
+    auto Sym2 = getSym2();
+
+    return Sym1->inputform()+"___"+Sym2->inputform();
+}
+
+std::string OptionalDefaultPatternNode::inputform() {
+
+    auto Sym1 = getSym1();
+
+    return Sym1->inputform() + "_.";
+}
+
+
 
 std::string InternalTokenNode::inputform() {
     return Str;
 }
 
-std::string FileNode::inputform() {
 
-    auto Args = getArgs();
+std::string InternalAllNode::inputform() {
+    return "";
+}
 
-    std::ostringstream ss;
-    if (!Args.empty()) {
-        auto I = Args.begin();
-        auto LastIt = Args.end();
-        LastIt--;
-        for (; I < LastIt; I++) {
-            ss << (*I)->inputform();
-            ss << "\n\n";
-        }
-        
-        ss << (*I)->inputform();
-    }
-    return ss.str();
+std::string InternalDotNode::inputform() {
+    return "";
+}
+
+std::string InternalNullNode::inputform() {
+    return "";
+}
+
+std::string InternalOneNode::inputform() {
+    return "";
 }
 
 
 
-
+std::string SyntaxErrorNode::inputform() {
+    std::ostringstream ss;
+    ss << SYMBOL_SYNTAXERRORNODE.name();
+    ss << "[";
+    ss << TokenToString(Tok);
+    ss << ", ";
+    ss << ASTArgsString();
+    ss << ", <|";
+    ss << "|>";
+    ss << "]";
+    return ss.str();
+}

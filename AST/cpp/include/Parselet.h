@@ -3,6 +3,7 @@
 
 #include "Precedence.h"
 #include "Token.h"
+#include "Parser.h"
 
 #include <memory>
 
@@ -20,7 +21,7 @@ public:
     //
     // Commonly referred to as NUD method in the literature
     //
-    virtual std::shared_ptr<Node> parse() = 0;
+    virtual std::shared_ptr<Node> parse(ParserContext Ctxt) = 0;
     
     virtual precedence_t getPrecedence() = 0;
     
@@ -32,13 +33,18 @@ public:
     //
     // Commonly referred to as LED method in the literature
     //
-    virtual std::shared_ptr<Node> parse(std::shared_ptr<Node> Left) = 0;
+    virtual std::shared_ptr<Node> parse(std::shared_ptr<Node> Left, ParserContext Ctxt) = 0;
     
     virtual precedence_t getPrecedence() = 0;
     
+    virtual ~InfixParselet() {}
+};
+
+class BinaryParselet : virtual public InfixParselet {
+public:
     virtual bool isRight() = 0;
     
-    virtual ~InfixParselet() {}
+    virtual ~BinaryParselet() {}
 };
 
 class PostfixParselet : virtual public Parselet {
@@ -46,22 +52,32 @@ public:
     //
     // Commonly referred to as LED method in the literature
     //
-    virtual std::shared_ptr<Node> parse(std::shared_ptr<Node> Left) = 0;
+    virtual std::shared_ptr<Node> parse(std::shared_ptr<Node> Left, ParserContext Ctxt) = 0;
     
     virtual precedence_t getPrecedence() = 0;
     
     virtual ~PostfixParselet() {}
 };
 
+class ContextSensitiveParselet : virtual public Parselet {
+public:
+    
+    virtual ~ContextSensitiveParselet() {}
+};
+
+
+
 
 //
 // Atom and Atom-like parselets
 //
 
-class SymbolParselet : public PrefixParselet {
+class SymbolParselet : public PrefixParselet, public ContextSensitiveParselet {
 public:
-    std::shared_ptr<Node> parse() override;
+    std::shared_ptr<Node> parse(ParserContext Ctxt) override;
     
+    std::shared_ptr<Node> parseContextSensitive(ParserContext Ctxt);
+
     precedence_t getPrecedence() override {
         return PRECEDENCE_HIGHEST;
     }
@@ -69,7 +85,7 @@ public:
 
 class StringParselet : public PrefixParselet {
 public:
-    std::shared_ptr<Node> parse() override;
+    std::shared_ptr<Node> parse(ParserContext Ctxt) override;
     
     precedence_t getPrecedence() override {
         return PRECEDENCE_HIGHEST;
@@ -78,52 +94,16 @@ public:
 
 class NumberParselet : public PrefixParselet {
 public:
-    std::shared_ptr<Node> parse() override;
+    std::shared_ptr<Node> parse(ParserContext Ctxt) override;
     
     precedence_t getPrecedence() override {
         return PRECEDENCE_HIGHEST;
     }
 };
 
-class UnderParselet : public PrefixParselet {
-public:
-    std::shared_ptr<Node> parse() override;
-    
-    precedence_t getPrecedence() override {
-        return PRECEDENCE_CONTEXT_SENSITIVE;
-    }
-};
-
-class UnderUnderParselet : public PrefixParselet {
-public:
-    std::shared_ptr<Node> parse() override;
-    
-    precedence_t getPrecedence() override {
-        return PRECEDENCE_CONTEXT_SENSITIVE;
-    }
-};
-
-class UnderUnderUnderParselet : public PrefixParselet {
-public:
-    std::shared_ptr<Node> parse() override;
-    
-    precedence_t getPrecedence() override {
-        return PRECEDENCE_CONTEXT_SENSITIVE;
-    }
-};
-
-class UnderDotParselet : public PrefixParselet {
-public:
-    std::shared_ptr<Node> parse() override;
-    
-    precedence_t getPrecedence() override {
-        return PRECEDENCE_CONTEXT_SENSITIVE;
-    }
-};
-
 class HashParselet : public PrefixParselet {
 public:
-    std::shared_ptr<Node> parse() override;
+    std::shared_ptr<Node> parse(ParserContext Ctxt) override;
     
     precedence_t getPrecedence() override {
         return PRECEDENCE_HIGHEST;
@@ -132,7 +112,7 @@ public:
 
 class HashHashParselet : public PrefixParselet {
 public:
-    std::shared_ptr<Node> parse() override;
+    std::shared_ptr<Node> parse(ParserContext Ctxt) override;
     
     precedence_t getPrecedence() override {
         return PRECEDENCE_HIGHEST;
@@ -141,7 +121,7 @@ public:
 
 class PercentParselet : public PrefixParselet {
 public:
-    std::shared_ptr<Node> parse() override;
+    std::shared_ptr<Node> parse(ParserContext Ctxt) override;
     
     precedence_t getPrecedence() override {
         return PRECEDENCE_HIGHEST;
@@ -159,20 +139,20 @@ class PrefixOperatorParselet : public PrefixParselet {
 public:
     PrefixOperatorParselet(precedence_t precedence) : precedence(precedence) {}
     
-    std::shared_ptr<Node> parse() override;
+    std::shared_ptr<Node> parse(ParserContext Ctxt) override;
     
     precedence_t getPrecedence() override {
         return precedence;
     }
 };
 
-class BinaryOperatorParselet : public InfixParselet {
+class BinaryOperatorParselet : public BinaryParselet {
     precedence_t precedence;
     bool right;
 public:
     BinaryOperatorParselet(precedence_t precedence, bool right) : precedence(precedence), right(right) {}
     
-    std::shared_ptr<Node> parse(std::shared_ptr<Node> Left) override;
+    std::shared_ptr<Node> parse(std::shared_ptr<Node> Left, ParserContext Ctxt) override;
     
     precedence_t getPrecedence() override {
         return precedence;
@@ -188,14 +168,10 @@ class InfixOperatorParselet : public InfixParselet {
 public:
     InfixOperatorParselet(precedence_t precedence) : precedence(precedence) {}
     
-    std::shared_ptr<Node> parse(std::shared_ptr<Node> Left) override;
+    std::shared_ptr<Node> parse(std::shared_ptr<Node> Left, ParserContext Ctxt) override;
     
     precedence_t getPrecedence() override {
         return precedence;
-    }
-    
-    bool isRight() override {
-        return false;
     }
 };
 
@@ -204,7 +180,7 @@ class PostfixOperatorParselet : public PostfixParselet {
 public:
     PostfixOperatorParselet(precedence_t precedence) : precedence(precedence) {}
     
-    std::shared_ptr<Node> parse(std::shared_ptr<Node> Left) override;
+    std::shared_ptr<Node> parse(std::shared_ptr<Node> Left, ParserContext Ctxt) override;
     
     precedence_t getPrecedence() override {
         return precedence;
@@ -218,26 +194,12 @@ public:
 // Call parselets
 //
 
-class OpenSquareCallParselet : public InfixParselet {
+class CallParselet : public BinaryParselet {
+    Token Opener;
 public:
-    OpenSquareCallParselet() {}
+    CallParselet(Token Opener) : Opener(Opener) {}
     
-    std::shared_ptr<Node> parse(std::shared_ptr<Node> Left) override;
-    
-    precedence_t getPrecedence() override {
-        return PRECEDENCE_CALL;
-    }
-    
-    bool isRight() override {
-        return false;
-    }
-};
-
-class LeftDoubleBracketCallParselet : public InfixParselet {
-public:
-    LeftDoubleBracketCallParselet() {}
-    
-    std::shared_ptr<Node> parse(std::shared_ptr<Node> Left) override;
+    std::shared_ptr<Node> parse(std::shared_ptr<Node> Left, ParserContext Ctxt) override;
     
     precedence_t getPrecedence() override {
         return PRECEDENCE_CALL;
@@ -258,7 +220,7 @@ class GroupParselet : public PrefixParselet {
 public:
     GroupParselet(Token Opener) : Opener(Opener) {}
     
-    std::shared_ptr<Node> parse() override;
+    std::shared_ptr<Node> parse(ParserContext Ctxt) override;
     
     precedence_t getPrecedence() override {
         return PRECEDENCE_HIGHEST;
@@ -272,17 +234,47 @@ public:
 // Special parselets
 //
 
-class InfixPlusParselet : public InfixParselet {
+class UnderParselet : public PrefixParselet, public ContextSensitiveParselet {
 public:
+    std::shared_ptr<Node> parse(ParserContext Ctxt) override;
     
-    std::shared_ptr<Node> parse(std::shared_ptr<Node> left) override;
-    
+    std::shared_ptr<Node> parseContextSensitive(std::shared_ptr<Node> Left, ParserContext Ctxt);
+
     precedence_t getPrecedence() override {
-        return PRECEDENCE_INFIX_PLUS;
+        return PRECEDENCE_HIGHEST;
     }
+};
+
+class UnderUnderParselet : public PrefixParselet, public ContextSensitiveParselet {
+public:
+    std::shared_ptr<Node> parse(ParserContext Ctxt) override;
     
-    bool isRight() override {
-        return false;
+    std::shared_ptr<Node> parseContextSensitive(std::shared_ptr<Node> Left, ParserContext Ctxt);
+
+    precedence_t getPrecedence() override {
+        return PRECEDENCE_HIGHEST;
+    }
+};
+
+class UnderUnderUnderParselet : public PrefixParselet, public ContextSensitiveParselet {
+public:
+    std::shared_ptr<Node> parse(ParserContext Ctxt) override;
+    
+    std::shared_ptr<Node> parseContextSensitive(std::shared_ptr<Node> Left, ParserContext Ctxt);
+
+    precedence_t getPrecedence() override {
+        return PRECEDENCE_HIGHEST;
+    }
+};
+
+class UnderDotParselet : public PrefixParselet, public ContextSensitiveParselet {
+public:
+    std::shared_ptr<Node> parse(ParserContext Ctxt) override;
+    
+    std::shared_ptr<Node> parseContextSensitive(std::shared_ptr<Node> Left, ParserContext Ctxt);
+
+    precedence_t getPrecedence() override {
+        return PRECEDENCE_HIGHEST;
     }
 };
 
@@ -290,14 +282,10 @@ public:
 class SemiParselet : public InfixParselet, PostfixParselet {
 public:
     
-    std::shared_ptr<Node> parse(std::shared_ptr<Node> left) override;
+    std::shared_ptr<Node> parse(std::shared_ptr<Node> Left, ParserContext Ctxt) override;
     
     precedence_t getPrecedence() override {
         return PRECEDENCE_SEMI;
-    }
-    
-    bool isRight() override {
-        return false;
     }
 };
 
@@ -306,12 +294,12 @@ public:
 // Deliberately not extending PrefixOperatorParselet and InfixOperatorParselet because I don't feel like bothering with
 // multiple inheritance
 //
-class SemiSemiParselet : public PrefixParselet, public InfixParselet {
+class SemiSemiParselet : public PrefixParselet, public BinaryParselet {
 public:
     
-    std::shared_ptr<Node> parse() override;
+    std::shared_ptr<Node> parse(ParserContext Ctxt) override;
     
-    std::shared_ptr<Node> parse(std::shared_ptr<Node> left) override;
+    std::shared_ptr<Node> parse(std::shared_ptr<Node> Left, ParserContext Ctxt) override;
     
     precedence_t getPrecedence() override {
         return PRECEDENCE_SEMISEMI;
@@ -327,10 +315,10 @@ public:
 
 
 // It'd be weird if this were an "infix operator"
-class TildeParselet : public InfixParselet {
+class TildeParselet : public BinaryParselet {
 public:
     
-    std::shared_ptr<Node> parse(std::shared_ptr<Node> left) override;
+    std::shared_ptr<Node> parse(std::shared_ptr<Node> Left, ParserContext Ctxt) override;
     
     precedence_t getPrecedence() override {
         return PRECEDENCE_TILDE;
@@ -341,24 +329,29 @@ public:
     }
 };
 
-class ColonParselet : public BinaryOperatorParselet {
+class ColonParselet : public BinaryParselet, public ContextSensitiveParselet {
 public:
     
-    ColonParselet() : BinaryOperatorParselet(PRECEDENCE_UNUSED, false) {}
+    ColonParselet() {}
     
-    std::shared_ptr<Node> parse(std::shared_ptr<Node> Left) override;
+    std::shared_ptr<Node> parse(std::shared_ptr<Node> Left, ParserContext Ctxt) override;
+    std::shared_ptr<Node> parseContextSensitive(std::shared_ptr<Node> Left, ParserContext Ctxt);
+
+    precedence_t getPrecedence() override {
+        return PRECEDENCE_FAKE_OPTIONALCOLON;
+    }
     
-    precedence_t getPrecedence() override;
-    
-    precedence_t getColonPrecedence(std::shared_ptr<Node> Left);
+    bool isRight() override {
+        return false;
+    }
     
 };
 
 // It'd be weird if this were an "infix operator"
-class SlashColonParselet : public InfixParselet {
+class SlashColonParselet : public BinaryParselet {
 public:
     
-    std::shared_ptr<Node> parse(std::shared_ptr<Node> left) override;
+    std::shared_ptr<Node> parse(std::shared_ptr<Node> Left, ParserContext Ctxt) override;
 
     precedence_t getPrecedence() override {
         return PRECEDENCE_SLASHCOLON;
@@ -371,7 +364,7 @@ public:
 
 class LinearSyntaxOpenParenParselet : public PrefixParselet {
 public:
-    std::shared_ptr<Node> parse() override;
+    std::shared_ptr<Node> parse(ParserContext Ctxt) override;
     precedence_t getPrecedence() override {
         return PRECEDENCE_HIGHEST;
     }
@@ -380,19 +373,19 @@ public:
 class TickParselet : public PostfixOperatorParselet {
 public:
     TickParselet() : PostfixOperatorParselet(PRECEDENCE_TICK) {}
-    std::shared_ptr<Node> parse(std::shared_ptr<Node> Operand) override;
+    std::shared_ptr<Node> parse(std::shared_ptr<Node> Operand, ParserContext Ctxt) override;
 };
 
 class MessageNameParselet : public BinaryOperatorParselet {
 public:
     MessageNameParselet() : BinaryOperatorParselet(PRECEDENCE_COLONCOLON, false) {}
-    std::shared_ptr<Node> parse(std::shared_ptr<Node> left) override;
+    std::shared_ptr<Node> parse(std::shared_ptr<Node> Left, ParserContext Ctxt) override;
 };
 
 class EqualParselet : public BinaryOperatorParselet {
 public:
     EqualParselet() : BinaryOperatorParselet(PRECEDENCE_EQUAL, true) {}
-    std::shared_ptr<Node> parse(std::shared_ptr<Node> left) override;
+    std::shared_ptr<Node> parse(std::shared_ptr<Node> Left, ParserContext Ctxt) override;
 };
 
 
@@ -409,7 +402,7 @@ public:
     //
     // Commonly referred to as LED method in the literature
     //
-    virtual std::shared_ptr<Node> parse(std::shared_ptr<Node> Left) = 0;
+    virtual std::shared_ptr<Node> parse(std::shared_ptr<Node> Left, ParserContext Ctxt) = 0;
     
     virtual precedence_t getPrecedence() = 0;
     
@@ -418,7 +411,7 @@ public:
 
 class ErrorParselet : public PrefixParselet {
 public:
-    std::shared_ptr<Node> parse() override;
+    std::shared_ptr<Node> parse(ParserContext Ctxt) override;
     
     precedence_t getPrecedence() override {
         return PRECEDENCE_HIGHEST;
@@ -429,16 +422,9 @@ class CleanupRestParselet : public CleanupParselet {
 public:
    CleanupRestParselet() {}
    
-   std::shared_ptr<Node> parse(std::shared_ptr<Node> Left) override;
+   std::shared_ptr<Node> parse(std::shared_ptr<Node> Left, ParserContext Ctxt) override;
    
    precedence_t getPrecedence() override {
        return PRECEDENCE_HIGHEST;
    }
 };
-
-
-
-
-
-
-

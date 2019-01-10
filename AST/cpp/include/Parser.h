@@ -9,6 +9,7 @@
 class PrefixParselet;
 class InfixParselet;
 class PostfixParselet;
+class ContextSensitiveParselet;
 class CleanupParselet;
 class GroupParselet;
 class Parselet;
@@ -20,11 +21,16 @@ enum NextTokenPolicy {
     POLICY_PRESERVE_EVERYTHING
 };
 
+struct ParserContext {
+    size_t Depth;
+    precedence_t Precedence;
+    bool InsideColonParselet;
+};
+
 class Parser {
 private:
     
     int groupDepth;
-    bool insideColon;
     bool currentCached;
     Token _currentToken;
     std::string _currentTokenString;
@@ -32,7 +38,7 @@ private:
     std::map<Token, PrefixParselet *> mPrefixParselets;
     std::map<Token, InfixParselet *> mInfixParselets;
     std::map<Token, PostfixParselet *> mPostfixParselets;
-    std::map<Token, CleanupParselet *> mCleanupParselets;
+    std::map<Token, ContextSensitiveParselet *> mContextSensitiveParselets;
     
     std::vector<std::pair<Token, std::string>> tokenQueue;
 
@@ -41,9 +47,9 @@ private:
     void registerTokenType(Token, Parselet *);
     void registerPrefixTokenType(Token);
     
-    precedence_t getCurrentTokenPrecedence(Token current, std::shared_ptr<Node> Left);
+    precedence_t getCurrentTokenPrecedence(Token current, ParserContext Ctxt);
 
-    std::shared_ptr<Node> cleanup(std::shared_ptr<Node>);
+    std::shared_ptr<Node> cleanup(std::shared_ptr<Node>, ParserContext Ctxt);
     
 public:
     Parser();
@@ -63,15 +69,7 @@ public:
 
     std::shared_ptr<Node> parseTopLevel();
     
-    std::shared_ptr<Node> parse(precedence_t Precedence);
-
-    bool isInsideColon1() {
-        return insideColon;
-    }
-    
-    void setInsideColon1(bool b) {
-        insideColon = b;
-    }
+    std::shared_ptr<Node> parse(ParserContext Ctxt);
     
     void decrementGroupDepth() {
         groupDepth--;
@@ -82,18 +80,8 @@ public:
     }
 
     bool isPossibleBeginningOfExpression(Token Tok);
+
+    ContextSensitiveParselet* findContextSensitiveParselet(Token Tok);
 };
 
 extern Parser *TheParser;
-
-class ParserScoper {
-    bool b;
-    
-public:
-    ParserScoper() : b(TheParser->isInsideColon1()) {}
-    
-    ~ParserScoper() {
-        TheParser->setInsideColon1(b);
-    }
-};
-

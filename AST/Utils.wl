@@ -2,11 +2,11 @@ BeginPackage["AST`Utils`"]
 
 escapeString
 
+(*
 char
+*)
 
 empty
-
-drop
 
 Begin["`Private`"]
 
@@ -18,11 +18,12 @@ escapeString[s_] :=
 char["A"] evaluate to 65
 Only string literals of a single character may be given as arguments
 *)
+(*
 Attributes[char] = {HoldAll}
 char[s_String] /; StringLength[s] == 1 := ToCharacterCode[s][[1]]
 
 char[args___] := (Message[char::unhandled, Hold[args]];$Failed)
-
+*)
 
 
 empty[l_List] := Length[l] == 0
@@ -30,19 +31,6 @@ empty[l_List] := Length[l] == 0
 empty[a_Association] := Length[a] == 0
 
 empty[s_String] := s == ""
-
-
-
-(*
-drop the prefix from the string s
-*)
-drop[s_, prefix_] :=
-Which[
-  prefix == "", s,
-  StringStartsQ[s, prefix], StringDrop[s, StringLength[prefix]],
-  True, s
-]
-
 
 
 

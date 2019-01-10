@@ -7,8 +7,9 @@ tutorial/OperatorInputForms
 tutorial/Operators
 and the System function Precedence
 
+Precedence only reports the precedence values associated with operators, used for OUTPUT
 
-With modifications based on empircal observations
+With modifications based on empirical observations
 
 *)
 
@@ -193,6 +194,7 @@ Precedence`LongName`Star -> Precedence[Star], (* 390 *)
 Precedence`Star -> Precedence[Times], (* 400 *)
 Precedence`LongName`Times -> Precedence`Star,
 Precedence`Fake`ImplicitTimes -> Precedence`Star,
+Precedence`LongName`InvisibleTimes -> Precedence`Star,
 
 Precedence`LongName`CenterDot -> Precedence[CenterDot], (* 410 *)
 
@@ -284,14 +286,14 @@ Precedence`Call -> Precedence[Do], (* 670 just an example of any System symbol t
 
 Precedence`Infix`Question -> Precedence[PatternTest], (* 680 *)
 
-Precedence`LinearSyntax`Bang -> Next,
-
 Precedence`LessLess -> Precedence[Get], (* 720 *)
 
 Precedence`ColonColon -> Precedence[MessageName], (* 750 *)
 
 Precedence`Highest -> Precedence["foo"], (* 1000 just an example of any atom *)
-Precedence`Context`Sensitive -> Precedence`Highest,
+Precedence`LinearSyntax`Bang -> Precedence`Highest,
+Precedence`LongName`InvisiblePrefixScriptBase -> Precedence`Highest,
+Precedence`LongName`InvisiblePostfixScriptBase -> Precedence`Highest,
 
 Nothing
 |>

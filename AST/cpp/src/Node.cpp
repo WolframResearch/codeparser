@@ -95,20 +95,6 @@ std::string NumberNode::string() {
     ss << ASTArgsString();
     ss << ", <|";
     ss << ASTSourceString(getSourceSpan());
-    ss << "|>";
-    ss << "]";
-    return ss.str();
-}
-
-std::string SyntaxErrorNode::string() {
-    std::ostringstream ss;
-    ss << SYMBOL_SYNTAXERRORNODE.name();
-    ss << "[";
-    ss << TokenToString(Tok);
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
     if (!Issues.empty()) {
         ss << ", ";
         ss << SYMBOL_SYNTAXISSUES.name();
@@ -123,124 +109,6 @@ std::string SyntaxErrorNode::string() {
         ss << (*I).string();
         ss << "}";
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
-}
-
-SourceSpan SyntaxErrorNode::getSourceSpan() {
-
-    auto Args = getArgs();
-    
-    if (!Args.empty()) {
-        auto First = Args[0];
-        auto Last = Args[Args.size()-1];
-        return SourceSpan{First->getSourceSpan().start, Last->getSourceSpan().end};
-    } else {
-        return SourceSpan{{0, 0}, {0, 0}};
-    }
-}
-
-std::string BlankNode::string() {
-
-    std::ostringstream ss;
-    ss << SYMBOL_BLANKNODE.name();
-    ss << "[";
-    ss << SYMBOL_BLANK.name();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
-    ss << "|>";
-    ss << "]";
-    return ss.str();
-}
-
-std::string BlankSequenceNode::string() {
-
-    std::ostringstream ss;
-    ss << SYMBOL_BLANKSEQUENCENODE.name();
-    ss << "[";
-    ss << SYMBOL_BLANKSEQUENCE.name();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
-    ss << "|>";
-    ss << "]";
-    return ss.str();
-}
-
-std::string BlankNullSequenceNode::string() {
-
-    std::ostringstream ss;
-    ss << SYMBOL_BLANKNULLSEQUENCENODE.name();
-    ss << "[";
-    ss << SYMBOL_BLANKNULLSEQUENCE.name();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
-    ss << "|>";
-    ss << "]";
-    return ss.str();
-}
-
-std::string PatternBlankNode::string() {
-
-    std::ostringstream ss;
-    ss << SYMBOL_PATTERNBLANKNODE.name();
-    ss << "[";
-    ss << SYMBOL_PATTERNBLANK.name();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
-    ss << "|>";
-    ss << "]";
-    return ss.str();
-}
-
-std::string PatternBlankSequenceNode::string() {
-
-    std::ostringstream ss;
-    ss << SYMBOL_PATTERNBLANKSEQUENCENODE.name();
-    ss << "[";
-    ss << SYMBOL_PATTERNBLANKSEQUENCE.name();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
-    ss << "|>";
-    ss << "]";
-    return ss.str();
-}
-
-std::string PatternBlankNullSequenceNode::string() {
-
-    std::ostringstream ss;
-    ss << SYMBOL_PATTERNBLANKNULLSEQUENCENODE.name();
-    ss << "[";
-    ss << SYMBOL_PATTERNBLANKNULLSEQUENCE.name();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
-    ss << "|>";
-    ss << "]";
-    return ss.str();
-}
-
-std::string OptionalDefaultNode::string() {
-
-    std::ostringstream ss;
-    ss << SYMBOL_OPTIONALDEFAULTNODE.name();
-    ss << "[";
-    ss << SYMBOL_OPTIONALDEFAULT.name();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -279,20 +147,6 @@ std::string OutNode::string() {
     ss << SYMBOL_OUTNODE.name();
     ss << "[";
     ss << stringEscape(Str);
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
-    ss << "|>";
-    ss << "]";
-    return ss.str();
-}
-
-std::string InternalEmptyNode::string() {
-    std::ostringstream ss;
-    ss << SYMBOL_INTERNALEMPTYNODE.name();
-    ss << "[";
-    ss << SYMBOL_INTERNALEMPTY.name();
     ss << ", ";
     ss << ASTArgsString();
     ss << ", <|";
@@ -490,20 +344,17 @@ SourceSpan PostfixNode::getSourceSpan() {
 
 
 //
-// Group Expressions
+// CallNodes
 //
 
 std::string CallNode::string() {
 
-    auto Args = getArgs();
-
     std::ostringstream ss;
-    auto ArgsGroup = std::make_shared<GroupNode>(SYMBOL_GROUPSQUARE, OpenerTokSpan, CloserTokSpan, Args, std::vector<SyntaxIssue>());
     ss << SYMBOL_CALLNODE.name();
     ss << "[";
     ss << Head->string();
     ss << ", ";
-    ss << ArgsGroup->ASTArgsString();
+    ss << ASTArgsString();
     ss << ", <|";
     ss << ASTSourceString(getSourceSpan());
     if (!Issues.empty()) {
@@ -527,35 +378,19 @@ std::string CallNode::string() {
 
 SourceSpan CallNode::getSourceSpan() {
 
-    auto Args = getArgs();
+    auto Body = std::dynamic_pointer_cast<GroupNode>(getArgs()[0]);
 
-    auto ArgsGroup = std::make_shared<GroupNode>(SYMBOL_GROUPSQUARE, OpenerTokSpan, CloserTokSpan, Args, std::vector<SyntaxIssue>());
-    return SourceSpan{Head->getSourceSpan().start, ArgsGroup->getSourceSpan().end};
+    return SourceSpan{Head->getSourceSpan().start, Body->getSourceSpan().end};
 }
 
 std::string CallMissingCloserNode::string() {
-
-    auto Args = getArgs();
-    
-    SourceSpan CloserSpan;
-    if (Args.empty()) {
-        
-        CloserSpan = OpenerTokSpan;
-        
-    } else {
-        
-        auto Last = Args[Args.size()-1];
-        
-        CloserSpan = Last->getSourceSpan();
-    }
     
     std::ostringstream ss;
-    auto ArgsGroup = std::make_shared<GroupNode>(SYMBOL_GROUPSQUARE, OpenerTokSpan, CloserSpan, Args, std::vector<SyntaxIssue>());
     ss << SYMBOL_CALLMISSINGCLOSERNODE.name();
     ss << "[";
     ss << Head->string();
     ss << ", ";
-    ss << ArgsGroup->ASTArgsString();
+    ss << ASTArgsString();
     ss << ", <|";
     ss << ASTSourceString(getSourceSpan());
     if (!Issues.empty()) {
@@ -579,62 +414,16 @@ std::string CallMissingCloserNode::string() {
 
 SourceSpan CallMissingCloserNode::getSourceSpan() {
 
-    auto Args = getArgs();
-
-    SourceSpan CloserSpan;
-    if (Args.empty()) {
-        
-        CloserSpan = OpenerTokSpan;
-        
-    } else {
-        
-        auto Last = Args[Args.size()-1];
-        
-        CloserSpan = Last->getSourceSpan();
-    }
+    auto Body = std::dynamic_pointer_cast<GroupNode>(getArgs()[0]);
     
-    return SourceSpan{Head->getSourceSpan().start, CloserSpan.end };
+    return SourceSpan{Head->getSourceSpan().start, Body->getSourceSpan().end };
 }
 
-std::string PartNode::string() {
 
-    auto Args = getArgs();
 
-    std::ostringstream ss;
-    auto ArgsGroup = std::make_shared<GroupNode>(SYMBOL_GROUPDOUBLEBRACKET, OpenerTokSpan, CloserTokSpan, Args, std::vector<SyntaxIssue>());
-    ss << SYMBOL_PARTNODE.name();
-    ss << "[";
-    ss << Head->string();
-    ss << ", ";
-    ss << ArgsGroup->ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
-    if (!Issues.empty()) {
-        ss << ", ";
-        ss << SYMBOL_SYNTAXISSUES.name();
-        ss << "->{";
-        auto I = Issues.begin();
-        auto LastIt = Issues.end();
-        LastIt--;
-        for (; I < LastIt; I++) {
-            ss << (*I).string();
-            ss << ", ";
-        }
-        ss << (*I).string();
-        ss << "}";
-    }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
-}
-
-SourceSpan PartNode::getSourceSpan() {
-
-    auto Args = getArgs();
-
-    auto ArgsGroup = std::make_shared<GroupNode>(SYMBOL_GROUPDOUBLEBRACKET, OpenerTokSpan, CloserTokSpan, Args, std::vector<SyntaxIssue>());
-    return SourceSpan{Head->getSourceSpan().start, ArgsGroup->getSourceSpan().end};
-}
+//
+// GroupNode
+//
 
 std::string GroupNode::string() {
     std::ostringstream ss;
@@ -673,11 +462,12 @@ SourceSpan GroupNode::getSourceSpan() {
 // Special expressions
 //
 
-std::string InternalMinusNode::string() {
+std::string BlankNode::string() {
+
     std::ostringstream ss;
-    ss << SYMBOL_INTERNALMINUSNODE.name();
+    ss << SYMBOL_BLANKNODE.name();
     ss << "[";
-    ss << SYMBOL_INTERNALMINUS.name();
+    ss << SYMBOL_BLANK.name();
     ss << ", ";
     ss << ASTArgsString();
     ss << ", <|";
@@ -687,12 +477,112 @@ std::string InternalMinusNode::string() {
     return ss.str();
 }
 
-SourceSpan InternalMinusNode::getSourceSpan() {
-    
-    auto Operand = getOperand();
+std::string BlankSequenceNode::string() {
 
-    return Operand->getSourceSpan();
+    std::ostringstream ss;
+    ss << SYMBOL_BLANKSEQUENCENODE.name();
+    ss << "[";
+    ss << SYMBOL_BLANKSEQUENCE.name();
+    ss << ", ";
+    ss << ASTArgsString();
+    ss << ", <|";
+    ss << ASTSourceString(getSourceSpan());
+    ss << "|>";
+    ss << "]";
+    return ss.str();
 }
+
+std::string BlankNullSequenceNode::string() {
+
+    std::ostringstream ss;
+    ss << SYMBOL_BLANKNULLSEQUENCENODE.name();
+    ss << "[";
+    ss << SYMBOL_BLANKNULLSEQUENCE.name();
+    ss << ", ";
+    ss << ASTArgsString();
+    ss << ", <|";
+    ss << ASTSourceString(getSourceSpan());
+    ss << "|>";
+    ss << "]";
+    return ss.str();
+}
+
+std::string OptionalDefaultNode::string() {
+
+    std::ostringstream ss;
+    ss << SYMBOL_OPTIONALDEFAULTNODE.name();
+    ss << "[";
+    ss << SYMBOL_OPTIONALDEFAULT.name();
+    ss << ", ";
+    ss << ASTArgsString();
+    ss << ", <|";
+    ss << ASTSourceString(getSourceSpan());
+    ss << "|>";
+    ss << "]";
+    return ss.str();
+}
+
+std::string PatternBlankNode::string() {
+
+    std::ostringstream ss;
+    ss << SYMBOL_PATTERNBLANKNODE.name();
+    ss << "[";
+    ss << SYMBOL_PATTERNBLANK.name();
+    ss << ", ";
+    ss << ASTArgsString();
+    ss << ", <|";
+    ss << ASTSourceString(getSourceSpan());
+    ss << "|>";
+    ss << "]";
+    return ss.str();
+}
+
+std::string PatternBlankSequenceNode::string() {
+
+    std::ostringstream ss;
+    ss << SYMBOL_PATTERNBLANKSEQUENCENODE.name();
+    ss << "[";
+    ss << SYMBOL_PATTERNBLANKSEQUENCE.name();
+    ss << ", ";
+    ss << ASTArgsString();
+    ss << ", <|";
+    ss << ASTSourceString(getSourceSpan());
+    ss << "|>";
+    ss << "]";
+    return ss.str();
+}
+
+std::string PatternBlankNullSequenceNode::string() {
+
+    std::ostringstream ss;
+    ss << SYMBOL_PATTERNBLANKNULLSEQUENCENODE.name();
+    ss << "[";
+    ss << SYMBOL_PATTERNBLANKNULLSEQUENCE.name();
+    ss << ", ";
+    ss << ASTArgsString();
+    ss << ", <|";
+    ss << ASTSourceString(getSourceSpan());
+    ss << "|>";
+    ss << "]";
+    return ss.str();
+}
+
+std::string OptionalDefaultPatternNode::string() {
+
+    std::ostringstream ss;
+    ss << SYMBOL_OPTIONALDEFAULTPATTERNNODE.name();
+    ss << "[";
+    ss << SYMBOL_OPTIONALDEFAULTPATTERN.name();
+    ss << ", ";
+    ss << ASTArgsString();
+    ss << ", <|";
+    ss << ASTSourceString(getSourceSpan());
+    ss << "|>";
+    ss << "]";
+    return ss.str();
+}
+
+
 
 std::string InternalTokenNode::string() {
     std::ostringstream ss;
@@ -708,15 +598,55 @@ std::string InternalTokenNode::string() {
     return ss.str();
 }
 
-
-std::string FileNode::string() {
-
-    auto Args = getArgs();
-
+std::string InternalAllNode::string() {
     std::ostringstream ss;
-    ss << SYMBOL_FILENODE.name();
+    ss << SYMBOL_INTERNALALLNODE.name();
     ss << "[";
-    ss << SYMBOL_FILE.name();
+    ss << SYMBOL_ALL.name();
+    ss << ", ";
+    ss << ASTArgsString();
+    ss << ", <|";
+    ss << ASTSourceString(getSourceSpan());
+    ss << "|>";
+    ss << "]";
+    return ss.str();
+}
+
+std::string InternalDotNode::string() {
+    std::ostringstream ss;
+    ss << SYMBOL_INTERNALDOTNODE.name();
+    ss << "[";
+    ss << SYMBOL_DOT.name();
+    ss << ", ";
+    ss << ASTArgsString();
+    ss << ", <|";
+    ss << ASTSourceString(getSourceSpan());
+    ss << "|>";
+    ss << "]";
+    return ss.str();
+}
+
+std::string InternalNullNode::string() {
+    std::ostringstream ss;
+    ss << SYMBOL_INTERNALNULLNODE.name();
+    ss << "[";
+    ss << SYMBOL_NULL.name();
+    ss << ", ";
+    ss << ASTArgsString();
+    ss << ", <|";
+    ss << ASTSourceString(getSourceSpan());
+    ss << "|>";
+    ss << "]";
+    return ss.str();
+}
+
+std::string InternalOneNode::string() {
+    std::ostringstream ss;
+    ss << SYMBOL_INTERNALONENODE.name();
+    ss << "[";
+    
+    ss << "1";
+
     ss << ", ";
     ss << ASTArgsString();
     ss << ", <|";
@@ -727,10 +657,39 @@ std::string FileNode::string() {
 }
 
 
-SourceSpan FileNode::getSourceSpan() {
+
+std::string SyntaxErrorNode::string() {
+    std::ostringstream ss;
+    ss << SYMBOL_SYNTAXERRORNODE.name();
+    ss << "[";
+    ss << TokenToString(Tok);
+    ss << ", ";
+    ss << ASTArgsString();
+    ss << ", <|";
+    ss << ASTSourceString(getSourceSpan());
+    if (!Issues.empty()) {
+        ss << ", ";
+        ss << SYMBOL_SYNTAXISSUES.name();
+        ss << "->{";
+        auto I = Issues.begin();
+        auto LastIt = Issues.end();
+        LastIt--;
+        for (; I < LastIt; I++) {
+            ss << (*I).string();
+            ss << ", ";
+        }
+        ss << (*I).string();
+        ss << "}";
+    }
+    ss << "|>";
+    ss << "]";
+    return ss.str();
+}
+
+SourceSpan SyntaxErrorNode::getSourceSpan() {
 
     auto Args = getArgs();
-
+    
     if (!Args.empty()) {
         auto First = Args[0];
         auto Last = Args[Args.size()-1];

@@ -1,7 +1,7 @@
 
 # Building AST
 
-AST uses a WL kernel to generate code at build time and a C++ compiler to generate an executable.
+AST uses a WL kernel to generate code at build time and a C++ compiler to compile an executable.
 
 AST uses C++11 features and requires a compiler that can support at least C++11.
 

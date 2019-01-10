@@ -11,6 +11,9 @@
 
 ByteDecoder::ByteDecoder(std::istream &In, bool interactive) : In(In), interactive(interactive), eof(false), byteQueue() {}
 
+//
+// if interactive is true, then only allow single lines to be read (such as on the command-line)
+//
 SourceCharacter ByteDecoder::nextSourceCharacter() {
     
     auto b = nextByte();

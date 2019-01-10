@@ -63,8 +63,9 @@ enum NextCharacterPolicyBits {
     //
     // Convert character escapes to a single character
     //
-    // Given the 8 bytes \ [ A l p h a ], should the next character
-    // be 0x03b1 (the code point for Alpha character) or 0x005c (the code point for backslash character) ?
+    // Given the 8 bytes \ [ A l p h a ], should the next character be:
+    // 0x03b1 (the code point for Alpha character)
+    // or 0x005c (the code point for backslash character) ?
     //
     CONVERT_ESCAPES_TO_SINGLE = 0x02
 };

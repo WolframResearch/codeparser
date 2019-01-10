@@ -1,8 +1,5 @@
 BeginPackage["AST`"]
 
-
-(* functions *)
-
 ParseString::usage = "ParseString[string] returns an AST by interpreting string as WL input. \
 Note: If there are multiple expressions in string, then only the last expression is returned. \
 ParseString[string, h] wraps the output with h and allows multiple expressions to be returned."
@@ -14,11 +11,18 @@ TokenizeString::usage = "TokenizeString[string] returns a list of tokens by inte
 TokenizeFile::usage = "TokenizeFile[file] returns a list of tokens by interpreting file as WL input."
 
 
+ConcreteParseString::usage = "ConcreteParseString[string] returns a concrete syntax tree by interpreting string as WL input."
 
-ToInputFormString
+ConcreteParseFile::usage = "ConcreteParseFile[file] returns a concrete syntax tree by interpreting file as WL input."
+
+
+
+
+ToInputFormString::usage = "ToInputFormString[concrete] returns a string representation of concrete."
+ToFullFormString::usage = "ToFullFormString[abstract] returns a string representation of abstract."
 
 ToNode
-
+FromNode
 
 DeclarationName
 
@@ -28,6 +32,7 @@ PrefixOperatorToSymbol
 PostfixOperatorToSymbol
 BinaryOperatorToSymbol
 InfixOperatorToSymbol
+TernaryOperatorsToSymbol
 GroupOpenerToSymbol
 GroupOpenerToCloser
 GroupCloserToSymbol
@@ -44,8 +49,6 @@ SymbolToGroupPair
 SymbolToTernaryPair
 
 
-
-(* non-System symbols *)
 
 (*
 
@@ -71,35 +74,53 @@ Out[3]= {ImplicitPlus}
 These are not documented symbols, so they are apparently side-effects of parsing.
 
 We want to avoid any confusion about this, so we introduce our own symbols here:
-AST`PostfixHermitianConjugate and AST`InfixImplicitPlus
+AST`PostfixHermitianConjugate and AST`BinaryImplicitPlus
+
+Some examples of these System symbols that are introduced only after parsing:
+HermitianConjugate
+ImplicitPlus
+InvisiblePrefixScriptBase
+InvisiblePostfixScriptBase
 
 *)
 
 (*Token*)
 Token
 
-(* atoms *)
-InternalMinus
-InternalEmpty
+
+(*Character*)
+WLCharacter
+
+
+(* atom symbols *)
+(*InternalEmpty*)
 OptionalDefault
 PatternBlank
 PatternBlankSequence
 PatternBlankNullSequence
+OptionalDefaultPattern
 
-(* operators *)
+(* operator symbols *)
+PrefixLinearSyntaxBang
+PrefixInvisiblePrefixScriptBase
+
+PostfixHermitianConjugate
+PostfixInvisiblePostfixScriptBase
+
 BinarySlashSlash
 BinaryAt
 BinaryInvisibleApplication
 BinaryAtAtAt
-InfixImplicitTimes
+
 InfixImplicitPlus
+ImplicitTimes
+InfixInvisibleTimes
+InfixTimes
+
 TernaryTilde
 TernarySlashColon
-LinearSyntaxBang
-PostfixHermitianConjugate
 
-
-(* groups *)
+(* group symbols *)
 (*List*)
 GroupMissingOpenerList
 GroupMissingCloserList
@@ -146,7 +167,7 @@ GroupMissingCloserLinearSyntaxParen
 
 
 
-(* options *)
+(* option symbols *)
 DerivativeOrder
 Source
 (*
@@ -158,22 +179,24 @@ SyntaxIssue
 
 
 
-(* nodes *)
+(* node symbols *)
 SymbolNode
 StringNode
 NumberNode
-SyntaxErrorNode
+
 BlankNode
 BlankSequenceNode
 BlankNullSequenceNode
+OptionalDefaultNode
 PatternBlankNode
 PatternBlankSequenceNode
 PatternBlankNullSequenceNode
-OptionalDefaultNode
+OptionalDefaultPatternNode
+
 SlotNode
 SlotSequenceNode
 OutNode
-InternalEmptyNode
+(*InternalEmptyNode*)
 PrefixNode
 BinaryNode
 TernaryNode
@@ -181,17 +204,22 @@ InfixNode
 PostfixNode
 GroupNode
 CallNode
-PartNode
-InternalMinusNode
 
 (*
 InternalTokenNode represents a token in a linear syntax expression
-When parsing a linear syntax expressions, all tokens are simply kept unparsed
+When parsing linear syntax expressions, all tokens are simply kept unparsed
 *)
 InternalTokenNode
 
-FileNode
+InternalAllNode
+InternalDotNode
+InternalNullNode
+InternalOneNode
 
+FileNode
+HoldNode
+
+SyntaxErrorNode
 CallMissingCloserNode
 
 
@@ -202,30 +230,68 @@ InternalInvalid
 
 Begin["`Private`"]
 
+Needs["AST`Abstract`"]
 Needs["AST`DeclarationName`"]
 Needs["AST`Node`"]
 Needs["AST`Symbol`"]
 Needs["AST`ToInputFormString`"]
+Needs["AST`ToFullFormString`"]
 Needs["AST`Utils`"]
+Needs["PacletManager`"]
 
 
-packageDir = DirectoryName[FindFile["AST`"]]
+$exe = Module[{wlastResources, firstPair, listOfWLASTs},
+			(*
+			PacletResources["Resource", "wl-ast"] will return something like:
+			{{Paclet[AST,0.7,<>],{/path/to/AST/ASTResources/MacOSX-x86-64/wl-ast}}}
 
-exe = FileNameJoin[{packageDir, "ASTResources", $SystemID, "wl-ast"}]
+			or if AST is not yet installed (i.e., it is currently in the process of building),
+			then PacletResources["Resource", "wl-ast"] will return {}
+
+			*)
+			wlastResources = PacletResources["Resource", "wl-ast"];
+			Which[
+				wlastResources == {},
+					None
+				,
+				Length[wlastResources] != 1,
+					(*
+					more than one paclet has "wl-ast" resources
+					TODO: Message or Throw
+					*)
+					None
+				,
+				firstPair = wlastResources[[1]];
+				firstPair[[1]]["Name"] != "AST",
+					None
+				,
+				listOfWLASTs = firstPair[[2]];
+				Length[listOfWLASTs] != 1,
+					(*
+					more than one wl-ast in AST paclet
+					TODO: Message or Throw
+					*)
+					None
+				,
+				True,
+					listOfWLASTs[[1]]
+			]
+		]
 
 
-ParseString[s_String, h_:Automatic] :=
-	parseString[s, h]
+
+ConcreteParseString[s_String, h_:Automatic] :=
+	concreteParseString[s, h]
 
 TokenizeString[s_String] :=
-	parseString[s, Automatic, "Tokenize"->True]
+	concreteParseString[s, List, "Tokenize"->True]
 
 
-Options[parseString] = {
+Options[concreteParseString] = {
 	"Tokenize" -> False
 }
 
-parseString[sIn_String, h_, OptionsPattern[]] :=
+concreteParseString[sIn_String, h_, OptionsPattern[]] :=
 Catch[
 Module[{s = sIn, res, out, actualAST, multiBytes, tokenize},
 
@@ -244,14 +310,18 @@ Module[{s = sIn, res, out, actualAST, multiBytes, tokenize},
 	bug 360669
 	*)
 	multiBytes = Select[ToCharacterCode[s], # > 255&];
-	If[Length[multiBytes] > 0,
+	If[!empty[multiBytes],
 		Throw[Failure["MultiByteCharactersNotAllowed", <|
 			"Input"->s,
-			"MultiByteCharacters"->AST`Utils`escapeString[FromCharacterCode[#]]& /@ Take[multiBytes, UpTo[10]]|>]]
+			"MultiByteCharacters"->(AST`Utils`escapeString[FromCharacterCode[#]]& /@ Take[multiBytes, UpTo[10]])|>]]
+	];
+
+	If[$exe === None,
+		Throw[Failure["ExecutableNotFound", <|"Executable"->$exe|>]]
 	];
 
 	res = RunProcess[{
-		exe,
+		$exe,
 		Sequence@@If[tokenize, {"-format", "tokens"}, {}],
 		"-noPrompt",
 		"-nonInteractive"
@@ -270,36 +340,54 @@ Module[{s = sIn, res, out, actualAST, multiBytes, tokenize},
 	res
 ]]
 
+(*
+may return:
+a node
+or Null if input was an empty string
+*)
+ParseString[s_String, h_:Automatic] :=
+Module[{parse},
+	parse = ConcreteParseString[s, h];
 
+	ast = Abstract[parse];
 
+	ast
+]
 
 
 (*
-ParseFile[full_String] returns a FileNode AST or a Failure object
+ConcreteParseFile[full_String] returns a FileNode AST or a Failure object
 *)
-ParseFile[full_String] :=
-	parseFile[full]
+ConcreteParseFile[full_String, h_:Automatic] :=
+	concreteParseFile[full, h]
 
 TokenizeFile[full_String] :=
-	parseFile[full, "Tokenize"->True]
+	concreteParseFile[full, List, "Tokenize"->True]
 
 
 
-Options[parseFile] = {
+Options[concreteParseFile] = {
 	"Tokenize" -> False
 }
 
 
-parseFile[fullIn_String, OptionsPattern[]] :=
+concreteParseFile[fullIn_String, hIn_, OptionsPattern[]] :=
 Catch[
-Module[{full, res, actualAST, tryString, actual, skipFirstLine = False, shebangWarn = False, opts, issues, tokenize},
+Module[{h, full, res, actualAST, tryString, actual, skipFirstLine = False, shebangWarn = False, opts, issues, tokenize},
+
+	h = hIn;
+	full = fullIn;
+
+	If[h === Automatic,
+		h = Function[FileNode[File, {##}, <||>]]
+	];
 
 	tokenize = OptionValue["Tokenize"];
 
 	(*
 	We want to expand anything like ~ before passing to external process
 	*)
-	full = AbsoluteFileName[fullIn];
+	full = AbsoluteFileName[full];
 	If[FailureQ[full],
 		Throw[full]
 	];
@@ -324,7 +412,7 @@ Module[{full, res, actualAST, tryString, actual, skipFirstLine = False, shebangW
 			]
 		];
 		Which[
-			firstLine == "(*!1N!*)mcm",
+			StringMatchQ[firstLine, "(*!1"~~("A"|"B"|"C"|"D"|"H"|"I"|"N"|"O")~~"!*)mcm"],
 			Throw[Failure["EncodedFile", <|"FileName"->full|>]]
 			,
 			StringStartsQ[firstLine, "#!"],
@@ -335,8 +423,12 @@ Module[{full, res, actualAST, tryString, actual, skipFirstLine = False, shebangW
 		];
 	];
 
+	If[$exe === None,
+		Throw[Failure["ExecutableNotFound", <|"Executable"->$exe|>]]
+	];
+
 	res = RunProcess[{
-			exe,
+			$exe,
 			Sequence@@If[tokenize, {"-format", "tokens"}, {}],
 			Sequence@@If[skipFirstLine, {"-skipFirstLine"}, {}],
 			"-file", full
@@ -346,9 +438,12 @@ Module[{full, res, actualAST, tryString, actual, skipFirstLine = False, shebangW
 		Throw[res]
 	];
 
-	res = handleResult[res, Automatic];
+	res = handleResult[res, h];
 
 	If[FailureQ[res],
+		If[res === $Failed,
+			Throw[res]
+		];
 		res = Failure[res[[1]], Join[res[[2]], <|"FileName"->full|>]];
 		Throw[res]
 	];
@@ -356,7 +451,7 @@ Module[{full, res, actualAST, tryString, actual, skipFirstLine = False, shebangW
 	If[shebangWarn,
 		opts = res[[3]];
 		issues = Lookup[opts, SyntaxIssues, {}];
-		AppendTo[issues, SyntaxIssue["# on first line looks like #! shebang", "Remark", <|Source->{{1,1}, {1, 1}}|>]];
+		AppendTo[issues, SyntaxIssue["Shebang", "# on first line looks like #! shebang", "Remark", <|Source->{{1, 1}, {1, 1}}|>]];
 		AssociateTo[opts, SyntaxIssues -> issues];
 		res[[3]] = opts;
 	];
@@ -364,13 +459,20 @@ Module[{full, res, actualAST, tryString, actual, skipFirstLine = False, shebangW
 	res
 ]]
 
+ParseFile[file_String, h_:Automatic] :=
+Module[{parse, ast},
+
+	parse = ConcreteParseFile[file, h];
+
+	ast = Abstract[parse];
+
+	ast
+]
+
+
 handleResult[res_Association, h_] :=
 Catch[
 Module[{input, ast},
-
-	If[$Debug,
-		Print[res]
-	];
 
 	If[$Debug,
 		If[!empty[res["StandardError"]],
@@ -389,6 +491,10 @@ Module[{input, ast},
 
 	input = res["StandardOutput"];
 
+	If[$Debug,
+		$LastStandardOutput = input;
+	];
+
 	(*
 	work-around bug 363889
 	*)
@@ -397,19 +503,34 @@ Module[{input, ast},
 	];
 
 	(*
+	The current implementation of AST uses ToExpression to convert a string from the wl-ast process
+	to an expression.
+	This may hit the depth limit in the WL parser and give errors. e.g.,
+	ToExpression[StringJoin[{Table["f@", 255], "g"}]] evaluates fine
+	ToExpression[StringJoin[{Table["f@", 256], "g"}]] gives ToExpression::sntx and returns $Failed
+
+	Using a verbose way of expressing syntax makes this limit get hit earlier.
+	*)
+	Quiet[
+	(*
 	Put AST` on path even if it is not on path originally
 	*)
 	Block[{$ContextPath = {"AST`", "System`"}},
 		If[h === Automatic,
-			ast = ToExpression[input, InputForm]
+			ast = ToExpression[input, InputForm];
+			If[FailureQ[ast],
+				Throw[Failure["ToExpressionFailed", <|"Result"->ast|>]]
+			];
 			,
-			ast = ToExpression[input, InputForm, h]
+			ast = ToExpression[input, InputForm, h];
+			If[FailureQ[ast],
+				Throw[Failure["ToExpressionFailed", <|"Result"->ast|>]]
+			];
 		]
-	];
+	]];
 
 	ast
 ]]
-
 
 
 
