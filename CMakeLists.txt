@@ -95,7 +95,6 @@ set(DOCUMENTATION_NOTEBOOKS
 	${CMAKE_SOURCE_DIR}/AST/Documentation/English/ReferencePages/Symbols/ParseFile.nb
 	${CMAKE_SOURCE_DIR}/AST/Documentation/English/ReferencePages/Symbols/ConcreteParseString.nb
 	${CMAKE_SOURCE_DIR}/AST/Documentation/English/ReferencePages/Symbols/ConcreteParseFile.nb
-	${CMAKE_SOURCE_DIR}/AST/Documentation/English/Tutorials/Examples.nb
 )
 
 set(BUILT_DOCUMENTATION
@@ -109,7 +108,6 @@ set(BUILT_DOCUMENTATION
 	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/English/SpellIndex/_0.cfs
 	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/English/SpellIndex/segments.gen
 	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/English/SpellIndex/segments_3
-	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/English/Tutorials/Examples.nb
 )
 
 
