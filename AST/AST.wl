@@ -373,12 +373,11 @@ Options[concreteParseFile] = {
 }
 
 
-concreteParseFile[fullIn_String, hIn_, OptionsPattern[]] :=
+concreteParseFile[file_String, hIn_, OptionsPattern[]] :=
 Catch[
 Module[{h, full, res, actualAST, tryString, actual, skipFirstLine = False, shebangWarn = False, opts, issues, tokenize},
 
 	h = hIn;
-	full = fullIn;
 
 	If[h === Automatic,
 		h = Function[FileNode[File, {##}, <||>]]
@@ -388,14 +387,12 @@ Module[{h, full, res, actualAST, tryString, actual, skipFirstLine = False, sheba
 
 	(*
 	We want to expand anything like ~ before passing to external process
-	*)
-	full = AbsoluteFileName[full];
-	If[FailureQ[full],
-		Throw[full]
-	];
 
-	If[FileType[full] =!= File,
-		Throw[Failure["NotAFile", <|"FileName"->full|>]]
+	FindFile does a better job than AbsoluteFileName because it can handle things like "Foo`" also
+	*)
+	full = FindFile[file];
+	If[FailureQ[full],
+		Throw[Failure["FindFileFailed", <|"FileName"->file|>]]
 	];
 
 	(*
