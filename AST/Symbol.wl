@@ -339,68 +339,30 @@ BinaryOperatorToSymbol[Token`Operator`AtAtAt] = BinaryAtAtAt
 BinaryOperatorToSymbol[Token`Operator`Fake`EqualDot] = Unset
 BinaryOperatorToSymbol[Token`Operator`Fake`PatternColon] = Pattern
 BinaryOperatorToSymbol[Token`Operator`Fake`OptionalColon] = Optional
-   
+
+(* set relation operators *)
 BinaryOperatorToSymbol[Token`Operator`LongName`Element] = Element
-BinaryOperatorToSymbol[Token`Operator`LongName`RightTeeArrow] = RightTeeArrow
-BinaryOperatorToSymbol[Token`Operator`LongName`TildeTilde] = TildeTilde
-BinaryOperatorToSymbol[Token`Operator`LongName`SubsetEqual] = SubsetEqual
 BinaryOperatorToSymbol[Token`Operator`LongName`Subset] = Subset
-BinaryOperatorToSymbol[Token`Operator`LongName`Implies] = Implies
-BinaryOperatorToSymbol[Token`Operator`LongName`NotTildeTilde] = NotTildeTilde
-BinaryOperatorToSymbol[Token`Operator`LongName`PlusMinus] = PlusMinus
-BinaryOperatorToSymbol[Token`Operator`LongName`Equivalent] = Equivalent
-BinaryOperatorToSymbol[Token`Operator`LongName`LeftTriangleEqual] = LeftTriangleEqual
-BinaryOperatorToSymbol[Token`Operator`LongName`TildeEqual] = TildeEqual
+BinaryOperatorToSymbol[Token`Operator`LongName`Superset] = Superset
+BinaryOperatorToSymbol[Token`Operator`LongName`SubsetEqual] = SubsetEqual
 BinaryOperatorToSymbol[Token`Operator`LongName`SupersetEqual] = SupersetEqual
-BinaryOperatorToSymbol[Token`Operator`LongName`TildeFullEqual] = TildeFullEqual
-BinaryOperatorToSymbol[Token`Operator`LongName`DirectedEdge] = DirectedEdge
 BinaryOperatorToSymbol[Token`Operator`LongName`NotElement] = NotElement
-BinaryOperatorToSymbol[Token`Operator`LongName`NotTildeFullEqual] = NotTildeFullEqual
-BinaryOperatorToSymbol[Token`Operator`LongName`CircleDot] = CircleDot
+BinaryOperatorToSymbol[Token`Operator`LongName`NotSubset] = NotSubset
+BinaryOperatorToSymbol[Token`Operator`LongName`NotSuperset] = NotSuperset
+BinaryOperatorToSymbol[Token`Operator`LongName`NotSubsetEqual] = NotSubsetEqual
+BinaryOperatorToSymbol[Token`Operator`LongName`NotSupersetEqual] = NotSupersetEqual
+
+BinaryOperatorToSymbol[Token`Operator`LongName`Implies] = Implies
+BinaryOperatorToSymbol[Token`Operator`LongName`PlusMinus] = PlusMinus
+BinaryOperatorToSymbol[Token`Operator`LongName`DirectedEdge] = DirectedEdge
 BinaryOperatorToSymbol[Token`Operator`LongName`Rule] = Rule
-BinaryOperatorToSymbol[Token`Operator`LongName`Equal] = Equal
-BinaryOperatorToSymbol[Token`Operator`LongName`LessEqual] = LessEqual
 BinaryOperatorToSymbol[Token`Operator`LongName`RuleDelayed] = RuleDelayed
 BinaryOperatorToSymbol[Token`Operator`LongName`UndirectedEdge] = UndirectedEdge
 BinaryOperatorToSymbol[Token`Operator`LongName`Function] = Function
-BinaryOperatorToSymbol[Token`Operator`LongName`Distributed] = Distributed
-BinaryOperatorToSymbol[Token`Operator`LongName`Conditioned] = Conditioned
-BinaryOperatorToSymbol[Token`Operator`LongName`Union] = Union
-BinaryOperatorToSymbol[Token`Operator`LongName`Intersection] = Intersection
-BinaryOperatorToSymbol[Token`Operator`LongName`NotEqual] = Unequal
-BinaryOperatorToSymbol[Token`Operator`LongName`TensorWedge] = TensorWedge
-BinaryOperatorToSymbol[Token`Operator`LongName`CenterDot] = CenterDot
-BinaryOperatorToSymbol[Token`Operator`LongName`Cross] = Cross
-BinaryOperatorToSymbol[Token`Operator`LongName`GreaterTilde] = GreaterTilde
-BinaryOperatorToSymbol[Token`Operator`LongName`Proportional] = Proportional
-BinaryOperatorToSymbol[Token`Operator`LongName`LessLess] = LessLess
-BinaryOperatorToSymbol[Token`Operator`LongName`Congruent] = Congruent
-BinaryOperatorToSymbol[Token`Operator`LongName`Tilde] = Tilde
 BinaryOperatorToSymbol[Token`Operator`LongName`MinusPlus] = MinusPlus
-BinaryOperatorToSymbol[Token`Operator`LongName`DoubleLongLeftRightArrow] = DoubleLongLeftRightArrow
-BinaryOperatorToSymbol[Token`Operator`LongName`RightArrow] = RightArrow
-BinaryOperatorToSymbol[Token`Operator`LongName`SmallCircle] = SmallCircle
-BinaryOperatorToSymbol[Token`Operator`LongName`DoubleLongRightArrow] = DoubleLongRightArrow
-BinaryOperatorToSymbol[Token`Operator`LongName`Divides] = Divisible
-BinaryOperatorToSymbol[Token`Operator`LongName`LeftRightArrow] = LeftRightArrow
-BinaryOperatorToSymbol[Token`Operator`LongName`VerticalSeparator] = VerticalSeparator
-BinaryOperatorToSymbol[Token`Operator`LongName`LongRightArrow] = LongRightArrow
 If[$VersionNumber >= 11.1, ToExpression["BinaryOperatorToSymbol[Token`Operator`LongName`TwoWayRule] = TwoWayRule"]]
 BinaryOperatorToSymbol[Token`Operator`LongName`InvisibleApplication] = BinaryInvisibleApplication
-BinaryOperatorToSymbol[Token`Operator`LongName`Backslash] = Backslash
-BinaryOperatorToSymbol[Token`Operator`LongName`Diamond] = Diamond
-BinaryOperatorToSymbol[Token`Operator`LongName`Wedge] = Wedge
-BinaryOperatorToSymbol[Token`Operator`LongName`Vee] = Vee
-BinaryOperatorToSymbol[Token`Operator`LongName`CircleTimes] = CircleTimes
-BinaryOperatorToSymbol[Token`Operator`LongName`Star] = Star
-BinaryOperatorToSymbol[Token`Operator`LongName`VerticalTilde] = VerticalTilde
-BinaryOperatorToSymbol[Token`Operator`LongName`Coproduct] = Coproduct
-BinaryOperatorToSymbol[Token`Operator`LongName`Cap] = Cap
-BinaryOperatorToSymbol[Token`Operator`LongName`Cup] = Cup
-BinaryOperatorToSymbol[Token`Operator`LongName`CirclePlus] = CirclePlus
 BinaryOperatorToSymbol[Token`Operator`LongName`CircleMinus] = CircleMinus
-BinaryOperatorToSymbol[Token`Operator`LongName`RightTriangle] = RightTriangle
-BinaryOperatorToSymbol[Token`Operator`LongName`LeftTriangle] = LeftTriangle
 
 (* inequality operators *)
 SymbolToBinaryOperatorString[Equal] = "=="
@@ -447,62 +409,27 @@ SymbolToBinaryOperatorString[Put] = ">>"
 (* extra space, ending in . *)
 SymbolToBinaryOperatorString[Unset] = "=. "
 
+(* set relation operators *)
 SymbolToBinaryOperatorString[Element] = "\\[Element]"
-SymbolToBinaryOperatorString[SubsetEqual] = "\\[SubsetEqual]"
-SymbolToBinaryOperatorString[RightTeeArrow] = "\\[RightTeeArrow]"
-SymbolToBinaryOperatorString[LeftTriangleEqual] = "\\[LeftTriangleEqual]"
-SymbolToBinaryOperatorString[TildeFullEqual] = "\\[TildeFullEqual]"
-SymbolToBinaryOperatorString[NotTildeFullEqual] = "\\[NotTildeFullEqual]"
-SymbolToBinaryOperatorString[TildeTilde] = "\\[TildeTilde]"
-SymbolToBinaryOperatorString[NotTildeTilde] = "\\[NotTildeTilde]"
-SymbolToBinaryOperatorString[TildeEqual] = "\\[TildeEqual]"
 SymbolToBinaryOperatorString[Subset] = "\\[Subset]"
-SymbolToBinaryOperatorString[PlusMinus] = "\\[PlusMinus]"
-SymbolToBinaryOperatorString[NotElement] = "\\[NotElement]"
-SymbolToBinaryOperatorString[Implies] = "\\[Implies]"
-SymbolToBinaryOperatorString[Equivalent] = "\\[Equivalent]"
-SymbolToBinaryOperatorString[DirectedEdge] = "\\[DirectedEdge]"
+SymbolToBinaryOperatorString[Superset] = "\\[Superset]"
+SymbolToBinaryOperatorString[SubsetEqual] = "\\[SubsetEqual]"
 SymbolToBinaryOperatorString[SupersetEqual] = "\\[SupersetEqual]"
+SymbolToBinaryOperatorString[NotElement] = "\\[NotElement]"
+SymbolToBinaryOperatorString[NotSubset] = "\\[NotSubset]"
+SymbolToBinaryOperatorString[NotSuperset] = "\\[NotSuperset]"
+SymbolToBinaryOperatorString[NotSubsetEqual] = "\\[NotSubsetEqual]"
+SymbolToBinaryOperatorString[NotSupersetEqual] = "\\[NotSupersetEqual]"
+
+SymbolToBinaryOperatorString[PlusMinus] = "\\[PlusMinus]"
+SymbolToBinaryOperatorString[Implies] = "\\[Implies]"
+SymbolToBinaryOperatorString[DirectedEdge] = "\\[DirectedEdge]"
 If[$VersionNumber >= 11.1, ToExpression["SymbolToBinaryOperatorString[TwoWayRule] = \"\\\\[TwoWayRule]\""]]
 SymbolToBinaryOperatorString[UndirectedEdge] = "\\[UndirectedEdge]"
 SymbolToBinaryOperatorString[Function] = "\\[Function]"
-SymbolToBinaryOperatorString[Intersection] = "\\[Intersection]"
-SymbolToBinaryOperatorString[Union] = "\\[Union]"
-SymbolToBinaryOperatorString[Distributed] = "\\[Distributed]"
-SymbolToBinaryOperatorString[Conditioned] = "\\[Conditioned]"
-SymbolToBinaryOperatorString[CircleDot] = "\\[CircleDot]"
-SymbolToBinaryOperatorString[TensorWedge] = "\\[TensorWedge]"
-SymbolToBinaryOperatorString[CenterDot] = "\\[CenterDot]"
-SymbolToBinaryOperatorString[Cross] = "\\[Cross]"
-SymbolToBinaryOperatorString[GreaterTilde] = "\\[GreaterTilde]"
-SymbolToBinaryOperatorString[Proportional] = "\\[Proportional]"
-SymbolToBinaryOperatorString[LessLess] = "\\[LessLess]"
-SymbolToBinaryOperatorString[Congruent] = "\\[Congruent]"
-SymbolToBinaryOperatorString[Tilde] = "\\[Tilde]"
-SymbolToBinaryOperatorString[MinusPlus] = "\\[MinusPlus]"
-SymbolToBinaryOperatorString[DoubleLongLeftRightArrow] = "\\[DoubleLongLeftRightArrow]"
-SymbolToBinaryOperatorString[RightArrow] = "\\[RightArrow]"
-SymbolToBinaryOperatorString[SmallCircle] = "\\[SmallCircle]"
-SymbolToBinaryOperatorString[DoubleLongRightArrow] = "\\[DoubleLongRightArrow]"
-SymbolToBinaryOperatorString[Divisible] = "\\[Divides]"
-SymbolToBinaryOperatorString[LeftRightArrow] = "\\[LeftRightArrow]"
-SymbolToBinaryOperatorString[VerticalSeparator] = "\\[VerticalSeparator]"
-SymbolToBinaryOperatorString[LongRightArrow] = "\\[LongRightArrow]"
 SymbolToBinaryOperatorString[BinaryInvisibleApplication] = "\\[InvisibleApplication]"
-SymbolToBinaryOperatorString[CirclePlus] = "\\[CirclePlus]"
-SymbolToBinaryOperatorString[RightTriangle] = "\\[RightTriangle]"
-SymbolToBinaryOperatorString[CircleTimes] = "\\[CircleTimes]"
-SymbolToBinaryOperatorString[LeftTriangle] = "\\[LeftTriangle]"
-SymbolToBinaryOperatorString[Backslash] = "\\[Backslash]"
-SymbolToBinaryOperatorString[Cap] = "\\[Cap]"
 SymbolToBinaryOperatorString[CircleMinus] = "\\[CircleMinus]"
-SymbolToBinaryOperatorString[Coproduct] = "\\[Coproduct]"
-SymbolToBinaryOperatorString[Cup] = "\\[Cup]"
-SymbolToBinaryOperatorString[Diamond] = "\\[Diamond]"
-SymbolToBinaryOperatorString[Star] = "\\[Star]"
-SymbolToBinaryOperatorString[Vee] = "\\[Vee]"
-SymbolToBinaryOperatorString[VerticalTilde] = "\\[VerticalTilde]"
-SymbolToBinaryOperatorString[Wedge] = "\\[Wedge]"
+SymbolToBinaryOperatorString[MinusPlus] = "\\[MinusPlus]"
 
 (*
 Infix
@@ -533,11 +460,17 @@ InfixOperatorToSymbol[Token`Operator`TildeTilde] = StringExpression
 
 (* inequality operators *)
 InfixOperatorToSymbol[Token`Operator`EqualEqual] = Equal
-InfixOperatorToSymbol[Token`Operator`BangEqual] = Unequal
 InfixOperatorToSymbol[Token`Operator`Less] = Less
 InfixOperatorToSymbol[Token`Operator`Greater] = Greater
 InfixOperatorToSymbol[Token`Operator`LessEqual] = LessEqual
 InfixOperatorToSymbol[Token`Operator`GreaterEqual] = GreaterEqual
+InfixOperatorToSymbol[Token`Operator`BangEqual] = Unequal
+
+InfixOperatorToSymbol[Token`Operator`LongName`Equal] = Equal
+InfixOperatorToSymbol[Token`Operator`LongName`LessEqual] = LessEqual
+InfixOperatorToSymbol[Token`Operator`LongName`GreaterEqual] = GreaterEqual
+InfixOperatorToSymbol[Token`Operator`LongName`NotEqual] = Unequal
+
 
 (* other flattening operators *)
 InfixOperatorToSymbol[Token`Operator`EqualEqualEqual] = SameQ
@@ -550,6 +483,49 @@ InfixOperatorToSymbol[Token`Operator`LongName`Or] = Or
 InfixOperatorToSymbol[Token`Operator`LongName`Xor] = Xor
 InfixOperatorToSymbol[Token`Operator`LongName`Nand] = Nand
 InfixOperatorToSymbol[Token`Operator`LongName`Nor] = Nor
+
+InfixOperatorToSymbol[Token`Operator`LongName`CenterDot] = CenterDot
+InfixOperatorToSymbol[Token`Operator`LongName`RightTeeArrow] = RightTeeArrow
+InfixOperatorToSymbol[Token`Operator`LongName`TildeTilde] = TildeTilde
+InfixOperatorToSymbol[Token`Operator`LongName`NotTildeTilde] = NotTildeTilde
+InfixOperatorToSymbol[Token`Operator`LongName`Equivalent] = Equivalent
+InfixOperatorToSymbol[Token`Operator`LongName`LeftTriangleEqual] = LeftTriangleEqual
+InfixOperatorToSymbol[Token`Operator`LongName`TildeEqual] = TildeEqual
+InfixOperatorToSymbol[Token`Operator`LongName`TildeFullEqual] = TildeFullEqual
+InfixOperatorToSymbol[Token`Operator`LongName`NotTildeFullEqual] = NotTildeFullEqual
+InfixOperatorToSymbol[Token`Operator`LongName`CircleDot] = CircleDot
+InfixOperatorToSymbol[Token`Operator`LongName`Distributed] = Distributed
+InfixOperatorToSymbol[Token`Operator`LongName`Conditioned] = Conditioned
+InfixOperatorToSymbol[Token`Operator`LongName`Union] = Union
+InfixOperatorToSymbol[Token`Operator`LongName`Intersection] = Intersection
+InfixOperatorToSymbol[Token`Operator`LongName`TensorWedge] = TensorWedge
+InfixOperatorToSymbol[Token`Operator`LongName`Cross] = Cross
+InfixOperatorToSymbol[Token`Operator`LongName`GreaterTilde] = GreaterTilde
+InfixOperatorToSymbol[Token`Operator`LongName`Proportional] = Proportional
+InfixOperatorToSymbol[Token`Operator`LongName`LessLess] = LessLess
+InfixOperatorToSymbol[Token`Operator`LongName`Congruent] = Congruent
+InfixOperatorToSymbol[Token`Operator`LongName`Tilde] = Tilde
+InfixOperatorToSymbol[Token`Operator`LongName`DoubleLongLeftRightArrow] = DoubleLongLeftRightArrow
+InfixOperatorToSymbol[Token`Operator`LongName`RightArrow] = RightArrow
+InfixOperatorToSymbol[Token`Operator`LongName`SmallCircle] = SmallCircle
+InfixOperatorToSymbol[Token`Operator`LongName`DoubleLongRightArrow] = DoubleLongRightArrow
+InfixOperatorToSymbol[Token`Operator`LongName`Divides] = Divisible
+InfixOperatorToSymbol[Token`Operator`LongName`LeftRightArrow] = LeftRightArrow
+InfixOperatorToSymbol[Token`Operator`LongName`VerticalSeparator] = VerticalSeparator
+InfixOperatorToSymbol[Token`Operator`LongName`LongRightArrow] = LongRightArrow
+InfixOperatorToSymbol[Token`Operator`LongName`Backslash] = Backslash
+InfixOperatorToSymbol[Token`Operator`LongName`Diamond] = Diamond
+InfixOperatorToSymbol[Token`Operator`LongName`Wedge] = Wedge
+InfixOperatorToSymbol[Token`Operator`LongName`Vee] = Vee
+InfixOperatorToSymbol[Token`Operator`LongName`CircleTimes] = CircleTimes
+InfixOperatorToSymbol[Token`Operator`LongName`Star] = Star
+InfixOperatorToSymbol[Token`Operator`LongName`VerticalTilde] = VerticalTilde
+InfixOperatorToSymbol[Token`Operator`LongName`Coproduct] = Coproduct
+InfixOperatorToSymbol[Token`Operator`LongName`Cap] = Cap
+InfixOperatorToSymbol[Token`Operator`LongName`Cup] = Cup
+InfixOperatorToSymbol[Token`Operator`LongName`CirclePlus] = CirclePlus
+InfixOperatorToSymbol[Token`Operator`LongName`RightTriangle] = RightTriangle
+InfixOperatorToSymbol[Token`Operator`LongName`LeftTriangle] = LeftTriangle
 
 (* extra space *)
 SymbolToInfixOperatorString[CompoundExpression] = " ; "
@@ -593,7 +569,48 @@ SymbolToInfixOperatorString[Nand] = "\\[Nand]"
 SymbolToInfixOperatorString[Nor] = "\\[Nor]"
 SymbolToInfixOperatorString[Xor] = "\\[Xor]"
 
-
+SymbolToInfixOperatorString[CenterDot] = "\\[CenterDot]"
+SymbolToInfixOperatorString[RightTeeArrow] = "\\[RightTeeArrow]"
+SymbolToInfixOperatorString[LeftTriangleEqual] = "\\[LeftTriangleEqual]"
+SymbolToInfixOperatorString[TildeFullEqual] = "\\[TildeFullEqual]"
+SymbolToInfixOperatorString[NotTildeFullEqual] = "\\[NotTildeFullEqual]"
+SymbolToInfixOperatorString[TildeTilde] = "\\[TildeTilde]"
+SymbolToInfixOperatorString[NotTildeTilde] = "\\[NotTildeTilde]"
+SymbolToInfixOperatorString[TildeEqual] = "\\[TildeEqual]"
+SymbolToInfixOperatorString[Equivalent] = "\\[Equivalent]"
+SymbolToInfixOperatorString[Intersection] = "\\[Intersection]"
+SymbolToInfixOperatorString[Union] = "\\[Union]"
+SymbolToInfixOperatorString[Distributed] = "\\[Distributed]"
+SymbolToInfixOperatorString[Conditioned] = "\\[Conditioned]"
+SymbolToInfixOperatorString[CircleDot] = "\\[CircleDot]"
+SymbolToInfixOperatorString[TensorWedge] = "\\[TensorWedge]"
+SymbolToInfixOperatorString[Cross] = "\\[Cross]"
+SymbolToInfixOperatorString[GreaterTilde] = "\\[GreaterTilde]"
+SymbolToInfixOperatorString[Proportional] = "\\[Proportional]"
+SymbolToInfixOperatorString[LessLess] = "\\[LessLess]"
+SymbolToInfixOperatorString[Congruent] = "\\[Congruent]"
+SymbolToInfixOperatorString[Tilde] = "\\[Tilde]"
+SymbolToInfixOperatorString[DoubleLongLeftRightArrow] = "\\[DoubleLongLeftRightArrow]"
+SymbolToInfixOperatorString[RightArrow] = "\\[RightArrow]"
+SymbolToInfixOperatorString[SmallCircle] = "\\[SmallCircle]"
+SymbolToInfixOperatorString[DoubleLongRightArrow] = "\\[DoubleLongRightArrow]"
+SymbolToInfixOperatorString[Divisible] = "\\[Divides]"
+SymbolToInfixOperatorString[LeftRightArrow] = "\\[LeftRightArrow]"
+SymbolToInfixOperatorString[VerticalSeparator] = "\\[VerticalSeparator]"
+SymbolToInfixOperatorString[LongRightArrow] = "\\[LongRightArrow]"
+SymbolToInfixOperatorString[CirclePlus] = "\\[CirclePlus]"
+SymbolToInfixOperatorString[RightTriangle] = "\\[RightTriangle]"
+SymbolToInfixOperatorString[CircleTimes] = "\\[CircleTimes]"
+SymbolToInfixOperatorString[LeftTriangle] = "\\[LeftTriangle]"
+SymbolToInfixOperatorString[Backslash] = "\\[Backslash]"
+SymbolToInfixOperatorString[Cap] = "\\[Cap]"
+SymbolToInfixOperatorString[Coproduct] = "\\[Coproduct]"
+SymbolToInfixOperatorString[Cup] = "\\[Cup]"
+SymbolToInfixOperatorString[Diamond] = "\\[Diamond]"
+SymbolToInfixOperatorString[Star] = "\\[Star]"
+SymbolToInfixOperatorString[Vee] = "\\[Vee]"
+SymbolToInfixOperatorString[VerticalTilde] = "\\[VerticalTilde]"
+SymbolToInfixOperatorString[Wedge] = "\\[Wedge]"
 
 (*
 Ternary

@@ -102,10 +102,15 @@ Precedence`Prefix`Bang -> Precedence[Not], (* 230 *)
 Precedence`LongName`Not -> Precedence`Prefix`Bang,
 
 Precedence`LongName`Element -> Precedence[Element], (* 250 *)
-Precedence`LongName`SubsetEqual -> Precedence[SubsetEqual], (* 250 *)
 Precedence`LongName`Subset -> Precedence[Subset], (* 250 *)
-Precedence`LongName`NotElement -> Precedence[NotElement], (* 250 *)
+Precedence`LongName`Superset -> Precedence[Superset], (* 250 *)
+Precedence`LongName`SubsetEqual -> Precedence[SubsetEqual], (* 250 *)
 Precedence`LongName`SupersetEqual -> Precedence[SupersetEqual], (* 250 *)
+Precedence`LongName`NotElement -> Precedence[NotElement], (* 250 *)
+Precedence`LongName`NotSubset -> Precedence[NotSubset], (* 250 *)
+Precedence`LongName`NotSuperset -> Precedence[NotSuperset], (* 250 *)
+Precedence`LongName`NotSubsetEqual -> Precedence[NotSubsetEqual], (* 250 *)
+Precedence`LongName`NotSupersetEqual -> Precedence[NotSupersetEqual], (* 250 *)
 
 Precedence`LongName`Distributed -> Precedence[Distributed], (* 250 *)
 
