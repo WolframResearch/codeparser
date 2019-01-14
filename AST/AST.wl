@@ -1,10 +1,10 @@
 BeginPackage["AST`"]
 
-ParseString::usage = "ParseString[string] returns an AST by interpreting string as WL input. \
+ParseString::usage = "ParseString[string] returns an abstract syntax tree by interpreting string as WL input. \
 Note: If there are multiple expressions in string, then only the last expression is returned. \
 ParseString[string, h] wraps the output with h and allows multiple expressions to be returned."
 
-ParseFile::usage = "ParseFile[file] returns an AST by interpreting file as WL input."
+ParseFile::usage = "ParseFile[file] returns an abstract syntax tree by interpreting file as WL input."
 
 TokenizeString::usage = "TokenizeString[string] returns a list of tokens by interpreting string as WL input."
 
@@ -411,12 +411,15 @@ Module[{h, full, res, actualAST, tryString, actual, skipFirstLine = False, sheba
 			]
 		];
 		Which[
+			(* special encoded file format *)
 			StringMatchQ[firstLine, "(*!1"~~("A"|"B"|"C"|"D"|"H"|"I"|"N"|"O")~~"!*)mcm"],
 			Throw[Failure["EncodedFile", <|"FileName"->full|>]]
 			,
+			(* wl script *)
 			StringStartsQ[firstLine, "#!"],
 			skipFirstLine = True
 			,
+			(* looks like a script; warn *)
 			StringStartsQ[firstLine, "#"],
 			shebangWarn = True;
 		];
@@ -507,6 +510,8 @@ Module[{input, ast},
 	This may hit the depth limit in the WL parser and give errors. e.g.,
 	ToExpression[StringJoin[{Table["f@", 255], "g"}]] evaluates fine
 	ToExpression[StringJoin[{Table["f@", 256], "g"}]] gives ToExpression::sntx and returns $Failed
+
+	bug 70767
 
 	Using a verbose way of expressing syntax makes this limit get hit earlier.
 	*)

@@ -350,8 +350,13 @@ Test[
 
 
 
-
-
+Test[
+	"x[]'[z]"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+]
 
 
 
@@ -552,6 +557,9 @@ EndTestSection[]
 
 
 
+(*
+obscure syntax
+*)
 
 Test[
 	"\\[Integral] a \\[DifferentialD] x"
@@ -724,27 +732,6 @@ Test[
 
 
 
-(*
-Error handling
-*)
-Test[
-	ToInputFormString[ConcreteParseString["A B:C:.Ne"]]
-	,
-	"A B:C:.Ne"
-	,
-	TestID->"Parse-20181117-K1W0K0"
-]
-
-
-Test[
-	ToInputFormString[ConcreteParseString["a:"]]
-	,
-	"a:"
-	,
-	TestID->"Parse-20181118-V5G8O1"
-]
-
-
 
 
 
@@ -793,6 +780,56 @@ Test[
 ]
 
 
+
+
+
+
+(*
+
+implementation details of parser
+
+*)
+
+Test[
+	"1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-\
+1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+\
+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-\
+1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2-1+2"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+]
+
+
+
+
+
+
+
+Test[
+	"a \[CenterDot] b \[CenterDot] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+]
+
+Test[
+	"a \\[Divides] b"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+]
+
+Test[
+	"a \\[Divides] b \\[Divides] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+]
 
 
 

@@ -188,6 +188,28 @@ Test[
 
 
 
+(*
+Error handling
+*)
+Test[
+	ToInputFormString[ConcreteParseString["A B:C:.Ne"]]
+	,
+	"A B:C:.Ne"
+	,
+	TestID->"Parse-20181117-K1W0K0"
+]
+
+
+Test[
+	ToInputFormString[ConcreteParseString["a:"]]
+	,
+	"a:"
+	,
+	TestID->"Parse-20181118-V5G8O1"
+]
+
+
+
 
 
 

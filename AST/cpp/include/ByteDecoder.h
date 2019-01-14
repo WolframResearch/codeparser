@@ -1,10 +1,10 @@
 
 #pragma once
 
+#include "SourceManager.h"
+
 #include <vector>
 #include <istream>
-
-typedef int SourceCharacter;
 
 class ByteDecoder {
     

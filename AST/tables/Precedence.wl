@@ -7,7 +7,7 @@ tutorial/OperatorInputForms
 tutorial/Operators
 and the System function Precedence
 
-Precedence only reports the precedence values associated with operators, used for OUTPUT
+Precedence[] only reports the precedence values associated with operators, used for OUTPUT
 
 With modifications based on empirical observations
 

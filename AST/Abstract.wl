@@ -163,6 +163,9 @@ Abstract[syn_SyntaxErrorNode] := syn
 
 
 
+Abstract[f_Failure] := f
+
+
 
 
 

@@ -1,11 +1,11 @@
 
 #pragma once
 
-#include "ByteDecoder.h"
-
 #include <map>
 #include <string>
 #include <iostream>
+
+typedef int SourceCharacter;
 
 struct SourceLocation {
     size_t Line;

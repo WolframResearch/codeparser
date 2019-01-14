@@ -50,7 +50,7 @@ FromNode[NumberNode[s_, {}, _]] :=
 	ToExpression[s]
 
 
-FromNode[args___] := Failure["Unhandled", <|"Function"->FromNode, "Arguments"->HoldForm[{args}]|>]
+FromNode[args___] := Failure["InternalUnhandled", <|"Function"->FromNode, "Arguments"->HoldForm[{args}]|>]
 
 
 

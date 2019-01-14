@@ -62,6 +62,9 @@ std::shared_ptr<Node> SymbolParselet::parse(ParserContext Ctxt) {
     // when parsing a in a:b  then InsideColonParselet is false
     // when parsing b in a:b  then InsideColonParselet is true
     //
+    // It is necessary to go to colonParselet.parse here (even though it seems non-contextSensitive)
+    // because in e.g., a_*b:f[]  the b is the last node in the Times expression needs to bind with :f[]
+    //
     if (Ctxt.ColonFlag1) {
 
         Tok = TheParser->tryNextToken(POLICY_PRESERVE_TOPLEVEL_NEWLINES);
@@ -82,7 +85,7 @@ std::shared_ptr<Node> SymbolParselet::parse(ParserContext Ctxt) {
 }
 
 //
-// parsing a in _a
+// parsing x in _x
 //
 // we know it can only be a symbol
 //
@@ -513,7 +516,9 @@ std::shared_ptr<Node> CallParselet::parse(std::shared_ptr<Node> Left, ParserCont
 // Special parselets
 //
 
+//
 // prefix
+//
 std::shared_ptr<Node> UnderParselet::parse(ParserContext Ctxt) {
     
     // Clear String
@@ -540,7 +545,14 @@ std::shared_ptr<Node> UnderParselet::parse(ParserContext Ctxt) {
     }
 
     //
-    // For something like a:_:""  when parsing _, make sure to not parse the second : here
+    // For something like _:""  when parsing _
+    // ColonFlag1 == true
+    // the : here is Optional, and so we want to go parse with ColonParselet's parseContextSensitive method
+    //
+    // For something like a:_:""  when parsing _
+    // ColonFlag1 == false
+    // make sure to not parse the second : here
+    // We are already inside ColonParselet from the first :, and so ColonParselet will also handle the second :
     //
     if (Ctxt.ColonFlag1) {
         
@@ -557,7 +569,9 @@ std::shared_ptr<Node> UnderParselet::parse(ParserContext Ctxt) {
     return Blank;
 }
 
+//
 // infix
+//
 std::shared_ptr<Node> UnderParselet::parseContextSensitive(std::shared_ptr<Node> Left, ParserContext Ctxt) {
     
     // Clear String
@@ -595,7 +609,9 @@ std::shared_ptr<Node> UnderParselet::parseContextSensitive(std::shared_ptr<Node>
     return Pat;
 }
 
+//
 // prefix
+//
 std::shared_ptr<Node> UnderUnderParselet::parse(ParserContext Ctxt) {
     
     // Clear String
@@ -621,9 +637,6 @@ std::shared_ptr<Node> UnderUnderParselet::parse(ParserContext Ctxt) {
         Blank = std::make_shared<BlankSequenceNode>(Span);
     }
 
-    //
-    // For something like a:__:""  when parsing __, make sure to not parse the second : here
-    //
     if (Ctxt.ColonFlag1) {
         
         Tok = TheParser->tryNextToken(POLICY_PRESERVE_TOPLEVEL_NEWLINES);
@@ -639,7 +652,9 @@ std::shared_ptr<Node> UnderUnderParselet::parse(ParserContext Ctxt) {
     return Blank;
 }
 
+//
 // infix
+//
 std::shared_ptr<Node> UnderUnderParselet::parseContextSensitive(std::shared_ptr<Node> Left, ParserContext Ctxt) {
     
     // Clear String
@@ -677,7 +692,9 @@ std::shared_ptr<Node> UnderUnderParselet::parseContextSensitive(std::shared_ptr<
     return Pat;
 }
 
+//
 // prefix
+//
 std::shared_ptr<Node> UnderUnderUnderParselet::parse(ParserContext Ctxt) {
     
     // Clear String
@@ -703,9 +720,6 @@ std::shared_ptr<Node> UnderUnderUnderParselet::parse(ParserContext Ctxt) {
         Blank = std::make_shared<BlankNullSequenceNode>(Span);
     }
 
-    //
-    // For something like a:___:""  when parsing ___, make sure to not parse the second : here
-    //
     if (Ctxt.ColonFlag1) {
         
         Tok = TheParser->tryNextToken(POLICY_PRESERVE_TOPLEVEL_NEWLINES);
@@ -721,7 +735,9 @@ std::shared_ptr<Node> UnderUnderUnderParselet::parse(ParserContext Ctxt) {
     return Blank;
 }
 
+//
 // infix
+//
 std::shared_ptr<Node> UnderUnderUnderParselet::parseContextSensitive(std::shared_ptr<Node> Left, ParserContext Ctxt) {
     
     // Clear String
@@ -759,7 +775,9 @@ std::shared_ptr<Node> UnderUnderUnderParselet::parseContextSensitive(std::shared
     return Pat;
 }
 
+//
 // prefix
+//
 std::shared_ptr<Node> UnderDotParselet::parse(ParserContext Ctxt) {
     
     // Clear String
@@ -772,7 +790,9 @@ std::shared_ptr<Node> UnderDotParselet::parse(ParserContext Ctxt) {
     return std::make_shared<OptionalDefaultNode>(Span);
 }
 
-// infix
+//
+// postfix
+//
 std::shared_ptr<Node> UnderDotParselet::parseContextSensitive(std::shared_ptr<Node> Left, ParserContext Ctxt) {
     
     // Clear String
@@ -882,6 +902,10 @@ std::shared_ptr<Node> SemiParselet::parse(std::shared_ptr<Node> Left, ParserCont
             
         } else {
             
+            //
+            // Parse the expression
+            //
+
             auto ctxt{Ctxt};
             ctxt.Precedence = prec;
             auto operand = TheParser->parse(ctxt);
@@ -907,8 +931,10 @@ std::shared_ptr<Node> SemiParselet::parse(std::shared_ptr<Node> Left, ParserCont
     return std::make_shared<InfixNode>(SYMBOL_COMPOUNDEXPRESSION, Args, Issues);
 }
 
-
+//
 // prefix
+// ;;a
+//
 std::shared_ptr<Node> SemiSemiParselet::parse(ParserContext Ctxt) {
     
     auto Str = TheParser->getString();
@@ -977,7 +1003,10 @@ std::shared_ptr<Node> SemiSemiParselet::parse(ParserContext Ctxt) {
     return std::make_shared<BinaryNode>(SYMBOL_SPAN, std::make_shared<InternalOneNode>(PrefixSpan), std::make_shared<InternalAllNode>(PrefixSpan), Issues);
 }
 
+//
 // infix
+// a;;b
+//
 std::shared_ptr<Node> SemiSemiParselet::parse(std::shared_ptr<Node> Left, ParserContext Ctxt) {
 
     auto Str = TheParser->getString();

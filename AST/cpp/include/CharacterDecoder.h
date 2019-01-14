@@ -56,7 +56,7 @@ enum NextCharacterPolicyBits {
     //
     // ToExpression["0.\\\n  6"] evaluates to 0.6 (whitespace is NOT preserved)
     //
-    // But ToExpression["\"0.\\\n  6\""] evalautes to "0.  6" (whitespace IS preserved)
+    // But ToExpression["\"0.\\\n  6\""] evaluates to "0.  6" (whitespace IS preserved)
     //
     PRESERVE_WS_AFTER_LC = 0x01,
 
