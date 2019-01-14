@@ -62,7 +62,7 @@ std::shared_ptr<Node> SymbolParselet::parse(ParserContext Ctxt) {
     // when parsing a in a:b  then InsideColonParselet is false
     // when parsing b in a:b  then InsideColonParselet is true
     //
-    if (!Ctxt.InsideColonParselet) {
+    if (Ctxt.ColonFlag1) {
 
         Tok = TheParser->tryNextToken(POLICY_PRESERVE_TOPLEVEL_NEWLINES);
 
@@ -180,7 +180,9 @@ std::shared_ptr<Node> PrefixOperatorParselet::parse(ParserContext Ctxt) {
     
     TheParser->nextToken();
     
-    auto operand = TheParser->parse({Ctxt.Depth, prec, Ctxt.InsideColonParselet});
+    auto ctxt{Ctxt};
+    ctxt.Precedence = prec;
+    auto operand = TheParser->parse(ctxt);
     
     // Too noisy
     // if (Span.end.Line != operand->getSourceSpan().start.Line) {
@@ -210,7 +212,9 @@ std::shared_ptr<Node> BinaryOperatorParselet::parse(std::shared_ptr<Node> Left, 
     
     TheParser->nextToken();
     
-    auto Right = TheParser->parse({Ctxt.Depth, recalculatedPrecedence, Ctxt.InsideColonParselet});
+    auto ctxt{Ctxt};
+    ctxt.Precedence = recalculatedPrecedence;
+    auto Right = TheParser->parse(ctxt);
     
     // Too noisy
     // if (Left->getSourceSpan().end.Line != Span.start.Line) {
@@ -272,13 +276,16 @@ std::shared_ptr<Node> InfixOperatorParselet::parse(std::shared_ptr<Node> Left, P
         
         if (Tok == TokIn || (Ctxt.InfixPlusFlag && Tok == TOKEN_OPERATOR_MINUS)) {
             
-            auto Str = TheParser->getString();
+            // clear String
+            TheParser->getString();
             
             // auto Span = TheSourceManager->getTokenSpan();
             
             TheParser->nextToken();
             
-            auto operand = TheParser->parse({Ctxt.Depth, prec, Ctxt.InsideColonParselet});
+            auto ctxt{Ctxt};
+            ctxt.Precedence = prec;
+            auto operand = TheParser->parse(ctxt);
             
             // Too noisy
             // if (Span.end.Line != operand->getSourceSpan().start.Line) {
@@ -424,9 +431,14 @@ std::shared_ptr<Node> GroupParselet::parse(ParserContext Ctxt) {
             
         } else {
             
+            //
             // Handle the expression
-            
-            auto operand = TheParser->parse({Ctxt.Depth, PRECEDENCE_LOWEST, false});
+            //
+
+            auto ctxt{Ctxt};
+            ctxt.Precedence = PRECEDENCE_LOWEST;
+            ctxt.ColonFlag1 = true;
+            auto operand = TheParser->parse(ctxt);
             
             Args.push_back(operand);
         }
@@ -462,7 +474,9 @@ std::shared_ptr<Node> CallParselet::parse(std::shared_ptr<Node> Left, ParserCont
     //
     auto prec = PRECEDENCE_HIGHEST;
     
-    auto Right = TheParser->parse({Ctxt.Depth, prec, Ctxt.InsideColonParselet});
+    auto ctxt{Ctxt};
+    ctxt.Precedence = prec;
+    auto Right = TheParser->parse(ctxt);
     
     // Too noisy
     // if (Left->getSourceSpan().end.Line != Right->getSourceSpan().start.Line) {
@@ -528,7 +542,7 @@ std::shared_ptr<Node> UnderParselet::parse(ParserContext Ctxt) {
     //
     // For something like a:_:""  when parsing _, make sure to not parse the second : here
     //
-    if (!Ctxt.InsideColonParselet) {
+    if (Ctxt.ColonFlag1) {
         
         Tok = TheParser->tryNextToken(POLICY_PRESERVE_TOPLEVEL_NEWLINES);
         
@@ -610,7 +624,7 @@ std::shared_ptr<Node> UnderUnderParselet::parse(ParserContext Ctxt) {
     //
     // For something like a:__:""  when parsing __, make sure to not parse the second : here
     //
-    if (!Ctxt.InsideColonParselet) {
+    if (Ctxt.ColonFlag1) {
         
         Tok = TheParser->tryNextToken(POLICY_PRESERVE_TOPLEVEL_NEWLINES);
         
@@ -692,7 +706,7 @@ std::shared_ptr<Node> UnderUnderUnderParselet::parse(ParserContext Ctxt) {
     //
     // For something like a:___:""  when parsing ___, make sure to not parse the second : here
     //
-    if (!Ctxt.InsideColonParselet) {
+    if (Ctxt.ColonFlag1) {
         
         Tok = TheParser->tryNextToken(POLICY_PRESERVE_TOPLEVEL_NEWLINES);
         
@@ -868,7 +882,9 @@ std::shared_ptr<Node> SemiParselet::parse(std::shared_ptr<Node> Left, ParserCont
             
         } else {
             
-            auto operand = TheParser->parse({Ctxt.Depth, prec, Ctxt.InsideColonParselet});
+            auto ctxt{Ctxt};
+            ctxt.Precedence = prec;
+            auto operand = TheParser->parse(ctxt);
             
             // Too noisy
             // if (Span.end.Line != operand->getSourceSpan().start.Line) {
@@ -909,7 +925,9 @@ std::shared_ptr<Node> SemiSemiParselet::parse(ParserContext Ctxt) {
     
     if (TheParser->isPossibleBeginningOfExpression(Tok)) {
         
-        auto operand = TheParser->parse({Ctxt.Depth, recalculatedPrecedence, Ctxt.InsideColonParselet});
+        auto ctxt{Ctxt};
+        ctxt.Precedence = recalculatedPrecedence;
+        auto operand = TheParser->parse(ctxt);
         
         // Too noisy
         // if (PrefixSpan.end.Line != operand->getSourceSpan().start.Line) {
@@ -986,7 +1004,9 @@ std::shared_ptr<Node> SemiSemiParselet::parse(std::shared_ptr<Node> Left, Parser
     
     if (TheParser->isPossibleBeginningOfExpression(Tok)) {
         
-        auto Right = TheParser->parse({Ctxt.Depth, recalculatedPrecedence, Ctxt.InsideColonParselet});
+        auto ctxt{Ctxt};
+        ctxt.Precedence = recalculatedPrecedence;
+        auto Right = TheParser->parse(ctxt);
         
         // Too noisy
         // if (InfixSpan.end.Line != Right->getSourceSpan().start.Line) {
@@ -1071,7 +1091,9 @@ std::shared_ptr<Node> TildeParselet::parse(std::shared_ptr<Node> Left, ParserCon
 
     TheParser->nextToken();
     
-    auto Middle = TheParser->parse({Ctxt.Depth, prec, Ctxt.InsideColonParselet});
+    auto ctxt1{Ctxt};
+    ctxt1.Precedence = prec;
+    auto Middle = TheParser->parse(ctxt1);
     
     // auto MiddleSpan = Middle->getSourceSpan();
 
@@ -1100,7 +1122,9 @@ std::shared_ptr<Node> TildeParselet::parse(std::shared_ptr<Node> Left, ParserCon
                 Middle, std::make_shared<InternalTokenNode>(Str, SecondTildeSpan) }, Issues);
     }
     
-    auto Right = TheParser->parse({Ctxt.Depth, prec, Ctxt.InsideColonParselet});
+    auto ctxt2{Ctxt};
+    ctxt2.Precedence = prec;
+    auto Right = TheParser->parse(ctxt2);
 
     // Too noisy
     // if (SecondTildeSpan.end.Line != Right->getSourceSpan().start.Line) {
@@ -1129,7 +1153,10 @@ std::shared_ptr<Node> ColonParselet::parse(std::shared_ptr<Node> Left, ParserCon
     
     auto prec = PRECEDENCE_FAKE_PATTERNCOLON;
     
-    auto Right = TheParser->parse({Ctxt.Depth, prec, true});
+    auto ctxt{Ctxt};
+    ctxt.Precedence = prec;
+    ctxt.ColonFlag1 = false;
+    auto Right = TheParser->parse(ctxt);
     
     if (!std::dynamic_pointer_cast<SymbolNode>(Left)) {
         
@@ -1161,7 +1188,7 @@ std::shared_ptr<Node> ColonParselet::parse(std::shared_ptr<Node> Left, ParserCon
 //
 std::shared_ptr<Node> ColonParselet::parseContextSensitive(std::shared_ptr<Node> Left, ParserContext Ctxt) {
 
-    assert(!Ctxt.InsideColonParselet);
+    assert(Ctxt.ColonFlag1);
 
     // Clear String
     TheParser->getString();
@@ -1172,7 +1199,9 @@ std::shared_ptr<Node> ColonParselet::parseContextSensitive(std::shared_ptr<Node>
     
     auto prec = PRECEDENCE_FAKE_OPTIONALCOLON;
     
-    auto Right = TheParser->parse({Ctxt.Depth, prec, Ctxt.InsideColonParselet});
+    auto ctxt{Ctxt};
+    ctxt.Precedence = prec;
+    auto Right = TheParser->parse(ctxt);
     
     // Too noisy
     // if (Span.end.Line != Right->getSourceSpan().start.Line) {
@@ -1209,7 +1238,9 @@ std::shared_ptr<Node> SlashColonParselet::parse(std::shared_ptr<Node> Left, Pars
     
     TheParser->nextToken();
     
-    auto Middle = TheParser->parse({Ctxt.Depth, recalculatedPrecedence, Ctxt.InsideColonParselet});
+    auto ctxt{Ctxt};
+    ctxt.Precedence = recalculatedPrecedence;
+    auto Middle = TheParser->parse(ctxt);
     
     // Too noisy
     // if (Span.end.Line != Middle->getSourceSpan().start.Line) {
@@ -1356,7 +1387,9 @@ std::shared_ptr<Node> MessageNameParselet::parse(std::shared_ptr<Node> Left, Par
 
     TheParser->nextToken();
     
-    auto Middle = TheParser->parse({Ctxt.Depth, prec, Ctxt.InsideColonParselet});
+    auto ctxt{Ctxt};
+    ctxt.Precedence = prec;
+    auto Middle = TheParser->parse(ctxt);
     
     // Too noisy
     // if (Span.end.Line != Middle->getSourceSpan().start.Line) {
@@ -1375,7 +1408,9 @@ std::shared_ptr<Node> MessageNameParselet::parse(std::shared_ptr<Node> Left, Par
         
         TheParser->nextToken();
         
-        auto Right = TheParser->parse({Ctxt.Depth, prec, Ctxt.InsideColonParselet});
+        auto ctxt{Ctxt};
+        ctxt.Precedence = prec;
+        auto Right = TheParser->parse(ctxt);
         
         // Too noisy
         // if (Span.end.Line != Right->getSourceSpan().start.Line) {
@@ -1443,7 +1478,9 @@ std::shared_ptr<Node> EqualParselet::parse(std::shared_ptr<Node> Left, ParserCon
         return std::make_shared<BinaryNode>(SYMBOL_UNSET, Left, Empty, Issues);
     }
     
-    auto Right = TheParser->parse({Ctxt.Depth, recalculatedPrecedence, Ctxt.InsideColonParselet});
+    auto ctxt{Ctxt};
+    ctxt.Precedence = recalculatedPrecedence;
+    auto Right = TheParser->parse(ctxt);
     
     // Too noisy
     // if (Span.end.Line != Right->getSourceSpan().start.Line) {

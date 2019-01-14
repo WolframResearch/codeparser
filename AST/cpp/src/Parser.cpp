@@ -494,18 +494,14 @@ precedence_t Parser::getCurrentTokenPrecedence(Token TokIn, ParserContext Ctxt) 
 
 std::shared_ptr<Node>Parser::parseTopLevel() {
     
-    auto Expr = parse({0, PRECEDENCE_LOWEST, false});
+    auto Expr = parse({0, PRECEDENCE_LOWEST, true, false});
     
-    Expr = cleanup(Expr, {0, PRECEDENCE_LOWEST, false});
+    Expr = cleanup(Expr, {0, PRECEDENCE_LOWEST, true, false});
     
     return Expr;
 }
 
 std::shared_ptr<Node>Parser::parse(ParserContext Ctxt) {
-    
-    auto DepthIn = Ctxt.Depth;
-    auto PrecedenceIn = Ctxt.Precedence;
-    auto InsideColonParseletIn = Ctxt.InsideColonParselet;
     
     Token token = currentToken();
     
@@ -514,7 +510,7 @@ std::shared_ptr<Node>Parser::parse(ParserContext Ctxt) {
     assert(token != TOKEN_NEWLINE);
     assert(token != TOKEN_SPACE);
     
-    if (DepthIn == MAX_EXPRESSION_DEPTH) {
+    if (Ctxt.Depth == MAX_EXPRESSION_DEPTH) {
         
         auto Span = TheSourceManager->getTokenSpan();
         
@@ -547,7 +543,9 @@ std::shared_ptr<Node>Parser::parse(ParserContext Ctxt) {
         prefix = I->second;
     }
     
-    Left = prefix->parse({DepthIn+1, PrecedenceIn, InsideColonParseletIn});
+    auto ctxt{Ctxt};
+    ctxt.Depth++;
+    Left = prefix->parse(ctxt);
     
     while (true) {
         
@@ -555,7 +553,7 @@ std::shared_ptr<Node>Parser::parse(ParserContext Ctxt) {
         
         auto TokenPrecedence = getCurrentTokenPrecedence(token, Ctxt);
         
-        if (PrecedenceIn >= TokenPrecedence) {
+        if (Ctxt.Precedence >= TokenPrecedence) {
             break;
         }
         
@@ -564,8 +562,8 @@ std::shared_ptr<Node>Parser::parse(ParserContext Ctxt) {
         //
         token = currentToken();
         
-        auto I = mInfixParselets.find(token);
-        if (I != mInfixParselets.end()) {
+        auto I = infixParselets.find(token);
+        if (I != infixParselets.end()) {
             
             InfixParselet *infix;
             infix = I->second;
@@ -590,7 +588,10 @@ std::shared_ptr<Node>Parser::parse(ParserContext Ctxt) {
             PostfixParselet *post;
             post = P->second;
             
-            Left = post->parse(Left, {DepthIn+1, TokenPrecedence, InsideColonParseletIn});
+            auto ctxt{Ctxt};
+            ctxt.Depth++;
+            ctxt.Precedence = TokenPrecedence;
+            Left = post->parse(Left, ctxt);
         }
         
         token = currentToken();

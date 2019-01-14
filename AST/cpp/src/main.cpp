@@ -150,6 +150,12 @@ int main(int argc, char *argv[]) {
             std::cout << "\n";
         }
         
+        delete TheSourceManager;
+        delete TheByteDecoder;
+        delete TheCharacterDecoder;
+        delete TheTokenizer;
+        delete TheParser;
+
     } else {
             
         if (prompt) {
@@ -200,6 +206,12 @@ int main(int argc, char *argv[]) {
                 }
             }
         }
+
+        delete TheSourceManager;
+        delete TheByteDecoder;
+        delete TheCharacterDecoder;
+        delete TheTokenizer;
+        delete TheParser;
     }
     
 	return 0;
