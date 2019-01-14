@@ -9,7 +9,15 @@
 
 
 Parser::Parser() : groupDepth(0), currentCached(false), _currentToken(), _currentTokenString(),
-    mPrefixParselets(), mInfixParselets(), mPostfixParselets(), mContextSensitiveParselets(), tokenQueue(), Issues() {}
+    prefixParselets(), infixParselets(), postfixParselets(), contextSensitiveParselets(), tokenQueue(), Issues() {}
+
+Parser::~Parser() {
+    for (auto parselet : parselets) {
+        delete parselet;
+    }
+}
+
+
 
 void Parser::init() {
     
@@ -286,40 +294,42 @@ void Parser::init() {
 
 void Parser::registerTokenType(Token token, Parselet *parselet) {
     
+    parselets.insert(parselet);
+
     if (auto Prefix = dynamic_cast<PrefixParselet *>(parselet)) {
         
-        if (mPrefixParselets.find(token) != mPrefixParselets.end()) {
+        if (prefixParselets.find(token) != prefixParselets.end()) {
             assert(false);
         }
         
-        mPrefixParselets[token] = Prefix;
+        prefixParselets[token] = Prefix;
     }
     
     if (auto Infix = dynamic_cast<InfixParselet *>(parselet)) {
         
-        if (mInfixParselets.find(token) != mInfixParselets.end()) {
+        if (infixParselets.find(token) != infixParselets.end()) {
             assert(false);
         }
         
-        mInfixParselets[token] = Infix;
+        infixParselets[token] = Infix;
     }
     
     if (auto Postfix = dynamic_cast<PostfixParselet *>(parselet)) {
         
-        if (mPostfixParselets.find(token) != mPostfixParselets.end()) {
+        if (postfixParselets.find(token) != postfixParselets.end()) {
             assert(false);
         }
         
-        mPostfixParselets[token] = Postfix;
+        postfixParselets[token] = Postfix;
     }
 
     if (auto ContextSensitive = dynamic_cast<ContextSensitiveParselet *>(parselet)) {
         
-        if (mContextSensitiveParselets.find(token) != mContextSensitiveParselets.end()) {
+        if (contextSensitiveParselets.find(token) != contextSensitiveParselets.end()) {
             assert(false);
         }
         
-        mContextSensitiveParselets[token] = ContextSensitive;
+        contextSensitiveParselets[token] = ContextSensitive;
     }
 }
 
@@ -430,8 +440,8 @@ std::vector<SyntaxIssue> Parser::getIssues() {
 
 bool Parser::isPossibleBeginningOfExpression(Token Tok) {
     
-    auto I = mPrefixParselets.find(Tok);
-    if (I != mPrefixParselets.end()) {
+    auto I = prefixParselets.find(Tok);
+    if (I != prefixParselets.end()) {
         return true;
     }
     
@@ -439,8 +449,8 @@ bool Parser::isPossibleBeginningOfExpression(Token Tok) {
 }
 
 ContextSensitiveParselet* Parser::findContextSensitiveParselet(Token Tok) {
-    auto I = mContextSensitiveParselets.find(Tok);
-    assert(I != mContextSensitiveParselets.end());
+    auto I = contextSensitiveParselets.find(Tok);
+    assert(I != contextSensitiveParselets.end());
     return I->second;
 }
 
@@ -450,37 +460,23 @@ precedence_t Parser::getCurrentTokenPrecedence(Token TokIn, ParserContext Ctxt) 
         return PRECEDENCE_LOWEST;
     }
     
-//    if (TokIn == TOKEN_OPERATOR_COLON) {
-//        if (Ctxt.InsideColonParselet) {
-//            return PRECEDENCE_FAKE_OPTIONALCOLON;
-//        } else {
-//            return PRECEDENCE_FAKE_PATTERNCOLON;
-//        }
-//    }
-    
-    auto I = mInfixParselets.find(TokIn);
-    if (I != mInfixParselets.end()) {
+    auto I = infixParselets.find(TokIn);
+    if (I != infixParselets.end()) {
         
         auto parselet = I->second;
-        
-        // ColonParselet.getPrecedence is context sensitive
-//        if (auto colonParselet = dynamic_cast<ColonParselet *>(parselet)) {
-//            auto prec = colonParselet->getColonPrecedence(Left);
-//            return prec;
-//        }
         
         return parselet->getPrecedence();
     }
     
-    auto IP = mPostfixParselets.find(TokIn);
-    if (IP != mPostfixParselets.end()) {
+    auto IP = postfixParselets.find(TokIn);
+    if (IP != postfixParselets.end()) {
         
         auto parselet = IP->second;
         
         return parselet->getPrecedence();
     }
     
-    if (mPrefixParselets.find(TokIn) != mPrefixParselets.end()) {
+    if (prefixParselets.find(TokIn) != prefixParselets.end()) {
         
         //
         // Make up a source string for this token. For TOKEN_OPERATOR_FAKE_IMPLICITTIMES, this string is ""
@@ -544,9 +540,9 @@ std::shared_ptr<Node>Parser::parse(ParserContext Ctxt) {
     
     PrefixParselet *prefix;
     {
-        auto I = mPrefixParselets.find(token);
+        auto I = prefixParselets.find(token);
         
-        assert(I != mPrefixParselets.end());
+        assert(I != prefixParselets.end());
         
         prefix = I->second;
     }
@@ -587,9 +583,9 @@ std::shared_ptr<Node>Parser::parse(ParserContext Ctxt) {
             
         } else {
             
-            auto P = mPostfixParselets.find(token);
+            auto P = postfixParselets.find(token);
             
-            assert(P != mPostfixParselets.end());
+            assert(P != postfixParselets.end());
             
             PostfixParselet *post;
             post = P->second;

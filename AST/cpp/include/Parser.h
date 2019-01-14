@@ -5,6 +5,7 @@
 #include "Precedence.h"
 
 #include <map>
+#include <set>
 
 class PrefixParselet;
 class InfixParselet;
@@ -35,10 +36,11 @@ private:
     Token _currentToken;
     std::string _currentTokenString;
 
-    std::map<Token, PrefixParselet *> mPrefixParselets;
-    std::map<Token, InfixParselet *> mInfixParselets;
-    std::map<Token, PostfixParselet *> mPostfixParselets;
-    std::map<Token, ContextSensitiveParselet *> mContextSensitiveParselets;
+    std::map<Token, PrefixParselet *> prefixParselets;
+    std::map<Token, InfixParselet *> infixParselets;
+    std::map<Token, PostfixParselet *> postfixParselets;
+    std::map<Token, ContextSensitiveParselet *> contextSensitiveParselets;
+    std::set<Parselet *> parselets;
     
     std::vector<std::pair<Token, std::string>> tokenQueue;
 
@@ -82,6 +84,8 @@ public:
     bool isPossibleBeginningOfExpression(Token Tok);
 
     ContextSensitiveParselet* findContextSensitiveParselet(Token Tok);
+
+    ~Parser();
 };
 
 extern Parser *TheParser;
