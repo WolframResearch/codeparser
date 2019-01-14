@@ -407,7 +407,7 @@ Module[{h, full, res, actualAST, tryString, actual, skipFirstLine = False, sheba
 			*)
 			firstLine = Import[full, {"Lines", 1}];
 			If[FailureQ[firstLine],
-				Throw[Failure["CannotImportLines", <|"FileName"->full|>]]
+				firstLine = "";
 			]
 		];
 		Which[
