@@ -25,11 +25,18 @@ ToFullFormString[NumberNode[str_, _, _]] :=
 	str
 
 ToFullFormString[CallNode[head_, nodes_, _]] :=
+Catch[
 Module[{headStr, nodeStrs},
 	headStr = ToFullFormString[head];
+	If[Failure[headStr],
+		Throw[headStr]
+	];
 	nodeStrs = ToFullFormString /@ nodes;
-	StringJoin[{headStr, "[", Riffle[nodeStrs, ", "], "]"}] /; (StringQ[headStr] && AllTrue[nodeStrs, StringQ])
-]
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[{headStr, "[", Riffle[nodeStrs, ", "], "]"}]
+]]
 
 
 
@@ -49,7 +56,10 @@ ToFullFormString[g:GroupNode[GroupLinearSyntaxParen, _, _]] :=
 ToFullFormString[FileNode[File, nodes_, opts_]] :=
 Module[{nodeStrs},
 	nodeStrs = ToFullFormString /@ nodes;
-	StringJoin[Riffle[nodeStrs, "\n"]] /; AllTrue[nodeStrs, StringQ]
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[Riffle[nodeStrs, "\n"]]
 ]
 
 ToFullFormString[HoldNode[Hold, nodes_, opts_]] :=
@@ -57,7 +67,9 @@ ToFullFormString[HoldNode[Hold, nodes_, opts_]] :=
 
 
 
-ToFullFormString[args___] := Failure["Unhandled", <|"Function"->ToFullFormString, "Arguments"->HoldForm[{args}]|>]
+ToFullFormString[f_Failure] := f
+
+ToFullFormString[args___] := Failure["InternalUnhandled", <|"Function"->ToFullFormString, "Arguments"->HoldForm[{args}]|>]
 
 
 End[]
