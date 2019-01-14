@@ -493,17 +493,16 @@ Token Tokenizer::handleString() {
 
     assert(c == '"' || _stringifyNextToken);
     
+    // first eat the whitespace
+    while (c == ' ' || c == '\t' || c == '\n') {
+        c = nextWLCharacter(INSIDE_STRING);
+    }
+    
     if (_stringifyNextToken && c != '"') {
         
         //
         // magically turn into a string
         //
-        
-        // first eat the spaces
-        while (c == ' ') {
-            
-            c = nextWLCharacter(INSIDE_STRING);
-        }
         
         auto empty = true;
         while (true) {
@@ -1870,19 +1869,6 @@ Token Tokenizer::handleOperator() {
             String.put(c);
             
             c = nextWLCharacter();
-            
-            while (true) {
-                
-                if (c != '\'') {
-                    break;
-                }
-                
-                String.put(c);
-                
-                c = nextWLCharacter();
-            }
-            
-            return Operator;
         }
             break;
         default: {
