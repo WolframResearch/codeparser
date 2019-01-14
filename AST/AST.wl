@@ -215,6 +215,9 @@ InternalDotNode
 InternalNullNode
 InternalOneNode
 
+(* InternalMinusNode stop-gap *)
+InternalMinusNode
+
 FileNode
 HoldNode
 

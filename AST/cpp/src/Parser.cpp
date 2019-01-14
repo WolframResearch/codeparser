@@ -563,7 +563,16 @@ std::shared_ptr<Node>Parser::parse(ParserContext Ctxt) {
             InfixParselet *infix;
             infix = I->second;
             
-            Left = infix->parse(Left, {DepthIn+1, TokenPrecedence, InsideColonParseletIn});
+            auto infixPlusFlag = false;
+            if (token == TOKEN_OPERATOR_PLUS || token == TOKEN_OPERATOR_MINUS) {
+                infixPlusFlag = true;
+            }
+            
+            auto ctxt{Ctxt};
+            ctxt.Depth++;
+            ctxt.Precedence = TokenPrecedence;
+            ctxt.InfixPlusFlag = infixPlusFlag;
+            Left = infix->parse(Left, ctxt);
             
         } else {
             

@@ -561,6 +561,29 @@ public:
 
 
 
+//
+// InternalMinusNode stop-gap
+//
+class InternalMinusNode : public Node {
+public:
+    InternalMinusNode(std::shared_ptr<Node> Operand, SourceSpan Loc) : Node({Operand}) {}
+    
+    std::string string() override;
+    
+    std::string inputform() override;
+    
+    SourceSpan getSourceSpan() override;
+
+    std::shared_ptr<Node> getOperand() {
+        return getArgs()[0];
+    }
+};
+
+
+
+
+
+
 
 class SyntaxErrorNode : public Node {
     Token Tok;

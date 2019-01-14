@@ -110,6 +110,9 @@ TagUnset,
 
 TernaryTilde,
 
+(* InternalMinusNode stop-gap *)
+InternalMinusNode,
+
 (*InternalEmpty,*)
 InternalInvalid,
 

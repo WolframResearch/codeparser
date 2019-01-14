@@ -310,6 +310,12 @@ std::string InternalOneNode::inputform() {
     return "";
 }
 
+std::string InternalMinusNode::inputform() {
+    
+    auto Op = getOperand();
+
+    return Op->inputform();
+}
 
 
 std::string SyntaxErrorNode::inputform() {

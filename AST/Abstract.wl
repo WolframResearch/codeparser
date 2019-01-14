@@ -225,6 +225,10 @@ flattenPlus[nodes_List] :=
 				InfixNode[InfixImplicitPlus, _, _],
 					flattenPlus[#[[2]]]
 				,
+				(* InternalMinusNode stop-gap *)
+				InternalMinusNode[Minus, _, _],
+					negate[#[[2]][[1]]]
+				,
 				_,
 					#
 			]

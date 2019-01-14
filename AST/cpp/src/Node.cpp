@@ -638,9 +638,7 @@ std::string InternalOneNode::string() {
     std::ostringstream ss;
     ss << SYMBOL_INTERNALONENODE.name();
     ss << "[";
-    
     ss << "1";
-
     ss << ", ";
     ss << ASTArgsString();
     ss << ", <|";
@@ -648,6 +646,30 @@ std::string InternalOneNode::string() {
     ss << "|>";
     ss << "]";
     return ss.str();
+}
+
+//
+// InternalMinusNode stop-gap
+//
+std::string InternalMinusNode::string() {
+    std::ostringstream ss;
+    ss << SYMBOL_INTERNALMINUSNODE.name();
+    ss << "[";
+    ss << SYMBOL_MINUS.name();
+    ss << ", ";
+    ss << ASTArgsString();
+    ss << ", <|";
+    ss << ASTSourceString(getSourceSpan());
+    ss << "|>";
+    ss << "]";
+    return ss.str();
+}
+
+//
+// InternalMinusNode stop-gap
+//
+SourceSpan InternalMinusNode::getSourceSpan() {
+    return SourceSpan{getOperand()->getSourceSpan().start, getOperand()->getSourceSpan().end};
 }
 
 
