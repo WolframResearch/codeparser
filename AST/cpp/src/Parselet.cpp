@@ -1324,29 +1324,6 @@ std::shared_ptr<Node> LinearSyntaxOpenParenParselet::parse(ParserContext Ctxt) {
 }
 
 
-
-std::shared_ptr<Node> TickParselet::parse(std::shared_ptr<Node> Operand, ParserContext Ctxt) {
-    
-    auto Str = TheParser->getString();
-    
-    auto Issues = TheParser->getIssues();
-
-    auto Span = TheSourceManager->getTokenSpan();
-    
-    TheParser->nextToken(POLICY_PRESERVE_TOPLEVEL_NEWLINES);
-    
-    // Too noisy
-    // if (Operand->getSourceSpan().end.Line != Span.start.Line) {
-    
-    //     auto Issue = SyntaxIssue(TAG_DIFFERENTLINE, Str + " is not on same line as operand", SEVERITY_REMARK, (SourceSpan{Operand->getSourceSpan().start, Span.end}));
-    
-    //     Issues.push_back(Issue);
-    // }
-    
-    return std::make_shared<PostfixNode>(SYMBOL_DERIVATIVE, Span, Str.size(), Operand, Issues);
-}
-
-
 std::shared_ptr<Node> MessageNameParselet::parse(std::shared_ptr<Node> Left, ParserContext Ctxt) {
 
     auto Str = TheParser->getString();

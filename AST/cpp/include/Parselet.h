@@ -370,12 +370,6 @@ public:
     }
 };
 
-class TickParselet : public PostfixOperatorParselet {
-public:
-    TickParselet() : PostfixOperatorParselet(PRECEDENCE_TICK) {}
-    std::shared_ptr<Node> parse(std::shared_ptr<Node> Operand, ParserContext Ctxt) override;
-};
-
 class MessageNameParselet : public BinaryOperatorParselet {
 public:
     MessageNameParselet() : BinaryOperatorParselet(PRECEDENCE_COLONCOLON, false) {}

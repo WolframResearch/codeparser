@@ -76,7 +76,6 @@ CallMissingCloserNode
 }
 
 $Options = {
-DerivativeOrder,
 Source,
 SyntaxIssues
 }
@@ -276,7 +275,7 @@ SymbolToPostfixOperatorString[Factorial] = "! "
 (* extra space *)
 SymbolToPostfixOperatorString[Factorial2] = "!! "
 (* not used *)
-SymbolToPostfixOperatorString[Derivative] = "INVALID"
+SymbolToPostfixOperatorString[Derivative] = "'"
 
 SymbolToPostfixOperatorString[Transpose] = "\\[Transpose]"
 SymbolToPostfixOperatorString[Conjugate] = "\\[Conjugate]"

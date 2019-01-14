@@ -121,11 +121,6 @@ Module[{},
 	ToInputFormString[operand] <> SymbolToPostfixOperatorString[op]
 ]
 
-ToInputFormString[PostfixNode[Derivative, {operand_}, opts_]] :=
-Module[{},
-	ToInputFormString[operand] <> Table["'", opts[DerivativeOrder]]
-]
-
 (*
 ToInputFormString is intended for concrete syntax, and concrete syntax
 only ever has 1 arg for a Call: i.e. CallNode[head, {GroupNode[GroupSquare, {}]}]

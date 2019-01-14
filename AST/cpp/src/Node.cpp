@@ -309,12 +309,6 @@ std::string PostfixNode::string() {
     ss << ASTArgsString();
     ss << ", <|";
     ss << ASTSourceString(getSourceSpan());
-    if (Op == SYMBOL_DERIVATIVE) {
-        ss << ", ";
-        ss << SYMBOL_DERIVATIVEORDER.name();
-        ss << "->";
-        ss << DerivativeOrder;
-    }
     if (!Issues.empty()) {
         ss << ", ";
         ss << SYMBOL_SYNTAXISSUES.name();

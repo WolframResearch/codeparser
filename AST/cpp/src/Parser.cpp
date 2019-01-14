@@ -205,7 +205,8 @@ void Parser::init() {
     registerTokenType(TOKEN_OPERATOR_PLUSPLUS, new PostfixOperatorParselet(PRECEDENCE_POSTFIX_PLUSPLUS));
     registerTokenType(TOKEN_OPERATOR_DOTDOTDOT, new PostfixOperatorParselet(PRECEDENCE_DOTDOTDOT));
     registerTokenType(TOKEN_OPERATOR_BANGBANG, new PostfixOperatorParselet(PRECEDENCE_BANGBANG));
-    
+    registerTokenType(TOKEN_OPERATOR_TICK, new PostfixOperatorParselet(PRECEDENCE_TICK));
+
     registerTokenType(TOKEN_OPERATOR_LONGNAME_TRANSPOSE, new PostfixOperatorParselet(PRECEDENCE_LONGNAME_TRANSPOSE));
     registerTokenType(TOKEN_OPERATOR_LONGNAME_CONJUGATE, new PostfixOperatorParselet(PRECEDENCE_LONGNAME_CONGRUENT));
     registerTokenType(TOKEN_OPERATOR_LONGNAME_CONJUGATETRANSPOSE, new PostfixOperatorParselet(PRECEDENCE_LONGNAME_CONJUGATETRANSPOSE));
@@ -255,9 +256,6 @@ void Parser::init() {
     
     // context sensitive parsing of sym:obj and pat:v
     registerTokenType(TOKEN_OPERATOR_COLON, new ColonParselet());
-    
-    // token is variable length
-    registerTokenType(TOKEN_OPERATOR_TICK, new TickParselet());
     
     // ternary, with different possibilities for second operator
     registerTokenType(TOKEN_OPERATOR_SLASHCOLON, new SlashColonParselet());

@@ -31,7 +31,7 @@ Abstract[prefix:PrefixNode[PrefixLinearSyntaxBang, children_, data_]] := prefix
 Abstract[PrefixNode[op_, {operand_}, data_]] := CallNode[ToNode[op], {Abstract[operand]}, data]
 
 
-Abstract[PostfixNode[Derivative, {operand_}, data_]] := CallNode[ CallNode[ToNode[Derivative], {ToNode[data[DerivativeOrder]]}, <||>], {Abstract[operand]}, data]
+Abstract[deriv:PostfixNode[Derivative, {operand_}, data_]] := abstractDerivative[deriv]
 Abstract[PostfixNode[op_, {operand_}, data_]] := CallNode[ToNode[op], {Abstract[operand]}, data]
 
 
@@ -538,6 +538,30 @@ flattenOr[nodes_List] :=
 
 abstractOr[InfixNode[Or, children_, data_]] :=
 	CallNode[ToNode[Or], Abstract /@ Flatten[flattenOr[children]], data]
+
+
+
+
+
+(*
+Collect all of the ' in f'''[x]
+*)
+
+derivativeOrderAndBody[PostfixNode[Derivative, {rand_}, data_]] :=
+Module[{order, body},
+	{order, body} = derivativeOrderAndBody[rand];
+	{order+1, body}
+]
+
+derivativeOrderAndBody[node_] :=
+	{0, Abstract[node]}
+
+abstractDerivative[deriv:PostfixNode[Derivative, {rand_}, data_]] :=
+Module[{order, body},
+	{order, body} = derivativeOrderAndBody[deriv];
+	CallNode[CallNode[ToNode[Derivative], {ToNode[order]}, <||>], {body}, <||>]
+]
+
 
 
 
