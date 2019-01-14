@@ -55,6 +55,8 @@ Abstract[comp:BinaryNode[RightComposition, _, _]] := abstractRightComposition[co
 
 (* NonAssociative errors *)
 Abstract[BinaryNode[PatternTest, children:{BinaryNode[PatternTest, _, _], _}, data_]] := SyntaxErrorNode[Token`Operator`Question, children, data]
+Abstract[BinaryNode[DirectedEdge, children:{BinaryNode[DirectedEdge, _, _], _}, data_]] := SyntaxErrorNode[Token`Operator`LongName`DirectedEdge, children, data]
+Abstract[BinaryNode[UndirectedEdge, children:{BinaryNode[UndirectedEdge, _, _], _}, data_]] := SyntaxErrorNode[Token`Operator`LongName`UndirectedEdge, children, data]
 
 Abstract[BinaryNode[Span, {InternalOneNode[1, {}, _], InternalAllNode[All, {}, _]}, data_]] := CallNode[ToNode[Span], {ToNode[1], ToNode[All]}, data]
 Abstract[BinaryNode[Span, {left_, InternalAllNode[All, {}, _]}, data_]] := CallNode[ToNode[Span], {Abstract[left], ToNode[All]}, data]
@@ -78,6 +80,8 @@ Abstract[times:InfixNode[InfixTimes, _, _]] := abstractTimes[times]
 
 Abstract[and:InfixNode[And, _, _]] := abstractAnd[and]
 Abstract[or:InfixNode[Or, _, _]] := abstractOr[or]
+
+Abstract[divisible:InfixNode[Divisible, _, _]] := abstractDivisible[divisible]
 
 Abstract[compound:InfixNode[CompoundExpression, _, _]] := abstractCompoundExpression[compound]
 Abstract[stringJoin:InfixNode[StringJoin, _, _]] := abstractStringJoin[stringJoin]
@@ -538,6 +542,15 @@ flattenOr[nodes_List] :=
 
 abstractOr[InfixNode[Or, children_, data_]] :=
 	CallNode[ToNode[Or], Abstract /@ Flatten[flattenOr[children]], data]
+
+
+
+(*
+make sure to reverse children of Divisible
+*)
+abstractDivisible[InfixNode[Divisible, children_, data_]] :=
+	CallNode[ToNode[Divisible], Abstract /@ Reverse[children], data]
+
 
 
 
