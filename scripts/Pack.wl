@@ -15,6 +15,10 @@ If[FileType[pacletDir] =!= Directory,
   Quit[1]
 ]
 
+If[!TrueQ[VerifyPaclet[pacletDir]],
+	Quit[1]
+]
+
 PackPaclet[pacletDir]
 
 Print["Done packing paclet"]
