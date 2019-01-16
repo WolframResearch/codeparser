@@ -1,6 +1,6 @@
 BeginPackage["AST`Abstract`"]
 
-Abstract::usage = "Abstract[concrete] returns an abstract syntax tree from a concrete syntax tree"
+Abstract::usage = "Abstract[concrete] returns an abstract syntax tree from a concrete syntax tree."
 
 Begin["`Private`"]
 

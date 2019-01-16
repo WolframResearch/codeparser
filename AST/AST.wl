@@ -182,16 +182,6 @@ SyntaxIssue
 SymbolNode
 StringNode
 NumberNode
-
-BlankNode
-BlankSequenceNode
-BlankNullSequenceNode
-OptionalDefaultNode
-PatternBlankNode
-PatternBlankSequenceNode
-PatternBlankNullSequenceNode
-OptionalDefaultPatternNode
-
 SlotNode
 SlotSequenceNode
 OutNode
@@ -203,6 +193,15 @@ InfixNode
 PostfixNode
 GroupNode
 CallNode
+
+BlankNode
+BlankSequenceNode
+BlankNullSequenceNode
+OptionalDefaultNode
+PatternBlankNode
+PatternBlankSequenceNode
+PatternBlankNullSequenceNode
+OptionalDefaultPatternNode
 
 (*
 InternalTokenNode represents a token in a linear syntax expression
@@ -295,7 +294,7 @@ Options[concreteParseString] = {
 
 concreteParseString[sIn_String, h_, OptionsPattern[]] :=
 Catch[
-Module[{s = sIn, res, out, actualAST, multiBytes, tokenize},
+Module[{s = sIn, res, multiBytes, tokenize},
 
 	tokenize = OptionValue["Tokenize"];
 
@@ -315,7 +314,7 @@ Module[{s = sIn, res, out, actualAST, multiBytes, tokenize},
 	If[!empty[multiBytes],
 		Throw[Failure["MultiByteCharactersNotAllowed", <|
 			"Input"->s,
-			"MultiByteCharacters"->(AST`Utils`escapeString[FromCharacterCode[#]]& /@ Take[multiBytes, UpTo[10]])|>]]
+			"MultiByteCharacters"->(escapeString[FromCharacterCode[#]]& /@ Take[multiBytes, UpTo[10]])|>]]
 	];
 
 	If[$exe === None,
@@ -348,7 +347,7 @@ a node
 or Null if input was an empty string
 *)
 ParseString[s_String, h_:Automatic] :=
-Module[{parse},
+Module[{parse, ast},
 	parse = ConcreteParseString[s, h];
 
 	ast = Abstract[parse];
@@ -375,7 +374,7 @@ Options[concreteParseFile] = {
 
 concreteParseFile[file_String, hIn_, OptionsPattern[]] :=
 Catch[
-Module[{h, full, res, actualAST, tryString, actual, skipFirstLine = False, shebangWarn = False, opts, issues, tokenize},
+Module[{h, full, res, skipFirstLine = False, shebangWarn = False, opts, issues, tokenize, firstLine},
 
 	h = hIn;
 

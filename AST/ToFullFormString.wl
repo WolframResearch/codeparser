@@ -28,7 +28,7 @@ ToFullFormString[CallNode[head_, nodes_, _]] :=
 Catch[
 Module[{headStr, nodeStrs},
 	headStr = ToFullFormString[head];
-	If[Failure[headStr],
+	If[FailureQ[headStr],
 		Throw[headStr]
 	];
 	nodeStrs = ToFullFormString /@ nodes;

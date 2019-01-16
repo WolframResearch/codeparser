@@ -68,7 +68,7 @@ Module[{nodeStrs},
 (* InternalMinusNode stop-gap *)
 ToInputFormString[InfixNode[Plus, nodes_, opts_]] :=
 Catch[
-Module[{first, rest},
+Module[{first},
 
 	first = ToInputFormString[First[nodes]];
 	If[FailureQ[first],

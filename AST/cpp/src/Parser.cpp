@@ -209,8 +209,7 @@ void Parser::init() {
     registerTokenType(TOKEN_OPERATOR_LONGNAME_CIRCLEPLUS, new InfixOperatorParselet(PRECEDENCE_LONGNAME_CIRCLEPLUS));
     registerTokenType(TOKEN_OPERATOR_LONGNAME_RIGHTTRIANGLE, new InfixOperatorParselet(PRECEDENCE_LONGNAME_RIGHTTRIANGLE));
     registerTokenType(TOKEN_OPERATOR_LONGNAME_LEFTTRIANGLE, new InfixOperatorParselet(PRECEDENCE_LONGNAME_LEFTTRIANGLE));
-
-
+    
     registerTokenType(TOKEN_OPERATOR_FAKE_IMPLICITTIMES, new InfixOperatorParselet(PRECEDENCE_FAKE_IMPLICITTIMES));
 
 
@@ -460,23 +459,24 @@ precedence_t Parser::getCurrentTokenPrecedence(Token TokIn, ParserContext Ctxt) 
         return PRECEDENCE_LOWEST;
     }
     
-    auto I = infixParselets.find(TokIn);
-    if (I != infixParselets.end()) {
+    auto Infix = infixParselets.find(TokIn);
+    if (Infix != infixParselets.end()) {
         
-        auto parselet = I->second;
-        
-        return parselet->getPrecedence();
-    }
-    
-    auto IP = postfixParselets.find(TokIn);
-    if (IP != postfixParselets.end()) {
-        
-        auto parselet = IP->second;
+        auto parselet = Infix->second;
         
         return parselet->getPrecedence();
     }
     
-    if (prefixParselets.find(TokIn) != prefixParselets.end()) {
+    auto Postfix = postfixParselets.find(TokIn);
+    if (Postfix != postfixParselets.end()) {
+        
+        auto parselet = Postfix->second;
+        
+        return parselet->getPrecedence();
+    }
+
+    auto Prefix = prefixParselets.find(TokIn);
+    if (Prefix != prefixParselets.end()) {
         
         //
         // Make up a source string for this token. For TOKEN_OPERATOR_FAKE_IMPLICITTIMES, this string is ""
@@ -484,7 +484,7 @@ precedence_t Parser::getCurrentTokenPrecedence(Token TokIn, ParserContext Ctxt) 
         
         setCurrentToken(TOKEN_OPERATOR_FAKE_IMPLICITTIMES, "");
         
-        return PRECEDENCE_STAR;
+        return PRECEDENCE_FAKE_IMPLICITTIMES;
     }
     
     return PRECEDENCE_LOWEST;

@@ -40,6 +40,18 @@ SymbolNode,
 StringNode,
 NumberNode,
 
+SlotNode,
+SlotSequenceNode,
+OutNode,
+
+PrefixNode,
+BinaryNode,
+TernaryNode,
+InfixNode,
+PostfixNode,
+GroupNode,
+CallNode,
+
 BlankNode,
 BlankSequenceNode,
 BlankNullSequenceNode,
@@ -49,24 +61,11 @@ PatternBlankSequenceNode,
 PatternBlankNullSequenceNode,
 OptionalDefaultPatternNode,
 
-SlotNode,
-SlotSequenceNode,
-OutNode,
-(*InternalEmptyNode,*)
-PrefixNode,
-BinaryNode,
-TernaryNode,
-InfixNode,
-PostfixNode,
-GroupNode,
-CallNode,
-
 InternalTokenNode,
 InternalAllNode,
 InternalDotNode,
 InternalNullNode,
 InternalOneNode,
-
 
 FileNode,
 

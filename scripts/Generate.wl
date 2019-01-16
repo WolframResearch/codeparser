@@ -81,6 +81,8 @@ If[FindFile["AST`"] =!= FileNameJoin[{pacletASTDir, "AST.wl"}],
   If[FindFile["AST`"] === FileNameJoin[{packageDir, "AST", "AST.wl"}],
     Print["It looks like the AST source is being used. This is not supported."];
     Print["There may be a problem with the version of Wolfram Engine that is being used."];
+    ,
+    Print["Consider running:\nPacletUninstall[\"AST\"]"];
   ];
   Quit[1]
 ]
