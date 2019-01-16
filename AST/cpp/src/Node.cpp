@@ -26,11 +26,32 @@ std::string Node::ASTArgsString() {
     return ss.str();
 }
 
+std::string Node::SyntaxIssuesString() {
+    std::ostringstream ss;
+    ss << SYMBOL_SYNTAXISSUES.name();
+    ss << "->{";
+    if (!Issues.empty()) {
+        auto I = Issues.begin();
+        auto LastIt = Issues.end();
+        LastIt--;
+        for (; I < LastIt; I++) {
+            ss << (*I).string();
+            ss << ", ";
+        }
+        ss << (*I).string();
+    }
+    ss << "}";
+    return ss.str();
+}
+
 //
 // Atom and Atom-like expressions
 //
 
 std::string SymbolNode::string() {
+    
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_SYMBOLNODE.name();
     ss << "[";
@@ -41,17 +62,7 @@ std::string SymbolNode::string() {
     ss << ASTSourceString(getSourceSpan());
     if (!Issues.empty()) {
         ss << ", ";
-        ss << SYMBOL_SYNTAXISSUES.name();
-        ss << "->{";
-        auto I = Issues.begin();
-        auto LastIt = Issues.end();
-        LastIt--;
-        for (; I < LastIt; I++) {
-            ss << (*I).string();
-            ss << ", ";
-        }
-        ss << (*I).string();
-        ss << "}";
+        ss << SyntaxIssuesString();
     }
     ss << "|>";
     ss << "]";
@@ -59,6 +70,9 @@ std::string SymbolNode::string() {
 }
 
 std::string StringNode::string() {
+    
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_STRINGNODE.name();
     ss << "[";
@@ -69,17 +83,7 @@ std::string StringNode::string() {
     ss << ASTSourceString(getSourceSpan());
     if (!Issues.empty()) {
         ss << ", ";
-        ss << SYMBOL_SYNTAXISSUES.name();
-        ss << "->{";
-        auto I = Issues.begin();
-        auto LastIt = Issues.end();
-        LastIt--;
-        for (; I < LastIt; I++) {
-            ss << (*I).string();
-            ss << ", ";
-        }
-        ss << (*I).string();
-        ss << "}";
+        ss << SyntaxIssuesString();
     }
     ss << "|>";
     ss << "]";
@@ -87,6 +91,9 @@ std::string StringNode::string() {
 }
 
 std::string NumberNode::string() {
+    
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_NUMBERNODE.name();
     ss << "[";
@@ -97,17 +104,7 @@ std::string NumberNode::string() {
     ss << ASTSourceString(getSourceSpan());
     if (!Issues.empty()) {
         ss << ", ";
-        ss << SYMBOL_SYNTAXISSUES.name();
-        ss << "->{";
-        auto I = Issues.begin();
-        auto LastIt = Issues.end();
-        LastIt--;
-        for (; I < LastIt; I++) {
-            ss << (*I).string();
-            ss << ", ";
-        }
-        ss << (*I).string();
-        ss << "}";
+        ss << SyntaxIssuesString();
     }
     ss << "|>";
     ss << "]";
@@ -115,6 +112,9 @@ std::string NumberNode::string() {
 }
 
 std::string SlotNode::string() {
+    
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_SLOTNODE.name();
     ss << "[";
@@ -123,12 +123,19 @@ std::string SlotNode::string() {
     ss << ASTArgsString();
     ss << ", <|";
     ss << ASTSourceString(getSourceSpan());
+    if (!Issues.empty()) {
+        ss << ", ";
+        ss << SyntaxIssuesString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
 }
 
 std::string SlotSequenceNode::string() {
+    
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_SLOTSEQUENCENODE.name();
     ss << "[";
@@ -137,12 +144,19 @@ std::string SlotSequenceNode::string() {
     ss << ASTArgsString();
     ss << ", <|";
     ss << ASTSourceString(getSourceSpan());
+    if (!Issues.empty()) {
+        ss << ", ";
+        ss << SyntaxIssuesString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
 }
 
 std::string OutNode::string() {
+    
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_OUTNODE.name();
     ss << "[";
@@ -151,6 +165,10 @@ std::string OutNode::string() {
     ss << ASTArgsString();
     ss << ", <|";
     ss << ASTSourceString(getSourceSpan());
+    if (!Issues.empty()) {
+        ss << ", ";
+        ss << SyntaxIssuesString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -162,7 +180,9 @@ std::string OutNode::string() {
 //
 
 std::string PrefixNode::string() {
-
+    
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_PREFIXNODE.name();
     ss << "[";
@@ -171,6 +191,10 @@ std::string PrefixNode::string() {
     ss << ASTArgsString();
     ss << ", <|";
     ss << ASTSourceString(getSourceSpan());
+    if (!Issues.empty()) {
+        ss << ", ";
+        ss << SyntaxIssuesString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -185,6 +209,8 @@ SourceSpan PrefixNode::getSourceSpan() {
 
 std::string BinaryNode::string() {
 
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_BINARYNODE.name();
     ss << "[";
@@ -195,17 +221,7 @@ std::string BinaryNode::string() {
     ss << ASTSourceString(getSourceSpan());
     if (!Issues.empty()) {
         ss << ", ";
-        ss << SYMBOL_SYNTAXISSUES.name();
-        ss << "->{";
-        auto I = Issues.begin();
-        auto LastIt = Issues.end();
-        LastIt--;
-        for (; I < LastIt; I++) {
-            ss << (*I).string();
-            ss << ", ";
-        }
-        ss << (*I).string();
-        ss << "}";
+        ss << SyntaxIssuesString();
     }
     ss << "|>";
     ss << "]";
@@ -222,6 +238,8 @@ SourceSpan BinaryNode::getSourceSpan() {
 
 std::string InfixNode::string() {
 
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_INFIXNODE.name();
     ss << "[";
@@ -232,17 +250,7 @@ std::string InfixNode::string() {
     ss << ASTSourceString(getSourceSpan());
     if (!Issues.empty()) {
         ss << ", ";
-        ss << SYMBOL_SYNTAXISSUES.name();
-        ss << "->{";
-        auto I = Issues.begin();
-        auto LastIt = Issues.end();
-        LastIt--;
-        for (; I < LastIt; I++) {
-            ss << (*I).string();
-            ss << ", ";
-        }
-        ss << (*I).string();
-        ss << "}";
+        ss << SyntaxIssuesString();
     }
     ss << "|>";
     ss << "]";
@@ -263,7 +271,9 @@ SourceSpan InfixNode::getSourceSpan() {
 }
 
 std::string TernaryNode::string() {
-
+    
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_TERNARYNODE.name();
     ss << "[";
@@ -274,17 +284,7 @@ std::string TernaryNode::string() {
     ss << ASTSourceString(getSourceSpan());
     if (!Issues.empty()) {
         ss << ", ";
-        ss << SYMBOL_SYNTAXISSUES.name();
-        ss << "->{";
-        auto I = Issues.begin();
-        auto LastIt = Issues.end();
-        LastIt--;
-        for (; I < LastIt; I++) {
-            ss << (*I).string();
-            ss << ", ";
-        }
-        ss << (*I).string();
-        ss << "}";
+        ss << SyntaxIssuesString();
     }
     ss << "|>";
     ss << "]";
@@ -300,7 +300,9 @@ SourceSpan TernaryNode::getSourceSpan() {
 }
 
 std::string PostfixNode::string() {
-
+    
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_POSTFIXNODE.name();
     ss << "[";
@@ -311,17 +313,7 @@ std::string PostfixNode::string() {
     ss << ASTSourceString(getSourceSpan());
     if (!Issues.empty()) {
         ss << ", ";
-        ss << SYMBOL_SYNTAXISSUES.name();
-        ss << "->{";
-        auto I = Issues.begin();
-        auto LastIt = Issues.end();
-        LastIt--;
-        for (; I < LastIt; I++) {
-            ss << (*I).string();
-            ss << ", ";
-        }
-        ss << (*I).string();
-        ss << "}";
+        ss << SyntaxIssuesString();
     }
     ss << "|>";
     ss << "]";
@@ -343,6 +335,8 @@ SourceSpan PostfixNode::getSourceSpan() {
 
 std::string CallNode::string() {
 
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_CALLNODE.name();
     ss << "[";
@@ -353,17 +347,7 @@ std::string CallNode::string() {
     ss << ASTSourceString(getSourceSpan());
     if (!Issues.empty()) {
         ss << ", ";
-        ss << SYMBOL_SYNTAXISSUES.name();
-        ss << "->{";
-        auto I = Issues.begin();
-        auto LastIt = Issues.end();
-        LastIt--;
-        for (; I < LastIt; I++) {
-            ss << (*I).string();
-            ss << ", ";
-        }
-        ss << (*I).string();
-        ss << "}";
+        ss << SyntaxIssuesString();
     }
     ss << "|>";
     ss << "]";
@@ -379,6 +363,8 @@ SourceSpan CallNode::getSourceSpan() {
 
 std::string CallMissingCloserNode::string() {
     
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_CALLMISSINGCLOSERNODE.name();
     ss << "[";
@@ -389,17 +375,7 @@ std::string CallMissingCloserNode::string() {
     ss << ASTSourceString(getSourceSpan());
     if (!Issues.empty()) {
         ss << ", ";
-        ss << SYMBOL_SYNTAXISSUES.name();
-        ss << "->{";
-        auto I = Issues.begin();
-        auto LastIt = Issues.end();
-        LastIt--;
-        for (; I < LastIt; I++) {
-            ss << (*I).string();
-            ss << ", ";
-        }
-        ss << (*I).string();
-        ss << "}";
+        ss << SyntaxIssuesString();
     }
     ss << "|>";
     ss << "]";
@@ -420,6 +396,9 @@ SourceSpan CallMissingCloserNode::getSourceSpan() {
 //
 
 std::string GroupNode::string() {
+    
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_GROUPNODE.name();
     ss << "[";
@@ -430,17 +409,7 @@ std::string GroupNode::string() {
     ss << ASTSourceString(getSourceSpan());
     if (!Issues.empty()) {
         ss << ", ";
-        ss << SYMBOL_SYNTAXISSUES.name();
-        ss << "->{";
-        auto I = Issues.begin();
-        auto LastIt = Issues.end();
-        LastIt--;
-        for (; I < LastIt; I++) {
-            ss << (*I).string();
-            ss << ", ";
-        }
-        ss << (*I).string();
-        ss << "}";
+        ss << SyntaxIssuesString();
     }
     ss << "|>";
     ss << "]";
@@ -458,6 +427,8 @@ SourceSpan GroupNode::getSourceSpan() {
 
 std::string BlankNode::string() {
 
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_BLANKNODE.name();
     ss << "[";
@@ -466,6 +437,10 @@ std::string BlankNode::string() {
     ss << ASTArgsString();
     ss << ", <|";
     ss << ASTSourceString(getSourceSpan());
+    if (!Issues.empty()) {
+        ss << ", ";
+        ss << SyntaxIssuesString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -473,6 +448,8 @@ std::string BlankNode::string() {
 
 std::string BlankSequenceNode::string() {
 
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_BLANKSEQUENCENODE.name();
     ss << "[";
@@ -481,6 +458,10 @@ std::string BlankSequenceNode::string() {
     ss << ASTArgsString();
     ss << ", <|";
     ss << ASTSourceString(getSourceSpan());
+    if (!Issues.empty()) {
+        ss << ", ";
+        ss << SyntaxIssuesString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -488,6 +469,8 @@ std::string BlankSequenceNode::string() {
 
 std::string BlankNullSequenceNode::string() {
 
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_BLANKNULLSEQUENCENODE.name();
     ss << "[";
@@ -496,6 +479,10 @@ std::string BlankNullSequenceNode::string() {
     ss << ASTArgsString();
     ss << ", <|";
     ss << ASTSourceString(getSourceSpan());
+    if (!Issues.empty()) {
+        ss << ", ";
+        ss << SyntaxIssuesString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -503,6 +490,8 @@ std::string BlankNullSequenceNode::string() {
 
 std::string OptionalDefaultNode::string() {
 
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_OPTIONALDEFAULTNODE.name();
     ss << "[";
@@ -511,6 +500,10 @@ std::string OptionalDefaultNode::string() {
     ss << ASTArgsString();
     ss << ", <|";
     ss << ASTSourceString(getSourceSpan());
+    if (!Issues.empty()) {
+        ss << ", ";
+        ss << SyntaxIssuesString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -518,6 +511,8 @@ std::string OptionalDefaultNode::string() {
 
 std::string PatternBlankNode::string() {
 
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_PATTERNBLANKNODE.name();
     ss << "[";
@@ -526,6 +521,10 @@ std::string PatternBlankNode::string() {
     ss << ASTArgsString();
     ss << ", <|";
     ss << ASTSourceString(getSourceSpan());
+    if (!Issues.empty()) {
+        ss << ", ";
+        ss << SyntaxIssuesString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -533,6 +532,8 @@ std::string PatternBlankNode::string() {
 
 std::string PatternBlankSequenceNode::string() {
 
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_PATTERNBLANKSEQUENCENODE.name();
     ss << "[";
@@ -541,6 +542,10 @@ std::string PatternBlankSequenceNode::string() {
     ss << ASTArgsString();
     ss << ", <|";
     ss << ASTSourceString(getSourceSpan());
+    if (!Issues.empty()) {
+        ss << ", ";
+        ss << SyntaxIssuesString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -548,6 +553,8 @@ std::string PatternBlankSequenceNode::string() {
 
 std::string PatternBlankNullSequenceNode::string() {
 
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_PATTERNBLANKNULLSEQUENCENODE.name();
     ss << "[";
@@ -556,6 +563,10 @@ std::string PatternBlankNullSequenceNode::string() {
     ss << ASTArgsString();
     ss << ", <|";
     ss << ASTSourceString(getSourceSpan());
+    if (!Issues.empty()) {
+        ss << ", ";
+        ss << SyntaxIssuesString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -563,6 +574,8 @@ std::string PatternBlankNullSequenceNode::string() {
 
 std::string OptionalDefaultPatternNode::string() {
 
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_OPTIONALDEFAULTPATTERNNODE.name();
     ss << "[";
@@ -571,6 +584,10 @@ std::string OptionalDefaultPatternNode::string() {
     ss << ASTArgsString();
     ss << ", <|";
     ss << ASTSourceString(getSourceSpan());
+    if (!Issues.empty()) {
+        ss << ", ";
+        ss << SyntaxIssuesString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -579,6 +596,9 @@ std::string OptionalDefaultPatternNode::string() {
 
 
 std::string InternalTokenNode::string() {
+    
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_INTERNALTOKENNODE.name();
     ss << "[";
@@ -587,12 +607,19 @@ std::string InternalTokenNode::string() {
     ss << ASTArgsString();
     ss << ", <|";
     ss << ASTSourceString(getSourceSpan());
+    if (!Issues.empty()) {
+        ss << ", ";
+        ss << SyntaxIssuesString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
 }
 
 std::string InternalAllNode::string() {
+    
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_INTERNALALLNODE.name();
     ss << "[";
@@ -601,12 +628,19 @@ std::string InternalAllNode::string() {
     ss << ASTArgsString();
     ss << ", <|";
     ss << ASTSourceString(getSourceSpan());
+    if (!Issues.empty()) {
+        ss << ", ";
+        ss << SyntaxIssuesString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
 }
 
 std::string InternalDotNode::string() {
+    
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_INTERNALDOTNODE.name();
     ss << "[";
@@ -615,12 +649,19 @@ std::string InternalDotNode::string() {
     ss << ASTArgsString();
     ss << ", <|";
     ss << ASTSourceString(getSourceSpan());
+    if (!Issues.empty()) {
+        ss << ", ";
+        ss << SyntaxIssuesString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
 }
 
 std::string InternalNullNode::string() {
+    
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_INTERNALNULLNODE.name();
     ss << "[";
@@ -629,12 +670,19 @@ std::string InternalNullNode::string() {
     ss << ASTArgsString();
     ss << ", <|";
     ss << ASTSourceString(getSourceSpan());
+    if (!Issues.empty()) {
+        ss << ", ";
+        ss << SyntaxIssuesString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
 }
 
 std::string InternalOneNode::string() {
+    
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_INTERNALONENODE.name();
     ss << "[";
@@ -643,6 +691,10 @@ std::string InternalOneNode::string() {
     ss << ASTArgsString();
     ss << ", <|";
     ss << ASTSourceString(getSourceSpan());
+    if (!Issues.empty()) {
+        ss << ", ";
+        ss << SyntaxIssuesString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -652,6 +704,9 @@ std::string InternalOneNode::string() {
 // InternalMinusNode stop-gap
 //
 std::string InternalMinusNode::string() {
+    
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_INTERNALMINUSNODE.name();
     ss << "[";
@@ -660,6 +715,10 @@ std::string InternalMinusNode::string() {
     ss << ASTArgsString();
     ss << ", <|";
     ss << ASTSourceString(getSourceSpan());
+    if (!Issues.empty()) {
+        ss << ", ";
+        ss << SyntaxIssuesString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -675,6 +734,9 @@ SourceSpan InternalMinusNode::getSourceSpan() {
 
 
 std::string SyntaxErrorNode::string() {
+    
+    auto Issues = getIssues();
+    
     std::ostringstream ss;
     ss << SYMBOL_SYNTAXERRORNODE.name();
     ss << "[";
@@ -685,17 +747,7 @@ std::string SyntaxErrorNode::string() {
     ss << ASTSourceString(getSourceSpan());
     if (!Issues.empty()) {
         ss << ", ";
-        ss << SYMBOL_SYNTAXISSUES.name();
-        ss << "->{";
-        auto I = Issues.begin();
-        auto LastIt = Issues.end();
-        LastIt--;
-        for (; I < LastIt; I++) {
-            ss << (*I).string();
-            ss << ", ";
-        }
-        ss << (*I).string();
-        ss << "}";
+        ss << SyntaxIssuesString();
     }
     ss << "|>";
     ss << "]";

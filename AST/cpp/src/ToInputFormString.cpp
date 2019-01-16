@@ -123,35 +123,25 @@ std::string PostfixNode::inputform() {
     std::ostringstream s;
 
     s << Operand->inputform();
+        
+    if (Op == SYMBOL_REPEATED ||
+        Op == SYMBOL_REPEATEDNULL ||
+        Op == SYMBOL_REPEATEDNULL) {
+        
+        s << " ";
+    }
     
-    if (Op == SYMBOL_DERIVATIVE) {
+    s << SymbolToPostfixOperatorString(Op);
+    
+    if (Op == SYMBOL_COMPOUNDEXPRESSION ||
+        Op == SYMBOL_REPEATED ||
+        Op == SYMBOL_REPEATEDNULL) {
         
-        for (int i = 0; i < DerivativeOrder; i++) {
-            s << SymbolToPostfixOperatorString(SYMBOL_DERIVATIVE);
-        }
+        //
+        // prevent a; ; from printing as a;;
+        //
         
-    } else {
-        
-        if (Op == SYMBOL_REPEATED ||
-            Op == SYMBOL_REPEATEDNULL ||
-            Op == SYMBOL_REPEATEDNULL) {
-            
-            s << " ";
-        }
-        
-        s << SymbolToPostfixOperatorString(Op);
-        
-        if (Op == SYMBOL_COMPOUNDEXPRESSION ||
-            Op == SYMBOL_REPEATED ||
-            Op == SYMBOL_REPEATEDNULL) {
-            
-            //
-            // prevent a; ; from printing as a;;
-            //
-            
-            s << " ";
-        }
-        
+        s << " ";
     }
 
     return s.str();
