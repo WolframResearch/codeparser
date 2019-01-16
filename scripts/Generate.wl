@@ -90,10 +90,6 @@ If[FindFile["AST`"] =!= FileNameJoin[{pacletASTDir, "AST.wl"}],
 
 
 
-
-Needs["SymbolicC`"]
-Needs["SymbolicC`SymbolicCXX`"]
-
 res = Needs["AST`"]
 
 If[FailureQ[res],
@@ -158,23 +154,23 @@ If[!DuplicateFreeQ[importedLongNames],
 ]
 
 Check[
-longNameDefines = CDefine[toGlobal["WLCharacter`LongName`" <> #], "0x" <> longNameToHexDigits[#]]& /@ importedLongNames
+defines = ("#define " <> toGlobal["WLCharacter`LongName`" <> #] <> " " <> "0x" <> longNameToHexDigits[#])& /@ importedLongNames
 ,
 Print["Message while generating LongNameDefines"];
 Quit[1]
 ]
 
 
-longNameDefinesCPPHeader = CProgram[
-SymbolicCXXCommentLine[""],
-SymbolicCXXCommentLine["AUTO GENERATED FILE"],
-SymbolicCXXCommentLine["DO NOT MODIFY"],
-SymbolicCXXCommentLine[""],
-longNameDefines
-]
+longNameDefinesCPPHeader = {
+"
+//
+// AUTO GENERATED FILE
+// DO NOT MODIFY
+//
+"} ~Join~ defines ~Join~ {""}
 
 Print["exporting LongNameDefines.h"]
-res = Export[FileNameJoin[{generatedCPPIncludeDir, "LongNameDefines.h"}], ToCCodeString[longNameDefinesCPPHeader], "Text"]
+res = Export[FileNameJoin[{generatedCPPIncludeDir, "LongNameDefines.h"}], Column[longNameDefinesCPPHeader], "String"]
 
 If[FailureQ[res],
   Print[res];
