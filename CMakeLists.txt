@@ -20,7 +20,6 @@ set(BUILD_DOCS OFF CACHE BOOL "Build documentation")
 message(STATUS "BUILD_DOCS: ${BUILD_DOCS}")
 
 set(WL_SOURCES
-	${CMAKE_SOURCE_DIR}/PacletInfo.m
 	${CMAKE_SOURCE_DIR}/AST/Abstract.wl
 	${CMAKE_SOURCE_DIR}/AST/AST.wl
 	${CMAKE_SOURCE_DIR}/AST/DeclarationName.wl
@@ -29,6 +28,10 @@ set(WL_SOURCES
 	${CMAKE_SOURCE_DIR}/AST/ToInputFormString.wl
 	${CMAKE_SOURCE_DIR}/AST/ToFullFormString.wl
 	${CMAKE_SOURCE_DIR}/AST/Utils.wl
+)
+
+set(PACLETINFO_SOURCE
+	${CMAKE_SOURCE_DIR}/AST/PacletInfo.m
 )
 
 set(CPP_SOURCES
@@ -54,6 +57,10 @@ set(WL_DATA_SOURCES
 	${CMAKE_SOURCE_DIR}/AST/tables/SpaceLongNames.wl
 	${CMAKE_SOURCE_DIR}/AST/tables/StrangeLetterlikeCodePoints.wl
 	${CMAKE_SOURCE_DIR}/AST/tables/TokenEnum.wl
+)
+
+set(BUILT_PACLETINFO
+	${CMAKE_BINARY_DIR}/paclet/AST/PacletInfo.m
 )
 
 set(GENERATED_WL_SOURCES
@@ -98,16 +105,16 @@ set(DOCUMENTATION_NOTEBOOKS
 )
 
 set(BUILT_DOCUMENTATION
-	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/English/Index/_0.cfs
-	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/English/Index/segments.gen
-	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/English/Index/segments_3
-	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/English/ReferencePages/Symbols/ParseString.nb
-	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/English/ReferencePages/Symbols/ParseFile.nb
-	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/English/ReferencePages/Symbols/ConcreteParseString.nb
-	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/English/ReferencePages/Symbols/ConcreteParseFile.nb
-	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/English/SpellIndex/_0.cfs
-	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/English/SpellIndex/segments.gen
-	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/English/SpellIndex/segments_3
+	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/Index/_0.cfs
+	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/Index/segments.gen
+	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/Index/segments_3
+	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/ReferencePages/Symbols/ParseString.nb
+	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/ReferencePages/Symbols/ParseFile.nb
+	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/ReferencePages/Symbols/ConcreteParseString.nb
+	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/ReferencePages/Symbols/ConcreteParseFile.nb
+	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/SpellIndex/_0.cfs
+	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/SpellIndex/segments.gen
+	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/SpellIndex/segments_3
 )
 
 
@@ -165,6 +172,7 @@ set(PACLET_SOURCES
 	# Pack script
 	${CMAKE_SOURCE_DIR}/scripts/Pack.wl
 	${CONFIGURED_WL_SOURCES}
+	${BUILT_PACLETINFO}
 	${GENERATED_WL_SOURCES}
 	# wl-ast executable
 	wl-ast
@@ -177,6 +185,24 @@ list(APPEND PACLET_SOURCES
 )
 
 endif(BUILD_DOCS)
+
+
+
+
+#
+# Build PacletInfo.m
+#
+# Run the BuildPacletInfo.wl script to build a PacletInfo.m appropriate for including in the paclet
+#
+add_custom_command(
+	OUTPUT
+		${BUILT_PACLETINFO}
+	DEPENDS
+		${CMAKE_SOURCE_DIR}/scripts/BuildPacletInfo.wl
+		${PACLETINFO_SOURCE}
+	COMMAND ${WOLFRAMKERNEL} -noinit -script ${CMAKE_SOURCE_DIR}/scripts/BuildPacletInfo.wl -source ${PACLETINFO_SOURCE} -built ${BUILT_PACLETINFO} -pacletVersion "${PACLET_VERSION}"
+	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
 
 
 
@@ -195,6 +221,8 @@ add_custom_command(
 		${WL_DATA_SOURCES}
 		# it may be overkill to depend on all WL sources, but it keeps things simple
 		${WL_SOURCES}
+		${PACLETINFO_SOURCE}
+		${BUILT_PACLETINFO}
 	COMMAND ${WOLFRAMKERNEL} -noinit -script ${CMAKE_SOURCE_DIR}/scripts/Generate.wl -buildDir ${CMAKE_BINARY_DIR}
 	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
