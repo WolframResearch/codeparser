@@ -365,8 +365,7 @@ ToInputFormString[Null] := ""
 
 
 
-ToInputFormString[f_FailureQ] := f
-
+ToInputFormString[f_Failure] := f
 
 ToInputFormString[args___] := Failure["InternalUnhandled", <|"Function"->ToInputFormString, "Arguments"->HoldForm[{args}]|>]
 

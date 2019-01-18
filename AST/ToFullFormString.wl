@@ -67,6 +67,8 @@ ToFullFormString[HoldNode[Hold, nodes_, opts_]] :=
 
 
 
+ToFullFormString[n_SyntaxErrorNode] := Failure["SyntaxError", <|"Error"->n|>]
+
 ToFullFormString[f_Failure] := f
 
 ToFullFormString[args___] := Failure["InternalUnhandled", <|"Function"->ToFullFormString, "Arguments"->HoldForm[{args}]|>]
