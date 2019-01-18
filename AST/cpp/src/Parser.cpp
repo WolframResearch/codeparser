@@ -9,7 +9,8 @@
 
 
 Parser::Parser() : groupDepth(0), currentCached(false), _currentToken(), _currentTokenString(),
-    prefixParselets(), infixParselets(), postfixParselets(), contextSensitiveParselets(), tokenQueue(), Issues() {}
+    prefixParselets(), infixParselets(), postfixParselets(), contextSensitiveParselets(), parselets(),
+    tokenQueue(), Issues() {}
 
 Parser::~Parser() {
     for (auto parselet : parselets) {
