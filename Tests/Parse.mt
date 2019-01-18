@@ -356,6 +356,8 @@ Test[
 	Null
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190117-X8Q1C1"
 ]
 
 
@@ -557,19 +559,7 @@ EndTestSection[]
 
 
 
-(*
-obscure syntax
-*)
 
-Test[
-	"\\[Integral] a \\[DifferentialD] x"
-	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
-	,
-	TestID->"Parse-20181202-W8E4P4"
-]
 
 
 
@@ -766,15 +756,13 @@ shebangwarning = FileNameJoin[{DirectoryName[$CurrentTestSource], "shebangwarnin
 
 cst = ConcreteParseFile[shebangwarning]
 
-Test[
+TestMatch[
 	cst
 	,
-	FileNode[File, {SlotNode[
-   "#something", {}, <|Source -> {{1, 1}, {1, 
-       10}}|>]}, <|Source -> {{1, 1}, {1, 10}}, 
-  SyntaxIssues -> {SyntaxIssue["Shebang", 
-     "# on first line looks like #! shebang", 
-     "Remark", <|Source -> {{1, 1}, {1, 1}}|>]}|>]
+	FileNode[File, {SlotNode["#something", {}, <|Source -> {{1, 1}, {1, 10}}|>]},
+		KeyValuePattern[{
+			Source -> {{1, 1}, {1, 10}},
+			SyntaxIssues -> {SyntaxIssue["Shebang", "# on first line looks like #! shebang", "Remark", <|Source -> {{1, 1}, {1, 1}}|>]} }] ]
 	,
 	TestID->"Parse-20181230-M7H7Q7"
 ]
@@ -799,6 +787,8 @@ Test[
 	Null
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190117-S9J8V7"
 ]
 
 
@@ -813,6 +803,8 @@ Test[
 	Null
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190117-A5S4V2"
 ]
 
 Test[
@@ -821,6 +813,8 @@ Test[
 	Null
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190117-R7B1K5"
 ]
 
 Test[
@@ -829,6 +823,8 @@ Test[
 	Null
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190117-G2E2V3"
 ]
 
 
