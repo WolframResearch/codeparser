@@ -836,8 +836,8 @@ std::shared_ptr<Node> SemiParselet::parse(std::shared_ptr<Node> Left, ParserCont
 
     auto Str = TheParser->getString();
     
-    auto Span = TheSourceManager->getTokenSpan();
-    auto lastSpan = Span;
+//    auto Span = TheSourceManager->getTokenSpan();
+    auto lastSpan = TheSourceManager->getTokenSpan();
     
     auto Issues = TheParser->getIssues();
 
@@ -876,24 +876,25 @@ std::shared_ptr<Node> SemiParselet::parse(std::shared_ptr<Node> Left, ParserCont
 
         Tok = TheParser->currentToken();
         
-        Span = TheSourceManager->getTokenSpan();
+//        Span = TheSourceManager->getTokenSpan();
 
-        if (Tok == TOKEN_NEWLINE) {
-            
-            auto Issues = TheParser->getIssues();
-            
-            if (lastWasSemi) {
-                
-                Span = TheSourceManager->getTokenSpan();
-                
-                auto Empty = std::make_shared<InternalNullNode>(Span, Issues);
-                
-                Args.push_back(Empty);
-            }
-            
-            break;
-
-        } else if (Tok == TOKEN_OPERATOR_SEMI) {
+//        if (Tok == TOKEN_NEWLINE) {
+//
+//            auto Issues = TheParser->getIssues();
+//
+//            if (lastWasSemi) {
+//
+//                Span = TheSourceManager->getTokenSpan();
+//
+//                auto Empty = std::make_shared<InternalNullNode>(Span, Issues);
+//
+//                Args.push_back(Empty);
+//            }
+//
+//            break;
+//
+//        } else
+        if (Tok == TOKEN_OPERATOR_SEMI) {
             
             //
             // something like a; ; parses as CompoundExpression[a, Null, Null]
@@ -901,9 +902,9 @@ std::shared_ptr<Node> SemiParselet::parse(std::shared_ptr<Node> Left, ParserCont
             
             if (!eatTheNextSemi) {
                 
-                Span = TheSourceManager->getTokenSpan();
+//                Span = TheSourceManager->getTokenSpan();
 
-                auto Empty = std::make_shared<InternalNullNode>(Span, Issues);
+                auto Empty = std::make_shared<InternalNullNode>(lastSpan, Issues);
                 
                 Args.push_back(Empty);
             }
@@ -920,6 +921,11 @@ std::shared_ptr<Node> SemiParselet::parse(std::shared_ptr<Node> Left, ParserCont
             TheParser->nextToken(POLICY_PRESERVE_TOPLEVEL_NEWLINES);
 
         } else if (!TheParser->isPossibleBeginningOfExpression(Tok)) {
+            
+            //
+            // A InfixNode[CompoundExpression, ...] may or may not end with a ;
+            // Need to test the next token to decide
+            //
             
             auto Issues = TheParser->getIssues();
             
