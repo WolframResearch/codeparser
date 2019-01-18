@@ -364,8 +364,25 @@ Token Parser::tryNextToken(NextTokenPolicy policy) {
     
     switch (policy) {
         case POLICY_DEFAULT:
-            while (res == TOKEN_COMMENT || res == TOKEN_NEWLINE || res == TOKEN_SPACE) {
-
+            while (true) {
+                
+                if (res == TOKEN_NEWLINE || res == TOKEN_SPACE) {
+                    
+                    // Clear String
+                    getString();
+                    
+                } else if (res == TOKEN_COMMENT) {
+                    
+                    auto Text = getString();
+                    
+                    auto C = Comment(Text, Span);
+                    
+                    Comments.push_back(C);
+                    
+                } else {
+                    break;
+                }
+                
                 // Clear String
                 getString();
 
@@ -374,16 +391,47 @@ Token Parser::tryNextToken(NextTokenPolicy policy) {
             break;
         case POLICY_PRESERVE_TOPLEVEL_NEWLINES:
             if (groupDepth == 0) {
-                while (res == TOKEN_COMMENT || res == TOKEN_SPACE) {
+                while (true) {
 
-                    // Clear String
-                    getString();
+                    if (res == TOKEN_SPACE) {
+                        
+                        // Clear String
+                        getString();
+                        
+                    } else if (res == TOKEN_COMMENT) {
+                        
+                        auto Text = getString();
+                        
+                        auto C = Comment(Text, Span);
+                        
+                        Comments.push_back(C);
+                        
+                    } else {
+                        break;
+                    }
 
                     res = TheTokenizer->nextToken();
                 }
             } else {
-                while (res == TOKEN_COMMENT || res == TOKEN_NEWLINE || res == TOKEN_SPACE) {
+                while (true) {
 
+                    if (res == TOKEN_NEWLINE || res == TOKEN_SPACE) {
+                        
+                        // Clear String
+                        getString();
+                        
+                    } else if (res == TOKEN_COMMENT) {
+                        
+                        auto Text = getString();
+                        
+                        auto C = Comment(Text, Span);
+                        
+                        Comments.push_back(C);
+                        
+                    } else {
+                        break;
+                    }
+                    
                     // Clear String
                     getString();
 
@@ -599,6 +647,9 @@ std::shared_ptr<Node>Parser::parse(ParserContext Ctxt) {
         
         if (token == TOKEN_NEWLINE) {
             
+            //
+            // "Parse" newlines
+            //
             //
             // This is like a lifeline to exit all of the levels of parsing
             //

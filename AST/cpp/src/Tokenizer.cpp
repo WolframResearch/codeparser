@@ -298,9 +298,7 @@ Token Tokenizer::handleComment() {
     auto c = currentWLCharacter();
 
     assert(c == '*');
-    assert(String.str().empty());
-
-    String.put('(');
+    
     String.put('*');
     
     auto depth = 1;
@@ -670,8 +668,6 @@ Token Tokenizer::handleNumber() {
                 }
                 
             } else {
-                
-                String.str("");
                 
                 cur = TOKEN_ERROR_EXPECTEDDIGITORALPHA;
                 return cur;
@@ -1074,8 +1070,6 @@ Token Tokenizer::handleOperator() {
             c = nextWLCharacter();
             
             if (c == '*') {
-                
-                String.str("");
                 
                 return handleComment();
             }

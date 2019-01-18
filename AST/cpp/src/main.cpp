@@ -320,6 +320,7 @@ std::vector<std::shared_ptr<Node>> parseExpressions(bool interactive) {
             
             assert(TheParser->getString().empty());
             assert(TheParser->getIssues().empty());
+            assert(TheParser->getComments().empty());
 
             nodes.push_back(Expr);
         }
@@ -341,6 +342,7 @@ std::vector<std::shared_ptr<Node>> parseExpressions(bool interactive) {
 
     assert(TheParser->getString().empty());
     assert(TheParser->getIssues().empty());
+    assert(TheParser->getComments().empty());
 
     return nodes;
 }

@@ -76,7 +76,8 @@ CallMissingCloserNode
 
 $Options = {
 Source,
-SyntaxIssues
+SyntaxIssues,
+Comments
 }
 
 
@@ -85,6 +86,7 @@ All,
 (* when parsing f[1,] then we need to parse as f[1,Null] *)
 Null,
 SyntaxIssue,
+Comment,
 
 (* for Nodes *)
 File,
