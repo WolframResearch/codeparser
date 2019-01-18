@@ -374,11 +374,14 @@ Options[concreteParseFile] = {
 
 concreteParseFile[file_String, hIn_, OptionsPattern[]] :=
 Catch[
-Module[{h, full, res, skipFirstLine = False, shebangWarn = False, opts, issues, tokenize, firstLine},
+Module[{h, full, res, skipFirstLine = False, shebangWarn = False, data, issues, tokenize, firstLine, start, end, children},
 
 	h = hIn;
 
-	If[h === Automatic,
+	(*
+	The <||> will be filled in with Source later
+	*)
+	If[hIn === Automatic,
 		h = Function[FileNode[File, {##}, <||>]]
 	];
 
@@ -449,12 +452,27 @@ Module[{h, full, res, skipFirstLine = False, shebangWarn = False, opts, issues, 
 		Throw[res]
 	];
 
+	(*
+	Fill in Source for FileNode now
+	*)
+	If[hIn === Automatic,
+		children = res[[2]];
+		(* a file with only newlines would be FilNode[File, {Null}, <||>] *)
+		If[children =!= {Null},
+			start = First[children][[3]][Source][[1]];
+			end = Last[children][[3]][Source][[2]];
+			data = res[[3]];
+			AssociateTo[data, Source -> {start, end}];
+			res[[3]] = data;
+		];
+	];
+
 	If[shebangWarn,
-		opts = res[[3]];
-		issues = Lookup[opts, SyntaxIssues, {}];
+		data = res[[3]];
+		issues = Lookup[data, SyntaxIssues, {}];
 		AppendTo[issues, SyntaxIssue["Shebang", "# on first line looks like #! shebang", "Remark", <|Source->{{1, 1}, {1, 1}}|>]];
-		AssociateTo[opts, SyntaxIssues -> issues];
-		res[[3]] = opts;
+		AssociateTo[data, SyntaxIssues -> issues];
+		res[[3]] = data;
 	];
 
 	res
