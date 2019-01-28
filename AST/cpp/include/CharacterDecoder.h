@@ -1,51 +1,110 @@
 
 #pragma once
 
-#include "Utils.h"
 #include "ByteDecoder.h"
 #include "SyntaxIssue.h"
+#include "CodePoint.h"
 
 #include <sstream>
 #include <vector>
+#include <cassert>
 
-typedef int WLCharacter;
+//
+// https://akrzemi1.wordpress.com/2017/05/18/asserts-in-constexpr-functions/
+//
+#if defined NDEBUG
+# define X_ASSERT(CHECK) void(0)
+#else
+# define X_ASSERT(CHECK) \
+( (CHECK) ? void(0) : []{assert(false && #CHECK);}() )
+#endif
 
-#define WLCHARACTER_EOF -1
-//
-// These are the actual code points for linear syntax
-//
-#define WLCHARACTER_LINEARSYNTAX_BANG 0xf7c1
-#define WLCHARACTER_LINEARSYNTAX_PERCENT 0xf7c5
-#define WLCHARACTER_LINEARSYNTAX_AMP 0xf7c7
-#define WLCHARACTER_LINEARSYNTAX_OPENPAREN 0xf7c9
-#define WLCHARACTER_LINEARSYNTAX_CLOSEPAREN 0xf7c0
-#define WLCHARACTER_LINEARSYNTAX_STAR 0xf7c8
-#define WLCHARACTER_LINEARSYNTAX_PLUS 0xf7cb
-#define WLCHARACTER_LINEARSYNTAX_SLASH 0xf7cc
-#define WLCHARACTER_LINEARSYNTAX_AT 0xf7c2
-#define WLCHARACTER_LINEARSYNTAX_CARET 0xf7c6
-#define WLCHARACTER_LINEARSYNTAX_UNDER 0xf7ca
-#define WLCHARACTER_LINEARSYNTAX_BACKTICK 0xf7cd
-//
-// LINEARSYNTAX_SPACE does not have a dedicated code point in WL
-// So invent one here.
-//
-#define WLCHARACTER_LINEARSYNTAX_SPACE -2
-//
-// Something like 1 + \[Bad] would be:
-// '1', ' ', '+', ' ', CHARACTER_ERROR_UNRECOGNIZED
-//
-#define WLCHARACTER_ERROR_UNRECOGNIZED -3
-//
-// Something like 1 + \:123 would be:
-// '1', ' ', '+', ' ', CHARACTER_ERROR_MALFORMED
-//
-#define WLCHARACTER_ERROR_MALFORMED -4
+class WLCharacter
+{
+public:
+    explicit constexpr WLCharacter(int val) : value_(val) {}
+
+    explicit operator int() const noexcept = delete;
+
+    bool operator==(const WLCharacter &o) const {
+        return value_ == o.value_;
+    }
+
+    bool operator==(int o) const {
+        return value_ == o;
+    }
+
+    bool operator!=(int o) const {
+        return value_ != o;
+    }
+
+    //
+    // for std::map
+    //
+    bool operator<(const WLCharacter &o) const {
+        return value_ < o.value_;
+    }
+
+    constexpr char to_char() const {
+        //
+        // https://akrzemi1.wordpress.com/2017/05/18/asserts-in-constexpr-functions/
+        //
+        return X_ASSERT(0x00 <= value_ && value_ <= 0xff), value_;
+    }
+
+    constexpr int to_point() const {
+        return value_;
+    }
+
+    std::string string() const;
+
+    bool isDigit() const;
+
+    bool isAlpha() const;
+
+    bool isDigitOrAlpha() const;
+
+    bool isDigitOrAlphaOrDollar() const;
+
+    bool isAlphaOrDollar() const;
+
+    bool isHex() const;
+
+    bool isOctal() const;
+
+    bool isSpace() const;
+
+    bool isControl() const;
+
+    bool isLinearSyntax() const;
+
+    bool isLetterlikeCharacter() const;
+    bool isStrangeLetterlikeCharacter() const;
+    bool isOperatorCharacter() const;
+    bool isSpaceCharacter() const;
+    bool isNewlineCharacter() const;
+    bool isCommaCharacter() const;
+
+    int toBaseDigit() const;
+
+private:
+    int value_;
+};
+
+ namespace std {
+     //
+     // for std::unordered_set
+     //
+     template <> struct hash<WLCharacter> {
+         size_t operator()(const WLCharacter &x) const {
+             return hash<int>()(x.to_point());
+         }
+     };
+ }
 
 
-bool isLinearSyntax(WLCharacter);
 
-std::string WLCharacterToString(WLCharacter c);
+constexpr WLCharacter WLCHARACTER_EOF(CODEPOINT_EOF);
 
 
 
@@ -59,23 +118,14 @@ enum NextCharacterPolicyBits {
     // But ToExpression["\"0.\\\n  6\""] evaluates to "0.  6" (whitespace IS preserved)
     //
     PRESERVE_WS_AFTER_LC = 0x01,
-
-    //
-    // Convert character escapes to a single character
-    //
-    // Given the 8 bytes \ [ A l p h a ], should the next character be:
-    // 0x03b1 (the code point for Alpha character)
-    // or 0x005c (the code point for backslash character) ?
-    //
-    CONVERT_ESCAPES_TO_SINGLE = 0x02
 };
 
 typedef int NextCharacterPolicy;
 
-const NextCharacterPolicy TOPLEVEL       = CONVERT_ESCAPES_TO_SINGLE | (PRESERVE_WS_AFTER_LC & 0);
-const NextCharacterPolicy INSIDE_NUMBER = TOPLEVEL;
-const NextCharacterPolicy INSIDE_STRING  = (CONVERT_ESCAPES_TO_SINGLE & 0) | PRESERVE_WS_AFTER_LC;
-const NextCharacterPolicy INSIDE_COMMENT = (CONVERT_ESCAPES_TO_SINGLE & 0) | PRESERVE_WS_AFTER_LC;
+const NextCharacterPolicy TOPLEVEL       = 0;
+const NextCharacterPolicy INSIDE_NUMBER  = 0;
+const NextCharacterPolicy INSIDE_STRING  = PRESERVE_WS_AFTER_LC;
+const NextCharacterPolicy INSIDE_COMMENT = PRESERVE_WS_AFTER_LC;
 
 
 //
@@ -84,19 +134,22 @@ const NextCharacterPolicy INSIDE_COMMENT = (CONVERT_ESCAPES_TO_SINGLE & 0) | PRE
 //
 class CharacterDecoder {
 
-    WLCharacter c;
+    WLCharacter cur;
+    SourceCharacter curSource;
 
-    std::vector<std::pair<SourceCharacter, SourceLocation>> characterQueue;
+    std::vector<std::pair<WLCharacter, SourceSpan>> characterQueue;
     
     std::vector<SyntaxIssue> Issues;
     
-    void handleLongName(SourceLocation CharacterStart, NextCharacterPolicy policy);
-    void handle2Hex(SourceLocation CharacterStart, NextCharacterPolicy policy);
-    void handle4Hex(SourceLocation CharacterStart, NextCharacterPolicy policy);
-    void handle6Hex(SourceLocation CharacterStart, NextCharacterPolicy policy);
-    void handleOctal(SourceLocation CharacterStart, NextCharacterPolicy policy);
+    WLCharacter handleLongName(SourceLocation CharacterStart, NextCharacterPolicy policy);
+    WLCharacter handle2Hex(SourceLocation CharacterStart, NextCharacterPolicy policy);
+    WLCharacter handle4Hex(SourceLocation CharacterStart, NextCharacterPolicy policy);
+    WLCharacter handle6Hex(SourceLocation CharacterStart, NextCharacterPolicy policy);
+    WLCharacter handleOctal(SourceLocation CharacterStart, NextCharacterPolicy policy);
 
-    void leaveAlone(SourceLocation CharacterStart, std::vector<WLCharacter>);
+    WLCharacter leaveAlone(std::vector<std::pair<WLCharacter, SourceSpan>> chars);
+
+    int replaceRawCodePoint(int point);
     
 public:
     CharacterDecoder();

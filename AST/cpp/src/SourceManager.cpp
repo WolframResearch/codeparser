@@ -10,8 +10,12 @@
 
 #include "SourceManager.h"
 
+#include "Utils.h"
+
 #include <cassert>
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 
 bool isContiguous(SourceLocation a, SourceLocation b) {
     return a.Line == b.Line && a.Col + 1 == b.Col;
@@ -129,6 +133,124 @@ SourceLocation SourceManager::getSourceLocation() {
 size_t SourceManager::getCurrentLineWidth() {
 
     return CurLineWidth;
+}
+
+std::string SourceCharacter::string() const {
+    
+    std::ostringstream String;
+    
+    auto i = value_;
+    if (i >= 0x80 || i < 0) {
+        
+        //
+        // non-ASCII
+        //
+        
+        if (i == EOF) {
+            
+            //
+            // Do not return a string for EOF
+            //
+            
+        } else {
+            
+            assert(i > 0);
+
+            String << "0x" << std::setfill('0') << std::setw(4) << std::hex << i << std::dec;
+        }
+        
+    } else if (isSpace()) {
+        
+        // ASCII
+        //
+        // \f, \n, \r, \t, \v, or (space) and it is ok to write directly
+        //
+        
+        switch (i) {
+            case '\f':
+                String.put('\\');
+                String.put('f');
+                break;
+            case '\n':
+                String.put('\\');
+                String.put('n');
+                break;
+            case '\r':
+                String.put('\\');
+                String.put('r');
+                break;
+            case '\t':
+                String.put('\\');
+                String.put('t');
+                break;
+            case '\v':
+                String.put('\\');
+                String.put('v');
+                break;
+            default:
+                String.put(i);
+                break;
+        }
+        
+    } else if (isControl()) {
+        
+        // ASCII
+        //
+        // something nasty like '\0'
+        //
+        
+        if (i == '\b') {
+            String.put('\\');
+            String.put('b');
+        } else {
+            String << "0x" << std::setfill('0') << std::setw(4) << std::hex << i << std::dec;
+        }
+        
+    } else {
+        
+        // ASCII
+        //
+        
+        String.put(i);
+    }
+    
+    return String.str();
+}
+
+bool SourceCharacter::isDigitOrAlpha() const {
+    return std::isalnum(value_);
+}
+
+bool SourceCharacter::isAlphaOrDollar() const {
+    return std::isalpha(value_) || value_ == '$';
+}
+
+bool SourceCharacter::isDigitOrAlphaOrDollar() const {
+    return std::isalnum(value_) || value_ == '$';
+}
+
+bool SourceCharacter::isHex() const {
+    return std::isxdigit(value_);
+}
+
+bool SourceCharacter::isOctal() const {
+    return  '0' <= value_ && value_ <= '7';
+}
+
+bool SourceCharacter::isDigit() const {
+    return std::isdigit(value_);
+}
+
+bool SourceCharacter::isAlpha() const {
+    return std::isalpha(value_);
+}
+
+bool SourceCharacter::isSpace() const {
+    return std::isspace(value_);
+}
+
+bool SourceCharacter::isControl() const {
+    return iscntrl(value_);
 }
 
 SourceManager *TheSourceManager = nullptr;

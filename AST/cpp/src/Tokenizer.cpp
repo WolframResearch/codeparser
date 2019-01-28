@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <cassert>
 
+
 Tokenizer::Tokenizer() : _stringifyNextToken(false), cur(TOKEN_UNKNOWN), currentCached(false), characterQueue(),
     _currentWLCharacter(0), _currentSourceLocation{0, 0}, String(), Issues() {}
 
@@ -47,7 +48,7 @@ Token Tokenizer::nextToken() {
     
     auto c = currentWLCharacter();
 
-    switch (c) {
+    switch (c.to_point()) {
         case 'a': case 'A': case 'b': case 'B': case 'c': case 'C': case 'd': case 'D': case 'e': case 'E': case 'f': case 'F':
         case 'g': case 'G': case 'h': case 'H': case 'i': case 'I': case 'j': case 'J': case 'k': case 'K': case 'l': case 'L':
         case 'm': case 'M': case 'n': case 'N': case 'o': case 'O': case 'p': case 'P': case 'q': case 'Q': case 'r': case 'R':
@@ -83,7 +84,7 @@ Token Tokenizer::nextToken() {
             
             while (c == ' ' || c == '\t' || c == '\r') {
 
-                String.put(c);
+                String.put(c.to_char());
                 
                 c = nextWLCharacter();
             }
@@ -103,16 +104,16 @@ Token Tokenizer::nextToken() {
             cur = handleOperator();
             break;
         
-        case WLCHARACTER_LINEARSYNTAX_BANG: case WLCHARACTER_LINEARSYNTAX_PERCENT: case WLCHARACTER_LINEARSYNTAX_AMP:
-        case WLCHARACTER_LINEARSYNTAX_OPENPAREN: case WLCHARACTER_LINEARSYNTAX_CLOSEPAREN: case WLCHARACTER_LINEARSYNTAX_STAR:
-        case WLCHARACTER_LINEARSYNTAX_PLUS: case WLCHARACTER_LINEARSYNTAX_SLASH: case WLCHARACTER_LINEARSYNTAX_AT:
-        case WLCHARACTER_LINEARSYNTAX_CARET: case WLCHARACTER_LINEARSYNTAX_UNDER: case WLCHARACTER_LINEARSYNTAX_BACKTICK:
-        case WLCHARACTER_LINEARSYNTAX_SPACE:
+        case CODEPOINT_LINEARSYNTAX_BANG: case CODEPOINT_LINEARSYNTAX_PERCENT: case CODEPOINT_LINEARSYNTAX_AMP:
+        case CODEPOINT_LINEARSYNTAX_OPENPAREN: case CODEPOINT_LINEARSYNTAX_CLOSEPAREN: case CODEPOINT_LINEARSYNTAX_STAR:
+        case CODEPOINT_LINEARSYNTAX_PLUS: case CODEPOINT_LINEARSYNTAX_SLASH: case CODEPOINT_LINEARSYNTAX_AT:
+        case CODEPOINT_LINEARSYNTAX_CARET: case CODEPOINT_LINEARSYNTAX_UNDER: case CODEPOINT_LINEARSYNTAX_BACKTICK:
+        case CODEPOINT_LINEARSYNTAX_SPACE:
 
             cur = handleLinearSyntax();
             break;
             
-        case WLCHARACTER_EOF:
+        case CODEPOINT_EOF:
             
             TheSourceManager->setEOF();
             
@@ -125,46 +126,46 @@ Token Tokenizer::nextToken() {
             // Everything else involving Unicode or errors
             //
             
-            if (isLetterlikeCodePoint(c)) {
+            if (c.isLetterlikeCharacter()) {
                 
                 cur = handleSymbol();
                 break;
                 
-            } else if (isSpaceCodePoint(c)) {
+            } else if (c.isSpaceCharacter()) {
                 
-                String << WLCharacterToString(c);
+                String << c.string();
                 
                 c = nextWLCharacter();
                 
                 cur = TOKEN_SPACE;
                 break;
                 
-            } else if (isNewlineCodePoint(c)) {
+            } else if (c.isNewlineCharacter()) {
                 
-                String << WLCharacterToString(c);
+                String << c.string();
                 
                 c = nextWLCharacter();
                 
                 cur = TOKEN_NEWLINE;
                 break;
                 
-            } else if (isCommaCodePoint(c)) {
+            } else if (c.isCommaCharacter()) {
                 
-                String << WLCharacterToString(c);
+                String << c.string();
                 
                 c = nextWLCharacter();
                 
                 cur = TOKEN_OPERATOR_COMMA;
                 break;
                 
-            } else if (isOperatorCodePoint(c)) {
+            } else if (c.isOperatorCharacter()) {
                 
                 cur = handleOperator();
                 break;
                 
             } else {
                 
-                String << WLCharacterToString(c);
+                String << c.string();
                 
                 // Clear Issues
                 auto Tmp = TheCharacterDecoder->getIssues();
@@ -233,48 +234,48 @@ Token Tokenizer::handleLinearSyntax() {
     
     auto c = currentWLCharacter();
 
-    String << WLCharacterToString(c);
+    String << c.string();
     
     Token Operator;
     
-    switch (c) {
-        case WLCHARACTER_LINEARSYNTAX_BANG:
+    switch (c.to_point()) {
+        case CODEPOINT_LINEARSYNTAX_BANG:
             Operator = TOKEN_OPERATOR_LINEARSYNTAX_BANG;
             break;
-        case WLCHARACTER_LINEARSYNTAX_OPENPAREN:
+        case CODEPOINT_LINEARSYNTAX_OPENPAREN:
             Operator = TOKEN_OPERATOR_LINEARSYNTAX_OPENPAREN;
             break;
-        case WLCHARACTER_LINEARSYNTAX_STAR:
+        case CODEPOINT_LINEARSYNTAX_STAR:
             Operator = TOKEN_OPERATOR_LINEARSYNTAX_STAR;
             break;
-        case WLCHARACTER_LINEARSYNTAX_CLOSEPAREN:
+        case CODEPOINT_LINEARSYNTAX_CLOSEPAREN:
             Operator = TOKEN_OPERATOR_LINEARSYNTAX_CLOSEPAREN;
             break;
-        case WLCHARACTER_LINEARSYNTAX_AT:
+        case CODEPOINT_LINEARSYNTAX_AT:
             Operator = TOKEN_OPERATOR_LINEARSYNTAX_AT;
             break;
-        case WLCHARACTER_LINEARSYNTAX_CARET:
+        case CODEPOINT_LINEARSYNTAX_CARET:
             Operator = TOKEN_OPERATOR_LINEARSYNTAX_CARET;
             break;
-        case WLCHARACTER_LINEARSYNTAX_UNDER:
+        case CODEPOINT_LINEARSYNTAX_UNDER:
             Operator = TOKEN_OPERATOR_LINEARSYNTAX_UNDER;
             break;
-        case WLCHARACTER_LINEARSYNTAX_PERCENT:
+        case CODEPOINT_LINEARSYNTAX_PERCENT:
             Operator = TOKEN_OPERATOR_LINEARSYNTAX_PERCENT;
             break;
-        case WLCHARACTER_LINEARSYNTAX_AMP:
+        case CODEPOINT_LINEARSYNTAX_AMP:
             Operator = TOKEN_OPERATOR_LINEARSYNTAX_AMP;
             break;
-        case WLCHARACTER_LINEARSYNTAX_SLASH:
+        case CODEPOINT_LINEARSYNTAX_SLASH:
             Operator = TOKEN_OPERATOR_LINEARSYNTAX_SLASH;
             break;
-        case WLCHARACTER_LINEARSYNTAX_PLUS:
+        case CODEPOINT_LINEARSYNTAX_PLUS:
             Operator = TOKEN_OPERATOR_LINEARSYNTAX_PLUS;
             break;
-        case WLCHARACTER_LINEARSYNTAX_BACKTICK:
+        case CODEPOINT_LINEARSYNTAX_BACKTICK:
             Operator = TOKEN_OPERATOR_LINEARSYNTAX_BACKTICK;
             break;
-        case WLCHARACTER_LINEARSYNTAX_SPACE:
+        case CODEPOINT_LINEARSYNTAX_SPACE:
             Operator = TOKEN_OPERATOR_LINEARSYNTAX_SPACE;
             break;
         default:
@@ -315,7 +316,7 @@ Token Tokenizer::handleComment() {
         
         if (c == '(') {
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter(INSIDE_COMMENT);
             
@@ -325,7 +326,7 @@ Token Tokenizer::handleComment() {
             
             if (c == '*') {
                 
-                String.put(c);
+                String.put(c.to_char());
                 
                 c = nextWLCharacter(INSIDE_COMMENT);
                 
@@ -338,7 +339,7 @@ Token Tokenizer::handleComment() {
             
         } else if (c == '*') {
             
-            String.put(c);
+            String.put(c.to_char());
 
             c = nextWLCharacter(INSIDE_COMMENT);
             
@@ -348,7 +349,7 @@ Token Tokenizer::handleComment() {
             
             if (c == ')') {
                 
-                String.put(c);
+                String.put(c.to_char());
 
                 // This comment is closing
                 
@@ -374,7 +375,11 @@ Token Tokenizer::handleComment() {
             
         } else {
             
-            String.put(c);
+            //
+            // Do not use String.put(c.to_char()); here because c may not be a char
+            //
+            
+            String << c.string();
             
             // Clear Issues
             // We do not care about issues inside of comments
@@ -400,9 +405,9 @@ Token Tokenizer::handleSymbol() {
     
     auto c = currentWLCharacter();
 
-    assert(c == '`' || isAlphaOrDollar(c) || isLetterlikeCodePoint(c));
+    assert(c == '`' || c.isAlphaOrDollar() || c.isLetterlikeCharacter());
     
-    if (isAlphaOrDollar(c) || isLetterlikeCodePoint(c)) {
+    if (c.isAlphaOrDollar() || c.isLetterlikeCharacter()) {
         handleSymbolSegment();
     }
     
@@ -410,11 +415,11 @@ Token Tokenizer::handleSymbol() {
     
     while (c == '`') {
         
-        String.put(c);
+        String.put(c.to_char());
         
         c = nextWLCharacter();
         
-        if (isAlphaOrDollar(c) || isLetterlikeCodePoint(c)) {
+        if (c.isAlphaOrDollar() || c.isLetterlikeCharacter()) {
             handleSymbolSegment();
         } else {
             
@@ -433,50 +438,50 @@ void Tokenizer::handleSymbolSegment() {
     
     auto c = currentWLCharacter();
 
-    assert(isAlphaOrDollar(c) || isLetterlikeCodePoint(c));
+    assert(c.isAlphaOrDollar() || c.isLetterlikeCharacter());
     
-    if (isAlphaOrDollar(c)) {
+    if (c.isAlphaOrDollar()) {
         
-        String.put(c);
+        String.put(c.to_char());
         
         c = nextWLCharacter();
         
     } else {
         
-        if (isStrangeLetterlikeCodePoint(c)) {
+        if (c.isStrangeLetterlikeCharacter()) {
             
             auto Span = TheSourceManager->getWLCharacterSpan();
             
-            auto Issue = SyntaxIssue(TAG_STRANGECHARACTER, "Strange character in symbol: " + WLCharacterToString(c), SEVERITY_ERROR, Span);
+            auto Issue = SyntaxIssue(TAG_STRANGECHARACTER, "Strange character in symbol: " + c.string(), SEVERITY_ERROR, Span);
 
             Issues.push_back(Issue);
         }
         
-        String << WLCharacterToString(c);
+        String << c.string();
         
         c = nextWLCharacter();
     }
     
     while (true) {
         
-        if (isDigitOrAlphaOrDollar(c)) {
+        if (c.isDigitOrAlphaOrDollar()) {
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
             
-        } else if (isLetterlikeCodePoint(c)) {
+        } else if (c.isLetterlikeCharacter()) {
             
-            if (isStrangeLetterlikeCodePoint(c)) {
+            if (c.isStrangeLetterlikeCharacter()) {
                 
                 auto Span = TheSourceManager->getWLCharacterSpan();
                 
-                auto Issue = SyntaxIssue(TAG_STRANGECHARACTER, "Strange character in symbol: " + WLCharacterToString(c), SEVERITY_ERROR, Span);
+                auto Issue = SyntaxIssue(TAG_STRANGECHARACTER, "Strange character in symbol: " + c.string(), SEVERITY_ERROR, Span);
 
                 Issues.push_back(Issue);
             }
             
-            String << WLCharacterToString(c);
+            String << c.string();
             
             c = nextWLCharacter();
             
@@ -507,11 +512,11 @@ Token Tokenizer::handleString() {
         auto empty = true;
         while (true) {
             
-            if (isAlpha(c) || isDigit(c) || c == '`' || c == '$' || c == '.' || c == '_' || c == '/') {
+            if (c.isAlpha() || c.isDigit() || c == '`' || c == '$' || c == '.' || c == '_' || c == '/') {
                 
                 empty = false;
 
-                String.put(c);
+                String.put(c.to_char());
                 
                 c = nextWLCharacter(INSIDE_STRING);
                 
@@ -557,7 +562,7 @@ Token Tokenizer::handleString() {
                 
             } else if (c == '\\') {
                 
-                String.put(c);
+                String.put(c.to_char());
                 
                 auto Tmp = TheCharacterDecoder->getIssues();
                 
@@ -565,7 +570,7 @@ Token Tokenizer::handleString() {
                 
                 c = nextWLCharacter(INSIDE_STRING);
                 
-                String.put(c);
+                String.put(c.to_char());
                 
             } else if (c == '\r') {
 
@@ -591,7 +596,7 @@ Token Tokenizer::handleString() {
                 //     Issues.push_back(Issue);
                 // }
 
-                String << WLCharacterToString(c);
+                String << c.string();
             }
             
         } // while
@@ -657,11 +662,11 @@ Token Tokenizer::handleNumber() {
             }
             
             String.put('^');
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter(INSIDE_NUMBER);
             
-            if (isDigitOrAlpha(c)) {
+            if (c.isDigitOrAlpha()) {
                 
                 if (!handleDigitsOrAlpha(base)) {
                     
@@ -682,7 +687,7 @@ Token Tokenizer::handleNumber() {
             auto Loc = TheSourceManager->getSourceLocation();
             
             characterQueue.push_back(std::make_pair(c, Loc));
-            setCurrentWLCharacter('^', Loc);
+            setCurrentWLCharacter(WLCharacter('^'), Loc);
             
             return TOKEN_NUMBER;
         }
@@ -725,7 +730,7 @@ Token Tokenizer::handleNumber() {
             accuracy = true;
         }
         
-        if (isAlphaOrDollar(c) || isLetterlikeCodePoint(c)) {
+        if (c.isAlphaOrDollar() || c.isLetterlikeCharacter()) {
 
             //
             // Something like 1.2`a
@@ -733,12 +738,12 @@ Token Tokenizer::handleNumber() {
 
             auto Loc2 = TheSourceManager->getSourceLocation();
 
-            auto Issue = SyntaxIssue(TAG_SYNTAXAMBIGUITY, "Put a space between ` and " + WLCharacterToString(c) + " to reduce ambiguity", SEVERITY_REMARK, (SourceSpan{Loc, Loc2}));
+            auto Issue = SyntaxIssue(TAG_SYNTAXAMBIGUITY, "Put a space between ` and " + c.string() + " to reduce ambiguity", SEVERITY_REMARK, (SourceSpan{Loc, Loc2}));
                 
             Issues.push_back(Issue);
         }
 
-        if (accuracy || isDigit(c) || c == '-' || c == '+' || c == '.') {
+        if (accuracy || c.isDigit() || c == '-' || c == '+' || c == '.') {
             
             if (c == '-' || c == '+') {
                 
@@ -748,13 +753,13 @@ Token Tokenizer::handleNumber() {
                 
                 c = nextWLCharacter(INSIDE_NUMBER);
                 
-                if (isDigit(c)) {
+                if (c.isDigit()) {
                     
-                    String.put(s);
+                    String.put(s.to_char());
                     
                 } else if (c == '.') {
                     
-                    String.put(s);
+                    String.put(s.to_char());
                     
                 } else if (accuracy) {
                     
@@ -762,7 +767,7 @@ Token Tokenizer::handleNumber() {
                     // Something like 1.2``->3
                     //
                     
-                    String.put(s);
+                    String.put(s.to_char());
                     
                     cur = TOKEN_ERROR_EXPECTEDACCURACY;
                     return cur;
@@ -796,7 +801,7 @@ Token Tokenizer::handleNumber() {
             
             bool handled = false;
             
-            if (isDigit(c)) {
+            if (c.isDigit()) {
                 
                 handleDigits();
                 
@@ -835,13 +840,13 @@ Token Tokenizer::handleNumber() {
         if (c == '^') {
             
             String.put('*');
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter(INSIDE_NUMBER);
             
             if (c == '-' || c == '+') {
                 
-                String.put(c);
+                String.put(c.to_char());
                 
                 c = nextWLCharacter(INSIDE_NUMBER);
             }
@@ -872,7 +877,7 @@ Token Tokenizer::handleNumber() {
             Loc = Loc - 1;
             
             characterQueue.push_back(std::make_pair(c, Loc));
-            setCurrentWLCharacter('*', Loc);
+            setCurrentWLCharacter(WLCharacter('*'), Loc);
             
             return TOKEN_NUMBER;
         }
@@ -908,7 +913,7 @@ bool Tokenizer::handleFractionalPart(int base) {
         Loc = TheSourceManager->getSourceLocation();
         
         characterQueue.push_back(std::make_pair(c, Loc));
-        setCurrentWLCharacter('.', Loc);
+        setCurrentWLCharacter(WLCharacter('.'), Loc);
         
         
         return false; 
@@ -916,7 +921,7 @@ bool Tokenizer::handleFractionalPart(int base) {
 
     String.put('.');
 
-    if (isDigitOrAlpha(c)) {
+    if (c.isDigitOrAlpha()) {
         
         if (!handleDigitsOrAlpha(base)) {
             return false;
@@ -947,7 +952,7 @@ bool Tokenizer::expectDigits() {
     
     auto c = currentWLCharacter();
 
-    if (isDigit(c)) {
+    if (c.isDigit()) {
         
         handleDigits();
         
@@ -965,9 +970,9 @@ void Tokenizer::handleDigits() {
 
     while (true) {
         
-        if (isDigit(c)) {
+        if (c.isDigit()) {
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter(INSIDE_NUMBER);
             
@@ -984,15 +989,15 @@ bool Tokenizer::handleDigitsOrAlpha(int base) {
 
     while (true) {
         
-        if (isDigitOrAlpha(c)) {
+        if (c.isDigitOrAlpha()) {
             
-            int baseDigit = toBaseDigit(c);
+            int baseDigit = c.toBaseDigit();
             
             if (baseDigit == -1 || baseDigit >= base) {
                 return false;
             }
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter(INSIDE_NUMBER);
             
@@ -1010,9 +1015,9 @@ void Tokenizer::handleDigitsOrAlphaOrDollar() {
 
     while (true) {
         
-        if (isDigitOrAlphaOrDollar(c)) {
+        if (c.isDigitOrAlphaOrDollar()) {
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
             
@@ -1028,19 +1033,19 @@ Token Tokenizer::handleOperator() {
 
     Token Operator;
     
-    switch (c) {
+    switch (c.to_point()) {
         case ':': {
             Operator = TOKEN_OPERATOR_COLON;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
             
-            switch (c) {
+            switch (c.to_point()) {
                 case ':': {
                     Operator = TOKEN_OPERATOR_COLONCOLON;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                     
@@ -1050,7 +1055,7 @@ Token Tokenizer::handleOperator() {
                 case '=': {
                     Operator = TOKEN_OPERATOR_COLONEQUAL;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                 }
@@ -1058,7 +1063,7 @@ Token Tokenizer::handleOperator() {
                 case '>': {
                     Operator = TOKEN_OPERATOR_COLONGREATER;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                 }
@@ -1069,7 +1074,7 @@ Token Tokenizer::handleOperator() {
         case '(': {
             Operator = TOKEN_OPERATOR_OPENPAREN;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
             
@@ -1084,7 +1089,7 @@ Token Tokenizer::handleOperator() {
         case ')': {
             Operator = TOKEN_OPERATOR_CLOSEPAREN;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
         }
@@ -1093,7 +1098,7 @@ Token Tokenizer::handleOperator() {
             
             Operator = TOKEN_OPERATOR_OPENSQUARE;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
         }
@@ -1101,7 +1106,7 @@ Token Tokenizer::handleOperator() {
         case ']': {
             Operator = TOKEN_OPERATOR_CLOSESQUARE;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
         }
@@ -1109,7 +1114,7 @@ Token Tokenizer::handleOperator() {
         case ',': {
             Operator = TOKEN_OPERATOR_COMMA;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
         }
@@ -1117,7 +1122,7 @@ Token Tokenizer::handleOperator() {
         case '{': {
             Operator = TOKEN_OPERATOR_OPENCURLY;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
         }
@@ -1125,7 +1130,7 @@ Token Tokenizer::handleOperator() {
         case '}': {
             Operator = TOKEN_OPERATOR_CLOSECURLY;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
         }
@@ -1133,15 +1138,15 @@ Token Tokenizer::handleOperator() {
         case '=': {
             Operator = TOKEN_OPERATOR_EQUAL;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
             
-            switch (c) {
+            switch (c.to_point()) {
                 case '=': {
                     Operator = TOKEN_OPERATOR_EQUALEQUAL;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                     
@@ -1149,7 +1154,7 @@ Token Tokenizer::handleOperator() {
                         
                         Operator = TOKEN_OPERATOR_EQUALEQUALEQUAL;
                         
-                        String.put(c);
+                        String.put(c.to_char());
                         
                         c = nextWLCharacter();
                     }
@@ -1165,7 +1170,7 @@ Token Tokenizer::handleOperator() {
                         Operator = TOKEN_OPERATOR_EQUALBANGEQUAL;
                         
                         String.put('!');
-                        String.put(c);
+                        String.put(c.to_char());
                         
                         c = nextWLCharacter();
                         
@@ -1174,7 +1179,7 @@ Token Tokenizer::handleOperator() {
                         auto Loc = TheSourceManager->getSourceLocation();
                         
                         characterQueue.push_back(std::make_pair(c, Loc));
-                        setCurrentWLCharacter('!', Loc);
+                        setCurrentWLCharacter(WLCharacter('!'), Loc);
                         
                         Operator = TOKEN_OPERATOR_EQUAL;
                     }
@@ -1186,15 +1191,15 @@ Token Tokenizer::handleOperator() {
         case '_': {
             Operator = TOKEN_OPERATOR_UNDER;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
             
-            switch (c) {
+            switch (c.to_point()) {
                 case '_': {
                     Operator = TOKEN_OPERATOR_UNDERUNDER;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                     
@@ -1202,7 +1207,7 @@ Token Tokenizer::handleOperator() {
                         
                         Operator = TOKEN_OPERATOR_UNDERUNDERUNDER;
                         
-                        String.put(c);
+                        String.put(c.to_char());
                         
                         c = nextWLCharacter();
                     }
@@ -1232,12 +1237,12 @@ Token Tokenizer::handleOperator() {
                         Loc = TheSourceManager->getSourceLocation();
                         
                         characterQueue.push_back(std::make_pair(c, Loc));
-                        setCurrentWLCharacter('.', Loc);
+                        setCurrentWLCharacter(WLCharacter('.'), Loc);
                         
                         
                         Operator = TOKEN_OPERATOR_UNDER;
                         
-                    } else if (isDigit(c)) {
+                    } else if (c.isDigit()) {
                         
                         String.put('.');
                         
@@ -1270,15 +1275,15 @@ Token Tokenizer::handleOperator() {
         case '<': {
             Operator = TOKEN_OPERATOR_LESS;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
             
-            switch (c) {
+            switch (c.to_point()) {
                 case '|': {
                     Operator = TOKEN_OPERATOR_LESSBAR;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                 }
@@ -1286,7 +1291,7 @@ Token Tokenizer::handleOperator() {
                 case '<': {
                     Operator = TOKEN_OPERATOR_LESSLESS;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                     
@@ -1296,7 +1301,7 @@ Token Tokenizer::handleOperator() {
                 case '>': {
                     Operator = TOKEN_OPERATOR_LESSGREATER;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                 }
@@ -1304,7 +1309,7 @@ Token Tokenizer::handleOperator() {
                 case '=': {
                     Operator = TOKEN_OPERATOR_LESSEQUAL;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                 }
@@ -1319,7 +1324,7 @@ Token Tokenizer::handleOperator() {
                         Operator = TOKEN_OPERATOR_LESSMINUSGREATER;
                         
                         String.put('-');
-                        String.put(c);
+                        String.put(c.to_char());
                         
                         c = nextWLCharacter();
                         
@@ -1328,7 +1333,7 @@ Token Tokenizer::handleOperator() {
                         auto Loc = TheSourceManager->getSourceLocation();
                         
                         characterQueue.push_back(std::make_pair(c, Loc));
-                        setCurrentWLCharacter('-', Loc);
+                        setCurrentWLCharacter(WLCharacter('-'), Loc);
                         
                         
                         Operator = TOKEN_OPERATOR_LESS;
@@ -1341,15 +1346,15 @@ Token Tokenizer::handleOperator() {
         case '>': {
             Operator = TOKEN_OPERATOR_GREATER;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
             
-            switch (c) {
+            switch (c.to_point()) {
                 case '>': {
                     Operator = TOKEN_OPERATOR_GREATERGREATER;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                     
@@ -1359,7 +1364,7 @@ Token Tokenizer::handleOperator() {
                 case '=': {
                     Operator = TOKEN_OPERATOR_GREATEREQUAL;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                 }
@@ -1370,7 +1375,7 @@ Token Tokenizer::handleOperator() {
         case '-': {
             Operator = TOKEN_OPERATOR_MINUS;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
             
@@ -1383,11 +1388,11 @@ Token Tokenizer::handleOperator() {
             // b<invisiblespace>-1 which is Times[b, -1]
             //
             
-            switch (c) {
+            switch (c.to_point()) {
                 case '>': {
                     Operator = TOKEN_OPERATOR_MINUSGREATER;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                 }
@@ -1395,7 +1400,7 @@ Token Tokenizer::handleOperator() {
                 case '-': {
                     Operator = TOKEN_OPERATOR_MINUSMINUS;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                 }
@@ -1403,7 +1408,7 @@ Token Tokenizer::handleOperator() {
                 case '=': {
                     Operator = TOKEN_OPERATOR_MINUSEQUAL;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                 }
@@ -1414,15 +1419,15 @@ Token Tokenizer::handleOperator() {
         case '|': {
             Operator = TOKEN_OPERATOR_BAR;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
             
-            switch (c) {
+            switch (c.to_point()) {
                 case '>': {
                     Operator = TOKEN_OPERATOR_BARGREATER;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                 }
@@ -1430,7 +1435,7 @@ Token Tokenizer::handleOperator() {
                 case '|': {
                     Operator = TOKEN_OPERATOR_BARBAR;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                 }
@@ -1441,7 +1446,7 @@ Token Tokenizer::handleOperator() {
         case ';': {
             Operator = TOKEN_OPERATOR_SEMI;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
             
@@ -1449,7 +1454,7 @@ Token Tokenizer::handleOperator() {
                 
                 Operator = TOKEN_OPERATOR_SEMISEMI;
                 
-                String.put(c);
+                String.put(c.to_char());
                 
                 c = nextWLCharacter();
             }
@@ -1458,15 +1463,15 @@ Token Tokenizer::handleOperator() {
         case '!': {
             Operator = TOKEN_OPERATOR_BANG;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
             
-            switch (c) {
+            switch (c.to_point()) {
                 case '=': {
                     Operator = TOKEN_OPERATOR_BANGEQUAL;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                 }
@@ -1474,7 +1479,7 @@ Token Tokenizer::handleOperator() {
                 case '!': {
                     Operator = TOKEN_OPERATOR_BANGBANG;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                 }
@@ -1488,7 +1493,7 @@ Token Tokenizer::handleOperator() {
             
             Operator = TOKEN_OPERATOR_UNKNOWN;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
             
@@ -1499,7 +1504,7 @@ Token Tokenizer::handleOperator() {
             // Make sure e.g. #1a is not parsd as SlotNode["#1a"]
             //
             
-            if (isDigit(c)) {
+            if (c.isDigit()) {
                 
                 Operator = TOKEN_OPERATOR_HASH;
                 
@@ -1507,7 +1512,7 @@ Token Tokenizer::handleOperator() {
                 
                 return Operator;
                 
-            } else if (isAlphaOrDollar(c)) {
+            } else if (c.isAlphaOrDollar()) {
                 
                 Operator = TOKEN_OPERATOR_HASH;
                 
@@ -1519,11 +1524,11 @@ Token Tokenizer::handleOperator() {
                 
                 Operator = TOKEN_OPERATOR_HASHHASH;
                 
-                String.put(c);
+                String.put(c.to_char());
                 
                 c = nextWLCharacter();
                 
-                if (isDigit(c)) {
+                if (c.isDigit()) {
                     
                     handleDigits();
                     
@@ -1539,7 +1544,7 @@ Token Tokenizer::handleOperator() {
         case '%': {
             Operator = TOKEN_OPERATOR_PERCENT;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
             
@@ -1551,14 +1556,14 @@ Token Tokenizer::handleOperator() {
                         break;
                     }
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                 }
                 
                 return Operator;
                 
-            } else if (isDigit(c)) {
+            } else if (c.isDigit()) {
                 
                 handleDigits();
                 
@@ -1569,7 +1574,7 @@ Token Tokenizer::handleOperator() {
         case '&': {
             Operator = TOKEN_OPERATOR_AMP;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
             
@@ -1577,7 +1582,7 @@ Token Tokenizer::handleOperator() {
                 
                 Operator = TOKEN_OPERATOR_AMPAMP;
                 
-                String.put(c);
+                String.put(c.to_char());
                 
                 c = nextWLCharacter();
             }
@@ -1586,15 +1591,15 @@ Token Tokenizer::handleOperator() {
         case '/': {
             Operator = TOKEN_OPERATOR_SLASH;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
             
-            switch (c) {
+            switch (c.to_point()) {
                 case '@': {
                     Operator = TOKEN_OPERATOR_SLASHAT;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                 }
@@ -1602,7 +1607,7 @@ Token Tokenizer::handleOperator() {
                 case ';': {
                     Operator = TOKEN_OPERATOR_SLASHSEMI;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                 }
@@ -1614,7 +1619,7 @@ Token Tokenizer::handleOperator() {
                     
                     c = nextWLCharacter();
                     
-                    if (isDigit(c)) {
+                    if (c.isDigit()) {
                         
                         //
                         // Something like Round[t/.03 + 1]
@@ -1631,7 +1636,7 @@ Token Tokenizer::handleOperator() {
                         Loc = TheSourceManager->getSourceLocation();
                         
                         characterQueue.push_back(std::make_pair(c, Loc));
-                        setCurrentWLCharacter('.', Loc);
+                        setCurrentWLCharacter(WLCharacter('.'), Loc);
                         
                         
                         Operator = TOKEN_OPERATOR_SLASH;
@@ -1647,15 +1652,15 @@ Token Tokenizer::handleOperator() {
                 case '/': {
                     Operator = TOKEN_OPERATOR_SLASHSLASH;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                     
-                    switch (c) {
+                    switch (c.to_point()) {
                         case '.': {
                             Operator = TOKEN_OPERATOR_SLASHSLASHDOT;
                             
-                            String.put(c);
+                            String.put(c.to_char());
                             
                             c = nextWLCharacter();
                         }
@@ -1663,7 +1668,7 @@ Token Tokenizer::handleOperator() {
                         case '@': {
                             Operator = TOKEN_OPERATOR_SLASHSLASHAT;
                             
-                            String.put(c);
+                            String.put(c.to_char());
                             
                             c = nextWLCharacter();
                         }
@@ -1674,7 +1679,7 @@ Token Tokenizer::handleOperator() {
                 case ':': {
                     Operator = TOKEN_OPERATOR_SLASHCOLON;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                 }
@@ -1682,7 +1687,7 @@ Token Tokenizer::handleOperator() {
                 case '=': {
                     Operator = TOKEN_OPERATOR_SLASHEQUAL;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                 }
@@ -1690,7 +1695,7 @@ Token Tokenizer::handleOperator() {
                 case '*': {
                     Operator = TOKEN_OPERATOR_SLASHSTAR;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                 }
@@ -1701,15 +1706,15 @@ Token Tokenizer::handleOperator() {
         case '@': {
             Operator = TOKEN_OPERATOR_AT;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
             
-            switch (c) {
+            switch (c.to_point()) {
                 case '@': {
                     Operator = TOKEN_OPERATOR_ATAT;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                     
@@ -1717,7 +1722,7 @@ Token Tokenizer::handleOperator() {
                         
                         Operator = TOKEN_OPERATOR_ATATAT;
                         
-                        String.put(c);
+                        String.put(c.to_char());
                         
                         c = nextWLCharacter();
                     }
@@ -1726,7 +1731,7 @@ Token Tokenizer::handleOperator() {
                 case '*': {
                     Operator = TOKEN_OPERATOR_ATSTAR;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                 }
@@ -1738,15 +1743,15 @@ Token Tokenizer::handleOperator() {
 
             Operator = TOKEN_OPERATOR_PLUS;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
             
-            switch (c) {
+            switch (c.to_point()) {
                 case '+': {
                     Operator = TOKEN_OPERATOR_PLUSPLUS;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                 }
@@ -1754,7 +1759,7 @@ Token Tokenizer::handleOperator() {
                 case '=': {
                     Operator = TOKEN_OPERATOR_PLUSEQUAL;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                 }
@@ -1765,7 +1770,7 @@ Token Tokenizer::handleOperator() {
         case '~': {
             Operator = TOKEN_OPERATOR_TILDE;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
             
@@ -1773,7 +1778,7 @@ Token Tokenizer::handleOperator() {
                 
                 Operator = TOKEN_OPERATOR_TILDETILDE;
                 
-                String.put(c);
+                String.put(c.to_char());
                 
                 c = nextWLCharacter();
             }
@@ -1782,7 +1787,7 @@ Token Tokenizer::handleOperator() {
         case '?': {
             Operator = TOKEN_OPERATOR_QUESTION;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
         }
@@ -1790,15 +1795,15 @@ Token Tokenizer::handleOperator() {
         case '*': {
             Operator = TOKEN_OPERATOR_STAR;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
             
-            switch (c) {
+            switch (c.to_point()) {
                 case '=': {
                     Operator = TOKEN_OPERATOR_STAREQUAL;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                 }
@@ -1806,7 +1811,7 @@ Token Tokenizer::handleOperator() {
                 case '*': {
                     Operator = TOKEN_OPERATOR_STARSTAR;
                     
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                 }
@@ -1820,7 +1825,7 @@ Token Tokenizer::handleOperator() {
             
             c = nextWLCharacter();
             
-            switch (c) {
+            switch (c.to_point()) {
                 case ':': {
                     
                     c = nextWLCharacter();
@@ -1831,7 +1836,7 @@ Token Tokenizer::handleOperator() {
                         
                         String.put('^');
                         String.put(':');
-                        String.put(c);
+                        String.put(c.to_char());
                         
                         c = nextWLCharacter();
                         
@@ -1849,7 +1854,7 @@ Token Tokenizer::handleOperator() {
                     Operator = TOKEN_OPERATOR_CARETEQUAL;
                     
                     String.put('^');
-                    String.put(c);
+                    String.put(c.to_char());
                     
                     c = nextWLCharacter();
                 }
@@ -1864,20 +1869,20 @@ Token Tokenizer::handleOperator() {
         }
             break;
         case '\'': {
-            Operator = TOKEN_OPERATOR_TICK;
+            Operator = TOKEN_OPERATOR_SINGLEQUOTE;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
         }
             break;
         default: {
             
-            assert(isOperatorCodePoint(c));
+            assert(c.isOperatorCharacter());
             
-            String << WLCharacterToString(c);
+            String << c.string();
             
-            Operator = LongNameCodePointToOperator(c);
+            Operator = LongNameCodePointToOperator(c.to_point());
             
             c = nextWLCharacter();
         }
@@ -1898,12 +1903,12 @@ Token Tokenizer::handleDot() {
     
     c = nextWLCharacter();
     
-    if (isDigit(c)) {
+    if (c.isDigit()) {
         
         auto Loc = TheSourceManager->getSourceLocation();
         
         characterQueue.push_back(std::make_pair(c, Loc));
-        setCurrentWLCharacter('.', Loc);
+        setCurrentWLCharacter(WLCharacter('.'), Loc);
         
         cur = handleNumber();
         return cur;
@@ -1917,7 +1922,7 @@ Token Tokenizer::handleDot() {
         
         Operator = TOKEN_OPERATOR_DOTDOT;
         
-        String.put(c);
+        String.put(c.to_char());
         
         c = nextWLCharacter();
         
@@ -1925,7 +1930,7 @@ Token Tokenizer::handleDot() {
             
             Operator = TOKEN_OPERATOR_DOTDOTDOT;
             
-            String.put(c);
+            String.put(c.to_char());
             
             c = nextWLCharacter();
         }

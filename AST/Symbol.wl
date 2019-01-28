@@ -256,7 +256,7 @@ PostfixOperatorToSymbol[Token`Operator`PlusPlus] = Increment
 PostfixOperatorToSymbol[Token`Operator`DotDotDot] = RepeatedNull
 PostfixOperatorToSymbol[Token`Operator`Amp] = Function
 PostfixOperatorToSymbol[Token`Operator`BangBang] = Factorial2
-PostfixOperatorToSymbol[Token`Operator`Tick] = Derivative
+PostfixOperatorToSymbol[Token`Operator`SingleQuote] = Derivative
    
 PostfixOperatorToSymbol[Token`Operator`LongName`Transpose] = Transpose
 PostfixOperatorToSymbol[Token`Operator`LongName`Conjugate] = Conjugate

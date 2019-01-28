@@ -63,7 +63,7 @@ std::shared_ptr<Node> SymbolParselet::parse(ParserContext Ctxt) {
     // when parsing b in a:b  then InsideColonParselet is true
     //
     // It is necessary to go to colonParselet.parse here (even though it seems non-contextSensitive)
-    // because in e.g., a_*b:f[]  the b is the last node in the Times expression needs to bind with :f[]
+    // because in e.g., a_*b:f[]  the b is the last node in the Times expression and needs to bind with :f[]
     //
     if (Ctxt.ColonFlag1) {
 
@@ -176,7 +176,8 @@ std::shared_ptr<Node> PercentParselet::parse(ParserContext Ctxt) {
 
 std::shared_ptr<Node> PrefixOperatorParselet::parse(ParserContext Ctxt) {
     
-    auto Str = TheParser->getString();
+    // Clear String
+    TheParser->getString();
     
     auto Issues = TheParser->getIssues();
 
@@ -208,7 +209,8 @@ std::shared_ptr<Node> BinaryOperatorParselet::parse(std::shared_ptr<Node> Left, 
 
     auto TokIn = TheParser->currentToken();
     
-    auto Str = TheParser->getString();
+    // Clear String
+    TheParser->getString();
     
     auto Issues = TheParser->getIssues();
 
@@ -245,8 +247,6 @@ std::shared_ptr<Node> BinaryOperatorParselet::parse(std::shared_ptr<Node> Left, 
 }
 
 std::shared_ptr<Node> InfixOperatorParselet::parse(std::shared_ptr<Node> Left, ParserContext Ctxt) {
-    
-    auto Str = TheParser->getString();
 
     auto TokIn = TheParser->currentToken();
     
@@ -331,7 +331,8 @@ std::shared_ptr<Node> InfixOperatorParselet::parse(std::shared_ptr<Node> Left, P
 
 std::shared_ptr<Node> PostfixOperatorParselet::parse(std::shared_ptr<Node> Operand, ParserContext Ctxt) {
     
-    auto Str = TheParser->getString();
+    // Clear String
+    TheParser->getString();
     
     auto Issues = TheParser->getIssues();
 
@@ -833,8 +834,9 @@ std::shared_ptr<Node> UnderDotParselet::parseContextSensitive(std::shared_ptr<No
 
 
 std::shared_ptr<Node> SemiParselet::parse(std::shared_ptr<Node> Left, ParserContext Ctxt) {
-
-    auto Str = TheParser->getString();
+    
+    // Clear String
+    TheParser->getString();
     
 //    auto Span = TheSourceManager->getTokenSpan();
     auto lastSpan = TheSourceManager->getTokenSpan();
@@ -975,7 +977,8 @@ std::shared_ptr<Node> SemiParselet::parse(std::shared_ptr<Node> Left, ParserCont
 //
 std::shared_ptr<Node> SemiSemiParselet::parse(ParserContext Ctxt) {
     
-    auto Str = TheParser->getString();
+    // Clear String
+    TheParser->getString();
     
     auto PrefixSpan = TheSourceManager->getTokenSpan();
 
@@ -1047,7 +1050,8 @@ std::shared_ptr<Node> SemiSemiParselet::parse(ParserContext Ctxt) {
 //
 std::shared_ptr<Node> SemiSemiParselet::parse(std::shared_ptr<Node> Left, ParserContext Ctxt) {
 
-    auto Str = TheParser->getString();
+    // Clear String
+    TheParser->getString();
     
     // auto Span = TheSourceManager->getTokenSpan();
 
@@ -1285,7 +1289,8 @@ std::shared_ptr<Node> ColonParselet::parseContextSensitive(std::shared_ptr<Node>
 
 std::shared_ptr<Node> SlashColonParselet::parse(std::shared_ptr<Node> Left, ParserContext Ctxt) {
 
-    auto Str = TheParser->getString();
+    // Clear String
+    TheParser->getString();
     
     // auto Span = TheSourceManager->getTokenSpan();
 
@@ -1435,7 +1440,8 @@ std::shared_ptr<Node> LinearSyntaxOpenParenParselet::parse(ParserContext Ctxt) {
 
 std::shared_ptr<Node> MessageNameParselet::parse(std::shared_ptr<Node> Left, ParserContext Ctxt) {
 
-    auto Str = TheParser->getString();
+    // Clear String
+    TheParser->getString();
     
     // auto Span = TheSourceManager->getTokenSpan();
 
@@ -1495,7 +1501,8 @@ std::shared_ptr<Node> MessageNameParselet::parse(std::shared_ptr<Node> Left, Par
 
 std::shared_ptr<Node> EqualParselet::parse(std::shared_ptr<Node> Left, ParserContext Ctxt) {
 
-    auto Str = TheParser->getString();
+    // Clear String
+    TheParser->getString();
     
     // auto Span = TheSourceManager->getTokenSpan();
 

@@ -259,6 +259,25 @@ Test[
 	TestID->"Parse-20190109-R6F7B2"
 ]
 
+Test[
+	"_a:b|c|d:e"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190126-L1E8H9"
+]
+
+Test[
+	"a:b|c|d:e"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190126-S5O0X2"
+]
 
 
 
@@ -378,7 +397,7 @@ Test[
 
 (*
 
-Implicit times
+Implicit times and span
 
 *)
 
@@ -531,6 +550,8 @@ Test[
 
 (*
 bug 364202
+<-> and \[TwoWayRule] had different precedences
+found by AST
 *)
 Test[
 	"a > b <-> c"
@@ -553,6 +574,7 @@ Test[
 ]
 
 EndTestSection[]
+
 
 
 
@@ -592,6 +614,65 @@ Test[
 	TestID->"Parse-20181115-A3F2Z1"
 ]
 
+Test[
+	"\"\\:000d\""
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190126-A6E4K4"
+]
+
+
+
+(*
+\[RawDoubleQuote]
+*)
+Test[
+	"\"\\[RawDoubleQuote]\""
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190126-S9D1H2"
+]
+
+Test[
+	"\"\\:0022\""
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190126-O0I4X0"
+]
+
+
+
+(*
+\[RawBackslash]
+*)
+Test[
+	"\"\\[RawBackslash]\""
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190126-T0Y0O1"
+]
+
+Test[
+	"\"\\:005c\""
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190126-F7Z5P8"
+]
 
 
 
@@ -600,6 +681,13 @@ Test[
 
 
 
+
+
+
+
+(*
+Linear Syntax
+*)
 
 (*
 Testing \space
@@ -633,6 +721,31 @@ Test[
 	,
 	TestID->"Parse-20181202-L5J7A2"
 ]
+
+Test[
+	"\\(x\\ny\\)"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190126-K1B5U2"
+]
+
+Test[
+	"\\(f := \n\\ng\\)"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190126-A4A9T4"
+]
+
+
+
+
+
 
 
 
@@ -722,6 +835,42 @@ Test[
 
 
 
+(*
+Parsing <newline>23 should be fine, but parsing \n23 should fail
+*)
+
+(*
+Use "1\n23" here because "\n23" is parsed as a single expression by AST and as two expressions by the kernel
+*)
+Test[
+	"1\n23"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190126-W2J2Q1"
+]
+
+TestMatch[
+	ParseString["\\n23"]
+	,
+	_SyntaxErrorNode
+	,
+	TestID->"Parse-20190126-Q9U0H8"
+]
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -790,6 +939,10 @@ Test[
 	,
 	TestID->"Parse-20190117-S9J8V7"
 ]
+
+
+
+
 
 
 

@@ -18,7 +18,7 @@ class ByteDecoder {
     
     SourceCharacter decodeBytes(unsigned char);
 
-    unsigned char leaveAlone(std::vector<unsigned char> bytes);
+    SourceCharacter leaveAlone(std::vector<unsigned char> bytes);
     
 public:
     

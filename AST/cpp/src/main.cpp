@@ -217,31 +217,30 @@ int main(int argc, char *argv[]) {
 }
 
 void printCharacters() {
-
+    
     TheCharacterDecoder->nextWLCharacter();
-
+    
     std::cout << "{\n";
-
+    
     while (true) {
         
         auto c = TheCharacterDecoder->currentWLCharacter();
-
-        auto String = WLCharacterToString(c);
-
+//        auto s = TheCharacterDecoder->currentSourceCharacters();
+        
         auto Span = TheSourceManager->getWLCharacterSpan();
-
+        
         std::cout << SYMBOL_WLCHARACTER.name();
         std::cout << "[";
-        std::cout << c;
+        std::cout << c.to_point();
         std::cout << ", ";
-        std::cout << stringEscape(String);
+        std::cout << c.string(),
         std::cout << ", <|";
         std::cout << ASTSourceString(Span);
         std::cout << "|>";
         std::cout << "]";
-
+        
         std::cout << ",\n";
-
+        
         if (c == WLCHARACTER_EOF) {
             break;
         }
@@ -251,13 +250,13 @@ void printCharacters() {
             auto I = Issues.begin();
             for (; I < Issues.end(); I++) {
                 std::cout << (*I).string();
-                std::cout << ", ";
+                std::cout << ",\n";
             }
         }
         
         TheCharacterDecoder->nextWLCharacter();
     }
-
+    
     std::cout << "Nothing\n";
     std::cout << "}\n";
 }

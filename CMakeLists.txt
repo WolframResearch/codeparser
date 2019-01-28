@@ -45,6 +45,7 @@ set(CPP_SOURCES
 	${CMAKE_SOURCE_DIR}/AST/cpp/src/Node.cpp
 	${CMAKE_SOURCE_DIR}/AST/cpp/src/ToInputFormString.cpp
 	${CMAKE_SOURCE_DIR}/AST/cpp/src/main.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/SyntaxIssue.cpp
 )
 
 set(WL_DATA_SOURCES

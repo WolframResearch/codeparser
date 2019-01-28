@@ -20,9 +20,9 @@ SourceCharacter ByteDecoder::nextSourceCharacter() {
     
     if (eof) {
         
-        TheSourceManager->advanceSourceLocation(EOF);
+        TheSourceManager->advanceSourceLocation(SourceCharacter(EOF));
         
-        return EOF;
+        return SourceCharacter(EOF);
     }
     
     auto c = decodeBytes(b);
@@ -31,7 +31,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter() {
     
     if (interactive && TheSourceManager->getSourceLocation().Line > 1) {
         eof = true;
-        return EOF;
+        return SourceCharacter(EOF);
     }
     
     return c;
@@ -66,7 +66,7 @@ unsigned char ByteDecoder::nextByte() {
     return b;
 }
 
-unsigned char ByteDecoder::leaveAlone(std::vector<unsigned char> bytes) {
+SourceCharacter ByteDecoder::leaveAlone(std::vector<unsigned char> bytes) {
 
     assert(!bytes.empty());
 
@@ -77,12 +77,9 @@ unsigned char ByteDecoder::leaveAlone(std::vector<unsigned char> bytes) {
         byteQueue.push_back(b);
     }
 
-    return first;
+    return SourceCharacter(first);
 }
 
-//
-// Sets Unicode to the text of the decoded character, if it was not ASCII
-//
 SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
     
     if ((cIn & 0x80) == 0x00) {
@@ -91,7 +88,7 @@ SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
         // ASCII character
         //
         
-        return cIn;
+        return SourceCharacter(cIn);
         
     } else if ((cIn & 0xe0) == 0xc0) {
         
@@ -117,7 +114,7 @@ SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
         
         auto decoded = (((firstByte & 0x1f) << 6) | (secondByte & 0x3f));
         
-        return decoded;
+        return SourceCharacter(decoded);
         
     } else if ((cIn & 0xf0) == 0xe0) {
         
@@ -155,7 +152,7 @@ SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
         
         auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (tmp & 0x3f));
         
-        return decoded;
+        return SourceCharacter(decoded);
         
     } else if ((cIn & 0xf8) == 0xf0) {
         
@@ -207,7 +204,7 @@ SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
         
         auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((tmp & 0x3f)));
         
-        return decoded;
+        return SourceCharacter(decoded);
         
     } else {
         

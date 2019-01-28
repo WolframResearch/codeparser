@@ -4,8 +4,71 @@
 #include <map>
 #include <string>
 #include <iostream>
+#include <cassert>
 
-typedef int SourceCharacter;
+//
+// https://akrzemi1.wordpress.com/2017/05/18/asserts-in-constexpr-functions/
+//
+#if defined NDEBUG
+# define X_ASSERT(CHECK) void(0)
+#else
+# define X_ASSERT(CHECK) \
+( (CHECK) ? void(0) : []{assert(false && #CHECK);}() )
+#endif
+
+
+class SourceCharacter
+{
+public:
+    explicit constexpr SourceCharacter(int val) : value_(val) {}
+
+    explicit operator int() const noexcept = delete;
+
+    bool operator==(int o) const {
+        return value_ == o;
+    }
+
+    bool operator!=(int o) const {
+        return value_ != o;
+    }
+
+   constexpr int to_point() const {
+       return value_;
+   }
+
+   constexpr char to_char() const {
+        //
+        // https://akrzemi1.wordpress.com/2017/05/18/asserts-in-constexpr-functions/
+        //
+        return X_ASSERT(0x00 <= value_ && value_ <= 0xff), value_;
+    }
+
+    std::string string() const;
+
+    bool isDigit() const;
+
+    bool isAlpha() const;
+
+    bool isDigitOrAlpha() const;
+
+    bool isDigitOrAlphaOrDollar() const;
+
+    bool isAlphaOrDollar() const;
+
+    bool isHex() const;
+
+    bool isOctal() const;
+
+    bool isSpace() const;
+
+    bool isControl() const;
+
+private:
+    int value_;
+};
+
+
+constexpr SourceCharacter SOURCECHARACTER_BACKSLASH('\\');
 
 struct SourceLocation {
     size_t Line;

@@ -64,7 +64,7 @@ Token`Operator`Plus -> Next,
 Token`Operator`Tilde -> Next,
 Token`Operator`Star -> Next,
 Token`Operator`Caret -> Next,
-Token`Operator`Tick -> Next,
+Token`Operator`SingleQuote -> Next,
 Token`Operator`Percent -> Next,
 Token`Operator`Question -> Next,
 
