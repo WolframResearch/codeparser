@@ -7,6 +7,7 @@
 
 #include <iomanip>
 #include <cassert>
+#include <cctype>
 
 CharacterDecoder::CharacterDecoder() : cur(0), curSource(0), characterQueue(), Issues() {}
 
