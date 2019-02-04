@@ -2,6 +2,7 @@
 #include "Parser.h"
 #include "Precedence.h"
 #include "ByteDecoder.h"
+#include "ByteEncoder.h"
 #include "CharacterDecoder.h"
 #include "Tokenizer.h"
 
@@ -82,6 +83,7 @@ int main(int argc, char *argv[]) {
 
         TheSourceManager = new SourceManager();
         TheByteDecoder = new ByteDecoder(ifs, interactive);
+        TheByteEncoder = new ByteEncoder();
         TheCharacterDecoder = new CharacterDecoder();
         
         if (format == FORMAT_CHARACTERS) {
@@ -151,6 +153,7 @@ int main(int argc, char *argv[]) {
         
         delete TheSourceManager;
         delete TheByteDecoder;
+        delete TheByteEncoder;
         delete TheCharacterDecoder;
         delete TheTokenizer;
         delete TheParser;
@@ -163,6 +166,7 @@ int main(int argc, char *argv[]) {
         
         TheSourceManager = new SourceManager();
         TheByteDecoder = new ByteDecoder(std::cin, interactive);
+        TheByteEncoder = new ByteEncoder();
         TheCharacterDecoder = new CharacterDecoder();
         
         if (format == FORMAT_CHARACTERS) {
@@ -208,6 +212,7 @@ int main(int argc, char *argv[]) {
 
         delete TheSourceManager;
         delete TheByteDecoder;
+        delete TheByteEncoder;
         delete TheCharacterDecoder;
         delete TheTokenizer;
         delete TheParser;
@@ -317,9 +322,14 @@ std::vector<std::shared_ptr<Node>> parseExpressions(bool interactive) {
             
             auto Expr = TheParser->parseTopLevel();
             
-            assert(TheParser->getString().empty());
-            assert(TheParser->getIssues().empty());
-
+            //
+            // Do not check:
+            // assert(TheParser->getString().empty());
+            // assert(TheParser->getIssues().empty());
+            // here.
+            // There may be multiple expressons to parse, and after parsing the first expression, the first token of the second expression has been queued.
+            // There may be a message from this token which will be handled when the second expression is parsed.
+            
             nodes.push_back(Expr);
         }
 

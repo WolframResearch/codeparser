@@ -83,6 +83,7 @@ void Parser::init() {
     registerTokenType(TOKEN_OPERATOR_ATSTAR, new BinaryOperatorParselet(PRECEDENCE_ATSTAR, false));
     registerTokenType(TOKEN_OPERATOR_SLASHSTAR, new BinaryOperatorParselet(PRECEDENCE_SLASHSTAR, false));
 
+    registerTokenType(TOKEN_OPERATOR_SLASH, new BinaryOperatorParselet(PRECEDENCE_SLASH, false));
     registerTokenType(TOKEN_OPERATOR_CARET, new BinaryOperatorParselet(PRECEDENCE_CARET, true));
     registerTokenType(TOKEN_OPERATOR_CARETEQUAL, new BinaryOperatorParselet(PRECEDENCE_CARETEQUAL, true));
     registerTokenType(TOKEN_OPERATOR_CARETCOLONEQUAL, new BinaryOperatorParselet(PRECEDENCE_CARETCOLONEQUAL, true));
@@ -143,7 +144,6 @@ void Parser::init() {
     registerTokenType(TOKEN_OPERATOR_MINUS, new InfixOperatorParselet(PRECEDENCE_INFIX_MINUS));
 
     registerTokenType(TOKEN_OPERATOR_STAR, new InfixOperatorParselet(PRECEDENCE_STAR));
-    registerTokenType(TOKEN_OPERATOR_SLASH, new InfixOperatorParselet(PRECEDENCE_SLASH));
     
     registerTokenType(TOKEN_OPERATOR_DOT, new InfixOperatorParselet(PRECEDENCE_DOT));
     registerTokenType(TOKEN_OPERATOR_STARSTAR, new InfixOperatorParselet(PRECEDENCE_STARSTAR));
@@ -625,6 +625,10 @@ std::shared_ptr<Node> Parser::cleanup(std::shared_ptr<Node> Left, ParserContext 
         // Some newline inbetween toplevel expressions
         //
         if (token == TOKEN_NEWLINE) {
+            
+            // Clear String
+            getString();
+            
             return Cleaned;
         }
         

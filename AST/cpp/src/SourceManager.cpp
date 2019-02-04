@@ -11,6 +11,7 @@
 #include "SourceManager.h"
 
 #include "Utils.h"
+#include "ByteEncoder.h"
 
 #include <cassert>
 #include <iostream>
@@ -30,7 +31,7 @@ SourceManager::SourceManager() : eof(false), SourceLoc{1, 0}, TokenStartLoc{0, 0
 
 void SourceManager::advanceSourceLocation(SourceCharacter c) {
     
-    if (c == EOF) {
+    if (c == SourceCharacter(EOF)) {
         
         CurLineWidth = SourceLoc.Col;
         
@@ -40,7 +41,7 @@ void SourceManager::advanceSourceLocation(SourceCharacter c) {
         return;
     }
     
-    if (c == '\n') {
+    if (c == SourceCharacter('\n')) {
         
         CurLineWidth = SourceLoc.Col;
         
@@ -135,88 +136,6 @@ size_t SourceManager::getCurrentLineWidth() {
     return CurLineWidth;
 }
 
-std::string SourceCharacter::string() const {
-    
-    std::ostringstream String;
-    
-    auto i = value_;
-    if (i >= 0x80 || i < 0) {
-        
-        //
-        // non-ASCII
-        //
-        
-        if (i == EOF) {
-            
-            //
-            // Do not return a string for EOF
-            //
-            
-        } else {
-            
-            assert(i > 0);
-
-            String << "0x" << std::setfill('0') << std::setw(4) << std::hex << i << std::dec;
-        }
-        
-    } else if (isSpace()) {
-        
-        // ASCII
-        //
-        // \f, \n, \r, \t, \v, or (space) and it is ok to write directly
-        //
-        
-        switch (i) {
-            case '\f':
-                String.put('\\');
-                String.put('f');
-                break;
-            case '\n':
-                String.put('\\');
-                String.put('n');
-                break;
-            case '\r':
-                String.put('\\');
-                String.put('r');
-                break;
-            case '\t':
-                String.put('\\');
-                String.put('t');
-                break;
-            case '\v':
-                String.put('\\');
-                String.put('v');
-                break;
-            default:
-                String.put(i);
-                break;
-        }
-        
-    } else if (isControl()) {
-        
-        // ASCII
-        //
-        // something nasty like '\0'
-        //
-        
-        if (i == '\b') {
-            String.put('\\');
-            String.put('b');
-        } else {
-            String << "0x" << std::setfill('0') << std::setw(4) << std::hex << i << std::dec;
-        }
-        
-    } else {
-        
-        // ASCII
-        //
-        
-        String.put(i);
-    }
-    
-    return String.str();
-}
-
 bool SourceCharacter::isDigitOrAlpha() const {
     return std::isalnum(value_);
 }
@@ -251,6 +170,15 @@ bool SourceCharacter::isSpace() const {
 
 bool SourceCharacter::isControl() const {
     return iscntrl(value_);
+}
+
+std::vector<unsigned char> SourceCharacter::bytes() const {
+    
+    if (value_ == EOF) {
+        return {};
+    }
+    
+    return ByteEncoder::encodeBytes(value_);
 }
 
 SourceManager *TheSourceManager = nullptr;

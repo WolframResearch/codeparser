@@ -22,20 +22,16 @@
 class WLCharacter
 {
 public:
-    explicit constexpr WLCharacter(int val) : value_(val) {}
+    explicit constexpr WLCharacter(int val, bool escaped = false) : value_(val), escaped(escaped) {}
 
     explicit operator int() const noexcept = delete;
 
     bool operator==(const WLCharacter &o) const {
-        return value_ == o.value_;
+        return value_ == o.value_ && escaped == o.escaped;
     }
 
-    bool operator==(int o) const {
-        return value_ == o;
-    }
-
-    bool operator!=(int o) const {
-        return value_ != o;
+    bool operator!=(const WLCharacter &o) const {
+        return value_ != o.value_ || escaped != o.escaped;
     }
 
     //
@@ -58,6 +54,12 @@ public:
 
     std::string string() const;
 
+    std::vector<SourceCharacter> source() const;
+
+    bool isEscaped() const {
+        return escaped;
+    }
+    
     bool isDigit() const;
 
     bool isAlpha() const;
@@ -71,13 +73,11 @@ public:
     bool isHex() const;
 
     bool isOctal() const;
-
-    bool isSpace() const;
-
-    bool isControl() const;
-
+    
+    bool isPunctuation() const;
+    
     bool isLinearSyntax() const;
-
+    
     bool isLetterlikeCharacter() const;
     bool isStrangeLetterlikeCharacter() const;
     bool isOperatorCharacter() const;
@@ -85,10 +85,13 @@ public:
     bool isNewlineCharacter() const;
     bool isCommaCharacter() const;
 
-    int toBaseDigit() const;
+    int toDigit() const;
+
+    static int fromDigit(int d);
 
 private:
     int value_;
+    bool escaped;
 };
 
  namespace std {
@@ -147,9 +150,7 @@ class CharacterDecoder {
     WLCharacter handle6Hex(SourceLocation CharacterStart, NextCharacterPolicy policy);
     WLCharacter handleOctal(SourceLocation CharacterStart, NextCharacterPolicy policy);
 
-    WLCharacter leaveAlone(std::vector<std::pair<WLCharacter, SourceSpan>> chars);
-
-    int replaceRawCodePoint(int point);
+    WLCharacter enqueue(std::vector<std::pair<WLCharacter, SourceSpan>> chars);
     
 public:
     CharacterDecoder();

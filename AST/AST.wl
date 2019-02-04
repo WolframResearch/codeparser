@@ -21,6 +21,9 @@ ConcreteParseFile::usage = "ConcreteParseFile[file] returns a concrete syntax tr
 ToInputFormString::usage = "ToInputFormString[concrete] returns a string representation of concrete."
 ToFullFormString::usage = "ToFullFormString[abstract] returns a string representation of abstract."
 
+CSTToBoxes
+BoxesToCST
+
 ToNode
 FromNode
 
@@ -232,6 +235,7 @@ InternalInvalid
 Begin["`Private`"]
 
 Needs["AST`Abstract`"]
+Needs["AST`Boxes`"]
 Needs["AST`DeclarationName`"]
 Needs["AST`Node`"]
 Needs["AST`Symbol`"]
@@ -294,7 +298,7 @@ Options[concreteParseString] = {
 
 concreteParseString[sIn_String, h_, OptionsPattern[]] :=
 Catch[
-Module[{s = sIn, res, multiBytes, tokenize},
+Module[{s = sIn, res, nonASCII, tokenize},
 
 	tokenize = OptionValue["Tokenize"];
 
@@ -307,14 +311,14 @@ Module[{s = sIn, res, multiBytes, tokenize},
 	];
 
 	(*
-	RunProcess cannot handle characters > 255 yet
+	RunProcess cannot handle characters >= 256 yet, but test >= 128 to be consistent with testing for ASCII
 	bug 360669
 	*)
-	multiBytes = Select[ToCharacterCode[s], # > 255&];
-	If[!empty[multiBytes],
-		Throw[Failure["MultiByteCharactersNotAllowed", <|
+	nonASCII = Select[ToCharacterCode[s], # >= 128&];
+	If[!empty[nonASCII],
+		Throw[Failure["NonASCIICharactersNotAllowed", <|
 			"Input"->s,
-			"MultiByteCharacters"->(escapeString[FromCharacterCode[#]]& /@ Take[multiBytes, UpTo[10]])|>]]
+			"NonASCIICharacters"->(escapeString[FromCharacterCode[#]]& /@ Take[nonASCII, UpTo[10]])|>]]
 	];
 
 	If[$exe === None,
@@ -374,7 +378,7 @@ Options[concreteParseFile] = {
 
 concreteParseFile[file_String, hIn_, OptionsPattern[]] :=
 Catch[
-Module[{h, full, res, skipFirstLine = False, shebangWarn = False, data, issues, tokenize, firstLine, start, end, children},
+Module[{h, full, strm, b, nonASCII, pos, res, skipFirstLine = False, shebangWarn = False, data, issues, tokenize, firstLine, start, end, children},
 
 	h = hIn;
 
@@ -395,6 +399,26 @@ Module[{h, full, res, skipFirstLine = False, shebangWarn = False, data, issues, 
 	full = FindFile[file];
 	If[FailureQ[full],
 		Throw[Failure["FindFileFailed", <|"FileName"->file|>]]
+	];
+
+	(*
+	RunProcess cannot handle characters >= 256 yet, but test >= 128 to be consistent with testing for ASCII
+	bug 360669
+	*)
+	strm = OpenRead[full, BinaryFormat -> True];
+	nonASCII = False;
+	While[True,
+		b = BinaryRead[strm];
+		Which[
+			b === EndOfFile, Break[],
+			b >= 128, nonASCII = True; pos = StreamPosition[strm]; Break[]
+		]
+	];
+	Close[strm];
+	If[nonASCII,
+		Throw[Failure["NonASCIICharactersNotAllowed", <|
+			"FileName"->full,
+			"FirstNonASCIICharacter"->b, "FirstNonASCIICharacterStreamPosition"->pos|>]]
 	];
 
 	(*

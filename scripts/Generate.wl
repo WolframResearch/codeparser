@@ -7,7 +7,8 @@ wolfram -script scripts/Generate.wl -buildDir /path/to/build/dir
 
 will generate additional required files in these directories:
 
-/path/to/build/dir/generated/cpp
+/path/to/build/dir/generated/cpp/include
+/path/to/build/dir/generated/cpp/src
 /path/to/build/dir/generated/wl
 /path/to/build/dir/paclet/AST
 
@@ -305,6 +306,38 @@ If[FailureQ[res],
 
 
 
+longNameReplacementsWL = {
+"
+(*
+AUTO GENERATED FILE
+DO NOT MODIFY
+*)
+
+BeginPackage[\"AST`LongNameReplacements`\"]
+
+$LongNameReplacements
+
+Begin[\"`Private`\"]
+
+$LongNameReplacements = {"
+} ~Join~ (("\"\\\\["<>#<>"]\"" -> "\"\\["<>#<>"]\",")& /@ importedLongNames) ~Join~ {
+"
+Nothing
+}
+
+End[]
+
+EndPackage[]
+"}
+
+Print["exporting LongNameReplacements.wl"]
+res = Export[FileNameJoin[{pacletASTDir, "LongNameReplacements.wl"}], Column[longNameReplacementsWL], "String"]
+
+If[FailureQ[res],
+  Print[res];
+  Quit[1]
+]
+
 
 
 
@@ -399,44 +432,6 @@ codePointCPPHeader = {
 
 #include <string>
 
-constexpr int CODEPOINT_TAB('\\t');
-constexpr int CODEPOINT_NEWLINE('\\n');
-constexpr int CODEPOINT_RETURN('\\r');
-constexpr int CODEPOINT_ESCAPE(0x001b);
-constexpr int CODEPOINT_SPACE(' ');
-constexpr int CODEPOINT_BANG('!');
-constexpr int CODEPOINT_DOUBLEQUOTE('\"');
-constexpr int CODEPOINT_HASH('#');
-constexpr int CODEPOINT_DOLLAR('$');
-constexpr int CODEPOINT_PERCENT('%');
-constexpr int CODEPOINT_AMP('&');
-constexpr int CODEPOINT_SINGLEQUOTE('\\'');
-constexpr int CODEPOINT_OPENPAREN('(');
-constexpr int CODEPOINT_CLOSEPAREN(')');
-constexpr int CODEPOINT_STAR('*');
-constexpr int CODEPOINT_PLUS('+');
-constexpr int CODEPOINT_COMMA(',');
-constexpr int CODEPOINT_MINUS('-');
-constexpr int CODEPOINT_DOT('.');
-constexpr int CODEPOINT_SLASH('/');
-constexpr int CODEPOINT_COLON(':');
-constexpr int CODEPOINT_SEMICOLON(';');
-constexpr int CODEPOINT_LESS('<');
-constexpr int CODEPOINT_EQUAL('=');
-constexpr int CODEPOINT_GREATER('>');
-constexpr int CODEPOINT_QUESTION('?');
-constexpr int CODEPOINT_AT('@');
-constexpr int CODEPOINT_OPENSQUARE('[');
-constexpr int CODEPOINT_BACKSLASH('\\\\');
-constexpr int CODEPOINT_CLOSESQUARE(']');
-constexpr int CODEPOINT_CARET('^');
-constexpr int CODEPOINT_UNDER('_');
-constexpr int CODEPOINT_BACKTICK('`');
-constexpr int CODEPOINT_OPENCURLY('{');
-constexpr int CODEPOINT_BAR('|');
-constexpr int CODEPOINT_CLOSECURLY('}');
-constexpr int CODEPOINT_TILDE('~');
-
 //
 // These are the actual WL code points for linear syntax characters
 //
@@ -452,84 +447,25 @@ constexpr int CODEPOINT_LINEARSYNTAX_UNDER(0xf7ca);
 constexpr int CODEPOINT_LINEARSYNTAX_PLUS(0xf7cb);
 constexpr int CODEPOINT_LINEARSYNTAX_SLASH(0xf7cc);
 constexpr int CODEPOINT_LINEARSYNTAX_BACKTICK(0xf7cd);
+
 //
 // Do the simple thing and have -1 be EOF
 //
 constexpr int CODEPOINT_EOF(EOF);
+
+constexpr int CODEPOINT_ERROR_INTERNAL(-2);
+
 //
-// There is a WL design flaw that LINEARSYNTAX_SPACE does not have a dedicated code point
+// There is an inconsistency in WL, such that LINEARSYNTAX_SPACE does not have a dedicated code point
 // So invent one here.
 //
-constexpr int CODEPOINT_LINEARSYNTAX_SPACE(-2);
-//
-// Something like 1 + \\[Bad] would be:
-// '1', ' ', '+', ' ', CHARACTER_ERROR_UNRECOGNIZED
-//
-// constexpr WLCharacter WLCHARACTER_ERROR_UNRECOGNIZED(-3);
-//
-// Something like 1 + \\:123 would be:
-// '1', ' ', '+', ' ', CHARACTER_ERROR_MALFORMED
-//
-// constexpr WLCharacter WLCHARACTER_ERROR_MALFORMED(-4);
-//
-// Such as LongNameOperatorToCodePoint called with a bad Token
-//
-constexpr int CODEPOINT_ERROR_INTERNAL(-5);
+constexpr int CODEPOINT_LINEARSYNTAX_SPACE(-3);
 
 //
-// Characters that are only valid inside strings, escapedness needs to be remembered.
-// Character 10 (newline) may appear any where, but BACKSLASH N is not equivalent to NEWLINE.
-// BACKSLASH N may only appear in strings.
-//
-constexpr int CODEPOINT_ESCAPED_B(-6);
-constexpr int CODEPOINT_ESCAPED_F(-7);
-constexpr int CODEPOINT_ESCAPED_N(-8);
-constexpr int CODEPOINT_ESCAPED_R(-9);
-constexpr int CODEPOINT_ESCAPED_T(-10);
-
-constexpr int CODEPOINT_ESCAPED_DOUBLEQUOTE(-11);
-constexpr int CODEPOINT_ESCAPED_BACKSLASH(-12);
-constexpr int CODEPOINT_ESCAPED_LESS(-13);
-constexpr int CODEPOINT_ESCAPED_GREATER(-14);
-
-constexpr int CODEPOINT_RAW_TAB(-15);
-constexpr int CODEPOINT_RAW_NEWLINE(-16);
-constexpr int CODEPOINT_RAW_RETURN(-17);
-constexpr int CODEPOINT_RAW_ESCAPE(-18);
-constexpr int CODEPOINT_RAW_SPACE(-19);
-constexpr int CODEPOINT_RAW_BANG(-20);
-constexpr int CODEPOINT_RAW_DOUBLEQUOTE(-21);
-constexpr int CODEPOINT_RAW_HASH(-22);
-constexpr int CODEPOINT_RAW_DOLLAR(-23);
-constexpr int CODEPOINT_RAW_PERCENT(-24);
-constexpr int CODEPOINT_RAW_AMP(-25);
-constexpr int CODEPOINT_RAW_SINGLEQUOTE(-26);
-constexpr int CODEPOINT_RAW_OPENPAREN(-27);
-constexpr int CODEPOINT_RAW_CLOSEPAREN(-28);
-constexpr int CODEPOINT_RAW_STAR(-29);
-constexpr int CODEPOINT_RAW_PLUS(-30);
-constexpr int CODEPOINT_RAW_COMMA(-31);
-constexpr int CODEPOINT_RAW_MINUS(-32);
-constexpr int CODEPOINT_RAW_DOT(-33);
-constexpr int CODEPOINT_RAW_SLASH(-34);
-constexpr int CODEPOINT_RAW_COLON(-35);
-constexpr int CODEPOINT_RAW_SEMICOLON(-36);
-constexpr int CODEPOINT_RAW_LESS(-37);
-constexpr int CODEPOINT_RAW_EQUAL(-38);
-constexpr int CODEPOINT_RAW_GREATER(-39);
-constexpr int CODEPOINT_RAW_QUESTION(-40);
-constexpr int CODEPOINT_RAW_AT(-41);
-constexpr int CODEPOINT_RAW_OPENSQUARE(-42);
-constexpr int CODEPOINT_RAW_BACKSLASH(-43);
-constexpr int CODEPOINT_RAW_CLOSESQUARE(-44);
-constexpr int CODEPOINT_RAW_CARET(-45);
-constexpr int CODEPOINT_RAW_UNDER(-46);
-constexpr int CODEPOINT_RAW_BACKTICK(-47);
-constexpr int CODEPOINT_RAW_OPENCURLY(-48);
-constexpr int CODEPOINT_RAW_BAR(-49);
-constexpr int CODEPOINT_RAW_CLOSECURLY(-50);
-constexpr int CODEPOINT_RAW_TILDE(-51);
-
+// The string meta characters will have code points here, but they are not actual characters and do not have real code points
+// 
+constexpr int CODEPOINT_STRINGMETA_OPEN(-4);
+constexpr int CODEPOINT_STRINGMETA_CLOSE(-5);
 
 Token LongNameCodePointToOperator(int c);
 int LongNameOperatorToCodePoint(Token t);

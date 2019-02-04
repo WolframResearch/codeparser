@@ -21,32 +21,12 @@ std::string stringEscape(std::string s) {
     escaped << "\"";
     for (size_t i = 0; i < s.size(); i++) {
         auto c = s[i];
-        //
-        // Handle " and \ specially
-        //
-        // and then handle \b, \f, \n, \r, \t
-        //
         switch (c) {
             case '\\':
                 escaped << "\\\\";
                 break;
             case '"':
                 escaped << "\\\"";
-                break;
-            case '\b':
-                escaped << "\\b";
-                break;
-            case '\f':
-                escaped << "\\f";
-                break;
-            case '\n':
-                escaped << "\\n";
-                break;
-            case '\r':
-                escaped << "\\r";
-                break;
-            case '\t':
-                escaped << "\\t";
                 break;
             default:
                 escaped << c;

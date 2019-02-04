@@ -5,6 +5,7 @@
 #include <string>
 #include <iostream>
 #include <cassert>
+#include <vector>
 
 //
 // https://akrzemi1.wordpress.com/2017/05/18/asserts-in-constexpr-functions/
@@ -24,12 +25,12 @@ public:
 
     explicit operator int() const noexcept = delete;
 
-    bool operator==(int o) const {
-        return value_ == o;
+    bool operator==(const SourceCharacter &o) const {
+        return value_ == o.value_;
     }
 
-    bool operator!=(int o) const {
-        return value_ != o;
+    bool operator!=(const SourceCharacter &o) const {
+        return value_ != o.value_;
     }
 
    constexpr int to_point() const {
@@ -42,8 +43,6 @@ public:
         //
         return X_ASSERT(0x00 <= value_ && value_ <= 0xff), value_;
     }
-
-    std::string string() const;
 
     bool isDigit() const;
 
@@ -62,6 +61,8 @@ public:
     bool isSpace() const;
 
     bool isControl() const;
+
+    std::vector<unsigned char> bytes() const;
 
 private:
     int value_;

@@ -2,19 +2,22 @@
 Needs["AST`"]
 
 
-parseEquivalenceFunction[actual_, expectedIgnored_] :=
-Module[{good},
-	good = SameQ[
-		ToExpression[ToFullFormString[ParseString[actual, HoldNode[Hold, {##}, <||>]&]], InputForm]
-		,
-		ToExpression[actual, InputForm, Hold]
+parseEquivalenceFunction[actualIn_, expectedIgnored_] :=
+Catch[
+Module[{parsed, good, expected, actual},
+	parsed = ParseString[actualIn, HoldNode[Hold, {##}, <||>]&];
+	If[FailureQ[parsed],
+		Throw[parsed]
 	];
+	expected = ToExpression[ToFullFormString[parsed], InputForm];
+	actual = ToExpression[actualIn, InputForm, Hold];
+	good = SameQ[expected, actual];
 	If[good,
 		True
 		,
-		False
+		unhandled[{actual, expected}]
 	]
-]
+]]
 
 
 Test[
@@ -279,6 +282,15 @@ Test[
 	TestID->"Parse-20190126-S5O0X2"
 ]
 
+Test[
+	"a:b_c:d"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190203-X5M4A5"
+]
 
 
 
@@ -785,6 +797,31 @@ EndTestSection[]
 
 
 
+Test[
+	"\"\\.00\""
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190128-I9O3D9"
+]
+
+
+Test[
+	"\"\\|010023\""
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190129-O8S8M2"
+]
+
+
+
+
+
 
 
 
@@ -860,7 +897,36 @@ TestMatch[
 	TestID->"Parse-20190126-Q9U0H8"
 ]
 
+TestMatch[
+	ParseString["\\t23"]
+	,
+	_SyntaxErrorNode
+	,
+	TestID->"Parse-20190203-F5C9L1"
+]
 
+(*
+important that space after - is not in SyntaxErrorNode
+*)
+Test[
+	ConcreteParseString["a - \\tb"]
+	,
+	InfixNode[Plus, {SymbolNode["a", {}, <|Source->{{1, 1}, {1, 1}}|>],
+		InternalMinusNode[Minus, {SyntaxErrorNode[Token`Error`Rest, {SyntaxErrorNode[Token`Error`UnhandledCharacter, {
+			InternalTokenNode["\\t", {}, <|Source->{{1, 5}, {1, 6}}|>]}, <|Source->{{1, 5}, {1, 6}}|>],
+			InternalTokenNode["b", {}, <|Source->{{1, 7}, {1, 7}}|>]},
+			<|Source->{{1, 5}, {1, 7}}|>]}, <|Source->{{1, 5}, {1, 7}}|>]}, <|Source->{{1, 1}, {1, 7}}|>]
+	,
+	TestID->"Parse-20190203-G0U2N7"
+]
+
+TestMatch[
+	ParseString["\\"]
+	,
+	_SyntaxErrorNode
+	,
+	TestID->"Parse-20190203-M3A0S4"
+]
 
 
 
@@ -951,7 +1017,7 @@ Test[
 
 
 Test[
-	"a \[CenterDot] b \[CenterDot] c"
+	"a \\[CenterDot] b \\[CenterDot] c"
 	,
 	Null
 	,

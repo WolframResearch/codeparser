@@ -36,11 +36,11 @@ sample = FileNameJoin[{DirectoryName[$CurrentTestSource], "sample.wl"}]
 Test[
 	TokenizeFile[sample]
 	,
-	{Token[Token`Newline, "", <|Source -> {{2, 0}, {2, 0}}|>], 
+	{Token[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 0}}|>], 
  Token[Token`Number, "1", <|Source -> {{2, 1}, {2, 1}}|>], 
  Token[Token`Operator`Plus, "+", <|Source -> {{2, 2}, {2, 2}}|>], 
  Token[Token`Number, "1", <|Source -> {{2, 3}, {2, 3}}|>], 
- Token[Token`Newline, "", <|Source -> {{3, 0}, {3, 0}}|>], 
+ Token[Token`Newline, "\n", <|Source -> {{3, 0}, {3, 0}}|>], 
  Token[Token`EOF, "", <|Source -> {{4, 0}, {4, 0}}|>]}
 	,
 	TestID->"Tokenize-20181230-Q3C4N0"
