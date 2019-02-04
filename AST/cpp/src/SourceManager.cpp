@@ -17,6 +17,7 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <cctype>
 
 bool isContiguous(SourceLocation a, SourceLocation b) {
     return a.Line == b.Line && a.Col + 1 == b.Col;
@@ -137,39 +138,24 @@ size_t SourceManager::getCurrentLineWidth() {
 }
 
 bool SourceCharacter::isDigitOrAlpha() const {
+    if (!(0 <= value_ && value_ <= 0x7f)) {
+        return false;
+    }
     return std::isalnum(value_);
 }
 
-bool SourceCharacter::isAlphaOrDollar() const {
-    return std::isalpha(value_) || value_ == '$';
-}
-
-bool SourceCharacter::isDigitOrAlphaOrDollar() const {
-    return std::isalnum(value_) || value_ == '$';
-}
-
 bool SourceCharacter::isHex() const {
+    if (!(0 <= value_ && value_ <= 0x7f)) {
+        return false;
+    }
     return std::isxdigit(value_);
 }
 
 bool SourceCharacter::isOctal() const {
+    if (!(0 <= value_ && value_ <= 0x7f)) {
+        return false;
+    }
     return  '0' <= value_ && value_ <= '7';
-}
-
-bool SourceCharacter::isDigit() const {
-    return std::isdigit(value_);
-}
-
-bool SourceCharacter::isAlpha() const {
-    return std::isalpha(value_);
-}
-
-bool SourceCharacter::isSpace() const {
-    return std::isspace(value_);
-}
-
-bool SourceCharacter::isControl() const {
-    return iscntrl(value_);
 }
 
 std::vector<unsigned char> SourceCharacter::bytes() const {

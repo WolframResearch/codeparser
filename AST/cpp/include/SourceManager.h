@@ -44,23 +44,11 @@ public:
         return X_ASSERT(0x00 <= value_ && value_ <= 0xff), value_;
     }
 
-    bool isDigit() const;
-
-    bool isAlpha() const;
-
     bool isDigitOrAlpha() const;
-
-    bool isDigitOrAlphaOrDollar() const;
-
-    bool isAlphaOrDollar() const;
 
     bool isHex() const;
 
     bool isOctal() const;
-
-    bool isSpace() const;
-
-    bool isControl() const;
 
     std::vector<unsigned char> bytes() const;
 
