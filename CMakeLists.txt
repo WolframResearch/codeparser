@@ -7,7 +7,7 @@ set(PACLET "AST")
 
 message(STATUS "PACLET: ${PACLET}")
 
-set(PACLET_VERSION "0.8.1" CACHE STRING "Paclet Version")
+set(PACLET_VERSION "0.9" CACHE STRING "Paclet Version")
 
 message(STATUS "PACLET_VERSION: ${PACLET_VERSION}")
 
