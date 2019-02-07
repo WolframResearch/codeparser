@@ -764,6 +764,33 @@ Test[
 
 
 
+(*
+Stringification
+*)
+Test[
+	"a>>C:\\progs\\hello"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 (*

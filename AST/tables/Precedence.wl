@@ -22,6 +22,7 @@ Precedence`Lowest -> 0,
 Precedence`Semi -> Precedence[CompoundExpression], (* 10 *)
 
 Precedence`GreaterGreater -> Precedence[Put], (* 30 *)
+Precedence`GreaterGreaterGreater -> Precedence[PutAppend], (* 30 *)
 
 Precedence`Equal -> Precedence[Set], (* 40 *)
 Precedence`ColonEqual -> Precedence[SetDelayed], (* 40 *)

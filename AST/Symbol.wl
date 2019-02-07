@@ -331,6 +331,7 @@ If[$VersionNumber >= 11.1, ToExpression["BinaryOperatorToSymbol[Token`Operator`L
 BinaryOperatorToSymbol[Token`Operator`SlashSlashAt] = MapAll
 BinaryOperatorToSymbol[Token`Operator`ColonColon] = MessageName
 BinaryOperatorToSymbol[Token`Operator`GreaterGreater] = Put
+BinaryOperatorToSymbol[Token`Operator`GreaterGreaterGreater] = PutAppend
 BinaryOperatorToSymbol[Token`Operator`SlashSlash] = BinarySlashSlash
 BinaryOperatorToSymbol[Token`Operator`SemiSemi] = Span
 BinaryOperatorToSymbol[Token`Operator`At] = BinaryAt
@@ -407,6 +408,7 @@ SymbolToBinaryOperatorString[UpSetDelayed] = "^:="
 SymbolToBinaryOperatorString[UpSet] = "^="
 SymbolToBinaryOperatorString[MapAll] = "//@"
 SymbolToBinaryOperatorString[Put] = ">>"
+SymbolToBinaryOperatorString[PutAppend] = ">>>"
 (* extra space, ending in . *)
 SymbolToBinaryOperatorString[Unset] = "=. "
 

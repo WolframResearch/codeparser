@@ -106,6 +106,7 @@ void Parser::init() {
     registerTokenType(TOKEN_OPERATOR_COLONEQUAL, new BinaryOperatorParselet(PRECEDENCE_COLONEQUAL, true));
     registerTokenType(TOKEN_OPERATOR_GREATERGREATER, new BinaryOperatorParselet(PRECEDENCE_GREATERGREATER, false));
     registerTokenType(TOKEN_OPERATOR_QUESTION, new BinaryOperatorParselet(PRECEDENCE_INFIX_QUESTION, false));
+    registerTokenType(TOKEN_OPERATOR_GREATERGREATERGREATER, new BinaryOperatorParselet(PRECEDENCE_GREATERGREATERGREATER, false));
     
     // set relation operators
     registerTokenType(TOKEN_OPERATOR_LONGNAME_ELEMENT, new BinaryOperatorParselet(PRECEDENCE_LONGNAME_ELEMENT, false));

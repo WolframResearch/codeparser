@@ -9,7 +9,7 @@
 #include <cassert>
 
 
-Tokenizer::Tokenizer() : _stringifyNextToken(false), cur(TOKEN_UNKNOWN), currentCached(false), characterQueue(),
+Tokenizer::Tokenizer() : _symbolifyNextToken(false), _fileifyNextToken(false), cur(TOKEN_UNKNOWN), currentCached(false), characterQueue(),
     _currentWLCharacter(0), _currentSourceLocation{0, 0}, String(), Issues() {}
 
 void Tokenizer::init(bool skipFirstLine) {
@@ -37,7 +37,7 @@ Token Tokenizer::nextToken() {
     
     TheSourceManager->setTokenStart();
     
-    if (_stringifyNextToken) {
+    if (_symbolifyNextToken || _fileifyNextToken) {
         
         cur = handleString();
         
@@ -256,9 +256,7 @@ Token Tokenizer::handleLinearSyntax() {
     
     c = nextWLCharacter();
 
-    cur = Operator;
-    
-    return cur;
+    return Operator;
 }
 
 Token Tokenizer::handleComment() {
@@ -391,8 +389,7 @@ Token Tokenizer::handleSymbol() {
             handleSymbolSegment();
         } else {
             
-            cur = TOKEN_ERROR_UNHANDLEDCHARACTER;
-            return cur;
+            return TOKEN_ERROR_UNHANDLEDCHARACTER;
         }
         
         c = currentWLCharacter();
@@ -473,16 +470,43 @@ Token Tokenizer::handleString() {
             
             return TOKEN_ERROR_UNHANDLEDCHARACTER;
         }
-    } else if (_stringifyNextToken) {
+    } else if (_fileifyNextToken) {
         // first eat the whitespace
         while (c == WLCharacter(' ') || c == WLCharacter('\t') || c == WLCharacter('\n')) {
             c = nextWLCharacter(INSIDE_STRING);
         }
+    } else if (_symbolifyNextToken) {
+        ;
     } else {
         assert(false);
     }
     
-    if (_stringifyNextToken && c != WLCharacter('"')) {
+    if (_symbolifyNextToken && c != WLCharacter('"')) {
+        
+        //
+        // magically turn into a string
+        //
+        
+        if (c.isAlphaOrDollar() || c.isLetterlikeCharacter()) {
+            
+            handleSymbolSegment();
+            
+            _symbolifyNextToken = false;
+            
+            return TOKEN_STRING;
+            
+        } else {
+            
+            //
+            // Something like a::EOF
+            //
+            
+            _symbolifyNextToken = false;
+            
+            return TOKEN_ERROR_EMPTYSTRING;
+        }
+        
+    } else if (_fileifyNextToken && c != WLCharacter('"')) {
         
         //
         // magically turn into a string
@@ -491,10 +515,27 @@ Token Tokenizer::handleString() {
         auto empty = true;
         while (true) {
             
-            if (c.isAlpha() || c.isDigit() || c == WLCharacter('`') || c == WLCharacter('$') || c == WLCharacter('.') || c == WLCharacter('_') || c == WLCharacter('/')) {
+            //
+            // tutorial/OperatorInputForms
+            //
+            // File Names
+            //
+            // Any file name can be given in quotes after <<, >>, and >>>.
+            // File names can also be given without quotes if they contain only alphanumeric
+            // characters and the characters `, /, ., \[Backslash], !, -, _, :, $, *, ~, and ?, together with
+            // matched pairs of square brackets enclosing any characters other than spaces, tabs, and newlines.
+            // Note that file names given without quotes can be followed only by spaces, tabs, or newlines, or
+            // by the characters ), ], or }, as well as semicolons and commas.
+            //
+            // TODO: handle [] and a>>C:\progs
+            //
+            
+            if (c.isDigitOrAlphaOrDollar() || c == WLCharacter('`') || c == WLCharacter('/') || c == WLCharacter('.') ||
+                c == WLCharacter('\\') || c == WLCharacter('!') || c == WLCharacter('-') || c == WLCharacter('_') ||
+                c == WLCharacter(':') || c == WLCharacter('*') || c == WLCharacter('~') || c == WLCharacter('?')) {
                 
                 empty = false;
-
+                
                 String.put(c.to_char());
                 
                 c = nextWLCharacter(INSIDE_STRING);
@@ -506,17 +547,17 @@ Token Tokenizer::handleString() {
             
         } // while
         
-        _stringifyNextToken = false;
+        _fileifyNextToken = false;
         
         if (empty) {
-
+            
             //
-            // Something like a::EOF
+            // Something like a>>EOF
             //
-
+            
             return TOKEN_ERROR_EMPTYSTRING;
         }
-
+        
         return TOKEN_STRING;
         
     } else {
@@ -587,9 +628,8 @@ Token Tokenizer::handleString() {
         
         c = nextWLCharacter();
         
-        if (_stringifyNextToken) {
-            _stringifyNextToken = false;
-        }
+        _symbolifyNextToken = false;
+        _fileifyNextToken = false;
 
         return TOKEN_STRING;
     }
@@ -639,8 +679,7 @@ Token Tokenizer::handleNumber() {
             
             if (base < 2 || base > 36) {
                 
-                cur = TOKEN_ERROR_INVALIDBASE;
-                return cur;
+                return TOKEN_ERROR_INVALIDBASE;
             }
             
             String.put('^');
@@ -652,16 +691,14 @@ Token Tokenizer::handleNumber() {
                 
                 if (!handleDigitsOrAlpha(base)) {
                     
-                    cur = TOKEN_ERROR_UNHANDLEDCHARACTER;
-                    return cur;
+                    return TOKEN_ERROR_UNHANDLEDCHARACTER;
                 }
                 
             } else {
                 
                 String.str("");
                 
-                cur = TOKEN_ERROR_EXPECTEDDIGITORALPHA;
-                return cur;
+                return TOKEN_ERROR_EXPECTEDDIGITORALPHA;
             }
             
         } else {
@@ -751,8 +788,7 @@ Token Tokenizer::handleNumber() {
                     
                     String.put(s.to_char());
                     
-                    cur = TOKEN_ERROR_EXPECTEDACCURACY;
-                    return cur;
+                    return TOKEN_ERROR_EXPECTEDACCURACY;
                     
                 } else {
 
@@ -775,7 +811,6 @@ Token Tokenizer::handleNumber() {
                     
                     characterQueue.push_back(std::make_pair(c, Loc));
                     setCurrentWLCharacter(s, Loc);
-                    
                     
                     return TOKEN_NUMBER;
                 }
@@ -806,8 +841,7 @@ Token Tokenizer::handleNumber() {
             
             if (accuracy) {
                 if (!handled) {
-                    cur = TOKEN_ERROR_EXPECTEDACCURACY;
-                    return cur;
+                    return TOKEN_ERROR_EXPECTEDACCURACY;
                 }
             }
         }
@@ -835,16 +869,14 @@ Token Tokenizer::handleNumber() {
             
             if (!expectDigits()) {
                 
-                cur = TOKEN_ERROR_UNHANDLEDCHARACTER;
-                return cur;
+                return TOKEN_ERROR_UNHANDLEDCHARACTER;
             }
             
             if (c == WLCharacter('.')) {
                 
                 c = nextWLCharacter(INSIDE_NUMBER);
                 
-                cur = TOKEN_ERROR_EXPONENT;
-                return cur;
+                return TOKEN_ERROR_EXPONENT;
             }
             
         } else {
@@ -1031,7 +1063,7 @@ Token Tokenizer::handleOperator() {
                     
                     c = nextWLCharacter();
                     
-                    _stringifyNextToken = true;
+                    _symbolifyNextToken = true;
                 }
                     break;
                 case '=': {
@@ -1277,7 +1309,7 @@ Token Tokenizer::handleOperator() {
                     
                     c = nextWLCharacter();
                     
-                    _stringifyNextToken = true;
+                    _fileifyNextToken = true;
                 }
                     break;
                 case '>': {
@@ -1334,13 +1366,27 @@ Token Tokenizer::handleOperator() {
             
             switch (c.to_point()) {
                 case '>': {
-                    Operator = TOKEN_OPERATOR_GREATERGREATER;
                     
                     String.put(c.to_char());
                     
                     c = nextWLCharacter();
                     
-                    _stringifyNextToken = true;
+                    if (c.to_point() == '>') {
+                        
+                        Operator = TOKEN_OPERATOR_GREATERGREATERGREATER;
+                        
+                        String.put(c.to_char());
+                        
+                        c = nextWLCharacter();
+                        
+                        _fileifyNextToken = true;
+                        
+                    } else {
+                        
+                        Operator = TOKEN_OPERATOR_GREATERGREATER;
+                        
+                        _fileifyNextToken = true;
+                    }
                 }
                     break;
                 case '=': {
@@ -1827,8 +1873,7 @@ Token Tokenizer::handleOperator() {
                         String.put('^');
                         String.put(':');
                         
-                        cur = TOKEN_ERROR_UNHANDLEDCHARACTER;
-                        return cur;
+                        return TOKEN_ERROR_UNHANDLEDCHARACTER;
                     }
                 }
                     break;
@@ -1892,8 +1937,7 @@ Token Tokenizer::handleDot() {
         characterQueue.push_back(std::make_pair(c, Loc));
         setCurrentWLCharacter(WLCharacter('.'), Loc);
         
-        cur = handleNumber();
-        return cur;
+        return handleNumber();
     }
     
     String.put('.');
@@ -1918,8 +1962,7 @@ Token Tokenizer::handleDot() {
         }
     }
     
-    cur = Operator;
-    return cur;
+    return Operator;
 }
 
 std::string Tokenizer::getString() {
