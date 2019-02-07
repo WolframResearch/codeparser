@@ -65,14 +65,13 @@ set(CPP_SOURCES
 
 set(WL_DATA_SOURCES
 	${CMAKE_SOURCE_DIR}/AST/tables/CommaLongNames.wl
-	${CMAKE_SOURCE_DIR}/AST/tables/LetterlikeLongNames.wl
 	${CMAKE_SOURCE_DIR}/AST/tables/LongNames.wl
 	${CMAKE_SOURCE_DIR}/AST/tables/NewlineLongNames.wl
 	${CMAKE_SOURCE_DIR}/AST/tables/OperatorLongNames.wl
 	${CMAKE_SOURCE_DIR}/AST/tables/Precedence.wl
 	${CMAKE_SOURCE_DIR}/AST/tables/SpaceLongNames.wl
-	${CMAKE_SOURCE_DIR}/AST/tables/StrangeLetterlikeCodePoints.wl
 	${CMAKE_SOURCE_DIR}/AST/tables/TokenEnum.wl
+	${CMAKE_SOURCE_DIR}/AST/tables/UninterpretableLongNames.wl
 )
 
 set(BUILT_PACLETINFO

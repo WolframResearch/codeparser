@@ -128,19 +128,19 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextCharacterPolicy policy) {
         // \b \f \n \r \t
         //
         case 'b':
-            cur = enqueue({std::make_pair<>(WLCharacter('\b', true), SourceSpan{CharacterStart, CharacterStart+1})});
+            cur = enqueue({std::make_pair<>(WLCharacter('\b', ESCAPE_SINGLE), SourceSpan{CharacterStart, CharacterStart+1})});
             break;
         case 'f':
-            cur = enqueue({std::make_pair<>(WLCharacter('\f', true), SourceSpan{CharacterStart, CharacterStart+1})});
+            cur = enqueue({std::make_pair<>(WLCharacter('\f', ESCAPE_SINGLE), SourceSpan{CharacterStart, CharacterStart+1})});
             break;
         case 'n':
-            cur = enqueue({std::make_pair<>(WLCharacter('\n', true), SourceSpan{CharacterStart, CharacterStart+1})});
+            cur = enqueue({std::make_pair<>(WLCharacter('\n', ESCAPE_SINGLE), SourceSpan{CharacterStart, CharacterStart+1})});
             break;
         case 'r':
-            cur = enqueue({std::make_pair<>(WLCharacter('\r', true), SourceSpan{CharacterStart, CharacterStart+1})});
+            cur = enqueue({std::make_pair<>(WLCharacter('\r', ESCAPE_SINGLE), SourceSpan{CharacterStart, CharacterStart+1})});
             break;
         case 't':
-            cur = enqueue({std::make_pair<>(WLCharacter('\t', true), SourceSpan{CharacterStart, CharacterStart+1})});
+            cur = enqueue({std::make_pair<>(WLCharacter('\t', ESCAPE_SINGLE), SourceSpan{CharacterStart, CharacterStart+1})});
             break;
         //
         // \\ \" \< \>
@@ -153,10 +153,10 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextCharacterPolicy policy) {
         // String meta characters are not considered to be escaped
         //
         case '"':
-            cur = enqueue({std::make_pair<>(WLCharacter('"', true), SourceSpan{CharacterStart, CharacterStart+1})});
+            cur = enqueue({std::make_pair<>(WLCharacter('"', ESCAPE_SINGLE), SourceSpan{CharacterStart, CharacterStart+1})});
             break;
         case '\\':
-            cur = enqueue({std::make_pair<>(WLCharacter('\\', true), SourceSpan{CharacterStart, CharacterStart+1})});
+            cur = enqueue({std::make_pair<>(WLCharacter('\\', ESCAPE_SINGLE), SourceSpan{CharacterStart, CharacterStart+1})});
             break;
         case '<':
             cur = enqueue({std::make_pair<>(WLCharacter(CODEPOINT_STRINGMETA_OPEN), SourceSpan{CharacterStart, CharacterStart+1})});
@@ -344,7 +344,7 @@ WLCharacter CharacterDecoder::handleLongName(SourceLocation CharacterStart, Next
             
             auto point = it->second;
             
-            cur = enqueue({std::make_pair<>(WLCharacter(point, true), SourceSpan{CharacterStart, Loc})});
+            cur = enqueue({std::make_pair<>(WLCharacter(point, ESCAPE_LONGNAME), SourceSpan{CharacterStart, Loc})});
             
         } else {
             
@@ -427,7 +427,7 @@ WLCharacter CharacterDecoder::handle4Hex(SourceLocation CharacterStart, NextChar
 
     auto Loc = TheSourceManager->getSourceLocation();
     
-    cur = enqueue({std::make_pair<>(WLCharacter(point, true), SourceSpan{CharacterStart, Loc})});
+    cur = enqueue({std::make_pair<>(WLCharacter(point, ESCAPE_4HEX), SourceSpan{CharacterStart, Loc})});
     
     return cur;
 }
@@ -485,7 +485,7 @@ WLCharacter CharacterDecoder::handle2Hex(SourceLocation CharacterStart, NextChar
 
     auto Loc = TheSourceManager->getSourceLocation();
     
-    cur = enqueue({std::make_pair<>(WLCharacter(point, true), SourceSpan{CharacterStart, Loc})});
+    cur = enqueue({std::make_pair<>(WLCharacter(point, ESCAPE_2HEX), SourceSpan{CharacterStart, Loc})});
     
     return cur;
 }
@@ -544,7 +544,7 @@ WLCharacter CharacterDecoder::handleOctal(SourceLocation CharacterStart, NextCha
 
     auto Loc = TheSourceManager->getSourceLocation();
     
-    cur = enqueue({std::make_pair<>(WLCharacter(point, true), SourceSpan{CharacterStart, Loc})});
+    cur = enqueue({std::make_pair<>(WLCharacter(point, ESCAPE_OCTAL), SourceSpan{CharacterStart, Loc})});
     
     return cur;
 }
@@ -602,7 +602,7 @@ WLCharacter CharacterDecoder::handle6Hex(SourceLocation CharacterStart, NextChar
 
     auto Loc = TheSourceManager->getSourceLocation();
     
-    cur = enqueue({std::make_pair<>(WLCharacter(point, true), SourceSpan{CharacterStart, Loc})});
+    cur = enqueue({std::make_pair<>(WLCharacter(point, ESCAPE_6HEX), SourceSpan{CharacterStart, Loc})});
     
     return cur;
 }
@@ -632,7 +632,7 @@ std::vector<SourceCharacter> WLCharacter::source() const {
     
     auto i = value_;
     
-    if (!escaped) {
+    if (escape_ == ESCAPE_NONE) {
         
         switch (i) {
             case CODEPOINT_STRINGMETA_OPEN:
@@ -778,7 +778,7 @@ bool WLCharacter::isDigitOrAlpha() const {
     if (!(0 <= value_ && value_ <= 0x7f)) {
         return false;
     }
-    if (escaped) {
+    if (isEscaped()) {
         return false;
     }
     return std::isalnum(value_);
@@ -788,7 +788,7 @@ bool WLCharacter::isAlphaOrDollar() const {
     if (!(0 <= value_ && value_ <= 0x7f)) {
         return false;
     }
-    if (escaped) {
+    if (isEscaped()) {
         return false;
     }
     return std::isalpha(value_) || value_ == '$';
@@ -798,7 +798,7 @@ bool WLCharacter::isDigitOrAlphaOrDollar() const {
     if (!(0 <= value_ && value_ <= 0x7f)) {
         return false;
     }
-    if (escaped) {
+    if (isEscaped()) {
         return false;
     }
     return std::isalnum(value_) || value_ == '$';
@@ -808,7 +808,7 @@ bool WLCharacter::isHex() const {
     if (!(0 <= value_ && value_ <= 0x7f)) {
         return false;
     }
-    if (escaped) {
+    if (isEscaped()) {
         return false;
     }
     return std::isxdigit(value_);
@@ -818,7 +818,7 @@ bool WLCharacter::isOctal() const {
     if (!(0 <= value_ && value_ <= 0x7f)) {
         return false;
     }
-    if (escaped) {
+    if (isEscaped()) {
         return false;
     }
     return '0' <= value_ && value_ <= '7';
@@ -828,7 +828,7 @@ bool WLCharacter::isDigit() const {
     if (!(0 <= value_ && value_ <= 0x7f)) {
         return false;
     }
-    if (escaped) {
+    if (isEscaped()) {
         return false;
     }
     return std::isdigit(value_);
@@ -838,7 +838,7 @@ bool WLCharacter::isAlpha() const {
     if (!(0 <= value_ && value_ <= 0x7f)) {
         return false;
     }
-    if (escaped) {
+    if (isEscaped()) {
         return false;
     }
     return std::isalpha(value_);
@@ -848,14 +848,14 @@ bool WLCharacter::isPunctuation() const {
     if (!(0 <= value_ && value_ <= 0x7f)) {
         return false;
     }
-    if (escaped) {
+    if (isEscaped()) {
         return false;
     }
     return std::ispunct(value_);
 }
 
 bool WLCharacter::isLinearSyntax() const {
-    if (escaped) {
+    if (isEscaped()) {
         return false;
     }
     switch (value_) {
@@ -876,6 +876,69 @@ bool WLCharacter::isLinearSyntax() const {
         default:
             return false;
     }
+}
+
+bool WLCharacter::isLetterlikeCharacter() const {
+
+    if (0 <= value_ && value_ <= 0x7f) {
+
+        //
+        // ASCII
+        //
+
+        if (isAlphaOrDollar()) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    //
+    // Non-ASCII
+    //
+
+    if (isOperatorCharacter()) {
+        return false;
+    }
+    
+    if (value_ == EOF) {
+        return false;
+    }
+    
+    if (isLinearSyntax()) {
+        return false;
+    }
+
+    if (isSpaceCharacter()) {
+        return false;
+    }
+
+    if (isNewlineCharacter()) {
+        return false;
+    }
+
+    if (isCommaCharacter()) {
+        return false;
+    }
+
+    if (isUninterpretableCharacter()) {
+        return false;
+    }
+
+    return true;
+}
+
+bool WLCharacter::isStrangeLetterlikeCharacter() const {
+
+    if (!isLetterlikeCharacter()) {
+        return false;
+    }
+
+    if (escape_ == ESCAPE_NONE || escape_ == ESCAPE_LONGNAME) {
+        return false;
+    }
+
+    return true;
 }
 
 // Convert value_ to the digit that it represents

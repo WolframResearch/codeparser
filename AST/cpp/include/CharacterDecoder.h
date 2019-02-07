@@ -19,19 +19,29 @@
 ( (CHECK) ? void(0) : []{assert(false && #CHECK);}() )
 #endif
 
+enum Escape {
+    ESCAPE_NONE,
+    ESCAPE_SINGLE,
+    ESCAPE_LONGNAME,
+    ESCAPE_4HEX,
+    ESCAPE_2HEX,
+    ESCAPE_OCTAL,
+    ESCAPE_6HEX,
+};
+
 class WLCharacter
 {
 public:
-    explicit constexpr WLCharacter(int val, bool escaped = false) : value_(val), escaped(escaped) {}
+    explicit constexpr WLCharacter(int val, Escape escape_ = ESCAPE_NONE) : value_(val), escape_(escape_) {}
 
     explicit operator int() const noexcept = delete;
 
     bool operator==(const WLCharacter &o) const {
-        return value_ == o.value_ && escaped == o.escaped;
+        return value_ == o.value_ && escape_ == o.escape_;
     }
 
     bool operator!=(const WLCharacter &o) const {
-        return value_ != o.value_ || escaped != o.escaped;
+        return value_ != o.value_ || escape_ != o.escape_;
     }
 
     //
@@ -57,7 +67,7 @@ public:
     std::vector<SourceCharacter> source() const;
 
     bool isEscaped() const {
-        return escaped;
+        return escape_ != ESCAPE_NONE;
     }
     
     bool isDigit() const;
@@ -84,6 +94,7 @@ public:
     bool isSpaceCharacter() const;
     bool isNewlineCharacter() const;
     bool isCommaCharacter() const;
+    bool isUninterpretableCharacter() const;
 
     int toDigit() const;
 
@@ -91,7 +102,7 @@ public:
 
 private:
     int value_;
-    bool escaped;
+    Escape escape_;
 };
 
  namespace std {

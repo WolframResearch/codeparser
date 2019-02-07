@@ -345,18 +345,6 @@ If[FailureQ[res],
 (* CodePoint *)
 Print["generating CodePoint"]
 
-importedLetterlikeLongNames = Get[FileNameJoin[{tablesDir, "LetterlikeLongNames.wl"}]]
-
-If[FailureQ[importedLetterlikeLongNames],
-  Print[importedLetterlikeLongNames];
-  Quit[1]
-]
-
-If[!DuplicateFreeQ[importedLetterlikeLongNames],
-  Print["LetterlikeLongNames.wl has duplicates"];
-  Quit[1]
-]
-
 importedOperatorLongNames = Get[FileNameJoin[{tablesDir, "OperatorLongNames.wl"}]]
 
 If[FailureQ[importedOperatorLongNames],
@@ -405,15 +393,15 @@ If[!DuplicateFreeQ[importedSpaceLongNames],
   Quit[1]
 ]
 
-importedStrangeLetterlikeCodePoints = Get[FileNameJoin[{tablesDir, "StrangeLetterlikeCodePoints.wl"}]]
+importedUninterpretableLongNames = Get[FileNameJoin[{tablesDir, "UninterpretableLongNames.wl"}]]
 
-If[FailureQ[importedStrangeLetterlikeCodePoints],
-  Print[importedStrangeLetterlikeCodePoints];
+If[FailureQ[importedUninterpretableLongNames],
+  Print[importedUninterpretableLongNames];
   Quit[1]
 ]
 
-If[!DuplicateFreeQ[importedStrangeLetterlikeCodePoints],
-  Print["StrangeLetterlikeCodePoints.wl has duplicates"];
+If[!DuplicateFreeQ[importedUninterpretableLongNames],
+  Print["UninterpretableLongNames.wl has duplicates"];
   Quit[1]
 ]
 
@@ -480,18 +468,6 @@ If[FailureQ[res],
 ]
 
 
-letterlikeSource = 
-  {"std::unordered_set<int> letterlikeCodePoints {"} ~Join~
-    (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ importedLetterlikeLongNames) ~Join~ 
-    (Row[{"0x",integerToHexDigits[#], ","}]& /@ importedStrangeLetterlikeCodePoints) ~Join~
-    {"};", "",
-    "bool WLCharacter::isLetterlikeCharacter() const { return letterlikeCodePoints.find(value_) != letterlikeCodePoints.end();}", ""}
-
-strangeLetterlikeSource = 
-  {"std::unordered_set<int> strangeLetterlikeCodePoints {"} ~Join~
-    (Row[{"0x"<>integerToHexDigits[#], ","}]& /@ importedStrangeLetterlikeCodePoints) ~Join~
-    {"};", "",
-    "bool WLCharacter::isStrangeLetterlikeCharacter() const { return strangeLetterlikeCodePoints.find(value_) != strangeLetterlikeCodePoints.end();}", ""}
 
 operatorSource = 
   {"std::unordered_set<int> operatorCodePoints {"} ~Join~
@@ -516,6 +492,12 @@ commaSource =
     (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ importedCommaLongNames) ~Join~
     {"};", "",
     "bool WLCharacter::isCommaCharacter() const { return commaCodePoints.find(value_) != commaCodePoints.end(); }", ""}
+
+uninterpretableSource = 
+  {"std::unordered_set<int> uninterpretableCodePoints {"} ~Join~
+    (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ importedUninterpretableLongNames) ~Join~
+    {"};", "",
+    "bool WLCharacter::isUninterpretableCharacter() const { return uninterpretableCodePoints.find(value_) != uninterpretableCodePoints.end(); }", ""}
 
 LongNameCodePointToOperatorSource = 
   {"Token LongNameCodePointToOperator(int c) {
@@ -559,8 +541,7 @@ codePointCPPSource = Join[{
 #include <iostream>
 #include <iomanip>
 #include <cassert>
-"}, letterlikeSource, strangeLetterlikeSource, 
-    operatorSource, spaceSource, newlineSource, commaSource, 
+"}, operatorSource, spaceSource, newlineSource, commaSource, uninterpretableSource,
     LongNameCodePointToOperatorSource, 
     LongNameOperatorToCodePointSource]
 
