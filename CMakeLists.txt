@@ -7,7 +7,7 @@ set(PACLET "AST")
 
 message(STATUS "PACLET: ${PACLET}")
 
-set(PACLET_VERSION "0.8" CACHE STRING "Paclet Version")
+set(PACLET_VERSION "0.9" CACHE STRING "Paclet Version")
 
 message(STATUS "PACLET_VERSION: ${PACLET_VERSION}")
 
@@ -22,6 +22,7 @@ message(STATUS "BUILD_DOCS: ${BUILD_DOCS}")
 set(WL_SOURCES
 	${CMAKE_SOURCE_DIR}/AST/Abstract.wl
 	${CMAKE_SOURCE_DIR}/AST/AST.wl
+	${CMAKE_SOURCE_DIR}/AST/Boxes.wl
 	${CMAKE_SOURCE_DIR}/AST/DeclarationName.wl
 	${CMAKE_SOURCE_DIR}/AST/Node.wl
 	${CMAKE_SOURCE_DIR}/AST/Symbol.wl
@@ -34,29 +35,43 @@ set(PACLETINFO_SOURCE
 	${CMAKE_SOURCE_DIR}/AST/PacletInfo.m
 )
 
+set(CPP_INCLUDES
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/ByteDecoder.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/ByteEncoder.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/CharacterDecoder.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/Node.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/Parselet.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/Parser.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/SourceManager.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/SyntaxIssue.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/Tokenizer.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/Utils.h
+)
+
 set(CPP_SOURCES
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/SourceManager.cpp
 	${CMAKE_SOURCE_DIR}/AST/cpp/src/ByteDecoder.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/ByteEncoder.cpp
 	${CMAKE_SOURCE_DIR}/AST/cpp/src/CharacterDecoder.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/Tokenizer.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/Parser.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/Utils.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/Parselet.cpp
 	${CMAKE_SOURCE_DIR}/AST/cpp/src/Node.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/Parselet.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/Parser.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/SourceManager.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/SyntaxIssue.cpp
 	${CMAKE_SOURCE_DIR}/AST/cpp/src/ToInputFormString.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/Tokenizer.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/Utils.cpp
 	${CMAKE_SOURCE_DIR}/AST/cpp/src/main.cpp
 )
 
 set(WL_DATA_SOURCES
 	${CMAKE_SOURCE_DIR}/AST/tables/CommaLongNames.wl
-	${CMAKE_SOURCE_DIR}/AST/tables/LetterlikeLongNames.wl
 	${CMAKE_SOURCE_DIR}/AST/tables/LongNames.wl
 	${CMAKE_SOURCE_DIR}/AST/tables/NewlineLongNames.wl
 	${CMAKE_SOURCE_DIR}/AST/tables/OperatorLongNames.wl
 	${CMAKE_SOURCE_DIR}/AST/tables/Precedence.wl
 	${CMAKE_SOURCE_DIR}/AST/tables/SpaceLongNames.wl
-	${CMAKE_SOURCE_DIR}/AST/tables/StrangeLetterlikeCodePoints.wl
 	${CMAKE_SOURCE_DIR}/AST/tables/TokenEnum.wl
+	${CMAKE_SOURCE_DIR}/AST/tables/UninterpretableLongNames.wl
 )
 
 set(BUILT_PACLETINFO
@@ -65,8 +80,9 @@ set(BUILT_PACLETINFO
 
 set(GENERATED_WL_SOURCES
 	# not used right now ${CMAKE_BINARY_DIR}/paclet/${PACLET}/LongNameDefines.wl
-	# not used right now ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Precedence.wl
-	# not used right now ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Token.wl
+	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Precedence.wl
+	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Token.wl
+	${CMAKE_BINARY_DIR}/paclet/${PACLET}/LongNameReplacements.wl
 )
 
 set(GENERATED_WL_DATA_SOURCES
@@ -236,7 +252,9 @@ add_custom_command(
 # Build wl-ast executable
 #
 add_executable(wl-ast
+	${GENERATED_CPP_INCLUDES}
 	${GENERATED_CPP_SOURCES}
+	${CPP_INCLUDES}
 	${CPP_SOURCES}
 )
 

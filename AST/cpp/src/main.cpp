@@ -2,6 +2,7 @@
 #include "Parser.h"
 #include "Precedence.h"
 #include "ByteDecoder.h"
+#include "ByteEncoder.h"
 #include "CharacterDecoder.h"
 #include "Tokenizer.h"
 
@@ -82,6 +83,7 @@ int main(int argc, char *argv[]) {
 
         TheSourceManager = new SourceManager();
         TheByteDecoder = new ByteDecoder(ifs, interactive);
+        TheByteEncoder = new ByteEncoder();
         TheCharacterDecoder = new CharacterDecoder();
         
         if (format == FORMAT_CHARACTERS) {
@@ -151,6 +153,7 @@ int main(int argc, char *argv[]) {
         
         delete TheSourceManager;
         delete TheByteDecoder;
+        delete TheByteEncoder;
         delete TheCharacterDecoder;
         delete TheTokenizer;
         delete TheParser;
@@ -163,6 +166,7 @@ int main(int argc, char *argv[]) {
         
         TheSourceManager = new SourceManager();
         TheByteDecoder = new ByteDecoder(std::cin, interactive);
+        TheByteEncoder = new ByteEncoder();
         TheCharacterDecoder = new CharacterDecoder();
         
         if (format == FORMAT_CHARACTERS) {
@@ -208,6 +212,7 @@ int main(int argc, char *argv[]) {
 
         delete TheSourceManager;
         delete TheByteDecoder;
+        delete TheByteEncoder;
         delete TheCharacterDecoder;
         delete TheTokenizer;
         delete TheParser;
@@ -217,31 +222,30 @@ int main(int argc, char *argv[]) {
 }
 
 void printCharacters() {
-
+    
     TheCharacterDecoder->nextWLCharacter();
-
+    
     std::cout << "{\n";
-
+    
     while (true) {
         
         auto c = TheCharacterDecoder->currentWLCharacter();
-
-        auto String = WLCharacterToString(c);
-
+//        auto s = TheCharacterDecoder->currentSourceCharacters();
+        
         auto Span = TheSourceManager->getWLCharacterSpan();
-
+        
         std::cout << SYMBOL_WLCHARACTER.name();
         std::cout << "[";
-        std::cout << c;
+        std::cout << c.to_point();
         std::cout << ", ";
-        std::cout << stringEscape(String);
+        std::cout << c.string(),
         std::cout << ", <|";
         std::cout << ASTSourceString(Span);
         std::cout << "|>";
         std::cout << "]";
-
+        
         std::cout << ",\n";
-
+        
         if (c == WLCHARACTER_EOF) {
             break;
         }
@@ -251,13 +255,13 @@ void printCharacters() {
             auto I = Issues.begin();
             for (; I < Issues.end(); I++) {
                 std::cout << (*I).string();
-                std::cout << ", ";
+                std::cout << ",\n";
             }
         }
         
         TheCharacterDecoder->nextWLCharacter();
     }
-
+    
     std::cout << "Nothing\n";
     std::cout << "}\n";
 }
@@ -318,10 +322,15 @@ std::vector<std::shared_ptr<Node>> parseExpressions(bool interactive) {
             
             auto Expr = TheParser->parseTopLevel();
             
-            assert(TheParser->getString().empty());
-            assert(TheParser->getIssues().empty());
-            assert(TheParser->getComments().empty());
-
+            //
+            // Do not check:
+            // assert(TheParser->getString().empty());
+            // assert(TheParser->getIssues().empty());
+            // assert(TheParser->getComments().empty());
+            // here.
+            // There may be multiple expressons to parse, and after parsing the first expression, the first token of the second expression has been queued.
+            // There may be a message from this token which will be handled when the second expression is parsed.
+            
             nodes.push_back(Expr);
         }
 

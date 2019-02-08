@@ -7,7 +7,8 @@ wolfram -script scripts/Generate.wl -buildDir /path/to/build/dir
 
 will generate additional required files in these directories:
 
-/path/to/build/dir/generated/cpp
+/path/to/build/dir/generated/cpp/include
+/path/to/build/dir/generated/cpp/src
 /path/to/build/dir/generated/wl
 /path/to/build/dir/paclet/AST
 
@@ -120,6 +121,8 @@ longNameToHexDigits["Alpha"] is "03b1"
 longNameToHexDigits[longName_String] :=
   IntegerString[ToCharacterCode[ToExpression["\"\\[" <> longName <> "]\""]], 16, 4]
 
+integerToHexDigits[int_Integer] :=
+  IntegerString[int, 16, 4]
 
 
 
@@ -154,7 +157,7 @@ If[!DuplicateFreeQ[importedLongNames],
 ]
 
 Check[
-defines = ("#define " <> toGlobal["WLCharacter`LongName`" <> #] <> " " <> "0x" <> longNameToHexDigits[#])& /@ importedLongNames
+longNameDefines = ("constexpr int " <> toGlobal["CodePoint`LongName`" <> #] <> "(" <> "0x" <> longNameToHexDigits[#] <> ");")& /@ importedLongNames
 ,
 Print["Message while generating LongNameDefines"];
 Quit[1]
@@ -167,7 +170,10 @@ longNameDefinesCPPHeader = {
 // AUTO GENERATED FILE
 // DO NOT MODIFY
 //
-"} ~Join~ defines ~Join~ {""}
+
+#pragma once
+
+"} ~Join~ longNameDefines ~Join~ {""}
 
 Print["exporting LongNameDefines.h"]
 res = Export[FileNameJoin[{generatedCPPIncludeDir, "LongNameDefines.h"}], Column[longNameDefinesCPPHeader], "String"]
@@ -214,10 +220,10 @@ If[FailureQ[res],
 Print["generating LongNameMap"]
 
 longNameToCodePointMap = {
-"std::map <std::string, int> LongNameToCodePointMap {"} ~Join~ (Row[{"{", escapeString[#], ",", " ", toGlobal["WLCharacter`LongName`"<>#], "}", ","}]& /@ importedLongNames) ~Join~ {"};", ""}
+"std::map <std::string, int> LongNameToCodePointMap {"} ~Join~ (Row[{"{", escapeString[#], ",", " ", toGlobal["CodePoint`LongName`"<>#], "}", ","}]& /@ importedLongNames) ~Join~ {"};", ""}
 
 codePointToLongNameMap = {
-"std::map <int, std::string> CodePointToLongNameMap {"} ~Join~ (Row[{"{", toGlobal["WLCharacter`LongName`"<>#], ",", " ", escapeString[#], "}", ","}] & /@ importedLongNames)~Join~{"};", ""}
+"std::map <int, std::string> CodePointToLongNameMap {"} ~Join~ (Row[{"{", toGlobal["CodePoint`LongName`"<>#], ",", " ", escapeString[#], "}", ","}] & /@ importedLongNames)~Join~{"};", ""}
 
 longNameMapCPPSource = {
 "
@@ -227,7 +233,9 @@ longNameMapCPPSource = {
 //
 
 #include \"LongNameMap.h\"
+
 #include \"LongNameDefines.h\"
+
 #include <map>
 #include <string>
 "} ~Join~ longNameToCodePointMap ~Join~ codePointToLongNameMap
@@ -248,11 +256,13 @@ longNameMapCPPHeader = {
 // DO NOT MODIFY
 //
 
+#pragma once
+
 #include <map>
 #include <string>
 
-extern std::map<std::string, int>LongNameToCodePointMap;
-extern std::map<int, std::string>CodePointToLongNameMap;
+extern std::map<std::string, int> LongNameToCodePointMap;
+extern std::map<int, std::string> CodePointToLongNameMap;
 "}
 
 Print["exporting LongNameMap.h"]
@@ -296,24 +306,44 @@ If[FailureQ[res],
 
 
 
+longNameReplacementsWL = {
+"
+(*
+AUTO GENERATED FILE
+DO NOT MODIFY
+*)
+
+BeginPackage[\"AST`LongNameReplacements`\"]
+
+$LongNameReplacements
+
+Begin[\"`Private`\"]
+
+$LongNameReplacements = {"
+} ~Join~ (("\"\\\\["<>#<>"]\"" -> "\"\\["<>#<>"]\",")& /@ importedLongNames) ~Join~ {
+"
+Nothing
+}
+
+End[]
+
+EndPackage[]
+"}
+
+Print["exporting LongNameReplacements.wl"]
+res = Export[FileNameJoin[{pacletASTDir, "LongNameReplacements.wl"}], Column[longNameReplacementsWL], "String"]
+
+If[FailureQ[res],
+  Print[res];
+  Quit[1]
+]
+
 
 
 
 
 (* CodePoint *)
 Print["generating CodePoint"]
-
-importedLetterlikeLongNames = Get[FileNameJoin[{tablesDir, "LetterlikeLongNames.wl"}]]
-
-If[FailureQ[importedLetterlikeLongNames],
-  Print[importedLetterlikeLongNames];
-  Quit[1]
-]
-
-If[!DuplicateFreeQ[importedLetterlikeLongNames],
-  Print["LetterlikeLongNames.wl has duplicates"];
-  Quit[1]
-]
 
 importedOperatorLongNames = Get[FileNameJoin[{tablesDir, "OperatorLongNames.wl"}]]
 
@@ -363,15 +393,15 @@ If[!DuplicateFreeQ[importedSpaceLongNames],
   Quit[1]
 ]
 
-importedStrangeLetterlikeCodePoints = Get[FileNameJoin[{tablesDir, "StrangeLetterlikeCodePoints.wl"}]]
+importedUninterpretableLongNames = Get[FileNameJoin[{tablesDir, "UninterpretableLongNames.wl"}]]
 
-If[FailureQ[importedStrangeLetterlikeCodePoints],
-  Print[importedStrangeLetterlikeCodePoints];
+If[FailureQ[importedUninterpretableLongNames],
+  Print[importedUninterpretableLongNames];
   Quit[1]
 ]
 
-If[!DuplicateFreeQ[importedStrangeLetterlikeCodePoints],
-  Print["StrangeLetterlikeCodePoints.wl has duplicates"];
+If[!DuplicateFreeQ[importedUninterpretableLongNames],
+  Print["UninterpretableLongNames.wl has duplicates"];
   Quit[1]
 ]
 
@@ -384,16 +414,46 @@ codePointCPPHeader = {
 // DO NOT MODIFY
 //
 
+#pragma once
+
 #include \"Token.h\"
 
 #include <string>
 
-bool isLetterlikeCodePoint(int i);
-bool isStrangeLetterlikeCodePoint(int i);
-bool isOperatorCodePoint(int i);
-bool isSpaceCodePoint(int i);
-bool isNewlineCodePoint(int i);
-bool isCommaCodePoint(int i);
+//
+// These are the actual WL code points for linear syntax characters
+//
+constexpr int CODEPOINT_LINEARSYNTAX_CLOSEPAREN(0xf7c0);
+constexpr int CODEPOINT_LINEARSYNTAX_BANG(0xf7c1);
+constexpr int CODEPOINT_LINEARSYNTAX_AT(0xf7c2);
+constexpr int CODEPOINT_LINEARSYNTAX_PERCENT(0xf7c5);
+constexpr int CODEPOINT_LINEARSYNTAX_CARET(0xf7c6);
+constexpr int CODEPOINT_LINEARSYNTAX_AMP(0xf7c7);
+constexpr int CODEPOINT_LINEARSYNTAX_STAR(0xf7c8);
+constexpr int CODEPOINT_LINEARSYNTAX_OPENPAREN(0xf7c9);
+constexpr int CODEPOINT_LINEARSYNTAX_UNDER(0xf7ca);
+constexpr int CODEPOINT_LINEARSYNTAX_PLUS(0xf7cb);
+constexpr int CODEPOINT_LINEARSYNTAX_SLASH(0xf7cc);
+constexpr int CODEPOINT_LINEARSYNTAX_BACKTICK(0xf7cd);
+
+//
+// Do the simple thing and have -1 be EOF
+//
+constexpr int CODEPOINT_EOF(EOF);
+
+constexpr int CODEPOINT_ERROR_INTERNAL(-2);
+
+//
+// There is an inconsistency in WL, such that LINEARSYNTAX_SPACE does not have a dedicated code point
+// So invent one here.
+//
+constexpr int CODEPOINT_LINEARSYNTAX_SPACE(-3);
+
+//
+// The string meta characters will have code points here, but they are not actual characters and do not have real code points
+// 
+constexpr int CODEPOINT_STRINGMETA_OPEN(-4);
+constexpr int CODEPOINT_STRINGMETA_CLOSE(-5);
 
 Token LongNameCodePointToOperator(int c);
 int LongNameOperatorToCodePoint(Token t);
@@ -408,47 +468,41 @@ If[FailureQ[res],
 ]
 
 
-letterlikeSource = 
-  {"std::unordered_set<int> letterlikeCodePoints {"} ~Join~
-    (Row[{toGlobal["WLCharacter`LongName`"<>#], ","}]& /@ importedLetterlikeLongNames) ~Join~ 
-    (Row[{#, ","}]& /@ importedStrangeLetterlikeCodePoints) ~Join~
-    {"};", "",
-    "bool isLetterlikeCodePoint(int i) { return letterlikeCodePoints.find(i) != letterlikeCodePoints.end();}", ""}
-
-strangeLetterlikeSource = 
-  {"std::unordered_set<int> strangeLetterlikeCodePoints {"} ~Join~
-    (Row[{#, ","}]& /@ importedStrangeLetterlikeCodePoints) ~Join~
-    {"};", "",
-    "bool isStrangeLetterlikeCodePoint(int i) { return strangeLetterlikeCodePoints.find(i) != strangeLetterlikeCodePoints.end();}", ""}
 
 operatorSource = 
   {"std::unordered_set<int> operatorCodePoints {"} ~Join~
-    (Row[{toGlobal["WLCharacter`LongName`"<>#], ","}]& /@ importedOperatorLongNames) ~Join~
+    (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ importedOperatorLongNames) ~Join~
     {"};", "",
-    "bool isOperatorCodePoint(int i) { return operatorCodePoints.find(i) != operatorCodePoints.end(); }", ""}
+    "bool WLCharacter::isOperatorCharacter() const { return operatorCodePoints.find(value_) != operatorCodePoints.end(); }", ""}
 
 spaceSource = 
   {"std::unordered_set<int> spaceCodePoints {"} ~Join~
-    (Row[{toGlobal["WLCharacter`LongName`"<>#], ","}]& /@ importedSpaceLongNames) ~Join~
+    (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ importedSpaceLongNames) ~Join~
     {"};", "",
-    "bool isSpaceCodePoint(int i) { return spaceCodePoints.find(i) != spaceCodePoints.end(); }", ""}
+    "bool WLCharacter::isSpaceCharacter() const { return spaceCodePoints.find(value_) != spaceCodePoints.end(); }", ""}
 
 newlineSource = 
   {"std::unordered_set<int> newlineCodePoints {"} ~Join~
-    (Row[{toGlobal["WLCharacter`LongName`"<>#], ","}]& /@ importedNewlineLongNames) ~Join~
+    (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ importedNewlineLongNames) ~Join~
     {"};", "",
-    "bool isNewlineCodePoint(int i) { return newlineCodePoints.find(i) != newlineCodePoints.end();}", ""}
+    "bool WLCharacter::isNewlineCharacter() const { return newlineCodePoints.find(value_) != newlineCodePoints.end();}", ""}
 
 commaSource = 
   {"std::unordered_set<int> commaCodePoints {"} ~Join~
-    (Row[{toGlobal["WLCharacter`LongName`"<>#], ","}]& /@ importedCommaLongNames) ~Join~
+    (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ importedCommaLongNames) ~Join~
     {"};", "",
-    "bool isCommaCodePoint(int i) { return commaCodePoints.find(i) != commaCodePoints.end(); }", ""}
+    "bool WLCharacter::isCommaCharacter() const { return commaCodePoints.find(value_) != commaCodePoints.end(); }", ""}
+
+uninterpretableSource = 
+  {"std::unordered_set<int> uninterpretableCodePoints {"} ~Join~
+    (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ importedUninterpretableLongNames) ~Join~
+    {"};", "",
+    "bool WLCharacter::isUninterpretableCharacter() const { return uninterpretableCodePoints.find(value_) != uninterpretableCodePoints.end(); }", ""}
 
 LongNameCodePointToOperatorSource = 
   {"Token LongNameCodePointToOperator(int c) {
 switch (c) {"} ~Join~
-    (Row[{"case", " ", toGlobal["WLCharacter`LongName`"<>#], ":", " ", "return", " ", 
+    (Row[{"case", " ", toGlobal["CodePoint`LongName`"<>#], ":", " ", "return", " ", 
         toGlobal["Token`Operator`LongName`"<>#], ";"}]& /@ importedOperatorLongNames) ~Join~
     {"default:
 std::cerr << \"Need to add operator: 0x\" << std::setfill('0') << std::setw(4) << std::hex << c << std::dec << \"\\n\";
@@ -462,11 +516,11 @@ LongNameOperatorToCodePointSource =
 int LongNameOperatorToCodePoint(Token t) {
 switch (t) {"} ~Join~
     (Row[{"case", " ", toGlobal["Token`Operator`LongName`"<>#], ":", " ", "return",
-         " ", toGlobal["WLCharacter`LongName`"<>#], ";"}]& /@ importedOperatorLongNames) ~Join~
+         " ", toGlobal["CodePoint`LongName`"<>#], ";"}]& /@ importedOperatorLongNames) ~Join~
 {"default:
 std::cerr << \"Need to add operator: 0x\" << std::setfill('0') << std::setw(4) << std::hex << t << std::dec << \"\\n\";
 assert(false && \"Need to add operator\");
-return TOKEN_ERROR_INTERNAL;
+return CODEPOINT_ERROR_INTERNAL;
 }
 }
 "}
@@ -481,13 +535,13 @@ codePointCPPSource = Join[{
 #include \"CodePoint.h\"
 
 #include \"LongNameDefines.h\"
+#include \"CharacterDecoder.h\"
 
 #include <unordered_set>
 #include <iostream>
 #include <iomanip>
 #include <cassert>
-"}, letterlikeSource, strangeLetterlikeSource, 
-    operatorSource, spaceSource, newlineSource, commaSource, 
+"}, operatorSource, spaceSource, newlineSource, commaSource, uninterpretableSource,
     LongNameCodePointToOperatorSource, 
     LongNameOperatorToCodePointSource]
 

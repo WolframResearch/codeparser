@@ -10,8 +10,14 @@
 
 #include "SourceManager.h"
 
+#include "Utils.h"
+#include "ByteEncoder.h"
+
 #include <cassert>
 #include <iostream>
+#include <sstream>
+#include <iomanip>
+#include <cctype>
 
 bool isContiguous(SourceLocation a, SourceLocation b) {
     return a.Line == b.Line && a.Col + 1 == b.Col;
@@ -26,7 +32,7 @@ SourceManager::SourceManager() : eof(false), SourceLoc{1, 0}, TokenStartLoc{0, 0
 
 void SourceManager::advanceSourceLocation(SourceCharacter c) {
     
-    if (c == EOF) {
+    if (c == SourceCharacter(EOF)) {
         
         CurLineWidth = SourceLoc.Col;
         
@@ -36,7 +42,7 @@ void SourceManager::advanceSourceLocation(SourceCharacter c) {
         return;
     }
     
-    if (c == '\n') {
+    if (c == SourceCharacter('\n')) {
         
         CurLineWidth = SourceLoc.Col;
         
@@ -129,6 +135,36 @@ SourceLocation SourceManager::getSourceLocation() {
 size_t SourceManager::getCurrentLineWidth() {
 
     return CurLineWidth;
+}
+
+bool SourceCharacter::isDigitOrAlpha() const {
+    if (!(0 <= value_ && value_ <= 0x7f)) {
+        return false;
+    }
+    return std::isalnum(value_);
+}
+
+bool SourceCharacter::isHex() const {
+    if (!(0 <= value_ && value_ <= 0x7f)) {
+        return false;
+    }
+    return std::isxdigit(value_);
+}
+
+bool SourceCharacter::isOctal() const {
+    if (!(0 <= value_ && value_ <= 0x7f)) {
+        return false;
+    }
+    return  '0' <= value_ && value_ <= '7';
+}
+
+std::vector<unsigned char> SourceCharacter::bytes() const {
+    
+    if (value_ == EOF) {
+        return {};
+    }
+    
+    return ByteEncoder::encodeBytes(value_);
 }
 
 SourceManager *TheSourceManager = nullptr;

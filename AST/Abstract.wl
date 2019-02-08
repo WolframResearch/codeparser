@@ -53,6 +53,8 @@ Abstract[unsameq:BinaryNode[UnsameQ, _, _]] := abstractUnsameQ[unsameq]
 Abstract[comp:BinaryNode[Composition, _, _]] := abstractComposition[comp]
 Abstract[comp:BinaryNode[RightComposition, _, _]] := abstractRightComposition[comp]
 
+Abstract[times:BinaryNode[Divide, _, _]] := abstractTimes[times]
+
 (* NonAssociative errors *)
 Abstract[BinaryNode[PatternTest, children:{BinaryNode[PatternTest, _, _], _}, data_]] := SyntaxErrorNode[Token`Operator`Question, children, data]
 Abstract[BinaryNode[DirectedEdge, children:{BinaryNode[DirectedEdge, _, _], _}, data_]] := SyntaxErrorNode[Token`Operator`LongName`DirectedEdge, children, data]
@@ -73,7 +75,6 @@ Abstract[plus:InfixNode[Plus, _, _]] := abstractPlus[plus]
 Abstract[plus:InfixNode[Minus, _, _]] := abstractPlus[plus]
 Abstract[plus:InfixNode[InfixImplicitPlus, _, _]] := abstractPlus[plus]
 Abstract[times:InfixNode[Times, _, _]] := abstractTimes[times]
-Abstract[times:InfixNode[Divide, _, _]] := abstractTimes[times]
 Abstract[times:InfixNode[ImplicitTimes, _, _]] := abstractTimes[times]
 Abstract[times:InfixNode[InfixInvisibleTimes, _, _]] := abstractTimes[times]
 Abstract[times:InfixNode[InfixTimes, _, _]] := abstractTimes[times]
@@ -211,6 +212,7 @@ reciprocate[node_] :=
 
 (*
 abstract syntax of  +a + b - c \[ImplicitPlus] d  is a single Plus expression
+except when it's not, bug 365287
 *)
 flattenPlus[nodes_List] :=
 	Module[{},
@@ -263,8 +265,8 @@ flattenTimes[nodes_List] :=
 				InfixNode[Times, _, _],
 					flattenTimes[#[[2]]]
 				,
-				InfixNode[Divide, _, _],
-					flattenTimes[{First[#[[2]]], reciprocate /@ Rest[#[[2]]]}]
+				BinaryNode[Divide, _, _],
+					flattenTimes[{#[[2]][[1]], reciprocate[#[[2]][[2]]]}]
 				,
 				InfixNode[ImplicitTimes, _, _],
 					flattenTimes[#[[2]]]
@@ -284,8 +286,8 @@ flattenTimes[nodes_List] :=
 abstractTimes[InfixNode[Times, children_, data_]] :=
 	CallNode[ToNode[Times], Abstract /@ Flatten[flattenTimes[children]], data]
 
-abstractTimes[InfixNode[Divide, children_, data_]] :=
-	CallNode[ToNode[Times], Abstract /@ Flatten[flattenTimes[{First[children], reciprocate /@ Rest[children]}]], data]
+abstractTimes[BinaryNode[Divide, children_, data_]] :=
+	CallNode[ToNode[Times], Abstract /@ Flatten[flattenTimes[{children[[1]], reciprocate[children[[2]]]}]], data]
 
 abstractTimes[InfixNode[ImplicitTimes, children_, data_]] :=
 	CallNode[ToNode[Times], Abstract /@ Flatten[flattenTimes[children]], data]

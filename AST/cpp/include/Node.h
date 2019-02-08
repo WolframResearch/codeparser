@@ -3,6 +3,7 @@
 
 #include "Utils.h"
 #include "SyntaxIssue.h"
+#include "Symbol.h"
 
 #include <string>
 #include <vector>

@@ -258,7 +258,7 @@ PostfixOperatorToSymbol[Token`Operator`PlusPlus] = Increment
 PostfixOperatorToSymbol[Token`Operator`DotDotDot] = RepeatedNull
 PostfixOperatorToSymbol[Token`Operator`Amp] = Function
 PostfixOperatorToSymbol[Token`Operator`BangBang] = Factorial2
-PostfixOperatorToSymbol[Token`Operator`Tick] = Derivative
+PostfixOperatorToSymbol[Token`Operator`SingleQuote] = Derivative
    
 PostfixOperatorToSymbol[Token`Operator`LongName`Transpose] = Transpose
 PostfixOperatorToSymbol[Token`Operator`LongName`Conjugate] = Conjugate
@@ -311,6 +311,7 @@ BinaryOperatorToSymbol[Token`Operator`EqualBangEqual] = UnsameQ
 BinaryOperatorToSymbol[Token`Operator`AtStar] = Composition
 BinaryOperatorToSymbol[Token`Operator`SlashStar] = RightComposition
 
+BinaryOperatorToSymbol[Token`Operator`Slash] = Divide
 BinaryOperatorToSymbol[Token`Operator`SlashAt] = Map
 BinaryOperatorToSymbol[Token`Operator`Equal] = Set
 BinaryOperatorToSymbol[Token`Operator`Caret] = Power
@@ -379,6 +380,7 @@ SymbolToBinaryOperatorString[UnsameQ] = "=!="
 SymbolToBinaryOperatorString[Composition] = "@*"
 SymbolToBinaryOperatorString[RightComposition] = "/*"
 
+SymbolToBinaryOperatorString[Divide] = "/"
 SymbolToBinaryOperatorString[Map] = "/@"
 SymbolToBinaryOperatorString[Set] = "="
 SymbolToBinaryOperatorString[SetDelayed] = ":="
@@ -444,7 +446,6 @@ InfixOperatorToSymbol[Token`Operator`Minus] = Minus
 InfixOperatorToSymbol[Token`Operator`LongName`ImplicitPlus] = InfixImplicitPlus
 
 InfixOperatorToSymbol[Token`Operator`Star] = Times
-InfixOperatorToSymbol[Token`Operator`Slash] = Divide
 
 InfixOperatorToSymbol[Token`Operator`Fake`ImplicitTimes] = ImplicitTimes
 
@@ -538,7 +539,6 @@ SymbolToInfixOperatorString[Minus] = " - "
 SymbolToInfixOperatorString[InfixImplicitPlus] = "\\[ImplicitPlus]"
 
 SymbolToInfixOperatorString[Times] = "*"
-SymbolToInfixOperatorString[Divide] = "/"
 SymbolToInfixOperatorString[ImplicitTimes] = " "
 SymbolToInfixOperatorString[InfixInvisibleTimes] = "\\[InvisibleTimes]"
 SymbolToInfixOperatorString[InfixTimes] = "\\[Times]"

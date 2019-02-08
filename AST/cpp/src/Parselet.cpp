@@ -59,11 +59,11 @@ std::shared_ptr<Node> SymbolParselet::parse(ParserContext Ctxt) {
     }
     
     //
-    // when parsing a in a:b  then InsideColonParselet is false
-    // when parsing b in a:b  then InsideColonParselet is true
+    // when parsing a in a:b  then ColonFlag1 is true
+    // when parsing b in a:b  then ColonFlag1 is false
     //
     // It is necessary to go to colonParselet.parse here (even though it seems non-contextSensitive)
-    // because in e.g., a_*b:f[]  the b is the last node in the Times expression needs to bind with :f[]
+    // because in e.g., a_*b:f[]  the b is the last node in the Times expression and needs to bind with :f[]
     //
     if (Ctxt.ColonFlag1) {
 
@@ -176,7 +176,8 @@ std::shared_ptr<Node> PercentParselet::parse(ParserContext Ctxt) {
 
 std::shared_ptr<Node> PrefixOperatorParselet::parse(ParserContext Ctxt) {
     
-    auto Str = TheParser->getString();
+    // Clear String
+    TheParser->getString();
     
     auto Issues = TheParser->getIssues();
 
@@ -208,7 +209,8 @@ std::shared_ptr<Node> BinaryOperatorParselet::parse(std::shared_ptr<Node> Left, 
 
     auto TokIn = TheParser->currentToken();
     
-    auto Str = TheParser->getString();
+    // Clear String
+    TheParser->getString();
     
     auto Issues = TheParser->getIssues();
 
@@ -245,8 +247,6 @@ std::shared_ptr<Node> BinaryOperatorParselet::parse(std::shared_ptr<Node> Left, 
 }
 
 std::shared_ptr<Node> InfixOperatorParselet::parse(std::shared_ptr<Node> Left, ParserContext Ctxt) {
-    
-    auto Str = TheParser->getString();
 
     auto TokIn = TheParser->currentToken();
     
@@ -283,12 +283,10 @@ std::shared_ptr<Node> InfixOperatorParselet::parse(std::shared_ptr<Node> Left, P
 
         auto Tok = TheParser->currentToken();
         
-        if (Tok == TokIn || (Ctxt.InfixPlusFlag && Tok == TOKEN_OPERATOR_MINUS)) {
+        if (Tok == TokIn || (Ctxt.InfixPlusFlag && (Tok == TOKEN_OPERATOR_MINUS || Tok == TOKEN_OPERATOR_PLUS))) {
             
             // clear String
             TheParser->getString();
-            
-            auto Issues = TheParser->getIssues();
             
             // auto Span = TheSourceManager->getTokenSpan();
             
@@ -306,7 +304,9 @@ std::shared_ptr<Node> InfixOperatorParselet::parse(std::shared_ptr<Node> Left, P
             //     Issues.push_back(Issue);
             // }
             
-            if (Ctxt.InfixPlusFlag && Tok == TOKEN_OPERATOR_MINUS) {
+            if (Ctxt.InfixPlusFlag && (Tok == TOKEN_OPERATOR_MINUS)) {
+                
+                auto Issues = TheParser->getIssues();
                 
                 auto minus = std::make_shared<InternalMinusNode>(operand, operand->getSourceSpan(), Issues);
                 Args.push_back(minus);
@@ -322,7 +322,7 @@ std::shared_ptr<Node> InfixOperatorParselet::parse(std::shared_ptr<Node> Left, P
         breadth++;
     } // while
     
-    if (Ctxt.InfixPlusFlag && TokIn == TOKEN_OPERATOR_MINUS) {
+    if (Ctxt.InfixPlusFlag && (TokIn == TOKEN_OPERATOR_MINUS || TokIn == TOKEN_OPERATOR_PLUS)) {
         return std::make_shared<InfixNode>(InfixOperatorToSymbol(TOKEN_OPERATOR_PLUS), Args, Issues);
     }
     
@@ -331,7 +331,8 @@ std::shared_ptr<Node> InfixOperatorParselet::parse(std::shared_ptr<Node> Left, P
 
 std::shared_ptr<Node> PostfixOperatorParselet::parse(std::shared_ptr<Node> Operand, ParserContext Ctxt) {
     
-    auto Str = TheParser->getString();
+    // Clear String
+    TheParser->getString();
     
     auto Issues = TheParser->getIssues();
 
@@ -611,13 +612,20 @@ std::shared_ptr<Node> UnderParselet::parseContextSensitive(std::shared_ptr<Node>
         Pat = std::make_shared<PatternBlankNode>(Left, SourceSpan{Left->getSourceSpan().start, Span.end}, Issues);
     }
 
-    Tok = TheParser->currentToken();
+    //
+    // For something like a:b_c:d when parsing _
+    // ColonFlag1 == false
+    //
+    if (Ctxt.ColonFlag1) {
+        
+        Tok = TheParser->currentToken();
 
-    if (Tok == TOKEN_OPERATOR_COLON) {
+        if (Tok == TOKEN_OPERATOR_COLON) {
 
-        auto colonParselet = dynamic_cast<ColonParselet*>(TheParser->findContextSensitiveParselet(Tok));
+            auto colonParselet = dynamic_cast<ColonParselet*>(TheParser->findContextSensitiveParselet(Tok));
 
-        return colonParselet->parseContextSensitive(Pat, Ctxt);
+            return colonParselet->parseContextSensitive(Pat, Ctxt);
+        }
     }
 
     return Pat;
@@ -698,13 +706,16 @@ std::shared_ptr<Node> UnderUnderParselet::parseContextSensitive(std::shared_ptr<
         Pat = std::make_shared<PatternBlankSequenceNode>(Left, SourceSpan{Left->getSourceSpan().start, Span.end}, Issues);
     }
 
-    Tok = TheParser->currentToken();
+    if (Ctxt.ColonFlag1) {
+        
+        Tok = TheParser->currentToken();
 
-    if (Tok == TOKEN_OPERATOR_COLON) {
+        if (Tok == TOKEN_OPERATOR_COLON) {
 
-        auto colonParselet = dynamic_cast<ColonParselet*>(TheParser->findContextSensitiveParselet(Tok));
+            auto colonParselet = dynamic_cast<ColonParselet*>(TheParser->findContextSensitiveParselet(Tok));
 
-        return colonParselet->parseContextSensitive(Pat, Ctxt);
+            return colonParselet->parseContextSensitive(Pat, Ctxt);
+        }
     }
 
     return Pat;
@@ -785,13 +796,16 @@ std::shared_ptr<Node> UnderUnderUnderParselet::parseContextSensitive(std::shared
         Pat = std::make_shared<PatternBlankNullSequenceNode>(Left, SourceSpan{Left->getSourceSpan().start, Span.end}, Issues);
     }
 
-    Tok = TheParser->currentToken();
-
-    if (Tok == TOKEN_OPERATOR_COLON) {
-
-        auto colonParselet = dynamic_cast<ColonParselet*>(TheParser->findContextSensitiveParselet(Tok));
-
-        return colonParselet->parseContextSensitive(Pat, Ctxt);
+    if (Ctxt.ColonFlag1) {
+        
+        Tok = TheParser->currentToken();
+        
+        if (Tok == TOKEN_OPERATOR_COLON) {
+            
+            auto colonParselet = dynamic_cast<ColonParselet*>(TheParser->findContextSensitiveParselet(Tok));
+            
+            return colonParselet->parseContextSensitive(Pat, Ctxt);
+        }
     }
 
     return Pat;
@@ -833,8 +847,9 @@ std::shared_ptr<Node> UnderDotParselet::parseContextSensitive(std::shared_ptr<No
 
 
 std::shared_ptr<Node> SemiParselet::parse(std::shared_ptr<Node> Left, ParserContext Ctxt) {
-
-    auto Str = TheParser->getString();
+    
+    // Clear String
+    TheParser->getString();
     
 //    auto Span = TheSourceManager->getTokenSpan();
     auto lastSpan = TheSourceManager->getTokenSpan();
@@ -975,7 +990,8 @@ std::shared_ptr<Node> SemiParselet::parse(std::shared_ptr<Node> Left, ParserCont
 //
 std::shared_ptr<Node> SemiSemiParselet::parse(ParserContext Ctxt) {
     
-    auto Str = TheParser->getString();
+    // Clear String
+    TheParser->getString();
     
     auto PrefixSpan = TheSourceManager->getTokenSpan();
 
@@ -1047,7 +1063,8 @@ std::shared_ptr<Node> SemiSemiParselet::parse(ParserContext Ctxt) {
 //
 std::shared_ptr<Node> SemiSemiParselet::parse(std::shared_ptr<Node> Left, ParserContext Ctxt) {
 
-    auto Str = TheParser->getString();
+    // Clear String
+    TheParser->getString();
     
     // auto Span = TheSourceManager->getTokenSpan();
 
@@ -1285,7 +1302,8 @@ std::shared_ptr<Node> ColonParselet::parseContextSensitive(std::shared_ptr<Node>
 
 std::shared_ptr<Node> SlashColonParselet::parse(std::shared_ptr<Node> Left, ParserContext Ctxt) {
 
-    auto Str = TheParser->getString();
+    // Clear String
+    TheParser->getString();
     
     // auto Span = TheSourceManager->getTokenSpan();
 
@@ -1422,7 +1440,7 @@ std::shared_ptr<Node> LinearSyntaxOpenParenParselet::parse(ParserContext Ctxt) {
             
             std::copy(Tmp.begin(), Tmp.end(), std::back_inserter(Issues));
             
-            Tok = TheParser->nextToken();
+            Tok = TheParser->nextToken(POLICY_PRESERVE_EVERYTHING);
         }
 
         breadth++;
@@ -1435,7 +1453,8 @@ std::shared_ptr<Node> LinearSyntaxOpenParenParselet::parse(ParserContext Ctxt) {
 
 std::shared_ptr<Node> MessageNameParselet::parse(std::shared_ptr<Node> Left, ParserContext Ctxt) {
 
-    auto Str = TheParser->getString();
+    // Clear String
+    TheParser->getString();
     
     // auto Span = TheSourceManager->getTokenSpan();
 
@@ -1495,7 +1514,8 @@ std::shared_ptr<Node> MessageNameParselet::parse(std::shared_ptr<Node> Left, Par
 
 std::shared_ptr<Node> EqualParselet::parse(std::shared_ptr<Node> Left, ParserContext Ctxt) {
 
-    auto Str = TheParser->getString();
+    // Clear String
+    TheParser->getString();
     
     // auto Span = TheSourceManager->getTokenSpan();
 

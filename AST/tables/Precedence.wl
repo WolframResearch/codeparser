@@ -253,7 +253,7 @@ Precedence`Caret -> Precedence[Power], (* 590 *)
 
 Precedence`LessGreater -> Precedence[StringJoin], (* 600 *)
 
-Precedence`Tick -> Next,
+Precedence`SingleQuote -> Next,
 
 Precedence`Postfix`Bang -> Precedence[Factorial], (* 610 *)
 
