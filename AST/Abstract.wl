@@ -212,6 +212,7 @@ reciprocate[node_] :=
 
 (*
 abstract syntax of  +a + b - c \[ImplicitPlus] d  is a single Plus expression
+except when it's not, bug 365287
 *)
 flattenPlus[nodes_List] :=
 	Module[{},

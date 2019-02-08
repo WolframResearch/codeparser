@@ -349,15 +349,21 @@ Module[{s = sIn, res, nonASCII, tokenize},
 may return:
 a node
 or Null if input was an empty string
+or something FailureQ if e.g., no permission to run wl-ast
 *)
 ParseString[s_String, h_:Automatic] :=
+Catch[
 Module[{parse, ast},
 	parse = ConcreteParseString[s, h];
+
+	If[FailureQ[parse],
+		Throw[parse]
+	];
 
 	ast = Abstract[parse];
 
 	ast
-]
+]]
 
 
 (*
@@ -503,14 +509,19 @@ Module[{h, full, strm, b, nonASCII, pos, res, skipFirstLine = False, shebangWarn
 ]]
 
 ParseFile[file_String, h_:Automatic] :=
+Catch[
 Module[{parse, ast},
 
 	parse = ConcreteParseFile[file, h];
 
+	If[FailureQ[parse],
+		Throw[parse]
+	];
+
 	ast = Abstract[parse];
 
 	ast
-]
+]]
 
 
 handleResult[res_Association, h_] :=
