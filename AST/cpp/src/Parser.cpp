@@ -10,7 +10,7 @@
 
 Parser::Parser() : groupDepth(0), currentCached(false), _currentToken(), _currentTokenString(),
     prefixParselets(), infixParselets(), postfixParselets(), contextSensitiveParselets(), parselets(),
-    tokenQueue(), Issues() {}
+    tokenQueue(), Issues(), Comments() {}
 
 Parser::~Parser() {
     for (auto parselet : parselets) {
@@ -375,6 +375,8 @@ Token Parser::tryNextToken(NextTokenPolicy policy) {
                     
                     auto Text = getString();
                     
+                    auto Span = TheSourceManager->getTokenSpan();
+                    
                     auto C = Comment(Text, Span);
                     
                     Comments.push_back(C);
@@ -402,6 +404,8 @@ Token Parser::tryNextToken(NextTokenPolicy policy) {
                         
                         auto Text = getString();
                         
+                        auto Span = TheSourceManager->getTokenSpan();
+                        
                         auto C = Comment(Text, Span);
                         
                         Comments.push_back(C);
@@ -423,6 +427,8 @@ Token Parser::tryNextToken(NextTokenPolicy policy) {
                     } else if (res == TOKEN_COMMENT) {
                         
                         auto Text = getString();
+                        
+                        auto Span = TheSourceManager->getTokenSpan();
                         
                         auto C = Comment(Text, Span);
                         
@@ -482,6 +488,15 @@ std::vector<SyntaxIssue> Parser::getIssues() {
     auto TokenizerIssues = TheTokenizer->getIssues();
     
     std::copy(TokenizerIssues.begin(), TokenizerIssues.end(), std::back_inserter(Tmp));
+    
+    return Tmp;
+}
+
+std::vector<Comment> Parser::getComments() {
+
+    auto Tmp = Comments;
+
+    Comments.clear();
     
     return Tmp;
 }

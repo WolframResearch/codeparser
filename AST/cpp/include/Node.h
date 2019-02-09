@@ -14,8 +14,9 @@ class Node;
 class Node {
     std::vector<std::shared_ptr<Node>> Args;
     std::vector<SyntaxIssue> Issues;
+    std::vector<Comment> Comments;
 public:
-    Node(std::vector<std::shared_ptr<Node>> Args, std::vector<SyntaxIssue> Issues) : Args(Args), Issues(Issues) {}
+    Node(std::vector<std::shared_ptr<Node>> Args, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Args(Args), Issues(Issues), Comments(Comments) {}
 
     std::vector<std::shared_ptr<Node>> getArgs() {
         return Args;
@@ -23,6 +24,10 @@ public:
 
     std::vector<SyntaxIssue> getIssues() {
         return Issues;
+    }
+    
+    std::vector<Comment> getComments() {
+        return Comments;
     }
 
     virtual std::string string() = 0;
@@ -34,6 +39,7 @@ public:
     std::string ASTArgsString();
 
     std::string SyntaxIssuesString();
+    std::string CommentsString();
     
     virtual ~Node() {}
 };
@@ -49,7 +55,7 @@ class SymbolNode : public Node {
     std::string Str;
     SourceSpan Span;
 public:
-    SymbolNode(std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({}, Issues), Str(Str), Span(Span) {}
+    SymbolNode(std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Str(Str), Span(Span) {}
     
     std::string string() override;
     
@@ -65,7 +71,7 @@ class StringNode : public Node {
     SourceSpan Span;
 public:
     
-    StringNode(std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({}, Issues), Str(Str), Span(Span) {}
+    StringNode(std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Str(Str), Span(Span) {}
     
     std::string string() override;
     
@@ -81,7 +87,7 @@ class NumberNode : public Node {
     SourceSpan Span;
 public:
     
-    NumberNode(std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({}, Issues), Str(Str), Span(Span) {}
+    NumberNode(std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Str(Str), Span(Span) {}
     
     std::string string() override;
     
@@ -96,7 +102,7 @@ class SlotNode : public Node {
     std::string Str;
     SourceSpan Span;
 public:
-    SlotNode(std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({}, Issues), Str(Str), Span(Span) {};
+    SlotNode(std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Str(Str), Span(Span) {};
     
     std::string string() override;
     
@@ -112,7 +118,7 @@ class SlotSequenceNode : public Node {
     std::string Str;
     SourceSpan Span;
 public:
-    SlotSequenceNode(std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({}, Issues), Str(Str), Span(Span) {};
+    SlotSequenceNode(std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Str(Str), Span(Span) {};
     
     std::string string() override;
     
@@ -127,7 +133,7 @@ class OutNode : public Node {
     std::string Str;
     SourceSpan Span;
 public:
-    OutNode(std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({}, Issues), Str(Str), Span(Span) {}
+    OutNode(std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Str(Str), Span(Span) {}
     
     std::string string() override;
     
@@ -149,7 +155,7 @@ class PrefixNode : public Node {
     const Symbol& Op;
     SourceSpan TokSpan;
 public:
-    PrefixNode(const Symbol& Op, SourceSpan TokSpan, std::shared_ptr<Node> Operand, std::vector<SyntaxIssue> Issues) : Node({Operand}, Issues), Op(Op), TokSpan(TokSpan) {}
+    PrefixNode(const Symbol& Op, SourceSpan TokSpan, std::shared_ptr<Node> Operand, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Operand}, Issues, Comments), Op(Op), TokSpan(TokSpan) {}
     
     std::string string() override;
     
@@ -165,7 +171,7 @@ public:
 class BinaryNode : public Node {
     const Symbol& Op;
 public:
-    BinaryNode(const Symbol& Op, std::shared_ptr<Node> Left, std::shared_ptr<Node> Right, std::vector<SyntaxIssue> Issues) : Node({Left, Right}, Issues), Op(Op) {}
+    BinaryNode(const Symbol& Op, std::shared_ptr<Node> Left, std::shared_ptr<Node> Right, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Left, Right}, Issues, Comments), Op(Op) {}
 
     std::string string() override;
     
@@ -189,7 +195,7 @@ public:
 class InfixNode : public Node {
     const Symbol& Op;
 public:
-    InfixNode(const Symbol& Op, std::vector<std::shared_ptr<Node>> Args, std::vector<SyntaxIssue> Issues) : Node(Args, Issues), Op(Op) {}
+    InfixNode(const Symbol& Op, std::vector<std::shared_ptr<Node>> Args, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node(Args, Issues, Comments), Op(Op) {}
     
     std::string string() override;
     
@@ -202,7 +208,7 @@ public:
 class TernaryNode : public Node {
     const Symbol& Op;
 public:
-    TernaryNode(const Symbol& Op, std::shared_ptr<Node> Left, std::shared_ptr<Node> Middle, std::shared_ptr<Node> Right, std::vector<SyntaxIssue> Issues) : Node({Left, Middle, Right}, Issues), Op(Op) {}
+    TernaryNode(const Symbol& Op, std::shared_ptr<Node> Left, std::shared_ptr<Node> Middle, std::shared_ptr<Node> Right, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Left, Middle, Right}, Issues, Comments), Op(Op) {}
     
     std::string string() override;
     
@@ -227,7 +233,7 @@ class PostfixNode : public Node {
     const Symbol& Op;
     SourceSpan TokSpan;
 public:
-    PostfixNode(const Symbol& Op, SourceSpan TokSpan, std::shared_ptr<Node> Operand, std::vector<SyntaxIssue> Issues) : Node({Operand}, Issues), Op(Op), TokSpan(TokSpan) {}
+    PostfixNode(const Symbol& Op, SourceSpan TokSpan, std::shared_ptr<Node> Operand, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Operand}, Issues, Comments), Op(Op), TokSpan(TokSpan) {}
     
     std::string string() override;
     
@@ -252,7 +258,7 @@ class GroupNode;
 class CallNode : public Node {
     std::shared_ptr<Node> Head;
 public:
-    CallNode(std::shared_ptr<Node> Head, std::shared_ptr<Node> Body, std::vector<SyntaxIssue> Issues) : Node({Body}, Issues), Head(Head) {}
+    CallNode(std::shared_ptr<Node> Head, std::shared_ptr<Node> Body, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Body}, Issues, Comments), Head(Head) {}
     
     std::string string() override;
     
@@ -264,7 +270,7 @@ public:
 class CallMissingCloserNode : public Node {
     std::shared_ptr<Node> Head;
 public:
-    CallMissingCloserNode(std::shared_ptr<Node> Head, std::shared_ptr<Node> Body, std::vector<SyntaxIssue> Issues) : Node({Body}, Issues), Head(Head) {}
+    CallMissingCloserNode(std::shared_ptr<Node> Head, std::shared_ptr<Node> Body, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Body}, Issues, Comments), Head(Head) {}
     
     std::string string() override;
     
@@ -279,7 +285,7 @@ class GroupNode : public Node {
     SourceSpan CloserTokSpan;
 public:
     
-    GroupNode(const Symbol& Op, SourceSpan OpenerTokSpan, SourceSpan CloserTokSpan, std::vector<std::shared_ptr<Node>> Args, std::vector<SyntaxIssue> Issues) : Node(Args, Issues), Op(Op), OpenerTokSpan(OpenerTokSpan), CloserTokSpan(CloserTokSpan) {}
+    GroupNode(const Symbol& Op, SourceSpan OpenerTokSpan, SourceSpan CloserTokSpan, std::vector<std::shared_ptr<Node>> Args, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node(Args, Issues, Comments), Op(Op), OpenerTokSpan(OpenerTokSpan), CloserTokSpan(CloserTokSpan) {}
     
     std::string string() override;
     
@@ -308,8 +314,8 @@ public:
 class BlankNode : public Node {
     SourceSpan Span;
 public:
-    BlankNode(SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({}, Issues), Span(Span) {}
-    BlankNode(std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({Sym2}, Issues), Span(Span) {}
+    BlankNode(SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Span(Span) {}
+    BlankNode(std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym2}, Issues, Comments), Span(Span) {}
     
     std::string string() override;
     
@@ -327,8 +333,8 @@ public:
 class BlankSequenceNode : public Node {
     SourceSpan Span;
 public:
-    BlankSequenceNode(SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({}, Issues), Span(Span) {}
-    BlankSequenceNode(std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({Sym2}, Issues), Span(Span) {}
+    BlankSequenceNode(SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Span(Span) {}
+    BlankSequenceNode(std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym2}, Issues, Comments), Span(Span) {}
     
     std::string string() override;
     
@@ -346,8 +352,8 @@ public:
 class BlankNullSequenceNode : public Node {
     SourceSpan Span;
 public:
-    BlankNullSequenceNode(SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({}, Issues), Span(Span) {}
-    BlankNullSequenceNode(std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({Sym2}, Issues), Span(Span) {}
+    BlankNullSequenceNode(SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Span(Span) {}
+    BlankNullSequenceNode(std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym2}, Issues, Comments), Span(Span) {}
     
     std::string string() override;
     
@@ -365,7 +371,7 @@ public:
 class OptionalDefaultNode : public Node {
     SourceSpan Span;
 public:
-    OptionalDefaultNode(SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({}, Issues), Span(Span) {}
+    OptionalDefaultNode(SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Span(Span) {}
     
     std::string string() override;
     
@@ -379,8 +385,8 @@ public:
 class PatternBlankNode : public Node {
     SourceSpan Span;
 public:
-    PatternBlankNode(std::shared_ptr<Node> Sym1, SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({Sym1}, Issues), Span(Span) {}
-    PatternBlankNode(std::shared_ptr<Node> Sym1, std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({Sym1, Sym2}, Issues), Span(Span) {}
+    PatternBlankNode(std::shared_ptr<Node> Sym1, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym1}, Issues, Comments), Span(Span) {}
+    PatternBlankNode(std::shared_ptr<Node> Sym1, std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym1, Sym2}, Issues, Comments), Span(Span) {}
     
     std::string string() override;
     
@@ -402,8 +408,8 @@ public:
 class PatternBlankSequenceNode : public Node {
     SourceSpan Span;
 public:
-    PatternBlankSequenceNode(std::shared_ptr<Node> Sym1, SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({Sym1}, Issues), Span(Span) {}
-    PatternBlankSequenceNode(std::shared_ptr<Node> Sym1, std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({Sym1, Sym2}, Issues), Span(Span) {}
+    PatternBlankSequenceNode(std::shared_ptr<Node> Sym1, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym1}, Issues, Comments), Span(Span) {}
+    PatternBlankSequenceNode(std::shared_ptr<Node> Sym1, std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym1, Sym2}, Issues, Comments), Span(Span) {}
     
     std::string string() override;
     
@@ -425,8 +431,8 @@ public:
 class PatternBlankNullSequenceNode : public Node {
     SourceSpan Span;
 public:
-    PatternBlankNullSequenceNode(std::shared_ptr<Node> Sym1, SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({Sym1}, Issues), Span(Span) {}
-    PatternBlankNullSequenceNode(std::shared_ptr<Node> Sym1, std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({Sym1, Sym2}, Issues), Span(Span) {}
+    PatternBlankNullSequenceNode(std::shared_ptr<Node> Sym1, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym1}, Issues, Comments), Span(Span) {}
+    PatternBlankNullSequenceNode(std::shared_ptr<Node> Sym1, std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym1, Sym2}, Issues, Comments), Span(Span) {}
     
     std::string string() override;
     
@@ -448,7 +454,7 @@ public:
 class OptionalDefaultPatternNode : public Node {
     SourceSpan Span;
 public:
-    OptionalDefaultPatternNode(std::shared_ptr<Node> Sym1, SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({Sym1}, Issues), Span(Span) {}
+    OptionalDefaultPatternNode(std::shared_ptr<Node> Sym1, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym1}, Issues, Comments), Span(Span) {}
     
     std::string string() override;
     
@@ -472,7 +478,7 @@ public:
 class InternalNullNode : public Node {
     SourceSpan Span;
 public:
-    InternalNullNode(SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({}, Issues), Span(Span) {}
+    InternalNullNode(SourceSpan Span) : Node({}, {}, {}), Span(Span) {}
     
     std::string string() override;
     
@@ -489,7 +495,7 @@ public:
 class InternalOneNode : public Node {
     SourceSpan Span;
 public:
-    InternalOneNode(SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({}, Issues), Span(Span) {}
+    InternalOneNode(SourceSpan Span) : Node({}, {}, {}), Span(Span) {}
     
     std::string string() override;
     
@@ -506,7 +512,7 @@ public:
 class InternalAllNode : public Node {
     SourceSpan Span;
 public:
-    InternalAllNode(SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({}, Issues), Span(Span) {}
+    InternalAllNode(SourceSpan Span) : Node({}, {}, {}), Span(Span) {}
     
     std::string string() override;
     
@@ -523,7 +529,7 @@ public:
 class InternalDotNode : public Node {
     SourceSpan Span;
 public:
-    InternalDotNode(SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({}, Issues), Span(Span) {}
+    InternalDotNode(SourceSpan Span) : Node({}, {}, {}), Span(Span) {}
     
     std::string string() override;
     
@@ -541,7 +547,7 @@ class InternalTokenNode : public Node {
     std::string Str;
     SourceSpan Span;
 public:
-    InternalTokenNode(std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({}, Issues), Str(Str), Span(Span) {}
+    InternalTokenNode(std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Str(Str), Span(Span) {}
     
     std::string string() override;
     
@@ -559,7 +565,7 @@ public:
 //
 class InternalMinusNode : public Node {
 public:
-    InternalMinusNode(std::shared_ptr<Node> Operand, SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({Operand}, Issues) {}
+    InternalMinusNode(std::shared_ptr<Node> Operand, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Operand}, Issues, Comments) {}
     
     std::string string() override;
     
@@ -581,7 +587,7 @@ public:
 class SyntaxErrorNode : public Node {
     Token Tok;
 public:
-    SyntaxErrorNode(Token Tok, std::vector<std::shared_ptr<Node>> Args, std::vector<SyntaxIssue> Issues) : Node(Args, Issues), Tok(Tok) {}
+    SyntaxErrorNode(Token Tok, std::vector<std::shared_ptr<Node>> Args, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node(Args, Issues, Comments), Tok(Tok) {}
     
     std::string string() override;
     

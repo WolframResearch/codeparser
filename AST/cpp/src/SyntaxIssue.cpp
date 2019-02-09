@@ -24,3 +24,21 @@ std::string SyntaxIssue::string() {
     ss << "]";
     return ss.str();
 }
+
+std::string Comment::string() {
+    std::ostringstream ss;
+    ss << SYMBOL_COMMENT.name();
+    ss << "[";
+    ss << stringEscape(Msg);
+    ss << ",<|";
+    ss << SYMBOL_SOURCE.name();
+    ss << "->{";
+    ss << Span.start.string();
+    ss << ", ";
+    ss << Span.end.string();
+    ss << "}";
+    ss << "|>";
+    ss << "]";
+    return ss.str();
+}
+

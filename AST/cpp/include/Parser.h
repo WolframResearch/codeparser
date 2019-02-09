@@ -47,6 +47,7 @@ private:
     std::vector<std::pair<Token, std::string>> tokenQueue;
 
     std::vector<SyntaxIssue> Issues;
+    std::vector<Comment> Comments;
     
     void registerTokenType(Token, Parselet *);
     void registerPrefixTokenType(Token);
@@ -70,6 +71,8 @@ public:
     std::string getString();
     
     std::vector<SyntaxIssue> getIssues();
+
+    std::vector<Comment> getComments();
 
     std::shared_ptr<Node> parseTopLevel();
     
