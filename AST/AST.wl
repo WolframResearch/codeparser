@@ -283,6 +283,12 @@ $exe = Module[{wlastResources, firstPair, listOfWLASTs},
 			]
 		]
 
+$lib = FindLibrary["libwl-ast"]
+
+
+concreteParseStringFunc := concreteParseStringFunc = LibraryFunctionLoad[$lib, "concreteParseStringFunc", LinkObject, LinkObject]
+
+concreteParseFileFunc := concreteParseFileFunc = LibraryFunctionLoad[$lib, "concreteParseFile", LinkObject, LinkObject]
 
 
 ConcreteParseString[s_String, h_:Automatic] :=
@@ -321,16 +327,7 @@ Module[{s = sIn, res, nonASCII, tokenize},
 			"NonASCIICharacters"->(escapeString[FromCharacterCode[#]]& /@ Take[nonASCII, UpTo[10]])|>]]
 	];
 
-	If[$exe === None,
-		Throw[Failure["ExecutableNotFound", <|"Executable"->$exe|>]]
-	];
-
-	res = RunProcess[{
-		$exe,
-		Sequence@@If[tokenize, {"-format", "tokens"}, {}],
-		"-noPrompt",
-		"-nonInteractive"
-		}, All, s];
+	res = concreteParseStringFunc[s];
 
 	If[FailureQ[res],
 		Throw[res]
@@ -457,16 +454,7 @@ Module[{h, full, strm, b, nonASCII, pos, res, skipFirstLine = False, shebangWarn
 		];
 	];
 
-	If[$exe === None,
-		Throw[Failure["ExecutableNotFound", <|"Executable"->$exe|>]]
-	];
-
-	res = RunProcess[{
-			$exe,
-			Sequence@@If[tokenize, {"-format", "tokens"}, {}],
-			Sequence@@If[skipFirstLine, {"-skipFirstLine"}, {}],
-			"-file", full
-		}, All];
+	res = concreteParseFileFunc[s];
 
 	If[FailureQ[res],
 		Throw[res]
@@ -524,37 +512,9 @@ Module[{parse, ast},
 ]]
 
 
-handleResult[res_Association, h_] :=
+handleResult[input_String, h_] :=
 Catch[
-Module[{input, ast},
-
-	If[$Debug,
-		If[!empty[res["StandardError"]],
-			Print[res["StandardError"]]
-		]
-	];
-
-	(*
-	ExitCode may be None if the process crashed
-	see bug 360670
-	So make sure to test with =!=
-	*)
-	If[res["ExitCode"] =!= 0,
-		Throw[Failure["ExitCode", <|"ExitCode"->res["ExitCode"]|>]]
-	];
-
-	input = res["StandardOutput"];
-
-	If[$Debug,
-		$LastStandardOutput = input;
-	];
-
-	(*
-	work-around bug 363889
-	*)
-	If[$OperatingSystem == "Windows",
-		input = StringReplace[input, "\r" -> ""];
-	];
+Module[{cst},
 
 	(*
 	The current implementation of AST uses ToExpression to convert a string from the wl-ast process
@@ -573,19 +533,19 @@ Module[{input, ast},
 	*)
 	Block[{$ContextPath = {"AST`", "System`"}},
 		If[h === Automatic,
-			ast = ToExpression[input, InputForm];
-			If[FailureQ[ast],
+			cst = ToExpression[input, InputForm];
+			If[FailureQ[cst],
 				Throw[Failure["ToExpressionFailed", <|"Result"->ast|>]]
 			];
 			,
-			ast = ToExpression[input, InputForm, h];
-			If[FailureQ[ast],
+			cst = ToExpression[input, InputForm, h];
+			If[FailureQ[cst],
 				Throw[Failure["ToExpressionFailed", <|"Result"->ast|>]]
 			];
 		]
 	]];
 
-	ast
+	cst
 ]]
 
 

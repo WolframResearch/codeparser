@@ -52,7 +52,7 @@ If[FileType[buildDir] =!= Directory,
 
 generatedCPPDir = FileNameJoin[{buildDir, "generated", "cpp"}]
 generatedCPPIncludeDir = FileNameJoin[{generatedCPPDir, "include"}]
-generatedCPPSrcDir = FileNameJoin[{generatedCPPDir, "src"}]
+generatedCPPSrcDir = FileNameJoin[{generatedCPPDir, "src", "lib"}]
 
 generatedWLDir = FileNameJoin[{buildDir, "generated", "wl"}]
 

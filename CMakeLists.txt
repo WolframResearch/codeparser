@@ -35,19 +35,6 @@ set(PACLETINFO_SOURCE
 	${CMAKE_SOURCE_DIR}/AST/PacletInfo.m
 )
 
-set(LIB_CPP_INCLUDES
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/ByteDecoder.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/ByteEncoder.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/CharacterDecoder.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/Node.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/Parselet.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/Parser.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/SourceManager.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/SyntaxIssue.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/Tokenizer.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/Utils.h
-)
-
 set(WL_DATA_SOURCES
 	${CMAKE_SOURCE_DIR}/AST/tables/CommaLongNames.wl
 	${CMAKE_SOURCE_DIR}/AST/tables/LongNames.wl
@@ -84,19 +71,20 @@ set(GENERATED_CPP_INCLUDES
 	${CMAKE_BINARY_DIR}/generated/cpp/include/ToInputFormString.h
 )
 
-set(GENERATED_CPP_SOURCES
-	${CMAKE_BINARY_DIR}/generated/cpp/src/LongNameMap.cpp
-	${CMAKE_BINARY_DIR}/generated/cpp/src/Token.cpp
-	${CMAKE_BINARY_DIR}/generated/cpp/src/CodePoint.cpp
-	${CMAKE_BINARY_DIR}/generated/cpp/src/Symbol.cpp
+set(GENERATED_CPP_LIB_SOURCES
+	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/LongNameMap.cpp
+	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/Token.cpp
+	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/CodePoint.cpp
+	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/Symbol.cpp
 )
 
 set(GENERATED_SOURCES
 	${GENERATED_WL_SOURCES}
 	${GENERATED_WL_DATA_SOURCES}
 	${GENERATED_CPP_INCLUDES}
-	${GENERATED_CPP_SOURCES}
+	${GENERATED_CPP_LIB_SOURCES}
 )
+
 
 set(DOCUMENTATION_NOTEBOOKS
 	${CMAKE_SOURCE_DIR}/AST/Documentation/English/ReferencePages/Symbols/ParseString.nb
@@ -214,6 +202,7 @@ add_custom_command(
 #
 # Run the Generate.wl script to generate additional required C++ and WL files
 #
+
 add_custom_command(
 	OUTPUT
 		${GENERATED_SOURCES}
@@ -227,6 +216,192 @@ add_custom_command(
 	COMMAND ${WOLFRAMKERNEL} -noinit -script ${CMAKE_SOURCE_DIR}/scripts/Generate.wl -buildDir ${CMAKE_BINARY_DIR}
 	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
+
+
+
+
+#
+# Build library
+#
+
+set(WOLFRAMLIBRARY_INCLUDE_DIR /Applications/Mathematica.app/Contents/SystemFiles/IncludeFiles/C CACHE FILEPATH "Path to WolframLibrary.h")
+
+message(STATUS "WOLFRAMLIBRARY_INCLUDE_DIR: ${WOLFRAMLIBRARY_INCLUDE_DIR}")
+
+set(MATHLINK_INCLUDE_DIR /Applications/Mathematica.app/Contents/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions CACHE FILEPATH "Path to mathlink.h")
+
+message(STATUS "MATHLINK_INCLUDE_DIR: ${MATHLINK_INCLUDE_DIR}")
+
+set(CPP_INCLUDES
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/ByteDecoder.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/ByteEncoder.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/CharacterDecoder.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/Node.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/Parselet.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/Parser.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/SourceManager.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/SyntaxIssue.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/Tokenizer.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/Utils.h
+)
+
+set(CPP_LIB_SOURCES
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/API.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/ByteDecoder.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/ByteEncoder.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/CharacterDecoder.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/Node.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/Parselet.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/Parser.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/SourceManager.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/SyntaxIssue.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/ToInputFormString.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/Tokenizer.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/Utils.cpp
+)
+
+add_library(wl-ast-lib SHARED
+	${CPP_INCLUDES}
+	${CPP_LIB_SOURCES}
+	${GENERATED_CPP_INCLUDES}
+	${GENERATED_CPP_LIB_SOURCES}
+)
+
+target_include_directories(wl-ast-lib
+	PRIVATE ${CMAKE_SOURCE_DIR}/AST/cpp/include
+	PRIVATE ${CMAKE_BINARY_DIR}/generated/cpp/include
+	PRIVATE ${MATHLINK_INCLUDE_DIR}
+	PRIVATE ${WOLFRAMLIBRARY_INCLUDE_DIR}
+)
+
+find_library(ML_LIB
+	NAMES MLi4
+	HINTS ${MATHLINK_LIB_DIR}
+)
+
+target_link_libraries(wl-ast-lib ${ML_LIB})
+
+#
+# https://community.wolfram.com/groups/-/m/t/610879?sortMsg=Flat
+#
+target_link_libraries(wl-ast-lib
+	#"-framework Foundation"
+	"-stdlib=libc++ -framework Foundation -lc++"
+)
+
+set(MAX_EXPRESSION_DEPTH 100 CACHE STRING "Maximum depth allowed by the parser")
+set(MAX_EXPRESSION_BREADTH 1000 CACHE STRING "Maximum breadth allowed by the parser")
+
+message(STATUS "MAX_EXPRESSION_DEPTH: ${MAX_EXPRESSION_DEPTH}")
+message(STATUS "MAX_EXPRESSION_BREADTH: ${MAX_EXPRESSION_BREADTH}")
+
+target_compile_definitions(wl-ast-lib
+	PRIVATE VERSION_NUMBER=${VERSION_NUMBER}
+	PRIVATE MAX_EXPRESSION_DEPTH=${MAX_EXPRESSION_DEPTH}
+	PRIVATE MAX_EXPRESSION_BREADTH=${MAX_EXPRESSION_BREADTH}
+)
+
+# get $SystemID
+execute_process(
+	COMMAND ${WOLFRAMKERNEL} -noinit -script ${CMAKE_SOURCE_DIR}/scripts/SystemID.wl
+	OUTPUT_VARIABLE SYSTEMID
+	OUTPUT_STRIP_TRAILING_WHITESPACE
+	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+
+message(STATUS "SYSTEMID: ${SYSTEMID}")
+
+set_target_properties(wl-ast-lib PROPERTIES
+	OUTPUT_NAME
+		wl-ast
+	CXX_STANDARD
+		11
+	CXX_STANDARD_REQUIRED
+		ON
+	LIBRARY_OUTPUT_DIRECTORY
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/${PACLET}Resources/${SYSTEMID}
+	# make sure that it is not created inside ${SYSTEMID}/Debug on Multi-configuration generators (VS, Xcode)
+	LIBRARY_OUTPUT_DIRECTORY_DEBUG
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/${PACLET}Resources/${SYSTEMID}
+	# make sure that it is not created inside ${SYSTEMID}/Release on Multi-configuration generators (VS, Xcode)
+	LIBRARY_OUTPUT_DIRECTORY_RELEASE
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/${PACLET}Resources/${SYSTEMID}
+)
+
+#
+# Setup warnings
+#
+if(MSVC)
+	target_compile_options(wl-ast-lib
+		# specify /MT to statically link runtime on Windows
+		# This prevents "The program can't start because ucrtbased.dll is missing from your computer" error on Windows 7
+		PRIVATE /W3 /EHsc /MT
+	)
+else()
+	target_compile_options(wl-ast-lib
+		PRIVATE -Wextra -Wall -Weffc++ -Wno-unused-parameter -Wno-unused-function -Wno-comment
+	)
+endif(MSVC)
+
+
+
+
+
+#
+# Build executable
+#
+
+set(CPP_EXE_SOURCES
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/exe/main.cpp
+)
+
+add_executable(wl-ast-exe
+	${CPP_EXE_SOURCES}
+)
+
+target_include_directories(wl-ast-exe
+	PRIVATE ${CMAKE_SOURCE_DIR}/AST/cpp/include
+	PRIVATE ${CMAKE_BINARY_DIR}/generated/cpp/include
+)
+
+target_link_libraries(wl-ast-exe wl-ast-lib)
+
+set_target_properties(wl-ast-exe PROPERTIES
+	OUTPUT_NAME
+		wl-ast
+	CXX_STANDARD
+		11
+	CXX_STANDARD_REQUIRED
+		ON
+	RUNTIME_OUTPUT_DIRECTORY
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/${PACLET}Resources/${SYSTEMID}
+	# make sure that it is not created inside ${SYSTEMID}/Debug on Multi-configuration generators (VS, Xcode)
+	RUNTIME_OUTPUT_DIRECTORY_DEBUG
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/${PACLET}Resources/${SYSTEMID}
+	# make sure that it is not created inside ${SYSTEMID}/Release on Multi-configuration generators (VS, Xcode)
+	RUNTIME_OUTPUT_DIRECTORY_RELEASE
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/${PACLET}Resources/${SYSTEMID}
+)
+
+#
+# Setup warnings
+#
+if(MSVC)
+	target_compile_options(wl-ast-exe
+		# specify /MT to statically link runtime on Windows
+		# This prevents "The program can't start because ucrtbased.dll is missing from your computer" error on Windows 7
+		PRIVATE /W3 /EHsc /MT
+	)
+else()
+	target_compile_options(wl-ast-exe
+		PRIVATE -Wextra -Wall -Weffc++ -Wno-unused-parameter -Wno-unused-function -Wno-comment
+	)
+endif(MSVC)
+
+
+
+
+
 
 
 

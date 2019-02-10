@@ -17,6 +17,7 @@ Paclet[
 				Resources -> {{"wl-ast", "ASTResources/Windows/wl-ast.exe"}}},
 			{"Resource",
 				SystemID->"Windows-x86-64",
-				Resources -> {{"wl-ast", "ASTResources/Windows-x86-64/wl-ast.exe"}}}
+				Resources -> {{"wl-ast", "ASTResources/Windows-x86-64/wl-ast.exe"}}},
+			{"LibraryLink"}
     }
 ]
