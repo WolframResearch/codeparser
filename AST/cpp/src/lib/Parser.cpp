@@ -83,6 +83,7 @@ void Parser::init() {
     registerTokenType(TOKEN_OPERATOR_ATSTAR, new BinaryOperatorParselet(PRECEDENCE_ATSTAR, false));
     registerTokenType(TOKEN_OPERATOR_SLASHSTAR, new BinaryOperatorParselet(PRECEDENCE_SLASHSTAR, false));
 
+    registerTokenType(TOKEN_OPERATOR_MINUS, new BinaryOperatorParselet(PRECEDENCE_BINARY_MINUS, false));
     registerTokenType(TOKEN_OPERATOR_SLASH, new BinaryOperatorParselet(PRECEDENCE_SLASH, false));
     registerTokenType(TOKEN_OPERATOR_CARET, new BinaryOperatorParselet(PRECEDENCE_CARET, true));
     registerTokenType(TOKEN_OPERATOR_CARETEQUAL, new BinaryOperatorParselet(PRECEDENCE_CARETEQUAL, true));
@@ -141,10 +142,7 @@ void Parser::init() {
     // These may not necessarily correspond to Flat functions in WL.
     //
     registerTokenType(TOKEN_OPERATOR_PLUS, new InfixOperatorParselet(PRECEDENCE_INFIX_PLUS));
-    registerTokenType(TOKEN_OPERATOR_MINUS, new InfixOperatorParselet(PRECEDENCE_INFIX_MINUS));
-
     registerTokenType(TOKEN_OPERATOR_STAR, new InfixOperatorParselet(PRECEDENCE_STAR));
-    
     registerTokenType(TOKEN_OPERATOR_DOT, new InfixOperatorParselet(PRECEDENCE_DOT));
     registerTokenType(TOKEN_OPERATOR_STARSTAR, new InfixOperatorParselet(PRECEDENCE_STARSTAR));
     registerTokenType(TOKEN_OPERATOR_AMPAMP, new InfixOperatorParselet(PRECEDENCE_AMPAMP));
@@ -495,9 +493,9 @@ precedence_t Parser::getCurrentTokenPrecedence(Token TokIn, ParserContext Ctxt) 
 
 std::shared_ptr<Node>Parser::parseTopLevel() {
     
-    auto Expr = parse({0, PRECEDENCE_LOWEST, true, false});
+    auto Expr = parse({0, PRECEDENCE_LOWEST, true});
     
-    Expr = cleanup(Expr, {0, PRECEDENCE_LOWEST, true, false});
+    Expr = cleanup(Expr, {0, PRECEDENCE_LOWEST, true});
     
     return Expr;
 }
@@ -569,15 +567,9 @@ std::shared_ptr<Node>Parser::parse(ParserContext Ctxt) {
             InfixParselet *infix;
             infix = I->second;
             
-            auto infixPlusFlag = false;
-            if (token == TOKEN_OPERATOR_PLUS || token == TOKEN_OPERATOR_MINUS) {
-                infixPlusFlag = true;
-            }
-            
             auto ctxt{Ctxt};
             ctxt.Depth++;
             ctxt.Precedence = TokenPrecedence;
-            ctxt.InfixPlusFlag = infixPlusFlag;
             Left = infix->parse(Left, ctxt);
             
         } else {

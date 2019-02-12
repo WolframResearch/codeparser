@@ -217,9 +217,6 @@ InternalDotNode
 InternalNullNode
 InternalOneNode
 
-(* InternalMinusNode stop-gap *)
-InternalMinusNode
-
 FileNode
 HoldNode
 
@@ -245,50 +242,38 @@ Needs["AST`Utils`"]
 Needs["PacletManager`"]
 
 
-$exe = Module[{wlastResources, firstPair, listOfWLASTs},
-			(*
-			PacletResources["Resource", "wl-ast"] will return something like:
-			{{Paclet[AST,0.7,<>],{/path/to/AST/ASTResources/MacOSX-x86-64/wl-ast}}}
-
-			or if AST is not yet installed (i.e., it is currently in the process of building),
-			then PacletResources["Resource", "wl-ast"] will return {}
-
-			*)
-			wlastResources = PacletResources["Resource", "wl-ast"];
-			Which[
-				wlastResources == {},
-					None
-				,
-				Length[wlastResources] != 1,
-					(*
-					more than one paclet has "wl-ast" resources
-					TODO: Message or Throw
-					*)
-					None
-				,
-				firstPair = wlastResources[[1]];
-				firstPair[[1]]["Name"] != "AST",
-					None
-				,
-				listOfWLASTs = firstPair[[2]];
-				Length[listOfWLASTs] != 1,
-					(*
-					more than one wl-ast in AST paclet
-					TODO: Message or Throw
-					*)
-					None
-				,
-				True,
-					listOfWLASTs[[1]]
-			]
-		]
-
-$lib = FindLibrary["libwl-ast"]
+$lib := $lib = FindLibrary["libwl-ast"]
 
 
-concreteParseStringFunc := concreteParseStringFunc = LibraryFunctionLoad[$lib, "concreteParseStringFunc", LinkObject, LinkObject]
+concreteParseStringFunc := concreteParseStringFunc =
+	Catch[
+	Module[{loaded},
+		loaded = LibraryFunctionLoad[$lib, "ConcreteParseString", LinkObject, LinkObject];
+		If[FailureQ[loaded]
+			Throw[loaded]
+		];
 
-concreteParseFileFunc := concreteParseFileFunc = LibraryFunctionLoad[$lib, "concreteParseFile", LinkObject, LinkObject]
+		If[Head[loaded] =!= LibraryFunction
+			Throw[Failure["LibraryFunctionLoad", <|"Result"->loaded|>]]
+		];
+
+		loaded
+	]]
+
+concreteParseFileFunc := concreteParseFileFunc =
+	Catch[
+	Module[{loaded},
+		loaded = LibraryFunctionLoad[$lib, "ConcreteParseFile", LinkObject, LinkObject];
+		If[FailureQ[loaded]
+			Throw[loaded]
+		];
+
+		If[Head[loaded] =!= LibraryFunction
+			Throw[Failure["LibraryFunctionLoad", <|"Result"->loaded|>]]
+		];
+
+		loaded
+	]]
 
 
 ConcreteParseString[s_String, h_:Automatic] :=
@@ -302,44 +287,23 @@ Options[concreteParseString] = {
 	"Tokenize" -> False
 }
 
-concreteParseString[sIn_String, h_, OptionsPattern[]] :=
+concreteParseString[sIn_String, hIn_, OptionsPattern[]] :=
 Catch[
-Module[{s = sIn, res, nonASCII, tokenize},
+Module[{s = sIn, h = hIn, res, tokenize},
+
+	If[h === Automatic,
+		h = Last
+	];
 
 	tokenize = OptionValue["Tokenize"];
 
-	(*
-	RunProcess cannot handle strings > 2^16.
-	This may be a system limitation
-	*)
-	If[StringLength[sIn] > 2^16,
-		Throw[Failure["InputTooLarge", <|"TruncatedInput"->StringTake[s, 100]|>]]
-	];
-
-	(*
-	RunProcess cannot handle characters >= 256 yet, but test >= 128 to be consistent with testing for ASCII
-	bug 360669
-	*)
-	nonASCII = Select[ToCharacterCode[s], # >= 128&];
-	If[!empty[nonASCII],
-		Throw[Failure["NonASCIICharactersNotAllowed", <|
-			"Input"->s,
-			"NonASCIICharacters"->(escapeString[FromCharacterCode[#]]& /@ Take[nonASCII, UpTo[10]])|>]]
-	];
-
-	res = concreteParseStringFunc[s];
+	res = concreteParseStringFunc[s, False, False];
 
 	If[FailureQ[res],
 		Throw[res]
 	];
 
-	res = handleResult[res, h];
-
-	If[FailureQ[res],
-		Throw[res]
-	];
-
-	res
+	h[res]
 ]]
 
 (*
@@ -405,26 +369,6 @@ Module[{h, full, strm, b, nonASCII, pos, res, skipFirstLine = False, shebangWarn
 	];
 
 	(*
-	RunProcess cannot handle characters >= 256 yet, but test >= 128 to be consistent with testing for ASCII
-	bug 360669
-	*)
-	strm = OpenRead[full, BinaryFormat -> True];
-	nonASCII = False;
-	While[True,
-		b = BinaryRead[strm];
-		Which[
-			b === EndOfFile, Break[],
-			b >= 128, nonASCII = True; pos = StreamPosition[strm]; Break[]
-		]
-	];
-	Close[strm];
-	If[nonASCII,
-		Throw[Failure["NonASCIICharactersNotAllowed", <|
-			"FileName"->full,
-			"FirstNonASCIICharacter"->b, "FirstNonASCIICharacterStreamPosition"->pos|>]]
-	];
-
-	(*
 	figure out if first line is special
 	*)
 	If[FileByteCount[full] > 0,
@@ -454,13 +398,7 @@ Module[{h, full, strm, b, nonASCII, pos, res, skipFirstLine = False, shebangWarn
 		];
 	];
 
-	res = concreteParseFileFunc[s];
-
-	If[FailureQ[res],
-		Throw[res]
-	];
-
-	res = handleResult[res, h];
+	res = concreteParseFileFunc[s, False, skipFirstLine];
 
 	If[FailureQ[res],
 		If[res === $Failed,
@@ -475,7 +413,7 @@ Module[{h, full, strm, b, nonASCII, pos, res, skipFirstLine = False, shebangWarn
 	*)
 	If[hIn === Automatic,
 		children = res[[2]];
-		(* a file with only newlines would be FilNode[File, {Null}, <||>] *)
+		(* a file with only newlines would be FileNode[File, {Null}, <||>] *)
 		If[children =!= {Null},
 			start = First[children][[3]][Source][[1]];
 			end = Last[children][[3]][Source][[2]];
@@ -493,7 +431,7 @@ Module[{h, full, strm, b, nonASCII, pos, res, skipFirstLine = False, shebangWarn
 		res[[3]] = data;
 	];
 
-	res
+	h[res]
 ]]
 
 ParseFile[file_String, h_:Automatic] :=
@@ -510,45 +448,6 @@ Module[{parse, ast},
 
 	ast
 ]]
-
-
-handleResult[input_String, h_] :=
-Catch[
-Module[{cst},
-
-	(*
-	The current implementation of AST uses ToExpression to convert a string from the wl-ast process
-	to an expression.
-	This may hit the depth limit in the WL parser and give errors. e.g.,
-	ToExpression[StringJoin[{Table["f@", 255], "g"}]] evaluates fine
-	ToExpression[StringJoin[{Table["f@", 256], "g"}]] gives ToExpression::sntx and returns $Failed
-
-	bug 70767
-
-	Using a verbose way of expressing syntax makes this limit get hit earlier.
-	*)
-	Quiet[
-	(*
-	Put AST` on path even if it is not on path originally
-	*)
-	Block[{$ContextPath = {"AST`", "System`"}},
-		If[h === Automatic,
-			cst = ToExpression[input, InputForm];
-			If[FailureQ[cst],
-				Throw[Failure["ToExpressionFailed", <|"Result"->ast|>]]
-			];
-			,
-			cst = ToExpression[input, InputForm, h];
-			If[FailureQ[cst],
-				Throw[Failure["ToExpressionFailed", <|"Result"->ast|>]]
-			];
-		]
-	]];
-
-	cst
-]]
-
-
 
 
 

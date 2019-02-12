@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "mathlink.h"
+
 #include <map>
 #include <string>
 #include <iostream>
@@ -71,6 +73,15 @@ struct SourceLocation {
         os << "{" << Line << ", " << Col << "}";
     }
 
+    void put(MLINK mlp) {
+
+        MLPutFunction(mlp, "List", 2);
+
+        MLPutInteger(mlp, Line);
+
+        MLPutInteger(mlp, Col);
+    }
+
     SourceLocation operator+(size_t i) {
         return SourceLocation{Line, Col+i};
     }
@@ -94,6 +105,23 @@ struct SourceSpan {
         os << ", ";
         end.string(os);
         os << "}";
+    }
+
+    void put(MLINK mlp) {
+        MLPutFunction(mlp, "List", 2);
+
+        start.put(mlp);
+
+        end.put(mlp);
+    }
+
+    void putSourceRule(MLINK mlp) {
+
+        MLPutFunction(mlp, "Rule", 2);
+
+        MLPutSymbol(mlp, "Source");
+
+        put(mlp);
     }
 };
 

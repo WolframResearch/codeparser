@@ -132,6 +132,15 @@ if(NOT ${VERSION_NUMBER} GREATER_EQUAL 1100)
 	message(FATAL_ERROR "Wolfram Kernel must be at least version 11.0")
 endif()
 
+# get $SystemID
+execute_process(
+	COMMAND ${WOLFRAMKERNEL} -noinit -script ${CMAKE_SOURCE_DIR}/scripts/SystemID.wl
+	OUTPUT_VARIABLE SYSTEMID
+	OUTPUT_STRIP_TRAILING_WHITESPACE
+	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+
+message(STATUS "SYSTEMID: ${SYSTEMID}")
 
 
 
@@ -164,7 +173,6 @@ set(PACLET_SOURCES
 	${BUILT_PACLETINFO}
 	${GENERATED_WL_SOURCES}
 	wl-ast-lib
-	wl-ast-exe
 )
 
 if(BUILD_DOCS)
@@ -232,6 +240,10 @@ set(MATHLINK_INCLUDE_DIR /Applications/Mathematica.app/Contents/SystemFiles/Link
 
 message(STATUS "MATHLINK_INCLUDE_DIR: ${MATHLINK_INCLUDE_DIR}")
 
+set(MATHLINK_LIB_DIR /Applications/Mathematica.app/Contents/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions CACHE FILEPATH "Path to MathLink library")
+
+message(STATUS "MATHLINK_LIB_DIR: ${MATHLINK_LIB_DIR}")
+
 set(CPP_INCLUDES
 	${CMAKE_SOURCE_DIR}/AST/cpp/include/ByteDecoder.h
 	${CMAKE_SOURCE_DIR}/AST/cpp/include/ByteEncoder.h
@@ -255,7 +267,6 @@ set(CPP_LIB_SOURCES
 	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/Parser.cpp
 	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/SourceManager.cpp
 	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/SyntaxIssue.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/ToInputFormString.cpp
 	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/Tokenizer.cpp
 	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/Utils.cpp
 )
@@ -285,7 +296,6 @@ target_link_libraries(wl-ast-lib ${ML_LIB})
 # https://community.wolfram.com/groups/-/m/t/610879?sortMsg=Flat
 #
 target_link_libraries(wl-ast-lib
-	#"-framework Foundation"
 	"-stdlib=libc++ -framework Foundation -lc++"
 )
 
@@ -301,16 +311,6 @@ target_compile_definitions(wl-ast-lib
 	PRIVATE MAX_EXPRESSION_BREADTH=${MAX_EXPRESSION_BREADTH}
 )
 
-# get $SystemID
-execute_process(
-	COMMAND ${WOLFRAMKERNEL} -noinit -script ${CMAKE_SOURCE_DIR}/scripts/SystemID.wl
-	OUTPUT_VARIABLE SYSTEMID
-	OUTPUT_STRIP_TRAILING_WHITESPACE
-	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-)
-
-message(STATUS "SYSTEMID: ${SYSTEMID}")
-
 set_target_properties(wl-ast-lib PROPERTIES
 	OUTPUT_NAME
 		wl-ast
@@ -319,13 +319,13 @@ set_target_properties(wl-ast-lib PROPERTIES
 	CXX_STANDARD_REQUIRED
 		ON
 	LIBRARY_OUTPUT_DIRECTORY
-		${CMAKE_BINARY_DIR}/paclet/${PACLET}/${PACLET}Resources/${SYSTEMID}
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
 	# make sure that it is not created inside ${SYSTEMID}/Debug on Multi-configuration generators (VS, Xcode)
 	LIBRARY_OUTPUT_DIRECTORY_DEBUG
-		${CMAKE_BINARY_DIR}/paclet/${PACLET}/${PACLET}Resources/${SYSTEMID}
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
 	# make sure that it is not created inside ${SYSTEMID}/Release on Multi-configuration generators (VS, Xcode)
 	LIBRARY_OUTPUT_DIRECTORY_RELEASE
-		${CMAKE_BINARY_DIR}/paclet/${PACLET}/${PACLET}Resources/${SYSTEMID}
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
 )
 
 #
@@ -343,60 +343,6 @@ else()
 	)
 endif(MSVC)
 
-
-
-
-
-#
-# Build executable
-#
-
-set(CPP_EXE_SOURCES
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/exe/main.cpp
-)
-
-add_executable(wl-ast-exe
-	${CPP_EXE_SOURCES}
-)
-
-target_include_directories(wl-ast-exe
-	PRIVATE ${CMAKE_SOURCE_DIR}/AST/cpp/include
-	PRIVATE ${CMAKE_BINARY_DIR}/generated/cpp/include
-)
-
-target_link_libraries(wl-ast-exe wl-ast-lib)
-
-set_target_properties(wl-ast-exe PROPERTIES
-	OUTPUT_NAME
-		wl-ast
-	CXX_STANDARD
-		11
-	CXX_STANDARD_REQUIRED
-		ON
-	RUNTIME_OUTPUT_DIRECTORY
-		${CMAKE_BINARY_DIR}/paclet/${PACLET}/${PACLET}Resources/${SYSTEMID}
-	# make sure that it is not created inside ${SYSTEMID}/Debug on Multi-configuration generators (VS, Xcode)
-	RUNTIME_OUTPUT_DIRECTORY_DEBUG
-		${CMAKE_BINARY_DIR}/paclet/${PACLET}/${PACLET}Resources/${SYSTEMID}
-	# make sure that it is not created inside ${SYSTEMID}/Release on Multi-configuration generators (VS, Xcode)
-	RUNTIME_OUTPUT_DIRECTORY_RELEASE
-		${CMAKE_BINARY_DIR}/paclet/${PACLET}/${PACLET}Resources/${SYSTEMID}
-)
-
-#
-# Setup warnings
-#
-if(MSVC)
-	target_compile_options(wl-ast-exe
-		# specify /MT to statically link runtime on Windows
-		# This prevents "The program can't start because ucrtbased.dll is missing from your computer" error on Windows 7
-		PRIVATE /W3 /EHsc /MT
-	)
-else()
-	target_compile_options(wl-ast-exe
-		PRIVATE -Wextra -Wall -Weffc++ -Wno-unused-parameter -Wno-unused-function -Wno-comment
-	)
-endif(MSVC)
 
 
 

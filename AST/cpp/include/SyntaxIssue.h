@@ -26,5 +26,5 @@ struct SyntaxIssue {
 
     SyntaxIssue(std::string Tag, std::string Msg, std::string Severity, SourceSpan Span) : Tag(Tag), Msg(Msg), Severity(Severity), Span(Span) {}
 
-    std::string string();
+    void put(MLINK mlp);
 };

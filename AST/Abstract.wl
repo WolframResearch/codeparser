@@ -37,6 +37,8 @@ Abstract[PostfixNode[op_, {operand_}, data_]] := CallNode[ToNode[op], {Abstract[
 
 
 
+Abstract[minus:BinaryNode[Minus, _, _]] := abstractPlus[minus]
+Abstract[times:BinaryNode[Divide, _, _]] := abstractTimes[times]
 
 Abstract[inequality:BinaryNode[Equal, _, _]] := abstractInequality[inequality]
 Abstract[inequality:BinaryNode[Unequal, _, _]] := abstractInequality[inequality]
@@ -52,8 +54,6 @@ Abstract[sameq:BinaryNode[SameQ, _, _]] := abstractSameQ[sameq]
 Abstract[unsameq:BinaryNode[UnsameQ, _, _]] := abstractUnsameQ[unsameq]
 Abstract[comp:BinaryNode[Composition, _, _]] := abstractComposition[comp]
 Abstract[comp:BinaryNode[RightComposition, _, _]] := abstractRightComposition[comp]
-
-Abstract[times:BinaryNode[Divide, _, _]] := abstractTimes[times]
 
 (* NonAssociative errors *)
 Abstract[BinaryNode[PatternTest, children:{BinaryNode[PatternTest, _, _], _}, data_]] := SyntaxErrorNode[Token`Operator`Question, children, data]
@@ -72,7 +72,6 @@ Abstract[BinaryNode[op_, {left_, right_}, data_]] := CallNode[ToNode[op], {Abstr
 
 
 Abstract[plus:InfixNode[Plus, _, _]] := abstractPlus[plus]
-Abstract[plus:InfixNode[Minus, _, _]] := abstractPlus[plus]
 Abstract[plus:InfixNode[InfixImplicitPlus, _, _]] := abstractPlus[plus]
 Abstract[times:InfixNode[Times, _, _]] := abstractTimes[times]
 Abstract[times:InfixNode[ImplicitTimes, _, _]] := abstractTimes[times]
@@ -224,15 +223,11 @@ flattenPlus[nodes_List] :=
 				InfixNode[Plus, _, _],
 					flattenPlus[#[[2]]]
 				,
-				InfixNode[Minus, _, _],
+				BinaryNode[Minus, _, _],
 					flattenPlus[{First[#[[2]]], negate /@ Rest[#[[2]]]}]
 				,
 				InfixNode[InfixImplicitPlus, _, _],
 					flattenPlus[#[[2]]]
-				,
-				(* InternalMinusNode stop-gap *)
-				InternalMinusNode[Minus, _, _],
-					negate[#[[2]][[1]]]
 				,
 				_,
 					#
@@ -243,7 +238,7 @@ flattenPlus[nodes_List] :=
 abstractPlus[InfixNode[Plus, children_, data_]] :=
 	CallNode[ToNode[Plus], Abstract /@ Flatten[flattenPlus[children]], data]
 
-abstractPlus[InfixNode[Minus, children_, data_]] :=
+abstractPlus[BinaryNode[Minus, children_, data_]] :=
 	CallNode[ToNode[Plus], Abstract /@ Flatten[flattenPlus[{First[children], negate /@ Rest[children]}]], data]
 
 abstractPlus[InfixNode[InfixImplicitPlus, children_, data_]] :=

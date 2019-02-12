@@ -65,28 +65,6 @@ Module[{nodeStrs},
 ]]
 
 
-(* InternalMinusNode stop-gap *)
-ToInputFormString[InfixNode[Plus, nodes_, opts_]] :=
-Catch[
-Module[{first},
-
-	first = ToInputFormString[First[nodes]];
-	If[FailureQ[first],
-		Throw[first]
-	];
-
-	StringJoin[{first,
-		(* extra space *)
-		Switch[#,
-			InternalMinusNode[_, _, _],
-				{" - ", ToInputFormString[#[[2]][[1]]] /. {f_FailureQ :> Throw[f]}}
-			,
-			_,
-				{" + ", ToInputFormString[#] /. {f_FailureQ :> Throw[f]}}
-		]& /@ Rest[nodes]}]
-]]
-
-
 (* -a *)
 ToInputFormString[InfixNode[Times, {NumberNode["-1", {}, _], op_}, opts_]] :=
 Catch[

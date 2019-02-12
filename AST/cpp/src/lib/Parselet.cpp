@@ -283,7 +283,7 @@ std::shared_ptr<Node> InfixOperatorParselet::parse(std::shared_ptr<Node> Left, P
 
         auto Tok = TheParser->currentToken();
         
-        if (Tok == TokIn || (Ctxt.InfixPlusFlag && (Tok == TOKEN_OPERATOR_MINUS || Tok == TOKEN_OPERATOR_PLUS))) {
+        if (Tok == TokIn) {
             
             // clear String
             TheParser->getString();
@@ -304,16 +304,7 @@ std::shared_ptr<Node> InfixOperatorParselet::parse(std::shared_ptr<Node> Left, P
             //     Issues.push_back(Issue);
             // }
             
-            if (Ctxt.InfixPlusFlag && (Tok == TOKEN_OPERATOR_MINUS)) {
-                
-                auto Issues = TheParser->getIssues();
-                
-                auto minus = std::make_shared<InternalMinusNode>(operand, operand->getSourceSpan(), Issues);
-                Args.push_back(minus);
-                
-            } else {
-                Args.push_back(operand);
-            }
+            Args.push_back(operand);
             
         } else {
             break;
@@ -321,10 +312,6 @@ std::shared_ptr<Node> InfixOperatorParselet::parse(std::shared_ptr<Node> Left, P
 
         breadth++;
     } // while
-    
-    if (Ctxt.InfixPlusFlag && (TokIn == TOKEN_OPERATOR_MINUS || TokIn == TOKEN_OPERATOR_PLUS)) {
-        return std::make_shared<InfixNode>(InfixOperatorToSymbol(TOKEN_OPERATOR_PLUS), Args, Issues);
-    }
     
     return std::make_shared<InfixNode>(InfixOperatorToSymbol(TokIn), Args, Issues);
 }

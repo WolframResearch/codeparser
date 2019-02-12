@@ -5,199 +5,173 @@
 #include "Symbol.h"
 #include "ToInputFormString.h"
 
+#include "mathlink.h"
+
 #include <cassert>
 #include <iostream>
 #include <memory>
 
-std::string Node::ASTArgsString() {
-    std::ostringstream ss;
-    ss << "{";
-    if (!Args.empty()) {
-        auto I = Args.begin();
-        auto LastIt = Args.end();
-        LastIt--;
-        for (; I < LastIt; I++) {
-            ss << (*I)->string();
-            ss << ", ";
-        }
-        ss << (*I)->string();
+void Node::putASTArgs(MLINK mlp) {
+
+    MLPutFunction(mlp, "List", Args.size());
+
+    for (auto A : Args) {
+        A->put(mlp);
     }
-    ss << "}";
-    return ss.str();
 }
 
-std::string Node::SyntaxIssuesString() {
-    std::ostringstream ss;
-    ss << SYMBOL_SYNTAXISSUES.name();
-    ss << "->{";
-    if (!Issues.empty()) {
-        auto I = Issues.begin();
-        auto LastIt = Issues.end();
-        LastIt--;
-        for (; I < LastIt; I++) {
-            ss << (*I).string();
-            ss << ", ";
-        }
-        ss << (*I).string();
+void Node::putSyntaxIssues(MLINK mlp) {
+
+    MLPutFunction(mlp, SYMBOL_RULE.name().c_str(), 2);
+
+    SYMBOL_SYNTAXISSUES.put(mlp);
+
+    MLPutFunction(mlp, "List", Issues.size());
+
+    for (auto I : Issues) {
+        I.put(mlp);
     }
-    ss << "}";
-    return ss.str();
 }
 
 //
 // Atom and Atom-like expressions
 //
 
-std::string SymbolNode::string() {
-    
+void SymbolNode::put(MLINK mlp) {
+
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_SYMBOLNODE.name();
-    ss << "[";
-    ss << stringEscape(Str);
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_SYMBOLNODE.name().c_str(), 3);
+
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), Str.size());
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
-std::string StringNode::string() {
-    
+void StringNode::put(MLINK mlp) {
+
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_STRINGNODE.name();
-    ss << "[";
-    ss << stringEscape(Str);
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_STRINGNODE.name().c_str(), 3);
+
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), Str.size());
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
-std::string NumberNode::string() {
-    
+void NumberNode::put(MLINK mlp) {
+
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_NUMBERNODE.name();
-    ss << "[";
-    ss << stringEscape(Str);
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_NUMBERNODE.name().c_str(), 3);
+
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), Str.size());
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
-std::string SlotNode::string() {
-    
+void SlotNode::put(MLINK mlp) {
+
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_SLOTNODE.name();
-    ss << "[";
-    ss << stringEscape(Str);
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_SLOTNODE.name().c_str(), 3);
+
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), Str.size());
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
-std::string SlotSequenceNode::string() {
-    
+void SlotSequenceNode::put(MLINK mlp) {
+
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_SLOTSEQUENCENODE.name();
-    ss << "[";
-    ss << stringEscape(Str);
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_SLOTSEQUENCENODE.name().c_str(), 3);
+
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), Str.size());
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
-std::string OutNode::string() {
-    
-    auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_OUTNODE.name();
-    ss << "[";
-    ss << stringEscape(Str);
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
-    if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
-    }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
-}
+void OutNode::put(MLINK mlp) {
 
+    auto Issues = getIssues();
+
+    MLPutFunction(mlp, SYMBOL_OUTNODE.name().c_str(), 3);
+
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), Str.size());
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
+    if (!Issues.empty()) {
+        putSyntaxIssues(mlp);
+    }
+}
 
 //
 // Base operator expressions
 //
 
-std::string PrefixNode::string() {
-    
+void PrefixNode::put(MLINK mlp) {
+
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_PREFIXNODE.name();
-    ss << "[";
-    ss << Op.name();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_PREFIXNODE.name().c_str(), 3);
+
+    MLPutSymbol(mlp, Op.name().c_str());
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
 SourceSpan PrefixNode::getSourceSpan() {
@@ -207,25 +181,23 @@ SourceSpan PrefixNode::getSourceSpan() {
     return SourceSpan{TokSpan.start, Operand->getSourceSpan().end};
 }
 
-std::string BinaryNode::string() {
+void BinaryNode::put(MLINK mlp) {
 
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_BINARYNODE.name();
-    ss << "[";
-    ss << Op.name();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_BINARYNODE.name().c_str(), 3);
+
+    MLPutSymbol(mlp, Op.name().c_str());
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
 SourceSpan BinaryNode::getSourceSpan() {
@@ -236,25 +208,23 @@ SourceSpan BinaryNode::getSourceSpan() {
     return SourceSpan{Left->getSourceSpan().start, Right->getSourceSpan().end};
 }
 
-std::string InfixNode::string() {
+void InfixNode::put(MLINK mlp) {
 
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_INFIXNODE.name();
-    ss << "[";
-    ss << Op.name();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_INFIXNODE.name().c_str(), 3);
+
+    MLPutSymbol(mlp, Op.name().c_str());
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
 SourceSpan InfixNode::getSourceSpan() {
@@ -270,25 +240,23 @@ SourceSpan InfixNode::getSourceSpan() {
     }
 }
 
-std::string TernaryNode::string() {
-    
+void TernaryNode::put(MLINK mlp) {
+
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_TERNARYNODE.name();
-    ss << "[";
-    ss << Op.name();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_TERNARYNODE.name().c_str(), 3);
+
+    MLPutSymbol(mlp, Op.name().c_str());
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
 SourceSpan TernaryNode::getSourceSpan() {
@@ -299,25 +267,23 @@ SourceSpan TernaryNode::getSourceSpan() {
     return SourceSpan{Left->getSourceSpan().start, Right->getSourceSpan().end};
 }
 
-std::string PostfixNode::string() {
-    
+void PostfixNode::put(MLINK mlp) {
+
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_POSTFIXNODE.name();
-    ss << "[";
-    ss << Op.name();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_POSTFIXNODE.name().c_str(), 3);
+
+    MLPutSymbol(mlp, Op.name().c_str());
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
 SourceSpan PostfixNode::getSourceSpan() {
@@ -333,25 +299,23 @@ SourceSpan PostfixNode::getSourceSpan() {
 // CallNodes
 //
 
-std::string CallNode::string() {
+void CallNode::put(MLINK mlp) {
 
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_CALLNODE.name();
-    ss << "[";
-    ss << Head->string();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_CALLNODE.name().c_str(), 3);
+
+    Head->put(mlp);
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
 SourceSpan CallNode::getSourceSpan() {
@@ -361,25 +325,23 @@ SourceSpan CallNode::getSourceSpan() {
     return SourceSpan{Head->getSourceSpan().start, Body->getSourceSpan().end};
 }
 
-std::string CallMissingCloserNode::string() {
-    
+void CallMissingCloserNode::put(MLINK mlp) {
+
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_CALLMISSINGCLOSERNODE.name();
-    ss << "[";
-    ss << Head->string();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_CALLMISSINGCLOSERNODE.name().c_str(), 3);
+
+    Head->put(mlp);
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
 SourceSpan CallMissingCloserNode::getSourceSpan() {
@@ -395,25 +357,23 @@ SourceSpan CallMissingCloserNode::getSourceSpan() {
 // GroupNode
 //
 
-std::string GroupNode::string() {
-    
+void GroupNode::put(MLINK mlp) {
+
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_GROUPNODE.name();
-    ss << "[";
-    ss << Op.name();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_GROUPNODE.name().c_str(), 3);
+
+    MLPutSymbol(mlp, Op.name().c_str());
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
 SourceSpan GroupNode::getSourceSpan() {
@@ -425,333 +385,271 @@ SourceSpan GroupNode::getSourceSpan() {
 // Special expressions
 //
 
-std::string BlankNode::string() {
+void BlankNode::put(MLINK mlp) {
 
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_BLANKNODE.name();
-    ss << "[";
-    ss << SYMBOL_BLANK.name();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_BLANKNODE.name().c_str(), 3);
+
+    SYMBOL_BLANK.put(mlp);
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
-std::string BlankSequenceNode::string() {
+void BlankSequenceNode::put(MLINK mlp) {
 
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_BLANKSEQUENCENODE.name();
-    ss << "[";
-    ss << SYMBOL_BLANKSEQUENCE.name();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_BLANKSEQUENCENODE.name().c_str(), 3);
+
+    SYMBOL_BLANKSEQUENCE.put(mlp);
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
-std::string BlankNullSequenceNode::string() {
+void BlankNullSequenceNode::put(MLINK mlp) {
 
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_BLANKNULLSEQUENCENODE.name();
-    ss << "[";
-    ss << SYMBOL_BLANKNULLSEQUENCE.name();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_BLANKNULLSEQUENCENODE.name().c_str(), 3);
+
+    SYMBOL_BLANKNULLSEQUENCE.put(mlp);
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
-std::string OptionalDefaultNode::string() {
+void OptionalDefaultNode::put(MLINK mlp) {
 
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_OPTIONALDEFAULTNODE.name();
-    ss << "[";
-    ss << SYMBOL_OPTIONALDEFAULT.name();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_OPTIONALDEFAULTNODE.name().c_str(), 3);
+
+    SYMBOL_OPTIONALDEFAULT.put(mlp);
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
-std::string PatternBlankNode::string() {
+void PatternBlankNode::put(MLINK mlp) {
 
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_PATTERNBLANKNODE.name();
-    ss << "[";
-    ss << SYMBOL_PATTERNBLANK.name();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_PATTERNBLANKNODE.name().c_str(), 3);
+
+    SYMBOL_PATTERNBLANK.put(mlp);
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
-std::string PatternBlankSequenceNode::string() {
+void PatternBlankSequenceNode::put(MLINK mlp) {
 
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_PATTERNBLANKSEQUENCENODE.name();
-    ss << "[";
-    ss << SYMBOL_PATTERNBLANKSEQUENCE.name();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_PATTERNBLANKSEQUENCENODE.name().c_str(), 3);
+
+    SYMBOL_PATTERNBLANKSEQUENCE.put(mlp);
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
-std::string PatternBlankNullSequenceNode::string() {
+void PatternBlankNullSequenceNode::put(MLINK mlp) {
 
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_PATTERNBLANKNULLSEQUENCENODE.name();
-    ss << "[";
-    ss << SYMBOL_PATTERNBLANKNULLSEQUENCE.name();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_PATTERNBLANKNULLSEQUENCENODE.name().c_str(), 3);
+
+    SYMBOL_PATTERNBLANKNULLSEQUENCE.put(mlp);
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
-std::string OptionalDefaultPatternNode::string() {
+void OptionalDefaultPatternNode::put(MLINK mlp) {
 
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_OPTIONALDEFAULTPATTERNNODE.name();
-    ss << "[";
-    ss << SYMBOL_OPTIONALDEFAULTPATTERN.name();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_OPTIONALDEFAULTPATTERNNODE.name().c_str(), 3);
+
+    SYMBOL_OPTIONALDEFAULTPATTERN.put(mlp);
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
+void InternalTokenNode::put(MLINK mlp) {
 
-
-std::string InternalTokenNode::string() {
-    
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_INTERNALTOKENNODE.name();
-    ss << "[";
-    ss << stringEscape(Str);
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_INTERNALTOKENNODE.name().c_str(), 3);
+
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), Str.size());
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
-std::string InternalAllNode::string() {
-    
+void InternalAllNode::put(MLINK mlp) {
+
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_INTERNALALLNODE.name();
-    ss << "[";
-    ss << SYMBOL_ALL.name();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_INTERNALALLNODE.name().c_str(), 3);
+
+    SYMBOL_ALL.put(mlp);
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
-std::string InternalDotNode::string() {
-    
+void InternalDotNode::put(MLINK mlp) {
+
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_INTERNALDOTNODE.name();
-    ss << "[";
-    ss << SYMBOL_DOT.name();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_INTERNALDOTNODE.name().c_str(), 3);
+
+    SYMBOL_DOT.put(mlp);
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
-std::string InternalNullNode::string() {
-    
+void InternalNullNode::put(MLINK mlp) {
+
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_INTERNALNULLNODE.name();
-    ss << "[";
-    ss << SYMBOL_NULL.name();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_INTERNALNULLNODE.name().c_str(), 3);
+
+    SYMBOL_NULL.put(mlp);
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
-std::string InternalOneNode::string() {
-    
+void InternalOneNode::put(MLINK mlp) {
+
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_INTERNALONENODE.name();
-    ss << "[";
-    ss << "1";
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
-    if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
-    }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
-}
 
-//
-// InternalMinusNode stop-gap
-//
-std::string InternalMinusNode::string() {
-    
-    auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_INTERNALMINUSNODE.name();
-    ss << "[";
-    ss << SYMBOL_MINUS.name();
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
-    if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
-    }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
-}
+    MLPutFunction(mlp, SYMBOL_INTERNALONENODE.name().c_str(), 3);
 
-//
-// InternalMinusNode stop-gap
-//
-SourceSpan InternalMinusNode::getSourceSpan() {
-    return SourceSpan{getOperand()->getSourceSpan().start, getOperand()->getSourceSpan().end};
+    MLPutInteger(mlp, 1);
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
+    if (!Issues.empty()) {
+        putSyntaxIssues(mlp);
+    }
 }
 
 
+void SyntaxErrorNode::put(MLINK mlp) {
 
-std::string SyntaxErrorNode::string() {
-    
     auto Issues = getIssues();
-    
-    std::ostringstream ss;
-    ss << SYMBOL_SYNTAXERRORNODE.name();
-    ss << "[";
-    ss << TokenToString(Tok);
-    ss << ", ";
-    ss << ASTArgsString();
-    ss << ", <|";
-    ss << ASTSourceString(getSourceSpan());
+
+    MLPutFunction(mlp, SYMBOL_SYNTAXERRORNODE.name().c_str(), 3);
+
+    MLPutSymbol(mlp, TokenToString(Tok).c_str());
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name().c_str(), 1 + ((!Issues.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
     if (!Issues.empty()) {
-        ss << ", ";
-        ss << SyntaxIssuesString();
+        putSyntaxIssues(mlp);
     }
-    ss << "|>";
-    ss << "]";
-    return ss.str();
 }
 
 SourceSpan SyntaxErrorNode::getSourceSpan() {

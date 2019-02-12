@@ -37,15 +37,3 @@ std::string stringEscape(std::string s) {
     
     return escaped.str();
 }
-
-
-std::string ASTSourceString(SourceSpan span) {
-    std::ostringstream ss;
-    ss << SYMBOL_SOURCE.name();
-    ss << "->{";
-    ss << span.start.string();
-    ss << ", ";
-    ss << span.end.string();
-    ss << "}";
-    return ss.str();
-}

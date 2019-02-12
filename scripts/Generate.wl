@@ -906,6 +906,8 @@ symbolCPPHeader = {
 
 #include \"Token.h\"
 
+#include \"mathlink.h\"
+
 #include <string>
 #include <utility>
 
@@ -913,6 +915,8 @@ class Symbol {
   std::string Name;
   public:Symbol(std::string Name):Name(Name) {}
   std::string name() const;
+
+  void put(MLINK) const;
 };
 
 bool operator==(const Symbol& lhs, const Symbol& rhs);
@@ -971,6 +975,11 @@ bool operator==(const Symbol& lhs, const Symbol& rhs) {
 std::string Symbol::name() const {
    return Name;
 }
+
+void Symbol::put(MLINK mlp) const {
+  MLPutSymbol(mlp, Name.c_str());
+}
+
 "} ~Join~ 
 
     (Row[{"const", " ", "Symbol&", " ", toGlobal["Symbol`"<>ToString[#]], " ", "=", " ", "Symbol(\"", ToString[#], "\")", ";"}]& /@ symbols) ~Join~
@@ -1059,42 +1068,42 @@ std::string Symbol::name() const {
           "{ return std::make_pair(std::string(", 
           escapeString[#[[2, 1]]], "), std::string(", 
           escapeString[#[[2, 2]]], "));", "}"}]& /@ DownValues[SymbolToGroupPair]) ~Join~ 
-      {"return std::make_pair(std::string(\"XXX\"), std::string(\"XXX\"));",
+      {"std::cerr << \"Unhandled Symbol: \" << Sym.name() << \"\\n\"; assert(false && \"Unhandled Symbol\"); return std::make_pair(std::string(\"XXX\"), std::string(\"XXX\"));",
      "}"} ~Join~
 
      {""} ~Join~
      {"std::string SymbolToPrefixOperatorString(const Symbol& Sym) {"} ~Join~
       (Row[{"if (Sym == ", toGlobal["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
           "{ return ", escapeString[#[[2]]], ";", "}"}]& /@ DownValues[SymbolToPrefixOperatorString]) ~Join~
-      {"return \"XXX\";",
+      {"std::cerr << \"Unhandled Symbol: \" << Sym.name() << \"\\n\"; assert(false && \"Unhandled Symbol\"); return \"XXX\";",
       "}",
      ""} ~Join~
 
      {"std::string SymbolToPostfixOperatorString(const Symbol& Sym) {"} ~Join~
       (Row[{"if (Sym == ", toGlobal["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
           "{ return ", escapeString[#[[2]]], ";", "}"}]& /@ DownValues[SymbolToPostfixOperatorString]) ~Join~
-      {"return \"XXX\";",
+      {" std::cerr << \"Unhandled Symbol: \" << Sym.name() << \"\\n\"; assert(false && \"Unhandled Symbol\");return \"XXX\";",
      "}"} ~Join~
      {""} ~Join~
 
      {"std::string SymbolToBinaryOperatorString(const Symbol& Sym) {"} ~Join~
       (Row[{"if (Sym == ", toGlobal["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
           "{ return ", escapeString[#[[2]]], ";", "}"}]& /@ DownValues[SymbolToBinaryOperatorString]) ~Join~
-      {"return \"XXX\";",
+      {"std::cerr << \"Unhandled Symbol: \" << Sym.name() << \"\\n\"; assert(false && \"Unhandled Symbol\"); return \"XXX\";",
      "}",
      ""} ~Join~
 
      {"std::string SymbolToInfixOperatorString(const Symbol& Sym) {"} ~Join~
       (Row[{"if (Sym == ", toGlobal["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
           "{ return ", escapeString[#[[2]]], ";", "}"}]& /@ DownValues[SymbolToInfixOperatorString]) ~Join~
-      {"return \"XXX\";",
+      {"std::cerr << \"Unhandled Symbol: \" << Sym.name() << \"\\n\"; assert(false && \"Unhandled Symbol\"); return \"XXX\";",
      "}",
      ""} ~Join~
 
      {"std::string SymbolToTernaryOperatorString(const Symbol& Sym) {"} ~Join~
       (Row[{"if (Sym == ", toGlobal["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
           "{ return ", escapeString[#[[2]]], ";", "}"}]& /@ DownValues[SymbolToTernaryOperatorString]) ~Join~
-      {"return \"XXX\";",
+      {" std::cerr << \"Unhandled Symbol: \" << Sym.name() << \"\\n\"; assert(false && \"Unhandled Symbol\");return \"XXX\";",
      "}",
      ""} ~Join~
 

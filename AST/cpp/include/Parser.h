@@ -26,8 +26,6 @@ struct ParserContext {
     size_t Depth;
     precedence_t Precedence;
     bool ColonFlag1;
-    // InternalMinusNode stop-gap
-    bool InfixPlusFlag;
 };
 
 class Parser {

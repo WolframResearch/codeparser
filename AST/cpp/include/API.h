@@ -1,3 +1,6 @@
+
+#include "Node.h"
+
 //
 // Despite being mentioned here:
 // language/LibraryLink/tutorial/LibraryStructure.html
@@ -8,10 +11,11 @@
 // Using wstp.h results in errors like:
 // error: unknown type name 'MLINK'
 //
-// This is a bug in WSTP
+// The closest related bug is 357133
 //
 // Also be a good citizen and cleanup the leftover defines
 //
+//#include "wstp.h"
 #include "mathlink.h"
 
 #undef P
@@ -22,14 +26,20 @@
 
 #undef False
 
-EXTERN_C DLLEXPORT int concreteParseFile_characters(WolframLibraryData libData, MLINK mlp);
 
-EXTERN_C DLLEXPORT int concreteParseFile_tokens(WolframLibraryData libData, MLINK mlp);
+#include <vector>
 
-EXTERN_C DLLEXPORT int concreteParseFile(WolframLibraryData libData, MLINK mlp);
 
-EXTERN_C DLLEXPORT int concreteParseString_characters(WolframLibraryData libData, MLINK mlp);
+EXTERN_C DLLEXPORT int ConcreteParseFile(WolframLibraryData libData, MLINK mlp);
 
-EXTERN_C DLLEXPORT int concreteParseString_tokens(WolframLibraryData libData, MLINK mlp);
+EXTERN_C DLLEXPORT int ConcreteParseString(WolframLibraryData libData, MLINK mlp);
 
-EXTERN_C DLLEXPORT int concreteParseString(WolframLibraryData libData, MLINK mlp);
+EXTERN_C DLLEXPORT int TokenizeFile(WolframLibraryData libData, MLINK mlp);
+
+EXTERN_C DLLEXPORT int TokenizeString(WolframLibraryData libData, MLINK mlp);
+
+// EXTERN_C DLLEXPORT int testFunc(WolframLibraryData libData, MLINK mlp);
+
+void putTokens(MLINK mlp, bool interactive);
+void putExpressions(MLINK mlp, bool interactive);
+std::vector<std::shared_ptr<Node>> parseExpressions(bool interactive);
