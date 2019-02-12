@@ -299,6 +299,10 @@ Module[{s = sIn, h = hIn, res, tokenize},
 
 	res = concreteParseStringFunc[s, False, False];
 
+	If[Head[res] === LibraryFunctionError,
+		Throw[Failure["LibraryFunctionError", <|"Result"->res|>]]
+	];
+
 	If[FailureQ[res],
 		Throw[res]
 	];
@@ -353,7 +357,7 @@ Module[{h, full, strm, b, nonASCII, pos, res, skipFirstLine = False, shebangWarn
 	The <||> will be filled in with Source later
 	*)
 	If[hIn === Automatic,
-		h = Function[FileNode[File, {##}, <||>]]
+		h = Function[FileNode[File, #, <||>]]
 	];
 
 	tokenize = OptionValue["Tokenize"];
@@ -398,7 +402,11 @@ Module[{h, full, strm, b, nonASCII, pos, res, skipFirstLine = False, shebangWarn
 		];
 	];
 
-	res = concreteParseFileFunc[s, False, skipFirstLine];
+	res = concreteParseFileFunc[full, False, skipFirstLine];
+
+	If[Head[res] === LibraryFunctionError,
+		Throw[Failure["LibraryFunctionError", <|"Result"->res|>]]
+	];
 
 	If[FailureQ[res],
 		If[res === $Failed,
@@ -407,6 +415,8 @@ Module[{h, full, strm, b, nonASCII, pos, res, skipFirstLine = False, shebangWarn
 		res = Failure[res[[1]], Join[res[[2]], <|"FileName"->full|>]];
 		Throw[res]
 	];
+
+	res = h[res];
 
 	(*
 	Fill in Source for FileNode now
@@ -431,7 +441,7 @@ Module[{h, full, strm, b, nonASCII, pos, res, skipFirstLine = False, shebangWarn
 		res[[3]] = data;
 	];
 
-	h[res]
+	res
 ]]
 
 ParseFile[file_String, h_:Automatic] :=

@@ -67,7 +67,7 @@ DLLEXPORT int ConcreteParseFile(WolframLibraryData libData, MLINK mlp) {
 	std::ifstream ifs(reinterpret_cast<const char *>(inStr), std::ifstream::in);
         
 	if (ifs.fail()) {
-	   return 1;
+	   goto retPt;
 	}
 
 	TheSourceManager = new SourceManager();
