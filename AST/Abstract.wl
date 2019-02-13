@@ -608,7 +608,7 @@ Module[{lastWasComma, abstractedChildren, issues, data},
 	abstractedChildren = (Switch[#,
 		InternalTokenNode[commaPat, {}, _],
 			If[lastWasComma,
-    			AppendTo[issues, SyntaxIssue["SyntaxError", "Comma encountered with no adjacent expression. The expression will be treated as Null", "Error", data]];
+    			AppendTo[issues, SyntaxIssue["SyntaxError", "Comma encountered with no adjacent expression. The expression will be treated as Null", "Error", #[[3]]]];
     			SymbolNode["Null", {}, <||>]
     			,
     			lastWasComma = True;
@@ -620,7 +620,7 @@ Module[{lastWasComma, abstractedChildren, issues, data},
     		Abstract[#]
    ])& /@ children;
    If[lastWasComma,
-   	AppendTo[issues, SyntaxIssue["SyntaxError", "Comma encountered with no adjacent expression. The expression will be treated as Null", "Error", data]];
+   	AppendTo[issues, SyntaxIssue["SyntaxError", "Comma encountered with no adjacent expression. The expression will be treated as Null", "Error", children[[-1]][[3]]]];
    	AppendTo[abstractedChildren, SymbolNode["Null", {}, <||>]];
    ];
 

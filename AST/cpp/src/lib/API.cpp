@@ -15,6 +15,12 @@
 #include <iostream>
 #include <fstream>
 #include <cassert>
+#include <vector>
+
+void putTokens(MLINK mlp);
+void putExpressions(MLINK mlp);
+std::vector<std::shared_ptr<Node>> parseExpressions();
+
 
 DLLEXPORT mint WolframLibrary_getVersion() {
 	return WolframLibraryVersion;
@@ -32,24 +38,17 @@ DLLEXPORT int ConcreteParseFile(WolframLibraryData libData, MLINK mlp) {
 	int res = LIBRARY_FUNCTION_ERROR;
 	int len;
 	const unsigned char *inStr = NULL;
-	const char *interactiveSym = NULL;
 	const char *skipFirstLineSym = NULL;
 	
 	if ( !MLTestHead( mlp, "List", &len)) 
 		goto retPt;
-	if ( len != 3) 
+	if ( len != 2) 
 		goto retPt;
 
 	int b;
 	int c;
 	if(! MLGetUTF8String(mlp, &inStr, &b, &c))
 		goto retPt;
-
-	if(! MLGetSymbol(mlp, &interactiveSym))
-		goto retPt;
-
-	
-
 
 	if(! MLGetSymbol(mlp, &skipFirstLineSym))
 		goto retPt;
@@ -60,8 +59,6 @@ DLLEXPORT int ConcreteParseFile(WolframLibraryData libData, MLINK mlp) {
 
 	// blah;
 	{
-	auto interactive = (strcmp(interactiveSym, "True") == 0);
-
 	auto skipFirstLine = (strcmp(skipFirstLineSym, "True") == 0);
 
 	std::ifstream ifs(reinterpret_cast<const char *>(inStr), std::ifstream::in);
@@ -71,7 +68,7 @@ DLLEXPORT int ConcreteParseFile(WolframLibraryData libData, MLINK mlp) {
 	}
 
 	TheSourceManager = new SourceManager();
-	TheByteDecoder = new ByteDecoder(ifs, interactive);
+	TheByteDecoder = new ByteDecoder(ifs);
 	TheByteEncoder = new ByteEncoder();
 	TheCharacterDecoder = new CharacterDecoder();
 
@@ -79,7 +76,7 @@ DLLEXPORT int ConcreteParseFile(WolframLibraryData libData, MLINK mlp) {
    TheTokenizer->init(skipFirstLine);
    TheParser = new Parser();
    TheParser->init();
-   putExpressions(mlp, interactive);
+   putExpressions(mlp);
 
 	delete TheSourceManager;
 	delete TheByteDecoder;
@@ -93,8 +90,6 @@ DLLEXPORT int ConcreteParseFile(WolframLibraryData libData, MLINK mlp) {
 retPt: 
 	if ( inStr != NULL)
 		MLReleaseUTF8String(mlp, inStr, b);
-	if ( interactiveSym != NULL)
-		MLReleaseSymbol(mlp, interactiveSym);
 	if ( skipFirstLineSym != NULL)
 		MLReleaseSymbol(mlp, skipFirstLineSym);
 	return res;
@@ -104,24 +99,17 @@ DLLEXPORT int ConcreteParseString(WolframLibraryData libData, MLINK mlp) {
 	int res = LIBRARY_FUNCTION_ERROR;
 	int len;
 	const unsigned char *inStr = NULL;
-	const char *interactiveSym = NULL;
 	const char *skipFirstLineSym = NULL;
 	
 	if ( !MLTestHead( mlp, "List", &len)) 
 		goto retPt;
-	if ( len != 3) 
+	if ( len != 2) 
 		goto retPt;
 
 	int b;
 	int c;
 	if(! MLGetUTF8String(mlp, &inStr, &b, &c))
 		goto retPt;
-
-	if(! MLGetSymbol(mlp, &interactiveSym))
-		goto retPt;
-
-	
-
 
 	if(! MLGetSymbol(mlp, &skipFirstLineSym))
 		goto retPt;
@@ -132,14 +120,12 @@ DLLEXPORT int ConcreteParseString(WolframLibraryData libData, MLINK mlp) {
 
 	// blah;
 	{
-	auto interactive = (strcmp(interactiveSym, "True") == 0);
-
 	auto skipFirstLine = (strcmp(skipFirstLineSym, "True") == 0);
 
 	auto iss = std::stringstream(reinterpret_cast<const char *>(inStr));
 
 	TheSourceManager = new SourceManager();
-	TheByteDecoder = new ByteDecoder(iss, interactive);
+	TheByteDecoder = new ByteDecoder(iss);
 	TheByteEncoder = new ByteEncoder();
 	TheCharacterDecoder = new CharacterDecoder();
 
@@ -147,7 +133,7 @@ DLLEXPORT int ConcreteParseString(WolframLibraryData libData, MLINK mlp) {
    TheTokenizer->init(skipFirstLine);
    TheParser = new Parser();
    TheParser->init();
-   putExpressions(mlp, interactive);
+   putExpressions(mlp);
 
 	delete TheSourceManager;
 	delete TheByteDecoder;
@@ -161,8 +147,6 @@ DLLEXPORT int ConcreteParseString(WolframLibraryData libData, MLINK mlp) {
 retPt: 
 	if ( inStr != NULL)
 		MLReleaseUTF8String(mlp, inStr, b);
-	if ( interactiveSym != NULL)
-		MLReleaseSymbol(mlp, interactiveSym);
 	if ( skipFirstLineSym != NULL)
 		MLReleaseSymbol(mlp, skipFirstLineSym);
 	return res;
@@ -172,24 +156,17 @@ DLLEXPORT int TokenizeFile(WolframLibraryData libData, MLINK mlp) {
 	int res = LIBRARY_FUNCTION_ERROR;
 	int len;
 	const unsigned char *inStr = NULL;
-	const char *interactiveSym = NULL;
 	const char *skipFirstLineSym = NULL;
 	
 	if ( !MLTestHead( mlp, "List", &len)) 
 		goto retPt;
-	if ( len != 3) 
+	if ( len != 2) 
 		goto retPt;
 
 	int b;
 	int c;
 	if(! MLGetUTF8String(mlp, &inStr, &b, &c))
 		goto retPt;
-
-	if(! MLGetSymbol(mlp, &interactiveSym))
-		goto retPt;
-
-	
-
 
 	if(! MLGetSymbol(mlp, &skipFirstLineSym))
 		goto retPt;
@@ -200,8 +177,6 @@ DLLEXPORT int TokenizeFile(WolframLibraryData libData, MLINK mlp) {
 
 	// blah;
 	{
-	auto interactive = (strcmp(interactiveSym, "True") == 0);
-
 	auto skipFirstLine = (strcmp(skipFirstLineSym, "True") == 0);
 
 	std::ifstream ifs(reinterpret_cast<const char *>(inStr), std::ifstream::in);
@@ -211,13 +186,13 @@ DLLEXPORT int TokenizeFile(WolframLibraryData libData, MLINK mlp) {
 	}
 
 	TheSourceManager = new SourceManager();
-	TheByteDecoder = new ByteDecoder(ifs, interactive);
+	TheByteDecoder = new ByteDecoder(ifs);
 	TheByteEncoder = new ByteEncoder();
 	TheCharacterDecoder = new CharacterDecoder();
 
 	TheTokenizer = new Tokenizer();
    TheTokenizer->init(skipFirstLine);
-   putTokens(mlp, interactive);
+   putTokens(mlp);
 
 	delete TheSourceManager;
 	delete TheByteDecoder;
@@ -231,8 +206,6 @@ DLLEXPORT int TokenizeFile(WolframLibraryData libData, MLINK mlp) {
 retPt: 
 	if ( inStr != NULL)
 		MLReleaseUTF8String(mlp, inStr, b);
-	if ( interactiveSym != NULL)
-		MLReleaseSymbol(mlp, interactiveSym);
 	if ( skipFirstLineSym != NULL)
 		MLReleaseSymbol(mlp, skipFirstLineSym);
 	return res;
@@ -242,24 +215,17 @@ DLLEXPORT int TokenizeString(WolframLibraryData libData, MLINK mlp) {
 	int res = LIBRARY_FUNCTION_ERROR;
 	int len;
 	const unsigned char *inStr = NULL;
-	const char *interactiveSym = NULL;
 	const char *skipFirstLineSym = NULL;
 	
 	if ( !MLTestHead( mlp, "List", &len)) 
 		goto retPt;
-	if ( len != 3) 
+	if ( len != 2) 
 		goto retPt;
 
 	int b;
 	int c;
 	if(! MLGetUTF8String(mlp, &inStr, &b, &c))
 		goto retPt;
-
-	if(! MLGetSymbol(mlp, &interactiveSym))
-		goto retPt;
-
-	
-
 
 	if(! MLGetSymbol(mlp, &skipFirstLineSym))
 		goto retPt;
@@ -270,20 +236,18 @@ DLLEXPORT int TokenizeString(WolframLibraryData libData, MLINK mlp) {
 
 	// blah;
 	{
-	auto interactive = (strcmp(interactiveSym, "True") == 0);
-
 	auto skipFirstLine = (strcmp(skipFirstLineSym, "True") == 0);
 
 	auto iss = std::stringstream(reinterpret_cast<const char *>(inStr));
 
 	TheSourceManager = new SourceManager();
-	TheByteDecoder = new ByteDecoder(iss, interactive);
+	TheByteDecoder = new ByteDecoder(iss);
 	TheByteEncoder = new ByteEncoder();
 	TheCharacterDecoder = new CharacterDecoder();
 
 	TheTokenizer = new Tokenizer();
    TheTokenizer->init(skipFirstLine);
-   putTokens(mlp, interactive);
+   putTokens(mlp);
 
 	delete TheSourceManager;
 	delete TheByteDecoder;
@@ -297,8 +261,6 @@ DLLEXPORT int TokenizeString(WolframLibraryData libData, MLINK mlp) {
 retPt: 
 	if ( inStr != NULL)
 		MLReleaseUTF8String(mlp, inStr, b);
-	if ( interactiveSym != NULL)
-		MLReleaseSymbol(mlp, interactiveSym);
 	if ( skipFirstLineSym != NULL)
 		MLReleaseSymbol(mlp, skipFirstLineSym);
 	return res;
@@ -306,9 +268,9 @@ retPt:
 
 
 
-void putExpressions(MLINK mlp, bool interactive) {
+void putExpressions(MLINK mlp) {
 
-	auto nodes = parseExpressions(interactive);
+	auto nodes = parseExpressions();
    
 	if(!MLPutFunction(mlp, "List", nodes.size()))
 		goto retPt;
@@ -341,7 +303,7 @@ struct TokenExpr {
 	}
 };
 
-void putTokens(MLINK mlp, bool interactive) {
+void putTokens(MLINK mlp) {
 
 	TheTokenizer->nextToken();
 
@@ -393,7 +355,7 @@ retPt:
 	return;
 }
 
-std::vector<std::shared_ptr<Node>> parseExpressions(bool interactive) {
+std::vector<std::shared_ptr<Node>> parseExpressions() {
 
     std::vector<std::shared_ptr<Node>> nodes;
             
@@ -418,13 +380,6 @@ std::vector<std::shared_ptr<Node>> parseExpressions(bool interactive) {
             // There may be a message from this token which will be handled when the second expression is parsed.
             
             nodes.push_back(Expr);
-        }
-
-        //
-        // This is running on command-line, so only parse first expression
-        //
-        if (interactive) {
-            break;
         }
 
         peek = TheParser->currentToken();

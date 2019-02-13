@@ -4,49 +4,56 @@ Begin["`Private`"]
 
 Needs["AST`"]
 
+
 (*
 ToInputFormString is intended for concrete syntax trees
 *)
 
-ToInputFormString[SymbolNode[str_, _, _]] :=
+ToInputFormString[cst_] :=
+Block[{$RecursionLimit = Infinity},
+	toInputFormString[cst]
+]
+
+
+toInputFormString[SymbolNode[str_, _, _]] :=
 	str
 
-ToInputFormString[StringNode[str_, _, _]] :=
+toInputFormString[StringNode[str_, _, _]] :=
 	str
 
-ToInputFormString[NumberNode[str_, _, _]] :=
+toInputFormString[NumberNode[str_, _, _]] :=
 	str
 
-ToInputFormString[SlotNode[str_, _, _]] :=
+toInputFormString[SlotNode[str_, _, _]] :=
 	str
 
-ToInputFormString[SlotSequenceNode[str_, _, _]] :=
+toInputFormString[SlotSequenceNode[str_, _, _]] :=
 	str
 
-ToInputFormString[OutNode[str_, _, _]] :=
+toInputFormString[OutNode[str_, _, _]] :=
 	str
 
 
 
 
-ToInputFormString[PrefixNode[op_, {operand_}, _]] :=
+toInputFormString[PrefixNode[op_, {operand_}, _]] :=
 Catch[
 Module[{os},
-	os = ToInputFormString[operand];
+	os = toInputFormString[operand];
 	If[FailureQ[op],
 		Throw[op]
 	];
 	SymbolToPrefixOperatorString[op] <> os
 ]]
 
-ToInputFormString[BinaryNode[op_, {left_, right_}, _]] :=
+toInputFormString[BinaryNode[op_, {left_, right_}, _]] :=
 Catch[
 Module[{ls, rs},
-	ls = ToInputFormString[left];
+	ls = toInputFormString[left];
 	If[FailureQ[ls],
 		Throw[ls]
 	];
-	rs = ToInputFormString[right];
+	rs = toInputFormString[right];
 	If[FailureQ[rs],
 		Throw[rs]
 	];
@@ -54,10 +61,10 @@ Module[{ls, rs},
 ]]
 
 
-ToInputFormString[InfixNode[op_, nodes_, _]] :=
+toInputFormString[InfixNode[op_, nodes_, _]] :=
 Catch[
 Module[{nodeStrs},
-	nodeStrs = ToInputFormString /@ nodes;
+	nodeStrs = toInputFormString /@ nodes;
 	If[AnyTrue[nodeStrs, FailureQ],
 		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];
@@ -66,10 +73,10 @@ Module[{nodeStrs},
 
 
 (* -a *)
-ToInputFormString[InfixNode[Times, {NumberNode["-1", {}, _], op_}, opts_]] :=
+toInputFormString[InfixNode[Times, {NumberNode["-1", {}, _], op_}, opts_]] :=
 Catch[
 Module[{opStr},
-	opStr = ToInputFormString[op];
+	opStr = toInputFormString[op];
 	If[FailureQ[opStr],
 		Throw[opStr]
 	];
@@ -78,10 +85,10 @@ Module[{opStr},
 
 
 
-ToInputFormString[TernaryNode[op_, nodes_, opts_]] :=
+toInputFormString[TernaryNode[op_, nodes_, opts_]] :=
 Catch[
 Module[{pair = SymbolToTernaryPair[op], nodeStrs},
-	nodeStrs = ToInputFormString /@ nodes;
+	nodeStrs = toInputFormString /@ nodes;
 	If[AnyTrue[nodeStrs, FailureQ],
 		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];
@@ -89,10 +96,10 @@ Module[{pair = SymbolToTernaryPair[op], nodeStrs},
 ]]
 
 
-ToInputFormString[PostfixNode[op_, {operand_}, opts_]] :=
+toInputFormString[PostfixNode[op_, {operand_}, opts_]] :=
 Catch[
 Module[{opStr},
-	opStr = ToInputFormString[operand];
+	opStr = toInputFormString[operand];
 	If[FailureQ[opStr],
 		Throw[opStr]
 	];
@@ -100,44 +107,44 @@ Module[{opStr},
 ]]
 
 (*
-ToInputFormString is intended for concrete syntax, and concrete syntax
+toInputFormString is intended for concrete syntax, and concrete syntax
 only ever has 1 arg for a Call: i.e. CallNode[head, {GroupNode[GroupSquare, {args}]}]
 
-If you see an unevaluated ToInputFormString[CallNode[head, {arg1, arg2}]], then
+If you see an unevaluated toInputFormString[CallNode[head, {arg1, arg2}]], then
 that is abstract syntax
 *)
-ToInputFormString[CallNode[op_, {node_}, opts_]] :=
+toInputFormString[CallNode[op_, {node_}, opts_]] :=
 Catch[
 Module[{opStr, ns},
-	opStr = ToInputFormString[op];
+	opStr = toInputFormString[op];
 	If[FailureQ[opStr],
 		Throw[opStr]
 	];
-	ns = ToInputFormString[node];
+	ns = toInputFormString[node];
 	If[FailureQ[ns],
 		Throw[ns]
 	];
 	opStr <> ns
 ]]
 
-ToInputFormString[CallMissingCloserNode[op_, {node_}, opts_]] :=
+toInputFormString[CallMissingCloserNode[op_, {node_}, opts_]] :=
 Catch[
 Module[{opStr, ns},
-	opStr = ToInputFormString[op];
+	opStr = toInputFormString[op];
 	If[FailureQ[opStr],
 		Throw[opStr]
 	];
-	ns = ToInputFormString[node];
+	ns = toInputFormString[node];
 	If[FailureQ[ns],
 		Throw[ns]
 	];
 	opStr <> ns
 ]]
 
-ToInputFormString[GroupNode[op_, nodes_, opts_]] :=
+toInputFormString[GroupNode[op_, nodes_, opts_]] :=
 Catch[
 Module[{pair = SymbolToGroupPair[op], ns},
-	ns = ToInputFormString /@ nodes;
+	ns = toInputFormString /@ nodes;
 	If[AnyTrue[ns, FailureQ],
 		Throw[SelectFirst[ns, FailureQ]]
 	];
@@ -148,124 +155,124 @@ Module[{pair = SymbolToGroupPair[op], ns},
 
 
 
-ToInputFormString[BlankNode[Blank, {}, _]] :=
+toInputFormString[BlankNode[Blank, {}, _]] :=
 	"_"
 
-ToInputFormString[BlankNode[Blank, {sym2_}, _]] :=
+toInputFormString[BlankNode[Blank, {sym2_}, _]] :=
 Catch[
 Module[{str},
-	str = ToInputFormString[sym2];
+	str = toInputFormString[sym2];
 	If[FailureQ[str],
 		Throw[str]
 	];
 	"_" <> str
 ]]
 
-ToInputFormString[BlankSequenceNode[BlankSequence, {}, _]] :=
+toInputFormString[BlankSequenceNode[BlankSequence, {}, _]] :=
 	"__"
 
-ToInputFormString[BlankSequenceNode[BlankSequence, {sym2_}, _]] :=
+toInputFormString[BlankSequenceNode[BlankSequence, {sym2_}, _]] :=
 Catch[
 Module[{str},
-	str = ToInputFormString[sym2];
+	str = toInputFormString[sym2];
 	If[FailureQ[str],
 		Throw[str]
 	];
 	"__" <> str
 ]]
 
-ToInputFormString[BlankNullSequenceNode[BlankNullSequence, {}, _]] :=
+toInputFormString[BlankNullSequenceNode[BlankNullSequence, {}, _]] :=
 	"___"
 
-ToInputFormString[BlankNullSequenceNode[BlankNullSequence, {sym2_}, _]] :=
+toInputFormString[BlankNullSequenceNode[BlankNullSequence, {sym2_}, _]] :=
 Catch[
 Module[{str},
-	str = ToInputFormString[sym2];
+	str = toInputFormString[sym2];
 	If[FailureQ[str],
 		Throw[str]
 	];
 	"___" <> str
 ]]
 
-ToInputFormString[OptionalDefaultNode[OptionalDefault, {}, _]] :=
+toInputFormString[OptionalDefaultNode[OptionalDefault, {}, _]] :=
 	"_."
 
-ToInputFormString[PatternBlankNode[PatternBlank, {sym1_}, _]] :=
+toInputFormString[PatternBlankNode[PatternBlank, {sym1_}, _]] :=
 Catch[
 Module[{str},
-	str = ToInputFormString[sym1];
+	str = toInputFormString[sym1];
 	If[FailureQ[str],
 		Throw[str]
 	];
 	str <> "_"
 ]]
 
-ToInputFormString[PatternBlankNode[PatternBlank, {sym1_, sym2_}, _]] :=
+toInputFormString[PatternBlankNode[PatternBlank, {sym1_, sym2_}, _]] :=
 Catch[
 Module[{str1, str2},
-	str1 = ToInputFormString[sym1];
+	str1 = toInputFormString[sym1];
 	If[FailureQ[str1],
 		Throw[str1]
 	];
-	str2 = ToInputFormString[sym2];
+	str2 = toInputFormString[sym2];
 	If[FailureQ[str2],
 		Throw[str2]
 	];
 	str1 <> "_" <> str2
 ]]
 
-ToInputFormString[PatternBlankSequenceNode[PatternBlankSequence, {sym1_}, _]] :=
+toInputFormString[PatternBlankSequenceNode[PatternBlankSequence, {sym1_}, _]] :=
 Catch[
 Module[{str},
-	str = ToInputFormString[sym1];
+	str = toInputFormString[sym1];
 	If[FailureQ[str],
 		Throw[str]
 	];
 	str <> "__"
 ]]
 
-ToInputFormString[PatternBlankSequenceNode[PatternBlankSequence, {sym1_, sym2_}, _]] :=
+toInputFormString[PatternBlankSequenceNode[PatternBlankSequence, {sym1_, sym2_}, _]] :=
 Catch[
 Module[{str1, str2},
-	str1 = ToInputFormString[sym1];
+	str1 = toInputFormString[sym1];
 	If[FailureQ[str1],
 		Throw[str1]
 	];
-	str2 = ToInputFormString[sym2];
+	str2 = toInputFormString[sym2];
 	If[FailureQ[str2],
 		Throw[str2]
 	];
 	str1 <> "__" <> str2
 ]]
 
-ToInputFormString[PatternBlankNullSequenceNode[PatternBlankNullSequence, {sym1_}, _]] :=
+toInputFormString[PatternBlankNullSequenceNode[PatternBlankNullSequence, {sym1_}, _]] :=
 Catch[
 Module[{str},
-	str = ToInputFormString[sym1];
+	str = toInputFormString[sym1];
 	If[FailureQ[str],
 		Throw[str]
 	];
 	str <> "___"
 ]]
 
-ToInputFormString[PatternBlankNullSequenceNode[PatternBlankNullSequence, {sym1_, sym2_}, _]] :=
+toInputFormString[PatternBlankNullSequenceNode[PatternBlankNullSequence, {sym1_, sym2_}, _]] :=
 Catch[
 Module[{str1, str2},
-	str1 = ToInputFormString[sym1];
+	str1 = toInputFormString[sym1];
 	If[FailureQ[str1],
 		Throw[str1]
 	];
-	str2 = ToInputFormString[sym2];
+	str2 = toInputFormString[sym2];
 	If[FailureQ[str2],
 		Throw[str2]
 	];
 	str1 <> "___" <> str2
 ]]
 
-ToInputFormString[OptionalDefaultPatternNode[OptionalDefaultPattern, {sym1_}, _]] :=
+toInputFormString[OptionalDefaultPatternNode[OptionalDefaultPattern, {sym1_}, _]] :=
 Catch[
 Module[{str},
-	str = ToInputFormString[sym1];
+	str = toInputFormString[sym1];
 	If[FailureQ[str],
 		Throw[str]
 	];
@@ -275,7 +282,7 @@ Module[{str},
 
 	
 
-ToInputFormString[InternalTokenNode[str_, _, _]] :=
+toInputFormString[InternalTokenNode[str_, _, _]] :=
 	str
 
 
@@ -289,25 +296,25 @@ InternalOneNode
 all represent input that was skipped, so InputForm is ""
 *)
 
-ToInputFormString[InternalAllNode[All, _, _]] :=
+toInputFormString[InternalAllNode[All, _, _]] :=
 	""
 
-ToInputFormString[InternalDotNode[Dot, _, _]] :=
+toInputFormString[InternalDotNode[Dot, _, _]] :=
 	""
 
-ToInputFormString[InternalNullNode[Null, _, _]] :=
+toInputFormString[InternalNullNode[Null, _, _]] :=
 	""
 
-ToInputFormString[InternalOneNode[1, _, _]] :=
+toInputFormString[InternalOneNode[1, _, _]] :=
 	""
 
 
 
 
-ToInputFormString[SyntaxErrorNode[tok_, nodes_, opts_]] :=
+toInputFormString[SyntaxErrorNode[tok_, nodes_, opts_]] :=
 Catch[
 Module[{nodeStrs},
-	nodeStrs = ToInputFormString /@ nodes;
+	nodeStrs = toInputFormString /@ nodes;
 	If[AnyTrue[nodeStrs, FailureQ],
 		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];
@@ -319,10 +326,10 @@ Module[{nodeStrs},
 
 
 
-ToInputFormString[FileNode[File, nodes_, opts_]] :=
+toInputFormString[FileNode[File, nodes_, opts_]] :=
 Catch[
 Module[{nodeStrs},
-	nodeStrs = ToInputFormString /@ nodes;
+	nodeStrs = toInputFormString /@ nodes;
 	If[AnyTrue[nodeStrs, FailureQ],
 		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];
@@ -331,21 +338,21 @@ Module[{nodeStrs},
 
 
 
-ToInputFormString[HoldNode[Hold, nodes_, opts_]] :=
-	ToInputFormString[CallNode[ToNode[Hold], {GroupNode[GroupSquare, Riffle[nodes, InternalTokenNode[",", {}, <||>]], <||>]}, <||>]]
+toInputFormString[HoldNode[Hold, nodes_, opts_]] :=
+	toInputFormString[CallNode[ToNode[Hold], {GroupNode[GroupSquare, Riffle[nodes, InternalTokenNode[",", {}, <||>]], <||>]}, <||>]]
 
 
 (*
 ConcreteParseString[""] returns Null, so handle that
 *)
-ToInputFormString[Null] := ""
+toInputFormString[Null] := ""
 
 
 
 
-ToInputFormString[f_Failure] := f
+toInputFormString[f_Failure] := f
 
-ToInputFormString[args___] := Failure["InternalUnhandled", <|"Function"->ToInputFormString, "Arguments"->HoldForm[{args}]|>]
+toInputFormString[args___] := Failure["InternalUnhandled", <|"Function"->ToInputFormString, "Arguments"->HoldForm[{args}]|>]
 
 
 End[]

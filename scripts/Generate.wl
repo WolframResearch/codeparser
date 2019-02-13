@@ -776,16 +776,16 @@ If[FailureQ[res],
 ]
 
 
-precedenceWL = Column[{
+precedenceWL = {
 "
 (*
 AUTO GENERATED FILE
 DO NOT MODIFY
 *)
-"} ~Join~ {"<|"} ~Join~ (KeyValueMap[(Row[{#1, " -> ", #2, ","}]) &, enumMap]) ~Join~ {"Nothing", "|>", ""}]
+"} ~Join~ {"<|"} ~Join~ (KeyValueMap[(Row[{#1, " -> ", #2, ","}]) &, enumMap]) ~Join~ {"Nothing", "|>", ""}
 
 Print["exporting Precedence.wl"]
-res = Export[FileNameJoin[{pacletASTDir, "Precedence.wl"}], precedenceWL, "String"]
+res = Export[FileNameJoin[{pacletASTDir, "Precedence.wl"}], Column[precedenceWL], "String"]
 
 If[FailureQ[res],
   Print[res];

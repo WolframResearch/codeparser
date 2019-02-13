@@ -27,8 +27,6 @@
 #undef False
 
 
-#include <vector>
-
 
 EXTERN_C DLLEXPORT int ConcreteParseFile(WolframLibraryData libData, MLINK mlp);
 
@@ -37,9 +35,3 @@ EXTERN_C DLLEXPORT int ConcreteParseString(WolframLibraryData libData, MLINK mlp
 EXTERN_C DLLEXPORT int TokenizeFile(WolframLibraryData libData, MLINK mlp);
 
 EXTERN_C DLLEXPORT int TokenizeString(WolframLibraryData libData, MLINK mlp);
-
-// EXTERN_C DLLEXPORT int testFunc(WolframLibraryData libData, MLINK mlp);
-
-void putTokens(MLINK mlp, bool interactive);
-void putExpressions(MLINK mlp, bool interactive);
-std::vector<std::shared_ptr<Node>> parseExpressions(bool interactive);

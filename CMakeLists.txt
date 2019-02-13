@@ -4,20 +4,16 @@ cmake_minimum_required(VERSION 3.0)
 project(ast)
 
 set(PACLET "AST")
+set(PACLET_VERSION "0.9" CACHE STRING "Paclet Version")
+set(WOLFRAMKERNEL /Applications/Mathematica.app/Contents/MacOS/WolframKernel CACHE FILEPATH "Path to WolframKernel")
+set(BUILD_DOCS OFF CACHE BOOL "Build documentation")
+set(BUILD_EXE OFF CACHE BOOL "Build executable")
 
 message(STATUS "PACLET: ${PACLET}")
-
-set(PACLET_VERSION "0.9" CACHE STRING "Paclet Version")
-
 message(STATUS "PACLET_VERSION: ${PACLET_VERSION}")
-
-set(WOLFRAMKERNEL /Applications/Mathematica.app/Contents/MacOS/WolframKernel CACHE FILEPATH "Path to WolframKernel")
-
 message(STATUS "WOLFRAMKERNEL: ${WOLFRAMKERNEL}")
-
-set(BUILD_DOCS OFF CACHE BOOL "Build documentation")
-
 message(STATUS "BUILD_DOCS: ${BUILD_DOCS}")
+message(STATUS "BUILD_EXE: ${BUILD_EXE}")
 
 set(WL_SOURCES
 	${CMAKE_SOURCE_DIR}/AST/Abstract.wl
@@ -186,6 +182,7 @@ endif(BUILD_DOCS)
 
 
 
+
 #
 # Build PacletInfo.m
 #
@@ -210,7 +207,6 @@ add_custom_command(
 #
 # Run the Generate.wl script to generate additional required C++ and WL files
 #
-
 add_custom_command(
 	OUTPUT
 		${GENERATED_SOURCES}
@@ -346,10 +342,7 @@ endif(MSVC)
 
 
 
-
-
-
-
+add_subdirectory(AST/cpp/src/exe)
 
 
 

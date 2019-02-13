@@ -41,13 +41,6 @@
 		<copy todir='${files_directory}'>
 			<fileset dir='${build.dir}${file.separator}paclet${file.separator}AST' />
 		</copy>
-
-		<!-- Set execute bit on wl-ast files.' -->
-		<chmod perm='ugo+rx' type='file' osfamily='unix'>
-			<fileset dir='${files_directory}${file.separator}ASTResources'>
-				<include name='**/wl-ast'/>
-			</fileset>
-		</chmod>
 		
 	</target>
 

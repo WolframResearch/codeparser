@@ -9,7 +9,6 @@
 class ByteDecoder {
     
     std::istream &In;
-    bool interactive;
     bool eof;
     
     std::vector<unsigned char> byteQueue;
@@ -22,7 +21,7 @@ class ByteDecoder {
     
 public:
     
-    ByteDecoder(std::istream &In, bool interactive);
+    ByteDecoder(std::istream &In);
     
     SourceCharacter nextSourceCharacter();
 };

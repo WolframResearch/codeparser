@@ -39,9 +39,16 @@ If[FailureQ[importedPacletInfo],
 
 replacedPacletInfo = importedPacletInfo /. {(Version -> _) -> (Version -> pacletVersion)}
 
+builtPacletInfoM = {
+"
+(*
+AUTO GENERATED FILE
+DO NOT MODIFY
+*)
+"} ~Join~ { ToString[replacedPacletInfo, InputForm, PageWidth->80] }
 
 Print["exporting built PacletInfo.m"]
-res = Put[replacedPacletInfo, built]
+res = Export[built, Column[builtPacletInfoM], "String"]
 
 If[FailureQ[res],
   Print[res];

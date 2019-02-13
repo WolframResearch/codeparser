@@ -297,7 +297,7 @@ Module[{s = sIn, h = hIn, res, tokenize},
 
 	tokenize = OptionValue["Tokenize"];
 
-	res = concreteParseStringFunc[s, False, False];
+	res = concreteParseStringFunc[s, False];
 
 	If[Head[res] === LibraryFunctionError,
 		Throw[Failure["LibraryFunctionError", <|"Result"->res|>]]
@@ -402,7 +402,7 @@ Module[{h, full, strm, b, nonASCII, pos, res, skipFirstLine = False, shebangWarn
 		];
 	];
 
-	res = concreteParseFileFunc[full, False, skipFirstLine];
+	res = concreteParseFileFunc[full, skipFirstLine];
 
 	If[Head[res] === LibraryFunctionError,
 		Throw[Failure["LibraryFunctionError", <|"Result"->res|>]]

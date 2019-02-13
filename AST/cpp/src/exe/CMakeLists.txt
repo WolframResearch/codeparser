@@ -1,0 +1,49 @@
+
+if(BUILD_EXE)
+
+#
+# Build executable
+#
+
+set(CPP_EXE_SOURCES
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/exe/main.cpp
+)
+
+add_executable(wl-ast-exe
+	${CPP_EXE_SOURCES}
+)
+
+target_include_directories(wl-ast-exe
+	PRIVATE ${CMAKE_SOURCE_DIR}/AST/cpp/include
+	PRIVATE ${CMAKE_BINARY_DIR}/generated/cpp/include
+	PRIVATE ${MATHLINK_INCLUDE_DIR}
+	PRIVATE ${WOLFRAMLIBRARY_INCLUDE_DIR}
+)
+
+target_link_libraries(wl-ast-exe wl-ast-lib)
+
+set_target_properties(wl-ast-exe PROPERTIES
+	OUTPUT_NAME
+		wl-ast
+	CXX_STANDARD
+		11
+	CXX_STANDARD_REQUIRED
+		ON
+)
+
+#
+# Setup warnings
+#
+if(MSVC)
+	target_compile_options(wl-ast-exe
+		# specify /MT to statically link runtime on Windows
+		# This prevents "The program can't start because ucrtbased.dll is missing from your computer" error on Windows 7
+		PRIVATE /W3 /EHsc /MT
+	)
+else()
+	target_compile_options(wl-ast-exe
+		PRIVATE -Wextra -Wall -Weffc++ -Wno-unused-parameter -Wno-unused-function -Wno-comment
+	)
+endif(MSVC)
+
+endif(BUILD_EXE)
