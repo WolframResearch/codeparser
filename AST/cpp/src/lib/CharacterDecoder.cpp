@@ -6,6 +6,19 @@
 
 CharacterDecoder::CharacterDecoder() : cur(0), curSource(0), characterQueue(), Issues() {}
 
+void CharacterDecoder::init() {
+    cur = WLCharacter(0);
+    curSource = SourceCharacter(0);
+    characterQueue.clear();
+    Issues.clear();
+}
+
+void CharacterDecoder::deinit() {
+    characterQueue.clear();
+    Issues.clear();
+}
+
+
 //
 // Returns a useful character
 //

@@ -170,6 +170,10 @@ class CharacterDecoder {
 public:
     CharacterDecoder();
 
+    void init();
+
+    void deinit();
+
     WLCharacter nextWLCharacter(NextCharacterPolicy policy = TOPLEVEL);
 
     WLCharacter currentWLCharacter();

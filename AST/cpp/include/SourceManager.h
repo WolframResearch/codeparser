@@ -124,6 +124,10 @@ class SourceManager {
 public:
     SourceManager();
     
+    void init();
+
+    void deinit();
+
     void advanceSourceLocation(SourceCharacter c);
     
     void setTokenStart();

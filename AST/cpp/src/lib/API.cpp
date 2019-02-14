@@ -74,16 +74,19 @@ DLLEXPORT int ConcreteParseFile(WolframLibraryData libData, MLINK mlp) {
 	   goto retPt;
 	}
         
-        
+        TheSourceManager->init();
         TheByteDecoder = new ByteDecoder(ifs);
+        TheCharacterDecoder->init();
         TheTokenizer->init(skipFirstLine);
         TheParser->init();
         
         putExpressions(mlp);
-        
+       	
         TheParser->deinit();
         TheTokenizer->deinit();
+        TheCharacterDecoder->deinit();
         delete TheByteDecoder;
+        TheSourceManager->deinit();
 
 	}
 	res = LIBRARY_NO_ERROR;
@@ -121,6 +124,7 @@ DLLEXPORT int ConcreteParseString(WolframLibraryData libData, MLINK mlp) {
 	auto skipFirstLine = false;
 	auto iss = std::stringstream(reinterpret_cast<const char *>(inStr));
 
+			TheSourceManager->init();
         TheByteDecoder = new ByteDecoder(iss);
         TheTokenizer->init(skipFirstLine);
         TheParser->init();
@@ -130,6 +134,7 @@ DLLEXPORT int ConcreteParseString(WolframLibraryData libData, MLINK mlp) {
         TheParser->deinit();
         TheTokenizer->deinit();
         delete TheByteDecoder;
+        TheSourceManager->deinit();
 
 	}
 	res = LIBRARY_NO_ERROR;
