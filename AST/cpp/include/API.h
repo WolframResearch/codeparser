@@ -29,12 +29,12 @@
 
 #undef False
 
+EXTERN_C DLLEXPORT mint WolframLibrary_getVersion();
 
+EXTERN_C DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData);
+
+EXTERN_C DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData);
 
 EXTERN_C DLLEXPORT int ConcreteParseFile(WolframLibraryData libData, MLINK mlp);
 
 EXTERN_C DLLEXPORT int ConcreteParseString(WolframLibraryData libData, MLINK mlp);
-
-EXTERN_C DLLEXPORT int TokenizeFile(WolframLibraryData libData, MLINK mlp);
-
-EXTERN_C DLLEXPORT int TokenizeString(WolframLibraryData libData, MLINK mlp);

@@ -63,7 +63,7 @@ struct SourceLocation {
 
     void put(MLINK mlp) {
 
-        MLPutFunction(mlp, SYMBOL_LIST.name().c_str(), 2);
+        MLPutFunction(mlp, SYMBOL_LIST.name(), 2);
 
         MLPutInteger(mlp, Line);
 
@@ -80,11 +80,13 @@ struct SourceLocation {
 };
 
 struct SourceSpan {
+
     SourceLocation start;
     SourceLocation end;
 
     void put(MLINK mlp) {
-        MLPutFunction(mlp, SYMBOL_LIST.name().c_str(), 2);
+
+        MLPutFunction(mlp, SYMBOL_LIST.name(), 2);
 
         start.put(mlp);
 
@@ -93,9 +95,9 @@ struct SourceSpan {
 
     void putSourceRule(MLINK mlp) {
 
-        MLPutFunction(mlp, SYMBOL_RULE.name().c_str(), 2);
+        MLPutFunction(mlp, SYMBOL_RULE.name(), 2);
 
-        MLPutSymbol(mlp, SYMBOL_SOURCE.name().c_str());
+        MLPutSymbol(mlp, SYMBOL_SOURCE.name());
 
         put(mlp);
     }

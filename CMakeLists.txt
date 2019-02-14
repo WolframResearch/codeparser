@@ -240,6 +240,7 @@ set(MATHLINK_LIB_DIR /Applications/Mathematica.app/Contents/SystemFiles/Links/Ma
 message(STATUS "MATHLINK_LIB_DIR: ${MATHLINK_LIB_DIR}")
 
 set(CPP_INCLUDES
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/API.h
 	${CMAKE_SOURCE_DIR}/AST/cpp/include/ByteDecoder.h
 	${CMAKE_SOURCE_DIR}/AST/cpp/include/ByteEncoder.h
 	${CMAKE_SOURCE_DIR}/AST/cpp/include/CharacterDecoder.h

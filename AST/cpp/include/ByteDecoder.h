@@ -7,10 +7,9 @@
 #include <istream>
 
 class ByteDecoder {
-    
+private:
     std::istream &In;
     bool eof;
-    
     std::vector<unsigned char> byteQueue;
     
     unsigned char nextByte();

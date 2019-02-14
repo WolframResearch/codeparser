@@ -910,11 +910,14 @@ symbolCPPHeader = {
 #include <utility>
 
 class Symbol {
-  std::string Name;
-  public:Symbol(std::string Name):Name(Name) {}
-  std::string name() const;
+public:
+  constexpr Symbol(const char *Name) : Name(Name) {}
+  const char *name() const;
 
-  void put(MLINK) const;
+  void put(MLINK mlp) const;
+
+private:
+  const char *Name;
 };
 
 bool operator==(const Symbol& lhs, const Symbol& rhs);
@@ -987,12 +990,12 @@ bool operator==(const Symbol& lhs, const Symbol& rhs) {
    return lhs.name() == rhs.name();
 }
 
-std::string Symbol::name() const {
+const char *Symbol::name() const {
    return Name;
 }
 
 void Symbol::put(MLINK mlp) const {
-  MLPutSymbol(mlp, Name.c_str());
+  MLPutSymbol(mlp, Name);
 }
 
 "} ~Join~ 

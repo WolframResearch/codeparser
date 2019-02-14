@@ -758,16 +758,24 @@ std::string WLCharacter::string() const {
     
     std::ostringstream String;
     
-    auto src = source();
-    for (auto S : src) {
-        auto bytes = S.bytes();
-        for (auto b : bytes) {
-            String.put(b);
-        }
-    }
+    String << this;
     
     return String.str();
 }
+
+std::ostream& operator<<(std::ostream& s, const WLCharacter c) {
+
+    auto src = c.source();
+    for (auto S : src) {
+        auto bytes = S.bytes();
+        for (auto b : bytes) {
+            s.put(b);
+        }
+    }
+
+    return s;
+}
+
 
 bool WLCharacter::isDigitOrAlpha() const {
     if (!(0 <= value_ && value_ <= 0x7f)) {

@@ -63,7 +63,7 @@ public:
     constexpr int to_point() const {
         return value_;
     }
-
+    
     std::string string() const;
 
     std::vector<SourceCharacter> source() const;
@@ -117,6 +117,8 @@ private:
          }
      };
  }
+
+std::ostream& operator<<(std::ostream& stream, const WLCharacter);
 
 
 

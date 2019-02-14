@@ -59,7 +59,8 @@ public:
     Parser();
     
     void init();
-    
+    void deinit();
+
     Token nextToken(NextTokenPolicy policy = POLICY_DEFAULT);
     
     Token tryNextToken(NextTokenPolicy policy = POLICY_DEFAULT);

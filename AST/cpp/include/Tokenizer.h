@@ -52,7 +52,8 @@ public:
     Tokenizer();
     
     void init(bool skipFirstLine);
-    
+    void deinit();
+
     Token nextToken();
     
     Token currentToken();

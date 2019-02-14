@@ -843,7 +843,7 @@ std::shared_ptr<Node> SemiParselet::parse(std::shared_ptr<Node> Left, ParserCont
     auto prec = getPrecedence();
     assert(prec != PRECEDENCE_UNUSED);
 
-    auto Tok = TheParser->nextToken(POLICY_PRESERVE_TOPLEVEL_NEWLINES);
+    TheParser->nextToken(POLICY_PRESERVE_TOPLEVEL_NEWLINES);
     
     
     std::vector<std::shared_ptr<Node>> Args;
@@ -865,7 +865,7 @@ std::shared_ptr<Node> SemiParselet::parse(std::shared_ptr<Node> Left, ParserCont
             Issues.push_back(Issue);
         }
 
-        Tok = TheParser->currentToken();
+        auto Tok = TheParser->currentToken();
         
 //        Span = TheSourceManager->getTokenSpan();
 

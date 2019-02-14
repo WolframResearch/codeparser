@@ -4,22 +4,10 @@
 #include "Parselet.h"
 #include "Tokenizer.h"
 
-Parser::Parser() : groupDepth(0), currentCached(false), _currentToken(), _currentTokenString(),
+Parser::Parser() : groupDepth(0), currentCached(false), _currentToken(TOKEN_UNKNOWN), _currentTokenString(),
     prefixParselets(), infixParselets(), postfixParselets(), contextSensitiveParselets(), parselets(),
-    tokenQueue(), Issues() {}
+    tokenQueue(), Issues() {
 
-Parser::~Parser() {
-    for (auto parselet : parselets) {
-        delete parselet;
-    }
-}
-
-
-
-void Parser::init() {
-    
-    nextToken();
-    
     //
     // Atoms and Atom-like expressions
     //
@@ -286,6 +274,33 @@ void Parser::init() {
     registerTokenType(TOKEN_OPERATOR_EQUAL, new EqualParselet());
 }
 
+Parser::~Parser() {
+    for (auto parselet : parselets) {
+        delete parselet;
+    }
+}
+
+
+
+void Parser::init() {
+    
+    groupDepth = 0;
+    currentCached = false;
+    _currentToken = TOKEN_UNKNOWN;
+    _currentTokenString.clear();
+    tokenQueue.clear();
+    Issues.clear();
+
+    nextToken();
+}
+
+void Parser::deinit() {
+
+    _currentTokenString.clear();
+    tokenQueue.clear();
+    Issues.clear();
+}
+
 void Parser::registerTokenType(Token token, Parselet *parselet) {
     
     parselets.insert(parselet);
@@ -326,6 +341,7 @@ void Parser::registerTokenType(Token token, Parselet *parselet) {
         contextSensitiveParselets[token] = ContextSensitive;
     }
 }
+
 
 Token Parser::nextToken(NextTokenPolicy policy) {
     

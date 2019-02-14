@@ -16,8 +16,9 @@ int main(int argc, char *argv[]) {
     
     std::string input;
     std::cout << ">>> ";
-    std::getline(std::cin, input);
-
+   std::getline(std::cin, input);
+    // input = "/Applications/Mathematica120.app/Contents/AddOns/Applications/GeoFieldModelData/Kernel/geomagneticmodels.m";
+    
     MLENV ep;
     MLEnvironmentParameter p;
     int err;
@@ -34,8 +35,10 @@ int main(int argc, char *argv[]) {
     MLINK mlp;
     mlp = MLLoopbackOpen(ep, &err);
 
-    MLPutFunction(mlp, SYMBOL_LIST.name().c_str(), 1);
+    MLPutFunction(mlp, SYMBOL_LIST.name(), 1);
     MLPutString(mlp, input.c_str());
+    
+    WolframLibrary_initialize(nullptr);
     
     res = ConcreteParseString(nullptr, mlp);
     if (res != LIBRARY_NO_ERROR) {
@@ -45,7 +48,9 @@ int main(int argc, char *argv[]) {
 
     printExpression(mlp);
     std::cout << "\n";
-
+    
+    WolframLibrary_uninitialize(nullptr);
+    
 retPt:
     if (mlp != nullptr) {
         MLClose(mlp);

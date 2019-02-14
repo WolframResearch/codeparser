@@ -22,11 +22,23 @@ DLLEXPORT mint WolframLibrary_getVersion() {
 }
 
 DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData) {
+    
+    TheCharacterDecoder = new CharacterDecoder();
+    TheSourceManager = new SourceManager();
+    TheByteEncoder = new ByteEncoder();
+    TheTokenizer = new Tokenizer();
+    TheParser = new Parser();
+    
 	return 0;
 }
 
 DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData) {
-	return;
+    
+    delete TheCharacterDecoder;
+    delete TheSourceManager;
+    delete TheByteEncoder;
+    delete TheParser;
+    delete TheTokenizer;
 }
 
 DLLEXPORT int ConcreteParseFile(WolframLibraryData libData, MLINK mlp) {
@@ -35,7 +47,7 @@ DLLEXPORT int ConcreteParseFile(WolframLibraryData libData, MLINK mlp) {
 	const unsigned char *inStr = NULL;
 	const char *skipFirstLineSym = NULL;
 	
-	if ( !MLTestHead( mlp, SYMBOL_LIST.name().c_str(), &len)) 
+	if ( !MLTestHead( mlp, SYMBOL_LIST.name(), &len)) 
 		goto retPt;
 	if ( len != 2) 
 		goto retPt;
@@ -54,31 +66,24 @@ DLLEXPORT int ConcreteParseFile(WolframLibraryData libData, MLINK mlp) {
 
 	// blah;
 	{
-	auto skipFirstLine = (strcmp(skipFirstLineSym, SYMBOL_TRUE.name().c_str()) == 0);
+	auto skipFirstLine = (strcmp(skipFirstLineSym, SYMBOL_TRUE.name()) == 0);
 
 	std::ifstream ifs(reinterpret_cast<const char *>(inStr), std::ifstream::in);
         
 	if (ifs.fail()) {
 	   goto retPt;
 	}
-
-	TheSourceManager = new SourceManager();
-	TheByteDecoder = new ByteDecoder(ifs);
-	TheByteEncoder = new ByteEncoder();
-	TheCharacterDecoder = new CharacterDecoder();
-
-	TheTokenizer = new Tokenizer();
-   TheTokenizer->init(skipFirstLine);
-   TheParser = new Parser();
-   TheParser->init();
-   putExpressions(mlp);
-
-	delete TheSourceManager;
-	delete TheByteDecoder;
-	delete TheByteEncoder;
-	delete TheCharacterDecoder;
-	delete TheTokenizer;
-	delete TheParser;
+        
+        
+        TheByteDecoder = new ByteDecoder(ifs);
+        TheTokenizer->init(skipFirstLine);
+        TheParser->init();
+        
+        putExpressions(mlp);
+        
+        TheParser->deinit();
+        TheTokenizer->deinit();
+        delete TheByteDecoder;
 
 	}
 	res = LIBRARY_NO_ERROR;
@@ -95,7 +100,7 @@ DLLEXPORT int ConcreteParseString(WolframLibraryData libData, MLINK mlp) {
 	int len;
 	const unsigned char *inStr = NULL;
 
-    if ( !MLTestHead( mlp, SYMBOL_LIST.name().c_str(), &len)) {
+    if ( !MLTestHead( mlp, SYMBOL_LIST.name(), &len)) {
 		goto retPt;
     }
     if ( len != 1) {
@@ -116,23 +121,15 @@ DLLEXPORT int ConcreteParseString(WolframLibraryData libData, MLINK mlp) {
 	auto skipFirstLine = false;
 	auto iss = std::stringstream(reinterpret_cast<const char *>(inStr));
 
-	TheSourceManager = new SourceManager();
-	TheByteDecoder = new ByteDecoder(iss);
-	TheByteEncoder = new ByteEncoder();
-	TheCharacterDecoder = new CharacterDecoder();
+        TheByteDecoder = new ByteDecoder(iss);
+        TheTokenizer->init(skipFirstLine);
+        TheParser->init();
+        
+        putExpressions(mlp);
 
-	TheTokenizer = new Tokenizer();
-   TheTokenizer->init(skipFirstLine);
-   TheParser = new Parser();
-   TheParser->init();
-   putExpressions(mlp);
-
-	delete TheSourceManager;
-	delete TheByteDecoder;
-	delete TheByteEncoder;
-	delete TheCharacterDecoder;
-	delete TheTokenizer;
-	delete TheParser;
+        TheParser->deinit();
+        TheTokenizer->deinit();
+        delete TheByteDecoder;
 
 	}
 	res = LIBRARY_NO_ERROR;
@@ -148,7 +145,7 @@ void putExpressions(MLINK mlp) {
 
 	auto nodes = parseExpressions();
    
-	if(!MLPutFunction(mlp, SYMBOL_LIST.name().c_str(), nodes.size()))
+	if(!MLPutFunction(mlp, SYMBOL_LIST.name(), nodes.size()))
 		goto retPt;
 
 	for (std::shared_ptr<Node> node : nodes) {
