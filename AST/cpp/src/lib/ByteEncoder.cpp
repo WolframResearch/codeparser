@@ -1,12 +1,6 @@
 
 #include "ByteEncoder.h"
 
-#include "Utils.h"
-#include "LongNameDefines.h"
-
-#include <sstream>
-#include <iomanip>
-#include <iostream>
 #include <cassert>
 
 ByteEncoder::ByteEncoder() {}

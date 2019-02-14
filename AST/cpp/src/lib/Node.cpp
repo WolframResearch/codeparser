@@ -1,19 +1,9 @@
 
 #include "Node.h"
 
-#include "Utils.h"
-#include "Symbol.h"
-#include "ToInputFormString.h"
-
-#include "mathlink.h"
-
-#include <cassert>
-#include <iostream>
-#include <memory>
-
 void Node::putASTArgs(MLINK mlp) {
 
-    MLPutFunction(mlp, "List", Args.size());
+    MLPutFunction(mlp, SYMBOL_LIST.name().c_str(), Args.size());
 
     for (auto A : Args) {
         A->put(mlp);
@@ -26,7 +16,7 @@ void Node::putSyntaxIssues(MLINK mlp) {
 
     SYMBOL_SYNTAXISSUES.put(mlp);
 
-    MLPutFunction(mlp, "List", Issues.size());
+    MLPutFunction(mlp, SYMBOL_LIST.name().c_str(), Issues.size());
 
     for (auto I : Issues) {
         I.put(mlp);

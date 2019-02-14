@@ -1,17 +1,6 @@
 
 #include "Parselet.h"
 
-#include "Parser.h"
-#include "Utils.h"
-#include "Symbol.h"
-#include "Node.h"
-#include "SyntaxIssue.h"
-
-#include <cassert>
-#include <iostream>
-#include <vector>
-#include <iterator>
-
 //
 // Atom parselets
 //

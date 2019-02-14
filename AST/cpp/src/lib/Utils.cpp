@@ -1,16 +1,7 @@
 
 #include "Utils.h"
 
-#include "Symbol.h"
-
-#include <cctype>
 #include <sstream>
-#include <iomanip>
-#include <iostream>
-#include <cassert>
-#include <string>
-#include <memory>
-#include <vector>
 
 int parseInteger(std::string s, int base) {
     return std::stoi(s, nullptr, base);

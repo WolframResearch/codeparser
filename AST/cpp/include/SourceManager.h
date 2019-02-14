@@ -1,13 +1,9 @@
 
 #pragma once
 
-#include "mathlink.h"
+#include "Symbol.h"
 
-#include <map>
-#include <string>
-#include <iostream>
 #include <cassert>
-#include <vector>
 
 //
 // https://akrzemi1.wordpress.com/2017/05/18/asserts-in-constexpr-functions/
@@ -64,18 +60,10 @@ constexpr SourceCharacter SOURCECHARACTER_BACKSLASH('\\');
 struct SourceLocation {
     size_t Line;
     size_t Col;
-    
-    std::string string() const {
-        return "{" + std::to_string(Line) + ", " + std::to_string(Col) + "}";
-    }
-    
-    void string(std::ostream& os) const {
-        os << "{" << Line << ", " << Col << "}";
-    }
 
     void put(MLINK mlp) {
 
-        MLPutFunction(mlp, "List", 2);
+        MLPutFunction(mlp, SYMBOL_LIST.name().c_str(), 2);
 
         MLPutInteger(mlp, Line);
 
@@ -94,21 +82,9 @@ struct SourceLocation {
 struct SourceSpan {
     SourceLocation start;
     SourceLocation end;
-    
-    std::string string() const {
-        return "{" + start.string() + ", " + end.string() + "}";
-    }
-    
-    void string(std::ostream& os) const {
-        os << "{";
-        start.string(os);
-        os << ", ";
-        end.string(os);
-        os << "}";
-    }
 
     void put(MLINK mlp) {
-        MLPutFunction(mlp, "List", 2);
+        MLPutFunction(mlp, SYMBOL_LIST.name().c_str(), 2);
 
         start.put(mlp);
 
@@ -117,9 +93,9 @@ struct SourceSpan {
 
     void putSourceRule(MLINK mlp) {
 
-        MLPutFunction(mlp, "Rule", 2);
+        MLPutFunction(mlp, SYMBOL_RULE.name().c_str(), 2);
 
-        MLPutSymbol(mlp, "Source");
+        MLPutSymbol(mlp, SYMBOL_SOURCE.name().c_str());
 
         put(mlp);
     }

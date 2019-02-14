@@ -10,14 +10,9 @@
 
 #include "SourceManager.h"
 
-#include "Utils.h"
 #include "ByteEncoder.h"
 
-#include <cassert>
-#include <iostream>
-#include <sstream>
-#include <iomanip>
-#include <cctype>
+#include <vector>
 
 bool isContiguous(SourceLocation a, SourceLocation b) {
     return a.Line == b.Line && a.Col + 1 == b.Col;

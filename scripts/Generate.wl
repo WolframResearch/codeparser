@@ -172,7 +172,6 @@ longNameDefinesCPPHeader = {
 //
 
 #pragma once
-
 "} ~Join~ longNameDefines ~Join~ {""}
 
 Print["exporting LongNameDefines.h"]
@@ -417,8 +416,6 @@ codePointCPPHeader = {
 #pragma once
 
 #include \"Token.h\"
-
-#include <string>
 
 //
 // These are the actual WL code points for linear syntax characters
@@ -683,6 +680,7 @@ tokenCPPSource = {
 //
 
 #include \"Token.h\"
+
 #include <iostream>
 #include <cassert>
 "} ~Join~
@@ -954,6 +952,23 @@ If[FailureQ[res],
   Quit[1]
 ]
 
+(*
+We want to fully-qualify symbol names over the wire.
+This allows library->kernel traffic to work when AST` is not on $ContextPath.
+However, it is still not possible to fully-qualify System` symbols
+bug 283291
+bug 284492
+So also make library->kernel traffic match this behavior
+*)
+stringifyForTransmitting[sym_Symbol] :=
+Module[{ctxt},
+  ctxt = Context[sym];
+  If[ctxt == "System`",
+    ToString[sym]
+    ,
+    Context[sym]<>ToString[sym]
+  ]
+]
 
 
 symbolCPPSource = {
@@ -982,7 +997,7 @@ void Symbol::put(MLINK mlp) const {
 
 "} ~Join~ 
 
-    (Row[{"const", " ", "Symbol&", " ", toGlobal["Symbol`"<>ToString[#]], " ", "=", " ", "Symbol(\"", ToString[#], "\")", ";"}]& /@ symbols) ~Join~
+    (Row[{"const", " ", "Symbol&", " ", toGlobal["Symbol`"<>ToString[#]], " ", "=", " ", "Symbol(\"", stringifyForTransmitting[#], "\")", ";"}]& /@ symbols) ~Join~
 
       {""} ~Join~
 
@@ -1082,7 +1097,7 @@ void Symbol::put(MLINK mlp) const {
      {"std::string SymbolToPostfixOperatorString(const Symbol& Sym) {"} ~Join~
       (Row[{"if (Sym == ", toGlobal["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
           "{ return ", escapeString[#[[2]]], ";", "}"}]& /@ DownValues[SymbolToPostfixOperatorString]) ~Join~
-      {" std::cerr << \"Unhandled Symbol: \" << Sym.name() << \"\\n\"; assert(false && \"Unhandled Symbol\");return \"XXX\";",
+      {" std::cerr << \"Unhandled Symbol: \" << Sym.name() << \"\\n\"; assert(false && \"Unhandled Symbol\"); return \"XXX\";",
      "}"} ~Join~
      {""} ~Join~
 
@@ -1103,7 +1118,7 @@ void Symbol::put(MLINK mlp) const {
      {"std::string SymbolToTernaryOperatorString(const Symbol& Sym) {"} ~Join~
       (Row[{"if (Sym == ", toGlobal["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
           "{ return ", escapeString[#[[2]]], ";", "}"}]& /@ DownValues[SymbolToTernaryOperatorString]) ~Join~
-      {" std::cerr << \"Unhandled Symbol: \" << Sym.name() << \"\\n\"; assert(false && \"Unhandled Symbol\");return \"XXX\";",
+      {" std::cerr << \"Unhandled Symbol: \" << Sym.name() << \"\\n\"; assert(false && \"Unhandled Symbol\"); return \"XXX\";",
      "}",
      ""} ~Join~
 
@@ -1118,39 +1133,6 @@ void Symbol::put(MLINK mlp) const {
 
 Print["exporting Symbol.cpp"]
 res = Export[FileNameJoin[{generatedCPPSrcDir, "Symbol.cpp"}], Column[symbolCPPSource], "String"]
-
-If[FailureQ[res],
-  Print[res];
-  Quit[1]
-]
-
-
-
-
-
-
-
-(* ToInputFormString *)
-Print["generating ToInputFormString"]
-
-toInputFormStringCPPHeader = {
-"
-//
-// AUTO GENERATED FILE
-// DO NOT MODIFY
-//
-
-#pragma once
-
-#include \"Token.h\"
-
-#include <string>
-
-std::string ToInputFormString(std::shared_ptr<Node>);
-"}
-
-Print["exporting ToInputFormString.h"]
-res = Export[FileNameJoin[{generatedCPPIncludeDir, "ToInputFormString.h"}], Column[toInputFormStringCPPHeader], "String"]
 
 If[FailureQ[res],
   Print[res];

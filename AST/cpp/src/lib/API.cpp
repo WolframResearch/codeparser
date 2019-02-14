@@ -2,22 +2,17 @@
 #include "API.h"
 
 #include "Parser.h"
-#include "Precedence.h"
+#include "Tokenizer.h"
+#include "CharacterDecoder.h"
+#include "Node.h"
 #include "ByteDecoder.h"
 #include "ByteEncoder.h"
-#include "CharacterDecoder.h"
-#include "Tokenizer.h"
+#include "Precedence.h"
 
-#include <stdlib.h>
-#include <string>
-#include <string>
-#include <sstream>
-#include <iostream>
 #include <fstream>
 #include <cassert>
 #include <vector>
 
-void putTokens(MLINK mlp);
 void putExpressions(MLINK mlp);
 std::vector<std::shared_ptr<Node>> parseExpressions();
 
@@ -40,7 +35,7 @@ DLLEXPORT int ConcreteParseFile(WolframLibraryData libData, MLINK mlp) {
 	const unsigned char *inStr = NULL;
 	const char *skipFirstLineSym = NULL;
 	
-	if ( !MLTestHead( mlp, "List", &len)) 
+	if ( !MLTestHead( mlp, SYMBOL_LIST.name().c_str(), &len)) 
 		goto retPt;
 	if ( len != 2) 
 		goto retPt;
@@ -59,7 +54,7 @@ DLLEXPORT int ConcreteParseFile(WolframLibraryData libData, MLINK mlp) {
 
 	// blah;
 	{
-	auto skipFirstLine = (strcmp(skipFirstLineSym, "True") == 0);
+	auto skipFirstLine = (strcmp(skipFirstLineSym, SYMBOL_TRUE.name().c_str()) == 0);
 
 	std::ifstream ifs(reinterpret_cast<const char *>(inStr), std::ifstream::in);
         
@@ -99,19 +94,17 @@ DLLEXPORT int ConcreteParseString(WolframLibraryData libData, MLINK mlp) {
 	int res = LIBRARY_FUNCTION_ERROR;
 	int len;
 	const unsigned char *inStr = NULL;
-	const char *skipFirstLineSym = NULL;
-	
-	if ( !MLTestHead( mlp, "List", &len)) 
-		goto retPt;
-	if ( len != 2) 
-		goto retPt;
 
+    if ( !MLTestHead( mlp, SYMBOL_LIST.name().c_str(), &len)) {
+		goto retPt;
+    }
+    if ( len != 1) {
+		goto retPt;
+    }
+    
 	int b;
 	int c;
 	if(! MLGetUTF8String(mlp, &inStr, &b, &c))
-		goto retPt;
-
-	if(! MLGetSymbol(mlp, &skipFirstLineSym))
 		goto retPt;
 
 
@@ -120,8 +113,7 @@ DLLEXPORT int ConcreteParseString(WolframLibraryData libData, MLINK mlp) {
 
 	// blah;
 	{
-	auto skipFirstLine = (strcmp(skipFirstLineSym, "True") == 0);
-
+	auto skipFirstLine = false;
 	auto iss = std::stringstream(reinterpret_cast<const char *>(inStr));
 
 	TheSourceManager = new SourceManager();
@@ -147,122 +139,6 @@ DLLEXPORT int ConcreteParseString(WolframLibraryData libData, MLINK mlp) {
 retPt: 
 	if ( inStr != NULL)
 		MLReleaseUTF8String(mlp, inStr, b);
-	if ( skipFirstLineSym != NULL)
-		MLReleaseSymbol(mlp, skipFirstLineSym);
-	return res;
-}
-
-DLLEXPORT int TokenizeFile(WolframLibraryData libData, MLINK mlp) {
-	int res = LIBRARY_FUNCTION_ERROR;
-	int len;
-	const unsigned char *inStr = NULL;
-	const char *skipFirstLineSym = NULL;
-	
-	if ( !MLTestHead( mlp, "List", &len)) 
-		goto retPt;
-	if ( len != 2) 
-		goto retPt;
-
-	int b;
-	int c;
-	if(! MLGetUTF8String(mlp, &inStr, &b, &c))
-		goto retPt;
-
-	if(! MLGetSymbol(mlp, &skipFirstLineSym))
-		goto retPt;
-
-
-	if ( ! MLNewPacket(mlp) ) 
-		goto retPt;
-
-	// blah;
-	{
-	auto skipFirstLine = (strcmp(skipFirstLineSym, "True") == 0);
-
-	std::ifstream ifs(reinterpret_cast<const char *>(inStr), std::ifstream::in);
-        
-	if (ifs.fail()) {
-	   return 1;
-	}
-
-	TheSourceManager = new SourceManager();
-	TheByteDecoder = new ByteDecoder(ifs);
-	TheByteEncoder = new ByteEncoder();
-	TheCharacterDecoder = new CharacterDecoder();
-
-	TheTokenizer = new Tokenizer();
-   TheTokenizer->init(skipFirstLine);
-   putTokens(mlp);
-
-	delete TheSourceManager;
-	delete TheByteDecoder;
-	delete TheByteEncoder;
-	delete TheCharacterDecoder;
-	delete TheTokenizer;
-	delete TheParser;
-
-	}
-	res = LIBRARY_NO_ERROR;
-retPt: 
-	if ( inStr != NULL)
-		MLReleaseUTF8String(mlp, inStr, b);
-	if ( skipFirstLineSym != NULL)
-		MLReleaseSymbol(mlp, skipFirstLineSym);
-	return res;
-}
-
-DLLEXPORT int TokenizeString(WolframLibraryData libData, MLINK mlp) {
-	int res = LIBRARY_FUNCTION_ERROR;
-	int len;
-	const unsigned char *inStr = NULL;
-	const char *skipFirstLineSym = NULL;
-	
-	if ( !MLTestHead( mlp, "List", &len)) 
-		goto retPt;
-	if ( len != 2) 
-		goto retPt;
-
-	int b;
-	int c;
-	if(! MLGetUTF8String(mlp, &inStr, &b, &c))
-		goto retPt;
-
-	if(! MLGetSymbol(mlp, &skipFirstLineSym))
-		goto retPt;
-
-
-	if ( ! MLNewPacket(mlp) ) 
-		goto retPt;
-
-	// blah;
-	{
-	auto skipFirstLine = (strcmp(skipFirstLineSym, "True") == 0);
-
-	auto iss = std::stringstream(reinterpret_cast<const char *>(inStr));
-
-	TheSourceManager = new SourceManager();
-	TheByteDecoder = new ByteDecoder(iss);
-	TheByteEncoder = new ByteEncoder();
-	TheCharacterDecoder = new CharacterDecoder();
-
-	TheTokenizer = new Tokenizer();
-   TheTokenizer->init(skipFirstLine);
-   putTokens(mlp);
-
-	delete TheSourceManager;
-	delete TheByteDecoder;
-	delete TheByteEncoder;
-	delete TheCharacterDecoder;
-	delete TheTokenizer;
-	delete TheParser;
-
-	}
-	res = LIBRARY_NO_ERROR;
-retPt: 
-	if ( inStr != NULL)
-		MLReleaseUTF8String(mlp, inStr, b);
-	if ( skipFirstLineSym != NULL)
-		MLReleaseSymbol(mlp, skipFirstLineSym);
 	return res;
 }
 
@@ -272,83 +148,11 @@ void putExpressions(MLINK mlp) {
 
 	auto nodes = parseExpressions();
    
-	if(!MLPutFunction(mlp, "List", nodes.size()))
+	if(!MLPutFunction(mlp, SYMBOL_LIST.name().c_str(), nodes.size()))
 		goto retPt;
 
 	for (std::shared_ptr<Node> node : nodes) {
 		node->put(mlp);
-	}
-
-retPt:
-	return;
-}
-
-
-struct TokenExpr {
-	Token Tok;
-	std::string Str;
-	SourceSpan Span;
-
-	void put(MLINK mlp) {
-		MLPutFunction(mlp, SYMBOL_TOKEN.name().c_str(), 3);
-
-		MLPutSymbol(mlp, TokenToString(Tok).c_str());
-
-		auto escaped = stringEscape(Str);
-    	MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(escaped.c_str()), escaped.size());
-
-		MLPutSymbol(mlp, "Source");
-
-		Span.put(mlp);
-	}
-};
-
-void putTokens(MLINK mlp) {
-
-	TheTokenizer->nextToken();
-
-	std::vector<TokenExpr> TokenExprs;
-
-    while (true) {
-        
-        auto Tok = TheTokenizer->currentToken();
-
-        auto Str = TheTokenizer->getString();
-
-        auto Span = TheSourceManager->getTokenSpan();
-
-        // std::cout << SYMBOL_TOKEN.name();
-        // std::cout << "[";
-        // std::cout << TokenToString(Tok);
-        // std::cout << ", ";
-        // std::cout << stringEscape(Str);
-        // std::cout << ", <|";
-        // std::cout << ASTSourceString(Span);
-        // std::cout << "|>";
-        // std::cout << "]";
-
-        // std::cout << ",\n";
-        // std::cout << "\n";
-
-        if (Tok == TOKEN_EOF) {
-            break;
-        }
-
-        TokenExpr E{Tok, Str, Span};
-        TokenExprs.push_back(E);
-
-        TheTokenizer->nextToken();
-    }
-
-    // std::cout << SYMBOL_NOTHING.name();
-    // std::cout << "\n";
-    // std::cout << "}\n";
-
-    if(!MLPutFunction(mlp, "List", TokenExprs.size()))
-		goto retPt;
-
-	for (auto E : TokenExprs) {
-		E.put(mlp);
 	}
 
 retPt:

@@ -6,10 +6,6 @@ ParseString[string, h] wraps the output with h and allows multiple expressions t
 
 ParseFile::usage = "ParseFile[file] returns an abstract syntax tree by interpreting file as WL input."
 
-TokenizeString::usage = "TokenizeString[string] returns a list of tokens by interpreting string as WL input."
-
-TokenizeFile::usage = "TokenizeFile[file] returns a list of tokens by interpreting file as WL input."
-
 
 ConcreteParseString::usage = "ConcreteParseString[string] returns a concrete syntax tree by interpreting string as WL input."
 
@@ -242,62 +238,132 @@ Needs["AST`Utils`"]
 Needs["PacletManager`"]
 
 
-$lib := $lib = FindLibrary["libwl-ast"]
+$lib := $lib =
+Catch[
+Module[{res},
+	res = FindLibrary["AST"];
+	If[FailureQ[res],
+		Throw[Failure["ASTLibraryNotFound", <||>]]
+	];
+	res
+]]
 
+(*
+LibraryLink creates a separate loopback link for each library function
+*)
 
 concreteParseStringFunc := concreteParseStringFunc =
 	Catch[
-	Module[{loaded},
-		loaded = LibraryFunctionLoad[$lib, "ConcreteParseString", LinkObject, LinkObject];
-		If[FailureQ[loaded]
+	Module[{res, loaded, linkObject},
+
+		If[FailureQ[$lib],
+			Throw[$lib]
+		];
+
+		res = newestLinkObject[LibraryFunctionLoad[$lib, "ConcreteParseString", LinkObject, LinkObject]];
+
+		If[FailureQ[res],
+			Throw[res]
+		];
+
+		{loaded, linkObject} = res;
+
+		If[FailureQ[loaded],
 			Throw[loaded]
 		];
 
-		If[Head[loaded] =!= LibraryFunction
+		If[Head[loaded] =!= LibraryFunction,
 			Throw[Failure["LibraryFunctionLoad", <|"Result"->loaded|>]]
 		];
+
+		(*
+		send fully-qualified symbol names over the wire
+		library->kernel traffic has fully-qualified symbols.
+		This allows LibraryLink traffic to work when AST` is not on $ContextPath.
+		And we want kernel->library traffic to match this behavior, to minimize surprises.
+		Note: this still does not enable sending fully-qualified System` symbols
+		bug 283291
+		bug 284492
+		*)
+		MathLink`LinkSetPrintFullSymbols[linkObject, True];
 
 		loaded
 	]]
 
 concreteParseFileFunc := concreteParseFileFunc =
 	Catch[
-	Module[{loaded},
-		loaded = LibraryFunctionLoad[$lib, "ConcreteParseFile", LinkObject, LinkObject];
-		If[FailureQ[loaded]
+	Module[{res, loaded, linkObject},
+
+		If[FailureQ[$lib],
+			Throw[$lib]
+		];
+
+		res = newestLinkObject[LibraryFunctionLoad[$lib, "ConcreteParseFile", LinkObject, LinkObject]];
+		
+		If[FailureQ[res],
+			Throw[res]
+		];
+
+		{loaded, linkObject} = res;
+
+		If[FailureQ[loaded],
 			Throw[loaded]
 		];
 
-		If[Head[loaded] =!= LibraryFunction
+		If[Head[loaded] =!= LibraryFunction,
 			Throw[Failure["LibraryFunctionLoad", <|"Result"->loaded|>]]
 		];
 
+		MathLink`LinkSetPrintFullSymbols[linkObject, True];
+
 		loaded
 	]]
+
+Attributes[newestLinkObject] = {HoldFirst}
+
+(*
+Return the LinkObject that is created when evaluating expr along with the result of evaluating expr
+
+this is all just to find the LinkObject associated with this LibraryFunction
+
+TODO: If there is ever a nicer way to find the LinkObject, then use that
+*)
+newestLinkObject[expr_] :=
+Catch[
+Module[{before, after, res, set, first},
+	before = Links[];
+	(*evaluate*)
+	res = expr;
+	after = Links[];
+	If[before == after,
+		Throw[Failure["LinksDidNotChange", <||>]]
+	];
+	set = Complement[after, before];
+	If[Length[set] != 1,
+		Throw[Failure["InternalLinksError", <|"Before"->before, "After"->after|>]]
+	];
+	first = set[[1]];
+	{res, first}
+]]
+
 
 
 ConcreteParseString[s_String, h_:Automatic] :=
 	concreteParseString[s, h]
 
-TokenizeString[s_String] :=
-	concreteParseString[s, List, "Tokenize"->True]
-
-
-Options[concreteParseString] = {
-	"Tokenize" -> False
-}
-
 concreteParseString[sIn_String, hIn_, OptionsPattern[]] :=
 Catch[
-Module[{s = sIn, h = hIn, res, tokenize},
+Module[{s = sIn, h = hIn, res},
 
 	If[h === Automatic,
 		h = Last
 	];
 
-	tokenize = OptionValue["Tokenize"];
+	If[FailureQ[concreteParseStringFunc],
+		Throw[concreteParseStringFunc]
+	];
 
-	res = concreteParseStringFunc[s, False];
+	res = concreteParseStringFunc[s];
 
 	If[Head[res] === LibraryFunctionError,
 		Throw[Failure["LibraryFunctionError", <|"Result"->res|>]]
@@ -337,19 +403,9 @@ ConcreteParseFile[full_String] returns a FileNode AST or a Failure object
 ConcreteParseFile[full_String, h_:Automatic] :=
 	concreteParseFile[full, h]
 
-TokenizeFile[full_String] :=
-	concreteParseFile[full, List, "Tokenize"->True]
-
-
-
-Options[concreteParseFile] = {
-	"Tokenize" -> False
-}
-
-
 concreteParseFile[file_String, hIn_, OptionsPattern[]] :=
 Catch[
-Module[{h, full, strm, b, nonASCII, pos, res, skipFirstLine = False, shebangWarn = False, data, issues, tokenize, firstLine, start, end, children},
+Module[{h, full, strm, b, nonASCII, pos, res, skipFirstLine = False, shebangWarn = False, data, issues, firstLine, start, end, children},
 
 	h = hIn;
 
@@ -359,8 +415,6 @@ Module[{h, full, strm, b, nonASCII, pos, res, skipFirstLine = False, shebangWarn
 	If[hIn === Automatic,
 		h = Function[FileNode[File, #, <||>]]
 	];
-
-	tokenize = OptionValue["Tokenize"];
 
 	(*
 	We want to expand anything like ~ before passing to external process
@@ -400,6 +454,10 @@ Module[{h, full, strm, b, nonASCII, pos, res, skipFirstLine = False, shebangWarn
 			StringStartsQ[firstLine, "#"],
 			shebangWarn = True;
 		];
+	];
+
+	If[FailureQ[concreteParseFileFunc],
+		Throw[concreteParseFileFunc]
 	];
 
 	res = concreteParseFileFunc[full, skipFirstLine];

@@ -1,12 +1,7 @@
 
 #include "Tokenizer.h"
 
-#include "CharacterDecoder.h"
-#include "CodePoint.h"
-#include "LongNameMap.h"
-
-#include <iomanip>
-#include <cassert>
+#include "Utils.h"
 
 
 Tokenizer::Tokenizer() : _stringifyNextToken(false), cur(TOKEN_UNKNOWN), currentCached(false), characterQueue(),

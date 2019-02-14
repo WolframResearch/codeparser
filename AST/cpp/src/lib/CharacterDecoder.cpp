@@ -1,13 +1,8 @@
 
 #include "CharacterDecoder.h"
 
-#include "ByteDecoder.h"
 #include "LongNameMap.h"
 #include "Utils.h"
-
-#include <iomanip>
-#include <cassert>
-#include <cctype>
 
 CharacterDecoder::CharacterDecoder() : cur(0), curSource(0), characterQueue(), Issues() {}
 

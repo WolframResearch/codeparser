@@ -3,11 +3,13 @@
 
 #include "ByteDecoder.h"
 #include "SyntaxIssue.h"
+#include "SourceManager.h"
 #include "CodePoint.h"
 
 #include <sstream>
 #include <vector>
 #include <cassert>
+#include <unordered_map>
 
 //
 // https://akrzemi1.wordpress.com/2017/05/18/asserts-in-constexpr-functions/

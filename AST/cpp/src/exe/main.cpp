@@ -1,66 +1,113 @@
 
 #include "API.h"
 
-// #include "Parser.h"
-// #include "Precedence.h"
-// #include "ByteDecoder.h"
-// #include "ByteEncoder.h"
-// #include "CharacterDecoder.h"
-// #include "Tokenizer.h"
+#include "Symbol.h"
 
 #include "mathlink.h"
 
 #include <string>
-// #include <sstream>
 #include <iostream>
-// #include <fstream>
-// #include <cassert>
+
+void printExpression(MLINK mlp);
 
 int main(int argc, char *argv[]) {
 
+    int res = LIBRARY_FUNCTION_ERROR;
+    
     std::string input;
     std::cout << ">>> ";
     std::getline(std::cin, input);
 
     MLENV ep;
+    MLEnvironmentParameter p;
     int err;
 
-    ep = MLInitialize((MLEnvironmentParameter)0);
+    p = MLNewParameters(MLREVISION, MLAPIREVISION);
+
+    MLDoNotHandleSignalParameter(p, SIGINT);
+
+    ep = MLInitialize(p);
     if (ep == (MLENV)0) {
         return 1;
     }
 
-    auto mlp = MLLoopbackOpen(ep, &err);
+    MLINK mlp;
+    mlp = MLLoopbackOpen(ep, &err);
 
-    // std::cout << err << "\n";
-
-    // MLPutFunction(mlp, "Power", 2);
-    //   MLPutSymbol(mlp, "x");
-    //   MLPutInteger32(mlp, 3);
-
-    MLPutFunction(mlp, "List", 2);
+    MLPutFunction(mlp, SYMBOL_LIST.name().c_str(), 1);
     MLPutString(mlp, input.c_str());
-    MLPutSymbol(mlp, "False");
     
-    ConcreteParseString(nullptr, mlp);
+    res = ConcreteParseString(nullptr, mlp);
+    if (res != LIBRARY_NO_ERROR) {
+        std::cerr << "library error: " << res << "\n";
+        goto retPt;
+    }
 
-    const char *head;
-    int n;
-    const char *sname;
-    int k;
+    printExpression(mlp);
+    std::cout << "\n";
 
-    MLGetFunction(mlp, &head, &n);
-      MLGetSymbol(mlp, &sname);
-      MLGetInteger32(mlp, &k);
-
-    MLClose(mlp);
-    MLDeinitialize(ep);
-
-    std::cout << head << "\n";
-    std::cout << sname << "\n";
-    std::cout << k << "\n";
-
-    return 0;
+retPt:
+    if (mlp != nullptr) {
+        MLClose(mlp);
+    }
+    if (ep != 0) {
+        MLDeinitialize(ep);
+    }
+    
+    return res;
 }
 
+void printExpression(MLINK mlp) {
+    int i;
+    double r;
+    const char *string;
+    const char *symbol;
+    const char *func;
+    int a;
+    int ready;
+    int err = 0;
+    
+    ready = MLReady(mlp);
+    if (!ready) {
+        return;
+    }
+
+    switch(MLGetType(mlp)) {
+        case MLTKINT:
+            MLGetInteger(mlp, &i);
+            std::cout << i;
+            break;
+        case MLTKREAL:
+            MLGetReal(mlp, &r);
+            std::cout << r;
+            break;
+        case MLTKSTR:
+            MLGetString(mlp, &string);
+            std::cout << string;
+            MLReleaseString(mlp, string);
+            break;
+        case MLTKSYM:
+            MLGetSymbol(mlp, &symbol);
+            std::cout << symbol;
+            MLReleaseSymbol(mlp, symbol);
+            break;
+        case MLTKFUNC:
+            MLGetFunction(mlp, &func, &a);
+            std::cout << func << "[";
+            if (a > 0) {
+                for (int i = 0; i < a-1; i++) {
+                    printExpression(mlp);
+                    std::cout << ", ";
+                }
+                printExpression(mlp);
+            }
+            std::cout << "]";
+            MLReleaseSymbol(mlp, func);
+            break;
+        default:
+            err = MLError(mlp);
+            std::cout << "\nerr: " << err << "\n";
+            break;
+    }
+}
 

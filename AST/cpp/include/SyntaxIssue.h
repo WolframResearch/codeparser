@@ -3,8 +3,9 @@
 
 #include "SourceManager.h"
 
+#include "mathlink.h"
+
 #include <string>
-#include <sstream>
 
 #define TAG_SYNTAXERROR "SyntaxError"
 #define TAG_STRANGECHARACTER "StrangeCharacter"

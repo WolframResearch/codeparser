@@ -1,5 +1,5 @@
 
-#include "Node.h"
+#pragma once
 
 //
 // Despite being mentioned here:
@@ -13,9 +13,12 @@
 //
 // The closest related bug is 357133
 //
+// This bug was fixed in v12.0
+//
+// When we no longer support any version < 12.0, then we can switch to using WSTP
+//
 // Also be a good citizen and cleanup the leftover defines
 //
-//#include "wstp.h"
 #include "mathlink.h"
 
 #undef P

@@ -1,7 +1,6 @@
 
 #include "SyntaxIssue.h"
 
-#include "Symbol.h"
 #include "Utils.h"
 
 void SyntaxIssue::put(MLINK mlp) {

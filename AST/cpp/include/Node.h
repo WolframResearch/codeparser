@@ -1,15 +1,11 @@
 
 #pragma once
 
-#include "Utils.h"
 #include "SyntaxIssue.h"
-#include "Symbol.h"
-
-#include "mathlink.h"
+#include "SourceManager.h"
 
 #include <string>
 #include <vector>
-#include <memory>
 
 class Node;
 

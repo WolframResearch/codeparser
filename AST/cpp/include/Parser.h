@@ -2,10 +2,12 @@
 #pragma once
 
 #include "Node.h"
+#include "SyntaxIssue.h"
 #include "Precedence.h"
 
 #include <map>
 #include <set>
+#include <vector>
 
 class PrefixParselet;
 class InfixParselet;

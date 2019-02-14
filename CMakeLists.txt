@@ -64,7 +64,6 @@ set(GENERATED_CPP_INCLUDES
 	${CMAKE_BINARY_DIR}/generated/cpp/include/Precedence.h
 	${CMAKE_BINARY_DIR}/generated/cpp/include/CodePoint.h
 	${CMAKE_BINARY_DIR}/generated/cpp/include/Symbol.h
-	${CMAKE_BINARY_DIR}/generated/cpp/include/ToInputFormString.h
 )
 
 set(GENERATED_CPP_LIB_SOURCES
@@ -168,7 +167,7 @@ set(PACLET_SOURCES
 	${CONFIGURED_WL_SOURCES}
 	${BUILT_PACLETINFO}
 	${GENERATED_WL_SOURCES}
-	wl-ast-lib
+	ast-lib
 )
 
 if(BUILD_DOCS)
@@ -267,14 +266,14 @@ set(CPP_LIB_SOURCES
 	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/Utils.cpp
 )
 
-add_library(wl-ast-lib SHARED
+add_library(ast-lib SHARED
 	${CPP_INCLUDES}
 	${CPP_LIB_SOURCES}
 	${GENERATED_CPP_INCLUDES}
 	${GENERATED_CPP_LIB_SOURCES}
 )
 
-target_include_directories(wl-ast-lib
+target_include_directories(ast-lib
 	PRIVATE ${CMAKE_SOURCE_DIR}/AST/cpp/include
 	PRIVATE ${CMAKE_BINARY_DIR}/generated/cpp/include
 	PRIVATE ${MATHLINK_INCLUDE_DIR}
@@ -286,12 +285,12 @@ find_library(ML_LIB
 	HINTS ${MATHLINK_LIB_DIR}
 )
 
-target_link_libraries(wl-ast-lib ${ML_LIB})
+target_link_libraries(ast-lib ${ML_LIB})
 
 #
 # https://community.wolfram.com/groups/-/m/t/610879?sortMsg=Flat
 #
-target_link_libraries(wl-ast-lib
+target_link_libraries(ast-lib
 	"-stdlib=libc++ -framework Foundation -lc++"
 )
 
@@ -301,15 +300,15 @@ set(MAX_EXPRESSION_BREADTH 1000 CACHE STRING "Maximum breadth allowed by the par
 message(STATUS "MAX_EXPRESSION_DEPTH: ${MAX_EXPRESSION_DEPTH}")
 message(STATUS "MAX_EXPRESSION_BREADTH: ${MAX_EXPRESSION_BREADTH}")
 
-target_compile_definitions(wl-ast-lib
+target_compile_definitions(ast-lib
 	PRIVATE VERSION_NUMBER=${VERSION_NUMBER}
 	PRIVATE MAX_EXPRESSION_DEPTH=${MAX_EXPRESSION_DEPTH}
 	PRIVATE MAX_EXPRESSION_BREADTH=${MAX_EXPRESSION_BREADTH}
 )
 
-set_target_properties(wl-ast-lib PROPERTIES
+set_target_properties(ast-lib PROPERTIES
 	OUTPUT_NAME
-		wl-ast
+		AST
 	CXX_STANDARD
 		11
 	CXX_STANDARD_REQUIRED
@@ -322,19 +321,22 @@ set_target_properties(wl-ast-lib PROPERTIES
 	# make sure that it is not created inside ${SYSTEMID}/Release on Multi-configuration generators (VS, Xcode)
 	LIBRARY_OUTPUT_DIRECTORY_RELEASE
 		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+	# WL / LibraryLink style dictates that the library be named "AST.dylib" and not "libAST.dylib"
+	PREFIX
+		""
 )
 
 #
 # Setup warnings
 #
 if(MSVC)
-	target_compile_options(wl-ast-lib
+	target_compile_options(ast-lib
 		# specify /MT to statically link runtime on Windows
 		# This prevents "The program can't start because ucrtbased.dll is missing from your computer" error on Windows 7
 		PRIVATE /W3 /EHsc /MT
 	)
 else()
-	target_compile_options(wl-ast-lib
+	target_compile_options(ast-lib
 		PRIVATE -Wextra -Wall -Weffc++ -Wno-unused-parameter -Wno-unused-function -Wno-comment
 	)
 endif(MSVC)

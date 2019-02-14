@@ -4,10 +4,6 @@
 #include "Parselet.h"
 #include "Tokenizer.h"
 
-#include <cassert>
-#include <iostream>
-
-
 Parser::Parser() : groupDepth(0), currentCached(false), _currentToken(), _currentTokenString(),
     prefixParselets(), infixParselets(), postfixParselets(), contextSensitiveParselets(), parselets(),
     tokenQueue(), Issues() {}

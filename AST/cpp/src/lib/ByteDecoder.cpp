@@ -1,14 +1,6 @@
 
 #include "ByteDecoder.h"
 
-#include "Utils.h"
-#include "LongNameDefines.h"
-
-#include <sstream>
-#include <iomanip>
-#include <iostream>
-#include <cassert>
-
 ByteDecoder::ByteDecoder(std::istream &In) : In(In), eof(false), byteQueue() {}
 
 //

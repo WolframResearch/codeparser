@@ -84,6 +84,8 @@ $Miscellaneous = {
 All,
 (* when parsing f[1,] then we need to parse as f[1,Null] *)
 Null,
+True,
+False,
 SyntaxIssue,
 
 (* for Nodes *)
@@ -111,8 +113,6 @@ TernaryTilde,
 
 (*InternalEmpty,*)
 InternalInvalid,
-
-HoldForm[Nothing],
 
 Nothing
 }
