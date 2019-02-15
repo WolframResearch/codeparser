@@ -296,9 +296,14 @@ Options[concreteParseString] = {
 	"Tokenize" -> False
 }
 
-concreteParseString[sIn_String, h_, OptionsPattern[]] :=
+concreteParseString[sIn_String, hIn_, OptionsPattern[]] :=
 Catch[
-Module[{s = sIn, res, nonASCII, tokenize},
+Module[{s = sIn, h, res, nonASCII, tokenize},
+
+	h = hIn;
+	If[h === Automatic,
+		h = Last
+	];
 
 	tokenize = OptionValue["Tokenize"];
 
@@ -392,7 +397,7 @@ Module[{h, full, strm, b, nonASCII, pos, res, skipFirstLine = False, shebangWarn
 	The <||> will be filled in with Source later
 	*)
 	If[hIn === Automatic,
-		h = Function[FileNode[File, {##}, <||>]]
+		h = Function[FileNode[File, #, <||>]]
 	];
 
 	tokenize = OptionValue["Tokenize"];
