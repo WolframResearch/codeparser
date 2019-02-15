@@ -115,12 +115,13 @@ int main(int argc, char *argv[]) {
                         auto I = nodes.begin();
                         auto LastIt = nodes.end();
                         LastIt--;
+                        std::cout << "{\n";
                         for (; I < LastIt; I++) {
                             std::cout << (*I)->inputform();
-                            std::cout << "\n";
+                            std::cout << ",\n";
                         }
-                        
                         std::cout << (*I)->inputform();
+                        std::cout << "}\n";
                     }
 
                     break;
@@ -131,11 +132,13 @@ int main(int argc, char *argv[]) {
                         auto I = nodes.begin();
                         auto LastIt = nodes.end();
                         LastIt--;
+                        std::cout << "{\n";
                         for (; I < LastIt; I++) {
                             std::cout << (*I)->string();
-                            std::cout << "\n";
+                            std::cout << ",\n";
                         }
                         std::cout << (*I)->string();
+                        std::cout << "}\n";
                     }
 
                     break;
@@ -188,15 +191,19 @@ int main(int argc, char *argv[]) {
             
             auto nodes = parseExpressions(interactive);
             
-            for (std::shared_ptr<Node> node : nodes) {
+            std::cout << "{\n";
+            auto I = nodes.begin();
+            auto LastIt = nodes.end();
+            LastIt--;
+            for (; I < LastIt; I++) {
                 switch (format) {
                     case FORMAT_INPUTFORM:
-                        std::cout << node->inputform();
-                        std::cout << "\n";
+                        std::cout << (*I)->inputform();
+                        std::cout << ",\n";
                         break;
                     case FORMAT_AST:
-                        std::cout << node->string();
-                        std::cout << "\n";
+                        std::cout << (*I)->string();
+                        std::cout << ",\n";
                         break;
                     case FORMAT_TOKENS:
                         // handled elsewhere
@@ -208,6 +215,25 @@ int main(int argc, char *argv[]) {
                         break;
                 }
             }
+            switch (format) {
+                case FORMAT_INPUTFORM:
+                    std::cout << (*I)->inputform();
+                    std::cout << "\n";
+                    break;
+                case FORMAT_AST:
+                    std::cout << (*I)->string();
+                    std::cout << "\n";
+                    break;
+                case FORMAT_TOKENS:
+                    // handled elsewhere
+                    ;
+                    break;
+                case FORMAT_CHARACTERS:
+                    // handled elsewhere
+                    ;
+                    break;
+            }
+            std::cout << "}\n";
         }
 
         delete TheSourceManager;
