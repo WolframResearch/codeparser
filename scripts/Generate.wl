@@ -80,10 +80,10 @@ If[FindFile["AST`"] =!= FileNameJoin[{pacletASTDir, "AST.wl"}],
   Print["Expected to find AST here: ", FileNameJoin[{pacletASTDir, "AST.wl"}]];
   Print["Actually found AST here: ", FindFile["AST`"]];
   If[FindFile["AST`"] === FileNameJoin[{packageDir, "AST", "AST.wl"}],
-    Print["It looks like the AST source is being used. This is not supported."];
+    Print["It looks like the AST source is being used. This is not supported during build time."];
     Print["There may be a problem with the version of Wolfram Engine that is being used."];
     ,
-    Print["Consider running:\nPacletUninstall[\"AST\"]"];
+    Print["Consider running:\nPacletUninstall[\"AST\"]\nto ensure that no other isntallations of AST interfere with the build."];
   ];
   Quit[1]
 ]
