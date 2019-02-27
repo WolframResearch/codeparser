@@ -28,3 +28,12 @@ struct SyntaxIssue {
 
     std::string string();
 };
+
+struct Comment {
+	std::string Msg;
+	SourceSpan Span;
+
+	Comment(std::string Msg, SourceSpan Span) : Msg(Msg), Span(Span) {}
+
+	std::string string();
+};

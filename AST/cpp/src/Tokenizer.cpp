@@ -265,9 +265,7 @@ Token Tokenizer::handleComment() {
     auto c = currentWLCharacter();
 
     assert(c == WLCharacter('*'));
-    assert(String.str().empty());
-
-    String.put('(');
+    
     String.put('*');
     
     auto depth = 1;
@@ -1093,8 +1091,6 @@ Token Tokenizer::handleOperator() {
             c = nextWLCharacter();
             
             if (c == WLCharacter('*')) {
-                
-                String.str("");
                 
                 return handleComment();
             }

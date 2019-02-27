@@ -177,6 +177,8 @@ Used to report f[,] or "\[Alpa]" as an option, e.g. SyntaxIssues -> {SyntaxIssue
 *)
 SyntaxIssues
 SyntaxIssue
+Comments
+Comment
 
 
 
@@ -222,6 +224,8 @@ InternalMinusNode
 
 FileNode
 HoldNode
+
+CommentNode
 
 SyntaxErrorNode
 CallMissingCloserNode
@@ -296,9 +300,14 @@ Options[concreteParseString] = {
 	"Tokenize" -> False
 }
 
-concreteParseString[sIn_String, h_, OptionsPattern[]] :=
+concreteParseString[sIn_String, hIn_, OptionsPattern[]] :=
 Catch[
-Module[{s = sIn, res, nonASCII, tokenize},
+Module[{s = sIn, h, res, nonASCII, tokenize},
+
+	h = hIn;
+	If[h === Automatic,
+		h = If[empty[#], Null, Last[#]]&
+	];
 
 	tokenize = OptionValue["Tokenize"];
 
@@ -349,15 +358,21 @@ Module[{s = sIn, res, nonASCII, tokenize},
 may return:
 a node
 or Null if input was an empty string
+or something FailureQ if e.g., no permission to run wl-ast
 *)
 ParseString[s_String, h_:Automatic] :=
+Catch[
 Module[{parse, ast},
 	parse = ConcreteParseString[s, h];
+
+	If[FailureQ[parse],
+		Throw[parse]
+	];
 
 	ast = Abstract[parse];
 
 	ast
-]
+]]
 
 
 (*
@@ -386,7 +401,7 @@ Module[{h, full, strm, b, nonASCII, pos, res, skipFirstLine = False, shebangWarn
 	The <||> will be filled in with Source later
 	*)
 	If[hIn === Automatic,
-		h = Function[FileNode[File, {##}, <||>]]
+		h = Function[FileNode[File, #, <||>]]
 	];
 
 	tokenize = OptionValue["Tokenize"];
@@ -503,14 +518,19 @@ Module[{h, full, strm, b, nonASCII, pos, res, skipFirstLine = False, shebangWarn
 ]]
 
 ParseFile[file_String, h_:Automatic] :=
+Catch[
 Module[{parse, ast},
 
 	parse = ConcreteParseFile[file, h];
 
+	If[FailureQ[parse],
+		Throw[parse]
+	];
+
 	ast = Abstract[parse];
 
 	ast
-]
+]]
 
 
 handleResult[res_Association, h_] :=

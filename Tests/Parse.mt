@@ -1,11 +1,12 @@
 
 Needs["AST`"]
+Needs["AST`Utils`"]
 
 
 parseEquivalenceFunction[actualIn_, expectedIgnored_] :=
 Catch[
 Module[{parsed, good, expected, actual},
-	parsed = ParseString[actualIn, HoldNode[Hold, {##}, <||>]&];
+	parsed = ParseString[actualIn, HoldNode[Hold, #, <||>]&];
 	If[FailureQ[parsed],
 		Throw[parsed]
 	];
@@ -49,6 +50,16 @@ Test[
 	,
 	TestID->"Parse-20181219-I1H5B6"
 ]
+
+Test[
+	ParseString[""]
+	,
+	Null
+	,
+	TestID->"Parse-20190227-B2B5G4"
+]
+
+
 
 
 
@@ -396,9 +407,19 @@ Test[
 
 
 
+(*
+Comments
+*)
 
-
-
+Test[
+	"foo(**)[] := bar"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190223-C9F0S5"
+]
 
 
 

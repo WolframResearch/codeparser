@@ -111,32 +111,36 @@ int main(int argc, char *argv[]) {
                 case FORMAT_INPUTFORM:
                     // std::cout << FN->inputform();
 
+                    std::cout << "{\n";
                     if (!nodes.empty()) {
                         auto I = nodes.begin();
                         auto LastIt = nodes.end();
                         LastIt--;
                         for (; I < LastIt; I++) {
                             std::cout << (*I)->inputform();
-                            std::cout << "\n";
+                            std::cout << ",\n";
                         }
-                        
                         std::cout << (*I)->inputform();
                     }
+                    std::cout << "}\n";
 
                     break;
                 case FORMAT_AST:
                     // std::cout << FN->string();
 
+                    std::cout << "{\n";
                     if (!nodes.empty()) {
                         auto I = nodes.begin();
                         auto LastIt = nodes.end();
                         LastIt--;
                         for (; I < LastIt; I++) {
                             std::cout << (*I)->string();
-                            std::cout << "\n";
+                            std::cout << ",\n";
                         }
                         std::cout << (*I)->string();
+                        std::cout << "\n";
                     }
+                    std::cout << "}\n";
 
                     break;
                 case FORMAT_TOKENS:
@@ -188,14 +192,38 @@ int main(int argc, char *argv[]) {
             
             auto nodes = parseExpressions(interactive);
             
-            for (std::shared_ptr<Node> node : nodes) {
+            std::cout << "{\n";
+            if (!nodes.empty()) {
+                auto I = nodes.begin();
+                auto LastIt = nodes.end();
+                LastIt--;
+                for (; I < LastIt; I++) {
+                    switch (format) {
+                        case FORMAT_INPUTFORM:
+                            std::cout << (*I)->inputform();
+                            std::cout << ",\n";
+                            break;
+                        case FORMAT_AST:
+                            std::cout << (*I)->string();
+                            std::cout << ",\n";
+                            break;
+                        case FORMAT_TOKENS:
+                            // handled elsewhere
+                            ;
+                            break;
+                        case FORMAT_CHARACTERS:
+                            // handled elsewhere
+                            ;
+                            break;
+                    }
+                }
                 switch (format) {
                     case FORMAT_INPUTFORM:
-                        std::cout << node->inputform();
+                        std::cout << (*I)->inputform();
                         std::cout << "\n";
                         break;
                     case FORMAT_AST:
-                        std::cout << node->string();
+                        std::cout << (*I)->string();
                         std::cout << "\n";
                         break;
                     case FORMAT_TOKENS:
@@ -208,6 +236,7 @@ int main(int argc, char *argv[]) {
                         break;
                 }
             }
+            std::cout << "}\n";
         }
 
         delete TheSourceManager;
@@ -309,13 +338,19 @@ void printTokens() {
 std::vector<std::shared_ptr<Node>> parseExpressions(bool interactive) {
 
     std::vector<std::shared_ptr<Node>> nodes;
-            
+    
+    ParserContext Ctxt{0, 0, PRECEDENCE_LOWEST, true, false};
+    
     while (true) {
         
         auto peek = TheParser->currentToken();
         
         while (peek == TOKEN_NEWLINE) {
-            peek = TheParser->nextToken();
+            
+            // Clear String
+            TheParser->getString();
+            
+            peek = TheParser->nextToken(Ctxt, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
         }
         
         if (peek != TOKEN_EOF) {
@@ -326,6 +361,7 @@ std::vector<std::shared_ptr<Node>> parseExpressions(bool interactive) {
             // Do not check:
             // assert(TheParser->getString().empty());
             // assert(TheParser->getIssues().empty());
+            // assert(TheParser->getComments().empty());
             // here.
             // There may be multiple expressons to parse, and after parsing the first expression, the first token of the second expression has been queued.
             // There may be a message from this token which will be handled when the second expression is parsed.
@@ -350,6 +386,7 @@ std::vector<std::shared_ptr<Node>> parseExpressions(bool interactive) {
 
     assert(TheParser->getString().empty());
     assert(TheParser->getIssues().empty());
+    assert(TheParser->getComments().empty());
 
     return nodes;
 }

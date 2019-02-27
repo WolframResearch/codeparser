@@ -44,6 +44,24 @@ std::string Node::SyntaxIssuesString() {
     return ss.str();
 }
 
+std::string Node::CommentsString() {
+    std::ostringstream ss;
+    ss << SYMBOL_COMMENTS.name();
+    ss << "->{";
+    if (!Comments.empty()) {
+        auto I = Comments.begin();
+        auto LastIt = Comments.end();
+        LastIt--;
+        for (; I < LastIt; I++) {
+            ss << (*I).string();
+            ss << ", ";
+        }
+        ss << (*I).string();
+    }
+    ss << "}";
+    return ss.str();
+}
+
 //
 // Atom and Atom-like expressions
 //
@@ -51,6 +69,7 @@ std::string Node::SyntaxIssuesString() {
 std::string SymbolNode::string() {
     
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_SYMBOLNODE.name();
@@ -64,6 +83,10 @@ std::string SymbolNode::string() {
         ss << ", ";
         ss << SyntaxIssuesString();
     }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -72,6 +95,7 @@ std::string SymbolNode::string() {
 std::string StringNode::string() {
     
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_STRINGNODE.name();
@@ -85,6 +109,10 @@ std::string StringNode::string() {
         ss << ", ";
         ss << SyntaxIssuesString();
     }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -93,6 +121,7 @@ std::string StringNode::string() {
 std::string NumberNode::string() {
     
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_NUMBERNODE.name();
@@ -106,6 +135,10 @@ std::string NumberNode::string() {
         ss << ", ";
         ss << SyntaxIssuesString();
     }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -114,6 +147,7 @@ std::string NumberNode::string() {
 std::string SlotNode::string() {
     
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_SLOTNODE.name();
@@ -127,6 +161,10 @@ std::string SlotNode::string() {
         ss << ", ";
         ss << SyntaxIssuesString();
     }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -135,6 +173,7 @@ std::string SlotNode::string() {
 std::string SlotSequenceNode::string() {
     
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_SLOTSEQUENCENODE.name();
@@ -148,6 +187,10 @@ std::string SlotSequenceNode::string() {
         ss << ", ";
         ss << SyntaxIssuesString();
     }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -156,6 +199,7 @@ std::string SlotSequenceNode::string() {
 std::string OutNode::string() {
     
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_OUTNODE.name();
@@ -168,6 +212,10 @@ std::string OutNode::string() {
     if (!Issues.empty()) {
         ss << ", ";
         ss << SyntaxIssuesString();
+    }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
     }
     ss << "|>";
     ss << "]";
@@ -182,6 +230,7 @@ std::string OutNode::string() {
 std::string PrefixNode::string() {
     
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_PREFIXNODE.name();
@@ -194,6 +243,10 @@ std::string PrefixNode::string() {
     if (!Issues.empty()) {
         ss << ", ";
         ss << SyntaxIssuesString();
+    }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
     }
     ss << "|>";
     ss << "]";
@@ -210,6 +263,7 @@ SourceSpan PrefixNode::getSourceSpan() {
 std::string BinaryNode::string() {
 
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_BINARYNODE.name();
@@ -222,6 +276,10 @@ std::string BinaryNode::string() {
     if (!Issues.empty()) {
         ss << ", ";
         ss << SyntaxIssuesString();
+    }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
     }
     ss << "|>";
     ss << "]";
@@ -239,6 +297,7 @@ SourceSpan BinaryNode::getSourceSpan() {
 std::string InfixNode::string() {
 
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_INFIXNODE.name();
@@ -251,6 +310,10 @@ std::string InfixNode::string() {
     if (!Issues.empty()) {
         ss << ", ";
         ss << SyntaxIssuesString();
+    }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
     }
     ss << "|>";
     ss << "]";
@@ -273,6 +336,7 @@ SourceSpan InfixNode::getSourceSpan() {
 std::string TernaryNode::string() {
     
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_TERNARYNODE.name();
@@ -285,6 +349,10 @@ std::string TernaryNode::string() {
     if (!Issues.empty()) {
         ss << ", ";
         ss << SyntaxIssuesString();
+    }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
     }
     ss << "|>";
     ss << "]";
@@ -302,6 +370,7 @@ SourceSpan TernaryNode::getSourceSpan() {
 std::string PostfixNode::string() {
     
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_POSTFIXNODE.name();
@@ -314,6 +383,10 @@ std::string PostfixNode::string() {
     if (!Issues.empty()) {
         ss << ", ";
         ss << SyntaxIssuesString();
+    }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
     }
     ss << "|>";
     ss << "]";
@@ -336,6 +409,7 @@ SourceSpan PostfixNode::getSourceSpan() {
 std::string CallNode::string() {
 
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_CALLNODE.name();
@@ -348,6 +422,10 @@ std::string CallNode::string() {
     if (!Issues.empty()) {
         ss << ", ";
         ss << SyntaxIssuesString();
+    }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
     }
     ss << "|>";
     ss << "]";
@@ -364,6 +442,7 @@ SourceSpan CallNode::getSourceSpan() {
 std::string CallMissingCloserNode::string() {
     
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_CALLMISSINGCLOSERNODE.name();
@@ -376,6 +455,10 @@ std::string CallMissingCloserNode::string() {
     if (!Issues.empty()) {
         ss << ", ";
         ss << SyntaxIssuesString();
+    }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
     }
     ss << "|>";
     ss << "]";
@@ -398,6 +481,7 @@ SourceSpan CallMissingCloserNode::getSourceSpan() {
 std::string GroupNode::string() {
     
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_GROUPNODE.name();
@@ -410,6 +494,10 @@ std::string GroupNode::string() {
     if (!Issues.empty()) {
         ss << ", ";
         ss << SyntaxIssuesString();
+    }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
     }
     ss << "|>";
     ss << "]";
@@ -428,6 +516,7 @@ SourceSpan GroupNode::getSourceSpan() {
 std::string BlankNode::string() {
 
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_BLANKNODE.name();
@@ -441,6 +530,10 @@ std::string BlankNode::string() {
         ss << ", ";
         ss << SyntaxIssuesString();
     }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -449,6 +542,7 @@ std::string BlankNode::string() {
 std::string BlankSequenceNode::string() {
 
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_BLANKSEQUENCENODE.name();
@@ -462,6 +556,10 @@ std::string BlankSequenceNode::string() {
         ss << ", ";
         ss << SyntaxIssuesString();
     }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -470,6 +568,7 @@ std::string BlankSequenceNode::string() {
 std::string BlankNullSequenceNode::string() {
 
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_BLANKNULLSEQUENCENODE.name();
@@ -483,6 +582,10 @@ std::string BlankNullSequenceNode::string() {
         ss << ", ";
         ss << SyntaxIssuesString();
     }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -491,6 +594,7 @@ std::string BlankNullSequenceNode::string() {
 std::string OptionalDefaultNode::string() {
 
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_OPTIONALDEFAULTNODE.name();
@@ -504,6 +608,10 @@ std::string OptionalDefaultNode::string() {
         ss << ", ";
         ss << SyntaxIssuesString();
     }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -512,6 +620,7 @@ std::string OptionalDefaultNode::string() {
 std::string PatternBlankNode::string() {
 
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_PATTERNBLANKNODE.name();
@@ -525,6 +634,10 @@ std::string PatternBlankNode::string() {
         ss << ", ";
         ss << SyntaxIssuesString();
     }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -533,6 +646,7 @@ std::string PatternBlankNode::string() {
 std::string PatternBlankSequenceNode::string() {
 
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_PATTERNBLANKSEQUENCENODE.name();
@@ -546,6 +660,10 @@ std::string PatternBlankSequenceNode::string() {
         ss << ", ";
         ss << SyntaxIssuesString();
     }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -554,6 +672,7 @@ std::string PatternBlankSequenceNode::string() {
 std::string PatternBlankNullSequenceNode::string() {
 
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_PATTERNBLANKNULLSEQUENCENODE.name();
@@ -567,6 +686,10 @@ std::string PatternBlankNullSequenceNode::string() {
         ss << ", ";
         ss << SyntaxIssuesString();
     }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -575,6 +698,7 @@ std::string PatternBlankNullSequenceNode::string() {
 std::string OptionalDefaultPatternNode::string() {
 
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_OPTIONALDEFAULTPATTERNNODE.name();
@@ -588,6 +712,10 @@ std::string OptionalDefaultPatternNode::string() {
         ss << ", ";
         ss << SyntaxIssuesString();
     }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -598,6 +726,7 @@ std::string OptionalDefaultPatternNode::string() {
 std::string InternalTokenNode::string() {
     
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_INTERNALTOKENNODE.name();
@@ -611,6 +740,10 @@ std::string InternalTokenNode::string() {
         ss << ", ";
         ss << SyntaxIssuesString();
     }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -619,6 +752,7 @@ std::string InternalTokenNode::string() {
 std::string InternalAllNode::string() {
     
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_INTERNALALLNODE.name();
@@ -632,6 +766,10 @@ std::string InternalAllNode::string() {
         ss << ", ";
         ss << SyntaxIssuesString();
     }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -640,6 +778,7 @@ std::string InternalAllNode::string() {
 std::string InternalDotNode::string() {
     
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_INTERNALDOTNODE.name();
@@ -653,6 +792,10 @@ std::string InternalDotNode::string() {
         ss << ", ";
         ss << SyntaxIssuesString();
     }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -661,6 +804,7 @@ std::string InternalDotNode::string() {
 std::string InternalNullNode::string() {
     
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_INTERNALNULLNODE.name();
@@ -674,6 +818,10 @@ std::string InternalNullNode::string() {
         ss << ", ";
         ss << SyntaxIssuesString();
     }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -682,6 +830,7 @@ std::string InternalNullNode::string() {
 std::string InternalOneNode::string() {
     
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_INTERNALONENODE.name();
@@ -695,6 +844,10 @@ std::string InternalOneNode::string() {
         ss << ", ";
         ss << SyntaxIssuesString();
     }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
+    }
     ss << "|>";
     ss << "]";
     return ss.str();
@@ -706,6 +859,7 @@ std::string InternalOneNode::string() {
 std::string InternalMinusNode::string() {
     
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_INTERNALMINUSNODE.name();
@@ -718,6 +872,10 @@ std::string InternalMinusNode::string() {
     if (!Issues.empty()) {
         ss << ", ";
         ss << SyntaxIssuesString();
+    }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
     }
     ss << "|>";
     ss << "]";
@@ -732,10 +890,37 @@ SourceSpan InternalMinusNode::getSourceSpan() {
 }
 
 
+std::string CommentNode::string() {
+    
+    auto Issues = getIssues();
+    auto Comments = getComments();
+    
+    std::ostringstream ss;
+    ss << SYMBOL_COMMENTNODE.name();
+    ss << "[";
+    ss << stringEscape(Str);
+    ss << ", ";
+    ss << ASTArgsString();
+    ss << ", <|";
+    ss << ASTSourceString(getSourceSpan());
+    if (!Issues.empty()) {
+        ss << ", ";
+        ss << SyntaxIssuesString();
+    }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
+    }
+    ss << "|>";
+    ss << "]";
+    return ss.str();
+}
+
 
 std::string SyntaxErrorNode::string() {
     
     auto Issues = getIssues();
+    auto Comments = getComments();
     
     std::ostringstream ss;
     ss << SYMBOL_SYNTAXERRORNODE.name();
@@ -748,6 +933,10 @@ std::string SyntaxErrorNode::string() {
     if (!Issues.empty()) {
         ss << ", ";
         ss << SyntaxIssuesString();
+    }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
     }
     ss << "|>";
     ss << "]";

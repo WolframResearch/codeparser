@@ -308,6 +308,11 @@ std::string InternalMinusNode::inputform() {
 }
 
 
+std::string CommentNode::inputform() {
+    return Str;
+}
+
+
 std::string SyntaxErrorNode::inputform() {
     std::ostringstream ss;
     ss << SYMBOL_SYNTAXERRORNODE.name();
