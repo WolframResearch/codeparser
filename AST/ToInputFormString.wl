@@ -357,24 +357,26 @@ Module[{nodeStrs},
 
 
 
-(*
-make sure to transform Hold[(**), 1+1, 2+2] into Hold[(**)1+1, 2+2]
 
-and also transform Hold[1+1, 2+2, (**), (**)] into Hold[1+1, 2+2(**)(**)]
-*)
-coalesceComments[nodes_] :=
-Module[{coalesced},
-	coalesced = nodes //. {
-		{a___, PatternSequence[c_CommentNode, InternalTokenNode[",", _, _]], b___} :> {a, c, b},
-		{a___, PatternSequence[InternalTokenNode[",", _, _], c__CommentNode]} :> {a, c}
-	};
-	coalesced
-]
 
 ToInputFormString[HoldNode[Hold, nodes_, opts_]] :=
+Module[{x, lastNonCommentIndex, processed},
+	x = 1;
+	lastNonCommentIndex = 0;
+	processed = Flatten[(If[Head[#] === CommentNode,
+        x++;
+        #
+        ,
+        lastNonCommentIndex = x;
+        x += 2;
+        {#, InternalTokenNode[",", {}, <||>]}
+        ])& /@ nodes];
+	If[lastNonCommentIndex > 0,
+		processed = Delete[processed, lastNonCommentIndex + 1];
+	];
 	ToInputFormString[CallNode[ToNode[Hold], {
-		GroupNode[GroupSquare,
-			coalesceComments[Riffle[nodes, InternalTokenNode[",", {}, <||>]]], <||>] }, <||>]]
+		GroupNode[GroupSquare, processed, <||>] }, <||>]]
+]
 
 
 (*
