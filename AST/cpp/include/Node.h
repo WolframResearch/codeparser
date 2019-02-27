@@ -581,6 +581,20 @@ public:
 
 
 
+class CommentNode : public Node {
+    std::string Str;
+    SourceSpan Span;
+public:
+    CommentNode(std::string Str, SourceSpan Span) : Node({}, {}, {}), Str(Str), Span(Span) {}
+    
+    std::string string() override;
+    
+    std::string inputform() override;
+    
+    SourceSpan getSourceSpan() override {
+        return Span;
+    }
+};
 
 
 

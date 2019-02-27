@@ -396,9 +396,19 @@ Test[
 
 
 
+(*
+Comments
+*)
 
-
-
+Test[
+	"foo(**)[] := bar"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190223-C9F0S5"
+]
 
 
 

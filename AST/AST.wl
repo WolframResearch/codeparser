@@ -225,6 +225,8 @@ InternalMinusNode
 FileNode
 HoldNode
 
+CommentNode
+
 SyntaxErrorNode
 CallMissingCloserNode
 

@@ -17,23 +17,53 @@ class Parselet;
 
 
 enum NextTokenPolicy {
-    POLICY_DEFAULT,
-    POLICY_PRESERVE_TOPLEVEL_NEWLINES,
-    POLICY_PRESERVE_EVERYTHING
+    //
+    // DISCARD_TOPLEVEL_NEWLINES:
+    // discard top-level newlines, discard other newline, discard whitespace, keep track of comments but don't return them
+    //
+    NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES,
+    
+    //
+    // PRESERVE_TOPLEVEL_NEWLINES:
+    // preserve top-level newlines, discard other newlines, discard whitespace, keep track of comments but don't return them
+    //
+    NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES,
+    
+    //
+    // PRESERVE_EVERYTHING
+    // return newlines, return whitespace, keep track of comments AND ALSO return them
+    //
+    // Note: Whoever uses PRESERVE_EVERYTHING also needs to own any Comments that are read in
+    //
+    NEXTTOKEN_PRESERVE_EVERYTHING,
+    
+    //
+    // PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS
+    // return newlines, return whitespace, keep track of comments but don't return them
+    //
+    NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS
 };
 
 struct ParserContext {
-    size_t Depth;
+    size_t GroupDepth;
+    size_t OperatorDepth;
     precedence_t Precedence;
     bool ColonFlag1;
     // InternalMinusNode stop-gap
     bool InfixPlusFlag;
+    
+    bool isGroupTopLevel() {
+        return GroupDepth == 0;
+    }
+    
+    bool isOperatorTopLevel() {
+        return OperatorDepth == 0;
+    }
 };
 
 class Parser {
 private:
     
-    int groupDepth;
     bool currentCached;
     Token _currentToken;
     std::string _currentTokenString;
@@ -61,9 +91,9 @@ public:
     
     void init();
     
-    Token nextToken(NextTokenPolicy policy = POLICY_DEFAULT);
+    Token nextToken(ParserContext Ctxt, NextTokenPolicy policy);
     
-    Token tryNextToken(NextTokenPolicy policy = POLICY_DEFAULT);
+    Token tryNextToken(ParserContext Ctxt, NextTokenPolicy policy);
     
     Token currentToken();
     void setCurrentToken(Token current, std::string Str);
@@ -72,19 +102,15 @@ public:
     
     std::vector<SyntaxIssue> getIssues();
 
+    void addIssue(SyntaxIssue);
+    
+    void addComment(Comment);
+    
     std::vector<Comment> getComments();
 
     std::shared_ptr<Node> parseTopLevel();
     
     std::shared_ptr<Node> parse(ParserContext Ctxt);
-    
-    void decrementGroupDepth() {
-        groupDepth--;
-    }
-    
-    void incrementGroupDepth() {
-        groupDepth++;
-    }
 
     bool isPossibleBeginningOfExpression(Token Tok);
 

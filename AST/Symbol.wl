@@ -69,6 +69,8 @@ InternalOneNode,
 
 FileNode,
 
+CommentNode,
+
 SyntaxErrorNode,
 CallMissingCloserNode
 

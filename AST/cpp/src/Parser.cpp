@@ -8,7 +8,7 @@
 #include <iostream>
 
 
-Parser::Parser() : groupDepth(0), currentCached(false), _currentToken(), _currentTokenString(),
+Parser::Parser() : currentCached(false), _currentToken(), _currentTokenString(),
     prefixParselets(), infixParselets(), postfixParselets(), contextSensitiveParselets(), parselets(),
     tokenQueue(), Issues(), Comments() {}
 
@@ -22,7 +22,7 @@ Parser::~Parser() {
 
 void Parser::init() {
     
-    nextToken();
+    nextToken({0, 0, PRECEDENCE_LOWEST, true, false}, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
     
     //
     // Atoms and Atom-like expressions
@@ -282,7 +282,7 @@ void Parser::init() {
     // infix and postfix
     registerTokenType(TOKEN_OPERATOR_SEMI, new SemiParselet());
     
-    // punt on parsing box syntax, reads tokens with no parsing
+    // FIXME: punt on parsing box syntax, reads tokens with no parsing
     registerTokenType(TOKEN_OPERATOR_LINEARSYNTAX_OPENPAREN, new LinearSyntaxOpenParenParselet());
     
     // binary and ternary
@@ -333,7 +333,7 @@ void Parser::registerTokenType(Token token, Parselet *parselet) {
     }
 }
 
-Token Parser::nextToken(NextTokenPolicy policy) {
+Token Parser::nextToken(ParserContext Ctxt, NextTokenPolicy Policy) {
     
     if (currentCached) {
         currentCached = false;
@@ -355,98 +355,68 @@ Token Parser::nextToken(NextTokenPolicy policy) {
     
     TheTokenizer->nextToken();
     
-    return tryNextToken(policy);
+    return tryNextToken(Ctxt, Policy);
 }
 
-Token Parser::tryNextToken(NextTokenPolicy policy) {
+Token Parser::tryNextToken(ParserContext Ctxt, NextTokenPolicy Policy) {
     
     auto res = TheTokenizer->currentToken();
     
-    switch (policy) {
-        case POLICY_DEFAULT:
-            while (true) {
-                
-                if (res == TOKEN_NEWLINE || res == TOKEN_SPACE) {
-                    
-                    // Clear String
-                    getString();
-                    
-                } else if (res == TOKEN_COMMENT) {
-                    
-                    auto Text = getString();
-                    
-                    auto Span = TheSourceManager->getTokenSpan();
-                    
-                    auto C = Comment(Text, Span);
-                    
-                    Comments.push_back(C);
-                    
-                } else {
-                    break;
-                }
-                
-                // Clear String
-                getString();
-
-                res = TheTokenizer->nextToken();
+    if (Policy == NEXTTOKEN_PRESERVE_EVERYTHING) {
+        
+        if (res == TOKEN_COMMENT) {
+            
+            auto Text = getString();
+            
+            auto Span = TheSourceManager->getTokenSpan();
+            
+            auto C = Comment(Text, Span);
+            
+            Comments.push_back(C);
+        }
+        
+        return res;
+    }
+    
+    while (true) {
+        
+        if (res == TOKEN_NEWLINE) {
+            
+            if (Policy == NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES && Ctxt.isGroupTopLevel()) {
+                //
+                // return a top-level newline
+                // will be handled later
+                //
+                break;
             }
-            break;
-        case POLICY_PRESERVE_TOPLEVEL_NEWLINES:
-            if (groupDepth == 0) {
-                while (true) {
-
-                    if (res == TOKEN_SPACE) {
-                        
-                        // Clear String
-                        getString();
-                        
-                    } else if (res == TOKEN_COMMENT) {
-                        
-                        auto Text = getString();
-                        
-                        auto Span = TheSourceManager->getTokenSpan();
-                        
-                        auto C = Comment(Text, Span);
-                        
-                        Comments.push_back(C);
-                        
-                    } else {
-                        break;
-                    }
-
-                    res = TheTokenizer->nextToken();
-                }
-            } else {
-                while (true) {
-
-                    if (res == TOKEN_NEWLINE || res == TOKEN_SPACE) {
-                        
-                        // Clear String
-                        getString();
-                        
-                    } else if (res == TOKEN_COMMENT) {
-                        
-                        auto Text = getString();
-                        
-                        auto Span = TheSourceManager->getTokenSpan();
-                        
-                        auto C = Comment(Text, Span);
-                        
-                        Comments.push_back(C);
-                        
-                    } else {
-                        break;
-                    }
-                    
-                    // Clear String
-                    getString();
-
-                    res = TheTokenizer->nextToken();
-                }
+            
+            // Clear String
+            getString();
+            
+        } else if (res == TOKEN_SPACE) {
+            // Clear String
+            getString();
+        } else if (res == TOKEN_COMMENT) {
+            
+            if (Policy != NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS &&
+                    Ctxt.isOperatorTopLevel()) {
+                // Create a top-level CommentNode
+                break;
             }
+            
+            auto Text = getString();
+            
+            auto Span = TheSourceManager->getTokenSpan();
+            
+            auto C = Comment(Text, Span);
+            
+            Comments.push_back(C);
+            
+        } else {
             break;
-        case POLICY_PRESERVE_EVERYTHING:
-            break;
+        }
+        
+        res = TheTokenizer->nextToken();
     }
     
     return res;
@@ -492,6 +462,13 @@ std::vector<SyntaxIssue> Parser::getIssues() {
     return Tmp;
 }
 
+//
+// Only to be used by Parselets
+//
+void Parser::addIssue(SyntaxIssue I) {
+    Issues.push_back(I);
+}
+
 std::vector<Comment> Parser::getComments() {
 
     auto Tmp = Comments;
@@ -499,6 +476,13 @@ std::vector<Comment> Parser::getComments() {
     Comments.clear();
     
     return Tmp;
+}
+
+//
+// Only to be used by Parselets
+//
+void Parser::addComment(Comment C) {
+    Comments.push_back(C);
 }
 
 bool Parser::isPossibleBeginningOfExpression(Token Tok) {
@@ -558,29 +542,46 @@ precedence_t Parser::getCurrentTokenPrecedence(Token TokIn, ParserContext Ctxt) 
 
 std::shared_ptr<Node>Parser::parseTopLevel() {
     
-    auto Expr = parse({0, PRECEDENCE_LOWEST, true, false});
+    ParserContext Ctxt{0, 0, PRECEDENCE_LOWEST, true, false};
     
-    Expr = cleanup(Expr, {0, PRECEDENCE_LOWEST, true, false});
+    auto Expr = parse(Ctxt);
     
     return Expr;
 }
 
-std::shared_ptr<Node>Parser::parse(ParserContext Ctxt) {
+std::shared_ptr<Node>Parser::parse(ParserContext CtxtIn) {
     
     Token token = currentToken();
     
     assert(token != TOKEN_UNKNOWN);
-    assert(token != TOKEN_COMMENT);
     assert(token != TOKEN_NEWLINE);
     assert(token != TOKEN_SPACE);
     
-    if (Ctxt.Depth == MAX_EXPRESSION_DEPTH) {
+    if (CtxtIn.OperatorDepth == MAX_EXPRESSION_DEPTH) {
+
+        auto Span = TheSourceManager->getTokenSpan();
+
+        auto Issue = SyntaxIssue(TAG_MAXEXPRESSIONDEPTH, std::string("Max expression depth reached. Consider breaking up into smaller expressions."), SEVERITY_WARNING, Span);
+
+        Issues.push_back(Issue);
+    }
+    
+    if (token == TOKEN_COMMENT) {
+        
+        //
+        // Only allow CommentNodes at top-level
+        //
+        assert(CtxtIn.OperatorDepth == 0);
+        
+        auto Str = TheParser->getString();
         
         auto Span = TheSourceManager->getTokenSpan();
         
-        auto Issue = SyntaxIssue(TAG_MAXEXPRESSIONDEPTH, std::string("Max expression depth reached. Consider breaking up into smaller expressions."), SEVERITY_WARNING, Span);
+        TheParser->nextToken(CtxtIn, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
         
-        Issues.push_back(Issue);
+        auto C = std::make_shared<CommentNode>(Str, Span);
+        
+        return C;
     }
     
     if (isError(token) ||
@@ -589,9 +590,9 @@ std::shared_ptr<Node>Parser::parse(ParserContext Ctxt) {
         
         auto errorParselet = new ErrorParselet();
         
-        auto Error = errorParselet->parse(Ctxt);
+        auto Error = errorParselet->parse(CtxtIn);
         
-        Error = cleanup(Error, Ctxt);
+        Error = cleanup(Error, CtxtIn);
         
         return Error;
     }
@@ -607,17 +608,15 @@ std::shared_ptr<Node>Parser::parse(ParserContext Ctxt) {
         prefix = I->second;
     }
     
-    auto ctxt{Ctxt};
-    ctxt.Depth++;
-    Left = prefix->parse(ctxt);
+    Left = prefix->parse(CtxtIn);
     
     while (true) {
         
-        token = currentToken();
+        token = tryNextToken(CtxtIn, NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES);
         
-        auto TokenPrecedence = getCurrentTokenPrecedence(token, Ctxt);
+        auto TokenPrecedence = getCurrentTokenPrecedence(token, CtxtIn);
         
-        if (Ctxt.Precedence >= TokenPrecedence) {
+        if (CtxtIn.Precedence >= TokenPrecedence) {
             break;
         }
         
@@ -637,11 +636,10 @@ std::shared_ptr<Node>Parser::parse(ParserContext Ctxt) {
                 infixPlusFlag = true;
             }
             
-            auto ctxt{Ctxt};
-            ctxt.Depth++;
-            ctxt.Precedence = TokenPrecedence;
-            ctxt.InfixPlusFlag = infixPlusFlag;
-            Left = infix->parse(Left, ctxt);
+            auto Ctxt = CtxtIn;
+            Ctxt.Precedence = TokenPrecedence;
+            Ctxt.InfixPlusFlag = infixPlusFlag;
+            Left = infix->parse(Left, Ctxt);
             
         } else {
             
@@ -652,10 +650,9 @@ std::shared_ptr<Node>Parser::parse(ParserContext Ctxt) {
             PostfixParselet *post;
             post = P->second;
             
-            auto ctxt{Ctxt};
-            ctxt.Depth++;
-            ctxt.Precedence = TokenPrecedence;
-            Left = post->parse(Left, ctxt);
+            auto Ctxt = CtxtIn;
+            Ctxt.Precedence = TokenPrecedence;
+            Left = post->parse(Left, Ctxt);
         }
         
         token = currentToken();

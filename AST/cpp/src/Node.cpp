@@ -890,6 +890,32 @@ SourceSpan InternalMinusNode::getSourceSpan() {
 }
 
 
+std::string CommentNode::string() {
+    
+    auto Issues = getIssues();
+    auto Comments = getComments();
+    
+    std::ostringstream ss;
+    ss << SYMBOL_COMMENTNODE.name();
+    ss << "[";
+    ss << stringEscape(Str);
+    ss << ", ";
+    ss << ASTArgsString();
+    ss << ", <|";
+    ss << ASTSourceString(getSourceSpan());
+    if (!Issues.empty()) {
+        ss << ", ";
+        ss << SyntaxIssuesString();
+    }
+    if (!Comments.empty()) {
+        ss << ", ";
+        ss << CommentsString();
+    }
+    ss << "|>";
+    ss << "]";
+    return ss.str();
+}
+
 
 std::string SyntaxErrorNode::string() {
     

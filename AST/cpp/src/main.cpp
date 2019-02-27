@@ -111,35 +111,36 @@ int main(int argc, char *argv[]) {
                 case FORMAT_INPUTFORM:
                     // std::cout << FN->inputform();
 
+                    std::cout << "{\n";
                     if (!nodes.empty()) {
                         auto I = nodes.begin();
                         auto LastIt = nodes.end();
                         LastIt--;
-                        std::cout << "{\n";
                         for (; I < LastIt; I++) {
                             std::cout << (*I)->inputform();
                             std::cout << ",\n";
                         }
                         std::cout << (*I)->inputform();
-                        std::cout << "}\n";
                     }
+                    std::cout << "}\n";
 
                     break;
                 case FORMAT_AST:
                     // std::cout << FN->string();
 
+                    std::cout << "{\n";
                     if (!nodes.empty()) {
                         auto I = nodes.begin();
                         auto LastIt = nodes.end();
                         LastIt--;
-                        std::cout << "{\n";
                         for (; I < LastIt; I++) {
                             std::cout << (*I)->string();
                             std::cout << ",\n";
                         }
                         std::cout << (*I)->string();
-                        std::cout << "}\n";
+                        std::cout << "\n";
                     }
+                    std::cout << "}\n";
 
                     break;
                 case FORMAT_TOKENS:
@@ -192,18 +193,38 @@ int main(int argc, char *argv[]) {
             auto nodes = parseExpressions(interactive);
             
             std::cout << "{\n";
-            auto I = nodes.begin();
-            auto LastIt = nodes.end();
-            LastIt--;
-            for (; I < LastIt; I++) {
+            if (!nodes.empty()) {
+                auto I = nodes.begin();
+                auto LastIt = nodes.end();
+                LastIt--;
+                for (; I < LastIt; I++) {
+                    switch (format) {
+                        case FORMAT_INPUTFORM:
+                            std::cout << (*I)->inputform();
+                            std::cout << ",\n";
+                            break;
+                        case FORMAT_AST:
+                            std::cout << (*I)->string();
+                            std::cout << ",\n";
+                            break;
+                        case FORMAT_TOKENS:
+                            // handled elsewhere
+                            ;
+                            break;
+                        case FORMAT_CHARACTERS:
+                            // handled elsewhere
+                            ;
+                            break;
+                    }
+                }
                 switch (format) {
                     case FORMAT_INPUTFORM:
                         std::cout << (*I)->inputform();
-                        std::cout << ",\n";
+                        std::cout << "\n";
                         break;
                     case FORMAT_AST:
                         std::cout << (*I)->string();
-                        std::cout << ",\n";
+                        std::cout << "\n";
                         break;
                     case FORMAT_TOKENS:
                         // handled elsewhere
@@ -214,24 +235,6 @@ int main(int argc, char *argv[]) {
                         ;
                         break;
                 }
-            }
-            switch (format) {
-                case FORMAT_INPUTFORM:
-                    std::cout << (*I)->inputform();
-                    std::cout << "\n";
-                    break;
-                case FORMAT_AST:
-                    std::cout << (*I)->string();
-                    std::cout << "\n";
-                    break;
-                case FORMAT_TOKENS:
-                    // handled elsewhere
-                    ;
-                    break;
-                case FORMAT_CHARACTERS:
-                    // handled elsewhere
-                    ;
-                    break;
             }
             std::cout << "}\n";
         }
@@ -335,13 +338,19 @@ void printTokens() {
 std::vector<std::shared_ptr<Node>> parseExpressions(bool interactive) {
 
     std::vector<std::shared_ptr<Node>> nodes;
-            
+    
+    ParserContext Ctxt{0, 0, PRECEDENCE_LOWEST, true, false};
+    
     while (true) {
         
         auto peek = TheParser->currentToken();
         
         while (peek == TOKEN_NEWLINE) {
-            peek = TheParser->nextToken();
+            
+            // Clear String
+            TheParser->getString();
+            
+            peek = TheParser->nextToken(Ctxt, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
         }
         
         if (peek != TOKEN_EOF) {
