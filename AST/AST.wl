@@ -306,7 +306,7 @@ Module[{s = sIn, h, res, nonASCII, tokenize},
 
 	h = hIn;
 	If[h === Automatic,
-		h = Last
+		h = If[empty[#], Null, Last[#]]&
 	];
 
 	tokenize = OptionValue["Tokenize"];

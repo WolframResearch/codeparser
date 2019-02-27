@@ -13,3 +13,15 @@ Test[
 	,
 	TestID->"Concrete-20190117-C3R5P5"
 ]
+
+
+
+
+Test[
+	ConcreteParseString[""]
+	,
+	Null
+	,
+	TestID->"Concrete-20190227-H6C1K7"
+]
+
