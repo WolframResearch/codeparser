@@ -382,7 +382,8 @@ Token Parser::tryNextToken(ParserContext Ctxt, NextTokenPolicy Policy) {
         
         if (res == TOKEN_NEWLINE) {
             
-            if (Policy == NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES && Ctxt.isGroupTopLevel()) {
+            if (Policy != NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES &&
+                    Ctxt.isGroupTopLevel()) {
                 //
                 // return a top-level newline
                 // will be handled later
