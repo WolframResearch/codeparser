@@ -496,8 +496,8 @@ Module[{h, full, strm, b, nonASCII, pos, res, skipFirstLine = False, shebangWarn
 	*)
 	If[hIn === Automatic,
 		children = res[[2]];
-		(* a file with only newlines would be FilNode[File, {Null}, <||>] *)
-		If[children =!= {Null},
+		(* a file with only newlines would be FileNode[File, {Null}, <||>] *)
+		If[children =!= {Null} && children =!= {},
 			start = First[children][[3]][Source][[1]];
 			end = Last[children][[3]][Source][[2]];
 			data = res[[3]];
