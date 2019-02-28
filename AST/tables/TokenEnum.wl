@@ -118,6 +118,7 @@ Token`Operator`AtAtAt -> Next,
 Token`Operator`LessMinusGreater -> Next,
 Token`Operator`SlashSlashAt -> Next,
 Token`Operator`CaretColonEqual -> Next,
+Token`Operator`GreaterGreaterGreater -> Next,
 
 (* Linear syntax operators *)
 Token`Operator`LinearSyntax`Bang -> Next,

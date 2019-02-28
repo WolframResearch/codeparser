@@ -13,7 +13,8 @@
 //
 class Tokenizer {
     
-    bool _stringifyNextToken;
+    bool _symbolifyNextToken;
+    bool _fileifyNextToken;
     Token cur;
     bool currentCached;
 
