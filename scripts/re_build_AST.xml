@@ -27,7 +27,11 @@
 	<target name='NativeLibrary.ast.execute' extensionOf='NativeLibrary.execute'>
 
 		<exec dir='${build.dir}' executable='${cmake.exe}' failonerror='true'>
-			<arg line='-DWOLFRAMKERNEL=${mathExe} ..' />
+			<arg line='-DWOLFRAMKERNEL=${mathExe}' />
+			<arg line='-DMATHLINK_INCLUDE_DIR=${checkout_directory}/MathLink/CompilerAdditions' />
+			<arg line='-DMATHLINK_LIB_DIR=${checkout_directory}/MathLink/CompilerAdditions' />
+			<arg line='-DWOLFRAMLIBRARY_INCLUDE_DIR=${checkout_directory}/RuntimeLibrary/${system_id}' />
+			<arg value='${checkout_directory}/${component}' />
         </exec>
 
 		<exec dir='${build.dir}' executable='${cmake.exe}' failonerror='true'>
@@ -41,13 +45,6 @@
 		<copy todir='${files_directory}'>
 			<fileset dir='${build.dir}${file.separator}paclet${file.separator}AST' />
 		</copy>
-
-		<!-- Set execute bit on wl-ast files.' -->
-		<chmod perm='ugo+rx' type='file' osfamily='unix'>
-			<fileset dir='${files_directory}${file.separator}ASTResources'>
-				<include name='**/wl-ast'/>
-			</fileset>
-		</chmod>
 		
 	</target>
 

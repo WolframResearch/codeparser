@@ -8,30 +8,35 @@ Needs["AST`"]
 ToFullFormString is intended for abstract syntax trees
 *)
 
+ToFullFormString[cst_] :=
+Block[{$RecursionLimit = Infinity},
+	toFullFormString[cst]
+]
 
-ToFullFormString[SymbolNode[str_, _, _]] :=
+
+toFullFormString[SymbolNode[str_, _, _]] :=
 	str
 
 (*
 strings may not be quoted, a::b
 *)
-ToFullFormString[StringNode[str_, _, _]] :=
+toFullFormString[StringNode[str_, _, _]] :=
 	If[StringStartsQ[str, "\""],
 		str,
 		"\""<>str<>"\""
 	]
 
-ToFullFormString[NumberNode[str_, _, _]] :=
+toFullFormString[NumberNode[str_, _, _]] :=
 	str
 
-ToFullFormString[CallNode[head_, nodes_, _]] :=
+toFullFormString[CallNode[head_, nodes_, _]] :=
 Catch[
 Module[{headStr, nodeStrs},
-	headStr = ToFullFormString[head];
+	headStr = toFullFormString[head];
 	If[FailureQ[headStr],
 		Throw[headStr]
 	];
-	nodeStrs = ToFullFormString /@ nodes;
+	nodeStrs = toFullFormString /@ nodes;
 	If[AnyTrue[nodeStrs, FailureQ],
 		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];
@@ -43,35 +48,35 @@ Module[{headStr, nodeStrs},
 (*
 linear syntax is skipped right now
 *)
-ToFullFormString[p:PrefixNode[PrefixLinearSyntaxBang, _, _]] :=
+toFullFormString[p:PrefixNode[PrefixLinearSyntaxBang, _, _]] :=
 	ToInputFormString[p]
 
-ToFullFormString[g:GroupNode[GroupLinearSyntaxParen, _, _]] :=
+toFullFormString[g:GroupNode[GroupLinearSyntaxParen, _, _]] :=
 	ToInputFormString[g]
 
 
 
 
 
-ToFullFormString[FileNode[File, nodes_, opts_]] :=
+toFullFormString[FileNode[File, nodes_, opts_]] :=
 Module[{nodeStrs},
-	nodeStrs = ToFullFormString /@ nodes;
+	nodeStrs = toFullFormString /@ nodes;
 	If[AnyTrue[nodeStrs, FailureQ],
 		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];
 	StringJoin[Riffle[nodeStrs, "\n"]]
 ]
 
-ToFullFormString[HoldNode[Hold, nodes_, opts_]] :=
-	ToFullFormString[CallNode[ToNode[Hold], nodes, <||>]]
+toFullFormString[HoldNode[Hold, nodes_, opts_]] :=
+	toFullFormString[CallNode[ToNode[Hold], nodes, <||>]]
 
 
 
-ToFullFormString[n_SyntaxErrorNode] := Failure["SyntaxError", <|"Error"->n|>]
+toFullFormString[n_SyntaxErrorNode] := Failure["SyntaxError", <|"Error"->n|>]
 
-ToFullFormString[f_Failure] := f
+toFullFormString[f_Failure] := f
 
-ToFullFormString[args___] := Failure["InternalUnhandled", <|"Function"->ToFullFormString, "Arguments"->HoldForm[{args}]|>]
+toFullFormString[args___] := Failure["InternalUnhandled", <|"Function"->ToFullFormString, "Arguments"->HoldForm[{args}]|>]
 
 
 End[]

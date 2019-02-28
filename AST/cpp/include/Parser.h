@@ -2,10 +2,12 @@
 #pragma once
 
 #include "Node.h"
+#include "SyntaxIssue.h"
 #include "Precedence.h"
 
 #include <map>
 #include <set>
+#include <vector>
 
 class PrefixParselet;
 class InfixParselet;
@@ -49,8 +51,6 @@ struct ParserContext {
     size_t OperatorDepth;
     precedence_t Precedence;
     bool ColonFlag1;
-    // InternalMinusNode stop-gap
-    bool InfixPlusFlag;
     
     bool isGroupTopLevel() {
         return GroupDepth == 0;
@@ -91,6 +91,8 @@ public:
     
     void init();
     
+    void deinit();
+
     Token nextToken(ParserContext Ctxt, NextTokenPolicy policy);
     
     Token tryNextToken(ParserContext Ctxt, NextTokenPolicy policy);

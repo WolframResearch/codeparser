@@ -3,11 +3,13 @@
 
 #include "ByteDecoder.h"
 #include "SyntaxIssue.h"
+#include "SourceManager.h"
 #include "CodePoint.h"
 
 #include <sstream>
 #include <vector>
 #include <cassert>
+#include <unordered_map>
 
 //
 // https://akrzemi1.wordpress.com/2017/05/18/asserts-in-constexpr-functions/
@@ -61,7 +63,7 @@ public:
     constexpr int to_point() const {
         return value_;
     }
-
+    
     std::string string() const;
 
     std::vector<SourceCharacter> source() const;
@@ -116,6 +118,8 @@ private:
      };
  }
 
+std::ostream& operator<<(std::ostream& stream, const WLCharacter);
+
 
 
 constexpr WLCharacter WLCHARACTER_EOF(CODEPOINT_EOF);
@@ -165,6 +169,10 @@ class CharacterDecoder {
     
 public:
     CharacterDecoder();
+
+    void init();
+
+    void deinit();
 
     WLCharacter nextWLCharacter(NextCharacterPolicy policy = TOPLEVEL);
 

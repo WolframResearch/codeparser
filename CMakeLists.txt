@@ -4,20 +4,16 @@ cmake_minimum_required(VERSION 3.0)
 project(ast)
 
 set(PACLET "AST")
+set(PACLET_VERSION "0.9" CACHE STRING "Paclet Version")
+set(WOLFRAMKERNEL /Applications/Mathematica.app/Contents/MacOS/WolframKernel CACHE FILEPATH "Path to WolframKernel")
+set(BUILD_DOCS OFF CACHE BOOL "Build documentation")
+set(BUILD_EXE OFF CACHE BOOL "Build executable")
 
 message(STATUS "PACLET: ${PACLET}")
-
-set(PACLET_VERSION "0.9" CACHE STRING "Paclet Version")
-
 message(STATUS "PACLET_VERSION: ${PACLET_VERSION}")
-
-set(WOLFRAMKERNEL /Applications/Mathematica.app/Contents/MacOS/WolframKernel CACHE FILEPATH "Path to WolframKernel")
-
 message(STATUS "WOLFRAMKERNEL: ${WOLFRAMKERNEL}")
-
-set(BUILD_DOCS OFF CACHE BOOL "Build documentation")
-
 message(STATUS "BUILD_DOCS: ${BUILD_DOCS}")
+message(STATUS "BUILD_EXE: ${BUILD_EXE}")
 
 set(WL_SOURCES
 	${CMAKE_SOURCE_DIR}/AST/Abstract.wl
@@ -33,34 +29,6 @@ set(WL_SOURCES
 
 set(PACLETINFO_SOURCE
 	${CMAKE_SOURCE_DIR}/AST/PacletInfo.m
-)
-
-set(CPP_INCLUDES
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/ByteDecoder.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/ByteEncoder.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/CharacterDecoder.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/Node.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/Parselet.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/Parser.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/SourceManager.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/SyntaxIssue.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/Tokenizer.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/Utils.h
-)
-
-set(CPP_SOURCES
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/ByteDecoder.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/ByteEncoder.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/CharacterDecoder.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/Node.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/Parselet.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/Parser.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/SourceManager.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/SyntaxIssue.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/ToInputFormString.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/Tokenizer.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/Utils.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/main.cpp
 )
 
 set(WL_DATA_SOURCES
@@ -96,22 +64,22 @@ set(GENERATED_CPP_INCLUDES
 	${CMAKE_BINARY_DIR}/generated/cpp/include/Precedence.h
 	${CMAKE_BINARY_DIR}/generated/cpp/include/CodePoint.h
 	${CMAKE_BINARY_DIR}/generated/cpp/include/Symbol.h
-	${CMAKE_BINARY_DIR}/generated/cpp/include/ToInputFormString.h
 )
 
-set(GENERATED_CPP_SOURCES
-	${CMAKE_BINARY_DIR}/generated/cpp/src/LongNameMap.cpp
-	${CMAKE_BINARY_DIR}/generated/cpp/src/Token.cpp
-	${CMAKE_BINARY_DIR}/generated/cpp/src/CodePoint.cpp
-	${CMAKE_BINARY_DIR}/generated/cpp/src/Symbol.cpp
+set(GENERATED_CPP_LIB_SOURCES
+	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/LongNameMap.cpp
+	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/Token.cpp
+	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/CodePoint.cpp
+	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/Symbol.cpp
 )
 
 set(GENERATED_SOURCES
 	${GENERATED_WL_SOURCES}
 	${GENERATED_WL_DATA_SOURCES}
 	${GENERATED_CPP_INCLUDES}
-	${GENERATED_CPP_SOURCES}
+	${GENERATED_CPP_LIB_SOURCES}
 )
+
 
 set(DOCUMENTATION_NOTEBOOKS
 	${CMAKE_SOURCE_DIR}/AST/Documentation/English/ReferencePages/Symbols/ParseString.nb
@@ -159,6 +127,15 @@ if(NOT ${VERSION_NUMBER} GREATER_EQUAL 1100)
 	message(FATAL_ERROR "Wolfram Kernel must be at least version 11.0")
 endif()
 
+# get $SystemID
+execute_process(
+	COMMAND ${WOLFRAMKERNEL} -noinit -script ${CMAKE_SOURCE_DIR}/scripts/SystemID.wl
+	OUTPUT_VARIABLE SYSTEMID
+	OUTPUT_STRIP_TRAILING_WHITESPACE
+	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+
+message(STATUS "SYSTEMID: ${SYSTEMID}")
 
 
 
@@ -190,8 +167,7 @@ set(PACLET_SOURCES
 	${CONFIGURED_WL_SOURCES}
 	${BUILT_PACLETINFO}
 	${GENERATED_WL_SOURCES}
-	# wl-ast executable
-	wl-ast
+	ast-lib
 )
 
 if(BUILD_DOCS)
@@ -201,6 +177,7 @@ list(APPEND PACLET_SOURCES
 )
 
 endif(BUILD_DOCS)
+
 
 
 
@@ -246,21 +223,76 @@ add_custom_command(
 
 
 
-
-
 #
-# Build wl-ast executable
+# Build library
 #
-add_executable(wl-ast
-	${GENERATED_CPP_INCLUDES}
-	${GENERATED_CPP_SOURCES}
-	${CPP_INCLUDES}
-	${CPP_SOURCES}
+
+set(WOLFRAMLIBRARY_INCLUDE_DIR /Applications/Mathematica.app/Contents/SystemFiles/IncludeFiles/C CACHE FILEPATH "Path to WolframLibrary.h")
+
+message(STATUS "WOLFRAMLIBRARY_INCLUDE_DIR: ${WOLFRAMLIBRARY_INCLUDE_DIR}")
+
+set(MATHLINK_INCLUDE_DIR /Applications/Mathematica.app/Contents/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions CACHE FILEPATH "Path to mathlink.h")
+
+message(STATUS "MATHLINK_INCLUDE_DIR: ${MATHLINK_INCLUDE_DIR}")
+
+set(MATHLINK_LIB_DIR /Applications/Mathematica.app/Contents/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions CACHE FILEPATH "Path to MathLink library")
+
+message(STATUS "MATHLINK_LIB_DIR: ${MATHLINK_LIB_DIR}")
+
+set(CPP_INCLUDES
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/API.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/ByteDecoder.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/ByteEncoder.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/CharacterDecoder.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/Node.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/Parselet.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/Parser.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/SourceManager.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/SyntaxIssue.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/Tokenizer.h
+	${CMAKE_SOURCE_DIR}/AST/cpp/include/Utils.h
 )
 
-target_include_directories(wl-ast
+set(CPP_LIB_SOURCES
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/API.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/ByteDecoder.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/ByteEncoder.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/CharacterDecoder.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/Node.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/Parselet.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/Parser.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/SourceManager.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/SyntaxIssue.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/Tokenizer.cpp
+	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/Utils.cpp
+)
+
+add_library(ast-lib SHARED
+	${CPP_INCLUDES}
+	${CPP_LIB_SOURCES}
+	${GENERATED_CPP_INCLUDES}
+	${GENERATED_CPP_LIB_SOURCES}
+)
+
+target_include_directories(ast-lib
 	PRIVATE ${CMAKE_SOURCE_DIR}/AST/cpp/include
 	PRIVATE ${CMAKE_BINARY_DIR}/generated/cpp/include
+	PRIVATE ${MATHLINK_INCLUDE_DIR}
+	PRIVATE ${WOLFRAMLIBRARY_INCLUDE_DIR}
+)
+
+find_library(ML_LIB
+	NAMES MLi4
+	HINTS ${MATHLINK_LIB_DIR}
+)
+
+target_link_libraries(ast-lib ${ML_LIB})
+
+#
+# https://community.wolfram.com/groups/-/m/t/610879?sortMsg=Flat
+#
+target_link_libraries(ast-lib
+	"-stdlib=libc++ -framework Foundation -lc++"
 )
 
 set(MAX_EXPRESSION_DEPTH 100 CACHE STRING "Maximum depth allowed by the parser")
@@ -269,54 +301,51 @@ set(MAX_EXPRESSION_BREADTH 1000 CACHE STRING "Maximum breadth allowed by the par
 message(STATUS "MAX_EXPRESSION_DEPTH: ${MAX_EXPRESSION_DEPTH}")
 message(STATUS "MAX_EXPRESSION_BREADTH: ${MAX_EXPRESSION_BREADTH}")
 
-target_compile_definitions(wl-ast
+target_compile_definitions(ast-lib
 	PRIVATE VERSION_NUMBER=${VERSION_NUMBER}
 	PRIVATE MAX_EXPRESSION_DEPTH=${MAX_EXPRESSION_DEPTH}
 	PRIVATE MAX_EXPRESSION_BREADTH=${MAX_EXPRESSION_BREADTH}
 )
 
-# get $SystemID
-execute_process(
-	COMMAND ${WOLFRAMKERNEL} -noinit -script ${CMAKE_SOURCE_DIR}/scripts/SystemID.wl
-	OUTPUT_VARIABLE SYSTEMID
-	OUTPUT_STRIP_TRAILING_WHITESPACE
-	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-)
-
-message(STATUS "SYSTEMID: ${SYSTEMID}")
-
-set_target_properties(wl-ast PROPERTIES
+set_target_properties(ast-lib PROPERTIES
+	OUTPUT_NAME
+		AST
 	CXX_STANDARD
 		11
 	CXX_STANDARD_REQUIRED
 		ON
-	RUNTIME_OUTPUT_DIRECTORY
-		${CMAKE_BINARY_DIR}/paclet/${PACLET}/${PACLET}Resources/${SYSTEMID}
+	LIBRARY_OUTPUT_DIRECTORY
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
 	# make sure that it is not created inside ${SYSTEMID}/Debug on Multi-configuration generators (VS, Xcode)
-	RUNTIME_OUTPUT_DIRECTORY_DEBUG
-		${CMAKE_BINARY_DIR}/paclet/${PACLET}/${PACLET}Resources/${SYSTEMID}
+	LIBRARY_OUTPUT_DIRECTORY_DEBUG
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
 	# make sure that it is not created inside ${SYSTEMID}/Release on Multi-configuration generators (VS, Xcode)
-	RUNTIME_OUTPUT_DIRECTORY_RELEASE
-		${CMAKE_BINARY_DIR}/paclet/${PACLET}/${PACLET}Resources/${SYSTEMID}
+	LIBRARY_OUTPUT_DIRECTORY_RELEASE
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+	# WL / LibraryLink style dictates that the library be named "AST.dylib" and not "libAST.dylib"
+	PREFIX
+		""
 )
 
 #
 # Setup warnings
 #
 if(MSVC)
-	target_compile_options(wl-ast
+	target_compile_options(ast-lib
 		# specify /MT to statically link runtime on Windows
 		# This prevents "The program can't start because ucrtbased.dll is missing from your computer" error on Windows 7
 		PRIVATE /W3 /EHsc /MT
 	)
 else()
-	target_compile_options(wl-ast
+	target_compile_options(ast-lib
 		PRIVATE -Wextra -Wall -Weffc++ -Wno-unused-parameter -Wno-unused-function -Wno-comment
 	)
 endif(MSVC)
 
 
 
+
+add_subdirectory(AST/cpp/src/exe)
 
 
 

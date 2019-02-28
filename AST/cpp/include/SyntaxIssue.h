@@ -3,8 +3,9 @@
 
 #include "SourceManager.h"
 
+#include "mathlink.h"
+
 #include <string>
-#include <sstream>
 
 #define TAG_SYNTAXERROR "SyntaxError"
 #define TAG_STRANGECHARACTER "StrangeCharacter"
@@ -26,7 +27,7 @@ struct SyntaxIssue {
 
     SyntaxIssue(std::string Tag, std::string Msg, std::string Severity, SourceSpan Span) : Tag(Tag), Msg(Msg), Severity(Severity), Span(Span) {}
 
-    std::string string();
+    void put(MLINK mlp);
 };
 
 struct Comment {

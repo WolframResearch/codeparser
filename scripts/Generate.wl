@@ -52,7 +52,7 @@ If[FileType[buildDir] =!= Directory,
 
 generatedCPPDir = FileNameJoin[{buildDir, "generated", "cpp"}]
 generatedCPPIncludeDir = FileNameJoin[{generatedCPPDir, "include"}]
-generatedCPPSrcDir = FileNameJoin[{generatedCPPDir, "src"}]
+generatedCPPSrcDir = FileNameJoin[{generatedCPPDir, "src", "lib"}]
 
 generatedWLDir = FileNameJoin[{buildDir, "generated", "wl"}]
 
@@ -80,10 +80,10 @@ If[FindFile["AST`"] =!= FileNameJoin[{pacletASTDir, "AST.wl"}],
   Print["Expected to find AST here: ", FileNameJoin[{pacletASTDir, "AST.wl"}]];
   Print["Actually found AST here: ", FindFile["AST`"]];
   If[FindFile["AST`"] === FileNameJoin[{packageDir, "AST", "AST.wl"}],
-    Print["It looks like the AST source is being used. This is not supported."];
+    Print["It looks like the AST source is being used. This is not supported during build time."];
     Print["There may be a problem with the version of Wolfram Engine that is being used."];
     ,
-    Print["Consider running:\nPacletUninstall[\"AST\"]"];
+    Print["Consider running:\nPacletUninstall[\"AST\"]\nto ensure that no other isntallations of AST interfere with the build."];
   ];
   Quit[1]
 ]
@@ -172,7 +172,6 @@ longNameDefinesCPPHeader = {
 //
 
 #pragma once
-
 "} ~Join~ longNameDefines ~Join~ {""}
 
 Print["exporting LongNameDefines.h"]
@@ -417,8 +416,6 @@ codePointCPPHeader = {
 #pragma once
 
 #include \"Token.h\"
-
-#include <string>
 
 //
 // These are the actual WL code points for linear syntax characters
@@ -683,6 +680,7 @@ tokenCPPSource = {
 //
 
 #include \"Token.h\"
+
 #include <iostream>
 #include <cassert>
 "} ~Join~
@@ -776,16 +774,16 @@ If[FailureQ[res],
 ]
 
 
-precedenceWL = Column[{
+precedenceWL = {
 "
 (*
 AUTO GENERATED FILE
 DO NOT MODIFY
 *)
-"} ~Join~ {"<|"} ~Join~ (KeyValueMap[(Row[{#1, " -> ", #2, ","}]) &, enumMap]) ~Join~ {"Nothing", "|>", ""}]
+"} ~Join~ {"<|"} ~Join~ (KeyValueMap[(Row[{#1, " -> ", #2, ","}]) &, enumMap]) ~Join~ {"Nothing", "|>", ""}
 
 Print["exporting Precedence.wl"]
-res = Export[FileNameJoin[{pacletASTDir, "Precedence.wl"}], precedenceWL, "String"]
+res = Export[FileNameJoin[{pacletASTDir, "Precedence.wl"}], Column[precedenceWL], "String"]
 
 If[FailureQ[res],
   Print[res];
@@ -906,13 +904,20 @@ symbolCPPHeader = {
 
 #include \"Token.h\"
 
+#include \"mathlink.h\"
+
 #include <string>
 #include <utility>
 
 class Symbol {
-  std::string Name;
-  public:Symbol(std::string Name):Name(Name) {}
-  std::string name() const;
+public:
+  constexpr Symbol(const char *Name) : Name(Name) {}
+  const char *name() const;
+
+  void put(MLINK mlp) const;
+
+private:
+  const char *Name;
 };
 
 bool operator==(const Symbol& lhs, const Symbol& rhs);
@@ -950,6 +955,23 @@ If[FailureQ[res],
   Quit[1]
 ]
 
+(*
+We want to fully-qualify symbol names over the wire.
+This allows library->kernel traffic to work when AST` is not on $ContextPath.
+However, it is still not possible to fully-qualify System` symbols
+bug 283291
+bug 284492
+So also make library->kernel traffic match this behavior
+*)
+stringifyForTransmitting[sym_Symbol] :=
+Module[{ctxt},
+  ctxt = Context[sym];
+  If[ctxt == "System`",
+    ToString[sym]
+    ,
+    Context[sym]<>ToString[sym]
+  ]
+]
 
 
 symbolCPPSource = {
@@ -968,12 +990,17 @@ bool operator==(const Symbol& lhs, const Symbol& rhs) {
    return lhs.name() == rhs.name();
 }
 
-std::string Symbol::name() const {
+const char *Symbol::name() const {
    return Name;
 }
+
+void Symbol::put(MLINK mlp) const {
+  MLPutSymbol(mlp, Name);
+}
+
 "} ~Join~ 
 
-    (Row[{"const", " ", "Symbol&", " ", toGlobal["Symbol`"<>ToString[#]], " ", "=", " ", "Symbol(\"", ToString[#], "\")", ";"}]& /@ symbols) ~Join~
+    (Row[{"const", " ", "Symbol&", " ", toGlobal["Symbol`"<>ToString[#]], " ", "=", " ", "Symbol(\"", stringifyForTransmitting[#], "\")", ";"}]& /@ symbols) ~Join~
 
       {""} ~Join~
 
@@ -1059,42 +1086,42 @@ std::string Symbol::name() const {
           "{ return std::make_pair(std::string(", 
           escapeString[#[[2, 1]]], "), std::string(", 
           escapeString[#[[2, 2]]], "));", "}"}]& /@ DownValues[SymbolToGroupPair]) ~Join~ 
-      {"return std::make_pair(std::string(\"XXX\"), std::string(\"XXX\"));",
+      {"std::cerr << \"Unhandled Symbol: \" << Sym.name() << \"\\n\"; assert(false && \"Unhandled Symbol\"); return std::make_pair(std::string(\"XXX\"), std::string(\"XXX\"));",
      "}"} ~Join~
 
      {""} ~Join~
      {"std::string SymbolToPrefixOperatorString(const Symbol& Sym) {"} ~Join~
       (Row[{"if (Sym == ", toGlobal["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
           "{ return ", escapeString[#[[2]]], ";", "}"}]& /@ DownValues[SymbolToPrefixOperatorString]) ~Join~
-      {"return \"XXX\";",
+      {"std::cerr << \"Unhandled Symbol: \" << Sym.name() << \"\\n\"; assert(false && \"Unhandled Symbol\"); return \"XXX\";",
       "}",
      ""} ~Join~
 
      {"std::string SymbolToPostfixOperatorString(const Symbol& Sym) {"} ~Join~
       (Row[{"if (Sym == ", toGlobal["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
           "{ return ", escapeString[#[[2]]], ";", "}"}]& /@ DownValues[SymbolToPostfixOperatorString]) ~Join~
-      {"return \"XXX\";",
+      {" std::cerr << \"Unhandled Symbol: \" << Sym.name() << \"\\n\"; assert(false && \"Unhandled Symbol\"); return \"XXX\";",
      "}"} ~Join~
      {""} ~Join~
 
      {"std::string SymbolToBinaryOperatorString(const Symbol& Sym) {"} ~Join~
       (Row[{"if (Sym == ", toGlobal["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
           "{ return ", escapeString[#[[2]]], ";", "}"}]& /@ DownValues[SymbolToBinaryOperatorString]) ~Join~
-      {"return \"XXX\";",
+      {"std::cerr << \"Unhandled Symbol: \" << Sym.name() << \"\\n\"; assert(false && \"Unhandled Symbol\"); return \"XXX\";",
      "}",
      ""} ~Join~
 
      {"std::string SymbolToInfixOperatorString(const Symbol& Sym) {"} ~Join~
       (Row[{"if (Sym == ", toGlobal["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
           "{ return ", escapeString[#[[2]]], ";", "}"}]& /@ DownValues[SymbolToInfixOperatorString]) ~Join~
-      {"return \"XXX\";",
+      {"std::cerr << \"Unhandled Symbol: \" << Sym.name() << \"\\n\"; assert(false && \"Unhandled Symbol\"); return \"XXX\";",
      "}",
      ""} ~Join~
 
      {"std::string SymbolToTernaryOperatorString(const Symbol& Sym) {"} ~Join~
       (Row[{"if (Sym == ", toGlobal["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
           "{ return ", escapeString[#[[2]]], ";", "}"}]& /@ DownValues[SymbolToTernaryOperatorString]) ~Join~
-      {"return \"XXX\";",
+      {" std::cerr << \"Unhandled Symbol: \" << Sym.name() << \"\\n\"; assert(false && \"Unhandled Symbol\"); return \"XXX\";",
      "}",
      ""} ~Join~
 
@@ -1109,39 +1136,6 @@ std::string Symbol::name() const {
 
 Print["exporting Symbol.cpp"]
 res = Export[FileNameJoin[{generatedCPPSrcDir, "Symbol.cpp"}], Column[symbolCPPSource], "String"]
-
-If[FailureQ[res],
-  Print[res];
-  Quit[1]
-]
-
-
-
-
-
-
-
-(* ToInputFormString *)
-Print["generating ToInputFormString"]
-
-toInputFormStringCPPHeader = {
-"
-//
-// AUTO GENERATED FILE
-// DO NOT MODIFY
-//
-
-#pragma once
-
-#include \"Token.h\"
-
-#include <string>
-
-std::string ToInputFormString(std::shared_ptr<Node>);
-"}
-
-Print["exporting ToInputFormString.h"]
-res = Export[FileNameJoin[{generatedCPPIncludeDir, "ToInputFormString.h"}], Column[toInputFormStringCPPHeader], "String"]
 
 If[FailureQ[res],
   Print[res];

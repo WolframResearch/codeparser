@@ -1,13 +1,11 @@
 
 #pragma once
 
-#include "Utils.h"
 #include "SyntaxIssue.h"
-#include "Symbol.h"
+#include "SourceManager.h"
 
 #include <string>
 #include <vector>
-#include <memory>
 
 class Node;
 
@@ -30,16 +28,19 @@ public:
         return Comments;
     }
 
-    virtual std::string string() = 0;
-    
-    virtual std::string inputform() = 0;
+    virtual void put(MLINK mlp) = 0;
     
     virtual SourceSpan getSourceSpan() = 0;
     
     std::string ASTArgsString();
 
+    void putASTArgs(MLINK mlp);
+
     std::string SyntaxIssuesString();
     std::string CommentsString();
+
+    void putSyntaxIssues(MLINK mlp);
+    void putComments(MLINK mlp);
     
     virtual ~Node() {}
 };
@@ -57,10 +58,8 @@ class SymbolNode : public Node {
 public:
     SymbolNode(std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Str(Str), Span(Span) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override {
         return Span;
     }
@@ -73,10 +72,8 @@ public:
     
     StringNode(std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Str(Str), Span(Span) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override {
         return Span;
     }
@@ -89,10 +86,8 @@ public:
     
     NumberNode(std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Str(Str), Span(Span) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override {
         return Span;
     }
@@ -104,10 +99,8 @@ class SlotNode : public Node {
 public:
     SlotNode(std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Str(Str), Span(Span) {};
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override {
         return Span;
     }
@@ -120,10 +113,8 @@ class SlotSequenceNode : public Node {
 public:
     SlotSequenceNode(std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Str(Str), Span(Span) {};
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override {
         return Span;
     }
@@ -135,10 +126,8 @@ class OutNode : public Node {
 public:
     OutNode(std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Str(Str), Span(Span) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override {
         return Span;
     }
@@ -157,10 +146,8 @@ class PrefixNode : public Node {
 public:
     PrefixNode(const Symbol& Op, SourceSpan TokSpan, std::shared_ptr<Node> Operand, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Operand}, Issues, Comments), Op(Op), TokSpan(TokSpan) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override;
     
     std::shared_ptr<Node> getOperand() {
@@ -173,10 +160,8 @@ class BinaryNode : public Node {
 public:
     BinaryNode(const Symbol& Op, std::shared_ptr<Node> Left, std::shared_ptr<Node> Right, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Left, Right}, Issues, Comments), Op(Op) {}
 
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override;
     
     std::shared_ptr<Node> getLeft() {
@@ -197,10 +182,8 @@ class InfixNode : public Node {
 public:
     InfixNode(const Symbol& Op, std::vector<std::shared_ptr<Node>> Args, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node(Args, Issues, Comments), Op(Op) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override;
 };
 
@@ -210,10 +193,8 @@ class TernaryNode : public Node {
 public:
     TernaryNode(const Symbol& Op, std::shared_ptr<Node> Left, std::shared_ptr<Node> Middle, std::shared_ptr<Node> Right, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Left, Middle, Right}, Issues, Comments), Op(Op) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override;
     
     std::shared_ptr<Node> getLeft() {
@@ -235,10 +216,8 @@ class PostfixNode : public Node {
 public:
     PostfixNode(const Symbol& Op, SourceSpan TokSpan, std::shared_ptr<Node> Operand, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Operand}, Issues, Comments), Op(Op), TokSpan(TokSpan) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override;
     
     std::shared_ptr<Node> getOperand() {
@@ -260,10 +239,8 @@ class CallNode : public Node {
 public:
     CallNode(std::shared_ptr<Node> Head, std::shared_ptr<Node> Body, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Body}, Issues, Comments), Head(Head) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override;
 };
 
@@ -272,10 +249,8 @@ class CallMissingCloserNode : public Node {
 public:
     CallMissingCloserNode(std::shared_ptr<Node> Head, std::shared_ptr<Node> Body, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Body}, Issues, Comments), Head(Head) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override;
 };
 
@@ -287,10 +262,8 @@ public:
     
     GroupNode(const Symbol& Op, SourceSpan OpenerTokSpan, SourceSpan CloserTokSpan, std::vector<std::shared_ptr<Node>> Args, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node(Args, Issues, Comments), Op(Op), OpenerTokSpan(OpenerTokSpan), CloserTokSpan(CloserTokSpan) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     std::string internalInputform();
     
     SourceSpan getSourceSpan() override;
@@ -317,10 +290,8 @@ public:
     BlankNode(SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Span(Span) {}
     BlankNode(std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym2}, Issues, Comments), Span(Span) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override {
         return Span;
     }
@@ -336,10 +307,8 @@ public:
     BlankSequenceNode(SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Span(Span) {}
     BlankSequenceNode(std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym2}, Issues, Comments), Span(Span) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override {
         return Span;
     }
@@ -355,10 +324,8 @@ public:
     BlankNullSequenceNode(SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Span(Span) {}
     BlankNullSequenceNode(std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym2}, Issues, Comments), Span(Span) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override {
         return Span;
     }
@@ -373,10 +340,8 @@ class OptionalDefaultNode : public Node {
 public:
     OptionalDefaultNode(SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Span(Span) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override {
         return Span;
     }
@@ -388,10 +353,8 @@ public:
     PatternBlankNode(std::shared_ptr<Node> Sym1, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym1}, Issues, Comments), Span(Span) {}
     PatternBlankNode(std::shared_ptr<Node> Sym1, std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym1, Sym2}, Issues, Comments), Span(Span) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override {
         return Span;
     }
@@ -411,10 +374,8 @@ public:
     PatternBlankSequenceNode(std::shared_ptr<Node> Sym1, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym1}, Issues, Comments), Span(Span) {}
     PatternBlankSequenceNode(std::shared_ptr<Node> Sym1, std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym1, Sym2}, Issues, Comments), Span(Span) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override {
         return Span;
     }
@@ -434,10 +395,8 @@ public:
     PatternBlankNullSequenceNode(std::shared_ptr<Node> Sym1, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym1}, Issues, Comments), Span(Span) {}
     PatternBlankNullSequenceNode(std::shared_ptr<Node> Sym1, std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym1, Sym2}, Issues, Comments), Span(Span) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override {
         return Span;
     }
@@ -456,10 +415,8 @@ class OptionalDefaultPatternNode : public Node {
 public:
     OptionalDefaultPatternNode(std::shared_ptr<Node> Sym1, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym1}, Issues, Comments), Span(Span) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override {
         return Span;
     }
@@ -480,10 +437,8 @@ class InternalNullNode : public Node {
 public:
     InternalNullNode(SourceSpan Span) : Node({}, {}, {}), Span(Span) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override {
         return Span;
     }
@@ -497,10 +452,8 @@ class InternalOneNode : public Node {
 public:
     InternalOneNode(SourceSpan Span) : Node({}, {}, {}), Span(Span) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override {
         return Span;
     }
@@ -514,10 +467,8 @@ class InternalAllNode : public Node {
 public:
     InternalAllNode(SourceSpan Span) : Node({}, {}, {}), Span(Span) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override {
         return Span;
     }
@@ -531,10 +482,8 @@ class InternalDotNode : public Node {
 public:
     InternalDotNode(SourceSpan Span) : Node({}, {}, {}), Span(Span) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override {
         return Span;
     }
@@ -549,10 +498,8 @@ class InternalTokenNode : public Node {
 public:
     InternalTokenNode(std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Str(Str), Span(Span) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override {
         return Span;
     }
@@ -560,23 +507,6 @@ public:
 
 
 
-//
-// InternalMinusNode stop-gap
-//
-class InternalMinusNode : public Node {
-public:
-    InternalMinusNode(std::shared_ptr<Node> Operand, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Operand}, Issues, Comments) {}
-    
-    std::string string() override;
-    
-    std::string inputform() override;
-    
-    SourceSpan getSourceSpan() override;
-
-    std::shared_ptr<Node> getOperand() {
-        return getArgs()[0];
-    }
-};
 
 
 
@@ -603,10 +533,8 @@ class SyntaxErrorNode : public Node {
 public:
     SyntaxErrorNode(Token Tok, std::vector<std::shared_ptr<Node>> Args, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node(Args, Issues, Comments), Tok(Tok) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
-    
+    void put(MLINK mlp) override;
+
     SourceSpan getSourceSpan() override;
 };
 

@@ -959,11 +959,10 @@ important that space after - is not in SyntaxErrorNode
 Test[
 	ConcreteParseString["a - \\tb"]
 	,
-	InfixNode[Plus, {SymbolNode["a", {}, <|Source->{{1, 1}, {1, 1}}|>],
-		InternalMinusNode[Minus, {SyntaxErrorNode[Token`Error`Rest, {SyntaxErrorNode[Token`Error`UnhandledCharacter, {
-			InternalTokenNode["\\t", {}, <|Source->{{1, 5}, {1, 6}}|>]}, <|Source->{{1, 5}, {1, 6}}|>],
-			InternalTokenNode["b", {}, <|Source->{{1, 7}, {1, 7}}|>]},
-			<|Source->{{1, 5}, {1, 7}}|>]}, <|Source->{{1, 5}, {1, 7}}|>]}, <|Source->{{1, 1}, {1, 7}}|>]
+	BinaryNode[Minus, {SymbolNode["a", {}, <|Source -> {{1, 1}, {1, 1}}|>], SyntaxErrorNode[Token`Error`Rest,
+		{SyntaxErrorNode[Token`Error`UnhandledCharacter, {InternalTokenNode["\\t", {}, <|Source -> {{1, 5}, {1, 6}}|>]},
+			<|Source -> {{1, 5}, {1, 6}}|>], InternalTokenNode["b", {}, <|Source -> {{1, 7}, {1, 7}}|>]},
+			<|Source -> {{1, 5}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]
 	,
 	TestID->"Parse-20190203-G0U2N7"
 ]

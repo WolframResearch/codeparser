@@ -1,9 +1,9 @@
 
 #pragma once
 
+#include "Parser.h"
 #include "Precedence.h"
 #include "Token.h"
-#include "Parser.h"
 
 #include <memory>
 

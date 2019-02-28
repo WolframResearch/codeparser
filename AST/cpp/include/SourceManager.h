@@ -1,11 +1,9 @@
 
 #pragma once
 
-#include <map>
-#include <string>
-#include <iostream>
+#include "Symbol.h"
+
 #include <cassert>
-#include <vector>
 
 //
 // https://akrzemi1.wordpress.com/2017/05/18/asserts-in-constexpr-functions/
@@ -62,13 +60,14 @@ constexpr SourceCharacter SOURCECHARACTER_BACKSLASH('\\');
 struct SourceLocation {
     size_t Line;
     size_t Col;
-    
-    std::string string() const {
-        return "{" + std::to_string(Line) + ", " + std::to_string(Col) + "}";
-    }
-    
-    void string(std::ostream& os) const {
-        os << "{" << Line << ", " << Col << "}";
+
+    void put(MLINK mlp) {
+
+        MLPutFunction(mlp, SYMBOL_LIST.name(), 2);
+
+        MLPutInteger(mlp, Line);
+
+        MLPutInteger(mlp, Col);
     }
 
     SourceLocation operator+(size_t i) {
@@ -81,19 +80,26 @@ struct SourceLocation {
 };
 
 struct SourceSpan {
+
     SourceLocation start;
     SourceLocation end;
-    
-    std::string string() const {
-        return "{" + start.string() + ", " + end.string() + "}";
+
+    void put(MLINK mlp) {
+
+        MLPutFunction(mlp, SYMBOL_LIST.name(), 2);
+
+        start.put(mlp);
+
+        end.put(mlp);
     }
-    
-    void string(std::ostream& os) const {
-        os << "{";
-        start.string(os);
-        os << ", ";
-        end.string(os);
-        os << "}";
+
+    void putSourceRule(MLINK mlp) {
+
+        MLPutFunction(mlp, SYMBOL_RULE.name(), 2);
+
+        MLPutSymbol(mlp, SYMBOL_SOURCE.name());
+
+        put(mlp);
     }
 };
 
@@ -118,6 +124,10 @@ class SourceManager {
 public:
     SourceManager();
     
+    void init();
+
+    void deinit();
+
     void advanceSourceLocation(SourceCharacter c);
     
     void setTokenStart();

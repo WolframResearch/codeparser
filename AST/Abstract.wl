@@ -39,6 +39,8 @@ Abstract[PostfixNode[op_, {operand_}, data_]] := CallNode[ToNode[op], {Abstract[
 
 
 
+Abstract[minus:BinaryNode[Minus, _, _]] := abstractPlus[minus]
+Abstract[times:BinaryNode[Divide, _, _]] := abstractTimes[times]
 
 Abstract[BinaryNode[Equal, children_, data_]] := abstractInequality[BinaryNode[Equal, children, KeyTake[data, {Source}]]]
 Abstract[BinaryNode[Unequal, children_, data_]] := abstractInequality[BinaryNode[Unequal, children, KeyTake[data, {Source}]]]
@@ -74,7 +76,6 @@ Abstract[BinaryNode[op_, {left_, right_}, data_]] := CallNode[ToNode[op], {Abstr
 
 
 Abstract[InfixNode[Plus, children_, data_]] := abstractPlus[InfixNode[Plus, children, KeyTake[data, {Source}]]]
-Abstract[InfixNode[Minus, children_, data_]] := abstractPlus[InfixNode[Minus, children, KeyTake[data, {Source}]]]
 Abstract[InfixNode[InfixImplicitPlus, children_, data_]] := abstractPlus[InfixNode[InfixImplicitPlus, children, KeyTake[data, {Source}]]]
 Abstract[InfixNode[Times, children_, data_]] := abstractTimes[InfixNode[Times, children, KeyTake[data, {Source}]]]
 Abstract[InfixNode[ImplicitTimes, children_, data_]] := abstractTimes[InfixNode[ImplicitTimes, children, KeyTake[data, {Source}]]]
@@ -231,15 +232,11 @@ flattenPlus[nodes_List, data_] :=
 				InfixNode[Plus, _, _],
 					flattenPlus[#[[2]], data]
 				,
-				InfixNode[Minus, _, _],
+				BinaryNode[Minus, _, _],
 					flattenPlus[{First[#[[2]]], negate[#, data]& /@ Rest[#[[2]]]}, data]
 				,
 				InfixNode[InfixImplicitPlus, _, _],
 					flattenPlus[#[[2]], data]
-				,
-				(* InternalMinusNode stop-gap *)
-				InternalMinusNode[Minus, _, _],
-					negate[#[[2]][[1]], data]
 				,
 				_,
 					#
@@ -250,7 +247,7 @@ flattenPlus[nodes_List, data_] :=
 abstractPlus[InfixNode[Plus, children_, data_]] :=
 	CallNode[ToNode[Plus], Abstract /@ Flatten[flattenPlus[children, data]], data]
 
-abstractPlus[InfixNode[Minus, children_, data_]] :=
+abstractPlus[BinaryNode[Minus, children_, data_]] :=
 	CallNode[ToNode[Plus], Abstract /@ Flatten[flattenPlus[{First[children], negate[#, data]& /@ Rest[children]}, data]], data]
 
 abstractPlus[InfixNode[InfixImplicitPlus, children_, data_]] :=
@@ -620,7 +617,7 @@ Module[{lastWasComma, abstractedChildren, issues, data},
 	abstractedChildren = (Switch[#,
 		InternalTokenNode[commaPat, {}, _],
 			If[lastWasComma,
-    			AppendTo[issues, SyntaxIssue["SyntaxError", "Comma encountered with no adjacent expression. The expression will be treated as Null", "Error", data]];
+    			AppendTo[issues, SyntaxIssue["SyntaxError", "Comma encountered with no adjacent expression. The expression will be treated as Null", "Error", #[[3]]]];
     			SymbolNode["Null", {}, <||>]
     			,
     			lastWasComma = True;
@@ -632,7 +629,7 @@ Module[{lastWasComma, abstractedChildren, issues, data},
     		Abstract[#]
    ])& /@ children;
    If[lastWasComma,
-   	AppendTo[issues, SyntaxIssue["SyntaxError", "Comma encountered with no adjacent expression. The expression will be treated as Null", "Error", data]];
+   	AppendTo[issues, SyntaxIssue["SyntaxError", "Comma encountered with no adjacent expression. The expression will be treated as Null", "Error", children[[-1]][[3]]]];
    	AppendTo[abstractedChildren, SymbolNode["Null", {}, <||>]];
    ];
 

@@ -87,6 +87,8 @@ $Miscellaneous = {
 All,
 (* when parsing f[1,] then we need to parse as f[1,Null] *)
 Null,
+True,
+False,
 SyntaxIssue,
 Comment,
 
@@ -113,13 +115,8 @@ TagUnset,
 
 TernaryTilde,
 
-(* InternalMinusNode stop-gap *)
-InternalMinusNode,
-
 (*InternalEmpty,*)
 InternalInvalid,
-
-HoldForm[Nothing],
 
 Nothing
 }
@@ -313,6 +310,7 @@ BinaryOperatorToSymbol[Token`Operator`EqualBangEqual] = UnsameQ
 BinaryOperatorToSymbol[Token`Operator`AtStar] = Composition
 BinaryOperatorToSymbol[Token`Operator`SlashStar] = RightComposition
 
+BinaryOperatorToSymbol[Token`Operator`Minus] = Minus
 BinaryOperatorToSymbol[Token`Operator`Slash] = Divide
 BinaryOperatorToSymbol[Token`Operator`SlashAt] = Map
 BinaryOperatorToSymbol[Token`Operator`Equal] = Set
@@ -383,6 +381,7 @@ SymbolToBinaryOperatorString[UnsameQ] = "=!="
 SymbolToBinaryOperatorString[Composition] = "@*"
 SymbolToBinaryOperatorString[RightComposition] = "/*"
 
+SymbolToBinaryOperatorString[Minus] = " - "
 SymbolToBinaryOperatorString[Divide] = "/"
 SymbolToBinaryOperatorString[Map] = "/@"
 SymbolToBinaryOperatorString[Set] = "="
@@ -445,7 +444,6 @@ InfixOperatorToSymbol[Token`Operator`Semi] = CompoundExpression
 
 (* Plus and Times *)
 InfixOperatorToSymbol[Token`Operator`Plus] = Plus
-InfixOperatorToSymbol[Token`Operator`Minus] = Minus
 
 InfixOperatorToSymbol[Token`Operator`LongName`ImplicitPlus] = InfixImplicitPlus
 
@@ -539,7 +537,6 @@ SymbolToInfixOperatorString[CompoundExpression] = " ; "
 (* Plus and Times *)
 (* extra space, prevent 9.8` + 3 from turning into 9.8`+3 *)
 SymbolToInfixOperatorString[Plus] = " + "
-SymbolToInfixOperatorString[Minus] = " - "
 SymbolToInfixOperatorString[InfixImplicitPlus] = "\\[ImplicitPlus]"
 
 SymbolToInfixOperatorString[Times] = "*"

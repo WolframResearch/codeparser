@@ -1,15 +1,7 @@
 
 #include "ByteDecoder.h"
 
-#include "Utils.h"
-#include "LongNameDefines.h"
-
-#include <sstream>
-#include <iomanip>
-#include <iostream>
-#include <cassert>
-
-ByteDecoder::ByteDecoder(std::istream &In, bool interactive) : In(In), interactive(interactive), eof(false), byteQueue() {}
+ByteDecoder::ByteDecoder(std::istream &In) : In(In), eof(false), byteQueue() {}
 
 //
 // if interactive is true, then only allow single lines to be read (such as on the command-line)
@@ -28,11 +20,6 @@ SourceCharacter ByteDecoder::nextSourceCharacter() {
     auto c = decodeBytes(b);
     
     TheSourceManager->advanceSourceLocation(c);
-    
-    if (interactive && TheSourceManager->getSourceLocation().Line > 1) {
-        eof = true;
-        return SourceCharacter(EOF);
-    }
     
     return c;
 }

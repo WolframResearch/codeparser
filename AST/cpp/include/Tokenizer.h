@@ -1,12 +1,9 @@
 
 #pragma once
 
-#include "Utils.h"
 #include "CharacterDecoder.h"
-#include "Token.h"
-#include "SyntaxIssue.h"
 
-#include <vector>
+#include <sstream>
 
 //
 // Tokenizer takes a stream of WL characters and tokenizes them
@@ -56,7 +53,8 @@ public:
     Tokenizer();
     
     void init(bool skipFirstLine);
-    
+    void deinit();
+
     Token nextToken();
     
     Token currentToken();

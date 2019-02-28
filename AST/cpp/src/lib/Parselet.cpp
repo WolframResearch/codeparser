@@ -1,17 +1,6 @@
 
 #include "Parselet.h"
 
-#include "Parser.h"
-#include "Utils.h"
-#include "Symbol.h"
-#include "Node.h"
-#include "SyntaxIssue.h"
-
-#include <cassert>
-#include <iostream>
-#include <vector>
-#include <iterator>
-
 //
 // Atom parselets
 //
@@ -402,7 +391,7 @@ std::shared_ptr<Node> InfixOperatorParselet::parse(std::shared_ptr<Node> Left, P
 
         auto Tok = TheParser->currentToken();
         
-        if (Tok == TokIn || (Ctxt.InfixPlusFlag && (Tok == TOKEN_OPERATOR_MINUS || Tok == TOKEN_OPERATOR_PLUS))) {
+        if (Tok == TokIn) {
             
             // clear String
             TheParser->getString();
@@ -421,17 +410,7 @@ std::shared_ptr<Node> InfixOperatorParselet::parse(std::shared_ptr<Node> Left, P
             //     Issues.push_back(Issue);
             // }
             
-            if (Ctxt.InfixPlusFlag && (Tok == TOKEN_OPERATOR_MINUS)) {
-                
-                auto Issues = TheParser->getIssues();
-                auto Comments = TheParser->getComments();
-                
-                auto minus = std::make_shared<InternalMinusNode>(operand, operand->getSourceSpan(), Issues, Comments);
-                Args.push_back(minus);
-                
-            } else {
-                Args.push_back(operand);
-            }
+            Args.push_back(operand);
             
         } else {
             break;
@@ -442,11 +421,6 @@ std::shared_ptr<Node> InfixOperatorParselet::parse(std::shared_ptr<Node> Left, P
     
     auto Issues = TheParser->getIssues();
     auto Comments = TheParser->getComments();
-    
-    if (Ctxt.InfixPlusFlag && (TokIn == TOKEN_OPERATOR_MINUS || TokIn == TOKEN_OPERATOR_PLUS)) {
-        
-        return std::make_shared<InfixNode>(InfixOperatorToSymbol(TOKEN_OPERATOR_PLUS), Args, Issues, Comments);
-    }
     
     return std::make_shared<InfixNode>(InfixOperatorToSymbol(TokIn), Args, Issues, Comments);
 }
@@ -1156,7 +1130,7 @@ std::shared_ptr<Node> SemiParselet::parse(std::shared_ptr<Node> Left, ParserCont
         
             TheParser->addIssue(Issue);
         }
-
+        
         Tok = TheParser->currentToken();
 
         if (Tok == TOKEN_NEWLINE) {

@@ -1,15 +1,23 @@
 
 #include "CharacterDecoder.h"
 
-#include "ByteDecoder.h"
 #include "LongNameMap.h"
 #include "Utils.h"
 
-#include <iomanip>
-#include <cassert>
-#include <cctype>
-
 CharacterDecoder::CharacterDecoder() : cur(0), curSource(0), characterQueue(), Issues() {}
+
+void CharacterDecoder::init() {
+    cur = WLCharacter(0);
+    curSource = SourceCharacter(0);
+    characterQueue.clear();
+    Issues.clear();
+}
+
+void CharacterDecoder::deinit() {
+    characterQueue.clear();
+    Issues.clear();
+}
+
 
 //
 // Returns a useful character
@@ -763,16 +771,24 @@ std::string WLCharacter::string() const {
     
     std::ostringstream String;
     
-    auto src = source();
-    for (auto S : src) {
-        auto bytes = S.bytes();
-        for (auto b : bytes) {
-            String.put(b);
-        }
-    }
+    String << this;
     
     return String.str();
 }
+
+std::ostream& operator<<(std::ostream& s, const WLCharacter c) {
+
+    auto src = c.source();
+    for (auto S : src) {
+        auto bytes = S.bytes();
+        for (auto b : bytes) {
+            s.put(b);
+        }
+    }
+
+    return s;
+}
+
 
 bool WLCharacter::isDigitOrAlpha() const {
     if (!(0 <= value_ && value_ <= 0x7f)) {

@@ -10,14 +10,9 @@
 
 #include "SourceManager.h"
 
-#include "Utils.h"
 #include "ByteEncoder.h"
 
-#include <cassert>
-#include <iostream>
-#include <sstream>
-#include <iomanip>
-#include <cctype>
+#include <vector>
 
 bool isContiguous(SourceLocation a, SourceLocation b) {
     return a.Line == b.Line && a.Col + 1 == b.Col;
@@ -29,6 +24,20 @@ bool isContiguous(SourceSpan a, SourceSpan b) {
 
 SourceManager::SourceManager() : eof(false), SourceLoc{1, 0}, TokenStartLoc{0, 0}, TokenEndLoc{0, 0},
     WLCharacterStartLoc{0, 0}, WLCharacterEndLoc{0, 0}, CurLineWidth(0) {}
+
+void SourceManager::init() {
+    eof = false;
+    SourceLoc = SourceLocation{1, 0};
+    TokenStartLoc = SourceLocation{0, 0};
+    TokenEndLoc = SourceLocation{0, 0};
+    WLCharacterStartLoc = SourceLocation{0 ,0};
+    WLCharacterEndLoc = SourceLocation{0, 0};
+    CurLineWidth = 0;
+}
+
+void SourceManager::deinit() {
+
+}
 
 void SourceManager::advanceSourceLocation(SourceCharacter c) {
     
