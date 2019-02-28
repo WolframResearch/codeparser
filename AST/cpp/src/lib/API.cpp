@@ -164,13 +164,19 @@ retPt:
 std::vector<std::shared_ptr<Node>> parseExpressions() {
 
     std::vector<std::shared_ptr<Node>> nodes;
-            
+
+    ParserContext Ctxt{0, 0, PRECEDENCE_LOWEST, true};
+
     while (true) {
         
         auto peek = TheParser->currentToken();
         
         while (peek == TOKEN_NEWLINE) {
-            peek = TheParser->nextToken();
+            
+            // Clear String
+            TheParser->getString();
+            
+            peek = TheParser->nextToken(Ctxt, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
         }
         
         if (peek != TOKEN_EOF) {

@@ -21,3 +21,16 @@ void SyntaxIssue::put(MLINK mlp) {
     Span.putSourceRule(mlp);
 
 }
+
+void Comment::put(MLINK mlp) {
+
+    MLPutFunction(mlp, SYMBOL_COMMENT.name(), 2);
+
+    auto escapedMsg = stringEscape(Msg);
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(escapedMsg.c_str()), escapedMsg.size());
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1);
+
+    Span.putSourceRule(mlp);
+
+}

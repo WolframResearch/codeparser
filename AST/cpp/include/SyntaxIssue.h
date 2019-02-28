@@ -36,5 +36,5 @@ struct Comment {
 
 	Comment(std::string Msg, SourceSpan Span) : Msg(Msg), Span(Span) {}
 
-	std::string string();
+	void put(MLINK mlp);
 };

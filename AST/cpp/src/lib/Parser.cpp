@@ -10,19 +10,7 @@
 
 Parser::Parser() : currentCached(false), _currentToken(), _currentTokenString(),
     prefixParselets(), infixParselets(), postfixParselets(), contextSensitiveParselets(), parselets(),
-    tokenQueue(), Issues(), Comments() {}
-
-Parser::~Parser() {
-    for (auto parselet : parselets) {
-        delete parselet;
-    }
-}
-
-
-
-void Parser::init() {
-    
-    nextToken({0, 0, PRECEDENCE_LOWEST, true, false}, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
+    tokenQueue(), Issues(), Comments() {
     
     //
     // Atoms and Atom-like expressions
@@ -300,15 +288,15 @@ Parser::~Parser() {
 
 
 void Parser::init() {
-    
-    groupDepth = 0;
+
     currentCached = false;
     _currentToken = TOKEN_UNKNOWN;
     _currentTokenString.clear();
     tokenQueue.clear();
     Issues.clear();
+    Comments.clear();
 
-    nextToken();
+    nextToken({0, 0, PRECEDENCE_LOWEST, true}, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
 }
 
 void Parser::deinit() {
@@ -316,6 +304,7 @@ void Parser::deinit() {
     _currentTokenString.clear();
     tokenQueue.clear();
     Issues.clear();
+    Comments.clear();
 }
 
 void Parser::registerTokenType(Token token, Parselet *parselet) {
@@ -569,7 +558,7 @@ precedence_t Parser::getCurrentTokenPrecedence(Token TokIn, ParserContext Ctxt) 
 
 std::shared_ptr<Node>Parser::parseTopLevel() {
     
-    ParserContext Ctxt{0, 0, PRECEDENCE_LOWEST, true, false};
+    ParserContext Ctxt{0, 0, PRECEDENCE_LOWEST, true};
     
     auto Expr = parse(Ctxt);
     

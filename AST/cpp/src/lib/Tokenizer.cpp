@@ -9,7 +9,8 @@ Tokenizer::Tokenizer() : _symbolifyNextToken(false), _fileifyNextToken(false), c
 
 void Tokenizer::init(bool skipFirstLine) {
 
-    _stringifyNextToken = false;
+    _symbolifyNextToken = false;
+    _fileifyNextToken = false;
     cur = TOKEN_UNKNOWN;
     currentCached = false;
 

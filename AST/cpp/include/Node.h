@@ -517,9 +517,7 @@ class CommentNode : public Node {
 public:
     CommentNode(std::string Str, SourceSpan Span) : Node({}, {}, {}), Str(Str), Span(Span) {}
     
-    std::string string() override;
-    
-    std::string inputform() override;
+    void put(MLINK mlp) override;
     
     SourceSpan getSourceSpan() override {
         return Span;
