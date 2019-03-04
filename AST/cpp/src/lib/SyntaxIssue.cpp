@@ -7,14 +7,11 @@ void SyntaxIssue::put(MLINK mlp) {
 
     MLPutFunction(mlp, SYMBOL_SYNTAXISSUE.name(), 4);
 
-    auto escapedTag = stringEscape(Tag);
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(escapedTag.c_str()), static_cast<int>(escapedTag.size()));
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Tag.c_str()), static_cast<int>(Tag.size()));
 
-    auto escapedMsg = stringEscape(Msg);
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(escapedMsg.c_str()), static_cast<int>(escapedMsg.size()));
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Msg.c_str()), static_cast<int>(Msg.size()));
 
-    auto escapedSeverity = stringEscape(Severity);
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(escapedSeverity.c_str()), static_cast<int>(escapedSeverity.size()));
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Severity.c_str()), static_cast<int>(Severity.size()));
 
     MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1);
 
@@ -25,9 +22,8 @@ void SyntaxIssue::put(MLINK mlp) {
 void Comment::put(MLINK mlp) {
 
     MLPutFunction(mlp, SYMBOL_COMMENT.name(), 2);
-
-    auto escapedMsg = stringEscape(Msg);
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(escapedMsg.c_str()), static_cast<int>(escapedMsg.size()));
+    
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Msg.c_str()), static_cast<int>(Msg.size()));
 
     MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1);
 
