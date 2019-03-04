@@ -393,9 +393,17 @@ set(DOCS_APPPATH /Applications/Eclipse.app/Contents/Eclipse/configuration/org.ec
 
 message(STATUS "DOCS_APPPATH: ${DOCS_APPPATH}")
 
+if (NOT IS_DIRECTORY ${DOCS_APPPATH})
+message(FATAL_ERROR "DOCS_APPPATH (${DOCS_APPPATH}) does not exist")
+endif(NOT IS_DIRECTORY ${DOCS_APPPATH})
+
 set(DOCS_JLINKPATH /Applications/Mathematica.app/Contents/SystemFiles/Links/JLink/ CACHE PATH "Path of JLink")
 
 message(STATUS "DOCS_JLINKPATH: ${DOCS_JLINKPATH}")
+
+if (NOT IS_DIRECTORY ${DOCS_JLINKPATH})
+message(FATAL_ERROR "DOCS_JLINKPATH (${DOCS_JLINKPATH}) does not exist")
+endif(NOT IS_DIRECTORY ${DOCS_JLINKPATH})
 
 
 #
