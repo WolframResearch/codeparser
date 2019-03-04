@@ -112,7 +112,7 @@ If[FailureQ[res],
 uppercases and replaces ` with _
 *)
 toGlobal[n_] := 
- StringReplace[ToUpperCase[ToString[n]], "`" -> "_"]
+ StringReplace[ToUpperCase[ToString[n]], {"`" -> "_", "$" -> "_"}]
 
 
 (*

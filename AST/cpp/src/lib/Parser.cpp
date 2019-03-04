@@ -10,7 +10,7 @@
 
 Parser::Parser() : currentCached(false), _currentToken(), _currentTokenString(),
     prefixParselets(), infixParselets(), postfixParselets(), contextSensitiveParselets(), parselets(),
-    tokenQueue(), Issues(), Comments() {
+    tokenQueue(), Issues(), Comments(), currentAbortQ(nullptr) {
     
     //
     // Atoms and Atom-like expressions
@@ -287,7 +287,7 @@ Parser::~Parser() {
 
 
 
-void Parser::init() {
+void Parser::init(std::function<bool ()> AbortQ) {
 
     currentCached = false;
     _currentToken = TOKEN_UNKNOWN;
@@ -295,6 +295,8 @@ void Parser::init() {
     tokenQueue.clear();
     Issues.clear();
     Comments.clear();
+
+    currentAbortQ = AbortQ;
 
     nextToken({0, 0, PRECEDENCE_LOWEST, true}, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
 }
@@ -305,6 +307,8 @@ void Parser::deinit() {
     tokenQueue.clear();
     Issues.clear();
     Comments.clear();
+
+    currentAbortQ = nullptr;
 }
 
 void Parser::registerTokenType(Token token, Parselet *parselet) {
@@ -377,17 +381,41 @@ Token Parser::tryNextToken(ParserContext Ctxt, NextTokenPolicy Policy) {
     
     auto res = TheTokenizer->currentToken();
     
-    if (Policy == NEXTTOKEN_PRESERVE_EVERYTHING) {
+    if (Policy == NEXTTOKEN_PRESERVE_EVERYTHING_AND_RETURN_COMMENTS) {
         
         if (res == TOKEN_COMMENT) {
             
-            auto Text = getString();
+            auto Text = getTokenString();
             
             auto Span = TheSourceManager->getTokenSpan();
             
             auto C = Comment(Text, Span);
             
             Comments.push_back(C);
+        }
+        
+        return res;
+    }
+    
+    if (Policy == NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS) {
+        
+        while (true) {
+            
+            if (res == TOKEN_COMMENT) {
+                
+                auto Text = getTokenString();
+                
+                auto Span = TheSourceManager->getTokenSpan();
+                
+                auto C = Comment(Text, Span);
+                
+                Comments.push_back(C);
+                
+            } else {
+                break;
+            }
+            
+            res = TheTokenizer->nextToken();
         }
         
         return res;
@@ -407,20 +435,19 @@ Token Parser::tryNextToken(ParserContext Ctxt, NextTokenPolicy Policy) {
             }
             
             // Clear String
-            getString();
+            getTokenString();
             
         } else if (res == TOKEN_SPACE) {
             // Clear String
-            getString();
+            getTokenString();
         } else if (res == TOKEN_COMMENT) {
             
-            if (Policy != NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS &&
-                    Ctxt.isOperatorTopLevel()) {
+            if (Ctxt.isOperatorTopLevel()) {
                 // Create a top-level CommentNode
                 break;
             }
             
-            auto Text = getString();
+            auto Text = getTokenString();
             
             auto Span = TheSourceManager->getTokenSpan();
             
@@ -455,7 +482,7 @@ void Parser::setCurrentToken(Token current, std::string StringVal) {
     currentCached = true;
 }
 
-std::string Parser::getString() {
+std::string Parser::getTokenString() {
     
     if (currentCached) {
         
@@ -573,6 +600,11 @@ std::shared_ptr<Node>Parser::parse(ParserContext CtxtIn) {
     assert(token != TOKEN_NEWLINE);
     assert(token != TOKEN_SPACE);
     
+    if (isAbort()) {
+        
+        return nullptr;
+    }
+
     if (CtxtIn.OperatorDepth == MAX_EXPRESSION_DEPTH) {
 
         auto Span = TheSourceManager->getTokenSpan();
@@ -589,11 +621,11 @@ std::shared_ptr<Node>Parser::parse(ParserContext CtxtIn) {
         //
         assert(CtxtIn.OperatorDepth == 0);
         
-        auto Str = TheParser->getString();
+        auto Str = getTokenString();
         
         auto Span = TheSourceManager->getTokenSpan();
         
-        TheParser->nextToken(CtxtIn, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
+        nextToken(CtxtIn, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
         
         auto C = std::make_shared<CommentNode>(Str, Span);
         
@@ -627,6 +659,11 @@ std::shared_ptr<Node>Parser::parse(ParserContext CtxtIn) {
     Left = prefix->parse(CtxtIn);
     
     while (true) {
+        
+        if (isAbort()) {
+            
+            return nullptr;
+        }
         
         token = tryNextToken(CtxtIn, NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES);
         
@@ -693,6 +730,11 @@ std::shared_ptr<Node> Parser::cleanup(std::shared_ptr<Node> Left, ParserContext 
     
     while (true) {
         
+        if (isAbort()) {
+            
+            return nullptr;
+        }
+        
         Token token = currentToken();
         
         //
@@ -701,7 +743,7 @@ std::shared_ptr<Node> Parser::cleanup(std::shared_ptr<Node> Left, ParserContext 
         if (token == TOKEN_NEWLINE) {
             
             // Clear String
-            getString();
+            getTokenString();
             
             return Cleaned;
         }
@@ -714,6 +756,14 @@ std::shared_ptr<Node> Parser::cleanup(std::shared_ptr<Node> Left, ParserContext 
         
         Cleaned = cleanup->parse(Cleaned, Ctxt);
     }
+}
+
+bool Parser::isAbort() {
+    if (!currentAbortQ) {
+        return false;
+    }
+    
+    return currentAbortQ();
 }
 
 Parser *TheParser = nullptr;

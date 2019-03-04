@@ -136,6 +136,15 @@ enum NextCharacterPolicyBits {
     // But ToExpression["\"0.\\\n  6\""] evaluates to "0.  6" (whitespace IS preserved)
     //
     PRESERVE_WS_AFTER_LC = 0x01,
+    
+    //
+    // Disable \ escapes for characters
+    //
+    // ToExpression["a>>>c:\\b"] evaluates to PutAppend[a, "c:\\b"] (escapes are DISABLED)
+    //
+    // ToExpression["\"c\\b\""] evaluates to "c\010" (escapes are ENABLED)
+    //
+    DISABLE_ESCAPES = 0x02
 };
 
 typedef int NextCharacterPolicy;
@@ -143,6 +152,7 @@ typedef int NextCharacterPolicy;
 const NextCharacterPolicy TOPLEVEL       = 0;
 const NextCharacterPolicy INSIDE_NUMBER  = 0;
 const NextCharacterPolicy INSIDE_STRING  = PRESERVE_WS_AFTER_LC;
+const NextCharacterPolicy INSIDE_STRING_FILEIFY  = DISABLE_ESCAPES;
 const NextCharacterPolicy INSIDE_COMMENT = PRESERVE_WS_AFTER_LC;
 
 

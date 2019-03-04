@@ -31,13 +31,8 @@ public:
     virtual void put(MLINK mlp) = 0;
     
     virtual SourceSpan getSourceSpan() = 0;
-    
-    std::string ASTArgsString();
 
     void putASTArgs(MLINK mlp);
-
-    std::string SyntaxIssuesString();
-    std::string CommentsString();
 
     void putSyntaxIssues(MLINK mlp);
     void putComments(MLINK mlp);
@@ -535,7 +530,5 @@ public:
 
     SourceSpan getSourceSpan() override;
 };
-
-
 
 

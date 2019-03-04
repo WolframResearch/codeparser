@@ -70,7 +70,7 @@ void StringNode::put(MLINK mlp) {
     auto Comments = getComments();
 
     MLPutFunction(mlp, SYMBOL_STRINGNODE.name(), 3);
-
+    
     MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), Str.size());
 
     putASTArgs(mlp);
@@ -831,5 +831,4 @@ SourceSpan SyntaxErrorNode::getSourceSpan() {
         return SourceSpan{{0, 0}, {0, 0}};
     }
 }
-
 

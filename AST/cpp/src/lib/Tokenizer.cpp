@@ -568,8 +568,6 @@ Token Tokenizer::handleString() {
             // Note that file names given without quotes can be followed only by spaces, tabs, or newlines, or
             // by the characters ), ], or }, as well as semicolons and commas.
             //
-            // TODO: handle [] and a>>C:\progs
-            //
             
             if (c.isDigitOrAlphaOrDollar() || c == WLCharacter('`') || c == WLCharacter('/') || c == WLCharacter('.') ||
                 c == WLCharacter('\\') || c == WLCharacter('!') || c == WLCharacter('-') || c == WLCharacter('_') ||
@@ -579,7 +577,20 @@ Token Tokenizer::handleString() {
                 
                 String.put(c.to_char());
                 
-                c = nextWLCharacter(INSIDE_STRING);
+                c = nextWLCharacter(INSIDE_STRING_FILEIFY);
+                
+            } else if (c == WLCharacter('[')) {
+
+                // handle matched pairs of [] enclosing any characters other than spaces, tabs, and newlines
+
+                empty = false;
+
+                auto res = handleFileOpsBrackets();
+                if (res != TOKEN_STRING) {
+                    return res;
+                }
+                
+                c = currentWLCharacter();
                 
             } else {
                 
@@ -682,6 +693,93 @@ Token Tokenizer::handleString() {
 
         return TOKEN_STRING;
     }
+}
+
+//
+// Handle parsing the brackets in:
+// a >> foo[[]]
+//
+// tutorial/OperatorInputForms
+//
+// File Names
+//
+// handle matched pairs of [] enclosing any characters other than spaces, tabs, and newlines
+//
+Token Tokenizer::handleFileOpsBrackets() {
+    
+    auto c = currentWLCharacter();
+
+    assert(c == WLCharacter('['));
+    
+    String.put('[');
+    
+    auto depth = 1;
+
+    c = nextWLCharacter(INSIDE_STRING_FILEIFY);
+    
+    if (c == WLCHARACTER_EOF) {
+        return TOKEN_ERROR_UNTERMINATEDSTRING;
+    }
+    
+    while (true) {
+        
+        if (c == WLCharacter('[')) {
+            
+            String.put(c.to_char());
+            
+            c = nextWLCharacter(INSIDE_STRING_FILEIFY);
+            
+            if (c == WLCHARACTER_EOF) {
+                return TOKEN_ERROR_UNTERMINATEDSTRING;
+            }
+            
+            depth = depth + 1;
+            
+        } else if (c == WLCharacter(']')) {
+                
+            String.put(c.to_char());
+            
+            depth = depth - 1;
+            
+            if (depth == 0) {
+                
+                // Leaving brackets, make sure to grab next character
+                
+                c = nextWLCharacter(INSIDE_STRING_FILEIFY);
+                
+                break;
+                
+            } else {
+                
+                c = nextWLCharacter(INSIDE_STRING_FILEIFY);
+                
+                if (c == WLCHARACTER_EOF) {
+                    return TOKEN_ERROR_UNTERMINATEDSTRING;
+                }
+            }
+
+        } else {
+
+            //
+            // Do not use String.put(c.to_char()); here because c may not be a char
+            //
+
+            String << c;
+            
+            if (c.to_point() == ' ' || c.to_point() == '\t' || c.to_point() == '\n') {
+                return TOKEN_ERROR_UNTERMINATEDSTRING;
+            }
+
+            c = nextWLCharacter(INSIDE_STRING_FILEIFY);
+            
+            if (c == WLCHARACTER_EOF) {
+                return TOKEN_ERROR_UNTERMINATEDSTRING;
+            }
+        }
+        
+    } // while
+
+    return TOKEN_STRING;
 }
 
 //digits                  integer

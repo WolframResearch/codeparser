@@ -1,6 +1,4 @@
 
-if(BUILD_EXE)
-
 #
 # Build executable
 #
@@ -45,5 +43,3 @@ else()
 		PRIVATE -Wextra -Wall -Weffc++ -Wno-unused-parameter -Wno-unused-function -Wno-comment
 	)
 endif(MSVC)
-
-endif(BUILD_EXE)

@@ -282,18 +282,17 @@ target_include_directories(ast-lib
 )
 
 find_library(ML_LIB
-	NAMES MLi4
+	NAMES MLi4 ML64i4 ML32i4
 	HINTS ${MATHLINK_LIB_DIR}
 )
 
 target_link_libraries(ast-lib ${ML_LIB})
 
-#
-# https://community.wolfram.com/groups/-/m/t/610879?sortMsg=Flat
-#
+if(APPLE)
 target_link_libraries(ast-lib
-	"-stdlib=libc++ -framework Foundation -lc++"
+	"-framework Foundation"
 )
+endif(APPLE)
 
 set(MAX_EXPRESSION_DEPTH 100 CACHE STRING "Maximum depth allowed by the parser")
 set(MAX_EXPRESSION_BREADTH 1000 CACHE STRING "Maximum breadth allowed by the parser")
@@ -344,8 +343,11 @@ endif(MSVC)
 
 
 
+if(BUILD_EXE)
 
 add_subdirectory(AST/cpp/src/exe)
+
+endif(BUILD_EXE)
 
 
 

@@ -21,23 +21,23 @@ class Parselet;
 enum NextTokenPolicy {
     //
     // DISCARD_TOPLEVEL_NEWLINES:
-    // discard top-level newlines, discard other newline, discard whitespace, keep track of comments but don't return them
+    // discard top-level newlines, discard other newline, discard whitespace, keep track of comments, return top-level comments
     //
     NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES,
     
     //
     // PRESERVE_TOPLEVEL_NEWLINES:
-    // preserve top-level newlines, discard other newlines, discard whitespace, keep track of comments but don't return them
+    // preserve top-level newlines, discard other newlines, discard whitespace, keep track of comments, return top-level comments
     //
     NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES,
     
     //
-    // PRESERVE_EVERYTHING
+    // PRESERVE_EVERYTHING_AND_RETURN_COMMENTS
     // return newlines, return whitespace, keep track of comments AND ALSO return them
     //
     // Note: Whoever uses PRESERVE_EVERYTHING also needs to own any Comments that are read in
     //
-    NEXTTOKEN_PRESERVE_EVERYTHING,
+    NEXTTOKEN_PRESERVE_EVERYTHING_AND_RETURN_COMMENTS,
     
     //
     // PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS
@@ -79,6 +79,8 @@ private:
     std::vector<SyntaxIssue> Issues;
     std::vector<Comment> Comments;
     
+    std::function<bool ()> currentAbortQ;
+
     void registerTokenType(Token, Parselet *);
     void registerPrefixTokenType(Token);
     
@@ -89,7 +91,7 @@ private:
 public:
     Parser();
     
-    void init();
+    void init(std::function<bool ()> AbortQ);
     
     void deinit();
 
@@ -100,7 +102,7 @@ public:
     Token currentToken();
     void setCurrentToken(Token current, std::string Str);
 
-    std::string getString();
+    std::string getTokenString();
     
     std::vector<SyntaxIssue> getIssues();
 
@@ -117,7 +119,9 @@ public:
     bool isPossibleBeginningOfExpression(Token Tok);
 
     ContextSensitiveParselet* findContextSensitiveParselet(Token Tok);
-
+    
+    bool isAbort();
+    
     ~Parser();
 };
 

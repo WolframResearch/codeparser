@@ -7,7 +7,7 @@
 
 std::shared_ptr<Node> SymbolParselet::parse(ParserContext CtxtIn) {
     
-    auto Str = TheParser->getString();
+    auto Str = TheParser->getTokenString();
     
     auto SymbolSpan = TheSourceManager->getTokenSpan();
     
@@ -15,7 +15,7 @@ std::shared_ptr<Node> SymbolParselet::parse(ParserContext CtxtIn) {
     
     auto Ctxt = CtxtIn;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING);
+    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_RETURN_COMMENTS);
     
     //
     // if we are here, then we know that Sym could bind to _
@@ -71,13 +71,9 @@ std::shared_ptr<Node> SymbolParselet::parse(ParserContext CtxtIn) {
     }
     
     if (Tok == TOKEN_COMMENT) {
-        //
-        // Handle TOKEN_COMMENT because we called PRESERVE_EVERYTHING earlier
-        //
-        
-        TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
+        Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
     }
-    
+
     auto Issues = TheParser->getIssues();
     
     auto Comments = TheParser->getComments();
@@ -119,21 +115,13 @@ std::shared_ptr<Node> SymbolParselet::parse(ParserContext CtxtIn) {
 //
 std::shared_ptr<Node> SymbolParselet::parseContextSensitive(ParserContext CtxtIn) {
     
-    auto Str = TheParser->getString();
+    auto Str = TheParser->getTokenString();
     
     auto Span = TheSourceManager->getTokenSpan();
     
     auto Ctxt = CtxtIn;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING);
-    
-    if (Tok == TOKEN_COMMENT) {
-        //
-        // Handle TOKEN_COMMENT because we called PRESERVE_EVERYTHING earlier
-        //
-        
-        TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
-    }
+    TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
     
     auto Issues = TheParser->getIssues();
     
@@ -144,21 +132,13 @@ std::shared_ptr<Node> SymbolParselet::parseContextSensitive(ParserContext CtxtIn
 
 std::shared_ptr<Node> NumberParselet::parse(ParserContext CtxtIn) {
     
-    auto Str = TheParser->getString();
+    auto Str = TheParser->getTokenString();
     
     auto Span = TheSourceManager->getTokenSpan();
     
     auto Ctxt = CtxtIn;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING);
-    
-    if (Tok == TOKEN_COMMENT) {
-        //
-        // Handle TOKEN_COMMENT because we called PRESERVE_EVERYTHING earlier
-        //
-        
-        TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
-    }
+    TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
     
     auto Issues = TheParser->getIssues();
     
@@ -169,21 +149,13 @@ std::shared_ptr<Node> NumberParselet::parse(ParserContext CtxtIn) {
 
 std::shared_ptr<Node> StringParselet::parse(ParserContext CtxtIn) {
     
-    auto Str = TheParser->getString();
+    auto Str = TheParser->getTokenString();
     
     auto Span = TheSourceManager->getTokenSpan();
 
     auto Ctxt = CtxtIn;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING);
-    
-    if (Tok == TOKEN_COMMENT) {
-        //
-        // Handle TOKEN_COMMENT because we called PRESERVE_EVERYTHING earlier
-        //
-        
-        TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
-    }
+    TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
     
     auto Issues = TheParser->getIssues();
     
@@ -194,21 +166,13 @@ std::shared_ptr<Node> StringParselet::parse(ParserContext CtxtIn) {
 
 std::shared_ptr<Node> HashParselet::parse(ParserContext CtxtIn) {
     
-    auto Str = TheParser->getString();
+    auto Str = TheParser->getTokenString();
     
     auto Span = TheSourceManager->getTokenSpan();
     
     auto Ctxt = CtxtIn;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING);
-    
-    if (Tok == TOKEN_COMMENT) {
-        //
-        // Handle TOKEN_COMMENT because we called PRESERVE_EVERYTHING earlier
-        //
-        
-        TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
-    }
+    TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
     
     auto Issues = TheParser->getIssues();
     
@@ -219,21 +183,13 @@ std::shared_ptr<Node> HashParselet::parse(ParserContext CtxtIn) {
 
 std::shared_ptr<Node> HashHashParselet::parse(ParserContext CtxtIn) {
     
-    auto Str = TheParser->getString();
+    auto Str = TheParser->getTokenString();
     
     auto Span = TheSourceManager->getTokenSpan();
     
     auto Ctxt = CtxtIn;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING);
-    
-    if (Tok == TOKEN_COMMENT) {
-        //
-        // Handle TOKEN_COMMENT because we called PRESERVE_EVERYTHING earlier
-        //
-        
-        TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
-    }
+    TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
     
     auto Issues = TheParser->getIssues();
     
@@ -244,21 +200,13 @@ std::shared_ptr<Node> HashHashParselet::parse(ParserContext CtxtIn) {
 
 std::shared_ptr<Node> PercentParselet::parse(ParserContext CtxtIn) {
     
-    auto Str = TheParser->getString();
+    auto Str = TheParser->getTokenString();
     
     auto Span = TheSourceManager->getTokenSpan();
     
     auto Ctxt = CtxtIn;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING);
-    
-    if (Tok == TOKEN_COMMENT) {
-        //
-        // Handle TOKEN_COMMENT because we called PRESERVE_EVERYTHING earlier
-        //
-        
-        TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
-    }
+    TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
     
     auto Issues = TheParser->getIssues();
     
@@ -277,7 +225,7 @@ std::shared_ptr<Node> PercentParselet::parse(ParserContext CtxtIn) {
 std::shared_ptr<Node> PrefixOperatorParselet::parse(ParserContext CtxtIn) {
     
     // Clear String
-    TheParser->getString();
+    TheParser->getTokenString();
     
     auto TokIn = TheParser->currentToken();
     
@@ -313,7 +261,7 @@ std::shared_ptr<Node> BinaryOperatorParselet::parse(std::shared_ptr<Node> Left, 
     auto TokIn = TheParser->currentToken();
     
     // Clear String
-    TheParser->getString();
+    TheParser->getTokenString();
     
     auto prec = getPrecedence();
     assert(prec != PRECEDENCE_UNUSED);
@@ -380,6 +328,14 @@ std::shared_ptr<Node> InfixOperatorParselet::parse(std::shared_ptr<Node> Left, P
     auto breadth = 1;
     while (true) {
         
+        //
+        // Check isAbort() inside loops
+        //
+        if (TheParser->isAbort()) {
+            
+            return nullptr;
+        }
+        
         if (breadth == MAX_EXPRESSION_BREADTH) {
 
             auto Span = TheSourceManager->getTokenSpan();
@@ -394,7 +350,7 @@ std::shared_ptr<Node> InfixOperatorParselet::parse(std::shared_ptr<Node> Left, P
         if (Tok == TokIn) {
             
             // clear String
-            TheParser->getString();
+            TheParser->getTokenString();
             
             // auto Span = TheSourceManager->getTokenSpan();
             
@@ -428,7 +384,7 @@ std::shared_ptr<Node> InfixOperatorParselet::parse(std::shared_ptr<Node> Left, P
 std::shared_ptr<Node> PostfixOperatorParselet::parse(std::shared_ptr<Node> Operand, ParserContext CtxtIn) {
     
     // Clear String
-    TheParser->getString();
+    TheParser->getTokenString();
     
     auto TokIn = TheParser->currentToken();
     
@@ -462,7 +418,7 @@ std::shared_ptr<Node> PostfixOperatorParselet::parse(std::shared_ptr<Node> Opera
 std::shared_ptr<Node> GroupParselet::parse(ParserContext CtxtIn) {
     
     // Clear String
-    TheParser->getString();
+    TheParser->getTokenString();
     
     auto OpenerSpan = TheSourceManager->getTokenSpan();
     
@@ -480,6 +436,14 @@ std::shared_ptr<Node> GroupParselet::parse(ParserContext CtxtIn) {
     
     auto breadth = 0;
     while (true) {
+        
+        //
+        // Check isAbort() inside loops
+        //
+        if (TheParser->isAbort()) {
+            
+            return nullptr;
+        }
         
         if (breadth == MAX_EXPRESSION_BREADTH) {
 
@@ -517,7 +481,7 @@ std::shared_ptr<Node> GroupParselet::parse(ParserContext CtxtIn) {
         } else if (Tok == Closer) {
             
             // Clear String
-            TheParser->getString();
+            TheParser->getTokenString();
             
             CloserSpan = TheSourceManager->getTokenSpan();
             
@@ -535,7 +499,7 @@ std::shared_ptr<Node> GroupParselet::parse(ParserContext CtxtIn) {
             // Reporting of commas, e.g., {1,,2} is done later
             //
             
-            auto Str = TheParser->getString();
+            auto Str = TheParser->getTokenString();
             
             auto Issues = TheParser->getIssues();
             auto Comments = TheParser->getComments();
@@ -584,7 +548,7 @@ std::shared_ptr<Node> CallParselet::parse(std::shared_ptr<Node> Left, ParserCont
     auto TokIn = TheParser->currentToken();
 
     // Clear String
-    TheParser->getString();
+    TheParser->getTokenString();
 
     //
     // if we used PRECEDENCE_CALL here, then e.g., a[]?b should technically parse as   a <call> []?b
@@ -642,13 +606,13 @@ std::shared_ptr<Node> CallParselet::parse(std::shared_ptr<Node> Left, ParserCont
 std::shared_ptr<Node> UnderParselet::parse(ParserContext CtxtIn) {
     
     // Clear String
-    TheParser->getString();
+    TheParser->getTokenString();
     
     auto Span = TheSourceManager->getTokenSpan();
     
     auto Ctxt = CtxtIn;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING);
+    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_RETURN_COMMENTS);
     
     std::shared_ptr<Node> Blank;
     if (Tok == TOKEN_SYMBOL) {
@@ -667,10 +631,6 @@ std::shared_ptr<Node> UnderParselet::parse(ParserContext CtxtIn) {
     } else {
         
         if (Tok == TOKEN_COMMENT) {
-            //
-            // Handle TOKEN_COMMENT because we called PRESERVE_EVERYTHING earlier
-            //
-            
             TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
         }
         
@@ -715,13 +675,13 @@ std::shared_ptr<Node> UnderParselet::parse(ParserContext CtxtIn) {
 std::shared_ptr<Node> UnderParselet::parseContextSensitive(std::shared_ptr<Node> Left, ParserContext CtxtIn) {
     
     // Clear String
-    TheParser->getString();
+    TheParser->getTokenString();
     
     auto Span = TheSourceManager->getTokenSpan();
     
     auto Ctxt = CtxtIn;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING);
+    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_RETURN_COMMENTS);
     
     std::shared_ptr<Node> Pat;
     if (Tok == TOKEN_SYMBOL) {
@@ -740,10 +700,6 @@ std::shared_ptr<Node> UnderParselet::parseContextSensitive(std::shared_ptr<Node>
     } else {
         
         if (Tok == TOKEN_COMMENT) {
-            //
-            // Handle TOKEN_COMMENT because we called PRESERVE_EVERYTHING earlier
-            //
-            
             TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
         }
         
@@ -782,13 +738,13 @@ std::shared_ptr<Node> UnderParselet::parseContextSensitive(std::shared_ptr<Node>
 std::shared_ptr<Node> UnderUnderParselet::parse(ParserContext CtxtIn) {
     
     // Clear String
-    TheParser->getString();
+    TheParser->getTokenString();
     
     auto Span = TheSourceManager->getTokenSpan();
     
     auto Ctxt = CtxtIn;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING);
+    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
     
     std::shared_ptr<Node> Blank;
     if (Tok == TOKEN_SYMBOL) {
@@ -807,10 +763,6 @@ std::shared_ptr<Node> UnderUnderParselet::parse(ParserContext CtxtIn) {
     } else {
         
         if (Tok == TOKEN_COMMENT) {
-            //
-            // Handle TOKEN_COMMENT because we called PRESERVE_EVERYTHING earlier
-            //
-            
             TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
         }
         
@@ -845,13 +797,13 @@ std::shared_ptr<Node> UnderUnderParselet::parse(ParserContext CtxtIn) {
 std::shared_ptr<Node> UnderUnderParselet::parseContextSensitive(std::shared_ptr<Node> Left, ParserContext CtxtIn) {
     
     // Clear String
-    TheParser->getString();
+    TheParser->getTokenString();
     
     auto Span = TheSourceManager->getTokenSpan();
     
     auto Ctxt = CtxtIn;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING);
+    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
     
     std::shared_ptr<Node> Pat;
     if (Tok == TOKEN_SYMBOL) {
@@ -870,10 +822,6 @@ std::shared_ptr<Node> UnderUnderParselet::parseContextSensitive(std::shared_ptr<
     } else {
         
         if (Tok == TOKEN_COMMENT) {
-            //
-            // Handle TOKEN_COMMENT because we called PRESERVE_EVERYTHING earlier
-            //
-            
             TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
         }
         
@@ -908,13 +856,13 @@ std::shared_ptr<Node> UnderUnderParselet::parseContextSensitive(std::shared_ptr<
 std::shared_ptr<Node> UnderUnderUnderParselet::parse(ParserContext CtxtIn) {
     
     // Clear String
-    TheParser->getString();
+    TheParser->getTokenString();
     
     auto Span = TheSourceManager->getTokenSpan();
     
     auto Ctxt = CtxtIn;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING);
+    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
     
     std::shared_ptr<Node> Blank;
     if (Tok == TOKEN_SYMBOL) {
@@ -933,10 +881,6 @@ std::shared_ptr<Node> UnderUnderUnderParselet::parse(ParserContext CtxtIn) {
     } else {
         
         if (Tok == TOKEN_COMMENT) {
-            //
-            // Handle TOKEN_COMMENT because we called PRESERVE_EVERYTHING earlier
-            //
-            
             TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
         }
         
@@ -971,13 +915,13 @@ std::shared_ptr<Node> UnderUnderUnderParselet::parse(ParserContext CtxtIn) {
 std::shared_ptr<Node> UnderUnderUnderParselet::parseContextSensitive(std::shared_ptr<Node> Left, ParserContext CtxtIn) {
     
     // Clear String
-    TheParser->getString();
+    TheParser->getTokenString();
     
     auto Span = TheSourceManager->getTokenSpan();
     
     auto Ctxt = CtxtIn;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING);
+    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
     
     std::shared_ptr<Node> Pat;
     if (Tok == TOKEN_SYMBOL) {
@@ -996,10 +940,6 @@ std::shared_ptr<Node> UnderUnderUnderParselet::parseContextSensitive(std::shared
     } else {
         
         if (Tok == TOKEN_COMMENT) {
-            //
-            // Handle TOKEN_COMMENT because we called PRESERVE_EVERYTHING earlier
-            //
-            
             TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
         }
         
@@ -1034,21 +974,13 @@ std::shared_ptr<Node> UnderUnderUnderParselet::parseContextSensitive(std::shared
 std::shared_ptr<Node> UnderDotParselet::parse(ParserContext CtxtIn) {
     
     // Clear String
-    TheParser->getString();
+    TheParser->getTokenString();
     
     auto Span = TheSourceManager->getTokenSpan();
     
     auto Ctxt = CtxtIn;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING);
-    
-    if (Tok == TOKEN_COMMENT) {
-        //
-        // Handle TOKEN_COMMENT because we called PRESERVE_EVERYTHING earlier
-        //
-        
-        TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
-    }
+    TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
     
     auto Issues = TheParser->getIssues();
     
@@ -1063,21 +995,13 @@ std::shared_ptr<Node> UnderDotParselet::parse(ParserContext CtxtIn) {
 std::shared_ptr<Node> UnderDotParselet::parseContextSensitive(std::shared_ptr<Node> Left, ParserContext CtxtIn) {
     
     // Clear String
-    TheParser->getString();
+    TheParser->getTokenString();
     
     auto Span = TheSourceManager->getTokenSpan();
     
     auto Ctxt = CtxtIn;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING);
-    
-    if (Tok == TOKEN_COMMENT) {
-        //
-        // Handle TOKEN_COMMENT because we called PRESERVE_EVERYTHING earlier
-        //
-        
-        TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
-    }
+    TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
     
     auto Issues = TheParser->getIssues();
     
@@ -1090,7 +1014,7 @@ std::shared_ptr<Node> UnderDotParselet::parseContextSensitive(std::shared_ptr<No
 std::shared_ptr<Node> SemiParselet::parse(std::shared_ptr<Node> Left, ParserContext CtxtIn) {
     
     // Clear String
-    TheParser->getString();
+    TheParser->getTokenString();
     
 //    auto Span = TheSourceManager->getTokenSpan();
     auto lastSpan = TheSourceManager->getTokenSpan();
@@ -1122,6 +1046,14 @@ std::shared_ptr<Node> SemiParselet::parse(std::shared_ptr<Node> Left, ParserCont
     auto breadth = 1;
     while (true) {
         
+        //
+        // Check isAbort() inside loops
+        //
+        if (TheParser->isAbort()) {
+            
+            return nullptr;
+        }
+        
         if (breadth == MAX_EXPRESSION_BREADTH) {
 
             auto Span = TheSourceManager->getTokenSpan();
@@ -1136,7 +1068,7 @@ std::shared_ptr<Node> SemiParselet::parse(std::shared_ptr<Node> Left, ParserCont
         if (Tok == TOKEN_NEWLINE) {
             
             // Clear String
-            TheParser->getString();
+            TheParser->getTokenString();
             
             if (lastWasSemi) {
 
@@ -1163,7 +1095,7 @@ std::shared_ptr<Node> SemiParselet::parse(std::shared_ptr<Node> Left, ParserCont
             }
             
             // Clear String
-            TheParser->getString();
+            TheParser->getTokenString();
             
             eatTheNextSemi = false;
             lastWasSemi = true;
@@ -1226,7 +1158,7 @@ std::shared_ptr<Node> SemiParselet::parse(std::shared_ptr<Node> Left, ParserCont
 std::shared_ptr<Node> SemiSemiParselet::parse(ParserContext CtxtIn) {
     
     // Clear String
-    TheParser->getString();
+    TheParser->getTokenString();
     
     auto PrefixSpan = TheSourceManager->getTokenSpan();
     
@@ -1302,7 +1234,7 @@ std::shared_ptr<Node> SemiSemiParselet::parse(ParserContext CtxtIn) {
 std::shared_ptr<Node> SemiSemiParselet::parse(std::shared_ptr<Node> Left, ParserContext CtxtIn) {
 
     // Clear String
-    TheParser->getString();
+    TheParser->getTokenString();
     
     // auto Span = TheSourceManager->getTokenSpan();
     
@@ -1397,7 +1329,7 @@ std::shared_ptr<Node> SemiSemiParselet::parse(std::shared_ptr<Node> Left, Parser
 
 std::shared_ptr<Node> TildeParselet::parse(std::shared_ptr<Node> Left, ParserContext CtxtIn) {
 
-    auto TildeStr = TheParser->getString();
+    auto TildeStr = TheParser->getTokenString();
     
     auto FirstTildeSpan = TheSourceManager->getTokenSpan();
     
@@ -1424,7 +1356,7 @@ std::shared_ptr<Node> TildeParselet::parse(std::shared_ptr<Node> Left, ParserCon
 
     auto Tok = TheParser->currentToken();
     
-    auto Str = TheParser->getString();
+    auto Str = TheParser->getTokenString();
     
     auto SecondTildeSpan = TheSourceManager->getTokenSpan();
 
@@ -1477,7 +1409,7 @@ std::shared_ptr<Node> ColonParselet::parse(std::shared_ptr<Node> Left, ParserCon
     assert(CtxtIn.ColonFlag1);
     
     // Clear String
-    TheParser->getString();
+    TheParser->getTokenString();
     
     auto prec = PRECEDENCE_FAKE_PATTERNCOLON;
     
@@ -1531,7 +1463,7 @@ std::shared_ptr<Node> ColonParselet::parseContextSensitive(std::shared_ptr<Node>
     assert(CtxtIn.ColonFlag1);
 
     // Clear String
-    TheParser->getString();
+    TheParser->getTokenString();
     
     auto prec = PRECEDENCE_FAKE_OPTIONALCOLON;
     
@@ -1562,7 +1494,7 @@ std::shared_ptr<Node> ColonParselet::parseContextSensitive(std::shared_ptr<Node>
 std::shared_ptr<Node> SlashColonParselet::parse(std::shared_ptr<Node> Left, ParserContext CtxtIn) {
 
     // Clear String
-    TheParser->getString();
+    TheParser->getTokenString();
     
     // auto Span = TheSourceManager->getTokenSpan();
     
@@ -1622,7 +1554,7 @@ std::shared_ptr<Node> SlashColonParselet::parse(std::shared_ptr<Node> Left, Pars
 std::shared_ptr<Node> LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn) {
     
     // Clear String
-    TheParser->getString();
+    TheParser->getTokenString();
     
     std::vector<std::shared_ptr<Node>> Tokens;
     
@@ -1632,12 +1564,20 @@ std::shared_ptr<Node> LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn)
     Ctxt.GroupDepth++;
     Ctxt.OperatorDepth++;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING);
+    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_RETURN_COMMENTS);
     
     SourceSpan CloserSpan;
     
     auto breadth = 0;
     while (true) {
+        
+        //
+        // Check isAbort() inside loops
+        //
+        if (TheParser->isAbort()) {
+            
+            return nullptr;
+        }
         
         if (breadth == MAX_EXPRESSION_BREADTH) {
 
@@ -1687,7 +1627,7 @@ std::shared_ptr<Node> LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn)
         } else if (Tok == TOKEN_OPERATOR_LINEARSYNTAX_CLOSEPAREN) {
             
             // Clear String
-            TheParser->getString();
+            TheParser->getTokenString();
             
             CloserSpan = TheSourceManager->getTokenSpan();
             
@@ -1705,13 +1645,13 @@ std::shared_ptr<Node> LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn)
             // Comments are handled here
             //
             
-            auto Str = TheParser->getString();
+            auto Str = TheParser->getTokenString();
             
             auto Span = TheSourceManager->getTokenSpan();
             
             Tokens.push_back(std::make_shared<InternalTokenNode>(Str, Span, std::vector<SyntaxIssue>(), std::vector<Comment>()));
             
-            Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING);
+            Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_RETURN_COMMENTS);
         }
 
         breadth++;
@@ -1728,7 +1668,7 @@ std::shared_ptr<Node> LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn)
 std::shared_ptr<Node> MessageNameParselet::parse(std::shared_ptr<Node> Left, ParserContext CtxtIn) {
 
     // Clear String
-    TheParser->getString();
+    TheParser->getTokenString();
     
     // auto Span = TheSourceManager->getTokenSpan();
     
@@ -1767,7 +1707,7 @@ std::shared_ptr<Node> MessageNameParselet::parse(std::shared_ptr<Node> Left, Par
     if (Tok == TOKEN_OPERATOR_COLONCOLON) {
         
         // Clear String
-        TheParser->getString();
+        TheParser->getTokenString();
         
         TheParser->nextToken(Ctxt, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
         
@@ -1790,7 +1730,7 @@ std::shared_ptr<Node> MessageNameParselet::parse(std::shared_ptr<Node> Left, Par
 std::shared_ptr<Node> EqualParselet::parse(std::shared_ptr<Node> Left, ParserContext CtxtIn) {
 
     // Clear String
-    TheParser->getString();
+    TheParser->getTokenString();
     
     // auto Span = TheSourceManager->getTokenSpan();
     
@@ -1833,7 +1773,7 @@ std::shared_ptr<Node> EqualParselet::parse(std::shared_ptr<Node> Left, ParserCon
          }
 
         // Clear String
-        TheParser->getString();
+        TheParser->getTokenString();
         
         TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES);
         
@@ -1880,7 +1820,7 @@ std::shared_ptr<Node> ErrorParselet::parse(ParserContext CtxtIn) {
     auto Issues = TheParser->getIssues();
     auto Comments = TheParser->getComments();
     
-    auto Str = TheParser->getString();
+    auto Str = TheParser->getTokenString();
     
     auto Ctxt = CtxtIn;
     
@@ -1891,13 +1831,13 @@ std::shared_ptr<Node> ErrorParselet::parse(ParserContext CtxtIn) {
 
 std::shared_ptr<Node> CleanupRestParselet::parse(std::shared_ptr<Node> Left, ParserContext CtxtIn) {
     
-    auto Str = TheParser->getString();
+    auto Str = TheParser->getTokenString();
     
     auto Span = TheSourceManager->getTokenSpan();
     
     auto Ctxt = CtxtIn;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING);
+    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_RETURN_COMMENTS);
     
     std::vector<std::shared_ptr<Node>> Tokens;
     
@@ -1909,6 +1849,14 @@ std::shared_ptr<Node> CleanupRestParselet::parse(std::shared_ptr<Node> Left, Par
     //
     while (true) {
         
+        //
+        // Check isAbort() inside loops
+        //
+        if (TheParser->isAbort()) {
+            
+            return nullptr;
+        }
+
         if (Tok == TOKEN_EOF) {
             
             break;
@@ -1919,13 +1867,13 @@ std::shared_ptr<Node> CleanupRestParselet::parse(std::shared_ptr<Node> Left, Par
             // Comments are handled here
             //
             
-            Str = TheParser->getString();
+            Str = TheParser->getTokenString();
             
             Span = TheSourceManager->getTokenSpan();
             
             Tokens.push_back(std::make_shared<InternalTokenNode>(Str, Span, std::vector<SyntaxIssue>(), std::vector<Comment>()));
             
-            Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING);
+            Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_RETURN_COMMENTS);
         }
     } // while
 

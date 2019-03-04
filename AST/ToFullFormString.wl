@@ -3,6 +3,7 @@ BeginPackage["AST`ToFullFormString`"]
 Begin["`Private`"]
 
 Needs["AST`"]
+Needs["AST`Utils`"]
 
 (*
 ToFullFormString is intended for abstract syntax trees
@@ -23,7 +24,7 @@ strings may not be quoted, a::b
 toFullFormString[StringNode[str_, _, _]] :=
 	If[StringStartsQ[str, "\""],
 		str,
-		"\""<>str<>"\""
+		escapeString[str]
 	]
 
 toFullFormString[NumberNode[str_, _, _]] :=

@@ -309,7 +309,7 @@ toInputFormString[InternalOneNode[1, _, _]] :=
 	""
 
 
-ToInputFormString[CommentNode[str_, _, _]] :=
+toInputFormString[CommentNode[str_, _, _]] :=
 	str
 
 

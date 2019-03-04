@@ -30,6 +30,7 @@ class Tokenizer {
     void handleDigitsOrAlphaOrDollar();
     
     Token handleComment();
+    Token handleFileOpsBrackets();
     Token handleString();
     
     void handleSymbolSegment();

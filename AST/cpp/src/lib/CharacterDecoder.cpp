@@ -59,7 +59,8 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextCharacterPolicy policy) {
         return cur;
     }
     
-    if (curSource != SourceCharacter('\\')) {
+    if (curSource != SourceCharacter('\\') ||
+        ((policy & DISABLE_ESCAPES) == DISABLE_ESCAPES)) {
         
         TheSourceManager->setWLCharacterStart();
         TheSourceManager->setWLCharacterEnd();

@@ -364,9 +364,6 @@ EndTestSection[]
 
 
 
-
-
-
 Test[
 	"1-n!/n^n b"
 	,
@@ -391,6 +388,12 @@ Test[
 
 
 
+
+
+
+(*
+Derivative
+*)
 
 Test[
 	"x[]'[z]"
@@ -420,6 +423,27 @@ Test[
 	,
 	TestID->"Parse-20190223-C9F0S5"
 ]
+
+Test[
+	"a(**)_"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190304-I3H5Q1"
+]
+
+Test[
+	"_(**)a"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190304-H6E5I5"
+]
+
 
 
 
@@ -467,6 +491,21 @@ Test[
 
 
 
+(*
+
+Implicit Times and symbols
+
+*)
+
+Test[
+	"a_ b_"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190228-E0E7X8"
+]
 
 
 
@@ -478,6 +517,11 @@ Test[
 
 
 
+
+
+(*
+Operators with both ASCII and LongNames
+*)
 
 Test[
 	"a \\[And] b && c"
@@ -498,60 +542,6 @@ Test[
 	,
 	TestID->"Parse-20190109-I6C4F9"
 ]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-(* calls and ? *)
-
-Test[
-	"a[]?b"
-	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
-	,
-	TestID->"Parse-20190109-G3G7J2"
-]
-
-Test[
-	"a?b[]"
-	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
-	,
-	TestID->"Parse-20190109-Q0T4J6"
-]
-
-Test[
-	"a_?b[c_]"
-	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
-	,
-	TestID->"Parse-20190109-V1T3T3"
-]
-
-
-
-
-
-
-
-
-
 
 (*
 <-> and \[TwoWayRule]
@@ -611,6 +601,111 @@ EndTestSection[]
 
 
 
+
+
+
+
+
+
+
+
+(* calls and ? *)
+
+Test[
+	"a[]?b"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190109-G3G7J2"
+]
+
+Test[
+	"a?b[]"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190109-Q0T4J6"
+]
+
+Test[
+	"a_?b[c_]"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190109-V1T3T3"
+]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*
+
+File operations
+
+*)
+
+Test[
+	"Block[{ReinstallJava}, <<CalculateLoader`]"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190301-V8I3O6"
+]
+
+Test[
+	"a>>>c:\\p"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190301-R7R5J7"
+]
+
+Test[
+	"a>>>c:\\n"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190301-N2X2B6"
+]
+
+Test[
+	"a>>>c:\\b"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190301-U8J6A5"
+]
 
 
 
@@ -794,6 +889,8 @@ Test[
 	Null
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190228-B1G1N2"
 ]
 
 
