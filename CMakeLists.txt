@@ -286,6 +286,8 @@ find_library(ML_LIB
 	HINTS ${MATHLINK_LIB_DIR}
 )
 
+message(STATUS "ML_LIB: ${ML_LIB}")
+
 target_link_libraries(ast-lib ${ML_LIB})
 
 if(APPLE)

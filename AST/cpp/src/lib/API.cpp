@@ -12,6 +12,7 @@
 #include <fstream>
 #include <cassert>
 #include <vector>
+#include <memory>
 
 void putExpressions(MLINK mlp);
 std::vector<std::shared_ptr<Node>> parseExpressions();
