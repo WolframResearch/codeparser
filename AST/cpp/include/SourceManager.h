@@ -66,9 +66,9 @@ struct SourceLocation {
 
         MLPutFunction(mlp, SYMBOL_LIST.name(), 2);
 
-        MLPutInteger(mlp, Line);
+        MLPutInteger(mlp, static_cast<int>(Line));
 
-        MLPutInteger(mlp, Col);
+        MLPutInteger(mlp, static_cast<int>(Col));
     }
 
     SourceLocation operator+(size_t i) {

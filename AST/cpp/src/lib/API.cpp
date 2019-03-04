@@ -187,7 +187,7 @@ void putExpressions(MLINK mlp) {
         return;
     }
     
-    if (!MLPutFunction(mlp, SYMBOL_LIST.name(), nodes.size())) {
+    if (!MLPutFunction(mlp, SYMBOL_LIST.name(), static_cast<int>(nodes.size()))) {
 		goto retPt;
     }
     

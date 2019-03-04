@@ -3,7 +3,7 @@
 
 void Node::putASTArgs(MLINK mlp) {
 
-    MLPutFunction(mlp, SYMBOL_LIST.name(), Args.size());
+    MLPutFunction(mlp, SYMBOL_LIST.name(), static_cast<int>(Args.size()));
 
     for (auto A : Args) {
         A->put(mlp);
@@ -16,7 +16,7 @@ void Node::putSyntaxIssues(MLINK mlp) {
 
     SYMBOL_SYNTAXISSUES.put(mlp);
 
-    MLPutFunction(mlp, SYMBOL_LIST.name(), Issues.size());
+    MLPutFunction(mlp, SYMBOL_LIST.name(), static_cast<int>(Issues.size()));
 
     for (auto I : Issues) {
         I.put(mlp);
@@ -29,7 +29,7 @@ void Node::putComments(MLINK mlp) {
 
     SYMBOL_COMMENTS.put(mlp);
 
-    MLPutFunction(mlp, SYMBOL_LIST.name(), Comments.size());
+    MLPutFunction(mlp, SYMBOL_LIST.name(), static_cast<int>(Comments.size()));
 
     for (auto C : Comments) {
         C.put(mlp);
@@ -47,7 +47,7 @@ void SymbolNode::put(MLINK mlp) {
 
     MLPutFunction(mlp, SYMBOL_SYMBOLNODE.name(), 3);
 
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), Str.size());
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
 
     putASTArgs(mlp);
 
@@ -71,7 +71,7 @@ void StringNode::put(MLINK mlp) {
 
     MLPutFunction(mlp, SYMBOL_STRINGNODE.name(), 3);
     
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), Str.size());
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
 
     putASTArgs(mlp);
 
@@ -95,7 +95,7 @@ void NumberNode::put(MLINK mlp) {
 
     MLPutFunction(mlp, SYMBOL_NUMBERNODE.name(), 3);
 
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), Str.size());
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
 
     putASTArgs(mlp);
 
@@ -119,7 +119,7 @@ void SlotNode::put(MLINK mlp) {
 
     MLPutFunction(mlp, SYMBOL_SLOTNODE.name(), 3);
 
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), Str.size());
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
 
     putASTArgs(mlp);
 
@@ -143,7 +143,7 @@ void SlotSequenceNode::put(MLINK mlp) {
 
     MLPutFunction(mlp, SYMBOL_SLOTSEQUENCENODE.name(), 3);
 
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), Str.size());
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
 
     putASTArgs(mlp);
 
@@ -167,7 +167,7 @@ void OutNode::put(MLINK mlp) {
 
     MLPutFunction(mlp, SYMBOL_OUTNODE.name(), 3);
 
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), Str.size());
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
 
     putASTArgs(mlp);
 
@@ -657,7 +657,7 @@ void InternalTokenNode::put(MLINK mlp) {
 
     MLPutFunction(mlp, SYMBOL_INTERNALTOKENNODE.name(), 3);
 
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), Str.size());
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
 
     putASTArgs(mlp);
 
@@ -778,7 +778,7 @@ void CommentNode::put(MLINK mlp) {
 
     MLPutFunction(mlp, SYMBOL_COMMENTNODE.name(), 3);
 
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), Str.size());
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
 
     putASTArgs(mlp);
 
