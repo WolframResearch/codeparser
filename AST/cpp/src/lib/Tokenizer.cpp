@@ -80,7 +80,7 @@ Token Tokenizer::nextToken() {
         
         cur = handleNumber();
         
-    } else if (c == WLCharacter('\n')) {
+    } else if (c == WLCharacter('\n') || c == WLCharacter('\r')) {
         
         String.put(c.to_char());
         
@@ -88,9 +88,9 @@ Token Tokenizer::nextToken() {
         
         cur = TOKEN_NEWLINE;
         
-    } else if (c == WLCharacter(' ') || c == WLCharacter('\t') || c == WLCharacter('\r')) {
+    } else if (c == WLCharacter(' ') || c == WLCharacter('\t')) {
         
-        while (c == WLCharacter(' ') || c == WLCharacter('\t') || c == WLCharacter('\r')) {
+        while (c == WLCharacter(' ') || c == WLCharacter('\t')) {
             
             String.put(c.to_char());
             

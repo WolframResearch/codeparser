@@ -83,34 +83,44 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextCharacterPolicy policy) {
     curSource = TheByteDecoder->nextSourceCharacter();
     
     switch (curSource.to_point()) {
-        case '\r': {
+        case '\r': case '\n': {
             
-            //
-            // Ignore \r as part of line continuation
-            //
-            
-            nextWLCharacter();
-            while (curSource == SourceCharacter('\r')) {
+            if (curSource.to_point() == '\r') {
+
+                //
+                // Line continuation
+                //
+                
                 nextWLCharacter();
-            }
-        }
-        case '\n': {
-        
-            //
-            // Line continuation
-            //
-            
-            nextWLCharacter();
-            
-            //
-            // Process the white space and glue together pieces
-            //
-            if ((policy & PRESERVE_WS_AFTER_LC) != PRESERVE_WS_AFTER_LC) {
-                while (curSource == SourceCharacter(' ') || curSource == SourceCharacter('\t')) {
-                    nextWLCharacter();
+                
+                //
+                // Process the white space and glue together pieces
+                //
+                if ((policy & PRESERVE_WS_AFTER_LC) != PRESERVE_WS_AFTER_LC) {
+                    while (curSource == SourceCharacter(' ') || curSource == SourceCharacter('\t')) {
+                        nextWLCharacter();
+                    }
                 }
             }
-            
+        
+            if (curSource.to_point() == '\n') {
+
+                //
+                // Line continuation
+                //
+                
+                nextWLCharacter();
+                
+                //
+                // Process the white space and glue together pieces
+                //
+                if ((policy & PRESERVE_WS_AFTER_LC) != PRESERVE_WS_AFTER_LC) {
+                    while (curSource == SourceCharacter(' ') || curSource == SourceCharacter('\t')) {
+                        nextWLCharacter();
+                    }
+                }
+            }
+
             //
             // return here
             //

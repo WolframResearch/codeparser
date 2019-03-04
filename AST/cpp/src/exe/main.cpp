@@ -14,24 +14,20 @@ void printExpression(MLINK mlp);
 
 int main(int argc, char *argv[]) {
     
-//    for (int i = 1; i < argc; i++) {
-//        auto arg = std::string(argv[i]);
-//        if (arg == "-file") {
-//            i++;
-//            auto file = std::string(argv[i]);
-//
-//            return readFile(file);
-//
-//        } else {
-//            return 1;
-//        }
-//    }
-//
-//    return readStdIn();
-    
-    auto file = "/Users/brenton/Library/Mathematica/ApplicationData/StashLink/Prototypes/Kernel/StartUp/Astronomy/ELPCompiledFunction.m";
-    
-    return readFile(file);
+    for (int i = 1; i < argc; i++) {
+        auto arg = std::string(argv[i]);
+        if (arg == "-file") {
+            i++;
+            auto file = std::string(argv[i]);
+
+            return readFile(file);
+
+        } else {
+            return 1;
+        }
+    }
+
+    return readStdIn();
 }
 
 int readStdIn() {
