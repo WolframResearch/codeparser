@@ -4,6 +4,8 @@
 #include "LongNameMap.h"
 #include "Utils.h"
 
+#include <cctype>
+
 CharacterDecoder::CharacterDecoder() : cur(0), curSource(0), characterQueue(), Issues() {}
 
 void CharacterDecoder::init() {
