@@ -13,6 +13,7 @@
 #include "ByteEncoder.h"
 
 #include <vector>
+#include <cctype>
 
 bool isContiguous(SourceLocation a, SourceLocation b) {
     return a.Line == b.Line && a.Col + 1 == b.Col;
