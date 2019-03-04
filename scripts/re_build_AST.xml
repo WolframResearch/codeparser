@@ -31,11 +31,13 @@
 			<arg line='-DMATHLINK_INCLUDE_DIR=${checkout_directory}/MathLink/CompilerAdditions' />
 			<arg line='-DMATHLINK_LIB_DIR=${checkout_directory}/MathLink/CompilerAdditions' />
 			<arg line='-DWOLFRAMLIBRARY_INCLUDE_DIR=${checkout_directory}/RuntimeLibrary/${system_id}' />
+			<arg line='-G &quot;${env.CMAKE_GENERATOR}&quot;' />
 			<arg value='${checkout_directory}/${component}' />
         </exec>
 
 		<exec dir='${build.dir}' executable='${cmake.exe}' failonerror='true'>
-			<arg line='--build . --target paclet' />
+			<arg line='--build .' />
+			<arg line='--target paclet' />
         </exec>
 
 	</target>
