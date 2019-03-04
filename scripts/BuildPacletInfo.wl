@@ -45,7 +45,7 @@ builtPacletInfoM = {
 AUTO GENERATED FILE
 DO NOT MODIFY
 *)
-"} ~Join~ { ToString[replacedPacletInfo, InputForm, PageWidth->80] }
+"} ~Join~ { ToString[replacedPacletInfo, InputForm, PageWidth->80] } ~Join~ {""}
 
 Print["exporting built PacletInfo.m"]
 res = Export[built, Column[builtPacletInfoM], "String"]
