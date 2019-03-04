@@ -315,15 +315,39 @@ set_target_properties(ast-lib PROPERTIES
 		11
 	CXX_STANDARD_REQUIRED
 		ON
+	#
+	# https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#library-output-artifacts
+	#
 	LIBRARY_OUTPUT_DIRECTORY
 		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+	#
 	# make sure that it is not created inside ${SYSTEMID}/Debug on Multi-configuration generators (VS, Xcode)
+	#
 	LIBRARY_OUTPUT_DIRECTORY_DEBUG
 		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
-	# make sure that it is not created inside ${SYSTEMID}/Release on Multi-configuration generators (VS, Xcode)
 	LIBRARY_OUTPUT_DIRECTORY_RELEASE
 		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+	#
+	# https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#archive-output-artifacts
+	#
+	ARCHIVE_OUTPUT_DIRECTORY
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+	ARCHIVE_OUTPUT_DIRECTORY_DEBUG
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+	ARCHIVE_OUTPUT_DIRECTORY_RELEASE
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+	#
+	# https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#runtime-output-artifacts
+	#
+	RUNTIME_OUTPUT_DIRECTORY
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+	RUNTIME_OUTPUT_DIRECTORY_DEBUG
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+	RUNTIME_OUTPUT_DIRECTORY_RELEASE
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+	#
 	# WL / LibraryLink style dictates that the library be named "AST.dylib" and not "libAST.dylib"
+	#
 	PREFIX
 		""
 )
