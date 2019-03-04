@@ -4,6 +4,7 @@
 #include "Symbol.h"
 
 #include <cassert>
+#include <vector>
 
 //
 // https://akrzemi1.wordpress.com/2017/05/18/asserts-in-constexpr-functions/

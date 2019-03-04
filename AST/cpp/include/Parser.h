@@ -8,6 +8,7 @@
 #include <map>
 #include <set>
 #include <vector>
+#include <functional>
 
 class PrefixParselet;
 class InfixParselet;
