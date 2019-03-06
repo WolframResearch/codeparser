@@ -61,7 +61,7 @@ PatternBlankSequenceNode,
 PatternBlankNullSequenceNode,
 OptionalDefaultPatternNode,
 
-InternalTokenNode,
+TokenNode,
 InternalAllNode,
 InternalDotNode,
 InternalNullNode,

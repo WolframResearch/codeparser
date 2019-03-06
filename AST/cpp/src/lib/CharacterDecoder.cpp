@@ -6,11 +6,10 @@
 
 #include <cctype>
 
-CharacterDecoder::CharacterDecoder() : cur(0), curSource(0), characterQueue(), Issues() {}
+CharacterDecoder::CharacterDecoder() : cur(0), characterQueue(), Issues() {}
 
 void CharacterDecoder::init() {
     cur = WLCharacter(0);
-    curSource = SourceCharacter(0);
     characterQueue.clear();
     Issues.clear();
 }
@@ -49,7 +48,7 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextCharacterPolicy policy) {
         return cur;
     }
     
-    curSource = TheByteDecoder->nextSourceCharacter();
+    auto curSource = TheByteDecoder->nextSourceCharacter();
     
     if (curSource == SourceCharacter(EOF)) {
         
@@ -85,42 +84,31 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextCharacterPolicy policy) {
     switch (curSource.to_point()) {
         case '\r': case '\n': {
             
-            if (curSource.to_point() == '\r') {
-
-                //
-                // Line continuation
-                //
-                
-                nextWLCharacter();
-                
-                //
-                // Process the white space and glue together pieces
-                //
-                if ((policy & PRESERVE_WS_AFTER_LC) != PRESERVE_WS_AFTER_LC) {
-                    while (curSource == SourceCharacter(' ') || curSource == SourceCharacter('\t')) {
-                        nextWLCharacter();
-                    }
-                }
-            }
+            std::vector<SyntaxIssue> TmpIssues;
         
-            if (curSource.to_point() == '\n') {
-
-                //
-                // Line continuation
-                //
-                
-                nextWLCharacter();
-                
-                //
-                // Process the white space and glue together pieces
-                //
-                if ((policy & PRESERVE_WS_AFTER_LC) != PRESERVE_WS_AFTER_LC) {
-                    while (curSource == SourceCharacter(' ') || curSource == SourceCharacter('\t')) {
-                        nextWLCharacter();
-                    }
+            //
+            // Line continuation
+            //
+            
+            nextWLCharacter();
+            
+            std::copy(Issues.begin(), Issues.end(), std::back_inserter(TmpIssues));
+            Issues.clear();
+            
+            //
+            // Process the white space and glue together pieces
+            //
+            if ((policy & PRESERVE_WS_AFTER_LC) != PRESERVE_WS_AFTER_LC) {
+                while (cur == WLCharacter(' ') || cur == WLCharacter('\t')) {
+                    nextWLCharacter();
+                    
+                    std::copy(Issues.begin(), Issues.end(), std::back_inserter(TmpIssues));
+                    Issues.clear();
                 }
             }
-
+            
+            Issues = TmpIssues;
+            
             //
             // return here
             //
@@ -130,19 +118,19 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextCharacterPolicy policy) {
             return cur;
         }
         case '[':
-            cur = handleLongName(CharacterStart, policy);
+            cur = handleLongName(curSource, CharacterStart, policy);
             break;
         case ':':
-            cur = handle4Hex(CharacterStart, policy);
+            cur = handle4Hex(curSource, CharacterStart, policy);
             break;
         case '.':
-            cur = handle2Hex(CharacterStart, policy);
+            cur = handle2Hex(curSource, CharacterStart, policy);
             break;
         case '|':
-            cur = handle6Hex(CharacterStart, policy);
+            cur = handle6Hex(curSource, CharacterStart, policy);
             break;
         case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7':
-            cur = handleOctal(CharacterStart, policy);
+            cur = handleOctal(curSource, CharacterStart, policy);
             break;
         //
         // Simple escaped characters
@@ -251,7 +239,11 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextCharacterPolicy policy) {
 
             auto Loc = TheSourceManager->getSourceLocation();
 
-            auto Issue = SyntaxIssue(TAG_SYNTAXERROR, std::string("Unrecognized character \\") + curSource.to_char() + ". Did you mean " + curSource.to_char()+ " or \\\\" + curSource.to_char() + "?", SEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
+            auto curSourceStr = (curSource == SourceCharacter(EOF)) ? std::string("") : curSource.string();
+            
+            curSourceStr = makeGraphical(curSourceStr);
+            
+            auto Issue = SyntaxIssue(TAG_SYNTAXERROR, std::string("Unrecognized character \\") + curSourceStr + ". Did you mean " + curSourceStr + " or \\\\" + curSourceStr + "?", SEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
 
             Issues.push_back(Issue);
             
@@ -295,7 +287,9 @@ WLCharacter CharacterDecoder::currentWLCharacter() {
 //
 // c is set to the next WL character
 //
-WLCharacter CharacterDecoder::handleLongName(SourceLocation CharacterStart, NextCharacterPolicy policy) {
+WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextCharacterPolicy policy) {
+    
+    auto curSource = curSourceIn;
     
     assert(curSource == SourceCharacter('['));
     
@@ -339,7 +333,9 @@ WLCharacter CharacterDecoder::handleLongName(SourceLocation CharacterStart, Next
 
         auto Loc = TheSourceManager->getSourceLocation();
     
-        auto curSourceStr = (curSource == SourceCharacter(EOF)) ? std::string("") : std::string(1, curSource.to_char());
+        auto curSourceStr = (curSource == SourceCharacter(EOF)) ? std::string("") : curSource.string();
+        
+        curSourceStr = makeGraphical(curSourceStr);
         
         auto Issue = SyntaxIssue(TAG_SYNTAXERROR, std::string("Unrecognized character: \\[") + LongNameStr + curSourceStr + ". Did you mean [" + LongNameStr + curSourceStr + " or \\\\[" + LongNameStr + curSourceStr + "?", SEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
         
@@ -395,11 +391,14 @@ WLCharacter CharacterDecoder::handleLongName(SourceLocation CharacterStart, Next
     return cur;
 }
 
-WLCharacter CharacterDecoder::handle4Hex(SourceLocation CharacterStart, NextCharacterPolicy policy) {
+WLCharacter CharacterDecoder::handle4Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextCharacterPolicy policy) {
+    
+    auto curSource = curSourceIn;
     
     assert(curSource == SourceCharacter(':'));
     
     std::ostringstream Hex;
+    
     
     for (auto i = 0; i < 4; i++) {
         
@@ -421,7 +420,9 @@ WLCharacter CharacterDecoder::handle4Hex(SourceLocation CharacterStart, NextChar
         
             auto Loc = TheSourceManager->getSourceLocation();
             
-            auto curSourceStr = (curSource == SourceCharacter(EOF)) ? std::string("") : std::string(1, curSource.to_char());
+            auto curSourceStr = (curSource == SourceCharacter(EOF)) ? std::string("") : curSource.string();
+            
+            curSourceStr = makeGraphical(curSourceStr);
             
             auto Issue = SyntaxIssue(TAG_SYNTAXERROR, std::string("Unrecognized character: \\:") + HexStr + curSourceStr + ". Did you mean :" + HexStr + curSourceStr + " or \\\\:" + HexStr + curSourceStr + "?", SEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
 
@@ -453,7 +454,9 @@ WLCharacter CharacterDecoder::handle4Hex(SourceLocation CharacterStart, NextChar
     return cur;
 }
 
-WLCharacter CharacterDecoder::handle2Hex(SourceLocation CharacterStart, NextCharacterPolicy policy) {
+WLCharacter CharacterDecoder::handle2Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextCharacterPolicy policy) {
+    
+    auto curSource = curSourceIn;
     
     assert(curSource == SourceCharacter('.'));
     
@@ -461,7 +464,7 @@ WLCharacter CharacterDecoder::handle2Hex(SourceLocation CharacterStart, NextChar
     
     for (auto i = 0; i < 2; i++) {
         
-        curSource = TheByteDecoder->nextSourceCharacter();
+        auto curSource = TheByteDecoder->nextSourceCharacter();
         
         if (curSource.isHex()) {
             
@@ -479,7 +482,9 @@ WLCharacter CharacterDecoder::handle2Hex(SourceLocation CharacterStart, NextChar
         
             auto Loc = TheSourceManager->getSourceLocation();
             
-            auto curSourceStr = (curSource == SourceCharacter(EOF)) ? std::string("") : std::string(1, curSource.to_char());
+            auto curSourceStr = (curSource == SourceCharacter(EOF)) ? std::string("") : curSource.string();
+            
+            curSourceStr = makeGraphical(curSourceStr);
             
             auto Issue = SyntaxIssue(TAG_SYNTAXERROR, "Unrecognized character: \\." + HexStr + curSourceStr + ". Did you mean ." + HexStr + curSourceStr + " or \\\\." + HexStr +curSourceStr + "?", SEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
 
@@ -511,7 +516,9 @@ WLCharacter CharacterDecoder::handle2Hex(SourceLocation CharacterStart, NextChar
     return cur;
 }
 
-WLCharacter CharacterDecoder::handleOctal(SourceLocation CharacterStart, NextCharacterPolicy policy) {
+WLCharacter CharacterDecoder::handleOctal(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextCharacterPolicy policy) {
+    
+    auto curSource = curSourceIn;
     
     assert(curSource.isOctal());
     
@@ -539,7 +546,9 @@ WLCharacter CharacterDecoder::handleOctal(SourceLocation CharacterStart, NextCha
         
             auto Loc = TheSourceManager->getSourceLocation();
             
-            auto curSourceStr = (curSource == SourceCharacter(EOF)) ? std::string("") : std::string(1, curSource.to_char());
+            auto curSourceStr = (curSource == SourceCharacter(EOF)) ? std::string("") : curSource.string();
+            
+            curSourceStr = makeGraphical(curSourceStr);
             
             auto Issue = SyntaxIssue(TAG_SYNTAXERROR, std::string("Unrecognized character: \\") + OctalStr + curSourceStr + ". Did you mean " + OctalStr + curSourceStr + " or \\\\" + OctalStr + curSourceStr + "?", SEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
 
@@ -570,7 +579,9 @@ WLCharacter CharacterDecoder::handleOctal(SourceLocation CharacterStart, NextCha
     return cur;
 }
 
-WLCharacter CharacterDecoder::handle6Hex(SourceLocation CharacterStart, NextCharacterPolicy policy) {
+WLCharacter CharacterDecoder::handle6Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextCharacterPolicy policy) {
+    
+    auto curSource = curSourceIn;
     
     assert(curSource == SourceCharacter('|'));
     
@@ -596,7 +607,9 @@ WLCharacter CharacterDecoder::handle6Hex(SourceLocation CharacterStart, NextChar
         
             auto Loc = TheSourceManager->getSourceLocation();
 
-            auto curSourceStr = (curSource == SourceCharacter(EOF)) ? std::string("") : std::string(1, curSource.to_char());
+            auto curSourceStr = (curSource == SourceCharacter(EOF)) ? std::string("") : curSource.string();
+            
+            curSourceStr = makeGraphical(curSourceStr);
             
             auto Issue = SyntaxIssue(TAG_SYNTAXERROR, std::string("Unrecognized character: \\|") + HexStr + curSourceStr + ". Did you mean |" + HexStr + curSourceStr + " or \\\\|" + HexStr + curSourceStr + "?", SEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
 
@@ -784,19 +797,16 @@ std::string WLCharacter::string() const {
     
     std::ostringstream String;
     
-    String << this;
+    String << *this;
     
     return String.str();
 }
 
-std::ostream& operator<<(std::ostream& s, const WLCharacter c) {
+std::ostream& operator<<(std::ostream& s, const WLCharacter& c) {
 
     auto src = c.source();
     for (auto S : src) {
-        auto bytes = S.bytes();
-        for (auto b : bytes) {
-            s.put(b);
-        }
+        s << S;
     }
 
     return s;
@@ -919,7 +929,20 @@ bool WLCharacter::isLetterlikeCharacter() const {
             return true;
         }
         
-        return false;
+        //
+        // technically, WL treats the ASCII control characters as letterlike
+        //
+        
+        switch (value_) {
+            case 0x00: case 0x01: case 0x02: case 0x03: case 0x04: case 0x05: case 0x06:
+                return true;
+            case 0x08:
+                return true;
+            case 0x0e: case 0x0f: case 0x10: case 0x11: case 0x12: case 0x13: case 0x14: case 0x15: case 0x16: case 0x17: case 0x18: case 0x19: case 0x1a: case 0x1b: case 0x1c: case 0x1d: case 0x1e: case 0x1f:
+                return true;
+            default:
+                return false;
+        }
     }
 
     //

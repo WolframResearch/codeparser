@@ -118,7 +118,7 @@ private:
      };
  }
 
-std::ostream& operator<<(std::ostream& stream, const WLCharacter);
+std::ostream& operator<<(std::ostream& stream, const WLCharacter&);
 
 
 
@@ -163,17 +163,16 @@ const NextCharacterPolicy INSIDE_COMMENT = PRESERVE_WS_AFTER_LC;
 class CharacterDecoder {
 
     WLCharacter cur;
-    SourceCharacter curSource;
 
     std::vector<std::pair<WLCharacter, SourceSpan>> characterQueue;
     
     std::vector<SyntaxIssue> Issues;
     
-    WLCharacter handleLongName(SourceLocation CharacterStart, NextCharacterPolicy policy);
-    WLCharacter handle2Hex(SourceLocation CharacterStart, NextCharacterPolicy policy);
-    WLCharacter handle4Hex(SourceLocation CharacterStart, NextCharacterPolicy policy);
-    WLCharacter handle6Hex(SourceLocation CharacterStart, NextCharacterPolicy policy);
-    WLCharacter handleOctal(SourceLocation CharacterStart, NextCharacterPolicy policy);
+    WLCharacter handleLongName(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextCharacterPolicy policy);
+    WLCharacter handle2Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextCharacterPolicy policy);
+    WLCharacter handle4Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextCharacterPolicy policy);
+    WLCharacter handle6Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextCharacterPolicy policy);
+    WLCharacter handleOctal(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextCharacterPolicy policy);
 
     WLCharacter enqueue(std::vector<std::pair<WLCharacter, SourceSpan>> chars);
     

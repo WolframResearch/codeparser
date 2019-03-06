@@ -15,9 +15,9 @@
 #include <memory>
 #include <cstring>
 
-void putExpressions(MLINK mlp);
+void putExpressions(std::vector<std::shared_ptr<Node>>, MLINK mlp);
 std::vector<std::shared_ptr<Node>> parseExpressions();
-
+std::vector<std::shared_ptr<Node>> tokenize();
 
 DLLEXPORT mint WolframLibrary_getVersion() {
 	return WolframLibraryVersion;
@@ -95,7 +95,9 @@ DLLEXPORT int ConcreteParseFile(WolframLibraryData libData, MLINK mlp) {
         return res;
     } );
     
-    putExpressions(mlp);
+    auto nodes = parseExpressions();
+
+    putExpressions(nodes, mlp);
     
     TheParser->deinit();
     TheTokenizer->deinit();
@@ -157,7 +159,9 @@ DLLEXPORT int ConcreteParseString(WolframLibraryData libData, MLINK mlp) {
         return res;
     } );
     
-    putExpressions(mlp);
+    auto nodes = parseExpressions();
+
+    putExpressions(nodes, mlp);
     
     TheParser->deinit();
     TheTokenizer->deinit();
@@ -174,11 +178,110 @@ retPt:
 	return res;
 }
 
-
-
-void putExpressions(MLINK mlp) {
+DLLEXPORT int TokenizeString(WolframLibraryData libData, MLINK mlp) {
     
-	auto nodes = parseExpressions();
+    int res = LIBRARY_FUNCTION_ERROR;
+    int len;
+    const unsigned char *inStr = NULL;
+
+    if (!MLTestHead( mlp, SYMBOL_LIST.name(), &len)) {
+        goto retPt;
+    }
+    if (len != 1) {
+        goto retPt;
+    }
+    
+    int b;
+    int c;
+    if (!MLGetUTF8String(mlp, &inStr, &b, &c)) {
+        goto retPt;
+    }
+
+    if (!MLNewPacket(mlp) ) {
+        goto retPt;
+    }
+    
+    {
+    auto skipFirstLine = false;
+    auto iss = std::stringstream(reinterpret_cast<const char *>(inStr));
+
+    TheSourceManager->init();
+    TheByteDecoder = new ByteDecoder(iss);
+    TheTokenizer->init(skipFirstLine);
+    
+    std::vector<std::shared_ptr<Node>> nodes = tokenize();
+
+    putExpressions(nodes, mlp);
+    
+    TheTokenizer->deinit();
+    delete TheByteDecoder;
+    TheSourceManager->deinit();
+
+    res = LIBRARY_NO_ERROR;
+    }
+    
+retPt: 
+    if (inStr != NULL) {
+        MLReleaseUTF8String(mlp, inStr, b);
+    }
+    return res;
+}
+
+DLLEXPORT int TokenizeFile(WolframLibraryData libData, MLINK mlp) {
+    
+    int res = LIBRARY_FUNCTION_ERROR;
+    int len;
+    const unsigned char *inStr = NULL;
+
+    if (!MLTestHead( mlp, SYMBOL_LIST.name(), &len)) {
+        goto retPt;
+    }
+    if (len != 1) {
+        goto retPt;
+    }
+    
+    int b;
+    int c;
+    if (!MLGetUTF8String(mlp, &inStr, &b, &c)) {
+        goto retPt;
+    }
+
+    if (!MLNewPacket(mlp) ) {
+        goto retPt;
+    }
+    
+    {
+    auto skipFirstLine = false;
+    std::ifstream ifs(reinterpret_cast<const char *>(inStr), std::ifstream::in);
+        
+    if (ifs.fail()) {
+       goto retPt;
+    }
+
+    TheSourceManager->init();
+    TheByteDecoder = new ByteDecoder(ifs);
+    TheTokenizer->init(skipFirstLine);
+    
+    std::vector<std::shared_ptr<Node>> nodes = tokenize();
+
+    putExpressions(nodes, mlp);
+    
+    TheTokenizer->deinit();
+    delete TheByteDecoder;
+    TheSourceManager->deinit();
+
+    res = LIBRARY_NO_ERROR;
+    }
+    
+retPt: 
+    if (inStr != NULL) {
+        MLReleaseUTF8String(mlp, inStr, b);
+    }
+    return res;
+}
+
+
+void putExpressions(std::vector<std::shared_ptr<Node>> nodes, MLINK mlp) {
    
     //
     // Check if isAbort() before calling MathLink
@@ -253,6 +356,31 @@ std::vector<std::shared_ptr<Node>> parseExpressions() {
     assert(TheParser->getTokenString().empty());
     assert(TheParser->getIssues().empty());
     assert(TheParser->getComments().empty());
+
+    return nodes;
+}
+
+
+std::vector<std::shared_ptr<Node>> tokenize() {
+
+    std::vector<std::shared_ptr<Node>> nodes;
+
+    while (true) {
+        
+        auto Tok = TheTokenizer->nextToken();
+        
+        if (Tok == TOKEN_EOF) {
+            break;
+        }
+
+        auto Str = TheTokenizer->getString();
+        auto Issues = TheTokenizer->getIssues();
+        auto Span = TheSourceManager->getTokenSpan();
+
+        auto N = std::make_shared<TokenNode>(Tok, Str, Span, Issues);
+        nodes.push_back(N);
+        
+    } // while (true)
 
     return nodes;
 }

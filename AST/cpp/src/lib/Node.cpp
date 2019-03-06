@@ -650,16 +650,16 @@ void OptionalDefaultPatternNode::put(MLINK mlp) {
     }
 }
 
-void InternalTokenNode::put(MLINK mlp) {
+void TokenNode::put(MLINK mlp) {
 
     auto Issues = getIssues();
     auto Comments = getComments();
 
-    MLPutFunction(mlp, SYMBOL_INTERNALTOKENNODE.name(), 3);
+    MLPutFunction(mlp, SYMBOL_TOKENNODE.name(), 3);
+
+    MLPutSymbol(mlp, TokenToString(Tok).c_str());
 
     MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
-
-    putASTArgs(mlp);
 
     MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
 

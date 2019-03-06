@@ -899,6 +899,22 @@ Test[
 
 
 
+(*
+Strange characters
+*)
+Test[
+	"a\:0000"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190305-E0A3A2"
+]
+
+
+
+
 
 
 

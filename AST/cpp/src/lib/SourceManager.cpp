@@ -177,4 +177,22 @@ std::vector<unsigned char> SourceCharacter::bytes() const {
     return ByteEncoder::encodeBytes(value_);
 }
 
+std::string SourceCharacter::string() const {
+    
+    std::ostringstream String;
+    
+    String << *this;
+    
+    return String.str();
+}
+
+std::ostream& operator<<(std::ostream& s, const SourceCharacter& c) {
+    
+    for (auto b : c.bytes()) {
+        s.put(b);
+    }
+    
+    return s;
+}
+
 SourceManager *TheSourceManager = nullptr;

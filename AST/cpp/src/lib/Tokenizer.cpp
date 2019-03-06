@@ -168,11 +168,6 @@ Token Tokenizer::nextToken() {
         //
         String << c;
         
-        // Clear Issues
-        auto Tmp = TheCharacterDecoder->getIssues();
-        
-        std::copy(Tmp.begin(), Tmp.end(), std::back_inserter(Issues));
-        
         c = nextWLCharacter();
         
         cur = TOKEN_ERROR_UNHANDLEDCHARACTER;
@@ -198,6 +193,10 @@ WLCharacter Tokenizer::nextWLCharacter(NextCharacterPolicy policy) {
         
         return c;
     }
+    
+    auto Tmp = TheCharacterDecoder->getIssues();
+    
+    std::copy(Tmp.begin(), Tmp.end(), std::back_inserter(Issues));
     
     return TheCharacterDecoder->nextWLCharacter(policy);
 }
@@ -375,10 +374,6 @@ Token Tokenizer::handleComment() {
             //
             
             String << c;
-            
-            // Clear Issues
-            // We do not care about issues inside of comments
-            TheCharacterDecoder->getIssues();
             
             c = nextWLCharacter(INSIDE_COMMENT);
             
@@ -618,10 +613,6 @@ Token Tokenizer::handleString() {
 
         while (true) {
             
-            auto Tmp = TheCharacterDecoder->getIssues();
-            
-            std::copy(Tmp.begin(), Tmp.end(), std::back_inserter(Issues));
-            
             c = nextWLCharacter(INSIDE_STRING);
             
             if (c == WLCHARACTER_EOF) {
@@ -635,10 +626,6 @@ Token Tokenizer::handleString() {
             } else if (c == WLCharacter('\\')) {
                 
                 String.put(c.to_char());
-                
-                auto Tmp = TheCharacterDecoder->getIssues();
-                
-                std::copy(Tmp.begin(), Tmp.end(), std::back_inserter(Issues));
                 
                 c = nextWLCharacter(INSIDE_STRING);
                 
@@ -2107,10 +2094,6 @@ std::vector<SyntaxIssue> Tokenizer::getIssues() {
     auto Tmp = Issues;
 
     Issues.clear();
-    
-    auto CharacterIssues = TheCharacterDecoder->getIssues();
-    
-    std::copy(CharacterIssues.begin(), CharacterIssues.end(), std::back_inserter(Tmp));
     
     return Tmp;
 }

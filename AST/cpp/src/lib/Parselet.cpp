@@ -502,13 +502,13 @@ std::shared_ptr<Node> GroupParselet::parse(ParserContext CtxtIn) {
             auto Str = TheParser->getTokenString();
             
             auto Issues = TheParser->getIssues();
-            auto Comments = TheParser->getComments();
+            TheParser->getComments();
             
             auto Span = TheSourceManager->getTokenSpan();
             
             TheParser->nextToken(Ctxt, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
 
-            auto CommaNode = std::make_shared<InternalTokenNode>(Str, Span, Issues, Comments);
+            auto CommaNode = std::make_shared<TokenNode>(Tok, Str, Span, Issues);
             
             Args.push_back(CommaNode);
             
@@ -1367,19 +1367,21 @@ std::shared_ptr<Node> TildeParselet::parse(std::shared_ptr<Node> Left, ParserCon
     
     //     Issues.push_back(Issue);
     // }
-
-    TheParser->nextToken(Ctxt, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
     
     if (Tok != TOKEN_OPERATOR_TILDE) {
         
+        TheParser->nextToken(Ctxt, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
+
         auto Issues = TheParser->getIssues();
         auto Comments = TheParser->getComments();
         
         return std::make_shared<SyntaxErrorNode>(TOKEN_ERROR_EXPECTEDTILDE,
-                                                 std::vector<std::shared_ptr<Node>> { Left, std::make_shared<InternalTokenNode>(TildeStr, FirstTildeSpan, std::vector<SyntaxIssue>(), std::vector<Comment>()),
-                Middle, std::make_shared<InternalTokenNode>(Str, SecondTildeSpan, std::vector<SyntaxIssue>(), std::vector<Comment>()) }, Issues, Comments);
+                                                 std::vector<std::shared_ptr<Node>> { Left, std::make_shared<TokenNode>(TOKEN_OPERATOR_TILDE, TildeStr, FirstTildeSpan, std::vector<SyntaxIssue>()),
+                Middle, std::make_shared<TokenNode>(Tok, Str, SecondTildeSpan, std::vector<SyntaxIssue>()) }, Issues, Comments);
     }
     
+    TheParser->nextToken(Ctxt, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
+
     auto Right = TheParser->parse(Ctxt);
 
     auto Issues = TheParser->getIssues();
@@ -1649,7 +1651,7 @@ std::shared_ptr<Node> LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn)
             
             auto Span = TheSourceManager->getTokenSpan();
             
-            Tokens.push_back(std::make_shared<InternalTokenNode>(Str, Span, std::vector<SyntaxIssue>(), std::vector<Comment>()));
+            Tokens.push_back(std::make_shared<TokenNode>(Tok, Str, Span, std::vector<SyntaxIssue>()));
             
             Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_RETURN_COMMENTS);
         }
@@ -1826,7 +1828,7 @@ std::shared_ptr<Node> ErrorParselet::parse(ParserContext CtxtIn) {
     
     TheParser->nextToken(Ctxt, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
     
-    return std::make_shared<SyntaxErrorNode>(TokIn, std::vector<std::shared_ptr<Node>> { std::make_shared<InternalTokenNode>(Str, Span, std::vector<SyntaxIssue>(), std::vector<Comment>()) }, Issues, Comments);
+    return std::make_shared<SyntaxErrorNode>(TokIn, std::vector<std::shared_ptr<Node>> { std::make_shared<TokenNode>(TokIn, Str, Span, std::vector<SyntaxIssue>()) }, Issues, Comments);
 }
 
 std::shared_ptr<Node> CleanupRestParselet::parse(std::shared_ptr<Node> Left, ParserContext CtxtIn) {
@@ -1842,7 +1844,7 @@ std::shared_ptr<Node> CleanupRestParselet::parse(std::shared_ptr<Node> Left, Par
     std::vector<std::shared_ptr<Node>> Tokens;
     
     Tokens.push_back(Left);
-    Tokens.push_back(std::make_shared<InternalTokenNode>(Str, Span, std::vector<SyntaxIssue>(), std::vector<Comment>()));
+    Tokens.push_back(std::make_shared<TokenNode>(Tok, Str, Span, std::vector<SyntaxIssue>()));
     
     //
     // do not keep track of breadth here, not a big deal
@@ -1871,7 +1873,7 @@ std::shared_ptr<Node> CleanupRestParselet::parse(std::shared_ptr<Node> Left, Par
             
             Span = TheSourceManager->getTokenSpan();
             
-            Tokens.push_back(std::make_shared<InternalTokenNode>(Str, Span, std::vector<SyntaxIssue>(), std::vector<Comment>()));
+            Tokens.push_back(std::make_shared<TokenNode>(Tok, Str, Span, std::vector<SyntaxIssue>()));
             
             Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_RETURN_COMMENTS);
         }
