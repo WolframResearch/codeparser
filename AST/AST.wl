@@ -172,6 +172,7 @@ Source
 Used to report f[,] or "\[Alpa]" as an option, e.g. SyntaxIssues -> {SyntaxIssue[], SyntaxIssue[]}
 *)
 SyntaxIssues
+AbstractSyntaxIssues
 SyntaxIssue
 Comments
 Comment
