@@ -104,7 +104,7 @@ CSTToBoxes[GroupNode[op_, args_, _]] :=
  Module[{pair = SymbolToGroupPair[op]}, 
   RowBox[{pair[[1]], RowBox[CSTToBoxes /@ args], pair[[2]]}]]
 
-CSTToBoxes[InternalTokenNode[",", {}, _]] := ","
+CSTToBoxes[TokenNode[Token`Operator`Comma, _, _]] := ","
 
 
 CSTToBoxes[CallNode[h_, {GroupNode[GroupSquare, {}, _]}, _]] := 

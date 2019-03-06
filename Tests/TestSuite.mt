@@ -5,7 +5,7 @@ TestSuite[{
 	"DeclarationName.mt",
 	"Parse.mt",
 	"ToInputFormString.mt",
-	(* not implemented "Tokenize.mt",*)
+	"Tokenize.mt",
 	"ToNode.mt",
 	(* not yet implemented "Weird.mt",*)
 	Nothing

@@ -282,7 +282,7 @@ Module[{str},
 
 	
 
-toInputFormString[InternalTokenNode[str_, _, _]] :=
+toInputFormString[TokenNode[_, str_, _]] :=
 	str
 
 
@@ -354,7 +354,7 @@ Module[{x, lastNonCommentIndex, processed},
         ,
         lastNonCommentIndex = x;
         x += 2;
-        {#, InternalTokenNode[",", {}, <||>]}
+        {#, TokenNode[Token`Operator`Comma, ",", <||>]}
         ])& /@ nodes];
 	If[lastNonCommentIndex > 0,
 		processed = Delete[processed, lastNonCommentIndex + 1];

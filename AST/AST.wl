@@ -13,6 +13,12 @@ ConcreteParseFile::usage = "ConcreteParseFile[file] returns a concrete syntax tr
 
 
 
+TokenizeString::usage = "TokenizeString[string] returns a list of tokens by interpreting string as WL input."
+
+TokenizeFile::usage = "TokenizeFile[file] returns a list of tokens by interpreting file as WL input."
+
+
+
 
 ToInputFormString::usage = "ToInputFormString[concrete] returns a string representation of concrete."
 ToFullFormString::usage = "ToFullFormString[abstract] returns a string representation of abstract."
@@ -204,11 +210,7 @@ PatternBlankSequenceNode
 PatternBlankNullSequenceNode
 OptionalDefaultPatternNode
 
-(*
-InternalTokenNode represents a token in a linear syntax expression
-When parsing linear syntax expressions, all tokens are simply kept unparsed
-*)
-InternalTokenNode
+TokenNode
 
 InternalAllNode
 InternalDotNode
@@ -322,6 +324,68 @@ concreteParseFileFunc := concreteParseFileFunc =
 
 		loaded
 	]]
+
+tokenizeStringFunc := tokenizeStringFunc =
+	Catch[
+	Module[{res, loaded, linkObject},
+
+		If[FailureQ[$lib],
+			Throw[$lib]
+		];
+
+		res = newestLinkObject[LibraryFunctionLoad[$lib, "TokenizeString", LinkObject, LinkObject]];
+		
+		If[FailureQ[res],
+			Throw[res]
+		];
+
+		{loaded, linkObject} = res;
+
+		If[FailureQ[loaded],
+			Throw[loaded]
+		];
+
+		If[Head[loaded] =!= LibraryFunction,
+			Throw[Failure["LibraryFunctionLoad", <|"Result"->loaded|>]]
+		];
+
+		MathLink`LinkSetPrintFullSymbols[linkObject, True];
+
+		loaded
+	]]
+
+tokenizeFileFunc := tokenizeFileFunc =
+	Catch[
+	Module[{res, loaded, linkObject},
+
+		If[FailureQ[$lib],
+			Throw[$lib]
+		];
+
+		res = newestLinkObject[LibraryFunctionLoad[$lib, "TokenizeFile", LinkObject, LinkObject]];
+		
+		If[FailureQ[res],
+			Throw[res]
+		];
+
+		{loaded, linkObject} = res;
+
+		If[FailureQ[loaded],
+			Throw[loaded]
+		];
+
+		If[Head[loaded] =!= LibraryFunction,
+			Throw[Failure["LibraryFunctionLoad", <|"Result"->loaded|>]]
+		];
+
+		MathLink`LinkSetPrintFullSymbols[linkObject, True];
+
+		loaded
+	]]
+
+
+
+
 
 Attributes[newestLinkObject] = {HoldFirst}
 
@@ -520,6 +584,59 @@ Module[{parse, ast},
 
 	ast
 ]]
+
+
+
+tokenizeString[sIn_String, OptionsPattern[]] :=
+Catch[
+Module[{s = sIn, res},
+
+	If[FailureQ[tokenizeStringFunc],
+		Throw[tokenizeStringFunc]
+	];
+
+	res = tokenizeStringFunc[s];
+
+	If[Head[res] === LibraryFunctionError,
+		Throw[Failure["LibraryFunctionError", <|"Result"->res|>]]
+	];
+
+	If[FailureQ[res],
+		Throw[res]
+	];
+
+	res
+]]
+
+
+TokenizeString[s_String] :=
+	tokenizeString[s]
+
+
+tokenizeFile[sIn_String, OptionsPattern[]] :=
+Catch[
+Module[{s = sIn, res},
+
+	If[FailureQ[tokenizeFileFunc],
+		Throw[tokenizeFileFunc]
+	];
+
+	res = tokenizeFileFunc[s];
+
+	If[Head[res] === LibraryFunctionError,
+		Throw[Failure["LibraryFunctionError", <|"Result"->res|>]]
+	];
+
+	If[FailureQ[res],
+		Throw[res]
+	];
+
+	res
+]]
+
+
+TokenizeFile[s_String] :=
+	tokenizeFile[s]
 
 
 

@@ -485,14 +485,12 @@ public:
     }
 };
 
-//
-// InternalTokenNode is internal to LinearSyntax Paren GroupNodes
-//
-class InternalTokenNode : public Node {
+class TokenNode : public Node {
+    Token Tok;
     std::string Str;
     SourceSpan Span;
 public:
-    InternalTokenNode(std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Str(Str), Span(Span) {}
+    TokenNode(Token Tok, std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues) : Node({}, Issues, {}), Tok(Tok), Str(Str), Span(Span) {}
     
     void put(MLINK mlp) override;
 

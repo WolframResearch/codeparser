@@ -144,7 +144,9 @@ retPt:
 void printExpression(MLINK mlp) {
     int i;
     double r;
-    const char *string;
+    const unsigned char *string;
+    int bytes;
+    int chars;
     const char *symbol;
     const char *func;
     int a;
@@ -170,11 +172,11 @@ void printExpression(MLINK mlp) {
             std::cout << r;
             break;
         case MLTKSTR:
-            if (!MLGetString(mlp, &string)) {
+            if (!MLGetUTF8String(mlp, &string, &bytes, &chars)) {
                 return;
             }
             std::cout << string;
-            MLReleaseString(mlp, string);
+            MLReleaseUTF8String(mlp, string, bytes);
             break;
         case MLTKSYM:
             if (!MLGetSymbol(mlp, &symbol)) {

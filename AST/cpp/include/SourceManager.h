@@ -5,6 +5,7 @@
 
 #include <cassert>
 #include <vector>
+#include <sstream>
 
 //
 // https://akrzemi1.wordpress.com/2017/05/18/asserts-in-constexpr-functions/
@@ -42,7 +43,9 @@ public:
         //
         return X_ASSERT(0x00 <= value_ && value_ <= 0xff), value_;
     }
-
+    
+    std::string string() const;
+    
     bool isDigitOrAlpha() const;
 
     bool isHex() const;
@@ -54,6 +57,8 @@ public:
 private:
     int value_;
 };
+
+std::ostream& operator<<(std::ostream& stream, const SourceCharacter&);
 
 
 constexpr SourceCharacter SOURCECHARACTER_BACKSLASH('\\');
