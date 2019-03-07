@@ -54,7 +54,10 @@ Precedence`ColonGreater -> Precedence[RuleDelayed], (* 120 *)
 Precedence`LongName`Rule -> Precedence`MinusGreater,
 Precedence`LongName`RuleDelayed -> Precedence`MinusGreater,
 
-Precedence`LessMinusGreater -> Precedence[TwoWayRule], (* 125 *)
+(*
+TwoWayRule did not have correct precedence until 12.0
+*)
+Precedence`LessMinusGreater -> If[$VersionNumber >= 12.0, Precedence[TwoWayRule] (* 125 *), 125],
 Precedence`LongName`TwoWayRule -> Precedence`LessMinusGreater,
 
 Precedence`SlashSemi -> Precedence[Condition], (* 130 *)
