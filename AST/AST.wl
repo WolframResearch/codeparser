@@ -390,7 +390,7 @@ Module[{parse, ast},
 (*
 ConcreteParseFile[full_String] returns a FileNode AST or a Failure object
 *)
-ConcreteParseFile[full_String, h_:Automatic] :=
+ConcreteParseFile[full_String | File[full_String], h_:Automatic] :=
 	concreteParseFile[full, h]
 
 concreteParseFile[file_String, hIn_, OptionsPattern[]] :=
@@ -492,7 +492,7 @@ Module[{h, full, strm, b, nonASCII, pos, res, skipFirstLine = False, shebangWarn
 	res
 ]]
 
-ParseFile[file_String, h_:Automatic] :=
+ParseFile[file_String | File[file_String], h_:Automatic] :=
 Catch[
 Module[{parse, ast},
 
@@ -557,7 +557,7 @@ Module[{s = sIn, res},
 ]]
 
 
-TokenizeFile[s_String] :=
+TokenizeFile[s_String | File[s_String]] :=
 	tokenizeFile[s]
 
 
