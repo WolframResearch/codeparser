@@ -259,130 +259,51 @@ Module[{res},
 LibraryLink creates a separate loopback link for each library function
 *)
 
-concreteParseStringFunc := concreteParseStringFunc =
-	Catch[
-	Module[{res, loaded, linkObject},
+loadFunc[name_String] :=
+Catch[
+Module[{res, loaded, linkObject},
 
-		If[FailureQ[$lib],
-			Throw[$lib]
-		];
+	If[FailureQ[$lib],
+		Throw[$lib]
+	];
 
-		res = newestLinkObject[LibraryFunctionLoad[$lib, "ConcreteParseString", LinkObject, LinkObject]];
+	res = newestLinkObject[LibraryFunctionLoad[$lib, name, LinkObject, LinkObject]];
 
-		If[FailureQ[res],
-			Throw[res]
-		];
+	If[FailureQ[res],
+		Throw[res]
+	];
 
-		{loaded, linkObject} = res;
+	{loaded, linkObject} = res;
 
-		If[FailureQ[loaded],
-			Throw[loaded]
-		];
+	If[FailureQ[loaded],
+		Throw[loaded]
+	];
 
-		If[Head[loaded] =!= LibraryFunction,
-			Throw[Failure["LibraryFunctionLoad", <|"Result"->loaded|>]]
-		];
+	If[Head[loaded] =!= LibraryFunction,
+		Throw[Failure["LibraryFunctionLoad", <|"Result"->loaded|>]]
+	];
 
-		(*
-		send fully-qualified symbol names over the wire
-		library->kernel traffic has fully-qualified symbols.
-		This allows LibraryLink traffic to work when AST` is not on $ContextPath.
-		And we want kernel->library traffic to match this behavior, to minimize surprises.
-		Note: this still does not enable sending fully-qualified System` symbols
-		bug 283291
-		bug 284492
-		*)
-		MathLink`LinkSetPrintFullSymbols[linkObject, True];
+	(*
+	send fully-qualified symbol names over the wire
+	library->kernel traffic has fully-qualified symbols.
+	This allows LibraryLink traffic to work when AST` is not on $ContextPath.
+	And we want kernel->library traffic to match this behavior, to minimize surprises.
+	Note: this still does not enable sending fully-qualified System` symbols
+	bug 283291
+	bug 284492
+	*)
+	MathLink`LinkSetPrintFullSymbols[linkObject, True];
 
-		loaded
-	]]
+	loaded
+]]
 
-concreteParseFileFunc := concreteParseFileFunc =
-	Catch[
-	Module[{res, loaded, linkObject},
+concreteParseStringFunc := concreteParseStringFunc = loadFunc["ConcreteParseString"]
 
-		If[FailureQ[$lib],
-			Throw[$lib]
-		];
+concreteParseFileFunc := concreteParseFileFunc = loadFunc["ConcreteParseFile"]
 
-		res = newestLinkObject[LibraryFunctionLoad[$lib, "ConcreteParseFile", LinkObject, LinkObject]];
-		
-		If[FailureQ[res],
-			Throw[res]
-		];
+tokenizeStringFunc := tokenizeStringFunc = loadFunc["TokenizeString"]
 
-		{loaded, linkObject} = res;
-
-		If[FailureQ[loaded],
-			Throw[loaded]
-		];
-
-		If[Head[loaded] =!= LibraryFunction,
-			Throw[Failure["LibraryFunctionLoad", <|"Result"->loaded|>]]
-		];
-
-		MathLink`LinkSetPrintFullSymbols[linkObject, True];
-
-		loaded
-	]]
-
-tokenizeStringFunc := tokenizeStringFunc =
-	Catch[
-	Module[{res, loaded, linkObject},
-
-		If[FailureQ[$lib],
-			Throw[$lib]
-		];
-
-		res = newestLinkObject[LibraryFunctionLoad[$lib, "TokenizeString", LinkObject, LinkObject]];
-		
-		If[FailureQ[res],
-			Throw[res]
-		];
-
-		{loaded, linkObject} = res;
-
-		If[FailureQ[loaded],
-			Throw[loaded]
-		];
-
-		If[Head[loaded] =!= LibraryFunction,
-			Throw[Failure["LibraryFunctionLoad", <|"Result"->loaded|>]]
-		];
-
-		MathLink`LinkSetPrintFullSymbols[linkObject, True];
-
-		loaded
-	]]
-
-tokenizeFileFunc := tokenizeFileFunc =
-	Catch[
-	Module[{res, loaded, linkObject},
-
-		If[FailureQ[$lib],
-			Throw[$lib]
-		];
-
-		res = newestLinkObject[LibraryFunctionLoad[$lib, "TokenizeFile", LinkObject, LinkObject]];
-		
-		If[FailureQ[res],
-			Throw[res]
-		];
-
-		{loaded, linkObject} = res;
-
-		If[FailureQ[loaded],
-			Throw[loaded]
-		];
-
-		If[Head[loaded] =!= LibraryFunction,
-			Throw[Failure["LibraryFunctionLoad", <|"Result"->loaded|>]]
-		];
-
-		MathLink`LinkSetPrintFullSymbols[linkObject, True];
-
-		loaded
-	]]
+tokenizeFileFunc := tokenizeFileFunc = loadFunc["TokenizeFile"]
 
 
 
