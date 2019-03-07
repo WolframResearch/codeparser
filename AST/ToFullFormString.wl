@@ -68,6 +68,9 @@ Module[{nodeStrs},
 	StringJoin[Riffle[nodeStrs, "\n"]]
 ]
 
+toFullFormString[HoldNode[Hold, {}, opts_]] :=
+	toFullFormString[CallNode[ToNode[Hold], {ToNode[Null]}, <||>]]
+
 toFullFormString[HoldNode[Hold, nodes_, opts_]] :=
 	toFullFormString[CallNode[ToNode[Hold], nodes, <||>]]
 
