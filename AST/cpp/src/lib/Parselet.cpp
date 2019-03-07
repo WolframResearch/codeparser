@@ -15,7 +15,7 @@ std::shared_ptr<Node> SymbolParselet::parse(ParserContext CtxtIn) {
     
     auto Ctxt = CtxtIn;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_RETURN_COMMENTS);
+    auto Tok = TheParser->nextToken(Ctxt, PRESERVE_EVERYTHING);
     
     //
     // if we are here, then we know that Sym could bind to _
@@ -70,17 +70,6 @@ std::shared_ptr<Node> SymbolParselet::parse(ParserContext CtxtIn) {
         return underParselet->parseContextSensitive(Sym, Ctxt);
     }
     
-    if (Tok == TOKEN_COMMENT) {
-        Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
-    }
-
-    auto Issues = TheParser->getIssues();
-    
-    auto Comments = TheParser->getComments();
-    
-    auto Sym = std::make_shared<SymbolNode>(Str, SymbolSpan, Issues, Comments);
-    
-    
     //
     // when parsing a in a:b  then ColonFlag1 is true
     // when parsing b in a:b  then ColonFlag1 is false
@@ -91,8 +80,14 @@ std::shared_ptr<Node> SymbolParselet::parse(ParserContext CtxtIn) {
     //
     if (Ctxt.ColonFlag1) {
 
-        Tok = TheParser->tryNextToken(Ctxt, NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES);
-
+        Tok = TheParser->tryNextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
+        
+        auto Issues = TheParser->getIssues();
+        
+        auto Comments = TheParser->getComments();
+        
+        auto Sym = std::make_shared<SymbolNode>(Str, SymbolSpan, Issues, Comments);
+        
         if (Tok == TOKEN_OPERATOR_COLON) {
 
             auto colonParselet = dynamic_cast<ColonParselet*>(TheParser->findContextSensitiveParselet(Tok));
@@ -103,7 +98,13 @@ std::shared_ptr<Node> SymbolParselet::parse(ParserContext CtxtIn) {
         return Sym;
     }
     
-    TheParser->tryNextToken(Ctxt, NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES);
+    TheParser->tryNextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
+    
+    auto Issues = TheParser->getIssues();
+    
+    auto Comments = TheParser->getComments();
+    
+    auto Sym = std::make_shared<SymbolNode>(Str, SymbolSpan, Issues, Comments);
     
     return Sym;
 }
@@ -121,7 +122,7 @@ std::shared_ptr<Node> SymbolParselet::parseContextSensitive(ParserContext CtxtIn
     
     auto Ctxt = CtxtIn;
     
-    TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
+    TheParser->nextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
     
     auto Issues = TheParser->getIssues();
     
@@ -138,7 +139,7 @@ std::shared_ptr<Node> NumberParselet::parse(ParserContext CtxtIn) {
     
     auto Ctxt = CtxtIn;
     
-    TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
+    TheParser->nextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
     
     auto Issues = TheParser->getIssues();
     
@@ -155,7 +156,7 @@ std::shared_ptr<Node> StringParselet::parse(ParserContext CtxtIn) {
 
     auto Ctxt = CtxtIn;
     
-    TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
+    TheParser->nextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
     
     auto Issues = TheParser->getIssues();
     
@@ -172,7 +173,7 @@ std::shared_ptr<Node> HashParselet::parse(ParserContext CtxtIn) {
     
     auto Ctxt = CtxtIn;
     
-    TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
+    TheParser->nextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
     
     auto Issues = TheParser->getIssues();
     
@@ -189,7 +190,7 @@ std::shared_ptr<Node> HashHashParselet::parse(ParserContext CtxtIn) {
     
     auto Ctxt = CtxtIn;
     
-    TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
+    TheParser->nextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
     
     auto Issues = TheParser->getIssues();
     
@@ -206,7 +207,7 @@ std::shared_ptr<Node> PercentParselet::parse(ParserContext CtxtIn) {
     
     auto Ctxt = CtxtIn;
     
-    TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
+    TheParser->nextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
     
     auto Issues = TheParser->getIssues();
     
@@ -238,7 +239,7 @@ std::shared_ptr<Node> PrefixOperatorParselet::parse(ParserContext CtxtIn) {
     Ctxt.OperatorDepth++;
     Ctxt.Precedence = prec;
     
-    TheParser->nextToken(Ctxt, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
+    TheParser->nextToken(Ctxt, DISCARD_EVERYTHING);
     
     auto operand = TheParser->parse(Ctxt);
     
@@ -274,7 +275,7 @@ std::shared_ptr<Node> BinaryOperatorParselet::parse(std::shared_ptr<Node> Left, 
     Ctxt.OperatorDepth++;
     Ctxt.Precedence = recalculatedPrecedence;
     
-    TheParser->nextToken(Ctxt, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
+    TheParser->nextToken(Ctxt, DISCARD_EVERYTHING);
     
     auto Right = TheParser->parse(Ctxt);
     
@@ -354,7 +355,7 @@ std::shared_ptr<Node> InfixOperatorParselet::parse(std::shared_ptr<Node> Left, P
             
             // auto Span = TheSourceManager->getTokenSpan();
             
-            TheParser->nextToken(Ctxt, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
+            TheParser->nextToken(Ctxt, DISCARD_EVERYTHING);
             
             auto operand = TheParser->parse(Ctxt);
             
@@ -392,7 +393,7 @@ std::shared_ptr<Node> PostfixOperatorParselet::parse(std::shared_ptr<Node> Opera
     
     auto Ctxt = CtxtIn;
     
-    TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES);
+    TheParser->nextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
     
     // Too noisy
     // if (Operand->getSourceSpan().end.Line != Span.start.Line) {
@@ -426,7 +427,7 @@ std::shared_ptr<Node> GroupParselet::parse(ParserContext CtxtIn) {
     Ctxt.GroupDepth++;
     Ctxt.OperatorDepth++;
     
-    TheParser->nextToken(Ctxt, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
+    TheParser->nextToken(Ctxt, DISCARD_EVERYTHING);
     
     std::vector<std::shared_ptr<Node>> Args;
     
@@ -489,7 +490,7 @@ std::shared_ptr<Node> GroupParselet::parse(ParserContext CtxtIn) {
             Ctxt2.GroupDepth--;
             Ctxt2.OperatorDepth--;
             
-            TheParser->nextToken(Ctxt2, NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES);
+            TheParser->nextToken(Ctxt2, PRESERVE_TOPLEVEL_NEWLINES);
     
             break;
             
@@ -506,7 +507,7 @@ std::shared_ptr<Node> GroupParselet::parse(ParserContext CtxtIn) {
             
             auto Span = TheSourceManager->getTokenSpan();
             
-            TheParser->nextToken(Ctxt, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
+            TheParser->nextToken(Ctxt, DISCARD_EVERYTHING);
 
             auto CommaNode = std::make_shared<TokenNode>(Tok, Str, Span, Issues);
             
@@ -612,36 +613,16 @@ std::shared_ptr<Node> UnderParselet::parse(ParserContext CtxtIn) {
     
     auto Ctxt = CtxtIn;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_RETURN_COMMENTS);
+    auto Tok = TheParser->nextToken(Ctxt, PRESERVE_EVERYTHING);
     
-    std::shared_ptr<Node> Blank;
+    std::shared_ptr<Node> Right = nullptr;
     if (Tok == TOKEN_SYMBOL) {
         
         auto symbolParselet = dynamic_cast<SymbolParselet*>(TheParser->findContextSensitiveParselet(Tok));
         
-        auto Right = symbolParselet->parseContextSensitive(Ctxt);
-
+        Right = symbolParselet->parseContextSensitive(Ctxt);
         
-        auto Issues = TheParser->getIssues();
-        
-        auto Comments = TheParser->getComments();
-        
-        Blank = std::make_shared<BlankNode>(Right, SourceSpan{Span.start, Right->getSourceSpan().end}, Issues, Comments);
-        
-    } else {
-        
-        if (Tok == TOKEN_COMMENT) {
-            TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
-        }
-        
-        TheParser->tryNextToken(Ctxt, NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES);
-        
-        
-        auto Issues = TheParser->getIssues();
-        
-        auto Comments = TheParser->getComments();
-        
-        Blank = std::make_shared<BlankNode>(Span, Issues, Comments);
+        Span = SourceSpan{Span.start, Right->getSourceSpan().end};
     }
 
     //
@@ -656,7 +637,13 @@ std::shared_ptr<Node> UnderParselet::parse(ParserContext CtxtIn) {
     //
     if (Ctxt.ColonFlag1) {
         
-        Tok = TheParser->tryNextToken(Ctxt, NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES);
+        Tok = TheParser->tryNextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
+        
+        auto Issues = TheParser->getIssues();
+        
+        auto Comments = TheParser->getComments();
+        
+        auto Blank = std::make_shared<BlankNode>(Right, Span, Issues, Comments);
         
         if (Tok == TOKEN_OPERATOR_COLON) {
             
@@ -664,7 +651,17 @@ std::shared_ptr<Node> UnderParselet::parse(ParserContext CtxtIn) {
             
             return colonParselet->parseContextSensitive(Blank, Ctxt);
         }
+        
+        return Blank;
     }
+    
+    Tok = TheParser->tryNextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
+    
+    auto Issues = TheParser->getIssues();
+    
+    auto Comments = TheParser->getComments();
+    
+    auto Blank = std::make_shared<BlankNode>(Right, Span, Issues, Comments);
     
     return Blank;
 }
@@ -677,40 +674,22 @@ std::shared_ptr<Node> UnderParselet::parseContextSensitive(std::shared_ptr<Node>
     // Clear String
     TheParser->getTokenString();
     
-    auto Span = TheSourceManager->getTokenSpan();
+    auto TokenSpan = TheSourceManager->getTokenSpan();
+    
+    auto Span = SourceSpan{Left->getSourceSpan().start, TokenSpan.end};
     
     auto Ctxt = CtxtIn;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_RETURN_COMMENTS);
+    auto Tok = TheParser->nextToken(Ctxt, PRESERVE_EVERYTHING);
     
-    std::shared_ptr<Node> Pat;
+    std::shared_ptr<Node> Right = nullptr;
     if (Tok == TOKEN_SYMBOL) {
         
         auto symbolParselet = dynamic_cast<SymbolParselet*>(TheParser->findContextSensitiveParselet(Tok));
         
-        auto Right = symbolParselet->parseContextSensitive(Ctxt);
-
+        Right = symbolParselet->parseContextSensitive(Ctxt);
         
-        auto Issues = TheParser->getIssues();
-        
-        auto Comments = TheParser->getComments();
-        
-        Pat = std::make_shared<PatternBlankNode>(Left, Right, SourceSpan{Left->getSourceSpan().start, Right->getSourceSpan().end}, Issues, Comments);
-        
-    } else {
-        
-        if (Tok == TOKEN_COMMENT) {
-            TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
-        }
-        
-        TheParser->tryNextToken(Ctxt, NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES);
-        
-        
-        auto Issues = TheParser->getIssues();
-        
-        auto Comments = TheParser->getComments();
-        
-        Pat = std::make_shared<PatternBlankNode>(Left, SourceSpan{Left->getSourceSpan().start, Span.end}, Issues, Comments);
+        Span = SourceSpan{Left->getSourceSpan().start, Right->getSourceSpan().end};
     }
 
     //
@@ -719,16 +698,32 @@ std::shared_ptr<Node> UnderParselet::parseContextSensitive(std::shared_ptr<Node>
     //
     if (Ctxt.ColonFlag1) {
         
-        Tok = TheParser->tryNextToken(Ctxt, NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES);
-
+        Tok = TheParser->tryNextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
+        
+        auto Issues = TheParser->getIssues();
+        
+        auto Comments = TheParser->getComments();
+        
+        auto Pat = std::make_shared<PatternBlankNode>(Left, Right, Span, Issues, Comments);
+        
         if (Tok == TOKEN_OPERATOR_COLON) {
 
             auto colonParselet = dynamic_cast<ColonParselet*>(TheParser->findContextSensitiveParselet(Tok));
 
             return colonParselet->parseContextSensitive(Pat, Ctxt);
         }
+        
+        return Pat;
     }
 
+    Tok = TheParser->tryNextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
+    
+    auto Issues = TheParser->getIssues();
+    
+    auto Comments = TheParser->getComments();
+    
+    auto Pat = std::make_shared<PatternBlankNode>(Left, Right, Span, Issues, Comments);
+    
     return Pat;
 }
 
@@ -744,41 +739,27 @@ std::shared_ptr<Node> UnderUnderParselet::parse(ParserContext CtxtIn) {
     
     auto Ctxt = CtxtIn;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
+    auto Tok = TheParser->nextToken(Ctxt, PRESERVE_EVERYTHING);
     
-    std::shared_ptr<Node> Blank;
+    std::shared_ptr<Node> Right = nullptr;
     if (Tok == TOKEN_SYMBOL) {
         
         auto symbolParselet = dynamic_cast<SymbolParselet*>(TheParser->findContextSensitiveParselet(Tok));
         
-        auto Right = symbolParselet->parseContextSensitive(Ctxt);
-
+        Right = symbolParselet->parseContextSensitive(Ctxt);
         
-        auto Issues = TheParser->getIssues();
-        
-        auto Comments = TheParser->getComments();
-        
-        Blank = std::make_shared<BlankSequenceNode>(Right, SourceSpan{Span.start, Right->getSourceSpan().end}, Issues, Comments);
-        
-    } else {
-        
-        if (Tok == TOKEN_COMMENT) {
-            TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
-        }
-        
-        TheParser->tryNextToken(Ctxt, NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES);
-
-        
-        auto Issues = TheParser->getIssues();
-        
-        auto Comments = TheParser->getComments();
-        
-        Blank = std::make_shared<BlankSequenceNode>(Span, Issues, Comments);
+        Span = SourceSpan{Span.start, Right->getSourceSpan().end};
     }
-
+    
     if (Ctxt.ColonFlag1) {
         
-        Tok = TheParser->tryNextToken(Ctxt, NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES);
+        Tok = TheParser->tryNextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
+        
+        auto Issues = TheParser->getIssues();
+        
+        auto Comments = TheParser->getComments();
+        
+        auto Blank = std::make_shared<BlankSequenceNode>(Right, Span, Issues, Comments);
         
         if (Tok == TOKEN_OPERATOR_COLON) {
             
@@ -786,8 +767,18 @@ std::shared_ptr<Node> UnderUnderParselet::parse(ParserContext CtxtIn) {
             
             return colonParselet->parseContextSensitive(Blank, Ctxt);
         }
+        
+        return Blank;
     }
-
+    
+    Tok = TheParser->tryNextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
+    
+    auto Issues = TheParser->getIssues();
+    
+    auto Comments = TheParser->getComments();
+    
+    auto Blank = std::make_shared<BlankSequenceNode>(Right, Span, Issues, Comments);
+    
     return Blank;
 }
 
@@ -799,54 +790,52 @@ std::shared_ptr<Node> UnderUnderParselet::parseContextSensitive(std::shared_ptr<
     // Clear String
     TheParser->getTokenString();
     
-    auto Span = TheSourceManager->getTokenSpan();
+    auto TokenSpan = TheSourceManager->getTokenSpan();
+    
+    auto Span = SourceSpan{Left->getSourceSpan().start, TokenSpan.end};
     
     auto Ctxt = CtxtIn;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
+    auto Tok = TheParser->nextToken(Ctxt, PRESERVE_EVERYTHING);
     
-    std::shared_ptr<Node> Pat;
+    std::shared_ptr<Node> Right = nullptr;
     if (Tok == TOKEN_SYMBOL) {
         
         auto symbolParselet = dynamic_cast<SymbolParselet*>(TheParser->findContextSensitiveParselet(Tok));
         
-        auto Right = symbolParselet->parseContextSensitive(Ctxt);
+        Right = symbolParselet->parseContextSensitive(Ctxt);
         
-        
-        auto Issues = TheParser->getIssues();
-        
-        auto Comments = TheParser->getComments();
-        
-        Pat = std::make_shared<PatternBlankSequenceNode>(Left, Right, SourceSpan{Left->getSourceSpan().start, Right->getSourceSpan().end}, Issues, Comments);
-        
-    } else {
-        
-        if (Tok == TOKEN_COMMENT) {
-            TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
-        }
-        
-        TheParser->tryNextToken(Ctxt, NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES);
-        
-        
-        auto Issues = TheParser->getIssues();
-        
-        auto Comments = TheParser->getComments();
-        
-        Pat = std::make_shared<PatternBlankSequenceNode>(Left, SourceSpan{Left->getSourceSpan().start, Span.end}, Issues, Comments);
+        Span = SourceSpan{Left->getSourceSpan().start, Right->getSourceSpan().end};
     }
-
+    
     if (Ctxt.ColonFlag1) {
         
-        Tok = TheParser->tryNextToken(Ctxt, NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES);
-
+        Tok = TheParser->tryNextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
+        
+        auto Issues = TheParser->getIssues();
+        
+        auto Comments = TheParser->getComments();
+        
+        auto Pat = std::make_shared<PatternBlankSequenceNode>(Left, Right, Span, Issues, Comments);
+        
         if (Tok == TOKEN_OPERATOR_COLON) {
-
+            
             auto colonParselet = dynamic_cast<ColonParselet*>(TheParser->findContextSensitiveParselet(Tok));
-
+            
             return colonParselet->parseContextSensitive(Pat, Ctxt);
         }
+        
+        return Pat;
     }
-
+    
+    Tok = TheParser->tryNextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
+    
+    auto Issues = TheParser->getIssues();
+    
+    auto Comments = TheParser->getComments();
+    
+    auto Pat = std::make_shared<PatternBlankSequenceNode>(Left, Right, Span, Issues, Comments);
+    
     return Pat;
 }
 
@@ -862,41 +851,27 @@ std::shared_ptr<Node> UnderUnderUnderParselet::parse(ParserContext CtxtIn) {
     
     auto Ctxt = CtxtIn;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
+    auto Tok = TheParser->nextToken(Ctxt, PRESERVE_EVERYTHING);
     
-    std::shared_ptr<Node> Blank;
+    std::shared_ptr<Node> Right = nullptr;
     if (Tok == TOKEN_SYMBOL) {
         
         auto symbolParselet = dynamic_cast<SymbolParselet*>(TheParser->findContextSensitiveParselet(Tok));
         
-        auto Right = symbolParselet->parseContextSensitive(Ctxt);
+        Right = symbolParselet->parseContextSensitive(Ctxt);
         
-        
-        auto Issues = TheParser->getIssues();
-        
-        auto Comments = TheParser->getComments();
-        
-        Blank = std::make_shared<BlankNullSequenceNode>(Right, SourceSpan{Span.start, Right->getSourceSpan().end}, Issues, Comments);
-        
-    } else {
-        
-        if (Tok == TOKEN_COMMENT) {
-            TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
-        }
-        
-        TheParser->tryNextToken(Ctxt, NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES);
-        
-        
-        auto Issues = TheParser->getIssues();
-        
-        auto Comments = TheParser->getComments();
-        
-        Blank = std::make_shared<BlankNullSequenceNode>(Span, Issues, Comments);
+        Span = SourceSpan{Span.start, Right->getSourceSpan().end};
     }
-
+    
     if (Ctxt.ColonFlag1) {
         
-        Tok = TheParser->tryNextToken(Ctxt, NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES);
+        Tok = TheParser->tryNextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
+        
+        auto Issues = TheParser->getIssues();
+        
+        auto Comments = TheParser->getComments();
+        
+        auto Blank = std::make_shared<BlankNullSequenceNode>(Right, Span, Issues, Comments);
         
         if (Tok == TOKEN_OPERATOR_COLON) {
             
@@ -904,8 +879,18 @@ std::shared_ptr<Node> UnderUnderUnderParselet::parse(ParserContext CtxtIn) {
             
             return colonParselet->parseContextSensitive(Blank, Ctxt);
         }
+        
+        return Blank;
     }
-
+    
+    Tok = TheParser->tryNextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
+    
+    auto Issues = TheParser->getIssues();
+    
+    auto Comments = TheParser->getComments();
+    
+    auto Blank = std::make_shared<BlankNullSequenceNode>(Right, Span, Issues, Comments);
+    
     return Blank;
 }
 
@@ -917,45 +902,33 @@ std::shared_ptr<Node> UnderUnderUnderParselet::parseContextSensitive(std::shared
     // Clear String
     TheParser->getTokenString();
     
-    auto Span = TheSourceManager->getTokenSpan();
+    auto TokenSpan = TheSourceManager->getTokenSpan();
+    
+    auto Span = SourceSpan{Left->getSourceSpan().start, TokenSpan.end};
     
     auto Ctxt = CtxtIn;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
+    auto Tok = TheParser->nextToken(Ctxt, PRESERVE_EVERYTHING);
     
-    std::shared_ptr<Node> Pat;
+    std::shared_ptr<Node> Right = nullptr;
     if (Tok == TOKEN_SYMBOL) {
         
         auto symbolParselet = dynamic_cast<SymbolParselet*>(TheParser->findContextSensitiveParselet(Tok));
         
-        auto Right = symbolParselet->parseContextSensitive(Ctxt);
+        Right = symbolParselet->parseContextSensitive(Ctxt);
         
-        
-        auto Issues = TheParser->getIssues();
-        
-        auto Comments = TheParser->getComments();
-        
-        Pat = std::make_shared<PatternBlankNullSequenceNode>(Left, Right, SourceSpan{Left->getSourceSpan().start, Right->getSourceSpan().end}, Issues, Comments);
-        
-    } else {
-        
-        if (Tok == TOKEN_COMMENT) {
-            TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
-        }
-        
-        TheParser->tryNextToken(Ctxt, NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES);
-        
-        
-        auto Issues = TheParser->getIssues();
-        
-        auto Comments = TheParser->getComments();
-        
-        Pat = std::make_shared<PatternBlankNullSequenceNode>(Left, SourceSpan{Left->getSourceSpan().start, Span.end}, Issues, Comments);
+        Span = SourceSpan{Left->getSourceSpan().start, Right->getSourceSpan().end};
     }
-
+    
     if (Ctxt.ColonFlag1) {
         
-        Tok = TheParser->tryNextToken(Ctxt, NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES);
+        Tok = TheParser->tryNextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
+        
+        auto Issues = TheParser->getIssues();
+        
+        auto Comments = TheParser->getComments();
+        
+        auto Pat = std::make_shared<PatternBlankNullSequenceNode>(Left, Right, Span, Issues, Comments);
         
         if (Tok == TOKEN_OPERATOR_COLON) {
             
@@ -963,8 +936,18 @@ std::shared_ptr<Node> UnderUnderUnderParselet::parseContextSensitive(std::shared
             
             return colonParselet->parseContextSensitive(Pat, Ctxt);
         }
+        
+        return Pat;
     }
-
+    
+    Tok = TheParser->tryNextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
+    
+    auto Issues = TheParser->getIssues();
+    
+    auto Comments = TheParser->getComments();
+    
+    auto Pat = std::make_shared<PatternBlankNullSequenceNode>(Left, Right, Span, Issues, Comments);
+    
     return Pat;
 }
 
@@ -980,7 +963,7 @@ std::shared_ptr<Node> UnderDotParselet::parse(ParserContext CtxtIn) {
     
     auto Ctxt = CtxtIn;
     
-    TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
+    TheParser->nextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
     
     auto Issues = TheParser->getIssues();
     
@@ -997,17 +980,19 @@ std::shared_ptr<Node> UnderDotParselet::parseContextSensitive(std::shared_ptr<No
     // Clear String
     TheParser->getTokenString();
     
-    auto Span = TheSourceManager->getTokenSpan();
+    auto TokenSpan = TheSourceManager->getTokenSpan();
+    
+    auto Span = SourceSpan{Left->getSourceSpan().start, TokenSpan.end};
     
     auto Ctxt = CtxtIn;
     
-    TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS);
+    TheParser->nextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
     
     auto Issues = TheParser->getIssues();
     
     auto Comments = TheParser->getComments();
     
-    return std::make_shared<OptionalDefaultPatternNode>(Left, SourceSpan{Left->getSourceSpan().start, Span.end}, Issues, Comments);
+    return std::make_shared<OptionalDefaultPatternNode>(Left, Span, Issues, Comments);
 }
 
 
@@ -1034,7 +1019,7 @@ std::shared_ptr<Node> SemiParselet::parse(std::shared_ptr<Node> Left, ParserCont
     Ctxt.OperatorDepth++;
     Ctxt.Precedence = prec;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES);
+    auto Tok = TheParser->nextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
     
     std::vector<std::shared_ptr<Node>> Args;
     
@@ -1101,7 +1086,7 @@ std::shared_ptr<Node> SemiParselet::parse(std::shared_ptr<Node> Left, ParserCont
             lastWasSemi = true;
             lastSpan = TheSourceManager->getTokenSpan();
             
-            Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES);
+            Tok = TheParser->nextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
             
         } else if (!TheParser->isPossibleBeginningOfExpression(Tok)) {
             
@@ -1170,7 +1155,7 @@ std::shared_ptr<Node> SemiSemiParselet::parse(ParserContext CtxtIn) {
     Ctxt.OperatorDepth++;
     Ctxt.Precedence = recalculatedPrecedence;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES);
+    auto Tok = TheParser->nextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
     
     if (TheParser->isPossibleBeginningOfExpression(Tok)) {
         
@@ -1256,7 +1241,7 @@ std::shared_ptr<Node> SemiSemiParselet::parse(std::shared_ptr<Node> Left, Parser
     
     auto InfixSpan = TheSourceManager->getTokenSpan();
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES);
+    auto Tok = TheParser->nextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
     
     if (TheParser->isPossibleBeginningOfExpression(Tok)) {
         
@@ -1348,7 +1333,7 @@ std::shared_ptr<Node> TildeParselet::parse(std::shared_ptr<Node> Left, ParserCon
     Ctxt.OperatorDepth++;
     Ctxt.Precedence = prec;
     
-    TheParser->nextToken(Ctxt, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
+    TheParser->nextToken(Ctxt, DISCARD_EVERYTHING);
     
     auto Middle = TheParser->parse(Ctxt);
     
@@ -1370,7 +1355,7 @@ std::shared_ptr<Node> TildeParselet::parse(std::shared_ptr<Node> Left, ParserCon
     
     if (Tok != TOKEN_OPERATOR_TILDE) {
         
-        TheParser->nextToken(Ctxt, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
+        TheParser->nextToken(Ctxt, DISCARD_EVERYTHING);
 
         auto Issues = TheParser->getIssues();
         auto Comments = TheParser->getComments();
@@ -1380,7 +1365,7 @@ std::shared_ptr<Node> TildeParselet::parse(std::shared_ptr<Node> Left, ParserCon
                 Middle, std::make_shared<TokenNode>(Tok, Str, SecondTildeSpan, std::vector<SyntaxIssue>()) }, Issues, Comments);
     }
     
-    TheParser->nextToken(Ctxt, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
+    TheParser->nextToken(Ctxt, DISCARD_EVERYTHING);
 
     auto Right = TheParser->parse(Ctxt);
 
@@ -1420,7 +1405,7 @@ std::shared_ptr<Node> ColonParselet::parse(std::shared_ptr<Node> Left, ParserCon
     Ctxt.Precedence = prec;
     Ctxt.ColonFlag1 = false;
     
-    TheParser->nextToken(Ctxt, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
+    TheParser->nextToken(Ctxt, DISCARD_EVERYTHING);
     
     auto Right = TheParser->parse(Ctxt);
     
@@ -1473,7 +1458,7 @@ std::shared_ptr<Node> ColonParselet::parseContextSensitive(std::shared_ptr<Node>
     Ctxt.OperatorDepth++;
     Ctxt.Precedence = prec;
     
-    TheParser->nextToken(Ctxt, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
+    TheParser->nextToken(Ctxt, DISCARD_EVERYTHING);
     
     auto Right = TheParser->parse(Ctxt);
     
@@ -1516,7 +1501,7 @@ std::shared_ptr<Node> SlashColonParselet::parse(std::shared_ptr<Node> Left, Pars
     Ctxt.OperatorDepth++;
     Ctxt.Precedence = recalculatedPrecedence;
     
-    TheParser->nextToken(Ctxt, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
+    TheParser->nextToken(Ctxt, DISCARD_EVERYTHING);
     
     auto Middle = TheParser->parse(Ctxt);
     
@@ -1566,7 +1551,7 @@ std::shared_ptr<Node> LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn)
     Ctxt.GroupDepth++;
     Ctxt.OperatorDepth++;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_RETURN_COMMENTS);
+    auto Tok = TheParser->nextToken(Ctxt, PRESERVE_EVERYTHING);
     
     SourceSpan CloserSpan;
     
@@ -1637,7 +1622,7 @@ std::shared_ptr<Node> LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn)
             Ctxt2.GroupDepth--;
             Ctxt2.OperatorDepth--;
             
-            TheParser->nextToken(Ctxt2, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
+            TheParser->nextToken(Ctxt2, PRESERVE_TOPLEVEL_NEWLINES);
             
             break;
             
@@ -1653,7 +1638,7 @@ std::shared_ptr<Node> LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn)
             
             Tokens.push_back(std::make_shared<TokenNode>(Tok, Str, Span, std::vector<SyntaxIssue>()));
             
-            Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_RETURN_COMMENTS);
+            Tok = TheParser->nextToken(Ctxt, PRESERVE_EVERYTHING);
         }
 
         breadth++;
@@ -1689,7 +1674,7 @@ std::shared_ptr<Node> MessageNameParselet::parse(std::shared_ptr<Node> Left, Par
     Ctxt.OperatorDepth++;
     Ctxt.Precedence = prec;
     
-    TheParser->nextToken(Ctxt, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
+    TheParser->nextToken(Ctxt, DISCARD_EVERYTHING);
     
     auto Middle = TheParser->parse(Ctxt);
     
@@ -1711,7 +1696,7 @@ std::shared_ptr<Node> MessageNameParselet::parse(std::shared_ptr<Node> Left, Par
         // Clear String
         TheParser->getTokenString();
         
-        TheParser->nextToken(Ctxt, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
+        TheParser->nextToken(Ctxt, DISCARD_EVERYTHING);
         
         auto Right = TheParser->parse(Ctxt);
         
@@ -1754,7 +1739,7 @@ std::shared_ptr<Node> EqualParselet::parse(std::shared_ptr<Node> Left, ParserCon
     
     auto EqualSpan = TheSourceManager->getTokenSpan();
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
+    auto Tok = TheParser->nextToken(Ctxt, DISCARD_EVERYTHING);
     
     if (Tok == TOKEN_OPERATOR_DOT) {
         
@@ -1777,7 +1762,7 @@ std::shared_ptr<Node> EqualParselet::parse(std::shared_ptr<Node> Left, ParserCon
         // Clear String
         TheParser->getTokenString();
         
-        TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES);
+        TheParser->nextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
         
         auto Issues = TheParser->getIssues();
         auto Comments = TheParser->getComments();
@@ -1826,12 +1811,14 @@ std::shared_ptr<Node> ErrorParselet::parse(ParserContext CtxtIn) {
     
     auto Ctxt = CtxtIn;
     
-    TheParser->nextToken(Ctxt, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
+    TheParser->nextToken(Ctxt, DISCARD_EVERYTHING);
     
     return std::make_shared<SyntaxErrorNode>(TokIn, std::vector<std::shared_ptr<Node>> { std::make_shared<TokenNode>(TokIn, Str, Span, std::vector<SyntaxIssue>()) }, Issues, Comments);
 }
 
 std::shared_ptr<Node> CleanupRestParselet::parse(std::shared_ptr<Node> Left, ParserContext CtxtIn) {
+    
+    auto Tok = TheParser->currentToken();
     
     auto Str = TheParser->getTokenString();
     
@@ -1839,12 +1826,12 @@ std::shared_ptr<Node> CleanupRestParselet::parse(std::shared_ptr<Node> Left, Par
     
     auto Ctxt = CtxtIn;
     
-    auto Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_RETURN_COMMENTS);
-    
     std::vector<std::shared_ptr<Node>> Tokens;
     
     Tokens.push_back(Left);
     Tokens.push_back(std::make_shared<TokenNode>(Tok, Str, Span, std::vector<SyntaxIssue>()));
+    
+    Tok = TheParser->nextToken(Ctxt, PRESERVE_EVERYTHING);
     
     //
     // do not keep track of breadth here, not a big deal
@@ -1875,7 +1862,7 @@ std::shared_ptr<Node> CleanupRestParselet::parse(std::shared_ptr<Node> Left, Par
             
             Tokens.push_back(std::make_shared<TokenNode>(Tok, Str, Span, std::vector<SyntaxIssue>()));
             
-            Tok = TheParser->nextToken(Ctxt, NEXTTOKEN_PRESERVE_EVERYTHING_AND_RETURN_COMMENTS);
+            Tok = TheParser->nextToken(Ctxt, PRESERVE_EVERYTHING);
         }
     } // while
 

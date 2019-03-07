@@ -320,15 +320,7 @@ std::vector<std::shared_ptr<Node>> parseExpressions() {
             break;
         }
         
-        auto peek = TheParser->currentToken();
-        
-        while (peek == TOKEN_NEWLINE) {
-            
-            // Clear String
-            TheParser->getTokenString();
-            
-            peek = TheParser->nextToken(Ctxt, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
-        }
+        auto peek = TheParser->tryNextToken(Ctxt, PRESERVE_TOPLEVEL_COMMENTS);
         
         if (peek != TOKEN_EOF) {
             

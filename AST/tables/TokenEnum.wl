@@ -11,7 +11,7 @@ Token`Symbol -> Next,
 Token`String -> Next,
 Token`Number -> Next,
 Token`Newline -> Next,
-Token`Space -> Next,
+Token`WhiteSpace -> Next,
 
 (* errors *)
 Token`Error`First -> Next,

@@ -8,12 +8,13 @@
 #include <string>
 #include <iostream>
 
-int readStdIn();
+int readStdIn(bool tokenize);
 int readFile(std::string file);
 void printExpression(MLINK mlp);
 
 int main(int argc, char *argv[]) {
     
+    auto tokenize = false;
     for (int i = 1; i < argc; i++) {
         auto arg = std::string(argv[i]);
         if (arg == "-file") {
@@ -22,15 +23,19 @@ int main(int argc, char *argv[]) {
 
             return readFile(file);
 
+        } else if (arg == "-tokenize") {
+            
+            tokenize = true;
+            
         } else {
             return 1;
         }
     }
 
-    return readStdIn();
+    return readStdIn(tokenize);
 }
 
-int readStdIn() {
+int readStdIn(bool tokenize) {
     
     int res = LIBRARY_FUNCTION_ERROR;
     
@@ -66,7 +71,12 @@ int readStdIn() {
     
     WolframLibrary_initialize(nullptr);
     
-    res = ConcreteParseString(nullptr, mlp);
+    if (tokenize) {
+        res = TokenizeString(nullptr, mlp);
+    } else {
+        res = ConcreteParseString(nullptr, mlp);
+    }
+    
     if (res != LIBRARY_NO_ERROR) {
         goto retPt;
     }

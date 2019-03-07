@@ -298,7 +298,7 @@ void Parser::init(std::function<bool ()> AbortQ) {
 
     currentAbortQ = AbortQ;
 
-    nextToken({0, 0, PRECEDENCE_LOWEST, true}, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
+    nextToken({0, 0, PRECEDENCE_LOWEST, true}, PRESERVE_TOPLEVEL_COMMENTS);
 }
 
 void Parser::deinit() {
@@ -381,81 +381,97 @@ Token Parser::tryNextToken(ParserContext Ctxt, NextTokenPolicy Policy) {
     
     auto res = TheTokenizer->currentToken();
     
-    if (Policy == NEXTTOKEN_PRESERVE_EVERYTHING_AND_RETURN_COMMENTS) {
-        
-        if (res == TOKEN_COMMENT) {
-            
-            auto Text = getTokenString();
-            
-            auto Span = TheSourceManager->getTokenSpan();
-            
-            auto C = Comment(Text, Span);
-            
-            Comments.push_back(C);
-        }
-        
-        return res;
-    }
-    
-    if (Policy == NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS) {
-        
-        while (true) {
-            
-            if (res == TOKEN_COMMENT) {
-                
-                auto Text = getTokenString();
-                
-                auto Span = TheSourceManager->getTokenSpan();
-                
-                auto C = Comment(Text, Span);
-                
-                Comments.push_back(C);
-                
-            } else {
-                break;
-            }
-            
-            res = TheTokenizer->nextToken();
-        }
-        
-        return res;
-    }
-    
     while (true) {
         
         if (res == TOKEN_NEWLINE) {
             
-            if (Policy != NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES &&
-                    Ctxt.isGroupTopLevel()) {
-                //
-                // return a top-level newline
-                // will be handled later
-                //
-                break;
+            if (Ctxt.isGroupTopLevel()) {
+                
+                if ((Policy & PRESERVE_TOPLEVEL_NEWLINES) == PRESERVE_TOPLEVEL_NEWLINES) {
+                    
+                    break;
+                    
+                } else {
+                    
+                    // Clear String
+                    getTokenString();
+                    
+                }
+                
+            } else {
+                
+                if ((Policy & PRESERVE_OTHER_NEWLINES) == PRESERVE_OTHER_NEWLINES) {
+                    
+                    break;
+                    
+                } else {
+                    
+                    // Clear String
+                    getTokenString();
+                    
+                }
             }
             
-            // Clear String
-            getTokenString();
+        } else if (res == TOKEN_WHITESPACE) {
             
-        } else if (res == TOKEN_SPACE) {
-            // Clear String
-            getTokenString();
+            if ((Policy & PRESERVE_WHITESPACE) == PRESERVE_WHITESPACE) {
+                
+                break;
+                
+            } else {
+                
+                // Clear String
+                getTokenString();
+                
+            }
+            
         } else if (res == TOKEN_COMMENT) {
             
-            if (Ctxt.isOperatorTopLevel()) {
-                // Create a top-level CommentNode
-                break;
-            }
-            
+            //
+            // Also keep track of comments
+            //
+
             auto Text = getTokenString();
-            
+
             auto Span = TheSourceManager->getTokenSpan();
-            
+
             auto C = Comment(Text, Span);
-            
+
             Comments.push_back(C);
             
+            if (Ctxt.isOperatorTopLevel()) {
+                
+                if ((Policy & PRESERVE_TOPLEVEL_COMMENTS) == PRESERVE_TOPLEVEL_COMMENTS) {
+                    
+                    break;
+                    
+                } else {
+                    
+                    // Clear String
+                    getTokenString();
+                    
+                }
+                
+            } else {
+                
+                if ((Policy & PRESERVE_OTHER_COMMENTS) == PRESERVE_OTHER_COMMENTS) {
+                    
+                    break;
+                    
+                } else {
+                    
+                    // Clear String
+                    getTokenString();
+                    
+                }
+            }
+            
         } else {
+            
+            //
+            // Everything else
+            //
+            
             break;
         }
         
@@ -598,7 +614,7 @@ std::shared_ptr<Node>Parser::parse(ParserContext CtxtIn) {
     
     assert(token != TOKEN_UNKNOWN);
     assert(token != TOKEN_NEWLINE);
-    assert(token != TOKEN_SPACE);
+    assert(token != TOKEN_WHITESPACE);
     
     if (isAbort()) {
         
@@ -621,13 +637,21 @@ std::shared_ptr<Node>Parser::parse(ParserContext CtxtIn) {
         //
         assert(CtxtIn.OperatorDepth == 0);
         
-        auto Str = getTokenString();
+        auto Comments = getComments();
         
-        auto Span = TheSourceManager->getTokenSpan();
+        //
+        // Do not assert Comments.size() == 1 here
+        //
+        // If tryNextToken was called multiple times, then the same comment has been saved multiple times
+        //
+        assert(Comments.size() >= 1);
         
-        nextToken(CtxtIn, NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES);
+        // Clear String
+        getTokenString();
         
-        auto C = std::make_shared<CommentNode>(Str, Span);
+        nextToken(CtxtIn, PRESERVE_TOPLEVEL_COMMENTS);
+        
+        auto C = std::make_shared<CommentNode>(Comments[0]);
         
         return C;
     }
@@ -665,7 +689,7 @@ std::shared_ptr<Node>Parser::parse(ParserContext CtxtIn) {
             return nullptr;
         }
         
-        token = tryNextToken(CtxtIn, NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES);
+        token = tryNextToken(CtxtIn, PRESERVE_TOPLEVEL_NEWLINES);
         
         auto TokenPrecedence = getCurrentTokenPrecedence(token, CtxtIn);
         

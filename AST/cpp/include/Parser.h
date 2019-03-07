@@ -19,33 +19,27 @@ class GroupParselet;
 class Parselet;
 
 
-enum NextTokenPolicy {
-    //
-    // DISCARD_TOPLEVEL_NEWLINES:
-    // discard top-level newlines, discard other newline, discard whitespace, keep track of comments, return top-level comments
-    //
-    NEXTTOKEN_DISCARD_TOPLEVEL_NEWLINES,
+//
+// These bits are set in a policy to flag which tokens to preserve
+//
+enum NextTokenPolicyBits {
     
-    //
-    // PRESERVE_TOPLEVEL_NEWLINES:
-    // preserve top-level newlines, discard other newlines, discard whitespace, keep track of comments, return top-level comments
-    //
-    NEXTTOKEN_PRESERVE_TOPLEVEL_NEWLINES,
+    PRESERVE_TOPLEVEL_NEWLINES = 0x01,
     
-    //
-    // PRESERVE_EVERYTHING_AND_RETURN_COMMENTS
-    // return newlines, return whitespace, keep track of comments AND ALSO return them
-    //
-    // Note: Whoever uses PRESERVE_EVERYTHING also needs to own any Comments that are read in
-    //
-    NEXTTOKEN_PRESERVE_EVERYTHING_AND_RETURN_COMMENTS,
+    PRESERVE_OTHER_NEWLINES = 0x02,
     
-    //
-    // PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS
-    // return newlines, return whitespace, keep track of comments but don't return them
-    //
-    NEXTTOKEN_PRESERVE_EVERYTHING_AND_DONT_RETURN_COMMENTS
+    PRESERVE_WHITESPACE = 0x04,
+    
+    PRESERVE_TOPLEVEL_COMMENTS = 0x08,
+    
+    PRESERVE_OTHER_COMMENTS = 0x10
 };
+
+typedef int NextTokenPolicy;
+
+const NextTokenPolicy DISCARD_EVERYTHING = 0;
+
+const NextTokenPolicy PRESERVE_EVERYTHING = ~DISCARD_EVERYTHING;
 
 struct ParserContext {
     size_t GroupDepth;

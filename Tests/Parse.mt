@@ -444,6 +444,39 @@ Test[
 	TestID->"Parse-20190304-H6E5I5"
 ]
 
+Test[
+	"1 (**) 2"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190306-F5V4D4"
+]
+
+Test[
+	"(**)"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190306-P2S6H7"
+]
+
+Test[
+	"(*\\a*)"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190306-K8W8O1"
+]
+
+
+
+
 
 
 
@@ -1073,8 +1106,8 @@ Test[
 	ConcreteParseString["a - \\tb"]
 	,
 	BinaryNode[Minus, {SymbolNode["a", {}, <|Source -> {{1, 1}, {1, 1}}|>], SyntaxErrorNode[Token`Error`Rest,
-		{SyntaxErrorNode[Token`Error`UnhandledCharacter, {InternalTokenNode["\\t", {}, <|Source -> {{1, 5}, {1, 6}}|>]},
-			<|Source -> {{1, 5}, {1, 6}}|>], InternalTokenNode["b", {}, <|Source -> {{1, 7}, {1, 7}}|>]},
+		{SyntaxErrorNode[Token`Error`UnhandledCharacter, {TokenNode[Token`Error`UnhandledCharacter, "\\t", <|Source -> {{1, 5}, {1, 6}}|>]},
+			<|Source -> {{1, 5}, {1, 6}}|>], TokenNode[Token`Symbol, "b", <|Source -> {{1, 7}, {1, 7}}|>]},
 			<|Source -> {{1, 5}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]
 	,
 	TestID->"Parse-20190203-G0U2N7"

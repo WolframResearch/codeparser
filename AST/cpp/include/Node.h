@@ -283,8 +283,7 @@ public:
 class BlankNode : public Node {
     SourceSpan Span;
 public:
-    BlankNode(SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Span(Span) {}
-    BlankNode(std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym2}, Issues, Comments), Span(Span) {}
+    BlankNode(std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node((Sym2 == nullptr) ? std::vector<std::shared_ptr<Node>>{} : std::vector<std::shared_ptr<Node>>{Sym2}, Issues, Comments), Span(Span) {}
     
     void put(MLINK mlp) override;
 
@@ -300,8 +299,7 @@ public:
 class BlankSequenceNode : public Node {
     SourceSpan Span;
 public:
-    BlankSequenceNode(SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Span(Span) {}
-    BlankSequenceNode(std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym2}, Issues, Comments), Span(Span) {}
+    BlankSequenceNode(std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node((Sym2 == nullptr) ? std::vector<std::shared_ptr<Node>>{} : std::vector<std::shared_ptr<Node>>{Sym2}, Issues, Comments), Span(Span) {}
     
     void put(MLINK mlp) override;
 
@@ -317,8 +315,7 @@ public:
 class BlankNullSequenceNode : public Node {
     SourceSpan Span;
 public:
-    BlankNullSequenceNode(SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Span(Span) {}
-    BlankNullSequenceNode(std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym2}, Issues, Comments), Span(Span) {}
+    BlankNullSequenceNode(std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node((Sym2 == nullptr) ? std::vector<std::shared_ptr<Node>>{} : std::vector<std::shared_ptr<Node>>{Sym2}, Issues, Comments), Span(Span) {}
     
     void put(MLINK mlp) override;
 
@@ -346,8 +343,7 @@ public:
 class PatternBlankNode : public Node {
     SourceSpan Span;
 public:
-    PatternBlankNode(std::shared_ptr<Node> Sym1, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym1}, Issues, Comments), Span(Span) {}
-    PatternBlankNode(std::shared_ptr<Node> Sym1, std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym1, Sym2}, Issues, Comments), Span(Span) {}
+    PatternBlankNode(std::shared_ptr<Node> Sym1, std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node((Sym2 == nullptr) ? std::vector<std::shared_ptr<Node>>{Sym1} : std::vector<std::shared_ptr<Node>>{Sym1, Sym2}, Issues, Comments), Span(Span) {}
     
     void put(MLINK mlp) override;
 
@@ -367,8 +363,7 @@ public:
 class PatternBlankSequenceNode : public Node {
     SourceSpan Span;
 public:
-    PatternBlankSequenceNode(std::shared_ptr<Node> Sym1, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym1}, Issues, Comments), Span(Span) {}
-    PatternBlankSequenceNode(std::shared_ptr<Node> Sym1, std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym1, Sym2}, Issues, Comments), Span(Span) {}
+    PatternBlankSequenceNode(std::shared_ptr<Node> Sym1, std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node((Sym2 == nullptr) ? std::vector<std::shared_ptr<Node>>{Sym1} : std::vector<std::shared_ptr<Node>>{Sym1, Sym2}, Issues, Comments), Span(Span) {}
     
     void put(MLINK mlp) override;
 
@@ -388,8 +383,7 @@ public:
 class PatternBlankNullSequenceNode : public Node {
     SourceSpan Span;
 public:
-    PatternBlankNullSequenceNode(std::shared_ptr<Node> Sym1, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym1}, Issues, Comments), Span(Span) {}
-    PatternBlankNullSequenceNode(std::shared_ptr<Node> Sym1, std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({Sym1, Sym2}, Issues, Comments), Span(Span) {}
+    PatternBlankNullSequenceNode(std::shared_ptr<Node> Sym1, std::shared_ptr<Node> Sym2, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node((Sym2 == nullptr) ? std::vector<std::shared_ptr<Node>>{Sym1} : std::vector<std::shared_ptr<Node>>{Sym1, Sym2}, Issues, Comments), Span(Span) {}
     
     void put(MLINK mlp) override;
 
@@ -509,7 +503,7 @@ class CommentNode : public Node {
     std::string Str;
     SourceSpan Span;
 public:
-    CommentNode(std::string Str, SourceSpan Span) : Node({}, {}, {}), Str(Str), Span(Span) {}
+    CommentNode(Comment C) : Node({}, {}, {}), Str(C.Msg), Span(C.Span) {}
     
     void put(MLINK mlp) override;
     

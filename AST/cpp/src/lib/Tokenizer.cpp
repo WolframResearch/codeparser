@@ -97,7 +97,7 @@ Token Tokenizer::nextToken() {
             c = nextWLCharacter();
         }
         
-        cur = TOKEN_SPACE;
+        cur = TOKEN_WHITESPACE;
         
     } else if (c == WLCharacter('.')) {
         
@@ -133,7 +133,7 @@ Token Tokenizer::nextToken() {
         
         c = nextWLCharacter();
         
-        cur = TOKEN_SPACE;
+        cur = TOKEN_WHITESPACE;
         
     } else if (c.isNewlineCharacter()) {
         
