@@ -370,6 +370,12 @@ Token Tokenizer::handleComment() {
         } else {
             
             //
+            // Clear Issues
+            // We do not care about issues within comments
+            //
+            getIssues();
+            
+            //
             // Do not use String.put(c.to_char()); here because c may not be a char
             //
             
