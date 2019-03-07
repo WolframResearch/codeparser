@@ -90,7 +90,22 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextCharacterPolicy policy) {
             // Line continuation
             //
             
-            nextWLCharacter();
+            //
+            // Slight annoyance here:
+            // In WL, sometimes \r is treated as a newline and sometimes it is not
+            // With line continuations, the sequence \ \r \n is a single line continuation
+            // Even though the sequence \r \n in other places is 2 newlines.
+            //
+            if (curSource.to_point() == '\r') {
+                nextWLCharacter();
+                
+                if (cur == WLCharacter('\n')) {
+                    nextWLCharacter();
+                }
+                
+            } else {
+                nextWLCharacter();
+            }
             
             std::copy(Issues.begin(), Issues.end(), std::back_inserter(TmpIssues));
             Issues.clear();
