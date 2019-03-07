@@ -82,20 +82,24 @@ set(GENERATED_SOURCES
 
 
 set(DOCUMENTATION_NOTEBOOKS
-	${CMAKE_SOURCE_DIR}/AST/Documentation/English/ReferencePages/Symbols/ParseString.nb
-	${CMAKE_SOURCE_DIR}/AST/Documentation/English/ReferencePages/Symbols/ParseFile.nb
-	${CMAKE_SOURCE_DIR}/AST/Documentation/English/ReferencePages/Symbols/ConcreteParseString.nb
 	${CMAKE_SOURCE_DIR}/AST/Documentation/English/ReferencePages/Symbols/ConcreteParseFile.nb
+	${CMAKE_SOURCE_DIR}/AST/Documentation/English/ReferencePages/Symbols/ConcreteParseString.nb
+	${CMAKE_SOURCE_DIR}/AST/Documentation/English/ReferencePages/Symbols/ParseFile.nb
+	${CMAKE_SOURCE_DIR}/AST/Documentation/English/ReferencePages/Symbols/ParseString.nb
+	${CMAKE_SOURCE_DIR}/AST/Documentation/English/ReferencePages/Symbols/TokenizeFile.nb
+	${CMAKE_SOURCE_DIR}/AST/Documentation/English/ReferencePages/Symbols/TokenizeString.nb
 )
 
 set(BUILT_DOCUMENTATION
 	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/Index/_0.cfs
 	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/Index/segments.gen
 	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/Index/segments_3
-	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/ReferencePages/Symbols/ParseString.nb
-	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/ReferencePages/Symbols/ParseFile.nb
-	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/ReferencePages/Symbols/ConcreteParseString.nb
 	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/ReferencePages/Symbols/ConcreteParseFile.nb
+	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/ReferencePages/Symbols/ConcreteParseString.nb
+	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/ReferencePages/Symbols/ParseFile.nb
+	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/ReferencePages/Symbols/ParseString.nb
+	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/ReferencePages/Symbols/TokenizeFile.nb
+	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/ReferencePages/Symbols/TokenizeString.nb
 	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/SpellIndex/_0.cfs
 	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/SpellIndex/segments.gen
 	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/SpellIndex/segments_3
