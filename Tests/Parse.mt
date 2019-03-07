@@ -3,6 +3,9 @@ Needs["AST`"]
 Needs["AST`Utils`"]
 
 
+(*
+TODO: also test roundtripping through ConcreteParseString and ToInputFormString
+*)
 parseEquivalenceFunction[actualIn_, expectedIgnored_] :=
 Catch[
 Module[{parsed, good, expected, actual},
