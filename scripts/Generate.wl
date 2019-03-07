@@ -17,12 +17,6 @@ will generate additional required files in these directories:
 
 Print["Generating additional required C++ and WL files"]
 
-If[!($VersionNumber >= 11.0),
-  Print["Expected $VersionNumber of at least 11.0"];
-  Print["Actual $VersionNumber is: ", $VersionNumber];
-  Quit[1]
-]
-
 
 
 packageDir = Directory[]
@@ -83,7 +77,7 @@ If[FindFile["AST`"] =!= FileNameJoin[{pacletASTDir, "AST.wl"}],
     Print["It looks like the AST source is being used. This is not supported during build time."];
     Print["There may be a problem with the version of Wolfram Engine that is being used."];
     ,
-    Print["Consider running:\nPacletUninstall[\"AST\"]\nto ensure that no other isntallations of AST interfere with the build."];
+    Print["Consider running:\nPacletUninstall[\"AST\"]\nto ensure that no other installations of AST interfere with the build."];
   ];
   Quit[1]
 ]

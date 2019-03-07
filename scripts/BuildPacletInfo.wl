@@ -37,7 +37,13 @@ If[FailureQ[importedPacletInfo],
   Quit[1]
 ]
 
-replacedPacletInfo = importedPacletInfo /. {(Version -> _) -> (Version -> pacletVersion)}
+replacedPacletInfo = importedPacletInfo /. {
+  (Version -> _) -> (Version -> pacletVersion),
+  (*
+  Use $VersionNumber of build system
+  *)
+  (WolframVersion -> _) -> (WolframVersion -> ToString[$VersionNumber]<>"+")
+}
 
 builtPacletInfoM = {
 "
