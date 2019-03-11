@@ -286,7 +286,10 @@ target_include_directories(ast-lib
 )
 
 find_library(ML_LIB
-	NAMES MLi4 ML64i4 ML32i4
+	#
+	# mathlink is the mathlink.framework on MacOSX
+	#
+	NAMES mathlink ML64i4 ML32i4
 	HINTS ${MATHLINK_LIB_DIR}
 )
 
@@ -294,11 +297,6 @@ message(STATUS "ML_LIB: ${ML_LIB}")
 
 target_link_libraries(ast-lib ${ML_LIB})
 
-if(APPLE)
-target_link_libraries(ast-lib
-	"-framework Foundation"
-)
-endif(APPLE)
 
 set(MAX_EXPRESSION_DEPTH 100 CACHE STRING "Maximum depth allowed by the parser")
 set(MAX_EXPRESSION_BREADTH 1000 CACHE STRING "Maximum breadth allowed by the parser")
