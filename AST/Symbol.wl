@@ -329,7 +329,11 @@ BinaryOperatorToSymbol[Token`Operator`MinusEqual] = SubtractFrom
 BinaryOperatorToSymbol[Token`Operator`SlashEqual] = DivideBy
 BinaryOperatorToSymbol[Token`Operator`CaretEqual] = UpSet
 BinaryOperatorToSymbol[Token`Operator`CaretColonEqual] = UpSetDelayed
-If[$VersionNumber >= 11.1, ToExpression["BinaryOperatorToSymbol[Token`Operator`LessMinusGreater] = TwoWayRule"]]
+(*
+TwoWayRule was added in 11.1, but we support building with 11.0
+force symbol to be in System`
+*)
+BinaryOperatorToSymbol[Token`Operator`LessMinusGreater] = System`TwoWayRule
 BinaryOperatorToSymbol[Token`Operator`SlashSlashAt] = MapAll
 BinaryOperatorToSymbol[Token`Operator`ColonColon] = MessageName
 BinaryOperatorToSymbol[Token`Operator`GreaterGreater] = Put
@@ -363,9 +367,23 @@ BinaryOperatorToSymbol[Token`Operator`LongName`RuleDelayed] = RuleDelayed
 BinaryOperatorToSymbol[Token`Operator`LongName`UndirectedEdge] = UndirectedEdge
 BinaryOperatorToSymbol[Token`Operator`LongName`Function] = Function
 BinaryOperatorToSymbol[Token`Operator`LongName`MinusPlus] = MinusPlus
-If[$VersionNumber >= 11.1, ToExpression["BinaryOperatorToSymbol[Token`Operator`LongName`TwoWayRule] = TwoWayRule"]]
+(*
+force TwoWayRule to be in System`
+*)
+BinaryOperatorToSymbol[Token`Operator`LongName`TwoWayRule] = System`TwoWayRule
 BinaryOperatorToSymbol[Token`Operator`LongName`InvisibleApplication] = BinaryInvisibleApplication
 BinaryOperatorToSymbol[Token`Operator`LongName`CircleMinus] = CircleMinus
+(*
+force to be in System`:
+VectorGreater
+VectorGreaterEqual
+VectorLess
+VectorLessEqual
+*)
+BinaryOperatorToSymbol[Token`Operator`LongName`VectorGreater] = System`VectorGreater
+BinaryOperatorToSymbol[Token`Operator`LongName`VectorGreaterEqual] = System`VectorGreaterEqual
+BinaryOperatorToSymbol[Token`Operator`LongName`VectorLess] = System`VectorLess
+BinaryOperatorToSymbol[Token`Operator`LongName`VectorLessEqual] = System`VectorLessEqual
 
 (* inequality operators *)
 SymbolToBinaryOperatorString[Equal] = "=="
@@ -430,12 +448,22 @@ SymbolToBinaryOperatorString[NotSupersetEqual] = "\\[NotSupersetEqual]"
 SymbolToBinaryOperatorString[PlusMinus] = "\\[PlusMinus]"
 SymbolToBinaryOperatorString[Implies] = "\\[Implies]"
 SymbolToBinaryOperatorString[DirectedEdge] = "\\[DirectedEdge]"
-If[$VersionNumber >= 11.1, ToExpression["SymbolToBinaryOperatorString[TwoWayRule] = \"\\\\[TwoWayRule]\""]]
+(*
+force to be in System`
+*)
+SymbolToBinaryOperatorString[System`TwoWayRule] = "\\[TwoWayRule]"
 SymbolToBinaryOperatorString[UndirectedEdge] = "\\[UndirectedEdge]"
 SymbolToBinaryOperatorString[Function] = "\\[Function]"
 SymbolToBinaryOperatorString[BinaryInvisibleApplication] = "\\[InvisibleApplication]"
 SymbolToBinaryOperatorString[CircleMinus] = "\\[CircleMinus]"
 SymbolToBinaryOperatorString[MinusPlus] = "\\[MinusPlus]"
+(*
+force to be in System`
+*)
+SymbolToBinaryOperatorString[System`VectorGreater] = "\\[VectorGreater]"
+SymbolToBinaryOperatorString[System`VectorGreaterEqual] = "\\[VectorGreaterEqual]"
+SymbolToBinaryOperatorString[System`VectorLess] = "\\[VectorLess]"
+SymbolToBinaryOperatorString[System`VectorLessEqual] = "\\[VectorLessEqual]"
 
 (*
 Infix

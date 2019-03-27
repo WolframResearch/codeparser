@@ -661,7 +661,10 @@ Range 0xf100
 "Shah",
 "WolframLanguageLogo",
 "WolframLanguageLogoCircle",
-If[$VersionNumber >= 11.1, "TwoWayRule", Nothing],
+(*
+TwoWayRule was added in 11.1
+*)
+"TwoWayRule",
 
 (*
 Range 0xf300
@@ -741,13 +744,26 @@ Range 0xf400
 "NotSquareSuperset",
 "Equal",
 "VerticalSeparator",
-If[$VersionNumber >= 12.0, "VectorGreater", Nothing],
-If[$VersionNumber >= 12.0, "VectorGreaterEqual", Nothing],
-If[$VersionNumber >= 12.0, "VectorLess", Nothing],
-If[$VersionNumber >= 12.0, "VectorLessEqual", Nothing],
-If[$VersionNumber >= 11.2, "Limit", Nothing],
-If[$VersionNumber >= 11.2, "MaxLimit", Nothing],
-If[$VersionNumber >= 11.2, "MinLimit", Nothing],
+(*
+added in 12.0:
+VectorGreater
+VectorGreaterEqual
+VectorLess
+VectorLessEqual
+*)
+"VectorGreater",
+"VectorGreaterEqual",
+"VectorLess",
+"VectorLessEqual",
+(*
+added in 11.2:
+Limit
+MaxLimit
+MinLimit
+*)
+"Limit",
+"MaxLimit",
+"MinLimit",
 "Cross",
 "Function",
 "Xnor",

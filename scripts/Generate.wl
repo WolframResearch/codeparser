@@ -109,11 +109,49 @@ toGlobal[n_] :=
  StringReplace[ToUpperCase[ToString[n]], {"`" -> "_", "$" -> "_"}]
 
 
+
+(*
+specify the long names that are not in earlier, supported versions
+
+e.g., Generate.wl may be run in a 11.0 kernel, but the target may be a 12.1 kernel
+So we want to recognize characters that are not in 11.0 while building with 11.0
+
+*)
+(*
+added in 11.1:
+TwoWayRule
+*)
+longNameToCharacterCode["TwoWayRule"] = 16^^f120
+(*
+added in 11.2:
+Limit
+MaxLimit
+MinLimit
+*)
+longNameToCharacterCode["Limit"] = 16^^f438
+longNameToCharacterCode["MaxLimit"] = 16^^f439
+longNameToCharacterCode["MinLimit"] = 16^^f43a
+(*
+added in 12.0:
+VectorGreater
+VectorGreaterEqual
+VectorLess
+VectorLessEqual
+*)
+longNameToCharacterCode["VectorGreater"] = 16^^f434
+longNameToCharacterCode["VectorGreaterEqual"] = 16^^f435
+longNameToCharacterCode["VectorLess"] = 16^^f436
+longNameToCharacterCode["VectorLessEqual"] = 16^^f437
+
+longNameToCharacterCode[longName_String] :=
+  ToCharacterCode[ToExpression["\"\\[" <> longName <> "]\""]]
+
+
 (*
 longNameToHexDigits["Alpha"] is "03b1"
 *)
 longNameToHexDigits[longName_String] :=
-  IntegerString[ToCharacterCode[ToExpression["\"\\[" <> longName <> "]\""]], 16, 4]
+  IntegerString[longNameToCharacterCode[longName], 16, 4]
 
 integerToHexDigits[int_Integer] :=
   IntegerString[int, 16, 4]
@@ -962,9 +1000,9 @@ stringifyForTransmitting[sym_Symbol] :=
 Module[{ctxt},
   ctxt = Context[sym];
   If[ctxt == "System`",
-    ToString[sym]
+    SymbolName[sym]
     ,
-    Context[sym]<>ToString[sym]
+    Context[sym]<>SymbolName[sym]
   ]
 ]
 

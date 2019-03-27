@@ -229,7 +229,10 @@
 "RightDoubleBracket",(* 0x301b *)
 "LeftAssociation",(* 0xf113 *)
 "RightAssociation",(* 0xf114 *)
-If[$VersionNumber >= 11.1, "TwoWayRule", Nothing],(* 0xf120 *)
+(*
+TwoWayRule was added in 11.1
+*)
+"TwoWayRule",(* 0xf120 *)
 "Piecewise",(* 0xf361 *)
 "AutoLeftMatch",(* 0xf3a8 *)
 "AutoRightMatch",(* 0xf3a9 *)
@@ -272,13 +275,26 @@ If[$VersionNumber >= 11.1, "TwoWayRule", Nothing],(* 0xf120 *)
 "NotSquareSuperset",(* 0xf42f *)
 "Equal",(* 0xf431 *)
 "VerticalSeparator",(* 0xf432 *)
-If[$VersionNumber >= 12.0, "VectorGreater", Nothing],(* 0xf434 *)
-If[$VersionNumber >= 12.0, "VectorGreaterEqual", Nothing],(* 0xf435 *)
-If[$VersionNumber >= 12.0, "VectorLess", Nothing],(* 0xf436 *)
-If[$VersionNumber >= 12.0, "VectorLessEqual", Nothing],(* 0xf437 *)
-If[$VersionNumber >= 12.0, "Limit", Nothing],(* 0xf438 *)
-If[$VersionNumber >= 12.0, "MaxLimit", Nothing],(* 0xf439 *)
-If[$VersionNumber >= 12.0, "MinLimit", Nothing],(* 0xf43a *)
+(*
+all added in 12.0:
+VectorGreater
+VectorGreaterEqual
+VectorLess
+VectorLessEqual
+*)
+"VectorGreater",(* 0xf434 *)
+"VectorGreaterEqual",(* 0xf435 *)
+"VectorLess",(* 0xf436 *)
+"VectorLessEqual",(* 0xf437 *)
+(*
+all added in 11.2:
+Limit
+MaxLimit
+MinLimit
+*)
+"Limit",(* 0xf438 *)
+"MaxLimit",(* 0xf439 *)
+"MinLimit",(* 0xf43a *)
 "Cross",(* 0xf4a0 *)
 "Function",(* 0xf4a1 *)
 "Xnor",(* 0xf4a2 *)

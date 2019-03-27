@@ -56,6 +56,10 @@ Precedence`LongName`RuleDelayed -> Precedence`MinusGreater,
 
 (*
 TwoWayRule did not have correct precedence until 12.0
+
+If building with versions below 12.0, then hard-code precedence 125
+
+This means that if built with version below 12.0, AST will treat <-> with a different precedence than the kernel
 *)
 Precedence`LessMinusGreater -> If[$VersionNumber >= 12.0, Precedence[TwoWayRule] (* 125 *), 125],
 Precedence`LongName`TwoWayRule -> Precedence`LessMinusGreater,
@@ -157,6 +161,19 @@ Precedence`LongName`LessLess -> Precedence[LessLess], (* 290 *)
 Precedence`LongName`Congruent -> Precedence[Congruent], (* 290 *)
 Precedence`LongName`RightTriangle -> Precedence[RightTriangle], (* 290 *)
 Precedence`LongName`LeftTriangle -> Precedence[LeftTriangle], (* 290 *)
+(*
+added in 12.0:
+VectorGreater
+VectorGreaterEqual
+VectorLess
+VectorLessEqual
+
+so hard-code if building with version less than 12.0
+*)
+Precedence`LongName`VectorGreater -> If[$VersionNumber >= 12.0, Precedence[VectorGreater] (* 290 *), 290],
+Precedence`LongName`VectorGreaterEqual -> If[$VersionNumber >= 12.0, Precedence[VectorGreaterEqual] (* 290 *), 290],
+Precedence`LongName`VectorLess -> If[$VersionNumber >= 12.0, Precedence[VectorLess] (* 290 *), 290],
+Precedence`LongName`VectorLessEqual -> If[$VersionNumber >= 12.0, Precedence[VectorLessEqual] (* 290 *), 290],
 
 Precedence`LongName`DirectedEdge -> Precedence[DirectedEdge], (* 295 *)
 Precedence`LongName`UndirectedEdge -> Precedence[UndirectedEdge], (* 295 *)

@@ -117,12 +117,18 @@ Parser::Parser() : currentCached(false), _currentToken(), _currentTokenString(),
     registerTokenType(TOKEN_OPERATOR_LONGNAME_UNDIRECTEDEDGE, new BinaryOperatorParselet(PRECEDENCE_LONGNAME_UNDIRECTEDEDGE, false));
     registerTokenType(TOKEN_OPERATOR_LONGNAME_FUNCTION, new BinaryOperatorParselet(PRECEDENCE_LONGNAME_FUNCTION, true));
     registerTokenType(TOKEN_OPERATOR_LONGNAME_MINUSPLUS, new BinaryOperatorParselet(PRECEDENCE_INFIX_LONGNAME_MINUSPLUS, false));
-#if VERSION_NUMBER >= 1110
+//    if (targetVersionNumber >= 1110) {
     registerTokenType(TOKEN_OPERATOR_LONGNAME_TWOWAYRULE, new BinaryOperatorParselet(PRECEDENCE_LONGNAME_TWOWAYRULE, true));
-#endif
+//    }
     registerTokenType(TOKEN_OPERATOR_LONGNAME_INVISIBLEAPPLICATION, new BinaryOperatorParselet(PRECEDENCE_LONGNAME_INVISIBLEAPPLICATION, true));
     registerTokenType(TOKEN_OPERATOR_LONGNAME_CIRCLEMINUS, new BinaryOperatorParselet(PRECEDENCE_LONGNAME_CIRCLEMINUS, false));
-    
+//    if (targetVersionNumber >= 1200) {
+    registerTokenType(TOKEN_OPERATOR_LONGNAME_VECTORGREATER, new BinaryOperatorParselet(PRECEDENCE_LONGNAME_VECTORGREATER, false));
+    registerTokenType(TOKEN_OPERATOR_LONGNAME_VECTORGREATEREQUAL, new BinaryOperatorParselet(PRECEDENCE_LONGNAME_VECTORGREATEREQUAL, false));
+    registerTokenType(TOKEN_OPERATOR_LONGNAME_VECTORLESS, new BinaryOperatorParselet(PRECEDENCE_LONGNAME_VECTORLESS, false));
+    registerTokenType(TOKEN_OPERATOR_LONGNAME_VECTORLESSEQUAL, new BinaryOperatorParselet(PRECEDENCE_LONGNAME_VECTORLESSEQUAL, false));
+//    }
+
     //
     // Infix
     //
