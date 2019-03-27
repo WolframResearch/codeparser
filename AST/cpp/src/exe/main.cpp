@@ -48,12 +48,14 @@ int readStdIn(bool tokenize) {
     int err;
     
     p = MLNewParameters(MLREVISION, MLAPIREVISION);
-    
+#ifdef WINDOWS_MATHLINK
+
+#else
     //
     // Needed because MathLink intercepts all signals
     //
     MLDoNotHandleSignalParameter(p, SIGINT);
-    
+#endif
     ep = MLInitialize(p);
     if (ep == (MLENV)0) {
         return 1;
@@ -65,7 +67,7 @@ int readStdIn(bool tokenize) {
     if (!MLPutFunction(mlp, SYMBOL_LIST.name(), 1)) {
         goto retPt;
     }
-    if (!MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(input.c_str()), input.size())) {
+    if (!MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(input.c_str()), static_cast<int>(input.size()))) {
         goto retPt;
     }
     
@@ -105,12 +107,14 @@ int readFile(std::string file) {
     int err;
     
     p = MLNewParameters(MLREVISION, MLAPIREVISION);
-    
+#ifdef WINDOWS_MATHLINK
+
+#else
     //
     // Needed because MathLink intercepts all signals
     //
     MLDoNotHandleSignalParameter(p, SIGINT);
-    
+#endif
     ep = MLInitialize(p);
     if (ep == (MLENV)0) {
         return 1;

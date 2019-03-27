@@ -236,7 +236,7 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextCharacterPolicy policy) {
         case EOF: {
             auto Loc = TheSourceManager->getSourceLocation();
             
-            auto Issue = SyntaxIssue(TAG_SYNTAXERROR, std::string("Incomplete character \\"), SEVERITY_FATAL, SourceSpan{CharacterStart, Loc});
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXERROR, std::string("Incomplete character \\"), SYNTAXISSUESEVERITY_FATAL, SourceSpan{CharacterStart, Loc});
             
             Issues.push_back(Issue);
             
@@ -258,7 +258,7 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextCharacterPolicy policy) {
             
             curSourceStr = makeGraphical(curSourceStr);
             
-            auto Issue = SyntaxIssue(TAG_SYNTAXERROR, std::string("Unrecognized character \\") + curSourceStr + ". Did you mean " + curSourceStr + " or \\\\" + curSourceStr + "?", SEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXERROR, std::string("Unrecognized character \\") + curSourceStr + ". Did you mean " + curSourceStr + " or \\\\" + curSourceStr + "?", SYNTAXISSUESEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
 
             Issues.push_back(Issue);
             
@@ -352,7 +352,7 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
         
         curSourceStr = makeGraphical(curSourceStr);
         
-        auto Issue = SyntaxIssue(TAG_SYNTAXERROR, std::string("Unrecognized character: \\[") + LongNameStr + curSourceStr + ". Did you mean [" + LongNameStr + curSourceStr + " or \\\\[" + LongNameStr + curSourceStr + "?", SEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
+        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXERROR, std::string("Unrecognized character: \\[") + LongNameStr + curSourceStr + ". Did you mean [" + LongNameStr + curSourceStr + " or \\\\[" + LongNameStr + curSourceStr + "?", SYNTAXISSUESEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
         
         Issues.push_back(Issue);
 
@@ -386,7 +386,7 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
 
             auto Loc = TheSourceManager->getSourceLocation();
             
-            auto Issue = SyntaxIssue(TAG_SYNTAXERROR, std::string("Unrecognized character: \\[") + LongNameStr + "]. Did you mean [" + LongNameStr + "] or \\\\[" + LongNameStr + "]?", SEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXERROR, std::string("Unrecognized character: \\[") + LongNameStr + "]. Did you mean [" + LongNameStr + "] or \\\\[" + LongNameStr + "]?", SYNTAXISSUESEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
             
             Issues.push_back(Issue);
 
@@ -439,7 +439,7 @@ WLCharacter CharacterDecoder::handle4Hex(SourceCharacter curSourceIn, SourceLoca
             
             curSourceStr = makeGraphical(curSourceStr);
             
-            auto Issue = SyntaxIssue(TAG_SYNTAXERROR, std::string("Unrecognized character: \\:") + HexStr + curSourceStr + ". Did you mean :" + HexStr + curSourceStr + " or \\\\:" + HexStr + curSourceStr + "?", SEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXERROR, std::string("Unrecognized character: \\:") + HexStr + curSourceStr + ". Did you mean :" + HexStr + curSourceStr + " or \\\\:" + HexStr + curSourceStr + "?", SYNTAXISSUESEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
 
             Issues.push_back(Issue);
 
@@ -501,7 +501,7 @@ WLCharacter CharacterDecoder::handle2Hex(SourceCharacter curSourceIn, SourceLoca
             
             curSourceStr = makeGraphical(curSourceStr);
             
-            auto Issue = SyntaxIssue(TAG_SYNTAXERROR, "Unrecognized character: \\." + HexStr + curSourceStr + ". Did you mean ." + HexStr + curSourceStr + " or \\\\." + HexStr +curSourceStr + "?", SEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXERROR, "Unrecognized character: \\." + HexStr + curSourceStr + ". Did you mean ." + HexStr + curSourceStr + " or \\\\." + HexStr +curSourceStr + "?", SYNTAXISSUESEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
 
             Issues.push_back(Issue);
 
@@ -565,7 +565,7 @@ WLCharacter CharacterDecoder::handleOctal(SourceCharacter curSourceIn, SourceLoc
             
             curSourceStr = makeGraphical(curSourceStr);
             
-            auto Issue = SyntaxIssue(TAG_SYNTAXERROR, std::string("Unrecognized character: \\") + OctalStr + curSourceStr + ". Did you mean " + OctalStr + curSourceStr + " or \\\\" + OctalStr + curSourceStr + "?", SEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXERROR, std::string("Unrecognized character: \\") + OctalStr + curSourceStr + ". Did you mean " + OctalStr + curSourceStr + " or \\\\" + OctalStr + curSourceStr + "?", SYNTAXISSUESEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
 
             Issues.push_back(Issue);
 
@@ -626,7 +626,7 @@ WLCharacter CharacterDecoder::handle6Hex(SourceCharacter curSourceIn, SourceLoca
             
             curSourceStr = makeGraphical(curSourceStr);
             
-            auto Issue = SyntaxIssue(TAG_SYNTAXERROR, std::string("Unrecognized character: \\|") + HexStr + curSourceStr + ". Did you mean |" + HexStr + curSourceStr + " or \\\\|" + HexStr + curSourceStr + "?", SEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXERROR, std::string("Unrecognized character: \\|") + HexStr + curSourceStr + ". Did you mean |" + HexStr + curSourceStr + " or \\\\|" + HexStr + curSourceStr + "?", SYNTAXISSUESEVERITY_ERROR, SourceSpan{CharacterStart, Loc});
 
             Issues.push_back(Issue);
 

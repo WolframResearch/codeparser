@@ -21,7 +21,11 @@
 ( (CHECK) ? void(0) : []{assert(false && #CHECK);}() )
 #endif
 
-enum Escape {
+//
+// Used to just be Escape, but this was observed:
+// c:\users\brenton\dropbox\wolfram\ast\ast\cpp\include\CharacterDecoder.h(37): error C2061: syntax error: identifier 'Escape'
+//
+enum EscapeFormat {
     ESCAPE_NONE,
     ESCAPE_SINGLE,
     ESCAPE_LONGNAME,
@@ -34,7 +38,7 @@ enum Escape {
 class WLCharacter
 {
 public:
-    explicit constexpr WLCharacter(int val, Escape escape_ = ESCAPE_NONE) : value_(val), escape_(escape_) {}
+    explicit constexpr WLCharacter(int val, EscapeFormat escape_ = ESCAPE_NONE) : value_(val), escape_(escape_) {}
 
     explicit operator int() const noexcept = delete;
 
@@ -104,7 +108,7 @@ public:
 
 private:
     int value_;
-    Escape escape_;
+    EscapeFormat escape_;
 };
 
  namespace std {

@@ -7,17 +7,23 @@
 
 #include <string>
 
-#define TAG_SYNTAXERROR "SyntaxError"
-#define TAG_STRANGECHARACTER "StrangeCharacter"
-#define TAG_SYNTAXAMBIGUITY "SyntaxAmbiguity"
-#define TAG_NOTCONTIGUOUS "NotContiguous"
-#define TAG_MAXEXPRESSIONDEPTH "MaxExpressionDepth"
-#define TAG_MAXEXPRESSIONBREADTH "MaxExpressionBreadth"
+#define SYNTAXISSUETAG_SYNTAXERROR std::string("SyntaxError")
+#define SYNTAXISSUETAG_STRANGECHARACTER std::string("StrangeCharacter")
+#define SYNTAXISSUETAG_SYNTAXAMBIGUITY std::string("SyntaxAmbiguity")
+#define SYNTAXISSUETAG_NOTCONTIGUOUS std::string("NotContiguous")
+#define SYNTAXISSUETAG_MAXEXPRESSIONDEPTH std::string("MaxExpressionDepth")
+#define SYNTAXISSUETAG_MAXEXPRESSIONBREADTH std::string("MaxExpressionBreadth")
 
-#define SEVERITY_REMARK "Remark"
-#define SEVERITY_WARNING "Warning"
-#define SEVERITY_ERROR "Error"
-#define SEVERITY_FATAL "Fatal"
+//
+// Used to be just SEVERITY_ERROR, etc.,
+// but this was observed:
+// c:\users\brenton\dropbox\wolfram\ast\ast\cpp\include\SyntaxIssue.h(19): warning C4005: 'SEVERITY_ERROR': macro redefinition
+// C:\Program Files (x86)\Windows Kits\10\include\10.0.17763.0\shared\winerror.h(28563): note: see previous definition of 'SEVERITY_ERROR'
+//
+#define SYNTAXISSUESEVERITY_REMARK std::string("Remark")
+#define SYNTAXISSUESEVERITY_WARNING std::string("Warning")
+#define SYNTAXISSUESEVERITY_ERROR std::string("Error")
+#define SYNTAXISSUESEVERITY_FATAL std::string("Fatal")
 
 struct SyntaxIssue {
     std::string Tag;

@@ -631,7 +631,7 @@ std::shared_ptr<Node>Parser::parse(ParserContext CtxtIn) {
 
         auto Span = TheSourceManager->getTokenSpan();
 
-        auto Issue = SyntaxIssue(TAG_MAXEXPRESSIONDEPTH, std::string("Max expression depth reached. Consider breaking up into smaller expressions."), SEVERITY_WARNING, Span);
+        auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXEXPRESSIONDEPTH, std::string("Max expression depth reached. Consider breaking up into smaller expressions."), SYNTAXISSUESEVERITY_WARNING, Span);
 
         Issues.push_back(Issue);
     }

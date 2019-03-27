@@ -447,7 +447,7 @@ void Tokenizer::handleSymbolSegment() {
             
             auto Span = TheSourceManager->getWLCharacterSpan();
             
-            auto Issue = SyntaxIssue(TAG_STRANGECHARACTER, "Strange character in symbol: " + c.string(), SEVERITY_ERROR, Span);
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange character in symbol: " + c.string(), SYNTAXISSUESEVERITY_ERROR, Span);
 
             Issues.push_back(Issue);
         }
@@ -475,7 +475,7 @@ void Tokenizer::handleSymbolSegment() {
                 
                 auto Span = TheSourceManager->getWLCharacterSpan();
                 
-                auto Issue = SyntaxIssue(TAG_STRANGECHARACTER, "Strange character in symbol: " + c.string(), SEVERITY_ERROR, Span);
+                auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange character in symbol: " + c.string(), SYNTAXISSUESEVERITY_ERROR, Span);
 
                 Issues.push_back(Issue);
             }
@@ -897,7 +897,7 @@ Token Tokenizer::handleNumber() {
 
             auto Loc2 = TheSourceManager->getSourceLocation();
 
-            auto Issue = SyntaxIssue(TAG_SYNTAXAMBIGUITY, "Put a space between ` and " + c.string() + " to reduce ambiguity", SEVERITY_REMARK, (SourceSpan{Loc, Loc2}));
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between ` and " + c.string() + " to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, (SourceSpan{Loc, Loc2}));
                 
             Issues.push_back(Issue);
         }
@@ -942,7 +942,7 @@ Token Tokenizer::handleNumber() {
                     } else {
                         msg = "Put a space between ` and + to reduce ambiguity";
                     }
-                    auto Issue = SyntaxIssue(TAG_SYNTAXAMBIGUITY, msg, SEVERITY_REMARK, (SourceSpan{Loc, Loc2}));
+                    auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, msg, SYNTAXISSUESEVERITY_REMARK, (SourceSpan{Loc, Loc2}));
                 
                     Issues.push_back(Issue);
                     
@@ -1059,7 +1059,7 @@ bool Tokenizer::handleFractionalPart(int base) {
         auto DigitLoc = Loc;
         DigitLoc.Col--;
 
-        auto Issue = SyntaxIssue(TAG_SYNTAXAMBIGUITY, "Put a space before the . to reduce ambiguity", SEVERITY_REMARK, (SourceSpan{DigitLoc,Loc}));
+        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space before the . to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, (SourceSpan{DigitLoc,Loc}));
         
         Issues.push_back(Issue);
 
@@ -1094,7 +1094,7 @@ bool Tokenizer::handleFractionalPart(int base) {
         auto Loc1 = Loc2;
         Loc1.Col--;
 
-        auto Issue = SyntaxIssue(TAG_SYNTAXAMBIGUITY, "Put a space before the . to reduce ambiguity", SEVERITY_ERROR, (SourceSpan{Loc1,Loc2}));
+        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space before the . to reduce ambiguity", SYNTAXISSUESEVERITY_ERROR, (SourceSpan{Loc1,Loc2}));
         
         Issues.push_back(Issue);
     }
@@ -1379,7 +1379,7 @@ Token Tokenizer::handleOperator() {
                         auto UnderLoc = Loc;
                         UnderLoc.Col--;
 
-                        auto Issue = SyntaxIssue(TAG_SYNTAXAMBIGUITY, "Put a space between _ and . to reduce ambiguity", SEVERITY_REMARK, (SourceSpan{UnderLoc,Loc}));
+                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between _ and . to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, (SourceSpan{UnderLoc,Loc}));
                         
                         Issues.push_back(Issue);
 
@@ -1403,7 +1403,7 @@ Token Tokenizer::handleOperator() {
                         auto UnderLoc = Loc;
                         UnderLoc.Col--;
                         
-                        auto Issue = SyntaxIssue(TAG_SYNTAXAMBIGUITY, "Put a space between . and number to reduce ambiguity", SEVERITY_REMARK, (SourceSpan{UnderLoc,Loc}));
+                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between . and number to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, (SourceSpan{UnderLoc,Loc}));
                         
                         Issues.push_back(Issue);
 
@@ -1776,7 +1776,7 @@ Token Tokenizer::handleOperator() {
                         auto SlashLoc = Loc;
                         SlashLoc.Col--;
                         
-                        auto Issue = SyntaxIssue(TAG_SYNTAXAMBIGUITY, "Put a space between / and . to reduce ambiguity", SEVERITY_REMARK, (SourceSpan{SlashLoc,Loc}));
+                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between / and . to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, (SourceSpan{SlashLoc,Loc}));
                         
                         Issues.push_back(Issue);
 

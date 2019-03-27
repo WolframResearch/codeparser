@@ -341,7 +341,7 @@ std::shared_ptr<Node> InfixOperatorParselet::parse(std::shared_ptr<Node> Left, P
 
             auto Span = TheSourceManager->getTokenSpan();
         
-            auto Issue = SyntaxIssue(TAG_MAXEXPRESSIONBREADTH, std::string("Max expression breadth reached. Consider breaking up into smaller expressions."), SEVERITY_REMARK, Span);
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXEXPRESSIONBREADTH, std::string("Max expression breadth reached. Consider breaking up into smaller expressions."), SYNTAXISSUESEVERITY_REMARK, Span);
         
             TheParser->addIssue(Issue);
         }
@@ -450,7 +450,7 @@ std::shared_ptr<Node> GroupParselet::parse(ParserContext CtxtIn) {
 
             auto Span = TheSourceManager->getTokenSpan();
         
-            auto Issue = SyntaxIssue(TAG_MAXEXPRESSIONBREADTH, std::string("Max expression breadth reached. Consider breaking up into smaller expressions."), SEVERITY_REMARK, Span);
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXEXPRESSIONBREADTH, std::string("Max expression breadth reached. Consider breaking up into smaller expressions."), SYNTAXISSUESEVERITY_REMARK, Span);
         
             TheParser->addIssue(Issue);
         }
@@ -467,7 +467,7 @@ std::shared_ptr<Node> GroupParselet::parse(ParserContext CtxtIn) {
             
             auto GroupSymbol = GroupOpenerToSymbol(Opener);
             auto GroupPair = SymbolToGroupPair(GroupSymbol);
-            auto Issue = SyntaxIssue(TAG_SYNTAXERROR, "Missing group closer: " + GroupPair.second, SEVERITY_FATAL, SourceSpan{OpenerSpan.start, EOFSpan.end});
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXERROR, "Missing group closer: " + GroupPair.second, SYNTAXISSUESEVERITY_FATAL, SourceSpan{OpenerSpan.start, EOFSpan.end});
                 
             TheParser->addIssue(Issue);
 
@@ -1043,7 +1043,7 @@ std::shared_ptr<Node> SemiParselet::parse(std::shared_ptr<Node> Left, ParserCont
 
             auto Span = TheSourceManager->getTokenSpan();
         
-            auto Issue = SyntaxIssue(TAG_MAXEXPRESSIONBREADTH, std::string("Max expression breadth reached. Consider breaking up into smaller expressions."), SEVERITY_REMARK, Span);
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXEXPRESSIONBREADTH, std::string("Max expression breadth reached. Consider breaking up into smaller expressions."), SYNTAXISSUESEVERITY_REMARK, Span);
         
             TheParser->addIssue(Issue);
         }
@@ -1570,7 +1570,7 @@ std::shared_ptr<Node> LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn)
 
             auto Span = TheSourceManager->getTokenSpan();
         
-            auto Issue = SyntaxIssue(TAG_MAXEXPRESSIONBREADTH, std::string("Max expression breadth reached. Consider breaking up into smaller expressions."), SEVERITY_REMARK, Span);
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXEXPRESSIONBREADTH, std::string("Max expression breadth reached. Consider breaking up into smaller expressions."), SYNTAXISSUESEVERITY_REMARK, Span);
         
             TheParser->addIssue(Issue);
         }
@@ -1754,7 +1754,7 @@ std::shared_ptr<Node> EqualParselet::parse(std::shared_ptr<Node> Left, ParserCon
             // Spaces to Avoid
             //
 
-             auto Issue = SyntaxIssue(TAG_NOTCONTIGUOUS, std::string("= and . are not contiguous"), SEVERITY_REMARK, (SourceSpan{EqualSpan.start, DotSpan.end}));
+             auto Issue = SyntaxIssue(SYNTAXISSUETAG_NOTCONTIGUOUS, std::string("= and . are not contiguous"), SYNTAXISSUESEVERITY_REMARK, (SourceSpan{EqualSpan.start, DotSpan.end}));
         
              TheParser->addIssue(Issue);
          }
