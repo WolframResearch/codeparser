@@ -70,7 +70,7 @@
 			<!--
 			RE is targeting Mathematica 11.1, so use the old path that has "mldev32"
 			-->
-			<arg line='-DMATHLINK_INCLUDE_DIR=${checkout_directory}/MathLink/CompilerAdditions/mldev32/lib' />
+			<arg line='-DMATHLINK_INCLUDE_DIR=${checkout_directory}/MathLink/CompilerAdditions/mldev32/include' />
 			<arg line='-DMATHLINK_LIB_DIR=${checkout_directory}/MathLink/CompilerAdditions/mldev32/lib' />
 			<arg line='-DWOLFRAMLIBRARY_INCLUDE_DIR=${checkout_directory}/RuntimeLibrary/${system_id}' />
 			<arg line='-G &quot;${env.CMAKE_GENERATOR}&quot;' />
