@@ -285,17 +285,17 @@ target_include_directories(ast-lib
 	PRIVATE ${WOLFRAMLIBRARY_INCLUDE_DIR}
 )
 
-find_library(ML_LIB
+find_library(MATHLINK_LIB
 	#
 	# mathlink is the mathlink.framework on MacOSX
 	#
-	NAMES mathlink ML64i4 ML32i4
+	NAMES mathlink ml64i4 ml32i4 ML64i4
 	HINTS ${MATHLINK_LIB_DIR}
 )
 
-message(STATUS "ML_LIB: ${ML_LIB}")
+message(STATUS "MATHLINK_LIB: ${MATHLINK_LIB}")
 
-target_link_libraries(ast-lib ${ML_LIB})
+target_link_libraries(ast-lib ${MATHLINK_LIB})
 
 
 set(MAX_EXPRESSION_DEPTH 100 CACHE STRING "Maximum depth allowed by the parser")
@@ -305,7 +305,6 @@ message(STATUS "MAX_EXPRESSION_DEPTH: ${MAX_EXPRESSION_DEPTH}")
 message(STATUS "MAX_EXPRESSION_BREADTH: ${MAX_EXPRESSION_BREADTH}")
 
 target_compile_definitions(ast-lib
-	PRIVATE VERSION_NUMBER=${VERSION_NUMBER}
 	PRIVATE MAX_EXPRESSION_DEPTH=${MAX_EXPRESSION_DEPTH}
 	PRIVATE MAX_EXPRESSION_BREADTH=${MAX_EXPRESSION_BREADTH}
 )
@@ -363,7 +362,7 @@ if(MSVC)
 		# This prevents "The program can't start because ucrtbased.dll is missing from your computer" error on Windows 7
 		PRIVATE /W3 /EHsc /MT
 	)
-else()
+else(MSVC)
 	target_compile_options(ast-lib
 		PRIVATE -Wextra -Wall -Weffc++ -Wno-unused-parameter -Wno-unused-function -Wno-comment
 	)

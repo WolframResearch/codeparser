@@ -897,13 +897,14 @@ symbolCPPHeader = {
 #pragma once
 
 #include \"Token.h\"
+#include \"API.h\"
 
 #include \"mathlink.h\"
 
 #include <string>
 #include <utility>
 
-class Symbol {
+class ASTLIB_EXPORTED Symbol {
 public:
   constexpr Symbol(const char *Name) : Name(Name) {}
   const char *name() const;
@@ -938,7 +939,7 @@ std::string SymbolToTernaryOperatorString(const Symbol&);
 std::pair<std::string, std::string> SymbolToGroupPair(const Symbol&);
 std::pair<const Symbol&, const Symbol&> SymbolToTernaryOperatorPair(const Symbol&);
 "} ~Join~
-(Row[{"extern", " ", "const", " ", "Symbol&", " ", toGlobal["Symbol`"<>ToString[#]], ";"}]& /@ symbols) ~Join~
+(Row[{"ASTLIB_EXPORTED", " ", "extern", " ", "const", " ", "Symbol&", " ", toGlobal["Symbol`"<>ToString[#]], ";"}]& /@ symbols) ~Join~
 {""}
 
 Print["exporting Symbol.h"]

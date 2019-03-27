@@ -29,6 +29,23 @@
 
 #undef False
 
+
+
+//
+// CMake defines ast_lib_EXPORTS
+//
+#ifdef _WIN32
+# ifdef ast_lib_EXPORTS
+#   define ASTLIB_EXPORTED  __declspec( dllexport )
+# else
+#   define ASTLIB_EXPORTED  __declspec( dllimport )
+# endif
+#else
+# define ASTLIB_EXPORTED
+#endif
+
+
+
 EXTERN_C DLLEXPORT mint WolframLibrary_getVersion();
 
 EXTERN_C DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData);
