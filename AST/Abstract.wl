@@ -697,7 +697,7 @@ abstract parse of a[2] returns CallNode[a, {2}]
 So convert from concrete [[ syntax to abstract Part syntax
 
 *)
-abstractCallNode[(c:CallNode|CallMissingCloserNode)[headIn_, {partIn:GroupNode[GroupSquare|GroupMissingCloserSquare, _, _]}, dataIn_]] :=
+abstractCallNode[(c:(CallNode|CallMissingCloserNode))[headIn_, {partIn:GroupNode[GroupSquare|GroupMissingCloserSquare, _, _]}, dataIn_]] :=
 Module[{head, part, partData, issues, data},
 	head = headIn;
 	part = partIn;

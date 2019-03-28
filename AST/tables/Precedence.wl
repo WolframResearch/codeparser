@@ -57,9 +57,15 @@ Precedence`LongName`RuleDelayed -> Precedence`MinusGreater,
 (*
 TwoWayRule did not have correct precedence until 12.0
 
+<-> was UndirectedEdge before 11.2.
+From 11.2 forward, <-> is TwoWayRule, but it kept the precedence of UndirectedEdge
+
+From 12.0 forward, <-> has correct precedence.
+
 If building with versions below 12.0, then hard-code precedence 125
 
 This means that if built with version below 12.0, AST will treat <-> with a different precedence than the kernel
+And if built with a version before 11.2, then <-> is treated as TwoWayRule which is different than the kernel
 *)
 Precedence`LessMinusGreater -> If[$VersionNumber >= 12.0, Precedence[TwoWayRule] (* 125 *), 125],
 Precedence`LongName`TwoWayRule -> Precedence`LessMinusGreater,
