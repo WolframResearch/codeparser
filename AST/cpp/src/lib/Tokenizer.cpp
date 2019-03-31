@@ -848,7 +848,7 @@ Token Tokenizer::handleNumber() {
             characterQueue.push_back(std::make_pair(c, Loc));
             setCurrentWLCharacter(WLCharacter('^'), Loc);
             
-            return TOKEN_NUMBER;
+            return TOKEN_INTEGER;
         }
     }
     
@@ -858,11 +858,13 @@ Token Tokenizer::handleNumber() {
         
         if (!handleFractionalPart(base)) {
             
-            return TOKEN_NUMBER;
+            return TOKEN_REAL;
         }
     }
     
     c = currentWLCharacter();
+    
+    bool real = false;
     
     //
     // foo`
@@ -870,6 +872,8 @@ Token Tokenizer::handleNumber() {
     // foo``bar
     //
     if (c == WLCharacter('`')) {
+        
+        real = true;
         
         String.put('`');
         
@@ -952,7 +956,7 @@ Token Tokenizer::handleNumber() {
                     characterQueue.push_back(std::make_pair(c, Loc));
                     setCurrentWLCharacter(s, Loc);
                     
-                    return TOKEN_NUMBER;
+                    return TOKEN_REAL;
                 }
             }
             
@@ -975,12 +979,21 @@ Token Tokenizer::handleNumber() {
                     
                 } else if (!accuracy) {
                     
-                    return TOKEN_NUMBER;
+                    //
+                    // Something like 123`.xxx  where the . could be a Dot operator
+                    //
+                    
+                    return TOKEN_REAL;
                 }
             }
             
             if (accuracy) {
                 if (!handled) {
+                    
+                    //
+                    // Something like 123``
+                    //
+                    
                     return TOKEN_ERROR_EXPECTEDACCURACY;
                 }
             }
@@ -1033,11 +1046,19 @@ Token Tokenizer::handleNumber() {
             characterQueue.push_back(std::make_pair(c, Loc));
             setCurrentWLCharacter(WLCharacter('*'), Loc);
             
-            return TOKEN_NUMBER;
+            if (real) {
+                return TOKEN_REAL;
+            } else {
+                return TOKEN_INTEGER;
+            }
         }
     }
     
-    return TOKEN_NUMBER;
+    if (real) {
+        return TOKEN_REAL;
+    } else {
+        return TOKEN_INTEGER;
+    }
 }
 
 bool Tokenizer::handleFractionalPart(int base) {

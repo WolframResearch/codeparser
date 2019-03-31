@@ -24,7 +24,8 @@ Block[{$RecursionLimit = Infinity},
 
 abstract[s_SymbolNode] := s
 abstract[s_StringNode] := s
-abstract[n_NumberNode] := n
+abstract[i_IntegerNode] := i
+abstract[r_RealNode] := r
 
 
 
@@ -200,9 +201,11 @@ abstract[f_Failure] := f
 concrete syntax does not have negated numbers
 abstract syntax is allowed to have negated numbers
 *)
-negate[NumberNode[str_, {}, data1_], data_] :=
-	NumberNode["-"<>str, {}, data]
+negate[IntegerNode[str_, {}, data1_], data_] :=
+	IntegerNode["-"<>str, {}, data]
 
+negate[RealNode[str_, {}, data1_], data_] :=
+	RealNode["-"<>str, {}, data]
 
 (*
 Important to use InfixNode[Times and not just CallNode[Times,
@@ -274,7 +277,10 @@ flattenTimes[nodes_List, data_] :=
 	Module[{},
 		(
 			Switch[#,
-				PrefixNode[Minus, {NumberNode[_, _, _]}, _],
+				PrefixNode[Minus, {IntegerNode[_, _, _]}, _],
+					{negate[#[[2,1]], data]}
+				,
+				PrefixNode[Minus, {RealNode[_, _, _]}, _],
 					{negate[#[[2,1]], data]}
 				,
 				PrefixNode[Minus, _, _],

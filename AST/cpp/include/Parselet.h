@@ -92,7 +92,16 @@ public:
     }
 };
 
-class NumberParselet : public PrefixParselet {
+class IntegerParselet : public PrefixParselet {
+public:
+    std::shared_ptr<Node> parse(ParserContext Ctxt) override;
+    
+    precedence_t getPrecedence() override {
+        return PRECEDENCE_HIGHEST;
+    }
+};
+
+class RealParselet : public PrefixParselet {
 public:
     std::shared_ptr<Node> parse(ParserContext Ctxt) override;
     

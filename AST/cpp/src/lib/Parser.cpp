@@ -16,7 +16,8 @@ Parser::Parser() : currentCached(false), _currentToken(), _currentTokenString(),
     // Atoms and Atom-like expressions
     //
     registerTokenType(TOKEN_SYMBOL, new SymbolParselet());
-    registerTokenType(TOKEN_NUMBER, new NumberParselet());
+    registerTokenType(TOKEN_INTEGER, new IntegerParselet());
+    registerTokenType(TOKEN_REAL, new RealParselet());
     registerTokenType(TOKEN_STRING, new StringParselet());
     registerTokenType(TOKEN_OPERATOR_HASH, new HashParselet());
     registerTokenType(TOKEN_OPERATOR_HASHHASH, new HashHashParselet());

@@ -75,12 +75,26 @@ public:
     }
 };
 
-class NumberNode : public Node {
+class IntegerNode : public Node {
     std::string Str;
     SourceSpan Span;
 public:
     
-    NumberNode(std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Str(Str), Span(Span) {}
+    IntegerNode(std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Str(Str), Span(Span) {}
+    
+    void put(MLINK mlp) override;
+
+    SourceSpan getSourceSpan() override {
+        return Span;
+    }
+};
+
+class RealNode : public Node {
+    std::string Str;
+    SourceSpan Span;
+public:
+    
+    RealNode(std::string Str, SourceSpan Span, std::vector<SyntaxIssue> Issues, std::vector<Comment> Comments) : Node({}, Issues, Comments), Str(Str), Span(Span) {}
     
     void put(MLINK mlp) override;
 

@@ -25,7 +25,7 @@ Test[
 Test[
 	ToNode[123]
 	,
-	NumberNode["123", {}, <||>]
+	IntegerNode["123", {}, <||>]
 	,
 	TestID->"ToNode-20181230-O2A4T0"
 ]
@@ -34,7 +34,7 @@ Test[
 Test[
 	ToNode[1.23]
 	,
-	NumberNode["1.23", {}, <||>]
+	RealNode["1.23", {}, <||>]
 	,
 	TestID->"ToNode-20181230-E5S9U5"
 ]

@@ -131,7 +131,7 @@ std::shared_ptr<Node> SymbolParselet::parseContextSensitive(ParserContext CtxtIn
     return std::make_shared<SymbolNode>(Str, Span, Issues, Comments);
 }
 
-std::shared_ptr<Node> NumberParselet::parse(ParserContext CtxtIn) {
+std::shared_ptr<Node> IntegerParselet::parse(ParserContext CtxtIn) {
     
     auto Str = TheParser->getTokenString();
     
@@ -145,7 +145,24 @@ std::shared_ptr<Node> NumberParselet::parse(ParserContext CtxtIn) {
     
     auto Comments = TheParser->getComments();
     
-    return std::make_shared<NumberNode>(Str, Span, Issues, Comments);
+    return std::make_shared<IntegerNode>(Str, Span, Issues, Comments);
+}
+
+std::shared_ptr<Node> RealParselet::parse(ParserContext CtxtIn) {
+    
+    auto Str = TheParser->getTokenString();
+    
+    auto Span = TheSourceManager->getTokenSpan();
+    
+    auto Ctxt = CtxtIn;
+    
+    TheParser->nextToken(Ctxt, PRESERVE_TOPLEVEL_NEWLINES);
+    
+    auto Issues = TheParser->getIssues();
+    
+    auto Comments = TheParser->getComments();
+    
+    return std::make_shared<RealNode>(Str, Span, Issues, Comments);
 }
 
 std::shared_ptr<Node> StringParselet::parse(ParserContext CtxtIn) {

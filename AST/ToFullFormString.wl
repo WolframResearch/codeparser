@@ -27,7 +27,10 @@ toFullFormString[StringNode[str_, _, _]] :=
 		escapeString[str]
 	]
 
-toFullFormString[NumberNode[str_, _, _]] :=
+toFullFormString[IntegerNode[str_, _, _]] :=
+	str
+
+toFullFormString[RealNode[str_, _, _]] :=
 	str
 
 toFullFormString[CallNode[head_, nodes_, _]] :=

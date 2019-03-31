@@ -24,10 +24,11 @@ ToNode[string] returns a StringNode
 ToNode[s_String] := StringNode[escapeString[s], {}, <||>]
 
 (*
-ToNode[number] returns a NumberNode
+ToNode[integer] returns an IntegerNode
+ToNode[real] returns a RealNode
 *)
-ToNode[s_Integer] := NumberNode[ToString[s, InputForm], {}, <||>]
-ToNode[s_Real] := NumberNode[ToString[s, InputForm], {}, <||>]
+ToNode[s_Integer] := IntegerNode[ToString[s, InputForm], {}, <||>]
+ToNode[s_Real] := RealNode[ToString[s, InputForm], {}, <||>]
 
 
 ToNode[args___] := Failure["Unhandled", <|"Function"->ToNode, "Arguments"->HoldForm[{args}]|>]
@@ -46,7 +47,10 @@ FromNode[StringNode[s_, {}, _]] :=
 (*
 No simple way to convert "123.456``7" to 123.456``7
 *)
-FromNode[NumberNode[s_, {}, _]] :=
+FromNode[IntegerNode[s_, {}, _]] :=
+	ToExpression[s]
+
+FromNode[RealNode[s_, {}, _]] :=
 	ToExpression[s]
 
 

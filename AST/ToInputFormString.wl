@@ -21,7 +21,10 @@ toInputFormString[SymbolNode[str_, _, _]] :=
 toInputFormString[StringNode[str_, _, _]] :=
 	str
 
-toInputFormString[NumberNode[str_, _, _]] :=
+toInputFormString[IntegerNode[str_, _, _]] :=
+	str
+
+toInputFormString[RealNode[str_, _, _]] :=
 	str
 
 toInputFormString[SlotNode[str_, _, _]] :=
@@ -73,7 +76,7 @@ Module[{nodeStrs},
 
 
 (* -a *)
-toInputFormString[InfixNode[Times, {NumberNode["-1", {}, _], op_}, opts_]] :=
+toInputFormString[InfixNode[Times, {IntegerNode["-1", {}, _], op_}, opts_]] :=
 Catch[
 Module[{opStr},
 	opStr = toInputFormString[op];
@@ -82,6 +85,17 @@ Module[{opStr},
 	];
 	"-" <> opStr
 ]]
+
+toInputFormString[InfixNode[Times, {RealNode["-1", {}, _], op_}, opts_]] :=
+Catch[
+Module[{opStr},
+	opStr = toInputFormString[op];
+	If[FailureQ[opStr],
+		Throw[opStr]
+	];
+	"-" <> opStr
+]]
+
 
 
 

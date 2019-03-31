@@ -15,7 +15,7 @@ Test[
 	,
 	{TokenNode[Token`Error`ExpectedAccuracy, "1.2``-", <|Source -> {{1, 1}, {1, 6}}|>], 
 	TokenNode[Token`Operator`Greater, ">", <|Source -> {{1, 7}, {1, 7}}|>], 
-	TokenNode[Token`Number, "3", <|Source -> {{1, 8}, {1, 8}}|>]}
+	TokenNode[Token`Integer, "3", <|Source -> {{1, 8}, {1, 8}}|>]}
 	,
 	TestID->"Tokenize-20181215-Z0H7Y5"
 ]
@@ -35,9 +35,9 @@ Test[
 	TokenizeFile[sample]
 	,
 	{TokenNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 0}}|>], 
- TokenNode[Token`Number, "1", <|Source -> {{2, 1}, {2, 1}}|>], 
+ TokenNode[Token`Integer, "1", <|Source -> {{2, 1}, {2, 1}}|>], 
  TokenNode[Token`Operator`Plus, "+", <|Source -> {{2, 2}, {2, 2}}|>], 
- TokenNode[Token`Number, "1", <|Source -> {{2, 3}, {2, 3}}|>], 
+ TokenNode[Token`Integer, "1", <|Source -> {{2, 3}, {2, 3}}|>], 
  TokenNode[Token`Newline, "\n", <|Source -> {{3, 0}, {3, 0}}|>]}
 	,
 	TestID->"Tokenize-20181230-Q3C4N0"

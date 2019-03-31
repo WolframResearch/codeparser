@@ -1154,8 +1154,8 @@ Test[
 	cst
 	,
 	FileNode[File, {InfixNode[
-   Plus, {NumberNode["1", {}, <|Source -> {{2, 1}, {2, 1}}|>], 
-    NumberNode[
+   Plus, {IntegerNode["1", {}, <|Source -> {{2, 1}, {2, 1}}|>], 
+    IntegerNode[
      "1", {}, <|Source -> {{2, 3}, {2, 3}}|>]}, <|Source -> {{2, 
        1}, {2, 3}}|>]}, <|Source -> {{2, 1}, {2, 3}}|>]
 	,

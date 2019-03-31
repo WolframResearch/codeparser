@@ -91,9 +91,9 @@ In[1]:= Needs["AST`"]
 
 In[2]:= ParseString["1+1"]
 
-Out[2]= InfixNode[Plus, {NumberNode[1, {}, <|Source -> {{1, 1}, {1, 1}}|>],
+Out[2]= InfixNode[Plus, {IntegerNode[1, {}, <|Source -> {{1, 1}, {1, 1}}|>],
 
->     NumberNode[1, {}, <|Source -> {{1, 3}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 3}}|>]
+>     IntegerNode[1, {}, <|Source -> {{1, 3}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 3}}|>]
 
 In[3]:=
 ```
@@ -104,7 +104,7 @@ A wl-ast command-line tool is also built and can be used.
 ```
 $wl-ast
 >>> 1+1
-InfixNode[Plus, {NumberNode["1", {}, <|Source->{{1, 1}, {1, 1}}|>], NumberNode["1", {}, <|Source->{{1, 3}, {1, 3}}|>]}, <|Source->{{1, 1}, {1, 3}}|>]
+InfixNode[Plus, {IntegerNode["1", {}, <|Source->{{1, 1}, {1, 1}}|>], IntegerNode["1", {}, <|Source->{{1, 3}, {1, 3}}|>]}, <|Source->{{1, 1}, {1, 3}}|>]
 
 >>>
 ```

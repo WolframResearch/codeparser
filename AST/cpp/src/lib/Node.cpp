@@ -88,12 +88,36 @@ void StringNode::put(MLINK mlp) {
     }
 }
 
-void NumberNode::put(MLINK mlp) {
+void IntegerNode::put(MLINK mlp) {
 
     auto Issues = getIssues();
     auto Comments = getComments();
 
-    MLPutFunction(mlp, SYMBOL_NUMBERNODE.name(), 3);
+    MLPutFunction(mlp, SYMBOL_INTEGERNODE.name(), 3);
+
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
+
+    putASTArgs(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
+
+    getSourceSpan().putSourceRule(mlp);
+
+    if (!Issues.empty()) {
+        putSyntaxIssues(mlp);
+    }
+
+    if (!Comments.empty()) {
+        putComments(mlp);
+    }
+}
+
+void RealNode::put(MLINK mlp) {
+
+    auto Issues = getIssues();
+    auto Comments = getComments();
+
+    MLPutFunction(mlp, SYMBOL_REALNODE.name(), 3);
 
     MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
 

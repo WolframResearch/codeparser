@@ -189,7 +189,8 @@ Comment
 (* node symbols *)
 SymbolNode
 StringNode
-NumberNode
+IntegerNode
+RealNode
 SlotNode
 SlotSequenceNode
 OutNode

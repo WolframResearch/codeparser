@@ -38,7 +38,8 @@ Needs["AST`"]
 $Nodes = {
 SymbolNode,
 StringNode,
-NumberNode,
+IntegerNode,
+RealNode,
 
 SlotNode,
 SlotSequenceNode,
