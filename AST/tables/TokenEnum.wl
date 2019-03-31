@@ -17,21 +17,42 @@ Token`WhiteSpace -> Next,
 (* errors *)
 Token`Error`First -> Next,
 Token`Error`Unknown -> Token`Error`First,
-Token`Error`MismatchedOpenSquare -> Next,
+
+(*
+a ~b
+*)
 Token`Error`ExpectedTilde -> Next,
-Token`Error`MismatchedSlashColon -> Next,
-Token`Error`ExpectedLinearSyntaxOpenParen -> Next,
-Token`Error`MismatchedQuestion -> Next,
+
+(*
+a /: b
+*)
+Token`Error`ExpectedSet -> Next,
+
+(*
+a ^:
+*)
+Token`Error`ExpectedEqual -> Next,
+
+(*
+Any weird unhandled escaped characters
+*)
 Token`Error`UnhandledCharacter -> Next,
-Token`Error`UnhandledLinearSyntax -> Next,
 Token`Error`ExpectedDigitOrAlpha -> Next,
+Token`Error`ExpectedAlphaOrDollar -> Next,
+
+(*
+1:2
+*)
 Token`Error`ExpectedSymbol -> Next,
 Token`Error`UnterminatedComment -> Next,
 Token`Error`UnterminatedString -> Next,
-Token`Error`EmptyParenGroup -> Next,
 Token`Error`InvalidBase -> Next,
 Token`Error`ExpectedAccuracy -> Next,
-Token`Error`Exponent -> Next,
+Token`Error`ExpectedExponent -> Next,
+
+(*
+a::
+*)
 Token`Error`EmptyString -> Next,
 Token`Error`Rest -> Next,
 Token`Error`Internal -> Next,

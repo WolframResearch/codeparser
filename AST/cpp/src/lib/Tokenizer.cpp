@@ -419,7 +419,7 @@ Token Tokenizer::handleSymbol() {
             handleSymbolSegment();
         } else {
             
-            return TOKEN_ERROR_UNHANDLEDCHARACTER;
+            return TOKEN_ERROR_EXPECTEDALPHAORDOLLAR;
         }
         
         c = currentWLCharacter();
@@ -831,7 +831,7 @@ Token Tokenizer::handleNumber() {
                 
                 if (!handleDigitsOrAlpha(base)) {
                     
-                    return TOKEN_ERROR_UNHANDLEDCHARACTER;
+                    return TOKEN_ERROR_EXPECTEDDIGITORALPHA;
                 }
                 
             } else {
@@ -854,17 +854,19 @@ Token Tokenizer::handleNumber() {
     
     c = currentWLCharacter();
     
+    bool real = false;
+
     if (c == WLCharacter('.')) {
         
         if (!handleFractionalPart(base)) {
             
-            return TOKEN_REAL;
+            return TOKEN_INTEGER;
         }
+
+        real = true;
     }
     
     c = currentWLCharacter();
-    
-    bool real = false;
     
     //
     // foo`
@@ -1021,15 +1023,23 @@ Token Tokenizer::handleNumber() {
             }
             
             if (!expectDigits()) {
-                
-                return TOKEN_ERROR_UNHANDLEDCHARACTER;
+
+                //
+                // Something like 123*^
+                //
+
+                return TOKEN_ERROR_EXPECTEDEXPONENT;
             }
             
             if (c == WLCharacter('.')) {
                 
+                //
+                // Something like 123*^.5
+                //
+
                 c = nextWLCharacter(INSIDE_NUMBER);
                 
-                return TOKEN_ERROR_EXPONENT;
+                return TOKEN_ERROR_EXPECTEDEXPONENT;
             }
             
         } else {
@@ -2012,7 +2022,7 @@ Token Tokenizer::handleOperator() {
                         String.put('^');
                         String.put(':');
                         
-                        Operator = TOKEN_ERROR_UNHANDLEDCHARACTER;
+                        Operator = TOKEN_ERROR_EXPECTEDEQUAL;
                     }
                 }
                     break;

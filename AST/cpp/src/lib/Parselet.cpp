@@ -1548,8 +1548,15 @@ std::shared_ptr<Node> SlashColonParselet::parse(std::shared_ptr<Node> Left, Pars
             return std::make_shared<TernaryNode>(SYMBOL_TAGUNSET, Left, BinaryMiddle->getLeft(), BinaryMiddle->getRight(), Issues, Comments);
         }
     }
-    
-    return std::make_shared<SyntaxErrorNode>(TOKEN_ERROR_MISMATCHEDSLASHCOLON, std::vector<std::shared_ptr<Node>> { Middle }, Issues, Comments);
+
+    //
+    // Anything other than:
+    // a /: b = c
+    // a /: b := c
+    // a /: b =.
+    //
+
+    return std::make_shared<SyntaxErrorNode>(TOKEN_ERROR_EXPECTEDSET, std::vector<std::shared_ptr<Node>> { Middle }, Issues, Comments);
 }
 
 
