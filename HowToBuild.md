@@ -24,10 +24,11 @@ Here is the build directory layout after building AST:
 ```
 paclet/
   AST/
+    Kernel/
+      AST.wl
     LibraryResources/
       <<SystemID>>
         AST.dll
-    AST.wl
     PacletInfo.m
     ...
 ```

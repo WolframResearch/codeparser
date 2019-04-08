@@ -9,7 +9,7 @@ TODO: also test roundtripping through ConcreteParseString and ToInputFormString
 parseEquivalenceFunction[actualIn_, expectedIgnored_] :=
 Catch[
 Module[{parsed, good, expected, actual},
-	parsed = ParseString[actualIn, HoldNode[Hold, #, <||>]&];
+	parsed = ParseString[actualIn, HoldNode[Hold, Most[#], <||>]&];
 	If[FailureQ[parsed],
 		Throw[parsed]
 	];
@@ -129,6 +129,26 @@ Test[
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
 	TestID->"Parse-20190109-Y2Q4X3"
+]
+
+Test[
+	"#\"a\""
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190406-P2Q9C9"
+]
+
+Test[
+	"#a`b"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190406-C1E0T4"
 ]
 
 
@@ -1157,7 +1177,7 @@ Test[
    Plus, {IntegerNode["1", {}, <|Source -> {{2, 1}, {2, 1}}|>], 
     IntegerNode[
      "1", {}, <|Source -> {{2, 3}, {2, 3}}|>]}, <|Source -> {{2, 
-       1}, {2, 3}}|>]}, <|Source -> {{2, 1}, {2, 3}}|>]
+       1}, {2, 3}}|>]}, <|SyntaxIssues -> {}, Source -> {{2, 1}, {2, 3}}|>]
 	,
 	TestID->"Parse-20181230-J0G3I8"
 ]
@@ -1177,6 +1197,29 @@ TestMatch[
 	,
 	TestID->"Parse-20181230-M7H7Q7"
 ]
+
+
+carriagereturn = FileNameJoin[{DirectoryName[$CurrentTestSource], "carriagereturn.wl"}]
+
+cst = ConcreteParseFile[carriagereturn]
+
+TestMatch[
+	cst
+	,
+	FileNode[File, {SymbolNode["A", {}, <|Source -> {{3, 1}, {3, 1}}|>]}, <| SyntaxIssues->{SyntaxIssue["CharacterEncoding", "Stray \\r character. Try resaving the file.", "Remark", <|Source -> {{2, 0}, {2, 0}}|>], SyntaxIssue["CharacterEncoding", "Stray \\r character. Try resaving the file.", "Remark", <|Source -> {{3, 0}, {3, 0}}|>]}, Source -> {{3, 1}, {3, 1}}|>]
+	,
+	TestID->"Parse-20190422-C6U5B6"
+]
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -15,7 +15,7 @@ will generate additional required files in these directories:
 *)
 
 
-Print["Generating additional required C++ and WL files"]
+Print["Generating additional required C++ and WL files..."]
 
 
 
@@ -52,7 +52,7 @@ generatedWLDir = FileNameJoin[{buildDir, "generated", "wl"}]
 
 pacletASTDir = FileNameJoin[{buildDir, "paclet", "AST"}]
 
-tablesDir = FileNameJoin[{packageDir, "AST", "tables"}]
+tablesDir = FileNameJoin[{packageDir, "tables"}]
 
 (* setup *)
 Print["Setup"]
@@ -69,9 +69,9 @@ If[FailureQ[FindFile["AST`"]],
   Quit[1]
 ]
 
-If[FindFile["AST`"] =!= FileNameJoin[{pacletASTDir, "AST.wl"}],
+If[FindFile["AST`"] =!= FileNameJoin[{pacletASTDir, "Kernel", "AST.wl"}],
   Print["Conflicting location for AST was found."];
-  Print["Expected to find AST here: ", FileNameJoin[{pacletASTDir, "AST.wl"}]];
+  Print["Expected to find AST here: ", FileNameJoin[{pacletASTDir, "Kernel", "AST.wl"}]];
   Print["Actually found AST here: ", FindFile["AST`"]];
   If[FindFile["AST`"] === FileNameJoin[{packageDir, "AST", "AST.wl"}],
     Print["It looks like the AST source is being used. This is not supported during build time."];
@@ -144,7 +144,7 @@ longNameToCharacterCode["VectorLess"] = 16^^f436
 longNameToCharacterCode["VectorLessEqual"] = 16^^f437
 
 longNameToCharacterCode[longName_String] :=
-  ToCharacterCode[ToExpression["\"\\[" <> longName <> "]\""]]
+  ToCharacterCode[ToExpression["\"\\[" <> longName <> "]\""]][[1]]
 
 
 (*
@@ -159,8 +159,34 @@ integerToHexDigits[int_Integer] :=
 
 
 
+validateLongNameList[l_, file_String] := (
+  Print["validating ", file];
+
+  If[FailureQ[l],
+    Print[l];
+    Quit[1]
+  ];
+
+  If[!DuplicateFreeQ[l],
+    Print[file, " has duplicates"];
+    Quit[1]
+  ];
+
+  If[!OrderedQ[longNameToCharacterCode /@ l],
+    Print[file, " is not ordered"];
+    Quit[1]
+  ];
+)
+
+
+
+
+
+
+
+
 (* clean *)
-Print["Clean"]
+Print["Clean..."]
 
 Quiet[DeleteDirectory[generatedCPPDir, DeleteContents -> True], DeleteDirectory::nodir]
 
@@ -172,21 +198,15 @@ Quiet[CreateDirectory[generatedCPPSrcDir], CreateDirectory::filex]
 
 Quiet[CreateDirectory[generatedWLDir], CreateDirectory::filex]
 
+Print["Done Clean"]
+
 
 (* LongNameDefines *)
-Print["generating LongNameDefines"]
+Print["Generating LongNameDefines..."]
 
 importedLongNames = Get[FileNameJoin[{tablesDir, "LongNames.wl"}]]
 
-If[FailureQ[importedLongNames],
-  Print[importedLongNames];
-  Quit[1]
-]
-
-If[!DuplicateFreeQ[importedLongNames],
-  Print["LongNames.wl has duplicates"];
-  Quit[1]
-]
+validateLongNameList[importedLongNames, "LongNames.wl"]
 
 Check[
 longNameDefines = ("constexpr int " <> toGlobal["CodePoint`LongName`" <> #] <> "(" <> "0x" <> longNameToHexDigits[#] <> ");")& /@ importedLongNames
@@ -245,10 +265,12 @@ If[FailureQ[res],
 ]
 *)
 
+Print["Done LongNameDefines"]
+
 
 
 (* LongNameMap *)
-Print["generating LongNameMap"]
+Print["Generating LongNameMap..."]
 
 longNameToCodePointMap = {
 "std::map <std::string, int> LongNameToCodePointMap {"} ~Join~ (Row[{"{", escapeString[#], ",", " ", toGlobal["CodePoint`LongName`"<>#], "}", ","}]& /@ importedLongNames) ~Join~ {"};", ""}
@@ -362,80 +384,44 @@ EndPackage[]
 "}
 
 Print["exporting LongNameReplacements.wl"]
-res = Export[FileNameJoin[{pacletASTDir, "LongNameReplacements.wl"}], Column[longNameReplacementsWL], "String"]
+res = Export[FileNameJoin[{pacletASTDir, "Kernel", "LongNameReplacements.wl"}], Column[longNameReplacementsWL], "String"]
 
 If[FailureQ[res],
   Print[res];
   Quit[1]
 ]
 
+Print["Done LongNameMap"]
 
 
 
 
 (* CodePoint *)
-Print["generating CodePoint"]
+Print["Generating CodePoint..."]
 
 importedOperatorLongNames = Get[FileNameJoin[{tablesDir, "OperatorLongNames.wl"}]]
 
-If[FailureQ[importedOperatorLongNames],
-  Print[importedOperatorLongNames];
-  Quit[1]
-]
+validateLongNameList[importedOperatorLongNames, "OperatorLongNames.wl"]
 
-If[!DuplicateFreeQ[importedOperatorLongNames],
-  Print["OperatorLongNames.wl has duplicates"];
-  Quit[1]
-]
 
 importedCommaLongNames = Get[FileNameJoin[{tablesDir, "CommaLongNames.wl"}]]
 
-If[FailureQ[importedCommaLongNames],
-  Print[importedCommaLongNames];
-  Quit[1]
-]
+validateLongNameList[importedCommaLongNames, "CommaLongNames.wl"]
 
-If[!DuplicateFreeQ[importedCommaLongNames],
-  Print["CommaLongNames.wl has duplicates"];
-  Quit[1]
-]
 
 importedNewlineLongNames = Get[FileNameJoin[{tablesDir, "NewlineLongNames.wl"}]]
 
-If[FailureQ[importedNewlineLongNames],
-  Print[importedNewlineLongNames];
-  Quit[1]
-]
+validateLongNameList[importedNewlineLongNames, "NewlineLongNames.wl"]
 
-If[!DuplicateFreeQ[importedNewlineLongNames],
-  Print["NewlineLongNames.wl has duplicates"];
-  Quit[1]
-]
 
 importedSpaceLongNames = Get[FileNameJoin[{tablesDir, "SpaceLongNames.wl"}]]
 
-If[FailureQ[importedSpaceLongNames],
-  Print[importedSpaceLongNames];
-  Quit[1]
-]
+validateLongNameList[importedSpaceLongNames, "SpaceLongNames.wl"]
 
-If[!DuplicateFreeQ[importedSpaceLongNames],
-  Print["SpaceLongNames.wl has duplicates"];
-  Quit[1]
-]
 
 importedUninterpretableLongNames = Get[FileNameJoin[{tablesDir, "UninterpretableLongNames.wl"}]]
 
-If[FailureQ[importedUninterpretableLongNames],
-  Print[importedUninterpretableLongNames];
-  Quit[1]
-]
-
-If[!DuplicateFreeQ[importedUninterpretableLongNames],
-  Print["UninterpretableLongNames.wl has duplicates"];
-  Quit[1]
-]
-
+validateLongNameList[importedUninterpretableLongNames, "UninterpretableLongNames.wl"]
 
 
 codePointCPPHeader = {
@@ -479,7 +465,7 @@ constexpr int CODEPOINT_ERROR_INTERNAL(-2);
 constexpr int CODEPOINT_LINEARSYNTAX_SPACE(-3);
 
 //
-// The string meta characters will have code points here, but they are not actual characters and do not have real code points
+// The string meta characters \\< and \\> will have code points here, but they are not actual characters and do not have real code points
 // 
 constexpr int CODEPOINT_STRINGMETA_OPEN(-4);
 constexpr int CODEPOINT_STRINGMETA_CLOSE(-5);
@@ -532,7 +518,7 @@ LongNameCodePointToOperatorSource =
   {"Token LongNameCodePointToOperator(int c) {
 switch (c) {"} ~Join~
     (Row[{"case", " ", toGlobal["CodePoint`LongName`"<>#], ":", " ", "return", " ", 
-        toGlobal["Token`Operator`LongName`"<>#], ";"}]& /@ importedOperatorLongNames) ~Join~
+        toGlobal["Token`LongName`"<>#], ";"}]& /@ importedOperatorLongNames) ~Join~
     {"default:
 std::cerr << \"Need to add operator: 0x\" << std::setfill('0') << std::setw(4) << std::hex << c << std::dec << \"\\n\";
 assert(false && \"Need to add operator\");
@@ -544,7 +530,7 @@ LongNameOperatorToCodePointSource =
   {"
 int LongNameOperatorToCodePoint(Token t) {
 switch (t) {"} ~Join~
-    (Row[{"case", " ", toGlobal["Token`Operator`LongName`"<>#], ":", " ", "return",
+    (Row[{"case", " ", toGlobal["Token`LongName`"<>#], ":", " ", "return",
          " ", toGlobal["CodePoint`LongName`"<>#], ";"}]& /@ importedOperatorLongNames) ~Join~
 {"default:
 std::cerr << \"Need to add operator: 0x\" << std::setfill('0') << std::setw(4) << std::hex << t << std::dec << \"\\n\";
@@ -582,7 +568,7 @@ If[FailureQ[res],
   Quit[1]
 ]
 
-
+Print["Done CodePoint"]
 
 
 
@@ -593,11 +579,11 @@ If[FailureQ[res],
 
 
 (* Token *)
-Print["generating Token"]
+Print["Generating Token..."]
 
 operatorMacros = 
   Association[
-   ToExpression["Token`Operator`LongName`" <> #] -> Next& /@ importedOperatorLongNames]
+   ToExpression["Token`LongName`" <> #] -> Next& /@ importedOperatorLongNames]
 
 importedTokenEnumSource = 
   Get[FileNameJoin[{tablesDir, "TokenEnum.wl"}]]
@@ -632,6 +618,7 @@ tokenCPPHeader = {
 #pragma once
 
 #include <string>
+#include <unordered_map>
 
 enum Token {"} ~Join~
    KeyValueMap[(Row[{toGlobal[#], " = ", #2, ","}])&, enumMap] ~Join~
@@ -639,7 +626,20 @@ enum Token {"} ~Join~
    {"std::string TokenToString(Token type);",
    "bool isOperator(Token type);",
    "bool isError(Token type);",
-   ""}
+"
+
+namespace std {
+    //
+    // for std::unordered_map
+    //
+    template <> struct hash<Token> {
+        size_t operator()(const Token &x) const {
+            return x;
+        }
+    };
+}
+"
+}
 
 Print["exporting Token.h"]
 res = Export[FileNameJoin[{generatedCPPIncludeDir, "Token.h"}], Column[tokenCPPHeader], "String"]
@@ -662,7 +662,7 @@ DO NOT MODIFY
  {"Nothing", "|>", ""}
 
 Print["exporting Token.wl"]
-res = Export[FileNameJoin[{pacletASTDir, "Token.wl"}], Column[tokenWL], "String"]
+res = Export[FileNameJoin[{pacletASTDir, "Kernel", "Token.wl"}], Column[tokenWL], "String"]
 
 If[FailureQ[res],
   Print[res];
@@ -695,7 +695,7 @@ uniqueEnums = DeleteCases[importedTokenEnumSource, v_ /; !IntegerQ[v] && UnsameQ
 tokenStrings = Association[# -> escapeString[ToString[#]]& /@ Keys[uniqueEnums]]
 
 operatorMacros = 
-  Association[ToExpression["Token`Operator`LongName`" <> #] -> escapeString["Token`Operator`LongName`" <> #]& /@ importedOperatorLongNames]
+  Association[ToExpression["Token`LongName`" <> #] -> escapeString["Token`LongName`" <> #]& /@ importedOperatorLongNames]
 
 
 
@@ -724,7 +724,7 @@ tokenCPPSource = {
     {"}"} ~Join~
     {"}"} ~Join~
     {""} ~Join~
-    {"bool isOperator(Token Tok) { return TOKEN_OPERATOR_FIRST <= Tok && Tok < TOKEN_OPERATOR_END; }"} ~Join~
+    {"bool isOperator(Token Tok) { return TOKEN_FIRST <= Tok && Tok < TOKEN_END; }"} ~Join~
     {"bool isError(Token Tok) { return TOKEN_ERROR_FIRST <= Tok && Tok < TOKEN_ERROR_END; }"} ~Join~
     {""}
 
@@ -736,7 +736,7 @@ If[FailureQ[res],
   Quit[1]
 ]
 
-
+Print["Done Token"]
 
 
 
@@ -745,7 +745,7 @@ If[FailureQ[res],
 
 
 (* Precedence *)
-Print["generating Precedence"]
+Print["Generating Precedence..."]
 
 importedPrecedenceSource = Get[FileNameJoin[{tablesDir, "Precedence.wl"}]]
 
@@ -815,14 +815,14 @@ DO NOT MODIFY
 "} ~Join~ {"<|"} ~Join~ (KeyValueMap[(Row[{#1, " -> ", #2, ","}]) &, enumMap]) ~Join~ {"Nothing", "|>", ""}
 
 Print["exporting Precedence.wl"]
-res = Export[FileNameJoin[{pacletASTDir, "Precedence.wl"}], Column[precedenceWL], "String"]
+res = Export[FileNameJoin[{pacletASTDir, "Kernel", "Precedence.wl"}], Column[precedenceWL], "String"]
 
 If[FailureQ[res],
   Print[res];
   Quit[1]
 ]
 
-
+Print["Done Precedence"]
 
 
 
@@ -832,7 +832,7 @@ If[FailureQ[res],
 
 
 (* Symbol *)
-Print["generating Symbol"]
+Print["Generating Symbol..."]
 
 (*
 sanity check Prefix operators
@@ -1175,6 +1175,7 @@ If[FailureQ[res],
   Quit[1]
 ]
 
+Print["Done Symbol"]
 
 
 
@@ -1190,8 +1191,10 @@ If[Complement[newTokens, oldTokens] =!= {},
   Quit[1]
 ]
 
-If[Length[Join[Names["LongName`*"], Names["LongName`*`*"]]] =!= 0,
-  Print["LongName: ", Join[Names["LongName`*"], Names["LongName`*`*"]]];
+longNames = Join[Names["LongName`*"], Names["LongName`*`*"]]
+
+If[Length[longNames] =!= 0,
+  Print["LongName: ", longNames];
   Quit[1]
 ]
 

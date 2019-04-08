@@ -1,0 +1,2 @@
+
+	InputAliases -> {"intt" -> \(\[Integral] \(\[SelectionPlaceholder] \(\[DifferentialD] \[Placeholder]\)\)\), "dintt" -> \(\(\[Integral]\_\[SelectionPlaceholder]\%\[Placeholder]\) \(\[Placeholder] \(\[DifferentialD] \[Placeholder]\)\)\), "sumt" -> \(\(\[Sum]\+\(\[SelectionPlaceholder] = \[Placeholder]\)\%\[Placeholder]\) \[Placeholder]\), "prodt" -> \(\(\[Product]\+\(\[SelectionPlaceholder] = \[Placeholder]\)\%\[Placeholder]\) \[Placeholder]\), "dt" -> \(\(\[PartialD]\_\[Placeholder]\)\ \[SelectionPlaceholder]\)}

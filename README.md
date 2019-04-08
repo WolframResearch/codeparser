@@ -24,7 +24,7 @@ The AST package introduces functions for parsing WL source code and returning a 
 
 All nodes have a uniform structure:
 
-`Node[string or operator, children, opts]`
+`Node[string or operator, children, data]`
 
 
 
@@ -39,13 +39,14 @@ The AST source layout has the following structure.
 ```
 ast/
   AST/
-    cpp/
-      include/
-      src/
     Documentation/
-    tables/
+    Kernel/
+  cpp/
+    include/
+    src/
   scripts/
     Generate.wl
+  tables/
   CMakeLists.txt
   README.md
 ```

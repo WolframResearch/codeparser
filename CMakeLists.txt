@@ -3,28 +3,28 @@ cmake_minimum_required(VERSION 3.0)
 
 project(ast)
 
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+
 set(PACLET "AST")
-set(PACLET_VERSION "0.9" CACHE STRING "Paclet Version")
 set(WOLFRAMKERNEL /Applications/Mathematica.app/Contents/MacOS/WolframKernel CACHE FILEPATH "Path to WolframKernel")
 set(BUILD_DOCS OFF CACHE BOOL "Build documentation")
 set(BUILD_EXE OFF CACHE BOOL "Build executable")
 
 message(STATUS "PACLET: ${PACLET}")
-message(STATUS "PACLET_VERSION: ${PACLET_VERSION}")
 message(STATUS "WOLFRAMKERNEL: ${WOLFRAMKERNEL}")
 message(STATUS "BUILD_DOCS: ${BUILD_DOCS}")
 message(STATUS "BUILD_EXE: ${BUILD_EXE}")
 
 set(WL_SOURCES
-	${CMAKE_SOURCE_DIR}/AST/Abstract.wl
-	${CMAKE_SOURCE_DIR}/AST/AST.wl
-	${CMAKE_SOURCE_DIR}/AST/Boxes.wl
-	${CMAKE_SOURCE_DIR}/AST/DeclarationName.wl
-	${CMAKE_SOURCE_DIR}/AST/Node.wl
-	${CMAKE_SOURCE_DIR}/AST/Symbol.wl
-	${CMAKE_SOURCE_DIR}/AST/ToInputFormString.wl
-	${CMAKE_SOURCE_DIR}/AST/ToFullFormString.wl
-	${CMAKE_SOURCE_DIR}/AST/Utils.wl
+	${CMAKE_SOURCE_DIR}/AST/Kernel/Abstract.wl
+	${CMAKE_SOURCE_DIR}/AST/Kernel/AST.wl
+	${CMAKE_SOURCE_DIR}/AST/Kernel/Boxes.wl
+	${CMAKE_SOURCE_DIR}/AST/Kernel/DeclarationName.wl
+	${CMAKE_SOURCE_DIR}/AST/Kernel/Node.wl
+	${CMAKE_SOURCE_DIR}/AST/Kernel/Symbol.wl
+	${CMAKE_SOURCE_DIR}/AST/Kernel/ToInputFormString.wl
+	${CMAKE_SOURCE_DIR}/AST/Kernel/ToFullFormString.wl
+	${CMAKE_SOURCE_DIR}/AST/Kernel/Utils.wl
 )
 
 set(PACLETINFO_SOURCE
@@ -32,25 +32,21 @@ set(PACLETINFO_SOURCE
 )
 
 set(WL_DATA_SOURCES
-	${CMAKE_SOURCE_DIR}/AST/tables/CommaLongNames.wl
-	${CMAKE_SOURCE_DIR}/AST/tables/LongNames.wl
-	${CMAKE_SOURCE_DIR}/AST/tables/NewlineLongNames.wl
-	${CMAKE_SOURCE_DIR}/AST/tables/OperatorLongNames.wl
-	${CMAKE_SOURCE_DIR}/AST/tables/Precedence.wl
-	${CMAKE_SOURCE_DIR}/AST/tables/SpaceLongNames.wl
-	${CMAKE_SOURCE_DIR}/AST/tables/TokenEnum.wl
-	${CMAKE_SOURCE_DIR}/AST/tables/UninterpretableLongNames.wl
-)
-
-set(BUILT_PACLETINFO
-	${CMAKE_BINARY_DIR}/paclet/AST/PacletInfo.m
+	${CMAKE_SOURCE_DIR}/tables/CommaLongNames.wl
+	${CMAKE_SOURCE_DIR}/tables/LongNames.wl
+	${CMAKE_SOURCE_DIR}/tables/NewlineLongNames.wl
+	${CMAKE_SOURCE_DIR}/tables/OperatorLongNames.wl
+	${CMAKE_SOURCE_DIR}/tables/Precedence.wl
+	${CMAKE_SOURCE_DIR}/tables/SpaceLongNames.wl
+	${CMAKE_SOURCE_DIR}/tables/TokenEnum.wl
+	${CMAKE_SOURCE_DIR}/tables/UninterpretableLongNames.wl
 )
 
 set(GENERATED_WL_SOURCES
-	# not used right now ${CMAKE_BINARY_DIR}/paclet/${PACLET}/LongNameDefines.wl
-	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Precedence.wl
-	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Token.wl
-	${CMAKE_BINARY_DIR}/paclet/${PACLET}/LongNameReplacements.wl
+	# not used right now ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/LongNameDefines.wl
+	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/Precedence.wl
+	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/Token.wl
+	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/LongNameReplacements.wl
 )
 
 set(GENERATED_WL_DATA_SOURCES
@@ -81,68 +77,32 @@ set(GENERATED_SOURCES
 )
 
 
-set(DOCUMENTATION_NOTEBOOKS
-	${CMAKE_SOURCE_DIR}/AST/Documentation/English/ReferencePages/Symbols/ConcreteParseFile.nb
-	${CMAKE_SOURCE_DIR}/AST/Documentation/English/ReferencePages/Symbols/ConcreteParseString.nb
-	${CMAKE_SOURCE_DIR}/AST/Documentation/English/ReferencePages/Symbols/ParseFile.nb
-	${CMAKE_SOURCE_DIR}/AST/Documentation/English/ReferencePages/Symbols/ParseString.nb
-	${CMAKE_SOURCE_DIR}/AST/Documentation/English/ReferencePages/Symbols/TokenizeFile.nb
-	${CMAKE_SOURCE_DIR}/AST/Documentation/English/ReferencePages/Symbols/TokenizeString.nb
+set(DOCUMENTATION_NOTEBOOK_PATHS
+	English/ReferencePages/Symbols/ConcreteParseFile.nb
+	English/ReferencePages/Symbols/ConcreteParseString.nb
+	English/ReferencePages/Symbols/ParseFile.nb
+	English/ReferencePages/Symbols/ParseString.nb
+	English/ReferencePages/Symbols/TokenizeFile.nb
+	English/ReferencePages/Symbols/TokenizeString.nb
 )
 
-set(BUILT_DOCUMENTATION
-	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/Index/_0.cfs
-	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/Index/segments.gen
-	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/Index/segments_3
-	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/ReferencePages/Symbols/ConcreteParseFile.nb
-	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/ReferencePages/Symbols/ConcreteParseString.nb
-	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/ReferencePages/Symbols/ParseFile.nb
-	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/ReferencePages/Symbols/ParseString.nb
-	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/ReferencePages/Symbols/TokenizeFile.nb
-	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/ReferencePages/Symbols/TokenizeString.nb
-	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/SpellIndex/_0.cfs
-	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/SpellIndex/segments.gen
-	${CMAKE_BINARY_DIR}/paclet/AST/Documentation/English/SpellIndex/segments_3
-)
-
-
+#
+# Setup documentation notebook paths
+#
+foreach(NB_PATH ${DOCUMENTATION_NOTEBOOK_PATHS})
+	set(SRC ${CMAKE_SOURCE_DIR}/${PACLET}/Documentation/${NB_PATH})
+	set(BUILT ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/${NB_PATH})
+	list(APPEND DOCUMENTATION_SOURCE ${SRC})
+	list(APPEND BUILT_DOCUMENTATION ${BUILT})
+endforeach()
 
 
 
 #
-# Check WolframKernel
+# Set VERSION_NUMBER, SYSTEMID, and PACLET_VERSION
 #
-
-# get $VersionNumber
-execute_process(
-	COMMAND ${WOLFRAMKERNEL} -noinit -script ${CMAKE_SOURCE_DIR}/scripts/VersionNumber.wl
-	OUTPUT_VARIABLE VERSION_NUMBER
-	OUTPUT_STRIP_TRAILING_WHITESPACE
-	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-)
-
-message(STATUS "VERSION_NUMBER: ${VERSION_NUMBER}")
-
-if("${VERSION_NUMBER}" STREQUAL "")
-	message(FATAL_ERROR "Wolfram Kernel failed")
-endif()
-
-if(NOT ${VERSION_NUMBER} GREATER_EQUAL 1100)
-	message(FATAL_ERROR "Wolfram Kernel must be at least version 11.0")
-endif()
-
-# get $SystemID
-execute_process(
-	COMMAND ${WOLFRAMKERNEL} -noinit -script ${CMAKE_SOURCE_DIR}/scripts/SystemID.wl
-	OUTPUT_VARIABLE SYSTEMID
-	OUTPUT_STRIP_TRAILING_WHITESPACE
-	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-)
-
-message(STATUS "SYSTEMID: ${SYSTEMID}")
-
-
-
+include(WolframKernel)
+CheckWolframKernel()
 
 
 
@@ -156,9 +116,14 @@ file(MAKE_DIRECTORY
 #
 # Use configure_file to create a file-level dependency between input and output
 #
+set(CONFIGURED_SRC ${CMAKE_BINARY_DIR}/paclet/${PACLET}/PacletInfo.m)
+configure_file(${PACLETINFO_SOURCE}
+	${CONFIGURED_SRC}
+)
+list(APPEND CONFIGURED_WL_SOURCES ${CONFIGURED_SRC})
 foreach(SRC ${WL_SOURCES})
 	get_filename_component(BARE_SRC ${SRC} NAME)
-	set(CONFIGURED_SRC ${CMAKE_BINARY_DIR}/paclet/${PACLET}/${BARE_SRC})
+	set(CONFIGURED_SRC ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC})
 	configure_file(${SRC}
 		${CONFIGURED_SRC}
 	)
@@ -166,10 +131,7 @@ foreach(SRC ${WL_SOURCES})
 endforeach()
 
 set(PACLET_SOURCES
-	# Pack script
-	${CMAKE_SOURCE_DIR}/scripts/Pack.wl
 	${CONFIGURED_WL_SOURCES}
-	${BUILT_PACLETINFO}
 	${GENERATED_WL_SOURCES}
 	ast-lib
 )
@@ -181,26 +143,6 @@ list(APPEND PACLET_SOURCES
 )
 
 endif(BUILD_DOCS)
-
-
-
-
-
-#
-# Build PacletInfo.m
-#
-# Run the BuildPacletInfo.wl script to build a PacletInfo.m appropriate for including in the paclet
-#
-add_custom_command(
-	OUTPUT
-		${BUILT_PACLETINFO}
-	DEPENDS
-		${CMAKE_SOURCE_DIR}/scripts/BuildPacletInfo.wl
-		${PACLETINFO_SOURCE}
-	COMMAND ${WOLFRAMKERNEL} -noinit -script ${CMAKE_SOURCE_DIR}/scripts/BuildPacletInfo.wl -source ${PACLETINFO_SOURCE} -built ${BUILT_PACLETINFO} -pacletVersion "${PACLET_VERSION}"
-	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-)
-
 
 
 
@@ -244,31 +186,30 @@ set(MATHLINK_LIB_DIR /Applications/Mathematica.app/Contents/SystemFiles/Links/Ma
 message(STATUS "MATHLINK_LIB_DIR: ${MATHLINK_LIB_DIR}")
 
 set(CPP_INCLUDES
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/API.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/ByteDecoder.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/ByteEncoder.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/CharacterDecoder.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/Node.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/Parselet.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/Parser.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/SourceManager.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/SyntaxIssue.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/Tokenizer.h
-	${CMAKE_SOURCE_DIR}/AST/cpp/include/Utils.h
+	${CMAKE_SOURCE_DIR}/cpp/include/API.h
+	${CMAKE_SOURCE_DIR}/cpp/include/ByteDecoder.h
+	${CMAKE_SOURCE_DIR}/cpp/include/ByteEncoder.h
+	${CMAKE_SOURCE_DIR}/cpp/include/CharacterDecoder.h
+	${CMAKE_SOURCE_DIR}/cpp/include/Node.h
+	${CMAKE_SOURCE_DIR}/cpp/include/Parselet.h
+	${CMAKE_SOURCE_DIR}/cpp/include/Parser.h
+	${CMAKE_SOURCE_DIR}/cpp/include/Source.h
+	${CMAKE_SOURCE_DIR}/cpp/include/Tokenizer.h
+	${CMAKE_SOURCE_DIR}/cpp/include/Utils.h
 )
 
 set(CPP_LIB_SOURCES
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/API.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/ByteDecoder.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/ByteEncoder.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/CharacterDecoder.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/Node.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/Parselet.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/Parser.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/SourceManager.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/SyntaxIssue.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/Tokenizer.cpp
-	${CMAKE_SOURCE_DIR}/AST/cpp/src/lib/Utils.cpp
+	${CMAKE_SOURCE_DIR}/cpp/src/lib/API.cpp
+	${CMAKE_SOURCE_DIR}/cpp/src/lib/ByteDecoder.cpp
+	${CMAKE_SOURCE_DIR}/cpp/src/lib/ByteEncoder.cpp
+	${CMAKE_SOURCE_DIR}/cpp/src/lib/CharacterDecoder.cpp
+	${CMAKE_SOURCE_DIR}/cpp/src/lib/Node.cpp
+	${CMAKE_SOURCE_DIR}/cpp/src/lib/Parselet.cpp
+	${CMAKE_SOURCE_DIR}/cpp/src/lib/Parser.cpp
+	${CMAKE_SOURCE_DIR}/cpp/src/lib/SourceManager.cpp
+	${CMAKE_SOURCE_DIR}/cpp/src/lib/SyntaxIssue.cpp
+	${CMAKE_SOURCE_DIR}/cpp/src/lib/Tokenizer.cpp
+	${CMAKE_SOURCE_DIR}/cpp/src/lib/Utils.cpp
 )
 
 add_library(ast-lib SHARED
@@ -279,7 +220,7 @@ add_library(ast-lib SHARED
 )
 
 target_include_directories(ast-lib
-	PRIVATE ${CMAKE_SOURCE_DIR}/AST/cpp/include
+	PRIVATE ${CMAKE_SOURCE_DIR}/cpp/include
 	PRIVATE ${CMAKE_BINARY_DIR}/generated/cpp/include
 	PRIVATE ${MATHLINK_INCLUDE_DIR}
 	PRIVATE ${WOLFRAMLIBRARY_INCLUDE_DIR}
@@ -299,14 +240,29 @@ target_link_libraries(ast-lib ${MATHLINK_LIB})
 
 
 set(MAX_EXPRESSION_DEPTH 100 CACHE STRING "Maximum depth allowed by the parser")
-set(MAX_EXPRESSION_BREADTH 1000 CACHE STRING "Maximum breadth allowed by the parser")
+set(MAX_EXPRESSION_BREADTH 100000 CACHE STRING "Maximum breadth allowed by the parser")
+set(MAX_DIGITS_LENGTH 1000000 CACHE STRING "Maximum length of digits allowed by the parser")
+set(MAX_PRECISION_LENGTH 6 CACHE STRING "Maximum length of precision allowed by the parser")
+set(MAX_ACCURACY_LENGTH 6 CACHE STRING "Maximum length of accuracy allowed by the parser")
+set(MAX_SYMBOL_LENGTH 1000000 CACHE STRING "Maximum length of symbols allowed by the parser")
+set(MAX_STRING_LENGTH 1000000 CACHE STRING "Maximum length of strings allowed by the parser")
 
 message(STATUS "MAX_EXPRESSION_DEPTH: ${MAX_EXPRESSION_DEPTH}")
 message(STATUS "MAX_EXPRESSION_BREADTH: ${MAX_EXPRESSION_BREADTH}")
+message(STATUS "MAX_DIGITS_LENGTH: ${MAX_DIGITS_LENGTH}")
+message(STATUS "MAX_PRECISION_LENGTH: ${MAX_PRECISION_LENGTH}")
+message(STATUS "MAX_ACCURACY_LENGTH: ${MAX_ACCURACY_LENGTH}")
+message(STATUS "MAX_SYMBOL_LENGTH: ${MAX_SYMBOL_LENGTH}")
+message(STATUS "MAX_STRING_LENGTH: ${MAX_STRING_LENGTH}")
 
 target_compile_definitions(ast-lib
 	PRIVATE MAX_EXPRESSION_DEPTH=${MAX_EXPRESSION_DEPTH}
 	PRIVATE MAX_EXPRESSION_BREADTH=${MAX_EXPRESSION_BREADTH}
+	PRIVATE MAX_DIGITS_LENGTH=${MAX_DIGITS_LENGTH}
+	PRIVATE MAX_PRECISION_LENGTH=${MAX_PRECISION_LENGTH}
+	PRIVATE MAX_ACCURACY_LENGTH=${MAX_ACCURACY_LENGTH}
+	PRIVATE MAX_SYMBOL_LENGTH=${MAX_SYMBOL_LENGTH}
+	PRIVATE MAX_STRING_LENGTH=${MAX_STRING_LENGTH}
 )
 
 set_target_properties(ast-lib PROPERTIES
@@ -372,7 +328,7 @@ endif(MSVC)
 
 if(BUILD_EXE)
 
-add_subdirectory(AST/cpp/src/exe)
+add_subdirectory(cpp/src/exe)
 
 endif(BUILD_EXE)
 
@@ -414,7 +370,7 @@ add_custom_command(
 	OUTPUT
 		${BUILT_DOCUMENTATION}
 	DEPENDS
-		${DOCUMENTATION_NOTEBOOKS}
+		${DOCUMENTATION_SOURCE}
 	COMMAND
 		ant -DmathExe=${WOLFRAMKERNEL} -DappPath=${DOCS_APPPATH} -Djlinkpath=${DOCS_JLINKPATH} -DinputDir=${CMAKE_SOURCE_DIR}/${PACLET}/Documentation/ -DoutputDir=${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/ -file ${DOCS_APPPATH}/DocumentationBuild/SystemFiles/ant/Build/notebook.xml
 	WORKING_DIRECTORY
@@ -444,7 +400,8 @@ add_custom_command(
 	DEPENDS
 		${PACLET_SOURCES}
 	COMMAND
-		${WOLFRAMKERNEL} -noinit -script ${CMAKE_SOURCE_DIR}/scripts/Pack.wl -pacletDir ${CMAKE_BINARY_DIR}/paclet/${PACLET}
+		${WOLFRAMKERNEL} -noinit -noprompt -run PackPaclet["${CMAKE_BINARY_DIR}/paclet/${PACLET}"]\;Exit[]
+	VERBATIM
 	WORKING_DIRECTORY
 		${CMAKE_SOURCE_DIR}
 )
