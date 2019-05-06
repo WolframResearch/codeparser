@@ -591,7 +591,7 @@ WLCharacter CharacterDecoder::handle2Hex(SourceCharacter curSourceIn, SourceLoca
     
     for (auto i = 0; i < 2; i++) {
         
-        auto curSource = nextSourceCharacter();
+        curSource = nextSourceCharacter();
         
         if (curSource.isHex()) {
             
@@ -1058,6 +1058,10 @@ std::vector<SourceCharacter> WLCharacter::actualSource() const {
             auto x5 = ii % 16;
             
             return {SourceCharacter('\\'), SourceCharacter('|'), SourceCharacter(WLCharacter::fromDigit(x5)), SourceCharacter(WLCharacter::fromDigit(x4)), SourceCharacter(WLCharacter::fromDigit(x3)), SourceCharacter(WLCharacter::fromDigit(x2)), SourceCharacter(WLCharacter::fromDigit(x1)), SourceCharacter(WLCharacter::fromDigit(x0))};
+        }
+        default: {
+            assert(false);
+            return {};
         }
     }
 }
