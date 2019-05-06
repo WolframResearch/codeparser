@@ -1206,7 +1206,9 @@ cst = ConcreteParseFile[carriagereturn]
 TestMatch[
 	cst
 	,
-	FileNode[File, {SymbolNode["A", {}, <|Source -> {{3, 1}, {3, 1}}|>]}, <| SyntaxIssues->{SyntaxIssue["CharacterEncoding", "Stray \\r character. Try resaving the file.", "Remark", <|Source -> {{2, 0}, {2, 0}}|>], SyntaxIssue["CharacterEncoding", "Stray \\r character. Try resaving the file.", "Remark", <|Source -> {{3, 0}, {3, 0}}|>]}, Source -> {{3, 1}, {3, 1}}|>]
+	FileNode[File, {SymbolNode["A", {}, <|Source -> {{3, 1}, {3, 1}}|>]},
+										<| SyntaxIssues->{SyntaxIssue["CharacterEncoding", _, "Remark", <|Source -> {{2, 0}, {2, 0}}|>],
+											SyntaxIssue["CharacterEncoding", _, "Remark", <|Source -> {{3, 0}, {3, 0}}|>]}, Source -> {{3, 1}, {3, 1}}|>]
 	,
 	TestID->"Parse-20190422-C6U5B6"
 ]
