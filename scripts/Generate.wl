@@ -18,7 +18,6 @@ will generate additional required files in these directories:
 Print["Generating additional required C++ and WL files..."]
 
 
-
 packageDir = Directory[]
 
 If[FileNameSplit[packageDir][[-1]] =!= "ast",
@@ -84,104 +83,24 @@ If[FindFile["AST`"] =!= FileNameJoin[{pacletASTDir, "Kernel", "AST.wl"}],
 
 
 
-
-res = Needs["AST`"]
-
-If[FailureQ[res],
-  Print["Needs[\"AST`\"] failed: ", res];
-  Quit[1];
-]
-
-res = Needs["AST`Utils`"]
+Catch[
+res = Needs[#];
 
 If[FailureQ[res],
-  Print["Needs[\"AST`Utils`\"] failed: ", res];
+  Print["Needs[" <> # <> "] failed: ", res];
   Quit[1];
 ]
+,
+_
+,
+(Print[#];Quit[1])&
+]& /@ {"AST`", "AST`Utils`", "AST`Build`"}
 
 
 
 
-(*
-uppercases and replaces ` with _
-*)
-toGlobal[n_] := 
- StringReplace[ToUpperCase[ToString[n]], {"`" -> "_", "$" -> "_"}]
-
-
-
-(*
-specify the long names that are not in earlier, supported versions
-
-e.g., Generate.wl may be run in a 11.0 kernel, but the target may be a 12.1 kernel
-So we want to recognize characters that are not in 11.0 while building with 11.0
-
-*)
-(*
-added in 11.1:
-TwoWayRule
-*)
-longNameToCharacterCode["TwoWayRule"] = 16^^f120
-(*
-added in 11.2:
-Limit
-MaxLimit
-MinLimit
-*)
-longNameToCharacterCode["Limit"] = 16^^f438
-longNameToCharacterCode["MaxLimit"] = 16^^f439
-longNameToCharacterCode["MinLimit"] = 16^^f43a
-(*
-added in 12.0:
-VectorGreater
-VectorGreaterEqual
-VectorLess
-VectorLessEqual
-*)
-longNameToCharacterCode["VectorGreater"] = 16^^f434
-longNameToCharacterCode["VectorGreaterEqual"] = 16^^f435
-longNameToCharacterCode["VectorLess"] = 16^^f436
-longNameToCharacterCode["VectorLessEqual"] = 16^^f437
-
-longNameToCharacterCode[longName_String] :=
-  ToCharacterCode[ToExpression["\"\\[" <> longName <> "]\""]][[1]]
-
-
-(*
-longNameToHexDigits["Alpha"] is "03b1"
-*)
-longNameToHexDigits[longName_String] :=
-  IntegerString[longNameToCharacterCode[longName], 16, 4]
-
-integerToHexDigits[int_Integer] :=
-  IntegerString[int, 16, 4]
-
-
-
-
-validateLongNameList[l_, file_String] := (
-  Print["validating ", file];
-
-  If[FailureQ[l],
-    Print[l];
-    Quit[1]
-  ];
-
-  If[!DuplicateFreeQ[l],
-    Print[file, " has duplicates"];
-    Quit[1]
-  ];
-
-  If[!OrderedQ[longNameToCharacterCode /@ l],
-    Print[file, " is not ordered"];
-    Quit[1]
-  ];
-)
-
-
-
-
-
+$WorkaroundBug321344 = checkBug321344[]
+Print["Work around Bug 321344: ", $WorkaroundBug321344];
 
 
 
@@ -206,10 +125,26 @@ Print["Generating LongNameDefines..."]
 
 importedLongNames = Get[FileNameJoin[{tablesDir, "LongNames.wl"}]]
 
-validateLongNameList[importedLongNames, "LongNames.wl"]
+validateLongNameMap[importedLongNames]
+
+
+
+
+importedPunctuationLongNames = Keys[Select[importedLongNames, # === Punctuation &]]
+
+importedSpaceLongNames = Keys[Select[importedLongNames, # === Space &]]
+
+importedNewlineLongNames = Keys[Select[importedLongNames, # === Newline &]]
+
+importedCommaLongNames = Keys[Select[importedLongNames, # === Comma &]]
+
+importedUninterpretableLongNames = Keys[Select[importedLongNames, # === Uninterpretable &]]
+
+
+
 
 Check[
-longNameDefines = ("constexpr int " <> toGlobal["CodePoint`LongName`" <> #] <> "(" <> "0x" <> longNameToHexDigits[#] <> ");")& /@ importedLongNames
+longNameDefines = ("constexpr int " <> toGlobal["CodePoint`LongName`" <> #] <> "(" <> "0x" <> longNameToHexDigits[#] <> ");")& /@ Keys[importedLongNames]
 ,
 Print["Message while generating LongNameDefines"];
 Quit[1]
@@ -273,10 +208,10 @@ Print["Done LongNameDefines"]
 Print["Generating LongNameMap..."]
 
 longNameToCodePointMap = {
-"std::map <std::string, int> LongNameToCodePointMap {"} ~Join~ (Row[{"{", escapeString[#], ",", " ", toGlobal["CodePoint`LongName`"<>#], "}", ","}]& /@ importedLongNames) ~Join~ {"};", ""}
+"std::map <std::string, int> LongNameToCodePointMap {"} ~Join~ (Row[{"{", escapeString[#], ",", " ", toGlobal["CodePoint`LongName`"<>#], "}", ","}]& /@ Keys[importedLongNames]) ~Join~ {"};", ""}
 
 codePointToLongNameMap = {
-"std::map <int, std::string> CodePointToLongNameMap {"} ~Join~ (Row[{"{", toGlobal["CodePoint`LongName`"<>#], ",", " ", escapeString[#], "}", ","}] & /@ importedLongNames)~Join~{"};", ""}
+"std::map <int, std::string> CodePointToLongNameMap {"} ~Join~ (Row[{"{", toGlobal["CodePoint`LongName`"<>#], ",", " ", escapeString[#], "}", ","}] & /@ Keys[importedLongNames])~Join~{"};", ""}
 
 longNameMapCPPSource = {
 "
@@ -328,12 +263,10 @@ If[FailureQ[res],
 
 
 longNameToCodePointAssociation = {
-"LongNameToCodePointAssociation = <|"} ~Join~ (Row[{escapeString[#], " -> ", "WLCharacter`LongName`" <> #, ","}]& /@ 
-     importedLongNames) ~Join~ {"Nothing"} ~Join~ {"|>"}
+"LongNameToCodePointAssociation = <|"} ~Join~ (Row[{escapeString[#], " -> ", "WLCharacter`LongName`" <> #, ","}]& /@ Keys[importedLongNames]) ~Join~ {"Nothing"} ~Join~ {"|>"}
 
 codePointToLongNameAssociation = {
-"CodePointToLongNameAssociation = <|"} ~Join~ (Row[{"WLCharacter`LongName`" <> #, " -> ", escapeString[#], ","}]& /@ 
-     importedLongNames) ~Join~ {"Nothing"} ~Join~ {"|>"}
+"CodePointToLongNameAssociation = <|"} ~Join~ (Row[{"WLCharacter`LongName`" <> #, " -> ", escapeString[#], ","}]& /@ Keys[importedLongNames]) ~Join~ {"Nothing"} ~Join~ {"|>"}
 
 
 
@@ -373,7 +306,7 @@ $LongNameReplacements
 Begin[\"`Private`\"]
 
 $LongNameReplacements = {"
-} ~Join~ (("\"\\\\["<>#<>"]\"" -> "\"\\["<>#<>"]\",")& /@ importedLongNames) ~Join~ {
+} ~Join~ (("\"\\\\["<>#<>"]\"" -> "\"\\:"<>longNameToHexDigits[#]<>"\",")& /@ Keys[importedLongNames]) ~Join~ {
 "
 Nothing
 }
@@ -399,31 +332,6 @@ Print["Done LongNameMap"]
 (* CodePoint *)
 Print["Generating CodePoint..."]
 
-importedOperatorLongNames = Get[FileNameJoin[{tablesDir, "OperatorLongNames.wl"}]]
-
-validateLongNameList[importedOperatorLongNames, "OperatorLongNames.wl"]
-
-
-importedCommaLongNames = Get[FileNameJoin[{tablesDir, "CommaLongNames.wl"}]]
-
-validateLongNameList[importedCommaLongNames, "CommaLongNames.wl"]
-
-
-importedNewlineLongNames = Get[FileNameJoin[{tablesDir, "NewlineLongNames.wl"}]]
-
-validateLongNameList[importedNewlineLongNames, "NewlineLongNames.wl"]
-
-
-importedSpaceLongNames = Get[FileNameJoin[{tablesDir, "SpaceLongNames.wl"}]]
-
-validateLongNameList[importedSpaceLongNames, "SpaceLongNames.wl"]
-
-
-importedUninterpretableLongNames = Get[FileNameJoin[{tablesDir, "UninterpretableLongNames.wl"}]]
-
-validateLongNameList[importedUninterpretableLongNames, "UninterpretableLongNames.wl"]
-
-
 codePointCPPHeader = {
 "
 //
@@ -441,6 +349,8 @@ codePointCPPHeader = {
 constexpr int CODEPOINT_LINEARSYNTAX_CLOSEPAREN(0xf7c0);
 constexpr int CODEPOINT_LINEARSYNTAX_BANG(0xf7c1);
 constexpr int CODEPOINT_LINEARSYNTAX_AT(0xf7c2);
+//UNUSED: constexpr int CODEPOINT_LINEARSYNTAX_HASH(0xf7c3);
+//UNUSED: constexpr int CODEPOINT_LINEARSYNTAX_DOLLAR(0xf7c4);
 constexpr int CODEPOINT_LINEARSYNTAX_PERCENT(0xf7c5);
 constexpr int CODEPOINT_LINEARSYNTAX_CARET(0xf7c6);
 constexpr int CODEPOINT_LINEARSYNTAX_AMP(0xf7c7);
@@ -454,7 +364,7 @@ constexpr int CODEPOINT_LINEARSYNTAX_BACKTICK(0xf7cd);
 //
 // Do the simple thing and have -1 be EOF
 //
-constexpr int CODEPOINT_EOF(EOF);
+constexpr int CODEPOINT_ENDOFFILE(EOF);
 
 constexpr int CODEPOINT_ERROR_INTERNAL(-2);
 
@@ -470,8 +380,8 @@ constexpr int CODEPOINT_LINEARSYNTAX_SPACE(-3);
 constexpr int CODEPOINT_STRINGMETA_OPEN(-4);
 constexpr int CODEPOINT_STRINGMETA_CLOSE(-5);
 
-Token LongNameCodePointToOperator(int c);
-int LongNameOperatorToCodePoint(Token t);
+TokenEnum LongNameCodePointToOperator(int c);
+int LongNameOperatorToCodePoint(TokenEnum t);
 "}
 
 Print["exporting CodePoint.h"]
@@ -484,11 +394,11 @@ If[FailureQ[res],
 
 
 
-operatorSource = 
-  {"std::unordered_set<int> operatorCodePoints {"} ~Join~
-    (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ importedOperatorLongNames) ~Join~
+punctuationSource = 
+  {"std::unordered_set<int> punctuationCodePoints {"} ~Join~
+    (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ importedPunctuationLongNames) ~Join~
     {"};", "",
-    "bool WLCharacter::isOperatorCharacter() const { return operatorCodePoints.find(value_) != operatorCodePoints.end(); }", ""}
+    "bool WLCharacter::isPunctuationCharacter() const { return punctuationCodePoints.find(value_) != punctuationCodePoints.end(); }", ""}
 
 spaceSource = 
   {"std::unordered_set<int> spaceCodePoints {"} ~Join~
@@ -515,23 +425,23 @@ uninterpretableSource =
     "bool WLCharacter::isUninterpretableCharacter() const { return uninterpretableCodePoints.find(value_) != uninterpretableCodePoints.end(); }", ""}
 
 LongNameCodePointToOperatorSource = 
-  {"Token LongNameCodePointToOperator(int c) {
+  {"TokenEnum LongNameCodePointToOperator(int c) {
 switch (c) {"} ~Join~
     (Row[{"case", " ", toGlobal["CodePoint`LongName`"<>#], ":", " ", "return", " ", 
-        toGlobal["Token`LongName`"<>#], ";"}]& /@ importedOperatorLongNames) ~Join~
+        toGlobal["Token`LongName`"<>#], ";"}]& /@ importedPunctuationLongNames) ~Join~
     {"default:
 std::cerr << \"Need to add operator: 0x\" << std::setfill('0') << std::setw(4) << std::hex << c << std::dec << \"\\n\";
 assert(false && \"Need to add operator\");
-return TOKEN_ERROR_INTERNAL;
+return TOKEN_ERROR_UNKNOWN;
 }
 }"}
 
 LongNameOperatorToCodePointSource = 
   {"
-int LongNameOperatorToCodePoint(Token t) {
+int LongNameOperatorToCodePoint(TokenEnum t) {
 switch (t) {"} ~Join~
     (Row[{"case", " ", toGlobal["Token`LongName`"<>#], ":", " ", "return",
-         " ", toGlobal["CodePoint`LongName`"<>#], ";"}]& /@ importedOperatorLongNames) ~Join~
+         " ", toGlobal["CodePoint`LongName`"<>#], ";"}]& /@ importedPunctuationLongNames) ~Join~
 {"default:
 std::cerr << \"Need to add operator: 0x\" << std::setfill('0') << std::setw(4) << std::hex << t << std::dec << \"\\n\";
 assert(false && \"Need to add operator\");
@@ -556,7 +466,7 @@ codePointCPPSource = Join[{
 #include <iostream>
 #include <iomanip>
 #include <cassert>
-"}, operatorSource, spaceSource, newlineSource, commaSource, uninterpretableSource,
+"}, punctuationSource, spaceSource, newlineSource, commaSource, uninterpretableSource,
     LongNameCodePointToOperatorSource, 
     LongNameOperatorToCodePointSource]
 
@@ -583,7 +493,7 @@ Print["Generating Token..."]
 
 operatorMacros = 
   Association[
-   ToExpression["Token`LongName`" <> #] -> Next& /@ importedOperatorLongNames]
+   ToExpression["Token`LongName`" <> #] -> Next& /@ importedPunctuationLongNames]
 
 importedTokenEnumSource = 
   Get[FileNameJoin[{tablesDir, "TokenEnum.wl"}]]
@@ -620,20 +530,18 @@ tokenCPPHeader = {
 #include <string>
 #include <unordered_map>
 
-enum Token {"} ~Join~
+enum TokenEnum {"} ~Join~
    KeyValueMap[(Row[{toGlobal[#], " = ", #2, ","}])&, enumMap] ~Join~
    {"};", ""} ~Join~
-   {"std::string TokenToString(Token type);",
-   "bool isOperator(Token type);",
-   "bool isError(Token type);",
+   {"std::string TokenToString(TokenEnum type);",
+   "bool isError(TokenEnum type);",
 "
-
 namespace std {
     //
     // for std::unordered_map
     //
-    template <> struct hash<Token> {
-        size_t operator()(const Token &x) const {
+    template <> struct hash<TokenEnum> {
+        size_t operator()(const TokenEnum &x) const {
             return x;
         }
     };
@@ -695,7 +603,7 @@ uniqueEnums = DeleteCases[importedTokenEnumSource, v_ /; !IntegerQ[v] && UnsameQ
 tokenStrings = Association[# -> escapeString[ToString[#]]& /@ Keys[uniqueEnums]]
 
 operatorMacros = 
-  Association[ToExpression["Token`LongName`" <> #] -> escapeString["Token`LongName`" <> #]& /@ importedOperatorLongNames]
+  Association[ToExpression["Token`LongName`" <> #] -> escapeString["Token`LongName`" <> #]& /@ importedPunctuationLongNames]
 
 
 
@@ -716,7 +624,7 @@ tokenCPPSource = {
 #include <iostream>
 #include <cassert>
 "} ~Join~
-    {"std::string TokenToString(Token Tok) {"} ~Join~
+    {"std::string TokenToString(TokenEnum Tok) {"} ~Join~
     {"switch (Tok) {"} ~Join~
     cases ~Join~
     {"default:"} ~Join~
@@ -724,8 +632,7 @@ tokenCPPSource = {
     {"}"} ~Join~
     {"}"} ~Join~
     {""} ~Join~
-    {"bool isOperator(Token Tok) { return TOKEN_FIRST <= Tok && Tok < TOKEN_END; }"} ~Join~
-    {"bool isError(Token Tok) { return TOKEN_ERROR_FIRST <= Tok && Tok < TOKEN_ERROR_END; }"} ~Join~
+    {"bool isError(TokenEnum Tok) { return TOKEN_ERROR_FIRST <= Tok && Tok < TOKEN_ERROR_END; }"} ~Join~
     {""}
 
 Print["exporting Token.cpp"]
@@ -790,7 +697,7 @@ precedenceCPPHeader = {
 
 #pragma once
 
-enum precedence_t {"} ~Join~
+enum Precedence {"} ~Join~
    KeyValueMap[(Row[{toGlobal[#1], " = ",
     Which[
       NumberQ[#2], Floor[#2],
@@ -835,80 +742,6 @@ Print["Done Precedence"]
 Print["Generating Symbol..."]
 
 (*
-sanity check Prefix operators
-*)
-If[Union[DownValues[PrefixOperatorToSymbol][[All, 2]]] =!= Union[DownValues[SymbolToPrefixOperatorString][[All, 1, 1, 1]]],
-  Print["PrefixOperatorToSymbol and SymbolToPrefixOperatorString do not match"];
-  Print["PrefixOperatorToSymbol:       ", Union[DownValues[PrefixOperatorToSymbol][[All, 2]]]];
-  Print["SymbolToPrefixOperatorString: ", Union[DownValues[SymbolToPrefixOperatorString][[All, 1, 1, 1]]]];
-  Quit[1]
-]
-
-(*
-sanity check Postfix operators
-*)
-If[Union[DownValues[PostfixOperatorToSymbol][[All, 2]]] =!= Union[DownValues[SymbolToPostfixOperatorString][[All, 1, 1, 1]]],
-  Print["PostfixOperatorToSymbol and SymbolToPostfixOperatorString do not match"];
-  Print["PostfixOperatorToSymbol:       ", Union[DownValues[PostfixOperatorToSymbol][[All, 2]]]];
-  Print["SymbolToPostfixOperatorString: ", Union[DownValues[SymbolToPostfixOperatorString][[All, 1, 1, 1]]]];
-  Quit[1]
-]
-
-(*
-sanity check Binary operators
-*)
-If[Union[DownValues[BinaryOperatorToSymbol][[All, 2]]] =!= Union[DownValues[SymbolToBinaryOperatorString][[All, 1, 1, 1]]],
-  Print["BinaryOperatorToSymbol and SymbolToBinaryOperatorString do not match"];
-  Print["BinaryOperatorToSymbol:       ", Union[DownValues[BinaryOperatorToSymbol][[All, 2]]]];
-  Print["SymbolToBinaryOperatorString: ", Union[DownValues[SymbolToBinaryOperatorString][[All, 1, 1, 1]]]];
-  Quit[1]
-]
-
-(*
-sanity check Infix operators
-*)
-If[Union[DownValues[InfixOperatorToSymbol][[All, 2]]] =!= Union[DownValues[SymbolToInfixOperatorString][[All, 1, 1, 1]]],
-  Print["InfixOperatorToSymbol and SymbolToInfixOperatorString do not match"];
-  Print["InfixOperatorToSymbol:       ", Union[DownValues[InfixOperatorToSymbol][[All, 2]]]];
-  Print["SymbolToInfixOperatorString: ", Union[DownValues[SymbolToInfixOperatorString][[All, 1, 1, 1]]]];
-  Quit[1]
-]
-
-(*
-sanity check Ternary operators
-*)
-If[Union[DownValues[TernaryOperatorsToSymbol][[All, 2]]] =!= Union[DownValues[SymbolToTernaryPair][[All, 1, 1, 1]]],
-  Print["TernaryOperatorsToSymbol and SymbolToTernaryPair do not match"];
-  Print["TernaryOperatorsToSymbol: ", Union[DownValues[TernaryOperatorsToSymbol][[All, 2]]]];
-  Print["SymbolToTernaryPair:      ", Union[DownValues[SymbolToTernaryPair][[All, 1, 1, 1]]]];
-  Quit[1]
-]
-
-If[Union[Flatten[DownValues[SymbolToTernaryPair][[All, 2]]]] =!= Union[DownValues[SymbolToTernaryOperatorString][[All, 1, 1, 1]]],
-  Print["SymbolToTernaryPair and SymbolToTernaryOperatorString do not match"];
-  Print["SymbolToTernaryPair:           ", Union[Flatten[DownValues[SymbolToTernaryPair][[All, 2]]]]];
-  Print["SymbolToTernaryOperatorString: ", Union[DownValues[SymbolToTernaryOperatorString][[All, 1, 1, 1]]]];
-  Quit[1]
-]
-
-(*
-sanity check Group operators
-*)
-If[Union[Flatten[{DownValues[GroupOpenerToSymbol][[All, 2]],
-                    DownValues[GroupCloserToSymbol][[All, 2]],
-                    DownValues[GroupOpenerToMissingCloserSymbol][[All, 2]],
-                    DownValues[GroupCloserToMissingOpenerSymbol][[All, 2]]}]] =!=
-    Union[DownValues[SymbolToGroupPair][[All, 1, 1, 1]]],
-  Print["GroupOpenerToSymbol ... and SymbolToGroupPair do not match"];
-  Print["GroupOpenerToSymbol ...: ", Union[Flatten[{DownValues[GroupOpenerToSymbol][[All, 2]],
-                                                      DownValues[GroupCloserToSymbol][[All, 2]],
-                                                      DownValues[GroupOpenerToMissingCloserSymbol][[All, 2]],
-                                                      DownValues[GroupCloserToMissingOpenerSymbol][[All, 2]]}]]];
-  Print["SymbolToGroupPair:       ", Union[DownValues[SymbolToGroupPair][[All, 1, 1, 1]]]];
-  Quit[1]
-]
-
-(*
 Obtain all symbols by inspecting DownValues of functions
 *)
 
@@ -917,10 +750,11 @@ symbols = Union[Join[DownValues[PrefixOperatorToSymbol][[All, 2]],
     DownValues[BinaryOperatorToSymbol][[All, 2]],
     DownValues[InfixOperatorToSymbol][[All, 2]],
     DownValues[TernaryOperatorToSymbol][[All, 2]],
+    DownValues[GroupOpenerToSymbol][[All, 2]],
+    DownValues[PrefixBinaryOperatorToSymbol][[All, 2]],
     AST`Symbol`$Nodes,
     AST`Symbol`$Options,
     AST`Symbol`$Miscellaneous,
-    AST`Symbol`$Tokens,
     AST`Symbol`$Groups,
     AST`Symbol`$Characters
     ]]
@@ -953,31 +787,24 @@ private:
   const char *Name;
 };
 
-bool operator==(const Symbol& lhs, const Symbol& rhs);
+void allocSymbols();
 
-const Symbol& PostfixOperatorToSymbol(Token);
-const Symbol& PrefixOperatorToSymbol(Token);
-const Symbol& BinaryOperatorToSymbol(Token);
-const Symbol& InfixOperatorToSymbol(Token);
-const Symbol& TernaryOperatorsToSymbol(Token, Token);
-const Symbol& GroupOpenerToSymbol(Token);
+void freeSymbols();
 
-Token GroupOpenerToCloser(Token);
+const Symbol* PrefixOperatorToSymbol(TokenEnum);
+const Symbol* PostfixOperatorToSymbol(TokenEnum);
+const Symbol* BinaryOperatorToSymbol(TokenEnum);
+const Symbol* InfixOperatorToSymbol(TokenEnum);
+const Symbol* GroupOpenerToSymbol(TokenEnum);
+const Symbol* PrefixBinaryOperatorToSymbol(TokenEnum);
 
-const Symbol& GroupCloserToSymbol(Token);
-const Symbol& GroupOpenerToMissingCloserSymbol(Token);
-const Symbol& GroupCloserToMissingOpenerSymbol(Token);
+TokenEnum GroupOpenerToCloser(TokenEnum);
+TokenEnum GroupCloserToOpener(TokenEnum);
 
-std::string SymbolToPrefixOperatorString(const Symbol&);
-std::string SymbolToPostfixOperatorString(const Symbol&);
-std::string SymbolToBinaryOperatorString(const Symbol&);
-std::string SymbolToInfixOperatorString(const Symbol&);
-std::string SymbolToTernaryOperatorString(const Symbol&);
+bool isCloser(TokenEnum);
 
-std::pair<std::string, std::string> SymbolToGroupPair(const Symbol&);
-std::pair<const Symbol&, const Symbol&> SymbolToTernaryOperatorPair(const Symbol&);
 "} ~Join~
-(Row[{"ASTLIB_EXPORTED", " ", "extern", " ", "const", " ", "Symbol&", " ", toGlobal["Symbol`"<>ToString[#]], ";"}]& /@ symbols) ~Join~
+(Row[{"ASTLIB_EXPORTED", " ", "extern", " ", "const", " ", "Symbol*", " ", toGlobal["Symbol`"<>ToString[#]], ";"}]& /@ symbols) ~Join~
 {""}
 
 Print["exporting Symbol.h"]
@@ -1019,10 +846,6 @@ symbolCPPSource = {
 #include <cassert>
 #include <iostream>
 
-bool operator==(const Symbol& lhs, const Symbol& rhs) {
-   return lhs.name() == rhs.name();
-}
-
 const char *Symbol::name() const {
    return Name;
 }
@@ -1031,13 +854,39 @@ void Symbol::put(MLINK mlp) const {
   MLPutSymbol(mlp, Name);
 }
 
-"} ~Join~ 
+"} ~Join~ { "void allocSymbols() {" } ~Join~
 
-    (Row[{"const", " ", "Symbol&", " ", toGlobal["Symbol`"<>ToString[#]], " ", "=", " ", "Symbol(\"", stringifyForTransmitting[#], "\")", ";"}]& /@ symbols) ~Join~
+    (If[# === String && $WorkaroundBug321344,
+      (*
+      handle String specially because of bug 321344
+      *)
+      "SYMBOL_STRING = new Symbol(\"String\");"
+      ,
+      Row[{toGlobal["Symbol`"<>ToString[#]], " = new Symbol(\"", stringifyForTransmitting[#], "\");"}]]& /@ symbols) ~Join~
+{"}
+"} ~Join~ { "void freeSymbols() {" } ~Join~
+
+    (If[# === String && $WorkaroundBug321344,
+      (*
+      handle String specially because of bug 321344
+      *)
+      "delete SYMBOL_STRING;"
+      ,
+      Row[{"delete ", toGlobal["Symbol`"<>ToString[#]], ";"}]]& /@ symbols) ~Join~
+{"}
+"} ~Join~
+
+  (If[# === String && $WorkaroundBug321344,
+      (*
+      handle String specially because of bug 321344
+      *)
+      "const Symbol* SYMBOL_STRING = nullptr;"
+      ,
+      Row[{"const Symbol* ", toGlobal["Symbol`"<>ToString[#]], " = nullptr;"}]]& /@ symbols) ~Join~
 
       {""} ~Join~
 
-      {"const Symbol& PrefixOperatorToSymbol(Token Type) {\nswitch (Type) {"} ~Join~
+      {"const Symbol* PrefixOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
      
      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PrefixOperatorToSymbol]] ~Join~ 
       {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
@@ -1045,7 +894,7 @@ void Symbol::put(MLINK mlp) const {
 
      {""} ~Join~
 
-     {"const Symbol& PostfixOperatorToSymbol(Token Type) {\nswitch (Type) {"} ~Join~
+     {"const Symbol* PostfixOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
      
       Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PostfixOperatorToSymbol]] ~Join~
       {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
@@ -1053,7 +902,7 @@ void Symbol::put(MLINK mlp) const {
 
      {""} ~Join~
 
-     {"const Symbol& BinaryOperatorToSymbol(Token Type) {\nswitch (Type) {"} ~Join~
+     {"const Symbol* BinaryOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
      
       Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[BinaryOperatorToSymbol]] ~Join~
       {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
@@ -1061,7 +910,7 @@ void Symbol::put(MLINK mlp) const {
 
      {""} ~Join~
 
-     {"const Symbol& InfixOperatorToSymbol(Token Type) {\nswitch (Type) {"} ~Join~
+     {"const Symbol* InfixOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
      
       Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[InfixOperatorToSymbol]] ~Join~
       {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
@@ -1069,103 +918,49 @@ void Symbol::put(MLINK mlp) const {
 
      {""} ~Join~
 
-     {"const Symbol& TernaryOperatorsToSymbol(Token Type1, Token Type2) {"} ~Join~
-
-     (*
-      cannot use C++ switch statements with 2 arguments, so just do a series of if statements
-     *)
-     Map[Row[{"if (Type1 == ", toGlobal[#[[1, 1, 1]]], " && Type2 == ", toGlobal[#[[1, 1, 2]]], ") {", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";", "}"}]&, DownValues[TernaryOperatorsToSymbol]] ~Join~
-      {"std::cerr << \"Unhandled Tokens: \" << TokenToString(Type1) << \" \" << TokenToString(Type2) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
-     "}"} ~Join~
-
-     {""} ~Join~
-
-     {"const Symbol& GroupOpenerToSymbol(Token Type) {\nswitch (Type) {"} ~Join~
+     {"const Symbol* GroupOpenerToSymbol(TokenEnum Type) {"} ~Join~
+     {"switch (Type) {"} ~Join~
       Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[GroupOpenerToSymbol]] ~Join~
       {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
-     "}\n}"} ~Join~
+     "}"} ~Join~
+     {"}"} ~Join~
 
      {""} ~Join~
 
-     {"Token GroupOpenerToCloser(Token Type) {\nswitch (Type) {"} ~Join~
+     {"TokenEnum GroupOpenerToCloser(TokenEnum Type) {"} ~Join~
+     {"switch (Type) {"} ~Join~
       Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal[#[[2]]], ";"}]&, DownValues[GroupOpenerToCloser]] ~Join~
       {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return TOKEN_UNKNOWN;",
-     "}\n}"} ~Join~
-
-     {""} ~Join~
-
-     {"const Symbol& GroupCloserToSymbol(Token Type) {\nswitch (Type) {"} ~Join~
-      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[GroupCloserToSymbol]] ~Join~
-      {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
-     "}\n}"} ~Join~
-
-     {""} ~Join~
-
-     {"const Symbol& GroupOpenerToMissingCloserSymbol(Token Type) {\nswitch (Type) {"} ~Join~
-      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[GroupOpenerToMissingCloserSymbol]] ~Join~
-      {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
-     "}\n}"} ~Join~
-
-     {""} ~Join~
-
-     {"const Symbol& GroupCloserToMissingOpenerSymbol(Token Type) {\nswitch (Type) {"} ~Join~
-      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[GroupCloserToMissingOpenerSymbol]] ~Join~ 
-      {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
-     "}\n}"} ~Join~
-
-     {""} ~Join~
-     {"std::pair<std::string, std::string> SymbolToGroupPair(const Symbol& Sym) {"} ~Join~
-      (Row[{"if (Sym == ", toGlobal["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
-          "{ return std::make_pair(std::string(", 
-          escapeString[#[[2, 1]]], "), std::string(", 
-          escapeString[#[[2, 2]]], "));", "}"}]& /@ DownValues[SymbolToGroupPair]) ~Join~ 
-      {"std::cerr << \"Unhandled Symbol: \" << Sym.name() << \"\\n\"; assert(false && \"Unhandled Symbol\"); return std::make_pair(std::string(\"XXX\"), std::string(\"XXX\"));",
      "}"} ~Join~
+     {"}"} ~Join~
 
      {""} ~Join~
-     {"std::string SymbolToPrefixOperatorString(const Symbol& Sym) {"} ~Join~
-      (Row[{"if (Sym == ", toGlobal["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
-          "{ return ", escapeString[#[[2]]], ";", "}"}]& /@ DownValues[SymbolToPrefixOperatorString]) ~Join~
-      {"std::cerr << \"Unhandled Symbol: \" << Sym.name() << \"\\n\"; assert(false && \"Unhandled Symbol\"); return \"XXX\";",
-      "}",
-     ""} ~Join~
 
-     {"std::string SymbolToPostfixOperatorString(const Symbol& Sym) {"} ~Join~
-      (Row[{"if (Sym == ", toGlobal["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
-          "{ return ", escapeString[#[[2]]], ";", "}"}]& /@ DownValues[SymbolToPostfixOperatorString]) ~Join~
-      {" std::cerr << \"Unhandled Symbol: \" << Sym.name() << \"\\n\"; assert(false && \"Unhandled Symbol\"); return \"XXX\";",
+     {"TokenEnum GroupCloserToOpener(TokenEnum Type) {"} ~Join~
+     {"switch (Type) {"} ~Join~
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal[#[[2]]], ";"}]&, DownValues[GroupCloserToOpener]] ~Join~
+      {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return TOKEN_UNKNOWN;",
      "}"} ~Join~
+     {"}"} ~Join~
+
      {""} ~Join~
 
-     {"std::string SymbolToBinaryOperatorString(const Symbol& Sym) {"} ~Join~
-      (Row[{"if (Sym == ", toGlobal["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
-          "{ return ", escapeString[#[[2]]], ";", "}"}]& /@ DownValues[SymbolToBinaryOperatorString]) ~Join~
-      {"std::cerr << \"Unhandled Symbol: \" << Sym.name() << \"\\n\"; assert(false && \"Unhandled Symbol\"); return \"XXX\";",
-     "}",
-     ""} ~Join~
+     {"bool isCloser(TokenEnum Type) {"} ~Join~
+     {"switch (Type) {"} ~Join~
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " true;"}]&, DownValues[GroupCloserToOpener]] ~Join~
+      {"default: return false;",
+     "}"} ~Join~
+     {"}"} ~Join~
 
-     {"std::string SymbolToInfixOperatorString(const Symbol& Sym) {"} ~Join~
-      (Row[{"if (Sym == ", toGlobal["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
-          "{ return ", escapeString[#[[2]]], ";", "}"}]& /@ DownValues[SymbolToInfixOperatorString]) ~Join~
-      {"std::cerr << \"Unhandled Symbol: \" << Sym.name() << \"\\n\"; assert(false && \"Unhandled Symbol\"); return \"XXX\";",
-     "}",
-     ""} ~Join~
+     {""} ~Join~
 
-     {"std::string SymbolToTernaryOperatorString(const Symbol& Sym) {"} ~Join~
-      (Row[{"if (Sym == ", toGlobal["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
-          "{ return ", escapeString[#[[2]]], ";", "}"}]& /@ DownValues[SymbolToTernaryOperatorString]) ~Join~
-      {" std::cerr << \"Unhandled Symbol: \" << Sym.name() << \"\\n\"; assert(false && \"Unhandled Symbol\"); return \"XXX\";",
-     "}",
-     ""} ~Join~
+     {"const Symbol* PrefixBinaryOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
+     
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PrefixBinaryOperatorToSymbol]] ~Join~
+      {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
+     "}\n}"} ~Join~
 
-     {"std::pair<const Symbol&, const Symbol&> SymbolToTernaryOperatorPair(const Symbol& Sym) {"} ~Join~
-      (Row[{"if (Sym == ", toGlobal["Symbol`"<>ToString[#[[1, 1, 1]]]], ")", " ", 
-          "{ return std::make_pair(", 
-          toGlobal["Symbol`"<>ToString[#[[2, 1]]]], ", ", 
-          toGlobal["Symbol`"<>ToString[#[[2, 2]]]], ");", "}"}]& /@ DownValues[SymbolToTernaryOperatorPair]) ~Join~
-      {"return std::make_pair(" <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ", " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ");",
-     "}",
-     ""}
+     {""}
 
 Print["exporting Symbol.cpp"]
 res = Export[FileNameJoin[{generatedCPPSrcDir, "Symbol.cpp"}], Column[symbolCPPSource], "String"]

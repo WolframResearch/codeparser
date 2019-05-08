@@ -4,37 +4,45 @@
 #include "Utils.h"
 
 
-Tokenizer::Tokenizer() : stringifyNextToken_symbol(false), stringifyNextToken_file(false), cur(TOKEN_UNKNOWN), currentCached(false), characterQueue(),
-    _currentWLCharacter(0), _currentSourceLocation{0, 0}, String(), Issues() {}
+Tokenizer::Tokenizer() : stringifyNextToken_symbol(false), stringifyNextToken_file(false), cur(Token(TOKEN_UNKNOWN, "", {})), _currentWLCharacter(0), characterQueue(), String(), Issues() {}
 
 void Tokenizer::init(bool skipFirstLine) {
 
     stringifyNextToken_symbol = false;
     stringifyNextToken_file = false;
-    cur = TOKEN_UNKNOWN;
-    currentCached = false;
+    cur = Token(TOKEN_UNKNOWN, "", Source(SourceLocation(), SourceLocation()));
 
+    _currentWLCharacter = WLCharacter(0);
     characterQueue.clear();
 
     String.str("");
 
     Issues.clear();
 
-    auto c = nextWLCharacter();
+    auto c = TheCharacterDecoder->nextWLCharacter();
 
     if (skipFirstLine) {
         while (true) {
             if (c == WLCharacter('\n')) {
-                c = nextWLCharacter();
+                c = TheCharacterDecoder->nextWLCharacter();
                 break;
-            } else if (c == WLCHARACTER_EOF) {
-                c = nextWLCharacter();
+            } else if (c == WLCHARACTER_ENDOFFILE) {
+                c = TheCharacterDecoder->nextWLCharacter();
                 break;
-            } else {
-                c = nextWLCharacter();
             }
+            
+            c = TheCharacterDecoder->nextWLCharacter();
         }
     }
+    
+    _currentWLCharacter = c;
+    
+    //
+    // if Ctxt.LinearSyntaxFlag, then we are in linear syntax, and we disable stringifying next tokens
+    //
+    TokenizerContext tokenizerCtxt;
+    
+    nextToken(tokenizerCtxt);
 }
 
 void Tokenizer::deinit() {
@@ -49,30 +57,72 @@ void Tokenizer::deinit() {
 
 Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
     
-    assert(String.str().empty());
-    assert(Issues.empty());
+    //
+    // Too complicated to clear string when calling getString and assert here
+    //
+    // assert(String.str().empty());
+    //
+    String.str("");
     
     auto Ctxt = CtxtIn;
     Ctxt.SlotFlag = false;
 
     TheSourceManager->setTokenStart();
     
-    if (stringifyNextToken_symbol || stringifyNextToken_file) {
+    auto c = currentWLCharacter();
+    
+    if (Ctxt.StringifyCurrentLine) {
         
         cur = handleString(Ctxt);
         
-        TheSourceManager->setTokenEnd();
+        return cur;
+        
+    } else if (stringifyNextToken_symbol) {
+        
+        cur = handleString(Ctxt);
+        
+        return cur;
+        
+    } else if (stringifyNextToken_file) {
+        
+        //
+        // There could be space, something like  << abc
+        //
+        // or something like:
+        // a >>
+        //   b
+        //
+        
+        if (c.isSpace() || c.isNewline() || c.isSpaceCharacter() || c.isNewlineCharacter()) {
+            
+            while (c.isSpace() || c.isNewline() || c.isSpaceCharacter() || c.isNewlineCharacter()) {
+                
+                //
+                // No need to check isAbort() inside tokenizer loops
+                //
+                
+                String << c;
+                
+                c = nextWLCharacter();
+            }
+            
+            cur = Token(TOKEN_WHITESPACE, String.str(), TheSourceManager->getTokenSpan());
+            
+            return cur;
+        }
+        
+        cur = handleString(Ctxt);
         
         return cur;
     }
     
-    auto c = currentWLCharacter();
     
-    if (c.isAlpha()) {
+    
+    if (c.isLetterlike()) {
         
         cur = handleSymbol(Ctxt);
         
-    } else if (c == WLCharacter('$') || c == WLCharacter('`')) {
+    } else if (c == WLCharacter('`')) {
         
         cur = handleSymbol(Ctxt);
         
@@ -84,42 +134,68 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
         
         cur = handleNumber(Ctxt);
         
-    } else if (c == WLCharacter('\n') || c == WLCharacter('\r')) {
+    } else if (c.isNewline()) {
         
-        String.put(c.to_char());
+        String << c;
         
         c = nextWLCharacter();
         
-        cur = TOKEN_NEWLINE;
+        cur = Token(TOKEN_NEWLINE, String.str(), TheSourceManager->getTokenSpan());
         
-    } else if (c == WLCharacter(' ') || c == WLCharacter('\t')) {
+    } else if (c.isSpace()) {
         
-        while (c == WLCharacter(' ') || c == WLCharacter('\t')) {
+        //
+        // Handle whitespace
+        //
+        
+        while (c.isSpace()) {
             
-            String.put(c.to_char());
+            //
+            // No need to check isAbort() inside tokenizer loops
+            //
+            
+            String << c;
             
             c = nextWLCharacter();
         }
         
-        cur = TOKEN_WHITESPACE;
+        cur = Token(TOKEN_WHITESPACE, String.str(), TheSourceManager->getTokenSpan());
         
     } else if (c == WLCharacter('.')) {
         
         cur = handleDot(Ctxt);
         
-    } else if (c.isPunctuation() && c != WLCharacter('\\')) {
+    } else if (c == WLCharacter('\\')) {
+        
+        String << c;
+        
+        c = nextWLCharacter();
+        
+        cur = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSpan());
+        
+    } else if (c.isPunctuation()) {
+        
+        //
+        // These are punctuation, but they are handled elsewhere
+        //
+        assert(c != WLCharacter('$')); // handled in handleSymbol
+        assert(c != WLCharacter('`')); // handled in handleSymbol
+        assert(c != WLCharacter('"')); // handled in handleString
+        assert(c != WLCharacter('.')); // handled in handleDot
+        assert(c != WLCharacter('\\')); // handled above
         
         cur = handleOperator(Ctxt);
         
-    } else if (c.isLinearSyntax()) {
+    } else if (c.isEndOfFile()) {
         
-        cur = handleLinearSyntax(Ctxt);
+        //
+        // EndOfFile is special because there is no source
+        //
+        // So invent source
+        //
+        auto Start = TheSourceManager->getTokenStart();
         
-    } else if (c == WLCharacter(EOF)) {
-        
-        TheSourceManager->setEOF();
-        
-        cur = TOKEN_EOF;
+        cur = Token(TOKEN_ENDOFFILE, String.str(), Source(Start, Start));
     }
     //
     // Everything else involving Unicode or errors
@@ -130,108 +206,92 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
         
     } else if (c.isSpaceCharacter()) {
         
-        //
-        // Do not use String.put(c.to_char()); here because c may not be a char
-        //
-        auto p = c.preferredSource();
-        String << p;
+        String << c;
         
         c = nextWLCharacter();
         
-        cur = TOKEN_WHITESPACE;
+        cur = Token(TOKEN_WHITESPACE, String.str(), TheSourceManager->getTokenSpan());
         
     } else if (c.isNewlineCharacter()) {
         
-        //
-        // Do not use String.put(c.to_char()); here because c may not be a char
-        //
-        auto p = c.preferredSource();
-        String << p;
+        String << c;
         
         c = nextWLCharacter();
         
-        cur = TOKEN_NEWLINE;
+        cur = Token(TOKEN_NEWLINE, String.str(), TheSourceManager->getTokenSpan());
         
     } else if (c.isCommaCharacter()) {
         
-        //
-        // Do not use String.put(c.to_char()); here because c may not be a char
-        //
-        auto p = c.preferredSource();
-        String << p;
+        String << c;
         
         c = nextWLCharacter();
         
-        cur = TOKEN_COMMA;
+        cur = Token(TOKEN_COMMA, String.str(), TheSourceManager->getTokenSpan());
         
-    } else if (c.isOperatorCharacter()) {
+    } else if (c.isLinearSyntax()) {
+        
+        cur = handleLinearSyntax(Ctxt);
+        
+    } else if (c.isPunctuationCharacter()) {
         
         cur = handleOperator(Ctxt);
         
     } else {
         
-        //
-        // Do not use String.put(c.to_char()); here because c may not be a char
-        //
-        auto p = c.preferredSource();
-        String << p;
+        String << c;
         
         c = nextWLCharacter();
         
-        cur = TOKEN_ERROR_UNHANDLEDCHARACTER;
+        cur = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSpan());
     }
-    
-    TheSourceManager->setTokenEnd();
     
     return cur;
 }
 
 WLCharacter Tokenizer::nextWLCharacter(NextCharacterPolicy policy) {
-    
-    currentCached = false;
-    
+
+    //
+    // handle the queue before anything else
+    //
+    // Unlike ByteDecoder and CharacterDecoder, the WLCharacters in the queue may be part of a Token with multiple WLCharacters
+    //
     if (!characterQueue.empty()) {
-        
+
         auto p = characterQueue[0];
-        
-        auto c = p.first;
-        
+
+        //
+        // Make sure to set source information
+        //
+        TheSourceManager->setSourceLocation(p.second.lines.start);
+        TheSourceManager->setWLCharacterStart();
+        TheSourceManager->setSourceLocation(p.second.lines.end);
+        TheSourceManager->setWLCharacterEnd();
+
         // erase first
         characterQueue.erase(characterQueue.begin());
         
-        return c;
-    }
-    
-    auto CharacterDecoderIssues = TheCharacterDecoder->getIssues();
-    
-    std::copy(CharacterDecoderIssues.begin(), CharacterDecoderIssues.end(), std::back_inserter(Issues));
-    
-    
-    return TheCharacterDecoder->nextWLCharacter(policy);
-}
-
-WLCharacter Tokenizer::currentWLCharacter() {
-
-    if (currentCached) {
+        _currentWLCharacter = p.first;
         
-        return _currentWLCharacter;
+    } else {
+        
+        _currentWLCharacter = TheCharacterDecoder->nextWLCharacter(policy);
     }
 
-   auto c = TheCharacterDecoder->currentWLCharacter();
-
-   return c;
+    return _currentWLCharacter;
 }
 
-void Tokenizer::setCurrentWLCharacter(WLCharacter current, SourceLocation Loc) {
-    
-    _currentWLCharacter = current;
-    _currentSourceLocation = Loc;
-    currentCached = true;
+void Tokenizer::enqueue(WLCharacter c, Source Span) {
+    characterQueue.push_back(std::make_pair(c, Span));
 }
 
-Token Tokenizer::currentToken() {
+WLCharacter Tokenizer::currentWLCharacter() const {
+
+    return _currentWLCharacter;
+}
+
+Token Tokenizer::currentToken() const {
     
-    assert(cur != TOKEN_UNKNOWN);
+    assert(cur.Tok != TOKEN_UNKNOWN);
     
     return cur;
 }
@@ -240,13 +300,9 @@ Token Tokenizer::handleLinearSyntax(TokenizerContext Ctxt) {
     
     auto c = currentWLCharacter();
 
-    //
-    // Do not use String.put(c.to_char()); here because c may not be a char
-    //
-    auto p = c.preferredSource();
-    String << p;
+    String << c;
     
-    Token Operator;
+    TokenEnum Operator;
     
     switch (c.to_point()) {
         case CODEPOINT_LINEARSYNTAX_BANG:
@@ -296,24 +352,26 @@ Token Tokenizer::handleLinearSyntax(TokenizerContext Ctxt) {
     
     c = nextWLCharacter();
 
-    return Operator;
+    return Token(Operator, String.str(), TheSourceManager->getTokenSpan());
 }
 
 Token Tokenizer::handleComment(TokenizerContext Ctxt) {
+    //
     // comment is already started
+    //
     
-    auto c = currentWLCharacter();
+    auto c = TheCharacterDecoder->currentWLCharacter();
 
     assert(c == WLCharacter('*'));
     
-    String.put('*');
+    String << WLCharacter('*');
     
     auto depth = 1;
 
     c = nextWLCharacter(INSIDE_COMMENT);
     
-    if (c == WLCHARACTER_EOF) {
-        return TOKEN_ERROR_UNTERMINATEDCOMMENT;
+    if (c == WLCHARACTER_ENDOFFILE) {
+        return Token(TOKEN_ERROR_UNTERMINATEDCOMMENT, String.str(), TheSourceManager->getTokenSpan());
     }
 
     while (true) {
@@ -328,40 +386,28 @@ Token Tokenizer::handleComment(TokenizerContext Ctxt) {
 
         if (c == WLCharacter('(')) {
             
-            String.put(c.to_char());
+            String << c;
             
             c = nextWLCharacter(INSIDE_COMMENT);
             
-            if (c == WLCHARACTER_EOF) {
-                return TOKEN_ERROR_UNTERMINATEDCOMMENT;
-            }
-            
             if (c == WLCharacter('*')) {
                 
-                String.put(c.to_char());
+                depth = depth + 1;
+                
+                String << c;
                 
                 c = nextWLCharacter(INSIDE_COMMENT);
-                
-                if (c == WLCHARACTER_EOF) {
-                    return TOKEN_ERROR_UNTERMINATEDCOMMENT;
-                }
-                
-                depth = depth + 1;
             }
             
         } else if (c == WLCharacter('*')) {
             
-            String.put(c.to_char());
+            String << c;
 
             c = nextWLCharacter(INSIDE_COMMENT);
             
-            if (c == WLCHARACTER_EOF) {
-                return TOKEN_ERROR_UNTERMINATEDCOMMENT;
-            }
-            
             if (c == WLCharacter(')')) {
                 
-                String.put(c.to_char());
+                String << c;
 
                 // This comment is closing
                 
@@ -374,78 +420,38 @@ Token Tokenizer::handleComment(TokenizerContext Ctxt) {
                     c = nextWLCharacter();
                     
                     break;
-                    
-                } else {
-                    
-                    c = nextWLCharacter(INSIDE_COMMENT);
-                    
-                    if (c == WLCHARACTER_EOF) {
-                        return TOKEN_ERROR_UNTERMINATEDCOMMENT;
-                    }
                 }
+                    
+                c = nextWLCharacter(INSIDE_COMMENT);
             }
+            
+        } else if (c.isEndOfFile()) {
+            
+            return Token(TOKEN_ERROR_UNTERMINATEDCOMMENT, String.str(), TheSourceManager->getTokenSpan());
             
         } else {
             
-            //
-            // Clear Issues
-            // We do not care about issues within comments
-            //
-            getIssues();
-            
-            //
-            // Do not use String.put(c.to_char()); here because c may not be a char
-            //
-            
-            auto p = c.preferredSource();
-            String << p;
+            String << c;
             
             c = nextWLCharacter(INSIDE_COMMENT);
-            
-            if (c == WLCHARACTER_EOF) {
-                return TOKEN_ERROR_UNTERMINATEDCOMMENT;
-            }
         }
 
     } // while
 
-    return TOKEN_COMMENT;
+    return Token(TOKEN_COMMENT, String.str(), TheSourceManager->getTokenSpan());
 }
 
 //
-// a segment is: [a-z$]([a-z]$[0-9])*
+// a segment is: [a-z$]([a-z$0-9])*
 // a symbol is: (segment)?(`segment)*
 //
 Token Tokenizer::handleSymbol(TokenizerContext Ctxt) {
     
     auto c = currentWLCharacter();
 
-    assert(c == WLCharacter('`') || c.isAlphaOrDollar() || c.isLetterlikeCharacter());
+    assert(c == WLCharacter('`') || c.isLetterlike() || c.isLetterlikeCharacter());
     
-    if (c.isAlpha()) {
-        handleSymbolSegment(Ctxt);
-    } else if (c.isDollar()) {
-
-        if (Ctxt.SlotFlag) {
-
-            auto Span = TheSourceManager->getWLCharacterSpan();
-            
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.", SYNTAXISSUESEVERITY_WARNING, Span);
-
-            Issues.push_back(Issue);
-        }
-
-        handleSymbolSegment(Ctxt);
-    } else if (c.isLetterlikeCharacter()) {
-
-        if (Ctxt.SlotFlag) {
-
-            auto Span = TheSourceManager->getWLCharacterSpan();
-            
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.", SYNTAXISSUESEVERITY_WARNING, Span);
-
-            Issues.push_back(Issue);
-        }
+    if (c.isLetterlike() || c.isLetterlikeCharacter()) {
 
         handleSymbolSegment(Ctxt);
     }
@@ -454,115 +460,70 @@ Token Tokenizer::handleSymbol(TokenizerContext Ctxt) {
     
     while (c == WLCharacter('`')) {
 
+        //
+        // No need to check isAbort() inside tokenizer loops
+        //
+        
         if (Ctxt.SlotFlag) {
 
             auto Span = TheSourceManager->getWLCharacterSpan();
             
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.", SYNTAXISSUESEVERITY_WARNING, Span);
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.\n``#`` is not documented to allow **`** characters.", SYNTAXISSUESEVERITY_REMARK, Span);
 
             Issues.push_back(Issue);
         }
 
-        String.put(c.to_char());
+        String << c;
         
-        c = nextWLCharacter();
+        c = nextWLCharacter(INSIDE_SYMBOL);
         
-        if (c.isAlpha()) {
-            handleSymbolSegment(Ctxt);
-        } else if (c.isDollar()) {
-
-            if (Ctxt.SlotFlag) {
-
-                auto Span = TheSourceManager->getWLCharacterSpan();
-                
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.", SYNTAXISSUESEVERITY_WARNING, Span);
-
-                Issues.push_back(Issue);
-            }
+        if (c.isLetterlike() || c.isLetterlikeCharacter()) {
             
             handleSymbolSegment(Ctxt);
-
-        } else if (c.isLetterlikeCharacter()) {
-
-            if (Ctxt.SlotFlag) {
-
-                auto Span = TheSourceManager->getWLCharacterSpan();
-                
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.", SYNTAXISSUESEVERITY_WARNING, Span);
-
-                Issues.push_back(Issue);
-            }
-
-            handleSymbolSegment(Ctxt);
+            
         } else {
-            return TOKEN_ERROR_EXPECTEDALPHAORDOLLAR;
+            return Token(TOKEN_ERROR_EXPECTEDLETTERLIKE, String.str(), TheSourceManager->getTokenSpan());
         }
         
         c = currentWLCharacter();
         
     } // while
     
-    return TOKEN_SYMBOL;
+    return Token(TOKEN_SYMBOL, String.str(), TheSourceManager->getTokenSpan());
 }
 
 void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
     
     auto c = currentWLCharacter();
 
-    assert(c.isAlphaOrDollar() || c.isLetterlikeCharacter());
+    assert(c.isLetterlike() || c.isLetterlikeCharacter());
     
     auto Loc = TheSourceManager->getSourceLocation();
 
-    if (c.isAlpha()) {
-        
-        String.put(c.to_char());
-        
-        c = nextWLCharacter();
-        
-    } else if (c.isDollar()) {
+    if (c.isDollar()) {
         
         if (Ctxt.SlotFlag) {
-
-            auto Span = TheSourceManager->getWLCharacterSpan();
-            
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.", SYNTAXISSUESEVERITY_WARNING, Span);
-
-            Issues.push_back(Issue);
-        }
-
-        String.put(c.to_char());
-        
-        c = nextWLCharacter();
-        
-    } else {
-        
-        if (c.isStrangeLetterlikeCharacter()) {
             
             auto Span = TheSourceManager->getWLCharacterSpan();
             
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange character in symbol: " + makeGraphical(c.actualString()), SYNTAXISSUESEVERITY_WARNING, Span);
-
-            Issues.push_back(Issue);
-        }
-        
-        if (Ctxt.SlotFlag) {
-
-            auto Span = TheSourceManager->getWLCharacterSpan();
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.\n``#`` is not documented to allow ``$`` characters.", SYNTAXISSUESEVERITY_REMARK, Span);
             
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.", SYNTAXISSUESEVERITY_WARNING, Span);
-
             Issues.push_back(Issue);
         }
-
-        //
-        // Do not use String.put(c.to_char()); here because c may not be a char
-        //
-        
-        auto p = c.preferredSource();
-        String << p;
-        
-        c = nextWLCharacter();
     }
+    
+    if (c.isStrangeLetterlike() || c.isStrangeLetterlikeCharacter()) {
+        
+        auto Span = TheSourceManager->getWLCharacterSpan();
+        
+        auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange character in symbol: " + Utils::makeGraphical(c.string()), SYNTAXISSUESEVERITY_WARNING, Span);
+        
+        Issues.push_back(Issue);
+    }
+    
+    String << c;
+    
+    c = nextWLCharacter(INSIDE_SYMBOL);
     
     auto len = 1;
     while (true) {
@@ -573,60 +534,43 @@ void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
 
         if (len == MAX_SYMBOL_LENGTH) {
         
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXSYMBOLLENGTH, std::string("Max symbol length reached."), SYNTAXISSUESEVERITY_REMARK, (SourceSpan{Loc,Loc}));
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXSYMBOLLENGTH, std::string("Max symbol length reached."), SYNTAXISSUESEVERITY_REMARK, Source(Loc,Loc));
         
             Issues.push_back(Issue);
         }
 
-        if (c.isDigitOrAlpha()) {
+        if (c.isDigit()) {
             
-            String.put(c.to_char());
+            String << c;
             
-            c = nextWLCharacter();
+            c = nextWLCharacter(INSIDE_SYMBOL);
             
-        } else if (c.isDollar()) {
+        } else if (c.isLetterlike() || c.isLetterlikeCharacter()) {
             
-            if (Ctxt.SlotFlag) {
-
-                auto Span = TheSourceManager->getWLCharacterSpan();
+            if (c.isDollar()) {
                 
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.", SYNTAXISSUESEVERITY_WARNING, Span);
-
-                Issues.push_back(Issue);
+                if (Ctxt.SlotFlag) {
+                    
+                    auto Span = TheSourceManager->getWLCharacterSpan();
+                    
+                    auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.\n``#`` is not documented to allow ``$`` characters.", SYNTAXISSUESEVERITY_REMARK, Span);
+                    
+                    Issues.push_back(Issue);
+                }
             }
-
-            String.put(c.to_char());
             
-            c = nextWLCharacter();
-            
-        } else if (c.isLetterlikeCharacter()) {
-            
-            if (c.isStrangeLetterlikeCharacter()) {
+            if (c.isStrangeLetterlike() || c.isStrangeLetterlikeCharacter()) {
                 
                 auto Span = TheSourceManager->getWLCharacterSpan();
                 
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange character in symbol: " + makeGraphical(c.actualString()), SYNTAXISSUESEVERITY_WARNING, Span);
-
-                Issues.push_back(Issue);
-            }
-            
-            if (Ctxt.SlotFlag) {
-
-                auto Span = TheSourceManager->getWLCharacterSpan();
+                auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange character in symbol: ``" + Utils::makeGraphical(c.string()) + "``.", SYNTAXISSUESEVERITY_WARNING, Span);
                 
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.", SYNTAXISSUESEVERITY_WARNING, Span);
-
                 Issues.push_back(Issue);
             }
-        
-            //
-            // Do not use String.put(c.to_char()); here because c may not be a char
-            //
             
-            auto p = c.preferredSource();
-            String << p;
+            String << c;
             
-            c = nextWLCharacter();
+            c = nextWLCharacter(INSIDE_SYMBOL);
             
         } else {
             break;
@@ -643,61 +587,135 @@ Token Tokenizer::handleString(TokenizerContext Ctxt) {
     
     auto Loc = TheSourceManager->getSourceLocation();
 
+    if (Ctxt.StringifyCurrentLine) {
+        ;
+    }
     //
     // Do not check c == WLCharacter('"') here because we want to know if it was escaped
     //
-    if (c.to_point() == '"') {
+    else if (c.to_point() == '"') {
 
         //
         // If the beginning " is escaped, then error out
         //
         if (c.isEscaped()) {
             
-            //
-            // Do not use String.put(c.to_char()); here because c may not be a char
-            //
-            
-            auto p = c.preferredSource();
-            String << p;
+            String << c;
             
             c = nextWLCharacter();
             
-            return TOKEN_ERROR_UNHANDLEDCHARACTER;
+            return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSpan());
         }
+        
     } else if (stringifyNextToken_file) {
-        // first eat the whitespace
-        while (c == WLCharacter(' ') || c == WLCharacter('\t') || c == WLCharacter('\n')) {
-            c = nextWLCharacter(INSIDE_STRING);
-        }
+        ;
     } else if (stringifyNextToken_symbol) {
         ;
     } else {
         assert(false);
     }
     
-    if (stringifyNextToken_symbol && c != WLCharacter('"')) {
+    if (Ctxt.StringifyCurrentLine) {
+        
+        auto lastGoodLocation = TheSourceManager->getSourceLocation();
+        
+        auto len = 0;
+        auto empty = true;
+        while (true) {
+            
+            //
+            // No need to check isAbort() inside tokenizer loops
+            //
+            
+            if (len == MAX_STRING_LENGTH) {
+                
+                auto Loc = TheSourceManager->getSourceLocation();
+                
+                auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXSTRINGLENGTH, std::string("Max string length reached."), SYNTAXISSUESEVERITY_REMARK, Source(Loc,Loc));
+                
+                Issues.push_back(Issue);
+            }
+            
+            c = currentWLCharacter();
+            
+            if (c.isEndOfFile()) {
+                
+                break;
+                
+            } else if (c.isNewline() || c.isNewlineCharacter()) {
+                    
+                break;
+            }
+            
+            String << c;
+            
+            empty = false;
+            
+            len++;
+            
+            lastGoodLocation = TheSourceManager->getSourceLocation();
+            
+            c = nextWLCharacter(INSIDE_STRING);
+            
+        } // while
+        
+        nextWLCharacter();
+        
+        stringifyNextToken_symbol = false;
+        stringifyNextToken_file = false;
+        
+        if (empty) {
+            
+            //
+            // Something like   ?EOF
+            //
+            // EndOfFile is special because there is no source
+            //
+            // So invent source
+            //
+            auto Start = TheSourceManager->getTokenStart();
+            
+            return Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start, Start));
+        }
+        
+        //
+        // ?? syntax is special because we want to ignore the newline that was read.
+        //
+        // So invent source
+        //
+        
+        return Token(TOKEN_STRING, String.str(), Source(TheSourceManager->getTokenStart(), lastGoodLocation));
+        
+    } else if (stringifyNextToken_symbol && c != WLCharacter('"')) {
         
         //
         // magically turn into a string
         //
         
-        if (c.isAlphaOrDollar() || c.isLetterlikeCharacter()) {
+        if (c.isLetterlike() || c.isLetterlikeCharacter()) {
             
             handleSymbolSegment(Ctxt);
             
             stringifyNextToken_symbol = false;
             
-            return TOKEN_STRING;
+            return Token(TOKEN_STRING, String.str(), TheSourceManager->getTokenSpan());
             
         } else {
             
             //
-            // Something like a::EOF
+            // Something like   a::EOF
             //
             
             stringifyNextToken_symbol = false;
             
-            return TOKEN_ERROR_EMPTYSTRING;
+            //
+            // EmptyString is special because there is no source
+            //
+            // So invent source
+            //
+            auto Start = TheSourceManager->getTokenStart();
+            
+            return Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start, Start));
         }
         
     } else if (stringifyNextToken_file && c != WLCharacter('"')) {
@@ -716,7 +734,7 @@ Token Tokenizer::handleString(TokenizerContext Ctxt) {
 
             if (len == MAX_STRING_LENGTH) {
             
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXSTRINGLENGTH, std::string("Max string length reached."), SYNTAXISSUESEVERITY_REMARK, (SourceSpan{Loc,Loc}));
+                auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXSTRINGLENGTH, std::string("Max string length reached."), SYNTAXISSUESEVERITY_REMARK, Source(Loc,Loc));
             
                 Issues.push_back(Issue);
             }
@@ -734,13 +752,13 @@ Token Tokenizer::handleString(TokenizerContext Ctxt) {
             // by the characters ), ], or }, as well as semicolons and commas.
             //
             
-            if (c.isDigitOrAlphaOrDollar() || c == WLCharacter('`') || c == WLCharacter('/') || c == WLCharacter('.') ||
+            if (c.isDigit() || c.isAlpha() || c.isDollar() || c == WLCharacter('`') || c == WLCharacter('/') || c == WLCharacter('.') ||
                 c == WLCharacter('\\') || c == WLCharacter('!') || c == WLCharacter('-') || c == WLCharacter('_') ||
                 c == WLCharacter(':') || c == WLCharacter('*') || c == WLCharacter('~') || c == WLCharacter('?')) {
                 
                 empty = false;
                 
-                String.put(c.to_char());
+                String << c;
                 
                 c = nextWLCharacter(INSIDE_STRING_FILEIFY);
                 
@@ -751,7 +769,7 @@ Token Tokenizer::handleString(TokenizerContext Ctxt) {
                 empty = false;
 
                 auto res = handleFileOpsBrackets(Ctxt);
-                if (res != TOKEN_STRING) {
+                if (res.Tok != TOKEN_STRING) {
                     return res;
                 }
                 
@@ -771,19 +789,24 @@ Token Tokenizer::handleString(TokenizerContext Ctxt) {
         if (empty) {
             
             //
-            // Something like a>>EOF
+            // Something like   a>>EOF
             //
-            // There is expected to be a string after >>
+            // EndOfFile is special because there is no source
             //
+            // So invent source
+            //
+            auto Start = TheSourceManager->getTokenStart();
             
-            return TOKEN_ERROR_EMPTYSTRING;
+            return Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start, Start));
         }
         
-        return TOKEN_STRING;
+        return Token(TOKEN_STRING, String.str(), TheSourceManager->getTokenSpan());
         
     } else {
         
-        String.put('"');
+        assert(c == WLCharacter('"'));
+        
+        String << WLCharacter('"');
 
         auto len = 0;
         while (true) {
@@ -794,16 +817,16 @@ Token Tokenizer::handleString(TokenizerContext Ctxt) {
 
             if (len == MAX_STRING_LENGTH) {
             
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXSTRINGLENGTH, std::string("Max string length reached."), SYNTAXISSUESEVERITY_REMARK, (SourceSpan{Loc,Loc}));
+                auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXSTRINGLENGTH, std::string("Max string length reached."), SYNTAXISSUESEVERITY_REMARK, Source(Loc,Loc));
             
                 Issues.push_back(Issue);
             }
 
             c = nextWLCharacter(INSIDE_STRING);
             
-            if (c == WLCHARACTER_EOF) {
+            if (c == WLCHARACTER_ENDOFFILE) {
                 
-                return TOKEN_ERROR_UNTERMINATEDSTRING;
+                return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), TheSourceManager->getTokenSpan());
                 
             } else
                 //
@@ -813,51 +836,22 @@ Token Tokenizer::handleString(TokenizerContext Ctxt) {
                 
                 break;
                 
-            } else if (c == WLCharacter('\\')) {
-                
-                String.put(c.to_char());
-                
-                c = nextWLCharacter(INSIDE_STRING);
-                
-                //
-                // c could be EOF, so just let string() handle stringifying
-                //
-                //
-                // Do not use String.put(c.to_char()); here because c may not be a char
-                //
-                
-                auto p = c.preferredSource();
-                String << p;
-                
-            } else if (c == WLCharacter('\r')) {
-
-                //
-                // Skip \r in strings
-                //
-                ;
-
-            } else {
-
-                //
-                // Do not use String.put(c.to_char()); here because c may not be a char
-                //
-                
-                auto p = c.preferredSource();
-                String << p;
             }
+            
+            String << c;
             
             len++;
 
         } // while
         
-        String.put('"');
+        String << WLCharacter('"');
         
         c = nextWLCharacter();
         
         stringifyNextToken_symbol = false;
         stringifyNextToken_file = false;
 
-        return TOKEN_STRING;
+        return Token(TOKEN_STRING, String.str(), TheSourceManager->getTokenSpan());
     }
 }
 
@@ -877,14 +871,14 @@ Token Tokenizer::handleFileOpsBrackets(TokenizerContext Ctxt) {
 
     assert(c == WLCharacter('['));
     
-    String.put('[');
+    String << WLCharacter('[');
     
     auto depth = 1;
 
     c = nextWLCharacter(INSIDE_STRING_FILEIFY);
     
-    if (c == WLCHARACTER_EOF) {
-        return TOKEN_ERROR_UNTERMINATEDSTRING;
+    if (c == WLCHARACTER_ENDOFFILE) {
+        return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), TheSourceManager->getTokenSpan());
     }
     
     while (true) {
@@ -895,19 +889,19 @@ Token Tokenizer::handleFileOpsBrackets(TokenizerContext Ctxt) {
 
         if (c == WLCharacter('[')) {
             
-            String.put(c.to_char());
+            String << c;
             
             c = nextWLCharacter(INSIDE_STRING_FILEIFY);
             
-            if (c == WLCHARACTER_EOF) {
-                return TOKEN_ERROR_UNTERMINATEDSTRING;
+            if (c == WLCHARACTER_ENDOFFILE) {
+                return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), TheSourceManager->getTokenSpan());
             }
             
             depth = depth + 1;
             
         } else if (c == WLCharacter(']')) {
                 
-            String.put(c.to_char());
+            String << c;
             
             depth = depth - 1;
             
@@ -923,36 +917,32 @@ Token Tokenizer::handleFileOpsBrackets(TokenizerContext Ctxt) {
                 
                 c = nextWLCharacter(INSIDE_STRING_FILEIFY);
                 
-                if (c == WLCHARACTER_EOF) {
-                    return TOKEN_ERROR_UNTERMINATEDSTRING;
+                if (c == WLCHARACTER_ENDOFFILE) {
+                    return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), TheSourceManager->getTokenSpan());
                 }
             }
 
         } else {
 
-            //
-            // Do not use String.put(c.to_char()); here because c may not be a char
-            //
-
-            auto p = c.preferredSource();
-            String << p;
+            String << c;
             
-            if (c.to_point() == ' ' || c.to_point() == '\t' || c.to_point() == '\n') {
-                return TOKEN_ERROR_UNTERMINATEDSTRING;
+            if (c.isSpace() || c.isNewline() || c.isSpaceCharacter() || c.isNewlineCharacter()) {
+                return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), TheSourceManager->getTokenSpan());
             }
 
             c = nextWLCharacter(INSIDE_STRING_FILEIFY);
             
-            if (c == WLCHARACTER_EOF) {
-                return TOKEN_ERROR_UNTERMINATEDSTRING;
+            if (c == WLCHARACTER_ENDOFFILE) {
+                return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), TheSourceManager->getTokenSpan());
             }
         }
         
     } // while
 
-    return TOKEN_STRING;
+    return Token(TOKEN_STRING, String.str(), TheSourceManager->getTokenSpan());
 }
 
+//
 //digits                  integer
 //digits.digits           approximate number
 //base^^digits            integer in specified base
@@ -962,7 +952,6 @@ Token Tokenizer::handleFileOpsBrackets(TokenizerContext Ctxt) {
 //number`                 machine-precision approximate number
 //number`s                arbitrary-precision number with precision s
 //number``s               arbitrary-precision number with accuracy s
-//
 //
 //
 // base = (digits^^)?
@@ -976,57 +965,111 @@ Token Tokenizer::handleFileOpsBrackets(TokenizerContext Ctxt) {
 //
 Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
     
-    auto c = currentWLCharacter();
-
     int base = 10;
     
     handleDigits(Ctxt);
     
-    c = currentWLCharacter();
+    auto c = currentWLCharacter();
     
     //
     // Could be 16^^blah
     //
     if (c == WLCharacter('^')) {
         
+        auto CaretLoc = TheSourceManager->getSourceLocation();
+        
         c = nextWLCharacter(INSIDE_NUMBER);
         
         if (c == WLCharacter('^')) {
             
-            base = parseInteger(String.str(), 10);
+            //
+            // Something like 2^^
+            //
+            // Must be a number
+            //
+            
+            auto Caret2Loc = TheSourceManager->getSourceLocation();
+            
+            base = Utils::parseInteger(String.str(), 10);
             
             if (base < 2 || base > 36) {
                 
-                return TOKEN_ERROR_INVALIDBASE;
+                //
+                // Something like 37^^2
+                //
+                
+                //
+                // FIXME: CaretLoc-1 is not correct because of something like this:
+                //
+                // 37\
+                // ^^a
+                //
+                TheSourceManager->setSourceLocation(CaretLoc-1);
+                TheSourceManager->setWLCharacterStart();
+                TheSourceManager->setWLCharacterEnd();
+                
+                TheSourceManager->setSourceLocation(CaretLoc);
+                TheSourceManager->setWLCharacterStart();
+                TheSourceManager->setWLCharacterEnd();
+                _currentWLCharacter = WLCharacter('^');
+                
+                enqueue(WLCharacter('^'), Source(Caret2Loc, Caret2Loc));
+                
+                return Token(TOKEN_ERROR_INVALIDBASE, String.str(), TheSourceManager->getTokenSpan());
             }
             
-            String.put('^');
-            String.put(c.to_char());
+            String << WLCharacter('^');
+            String << c;
             
             c = nextWLCharacter(INSIDE_NUMBER);
             
-            if (c.isDigitOrAlpha()) {
+            if (c.isDigit()) {
                 
                 if (!handleDigitsOrAlpha(Ctxt, base)) {
                     
-                    return TOKEN_ERROR_EXPECTEDDIGITORALPHA;
+                    return Token(TOKEN_ERROR_EXPECTEDDIGITORALPHA, String.str(), TheSourceManager->getTokenSpan());
+                }
+                
+            } else if (c.isAlpha()) {
+                
+                if (!handleDigitsOrAlpha(Ctxt, base)) {
+                    
+                    return Token(TOKEN_ERROR_EXPECTEDDIGITORALPHA, String.str(), TheSourceManager->getTokenSpan());
                 }
                 
             } else {
                 
-                String.str("");
-                
-                return TOKEN_ERROR_EXPECTEDDIGITORALPHA;
+                return Token(TOKEN_ERROR_EXPECTEDDIGITORALPHA, String.str(), TheSourceManager->getTokenSpan());
             }
             
         } else {
             
-            auto Loc = TheSourceManager->getSourceLocation();
+            //
+            // Something like  2^a
+            //
+            // Must now do surgery and back up
+            //
             
-            characterQueue.push_back(std::make_pair(c, Loc));
-            setCurrentWLCharacter(WLCharacter('^'), Loc);
+            auto Span = TheSourceManager->getWLCharacterSpan();
             
-            return TOKEN_INTEGER;
+            //
+            // FIXME: CaretLoc-1 is not correct because of something like this:
+            //
+            // 2\
+            // ^a
+            //
+            TheSourceManager->setSourceLocation(CaretLoc-1);
+            TheSourceManager->setWLCharacterStart();
+            TheSourceManager->setWLCharacterEnd();
+            
+            TheSourceManager->setSourceLocation(CaretLoc);
+            TheSourceManager->setWLCharacterStart();
+            TheSourceManager->setWLCharacterEnd();
+            _currentWLCharacter = WLCharacter('^');
+            
+            enqueue(c, Span);
+            
+            return Token(TOKEN_INTEGER, String.str(), TheSourceManager->getTokenSpan());
         }
     }
     
@@ -1038,7 +1081,7 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
         
         if (!handleFractionalPart(Ctxt, base)) {
             
-            return TOKEN_INTEGER;
+            return Token(TOKEN_INTEGER, String.str(), TheSourceManager->getTokenSpan());
         }
 
         real = true;
@@ -1055,25 +1098,25 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
         
         real = true;
         
-        String.put('`');
+        String << WLCharacter('`');
         
-        auto Loc = TheSourceManager->getSourceLocation();
+        auto TickLoc = TheSourceManager->getSourceLocation();
 
         c = nextWLCharacter(INSIDE_NUMBER);
         
         bool accuracy = false;
         if (c == WLCharacter('`')) {
             
-            String.put('`');
+            String << WLCharacter('`');
             
-            Loc = TheSourceManager->getSourceLocation();
+            TickLoc = TheSourceManager->getSourceLocation();
 
             c = nextWLCharacter(INSIDE_NUMBER);
             
             accuracy = true;
         }
         
-        if (c.isAlphaOrDollar() || c.isLetterlikeCharacter()) {
+        if (c.isLetterlike() || c.isLetterlikeCharacter()) {
 
             //
             // Something like 1.2`a
@@ -1081,7 +1124,10 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
 
             auto Loc2 = TheSourceManager->getSourceLocation();
 
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between ` and " + c.preferredString() + " to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, (SourceSpan{Loc, Loc2}));
+            //
+            // Use ** markup syntax here because of ` character
+            //
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between **`** and ``" + c.string() + "`` to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, Source(TickLoc, Loc2));
                 
             Issues.push_back(Issue);
         }
@@ -1092,17 +1138,17 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
                 
                 auto s = c;
                 
-                auto Loc2 = TheSourceManager->getSourceLocation();
+                auto SignLoc = TheSourceManager->getSourceLocation();
                 
                 c = nextWLCharacter(INSIDE_NUMBER);
                 
                 if (c.isDigit()) {
                     
-                    String.put(s.to_char());
+                    String << s;
                     
                 } else if (c == WLCharacter('.')) {
                     
-                    String.put(s.to_char());
+                    String << s;
                     
                 } else if (accuracy) {
                     
@@ -1110,33 +1156,50 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
                     // Something like 1.2``->3
                     //
                     
-                    String.put(s.to_char());
+                    String << s;
                     
-                    return TOKEN_ERROR_EXPECTEDACCURACY;
+                    return Token(TOKEN_ERROR_EXPECTEDACCURACY, String.str(), TheSourceManager->getTokenSpan());
                     
                 } else {
 
                     //
                     // Something like 1.2`->3
                     //
+                    // Must now do surgery and back up
+                    //
 
                     std::string msg;
                     if (s == WLCharacter('-')) {
-                        msg = "Put a space between ` and - to reduce ambiguity";
+                        msg = "Put a space between **`** and ``-`` to reduce ambiguity";
                     } else {
-                        msg = "Put a space between ` and + to reduce ambiguity";
+                        msg = "Put a space between **`** and ``+`` to reduce ambiguity";
                     }
-                    auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, msg, SYNTAXISSUESEVERITY_REMARK, (SourceSpan{Loc, Loc2}));
+                    auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, msg, SYNTAXISSUESEVERITY_REMARK, Source(TickLoc, SignLoc));
                 
                     Issues.push_back(Issue);
                     
                     
-                    Loc = TheSourceManager->getSourceLocation();
                     
-                    characterQueue.push_back(std::make_pair(c, Loc));
-                    setCurrentWLCharacter(s, Loc);
+                    auto Span = TheSourceManager->getWLCharacterSpan();
                     
-                    return TOKEN_REAL;
+                    //
+                    // FIXME: SignLoc-1 is not correct because of something like this:
+                    //
+                    // 1.2`\
+                    // ->3
+                    //
+                    TheSourceManager->setSourceLocation(SignLoc-1);
+                    TheSourceManager->setWLCharacterStart();
+                    TheSourceManager->setWLCharacterEnd();
+                    
+                    TheSourceManager->setSourceLocation(SignLoc);
+                    TheSourceManager->setWLCharacterStart();
+                    TheSourceManager->setWLCharacterEnd();
+                    _currentWLCharacter = s;
+                    
+                    enqueue(c, Span);
+                    
+                    return Token(TOKEN_REAL, String.str(), TheSourceManager->getTokenSpan());
                 }
             }
             
@@ -1155,10 +1218,11 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
                     //
                     if (len >= MAX_ACCURACY_LENGTH) {
                     
-                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXACCURACYLENGTH, std::string("Max accuracy length reached."), SYNTAXISSUESEVERITY_REMARK, (SourceSpan{Loc,Loc}));
+                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXACCURACYLENGTH, std::string("Max accuracy length reached."), SYNTAXISSUESEVERITY_REMARK, Source(Loc,Loc));
                     
                         Issues.push_back(Issue);
                     }
+                    
                 } else {
 
                     //
@@ -1166,7 +1230,7 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
                     //
                     if (len >= MAX_PRECISION_LENGTH) {
                     
-                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXPRECISIONLENGTH, std::string("Max precision length reached."), SYNTAXISSUESEVERITY_REMARK, (SourceSpan{Loc,Loc}));
+                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXPRECISIONLENGTH, std::string("Max precision length reached."), SYNTAXISSUESEVERITY_REMARK, Source(Loc,Loc));
                     
                         Issues.push_back(Issue);
                     }
@@ -1186,10 +1250,10 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
                 } else if (!accuracy) {
                     
                     //
-                    // Something like 123`.xxx  where the . could be a Dot operator
+                    // Something like   123`.xxx  where the . could be a Dot operator
                     //
                     
-                    return TOKEN_REAL;
+                    return Token(TOKEN_REAL, String.str(), TheSourceManager->getTokenSpan());
                 }
             }
             
@@ -1197,10 +1261,10 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
                 if (!handled) {
                     
                     //
-                    // Something like 123``EOF
+                    // Something like   123``EOF
                     //
                     
-                    return TOKEN_ERROR_EXPECTEDACCURACY;
+                    return Token(TOKEN_ERROR_EXPECTEDACCURACY, String.str(), TheSourceManager->getTokenSpan());
                 }
             }
         }
@@ -1210,18 +1274,21 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
     
     if (c == WLCharacter('*')) {
         
+        auto StarLoc = TheSourceManager->getSourceLocation();
+        
         c = nextWLCharacter(INSIDE_NUMBER);
         
         if (c == WLCharacter('^')) {
             
-            String.put('*');
-            String.put(c.to_char());
+            String << WLCharacter('*');
+            
+            String << c;
             
             c = nextWLCharacter(INSIDE_NUMBER);
             
             if (c == WLCharacter('-') || c == WLCharacter('+')) {
                 
-                String.put(c.to_char());
+                String << c;
                 
                 c = nextWLCharacter(INSIDE_NUMBER);
             }
@@ -1232,7 +1299,7 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
                 // Something like 123*^
                 //
 
-                return TOKEN_ERROR_EXPECTEDEXPONENT;
+                return Token(TOKEN_ERROR_EXPECTEDEXPONENT, String.str(), TheSourceManager->getTokenSpan());
             }
             
             if (c == WLCharacter('.')) {
@@ -1243,7 +1310,7 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
 
                 c = nextWLCharacter(INSIDE_NUMBER);
                 
-                return TOKEN_ERROR_EXPECTEDEXPONENT;
+                return Token(TOKEN_ERROR_EXPECTEDEXPONENT, String.str(), TheSourceManager->getTokenSpan());
             }
             
         } else {
@@ -1251,27 +1318,40 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
             //
             // Something like 1*a
             //
-            // Back out of treating * as part of the number
+            // Must now do surgery and back up
             //
             
-            auto Loc = TheSourceManager->getSourceLocation();
-            Loc = Loc - 1;
+            auto Span = TheSourceManager->getWLCharacterSpan();
             
-            characterQueue.push_back(std::make_pair(c, Loc));
-            setCurrentWLCharacter(WLCharacter('*'), Loc);
+            //
+            // FIXME: StarLoc-1 is not correct because of something like this:
+            //
+            // 1\
+            // *a
+            //
+            TheSourceManager->setSourceLocation(StarLoc-1);
+            TheSourceManager->setWLCharacterStart();
+            TheSourceManager->setWLCharacterEnd();
+            
+            TheSourceManager->setSourceLocation(StarLoc);
+            TheSourceManager->setWLCharacterStart();
+            TheSourceManager->setWLCharacterEnd();
+            _currentWLCharacter = WLCharacter('*');
+            
+            enqueue(c, Span);
             
             if (real) {
-                return TOKEN_REAL;
+                return Token(TOKEN_REAL, String.str(), TheSourceManager->getTokenSpan());
             } else {
-                return TOKEN_INTEGER;
+                return Token(TOKEN_INTEGER, String.str(), TheSourceManager->getTokenSpan());
             }
         }
     }
     
     if (real) {
-        return TOKEN_REAL;
+        return Token(TOKEN_REAL, String.str(), TheSourceManager->getTokenSpan());
     } else {
-        return TOKEN_INTEGER;
+        return Token(TOKEN_INTEGER, String.str(), TheSourceManager->getTokenSpan());
     }
 }
 
@@ -1281,7 +1361,7 @@ bool Tokenizer::handleFractionalPart(TokenizerContext Ctxt, int base) {
 
     assert(c == WLCharacter('.'));
     
-    auto Loc = TheSourceManager->getSourceLocation();
+    auto DotLoc = TheSourceManager->getSourceLocation();
     
     c = nextWLCharacter(INSIDE_NUMBER);
     
@@ -1290,27 +1370,46 @@ bool Tokenizer::handleFractionalPart(TokenizerContext Ctxt, int base) {
         //
         // Something like 0..
         //
+        // Must now do surgery and back up
+        //
         
-        auto DigitLoc = Loc;
-        DigitLoc.Col--;
+        auto DigitLoc = DotLoc-1;
 
-        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space before the . to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, (SourceSpan{DigitLoc,Loc}));
+        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space before the ``.`` to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, Source(DigitLoc,DotLoc));
         
         Issues.push_back(Issue);
 
         
-        Loc = TheSourceManager->getSourceLocation();
+        auto Loc = TheSourceManager->getSourceLocation();
+
+        //
+        // FIXME: DotLoc-1 is not correct because of something like this:
+        //
+        // 0\
+        // ..
+        //
+        TheSourceManager->setSourceLocation(DotLoc-1);
+        TheSourceManager->setWLCharacterStart();
+        TheSourceManager->setWLCharacterEnd();
         
-        characterQueue.push_back(std::make_pair(c, Loc));
-        setCurrentWLCharacter(WLCharacter('.'), Loc);
+        TheSourceManager->setSourceLocation(DotLoc);
+        TheSourceManager->setWLCharacterStart();
+        TheSourceManager->setWLCharacterEnd();
+        _currentWLCharacter = WLCharacter('.');
         
+        enqueue(c, Source(Loc, Loc));
         
         return false; 
     }
+    
+    String << WLCharacter('.');
 
-    String.put('.');
-
-    if (c.isDigitOrAlpha()) {
+    if (c.isDigit()) {
+        
+        if (!handleDigitsOrAlpha(Ctxt, base)) {
+            return false;
+        }
+    } else if (c.isAlpha()) {
         
         if (!handleDigitsOrAlpha(Ctxt, base)) {
             return false;
@@ -1326,10 +1425,9 @@ bool Tokenizer::handleFractionalPart(TokenizerContext Ctxt, int base) {
         //
 
         auto Loc2 = TheSourceManager->getSourceLocation();
-        auto Loc1 = Loc2;
-        Loc1.Col--;
+        auto Loc1 = Loc2-1;
 
-        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space before the . to reduce ambiguity", SYNTAXISSUESEVERITY_ERROR, (SourceSpan{Loc1,Loc2}));
+        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space before the ``.`` to reduce ambiguity", SYNTAXISSUESEVERITY_ERROR, Source(Loc1,Loc2));
         
         Issues.push_back(Issue);
     }
@@ -1347,10 +1445,9 @@ bool Tokenizer::expectDigits(TokenizerContext Ctxt) {
         
         return true;
         
-    } else {
-        
-        return false;
     }
+    
+    return false;
 }
 
 //
@@ -1371,14 +1468,14 @@ size_t Tokenizer::handleDigits(TokenizerContext Ctxt) {
         
         if (len == MAX_DIGITS_LENGTH) {
         
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXDIGITSLENGTH, std::string("Max digits length reached."), SYNTAXISSUESEVERITY_REMARK, (SourceSpan{Loc,Loc}));
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXDIGITSLENGTH, std::string("Max digits length reached."), SYNTAXISSUESEVERITY_REMARK, Source(Loc,Loc));
         
             Issues.push_back(Issue);
         }
 
         if (c.isDigit()) {
             
-            String.put(c.to_char());
+            String << c;
             
             c = nextWLCharacter(INSIDE_NUMBER);
             
@@ -1408,20 +1505,32 @@ bool Tokenizer::handleDigitsOrAlpha(TokenizerContext Ctxt, int base) {
         
         if (len == MAX_DIGITS_LENGTH) {
         
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXDIGITSLENGTH, std::string("Max digits length reached."), SYNTAXISSUESEVERITY_REMARK, (SourceSpan{Loc,Loc}));
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXDIGITSLENGTH, std::string("Max digits length reached."), SYNTAXISSUESEVERITY_REMARK, Source(Loc,Loc));
         
             Issues.push_back(Issue);
         }
 
-        if (c.isDigitOrAlpha()) {
+        if (c.isDigit()) {
             
-            int baseDigit = c.toDigit();
+            int baseDigit = Utils::toDigit(c.to_point());
             
             if (baseDigit == -1 || baseDigit >= base) {
                 return false;
             }
             
-            String.put(c.to_char());
+            String << c;
+            
+            c = nextWLCharacter(INSIDE_NUMBER);
+            
+        } else if (c.isAlpha()) {
+            
+            int baseDigit = Utils::toDigit(c.to_point());
+            
+            if (baseDigit == -1 || baseDigit >= base) {
+                return false;
+            }
+            
+            String << c;
             
             c = nextWLCharacter(INSIDE_NUMBER);
             
@@ -1439,21 +1548,21 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
     
     auto c = currentWLCharacter();
 
-    Token Operator = TOKEN_UNKNOWN;
+    TokenEnum Operator = TOKEN_UNKNOWN;
 
     switch (c.to_point()) {
         case ':': {
-            Operator = TOKEN_COLON;
+            Operator = TOKEN_COLON; // :
             
-            String.put(c.to_char());
+            String << c;
             
-            c = nextWLCharacter();
+            c = nextWLCharacter(INSIDE_OPERATOR);
             
             switch (c.to_point()) {
                 case ':': {
-                    Operator = TOKEN_COLONCOLON;
+                    Operator = TOKEN_COLONCOLON; // ::
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                     
@@ -1463,17 +1572,17 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                 }
                     break;
                 case '=': {
-                    Operator = TOKEN_COLONEQUAL;
+                    Operator = TOKEN_COLONEQUAL; // :=
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                 }
                     break;
                 case '>': {
-                    Operator = TOKEN_COLONGREATER;
+                    Operator = TOKEN_COLONGREATER; // :>
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                 }
@@ -1482,9 +1591,9 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
         }
             break;
         case '(': {
-            Operator = TOKEN_OPENPAREN;
+            Operator = TOKEN_OPENPAREN; // (
             
-            String.put(c.to_char());
+            String << c;
             
             c = nextWLCharacter();
             
@@ -1495,74 +1604,74 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
         }
             break;
         case ')': {
-            Operator = TOKEN_CLOSEPAREN;
+            Operator = TOKEN_CLOSEPAREN; // )
             
-            String.put(c.to_char());
+            String << c;
             
             c = nextWLCharacter();
         }
             break;
         case '[': {
             
-            Operator = TOKEN_OPENSQUARE;
+            Operator = TOKEN_OPENSQUARE; // [
             
-            String.put(c.to_char());
+            String << c;
             
             c = nextWLCharacter();
         }
             break;
         case ']': {
-            Operator = TOKEN_CLOSESQUARE;
+            Operator = TOKEN_CLOSESQUARE; // ]
             
-            String.put(c.to_char());
+            String << c;
             
             c = nextWLCharacter();
         }
             break;
         case ',': {
-            Operator = TOKEN_COMMA;
+            Operator = TOKEN_COMMA; // ,
             
-            String.put(c.to_char());
+            String << c;
             
             c = nextWLCharacter();
         }
             break;
         case '{': {
-            Operator = TOKEN_OPENCURLY;
+            Operator = TOKEN_OPENCURLY; // {
             
-            String.put(c.to_char());
+            String << c;
             
             c = nextWLCharacter();
         }
             break;
         case '}': {
-            Operator = TOKEN_CLOSECURLY;
+            Operator = TOKEN_CLOSECURLY; // }
             
-            String.put(c.to_char());
+            String << c;
             
             c = nextWLCharacter();
         }
             break;
         case '=': {
-            Operator = TOKEN_EQUAL;
+            Operator = TOKEN_EQUAL; // =
             
-            String.put(c.to_char());
+            String << c;
             
-            c = nextWLCharacter();
+            c = nextWLCharacter(INSIDE_OPERATOR);
             
             switch (c.to_point()) {
                 case '=': {
-                    Operator = TOKEN_EQUALEQUAL;
+                    Operator = TOKEN_EQUALEQUAL; // ==
                     
-                    String.put(c.to_char());
+                    String << c;
                     
-                    c = nextWLCharacter();
+                    c = nextWLCharacter(INSIDE_OPERATOR);
                     
                     if (c == WLCharacter('=')) {
                         
-                        Operator = TOKEN_EQUALEQUALEQUAL;
+                        Operator = TOKEN_EQUALEQUALEQUAL; // ===
                         
-                        String.put(c.to_char());
+                        String << c;
                         
                         c = nextWLCharacter();
                     }
@@ -1570,23 +1679,45 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                     break;
                 case '!': {
                     
-                    c = nextWLCharacter();
+                    auto BangLoc = TheSourceManager->getSourceLocation();
+                    
+                    c = nextWLCharacter(INSIDE_OPERATOR);
                     
                     if (c == WLCharacter('=')) {
                         
-                        Operator = TOKEN_EQUALBANGEQUAL;
+                        Operator = TOKEN_EQUALBANGEQUAL; // =!=
                         
-                        String.put('!');
-                        String.put(c.to_char());
+                        String << WLCharacter('!');
+                        String << c;
                         
                         c = nextWLCharacter();
                         
                     } else {
                         
-                        auto Loc = TheSourceManager->getSourceLocation();
+                        //
+                        // Something like x=!y
+                        //
+                        // Must now do surgery and back up
+                        //
                         
-                        characterQueue.push_back(std::make_pair(c, Loc));
-                        setCurrentWLCharacter(WLCharacter('!'), Loc);
+                        auto Span = TheSourceManager->getWLCharacterSpan();
+                        
+                        //
+                        // FIXME: BangLoc-1 is not correct because of something like this:
+                        //
+                        // x=\
+                        // !y
+                        //
+                        TheSourceManager->setSourceLocation(BangLoc-1);
+                        TheSourceManager->setWLCharacterStart();
+                        TheSourceManager->setWLCharacterEnd();
+                        
+                        TheSourceManager->setSourceLocation(BangLoc);
+                        TheSourceManager->setWLCharacterStart();
+                        TheSourceManager->setWLCharacterEnd();
+                        _currentWLCharacter = WLCharacter('!');
+                        
+                        enqueue(c, Span);
                         
                         Operator = TOKEN_EQUAL;
                     }
@@ -1596,25 +1727,25 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
         }
             break;
         case '_': {
-            Operator = TOKEN_UNDER;
+            Operator = TOKEN_UNDER; // _
             
-            String.put(c.to_char());
+            String << c;
             
-            c = nextWLCharacter();
+            c = nextWLCharacter(INSIDE_OPERATOR);
             
             switch (c.to_point()) {
                 case '_': {
-                    Operator = TOKEN_UNDERUNDER;
+                    Operator = TOKEN_UNDERUNDER; // __
                     
-                    String.put(c.to_char());
+                    String << c;
                     
-                    c = nextWLCharacter();
+                    c = nextWLCharacter(INSIDE_OPERATOR);
                     
                     if (c == WLCharacter('_')) {
                         
-                        Operator = TOKEN_UNDERUNDERUNDER;
+                        Operator = TOKEN_UNDERUNDERUNDER; // ___
                         
-                        String.put(c.to_char());
+                        String << c;
                         
                         c = nextWLCharacter();
                     }
@@ -1622,82 +1753,92 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                     break;
                 case '.': {
                     
-                    auto Loc = TheSourceManager->getSourceLocation();
+                    auto FirstDotLoc = TheSourceManager->getSourceLocation();
                     
-                    c = nextWLCharacter();
+                    c = nextWLCharacter(INSIDE_OPERATOR);
                     
                     if (c == WLCharacter('.')) {
                         
                         //
-                        // Could be _... which should parse as _ ...
+                        // Something like  _...
+                        //
+                        // Must now do surgery and back up
                         //
                         
-                        auto UnderLoc = Loc;
-                        UnderLoc.Col--;
+                        auto UnderLoc = FirstDotLoc-1;
 
-                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between _ and . to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, (SourceSpan{UnderLoc,Loc}));
+                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between ``_`` and ``.`` to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, Source(UnderLoc,FirstDotLoc));
                         
                         Issues.push_back(Issue);
 
                         
-                        Loc = TheSourceManager->getSourceLocation();
-                        
-                        characterQueue.push_back(std::make_pair(c, Loc));
-                        setCurrentWLCharacter(WLCharacter('.'), Loc);
-                        
-                        
-                        Operator = TOKEN_UNDER;
-                        
-                    } else if (c.isDigit()) {
-                        
-                        String.put('.');
+                        auto Span = TheSourceManager->getWLCharacterSpan();
                         
                         //
-                        // Something like _.0
+                        // FIXME: FirstDotLoc-1 is not correct because of something like this:
                         //
+                        // _\
+                        // ...
+                        //
+                        TheSourceManager->setSourceLocation(FirstDotLoc-1);
+                        TheSourceManager->setWLCharacterStart();
+                        TheSourceManager->setWLCharacterEnd();
                         
-                        auto UnderLoc = Loc;
-                        UnderLoc.Col--;
+                        TheSourceManager->setSourceLocation(FirstDotLoc);
+                        TheSourceManager->setWLCharacterStart();
+                        TheSourceManager->setWLCharacterEnd();
+                        _currentWLCharacter = WLCharacter('.');
                         
-                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between . and number to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, (SourceSpan{UnderLoc,Loc}));
+                        enqueue(c, Span);
                         
-                        Issues.push_back(Issue);
-
-                        Operator = TOKEN_UNDERDOT;
+                        Operator = TOKEN_UNDER; // _
                         
                     } else {
                         
-                        String.put('.');
+                        String << WLCharacter('.');
                         
-                        Operator = TOKEN_UNDERDOT;
+                        if (c.isDigit()) {
+                            
+                            //
+                            // Something like _.0
+                            //
+                            
+                            auto UnderLoc = FirstDotLoc-1;
+                            
+                            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between ``.`` and number to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, Source(UnderLoc,FirstDotLoc));
+                            
+                            Issues.push_back(Issue);
+                        }
+                        
+                        Operator = TOKEN_UNDERDOT; // _.
                     }
                 }
                     break;
             }
             
-            return Operator;
+            return Token(Operator, String.str(), TheSourceManager->getTokenSpan());
         }
             break;
         case '<': {
-            Operator = TOKEN_LESS;
+            Operator = TOKEN_LESS; // <
             
-            String.put(c.to_char());
+            String << c;
             
-            c = nextWLCharacter();
+            c = nextWLCharacter(INSIDE_OPERATOR);
             
             switch (c.to_point()) {
                 case '|': {
-                    Operator = TOKEN_LESSBAR;
+                    Operator = TOKEN_LESSBAR; // <|
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                 }
                     break;
                 case '<': {
-                    Operator = TOKEN_LESSLESS;
+                    Operator = TOKEN_LESSLESS; // <<
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                     
@@ -1707,40 +1848,62 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                 }
                     break;
                 case '>': {
-                    Operator = TOKEN_LESSGREATER;
+                    Operator = TOKEN_LESSGREATER; // <>
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                 }
                     break;
                 case '=': {
-                    Operator = TOKEN_LESSEQUAL;
+                    Operator = TOKEN_LESSEQUAL; // <=
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                 }
                     break;
                 case '-': {
                     
-                    c = nextWLCharacter();
+                    auto MinusLoc = TheSourceManager->getSourceLocation();
+                    
+                    c = nextWLCharacter(INSIDE_OPERATOR);
                     
                     if (c == WLCharacter('>')) {
                         
-                        Operator = TOKEN_LESSMINUSGREATER;
+                        Operator = TOKEN_LESSMINUSGREATER; // <->
                         
-                        String.put('-');
-                        String.put(c.to_char());
+                        String << WLCharacter('-');
+                        String << c;
                         
                         c = nextWLCharacter();
                         
                     } else {
                         
-                        auto Loc = TheSourceManager->getSourceLocation();
+                        //
+                        // Something like  a<-4
+                        //
+                        // Must now do surgery and back up
+                        //
                         
-                        characterQueue.push_back(std::make_pair(c, Loc));
-                        setCurrentWLCharacter(WLCharacter('-'), Loc);
+                        auto Span = TheSourceManager->getWLCharacterSpan();
+                        
+                        //
+                        // FIXME: MinusLoc-1 is not correct because of something like this:
+                        //
+                        // a<\
+                        // -4
+                        //
+                        TheSourceManager->setSourceLocation(MinusLoc-1);
+                        TheSourceManager->setWLCharacterStart();
+                        TheSourceManager->setWLCharacterEnd();
+                        
+                        TheSourceManager->setSourceLocation(MinusLoc);
+                        TheSourceManager->setWLCharacterStart();
+                        TheSourceManager->setWLCharacterEnd();
+                        _currentWLCharacter = WLCharacter('-');
+                        
+                        enqueue(c, Span);
                         
                         Operator = TOKEN_LESS;
                     }
@@ -1750,45 +1913,39 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
         }
             break;
         case '>': {
-            Operator = TOKEN_GREATER;
+            Operator = TOKEN_GREATER; // >
             
-            String.put(c.to_char());
+            String << c;
             
-            c = nextWLCharacter();
+            c = nextWLCharacter(INSIDE_OPERATOR);
             
             switch (c.to_point()) {
                 case '>': {
                     
-                    String.put(c.to_char());
+                    Operator = TOKEN_GREATERGREATER; // >>
                     
-                    c = nextWLCharacter();
+                    String << c;
+                    
+                    c = nextWLCharacter(INSIDE_OPERATOR);
                     
                     if (c.to_point() == '>') {
                         
-                        Operator = TOKEN_GREATERGREATERGREATER;
+                        Operator = TOKEN_GREATERGREATERGREATER; // >>>
                         
-                        String.put(c.to_char());
+                        String << c;
                         
                         c = nextWLCharacter();
-                        
-                        if (Ctxt.EnableStringifyNextToken) {
-                            stringifyNextToken_file = true;
-                        }
-                        
-                    } else {
-                        
-                        Operator = TOKEN_GREATERGREATER;
-                        
-                        if (Ctxt.EnableStringifyNextToken) {
-                            stringifyNextToken_file = true;
-                        }
+                    }
+                    
+                    if (Ctxt.EnableStringifyNextToken) {
+                        stringifyNextToken_file = true;
                     }
                 }
                     break;
                 case '=': {
-                    Operator = TOKEN_GREATEREQUAL;
+                    Operator = TOKEN_GREATEREQUAL; // >=
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                 }
@@ -1797,11 +1954,11 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
         }
             break;
         case '-': {
-            Operator = TOKEN_MINUS;
+            Operator = TOKEN_MINUS; // -
             
-            String.put(c.to_char());
+            String << c;
             
-            c = nextWLCharacter();
+            c = nextWLCharacter(INSIDE_OPERATOR);
             
             //
             // Do not lex as a number here
@@ -1814,17 +1971,17 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
             
             switch (c.to_point()) {
                 case '>': {
-                    Operator = TOKEN_MINUSGREATER;
+                    Operator = TOKEN_MINUSGREATER; // ->
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                 }
                     break;
                 case '-': {
-                    Operator = TOKEN_MINUSMINUS;
+                    Operator = TOKEN_MINUSMINUS; // --
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                     
@@ -1835,10 +1992,9 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                         //
                         
                         auto Loc = TheSourceManager->getSourceLocation();
-                        auto MinusLoc = Loc;
-                        MinusLoc.Col--;
+                        auto MinusLoc = Loc-1;
                         
-                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between - and > to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, (SourceSpan{MinusLoc,Loc}));
+                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between ``-`` and ``>`` to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, Source(MinusLoc,Loc));
                         
                         Issues.push_back(Issue);
                         
@@ -1849,21 +2005,18 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                         //
                         
                         auto Loc = TheSourceManager->getSourceLocation();
-                        auto MinusLoc = Loc;
-                        MinusLoc.Col--;
+                        auto MinusLoc = Loc-1;
                         
-                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between - and = to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, (SourceSpan{MinusLoc,Loc}));
+                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between ``-`` and ``=`` to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, Source(MinusLoc,Loc));
                         
                         Issues.push_back(Issue);
-                        
                     }
-                    
                 }
                     break;
                 case '=': {
-                    Operator = TOKEN_MINUSEQUAL;
+                    Operator = TOKEN_MINUSEQUAL; // -=
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                 }
@@ -1872,17 +2025,17 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
         }
             break;
         case '|': {
-            Operator = TOKEN_BAR;
+            Operator = TOKEN_BAR; // |
             
-            String.put(c.to_char());
+            String << c;
             
-            c = nextWLCharacter();
+            c = nextWLCharacter(INSIDE_OPERATOR);
             
             switch (c.to_point()) {
                 case '>': {
-                    Operator = TOKEN_BARGREATER;
+                    Operator = TOKEN_BARGREATER; // |>
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                     
@@ -1893,10 +2046,9 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                         //
                         
                         auto Loc = TheSourceManager->getSourceLocation();
-                        auto GreaterLoc = Loc;
-                        GreaterLoc.Col--;
+                        auto GreaterLoc = Loc-1;
                         
-                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between > and = to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, (SourceSpan{GreaterLoc,Loc}));
+                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between ``>`` and ``=`` to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, Source(GreaterLoc,Loc));
                         
                         Issues.push_back(Issue);
                         
@@ -1905,9 +2057,9 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                 }
                     break;
                 case '|': {
-                    Operator = TOKEN_BARBAR;
+                    Operator = TOKEN_BARBAR; // ||
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                 }
@@ -1916,42 +2068,42 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
         }
             break;
         case ';': {
-            Operator = TOKEN_SEMI;
+            Operator = TOKEN_SEMI; // ;
             
-            String.put(c.to_char());
+            String << c;
             
-            c = nextWLCharacter();
+            c = nextWLCharacter(INSIDE_OPERATOR);
             
             if (c == WLCharacter(';')) {
                 
-                Operator = TOKEN_SEMISEMI;
+                Operator = TOKEN_SEMISEMI; // ;;
                 
-                String.put(c.to_char());
+                String << c;
                 
                 c = nextWLCharacter();
             }
         }
             break;
         case '!': {
-            Operator = TOKEN_BANG;
+            Operator = TOKEN_BANG; // !
             
-            String.put(c.to_char());
+            String << c;
             
-            c = nextWLCharacter();
+            c = nextWLCharacter(INSIDE_OPERATOR);
             
             switch (c.to_point()) {
                 case '=': {
-                    Operator = TOKEN_BANGEQUAL;
+                    Operator = TOKEN_BANGEQUAL; // !=
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                 }
                     break;
                 case '!': {
-                    Operator = TOKEN_BANGBANG;
+                    Operator = TOKEN_BANGBANG; // !!
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                 }
@@ -1961,9 +2113,9 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
             break;
         case '#': {
             
-            String.put(c.to_char());
+            String << c;
             
-            c = nextWLCharacter();
+            c = nextWLCharacter(INSIDE_OPERATOR);
             
             //
             // From Slot documentation:
@@ -1972,28 +2124,28 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
             //
             //
             // A slot that starts with a digit goes down one path
-            // And a slot that starts with a letter does down another path
+            // And a slot that starts with a letter goes down another path
             //
-            // Make sure e.g. #1a is not parsed as SlotNode["#1a"]
+            // Make sure e.g.  #1a is not parsed as SlotNode["#1a"]
             //
             
             if (c.isDigit()) {
                 
-                Operator = TOKEN_HASH;
+                Operator = TOKEN_HASH; // #
                 
                 handleDigits(Ctxt);
                 
-            } else if (c.isAlpha()) {
-        
-                Operator = TOKEN_HASH;
+            } else if (c.isLetterlike() || c.isLetterlikeCharacter()) {
+                
+                Operator = TOKEN_HASH; // #
                 
                 Ctxt.SlotFlag = true;
-
+                
                 handleSymbol(Ctxt);
                 
-            } else if (c == WLCharacter('$') || c == WLCharacter('`')) {
+            } else if (c == WLCharacter('`')) {
                 
-                Operator = TOKEN_HASH;
+                Operator = TOKEN_HASH; // #
                 
                 Ctxt.SlotFlag = true;
 
@@ -2003,21 +2155,21 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                 
                 auto Loc = TheSourceManager->getSourceLocation();
 
-                Operator = TOKEN_HASH;
+                Operator = TOKEN_HASH; // #
                 
                 handleString(Ctxt);
 
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.", SYNTAXISSUESEVERITY_WARNING, (SourceSpan{Loc,Loc}));
+                auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.\n``#`` is not documented to allow ``\"`` characters.", SYNTAXISSUESEVERITY_REMARK, Source(Loc,Loc));
                         
                 Issues.push_back(Issue);
                 
             } else if (c == WLCharacter('#')) {
                 
-                Operator = TOKEN_HASHHASH;
+                Operator = TOKEN_HASHHASH; // ##
                 
-                String.put(c.to_char());
+                String << c;
                 
-                c = nextWLCharacter();
+                c = nextWLCharacter(INSIDE_OPERATOR);
                 
                 if (c.isDigit()) {
                     
@@ -2026,28 +2178,32 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
 
             } else {
                 
-                Operator = TOKEN_HASH;
+                Operator = TOKEN_HASH; // #
             }
         }
             break;
         case '%': {
-            Operator = TOKEN_PERCENT;
+            Operator = TOKEN_PERCENT; // %
             
-            String.put(c.to_char());
+            String << c;
             
-            c = nextWLCharacter();
+            c = nextWLCharacter(INSIDE_OPERATOR);
             
             if (c == WLCharacter('%')) {
                 
                 while (true) {
                     
+                    //
+                    // No need to check isAbort() inside tokenizer loops
+                    //
+                    
                     if (c != WLCharacter('%')) {
                         break;
                     }
                     
-                    String.put(c.to_char());
+                    String << c;
                     
-                    c = nextWLCharacter();
+                    c = nextWLCharacter(INSIDE_OPERATOR);
                 }
                 
             } else if (c.isDigit()) {
@@ -2057,102 +2213,114 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
         }
             break;
         case '&': {
-            Operator = TOKEN_AMP;
+            Operator = TOKEN_AMP; // &
             
-            String.put(c.to_char());
+            String << c;
             
-            c = nextWLCharacter();
+            c = nextWLCharacter(INSIDE_OPERATOR);
             
             if (c == WLCharacter('&')) {
                 
-                Operator = TOKEN_AMPAMP;
+                Operator = TOKEN_AMPAMP; // &&
                 
-                String.put(c.to_char());
+                String << c;
                 
                 c = nextWLCharacter();
             }
         }
             break;
         case '/': {
-            Operator = TOKEN_SLASH;
+            Operator = TOKEN_SLASH; // /
             
-            String.put(c.to_char());
+            String << c;
             
-            c = nextWLCharacter();
+            c = nextWLCharacter(INSIDE_OPERATOR);
             
             switch (c.to_point()) {
                 case '@': {
-                    Operator = TOKEN_SLASHAT;
+                    Operator = TOKEN_SLASHAT; // /@
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                 }
                     break;
                 case ';': {
-                    Operator = TOKEN_SLASHSEMI;
+                    Operator = TOKEN_SLASHSEMI; // /;
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                 }
                     break;
                 case '.': {
                     
-                    auto Loc = TheSourceManager->getSourceLocation();
+                    auto DotLoc = TheSourceManager->getSourceLocation();
                     
                     c = nextWLCharacter();
                     
                     if (c.isDigit()) {
                         
                         //
-                        // Something like Round[t/.03 + 1]
+                        // Something like t/.3
+                        //
+                        // Must now do surgery and back up
                         //
                         
-                        auto SlashLoc = Loc;
-                        SlashLoc.Col--;
+                        auto SlashLoc = DotLoc-1;
                         
-                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between / and . to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, (SourceSpan{SlashLoc,Loc}));
+                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between ``/`` and ``.`` to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, Source(SlashLoc,DotLoc));
                         
                         Issues.push_back(Issue);
 
                         
-                        Loc = TheSourceManager->getSourceLocation();
+                        auto Loc = TheSourceManager->getSourceLocation();
                         
-                        characterQueue.push_back(std::make_pair(c, Loc));
-                        setCurrentWLCharacter(WLCharacter('.'), Loc);
+                        //
+                        // FIXME: DotLoc-1 is not correct because of something like this:
+                        //
+                        // t/\
+                        // .3
+                        //
+                        TheSourceManager->setSourceLocation(DotLoc-1);
+                        TheSourceManager->setWLCharacterStart();
+                        TheSourceManager->setWLCharacterEnd();
                         
+                        TheSourceManager->setSourceLocation(DotLoc);
+                        TheSourceManager->setWLCharacterStart();
+                        TheSourceManager->setWLCharacterEnd();
+                        _currentWLCharacter = WLCharacter('.');
                         
-                        Operator = TOKEN_SLASH;
+                        enqueue(c, Source(Loc, Loc));
                         
                     } else {
                         
-                        String.put('.');
+                        Operator = TOKEN_SLASHDOT; // /.
                         
-                        Operator = TOKEN_SLASHDOT;
+                        String << WLCharacter('.');
                     }
                 }
                     break;
                 case '/': {
-                    Operator = TOKEN_SLASHSLASH;
+                    Operator = TOKEN_SLASHSLASH; // //
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                     
                     switch (c.to_point()) {
                         case '.': {
-                            Operator = TOKEN_SLASHSLASHDOT;
+                            Operator = TOKEN_SLASHSLASHDOT; // //.
                             
-                            String.put(c.to_char());
+                            String << c;
                             
                             c = nextWLCharacter();
                         }
                             break;
                         case '@': {
-                            Operator = TOKEN_SLASHSLASHAT;
+                            Operator = TOKEN_SLASHSLASHAT; // //@
                             
-                            String.put(c.to_char());
+                            String << c;
                             
                             c = nextWLCharacter();
                         }
@@ -2161,25 +2329,25 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                 }
                     break;
                 case ':': {
-                    Operator = TOKEN_SLASHCOLON;
+                    Operator = TOKEN_SLASHCOLON; // /:
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                 }
                     break;
                 case '=': {
-                    Operator = TOKEN_SLASHEQUAL;
+                    Operator = TOKEN_SLASHEQUAL; // /=
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                 }
                     break;
                 case '*': {
-                    Operator = TOKEN_SLASHSTAR;
+                    Operator = TOKEN_SLASHSTAR; // /*
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                 }
@@ -2188,34 +2356,34 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
         }
             break;
         case '@': {
-            Operator = TOKEN_AT;
+            Operator = TOKEN_AT; // @
             
-            String.put(c.to_char());
+            String << c;
             
             c = nextWLCharacter();
             
             switch (c.to_point()) {
                 case '@': {
-                    Operator = TOKEN_ATAT;
+                    Operator = TOKEN_ATAT; // @@
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                     
                     if (c == WLCharacter('@')) {
                         
-                        Operator = TOKEN_ATATAT;
+                        Operator = TOKEN_ATATAT; // @@@
                         
-                        String.put(c.to_char());
+                        String << c;
                         
                         c = nextWLCharacter();
                     }
                 }
                     break;
                 case '*': {
-                    Operator = TOKEN_ATSTAR;
+                    Operator = TOKEN_ATSTAR; // @*
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                 }
@@ -2225,17 +2393,17 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
             break;
         case '+': {
 
-            Operator = TOKEN_PLUS;
+            Operator = TOKEN_PLUS; // +
             
-            String.put(c.to_char());
+            String << c;
             
             c = nextWLCharacter();
             
             switch (c.to_point()) {
                 case '+': {
-                    Operator = TOKEN_PLUSPLUS;
+                    Operator = TOKEN_PLUSPLUS; // ++
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                     
@@ -2246,10 +2414,9 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                         //
                         
                         auto Loc = TheSourceManager->getSourceLocation();
-                        auto PlusLoc = Loc;
-                        PlusLoc.Col--;
+                        auto PlusLoc = Loc-1;
                         
-                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between + and = to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, (SourceSpan{PlusLoc,Loc}));
+                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between ``+`` and ``=`` to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, Source(PlusLoc,Loc));
                         
                         Issues.push_back(Issue);
                         
@@ -2257,9 +2424,9 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                 }
                     break;
                 case '=': {
-                    Operator = TOKEN_PLUSEQUAL;
+                    Operator = TOKEN_PLUSEQUAL; // +=
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                 }
@@ -2268,50 +2435,59 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
         }
             break;
         case '~': {
-            Operator = TOKEN_TILDE;
+            Operator = TOKEN_TILDE; // ~
             
-            String.put(c.to_char());
+            String << c;
             
             c = nextWLCharacter();
             
             if (c == WLCharacter('~')) {
                 
-                Operator = TOKEN_TILDETILDE;
+                Operator = TOKEN_TILDETILDE; // ~~
                 
-                String.put(c.to_char());
+                String << c;
                 
                 c = nextWLCharacter();
             }
         }
             break;
         case '?': {
-            Operator = TOKEN_QUESTION;
+            Operator = TOKEN_QUESTION; // ?
             
-            String.put(c.to_char());
+            String << c;
             
             c = nextWLCharacter();
+            
+            if (c == WLCharacter('?')) {
+                
+                Operator = TOKEN_QUESTIONQUESTION; // ??
+                
+                String << c;
+                
+                c = nextWLCharacter();
+            }
         }
             break;
         case '*': {
-            Operator = TOKEN_STAR;
+            Operator = TOKEN_STAR; // *
             
-            String.put(c.to_char());
+            String << c;
             
             c = nextWLCharacter();
             
             switch (c.to_point()) {
                 case '=': {
-                    Operator = TOKEN_STAREQUAL;
+                    Operator = TOKEN_STAREQUAL; // *=
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                 }
                     break;
                 case '*': {
-                    Operator = TOKEN_STARSTAR;
+                    Operator = TOKEN_STARSTAR; // **
                     
-                    String.put(c.to_char());
+                    String << c;
                     
                     c = nextWLCharacter();
                 }
@@ -2330,58 +2506,54 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                     
                     if (c == WLCharacter('=')) {
                         
-                        Operator = TOKEN_CARETCOLONEQUAL;
+                        Operator = TOKEN_CARETCOLONEQUAL; // ^:=
                         
-                        String.put('^');
-                        String.put(':');
-                        String.put(c.to_char());
+                        String << WLCharacter('^');
+                        String << WLCharacter(':');
+                        String << c;
                         
                         c = nextWLCharacter();
                         
                     } else {
                         
-                        String.put('^');
-                        String.put(':');
+                        String << WLCharacter('^');
+                        String << WLCharacter(':');
                         
                         Operator = TOKEN_ERROR_EXPECTEDEQUAL;
                     }
                 }
                     break;
                 case '=': {
-                    Operator = TOKEN_CARETEQUAL;
+                    Operator = TOKEN_CARETEQUAL; // ^=
                     
-                    String.put('^');
-                    String.put(c.to_char());
+                    String << WLCharacter('^');
+                    String << c;
                     
                     c = nextWLCharacter();
                 }
                     break;
                 default: {
-                    Operator = TOKEN_CARET;
+                    Operator = TOKEN_CARET; // ^
                     
-                    String.put('^');
+                    String << WLCharacter('^');
                 }
                     break;
             }
         }
             break;
         case '\'': {
-            Operator = TOKEN_SINGLEQUOTE;
+            Operator = TOKEN_SINGLEQUOTE; // '
             
-            String.put(c.to_char());
+            String << c;
             
             c = nextWLCharacter();
         }
             break;
         default: {
             
-            assert(c.isOperatorCharacter());
+            assert(c.isPunctuationCharacter());
             
-            //
-            // Do not use String.put(c.to_char()); here because c may not be a char
-            //
-            auto p = c.preferredSource();
-            String << p;
+            String << c;
             
             Operator = LongNameCodePointToOperator(c.to_point());
             
@@ -2389,7 +2561,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
         }
     }
     
-    return Operator;
+    return Token(Operator, String.str(), TheSourceManager->getTokenSpan());
 }
 
 //
@@ -2402,59 +2574,70 @@ Token Tokenizer::handleDot(TokenizerContext Ctxt) {
 
     assert(c == WLCharacter('.'));
     
+    auto DotLoc = TheSourceManager->getSourceLocation();
+    
     c = nextWLCharacter();
     
     if (c.isDigit()) {
         
+        //
+        // Something like .0
+        //
+        // Must now do surgery and back up
+        //
+        
         auto Loc = TheSourceManager->getSourceLocation();
         
-        characterQueue.push_back(std::make_pair(c, Loc));
-        setCurrentWLCharacter(WLCharacter('.'), Loc);
+        //
+        // FIXME: DotLoc-1 is not correct because of something like this:
+        //
+        // .0
+        //
+        TheSourceManager->setSourceLocation(DotLoc-1);
+        TheSourceManager->setWLCharacterStart();
+        TheSourceManager->setWLCharacterEnd();
+        
+        TheSourceManager->setSourceLocation(DotLoc);
+        TheSourceManager->setWLCharacterStart();
+        TheSourceManager->setWLCharacterEnd();
+        _currentWLCharacter = WLCharacter('.');
+        
+        enqueue(c, Source(Loc, Loc));
         
         return handleNumber(Ctxt);
     }
     
-    String.put('.');
+    String << WLCharacter('.');
     
-    auto Operator = TOKEN_DOT;
+    auto Operator = TOKEN_DOT; // .
     
     if (c == WLCharacter('.')) {
         
-        Operator = TOKEN_DOTDOT;
+        Operator = TOKEN_DOTDOT; // ..
         
-        String.put(c.to_char());
+        String << c;
         
         c = nextWLCharacter();
         
         if (c == WLCharacter('.')) {
             
-            Operator = TOKEN_DOTDOTDOT;
+            Operator = TOKEN_DOTDOTDOT; // ...
             
-            String.put(c.to_char());
+            String << c;
             
             c = nextWLCharacter();
         }
     }
     
-    return Operator;
+    return Token(Operator, String.str(), TheSourceManager->getTokenSpan());
 }
 
-std::string Tokenizer::getString() {
-    
-    auto StringStr = String.str();
-    
-    String.str("");
-    
-    return StringStr;
+std::string Tokenizer::getString() const {
+    return String.str();
 }
 
-std::vector<SyntaxIssue> Tokenizer::getIssues() {
-
-    auto Tmp = Issues;
-
-    Issues.clear();
-    
-    return Tmp;
+std::vector<SyntaxIssue> Tokenizer::getIssues() const {
+    return Issues;
 }
 
 Tokenizer *TheTokenizer = nullptr;

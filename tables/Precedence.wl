@@ -233,8 +233,14 @@ Precedence`LongName`CenterDot -> Precedence[CenterDot], (* 410 *)
 Precedence`LongName`CircleTimes -> Precedence[CircleTimes], (* 420 *)
 
 (*
+Precedence[PermutationProduct] is 520
+But empirically it is between \[CircleTimes] and \[TensorWedge]
+*)
+Precedence`LongName`PermutationProduct -> Next,
+
+(*
 Precedence[TensorWedge] is 500
-But empirically it is between \[CircleTimes] and \[Vee]
+But empirically it is between \[PermutationProduct] and \[Vee]
 *)
 Precedence`LongName`TensorWedge -> Next,
 
@@ -319,12 +325,13 @@ Precedence`Call -> Precedence[Do], (* 670 just an example of any System symbol t
 
 Precedence`Infix`Question -> Precedence[PatternTest], (* 680 *)
 
+Precedence`LinearSyntax`Bang -> Next,
+
 Precedence`LessLess -> Precedence[Get], (* 720 *)
 
 Precedence`ColonColon -> Precedence[MessageName], (* 750 *)
 
 Precedence`Highest -> Precedence["foo"], (* 1000 just an example of any atom *)
-Precedence`LinearSyntax`Bang -> Precedence`Highest,
 Precedence`LongName`InvisiblePrefixScriptBase -> Precedence`Highest,
 Precedence`LongName`InvisiblePostfixScriptBase -> Precedence`Highest,
 

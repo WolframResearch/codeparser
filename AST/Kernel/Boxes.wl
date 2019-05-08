@@ -29,7 +29,7 @@ CSTToBoxes[StringNode[s_ /; StringStartsQ[s, "\""], {}, _]] :=
 
 CSTToBoxes[StringNode[s_, {}, _]] := s
 
-CSTToBoxes[IntegerNode[s_, {}, _]] := s
+CSTToBoxes[IntegerNode[Integer, s_, _]] := s
 
 CSTToBoxes[RealNode[s_, {}, _]] := s
 

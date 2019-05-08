@@ -3,3 +3,5 @@ build
 
 build-xcode
 build-make
+build-gcc
+build-afl

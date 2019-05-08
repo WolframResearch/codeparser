@@ -1,32 +1,46 @@
 
 #include "ByteDecoder.h"
 
-ByteDecoder::ByteDecoder(std::istream &In) : In(In), eof(false), byteQueue(), Issues() {}
+ByteDecoder::ByteDecoder() : eof(false), byteQueue(), Issues() {}
+
+void ByteDecoder::init() {
+    eof = false;
+    byteQueue.clear();
+    Issues.clear();
+}
+
+void ByteDecoder::deinit() {
+    byteQueue.clear();
+    Issues.clear();
+}
 
 SourceCharacter ByteDecoder::nextSourceCharacter() {
     
-    assert(Issues.empty());
+    //
+    // handle the queue before anything else
+    //
+    // We know only single-byte SourceCharacters are queued
+    //
+    if (!byteQueue.empty()) {
+        
+        auto b = byteQueue[0];
+        
+        // erase first
+        byteQueue.erase(byteQueue.begin());
+        
+        return SourceCharacter(b);
+    }
     
     auto b = nextByte();
     
     if (eof) {
         
-        auto SourceManagerIssues = TheSourceManager->getIssues();
+        TheSourceManager->advanceSourceLocation(SOURCECHARACTER_ENDOFFILE);
         
-        std::copy(SourceManagerIssues.begin(), SourceManagerIssues.end(), std::back_inserter(Issues));
-        
-        
-        TheSourceManager->advanceSourceLocation(SourceCharacter(EOF));
-        
-        return SourceCharacter(EOF);
+        return SOURCECHARACTER_ENDOFFILE;
     }
     
     auto c = decodeBytes(b);
-    
-    auto SourceManagerIssues = TheSourceManager->getIssues();
-    
-    std::copy(SourceManagerIssues.begin(), SourceManagerIssues.end(), std::back_inserter(Issues));
-    
     
     TheSourceManager->advanceSourceLocation(c);
     
@@ -39,19 +53,9 @@ unsigned char ByteDecoder::nextByte() {
         return EOF;
     }
     
-    if (!byteQueue.empty()) {
-        
-        auto b = byteQueue[0];
-        
-        // erase first
-        byteQueue.erase(byteQueue.begin());
-        
-        return b;
-    }
+    auto b = TheInputStream->get();
     
-    auto b = In.get();
-    
-    if (In.eof()) {
+    if (TheInputStream->eof()) {
         eof = true;
     }
     
@@ -69,13 +73,11 @@ SourceCharacter ByteDecoder::leaveAlone(std::vector<unsigned char> bytes) {
     auto Loc = TheSourceManager->getSourceLocation();
     
     // Has not advanced yet at this point
-    Loc.Col++;
-    
+    Loc = SourceLocation(Loc.Line, Loc.Col+1);
 
-    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence. Try resaving the file.", SYNTAXISSUESEVERITY_REMARK, SourceSpan{Loc, Loc});
+    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
         
     Issues.push_back(Issue);
-    
 
     
     auto first = bytes[0];
@@ -234,13 +236,9 @@ SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
     }
 }
 
-std::vector<SyntaxIssue> ByteDecoder::getIssues() {
-    
-    auto Tmp = Issues;
-    
-    Issues.clear();
-    
-    return Tmp;
+std::vector<SyntaxIssue> ByteDecoder::getIssues() const {
+    return Issues;
 }
 
+std::istream *TheInputStream = nullptr;
 ByteDecoder *TheByteDecoder = nullptr;

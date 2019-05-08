@@ -1,27 +1,12 @@
 
+path = FileNameJoin[{DirectoryName[$CurrentTestSource], "ASTTestUtils"}]
+PrependTo[$Path, path]
+
+Needs["ASTTestUtils`"]
+
 Needs["AST`"]
 Needs["AST`Utils`"]
 
-
-(*
-TODO: also test roundtripping through ConcreteParseString and ToInputFormString
-*)
-parseEquivalenceFunction[actualIn_, expectedIgnored_] :=
-Catch[
-Module[{parsed, good, expected, actual},
-	parsed = ParseString[actualIn, HoldNode[Hold, Most[#], <||>]&];
-	If[FailureQ[parsed],
-		Throw[parsed]
-	];
-	expected = ToExpression[ToFullFormString[parsed], InputForm];
-	actual = ToExpression[actualIn, InputForm, Hold];
-	good = SameQ[expected, actual];
-	If[good,
-		True
-		,
-		unhandled[{actual, expected}]
-	]
-]]
 
 
 Test[
@@ -105,7 +90,15 @@ Test[
 	TestID->"Parse-20190109-D3H9G3"
 ]
 
-
+Test[
+	"0.006687037864392394` - 0.004767194980375145`"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190524-E0W7U3"
+]
 
 
 
@@ -150,6 +143,66 @@ Test[
 	,
 	TestID->"Parse-20190406-C1E0T4"
 ]
+
+
+
+
+
+
+
+(*
+Strings
+*)
+Test[
+	"\"a\rb\""
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190605-Q2J1C4"
+]
+
+Test[
+	"\"a\\rb\""
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190605-R5J1A5"
+]
+
+Test[
+	"\"a\r\nb\""
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190605-Y3N4N7"
+]
+
+Test[
+	"\"a\\r\\nb\""
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190605-J8F5L9"
+]
+
+Test[
+	"\"\r\n123\""
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190606-P6G5G5"
+]
+
 
 
 
@@ -566,8 +619,20 @@ Test[
 
 
 
+(*
 
+LongName operators
 
+*)
+Test[
+	"a \\[PermutationProduct] b"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190607-C3R7V3"
+]
 
 
 
@@ -763,100 +828,35 @@ Test[
 	TestID->"Parse-20190301-U8J6A5"
 ]
 
-
-
-
-
-
-
-
-
-
-
-
-
-(*
-\r and \[RawReturn]
-*)
 Test[
-	"\"\\r\""
+	"<< abc"
 	,
 	Null
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20181115-M4K2F9"
+	TestID->"Parse-20190529-T4J0U5"
 ]
 
+
 Test[
-	"\"\\[RawReturn]\""
+	"a >>\n   b"
 	,
 	Null
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20181115-A3F2Z1"
-]
-
-Test[
-	"\"\\:000d\""
-	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
-	,
-	TestID->"Parse-20190126-A6E4K4"
+	TestID->"Parse-20190601-N7G5R3"
 ]
 
 
 
-(*
-\[RawDoubleQuote]
-*)
-Test[
-	"\"\\[RawDoubleQuote]\""
-	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
-	,
-	TestID->"Parse-20190126-S9D1H2"
-]
-
-Test[
-	"\"\\:0022\""
-	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
-	,
-	TestID->"Parse-20190126-O0I4X0"
-]
 
 
 
-(*
-\[RawBackslash]
-*)
-Test[
-	"\"\\[RawBackslash]\""
-	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
-	,
-	TestID->"Parse-20190126-T0Y0O1"
-]
 
-Test[
-	"\"\\:005c\""
-	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
-	,
-	TestID->"Parse-20190126-F7Z5P8"
-]
+
+
 
 
 
@@ -953,10 +953,30 @@ Test[
 
 
 
+(*
+non-ASCII characters in symbol
+*)
+Test[
+	"System`\\[FormalK]"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190605-R7J0W5"
+]
+
+
+
+
+
+
+
+
 
 
 (*
-Strange characters
+Strange characters in symbols
 *)
 Test[
 	"a\:0000"
@@ -980,21 +1000,9 @@ Test[
 
 
 
-
-
-
 (*
 Multi-byte characters
 *)
-
-(*
-check if bug 360669 is fixed
-*)
-
-res = RunProcess[{"echo", "\[Alpha]"}]
-bug360669Fixed = (res["StandardOutput"] === "\[Alpha]")
-
-BeginTestSection["Multi-byte Characters", bug360669Fixed]
 
 Test[
 	(* the hyphen character below is multiple bytes *)
@@ -1007,33 +1015,28 @@ Test[
 	TestID->"Parse-20181202-G1K6S8"
 ]
 
-EndTestSection[]
-
-
-
-
-
-
 Test[
-	"\"\\.00\""
+	(* the copyright character below is multiple bytes *)
+	"(* :Copyright: © 2016 by Wolfram Research, Inc. *)a"
 	,
 	Null
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190128-I9O3D9"
+	TestID->"Parse-20190529-G6W5C4"
 ]
 
-
 Test[
-	"\"\\|010023\""
+	(* the alpha characters below are multiple bytes *)
+	"αα"
 	,
 	Null
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190129-O8S8M2"
+	TestID->"Parse-20190529-G7Y1W9"
 ]
+
 
 
 
@@ -1050,8 +1053,7 @@ Unrecognized \[] characters
 
 ast = ParseString["\"\\[.*\\]\""]
 
-s = ast[[1]]
-children = ast[[2]]
+s = ast[[2]]
 data = ast[[3]]
 issues = data[SyntaxIssues]
 
@@ -1069,14 +1071,6 @@ Test[
 	"\"\\[.*\\]\""
 	,
 	TestID->"Parse-20181207-X9G8E1"
-]
-
-Test[
-	children
-	,
-	{}
-	,
-	TestID->"Parse-20181207-Y7P1V8"
 ]
 
 Test[
@@ -1107,17 +1101,17 @@ Test[
 ]
 
 TestMatch[
-	ParseString["\\n23"]
+	ParseString["\\n23", HoldNode[Hold, #[[1]], <||>]&]
 	,
-	_SyntaxErrorNode
+	HoldNode[Hold, {_SyntaxErrorNode, _}, _]
 	,
 	TestID->"Parse-20190126-Q9U0H8"
 ]
 
 TestMatch[
-	ParseString["\\t23"]
+	ParseString["\\t23", HoldNode[Hold, #[[1]], <||>]&]
 	,
-	_SyntaxErrorNode
+	HoldNode[Hold, {_SyntaxErrorNode, _}, _]
 	,
 	TestID->"Parse-20190203-F5C9L1"
 ]
@@ -1128,10 +1122,13 @@ important that space after - is not in SyntaxErrorNode
 Test[
 	ConcreteParseString["a - \\tb"]
 	,
-	BinaryNode[Minus, {SymbolNode["a", {}, <|Source -> {{1, 1}, {1, 1}}|>], SyntaxErrorNode[Token`Error`Rest,
-		{SyntaxErrorNode[Token`Error`UnhandledCharacter, {TokenNode[Token`Error`UnhandledCharacter, "\\t", <|Source -> {{1, 5}, {1, 6}}|>]},
-			<|Source -> {{1, 5}, {1, 6}}|>], TokenNode[Token`Symbol, "b", <|Source -> {{1, 7}, {1, 7}}|>]},
-			<|Source -> {{1, 5}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]
+	InfixNode[ImplicitTimes, {
+		BinaryNode[Minus, {
+			SymbolNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
+			TokenNode[Token`Minus, "-", <|Source -> {{1, 3}, {1, 3}}|>],
+			SyntaxErrorNode[SyntaxError`UnhandledCharacter, {TokenNode[Token`Error`UnhandledCharacter, "\\t", <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 5}, {1, 6}}|>] }, <|Source -> {{1, 1}, {1, 6}}|>], 
+  		TokenNode[Token`Fake`ImplicitTimes, "", <|Source -> {{1, 7}, {1, 7}}|>],
+  		SymbolNode[Symbol, "b", <|Source -> {{1, 7}, {1, 7}}|>] }, <|Source -> {{1, 1}, {1, 7}}|>]
 	,
 	TestID->"Parse-20190203-G0U2N7"
 ]
@@ -1155,63 +1152,6 @@ TestMatch[
 
 
 
-
-
-
-
-
-(*
-
-Parse File
-
-*)
-
-sample = FileNameJoin[{DirectoryName[$CurrentTestSource], "sample.wl"}]
-
-cst = ConcreteParseFile[sample]
-
-Test[
-	cst
-	,
-	FileNode[File, {InfixNode[
-   Plus, {IntegerNode["1", {}, <|Source -> {{2, 1}, {2, 1}}|>], 
-    IntegerNode[
-     "1", {}, <|Source -> {{2, 3}, {2, 3}}|>]}, <|Source -> {{2, 
-       1}, {2, 3}}|>]}, <|SyntaxIssues -> {}, Source -> {{2, 1}, {2, 3}}|>]
-	,
-	TestID->"Parse-20181230-J0G3I8"
-]
-
-
-shebangwarning = FileNameJoin[{DirectoryName[$CurrentTestSource], "shebangwarning.wl"}]
-
-cst = ConcreteParseFile[shebangwarning]
-
-TestMatch[
-	cst
-	,
-	FileNode[File, {SlotNode["#something", {}, <|Source -> {{1, 1}, {1, 10}}|>]},
-		KeyValuePattern[{
-			Source -> {{1, 1}, {1, 10}},
-			SyntaxIssues -> {SyntaxIssue["Shebang", "# on first line looks like #! shebang", "Remark", <|Source -> {{1, 1}, {1, 1}}|>]} }] ]
-	,
-	TestID->"Parse-20181230-M7H7Q7"
-]
-
-
-carriagereturn = FileNameJoin[{DirectoryName[$CurrentTestSource], "carriagereturn.wl"}]
-
-cst = ConcreteParseFile[carriagereturn]
-
-TestMatch[
-	cst
-	,
-	FileNode[File, {SymbolNode["A", {}, <|Source -> {{3, 1}, {3, 1}}|>]},
-										<| SyntaxIssues->{SyntaxIssue["CharacterEncoding", _, "Remark", <|Source -> {{2, 0}, {2, 0}}|>],
-											SyntaxIssue["CharacterEncoding", _, "Remark", <|Source -> {{3, 0}, {3, 0}}|>]}, Source -> {{3, 1}, {3, 1}}|>]
-	,
-	TestID->"Parse-20190422-C6U5B6"
-]
 
 
 
@@ -1255,7 +1195,9 @@ Test[
 
 
 
-
+(*
+Proper abstracting
+*)
 
 Test[
 	"a \\[CenterDot] b \\[CenterDot] c"
@@ -1286,6 +1228,231 @@ Test[
 	,
 	TestID->"Parse-20190117-G2E2V3"
 ]
+
+
+Test[
+	"a \\[SubsetEqual] b \\[SubsetEqual] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190601-B8N2U4"
+]
+
+Test[
+	"a \\[Equal] b"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190602-H3P8Z9"
+]
+
+Test[
+	"#2 \\[DifferentialD]x"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190603-H4B0W1"
+]
+
+
+
+
+
+
+
+(*
+Backtracking in the parser
+*)
+
+Test[
+	"2^\\[Pi]"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190529-C9B6B8"
+]
+
+(*
+
+Cannot test because ToExpression["1.2`-\\[Pi]"] can hang the kernel
+
+bug 374238
+
+Test[
+	"1.2`-\\[Pi]"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190529-Q7U4X7"
+]
+*)
+
+Test[
+	"2*\\[Pi]"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190529-Z3Y8W3"
+]
+
+Test[
+	"x=!\\[Pi]"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190529-Q3O3B5"
+]
+
+Test[
+	"a<-\\[Pi]"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190529-W8F4E7"
+]
+
+
+
+
+
+
+
+
+
+(*
+Ambiguities
+*)
+
+
+Test[
+	"c_ . _LinearSolve"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190529-A3A3L5"
+]
+
+Test[
+	"0. .."
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190529-Q9D3W4"
+]
+
+Test[
+	"0. ..."
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190529-Z7J2D6"
+]
+
+Test[
+	"- - 12.34"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190529-N6K0P5"
+]
+
+Test[
+	"a& & b"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190529-J5O3R9"
+]
+
+Test[
+	"x ! ! y"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190529-O0C6C2"
+]
+
+Test[
+	"x /. 0"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190529-I3F9G4"
+]
+
+Test[
+	"x //. 0"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190529-B3Y1M2"
+]
+
+Test[
+	"x =. 0"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190529-J9F1C4"
+]
+
+
+Test[
+	"x ; ;"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190529-N9N1D6"
+]
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,0 +1,5 @@
+
+BeginPackage["Foo.m`"]
+
+EndPackage[]
+

@@ -5,7 +5,7 @@
 #include "Source.h"
 #include "CodePoint.h"
 
-#include <sstream>
+#include <ostream>
 #include <vector>
 #include <cassert>
 #include <unordered_map>
@@ -34,27 +34,25 @@ enum EscapeFormat {
     ESCAPE_6HEX,
 };
 
-class WLCharacter
-{
+//
+// A single WL character
+//
+// The text  \[Alpha]  would be 1 WLCharacter
+//
+class WLCharacter {
 public:
     explicit constexpr WLCharacter(int val, EscapeFormat escape_ = ESCAPE_NONE) : value_(val), escape_(escape_) {}
 
     explicit operator int() const noexcept = delete;
 
-    bool operator==(const WLCharacter &o) const {
-        return value_ == o.value_ && escape_ == o.escape_;
-    }
+    bool operator==(const WLCharacter &o) const;
 
-    bool operator!=(const WLCharacter &o) const {
-        return value_ != o.value_ || escape_ != o.escape_;
-    }
+    bool operator!=(const WLCharacter &o) const;
 
     //
     // for std::map
     //
-    bool operator<(const WLCharacter &o) const {
-        return value_ < o.value_;
-    }
+    bool operator<(const WLCharacter &o) const;
 
     constexpr char to_char() const {
         //
@@ -67,64 +65,56 @@ public:
         return value_;
     }
     
-    std::string preferredString() const;
-
-    std::string actualString() const;
-    
-    std::vector<SourceCharacter> preferredSource() const;
-
-    std::vector<SourceCharacter> actualSource() const;
-    
-    bool isEscaped() const {
-        return escape_ != ESCAPE_NONE;
+    constexpr EscapeFormat escape() const {
+        return escape_;
     }
+
+    std::string string() const;
+    
+    bool isEscaped() const;
     
     bool isDigit() const;
 
     bool isAlpha() const;
 
     bool isDollar() const;
-
-    bool isEOF() const;
-
-    bool isDigitOrAlpha() const;
-
-    bool isDigitOrAlphaOrDollar() const;
-
-    bool isAlphaOrDollar() const;
-
-    bool isHex() const;
-
-    bool isOctal() const;
+    
+    bool isLetterlike() const;
+    
+    bool isStrangeLetterlike() const;
     
     bool isPunctuation() const;
     
+    bool isSpace() const;
+    
+    bool isNewline() const;
+    
+    bool isEndOfFile() const;
+    
     bool isLinearSyntax() const;
     
-    bool isASCIIControlCharacter() const;
+    bool isUninterpretable() const;
+    
+    bool isControl() const;
     
     bool isLetterlikeCharacter() const;
     bool isStrangeLetterlikeCharacter() const;
-    bool isOperatorCharacter() const;
+    bool isPunctuationCharacter() const;
     bool isSpaceCharacter() const;
     bool isNewlineCharacter() const;
     bool isCommaCharacter() const;
     bool isUninterpretableCharacter() const;
-
-    int toDigit() const;
-
-    static int fromDigit(int d);
-
+    
 private:
     int value_;
     EscapeFormat escape_;
 };
 
-std::ostream& operator<<(std::ostream& stream, std::vector<SourceCharacter>&);
+std::ostream& operator<<(std::ostream& stream, WLCharacter);
 
 
 
-constexpr WLCharacter WLCHARACTER_EOF(CODEPOINT_EOF);
+constexpr WLCharacter WLCHARACTER_ENDOFFILE(CODEPOINT_ENDOFFILE);
 
 
 
@@ -146,17 +136,49 @@ enum NextCharacterPolicyBits {
     //
     // ToExpression["\"c\\b\""] evaluates to "c\010" (escapes are ENABLED)
     //
-    DISABLE_ESCAPES = 0x02
+    DISABLE_ESCAPES = 0x02,
+    
+    //
+    // Disable character decoding issues
+    //
+    // "\c" gives a CharacterDecoding error (issues are ENABLED)
+    //
+    // (*\c*) does NOT give a CharacterDecoding error (issues are DISABLED)
+    //
+    DISABLE_CHARACTERDECODINGISSUES = 0x04,
+    
+    //
+    // This code:
+    // { a, \
+    //   b }
+    //
+    // would give a line continuation warning because the line continuation is not needed
+    //
+    // This code:
+    // { a, "x\
+    //   y", b }
+    //
+    // would NOT give a warning because the line continuation is inside of a token
+    //
+    CURRENTLY_INSIDE_TOKEN = 0x08,
+    
+    //
+    // After a line continuation, is \r \n consumed as a single newline?
+    //
+    // TODO: add to kernel quirks mode
+    //
+    LC_UNDERSTANDS_CRLF = 0x10
 };
 
 typedef int NextCharacterPolicy;
 
-const NextCharacterPolicy TOPLEVEL       = 0;
-const NextCharacterPolicy INSIDE_NUMBER  = 0;
-const NextCharacterPolicy INSIDE_STRING  = PRESERVE_WS_AFTER_LC;
-const NextCharacterPolicy INSIDE_STRING_FILEIFY  = DISABLE_ESCAPES;
-const NextCharacterPolicy INSIDE_COMMENT = PRESERVE_WS_AFTER_LC;
-
+const NextCharacterPolicy TOPLEVEL               = LC_UNDERSTANDS_CRLF;
+const NextCharacterPolicy INSIDE_SYMBOL          = CURRENTLY_INSIDE_TOKEN | LC_UNDERSTANDS_CRLF;
+const NextCharacterPolicy INSIDE_NUMBER          = CURRENTLY_INSIDE_TOKEN | LC_UNDERSTANDS_CRLF;
+const NextCharacterPolicy INSIDE_STRING          = PRESERVE_WS_AFTER_LC | CURRENTLY_INSIDE_TOKEN;
+const NextCharacterPolicy INSIDE_STRING_FILEIFY  = DISABLE_ESCAPES | CURRENTLY_INSIDE_TOKEN;
+const NextCharacterPolicy INSIDE_OPERATOR        = CURRENTLY_INSIDE_TOKEN | LC_UNDERSTANDS_CRLF;
+const NextCharacterPolicy INSIDE_COMMENT         = PRESERVE_WS_AFTER_LC | DISABLE_CHARACTERDECODINGISSUES | CURRENTLY_INSIDE_TOKEN | LC_UNDERSTANDS_CRLF;
 
 //
 // CharacterDecoder is given a stream of integers that represent Unicode code points and decodes
@@ -165,21 +187,19 @@ const NextCharacterPolicy INSIDE_COMMENT = PRESERVE_WS_AFTER_LC;
 class CharacterDecoder {
 
     WLCharacter cur;
-
-    std::vector<std::pair<WLCharacter, SourceSpan>> characterQueue;
+    
+    std::vector<std::pair<SourceCharacter, SourceLocation>> characterQueue;
     
     std::vector<SyntaxIssue> Issues;
-    
-    SourceCharacter nextSourceCharacter();
     
     WLCharacter handleLongName(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextCharacterPolicy policy);
     WLCharacter handle2Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextCharacterPolicy policy);
     WLCharacter handle4Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextCharacterPolicy policy);
     WLCharacter handle6Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextCharacterPolicy policy);
     WLCharacter handleOctal(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextCharacterPolicy policy);
-
-    WLCharacter enqueue(std::vector<std::pair<WLCharacter, SourceSpan>> chars);
-
+    
+    void enqueue(SourceCharacter, SourceLocation);
+    
     static std::string longNameSuggestion(std::string);
 
 public:
@@ -191,9 +211,9 @@ public:
 
     WLCharacter nextWLCharacter(NextCharacterPolicy policy = TOPLEVEL);
 
-    WLCharacter currentWLCharacter();
+    WLCharacter currentWLCharacter() const;
 
-    std::vector<SyntaxIssue> getIssues();
+    std::vector<SyntaxIssue> getIssues() const;
 };
 
 extern CharacterDecoder *TheCharacterDecoder;

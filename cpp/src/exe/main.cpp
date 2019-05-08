@@ -61,17 +61,17 @@ int readStdIn(bool tokenize) {
         return 1;
     }
     
+    WolframLibrary_initialize(nullptr);
+    
     MLINK mlp;
     mlp = MLLoopbackOpen(ep, &err);
     
-    if (!MLPutFunction(mlp, SYMBOL_LIST.name(), 1)) {
+    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 1)) {
         goto retPt;
     }
     if (!MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(input.c_str()), static_cast<int>(input.size()))) {
         goto retPt;
     }
-    
-    WolframLibrary_initialize(nullptr);
     
     if (tokenize) {
         res = TokenizeString(nullptr, mlp);
@@ -120,10 +120,12 @@ int readFile(std::string file) {
         return 1;
     }
     
+    WolframLibrary_initialize(nullptr);
+    
     MLINK mlp;
     mlp = MLLoopbackOpen(ep, &err);
     
-    if (!MLPutFunction(mlp, SYMBOL_LIST.name(), 2)) {
+    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 2)) {
         goto retPt;
     }
     if (!MLPutString(mlp, file.c_str())) {
@@ -132,8 +134,6 @@ int readFile(std::string file) {
     if (!MLPutSymbol(mlp, "False")) {
         goto retPt;
     }
-    
-    WolframLibrary_initialize(nullptr);
     
     res = ConcreteParseFile(nullptr, mlp);
     if (res != LIBRARY_NO_ERROR) {

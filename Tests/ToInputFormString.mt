@@ -6,7 +6,7 @@ Needs["AST`"]
 Test[
 	ToInputFormString[ConcreteParseString["1+1"]]
 	,
-	"1 + 1"
+	" 1 + 1 "
 	,
 	TestID->"ToInputFormString-20181230-P1F9Q9"
 ]
@@ -14,7 +14,7 @@ Test[
 Test[
 	ToInputFormString[ConcreteParseString["_ + __ * ___"]]
 	,
-	"_ + __*___"
+	" _ +  __*___  "
 	,
 	TestID->"ToInputFormString-20181230-S7R9U8"
 ]
@@ -22,7 +22,7 @@ Test[
 Test[
 	ToInputFormString[ConcreteParseString["% ^ # ^ ## ^ f''[x]"]]
 	,
-	"%^#^##^f''[x]"
+	" %^ #^ ##^  f' ' [x]   "
 	,
 	TestID->"ToInputFormString-20181230-E6E4O1"
 ]
@@ -31,7 +31,7 @@ Test[
 Test[
 	ToInputFormString[ConcreteParseString["@"]]
 	,
-	"@"
+	" @ "
 	,
 	TestID->"ToInputFormString-20181230-V8O8B1"
 ]
@@ -48,7 +48,7 @@ Test[
 Test[
 	ToInputFormString[ConcreteParseString["aaa - bbb + ccc - !ddd"]]
 	,
-	"aaa - bbb + ccc - !ddd"
+	"   aaa - bbb  + ccc  -  !ddd  "
 	,
 	TestID->"ToInputFormString-20181230-Z9F3L8"
 ]
@@ -58,7 +58,7 @@ Test[
 Test[
 	ToInputFormString[ConcreteParseString["a::b::c"]]
 	,
-	"a::b::c"
+	" a::b::c "
 	,
 	TestID->"ToInputFormString-20181230-P0K1Y7"
 ]
@@ -66,7 +66,7 @@ Test[
 Test[
 	ToInputFormString[ConcreteParseString["a /: b := c"]]
 	,
-	"a/:b:=c"
+	" a/:b:=c "
 	,
 	TestID->"ToInputFormString-20181230-H9T6O8"
 ]
@@ -75,7 +75,7 @@ Test[
 Test[
 	ToInputFormString[ConcreteParseString["##&"]]
 	,
-	"##& "
+	" ##& "
 	,
 	TestID->"ToInputFormString-20181230-A2F7W1"
 ]
@@ -146,21 +146,6 @@ Test[
 
 
 
-sample = FileNameJoin[{DirectoryName[$CurrentTestSource], "sample.wl"}]
-
-ast = ConcreteParseFile[sample]
-
-Test[
-	ToInputFormString[ast]
-	,
-	"1 + 1"
-	,
-	TestID->"ToInputFormString-20181230-T2D2W6"
-]
-
-
-
-
 
 
 
@@ -178,7 +163,7 @@ Test[
 Test[
 	ToInputFormString[ConcreteParseString["a& & + b"]]
 	,
-	"a& &  + b"
+	"   a& &  + b "
 	,
 	TestID->"ToInputFormString-20181231-F0J3L4"
 ]
@@ -194,18 +179,18 @@ Error handling
 Test[
 	ToInputFormString[ConcreteParseString["A B:C:.Ne"]]
 	,
-	"A B:C:.Ne"
+	" A   B:C :  .    Ne "
 	,
-	TestID->"Parse-20181117-K1W0K0"
+	TestID->"ToInputFormString-20190523-V1I4S4"
 ]
 
 
 Test[
 	ToInputFormString[ConcreteParseString["a:"]]
 	,
-	"a:"
+	" a:   "
 	,
-	TestID->"Parse-20181118-V5G8O1"
+	TestID->"ToInputFormString-20190523-H5C9J2"
 ]
 
 

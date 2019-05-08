@@ -11,41 +11,108 @@
 #include "Source.h"
 
 #include "ByteEncoder.h"
+#include "Utils.h"
 
 #include <vector>
 #include <cctype>
+
+SourceLocation::SourceLocation() : Line(0), Col(0) {}
+
+SourceLocation::SourceLocation(size_t Line, size_t Col) : Line(Line), Col(Col) {}
 
 bool isContiguous(SourceLocation a, SourceLocation b) {
     return a.Line == b.Line && a.Col + 1 == b.Col;
 }
 
-bool isContiguous(SourceSpan a, SourceSpan b) {
-    return isContiguous(a.end, b.start);
+bool isContiguous(Source a, Source b) {
+    return isContiguous(a.lines.end, b.lines.start);
 }
 
-SourceManager::SourceManager() : lastCharacterWasCarriageReturn(false), eof(false), Issues(), SourceLoc{1, 0}, TokenStartLoc{0, 0}, TokenEndLoc{0, 0},
-    WLCharacterStartLoc{0, 0}, WLCharacterEndLoc{0, 0}, CurLineWidth(0) {}
+bool operator<=(SourceLocation a, SourceLocation b) {
+    
+    if (a.Line < b.Line) {
+        return true;
+    }
+    
+    if (a.Line > b.Line) {
+        return false;
+    }
+    
+    assert(a.Line == b.Line);
+    
+    if (a.Col <= b.Col) {
+        return true;
+    }
+    
+    return false;
+}
+
+Source::Source() {
+    
+}
+
+Source::Source(SourceLocation start, SourceLocation end) : lines{start, end} {
+    
+    //
+    // This is a really good way to uncover problems
+    //
+    assert( start <= end );
+}
+
+size_t Source::size() const {
+    assert(lines.start.Line == lines.end.Line);
+    return lines.end.Col - lines.start.Col + 1;
+}
+
+void Source::putSourceRule(MLINK mlp) const {
+    
+    assert(lines.start <= lines.end);
+    
+    MLPutFunction(mlp, SYMBOL_RULE->name(), 2);
+    
+    MLPutSymbol(mlp, SYMBOL_SOURCE->name());
+    
+    const int data[4] = {
+        static_cast<int>(lines.start.Line), static_cast<int>(lines.start.Col),
+        static_cast<int>(lines.end.Line), static_cast<int>(lines.end.Col)};
+    
+    static const long SOURCELOCATION_DIMS[2] = {2, 2};
+    
+    MLPutIntegerArray(mlp, data, SOURCELOCATION_DIMS, nullptr, 2);
+}
+
+
+SourceManager::SourceManager() : lastCharacterWasCarriageReturn(false), eof(false), Issues(), SourceLoc(1, 0), TokenStartLoc(0, 0),
+WLCharacterStartLoc(0, 0), WLCharacterEndLoc(0, 0), PrevWLCharacterStartLoc(0, 0), PrevWLCharacterEndLoc(0, 0) {}
 
 void SourceManager::init() {
     lastCharacterWasCarriageReturn = false;
     eof = false;
-    SourceLoc = SourceLocation{1, 0};
-    TokenStartLoc = SourceLocation{0, 0};
-    TokenEndLoc = SourceLocation{0, 0};
-    WLCharacterStartLoc = SourceLocation{0 ,0};
-    WLCharacterEndLoc = SourceLocation{0, 0};
-    CurLineWidth = 0;
+    Issues.clear();
+    SourceLoc = SourceLocation(1, 0);
+    TokenStartLoc = SourceLocation(0, 0);
+    WLCharacterStartLoc = SourceLocation(0 ,0);
+    WLCharacterEndLoc = SourceLocation(0, 0);
+    PrevWLCharacterStartLoc = SourceLocation(0, 0);
+    PrevWLCharacterEndLoc = SourceLocation(0, 0);
 }
 
 void SourceManager::deinit() {
-
+    Issues.clear();
 }
 
+//
+// Update SourceLoc according to the next source character c
+//
+// Precondition: SourceLoc is at the character before c
+//
+// Postcondition: SourceLoc is now at c
+//
 void SourceManager::advanceSourceLocation(SourceCharacter c) {
     
-    assert(Issues.empty());
-    
-    if (c == SourceCharacter(EOF)) {
+    if (c == SOURCECHARACTER_ENDOFFILE) {
+        
+        eof = true;
         
         //
         // It can happen that single \r occurs.
@@ -58,17 +125,14 @@ void SourceManager::advanceSourceLocation(SourceCharacter c) {
             // Do not need to advance Col here
             //
             
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Stray \\r character. Mac OS 9 line ending? Try resaving the file.", SYNTAXISSUESEVERITY_REMARK, SourceSpan{Loc, Loc});
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRAYCARRIAGERETURN, "Stray ``\\r`` character.\nMac OS 9 line ending?\nTry resaving the file.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
             
             Issues.push_back(Issue);
         }
         
         lastCharacterWasCarriageReturn = false;
         
-        CurLineWidth = SourceLoc.Col;
-        
-        SourceLoc.Line++;
-        SourceLoc.Col = 0;
+        SourceLoc = SourceLocation(SourceLoc.Line+1, 0);
         
         return;
     }
@@ -79,10 +143,8 @@ void SourceManager::advanceSourceLocation(SourceCharacter c) {
         // if lastCharacterWasCarriageReturn, then newline was already handled
         //
         if (!lastCharacterWasCarriageReturn) {
-            CurLineWidth = SourceLoc.Col;
             
-            SourceLoc.Line++;
-            SourceLoc.Col = 0;
+            SourceLoc = SourceLocation(SourceLoc.Line+1, 0);
         }
         
         lastCharacterWasCarriageReturn = false;
@@ -102,7 +164,7 @@ void SourceManager::advanceSourceLocation(SourceCharacter c) {
         // Do not need to advance Col here
         //
         
-        auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Stray \\r character. Mac OS 9 line ending? Try resaving the file.", SYNTAXISSUESEVERITY_REMARK, SourceSpan{Loc, Loc});
+        auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRAYCARRIAGERETURN, "Stray ``\\r`` character.\nMac OS 9 line ending?\nTry resaving the file.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
         
         Issues.push_back(Issue);
     }
@@ -110,20 +172,20 @@ void SourceManager::advanceSourceLocation(SourceCharacter c) {
     if (c == SourceCharacter('\r')) {
         lastCharacterWasCarriageReturn = true;
         
-        CurLineWidth = SourceLoc.Col;
-        
-        SourceLoc.Line++;
-        SourceLoc.Col = 0;
+        SourceLoc = SourceLocation(SourceLoc.Line+1, 0);
         
         return;
     }
     
     lastCharacterWasCarriageReturn = false;
     
-    SourceLoc.Col++;
+    SourceLoc = SourceLocation(SourceLoc.Line, SourceLoc.Col+1);
 }
 
 void SourceManager::setWLCharacterStart() {
+    
+    PrevWLCharacterStartLoc = WLCharacterStartLoc;
+    PrevWLCharacterEndLoc = WLCharacterEndLoc;
     
     WLCharacterStartLoc = SourceLoc;
 }
@@ -131,78 +193,36 @@ void SourceManager::setWLCharacterStart() {
 void SourceManager::setWLCharacterEnd() {
     
     WLCharacterEndLoc = SourceLoc;
+    
+    assert(WLCharacterStartLoc <= WLCharacterEndLoc);
 }
 
 void SourceManager::setTokenStart() {
-    
     TokenStartLoc = WLCharacterStartLoc;
 }
 
-void SourceManager::setTokenEnd() {
-    
-   if (eof) {
-
-       TokenEndLoc = WLCharacterStartLoc;
-
-       return;
-   }
-    
-    //
-    // Actually use CharacterStartLoc - 1, because we have already advanced by 1
-    //
-
-    if (WLCharacterStartLoc.Col == 0) {
-
-        //
-        // Back up to previous line
-        //
-
-        SourceLocation Rewind{WLCharacterStartLoc.Line-1, CurLineWidth};
-        
-        TokenEndLoc = Rewind;
-        
-        return;
-    }
-    
-    SourceLocation Rewind = WLCharacterStartLoc;
-    Rewind.Col--;
-    
-    TokenEndLoc = Rewind;
+Source SourceManager::getTokenSpan() const {
+    return Source(TokenStartLoc, PrevWLCharacterEndLoc);
 }
 
-void SourceManager::setEOF() {
-
-    eof = true;
-}
-
-SourceSpan SourceManager::getTokenSpan() {
-    
-    return SourceSpan{TokenStartLoc, TokenEndLoc};
-}
-
-SourceLocation SourceManager::getWLCharacterStart() {
-    
+SourceLocation SourceManager::getWLCharacterStart() const {
     return WLCharacterStartLoc;
 }
 
-SourceSpan SourceManager::getWLCharacterSpan() {
-    
-    return SourceSpan{WLCharacterStartLoc, WLCharacterEndLoc};
+Source SourceManager::getWLCharacterSpan() const {
+    return Source(WLCharacterStartLoc, WLCharacterEndLoc);
+}
+
+SourceLocation SourceManager::getTokenStart() const {
+    return TokenStartLoc;
 }
 
 void SourceManager::setSourceLocation(SourceLocation Loc) {
-    
     SourceLoc = Loc;
 }
 
-SourceLocation SourceManager::getSourceLocation() {
-
+SourceLocation SourceManager::getSourceLocation() const {
     return SourceLoc;
-}
-
-size_t SourceManager::getCurrentLineWidth() {
-
-    return CurLineWidth;
 }
 
 bool SourceCharacter::isDigitOrAlpha() const {
@@ -233,15 +253,6 @@ bool SourceCharacter::isUpper() const {
     return std::isupper(value_);
 }
 
-std::vector<unsigned char> SourceCharacter::bytes() const {
-    
-    if (value_ == EOF) {
-        return {};
-    }
-    
-    return ByteEncoder::encodeBytes(value_);
-}
-
 std::string SourceCharacter::string() const {
     
     std::ostringstream String;
@@ -251,22 +262,58 @@ std::string SourceCharacter::string() const {
     return String.str();
 }
 
-std::ostream& operator<<(std::ostream& s, const SourceCharacter& c) {
+std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
     
-    for (auto b : c.bytes()) {
-        s.put(b);
+    auto val = c.to_point();
+    
+    if (val == EOF) {
+        return stream;
     }
+
+    ByteEncoder::encodeBytes(stream, val);
     
-    return s;
+    return stream;
 }
 
-std::vector<SyntaxIssue> SourceManager::getIssues() {
+Token::Token(TokenEnum Tok, std::string Str, Source Span) : Tok(Tok), Str(Str), Span(Span) {
     
-    auto Tmp = Issues;
+    //
+    // Only bother checking if the token is all on one line
+    // Spanning multiple lines is too complicated to care about
+    //
+    if (Span.lines.start.Line == Span.lines.end.Line) {
+        switch (Tok) {
+                //
+                // These are the tokens that do not quite have correct spans.
+                // start and end are set to the same character, so size is 1
+                // But they take up 0 characters
+                //
+            case TOKEN_ENDOFFILE:
+            case TOKEN_UNKNOWN:
+            case TOKEN_FAKE_IMPLICITTIMES:
+            case TOKEN_ERROR_EMPTYSTRING:
+                break;
+            default:
+                if (Span.size() != Str.size()) {
+                    //
+                    // If the sizes do not match, then check if there are multi-byte characters
+                    // If there are multi-bytes characters, then it is too complicated to compare sizes
+                    //
+                    // Note that this also catches changes in character representation, e.g.,
+                    // If a character was in source with \XXX notation but was stringified with \:XXXX notation
+                    //
+                    if (!Utils::containsNonASCII(Str)) {
+                        assert(false);
+                    }
+                }
+                break;
+        }
+    }
     
-    Issues.clear();
-    
-    return Tmp;
+}
+
+std::vector<SyntaxIssue> SourceManager::getIssues() const {
+    return Issues;
 }
 
 SourceManager *TheSourceManager = nullptr;

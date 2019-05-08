@@ -1,0 +1,1258 @@
+a
+abc
+a12a
+$a
+a`b
+a`b`
+{a`b`}
+`a
+1
+1234
+5*^1
+5*^10
+5*^-10
+5*^+10
+12^^5
+12^^aa
+12^^az
+12..
+12...
+1.1
+12.34
+.34
+66.
+5.6*^1
+5.*^1
+5.5`
+5.5`500
+5.5`*^100
+5.5`*^-100
+5.5`*^+100
+5.5`10*^50
+5.5`10*^-50
+5.5`10*^+50
+12^^aa`
+12^^aa`10
+12^^a.a
+12^^a.a`50
+12^^a.a*^20
+12^^a.a*^-20
+12^^a.a`50*^20
+12^^a.a`50*^-20
+12^^a.a`50*^+20
+12^^a.a`*^-20
+12^^a.a`*^+20
+.6*^10
+.6*^-10
+.6*^+10
+.6`*^10
+.6`*^-10
+.6`*^+10
+.6`55*^10
+.6`55*^-10
+.6`55*^+10
+0``0.5
+0``-100
+1.2..
+1.2...
+a+*b
+a+
+f[]
+f[a]
+f[a,b]
+f[][]
+f[a,]
+f[,a]
+f[,]
+a~b~c
+a~b~c~d
+a~b~c~d~e
+a@b
+a@b@c
+a@b++
+a++@b
+a~b~c@d
+a//b
+a//b//c
+a//b &
+a&//b
+a//b=c
+a=b//c
+x + y + z
+x + y z
+(x + y) z
+x + y -> z
+f[ x + z[]]
+a + b - c + d
+10^5
+x^y^z
+(x^y)^z
+x y^z
+(x y)^z
+x^-y
+x^- -y
+x^-y[1]
+-x^y
+a-b^c
+a^-b^c
+a^-b^+c
+a^-b.c
+-a
++a
+a-a
+f[ -a] 
+f[ +a] 
+f[ ] - a 
+f[ ] + a 
+a -> - a 
+a -> + a 
+x/y/z
+a + (*  *) b
+a + (*(*(*  *)*)*) b
+a + (*  *) b  + (*  *)  c
+a + (*  
+a + (*  * ) 
+a + *)  
+a (* (  *) 
+a (* )  *) 
+a (* *  *) 
+a + \" ff \" +  c
+\" ff \"
+\" ff 
+\" \\\" \"
+\" \n \"
+\" \\[Name] \"
+\" \\\n \"
+\" \\\n  a\"
+\" \\:1234 \"
+\" \\:12FF \"
+\" \\:12ff \"
+\" \\.12 \"
+\" \\.1f \"
+\" \\.1F \"
+\" \\123 \"
+3*\\[Foo]
+\\[Foo]
+Part[a]
+Part[a,b]
+Part[a,b,c[1],d]
+{\\[Foo]}
+a \\[Rule] b
+a \\[RuleDelayed] b
+a \\[And] b
+a \\[Or] b
+a`\\[Foo]
+\\:1234
+\\:12ff
+\\:12FF
+\\.12
+\\.1f
+\\.1F
+\\123
+_
+__
+___
+a_
+a__
+a___
+_a
+__a
+___a
+a_b
+a__b
+a___b
+_a_
+_a__
+_a___
+_a_.
+__a_
+__a__
+__a___
+__a_.
+___a_
+___a__
+___a___
+___a_.
+x_a_
+x_a__
+x_a___
+x_a_.
+x__a_
+x__a__
+x__a___
+x__a_.
+x___a_
+x___a__
+x___a___
+x___a_.
+x_a_y
+x_a__y
+x_a___y
+x__a_y
+x__a__y
+x__a___y
+x___a_y
+x___a__y
+x___a___y
+a:b
+a[1]:b
+a:b[1]
+a:_
+a:_b
+_:a
+__:a
+___:a
+_b:a
+__b:a
+___b:a
+a_b:c
+Optional[Pattern[a,Blank[b]],c]
+a__b:c
+Optional[Pattern[a,BlankSequence[b]],c]
+a___b:c
+Optional[Pattern[a,BlankNullSequence[b]],c]
+a:b:c
+a:_:c
+a:__:c
+a:___:c
+a:_b:c
+a:__b:c
+a:___b:c
+a:b[1]:c
+a:b+c:d
+a:{b}:c
+a+b:c
+a:b|c
+a:b/;c
+_:b|c
+_:b/;c
+a_:0
+a__:0
+a___:0
+a_:b^c
+a_:b+c
+a_:b||c
+a_:b~~c
+a:{}:{}
+Optional[Pattern[a,List[]],List[]]
+a:{}:b[]
+Optional[Pattern[a,List[]],b[]]
+a:b[]:c[]
+Optional[Pattern[a,b[]],c[]]
+a:_|_:{}
+Pattern[a,Alternatives[Blank[],Optional[Blank[],List[]]]]
+a:b|c:{}
+Pattern[a,Alternatives[b,Pattern[c,List[]]]]
+a:b~~c:{}
+StringExpression[Pattern[a,b],Pattern[c,List[]]]
+a:b:c~~d
+StringExpression[Optional[Pattern[a,b],c],d]
+{}
+{a}
+{a,b}
+{a,}
+{,a}
+{,}
+{,,}
+{a,b+1}
+a /; b /; c
+a /; b -> c
+a:b /; c
+a | b | c
+a : b | c
+a | b /; c
+_.
+xx_.
+__.
+___.
+_. + a
+xx_. + a
+x -> y :> z
+x = y := z
+a^= b 
+a^:= b 
+a /:  b = c
+a /:  b := c
+a^= b  ^= c
+a^:= b  ^:= c
+a /:  b  = c  /: d  = e
+a /:  b  := c  /: d  := e
+a /:  b /: c  = d = e
+a /:  b;c  := d
+a /:  (b;c) = d
+a /:  (b;c) := d
+a /: b *= c = d
+a /: b *= c  := d
+a /: -b = c
+a /: -b := c
+x.y.z
+x.-y
+-x.y
+a-b.c
+a.-b.c
+a.-b.+c
+a.-b^c
+x**y
+x**y**z
+x**-y
+x**y^z
+x^y**z
+x.y**z
+x**y.z
+x&
+x& &
+a& + b
+a&  b
+a& & + b
+a+b& + c
+a->b&
+a& -> b
+a = b&
+a& = b
+a[[]]
+a[[b]]
+a[[b,c]]
+a[[b,c[1]]]
+(a+b)[[c]]
+a[b][[c]]
+a[[b]][c]
+a;
+a;b
+a;b[c]
+{a;}
+{a;b}
+{a;b[c]}
+c[a;]
+c[a;b]
+d[a;b[c]]
+c[a;,e]
+c[a;b,e]
+d[a;b[c],e]
+{a;,e}
+{a;b,e}
+{a;b[c],e}
+a;_
+a;*b
+a+b;(**)a + b
+a+b;(**)
+a+b;(**)(**)(**)(**)a + b
+a+b;(**)(**)(**)(**)(**)
+a+b;(**)  (**)  (**)  (**)a + b
+a+b;(**)  (**)  (**)  (**)(**)
+a+b;(**) \t\t (**) \t\t (**)  \t\t(**)a + b
+a+b;(**) \t\t (**) \t\t (**)  \t\t(**)(**)
+a+b;(**)\n(**)\n(**)\n(**)a + b
+a+b;(**)\n(**)\n(**)\n(**)\n(**)
+10*5
+10.*5
+10.5*5
+10.`*5
+!a
+!!a
+! !a
+a + !b
+a + !!b
+a + ! !b
++ ! b
+ ! +  b
+a(!b)
+a (! + b)
+a =! b
+a\n\n!b
+a ; ! b
+a!
+a!b
+(a!)b
+a! + b
+a! &
+a & !
+a! & + b
+a & ! + b
+a!!
+a!!b
+(a!!)b
+a!! + b
+a!! &
+a & !!
+a!! & + b
+a & !! + b
+a !! ^ b
+a?b
+a?b?c
+%
+%1
+a+%+c
+a+%12+c
+%-1
+a === b
+a =!= b
+a === b === c
+a =!= b  =!= c
+a === b =!= c
+a =!= b === c
+a == b
+a != b
+a > b
+a < b
+a >= b
+a <= b
+a == b == c
+a != b != c
+a > b > c
+a < b < c
+a >= b >= c
+a <= b <= c
+a == b != c
+a == b != c > d
+a =.
+a=. =.
+a=. = b
+a= b =.
+a =  .
+a= . =  .
+a=  . = b
+a= b =  .
+a=.b
+a=  .b
+f[ x_] =. 
+g /: f[ x_] =. 
+a::b
+a::b::c
+a..
+a...
+a.. + b
+a... + b
+_a  ..
+#
+##
+#2
+##66
+#+a
+##+a
+#55+a
+##55+a
+a;#
+a;##
+a;#55
+a;##66
+a /@ b
+a /@ b /@ c
+a //@ b
+a //@ b //@ c
+a @@ b
+a @@ b @@ c
+a @@@ b @@@ c
+a /@ b !
+a && b&& c
+a || b || c
+a && b || c
+a || b && c
+a <> b <> c
+a ^ b <>c
+a <> b ^ c
+a <> b !
+a <> b ! + c
+a ~~ b ~~ c
+a /; b ~~c
+a ~~ b /; c
+a ~~ b| c
+a | b ~~ c
+a /. b 
+a //. b 
+a /. b/.c 
+a //. b//.c 
+a //. b/.c 
+a /. b //.c 
+a /. b -> c 
+a -> b /. c 
+a //. b -> c 
+a -> b //. c 
+a /. b  &
+a&  /. b 
+a //. b  &
+a&  //. b 
+a += b 
+a -= b 
+a *= b 
+a /= b 
+a += b += c
+a -= b -= c
+a *= b *= c
+a /= b /= c
+a += b &
+a += b /. c
+a /. b +=  c
+++a 
+--a 
+a++ 
+a--
+++a++ 
+--a-- 
+++a-- 
+--a++
+a+ ++b
+a+ --b
+a++ + b
+a--  + b
+a++b
+\\( a + b\\)
+\\( a + \\(c  * b \\)  \\)
+\\( a \" c  \"  b\\)
+\\( a + \\\"  \" b c\"  \\)
+\\( a + \\a   \\)" 
+\\( a + \\ b\\)
+\\( a + \\\nb\\)
+\\( a + \\\\ b\\)
+\\(f[\\!\\(f\\)]\\)
+a + \\( a + b\\)
+\\!\\(a + b\\)
+\\(a + b
+\\!\\(a + b
+<<abc
+<< abc 
+<<abc\na+b
+<<a`b`c`
+<< a`b`c` 
+a+b\n<<abc
+<<abc\na+b
+<< Foo[1] 
+Get[\"Foo[1]\"]
+<< Foo[1][] 
+Get[\"Foo[1][]\"]
+<< Foo[1] [] 
+Get[\"Foo[1]\"][]
+<< Foo[[1]][] 
+Get[\"Foo[[1]][]\"]
+<< Foo[\\n] 
+Get[\"Foo[\\\\n]\"]
+<< Foo[\n] 
+Get[\"Foo[\\n]\"]
+<< Foo[;] 
+Get[\"Foo[;]\"]
+ab>>cd
+ab;bb>>cd
+ab;bb>>cd;ee
+ab>>>cd
+ab;bb>>>cd
+ab;bb>>>cd;ee
+ab>>cd\na+b
+a'
+a''
+a'[1]
+a`\\\nb
+a`\\\rb
+a\\\nb
+a\\\rb
+12\\\n56
+12\\\r56
+12*\\\n^56
+12*\\\r^56
+a`\\\r\nb
+a\\\r\nb
+12\\\r\n56
+12*\\\r\n^56
+\"SQLArgument[ arg1, arg2, …]\"
+a + ] 
+(a)
+()
+(a,b)
+?foo
+??foo
+(?foo)
+(??foo)
+?+
+??+ \n\n bar
+a\nb
+a[]\nb
+{}\nb
+a\n{}
+(a)\nb
+a\n(b)
+a[b[c,]\nd]
+a[ Times[ b[ c,Null],d ]]
+f[{b,}\nc]
+f[Times[List[b,Null],c]]
+f[]\n(* foo *)
+f[]
+Iñtërnâtiônàlizætiøn
+ñtërnâtiônàlizætiøn
+(*!1A!*)[}
+(*!1B!*)[}
+(*!1C!*)[}
+(*!1D!*)[}
+(*!1H!*)[}
+(*!1I!*)[}
+(*!1N!*)[}
+(*!1O!*)[}
+(*!1M!*)[}
+a;;b
+Span[a,b]
+a;;b;;c
+Span[a,b,c]
+a;;b;;c;;d
+Times[Span[a,b, c],Span[1,d]]
+a;;b;;c;;d;;e
+Times[Span[a,b,c],Span[1,d,e]]
+a+b;;c
+Span[a+b,c]
+a;;b+c
+Span[a,b+c]
+a+b;;c+d
+Span[a+b,c+d]
+a>b;;c
+Greater[a, Span[b,c]]
+a;;b>c
+Greater[Span[a,b],c]
+f[a;;b]
+f[Span[a,b]]
+f[[a;;b]]
+Part[f,Span[a,b]]
+f[[a;;b;;c]]
+Part[f,Span[a,b,c]]
+;;
+Span[]
+;; ;;
+Times[Span[], Span[]]
+a;; 
+Span[a,All]
+;;a
+Span[1,a]
+a;;b;;
+Times[Span[a,b], Span[]]
+a;;b;;;;
+Times[Span[a,b], Span[], Span[]]
+a;;b;;;;c
+Times[Span[a,b], Span[1,All,c]]
+;;a
+Span[1,a]
+;; ;; a
+Span[1,All, a]
+a
+abc
+a12a
+$a
+a`b
+a`b`
+{a`b`}
+`a
+1
+1234
+5*^1
+5*^10
+5*^-10
+5*^+10
+12^^5
+12^^aa
+12^^az
+12..
+12...
+1.1
+12.34
+.34
+66.
+5.6*^1
+5.*^1
+5.5`
+5.5`500
+5.5`*^100
+5.5`*^-100
+5.5`*^+100
+5.5`10*^50
+5.5`10*^-50
+5.5`10*^+50
+12^^aa`
+12^^aa`10
+12^^a.a
+12^^a.a`50
+12^^a.a*^20
+12^^a.a*^-20
+12^^a.a`50*^20
+12^^a.a`50*^-20
+12^^a.a`50*^+20
+12^^a.a`*^-20
+12^^a.a`*^+20
+.6*^10
+.6*^-10
+.6*^+10
+.6`*^10
+.6`*^-10
+.6`*^+10
+.6`55*^10
+.6`55*^-10
+.6`55*^+10
+0``0.5
+0``-100
+1.2..
+1.2...
+a+*b
+a+
+f[]
+f[a]
+f[a,b]
+f[][]
+f[a,]
+f[,a]
+f[,]
+a~b~c
+a~b~c~d
+a~b~c~d~e
+a@b
+a@b@c
+a@b++
+a++@b
+a~b~c@d
+a//b
+a//b//c
+a//b &
+a&//b
+a//b=c
+a=b//c
+x + y + z
+x + y z
+(x + y) z
+x + y -> z
+f[ x + z[]]
+a + b - c + d
+10^5
+x^y^z
+(x^y)^z
+x y^z
+(x y)^z
+x^-y
+x^- -y
+x^-y[1]
+-x^y
+a-b^c
+a^-b^c
+a^-b^+c
+a^-b.c
+-a
++a
+a-a
+f[ -a] 
+f[ +a] 
+f[ ] - a 
+f[ ] + a 
+a -> - a 
+a -> + a 
+x/y/z
+a + (*  *) b
+a + (*(*(*  *)*)*) b
+a + (*  *) b  + (*  *)  c
+a + (*  
+a + (*  * ) 
+a + *)  
+a (* (  *) 
+a (* )  *) 
+a (* *  *) 
+a + \" ff \" +  c
+\" ff \"
+\" ff 
+\" \\\" \"
+\" \n \"
+\" \\[Name] \"
+\" \\\n \"
+\" \\\n  a\"
+\" \\:1234 \"
+\" \\:12FF \"
+\" \\:12ff \"
+\" \\.12 \"
+\" \\.1f \"
+\" \\.1F \"
+\" \\123 \"
+3*\\[Foo]
+\\[Foo]
+Part[a]
+Part[a,b]
+Part[a,b,c[1],d]
+{\\[Foo]}
+a \\[Rule] b
+a \\[RuleDelayed] b
+a \\[And] b
+a \\[Or] b
+a`\\[Foo]
+\\:1234
+\\:12ff
+\\:12FF
+\\.12
+\\.1f
+\\.1F
+\\123
+_
+__
+___
+a_
+a__
+a___
+_a
+__a
+___a
+a_b
+a__b
+a___b
+_a_
+_a__
+_a___
+_a_.
+__a_
+__a__
+__a___
+__a_.
+___a_
+___a__
+___a___
+___a_.
+x_a_
+x_a__
+x_a___
+x_a_.
+x__a_
+x__a__
+x__a___
+x__a_.
+x___a_
+x___a__
+x___a___
+x___a_.
+x_a_y
+x_a__y
+x_a___y
+x__a_y
+x__a__y
+x__a___y
+x___a_y
+x___a__y
+x___a___y
+a:b
+a[1]:b
+a:b[1]
+a:_
+a:_b
+_:a
+__:a
+___:a
+_b:a
+__b:a
+___b:a
+a_b:c
+Optional[Pattern[a,Blank[b]],c]
+a__b:c
+Optional[Pattern[a,BlankSequence[b]],c]
+a___b:c
+Optional[Pattern[a,BlankNullSequence[b]],c]
+a:b:c
+a:_:c
+a:__:c
+a:___:c
+a:_b:c
+a:__b:c
+a:___b:c
+a:b[1]:c
+a:b+c:d
+a:{b}:c
+a+b:c
+a:b|c
+a:b/;c
+_:b|c
+_:b/;c
+a_:0
+a__:0
+a___:0
+a_:b^c
+a_:b+c
+a_:b||c
+a_:b~~c
+a:{}:{}
+Optional[Pattern[a,List[]],List[]]
+a:{}:b[]
+Optional[Pattern[a,List[]],b[]]
+a:b[]:c[]
+Optional[Pattern[a,b[]],c[]]
+a:_|_:{}
+Pattern[a,Alternatives[Blank[],Optional[Blank[],List[]]]]
+a:b|c:{}
+Pattern[a,Alternatives[b,Pattern[c,List[]]]]
+a:b~~c:{}
+StringExpression[Pattern[a,b],Pattern[c,List[]]]
+a:b:c~~d
+StringExpression[Optional[Pattern[a,b],c],d]
+{}
+{a}
+{a,b}
+{a,}
+{,a}
+{,}
+{,,}
+{a,b+1}
+a /; b /; c
+a /; b -> c
+a:b /; c
+a | b | c
+a : b | c
+a | b /; c
+_.
+xx_.
+__.
+___.
+_. + a
+xx_. + a
+x -> y :> z
+x = y := z
+a^= b 
+a^:= b 
+a /:  b = c
+a /:  b := c
+a^= b  ^= c
+a^:= b  ^:= c
+a /:  b  = c  /: d  = e
+a /:  b  := c  /: d  := e
+a /:  b /: c  = d = e
+a /:  b;c  := d
+a /:  (b;c) = d
+a /:  (b;c) := d
+a /: b *= c = d
+a /: b *= c  := d
+a /: -b = c
+a /: -b := c
+x.y.z
+x.-y
+-x.y
+a-b.c
+a.-b.c
+a.-b.+c
+a.-b^c
+x**y
+x**y**z
+x**-y
+x**y^z
+x^y**z
+x.y**z
+x**y.z
+x&
+x& &
+a& + b
+a&  b
+a& & + b
+a+b& + c
+a->b&
+a& -> b
+a = b&
+a& = b
+a[[]]
+a[[b]]
+a[[b,c]]
+a[[b,c[1]]]
+(a+b)[[c]]
+a[b][[c]]
+a[[b]][c]
+a;
+a;b
+a;b[c]
+{a;}
+{a;b}
+{a;b[c]}
+c[a;]
+c[a;b]
+d[a;b[c]]
+c[a;,e]
+c[a;b,e]
+d[a;b[c],e]
+{a;,e}
+{a;b,e}
+{a;b[c],e}
+a;_
+a;*b
+a+b;(**)a + b
+a+b;(**)
+a+b;(**)(**)(**)(**)a + b
+a+b;(**)(**)(**)(**)(**)
+a+b;(**)  (**)  (**)  (**)a + b
+a+b;(**)  (**)  (**)  (**)(**)
+a+b;(**) \t\t (**) \t\t (**)  \t\t(**)a + b
+a+b;(**) \t\t (**) \t\t (**)  \t\t(**)(**)
+a+b;(**)\n(**)\n(**)\n(**)a + b
+a+b;(**)\n(**)\n(**)\n(**)\n(**)
+10*5
+10.*5
+10.5*5
+10.`*5
+!a
+!!a
+! !a
+a + !b
+a + !!b
+a + ! !b
++ ! b
+ ! +  b
+a(!b)
+a (! + b)
+a =! b
+a\n\n!b
+a ; ! b
+a!
+a!b
+(a!)b
+a! + b
+a! &
+a & !
+a! & + b
+a & ! + b
+a!!
+a!!b
+(a!!)b
+a!! + b
+a!! &
+a & !!
+a!! & + b
+a & !! + b
+a !! ^ b
+a?b
+a?b?c
+%
+%1
+a+%+c
+a+%12+c
+%-1
+a === b
+a =!= b
+a === b === c
+a =!= b  =!= c
+a === b =!= c
+a =!= b === c
+a == b
+a != b
+a > b
+a < b
+a >= b
+a <= b
+a == b == c
+a != b != c
+a > b > c
+a < b < c
+a >= b >= c
+a <= b <= c
+a == b != c
+a == b != c > d
+a =.
+a=. =.
+a=. = b
+a= b =.
+a =  .
+a= . =  .
+a=  . = b
+a= b =  .
+a=.b
+a=  .b
+f[ x_] =. 
+g /: f[ x_] =. 
+a::b
+a::b::c
+a..
+a...
+a.. + b
+a... + b
+_a  ..
+#
+##
+#2
+##66
+#+a
+##+a
+#55+a
+##55+a
+a;#
+a;##
+a;#55
+a;##66
+a /@ b
+a /@ b /@ c
+a //@ b
+a //@ b //@ c
+a @@ b
+a @@ b @@ c
+a @@@ b @@@ c
+a /@ b !
+a && b&& c
+a || b || c
+a && b || c
+a || b && c
+a <> b <> c
+a ^ b <>c
+a <> b ^ c
+a <> b !
+a <> b ! + c
+a ~~ b ~~ c
+a /; b ~~c
+a ~~ b /; c
+a ~~ b| c
+a | b ~~ c
+a /. b 
+a //. b 
+a /. b/.c 
+a //. b//.c 
+a //. b/.c 
+a /. b //.c 
+a /. b -> c 
+a -> b /. c 
+a //. b -> c 
+a -> b //. c 
+a /. b  &
+a&  /. b 
+a //. b  &
+a&  //. b 
+a += b 
+a -= b 
+a *= b 
+a /= b 
+a += b += c
+a -= b -= c
+a *= b *= c
+a /= b /= c
+a += b &
+a += b /. c
+a /. b +=  c
+++a 
+--a 
+a++ 
+a--
+++a++ 
+--a-- 
+++a-- 
+--a++
+a+ ++b
+a+ --b
+a++ + b
+a--  + b
+a++b
+\\( a + b\\)
+\\( a + \\(c  * b \\)  \\)
+\\( a \" c  \"  b\\)
+\\( a + \\\"  \" b c\"  \\)
+\\( a + \\a   \\)" 
+\\( a + \\ b\\)
+\\( a + \\\nb\\)
+\\( a + \\\\ b\\)
+\\(f[\\!\\(f\\)]\\)
+a + \\( a + b\\)
+\\!\\(a + b\\)
+\\(a + b
+\\!\\(a + b
+<<abc
+<< abc 
+<<abc\na+b
+<<a`b`c`
+<< a`b`c` 
+a+b\n<<abc
+<<abc\na+b
+<< Foo[1] 
+Get[\"Foo[1]\"]
+<< Foo[1][] 
+Get[\"Foo[1][]\"]
+<< Foo[1] [] 
+Get[\"Foo[1]\"][]
+<< Foo[[1]][] 
+Get[\"Foo[[1]][]\"]
+<< Foo[\\n] 
+Get[\"Foo[\\\\n]\"]
+<< Foo[\n] 
+Get[\"Foo[\\n]\"]
+<< Foo[;] 
+Get[\"Foo[;]\"]
+ab>>cd
+ab;bb>>cd
+ab;bb>>cd;ee
+ab>>>cd
+ab;bb>>>cd
+ab;bb>>>cd;ee
+ab>>cd\na+b
+a'
+a''
+a'[1]
+a`\\\nb
+a`\\\rb
+a\\\nb
+a\\\rb
+12\\\n56
+12\\\r56
+12*\\\n^56
+12*\\\r^56
+a`\\\r\nb
+a\\\r\nb
+12\\\r\n56
+12*\\\r\n^56
+\"SQLArgument[ arg1, arg2, …]\"
+a + ] 
+(a)
+()
+(a,b)
+?foo
+??foo
+(?foo)
+(??foo)
+?+
+??+ \n\n bar
+a\nb
+a[]\nb
+{}\nb
+a\n{}
+(a)\nb
+a\n(b)
+a[b[c,]\nd]
+a[ Times[ b[ c,Null],d ]]
+f[{b,}\nc]
+f[Times[List[b,Null],c]]
+f[]\n(* foo *)
+f[]
+Iñtërnâtiônàlizætiøn
+ñtërnâtiônàlizætiøn
+(*!1A!*)[}
+(*!1B!*)[}
+(*!1C!*)[}
+(*!1D!*)[}
+(*!1H!*)[}
+(*!1I!*)[}
+(*!1N!*)[}
+(*!1O!*)[}
+(*!1M!*)[}
+a;;b
+Span[a,b]
+a;;b;;c
+Span[a,b,c]
+a;;b;;c;;d
+Times[Span[a,b, c],Span[1,d]]
+a;;b;;c;;d;;e
+Times[Span[a,b,c],Span[1,d,e]]
+a+b;;c
+Span[a+b,c]
+a;;b+c
+Span[a,b+c]
+a+b;;c+d
+Span[a+b,c+d]
+a>b;;c
+Greater[a, Span[b,c]]
+a;;b>c
+Greater[Span[a,b],c]
+f[a;;b]
+f[Span[a,b]]
+f[[a;;b]]
+Part[f,Span[a,b]]
+f[[a;;b;;c]]
+Part[f,Span[a,b,c]]
+;;
+Span[]
+;; ;;
+Times[Span[], Span[]]
+a;; 
+Span[a,All]
+;;a
+Span[1,a]
+a;;b;;
+Times[Span[a,b], Span[]]
+a;;b;;;;
+Times[Span[a,b], Span[], Span[]]
+a;;b;;;;c
+Times[Span[a,b], Span[1,All,c]]
+;;a
+Span[1,a]
+;; ;; a
+Span[1,All, a]

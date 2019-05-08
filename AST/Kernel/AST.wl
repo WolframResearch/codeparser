@@ -2,14 +2,24 @@ BeginPackage["AST`"]
 
 ParseString::usage = "ParseString[string] returns an abstract syntax tree by interpreting string as WL input. \
 Note: If there are multiple expressions in string, then only the last expression is returned. \
-ParseString[string, h] wraps the output with h and allows multiple expressions to be returned."
+ParseString[string, h] wraps the output with h and allows multiple expressions to be returned. \
+This is similar to how ToExpression operates."
 
 ParseFile::usage = "ParseFile[file] returns an abstract syntax tree by interpreting file as WL input."
+
+ParseBoxes
 
 
 ConcreteParseString::usage = "ConcreteParseString[string] returns a concrete syntax tree by interpreting string as WL input."
 
 ConcreteParseFile::usage = "ConcreteParseFile[file] returns a concrete syntax tree by interpreting file as WL input."
+
+ConcreteParseBoxes
+
+
+
+ToInputFormString::usage = "ToInputFormString[concrete] returns a string representation of concrete."
+ToFullFormString::usage = "ToFullFormString[abstract] returns a string representation of abstract."
 
 
 
@@ -20,12 +30,6 @@ TokenizeFile::usage = "TokenizeFile[file] returns a list of tokens by interpreti
 
 
 
-ToInputFormString::usage = "ToInputFormString[concrete] returns a string representation of concrete."
-ToFullFormString::usage = "ToFullFormString[abstract] returns a string representation of abstract."
-
-CSTToBoxes
-BoxesToCST
-
 ToNode
 FromNode
 
@@ -33,25 +37,21 @@ DeclarationName
 
 
 
+
+
+
+
+
+
 PrefixOperatorToSymbol
 PostfixOperatorToSymbol
 BinaryOperatorToSymbol
 InfixOperatorToSymbol
-TernaryOperatorsToSymbol
 GroupOpenerToSymbol
+PrefixBinaryOperatorToSymbol
+
 GroupOpenerToCloser
-GroupCloserToSymbol
-GroupOpenerToMissingCloserSymbol
-GroupCloserToMissingOpenerSymbol
-
-
-SymbolToPrefixOperatorString
-SymbolToPostfixOperatorString
-SymbolToBinaryOperatorString
-SymbolToInfixOperatorString
-SymbolToTernaryOperatorString
-SymbolToGroupPair
-SymbolToTernaryPair
+GroupCloserToOpener
 
 
 
@@ -98,7 +98,6 @@ WLCharacter
 
 
 (* atom symbols *)
-(*InternalEmpty*)
 OptionalDefault
 PatternBlank
 PatternBlankSequence
@@ -114,7 +113,6 @@ PostfixInvisiblePostfixScriptBase
 
 BinarySlashSlash
 BinaryAt
-BinaryInvisibleApplication
 BinaryAtAtAt
 
 InfixImplicitPlus
@@ -127,48 +125,26 @@ TernarySlashColon
 
 (* group symbols *)
 (*List*)
-GroupMissingOpenerList
-GroupMissingCloserList
 
 (*Association*)
-GroupMissingOpenerAssociation
-GroupMissingCloserAssociation
 
 (*AngleBracket*)
-GroupMissingOpenerAngleBracket
-GroupMissingCloserAngleBracket
 
 (*Ceiling*)
-GroupMissingOpenerCeiling
-GroupMissingCloserCeiling
 
 (*Floor*)
-GroupMissingOpenerFloor
-GroupMissingCloserFloor
 
 GroupDoubleBracket
-GroupMissingOpenerDoubleBracket
-GroupMissingCloserDoubleBracket
 
 GroupSquare
-GroupMissingOpenerSquare
-GroupMissingCloserSquare
 
 (*BracketingBar*)
-GroupMissingOpenerBracketingBar
-GroupMissingCloserBracketingBar
 
 (*DoubleBracketingBar*)
-GroupMissingOpenerDoubleBracketingBar
-GroupMissingCloserDoubleBracketingBar
 
 GroupParen
-GroupMissingOpenerParen
-GroupMissingCloserParen
 
 GroupLinearSyntaxParen
-GroupMissingOpenerLinearSyntaxParen
-GroupMissingCloserLinearSyntaxParen
 
 
 
@@ -180,7 +156,6 @@ Used to report f[,] or "\[Alpa]" as an option, e.g. SyntaxIssues -> {SyntaxIssue
 SyntaxIssues
 AbstractSyntaxIssues
 SyntaxIssue
-Comments
 Comment
 
 
@@ -194,7 +169,12 @@ RealNode
 SlotNode
 SlotSequenceNode
 OutNode
-(*InternalEmptyNode*)
+OptionalDefaultNode
+TokenNode
+InternalAllNode
+InternalNullNode
+InternalOneNode
+
 PrefixNode
 BinaryNode
 TernaryNode
@@ -202,36 +182,27 @@ InfixNode
 PostfixNode
 GroupNode
 CallNode
+PrefixBinaryNode
 
 BlankNode
 BlankSequenceNode
 BlankNullSequenceNode
-OptionalDefaultNode
 PatternBlankNode
 PatternBlankSequenceNode
 PatternBlankNullSequenceNode
 OptionalDefaultPatternNode
 
-TokenNode
-
-InternalAllNode
-InternalDotNode
-InternalNullNode
-InternalOneNode
-
 FileNode
 HoldNode
 
-CommentNode
 
 SyntaxErrorNode
+GroupMissingCloserNode
+GroupMissingOpenerNode
 AbstractSyntaxErrorNode
 
 
 InternalInvalid
-
-
-
 
 BeginStaticAnalysisIgnore
 EndStaticAnalysisIgnore
@@ -362,10 +333,10 @@ Module[{s = sIn, h = hIn, res},
 
 	If[h === Automatic,
 		(*
-		The # here is {node1, node2, ..., issues}
+		The # here is { {exprs}, {comments}, {issues} }
 		Simply drop any leftover syntax issues
 		*)
-		h = If[empty[Most[#]], Null, Last[Most[#]]]&
+		h = If[empty[#[[1]]], Null, Last[#[[1]]]]&
 	];
 
 	If[FailureQ[concreteParseStringFunc],
@@ -409,7 +380,7 @@ Module[{parse, ast},
 
 
 Options[ConcreteParseFile] = {
-	CharacterEncoding -> "UTF-8"
+	CharacterEncoding -> "UTF8"
 }
 
 (*
@@ -431,11 +402,11 @@ Module[{h, encoding, full, res, skipFirstLine = False, shebangWarn = False, data
 	The <||> will be filled in with Source later
 	*)
 	If[hIn === Automatic,
-		h = Function[FileNode[File, Most[#], <| SyntaxIssues -> Last[#] |>]]
+		h = Function[FileNode[File, #[[1]], <| SyntaxIssues -> #[[3]] |>]]
 	];
 
 	encoding = OptionValue[CharacterEncoding];
-	If[encoding =!= "UTF-8",
+	If[encoding =!= "UTF8",
 		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
 	];
 
@@ -500,6 +471,12 @@ Module[{h, encoding, full, res, skipFirstLine = False, shebangWarn = False, data
 		Throw[res]
 	];
 
+	If[shebangWarn,
+		issues = res[[3]];
+		AppendTo[issues, SyntaxIssue["Shebang", "# on first line looks like #! shebang", "Remark", <|Source->{{1, 1}, {1, 1}}|>]];
+		res[[3]] = issues;
+	];
+
 	res = h[res];
 
 	(*
@@ -517,21 +494,13 @@ Module[{h, encoding, full, res, skipFirstLine = False, shebangWarn = False, data
 		];
 	];
 
-	If[shebangWarn,
-		data = res[[3]];
-		issues = Lookup[data, SyntaxIssues, {}];
-		AppendTo[issues, SyntaxIssue["Shebang", "# on first line looks like #! shebang", "Remark", <|Source->{{1, 1}, {1, 1}}|>]];
-		AssociateTo[data, SyntaxIssues -> issues];
-		res[[3]] = data;
-	];
-
 	res
 ]]
 
 
 
 Options[ParseFile] = {
-	CharacterEncoding -> "UTF-8"
+	CharacterEncoding -> "UTF8"
 }
 
 ParseFile[file_String | File[file_String], h_:Automatic, opts:OptionsPattern[]] :=
@@ -578,7 +547,7 @@ TokenizeString[s_String] :=
 
 
 Options[TokenizeFile] = {
-	CharacterEncoding -> "UTF-8"
+	CharacterEncoding -> "UTF8"
 }
 
 TokenizeFile[s_String | File[s_String], opts:OptionsPattern[]] :=
@@ -596,7 +565,7 @@ Module[{s, encoding, res},
 	s = sIn;
 
 	encoding = OptionValue[CharacterEncoding];
-	If[encoding =!= "UTF-8",
+	If[encoding =!= "UTF8",
 		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
 	];
 

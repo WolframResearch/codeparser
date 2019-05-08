@@ -27,9 +27,11 @@ DLLEXPORT mint WolframLibrary_getVersion() {
 
 DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData) {
     
-    TheCharacterDecoder = new CharacterDecoder();
+    allocSymbols();
+    
+    TheByteDecoder = new ByteDecoder();
     TheSourceManager = new SourceManager();
-    TheByteEncoder = new ByteEncoder();
+    TheCharacterDecoder = new CharacterDecoder();
     TheTokenizer = new Tokenizer();
     TheParser = new Parser();
     
@@ -38,11 +40,13 @@ DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData) {
 
 DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData) {
     
-    delete TheCharacterDecoder;
-    delete TheSourceManager;
-    delete TheByteEncoder;
     delete TheParser;
     delete TheTokenizer;
+    delete TheSourceManager;
+    delete TheCharacterDecoder;
+    delete TheByteDecoder;
+    
+    freeSymbols();
 }
 
 DLLEXPORT int ConcreteParseFile(WolframLibraryData libData, MLINK mlp) {
@@ -52,7 +56,7 @@ DLLEXPORT int ConcreteParseFile(WolframLibraryData libData, MLINK mlp) {
 	const unsigned char *inStr = NULL;
 	const char *skipFirstLineSym = NULL;
 	
-    if (!MLTestHead(mlp, SYMBOL_LIST.name(), &len))  {
+    if (!MLTestHead(mlp, SYMBOL_LIST->name(), &len))  {
 		goto retPt;
     }
     if (len != 2) {
@@ -81,16 +85,18 @@ DLLEXPORT int ConcreteParseFile(WolframLibraryData libData, MLINK mlp) {
     }
 
     {
-	auto skipFirstLine = (strcmp(skipFirstLineSym, SYMBOL_TRUE.name()) == 0);
+	auto skipFirstLine = (strcmp(skipFirstLineSym, SYMBOL_TRUE->name()) == 0);
 
 	std::ifstream ifs(reinterpret_cast<const char *>(inStr), std::ifstream::in);
         
 	if (ifs.fail()) {
 	   goto retPt;
 	}
+    
+    TheInputStream = &ifs;
         
     TheSourceManager->init();
-    TheByteDecoder = new ByteDecoder(ifs);
+    TheByteDecoder->init();
     TheCharacterDecoder->init();
     TheTokenizer->init(skipFirstLine);
     TheParser->init( [&libData]() {
@@ -102,7 +108,7 @@ DLLEXPORT int ConcreteParseFile(WolframLibraryData libData, MLINK mlp) {
         //
         bool res = libData->AbortQ();
         return res;
-    } );
+    }, {} );
     
     auto nodes = parseExpressions();
 
@@ -111,9 +117,12 @@ DLLEXPORT int ConcreteParseFile(WolframLibraryData libData, MLINK mlp) {
     TheParser->deinit();
     TheTokenizer->deinit();
     TheCharacterDecoder->deinit();
-    delete TheByteDecoder;
+    TheByteDecoder->deinit();
     TheSourceManager->deinit();
 
+    ifs.close();
+    TheInputStream = nullptr;
+        
 	res = LIBRARY_NO_ERROR;
     }
     
@@ -133,7 +142,7 @@ DLLEXPORT int ConcreteParseString(WolframLibraryData libData, MLINK mlp) {
 	int len;
 	const unsigned char *inStr = NULL;
 
-    if (!MLTestHead( mlp, SYMBOL_LIST.name(), &len)) {
+    if (!MLTestHead( mlp, SYMBOL_LIST->name(), &len)) {
 		goto retPt;
     }
     if (len != 1) {
@@ -153,9 +162,12 @@ DLLEXPORT int ConcreteParseString(WolframLibraryData libData, MLINK mlp) {
     {
 	auto skipFirstLine = false;
 	auto iss = std::stringstream(reinterpret_cast<const char *>(inStr));
-
+    
+    TheInputStream = &iss;
+    
     TheSourceManager->init();
-    TheByteDecoder = new ByteDecoder(iss);
+    TheByteDecoder->init();
+    TheCharacterDecoder->init();
     TheTokenizer->init(skipFirstLine);
     TheParser->init( [&libData]() {
         if (!libData) {
@@ -166,7 +178,7 @@ DLLEXPORT int ConcreteParseString(WolframLibraryData libData, MLINK mlp) {
         //
         bool res = libData->AbortQ();
         return res;
-    } );
+    }, { } );
     
     auto nodes = parseExpressions();
 
@@ -174,9 +186,12 @@ DLLEXPORT int ConcreteParseString(WolframLibraryData libData, MLINK mlp) {
     
     TheParser->deinit();
     TheTokenizer->deinit();
-    delete TheByteDecoder;
+    TheByteDecoder->deinit();
+    TheCharacterDecoder->deinit();
     TheSourceManager->deinit();
 
+    TheInputStream = nullptr;
+        
 	res = LIBRARY_NO_ERROR;
     }
     
@@ -187,13 +202,20 @@ retPt:
 	return res;
 }
 
+DLLEXPORT int ConcreteParseBoxes(WolframLibraryData libData, MLINK mlp) {
+    
+    int res = LIBRARY_FUNCTION_ERROR;
+
+    return res;
+}
+
 DLLEXPORT int TokenizeString(WolframLibraryData libData, MLINK mlp) {
     
     int res = LIBRARY_FUNCTION_ERROR;
     int len;
     const unsigned char *inStr = NULL;
 
-    if (!MLTestHead( mlp, SYMBOL_LIST.name(), &len)) {
+    if (!MLTestHead( mlp, SYMBOL_LIST->name(), &len)) {
         goto retPt;
     }
     if (len != 1) {
@@ -214,8 +236,11 @@ DLLEXPORT int TokenizeString(WolframLibraryData libData, MLINK mlp) {
     auto skipFirstLine = false;
     auto iss = std::stringstream(reinterpret_cast<const char *>(inStr));
 
+    TheInputStream = &iss;
+        
+    TheByteDecoder->init();
+    TheCharacterDecoder->init();
     TheSourceManager->init();
-    TheByteDecoder = new ByteDecoder(iss);
     TheTokenizer->init(skipFirstLine);
     
     std::vector<std::shared_ptr<Node>> nodes = tokenize();
@@ -223,8 +248,9 @@ DLLEXPORT int TokenizeString(WolframLibraryData libData, MLINK mlp) {
     putExpressions(nodes, mlp);
     
     TheTokenizer->deinit();
-    delete TheByteDecoder;
     TheSourceManager->deinit();
+    TheCharacterDecoder->deinit();
+    TheByteDecoder->deinit();
 
     res = LIBRARY_NO_ERROR;
     }
@@ -242,7 +268,7 @@ DLLEXPORT int TokenizeFile(WolframLibraryData libData, MLINK mlp) {
     int len;
     const unsigned char *inStr = NULL;
 
-    if (!MLTestHead( mlp, SYMBOL_LIST.name(), &len)) {
+    if (!MLTestHead( mlp, SYMBOL_LIST->name(), &len)) {
         goto retPt;
     }
     if (len != 1) {
@@ -274,8 +300,11 @@ DLLEXPORT int TokenizeFile(WolframLibraryData libData, MLINK mlp) {
        goto retPt;
     }
 
+    TheInputStream = &ifs;
+        
+    TheByteDecoder->init();
+    TheCharacterDecoder->init();
     TheSourceManager->init();
-    TheByteDecoder = new ByteDecoder(ifs);
     TheTokenizer->init(skipFirstLine);
     
     std::vector<std::shared_ptr<Node>> nodes = tokenize();
@@ -283,9 +312,12 @@ DLLEXPORT int TokenizeFile(WolframLibraryData libData, MLINK mlp) {
     putExpressions(nodes, mlp);
     
     TheTokenizer->deinit();
-    delete TheByteDecoder;
     TheSourceManager->deinit();
+    TheCharacterDecoder->deinit();
+    TheByteDecoder->deinit();
 
+    ifs.close();
+        
     res = LIBRARY_NO_ERROR;
     }
     
@@ -306,7 +338,7 @@ void putExpressions(std::vector<std::shared_ptr<Node>> nodes, MLINK mlp) {
         return;
     }
     
-    if (!MLPutFunction(mlp, SYMBOL_LIST.name(), static_cast<int>(nodes.size()))) {
+    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(nodes.size()))) {
 		goto retPt;
     }
     
@@ -322,72 +354,65 @@ std::vector<std::shared_ptr<Node>> parseExpressions() {
 
     std::vector<std::shared_ptr<Node>> nodes;
 
-    ParserContext Ctxt{0, 0, PRECEDENCE_LOWEST, false, false};
+    
+    std::vector<std::shared_ptr<Node>> exprs;
+    
+    ParserContext Ctxt;
 
     while (true) {
         
         if (TheParser->isAbort()) {
             
-            // Clear
-            TheParser->getTokenString();
-            TheParser->getIssues();
-            TheParser->getComments();
-            
             break;
         }
         
-        auto peek = TheParser->tryNextToken(Ctxt, PRESERVE_TOPLEVEL_COMMENTS);
+        auto peek = TheParser->tryNextToken(Ctxt, DISCARD_EVERYTHING);
         
-        if (peek != TOKEN_EOF) {
-            
-            auto Expr = TheParser->parseTopLevel();
-            
-            //
-            // Do not check:
-            // assert(TheParser->getString().empty());
-            // assert(TheParser->getIssues().empty());
-            // here.
-            // There may be multiple expressions to parse, and after parsing the first expression, the first token of the second expression has been queued.
-            // There may be a message from this token which will be handled when the second expression is parsed.
-            
-            nodes.push_back(Expr);
-        }
-
-        peek = TheParser->currentToken();
-        
-        if (peek == TOKEN_EOF) {
+        if (peek.Tok == TOKEN_ENDOFFILE) {
             break;
         }
+        
+        auto Expr = TheParser->parse(Ctxt);
+        
+        exprs.push_back(Expr);
         
     } // while (true)
-
-    assert(TheParser->getTokenString().empty());
-    assert(TheParser->getComments().empty());
+    
+    nodes.push_back(std::make_shared<CollectedExpressionsNode>(exprs));
     
     
     //
-    // Cleanup up any leftover issues that were not handled.
+    // Now handle the out-of-band expressions, i.e., comments and issues
     //
-    // These are most likely only character encoding issues that come after the last token that we care about.
+    
+    
+    auto Comments = TheParser->getComments();
+    
+    nodes.push_back(std::make_shared<CollectedCommentsNode>(Comments));
+    
+    
+    
     //
-    std::vector<SyntaxIssue> leftOverIssues;
+    // Collect all issues from the various components
+    //
+    std::vector<SyntaxIssue> issues;
     
     auto ParserIssues = TheParser->getIssues();
-    std::copy(ParserIssues.begin(), ParserIssues.end(), std::back_inserter(leftOverIssues));
+    std::copy(ParserIssues.begin(), ParserIssues.end(), std::back_inserter(issues));
     
     auto TokenizerIssues = TheTokenizer->getIssues();
-    std::copy(TokenizerIssues.begin(), TokenizerIssues.end(), std::back_inserter(leftOverIssues));
+    std::copy(TokenizerIssues.begin(), TokenizerIssues.end(), std::back_inserter(issues));
 
     auto CharacterDecoderIssues = TheCharacterDecoder->getIssues();
-    std::copy(CharacterDecoderIssues.begin(), CharacterDecoderIssues.end(), std::back_inserter(leftOverIssues));
+    std::copy(CharacterDecoderIssues.begin(), CharacterDecoderIssues.end(), std::back_inserter(issues));
     
     auto ByteDecoderIssues = TheByteDecoder->getIssues();
-    std::copy(ByteDecoderIssues.begin(), ByteDecoderIssues.end(), std::back_inserter(leftOverIssues));
+    std::copy(ByteDecoderIssues.begin(), ByteDecoderIssues.end(), std::back_inserter(issues));
     
     auto SourceManagerIssues = TheSourceManager->getIssues();
-    std::copy(SourceManagerIssues.begin(), SourceManagerIssues.end(), std::back_inserter(leftOverIssues));
+    std::copy(SourceManagerIssues.begin(), SourceManagerIssues.end(), std::back_inserter(issues));
     
-    nodes.push_back(std::make_shared<LeftoverSyntaxIssuesNode>(leftOverIssues));
+    nodes.push_back(std::make_shared<CollectedSyntaxIssuesNode>(issues));
     
     
     return nodes;
@@ -398,22 +423,20 @@ std::vector<std::shared_ptr<Node>> tokenize() {
 
     std::vector<std::shared_ptr<Node>> nodes;
     
-    TokenizerContext Ctxt{false, true};
+    TokenizerContext Ctxt;
     
     while (true) {
         
-        auto Tok = TheTokenizer->nextToken(Ctxt);
+        auto Tok = TheTokenizer->currentToken();
         
-        if (Tok == TOKEN_EOF) {
+        if (Tok.Tok == TOKEN_ENDOFFILE) {
             break;
         }
 
-        auto Str = TheTokenizer->getString();
-        auto Issues = TheTokenizer->getIssues();
-        auto Span = TheSourceManager->getTokenSpan();
-
-        auto N = std::make_shared<TokenNode>(Tok, Str, Span, Issues);
+        auto N = std::make_shared<TokenNode>(Tok);
         nodes.push_back(N);
+        
+        TheTokenizer->nextToken(Ctxt);
         
     } // while (true)
 
@@ -435,4 +458,3 @@ bool validatePath(WolframLibraryData libData, const unsigned char *inStr) {
     auto valid = libData->validatePath(const_cast<char *>(reinterpret_cast<const char *>(inStr)), 'R');
     return valid;
 }
-

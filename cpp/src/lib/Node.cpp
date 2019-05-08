@@ -1,379 +1,260 @@
 
 #include "Node.h"
 
-void Node::putASTArgs(MLINK mlp) {
-
-    MLPutFunction(mlp, SYMBOL_LIST.name(), static_cast<int>(Args.size()));
-
-    for (auto A : Args) {
-        A->put(mlp);
-    }
-}
-
-void Node::putSyntaxIssues(MLINK mlp) {
-
-    MLPutFunction(mlp, SYMBOL_RULE.name(), 2);
-
-    SYMBOL_SYNTAXISSUES.put(mlp);
-
-    MLPutFunction(mlp, SYMBOL_LIST.name(), static_cast<int>(Issues.size()));
-
-    for (auto I : Issues) {
-        I.put(mlp);
-    }
-}
-
-void Node::putComments(MLINK mlp) {
-
-    MLPutFunction(mlp, SYMBOL_RULE.name(), 2);
-
-    SYMBOL_COMMENTS.put(mlp);
-
-    MLPutFunction(mlp, SYMBOL_LIST.name(), static_cast<int>(Comments.size()));
-
-    for (auto C : Comments) {
-        C.put(mlp);
-    }
-}
-
-//
-// Atom and Atom-like expressions
-//
-
-void SymbolNode::put(MLINK mlp) {
-
-    auto Issues = getIssues();
-    auto Comments = getComments();
-
-    MLPutFunction(mlp, SYMBOL_SYMBOLNODE.name(), 3);
-
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
-
-    putASTArgs(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
-
-    getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
-}
-
-void StringNode::put(MLINK mlp) {
-
-    auto Issues = getIssues();
-    auto Comments = getComments();
-
-    MLPutFunction(mlp, SYMBOL_STRINGNODE.name(), 3);
+Source Node::getSourceSpan() const {
     
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
-
-    putASTArgs(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
-
-    getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
-}
-
-void IntegerNode::put(MLINK mlp) {
-
-    auto Issues = getIssues();
-    auto Comments = getComments();
-
-    MLPutFunction(mlp, SYMBOL_INTEGERNODE.name(), 3);
-
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
-
-    putASTArgs(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
-
-    getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
-}
-
-void RealNode::put(MLINK mlp) {
-
-    auto Issues = getIssues();
-    auto Comments = getComments();
-
-    MLPutFunction(mlp, SYMBOL_REALNODE.name(), 3);
-
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
-
-    putASTArgs(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
-
-    getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
-}
-
-void SlotNode::put(MLINK mlp) {
-
-    auto Issues = getIssues();
-    auto Comments = getComments();
-
-    MLPutFunction(mlp, SYMBOL_SLOTNODE.name(), 3);
-
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
-
-    putASTArgs(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
-
-    getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
-}
-
-void SlotSequenceNode::put(MLINK mlp) {
-
-    auto Issues = getIssues();
-    auto Comments = getComments();
-
-    MLPutFunction(mlp, SYMBOL_SLOTSEQUENCENODE.name(), 3);
-
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
-
-    putASTArgs(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
-
-    getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
-}
-
-void OutNode::put(MLINK mlp) {
-
-    auto Issues = getIssues();
-    auto Comments = getComments();
-
-    MLPutFunction(mlp, SYMBOL_OUTNODE.name(), 3);
-
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
-
-    putASTArgs(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
-
-    getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
-}
-
-//
-// Base operator expressions
-//
-
-void PrefixNode::put(MLINK mlp) {
-
-    auto Issues = getIssues();
-    auto Comments = getComments();
-
-    MLPutFunction(mlp, SYMBOL_PREFIXNODE.name(), 3);
-
-    MLPutSymbol(mlp, Op.name());
-
-    putASTArgs(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
-
-    getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
-}
-
-SourceSpan PrefixNode::getSourceSpan() {
-
-    auto Operand = getOperand();
-
-    return SourceSpan{TokSpan.start, Operand->getSourceSpan().end};
-}
-
-void BinaryNode::put(MLINK mlp) {
-
-    auto Issues = getIssues();
-    auto Comments = getComments();
-
-    MLPutFunction(mlp, SYMBOL_BINARYNODE.name(), 3);
-
-    MLPutSymbol(mlp, Op.name());
-
-    putASTArgs(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
-
-    getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
-}
-
-SourceSpan BinaryNode::getSourceSpan() {
-
-    auto Left = getLeft();
-    auto Right = getRight();
-
-    return SourceSpan{Left->getSourceSpan().start, Right->getSourceSpan().end};
-}
-
-void InfixNode::put(MLINK mlp) {
-
-    auto Issues = getIssues();
-    auto Comments = getComments();
-
-    MLPutFunction(mlp, SYMBOL_INFIXNODE.name(), 3);
-
-    MLPutSymbol(mlp, Op.name());
-
-    putASTArgs(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
-
-    getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
-}
-
-SourceSpan InfixNode::getSourceSpan() {
-
-    auto Args = getArgs();
+    auto Args = getChildren();
     
     if (!Args.empty()) {
         auto First = Args[0];
         auto Last = Args[Args.size()-1];
-        return SourceSpan{First->getSourceSpan().start, Last->getSourceSpan().end};
+        return Source(First->getSourceSpan().lines.start, Last->getSourceSpan().lines.end);
     } else {
-        return SourceSpan{{0, 0}, {0, 0}};
+        return Source({0, 0}, {0, 0});
     }
 }
 
-void TernaryNode::put(MLINK mlp) {
+void Node::putChildren(MLINK mlp) const {
 
-    auto Issues = getIssues();
-    auto Comments = getComments();
+    MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(Children.size()));
 
-    MLPutFunction(mlp, SYMBOL_TERNARYNODE.name(), 3);
+    for (auto C : Children) {
+        C->put(mlp);
+    }
+}
 
-    MLPutSymbol(mlp, Op.name());
+//
+// Literal nodes
+//
 
-    putASTArgs(mlp);
+void SymbolNode::put(MLINK mlp) const {
 
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
+    MLPutFunction(mlp, SYMBOL_SYMBOLNODE->name(), 3);
+
+    SYMBOL_SYMBOL->put(mlp);
+
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
+
+    Span.putSourceRule(mlp);
+}
+
+void StringNode::put(MLINK mlp) const {
+
+    MLPutFunction(mlp, SYMBOL_STRINGNODE->name(), 3);
+    
+    SYMBOL_STRING->put(mlp);
+
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
+
+    Span.putSourceRule(mlp);
+}
+
+void IntegerNode::put(MLINK mlp) const {
+
+    MLPutFunction(mlp, SYMBOL_INTEGERNODE->name(), 3);
+
+    SYMBOL_INTEGER->put(mlp);
+
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
+
+    Span.putSourceRule(mlp);
+}
+
+void RealNode::put(MLINK mlp) const {
+
+    MLPutFunction(mlp, SYMBOL_REALNODE->name(), 3);
+
+    SYMBOL_REAL->put(mlp);
+
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
+
+    Span.putSourceRule(mlp);
+}
+
+void SlotNode::put(MLINK mlp) const {
+
+    MLPutFunction(mlp, SYMBOL_SLOTNODE->name(), 3);
+
+    SYMBOL_SLOT->put(mlp);
+
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
+
+    Span.putSourceRule(mlp);
+}
+
+void SlotSequenceNode::put(MLINK mlp) const {
+
+    MLPutFunction(mlp, SYMBOL_SLOTSEQUENCENODE->name(), 3);
+
+    SYMBOL_SLOTSEQUENCE->put(mlp);
+
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
+
+    Span.putSourceRule(mlp);
+}
+
+void OutNode::put(MLINK mlp) const {
+
+    MLPutFunction(mlp, SYMBOL_OUTNODE->name(), 3);
+
+    SYMBOL_OUT->put(mlp);
+
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
+
+    Span.putSourceRule(mlp);
+}
+
+void OptionalDefaultNode::put(MLINK mlp) const {
+
+    MLPutFunction(mlp, SYMBOL_OPTIONALDEFAULTNODE->name(), 3);
+
+    SYMBOL_OPTIONALDEFAULT->put(mlp);
+
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
+
+    Span.putSourceRule(mlp);
+}
+
+void TokenNode::put(MLINK mlp) const {
+
+    MLPutFunction(mlp, SYMBOL_TOKENNODE->name(), 3);
+
+    MLPutSymbol(mlp, TokenToString(Tok.Tok).c_str());
+
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Tok.Str.c_str()), static_cast<int>(Tok.Str.size()));
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
+
+    Span.putSourceRule(mlp);
+}
+
+void InternalAllNode::put(MLINK mlp) const {
+
+    MLPutFunction(mlp, SYMBOL_INTERNALALLNODE->name(), 3);
+
+    SYMBOL_ALL->put(mlp);
+
+    MLPutUTF8String(mlp, nullptr, 0);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
+
+    Span.putSourceRule(mlp);
+}
+
+void InternalNullNode::put(MLINK mlp) const {
+
+    MLPutFunction(mlp, SYMBOL_INTERNALNULLNODE->name(), 3);
+
+    SYMBOL_NULL->put(mlp);
+
+    MLPutUTF8String(mlp, nullptr, 0);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
+
+    Span.putSourceRule(mlp);
+}
+
+void InternalOneNode::put(MLINK mlp) const {
+
+    MLPutFunction(mlp, SYMBOL_INTERNALONENODE->name(), 3);
+
+    MLPutInteger(mlp, 1);
+
+    MLPutUTF8String(mlp, nullptr, 0);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
+
+    Span.putSourceRule(mlp);
+}
+
+
+
+
+//
+// Base operator nodes
+//
+
+void PrefixNode::put(MLINK mlp) const {
+
+    MLPutFunction(mlp, SYMBOL_PREFIXNODE->name(), 3);
+
+    MLPutSymbol(mlp, Op->name());
+
+    putChildren(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
 
     getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
 }
 
-SourceSpan TernaryNode::getSourceSpan() {
+void BinaryNode::put(MLINK mlp) const {
 
-    auto Left = getLeft();
-    auto Right = getRight();
+    MLPutFunction(mlp, SYMBOL_BINARYNODE->name(), 3);
 
-    return SourceSpan{Left->getSourceSpan().start, Right->getSourceSpan().end};
-}
+    MLPutSymbol(mlp, Op->name());
 
-void PostfixNode::put(MLINK mlp) {
+    putChildren(mlp);
 
-    auto Issues = getIssues();
-    auto Comments = getComments();
-
-    MLPutFunction(mlp, SYMBOL_POSTFIXNODE.name(), 3);
-
-    MLPutSymbol(mlp, Op.name());
-
-    putASTArgs(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
 
     getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
 }
 
-SourceSpan PostfixNode::getSourceSpan() {
+void InfixNode::put(MLINK mlp) const {
 
-    auto Operand = getOperand();
+    MLPutFunction(mlp, SYMBOL_INFIXNODE->name(), 3);
 
-    return SourceSpan{Operand->getSourceSpan().start, TokSpan.end};
+    MLPutSymbol(mlp, Op->name());
+
+    putChildren(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
+
+    getSourceSpan().putSourceRule(mlp);
 }
+
+void TernaryNode::put(MLINK mlp) const {
+
+    MLPutFunction(mlp, SYMBOL_TERNARYNODE->name(), 3);
+
+    MLPutSymbol(mlp, Op->name());
+
+    putChildren(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
+
+    getSourceSpan().putSourceRule(mlp);
+}
+
+void PostfixNode::put(MLINK mlp) const {
+
+    MLPutFunction(mlp, SYMBOL_POSTFIXNODE->name(), 3);
+
+    MLPutSymbol(mlp, Op->name());
+
+    putChildren(mlp);
+
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
+
+    getSourceSpan().putSourceRule(mlp);
+}
+
 
 
 
@@ -381,35 +262,24 @@ SourceSpan PostfixNode::getSourceSpan() {
 // CallNodes
 //
 
-void CallNode::put(MLINK mlp) {
+void CallNode::put(MLINK mlp) const {
 
-    auto Issues = getIssues();
-    auto Comments = getComments();
-
-    MLPutFunction(mlp, SYMBOL_CALLNODE.name(), 3);
+    MLPutFunction(mlp, SYMBOL_CALLNODE->name(), 3);
 
     Head->put(mlp);
 
-    putASTArgs(mlp);
+    putChildren(mlp);
 
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
 
     getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
 }
 
-SourceSpan CallNode::getSourceSpan() {
+Source CallNode::getSourceSpan() const {
 
-    auto Body = std::dynamic_pointer_cast<GroupNode>(getArgs()[0]);
+    auto Body = getChildren()[0];
 
-    return SourceSpan{Head->getSourceSpan().start, Body->getSourceSpan().end};
+    return Source(Head->getSourceSpan().lines.start, Body->getSourceSpan().lines.end);
 }
 
 
@@ -418,427 +288,207 @@ SourceSpan CallNode::getSourceSpan() {
 // GroupNode
 //
 
-void GroupNode::put(MLINK mlp) {
+void GroupNode::put(MLINK mlp) const {
 
-    auto Issues = getIssues();
-    auto Comments = getComments();
+    MLPutFunction(mlp, SYMBOL_GROUPNODE->name(), 3);
 
-    MLPutFunction(mlp, SYMBOL_GROUPNODE.name(), 3);
+    MLPutSymbol(mlp, Op->name());
 
-    MLPutSymbol(mlp, Op.name());
+    putChildren(mlp);
 
-    putASTArgs(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
 
     getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
-}
-
-SourceSpan GroupNode::getSourceSpan() {
-    return SourceSpan{OpenerTokSpan.start, CloserTokSpan.end};
 }
 
 
 //
-// Special expressions
+// Special nodes
 //
 
-void BlankNode::put(MLINK mlp) {
+void BlankNode::put(MLINK mlp) const {
 
-    auto Issues = getIssues();
-    auto Comments = getComments();
+    MLPutFunction(mlp, SYMBOL_BLANKNODE->name(), 3);
 
-    MLPutFunction(mlp, SYMBOL_BLANKNODE.name(), 3);
+    SYMBOL_BLANK->put(mlp);
 
-    SYMBOL_BLANK.put(mlp);
+    putChildren(mlp);
 
-    putASTArgs(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
 
     getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
 }
 
-void BlankSequenceNode::put(MLINK mlp) {
+void BlankSequenceNode::put(MLINK mlp) const {
 
-    auto Issues = getIssues();
-    auto Comments = getComments();
+    MLPutFunction(mlp, SYMBOL_BLANKSEQUENCENODE->name(), 3);
 
-    MLPutFunction(mlp, SYMBOL_BLANKSEQUENCENODE.name(), 3);
+    SYMBOL_BLANKSEQUENCE->put(mlp);
 
-    SYMBOL_BLANKSEQUENCE.put(mlp);
+    putChildren(mlp);
 
-    putASTArgs(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
 
     getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
 }
 
-void BlankNullSequenceNode::put(MLINK mlp) {
+void BlankNullSequenceNode::put(MLINK mlp) const {
 
-    auto Issues = getIssues();
-    auto Comments = getComments();
+    MLPutFunction(mlp, SYMBOL_BLANKNULLSEQUENCENODE->name(), 3);
 
-    MLPutFunction(mlp, SYMBOL_BLANKNULLSEQUENCENODE.name(), 3);
+    SYMBOL_BLANKNULLSEQUENCE->put(mlp);
 
-    SYMBOL_BLANKNULLSEQUENCE.put(mlp);
+    putChildren(mlp);
 
-    putASTArgs(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
 
     getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
 }
 
-void OptionalDefaultNode::put(MLINK mlp) {
+void PatternBlankNode::put(MLINK mlp) const {
 
-    auto Issues = getIssues();
-    auto Comments = getComments();
+    MLPutFunction(mlp, SYMBOL_PATTERNBLANKNODE->name(), 3);
 
-    MLPutFunction(mlp, SYMBOL_OPTIONALDEFAULTNODE.name(), 3);
+    SYMBOL_PATTERNBLANK->put(mlp);
 
-    SYMBOL_OPTIONALDEFAULT.put(mlp);
+    putChildren(mlp);
 
-    putASTArgs(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
 
     getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
 }
 
-void PatternBlankNode::put(MLINK mlp) {
+void PatternBlankSequenceNode::put(MLINK mlp) const {
 
-    auto Issues = getIssues();
-    auto Comments = getComments();
+    MLPutFunction(mlp, SYMBOL_PATTERNBLANKSEQUENCENODE->name(), 3);
 
-    MLPutFunction(mlp, SYMBOL_PATTERNBLANKNODE.name(), 3);
+    SYMBOL_PATTERNBLANKSEQUENCE->put(mlp);
 
-    SYMBOL_PATTERNBLANK.put(mlp);
+    putChildren(mlp);
 
-    putASTArgs(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
 
     getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
 }
 
-void PatternBlankSequenceNode::put(MLINK mlp) {
+void PatternBlankNullSequenceNode::put(MLINK mlp) const {
 
-    auto Issues = getIssues();
-    auto Comments = getComments();
+    MLPutFunction(mlp, SYMBOL_PATTERNBLANKNULLSEQUENCENODE->name(), 3);
 
-    MLPutFunction(mlp, SYMBOL_PATTERNBLANKSEQUENCENODE.name(), 3);
+    SYMBOL_PATTERNBLANKNULLSEQUENCE->put(mlp);
 
-    SYMBOL_PATTERNBLANKSEQUENCE.put(mlp);
+    putChildren(mlp);
 
-    putASTArgs(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
 
     getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
 }
 
-void PatternBlankNullSequenceNode::put(MLINK mlp) {
+void OptionalDefaultPatternNode::put(MLINK mlp) const {
 
-    auto Issues = getIssues();
-    auto Comments = getComments();
+    MLPutFunction(mlp, SYMBOL_OPTIONALDEFAULTPATTERNNODE->name(), 3);
 
-    MLPutFunction(mlp, SYMBOL_PATTERNBLANKNULLSEQUENCENODE.name(), 3);
+    SYMBOL_OPTIONALDEFAULTPATTERN->put(mlp);
 
-    SYMBOL_PATTERNBLANKNULLSEQUENCE.put(mlp);
+    putChildren(mlp);
 
-    putASTArgs(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
 
     getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
-}
-
-void OptionalDefaultPatternNode::put(MLINK mlp) {
-
-    auto Issues = getIssues();
-    auto Comments = getComments();
-
-    MLPutFunction(mlp, SYMBOL_OPTIONALDEFAULTPATTERNNODE.name(), 3);
-
-    SYMBOL_OPTIONALDEFAULTPATTERN.put(mlp);
-
-    putASTArgs(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
-
-    getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
-}
-
-void TokenNode::put(MLINK mlp) {
-
-    auto Issues = getIssues();
-    auto Comments = getComments();
-
-    MLPutFunction(mlp, SYMBOL_TOKENNODE.name(), 3);
-
-    MLPutSymbol(mlp, TokenToString(Tok).c_str());
-
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
-
-    getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
-}
-
-void InternalAllNode::put(MLINK mlp) {
-
-    auto Issues = getIssues();
-    auto Comments = getComments();
-
-    MLPutFunction(mlp, SYMBOL_INTERNALALLNODE.name(), 3);
-
-    SYMBOL_ALL.put(mlp);
-
-    putASTArgs(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
-
-    getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
-}
-
-void InternalDotNode::put(MLINK mlp) {
-
-    auto Issues = getIssues();
-    auto Comments = getComments();
-
-    MLPutFunction(mlp, SYMBOL_INTERNALDOTNODE.name(), 3);
-
-    SYMBOL_DOT.put(mlp);
-
-    putASTArgs(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
-
-    getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
-}
-
-void InternalNullNode::put(MLINK mlp) {
-
-    auto Issues = getIssues();
-    auto Comments = getComments();
-
-    MLPutFunction(mlp, SYMBOL_INTERNALNULLNODE.name(), 3);
-
-    SYMBOL_NULL.put(mlp);
-
-    putASTArgs(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
-
-    getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
-}
-
-void InternalOneNode::put(MLINK mlp) {
-
-    auto Issues = getIssues();
-    auto Comments = getComments();
-
-    MLPutFunction(mlp, SYMBOL_INTERNALONENODE.name(), 3);
-
-    MLPutInteger(mlp, 1);
-
-    putASTArgs(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
-
-    getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
 }
 
 
-void CommentNode::put(MLINK mlp) {
+//
+// Error nodes
+//
 
-    auto Issues = getIssues();
-    auto Comments = getComments();
+void SyntaxErrorNode::put(MLINK mlp) const {
 
-    MLPutFunction(mlp, SYMBOL_COMMENTNODE.name(), 3);
+    MLPutFunction(mlp, SYMBOL_SYNTAXERRORNODE->name(), 3);
 
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
+    MLPutSymbol(mlp, SyntaxErrorToString(Err).c_str());
 
-    putASTArgs(mlp);
+    putChildren(mlp);
 
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
-
-    getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
-}
-
-void SyntaxErrorNode::put(MLINK mlp) {
-
-    auto Issues = getIssues();
-    auto Comments = getComments();
-
-    MLPutFunction(mlp, SYMBOL_SYNTAXERRORNODE.name(), 3);
-
-    MLPutSymbol(mlp, TokenToString(Tok).c_str());
-
-    putASTArgs(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1 + ((!Issues.empty()) ? 1 : 0) + ((!Comments.empty()) ? 1 : 0));
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
 
     getSourceSpan().putSourceRule(mlp);
-
-    if (!Issues.empty()) {
-        putSyntaxIssues(mlp);
-    }
-
-    if (!Comments.empty()) {
-        putComments(mlp);
-    }
 }
 
-SourceSpan SyntaxErrorNode::getSourceSpan() {
-
-    auto Args = getArgs();
+void GroupMissingCloserNode::put(MLINK mlp) const {
     
-    if (!Args.empty()) {
-        auto First = Args[0];
-        auto Last = Args[Args.size()-1];
-        return SourceSpan{First->getSourceSpan().start, Last->getSourceSpan().end};
-    } else {
-        return SourceSpan{{0, 0}, {0, 0}};
-    }
+    MLPutFunction(mlp, SYMBOL_GROUPMISSINGCLOSERNODE->name(), 3);
+    
+    MLPutSymbol(mlp, Op->name());
+    
+    putChildren(mlp);
+    
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
+    
+    getSourceSpan().putSourceRule(mlp);
+}
+
+void GroupMissingOpenerNode::put(MLINK mlp) const {
+    
+    MLPutFunction(mlp, SYMBOL_GROUPMISSINGOPENERNODE->name(), 3);
+    
+    MLPutSymbol(mlp, Op->name());
+    
+    putChildren(mlp);
+    
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
+    
+    getSourceSpan().putSourceRule(mlp);
+}
+
+
+void PrefixBinaryNode::put(MLINK mlp) const {
+    
+    MLPutFunction(mlp, SYMBOL_PREFIXBINARYNODE->name(), 3);
+    
+    MLPutSymbol(mlp, Op->name());
+    
+    putChildren(mlp);
+    
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
+    
+    getSourceSpan().putSourceRule(mlp);
 }
 
 
 
+//
+// Aggregate nodes
+//
 
+void CollectedExpressionsNode::put(MLINK mlp) const {
+    
+    MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(Exprs.size()));
+    
+    for (auto E : Exprs) {
+        E->put(mlp);
+    }
+}
 
-void LeftoverSyntaxIssuesNode::put(MLINK mlp) {
+void CollectedCommentsNode::put(MLINK mlp) const {
     
-    auto Issues = getIssues();
+    MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(Comments.size()));
     
-    MLPutFunction(mlp, SYMBOL_LIST.name(), static_cast<int>(Issues.size()));
+    for (auto C : Comments) {
+        C.putComment(mlp);
+    }
+}
+
+void CollectedSyntaxIssuesNode::put(MLINK mlp) const {
+    
+    MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(Issues.size()));
     
     for (auto I : Issues) {
         I.put(mlp);
     }
 }
+
+
 
 
 

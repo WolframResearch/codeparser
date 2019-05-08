@@ -11,7 +11,6 @@
 //
 class ByteDecoder {
 private:
-    std::istream &In;
     bool eof;
     std::vector<unsigned char> byteQueue;
     
@@ -25,11 +24,16 @@ private:
     
 public:
     
-    ByteDecoder(std::istream &In);
+    ByteDecoder();
+    
+    void init();
+    
+    void deinit();
     
     SourceCharacter nextSourceCharacter();
     
-    std::vector<SyntaxIssue> getIssues();
+    std::vector<SyntaxIssue> getIssues() const;
 };
 
+extern std::istream *TheInputStream;
 extern ByteDecoder *TheByteDecoder;

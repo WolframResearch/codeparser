@@ -1,749 +1,773 @@
 
-{
+(*
+
+the categories are:
+
+Raw
+Letterlike
+Comma
+Space
+Newline
+Punctuation
+Uninterpretable
+Unsupported
+
+
+Use Punctuation here instead of Operator, because the term Operator implies knowledge at the Token level
+
+A Character is Punctuation
+
+A Token is an Operator
+
+*)
+
+<|
 
 (*
-Range 0x000
+Range 0x0000
 *)
-"RawTab",
-"NewLine",
-"RawReturn", (*0x000d*)
-"RawEscape",
-"RawSpace",
-"RawExclamation",
-"RawDoubleQuote",
-"RawNumberSign", 
-"RawDollar", 
-"RawPercent", 
-"RawAmpersand", 
-"RawQuote", 
-"RawLeftParenthesis", 
-"RawRightParenthesis",
-"RawStar", 
-"RawPlus", 
-"RawComma", 
-"RawDash", 
-"RawDot", 
-"RawSlash",
-"RawColon", 
-"RawSemicolon", 
-"RawLess", 
-"RawEqual", 
-"RawGreater", 
-"RawQuestion", 
-"RawAt",
-"RawLeftBracket", 
-"RawBackslash", 
-"RawRightBracket", 
-"RawWedge", 
-"RawUnderscore", 
-"RawBackquote",
-"RawLeftBrace", 
-"RawVerticalBar", 
-"RawRightBrace", 
-"RawTilde",
-"NonBreakingSpace",
-"DownExclamation",
-"Cent",
-"Sterling",
-"Currency",
-"Yen",
-"Section",
-"DoubleDot",
-"Copyright",
-"LeftGuillemet",
-"Not",
-"DiscretionaryHyphen",
-"RegisteredTrademark",
-"Degree",
-"PlusMinus",
-"Micro",
-"Paragraph",
-"CenterDot",
-"Cedilla",
-"RightGuillemet",
-"DownQuestion",
-"CapitalAGrave",
-"CapitalAAcute",
-"CapitalAHat",
-"CapitalATilde",
-"CapitalADoubleDot",
-"CapitalARing",
-"CapitalAE",
-"CapitalCCedilla",
-"CapitalEGrave",
-"CapitalEAcute",
-"CapitalEHat",
-"CapitalEDoubleDot",
-"CapitalIGrave",
-"CapitalIAcute",
-"CapitalIHat",
-"CapitalIDoubleDot",
-"CapitalEth",
-"CapitalNTilde",
-"CapitalOGrave",
-"CapitalOAcute",
-"CapitalOHat",
-"CapitalOTilde",
-"CapitalODoubleDot",
-"Times",
-"CapitalOSlash",
-"CapitalUGrave",
-"CapitalUAcute",
-"CapitalUHat",
-"CapitalUDoubleDot",
-"CapitalYAcute",
-"CapitalThorn",
-"SZ",
-"AGrave",
-"AAcute",
-"AHat",
-"ATilde",
-"ADoubleDot",
-"ARing",
-"AE",
-"CCedilla",
-"EGrave",
-"EAcute",
-"EHat",
-"EDoubleDot",
-"IGrave",
-"IAcute",
-"IHat",
-"IDoubleDot",
-"Eth",
-"NTilde",
-"OGrave",
-"OAcute",
-"OHat",
-"OTilde",
-"ODoubleDot",
-"Divide",
-"OSlash",
-"UGrave",
-"UAcute",
-"UHat",
-"UDoubleDot",
-"YAcute",
-"Thorn",
-"YDoubleDot",
+"RawTab" -> Raw, (* 0x0009 *)
+"NewLine" -> Raw, (* 0x000a *)
+"RawReturn" -> Raw, (* 0x000d *)
+"RawEscape" -> Raw, (* 0x001b *)
+"RawSpace" -> Raw, (* 0x0020 *)
+"RawExclamation" -> Raw, (* 0x0021 *)
+"RawDoubleQuote" -> Raw, (* 0x0022 *)
+"RawNumberSign" -> Raw, (* 0x0023 *)
+"RawDollar" -> Raw, (* 0x0024 *)
+"RawPercent" -> Raw, (* 0x0025 *)
+"RawAmpersand" -> Raw, (* 0x0026 *)
+"RawQuote" -> Raw, (* 0x0027 *)
+"RawLeftParenthesis" -> Raw, (* 0x0028 *)
+"RawRightParenthesis" -> Raw, (* 0x0029 *)
+"RawStar" -> Raw, (* 0x002a *)
+"RawPlus" -> Raw, (* 0x002b *)
+"RawComma" -> Raw, (* 0x002c *)
+"RawDash" -> Raw, (* 0x002d *)
+"RawDot" -> Raw, (* 0x002e *)
+"RawSlash" -> Raw, (* 0x002f *)
+"RawColon" -> Raw, (* 0x003a *)
+"RawSemicolon" -> Raw, (* 0x003b *)
+"RawLess" -> Raw, (* 0x003c *)
+"RawEqual" -> Raw, (* 0x003d *)
+"RawGreater" -> Raw, (* 0x003e *)
+"RawQuestion" -> Raw, (* 0x003f *)
+"RawAt" -> Raw, (* 0x0040 *)
+"RawLeftBracket" -> Raw, (* 0x005b *)
+"RawBackslash" -> Raw, (* 0x005c *)
+"RawRightBracket" -> Raw, (* 0x005d *)
+"RawWedge" -> Raw, (* 0x005e *)
+"RawUnderscore" -> Raw, (* 0x005f *)
+"RawBackquote" -> Raw, (* 0x0060 *)
+"RawLeftBrace" -> Raw, (* 0x007b *)
+"RawVerticalBar" -> Raw, (* 0x007c *)
+"RawRightBrace" -> Raw, (* 0x007d *)
+"RawTilde" -> Raw, (* 0x007e *)
+"NonBreakingSpace" -> Space, (* 0x00a0 *)
+"DownExclamation" -> Letterlike, (* 0x00a1 *)
+"Cent" -> Letterlike, (* 0x00a2 *)
+"Sterling" -> Letterlike, (* 0x00a3 *)
+"Currency" -> Letterlike, (* 0x00a4 *)
+"Yen" -> Letterlike, (* 0x00a5 *)
+"Section" -> Letterlike, (* 0x00a7 *)
+"DoubleDot" -> Letterlike, (* 0x00a8 *)
+"Copyright" -> Letterlike, (* 0x00a9 *)
+"LeftGuillemet" -> Letterlike, (* 0x00ab *)
+"Not" -> Punctuation, (* 0x00ac *)
+"DiscretionaryHyphen" -> Letterlike, (* 0x00ad *)
+"RegisteredTrademark" -> Letterlike, (* 0x00ae *)
+"Degree" -> Letterlike, (* 0x00b0 *)
+"PlusMinus" -> Punctuation, (* 0x00b1 *)
+"Micro" -> Letterlike, (* 0x00b5 *)
+"Paragraph" -> Letterlike, (* 0x00b6 *)
+"CenterDot" -> Punctuation, (* 0x00b7 *)
+"Cedilla" -> Letterlike, (* 0x00b8 *)
+"RightGuillemet" -> Letterlike, (* 0x00bb *)
+"DownQuestion" -> Letterlike, (* 0x00bf *)
+"CapitalAGrave" -> Letterlike, (* 0x00c0 *)
+"CapitalAAcute" -> Letterlike, (* 0x00c1 *)
+"CapitalAHat" -> Letterlike, (* 0x00c2 *)
+"CapitalATilde" -> Letterlike, (* 0x00c3 *)
+"CapitalADoubleDot" -> Letterlike, (* 0x00c4 *)
+"CapitalARing" -> Letterlike, (* 0x00c5 *)
+"CapitalAE" -> Letterlike, (* 0x00c6 *)
+"CapitalCCedilla" -> Letterlike, (* 0x00c7 *)
+"CapitalEGrave" -> Letterlike, (* 0x00c8 *)
+"CapitalEAcute" -> Letterlike, (* 0x00c9 *)
+"CapitalEHat" -> Letterlike, (* 0x00ca *)
+"CapitalEDoubleDot" -> Letterlike, (* 0x00cb *)
+"CapitalIGrave" -> Letterlike, (* 0x00cc *)
+"CapitalIAcute" -> Letterlike, (* 0x00cd *)
+"CapitalIHat" -> Letterlike, (* 0x00ce *)
+"CapitalIDoubleDot" -> Letterlike, (* 0x00cf *)
+"CapitalEth" -> Letterlike, (* 0x00d0 *)
+"CapitalNTilde" -> Letterlike, (* 0x00d1 *)
+"CapitalOGrave" -> Letterlike, (* 0x00d2 *)
+"CapitalOAcute" -> Letterlike, (* 0x00d3 *)
+"CapitalOHat" -> Letterlike, (* 0x00d4 *)
+"CapitalOTilde" -> Letterlike, (* 0x00d5 *)
+"CapitalODoubleDot" -> Letterlike, (* 0x00d6 *)
+"Times" -> Punctuation, (* 0x00d7 *)
+"CapitalOSlash" -> Letterlike, (* 0x00d8 *)
+"CapitalUGrave" -> Letterlike, (* 0x00d9 *)
+"CapitalUAcute" -> Letterlike, (* 0x00da *)
+"CapitalUHat" -> Letterlike, (* 0x00db *)
+"CapitalUDoubleDot" -> Letterlike, (* 0x00dc *)
+"CapitalYAcute" -> Letterlike, (* 0x00dd *)
+"CapitalThorn" -> Letterlike, (* 0x00de *)
+"SZ" -> Letterlike, (* 0x00df *)
+"AGrave" -> Letterlike, (* 0x00e0 *)
+"AAcute" -> Letterlike, (* 0x00e1 *)
+"AHat" -> Letterlike, (* 0x00e2 *)
+"ATilde" -> Letterlike, (* 0x00e3 *)
+"ADoubleDot" -> Letterlike, (* 0x00e4 *)
+"ARing" -> Letterlike, (* 0x00e5 *)
+"AE" -> Letterlike, (* 0x00e6 *)
+"CCedilla" -> Letterlike, (* 0x00e7 *)
+"EGrave" -> Letterlike, (* 0x00e8 *)
+"EAcute" -> Letterlike, (* 0x00e9 *)
+"EHat" -> Letterlike, (* 0x00ea *)
+"EDoubleDot" -> Letterlike, (* 0x00eb *)
+"IGrave" -> Letterlike, (* 0x00ec *)
+"IAcute" -> Letterlike, (* 0x00ed *)
+"IHat" -> Letterlike, (* 0x00ee *)
+"IDoubleDot" -> Letterlike, (* 0x00ef *)
+"Eth" -> Letterlike, (* 0x00f0 *)
+"NTilde" -> Letterlike, (* 0x00f1 *)
+"OGrave" -> Letterlike, (* 0x00f2 *)
+"OAcute" -> Letterlike, (* 0x00f3 *)
+"OHat" -> Letterlike, (* 0x00f4 *)
+"OTilde" -> Letterlike, (* 0x00f5 *)
+"ODoubleDot" -> Letterlike, (* 0x00f6 *)
+"Divide" -> Punctuation, (* 0x00f7 *)
+"OSlash" -> Letterlike, (* 0x00f8 *)
+"UGrave" -> Letterlike, (* 0x00f9 *)
+"UAcute" -> Letterlike, (* 0x00fa *)
+"UHat" -> Letterlike, (* 0x00fb *)
+"UDoubleDot" -> Letterlike, (* 0x00fc *)
+"YAcute" -> Letterlike, (* 0x00fd *)
+"Thorn" -> Letterlike, (* 0x00fe *)
+"YDoubleDot" -> Letterlike, (* 0x00ff *)
 
 (*
 Range 0x0100
 *)
-"CapitalABar",
-"ABar",
-"CapitalACup",
-"ACup",
-"CapitalCAcute",
-"CAcute",
-"CapitalCHacek",
-"CHacek",
-"CapitalDHacek",
-"DHacek",
-"CapitalEBar",
-"EBar",
-"CapitalECup",
-"ECup",
-"CapitalEHacek",
-"EHacek",
-"CapitalICup",
-"ICup",
-"DotlessI",
-"CapitalLSlash",
-"LSlash",
-"CapitalNHacek",
-"NHacek",
-"CapitalODoubleAcute",
-"ODoubleAcute",
-"CapitalOE",
-"OE",
-"CapitalRHacek",
-"RHacek",
-"CapitalSHacek",
-"SHacek",
-"CapitalTHacek",
-"THacek",
-"CapitalURing",
-"URing",
-"CapitalUDoubleAcute",
-"UDoubleAcute",
-"CapitalZHacek",
-"ZHacek",
-"Florin",
+"CapitalABar" -> Letterlike, (* 0x0100 *)
+"ABar" -> Letterlike, (* 0x0101 *)
+"CapitalACup" -> Letterlike, (* 0x0102 *)
+"ACup" -> Letterlike, (* 0x0103 *)
+"CapitalCAcute" -> Letterlike, (* 0x0106 *)
+"CAcute" -> Letterlike, (* 0x0107 *)
+"CapitalCHacek" -> Letterlike, (* 0x010c *)
+"CHacek" -> Letterlike, (* 0x010d *)
+"CapitalDHacek" -> Letterlike, (* 0x010e *)
+"DHacek" -> Letterlike, (* 0x010f *)
+"CapitalEBar" -> Letterlike, (* 0x0112 *)
+"EBar" -> Letterlike, (* 0x0113 *)
+"CapitalECup" -> Letterlike, (* 0x0114 *)
+"ECup" -> Letterlike, (* 0x0115 *)
+"CapitalEHacek" -> Letterlike, (* 0x011a *)
+"EHacek" -> Letterlike, (* 0x011b *)
+"CapitalICup" -> Letterlike, (* 0x012c *)
+"ICup" -> Letterlike, (* 0x012d *)
+"DotlessI" -> Letterlike, (* 0x0131 *)
+"CapitalLSlash" -> Letterlike, (* 0x0141 *)
+"LSlash" -> Letterlike, (* 0x0142 *)
+"CapitalNHacek" -> Letterlike, (* 0x0147 *)
+"NHacek" -> Letterlike, (* 0x0148 *)
+"CapitalODoubleAcute" -> Letterlike, (* 0x0150 *)
+"ODoubleAcute" -> Letterlike, (* 0x0151 *)
+"CapitalOE" -> Letterlike, (* 0x0152 *)
+"OE" -> Letterlike, (* 0x0153 *)
+"CapitalRHacek" -> Letterlike, (* 0x0158 *)
+"RHacek" -> Letterlike, (* 0x0159 *)
+"CapitalSHacek" -> Letterlike, (* 0x0160 *)
+"SHacek" -> Letterlike, (* 0x0161 *)
+"CapitalTHacek" -> Letterlike, (* 0x0164 *)
+"THacek" -> Letterlike, (* 0x0165 *)
+"CapitalURing" -> Letterlike, (* 0x016e *)
+"URing" -> Letterlike, (* 0x016f *)
+"CapitalUDoubleAcute" -> Letterlike, (* 0x0170 *)
+"UDoubleAcute" -> Letterlike, (* 0x0171 *)
+"CapitalZHacek" -> Letterlike, (* 0x017d *)
+"ZHacek" -> Letterlike, (* 0x017e *)
+"Florin" -> Letterlike, (* 0x0192 *)
 
 (*
 Range 0x0200
 *)
-"Hacek",
-"Breve",
+"Hacek" -> Letterlike, (* 0x02c7 *)
+"Breve" -> Letterlike, (* 0x02d8 *)
 
 (*
 Range 0x0300
 *)
-"CapitalAlpha",
-"CapitalBeta",
-"CapitalGamma",
-"CapitalDelta",
-"CapitalEpsilon",
-"CapitalZeta",
-"CapitalEta",
-"CapitalTheta",
-"CapitalIota",
-"CapitalKappa",
-"CapitalLambda",
-"CapitalMu",
-"CapitalNu",
-"CapitalXi",
-"CapitalOmicron",
-"CapitalPi",
-"CapitalRho",
-"CapitalSigma",
-"CapitalTau",
-"CapitalUpsilon",
-"CapitalPhi",
-"CapitalChi",
-"CapitalPsi",
-"CapitalOmega",
-"Alpha",
-"Beta",
-"Gamma",
-"Delta",
-"CurlyEpsilon",
-"Zeta",
-"Eta",
-"Theta",
-"Iota",
-"Kappa",
-"Lambda",
-"Mu",
-"Nu",
-"Xi",
-"Omicron",
-"Pi",
-"Rho",
-"FinalSigma",
-"Sigma",
-"Tau",
-"Upsilon",
-"CurlyPhi",
-"Chi",
-"Psi",
-"Omega",
-"CurlyTheta",
-"CurlyCapitalUpsilon",
-"Phi",
-"CurlyPi",
-"CapitalStigma",
-"Stigma",
-"CapitalDigamma",
-"Digamma",
-"CapitalKoppa",
-"Koppa",
-"CapitalSampi",
-"Sampi",
-"CurlyKappa",
-"CurlyRho",
-"Epsilon",
+"CapitalAlpha" -> Letterlike, (* 0x0391 *)
+"CapitalBeta" -> Letterlike, (* 0x0392 *)
+"CapitalGamma" -> Letterlike, (* 0x0393 *)
+"CapitalDelta" -> Letterlike, (* 0x0394 *)
+"CapitalEpsilon" -> Letterlike, (* 0x0395 *)
+"CapitalZeta" -> Letterlike, (* 0x0396 *)
+"CapitalEta" -> Letterlike, (* 0x0397 *)
+"CapitalTheta" -> Letterlike, (* 0x0398 *)
+"CapitalIota" -> Letterlike, (* 0x0399 *)
+"CapitalKappa" -> Letterlike, (* 0x039a *)
+"CapitalLambda" -> Letterlike, (* 0x039b *)
+"CapitalMu" -> Letterlike, (* 0x039c *)
+"CapitalNu" -> Letterlike, (* 0x039d *)
+"CapitalXi" -> Letterlike, (* 0x039e *)
+"CapitalOmicron" -> Letterlike, (* 0x039f *)
+"CapitalPi" -> Letterlike, (* 0x03a0 *)
+"CapitalRho" -> Letterlike, (* 0x03a1 *)
+"CapitalSigma" -> Letterlike, (* 0x03a3 *)
+"CapitalTau" -> Letterlike, (* 0x03a4 *)
+"CapitalUpsilon" -> Letterlike, (* 0x03a5 *)
+"CapitalPhi" -> Letterlike, (* 0x03a6 *)
+"CapitalChi" -> Letterlike, (* 0x03a7 *)
+"CapitalPsi" -> Letterlike, (* 0x03a8 *)
+"CapitalOmega" -> Letterlike, (* 0x03a9 *)
+"Alpha" -> Letterlike, (* 0x03b1 *)
+"Beta" -> Letterlike, (* 0x03b2 *)
+"Gamma" -> Letterlike, (* 0x03b3 *)
+"Delta" -> Letterlike, (* 0x03b4 *)
+"CurlyEpsilon" -> Letterlike, (* 0x03b5 *)
+"Zeta" -> Letterlike, (* 0x03b6 *)
+"Eta" -> Letterlike, (* 0x03b7 *)
+"Theta" -> Letterlike, (* 0x03b8 *)
+"Iota" -> Letterlike, (* 0x03b9 *)
+"Kappa" -> Letterlike, (* 0x03ba *)
+"Lambda" -> Letterlike, (* 0x03bb *)
+"Mu" -> Letterlike, (* 0x03bc *)
+"Nu" -> Letterlike, (* 0x03bd *)
+"Xi" -> Letterlike, (* 0x03be *)
+"Omicron" -> Letterlike, (* 0x03bf *)
+"Pi" -> Letterlike, (* 0x03c0 *)
+"Rho" -> Letterlike, (* 0x03c1 *)
+"FinalSigma" -> Letterlike, (* 0x03c2 *)
+"Sigma" -> Letterlike, (* 0x03c3 *)
+"Tau" -> Letterlike, (* 0x03c4 *)
+"Upsilon" -> Letterlike, (* 0x03c5 *)
+"CurlyPhi" -> Letterlike, (* 0x03c6 *)
+"Chi" -> Letterlike, (* 0x03c7 *)
+"Psi" -> Letterlike, (* 0x03c8 *)
+"Omega" -> Letterlike, (* 0x03c9 *)
+"CurlyTheta" -> Letterlike, (* 0x03d1 *)
+"CurlyCapitalUpsilon" -> Letterlike, (* 0x03d2 *)
+"Phi" -> Letterlike, (* 0x03d5 *)
+"CurlyPi" -> Letterlike, (* 0x03d6 *)
+"CapitalStigma" -> Letterlike, (* 0x03da *)
+"Stigma" -> Letterlike, (* 0x03db *)
+"CapitalDigamma" -> Letterlike, (* 0x03dc *)
+"Digamma" -> Letterlike, (* 0x03dd *)
+"CapitalKoppa" -> Letterlike, (* 0x03de *)
+"Koppa" -> Letterlike, (* 0x03df *)
+"CapitalSampi" -> Letterlike, (* 0x03e0 *)
+"Sampi" -> Letterlike, (* 0x03e1 *)
+"CurlyKappa" -> Letterlike, (* 0x03f0 *)
+"CurlyRho" -> Letterlike, (* 0x03f1 *)
+"Epsilon" -> Letterlike, (* 0x03f5 *)
 
 (*
 Range 0x2000
 *)
-"ThickSpace",
-"ThinSpace",
-"VeryThinSpace",
-"Hyphen",
-"Dash",
-"LongDash",
-"OpenCurlyQuote",
-"CloseCurlyQuote",
-"OpenCurlyDoubleQuote",
-"CloseCurlyDoubleQuote",
-"Dagger",
-"DoubleDagger",
-"Bullet",
-"Ellipsis",
-"LineSeparator",
-"ParagraphSeparator",
-"Prime",
-"DoublePrime",
-"ReversePrime",
-"ReverseDoublePrime",
-"SkeletonIndicator",
-"MediumSpace",
-"NoBreak",
-"InvisibleTimes",
-"Euro",
-"Rupee",
+"ThickSpace" -> Space, (* 0x2005 *)
+"ThinSpace" -> Space, (* 0x2009 *)
+"VeryThinSpace" -> Space, (* 0x200a *)
+"Hyphen" -> Letterlike, (* 0x2010 *)
+"Dash" -> Letterlike, (* 0x2013 *)
+"LongDash" -> Letterlike, (* 0x2014 *)
+"OpenCurlyQuote" -> Punctuation, (* 0x2018 *)
+"CloseCurlyQuote" -> Punctuation, (* 0x2019 *)
+"OpenCurlyDoubleQuote" -> Punctuation, (* 0x201c *)
+"CloseCurlyDoubleQuote" -> Punctuation, (* 0x201d *)
+"Dagger" -> Letterlike, (* 0x2020 *)
+"DoubleDagger" -> Letterlike, (* 0x2021 *)
+"Bullet" -> Letterlike, (* 0x2022 *)
+"Ellipsis" -> Letterlike, (* 0x2026 *)
+"LineSeparator" -> Newline, (* 0x2028 *)
+"ParagraphSeparator" -> Newline, (* 0x2029 *)
+"Prime" -> Letterlike, (* 0x2032 *)
+"DoublePrime" -> Letterlike, (* 0x2033 *)
+"ReversePrime" -> Letterlike, (* 0x2035 *)
+"ReverseDoublePrime" -> Letterlike, (* 0x2036 *)
+"SkeletonIndicator" -> Uninterpretable, (* 0x2043 *)
+"MediumSpace" -> Space, (* 0x205f *)
+"NoBreak" -> Space, (* 0x2060 *)
+"InvisibleTimes" -> Punctuation, (* 0x2062 *)
+"Euro" -> Letterlike, (* 0x20ac *)
+"Rupee" -> Letterlike, (* 0x20b9 *)
 
 (*
 Range 0x2100
 *)
-"ScriptG",
-"ScriptCapitalH",
-"GothicCapitalH",
-"HBar",
-"ScriptCapitalI",
-"GothicCapitalI",
-"ScriptCapitalL",
-"ScriptL",
-"WeierstrassP",
-"ScriptCapitalR",
-"GothicCapitalR",
-"Trademark",
-"Mho",
-"GothicCapitalZ",
-"Angstrom",
-"ScriptCapitalB",
-"GothicCapitalC",
-"ScriptE",
-"ScriptCapitalE",
-"ScriptCapitalF",
-"ScriptCapitalM",
-"ScriptO",
-"Aleph",
-"Bet",
-"Gimel",
-"Dalet",
-"LeftArrow",
-"UpArrow",
-"RightArrow",
-"DownArrow",
-"LeftRightArrow",
-"UpDownArrow",
-"UpperLeftArrow",
-"UpperRightArrow",
-"LowerRightArrow",
-"LowerLeftArrow",
-"LeftTeeArrow",
-"UpTeeArrow",
-"RightTeeArrow",
-"DownTeeArrow",
-"ReturnIndicator",
-"LeftVector",
-"DownLeftVector",
-"RightUpVector",
-"LeftUpVector",
-"RightVector",
-"DownRightVector",
-"RightDownVector",
-"LeftDownVector",
-"RightArrowLeftArrow",
-"UpArrowDownArrow",
-"LeftArrowRightArrow",
-"ReverseEquilibrium",
-"Equilibrium",
-"DoubleLeftArrow",
-"DoubleUpArrow",
-"DoubleRightArrow",
-"DoubleDownArrow",
-"DoubleLeftRightArrow",
-"DoubleUpDownArrow",
-"LeftArrowBar",
-"RightArrowBar",
-"DownArrowUpArrow",
+"ScriptG" -> Letterlike, (* 0x210a *)
+"ScriptCapitalH" -> Letterlike, (* 0x210b *)
+"GothicCapitalH" -> Letterlike, (* 0x210c *)
+"HBar" -> Letterlike, (* 0x210f *)
+"ScriptCapitalI" -> Letterlike, (* 0x2110 *)
+"GothicCapitalI" -> Letterlike, (* 0x2111 *)
+"ScriptCapitalL" -> Letterlike, (* 0x2112 *)
+"ScriptL" -> Letterlike, (* 0x2113 *)
+"WeierstrassP" -> Letterlike, (* 0x2118 *)
+"ScriptCapitalR" -> Letterlike, (* 0x211b *)
+"GothicCapitalR" -> Letterlike, (* 0x211c *)
+"Trademark" -> Letterlike, (* 0x2122 *)
+"Mho" -> Letterlike, (* 0x2127 *)
+"GothicCapitalZ" -> Letterlike, (* 0x2128 *)
+"Angstrom" -> Letterlike, (* 0x212b *)
+"ScriptCapitalB" -> Letterlike, (* 0x212c *)
+"GothicCapitalC" -> Letterlike, (* 0x212d *)
+"ScriptE" -> Letterlike, (* 0x212f *)
+"ScriptCapitalE" -> Letterlike, (* 0x2130 *)
+"ScriptCapitalF" -> Letterlike, (* 0x2131 *)
+"ScriptCapitalM" -> Letterlike, (* 0x2133 *)
+"ScriptO" -> Letterlike, (* 0x2134 *)
+"Aleph" -> Letterlike, (* 0x2135 *)
+"Bet" -> Letterlike, (* 0x2136 *)
+"Gimel" -> Letterlike, (* 0x2137 *)
+"Dalet" -> Letterlike, (* 0x2138 *)
+"LeftArrow" -> Punctuation, (* 0x2190 *)
+"UpArrow" -> Punctuation, (* 0x2191 *)
+"RightArrow" -> Punctuation, (* 0x2192 *)
+"DownArrow" -> Punctuation, (* 0x2193 *)
+"LeftRightArrow" -> Punctuation, (* 0x2194 *)
+"UpDownArrow" -> Punctuation, (* 0x2195 *)
+"UpperLeftArrow" -> Punctuation, (* 0x2196 *)
+"UpperRightArrow" -> Punctuation, (* 0x2197 *)
+"LowerRightArrow" -> Punctuation, (* 0x2198 *)
+"LowerLeftArrow" -> Punctuation, (* 0x2199 *)
+"LeftTeeArrow" -> Punctuation, (* 0x21a4 *)
+"UpTeeArrow" -> Punctuation, (* 0x21a5 *)
+"RightTeeArrow" -> Punctuation, (* 0x21a6 *)
+"DownTeeArrow" -> Punctuation, (* 0x21a7 *)
+"ReturnIndicator" -> Letterlike, (* 0x21b5 *)
+"LeftVector" -> Punctuation, (* 0x21bc *)
+"DownLeftVector" -> Punctuation, (* 0x21bd *)
+"RightUpVector" -> Punctuation, (* 0x21be *)
+"LeftUpVector" -> Punctuation, (* 0x21bf *)
+"RightVector" -> Punctuation, (* 0x21c0 *)
+"DownRightVector" -> Punctuation, (* 0x21c1 *)
+"RightDownVector" -> Punctuation, (* 0x21c2 *)
+"LeftDownVector" -> Punctuation, (* 0x21c3 *)
+"RightArrowLeftArrow" -> Punctuation, (* 0x21c4 *)
+"UpArrowDownArrow" -> Punctuation, (* 0x21c5 *)
+"LeftArrowRightArrow" -> Punctuation, (* 0x21c6 *)
+"ReverseEquilibrium" -> Punctuation, (* 0x21cb *)
+"Equilibrium" -> Punctuation, (* 0x21cc *)
+"DoubleLeftArrow" -> Punctuation, (* 0x21d0 *)
+"DoubleUpArrow" -> Punctuation, (* 0x21d1 *)
+"DoubleRightArrow" -> Punctuation, (* 0x21d2 *)
+"DoubleDownArrow" -> Punctuation, (* 0x21d3 *)
+"DoubleLeftRightArrow" -> Punctuation, (* 0x21d4 *)
+"DoubleUpDownArrow" -> Punctuation, (* 0x21d5 *)
+"LeftArrowBar" -> Punctuation, (* 0x21e4 *)
+"RightArrowBar" -> Punctuation, (* 0x21e5 *)
+"DownArrowUpArrow" -> Punctuation, (* 0x21f5 *)
 
 (*
 Range 0x2200
 *)
-"ForAll",
-"PartialD",
-"Exists",
-"NotExists",
-"EmptySet",
-"Laplacian",
-"Del",
-"Element",
-"NotElement",
-"ReverseElement",
-"NotReverseElement",
-"SuchThat",
-"Product",
-"Coproduct",
-"Sum",
-"Minus",
-"MinusPlus",
-"DivisionSlash",
-"Backslash",
-"SmallCircle",
-"Sqrt",
-"Proportional",
-"Infinity",
-"RightAngle",
-"Angle",
-"MeasuredAngle",
-"SphericalAngle",
-"Divides",
-"DoubleVerticalBar",
-"NotDoubleVerticalBar",
-"And",
-"Or",
-"Integral",
-"ContourIntegral",
-"DoubleContourIntegral",
-"ClockwiseContourIntegral",
-"CounterClockwiseContourIntegral",
-"Therefore",
-"Because",
-"Colon",
-"Proportion",
-"Tilde",
-"VerticalTilde",
-"NotTilde",
-"EqualTilde",
-"TildeEqual",
-"NotTildeEqual",
-"TildeFullEqual",
-"NotTildeFullEqual",
-"TildeTilde",
-"NotTildeTilde",
-"CupCap",
-"HumpDownHump",
-"HumpEqual",
-"DotEqual",
-"NotEqual",
-"Congruent",
-"NotCongruent",
-"LessEqual",
-"GreaterEqual",
-"LessFullEqual",
-"GreaterFullEqual",
-"NotLessFullEqual",
-"NotGreaterFullEqual",
-"LessLess",
-"GreaterGreater",
-"NotCupCap",
-"NotLess",
-"NotGreater",
-"NotLessEqual",
-"NotGreaterEqual",
-"LessTilde",
-"GreaterTilde",
-"NotLessTilde",
-"NotGreaterTilde",
-"LessGreater",
-"GreaterLess",
-"NotLessGreater",
-"NotGreaterLess",
-"Precedes",
-"Succeeds",
-"PrecedesSlantEqual",
-"SucceedsSlantEqual",
-"PrecedesTilde",
-"SucceedsTilde",
-"NotPrecedes",
-"NotSucceeds",
-"Subset",
-"Superset",
-"NotSubset",
-"NotSuperset",
-"SubsetEqual",
-"SupersetEqual",
-"NotSubsetEqual",
-"NotSupersetEqual",
-"UnionPlus",
-"SquareSubset",
-"SquareSuperset",
-"SquareSubsetEqual",
-"SquareSupersetEqual",
-"SquareIntersection",
-"SquareUnion",
-"CirclePlus",
-"CircleMinus",
-"CircleTimes",
-"CircleDot",
-"RightTee",
-"LeftTee",
-"DownTee",
-"UpTee",
-"DoubleRightTee",
-"LeftTriangle",
-"RightTriangle",
-"LeftTriangleEqual",
-"RightTriangleEqual",
-"Xor",
-"Nand",
-"Nor",
-"Wedge",
-"Vee",
-"Intersection",
-"Union",
-"Diamond",
-"Star",
-"LessEqualGreater",
-"GreaterEqualLess",
-"NotPrecedesSlantEqual",
-"NotSucceedsSlantEqual",
-"NotSquareSubsetEqual",
-"NotSquareSupersetEqual",
-"NotPrecedesTilde",
-"NotSucceedsTilde",
-"NotLeftTriangle",
-"NotRightTriangle",
-"NotLeftTriangleEqual",
-"NotRightTriangleEqual",
-"VerticalEllipsis",
-"CenterEllipsis",
-"AscendingEllipsis",
-"DescendingEllipsis",
+"ForAll" -> Punctuation, (* 0x2200 *)
+"PartialD" -> Punctuation, (* 0x2202 *)
+"Exists" -> Punctuation, (* 0x2203 *)
+"NotExists" -> Punctuation, (* 0x2204 *)
+"EmptySet" -> Letterlike, (* 0x2205 *)
+"Laplacian" -> Punctuation, (* 0x2206 *)
+"Del" -> Punctuation, (* 0x2207 *)
+"Element" -> Punctuation, (* 0x2208 *)
+"NotElement" -> Punctuation, (* 0x2209 *)
+"ReverseElement" -> Punctuation, (* 0x220b *)
+"NotReverseElement" -> Punctuation, (* 0x220c *)
+"SuchThat" -> Punctuation, (* 0x220d *)
+"Product" -> Punctuation, (* 0x220f *)
+"Coproduct" -> Punctuation, (* 0x2210 *)
+"Sum" -> Punctuation, (* 0x2211 *)
+"Minus" -> Punctuation, (* 0x2212 *)
+"MinusPlus" -> Punctuation, (* 0x2213 *)
+"DivisionSlash" -> Punctuation, (* 0x2215 *)
+"Backslash" -> Punctuation, (* 0x2216 *)
+"SmallCircle" -> Punctuation, (* 0x2218 *)
+"Sqrt" -> Punctuation, (* 0x221a *)
+"Proportional" -> Punctuation, (* 0x221d *)
+"Infinity" -> Letterlike, (* 0x221e *)
+"RightAngle" -> Punctuation, (* 0x221f *)
+"Angle" -> Punctuation, (* 0x2220 *)
+"MeasuredAngle" -> Punctuation, (* 0x2221 *)
+"SphericalAngle" -> Punctuation, (* 0x2222 *)
+"Divides" -> Punctuation, (* 0x2223 *)
+"DoubleVerticalBar" -> Punctuation, (* 0x2225 *)
+"NotDoubleVerticalBar" -> Punctuation, (* 0x2226 *)
+"And" -> Punctuation, (* 0x2227 *)
+"Or" -> Punctuation, (* 0x2228 *)
+"Integral" -> Punctuation, (* 0x222b *)
+"ContourIntegral" -> Punctuation, (* 0x222e *)
+"DoubleContourIntegral" -> Punctuation, (* 0x222f *)
+"ClockwiseContourIntegral" -> Punctuation, (* 0x2232 *)
+"CounterClockwiseContourIntegral" -> Punctuation, (* 0x2233 *)
+"Therefore" -> Punctuation, (* 0x2234 *)
+"Because" -> Punctuation, (* 0x2235 *)
+"Colon" -> Punctuation, (* 0x2236 *)
+"Proportion" -> Punctuation, (* 0x2237 *)
+"Tilde" -> Punctuation, (* 0x223c *)
+"VerticalTilde" -> Punctuation, (* 0x2240 *)
+"NotTilde" -> Punctuation, (* 0x2241 *)
+"EqualTilde" -> Punctuation, (* 0x2242 *)
+"TildeEqual" -> Punctuation, (* 0x2243 *)
+"NotTildeEqual" -> Punctuation, (* 0x2244 *)
+"TildeFullEqual" -> Punctuation, (* 0x2245 *)
+"NotTildeFullEqual" -> Punctuation, (* 0x2247 *)
+"TildeTilde" -> Punctuation, (* 0x2248 *)
+"NotTildeTilde" -> Punctuation, (* 0x2249 *)
+"CupCap" -> Punctuation, (* 0x224d *)
+"HumpDownHump" -> Punctuation, (* 0x224e *)
+"HumpEqual" -> Punctuation, (* 0x224f *)
+"DotEqual" -> Punctuation, (* 0x2250 *)
+"NotEqual" -> Punctuation, (* 0x2260 *)
+"Congruent" -> Punctuation, (* 0x2261 *)
+"NotCongruent" -> Punctuation, (* 0x2262 *)
+"LessEqual" -> Punctuation, (* 0x2264 *)
+"GreaterEqual" -> Punctuation, (* 0x2265 *)
+"LessFullEqual" -> Punctuation, (* 0x2266 *)
+"GreaterFullEqual" -> Punctuation, (* 0x2267 *)
+"NotLessFullEqual" -> Punctuation, (* 0x2268 *)
+"NotGreaterFullEqual" -> Punctuation, (* 0x2269 *)
+"LessLess" -> Punctuation, (* 0x226a *)
+"GreaterGreater" -> Punctuation, (* 0x226b *)
+"NotCupCap" -> Punctuation, (* 0x226d *)
+"NotLess" -> Punctuation, (* 0x226e *)
+"NotGreater" -> Punctuation, (* 0x226f *)
+"NotLessEqual" -> Punctuation, (* 0x2270 *)
+"NotGreaterEqual" -> Punctuation, (* 0x2271 *)
+"LessTilde" -> Punctuation, (* 0x2272 *)
+"GreaterTilde" -> Punctuation, (* 0x2273 *)
+"NotLessTilde" -> Punctuation, (* 0x2274 *)
+"NotGreaterTilde" -> Punctuation, (* 0x2275 *)
+"LessGreater" -> Punctuation, (* 0x2276 *)
+"GreaterLess" -> Punctuation, (* 0x2277 *)
+"NotLessGreater" -> Punctuation, (* 0x2278 *)
+"NotGreaterLess" -> Punctuation, (* 0x2279 *)
+"Precedes" -> Punctuation, (* 0x227a *)
+"Succeeds" -> Punctuation, (* 0x227b *)
+"PrecedesSlantEqual" -> Punctuation, (* 0x227c *)
+"SucceedsSlantEqual" -> Punctuation, (* 0x227d *)
+"PrecedesTilde" -> Punctuation, (* 0x227e *)
+"SucceedsTilde" -> Punctuation, (* 0x227f *)
+"NotPrecedes" -> Punctuation, (* 0x2280 *)
+"NotSucceeds" -> Punctuation, (* 0x2281 *)
+"Subset" -> Punctuation, (* 0x2282 *)
+"Superset" -> Punctuation, (* 0x2283 *)
+"NotSubset" -> Punctuation, (* 0x2284 *)
+"NotSuperset" -> Punctuation, (* 0x2285 *)
+"SubsetEqual" -> Punctuation, (* 0x2286 *)
+"SupersetEqual" -> Punctuation, (* 0x2287 *)
+"NotSubsetEqual" -> Punctuation, (* 0x2288 *)
+"NotSupersetEqual" -> Punctuation, (* 0x2289 *)
+"UnionPlus" -> Punctuation, (* 0x228e *)
+"SquareSubset" -> Punctuation, (* 0x228f *)
+"SquareSuperset" -> Punctuation, (* 0x2290 *)
+"SquareSubsetEqual" -> Punctuation, (* 0x2291 *)
+"SquareSupersetEqual" -> Punctuation, (* 0x2292 *)
+"SquareIntersection" -> Punctuation, (* 0x2293 *)
+"SquareUnion" -> Punctuation, (* 0x2294 *)
+"CirclePlus" -> Punctuation, (* 0x2295 *)
+"CircleMinus" -> Punctuation, (* 0x2296 *)
+"CircleTimes" -> Punctuation, (* 0x2297 *)
+"CircleDot" -> Punctuation, (* 0x2299 *)
+"RightTee" -> Punctuation, (* 0x22a2 *)
+"LeftTee" -> Punctuation, (* 0x22a3 *)
+"DownTee" -> Punctuation, (* 0x22a4 *)
+"UpTee" -> Punctuation, (* 0x22a5 *)
+"DoubleRightTee" -> Punctuation, (* 0x22a8 *)
+"LeftTriangle" -> Punctuation, (* 0x22b2 *)
+"RightTriangle" -> Punctuation, (* 0x22b3 *)
+"LeftTriangleEqual" -> Punctuation, (* 0x22b4 *)
+"RightTriangleEqual" -> Punctuation, (* 0x22b5 *)
+"Xor" -> Punctuation, (* 0x22bb *)
+"Nand" -> Punctuation, (* 0x22bc *)
+"Nor" -> Punctuation, (* 0x22bd *)
+"Wedge" -> Punctuation, (* 0x22c0 *)
+"Vee" -> Punctuation, (* 0x22c1 *)
+"Intersection" -> Punctuation, (* 0x22c2 *)
+"Union" -> Punctuation, (* 0x22c3 *)
+"Diamond" -> Punctuation, (* 0x22c4 *)
+"Star" -> Punctuation, (* 0x22c6 *)
+"LessEqualGreater" -> Punctuation, (* 0x22da *)
+"GreaterEqualLess" -> Punctuation, (* 0x22db *)
+"NotPrecedesSlantEqual" -> Punctuation, (* 0x22e0 *)
+"NotSucceedsSlantEqual" -> Punctuation, (* 0x22e1 *)
+"NotSquareSubsetEqual" -> Punctuation, (* 0x22e2 *)
+"NotSquareSupersetEqual" -> Punctuation, (* 0x22e3 *)
+"NotPrecedesTilde" -> Punctuation, (* 0x22e8 *)
+"NotSucceedsTilde" -> Punctuation, (* 0x22e9 *)
+"NotLeftTriangle" -> Punctuation, (* 0x22ea *)
+"NotRightTriangle" -> Punctuation, (* 0x22eb *)
+"NotLeftTriangleEqual" -> Punctuation, (* 0x22ec *)
+"NotRightTriangleEqual" -> Punctuation, (* 0x22ed *)
+"VerticalEllipsis" -> Letterlike, (* 0x22ee *)
+"CenterEllipsis" -> Letterlike, (* 0x22ef *)
+"AscendingEllipsis" -> Letterlike, (* 0x22f0 *)
+"DescendingEllipsis" -> Letterlike, (* 0x22f1 *)
 
 (*
 Range 0x2300
 *)
-"Diameter",
-"LeftCeiling",
-"RightCeiling",
-"LeftFloor",
-"RightFloor",
-"CloverLeaf",
-"WatchIcon",
-"Cap",
-"Cup",
-"LeftAngleBracket",
-"RightAngleBracket",
-"OverBracket",
-"UnderBracket",
+"Diameter" -> Punctuation, (* 0x2300 *)
+"LeftCeiling" -> Punctuation, (* 0x2308 *)
+"RightCeiling" -> Punctuation, (* 0x2309 *)
+"LeftFloor" -> Punctuation, (* 0x230a *)
+"RightFloor" -> Punctuation, (* 0x230b *)
+"CloverLeaf" -> Letterlike, (* 0x2318 *)
+"WatchIcon" -> Letterlike, (* 0x231a *)
+"Cap" -> Punctuation, (* 0x2322 *)
+"Cup" -> Punctuation, (* 0x2323 *)
+"LeftAngleBracket" -> Punctuation, (* 0x2329 *)
+"RightAngleBracket" -> Punctuation, (* 0x232a *)
+"OverBracket" -> Letterlike, (* 0x23b4 *)
+"UnderBracket" -> Letterlike, (* 0x23b5 *)
 
 (*
 Range 0x2400
 *)
-"SpaceIndicator",
+"SpaceIndicator" -> Space, (* 0x2423 *)
 
 (*
 Range 0x2500
 *)
-"HorizontalLine",
-"VerticalLine",
-"FilledSquare",
-"EmptySquare",
-"FilledVerySmallSquare",
-"EmptyVerySmallSquare",
-"FilledRectangle",
-"EmptyRectangle",
-"FilledUpTriangle",
-"EmptyUpTriangle",
-"UpPointer",
-"FilledRightTriangle",
-"RightPointer",
-"FilledDownTriangle",
-"EmptyDownTriangle",
-"DownPointer",
-"FilledLeftTriangle",
-"LeftPointer",
-"FilledDiamond",
-"EmptyDiamond",
-"EmptyCircle",
-"FilledCircle",
-"EmptySmallCircle",
-"EmptySmallSquare",
-"FilledSmallSquare",
+"HorizontalLine" -> Letterlike, (* 0x2500 *)
+"VerticalLine" -> Letterlike, (* 0x2502 *)
+"FilledSquare" -> Letterlike, (* 0x25a0 *)
+"EmptySquare" -> Letterlike, (* 0x25a1 *)
+"FilledVerySmallSquare" -> Letterlike, (* 0x25aa *)
+"EmptyVerySmallSquare" -> Letterlike, (* 0x25ab *)
+"FilledRectangle" -> Letterlike, (* 0x25ae *)
+"EmptyRectangle" -> Letterlike, (* 0x25af *)
+"FilledUpTriangle" -> Letterlike, (* 0x25b2 *)
+"EmptyUpTriangle" -> Letterlike, (* 0x25b3 *)
+"UpPointer" -> Letterlike, (* 0x25b4 *)
+"FilledRightTriangle" -> Letterlike, (* 0x25b6 *)
+"RightPointer" -> Letterlike, (* 0x25b8 *)
+"FilledDownTriangle" -> Letterlike, (* 0x25bc *)
+"EmptyDownTriangle" -> Letterlike, (* 0x25bd *)
+"DownPointer" -> Letterlike, (* 0x25be *)
+"FilledLeftTriangle" -> Letterlike, (* 0x25c0 *)
+"LeftPointer" -> Letterlike, (* 0x25c2 *)
+"FilledDiamond" -> Letterlike, (* 0x25c6 *)
+"EmptyDiamond" -> Letterlike, (* 0x25c7 *)
+"EmptyCircle" -> Letterlike, (* 0x25cb *)
+"FilledCircle" -> Letterlike, (* 0x25cf *)
+"EmptySmallCircle" -> Letterlike, (* 0x25e6 *)
+"EmptySmallSquare" -> Letterlike, (* 0x25fb *)
+"FilledSmallSquare" -> Letterlike, (* 0x25fc *)
 
 (*
 Range 0x2600
 *)
-"FivePointedStar",
-"Sun",
-"CheckmarkedBox",
-"CheckedBox",
-"SadSmiley",
-"HappySmiley",
-"Moon",
-"Mercury",
-"Venus",
-"Mars",
-"Jupiter",
-"Saturn",
-"Neptune",
-"Pluto",
-"AriesSign",
-"TaurusSign",
-"GeminiSign",
-"CancerSign",
-"LeoSign",
-"VirgoSign",
-"LibraSign",
-"ScorpioSign",
-"SagittariusSign",
-"CapricornSign",
-"AquariusSign",
-"PiscesSign",
-"WhiteKing",
-"WhiteQueen",
-"WhiteRook",
-"WhiteBishop",
-"WhiteKnight",
-"WhitePawn",
-"BlackKing",
-"BlackQueen",
-"BlackRook",
-"BlackBishop",
-"BlackKnight",
-"BlackPawn",
-"SpadeSuit",
-"HeartSuit",
-"DiamondSuit",
-"ClubSuit",
-"QuarterNote",
-"EighthNote",
-"BeamedEighthNote",
-"BeamedSixteenthNote",
-"Flat",
-"Natural",
-"Sharp",
-"Uranus",
+"FivePointedStar" -> Letterlike, (* 0x2605 *)
+"Sun" -> Letterlike, (* 0x2609 *)
+"CheckmarkedBox" -> Letterlike, (* 0x2611 *)
+"CheckedBox" -> Letterlike, (* 0x2612 *)
+"SadSmiley" -> Letterlike, (* 0x2639 *)
+"HappySmiley" -> Letterlike, (* 0x263a *)
+"Moon" -> Letterlike, (* 0x263e *)
+"Mercury" -> Letterlike, (* 0x263f *)
+"Venus" -> Letterlike, (* 0x2640 *)
+"Mars" -> Letterlike, (* 0x2642 *)
+"Jupiter" -> Letterlike, (* 0x2643 *)
+"Saturn" -> Letterlike, (* 0x2644 *)
+"Neptune" -> Letterlike, (* 0x2646 *)
+"Pluto" -> Letterlike, (* 0x2647 *)
+"AriesSign" -> Letterlike, (* 0x2648 *)
+"TaurusSign" -> Letterlike, (* 0x2649 *)
+"GeminiSign" -> Letterlike, (* 0x264a *)
+"CancerSign" -> Letterlike, (* 0x264b *)
+"LeoSign" -> Letterlike, (* 0x264c *)
+"VirgoSign" -> Letterlike, (* 0x264d *)
+"LibraSign" -> Letterlike, (* 0x264e *)
+"ScorpioSign" -> Letterlike, (* 0x264f *)
+"SagittariusSign" -> Letterlike, (* 0x2650 *)
+"CapricornSign" -> Letterlike, (* 0x2651 *)
+"AquariusSign" -> Letterlike, (* 0x2652 *)
+"PiscesSign" -> Letterlike, (* 0x2653 *)
+"WhiteKing" -> Letterlike, (* 0x2654 *)
+"WhiteQueen" -> Letterlike, (* 0x2655 *)
+"WhiteRook" -> Letterlike, (* 0x2656 *)
+"WhiteBishop" -> Letterlike, (* 0x2657 *)
+"WhiteKnight" -> Letterlike, (* 0x2658 *)
+"WhitePawn" -> Letterlike, (* 0x2659 *)
+"BlackKing" -> Letterlike, (* 0x265a *)
+"BlackQueen" -> Letterlike, (* 0x265b *)
+"BlackRook" -> Letterlike, (* 0x265c *)
+"BlackBishop" -> Letterlike, (* 0x265d *)
+"BlackKnight" -> Letterlike, (* 0x265e *)
+"BlackPawn" -> Letterlike, (* 0x265f *)
+"SpadeSuit" -> Letterlike, (* 0x2660 *)
+"HeartSuit" -> Letterlike, (* 0x2661 *)
+"DiamondSuit" -> Letterlike, (* 0x2662 *)
+"ClubSuit" -> Letterlike, (* 0x2663 *)
+"QuarterNote" -> Letterlike, (* 0x2669 *)
+"EighthNote" -> Letterlike, (* 0x266a *)
+"BeamedEighthNote" -> Letterlike, (* 0x266b *)
+"BeamedSixteenthNote" -> Letterlike, (* 0x266c *)
+"Flat" -> Letterlike, (* 0x266d *)
+"Natural" -> Letterlike, (* 0x266e *)
+"Sharp" -> Letterlike, (* 0x266f *)
+"Uranus" -> Letterlike, (* 0x26e2 *)
 
 (*
 Range 0x2700
 *)
-"Checkmark",
-"SixPointedStar",
-"Perpendicular",
-"LongLeftArrow",
-"LongRightArrow",
-"LongLeftRightArrow",
-"DoubleLongLeftArrow",
-"DoubleLongRightArrow",
-"DoubleLongLeftRightArrow",
+"Checkmark" -> Letterlike, (* 0x2713 *)
+"SixPointedStar" -> Letterlike, (* 0x2736 *)
+"Perpendicular" -> Punctuation, (* 0x27c2 *)
+"LongLeftArrow" -> Punctuation, (* 0x27f5 *)
+"LongRightArrow" -> Punctuation, (* 0x27f6 *)
+"LongLeftRightArrow" -> Punctuation, (* 0x27f7 *)
+"DoubleLongLeftArrow" -> Punctuation, (* 0x27f8 *)
+"DoubleLongRightArrow" -> Punctuation, (* 0x27f9 *)
+"DoubleLongLeftRightArrow" -> Punctuation, (* 0x27fa *)
 
 (*
 Range 0x2900
 *)
-"UpArrowBar",
-"DownArrowBar",
-"LeftRightVector",
-"RightUpDownVector",
-"DownLeftRightVector",
-"LeftUpDownVector",
-"LeftVectorBar",
-"RightVectorBar",
-"RightUpVectorBar",
-"RightDownVectorBar",
-"DownLeftVectorBar",
-"DownRightVectorBar",
-"LeftUpVectorBar",
-"LeftDownVectorBar",
-"LeftTeeVector",
-"RightTeeVector",
-"RightUpTeeVector",
-"RightDownTeeVector",
-"DownLeftTeeVector",
-"DownRightTeeVector",
-"LeftUpTeeVector",
-"LeftDownTeeVector",
-"UpEquilibrium",
-"ReverseUpEquilibrium",
-"RoundImplies",
-"LeftTriangleBar",
-"RightTriangleBar",
-"Equivalent",
+"UpArrowBar" -> Punctuation, (* 0x2912 *)
+"DownArrowBar" -> Punctuation, (* 0x2913 *)
+"LeftRightVector" -> Punctuation, (* 0x294e *)
+"RightUpDownVector" -> Punctuation, (* 0x294f *)
+"DownLeftRightVector" -> Punctuation, (* 0x2950 *)
+"LeftUpDownVector" -> Punctuation, (* 0x2951 *)
+"LeftVectorBar" -> Punctuation, (* 0x2952 *)
+"RightVectorBar" -> Punctuation, (* 0x2953 *)
+"RightUpVectorBar" -> Punctuation, (* 0x2954 *)
+"RightDownVectorBar" -> Punctuation, (* 0x2955 *)
+"DownLeftVectorBar" -> Punctuation, (* 0x2956 *)
+"DownRightVectorBar" -> Punctuation, (* 0x2957 *)
+"LeftUpVectorBar" -> Punctuation, (* 0x2958 *)
+"LeftDownVectorBar" -> Punctuation, (* 0x2959 *)
+"LeftTeeVector" -> Punctuation, (* 0x295a *)
+"RightTeeVector" -> Punctuation, (* 0x295b *)
+"RightUpTeeVector" -> Punctuation, (* 0x295c *)
+"RightDownTeeVector" -> Punctuation, (* 0x295d *)
+"DownLeftTeeVector" -> Punctuation, (* 0x295e *)
+"DownRightTeeVector" -> Punctuation, (* 0x295f *)
+"LeftUpTeeVector" -> Punctuation, (* 0x2960 *)
+"LeftDownTeeVector" -> Punctuation, (* 0x2961 *)
+"UpEquilibrium" -> Punctuation, (* 0x296e *)
+"ReverseUpEquilibrium" -> Punctuation, (* 0x296f *)
+"RoundImplies" -> Punctuation, (* 0x2970 *)
+"LeftTriangleBar" -> Punctuation, (* 0x29cf *)
+"RightTriangleBar" -> Punctuation, (* 0x29d0 *)
+"Equivalent" -> Punctuation, (* 0x29e6 *)
 
 (*
 Range 0x2a00
 *)
-"LessSlantEqual",
-"GreaterSlantEqual",
-"NestedLessLess",
-"NestedGreaterGreater",
-"PrecedesEqual",
-"SucceedsEqual",
-"DoubleLeftTee",
+"LessSlantEqual" -> Punctuation, (* 0x2a7d *)
+"GreaterSlantEqual" -> Punctuation, (* 0x2a7e *)
+"NestedLessLess" -> Punctuation, (* 0x2aa1 *)
+"NestedGreaterGreater" -> Punctuation, (* 0x2aa2 *)
+"PrecedesEqual" -> Punctuation, (* 0x2aaf *)
+"SucceedsEqual" -> Punctuation, (* 0x2ab0 *)
+"DoubleLeftTee" -> Punctuation, (* 0x2ae4 *)
 
 (*
 Range 0x3000
 *)
-"LeftDoubleBracket",
-"RightDoubleBracket",
+"COMPATIBILITYKanjiSpace" -> Unsupported, (* 0x3000 *)
+"LeftDoubleBracket" -> Punctuation, (* 0x301a *)
+"RightDoubleBracket" -> Punctuation, (* 0x301b *)
 
 (*
 Range 0xf100
 *)
-"LeftAssociation",
-"RightAssociation",
-"Shah",
-"WolframLanguageLogo",
-"WolframLanguageLogoCircle",
+"LeftAssociation" -> Punctuation, (* 0xf113 *)
+"RightAssociation" -> Punctuation, (* 0xf114 *)
+"Shah" -> Letterlike, (* 0xf11d *)
+"WolframLanguageLogo" -> Letterlike, (* 0xf11e *)
+"WolframLanguageLogoCircle" -> Letterlike, (* 0xf11f *)
 (*
 TwoWayRule was added in 11.1
 *)
-"TwoWayRule",
+"TwoWayRule" -> Punctuation, (* 0xf120 *)
 
 (*
 Range 0xf300
 *)
-"FreeformPrompt",
-"WolframAlphaPrompt",
-"InvisibleSpace",
-"Piecewise",
-"NegativeVeryThinSpace",
-"NegativeThinSpace",
-"NegativeMediumSpace",
-"NegativeThickSpace",
-"ImplicitPlus",
-"Null",
-"IndentingNewLine",
-"AutoPlaceholder",
-"AutoLeftMatch",
-"AutoRightMatch",
-"AutoSpace",
-"AutoOperand",
-"SystemsModelDelay",
-"Continuation",
-"RoundSpaceIndicator",
-"InvisiblePrefixScriptBase",
-"InvisiblePostfixScriptBase",
-"EntityStart",
-"EntityEnd",
-"SpanFromLeft",
-"SpanFromAbove",
-"SpanFromBoth",
-"PageBreakAbove",
-"PageBreakBelow",
-"DiscretionaryPageBreakAbove",
-"DiscretionaryPageBreakBelow",
-"Transpose",
-"Conjugate",
-"ConjugateTranspose",
-"StepperRight",
-"StepperLeft",
-"StepperUp",
-"StepperDown",
-"HermitianConjugate",
-"VerticalBar",
-"NotVerticalBar",
-"Distributed",
-"Conditioned",
-"UndirectedEdge",
-"DirectedEdge", (* 0xf3d5 *)
-"Gradient",
-"Divergence",
-"Curl",
-"ContinuedFractionK", (* 0xf3d9 *)
-"TensorProduct",
-"TensorWedge", (* 0xf3db *)
-"ProbabilityPr",
-"ExpectationE",
-"PermutationProduct",
-"Earth", (* 0xf3df *)
+"FreeformPrompt" -> Letterlike, (* 0xf351 *)
+"WolframAlphaPrompt" -> Letterlike, (* 0xf352 *)
+"InvisibleSpace" -> Space, (* 0xf360 *)
+"Piecewise" -> Punctuation, (* 0xf361 *)
+"NegativeVeryThinSpace" -> Space, (* 0xf380 *)
+"NegativeThinSpace" -> Space, (* 0xf382 *)
+"NegativeMediumSpace" -> Space, (* 0xf383 *)
+"NegativeThickSpace" -> Space, (* 0xf384 *)
+"ImplicitPlus" -> Punctuation, (* 0xf39e *)
+"Null" -> Letterlike, (* 0xf3a0 *)
+"COMPATIBILITYNoBreak" -> Unsupported, (* 0xf3a2 *)
+"IndentingNewLine" -> Newline, (* 0xf3a3 *)
+"AutoPlaceholder" -> Letterlike, (* 0xf3a4 *)
+"AutoLeftMatch" -> Punctuation, (* 0xf3a8 *)
+"AutoRightMatch" -> Punctuation, (* 0xf3a9 *)
+"AutoSpace" -> Space, (* 0xf3ad *)
+"AutoOperand" -> Letterlike, (* 0xf3ae *)
+"SystemsModelDelay" -> Letterlike, (* 0xf3af *)
+"Continuation" -> Uninterpretable, (* 0xf3b1 *)
+"RoundSpaceIndicator" -> Space, (* 0xf3b2 *)
+"InvisiblePrefixScriptBase" -> Punctuation, (* 0xf3b3 *)
+"InvisiblePostfixScriptBase" -> Punctuation, (* 0xf3b4 *)
+"EntityStart" -> Letterlike, (* 0xf3b8 *)
+"EntityEnd" -> Letterlike, (* 0xf3b9 *)
+"SpanFromLeft" -> Letterlike, (* 0xf3ba *)
+"SpanFromAbove" -> Letterlike, (* 0xf3bb *)
+"SpanFromBoth" -> Letterlike, (* 0xf3bc *)
+"PageBreakAbove" -> Space, (* 0xf3bd *)
+"PageBreakBelow" -> Space, (* 0xf3be *)
+"DiscretionaryPageBreakAbove" -> Space, (* 0xf3bf *)
+"DiscretionaryPageBreakBelow" -> Space, (* 0xf3c6 *)
+"Transpose" -> Punctuation, (* 0xf3c7 *)
+"Conjugate" -> Punctuation, (* 0xf3c8 *)
+"ConjugateTranspose" -> Punctuation, (* 0xf3c9 *)
+"StepperRight" -> Letterlike, (* 0xf3ca *)
+"StepperLeft" -> Letterlike, (* 0xf3cb *)
+"StepperUp" -> Letterlike, (* 0xf3cc *)
+"StepperDown" -> Letterlike, (* 0xf3cd *)
+"HermitianConjugate" -> Punctuation, (* 0xf3ce *)
+"VerticalBar" -> Punctuation, (* 0xf3d0 *)
+"NotVerticalBar" -> Punctuation, (* 0xf3d1 *)
+"Distributed" -> Punctuation, (* 0xf3d2 *)
+"Conditioned" -> Punctuation, (* 0xf3d3 *)
+"UndirectedEdge" -> Punctuation, (* 0xf3d4 *)
+"DirectedEdge" -> Punctuation, (* 0xf3d5 *)
+"Gradient" -> Punctuation, (* 0xf3d6 *)
+"Divergence" -> Punctuation, (* 0xf3d7 *)
+"Curl" -> Punctuation, (* 0xf3d8 *)
+"ContinuedFractionK" -> Punctuation, (* 0xf3d9 *)
+"TensorProduct" -> Punctuation, (* 0xf3da *)
+"TensorWedge" -> Punctuation, (* 0xf3db *)
+"ProbabilityPr" -> Punctuation, (* 0xf3dc *)
+"ExpectationE" -> Punctuation, (* 0xf3dd *)
+"PermutationProduct" -> Punctuation, (* 0xf3de *)
+"Earth" -> Letterlike, (* 0xf3df *)
 
 (*
 Range 0xf400
 *)
-"NotEqualTilde",
-"NotHumpEqual",
-"NotHumpDownHump",
-"NotLeftTriangleBar",
-"NotRightTriangleBar",
-"NotLessLess",
-"NotNestedLessLess",
-"NotLessSlantEqual",
-"NotGreaterGreater",
-"NotNestedGreaterGreater",
-"NotGreaterSlantEqual",
-"NotPrecedesEqual",
-"NotSucceedsEqual",
-"NotSquareSubset",
-"NotSquareSuperset",
-"Equal",
-"VerticalSeparator",
+"NotEqualTilde" -> Punctuation, (* 0xf400 *)
+"NotHumpEqual" -> Punctuation, (* 0xf401 *)
+"NotHumpDownHump" -> Punctuation, (* 0xf402 *)
+"NotLeftTriangleBar" -> Punctuation, (* 0xf412 *)
+"NotRightTriangleBar" -> Punctuation, (* 0xf413 *)
+"NotLessLess" -> Punctuation, (* 0xf422 *)
+"NotNestedLessLess" -> Punctuation, (* 0xf423 *)
+"NotLessSlantEqual" -> Punctuation, (* 0xf424 *)
+"NotGreaterGreater" -> Punctuation, (* 0xf427 *)
+"NotNestedGreaterGreater" -> Punctuation, (* 0xf428 *)
+"NotGreaterSlantEqual" -> Punctuation, (* 0xf429 *)
+"NotPrecedesEqual" -> Punctuation, (* 0xf42b *)
+"NotSucceedsEqual" -> Punctuation, (* 0xf42d *)
+"NotSquareSubset" -> Punctuation, (* 0xf42e *)
+"NotSquareSuperset" -> Punctuation, (* 0xf42f *)
+"Equal" -> Punctuation, (* 0xf431 *)
+"VerticalSeparator" -> Punctuation, (* 0xf432 *)
 (*
 added in 12.0:
 VectorGreater
@@ -751,422 +775,422 @@ VectorGreaterEqual
 VectorLess
 VectorLessEqual
 *)
-"VectorGreater",
-"VectorGreaterEqual",
-"VectorLess",
-"VectorLessEqual",
+"VectorGreater" -> Punctuation, (* 0xf434 *)
+"VectorGreaterEqual" -> Punctuation, (* 0xf435 *)
+"VectorLess" -> Punctuation, (* 0xf436 *)
+"VectorLessEqual" -> Punctuation, (* 0xf437 *)
 (*
 added in 11.2:
 Limit
 MaxLimit
 MinLimit
 *)
-"Limit",
-"MaxLimit",
-"MinLimit",
-"Cross",
-"Function",
-"Xnor",
-"DiscreteShift",
-"DifferenceDelta",
-"DiscreteRatio",
+"Limit" -> Punctuation, (* 0xf438 *)
+"MaxLimit" -> Punctuation, (* 0xf439 *)
+"MinLimit" -> Punctuation, (* 0xf43a *)
+"Cross" -> Punctuation, (* 0xf4a0 *)
+"Function" -> Punctuation, (* 0xf4a1 *)
+"Xnor" -> Punctuation, (* 0xf4a2 *)
+"DiscreteShift" -> Punctuation, (* 0xf4a3 *)
+"DifferenceDelta" -> Punctuation, (* 0xf4a4 *)
+"DiscreteRatio" -> Punctuation, (* 0xf4a5 *)
 
 (*
 Range 0xf500
 *)
-"InlinePart",
-"RuleDelayed",
-"Square",
-"Rule",
-"Implies",
-"ShortRightArrow",
-"ShortLeftArrow",
-"SelectionPlaceholder",
-"Placeholder",
-"ShortUpArrow",
-"ShortDownArrow",
+"InlinePart" -> Punctuation, (* 0xf51e *)
+"RuleDelayed" -> Punctuation, (* 0xf51f *)
+"Square" -> Punctuation, (* 0xf520 *)
+"Rule" -> Punctuation, (* 0xf522 *)
+"Implies" -> Punctuation, (* 0xf523 *)
+"ShortRightArrow" -> Punctuation, (* 0xf525 *)
+"ShortLeftArrow" -> Punctuation, (* 0xf526 *)
+"SelectionPlaceholder" -> Letterlike, (* 0xf527 *)
+"Placeholder" -> Letterlike, (* 0xf528 *)
+"ShortUpArrow" -> Punctuation, (* 0xf52a *)
+"ShortDownArrow" -> Punctuation, (* 0xf52b *)
 
 (*
 Range 0xf600
 *)
-"LeftBracketingBar",
-"RightBracketingBar",
-"LeftDoubleBracketingBar",
-"RightDoubleBracketingBar",
-"ScriptA",
-"ScriptB",
-"ScriptC",
-"ScriptD",
-"ScriptF",
-"ScriptH",
-"ScriptI",
-"ScriptJ",
-"ScriptK",
-"ScriptM",
-"ScriptN",
-"ScriptP",
-"ScriptQ",
-"ScriptR",
-"ScriptS",
-"ScriptT",
-"ScriptU",
-"ScriptV",
-"ScriptW",
-"ScriptX",
-"ScriptY",
-"ScriptZ",
-"GothicA",
-"GothicB",
-"GothicC",
-"GothicD",
-"GothicE",
-"GothicF",
-"GothicG",
-"GothicH",
-"GothicI",
-"GothicJ",
-"GothicK",
-"GothicL",
-"GothicM",
-"GothicN",
-"GothicO",
-"GothicP",
-"GothicQ",
-"GothicR",
-"GothicS",
-"GothicT",
-"GothicU",
-"GothicV",
-"GothicW",
-"GothicX",
-"GothicY",
-"GothicZ",
-"DoubleStruckA",
-"DoubleStruckB",
-"DoubleStruckC",
-"DoubleStruckD",
-"DoubleStruckE",
-"DoubleStruckF",
-"DoubleStruckG",
-"DoubleStruckH",
-"DoubleStruckI",
-"DoubleStruckJ",
-"DoubleStruckK",
-"DoubleStruckL",
-"DoubleStruckM",
-"DoubleStruckN",
-"DoubleStruckO",
-"DoubleStruckP",
-"DoubleStruckQ",
-"DoubleStruckR",
-"DoubleStruckS",
-"DoubleStruckT",
-"DoubleStruckU",
-"DoubleStruckV",
-"DoubleStruckW",
-"DoubleStruckX",
-"DoubleStruckY",
-"DoubleStruckZ",
+"LeftBracketingBar" -> Punctuation, (* 0xf603 *)
+"RightBracketingBar" -> Punctuation, (* 0xf604 *)
+"LeftDoubleBracketingBar" -> Punctuation, (* 0xf605 *)
+"RightDoubleBracketingBar" -> Punctuation, (* 0xf606 *)
+"ScriptA" -> Letterlike, (* 0xf6b2 *)
+"ScriptB" -> Letterlike, (* 0xf6b3 *)
+"ScriptC" -> Letterlike, (* 0xf6b4 *)
+"ScriptD" -> Letterlike, (* 0xf6b5 *)
+"ScriptF" -> Letterlike, (* 0xf6b7 *)
+"ScriptH" -> Letterlike, (* 0xf6b9 *)
+"ScriptI" -> Letterlike, (* 0xf6ba *)
+"ScriptJ" -> Letterlike, (* 0xf6bb *)
+"ScriptK" -> Letterlike, (* 0xf6bc *)
+"ScriptM" -> Letterlike, (* 0xf6be *)
+"ScriptN" -> Letterlike, (* 0xf6bf *)
+"ScriptP" -> Letterlike, (* 0xf6c1 *)
+"ScriptQ" -> Letterlike, (* 0xf6c2 *)
+"ScriptR" -> Letterlike, (* 0xf6c3 *)
+"ScriptS" -> Letterlike, (* 0xf6c4 *)
+"ScriptT" -> Letterlike, (* 0xf6c5 *)
+"ScriptU" -> Letterlike, (* 0xf6c6 *)
+"ScriptV" -> Letterlike, (* 0xf6c7 *)
+"ScriptW" -> Letterlike, (* 0xf6c8 *)
+"ScriptX" -> Letterlike, (* 0xf6c9 *)
+"ScriptY" -> Letterlike, (* 0xf6ca *)
+"ScriptZ" -> Letterlike, (* 0xf6cb *)
+"GothicA" -> Letterlike, (* 0xf6cc *)
+"GothicB" -> Letterlike, (* 0xf6cd *)
+"GothicC" -> Letterlike, (* 0xf6ce *)
+"GothicD" -> Letterlike, (* 0xf6cf *)
+"GothicE" -> Letterlike, (* 0xf6d0 *)
+"GothicF" -> Letterlike, (* 0xf6d1 *)
+"GothicG" -> Letterlike, (* 0xf6d2 *)
+"GothicH" -> Letterlike, (* 0xf6d3 *)
+"GothicI" -> Letterlike, (* 0xf6d4 *)
+"GothicJ" -> Letterlike, (* 0xf6d5 *)
+"GothicK" -> Letterlike, (* 0xf6d6 *)
+"GothicL" -> Letterlike, (* 0xf6d7 *)
+"GothicM" -> Letterlike, (* 0xf6d8 *)
+"GothicN" -> Letterlike, (* 0xf6d9 *)
+"GothicO" -> Letterlike, (* 0xf6da *)
+"GothicP" -> Letterlike, (* 0xf6db *)
+"GothicQ" -> Letterlike, (* 0xf6dc *)
+"GothicR" -> Letterlike, (* 0xf6dd *)
+"GothicS" -> Letterlike, (* 0xf6de *)
+"GothicT" -> Letterlike, (* 0xf6df *)
+"GothicU" -> Letterlike, (* 0xf6e0 *)
+"GothicV" -> Letterlike, (* 0xf6e1 *)
+"GothicW" -> Letterlike, (* 0xf6e2 *)
+"GothicX" -> Letterlike, (* 0xf6e3 *)
+"GothicY" -> Letterlike, (* 0xf6e4 *)
+"GothicZ" -> Letterlike, (* 0xf6e5 *)
+"DoubleStruckA" -> Letterlike, (* 0xf6e6 *)
+"DoubleStruckB" -> Letterlike, (* 0xf6e7 *)
+"DoubleStruckC" -> Letterlike, (* 0xf6e8 *)
+"DoubleStruckD" -> Letterlike, (* 0xf6e9 *)
+"DoubleStruckE" -> Letterlike, (* 0xf6ea *)
+"DoubleStruckF" -> Letterlike, (* 0xf6eb *)
+"DoubleStruckG" -> Letterlike, (* 0xf6ec *)
+"DoubleStruckH" -> Letterlike, (* 0xf6ed *)
+"DoubleStruckI" -> Letterlike, (* 0xf6ee *)
+"DoubleStruckJ" -> Letterlike, (* 0xf6ef *)
+"DoubleStruckK" -> Letterlike, (* 0xf6f0 *)
+"DoubleStruckL" -> Letterlike, (* 0xf6f1 *)
+"DoubleStruckM" -> Letterlike, (* 0xf6f2 *)
+"DoubleStruckN" -> Letterlike, (* 0xf6f3 *)
+"DoubleStruckO" -> Letterlike, (* 0xf6f4 *)
+"DoubleStruckP" -> Letterlike, (* 0xf6f5 *)
+"DoubleStruckQ" -> Letterlike, (* 0xf6f6 *)
+"DoubleStruckR" -> Letterlike, (* 0xf6f7 *)
+"DoubleStruckS" -> Letterlike, (* 0xf6f8 *)
+"DoubleStruckT" -> Letterlike, (* 0xf6f9 *)
+"DoubleStruckU" -> Letterlike, (* 0xf6fa *)
+"DoubleStruckV" -> Letterlike, (* 0xf6fb *)
+"DoubleStruckW" -> Letterlike, (* 0xf6fc *)
+"DoubleStruckX" -> Letterlike, (* 0xf6fd *)
+"DoubleStruckY" -> Letterlike, (* 0xf6fe *)
+"DoubleStruckZ" -> Letterlike, (* 0xf6ff *)
 
 (*
 Range 0xf700
 *)
-"DotlessJ",
-"Wolf",
-"FreakedSmiley",
-"NeutralSmiley",
-"LightBulb",
-"NumberSign",
-"WarningSign",
-"Villa",
-"Akuz",
-"Andy",
-"Spooky",
-"ScriptDotlessI",
-"ScriptDotlessJ",
-"DoubledPi",
-"DoubledGamma",
-"CapitalDifferentialD",
-"DifferentialD",
-"ExponentialE",
-"ImaginaryI",
-"ImaginaryJ",
-"FilledSmallCircle",
-"DottedSquare",
-"GraySquare",
-"GrayCircle",
-"LetterSpace",
-"DownBreve",
-"KernelIcon",
-"MathematicaIcon",
-"TripleDot",
-"SystemEnterKey",
-"AlignmentMarker",
-"LeftSkeleton",
-"RightSkeleton",
-"ControlKey",
-"AliasDelimiter",
-"InvisibleComma",
-"ReturnKey",
-"ErrorIndicator",
-"AliasIndicator",
-"EscapeKey",
-"CommandKey",
-"LeftModified",
-"RightModified",
-"InvisibleApplication",
-"DiscretionaryLineSeparator",
-"DiscretionaryParagraphSeparator",
-"ScriptCapitalA",
-"ScriptCapitalC",
-"ScriptCapitalD",
-"ScriptCapitalG",
-"ScriptCapitalJ",
-"ScriptCapitalK",
-"ScriptCapitalN",
-"ScriptCapitalO",
-"ScriptCapitalP",
-"ScriptCapitalQ",
-"ScriptCapitalS",
-"ScriptCapitalT",
-"ScriptCapitalU",
-"ScriptCapitalV",
-"ScriptCapitalW",
-"ScriptCapitalX",
-"ScriptCapitalY",
-"ScriptCapitalZ",
-"GothicCapitalA",
-"GothicCapitalB",
-"GothicCapitalD",
-"GothicCapitalE",
-"GothicCapitalF",
-"GothicCapitalG",
-"GothicCapitalJ",
-"GothicCapitalK",
-"GothicCapitalL",
-"GothicCapitalM",
-"GothicCapitalN",
-"GothicCapitalO",
-"GothicCapitalP",
-"GothicCapitalQ",
-"GothicCapitalS",
-"GothicCapitalT",
-"GothicCapitalU",
-"GothicCapitalV",
-"GothicCapitalW",
-"GothicCapitalX",
-"GothicCapitalY",
-"DoubleStruckCapitalA",
-"DoubleStruckCapitalB",
-"DoubleStruckCapitalC",
-"DoubleStruckCapitalD",
-"DoubleStruckCapitalE",
-"DoubleStruckCapitalF",
-"DoubleStruckCapitalG",
-"DoubleStruckCapitalH",
-"DoubleStruckCapitalI",
-"DoubleStruckCapitalJ",
-"DoubleStruckCapitalK",
-"DoubleStruckCapitalL",
-"DoubleStruckCapitalM",
-"DoubleStruckCapitalN",
-"DoubleStruckCapitalO",
-"DoubleStruckCapitalP",
-"DoubleStruckCapitalQ",
-"DoubleStruckCapitalR",
-"DoubleStruckCapitalS",
-"DoubleStruckCapitalT",
-"DoubleStruckCapitalU",
-"DoubleStruckCapitalV",
-"DoubleStruckCapitalW",
-"DoubleStruckCapitalX",
-"DoubleStruckCapitalY",
-"DoubleStruckCapitalZ",
-"TabKey",
-"SpaceKey",
-"DeleteKey",
-"AltKey",
-"OptionKey",
-"KeyBar",
-"EnterKey",
-"ShiftKey",
-"Mod1Key",
-"Mod2Key",
-"LongEqual",
-"ConstantC",
-"DoubleStruckZero",
-"DoubleStruckOne",
-"DoubleStruckTwo",
-"DoubleStruckThree",
-"DoubleStruckFour",
-"DoubleStruckFive",
-"DoubleStruckSix",
-"DoubleStruckSeven",
-"DoubleStruckEight",
-"DoubleStruckNine",
-"GothicZero",
-"GothicOne",
-"GothicTwo",
-"GothicThree",
-"GothicFour",
-"GothicFive",
-"GothicSix",
-"GothicSeven",
-"GothicEight",
-"GothicNine",
-"ScriptZero",
-"ScriptOne",
-"ScriptTwo",
-"ScriptThree",
-"ScriptFour",
-"ScriptFive",
-"ScriptSix",
-"ScriptSeven",
-"ScriptEight",
-"ScriptNine",
-"FirstPage",
-"LastPage",
+"DotlessJ" -> Letterlike, (* 0xf700 *)
+"Wolf" -> Letterlike, (* 0xf720 *)
+"FreakedSmiley" -> Letterlike, (* 0xf721 *)
+"NeutralSmiley" -> Letterlike, (* 0xf722 *)
+"LightBulb" -> Letterlike, (* 0xf723 *)
+"NumberSign" -> Letterlike, (* 0xf724 *)
+"WarningSign" -> Letterlike, (* 0xf725 *)
+"Villa" -> Letterlike, (* 0xf727 *)
+"Akuz" -> Letterlike, (* 0xf728 *)
+"Andy" -> Letterlike, (* 0xf729 *)
+"Spooky" -> Letterlike, (* 0xf72a *)
+"ScriptDotlessI" -> Letterlike, (* 0xf730 *)
+"ScriptDotlessJ" -> Letterlike, (* 0xf731 *)
+"DoubledPi" -> Letterlike, (* 0xf749 *)
+"DoubledGamma" -> Letterlike, (* 0xf74a *)
+"CapitalDifferentialD" -> Punctuation, (* 0xf74b *)
+"DifferentialD" -> Punctuation, (* 0xf74c *)
+"ExponentialE" -> Letterlike, (* 0xf74d *)
+"ImaginaryI" -> Letterlike, (* 0xf74e *)
+"ImaginaryJ" -> Letterlike, (* 0xf74f *)
+"FilledSmallCircle" -> Letterlike, (* 0xf750 *)
+"DottedSquare" -> Letterlike, (* 0xf751 *)
+"GraySquare" -> Letterlike, (* 0xf752 *)
+"GrayCircle" -> Letterlike, (* 0xf753 *)
+"LetterSpace" -> Letterlike, (* 0xf754 *)
+"DownBreve" -> Letterlike, (* 0xf755 *)
+"KernelIcon" -> Letterlike, (* 0xf756 *)
+"MathematicaIcon" -> Letterlike, (* 0xf757 *)
+"TripleDot" -> Letterlike, (* 0xf758 *)
+"SystemEnterKey" -> Letterlike, (* 0xf75f *)
+"AlignmentMarker" -> Space, (* 0xf760 *)
+"LeftSkeleton" -> Uninterpretable, (* 0xf761 *)
+"RightSkeleton" -> Uninterpretable, (* 0xf762 *)
+"ControlKey" -> Letterlike, (* 0xf763 *)
+"AliasDelimiter" -> Letterlike, (* 0xf764 *)
+"InvisibleComma" -> Comma, (* 0xf765 *)
+"ReturnKey" -> Letterlike, (* 0xf766 *)
+"ErrorIndicator" -> Uninterpretable, (* 0xf767 *)
+"AliasIndicator" -> Letterlike, (* 0xf768 *)
+"EscapeKey" -> Letterlike, (* 0xf769 *)
+"CommandKey" -> Letterlike, (* 0xf76a *)
+"LeftModified" -> Letterlike, (* 0xf76b *)
+"RightModified" -> Letterlike, (* 0xf76c *)
+"InvisibleApplication" -> Punctuation, (* 0xf76d *)
+"DiscretionaryLineSeparator" -> Newline, (* 0xf76e *)
+"DiscretionaryParagraphSeparator" -> Newline, (* 0xf76f *)
+"ScriptCapitalA" -> Letterlike, (* 0xf770 *)
+"ScriptCapitalC" -> Letterlike, (* 0xf772 *)
+"ScriptCapitalD" -> Letterlike, (* 0xf773 *)
+"ScriptCapitalG" -> Letterlike, (* 0xf776 *)
+"ScriptCapitalJ" -> Letterlike, (* 0xf779 *)
+"ScriptCapitalK" -> Letterlike, (* 0xf77a *)
+"ScriptCapitalN" -> Letterlike, (* 0xf77d *)
+"ScriptCapitalO" -> Letterlike, (* 0xf77e *)
+"ScriptCapitalP" -> Letterlike, (* 0xf77f *)
+"ScriptCapitalQ" -> Letterlike, (* 0xf780 *)
+"ScriptCapitalS" -> Letterlike, (* 0xf782 *)
+"ScriptCapitalT" -> Letterlike, (* 0xf783 *)
+"ScriptCapitalU" -> Letterlike, (* 0xf784 *)
+"ScriptCapitalV" -> Letterlike, (* 0xf785 *)
+"ScriptCapitalW" -> Letterlike, (* 0xf786 *)
+"ScriptCapitalX" -> Letterlike, (* 0xf787 *)
+"ScriptCapitalY" -> Letterlike, (* 0xf788 *)
+"ScriptCapitalZ" -> Letterlike, (* 0xf789 *)
+"GothicCapitalA" -> Letterlike, (* 0xf78a *)
+"GothicCapitalB" -> Letterlike, (* 0xf78b *)
+"GothicCapitalD" -> Letterlike, (* 0xf78d *)
+"GothicCapitalE" -> Letterlike, (* 0xf78e *)
+"GothicCapitalF" -> Letterlike, (* 0xf78f *)
+"GothicCapitalG" -> Letterlike, (* 0xf790 *)
+"GothicCapitalJ" -> Letterlike, (* 0xf793 *)
+"GothicCapitalK" -> Letterlike, (* 0xf794 *)
+"GothicCapitalL" -> Letterlike, (* 0xf795 *)
+"GothicCapitalM" -> Letterlike, (* 0xf796 *)
+"GothicCapitalN" -> Letterlike, (* 0xf797 *)
+"GothicCapitalO" -> Letterlike, (* 0xf798 *)
+"GothicCapitalP" -> Letterlike, (* 0xf799 *)
+"GothicCapitalQ" -> Letterlike, (* 0xf79a *)
+"GothicCapitalS" -> Letterlike, (* 0xf79c *)
+"GothicCapitalT" -> Letterlike, (* 0xf79d *)
+"GothicCapitalU" -> Letterlike, (* 0xf79e *)
+"GothicCapitalV" -> Letterlike, (* 0xf79f *)
+"GothicCapitalW" -> Letterlike, (* 0xf7a0 *)
+"GothicCapitalX" -> Letterlike, (* 0xf7a1 *)
+"GothicCapitalY" -> Letterlike, (* 0xf7a2 *)
+"DoubleStruckCapitalA" -> Letterlike, (* 0xf7a4 *)
+"DoubleStruckCapitalB" -> Letterlike, (* 0xf7a5 *)
+"DoubleStruckCapitalC" -> Letterlike, (* 0xf7a6 *)
+"DoubleStruckCapitalD" -> Letterlike, (* 0xf7a7 *)
+"DoubleStruckCapitalE" -> Letterlike, (* 0xf7a8 *)
+"DoubleStruckCapitalF" -> Letterlike, (* 0xf7a9 *)
+"DoubleStruckCapitalG" -> Letterlike, (* 0xf7aa *)
+"DoubleStruckCapitalH" -> Letterlike, (* 0xf7ab *)
+"DoubleStruckCapitalI" -> Letterlike, (* 0xf7ac *)
+"DoubleStruckCapitalJ" -> Letterlike, (* 0xf7ad *)
+"DoubleStruckCapitalK" -> Letterlike, (* 0xf7ae *)
+"DoubleStruckCapitalL" -> Letterlike, (* 0xf7af *)
+"DoubleStruckCapitalM" -> Letterlike, (* 0xf7b0 *)
+"DoubleStruckCapitalN" -> Letterlike, (* 0xf7b1 *)
+"DoubleStruckCapitalO" -> Letterlike, (* 0xf7b2 *)
+"DoubleStruckCapitalP" -> Letterlike, (* 0xf7b3 *)
+"DoubleStruckCapitalQ" -> Letterlike, (* 0xf7b4 *)
+"DoubleStruckCapitalR" -> Letterlike, (* 0xf7b5 *)
+"DoubleStruckCapitalS" -> Letterlike, (* 0xf7b6 *)
+"DoubleStruckCapitalT" -> Letterlike, (* 0xf7b7 *)
+"DoubleStruckCapitalU" -> Letterlike, (* 0xf7b8 *)
+"DoubleStruckCapitalV" -> Letterlike, (* 0xf7b9 *)
+"DoubleStruckCapitalW" -> Letterlike, (* 0xf7ba *)
+"DoubleStruckCapitalX" -> Letterlike, (* 0xf7bb *)
+"DoubleStruckCapitalY" -> Letterlike, (* 0xf7bc *)
+"DoubleStruckCapitalZ" -> Letterlike, (* 0xf7bd *)
+"TabKey" -> Letterlike, (* 0xf7be *)
+"SpaceKey" -> Letterlike, (* 0xf7bf *)
+"DeleteKey" -> Letterlike, (* 0xf7d0 *)
+"AltKey" -> Letterlike, (* 0xf7d1 *)
+"OptionKey" -> Letterlike, (* 0xf7d2 *)
+"KeyBar" -> Letterlike, (* 0xf7d3 *)
+"EnterKey" -> Letterlike, (* 0xf7d4 *)
+"ShiftKey" -> Letterlike, (* 0xf7d5 *)
+"Mod1Key" -> Letterlike, (* 0xf7d6 *)
+"Mod2Key" -> Letterlike, (* 0xf7d7 *)
+"LongEqual" -> Punctuation, (* 0xf7d9 *)
+"ConstantC" -> Letterlike, (* 0xf7da *)
+"DoubleStruckZero" -> Letterlike, (* 0xf7db *)
+"DoubleStruckOne" -> Letterlike, (* 0xf7dc *)
+"DoubleStruckTwo" -> Letterlike, (* 0xf7dd *)
+"DoubleStruckThree" -> Letterlike, (* 0xf7de *)
+"DoubleStruckFour" -> Letterlike, (* 0xf7df *)
+"DoubleStruckFive" -> Letterlike, (* 0xf7e0 *)
+"DoubleStruckSix" -> Letterlike, (* 0xf7e1 *)
+"DoubleStruckSeven" -> Letterlike, (* 0xf7e2 *)
+"DoubleStruckEight" -> Letterlike, (* 0xf7e3 *)
+"DoubleStruckNine" -> Letterlike, (* 0xf7e4 *)
+"GothicZero" -> Letterlike, (* 0xf7e5 *)
+"GothicOne" -> Letterlike, (* 0xf7e6 *)
+"GothicTwo" -> Letterlike, (* 0xf7e7 *)
+"GothicThree" -> Letterlike, (* 0xf7e8 *)
+"GothicFour" -> Letterlike, (* 0xf7e9 *)
+"GothicFive" -> Letterlike, (* 0xf7ea *)
+"GothicSix" -> Letterlike, (* 0xf7eb *)
+"GothicSeven" -> Letterlike, (* 0xf7ec *)
+"GothicEight" -> Letterlike, (* 0xf7ed *)
+"GothicNine" -> Letterlike, (* 0xf7ef *)
+"ScriptZero" -> Letterlike, (* 0xf7f0 *)
+"ScriptOne" -> Letterlike, (* 0xf7f1 *)
+"ScriptTwo" -> Letterlike, (* 0xf7f2 *)
+"ScriptThree" -> Letterlike, (* 0xf7f3 *)
+"ScriptFour" -> Letterlike, (* 0xf7f4 *)
+"ScriptFive" -> Letterlike, (* 0xf7f5 *)
+"ScriptSix" -> Letterlike, (* 0xf7f6 *)
+"ScriptSeven" -> Letterlike, (* 0xf7f7 *)
+"ScriptEight" -> Letterlike, (* 0xf7f8 *)
+"ScriptNine" -> Letterlike, (* 0xf7f9 *)
+"FirstPage" -> Letterlike, (* 0xf7fa *)
+"LastPage" -> Letterlike, (* 0xf7fb *)
+"NumberComma" -> Unsupported, (* 0xf7fc *)
 
 (*
 Range 0xf800
 *)
-"FormalA",
-"FormalB",
-"FormalC",
-"FormalD",
-"FormalE",
-"FormalF",
-"FormalG",
-"FormalH",
-"FormalI",
-"FormalJ",
-"FormalK",
-"FormalL",
-"FormalM",
-"FormalN",
-"FormalO",
-"FormalP",
-"FormalQ",
-"FormalR",
-"FormalS",
-"FormalT",
-"FormalU",
-"FormalV",
-"FormalW",
-"FormalX",
-"FormalY",
-"FormalZ",
-"FormalCapitalA",
-"FormalCapitalB",
-"FormalCapitalC",
-"FormalCapitalD",
-"FormalCapitalE",
-"FormalCapitalF",
-"FormalCapitalG",
-"FormalCapitalH",
-"FormalCapitalI",
-"FormalCapitalJ",
-"FormalCapitalK",
-"FormalCapitalL",
-"FormalCapitalM",
-"FormalCapitalN",
-"FormalCapitalO",
-"FormalCapitalP",
-"FormalCapitalQ",
-"FormalCapitalR",
-"FormalCapitalS",
-"FormalCapitalT",
-"FormalCapitalU",
-"FormalCapitalV",
-"FormalCapitalW",
-"FormalCapitalX",
-"FormalCapitalY",
-"FormalCapitalZ",
-"FormalCapitalAlpha",
-"FormalCapitalBeta",
-"FormalCapitalGamma",
-"FormalCapitalDelta",
-"FormalCapitalEpsilon",
-"FormalCapitalZeta",
-"FormalCapitalEta",
-"FormalCapitalTheta",
-"FormalCapitalIota",
-"FormalCapitalKappa",
-"FormalCapitalLambda",
-"FormalCapitalMu",
-"FormalCapitalNu",
-"FormalCapitalXi",
-"FormalCapitalOmicron",
-"FormalCapitalPi",
-"FormalCapitalRho",
-"FormalCapitalSigma",
-"FormalCapitalTau",
-"FormalCapitalUpsilon",
-"FormalCapitalPhi",
-"FormalCapitalChi",
-"FormalCapitalPsi",
-"FormalCapitalOmega",
-"FormalAlpha",
-"FormalBeta",
-"FormalGamma",
-"FormalDelta",
-"FormalCurlyEpsilon",
-"FormalZeta",
-"FormalEta",
-"FormalTheta",
-"FormalIota",
-"FormalKappa",
-"FormalLambda",
-"FormalMu",
-"FormalNu",
-"FormalXi",
-"FormalOmicron",
-"FormalPi",
-"FormalRho",
-"FormalFinalSigma",
-"FormalSigma",
-"FormalTau",
-"FormalUpsilon",
-"FormalCurlyPhi",
-"FormalChi",
-"FormalPsi",
-"FormalOmega",
-"FormalCurlyTheta",
-"FormalCurlyCapitalUpsilon",
-"FormalPhi",
-"FormalCurlyPi",
-"FormalCapitalStigma",
-"FormalStigma",
-"FormalCapitalDigamma",
-"FormalDigamma",
-"FormalCapitalKoppa",
-"FormalKoppa",
-"FormalCapitalSampi",
-"FormalSampi",
-"FormalCurlyKappa",
-"FormalCurlyRho",
-"FormalEpsilon",
+"FormalA" -> Letterlike, (* 0xf800 *)
+"FormalB" -> Letterlike, (* 0xf801 *)
+"FormalC" -> Letterlike, (* 0xf802 *)
+"FormalD" -> Letterlike, (* 0xf803 *)
+"FormalE" -> Letterlike, (* 0xf804 *)
+"FormalF" -> Letterlike, (* 0xf805 *)
+"FormalG" -> Letterlike, (* 0xf806 *)
+"FormalH" -> Letterlike, (* 0xf807 *)
+"FormalI" -> Letterlike, (* 0xf808 *)
+"FormalJ" -> Letterlike, (* 0xf809 *)
+"FormalK" -> Letterlike, (* 0xf80a *)
+"FormalL" -> Letterlike, (* 0xf80b *)
+"FormalM" -> Letterlike, (* 0xf80c *)
+"FormalN" -> Letterlike, (* 0xf80d *)
+"FormalO" -> Letterlike, (* 0xf80e *)
+"FormalP" -> Letterlike, (* 0xf80f *)
+"FormalQ" -> Letterlike, (* 0xf810 *)
+"FormalR" -> Letterlike, (* 0xf811 *)
+"FormalS" -> Letterlike, (* 0xf812 *)
+"FormalT" -> Letterlike, (* 0xf813 *)
+"FormalU" -> Letterlike, (* 0xf814 *)
+"FormalV" -> Letterlike, (* 0xf815 *)
+"FormalW" -> Letterlike, (* 0xf816 *)
+"FormalX" -> Letterlike, (* 0xf817 *)
+"FormalY" -> Letterlike, (* 0xf818 *)
+"FormalZ" -> Letterlike, (* 0xf819 *)
+"FormalCapitalA" -> Letterlike, (* 0xf81a *)
+"FormalCapitalB" -> Letterlike, (* 0xf81b *)
+"FormalCapitalC" -> Letterlike, (* 0xf81c *)
+"FormalCapitalD" -> Letterlike, (* 0xf81d *)
+"FormalCapitalE" -> Letterlike, (* 0xf81e *)
+"FormalCapitalF" -> Letterlike, (* 0xf81f *)
+"FormalCapitalG" -> Letterlike, (* 0xf820 *)
+"FormalCapitalH" -> Letterlike, (* 0xf821 *)
+"FormalCapitalI" -> Letterlike, (* 0xf822 *)
+"FormalCapitalJ" -> Letterlike, (* 0xf823 *)
+"FormalCapitalK" -> Letterlike, (* 0xf824 *)
+"FormalCapitalL" -> Letterlike, (* 0xf825 *)
+"FormalCapitalM" -> Letterlike, (* 0xf826 *)
+"FormalCapitalN" -> Letterlike, (* 0xf827 *)
+"FormalCapitalO" -> Letterlike, (* 0xf828 *)
+"FormalCapitalP" -> Letterlike, (* 0xf829 *)
+"FormalCapitalQ" -> Letterlike, (* 0xf82a *)
+"FormalCapitalR" -> Letterlike, (* 0xf82b *)
+"FormalCapitalS" -> Letterlike, (* 0xf82c *)
+"FormalCapitalT" -> Letterlike, (* 0xf82d *)
+"FormalCapitalU" -> Letterlike, (* 0xf82e *)
+"FormalCapitalV" -> Letterlike, (* 0xf82f *)
+"FormalCapitalW" -> Letterlike, (* 0xf830 *)
+"FormalCapitalX" -> Letterlike, (* 0xf831 *)
+"FormalCapitalY" -> Letterlike, (* 0xf832 *)
+"FormalCapitalZ" -> Letterlike, (* 0xf833 *)
+"FormalCapitalAlpha" -> Letterlike, (* 0xf834 *)
+"FormalCapitalBeta" -> Letterlike, (* 0xf835 *)
+"FormalCapitalGamma" -> Letterlike, (* 0xf836 *)
+"FormalCapitalDelta" -> Letterlike, (* 0xf837 *)
+"FormalCapitalEpsilon" -> Letterlike, (* 0xf838 *)
+"FormalCapitalZeta" -> Letterlike, (* 0xf839 *)
+"FormalCapitalEta" -> Letterlike, (* 0xf83a *)
+"FormalCapitalTheta" -> Letterlike, (* 0xf83b *)
+"FormalCapitalIota" -> Letterlike, (* 0xf83c *)
+"FormalCapitalKappa" -> Letterlike, (* 0xf83d *)
+"FormalCapitalLambda" -> Letterlike, (* 0xf83e *)
+"FormalCapitalMu" -> Letterlike, (* 0xf83f *)
+"FormalCapitalNu" -> Letterlike, (* 0xf840 *)
+"FormalCapitalXi" -> Letterlike, (* 0xf841 *)
+"FormalCapitalOmicron" -> Letterlike, (* 0xf842 *)
+"FormalCapitalPi" -> Letterlike, (* 0xf843 *)
+"FormalCapitalRho" -> Letterlike, (* 0xf844 *)
+"FormalCapitalSigma" -> Letterlike, (* 0xf846 *)
+"FormalCapitalTau" -> Letterlike, (* 0xf847 *)
+"FormalCapitalUpsilon" -> Letterlike, (* 0xf848 *)
+"FormalCapitalPhi" -> Letterlike, (* 0xf849 *)
+"FormalCapitalChi" -> Letterlike, (* 0xf84a *)
+"FormalCapitalPsi" -> Letterlike, (* 0xf84b *)
+"FormalCapitalOmega" -> Letterlike, (* 0xf84c *)
+"FormalAlpha" -> Letterlike, (* 0xf854 *)
+"FormalBeta" -> Letterlike, (* 0xf855 *)
+"FormalGamma" -> Letterlike, (* 0xf856 *)
+"FormalDelta" -> Letterlike, (* 0xf857 *)
+"FormalCurlyEpsilon" -> Letterlike, (* 0xf858 *)
+"FormalZeta" -> Letterlike, (* 0xf859 *)
+"FormalEta" -> Letterlike, (* 0xf85a *)
+"FormalTheta" -> Letterlike, (* 0xf85b *)
+"FormalIota" -> Letterlike, (* 0xf85c *)
+"FormalKappa" -> Letterlike, (* 0xf85d *)
+"FormalLambda" -> Letterlike, (* 0xf85e *)
+"FormalMu" -> Letterlike, (* 0xf85f *)
+"FormalNu" -> Letterlike, (* 0xf860 *)
+"FormalXi" -> Letterlike, (* 0xf861 *)
+"FormalOmicron" -> Letterlike, (* 0xf862 *)
+"FormalPi" -> Letterlike, (* 0xf863 *)
+"FormalRho" -> Letterlike, (* 0xf864 *)
+"FormalFinalSigma" -> Letterlike, (* 0xf865 *)
+"FormalSigma" -> Letterlike, (* 0xf866 *)
+"FormalTau" -> Letterlike, (* 0xf867 *)
+"FormalUpsilon" -> Letterlike, (* 0xf868 *)
+"FormalCurlyPhi" -> Letterlike, (* 0xf869 *)
+"FormalChi" -> Letterlike, (* 0xf86a *)
+"FormalPsi" -> Letterlike, (* 0xf86b *)
+"FormalOmega" -> Letterlike, (* 0xf86c *)
+"FormalCurlyTheta" -> Letterlike, (* 0xf874 *)
+"FormalCurlyCapitalUpsilon" -> Letterlike, (* 0xf875 *)
+"FormalPhi" -> Letterlike, (* 0xf878 *)
+"FormalCurlyPi" -> Letterlike, (* 0xf879 *)
+"FormalCapitalStigma" -> Letterlike, (* 0xf87d *)
+"FormalStigma" -> Letterlike, (* 0xf87e *)
+"FormalCapitalDigamma" -> Letterlike, (* 0xf87f *)
+"FormalDigamma" -> Letterlike, (* 0xf880 *)
+"FormalCapitalKoppa" -> Letterlike, (* 0xf881 *)
+"FormalKoppa" -> Letterlike, (* 0xf882 *)
+"FormalCapitalSampi" -> Letterlike, (* 0xf883 *)
+"FormalSampi" -> Letterlike, (* 0xf884 *)
+"FormalCurlyKappa" -> Letterlike, (* 0xf885 *)
+"FormalCurlyRho" -> Letterlike, (* 0xf886 *)
+"FormalEpsilon" -> Letterlike, (* 0xf88a *)
 
 (*
 Range 0xfb00
 *)
-"FiLigature",
-"FlLigature",
+"FiLigature" -> Letterlike, (* 0xfb01 *)
+"FlLigature" -> Letterlike, (* 0xfb02 *)
 
 (*
 Range 0xfe00
 *)
-"OverParenthesis",
-"UnderParenthesis",
-"OverBrace",
-"UnderBrace",
+"OverParenthesis" -> Letterlike, (* 0xfe35 *)
+"UnderParenthesis" -> Letterlike, (* 0xfe36 *)
+"OverBrace" -> Letterlike, (* 0xfe37 *)
+"UnderBrace" -> Letterlike, (* 0xfe38 *)
 
 (*
 Range 0xff00
 *)
-"UnknownGlyph",
+"UnknownGlyph" -> Letterlike, (* 0xfffd *)
 
 Nothing
 
-}
-
+|>

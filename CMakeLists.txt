@@ -19,6 +19,7 @@ set(WL_SOURCES
 	${CMAKE_SOURCE_DIR}/AST/Kernel/Abstract.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/AST.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/Boxes.wl
+	${CMAKE_SOURCE_DIR}/AST/Kernel/Build.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/DeclarationName.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/Node.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/Symbol.wl
@@ -32,14 +33,9 @@ set(PACLETINFO_SOURCE
 )
 
 set(WL_DATA_SOURCES
-	${CMAKE_SOURCE_DIR}/tables/CommaLongNames.wl
 	${CMAKE_SOURCE_DIR}/tables/LongNames.wl
-	${CMAKE_SOURCE_DIR}/tables/NewlineLongNames.wl
-	${CMAKE_SOURCE_DIR}/tables/OperatorLongNames.wl
 	${CMAKE_SOURCE_DIR}/tables/Precedence.wl
-	${CMAKE_SOURCE_DIR}/tables/SpaceLongNames.wl
 	${CMAKE_SOURCE_DIR}/tables/TokenEnum.wl
-	${CMAKE_SOURCE_DIR}/tables/UninterpretableLongNames.wl
 )
 
 set(GENERATED_WL_SOURCES
@@ -246,6 +242,7 @@ set(MAX_PRECISION_LENGTH 6 CACHE STRING "Maximum length of precision allowed by 
 set(MAX_ACCURACY_LENGTH 6 CACHE STRING "Maximum length of accuracy allowed by the parser")
 set(MAX_SYMBOL_LENGTH 1000000 CACHE STRING "Maximum length of symbols allowed by the parser")
 set(MAX_STRING_LENGTH 1000000 CACHE STRING "Maximum length of strings allowed by the parser")
+set(MAX_LONGNAME_LENGTH 20 CACHE STRING "Maximum length of long names allowed by the parser")
 
 message(STATUS "MAX_EXPRESSION_DEPTH: ${MAX_EXPRESSION_DEPTH}")
 message(STATUS "MAX_EXPRESSION_BREADTH: ${MAX_EXPRESSION_BREADTH}")
@@ -254,6 +251,7 @@ message(STATUS "MAX_PRECISION_LENGTH: ${MAX_PRECISION_LENGTH}")
 message(STATUS "MAX_ACCURACY_LENGTH: ${MAX_ACCURACY_LENGTH}")
 message(STATUS "MAX_SYMBOL_LENGTH: ${MAX_SYMBOL_LENGTH}")
 message(STATUS "MAX_STRING_LENGTH: ${MAX_STRING_LENGTH}")
+message(STATUS "MAX_LONGNAME_LENGTH: ${MAX_LONGNAME_LENGTH}")
 
 target_compile_definitions(ast-lib
 	PRIVATE MAX_EXPRESSION_DEPTH=${MAX_EXPRESSION_DEPTH}
@@ -263,6 +261,7 @@ target_compile_definitions(ast-lib
 	PRIVATE MAX_ACCURACY_LENGTH=${MAX_ACCURACY_LENGTH}
 	PRIVATE MAX_SYMBOL_LENGTH=${MAX_SYMBOL_LENGTH}
 	PRIVATE MAX_STRING_LENGTH=${MAX_STRING_LENGTH}
+	PRIVATE MAX_LONGNAME_LENGTH=${MAX_LONGNAME_LENGTH}
 )
 
 set_target_properties(ast-lib PROPERTIES

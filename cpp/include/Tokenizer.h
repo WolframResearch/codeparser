@@ -7,7 +7,9 @@
 
 struct TokenizerContext {
     //
-    // If inside #, then give syntax warnings for #"123" and #a`b syntax (which are undocumented)
+    // If inside #, then give syntax warnings for #"123" and #a`b syntax (which is undocumented syntax)
+    //
+    // But obviously "123" and a`b are fine outside of #
     //
     bool SlotFlag;
     
@@ -16,7 +18,20 @@ struct TokenizerContext {
     //
     // This behavior can be controlled with this flag.
     //
+    // This is used inside linear syntax.
+    //
     bool EnableStringifyNextToken;
+    
+    //
+    //
+    //
+    bool StringifyCurrentLine;
+    
+    
+    TokenizerContext() : SlotFlag(false), EnableStringifyNextToken(true), StringifyCurrentLine(false) {}
+    
+    TokenizerContext(bool SlotFlag, bool EnableStringifyNextToken, bool StringifyCurrentLine) : SlotFlag(SlotFlag), EnableStringifyNextToken(EnableStringifyNextToken), StringifyCurrentLine(StringifyCurrentLine) {}
+    
 };
 
 //
@@ -27,12 +42,10 @@ class Tokenizer {
     bool stringifyNextToken_symbol;
     bool stringifyNextToken_file;
     Token cur;
-    bool currentCached;
 
-    std::vector<std::pair<WLCharacter, SourceLocation>> characterQueue;
-    
     WLCharacter _currentWLCharacter;
-    SourceLocation _currentSourceLocation;
+    
+    std::vector<std::pair<WLCharacter, Source>> characterQueue;
 
     std::ostringstream String;
 
@@ -58,10 +71,11 @@ class Tokenizer {
     
     Token handleDot(TokenizerContext Ctxt);
 
+    void enqueue(WLCharacter, Source);
+    
     WLCharacter nextWLCharacter(NextCharacterPolicy policy = TOPLEVEL);
 
-    WLCharacter currentWLCharacter();
-    void setCurrentWLCharacter(WLCharacter, SourceLocation);
+    WLCharacter currentWLCharacter() const;
     
 public:
     Tokenizer();
@@ -71,11 +85,11 @@ public:
 
     Token nextToken(TokenizerContext Ctxt);
     
-    Token currentToken();
+    Token currentToken() const;
     
-    std::string getString();
+    std::string getString() const;
 
-    std::vector<SyntaxIssue> getIssues();
+    std::vector<SyntaxIssue> getIssues() const;
 };
 
 extern Tokenizer *TheTokenizer;

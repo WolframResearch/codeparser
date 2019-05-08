@@ -5,60 +5,30 @@ The token enum
 *)
 <|
 Token`Unknown -> 0,
-Token`EOF -> Next,
-Token`Comment -> Next,
+Token`EndOfFile -> Next,
 Token`Symbol -> Next,
 Token`String -> Next,
 Token`Integer -> Next,
 Token`Real -> Next,
+Token`Comment -> Next,
 Token`Newline -> Next,
 Token`WhiteSpace -> Next,
 
 (* errors *)
 Token`Error`First -> Next,
 Token`Error`Unknown -> Token`Error`First,
-
-(*
-a ~b
-*)
-Token`Error`ExpectedTilde -> Next,
-
-(*
-a /: b
-*)
-Token`Error`ExpectedSet -> Next,
-
-(*
-a ^:
-*)
 Token`Error`ExpectedEqual -> Next,
-
-(*
-Any weird unhandled escaped characters
-*)
 Token`Error`UnhandledCharacter -> Next,
 Token`Error`ExpectedDigitOrAlpha -> Next,
-Token`Error`ExpectedAlphaOrDollar -> Next,
-
-(*
-1:2
-*)
-Token`Error`ExpectedSymbol -> Next,
+Token`Error`ExpectedLetterlike -> Next,
 Token`Error`UnterminatedComment -> Next,
 Token`Error`UnterminatedString -> Next,
 Token`Error`InvalidBase -> Next,
 Token`Error`ExpectedAccuracy -> Next,
 Token`Error`ExpectedExponent -> Next,
-
-(*
-a::
-*)
 Token`Error`EmptyString -> Next,
-Token`Error`Rest -> Next,
-Token`Error`Internal -> Next,
 Token`Error`End -> Next,
 
-Token`First -> Next,
 (* 1 character tokens *)
 Token`Dot -> Next, (* . *)
 Token`Colon -> Next, (* : *)
@@ -128,6 +98,7 @@ Token`CaretEqual -> Next, (* ^= *)
 Token`HashHash -> Next, (* ## *)
 Token`BangEqual -> Next, (* != *)
 Token`BangBang -> Next, (* !! *)
+Token`QuestionQuestion -> Next, (* ?? *)
 
 (* 3 character tokens *)
 Token`DotDotDot -> Next, (* ... *)
@@ -157,16 +128,53 @@ Token`LinearSyntax`Amp -> Next, (* \& *)
 Token`LinearSyntax`Space -> Next, (* \<space> *)
 
 (* Fake tokens *)
+
 (* implicit times operator *)
 Token`Fake`ImplicitTimes -> Next,
+
 (* A colon operator that is sym:pat, COLON operator is not used, it is ambiguous *)
 Token`Fake`PatternColon -> Next,
 (* A colon operator that is pat:val, COLON operator is not used, it is ambiguous *)
 Token`Fake`OptionalColon -> Next,
+
 (* Not used, but needed for sanity checks *)
 Token`Fake`EqualDot -> Next,
 
-Token`End -> Next,
+(* missing } *)
+Token`Fake`MissingCloseCurly -> Next,
+
+(* missing |> *)
+Token`Fake`MissingBarGreater -> Next,
+
+(* missing \[RightAngleBracket] *)
+Token`Fake`LongName`MissingRightAngleBracket -> Next,
+
+(* missing \[RightCeiling] *)
+Token`Fake`LongName`MissingRightCeiling -> Next,
+
+(* missing \[RightFloor] *)
+Token`Fake`LongName`MissingRightFloor -> Next,
+
+(* missing \[RightDoubleBracket] *)
+Token`Fake`LongName`MissingRightDoubleBracket -> Next,
+
+(* missing ] *)
+Token`Fake`MissingCloseSquare -> Next,
+
+(* missing \[RightBracketingBar] *)
+Token`Fake`LongName`MissingRightBracketingBar -> Next,
+
+(* missing \[RightDoubleBracketingBar] *)
+Token`Fake`LongName`MissingRightDoubleBracketingBar -> Next,
+
+(* missing \[RightDoubleBracketingBar] *)
+Token`Fake`LongName`MissingRightAssociation -> Next,
+
+(* missing ) *)
+Token`Fake`MissingCloseParen -> Next,
+
+(* missing \) *)
+Token`Fake`LinearSyntax`MissingCloseParen -> Next,
 
 Nothing
 |>

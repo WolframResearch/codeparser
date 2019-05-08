@@ -3,9 +3,7 @@
 
 #include <cassert>
 
-ByteEncoder::ByteEncoder() {}
-
-std::vector<unsigned char> ByteEncoder::encodeBytes(int val) {
+void ByteEncoder::encodeBytes(std::ostream& stream, int val) {
 
     assert(val >= 0);
 
@@ -17,7 +15,7 @@ std::vector<unsigned char> ByteEncoder::encodeBytes(int val) {
 
         auto firstByte = static_cast<unsigned char>(((val >> 0) & 0x7f) | 0x00);
 
-        return { firstByte };
+        stream << firstByte;
 
     } else if (val <= 0x7ff) {
 
@@ -28,7 +26,8 @@ std::vector<unsigned char> ByteEncoder::encodeBytes(int val) {
         auto firstByte = static_cast<unsigned char>(((val >> 6) & 0x1f) | 0xc0);
         auto secondByte = static_cast<unsigned char>(((val >> 0) & 0x3f) | 0x80);
         
-        return { firstByte, secondByte };
+        stream << firstByte;
+        stream << secondByte;
 
     } else if (val <= 0xffff) {
 
@@ -40,7 +39,9 @@ std::vector<unsigned char> ByteEncoder::encodeBytes(int val) {
         auto secondByte = static_cast<unsigned char>(((val >> 6) & 0x3f) | 0x80);
         auto thirdByte = static_cast<unsigned char>(((val >> 0) & 0x3f) | 0x80);
         
-        return { firstByte, secondByte, thirdByte };
+        stream << firstByte;
+        stream << secondByte;
+        stream << thirdByte;
         
     } else if (val <= 0x10ffff) {
 
@@ -53,11 +54,13 @@ std::vector<unsigned char> ByteEncoder::encodeBytes(int val) {
         auto thirdByte = static_cast<unsigned char>(((val >> 6) & 0x3f) | 0x80);
         auto fourthByte = static_cast<unsigned char>(((val >> 0) & 0x3f) | 0x80);
         
-        return { firstByte, secondByte, thirdByte, fourthByte };
+        stream << firstByte;
+        stream << secondByte;
+        stream << thirdByte;
+        stream << fourthByte;
         
     } else {
         assert(false);
-        return {};
     }
 
 }

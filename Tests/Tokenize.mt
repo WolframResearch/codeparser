@@ -8,7 +8,7 @@ Comments
 Test[
 	TokenizeString["(* \\.28\\.2a *)"]
 	,
-	{TokenNode[Token`Comment, "(* \\[RawLeftParenthesis]\\[RawStar] *)", <|Source -> {{1, 1}, {1, 14}}|>]}
+	{TokenNode[Token`Comment, "(* \\.28\\.2a *)", <|Source -> {{1, 1}, {1, 14}}|>]}
 	,
 	TestID->"Tokenize-20181208-O3D5M5"
 ]
@@ -42,24 +42,4 @@ Test[
 
 
 
-
-(*
-
-Tokenize File
-
-*)
-
-sample = FileNameJoin[{DirectoryName[$CurrentTestSource], "sample.wl"}]
-
-Test[
-	TokenizeFile[sample]
-	,
-	{TokenNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 0}}|>], 
- TokenNode[Token`Integer, "1", <|Source -> {{2, 1}, {2, 1}}|>], 
- TokenNode[Token`Plus, "+", <|Source -> {{2, 2}, {2, 2}}|>], 
- TokenNode[Token`Integer, "1", <|Source -> {{2, 3}, {2, 3}}|>], 
- TokenNode[Token`Newline, "\n", <|Source -> {{3, 0}, {3, 0}}|>]}
-	,
-	TestID->"Tokenize-20181230-Q3C4N0"
-]
 

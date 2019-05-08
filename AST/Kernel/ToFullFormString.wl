@@ -10,12 +10,18 @@ ToFullFormString is intended for abstract syntax trees
 *)
 
 ToFullFormString[ast_] :=
+Catch[
+Module[{str},
 Block[{$RecursionLimit = Infinity},
-	StringJoin[toFullFormString[ast]]
-]
+	str = toFullFormString[ast];
+	If[FailureQ[str],
+		Throw[str]
+	];
+	StringJoin[str]
+]]]
 
 
-toFullFormString[SymbolNode[str_, _, _]] :=
+toFullFormString[SymbolNode[Symbol, str_, _]] :=
 	str
 
 (*
@@ -23,7 +29,7 @@ strings may not originally be quoted, a::b
 
 But they become quoted when they are abstracted
 *)
-toFullFormString[node:StringNode[str_, _, _]] :=
+toFullFormString[node:StringNode[String, str_, _]] :=
 Catch[
 	If[!StringStartsQ[str, "\""],
 		Throw[Failure["InternalUnhandled", <|"Function"->ToFullFormString, "Arguments"->HoldForm[{node}]|>]]
@@ -31,10 +37,10 @@ Catch[
 	str
 ]
 
-toFullFormString[IntegerNode[str_, _, _]] :=
+toFullFormString[IntegerNode[Integer, str_, _]] :=
 	str
 
-toFullFormString[RealNode[str_, _, _]] :=
+toFullFormString[RealNode[Real, str_, _]] :=
 	str
 
 toFullFormString[CallNode[head_, nodes_, _]] :=
@@ -69,8 +75,12 @@ toFullFormString[g:GroupNode[GroupLinearSyntaxParen, _, _]] :=
 toFullFormString[FileNode[File, nodes_, opts_]] :=
 Catch[
 Module[{nodeStrs},
-	nodeStrs = toFullFormString /@ nodes;
-	nodeStrs = Flatten[nodeStrs];
+	If[empty[nodes],
+		nodeStrs = {"Null"}
+		,
+		nodeStrs = toFullFormString /@ nodes;
+		nodeStrs = Flatten[nodeStrs];
+	];
 	If[AnyTrue[nodeStrs, FailureQ],
 		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];
@@ -80,8 +90,12 @@ Module[{nodeStrs},
 toFullFormString[HoldNode[Hold, nodes_, opts_]] :=
 Catch[
 Module[{nodeStrs},
-	nodeStrs = toFullFormString /@ nodes;
-	nodeStrs = Flatten[nodeStrs];
+	If[empty[nodes],
+		nodeStrs = {"Null"}
+		,
+		nodeStrs = toFullFormString /@ nodes;
+		nodeStrs = Flatten[nodeStrs];
+	];
 	If[AnyTrue[nodeStrs, FailureQ],
 		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];

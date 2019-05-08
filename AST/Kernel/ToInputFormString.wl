@@ -15,53 +15,126 @@ Block[{$RecursionLimit = Infinity},
 ]
 
 
-toInputFormString[SymbolNode[str_, _, _]] :=
+toInputFormString[SymbolNode[Symbol, str_, _]] :=
 	str
 
-toInputFormString[StringNode[str_, _, _]] :=
+toInputFormString[StringNode[String, str_, _]] :=
 	str
 
-toInputFormString[IntegerNode[str_, _, _]] :=
+toInputFormString[IntegerNode[Integer, str_, _]] :=
 	str
 
-toInputFormString[RealNode[str_, _, _]] :=
+toInputFormString[RealNode[Real, str_, _]] :=
 	str
 
-toInputFormString[SlotNode[str_, _, _]] :=
+toInputFormString[SlotNode[Slot, str_, _]] :=
 	str
 
-toInputFormString[SlotSequenceNode[str_, _, _]] :=
+toInputFormString[SlotSequenceNode[SlotSequence, str_, _]] :=
 	str
 
-toInputFormString[OutNode[str_, _, _]] :=
+toInputFormString[OutNode[Out, str_, _]] :=
+	str
+
+toInputFormString[OptionalDefaultNode[OptionalDefault, str_, _]] :=
+	str
+
+(*
+special case ImplicitTimes to fill in " " for the operators
+*)
+toInputFormString[TokenNode[Token`Fake`ImplicitTimes, _,  _]] :=
+	" "
+
+(*
+special case Plus to fix stringifying  1.2` + 3  as  1.2`+3
+*)
+toInputFormString[TokenNode[Token`Plus, _, _]] :=
+	" + "
+
+(*
+special case Minus to fix stringifying  1.2` - 3  as  1.2`-3
+*)
+toInputFormString[TokenNode[Token`Minus, _, _]] :=
+	" - "
+
+(*
+special case Dot to fix stringifying  c_ . _LinearSolve  as  c_._LinearSolve
+*)
+toInputFormString[TokenNode[Token`Dot, _, _]] :=
+	" . "
+
+(*
+special case DotDot to fix stringifying  0. .. as 0...
+*)
+toInputFormString[TokenNode[Token`DotDot, _, _]] :=
+	" .."
+
+(*
+special case DotDot to fix stringifying  0. ... as 0....
+*)
+toInputFormString[TokenNode[Token`DotDotDot, _, _]] :=
+	" ..."
+
+(*
+special case SlashDot to fix stringifying  x /. 0 as x/.0
+*)
+toInputFormString[TokenNode[Token`SlashDot, _, _]] :=
+	" /. "
+
+(*
+special case Dot to fix stringifying  x //. 0 as x//.0
+*)
+toInputFormString[TokenNode[Token`SlashSlashDot, _, _]] :=
+	" //. "
+
+
+
+toInputFormString[TokenNode[_, str_, _]] :=
+	str
+
+(*
+special case for a; ;, which is   a Semi InternalNullNode Semi
+*)
+toInputFormString[InternalNullNode[Null, str_, _]] :=
+	" "
+
+toInputFormString[InternalAllNode[All, str_, _]] :=
+	str
+
+toInputFormString[InternalOneNode[1, str_, _]] :=
 	str
 
 
 
 
-toInputFormString[PrefixNode[op_, {operand_}, _]] :=
+
+
+
+
+
+
+toInputFormString[PrefixNode[op_, nodes_, _]] :=
 Catch[
-Module[{os},
-	os = toInputFormString[operand];
-	If[FailureQ[op],
-		Throw[op]
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];
-	StringJoin[SymbolToPrefixOperatorString[op], os]
+	StringJoin[" ", nodeStrs, " "]
 ]]
 
-toInputFormString[BinaryNode[op_, {left_, right_}, _]] :=
+toInputFormString[BinaryNode[op_, nodes_, _]] :=
 Catch[
-Module[{ls, rs},
-	ls = toInputFormString[left];
-	If[FailureQ[ls],
-		Throw[ls]
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];
-	rs = toInputFormString[right];
-	If[FailureQ[rs],
-		Throw[rs]
-	];
-	StringJoin[ls, SymbolToBinaryOperatorString[op], rs]
+	StringJoin[" ", nodeStrs, " "]
 ]]
+
+
+
 
 
 toInputFormString[InfixNode[op_, nodes_, _]] :=
@@ -71,53 +144,30 @@ Module[{nodeStrs},
 	If[AnyTrue[nodeStrs, FailureQ],
 		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];
-	StringJoin[Riffle[nodeStrs, SymbolToInfixOperatorString[op]]]
+	StringJoin[" ", nodeStrs, " "]
 ]]
-
-
-(* -a *)
-toInputFormString[InfixNode[Times, {IntegerNode["-1", {}, _], op_}, opts_]] :=
-Catch[
-Module[{opStr},
-	opStr = toInputFormString[op];
-	If[FailureQ[opStr],
-		Throw[opStr]
-	];
-	StringJoin["-", opStr]
-]]
-
-toInputFormString[InfixNode[Times, {RealNode["-1", {}, _], op_}, opts_]] :=
-Catch[
-Module[{opStr},
-	opStr = toInputFormString[op];
-	If[FailureQ[opStr],
-		Throw[opStr]
-	];
-	StringJoin["-", opStr]
-]]
-
 
 
 
 toInputFormString[TernaryNode[op_, nodes_, data_]] :=
 Catch[
-Module[{pair = SymbolToTernaryPair[op], nodeStrs},
+Module[{nodeStrs},
 	nodeStrs = toInputFormString /@ nodes;
 	If[AnyTrue[nodeStrs, FailureQ],
 		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];
-	StringJoin[Riffle[nodeStrs, {SymbolToTernaryOperatorString[pair[[1]]], SymbolToTernaryOperatorString[pair[[2]]]}]]
+	StringJoin[" ", nodeStrs, " "]
 ]]
 
 
-toInputFormString[PostfixNode[op_, {operand_}, data_]] :=
+toInputFormString[PostfixNode[op_, nodes_, data_]] :=
 Catch[
-Module[{opStr},
-	opStr = toInputFormString[operand];
-	If[FailureQ[opStr],
-		Throw[opStr]
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];
-	StringJoin[opStr, SymbolToPostfixOperatorString[op]]
+	StringJoin[" ", nodeStrs, " "]
 ]]
 
 (*
@@ -127,195 +177,31 @@ only ever has 1 arg for a Call: i.e. CallNode[head, {GroupNode[GroupSquare, {arg
 If you see an unevaluated toInputFormString[CallNode[head, {arg1, arg2}]], then
 that is abstract syntax
 *)
-toInputFormString[CallNode[op_, {node_}, data_]] :=
+toInputFormString[CallNode[op_, nodes_, data_]] :=
 Catch[
-Module[{opStr, ns},
+Module[{opStr},
 	opStr = toInputFormString[op];
 	If[FailureQ[opStr],
 		Throw[opStr]
 	];
-	ns = toInputFormString[node];
-	If[FailureQ[ns],
-		Throw[ns]
+	nodeStrs = toInputFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];
-	StringJoin[opStr, ns]
+	StringJoin[opStr, nodeStrs]
 ]]
 
 toInputFormString[GroupNode[op_, nodes_, data_]] :=
 Catch[
-Module[{pair = SymbolToGroupPair[op], ns},
-	ns = toInputFormString /@ nodes;
-	If[AnyTrue[ns, FailureQ],
-		Throw[SelectFirst[ns, FailureQ]]
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];
-	StringJoin[pair[[1]], ns, pair[[2]]]
+	StringJoin[nodeStrs]
 ]]
 
-
-
-
-
-toInputFormString[BlankNode[Blank, {}, _]] :=
-	"_"
-
-toInputFormString[BlankNode[Blank, {sym2_}, _]] :=
-Catch[
-Module[{str},
-	str = toInputFormString[sym2];
-	If[FailureQ[str],
-		Throw[str]
-	];
-	StringJoin["_", str]
-]]
-
-toInputFormString[BlankSequenceNode[BlankSequence, {}, _]] :=
-	"__"
-
-toInputFormString[BlankSequenceNode[BlankSequence, {sym2_}, _]] :=
-Catch[
-Module[{str},
-	str = toInputFormString[sym2];
-	If[FailureQ[str],
-		Throw[str]
-	];
-	StringJoin["__", str]
-]]
-
-toInputFormString[BlankNullSequenceNode[BlankNullSequence, {}, _]] :=
-	"___"
-
-toInputFormString[BlankNullSequenceNode[BlankNullSequence, {sym2_}, _]] :=
-Catch[
-Module[{str},
-	str = toInputFormString[sym2];
-	If[FailureQ[str],
-		Throw[str]
-	];
-	StringJoin["___", str]
-]]
-
-toInputFormString[OptionalDefaultNode[OptionalDefault, {}, _]] :=
-	"_."
-
-toInputFormString[PatternBlankNode[PatternBlank, {sym1_}, _]] :=
-Catch[
-Module[{str},
-	str = toInputFormString[sym1];
-	If[FailureQ[str],
-		Throw[str]
-	];
-	StringJoin[str, "_"]
-]]
-
-toInputFormString[PatternBlankNode[PatternBlank, {sym1_, sym2_}, _]] :=
-Catch[
-Module[{str1, str2},
-	str1 = toInputFormString[sym1];
-	If[FailureQ[str1],
-		Throw[str1]
-	];
-	str2 = toInputFormString[sym2];
-	If[FailureQ[str2],
-		Throw[str2]
-	];
-	StringJoin[str1, "_", str2]
-]]
-
-toInputFormString[PatternBlankSequenceNode[PatternBlankSequence, {sym1_}, _]] :=
-Catch[
-Module[{str},
-	str = toInputFormString[sym1];
-	If[FailureQ[str],
-		Throw[str]
-	];
-	StringJoin[str, "__"]
-]]
-
-toInputFormString[PatternBlankSequenceNode[PatternBlankSequence, {sym1_, sym2_}, _]] :=
-Catch[
-Module[{str1, str2},
-	str1 = toInputFormString[sym1];
-	If[FailureQ[str1],
-		Throw[str1]
-	];
-	str2 = toInputFormString[sym2];
-	If[FailureQ[str2],
-		Throw[str2]
-	];
-	StringJoin[str1, "__", str2]
-]]
-
-toInputFormString[PatternBlankNullSequenceNode[PatternBlankNullSequence, {sym1_}, _]] :=
-Catch[
-Module[{str},
-	str = toInputFormString[sym1];
-	If[FailureQ[str],
-		Throw[str]
-	];
-	StringJoin[str, "___"]
-]]
-
-toInputFormString[PatternBlankNullSequenceNode[PatternBlankNullSequence, {sym1_, sym2_}, _]] :=
-Catch[
-Module[{str1, str2},
-	str1 = toInputFormString[sym1];
-	If[FailureQ[str1],
-		Throw[str1]
-	];
-	str2 = toInputFormString[sym2];
-	If[FailureQ[str2],
-		Throw[str2]
-	];
-	StringJoin[str1, "___", str2]
-]]
-
-toInputFormString[OptionalDefaultPatternNode[OptionalDefaultPattern, {sym1_}, _]] :=
-Catch[
-Module[{str},
-	str = toInputFormString[sym1];
-	If[FailureQ[str],
-		Throw[str]
-	];
-	StringJoin[str, "_."]
-]]
-
-
-	
-
-toInputFormString[TokenNode[_, str_, _]] :=
-	str
-
-
-
-(*
-InternalAllNode
-InternalDotNode
-InternalNullNode
-InternalOneNode
-
-all represent input that was skipped, so InputForm is ""
-*)
-
-toInputFormString[InternalAllNode[All, _, _]] :=
-	""
-
-toInputFormString[InternalDotNode[Dot, _, _]] :=
-	""
-
-toInputFormString[InternalNullNode[Null, _, _]] :=
-	""
-
-toInputFormString[InternalOneNode[1, _, _]] :=
-	""
-
-
-toInputFormString[CommentNode[str_, _, _]] :=
-	str
-
-
-
-
-toInputFormString[SyntaxErrorNode[tok_, nodes_, data_]] :=
+toInputFormString[PrefixBinaryNode[op_, nodes_, data_]] :=
 Catch[
 Module[{nodeStrs},
 	nodeStrs = toInputFormString /@ nodes;
@@ -326,6 +212,114 @@ Module[{nodeStrs},
 ]]
 
 
+
+
+
+
+toInputFormString[BlankNode[Blank, nodes_, _]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[nodeStrs]
+]]
+
+toInputFormString[BlankSequenceNode[BlankSequence, nodes_, _]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[nodeStrs]
+]]
+
+toInputFormString[BlankNullSequenceNode[BlankNullSequence, nodes_, _]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[nodeStrs]
+]]
+
+toInputFormString[PatternBlankNode[PatternBlank, nodes_, _]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[nodeStrs]
+]]
+
+toInputFormString[PatternBlankSequenceNode[PatternBlankSequence, nodes_, _]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[nodeStrs]
+]]
+
+toInputFormString[PatternBlankNullSequenceNode[PatternBlankNullSequence, nodes_, _]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[nodeStrs]
+]]
+
+toInputFormString[OptionalDefaultPatternNode[OptionalDefaultPattern, nodes_, _]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[nodeStrs]
+]]
+
+
+
+
+
+
+toInputFormString[SyntaxErrorNode[tag_, nodes_, data_]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[" ", nodeStrs, " "]
+]]
+
+toInputFormString[GroupMissingCloserNode[op_, nodes_, data_]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[nodeStrs]
+]]
+
+toInputFormString[GroupMissingOpenerNode[op_, nodes_, data_]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[nodeStrs]
+]]
 
 
 
@@ -345,24 +339,13 @@ Module[{nodeStrs},
 
 
 toInputFormString[HoldNode[Hold, nodes_, data_]] :=
-Module[{x, lastNonCommentIndex, processed},
-	x = 1;
-	lastNonCommentIndex = 0;
-	processed = (If[Head[#] === CommentNode,
-        x++;
-        #
-        ,
-        lastNonCommentIndex = x;
-        (* will be adding the node and the comma *)
-        x += 2;
-        {#, TokenNode[Token`Comma, ",", <||>]}
-        ])& /@ nodes;
-	processed = Flatten[processed];
-	(* remove the trailing comma *)
-	If[lastNonCommentIndex > 0,
-		processed = Delete[processed, lastNonCommentIndex + 1];
-	];
-	toInputFormString[CallNode[SymbolNode["Hold", {}, <||>], { GroupNode[GroupSquare, processed, <||>] }, <||>]]
+Module[{processed},
+	processed = Riffle[nodes, TokenNode[Token`Comma, ",", <||>]];
+	toInputFormString[CallNode[SymbolNode[Symbol, "Hold", <||>], {
+								GroupNode[GroupSquare, {
+									TokenNode[Token`OpenSquare, "[", <||>] } ~Join~
+									processed ~Join~
+									{ TokenNode[Token`CloseSquare, "]", <||>] }, <||>] }, <||> ]]
 ]
 
 
