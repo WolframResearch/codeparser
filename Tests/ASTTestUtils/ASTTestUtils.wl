@@ -90,9 +90,9 @@ Module[{parsed, good, expected, actual},
 Options[parseTest] = {"FileNamePrefixPattern" -> "", "FileSizeLimit" -> Infinity};
 
 parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
- Module[{prefix, res, cst, ast, expected, issues, errors, f, 
+ Module[{prefix, res, cst, ast, expected, errors, f, 
    tmp, text, file, errs, tryString, actual, skipFirstLine, 
-   firstLine, msgs, textReplaced, exclude, version, limit, savedFailure},
+   firstLine, msgs, textReplaced, version, limit, savedFailure},
   Catch[
    
    prefix = OptionValue["FileNamePrefixPattern"];
@@ -310,9 +310,20 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     
     
     (*
+    skip over #! shebang
+    *)
+    skipFirstLine = False;
+    If[FileByteCount[file] > 0,
+     firstLine = Import[file, {"Lines", 1}];
+     If[StringStartsQ[firstLine, "#!"],
+      skipFirstLine = True
+      ];
+     ];
+     
+    (*
     after Package has been scanned for, so reading in expected will not hang
     *)
-    {text, expected} = importExpected[file, i, prefix];
+    {text, expected} = importExpected[file, i, prefix, skipFirstLine];
     
     (*
     Now it is ok to throw if there were syntax errors
@@ -372,17 +383,6 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         DeleteCases[ToExpression[tryString, InputForm], Null];
        ]
       ];
-    
-    (*
-    skip over #! shebang
-    *)
-    skipFirstLine = False;
-    If[FileByteCount[file] > 0,
-     firstLine = Import[file, {"Lines", 1}];
-     If[StringStartsQ[firstLine, "#!"],
-      skipFirstLine = True
-      ];
-     ];
     
     If[actual =!= expected,
      
@@ -560,7 +560,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      textReplaced = 
       StringReplace[textReplaced, 
        RegularExpression[
-         "(?m)(^(BeginPackage|Begin|End|EndPackage)\\s*\\[[\"a-zA-Z0-9`,\\{\\} \\n\\t]*\\])\\s*;"] -> "$1"];
+         "(?m)(^(BeginPackage|Begin|End|EndPackage)\\s*\\[[\"a-zA-Z0-9`,\\{\\} \\n\\t\\r]*\\])\\s*;"] -> "$1"];
      (* enough people have End[(**)] that it is worth also replacing *)
 
           textReplaced = 
@@ -727,8 +727,8 @@ importFile[file_String] := FromCharacterCode[Import[file, "Byte"], "UTF8"]
 
 
 
-importExpected[file_, i_, prefix_] :=
-Module[{text, f, expected, msgs},
+importExpected[file_, i_, prefix_, skipFirstLine_] :=
+Module[{text, f, expected, msgs, crPos, lfPos},
        (*
       expected
      *)
@@ -736,13 +736,43 @@ Module[{text, f, expected, msgs},
       
       text = importFile[file];
       If[skipFirstLine,
-        f = Failure["SkipFirstLineUnimplemented", <|"FileName" -> file|>];
-     Print[
-      Style[Row[{"index: ", i, " ", 
-         StringReplace[file, StartOfString ~~ prefix -> ""]}], Bold,
-        Red]];
-     Print[Style[Row[{"index: ", i, " ", f}], Bold, Red]];
-     Throw[f, "Unhandled"]
+      	(*
+      	find first line and skip
+      	*)
+        crPos = StringPosition[text, "\r"];
+        lfPos = StringPosition[text, "\n"];
+        Which[
+        	(* no newlines *)
+        	crPos == {} && lfPos == {},
+        		f = Failure["EmptyScript", <|"FileName" -> file|>];
+			     Print[
+			      Style[Row[{"index: ", i, " ", 
+			         StringReplace[file, StartOfString ~~ prefix -> ""]}], Bold,
+			        Red]];
+			     Print[Style[Row[{"index: ", i, " ", f}], Bold, Red]];
+			     Throw[f, "Unhandled"]
+        	,
+        	(* stray \r as newlines *)
+        	crPos != {} && lfPos == {},
+        		text = StringDrop[text, crPos[[1,1]]];
+        	,
+        	(* \n newlines *)
+        	crPos == {} && lfPos != {},
+        		text = StringDrop[text, lfPos[[1,1]]];
+        	,
+        	(*crPos != {} && lfPos != {}*)
+        	(* Windows \r\n newline *)
+        	crPos[[1,1]] + 1 == lfPos[[1,1]],
+        		text = StringDrop[text, lfPos[[1,1]]];
+        	,
+        	(* stray \r as newlines *)
+        	crPos[[1,1]] < lfPos[[1,1]],
+        		text = StringDrop[text, crPos[[1,1]]];
+        	,
+        	(* crPos[[1,1]] > lfPos[[1,1]] *)
+        	True,
+        		text = StringDrop[text, lfPos[[1,1]]];
+        ]
        ];
        (*
       text = StringJoin[Riffle[text, "\n"]];

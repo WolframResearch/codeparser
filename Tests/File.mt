@@ -425,6 +425,14 @@ Test[
 ]
 
 Test[
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "script.wl"}], 1]
+	,
+	Null
+	,
+	TestID->"File-20190610-D7P4F8"
+]
+
+Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "shebangwarning.wl"}], 1]
 	,
 	Null
