@@ -183,10 +183,9 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ParseString[" f[,1] ", HoldNode[Hold, #[[1]], <||>] &],
-		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
+	ParseString[" f[,1] "]
 	,
-	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["Comma", _, _, _]}]
+	CallNode[LeafNode[Symbol, "f", _], { SyntaxErrorNode[SyntaxError`ExpectedPossibleExpression, _, _], LeafNode[Integer, "1", _] }, _]
 	,
 	TestID->"AbstractSyntaxIssues-20190520-V9J1I3"
 ]

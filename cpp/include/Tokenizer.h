@@ -4,6 +4,7 @@
 #include "CharacterDecoder.h"
 
 #include <sstream>
+#include <chrono>
 
 struct TokenizerContext {
     //
@@ -51,6 +52,9 @@ class Tokenizer {
 
     std::vector<SyntaxIssue> Issues;
     
+    std::chrono::microseconds totalTimeMicros;
+    
+    
     bool expectDigits(TokenizerContext Ctxt);
     size_t handleDigits(TokenizerContext Ctxt);
     bool handleDigitsOrAlpha(TokenizerContext Ctxt, int base);
@@ -71,7 +75,7 @@ class Tokenizer {
     
     Token handleDot(TokenizerContext Ctxt);
 
-    void enqueue(WLCharacter, Source);
+    void append(WLCharacter, Source);
     
     WLCharacter nextWLCharacter(NextCharacterPolicy policy = TOPLEVEL);
 
@@ -90,6 +94,8 @@ public:
     std::string getString() const;
 
     std::vector<SyntaxIssue> getIssues() const;
+    
+    std::vector<Metadata> getMetadatas() const;
 };
 
 extern Tokenizer *TheTokenizer;

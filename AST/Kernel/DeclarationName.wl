@@ -11,13 +11,13 @@ given an LHS node, determine its declared name
 DeclarationName will try to work with concrete syntax and abstract syntax
 *)
 
-DeclarationName[SymbolNode[Symbol, s_, _]] := s
+DeclarationName[LeafNode[Symbol, s_, _]] := s
 
 DeclarationName[CallNode[node_, _, _]] := DeclarationName[node]
 
 DeclarationName[BinaryNode[Condition, {node_, _}, _]] := DeclarationName[node]
 
-DeclarationName[CallNode[SymbolNode[Symbol, "Condition", _], {node_, _}, _]] := DeclarationName[node]
+DeclarationName[CallNode[LeafNode[Symbol, "Condition", _], {node_, _}, _]] := DeclarationName[node]
 
 (*
 handle something like:
@@ -27,7 +27,7 @@ DeclarationName[GroupNode[GroupParen, {node_}, _]] := DeclarationName[node]
 
 DeclarationName[PatternBlankNode[_, {node_, _}, _]] := DeclarationName[node]
 
-DeclarationName[CallNode[SymbolNode[Symbol, "Pattern", _], {node_, _}, _]] := DeclarationName[node]
+DeclarationName[CallNode[LeafNode[Symbol, "Pattern", _], {node_, _}, _]] := DeclarationName[node]
 
 DeclarationName[BinaryNode[Pattern, {node_, _}, _]] := DeclarationName[node]
 

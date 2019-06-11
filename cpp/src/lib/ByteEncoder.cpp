@@ -43,12 +43,14 @@ void ByteEncoder::encodeBytes(std::ostream& stream, int val) {
         stream << secondByte;
         stream << thirdByte;
         
-    } else if (val <= 0x10ffff) {
-
+    } else {
+        
         //
         // 4 byte UTF 8 sequence
         //
-
+        
+        assert(val <= 0x10ffff);
+        
         auto firstByte = static_cast<unsigned char>(((val >> 18) & 0x07) | 0xf0);
         auto secondByte = static_cast<unsigned char>(((val >> 12) & 0x3f) | 0x80);
         auto thirdByte = static_cast<unsigned char>(((val >> 6) & 0x3f) | 0x80);
@@ -58,9 +60,6 @@ void ByteEncoder::encodeBytes(std::ostream& stream, int val) {
         stream << secondByte;
         stream << thirdByte;
         stream << fourthByte;
-        
-    } else {
-        assert(false);
     }
 
 }

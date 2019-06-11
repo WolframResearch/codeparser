@@ -5,3 +5,4 @@ build-xcode
 build-make
 build-gcc
 build-afl
+build-release

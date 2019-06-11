@@ -1,0 +1,55 @@
+
+internal docs: operators with no InputForm input
+
+
+all must take subscripts?
+
+
+
+Product
+Sum
+
+Limit
+MaxLimit
+MinLimit
+
+DiscreteShift
+DifferenceDelta
+DiscreteRatio
+
+Piecewise
+
+ForAll
+PartialD
+Exists
+NotExists
+
+
+
+
+
+
+deprecated?
+
+Laplacian
+
+
+
+
+
+
+what are these?
+
+"AutoLeftMatch" -> Punctuation, (* 0xf3a8 *)
+"AutoRightMatch" -> Punctuation, (* 0xf3a9 *)
+"InvisiblePrefixScriptBase" -> Punctuation, (* 0xf3b3 *)
+"InvisiblePostfixScriptBase" -> Punctuation, (* 0xf3b4 *)
+
+
+
+
+
+
+
+
+

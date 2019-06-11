@@ -16,6 +16,10 @@ checkBug321344
 
 
 
+tokenToSymbol
+
+
+
 Begin["`Private`"]
 
 Needs["AST`"]
@@ -67,7 +71,7 @@ longNameToCharacterCode["VectorLessEqual"] = 16^^f437
 
 
 (*
-specify the long names that are not supported characters
+specify the long names that are not supported
 *)
 longNameToCharacterCode["COMPATIBILITYKanjiSpace"] = 16^^3000
 longNameToCharacterCode["COMPATIBILITYNoBreak"] = 16^^f3a2
@@ -138,6 +142,30 @@ Module[{res},
     Quit[1]
   ]
 ]
+
+
+
+(*
+Use the System` context symbols for literals when we can
+*)
+tokenToSymbol[Token`EndOfFile] = "Symbol`EndOfFile"
+tokenToSymbol[Token`Symbol] = "Symbol`Symbol"
+tokenToSymbol[Token`String] = "Symbol`String"
+tokenToSymbol[Token`Integer] = "Symbol`Integer"
+tokenToSymbol[Token`Real] = "Symbol`Real"
+
+tokenToSymbol[Token`Hash] = "Symbol`Slot"
+tokenToSymbol[Token`HashHash] = "Symbol`SlotSequence"
+
+tokenToSymbol[Token`Percent] = "Symbol`Out"
+
+tokenToSymbol[Token`UnderDot] = "Symbol`OptionalDefault"
+
+(*
+everything else will be Symbol`Token`Foo
+*)
+tokenToSymbol[s_] := "Symbol`"<>ToString[s]
+
 
 
 

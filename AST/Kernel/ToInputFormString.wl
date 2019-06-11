@@ -6,8 +6,10 @@ Needs["AST`"]
 
 
 (*
-ToInputFormString is intended for concrete syntax trees
+ToInputFormString is intended for aggregate syntax trees
 *)
+
+
 
 ToInputFormString[cst_] :=
 Block[{$RecursionLimit = Infinity},
@@ -15,93 +17,93 @@ Block[{$RecursionLimit = Infinity},
 ]
 
 
-toInputFormString[SymbolNode[Symbol, str_, _]] :=
+toInputFormString[LeafNode[Symbol, str_, _]] :=
 	str
 
-toInputFormString[StringNode[String, str_, _]] :=
+toInputFormString[LeafNode[String, str_, _]] :=
 	str
 
-toInputFormString[IntegerNode[Integer, str_, _]] :=
+toInputFormString[LeafNode[Integer, str_, _]] :=
 	str
 
-toInputFormString[RealNode[Real, str_, _]] :=
+toInputFormString[LeafNode[Real, str_, _]] :=
 	str
 
-toInputFormString[SlotNode[Slot, str_, _]] :=
+toInputFormString[LeafNode[Slot, str_, _]] :=
 	str
 
-toInputFormString[SlotSequenceNode[SlotSequence, str_, _]] :=
+toInputFormString[LeafNode[SlotSequence, str_, _]] :=
 	str
 
-toInputFormString[OutNode[Out, str_, _]] :=
+toInputFormString[LeafNode[Out, str_, _]] :=
 	str
 
-toInputFormString[OptionalDefaultNode[OptionalDefault, str_, _]] :=
+toInputFormString[LeafNode[OptionalDefault, str_, _]] :=
 	str
 
 (*
 special case ImplicitTimes to fill in " " for the operators
 *)
-toInputFormString[TokenNode[Token`Fake`ImplicitTimes, _,  _]] :=
+toInputFormString[LeafNode[Token`Fake`ImplicitTimes, _,  _]] :=
 	" "
 
 (*
 special case Plus to fix stringifying  1.2` + 3  as  1.2`+3
 *)
-toInputFormString[TokenNode[Token`Plus, _, _]] :=
+toInputFormString[LeafNode[Token`Plus, _, _]] :=
 	" + "
 
 (*
 special case Minus to fix stringifying  1.2` - 3  as  1.2`-3
 *)
-toInputFormString[TokenNode[Token`Minus, _, _]] :=
+toInputFormString[LeafNode[Token`Minus, _, _]] :=
 	" - "
 
 (*
 special case Dot to fix stringifying  c_ . _LinearSolve  as  c_._LinearSolve
 *)
-toInputFormString[TokenNode[Token`Dot, _, _]] :=
+toInputFormString[LeafNode[Token`Dot, _, _]] :=
 	" . "
 
 (*
 special case DotDot to fix stringifying  0. .. as 0...
 *)
-toInputFormString[TokenNode[Token`DotDot, _, _]] :=
+toInputFormString[LeafNode[Token`DotDot, _, _]] :=
 	" .."
 
 (*
 special case DotDot to fix stringifying  0. ... as 0....
 *)
-toInputFormString[TokenNode[Token`DotDotDot, _, _]] :=
+toInputFormString[LeafNode[Token`DotDotDot, _, _]] :=
 	" ..."
 
 (*
 special case SlashDot to fix stringifying  x /. 0 as x/.0
 *)
-toInputFormString[TokenNode[Token`SlashDot, _, _]] :=
+toInputFormString[LeafNode[Token`SlashDot, _, _]] :=
 	" /. "
 
 (*
 special case Dot to fix stringifying  x //. 0 as x//.0
 *)
-toInputFormString[TokenNode[Token`SlashSlashDot, _, _]] :=
+toInputFormString[LeafNode[Token`SlashSlashDot, _, _]] :=
 	" //. "
 
 
 
-toInputFormString[TokenNode[_, str_, _]] :=
+toInputFormString[LeafNode[_, str_, _]] :=
 	str
 
 (*
 special case for a; ;, which is   a Semi InternalNullNode Semi
 *)
-toInputFormString[InternalNullNode[Null, str_, _]] :=
+toInputFormString[LeafNode[Token`Fake`Null, str_, _]] :=
 	" "
 
-toInputFormString[InternalAllNode[All, str_, _]] :=
+toInputFormString[LeafNode[Token`Fake`All, str_, _]] :=
 	str
 
-toInputFormString[InternalOneNode[1, str_, _]] :=
+toInputFormString[LeafNode[Token`Fake`One, str_, _]] :=
 	str
 
 
@@ -171,7 +173,7 @@ Module[{nodeStrs},
 ]]
 
 (*
-toInputFormString is intended for concrete syntax, and concrete syntax
+toInputFormString is intended for aggregate syntax, and aggregate syntax
 only ever has 1 arg for a Call: i.e. CallNode[head, {GroupNode[GroupSquare, {args}]}]
 
 If you see an unevaluated toInputFormString[CallNode[head, {arg1, arg2}]], then
@@ -211,6 +213,18 @@ Module[{nodeStrs},
 	StringJoin[nodeStrs]
 ]]
 
+
+
+
+toInputFormString[StartOfLineNode[op_, nodes_, data_]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[nodeStrs]
+]]
 
 
 
@@ -340,12 +354,14 @@ Module[{nodeStrs},
 
 toInputFormString[HoldNode[Hold, nodes_, data_]] :=
 Module[{processed},
-	processed = Riffle[nodes, TokenNode[Token`Comma, ",", <||>]];
-	toInputFormString[CallNode[SymbolNode[Symbol, "Hold", <||>], {
+	
+	processed = Riffle[nodes, LeafNode[Token`Comma, ",", <||>]];
+
+	toInputFormString[CallNode[LeafNode[Symbol, "Hold", <||>], {
 								GroupNode[GroupSquare, {
-									TokenNode[Token`OpenSquare, "[", <||>] } ~Join~
-									processed ~Join~
-									{ TokenNode[Token`CloseSquare, "]", <||>] }, <||>] }, <||> ]]
+									LeafNode[Token`OpenSquare, "[", <||>] } ~Join~
+									{ InfixNode[Comma, processed, <||>] } ~Join~
+									{ LeafNode[Token`CloseSquare, "]", <||>] }, <||>] }, <||> ]]
 ]
 
 

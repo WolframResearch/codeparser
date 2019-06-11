@@ -1,0 +1,17 @@
+
+TODO: write up stuff about character encodings
+
+
+
+# Raw
+
+characters like \[RawReturn] are a way of escaping that character
+
+Poorly understood
+
+Perhaps essentially unused
+
+
+
+
+

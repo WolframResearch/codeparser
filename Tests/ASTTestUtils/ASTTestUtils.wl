@@ -33,42 +33,45 @@ Needs["PacletManager`"]
 
 
 
-parseEquivalenceFunction[actualIn_, expectedIgnored_] :=
+parseEquivalenceFunction[text_, expectedIgnored_] :=
 Catch[
-Module[{parsed, good, expected, actual},
+Module[{cst, agg, ast, good, expected, actual},
+	
+	expected = DeleteCases[ToExpression[text, InputForm, Hold], Null];
 	
 	(*
 	Concrete
 	*)
-	parsed = ConcreteParseString[actualIn, HoldNode[Hold, #[[1]], <||>]&];
-	If[FailureQ[parsed],
-		Throw[parsed]
+	cst = ConcreteParseString[text, HoldNode[Hold, #[[1]], <||>]&];
+	If[FailureQ[cst],
+		Throw[cst]
 	];
-	expected = ToExpression[ToInputFormString[parsed], InputForm];
 	
-	actual = DeleteCases[ToExpression[actualIn, InputForm, Hold], Null];
+	agg = AST`Abstract`Aggregate[cst];
+	
+	actual = ToExpression[ToInputFormString[agg], InputForm];
 	
 	good = SameQ[expected, actual];
 	If[good,
 		True
 		,
-		Throw[unhandled[{actual, expected}]]
+		Throw[unhandled[<|"actual1"->ToString[actual, InputForm], "expected1"->ToString[expected, InputForm]|>]]
 	];
 	
 	(*
 	Abstract
 	*)
-	parsed = ParseString[actualIn, HoldNode[Hold, #[[1]], <||>]&];
-	If[FailureQ[parsed],
-		Throw[parsed]
+	ast = ParseString[text, HoldNode[Hold, #[[1]], <||>]&];
+	If[FailureQ[ast],
+		Throw[ast]
 	];
-	expected = DeleteCases[ToExpression[ToFullFormString[parsed], InputForm], Null];
+	actual = DeleteCases[ToExpression[ToFullFormString[ast], InputForm], Null];
 	
 	good = SameQ[expected, actual];
 	If[good,
 		True
 		,
-		unhandled[{actual, expected}]
+		unhandled[<|"actual2"->ToString[actual, InputForm], "expected2"->ToString[expected, InputForm]|>]
 	]
 ]]
 
@@ -90,7 +93,7 @@ Module[{parsed, good, expected, actual},
 Options[parseTest] = {"FileNamePrefixPattern" -> "", "FileSizeLimit" -> Infinity};
 
 parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
- Module[{prefix, res, cst, ast, expected, errors, f, 
+ Module[{prefix, res, cst, agg, ast, expected, errors, f, 
    tmp, text, file, errs, tryString, actual, skipFirstLine, 
    firstLine, msgs, textReplaced, version, limit, savedFailure},
   Catch[
@@ -103,7 +106,6 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     ,
     file = fileIn;
     If[$Debug, Print["file1: ", file]];
-    If[$Debug, Print[importFile[file]]];
     
     (*If[StringEndsQ[file,".tr"],
     tmp=CreateFile[];
@@ -140,6 +142,11 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
 
     version = convertVersionString[PacletFind["AST"][[1]]["Version"]];
     Which[
+      version >= 12,
+      cst = 
+       ConcreteParseFile[file, 
+        HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1]][[1]][[3]][Source][[1]], #[[1]][[-1]][[3]][Source][[2]]}]|>] &];
+      ,
      version >= 11,
      cst = 
        ConcreteParseFile[file, 
@@ -157,10 +164,12 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      cst = ConcreteParseFile[file, HoldNode[Hold, {##}, <||>] &];
      ];
     
+    (*
     If[$Debug, Print["version: ", version]];
     If[$Debug, Print["cst1: ", cst]];
     If[$Debug, Print["file: ", file, " bytes: ", FileByteCount[file]]];
     If[$Debug, Print[importFile[file]]];
+    *)
     
     If[FailureQ[cst],
      If[cst === System`$Failed,
@@ -254,7 +263,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     Package symbol cannot be imported
     bug 347012
     *)
-    If[! FreeQ[cst, SymbolNode[Symbol, "Package", _]],
+    If[!FreeQ[cst, LeafNode[Symbol, "Package", _]],
      Print[
       Row[{"index: ", i, " ", 
         StringReplace[fileIn, StartOfString ~~ prefix -> ""]}]];
@@ -264,6 +273,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      tmp = CreateFile[];
      DeleteFile[tmp];
      CopyFile[file, tmp];
+     (*
      If[$Debug, 
       Print["Package file: ", file, " bytes: ", 
        FileByteCount[file]]];
@@ -271,6 +281,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      If[$Debug, 
       Print["Package: tmp: ", tmp, " bytes: ", FileByteCount[tmp]]];
      If[$Debug, Print[importFile[tmp]]];
+     *)
      res = 
       RunProcess[{"sed", "-i", "''", "s/Package/PackageXXX/", tmp}];
      If[res["ExitCode"] =!= 0,
@@ -282,12 +293,19 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       Throw[f, "OK"]
       ];
      file = tmp;
+     (*
      If[$Debug, 
       Print["file2: ", file, " bytes: ", FileByteCount[file]]];
      If[$Debug, Print[importFile[file]]];
-
+     *)
+     
      version = convertVersionString[PacletFind["AST"][[1]]["Version"]];
      Which[
+     version >= 12,
+      cst = 
+        ConcreteParseFile[file, 
+         HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1]][[1]][[3]][Source][[1]], #[[1]][[-1]][[3]][Source][[2]]}]|>]&];
+      ,
       version >= 11,
       cst = 
         ConcreteParseFile[file, 
@@ -306,9 +324,10 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       ];
      
      ];
+     (*
     If[$Debug, Print["cst2: ", cst]];
-    
-    
+    *)
+
     (*
     skip over #! shebang
     *)
@@ -333,7 +352,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     
     *)
     If[FailureQ[savedFailure],
-    	Throw[savedFailure, "Uhandled"]	
+    	Throw[savedFailure, "Unhandled"]	
     ];
     
     
@@ -346,8 +365,14 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     Throw[cst,"OK"]
     ];*)
     
-    tryString = ToInputFormString[cst];
-    If[$Debug, Print["tryString: ", tryString]];
+    agg = AST`Abstract`Aggregate[cst];
+
+    verifyAggregate[agg];
+
+    tryString = ToInputFormString[agg];
+    
+    If[$DebugString, Print["tryString: ", tryString]];
+    
     If[! StringQ[tryString],
      f = Failure[
        "ToInputFormString", <|"FileName" -> file, 
@@ -361,7 +386,9 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     
     Quiet@Check[
       actual = DeleteCases[ToExpression[tryString, InputForm], Null];
+      (*
       If[$Debug, Print["actual: ", actual]];
+      *)
       ,
       Print[
        Style[Row[{"index: ", i, " ", 
@@ -457,9 +484,8 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     (*
     abstracting
     *)
-    ast = AST`Abstract`Abstract[cst];
-    
-    Global`ast1 = ast;
+
+    ast = AST`Abstract`Abstract[agg];
 
     If[FailureQ[ast],
      Print[
@@ -502,7 +528,10 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     *)
 
     tryString = ToFullFormString[ast];
-    If[! StringQ[tryString],
+
+    If[$DebugString, Print["tryString: ", tryString]];
+
+    If[!StringQ[tryString],
      f = Failure[
        "ToFullFormString", <|"FileName" -> file, 
         "tryString" -> tryString|>];
@@ -556,7 +585,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     if there are no Package errors, 
     then proceed with replacing the text
     *)
-    If[! MemberQ[errors, SyntaxIssue["Package", _, _, _]],
+    If[!MemberQ[errors, SyntaxIssue["Package", _, _, _]],
      textReplaced = 
       StringReplace[textReplaced, 
        RegularExpression[
@@ -594,16 +623,22 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "serviceconnections/Pushbullet/Kernel/PushbulletAPIFunctions.m",
 
         prefix <> "alphasource/CalculateParse/ExportedFunctions.m",
+        prefix <> "alphasource/CalculateScan/FiniteFieldAndGroupScanner.m",
         prefix <> "alphasource/CalculateScan/TuringMachineScanner.m",
         prefix <> "visualization/Splines/BSplineFunction/Bugs/ModelMaker.m",
         prefix <> "bloomberglink/BloombergLink/UI.m",
         prefix <> "serviceconnections/NYTimes/Kernel/NYTimesAPIFunctions.m",
         prefix <> "TestTools/FrontEnd/CoreGraphicsGrammar.m",
         prefix <> "TestTools/Statistics/NIST/NISTTestTools.m",
+        prefix <> "Pubs/OnlineProduction/Applications/DocumentationBuild/Tests/UnitTests/UnitTests.m",
         (*
         broken BeginPackage[] / EndPackage[] or something
         *)
         prefix <> "codeanalysis/sources/MSource/CodeAnalysis.m",
+        prefix <> "applications/ControlSystems/auxTest.m",
+        prefix <> "applications/PolynomialControlSystems/PCSauxTest.m",
+        prefix <> "control/auxTest2.m",
+        prefix <> "control/UpdatedCSP/auxTest.m",
         Nothing
         }, fileIn],
       f = Failure["CannotRegexTooWeirdOrBroken", <|"FileName" -> fileIn|>];
@@ -655,7 +690,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
 (AST is correct)
      *)
      
-     If[! FreeQ[expected, 
+     If[!FreeQ[expected, 
         HoldPattern[Information][_, LongForm -> False]],
       f = Failure["Information?Syntax", <|"FileName" -> file|>];
       Print[
@@ -716,6 +751,43 @@ importFile[file_String] := FromCharacterCode[Import[file, "Byte"], "UTF8"]
 
 
 
+
+
+(*
+Verify that the source of a parent node accurately reflects the sources of children nodes
+*)
+verifyAggregate[LeafNode[_, _, _]] := Null
+
+verifyAggregate[agg:(_[tag_, children_, data_])] :=
+Catch[
+Module[{f, first, last, firstSource, lastSource},
+  
+  If[empty[children],
+    If[KeyExistsQ[data, Source],
+      f = Failure["EmptyChildren", <|"Aggregate" -> agg|>];
+      Throw[f, "Unhandled"]
+    ];
+
+    Throw[Null]
+  ];
+
+  first = children[[1]];
+  last = children[[-1]];
+  firstSource = first[[3]][Source];
+  lastSource = last[[3]][Source];
+
+  src = data[Source];
+
+  If[src[[1]] =!= firstSource[[1]],
+    f = Failure["MismatchedFirst", <|"Aggregate" -> agg, "Expected"->src[[1]], "Actual"->firstSource[[1]]|>];
+    Throw[f, "Unhandled"]
+  ];
+
+  If[src[[2]] =!= lastSource[[2]],
+    f = Failure["MismatchedLast", <|"Aggregate" -> agg, "Expected"->src[[2]], "Actual"->lastSource[[2]]|>];
+    Throw[f, "Unhandled"]
+  ];
+]]
 
 
 
@@ -782,11 +854,18 @@ Module[{text, f, expected, msgs, crPos, lfPos},
       Handle unsupported characters
       *)
       
-      text = StringReplace[text, {"\\[NumberComma]" -> "\\:f7fc"}];
-      
+      (*
+      FIXME: does not handle  \\\[NumberComma]
+      that is, the \ that is before \[NumberComma] may be escaped...
+      I don't feel like doing this properly right now...
+      *)
+      text = StringReplace[text, {RegularExpression["(?<!\\\\)\\\\\\[NumberComma\\]"] -> "\\:f7fc"}];
+
       expected = 
        DeleteCases[ToExpression[text, InputForm, Hold], Null];
+      (*
       If[$Debug, Print["expected: ", expected]];
+      *)
       ,
       Print[
        Style[Row[{"index: ", i, " ", 
@@ -820,15 +899,6 @@ Module[{text, f, expected, msgs, crPos, lfPos},
 
      {text, expected}
 ]
-
-
-
-
-
-
-
-
-
 
 
 

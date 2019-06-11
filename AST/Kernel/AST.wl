@@ -7,14 +7,10 @@ This is similar to how ToExpression operates."
 
 ParseFile::usage = "ParseFile[file] returns an abstract syntax tree by interpreting file as WL input."
 
-ParseBoxes
-
 
 ConcreteParseString::usage = "ConcreteParseString[string] returns a concrete syntax tree by interpreting string as WL input."
 
 ConcreteParseFile::usage = "ConcreteParseFile[file] returns a concrete syntax tree by interpreting file as WL input."
-
-ConcreteParseBoxes
 
 
 
@@ -49,6 +45,7 @@ BinaryOperatorToSymbol
 InfixOperatorToSymbol
 GroupOpenerToSymbol
 PrefixBinaryOperatorToSymbol
+StartOfLineOperatorToSymbol
 
 GroupOpenerToCloser
 GroupCloserToOpener
@@ -115,13 +112,11 @@ BinarySlashSlash
 BinaryAt
 BinaryAtAtAt
 
-InfixImplicitPlus
-ImplicitTimes
-InfixInvisibleTimes
-InfixTimes
-
 TernaryTilde
 TernarySlashColon
+
+Comma
+
 
 (* group symbols *)
 (*List*)
@@ -157,23 +152,12 @@ SyntaxIssues
 AbstractSyntaxIssues
 SyntaxIssue
 Comment
-
+Metadata
 
 
 
 (* node symbols *)
-SymbolNode
-StringNode
-IntegerNode
-RealNode
-SlotNode
-SlotSequenceNode
-OutNode
-OptionalDefaultNode
-TokenNode
-InternalAllNode
-InternalNullNode
-InternalOneNode
+LeafNode
 
 PrefixNode
 BinaryNode
@@ -184,6 +168,7 @@ GroupNode
 CallNode
 PrefixBinaryNode
 
+StartOfLineNode
 BlankNode
 BlankSequenceNode
 BlankNullSequenceNode
@@ -280,14 +265,18 @@ Module[{res, loaded, linkObject},
 	loaded
 ]]
 
-concreteParseStringFunc := concreteParseStringFunc = loadFunc["ConcreteParseString"]
+loadAllFuncs[] := (
 
-concreteParseFileFunc := concreteParseFileFunc = loadFunc["ConcreteParseFile"]
+concreteParseStringFunc := concreteParseStringFunc = loadFunc["ConcreteParseString"];
 
-tokenizeStringFunc := tokenizeStringFunc = loadFunc["TokenizeString"]
+concreteParseFileFunc := concreteParseFileFunc = loadFunc["ConcreteParseFile"];
 
-tokenizeFileFunc := tokenizeFileFunc = loadFunc["TokenizeFile"]
+tokenizeStringFunc := tokenizeStringFunc = loadFunc["TokenizeString"];
 
+tokenizeFileFunc := tokenizeFileFunc = loadFunc["TokenizeFile"];
+)
+
+loadAllFuncs[]
 
 
 
@@ -329,21 +318,37 @@ ConcreteParseString[s_String, h_:Automatic] :=
 
 concreteParseString[sIn_String, hIn_, OptionsPattern[]] :=
 Catch[
-Module[{s = sIn, h = hIn, res},
+Module[{s, h, res},
+
+	s = sIn;
+	h = hIn;
 
 	If[h === Automatic,
 		(*
-		The # here is { {exprs}, {comments}, {issues} }
+		The # here is { {exprs}, {issues}, {metadata} }
+
+		Return the last aggregate node, or Null
+
 		Simply drop any leftover syntax issues
 		*)
-		h = If[empty[#[[1]]], Null, Last[#[[1]]]]&
+		h = SelectFirst[Reverse[DeleteCases[#[[1]], LeafNode[Token`Comment | Token`WhiteSpace | Token`Newline, _, _]]], True&, Null]&
 	];
 
 	If[FailureQ[concreteParseStringFunc],
 		Throw[concreteParseStringFunc]
 	];
 
+	(*
+	in the event of an abort, force reload of functions
+	This will fix the transient error that can happen when an abort occurs
+	and the next use throws LIBRARY_FUNCTION_ERROR
+	*)
+	CheckAbort[
 	res = concreteParseStringFunc[s];
+	,
+	loadAllFuncs[];
+	Abort[]
+	];
 
 	If[Head[res] === LibraryFunctionError,
 		Throw[Failure["LibraryFunctionError", <|"Result"->res|>]]
@@ -364,14 +369,16 @@ or something FailureQ if e.g., no permission to run wl-ast
 *)
 ParseString[s_String, h_:Automatic] :=
 Catch[
-Module[{parse, ast},
-	parse = ConcreteParseString[s, h];
+Module[{cst, ast, agg},
+	cst = ConcreteParseString[s, h];
 
-	If[FailureQ[parse],
-		Throw[parse]
+	If[FailureQ[cst],
+		Throw[cst]
 	];
 
-	ast = Abstract[parse];
+	agg = Aggregate[cst];
+
+	ast = Abstract[agg];
 
 	ast
 ]]
@@ -402,7 +409,7 @@ Module[{h, encoding, full, res, skipFirstLine = False, shebangWarn = False, data
 	The <||> will be filled in with Source later
 	*)
 	If[hIn === Automatic,
-		h = Function[FileNode[File, #[[1]], <| SyntaxIssues -> #[[3]] |>]]
+		h = FileNode[File, #[[1]], <| SyntaxIssues -> #[[2]] |>]&
 	];
 
 	encoding = OptionValue[CharacterEncoding];
@@ -457,7 +464,12 @@ Module[{h, encoding, full, res, skipFirstLine = False, shebangWarn = False, data
 		Throw[concreteParseFileFunc]
 	];
 
+	CheckAbort[
 	res = concreteParseFileFunc[full, skipFirstLine];
+	,
+	loadAllFuncs[];
+	Abort[]
+	];
 
 	If[Head[res] === LibraryFunctionError,
 		Throw[Failure["LibraryFunctionError", <|"Result"->res|>]]
@@ -471,10 +483,11 @@ Module[{h, encoding, full, res, skipFirstLine = False, shebangWarn = False, data
 		Throw[res]
 	];
 
+
 	If[shebangWarn,
-		issues = res[[3]];
+		issues = res[[2]];
 		AppendTo[issues, SyntaxIssue["Shebang", "# on first line looks like #! shebang", "Remark", <|Source->{{1, 1}, {1, 1}}|>]];
-		res[[3]] = issues;
+		res[[2]] = issues;
 	];
 
 	res = h[res];
@@ -505,15 +518,17 @@ Options[ParseFile] = {
 
 ParseFile[file_String | File[file_String], h_:Automatic, opts:OptionsPattern[]] :=
 Catch[
-Module[{parse, ast},
+Module[{cst, ast, agg},
 
-	parse = ConcreteParseFile[file, h, opts];
+	cst = ConcreteParseFile[file, h, opts];
 
-	If[FailureQ[parse],
-		Throw[parse]
+	If[FailureQ[cst],
+		Throw[cst]
 	];
 
-	ast = Abstract[parse];
+	agg = Aggregate[cst];
+
+	ast = Abstract[agg];
 
 	ast
 ]]
@@ -528,7 +543,12 @@ Module[{s = sIn, res},
 		Throw[tokenizeStringFunc]
 	];
 
+	CheckAbort[
 	res = tokenizeStringFunc[s];
+	,
+	loadAllFuncs[];
+	Abort[]
+	];
 
 	If[Head[res] === LibraryFunctionError,
 		Throw[Failure["LibraryFunctionError", <|"Result"->res|>]]
@@ -573,7 +593,12 @@ Module[{s, encoding, res},
 		Throw[tokenizeFileFunc]
 	];
 
+	CheckAbort[
 	res = tokenizeFileFunc[s];
+	,
+	loadAllFuncs[];
+	Abort[]
+	];
 
 	If[Head[res] === LibraryFunctionError,
 		Throw[Failure["LibraryFunctionError", <|"Result"->res|>]]

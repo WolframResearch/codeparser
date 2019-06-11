@@ -23,10 +23,12 @@ Test[
 	cst
 	,
 	FileNode[File, {
+		LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 0}}|>],
 		InfixNode[Plus, {
-			IntegerNode[Integer, "1", <|Source -> {{2, 1}, {2, 1}}|>],
-			TokenNode[Token`Plus, "+", <|Source -> {{2, 2}, {2, 2}}|>],
-    		IntegerNode[Integer, "1", <|Source -> {{2, 3}, {2, 3}}|>] }, <|Source -> {{2, 1}, {2, 3}}|>] }, <|SyntaxIssues -> {}, Source -> {{2, 1}, {2, 3}}|>]
+			LeafNode[Integer, "1", <|Source -> {{2, 1}, {2, 1}}|>],
+			LeafNode[Token`Plus, "+", <|Source -> {{2, 2}, {2, 2}}|>],
+    		LeafNode[Integer, "1", <|Source -> {{2, 3}, {2, 3}}|>] }, <|Source -> {{2, 1}, {2, 3}}|>],
+    	LeafNode[Token`Newline, "\n", <|Source -> {{3, 0}, {3, 0}}|>] }, <|SyntaxIssues -> {}, Source -> {{2, 0}, {3, 0}}|>]
 	,
 	TestID->"File-20181230-J0G3I8"
 ]
@@ -36,7 +38,7 @@ Test[
 Test[
 	ToInputFormString[cst]
 	,
-	" 1 + 1 "
+	"\n\n 1 + 1 \n\n"
 	,
 	TestID->"File-20181230-T2D2W6"
 ]
@@ -56,9 +58,11 @@ cst = ConcreteParseFile[shebangwarning]
 TestMatch[
 	cst
 	,
-	FileNode[File, {SlotNode[Slot, "#something", <|Source -> {{1, 1}, {1, 10}}|>]},
+	FileNode[File, {
+		LeafNode[Slot, "#something", <|Source -> {{1, 1}, {1, 10}}|>],
+		LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 0}}|>] },
 		KeyValuePattern[{
-			Source -> {{1, 1}, {1, 10}},
+			Source -> {{1, 1}, {2, 0}},
 			SyntaxIssues -> {SyntaxIssue["Shebang", "# on first line looks like #! shebang", "Remark", <|Source -> {{1, 1}, {1, 1}}|>]} }] ]
 	,
 	TestID->"File-20181230-M7H7Q7"
@@ -72,9 +76,11 @@ cst = ConcreteParseFile[carriagereturn]
 TestMatch[
 	cst
 	,
-	FileNode[File, {SymbolNode[Symbol, "A", <|Source -> {{3, 1}, {3, 1}}|>]},
+	FileNode[File, {LeafNode[Token`Newline, "\r", <|Source -> {{2, 0}, {2, 0}}|>],
+					LeafNode[Token`Newline, "\r", <|Source -> {{3, 0}, {3, 0}}|>],
+					LeafNode[Symbol, "A", <|Source -> {{3, 1}, {3, 1}}|>]},
 										<| SyntaxIssues->{SyntaxIssue["StrayCarriageReturn", _, "Remark", <|Source -> {{2, 0}, {2, 0}}|>],
-											SyntaxIssue["StrayCarriageReturn", _, "Remark", <|Source -> {{3, 0}, {3, 0}}|>]}, Source -> {{3, 1}, {3, 1}}|>]
+											SyntaxIssue["StrayCarriageReturn", _, "Remark", <|Source -> {{3, 0}, {3, 0}}|>]}, Source -> {{2, 0}, {3, 1}}|>]
 	,
 	TestID->"File-20190422-C6U5B6"
 ]
@@ -86,7 +92,7 @@ cst = ConcreteParseFile[carriagereturn2]
 TestMatch[
 	cst
 	,
-	FileNode[File, {StringNode[String, "\"\r\n123\"", <|Source->{{1,1},{2,4}}|>]}, <|SyntaxIssues->{}, Source->{{1,1},{2,4}}|>]
+	FileNode[File, {LeafNode[String, "\"\r\n123\"", <|Source->{{1,1},{2,4}}|>]}, <|SyntaxIssues->{}, Source->{{1,1},{2,4}}|>]
 	,
 	TestID->"File-20190606-O8I6M9"
 ]
@@ -111,9 +117,9 @@ ast = ParseFile[package]
 TestMatch[
 	ast
 	,
-	FileNode[File, {CallNode[SymbolNode[Symbol, "BeginPackage", <|Source -> {{2, 1}, {2, 12}}|>], {
-		StringNode[String, "\"Foo.m`\"", <|Source -> {{2, 14}, {2, 21}}|>]}, <|Source -> {{2, 1}, {2, 22}}|>], 
-		CallNode[SymbolNode[Symbol, "EndPackage", <|Source -> {{4, 1}, {4, 10}}|>], {}, <|Source -> {{4, 1}, {4, 12}}|>]}, 
+	FileNode[File, {CallNode[LeafNode[Symbol, "BeginPackage", <|Source -> {{2, 1}, {2, 12}}|>], {
+		LeafNode[String, "\"Foo.m`\"", <|Source -> {{2, 14}, {2, 21}}|>]}, <|Source -> {{2, 1}, {2, 22}}|>], 
+		CallNode[LeafNode[Symbol, "EndPackage", <|Source -> {{4, 1}, {4, 10}}|>], {}, <|Source -> {{4, 1}, {4, 12}}|>]}, 
 		<|Source -> {{2, 1}, {4, 12}}, AbstractSyntaxIssues -> {
 			SyntaxIssue["Package", "Package directive does not have correct syntax.", "Error", <|Source -> {{2, 1}, {2, 22}}|>]}|>]
 	,
@@ -146,11 +152,11 @@ sample = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "sample.wl"}]
 Test[
 	TokenizeFile[sample]
 	,
-	{TokenNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 0}}|>], 
- TokenNode[Token`Integer, "1", <|Source -> {{2, 1}, {2, 1}}|>], 
- TokenNode[Token`Plus, "+", <|Source -> {{2, 2}, {2, 2}}|>], 
- TokenNode[Token`Integer, "1", <|Source -> {{2, 3}, {2, 3}}|>], 
- TokenNode[Token`Newline, "\n", <|Source -> {{3, 0}, {3, 0}}|>]}
+	{LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 0}}|>], 
+ LeafNode[Integer, "1", <|Source -> {{2, 1}, {2, 1}}|>], 
+ LeafNode[Token`Plus, "+", <|Source -> {{2, 2}, {2, 2}}|>], 
+ LeafNode[Integer, "1", <|Source -> {{2, 3}, {2, 3}}|>], 
+ LeafNode[Token`Newline, "\n", <|Source -> {{3, 0}, {3, 0}}|>]}
 	,
 	TestID->"File-20181230-Q3C4N0"
 ]
@@ -194,11 +200,13 @@ cst = ConcreteParseFile[strange]
 TestMatch[
 	cst
 	,
-	FileNode[File, {BinaryNode[Set, {SymbolNode[Symbol, "\.01x", <|Source -> {{1, 1}, {1, 2}}|>],
-		TokenNode[Token`Equal, "=", <|Source -> {{1, 4}, {1, 4}}|>], IntegerNode[Integer, "1",
-			<|Source -> {{1, 6}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]}, <|SyntaxIssues -> {
-			SyntaxIssue["StrangeCharacter", "Strange character in symbol: \\.01", "Warning", <|Source -> {{1, 1}, {1, 1}}|>]},
-			Source -> {{1, 1}, {1, 6}}|>]
+	FileNode[File, {
+		BinaryNode[Set, {
+			LeafNode[Symbol, "\.01x", <|Source -> {{1, 1}, {1, 2}}|>],
+			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 3}, {1, 3}}|>],
+			LeafNode[Token`Equal, "=", <|Source -> {{1, 4}, {1, 4}}|>],
+			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 5}, {1, 5}}|>],
+			LeafNode[Integer, "1", <|Source -> {{1, 6}, {1, 6}}|>] }, <|Source -> {{1, 1}, {1, 6}}|>] }, <|SyntaxIssues -> {SyntaxIssue["StrangeCharacter", "Strange character in symbol: \\.01", "Warning", <|Source -> {{1, 1}, {1, 1}}|>]}, Source -> {{1, 1}, {1, 6}}|>]
 	,
 	TestID->"File-20190602-N5D1B8"
 ]
@@ -447,6 +455,18 @@ Test[
 	,
 	TestID->"File-20190606-G6Q1C7"
 ]
+
+
+Test[
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "span1.wl"}], 1]
+	,
+	Null
+	,
+	TestID->"File-20190626-L4G9A9"
+]
+
+
+
 
 
 

@@ -13,7 +13,7 @@ TODO: invalid UTF-8 sequence
 StrayCarriageReturn
 *)
 TestMatch[
-	FirstCase[ConcreteParseString["{ \r }", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["{ \r }", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["StrayCarriageReturn", _, _, _]}]
@@ -29,7 +29,7 @@ SyntaxError:
 *)
 
 TestMatch[
-	FirstCase[ConcreteParseString["\\", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["\\", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxError", _, _, _]}]
@@ -48,7 +48,7 @@ UnrecognizedCharacter:
 *)
 
 TestMatch[
-	FirstCase[ConcreteParseString["\\A", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["\\A", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnrecognizedCharacter", _, _, _]}]
@@ -57,7 +57,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ConcreteParseString["\\G", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["\\G", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnrecognizedCharacter", _, _, _]}]
@@ -66,7 +66,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ConcreteParseString["\\a", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["\\a", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnrecognizedCharacter", _, _, _]}]
@@ -75,7 +75,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ConcreteParseString["\\-", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["\\-", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnrecognizedCharacter", _, _, _]}]
@@ -84,7 +84,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ConcreteParseString["\\[A!]", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["\\[A!]", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnrecognizedCharacter", _, _, _]}]
@@ -93,7 +93,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ConcreteParseString["\\[!", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["\\[!", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnrecognizedCharacter", _, _, _]}]
@@ -102,7 +102,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ConcreteParseString["\\[Alpa]", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["\\[Alpa]", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnrecognizedCharacter", _, _, _]}]
@@ -111,7 +111,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ConcreteParseString["\\:lcdm", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["\\:lcdm", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnrecognizedCharacter", _, _, _]}]
@@ -120,7 +120,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ConcreteParseString["\\.lc", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["\\.lc", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnrecognizedCharacter", _, _, _]}]
@@ -129,7 +129,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ConcreteParseString["\\009", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["\\009", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnrecognizedCharacter", _, _, _]}]
@@ -138,7 +138,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ConcreteParseString["\\|lhvbnr", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["\\|lhvbnr", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnrecognizedCharacter", _, _, _]}]
@@ -155,7 +155,7 @@ UnsupportedCharacter:
 *)
 
 TestMatch[
-	FirstCase[ConcreteParseString["\\[NumberComma]", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["\\[NumberComma]", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnsupportedCharacter", _, _, _]}]
@@ -173,7 +173,7 @@ DifferentLine:
 *)
 
 TestMatch[
-	FirstCase[ConcreteParseString["-\na", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["-\na", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["DifferentLine", _, _, _]}]
@@ -182,13 +182,17 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ConcreteParseString["{ a\n! }", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["{ a\n! }", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["DifferentLine", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-R2X2T0"
 ]
+
+(*
+
+TODO: should we have "DifferentLine" warnings about ; ?
 
 TestMatch[
 	FirstCase[ConcreteParseString["{ a\n; }", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
@@ -198,9 +202,10 @@ TestMatch[
 	,
 	TestID->"SyntaxIssues-20190521-M5K3M2"
 ]
+*)
 
 TestMatch[
-	FirstCase[ConcreteParseString["{ a\n;; }", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["{ a\n;; }", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["DifferentLine", _, _, _]}]
@@ -209,7 +214,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ConcreteParseString["{ a~\nf~b } ", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["{ a~\nf~b } ", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["DifferentLine", _, _, _]}]
@@ -237,7 +242,7 @@ NotContiguous:
 
 
 TestMatch[
-	FirstCase[ConcreteParseString["If []", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["If []", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["NotContiguous", _, _, _]}]
@@ -247,7 +252,7 @@ TestMatch[
 
 
 TestMatch[
-	FirstCase[ConcreteParseString["a =    .", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["a =    .", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["NotContiguous", _, _, _]}]
@@ -270,7 +275,7 @@ SyntaxUndocumentedSlot:
 
 
 TestMatch[
-	FirstCase[ConcreteParseString["#$aaa", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["#$aaa", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxUndocumentedSlot", _, _, _]}]
@@ -294,7 +299,7 @@ TestMatch[
 *)
 
 TestMatch[
-	FirstCase[ConcreteParseString["#aaa`bbb", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["#aaa`bbb", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxUndocumentedSlot", _, _, _]}]
@@ -303,7 +308,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ConcreteParseString["#\"aaa\"", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["#\"aaa\"", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxUndocumentedSlot", _, _, _]}]
@@ -329,7 +334,7 @@ StrangeCharacter:
 
 
 TestMatch[
-	FirstCase[ConcreteParseString["a\\.00", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["a\\.00", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["StrangeCharacter", _, _, _]}]
@@ -338,7 +343,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ConcreteParseString["a\\:f456", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["a\\:f456", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["StrangeCharacter", _, _, _]}]
@@ -363,7 +368,7 @@ SyntaxAmbiguity:
 
 
 TestMatch[
-	FirstCase[ConcreteParseString["1.2`a", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["1.2`a", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxAmbiguity", _, _, _]}]
@@ -372,7 +377,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ConcreteParseString["1.2`->3", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["1.2`->3", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxAmbiguity", _, _, _]}]
@@ -381,7 +386,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ConcreteParseString["0..", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["0..", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxAmbiguity", _, _, _]}]
@@ -390,7 +395,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ConcreteParseString["1.2.3", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["1.2.3", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxAmbiguity", _, _, _]}]
@@ -399,7 +404,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ConcreteParseString["_...", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["_...", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxAmbiguity", _, _, _]}]
@@ -408,7 +413,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ConcreteParseString["_.0", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["_.0", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxAmbiguity", _, _, _]}]
@@ -417,7 +422,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ConcreteParseString["a-->0", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["a-->0", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxAmbiguity", _, _, _]}]
@@ -426,7 +431,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ConcreteParseString["a--=0", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["a--=0", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxAmbiguity", _, _, _]}]
@@ -435,7 +440,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ConcreteParseString["<||>=0", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["<||>=0", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxAmbiguity", _, _, _]}]
@@ -444,7 +449,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ConcreteParseString["t/.03", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["t/.03", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxAmbiguity", _, _, _]}]
@@ -453,7 +458,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ConcreteParseString["a++=0", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString["a++=0", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxAmbiguity", _, _, _]}]
@@ -468,7 +473,7 @@ LineContinuation
 *)
 
 TestMatch[
-	FirstCase[ConcreteParseString[" { a, \\\n b } ", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString[" { a, \\\n b } ", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["StrayLineContinuation", _, _, _]}]
@@ -485,20 +490,20 @@ ImplicitTimesSpan
 *)
 
 TestMatch[
-	FirstCase[ConcreteParseString[" ;;b;; ", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString[" ;;b;; ", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["ImplicitTimesSpan", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["ImplicitTimesSpan", _, _, _], SyntaxIssue["EndOfLine", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190523-I1D9N0"
 ]
 
 
 TestMatch[
-	FirstCase[ConcreteParseString[" a;;b;; ", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
+	FirstCase[ConcreteParseString[" a;;b;; ", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["ImplicitTimesSpan", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["ImplicitTimesSpan", _, _, _], SyntaxIssue["EndOfLine", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190523-L7M6K3"
 ]

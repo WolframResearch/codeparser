@@ -136,8 +136,6 @@ importedSpaceLongNames = Keys[Select[importedLongNames, # === Space &]]
 
 importedNewlineLongNames = Keys[Select[importedLongNames, # === Newline &]]
 
-importedCommaLongNames = Keys[Select[importedLongNames, # === Comma &]]
-
 importedUninterpretableLongNames = Keys[Select[importedLongNames, # === Uninterpretable &]]
 
 
@@ -412,12 +410,6 @@ newlineSource =
     {"};", "",
     "bool WLCharacter::isNewlineCharacter() const { return newlineCodePoints.find(value_) != newlineCodePoints.end();}", ""}
 
-commaSource = 
-  {"std::unordered_set<int> commaCodePoints {"} ~Join~
-    (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ importedCommaLongNames) ~Join~
-    {"};", "",
-    "bool WLCharacter::isCommaCharacter() const { return commaCodePoints.find(value_) != commaCodePoints.end(); }", ""}
-
 uninterpretableSource = 
   {"std::unordered_set<int> uninterpretableCodePoints {"} ~Join~
     (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ importedUninterpretableLongNames) ~Join~
@@ -427,8 +419,7 @@ uninterpretableSource =
 LongNameCodePointToOperatorSource = 
   {"TokenEnum LongNameCodePointToOperator(int c) {
 switch (c) {"} ~Join~
-    (Row[{"case", " ", toGlobal["CodePoint`LongName`"<>#], ":", " ", "return", " ", 
-        toGlobal["Token`LongName`"<>#], ";"}]& /@ importedPunctuationLongNames) ~Join~
+    (Row[{"case", " ", toGlobal["CodePoint`LongName`"<>#], ":", " ", "return", " ", toGlobal["Token`LongName`"<>#], ";"}]& /@ importedPunctuationLongNames) ~Join~
     {"default:
 std::cerr << \"Need to add operator: 0x\" << std::setfill('0') << std::setw(4) << std::hex << c << std::dec << \"\\n\";
 assert(false && \"Need to add operator\");
@@ -440,8 +431,7 @@ LongNameOperatorToCodePointSource =
   {"
 int LongNameOperatorToCodePoint(TokenEnum t) {
 switch (t) {"} ~Join~
-    (Row[{"case", " ", toGlobal["Token`LongName`"<>#], ":", " ", "return",
-         " ", toGlobal["CodePoint`LongName`"<>#], ";"}]& /@ importedPunctuationLongNames) ~Join~
+    (Row[{"case", " ", toGlobal["Token`LongName`"<>#], ":", " ", "return", " ", toGlobal["CodePoint`LongName`"<>#], ";"}]& /@ importedPunctuationLongNames) ~Join~
 {"default:
 std::cerr << \"Need to add operator: 0x\" << std::setfill('0') << std::setw(4) << std::hex << t << std::dec << \"\\n\";
 assert(false && \"Need to add operator\");
@@ -466,7 +456,7 @@ codePointCPPSource = Join[{
 #include <iostream>
 #include <iomanip>
 #include <cassert>
-"}, punctuationSource, spaceSource, newlineSource, commaSource, uninterpretableSource,
+"}, punctuationSource, spaceSource, newlineSource, uninterpretableSource,
     LongNameCodePointToOperatorSource, 
     LongNameOperatorToCodePointSource]
 
@@ -503,7 +493,7 @@ If[FailureQ[importedTokenEnumSource],
   Quit[1]
 ]
 
-joined = importedTokenEnumSource ~Join~ operatorMacros
+joined = importedTokenEnumSource ~Join~ operatorMacros ~Join~ <| Token`Count -> Next |>
 
 oldTokens = ToString /@ Keys[joined]
 
@@ -532,10 +522,13 @@ tokenCPPHeader = {
 
 enum TokenEnum {"} ~Join~
    KeyValueMap[(Row[{toGlobal[#], " = ", #2, ","}])&, enumMap] ~Join~
-   {"};", ""} ~Join~
-   {"std::string TokenToString(TokenEnum type);",
-   "bool isError(TokenEnum type);",
+   {"};", ""} ~Join~ {
 "
+class Symbol;
+
+const Symbol* TokenToSymbol(TokenEnum type);
+bool isError(TokenEnum type);
+
 namespace std {
     //
     // for std::unordered_map
@@ -600,16 +593,15 @@ because C switch statements cannot have duplicate cases
 *)
 uniqueEnums = DeleteCases[importedTokenEnumSource, v_ /; !IntegerQ[v] && UnsameQ[v, Next]]
 
-tokenStrings = Association[# -> escapeString[ToString[#]]& /@ Keys[uniqueEnums]]
+tokens = Keys[uniqueEnums]
 
-operatorMacros = 
-  Association[ToExpression["Token`LongName`" <> #] -> escapeString["Token`LongName`" <> #]& /@ importedPunctuationLongNames]
-
+operatorMacros = ToExpression["Token`LongName`" <> #]& /@ importedPunctuationLongNames
 
 
-joined = tokenStrings ~Join~ operatorMacros
 
-cases = KeyValueMap[Row[{"case ", toGlobal[#1], ": return ", #2, ";"}]&, joined]
+tokens = tokens ~Join~ operatorMacros
+
+cases = Row[{"case ", toGlobal[#], ": return ", toGlobal[tokenToSymbol[#]], ";"}]& /@ tokens
 
 
 tokenCPPSource = {
@@ -621,14 +613,16 @@ tokenCPPSource = {
 
 #include \"Token.h\"
 
+#include \"Symbol.h\"
+
 #include <iostream>
 #include <cassert>
 "} ~Join~
-    {"std::string TokenToString(TokenEnum Tok) {"} ~Join~
+    {"const Symbol* TokenToSymbol(TokenEnum Tok) {"} ~Join~
     {"switch (Tok) {"} ~Join~
     cases ~Join~
     {"default:"} ~Join~
-    {"std::cerr << \"Unhandled token type: \" << std::to_string(Tok) << \"\\n\"; assert(false && \"Unhandled token type\"); return \"\";"} ~Join~
+    {"std::cerr << \"Unhandled token type: \" << std::to_string(Tok) << \"\\n\"; assert(false && \"Unhandled token type\"); return SYMBOL_TOKEN_UNKNOWN;"} ~Join~
     {"}"} ~Join~
     {"}"} ~Join~
     {""} ~Join~
@@ -752,11 +746,13 @@ symbols = Union[Join[DownValues[PrefixOperatorToSymbol][[All, 2]],
     DownValues[TernaryOperatorToSymbol][[All, 2]],
     DownValues[GroupOpenerToSymbol][[All, 2]],
     DownValues[PrefixBinaryOperatorToSymbol][[All, 2]],
+    DownValues[StartOfLineOperatorToSymbol][[All, 2]],
     AST`Symbol`$Nodes,
     AST`Symbol`$Options,
     AST`Symbol`$Miscellaneous,
     AST`Symbol`$Groups,
-    AST`Symbol`$Characters
+    AST`Symbol`$Characters,
+    tokens
     ]]
 
 symbolCPPHeader = {
@@ -795,6 +791,10 @@ const Symbol* PrefixOperatorToSymbol(TokenEnum);
 const Symbol* PostfixOperatorToSymbol(TokenEnum);
 const Symbol* BinaryOperatorToSymbol(TokenEnum);
 const Symbol* InfixOperatorToSymbol(TokenEnum);
+const Symbol* StartOfLineOperatorToSymbol(TokenEnum);
+
+bool isInfixOperator(TokenEnum);
+
 const Symbol* GroupOpenerToSymbol(TokenEnum);
 const Symbol* PrefixBinaryOperatorToSymbol(TokenEnum);
 
@@ -889,7 +889,7 @@ void Symbol::put(MLINK mlp) const {
       {"const Symbol* PrefixOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
      
      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PrefixOperatorToSymbol]] ~Join~ 
-      {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
+      {"default: std::cerr << \"Unhandled Token: \" << TokenToSymbol(Type)->name() << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
       "}\n}"} ~Join~
 
      {""} ~Join~
@@ -897,7 +897,7 @@ void Symbol::put(MLINK mlp) const {
      {"const Symbol* PostfixOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
      
       Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PostfixOperatorToSymbol]] ~Join~
-      {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
+      {"default: std::cerr << \"Unhandled Token: \" << TokenToSymbol(Type)->name() << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
      "}\n}"} ~Join~
 
      {""} ~Join~
@@ -905,7 +905,7 @@ void Symbol::put(MLINK mlp) const {
      {"const Symbol* BinaryOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
      
       Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[BinaryOperatorToSymbol]] ~Join~
-      {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
+      {"default: std::cerr << \"Unhandled Token: \" << TokenToSymbol(Type)->name() << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
      "}\n}"} ~Join~
 
      {""} ~Join~
@@ -913,7 +913,23 @@ void Symbol::put(MLINK mlp) const {
      {"const Symbol* InfixOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
      
       Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[InfixOperatorToSymbol]] ~Join~
-      {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
+      {"default: std::cerr << \"Unhandled Token: \" << TokenToSymbol(Type)->name() << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
+     "}\n}"} ~Join~
+
+     {""} ~Join~
+
+     {"bool isInfixOperator(TokenEnum Type) {\nswitch (Type) {"} ~Join~
+     
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", "true", ";"}]&, DownValues[InfixOperatorToSymbol]] ~Join~
+      {"default: return false;",
+     "}\n}"} ~Join~
+
+     {""} ~Join~
+
+     {"const Symbol* StartOfLineOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
+     
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[StartOfLineOperatorToSymbol]] ~Join~
+      {"default: std::cerr << \"Unhandled Token: \" << TokenToSymbol(Type)->name() << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
      "}\n}"} ~Join~
 
      {""} ~Join~
@@ -921,7 +937,7 @@ void Symbol::put(MLINK mlp) const {
      {"const Symbol* GroupOpenerToSymbol(TokenEnum Type) {"} ~Join~
      {"switch (Type) {"} ~Join~
       Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[GroupOpenerToSymbol]] ~Join~
-      {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
+      {"default: std::cerr << \"Unhandled Token: \" << TokenToSymbol(Type)->name() << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
      "}"} ~Join~
      {"}"} ~Join~
 
@@ -930,7 +946,7 @@ void Symbol::put(MLINK mlp) const {
      {"TokenEnum GroupOpenerToCloser(TokenEnum Type) {"} ~Join~
      {"switch (Type) {"} ~Join~
       Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal[#[[2]]], ";"}]&, DownValues[GroupOpenerToCloser]] ~Join~
-      {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return TOKEN_UNKNOWN;",
+      {"default: std::cerr << \"Unhandled Token: \" << TokenToSymbol(Type)->name() << \"\\n\"; assert(false && \"Unhandled token\"); return TOKEN_UNKNOWN;",
      "}"} ~Join~
      {"}"} ~Join~
 
@@ -939,7 +955,7 @@ void Symbol::put(MLINK mlp) const {
      {"TokenEnum GroupCloserToOpener(TokenEnum Type) {"} ~Join~
      {"switch (Type) {"} ~Join~
       Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal[#[[2]]], ";"}]&, DownValues[GroupCloserToOpener]] ~Join~
-      {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return TOKEN_UNKNOWN;",
+      {"default: std::cerr << \"Unhandled Token: \" << TokenToSymbol(Type)->name() << \"\\n\"; assert(false && \"Unhandled token\"); return TOKEN_UNKNOWN;",
      "}"} ~Join~
      {"}"} ~Join~
 
@@ -957,7 +973,7 @@ void Symbol::put(MLINK mlp) const {
      {"const Symbol* PrefixBinaryOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
      
       Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PrefixBinaryOperatorToSymbol]] ~Join~
-      {"default: std::cerr << \"Unhandled Token: \" << TokenToString(Type) << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
+      {"default: std::cerr << \"Unhandled Token: \" << TokenToSymbol(Type)->name() << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
      "}\n}"} ~Join~
 
      {""}

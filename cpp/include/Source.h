@@ -9,6 +9,7 @@
 #include <cassert>
 #include <vector>
 #include <sstream>
+#include <chrono>
 
 //
 // https://akrzemi1.wordpress.com/2017/05/18/asserts-in-constexpr-functions/
@@ -93,10 +94,12 @@ SyntaxIssueTag SYNTAXISSUETAG_SYNTAXERROR = "SyntaxError";
 SyntaxIssueTag SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER = "UnrecognizedCharacter";
 SyntaxIssueTag SYNTAXISSUETAG_UNSUPPORTEDCHARACTER = "UnsupportedCharacter";
 SyntaxIssueTag SYNTAXISSUETAG_UNDOCUMENTEDCHARACTER = "UndocumentedCharacter";
+SyntaxIssueTag SYNTAXISSUETAG_ESCAPESEQUENCE = "EscapeSequence";
 SyntaxIssueTag SYNTAXISSUETAG_STRANGECHARACTER = "StrangeCharacter";
 SyntaxIssueTag SYNTAXISSUETAG_SYNTAXAMBIGUITY = "SyntaxAmbiguity";
 SyntaxIssueTag SYNTAXISSUETAG_NOTCONTIGUOUS = "NotContiguous";
 SyntaxIssueTag SYNTAXISSUETAG_DIFFERENTLINE = "DifferentLine";
+SyntaxIssueTag SYNTAXISSUETAG_ENDOFLINE = "EndOfLine";
 SyntaxIssueTag SYNTAXISSUETAG_MAXEXPRESSIONDEPTH = "MaxExpressionDepth";
 SyntaxIssueTag SYNTAXISSUETAG_MAXEXPRESSIONBREADTH = "MaxExpressionBreadth";
 SyntaxIssueTag SYNTAXISSUETAG_MAXCOMMENTLENGTH = "MaxCommentLength";
@@ -232,6 +235,8 @@ union Source {
     
     Source();
     
+    Source(SourceLocation loc);
+    
     Source(SourceLocation start, SourceLocation end);
     
     void putSourceRule(MLINK mlp) const;
@@ -251,9 +256,8 @@ struct Token {
     Source Span;
     
     Token(TokenEnum, std::string, Source);
-    
-    void putComment(MLINK mlp) const;
 };
+
 
 struct SyntaxIssue {
     const SyntaxIssueTag Tag;
@@ -263,6 +267,15 @@ struct SyntaxIssue {
 
     SyntaxIssue(std::string Tag, std::string Msg, std::string Severity, Source Span) : Tag(Tag), Msg(Msg), Severity(Severity), Span(Span) {}
 
+    void put(MLINK mlp) const;
+};
+
+struct Metadata {
+    std::string Key;
+    std::string Val;
+    
+    Metadata(std::string Key, std::string Val) : Key(Key), Val(Val) {}
+    
     void put(MLINK mlp) const;
 };
 

@@ -9,6 +9,7 @@
 #include <vector>
 #include <cassert>
 #include <unordered_map>
+#include <chrono>
 
 //
 // https://akrzemi1.wordpress.com/2017/05/18/asserts-in-constexpr-functions/
@@ -102,8 +103,8 @@ public:
     bool isPunctuationCharacter() const;
     bool isSpaceCharacter() const;
     bool isNewlineCharacter() const;
-    bool isCommaCharacter() const;
     bool isUninterpretableCharacter() const;
+    bool isControlCharacter() const;
     
 private:
     int value_;
@@ -182,7 +183,7 @@ const NextCharacterPolicy INSIDE_COMMENT         = PRESERVE_WS_AFTER_LC | DISABL
 
 //
 // CharacterDecoder is given a stream of integers that represent Unicode code points and decodes
-// sequences such as \[Alpha] into a single WL character
+// sequences of Source Characters such as \[Alpha] into a single WL character
 //
 class CharacterDecoder {
 
@@ -192,13 +193,16 @@ class CharacterDecoder {
     
     std::vector<SyntaxIssue> Issues;
     
-    WLCharacter handleLongName(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextCharacterPolicy policy);
+    std::chrono::microseconds totalTimeMicros;
+    
+    
+    WLCharacter handleLongName(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextCharacterPolicy policy, bool unlikelyEscapeChecking);
     WLCharacter handle2Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextCharacterPolicy policy);
     WLCharacter handle4Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextCharacterPolicy policy);
     WLCharacter handle6Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextCharacterPolicy policy);
     WLCharacter handleOctal(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextCharacterPolicy policy);
     
-    void enqueue(SourceCharacter, SourceLocation);
+    void append(SourceCharacter, SourceLocation);
     
     static std::string longNameSuggestion(std::string);
 
@@ -214,6 +218,8 @@ public:
     WLCharacter currentWLCharacter() const;
 
     std::vector<SyntaxIssue> getIssues() const;
+    
+    std::vector<Metadata> getMetadatas() const;
 };
 
 extern CharacterDecoder *TheCharacterDecoder;

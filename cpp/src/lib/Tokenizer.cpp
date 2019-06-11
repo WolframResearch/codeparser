@@ -3,8 +3,7 @@
 
 #include "Utils.h"
 
-
-Tokenizer::Tokenizer() : stringifyNextToken_symbol(false), stringifyNextToken_file(false), cur(Token(TOKEN_UNKNOWN, "", {})), _currentWLCharacter(0), characterQueue(), String(), Issues() {}
+Tokenizer::Tokenizer() : stringifyNextToken_symbol(false), stringifyNextToken_file(false), cur(Token(TOKEN_UNKNOWN, "", Source())), _currentWLCharacter(0), characterQueue(), String(), Issues(), totalTimeMicros() {}
 
 void Tokenizer::init(bool skipFirstLine) {
 
@@ -18,11 +17,17 @@ void Tokenizer::init(bool skipFirstLine) {
     String.str("");
 
     Issues.clear();
-
+    totalTimeMicros = std::chrono::microseconds::zero();
+    
     auto c = TheCharacterDecoder->nextWLCharacter();
 
     if (skipFirstLine) {
         while (true) {
+            
+            //
+            // No need to check isAbort() inside tokenizer loops
+            //
+            
             if (c == WLCharacter('\n')) {
                 c = TheCharacterDecoder->nextWLCharacter();
                 break;
@@ -37,11 +42,7 @@ void Tokenizer::init(bool skipFirstLine) {
     
     _currentWLCharacter = c;
     
-    //
-    // if Ctxt.LinearSyntaxFlag, then we are in linear syntax, and we disable stringifying next tokens
-    //
     TokenizerContext tokenizerCtxt;
-    
     nextToken(tokenizerCtxt);
 }
 
@@ -56,6 +57,7 @@ void Tokenizer::deinit() {
 
 
 Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
+    TimeScoper Scoper(&totalTimeMicros);
     
     //
     // Too complicated to clear string when calling getString and assert here
@@ -220,14 +222,6 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
         
         cur = Token(TOKEN_NEWLINE, String.str(), TheSourceManager->getTokenSpan());
         
-    } else if (c.isCommaCharacter()) {
-        
-        String << c;
-        
-        c = nextWLCharacter();
-        
-        cur = Token(TOKEN_COMMA, String.str(), TheSourceManager->getTokenSpan());
-        
     } else if (c.isLinearSyntax()) {
         
         cur = handleLinearSyntax(Ctxt);
@@ -238,11 +232,15 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
         
     } else {
         
+        //
+        // Unhandled
+        //
+        
         String << c;
         
         c = nextWLCharacter();
         
-        cur = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSpan());
+        cur = Token(TOKEN_UNHANDLED, String.str(), TheSourceManager->getTokenSpan());
     }
     
     return cur;
@@ -280,7 +278,7 @@ WLCharacter Tokenizer::nextWLCharacter(NextCharacterPolicy policy) {
     return _currentWLCharacter;
 }
 
-void Tokenizer::enqueue(WLCharacter c, Source Span) {
+void Tokenizer::append(WLCharacter c, Source Span) {
     characterQueue.push_back(std::make_pair(c, Span));
 }
 
@@ -497,8 +495,6 @@ void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
     auto c = currentWLCharacter();
 
     assert(c.isLetterlike() || c.isLetterlikeCharacter());
-    
-    auto Loc = TheSourceManager->getSourceLocation();
 
     if (c.isDollar()) {
         
@@ -531,13 +527,6 @@ void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
         //
         // No need to check isAbort() inside tokenizer loops
         //
-
-        if (len == MAX_SYMBOL_LENGTH) {
-        
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXSYMBOLLENGTH, std::string("Max symbol length reached."), SYNTAXISSUESEVERITY_REMARK, Source(Loc,Loc));
-        
-            Issues.push_back(Issue);
-        }
 
         if (c.isDigit()) {
             
@@ -584,8 +573,6 @@ void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
 Token Tokenizer::handleString(TokenizerContext Ctxt) {
     
     auto c = currentWLCharacter();
-    
-    auto Loc = TheSourceManager->getSourceLocation();
 
     if (Ctxt.StringifyCurrentLine) {
         ;
@@ -626,15 +613,6 @@ Token Tokenizer::handleString(TokenizerContext Ctxt) {
             //
             // No need to check isAbort() inside tokenizer loops
             //
-            
-            if (len == MAX_STRING_LENGTH) {
-                
-                auto Loc = TheSourceManager->getSourceLocation();
-                
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXSTRINGLENGTH, std::string("Max string length reached."), SYNTAXISSUESEVERITY_REMARK, Source(Loc,Loc));
-                
-                Issues.push_back(Issue);
-            }
             
             c = currentWLCharacter();
             
@@ -732,13 +710,6 @@ Token Tokenizer::handleString(TokenizerContext Ctxt) {
             // No need to check isAbort() inside tokenizer loops
             //
 
-            if (len == MAX_STRING_LENGTH) {
-            
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXSTRINGLENGTH, std::string("Max string length reached."), SYNTAXISSUESEVERITY_REMARK, Source(Loc,Loc));
-            
-                Issues.push_back(Issue);
-            }
-
             //
             // tutorial/OperatorInputForms
             //
@@ -814,13 +785,6 @@ Token Tokenizer::handleString(TokenizerContext Ctxt) {
             //
             // No need to check isAbort() inside tokenizer loops
             //
-
-            if (len == MAX_STRING_LENGTH) {
-            
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXSTRINGLENGTH, std::string("Max string length reached."), SYNTAXISSUESEVERITY_REMARK, Source(Loc,Loc));
-            
-                Issues.push_back(Issue);
-            }
 
             c = nextWLCharacter(INSIDE_STRING);
             
@@ -1013,7 +977,7 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
                 TheSourceManager->setWLCharacterEnd();
                 _currentWLCharacter = WLCharacter('^');
                 
-                enqueue(WLCharacter('^'), Source(Caret2Loc, Caret2Loc));
+                append(WLCharacter('^'), Source(Caret2Loc, Caret2Loc));
                 
                 return Token(TOKEN_ERROR_INVALIDBASE, String.str(), TheSourceManager->getTokenSpan());
             }
@@ -1067,7 +1031,7 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
             TheSourceManager->setWLCharacterEnd();
             _currentWLCharacter = WLCharacter('^');
             
-            enqueue(c, Span);
+            append(c, Span);
             
             return Token(TOKEN_INTEGER, String.str(), TheSourceManager->getTokenSpan());
         }
@@ -1197,7 +1161,7 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
                     TheSourceManager->setWLCharacterEnd();
                     _currentWLCharacter = s;
                     
-                    enqueue(c, Span);
+                    append(c, Span);
                     
                     return Token(TOKEN_REAL, String.str(), TheSourceManager->getTokenSpan());
                 }
@@ -1206,35 +1170,8 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
             bool handled = false;
             
             if (c.isDigit()) {
-                
-                auto Loc = TheSourceManager->getSourceLocation();
 
-                auto len = handleDigits(Ctxt);
-
-                if (accuracy) {
-
-                    //
-                    // Just look at integer value of accuracy
-                    //
-                    if (len >= MAX_ACCURACY_LENGTH) {
-                    
-                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXACCURACYLENGTH, std::string("Max accuracy length reached."), SYNTAXISSUESEVERITY_REMARK, Source(Loc,Loc));
-                    
-                        Issues.push_back(Issue);
-                    }
-                    
-                } else {
-
-                    //
-                    // Just look at integer value of precision
-                    //
-                    if (len >= MAX_PRECISION_LENGTH) {
-                    
-                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXPRECISIONLENGTH, std::string("Max precision length reached."), SYNTAXISSUESEVERITY_REMARK, Source(Loc,Loc));
-                    
-                        Issues.push_back(Issue);
-                    }
-                }
+                handleDigits(Ctxt);
                 
                 handled = true;
             }
@@ -1338,7 +1275,7 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
             TheSourceManager->setWLCharacterEnd();
             _currentWLCharacter = WLCharacter('*');
             
-            enqueue(c, Span);
+            append(c, Span);
             
             if (real) {
                 return Token(TOKEN_REAL, String.str(), TheSourceManager->getTokenSpan());
@@ -1397,7 +1334,7 @@ bool Tokenizer::handleFractionalPart(TokenizerContext Ctxt, int base) {
         TheSourceManager->setWLCharacterEnd();
         _currentWLCharacter = WLCharacter('.');
         
-        enqueue(c, Source(Loc, Loc));
+        append(c, Source(Loc, Loc));
         
         return false; 
     }
@@ -1457,21 +1394,12 @@ size_t Tokenizer::handleDigits(TokenizerContext Ctxt) {
     
     auto c = currentWLCharacter();
 
-    auto Loc = TheSourceManager->getSourceLocation();
-
     auto len = 0;
     while (true) {
         
         //
         // No need to check isAbort() inside tokenizer loops
         //
-        
-        if (len == MAX_DIGITS_LENGTH) {
-        
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXDIGITSLENGTH, std::string("Max digits length reached."), SYNTAXISSUESEVERITY_REMARK, Source(Loc,Loc));
-        
-            Issues.push_back(Issue);
-        }
 
         if (c.isDigit()) {
             
@@ -1494,21 +1422,12 @@ bool Tokenizer::handleDigitsOrAlpha(TokenizerContext Ctxt, int base) {
     
     auto c = currentWLCharacter();
 
-    auto Loc = TheSourceManager->getSourceLocation();
-
     auto len = 1;
     while (true) {
         
         //
         // No need to check isAbort() inside tokenizer loops
         //
-        
-        if (len == MAX_DIGITS_LENGTH) {
-        
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_MAXDIGITSLENGTH, std::string("Max digits length reached."), SYNTAXISSUESEVERITY_REMARK, Source(Loc,Loc));
-        
-            Issues.push_back(Issue);
-        }
 
         if (c.isDigit()) {
             
@@ -1717,7 +1636,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                         TheSourceManager->setWLCharacterEnd();
                         _currentWLCharacter = WLCharacter('!');
                         
-                        enqueue(c, Span);
+                        append(c, Span);
                         
                         Operator = TOKEN_EQUAL;
                     }
@@ -1789,7 +1708,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                         TheSourceManager->setWLCharacterEnd();
                         _currentWLCharacter = WLCharacter('.');
                         
-                        enqueue(c, Span);
+                        append(c, Span);
                         
                         Operator = TOKEN_UNDER; // _
                         
@@ -1903,7 +1822,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                         TheSourceManager->setWLCharacterEnd();
                         _currentWLCharacter = WLCharacter('-');
                         
-                        enqueue(c, Span);
+                        append(c, Span);
                         
                         Operator = TOKEN_LESS;
                     }
@@ -2291,7 +2210,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                         TheSourceManager->setWLCharacterEnd();
                         _currentWLCharacter = WLCharacter('.');
                         
-                        enqueue(c, Source(Loc, Loc));
+                        append(c, Source(Loc, Loc));
                         
                     } else {
                         
@@ -2602,7 +2521,7 @@ Token Tokenizer::handleDot(TokenizerContext Ctxt) {
         TheSourceManager->setWLCharacterEnd();
         _currentWLCharacter = WLCharacter('.');
         
-        enqueue(c, Source(Loc, Loc));
+        append(c, Source(Loc, Loc));
         
         return handleNumber(Ctxt);
     }
@@ -2638,6 +2557,17 @@ std::string Tokenizer::getString() const {
 
 std::vector<SyntaxIssue> Tokenizer::getIssues() const {
     return Issues;
+}
+
+std::vector<Metadata> Tokenizer::getMetadatas() const {
+    
+    std::vector<Metadata> Metadatas;
+    
+    auto totalTimeMillis = std::chrono::duration_cast<std::chrono::milliseconds>(totalTimeMicros);
+    
+    Metadatas.push_back(Metadata("TokenizerTotalTimeMillis", std::to_string(totalTimeMillis.count())));
+    
+    return Metadatas;
 }
 
 Tokenizer *TheTokenizer = nullptr;

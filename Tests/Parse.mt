@@ -100,6 +100,115 @@ Test[
 	TestID->"Parse-20190524-E0W7U3"
 ]
 
+Test[
+	"-9.5`15.9*^3"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190710-V0J1V4"
+]
+
+Test[
+	"-1.2"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190725-I1J8V9"
+]
+
+Test[
+	"-(1.2)"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190725-W8R5A7"
+]
+
+Test[
+	"x * 2/3"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190725-C8B9K0"
+]
+
+Test[
+	"x * (2/3)"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190725-H4A5P4"
+]
+
+Test[
+	"2/3 * x"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190725-O1X7U5"
+]
+
+Test[
+	"(2/3) * x"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190725-T1G2R1"
+]
+
+Test[
+	"-0"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190730-N8U2U7"
+]
+
+Test[
+	"-(-0)"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190730-J8H8W7"
+]
+
+Test[
+	"-(-(-0))"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190730-A3Z6W9"
+]
+
+Test[
+	"-(-(-(-0)))"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190730-M9S3U2"
+]
 
 
 
@@ -568,51 +677,6 @@ Test[
 
 
 
-
-
-
-
-
-
-(*
-
-Implicit times and span
-
-*)
-
-Test[
-	";; ;;"
-	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
-	,
-	TestID->"Parse-20181231-N2J2Z3"
-]
-
-Test[
-	";;;;"
-	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
-	,
-	TestID->"Parse-20190109-B0V5P7"
-]
-
-Test[
-	";;a;;"
-	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
-	,
-	TestID->"Parse-20190109-M8Y0B6"
-]
-
-
-
-
 (*
 
 Implicit Times and symbols
@@ -628,6 +692,9 @@ Test[
 	,
 	TestID->"Parse-20190228-E0E7X8"
 ]
+
+
+
 
 
 
@@ -939,7 +1006,15 @@ Test[
 	TestID->"Parse-20190126-A4A9T4"
 ]
 
-
+Test[
+	"\\(x \\[VeryThinSpace]\\)"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190730-Z1U3H0"
+]
 
 
 
@@ -1055,132 +1130,6 @@ Test[
 
 
 
-
-
-
-
-(*
-Malformed \[] characters
-Unrecognized \[] characters
-*)
-
-ast = ParseString["\"\\[.*\\]\""]
-
-s = ast[[2]]
-data = ast[[3]]
-issues = data[SyntaxIssues]
-
-Test[
-	Head[ast]
-	,
-	StringNode
-	,
-	TestID->"Parse-20181207-O9W0O1"
-]
-
-Test[
-	s
-	,
-	"\"\\[.*\\]\""
-	,
-	TestID->"Parse-20181207-X9G8E1"
-]
-
-Test[
-	Length[issues]
-	,
-	2
-	,
-	TestID->"Parse-20181202-E8N4Z4"
-]
-
-
-
-(*
-Parsing <newline>23 should be fine, but parsing \n23 should fail
-*)
-
-(*
-Use "1\n23" here because "\n23" is parsed as a single expression by AST and as two expressions by the kernel
-*)
-Test[
-	"1\n23"
-	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
-	,
-	TestID->"Parse-20190126-W2J2Q1"
-]
-
-TestMatch[
-	ParseString["\\n23", HoldNode[Hold, #[[1]], <||>]&]
-	,
-	HoldNode[Hold, {_SyntaxErrorNode, _}, _]
-	,
-	TestID->"Parse-20190126-Q9U0H8"
-]
-
-TestMatch[
-	ParseString["\\t23", HoldNode[Hold, #[[1]], <||>]&]
-	,
-	HoldNode[Hold, {_SyntaxErrorNode, _}, _]
-	,
-	TestID->"Parse-20190203-F5C9L1"
-]
-
-(*
-important that space after - is not in SyntaxErrorNode
-*)
-Test[
-	ConcreteParseString["a - \\tb"]
-	,
-	InfixNode[ImplicitTimes, {
-		BinaryNode[Minus, {
-			SymbolNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
-			TokenNode[Token`Minus, "-", <|Source -> {{1, 3}, {1, 3}}|>],
-			SyntaxErrorNode[SyntaxError`UnhandledCharacter, {TokenNode[Token`Error`UnhandledCharacter, "\\t", <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 5}, {1, 6}}|>] }, <|Source -> {{1, 1}, {1, 6}}|>], 
-  		TokenNode[Token`Fake`ImplicitTimes, "", <|Source -> {{1, 7}, {1, 7}}|>],
-  		SymbolNode[Symbol, "b", <|Source -> {{1, 7}, {1, 7}}|>] }, <|Source -> {{1, 1}, {1, 7}}|>]
-	,
-	TestID->"Parse-20190203-G0U2N7"
-]
-
-TestMatch[
-	ParseString["\\"]
-	,
-	_SyntaxErrorNode
-	,
-	TestID->"Parse-20190203-M3A0S4"
-]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 (*
 
 implementation details of parser
@@ -1199,9 +1148,6 @@ Test[
 	,
 	TestID->"Parse-20190117-S9J8V7"
 ]
-
-
-
 
 
 
@@ -1462,6 +1408,342 @@ Test[
 
 
 
+Test[
+	"a;[]"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190621-X8J2Q1"
+]
+
+
+Test[
+	"a; &"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190623-X6G3Z0"
+]
+
+
+Test[
+	"-1/2a^2 b^2"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190626-U7U1D7"
+]
+
+
+Test[
+	"a \\[Divide] b"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190629-C1U2O5"
+]
+
+Test[
+	"\\[OpenCurlyQuote] a \\[CloseCurlyQuote]"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190629-A9S6V8"
+]
+
+Test[
+	"\\[OpenCurlyDoubleQuote] a \\[CloseCurlyDoubleQuote]"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190629-M6T3M5"
+]
+
+
+
+
+
+Test[
+	"\\[ForAll] x"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190629-O9F8D9"
+]
+
+Test[
+	"\\[Exists] x"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190629-W2S5W4"
+]
+
+Test[
+	"\\[NotExists] x"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190629-X5D6D4"
+]
+
+Test[
+	"\\[Del] x"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190629-Z1G6N5"
+]
+
+Test[
+	"a \\[ReverseElement] b \\[ReverseElement] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190629-I1S8K4"
+]
+
+Test[
+	"a \\[NotReverseElement] b \\[NotReverseElement] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190629-W8G5M5"
+]
+
+Test[
+	"a \\[SuchThat] b \\[SuchThat] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190629-R8X2V0"
+]
+
+Test[
+	"\\[Product] x"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190629-V7N7L6"
+]
+
+Test[
+	"\\[Coproduct] x"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190629-Q5S8M5"
+]
+
+Test[
+	"\\[Sum] x"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190629-O8L6N1"
+]
+
+Test[
+	"\\[Minus] x"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190629-F0N6F2"
+]
+
+Test[
+	"a \\[MinusPlus] b"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190629-M6J6N7"
+]
+
+Test[
+	"a \\[DivisionSlash] b"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190629-K1S2D3"
+]
+
+Test[
+	"a \\[Because] b \\[Because] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190703-O8X8R0"
+]
+
+Test[
+	"a \\[LeftTee] b \\[LeftTee] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190703-P3M1M6"
+]
+
+Test[
+	"a \\[RightTee] b \\[RightTee] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190703-L3H8M8"
+]
+
+Test[
+	"a \\[LessFullEqual] b \\[LessFullEqual] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190703-C6K9G3"
+]
+
+Test[
+	"a \\[NestedLessLess] b \\[NestedLessLess] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190703-K7P3H4"
+]
+
+Test[
+	"a \\[NotLess] b \\[NotLess] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190703-Z5X8X2"
+]
+
+Test[
+	"a \\[NotLessLess] b \\[NotLessLess] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190703-L4T5U5"
+]
+
+Test[
+	"\\[ContinuedFractionK] a"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190703-I2H4Z7"
+]
+
+Test[
+	"a \\[TensorProduct] b \\[TensorProduct] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190703-O8O6I6"
+]
+
+Test[
+	"\\[Coproduct] a"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190703-N5B6V7"
+]
+
+Test[
+	"a \\[Coproduct] b \\[Coproduct] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190703-A9X2W7"
+]
+
+Test[
+	"a \\[Therefore] b \\[Therefore] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190703-C3S4J2"
+]
+
+Test[
+	"a \\[SuchThat] b \\[SuchThat] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190703-A0O1Q4"
+]
+
+Test[
+	"a \\[Implies] b \\[Implies] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190703-E8L9K8"
+]
 
 
 
@@ -1469,7 +1751,127 @@ Test[
 
 
 
+Test[
+	"?LogicalExpand"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190717-T7P2K7"
+]
 
+Test[
+	"??LogicalExpand"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190717-F0Y3D1"
+]
+
+
+
+
+
+
+
+Test[
+	"a \\[PrecedesSlantEqual] b \\[PrecedesSlantEqual] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190717-A7N7G5"
+]
+
+Test[
+	"a \\[SucceedsSlantEqual] b \\[SucceedsSlantEqual] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190717-U1T9F6"
+]
+
+Test[
+	"a \\[LessSlantEqual] b \\[LessSlantEqual] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190717-A1K9Z6"
+]
+
+Test[
+	"a \\[GreaterSlantEqual] b \\[GreaterSlantEqual] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190717-M0M7G1"
+]
+
+Test[
+	"a \\[NotPrecedesSlantEqual] b \\[NotPrecedesSlantEqual] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190717-F0X1T3"
+]
+
+Test[
+	"a \\[NotSucceedsSlantEqual] b \\[NotSucceedsSlantEqual] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190717-G1S6Z6"
+]
+
+Test[
+	"a \\[NotLessSlantEqual] b \\[NotLessSlantEqual] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190717-Y5S0M5"
+]
+
+Test[
+	"a \\[NotGreaterSlantEqual] b \\[NotGreaterSlantEqual] c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190717-K7E0K0"
+]
+
+
+
+
+
+
+
+Test[
+	"\[Piecewise]{{ChebyshevT[30,x] Sin[100 x],x<0},{ChebyshevT[10,x],True}}"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190730-K3Q6I4"
+]
 
 
 

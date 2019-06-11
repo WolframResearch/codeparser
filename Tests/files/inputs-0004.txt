@@ -551,7 +551,7 @@ a`\\\r\nb
 a\\\r\nb
 12\\\r\n56
 12*\\\r\n^56
-\"SQLArgument[ arg1, arg2, …]\"
+\"SQLArgument[ arg1, arg2, â€¦]\"
 a + ] 
 (a)
 ()
@@ -574,8 +574,8 @@ f[{b,}\nc]
 f[Times[List[b,Null],c]]
 f[]\n(* foo *)
 f[]
-Iñtërnâtiônàlizætiøn
-ñtërnâtiônàlizætiøn
+IÃ±tÃ«rnÃ¢tiÃ´nÃ lizÃ¦tiÃ¸n
+Ã±tÃ«rnÃ¢tiÃ´nÃ lizÃ¦tiÃ¸n
 (*!1A!*)[}
 (*!1B!*)[}
 (*!1C!*)[}

@@ -1,6 +1,8 @@
 
 #include "Utils.h"
 
+#include "Parser.h"
+
 #include <sstream>
 #include <unordered_set>
 
@@ -34,7 +36,7 @@ std::string Utils::stringEscape(std::string s) {
 }
 
 //
-// Convert whitespace characters and control characters to graphical representations,
+// Convert whitespace Source characters and control Source characters to graphical representations,
 // appropriate for displaying
 //
 std::string Utils::makeGraphical(std::string s) {
@@ -45,136 +47,104 @@ std::string Utils::makeGraphical(std::string s) {
             //
             // whitespace characters
             //
-            case '\t':
-                graph << "\\t";
-                break;
-            case '\n':
-                graph << "\\n";
-                break;
-            case '\v':
-                graph << "\\.0b";
-                break;
-            case '\f':
-                graph << "\\.0c";
-                break;
-            case '\r':
-                graph << "\\r";
-                break;
+            case '\t': graph << "\\t"; break;
+            case '\n': graph << "\\n"; break;
+            case '\v': graph << "\\.0b"; break;
+            case '\f': graph << "\\.0c"; break;
+            case '\r': graph << "\\r"; break;
             //
-            // control characters
+            // C0 control characters
             //
-            case 0x00:
-                graph << "\\.00";
-                break;
-            case 0x01:
-                graph << "\\.01";
-                break;
-            case 0x02:
-                graph << "\\.02";
-                break;
-            case 0x03:
-                graph << "\\.03";
-                break;
-            case 0x04:
-                graph << "\\.04";
-                break;
-            case 0x05:
-                graph << "\\.05";
-                break;
-            case 0x06:
-                graph << "\\.06";
-                break;
-            case 0x07:
-                graph << "\\.07";
-                break;
-            case 0x08:
-                graph << "\\.08";
-                break;
+            case 0x00: graph << "\\.00"; break;
+            case 0x01: graph << "\\.01"; break;
+            case 0x02: graph << "\\.02"; break;
+            case 0x03: graph << "\\.03"; break;
+            case 0x04: graph << "\\.04"; break;
+            case 0x05: graph << "\\.05"; break;
+            case 0x06: graph << "\\.06"; break;
+            case 0x07: graph << "\\.07"; break;
+            case 0x08: graph << "\\.08"; break;
             //
             // Skip TAB, LF, VT, FF, CR. They are handled above
             //
-            case 0x0e:
-                graph << "\\.0e";
-                break;
-            case 0x0f:
-                graph << "\\.0f";
-                break;
-            case 0x10:
-                graph << "\\.10";
-                break;
-            case 0x11:
-                graph << "\\.11";
-                break;
-            case 0x12:
-                graph << "\\.12";
-                break;
-            case 0x13:
-                graph << "\\.13";
-                break;
-            case 0x14:
-                graph << "\\.14";
-                break;
-            case 0x15:
-                graph << "\\.15";
-                break;
-            case 0x16:
-                graph << "\\.16";
-                break;
-            case 0x17:
-                graph << "\\.17";
-                break;
-            case 0x18:
-                graph << "\\.18";
-                break;
-            case 0x19:
-                graph << "\\.19";
-                break;
-            case 0x1a:
-                graph << "\\.1a";
-                break;
-            case 0x1b:
-                graph << "\\.1b";
-                break;
-            case 0x1c:
-                graph << "\\.1c";
-                break;
-            case 0x1d:
-                graph << "\\.1d";
-                break;
-            case 0x1e:
-                graph << "\\.1e";
-                break;
-            case 0x01f:
-                graph << "\\.1f";
-                break;
+            case 0x0e: graph << "\\.0e"; break;
+            case 0x0f: graph << "\\.0f"; break;
+            case 0x10: graph << "\\.10"; break;
+            case 0x11: graph << "\\.11"; break;
+            case 0x12: graph << "\\.12"; break;
+            case 0x13: graph << "\\.13"; break;
+            case 0x14: graph << "\\.14"; break;
+            case 0x15: graph << "\\.15"; break;
+            case 0x16: graph << "\\.16"; break;
+            case 0x17: graph << "\\.17"; break;
+            case 0x18: graph << "\\.18"; break;
+            case 0x19: graph << "\\.19"; break;
+            case 0x1a: graph << "\\.1a"; break;
+            case 0x1b: graph << "\\.1b"; break;
+            case 0x1c: graph << "\\.1c"; break;
+            case 0x1d: graph << "\\.1d"; break;
+            case 0x1e: graph << "\\.1e"; break;
+            case 0x1f: graph << "\\.1f"; break;
             //
             // Make sure to include DEL
             //
-            case 0x7f:
-                graph << "\\.7f";
-                break;
+            case 0x7f: graph << "\\.7f"; break;
+            //
+            // C1 control characters
+            //
+            case -0x80: graph << "\\.80"; break;
+            case -0x7f: graph << "\\.81"; break;
+            case -0x7e: graph << "\\.82"; break;
+            case -0x7d: graph << "\\.83"; break;
+            case -0x7c: graph << "\\.84"; break;
+            case -0x7b: graph << "\\.85"; break;
+            case -0x7a: graph << "\\.86"; break;
+            case -0x79: graph << "\\.87"; break;
+            case -0x78: graph << "\\.88"; break;
+            case -0x77: graph << "\\.89"; break;
+            case -0x76: graph << "\\.8a"; break;
+            case -0x75: graph << "\\.8b"; break;
+            case -0x74: graph << "\\.8c"; break;
+            case -0x73: graph << "\\.8d"; break;
+            case -0x72: graph << "\\.8e"; break;
+            case -0x71: graph << "\\.8f"; break;
+            case -0x70: graph << "\\.90"; break;
+            case -0x6f: graph << "\\.91"; break;
+            case -0x6e: graph << "\\.92"; break;
+            case -0x6d: graph << "\\.93"; break;
+            case -0x6c: graph << "\\.94"; break;
+            case -0x6b: graph << "\\.95"; break;
+            case -0x6a: graph << "\\.96"; break;
+            case -0x69: graph << "\\.97"; break;
+            case -0x68: graph << "\\.98"; break;
+            case -0x67: graph << "\\.99"; break;
+            case -0x66: graph << "\\.9a"; break;
+            case -0x65: graph << "\\.9b"; break;
+            case -0x64: graph << "\\.9c"; break;
+            case -0x63: graph << "\\.9d"; break;
+            case -0x62: graph << "\\.9e"; break;
+            case -0x61: graph << "\\.9f"; break;
+            
             //
             // everything else is untouched
             //
-            default:
-                graph << c;
-                break;
+            default: graph << c; break;
         }
     }
     
     return graph.str();
 }
 
-bool Utils::containsNonASCII(std::string s) {
+bool Utils::containsOnlyASCII(std::string s) {
     for (auto c : s) {
         //
         // Take care to cast to int before comparing
         //
         if ((static_cast<int>(c) & 0xff) >= 0x80) {
-            return true;
+            return false;
         }
     }
-    return false;
+    return true;
 }
 
 
@@ -204,7 +174,7 @@ std::unordered_set<std::string> strangeLetterlikeLongNames {
         "Hyphen", "Dash", "LongDash", "Dagger", "DoubleDagger", "Bullet", "Ellipsis",
     "Prime", "DoublePrime", "ReversePrime", "ReverseDoublePrime",
     "Euro", "Rupee", "Trademark", "ReturnIndicator",
-    "EmptySet", "VerticalEllipsis", "CenterEllipsis", "AscendingEllipsis",
+    "VerticalEllipsis", "CenterEllipsis", "AscendingEllipsis",
         "DescendingEllipsis", "CloverLeaf", "WatchIcon", "OverBracket", "UnderBracket", "HorizontalLine", "VerticalLine", "FilledSquare",
         "EmptySquare", "FilledVerySmallSquare", "EmptyVerySmallSquare", "FilledRectangle", "EmptyRectangle", "FilledUpTriangle",
         "EmptyUpTriangle", "UpPointer", "FilledRightTriangle", "RightPointer", "FilledDownTriangle", "EmptyDownTriangle", "DownPointer",
@@ -238,7 +208,7 @@ std::unordered_set<std::string> strangeLetterlikeLongNames {
 // Perhaps they have been deprecated, perhaps the Front End understands the character, but the kernel doesn't, etc.
 //
 std::unordered_set<std::string> unsupportedLongNames {
-    "COMPATIBILITYKanjiSpace", "COMPATIBILITYNoBreak", "NumberComma" };
+    "COMPATIBILITYKanjiSpace", "COMPATIBILITYNoBreak", "NumberComma", "InlinePart" };
 
 //
 // Defined by grabbing character notebooks from Documentation/English/System/ReferencePages/Characters and comparing with existing long names
@@ -353,4 +323,172 @@ int Utils::fromDigit(int d) {
             return -1;
     }
 }
+
+
+
+Token Utils::eatAll(Token TokIn, ParserContext Ctxt, NodeSeq& Args) {
+    
+    auto Tok = TokIn;
+    
+    while (Tok.Tok == TOKEN_WHITESPACE ||
+           Tok.Tok == TOKEN_NEWLINE ||
+           Tok.Tok == TOKEN_COMMENT) {
+        
+        //
+        // No need to check isAbort() inside tokenizer loops
+        //
+        
+        
+        Args.push_back(std::make_shared<LeafNode>(Tok));
+        
+        Tok = TheParser->nextToken(Ctxt);
+    }
+    
+    return Tok;
+}
+
+Token Utils::eatAndPreserveToplevelNewlines(Token TokIn, ParserContext Ctxt, NodeSeq& Args) {
+    
+    auto Tok = TokIn;
+    
+    while (true) {
+        
+        //
+        // No need to check isAbort() inside tokenizer loops
+        //
+        
+        
+        if (Tok.Tok == TOKEN_WHITESPACE ||
+            Tok.Tok == TOKEN_COMMENT) {
+            
+            Args.push_back(std::make_shared<LeafNode>(Tok));
+            
+            Tok = TheParser->nextToken(Ctxt);
+            
+        } else if (Tok.Tok == TOKEN_NEWLINE) {
+            
+            if (Ctxt.getGroupDepth() == 0) {
+                
+                break;
+                
+            } else {
+                
+                Args.push_back(std::make_shared<LeafNode>(Tok));
+                
+                Tok = TheParser->nextToken(Ctxt);
+            }
+            
+        } else {
+            break;
+        }
+    }
+    
+    return Tok;
+}
+
+void Utils::differentLineWarning(Token Tok1, Token Tok2, SyntaxIssueSeverity Severity) {
+    
+    if (Tok1.Tok == TOKEN_ERROR_ABORTED) {
+        return;
+    }
+    if (Tok2.Tok == TOKEN_ERROR_ABORTED) {
+        return;
+    }
+    
+    //
+    // Skip DifferentLine issues if ENDOFFILE
+    //
+    if (Tok1.Tok == TOKEN_ENDOFFILE) {
+        return;
+    }
+    if (Tok2.Tok == TOKEN_ENDOFFILE) {
+        return;
+    }
+    
+    if (Tok1.Span.lines.end.Line == Tok2.Span.lines.start.Line) {
+        return;
+    }
+    
+    auto Issue = SyntaxIssue(SYNTAXISSUETAG_DIFFERENTLINE, "``" + Tok1.Str + "`` and ``" + Tok2.Str + "`` are on different lines.", Severity, Source(Tok1.Span.lines.start, Tok2.Span.lines.end));
+    
+    TheParser->addIssue(Issue);
+}
+
+Token Utils::lastToken(NodePtr Node) {
+    
+    if (auto Leaf = std::dynamic_pointer_cast<const LeafNode>(Node)) {
+        
+        return Leaf->getToken();
+    }
+    
+    auto Children = Node->getChildren();
+    auto LastNode = Children[Children.size()-1];
+    
+    return Utils::lastToken(LastNode);
+}
+
+void Utils::differentLineWarning(NodeSeq Args, Token Tok2, SyntaxIssueSeverity Severity) {
+    
+    auto Arg1 = Args.main();
+    
+    auto Tok1 = Utils::lastToken(Arg1);
+    
+    Utils::differentLineWarning(Tok1, Tok2, Severity);
+}
+
+void Utils::endOfLineWarning(Token Tok, Token EndTok) {
+    
+    if (Tok.Tok == TOKEN_ERROR_ABORTED) {
+        return;
+    }
+    if (EndTok.Tok == TOKEN_ERROR_ABORTED) {
+        return;
+    }
+    
+    if (EndTok.Tok != TOKEN_NEWLINE && EndTok.Tok != TOKEN_ENDOFFILE) {
+        return;
+    }
+    
+    auto Issue = SyntaxIssue(SYNTAXISSUETAG_ENDOFLINE, "``;;`` is at the end of a line. Did you mean ``;``?", SYNTAXISSUESEVERITY_WARNING, Tok.Span);
+    
+    TheParser->addIssue(Issue);
+}
+
+void Utils::notContiguousWarning(Token Tok1, Token Tok2) {
+    
+    if (Tok1.Tok == TOKEN_ERROR_ABORTED) {
+        return;
+    }
+    if (Tok2.Tok == TOKEN_ERROR_ABORTED) {
+        return;
+    }
+    
+    if (isContiguous(Tok1.Span, Tok2.Span)) {
+        return;
+    }
+    
+    auto Issue = SyntaxIssue(SYNTAXISSUETAG_NOTCONTIGUOUS, std::string("Tokens are not contiguous"), SYNTAXISSUESEVERITY_FORMATTING, Source(Tok1.Span.lines.end, Tok2.Span.lines.start));
+    
+    TheParser->addIssue(Issue);
+}
+
+
+
+
+
+
+
+TimeScoper::TimeScoper(std::chrono::microseconds *acc) : acc(acc) {
+    t1 = std::chrono::high_resolution_clock::now();
+};
+
+TimeScoper::~TimeScoper() {
+    
+    auto t2 = std::chrono::high_resolution_clock::now();
+    
+    std::chrono::microseconds span = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
+    
+    *acc += span;
+}
+
 

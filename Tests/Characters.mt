@@ -17,7 +17,7 @@ guarantee that "\:f3a2" does not get returned as StringNode[String, "\[COMPATIBI
 Test[
 	ConcreteParseString["\"\\:f3a2\""]
 	,
-	StringNode[String, "\"\\:f3a2\"", <|Source->{{1,1},{1,8}}|>]
+	LeafNode[String, "\"\\:f3a2\"", <|Source->{{1,1},{1,8}}|>]
 	,
 	TestID->"Characters-20190601-E6Q0I8"
 ]

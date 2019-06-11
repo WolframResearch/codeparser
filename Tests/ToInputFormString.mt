@@ -1,10 +1,10 @@
 
 Needs["AST`"]
-
+Needs["AST`Abstract`"]
 
 
 Test[
-	ToInputFormString[ConcreteParseString["1+1"]]
+	ToInputFormString[Aggregate[ConcreteParseString["1+1"]]]
 	,
 	" 1 + 1 "
 	,
@@ -12,7 +12,7 @@ Test[
 ]
 
 Test[
-	ToInputFormString[ConcreteParseString["_ + __ * ___"]]
+	ToInputFormString[Aggregate[ConcreteParseString["_ + __ * ___"]]]
 	,
 	" _ +  __*___  "
 	,
@@ -20,7 +20,7 @@ Test[
 ]
 
 Test[
-	ToInputFormString[ConcreteParseString["% ^ # ^ ## ^ f''[x]"]]
+	ToInputFormString[Aggregate[ConcreteParseString["% ^ # ^ ## ^ f''[x]"]]]
 	,
 	" %^ #^ ##^  f' ' [x]   "
 	,
@@ -29,7 +29,7 @@ Test[
 
 
 Test[
-	ToInputFormString[ConcreteParseString["@"]]
+	ToInputFormString[Aggregate[ConcreteParseString["@"]]]
 	,
 	" @ "
 	,
@@ -37,16 +37,16 @@ Test[
 ]
 
 Test[
-	ToInputFormString[ConcreteParseString["{a_b, c__d, e___f, _., g_.}"]]
+	ToInputFormString[Aggregate[ConcreteParseString["{a_b, c__d, e___f, _., g_.}"]]]
 	,
-	"{a_b,c__d,e___f,_.,g_.}"
+	"{ a_b,c__d,e___f,_.,g_. }"
 	,
 	TestID->"ToInputFormString-20181230-U1H3E1"
 ]
 
 
 Test[
-	ToInputFormString[ConcreteParseString["aaa - bbb + ccc - !ddd"]]
+	ToInputFormString[Aggregate[ConcreteParseString["aaa - bbb + ccc - !ddd"]]]
 	,
 	"   aaa - bbb  + ccc  -  !ddd  "
 	,
@@ -56,7 +56,7 @@ Test[
 
 
 Test[
-	ToInputFormString[ConcreteParseString["a::b::c"]]
+	ToInputFormString[Aggregate[ConcreteParseString["a::b::c"]]]
 	,
 	" a::b::c "
 	,
@@ -64,7 +64,7 @@ Test[
 ]
 
 Test[
-	ToInputFormString[ConcreteParseString["a /: b := c"]]
+	ToInputFormString[Aggregate[ConcreteParseString["a /: b := c"]]]
 	,
 	" a/:b:=c "
 	,
@@ -73,7 +73,7 @@ Test[
 
 
 Test[
-	ToInputFormString[ConcreteParseString["##&"]]
+	ToInputFormString[Aggregate[ConcreteParseString["##&"]]]
 	,
 	" ##& "
 	,
@@ -82,7 +82,7 @@ Test[
 
 
 Test[
-	ToInputFormString[ConcreteParseString["f[]"]]
+	ToInputFormString[Aggregate[ConcreteParseString["f[]"]]]
 	,
 	"f[]"
 	,
@@ -90,7 +90,7 @@ Test[
 ]
 
 Test[
-	ToInputFormString[ConcreteParseString["f["]]
+	ToInputFormString[Aggregate[ConcreteParseString["f["]]]
 	,
 	"f["
 	,
@@ -99,7 +99,7 @@ Test[
 
 
 Test[
-	ToInputFormString[ConcreteParseString["f[[4]]"]]
+	ToInputFormString[Aggregate[ConcreteParseString["f[[4]]"]]]
 	,
 	"f[[4]]"
 	,
@@ -116,7 +116,7 @@ Test[
 
 
 Test[
-	ToInputFormString[ConcreteParseString["\\(x\\)"]]
+	ToInputFormString[Aggregate[ConcreteParseString["\\(x\\)"]]]
 	,
 	"\\(x\\)"
 	,
@@ -124,7 +124,7 @@ Test[
 ]
 
 Test[
-	ToInputFormString[ConcreteParseString["\\(x"]]
+	ToInputFormString[Aggregate[ConcreteParseString["\\(x"]]]
 	,
 	"\\(x"
 	,
@@ -132,7 +132,7 @@ Test[
 ]
 
 Test[
-	ToInputFormString[ConcreteParseString["\\(x,y\\)"]]
+	ToInputFormString[Aggregate[ConcreteParseString["\\(x,y\\)"]]]
 	,
 	"\\(x,y\\)"
 	,
@@ -161,7 +161,7 @@ Test[
 
 
 Test[
-	ToInputFormString[ConcreteParseString["a& & + b"]]
+	ToInputFormString[Aggregate[ConcreteParseString["a& & + b"]]]
 	,
 	"   a& &  + b "
 	,
@@ -177,7 +177,7 @@ Test[
 Error handling
 *)
 Test[
-	ToInputFormString[ConcreteParseString["A B:C:.Ne"]]
+	ToInputFormString[Aggregate[ConcreteParseString["A B:C:.Ne"]]]
 	,
 	" A   B:C :  .    Ne "
 	,
@@ -186,7 +186,7 @@ Test[
 
 
 Test[
-	ToInputFormString[ConcreteParseString["a:"]]
+	ToInputFormString[Aggregate[ConcreteParseString["a:"]]]
 	,
 	" a:   "
 	,

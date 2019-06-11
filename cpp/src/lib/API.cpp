@@ -15,9 +15,9 @@
 #include <memory>
 #include <cstring>
 
-void putExpressions(std::vector<std::shared_ptr<Node>>, MLINK mlp);
-std::vector<std::shared_ptr<Node>> parseExpressions();
-std::vector<std::shared_ptr<Node>> tokenize();
+void putExpressions(std::vector<NodePtr>, MLINK mlp);
+std::vector<NodePtr> parseExpressions();
+std::vector<NodePtr> tokenize();
 
 bool validatePath(WolframLibraryData libData, const unsigned char *inStr);
 
@@ -109,11 +109,11 @@ DLLEXPORT int ConcreteParseFile(WolframLibraryData libData, MLINK mlp) {
         bool res = libData->AbortQ();
         return res;
     }, {} );
-    
+        
     auto nodes = parseExpressions();
-
+        
     putExpressions(nodes, mlp);
-    
+        
     TheParser->deinit();
     TheTokenizer->deinit();
     TheCharacterDecoder->deinit();
@@ -202,13 +202,6 @@ retPt:
 	return res;
 }
 
-DLLEXPORT int ConcreteParseBoxes(WolframLibraryData libData, MLINK mlp) {
-    
-    int res = LIBRARY_FUNCTION_ERROR;
-
-    return res;
-}
-
 DLLEXPORT int TokenizeString(WolframLibraryData libData, MLINK mlp) {
     
     int res = LIBRARY_FUNCTION_ERROR;
@@ -238,20 +231,31 @@ DLLEXPORT int TokenizeString(WolframLibraryData libData, MLINK mlp) {
 
     TheInputStream = &iss;
         
+    TheSourceManager->init();
     TheByteDecoder->init();
     TheCharacterDecoder->init();
-    TheSourceManager->init();
     TheTokenizer->init(skipFirstLine);
+    TheParser->init( [&libData]() {
+        if (!libData) {
+            return false;
+        }
+        //
+        // For some reason, AbortQ() returns a mint
+        //
+        bool res = libData->AbortQ();
+        return res;
+    }, { } );
     
-    std::vector<std::shared_ptr<Node>> nodes = tokenize();
+    std::vector<NodePtr> nodes = tokenize();
 
     putExpressions(nodes, mlp);
     
+    TheParser->deinit();
     TheTokenizer->deinit();
-    TheSourceManager->deinit();
     TheCharacterDecoder->deinit();
     TheByteDecoder->deinit();
-
+    TheSourceManager->deinit();
+        
     res = LIBRARY_NO_ERROR;
     }
     
@@ -302,20 +306,31 @@ DLLEXPORT int TokenizeFile(WolframLibraryData libData, MLINK mlp) {
 
     TheInputStream = &ifs;
         
+    TheSourceManager->init();
     TheByteDecoder->init();
     TheCharacterDecoder->init();
-    TheSourceManager->init();
     TheTokenizer->init(skipFirstLine);
+    TheParser->init( [&libData]() {
+        if (!libData) {
+            return false;
+        }
+        //
+        // For some reason, AbortQ() returns a mint
+        //
+        bool res = libData->AbortQ();
+        return res;
+    }, { } );
     
-    std::vector<std::shared_ptr<Node>> nodes = tokenize();
+    std::vector<NodePtr> nodes = tokenize();
 
     putExpressions(nodes, mlp);
     
+    TheParser->deinit();
     TheTokenizer->deinit();
-    TheSourceManager->deinit();
     TheCharacterDecoder->deinit();
     TheByteDecoder->deinit();
-
+    TheSourceManager->deinit();
+        
     ifs.close();
         
     res = LIBRARY_NO_ERROR;
@@ -329,12 +344,17 @@ retPt:
 }
 
 
-void putExpressions(std::vector<std::shared_ptr<Node>> nodes, MLINK mlp) {
+void putExpressions(std::vector<NodePtr> nodes, MLINK mlp) {
    
     //
     // Check if isAbort() before calling MathLink
     // 
     if (TheParser->isAbort()) {
+        
+        if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 0)) {
+            goto retPt;
+        }
+        
         return;
     }
     
@@ -342,7 +362,7 @@ void putExpressions(std::vector<std::shared_ptr<Node>> nodes, MLINK mlp) {
 		goto retPt;
     }
     
-	for (std::shared_ptr<Node> node : nodes) {
+	for (NodePtr node : nodes) {
 		node->put(mlp);
 	}
 
@@ -350,82 +370,110 @@ retPt:
 	return;
 }
 
-std::vector<std::shared_ptr<Node>> parseExpressions() {
+std::vector<NodePtr> parseExpressions() {
 
-    std::vector<std::shared_ptr<Node>> nodes;
+    std::vector<NodePtr> nodes;
 
-    
-    std::vector<std::shared_ptr<Node>> exprs;
-    
-    ParserContext Ctxt;
-
-    while (true) {
+    {
+        std::vector<NodePtr> exprs;
         
-        if (TheParser->isAbort()) {
+        ParserContext Ctxt;
+        
+        while (true) {
             
-            break;
-        }
+            if (TheParser->isAbort()) {
+                
+                break;
+            }
+            
+            auto peek = TheParser->currentToken();
+            
+            if (peek.Tok == TOKEN_ENDOFFILE) {
+                break;
+            }
+            
+            if (peek.Tok == TOKEN_WHITESPACE ||
+                peek.Tok == TOKEN_NEWLINE ||
+                peek.Tok == TOKEN_COMMENT) {
+                
+                exprs.push_back(std::make_shared<LeafNode>(peek));
+                
+                TheParser->nextToken(Ctxt);
+                
+                continue;
+            }
+            
+            auto Expr = TheParser->parse(Ctxt);
+            
+            exprs.push_back(Expr);
+            
+        } // while (true)
         
-        auto peek = TheParser->tryNextToken(Ctxt, DISCARD_EVERYTHING);
-        
-        if (peek.Tok == TOKEN_ENDOFFILE) {
-            break;
-        }
-        
-        auto Expr = TheParser->parse(Ctxt);
-        
-        exprs.push_back(Expr);
-        
-    } // while (true)
-    
-    nodes.push_back(std::make_shared<CollectedExpressionsNode>(exprs));
-    
+        nodes.push_back(std::make_shared<CollectedExpressionsNode>(exprs));
+    }
     
     //
-    // Now handle the out-of-band expressions, i.e., comments and issues
+    // Now handle the out-of-band expressions, i.e., issues and metadata
     //
-    
-    
-    auto Comments = TheParser->getComments();
-    
-    nodes.push_back(std::make_shared<CollectedCommentsNode>(Comments));
-    
-    
     
     //
     // Collect all issues from the various components
     //
-    std::vector<SyntaxIssue> issues;
-    
-    auto ParserIssues = TheParser->getIssues();
-    std::copy(ParserIssues.begin(), ParserIssues.end(), std::back_inserter(issues));
-    
-    auto TokenizerIssues = TheTokenizer->getIssues();
-    std::copy(TokenizerIssues.begin(), TokenizerIssues.end(), std::back_inserter(issues));
+    {
+        std::vector<SyntaxIssue> issues;
+        
+        auto ParserIssues = TheParser->getIssues();
+        std::copy(ParserIssues.begin(), ParserIssues.end(), std::back_inserter(issues));
+        
+        auto TokenizerIssues = TheTokenizer->getIssues();
+        std::copy(TokenizerIssues.begin(), TokenizerIssues.end(), std::back_inserter(issues));
 
-    auto CharacterDecoderIssues = TheCharacterDecoder->getIssues();
-    std::copy(CharacterDecoderIssues.begin(), CharacterDecoderIssues.end(), std::back_inserter(issues));
+        auto CharacterDecoderIssues = TheCharacterDecoder->getIssues();
+        std::copy(CharacterDecoderIssues.begin(), CharacterDecoderIssues.end(), std::back_inserter(issues));
+        
+        auto ByteDecoderIssues = TheByteDecoder->getIssues();
+        std::copy(ByteDecoderIssues.begin(), ByteDecoderIssues.end(), std::back_inserter(issues));
+        
+        auto SourceManagerIssues = TheSourceManager->getIssues();
+        std::copy(SourceManagerIssues.begin(), SourceManagerIssues.end(), std::back_inserter(issues));
+        
+        nodes.push_back(std::make_shared<CollectedSyntaxIssuesNode>(issues));
+    }
     
-    auto ByteDecoderIssues = TheByteDecoder->getIssues();
-    std::copy(ByteDecoderIssues.begin(), ByteDecoderIssues.end(), std::back_inserter(issues));
-    
-    auto SourceManagerIssues = TheSourceManager->getIssues();
-    std::copy(SourceManagerIssues.begin(), SourceManagerIssues.end(), std::back_inserter(issues));
-    
-    nodes.push_back(std::make_shared<CollectedSyntaxIssuesNode>(issues));
-    
+    {
+        std::vector<Metadata> metas;
+        
+        auto ParserMetas = TheParser->getMetadatas();
+        std::copy(ParserMetas.begin(), ParserMetas.end(), std::back_inserter(metas));
+        
+        auto TokenizerMetas = TheTokenizer->getMetadatas();
+        std::copy(TokenizerMetas.begin(), TokenizerMetas.end(), std::back_inserter(metas));
+        
+        auto CharacterDecoderMetas = TheCharacterDecoder->getMetadatas();
+        std::copy(CharacterDecoderMetas.begin(), CharacterDecoderMetas.end(), std::back_inserter(metas));
+        
+        auto ByteDecoderMetas = TheByteDecoder->getMetadatas();
+        std::copy(ByteDecoderMetas.begin(), ByteDecoderMetas.end(), std::back_inserter(metas));
+        
+        nodes.push_back(std::make_shared<CollectedMetadatasNode>(metas));
+    }
     
     return nodes;
 }
 
 
-std::vector<std::shared_ptr<Node>> tokenize() {
+std::vector<NodePtr> tokenize() {
 
-    std::vector<std::shared_ptr<Node>> nodes;
+    std::vector<NodePtr> nodes;
     
     TokenizerContext Ctxt;
     
     while (true) {
+        
+        //
+        // No need to check isAbort() inside tokenizer loops
+        //
+        
         
         auto Tok = TheTokenizer->currentToken();
         
@@ -433,7 +481,7 @@ std::vector<std::shared_ptr<Node>> tokenize() {
             break;
         }
 
-        auto N = std::make_shared<TokenNode>(Tok);
+        auto N = std::make_shared<LeafNode>(Tok);
         nodes.push_back(N);
         
         TheTokenizer->nextToken(Ctxt);

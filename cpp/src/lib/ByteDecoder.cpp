@@ -1,12 +1,14 @@
 
 #include "ByteDecoder.h"
+#include "Utils.h"
 
-ByteDecoder::ByteDecoder() : eof(false), byteQueue(), Issues() {}
+ByteDecoder::ByteDecoder() : eof(false), byteQueue(), Issues(), totalTimeMicros() {}
 
 void ByteDecoder::init() {
     eof = false;
     byteQueue.clear();
     Issues.clear();
+    totalTimeMicros = std::chrono::microseconds::zero();
 }
 
 void ByteDecoder::deinit() {
@@ -15,6 +17,7 @@ void ByteDecoder::deinit() {
 }
 
 SourceCharacter ByteDecoder::nextSourceCharacter() {
+    TimeScoper Scoper(&totalTimeMicros);
     
     //
     // handle the queue before anything else
@@ -23,12 +26,19 @@ SourceCharacter ByteDecoder::nextSourceCharacter() {
     //
     if (!byteQueue.empty()) {
         
-        auto b = byteQueue[0];
+        auto p = byteQueue[0];
         
         // erase first
         byteQueue.erase(byteQueue.begin());
         
-        return SourceCharacter(b);
+        auto b = p.first;
+        auto location = p.second;
+        
+        auto c = SourceCharacter(b);
+        
+        TheSourceManager->setSourceLocation(location);
+        
+        return c;
     }
     
     auto b = nextByte();
@@ -66,30 +76,13 @@ unsigned char ByteDecoder::nextByte() {
     return b;
 }
 
-SourceCharacter ByteDecoder::leaveAlone(std::vector<unsigned char> bytes) {
-
-    assert(!bytes.empty());
-
-    auto Loc = TheSourceManager->getSourceLocation();
-    
-    // Has not advanced yet at this point
-    Loc = SourceLocation(Loc.Line, Loc.Col+1);
-
-    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
-        
-    Issues.push_back(Issue);
-
-    
-    auto first = bytes[0];
-
-    for (size_t i = 1; i < bytes.size(); i++) {
-        auto b = bytes[i];
-        byteQueue.push_back(b);
-    }
-
-    return SourceCharacter(first);
+void ByteDecoder::append(unsigned char b, SourceLocation location) {
+    byteQueue.push_back(std::make_pair(b, location));
 }
 
+//
+// https://unicodebook.readthedocs.io/issues.html#strict-utf8-decoder
+//
 SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
     
     if ((cIn & 0x80) == 0x00) {
@@ -110,21 +103,36 @@ SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
         
         auto tmp = nextByte();
         
-        // UTF8 encoding
-        if (!((tmp & 0xc0) == 0x80)) {
+        //
+        // Manual test for code points that are over long
+        //
+        if (0xc2 <= firstByte && firstByte <= 0xdf) {
             
-            // Invalid UTF8
-
-            return leaveAlone({firstByte, tmp});
+            if (0x80 <= tmp && tmp <= 0xbf) {
+                
+                // Valid
+                
+                auto decoded = (((firstByte & 0x1f) << 6) | (tmp & 0x3f));
+                
+                return SourceCharacter(decoded);
+            }
         }
         
-        // Valid
-        
-        auto secondByte = tmp;
-        
-        auto decoded = (((firstByte & 0x1f) << 6) | (secondByte & 0x3f));
-        
-        return SourceCharacter(decoded);
+        // Invalid UTF8
+    
+        auto Loc = TheSourceManager->getSourceLocation();
+    
+        // Has not advanced yet at this point
+        Loc = SourceLocation(Loc.Line, Loc.Col+1);
+    
+        auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
+    
+        Issues.push_back(Issue);
+    
+    
+        append(tmp, Loc+1);
+    
+        return SourceCharacter(firstByte);
         
     } else if ((cIn & 0xf0) == 0xe0) {
         
@@ -136,33 +144,108 @@ SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
         
         auto tmp = nextByte();
         
-        // UTF8 encoding
-        if (!((tmp & 0xc0) == 0x80)) {
-            
-            // Invalid UTF8
-
-            return leaveAlone({firstByte, tmp});
-        }
-        
         // Continue
         
         auto secondByte = tmp;
         
         tmp = nextByte();
         
-        // UTF8 encoding
-        if (!((tmp & 0xc0) == 0x80)) {
+        //
+        // Manual test for code points that are over long
+        //
+        if (0xe0 <= firstByte && firstByte <= 0xe0) {
             
-            // Invalid UTF8
-
-            return leaveAlone({firstByte, secondByte, tmp});
+            if (0xa0 <= secondByte && secondByte <= 0xbf) {
+                
+                if (0x80 <= tmp && tmp <= 0xbf) {
+                    
+                    // Valid
+                    
+                    auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (tmp & 0x3f));
+                    
+                    //
+                    // Manual test for code points that are surrogates
+                    //
+                    assert(!(0xd800 <= decoded && decoded <= 0xdfff));
+                    
+                    return SourceCharacter(decoded);
+                }
+            }
+            
+        } else if (0xe1 <= firstByte && firstByte <= 0xec) {
+            
+            if (0x80 <= secondByte && secondByte <= 0xbf) {
+                
+                if (0x80 <= tmp && tmp <= 0xbf) {
+                    
+                    // Valid
+                    
+                    auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (tmp & 0x3f));
+                    
+                    //
+                    // Manual test for code points that are surrogates
+                    //
+                    assert(!(0xd800 <= decoded && decoded <= 0xdfff));
+                    
+                    return SourceCharacter(decoded);
+                }
+            }
+            
+        } else if (0xed <= firstByte && firstByte <= 0xed) {
+            
+            if (0x80 <= secondByte && secondByte <= 0x9f) {
+                
+                if (0x80 <= tmp && tmp <= 0xbf) {
+                    
+                    // Valid
+                    
+                    auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (tmp & 0x3f));
+                    
+                    //
+                    // Manual test for code points that are surrogates
+                    //
+                    assert(!(0xd800 <= decoded && decoded <= 0xdfff));
+                    
+                    return SourceCharacter(decoded);
+                }
+            }
+            
+        } else if (0xee <= firstByte && firstByte <= 0xef) {
+            
+            if (0x80 <= secondByte && secondByte <= 0xbf) {
+                
+                if (0x80 <= tmp && tmp <= 0xbf) {
+                    
+                    // Valid
+                    
+                    auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (tmp & 0x3f));
+                    
+                    //
+                    // Manual test for code points that are surrogates
+                    //
+                    assert(!(0xd800 <= decoded && decoded <= 0xdfff));
+                    
+                    return SourceCharacter(decoded);
+                }
+            }
         }
         
-        // Valid
+        // Invalid UTF8
         
-        auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (tmp & 0x3f));
+        auto Loc = TheSourceManager->getSourceLocation();
         
-        return SourceCharacter(decoded);
+        // Has not advanced yet at this point
+        Loc = SourceLocation(Loc.Line, Loc.Col+1);
+        
+        auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
+        
+        Issues.push_back(Issue);
+        
+        
+        append(secondByte, Loc+1);
+        append(tmp, Loc+2);
+        
+        return SourceCharacter(firstByte);
         
     } else if ((cIn & 0xf8) == 0xf0) {
         
@@ -174,27 +257,11 @@ SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
         
         auto tmp = nextByte();
         
-        // UTF8 encoding
-        if (!((tmp & 0xc0) == 0x80)) {
-            
-            // Invalid UTF8
-
-            return leaveAlone({firstByte, tmp});
-        }
-        
         // Continue
         
         auto secondByte = tmp;
         
         tmp = nextByte();
-        
-        // UTF8 encoding
-        if (!((tmp & 0xc0) == 0x80)) {
-            
-            // Invalid UTF8
-
-            return leaveAlone({firstByte, secondByte, tmp});
-        }
         
         // Continue
         
@@ -202,42 +269,125 @@ SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
         
         tmp = nextByte();
         
-        // UTF8 encoding
-        if (!((tmp & 0xc0) == 0x80)) {
+        //
+        // Manual test for code points that are over long
+        //
+        if (0xf0 <= firstByte && firstByte <= 0xf0) {
             
-            // Invalid UTF8
-
-            return leaveAlone({firstByte, secondByte, thirdByte, tmp});
+            if (0x90 <= secondByte && secondByte <= 0xbf) {
+                
+                if (0x80 <= thirdByte && thirdByte <= 0xbf) {
+                    
+                    if (0x80 <= tmp && tmp <= 0xbf) {
+                        
+                        // Valid
+                        
+                        auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((tmp & 0x3f)));
+                        
+                        //
+                        // Manual test for code points that are too large
+                        //
+                        assert(decoded <= 0x10ffff);
+                        
+                        return SourceCharacter(decoded);
+                    }
+                }
+            }
+            
+        } else if (0xf1 <= firstByte && firstByte <= 0xf3) {
+            
+            if (0x80 <= secondByte && secondByte <= 0xbf) {
+                
+                if (0x80 <= thirdByte && thirdByte <= 0xbf) {
+                    
+                    if (0x80 <= tmp && tmp <= 0xbf) {
+                        
+                        // Valid
+                        
+                        auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((tmp & 0x3f)));
+                        
+                        //
+                        // Manual test for code points that are too large
+                        //
+                        assert(decoded <= 0x10ffff);
+                        
+                        return SourceCharacter(decoded);
+                    }
+                }
+            }
+            
+        } else if (0xf4 <= firstByte && firstByte <= 0xf4) {
+            
+            if (0x80 <= secondByte && secondByte <= 0x8f) {
+                
+                if (0x80 <= thirdByte && thirdByte <= 0xbf) {
+                    
+                    if (0x80 <= tmp && tmp <= 0xbf) {
+                        
+                        // Valid
+                        
+                        auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((tmp & 0x3f)));
+                        
+                        //
+                        // Manual test for code points that are too large
+                        //
+                        assert(decoded <= 0x10ffff);
+                        
+                        return SourceCharacter(decoded);
+                    }
+                }
+            }
         }
         
-        // Valid
+        // Invalid UTF8
         
-        auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((tmp & 0x3f)));
+        auto Loc = TheSourceManager->getSourceLocation();
         
-        //
-        // Manual test for code points that are too large
-        //
-        if (decoded > 0x10ffff) {
-            
-            // Invalid UTF8
-            
-            return leaveAlone({firstByte, secondByte, thirdByte, tmp});
-        }
+        // Has not advanced yet at this point
+        Loc = SourceLocation(Loc.Line, Loc.Col+1);
         
-        return SourceCharacter(decoded);
+        auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
         
-    } else {
+        Issues.push_back(Issue);
         
-        //
-        // Not a valid UTF8 prefix, so just assume 8-bit extended ASCII
-        //
         
-        return leaveAlone({cIn});
+        append(secondByte, Loc+1);
+        append(thirdByte, Loc+2);
+        append(tmp, Loc+3);
+        
+        return SourceCharacter(firstByte);
     }
+        
+    //
+    // Not a valid UTF8 prefix, so just assume 8-bit extended ASCII
+    //
+    
+    auto Loc = TheSourceManager->getSourceLocation();
+    
+    // Has not advanced yet at this point
+    Loc = SourceLocation(Loc.Line, Loc.Col+1);
+    
+    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
+    
+    Issues.push_back(Issue);
+    
+    
+    return SourceCharacter(cIn);
 }
 
 std::vector<SyntaxIssue> ByteDecoder::getIssues() const {
     return Issues;
+}
+
+std::vector<Metadata> ByteDecoder::getMetadatas() const {
+    
+    std::vector<Metadata> Metadatas;
+    
+    auto totalTimeMillis = std::chrono::duration_cast<std::chrono::milliseconds>(totalTimeMicros);
+    
+    Metadatas.push_back(Metadata("ByteDecoderTotalTimeMillis", std::to_string(totalTimeMillis.count())));
+    
+    return Metadatas;
 }
 
 std::istream *TheInputStream = nullptr;

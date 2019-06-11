@@ -10,6 +10,11 @@ empty
 
 SourceMemberQ
 
+SourceMemberQFunction
+
+contiguousQ
+
+
 Begin["`Private`"]
 
 escapeString[s_] :=
@@ -38,30 +43,94 @@ empty[s_String] := s == ""
 
 
 
+(*
+Construct a SourceMemberQFunction to be used later
+*)
+
+SourceMemberQ[srcs_] := SourceMemberQFunction[srcs]
 
 (*
+Define what SourceMemberQFunction should do
+*)
+SourceMemberQFunction[srcs_][cursor_] := SourceMemberQ[srcs, cursor]
+
+
+
+
+
+
+spanPat = {_Integer, _Integer}
+
+srcPat = {spanPat, spanPat}
+
+
+(*
+test that a cursor Source is a Member of any of a List of Sources
+
+This tests for membership of ANY src
+
+This does NOT test for membership of ALL srcs
+
+*)
+SourceMemberQ[srcs:{srcPat...}, cursor:srcPat] :=
+	AnyTrue[srcs, SourceMemberQ[#, cursor]&]
+
+SourceMemberQ[srcs:{srcPat...}, cursor:spanPat] :=
+	AnyTrue[srcs, SourceMemberQ[#, cursor]&]
+
+
+(*
+test that a cursor Source is a Member of a src Source
+*)
+SourceMemberQ[src:srcPat, {cursor1:spanPat, cursor2:spanPat}] :=
+	SourceMemberQ[src, cursor1] && SourceMemberQ[src, cursor2]
+
+SourceMemberQ[src:srcPat, cursor:spanPat] :=
+	SourceMemberQ[src, cursor]
+
+(*
+Do the actual work
+
 SourceMemberQ[{{1,3},{2,0}}, {1,4}] => True
 SourceMemberQ[{{1,3},{2,0}}, {2,4}] => False
 *)
-SourceMemberQ[sourceSpec_, {cursorLine_, cursorCol_}] :=
+SourceMemberQ[{{srcLine1_Integer, srcCol1_Integer}, {srcLine2_Integer, srcCol2_Integer}}, {cursorLine_Integer, cursorCol_Integer}] :=
 Which[
-	!(sourceSpec[[1, 1]] <= cursorLine <= sourceSpec[[1, 1]]),
+	(* not in-between the lines of the spec, so no *)
+	!(srcLine1 <= cursorLine <= srcLine2),
 	False
 	,
-	cursorLine == sourceSpec[[1, 1]] == sourceSpec[[2, 1]],
-	sourceSpec[[1, 2]] <= cursorCol <= sourceSpec[[2, 2]]
+	(* everything is on 1 line, so now test cols *)
+	cursorLine == srcLine1 == srcLine2,
+	srcCol1 <= cursorCol <= srcCol2
 	,
-	cursorLine == sourceSpec[[1, 1]],
-	sourceSpec[[1, 2]] <= cursorCol
+	(* on srcLine1, so test that cursor comes after srcCol1 *)
+	cursorLine == srcLine1,
+	srcCol1 <= cursorCol
 	,
-	cursorLine == sourceSpec[[2, 1]],
-	cursorCol <= sourceSpec[[2, 2]]
+	(* on srcLine2, so test that cursor comes before srcCol2 *)
+	cursorLine == srcLine2,
+	cursorCol <= srcCol2
 	,
-	(* in-between start and end, so yes *)
+	(* exclusively in-between start and end, so yes *)
 	True,
 	True
 ]
 
+
+(*
+
+contiguousQ
+
+input: src1:{{line,col}, {line,col}}   src2:{{line,col}, {line,col}}
+
+*)
+
+contiguousQ[srcs_List] := And @@ contiguousQ @@@ Partition[srcs, 2, 1]
+
+contiguousQ[{{_, _}, {line_, col1_}}, {{line_, col2_}, {_, _}}] := col1 + 1 == col2
+
+contiguousQ[_, _] := False
 
 
 

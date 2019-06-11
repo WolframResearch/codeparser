@@ -9,41 +9,19 @@
 #include <unordered_set>
 #include <vector>
 #include <functional>
+#include <chrono>
+#include <array>
 
 class PrefixParselet;
 class InfixParselet;
 class CallParselet;
 class PostfixParselet;
-class ContextSensitiveParselet;
+class ContextSensitivePrefixParselet;
+class ContextSensitiveInfixParselet;
 class StartOfLineParselet;
 class CleanupParselet;
 class GroupParselet;
 class Parselet;
-
-
-//
-// These bits are set in a policy to flag which tokens to preserve
-//
-enum NextTokenPolicyBits {
-    
-    PRESERVE_TOPLEVEL_NEWLINES = 0x01,
-    
-    PRESERVE_OTHER_NEWLINES = 0x02,
-    
-    PRESERVE_WHITESPACE = 0x04,
-    
-    //
-    // If using PRESERVE_COMMENTS, then COMMENT tokens may be returned and must be handled by the caller
-    //
-    PRESERVE_COMMENTS = 0x08,
-    
-};
-
-typedef int NextTokenPolicy;
-
-const NextTokenPolicy DISCARD_EVERYTHING = 0;
-
-const NextTokenPolicy PRESERVE_EVERYTHING = ~DISCARD_EVERYTHING;
 
 
 //
@@ -60,14 +38,9 @@ struct ParserContext {
     
     //
     // Each time a GroupNode (or LinearSyntaxOpenParenNode) is entered, then GroupDepth increments
+    // This is used for detecting whether we are parsing at top-level.
     //
     size_t GroupDepth;
-    
-    //
-    // Each time any PrefixNode, PostfixNode, BinaryNode, InfixNode,
-    //    GroupNode, special parselets like EqualParselet, etc.   is entered, then OperatorDepth increment
-    //
-    size_t OperatorDepth;
     
     //
     // Precedence of the current operator being parsed
@@ -93,7 +66,7 @@ struct ParserContext {
     //
     //
     //
-    bool InformationFlag;
+    bool StringifyCurrentLine;
     
     //
     //
@@ -110,40 +83,57 @@ struct ParserContext {
     //
     UnderEnum UnderCount;
     
-    ParserContext() : GroupDepth(0), OperatorDepth(0), Prec(PRECEDENCE_LOWEST), Assoc(ASSOCIATIVITY_NONE), ColonFlag(false), LinearSyntaxFlag(false), InformationFlag(false), IntegralFlag(false), Closer(TOKEN_UNKNOWN), UnderCount(UNDER_UNKNOWN) {}
+    //
+    //
+    //
+    bool AllowTrailing;
+    
+    ParserContext() : GroupDepth(0), Prec(PRECEDENCE_LOWEST), Assoc(ASSOCIATIVITY_NONE), ColonFlag(false), LinearSyntaxFlag(false), StringifyCurrentLine(false), IntegralFlag(false), Closer(TOKEN_UNKNOWN), UnderCount(UNDER_UNKNOWN), AllowTrailing(false) {}
 
-    ParserContext(size_t GroupDepth, size_t OperatorDepth, Precedence Prec, Associativity Assoc, bool ColonFlag, bool LinearSyntaxFlag, bool InformationFlag, bool IntegralFlag, TokenEnum Closer, UnderEnum UnderCount) : GroupDepth(GroupDepth), OperatorDepth(OperatorDepth), Prec(Prec), Assoc(Assoc), ColonFlag(ColonFlag), LinearSyntaxFlag(LinearSyntaxFlag), InformationFlag(InformationFlag), IntegralFlag(IntegralFlag), Closer(Closer), UnderCount(UnderCount) {}
+    ParserContext(size_t GroupDepth, Precedence Prec, Associativity Assoc, bool ColonFlag, bool LinearSyntaxFlag, bool StringifyCurrentLine, bool IntegralFlag, TokenEnum Closer, UnderEnum UnderCount, bool AllowTrailing) : GroupDepth(GroupDepth), Prec(Prec), Assoc(Assoc), ColonFlag(ColonFlag), LinearSyntaxFlag(LinearSyntaxFlag), StringifyCurrentLine(StringifyCurrentLine), IntegralFlag(IntegralFlag), Closer(Closer), UnderCount(UnderCount), AllowTrailing(AllowTrailing) {}
     
-    bool isGroupTopLevel() const {
-        return GroupDepth == 0;
+    size_t getGroupDepth() {
+        return GroupDepth;
     }
     
-    bool isOperatorTopLevel() const {
-        return OperatorDepth == 0;
-    }
 };
 
 class Parser {
 private:
 
-    std::unordered_map<TokenEnum, PrefixParselet *> prefixParselets;
-    std::unordered_map<TokenEnum, InfixParselet *> infixParselets;
-    std::unordered_map<TokenEnum, CallParselet *> callParselets;
-    std::unordered_map<TokenEnum, PostfixParselet *> postfixParselets;
-    std::unordered_map<TokenEnum, ContextSensitiveParselet *> contextSensitiveParselets;
-    std::unordered_map<TokenEnum, StartOfLineParselet *> startOfLineParselets;
-    std::unordered_set<Parselet *> parselets;
+    std::array<std::unique_ptr<const PrefixParselet>, TOKEN_COUNT> prefixParselets;
+    std::array<std::unique_ptr<const InfixParselet>, TOKEN_COUNT> infixParselets;
+    std::array<std::unique_ptr<const StartOfLineParselet>, TOKEN_COUNT> startOfLineParselets;
+    std::array<std::unique_ptr<const ContextSensitivePrefixParselet>, TOKEN_COUNT> contextSensitivePrefixParselets;
+    std::array<std::unique_ptr<const ContextSensitiveInfixParselet>, TOKEN_COUNT> contextSensitiveInfixParselets;
     
     std::vector<Token> tokenQueue;
 
     std::vector<SyntaxIssue> Issues;
-    std::vector<Token> Comments;
+    std::chrono::microseconds totalTimeMicros;
     
     std::function<bool ()> currentAbortQ;
-
-    void registerTokenType(TokenEnum, Parselet *);
     
-    Precedence getCurrentTokenPrecedence(TokenEnum current, ParserContext Ctxt);
+    
+    void registerPrefixParselet(TokenEnum, std::unique_ptr<const PrefixParselet> );
+    
+    void registerInfixParselet(TokenEnum, std::unique_ptr<const InfixParselet> );
+    
+    void registerStartOfLineParselet(TokenEnum, std::unique_ptr<const StartOfLineParselet> );
+    
+    void registerContextSensitivePrefixParselet(TokenEnum, std::unique_ptr<const ContextSensitivePrefixParselet> );
+    
+    void registerContextSensitiveInfixParselet(TokenEnum, std::unique_ptr<const ContextSensitiveInfixParselet> );
+    
+    
+    
+    NodePtr parse0(NodeSeq Left, Precedence, ParserContext Ctxt);
+    
+    void nextToken0(ParserContext Ctxt);
+    
+    void prepend(Token current);
+    
+    Precedence getCurrentTokenPrecedence(Token current, ParserContext Ctxt);
     
 public:
     Parser();
@@ -152,27 +142,35 @@ public:
     
     void deinit();
 
-    Token nextToken0(ParserContext Ctxt);
     
-    Token nextToken(ParserContext Ctxt, NextTokenPolicy policy);
     
-    Token tryNextToken(ParserContext Ctxt, NextTokenPolicy policy);
+    Token nextToken(ParserContext Ctxt);
     
     Token currentToken() const;
     
-    void setCurrentToken(Token current);
+    void append(Token Tok);
+    
+    std::vector<Token> getTokenQueue() const;
+    
+    
     
     std::vector<SyntaxIssue> getIssues() const;
+    
+    std::vector<Metadata> getMetadatas() const;
+    
 
     void addIssue(SyntaxIssue);
     
-    std::vector<Token> getComments() const;
+    NodePtr parse(ParserContext Ctxt);
     
-    std::shared_ptr<Node> parse(ParserContext Ctxt);
-
     bool isPossibleBeginningOfExpression(Token Tok, ParserContext Ctxt) const;
     
-    ContextSensitiveParselet* findContextSensitiveParselet(TokenEnum Tok) const;
+    const std::unique_ptr<const InfixParselet>& findInfixParselet(TokenEnum Tok) const;
+    
+    const std::unique_ptr<const ContextSensitivePrefixParselet>& findContextSensitivePrefixParselet(TokenEnum Tok) const;
+    
+    const std::unique_ptr<const ContextSensitiveInfixParselet>& findContextSensitiveInfixParselet(TokenEnum Tok) const;
+    
     
     bool isAbort() const;
     

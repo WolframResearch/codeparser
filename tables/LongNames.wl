@@ -5,7 +5,6 @@ the categories are:
 
 Raw
 Letterlike
-Comma
 Space
 Newline
 Punctuation
@@ -390,10 +389,10 @@ Range 0x2200
 "Sqrt" -> Punctuation, (* 0x221a *)
 "Proportional" -> Punctuation, (* 0x221d *)
 "Infinity" -> Letterlike, (* 0x221e *)
-"RightAngle" -> Punctuation, (* 0x221f *)
-"Angle" -> Punctuation, (* 0x2220 *)
-"MeasuredAngle" -> Punctuation, (* 0x2221 *)
-"SphericalAngle" -> Punctuation, (* 0x2222 *)
+"RightAngle" -> Letterlike, (* 0x221f *)
+"Angle" -> Letterlike, (* 0x2220 *)
+"MeasuredAngle" -> Letterlike, (* 0x2221 *)
+"SphericalAngle" -> Letterlike, (* 0x2222 *)
 "Divides" -> Punctuation, (* 0x2223 *)
 "DoubleVerticalBar" -> Punctuation, (* 0x2225 *)
 "NotDoubleVerticalBar" -> Punctuation, (* 0x2226 *)
@@ -710,7 +709,7 @@ Range 0xf300
 "AutoSpace" -> Space, (* 0xf3ad *)
 "AutoOperand" -> Letterlike, (* 0xf3ae *)
 "SystemsModelDelay" -> Letterlike, (* 0xf3af *)
-"Continuation" -> Uninterpretable, (* 0xf3b1 *)
+"Continuation" -> Space, (* 0xf3b1 *)
 "RoundSpaceIndicator" -> Space, (* 0xf3b2 *)
 "InvisiblePrefixScriptBase" -> Punctuation, (* 0xf3b3 *)
 "InvisiblePostfixScriptBase" -> Punctuation, (* 0xf3b4 *)
@@ -930,7 +929,7 @@ Range 0xf700
 "RightSkeleton" -> Uninterpretable, (* 0xf762 *)
 "ControlKey" -> Letterlike, (* 0xf763 *)
 "AliasDelimiter" -> Letterlike, (* 0xf764 *)
-"InvisibleComma" -> Comma, (* 0xf765 *)
+"InvisibleComma" -> Punctuation, (* 0xf765 *)
 "ReturnKey" -> Letterlike, (* 0xf766 *)
 "ErrorIndicator" -> Uninterpretable, (* 0xf767 *)
 "AliasIndicator" -> Letterlike, (* 0xf768 *)
@@ -1189,8 +1188,6 @@ Range 0xfe00
 (*
 Range 0xff00
 *)
-"UnknownGlyph" -> Letterlike, (* 0xfffd *)
-
-Nothing
+"UnknownGlyph" -> Letterlike (* 0xfffd *)
 
 |>

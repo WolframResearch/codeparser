@@ -1,17 +1,101 @@
 
 #include "Node.h"
 
+
+
+void NodeSeq::push_back(NodePtr N) {
+    
+    vector.push_back(N);
+}
+
+void NodeSeq::push_back(NodeSeq Args) {
+    push_back(Args.vector);
+}
+
+void NodeSeq::push_back(std::vector<NodePtr> V) {
+    
+    for (auto N : V) {
+        push_back(N);
+    }
+}
+
+NodePtr NodeSeq::main() const {
+    
+    for (auto N : vector) {
+        
+        if (auto NLeaf = std::dynamic_pointer_cast<const LeafNode>(N)) {
+            
+            auto Tok = NLeaf->getToken();
+            if (Tok.Tok == TOKEN_COMMENT) {
+                continue;
+            }
+            if (Tok.Tok == TOKEN_WHITESPACE) {
+                continue;
+            }
+            if (Tok.Tok == TOKEN_NEWLINE) {
+                continue;
+            }
+            
+            return N;
+        }
+        
+        return N;
+    }
+    
+    assert(false);
+    
+    return nullptr;
+}
+
+NodePtr NodeSeq::last() const {
+    
+    assert(!vector.empty());
+    
+    auto i = vector.end();
+    while (i != vector.begin()) {
+        
+        --i;
+        
+        auto N = *i;
+        
+        if (auto NLeaf = std::dynamic_pointer_cast<const LeafNode>(N)) {
+            
+            auto Tok = NLeaf->getToken();
+            if (Tok.Tok == TOKEN_COMMENT) {
+                continue;
+            }
+            if (Tok.Tok == TOKEN_WHITESPACE) {
+                continue;
+            }
+            if (Tok.Tok == TOKEN_NEWLINE) {
+                continue;
+            }
+        }
+        
+        return N;
+    }
+    
+    return nullptr;
+}
+
+void NodeSeq::clear() {
+    vector.clear();
+}
+
+
 Source Node::getSourceSpan() const {
     
     auto Args = getChildren();
     
     if (!Args.empty()) {
+        
         auto First = Args[0];
         auto Last = Args[Args.size()-1];
+        
         return Source(First->getSourceSpan().lines.start, Last->getSourceSpan().lines.end);
-    } else {
-        return Source({0, 0}, {0, 0});
     }
+    
+    return Source();
 }
 
 void Node::putChildren(MLINK mlp) const {
@@ -27,160 +111,17 @@ void Node::putChildren(MLINK mlp) const {
 // Literal nodes
 //
 
-void SymbolNode::put(MLINK mlp) const {
+void LeafNode::put(MLINK mlp) const {
 
-    MLPutFunction(mlp, SYMBOL_SYMBOLNODE->name(), 3);
+    MLPutFunction(mlp, SYMBOL_LEAFNODE->name(), 3);
 
-    SYMBOL_SYMBOL->put(mlp);
-
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    Span.putSourceRule(mlp);
-}
-
-void StringNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_STRINGNODE->name(), 3);
-    
-    SYMBOL_STRING->put(mlp);
-
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    Span.putSourceRule(mlp);
-}
-
-void IntegerNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_INTEGERNODE->name(), 3);
-
-    SYMBOL_INTEGER->put(mlp);
-
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    Span.putSourceRule(mlp);
-}
-
-void RealNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_REALNODE->name(), 3);
-
-    SYMBOL_REAL->put(mlp);
-
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    Span.putSourceRule(mlp);
-}
-
-void SlotNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_SLOTNODE->name(), 3);
-
-    SYMBOL_SLOT->put(mlp);
-
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    Span.putSourceRule(mlp);
-}
-
-void SlotSequenceNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_SLOTSEQUENCENODE->name(), 3);
-
-    SYMBOL_SLOTSEQUENCE->put(mlp);
-
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    Span.putSourceRule(mlp);
-}
-
-void OutNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_OUTNODE->name(), 3);
-
-    SYMBOL_OUT->put(mlp);
-
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    Span.putSourceRule(mlp);
-}
-
-void OptionalDefaultNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_OPTIONALDEFAULTNODE->name(), 3);
-
-    SYMBOL_OPTIONALDEFAULT->put(mlp);
-
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    Span.putSourceRule(mlp);
-}
-
-void TokenNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_TOKENNODE->name(), 3);
-
-    MLPutSymbol(mlp, TokenToString(Tok.Tok).c_str());
+    MLPutSymbol(mlp, TokenToSymbol(Tok.Tok)->name());
 
     MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Tok.Str.c_str()), static_cast<int>(Tok.Str.size()));
 
     MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
 
-    Span.putSourceRule(mlp);
-}
-
-void InternalAllNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_INTERNALALLNODE->name(), 3);
-
-    SYMBOL_ALL->put(mlp);
-
-    MLPutUTF8String(mlp, nullptr, 0);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    Span.putSourceRule(mlp);
-}
-
-void InternalNullNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_INTERNALNULLNODE->name(), 3);
-
-    SYMBOL_NULL->put(mlp);
-
-    MLPutUTF8String(mlp, nullptr, 0);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    Span.putSourceRule(mlp);
-}
-
-void InternalOneNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_INTERNALONENODE->name(), 3);
-
-    MLPutInteger(mlp, 1);
-
-    MLPutUTF8String(mlp, nullptr, 0);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    Span.putSourceRule(mlp);
+    Tok.Span.putSourceRule(mlp);
 }
 
 
@@ -266,8 +207,12 @@ void CallNode::put(MLINK mlp) const {
 
     MLPutFunction(mlp, SYMBOL_CALLNODE->name(), 3);
 
-    Head->put(mlp);
-
+    MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(Head.size()));
+    
+    for (auto H : Head) {
+        H->put(mlp);
+    }
+    
     putChildren(mlp);
 
     MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
@@ -277,9 +222,12 @@ void CallNode::put(MLINK mlp) const {
 
 Source CallNode::getSourceSpan() const {
 
-    auto Body = getChildren()[0];
+    auto FirstHead = Head[0];
+    
+    auto Children = getChildren();
+    auto LastChild = Children[Children.size()-1];
 
-    return Source(Head->getSourceSpan().lines.start, Body->getSourceSpan().lines.end);
+    return Source(FirstHead->getSourceSpan().lines.start, LastChild->getSourceSpan().lines.end);
 }
 
 
@@ -305,6 +253,19 @@ void GroupNode::put(MLINK mlp) const {
 //
 // Special nodes
 //
+
+void StartOfLineNode::put(MLINK mlp) const {
+    
+    MLPutFunction(mlp, SYMBOL_STARTOFLINENODE->name(), 3);
+    
+    MLPutSymbol(mlp, Op->name());
+    
+    putChildren(mlp);
+    
+    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
+    
+    getSourceSpan().putSourceRule(mlp);
+}
 
 void BlankNode::put(MLINK mlp) const {
 
@@ -458,7 +419,7 @@ void PrefixBinaryNode::put(MLINK mlp) const {
 
 
 //
-// Aggregate nodes
+// Collection nodes
 //
 
 void CollectedExpressionsNode::put(MLINK mlp) const {
@@ -470,15 +431,6 @@ void CollectedExpressionsNode::put(MLINK mlp) const {
     }
 }
 
-void CollectedCommentsNode::put(MLINK mlp) const {
-    
-    MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(Comments.size()));
-    
-    for (auto C : Comments) {
-        C.putComment(mlp);
-    }
-}
-
 void CollectedSyntaxIssuesNode::put(MLINK mlp) const {
     
     MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(Issues.size()));
@@ -487,6 +439,16 @@ void CollectedSyntaxIssuesNode::put(MLINK mlp) const {
         I.put(mlp);
     }
 }
+
+void CollectedMetadatasNode::put(MLINK mlp) const {
+    
+    MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(Metadatas.size()));
+    
+    for (auto M : Metadatas) {
+        M.put(mlp);
+    }
+}
+
 
 
 

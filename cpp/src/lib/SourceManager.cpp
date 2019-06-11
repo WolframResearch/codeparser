@@ -1,7 +1,7 @@
 
 //
 // Characters:
-// Manage the start and end of characters like \[Alpha] with setWLCharacterStart() and setWLCharacterEnd()
+// Manage the start and end of WL characters like \[Alpha] with setWLCharacterStart() and setWLCharacterEnd()
 //
 // Tokens:
 // Manage the start and end of tokens like @@@ with setTokenStart() and setTokenEnd()
@@ -47,9 +47,11 @@ bool operator<=(SourceLocation a, SourceLocation b) {
     return false;
 }
 
-Source::Source() {
-    
-}
+
+
+Source::Source() : lines{SourceLocation(), SourceLocation()} {}
+
+Source::Source(SourceLocation loc) : lines{loc, loc} {}
 
 Source::Source(SourceLocation start, SourceLocation end) : lines{start, end} {
     
@@ -88,7 +90,9 @@ WLCharacterStartLoc(0, 0), WLCharacterEndLoc(0, 0), PrevWLCharacterStartLoc(0, 0
 void SourceManager::init() {
     lastCharacterWasCarriageReturn = false;
     eof = false;
+    
     Issues.clear();
+    
     SourceLoc = SourceLocation(1, 0);
     TokenStartLoc = SourceLocation(0, 0);
     WLCharacterStartLoc = SourceLocation(0 ,0);
@@ -277,23 +281,32 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
 
 Token::Token(TokenEnum Tok, std::string Str, Source Span) : Tok(Tok), Str(Str), Span(Span) {
     
-    //
-    // Only bother checking if the token is all on one line
-    // Spanning multiple lines is too complicated to care about
-    //
-    if (Span.lines.start.Line == Span.lines.end.Line) {
-        switch (Tok) {
-                //
-                // These are the tokens that do not quite have correct spans.
-                // start and end are set to the same character, so size is 1
-                // But they take up 0 characters
-                //
-            case TOKEN_ENDOFFILE:
-            case TOKEN_UNKNOWN:
-            case TOKEN_FAKE_IMPLICITTIMES:
-            case TOKEN_ERROR_EMPTYSTRING:
-                break;
-            default:
+    switch (Tok) {
+        //
+        // These are the tokens that do not quite have correct spans.
+        // start and end are set to the same character, so size is 1
+        // But they take up 0 characters
+        //
+        case TOKEN_ENDOFFILE:
+        case TOKEN_UNKNOWN:
+        case TOKEN_FAKE_IMPLICITTIMES:
+        case TOKEN_ERROR_EMPTYSTRING:
+        case TOKEN_ERROR_ABORTED:
+        case TOKEN_FAKE_NULL:
+        case TOKEN_FAKE_ONE:
+        case TOKEN_FAKE_ALL:
+            assert(Span.lines.start.Line == Span.lines.end.Line);
+            assert(Span.lines.start.Col == Span.lines.end.Col);
+            break;
+        default:
+            //
+            // This is all just to do an assert.
+            // But it's a good assert because it catches problems.
+            //
+            // Only bother checking if the token is all on one line
+            // Spanning multiple lines is too complicated to care about
+            //
+            if (Span.lines.start.Line == Span.lines.end.Line) {
                 if (Span.size() != Str.size()) {
                     //
                     // If the sizes do not match, then check if there are multi-byte characters
@@ -302,12 +315,10 @@ Token::Token(TokenEnum Tok, std::string Str, Source Span) : Tok(Tok), Str(Str), 
                     // Note that this also catches changes in character representation, e.g.,
                     // If a character was in source with \XXX notation but was stringified with \:XXXX notation
                     //
-                    if (!Utils::containsNonASCII(Str)) {
-                        assert(false);
-                    }
+                    assert(!Utils::containsOnlyASCII(Str));
                 }
-                break;
-        }
+            }
+            break;
     }
     
 }

@@ -21,7 +21,7 @@ Block[{$RecursionLimit = Infinity},
 ]]]
 
 
-toFullFormString[SymbolNode[Symbol, str_, _]] :=
+toFullFormString[LeafNode[Symbol, str_, _]] :=
 	str
 
 (*
@@ -29,7 +29,7 @@ strings may not originally be quoted, a::b
 
 But they become quoted when they are abstracted
 *)
-toFullFormString[node:StringNode[String, str_, _]] :=
+toFullFormString[node:LeafNode[String, str_, _]] :=
 Catch[
 	If[!StringStartsQ[str, "\""],
 		Throw[Failure["InternalUnhandled", <|"Function"->ToFullFormString, "Arguments"->HoldForm[{node}]|>]]
@@ -37,10 +37,10 @@ Catch[
 	str
 ]
 
-toFullFormString[IntegerNode[Integer, str_, _]] :=
+toFullFormString[LeafNode[Integer, str_, _]] :=
 	str
 
-toFullFormString[RealNode[Real, str_, _]] :=
+toFullFormString[LeafNode[Real, str_, _]] :=
 	str
 
 toFullFormString[CallNode[head_, nodes_, _]] :=

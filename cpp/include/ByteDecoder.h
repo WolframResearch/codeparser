@@ -5,22 +5,24 @@
 
 #include <vector>
 #include <istream>
+#include <chrono>
 
 //
-// Decode a sequences of UTF-8 encoded bytes into characters
+// Decode a sequence of UTF-8 encoded bytes into Source characters
 //
 class ByteDecoder {
 private:
     bool eof;
-    std::vector<unsigned char> byteQueue;
+    std::vector<std::pair<unsigned char, SourceLocation>> byteQueue;
     
     std::vector<SyntaxIssue> Issues;
+    
+    std::chrono::microseconds totalTimeMicros;
+    
     
     unsigned char nextByte();
     
     SourceCharacter decodeBytes(unsigned char);
-
-    SourceCharacter leaveAlone(std::vector<unsigned char> bytes);
     
 public:
     
@@ -32,7 +34,11 @@ public:
     
     SourceCharacter nextSourceCharacter();
     
+    void append(unsigned char, SourceLocation);
+    
     std::vector<SyntaxIssue> getIssues() const;
+    
+    std::vector<Metadata> getMetadatas() const;
 };
 
 extern std::istream *TheInputStream;

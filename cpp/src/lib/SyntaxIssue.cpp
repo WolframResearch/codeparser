@@ -18,20 +18,15 @@ void SyntaxIssue::put(MLINK mlp) const {
     MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1);
 
     Span.putSourceRule(mlp);
-
 }
 
-void Token::putComment(MLINK mlp) const {
+void Metadata::put(MLINK mlp) const {
     
-    assert(Tok == TOKEN_COMMENT);
+    MLPutFunction(mlp, SYMBOL_METADATA->name(), 2);
     
-    MLPutFunction(mlp, SYMBOL_COMMENT->name(), 2);
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Key.c_str()), static_cast<int>(Key.size()));
     
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
-    
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1);
-    
-    Span.putSourceRule(mlp);
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Val.c_str()), static_cast<int>(Val.size()));
 }
 
 std::string SyntaxErrorToString(SyntaxError Err) {

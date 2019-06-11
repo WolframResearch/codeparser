@@ -21,6 +21,7 @@ set(WL_SOURCES
 	${CMAKE_SOURCE_DIR}/AST/Kernel/Boxes.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/Build.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/DeclarationName.wl
+	${CMAKE_SOURCE_DIR}/AST/Kernel/Folds.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/Node.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/Symbol.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/ToInputFormString.wl
@@ -202,6 +203,7 @@ set(CPP_LIB_SOURCES
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/Node.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/Parselet.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/Parser.cpp
+	${CMAKE_SOURCE_DIR}/cpp/src/lib/SemiSemiParselet.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/SourceManager.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/SyntaxIssue.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/Tokenizer.cpp
@@ -233,36 +235,6 @@ find_library(MATHLINK_LIB
 message(STATUS "MATHLINK_LIB: ${MATHLINK_LIB}")
 
 target_link_libraries(ast-lib ${MATHLINK_LIB})
-
-
-set(MAX_EXPRESSION_DEPTH 100 CACHE STRING "Maximum depth allowed by the parser")
-set(MAX_EXPRESSION_BREADTH 100000 CACHE STRING "Maximum breadth allowed by the parser")
-set(MAX_DIGITS_LENGTH 1000000 CACHE STRING "Maximum length of digits allowed by the parser")
-set(MAX_PRECISION_LENGTH 6 CACHE STRING "Maximum length of precision allowed by the parser")
-set(MAX_ACCURACY_LENGTH 6 CACHE STRING "Maximum length of accuracy allowed by the parser")
-set(MAX_SYMBOL_LENGTH 1000000 CACHE STRING "Maximum length of symbols allowed by the parser")
-set(MAX_STRING_LENGTH 1000000 CACHE STRING "Maximum length of strings allowed by the parser")
-set(MAX_LONGNAME_LENGTH 20 CACHE STRING "Maximum length of long names allowed by the parser")
-
-message(STATUS "MAX_EXPRESSION_DEPTH: ${MAX_EXPRESSION_DEPTH}")
-message(STATUS "MAX_EXPRESSION_BREADTH: ${MAX_EXPRESSION_BREADTH}")
-message(STATUS "MAX_DIGITS_LENGTH: ${MAX_DIGITS_LENGTH}")
-message(STATUS "MAX_PRECISION_LENGTH: ${MAX_PRECISION_LENGTH}")
-message(STATUS "MAX_ACCURACY_LENGTH: ${MAX_ACCURACY_LENGTH}")
-message(STATUS "MAX_SYMBOL_LENGTH: ${MAX_SYMBOL_LENGTH}")
-message(STATUS "MAX_STRING_LENGTH: ${MAX_STRING_LENGTH}")
-message(STATUS "MAX_LONGNAME_LENGTH: ${MAX_LONGNAME_LENGTH}")
-
-target_compile_definitions(ast-lib
-	PRIVATE MAX_EXPRESSION_DEPTH=${MAX_EXPRESSION_DEPTH}
-	PRIVATE MAX_EXPRESSION_BREADTH=${MAX_EXPRESSION_BREADTH}
-	PRIVATE MAX_DIGITS_LENGTH=${MAX_DIGITS_LENGTH}
-	PRIVATE MAX_PRECISION_LENGTH=${MAX_PRECISION_LENGTH}
-	PRIVATE MAX_ACCURACY_LENGTH=${MAX_ACCURACY_LENGTH}
-	PRIVATE MAX_SYMBOL_LENGTH=${MAX_SYMBOL_LENGTH}
-	PRIVATE MAX_STRING_LENGTH=${MAX_STRING_LENGTH}
-	PRIVATE MAX_LONGNAME_LENGTH=${MAX_LONGNAME_LENGTH}
-)
 
 set_target_properties(ast-lib PROPERTIES
 	OUTPUT_NAME

@@ -6,11 +6,11 @@ ExpectedOperand:
 Test[
 	ParseString["{ + }"]
 	,
-CallNode[SymbolNode[Symbol, 
+CallNode[LeafNode[Symbol, 
   "List", <||>], {CallNode[
-   SymbolNode[Symbol, 
+   LeafNode[Symbol, 
     "Plus", <||>], {SyntaxErrorNode[
-     SyntaxError`ExpectedOperand, {TokenNode[Token`CloseCurly, 
+     SyntaxError`ExpectedOperand, {LeafNode[Token`CloseCurly, 
        "}", <|Source -> {{1, 5}, {1, 5}}|>]}, <|Source -> {{1, 5}, {1,
           5}}|>]}, <|Source -> {{1, 3}, {1, 5}}|>]}, <|Source -> {{1, 
      1}, {1, 5}}|>]
@@ -27,14 +27,14 @@ Test[
 	ParseString["a ? b ? c"]
 	,
 SyntaxErrorNode[SyntaxError`NonAssociative, {BinaryNode[
-   PatternTest, {SymbolNode[Symbol, 
+   PatternTest, {LeafNode[Symbol, 
      "a", <|Source -> {{1, 1}, {1, 1}}|>], 
-    TokenNode[Token`Question, "?", <|Source -> {{1, 3}, {1, 3}}|>], 
-    SymbolNode[Symbol, 
+    LeafNode[Token`Question, "?", <|Source -> {{1, 3}, {1, 3}}|>], 
+    LeafNode[Symbol, 
      "b", <|Source -> {{1, 5}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 
-       5}}|>], TokenNode[Token`Question, 
+       5}}|>], LeafNode[Token`Question, 
    "?", <|Source -> {{1, 7}, {1, 7}}|>], 
-  SymbolNode[Symbol, 
+  LeafNode[Symbol, 
    "c", <|Source -> {{1, 9}, {1, 9}}|>]}, <|Source -> {{1, 1}, {1, 
      9}}|>]
 	,
@@ -51,11 +51,11 @@ ExpectedTilde:
 Test[
 	ParseString["a ~f"]
 	,
-SyntaxErrorNode[SyntaxError`ExpectedTilde, {SymbolNode[Symbol, 
+SyntaxErrorNode[SyntaxError`ExpectedTilde, {LeafNode[Symbol, 
    "a", <|Source -> {{1, 1}, {1, 1}}|>], 
-  TokenNode[Token`Tilde, "~", <|Source -> {{1, 3}, {1, 3}}|>], 
-  SymbolNode[Symbol, "f", <|Source -> {{1, 4}, {1, 4}}|>], 
-  TokenNode[Token`EndOfFile, 
+  LeafNode[Token`Tilde, "~", <|Source -> {{1, 3}, {1, 3}}|>], 
+  LeafNode[Symbol, "f", <|Source -> {{1, 4}, {1, 4}}|>], 
+  LeafNode[EndOfFile, 
    "", <|Source -> {{2, 0}, {2, 0}}|>]}, <|Source -> {{1, 1}, {2, 
      0}}|>]
 	,
@@ -73,10 +73,10 @@ ExpectedSymbol:
 Test[
 	ParseString["1:2"]
 	,
-SyntaxErrorNode[SyntaxError`ExpectedSymbol, {IntegerNode[Integer, 
+SyntaxErrorNode[SyntaxError`ExpectedSymbol, {LeafNode[Integer, 
    "1", <|Source -> {{1, 1}, {1, 1}}|>], 
-  TokenNode[Token`Colon, ":", <|Source -> {{1, 2}, {1, 2}}|>], 
-  IntegerNode[Integer, 
+  LeafNode[Token`Colon, ":", <|Source -> {{1, 2}, {1, 2}}|>], 
+  LeafNode[Integer, 
    "2", <|Source -> {{1, 3}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 
      3}}|>]
 	,
@@ -96,13 +96,13 @@ ExpectedSet:
 Test[
 	ParseString["a /: b * c"]
 	,
-SyntaxErrorNode[SyntaxError`ExpectedSet, {SymbolNode[Symbol, 
+SyntaxErrorNode[SyntaxError`ExpectedSet, {LeafNode[Symbol, 
    "a", <|Source -> {{1, 1}, {1, 1}}|>], 
-  TokenNode[Token`SlashColon, "/:", <|Source -> {{1, 3}, {1, 4}}|>], 
+  LeafNode[Token`SlashColon, "/:", <|Source -> {{1, 3}, {1, 4}}|>], 
   InfixNode[
-   Times, {SymbolNode[Symbol, "b", <|Source -> {{1, 6}, {1, 6}}|>], 
-    TokenNode[Token`Star, "*", <|Source -> {{1, 8}, {1, 8}}|>], 
-    SymbolNode[Symbol, 
+   Times, {LeafNode[Symbol, "b", <|Source -> {{1, 6}, {1, 6}}|>], 
+    LeafNode[Token`Star, "*", <|Source -> {{1, 8}, {1, 8}}|>], 
+    LeafNode[Symbol, 
      "c", <|Source -> {{1, 10}, {1, 10}}|>]}, <|Source -> {{1, 6}, {1,
         10}}|>]}, <|Source -> {{1, 1}, {1, 10}}|>]
 	,
@@ -121,7 +121,7 @@ Test[
 	ParseString["&"]
 	,
 	SyntaxErrorNode[SyntaxError`ExpectedPossibleExpression, {
-		TokenNode[Token`Amp, "&", <|Source -> {{1, 1}, {1, 1}}|>]}, <|Source -> {{1, 1}, {1, 1}}|>]
+		LeafNode[Token`Amp, "&", <|Source -> {{1, 1}, {1, 1}}|>]}, <|Source -> {{1, 1}, {1, 1}}|>]
 	,
 	TestID->"SyntaxErrorNodes-20190521-O5D4A9"
 ]

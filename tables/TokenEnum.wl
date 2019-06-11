@@ -13,6 +13,7 @@ Token`Real -> Next,
 Token`Comment -> Next,
 Token`Newline -> Next,
 Token`WhiteSpace -> Next,
+Token`Unhandled -> Next,
 
 (* errors *)
 Token`Error`First -> Next,
@@ -27,6 +28,7 @@ Token`Error`InvalidBase -> Next,
 Token`Error`ExpectedAccuracy -> Next,
 Token`Error`ExpectedExponent -> Next,
 Token`Error`EmptyString -> Next,
+Token`Error`Aborted -> Next,
 Token`Error`End -> Next,
 
 (* 1 character tokens *)
@@ -132,13 +134,12 @@ Token`LinearSyntax`Space -> Next, (* \<space> *)
 (* implicit times operator *)
 Token`Fake`ImplicitTimes -> Next,
 
-(* A colon operator that is sym:pat, COLON operator is not used, it is ambiguous *)
-Token`Fake`PatternColon -> Next,
-(* A colon operator that is pat:val, COLON operator is not used, it is ambiguous *)
-Token`Fake`OptionalColon -> Next,
-
 (* Not used, but needed for sanity checks *)
 Token`Fake`EqualDot -> Next,
+
+Token`Fake`Null -> Next,
+Token`Fake`One -> Next,
+Token`Fake`All -> Next,
 
 (* missing } *)
 Token`Fake`MissingCloseCurly -> Next,
