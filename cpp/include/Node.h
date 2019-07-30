@@ -10,7 +10,11 @@
 
 class Node;
 
-using NodePtr = const std::shared_ptr<const Node>;
+//
+// Cannot be const std::shared_ptr<const Node>
+// 
+//
+using NodePtr = std::shared_ptr<const Node>;
 
 //
 // A sequence of Nodes
@@ -29,7 +33,7 @@ class NodeSeq {
     
 public:
     
-    NodeSeq() {}
+    NodeSeq() : vector() {}
     
     void push_back(NodePtr );
     
