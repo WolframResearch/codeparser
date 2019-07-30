@@ -7,6 +7,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <algorithm>
 
 
 Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), contextSensitivePrefixParselets(), contextSensitiveInfixParselets(), tokenQueue(), Issues(), totalTimeMicros(), currentAbortQ(nullptr) {
