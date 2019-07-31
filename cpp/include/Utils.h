@@ -68,7 +68,7 @@ public:
     // Define copy ctor and copy assignment to silence -Weffc++ warnings
     //
     
-    TimeScoper(const TimeScoper& T) : acc(T.acc) {}
+    TimeScoper(const TimeScoper& T) : acc(T.acc), t1(T.t1) {}
     
     TimeScoper& operator=(TimeScoper T) {
         if(&T == this) {

@@ -478,9 +478,7 @@ void Utils::notContiguousWarning(Token Tok1, Token Tok2) {
 
 
 
-TimeScoper::TimeScoper(std::chrono::microseconds *acc) : acc(acc) {
-    t1 = std::chrono::high_resolution_clock::now();
-};
+TimeScoper::TimeScoper(std::chrono::microseconds *acc) : acc(acc), t1(std::chrono::high_resolution_clock::now()) {}
 
 TimeScoper::~TimeScoper() {
     
