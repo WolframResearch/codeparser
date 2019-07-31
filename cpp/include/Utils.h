@@ -64,6 +64,23 @@ class TimeScoper {
 public:
     TimeScoper(std::chrono::microseconds *acc);
     
+    //
+    // Define copy ctor and copy assignment to silence -Weffc++ warnings
+    //
+    
+    TimeScoper(const TimeScoper& T) : acc(T.acc) {}
+    
+    TimeScoper& operator=(TimeScoper T) {
+        if(&T == this) {
+            return *this;
+        }
+        
+        acc = T.acc;
+        t1 = T.t1;
+        
+        return *this;
+    }
+    
     ~TimeScoper();
 };
 
