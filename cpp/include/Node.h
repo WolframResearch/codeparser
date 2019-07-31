@@ -16,6 +16,28 @@ class Node;
 using NodePtr = std::shared_ptr<const Node>;
 
 //
+// An expression representing a node in the syntax tree
+//
+class Node {
+    const std::vector<NodePtr> Children;
+public:
+    
+    Node(std::vector<NodePtr> Children) : Children(Children) {}
+    
+    const std::vector<NodePtr> getChildren() const {
+        return Children;
+    }
+    
+    virtual void put(MLINK mlp) const = 0;
+    
+    virtual Source getSourceSpan() const;
+    
+    void putChildren(MLINK mlp) const;
+    
+    virtual ~Node() {}
+};
+
+//
 // A sequence of Nodes
 //
 // When parsing  a(**)+b  we actually want to keep track of the comment.
@@ -49,30 +71,6 @@ public:
     }
     
     void clear();
-};
-
-
-
-//
-// An expression representing a node in the syntax tree
-//
-class Node {
-    const std::vector<NodePtr> Children;
-public:
-    
-    Node(std::vector<NodePtr> Children) : Children(Children) {}
-    
-    const std::vector<NodePtr> getChildren() const {
-        return Children;
-    }
-
-    virtual void put(MLINK mlp) const = 0;
-    
-    virtual Source getSourceSpan() const;
-
-    void putChildren(MLINK mlp) const;
-    
-    virtual ~Node() {}
 };
 
 

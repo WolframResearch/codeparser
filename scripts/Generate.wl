@@ -769,6 +769,7 @@ symbolCPPHeader = {
 
 #include <string>
 #include <utility>
+#include <memory>
 
 class ASTLIB_EXPORTED Symbol {
 public:
