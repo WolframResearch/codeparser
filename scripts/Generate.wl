@@ -524,9 +524,7 @@ enum TokenEnum {"} ~Join~
    KeyValueMap[(Row[{toGlobal[#], " = ", #2, ","}])&, enumMap] ~Join~
    {"};", ""} ~Join~ {
 "
-class Symbol;
 
-const Symbol* TokenToSymbol(TokenEnum type);
 bool isError(TokenEnum type);
 
 namespace std {
@@ -618,7 +616,7 @@ tokenCPPSource = {
 #include <iostream>
 #include <cassert>
 "} ~Join~
-    {"const Symbol* TokenToSymbol(TokenEnum Tok) {"} ~Join~
+    {"SymbolPtr& TokenToSymbol(TokenEnum Tok) {"} ~Join~
     {"switch (Tok) {"} ~Join~
     cases ~Join~
     {"default:"} ~Join~
@@ -783,28 +781,33 @@ private:
   const char *Name;
 };
 
+using SymbolPtr = std::unique_ptr<const Symbol>;
+
+
 void allocSymbols();
 
 void freeSymbols();
 
-const Symbol* PrefixOperatorToSymbol(TokenEnum);
-const Symbol* PostfixOperatorToSymbol(TokenEnum);
-const Symbol* BinaryOperatorToSymbol(TokenEnum);
-const Symbol* InfixOperatorToSymbol(TokenEnum);
-const Symbol* StartOfLineOperatorToSymbol(TokenEnum);
+SymbolPtr& PrefixOperatorToSymbol(TokenEnum);
+SymbolPtr& PostfixOperatorToSymbol(TokenEnum);
+SymbolPtr& BinaryOperatorToSymbol(TokenEnum);
+SymbolPtr& InfixOperatorToSymbol(TokenEnum);
+SymbolPtr& StartOfLineOperatorToSymbol(TokenEnum);
 
 bool isInfixOperator(TokenEnum);
 
-const Symbol* GroupOpenerToSymbol(TokenEnum);
-const Symbol* PrefixBinaryOperatorToSymbol(TokenEnum);
+SymbolPtr& GroupOpenerToSymbol(TokenEnum);
+SymbolPtr& PrefixBinaryOperatorToSymbol(TokenEnum);
 
 TokenEnum GroupOpenerToCloser(TokenEnum);
 TokenEnum GroupCloserToOpener(TokenEnum);
 
 bool isCloser(TokenEnum);
 
+SymbolPtr& TokenToSymbol(TokenEnum type);
+
 "} ~Join~
-(Row[{"ASTLIB_EXPORTED", " ", "extern", " ", "const", " ", "Symbol*", " ", toGlobal["Symbol`"<>ToString[#]], ";"}]& /@ symbols) ~Join~
+(Row[{"ASTLIB_EXPORTED", " ", "extern", " ", "SymbolPtr", " ", toGlobal["Symbol`"<>ToString[#]], ";"}]& /@ symbols) ~Join~
 {""}
 
 Print["exporting Symbol.h"]
@@ -860,9 +863,9 @@ void Symbol::put(MLINK mlp) const {
       (*
       handle String specially because of bug 321344
       *)
-      "SYMBOL_STRING = new Symbol(\"String\");"
+      "SYMBOL_STRING = std::unique_ptr<const Symbol>(new Symbol(\"String\"));"
       ,
-      Row[{toGlobal["Symbol`"<>ToString[#]], " = new Symbol(\"", stringifyForTransmitting[#], "\");"}]]& /@ symbols) ~Join~
+      Row[{toGlobal["Symbol`"<>ToString[#]], " = std::unique_ptr<const Symbol>(new Symbol(\"", stringifyForTransmitting[#], "\"));"}]]& /@ symbols) ~Join~
 {"}
 "} ~Join~ { "void freeSymbols() {" } ~Join~
 
@@ -870,9 +873,9 @@ void Symbol::put(MLINK mlp) const {
       (*
       handle String specially because of bug 321344
       *)
-      "delete SYMBOL_STRING;"
+      "SYMBOL_STRING = nullptr;"
       ,
-      Row[{"delete ", toGlobal["Symbol`"<>ToString[#]], ";"}]]& /@ symbols) ~Join~
+      Row[{toGlobal["Symbol`"<>ToString[#]], " ", "=", " ", "nullptr", ";"}]]& /@ symbols) ~Join~
 {"}
 "} ~Join~
 
@@ -880,13 +883,13 @@ void Symbol::put(MLINK mlp) const {
       (*
       handle String specially because of bug 321344
       *)
-      "const Symbol* SYMBOL_STRING = nullptr;"
+      "SymbolPtr SYMBOL_STRING = nullptr;"
       ,
-      Row[{"const Symbol* ", toGlobal["Symbol`"<>ToString[#]], " = nullptr;"}]]& /@ symbols) ~Join~
+      Row[{"SymbolPtr", " ", toGlobal["Symbol`"<>ToString[#]], " = nullptr;"}]]& /@ symbols) ~Join~
 
       {""} ~Join~
 
-      {"const Symbol* PrefixOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
+      {"SymbolPtr& PrefixOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
      
      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PrefixOperatorToSymbol]] ~Join~ 
       {"default: std::cerr << \"Unhandled Token: \" << TokenToSymbol(Type)->name() << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
@@ -894,7 +897,7 @@ void Symbol::put(MLINK mlp) const {
 
      {""} ~Join~
 
-     {"const Symbol* PostfixOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
+     {"SymbolPtr& PostfixOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
      
       Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PostfixOperatorToSymbol]] ~Join~
       {"default: std::cerr << \"Unhandled Token: \" << TokenToSymbol(Type)->name() << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
@@ -902,7 +905,7 @@ void Symbol::put(MLINK mlp) const {
 
      {""} ~Join~
 
-     {"const Symbol* BinaryOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
+     {"SymbolPtr& BinaryOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
      
       Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[BinaryOperatorToSymbol]] ~Join~
       {"default: std::cerr << \"Unhandled Token: \" << TokenToSymbol(Type)->name() << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
@@ -910,7 +913,7 @@ void Symbol::put(MLINK mlp) const {
 
      {""} ~Join~
 
-     {"const Symbol* InfixOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
+     {"SymbolPtr& InfixOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
      
       Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[InfixOperatorToSymbol]] ~Join~
       {"default: std::cerr << \"Unhandled Token: \" << TokenToSymbol(Type)->name() << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
@@ -926,7 +929,7 @@ void Symbol::put(MLINK mlp) const {
 
      {""} ~Join~
 
-     {"const Symbol* StartOfLineOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
+     {"SymbolPtr& StartOfLineOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
      
       Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[StartOfLineOperatorToSymbol]] ~Join~
       {"default: std::cerr << \"Unhandled Token: \" << TokenToSymbol(Type)->name() << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
@@ -934,7 +937,7 @@ void Symbol::put(MLINK mlp) const {
 
      {""} ~Join~
 
-     {"const Symbol* GroupOpenerToSymbol(TokenEnum Type) {"} ~Join~
+     {"SymbolPtr& GroupOpenerToSymbol(TokenEnum Type) {"} ~Join~
      {"switch (Type) {"} ~Join~
       Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[GroupOpenerToSymbol]] ~Join~
       {"default: std::cerr << \"Unhandled Token: \" << TokenToSymbol(Type)->name() << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",
@@ -970,7 +973,7 @@ void Symbol::put(MLINK mlp) const {
 
      {""} ~Join~
 
-     {"const Symbol* PrefixBinaryOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
+     {"SymbolPtr& PrefixBinaryOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
      
       Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PrefixBinaryOperatorToSymbol]] ~Join~
       {"default: std::cerr << \"Unhandled Token: \" << TokenToSymbol(Type)->name() << \"\\n\"; assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[InternalInvalid]] <> ";",

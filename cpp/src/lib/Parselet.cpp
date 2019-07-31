@@ -331,7 +331,7 @@ NodePtr GroupParselet::parse(ParserContext CtxtIn) const {
     
     auto Tok = TheParser->nextToken(Ctxt);
     
-    auto Op = GroupOpenerToSymbol(Opener.Tok);
+    auto& Op = GroupOpenerToSymbol(Opener.Tok);
     
     auto CloserTok = GroupOpenerToCloser(Opener.Tok);
     Ctxt.Closer = CloserTok;
@@ -386,7 +386,7 @@ NodePtr GroupParselet::parse(ParserContext CtxtIn) const {
             
             Args.push_back(std::make_shared<LeafNode>(Tok));
             
-            auto MissingOpenerSymbol = GroupOpenerToSymbol(MissingOpener);
+            auto& MissingOpenerSymbol = GroupOpenerToSymbol(MissingOpener);
             
             auto group = std::make_shared<GroupMissingOpenerNode>(MissingOpenerSymbol, Args.getVector());
             
@@ -400,7 +400,7 @@ NodePtr GroupParselet::parse(ParserContext CtxtIn) const {
             
             Args.push_back(std::make_shared<LeafNode>(Tok));
             
-            auto Op = GroupOpenerToSymbol(Opener.Tok);
+            auto& Op = GroupOpenerToSymbol(Opener.Tok);
             
             auto group = std::make_shared<GroupMissingCloserNode>(Op, Args.getVector());
             
