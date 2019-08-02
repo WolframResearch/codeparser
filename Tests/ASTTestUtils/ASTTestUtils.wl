@@ -631,6 +631,18 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "TestTools/FrontEnd/CoreGraphicsGrammar.m",
         prefix <> "TestTools/Statistics/NIST/NISTTestTools.m",
         prefix <> "Pubs/OnlineProduction/Applications/DocumentationBuild/Tests/UnitTests/UnitTests.m",
+        Nothing
+        }, fileIn],
+      f = Failure["CannotRegexTooWeird", <|"FileName" -> fileIn|>];
+      Print[
+       Style[Row[{"index: ", i, " ", 
+          StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], 
+        Darker[Orange]]];
+      Print[Style[Row[{"index: ", i, " ", f}], Darker[Orange]]];
+      Throw[f, "OK"]
+      ];
+
+      If[MemberQ[{
         (*
         broken BeginPackage[] / EndPackage[] or something
         *)
@@ -641,7 +653,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "control/UpdatedCSP/auxTest.m",
         Nothing
         }, fileIn],
-      f = Failure["CannotRegexTooWeirdOrBroken", <|"FileName" -> fileIn|>];
+      f = Failure["CannotRegexTooBroken", <|"FileName" -> fileIn|>];
       Print[
        Style[Row[{"index: ", i, " ", 
           StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], 
@@ -650,6 +662,22 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       Throw[f, "OK"]
       ];
      
+      If[MemberQ[{
+        (*
+        too deep
+        *)
+        prefix <> "Documentation/English/System/ExamplePages/SymbolicGeometricTransformations.nb",
+        Nothing
+        }, fileIn],
+      f = Failure["TooDeep", <|"FileName" -> fileIn|>];
+      Print[
+       Style[Row[{"index: ", i, " ", 
+          StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], 
+        Darker[Orange]]];
+      Print[Style[Row[{"index: ", i, " ", f}], Darker[Orange]]];
+      Throw[f, "OK"]
+      ];
+
      (*
      the files here have uses of < - > 
      and it is an older version
