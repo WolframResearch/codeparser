@@ -387,6 +387,7 @@ Range 0x2200
 "Backslash" -> Punctuation, (* 0x2216 *)
 "SmallCircle" -> Punctuation, (* 0x2218 *)
 "Sqrt" -> Punctuation, (* 0x221a *)
+"CubeRoot" -> Punctuation, (* 0x221b *)
 "Proportional" -> Punctuation, (* 0x221d *)
 "Infinity" -> Letterlike, (* 0x221e *)
 "RightAngle" -> Letterlike, (* 0x221f *)

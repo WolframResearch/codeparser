@@ -68,7 +68,11 @@ longNameToCharacterCode["VectorGreater"] = 16^^f434
 longNameToCharacterCode["VectorGreaterEqual"] = 16^^f435
 longNameToCharacterCode["VectorLess"] = 16^^f436
 longNameToCharacterCode["VectorLessEqual"] = 16^^f437
-
+(*
+added in 12.1:
+CubeRoot
+*)
+longNameToCharacterCode["CubeRoot"] = 16^^221b
 
 (*
 specify the long names that are not supported
