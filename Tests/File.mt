@@ -213,6 +213,37 @@ TestMatch[
 
 
 
+strange = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "string1.wl"}]
+
+cst = ConcreteParseFile[strange]
+
+TestMatch[
+	cst
+	,
+	FileNode[File, {
+		LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 0}}|>],
+		LeafNode[String, "\"data\\\\\n\"", <|Source -> {{2, 1}, {3, 1}}|>],
+		LeafNode[Token`Newline, "\n", <|Source -> {{4, 0}, {4, 0}}|>],
+		LeafNode[Token`Newline, "\n", <|Source -> {{5, 0}, {5, 0}}|>],
+		LeafNode[Symbol, "x", <|Source -> {{5, 1}, {5, 1}}|>],
+		LeafNode[Token`Newline, "\n", <|Source -> {{6, 0}, {6, 0}}|>]}, <|SyntaxIssues -> {}, Source -> {{2, 0}, {6, 0}}|>]
+	,
+	TestID->"File-20190804-K7V2D8"
+]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -465,6 +496,13 @@ Test[
 	TestID->"File-20190626-L4G9A9"
 ]
 
+Test[
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "string1.wl"}], 1]
+	,
+	Null
+	,
+	TestID->"File-20190804-T9F2J6"
+]
 
 
 
