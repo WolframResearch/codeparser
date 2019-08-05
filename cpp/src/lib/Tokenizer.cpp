@@ -57,7 +57,7 @@ void Tokenizer::deinit() {
 
 
 Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
-    TimeScoper Scoper(&totalTimeMicros);
+    TimeScoper Scoper(totalTimeMicros);
     
     //
     // Too complicated to clear string when calling getString and assert here

@@ -58,28 +58,11 @@ public:
 
 class TimeScoper {
     
-    std::chrono::microseconds *acc;
+    std::chrono::microseconds& acc;
     std::chrono::high_resolution_clock::time_point t1;
     
 public:
-    TimeScoper(std::chrono::microseconds *acc);
-    
-    //
-    // Define copy ctor and copy assignment to silence -Weffc++ warnings
-    //
-    
-    TimeScoper(const TimeScoper& T) : acc(T.acc), t1(T.t1) {}
-    
-    TimeScoper& operator=(TimeScoper T) {
-        if(&T == this) {
-            return *this;
-        }
-        
-        acc = T.acc;
-        t1 = T.t1;
-        
-        return *this;
-    }
+    TimeScoper(std::chrono::microseconds& acc);
     
     ~TimeScoper();
 };

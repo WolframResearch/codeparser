@@ -17,7 +17,7 @@ void ByteDecoder::deinit() {
 }
 
 SourceCharacter ByteDecoder::nextSourceCharacter() {
-    TimeScoper Scoper(&totalTimeMicros);
+    TimeScoper Scoper(totalTimeMicros);
     
     //
     // handle the queue before anything else

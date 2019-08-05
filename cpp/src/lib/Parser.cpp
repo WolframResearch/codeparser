@@ -719,7 +719,7 @@ Precedence Parser::getCurrentTokenPrecedence(Token TokIn, ParserContext Ctxt) {
 }
 
 NodePtr Parser::parse(ParserContext CtxtIn) {
-    TimeScoper Scoper(&totalTimeMicros);
+    TimeScoper Scoper(totalTimeMicros);
     
     if (isAbort()) {
         

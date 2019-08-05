@@ -26,7 +26,7 @@ void CharacterDecoder::deinit() {
 // Keeps track of character counts
 //
 WLCharacter CharacterDecoder::nextWLCharacter(NextCharacterPolicy policy) {
-    TimeScoper Scoper(&totalTimeMicros);
+    TimeScoper Scoper(totalTimeMicros);
     
     //
     // handle the queue before anything else
