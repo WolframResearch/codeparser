@@ -247,11 +247,16 @@ abstract[CallNode[op_, { GroupNode[GroupSquare, { _, inner___, _ }, data2_] }, d
 abstract[CallNode[op_, { GroupNode[GroupDoubleBracket, { _, inner___, _ }, data2_] }, data1_]] :=
 	abstractCallNode[CallNode[op, { GroupNode[GroupDoubleBracket, { inner }, KeyTake[data2, keysToTake]] }, KeyTake[data1, keysToTake]]]
 
+
 (*
-must handled this so that AbstractSyntaxErrorNode is created later
+must handle this so that AbstractSyntaxErrorNode is created later
 *)
-abstract[CallNode[op_, { GroupMissingCloserNode[GroupSquare, children_, data2_] }, data1_]] :=
-	abstractCallNode[CallNode[op, { GroupMissingCloserNode[GroupSquare, children, data2] }, KeyTake[data1, keysToTake]]]
+
+abstract[CallNode[op_, { missing:GroupMissingOpenerNode[_, _, _] }, data1_]] :=
+	abstractCallNode[CallNode[op, { missing }, KeyTake[data1, keysToTake]]]
+
+abstract[CallNode[op_, { missing:GroupMissingCloserNode[_, _, _] }, data1_]] :=
+	abstractCallNode[CallNode[op, { missing }, KeyTake[data1, keysToTake]]]
 
 
 
@@ -1344,12 +1349,26 @@ Module[{data},
    CallNode[ToNode[tag], {}, data]
 ]
 
+
+
+(*
+FIXME: would be good to remember tag somehow
+*)
+
+abstractGroupNode[GroupMissingOpenerNode[tag_, children_, dataIn_]] :=
+Module[{data},
+
+	data = dataIn;
+
+   AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingOpener, children, data]
+]
+
 abstractGroupNode[GroupMissingCloserNode[tag_, children_, dataIn_]] :=
 Module[{data},
 
 	data = dataIn;
 
-   CallNode[ToNode[tag], { AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingCloser, children, data] }, data]
+   AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingCloser, children, data]
 ]
 
 
@@ -1602,7 +1621,7 @@ Module[{head, part, partData, data, issues},
 ]
 
 
-abstractCallNode[CallNode[headIn_, {partIn:GroupMissingCloserNode[GroupSquare, _, _]}, dataIn_]] :=
+abstractCallNode[CallNode[headIn_, {partIn:GroupMissingOpenerNode[_, _, _]}, dataIn_]] :=
 Module[{head, part, data},
 	head = headIn;
 	part = partIn;
@@ -1611,9 +1630,20 @@ Module[{head, part, data},
 	head = abstract[head];
 	part = abstractGroupNode[part];
 
-	CallNode[head, part[[2]], data]
+	CallNode[head, { part }, data]
 ]
 
+abstractCallNode[CallNode[headIn_, {partIn:GroupMissingCloserNode[_, _, _]}, dataIn_]] :=
+Module[{head, part, data},
+	head = headIn;
+	part = partIn;
+	data = dataIn;
+
+	head = abstract[head];
+	part = abstractGroupNode[part];
+
+	CallNode[head, { part }, data]
+]
 
 End[]
 
