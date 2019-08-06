@@ -554,9 +554,17 @@ topLevelChildIssues[InfixNode[CompoundExpression, {
 topLevelChildIssues[InfixNode[CompoundExpression, _, data_], True] := { SyntaxIssue["TopLevel", "Strange expression is at top-level.\n\
 Consider breaking up expression on separate lines or removing the ``;``.", "Warning", data] }
 
+
+
+
 (*
 Anything else, then warn
+
+Specifically add a DidYouMean for /
 *)
+topLevelChildIssues[BinaryNode[Divide, _, data_], True] := { SyntaxIssue["TopLevel", "Strange expression is at top-level.\n\
+Did you mean ``/@``?", "Warning", data] }
+
 topLevelChildIssues[node_, True] := { SyntaxIssue["TopLevel", "Strange expression is at top-level.", "Warning", node[[3]]] }
 
 
