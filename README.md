@@ -98,7 +98,6 @@ Here are typical values for the variables:
 * `WOLFRAMLIBRARY_INCLUDE_DIR` `/Applications/Mathematica.app/Contents/SystemFiles/IncludeFiles/C`
 
 Here is the build directory layout after building AST:
-
 ```
 paclet/
   AST/
@@ -145,16 +144,3 @@ InfixNode[Plus, {IntegerNode["1", {}, <|Source->{{1, 1}, {1, 1}}|>], IntegerNode
 
 >>>
 ```
-
-
-## Troubleshooting
-
-### Strange behavior on Windows
-
-After installing the AST paclet on Windows, you may see strange behavior such as the kernel and front end crashing or the `wl-ast` executable disppearing.
-
-This is most likely due to Antivirus software such as Bitdefender incorrectly flagging the `wl-ast.exe` executable as a virus.
-
-Make sure to whitelist `wl-ast.exe` to prevent Antivirus software from flagging this paclet as a virus.
-
-<!--- bug 236253 --->
