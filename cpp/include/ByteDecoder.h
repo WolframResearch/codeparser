@@ -4,7 +4,6 @@
 #include "Source.h"
 
 #include <vector>
-#include <istream>
 #include <chrono>
 
 //
@@ -19,10 +18,12 @@ private:
     
     std::chrono::microseconds totalTimeMicros;
     
-    
-    unsigned char nextByte();
-    
     SourceCharacter decodeBytes(unsigned char);
+    
+    SourceCharacter invalid(unsigned char);
+    SourceCharacter invalid(unsigned char, unsigned char);
+    SourceCharacter invalid(unsigned char, unsigned char, unsigned char);
+    SourceCharacter invalid(unsigned char, unsigned char, unsigned char, unsigned char);
     
 public:
     
@@ -38,8 +39,8 @@ public:
     
     std::vector<SyntaxIssue> getIssues() const;
     
-    std::vector<Metadata> getMetadatas() const;
+    //    std::vector<Metadata> getMetadatas() const;
 };
 
-extern std::istream *TheInputStream;
 extern ByteDecoder *TheByteDecoder;
+

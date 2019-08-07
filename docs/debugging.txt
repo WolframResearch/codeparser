@@ -1,0 +1,2 @@
+
+type summary add --summary-string "Escape: ${var.escapeBits%u} Sign: ${var.signBit%u} BinValue: ${var.valBits%b} CharValue: ${var.valBits%c}" WLCharacter

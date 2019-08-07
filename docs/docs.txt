@@ -12,6 +12,34 @@ All nodes have a uniform structure:
 
 
 
+We take advantage of the symbolic nature of WL and use the function symbols themselves for tags:
+
+
+a+b is parsed as:
+InfixNode[Plus, {LeafNode[Symbol, "a", <||>], LeafNode[Token`Plus, "+", <||>], LeafNode[Symbol, "b", <||>]}, <||>]
+
+and a::b is parsed as:
+InfixNode[MessageName, {LeafNode[Symbol, "a", <||>], LeafNode[Token`ColonColon, "::", <||>], LeafNode[String, "b", <||>]
+
+
+
+
+
+# Philosophy
+
+there is an analogy here:
+
+if a character is not something else, then it is letterlike
+
+if a token is not something else, then it is prefix
+
+if an expression is not something else, then it is leaf
+
+
+
+
+
+
 
 
 
@@ -25,33 +53,11 @@ AST aims to be source compatible for Mathematica versions >= 11.0
 
 # Caveats
 
-
-CAVEAT 1:
-
-line continuations are lost
-
-12\
-3
-
-has same concrete syntax as
-
-123
-
-
-
-In[8]:= ConcreteParseString["12\\\n34"]
-
-Out[8]= LeafNode[Integer, "1234", <|Source -> {{1, 1}, {2, 2}}|>]
-
-
-
-
-
-
-CAVEAT 2:
-
 linear syntax is not parsed, just tokenized
 
+linear syntax is not abstracted, don't want to reimplement MakeExpression
+
+boxes are not abstracted, don't want to reimplement MakeExpression
 
 
 
@@ -60,12 +66,7 @@ linear syntax is not parsed, just tokenized
 
 
 
-there is an analogy here:
 
-if a character is not something else, then it is letterlike
 
-if a token is not something else, then it is prefix
-
-if an expression is not something else, then it is leaf
 
 

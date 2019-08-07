@@ -8,34 +8,62 @@
 #include <string>
 #include <iostream>
 
-int readStdIn(bool tokenize);
-int readFile(std::string file);
+int EXPRESSION = 0;
+int TOKENIZE = 1;
+int LEAF = 2;
+
+int readStdIn(int mode, bool printOutput);
+
+int readFile(std::string file, bool printOutput);
 void printExpression(MLINK mlp);
 
 int main(int argc, char *argv[]) {
     
+    auto file = false;
     auto tokenize = false;
+    auto leaf = false;
+    auto printOutput = true;
+    
+    std::string fileInput;
+    
     for (int i = 1; i < argc; i++) {
         auto arg = std::string(argv[i]);
         if (arg == "-file") {
+            
+            file = true;
+            
             i++;
-            auto file = std::string(argv[i]);
-
-            return readFile(file);
+            fileInput = std::string(argv[i]);
 
         } else if (arg == "-tokenize") {
             
             tokenize = true;
             
+        } else if (arg == "-leaf") {
+            
+            leaf = true;
+            
+        } else if (arg == "-n") {
+            
+            printOutput = false;
+            
         } else {
             return 1;
         }
     }
-
-    return readStdIn(tokenize);
+    
+    if (file) {
+        return readFile(fileInput, printOutput);
+    } else if (leaf) {
+        return readStdIn(LEAF, printOutput);
+    } else if (tokenize) {
+        return readStdIn(TOKENIZE, printOutput);
+    } else {
+        return readStdIn(EXPRESSION, printOutput);
+    }
 }
 
-int readStdIn(bool tokenize) {
+int readStdIn(int mode, bool printOutput) {
     
     int res = LIBRARY_FUNCTION_ERROR;
     
@@ -73,8 +101,10 @@ int readStdIn(bool tokenize) {
         goto retPt;
     }
     
-    if (tokenize) {
+    if (mode == TOKENIZE) {
         res = TokenizeString(nullptr, mlp);
+    } else if (mode == LEAF) {
+        res = ParseLeaf(nullptr, mlp);
     } else {
         res = ConcreteParseString(nullptr, mlp);
     }
@@ -83,8 +113,10 @@ int readStdIn(bool tokenize) {
         goto retPt;
     }
     
-    printExpression(mlp);
-    std::cout << "\n";
+    if (printOutput) {
+        printExpression(mlp);
+        std::cout << "\n";
+    }
     
 retPt:
     if (mlp != nullptr) {
@@ -98,7 +130,7 @@ retPt:
     return res;
 }
 
-int readFile(std::string file) {
+int readFile(std::string file, bool printOutput) {
     
     int res = LIBRARY_FUNCTION_ERROR;
     
@@ -140,8 +172,10 @@ int readFile(std::string file) {
         goto retPt;
     }
     
-    printExpression(mlp);
-    std::cout << "\n";
+    if (printOutput) {
+        printExpression(mlp);
+        std::cout << "\n";
+    }
     
 retPt:
     if (mlp != nullptr) {

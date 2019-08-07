@@ -2,6 +2,8 @@
 
 The token enum
 
+This is a complete enumeration of all tokens in Wolfram Language
+
 *)
 <|
 Token`Unknown -> 0,
@@ -10,17 +12,19 @@ Token`Symbol -> Next,
 Token`String -> Next,
 Token`Integer -> Next,
 Token`Real -> Next,
+
+(* trivia *)
 Token`Comment -> Next,
 Token`Newline -> Next,
 Token`WhiteSpace -> Next,
-Token`Unhandled -> Next,
+Token`LineContinuation -> Next,
 
 (* errors *)
 Token`Error`First -> Next,
 Token`Error`Unknown -> Token`Error`First,
 Token`Error`ExpectedEqual -> Next,
+Token`Error`UnhandledDot -> Next,
 Token`Error`UnhandledCharacter -> Next,
-Token`Error`ExpectedDigitOrAlpha -> Next,
 Token`Error`ExpectedLetterlike -> Next,
 Token`Error`UnterminatedComment -> Next,
 Token`Error`UnterminatedString -> Next,
@@ -101,6 +105,7 @@ Token`HashHash -> Next, (* ## *)
 Token`BangEqual -> Next, (* != *)
 Token`BangBang -> Next, (* !! *)
 Token`QuestionQuestion -> Next, (* ?? *)
+Token`EqualDot -> Next, (* =. *)
 
 (* 3 character tokens *)
 Token`DotDotDot -> Next, (* ... *)
@@ -131,15 +136,15 @@ Token`LinearSyntax`Space -> Next, (* \<space> *)
 
 (* Fake tokens *)
 
-(* implicit times operator *)
+(* implicit Times operator in  a b  *)
 Token`Fake`ImplicitTimes -> Next,
 
-(* Not used, but needed for sanity checks *)
-Token`Fake`EqualDot -> Next,
-
-Token`Fake`Null -> Next,
-Token`Fake`One -> Next,
-Token`Fake`All -> Next,
+(* implicit  Null  in  a; *)
+Token`Fake`ImplicitNull -> Next,
+(* implicit  1  in  ;;b  *)
+Token`Fake`ImplicitOne -> Next,
+(* implicit  All  in  a;;  *)
+Token`Fake`ImplicitAll -> Next,
 
 (* missing } *)
 Token`Fake`MissingCloseCurly -> Next,
@@ -176,6 +181,25 @@ Token`Fake`MissingCloseParen -> Next,
 
 (* missing \) *)
 Token`Fake`LinearSyntax`MissingCloseParen -> Next,
+
+
+(*
+Used when parsing boxes
+
+The front end treats  ( *  and  * )  as tokens
+(broken up here so as to not mess up the comment)
+*)
+Token`Boxes`OpenParenStar -> Next,
+Token`Boxes`StarCloseParen -> Next,
+(*
+The front end treats ''' as a single token
+*)
+Token`Boxes`MultiSingleQuote -> Next,
+
+(*
+Parsing f.m as a leaf from the front end (from example input such as <<f.m)
+*)
+Token`Other -> Next,
 
 Nothing
 |>

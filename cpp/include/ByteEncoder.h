@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include <vector>
 #include <ostream>
 
 //
@@ -9,8 +8,9 @@
 //
 class ByteEncoder {
 public:
-
+    
     static void encodeBytes(std::ostream&, int val);
 };
 
 extern ByteEncoder *TheByteEncoder;
+

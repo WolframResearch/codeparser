@@ -1,15 +1,12 @@
 
 #pragma once
 
-#include "Symbol.h"
+#include "Token.h"
 
 #include "mathlink.h"
 
 #include <string>
 #include <cassert>
-#include <vector>
-#include <sstream>
-#include <chrono>
 
 //
 // https://akrzemi1.wordpress.com/2017/05/18/asserts-in-constexpr-functions/
@@ -45,9 +42,9 @@ enum SyntaxError {
     SYNTAXERROR_EXPECTEDSET,
     
     //
-    // Something like  1:2
+    // Something like  1:2  or  a:b:1:2
     //
-    SYNTAXERROR_EXPECTEDSYMBOL,
+    SYNTAXERROR_COLONERROR,
     
     //
     // Something like:
@@ -94,21 +91,13 @@ SyntaxIssueTag SYNTAXISSUETAG_SYNTAXERROR = "SyntaxError";
 SyntaxIssueTag SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER = "UnrecognizedCharacter";
 SyntaxIssueTag SYNTAXISSUETAG_UNSUPPORTEDCHARACTER = "UnsupportedCharacter";
 SyntaxIssueTag SYNTAXISSUETAG_UNDOCUMENTEDCHARACTER = "UndocumentedCharacter";
-SyntaxIssueTag SYNTAXISSUETAG_ESCAPESEQUENCE = "EscapeSequence";
+SyntaxIssueTag SYNTAXISSUETAG_UNLIKELYESCAPESEQUENCE = "UnlikelyEscapeSequence";
+SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDEXPRESSION = "UnexpectedExpression";
 SyntaxIssueTag SYNTAXISSUETAG_STRANGECHARACTER = "StrangeCharacter";
 SyntaxIssueTag SYNTAXISSUETAG_SYNTAXAMBIGUITY = "SyntaxAmbiguity";
 SyntaxIssueTag SYNTAXISSUETAG_NOTCONTIGUOUS = "NotContiguous";
 SyntaxIssueTag SYNTAXISSUETAG_DIFFERENTLINE = "DifferentLine";
 SyntaxIssueTag SYNTAXISSUETAG_ENDOFLINE = "EndOfLine";
-SyntaxIssueTag SYNTAXISSUETAG_MAXEXPRESSIONDEPTH = "MaxExpressionDepth";
-SyntaxIssueTag SYNTAXISSUETAG_MAXEXPRESSIONBREADTH = "MaxExpressionBreadth";
-SyntaxIssueTag SYNTAXISSUETAG_MAXCOMMENTLENGTH = "MaxCommentLength";
-SyntaxIssueTag SYNTAXISSUETAG_MAXSYMBOLLENGTH = "MaxSymbolLength";
-SyntaxIssueTag SYNTAXISSUETAG_MAXSTRINGLENGTH = "MaxStringLength";
-SyntaxIssueTag SYNTAXISSUETAG_MAXPRECISIONLENGTH = "MaxPrecisionLength";
-SyntaxIssueTag SYNTAXISSUETAG_MAXACCURACYLENGTH = "MaxAccuracyLength";
-SyntaxIssueTag SYNTAXISSUETAG_MAXDIGITSLENGTH = "MaxDigitsLength";
-SyntaxIssueTag SYNTAXISSUETAG_MAXLONGNAMELENGTH = "MaxLongNameLength";
 SyntaxIssueTag SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT = "SyntaxUndocumentedSlot";
 SyntaxIssueTag SYNTAXISSUETAG_CHARACTERENCODING = "CharacterEncoding";
 SyntaxIssueTag SYNTAXISSUETAG_STRAYCARRIAGERETURN = "StrayCarriageReturn";
@@ -139,49 +128,48 @@ SyntaxIssueSeverity SYNTAXISSUESEVERITY_FATAL = "Fatal";
 //
 // The text  \[Alpha]  would be 8 separate SourceCharacters
 //
-class SourceCharacter {
-private:
-    int value_;
-public:
-    explicit constexpr SourceCharacter(int val) : value_(val) {}
-
+struct SourceCharacter {
+    
+    int32_t valBits;
+    
+    explicit constexpr SourceCharacter(int val) : valBits(val) {}
+    
     explicit operator int() const noexcept = delete;
-
-    bool operator==(const SourceCharacter &o) const {
-        return value_ == o.value_;
+    
+    constexpr bool operator==(const SourceCharacter &o) const {
+        return valBits == o.valBits;
     }
-
-    bool operator!=(const SourceCharacter &o) const {
-        return value_ != o.value_;
+    
+    constexpr bool operator!=(const SourceCharacter &o) const {
+        return valBits != o.valBits;
     }
-
-   constexpr int to_point() const {
-       return value_;
-   }
-
-   constexpr char to_char() const {
+    
+    constexpr int to_point() const {
+        return valBits;
+    }
+    
+    constexpr char to_char() const {
         //
         // https://akrzemi1.wordpress.com/2017/05/18/asserts-in-constexpr-functions/
         //
-        return X_ASSERT(0x00 <= value_ && value_ <= 0xff), value_;
+        return X_ASSERT(0x00 <= valBits && valBits <= 0xff), valBits;
     }
     
     std::string string() const;
     
     bool isDigitOrAlpha() const;
-
+    
     bool isHex() const;
-
+    
     bool isOctal() const;
-
+    
     bool isUpper() const;
+    
+    bool isEndOfFile() const;
 };
 
 std::ostream& operator<<(std::ostream& stream, const SourceCharacter);
 
-
-constexpr SourceCharacter SOURCECHARACTER_ENDOFFILE(EOF);
-constexpr SourceCharacter SOURCECHARACTER_BACKSLASH('\\');
 
 struct SourceLocation {
     size_t Line;
@@ -194,7 +182,7 @@ struct SourceLocation {
     SourceLocation operator+(size_t i) const {
         return SourceLocation{Line, Col+i};
     }
-
+    
     SourceLocation operator-(size_t i) const {
         return SourceLocation{Line, Col-i};
     }
@@ -239,7 +227,7 @@ union Source {
     
     Source(SourceLocation start, SourceLocation end);
     
-    void putSourceRule(MLINK mlp) const;
+    void putLineCols(MLINK mlp) const;
     
     size_t size() const;
 };
@@ -251,6 +239,7 @@ bool operator<=(SourceLocation a, SourceLocation b);
 
 
 struct Token {
+    
     TokenEnum Tok;
     std::string Str;
     Source Span;
@@ -264,9 +253,14 @@ struct SyntaxIssue {
     const std::string Msg;
     const SyntaxIssueSeverity Severity;
     const Source Span;
-
+    
+    //
+    // Tag + Msg + Severity + 4 Source integers = 7
+    //
+    static const size_t SYNTAXISSUE_LENGTH = 7;
+    
     SyntaxIssue(std::string Tag, std::string Msg, std::string Severity, Source Span) : Tag(Tag), Msg(Msg), Severity(Severity), Span(Span) {}
-
+    
     void put(MLINK mlp) const;
 };
 
@@ -279,52 +273,3 @@ struct Metadata {
     void put(MLINK mlp) const;
 };
 
-
-
-
-class SourceManager {
-    
-    bool lastCharacterWasCarriageReturn;
-    bool eof;
-
-    std::vector<SyntaxIssue> Issues;
-    
-    SourceLocation SourceLoc;
-
-    SourceLocation TokenStartLoc;
-
-    SourceLocation WLCharacterStartLoc;
-    SourceLocation WLCharacterEndLoc;
-    
-    SourceLocation PrevWLCharacterStartLoc;
-    SourceLocation PrevWLCharacterEndLoc;
-    
-public:
-    SourceManager();
-    
-    void init();
-
-    void deinit();
-
-    void advanceSourceLocation(SourceCharacter c);
-    
-    void setTokenStart();
-    
-    void setWLCharacterStart();
-    void setWLCharacterEnd();
-
-    Source getTokenSpan() const;
-    
-    SourceLocation getWLCharacterStart() const;
-
-    Source getWLCharacterSpan() const;
-
-    SourceLocation getTokenStart() const;
-    
-    void setSourceLocation(SourceLocation Loc);
-    SourceLocation getSourceLocation() const;
-    
-    std::vector<SyntaxIssue> getIssues() const;
-};
-
-extern SourceManager *TheSourceManager;

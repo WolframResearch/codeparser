@@ -23,8 +23,7 @@ Test[
 	BinaryNode[Optional, {PatternBlankNode[
    PatternBlank, {LeafNode[Symbol, 
      "a", <|Source -> {{1, 1}, {1, 1}}|>], 
-    LeafNode[Token`Under, 
-     "_", <|Source -> {{1, 2}, {1, 2}}|>]}, <|Source -> {{1, 1}, {1, 
+    LeafNode[Blank, "_", <|Source -> {{1, 2}, {1, 2}}|>]}, <|Source -> {{1, 1}, {1, 
        2}}|>], LeafNode[Token`Colon, 
    ":", <|Source -> {{1, 3}, {1, 3}}|>], 
   LeafNode[Symbol, 
@@ -52,9 +51,9 @@ Test[
 		LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
 		LeafNode[Token`Semi, ";", <|Source -> {{1, 2}, {1, 2}}|>],
 		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 3}, {1, 3}}|>],
-		LeafNode[Token`Fake`Null, "", <|Source -> {{1, 4}, {1, 4}}|>],
+		LeafNode[Token`Fake`ImplicitNull, "", <|Source -> {{1, 4}, {1, 4}}|>],
 		LeafNode[Token`Semi, ";", <|Source -> {{1, 4}, {1, 4}}|>],
-		LeafNode[Token`Fake`Null, "", <|Source -> {{1, 4}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]
+		LeafNode[Token`Fake`ImplicitNull, "", <|Source -> {{1, 4}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]
 	,
 	TestID->"Concrete-20190117-C3R5P5"
 ]
@@ -111,7 +110,7 @@ line continuations and newlines
 Test[
 	ConcreteParseString["\"abc\\\r\ndef\""]
 	,
-	LeafNode[String, "\"abc\ndef\"", <|Source -> {{1, 1}, {2, 4}}|>]
+	LeafNode[String, "\"abc\\\n\ndef\"", <|Source -> {{1, 1}, {2, 4}}|>]
 	,
 	TestID->"Concrete-20190606-U7J9I3"
 ]
@@ -169,7 +168,7 @@ Test[
 			InfixNode[Comma, {
 				LeafNode[Integer, "1", <|Source->{{1,3}, {1,3}}|>],
 				LeafNode[Token`Comma, ",", <|Source->{{1,4}, {1,4}}|>],
-				LeafNode[Token`Fake`Null, "", <|Source->{{1,5}, {1,5}}|>],
+				LeafNode[Token`Fake`ImplicitNull, "", <|Source->{{1,5}, {1,5}}|>],
 				LeafNode[Token`LongName`InvisibleComma, "\\[InvisibleComma]", <|Source->{{1,5}, {1,21}}|>],
 				LeafNode[Integer, "2", <|Source->{{1,22}, {1,22}}|>]}, <|Source->{{1,3}, {1,22}}|>],
 			LeafNode[Token`CloseSquare, "]", <|Source->{{1,23}, {1,23}}|>] }, <|Source->{{1,2}, {1,23}}|>] }, <|Source->{{1,1}, {1,23}}|>]

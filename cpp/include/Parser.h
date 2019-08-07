@@ -5,12 +5,10 @@
 #include "Source.h"
 #include "Precedence.h"
 
-#include <unordered_map>
-#include <unordered_set>
 #include <vector>
-#include <functional>
 #include <chrono>
 #include <array>
+#include <cstddef>
 
 class PrefixParselet;
 class InfixParselet;
@@ -22,7 +20,6 @@ class StartOfLineParselet;
 class CleanupParselet;
 class GroupParselet;
 class Parselet;
-
 
 //
 // How many _ are currently being parsed?
@@ -89,7 +86,7 @@ struct ParserContext {
     bool AllowTrailing;
     
     ParserContext() : GroupDepth(0), Prec(PRECEDENCE_LOWEST), Assoc(ASSOCIATIVITY_NONE), ColonFlag(false), LinearSyntaxFlag(false), StringifyCurrentLine(false), IntegralFlag(false), Closer(TOKEN_UNKNOWN), UnderCount(UNDER_UNKNOWN), AllowTrailing(false) {}
-
+    
     ParserContext(size_t GroupDepth, Precedence Prec, Associativity Assoc, bool ColonFlag, bool LinearSyntaxFlag, bool StringifyCurrentLine, bool IntegralFlag, TokenEnum Closer, UnderEnum UnderCount, bool AllowTrailing) : GroupDepth(GroupDepth), Prec(Prec), Assoc(Assoc), ColonFlag(ColonFlag), LinearSyntaxFlag(LinearSyntaxFlag), StringifyCurrentLine(StringifyCurrentLine), IntegralFlag(IntegralFlag), Closer(Closer), UnderCount(UnderCount), AllowTrailing(AllowTrailing) {}
     
     size_t getGroupDepth() {
@@ -100,7 +97,7 @@ struct ParserContext {
 
 class Parser {
 private:
-
+    
     std::array<std::unique_ptr<const PrefixParselet>, TOKEN_COUNT> prefixParselets;
     std::array<std::unique_ptr<const InfixParselet>, TOKEN_COUNT> infixParselets;
     std::array<std::unique_ptr<const StartOfLineParselet>, TOKEN_COUNT> startOfLineParselets;
@@ -108,7 +105,7 @@ private:
     std::array<std::unique_ptr<const ContextSensitiveInfixParselet>, TOKEN_COUNT> contextSensitiveInfixParselets;
     
     std::vector<Token> tokenQueue;
-
+    
     std::vector<SyntaxIssue> Issues;
     std::chrono::microseconds totalTimeMicros;
     
@@ -131,24 +128,24 @@ private:
     
     void nextToken0(ParserContext Ctxt);
     
-    void prepend(Token current);
+    void prepend(Token& current);
     
-    Precedence getCurrentTokenPrecedence(Token current, ParserContext Ctxt);
+    Precedence getCurrentTokenPrecedence(Token& current, ParserContext Ctxt);
     
 public:
     Parser();
     
-    void init(std::function<bool ()> AbortQ, std::vector<Token> queued);
+    void init(std::function<bool ()> AbortQ, const std::vector<Token>& queued);
     
     void deinit();
-
+    
     
     
     Token nextToken(ParserContext Ctxt);
     
     Token currentToken() const;
     
-    void append(Token Tok);
+    void append(const Token& Tok);
     
     std::vector<Token> getTokenQueue() const;
     
@@ -156,14 +153,14 @@ public:
     
     std::vector<SyntaxIssue> getIssues() const;
     
-    std::vector<Metadata> getMetadatas() const;
+    //    std::vector<Metadata> getMetadatas() const;
     
-
+    
     void addIssue(SyntaxIssue);
     
     NodePtr parse(ParserContext Ctxt);
     
-    bool isPossibleBeginningOfExpression(Token Tok, ParserContext Ctxt) const;
+    bool isPossibleBeginningOfExpression(Token& Tok, ParserContext Ctxt) const;
     
     const std::unique_ptr<const InfixParselet>& findInfixParselet(TokenEnum Tok) const;
     
@@ -175,6 +172,12 @@ public:
     bool isAbort() const;
     
     ~Parser();
+    
+    
+    static const Token eatAll(Token& Tok, ParserContext Ctxt, NodeSeq&);
+    
+    static const Token eatAndPreserveToplevelNewlines(Token& Tok, ParserContext Ctxt, NodeSeq&);
 };
 
 extern Parser *TheParser;
+

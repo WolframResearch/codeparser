@@ -6,21 +6,26 @@ UnhandledCharacter:
 Test[
 	TokenizeString["\\[SkeletonIndicator]"]
 	,
-	{LeafNode[Token`Unhandled, 
-  "\\[SkeletonIndicator]", <|Source -> {{1, 1}, {1, 20}}|>]}
+	{LeafNode[Token`Error`UnhandledCharacter, "\\[SkeletonIndicator]", <|Source -> {{1, 1}, {1, 20}}|>]}
 	,
 	TestID->"TokenErrors-20190520-B1H0A6"
 ]
 
 Test[
+	TokenizeString["\\\""]
+	,
+	{LeafNode[Token`Error`UnhandledCharacter, "\\\"", <|Source -> {{1, 1}, {1, 2}}|>]}
+	,
+	TestID->"TokenErrors-20190816-G5Q8B5"
+]
+
+Test[
 	TokenizeString["a::\\\""]
 	,
-	{LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>], 
- LeafNode[Token`ColonColon, "::", <|Source -> {{1, 2}, {1, 3}}|>], 
- LeafNode[Token`Error`UnhandledCharacter, 
-  "\\\"", <|Source -> {{1, 4}, {1, 5}}|>], 
- LeafNode[Token`Error`EmptyString, 
-  "", <|Source -> {{2, 0}, {2, 0}}|>]}
+	{LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
+		LeafNode[Token`ColonColon, "::", <|Source -> {{1, 2}, {1, 3}}|>],
+		LeafNode[Token`Error`EmptyString, "", <|Source -> {{1, 4}, {1, 4}}|>],
+		LeafNode[Token`Error`UnhandledCharacter, "\\\"", <|Source -> {{1, 4}, {1, 5}}|>]}
 	,
 	TestID->"TokenErrors-20190520-L5N7B0"
 ]
@@ -51,7 +56,7 @@ ExpectedAlphaOrDollar:
 Test[
 	TokenizeString["aaa`1"]
 	,
-	{LeafNode[Token`Error`ExpectedLetterlike, 
+	{LeafNode[Token`Other, 
   "aaa`", <|Source -> {{1, 1}, {1, 4}}|>], 
  LeafNode[Integer, "1", <|Source -> {{1, 5}, {1, 5}}|>]}
 	,
@@ -134,8 +139,7 @@ ExpectedDigitOrAlpha:
 Test[
 	TokenizeString["2^^3"]
 	,
-	{LeafNode[Token`Error`ExpectedDigitOrAlpha, "2^^", <|Source -> {{1, 1}, {1, 3}}|>],
-		LeafNode[Integer, "3", <|Source -> {{1, 4}, {1, 4}}|>]}
+	{LeafNode[Token`Error`UnhandledCharacter, "2^^3", <|Source -> {{1, 1}, {1, 4}}|>]}
 	,
 	TestID->"TokenErrors-20190520-B7G4V4"
 ]
@@ -144,8 +148,7 @@ Test[
 Test[
 	TokenizeString["2^^@"]
 	,
-	{LeafNode[Token`Error`ExpectedDigitOrAlpha, "2^^", <|Source -> {{1, 1}, {1, 3}}|>],
-		LeafNode[Token`At, "@", <|Source -> {{1, 4}, {1, 4}}|>]}
+	{LeafNode[Token`Error`UnhandledCharacter, "2^^@", <|Source -> {{1, 1}, {1, 4}}|>]}
 	,
 	TestID->"TokenErrors-20190520-J3Q2S7"
 ]

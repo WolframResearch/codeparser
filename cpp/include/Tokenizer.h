@@ -2,9 +2,11 @@
 #pragma once
 
 #include "CharacterDecoder.h"
+#include "Source.h"
+#include "WLCharacter.h"
 
 #include <sstream>
-#include <chrono>
+#include <vector>
 
 struct TokenizerContext {
     //
@@ -42,14 +44,14 @@ class Tokenizer {
     
     bool stringifyNextToken_symbol;
     bool stringifyNextToken_file;
-    Token cur;
-
+    Token _currentToken;
+    
     WLCharacter _currentWLCharacter;
     
-    std::vector<std::pair<WLCharacter, Source>> characterQueue;
-
+    std::vector<std::pair<WLCharacter, Source>> wlCharacterQueue;
+    
     std::ostringstream String;
-
+    
     std::vector<SyntaxIssue> Issues;
     
     std::chrono::microseconds totalTimeMicros;
@@ -57,28 +59,26 @@ class Tokenizer {
     
     bool expectDigits(TokenizerContext Ctxt);
     size_t handleDigits(TokenizerContext Ctxt);
-    bool handleDigitsOrAlpha(TokenizerContext Ctxt, int base);
+    int handleDigitsOrAlpha(TokenizerContext Ctxt, int base);
     
     Token handleComment(TokenizerContext Ctxt);
     Token handleFileOpsBrackets(TokenizerContext Ctxt);
     Token handleString(TokenizerContext Ctxt);
     
-    void handleSymbolSegment(TokenizerContext Ctxt);
     Token handleSymbol(TokenizerContext Ctxt);
+    void handleSymbolSegment(TokenizerContext Ctxt);
     
     Token handleNumber(TokenizerContext Ctxt);
-    bool handleFractionalPart(TokenizerContext Ctxt, int base);
+    int handleFractionalPart(TokenizerContext Ctxt, int base);
     
     Token handleOperator(TokenizerContext Ctxt);
     
     Token handleLinearSyntax(TokenizerContext Ctxt);
     
-    Token handleDot(TokenizerContext Ctxt);
-
     void append(WLCharacter, Source);
     
-    WLCharacter nextWLCharacter(NextCharacterPolicy policy = TOPLEVEL);
-
+    WLCharacter nextWLCharacter(NextWLCharacterPolicy policy);
+    
     WLCharacter currentWLCharacter() const;
     
 public:
@@ -86,16 +86,17 @@ public:
     
     void init(bool skipFirstLine);
     void deinit();
-
+    
     Token nextToken(TokenizerContext Ctxt);
     
     Token currentToken() const;
     
     std::string getString() const;
-
+    
     std::vector<SyntaxIssue> getIssues() const;
     
-    std::vector<Metadata> getMetadatas() const;
+    //    std::vector<Metadata> getMetadatas() const;
 };
 
 extern Tokenizer *TheTokenizer;
+

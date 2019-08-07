@@ -1,6 +1,9 @@
 
 #include "ByteDecoder.h"
-#include "Utils.h"
+
+#include "SourceManager.h"
+#include "CodePoint.h"
+//#include "TimeScoper.h"
 
 ByteDecoder::ByteDecoder() : eof(false), byteQueue(), Issues(), totalTimeMicros() {}
 
@@ -17,7 +20,7 @@ void ByteDecoder::deinit() {
 }
 
 SourceCharacter ByteDecoder::nextSourceCharacter() {
-    TimeScoper Scoper(totalTimeMicros);
+    //    TimeScoper Scoper(totalTimeMicros);
     
     //
     // handle the queue before anything else
@@ -41,14 +44,14 @@ SourceCharacter ByteDecoder::nextSourceCharacter() {
         return c;
     }
     
-    auto b = nextByte();
-    
-    if (eof) {
+    if (TheSourceManager->isEndOfFile()) {
         
-        TheSourceManager->advanceSourceLocation(SOURCECHARACTER_ENDOFFILE);
+        TheSourceManager->advanceSourceLocation(SourceCharacter(CODEPOINT_ENDOFFILE));
         
-        return SOURCECHARACTER_ENDOFFILE;
+        return SourceCharacter(CODEPOINT_ENDOFFILE);
     }
+    
+    auto b = TheSourceManager->nextByte();
     
     auto c = decodeBytes(b);
     
@@ -57,27 +60,73 @@ SourceCharacter ByteDecoder::nextSourceCharacter() {
     return c;
 }
 
-unsigned char ByteDecoder::nextByte() {
-    
-    if (eof) {
-        return EOF;
-    }
-    
-    auto b = TheInputStream->get();
-    
-    if (TheInputStream->eof()) {
-        eof = true;
-    }
-    
-    if (b == EOF) {
-        eof = true;
-    }
-    
-    return b;
-}
-
 void ByteDecoder::append(unsigned char b, SourceLocation location) {
     byteQueue.push_back(std::make_pair(b, location));
+}
+
+SourceCharacter ByteDecoder::invalid(unsigned char first) {
+    
+    auto Loc = TheSourceManager->getSourceLocation();
+    
+    // Has not advanced yet at this point
+    Loc = SourceLocation(Loc.Line, Loc.Col+1);
+    
+    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
+    
+    Issues.push_back(Issue);
+    
+    return SourceCharacter(first);
+}
+
+SourceCharacter ByteDecoder::invalid(unsigned char first, unsigned char second) {
+    
+    auto Loc = TheSourceManager->getSourceLocation();
+    
+    // Has not advanced yet at this point
+    Loc = SourceLocation(Loc.Line, Loc.Col+1);
+    
+    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
+    
+    Issues.push_back(Issue);
+    
+    append(second, Loc+1);
+    
+    return SourceCharacter(first);
+}
+
+SourceCharacter ByteDecoder::invalid(unsigned char first, unsigned char second, unsigned char third) {
+    
+    auto Loc = TheSourceManager->getSourceLocation();
+    
+    // Has not advanced yet at this point
+    Loc = SourceLocation(Loc.Line, Loc.Col+1);
+    
+    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
+    
+    Issues.push_back(Issue);
+    
+    append(second, Loc+1);
+    append(third, Loc+2);
+    
+    return SourceCharacter(first);
+}
+
+SourceCharacter ByteDecoder::invalid(unsigned char first, unsigned char second, unsigned char third, unsigned char fourth) {
+    
+    auto Loc = TheSourceManager->getSourceLocation();
+    
+    // Has not advanced yet at this point
+    Loc = SourceLocation(Loc.Line, Loc.Col+1);
+    
+    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
+    
+    Issues.push_back(Issue);
+    
+    append(second, Loc+1);
+    append(third, Loc+2);
+    append(fourth, Loc+3);
+    
+    return SourceCharacter(first);
 }
 
 //
@@ -101,7 +150,11 @@ SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
         
         auto firstByte = cIn;
         
-        auto tmp = nextByte();
+        if (TheSourceManager->isEndOfFile()) {
+            return invalid(firstByte);
+        }
+        
+        auto tmp = TheSourceManager->nextByte();
         
         //
         // Manual test for code points that are over long
@@ -118,21 +171,7 @@ SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
             }
         }
         
-        // Invalid UTF8
-    
-        auto Loc = TheSourceManager->getSourceLocation();
-    
-        // Has not advanced yet at this point
-        Loc = SourceLocation(Loc.Line, Loc.Col+1);
-    
-        auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
-    
-        Issues.push_back(Issue);
-    
-    
-        append(tmp, Loc+1);
-    
-        return SourceCharacter(firstByte);
+        return invalid(firstByte, tmp);
         
     } else if ((cIn & 0xf0) == 0xe0) {
         
@@ -142,13 +181,21 @@ SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
         
         auto firstByte = cIn;
         
-        auto tmp = nextByte();
+        if (TheSourceManager->isEndOfFile()) {
+            return invalid(firstByte);
+        }
+        
+        auto tmp = TheSourceManager->nextByte();
         
         // Continue
         
         auto secondByte = tmp;
         
-        tmp = nextByte();
+        if (TheSourceManager->isEndOfFile()) {
+            return invalid(firstByte, secondByte);
+        }
+        
+        tmp = TheSourceManager->nextByte();
         
         //
         // Manual test for code points that are over long
@@ -230,22 +277,7 @@ SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
             }
         }
         
-        // Invalid UTF8
-        
-        auto Loc = TheSourceManager->getSourceLocation();
-        
-        // Has not advanced yet at this point
-        Loc = SourceLocation(Loc.Line, Loc.Col+1);
-        
-        auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
-        
-        Issues.push_back(Issue);
-        
-        
-        append(secondByte, Loc+1);
-        append(tmp, Loc+2);
-        
-        return SourceCharacter(firstByte);
+        return invalid(firstByte, secondByte, tmp);
         
     } else if ((cIn & 0xf8) == 0xf0) {
         
@@ -255,19 +287,31 @@ SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
         
         auto firstByte = cIn;
         
-        auto tmp = nextByte();
+        if (TheSourceManager->isEndOfFile()) {
+            return invalid(firstByte);
+        }
+        
+        auto tmp = TheSourceManager->nextByte();
         
         // Continue
         
         auto secondByte = tmp;
         
-        tmp = nextByte();
+        if (TheSourceManager->isEndOfFile()) {
+            return invalid(firstByte, secondByte);
+        }
+        
+        tmp = TheSourceManager->nextByte();
         
         // Continue
         
         auto thirdByte = tmp;
         
-        tmp = nextByte();
+        if (TheSourceManager->isEndOfFile()) {
+            return invalid(firstByte, secondByte, thirdByte);
+        }
+        
+        tmp = TheSourceManager->nextByte();
         
         //
         // Manual test for code points that are over long
@@ -339,56 +383,30 @@ SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
             }
         }
         
-        // Invalid UTF8
-        
-        auto Loc = TheSourceManager->getSourceLocation();
-        
-        // Has not advanced yet at this point
-        Loc = SourceLocation(Loc.Line, Loc.Col+1);
-        
-        auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
-        
-        Issues.push_back(Issue);
-        
-        
-        append(secondByte, Loc+1);
-        append(thirdByte, Loc+2);
-        append(tmp, Loc+3);
-        
-        return SourceCharacter(firstByte);
+        return invalid(firstByte, secondByte, thirdByte, tmp);
     }
-        
+    
     //
     // Not a valid UTF8 prefix, so just assume 8-bit extended ASCII
     //
     
-    auto Loc = TheSourceManager->getSourceLocation();
-    
-    // Has not advanced yet at this point
-    Loc = SourceLocation(Loc.Line, Loc.Col+1);
-    
-    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
-    
-    Issues.push_back(Issue);
-    
-    
-    return SourceCharacter(cIn);
+    return invalid(cIn);
 }
 
 std::vector<SyntaxIssue> ByteDecoder::getIssues() const {
     return Issues;
 }
 
-std::vector<Metadata> ByteDecoder::getMetadatas() const {
-    
-    std::vector<Metadata> Metadatas;
-    
-    auto totalTimeMillis = std::chrono::duration_cast<std::chrono::milliseconds>(totalTimeMicros);
-    
-    Metadatas.push_back(Metadata("ByteDecoderTotalTimeMillis", std::to_string(totalTimeMillis.count())));
-    
-    return Metadatas;
-}
+//std::vector<Metadata> ByteDecoder::getMetadatas() const {
+//
+//    std::vector<Metadata> Metadatas;
+//
+//    auto totalTimeMillis = std::chrono::duration_cast<std::chrono::milliseconds>(totalTimeMicros);
+//
+//    Metadatas.push_back(Metadata("ByteDecoderTotalTimeMillis", std::to_string(totalTimeMillis.count())));
+//
+//    return Metadatas;
+//}
 
-std::istream *TheInputStream = nullptr;
 ByteDecoder *TheByteDecoder = nullptr;
+

@@ -16,6 +16,15 @@ LeafNode[_, str_, _]["String"] := str
 
 
 
+(*
+Some attributes
+*)
+
+Attributes[CodeNode] = {HoldRest}
+
+
+
+
 
 (*
 ToNode[sym] returns a SymbolNode

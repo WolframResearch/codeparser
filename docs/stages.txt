@@ -56,13 +56,25 @@ tree structure of tokens
 
 no type information
 
-no fake tokens
+no Implicit tokens
 
-comments are kept
+Trivia is kept
 
-whitespace is kept
 
-newlines are kept
+
+##
+What is trivia?
+
+Taken from:
+https://github.com/dotnet/roslyn/wiki/Roslyn-Overview#syntax-trivia
+
+comments
+
+whitespace
+
+newlines
+
+line continuations
 
 
 
@@ -84,11 +96,7 @@ InfixNode[Plus, {
 	LeafNode[Token`Comment, "(**)", <||>],
 	LeafNode[SqrtBox, "a", <||>] }, <||>]
 
-comments are kept
-
-whitespace is kept
-
-newlines are kept
+Trivia is kept
 
 type information is added
 type information is the wrapper like InfixNode[Plus, ...]
@@ -97,9 +105,11 @@ and also type information is all of the riffled tokens InfixNode[Plus, { 1, +, 2
 
 
 
-fake tokens are added
+Implicit tokens are added
 
 
+##
+What are Implicit tokens?
 
 
 when parsing   ;;   it is convenient to remember the implicit   1 ;; All
@@ -158,13 +168,9 @@ InfixNode[Plus, {
 
 type information is kept
 
-fake tokens are kept
+Implicit tokens are kept
 
-comments are removed
-
-whitespace is removed
-
-newlines are removed
+Trivia is removed
 
 
 
@@ -191,7 +197,7 @@ everything is a Call
 
 type information is lost because everything is a CallNode
 
-fake tokens are converted to actual tokens
+Implicit tokens are converted to actual tokens
 
 
 

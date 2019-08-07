@@ -89,9 +89,8 @@ TestMatch[
 	ParseString["\\n23", HoldNode[Hold, #[[1]], <||>]&]
 	,
 	HoldNode[Hold, {
-		CallNode[LeafNode[Symbol, "Times", _], {
-			AbstractSyntaxErrorNode[AbstractSyntaxError`Unhandled, _, _],
-			LeafNode[Integer, "23", _] }, _] }, _]
+		SyntaxErrorNode[SyntaxError`UnhandledCharacter, {LeafNode[Token`Error`UnhandledCharacter, "\\n", _]}, _],
+		LeafNode[Integer, "23", _] }, _]
 	,
 	TestID->"Errors-20190126-Q9U0H8"
 ]
@@ -100,9 +99,8 @@ TestMatch[
 	ParseString["\\t23", HoldNode[Hold, #[[1]], <||>]&]
 	,
 	HoldNode[Hold, {
-		CallNode[LeafNode[Symbol, "Times", _], {
-			AbstractSyntaxErrorNode[AbstractSyntaxError`Unhandled, _, _],
-			LeafNode[Integer, "23", _] }, _] }, _]
+		SyntaxErrorNode[SyntaxError`UnhandledCharacter, {LeafNode[Token`Error`UnhandledCharacter, "\\t", _]}, _],
+		LeafNode[Integer, "23", _] }, _]
 	,
 	TestID->"Errors-20190203-F5C9L1"
 ]
@@ -113,15 +111,18 @@ important that space after - is not in SyntaxErrorNode
 Test[
 	ConcreteParseString["a - \\tb"]
 	,
-	BinaryNode[Minus, {
-			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
-			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 2}, {1, 2}}|>],
-			LeafNode[Token`Minus, "-", <|Source -> {{1, 3}, {1, 3}}|>],
-			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 4}, {1, 4}}|>],
-			InfixNode[Times, {
-				LeafNode[Token`Unhandled, "\\t", <|Source -> {{1, 5}, {1, 6}}|>], 
-		  		LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> {{1, 7}, {1, 7}}|>],
-		  		LeafNode[Symbol, "b", <|Source -> {{1, 7}, {1, 7}}|>] }, <|Source -> {{1, 5}, {1, 7}}|>] }, <|Source -> {{1, 1}, {1, 7}}|>]
+	InfixNode[Times, {
+		BinaryNode[Minus, {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>], 
+    		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 2}, {1, 2}}|>], 
+    		LeafNode[Token`Minus, "-", <|Source -> {{1, 3}, {1, 3}}|>], 
+    		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 4}, {1, 4}}|>], 
+   			SyntaxErrorNode[
+     			SyntaxError`UnhandledCharacter, {LeafNode[
+       			Token`Error`UnhandledCharacter, 
+       			"\\t", <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>],
+   		LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> {{1, 7}, {1, 7}}|>],
+   		LeafNode[Symbol, "b", <|Source -> {{1, 7}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]
 	,
 	TestID->"Errors-20190203-G0U2N7"
 ]

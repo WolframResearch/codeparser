@@ -1,143 +1,38 @@
-BeginPackage["AST`Symbol`"]
-
-(*
-list of all node symbols
-*)
-$Nodes
-
-(*
-list of all option symbols
-*)
-$Options
-
-(*
-list of all other symbols used by parser
-*)
-$Miscellaneous
-
-
-(*
-list of symbols used for groups
-*)
-$Groups
-
-
-$Characters
-
+BeginPackage["AST`Generate`Symbol`"]
 
 Begin["`Private`"]
 
-Needs["AST`"]
+Needs["AST`Generate`"]
 
 
-$Nodes = {
-LeafNode,
-
-PrefixNode,
-BinaryNode,
-TernaryNode,
-InfixNode,
-PostfixNode,
-GroupNode,
-CallNode,
-PrefixBinaryNode,
-
-StartOfLineNode,
-BlankNode,
-BlankSequenceNode,
-BlankNullSequenceNode,
-PatternBlankNode,
-PatternBlankSequenceNode,
-PatternBlankNullSequenceNode,
-OptionalDefaultPatternNode,
-
-FileNode,
-
-SyntaxErrorNode,
-GroupMissingCloserNode,
-GroupMissingOpenerNode,
-AbstractSyntaxErrorNode,
-
-PackageNode,
-ContextNode,
-StaticAnalysisIgnoreNode
-
-}
-
-$Options = {
-Source,
-SyntaxIssues
-}
 
 
-$Miscellaneous = {
-All,
-(* when parsing f[1,] then we need to parse as f[1,Null] *)
-Null,
-True,
-False,
-SyntaxIssue,
-Comment,
-Metadata,
-EndOfFile,
+(*
+Bug 321344:
 
-(* for Nodes *)
-File,
+ExportString["String", "String"] returns ""
 
-Symbol,
-String,
-Real,
-Integer,
-Out,
-Slot,
-SlotSequence,
+checkBug321344[] sets the flag $WorkaroundBug321344 to True if we still need to workaround bug 321344
+*)
+checkBug321344[] :=
+Module[{res},
+  res = ExportString["String", "String"];
+  Switch[res,
+    "",
+    True
+    ,
+    "String",
+    False
+    ,
+    _,
+    Print["Unhandled result while checking bug 321344: ", res];
+    Quit[1]
+  ]
+]
 
-Blank,
-BlankSequence,
-BlankNullSequence,
-OptionalDefault,
-PatternBlank,
-PatternBlankSequence,
-PatternBlankNullSequence,
-OptionalDefaultPattern,
 
-TernarySlashColon,
-TagSet,
-TagSetDelayed,
-TagUnset,
 
-TernaryTilde,
 
-Comma,
-
-(*InternalEmpty,*)
-InternalInvalid,
-
-Pattern,
-Optional,
-
-Nothing
-}
-
-$Characters = {
-WLCharacter
-}
-
-$Groups = {
-List,
-Association,
-AngleBracket,
-Ceiling,
-Floor,
-GroupDoubleBracket,
-GroupSquare,
-BracketingBar,
-DoubleBracketingBar,
-GroupParen,
-GroupLinearSyntaxParen,
-
-Nothing
-}
 
 
 PrefixOperatorToSymbol[Token`Bang] = Not
@@ -173,7 +68,7 @@ PrefixOperatorToSymbol[Token`LongName`NotExists] = NotExists
 PrefixOperatorToSymbol[Token`LongName`Coproduct] = Coproduct
 PrefixOperatorToSymbol[Token`LongName`Piecewise] = Piecewise
 
-PrefixOperatorToSymbol[Token`LinearSyntax`Bang] = PrefixLinearSyntaxBang
+PrefixOperatorToSymbol[Token`LinearSyntax`Bang] = AST`PrefixLinearSyntaxBang
 
 
 
@@ -189,7 +84,7 @@ PostfixOperatorToSymbol[Token`SingleQuote] = Derivative
 PostfixOperatorToSymbol[Token`LongName`Transpose] = Transpose
 PostfixOperatorToSymbol[Token`LongName`Conjugate] = Conjugate
 PostfixOperatorToSymbol[Token`LongName`ConjugateTranspose] = ConjugateTranspose
-PostfixOperatorToSymbol[Token`LongName`HermitianConjugate] = PostfixHermitianConjugate
+PostfixOperatorToSymbol[Token`LongName`HermitianConjugate] = AST`PostfixHermitianConjugate
 
 
 
@@ -230,12 +125,11 @@ BinaryOperatorToSymbol[Token`LessMinusGreater] = System`TwoWayRule
 BinaryOperatorToSymbol[Token`SlashSlashAt] = MapAll
 BinaryOperatorToSymbol[Token`GreaterGreater] = Put
 BinaryOperatorToSymbol[Token`GreaterGreaterGreater] = PutAppend
-BinaryOperatorToSymbol[Token`SlashSlash] = BinarySlashSlash
+BinaryOperatorToSymbol[Token`SlashSlash] = AST`BinarySlashSlash
 BinaryOperatorToSymbol[Token`SemiSemi] = Span
-BinaryOperatorToSymbol[Token`At] = BinaryAt
-BinaryOperatorToSymbol[Token`AtAtAt] = BinaryAtAtAt
-
-BinaryOperatorToSymbol[Token`Fake`EqualDot] = Unset
+BinaryOperatorToSymbol[Token`At] = AST`BinaryAt
+BinaryOperatorToSymbol[Token`AtAtAt] = AST`BinaryAtAtAt
+BinaryOperatorToSymbol[Token`EqualDot] = Unset
 
 BinaryOperatorToSymbol[Token`LongName`Divide] = Divide
 BinaryOperatorToSymbol[Token`LongName`DivisionSlash] = Divide
@@ -255,7 +149,7 @@ BinaryOperatorToSymbol[Token`LongName`TwoWayRule] = System`TwoWayRule
 (*
 Use BinaryAt here
 *)
-BinaryOperatorToSymbol[Token`LongName`InvisibleApplication] = BinaryAt
+BinaryOperatorToSymbol[Token`LongName`InvisibleApplication] = AST`BinaryAt
 BinaryOperatorToSymbol[Token`LongName`CircleMinus] = CircleMinus
 
 BinaryOperatorToSymbol[Token`LongName`SuchThat] = SuchThat
@@ -269,9 +163,9 @@ BinaryOperatorToSymbol[Token`LongName`SuchThat] = SuchThat
 Infix
 *)
 InfixOperatorToSymbol[Token`Semi] = CompoundExpression
-InfixOperatorToSymbol[Token`Comma] = Comma
+InfixOperatorToSymbol[Token`Comma] = AST`Comma
 
-InfixOperatorToSymbol[Token`LongName`InvisibleComma] = Comma
+InfixOperatorToSymbol[Token`LongName`InvisibleComma] = AST`Comma
 
 InfixOperatorToSymbol[Token`EqualEqual] = Equal
 InfixOperatorToSymbol[Token`BangEqual] = Unequal
@@ -485,10 +379,18 @@ InfixOperatorToSymbol[Token`LongName`LessSlantEqual] = LessEqual
 InfixOperatorToSymbol[Token`LongName`GreaterSlantEqual] = GreaterEqual
 InfixOperatorToSymbol[Token`LongName`NotPrecedesSlantEqual] = NotPrecedesSlantEqual
 InfixOperatorToSymbol[Token`LongName`NotSucceedsSlantEqual] = NotSucceedsSlantEqual
-
-
-
-
+InfixOperatorToSymbol[Token`LongName`Colon] = Colon
+InfixOperatorToSymbol[Token`LongName`CupCap] = CupCap
+InfixOperatorToSymbol[Token`LongName`DotEqual] = DotEqual
+InfixOperatorToSymbol[Token`LongName`GreaterEqualLess] = GreaterEqualLess
+InfixOperatorToSymbol[Token`LongName`GreaterFullEqual] = GreaterFullEqual
+InfixOperatorToSymbol[Token`LongName`GreaterGreater] = GreaterGreater
+InfixOperatorToSymbol[Token`LongName`GreaterLess] = GreaterLess
+InfixOperatorToSymbol[Token`LongName`HumpEqual] = HumpEqual
+InfixOperatorToSymbol[Token`LongName`HumpDownHump] = HumpDownHump
+InfixOperatorToSymbol[Token`LongName`NestedGreaterGreater] = NestedGreaterGreater
+InfixOperatorToSymbol[Token`LongName`NestedLessLess] = NestedLessLess
+InfixOperatorToSymbol[Token`LongName`NotCongruent] = NotCongruent
 
 StartOfLineOperatorToSymbol[Token`Question] = Information
 StartOfLineOperatorToSymbol[Token`QuestionQuestion] = Information
@@ -501,20 +403,20 @@ StartOfLineOperatorToSymbol[Token`BangBang] = FilePrint
 
 GroupOpenerToSymbol[Token`OpenCurly] = List
 GroupOpenerToSymbol[Token`LessBar] = Association
-GroupOpenerToSymbol[Token`OpenSquare] = GroupSquare
-GroupOpenerToSymbol[Token`OpenParen] = GroupParen
+GroupOpenerToSymbol[Token`OpenSquare] = AST`GroupSquare
+GroupOpenerToSymbol[Token`OpenParen] = AST`GroupParen
 
 GroupOpenerToSymbol[Token`LongName`LeftAngleBracket] = AngleBracket
 GroupOpenerToSymbol[Token`LongName`LeftCeiling] = Ceiling
 GroupOpenerToSymbol[Token`LongName`LeftFloor] = Floor
-GroupOpenerToSymbol[Token`LongName`LeftDoubleBracket] = GroupDoubleBracket
+GroupOpenerToSymbol[Token`LongName`LeftDoubleBracket] = AST`GroupDoubleBracket
 GroupOpenerToSymbol[Token`LongName`LeftBracketingBar] = BracketingBar
 GroupOpenerToSymbol[Token`LongName`LeftDoubleBracketingBar] = DoubleBracketingBar
 GroupOpenerToSymbol[Token`LongName`LeftAssociation] = Association
 GroupOpenerToSymbol[Token`LongName`OpenCurlyQuote] = CurlyQuote
 GroupOpenerToSymbol[Token`LongName`OpenCurlyDoubleQuote] = CurlyDoubleQuote
 
-GroupOpenerToSymbol[Token`LinearSyntax`OpenParen] = GroupLinearSyntaxParen
+GroupOpenerToSymbol[Token`LinearSyntax`OpenParen] = AST`GroupLinearSyntaxParen
 
 
 
@@ -561,9 +463,313 @@ PrefixBinaryOperatorToSymbol[Token`LongName`Integral] = Integrate
 
 
 
+InequalityOperatorToSymbol[Token`EqualEqual] = Inequality
+InequalityOperatorToSymbol[Token`LessEqual] = Inequality
+InequalityOperatorToSymbol[Token`BangEqual] = Inequality
+InequalityOperatorToSymbol[Token`Less] = Inequality
+InequalityOperatorToSymbol[Token`Greater] = Inequality
+InequalityOperatorToSymbol[Token`GreaterEqual] = Inequality
+InequalityOperatorToSymbol[Token`LongName`Equal] = Inequality
+InequalityOperatorToSymbol[Token`LongName`LessEqual] = Inequality
+InequalityOperatorToSymbol[Token`LongName`GreaterEqual] = Inequality
+InequalityOperatorToSymbol[Token`LongName`NotEqual] = Inequality
 
 
 
+
+VectorInequalityOperatorToSymbol[Token`LongName`VectorGreater] = Developer`VectorInequality
+VectorInequalityOperatorToSymbol[Token`LongName`VectorGreaterEqual] = Developer`VectorInequality
+VectorInequalityOperatorToSymbol[Token`LongName`VectorLess] = Developer`VectorInequality
+VectorInequalityOperatorToSymbol[Token`LongName`VectorLessEqual] = Developer`VectorInequality
+
+
+
+
+
+
+
+Print["Generating Symbol..."]
+
+$WorkaroundBug321344 = checkBug321344[]
+Print["Work around Bug 321344: ", $WorkaroundBug321344];
+
+symbols = Union[Join[
+    {Blank, BlankSequence, BlankNullSequence, EndOfFile, Inequality, Integer, List, Optional, Out, Pattern, Real, Slot, SlotSequence,
+      String, Symbol, TagSet, TagSetDelayed, TagUnset, True} ~Join~
+    {Developer`VectorInequality},
+    {AST`Library`MakeLeafNode, AST`Library`MakePrefixNode, AST`Library`MakeBinaryNode, AST`Library`MakeInfixNode,
+            AST`Library`MakeTernaryNode, AST`Library`MakePostfixNode, AST`Library`MakeCallNode, AST`Library`MakeGroupNode,
+            AST`Library`MakeStartOfLineNode, AST`Library`MakeBlankNode, AST`Library`MakeBlankSequenceNode,
+            AST`Library`MakeBlankNullSequenceNode, AST`Library`MakePatternBlankNode, AST`Library`MakePatternBlankSequenceNode,
+            AST`Library`MakePatternBlankNullSequenceNode, AST`Library`MakeOptionalDefaultPatternNode, AST`Library`MakeSyntaxErrorNode,
+            AST`Library`MakeGroupMissingCloserNode, AST`Library`MakeGroupMissingOpenerNode, AST`Library`MakePrefixBinaryNode,
+            AST`Library`MakeSyntaxIssue},
+    {AST`InternalInvalid, AST`Metadata, AST`PatternBlank, AST`PatternBlankSequence, AST`PatternBlankNullSequence,
+      AST`OptionalDefault, AST`OptionalDefaultPattern, AST`TernaryTilde},
+    DownValues[PrefixOperatorToSymbol][[All, 2]],
+    DownValues[PostfixOperatorToSymbol][[All, 2]],
+    DownValues[BinaryOperatorToSymbol][[All, 2]],
+    DownValues[InfixOperatorToSymbol][[All, 2]],
+    DownValues[TernaryOperatorToSymbol][[All, 2]],
+    DownValues[GroupOpenerToSymbol][[All, 2]],
+    DownValues[PrefixBinaryOperatorToSymbol][[All, 2]],
+    DownValues[StartOfLineOperatorToSymbol][[All, 2]],
+    tokens
+    ]]
+
+
+symbolCPPHeader = {
+"
+//
+// AUTO GENERATED FILE
+// DO NOT MODIFY
+//
+
+#pragma once
+
+#include \"Token.h\"
+#include \"API.h\"
+
+#include \"mathlink.h\"
+
+#include <string>
+#include <memory>
+
+class ASTLIB_EXPORTED Symbol {
+public:
+  constexpr Symbol(const char *Name) : Name(Name) {}
+  const char *name() const;
+
+  void put(MLINK mlp) const;
+
+private:
+  const char *Name;
+};
+
+using SymbolPtr = std::unique_ptr<const Symbol>;
+
+
+void allocSymbols();
+
+void freeSymbols();
+
+SymbolPtr& PrefixOperatorToSymbol(TokenEnum);
+SymbolPtr& PostfixOperatorToSymbol(TokenEnum);
+SymbolPtr& BinaryOperatorToSymbol(TokenEnum);
+SymbolPtr& InfixOperatorToSymbol(TokenEnum);
+SymbolPtr& StartOfLineOperatorToSymbol(TokenEnum);
+
+bool isInfixOperator(TokenEnum);
+bool isInequalityOperator(TokenEnum);
+bool isVectorInequalityOperator(TokenEnum);
+
+SymbolPtr& GroupOpenerToSymbol(TokenEnum);
+SymbolPtr& PrefixBinaryOperatorToSymbol(TokenEnum);
+
+TokenEnum GroupOpenerToCloser(TokenEnum);
+TokenEnum GroupCloserToOpener(TokenEnum);
+
+bool isCloser(TokenEnum);
+
+SymbolPtr& TokenToSymbol(TokenEnum type);
+
+"} ~Join~
+(Row[{"ASTLIB_EXPORTED", " ", "extern", " ", "SymbolPtr", " ", toGlobal["Symbol`"<>ToString[#]], ";"}]& /@ symbols) ~Join~
+{""}
+
+Print["exporting Symbol.h"]
+res = Export[FileNameJoin[{generatedCPPIncludeDir, "Symbol.h"}], Column[symbolCPPHeader], "String"]
+
+If[FailureQ[res],
+  Print[res];
+  Quit[1]
+]
+
+(*
+We want to fully-qualify symbol names over the wire.
+This allows library->kernel traffic to work when AST` is not on $ContextPath.
+However, it is still not possible to fully-qualify System` symbols
+bug 283291
+bug 284492
+So also make library->kernel traffic match this behavior
+*)
+stringifyForTransmitting[sym_Symbol] :=
+Module[{ctxt},
+  ctxt = Context[sym];
+  If[ctxt == "System`",
+    SymbolName[sym]
+    ,
+    Context[sym]<>SymbolName[sym]
+  ]
+]
+
+symbolCPPSource = {
+"
+//
+// AUTO GENERATED FILE
+// DO NOT MODIFY
+//
+
+#include \"Symbol.h\"
+
+#include <cassert>
+
+const char *Symbol::name() const {
+   return Name;
+}
+
+void Symbol::put(MLINK mlp) const {
+  MLPutSymbol(mlp, Name);
+}
+"} ~Join~ { "void allocSymbols() {" } ~Join~
+
+    (If[# === String && $WorkaroundBug321344,
+      (*
+      handle String specially because of bug 321344
+      *)
+      "SYMBOL_STRING = SymbolPtr(new Symbol(\"String\"));"
+      ,
+      Row[{toGlobal["Symbol`"<>ToString[#]], " = SymbolPtr(new Symbol(\"", stringifyForTransmitting[#], "\"));"}]]& /@ symbols) ~Join~
+{"}
+"} ~Join~ { "void freeSymbols() {" } ~Join~
+
+    (If[# === String && $WorkaroundBug321344,
+      (*
+      handle String specially because of bug 321344
+      *)
+      "SYMBOL_STRING = nullptr;"
+      ,
+      Row[{toGlobal["Symbol`"<>ToString[#]], " ", "=", " ", "nullptr", ";"}]]& /@ symbols) ~Join~
+{"}
+"} ~Join~
+
+  (If[# === String && $WorkaroundBug321344,
+      (*
+      handle String specially because of bug 321344
+      *)
+      "SymbolPtr SYMBOL_STRING = nullptr;"
+      ,
+      Row[{"SymbolPtr", " ", toGlobal["Symbol`"<>ToString[#]], " = nullptr;"}]]& /@ symbols) ~Join~
+
+      {""} ~Join~
+
+      {"SymbolPtr& PrefixOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
+     
+     Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PrefixOperatorToSymbol]] ~Join~ 
+      {"default: assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
+      "}\n}"} ~Join~
+
+     {""} ~Join~
+
+     {"SymbolPtr& PostfixOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
+     
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PostfixOperatorToSymbol]] ~Join~
+      {"default: assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
+     "}\n}"} ~Join~
+
+     {""} ~Join~
+
+     {"SymbolPtr& BinaryOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
+     
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[BinaryOperatorToSymbol]] ~Join~
+      {"default: assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
+     "}\n}"} ~Join~
+
+     {""} ~Join~
+
+     {"SymbolPtr& InfixOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
+     
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[InfixOperatorToSymbol]] ~Join~
+      {"default: assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
+     "}\n}"} ~Join~
+
+     {""} ~Join~
+
+     {"bool isInfixOperator(TokenEnum Type) {\nswitch (Type) {"} ~Join~
+     
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", "true", ";"}]&, DownValues[InfixOperatorToSymbol]] ~Join~
+      {"default: return false;",
+     "}\n}"} ~Join~
+
+     {""} ~Join~
+
+     {"bool isInequalityOperator(TokenEnum Type) {\nswitch (Type) {"} ~Join~
+     
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", "true", ";"}]&, DownValues[InequalityOperatorToSymbol]] ~Join~
+      {"default: return false;",
+     "}\n}"} ~Join~
+
+     {""} ~Join~
+
+     {"bool isVectorInequalityOperator(TokenEnum Type) {\nswitch (Type) {"} ~Join~
+     
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", "true", ";"}]&, DownValues[VectorInequalityOperatorToSymbol]] ~Join~
+      {"default: return false;",
+     "}\n}"} ~Join~
+
+     {""} ~Join~
+
+     {"SymbolPtr& StartOfLineOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
+     
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[StartOfLineOperatorToSymbol]] ~Join~
+      {"default: assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
+     "}\n}"} ~Join~
+
+     {""} ~Join~
+
+     {"SymbolPtr& GroupOpenerToSymbol(TokenEnum Type) {"} ~Join~
+     {"switch (Type) {"} ~Join~
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[GroupOpenerToSymbol]] ~Join~
+      {"default: assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
+     "}"} ~Join~
+     {"}"} ~Join~
+
+     {""} ~Join~
+
+     {"TokenEnum GroupOpenerToCloser(TokenEnum Type) {"} ~Join~
+     {"switch (Type) {"} ~Join~
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal[#[[2]]], ";"}]&, DownValues[GroupOpenerToCloser]] ~Join~
+      {"default: assert(false && \"Unhandled token\"); return TOKEN_UNKNOWN;",
+     "}"} ~Join~
+     {"}"} ~Join~
+
+     {""} ~Join~
+
+     {"TokenEnum GroupCloserToOpener(TokenEnum Type) {"} ~Join~
+     {"switch (Type) {"} ~Join~
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal[#[[2]]], ";"}]&, DownValues[GroupCloserToOpener]] ~Join~
+      {"default: assert(false && \"Unhandled token\"); return TOKEN_UNKNOWN;",
+     "}"} ~Join~
+     {"}"} ~Join~
+
+     {""} ~Join~
+
+     {"bool isCloser(TokenEnum Type) {"} ~Join~
+     {"switch (Type) {"} ~Join~
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " true;"}]&, DownValues[GroupCloserToOpener]] ~Join~
+      {"default: return false;",
+     "}"} ~Join~
+     {"}"} ~Join~
+
+     {""} ~Join~
+
+     {"SymbolPtr& PrefixBinaryOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
+     
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PrefixBinaryOperatorToSymbol]] ~Join~
+      {"default: assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
+     "}\n}"} ~Join~
+
+     {""}
+
+Print["exporting Symbol.cpp"]
+res = Export[FileNameJoin[{generatedCPPSrcDir, "Symbol.cpp"}], Column[symbolCPPSource], "String"]
+
+If[FailureQ[res],
+  Print[res];
+  Quit[1]
+]
+
+Print["Done Symbol"]
 
 End[]
 

@@ -4,8 +4,6 @@ aggregate
 
 deparen
 
-recalculateSources
-
 
 Begin["`Private`"]
 
@@ -23,7 +21,7 @@ Collapse CallNode[{op}, {}] to CallNode[op, {}]
 
 aggregate[Null] := Null
 
-aggregate[LeafNode[Token`Comment | Token`WhiteSpace | Token`Newline, _, _]] := Nothing
+aggregate[LeafNode[Token`Comment | Token`WhiteSpace | Token`Newline | Token`LineContinuation, _, _]] := Nothing
 
 aggregate[l_LeafNode] := l
 
@@ -32,45 +30,101 @@ do not touch linear syntax
 *)
 aggregate[node:GroupNode[GroupLinearSyntaxParen, _, _]] := node
 
-aggregate[CallNode[head_, children_, dataIn_]] :=
+aggregate[CallNode[headIn_, childrenIn_, dataIn_]] :=
 Catch[
-Module[{newSrc, aggHead, aggChildren, data},
+Module[{head, children, aggHead, aggChildren, data},
 
+	head = headIn;
+	children = childrenIn;
 	data = dataIn;
 
 	aggHead = aggregate /@ head;
 
 	If[Length[aggHead] != 1,
-		Throw[Failure["InternalUnhandled", <|"Function"->aggregate, "Arguments"->HoldForm[{CallNode[head, children, dataIn]}]|>]]
+		Throw[Failure["InternalUnhandled", <|"Function"->aggregate, "Arguments"->HoldForm[{CallNode[head, children, data]}]|>]]
 	];
 
 	aggHead = aggHead[[1]];
 
 	aggChildren = aggregate /@ children;
-	newSrc = {aggHead[[3]][Source][[1]], aggChildren[[-1]][[3]][Source][[2]]};
 
-	If[newSrc =!= data[Source],
-		data[Source] = newSrc
+	If[Length[head] != 1 || Length[children] != Length[aggChildren],
+		(*
+		recalculate Sources
+		*)
+		data[Source] = { aggHead[[3, Key[Source], 1]], aggChildren[[-1, 3, Key[Source], 2]] };
 	];
 
 	CallNode[aggHead, aggChildren, data]
 ]]
 
-aggregate[node_[tag_, children_, dataIn_]] :=
-Module[{newSrc, aggChildren, data},
+aggregate[FileNode[File, childrenIn_, dataIn_]] :=
+Catch[
+Module[{children, aggChildren, data},
 
+	children = childrenIn;
 	data = dataIn;
-	
+
 	aggChildren = aggregate /@ children;
 
-	If[empty[aggChildren],
-		data[Source] =.
-		,
-		newSrc = {aggChildren[[1]][[3]][Source][[1]], aggChildren[[-1]][[3]][Source][[2]]};
+	If[Length[children] != Length[aggChildren],
 
-		If[newSrc =!= data[Source],
-			data[Source] = newSrc
+		If[Length[aggChildren] > 0,
+			(*
+			recalculate Sources
+			*)
+			data[Source] = { aggChildren[[1, 3, Key[Source], 1]], aggChildren[[-1, 3, Key[Source], 2]] };
+			,
+			(*
+			There is nothing left after aggregating
+			*)
+			data[Source] =.
 		];
+	];
+
+	FileNode[File, aggChildren, data]
+]]
+
+aggregate[HoldNode[Hold, childrenIn_, dataIn_]] :=
+Catch[
+Module[{children, aggChildren, data},
+
+	children = childrenIn;
+	data = dataIn;
+
+	aggChildren = aggregate /@ children;
+
+	If[Length[children] != Length[aggChildren],
+
+		If[Length[aggChildren] > 0,
+			(*
+			recalculate Sources
+			*)
+			data[Source] = { aggChildren[[1, 3, Key[Source], 1]], aggChildren[[-1, 3, Key[Source], 2]] };
+			,
+			(*
+			There is nothing left after aggregating
+			*)
+			data[Source] =.
+		];
+	];
+
+	HoldNode[Hold, aggChildren, data]
+]]
+
+aggregate[node_[tag_, childrenIn_, dataIn_]] :=
+Module[{children, aggChildren, data},
+	
+	children = childrenIn;
+	data = dataIn;
+
+	aggChildren = aggregate /@ children;
+
+	If[Length[children] != Length[aggChildren],
+		(*
+		recalculate Sources
+		*)
+		data[Source] = { aggChildren[[1, 3, Key[Source], 1]], aggChildren[[-1, 3, Key[Source], 2]] };
 	];
 
 	node[tag, aggChildren, data]
@@ -116,84 +170,6 @@ Module[{deChildren, data},
 
 	node[tag, deChildren, data]
 ]
-
-
-
-
-
-
-
-
-
-recalculateSources[Null] := Null
-
-recalculateSources[l_LeafNode] := l
-
-recalculateSources[a_AbstractSyntaxErrorNode] := a
-
-recalculateSources[CallNode[head_, childrenIn_, dataIn_]] :=
-Catch[
-Module[{children, data},
-
-	children = childrenIn;
-	data = dataIn;
-
-	If[empty[children],
-
-		(*
-		no children, so only bother with head
-		*)
-
-		(*
-		do not remove any Sources, they may have been present from before
-
-		something like  f[]  should remember about the []
-
-		data[Source] =.;
-		*)
-
-		newSrc = head[[3]][Source][[1]];
-		If[newSrc =!= data[Source][[1]],
-			data[[Key[Source], 1]] = newSrc
-		];
-
-		Throw[CallNode[head, children, data]]
-	];
-
-	children = recalculateSources /@ children;
-
-	newSrc = {head[[3]][Source][[1]], children[[-1]][[3]][Source][[2]]};
-
-	If[newSrc =!= data[Source],
-		data[Source] = newSrc
-	];
-
-	CallNode[head, children, data]
-]]
-
-recalculateSources[node_[tag_, childrenIn_, dataIn_]] :=
-Catch[
-Module[{children, data},
-
-	children = childrenIn;
-	data = dataIn;
-
-	If[empty[children],
-		data[Source] =.;
-		Throw[node[tag, children, data]]
-	];
-
-	children = recalculateSources /@ children;
-
-	newSrc = {children[[1]][[3]][Source][[1]], children[[-1]][[3]][Source][[2]]};
-
-	If[newSrc =!= data[Source],
-		data[Source] = newSrc
-	];
-
-	node[tag, children, data]
-]]
-
 
 
 

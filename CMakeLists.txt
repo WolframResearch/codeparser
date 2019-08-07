@@ -15,18 +15,29 @@ message(STATUS "WOLFRAMKERNEL: ${WOLFRAMKERNEL}")
 message(STATUS "BUILD_DOCS: ${BUILD_DOCS}")
 message(STATUS "BUILD_EXE: ${BUILD_EXE}")
 
-set(WL_SOURCES
+set(WL_PACLET_SOURCES
 	${CMAKE_SOURCE_DIR}/AST/Kernel/Abstract.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/AST.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/Boxes.wl
-	${CMAKE_SOURCE_DIR}/AST/Kernel/Build.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/DeclarationName.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/Folds.wl
+	${CMAKE_SOURCE_DIR}/AST/Kernel/Library.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/Node.wl
-	${CMAKE_SOURCE_DIR}/AST/Kernel/Symbol.wl
-	${CMAKE_SOURCE_DIR}/AST/Kernel/ToInputFormString.wl
-	${CMAKE_SOURCE_DIR}/AST/Kernel/ToFullFormString.wl
+	${CMAKE_SOURCE_DIR}/AST/Kernel/ToString.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/Utils.wl
+)
+
+#
+# Used during the build process
+#
+set(WL_GENERATE_SOURCES
+	${CMAKE_SOURCE_DIR}/AST/Generate/Generate.wl
+	${CMAKE_SOURCE_DIR}/AST/Generate/CharacterMaps.wl
+	${CMAKE_SOURCE_DIR}/AST/Generate/CodePoint.wl
+	${CMAKE_SOURCE_DIR}/AST/Generate/LongNameDefines.wl
+	${CMAKE_SOURCE_DIR}/AST/Generate/Precedence.wl
+	${CMAKE_SOURCE_DIR}/AST/Generate/Symbol.wl
+	${CMAKE_SOURCE_DIR}/AST/Generate/Token.wl
 )
 
 set(PACLETINFO_SOURCE
@@ -39,36 +50,21 @@ set(WL_DATA_SOURCES
 	${CMAKE_SOURCE_DIR}/tables/TokenEnum.wl
 )
 
-set(GENERATED_WL_SOURCES
-	# not used right now ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/LongNameDefines.wl
-	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/Precedence.wl
-	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/Token.wl
-	${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/LongNameReplacements.wl
-)
-
-set(GENERATED_WL_DATA_SOURCES
-	${CMAKE_BINARY_DIR}/generated/wl/LongNameMap.wl
-)
-
 set(GENERATED_CPP_INCLUDES
 	${CMAKE_BINARY_DIR}/generated/cpp/include/LongNameDefines.h
-	${CMAKE_BINARY_DIR}/generated/cpp/include/LongNameMap.h
-	${CMAKE_BINARY_DIR}/generated/cpp/include/Token.h
 	${CMAKE_BINARY_DIR}/generated/cpp/include/Precedence.h
-	${CMAKE_BINARY_DIR}/generated/cpp/include/CodePoint.h
 	${CMAKE_BINARY_DIR}/generated/cpp/include/Symbol.h
+	${CMAKE_BINARY_DIR}/generated/cpp/include/Token.h
 )
 
 set(GENERATED_CPP_LIB_SOURCES
-	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/LongNameMap.cpp
-	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/Token.cpp
+	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/CharacterMaps.cpp
 	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/CodePoint.cpp
 	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/Symbol.cpp
+	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/Token.cpp
 )
 
 set(GENERATED_SOURCES
-	${GENERATED_WL_SOURCES}
-	${GENERATED_WL_DATA_SOURCES}
 	${GENERATED_CPP_INCLUDES}
 	${GENERATED_CPP_LIB_SOURCES}
 )
@@ -109,26 +105,25 @@ file(MAKE_DIRECTORY
 
 
 #
-# Configure WL source files
+# Copy WL source files
 #
-# Use configure_file to create a file-level dependency between input and output
-#
-set(CONFIGURED_SRC ${CMAKE_BINARY_DIR}/paclet/${PACLET}/PacletInfo.m)
-configure_file(${PACLETINFO_SOURCE}
-	${CONFIGURED_SRC}
-)
-list(APPEND CONFIGURED_WL_SOURCES ${CONFIGURED_SRC})
-foreach(SRC ${WL_SOURCES})
+add_custom_command(
+    OUTPUT ${CMAKE_BINARY_DIR}/paclet/${PACLET}/PacletInfo.m
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${PACLET}/PacletInfo.m ${CMAKE_BINARY_DIR}/paclet/${PACLET}/PacletInfo.m
+    MAIN_DEPENDENCY ${CMAKE_SOURCE_DIR}/${PACLET}/PacletInfo.m)
+list(APPEND COPIED_WL_PACLET_SOURCES ${CMAKE_BINARY_DIR}/paclet/${PACLET}/PacletInfo.m)
+
+foreach(SRC ${WL_PACLET_SOURCES})
 	get_filename_component(BARE_SRC ${SRC} NAME)
-	set(CONFIGURED_SRC ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC})
-	configure_file(${SRC}
-		${CONFIGURED_SRC}
-	)
-	list(APPEND CONFIGURED_WL_SOURCES ${CONFIGURED_SRC})
+	add_custom_command(
+    OUTPUT ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC}
+    COMMAND ${CMAKE_COMMAND} -E copy ${SRC} ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC}
+    MAIN_DEPENDENCY ${SRC})
+	list(APPEND COPIED_WL_PACLET_SOURCES ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC})
 endforeach()
 
 set(PACLET_SOURCES
-	${CONFIGURED_WL_SOURCES}
+	${COPIED_WL_PACLET_SOURCES}
 	${GENERATED_WL_SOURCES}
 	ast-lib
 )
@@ -153,13 +148,9 @@ add_custom_command(
 	OUTPUT
 		${GENERATED_SOURCES}
 	DEPENDS
-		${CMAKE_SOURCE_DIR}/scripts/Generate.wl
 		${WL_DATA_SOURCES}
-		# it may be overkill to depend on all WL sources, but it keeps things simple
-		${WL_SOURCES}
-		${PACLETINFO_SOURCE}
-		${BUILT_PACLETINFO}
-	COMMAND ${WOLFRAMKERNEL} -noinit -script ${CMAKE_SOURCE_DIR}/scripts/Generate.wl -buildDir ${CMAKE_BINARY_DIR}
+		${WL_GENERATE_SOURCES}
+	COMMAND ${WOLFRAMKERNEL} -noinit -script ${CMAKE_SOURCE_DIR}/AST/Generate/Generate.wl -buildDir ${CMAKE_BINARY_DIR}
 	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 
@@ -187,12 +178,17 @@ set(CPP_INCLUDES
 	${CMAKE_SOURCE_DIR}/cpp/include/ByteDecoder.h
 	${CMAKE_SOURCE_DIR}/cpp/include/ByteEncoder.h
 	${CMAKE_SOURCE_DIR}/cpp/include/CharacterDecoder.h
+	${CMAKE_SOURCE_DIR}/cpp/include/CharacterMaps.h
+	${CMAKE_SOURCE_DIR}/cpp/include/CodePoint.h
 	${CMAKE_SOURCE_DIR}/cpp/include/Node.h
 	${CMAKE_SOURCE_DIR}/cpp/include/Parselet.h
 	${CMAKE_SOURCE_DIR}/cpp/include/Parser.h
 	${CMAKE_SOURCE_DIR}/cpp/include/Source.h
+	${CMAKE_SOURCE_DIR}/cpp/include/SourceManager.h
+	${CMAKE_SOURCE_DIR}/cpp/include/TimeScoper.h
 	${CMAKE_SOURCE_DIR}/cpp/include/Tokenizer.h
 	${CMAKE_SOURCE_DIR}/cpp/include/Utils.h
+	${CMAKE_SOURCE_DIR}/cpp/include/WLCharacter.h
 )
 
 set(CPP_LIB_SOURCES
@@ -204,10 +200,11 @@ set(CPP_LIB_SOURCES
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/Parselet.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/Parser.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/SemiSemiParselet.cpp
+	${CMAKE_SOURCE_DIR}/cpp/src/lib/Source.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/SourceManager.cpp
-	${CMAKE_SOURCE_DIR}/cpp/src/lib/SyntaxIssue.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/Tokenizer.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/Utils.cpp
+	${CMAKE_SOURCE_DIR}/cpp/src/lib/WLCharacter.cpp
 )
 
 add_library(ast-lib SHARED
@@ -303,6 +300,13 @@ add_subdirectory(cpp/src/exe)
 
 endif(BUILD_EXE)
 
+
+
+if(BUILD_TESTS)
+
+add_subdirectory(cpp/test)
+
+endif(BUILD_TESTS)
 
 
 

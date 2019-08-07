@@ -17,6 +17,10 @@ contiguousQ
 
 Begin["`Private`"]
 
+Needs["AST`"]
+
+
+
 escapeString[s_] :=
 	ToString[s, InputForm, CharacterEncoding -> "ASCII"]
 

@@ -6,3 +6,8 @@ build-make
 build-gcc
 build-afl
 build-release
+build-debug
+build-exe
+build-test
+build-test-xcode
+

@@ -1,8 +1,14 @@
 BeginPackage["AST`Abstract`"]
 
-Aggregate::usage = "Aggregate[cst] returns an aggregate syntax tree from a concrete syntax tree."
+Aggregate
 
-Abstract::usage = "Abstract[agg] returns an abstract syntax tree from an aggregate syntax tree."
+Abstract
+
+
+
+$AggregateParseProgress
+
+$AbstractParseProgress
 
 
 Begin["`Private`"]
@@ -42,13 +48,21 @@ abstract syntax has CallNode[head, {child1}]
 abstract syntax has CallNode[Plus, {1, 1}]
 *)
 
+Aggregate::usage = "Aggregate[cst] returns an aggregate syntax tree from a concrete syntax tree."
+
 Aggregate[cst_] :=
 Block[{$RecursionLimit = Infinity},
 Module[{agg},
-	
+
+	AST`Abstract`$AggregateParseStart = Now;
+	AST`Abstract`$AggregateParseTime = Quantity[0, "Seconds"];
+
+	AST`Abstract`$AggregateParseProgress = 5;
+
 	agg = aggregate[cst];
 
-	agg = recalculateSources[agg];
+	AST`Abstract`$AggregateParseProgress = 100;
+	AST`Abstract`$AggregateParseTime = Now - AST`Abstract`$AggregateParseStart;
 
 	agg
 ]]
@@ -63,48 +77,170 @@ what keys do we want to keep when abstracting?
 keysToTake = {Source, AbstractSyntaxIssues}
 
 
+Abstract::usage = "Abstract[agg] returns an abstract syntax tree from an aggregate syntax tree."
+
 Abstract[agg_] :=
 Block[{$RecursionLimit = Infinity},
 Module[{ast},
 
+	AST`Abstract`$AbstractParseStart = Now;
+	AST`Abstract`$AbstractParseTime = Quantity[0, "Seconds"];
+
+	AST`Abstract`$AbstractParseProgress = 5;
+
 	ast = abstract[agg];
+
+	AST`Abstract`$AbstractParseProgress = 100;
+
+	AST`Abstract`$AbstractParseTime = Now - AST`Abstract`$AbstractParseStart;
 
 	ast
 ]]
 
 
 
-abstract[LeafNode[Symbol, s_, data_]] := LeafNode[Symbol, s, KeyTake[data, keysToTake]]
-abstract[LeafNode[String, s_, data_]] := LeafNode[String, s, KeyTake[data, keysToTake]]
-abstract[LeafNode[Integer, s_, data_]] := LeafNode[Integer, s, KeyTake[data, keysToTake]]
-abstract[LeafNode[Real, s_, data_]] := LeafNode[Real, s, KeyTake[data, keysToTake]]
+abstract[LeafNode[Symbol, s_, data_]] := LeafNode[Symbol, abstractLineContinuation[s], KeyTake[data, keysToTake]]
+abstract[LeafNode[String, s_, data_]] := LeafNode[String, abstractLineContinuation[s], KeyTake[data, keysToTake]]
+abstract[LeafNode[Integer, s_, data_]] := LeafNode[Integer, abstractLineContinuation[s], KeyTake[data, keysToTake]]
+abstract[LeafNode[Real, s_, data_]] := LeafNode[Real, abstractLineContinuation[s], KeyTake[data, keysToTake]]
 
+abstract[LeafNode[Slot, str_, data_]] :=
+Module[{a},
+	a = abstractLineContinuation[str];
+	Switch[a,
+		"#",
+		    CallNode[ToNode[Slot], {ToNode[1]}, KeyTake[data, keysToTake]]
+		,
+		test_ /; StringMatchQ[test, "#"~~DigitCharacter..],
+		    CallNode[ToNode[Slot], {ToNode[FromDigits[StringDrop[a, 1]]]}, KeyTake[data, keysToTake]]
+		,
+		_,
+		    CallNode[ToNode[Slot], {ToNode[abstractString[StringDrop[a, 1]]]}, KeyTake[data, keysToTake]]
+	]
+]
 
-abstract[LeafNode[Slot, "#", data_]] := CallNode[ToNode[Slot], {ToNode[1]}, KeyTake[data, keysToTake]]
-abstract[LeafNode[Slot, str_ /; StringMatchQ[str, "#"~~DigitCharacter..], data_]] := CallNode[ToNode[Slot], {ToNode[FromDigits[StringDrop[str, 1]]]}, KeyTake[data, keysToTake]]
-abstract[LeafNode[Slot, str_, data_]] := CallNode[ToNode[Slot], {ToNode[abstractString[StringDrop[str, 1]]]}, KeyTake[data, keysToTake]]
+abstract[LeafNode[SlotSequence, str_, data_]] :=
+Module[{a},
+	a = abstractLineContinuation[str];
+	Switch[a,
+		"##",
+		    CallNode[ToNode[SlotSequence], {ToNode[1]}, KeyTake[data, keysToTake]]
+		,
+		_,
+		    CallNode[ToNode[SlotSequence], {ToNode[FromDigits[StringDrop[a, 2]]]}, KeyTake[data, keysToTake]]
+	]
+]
 
+abstract[LeafNode[Out, str_, data_]] :=
+Module[{a},
+   a = abstractLineContinuation[str];
+	Switch[a,
+		"%",
+		    CallNode[ToNode[Out], {}, KeyTake[data, keysToTake]]
+		,
+		_,
+		    CallNode[ToNode[Out], { ToNode[-StringLength[a]] }, KeyTake[data, keysToTake]]
+	]
+]
 
-abstract[LeafNode[SlotSequence, "##", data_]] := CallNode[ToNode[SlotSequence], {ToNode[1]}, KeyTake[data, keysToTake]]
-abstract[LeafNode[SlotSequence, str_ /; StringMatchQ[str, "##"~~DigitCharacter..], data_]] := CallNode[ToNode[SlotSequence], {ToNode[FromDigits[StringDrop[str, 2]]]}, KeyTake[data, keysToTake]]
-
-
-abstract[LeafNode[Out, "%", data_]] := CallNode[ToNode[Out], {}, KeyTake[data, keysToTake]]
-abstract[LeafNode[Out, str_, data_]] := CallNode[ToNode[Out], { ToNode[-StringLength[str]] }, KeyTake[data, keysToTake]]
-
+abstract[LeafNode[Blank, _, data_]] := CallNode[ToNode[Blank], {}, KeyTake[data, keysToTake]]
+abstract[LeafNode[BlankSequence, _, data_]] := CallNode[ToNode[BlankSequence], {}, KeyTake[data, keysToTake]]
+abstract[LeafNode[BlankNullSequence, _, data_]] := CallNode[ToNode[BlankNullSequence], {}, KeyTake[data, keysToTake]]
 abstract[LeafNode[OptionalDefault, _, data_]] := CallNode[ToNode[Optional], {CallNode[ToNode[Blank], {}, <||>]}, KeyTake[data, keysToTake]]
 
-abstract[LeafNode[Token`Unhandled, str_, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`Unhandled, str, KeyTake[data, keysToTake]]
+abstract[LeafNode[Token`Error`UnhandledCharacter, str_, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`Unhandled, str, KeyTake[data, keysToTake]]
+
+abstract[LeafNode[Token`Fake`ImplicitNull, _, data_]] := LeafNode[Symbol, "Null", KeyTake[data, keysToTake] ~Join~ <|AbstractSyntaxIssues->{SyntaxIssue["Comma", "Comma encountered with no adjacent expression.\n\
+The expression will be treated as ``Null``.", "Error", <|data, CodeActions->{CodeAction["Delete Comma", DeleteNode, <||>]}|>]}|>]
+
+abstract[LeafNode[Token`Fake`ImplicitOne, _, data_]] := LeafNode[Integer, "1", KeyTake[data, keysToTake]]
+
+abstract[LeafNode[Token`Fake`ImplicitAll, _, data_]] := LeafNode[Symbol, "All", KeyTake[data, keysToTake]]
+
+abstract[BlankNode[Blank, {_, sym2_}, data_]] := CallNode[ToNode[Blank], {abstract[sym2]}, KeyTake[data, keysToTake]]
+abstract[BlankSequenceNode[BlankSequence, {_, sym2_}, data_]] := CallNode[ToNode[BlankSequence], {abstract[sym2]}, KeyTake[data, keysToTake]]
+abstract[BlankNullSequenceNode[BlankNullSequence, {_, sym2_}, data_]] := CallNode[ToNode[BlankNullSequence], {abstract[sym2]}, KeyTake[data, keysToTake]]
+
+abstract[PatternBlankNode[PatternBlank, {sym1_, _}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[Blank], {}, <||>]}, KeyTake[data, keysToTake]]
+abstract[PatternBlankNode[PatternBlank, {sym1_, _, sym2_}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[Blank], {abstract[sym2]}, <||>]}, KeyTake[data, keysToTake]]
+abstract[PatternBlankSequenceNode[PatternBlankSequence, {sym1_, _}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[BlankSequence], {}, <||>]}, KeyTake[data, keysToTake]]
+abstract[PatternBlankSequenceNode[PatternBlankSequence, {sym1_, _, sym2_}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[BlankSequence], {abstract[sym2]}, <||>]}, KeyTake[data, keysToTake]]
+abstract[PatternBlankNullSequenceNode[PatternBlankNullSequence, {sym1_, _}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[BlankNullSequence], {}, <||>]}, KeyTake[data, keysToTake]]
+abstract[PatternBlankNullSequenceNode[PatternBlankNullSequence, {sym1_, _, sym2_}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[BlankNullSequence], {abstract[sym2]}, <||>]}, KeyTake[data, keysToTake]]
+abstract[OptionalDefaultPatternNode[OptionalDefaultPattern, {sym1_, _}, data_]] := CallNode[ToNode[Optional], {CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[Blank], {}, <||>]}, <||>]}, KeyTake[data, keysToTake]]
 
 
-abstract[LeafNode[Token`Fake`Null, str_, data_]] := LeafNode[Symbol, "Null", KeyTake[data, keysToTake] ~Join~ <|AbstractSyntaxIssues->{SyntaxIssue["Comma", "Comma encountered with no adjacent expression.\n\
-The expression will be treated as Null.", "Error", data]}|>]
+(*
+Remove line continuations
 
-abstract[LeafNode[Token`Fake`One, str_, data_]] := LeafNode[Integer, "1", KeyTake[data, keysToTake]]
+Line continuations might be inside of strings and we want to remove them
 
-abstract[LeafNode[Token`Fake`All, str_, data_]] := LeafNode[Symbol, "All", KeyTake[data, keysToTake]]
+I don't feel like constructing a regex to do the matching for true line continuations
+So use an auxiliary function. This is probably easier to understand.
+*)
+abstractLineContinuation[s_String /; StringContainsQ[s, "\\\n"]] :=
+Module[{candidatePoss, actualLCs, specs},
+	candidatePoss = StringPosition[s, "\\\n"];
+	actualLCs = Select[candidatePoss, isLineContinuation[s, #]&];
+
+	(*
+	Used to be:
+	StringReplacePart[s, "", actualLCs]
+
+	but this is VERY slow
+	*)
+
+	(*
+	Convert the LC poss into Take specs in-between the line continuations
+	*)
+	specs = {#[[1]] + 1, #[[2]] - 1}& /@ Partition[{0} ~Join~ Flatten[actualLCs] ~Join~ {StringLength[s] + 1}, 2];
+
+	(*
+	And then StringJoin all of the in-between parts
+	*)
+	StringJoin[StringTake[s, specs]]
+]
+
+abstractLineContinuation[s_String] := s
 
 
+
+(*
+
+We need to do a test for line continuation because \\\n does not NECESSARILY mean a line continuation
+
+There could be preceding \\, thus changing the semantics of \\\n
+
+
+s: input string
+candidatePos: position of \\\n that looks like a line continuation
+
+go backwards and count an odd number of \\
+
+isLineContinuation["abc\\\ndef", {4, 5}] => True
+
+isLineContinuation["ab\\\\\ndef", {4, 5}] => False
+
+*)
+isLineContinuation[s_String, candidatePos_List] :=
+Catch[
+Module[{acc, nToTest},
+	(*
+	acc: how many \ have we seen so far?
+	*)
+	acc = 1;
+	nToTest = candidatePos[[1]] - 1;
+	While[True,
+		If[nToTest == 0,
+			Throw[OddQ[acc]]
+		];
+		If[StringPart[s, nToTest] != "\\",
+			Throw[OddQ[acc]]
+		];
+		acc++;
+		nToTest--;
+	]
+]]
 
 
 
@@ -117,7 +253,7 @@ abstract[PrefixNode[PrefixLinearSyntaxBang, children:{_, Except[GroupNode[GroupL
 (*
 FIXME: keep linear syntax for now
 *)
-abstract[PrefixNode[PrefixLinearSyntaxBang, children_, data_]] := PrefixNode[PrefixLinearSyntaxBang, children, KeyTake[data, keysToTake]]
+abstract[PrefixNode[PrefixLinearSyntaxBang, {rator_, rand_}, data_]] := PrefixNode[PrefixLinearSyntaxBang, {rator, abstract[rand]}, KeyTake[data, keysToTake]]
 
 (*
 strings may be quoted
@@ -133,7 +269,7 @@ abstract[PrefixNode[Get, {_, LeafNode[String, str_, _]}, data_]] := CallNode[ToN
 abstract[PrefixNode[op_, {_, operand_}, data_]] := CallNode[ToNode[op], {abstract[operand]}, KeyTake[data, keysToTake]]
 
 
-abstract[PostfixNode[Derivative, {operand_, _}, data_]] := abstractDerivative[PostfixNode[Derivative, {operand}, KeyTake[data, keysToTake]]]
+abstract[PostfixNode[Derivative, {operand_, rator_}, data_]] := abstractDerivative[PostfixNode[Derivative, {operand, rator}, KeyTake[data, keysToTake]]]
 abstract[PostfixNode[op_, {operand_, _}, data_]] := CallNode[ToNode[op], {abstract[operand]}, KeyTake[data, keysToTake]]
 
 
@@ -163,6 +299,9 @@ DirectedEdge and UndirectedEdge do not associate with each other
 abstract[BinaryNode[DirectedEdge, children:{BinaryNode[UndirectedEdge, _, _], _, _}, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociative, children, KeyTake[data, keysToTake]]
 abstract[BinaryNode[UndirectedEdge, children:{BinaryNode[DirectedEdge, _, _], _, _}, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociative, children, KeyTake[data, keysToTake]]
 
+(* could be  a =. *)
+abstract[BinaryNode[Unset, {left_, _}, data_]] := CallNode[ToNode[Unset], {abstract[left]}, KeyTake[data, keysToTake]]
+(* or it could be  a = . *)
 abstract[BinaryNode[Unset, {left_, _, _}, data_]] := CallNode[ToNode[Unset], {abstract[left]}, KeyTake[data, keysToTake]]
 
 abstract[BinaryNode[op_, {left_, _, right_}, data_]] := CallNode[ToNode[op], {abstract[left], abstract[right]}, KeyTake[data, keysToTake]]
@@ -173,17 +312,9 @@ abstract[BinaryNode[op_, {left_, _, right_}, data_]] := CallNode[ToNode[op], {ab
 
 
 
-abstract[InfixNode[Equal, children_, data_]] := abstractInequality[InfixNode[Equal, children[[;;;;2]], KeyTake[data, keysToTake]]]
-abstract[InfixNode[Unequal, children_, data_]] := abstractInequality[InfixNode[Unequal, children[[;;;;2]], KeyTake[data, keysToTake]]]
-abstract[InfixNode[Less, children_, data_]] := abstractInequality[InfixNode[Less, children[[;;;;2]], KeyTake[data, keysToTake]]]
-abstract[InfixNode[Greater, children_, data_]] := abstractInequality[InfixNode[Greater, children[[;;;;2]], KeyTake[data, keysToTake]]]
-abstract[InfixNode[LessEqual, children_, data_]] := abstractInequality[InfixNode[LessEqual, children[[;;;;2]], KeyTake[data, keysToTake]]]
-abstract[InfixNode[GreaterEqual, children_, data_]] := abstractInequality[InfixNode[GreaterEqual, children[[;;;;2]], KeyTake[data, keysToTake]]]
+abstract[InfixNode[Inequality, children_, data_]] := abstractInequality[InfixNode[Inequality, children, KeyTake[data, keysToTake]]]
 
-abstract[InfixNode[System`VectorLess, children_, data_]] := abstractVectorInequality[InfixNode[System`VectorLess, children[[;;;;2]], KeyTake[data, keysToTake]]]
-abstract[InfixNode[System`VectorGreater, children_, data_]] := abstractVectorInequality[InfixNode[System`VectorGreater, children[[;;;;2]], KeyTake[data, keysToTake]]]
-abstract[InfixNode[System`VectorLessEqual, children_, data_]] := abstractVectorInequality[InfixNode[System`VectorLessEqual, children[[;;;;2]], KeyTake[data, keysToTake]]]
-abstract[InfixNode[System`VectorGreaterEqual, children_, data_]] := abstractVectorInequality[InfixNode[System`VectorGreaterEqual, children[[;;;;2]], KeyTake[data, keysToTake]]]
+abstract[InfixNode[Developer`VectorInequality, children_, data_]] := abstractVectorInequality[InfixNode[Developer`VectorInequality, children, KeyTake[data, keysToTake]]]
 
 abstract[InfixNode[Plus, children_, data_]] := abstractPlus[InfixNode[Plus, children[[;;;;2]], KeyTake[data, keysToTake]]]
 abstract[InfixNode[Times, children_, data_]] := abstractTimes[InfixNode[Times, children[[;;;;2]], KeyTake[data, keysToTake]]]
@@ -208,6 +339,10 @@ abstract[TernaryNode[TernaryTilde, {left_, _, middle_, _, right_}, data_]] := Ca
 
 abstract[TernaryNode[TagSet, {left_, _, middle_, _, right_}, data_]] := CallNode[ToNode[TagSet], {abstract[left], abstract[middle], abstract[right]}, KeyTake[data, keysToTake]]
 abstract[TernaryNode[TagSetDelayed, {left_, _, middle_, _, right_}, data_]] := CallNode[ToNode[TagSetDelayed], {abstract[left], abstract[middle], abstract[right]}, KeyTake[data, keysToTake]]
+
+(* could be  a /: b =. *)
+abstract[TernaryNode[TagUnset, {left_, _, middle_, _}, data_]] := CallNode[ToNode[TagUnset], {abstract[left], abstract[middle]}, KeyTake[data, keysToTake]]
+(* or it could be  a /: b = . *)
 abstract[TernaryNode[TagUnset, {left_, _, middle_, _, _}, data_]] := CallNode[ToNode[TagUnset], {abstract[left], abstract[middle]}, KeyTake[data, keysToTake]]
 
 abstract[TernaryNode[Span, {left_, _, middle_, _, right_}, data_]] := CallNode[ToNode[Span], {abstract[left], abstract[middle], abstract[right]}, KeyTake[data, keysToTake]]
@@ -296,30 +431,9 @@ abstract[GroupNode[op_, {_, inner___, _}, data_]] := abstractGroupNode[GroupNode
 
 
 
-
 abstract[PrefixBinaryNode[Integrate, {_, operand1_, PrefixNode[DifferentialD, {_, var_}, _]}, data_]] := CallNode[ToNode[Integrate], {abstract[operand1], abstract[var]}, KeyTake[data, keysToTake]]
 
 abstract[PrefixBinaryNode[op_, {_, operand1_, operand2_}, data_]] := CallNode[ToNode[op], {abstract[operand1], abstract[operand2]}, KeyTake[data, keysToTake]]
-
-
-
-
-
-
-abstract[BlankNode[Blank, {_}, data_]] := CallNode[ToNode[Blank], {}, KeyTake[data, keysToTake]]
-abstract[BlankNode[Blank, {_, sym2_}, data_]] := CallNode[ToNode[Blank], {sym2}, KeyTake[data, keysToTake]]
-abstract[BlankSequenceNode[BlankSequence, {_}, data_]] := CallNode[ToNode[BlankSequence], {}, KeyTake[data, keysToTake]]
-abstract[BlankSequenceNode[BlankSequence, {_, sym2_}, data_]] := CallNode[ToNode[BlankSequence], {sym2}, KeyTake[data, keysToTake]]
-abstract[BlankNullSequenceNode[BlankNullSequence, {_}, data_]] := CallNode[ToNode[BlankNullSequence], {}, KeyTake[data, keysToTake]]
-abstract[BlankNullSequenceNode[BlankNullSequence, {_, sym2_}, data_]] := CallNode[ToNode[BlankNullSequence], {sym2}, KeyTake[data, keysToTake]]
-
-abstract[PatternBlankNode[PatternBlank, {sym1_, _}, data_]] := CallNode[ToNode[Pattern], {sym1, CallNode[ToNode[Blank], {}, <||>]}, KeyTake[data, keysToTake]]
-abstract[PatternBlankNode[PatternBlank, {sym1_, _, sym2_}, data_]] := CallNode[ToNode[Pattern], {sym1, CallNode[ToNode[Blank], {sym2}, <||>]}, KeyTake[data, keysToTake]]
-abstract[PatternBlankSequenceNode[PatternBlankSequence, {sym1_, _}, data_]] := CallNode[ToNode[Pattern], {sym1, CallNode[ToNode[BlankSequence], {}, <||>]}, KeyTake[data, keysToTake]]
-abstract[PatternBlankSequenceNode[PatternBlankSequence, {sym1_, _, sym2_}, data_]] := CallNode[ToNode[Pattern], {sym1, CallNode[ToNode[BlankSequence], {sym2}, <||>]}, KeyTake[data, keysToTake]]
-abstract[PatternBlankNullSequenceNode[PatternBlankNullSequence, {sym1_, _}, data_]] := CallNode[ToNode[Pattern], {sym1, CallNode[ToNode[BlankNullSequence], {}, <||>]}, KeyTake[data, keysToTake]]
-abstract[PatternBlankNullSequenceNode[PatternBlankNullSequence, {sym1_, _, sym2_}, data_]] := CallNode[ToNode[Pattern], {sym1, CallNode[ToNode[BlankNullSequence], {sym2}, <||>]}, KeyTake[data, keysToTake]]
-abstract[OptionalDefaultPatternNode[OptionalDefaultPattern, {sym1_, _}, data_]] := CallNode[ToNode[Optional], {CallNode[ToNode[Pattern], {sym1, CallNode[ToNode[Blank], {}, <||>]}, <||>]}, KeyTake[data, keysToTake]]
 
 
 
@@ -496,40 +610,40 @@ So hard-code the CompoundExpression versions to be able to catch these cases
 
 *)
 topLevelChildIssues[InfixNode[CompoundExpression, {
-												CallNode[_, _, _], _LeafNode, LeafNode[Token`Fake`Null, _, _] }, _], True] := {}
+												CallNode[_, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
 
 topLevelChildIssues[InfixNode[CompoundExpression, {
-												LeafNode[Symbol, _, _], _LeafNode, LeafNode[Token`Fake`Null, _, _] }, _], True] := {}
+												LeafNode[Symbol, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
 
 topLevelChildIssues[InfixNode[CompoundExpression, {
 												BinaryNode[AddTo | Apply | BinaryAt | BinaryAtAtAt |
 													BinarySlashSlash | Map | Set | SetDelayed |
-													SubtractFrom | Unset | UpSet | UpSetDelayed, _, _], _LeafNode, LeafNode[Token`Fake`Null, _, _] }, _], True] := {}
+													SubtractFrom | Unset | UpSet | UpSetDelayed, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
 
 topLevelChildIssues[InfixNode[CompoundExpression, {
-												TernaryNode[TagSet | TagSetDelayed | TernaryTilde, _, _], _LeafNode, LeafNode[Token`Fake`Null, _, _] }, _], True] := {}
+												TernaryNode[TagSet | TagSetDelayed | TernaryTilde, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
 
 topLevelChildIssues[InfixNode[CompoundExpression, {
-												PrefixNode[Get | PreDecrement | PreIncrement, _, _], _LeafNode, LeafNode[Token`Fake`Null, _, _] }, _], True] := {}
+												PrefixNode[Get | PreDecrement | PreIncrement, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
 
 topLevelChildIssues[InfixNode[CompoundExpression, {
-												PostfixNode[Decrement | Increment, _, _], _LeafNode, LeafNode[Token`Fake`Null, _, _] }, _], True] := {}
+												PostfixNode[Decrement | Increment, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
 
 topLevelChildIssues[InfixNode[CompoundExpression, {
 												GroupNode[List, {
 												LeafNode[Token`OpenCurly, _, _],
 												InfixNode[Comma, { PatternSequence[LeafNode[Symbol | String, _, _] | CallNode[LeafNode[Symbol, "Symbol", _], _, _], LeafNode[Token`Comma, _, _]]...,
 													LeafNode[Symbol | String, _, _] | CallNode[LeafNode[Symbol, "Symbol", _], _, _] }, _],
-												LeafNode[Token`CloseCurly, _, _]}, _], _LeafNode, LeafNode[Token`Fake`Null, _, _] }, _], True] := {}
+												LeafNode[Token`CloseCurly, _, _]}, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
 
 topLevelChildIssues[InfixNode[CompoundExpression, {
 												GroupNode[List, {
 												LeafNode[Token`OpenCurly, _, _],
 												LeafNode[Symbol | String, _, _] | CallNode[LeafNode[Symbol, "Symbol", _], _, _],
-												LeafNode[Token`CloseCurly, _, _]}, _], _LeafNode, LeafNode[Token`Fake`Null, _, _] }, _], True] := {}
+												LeafNode[Token`CloseCurly, _, _]}, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
 
 topLevelChildIssues[InfixNode[CompoundExpression, {
-												GroupNode[GroupParen, _, _], _LeafNode, LeafNode[Token`Fake`Null, _, _] }, _], True] := {}
+												GroupNode[GroupParen, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
 
 (*
 more specific stuff inside CompoundExpression
@@ -542,10 +656,10 @@ FIXME: maybe this is too niche
 
 *)
 topLevelChildIssues[InfixNode[CompoundExpression, {
-												PatternSequence[BinaryNode[Set | SetDelayed | Unset, _, _], _LeafNode].., LeafNode[Token`Fake`Null, _, _] }, _], True] := {}
+												PatternSequence[BinaryNode[Set | SetDelayed | Unset, _, _], _LeafNode].., LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
 
 topLevelChildIssues[InfixNode[CompoundExpression, {
-												PatternSequence[LeafNode[Symbol, _, _], _LeafNode].., LeafNode[Token`Fake`Null, _, _] }, _], True] := {}
+												PatternSequence[LeafNode[Symbol, _, _], _LeafNode].., LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
 
 topLevelChildIssues[InfixNode[CompoundExpression, {
 												PatternSequence[LeafNode[Symbol, _, _], _LeafNode].., LeafNode[Symbol, _, _] }, _], True] := {}
@@ -950,157 +1064,90 @@ abstractTimes[BinaryNode[Divide, {left_, right_}, data_]] :=
 
 
 
-
-(*
-abstract syntax of  a == b != c < d > e <= f >= g  is a single Inequality expression
-*)
-flattenInequality[nodes_List] :=
-	Module[{},
-		(
-			Switch[#,
-				InfixNode[Equal, _, _],
-					flattenInequality[Riffle[#[[2, ;;;;2]], ToNode[Equal]]]
-				,
-				InfixNode[Unequal, _, _],
-					flattenInequality[Riffle[#[[2, ;;;;2]], ToNode[Unequal]]]
-				,
-				InfixNode[Less, _, _],
-					flattenInequality[Riffle[#[[2, ;;;;2]], ToNode[Less]]]
-				,
-				InfixNode[Greater, _, _],
-					flattenInequality[Riffle[#[[2, ;;;;2]], ToNode[Greater]]]
-				,
-				InfixNode[LessEqual, _, _],
-					flattenInequality[Riffle[#[[2, ;;;;2]], ToNode[LessEqual]]]
-				,
-				InfixNode[GreaterEqual, _, _],
-					flattenInequality[Riffle[#[[2, ;;;;2]], ToNode[GreaterEqual]]]
-				,
-				_,
-					#
-			]
-		)& /@ nodes
-	]
-
-abstractInequality[InfixNode[Equal, children_, data_]] :=
-	simplifyInequality[InfixNode[Inequality, Flatten[flattenInequality[Riffle[children, ToNode[Equal]]]], data]]
-
-abstractInequality[InfixNode[Unequal, children_, data_]] :=
-	simplifyInequality[InfixNode[Inequality, Flatten[flattenInequality[Riffle[children, ToNode[Unequal]]]], data]]
-
-abstractInequality[InfixNode[Less, children_, data_]] :=
-	simplifyInequality[InfixNode[Inequality, Flatten[flattenInequality[Riffle[children, ToNode[Less]]]], data]]
-
-abstractInequality[InfixNode[Greater, children_, data_]] :=
-	simplifyInequality[InfixNode[Inequality, Flatten[flattenInequality[Riffle[children, ToNode[Greater]]]], data]]
-
-abstractInequality[InfixNode[LessEqual, children_, data_]] :=
-	simplifyInequality[InfixNode[Inequality, Flatten[flattenInequality[Riffle[children, ToNode[LessEqual]]]], data]]
-
-abstractInequality[InfixNode[GreaterEqual, children_, data_]] :=
-	simplifyInequality[InfixNode[Inequality, Flatten[flattenInequality[Riffle[children, ToNode[GreaterEqual]]]], data]]
+abstractInequality[InfixNode[Inequality, children_, data_]] :=
+	simplifyInequality[InfixNode[Inequality, children, data]]
 
 (*
 attempt to simplify e.g. Inequality[a, Less, b, Less, c] to Less[a, b, c]
 *)
 simplifyInequality[InfixNode[Inequality, children_, data_]] :=
 Module[{rators, rands},
-	rators = children[[2;;-2;;2]];
-	rands = children[[1;;-1;;2]];
+	rators = inequalityOperatorToSymbol /@ children[[2;;-2;;2]];
+	rands = abstract /@ children[[1;;-1;;2]];
 
 	Switch[rators,
 		{ToNode[Equal]..},
-			CallNode[ToNode[Equal], abstract /@ rands, data]
+			CallNode[ToNode[Equal], rands, data]
 		,
 		{ToNode[Unequal]..},
-			CallNode[ToNode[Unequal], abstract /@ rands, data]
+			CallNode[ToNode[Unequal], rands, data]
 		,
 		{ToNode[Less]..},
-			CallNode[ToNode[Less], abstract /@ rands, data]
+			CallNode[ToNode[Less], rands, data]
 		,
 		{ToNode[Greater]..},
-			CallNode[ToNode[Greater], abstract /@ rands, data]
+			CallNode[ToNode[Greater], rands, data]
 		,
 		{ToNode[LessEqual]..},
-			CallNode[ToNode[LessEqual], abstract /@ rands, data]
+			CallNode[ToNode[LessEqual], rands, data]
 		,
 		{ToNode[GreaterEqual]..},
-			CallNode[ToNode[GreaterEqual], abstract /@ rands, data]
+			CallNode[ToNode[GreaterEqual], rands, data]
 		,
 		_,
-			CallNode[ToNode[Inequality], abstract /@ children, data]
+			CallNode[ToNode[Inequality], Riffle[rands, rators], data]
 	]
 ]
 
 
+inequalityOperatorToSymbol[LeafNode[Token`EqualEqual | Token`LongName`Equal, _, _]] := ToNode[Equal]
+inequalityOperatorToSymbol[LeafNode[Token`BangEqual | Token`LongName`NotEqual, _, _]] := ToNode[Unequal]
+inequalityOperatorToSymbol[LeafNode[Token`Less, _, _]] := ToNode[Less]
+inequalityOperatorToSymbol[LeafNode[Token`Greater, _, _]] := ToNode[Greater]
+inequalityOperatorToSymbol[LeafNode[Token`LessEqual | Token`LongName`LessEqual, _, _]] := ToNode[LessEqual]
+inequalityOperatorToSymbol[LeafNode[Token`GreaterEqual | Token`LongName`GreaterEqual, _, _]] := ToNode[GreaterEqual]
 
 
 
-(*
-abstract syntax of  a \[VectorLess] b \[VectorLessEqual] c \[VectorGreater] d \[VectorGreaterEqual] e  is a single Developer`VectorInequality expression
-*)
-flattenVectorInequality[nodes_List] :=
-	Module[{},
-		(
-			Switch[#,
-				InfixNode[System`VectorLess, _, _],
-					flattenVectorInequality[Riffle[#[[2, ;;;;2]], ToNode[System`VectorLess]]]
-				,
-				InfixNode[System`VectorGreater, _, _],
-					flattenVectorInequality[Riffle[#[[2, ;;;;2]], ToNode[System`VectorGreater]]]
-				,
-				InfixNode[System`VectorLessEqual, _, _],
-					flattenVectorInequality[Riffle[#[[2, ;;;;2]], ToNode[System`VectorLessEqual]]]
-				,
-				InfixNode[System`VectorGreaterEqual, _, _],
-					flattenVectorInequality[Riffle[#[[2, ;;;;2]], ToNode[System`VectorGreaterEqual]]]
-				,
-				_,
-					#
-			]
-		)& /@ nodes
-	]
 
-abstractVectorInequality[InfixNode[System`VectorLess, children_, data_]] :=
-	simplifyVectorInequality[InfixNode[Developer`VectorInequality, Flatten[flattenVectorInequality[Riffle[children, ToNode[System`VectorLess]]]], data]]
 
-abstractVectorInequality[InfixNode[System`VectorGreater, children_, data_]] :=
-	simplifyVectorInequality[InfixNode[Developer`VectorInequality, Flatten[flattenVectorInequality[Riffle[children, ToNode[System`VectorGreater]]]], data]]
 
-abstractVectorInequality[InfixNode[System`VectorLessEqual, children_, data_]] :=
-	simplifyVectorInequality[InfixNode[Developer`VectorInequality, Flatten[flattenVectorInequality[Riffle[children, ToNode[System`VectorLessEqual]]]], data]]
-
-abstractVectorInequality[InfixNode[System`VectorGreaterEqual, children_, data_]] :=
-	simplifyVectorInequality[InfixNode[Developer`VectorInequality, Flatten[flattenVectorInequality[Riffle[children, ToNode[System`VectorGreaterEqual]]]], data]]
+abstractVectorInequality[InfixNode[Developer`VectorInequality, children_, data_]] :=
+	simplifyVectorInequality[InfixNode[Developer`VectorInequality, children, data]]
 
 (*
 attempt to simplify e.g. Developer`VectorInequality[a, VectorLess, b, VectorLess, c] to VectorLess[{a, b, c}]
 
 Yes, make sure that it is VectorLess[{a, b, c}] and not VectorLess[a, b, c]
-
 *)
 simplifyVectorInequality[InfixNode[Developer`VectorInequality, children_, data_]] :=
 Module[{rators, rands},
-	rators = children[[2;;-2;;2]];
-	rands = children[[1;;-1;;2]];
+	rators = vectorInequalityOperatorToSymbol /@ children[[2;;-2;;2]];
+	rands = abstract /@ children[[1;;-1;;2]];
 
 	Switch[rators,
 		{ToNode[System`VectorLess]..},
-			CallNode[ToNode[System`VectorLess], { CallNode[ToNode[List], abstract /@ rands, <||>] }, data]
+			CallNode[ToNode[System`VectorLess], { CallNode[ToNode[List], rands, <||>] }, data]
 		,
 		{ToNode[System`VectorGreater]..},
-			CallNode[ToNode[System`VectorGreater], { CallNode[ToNode[List], abstract /@ rands, <||>] }, data]
+			CallNode[ToNode[System`VectorGreater], { CallNode[ToNode[List], rands, <||>] }, data]
 		,
 		{ToNode[System`VectorLessEqual]..},
-			CallNode[ToNode[System`VectorLessEqual], { CallNode[ToNode[List], abstract /@ rands, <||>] }, data]
+			CallNode[ToNode[System`VectorLessEqual], { CallNode[ToNode[List], rands, <||>] }, data]
 		,
 		{ToNode[System`VectorGreaterEqual]..},
-			CallNode[ToNode[System`VectorGreaterEqual], { CallNode[ToNode[List], abstract /@ rands, <||>] }, data]
+			CallNode[ToNode[System`VectorGreaterEqual], { CallNode[ToNode[List], rands, <||>] }, data]
 		,
 		_,
-			CallNode[ToNode[Developer`VectorInequality], abstract /@ children, data]
+			CallNode[ToNode[Developer`VectorInequality], Riffle[rands, rators], data]
 	]
 ]
+
+
+vectorInequalityOperatorToSymbol[LeafNode[Token`LongName`VectorLess, _, _]] := ToNode[System`VectorLess]
+vectorInequalityOperatorToSymbol[LeafNode[Token`LongName`VectorGreater, _, _]] := ToNode[System`VectorGreater]
+vectorInequalityOperatorToSymbol[LeafNode[Token`LongName`VectorLessEqual, _, _]] := ToNode[System`VectorLessEqual]
+vectorInequalityOperatorToSymbol[LeafNode[Token`LongName`VectorGreaterEqual, _, _]] := ToNode[System`VectorGreaterEqual]
 
 
 
@@ -1124,7 +1171,7 @@ Module[{head, data, groupData, issues},
 
 	AssociateTo[data, AbstractSyntaxIssues -> issues];
 
-    head = InfixNode[CompoundExpression, Riffle[{headIn}, LeafNode[Token`Semi, ";", <||>]] ~Join~ {LeafNode[Token`Semi, ";", <||>], LeafNode[Token`Fake`Null, "", <||>]}, <||>];
+   head = InfixNode[CompoundExpression, Riffle[{headIn}, LeafNode[Token`Semi, ";", <||>]] ~Join~ {LeafNode[Token`Semi, ";", <||>], LeafNode[Token`Fake`ImplicitNull, "", <||>]}, <||>];
 
 	abstract[CallNode[head, { groupIn }, data]]
 ]
@@ -1145,7 +1192,7 @@ Module[{head, data, groupData, issues},
 
 	AssociateTo[data, AbstractSyntaxIssues -> issues];
 
-    head = InfixNode[CompoundExpression, Riffle[{headIn}, LeafNode[Token`Semi, ";", <||>]] ~Join~ {LeafNode[Token`Semi, ";", <||>], LeafNode[Token`Fake`Null, "", <||>]}, <||>];
+    head = InfixNode[CompoundExpression, Riffle[{headIn}, LeafNode[Token`Semi, ";", <||>]] ~Join~ {LeafNode[Token`Semi, ";", <||>], LeafNode[Token`Fake`ImplicitNull, "", <||>]}, <||>];
 
 	abstract[InfixNode[CompoundExpression, { CallNode[head, { groupIn }, data], LeafNode[Token`Semi, ";", <||>] } ~Join~ Riffle[{rest}, LeafNode[Token`Semi, ";", <||>]], <||>]]
 ]
@@ -1167,7 +1214,7 @@ Module[{head, data, groupData, issues},
 
     AssociateTo[data, AbstractSyntaxIssues -> issues];
 
-    head = InfixNode[CompoundExpression, Riffle[{headIn}, LeafNode[Token`Semi, ";", <||>]] ~Join~ {LeafNode[Token`Semi, ";", <||>], LeafNode[Token`Fake`Null, "", <||>]}, <||>];
+    head = InfixNode[CompoundExpression, Riffle[{headIn}, LeafNode[Token`Semi, ";", <||>]] ~Join~ {LeafNode[Token`Semi, ";", <||>], LeafNode[Token`Fake`ImplicitNull, "", <||>]}, <||>];
 
     abstract[CallNode[head, { groupIn }, data]]
 ]
@@ -1188,13 +1235,13 @@ Module[{head, data, groupData, issues},
 
     AssociateTo[data, AbstractSyntaxIssues -> issues];
 
-    head = InfixNode[CompoundExpression, Riffle[{headIn}, LeafNode[Token`Semi, ";", <||>]] ~Join~ {LeafNode[Token`Semi, ";", <||>], LeafNode[Token`Fake`Null, "", <||>]}, <||>];
+    head = InfixNode[CompoundExpression, Riffle[{headIn}, LeafNode[Token`Semi, ";", <||>]] ~Join~ {LeafNode[Token`Semi, ";", <||>], LeafNode[Token`Fake`ImplicitNull, "", <||>]}, <||>];
 
     abstract[InfixNode[CompoundExpression, { CallNode[head, { groupIn }, data], LeafNode[Token`Semi, ";", <||>] } ~Join~ Riffle[{rest}, LeafNode[Token`Semi, ";", <||>]], <||>]]
 ]
 
 
-abstractCompoundExpressionChild[LeafNode[Token`Fake`Null, _, data_]] :=
+abstractCompoundExpressionChild[LeafNode[Token`Fake`ImplicitNull, _, data_]] :=
     LeafNode[Symbol, "Null", data]
 
 abstractCompoundExpressionChild[c_] :=
@@ -1291,13 +1338,17 @@ Module[{order, body},
 derivativeOrderAndBody[node_] :=
 	{0, abstract[node]}
 
-abstractDerivative[PostfixNode[Derivative, {rand_}, data_]] :=
+abstractDerivative[PostfixNode[Derivative, {rand_, LeafNode[Token`SingleQuote, _, _]}, data_]] :=
 Module[{order, body},
 	{order, body} = derivativeOrderAndBody[rand];
 	CallNode[CallNode[ToNode[Derivative], {ToNode[order+1]}, <||>], {body}, <||>]
 ]
 
-
+abstractDerivative[PostfixNode[Derivative, {rand_, LeafNode[Token`Boxes`MultiSingleQuote, quoteStr_, _]}, data_]] :=
+Module[{order},
+	order = StringLength[quoteStr];
+	CallNode[CallNode[ToNode[Derivative], {ToNode[order]}, <||>], {rand}, <||>]
+]
 
 
 
@@ -1309,20 +1360,21 @@ Module[{order, body},
 Precondition: Opener and Closer have been removed
 Precondition: Commas are still present
 
-
 Removes all commas
 
 Fills in Nulls and gives SyntaxIssues for e.g. {1,,2}
 *)
 abstractGroupNode[GroupNode[tag_, { errs:___SyntaxErrorNode, InfixNode[Comma, children_, _] }, dataIn_]] :=
-Module[{abstractedChildren, issues, data},
+Module[{abstractedChildren, issues, data, abstractedErrs},
 	data = dataIn;
 
 	abstractedChildren = {};
 
 	issues = {};
 
-	abstractedChildren = (abstract /@ {errs}) ~Join~ (abstract /@ children[[;;;;2]]);
+	abstractedErrs = abstract /@ {errs};
+
+	abstractedChildren = abstractedErrs ~Join~ (abstract /@ children[[;;;;2]]);
 
    If[issues != {},
    	issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
@@ -1333,14 +1385,24 @@ Module[{abstractedChildren, issues, data},
 ]
 
 abstractGroupNode[GroupNode[tag_, { errs:___SyntaxErrorNode, child_ }, dataIn_]] :=
-Module[{abstractedChildren, issues, data},
+Module[{abstractedChildren, issues, data, abstractedErrs},
 	data = dataIn;
 
 	abstractedChildren = {};
 
 	issues = {};
 
-	abstractedChildren = abstract /@ { errs, child };
+	abstractedErrs = abstract /@ {errs};
+
+	(*
+	Handle leading commas like  f[,2]
+	*)
+	abstractedErrs = abstractedErrs /. {
+		SyntaxErrorNode[SyntaxError`ExpectedPossibleExpression, {LeafNode[Token`Comma, _, _]}, data_] :>
+			(* make sure to abstract in order to get the syntax warning *)
+			abstract[LeafNode[Token`Fake`ImplicitNull, _, data]] };
+
+	abstractedChildren = abstractedErrs ~Join~ { abstract[child] };
 
    If[issues != {},
    	issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
@@ -1410,7 +1472,7 @@ Module[{head, data, part, innerData, outerData, issues, partData},
     		LeafNode[SlotSequence, _, _],
     		AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Strange ``Part`` call.", "Error", <|Source->data[Source]|>]];
     		,
-        LeafNode[Symbol | Slot, _, _] (* |_StringNode*) | _CallNode | _BlankNode | _BlankSequenceNode | _BlankNullSequenceNode (*| _OptionalDefaultNode*) |
+        LeafNode[Symbol | Slot | Blank | BlankSequence | BlankNullSequence, _, _] (* |_StringNode*) | _CallNode | _BlankNode | _BlankSequenceNode | _BlankNullSequenceNode (*| _OptionalDefaultNode*) |
             _PatternBlankNode | _PatternBlankSequenceNode | _PatternBlankNullSequenceNode (*| _SlotSequenceNode *),
         (* these are fine *)
         Null
@@ -1498,7 +1560,7 @@ Module[{head, part, partData, issues, data},
     		LeafNode[SlotSequence, _, _],
     		AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Strange call.", "Error", <|Source->data[Source]|>]];
     		,
-        LeafNode[Symbol | String | Slot, _, _] | _CallNode | _BlankNode | _BlankSequenceNode | _BlankNullSequenceNode (*| _OptionalDefaultNode*)|
+        LeafNode[Symbol | String | Slot | Blank | BlankSequence | BlankNullSequence, _, _] | _CallNode | _BlankNode | _BlankSequenceNode | _BlankNullSequenceNode (*| _OptionalDefaultNode*)|
             _PatternBlankNode | _PatternBlankSequenceNode | _PatternBlankNullSequenceNode (*| _SlotSequenceNode*),
         (* these are fine *)
         Null
@@ -1572,7 +1634,7 @@ Module[{head, part, partData, data, issues},
     		LeafNode[SlotSequence, _, _],
     		AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Strange call.", "Error", <|Source->data[Source]|>]];
     		,
-        LeafNode[Symbol | Slot, _, _] (* |_StringNode*) | _CallNode | _BlankNode | _BlankSequenceNode | _BlankNullSequenceNode (*| _OptionalDefaultNode*) |
+        LeafNode[Symbol | Slot | Blank | BlankSequence | BlankNullSequence, _, _] (* |_StringNode*) | _CallNode | _BlankNode | _BlankSequenceNode | _BlankNullSequenceNode (*| _OptionalDefaultNode*) |
             _PatternBlankNode | _PatternBlankSequenceNode | _PatternBlankNullSequenceNode (*| _SlotSequenceNode *),
         (* these are fine *)
         Null
@@ -1625,7 +1687,7 @@ Module[{head, part, partData, data, issues},
 		AssociateTo[data, AbstractSyntaxIssues -> issues];
    ];
 
-	CallNode[ToNode[Part], {head}~Join~(part[[2]]), data]
+	CallNode[ToNode[Part], {head} ~Join~ (part[[2]]), data]
 ]
 
 
@@ -1652,6 +1714,30 @@ Module[{head, part, data},
 
 	CallNode[head, { part }, data]
 ]
+
+
+
+
+
+
+
+(*
+FIXME: keep boxes for now
+
+Abstract any child boxes
+
+Do not touch CodeNodes
+
+*)
+abstract[BoxNode[SqrtBox, children_, data_]] := BoxNode[SqrtBox, abstract /@ children, KeyTake[data, keysToTake]]
+
+abstract[BoxNode[FractionBox, children_, data_]] := BoxNode[FractionBox, abstract /@ children, KeyTake[data, keysToTake]]
+
+
+abstract[BoxNode[RasterBox, children_, data_]] := BoxNode[RasterBox, children, KeyTake[data, keysToTake]]
+
+
+
 
 End[]
 

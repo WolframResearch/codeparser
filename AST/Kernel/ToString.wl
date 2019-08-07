@@ -1,19 +1,20 @@
-BeginPackage["AST`ToInputFormString`"]
+BeginPackage["AST`ToString`"]
 
 Begin["`Private`"]
 
 Needs["AST`"]
+Needs["AST`Utils`"]
 
 
 (*
 ToInputFormString is intended for aggregate syntax trees
 *)
 
+ToInputFormString::usage = "ToInputFormString[concrete] returns a string representation of concrete."
 
-
-ToInputFormString[cst_] :=
+ToInputFormString[agg_] :=
 Block[{$RecursionLimit = Infinity},
-	StringJoin[toInputFormString[cst]]
+	StringJoin[toInputFormString[agg]]
 ]
 
 
@@ -97,19 +98,29 @@ toInputFormString[LeafNode[_, str_, _]] :=
 (*
 special case for a; ;, which is   a Semi InternalNullNode Semi
 *)
-toInputFormString[LeafNode[Token`Fake`Null, str_, _]] :=
+toInputFormString[LeafNode[Token`Fake`ImplicitNull, _, _]] :=
 	" "
 
-toInputFormString[LeafNode[Token`Fake`All, str_, _]] :=
-	str
+toInputFormString[LeafNode[Token`Fake`ImplicitAll, _, _]] :=
+	""
 
-toInputFormString[LeafNode[Token`Fake`One, str_, _]] :=
-	str
-
-
+toInputFormString[LeafNode[Token`Fake`ImplicitOne, _, _]] :=
+	""
 
 
 
+
+
+toInputFormString[BoxNode[box_, children_, _]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ children;
+	nodeStrs = ToString[#, InputForm]& /@ nodeStrs;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin["\\!\\(\\*" <> ToString[box] <> "[", Riffle[nodeStrs, ", "], "]\\)"]
+]]
 
 
 
@@ -181,7 +192,7 @@ that is abstract syntax
 *)
 toInputFormString[CallNode[op_, nodes_, data_]] :=
 Catch[
-Module[{opStr},
+Module[{opStr, nodeStrs},
 	opStr = toInputFormString[op];
 	If[FailureQ[opStr],
 		Throw[opStr]
@@ -376,6 +387,298 @@ toInputFormString[Null] := ""
 toInputFormString[f_Failure] := f
 
 toInputFormString[args___] := Failure["InternalUnhandled", <|"Function"->ToInputFormString, "Arguments"->HoldForm[{args}]|>]
+
+
+
+
+
+
+
+(*
+ToFullFormString is intended for abstract syntax trees
+*)
+
+ToFullFormString::usage = "ToFullFormString[abstract] returns a string representation of abstract."
+
+ToFullFormString[ast_] :=
+Catch[
+Module[{str},
+Block[{$RecursionLimit = Infinity},
+	str = toFullFormString[ast];
+	If[FailureQ[str],
+		Throw[str]
+	];
+	StringJoin[str]
+]]]
+
+
+toFullFormString[LeafNode[Symbol, str_, _]] :=
+	str
+
+(*
+strings may not originally be quoted, a::b
+
+But they become quoted when they are abstracted
+*)
+toFullFormString[node:LeafNode[String, str_, _]] :=
+Catch[
+	If[!StringStartsQ[str, "\""],
+		Throw[Failure["InternalUnhandled", <|"Function"->ToFullFormString, "Arguments"->HoldForm[{node}]|>]]
+	];
+	str
+]
+
+toFullFormString[LeafNode[Integer, str_, _]] :=
+	str
+
+toFullFormString[LeafNode[Real, str_, _]] :=
+	str
+
+toFullFormString[CallNode[head_, nodes_, _]] :=
+Catch[
+Module[{headStr, nodeStrs},
+	headStr = toFullFormString[head];
+	If[FailureQ[headStr],
+		Throw[headStr]
+	];
+	nodeStrs = toFullFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[{headStr, "[", Riffle[nodeStrs, ", "], "]"}]
+]]
+
+
+
+(*
+FIXME: linear syntax is skipped right now
+*)
+toFullFormString[p:PrefixNode[PrefixLinearSyntaxBang, _, _]] :=
+	ToInputFormString[p]
+
+toFullFormString[g:GroupNode[GroupLinearSyntaxParen, _, _]] :=
+	ToInputFormString[g]
+
+
+
+
+
+toFullFormString[FileNode[File, nodes_, opts_]] :=
+Catch[
+Module[{nodeStrs},
+	If[empty[nodes],
+		nodeStrs = {"Null"}
+		,
+		nodeStrs = toFullFormString /@ nodes;
+		nodeStrs = Flatten[nodeStrs];
+	];
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[Riffle[nodeStrs, "\n"]]
+]]
+
+toFullFormString[HoldNode[Hold, nodes_, opts_]] :=
+Catch[
+Module[{nodeStrs},
+	If[empty[nodes],
+		nodeStrs = {"Null"}
+		,
+		nodeStrs = toFullFormString /@ nodes;
+		nodeStrs = Flatten[nodeStrs];
+	];
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[{"Hold", "[", Riffle[nodeStrs, ", "], "]"}]
+]]
+
+
+
+
+(*
+returns a list
+*)
+toFullFormString[PackageNode[args_, nodes_, opts_]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toFullFormString /@ ({CallNode[ToNode[BeginPackage], args, <||>]} ~Join~ nodes ~Join~ {CallNode[ToNode[EndPackage], {}, <||>]});
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	nodeStrs
+]]
+
+(*
+returns a list
+*)
+toFullFormString[ContextNode[args_, nodes_, opts_]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toFullFormString /@ ({CallNode[ToNode[Begin], args, <||>]} ~Join~ nodes ~Join~ {CallNode[ToNode[End], {}, <||>]});
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	nodeStrs
+]]
+
+(*
+returns a list
+*)
+toFullFormString[StaticAnalysisIgnoreNode[args_, nodes_, opts_]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toFullFormString /@ ({CallNode[ToNode[BeginStaticAnalysisIgnore], args, <||>]} ~Join~ nodes ~Join~ {CallNode[ToNode[EndStaticAnalysisIgnore], {}, <||>]});
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	nodeStrs
+]]
+
+
+
+(*
+ParseString[""] returns Null, so handle that
+*)
+toFullFormString[Null] := "Null"
+
+
+
+
+
+toFullFormString[n_SyntaxErrorNode] := Failure["SyntaxError", <|"Error"->n|>]
+
+toFullFormString[f_?FailureQ] := f
+
+toFullFormString[args___] := Failure["InternalUnhandled", <|"Function"->ToFullFormString, "Arguments"->HoldForm[{args}]|>]
+
+
+
+
+
+
+
+(*
+ToSourceCharacterString is intended for concrete syntax trees
+*)
+
+ToSourceCharacterString[cst_] :=
+Catch[
+Module[{str},
+Block[{$RecursionLimit = Infinity},
+	str = toSourceCharacterString[cst, False];
+	If[FailureQ[str],
+		Throw[str]
+	];
+	StringJoin[str]
+]]]
+
+
+toSourceCharacterString[LeafNode[_, str_, _], insideBoxes_] :=
+	str
+
+
+(*
+toSourceCharacterString is intended for concrete syntax, and concrete syntax
+has a List for the head of a Call: i.e. CallNode[{head}, {GroupNode[GroupSquare, {args}]}]
+*)
+toSourceCharacterString[CallNode[op_, nodes_, data_], insideBoxes_] :=
+Catch[
+Module[{opStrs, nodeStrs},
+	opStrs = toSourceCharacterString[#, insideBoxes]& /@ op;
+	If[AnyTrue[opStrs, FailureQ],
+		Throw[SelectFirst[opStrs, FailureQ]]
+	];
+	nodeStrs = toSourceCharacterString[#, insideBoxes]& /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[opStrs, nodeStrs]
+]]
+
+toSourceCharacterString[FileNode[File, nodes_, opts_], insideBoxes_] :=
+Catch[
+Module[{nodeStrs},
+	If[empty[nodes],
+		nodeStrs = {"Null"}
+		,
+		nodeStrs = toSourceCharacterString[#, insideBoxes]& /@ nodes;
+		nodeStrs = Flatten[nodeStrs];
+	];
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[Riffle[nodeStrs, "\n"]]
+]]
+
+toSourceCharacterString[HoldNode[Hold, nodesIn_, opts_], insideBoxes_] :=
+Catch[
+Module[{nodes, nodeStrs},
+	nodes = nodesIn;
+	If[empty[nodes],
+		nodeStrs = {"Null"}
+		,
+		(*
+		remove top-level trivia
+		*)
+		nodes = DeleteCases[nodes, LeafNode[Token`WhiteSpace | Token`Newline | Token`Comment | Token`LineContinuation, _, _]];
+		nodeStrs = toSourceCharacterString[#, insideBoxes]& /@ nodes;
+		nodeStrs = Flatten[nodeStrs];
+	];
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[{"Hold", "[", Riffle[nodeStrs, ", "], "]"}]
+]]
+
+
+
+
+
+toSourceCharacterString[BoxNode[DiskBox, {rest___}, _], insideBoxes_] :=
+Catch[
+Module[{heldRest, heldChildren, args},
+  heldRest = Extract[#, {2}, HoldForm]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  nodeStrs = ToString /@ heldChildren;
+
+  args = StringJoin[Riffle[nodeStrs, ", "]];
+
+  If[insideBoxes, "\\*\\(", "\\!\\(\\*"] <> ToString[DiskBox] <> "[" <> args <> "]\\)"
+]]
+
+(*
+For BoxNodes that do not contain CodeNodes ( SqrtBox, FractionBox, etc )
+*)
+toSourceCharacterString[BoxNode[box_, children_, _], insideBoxes_] :=
+Catch[
+Module[{nodeStrs, args},
+  nodeStrs = toSourceCharacterString[#, True]& /@ children;
+  If[AnyTrue[nodeStrs, FailureQ],
+    Throw[SelectFirst[nodeStrs, FailureQ]]
+  ];
+  args = StringJoin[Riffle[nodeStrs, ", "]];
+
+  If[insideBoxes, "\\*\\(", "\\!\\(\\*"] <> ToString[box] <> "[" <> args <> "]\\)"
+]]
+
+toSourceCharacterString[CodeNode[Null, children_, data_], insideBoxes_] :=
+	Failure["CannotConvertToSourceCharacterString", <|"Node"->CodeNode[Null, children, data]|>]
+
+
+toSourceCharacterString[_[op_, nodes_, data_], insideBoxes_] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toSourceCharacterString[#, insideBoxes]& /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[nodeStrs]
+]]
+
+toSourceCharacterString[args___] := Failure["InternalUnhandled", <|"Function"->toSourceCharacterString, "Arguments"->HoldForm[{args}]|>]
 
 
 End[]

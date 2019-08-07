@@ -306,7 +306,7 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-0001.txt"}], 1]
 	,
-	Null
+	ok
 	,
 	TestID->"File-20190606-P8X5C7"
 ]
@@ -314,7 +314,7 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-0002.txt"}], 1]
 	,
-	Null
+	ok
 	,
 	TestID->"File-20190606-T7B2I1"
 ]
@@ -322,7 +322,7 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-0003.txt"}], 1]
 	,
-	Null
+	ok
 	,
 	TestID->"File-20190606-G9V4A7"
 ]
@@ -330,7 +330,7 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-characternameoperations.txt"}], 1]
 	,
-	Null
+	ok
 	,
 	TestID->"File-20190606-K6L3G0"
 ]
@@ -346,7 +346,7 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-characternames.txt"}], 1]
 	,
-	Null
+	ok
 	,
 	TestID->"File-20190606-E9U5Q2"
 ]
@@ -354,7 +354,7 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-comments.txt"}], 1]
 	,
-	Null
+	ok
 	,
 	TestID->"File-20190606-L5D5P4"
 ]
@@ -362,7 +362,7 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-contexts.txt"}], 1]
 	,
-	Null
+	ok
 	,
 	TestID->"File-20190606-B4F3R6"
 ]
@@ -386,7 +386,7 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-random.txt"}], 1]
 	,
-	Null
+	ok
 	,
 	TestID->"File-20190606-K8J6I8"
 ]
@@ -402,7 +402,7 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-specialchararacters.txt"}], 1]
 	,
-	Null
+	ok
 	,
 	TestID->"File-20190606-K8S9K0"
 ]
@@ -504,7 +504,13 @@ Test[
 	TestID->"File-20190804-T9F2J6"
 ]
 
-
+Test[
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "comment.wl"}], 1]
+	,
+	Null
+	,
+	TestID->"File-20190904-Q7T9Y5"
+]
 
 
 

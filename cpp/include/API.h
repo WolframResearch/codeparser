@@ -5,7 +5,7 @@
 // Despite being mentioned here:
 // language/LibraryLink/tutorial/LibraryStructure.html
 //
-// It is not actually possible to include "wstp.h" for use with 
+// It is not actually possible to include "wstp.h" for use with
 // WolframLibrary.h
 //
 // Using wstp.h results in errors like:
@@ -59,4 +59,6 @@ EXTERN_C DLLEXPORT int ConcreteParseString(WolframLibraryData libData, MLINK mlp
 EXTERN_C DLLEXPORT int TokenizeString(WolframLibraryData libData, MLINK mlp);
 
 EXTERN_C DLLEXPORT int TokenizeFile(WolframLibraryData libData, MLINK mlp);
+
+EXTERN_C DLLEXPORT int ParseLeaf(WolframLibraryData libData, MLINK mlp);
 

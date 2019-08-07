@@ -1,6 +1,7 @@
 
 #include "Parselet.h"
 
+#include "Symbol.h"
 #include "Utils.h"
 
 //
@@ -35,8 +36,9 @@ NodePtr SymbolParselet::parse(ParserContext CtxtIn) const {
     auto Sym = std::make_shared<LeafNode>(TokIn);
     
     NodeSeq Args;
+    Args.reserve(1 + 1);
     
-    Args.push_back(Sym);
+    Args.append(Sym);
     
     auto Ctxt = CtxtIn;
     
@@ -53,26 +55,26 @@ NodePtr SymbolParselet::parse(ParserContext CtxtIn) const {
         Ctxt.UnderCount = UNDER_1;
         
         return underParselet->parseContextSensitive(Args, Ctxt);
-    }
-    if (Tok.Tok == TOKEN_UNDERUNDER) {
+        
+    } else if (Tok.Tok == TOKEN_UNDERUNDER) {
         
         auto& underParselet = TheParser->findContextSensitiveInfixParselet(Tok.Tok);
         
         Ctxt.UnderCount = UNDER_2;
         
         return underParselet->parseContextSensitive(Args, Ctxt);
-    }
-    if (Tok.Tok == TOKEN_UNDERUNDERUNDER) {
+        
+    } else if (Tok.Tok == TOKEN_UNDERUNDERUNDER) {
         
         auto& underParselet = TheParser->findContextSensitiveInfixParselet(Tok.Tok);
         
         Ctxt.UnderCount = UNDER_3;
         
         return underParselet->parseContextSensitive(Args, Ctxt);
-    }
-    if (Tok.Tok == TOKEN_UNDERDOT) {
         
-        Args.push_back(std::make_shared<LeafNode>(Tok));
+    } else if (Tok.Tok == TOKEN_UNDERDOT) {
+        
+        Args.append(std::make_shared<LeafNode>(Tok));
         
         TheParser->nextToken(Ctxt);
         
@@ -81,7 +83,7 @@ NodePtr SymbolParselet::parse(ParserContext CtxtIn) const {
     
     NodeSeq ArgsTest;
     
-    Tok = Utils::eatAll(Tok, Ctxt, ArgsTest);
+    Tok = Parser::eatAll(Tok, Ctxt, ArgsTest);
     
     //
     // when parsing a in a:b  then ColonFlag is false
@@ -95,7 +97,7 @@ NodePtr SymbolParselet::parse(ParserContext CtxtIn) const {
         
         if (Tok.Tok == TOKEN_COLON) {
             
-            Args.push_back(ArgsTest);
+            Args.append(ArgsTest);
             
             auto& colonParselet = TheParser->findInfixParselet(Tok.Tok);
             
@@ -103,14 +105,14 @@ NodePtr SymbolParselet::parse(ParserContext CtxtIn) const {
         }
     }
     
+    //
+    // Put back unused Nodes
+    //
     assert(TheParser->getTokenQueue().empty());
     for (auto A : ArgsTest.getVector()) {
-        if (auto ALeaf = std::dynamic_pointer_cast<const LeafNode>(A)) {
-            TheParser->append(ALeaf->getToken());
-            continue;
-        }
-        
-        assert(false);
+        auto ALeaf = std::dynamic_pointer_cast<const LeafNode>(A);
+        assert(ALeaf);
+        TheParser->append(ALeaf->getToken());
     }
     
     return Sym;
@@ -124,10 +126,11 @@ NodePtr SymbolParselet::parse(ParserContext CtxtIn) const {
 NodePtr PrefixOperatorParselet::parse(ParserContext CtxtIn) const {
     
     NodeSeq Args;
+    Args.reserve(1 + 1);
     
     auto TokIn = TheParser->currentToken();
     
-    Args.push_back(std::make_shared<LeafNode>(TokIn));
+    Args.append(std::make_shared<LeafNode>(TokIn));
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
@@ -135,26 +138,27 @@ NodePtr PrefixOperatorParselet::parse(ParserContext CtxtIn) const {
     
     auto Tok = TheParser->nextToken(Ctxt);
     
-    Tok = Utils::eatAll(Tok, Ctxt, Args);
+    Tok = Parser::eatAll(Tok, Ctxt, Args);
     
     Utils::differentLineWarning(TokIn, Tok, SYNTAXISSUESEVERITY_FORMATTING);
     
     auto operand = TheParser->parse(Ctxt);
     
-    Args.push_back(operand);
+    Args.append(operand);
     
     return std::make_shared<PrefixNode>(PrefixOperatorToSymbol(TokIn.Tok), Args.getVector());
 }
 
-NodePtr BinaryOperatorParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
-
-    NodeSeq Args;
+NodePtr BinaryOperatorParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
     
-    Args.push_back(Left);
+    NodeSeq Args;
+    Args.reserve(1 + 1 + 1);
+    
+    Args.append(Left);
     
     auto TokIn = TheParser->currentToken();
     
-    Args.push_back(std::make_shared<LeafNode>(TokIn));
+    Args.append(std::make_shared<LeafNode>(TokIn));
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
@@ -162,11 +166,11 @@ NodePtr BinaryOperatorParselet::parse(NodeSeq Left, ParserContext CtxtIn) const 
     
     auto Tok = TheParser->nextToken(Ctxt);
     
-    Tok = Utils::eatAll(Tok, Ctxt, Args);
+    Tok = Parser::eatAll(Tok, Ctxt, Args);
     
     auto Right = TheParser->parse(Ctxt);
     
-    Args.push_back(Right);
+    Args.append(Right);
     
     if (getAssociativity() == ASSOCIATIVITY_NONASSOCIATIVE) {
         
@@ -182,15 +186,14 @@ NodePtr BinaryOperatorParselet::parse(NodeSeq Left, ParserContext CtxtIn) const 
     return std::make_shared<BinaryNode>(BinaryOperatorToSymbol(TokIn.Tok), Args.getVector());
 }
 
-NodePtr InfixOperatorParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
-
-    NodeSeq Args;
+NodePtr InfixOperatorParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
     
-    Args.push_back(Left);
+    NodeSeq Args;
+    Args.reserve(1 + 1 + 1);
+    
+    Args.append(Left);
     
     auto TokIn = TheParser->currentToken();
-
-    auto lastOperatorToken = TokIn;
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
@@ -202,16 +205,18 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
         // Check isAbort() inside loops
         //
         if (TheParser->isAbort()) {
-
-            auto Aborted = std::make_shared<LeafNode>(Token(TOKEN_ERROR_ABORTED, "", Source()));
-
+            
+            auto A = Token(TOKEN_ERROR_ABORTED, "", Source());
+            
+            auto Aborted = std::make_shared<LeafNode>(A);
+            
             return Aborted;
         }
         
         
         auto Tok = TheParser->currentToken();
         
-        Tok = Utils::eatAndPreserveToplevelNewlines(Tok, CtxtIn, Args);
+        Tok = Parser::eatAndPreserveToplevelNewlines(Tok, CtxtIn, Args);
         
         //
         // Cannot just compare tokens
@@ -223,60 +228,15 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
         if (isInfixOperator(Tok.Tok) &&
             InfixOperatorToSymbol(Tok.Tok) == InfixOperatorToSymbol(TokIn.Tok)) {
             
-            Args.push_back(std::make_shared<LeafNode>(Tok));
+            Args.append(std::make_shared<LeafNode>(Tok));
             
-            lastOperatorToken = Tok;
+            Tok = TheParser->nextToken(Ctxt);
             
-            if (allowTrailing) {
-                
-                //
-                // Something like  a;b  or  a,b
-                //
-                
-                Tok = TheParser->nextToken(Ctxt);
-                
-                Tok = Utils::eatAndPreserveToplevelNewlines(Tok, CtxtIn, Args);
-                
-                if (isInfixOperator(Tok.Tok) &&
-                    InfixOperatorToSymbol(Tok.Tok) == InfixOperatorToSymbol(TokIn.Tok)) {
-                    
-                    //
-                    // Something like  a; ;
-                    //
-                    
-                    lastOperatorToken = Tok;
-                    
-                    Args.push_back(std::make_shared<LeafNode>(Token(TOKEN_FAKE_NULL, "", Source(lastOperatorToken.Span.lines.start))));
-                    
-                } else if (TheParser->isPossibleBeginningOfExpression(Tok, Ctxt)) {
-                    
-                    auto operand = TheParser->parse(Ctxt);
-                    
-                    Args.push_back(operand);
-                    
-                } else {
-                    
-                    //
-                    // Not beginning of an expression
-                    //
-                    // For example:  a;&
-                    //
-                    
-                    Args.push_back(std::make_shared<LeafNode>(Token(TOKEN_FAKE_NULL, "", Source(lastOperatorToken.Span.lines.end))));
-                    
-                    break;
-                }
-                
-            } else {
-                
-                Tok = TheParser->nextToken(Ctxt);
-                
-                Tok = Utils::eatAll(Tok, Ctxt, Args);
-                
-                auto operand = TheParser->parse(Ctxt);
-                
-                Args.push_back(operand);
-            }
+            Tok = Parser::eatAll(Tok, Ctxt, Args);
+            
+            auto operand = TheParser->parse(Ctxt);
+            
+            Args.append(operand);
             
         } else {
             
@@ -292,15 +252,16 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
     return std::make_shared<InfixNode>(InfixOperatorToSymbol(TokIn.Tok), Args.getVector());
 }
 
-NodePtr PostfixOperatorParselet::parse(NodeSeq Operand, ParserContext CtxtIn) const {
+NodePtr PostfixOperatorParselet::parse(NodeSeq& Operand, ParserContext CtxtIn) const {
     
     NodeSeq Args;
+    Args.reserve(1 + 1);
     
-    Args.push_back(Operand);
+    Args.append(Operand);
     
     auto TokIn = TheParser->currentToken();
     
-    Args.push_back(std::make_shared<LeafNode>(TokIn));
+    Args.append(std::make_shared<LeafNode>(TokIn));
     
     Utils::differentLineWarning(Operand, TokIn, SYNTAXISSUESEVERITY_FORMATTING);
     
@@ -321,10 +282,11 @@ NodePtr PostfixOperatorParselet::parse(NodeSeq Operand, ParserContext CtxtIn) co
 NodePtr GroupParselet::parse(ParserContext CtxtIn) const {
     
     NodeSeq Args;
+    Args.reserve(1 + 1 + 1);
     
     auto Opener = TheParser->currentToken();
     
-    Args.push_back(std::make_shared<LeafNode>(Opener));
+    Args.append(std::make_shared<LeafNode>(Opener));
     
     auto Ctxt = CtxtIn;
     Ctxt.GroupDepth++;
@@ -346,16 +308,18 @@ NodePtr GroupParselet::parse(ParserContext CtxtIn) const {
         // Check isAbort() inside loops
         //
         if (TheParser->isAbort()) {
-
-            auto Aborted = std::make_shared<LeafNode>(Token(TOKEN_ERROR_ABORTED, "", Source()));
-
+            
+            auto A = Token(TOKEN_ERROR_ABORTED, "", Source());
+            
+            auto Aborted = std::make_shared<LeafNode>(A);
+            
             return Aborted;
         }
         
         
         auto Tok = TheParser->currentToken();
         
-        Tok = Utils::eatAll(Tok, Ctxt, Args);
+        Tok = Parser::eatAll(Tok, Ctxt, Args);
         
         if (Tok.Tok == CloserTok) {
             
@@ -363,7 +327,7 @@ NodePtr GroupParselet::parse(ParserContext CtxtIn) const {
             // Everything is good
             //
             
-            Args.push_back(std::make_shared<LeafNode>(Tok));
+            Args.append(std::make_shared<LeafNode>(Tok));
             
             auto Ctxt2 = Ctxt;
             Ctxt2.GroupDepth--;
@@ -384,7 +348,7 @@ NodePtr GroupParselet::parse(ParserContext CtxtIn) const {
             
             auto MissingOpener = GroupCloserToOpener(Tok.Tok);
             
-            Args.push_back(std::make_shared<LeafNode>(Tok));
+            Args.append(std::make_shared<LeafNode>(Tok));
             
             auto& MissingOpenerSymbol = GroupOpenerToSymbol(MissingOpener);
             
@@ -398,7 +362,7 @@ NodePtr GroupParselet::parse(ParserContext CtxtIn) const {
             // Handle something like   { a EOF
             //
             
-            Args.push_back(std::make_shared<LeafNode>(Tok));
+            Args.append(std::make_shared<LeafNode>(Tok));
             
             auto& Op = GroupOpenerToSymbol(Opener.Tok);
             
@@ -411,7 +375,7 @@ NodePtr GroupParselet::parse(ParserContext CtxtIn) const {
         // Handle the expression
         //
         
-        Tok = Utils::eatAll(Tok, Ctxt, Args);
+        Tok = Parser::eatAll(Tok, Ctxt, Args);
         
         auto Ctxt2 = Ctxt;
         Ctxt2.ColonFlag = false;
@@ -421,7 +385,7 @@ NodePtr GroupParselet::parse(ParserContext CtxtIn) const {
         
         auto operand = TheParser->parse(Ctxt2);
         
-        Args.push_back(operand);
+        Args.append(operand);
     }
 }
 
@@ -430,12 +394,13 @@ NodePtr GroupParselet::parse(ParserContext CtxtIn) const {
 // Call parselets
 //
 
-NodePtr CallParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
+NodePtr CallParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
     
     NodeSeq Args;
+    Args.reserve(1 + 1);
     
     auto TokIn = TheParser->currentToken();
-
+    
     //
     // if we used PRECEDENCE_CALL here, then e.g., a[]?b should technically parse as   a <call> []?b
     //
@@ -446,7 +411,7 @@ NodePtr CallParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
     
     auto Right = TheParser->parse(Ctxt);
     
-    Args.push_back(Right);
+    Args.append(Right);
     
     //
     // Only warn if  Symbol [1]
@@ -481,14 +446,15 @@ NodePtr CallParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
 NodePtr StartOfLineParselet::parse(ParserContext CtxtIn) const {
     
     NodeSeq Args;
+    Args.reserve(1 + 1);
     
     auto TokIn = TheParser->currentToken();
     
-    Args.push_back(std::make_shared<LeafNode>(TokIn));
+    Args.append(std::make_shared<LeafNode>(TokIn));
     
     auto Ctxt = CtxtIn;
     Ctxt.StringifyCurrentLine = true;
-        
+    
     TheParser->nextToken(Ctxt);
     
     Ctxt.StringifyCurrentLine = false;
@@ -502,7 +468,7 @@ NodePtr StartOfLineParselet::parse(ParserContext CtxtIn) const {
     
     auto Operand = TheParser->parse(Ctxt);
     
-    Args.push_back(Operand);
+    Args.append(Operand);
     
     return std::make_shared<StartOfLineNode>(StartOfLineOperatorToSymbol(TokIn.Tok), Args.getVector());
 }
@@ -523,46 +489,52 @@ NodePtr StartOfLineParselet::parse(ParserContext CtxtIn) const {
 //
 NodePtr UnderParselet::parse(ParserContext CtxtIn) const {
     
-    NodeSeq Args;
-    
     auto TokIn = TheParser->currentToken();
     
-    Args.push_back(std::make_shared<LeafNode>(TokIn));
+    auto Under = std::make_shared<LeafNode>(TokIn);
     
     auto Ctxt = CtxtIn;
     
     auto Tok = TheParser->nextToken(Ctxt);
     
+    std::shared_ptr<const Node> BlankTmp = nullptr;
     if (Tok.Tok == TOKEN_SYMBOL) {
         
         auto& symbolParselet = TheParser->findContextSensitivePrefixParselet(Tok.Tok);
         
         auto Sym2 = symbolParselet->parseContextSensitive(Ctxt);
         
-        Args.push_back(Sym2);
-    }
-    
-    std::shared_ptr<const Node> BlankTmp = nullptr;
-    switch (TokIn.Tok) {
-        case TOKEN_UNDER:
-            BlankTmp = std::make_shared<BlankNode>(Args.getVector());
-            break;
-        case TOKEN_UNDERUNDER:
-            BlankTmp = std::make_shared<BlankSequenceNode>(Args.getVector());
-            break;
-        case TOKEN_UNDERUNDERUNDER:
-            BlankTmp = std::make_shared<BlankNullSequenceNode>(Args.getVector());
-            break;
-        default:
-            assert(false);
-            break;
+        NodeSeq Args;
+        Args.reserve(1 + 1);
+        Args.append(Under);
+        Args.append(Sym2);
+        
+        switch (TokIn.Tok) {
+            case TOKEN_UNDER:
+                BlankTmp = std::make_shared<BlankNode>(Args.getVector());
+                break;
+            case TOKEN_UNDERUNDER:
+                BlankTmp = std::make_shared<BlankSequenceNode>(Args.getVector());
+                break;
+            case TOKEN_UNDERUNDERUNDER:
+                BlankTmp = std::make_shared<BlankNullSequenceNode>(Args.getVector());
+                break;
+            default:
+                assert(false);
+                break;
+        }
+        
+    } else {
+        BlankTmp = Under;
     }
     NodePtr Blank = BlankTmp;
     
     
+    NodeSeq ArgsTest;
+    
     Tok = TheParser->currentToken();
     
-    Tok = Utils::eatAndPreserveToplevelNewlines(Tok, CtxtIn, Args);
+    Tok = Parser::eatAndPreserveToplevelNewlines(Tok, CtxtIn, ArgsTest);
     
     //
     // For something like _:""  when parsing _
@@ -581,9 +553,21 @@ NodePtr UnderParselet::parse(ParserContext CtxtIn) const {
             auto& colonParselet = TheParser->findContextSensitiveInfixParselet(Tok.Tok);
             
             NodeSeq BlankSeq;
-            BlankSeq.push_back(Blank);
+            BlankSeq.reserve(1 + 1);
+            BlankSeq.append(Blank);
+            BlankSeq.append(ArgsTest);
             return colonParselet->parseContextSensitive(BlankSeq, Ctxt);
         }
+    }
+    
+    //
+    // Put back unused Nodes
+    //
+    assert(TheParser->getTokenQueue().empty());
+    for (auto A : ArgsTest.getVector()) {
+        auto ALeaf = std::dynamic_pointer_cast<const LeafNode>(A);
+        assert(ALeaf);
+        TheParser->append(ALeaf->getToken());
     }
     
     return Blank;
@@ -596,15 +580,16 @@ NodePtr UnderParselet::parse(ParserContext CtxtIn) const {
 //
 // Called from other parselets
 //
-NodePtr UnderParselet::parseContextSensitive(NodeSeq Left, ParserContext CtxtIn) const {
+NodePtr UnderParselet::parseContextSensitive(NodeSeq& Left, ParserContext CtxtIn) const {
     
     NodeSeq Args;
+    Args.reserve(1 + 1);
     
-    Args.push_back(Left);
+    Args.append(Left);
     
     auto TokIn = TheParser->currentToken();
     
-    Args.push_back(std::make_shared<LeafNode>(TokIn));
+    Args.append(std::make_shared<LeafNode>(TokIn));
     
     auto UnderCount = CtxtIn.UnderCount;
     
@@ -619,7 +604,7 @@ NodePtr UnderParselet::parseContextSensitive(NodeSeq Left, ParserContext CtxtIn)
         
         auto Right = symbolParselet->parseContextSensitive(Ctxt);
         
-        Args.push_back(Right);
+        Args.append(Right);
     }
     
     std::shared_ptr<const Node> PatTmp = nullptr;
@@ -639,9 +624,12 @@ NodePtr UnderParselet::parseContextSensitive(NodeSeq Left, ParserContext CtxtIn)
     }
     NodePtr Pat = PatTmp;
     
+    
+    NodeSeq ArgsTest;
+    
     Tok = TheParser->currentToken();
     
-    Tok = Utils::eatAll(Tok, Ctxt, Args);
+    Tok = Parser::eatAll(Tok, Ctxt, ArgsTest);
     
     //
     // For something like a:b_c:d when parsing _
@@ -650,13 +638,25 @@ NodePtr UnderParselet::parseContextSensitive(NodeSeq Left, ParserContext CtxtIn)
     if (!Ctxt.ColonFlag) {
         
         if (Tok.Tok == TOKEN_COLON) {
-
+            
             auto& colonParselet = TheParser->findContextSensitiveInfixParselet(Tok.Tok);
-
+            
             NodeSeq PatSeq;
-            PatSeq.push_back(Pat);
+            PatSeq.reserve(1 + 1);
+            PatSeq.append(Pat);
+            PatSeq.append(ArgsTest);
             return colonParselet->parseContextSensitive(PatSeq, Ctxt);
         }
+    }
+    
+    //
+    // Put back unused Nodes
+    //
+    assert(TheParser->getTokenQueue().empty());
+    for (auto A : ArgsTest.getVector()) {
+        auto ALeaf = std::dynamic_pointer_cast<const LeafNode>(A);
+        assert(ALeaf);
+        TheParser->append(ALeaf->getToken());
     }
     
     return Pat;
@@ -665,15 +665,16 @@ NodePtr UnderParselet::parseContextSensitive(NodeSeq Left, ParserContext CtxtIn)
 //
 // Something like  a ~f~ b
 //
-NodePtr TildeParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
-
-    NodeSeq Args;
+NodePtr TildeParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
     
-    Args.push_back(Left);
+    NodeSeq Args;
+    Args.reserve(1 + 1 + 1 + 1 + 1);
+    
+    Args.append(Left);
     
     auto FirstTilde = TheParser->currentToken();
-
-    Args.push_back(std::make_shared<LeafNode>(FirstTilde));
+    
+    Args.append(std::make_shared<LeafNode>(FirstTilde));
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
@@ -681,37 +682,51 @@ NodePtr TildeParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
     
     auto Tok = TheParser->nextToken(Ctxt);
     
-    Tok = Utils::eatAll(Tok, Ctxt, Args);
+    Tok = Parser::eatAll(Tok, Ctxt, Args);
     
     Utils::differentLineWarning(FirstTilde, Tok, SYNTAXISSUESEVERITY_FORMATTING);
     
     auto FirstTok = Tok;
     
     auto Middle = TheParser->parse(Ctxt);
-
-    Args.push_back(Middle);
+    
+    Args.append(Middle);
     
     Tok = TheParser->currentToken();
     
-    Tok = Utils::eatAll(Tok, Ctxt, Args);
+    Tok = Parser::eatAll(Tok, Ctxt, Args);
     
     Utils::differentLineWarning(FirstTok, Tok, SYNTAXISSUESEVERITY_FORMATTING);
     
     if (Tok.Tok == TOKEN_TILDE) {
         
-        Args.push_back(std::make_shared<LeafNode>(Tok));
+        auto isMiddleSymbol = false;
+        if (auto MiddleLeaf = std::dynamic_pointer_cast<const LeafNode>(Middle)) {
+            if (MiddleLeaf->getToken().Tok == TOKEN_SYMBOL) {
+                isMiddleSymbol = true;
+            }
+        }
+        
+        if (!isMiddleSymbol) {
+            
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDEXPRESSION, "Expression in middle of ``~`` is usually a symbol.", SYNTAXISSUESEVERITY_WARNING, Middle->getSourceSpan());
+            
+            TheParser->addIssue(Issue);
+        }
+        
+        Args.append(std::make_shared<LeafNode>(Tok));
         
         Tok = TheParser->nextToken(Ctxt);
         
-        Tok = Utils::eatAll(Tok, Ctxt, Args);
+        Tok = Parser::eatAll(Tok, Ctxt, Args);
         
         auto Right = TheParser->parse(Ctxt);
         
-        Args.push_back(Right);
+        Args.append(Right);
         
-        return std::make_shared<TernaryNode>(SYMBOL_TERNARYTILDE, Args.getVector());
+        return std::make_shared<TernaryNode>(SYMBOL_AST_TERNARYTILDE, Args.getVector());
     }
-        
+    
     //
     // Something like   a ~f b
     //
@@ -724,7 +739,7 @@ NodePtr TildeParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
         // If EndOfFile, don't bother trying to parse
         //
         
-        Args.push_back(std::make_shared<LeafNode>(Tok));
+        Args.append(std::make_shared<LeafNode>(Tok));
         
         auto Error = std::make_shared<SyntaxErrorNode>(SYNTAXERROR_EXPECTEDTILDE, Args.getVector());
         
@@ -733,7 +748,7 @@ NodePtr TildeParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
     
     auto Right = TheParser->parse(Ctxt);
     
-    Args.push_back(Right);
+    Args.append(Right);
     
     auto Error = std::make_shared<SyntaxErrorNode>(SYNTAXERROR_EXPECTEDTILDE, Args.getVector());
     
@@ -748,17 +763,18 @@ NodePtr TildeParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
 // when parsing a in a:b  then ColonFlag is false
 // when parsing b in a:b  then ColonFlag is true
 //
-NodePtr ColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
+NodePtr ColonParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
     
     assert(!CtxtIn.ColonFlag);
     
     NodeSeq Args;
+    Args.reserve(1 + 1 + 1);
     
-    Args.push_back(Left);
+    Args.append(Left);
     
     auto TokIn = TheParser->currentToken();
     
-    Args.push_back(std::make_shared<LeafNode>(TokIn));
+    Args.append(std::make_shared<LeafNode>(TokIn));
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = PRECEDENCE_FAKE_PATTERNCOLON;
@@ -767,11 +783,11 @@ NodePtr ColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
     
     auto Tok = TheParser->nextToken(Ctxt);
     
-    Tok = Utils::eatAll(Tok, Ctxt, Args);
+    Tok = Parser::eatAll(Tok, Ctxt, Args);
     
     auto Right = TheParser->parse(Ctxt);
     
-    Args.push_back(Right);
+    Args.append(Right);
     
     if (auto LeftLeaf = std::dynamic_pointer_cast<const LeafNode>(Left.main())) {
         
@@ -780,11 +796,11 @@ NodePtr ColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
             auto Pat = std::make_shared<BinaryNode>(SYMBOL_PATTERN, Args.getVector());
             
             NodeSeq PatSeq;
-            PatSeq.push_back(Pat);
+            PatSeq.append(Pat);
             
             auto Tok = TheParser->currentToken();
             
-            Tok = Utils::eatAndPreserveToplevelNewlines(Tok, CtxtIn, PatSeq);
+            Tok = Parser::eatAndPreserveToplevelNewlines(Tok, CtxtIn, PatSeq);
             
             if (Tok.Tok == TOKEN_COLON) {
                 
@@ -797,7 +813,7 @@ NodePtr ColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
         }
     }
     
-    auto Error = std::make_shared<SyntaxErrorNode>(SYNTAXERROR_EXPECTEDSYMBOL, Args.getVector());
+    auto Error = std::make_shared<SyntaxErrorNode>(SYNTAXERROR_COLONERROR, Args.getVector());
     
     return Error;
 }
@@ -807,8 +823,8 @@ NodePtr ColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
 //
 // Called from other parselets
 //
-NodePtr ColonParselet::parseContextSensitive(NodeSeq Left, ParserContext CtxtIn) const {
-
+NodePtr ColonParselet::parseContextSensitive(NodeSeq& Left, ParserContext CtxtIn) const {
+    
     //
     // when parsing a in a:b  then ColonFlag is false
     // when parsing b in a:b  then ColonFlag is true
@@ -816,12 +832,13 @@ NodePtr ColonParselet::parseContextSensitive(NodeSeq Left, ParserContext CtxtIn)
     assert(!CtxtIn.ColonFlag);
     
     NodeSeq Args;
+    Args.reserve(1 + 1 + 1);
     
-    Args.push_back(Left);
+    Args.append(Left);
     
     auto TokIn = TheParser->currentToken();
     
-    Args.push_back(std::make_shared<LeafNode>(TokIn));
+    Args.append(std::make_shared<LeafNode>(TokIn));
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = PRECEDENCE_FAKE_OPTIONALCOLON;
@@ -829,11 +846,11 @@ NodePtr ColonParselet::parseContextSensitive(NodeSeq Left, ParserContext CtxtIn)
     
     auto Tok = TheParser->nextToken(Ctxt);
     
-    Tok = Utils::eatAll(Tok, Ctxt, Args);
+    Tok = Parser::eatAll(Tok, Ctxt, Args);
     
     auto Right = TheParser->parse(Ctxt);
     
-    Args.push_back(Right);
+    Args.append(Right);
     
     return std::make_shared<BinaryNode>(SYMBOL_OPTIONAL, Args.getVector());
 }
@@ -841,15 +858,16 @@ NodePtr ColonParselet::parseContextSensitive(NodeSeq Left, ParserContext CtxtIn)
 //
 // Something like  a /: b = c
 //
-NodePtr SlashColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
-
-    NodeSeq Args;
+NodePtr SlashColonParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
     
-    Args.push_back(Left);
+    NodeSeq Args;
+    Args.reserve(1 + 1 + 1);
+    
+    Args.append(Left);
     
     auto TokIn = TheParser->currentToken();
     
-    Args.push_back(std::make_shared<LeafNode>(TokIn));
+    Args.append(std::make_shared<LeafNode>(TokIn));
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
@@ -857,7 +875,7 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
     
     auto Tok = TheParser->nextToken(Ctxt);
     
-    Tok = Utils::eatAll(Tok, Ctxt, Args);
+    Tok = Parser::eatAll(Tok, Ctxt, Args);
     
     auto Middle = TheParser->parse(Ctxt);
     
@@ -867,7 +885,7 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
             
             auto MiddleChildren = Middle->getChildren();
             
-            Args.push_back(MiddleChildren);
+            Args.append(MiddleChildren);
             
             return std::make_shared<TernaryNode>(SYMBOL_TAGSET, Args.getVector());
         }
@@ -875,7 +893,7 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
             
             auto MiddleChildren = Middle->getChildren();
             
-            Args.push_back(MiddleChildren);
+            Args.append(MiddleChildren);
             
             return std::make_shared<TernaryNode>(SYMBOL_TAGSETDELAYED, Args.getVector());
         }
@@ -883,12 +901,12 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
             
             auto MiddleChildren = Middle->getChildren();
             
-            Args.push_back(MiddleChildren);
+            Args.append(MiddleChildren);
             
             return std::make_shared<TernaryNode>(SYMBOL_TAGUNSET, Args.getVector());
         }
     }
-
+    
     //
     // Anything other than:
     // a /: b = c
@@ -896,7 +914,7 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
     // a /: b =.
     //
     
-    Args.push_back(Middle);
+    Args.append(Middle);
     
     auto Error = std::make_shared<SyntaxErrorNode>(SYNTAXERROR_EXPECTEDSET, Args.getVector());
     
@@ -911,6 +929,7 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
 NodePtr LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn) const {
     
     NodeSeq Args;
+    Args.reserve(1 + 1 + 1);
     
     auto Opener = TheParser->currentToken();
     
@@ -923,7 +942,7 @@ NodePtr LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn) const {
     auto CloserTok = TOKEN_LINEARSYNTAX_CLOSEPAREN;
     Ctxt.Closer = CloserTok;
     
-    Args.push_back(std::make_shared<LeafNode>(Opener));
+    Args.append(std::make_shared<LeafNode>(Opener));
     
     while (true) {
         
@@ -932,7 +951,9 @@ NodePtr LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn) const {
         //
         if (TheParser->isAbort()) {
             
-            auto Aborted = std::make_shared<LeafNode>(Token(TOKEN_ERROR_ABORTED, "", Source()));
+            auto A = Token(TOKEN_ERROR_ABORTED, "", Source());
+            
+            auto Aborted = std::make_shared<LeafNode>(A);
             
             return Aborted;
         }
@@ -944,13 +965,13 @@ NodePtr LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn) const {
             // Handle something like   \( a EOF
             //
             
-            auto group = std::make_shared<GroupMissingCloserNode>(SYMBOL_GROUPLINEARSYNTAXPAREN, Args.getVector());
+            auto group = std::make_shared<GroupMissingCloserNode>(SYMBOL_AST_GROUPLINEARSYNTAXPAREN, Args.getVector());
             
             return group;
         }
         if (Tok.Tok == CloserTok) {
             
-            Args.push_back(std::make_shared<LeafNode>(Tok));
+            Args.append(std::make_shared<LeafNode>(Tok));
             
             auto Ctxt2 = Ctxt;
             Ctxt2.GroupDepth--;
@@ -974,17 +995,17 @@ NodePtr LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn) const {
             
             if (auto SubOpenParen = std::dynamic_pointer_cast<const GroupNode>(Sub)) {
                 
-                assert(SubOpenParen->getOperator() == SYMBOL_GROUPLINEARSYNTAXPAREN);
+                assert(SubOpenParen->getOperator() == SYMBOL_AST_GROUPLINEARSYNTAXPAREN);
                 
-                Args.push_back(SubOpenParen);
+                Args.append(SubOpenParen);
                 
                 Tok = TheParser->currentToken();
                 
             } else if (auto SubOpenParen = std::dynamic_pointer_cast<const GroupMissingCloserNode>(Sub)) {
                 
-                assert(SubOpenParen->getOperator() == SYMBOL_GROUPLINEARSYNTAXPAREN);
+                assert(SubOpenParen->getOperator() == SYMBOL_AST_GROUPLINEARSYNTAXPAREN);
                 
-                Args.push_back(SubOpenParen);
+                Args.append(SubOpenParen);
                 
                 Tok = TheParser->currentToken();
                 
@@ -998,41 +1019,49 @@ NodePtr LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn) const {
             // COMMENT, WHITESPACE, and NEWLINE are handled here
             //
             
-            Args.push_back(std::make_shared<LeafNode>(Tok));
+            Args.append(std::make_shared<LeafNode>(Tok));
             
             Tok = TheParser->nextToken(Ctxt);
         }
-
+        
     } // while
     
-    return std::make_shared<GroupNode>(SYMBOL_GROUPLINEARSYNTAXPAREN, Args.getVector());
+    return std::make_shared<GroupNode>(SYMBOL_AST_GROUPLINEARSYNTAXPAREN, Args.getVector());
 }
 
 //
 // Something like  a =.
 //
-NodePtr EqualParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
-
-    NodeSeq Args;
+NodePtr EqualParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
     
-    Args.push_back(Left);
+    NodeSeq Args;
+    Args.reserve(1 + 1 + 1);
+    
+    Args.append(Left);
     
     auto TokIn = TheParser->currentToken();
     
-    Args.push_back(std::make_shared<LeafNode>(TokIn));
+    Args.append(std::make_shared<LeafNode>(TokIn));
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
     Ctxt.Assoc = getAssociativity();
     
+    if (TokIn.Tok == TOKEN_EQUALDOT) {
+        
+        TheParser->nextToken(Ctxt);
+        
+        return std::make_shared<BinaryNode>(SYMBOL_UNSET, Args.getVector());
+    }
+    
     auto Tok = TheParser->nextToken(Ctxt);
     
-    Tok = Utils::eatAll(Tok, Ctxt, Args);
+    Tok = Parser::eatAll(Tok, Ctxt, Args);
     
     if (Tok.Tok == TOKEN_DOT) {
-
+        
         //
-        // Something like a =  .
+        // Something like a = .
         //
         // tutorial/OperatorInputForms
         // Spaces to Avoid
@@ -1042,16 +1071,14 @@ NodePtr EqualParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
         
         TheParser->nextToken(Ctxt);
         
-        auto Empty = std::make_shared<LeafNode>(Tok);
-        
-        Args.push_back(std::make_shared<LeafNode>(Tok));
+        Args.append(std::make_shared<LeafNode>(Tok));
         
         return std::make_shared<BinaryNode>(SYMBOL_UNSET, Args.getVector());
     }
     
     auto Right = TheParser->parse(Ctxt);
     
-    Args.push_back(Right);
+    Args.append(Right);
     
     return std::make_shared<BinaryNode>(SYMBOL_SET, Args.getVector());
 }
@@ -1063,10 +1090,11 @@ NodePtr EqualParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
 NodePtr IntegralParselet::parse(ParserContext CtxtIn) const {
     
     NodeSeq Args;
+    Args.reserve(1 + 1 + 1);
     
     auto TokIn = TheParser->currentToken();
     
-    Args.push_back(std::make_shared<LeafNode>(TokIn));
+    Args.append(std::make_shared<LeafNode>(TokIn));
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
@@ -1075,25 +1103,25 @@ NodePtr IntegralParselet::parse(ParserContext CtxtIn) const {
     
     auto Tok = TheParser->nextToken(Ctxt);
     
-    Tok = Utils::eatAll(Tok, Ctxt, Args);
+    Tok = Parser::eatAll(Tok, Ctxt, Args);
     
     Utils::differentLineWarning(TokIn, TokIn, SYNTAXISSUESEVERITY_FORMATTING);
     
     auto operand = TheParser->parse(Ctxt);
     
-    Args.push_back(operand);
+    Args.append(operand);
     
     Ctxt.IntegralFlag = false;
     
     Tok = TheParser->currentToken();
     
-    Tok = Utils::eatAll(Tok, Ctxt, Args);
+    Tok = Parser::eatAll(Tok, Ctxt, Args);
     
     if (Tok.Tok == TOKEN_LONGNAME_DIFFERENTIALD) {
         
         auto variable = TheParser->parse(Ctxt);
         
-        Args.push_back(variable);
+        Args.append(variable);
         
         return std::make_shared<PrefixBinaryNode>(PrefixBinaryOperatorToSymbol(TokIn.Tok), Args.getVector());
     }
@@ -1101,8 +1129,241 @@ NodePtr IntegralParselet::parse(ParserContext CtxtIn) const {
     return std::make_shared<PrefixNode>(PrefixOperatorToSymbol(TokIn.Tok), Args.getVector());
 }
 
+//
+// Gather all < > == <= => into a single node
+//
+NodePtr InequalityParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
+    
+    NodeSeq Args;
+    
+    Args.append(Left);
+    
+    auto TokIn = TheParser->currentToken();
+    
+    auto Ctxt = CtxtIn;
+    Ctxt.Prec = getPrecedence();
+    Ctxt.Assoc = ASSOCIATIVITY_NONE;
+    
+    while (true) {
+        
+        //
+        // Check isAbort() inside loops
+        //
+        if (TheParser->isAbort()) {
+            
+            auto A = Token(TOKEN_ERROR_ABORTED, "", Source());
+            
+            auto Aborted = std::make_shared<LeafNode>(A);
+            
+            return Aborted;
+        }
+        
+        auto Tok = TheParser->currentToken();
+        
+        Tok = Parser::eatAndPreserveToplevelNewlines(Tok, CtxtIn, Args);
+        
+        if (isInequalityOperator(Tok.Tok)) {
+            
+            Args.append(std::make_shared<LeafNode>(Tok));
+            
+            Tok = TheParser->nextToken(Ctxt);
+            
+            Tok = Parser::eatAll(Tok, Ctxt, Args);
+            
+            auto operand = TheParser->parse(Ctxt);
+            
+            Args.append(operand);
+            
+        } else {
+            
+            //
+            // Tok.Tok != TokIn.Tok, so break
+            //
+            
+            break;
+        }
+        
+    } // while
+    
+    return std::make_shared<InfixNode>(SYMBOL_INEQUALITY, Args.getVector());
+}
 
+//
+// Gather all \[VectorGreater] \[VectorLess] \[VectorGreaterEqual] \[VectorLessEqual] into a single node
+//
+NodePtr VectorInequalityParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
+    
+    NodeSeq Args;
+    
+    Args.append(Left);
+    
+    auto TokIn = TheParser->currentToken();
+    
+    auto Ctxt = CtxtIn;
+    Ctxt.Prec = getPrecedence();
+    Ctxt.Assoc = ASSOCIATIVITY_NONE;
+    
+    while (true) {
+        
+        //
+        // Check isAbort() inside loops
+        //
+        if (TheParser->isAbort()) {
+            
+            auto A = Token(TOKEN_ERROR_ABORTED, "", Source());
+            
+            auto Aborted = std::make_shared<LeafNode>(A);
+            
+            return Aborted;
+        }
+        
+        auto Tok = TheParser->currentToken();
+        
+        Tok = Parser::eatAndPreserveToplevelNewlines(Tok, CtxtIn, Args);
+        
+        if (isVectorInequalityOperator(Tok.Tok)) {
+            
+            Args.append(std::make_shared<LeafNode>(Tok));
+            
+            Tok = TheParser->nextToken(Ctxt);
+            
+            Tok = Parser::eatAll(Tok, Ctxt, Args);
+            
+            auto operand = TheParser->parse(Ctxt);
+            
+            Args.append(operand);
+            
+        } else {
+            
+            //
+            // Tok.Tok != TokIn.Tok, so break
+            //
+            
+            break;
+        }
+        
+    } // while
+    
+    return std::make_shared<InfixNode>(SYMBOL_DEVELOPER_VECTORINEQUALITY, Args.getVector());
+}
 
+NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
+    
+    NodeSeq Args;
+    Args.reserve(1 + 1 + 1);
+    
+    Args.append(Left);
+    
+    auto TokIn = TheParser->currentToken();
+    
+    auto lastOperatorToken = TokIn;
+    
+    auto Ctxt = CtxtIn;
+    Ctxt.Prec = getPrecedence();
+    Ctxt.Assoc = ASSOCIATIVITY_NONE;
+    
+    while (true) {
+        
+        //
+        // Check isAbort() inside loops
+        //
+        if (TheParser->isAbort()) {
+            
+            auto A = Token(TOKEN_ERROR_ABORTED, "", Source());
+            
+            auto Aborted = std::make_shared<LeafNode>(A);
+            
+            return Aborted;
+        }
+        
+        
+        auto Tok = TheParser->currentToken();
+        
+        Tok = Parser::eatAndPreserveToplevelNewlines(Tok, CtxtIn, Args);
+        
+        //
+        // Cannot just compare tokens
+        //
+        // May be something like  a * b c \[Times] d
+        //
+        // and we want only a single Infix node created
+        //
+        if (isInfixOperator(Tok.Tok) &&
+            InfixOperatorToSymbol(Tok.Tok) == InfixOperatorToSymbol(TokIn.Tok)) {
+            
+            Args.append(std::make_shared<LeafNode>(Tok));
+            
+            lastOperatorToken = Tok;
+            
+            auto allowTrailing = true;
+            if (allowTrailing) {
+                
+                //
+                // Something like  a;b  or  a,b
+                //
+                
+                Tok = TheParser->nextToken(Ctxt);
+                
+                Tok = Parser::eatAndPreserveToplevelNewlines(Tok, CtxtIn, Args);
+                
+                if (isInfixOperator(Tok.Tok) &&
+                    InfixOperatorToSymbol(Tok.Tok) == InfixOperatorToSymbol(TokIn.Tok)) {
+                    
+                    //
+                    // Something like  a; ;
+                    //
+                    
+                    lastOperatorToken = Tok;
+                    
+                    auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, "", Source(lastOperatorToken.Span.lines.start));
+                    
+                    Args.append(std::make_shared<LeafNode>(Implicit));
+                    
+                } else if (TheParser->isPossibleBeginningOfExpression(Tok, Ctxt)) {
+                    
+                    auto operand = TheParser->parse(Ctxt);
+                    
+                    Args.append(operand);
+                    
+                } else {
+                    
+                    //
+                    // Not beginning of an expression
+                    //
+                    // For example:  a;&
+                    //
+                    
+                    auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, "", Source(lastOperatorToken.Span.lines.end));
+                    
+                    Args.append(std::make_shared<LeafNode>(Implicit));
+                    
+                    break;
+                }
+                
+            } else {
+                
+                Tok = TheParser->nextToken(Ctxt);
+                
+                Tok = Parser::eatAll(Tok, Ctxt, Args);
+                
+                auto operand = TheParser->parse(Ctxt);
+                
+                Args.append(operand);
+            }
+            
+        } else {
+            
+            //
+            // Tok.Tok != TokIn.Tok, so break
+            //
+            
+            break;
+        }
+        
+    } // while
+    
+    return std::make_shared<InfixNode>(InfixOperatorToSymbol(TokIn.Tok), Args.getVector());
+}
 
 //
 // Error handling and Cleanup
@@ -1128,7 +1389,7 @@ NodePtr ExpectedPossibleExpressionErrorParselet::parse(ParserContext CtxtIn) con
         
         return Error;
     }
-        
+    
     //
     // If NOT a Token error, then just use a generic error
     //

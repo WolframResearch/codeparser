@@ -73,7 +73,7 @@ ExpectedSymbol:
 Test[
 	ParseString["1:2"]
 	,
-SyntaxErrorNode[SyntaxError`ExpectedSymbol, {LeafNode[Integer, 
+SyntaxErrorNode[SyntaxError`ColonError, {LeafNode[Integer, 
    "1", <|Source -> {{1, 1}, {1, 1}}|>], 
   LeafNode[Token`Colon, ":", <|Source -> {{1, 2}, {1, 2}}|>], 
   LeafNode[Integer, 

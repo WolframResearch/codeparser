@@ -193,16 +193,7 @@ Precedence`LongName`NotVerticalBar -> Precedence[NotVerticalBar], (* 280 *)
 Precedence`LongName`DoubleVerticalBar -> Precedence[DoubleVerticalBar], (* 280 *)
 Precedence`LongName`NotDoubleVerticalBar -> Precedence[NotDoubleVerticalBar], (* 280 *)
 
-Precedence`EqualEqual -> Precedence[Equal], (* 290 *)
-Precedence`Greater -> Precedence[Greater], (* 290 *)
-Precedence`LessEqual -> Precedence[LessEqual], (* 290 *)
-Precedence`GreaterEqual -> Precedence[GreaterEqual], (* 290 *)
-Precedence`Less -> Precedence[Less], (* 290 *)
-Precedence`BangEqual -> Precedence[Unequal], (* 290 *)
-Precedence`LongName`Equal -> Precedence`EqualEqual,
-Precedence`LongName`LessEqual -> Precedence`LessEqual,
-Precedence`LongName`NotEqual -> Precedence`BangEqual,
-Precedence`LongName`GreaterEqual -> Precedence`GreaterEqual,
+Precedence`Fake`Inequality -> Precedence[Equal], (* 290 *)
 Precedence`LongName`TildeTilde -> Precedence[TildeTilde], (* 290 *)
 Precedence`LongName`NotTildeTilde -> Precedence[NotTildeTilde], (* 290 *)
 Precedence`LongName`LeftTriangleEqual -> Precedence[LeftTriangleEqual], (* 290 *)
@@ -226,6 +217,8 @@ Precedence`LongName`NotLessLess -> Precedence[NotLessLess], (* 290 *)
 Precedence`LongName`LongEqual -> Precedence[Equal], (* 290 *)
 Precedence`LongName`NotTilde -> Precedence[NotTilde], (* 290 *)
 Precedence`LongName`EqualTilde -> Precedence[EqualTilde], (* 290 *)
+Precedence`LongName`DotEqual -> Precedence[DotEqual], (* 290 *)
+Precedence`LongName`NotCongruent -> Precedence[NotCongruent], (* 290 *)
 (*
 added in 12.0:
 VectorGreater
@@ -235,11 +228,10 @@ VectorLessEqual
 
 so hard-code if building with version less than 12.0
 *)
-Precedence`LongName`VectorGreater -> If[$VersionNumber >= 12.0, Precedence[System`VectorGreater] (* 290 *), 290],
-Precedence`LongName`VectorGreaterEqual -> If[$VersionNumber >= 12.0, Precedence[System`VectorGreaterEqual] (* 290 *), 290],
-Precedence`LongName`VectorLess -> If[$VersionNumber >= 12.0, Precedence[System`VectorLess] (* 290 *), 290],
-Precedence`LongName`VectorLessEqual -> If[$VersionNumber >= 12.0, Precedence[System`VectorLessEqual] (* 290 *), 290],
+Precedence`Fake`VectorInequality -> If[$VersionNumber >= 12.0, Precedence[System`VectorGreater] (* 290 *), 290],
 
+Precedence`LongName`GreaterGreater -> Precedence[GreaterGreater], (* 290 *)
+Precedence`LongName`GreaterLess -> Precedence[GreaterLess], (* 290 *)
 Precedence`LongName`NotEqualTilde -> Precedence[NotEqualTilde], (* 290 *)
 Precedence`LongName`NotHumpEqual -> Precedence[NotHumpEqual], (* 290 *)
 Precedence`LongName`NotHumpDownHump -> Precedence[NotHumpDownHump], (* 290 *)
@@ -261,6 +253,16 @@ Precedence`LongName`LessSlantEqual -> Precedence[LessEqual], (* 290 *)
 Precedence`LongName`GreaterSlantEqual -> Precedence[GreaterEqual], (* 290 *)
 Precedence`LongName`NotPrecedesSlantEqual -> Precedence[PrecedesSlantEqual], (* 290 *)
 Precedence`LongName`NotSucceedsSlantEqual -> Precedence[SucceedsSlantEqual], (* 290 *)
+Precedence`LongName`CupCap -> Precedence[CupCap], (* 290 *)
+Precedence`LongName`GreaterEqualLess -> Precedence[GreaterEqualLess], (* 290 *)
+Precedence`LongName`GreaterFullEqual -> Precedence[GreaterFullEqual], (* 290 *)
+Precedence`LongName`HumpEqual -> Precedence[HumpEqual], (* 290 *)
+Precedence`LongName`HumpDownHump -> Precedence[HumpDownHump], (* 290 *)
+Precedence`LongName`NestedGreaterGreater -> Precedence[NestedGreaterGreater], (* 290 *)
+Precedence`LongName`NestedLessLess -> Precedence[NestedLessLess], (* 290 *)
+Precedence`LongName`NotCupCap -> Precedence[NotCupCap], (* 290 *)
+Precedence`LongName`NotGreater -> Precedence[NotGreater], (* 290 *)
+Precedence`LongName`NotGreaterEqual -> Precedence[NotGreaterEqual], (* 290 *)
 
 Precedence`LongName`DirectedEdge -> Precedence[DirectedEdge], (* 295 *)
 Precedence`LongName`UndirectedEdge -> Precedence[UndirectedEdge], (* 295 *)

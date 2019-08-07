@@ -7,6 +7,8 @@ parseEquivalenceFunction
 
 parseTest
 
+ok
+
 
 
 $LastFailedFileIn
@@ -35,7 +37,7 @@ Needs["PacletManager`"]
 
 parseEquivalenceFunction[text_, expectedIgnored_] :=
 Catch[
-Module[{cst, agg, ast, good, expected, actual},
+Module[{cst, agg, ast, good, expected, actual, str},
 	
 	expected = DeleteCases[ToExpression[text, InputForm, Hold], Null];
 	
@@ -47,15 +49,37 @@ Module[{cst, agg, ast, good, expected, actual},
 		Throw[cst]
 	];
 	
+	str = ToSourceCharacterString[cst];
+	If[!FailureQ[str],
+		actual = DeleteCases[ToExpression[str, InputForm], Null];
+		,
+		actual = $Failed;
+	];
+
+  good = SameQ[expected, actual];
+  If[good,
+    True
+    ,
+    Throw[unhandled[<|"actualConcrete"->ToString[actual, InputForm], "expectedConcrete"->ToString[expected, InputForm]|>]]
+  ];
+
+  (*
+  Aggregate
+  *)
 	agg = AST`Abstract`Aggregate[cst];
 	
-	actual = ToExpression[ToInputFormString[agg], InputForm];
+	str = ToInputFormString[agg];
+	If[!FailureQ[actual],
+		actual = DeleteCases[ToExpression[str, InputForm], Null];
+		,
+		actual = $Failed;
+	];
 	
 	good = SameQ[expected, actual];
 	If[good,
 		True
 		,
-		Throw[unhandled[<|"actual1"->ToString[actual, InputForm], "expected1"->ToString[expected, InputForm]|>]]
+		Throw[unhandled[<|"actualAggregate"->ToString[actual, InputForm], "expectedAggregate"->ToString[expected, InputForm]|>]]
 	];
 	
 	(*
@@ -65,13 +89,19 @@ Module[{cst, agg, ast, good, expected, actual},
 	If[FailureQ[ast],
 		Throw[ast]
 	];
-	actual = DeleteCases[ToExpression[ToFullFormString[ast], InputForm], Null];
+	
+	str = ToFullFormString[ast];
+	If[!FailureQ[str],
+		actual = DeleteCases[ToExpression[str, InputForm], Null];
+		,
+		actual = $Failed
+	];
 	
 	good = SameQ[expected, actual];
 	If[good,
 		True
 		,
-		unhandled[<|"actual2"->ToString[actual, InputForm], "expected2"->ToString[expected, InputForm]|>]
+		unhandled[<|"actualAbstract"->ToString[actual, InputForm], "expectedAbstract"->ToString[expected, InputForm]|>]
 	]
 ]]
 
@@ -90,7 +120,7 @@ Module[{cst, agg, ast, good, expected, actual},
 
 
 
-Options[parseTest] = {"FileNamePrefixPattern" -> "", "FileSizeLimit" -> Infinity};
+Options[parseTest] = {"FileNamePrefixPattern" -> "", "FileSizeLimit" -> {0, Infinity}};
 
 parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
  Module[{prefix, res, cst, agg, ast, expected, errors, f, 
@@ -128,15 +158,19 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     file=tmp;
     ];*)
     
-    If[FileType[file] === File && FileByteCount[file] > limit,
-     ast = 
+    If[FileType[file] === File,
+     If[FileByteCount[file] > limit[[2]],
+      ast = 
       Failure["FileTooLarge", <|"FileName" -> file, 
         "FileSize" -> FileSize[file]|>];
-     Print[
-      Row[{"index: ", i, " ", 
-        StringReplace[fileIn, StartOfString ~~ prefix -> ""]}]];
-     Print[Row[{"index: ", i, " ", ast[[1]], "; skipping"}]];
      Throw[ast, "OK"]
+     ];
+     If[FileByteCount[file] < limit[[1]],
+      ast = 
+      Failure["FileTooSmall", <|"FileName" -> file, 
+        "FileSize" -> FileSize[file]|>];
+     Throw[ast, "OK"]
+     ];
      ];
 
 
@@ -145,7 +179,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       version >= 12,
       cst = 
        ConcreteParseFile[file, 
-        HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1]][[1]][[3]][Source][[1]], #[[1]][[-1]][[3]][Source][[2]]}]|>] &];
+        HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1, 1, 3, Key[Source], 1]], #[[1, -1, 3, Key[Source], 2]]}]|>] &];
       ,
      version >= 11,
      cst = 
@@ -304,7 +338,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      version >= 12,
       cst = 
         ConcreteParseFile[file, 
-         HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1]][[1]][[3]][Source][[1]], #[[1]][[-1]][[3]][Source][[2]]}]|>]&];
+         HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1, 1, 3, Key[Source], 1]], #[[1, -1, 3, Key[Source], 2]]}]|>]&];
       ,
       version >= 11,
       cst = 
@@ -355,27 +389,13 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     	Throw[savedFailure, "Unhandled"]	
     ];
     
-    
-    
-    (*If[Depth[cst]>170,
-    Print[Row[{"index: ",i," ",StringReplace[fileIn,StartOfString~~
-    prefix\[Rule]""]}]];
-    Print[Row[{"index: ",i," ",
-    "Depth > 170; cannot call ToInputFormString by default"}]];
-    Throw[cst,"OK"]
-    ];*)
-    
-    agg = AST`Abstract`Aggregate[cst];
-
-    verifyAggregate[agg];
-
-    tryString = ToInputFormString[agg];
+    tryString = ToSourceCharacterString[cst];
     
     If[$DebugString, Print["tryString: ", tryString]];
     
     If[! StringQ[tryString],
      f = Failure[
-       "ToInputFormString", <|"FileName" -> file, 
+       "ToSourceCharacterString", <|"FileName" -> file, 
         "tryString" -> tryString|>];
      Print[
       Style[Row[{"index: ", i, " ", 
@@ -438,7 +458,85 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      $LastFailedActualCST = cst;
      $LastFailedExpected = expected;
      $LastFailedExpectedText = text;
-     f = Failure["ParsingFailure", <|"FileName" -> fileIn|>];
+     f = Failure["ConcreteParsingFailure", <|"FileName" -> fileIn|>];
+     Print[
+      Style[Row[{"index: ", i, " ", 
+         StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], Bold,
+        Red]];
+     Print[Style[Row[{"index: ", i, " ", f}], Bold, Red]];
+     Throw[f, "Uncaught"]
+     ];
+    
+    (*If[Depth[cst]>170,
+    Print[Row[{"index: ",i," ",StringReplace[fileIn,StartOfString~~
+    prefix\[Rule]""]}]];
+    Print[Row[{"index: ",i," ",
+    "Depth > 170; cannot call ToInputFormString by default"}]];
+    Throw[cst,"OK"]
+    ];*)
+    
+
+    (*
+    Aggregate
+    *)
+    agg = AST`Abstract`Aggregate[cst];
+
+    (*
+    verifyAggregate[agg];
+    *)
+    
+    tryString = ToInputFormString[agg];
+    
+    If[$DebugString, Print["tryString: ", tryString]];
+    
+    If[! StringQ[tryString],
+     f = Failure[
+       "ToInputFormString", <|"FileName" -> file, 
+        "tryString" -> tryString|>];
+     Print[
+      Style[Row[{"index: ", i, " ", 
+         StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], Red]];
+     Print[Style[Row[{"index: ", i, " ", f}], Red]];
+     Throw[f, "Unhandled"]
+     ];
+    
+    Quiet@Check[
+      actual = DeleteCases[ToExpression[tryString, InputForm], Null];
+      (*
+      If[$Debug, Print["actual: ", actual]];
+      *)
+      ,
+      Print[
+       Style[Row[{"index: ", i, " ", 
+          StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], 
+        Darker[Orange]]];
+      Print[
+       Style[Row[{"index: ", i, " ", 
+          "Messages while processing actual input (possibly from previous files):"}], Darker[Orange]]];
+      Print[
+       Style[If[$MessageList =!= {}, $MessageList, 
+         "{} (Most likely Syntax Messages, but Syntax Messages don't show up in $MessageList: bug 210020)"], Darker[Orange]]];
+      msgs = Cases[$MessageList, HoldForm[_::shdw]];
+      If[msgs != {},
+       Print[
+        Style[Row[{"index: ", i, " ", 
+           "There were General::shdw messages; rerunning"}], 
+         Darker[Orange]]];
+       actual = 
+        DeleteCases[ToExpression[tryString, InputForm], Null];
+       ]
+      ];
+    
+    If[actual =!= expected, 
+     
+     $LastFailedFileIn = fileIn;
+     $LastFailedFile = file;
+     $LastFailedActual = actual;
+     $LastFailedActualString = tryString;
+     $LastFailedActualAgg = agg;
+     $LastFailedExpected = expected;
+     $LastFailedExpectedText = text;
+     f = Failure["AggregateParsingFailure", <|"FileName" -> fileIn|>];
      Print[
       Style[Row[{"index: ", i, " ", 
          StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], Bold,
@@ -718,8 +816,8 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      
      (*
      
-     file has something like  a; ?b   and the kernel and AST disagree \
-(AST is correct)
+     file has something like  a; ?b   and the kernel and AST disagree
+     (AST is correct)
      *)
      
      If[!FreeQ[expected, 
@@ -741,7 +839,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      $LastFailedExpected = expected;
      $LastFailedExpectedText = text;
      $LastFailedExpectedTextReplaced = textReplaced;
-     f = Failure["ParsingFailure2", <|"FileName" -> fileIn|>];
+     f = Failure["AbstractParsingFailure", <|"FileName" -> fileIn|>];
      Print[
       Style[Row[{"index: ", i, " ", 
          StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], Bold,
@@ -755,7 +853,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
    ,
    "OK"
    ,
-   (If[StringQ[tmp] && FileExistsQ[tmp], DeleteFile[tmp]];) &
+   (If[StringQ[tmp] && FileExistsQ[tmp], DeleteFile[tmp]];ok) &
    ]
   ]
 
@@ -788,6 +886,7 @@ importFile[file_String] := FromCharacterCode[Import[file, "Byte"], "UTF8"]
 (*
 Verify that the source of a parent node accurately reflects the sources of children nodes
 *)
+(*
 verifyAggregate[LeafNode[_, _, _]] := Null
 
 verifyAggregate[agg:(_[tag_, children_, data_])] :=
@@ -820,7 +919,7 @@ Module[{f, first, last, firstSource, lastSource},
     Throw[f, "Unhandled"]
   ];
 ]]
-
+*)
 
 
 

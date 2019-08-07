@@ -210,6 +210,119 @@ Test[
 	TestID->"Parse-20190730-M9S3U2"
 ]
 
+Test[
+	"16^^.FFFFFF*^32"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190820-O6O9O1"
+]
+
+Test[
+	"16^^.FFFFFFFFFFFFF8*^256"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190820-S7J2H3"
+]
+
+Test[
+	"-16^^.FFFFFF*^32"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190820-A2P3N2"
+]
+
+Test[
+	"-16^^.FFFFFFFFFFFFF8*^256"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190820-G5K3X8"
+]
+
+
+(*
+should succeed
+*)
+Test[
+	"2.Pi"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190821-G1U3U4"
+]
+
+(*
+should fail
+*)
+Test[
+	"10^^2.Pi"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190821-P0C8P3"
+]
+
+Test[
+	"1.2`3.*^4"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190821-Y5A6B1"
+]
+
+Test[
+	"123`.xxx"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190821-N5B9V0"
+]
+
+Test[
+	"123``.xxx"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190821-N2R2A4"
+]
+
+Test[
+	"N[-2.338107410459767038489197252446735440638540145672387852483854437213668002700\\
+              283647782164041731329320284760093853265952775225466858359866744868898716819727\\
+              540973152674991112748065999645628353491550367242154602253040142644994178463934\\
+              453444457600947385805599328400354197885486873437032794768373623126914436368456\\
+              216321695224896886771887967253644542964146651161756655217909281106701616013124\\
+              010872087510680153635409304355401733365182436841536888461538337816732637447723\\
+              5216626917898162900770617327677840, {pp,aa}]"
+    ,
+    Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190826-H8C5S0"
+]
+
 
 
 
@@ -1871,6 +1984,20 @@ Test[
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
 	TestID->"Parse-20190730-K3Q6I4"
+]
+
+
+
+
+
+Test[
+	"{a;,b;}"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190820-O6Q6C4"
 ]
 
 

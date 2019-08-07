@@ -1,22 +1,30 @@
 
 #include "Node.h"
 
+#include "Symbol.h"
 
-
-void NodeSeq::push_back(NodePtr N) {
-    
+void NodeSeq::append(NodePtr& N) {
     vector.push_back(N);
 }
 
-void NodeSeq::push_back(NodeSeq Args) {
-    push_back(Args.vector);
+void NodeSeq::append(NodeSeq& Args) {
+    append(Args.vector);
 }
 
-void NodeSeq::push_back(std::vector<NodePtr> V) {
-    
-    for (auto N : V) {
-        push_back(N);
-    }
+void NodeSeq::append(std::vector<NodePtr>& V) {
+    std::copy(V.begin(), V.end(), std::back_inserter(vector));
+}
+
+bool NodeSeq::empty() const {
+    return vector.empty();
+}
+
+size_t NodeSeq::size() const {
+    return vector.size();
+}
+
+void NodeSeq::reserve(size_t i) {
+    vector.reserve(i);
 }
 
 NodePtr NodeSeq::main() const {
@@ -26,13 +34,10 @@ NodePtr NodeSeq::main() const {
         if (auto NLeaf = std::dynamic_pointer_cast<const LeafNode>(N)) {
             
             auto Tok = NLeaf->getToken();
-            if (Tok.Tok == TOKEN_COMMENT) {
-                continue;
-            }
-            if (Tok.Tok == TOKEN_WHITESPACE) {
-                continue;
-            }
-            if (Tok.Tok == TOKEN_NEWLINE) {
+            if (Tok.Tok == TOKEN_COMMENT ||
+                Tok.Tok == TOKEN_WHITESPACE ||
+                Tok.Tok == TOKEN_NEWLINE ||
+                Tok.Tok == TOKEN_LINECONTINUATION) {
                 continue;
             }
             
@@ -61,13 +66,10 @@ NodePtr NodeSeq::last() const {
         if (auto NLeaf = std::dynamic_pointer_cast<const LeafNode>(N)) {
             
             auto Tok = NLeaf->getToken();
-            if (Tok.Tok == TOKEN_COMMENT) {
-                continue;
-            }
-            if (Tok.Tok == TOKEN_WHITESPACE) {
-                continue;
-            }
-            if (Tok.Tok == TOKEN_NEWLINE) {
+            if (Tok.Tok == TOKEN_COMMENT ||
+                Tok.Tok == TOKEN_WHITESPACE ||
+                Tok.Tok == TOKEN_NEWLINE ||
+                Tok.Tok == TOKEN_LINECONTINUATION) {
                 continue;
             }
         }
@@ -99,29 +101,27 @@ Source Node::getSourceSpan() const {
 }
 
 void Node::putChildren(MLINK mlp) const {
-
+    
     MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(Children.size()));
-
+    
     for (auto C : Children) {
         C->put(mlp);
     }
 }
 
 //
-// Literal nodes
+// Leaf nodes
 //
 
 void LeafNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_LEAFNODE->name(), 3);
-
+    
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKELEAFNODE->name(), NODE_LENGTH);
+    
     MLPutSymbol(mlp, TokenToSymbol(Tok.Tok)->name());
-
+    
     MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Tok.Str.c_str()), static_cast<int>(Tok.Str.size()));
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    Tok.Span.putSourceRule(mlp);
+    
+    Tok.Span.putLineCols(mlp);
 }
 
 
@@ -132,68 +132,58 @@ void LeafNode::put(MLINK mlp) const {
 //
 
 void PrefixNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_PREFIXNODE->name(), 3);
-
+    
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEPREFIXNODE->name(), NODE_LENGTH);
+    
     MLPutSymbol(mlp, Op->name());
-
+    
     putChildren(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    getSourceSpan().putSourceRule(mlp);
+    
+    getSourceSpan().putLineCols(mlp);
 }
 
 void BinaryNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_BINARYNODE->name(), 3);
-
+    
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEBINARYNODE->name(), NODE_LENGTH);
+    
     MLPutSymbol(mlp, Op->name());
-
+    
     putChildren(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    getSourceSpan().putSourceRule(mlp);
+    
+    getSourceSpan().putLineCols(mlp);
 }
 
 void InfixNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_INFIXNODE->name(), 3);
-
+    
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEINFIXNODE->name(), NODE_LENGTH);
+    
     MLPutSymbol(mlp, Op->name());
-
+    
     putChildren(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    getSourceSpan().putSourceRule(mlp);
+    
+    getSourceSpan().putLineCols(mlp);
 }
 
 void TernaryNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_TERNARYNODE->name(), 3);
-
+    
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKETERNARYNODE->name(), NODE_LENGTH);
+    
     MLPutSymbol(mlp, Op->name());
-
+    
     putChildren(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    getSourceSpan().putSourceRule(mlp);
+    
+    getSourceSpan().putLineCols(mlp);
 }
 
 void PostfixNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_POSTFIXNODE->name(), 3);
-
+    
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEPOSTFIXNODE->name(), NODE_LENGTH);
+    
     MLPutSymbol(mlp, Op->name());
-
+    
     putChildren(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    getSourceSpan().putSourceRule(mlp);
+    
+    getSourceSpan().putLineCols(mlp);
 }
 
 
@@ -204,9 +194,9 @@ void PostfixNode::put(MLINK mlp) const {
 //
 
 void CallNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_CALLNODE->name(), 3);
-
+    
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKECALLNODE->name(), NODE_LENGTH);
+    
     MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(Head.size()));
     
     for (auto H : Head) {
@@ -214,19 +204,17 @@ void CallNode::put(MLINK mlp) const {
     }
     
     putChildren(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    getSourceSpan().putSourceRule(mlp);
+    
+    getSourceSpan().putLineCols(mlp);
 }
 
 Source CallNode::getSourceSpan() const {
-
+    
     auto FirstHead = Head[0];
     
     auto Children = getChildren();
     auto LastChild = Children[Children.size()-1];
-
+    
     return Source(FirstHead->getSourceSpan().lines.start, LastChild->getSourceSpan().lines.end);
 }
 
@@ -237,16 +225,14 @@ Source CallNode::getSourceSpan() const {
 //
 
 void GroupNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_GROUPNODE->name(), 3);
-
+    
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEGROUPNODE->name(), NODE_LENGTH);
+    
     MLPutSymbol(mlp, Op->name());
-
+    
     putChildren(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    getSourceSpan().putSourceRule(mlp);
+    
+    getSourceSpan().putLineCols(mlp);
 }
 
 
@@ -256,106 +242,90 @@ void GroupNode::put(MLINK mlp) const {
 
 void StartOfLineNode::put(MLINK mlp) const {
     
-    MLPutFunction(mlp, SYMBOL_STARTOFLINENODE->name(), 3);
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKESTARTOFLINENODE->name(), NODE_LENGTH);
     
     MLPutSymbol(mlp, Op->name());
     
     putChildren(mlp);
     
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-    
-    getSourceSpan().putSourceRule(mlp);
+    getSourceSpan().putLineCols(mlp);
 }
 
 void BlankNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_BLANKNODE->name(), 3);
-
+    
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEBLANKNODE->name(), NODE_LENGTH);
+    
     SYMBOL_BLANK->put(mlp);
-
+    
     putChildren(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    getSourceSpan().putSourceRule(mlp);
+    
+    getSourceSpan().putLineCols(mlp);
 }
 
 void BlankSequenceNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_BLANKSEQUENCENODE->name(), 3);
-
+    
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEBLANKSEQUENCENODE->name(), NODE_LENGTH);
+    
     SYMBOL_BLANKSEQUENCE->put(mlp);
-
+    
     putChildren(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    getSourceSpan().putSourceRule(mlp);
+    
+    getSourceSpan().putLineCols(mlp);
 }
 
 void BlankNullSequenceNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_BLANKNULLSEQUENCENODE->name(), 3);
-
+    
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEBLANKNULLSEQUENCENODE->name(), NODE_LENGTH);
+    
     SYMBOL_BLANKNULLSEQUENCE->put(mlp);
-
+    
     putChildren(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    getSourceSpan().putSourceRule(mlp);
+    
+    getSourceSpan().putLineCols(mlp);
 }
 
 void PatternBlankNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_PATTERNBLANKNODE->name(), 3);
-
-    SYMBOL_PATTERNBLANK->put(mlp);
-
+    
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEPATTERNBLANKNODE->name(), NODE_LENGTH);
+    
+    SYMBOL_AST_PATTERNBLANK->put(mlp);
+    
     putChildren(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    getSourceSpan().putSourceRule(mlp);
+    
+    getSourceSpan().putLineCols(mlp);
 }
 
 void PatternBlankSequenceNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_PATTERNBLANKSEQUENCENODE->name(), 3);
-
-    SYMBOL_PATTERNBLANKSEQUENCE->put(mlp);
-
+    
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEPATTERNBLANKSEQUENCENODE->name(), NODE_LENGTH);
+    
+    SYMBOL_AST_PATTERNBLANKSEQUENCE->put(mlp);
+    
     putChildren(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    getSourceSpan().putSourceRule(mlp);
+    
+    getSourceSpan().putLineCols(mlp);
 }
 
 void PatternBlankNullSequenceNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_PATTERNBLANKNULLSEQUENCENODE->name(), 3);
-
-    SYMBOL_PATTERNBLANKNULLSEQUENCE->put(mlp);
-
+    
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEPATTERNBLANKNULLSEQUENCENODE->name(), NODE_LENGTH);
+    
+    SYMBOL_AST_PATTERNBLANKNULLSEQUENCE->put(mlp);
+    
     putChildren(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    getSourceSpan().putSourceRule(mlp);
+    
+    getSourceSpan().putLineCols(mlp);
 }
 
 void OptionalDefaultPatternNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_OPTIONALDEFAULTPATTERNNODE->name(), 3);
-
-    SYMBOL_OPTIONALDEFAULTPATTERN->put(mlp);
-
+    
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEOPTIONALDEFAULTPATTERNNODE->name(), NODE_LENGTH);
+    
+    SYMBOL_AST_OPTIONALDEFAULTPATTERN->put(mlp);
+    
     putChildren(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    getSourceSpan().putSourceRule(mlp);
+    
+    getSourceSpan().putLineCols(mlp);
 }
 
 
@@ -364,56 +334,48 @@ void OptionalDefaultPatternNode::put(MLINK mlp) const {
 //
 
 void SyntaxErrorNode::put(MLINK mlp) const {
-
-    MLPutFunction(mlp, SYMBOL_SYNTAXERRORNODE->name(), 3);
-
+    
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKESYNTAXERRORNODE->name(), NODE_LENGTH);
+    
     MLPutSymbol(mlp, SyntaxErrorToString(Err).c_str());
-
+    
     putChildren(mlp);
-
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-
-    getSourceSpan().putSourceRule(mlp);
+    
+    getSourceSpan().putLineCols(mlp);
 }
 
 void GroupMissingCloserNode::put(MLINK mlp) const {
     
-    MLPutFunction(mlp, SYMBOL_GROUPMISSINGCLOSERNODE->name(), 3);
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEGROUPMISSINGCLOSERNODE->name(), NODE_LENGTH);
     
     MLPutSymbol(mlp, Op->name());
     
     putChildren(mlp);
     
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-    
-    getSourceSpan().putSourceRule(mlp);
+    getSourceSpan().putLineCols(mlp);
 }
 
 void GroupMissingOpenerNode::put(MLINK mlp) const {
     
-    MLPutFunction(mlp, SYMBOL_GROUPMISSINGOPENERNODE->name(), 3);
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEGROUPMISSINGOPENERNODE->name(), NODE_LENGTH);
     
     MLPutSymbol(mlp, Op->name());
     
     putChildren(mlp);
     
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-    
-    getSourceSpan().putSourceRule(mlp);
+    getSourceSpan().putLineCols(mlp);
 }
 
 
 void PrefixBinaryNode::put(MLINK mlp) const {
     
-    MLPutFunction(mlp, SYMBOL_PREFIXBINARYNODE->name(), 3);
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEPREFIXBINARYNODE->name(), NODE_LENGTH);
     
     MLPutSymbol(mlp, Op->name());
     
     putChildren(mlp);
     
-    MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1 );
-    
-    getSourceSpan().putSourceRule(mlp);
+    getSourceSpan().putLineCols(mlp);
 }
 
 

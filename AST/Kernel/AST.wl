@@ -1,55 +1,46 @@
 BeginPackage["AST`"]
 
-ParseString::usage = "ParseString[string] returns an abstract syntax tree by interpreting string as WL input. \
-Note: If there are multiple expressions in string, then only the last expression is returned. \
-ParseString[string, h] wraps the output with h and allows multiple expressions to be returned. \
-This is similar to how ToExpression operates."
+(*
+Parsing
+*)
+ParseString
 
-ParseFile::usage = "ParseFile[file] returns an abstract syntax tree by interpreting file as WL input."
+ParseFile
 
+ConcreteParseString
 
-ConcreteParseString::usage = "ConcreteParseString[string] returns a concrete syntax tree by interpreting string as WL input."
+ConcreteParseFile
 
-ConcreteParseFile::usage = "ConcreteParseFile[file] returns a concrete syntax tree by interpreting file as WL input."
+TokenizeString
 
+TokenizeFile
 
+ParseLeaf
 
-ToInputFormString::usage = "ToInputFormString[concrete] returns a string representation of concrete."
-ToFullFormString::usage = "ToFullFormString[abstract] returns a string representation of abstract."
-
-
-
-TokenizeString::usage = "TokenizeString[string] returns a list of tokens by interpreting string as WL input."
-
-TokenizeFile::usage = "TokenizeFile[file] returns a list of tokens by interpreting file as WL input."
+ConcreteParseBox
 
 
 
+(*
+ToString
+*)
+ToInputFormString
 
+ToFullFormString
+
+ToStandardFormBoxes
+
+ToSourceCharacterString
+
+
+
+(*
+Nodes
+*)
 ToNode
 FromNode
 
 DeclarationName
-
-
-
-
-
-
-
-
-
-PrefixOperatorToSymbol
-PostfixOperatorToSymbol
-BinaryOperatorToSymbol
-InfixOperatorToSymbol
-GroupOpenerToSymbol
-PrefixBinaryOperatorToSymbol
-StartOfLineOperatorToSymbol
-
-GroupOpenerToCloser
-GroupCloserToOpener
-
 
 
 (*
@@ -141,23 +132,18 @@ GroupParen
 
 GroupLinearSyntaxParen
 
-
-
 (* option symbols *)
 Source
-(*
-Used to report f[,] or "\[Alpa]" as an option, e.g. SyntaxIssues -> {SyntaxIssue[], SyntaxIssue[]}
-*)
-SyntaxIssues
-AbstractSyntaxIssues
-SyntaxIssue
+Synthesized
+
 Comment
 Metadata
 
-
-
 (* node symbols *)
 LeafNode
+BoxNode
+CodeNode
+DirectiveNode
 
 PrefixNode
 BinaryNode
@@ -199,16 +185,44 @@ StaticAnalysisIgnoreNode
 
 
 
+(*
+Analysis
+*)
+
+(* property for SyntaxIssue *)
+CodeActions
+CodeAction
+(*
+CodeAction commands
+*)
+DeleteNode
+ReplaceNode
+
+ReplaceText
+
+
+(*
+Used to report f[,] or "\[Alpa]" as an option, e.g. SyntaxIssues -> {SyntaxIssue[], SyntaxIssue[]}
+*)
+SyntaxIssues
+AbstractSyntaxIssues
+SyntaxIssue
+
+
+
+
+
+
+
 
 Begin["`Private`"]
 
 Needs["AST`Abstract`"]
 Needs["AST`Boxes`"]
 Needs["AST`DeclarationName`"]
+Needs["AST`Library`"]
 Needs["AST`Node`"]
-Needs["AST`Symbol`"]
-Needs["AST`ToInputFormString`"]
-Needs["AST`ToFullFormString`"]
+Needs["AST`ToString`"]
 Needs["AST`Utils`"]
 Needs["PacletManager`"]
 
@@ -274,6 +288,8 @@ concreteParseFileFunc := concreteParseFileFunc = loadFunc["ConcreteParseFile"];
 tokenizeStringFunc := tokenizeStringFunc = loadFunc["TokenizeString"];
 
 tokenizeFileFunc := tokenizeFileFunc = loadFunc["TokenizeFile"];
+
+parseLeafFunc := parseLeafFunc = loadFunc["ParseLeaf"];
 )
 
 loadAllFuncs[]
@@ -313,6 +329,8 @@ Module[{before, after, res, set, first},
 
 
 
+ConcreteParseString::usage = "ConcreteParseString[string] returns a concrete syntax tree by interpreting string as WL input."
+
 ConcreteParseString[s_String, h_:Automatic] :=
 	concreteParseString[s, h]
 
@@ -331,13 +349,17 @@ Module[{s, h, res},
 
 		Simply drop any leftover syntax issues
 		*)
-		h = SelectFirst[Reverse[DeleteCases[#[[1]], LeafNode[Token`Comment | Token`WhiteSpace | Token`Newline, _, _]]], True&, Null]&
+		h = SelectFirst[Reverse[DeleteCases[#[[1]], LeafNode[Token`Comment | Token`WhiteSpace | Token`Newline | Token`LineContinuation, _, _]]], True&, Null]&
 	];
 
 	If[FailureQ[concreteParseStringFunc],
 		Throw[concreteParseStringFunc]
 	];
 
+	$ConcreteParseProgress = 0;
+	$ConcreteParseStart = Now;
+	$ConcreteParseTime = Quantity[0, "Seconds"];
+	$MathLinkTime = Quantity[0, "Seconds"];
 	(*
 	in the event of an abort, force reload of functions
 	This will fix the transient error that can happen when an abort occurs
@@ -350,6 +372,8 @@ Module[{s, h, res},
 	Abort[]
 	];
 
+	$MathLinkTime = Now - ($ConcreteParseStart + $ConcreteParseTime);
+
 	If[Head[res] === LibraryFunctionError,
 		Throw[Failure["LibraryFunctionError", <|"Result"->res|>]]
 	];
@@ -361,6 +385,15 @@ Module[{s, h, res},
 	h[res]
 ]]
 
+
+
+
+
+ParseString::usage = "ParseString[string] returns an abstract syntax tree by interpreting string as WL input. \
+Note: If there are multiple expressions in string, then only the last expression is returned. \
+ParseString[string, h] wraps the output with h and allows multiple expressions to be returned. \
+This is similar to how ToExpression operates."
+
 (*
 may return:
 a node
@@ -370,6 +403,7 @@ or something FailureQ if e.g., no permission to run wl-ast
 ParseString[s_String, h_:Automatic] :=
 Catch[
 Module[{cst, ast, agg},
+	
 	cst = ConcreteParseString[s, h];
 
 	If[FailureQ[cst],
@@ -385,6 +419,8 @@ Module[{cst, ast, agg},
 
 
 
+
+ConcreteParseFile::usage = "ConcreteParseFile[file] returns a concrete syntax tree by interpreting file as WL input."
 
 Options[ConcreteParseFile] = {
 	CharacterEncoding -> "UTF8"
@@ -407,6 +443,7 @@ Module[{h, encoding, full, res, skipFirstLine = False, shebangWarn = False, data
 
 	(*
 	The <||> will be filled in with Source later
+	The # here is { {exprs}, {issues}, {metadata} }
 	*)
 	If[hIn === Automatic,
 		h = FileNode[File, #[[1]], <| SyntaxIssues -> #[[2]] |>]&
@@ -464,12 +501,18 @@ Module[{h, encoding, full, res, skipFirstLine = False, shebangWarn = False, data
 		Throw[concreteParseFileFunc]
 	];
 
+	$ConcreteParseProgress = 0;
+	$ConcreteParseStart = Now;
+	$ConcreteParseTime = Quantity[0, "Seconds"];
+	$MathLinkTime = Quantity[0, "Seconds"];
 	CheckAbort[
 	res = concreteParseFileFunc[full, skipFirstLine];
 	,
 	loadAllFuncs[];
 	Abort[]
 	];
+
+	$MathLinkTime = Now - ($ConcreteParseStart + $ConcreteParseTime);
 
 	If[Head[res] === LibraryFunctionError,
 		Throw[Failure["LibraryFunctionError", <|"Result"->res|>]]
@@ -512,6 +555,9 @@ Module[{h, encoding, full, res, skipFirstLine = False, shebangWarn = False, data
 
 
 
+
+ParseFile::usage = "ParseFile[file] returns an abstract syntax tree by interpreting file as WL input."
+
 Options[ParseFile] = {
 	CharacterEncoding -> "UTF8"
 }
@@ -543,12 +589,18 @@ Module[{s = sIn, res},
 		Throw[tokenizeStringFunc]
 	];
 
+	$ConcreteParseProgress = 0;
+	$ConcreteParseStart = Now;
+	$ConcreteParseTime = Quantity[0, "Seconds"];
+	$MathLinkTime = Quantity[0, "Seconds"];
 	CheckAbort[
 	res = tokenizeStringFunc[s];
 	,
 	loadAllFuncs[];
 	Abort[]
 	];
+
+	$MathLinkTime = Now - ($ConcreteParseStart + $ConcreteParseTime);
 
 	If[Head[res] === LibraryFunctionError,
 		Throw[Failure["LibraryFunctionError", <|"Result"->res|>]]
@@ -562,9 +614,17 @@ Module[{s = sIn, res},
 ]]
 
 
+
+
+TokenizeString::usage = "TokenizeString[string] returns a list of tokens by interpreting string as WL input."
+
 TokenizeString[s_String] :=
 	tokenizeString[s]
 
+
+
+
+TokenizeFile::usage = "TokenizeFile[file] returns a list of tokens by interpreting file as WL input."
 
 Options[TokenizeFile] = {
 	CharacterEncoding -> "UTF8"
@@ -593,12 +653,18 @@ Module[{s, encoding, res},
 		Throw[tokenizeFileFunc]
 	];
 
+	$ConcreteParseProgress = 0;
+	$ConcreteParseStart = Now;
+	$ConcreteParseTime = Quantity[0, "Seconds"];
+	$MathLinkTime = Quantity[0, "Seconds"];
 	CheckAbort[
 	res = tokenizeFileFunc[s];
 	,
 	loadAllFuncs[];
 	Abort[]
 	];
+
+	$MathLinkTime = Now - ($ConcreteParseStart + $ConcreteParseTime);
 
 	If[Head[res] === LibraryFunctionError,
 		Throw[Failure["LibraryFunctionError", <|"Result"->res|>]]
@@ -612,6 +678,47 @@ Module[{s, encoding, res},
 ]]
 
 
+ParseLeaf[str_String] :=
+	parseLeaf[str]
+
+parseLeaf[strIn_String, OptionsPattern[]] :=
+Catch[
+Module[{str, res},
+
+	str = strIn;
+
+	If[FailureQ[parseLeafFunc],
+		Throw[parseLeafFunc]
+	];
+
+	$ConcreteParseProgress = 0;
+	$ConcreteParseStart = Now;
+	$ConcreteParseTime = Quantity[0, "Seconds"];
+	$MathLinkTime = Quantity[0, "Seconds"];
+	(*
+	in the event of an abort, force reload of functions
+	This will fix the transient error that can happen when an abort occurs
+	and the next use throws LIBRARY_FUNCTION_ERROR
+	*)
+	CheckAbort[
+	res = parseLeafFunc[str];
+	,
+	loadAllFuncs[];
+	Abort[]
+	];
+
+	$MathLinkTime = Now - ($ConcreteParseStart + $ConcreteParseTime);
+
+	If[Head[res] === LibraryFunctionError,
+		Throw[Failure["LibraryFunctionError", <|"Result"->res|>]]
+	];
+
+	If[FailureQ[res],
+		Throw[res]
+	];
+
+	res
+]]
 
 
 

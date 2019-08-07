@@ -6,7 +6,9 @@
 //
 
 #include "Parselet.h"
+
 #include "Utils.h"
+#include "Symbol.h"
 
 //
 // prefix
@@ -17,15 +19,17 @@
 //
 // Multiple Span expressions are ImplicitTimes together
 //
-NodePtr SemiSemiParselet::SemiSemiParselet::parse(ParserContext CtxtIn) const {
+NodePtr SemiSemiParselet::parse(ParserContext CtxtIn) const {
     
     NodeSeq Left;
-
-    auto TokIn = TheParser->currentToken();
-
-    auto One = std::make_shared<LeafNode>(Token(TOKEN_FAKE_ONE, "", Source(TokIn.Span.lines.start)));
     
-    Left.push_back(One);
+    auto TokIn = TheParser->currentToken();
+    
+    auto Implicit = Token(TOKEN_FAKE_IMPLICITONE, "", Source(TokIn.Span.lines.start));
+    
+    auto One = std::make_shared<LeafNode>(Implicit);
+    
+    Left.append(One);
     
     return parse(Left, CtxtIn);
 }
@@ -39,17 +43,17 @@ NodePtr SemiSemiParselet::SemiSemiParselet::parse(ParserContext CtxtIn) const {
 //
 // Multiple Span expressions are ImplicitTimes together
 //
-NodePtr SemiSemiParselet::SemiSemiParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
+NodePtr SemiSemiParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
     
     NodeSeq Args;
     
     auto Operand = parse0(Left, CtxtIn);
     
-    Args.push_back(Operand);
+    Args.append(Operand);
     
     auto Tok = TheParser->currentToken();
     
-    Tok = Utils::eatAndPreserveToplevelNewlines(Tok, CtxtIn, Args);
+    Tok = Parser::eatAndPreserveToplevelNewlines(Tok, CtxtIn, Args);
     
     if (Tok.Tok != TOKEN_SEMISEMI) {
         return Operand;
@@ -63,7 +67,9 @@ NodePtr SemiSemiParselet::SemiSemiParselet::parse(NodeSeq Left, ParserContext Ct
         //
         if (TheParser->isAbort()) {
             
-            auto Aborted = std::make_shared<LeafNode>(Token(TOKEN_ERROR_ABORTED, "", Source()));
+            auto A = Token(TOKEN_ERROR_ABORTED, "", Source());
+            
+            auto Aborted = std::make_shared<LeafNode>(A);
             
             return Aborted;
         }
@@ -71,7 +77,7 @@ NodePtr SemiSemiParselet::SemiSemiParselet::parse(NodeSeq Left, ParserContext Ct
         
         Tok = TheParser->currentToken();
         
-        Tok = Utils::eatAndPreserveToplevelNewlines(Tok, CtxtIn, Args);
+        Tok = Parser::eatAndPreserveToplevelNewlines(Tok, CtxtIn, Args);
         
         if (Tok.Tok != TOKEN_SEMISEMI) {
             break;
@@ -81,17 +87,21 @@ NodePtr SemiSemiParselet::SemiSemiParselet::parse(NodeSeq Left, ParserContext Ct
         
         TheParser->addIssue(Issue);
         
-        Args.push_back(std::make_shared<LeafNode>(Token(TOKEN_FAKE_IMPLICITTIMES, "", Source(Tok.Span.lines.start))));
+        auto Implicit = Token(TOKEN_FAKE_IMPLICITTIMES, "", Source(Tok.Span.lines.start));
+        
+        Args.append(std::make_shared<LeafNode>(Implicit));
         
         
         NodeSeq OperandLeft;
-    
-        OperandLeft.push_back(std::make_shared<LeafNode>(Token(TOKEN_FAKE_ONE, "", Source(Tok.Span.lines.start))));
+        
+        auto Implicit2 = Token(TOKEN_FAKE_IMPLICITONE, "", Source(Tok.Span.lines.start));
+        
+        OperandLeft.append(std::make_shared<LeafNode>(Implicit2));
         
         Operand = parse0(OperandLeft, CtxtIn);
         
         
-        Args.push_back(Operand);
+        Args.append(Operand);
     }
     
     auto ImplicitTimes = std::make_shared<InfixNode>(SYMBOL_TIMES, Args.getVector());
@@ -106,15 +116,16 @@ NodePtr SemiSemiParselet::SemiSemiParselet::parse(NodeSeq Left, ParserContext Ct
 //
 // Parses a single complete Span
 //
-NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
+NodePtr SemiSemiParselet::parse0(NodeSeq& Left, ParserContext CtxtIn) const {
     
     NodeSeq Args;
+    Args.reserve(1 + 1 + 1);
     
-    Args.push_back(Left);
+    Args.append(Left);
     
     auto TokIn = TheParser->currentToken();
     
-    Args.push_back(std::make_shared<LeafNode>(TokIn));
+    Args.append(std::make_shared<LeafNode>(TokIn));
     
     Utils::differentLineWarning(Left, TokIn, SYNTAXISSUESEVERITY_WARNING);
     
@@ -124,7 +135,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
     
     auto SecondTok = TheParser->nextToken(Ctxt);
     Utils::endOfLineWarning(TokIn, SecondTok);
-    SecondTok = Utils::eatAndPreserveToplevelNewlines(SecondTok, CtxtIn, Args);
+    SecondTok = Parser::eatAndPreserveToplevelNewlines(SecondTok, CtxtIn, Args);
     
     //
     // a;;
@@ -136,14 +147,16 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
         // a;;&
         //
         
-        Args.push_back(std::make_shared<LeafNode>(Token(TOKEN_FAKE_ALL, "", Source(TokIn.Span.lines.end))));
+        auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, "", Source(TokIn.Span.lines.end));
+        
+        Args.append(std::make_shared<LeafNode>(Implicit));
         
         auto Span = std::make_shared<BinaryNode>(SYMBOL_SPAN, Args.getVector());
         
         return Span;
     }
-        
-   Utils::differentLineWarning(TokIn, SecondTok, SYNTAXISSUESEVERITY_WARNING);
+    
+    Utils::differentLineWarning(TokIn, SecondTok, SYNTAXISSUESEVERITY_WARNING);
     
     if (SecondTok.Tok != TOKEN_SEMISEMI) {
         
@@ -153,10 +166,10 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
         
         auto FirstArg = TheParser->parse(Ctxt);
         
-        Args.push_back(FirstArg);
+        Args.append(FirstArg);
         
         auto ThirdTok = TheParser->currentToken();
-        ThirdTok = Utils::eatAndPreserveToplevelNewlines(ThirdTok, CtxtIn, Args);
+        ThirdTok = Parser::eatAndPreserveToplevelNewlines(ThirdTok, CtxtIn, Args);
         
         if (ThirdTok.Tok != TOKEN_SEMISEMI) {
             
@@ -177,7 +190,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
         
         auto FourthTok = TheParser->nextToken(Ctxt);
         Utils::endOfLineWarning(ThirdTok, FourthTok);
-        FourthTok = Utils::eatAndPreserveToplevelNewlines(FourthTok, CtxtIn, Args);
+        FourthTok = Parser::eatAndPreserveToplevelNewlines(FourthTok, CtxtIn, Args);
         
         if (!TheParser->isPossibleBeginningOfExpression(FourthTok, Ctxt)) {
             
@@ -206,8 +219,8 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
             
             auto SecondArg = TheParser->parse(Ctxt);
             
-            Args.push_back(std::make_shared<LeafNode>(ThirdTok));
-            Args.push_back(SecondArg);
+            Args.append(std::make_shared<LeafNode>(ThirdTok));
+            Args.append(SecondArg);
             
             auto Span = std::make_shared<TernaryNode>(SYMBOL_SPAN, Args.getVector());
             
@@ -229,14 +242,14 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
         
         return Span;
     }
-        
+    
     //
     // a;;;;
     //
     
     auto ThirdTok = TheParser->nextToken(Ctxt);
     Utils::endOfLineWarning(SecondTok, ThirdTok);
-    ThirdTok = Utils::eatAndPreserveToplevelNewlines(ThirdTok, CtxtIn, Args);
+    ThirdTok = Parser::eatAndPreserveToplevelNewlines(ThirdTok, CtxtIn, Args);
     
     if (!TheParser->isPossibleBeginningOfExpression(ThirdTok, Ctxt)) {
         
@@ -246,7 +259,9 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
         
         TheParser->nextToken(Ctxt);
         
-        Args.push_back(std::make_shared<LeafNode>(Token(TOKEN_FAKE_ALL, "", Source(TokIn.Span.lines.end))));
+        auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, "", Source(TokIn.Span.lines.end));
+        
+        Args.append(std::make_shared<LeafNode>(Implicit));
         
         auto Span = std::make_shared<BinaryNode>(SYMBOL_SPAN, Args.getVector());
         
@@ -267,9 +282,11 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
         
         auto FirstArg = TheParser->parse(Ctxt);
         
-        Args.push_back(std::make_shared<LeafNode>(Token(TOKEN_FAKE_ALL, "", Source(SecondTok.Span.lines.start))));
-        Args.push_back(std::make_shared<LeafNode>(SecondTok));
-        Args.push_back(FirstArg);
+        auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, "", Source(SecondTok.Span.lines.start));
+        
+        Args.append(std::make_shared<LeafNode>(Implicit));
+        Args.append(std::make_shared<LeafNode>(SecondTok));
+        Args.append(FirstArg);
         
         auto Span = std::make_shared<TernaryNode>(SYMBOL_SPAN, Args.getVector());
         
@@ -283,7 +300,9 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
     auto FourthTok = TheParser->nextToken(Ctxt);
     Utils::endOfLineWarning(ThirdTok, FourthTok);
     
-    Args.push_back(std::make_shared<LeafNode>(Token(TOKEN_FAKE_ALL, "", Source(TokIn.Span.lines.end))));
+    auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, "", Source(TokIn.Span.lines.end));
+    
+    Args.append(std::make_shared<LeafNode>(Implicit));
     
     auto Span = std::make_shared<BinaryNode>(SYMBOL_SPAN, Args.getVector());
     
@@ -293,3 +312,4 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
     
     return Span;
 }
+
