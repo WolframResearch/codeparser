@@ -81,41 +81,38 @@ NodePtr SymbolParselet::parse(ParserContext CtxtIn) const {
         return std::make_shared<OptionalDefaultPatternNode>(Args.getVector());
     }
     
-    NodeSeq ArgsTest;
-    
-    Tok = Parser::eatAll(Tok, Ctxt, ArgsTest);
-    
     //
-    // when parsing a in a:b  then ColonFlag is false
-    // when parsing b in a:b  then ColonFlag is true
+    // LOOKAHEAD
     //
-    // It is necessary to go to colonParselet->parse here (even though it seems non-contextSensitive)
-    // because in e.g.,   a_*b:f[]    the b is the last node in the Times expression and needs to bind with :f[]
-    // Parsing a_*b completely, and then parsing :f[] would be wrong.
-    //
-    if (!Ctxt.ColonFlag) {
+    {
+        LeafSeq ArgsTest;
         
-        if (Tok.Tok == TOKEN_COLON) {
+        Tok = Parser::eatAll(Tok, Ctxt, ArgsTest);
+        
+        //
+        // when parsing a in a:b  then ColonFlag is false
+        // when parsing b in a:b  then ColonFlag is true
+        //
+        // It is necessary to go to colonParselet->parse here (even though it seems non-contextSensitive)
+        // because in e.g.,   a_*b:f[]    the b is the last node in the Times expression and needs to bind with :f[]
+        // Parsing a_*b completely, and then parsing :f[] would be wrong.
+        //
+        if (!Ctxt.ColonFlag) {
             
-            Args.append(ArgsTest);
-            
-            auto& colonParselet = TheParser->findInfixParselet(Tok.Tok);
-            
-            return colonParselet->parse(Args, Ctxt);
+            if (Tok.Tok == TOKEN_COLON) {
+                
+                Args.append(ArgsTest);
+                
+                auto& colonParselet = TheParser->findInfixParselet(Tok.Tok);
+                
+                return colonParselet->parse(Args, Ctxt);
+            }
         }
+        
+        TheParser->append(ArgsTest);
+        
+        return Sym;
     }
-    
-    //
-    // Put back unused Nodes
-    //
-    assert(TheParser->getTokenQueue().empty());
-    for (auto A : ArgsTest.getVector()) {
-        auto ALeaf = std::dynamic_pointer_cast<const LeafNode>(A);
-        assert(ALeaf);
-        TheParser->append(ALeaf->getToken());
-    }
-    
-    return Sym;
 }
 
 
@@ -149,7 +146,7 @@ NodePtr PrefixOperatorParselet::parse(ParserContext CtxtIn) const {
     return std::make_shared<PrefixNode>(PrefixOperatorToSymbol(TokIn.Tok), Args.getVector());
 }
 
-NodePtr BinaryOperatorParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
+NodePtr BinaryOperatorParselet::parse(const NodeSeq& Left, ParserContext CtxtIn) const {
     
     NodeSeq Args;
     Args.reserve(1 + 1 + 1);
@@ -186,7 +183,7 @@ NodePtr BinaryOperatorParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const
     return std::make_shared<BinaryNode>(BinaryOperatorToSymbol(TokIn.Tok), Args.getVector());
 }
 
-NodePtr InfixOperatorParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
+NodePtr InfixOperatorParselet::parse(const NodeSeq& Left, ParserContext CtxtIn) const {
     
     NodeSeq Args;
     Args.reserve(1 + 1 + 1);
@@ -252,7 +249,7 @@ NodePtr InfixOperatorParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const 
     return std::make_shared<InfixNode>(InfixOperatorToSymbol(TokIn.Tok), Args.getVector());
 }
 
-NodePtr PostfixOperatorParselet::parse(NodeSeq& Operand, ParserContext CtxtIn) const {
+NodePtr PostfixOperatorParselet::parse(const NodeSeq& Operand, ParserContext CtxtIn) const {
     
     NodeSeq Args;
     Args.reserve(1 + 1);
@@ -394,7 +391,7 @@ NodePtr GroupParselet::parse(ParserContext CtxtIn) const {
 // Call parselets
 //
 
-NodePtr CallParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
+NodePtr CallParselet::parse(const NodeSeq& Left, ParserContext CtxtIn) const {
     
     NodeSeq Args;
     Args.reserve(1 + 1);
@@ -529,48 +526,44 @@ NodePtr UnderParselet::parse(ParserContext CtxtIn) const {
     }
     NodePtr Blank = BlankTmp;
     
-    
-    NodeSeq ArgsTest;
-    
-    Tok = TheParser->currentToken();
-    
-    Tok = Parser::eatAndPreserveToplevelNewlines(Tok, CtxtIn, ArgsTest);
-    
     //
-    // For something like _:""  when parsing _
-    // ColonFlag == false
-    // the : here is Optional, and so we want to go parse with ColonParselet's parseContextSensitive method
+    // LOOKAHEAD
     //
-    // For something like a:_:""  when parsing _
-    // ColonFlag == true
-    // make sure to not parse the second : here
-    // We are already inside ColonParselet from the first :, and so ColonParselet will also handle the second :
-    //
-    if (!Ctxt.ColonFlag) {
+    {
+        LeafSeq ArgsTest;
         
-        if (Tok.Tok == TOKEN_COLON) {
+        Tok = TheParser->currentToken();
+        
+        Tok = Parser::eatAndPreserveToplevelNewlines(Tok, CtxtIn, ArgsTest);
+        
+        //
+        // For something like _:""  when parsing _
+        // ColonFlag == false
+        // the : here is Optional, and so we want to go parse with ColonParselet's parseContextSensitive method
+        //
+        // For something like a:_:""  when parsing _
+        // ColonFlag == true
+        // make sure to not parse the second : here
+        // We are already inside ColonParselet from the first :, and so ColonParselet will also handle the second :
+        //
+        if (!Ctxt.ColonFlag) {
             
-            auto& colonParselet = TheParser->findContextSensitiveInfixParselet(Tok.Tok);
-            
-            NodeSeq BlankSeq;
-            BlankSeq.reserve(1 + 1);
-            BlankSeq.append(Blank);
-            BlankSeq.append(ArgsTest);
-            return colonParselet->parseContextSensitive(BlankSeq, Ctxt);
+            if (Tok.Tok == TOKEN_COLON) {
+                
+                auto& colonParselet = TheParser->findContextSensitiveInfixParselet(Tok.Tok);
+                
+                NodeSeq BlankSeq;
+                BlankSeq.reserve(1 + 1);
+                BlankSeq.append(Blank);
+                BlankSeq.append(ArgsTest);
+                return colonParselet->parseContextSensitive(BlankSeq, Ctxt);
+            }
         }
+        
+        TheParser->append(ArgsTest);
+        
+        return Blank;
     }
-    
-    //
-    // Put back unused Nodes
-    //
-    assert(TheParser->getTokenQueue().empty());
-    for (auto A : ArgsTest.getVector()) {
-        auto ALeaf = std::dynamic_pointer_cast<const LeafNode>(A);
-        assert(ALeaf);
-        TheParser->append(ALeaf->getToken());
-    }
-    
-    return Blank;
 }
 
 //
@@ -580,7 +573,7 @@ NodePtr UnderParselet::parse(ParserContext CtxtIn) const {
 //
 // Called from other parselets
 //
-NodePtr UnderParselet::parseContextSensitive(NodeSeq& Left, ParserContext CtxtIn) const {
+NodePtr UnderParselet::parseContextSensitive(const NodeSeq& Left, ParserContext CtxtIn) const {
     
     NodeSeq Args;
     Args.reserve(1 + 1);
@@ -625,47 +618,44 @@ NodePtr UnderParselet::parseContextSensitive(NodeSeq& Left, ParserContext CtxtIn
     NodePtr Pat = PatTmp;
     
     
-    NodeSeq ArgsTest;
-    
-    Tok = TheParser->currentToken();
-    
-    Tok = Parser::eatAll(Tok, Ctxt, ArgsTest);
-    
     //
-    // For something like a:b_c:d when parsing _
-    // ColonFlag == true
+    // LOOKAHEAD
     //
-    if (!Ctxt.ColonFlag) {
+    {
+        LeafSeq ArgsTest;
         
-        if (Tok.Tok == TOKEN_COLON) {
+        Tok = TheParser->currentToken();
+        
+        Tok = Parser::eatAll(Tok, Ctxt, ArgsTest);
+        
+        //
+        // For something like a:b_c:d when parsing _
+        // ColonFlag == true
+        //
+        if (!Ctxt.ColonFlag) {
             
-            auto& colonParselet = TheParser->findContextSensitiveInfixParselet(Tok.Tok);
-            
-            NodeSeq PatSeq;
-            PatSeq.reserve(1 + 1);
-            PatSeq.append(Pat);
-            PatSeq.append(ArgsTest);
-            return colonParselet->parseContextSensitive(PatSeq, Ctxt);
+            if (Tok.Tok == TOKEN_COLON) {
+                
+                auto& colonParselet = TheParser->findContextSensitiveInfixParselet(Tok.Tok);
+                
+                NodeSeq PatSeq;
+                PatSeq.reserve(1 + 1);
+                PatSeq.append(Pat);
+                PatSeq.append(ArgsTest);
+                return colonParselet->parseContextSensitive(PatSeq, Ctxt);
+            }
         }
+        
+        TheParser->append(ArgsTest);
+        
+        return Pat;
     }
-    
-    //
-    // Put back unused Nodes
-    //
-    assert(TheParser->getTokenQueue().empty());
-    for (auto A : ArgsTest.getVector()) {
-        auto ALeaf = std::dynamic_pointer_cast<const LeafNode>(A);
-        assert(ALeaf);
-        TheParser->append(ALeaf->getToken());
-    }
-    
-    return Pat;
 }
 
 //
 // Something like  a ~f~ b
 //
-NodePtr TildeParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
+NodePtr TildeParselet::parse(const NodeSeq& Left, ParserContext CtxtIn) const {
     
     NodeSeq Args;
     Args.reserve(1 + 1 + 1 + 1 + 1);
@@ -763,7 +753,7 @@ NodePtr TildeParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
 // when parsing a in a:b  then ColonFlag is false
 // when parsing b in a:b  then ColonFlag is true
 //
-NodePtr ColonParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
+NodePtr ColonParselet::parse(const NodeSeq& Left, ParserContext CtxtIn) const {
     
     assert(!CtxtIn.ColonFlag);
     
@@ -823,7 +813,7 @@ NodePtr ColonParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
 //
 // Called from other parselets
 //
-NodePtr ColonParselet::parseContextSensitive(NodeSeq& Left, ParserContext CtxtIn) const {
+NodePtr ColonParselet::parseContextSensitive(const NodeSeq& Left, ParserContext CtxtIn) const {
     
     //
     // when parsing a in a:b  then ColonFlag is false
@@ -858,7 +848,7 @@ NodePtr ColonParselet::parseContextSensitive(NodeSeq& Left, ParserContext CtxtIn
 //
 // Something like  a /: b = c
 //
-NodePtr SlashColonParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
+NodePtr SlashColonParselet::parse(const NodeSeq& Left, ParserContext CtxtIn) const {
     
     NodeSeq Args;
     Args.reserve(1 + 1 + 1);
@@ -1032,7 +1022,7 @@ NodePtr LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn) const {
 //
 // Something like  a =.
 //
-NodePtr EqualParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
+NodePtr EqualParselet::parse(const NodeSeq& Left, ParserContext CtxtIn) const {
     
     NodeSeq Args;
     Args.reserve(1 + 1 + 1);
@@ -1132,7 +1122,7 @@ NodePtr IntegralParselet::parse(ParserContext CtxtIn) const {
 //
 // Gather all < > == <= => into a single node
 //
-NodePtr InequalityParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
+NodePtr InequalityParselet::parse(const NodeSeq& Left, ParserContext CtxtIn) const {
     
     NodeSeq Args;
     
@@ -1191,7 +1181,7 @@ NodePtr InequalityParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
 //
 // Gather all \[VectorGreater] \[VectorLess] \[VectorGreaterEqual] \[VectorLessEqual] into a single node
 //
-NodePtr VectorInequalityParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
+NodePtr VectorInequalityParselet::parse(const NodeSeq& Left, ParserContext CtxtIn) const {
     
     NodeSeq Args;
     
@@ -1247,7 +1237,7 @@ NodePtr VectorInequalityParselet::parse(NodeSeq& Left, ParserContext CtxtIn) con
     return std::make_shared<InfixNode>(SYMBOL_DEVELOPER_VECTORINEQUALITY, Args.getVector());
 }
 
-NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
+NodePtr InfixOperatorWithTrailingParselet::parse(const NodeSeq& Left, ParserContext CtxtIn) const {
     
     NodeSeq Args;
     Args.reserve(1 + 1 + 1);
@@ -1295,16 +1285,23 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq& Left, ParserContext Ct
             
             lastOperatorToken = Tok;
             
-            auto allowTrailing = true;
-            if (allowTrailing) {
+            //
+            // ALLOWTRAILING CODE
+            //
                 
-                //
-                // Something like  a;b  or  a,b
-                //
+            //
+            // Something like  a;b  or  a,b
+            //
+            
+            Tok = TheParser->nextToken(Ctxt);
+            
+            //
+            // LOOKAHEAD
+            //
+            {
+                LeafSeq ArgsTest;
                 
-                Tok = TheParser->nextToken(Ctxt);
-                
-                Tok = Parser::eatAndPreserveToplevelNewlines(Tok, CtxtIn, Args);
+                Tok = Parser::eatAndPreserveToplevelNewlines(Tok, Ctxt, ArgsTest);
                 
                 if (isInfixOperator(Tok.Tok) &&
                     InfixOperatorToSymbol(Tok.Tok) == InfixOperatorToSymbol(TokIn.Tok)) {
@@ -1313,15 +1310,19 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq& Left, ParserContext Ct
                     // Something like  a; ;
                     //
                     
-                    lastOperatorToken = Tok;
-                    
                     auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, "", Source(lastOperatorToken.Span.lines.start));
                     
+                    lastOperatorToken = Tok;
+                    
                     Args.append(std::make_shared<LeafNode>(Implicit));
+                    
+                    Args.append(ArgsTest);
                     
                 } else if (TheParser->isPossibleBeginningOfExpression(Tok, Ctxt)) {
                     
                     auto operand = TheParser->parse(Ctxt);
+                    
+                    Args.append(ArgsTest);
                     
                     Args.append(operand);
                     
@@ -1337,18 +1338,10 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq& Left, ParserContext Ct
                     
                     Args.append(std::make_shared<LeafNode>(Implicit));
                     
-                    break;
+                    TheParser->append(ArgsTest);
+                    
+                    return std::make_shared<InfixNode>(InfixOperatorToSymbol(TokIn.Tok), Args.getVector());
                 }
-                
-            } else {
-                
-                Tok = TheParser->nextToken(Ctxt);
-                
-                Tok = Parser::eatAll(Tok, Ctxt, Args);
-                
-                auto operand = TheParser->parse(Ctxt);
-                
-                Args.append(operand);
             }
             
         } else {
@@ -1357,12 +1350,10 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq& Left, ParserContext Ct
             // Tok.Tok != TokIn.Tok, so break
             //
             
-            break;
+            return std::make_shared<InfixNode>(InfixOperatorToSymbol(TokIn.Tok), Args.getVector());
         }
         
     } // while
-    
-    return std::make_shared<InfixNode>(InfixOperatorToSymbol(TokIn.Tok), Args.getVector());
 }
 
 //

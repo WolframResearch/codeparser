@@ -4,32 +4,40 @@
 #include "Symbol.h"
 
 void NodeSeq::append(NodePtr& N) {
-    vector.push_back(N);
+    vec.push_back(N);
 }
 
-void NodeSeq::append(NodeSeq& Args) {
-    append(Args.vector);
+void NodeSeq::append(const NodeSeq& Args) {
+    append(Args.vec);
 }
 
-void NodeSeq::append(std::vector<NodePtr>& V) {
-    std::copy(V.begin(), V.end(), std::back_inserter(vector));
+void NodeSeq::append(const LeafSeq& Args) {
+    append(Args.vec);
+}
+
+void NodeSeq::append(const std::vector<NodePtr>& V) {
+    std::copy(V.begin(), V.end(), std::back_inserter(vec));
+}
+
+void NodeSeq::append(const std::vector<LeafNodePtr>& V) {
+    std::copy(V.begin(), V.end(), std::back_inserter(vec));
 }
 
 bool NodeSeq::empty() const {
-    return vector.empty();
+    return vec.empty();
 }
 
 size_t NodeSeq::size() const {
-    return vector.size();
+    return vec.size();
 }
 
 void NodeSeq::reserve(size_t i) {
-    vector.reserve(i);
+    vec.reserve(i);
 }
 
 NodePtr NodeSeq::main() const {
     
-    for (auto N : vector) {
+    for (auto N : vec) {
         
         if (auto NLeaf = std::dynamic_pointer_cast<const LeafNode>(N)) {
             
@@ -54,10 +62,10 @@ NodePtr NodeSeq::main() const {
 
 NodePtr NodeSeq::last() const {
     
-    assert(!vector.empty());
+    assert(!vec.empty());
     
-    auto i = vector.end();
-    while (i != vector.begin()) {
+    auto i = vec.end();
+    while (i != vec.begin()) {
         
         --i;
         
@@ -81,9 +89,12 @@ NodePtr NodeSeq::last() const {
 }
 
 void NodeSeq::clear() {
-    vector.clear();
+    vec.clear();
 }
 
+void LeafSeq::append(LeafNodePtr& N) {
+    vec.push_back(N);
+}
 
 Source Node::getSourceSpan() const {
     

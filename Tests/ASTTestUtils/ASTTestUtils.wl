@@ -49,6 +49,10 @@ Module[{cst, agg, ast, good, expected, actual, str},
 		Throw[cst]
 	];
 	
+	If[!TrueQ[testLeafNodeOrder[cst]],
+		Throw[OutOfOrder]
+	];
+	
 	str = ToSourceCharacterString[cst];
 	If[!FailureQ[str],
 		actual = DeleteCases[ToExpression[str, InputForm], Null];
@@ -388,6 +392,10 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     If[FailureQ[savedFailure],
     	Throw[savedFailure, "Unhandled"]	
     ];
+    
+    If[!TrueQ[testLeafNodeOrder[cst]],
+		Throw[OutOfOrder]
+	];
     
     tryString = ToSourceCharacterString[cst];
     
@@ -733,6 +741,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "SystemFiles/Links/JLink/Examples/Part1/Palette.nb",
         prefix <> "SystemFiles/Links/JLink/Examples/Part1/Spirograph.nb",
         prefix <> "SystemFiles/Links/NETLink/Examples/Part1/Windows and Dialogs/AsteroidsGame/AsteroidsGame.nb",
+        prefix <> "CompileUtilities/CompileUtilities/RuntimeChecks/RuntimeChecks.m",
         Nothing
         }, fileIn],
       f = Failure["CannotRegexTooWeird", <|"FileName" -> fileIn|>];
@@ -1036,7 +1045,11 @@ Module[{text, f, expected, msgs, crPos, lfPos},
 
 
 
-
+testLeafNodeOrder[cst_] :=
+Module[{leaves},
+	leaves = Cases[cst, _LeafNode, Infinity];
+	OrderedQ[leaves, OrderedQ[{#1[[3]][Source], #2[[3]][Source]}]&]
+]
 
 
 

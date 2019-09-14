@@ -530,13 +530,30 @@ Token Parser::currentToken() const {
     return Tok;
 }
 
-void Parser::prepend(Token& current) {
+//
+// Used to insert ImplicitTimes
+//
+void Parser::prepend(const Token& current) {
     
     tokenQueue.insert(tokenQueue.begin(), current);
 }
 
 void Parser::append(const Token& Tok) {
     tokenQueue.push_back(Tok);
+}
+
+void Parser::append(const NodeSeq& N) {
+    for (auto A : N.getVector()) {
+        auto ALeaf = std::dynamic_pointer_cast<const LeafNode>(A);
+        assert(ALeaf);
+        append(ALeaf->getToken());
+    }
+}
+
+void Parser::append(const LeafSeq& N) {
+    for (auto A : N.getVector()) {
+        append(A->getToken());
+    }
 }
 
 std::vector<SyntaxIssue> Parser::getIssues() const {
@@ -565,7 +582,7 @@ void Parser::addIssue(SyntaxIssue I) {
     Issues.push_back(I);
 }
 
-bool Parser::isPossibleBeginningOfExpression(Token& Tok, ParserContext CtxtIn) const {
+bool Parser::isPossibleBeginningOfExpression(const Token& Tok, ParserContext CtxtIn) const {
     
     if (isError(Tok.Tok)) {
         return false;
@@ -575,16 +592,10 @@ bool Parser::isPossibleBeginningOfExpression(Token& Tok, ParserContext CtxtIn) c
         return false;
     }
     
-    if (Tok.Tok == TOKEN_WHITESPACE) {
-        return false;
-    }
-    if (Tok.Tok == TOKEN_NEWLINE) {
-        return false;
-    }
-    if (Tok.Tok == TOKEN_COMMENT) {
-        return false;
-    }
-    if (Tok.Tok == TOKEN_LINECONTINUATION) {
+    if (Tok.Tok == TOKEN_WHITESPACE ||
+        Tok.Tok == TOKEN_NEWLINE ||
+        Tok.Tok == TOKEN_COMMENT ||
+        Tok.Tok == TOKEN_LINECONTINUATION) {
         return false;
     }
     
@@ -907,7 +918,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
     return Left;
 }
 
-NodePtr Parser::parse0(NodeSeq Left, Precedence TokenPrecedence, ParserContext CtxtIn) {
+NodePtr Parser::parse0(const NodeSeq& Left, Precedence TokenPrecedence, ParserContext CtxtIn) {
     
     //
     // getCurrentTokenPrecedence() may have inserted something like a new IMPLICITTIMES token, so grab again
@@ -935,7 +946,7 @@ bool Parser::isAbort() const {
     return currentAbortQ();
 }
 
-const Token Parser::eatAll(Token& TokIn, ParserContext Ctxt, NodeSeq& Args) {
+const Token Parser::eatAll(const Token& TokIn, ParserContext Ctxt, NodeSeq& Args) {
     
     auto Tok = TokIn;
     
@@ -957,7 +968,69 @@ const Token Parser::eatAll(Token& TokIn, ParserContext Ctxt, NodeSeq& Args) {
     return Tok;
 }
 
-const Token Parser::eatAndPreserveToplevelNewlines(Token& TokIn, ParserContext Ctxt, NodeSeq& Args) {
+const Token Parser::eatAll(const Token& TokIn, ParserContext Ctxt, LeafSeq& Args) {
+    
+    auto Tok = TokIn;
+    
+    while (Tok.Tok == TOKEN_WHITESPACE ||
+           Tok.Tok == TOKEN_NEWLINE ||
+           Tok.Tok == TOKEN_COMMENT ||
+           Tok.Tok == TOKEN_LINECONTINUATION) {
+        
+        //
+        // No need to check isAbort() inside tokenizer loops
+        //
+        
+        
+        Args.append(std::make_shared<LeafNode>(Tok));
+        
+        Tok = TheParser->nextToken(Ctxt);
+    }
+    
+    return Tok;
+}
+
+const Token Parser::eatAndPreserveToplevelNewlines(const Token& TokIn, ParserContext Ctxt, NodeSeq& Args) {
+    
+    auto Tok = TokIn;
+    
+    while (true) {
+        
+        //
+        // No need to check isAbort() inside tokenizer loops
+        //
+        
+        
+        if (Tok.Tok == TOKEN_WHITESPACE ||
+            Tok.Tok == TOKEN_COMMENT ||
+            Tok.Tok == TOKEN_LINECONTINUATION) {
+            
+            Args.append(std::make_shared<LeafNode>(Tok));
+            
+            Tok = TheParser->nextToken(Ctxt);
+            
+        } else if (Tok.Tok == TOKEN_NEWLINE) {
+            
+            if (Ctxt.getGroupDepth() == 0) {
+                
+                break;
+                
+            } else {
+                
+                Args.append(std::make_shared<LeafNode>(Tok));
+                
+                Tok = TheParser->nextToken(Ctxt);
+            }
+            
+        } else {
+            break;
+        }
+    }
+    
+    return Tok;
+}
+
+const Token Parser::eatAndPreserveToplevelNewlines(const Token& TokIn, ParserContext Ctxt, LeafSeq& Args) {
     
     auto Tok = TokIn;
     

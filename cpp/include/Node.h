@@ -13,8 +13,10 @@ class Symbol;
 using SymbolPtr = std::unique_ptr<const Symbol>;
 
 class Node;
+class LeafNode;
 
 using NodePtr = const std::shared_ptr<const Node>;
+using LeafNodePtr = const std::shared_ptr<const LeafNode>;
 
 //
 // An expression representing a node in the syntax tree
@@ -43,6 +45,29 @@ public:
     virtual ~Node() {}
 };
 
+class LeafNode;
+
+class LeafSeq {
+public:
+    std::vector<LeafNodePtr> vec;
+    
+    LeafSeq() : vec() {}
+    
+    bool empty() const;
+    
+    size_t size() const;
+    
+    void reserve(size_t i);
+    
+    void append(LeafNodePtr& );
+    
+    const std::vector<LeafNodePtr> getVector() const {
+        return vec;
+    }
+    
+    void clear();
+};
+
 //
 // A sequence of Nodes
 //
@@ -55,12 +80,10 @@ public:
 // for fast access.
 //
 class NodeSeq {
-    
-    std::vector<NodePtr> vector;
-    
 public:
+    std::vector<NodePtr> vec;
     
-    NodeSeq() : vector() {}
+    NodeSeq() : vec() {}
     
     bool empty() const;
     
@@ -70,23 +93,22 @@ public:
     
     void append(NodePtr& );
     
-    void append(NodeSeq& );
+    void append(const NodeSeq& );
+    void append(const LeafSeq& );
     
-    void append(std::vector<NodePtr>& );
+    void append(const std::vector<NodePtr>& );
+    void append(const std::vector<LeafNodePtr>& );
     
     NodePtr main() const;
     
     NodePtr last() const;
     
     const std::vector<NodePtr> getVector() const {
-        return vector;
+        return vec;
     }
     
     void clear();
 };
-
-
-
 
 //
 // Literal nodes

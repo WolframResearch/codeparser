@@ -21,7 +21,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20181231-N2J2Z3"
+	TestID->"Span-20181231-N2J2Z3"
 ]
 
 Test[
@@ -31,7 +31,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190109-B0V5P7"
+	TestID->"Span-20190109-B0V5P7"
 ]
 
 Test[
@@ -41,7 +41,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-E5E6B1"
+	TestID->"Span-20190620-E5E6B1"
 ]
 
 Test[
@@ -51,7 +51,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-Y6L0F5"
+	TestID->"Span-20190620-Y6L0F5"
 ]
 
 Test[
@@ -61,7 +61,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-M8I9Z2"
+	TestID->"Span-20190620-M8I9Z2"
 ]
 
 Test[
@@ -71,7 +71,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-J5A3O4"
+	TestID->"Span-20190620-J5A3O4"
 ]
 
 Test[
@@ -81,7 +81,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190109-M8Y0B6"
+	TestID->"Span-20190109-M8Y0B6"
 ]
 
 Test[
@@ -91,7 +91,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-L0I6I3"
+	TestID->"Span-20190620-L0I6I3"
 ]
 
 Test[
@@ -101,7 +101,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-U3F5F7"
+	TestID->"Span-20190620-U3F5F7"
 ]
 
 Test[
@@ -111,7 +111,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-C7J3X7"
+	TestID->"Span-20190620-C7J3X7"
 ]
 
 Test[
@@ -121,7 +121,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-B6M3X4"
+	TestID->"Span-20190620-B6M3X4"
 ]
 
 Test[
@@ -131,7 +131,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-T0Y0L1"
+	TestID->"Span-20190620-T0Y0L1"
 ]
 
 Test[
@@ -141,7 +141,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-V7M9T8"
+	TestID->"Span-20190620-V7M9T8"
 ]
 
 Test[
@@ -151,7 +151,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-G4T7T1"
+	TestID->"Span-20190620-G4T7T1"
 ]
 
 Test[
@@ -161,7 +161,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-L4W4G9"
+	TestID->"Span-20190620-L4W4G9"
 ]
 
 Test[
@@ -171,7 +171,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-Y5S8V9"
+	TestID->"Span-20190620-Y5S8V9"
 ]
 
 Test[
@@ -181,7 +181,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-T8R1B0"
+	TestID->"Span-20190620-T8R1B0"
 ]
 
 Test[
@@ -191,7 +191,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-S0D8M5"
+	TestID->"Span-20190620-S0D8M5"
 ]
 
 Test[
@@ -201,7 +201,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-W9H4P5"
+	TestID->"Span-20190620-W9H4P5"
 ]
 
 Test[
@@ -211,7 +211,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-T4T2R7"
+	TestID->"Span-20190620-T4T2R7"
 ]
 
 Test[
@@ -221,7 +221,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-Y9A7L2"
+	TestID->"Span-20190620-Y9A7L2"
 ]
 
 Test[
@@ -231,7 +231,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-K8Q1S1"
+	TestID->"Span-20190620-K8Q1S1"
 ]
 
 Test[
@@ -241,7 +241,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-N7X0T0"
+	TestID->"Span-20190620-N7X0T0"
 ]
 
 Test[
@@ -251,7 +251,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-T3H6N4"
+	TestID->"Span-20190620-T3H6N4"
 ]
 
 Test[
@@ -261,7 +261,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-B1F7N5"
+	TestID->"Span-20190620-B1F7N5"
 ]
 
 Test[
@@ -271,7 +271,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-H7G3T9"
+	TestID->"Span-20190620-H7G3T9"
 ]
 
 Test[
@@ -281,7 +281,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-S1L1E1"
+	TestID->"Span-20190620-S1L1E1"
 ]
 
 Test[
@@ -291,7 +291,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-D8U0E6"
+	TestID->"Span-20190620-D8U0E6"
 ]
 
 Test[
@@ -301,7 +301,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-V4H4O6"
+	TestID->"Span-20190620-V4H4O6"
 ]
 
 Test[
@@ -311,7 +311,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-T8T4G5"
+	TestID->"Span-20190620-T8T4G5"
 ]
 
 Test[
@@ -321,7 +321,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-G6W0G8"
+	TestID->"Span-20190620-G6W0G8"
 ]
 
 Test[
@@ -331,7 +331,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-I5M5M6"
+	TestID->"Span-20190620-I5M5M6"
 ]
 
 Test[
@@ -341,7 +341,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-B2S1L0"
+	TestID->"Span-20190620-B2S1L0"
 ]
 
 Test[
@@ -351,7 +351,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-C1M5E0"
+	TestID->"Span-20190620-C1M5E0"
 ]
 
 Test[
@@ -361,7 +361,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-J7I0N0"
+	TestID->"Span-20190620-J7I0N0"
 ]
 
 Test[
@@ -371,7 +371,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-V5R5K9"
+	TestID->"Span-20190620-V5R5K9"
 ]
 
 Test[
@@ -381,7 +381,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-A1K3Y2"
+	TestID->"Span-20190620-A1K3Y2"
 ]
 
 Test[
@@ -391,7 +391,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-H1W2W2"
+	TestID->"Span-20190620-H1W2W2"
 ]
 
 Test[
@@ -401,7 +401,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-C1K3V9"
+	TestID->"Span-20190620-C1K3V9"
 ]
 
 Test[
@@ -411,7 +411,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-S9O5S7"
+	TestID->"Span-20190620-S9O5S7"
 ]
 
 Test[
@@ -421,7 +421,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-E2I3R8"
+	TestID->"Span-20190620-E2I3R8"
 ]
 
 Test[
@@ -431,7 +431,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-C1V9W3"
+	TestID->"Span-20190620-C1V9W3"
 ]
 
 Test[
@@ -441,7 +441,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-E0A2L9"
+	TestID->"Span-20190620-E0A2L9"
 ]
 
 Test[
@@ -451,7 +451,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-Y0F1O2"
+	TestID->"Span-20190620-Y0F1O2"
 ]
 
 Test[
@@ -461,7 +461,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-D8G2B8"
+	TestID->"Span-20190620-D8G2B8"
 ]
 
 Test[
@@ -471,7 +471,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-V3Y3U4"
+	TestID->"Span-20190620-V3Y3U4"
 ]
 
 Test[
@@ -481,7 +481,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-K1V8P0"
+	TestID->"Span-20190620-K1V8P0"
 ]
 
 Test[
@@ -491,7 +491,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190620-T6E4Z3"
+	TestID->"Span-20190620-T6E4Z3"
 ]
 
 Test[
@@ -501,7 +501,7 @@ Test[
 	,
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
-	TestID->"Parse-20190621-I4J4Y6"
+	TestID->"Span-20190621-I4J4Y6"
 ]
 
 
@@ -518,8 +518,10 @@ TestMatch[
 	,
 	InfixNode[Times, {
 		BinaryNode[Span, _, _],
+		LeafNode[Token`WhiteSpace, _, _],
 		LeafNode[Token`Fake`ImplicitTimes, _, _],
 		BinaryNode[Span, _, _],
+		LeafNode[Token`WhiteSpace, _, _],
 		LeafNode[Token`Fake`ImplicitTimes, _, _],
 		BinaryNode[Span, _, _] }, _]
 	,

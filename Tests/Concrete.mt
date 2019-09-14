@@ -50,8 +50,8 @@ Test[
 	InfixNode[CompoundExpression, {
 		LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
 		LeafNode[Token`Semi, ";", <|Source -> {{1, 2}, {1, 2}}|>],
+		LeafNode[Token`Fake`ImplicitNull, "", <|Source -> {{1, 2}, {1, 2}}|>],
 		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 3}, {1, 3}}|>],
-		LeafNode[Token`Fake`ImplicitNull, "", <|Source -> {{1, 4}, {1, 4}}|>],
 		LeafNode[Token`Semi, ";", <|Source -> {{1, 4}, {1, 4}}|>],
 		LeafNode[Token`Fake`ImplicitNull, "", <|Source -> {{1, 4}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]
 	,
@@ -168,7 +168,7 @@ Test[
 			InfixNode[Comma, {
 				LeafNode[Integer, "1", <|Source->{{1,3}, {1,3}}|>],
 				LeafNode[Token`Comma, ",", <|Source->{{1,4}, {1,4}}|>],
-				LeafNode[Token`Fake`ImplicitNull, "", <|Source->{{1,5}, {1,5}}|>],
+				LeafNode[Token`Fake`ImplicitNull, "", <|Source->{{1,4}, {1,4}}|>],
 				LeafNode[Token`LongName`InvisibleComma, "\\[InvisibleComma]", <|Source->{{1,5}, {1,21}}|>],
 				LeafNode[Integer, "2", <|Source->{{1,22}, {1,22}}|>]}, <|Source->{{1,3}, {1,22}}|>],
 			LeafNode[Token`CloseSquare, "]", <|Source->{{1,23}, {1,23}}|>] }, <|Source->{{1,2}, {1,23}}|>] }, <|Source->{{1,1}, {1,23}}|>]
@@ -234,14 +234,107 @@ Test[
 
 
 
+Test[
+	ConcreteParseString[";;(**);;"]
+	,
+	InfixNode[Times, {
+		BinaryNode[Span, {
+			LeafNode[Token`Fake`ImplicitOne, "", <|Source -> {{1, 1}, {1, 1}}|>],
+			LeafNode[Token`SemiSemi, ";;", <|Source -> {{1, 1}, {1, 2}}|>],
+			LeafNode[Token`Fake`ImplicitAll, "", <|Source -> {{1, 2}, {1, 2}}|>]}, <|Source -> {{1, 1}, {1, 2}}|>],
+		LeafNode[Token`Comment, "(**)", <|Source -> {{1, 3}, {1, 6}}|>],
+		LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> {{1, 7}, {1, 7}}|>],
+		BinaryNode[Span, {
+			LeafNode[Token`Fake`ImplicitOne, "", <|Source -> {{1, 7}, {1, 7}}|>],
+			LeafNode[Token`SemiSemi, ";;", <|Source -> {{1, 7}, {1, 8}}|>],
+			LeafNode[Token`Fake`ImplicitAll, "", <|Source -> {{1, 8}, {1, 8}}|>]}, <|Source -> {{1, 7}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]
+	,
+	TestID->"Concrete-20190914-Z5W3U0"
+]
+
+Test[
+	ConcreteParseString["a;;b;;(**)&"]
+	,
+	PostfixNode[Function, {
+		InfixNode[Times, {
+			BinaryNode[Span, {
+				LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>], 
+		     	LeafNode[Token`SemiSemi, ";;", <|Source -> {{1, 2}, {1, 3}}|>], 
+		     	LeafNode[Symbol, "b", <|Source -> {{1, 4}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>],
+      		LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> {{1, 5}, {1, 5}}|>], 
+      		BinaryNode[Span, {LeafNode[Token`Fake`ImplicitOne, "", <|Source -> {{1, 5}, {1, 5}}|>], 
+      			LeafNode[Token`SemiSemi, ";;", <|Source -> {{1, 5}, {1, 6}}|>], 
+      			LeafNode[Token`Fake`ImplicitAll, "", <|Source -> {{1, 6}, {1, 6}}|>]}, <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>], 
+  		LeafNode[Token`Comment, "(**)", <|Source -> {{1, 7}, {1, 10}}|>],
+  		LeafNode[Token`Amp, "&", <|Source -> {{1, 11}, {1, 11}}|>]}, <|Source -> {{1, 1}, {1, 11}}|>]
+	,
+	TestID->"Concrete-20190914-U5A2R0"
+]
+
+Test[
+	ConcreteParseString["a;(**)&"]
+	,
+	PostfixNode[Function, {
+		InfixNode[CompoundExpression, {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
+			LeafNode[Token`Semi, ";", <|Source -> {{1, 2}, {1, 2}}|>],
+			LeafNode[Token`Fake`ImplicitNull, "", <|Source -> {{1, 2}, {1, 2}}|>]}, <|Source -> {{1, 1}, {1, 2}}|>],
+		LeafNode[Token`Comment, "(**)", <|Source -> {{1, 3}, {1, 6}}|>],
+		LeafNode[Token`Amp, "&", <|Source -> {{1, 7}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]
+	,
+	TestID->"Concrete-20190914-L1P0K2"
+]
+
+Test[
+	ConcreteParseString["a;(**);"]
+	,
+	InfixNode[CompoundExpression, {
+		LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
+		LeafNode[Token`Semi, ";", <|Source -> {{1, 2}, {1, 2}}|>],
+		LeafNode[Token`Fake`ImplicitNull, "", <|Source -> {{1, 2}, {1, 2}}|>],
+		LeafNode[Token`Comment, "(**)", <|Source -> {{1, 3}, {1, 6}}|>],
+		LeafNode[Token`Semi, ";", <|Source -> {{1, 7}, {1, 7}}|>],
+		LeafNode[Token`Fake`ImplicitNull, "", <|Source -> {{1, 7}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]
+	,
+	TestID->"Concrete-20190914-E0H4C5"
+]
+
+Test[
+	ConcreteParseString["{a;\n}"]
+	,
+	GroupNode[List, {
+		LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 1}}|>],
+		InfixNode[CompoundExpression, {
+			LeafNode[Symbol, "a", <|Source -> {{1, 2}, {1, 2}}|>],
+			LeafNode[Token`Semi, ";", <|Source -> {{1, 3}, {1, 3}}|>],
+			LeafNode[Token`Fake`ImplicitNull, "", <|Source -> {{1, 3}, {1, 3}}|>]}, <|Source -> {{1, 2}, {1, 3}}|>],
+		LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 0}}|>],
+		LeafNode[Token`CloseCurly, "}", <|Source -> {{2, 1}, {2, 1}}|>]}, <|Source -> {{1, 1}, {2, 1}}|>]
+	,
+	TestID->"Concrete-20190914-X0P1Q6"
+]
 
 
 
-
-
-
-
-
-
-
-
+Test[
+	ConcreteParseString["a;;;;(**);;"]
+	,
+	InfixNode[Times, {
+		BinaryNode[Span, {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
+    		LeafNode[Token`SemiSemi, ";;", <|Source -> {{1, 2}, {1, 3}}|>], 
+    		LeafNode[Token`Fake`ImplicitAll, "", <|Source -> {{1, 3}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 3}}|>],
+    	LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> {{1, 4}, {1, 4}}|>], 
+    	BinaryNode[Span, {
+    		LeafNode[Token`Fake`ImplicitOne, "", <|Source -> {{1, 4}, {1, 4}}|>],
+    		LeafNode[Token`SemiSemi, ";;", <|Source -> {{1, 4}, {1, 5}}|>],
+    		LeafNode[Token`Fake`ImplicitAll, "", <|Source -> {{1, 5}, {1, 5}}|>]}, <|Source -> {{1, 4}, {1, 5}}|>],
+    	LeafNode[Token`Comment, "(**)", <|Source -> {{1, 6}, {1, 9}}|>],
+    	LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> {{1, 10}, {1, 10}}|>],
+    	BinaryNode[Span, {
+    		LeafNode[Token`Fake`ImplicitOne, "", <|Source -> {{1, 10}, {1, 10}}|>],
+    		LeafNode[Token`SemiSemi, ";;", <|Source -> {{1, 10}, {1, 11}}|>],
+    		LeafNode[Token`Fake`ImplicitAll, "", <|Source -> {{1, 11}, {1, 11}}|>]}, <|Source -> {{1, 10}, {1, 11}}|>]}, <|Source -> {{1, 1}, {1, 11}}|>]
+	,
+	TestID->"Concrete-20190914-K2Z7E2"
+]

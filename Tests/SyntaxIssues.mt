@@ -490,20 +490,20 @@ ImplicitTimesSpan
 *)
 
 TestMatch[
-	FirstCase[ConcreteParseString[" ;;b;; ", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
+	FirstCase[ConcreteParseString[";;b;;", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["ImplicitTimesSpan", _, _, _], SyntaxIssue["EndOfLine", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {OrderlessPatternSequence[SyntaxIssue["ImplicitTimesSpan", _, _, _], SyntaxIssue["EndOfLine", _, _, _]]}]
 	,
 	TestID->"SyntaxIssues-20190523-I1D9N0"
 ]
 
 
 TestMatch[
-	FirstCase[ConcreteParseString[" a;;b;; ", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
+	FirstCase[ConcreteParseString["a;;b;;", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["ImplicitTimesSpan", _, _, _], SyntaxIssue["EndOfLine", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {OrderlessPatternSequence[SyntaxIssue["ImplicitTimesSpan", _, _, _], SyntaxIssue["EndOfLine", _, _, _]]}]
 	,
 	TestID->"SyntaxIssues-20190523-L7M6K3"
 ]

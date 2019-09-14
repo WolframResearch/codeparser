@@ -73,8 +73,10 @@ EmptyString:
 Test[
 	TokenizeString["a::"]
 	,
-	{LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>], LeafNode[Token`ColonColon, "::",
-		<|Source -> {{1, 2}, {1, 3}}|>], LeafNode[Token`Error`EmptyString, "", <|Source -> {{2, 0}, {2, 0}}|>]}
+	{
+		LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
+		LeafNode[Token`ColonColon, "::", <|Source -> {{1, 2}, {1, 3}}|>],
+		LeafNode[Token`Error`EmptyString, "", <|Source -> {{2, 0}, {2, 0}}|>]}
 	,
 	TestID->"TokenErrors-20190520-R2P3A3"
 ]
@@ -82,7 +84,8 @@ Test[
 Test[
 	TokenizeString["a>>"]
 	,
-	{LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
+	{
+		LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
 		LeafNode[Token`GreaterGreater, ">>", <|Source -> {{1, 2}, {1, 3}}|>],
 		LeafNode[Token`Error`EmptyString, "", <|Source -> {{2, 0}, {2, 0}}|>]}
 	,

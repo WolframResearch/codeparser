@@ -43,7 +43,7 @@ NodePtr SemiSemiParselet::parse(ParserContext CtxtIn) const {
 //
 // Multiple Span expressions are ImplicitTimes together
 //
-NodePtr SemiSemiParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
+NodePtr SemiSemiParselet::parse(const NodeSeq& Left, ParserContext CtxtIn) const {
     
     NodeSeq Args;
     
@@ -75,38 +75,51 @@ NodePtr SemiSemiParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
         }
         
         
-        Tok = TheParser->currentToken();
-        
-        Tok = Parser::eatAndPreserveToplevelNewlines(Tok, CtxtIn, Args);
-        
-        if (Tok.Tok != TOKEN_SEMISEMI) {
-            break;
+        //
+        // LOOKAHEAD
+        //
+        {
+            LeafSeq ArgsTest;
+            
+            Tok = TheParser->currentToken();
+            
+            Tok = Parser::eatAndPreserveToplevelNewlines(Tok, CtxtIn, ArgsTest);
+            
+            if (Tok.Tok != TOKEN_SEMISEMI) {
+                
+                TheParser->nextToken(CtxtIn);
+                
+                TheParser->append(ArgsTest);
+                TheParser->append(Tok);
+                
+                auto ImplicitTimes = std::make_shared<InfixNode>(SYMBOL_TIMES, Args.getVector());
+                
+                return ImplicitTimes;
+            }
+            
+            Args.append(ArgsTest);
+            
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_IMPLICITTIMESSPAN, "Implicit ``Times`` between ``Spans``.", SYNTAXISSUESEVERITY_WARNING, Source(Tok.Span.lines.start));
+            
+            TheParser->addIssue(Issue);
+            
+            auto Implicit = Token(TOKEN_FAKE_IMPLICITTIMES, "", Source(Tok.Span.lines.start));
+            
+            Args.append(std::make_shared<LeafNode>(Implicit));
+            
+            
+            NodeSeq OperandLeft;
+            
+            auto Implicit2 = Token(TOKEN_FAKE_IMPLICITONE, "", Source(Tok.Span.lines.start));
+            
+            OperandLeft.append(std::make_shared<LeafNode>(Implicit2));
+            
+            Operand = parse0(OperandLeft, CtxtIn);
+            
+            
+            Args.append(Operand);
         }
-        
-        auto Issue = SyntaxIssue(SYNTAXISSUETAG_IMPLICITTIMESSPAN, "Implicit ``Times`` between ``Spans``.", SYNTAXISSUESEVERITY_WARNING, Source(Tok.Span.lines.start));
-        
-        TheParser->addIssue(Issue);
-        
-        auto Implicit = Token(TOKEN_FAKE_IMPLICITTIMES, "", Source(Tok.Span.lines.start));
-        
-        Args.append(std::make_shared<LeafNode>(Implicit));
-        
-        
-        NodeSeq OperandLeft;
-        
-        auto Implicit2 = Token(TOKEN_FAKE_IMPLICITONE, "", Source(Tok.Span.lines.start));
-        
-        OperandLeft.append(std::make_shared<LeafNode>(Implicit2));
-        
-        Operand = parse0(OperandLeft, CtxtIn);
-        
-        
-        Args.append(Operand);
     }
-    
-    auto ImplicitTimes = std::make_shared<InfixNode>(SYMBOL_TIMES, Args.getVector());
-    
-    return ImplicitTimes;
 }
 
 //
@@ -116,7 +129,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq& Left, ParserContext CtxtIn) const {
 //
 // Parses a single complete Span
 //
-NodePtr SemiSemiParselet::parse0(NodeSeq& Left, ParserContext CtxtIn) const {
+NodePtr SemiSemiParselet::parse0(const NodeSeq& Left, ParserContext CtxtIn) const {
     
     NodeSeq Args;
     Args.reserve(1 + 1 + 1);
@@ -133,183 +146,245 @@ NodePtr SemiSemiParselet::parse0(NodeSeq& Left, ParserContext CtxtIn) const {
     Ctxt.Prec = getPrecedence();
     Ctxt.Assoc = ASSOCIATIVITY_NONE;
     
-    auto SecondTok = TheParser->nextToken(Ctxt);
-    Utils::endOfLineWarning(TokIn, SecondTok);
-    SecondTok = Parser::eatAndPreserveToplevelNewlines(SecondTok, CtxtIn, Args);
-    
     //
-    // a;;
+    // LOOKAHEAD
     //
-    
-    if (!TheParser->isPossibleBeginningOfExpression(SecondTok, Ctxt)) {
+    {
+        auto SecondTok = TheParser->nextToken(Ctxt);
+        Utils::endOfLineWarning(TokIn, SecondTok);
+        
+        LeafSeq ArgsTest;
+        
+        SecondTok = Parser::eatAndPreserveToplevelNewlines(SecondTok, CtxtIn, ArgsTest);
         
         //
-        // a;;&
+        // a;;
         //
         
-        auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, "", Source(TokIn.Span.lines.end));
-        
-        Args.append(std::make_shared<LeafNode>(Implicit));
-        
-        auto Span = std::make_shared<BinaryNode>(SYMBOL_SPAN, Args.getVector());
-        
-        return Span;
-    }
-    
-    Utils::differentLineWarning(TokIn, SecondTok, SYNTAXISSUESEVERITY_WARNING);
-    
-    if (SecondTok.Tok != TOKEN_SEMISEMI) {
-        
-        //
-        // a;;b
-        //
-        
-        auto FirstArg = TheParser->parse(Ctxt);
-        
-        Args.append(FirstArg);
-        
-        auto ThirdTok = TheParser->currentToken();
-        ThirdTok = Parser::eatAndPreserveToplevelNewlines(ThirdTok, CtxtIn, Args);
-        
-        if (ThirdTok.Tok != TOKEN_SEMISEMI) {
+        if (!TheParser->isPossibleBeginningOfExpression(SecondTok, Ctxt)) {
             
             //
-            // a;;b&
-            //
-            
-            auto Span = std::make_shared<BinaryNode>(SYMBOL_SPAN, Args.getVector());
-            
-            return Span;
-        }
-        
-        Utils::differentLineWarning(SecondTok, ThirdTok, SYNTAXISSUESEVERITY_WARNING);
-        
-        //
-        // a;;b;;
-        //
-        
-        auto FourthTok = TheParser->nextToken(Ctxt);
-        Utils::endOfLineWarning(ThirdTok, FourthTok);
-        FourthTok = Parser::eatAndPreserveToplevelNewlines(FourthTok, CtxtIn, Args);
-        
-        if (!TheParser->isPossibleBeginningOfExpression(FourthTok, Ctxt)) {
-            
-            //
-            // a;;b;;&
+            // a;;&
             //
             
             TheParser->nextToken(Ctxt);
             
+            auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, "", Source(TokIn.Span.lines.end));
+            
+            Args.append(std::make_shared<LeafNode>(Implicit));
+            
+            TheParser->append(ArgsTest);
+            TheParser->append(SecondTok);
+            
             auto Span = std::make_shared<BinaryNode>(SYMBOL_SPAN, Args.getVector());
             
-            assert(TheParser->getTokenQueue().empty());
-            TheParser->append(ThirdTok);
-            TheParser->append(FourthTok);
-            
             return Span;
         }
         
-        Utils::differentLineWarning(ThirdTok, FourthTok, SYNTAXISSUESEVERITY_WARNING);
+        Utils::differentLineWarning(TokIn, SecondTok, SYNTAXISSUESEVERITY_WARNING);
         
-        if (FourthTok.Tok != TOKEN_SEMISEMI) {
+        if (SecondTok.Tok != TOKEN_SEMISEMI) {
             
             //
-            // a;;b;;c
+            // a;;b
             //
             
-            auto SecondArg = TheParser->parse(Ctxt);
+            Args.append(ArgsTest);
             
-            Args.append(std::make_shared<LeafNode>(ThirdTok));
-            Args.append(SecondArg);
+            auto FirstArg = TheParser->parse(Ctxt);
             
-            auto Span = std::make_shared<TernaryNode>(SYMBOL_SPAN, Args.getVector());
+            Args.append(FirstArg);
             
-            return Span;
+            //
+            // LOOKAHEAD
+            //
+            {
+                LeafSeq ArgsTest2;
+                
+                auto ThirdTok = TheParser->currentToken();
+                
+                ThirdTok = Parser::eatAndPreserveToplevelNewlines(ThirdTok, CtxtIn, ArgsTest2);
+                
+                if (ThirdTok.Tok != TOKEN_SEMISEMI) {
+                    
+                    //
+                    // a;;b&
+                    //
+                    
+                    TheParser->append(ArgsTest2);
+                    
+                    auto Span = std::make_shared<BinaryNode>(SYMBOL_SPAN, Args.getVector());
+                    
+                    return Span;
+                }
+                
+                Utils::differentLineWarning(SecondTok, ThirdTok, SYNTAXISSUESEVERITY_WARNING);
+                
+                //
+                // a;;b;;
+                //
+                
+                //
+                // LOOKAHEAD
+                //
+                {
+                    LeafSeq ArgsTest3;
+                    
+                    auto FourthTok = TheParser->nextToken(Ctxt);
+                    FourthTok = Parser::eatAndPreserveToplevelNewlines(FourthTok, CtxtIn, ArgsTest3);
+                    
+                    if (!TheParser->isPossibleBeginningOfExpression(FourthTok, Ctxt)) {
+                        
+                        //
+                        // a;;b;;&
+                        //
+                        
+                        TheParser->nextToken(Ctxt);
+                        
+                        auto Span = std::make_shared<BinaryNode>(SYMBOL_SPAN, Args.getVector());
+                        
+                        assert(TheParser->getTokenQueue().empty());
+                        TheParser->append(ArgsTest2);
+                        TheParser->append(ThirdTok);
+                        TheParser->append(ArgsTest3);
+                        TheParser->append(FourthTok);
+                        
+                        return Span;
+                    }
+                    
+                    Utils::differentLineWarning(ThirdTok, FourthTok, SYNTAXISSUESEVERITY_WARNING);
+                    
+                    if (FourthTok.Tok != TOKEN_SEMISEMI) {
+                        
+                        //
+                        // a;;b;;c
+                        //
+                        
+                        auto SecondArg = TheParser->parse(Ctxt);
+                        
+                        Args.append(ArgsTest2);
+                        Args.append(std::make_shared<LeafNode>(ThirdTok));
+                        Args.append(ArgsTest3);
+                        Args.append(SecondArg);
+                        
+                        auto Span = std::make_shared<TernaryNode>(SYMBOL_SPAN, Args.getVector());
+                        
+                        return Span;
+                    }
+                    
+                    //
+                    // a;;b;;;;
+                    //
+                    
+                    auto FifthTok = TheParser->nextToken(Ctxt);
+                    Utils::endOfLineWarning(FourthTok, FifthTok);
+                    
+                    auto Span = std::make_shared<BinaryNode>(SYMBOL_SPAN, Args.getVector());
+                    
+                    assert(TheParser->getTokenQueue().empty());
+                    TheParser->append(ArgsTest2);
+                    TheParser->append(ThirdTok);
+                    TheParser->append(ArgsTest3);
+                    TheParser->append(FourthTok);
+                    
+                    return Span;
+                }
+            }
         }
         
         //
-        // a;;b;;;;
+        // a;;;;
         //
         
-        auto FifthTok = TheParser->nextToken(Ctxt);
-        Utils::endOfLineWarning(FourthTok, FifthTok);
-        
-        auto Span = std::make_shared<BinaryNode>(SYMBOL_SPAN, Args.getVector());
-        
-        assert(TheParser->getTokenQueue().empty());
-        TheParser->append(ThirdTok);
-        TheParser->append(FourthTok);
-        
-        return Span;
+        //
+        // LOOKAHEAD
+        //
+        {
+            
+            LeafSeq ArgsTest2;
+            
+            auto ThirdTok = TheParser->nextToken(Ctxt);
+            ThirdTok = Parser::eatAndPreserveToplevelNewlines(ThirdTok, CtxtIn, ArgsTest2);
+            
+            if (!TheParser->isPossibleBeginningOfExpression(ThirdTok, Ctxt)) {
+                
+                //
+                // a;;;;&
+                //
+                
+                TheParser->nextToken(Ctxt);
+                
+                auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, "", Source(TokIn.Span.lines.end));
+                
+                Args.append(std::make_shared<LeafNode>(Implicit));
+                
+                auto Span = std::make_shared<BinaryNode>(SYMBOL_SPAN, Args.getVector());
+                
+                assert(TheParser->getTokenQueue().empty());
+                TheParser->append(ArgsTest);
+                TheParser->append(SecondTok);
+                TheParser->append(ArgsTest2);
+                TheParser->append(ThirdTok);
+                
+                return Span;
+            }
+            
+            Utils::differentLineWarning(SecondTok, ThirdTok, SYNTAXISSUESEVERITY_WARNING);
+            
+            if (ThirdTok.Tok != TOKEN_SEMISEMI) {
+                
+                //
+                // a;;;;b
+                //
+                
+                auto FirstArg = TheParser->parse(Ctxt);
+                
+                auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, "", Source(TokIn.Span.lines.end));
+                
+                Args.append(std::make_shared<LeafNode>(Implicit));
+                
+                Args.append(ArgsTest);
+                
+                Args.append(std::make_shared<LeafNode>(SecondTok));
+                
+                TheParser->append(ArgsTest2);
+                
+                Args.append(FirstArg);
+                
+                auto Span = std::make_shared<TernaryNode>(SYMBOL_SPAN, Args.getVector());
+                
+                return Span;
+            }
+            
+            //
+            // a;;;;;;
+            //
+            
+            //
+            // LOOKAHEAD
+            //
+            {
+                LeafSeq ArgsTest3;
+                
+                auto FourthTok = TheParser->nextToken(Ctxt);
+                FourthTok = Parser::eatAndPreserveToplevelNewlines(FourthTok, CtxtIn, ArgsTest3);
+                
+                auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, "", Source(TokIn.Span.lines.end));
+                
+                Args.append(std::make_shared<LeafNode>(Implicit));
+                
+                auto Span = std::make_shared<BinaryNode>(SYMBOL_SPAN, Args.getVector());
+                
+                assert(TheParser->getTokenQueue().empty());
+                TheParser->append(ArgsTest);
+                TheParser->append(SecondTok);
+                TheParser->append(ArgsTest2);
+                TheParser->append(ThirdTok);
+                TheParser->append(ArgsTest3);
+                
+                return Span;
+            }
+        }
     }
-    
-    //
-    // a;;;;
-    //
-    
-    auto ThirdTok = TheParser->nextToken(Ctxt);
-    Utils::endOfLineWarning(SecondTok, ThirdTok);
-    ThirdTok = Parser::eatAndPreserveToplevelNewlines(ThirdTok, CtxtIn, Args);
-    
-    if (!TheParser->isPossibleBeginningOfExpression(ThirdTok, Ctxt)) {
-        
-        //
-        // a;;;;&
-        //
-        
-        TheParser->nextToken(Ctxt);
-        
-        auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, "", Source(TokIn.Span.lines.end));
-        
-        Args.append(std::make_shared<LeafNode>(Implicit));
-        
-        auto Span = std::make_shared<BinaryNode>(SYMBOL_SPAN, Args.getVector());
-        
-        assert(TheParser->getTokenQueue().empty());
-        TheParser->append(SecondTok);
-        TheParser->append(ThirdTok);
-        
-        return Span;
-    }
-    
-    Utils::differentLineWarning(SecondTok, ThirdTok, SYNTAXISSUESEVERITY_WARNING);
-    
-    if (ThirdTok.Tok != TOKEN_SEMISEMI) {
-        
-        //
-        // a;;;;b
-        //
-        
-        auto FirstArg = TheParser->parse(Ctxt);
-        
-        auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, "", Source(SecondTok.Span.lines.start));
-        
-        Args.append(std::make_shared<LeafNode>(Implicit));
-        Args.append(std::make_shared<LeafNode>(SecondTok));
-        Args.append(FirstArg);
-        
-        auto Span = std::make_shared<TernaryNode>(SYMBOL_SPAN, Args.getVector());
-        
-        return Span;
-    }
-    
-    //
-    // a;;;;;;
-    //
-    
-    auto FourthTok = TheParser->nextToken(Ctxt);
-    Utils::endOfLineWarning(ThirdTok, FourthTok);
-    
-    auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, "", Source(TokIn.Span.lines.end));
-    
-    Args.append(std::make_shared<LeafNode>(Implicit));
-    
-    auto Span = std::make_shared<BinaryNode>(SYMBOL_SPAN, Args.getVector());
-    
-    assert(TheParser->getTokenQueue().empty());
-    TheParser->append(SecondTok);
-    TheParser->append(ThirdTok);
-    
-    return Span;
 }
 

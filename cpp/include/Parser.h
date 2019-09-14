@@ -124,11 +124,11 @@ private:
     
     
     
-    NodePtr parse0(NodeSeq Left, Precedence, ParserContext Ctxt);
+    NodePtr parse0(const NodeSeq& Left, Precedence, ParserContext Ctxt);
     
     void nextToken0(ParserContext Ctxt);
     
-    void prepend(Token& current);
+    void prepend(const Token& current);
     
     Precedence getCurrentTokenPrecedence(Token& current, ParserContext Ctxt);
     
@@ -147,6 +147,9 @@ public:
     
     void append(const Token& Tok);
     
+    void append(const NodeSeq& );
+    void append(const LeafSeq& );
+    
     std::vector<Token> getTokenQueue() const;
     
     
@@ -160,7 +163,7 @@ public:
     
     NodePtr parse(ParserContext Ctxt);
     
-    bool isPossibleBeginningOfExpression(Token& Tok, ParserContext Ctxt) const;
+    bool isPossibleBeginningOfExpression(const Token& Tok, ParserContext Ctxt) const;
     
     const std::unique_ptr<const InfixParselet>& findInfixParselet(TokenEnum Tok) const;
     
@@ -173,10 +176,11 @@ public:
     
     ~Parser();
     
+    static const Token eatAll(const Token& Tok, ParserContext Ctxt, NodeSeq&);
+    static const Token eatAll(const Token& Tok, ParserContext Ctxt, LeafSeq&);
     
-    static const Token eatAll(Token& Tok, ParserContext Ctxt, NodeSeq&);
-    
-    static const Token eatAndPreserveToplevelNewlines(Token& Tok, ParserContext Ctxt, NodeSeq&);
+    static const Token eatAndPreserveToplevelNewlines(const Token& Tok, ParserContext Ctxt, NodeSeq&);
+    static const Token eatAndPreserveToplevelNewlines(const Token& Tok, ParserContext Ctxt, LeafSeq&);
 };
 
 extern Parser *TheParser;
