@@ -14,13 +14,13 @@
 
 class Node;
 
-using NodePtr = const std::shared_ptr<const Node>;
+using NodePtr = std::unique_ptr<Node>;
 
 void putExpressions(std::vector<NodePtr>, MLINK mlp);
 
 std::vector<NodePtr> parseExpressions();
 std::vector<NodePtr> tokenize();
-NodePtr parseLeaf();
+LeafNodePtr parseLeaf();
 
 bool validatePath(WolframLibraryData libData, const unsigned char *inStr);
 
@@ -113,7 +113,7 @@ DLLEXPORT int ConcreteParseFile(WolframLibraryData libData, MLINK mlp) {
         
         auto nodes = parseExpressions();
         
-        putExpressions(nodes, mlp);
+        putExpressions(std::move(nodes), mlp);
         
         TheParser->deinit();
         TheTokenizer->deinit();
@@ -180,7 +180,7 @@ DLLEXPORT int ConcreteParseString(WolframLibraryData libData, MLINK mlp) {
         
         auto nodes = parseExpressions();
         
-        putExpressions(nodes, mlp);
+        putExpressions(std::move(nodes), mlp);
         
         TheParser->deinit();
         TheTokenizer->deinit();
@@ -242,7 +242,7 @@ DLLEXPORT int TokenizeString(WolframLibraryData libData, MLINK mlp) {
         
         std::vector<NodePtr> nodes = tokenize();
         
-        putExpressions(nodes, mlp);
+        putExpressions(std::move(nodes), mlp);
         
         TheParser->deinit();
         TheTokenizer->deinit();
@@ -315,7 +315,7 @@ DLLEXPORT int TokenizeFile(WolframLibraryData libData, MLINK mlp) {
         
         std::vector<NodePtr> nodes = tokenize();
         
-        putExpressions(nodes, mlp);
+        putExpressions(std::move(nodes), mlp);
         
         TheParser->deinit();
         TheTokenizer->deinit();
@@ -412,7 +412,7 @@ void putExpressions(std::vector<NodePtr> nodes, MLINK mlp) {
         goto retPt;
     }
     
-    for (NodePtr node : nodes) {
+    for (auto& node : nodes) {
         node->put(mlp);
     }
     
@@ -447,7 +447,7 @@ std::vector<NodePtr> parseExpressions() {
                 peek.Tok == TOKEN_COMMENT ||
                 peek.Tok == TOKEN_LINECONTINUATION) {
                 
-                exprs.push_back(std::make_shared<LeafNode>(peek));
+                exprs.push_back(std::unique_ptr<LeafNode>(new LeafNode(peek)));
                 
                 TheParser->nextToken(Ctxt);
                 
@@ -456,11 +456,13 @@ std::vector<NodePtr> parseExpressions() {
             
             auto Expr = TheParser->parse(Ctxt);
             
-            exprs.push_back(Expr);
+            exprs.push_back(std::move(Expr));
             
         } // while (true)
         
-        nodes.push_back(std::make_shared<CollectedExpressionsNode>(exprs));
+        NodePtr Collected = std::unique_ptr<Node>(new CollectedExpressionsNode(std::move(exprs)));
+        
+        nodes.push_back(std::move(Collected));
     }
     
     //
@@ -488,7 +490,7 @@ std::vector<NodePtr> parseExpressions() {
         auto SourceManagerIssues = TheSourceManager->getIssues();
         std::copy(SourceManagerIssues.begin(), SourceManagerIssues.end(), std::back_inserter(issues));
         
-        nodes.push_back(std::make_shared<CollectedSyntaxIssuesNode>(issues));
+        nodes.push_back(std::unique_ptr<Node>(new CollectedSyntaxIssuesNode(issues)));
     }
     
     {
@@ -510,7 +512,7 @@ std::vector<NodePtr> parseExpressions() {
         //        auto ByteDecoderMetas = TheByteDecoder->getMetadatas();
         //        std::copy(ByteDecoderMetas.begin(), ByteDecoderMetas.end(), std::back_inserter(metas));
         
-        nodes.push_back(std::make_shared<CollectedMetadatasNode>(metas));
+        nodes.push_back(std::unique_ptr<Node>(new CollectedMetadatasNode(metas)));
     }
     
     return nodes;
@@ -536,8 +538,9 @@ std::vector<NodePtr> tokenize() {
             break;
         }
         
-        auto N = std::make_shared<LeafNode>(Tok);
-        nodes.push_back(N);
+        auto N = std::unique_ptr<Node>(new LeafNode(Tok));
+        
+        nodes.push_back(std::move(N));
         
         TheTokenizer->nextToken(Ctxt);
         
@@ -546,13 +549,13 @@ std::vector<NodePtr> tokenize() {
     return nodes;
 }
 
-NodePtr parseLeaf() {
+LeafNodePtr parseLeaf() {
     
     TokenizerContext Ctxt;
     
     auto Tok = TheTokenizer->currentToken();
     
-    auto N = std::make_shared<LeafNode>(Tok);
+    auto N = std::unique_ptr<LeafNode>(new LeafNode(Tok));
     
     Tok = TheTokenizer->nextToken(Ctxt);
     
@@ -586,7 +589,7 @@ NodePtr parseLeaf() {
         auto EndSpan = StartSpan + AccumStr.size() - 1;
         
         auto OtherTok = Token(TOKEN_OTHER, AccumStr, Source(StartSpan, EndSpan));
-        auto OtherLeaf = std::make_shared<LeafNode>(OtherTok);
+        auto OtherLeaf = std::unique_ptr<LeafNode>(new LeafNode(OtherTok));
         return OtherLeaf;
     }
     

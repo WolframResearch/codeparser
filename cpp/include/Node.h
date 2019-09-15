@@ -10,48 +10,21 @@
 
 class Symbol;
 
-using SymbolPtr = std::unique_ptr<const Symbol>;
+using SymbolPtr = std::unique_ptr<Symbol>;
 
 class Node;
 class LeafNode;
 
-using NodePtr = const std::shared_ptr<const Node>;
-using LeafNodePtr = const std::shared_ptr<const LeafNode>;
-
-//
-// An expression representing a node in the syntax tree
-//
-class Node {
-    const std::vector<NodePtr> Children;
-public:
-    
-    //
-    // Tag + Children + 4 Source Ints
-    //
-    static const size_t NODE_LENGTH = 6;
-    
-    Node(const std::vector<NodePtr>& Children) : Children(Children) {}
-    
-    const std::vector<NodePtr> getChildren() const {
-        return Children;
-    }
-    
-    virtual void put(MLINK mlp) const = 0;
-    
-    virtual Source getSourceSpan() const;
-    
-    void putChildren(MLINK mlp) const;
-    
-    virtual ~Node() {}
-};
-
-class LeafNode;
+using NodePtr = std::unique_ptr<Node>;
+using LeafNodePtr = std::unique_ptr<LeafNode>;
 
 class LeafSeq {
-public:
-    std::vector<LeafNodePtr> vec;
     
-    LeafSeq() : vec() {}
+    std::unique_ptr<std::vector<LeafNodePtr>> vec;
+    
+public:
+    
+    LeafSeq() : vec(std::unique_ptr<std::vector<LeafNodePtr>>(new std::vector<LeafNodePtr>)) {}
     
     bool empty() const;
     
@@ -59,13 +32,13 @@ public:
     
     void reserve(size_t i);
     
-    void append(LeafNodePtr& );
+    void append(LeafNodePtr );
     
-    const std::vector<LeafNodePtr> getVector() const {
-        return vec;
+    std::vector<LeafNodePtr> *getVectorDestructive() {
+        auto p = vec.release();
+        vec = nullptr;
+        return p;
     }
-    
-    void clear();
 };
 
 //
@@ -80,10 +53,14 @@ public:
 // for fast access.
 //
 class NodeSeq {
-public:
-    std::vector<NodePtr> vec;
     
-    NodeSeq() : vec() {}
+    std::unique_ptr<std::vector<NodePtr>> vec;
+    
+    void append(std::unique_ptr<std::vector<NodePtr>> );
+    
+public:
+    
+    NodeSeq() : vec(std::unique_ptr<std::vector<NodePtr>>(new std::vector<NodePtr>)) {}
     
     bool empty() const;
     
@@ -91,24 +68,62 @@ public:
     
     void reserve(size_t i);
     
-    void append(NodePtr& );
+    void append(NodePtr );
     
-    void append(const NodeSeq& );
-    void append(const LeafSeq& );
+    void append(std::unique_ptr<NodeSeq> );
     
-    void append(const std::vector<NodePtr>& );
-    void append(const std::vector<LeafNodePtr>& );
+    void append(std::unique_ptr<LeafSeq> );
     
-    NodePtr main() const;
+    NodePtr& first() const;
+    NodePtr& last() const;
     
-    NodePtr last() const;
+    void put(MLINK ) const;
     
-    const std::vector<NodePtr> getVector() const {
+    const std::unique_ptr<std::vector<NodePtr>>& getVector() const {
         return vec;
     }
-    
-    void clear();
 };
+
+//
+// An expression representing a node in the syntax tree
+//
+class Node {
+    std::unique_ptr<NodeSeq> Children;
+public:
+    
+    //
+    // Tag + Children + 4 Source Ints
+    //
+    static const size_t NODE_LENGTH = 6;
+
+    Node() : Children() {}
+    Node(std::unique_ptr<NodeSeq> Children) : Children(std::move(Children)) {}
+
+    virtual void put(MLINK mlp) const = 0;
+
+    virtual Source getSourceSpan() const;
+
+    void putChildren(MLINK mlp) const;
+
+    const std::unique_ptr<NodeSeq>& getChildren() const {
+        return Children;
+    }
+    
+    NodeSeq *getChildrenDestructive() {
+        auto p = Children.release();
+        Children = nullptr;
+        return p;
+    }
+    
+    virtual const Token lastToken() const {
+        auto& L = Children->last();
+        return L->lastToken();
+    }
+    
+    virtual ~Node() {}
+};
+
+class LeafNode;
 
 //
 // Literal nodes
@@ -117,16 +132,20 @@ public:
 class LeafNode : public Node {
     const Token Tok;
 public:
-    
-    LeafNode(Token& Tok) : Node({}), Tok(Tok) {}
-    
+
+    LeafNode(Token& Tok) : Node(), Tok(Tok) {}
+
     void put(MLINK mlp) const override;
-    
+
     Source getSourceSpan() const override {
         return Tok.Span;
     }
-    
+
     const Token getToken() const {
+        return Tok;
+    }
+    
+    const Token lastToken() const override {
         return Tok;
     }
 };
@@ -142,7 +161,7 @@ public:
 class PrefixNode : public Node {
     SymbolPtr& Op;
 public:
-    PrefixNode(SymbolPtr& Op, const std::vector<NodePtr>& Args) : Node(Args), Op(Op) {}
+    PrefixNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)), Op(Op) {}
     
     void put(MLINK mlp) const override;
 };
@@ -150,7 +169,7 @@ public:
 class BinaryNode : public Node {
     SymbolPtr& Op;
 public:
-    BinaryNode(SymbolPtr& Op, const std::vector<NodePtr>& Args) : Node(Args), Op(Op) {}
+    BinaryNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)), Op(Op) {}
     
     void put(MLINK mlp) const override;
     
@@ -162,7 +181,7 @@ public:
 class InfixNode : public Node {
     SymbolPtr& Op;
 public:
-    InfixNode(SymbolPtr& Op, const std::vector<NodePtr>& Args) : Node(Args), Op(Op) {}
+    InfixNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)), Op(Op) {}
     
     void put(MLINK mlp) const override;
 };
@@ -171,7 +190,7 @@ public:
 class TernaryNode : public Node {
     SymbolPtr& Op;
 public:
-    TernaryNode(SymbolPtr& Op, const std::vector<NodePtr>& Args) : Node(Args), Op(Op) {}
+    TernaryNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)), Op(Op) {}
     
     void put(MLINK mlp) const override;
 };
@@ -179,7 +198,7 @@ public:
 class PostfixNode : public Node {
     SymbolPtr& Op;
 public:
-    PostfixNode(SymbolPtr& Op, const std::vector<NodePtr>& Args) : Node(Args), Op(Op) {}
+    PostfixNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)), Op(Op) {}
     
     void put(MLINK mlp) const override;
     
@@ -191,7 +210,7 @@ public:
 class PrefixBinaryNode : public Node {
     SymbolPtr& Op;
 public:
-    PrefixBinaryNode(SymbolPtr& Op, const std::vector<NodePtr>& Args) : Node(Args), Op(Op) {}
+    PrefixBinaryNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)), Op(Op) {}
     
     void put(MLINK mlp) const override;
 };
@@ -205,9 +224,9 @@ public:
 //
 
 class CallNode : public Node {
-    const std::vector<NodePtr> Head;
+    std::unique_ptr<NodeSeq> Head;
 public:
-    CallNode(std::vector<NodePtr> Head, const std::vector<NodePtr>& Body) : Node(Body), Head(Head) {}
+    CallNode(std::unique_ptr<NodeSeq> Head, std::unique_ptr<NodeSeq> Body) : Node(std::move(Body)), Head(std::move(Head)) {}
     
     void put(MLINK mlp) const override;
     
@@ -224,7 +243,7 @@ public:
 class GroupNode : public Node {
     SymbolPtr& Op;
 public:
-    GroupNode(SymbolPtr& Op, const std::vector<NodePtr>& Args) : Node(Args), Op(Op) {}
+    GroupNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)), Op(Op) {}
     
     void put(MLINK mlp) const override;
     
@@ -243,7 +262,7 @@ public:
 class StartOfLineNode : public Node {
     SymbolPtr& Op;
 public:
-    StartOfLineNode(SymbolPtr& Op, const std::vector<NodePtr>& Args) : Node(Args), Op(Op) {}
+    StartOfLineNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)), Op(Op) {}
     
     void put(MLINK mlp) const override;
 };
@@ -251,42 +270,42 @@ public:
 
 class BlankNode : public Node {
 public:
-    BlankNode(const std::vector<NodePtr>& Args) : Node(Args) {}
+    BlankNode(std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)) {}
     
     void put(MLINK mlp) const override;
 };
 
 class BlankSequenceNode : public Node {
 public:
-    BlankSequenceNode(const std::vector<NodePtr>& Args) : Node(Args) {}
+    BlankSequenceNode(std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)) {}
     
     void put(MLINK mlp) const override;
 };
 
 class BlankNullSequenceNode : public Node {
 public:
-    BlankNullSequenceNode(const std::vector<NodePtr>& Args) : Node(Args) {}
+    BlankNullSequenceNode(std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)) {}
     
     void put(MLINK mlp) const override;
 };
 
 class PatternBlankNode : public Node {
 public:
-    PatternBlankNode(const std::vector<NodePtr>& Args) : Node(Args) {}
+    PatternBlankNode(std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)) {}
     
     void put(MLINK mlp) const override;
 };
 
 class PatternBlankSequenceNode : public Node {
 public:
-    PatternBlankSequenceNode(const std::vector<NodePtr>& Args) : Node(Args) {}
+    PatternBlankSequenceNode(std::unique_ptr<NodeSeq> Args) : Node() {}
     
     void put(MLINK mlp) const override;
 };
 
 class PatternBlankNullSequenceNode : public Node {
 public:
-    PatternBlankNullSequenceNode(const std::vector<NodePtr>& Args) : Node(Args) {}
+    PatternBlankNullSequenceNode(std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)) {}
     
     void put(MLINK mlp) const override;
 };
@@ -296,7 +315,7 @@ public:
 //
 class OptionalDefaultPatternNode : public Node {
 public:
-    OptionalDefaultPatternNode(const std::vector<NodePtr>& Args) : Node(Args) {}
+    OptionalDefaultPatternNode(std::unique_ptr<NodeSeq> Args) : Node() {}
     
     void put(MLINK mlp) const override;
 };
@@ -310,7 +329,7 @@ public:
 class SyntaxErrorNode : public Node {
     const SyntaxError Err;
 public:
-    SyntaxErrorNode(SyntaxError Err, const std::vector<NodePtr>& Args) : Node(Args), Err(Err) {}
+    SyntaxErrorNode(SyntaxError Err, std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)), Err(Err) {}
     
     void put(MLINK mlp) const override;
 };
@@ -318,7 +337,7 @@ public:
 class GroupMissingCloserNode : public Node {
     SymbolPtr& Op;
 public:
-    GroupMissingCloserNode(SymbolPtr& Op, const std::vector<NodePtr>& Args) : Node(Args), Op(Op) {}
+    GroupMissingCloserNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)), Op(Op) {}
     
     void put(MLINK mlp) const override;
     
@@ -330,7 +349,7 @@ public:
 class GroupMissingOpenerNode : public Node {
     SymbolPtr& Op;
 public:
-    GroupMissingOpenerNode(SymbolPtr& Op, const std::vector<NodePtr>& Args) : Node(Args), Op(Op) {}
+    GroupMissingOpenerNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)), Op(Op) {}
     
     void put(MLINK mlp) const override;
     
@@ -350,7 +369,7 @@ public:
 class CollectedExpressionsNode : public Node {
     std::vector<NodePtr> Exprs;
 public:
-    CollectedExpressionsNode(const std::vector<NodePtr>& Exprs) : Node({}), Exprs(Exprs) {}
+    CollectedExpressionsNode(std::vector<NodePtr> Exprs) : Node(), Exprs(std::move(Exprs)) {}
     
     void put(MLINK mlp) const override;
 };
@@ -358,7 +377,7 @@ public:
 class CollectedSyntaxIssuesNode : public Node {
     std::vector<SyntaxIssue> Issues;
 public:
-    CollectedSyntaxIssuesNode(const std::vector<SyntaxIssue>& Issues) : Node({}), Issues(Issues) {}
+    CollectedSyntaxIssuesNode(std::vector<SyntaxIssue> Issues) : Node(), Issues(std::move(Issues)) {}
     
     void put(MLINK mlp) const override;
 };
@@ -366,10 +385,11 @@ public:
 class CollectedMetadatasNode : public Node {
     std::vector<Metadata> Metadatas;
 public:
-    CollectedMetadatasNode(const std::vector<Metadata>& Metadatas) : Node({}), Metadatas(Metadatas) {}
+    CollectedMetadatasNode(std::vector<Metadata> Metadatas) : Node(), Metadatas(std::move(Metadatas)) {}
     
     void put(MLINK mlp) const override;
 };
+
 
 
 

@@ -24,7 +24,7 @@ public:
     //
     // Warn if node and token are on different lines
     //
-    static void differentLineWarning(NodeSeq Args, Token Tok2, SyntaxIssueSeverity Severity);
+    static void differentLineWarning(std::unique_ptr<NodeSeq>& Args, Token Tok2, SyntaxIssueSeverity Severity);
     
     //
     // Warn if end of line

@@ -3,107 +3,76 @@
 
 #include "Symbol.h"
 
-void NodeSeq::append(NodePtr& N) {
-    vec.push_back(N);
+void NodeSeq::append(NodePtr N) {
+    vec->push_back(std::move(N));
 }
 
-void NodeSeq::append(const NodeSeq& Args) {
-    append(Args.vec);
+void NodeSeq::append(std::unique_ptr<NodeSeq> Args) {
+    append(std::move(Args->vec));
 }
 
-void NodeSeq::append(const LeafSeq& Args) {
-    append(Args.vec);
+void NodeSeq::append(std::unique_ptr<LeafSeq> Args) {
+    auto V = Args->getVectorDestructive();
+    for (auto& N : *V) {
+        vec->push_back(std::move(N));
+    }
+    delete V;
 }
 
-void NodeSeq::append(const std::vector<NodePtr>& V) {
-    std::copy(V.begin(), V.end(), std::back_inserter(vec));
-}
-
-void NodeSeq::append(const std::vector<LeafNodePtr>& V) {
-    std::copy(V.begin(), V.end(), std::back_inserter(vec));
+void NodeSeq::append(std::unique_ptr<std::vector<NodePtr>> V) {
+    for (auto& N : *V) {
+        vec->push_back(std::move(N));
+    }
 }
 
 bool NodeSeq::empty() const {
-    return vec.empty();
+    return vec->empty();
 }
 
 size_t NodeSeq::size() const {
-    return vec.size();
+    return vec->size();
 }
 
 void NodeSeq::reserve(size_t i) {
-    vec.reserve(i);
+    vec->reserve(i);
 }
 
-NodePtr NodeSeq::main() const {
+NodePtr& NodeSeq::first() const {
+    return vec->at(0);
+}
+
+NodePtr& NodeSeq::last() const {
+    return vec->at(vec->size()-1);
+}
+
+void NodeSeq::put(MLINK mlp) const {
     
-    for (auto N : vec) {
-        
-        if (auto NLeaf = std::dynamic_pointer_cast<const LeafNode>(N)) {
-            
-            auto Tok = NLeaf->getToken();
-            if (Tok.Tok == TOKEN_COMMENT ||
-                Tok.Tok == TOKEN_WHITESPACE ||
-                Tok.Tok == TOKEN_NEWLINE ||
-                Tok.Tok == TOKEN_LINECONTINUATION) {
-                continue;
-            }
-            
-            return N;
-        }
-        
-        return N;
+    MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(vec->size()));
+    
+    for (auto& C : *vec) {
+        C->put(mlp);
     }
-    
-    assert(false);
-    
-    return nullptr;
 }
 
-NodePtr NodeSeq::last() const {
-    
-    assert(!vec.empty());
-    
-    auto i = vec.end();
-    while (i != vec.begin()) {
-        
-        --i;
-        
-        auto N = *i;
-        
-        if (auto NLeaf = std::dynamic_pointer_cast<const LeafNode>(N)) {
-            
-            auto Tok = NLeaf->getToken();
-            if (Tok.Tok == TOKEN_COMMENT ||
-                Tok.Tok == TOKEN_WHITESPACE ||
-                Tok.Tok == TOKEN_NEWLINE ||
-                Tok.Tok == TOKEN_LINECONTINUATION) {
-                continue;
-            }
-        }
-        
-        return N;
-    }
-    
-    return nullptr;
+void LeafSeq::append(LeafNodePtr N) {
+    vec->push_back(std::move(N));
 }
 
-void NodeSeq::clear() {
-    vec.clear();
+bool LeafSeq::empty() const {
+    return vec->empty();
 }
 
-void LeafSeq::append(LeafNodePtr& N) {
-    vec.push_back(N);
+size_t LeafSeq::size() const {
+    return vec->size();
 }
+
 
 Source Node::getSourceSpan() const {
     
-    auto Args = getChildren();
-    
-    if (!Args.empty()) {
+    if (!Children->empty()) {
         
-        auto First = Args[0];
-        auto Last = Args[Args.size()-1];
+        const auto& First = Children->first();
+        const auto& Last = Children->last();
         
         return Source(First->getSourceSpan().lines.start, Last->getSourceSpan().lines.end);
     }
@@ -113,11 +82,7 @@ Source Node::getSourceSpan() const {
 
 void Node::putChildren(MLINK mlp) const {
     
-    MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(Children.size()));
-    
-    for (auto C : Children) {
-        C->put(mlp);
-    }
+    Children->put(mlp);
 }
 
 //
@@ -208,11 +173,7 @@ void CallNode::put(MLINK mlp) const {
     
     MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKECALLNODE->name(), NODE_LENGTH);
     
-    MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(Head.size()));
-    
-    for (auto H : Head) {
-        H->put(mlp);
-    }
+    Head->put(mlp);
     
     putChildren(mlp);
     
@@ -221,10 +182,10 @@ void CallNode::put(MLINK mlp) const {
 
 Source CallNode::getSourceSpan() const {
     
-    auto FirstHead = Head[0];
+    const auto& FirstHead = Head->first();
     
-    auto Children = getChildren();
-    auto LastChild = Children[Children.size()-1];
+    const auto& Children = getChildren();
+    const auto& LastChild = Children->last();
     
     return Source(FirstHead->getSourceSpan().lines.start, LastChild->getSourceSpan().lines.end);
 }
@@ -399,7 +360,7 @@ void CollectedExpressionsNode::put(MLINK mlp) const {
     
     MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(Exprs.size()));
     
-    for (auto E : Exprs) {
+    for (auto& E : Exprs) {
         E->put(mlp);
     }
 }
@@ -421,6 +382,7 @@ void CollectedMetadatasNode::put(MLINK mlp) const {
         M.put(mlp);
     }
 }
+
 
 
 

@@ -542,18 +542,13 @@ void Parser::append(const Token& Tok) {
     tokenQueue.push_back(Tok);
 }
 
-void Parser::append(const NodeSeq& N) {
-    for (auto A : N.getVector()) {
-        auto ALeaf = std::dynamic_pointer_cast<const LeafNode>(A);
-        assert(ALeaf);
-        append(ALeaf->getToken());
-    }
-}
-
-void Parser::append(const LeafSeq& N) {
-    for (auto A : N.getVector()) {
+void Parser::append(std::unique_ptr<LeafSeq> N) {
+    auto V = N->getVectorDestructive();
+    for (const auto& A : *V) {
         append(A->getToken());
     }
+    delete V;
+    N = nullptr;
 }
 
 std::vector<SyntaxIssue> Parser::getIssues() const {
@@ -758,7 +753,8 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
         
         auto A = Token(TOKEN_ERROR_ABORTED, "", Source());
         
-        auto Aborted = std::make_shared<LeafNode>(A);
+        //        const auto& Aborted = std::unique_ptr<const Node>(new LeafNode(A));
+        NodePtr Aborted = std::unique_ptr<Node>(new LeafNode(A));
         
         return Aborted;
     }
@@ -782,11 +778,13 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
     //
     if (token.Tok == Ctxt.Closer) {
         
-        auto Error = std::make_shared<SyntaxErrorNode>(SYNTAXERROR_EXPECTEDOPERAND, std::vector<NodePtr> {
-            std::make_shared<LeafNode>(token)
-        });
+        NodePtr Tmp = std::unique_ptr<Node>(new LeafNode(token));
         
-        return Error;
+        auto TmpVec = std::unique_ptr<NodeSeq>(new NodeSeq);
+        
+        TmpVec->append(std::move(Tmp));
+        
+        return std::unique_ptr<Node>(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDOPERAND, std::move(TmpVec)));
     }
     
     if (!isPossibleBeginningOfExpression(token, Ctxt)) {
@@ -802,7 +800,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
     // Prefix start
     //
     
-    std::shared_ptr<const Node> Left = nullptr;
+    NodePtr Left = nullptr;
     
     //
     // StartOfLine
@@ -837,7 +835,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
             
             nextToken(Ctxt);
             
-            Left = std::make_shared<LeafNode>(token);
+            Left = std::unique_ptr<Node>(new LeafNode(token));
         }
     }
     
@@ -846,7 +844,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
     // Infix loop
     //
     
-    NodeSeq Args;
+    auto Args = std::unique_ptr<LeafSeq>(new LeafSeq);
     
     while (true) {
         
@@ -854,9 +852,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
             
             auto A = Token(TOKEN_ERROR_ABORTED, "", Source());
             
-            auto Aborted = std::make_shared<LeafNode>(A);
-            
-            return Aborted;
+            return std::unique_ptr<Node>(new LeafNode(A));
         }
         
         
@@ -880,16 +876,18 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
             }
         }
         
-        NodeSeq LeftSeq;
-        LeftSeq.reserve(1 + Args.size());
+        auto LeftSeq = std::unique_ptr<NodeSeq>(new NodeSeq);
+        LeftSeq->reserve(1 + Args->size());
         
-        LeftSeq.append(Left);
+        LeftSeq->append(std::move(Left));
         
-        LeftSeq.append(Args);
+        LeftSeq->append(std::move(Args));
         
-        Left = parse0(LeftSeq, TokenPrecedence, Ctxt);
+        auto LeftTmp = parse0(std::move(LeftSeq), TokenPrecedence, Ctxt);
         
-        Args.clear();
+        Left.reset(LeftTmp.release());
+        
+        Args.reset(new LeafSeq);
         
     } // while
     
@@ -898,18 +896,17 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
     // but make sure it is front of anything else in tokenQueue
     //
     
-    if (!Args.empty()) {
+    if (!Args->empty()) {
         
         std::vector<const Token> Tmp;
-        Tmp.reserve(Args.size());
+        Tmp.reserve(Args->size());
         
         //
         // Put back unused Nodes
         //
-        for (auto A : Args.getVector()) {
-            auto ALeaf = std::dynamic_pointer_cast<const LeafNode>(A);
-            assert(ALeaf);
-            Tmp.push_back(ALeaf->getToken());
+        auto V = Args->getVectorDestructive();
+        for (const auto& A : *V) {
+            Tmp.push_back(A->getToken());
         }
         
         tokenQueue.insert(tokenQueue.begin(), Tmp.begin(), Tmp.end());
@@ -918,7 +915,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
     return Left;
 }
 
-NodePtr Parser::parse0(const NodeSeq& Left, Precedence TokenPrecedence, ParserContext CtxtIn) {
+NodePtr Parser::parse0(std::unique_ptr<NodeSeq> Left, Precedence TokenPrecedence, ParserContext CtxtIn) {
     
     //
     // getCurrentTokenPrecedence() may have inserted something like a new IMPLICITTIMES token, so grab again
@@ -933,7 +930,7 @@ NodePtr Parser::parse0(const NodeSeq& Left, Precedence TokenPrecedence, ParserCo
     
     assert(I != nullptr);
     
-    auto Res = I->parse(Left, Ctxt);
+    auto Res = I->parse(std::move(Left), Ctxt);
     
     return Res;
 }
@@ -946,7 +943,7 @@ bool Parser::isAbort() const {
     return currentAbortQ();
 }
 
-const Token Parser::eatAll(const Token& TokIn, ParserContext Ctxt, NodeSeq& Args) {
+const Token Parser::eatAll(const Token& TokIn, ParserContext Ctxt, std::unique_ptr<NodeSeq>& Args) {
     
     auto Tok = TokIn;
     
@@ -960,7 +957,7 @@ const Token Parser::eatAll(const Token& TokIn, ParserContext Ctxt, NodeSeq& Args
         //
         
         
-        Args.append(std::make_shared<LeafNode>(Tok));
+        Args->append(std::unique_ptr<Node>(new LeafNode(Tok)));
         
         Tok = TheParser->nextToken(Ctxt);
     }
@@ -968,7 +965,7 @@ const Token Parser::eatAll(const Token& TokIn, ParserContext Ctxt, NodeSeq& Args
     return Tok;
 }
 
-const Token Parser::eatAll(const Token& TokIn, ParserContext Ctxt, LeafSeq& Args) {
+const Token Parser::eatAll(const Token& TokIn, ParserContext Ctxt, std::unique_ptr<LeafSeq>& Args) {
     
     auto Tok = TokIn;
     
@@ -982,7 +979,7 @@ const Token Parser::eatAll(const Token& TokIn, ParserContext Ctxt, LeafSeq& Args
         //
         
         
-        Args.append(std::make_shared<LeafNode>(Tok));
+        Args->append(std::unique_ptr<LeafNode>(new LeafNode(Tok)));
         
         Tok = TheParser->nextToken(Ctxt);
     }
@@ -990,7 +987,7 @@ const Token Parser::eatAll(const Token& TokIn, ParserContext Ctxt, LeafSeq& Args
     return Tok;
 }
 
-const Token Parser::eatAndPreserveToplevelNewlines(const Token& TokIn, ParserContext Ctxt, NodeSeq& Args) {
+const Token Parser::eatAndPreserveToplevelNewlines(const Token& TokIn, ParserContext Ctxt, std::unique_ptr<NodeSeq>& Args) {
     
     auto Tok = TokIn;
     
@@ -1005,7 +1002,7 @@ const Token Parser::eatAndPreserveToplevelNewlines(const Token& TokIn, ParserCon
             Tok.Tok == TOKEN_COMMENT ||
             Tok.Tok == TOKEN_LINECONTINUATION) {
             
-            Args.append(std::make_shared<LeafNode>(Tok));
+            Args->append(std::unique_ptr<LeafNode>(new LeafNode(Tok)));
             
             Tok = TheParser->nextToken(Ctxt);
             
@@ -1017,7 +1014,7 @@ const Token Parser::eatAndPreserveToplevelNewlines(const Token& TokIn, ParserCon
                 
             } else {
                 
-                Args.append(std::make_shared<LeafNode>(Tok));
+                Args->append(std::unique_ptr<LeafNode>(new LeafNode(Tok)));
                 
                 Tok = TheParser->nextToken(Ctxt);
             }
@@ -1030,7 +1027,7 @@ const Token Parser::eatAndPreserveToplevelNewlines(const Token& TokIn, ParserCon
     return Tok;
 }
 
-const Token Parser::eatAndPreserveToplevelNewlines(const Token& TokIn, ParserContext Ctxt, LeafSeq& Args) {
+const Token Parser::eatAndPreserveToplevelNewlines(const Token& TokIn, ParserContext Ctxt, std::unique_ptr<LeafSeq>& Args) {
     
     auto Tok = TokIn;
     
@@ -1045,7 +1042,7 @@ const Token Parser::eatAndPreserveToplevelNewlines(const Token& TokIn, ParserCon
             Tok.Tok == TOKEN_COMMENT ||
             Tok.Tok == TOKEN_LINECONTINUATION) {
             
-            Args.append(std::make_shared<LeafNode>(Tok));
+            Args->append(std::unique_ptr<LeafNode>(new LeafNode(Tok)));
             
             Tok = TheParser->nextToken(Ctxt);
             
@@ -1057,7 +1054,7 @@ const Token Parser::eatAndPreserveToplevelNewlines(const Token& TokIn, ParserCon
                 
             } else {
                 
-                Args.append(std::make_shared<LeafNode>(Tok));
+                Args->append(std::unique_ptr<LeafNode>(new LeafNode(Tok)));
                 
                 Tok = TheParser->nextToken(Ctxt);
             }
@@ -1071,4 +1068,6 @@ const Token Parser::eatAndPreserveToplevelNewlines(const Token& TokIn, ParserCon
 }
 
 Parser *TheParser = nullptr;
+
+
 

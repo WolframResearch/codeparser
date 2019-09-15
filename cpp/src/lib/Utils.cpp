@@ -6,8 +6,6 @@
 #include <sstream>
 #include <unordered_set>
 
-Token lastToken(NodePtr Node);
-
 //
 // s MUST contain an integer
 //
@@ -133,24 +131,11 @@ void Utils::differentLineWarning(Token Tok1, Token Tok2, SyntaxIssueSeverity Sev
     TheParser->addIssue(Issue);
 }
 
-Token lastToken(NodePtr Node) {
+void Utils::differentLineWarning(std::unique_ptr<NodeSeq>& Args, Token Tok2, SyntaxIssueSeverity Severity) {
     
-    if (auto Leaf = std::dynamic_pointer_cast<const LeafNode>(Node)) {
-        
-        return Leaf->getToken();
-    }
+    auto& F = Args->first();
     
-    auto Children = Node->getChildren();
-    auto LastNode = Children[Children.size()-1];
-    
-    return lastToken(LastNode);
-}
-
-void Utils::differentLineWarning(NodeSeq Args, Token Tok2, SyntaxIssueSeverity Severity) {
-    
-    auto Arg1 = Args.main();
-    
-    auto Tok1 = lastToken(Arg1);
+    auto Tok1 = F->lastToken();
     
     Utils::differentLineWarning(Tok1, Tok2, Severity);
 }
@@ -190,4 +175,3 @@ void Utils::notContiguousWarning(Token Tok1, Token Tok2) {
     
     TheParser->addIssue(Issue);
 }
-

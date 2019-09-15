@@ -338,3 +338,48 @@ Test[
 	,
 	TestID->"Concrete-20190914-K2Z7E2"
 ]
+
+
+Test[
+	ConcreteParseString["a(**):b"]
+	,
+	BinaryNode[Pattern, {
+		LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
+		LeafNode[Token`Comment, "(**)", <|Source -> {{1, 2}, {1, 5}}|>],
+		LeafNode[Token`Colon, ":", <|Source -> {{1, 6}, {1, 6}}|>],
+		LeafNode[Symbol, "b", <|Source -> {{1, 7}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]
+	,
+	TestID->"Concrete-20190915-S7T5K8"
+]
+
+Test[
+	ConcreteParseString["a:(**)b"]
+	,
+	BinaryNode[Pattern, {
+		LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
+		LeafNode[Token`Colon, ":", <|Source -> {{1, 2}, {1, 2}}|>],
+		LeafNode[Token`Comment, "(**)", <|Source -> {{1, 3}, {1, 6}}|>],
+		LeafNode[Symbol, "b", <|Source -> {{1, 7}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]
+	,
+	TestID->"Concrete-20190915-E7Q5J3"
+]
+
+Test[
+	ConcreteParseString[";;(**)*2"]
+	,
+	InfixNode[Times, {
+		BinaryNode[Span, {
+			LeafNode[Token`Fake`ImplicitOne, "", <|Source -> {{1, 1}, {1, 1}}|>],
+			LeafNode[Token`SemiSemi, ";;", <|Source -> {{1, 1}, {1, 2}}|>],
+			LeafNode[Token`Fake`ImplicitAll, "", <|Source -> {{1, 2}, {1, 2}}|>]}, <|Source -> {{1, 1}, {1, 2}}|>],
+		LeafNode[Token`Comment, "(**)", <|Source -> {{1, 3}, {1, 6}}|>],
+		LeafNode[Token`Star, "*", <|Source -> {{1, 7}, {1, 7}}|>],
+		LeafNode[Integer, "2", <|Source -> {{1, 8}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]
+	,
+	TestID->"Concrete-20190915-Y4E3E1"
+]
+
+
+
+
+

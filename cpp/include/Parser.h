@@ -124,7 +124,7 @@ private:
     
     
     
-    NodePtr parse0(const NodeSeq& Left, Precedence, ParserContext Ctxt);
+    NodePtr parse0(std::unique_ptr<NodeSeq> Left, Precedence, ParserContext Ctxt);
     
     void nextToken0(ParserContext Ctxt);
     
@@ -147,8 +147,7 @@ public:
     
     void append(const Token& Tok);
     
-    void append(const NodeSeq& );
-    void append(const LeafSeq& );
+    void append(std::unique_ptr<LeafSeq>);
     
     std::vector<Token> getTokenQueue() const;
     
@@ -176,11 +175,11 @@ public:
     
     ~Parser();
     
-    static const Token eatAll(const Token& Tok, ParserContext Ctxt, NodeSeq&);
-    static const Token eatAll(const Token& Tok, ParserContext Ctxt, LeafSeq&);
+    static const Token eatAll(const Token& Tok, ParserContext Ctxt, std::unique_ptr<NodeSeq>&);
+    static const Token eatAll(const Token& Tok, ParserContext Ctxt, std::unique_ptr<LeafSeq>&);
     
-    static const Token eatAndPreserveToplevelNewlines(const Token& Tok, ParserContext Ctxt, NodeSeq&);
-    static const Token eatAndPreserveToplevelNewlines(const Token& Tok, ParserContext Ctxt, LeafSeq&);
+    static const Token eatAndPreserveToplevelNewlines(const Token& Tok, ParserContext Ctxt, std::unique_ptr<NodeSeq>&);
+    static const Token eatAndPreserveToplevelNewlines(const Token& Tok, ParserContext Ctxt, std::unique_ptr<LeafSeq>&);
 };
 
 extern Parser *TheParser;
