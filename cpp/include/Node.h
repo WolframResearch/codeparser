@@ -35,9 +35,7 @@ public:
     void append(LeafNodePtr );
     
     std::vector<LeafNodePtr> *getVectorDestructive() {
-        auto p = vec.release();
-        vec = nullptr;
-        return p;
+        return vec.release();
     }
 };
 
@@ -110,9 +108,7 @@ public:
     }
     
     NodeSeq *getChildrenDestructive() {
-        auto p = Children.release();
-        Children = nullptr;
-        return p;
+        return Children.release();
     }
     
     virtual const Token lastToken() const {

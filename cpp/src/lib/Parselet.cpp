@@ -483,7 +483,7 @@ NodePtr UnderParselet::parse(ParserContext CtxtIn) const {
     
     auto Tok = TheParser->nextToken(Ctxt);
     
-    std::unique_ptr<Node> BlankTmp = nullptr;
+    std::unique_ptr<Node> Blank;
     if (Tok.Tok == TOKEN_SYMBOL) {
         
         auto& symbolParselet = TheParser->findContextSensitivePrefixParselet(Tok.Tok);
@@ -497,13 +497,13 @@ NodePtr UnderParselet::parse(ParserContext CtxtIn) const {
         
         switch (TokIn.Tok) {
             case TOKEN_UNDER:
-                BlankTmp = std::unique_ptr<Node>(new BlankNode(std::move(Args)));
+                Blank = std::unique_ptr<Node>(new BlankNode(std::move(Args)));
                 break;
             case TOKEN_UNDERUNDER:
-                BlankTmp = std::unique_ptr<Node>(new BlankSequenceNode(std::move(Args)));
+                Blank = std::unique_ptr<Node>(new BlankSequenceNode(std::move(Args)));
                 break;
             case TOKEN_UNDERUNDERUNDER:
-                BlankTmp = std::unique_ptr<Node>(new BlankNullSequenceNode(std::move(Args)));
+                Blank = std::unique_ptr<Node>(new BlankNullSequenceNode(std::move(Args)));
                 break;
             default:
                 assert(false);
@@ -511,9 +511,8 @@ NodePtr UnderParselet::parse(ParserContext CtxtIn) const {
         }
         
     } else {
-        BlankTmp = std::move(Under);
+        Blank = std::move(Under);
     }
-    auto Blank = std::move(BlankTmp);
     
     //
     // LOOKAHEAD
@@ -589,22 +588,21 @@ NodePtr UnderParselet::parseContextSensitive(std::unique_ptr<NodeSeq> Left, Pars
         Args->append(std::move(Right));
     }
     
-    std::unique_ptr<Node> PatTmp = nullptr;
+    std::unique_ptr<Node> Pat;
     switch (UnderCount) {
         case UNDER_1:
-            PatTmp = std::unique_ptr<Node>(new PatternBlankNode(std::move(Args)));
+            Pat = std::unique_ptr<Node>(new PatternBlankNode(std::move(Args)));
             break;
         case UNDER_2:
-            PatTmp = std::unique_ptr<Node>(new PatternBlankSequenceNode(std::move(Args)));
+            Pat = std::unique_ptr<Node>(new PatternBlankSequenceNode(std::move(Args)));
             break;
         case UNDER_3:
-            PatTmp = std::unique_ptr<Node>(new PatternBlankNullSequenceNode(std::move(Args)));
+            Pat = std::unique_ptr<Node>(new PatternBlankNullSequenceNode(std::move(Args)));
             break;
         default:
             assert(false);
             break;
     }
-    NodePtr Pat = std::move(PatTmp);
     
     
     //
@@ -1388,11 +1386,9 @@ NodePtr ExpectedPossibleExpressionErrorParselet::parse(ParserContext CtxtIn) con
         
         auto SyntaxErrorEnum = TokenErrorToSyntaxError(TokIn.Tok);
         
-        NodePtr Tmp = std::unique_ptr<Node>(new LeafNode(TokIn));
-        
         auto TmpVec = std::unique_ptr<NodeSeq>(new NodeSeq);
         
-        TmpVec->append(std::move(Tmp));
+        TmpVec->append(std::unique_ptr<Node>(new LeafNode(TokIn)));
         
         auto Error = std::unique_ptr<Node>(new SyntaxErrorNode(SyntaxErrorEnum, std::move(TmpVec)));
         
@@ -1405,11 +1401,9 @@ NodePtr ExpectedPossibleExpressionErrorParselet::parse(ParserContext CtxtIn) con
     
     auto SyntaxErrorEnum = SYNTAXERROR_EXPECTEDPOSSIBLEEXPRESSION;
     
-    NodePtr Tmp = std::unique_ptr<Node>(new LeafNode(TokIn));
-    
     auto TmpVec = std::unique_ptr<NodeSeq>(new NodeSeq);
     
-    TmpVec->append(std::move(Tmp));
+    TmpVec->append(std::unique_ptr<Node>(new LeafNode(TokIn)));
     
     auto Error = std::unique_ptr<Node>(new SyntaxErrorNode(SyntaxErrorEnum, std::move(TmpVec)));
     

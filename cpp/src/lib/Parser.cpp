@@ -548,7 +548,6 @@ void Parser::append(std::unique_ptr<LeafSeq> N) {
         append(A->getToken());
     }
     delete V;
-    N = nullptr;
 }
 
 std::vector<SyntaxIssue> Parser::getIssues() const {
@@ -778,11 +777,9 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
     //
     if (token.Tok == Ctxt.Closer) {
         
-        NodePtr Tmp = std::unique_ptr<Node>(new LeafNode(token));
-        
         auto TmpVec = std::unique_ptr<NodeSeq>(new NodeSeq);
         
-        TmpVec->append(std::move(Tmp));
+        TmpVec->append(std::unique_ptr<Node>(new LeafNode(token)));
         
         return std::unique_ptr<Node>(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDOPERAND, std::move(TmpVec)));
     }

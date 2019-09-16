@@ -379,7 +379,13 @@ Test[
 	TestID->"Concrete-20190915-Y4E3E1"
 ]
 
-
+Test[
+	ConcreteParseString["{ headIn__ }"]
+	,
+	foo
+	,
+	TestID->"Concrete-20190916-X5M4H9"
+]
 
 
 
