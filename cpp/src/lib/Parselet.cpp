@@ -1054,6 +1054,7 @@ NodePtr EqualParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext CtxtIn
         return std::unique_ptr<Node>(new BinaryNode(SYMBOL_UNSET, std::move(Args)));
     }
     
+    
     auto Tok = TheParser->nextToken(Ctxt);
     
     Tok = Parser::eatAll(Tok, Ctxt, Args);
@@ -1113,6 +1114,7 @@ NodePtr IntegralParselet::parse(ParserContext CtxtIn) const {
     
     Ctxt.IntegralFlag = false;
     
+    
     Tok = TheParser->currentToken();
     
     Tok = Parser::eatAll(Tok, Ctxt, Args);
@@ -1157,6 +1159,7 @@ NodePtr InequalityParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext C
             
             return Aborted;
         }
+        
         
         auto Tok = TheParser->currentToken();
         
@@ -1217,6 +1220,7 @@ NodePtr VectorInequalityParselet::parse(std::unique_ptr<NodeSeq> Left, ParserCon
             return Aborted;
         }
         
+        
         auto Tok = TheParser->currentToken();
         
         Tok = Parser::eatAndPreserveToplevelNewlines(Tok, CtxtIn, Args);
@@ -1276,6 +1280,32 @@ NodePtr InfixOperatorWithTrailingParselet::parse(std::unique_ptr<NodeSeq> Left, 
             return Aborted;
         }
         
+        
+        
+//        setup warnings for
+//
+//            f [1]
+//
+//
+//            and check f [1][2]
+//
+//
+//
+//
+//
+//            NonAssociative warnings
+//
+//            a \[UndirectedEdge] b \[UndirectedEdge] c
+//
+//
+//
+//
+//            UnexpectedExpression
+//
+//            "Expression in middle of ``~`` is usually a symbol."
+//
+//            a ~f[x]~ b
+        xxx;
         
         auto Tok = TheParser->currentToken();
         

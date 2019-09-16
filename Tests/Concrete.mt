@@ -387,5 +387,55 @@ Test[
 	TestID->"Concrete-20190916-X5M4H9"
 ]
 
+Test[
+	ConcreteParseString["a(*1*)+(*2*)b(*3*);"]
+	,
+	InfixNode[CompoundExpression, {
+		InfixNode[Plus, {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
+			LeafNode[Token`Comment, "(*1*)", <|Source -> {{1, 2}, {1, 6}}|>],
+			LeafNode[Token`Plus, "+", <|Source -> {{1, 7}, {1, 7}}|>],
+			LeafNode[Token`Comment, "(*2*)", <|Source -> {{1, 8}, {1, 12}}|>],
+			LeafNode[Symbol, "b", <|Source -> {{1, 13}, {1, 13}}|>]}, <|Source -> {{1, 1}, {1, 13}}|>],
+		LeafNode[Token`Comment, "(*3*)", <|Source -> {{1, 14}, {1, 18}}|>],
+		LeafNode[Token`Semi, ";", <|Source -> {{1, 19}, {1, 19}}|>],
+		LeafNode[Token`Fake`ImplicitNull, "", <|Source -> {{1, 19}, {1, 19}}|>]}, <|Source -> {{1, 1}, {1, 19}}|>]
+	,
+	TestID->"Concrete-20190916-L9G1L8"
+]
+
+Test[
+	ConcreteParseString["{(*1*)[(*2*)](*3*)}"]
+	,
+	GroupNode[List, {
+		LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 1}}|>],
+		LeafNode[Token`Comment, "(*1*)", <|Source -> {{1, 2}, {1, 6}}|>],
+		GroupNode[GroupSquare, {
+			LeafNode[Token`OpenSquare, "[", <|Source -> {{1, 7}, {1, 7}}|>],
+			LeafNode[Token`Comment, "(*2*)", <|Source -> {{1, 8}, {1, 12}}|>],
+			LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 13}, {1, 13}}|>]}, <|Source -> {{1, 7}, {1, 13}}|>],
+		LeafNode[Token`Comment, "(*3*)", <|Source -> {{1, 14}, {1, 18}}|>],
+		LeafNode[Token`CloseCurly, "}", <|Source -> {{1, 19}, {1, 19}}|>]}, <|Source -> {{1, 1}, {1, 19}}|>]
+	,
+	TestID->"Concrete-20190916-U0Q1K6"
+]
+
+Test[
+	ConcreteParseString["{(*0*)a(*1*),(*2*)b(*3*)}"]
+	,
+	GroupNode[List, {
+		LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 1}}|>],
+		LeafNode[Token`Comment, "(*0*)", <|Source -> {{1, 2}, {1, 6}}|>],
+		InfixNode[Comma, {
+			LeafNode[Symbol, "a", <|Source -> {{1, 7}, {1, 7}}|>],
+			LeafNode[Token`Comment, "(*1*)", <|Source -> {{1, 8}, {1, 12}}|>],
+			LeafNode[Token`Comma, ",", <|Source -> {{1, 13}, {1, 13}}|>],
+			LeafNode[Token`Comment, "(*2*)", <|Source -> {{1, 14}, {1, 18}}|>],
+			LeafNode[Symbol, "b", <|Source -> {{1, 19}, {1, 19}}|>]}, <|Source -> {{1, 7}, {1, 24}}|>],
+		LeafNode[Token`Comment, "(*3*)", <|Source -> {{1, 20}, {1, 24}}|>],
+		LeafNode[Token`CloseCurly, "}", <|Source -> {{1, 25}, {1, 25}}|>]}, <|Source -> {{1, 1}, {1, 25}}|>]
+	,
+	TestID->"Concrete-20190916-C5C7M2"
+]
 
 
