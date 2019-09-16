@@ -546,7 +546,7 @@ private:
   const char *Name;
 };
 
-using SymbolPtr = std::unique_ptr<const Symbol>;
+using SymbolPtr = std::unique_ptr<Symbol>;
 
 
 void allocSymbols();
