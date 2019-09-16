@@ -900,7 +900,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
     
     if (!Args.empty()) {
         
-        std::vector<const Token> Tmp;
+        std::vector<Token> Tmp;
         Tmp.reserve(Args.size());
         
         //

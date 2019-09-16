@@ -11,6 +11,7 @@
 
 #include <fstream>
 #include <memory>
+#include <cstring> // for strcmp
 
 class Node;
 
