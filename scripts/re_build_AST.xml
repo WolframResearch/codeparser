@@ -85,8 +85,8 @@
 	</target>
 
 	<target name='NativeLibrary.ast.postbuild' extensionOf='NativeLibrary.postbuild'>
-
-		<copy todir='${files_directory}'>
+		<mkdir dir='${files_directory}/AST' />
+		<copy todir='${files_directory}/AST'>
 			<fileset dir='${build.dir}${file.separator}paclet${file.separator}AST' />
 		</copy>
 		

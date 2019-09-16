@@ -11,9 +11,11 @@
 
 #include <fstream>
 #include <memory>
+#include <cstring> // for strcmp with with GCC and MSVC
 
 class Node;
 
+// MSVC: error C2338: The C++ Standard forbids containers of const elements because allocator<const T> is ill-formed.
 using NodePtr = std::unique_ptr<Node>;
 
 void putExpressions(std::vector<NodePtr>, MLINK mlp);

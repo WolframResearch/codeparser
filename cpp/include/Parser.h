@@ -9,6 +9,7 @@
 #include <chrono>
 #include <array>
 #include <cstddef>
+#include <functional> // for function with GCC and MSVC
 
 class PrefixParselet;
 class InfixParselet;

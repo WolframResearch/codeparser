@@ -10,6 +10,7 @@
 
 class Symbol;
 
+// MSVC: error C2338: The C++ Standard forbids containers of const elements because allocator<const T> is ill-formed.
 using SymbolPtr = std::unique_ptr<Symbol>;
 
 class Node;

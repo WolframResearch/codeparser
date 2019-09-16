@@ -7,6 +7,8 @@
 #include "Symbol.h"
 //#include "TimeScoper.h"
 
+#include <algorithm> // for generate with GCC and MSVC
+
 Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), contextSensitivePrefixParselets(), contextSensitiveInfixParselets(), tokenQueue(), Issues(), totalTimeMicros(), currentAbortQ(nullptr) {
     
     //
@@ -895,7 +897,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
     
     if (!Args->empty()) {
         
-        std::vector<const Token> Tmp;
+        std::vector<Token> Tmp;
         Tmp.reserve(Args->size());
         
         //
