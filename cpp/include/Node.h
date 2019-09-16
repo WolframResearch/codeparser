@@ -298,7 +298,7 @@ public:
 
 class PatternBlankSequenceNode : public Node {
 public:
-    PatternBlankSequenceNode(std::unique_ptr<NodeSeq> Args) : Node() {}
+    PatternBlankSequenceNode(std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)) {}
     
     void put(MLINK mlp) const override;
 };
