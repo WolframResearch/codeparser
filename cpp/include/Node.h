@@ -16,8 +16,8 @@ using SymbolPtr = std::unique_ptr<Symbol>;
 class Node;
 class LeafNode;
 
-using NodePtr = const std::shared_ptr<Node>;
-using LeafNodePtr = const std::shared_ptr<LeafNode>;
+using NodePtr = std::shared_ptr<Node>;
+using LeafNodePtr = std::shared_ptr<LeafNode>;
 
 //
 // An expression representing a node in the syntax tree
@@ -60,7 +60,7 @@ public:
     
     void reserve(size_t i);
     
-    void append(LeafNodePtr& );
+    void append(const LeafNodePtr& );
     
     const std::vector<LeafNodePtr> getVector() const {
         return vec;
@@ -92,7 +92,7 @@ public:
     
     void reserve(size_t i);
     
-    void append(NodePtr& );
+    void append(const NodePtr& );
     
     void append(const NodeSeq& );
     void append(const LeafSeq& );

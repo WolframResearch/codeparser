@@ -3,7 +3,7 @@
 
 #include "Symbol.h"
 
-void NodeSeq::append(NodePtr& N) {
+void NodeSeq::append(const NodePtr& N) {
     vec.push_back(N);
 }
 
@@ -92,7 +92,7 @@ void NodeSeq::clear() {
     vec.clear();
 }
 
-void LeafSeq::append(LeafNodePtr& N) {
+void LeafSeq::append(const LeafNodePtr& N) {
     vec.push_back(N);
 }
 
