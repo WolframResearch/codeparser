@@ -54,7 +54,7 @@ unsigned char SourceManager::nextByte() {
             MLINK link = libData->getMathLink(libData);
             MLPutFunction(link, "EvaluatePacket", 1);
             MLPutFunction(link, "AST`Library`SetConcreteParseProgress", 1);
-            MLPutInteger(link, progress);
+            MLPutInteger(link, static_cast<int>(progress));
             libData->processMathLink(link);
             auto pkt = MLNextPacket(link);
             if (pkt == RETURNPKT) {

@@ -15,7 +15,7 @@
 #include "CodePoint.h"
 
 #include <sstream>
-
+#include <cctype> // for isalnum, isxdigit, isupper, isdigit, isalpha, ispunct, iscntrl
 
 bool containsOnlyASCII(std::string s);
 
@@ -160,10 +160,10 @@ void Source::putLineCols(MLINK mlp) const {
     
     assert(lines.start <= lines.end);
     
-    MLPutInteger(mlp, lines.start.Line);
-    MLPutInteger(mlp, lines.start.Col);
-    MLPutInteger(mlp, lines.end.Line);
-    MLPutInteger(mlp, lines.end.Col);
+    MLPutInteger(mlp, static_cast<int>(lines.start.Line));
+    MLPutInteger(mlp, static_cast<int>(lines.start.Col));
+    MLPutInteger(mlp, static_cast<int>(lines.end.Line));
+    MLPutInteger(mlp, static_cast<int>(lines.end.Col));
 }
 
 
