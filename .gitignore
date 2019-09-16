@@ -1,5 +1,6 @@
 
 build
+build-layout
 
 build-xcode
 build-make
@@ -10,4 +11,4 @@ build-debug
 build-exe
 build-test
 build-test-xcode
-
+build-re
