@@ -11,7 +11,7 @@
 
 #include <fstream>
 #include <memory>
-#include <cstring> // for strcmp
+#include <cstring> // for strcmp with with GCC and MSVC
 
 class Node;
 

@@ -9,7 +9,7 @@
 #include <chrono>
 #include <array>
 #include <cstddef>
-#include <functional> // MSVC complains: error C2039: 'function': is not a member of 'std'
+#include <functional> // for function with GCC and MSVC
 
 class PrefixParselet;
 class InfixParselet;

@@ -15,7 +15,7 @@
 #include "CodePoint.h"
 
 #include <sstream>
-#include <cctype> // for isalnum, isxdigit, isupper, isdigit, isalpha, ispunct, iscntrl
+#include <cctype> // for isalnum, isxdigit, isupper, isdigit, isalpha, ispunct, iscntrl with GCC and MSVC
 
 bool containsOnlyASCII(std::string s);
 

@@ -7,6 +7,7 @@
 #include "CharacterMaps.h"
 
 #include <sstream>
+#include <cctype> // for isdigit, isalpha, ispunct, iscntrl with GCC and MSVC
 
 int fromDigit(int d);
 
