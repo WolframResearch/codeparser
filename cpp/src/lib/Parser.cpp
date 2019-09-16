@@ -908,6 +908,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
         for (const auto& A : *V) {
             Tmp.push_back(A->getToken());
         }
+        delete V;
         
         tokenQueue.insert(tokenQueue.begin(), Tmp.begin(), Tmp.end());
     }

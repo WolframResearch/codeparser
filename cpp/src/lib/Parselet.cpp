@@ -884,7 +884,9 @@ NodePtr SlashColonParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext C
             auto MiddleChildren = BinaryMiddle->getChildrenDestructive();
             
             Args->append(std::unique_ptr<NodeSeq>(MiddleChildren));
-
+            
+            delete M;
+            
             return std::unique_ptr<Node>(new TernaryNode(SYMBOL_TAGSET, std::move(Args)));
         }
         if (BinaryMiddle->getSymbol() == SYMBOL_SETDELAYED) {
@@ -892,7 +894,9 @@ NodePtr SlashColonParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext C
             auto MiddleChildren = Middle->getChildrenDestructive();
 
             Args->append(std::unique_ptr<NodeSeq>(MiddleChildren));
-
+            
+            delete M;
+            
             return std::unique_ptr<Node>(new TernaryNode(SYMBOL_TAGSETDELAYED, std::move(Args)));
         }
         if (BinaryMiddle->getSymbol() == SYMBOL_UNSET) {
@@ -900,7 +904,9 @@ NodePtr SlashColonParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext C
             auto MiddleChildren = Middle->getChildrenDestructive();
 
             Args->append(std::unique_ptr<NodeSeq>(MiddleChildren));
-
+            
+            delete M;
+            
             return std::unique_ptr<Node>(new TernaryNode(SYMBOL_TAGUNSET, std::move(Args)));
         }
     }
@@ -912,7 +918,7 @@ NodePtr SlashColonParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext C
     // a /: b =.
     //
     
-    Args->append(std::move(Middle));
+    Args->append(std::unique_ptr<Node>(M));
     
     auto Error = std::unique_ptr<Node>(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDSET, std::move(Args)));
     
@@ -997,21 +1003,17 @@ NodePtr LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn) const {
                 
                 assert(SubOpenParen->getOperator() == SYMBOL_AST_GROUPLINEARSYNTAXPAREN);
                 
-                Args->append(std::unique_ptr<Node>(SubOpenParen));
-                
-                Tok = TheParser->currentToken();
-                
             } else if (auto SubOpenParen = dynamic_cast<GroupMissingCloserNode*>(S)) {
                 
                 assert(SubOpenParen->getOperator() == SYMBOL_AST_GROUPLINEARSYNTAXPAREN);
                 
-                Args->append(std::unique_ptr<Node>(SubOpenParen));
-                
-                Tok = TheParser->currentToken();
-                
             } else {
                 assert(false);
             }
+            
+            Args->append(std::unique_ptr<Node>(S));
+            
+            Tok = TheParser->currentToken();
             
         } else {
             
