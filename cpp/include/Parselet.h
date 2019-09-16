@@ -7,7 +7,8 @@
 
 class Node;
 
-using NodePtr = const std::shared_ptr<const Node>;
+// MSVC: error C2338: The C++ Standard forbids containers of const elements because allocator<const T> is ill-formed.
+using NodePtr = const std::shared_ptr<Node>;
 
 //
 // Classes that derive from Parselet are responsible for parsing specific kinds of syntax

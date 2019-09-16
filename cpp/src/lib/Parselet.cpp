@@ -494,7 +494,7 @@ NodePtr UnderParselet::parse(ParserContext CtxtIn) const {
     
     auto Tok = TheParser->nextToken(Ctxt);
     
-    std::shared_ptr<const Node> BlankTmp = nullptr;
+    std::shared_ptr<Node> BlankTmp = nullptr;
     if (Tok.Tok == TOKEN_SYMBOL) {
         
         auto& symbolParselet = TheParser->findContextSensitivePrefixParselet(Tok.Tok);
@@ -600,7 +600,7 @@ NodePtr UnderParselet::parseContextSensitive(const NodeSeq& Left, ParserContext 
         Args.append(Right);
     }
     
-    std::shared_ptr<const Node> PatTmp = nullptr;
+    std::shared_ptr<Node> PatTmp = nullptr;
     switch (UnderCount) {
         case UNDER_1:
             PatTmp = std::make_shared<PatternBlankNode>(Args.getVector());
@@ -983,7 +983,7 @@ NodePtr LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn) const {
             
             auto Sub = this->parse(Ctxt);
             
-            if (auto SubOpenParen = std::dynamic_pointer_cast<const GroupNode>(Sub)) {
+            if (auto SubOpenParen = std::dynamic_pointer_cast<GroupNode>(Sub)) {
                 
                 assert(SubOpenParen->getOperator() == SYMBOL_AST_GROUPLINEARSYNTAXPAREN);
                 
@@ -991,7 +991,7 @@ NodePtr LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn) const {
                 
                 Tok = TheParser->currentToken();
                 
-            } else if (auto SubOpenParen = std::dynamic_pointer_cast<const GroupMissingCloserNode>(Sub)) {
+            } else if (auto SubOpenParen = std::dynamic_pointer_cast<GroupMissingCloserNode>(Sub)) {
                 
                 assert(SubOpenParen->getOperator() == SYMBOL_AST_GROUPLINEARSYNTAXPAREN);
                 

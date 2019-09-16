@@ -802,7 +802,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
     // Prefix start
     //
     
-    std::shared_ptr<const Node> Left = nullptr;
+    std::shared_ptr<Node> Left = nullptr;
     
     //
     // StartOfLine
