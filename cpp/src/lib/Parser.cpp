@@ -7,6 +7,8 @@
 #include "Symbol.h"
 //#include "TimeScoper.h"
 
+#include <algorithm> // for generate with GCC and MSVC
+
 Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), contextSensitivePrefixParselets(), contextSensitiveInfixParselets(), tokenQueue(), Issues(), totalTimeMicros(), currentAbortQ(nullptr) {
     
     //
