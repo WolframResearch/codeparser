@@ -71,7 +71,7 @@ SourceCharacter ByteDecoder::invalid(unsigned char first) {
     // Has not advanced yet at this point
     Loc = SourceLocation(Loc.Line, Loc.Col+1);
     
-    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
+    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file as valid UTF-8.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
     
     Issues.push_back(Issue);
     
@@ -85,7 +85,7 @@ SourceCharacter ByteDecoder::invalid(unsigned char first, unsigned char second) 
     // Has not advanced yet at this point
     Loc = SourceLocation(Loc.Line, Loc.Col+1);
     
-    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
+    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file as valid UTF-8.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
     
     Issues.push_back(Issue);
     
@@ -101,7 +101,7 @@ SourceCharacter ByteDecoder::invalid(unsigned char first, unsigned char second, 
     // Has not advanced yet at this point
     Loc = SourceLocation(Loc.Line, Loc.Col+1);
     
-    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
+    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file as valid UTF-8.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
     
     Issues.push_back(Issue);
     
@@ -118,7 +118,7 @@ SourceCharacter ByteDecoder::invalid(unsigned char first, unsigned char second, 
     // Has not advanced yet at this point
     Loc = SourceLocation(Loc.Line, Loc.Col+1);
     
-    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
+    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file as valid UTF-8.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
     
     Issues.push_back(Issue);
     

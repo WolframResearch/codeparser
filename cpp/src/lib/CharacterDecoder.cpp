@@ -577,8 +577,14 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
                 
             } else if (unlikelyEscapeChecking) {
                 
+                auto suggestion = longNameSuggestion(LongNameStr);
+                
+                if (!suggestion.empty()) {
+                    suggestion = std::string("\nDid you mean ``\\[") + suggestion + "]``?";
+                }
+                
                 auto Issue = SyntaxIssue(SYNTAXISSUETAG_UNLIKELYESCAPESEQUENCE, std::string("Unlikely escape sequence: ``\\\\[") + LongNameStr +
-                                         "]``.", SYNTAXISSUESEVERITY_REMARK,
+                                         "]``." + suggestion, SYNTAXISSUESEVERITY_REMARK,
                                          Source(CharacterStart-1, Loc));
                 
                 Issues.push_back(Issue);

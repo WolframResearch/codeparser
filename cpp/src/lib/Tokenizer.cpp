@@ -179,7 +179,7 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
                 
                 auto Span = TheSourceManager->getWLCharacterSpan();
                 
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange space character: " + c.graphicalString(), SYNTAXISSUESEVERITY_WARNING, Span);
+                auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange space character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Span);
                 
                 Issues.push_back(Issue);
             }
@@ -224,7 +224,7 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
         if (c.isStrangeSpaceCharacter()) {
             auto Span = TheSourceManager->getWLCharacterSpan();
             
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange space character: " + c.graphicalString(), SYNTAXISSUESEVERITY_WARNING, Span);
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange space character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Span);
             
             Issues.push_back(Issue);
         }
@@ -241,7 +241,7 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
             
             auto Span = TheSourceManager->getWLCharacterSpan();
             
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange newline character: " + c.graphicalString(), SYNTAXISSUESEVERITY_WARNING, Span);
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange newline character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Span);
             
             Issues.push_back(Issue);
         }
@@ -590,7 +590,7 @@ void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
         
         auto Span = TheSourceManager->getWLCharacterSpan();
         
-        auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange character in symbol: " + c.graphicalString(), SYNTAXISSUESEVERITY_WARNING, Span);
+        auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange character in symbol: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Span);
         
         Issues.push_back(Issue);
     }
