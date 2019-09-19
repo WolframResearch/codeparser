@@ -312,7 +312,7 @@ public:
 //
 class OptionalDefaultPatternNode : public Node {
 public:
-    OptionalDefaultPatternNode(std::unique_ptr<NodeSeq> Args) : Node() {}
+    OptionalDefaultPatternNode(std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)) {}
     
     void put(MLINK mlp) const override;
 };
