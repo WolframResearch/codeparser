@@ -131,7 +131,6 @@ bool operator<=(SourceLocation a, SourceLocation b) {
     return false;
 }
 
-
 //
 // Source
 //
@@ -172,7 +171,7 @@ void Source::putLineCols(MLINK mlp) const {
 // SourceCharacter
 //
 
-bool SourceCharacter::isDigitOrAlpha() const {
+bool SourceCharacter::isAlphaOrDigit() const {
     if (!(0x00 <= valBits && valBits <= 0x7f)) {
         return false;
     }
@@ -198,6 +197,13 @@ bool SourceCharacter::isUpper() const {
         return false;
     }
     return std::isupper(valBits);
+}
+
+bool SourceCharacter::isDigit() const {
+    if (!(0x00 <= valBits && valBits <= 0x7f)) {
+        return false;
+    }
+    return std::isdigit(valBits);
 }
 
 bool SourceCharacter::isEndOfFile() const {

@@ -153,7 +153,7 @@ struct SourceCharacter {
     
     std::string string() const;
     
-    bool isDigitOrAlpha() const;
+    bool isAlphaOrDigit() const;
     
     bool isHex() const;
     
@@ -162,6 +162,8 @@ struct SourceCharacter {
     bool isUpper() const;
     
     bool isEndOfFile() const;
+    
+    bool isDigit() const;
 };
 
 std::ostream& operator<<(std::ostream& stream, const SourceCharacter);

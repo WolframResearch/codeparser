@@ -423,7 +423,7 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
     //
     // Read at least 1 alnum before entering loop
     //
-    if (curSource.isDigitOrAlpha()) {
+    if (curSource.isAlphaOrDigit()) {
         
         atleast1DigitOrAlpha = true;
         
@@ -437,7 +437,7 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
             // No need to check isAbort() inside decoder loops
             //
             
-            if (curSource.isDigitOrAlpha()) {
+            if (curSource.isAlphaOrDigit()) {
                 
                 LongName.put(curSource.to_char());
                 
