@@ -69,8 +69,11 @@ NodePtr SemiSemiParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext Ctx
             
             TheParser->nextToken(CtxtIn);
             
-            TheParser->append(std::move(ArgsTest));
-            TheParser->append(Tok);
+            //
+            // Prepend in correct order
+            //
+            TheParser->prepend(Tok);
+            TheParser->prependInReverse(std::move(ArgsTest));
             
             return Operand;
         }
@@ -107,8 +110,11 @@ NodePtr SemiSemiParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext Ctx
                     
                     TheParser->nextToken(CtxtIn);
                     
-                    TheParser->append(std::move(ArgsTest2));
-                    TheParser->append(Tok);
+                    //
+                    // Prepend in correct order
+                    //
+                    TheParser->prepend(Tok);
+                    TheParser->prependInReverse(std::move(ArgsTest2));
                     
                     auto ImplicitTimes = std::unique_ptr<Node>(new InfixNode(SYMBOL_TIMES, std::move(Args)));
                     
@@ -193,8 +199,11 @@ NodePtr SemiSemiParselet::parse0(std::unique_ptr<NodeSeq> Left, ParserContext Ct
             
             Args->append(std::unique_ptr<Node>(new LeafNode(Implicit)));
             
-            TheParser->append(std::move(ArgsTest));
-            TheParser->append(SecondTok);
+            //
+            // Prepend in correct order
+            //
+            TheParser->prepend(SecondTok);
+            TheParser->prependInReverse(std::move(ArgsTest));
             
             auto Span = std::unique_ptr<Node>(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
             
@@ -231,7 +240,7 @@ NodePtr SemiSemiParselet::parse0(std::unique_ptr<NodeSeq> Left, ParserContext Ct
                     // a;;b&
                     //
                     
-                    TheParser->append(std::move(ArgsTest2));
+                    TheParser->prependInReverse(std::move(ArgsTest2));
                     
                     auto Span = std::unique_ptr<Node>(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
                     
@@ -263,11 +272,13 @@ NodePtr SemiSemiParselet::parse0(std::unique_ptr<NodeSeq> Left, ParserContext Ct
                         
                         auto Span = std::unique_ptr<Node>(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
                         
-                        assert(TheParser->getTokenQueue().empty());
-                        TheParser->append(std::move(ArgsTest2));
-                        TheParser->append(ThirdTok);
-                        TheParser->append(std::move(ArgsTest3));
-                        TheParser->append(FourthTok);
+                        //
+                        // Prepend in correct order
+                        //
+                        TheParser->prepend(FourthTok);
+                        TheParser->prependInReverse(std::move(ArgsTest3));
+                        TheParser->prepend(ThirdTok);
+                        TheParser->prependInReverse(std::move(ArgsTest2));
                         
                         return Span;
                     }
@@ -301,11 +312,13 @@ NodePtr SemiSemiParselet::parse0(std::unique_ptr<NodeSeq> Left, ParserContext Ct
                     
                     auto Span = std::unique_ptr<Node>(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
                     
-                    assert(TheParser->getTokenQueue().empty());
-                    TheParser->append(std::move(ArgsTest2));
-                    TheParser->append(ThirdTok);
-                    TheParser->append(std::move(ArgsTest3));
-                    TheParser->append(FourthTok);
+                    //
+                    // Prepend in correct order
+                    //
+                    TheParser->prepend(FourthTok);
+                    TheParser->prependInReverse(std::move(ArgsTest3));
+                    TheParser->prepend(ThirdTok);
+                    TheParser->prependInReverse(std::move(ArgsTest2));
                     
                     return Span;
                 }
@@ -340,11 +353,13 @@ NodePtr SemiSemiParselet::parse0(std::unique_ptr<NodeSeq> Left, ParserContext Ct
                 
                 auto Span = std::unique_ptr<Node>(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
                 
-                assert(TheParser->getTokenQueue().empty());
-                TheParser->append(std::move(ArgsTest));
-                TheParser->append(SecondTok);
-                TheParser->append(std::move(ArgsTest2));
-                TheParser->append(ThirdTok);
+                //
+                // Prepend in correct order
+                //
+                TheParser->prepend(ThirdTok);
+                TheParser->prependInReverse(std::move(ArgsTest2));
+                TheParser->prepend(SecondTok);
+                TheParser->prependInReverse(std::move(ArgsTest));
                 
                 return Span;
             }
@@ -367,7 +382,7 @@ NodePtr SemiSemiParselet::parse0(std::unique_ptr<NodeSeq> Left, ParserContext Ct
                 
                 Args->append(std::unique_ptr<Node>(new LeafNode(SecondTok)));
                 
-                TheParser->append(std::move(ArgsTest2));
+                Args->append(std::move(ArgsTest2));
                 
                 Args->append(std::move(FirstArg));
                 
@@ -395,12 +410,14 @@ NodePtr SemiSemiParselet::parse0(std::unique_ptr<NodeSeq> Left, ParserContext Ct
                 
                 auto Span = std::unique_ptr<Node>(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
                 
-                assert(TheParser->getTokenQueue().empty());
-                TheParser->append(std::move(ArgsTest));
-                TheParser->append(SecondTok);
-                TheParser->append(std::move(ArgsTest2));
-                TheParser->append(ThirdTok);
-                TheParser->append(std::move(ArgsTest3));
+                //
+                // Prepend in correct order
+                //
+                TheParser->prependInReverse(std::move(ArgsTest3));
+                TheParser->prepend(ThirdTok);
+                TheParser->prependInReverse(std::move(ArgsTest2));
+                TheParser->prepend(SecondTok);
+                TheParser->prependInReverse(std::move(ArgsTest));
                 
                 return Span;
             }

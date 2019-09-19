@@ -130,8 +130,6 @@ private:
     
     void nextToken0(ParserContext Ctxt);
     
-    void prepend(const Token& current);
-    
     Precedence getCurrentTokenPrecedence(Token& current, ParserContext Ctxt);
     
 public:
@@ -141,18 +139,13 @@ public:
     
     void deinit();
     
-    
-    
     Token nextToken(ParserContext Ctxt);
     
     Token currentToken() const;
     
-    void append(const Token& Tok);
+    void prepend(const Token& current);
     
-    void append(std::unique_ptr<LeafSeq>);
-    
-    std::vector<Token> getTokenQueue() const;
-    
+    void prependInReverse(std::unique_ptr<LeafSeq>);
     
     
     std::vector<SyntaxIssue> getIssues() const;

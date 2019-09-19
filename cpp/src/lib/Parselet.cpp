@@ -117,7 +117,13 @@ NodePtr SymbolParselet::parse(ParserContext CtxtIn) const {
             }
         }
         
-        TheParser->append(std::move(ArgsTest));
+        TheParser->nextToken(Ctxt);
+        
+        //
+        // Prepend in correct order
+        //
+        TheParser->prepend(Tok);
+        TheParser->prependInReverse(std::move(ArgsTest));
         
         return Sym;
     }
@@ -208,37 +214,54 @@ NodePtr InfixOperatorParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContex
         }
         
         
-        auto Tok = TheParser->currentToken();
-        
-        Tok = Parser::eatAndPreserveToplevelNewlines(Tok, CtxtIn, Args);
-        
         //
-        // Cannot just compare tokens
+        // LOOKAHEAD
         //
-        // May be something like  a * b c \[Times] d
-        //
-        // and we want only a single Infix node created
-        //
-        if (isInfixOperator(Tok.Tok) &&
-            InfixOperatorToSymbol(Tok.Tok) == InfixOperatorToSymbol(TokIn.Tok)) {
+        {
+            auto ArgsTest = std::unique_ptr<LeafSeq>(new LeafSeq);
             
-            Args->append(std::unique_ptr<Node>(new LeafNode(Tok)));
+            auto Tok = TheParser->currentToken();
             
-            Tok = TheParser->nextToken(Ctxt);
-            
-            Tok = Parser::eatAll(Tok, Ctxt, Args);
-            
-            auto operand = TheParser->parse(Ctxt);
-            
-            Args->append(std::move(operand));
-            
-        } else {
+            Tok = Parser::eatAndPreserveToplevelNewlines(Tok, CtxtIn, ArgsTest);
             
             //
-            // Tok.Tok != TokIn.Tok, so break
+            // Cannot just compare tokens
             //
-            
-            break;
+            // May be something like  a * b c \[Times] d
+            //
+            // and we want only a single Infix node created
+            //
+            if (isInfixOperator(Tok.Tok) &&
+                InfixOperatorToSymbol(Tok.Tok) == InfixOperatorToSymbol(TokIn.Tok)) {
+                
+                Args->append(std::move(ArgsTest));
+                
+                Args->append(std::unique_ptr<Node>(new LeafNode(Tok)));
+                
+                Tok = TheParser->nextToken(Ctxt);
+                
+                Tok = Parser::eatAll(Tok, Ctxt, Args);
+                
+                auto operand = TheParser->parse(Ctxt);
+                
+                Args->append(std::move(operand));
+                
+            } else {
+                
+                //
+                // Tok.Tok != TokIn.Tok, so break
+                //
+                
+                TheParser->nextToken(Ctxt);
+                
+                //
+                // Prepend in correct order
+                //
+                TheParser->prepend(Tok);
+                TheParser->prependInReverse(std::move(ArgsTest));
+                
+                break;
+            }
         }
         
     } // while
@@ -548,7 +571,7 @@ NodePtr UnderParselet::parse(ParserContext CtxtIn) const {
             }
         }
         
-        TheParser->append(std::move(ArgsTest));
+        TheParser->prependInReverse(std::move(ArgsTest));
         
         return Blank;
     }
@@ -633,7 +656,7 @@ NodePtr UnderParselet::parseContextSensitive(std::unique_ptr<NodeSeq> Left, Pars
             }
         }
         
-        TheParser->append(std::move(ArgsTest));
+        TheParser->prependInReverse(std::move(ArgsTest));
         
         return Pat;
     }
@@ -806,7 +829,7 @@ NodePtr ColonParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext CtxtIn
             return parseContextSensitive(std::move(PatSeq), Ctxt);
         }
         
-        TheParser->append(std::move(ArgsTest));
+        TheParser->prependInReverse(std::move(ArgsTest));
         
         return Pat;
     }
@@ -1281,116 +1304,103 @@ NodePtr InfixOperatorWithTrailingParselet::parse(std::unique_ptr<NodeSeq> Left, 
         }
         
         
-        
-//        setup warnings for
-//
-//            f [1]
-//
-//
-//            and check f [1][2]
-//
-//
-//
-//
-//
-//            NonAssociative warnings
-//
-//            a \[UndirectedEdge] b \[UndirectedEdge] c
-//
-//
-//
-//
-//            UnexpectedExpression
-//
-//            "Expression in middle of ``~`` is usually a symbol."
-//
-//            a ~f[x]~ b
-        xxx;
-        
-        auto Tok = TheParser->currentToken();
-        
-        Tok = Parser::eatAndPreserveToplevelNewlines(Tok, CtxtIn, Args);
-        
         //
-        // Cannot just compare tokens
+        // LOOKAHEAD
         //
-        // May be something like  a * b c \[Times] d
-        //
-        // and we want only a single Infix node created
-        //
-        if (isInfixOperator(Tok.Tok) &&
-            InfixOperatorToSymbol(Tok.Tok) == InfixOperatorToSymbol(TokIn.Tok)) {
+        {
+            auto ArgsTest1 = std::unique_ptr<LeafSeq>(new LeafSeq);
             
-            Args->append(std::unique_ptr<Node>(new LeafNode(Tok)));
+            auto Tok = TheParser->currentToken();
             
-            lastOperatorToken = Tok;
+            Tok = Parser::eatAndPreserveToplevelNewlines(Tok, CtxtIn, ArgsTest1);
             
             //
-            // ALLOWTRAILING CODE
+            // Cannot just compare tokens
             //
-            
+            // May be something like  a * b c \[Times] d
             //
-            // Something like  a;b  or  a,b
+            // and we want only a single Infix node created
             //
-            
-            Tok = TheParser->nextToken(Ctxt);
-            
-            //
-            // LOOKAHEAD
-            //
-            {
-                auto ArgsTest = std::unique_ptr<LeafSeq>(new LeafSeq);
+            if (isInfixOperator(Tok.Tok) &&
+                InfixOperatorToSymbol(Tok.Tok) == InfixOperatorToSymbol(TokIn.Tok)) {
                 
-                Tok = Parser::eatAndPreserveToplevelNewlines(Tok, Ctxt, ArgsTest);
+                Args->append(std::move(ArgsTest1));
                 
-                if (isInfixOperator(Tok.Tok) &&
-                    InfixOperatorToSymbol(Tok.Tok) == InfixOperatorToSymbol(TokIn.Tok)) {
+                Args->append(std::unique_ptr<Node>(new LeafNode(Tok)));
+                
+                lastOperatorToken = Tok;
+                
+                //
+                // ALLOWTRAILING CODE
+                //
+                
+                //
+                // Something like  a;b  or  a,b
+                //
+                
+                Tok = TheParser->nextToken(Ctxt);
+                
+                //
+                // LOOKAHEAD
+                //
+                {
+                    auto ArgsTest2 = std::unique_ptr<LeafSeq>(new LeafSeq);
                     
-                    //
-                    // Something like  a; ;
-                    //
+                    Tok = Parser::eatAndPreserveToplevelNewlines(Tok, Ctxt, ArgsTest2);
                     
-                    auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, "", Source(lastOperatorToken.Span.lines.start));
-                    
-                    lastOperatorToken = Tok;
-                    
-                    Args->append(std::unique_ptr<Node>(new LeafNode(Implicit)));
-                    
-                    Args->append(std::move(ArgsTest));
-                    
-                } else if (TheParser->isPossibleBeginningOfExpression(Tok, Ctxt)) {
-                    
-                    auto operand = TheParser->parse(Ctxt);
-                    
-                    Args->append(std::move(ArgsTest));
-                    
-                    Args->append(std::move(operand));
-                    
-                } else {
-                    
-                    //
-                    // Not beginning of an expression
-                    //
-                    // For example:  a;&
-                    //
-                    
-                    auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, "", Source(lastOperatorToken.Span.lines.end));
-                    
-                    Args->append(std::unique_ptr<Node>(new LeafNode(Implicit)));
-                    
-                    TheParser->append(std::move(ArgsTest));
-                    
-                    return std::unique_ptr<Node>(new InfixNode(InfixOperatorToSymbol(TokIn.Tok), std::move(Args)));
+                    if (isInfixOperator(Tok.Tok) &&
+                        InfixOperatorToSymbol(Tok.Tok) == InfixOperatorToSymbol(TokIn.Tok)) {
+                        
+                        //
+                        // Something like  a; ;
+                        //
+                        
+                        auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, "", Source(lastOperatorToken.Span.lines.start));
+                        
+                        lastOperatorToken = Tok;
+                        
+                        Args->append(std::unique_ptr<Node>(new LeafNode(Implicit)));
+                        
+                        Args->append(std::move(ArgsTest2));
+                        
+                    } else if (TheParser->isPossibleBeginningOfExpression(Tok, Ctxt)) {
+                        
+                        auto operand = TheParser->parse(Ctxt);
+                        
+                        Args->append(std::move(ArgsTest2));
+                        
+                        Args->append(std::move(operand));
+                        
+                    } else {
+                        
+                        //
+                        // Not beginning of an expression
+                        //
+                        // For example:  a;&
+                        //
+                        
+                        auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, "", Source(lastOperatorToken.Span.lines.end));
+                        
+                        Args->append(std::unique_ptr<Node>(new LeafNode(Implicit)));
+                        
+                        TheParser->prependInReverse(std::move(ArgsTest2));
+                        
+                        return std::unique_ptr<Node>(new InfixNode(InfixOperatorToSymbol(TokIn.Tok), std::move(Args)));
+                    }
                 }
+                
+            } else {
+                
+                TheParser->nextToken(Ctxt);
+                
+                //
+                // Prepend in correct order
+                //
+                TheParser->prepend(Tok);
+                TheParser->prependInReverse(std::move(ArgsTest1));
+                
+                return std::unique_ptr<Node>(new InfixNode(InfixOperatorToSymbol(TokIn.Tok), std::move(Args)));
             }
-            
-        } else {
-            
-            //
-            // Tok.Tok != TokIn.Tok, so break
-            //
-            
-            return std::unique_ptr<Node>(new InfixNode(InfixOperatorToSymbol(TokIn.Tok), std::move(Args)));
         }
         
     } // while

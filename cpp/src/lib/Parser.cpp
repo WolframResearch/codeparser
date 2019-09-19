@@ -536,39 +536,25 @@ Token Parser::currentToken() const {
 // Used to insert ImplicitTimes
 //
 void Parser::prepend(const Token& current) {
-    
     tokenQueue.insert(tokenQueue.begin(), current);
 }
 
-void Parser::append(const Token& Tok) {
-    tokenQueue.push_back(Tok);
-}
-
-void Parser::append(std::unique_ptr<LeafSeq> N) {
+void Parser::prependInReverse(std::unique_ptr<LeafSeq> N) {
+    
+    if (N->empty()) {
+        return;
+    }
+    
     auto V = N->getVectorDestructive();
-    for (const auto& A : *V) {
-        append(A->getToken());
+    auto i = V->rbegin();
+    for (; i != V->rend(); ++i ) {
+        prepend((*i)->getToken());
     }
     delete V;
 }
 
 std::vector<SyntaxIssue> Parser::getIssues() const {
     return Issues;
-}
-
-//std::vector<Metadata> Parser::getMetadatas() const {
-//
-//    std::vector<Metadata> Metadatas;
-//
-//    auto totalTimeMillis = std::chrono::duration_cast<std::chrono::milliseconds>(totalTimeMicros);
-//
-//    Metadatas.push_back(Metadata("ParserTotalTimeMillis", std::to_string(totalTimeMillis.count())));
-//
-//    return Metadatas;
-//}
-
-std::vector<Token> Parser::getTokenQueue() const {
-    return tokenQueue;
 }
 
 //
@@ -890,27 +876,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
         
     } // while
     
-    //
-    // Push Args.vector back onto tokenQueue,
-    // but make sure it is front of anything else in tokenQueue
-    //
-    
-    if (!Args->empty()) {
-        
-        std::vector<Token> Tmp;
-        Tmp.reserve(Args->size());
-        
-        //
-        // Put back unused Nodes
-        //
-        auto V = Args->getVectorDestructive();
-        for (const auto& A : *V) {
-            Tmp.push_back(A->getToken());
-        }
-        delete V;
-        
-        tokenQueue.insert(tokenQueue.begin(), Tmp.begin(), Tmp.end());
-    }
+    prependInReverse(std::move(Args));
     
     return Left;
 }
