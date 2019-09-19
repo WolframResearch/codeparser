@@ -3,7 +3,7 @@
 
 #include "CodePoint.h"
 
-SourceManager::SourceManager() : buffer(), length(), idx(), lastCharacterWasCarriageReturn(false), Issues(), SourceLoc(1, 0), TokenStartLoc(0, 0),
+SourceManager::SourceManager() : buffer(), length(), idx(), lastCharacterWasCarriageReturn(false), advancedToEOF(false), Issues(), SourceLoc(1, 0), TokenStartLoc(0, 0),
 WLCharacterStartLoc(0, 0), WLCharacterEndLoc(0, 0), PrevWLCharacterStartLoc(0, 0), PrevWLCharacterEndLoc(0, 0) {}
 
 void SourceManager::init(std::istream& is, WolframLibraryData libDataIn) {
@@ -19,6 +19,8 @@ void SourceManager::init(std::istream& is, WolframLibraryData libDataIn) {
     idx = 0;
     
     lastCharacterWasCarriageReturn = false;
+    
+    advancedToEOF = false;
     
     Issues.clear();
     
@@ -85,6 +87,10 @@ void SourceManager::advanceSourceLocation(SourceCharacter c) {
     
     if (c == SourceCharacter(CODEPOINT_ENDOFFILE)) {
         
+        if (advancedToEOF) {
+            return;
+        }
+        
         //
         // It can happen that single \r occurs.
         // Then make sure to treat it as a newline.
@@ -104,6 +110,8 @@ void SourceManager::advanceSourceLocation(SourceCharacter c) {
         lastCharacterWasCarriageReturn = false;
         
         SourceLoc = SourceLocation(SourceLoc.Line+1, 0);
+        
+        advancedToEOF = true;
         
         return;
     }
