@@ -912,7 +912,7 @@ NodePtr SlashColonParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext C
         }
         if (BinaryMiddle->getSymbol() == SYMBOL_SETDELAYED) {
 
-            auto MiddleChildren = Middle->getChildrenDestructive();
+            auto MiddleChildren = BinaryMiddle->getChildrenDestructive();
 
             Args->append(std::unique_ptr<NodeSeq>(MiddleChildren));
             
@@ -922,7 +922,7 @@ NodePtr SlashColonParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext C
         }
         if (BinaryMiddle->getSymbol() == SYMBOL_UNSET) {
 
-            auto MiddleChildren = Middle->getChildrenDestructive();
+            auto MiddleChildren = BinaryMiddle->getChildrenDestructive();
 
             Args->append(std::unique_ptr<NodeSeq>(MiddleChildren));
             
