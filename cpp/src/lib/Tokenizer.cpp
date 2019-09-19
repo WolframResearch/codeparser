@@ -274,12 +274,30 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
         
         _currentToken = handleOperator(Ctxt);
         
+    } else if (c.to_point() == '\\') {
+        
+        //
+        // Unhandled \
+        //
+        // But do the favor of combining with next character for better error reporting
+        //
+        
+        String << c;
+        
+        c = nextWLCharacter(TOPLEVEL);
+        
+        String << c;
+        
+        c = nextWLCharacter(TOPLEVEL);
+        
+        _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSpan());
+        
     } else {
         
         //
         // Unhandled
         //
-        // Something like single \ or \[ErrorIndicator]
+        // Something like \[ErrorIndicator]
         //
         
         String << c;
