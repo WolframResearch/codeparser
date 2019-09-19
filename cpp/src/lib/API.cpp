@@ -566,7 +566,10 @@ LeafNodePtr parseLeaf() {
     // For example, parsing f.m would first return f as a Symbol
     // Still need to grab . and m to finish the parse
     //
-    if (Tok.Tok != TOKEN_ENDOFFILE) {
+    // Also handle TOKEN_ERROR_EMPTYSTRING here because we want << to return TOKEN_LESSLESS, not TOKEN_OTHER
+    //
+    if (!(Tok.Tok == TOKEN_ENDOFFILE ||
+          Tok.Tok == TOKEN_ERROR_EMPTYSTRING)) {
         
         auto AccumTok = N->getToken();
         auto AccumStr = AccumTok.Str;
@@ -576,7 +579,8 @@ LeafNodePtr parseLeaf() {
         
         Tok = TheTokenizer->nextToken(Ctxt);
         
-        while (Tok.Tok != TOKEN_ENDOFFILE) {
+        while (!(Tok.Tok == TOKEN_ENDOFFILE ||
+                 Tok.Tok == TOKEN_ERROR_EMPTYSTRING)) {
             
             auto Str = Tok.Str;
             AccumStr = AccumStr + Str;
