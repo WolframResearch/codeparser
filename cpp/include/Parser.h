@@ -10,6 +10,7 @@
 #include <array>
 #include <cstddef>
 #include <functional> // for function with GCC and MSVC
+#include <deque>
 
 class PrefixParselet;
 class InfixParselet;
@@ -105,7 +106,7 @@ private:
     std::array<std::unique_ptr<const ContextSensitivePrefixParselet>, TOKEN_COUNT> contextSensitivePrefixParselets;
     std::array<std::unique_ptr<const ContextSensitiveInfixParselet>, TOKEN_COUNT> contextSensitiveInfixParselets;
     
-    std::vector<Token> tokenQueue;
+    std::deque<Token> tokenQueue;
     
     std::vector<SyntaxIssue> Issues;
     std::chrono::microseconds totalTimeMicros;
@@ -136,7 +137,7 @@ private:
 public:
     Parser();
     
-    void init(std::function<bool ()> AbortQ, const std::vector<Token>& queued);
+    void init(std::function<bool ()> AbortQ, const std::deque<Token>& queued);
     
     void deinit();
     

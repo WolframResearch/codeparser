@@ -430,7 +430,7 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
 Parser::~Parser() {}
 
 
-void Parser::init(std::function<bool ()> AbortQ, const std::vector<Token>& queued) {
+void Parser::init(std::function<bool ()> AbortQ, const std::deque<Token>& queued) {
     
     tokenQueue = queued;
     Issues.clear();
