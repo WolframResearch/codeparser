@@ -64,7 +64,6 @@ std::string SyntaxErrorToString(SyntaxError Err) {
         case SYNTAXERROR_COLONERROR: return "SyntaxError`ColonError";
         case SYNTAXERROR_EXPECTEDOPERAND: return "SyntaxError`ExpectedOperand";
         case SYNTAXERROR_EXPECTEDPOSSIBLEEXPRESSION: return "SyntaxError`ExpectedPossibleExpression";
-        case SYNTAXERROR_NONASSOCIATIVE: return "SyntaxError`NonAssociative";
         case SYNTAXERROR_TOKEN_EXPECTEDEQUAL: return "SyntaxError`ExpectedEqual";
         case SYNTAXERROR_TOKEN_UNHANDLEDCHARACTER: return "SyntaxError`UnhandledCharacter";
         case SYNTAXERROR_TOKEN_EXPECTEDDIGITORALPHA: return "SyntaxError`ExpectedDigitOrAlpha";

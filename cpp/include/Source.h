@@ -60,11 +60,6 @@ enum SyntaxError {
     SYNTAXERROR_EXPECTEDPOSSIBLEEXPRESSION,
     
     //
-    // Something like  a ? b ? c
-    //
-    SYNTAXERROR_NONASSOCIATIVE,
-    
-    //
     // These are translated over from Token Errors
     //
     SYNTAXERROR_TOKEN_EXPECTEDEQUAL,

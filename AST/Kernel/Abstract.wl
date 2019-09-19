@@ -293,11 +293,13 @@ abstract[BinaryNode[PutAppend, {left_, _, LeafNode[String, str_, _]}, data_]] :=
 
 (* Abstract NonAssociative errors *)
 
+abstract[BinaryNode[PatternTest, children:{BinaryNode[PatternTest, _, _], _, _}, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociative, children, KeyTake[data, keysToTake]]
+
 (*
-DirectedEdge and UndirectedEdge do not associate with each other
+DirectedEdge and UndirectedEdge do not associate with themselves or each other
 *)
-abstract[BinaryNode[DirectedEdge, children:{BinaryNode[UndirectedEdge, _, _], _, _}, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociative, children, KeyTake[data, keysToTake]]
-abstract[BinaryNode[UndirectedEdge, children:{BinaryNode[DirectedEdge, _, _], _, _}, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociative, children, KeyTake[data, keysToTake]]
+abstract[BinaryNode[DirectedEdge, children:{BinaryNode[DirectedEdge | UndirectedEdge, _, _], _, _}, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociative, children, KeyTake[data, keysToTake]]
+abstract[BinaryNode[UndirectedEdge, children:{BinaryNode[DirectedEdge | UndirectedEdge, _, _], _, _}, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociative, children, KeyTake[data, keysToTake]]
 
 (* could be  a =. *)
 abstract[BinaryNode[Unset, {left_, _}, data_]] := CallNode[ToNode[Unset], {abstract[left]}, KeyTake[data, keysToTake]]
