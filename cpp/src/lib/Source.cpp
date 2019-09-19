@@ -112,6 +112,10 @@ bool isContiguous(SourceLocation a, SourceLocation b) {
     return a.Line == b.Line && a.Col + 1 == b.Col;
 }
 
+bool operator==(SourceLocation a, SourceLocation b) {
+    return (a.Line == b.Line) && (a.Col == b.Col);
+}
+
 bool operator<=(SourceLocation a, SourceLocation b) {
     
     if (a.Line < b.Line) {

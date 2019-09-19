@@ -233,8 +233,8 @@ union Source {
 bool isContiguous(SourceLocation a, SourceLocation b);
 bool isContiguous(Source a, Source b);
 
+bool operator==(SourceLocation a, SourceLocation b);
 bool operator<=(SourceLocation a, SourceLocation b);
-
 
 struct Token {
     
