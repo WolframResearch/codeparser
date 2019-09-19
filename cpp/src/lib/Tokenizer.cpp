@@ -89,8 +89,22 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
         //
         auto Start = TheSourceManager->getTokenStart();
         
-        _currentToken = Token(TOKEN_ENDOFFILE, String.str(), Source(Start, Start));
-    
+        if (stringifyNextToken_symbol) {
+            
+            stringifyNextToken_symbol = false;
+            
+            _currentToken = Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start, Start));
+            
+        } else if (stringifyNextToken_file) {
+            
+            stringifyNextToken_file = false;
+            
+            _currentToken = Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start, Start));
+            
+        } else {
+            _currentToken = Token(TOKEN_ENDOFFILE, String.str(), Source(Start, Start));
+        }
+        
         return _currentToken;
         
     } else if (Ctxt.StringifyCurrentLine) {
