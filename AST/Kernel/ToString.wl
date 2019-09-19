@@ -632,26 +632,6 @@ Module[{nodes, nodeStrs},
 ]]
 
 
-
-
-
-toSourceCharacterString[BoxNode[DiskBox, {rest___}, _], insideBoxes_] :=
-Catch[
-Module[{heldRest, heldChildren, args},
-  heldRest = Extract[#, {2}, HoldForm]& /@ {rest};
-
-  heldChildren = heldRest;
-
-  nodeStrs = ToString /@ heldChildren;
-
-  args = StringJoin[Riffle[nodeStrs, ", "]];
-
-  If[insideBoxes, "\\*\\(", "\\!\\(\\*"] <> ToString[DiskBox] <> "[" <> args <> "]\\)"
-]]
-
-(*
-For BoxNodes that do not contain CodeNodes ( SqrtBox, FractionBox, etc )
-*)
 toSourceCharacterString[BoxNode[box_, children_, _], insideBoxes_] :=
 Catch[
 Module[{nodeStrs, args},
@@ -664,8 +644,41 @@ Module[{nodeStrs, args},
   If[insideBoxes, "\\*\\(", "\\!\\(\\*"] <> ToString[box] <> "[" <> args <> "]\\)"
 ]]
 
-toSourceCharacterString[CodeNode[Null, children_, data_], insideBoxes_] :=
-	Failure["CannotConvertToSourceCharacterString", <|"Node"->CodeNode[Null, children, data]|>]
+(*
+if there is a RowBox, then we know there is an extra list
+*)
+toSourceCharacterString[BoxNode[RowBox, {a_}, _], insideBoxes_] :=
+Catch[
+Module[{nodeStrs, args},
+  nodeStrs = toSourceCharacterString[#, True]& /@ a;
+  If[AnyTrue[nodeStrs, FailureQ],
+    Throw[SelectFirst[nodeStrs, FailureQ]]
+  ];
+  args = StringJoin["{", Riffle[nodeStrs, ", "], "}"];
+
+  If[insideBoxes, "\\*\\(", "\\!\\(\\*"] <> ToString[RowBox] <> "[" <> args <> "]\\)"
+]]
+
+(*
+if there is a GridBox, then we know there are 2 extra lists
+*)
+toSourceCharacterString[BoxNode[GridBox, {a_, rest___}, _], insideBoxes_] :=
+Catch[
+Module[{nodeStrsA, nodeStrsRest, argsA, args},
+  
+  nodeStrsA = Map[toSourceCharacterString[#, True]&, a, {2}];
+
+  nodeStrsRest = toSourceCharacterString[#, True]& /@ {rest};
+
+  argsA = StringJoin["{", Riffle[StringJoin["{", Riffle[#, ", "], "}"]& /@ nodeStrsA, ", "], "}"];
+
+  args = StringJoin["{", Riffle[{argsA} ~Join~ nodeStrsRest, ", "], "}"];
+
+  If[insideBoxes, "\\*\\(", "\\!\\(\\*"] <> ToString[GridBox] <> "[" <> args <> "]\\)"
+]]
+
+toSourceCharacterString[CodeNode[Null, code_, data_], insideBoxes_] :=
+	ToString[Unevaluated[code], InputForm]
 
 
 toSourceCharacterString[_[op_, nodes_, data_], insideBoxes_] :=
