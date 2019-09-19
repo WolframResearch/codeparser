@@ -508,9 +508,11 @@ Module[{abstractedChildren, issues, single},
 	(*
 	if there is only 1 expression in the file, then assume it could be a data file or an expression from ParseString[]
 
+	ignore SyntaxErrorNodes, do not count SyntaxErrorNodes as being strange at top-level
+
 	TODO: handle as a Data file
 	*)
-	single = (Length[children] == 1);
+	single = (Length[Cases[children, Except[_SyntaxErrorNode]]] <= 1);
 
 	abstractedChildren = (
 		If[!single, issues = issues ~Join~ topLevelChildIssues[#, True]];
