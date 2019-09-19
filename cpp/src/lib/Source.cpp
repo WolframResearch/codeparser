@@ -74,6 +74,7 @@ std::string SyntaxErrorToString(SyntaxError Err) {
         case SYNTAXERROR_TOKEN_EXPECTEDACCURACY: return "SyntaxError`ExpectedAccuracy";
         case SYNTAXERROR_TOKEN_EXPECTEDEXPONENT: return "SyntaxError`ExpectedExponent";
         case SYNTAXERROR_TOKEN_EMPTYSTRING: return "SyntaxError`EmptyString";
+        case SYNTAXERROR_TOKEN_UNHANDLEDDOT: return "SyntaxError`UnhandledDot";
         default:
             assert(false);
             return "";
@@ -91,6 +92,7 @@ SyntaxError TokenErrorToSyntaxError(TokenEnum Tok) {
         case TOKEN_ERROR_EXPECTEDACCURACY: return SYNTAXERROR_TOKEN_EXPECTEDACCURACY;
         case TOKEN_ERROR_EXPECTEDEXPONENT: return SYNTAXERROR_TOKEN_EXPECTEDEXPONENT;
         case TOKEN_ERROR_EMPTYSTRING: return SYNTAXERROR_TOKEN_EMPTYSTRING;
+        case TOKEN_ERROR_UNHANDLEDDOT: return SYNTAXERROR_TOKEN_UNHANDLEDDOT;
         default:
             assert(false);
             return SYNTAXERROR_UNKNOWN;

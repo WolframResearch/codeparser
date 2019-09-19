@@ -1831,13 +1831,15 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                     } else if (c.to_point() == '.') {
                         
                         //
-                        // =...  is a syntax error
+                        // =..  is a syntax error
                         //
                         
                         String << DotChar;
                         String << c;
                         
                         Operator = TOKEN_ERROR_UNHANDLEDDOT;
+                        
+                        c = nextWLCharacter(INSIDE_OPERATOR);
                         
                     } else {
                         
