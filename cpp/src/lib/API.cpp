@@ -562,7 +562,7 @@ LeafNodePtr parseLeaf() {
     Tok = TheTokenizer->nextToken(Ctxt);
     
     //
-    // There may be more import
+    // There may be more input
     // For example, parsing f.m would first return f as a Symbol
     // Still need to grab . and m to finish the parse
     //

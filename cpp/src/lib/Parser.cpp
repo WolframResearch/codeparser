@@ -680,7 +680,7 @@ Precedence Parser::getCurrentTokenPrecedence(Token& TokIn, ParserContext Ctxt) {
         // Given the input  1+2
         // when parsing the +, make sure to treat it as infix and NOT prefix
         //
-        // Solution is to handle in parselets where needed, i.e., SemiSemiParselet
+        // Solution is to handle infix parselets where needed, i.e., SemiSemiParselet
         //
         
         return Infix->getPrecedence();

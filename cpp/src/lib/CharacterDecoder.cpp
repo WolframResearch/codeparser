@@ -144,45 +144,45 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
         case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7':
             _currentWLCharacter = handleOctal(curSource, CharacterStart, policy);
             break;
-            //
-            // Simple escaped characters
-            // \b \f \n \r \t
-            //
+        //
+        // Simple escaped characters
+        // \b \f \n \r \t
+        //
         case 'b':
             _currentWLCharacter = WLCharacter(CODEPOINT_STRINGMETA_BACKSPACE, ESCAPE_SINGLE);
             break;
         case 'f':
             //
-            // \f is NOT a space character
+            // \f is NOT a space character (but inside of strings, it does have special meaning)
             //
             _currentWLCharacter = WLCharacter(CODEPOINT_STRINGMETA_FORMFEED, ESCAPE_SINGLE);
             break;
         case 'n':
             //
-            // \n is NOT a newline character
+            // \n is NOT a newline character (but inside of strings, it does have special meaning)
             //
             _currentWLCharacter = WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
             break;
         case 'r':
             //
-            // \r is NOT a newline character
+            // \r is NOT a newline character (but inside of strings, it does have special meaning)
             //
             _currentWLCharacter = WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
             break;
         case 't':
             //
-            // \t is NOT a space character
+            // \t is NOT a space character (but inside of strings, it does have special meaning)
             //
             _currentWLCharacter = WLCharacter(CODEPOINT_STRINGMETA_TAB, ESCAPE_SINGLE);
             break;
-            //
-            // \\ \" \< \>
-            //
-            // String meta characters
-            // What are \< and \> ?
-            // https://mathematica.stackexchange.com/questions/105018/what-are-and-delimiters-in-box-expressions
-            // https://stackoverflow.com/q/6065887
-            //
+        //
+        // \\ \" \< \>
+        //
+        // String meta characters
+        // What are \< and \> ?
+        // https://mathematica.stackexchange.com/questions/105018/what-are-and-delimiters-in-box-expressions
+        // https://stackoverflow.com/q/6065887
+        //
         case '"':
             _currentWLCharacter = WLCharacter(CODEPOINT_STRINGMETA_DOUBLEQUOTE, ESCAPE_SINGLE);
             break;
@@ -263,10 +263,10 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
         case '>':
             _currentWLCharacter = WLCharacter(CODEPOINT_STRINGMETA_CLOSE, ESCAPE_SINGLE);
             break;
-            //
-            // Linear syntax characters
-            // \! \% \& \( \) \* \+ \/ \@ \^ \_ \` \<space>
-            //
+        //
+        // Linear syntax characters
+        // \! \% \& \( \) \* \+ \/ \@ \^ \_ \` \<space>
+        //
         case '!':
             _currentWLCharacter = WLCharacter(CODEPOINT_LINEARSYNTAX_BANG, ESCAPE_SINGLE);
             break;
