@@ -681,6 +681,13 @@ Specifically add a DidYouMean for /
 topLevelChildIssues[BinaryNode[Divide, _, data_], True] := { SyntaxIssue["TopLevel", "Strange expression is at top-level.\n\
 Did you mean ``/@``?", "Warning", data] }
 
+(*
+No need to issue warning for errors being strange
+*)
+topLevelChildIssues[SyntaxErrorNode[_, _, _], True] := {}
+
+topLevelChildIssues[AbstractSyntaxErrorNode[_, _, _], True] := {}
+
 topLevelChildIssues[node_, True] := { SyntaxIssue["TopLevel", "Strange expression is at top-level.", "Warning", node[[3]]] }
 
 
