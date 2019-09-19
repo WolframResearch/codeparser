@@ -26,7 +26,7 @@ NonAssociative:
 Test[
 	ParseString["a ? b ? c"]
 	,
-SyntaxErrorNode[SyntaxError`NonAssociative, {BinaryNode[
+AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociative, {BinaryNode[
    PatternTest, {LeafNode[Symbol, 
      "a", <|Source -> {{1, 1}, {1, 1}}|>], 
     LeafNode[Token`Question, "?", <|Source -> {{1, 3}, {1, 3}}|>], 
@@ -128,5 +128,22 @@ Test[
 
 
 
+
+
+
+(*
+SyntaxError:
+*)
+
+TestMatch[
+	ConcreteParseString["\\"]
+	,
+	SyntaxErrorNode[SyntaxError`UnhandledCharacter, {LeafNode[
+   Token`Error`UnhandledCharacter, 
+   "\\", <|Source -> {{1, 1}, {2, 0}}|>]}, <|Source -> {{1, 1}, {2, 
+     0}}|>]
+	,
+	TestID->"SyntaxIssues-20190521-P7R3O7"
+]
 
 

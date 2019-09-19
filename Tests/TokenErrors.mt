@@ -24,8 +24,7 @@ Test[
 	,
 	{LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
 		LeafNode[Token`ColonColon, "::", <|Source -> {{1, 2}, {1, 3}}|>],
-		LeafNode[Token`Error`EmptyString, "", <|Source -> {{1, 4}, {1, 4}}|>],
-		LeafNode[Token`Error`UnhandledCharacter, "\\\"", <|Source -> {{1, 4}, {1, 5}}|>]}
+		LeafNode[Token`Other, "\\\"", <|Source -> {{1, 4}, {1, 5}}|>]}
 	,
 	TestID->"TokenErrors-20190520-L5N7B0"
 ]

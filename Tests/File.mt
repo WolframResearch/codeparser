@@ -206,7 +206,7 @@ TestMatch[
 			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 3}, {1, 3}}|>],
 			LeafNode[Token`Equal, "=", <|Source -> {{1, 4}, {1, 4}}|>],
 			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 5}, {1, 5}}|>],
-			LeafNode[Integer, "1", <|Source -> {{1, 6}, {1, 6}}|>] }, <|Source -> {{1, 1}, {1, 6}}|>] }, <|SyntaxIssues -> {SyntaxIssue["StrangeCharacter", "Strange character in symbol: \\.01", "Warning", <|Source -> {{1, 1}, {1, 1}}|>]}, Source -> {{1, 1}, {1, 6}}|>]
+			LeafNode[Integer, "1", <|Source -> {{1, 6}, {1, 6}}|>] }, <|Source -> {{1, 1}, {1, 6}}|>] }, <|SyntaxIssues -> {SyntaxIssue["StrangeCharacter", "Strange character in symbol: ``\\.01``.", "Warning", <|Source -> {{1, 1}, {1, 1}}|>]}, Source -> {{1, 1}, {1, 6}}|>]
 	,
 	TestID->"File-20190602-N5D1B8"
 ]

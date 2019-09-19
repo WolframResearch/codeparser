@@ -382,7 +382,14 @@ Test[
 Test[
 	ConcreteParseString["{ headIn__ }"]
 	,
-	foo
+	GroupNode[List, {
+		LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 1}}|>],
+		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 2}, {1, 2}}|>],
+		PatternBlankSequenceNode[PatternBlankSequence, {
+			LeafNode[Symbol, "headIn", <|Source -> {{1, 3}, {1, 8}}|>],
+			LeafNode[BlankSequence, "__", <|Source -> {{1, 9}, {1, 10}}|>]}, <|Source -> {{1, 3}, {1, 10}}|>],
+		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 11}, {1, 11}}|>],
+		LeafNode[Token`CloseCurly, "}", <|Source -> {{1, 12}, {1, 12}}|>]}, <|Source -> {{1, 1}, {1, 12}}|>]
 	,
 	TestID->"Concrete-20190916-X5M4H9"
 ]
@@ -431,11 +438,20 @@ Test[
 			LeafNode[Token`Comment, "(*1*)", <|Source -> {{1, 8}, {1, 12}}|>],
 			LeafNode[Token`Comma, ",", <|Source -> {{1, 13}, {1, 13}}|>],
 			LeafNode[Token`Comment, "(*2*)", <|Source -> {{1, 14}, {1, 18}}|>],
-			LeafNode[Symbol, "b", <|Source -> {{1, 19}, {1, 19}}|>]}, <|Source -> {{1, 7}, {1, 24}}|>],
+			LeafNode[Symbol, "b", <|Source -> {{1, 19}, {1, 19}}|>]}, <|Source -> {{1, 7}, {1, 19}}|>],
 		LeafNode[Token`Comment, "(*3*)", <|Source -> {{1, 20}, {1, 24}}|>],
 		LeafNode[Token`CloseCurly, "}", <|Source -> {{1, 25}, {1, 25}}|>]}, <|Source -> {{1, 1}, {1, 25}}|>]
 	,
 	TestID->"Concrete-20190916-C5C7M2"
+]
+
+Test[
+	ConcreteParseString["a=.."]
+	,
+	SyntaxErrorNode[SyntaxError`UnhandledDot, {
+		LeafNode[Token`Error`UnhandledDot, "=..", <|Source -> {{1, 2}, {1, 4}}|>]}, <|Source -> {{1, 2}, {1, 4}}|>]
+	,
+	TestID->"Concrete-20190916-N2A8O1"
 ]
 
 

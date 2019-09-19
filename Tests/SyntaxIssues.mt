@@ -24,23 +24,6 @@ TestMatch[
 
 
 
-(*
-SyntaxError:
-*)
-
-TestMatch[
-	FirstCase[ConcreteParseString["\\", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
-		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxError", _, _, _]}]
-	,
-	TestID->"SyntaxIssues-20190521-P7R3O7"
-]
-
-
-
-
-
 
 
 (*
@@ -239,18 +222,6 @@ TestMatch[
 (*
 NotContiguous:
 *)
-
-
-TestMatch[
-	FirstCase[ConcreteParseString["If []", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
-		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["NotContiguous", _, _, _]}]
-	,
-	TestID->"SyntaxIssues-20190521-F6H2O9"
-]
-
-
 TestMatch[
 	FirstCase[ConcreteParseString["a =    .", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]

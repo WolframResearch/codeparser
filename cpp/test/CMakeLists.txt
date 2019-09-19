@@ -12,6 +12,9 @@ endif()
 
 set(CPP_TEST_SOURCES
 	${CMAKE_SOURCE_DIR}/cpp/test/TestCharacterDecoder.cpp
+	${CMAKE_SOURCE_DIR}/cpp/test/TestNode.cpp
+	${CMAKE_SOURCE_DIR}/cpp/test/TestParselet.cpp
+	${CMAKE_SOURCE_DIR}/cpp/test/TestWLCharacter.cpp
 )
 
 add_executable(test-exe

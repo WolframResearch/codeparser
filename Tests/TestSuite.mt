@@ -4,6 +4,7 @@ TestSuite[{
 	"AbstractSyntaxErrorNodes.mt",
 	"AbstractSyntaxIssues.mt",
 	"Arrows.mt",
+	"Boxes.mt",
 	"Characters.mt",
 	"Concrete.mt",
 	"DeclarationName.mt",
