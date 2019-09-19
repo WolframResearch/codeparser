@@ -306,17 +306,12 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
         case ' ':
             _currentWLCharacter = WLCharacter(CODEPOINT_LINEARSYNTAX_SPACE, ESCAPE_SINGLE);
             break;
-        case CODEPOINT_ENDOFFILE: {
-            auto Loc = TheSourceManager->getSourceLocation();
-            
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXERROR, std::string("Incomplete character ``\\``"), SYNTAXISSUESEVERITY_FATAL, Source(CharacterStart, Loc));
-            
-            Issues.push_back(Issue);
-            
+        case CODEPOINT_ENDOFFILE:
+            //
+            // Just return the naked \
+            //
             _currentWLCharacter = WLCharacter('\\');
-            
             break;
-        }
         default: {
             
             //
