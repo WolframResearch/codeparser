@@ -92,50 +92,41 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
     curSource = TheByteDecoder->nextSourceCharacter();
     
     switch (curSource.to_point()) {
-        case '\r': case '\n': {
+        case '\n':
+            _currentWLCharacter = WLCharacter(CODEPOINT_LINECONTINUATION, ESCAPE_SINGLE);
+            break;
+        case '\r': {
             
             //
             // Line continuation
             //
             
             if ((policy & LC_UNDERSTANDS_CRLF) == LC_UNDERSTANDS_CRLF) {
+                    
+                auto c = TheByteDecoder->nextSourceCharacter();
                 
-                bool wasCR = (curSource == SourceCharacter('\r'));
-                if (wasCR) {
+                if (c != SourceCharacter('\n')) {
                     
-                    auto c = TheByteDecoder->nextSourceCharacter();
+                    //
+                    // It is possible to have \ followed by a single \r, and no accompanying \n
+                    // Keep things simple and just treat it like a regular line continuation.
+                    // Stray \r is reported elsewhere
+                    //
                     
-                    if (c != SourceCharacter('\n')) {
-                        
-                        auto Loc = TheSourceManager->getSourceLocation();
-                        
-                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXERROR, std::string("Incomplete line continuation ``\\``"), SYNTAXISSUESEVERITY_FATAL, Source(CharacterStart, Loc));
-                        
-                        Issues.push_back(Issue);
-                        
-                        TheSourceManager->setSourceLocation(CharacterStart);
-                        TheSourceManager->setWLCharacterStart();
-                        TheSourceManager->setWLCharacterEnd();
-                        
-                        TheByteDecoder->append('\r', CharacterStart+1);
-                        auto testStr = c.string();
-                        for (auto b : testStr) {
-                            TheByteDecoder->append(b, Loc);
-                        }
-                        
-                        _currentWLCharacter = WLCharacter('\\');
-                        
-                    } else {
-                        _currentWLCharacter = WLCharacter(CODEPOINT_LINECONTINUATION, ESCAPE_SINGLE);
+                    auto Loc = TheSourceManager->getSourceLocation();
+                    
+                    TheSourceManager->setSourceLocation(CharacterStart);
+                    TheSourceManager->setWLCharacterStart();
+                    TheSourceManager->setWLCharacterEnd();
+                    
+                    auto testStr = c.string();
+                    for (auto b : testStr) {
+                        TheByteDecoder->append(b, Loc);
                     }
-                    
-                } else {
-                    _currentWLCharacter = WLCharacter(CODEPOINT_LINECONTINUATION, ESCAPE_SINGLE);
                 }
-                
-            } else {
-                _currentWLCharacter = WLCharacter(CODEPOINT_LINECONTINUATION, ESCAPE_SINGLE);
             }
+            
+            _currentWLCharacter = WLCharacter(CODEPOINT_LINECONTINUATION, ESCAPE_SINGLE);
         }
             break;
         case '[':
