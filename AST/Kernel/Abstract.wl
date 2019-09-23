@@ -153,6 +153,9 @@ abstract[LeafNode[Token`Error`UnhandledCharacter, str_, data_]] := AbstractSynta
 abstract[LeafNode[Token`Fake`ImplicitNull, _, data_]] := LeafNode[Symbol, "Null", KeyTake[data, keysToTake] ~Join~ <|AbstractSyntaxIssues->{SyntaxIssue["Comma", "Comma encountered with no adjacent expression.\n\
 The expression will be treated as ``Null``.", "Error", <|data, CodeActions->{CodeAction["Delete Comma", DeleteNode, <||>]}|>]}|>]
 
+abstract[LeafNode[Token`Error`ExpectedOperand, str_, data_]] :=
+	AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, str, data]
+
 abstract[LeafNode[Token`Fake`ImplicitOne, _, data_]] := LeafNode[Integer, "1", KeyTake[data, keysToTake]]
 
 abstract[LeafNode[Token`Fake`ImplicitAll, _, data_]] := LeafNode[Symbol, "All", KeyTake[data, keysToTake]]
@@ -1376,16 +1379,14 @@ Removes all commas
 Fills in Nulls and gives SyntaxIssues for e.g. {1,,2}
 *)
 abstractGroupNode[GroupNode[tag_, { errs:___SyntaxErrorNode, InfixNode[Comma, children_, _] }, dataIn_]] :=
-Module[{abstractedChildren, issues, data, abstractedErrs},
+Module[{abstractedChildren, issues, data},
 	data = dataIn;
 
 	abstractedChildren = {};
 
 	issues = {};
 
-	abstractedErrs = abstract /@ {errs};
-
-	abstractedChildren = abstractedErrs ~Join~ (abstract /@ children[[;;;;2]]);
+	abstractedChildren = abstract /@ ( {errs} ~Join~ children[[;;;;2]] );
 
    If[issues != {},
    	issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
@@ -1396,24 +1397,14 @@ Module[{abstractedChildren, issues, data, abstractedErrs},
 ]
 
 abstractGroupNode[GroupNode[tag_, { errs:___SyntaxErrorNode, child_ }, dataIn_]] :=
-Module[{abstractedChildren, issues, data, abstractedErrs},
+Module[{abstractedChildren, issues, data},
 	data = dataIn;
 
 	abstractedChildren = {};
 
 	issues = {};
 
-	abstractedErrs = abstract /@ {errs};
-
-	(*
-	Handle leading commas like  f[,2]
-	*)
-	abstractedErrs = abstractedErrs /. {
-		SyntaxErrorNode[SyntaxError`ExpectedPossibleExpression, {LeafNode[Token`Comma, _, _]}, data_] :>
-			(* make sure to abstract in order to get the syntax warning *)
-			abstract[LeafNode[Token`Fake`ImplicitNull, _, data]] };
-
-	abstractedChildren = abstractedErrs ~Join~ { abstract[child] };
+	abstractedChildren = abstract /@ { errs, child };
 
    If[issues != {},
    	issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;

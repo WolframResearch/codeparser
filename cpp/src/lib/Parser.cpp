@@ -424,6 +424,9 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
     registerInfixParselet(TOKEN_LONGNAME_VECTORGREATEREQUAL, std::unique_ptr<InfixParselet>(new VectorInequalityParselet()));
     registerInfixParselet(TOKEN_LONGNAME_VECTORLESS, std::unique_ptr<InfixParselet>(new VectorInequalityParselet()));
     registerInfixParselet(TOKEN_LONGNAME_VECTORLESSEQUAL, std::unique_ptr<InfixParselet>(new VectorInequalityParselet()));
+    
+    // Error handling
+    expectedPossibleExpressionErrorParselet = std::unique_ptr<ExpectedPossibleExpressionErrorParselet>(new ExpectedPossibleExpressionErrorParselet());
 }
 
 Parser::~Parser() {}
@@ -435,6 +438,8 @@ void Parser::init(std::function<bool ()> AbortQ, const std::deque<Token>& queued
     Issues.clear();
     
     currentAbortQ = AbortQ;
+    
+    implicitTimesEnabled = true;
 }
 
 void Parser::deinit() {
@@ -703,6 +708,13 @@ Precedence Parser::getCurrentTokenPrecedence(Token& TokIn, ParserContext Ctxt) {
         return PRECEDENCE_LOWEST;
     }
     
+    if (!implicitTimesEnabled) {
+        
+        implicitTimesEnabled = true;
+        
+        return PRECEDENCE_LOWEST;
+    }
+    
     //
     // ImplicitTimes should not have gotten here
     //
@@ -754,31 +766,6 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
     assert(token.Tok != TOKEN_LINECONTINUATION);
     
     //
-    // Handle the special cases of:
-    // { + }
-    // ( a + }
-    // ( a @ }
-    // We are here parsing the operators, but we don't want to descend and treat the } as the problem
-    //
-    if (token.Tok == Ctxt.Closer) {
-        
-        auto TmpVec = std::unique_ptr<NodeSeq>(new NodeSeq);
-        
-        TmpVec->append(std::unique_ptr<Node>(new LeafNode(token)));
-        
-        return std::unique_ptr<Node>(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDOPERAND, std::move(TmpVec)));
-    }
-    
-    if (!isPossibleBeginningOfExpression(token, Ctxt)) {
-        
-        auto errorParselet = std::make_shared<ExpectedPossibleExpressionErrorParselet>();
-        
-        auto Error = errorParselet->parse(Ctxt);
-        
-        return Error;
-    }
-    
-    //
     // Prefix start
     //
     
@@ -815,9 +802,66 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
             // Literal or Unhandled
             //
             
-            nextToken(Ctxt);
-            
-            Left = std::unique_ptr<Node>(new LeafNode(token));
+            if (!isPossibleBeginningOfExpression(token, Ctxt)) {
+                
+                //
+                // Some kind of error
+                //
+                
+                auto& I = infixParselets[token.Tok];
+                if (I != nullptr) {
+                    
+                    //
+                    // Do not take next token
+                    //
+                    // Important to not duplicate token's Str here, it may also appear later
+                    //
+                    // Also, invent Source
+                    //
+                    
+                    auto createdToken = Token( token.Tok == TOKEN_COMMA ? TOKEN_FAKE_IMPLICITNULL : TOKEN_ERROR_EXPECTEDOPERAND, "", Source(token.Span.lines.start, token.Span.lines.start));
+                    
+                    Left = std::unique_ptr<Node>(new LeafNode(createdToken));
+                    
+                } else if (token.Tok == Ctxt.Closer) {
+                    //
+                    // Handle the special cases of:
+                    // { + }
+                    // ( a + }
+                    // ( a @ }
+                    // We are here parsing the operators, but we don't want to descend and treat the } as the problem
+                    //
+                    
+                    //
+                    // Do not take next token
+                    //
+                    
+                    auto createdToken = Token(token.Tok == TOKEN_COMMA ? TOKEN_FAKE_IMPLICITNULL : TOKEN_ERROR_EXPECTEDOPERAND, "", Source(token.Span.lines.start, token.Span.lines.start));
+                    
+                    Left = std::unique_ptr<Node>(new LeafNode(createdToken));
+                    
+                } else {
+                    
+                    //
+                    // Some other kind of error
+                    //
+                    Left = expectedPossibleExpressionErrorParselet->parse(Ctxt);
+                }
+                
+                //
+                // We know this is an error, so make sure to disable ImplicitTimes
+                //
+                // We don't want to treat \ABC as \A * BC
+                //
+                
+                implicitTimesEnabled = false;
+                
+            } else {
+
+                nextToken(Ctxt);
+
+                Left = std::unique_ptr<Node>(new LeafNode(token));
+            }
         }
     }
     

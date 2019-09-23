@@ -21,6 +21,7 @@ class StartOfLineParselet;
 class CleanupParselet;
 class GroupParselet;
 class Parselet;
+class ExpectedPossibleExpressionErrorParselet;
 
 //
 // How many _ are currently being parsed?
@@ -105,12 +106,15 @@ private:
     std::array<std::unique_ptr<const ContextSensitivePrefixParselet>, TOKEN_COUNT> contextSensitivePrefixParselets;
     std::array<std::unique_ptr<const ContextSensitiveInfixParselet>, TOKEN_COUNT> contextSensitiveInfixParselets;
     
+    std::unique_ptr<ExpectedPossibleExpressionErrorParselet> expectedPossibleExpressionErrorParselet;
+    
     std::deque<Token> tokenQueue;
     
     std::vector<SyntaxIssue> Issues;
     
     std::function<bool ()> currentAbortQ;
     
+    bool implicitTimesEnabled;
     
     void registerPrefixParselet(TokenEnum, std::unique_ptr<const PrefixParselet> );
     
