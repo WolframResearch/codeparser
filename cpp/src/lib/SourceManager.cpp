@@ -48,6 +48,8 @@ void SourceManager::deinit() {
     Issues.clear();
     
     buffer.reset(nullptr);
+    
+    libData = nullptr;
 }
 
 unsigned char SourceManager::nextByte() {

@@ -57,6 +57,10 @@ $ConcreteParseStart
 
 $MathLinkTime
 
+
+LongNameSuggestion
+
+
 Begin["`Private`"]
 
 Needs["AST`"]
@@ -257,6 +261,30 @@ MakeAbstractSyntaxErrorNode[tag_, payload_, startLine_, startCol_, endLine_, end
 
 MakeSyntaxIssue[tag_, msg_, severity_, startLine_, startCol_, endLine_, endCol_] :=
 	SyntaxIssue[tag, msg, severity, <|Source->{{startLine,startCol},{endLine,endCol}}|>]
+
+
+
+
+$longNames
+
+LongNameSuggestion[input_String] :=
+Module[{nearest},
+	If[$Debug,
+		Print["input: ", input];
+	];
+	If[!ListQ[$longNames],
+		$longNames = Get["AST`LongNames`"];
+	];
+	nearest = Nearest[$longNames, input, {1, 2}];
+	If[nearest == {},
+		""
+		,
+		nearest[[1]]
+	]
+]
+
+
+
 
 
 End[]

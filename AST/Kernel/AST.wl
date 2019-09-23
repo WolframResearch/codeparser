@@ -148,6 +148,7 @@ LeafNode
 BoxNode
 CodeNode
 DirectiveNode
+MultiBoxNode
 
 PrefixNode
 BinaryNode
@@ -594,7 +595,7 @@ ParseLeaf[str_String] :=
 
 parseLeaf[strIn_String, OptionsPattern[]] :=
 Catch[
-Module[{str, res},
+Module[{str, res, leaf, data, exprs, issues},
 
 	str = strIn;
 
@@ -628,7 +629,14 @@ Module[{str, res},
 		Throw[res]
 	];
 
-	res
+	exprs = res[[1]];
+	issues = res[[2]];
+
+	leaf = exprs[[1]];
+	data = leaf[[3]];
+	data[SyntaxIssues] = issues;
+	leaf[[3]] = data;
+	leaf
 ]]
 
 

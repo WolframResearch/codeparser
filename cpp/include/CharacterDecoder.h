@@ -4,6 +4,8 @@
 #include "Source.h"
 #include "WLCharacter.h"
 
+#include "WolframLibrary.h"
+
 #include <vector>
 #include <memory> // for unique_ptr
 
@@ -102,6 +104,8 @@ class CharacterDecoder {
     
     std::vector<SyntaxIssue> Issues;
     
+    WolframLibraryData libData;
+    
     
     WLCharacter handleLongName(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy, bool unlikelyEscapeChecking);
     WLCharacter handle2Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy);
@@ -111,12 +115,12 @@ class CharacterDecoder {
     
     void append(SourceCharacter, SourceLocation);
     
-    static std::string longNameSuggestion(std::string);
+    std::string longNameSuggestion(std::string);
     
 public:
     CharacterDecoder();
     
-    void init();
+    void init(WolframLibraryData libData);
     
     void deinit();
     

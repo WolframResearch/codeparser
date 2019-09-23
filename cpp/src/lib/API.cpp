@@ -26,7 +26,7 @@ void putExpressions(std::vector<NodePtr>, MLINK mlp);
 
 std::vector<NodePtr> parseExpressions();
 std::vector<NodePtr> tokenize();
-LeafNodePtr parseLeaf();
+NodePtr parseLeaf();
 
 bool validatePath(WolframLibraryData libData, const unsigned char *inStr);
 
@@ -243,7 +243,46 @@ DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     auto node = parseLeaf();
     
-    node->put(mlp);
+    std::vector<NodePtr> nodes;
+    
+    //
+    // Collect all expressions
+    //
+    {
+        std::vector<NodePtr> exprs;
+        
+        exprs.push_back(std::move(node));
+        
+        NodePtr Collected = std::unique_ptr<Node>(new CollectedExpressionsNode(std::move(exprs)));
+        
+        nodes.push_back(std::move(Collected));
+    }
+    
+    //
+    // Collect all issues from the various components
+    //
+    {
+        std::vector<SyntaxIssue> issues;
+        
+        auto ParserIssues = TheParser->getIssues();
+        std::copy(ParserIssues.begin(), ParserIssues.end(), std::back_inserter(issues));
+        
+        auto TokenizerIssues = TheTokenizer->getIssues();
+        std::copy(TokenizerIssues.begin(), TokenizerIssues.end(), std::back_inserter(issues));
+        
+        auto CharacterDecoderIssues = TheCharacterDecoder->getIssues();
+        std::copy(CharacterDecoderIssues.begin(), CharacterDecoderIssues.end(), std::back_inserter(issues));
+        
+        auto ByteDecoderIssues = TheByteDecoder->getIssues();
+        std::copy(ByteDecoderIssues.begin(), ByteDecoderIssues.end(), std::back_inserter(issues));
+        
+        auto SourceManagerIssues = TheSourceManager->getIssues();
+        std::copy(SourceManagerIssues.begin(), SourceManagerIssues.end(), std::back_inserter(issues));
+        
+        nodes.push_back(std::unique_ptr<Node>(new CollectedSyntaxIssuesNode(issues)));
+    }
+    
+    putExpressions(std::move(nodes), mlp);
     
     TheParserSession->deinit();
     
@@ -385,7 +424,7 @@ std::vector<NodePtr> tokenize() {
     return nodes;
 }
 
-LeafNodePtr parseLeaf() {
+NodePtr parseLeaf() {
     
     TokenizerContext Ctxt;
     
@@ -480,7 +519,7 @@ void ParserSession::init(WolframLibraryData libData, std::istream& is, bool skip
     
     TheSourceManager->init(is, libData);
     TheByteDecoder->init();
-    TheCharacterDecoder->init();
+    TheCharacterDecoder->init(libData);
     TheTokenizer->init(skipFirstLine);
     TheParser->init( [libData]() {
         if (!libData) {

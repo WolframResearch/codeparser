@@ -12,6 +12,8 @@ generatedCPPDir
 generatedCPPIncludeDir
 generatedCPPSrcDir
 
+generatedWLDir
+
 tablesDir
 
 buildSrcDir
@@ -171,6 +173,10 @@ If[FileType[buildDir] =!= Directory,
 generatedCPPDir = FileNameJoin[{buildDir, "generated", "cpp"}]
 generatedCPPIncludeDir = FileNameJoin[{generatedCPPDir, "include"}]
 generatedCPPSrcDir = FileNameJoin[{generatedCPPDir, "src", "lib"}]
+
+generatedWLDir = FileNameJoin[{buildDir, "generated", "wl"}]
+
+
 (*
 pacletASTDir = FileNameJoin[{buildDir, "paclet", "AST"}]
 *)
@@ -241,6 +247,10 @@ Quiet[CreateDirectory[generatedCPPDir], CreateDirectory::filex]
 Quiet[CreateDirectory[generatedCPPIncludeDir], CreateDirectory::filex]
 
 Quiet[CreateDirectory[generatedCPPSrcDir], CreateDirectory::filex]
+
+Quiet[DeleteDirectory[generatedWLDir, DeleteContents -> True], DeleteDirectory::nodir]
+
+Quiet[CreateDirectory[generatedWLDir], CreateDirectory::filex]
 
 Print["Done Clean"]
 

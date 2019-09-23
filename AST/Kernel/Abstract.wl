@@ -1740,6 +1740,9 @@ abstract[BoxNode[RasterBox, children_, data_]] := BoxNode[RasterBox, children, K
 
 
 
+abstract[MultiBoxNode[List, children_, data_]] := BoxNode[List, abstract /@ children, KeyTake[data, keysToTake]]
+
+
 
 End[]
 

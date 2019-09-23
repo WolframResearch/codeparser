@@ -6,20 +6,25 @@
 #include "Utils.h"
 #include "CharacterMaps.h"
 #include "CodePoint.h"
+#include "API.h"
 
 #include <sstream>
 
 CharacterDecoder::CharacterDecoder() : _currentWLCharacter(0), sourceCharacterQueue(), Issues() {}
 
-void CharacterDecoder::init() {
+void CharacterDecoder::init(WolframLibraryData libDataIn) {
     _currentWLCharacter = WLCharacter(0);
     sourceCharacterQueue.clear();
     Issues.clear();
+    
+    libData = libDataIn;
 }
 
 void CharacterDecoder::deinit() {
     sourceCharacterQueue.clear();
     Issues.clear();
+    
+    libData = nullptr;
 }
 
 //
@@ -935,6 +940,23 @@ std::vector<SyntaxIssue> CharacterDecoder::getIssues() const {
 // Return empty string if no suggestion.
 //
 std::string CharacterDecoder::longNameSuggestion(std::string input) {
+    
+    if (libData) {
+        MLINK link = libData->getMathLink(libData);
+        MLPutFunction(link, "EvaluatePacket", 1);
+        MLPutFunction(link, "AST`Library`LongNameSuggestion", 1);
+        MLPutUTF8String(link, reinterpret_cast<unsigned const char *>(input.c_str()), static_cast<int>(input.size()));
+        libData->processMathLink(link);
+        auto pkt = MLNextPacket(link);
+        if (pkt == RETURNPKT) {
+            
+            ScopedMLString str(link);
+            str.read();
+            
+            return reinterpret_cast<const char *>(str.get());
+        }
+    }
+    
     return "";
 }
 

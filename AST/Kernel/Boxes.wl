@@ -44,7 +44,6 @@ Module[{handledChildren, aggregatedChildren},
     {_, LeafNode[Token`Plus, _, _], ___}, InfixNode[Plus, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`Times | Token`Star, _, _], ___}, InfixNode[Times, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`Minus, _, _], ___}, InfixNode[Minus, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`Semi, _, _], ___}, InfixNode[CompoundExpression, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`WhiteSpace, _, _], ___}, InfixNode[Times, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`Bar, _, _], ___}, InfixNode[Alternatives, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LessEqual | Token`LongName`LessEqual | Token`Greater | 
@@ -57,6 +56,11 @@ Module[{handledChildren, aggregatedChildren},
     {_, LeafNode[Token`LongName`And | Token`AmpAmp, _, _], ___}, InfixNode[And, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`Or | Token`BarBar, _, _], ___}, InfixNode[Or, handledChildren, <|Source->Append[pos, 1]|>],
     
+    {_, LeafNode[Token`Semi, _, _], ___}, InfixNode[CompoundElement, handledChildren ~Join~
+                                              If[MatchQ[handledChildren[[-1]], LeafNode[Token`Semi, _, _]],
+                                                { LeafNode[Token`Fake`ImplicitNull, "", handledChildren[[-1, 3]]] },
+                                                {}], <|Source->Append[pos, 1]|>],
+
     {_, LeafNode[Token`Comma, _, _], ___}, InfixNode[Comma, handledChildren ~Join~
                                               If[MatchQ[handledChildren[[-1]], LeafNode[Token`Comma, _, _]],
                                                 { LeafNode[Token`Fake`ImplicitNull, "", handledChildren[[-1, 3]]] },
@@ -399,9 +403,9 @@ Module[{handledChildren, aggregatedChildren},
 
 
 parseBox[{args___}, pos_] :=
-  Module[{handled},
-    handled = DeleteCases[{args}, "\[IndentingNewLine]" | "\n"];
-    MapIndexed[parseBox[#1, pos ~Join~ #2]&, handled]
+  Module[{children},
+    children = MapIndexed[parseBox[#1, pos ~Join~ #2]&, {args}];
+    MultiBoxNode[List, children, <|Source->pos|>]
   ]
 
 

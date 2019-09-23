@@ -34,6 +34,40 @@ If[FailureQ[res],
   Quit[1]
 ]
 
+
+
+
+Check[
+longNames = ("\"" <> # <> "\", ")& /@ Keys[importedLongNames]
+,
+Print["Message while generating LongNames"];
+Quit[1]
+]
+
+longNamesWL = {
+"
+(*
+AUTO GENERATED FILE
+DO NOT MODIFY
+*)
+
+{"} ~Join~ longNames ~Join~ {
+"Nothing
+}
+"	
+}
+
+Print["exporting LongNames.wl"]
+res = Export[FileNameJoin[{generatedWLDir, "LongNames.wl"}], Column[longNamesWL], "String"]
+
+If[FailureQ[res],
+  Print[res];
+  Quit[1]
+]
+
+
+
+
 Print["Done LongNameDefines"]
 
 End[]
