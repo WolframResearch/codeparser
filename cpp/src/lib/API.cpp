@@ -10,7 +10,7 @@
 #include "Symbol.h"
 
 #include <functional> // for function with GCC and MSVC
-#include <memory>
+#include <memory> // for unique_ptr
 #include <cstring> // for strcmp with GCC and MSVC
 #ifdef WINDOWS_MATHLINK
 #else

@@ -12,6 +12,7 @@
 #include <cstddef>
 #include <vector>
 #include <istream>
+#include <memory> // for unique_ptr
 
 class SourceManager {
     

@@ -4,6 +4,7 @@
 #include "Source.h"
 
 #include <vector>
+#include <memory> // for unique_ptr
 
 //
 // Decode a sequence of UTF-8 encoded bytes into Source characters
