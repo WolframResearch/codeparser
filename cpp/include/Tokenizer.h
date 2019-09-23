@@ -54,8 +54,6 @@ class Tokenizer {
     
     std::vector<SyntaxIssue> Issues;
     
-    std::chrono::microseconds totalTimeMicros;
-    
     
     bool expectDigits(TokenizerContext Ctxt);
     size_t handleDigits(TokenizerContext Ctxt);
@@ -94,8 +92,6 @@ public:
     std::string getString() const;
     
     std::vector<SyntaxIssue> getIssues() const;
-    
-    //    std::vector<Metadata> getMetadatas() const;
 };
 
 extern Tokenizer *TheTokenizer;

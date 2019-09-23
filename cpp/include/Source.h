@@ -262,12 +262,3 @@ struct SyntaxIssue {
     void put(MLINK mlp) const;
 };
 
-struct Metadata {
-    std::string Key;
-    std::string Val;
-    
-    Metadata(std::string Key, std::string Val) : Key(Key), Val(Val) {}
-    
-    void put(MLINK mlp) const;
-};
-

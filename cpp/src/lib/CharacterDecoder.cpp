@@ -6,17 +6,15 @@
 #include "Utils.h"
 #include "CharacterMaps.h"
 #include "CodePoint.h"
-//#include "TimeScoper.h"
 
 #include <sstream>
 
-CharacterDecoder::CharacterDecoder() : _currentWLCharacter(0), sourceCharacterQueue(), Issues(), totalTimeMicros() {}
+CharacterDecoder::CharacterDecoder() : _currentWLCharacter(0), sourceCharacterQueue(), Issues() {}
 
 void CharacterDecoder::init() {
     _currentWLCharacter = WLCharacter(0);
     sourceCharacterQueue.clear();
     Issues.clear();
-    totalTimeMicros = std::chrono::microseconds::zero();
 }
 
 void CharacterDecoder::deinit() {
@@ -30,7 +28,6 @@ void CharacterDecoder::deinit() {
 // Keeps track of character counts
 //
 WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
-    //    TimeScoper Scoper(totalTimeMicros);
     
     //
     // handle the queue before anything else
@@ -925,17 +922,6 @@ WLCharacter CharacterDecoder::handle6Hex(SourceCharacter curSourceIn, SourceLoca
 std::vector<SyntaxIssue> CharacterDecoder::getIssues() const {
     return Issues;
 }
-
-//std::vector<Metadata> CharacterDecoder::getMetadatas() const {
-//
-//    std::vector<Metadata> Metadatas;
-//
-//    auto totalTimeMillis = std::chrono::duration_cast<std::chrono::milliseconds>(totalTimeMicros);
-//
-//    Metadatas.push_back(Metadata("CharacterDecoderTotalTimeMillis", std::to_string(totalTimeMillis.count())));
-//
-//    return Metadatas;
-//}
 
 //
 // TODO: implement a suggestion mechanism for long name typos

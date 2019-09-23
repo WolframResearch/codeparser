@@ -185,7 +185,6 @@ set(CPP_INCLUDES
 	${CMAKE_SOURCE_DIR}/cpp/include/Parser.h
 	${CMAKE_SOURCE_DIR}/cpp/include/Source.h
 	${CMAKE_SOURCE_DIR}/cpp/include/SourceManager.h
-	${CMAKE_SOURCE_DIR}/cpp/include/TimeScoper.h
 	${CMAKE_SOURCE_DIR}/cpp/include/Tokenizer.h
 	${CMAKE_SOURCE_DIR}/cpp/include/Utils.h
 	${CMAKE_SOURCE_DIR}/cpp/include/WLCharacter.h

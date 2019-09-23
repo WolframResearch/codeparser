@@ -3,15 +3,13 @@
 
 #include "SourceManager.h"
 #include "CodePoint.h"
-//#include "TimeScoper.h"
 
-ByteDecoder::ByteDecoder() : eof(false), byteQueue(), Issues(), totalTimeMicros() {}
+ByteDecoder::ByteDecoder() : eof(false), byteQueue(), Issues() {}
 
 void ByteDecoder::init() {
     eof = false;
     byteQueue.clear();
     Issues.clear();
-    totalTimeMicros = std::chrono::microseconds::zero();
 }
 
 void ByteDecoder::deinit() {
@@ -20,7 +18,6 @@ void ByteDecoder::deinit() {
 }
 
 SourceCharacter ByteDecoder::nextSourceCharacter() {
-    //    TimeScoper Scoper(totalTimeMicros);
     
     //
     // handle the queue before anything else
@@ -396,17 +393,6 @@ SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
 std::vector<SyntaxIssue> ByteDecoder::getIssues() const {
     return Issues;
 }
-
-//std::vector<Metadata> ByteDecoder::getMetadatas() const {
-//
-//    std::vector<Metadata> Metadatas;
-//
-//    auto totalTimeMillis = std::chrono::duration_cast<std::chrono::milliseconds>(totalTimeMicros);
-//
-//    Metadatas.push_back(Metadata("ByteDecoderTotalTimeMillis", std::to_string(totalTimeMillis.count())));
-//
-//    return Metadatas;
-//}
 
 ByteDecoder *TheByteDecoder = nullptr;
 

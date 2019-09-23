@@ -5,12 +5,11 @@
 #include "SourceManager.h"
 #include "Utils.h"
 #include "CodePoint.h"
-//#include "TimeScoper.h"
 
 int toDigit(int val);
 
 
-Tokenizer::Tokenizer() : stringifyNextToken_symbol(false), stringifyNextToken_file(false), _currentToken(Token(TOKEN_UNKNOWN, "", Source())), _currentWLCharacter(0), wlCharacterQueue(), String(), Issues(), totalTimeMicros() {}
+Tokenizer::Tokenizer() : stringifyNextToken_symbol(false), stringifyNextToken_file(false), _currentToken(Token(TOKEN_UNKNOWN, "", Source())), _currentWLCharacter(0), wlCharacterQueue(), String(), Issues() {}
 
 void Tokenizer::init(bool skipFirstLine) {
     
@@ -24,7 +23,6 @@ void Tokenizer::init(bool skipFirstLine) {
     String.str("");
     
     Issues.clear();
-    totalTimeMicros = std::chrono::microseconds::zero();
     
     auto c = TheCharacterDecoder->nextWLCharacter();
     
@@ -64,7 +62,6 @@ void Tokenizer::deinit() {
 
 
 Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
-    //    TimeScoper Scoper(totalTimeMicros);
     
     //
     // Too complicated to clear string when calling getString and assert here
@@ -2788,17 +2785,6 @@ std::string Tokenizer::getString() const {
 std::vector<SyntaxIssue> Tokenizer::getIssues() const {
     return Issues;
 }
-
-//std::vector<Metadata> Tokenizer::getMetadatas() const {
-//
-//    std::vector<Metadata> Metadatas;
-//
-//    auto totalTimeMillis = std::chrono::duration_cast<std::chrono::milliseconds>(totalTimeMicros);
-//
-//    Metadatas.push_back(Metadata("TokenizerTotalTimeMillis", std::to_string(totalTimeMillis.count())));
-//
-//    return Metadatas;
-//}
 
 Tokenizer *TheTokenizer = nullptr;
 

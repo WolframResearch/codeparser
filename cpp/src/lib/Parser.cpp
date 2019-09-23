@@ -5,11 +5,10 @@
 #include "Tokenizer.h"
 #include "Utils.h"
 #include "Symbol.h"
-//#include "TimeScoper.h"
 
 #include <algorithm> // for generate with GCC and MSVC
 
-Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), contextSensitivePrefixParselets(), contextSensitiveInfixParselets(), tokenQueue(), Issues(), totalTimeMicros(), currentAbortQ(nullptr) {
+Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), contextSensitivePrefixParselets(), contextSensitiveInfixParselets(), tokenQueue(), Issues(), currentAbortQ(nullptr), implicitTimesEnabled(true) {
     
     //
     // Setup all of the parselet lists with nullptr unique_ptrs
@@ -434,7 +433,6 @@ void Parser::init(std::function<bool ()> AbortQ, const std::deque<Token>& queued
     
     tokenQueue = queued;
     Issues.clear();
-    totalTimeMicros = std::chrono::microseconds::zero();
     
     currentAbortQ = AbortQ;
 }
@@ -734,7 +732,6 @@ Precedence Parser::getCurrentTokenPrecedence(Token& TokIn, ParserContext Ctxt) {
 }
 
 NodePtr Parser::parse(ParserContext CtxtIn) {
-    //    TimeScoper Scoper(totalTimeMicros);
     
     if (isAbort()) {
         

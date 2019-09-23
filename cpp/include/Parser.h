@@ -6,7 +6,6 @@
 #include "Precedence.h"
 
 #include <vector>
-#include <chrono>
 #include <array>
 #include <cstddef>
 #include <functional> // for function with GCC and MSVC
@@ -109,7 +108,6 @@ private:
     std::deque<Token> tokenQueue;
     
     std::vector<SyntaxIssue> Issues;
-    std::chrono::microseconds totalTimeMicros;
     
     std::function<bool ()> currentAbortQ;
     
@@ -149,8 +147,6 @@ public:
     
     
     std::vector<SyntaxIssue> getIssues() const;
-    
-    //    std::vector<Metadata> getMetadatas() const;
     
     
     void addIssue(SyntaxIssue);

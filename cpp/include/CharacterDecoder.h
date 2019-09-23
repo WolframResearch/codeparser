@@ -5,7 +5,6 @@
 #include "WLCharacter.h"
 
 #include <vector>
-#include <chrono>
 
 enum NextWLCharacterPolicyBits {
     
@@ -102,8 +101,6 @@ class CharacterDecoder {
     
     std::vector<SyntaxIssue> Issues;
     
-    std::chrono::microseconds totalTimeMicros;
-    
     
     WLCharacter handleLongName(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy, bool unlikelyEscapeChecking);
     WLCharacter handle2Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy);
@@ -127,8 +124,6 @@ public:
     WLCharacter currentWLCharacter() const;
     
     std::vector<SyntaxIssue> getIssues() const;
-    
-    //    std::vector<Metadata> getMetadatas() const;
 };
 
 extern CharacterDecoder *TheCharacterDecoder;

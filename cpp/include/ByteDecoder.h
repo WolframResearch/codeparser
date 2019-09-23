@@ -4,7 +4,6 @@
 #include "Source.h"
 
 #include <vector>
-#include <chrono>
 
 //
 // Decode a sequence of UTF-8 encoded bytes into Source characters
@@ -15,8 +14,6 @@ private:
     std::vector<std::pair<unsigned char, SourceLocation>> byteQueue;
     
     std::vector<SyntaxIssue> Issues;
-    
-    std::chrono::microseconds totalTimeMicros;
     
     SourceCharacter decodeBytes(unsigned char);
     
@@ -38,8 +35,6 @@ public:
     void append(unsigned char, SourceLocation);
     
     std::vector<SyntaxIssue> getIssues() const;
-    
-    //    std::vector<Metadata> getMetadatas() const;
 };
 
 extern ByteDecoder *TheByteDecoder;

@@ -39,20 +39,6 @@ void SyntaxIssue::put(MLINK mlp) const {
 
 
 //
-// Metadata
-//
-
-void Metadata::put(MLINK mlp) const {
-    
-    MLPutFunction(mlp, SYMBOL_AST_METADATA->name(), 2);
-    
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Key.c_str()), static_cast<int>(Key.size()));
-    
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Val.c_str()), static_cast<int>(Val.size()));
-}
-
-
-//
 // SyntaxError
 //
 
