@@ -1,6 +1,11 @@
 
-#include "Parser.h"
 #include "API.h"
+//#include "Tokenizer.h"
+
+//#include "ByteDecoder.h"
+//#include "SourceManager.h"
+//#include "CharacterDecoder.h"
+//#include "Symbol.h"
 
 #include "gtest/gtest.h"
 
@@ -8,7 +13,7 @@
 
 static std::unique_ptr<MLSession> mlSession;
 
-class ParseletTest : public ::testing::Test {
+class TokenizerTest : public ::testing::Test {
 protected:
     
     static void SetUpTestSuite() {
@@ -32,20 +37,17 @@ protected:
     void TearDown() override {
         TheParserSession->deinit();
     }
-
+    
 };
 
-TEST_F(ParseletTest, Bug1) {
+//
+// This was asserting
+//
+TEST_F(TokenizerTest, Bug1) {
     
-    auto iss = std::stringstream("a /: b := c");
+    auto iss = std::stringstream("\\.GG");
     
     TheParserSession->init(nullptr, iss, false);
     
-    ParserContext Ctxt;
-    
-    auto NP = TheParser->parse(Ctxt);
-    
-    auto N = NP.get();
-    
-    EXPECT_TRUE(dynamic_cast<TernaryNode*>(N));
+    SUCCEED();
 }

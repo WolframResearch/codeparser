@@ -394,5 +394,5 @@ std::vector<SyntaxIssue> ByteDecoder::getIssues() const {
     return Issues;
 }
 
-ByteDecoder *TheByteDecoder = nullptr;
+std::unique_ptr<ByteDecoder> TheByteDecoder = nullptr;
 

@@ -208,5 +208,5 @@ std::vector<SyntaxIssue> SourceManager::getIssues() const {
     return Issues;
 }
 
-SourceManager *TheSourceManager = nullptr;
+std::unique_ptr<SourceManager> TheSourceManager = nullptr;
 

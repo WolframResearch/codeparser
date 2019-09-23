@@ -9,9 +9,9 @@
 #include "Utils.h"
 #include "Symbol.h"
 
-#include <fstream>
+#include <functional> // for function with GCC and MSVC
 #include <memory>
-#include <cstring> // for strcmp with with GCC and MSVC
+#include <cstring> // for strcmp with GCC and MSVC
 
 class Node;
 
@@ -32,367 +32,219 @@ DLLEXPORT mint WolframLibrary_getVersion() {
 
 DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData) {
     
-    allocSymbols();
-    
-    TheByteDecoder = new ByteDecoder();
-    TheSourceManager = new SourceManager();
-    TheCharacterDecoder = new CharacterDecoder();
-    TheTokenizer = new Tokenizer();
-    TheParser = new Parser();
+    TheParserSession = std::unique_ptr<ParserSession>(new ParserSession);
     
     return 0;
 }
 
 DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData) {
     
-    delete TheParser;
-    delete TheTokenizer;
-    delete TheSourceManager;
-    delete TheCharacterDecoder;
-    delete TheByteDecoder;
-    
-    freeSymbols();
+    TheParserSession.reset(nullptr);
 }
 
-DLLEXPORT int ConcreteParseFile(WolframLibraryData libData, MLINK mlp) {
+DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     int res = LIBRARY_FUNCTION_ERROR;
     int len;
-    const unsigned char *inStr = NULL;
-    const char *skipFirstLineSym = NULL;
     
     if (!MLTestHead(mlp, SYMBOL_LIST->name(), &len))  {
-        goto retPt;
+        return res;
     }
     if (len != 2) {
-        goto retPt;
+        return res;
     }
     
-    int b;
-    int c;
-    if (!MLGetUTF8String(mlp, &inStr, &b, &c)) {
-        goto retPt;
+    ScopedMLString inStr(mlp);
+    if (!inStr.read()) {
+        return res;
     }
     
-    if (!MLGetSymbol(mlp, &skipFirstLineSym)) {
-        goto retPt;
+    ScopedMLSymbol skipFirstLineSym(mlp);
+    if (!skipFirstLineSym.read()) {
+        return res;
     }
     
     if (!MLNewPacket(mlp)) {
-        goto retPt;
+        return res;
     }
     
-    {
-        auto valid = validatePath(libData, inStr);
-        if (!valid) {
-            goto retPt;
-        }
+    auto valid = validatePath(libData, inStr.get());
+    if (!valid) {
+        return res;
     }
     
-    {
-        auto skipFirstLine = (strcmp(skipFirstLineSym, SYMBOL_TRUE->name()) == 0);
-        
-        std::ifstream ifs(reinterpret_cast<const char *>(inStr), std::ifstream::in);
-        
-        if (ifs.fail()) {
-            goto retPt;
-        }
-        
-        TheSourceManager->init(ifs, libData);
-        TheByteDecoder->init();
-        TheCharacterDecoder->init();
-        TheTokenizer->init(skipFirstLine);
-        TheParser->init( [&libData]() {
-            if (!libData) {
-                return false;
-            }
-            //
-            // For some reason, AbortQ() returns a mint
-            //
-            bool res = libData->AbortQ();
-            return res;
-        }, { } );
-        
-        auto nodes = parseExpressions();
-        
-        putExpressions(std::move(nodes), mlp);
-        
-        TheParser->deinit();
-        TheTokenizer->deinit();
-        TheCharacterDecoder->deinit();
-        TheByteDecoder->deinit();
-        TheSourceManager->deinit();
-        
-        ifs.close();
-        
-        res = LIBRARY_NO_ERROR;
+    auto skipFirstLine = (strcmp(skipFirstLineSym.get(), SYMBOL_TRUE->name()) == 0);
+    
+    ScopedIFS ifs(inStr.get());
+    
+    if (ifs.fail()) {
+        return res;
     }
     
-retPt:
-    if (inStr != NULL) {
-        MLReleaseUTF8String(mlp, inStr, b);
-    }
-    if (skipFirstLineSym != NULL) {
-        MLReleaseSymbol(mlp, skipFirstLineSym);
-    }
+    TheParserSession->init(libData, ifs, skipFirstLine);
+    
+    auto nodes = parseExpressions();
+    
+    putExpressions(std::move(nodes), mlp);
+    
+    TheParserSession->deinit();
+    
+    res = LIBRARY_NO_ERROR;
+    
     return res;
 }
 
-DLLEXPORT int ConcreteParseString(WolframLibraryData libData, MLINK mlp) {
+DLLEXPORT int ConcreteParseString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     int res = LIBRARY_FUNCTION_ERROR;
     int len;
-    const unsigned char *inStr = NULL;
     
-    if (!MLTestHead( mlp, SYMBOL_LIST->name(), &len)) {
-        goto retPt;
+    if (!MLTestHead(mlp, SYMBOL_LIST->name(), &len)) {
+        return res;
     }
     if (len != 1) {
-        goto retPt;
+        return res;
     }
     
-    int b;
-    int c;
-    if (!MLGetUTF8String(mlp, &inStr, &b, &c)) {
-        goto retPt;
+    ScopedMLString inStr(mlp);
+    if (!inStr.read()) {
+        return res;
     }
     
     if (!MLNewPacket(mlp) ) {
-        goto retPt;
+        return res;
     }
     
-    {
-        auto skipFirstLine = false;
-        auto iss = std::stringstream(reinterpret_cast<const char *>(inStr));
-        
-        TheSourceManager->init(iss, libData);
-        TheByteDecoder->init();
-        TheCharacterDecoder->init();
-        TheTokenizer->init(skipFirstLine);
-        TheParser->init( [&libData]() {
-            if (!libData) {
-                return false;
-            }
-            //
-            // For some reason, AbortQ() returns a mint
-            //
-            bool res = libData->AbortQ();
-            return res;
-        }, { } );
-        
-        auto nodes = parseExpressions();
-        
-        putExpressions(std::move(nodes), mlp);
-        
-        TheParser->deinit();
-        TheTokenizer->deinit();
-        TheCharacterDecoder->deinit();
-        TheByteDecoder->deinit();
-        TheSourceManager->deinit();
-        
-        res = LIBRARY_NO_ERROR;
-    }
+    auto skipFirstLine = false;
+    auto iss = std::stringstream(reinterpret_cast<const char *>(inStr.get()));
     
-retPt:
-    if (inStr != NULL) {
-        MLReleaseUTF8String(mlp, inStr, b);
-    }
+    TheParserSession->init(libData, iss, skipFirstLine);
+    
+    auto nodes = parseExpressions();
+    
+    putExpressions(std::move(nodes), mlp);
+    
+    TheParserSession->deinit();
+    
+    res = LIBRARY_NO_ERROR;
+    
     return res;
 }
 
-DLLEXPORT int TokenizeString(WolframLibraryData libData, MLINK mlp) {
+DLLEXPORT int TokenizeString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     int res = LIBRARY_FUNCTION_ERROR;
     int len;
-    const unsigned char *inStr = NULL;
     
-    if (!MLTestHead( mlp, SYMBOL_LIST->name(), &len)) {
-        goto retPt;
+    if (!MLTestHead(mlp, SYMBOL_LIST->name(), &len)) {
+        return res;
     }
     if (len != 1) {
-        goto retPt;
+        return res;
     }
     
-    int b;
-    int c;
-    if (!MLGetUTF8String(mlp, &inStr, &b, &c)) {
-        goto retPt;
+    ScopedMLString inStr(mlp);
+    if (!inStr.read()) {
+        return res;
     }
     
     if (!MLNewPacket(mlp) ) {
-        goto retPt;
+        return res;
     }
     
-    {
-        auto skipFirstLine = false;
-        auto iss = std::stringstream(reinterpret_cast<const char *>(inStr));
-        
-        TheSourceManager->init(iss, libData);
-        TheByteDecoder->init();
-        TheCharacterDecoder->init();
-        TheTokenizer->init(skipFirstLine);
-        TheParser->init( [&libData]() {
-            if (!libData) {
-                return false;
-            }
-            //
-            // For some reason, AbortQ() returns a mint
-            //
-            bool res = libData->AbortQ();
-            return res;
-        }, { } );
-        
-        std::vector<NodePtr> nodes = tokenize();
-        
-        putExpressions(std::move(nodes), mlp);
-        
-        TheParser->deinit();
-        TheTokenizer->deinit();
-        TheCharacterDecoder->deinit();
-        TheByteDecoder->deinit();
-        TheSourceManager->deinit();
-        
-        res = LIBRARY_NO_ERROR;
-    }
+    auto skipFirstLine = false;
+    auto iss = std::stringstream(reinterpret_cast<const char *>(inStr.get()));
     
-retPt:
-    if (inStr != NULL) {
-        MLReleaseUTF8String(mlp, inStr, b);
-    }
+    TheParserSession->init(libData, iss, skipFirstLine);
+    
+    std::vector<NodePtr> nodes = tokenize();
+    
+    putExpressions(std::move(nodes), mlp);
+    
+    TheParserSession->deinit();
+    
+    res = LIBRARY_NO_ERROR;
+    
     return res;
 }
 
-DLLEXPORT int TokenizeFile(WolframLibraryData libData, MLINK mlp) {
+DLLEXPORT int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     int res = LIBRARY_FUNCTION_ERROR;
     int len;
-    const unsigned char *inStr = NULL;
     
     if (!MLTestHead( mlp, SYMBOL_LIST->name(), &len)) {
-        goto retPt;
+        return res;
     }
     if (len != 1) {
-        goto retPt;
+        return res;
     }
     
-    int b;
-    int c;
-    if (!MLGetUTF8String(mlp, &inStr, &b, &c)) {
-        goto retPt;
+    ScopedMLString inStr(mlp);
+    if (!inStr.read()) {
+        return res;
     }
     
     if (!MLNewPacket(mlp) ) {
-        goto retPt;
+        return res;
     }
     
-    {
-        auto valid = validatePath(libData, inStr);
-        if (!valid) {
-            goto retPt;
-        }
+    auto valid = validatePath(libData, inStr.get());
+    if (!valid) {
+        return res;
     }
     
-    {
-        auto skipFirstLine = false;
-        std::ifstream ifs(reinterpret_cast<const char *>(inStr), std::ifstream::in);
-        
-        if (ifs.fail()) {
-            goto retPt;
-        }
-        
-        TheSourceManager->init(ifs, libData);
-        TheByteDecoder->init();
-        TheCharacterDecoder->init();
-        TheTokenizer->init(skipFirstLine);
-        TheParser->init( [&libData]() {
-            if (!libData) {
-                return false;
-            }
-            //
-            // For some reason, AbortQ() returns a mint
-            //
-            bool res = libData->AbortQ();
-            return res;
-        }, { } );
-        
-        std::vector<NodePtr> nodes = tokenize();
-        
-        putExpressions(std::move(nodes), mlp);
-        
-        TheParser->deinit();
-        TheTokenizer->deinit();
-        TheCharacterDecoder->deinit();
-        TheByteDecoder->deinit();
-        TheSourceManager->deinit();
-        
-        ifs.close();
-        
-        res = LIBRARY_NO_ERROR;
+    auto skipFirstLine = false;
+    ScopedIFS ifs(inStr.get());
+    
+    if (ifs.fail()) {
+        return res;
     }
     
-retPt:
-    if (inStr != NULL) {
-        MLReleaseUTF8String(mlp, inStr, b);
-    }
+    TheParserSession->init(libData, ifs, skipFirstLine);
+    
+    std::vector<NodePtr> nodes = tokenize();
+    
+    putExpressions(std::move(nodes), mlp);
+    
+    TheParserSession->deinit();
+    
+    res = LIBRARY_NO_ERROR;
+    
     return res;
 }
 
-DLLEXPORT int ParseLeaf(WolframLibraryData libData, MLINK mlp) {
+DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     int res = LIBRARY_FUNCTION_ERROR;
     int len;
-    const unsigned char *inStr = NULL;
     
     std::string unescaped;
     
     if (!MLTestHead(mlp, SYMBOL_LIST->name(), &len))  {
-        goto retPt;
+        return res;
     }
     if (len != 1) {
-        goto retPt;
+        return res;
     }
     
-    int b;
-    int c;
-    if (!MLGetUTF8String(mlp, &inStr, &b, &c)) {
-        goto retPt;
+    ScopedMLString inStr(mlp);
+    if (!inStr.read()) {
+        return res;
     }
     
-    {
-        auto iss = std::stringstream(reinterpret_cast<const char *>(inStr));
-        
-        TheSourceManager->init(iss, libData);
-        TheByteDecoder->init();
-        TheCharacterDecoder->init();
-        TheTokenizer->init(false);
-        TheParser->init( [&libData]() {
-            if (!libData) {
-                return false;
-            }
-            //
-            // For some reason, AbortQ() returns a mint
-            //
-            bool res = libData->AbortQ();
-            return res;
-        }, { } );
-        
-        auto node = parseLeaf();
-        
-        node->put(mlp);
-        
-        TheParser->deinit();
-        TheTokenizer->deinit();
-        TheCharacterDecoder->deinit();
-        TheByteDecoder->deinit();
-        TheSourceManager->deinit();
-        
-        res = LIBRARY_NO_ERROR;
-    }
+    auto iss = std::stringstream(reinterpret_cast<const char *>(inStr.get()));
     
-retPt:
-    if (inStr != NULL) {
-        MLReleaseUTF8String(mlp, inStr, b);
-    }
+    TheParserSession->init(libData, iss, false);
+    
+    auto node = parseLeaf();
+    
+    node->put(mlp);
+    
+    TheParserSession->deinit();
+    
+    res = LIBRARY_NO_ERROR;
+    
     return res;
 }
 
@@ -404,28 +256,28 @@ void putExpressions(std::vector<NodePtr> nodes, MLINK mlp) {
     if (TheParser->isAbort()) {
         
         if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 0)) {
-            goto retPt;
+            return;
         }
         
         return;
     }
     
     if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(nodes.size()))) {
-        goto retPt;
+        return;
     }
     
     for (auto& node : nodes) {
         node->put(mlp);
     }
-    
-retPt:
-    return;
 }
 
 std::vector<NodePtr> parseExpressions() {
     
     std::vector<NodePtr> nodes;
     
+    //
+    // Collect all expressions
+    //
     {
         std::vector<NodePtr> exprs;
         
@@ -493,28 +345,6 @@ std::vector<NodePtr> parseExpressions() {
         std::copy(SourceManagerIssues.begin(), SourceManagerIssues.end(), std::back_inserter(issues));
         
         nodes.push_back(std::unique_ptr<Node>(new CollectedSyntaxIssuesNode(issues)));
-    }
-    
-    {
-        std::vector<Metadata> metas;
-        
-        //
-        // Skip metadatas for now
-        //
-        
-        //        auto ParserMetas = TheParser->getMetadatas();
-        //        std::copy(ParserMetas.begin(), ParserMetas.end(), std::back_inserter(metas));
-        //
-        //        auto TokenizerMetas = TheTokenizer->getMetadatas();
-        //        std::copy(TokenizerMetas.begin(), TokenizerMetas.end(), std::back_inserter(metas));
-        //
-        //        auto CharacterDecoderMetas = TheCharacterDecoder->getMetadatas();
-        //        std::copy(CharacterDecoderMetas.begin(), CharacterDecoderMetas.end(), std::back_inserter(metas));
-        //
-        //        auto ByteDecoderMetas = TheByteDecoder->getMetadatas();
-        //        std::copy(ByteDecoderMetas.begin(), ByteDecoderMetas.end(), std::back_inserter(metas));
-        
-        nodes.push_back(std::unique_ptr<Node>(new CollectedMetadatasNode(metas)));
     }
     
     return nodes;
@@ -619,4 +449,97 @@ bool validatePath(WolframLibraryData libData, const unsigned char *inStr) {
     auto valid = libData->validatePath(const_cast<char *>(reinterpret_cast<const char *>(inStr)), 'R');
     return valid;
 }
+
+ParserSession::ParserSession() {
+    
+    allocSymbols();
+    
+    TheByteDecoder = std::unique_ptr<ByteDecoder>(new ByteDecoder());
+    TheSourceManager = std::unique_ptr<SourceManager>(new SourceManager());
+    TheCharacterDecoder = std::unique_ptr<CharacterDecoder>(new CharacterDecoder());
+    TheTokenizer = std::unique_ptr<Tokenizer>(new Tokenizer());
+    TheParser = std::unique_ptr<Parser>(new Parser());
+}
+
+ParserSession::~ParserSession() {
+    
+    TheParser.reset(nullptr);
+    TheTokenizer.reset(nullptr);
+    TheSourceManager.reset(nullptr);
+    TheCharacterDecoder.reset(nullptr);
+    TheByteDecoder.reset(nullptr);
+    
+    freeSymbols();
+}
+
+void ParserSession::init(WolframLibraryData libData, std::istream& is, bool skipFirstLine) {
+    
+    TheSourceManager->init(is, libData);
+    TheByteDecoder->init();
+    TheCharacterDecoder->init();
+    TheTokenizer->init(skipFirstLine);
+    TheParser->init( [libData]() {
+        if (!libData) {
+            return false;
+        }
+        //
+        // For some reason, AbortQ() returns a mint
+        //
+        bool res = libData->AbortQ();
+        return res;
+    }, { } );
+}
+
+void ParserSession::deinit() {
+    
+    TheParser->deinit();
+    TheTokenizer->deinit();
+    TheCharacterDecoder->deinit();
+    TheByteDecoder->deinit();
+    TheSourceManager->deinit();
+}
+
+std::unique_ptr<ParserSession> TheParserSession = nullptr;
+
+
+
+
+MLSession::MLSession() {
+    
+    inited = false;
+    
+    MLEnvironmentParameter p;
+    int err;
+    
+    p = MLNewParameters(MLREVISION, MLAPIREVISION);
+#ifdef WINDOWS_MATHLINK
+    
+#else
+    //
+    // Needed because MathLink intercepts all signals
+    //
+    MLDoNotHandleSignalParameter(p, SIGINT);
+#endif
+    ep = MLInitialize(p);
+    if (ep == (MLENV)0) {
+        return;
+    }
+    
+    mlp = MLLoopbackOpen(ep, &err);
+    
+    inited = true;
+}
+
+MLSession::~MLSession() {
+    if (!inited) {
+        return;
+    }
+    if (mlp != nullptr) {
+        MLClose(mlp);
+    }
+    if (ep != 0) {
+        MLDeinitialize(ep);
+    }
+}
+
 

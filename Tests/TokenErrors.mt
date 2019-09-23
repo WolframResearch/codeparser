@@ -119,9 +119,7 @@ InvalidBase:
 Test[
 	TokenizeString["37^^2"]
 	,
-	{LeafNode[Token`Error`InvalidBase, "37", <|Source -> {{1, 1}, {1, 2}}|>],
-		LeafNode[Token`Caret, "^", <|Source -> {{1, 3}, {1, 3}}|>],
-		LeafNode[Token`Caret, "^", <|Source -> {{1, 4}, {1, 4}}|>],
+	{LeafNode[Token`Error`InvalidBase, "37^^", <|Source -> {{1, 1}, {1, 4}}|>],
 		LeafNode[Integer, "2", <|Source -> {{1, 5}, {1, 5}}|>]}
 	,
 	TestID->"TokenErrors-20190520-Q9B9R6"
@@ -165,8 +163,9 @@ ExpectedAccuracy:
 Test[
 	TokenizeString["1.2``->3"]
 	,
-	{LeafNode[Token`Error`ExpectedAccuracy, "1.2``-", <|Source -> {{1, 1}, {1, 6}}|>], LeafNode[Token`Greater, ">",
-		<|Source -> {{1, 7}, {1, 7}}|>], LeafNode[Integer, "3", <|Source -> {{1, 8}, {1, 8}}|>]}
+	{
+		LeafNode[Token`Error`ExpectedAccuracy, "1.2``->", <|Source -> {{1, 1}, {1, 7}}|>],
+		LeafNode[Integer, "3", <|Source -> {{1, 8}, {1, 8}}|>]}
 	,
 	TestID->"TokenErrors-20190520-B2J9I4"
 ]
@@ -185,7 +184,7 @@ ExpectedExponent:
 Test[
 	TokenizeString["123*^"]
 	,
-	{LeafNode[Token`Error`ExpectedExponent, "123*^", <|Source -> {{1, 1}, {1, 5}}|>]}
+	{LeafNode[Token`Error`ExpectedExponent, "123*^", <|Source -> {{1, 1}, {2, 0}}|>]}
 	,
 	TestID->"TokenErrors-20190520-L1J8C1"
 ]
@@ -201,9 +200,11 @@ ExpectedEqual:
 Test[
 	TokenizeString["a ^: f"]
 	,
-	{LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>], LeafNode[Token`WhiteSpace, " ",
-		<|Source -> {{1, 2}, {1, 2}}|>], LeafNode[Token`Error`ExpectedEqual, "^:", <|Source -> {{1, 3}, {1, 4}}|>],
-		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 5}, {1, 5}}|>], LeafNode[Symbol, "f", <|Source -> {{1, 6}, {1, 6}}|>]}
+	{
+		LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
+		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 2}, {1, 2}}|>],
+		LeafNode[Token`Error`ExpectedEqual, "^: ", <|Source -> {{1, 3}, {1, 5}}|>],
+		LeafNode[Symbol, "f", <|Source -> {{1, 6}, {1, 6}}|>] }
 	,
 	TestID->"TokenErrors-20190520-M3N7T5"
 ]

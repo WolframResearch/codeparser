@@ -37,5 +37,5 @@ public:
     std::vector<SyntaxIssue> getIssues() const;
 };
 
-extern ByteDecoder *TheByteDecoder;
+extern std::unique_ptr<ByteDecoder> TheByteDecoder;
 

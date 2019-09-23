@@ -2002,4 +2002,24 @@ Test[
 
 
 
+Test[
+	"f[,1]"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190920-R5Q7N8"
+]
+
+Test[
+	"f[,1,2]"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20190920-T8N2C7"
+]
+
 

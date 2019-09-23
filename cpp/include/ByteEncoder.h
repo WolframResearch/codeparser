@@ -11,6 +11,3 @@ public:
     
     static void encodeBytes(std::ostream&, int val);
 };
-
-extern ByteEncoder *TheByteEncoder;
-

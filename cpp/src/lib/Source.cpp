@@ -125,6 +125,10 @@ bool operator<=(SourceLocation a, SourceLocation b) {
 // Source
 //
 
+bool operator==(Source_SourceLocation_struct a, Source_SourceLocation_struct b) {
+    return a.start == b.start && a.end == b.end;
+}
+
 bool isContiguous(Source a, Source b) {
     return isContiguous(a.lines.end, b.lines.start);
 }
@@ -212,17 +216,15 @@ std::string SourceCharacter::string() const {
 std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
     
     if (c.isEndOfFile()) {
+        //
+        // Do not print anything for EOF
+        //
         return stream;
     }
     
     auto val = c.to_point();
     
     assert(val != CODEPOINT_ERROR_INTERNAL);
-    
-//    if (val == CODEPOINT_NAKED_BACKSLASH) {
-//        stream << '\\';
-//        return stream;
-//    }
     
     ByteEncoder::encodeBytes(stream, val);
     
@@ -237,11 +239,11 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
 Token::Token(TokenEnum Tok, std::string Str, Source Span) : Tok(Tok), Str(Str), Span(Span) {
     
     switch (Tok) {
-            //
-            // These are the tokens that do not quite have correct spans.
-            // start and end are set to the same character, so size is 1
-            // But they take up 0 characters
-            //
+        //
+        // These are the tokens that do not quite have correct spans.
+        // start and end are set to the same character, so size is 1
+        // But they take up 0 characters
+        //
         case TOKEN_ENDOFFILE:
         case TOKEN_UNKNOWN:
         case TOKEN_FAKE_IMPLICITTIMES:
@@ -250,6 +252,7 @@ Token::Token(TokenEnum Tok, std::string Str, Source Span) : Tok(Tok), Str(Str), 
         case TOKEN_FAKE_IMPLICITNULL:
         case TOKEN_FAKE_IMPLICITONE:
         case TOKEN_FAKE_IMPLICITALL:
+        case TOKEN_ERROR_EXPECTEDOPERAND:
             assert(Span.lines.start.Line == Span.lines.end.Line);
             assert(Span.lines.start.Col == Span.lines.end.Col);
             break;
@@ -278,6 +281,9 @@ Token::Token(TokenEnum Tok, std::string Str, Source Span) : Tok(Tok), Str(Str), 
     
 }
 
+bool operator==(Token a, Token b) {
+    return a.Span.lines == b.Span.lines;
+}
 
 bool containsOnlyASCII(std::string s) {
     for (auto c : s) {

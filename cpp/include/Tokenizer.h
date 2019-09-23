@@ -89,10 +89,8 @@ public:
     
     Token currentToken() const;
     
-    std::string getString() const;
-    
     std::vector<SyntaxIssue> getIssues() const;
 };
 
-extern Tokenizer *TheTokenizer;
+extern std::unique_ptr<Tokenizer> TheTokenizer;
 

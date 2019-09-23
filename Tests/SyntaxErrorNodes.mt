@@ -6,14 +6,9 @@ ExpectedOperand:
 Test[
 	ParseString["{ + }"]
 	,
-CallNode[LeafNode[Symbol, 
-  "List", <||>], {CallNode[
-   LeafNode[Symbol, 
-    "Plus", <||>], {SyntaxErrorNode[
-     SyntaxError`ExpectedOperand, {LeafNode[Token`CloseCurly, 
-       "}", <|Source -> {{1, 5}, {1, 5}}|>]}, <|Source -> {{1, 5}, {1,
-          5}}|>]}, <|Source -> {{1, 3}, {1, 5}}|>]}, <|Source -> {{1, 
-     1}, {1, 5}}|>]
+	CallNode[LeafNode[Symbol, "List", <||>], {
+		CallNode[LeafNode[Symbol, "Plus", <||>], {
+    		AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, "", <|Source -> {{1, 5}, {1, 5}}|>]}, <|Source -> {{1, 3}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>]
 	,
 	TestID->"SyntaxErrorNodes-20190521-C1B3O0"
 ]
@@ -120,8 +115,8 @@ ExpectedPossibleExpression:
 Test[
 	ParseString["&"]
 	,
-	SyntaxErrorNode[SyntaxError`ExpectedPossibleExpression, {
-		LeafNode[Token`Amp, "&", <|Source -> {{1, 1}, {1, 1}}|>]}, <|Source -> {{1, 1}, {1, 1}}|>]
+	CallNode[LeafNode[Symbol, "Function", <||>], {
+		AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, "", <|Source -> {{1, 1}, {1, 1}}|>]}, <|Source -> {{1, 1}, {1, 1}}|>]
 	,
 	TestID->"SyntaxErrorNodes-20190521-O5D4A9"
 ]

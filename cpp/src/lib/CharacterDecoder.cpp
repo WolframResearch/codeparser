@@ -187,7 +187,7 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
             
             //
             // if inside a string, then test whether this \ is the result of the "feature" of
-            // converting "\[Alpa]" into "\\[Alpa]" and never giving any further warnings
+            // converting "\[Alpa]" into "\\[Alpa]", copying that, and then never giving any further warnings
             // when dealing with "\\[Alpa]"
             //
             
@@ -207,6 +207,8 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
                     
                 } else {
                     
+                    //
+                    // '[' was not after \\, so must put back whatever was after \\
                     //
                     // Must append in TheByteDecoder
                     // Cannot append in TheCharacterDecoder, because only single-SourceCharacter WLCharacters are expected in
@@ -743,7 +745,7 @@ WLCharacter CharacterDecoder::handle2Hex(SourceCharacter curSourceIn, SourceLoca
             TheSourceManager->setWLCharacterStart();
             TheSourceManager->setWLCharacterEnd();
             
-            TheByteDecoder->append('.', CharacterStart);
+            TheByteDecoder->append('.', CharacterStart+1);
             for (size_t i = 0; i < HexStr.size(); i++) {
                 TheByteDecoder->append(HexStr[i], CharacterStart+2+i);
             }
@@ -936,5 +938,5 @@ std::string CharacterDecoder::longNameSuggestion(std::string input) {
     return "";
 }
 
-CharacterDecoder *TheCharacterDecoder = nullptr;
+std::unique_ptr<CharacterDecoder> TheCharacterDecoder = nullptr;
 

@@ -20,8 +20,7 @@ Number Errors
 Test[
 	TokenizeString["1.2``->3"]
 	,
-	{LeafNode[Token`Error`ExpectedAccuracy, "1.2``-", <|Source -> {{1, 1}, {1, 6}}|>], 
-	LeafNode[Token`Greater, ">", <|Source -> {{1, 7}, {1, 7}}|>], 
+	{LeafNode[Token`Error`ExpectedAccuracy, "1.2``->", <|Source -> {{1, 1}, {1, 7}}|>], 
 	LeafNode[Integer, "3", <|Source -> {{1, 8}, {1, 8}}|>]}
 	,
 	TestID->"Tokenize-20181215-Z0H7Y5"

@@ -17,6 +17,10 @@ TokenizeFile
 
 ParseLeaf
 
+
+(*
+Boxes
+*)
 ConcreteParseBox
 
 
@@ -483,6 +487,12 @@ Module[{cst, ast, agg},
 
 
 
+
+TokenizeString::usage = "TokenizeString[string] returns a list of tokens by interpreting string as WL input."
+
+TokenizeString[s_String] :=
+	tokenizeString[s]
+
 tokenizeString[sIn_String, OptionsPattern[]] :=
 Catch[
 Module[{s = sIn, res},
@@ -517,11 +527,6 @@ Module[{s = sIn, res},
 
 
 
-
-TokenizeString::usage = "TokenizeString[string] returns a list of tokens by interpreting string as WL input."
-
-TokenizeString[s_String] :=
-	tokenizeString[s]
 
 
 
@@ -579,6 +584,10 @@ Module[{s, encoding, res},
 	res
 ]]
 
+
+
+
+ParseLeaf::usage = "ParseLeaf[str] returns a LeafNode by interpreting str as a leaf."
 
 ParseLeaf[str_String] :=
 	parseLeaf[str]

@@ -1,37 +1,37 @@
 
+#include "Tokenizer.h"
 #include "CharacterDecoder.h"
-#include "ByteDecoder.h"
-#include "SourceManager.h"
+#include "API.h"
 #include "CodePoint.h"
 
 #include "gtest/gtest.h"
 
 #include <sstream>
 
+static std::unique_ptr<MLSession> mlSession;
+
 class CharacterDecoderTest : public ::testing::Test {
 protected:
-    
     static void SetUpTestSuite() {
-        TheByteDecoder = new ByteDecoder();
-        TheSourceManager = new SourceManager();
-        TheCharacterDecoder = new CharacterDecoder();
+        
+        mlSession = std::unique_ptr<MLSession>(new MLSession);
+        
+        TheParserSession = std::unique_ptr<ParserSession>(new ParserSession);
     }
     
     static void TearDownTestSuite() {
-        delete TheSourceManager;
-        delete TheCharacterDecoder;
-        delete TheByteDecoder;
+        
+        TheParserSession.reset(nullptr);
+        
+        mlSession.reset(nullptr);
     }
     
     void SetUp() override {
-        TheByteDecoder->init();
-        TheCharacterDecoder->init();
+        
     }
     
     void TearDown() override {
-        TheCharacterDecoder->deinit();
-        TheByteDecoder->deinit();
-        TheSourceManager->deinit();
+        TheParserSession->deinit();
     }
 };
 
@@ -39,12 +39,12 @@ TEST_F(CharacterDecoderTest, Basic) {
     
     auto iss = std::stringstream("1+2");
     
-    TheSourceManager->init(iss, nullptr);
+    TheParserSession->init(nullptr, iss, false);
     
-    auto C = TheCharacterDecoder->nextWLCharacter();
-    EXPECT_EQ(C, WLCharacter('1'));
+    auto T = TheTokenizer->currentToken();
+    EXPECT_EQ(T, Token(TOKEN_INTEGER, "1", Source(SourceLocation(1, 1), SourceLocation(1, 1))));
     
-    C = TheCharacterDecoder->nextWLCharacter();
+    auto C = TheCharacterDecoder->currentWLCharacter();
     EXPECT_EQ(C, WLCharacter('+'));
     
     C = TheCharacterDecoder->nextWLCharacter();

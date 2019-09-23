@@ -31,7 +31,7 @@ Test[
 Test[
 	ToInputFormString[Aggregate[ConcreteParseString["@"]]]
 	,
-	" @ "
+	" @   "
 	,
 	TestID->"ToInputFormString-20181230-V8O8B1"
 ]
@@ -179,7 +179,7 @@ Error handling
 Test[
 	ToInputFormString[Aggregate[ConcreteParseString["A B:C:.Ne"]]]
 	,
-	" A   B:C :  .    Ne "
+	" A   B:C :  . Ne   "
 	,
 	TestID->"ToInputFormString-20190523-V1I4S4"
 ]

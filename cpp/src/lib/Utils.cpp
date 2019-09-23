@@ -153,7 +153,7 @@ void Utils::endOfLineWarning(Token Tok, Token EndTok) {
         return;
     }
     
-    auto Issue = SyntaxIssue(SYNTAXISSUETAG_ENDOFLINE, "``;;`` is at the end of a line.\nDid you mean ``;``?", SYNTAXISSUESEVERITY_WARNING, Tok.Span);
+    auto Issue = SyntaxIssue(SYNTAXISSUETAG_ENDOFLINE, "``;;`` is at the end of a line.\nThis could be confused for ``;``.\nDid you mean ``;``?", SYNTAXISSUESEVERITY_WARNING, Tok.Span);
     
     TheParser->addIssue(Issue);
 }

@@ -2,13 +2,12 @@
 #pragma once
 
 #include "Source.h"
+#include "Symbol.h"
 
 #include "mathlink.h"
 
 #include <vector>
 #include <memory>
-
-class Symbol;
 
 // MSVC: error C2338: The C++ Standard forbids containers of const elements because allocator<const T> is ill-formed.
 using SymbolPtr = std::unique_ptr<Symbol>;
@@ -120,11 +119,20 @@ public:
     virtual ~Node() {}
 };
 
-class LeafNode;
 
-//
-// Literal nodes
-//
+class OperatorNode : public Node {
+    SymbolPtr& Op;
+    SymbolPtr& MakeSym;
+public:
+    OperatorNode(SymbolPtr& Op, SymbolPtr& MakeSym, std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)), Op(Op), MakeSym(MakeSym) {}
+    
+    void put(MLINK mlp) const override;
+    
+    SymbolPtr& getOperator() const {
+        return Op;
+    }
+};
+
 
 class LeafNode : public Node {
     const Token Tok;
@@ -148,77 +156,37 @@ public:
 };
 
 
-
-
-
-//
-// Base operator nodes
-//
-
-class PrefixNode : public Node {
-    SymbolPtr& Op;
+class PrefixNode : public OperatorNode {
 public:
-    PrefixNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)), Op(Op) {}
-    
-    void put(MLINK mlp) const override;
+    PrefixNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEPREFIXNODE, std::move(Args)) {}
 };
 
-class BinaryNode : public Node {
-    SymbolPtr& Op;
+class BinaryNode : public OperatorNode {
 public:
-    BinaryNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)), Op(Op) {}
-    
-    void put(MLINK mlp) const override;
-    
-    SymbolPtr& getSymbol() const {
-        return Op;
-    }
+    BinaryNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEBINARYNODE, std::move(Args)) {}
 };
 
-class InfixNode : public Node {
-    SymbolPtr& Op;
+class InfixNode : public OperatorNode {
 public:
-    InfixNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)), Op(Op) {}
-    
-    void put(MLINK mlp) const override;
+    InfixNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEINFIXNODE, std::move(Args)) {}
 };
 
 
-class TernaryNode : public Node {
-    SymbolPtr& Op;
+class TernaryNode : public OperatorNode {
 public:
-    TernaryNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)), Op(Op) {}
-    
-    void put(MLINK mlp) const override;
+    TernaryNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKETERNARYNODE, std::move(Args)) {}
 };
 
-class PostfixNode : public Node {
-    SymbolPtr& Op;
+class PostfixNode : public OperatorNode {
 public:
-    PostfixNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)), Op(Op) {}
-    
-    void put(MLINK mlp) const override;
-    
-    SymbolPtr& getOperator() const {
-        return Op;
-    }
+    PostfixNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEPOSTFIXNODE, std::move(Args)) {}
 };
 
-class PrefixBinaryNode : public Node {
-    SymbolPtr& Op;
+class PrefixBinaryNode : public OperatorNode {
 public:
-    PrefixBinaryNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)), Op(Op) {}
-    
-    void put(MLINK mlp) const override;
+    PrefixBinaryNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEPREFIXBINARYNODE, std::move(Args)) {}
 };
 
-
-
-
-
-//
-// Call nodes
-//
 
 class CallNode : public Node {
     std::unique_ptr<NodeSeq> Head;
@@ -231,96 +199,53 @@ public:
 };
 
 
-
-
-//
-// Group nodes
-//
-
-class GroupNode : public Node {
-    SymbolPtr& Op;
+class GroupNode : public OperatorNode {
 public:
-    GroupNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)), Op(Op) {}
-    
-    void put(MLINK mlp) const override;
-    
-    SymbolPtr& getOperator() const {
-        return Op;
-    }
+    GroupNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEGROUPNODE, std::move(Args)) {}
 };
 
 
-
-
-//
-// Special nodes
-//
-
-class StartOfLineNode : public Node {
-    SymbolPtr& Op;
+class StartOfLineNode : public OperatorNode {
 public:
-    StartOfLineNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)), Op(Op) {}
-    
-    void put(MLINK mlp) const override;
+    StartOfLineNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKESTARTOFLINENODE, std::move(Args)) {}
 };
 
 
-class BlankNode : public Node {
+class BlankNode : public OperatorNode {
 public:
-    BlankNode(std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)) {}
-    
-    void put(MLINK mlp) const override;
+    BlankNode(std::unique_ptr<NodeSeq> Args) : OperatorNode(SYMBOL_BLANK, SYMBOL_AST_LIBRARY_MAKEBLANKNODE, std::move(Args)) {}
 };
 
-class BlankSequenceNode : public Node {
+class BlankSequenceNode : public OperatorNode {
 public:
-    BlankSequenceNode(std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)) {}
-    
-    void put(MLINK mlp) const override;
+    BlankSequenceNode(std::unique_ptr<NodeSeq> Args) : OperatorNode(SYMBOL_BLANKSEQUENCE, SYMBOL_AST_LIBRARY_MAKEBLANKSEQUENCENODE, std::move(Args)) {}
 };
 
-class BlankNullSequenceNode : public Node {
+class BlankNullSequenceNode : public OperatorNode {
 public:
-    BlankNullSequenceNode(std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)) {}
-    
-    void put(MLINK mlp) const override;
+    BlankNullSequenceNode(std::unique_ptr<NodeSeq> Args) : OperatorNode(SYMBOL_BLANKNULLSEQUENCE, SYMBOL_AST_LIBRARY_MAKEBLANKNULLSEQUENCENODE, std::move(Args)) {}
 };
 
-class PatternBlankNode : public Node {
+class PatternBlankNode : public OperatorNode {
 public:
-    PatternBlankNode(std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)) {}
-    
-    void put(MLINK mlp) const override;
+    PatternBlankNode(std::unique_ptr<NodeSeq> Args) : OperatorNode(SYMBOL_AST_PATTERNBLANK, SYMBOL_AST_LIBRARY_MAKEPATTERNBLANKNODE, std::move(Args)) {}
 };
 
-class PatternBlankSequenceNode : public Node {
+class PatternBlankSequenceNode : public OperatorNode {
 public:
-    PatternBlankSequenceNode(std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)) {}
-    
-    void put(MLINK mlp) const override;
+    PatternBlankSequenceNode(std::unique_ptr<NodeSeq> Args) : OperatorNode(SYMBOL_AST_PATTERNBLANKSEQUENCE, SYMBOL_AST_LIBRARY_MAKEPATTERNBLANKSEQUENCENODE, std::move(Args)) {}
 };
 
-class PatternBlankNullSequenceNode : public Node {
+class PatternBlankNullSequenceNode : public OperatorNode {
 public:
-    PatternBlankNullSequenceNode(std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)) {}
-    
-    void put(MLINK mlp) const override;
-};
-
-//
-// Operand should always be a OptionalDefaultNode
-//
-class OptionalDefaultPatternNode : public Node {
-public:
-    OptionalDefaultPatternNode(std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)) {}
-    
-    void put(MLINK mlp) const override;
+    PatternBlankNullSequenceNode(std::unique_ptr<NodeSeq> Args) : OperatorNode(SYMBOL_AST_PATTERNBLANKNULLSEQUENCE, SYMBOL_AST_LIBRARY_MAKEPATTERNBLANKNULLSEQUENCENODE, std::move(Args)) {}
 };
 
 
-//
-// Error nodes
-//
+class OptionalDefaultPatternNode : public OperatorNode {
+public:
+    OptionalDefaultPatternNode(std::unique_ptr<NodeSeq> Args) : OperatorNode(SYMBOL_AST_OPTIONALDEFAULTPATTERN, SYMBOL_AST_LIBRARY_MAKEOPTIONALDEFAULTPATTERNNODE, std::move(Args)) {}
+};
 
 
 class SyntaxErrorNode : public Node {
@@ -331,36 +256,15 @@ public:
     void put(MLINK mlp) const override;
 };
 
-class GroupMissingCloserNode : public Node {
-    SymbolPtr& Op;
+class GroupMissingCloserNode : public OperatorNode {
 public:
-    GroupMissingCloserNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)), Op(Op) {}
-    
-    void put(MLINK mlp) const override;
-    
-    SymbolPtr& getOperator() const {
-        return Op;
-    }
+    GroupMissingCloserNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEGROUPMISSINGCLOSERNODE, std::move(Args)) {}
 };
 
-class GroupMissingOpenerNode : public Node {
-    SymbolPtr& Op;
+class GroupMissingOpenerNode : public OperatorNode {
 public:
-    GroupMissingOpenerNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)), Op(Op) {}
-    
-    void put(MLINK mlp) const override;
-    
-    SymbolPtr& getOperator() const {
-        return Op;
-    }
+    GroupMissingOpenerNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEGROUPMISSINGOPENERNODE, std::move(Args)) {}
 };
-
-
-
-
-//
-// Collection nodes
-//
 
 
 class CollectedExpressionsNode : public Node {
@@ -378,16 +282,4 @@ public:
     
     void put(MLINK mlp) const override;
 };
-
-class CollectedMetadatasNode : public Node {
-    std::vector<Metadata> Metadatas;
-public:
-    CollectedMetadatasNode(std::vector<Metadata> Metadatas) : Node(), Metadatas(std::move(Metadatas)) {}
-    
-    void put(MLINK mlp) const override;
-};
-
-
-
-
 

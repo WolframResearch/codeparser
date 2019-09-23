@@ -89,12 +89,11 @@ Test[
 	GroupNode[List, {
 		LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 1}}|>],
 		LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 0}}|>],
-		SyntaxErrorNode[SyntaxError`ExpectedPossibleExpression, {
-			LeafNode[Token`Question, "?", <|Source -> {{2, 1}, {2, 1}}|>]
-			}, <|Source -> {{2, 1}, {2, 1}}|>],
-		LeafNode[Symbol, "a", <|Source -> {{2, 2}, {2, 2}}|>],
-		LeafNode[Token`CloseCurly, "}", <|Source -> {{2, 3}, {2, 3}}|>]
-	}, <|Source -> {{1, 1}, {2, 3}}|>]
+		BinaryNode[PatternTest, {
+			LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{2, 1}, {2, 1}}|>],
+			LeafNode[Token`Question, "?", <|Source -> {{2, 1}, {2, 1}}|>],
+			LeafNode[Symbol, "a", <|Source -> {{2, 2}, {2, 2}}|>]}, <|Source -> {{2, 1}, {2, 2}}|>],
+		LeafNode[Token`CloseCurly, "}", <|Source -> {{2, 3}, {2, 3}}|>]}, <|Source -> {{1, 1}, {2, 3}}|>]
 	,
 	TestID->"Concrete-20190601-H6L1N7"
 ]

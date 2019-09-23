@@ -126,5 +126,5 @@ public:
     std::vector<SyntaxIssue> getIssues() const;
 };
 
-extern CharacterDecoder *TheCharacterDecoder;
+extern std::unique_ptr<CharacterDecoder> TheCharacterDecoder;
 

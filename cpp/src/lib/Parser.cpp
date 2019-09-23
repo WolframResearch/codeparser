@@ -450,35 +450,35 @@ void Parser::deinit() {
     currentAbortQ = nullptr;
 }
 
-void Parser::registerPrefixParselet(TokenEnum token, std::unique_ptr<const PrefixParselet> P) {
+void Parser::registerPrefixParselet(TokenEnum token, std::unique_ptr<PrefixParselet> P) {
     
     assert(prefixParselets[token] == nullptr);
     
     prefixParselets[token] = std::move(P);
 }
 
-void Parser::registerInfixParselet(TokenEnum token, std::unique_ptr<const InfixParselet> P) {
+void Parser::registerInfixParselet(TokenEnum token, std::unique_ptr<InfixParselet> P) {
     
     assert(infixParselets[token] == nullptr);
     
     infixParselets[token] = std::move(P);
 }
 
-void Parser::registerStartOfLineParselet(TokenEnum token, std::unique_ptr<const StartOfLineParselet> P) {
+void Parser::registerStartOfLineParselet(TokenEnum token, std::unique_ptr<StartOfLineParselet> P) {
     
     assert(startOfLineParselets[token] == nullptr);
     
     startOfLineParselets[token] = std::move(P);
 }
 
-void Parser::registerContextSensitivePrefixParselet(TokenEnum token, std::unique_ptr<const ContextSensitivePrefixParselet> P) {
+void Parser::registerContextSensitivePrefixParselet(TokenEnum token, std::unique_ptr<ContextSensitivePrefixParselet> P) {
     
     assert(contextSensitivePrefixParselets[token] == nullptr);
     
     contextSensitivePrefixParselets[token] = std::move(P);
 }
 
-void Parser::registerContextSensitiveInfixParselet(TokenEnum token, std::unique_ptr<const ContextSensitiveInfixParselet> P) {
+void Parser::registerContextSensitiveInfixParselet(TokenEnum token, std::unique_ptr<ContextSensitiveInfixParselet> P) {
     
     assert(contextSensitiveInfixParselets[token] == nullptr);
     
@@ -577,6 +577,9 @@ bool Parser::isPossibleBeginningOfExpression(const Token& Tok, ParserContext Ctx
         return false;
     }
     
+    //
+    // trivia
+    //
     if (Tok.Tok == TOKEN_WHITESPACE ||
         Tok.Tok == TOKEN_NEWLINE ||
         Tok.Tok == TOKEN_COMMENT ||
@@ -598,6 +601,9 @@ bool Parser::isPossibleBeginningOfExpression(const Token& Tok, ParserContext Ctx
     
     //
     // Prefix parselet?
+    //
+    // We want to test if prefix here because a token may be both prefix and infix, so must return true.
+    // But if we removed this prefix test first, then we would hit the test for infix first, and then mistakenly return false.
     //
     auto& P = prefixParselets[Tok.Tok];
     if (P != nullptr) {
@@ -626,19 +632,19 @@ bool Parser::isPossibleBeginningOfExpression(const Token& Tok, ParserContext Ctx
     return true;
 }
 
-const std::unique_ptr<const InfixParselet>& Parser::findInfixParselet(TokenEnum Tok) const {
+const std::unique_ptr<InfixParselet>& Parser::findInfixParselet(TokenEnum Tok) const {
     auto& I = infixParselets[Tok];
     assert(I != nullptr);
     return I;
 }
 
-const std::unique_ptr<const ContextSensitivePrefixParselet>& Parser::findContextSensitivePrefixParselet(TokenEnum Tok) const {
+const std::unique_ptr<ContextSensitivePrefixParselet>& Parser::findContextSensitivePrefixParselet(TokenEnum Tok) const {
     auto& I = contextSensitivePrefixParselets[Tok];
     assert(I != nullptr);
     return I;
 }
 
-const std::unique_ptr<const ContextSensitiveInfixParselet>& Parser::findContextSensitiveInfixParselet(TokenEnum Tok) const {
+const std::unique_ptr<ContextSensitiveInfixParselet>& Parser::findContextSensitiveInfixParselet(TokenEnum Tok) const {
     auto& I = contextSensitiveInfixParselets[Tok];
     assert(I != nullptr);
     return I;
@@ -1074,7 +1080,7 @@ const Token Parser::eatAndPreserveToplevelNewlines(const Token& TokIn, ParserCon
     return Tok;
 }
 
-Parser *TheParser = nullptr;
+std::unique_ptr<Parser> TheParser = nullptr;
 
 
 

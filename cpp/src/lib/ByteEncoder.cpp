@@ -63,6 +63,3 @@ void ByteEncoder::encodeBytes(std::ostream& stream, int val) {
     }
     
 }
-
-ByteEncoder *TheByteEncoder = nullptr;
-

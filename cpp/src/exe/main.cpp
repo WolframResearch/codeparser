@@ -71,61 +71,35 @@ int readStdIn(int mode, bool printOutput) {
     std::cout << ">>> ";
     std::getline(std::cin, input);
     
-    MLENV ep;
-    MLEnvironmentParameter p;
-    int err;
+    MLSession TheMLSession;
     
-    p = MLNewParameters(MLREVISION, MLAPIREVISION);
-#ifdef WINDOWS_MATHLINK
-
-#else
-    //
-    // Needed because MathLink intercepts all signals
-    //
-    MLDoNotHandleSignalParameter(p, SIGINT);
-#endif
-    ep = MLInitialize(p);
-    if (ep == (MLENV)0) {
-        return 1;
-    }
+    ParserSession TheParserSession;
     
-    WolframLibrary_initialize(nullptr);
-    
-    MLINK mlp;
-    mlp = MLLoopbackOpen(ep, &err);
+    auto mlp = TheMLSession.getMLINK();
     
     if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 1)) {
-        goto retPt;
+        return res;
     }
     if (!MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(input.c_str()), static_cast<int>(input.size()))) {
-        goto retPt;
+        return res;
     }
     
     if (mode == TOKENIZE) {
-        res = TokenizeString(nullptr, mlp);
+        res = TokenizeString_LibraryLink(nullptr, mlp);
     } else if (mode == LEAF) {
-        res = ParseLeaf(nullptr, mlp);
+        res = ParseLeaf_LibraryLink(nullptr, mlp);
     } else {
-        res = ConcreteParseString(nullptr, mlp);
+        res = ConcreteParseString_LibraryLink(nullptr, mlp);
     }
     
     if (res != LIBRARY_NO_ERROR) {
-        goto retPt;
+        return res;
     }
     
     if (printOutput) {
         printExpression(mlp);
         std::cout << "\n";
     }
-    
-retPt:
-    if (mlp != nullptr) {
-        MLClose(mlp);
-    }
-    if (ep != 0) {
-        MLDeinitialize(ep);
-    }
-    WolframLibrary_uninitialize(nullptr);
     
     return res;
 }
@@ -134,42 +108,25 @@ int readFile(std::string file, bool printOutput) {
     
     int res = LIBRARY_FUNCTION_ERROR;
     
-    MLENV ep;
-    MLEnvironmentParameter p;
-    int err;
+    MLSession TheMLSession;
     
-    p = MLNewParameters(MLREVISION, MLAPIREVISION);
-#ifdef WINDOWS_MATHLINK
-
-#else
-    //
-    // Needed because MathLink intercepts all signals
-    //
-    MLDoNotHandleSignalParameter(p, SIGINT);
-#endif
-    ep = MLInitialize(p);
-    if (ep == (MLENV)0) {
-        return 1;
-    }
+    ParserSession TheParserSession;
     
-    WolframLibrary_initialize(nullptr);
-    
-    MLINK mlp;
-    mlp = MLLoopbackOpen(ep, &err);
+    auto mlp = TheMLSession.getMLINK();
     
     if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 2)) {
-        goto retPt;
+        return res;
     }
     if (!MLPutString(mlp, file.c_str())) {
-        goto retPt;
+        return res;
     }
     if (!MLPutSymbol(mlp, "False")) {
-        goto retPt;
+        return res;
     }
     
-    res = ConcreteParseFile(nullptr, mlp);
+    res = ConcreteParseFile_LibraryLink(nullptr, mlp);
     if (res != LIBRARY_NO_ERROR) {
-        goto retPt;
+        return res;
     }
     
     if (printOutput) {
@@ -177,67 +134,56 @@ int readFile(std::string file, bool printOutput) {
         std::cout << "\n";
     }
     
-retPt:
-    if (mlp != nullptr) {
-        MLClose(mlp);
-    }
-    if (ep != 0) {
-        MLDeinitialize(ep);
-    }
-    WolframLibrary_uninitialize(nullptr);
-    
     return res;
 }
 
 void printExpression(MLINK mlp) {
-    int i;
-    double r;
-    const unsigned char *string;
-    int bytes;
-    int chars;
-    const char *symbol;
-    const char *func;
-    int a;
-    int ready;
-    int err = 0;
     
-    ready = MLReady(mlp);
+    auto ready = MLReady(mlp);
     if (!ready) {
         return;
     }
 
     switch(MLGetType(mlp)) {
-        case MLTKINT:
+        case MLTKINT: {
+            int i;
             if (!MLGetInteger(mlp, &i)) {
                 return;
             }
             std::cout << i;
+        }
             break;
-        case MLTKREAL:
+        case MLTKREAL: {
+            double r;
             if (!MLGetReal(mlp, &r)) {
                 return;
             }
             std::cout << r;
+        }
             break;
-        case MLTKSTR:
-            if (!MLGetUTF8String(mlp, &string, &bytes, &chars)) {
+        case MLTKSTR: {
+            ScopedMLString string(mlp);
+            if (!string.read()) {
                 return;
             }
-            std::cout << string;
-            MLReleaseUTF8String(mlp, string, bytes);
+            std::cout << string.get();
+        }
             break;
-        case MLTKSYM:
-            if (!MLGetSymbol(mlp, &symbol)) {
+        case MLTKSYM: {
+            ScopedMLSymbol symbol(mlp);
+            if (!symbol.read()) {
                 return;
             }
-            std::cout << symbol;
-            MLReleaseSymbol(mlp, symbol);
+            std::cout << symbol.get();
+        }
             break;
-        case MLTKFUNC:
-            if (!MLGetFunction(mlp, &func, &a)) {
+        case MLTKFUNC: {
+            ScopedMLFunction func(mlp);
+            if (!func.read()) {
                 return;
             }
-            std::cout << func << "[";
+            std::cout << func.getHead() << "[";
+            auto a = func.getArgCount();
             if (a > 0) {
                 for (int i = 0; i < a-1; i++) {
                     printExpression(mlp);
@@ -246,11 +192,12 @@ void printExpression(MLINK mlp) {
                 printExpression(mlp);
             }
             std::cout << "]";
-            MLReleaseSymbol(mlp, func);
+        }
             break;
-        default:
-            err = MLError(mlp);
+        default: {
+            auto err = MLError(mlp);
             std::cout << "\nerr: " << err << "\n";
+        }
             break;
     }
 }

@@ -100,11 +100,11 @@ struct ParserContext {
 class Parser {
 private:
     
-    std::array<std::unique_ptr<const PrefixParselet>, TOKEN_COUNT> prefixParselets;
-    std::array<std::unique_ptr<const InfixParselet>, TOKEN_COUNT> infixParselets;
-    std::array<std::unique_ptr<const StartOfLineParselet>, TOKEN_COUNT> startOfLineParselets;
-    std::array<std::unique_ptr<const ContextSensitivePrefixParselet>, TOKEN_COUNT> contextSensitivePrefixParselets;
-    std::array<std::unique_ptr<const ContextSensitiveInfixParselet>, TOKEN_COUNT> contextSensitiveInfixParselets;
+    std::array<std::unique_ptr<PrefixParselet>, TOKEN_COUNT> prefixParselets;
+    std::array<std::unique_ptr<InfixParselet>, TOKEN_COUNT> infixParselets;
+    std::array<std::unique_ptr<StartOfLineParselet>, TOKEN_COUNT> startOfLineParselets;
+    std::array<std::unique_ptr<ContextSensitivePrefixParselet>, TOKEN_COUNT> contextSensitivePrefixParselets;
+    std::array<std::unique_ptr<ContextSensitiveInfixParselet>, TOKEN_COUNT> contextSensitiveInfixParselets;
     
     std::unique_ptr<ExpectedPossibleExpressionErrorParselet> expectedPossibleExpressionErrorParselet;
     
@@ -116,15 +116,16 @@ private:
     
     bool implicitTimesEnabled;
     
-    void registerPrefixParselet(TokenEnum, std::unique_ptr<const PrefixParselet> );
     
-    void registerInfixParselet(TokenEnum, std::unique_ptr<const InfixParselet> );
+    void registerPrefixParselet(TokenEnum, std::unique_ptr<PrefixParselet> );
     
-    void registerStartOfLineParselet(TokenEnum, std::unique_ptr<const StartOfLineParselet> );
+    void registerInfixParselet(TokenEnum, std::unique_ptr<InfixParselet> );
     
-    void registerContextSensitivePrefixParselet(TokenEnum, std::unique_ptr<const ContextSensitivePrefixParselet> );
+    void registerStartOfLineParselet(TokenEnum, std::unique_ptr<StartOfLineParselet> );
     
-    void registerContextSensitiveInfixParselet(TokenEnum, std::unique_ptr<const ContextSensitiveInfixParselet> );
+    void registerContextSensitivePrefixParselet(TokenEnum, std::unique_ptr<ContextSensitivePrefixParselet> );
+    
+    void registerContextSensitiveInfixParselet(TokenEnum, std::unique_ptr<ContextSensitiveInfixParselet> );
     
     
     
@@ -159,12 +160,11 @@ public:
     
     bool isPossibleBeginningOfExpression(const Token& Tok, ParserContext Ctxt) const;
     
-    const std::unique_ptr<const InfixParselet>& findInfixParselet(TokenEnum Tok) const;
+    const std::unique_ptr<InfixParselet>& findInfixParselet(TokenEnum Tok) const;
     
-    const std::unique_ptr<const ContextSensitivePrefixParselet>& findContextSensitivePrefixParselet(TokenEnum Tok) const;
+    const std::unique_ptr<ContextSensitivePrefixParselet>& findContextSensitivePrefixParselet(TokenEnum Tok) const;
     
-    const std::unique_ptr<const ContextSensitiveInfixParselet>& findContextSensitiveInfixParselet(TokenEnum Tok) const;
-    
+    const std::unique_ptr<ContextSensitiveInfixParselet>& findContextSensitiveInfixParselet(TokenEnum Tok) const;
     
     bool isAbort() const;
     
@@ -177,5 +177,5 @@ public:
     static const Token eatAndPreserveToplevelNewlines(const Token& Tok, ParserContext Ctxt, std::unique_ptr<LeafSeq>&);
 };
 
-extern Parser *TheParser;
+extern std::unique_ptr<Parser> TheParser;
 

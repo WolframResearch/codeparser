@@ -69,5 +69,5 @@ public:
     std::vector<SyntaxIssue> getIssues() const;
 };
 
-extern SourceManager *TheSourceManager;
+extern std::unique_ptr<SourceManager> TheSourceManager;
 

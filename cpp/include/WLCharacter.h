@@ -81,9 +81,15 @@ struct WLCharacter {
     
     bool isEscaped() const;
     
+    bool isAlpha() const;
+    
     bool isDigit() const;
     
-    bool isAlpha() const;
+    bool isAlphaOrDigit() const;
+    
+    bool isHex() const;
+    
+    bool isOctal() const;
     
     bool isLetterlike() const;
     
@@ -118,4 +124,7 @@ struct WLCharacter {
 
 std::ostream& operator<<(std::ostream& stream, WLCharacter);
 
+//
+// For googletest
+//
 void PrintTo(const WLCharacter&, std::ostream*);

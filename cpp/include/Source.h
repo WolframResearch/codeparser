@@ -191,6 +191,9 @@ struct Source_SourceLocation_struct {
     SourceLocation end;
 };
 
+bool operator==(Source_SourceLocation_struct a, Source_SourceLocation_struct b);
+
+
 struct Source_File_struct {
     uint64_t offset;
     uint64_t len;
@@ -244,6 +247,8 @@ struct Token {
     
     Token(TokenEnum, std::string, Source);
 };
+
+bool operator==(Token a, Token b);
 
 
 struct SyntaxIssue {

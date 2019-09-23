@@ -30,6 +30,7 @@
 #undef False
 
 
+#include <fstream>
 
 //
 // CMake defines ast_lib_EXPORTS
@@ -52,13 +53,126 @@ EXTERN_C DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData);
 
 EXTERN_C DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData);
 
-EXTERN_C DLLEXPORT int ConcreteParseFile(WolframLibraryData libData, MLINK mlp);
+EXTERN_C DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
-EXTERN_C DLLEXPORT int ConcreteParseString(WolframLibraryData libData, MLINK mlp);
+EXTERN_C DLLEXPORT int ConcreteParseString_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
-EXTERN_C DLLEXPORT int TokenizeString(WolframLibraryData libData, MLINK mlp);
+EXTERN_C DLLEXPORT int TokenizeString_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
-EXTERN_C DLLEXPORT int TokenizeFile(WolframLibraryData libData, MLINK mlp);
+EXTERN_C DLLEXPORT int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
-EXTERN_C DLLEXPORT int ParseLeaf(WolframLibraryData libData, MLINK mlp);
+EXTERN_C DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
+class ScopedMLString {
+    MLINK mlp;
+    const unsigned char *str = NULL;
+    int b;
+    int c;
+public:
+    
+    ScopedMLString(MLINK mlp) : mlp(mlp) {}
+    
+    ~ScopedMLString() {
+        if (str != NULL) {
+            MLReleaseUTF8String(mlp, str, b);
+        }
+    }
+    
+    bool read() {
+        return MLGetUTF8String(mlp, &str, &b, &c);
+    }
+    
+    const unsigned char *get() const {
+        return str;
+    }
+};
+
+class ScopedMLSymbol {
+    MLINK mlp;
+    const char *sym = NULL;
+public:
+    
+    ScopedMLSymbol(MLINK mlp) : mlp(mlp) {}
+    
+    ~ScopedMLSymbol() {
+        if (sym != NULL) {
+            MLReleaseSymbol(mlp, sym);
+        }
+    }
+    
+    bool read() {
+        return MLGetSymbol(mlp, &sym);
+    }
+    
+    const char *get() const {
+        return sym;
+    }
+};
+
+class ScopedMLFunction {
+    MLINK mlp;
+    const char *func = NULL;
+    int a;
+public:
+    
+    ScopedMLFunction(MLINK mlp) : mlp(mlp) {}
+    
+    ~ScopedMLFunction() {
+        if (func != NULL) {
+            MLReleaseSymbol(mlp, func);
+        }
+    }
+    
+    bool read() {
+        return MLGetFunction(mlp, &func, &a);
+    }
+    
+    const char *getHead() const {
+        return func;
+    }
+    
+    int getArgCount() const {
+        return a;
+    }
+};
+
+class ScopedIFS : public std::ifstream {
+public:
+    
+    ScopedIFS(const unsigned char *inStr) : std::ifstream(reinterpret_cast<const char *>(inStr), std::ifstream::in) {}
+    
+    ~ScopedIFS() {
+        close();
+    }
+};
+
+class ParserSession {
+public:
+    
+    ParserSession();
+    
+    ~ParserSession();
+    
+    void init(WolframLibraryData libData, std::istream& is, bool skipFirstLine);
+    
+    void deinit();
+};
+
+extern std::unique_ptr<ParserSession> TheParserSession;
+
+
+class MLSession {
+    bool inited;
+    MLENV ep;
+    MLINK mlp;
+    
+public:
+    
+    MLSession();
+    
+    ~MLSession();
+    
+    MLINK getMLINK() const {
+        return mlp;
+    }
+};

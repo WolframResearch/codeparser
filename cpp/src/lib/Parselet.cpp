@@ -432,13 +432,11 @@ NodePtr CallParselet::parse(std::unique_ptr<NodeSeq> Head, ParserContext CtxtIn)
     
 #ifndef NDEBUG
     
-    auto R = Right.release();
+    auto R = Right.get();
     
     assert(dynamic_cast<const GroupNode*>(R) ||
            dynamic_cast<const GroupMissingCloserNode*>(R) ||
            dynamic_cast<const GroupMissingOpenerNode*>(R));
-    
-    Right = std::unique_ptr<Node>(R);
 
 #endif
     
@@ -760,7 +758,7 @@ NodePtr ColonParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext CtxtIn
     
     auto& LeftVector = Left->getVector();
     auto& LeftFirst = LeftVector->at(0);
-    auto L = LeftFirst.release();
+    auto L = LeftFirst.get();
     if (auto LeftLeaf = dynamic_cast<LeafNode*>(L)) {
 
         if (LeftLeaf->getToken().Tok == TOKEN_SYMBOL) {
@@ -768,8 +766,6 @@ NodePtr ColonParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext CtxtIn
             symbol = true;
         }
     }
-    
-    LeftFirst = std::unique_ptr<Node>(L);
     
     Args->append(std::move(LeftFirst));
     
@@ -896,37 +892,31 @@ NodePtr SlashColonParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext C
     
     auto Middle = TheParser->parse(Ctxt);
     
-    auto M = Middle.release();
+    auto M = Middle.get();
     
     if (auto BinaryMiddle = dynamic_cast<BinaryNode*>(M)) {
 
-        if (BinaryMiddle->getSymbol() == SYMBOL_SET) {
+        if (BinaryMiddle->getOperator() == SYMBOL_SET) {
 
             auto MiddleChildren = BinaryMiddle->getChildrenDestructive();
             
             Args->append(std::unique_ptr<NodeSeq>(MiddleChildren));
-            
-            delete M;
             
             return std::unique_ptr<Node>(new TernaryNode(SYMBOL_TAGSET, std::move(Args)));
         }
-        if (BinaryMiddle->getSymbol() == SYMBOL_SETDELAYED) {
+        if (BinaryMiddle->getOperator() == SYMBOL_SETDELAYED) {
 
             auto MiddleChildren = BinaryMiddle->getChildrenDestructive();
 
             Args->append(std::unique_ptr<NodeSeq>(MiddleChildren));
-            
-            delete M;
             
             return std::unique_ptr<Node>(new TernaryNode(SYMBOL_TAGSETDELAYED, std::move(Args)));
         }
-        if (BinaryMiddle->getSymbol() == SYMBOL_UNSET) {
+        if (BinaryMiddle->getOperator() == SYMBOL_UNSET) {
 
             auto MiddleChildren = BinaryMiddle->getChildrenDestructive();
 
             Args->append(std::unique_ptr<NodeSeq>(MiddleChildren));
-            
-            delete M;
             
             return std::unique_ptr<Node>(new TernaryNode(SYMBOL_TAGUNSET, std::move(Args)));
         }
@@ -1018,8 +1008,9 @@ NodePtr LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn) const {
             
             auto Sub = this->parse(Ctxt);
             
-            auto S = Sub.release();
+            auto S = Sub.get();
             
+#ifndef NDEBUG
             if (auto SubOpenParen = dynamic_cast<GroupNode*>(S)) {
                 
                 assert(SubOpenParen->getOperator() == SYMBOL_AST_GROUPLINEARSYNTAXPAREN);
@@ -1031,8 +1022,9 @@ NodePtr LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn) const {
             } else {
                 assert(false);
             }
+#endif
             
-            Args->append(std::unique_ptr<Node>(S));
+            Args->append(std::move(Sub));
             
             Tok = TheParser->currentToken();
             

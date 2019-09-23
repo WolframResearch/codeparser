@@ -443,6 +443,16 @@ bool WLCharacter::isNewline() const {
     return val == '\n' || val == '\r';
 }
 
+bool WLCharacter::isAlpha() const {
+    auto val = to_point();
+    
+    if (!(0 <= val && val <= 0x7f)) {
+        return false;
+    }
+    
+    return std::isalpha(val);
+}
+
 bool WLCharacter::isDigit() const {
     auto val = to_point();
     
@@ -453,14 +463,34 @@ bool WLCharacter::isDigit() const {
     return std::isdigit(val);
 }
 
-bool WLCharacter::isAlpha() const {
+bool WLCharacter::isAlphaOrDigit() const {
     auto val = to_point();
     
     if (!(0 <= val && val <= 0x7f)) {
         return false;
     }
     
-    return std::isalpha(val);
+    return std::isalnum(val);
+}
+
+bool WLCharacter::isHex() const {
+    auto val = to_point();
+    
+    if (!(0 <= val && val <= 0x7f)) {
+        return false;
+    }
+    
+    return std::isxdigit(val);
+}
+
+bool WLCharacter::isOctal() const {
+    auto val = to_point();
+    
+    if (!(0 <= val && val <= 0x7f)) {
+        return false;
+    }
+    
+    return '0' <= val && val <= '7';
 }
 
 bool WLCharacter::isPunctuation() const {
