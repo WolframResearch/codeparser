@@ -31,7 +31,7 @@
 
 
 #include <fstream>
-#include <memory>
+#include <memory> // for unique_ptr
 
 //
 // CMake defines ast_lib_EXPORTS

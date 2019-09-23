@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <functional> // for function with GCC and MSVC
 #include <deque>
+#include <memory> // for unique_ptr
 
 class PrefixParselet;
 class InfixParselet;

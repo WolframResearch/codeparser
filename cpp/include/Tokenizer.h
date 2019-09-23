@@ -7,6 +7,7 @@
 
 #include <sstream>
 #include <vector>
+#include <memory> // for unique_ptr
 
 struct TokenizerContext {
     //

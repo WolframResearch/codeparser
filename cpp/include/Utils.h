@@ -4,6 +4,7 @@
 #include "Node.h"
 
 #include <string>
+#include <memory> // for unique_ptr
 
 class Utils {
 public:

@@ -5,6 +5,7 @@
 #include "WLCharacter.h"
 
 #include <vector>
+#include <memory> // for unique_ptr
 
 enum NextWLCharacterPolicyBits {
     
