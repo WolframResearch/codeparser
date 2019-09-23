@@ -929,7 +929,7 @@ NodePtr SlashColonParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext C
     // a /: b =.
     //
     
-    Args->append(std::unique_ptr<Node>(M));
+    Args->append(std::move(Middle));
     
     auto Error = std::unique_ptr<Node>(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDSET, std::move(Args)));
     
@@ -1008,9 +1008,10 @@ NodePtr LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn) const {
             
             auto Sub = this->parse(Ctxt);
             
+#ifndef NDEBUG
+            
             auto S = Sub.get();
             
-#ifndef NDEBUG
             if (auto SubOpenParen = dynamic_cast<GroupNode*>(S)) {
                 
                 assert(SubOpenParen->getOperator() == SYMBOL_AST_GROUPLINEARSYNTAXPAREN);
