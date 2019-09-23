@@ -3,18 +3,27 @@
 
 #include "CodePoint.h"
 
-SourceManager::SourceManager() : buffer(), length(), idx(), lastCharacterWasCarriageReturn(false), advancedToEOF(false), Issues(), SourceLoc(1, 0), TokenStartLoc(0, 0),
-WLCharacterStartLoc(0, 0), WLCharacterEndLoc(0, 0), PrevWLCharacterStartLoc(0, 0), PrevWLCharacterEndLoc(0, 0) {}
+SourceManager::SourceManager() : buffer(), length(), idx(), lastCharacterWasCarriageReturn(false), advancedToEOF(false), Issues(), SourceLoc(1, 0), TokenStartLoc(0, 0), WLCharacterStartLoc(0, 0), WLCharacterEndLoc(0, 0), PrevWLCharacterStartLoc(0, 0), PrevWLCharacterEndLoc(0, 0), libData() {}
 
 void SourceManager::init(std::istream& is, WolframLibraryData libDataIn) {
     
     is.seekg(0, is.end);
-    length = is.tellg();
+    
+    auto off = is.tellg();
+    if (off == -1) {
+        //
+        // FIXME: need to handle better
+        //
+        return;
+    }
+    
+    length = static_cast<size_t>(off);
+    
     is.seekg(0, is.beg);
     
-    buffer = new char[length];
+    buffer = std::unique_ptr<char[]>(new char[length]);
     
-    is.read(buffer, length);
+    is.read(buffer.get(), length);
     
     idx = 0;
     
@@ -35,9 +44,10 @@ void SourceManager::init(std::istream& is, WolframLibraryData libDataIn) {
 }
 
 void SourceManager::deinit() {
+    
     Issues.clear();
     
-    delete[] buffer;
+    buffer.reset(nullptr);
 }
 
 unsigned char SourceManager::nextByte() {

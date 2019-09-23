@@ -8,7 +8,7 @@
 
 #include <algorithm> // for generate with GCC and MSVC
 
-Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), contextSensitivePrefixParselets(), contextSensitiveInfixParselets(), tokenQueue(), Issues(), currentAbortQ(nullptr), implicitTimesEnabled(true) {
+Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), contextSensitivePrefixParselets(), contextSensitiveInfixParselets(), expectedPossibleExpressionErrorParselet(), tokenQueue(), Issues(), currentAbortQ(nullptr), implicitTimesEnabled(true) {
     
     //
     // Setup all of the parselet lists with nullptr unique_ptrs

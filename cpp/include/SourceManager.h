@@ -16,7 +16,7 @@
 
 class SourceManager {
     
-    char* buffer;
+    std::unique_ptr<char[]> buffer;
     size_t length;
     size_t idx;
     

@@ -508,7 +508,7 @@ std::unique_ptr<ParserSession> TheParserSession = nullptr;
 
 
 
-MLSession::MLSession() {
+MLSession::MLSession() : inited(false), ep(), mlp() {
     
     inited = false;
     

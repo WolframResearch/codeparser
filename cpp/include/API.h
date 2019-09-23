@@ -66,12 +66,12 @@ EXTERN_C DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK m
 
 class ScopedMLString {
     MLINK mlp;
-    const unsigned char *str = NULL;
+    const unsigned char *str;
     int b;
     int c;
 public:
     
-    ScopedMLString(MLINK mlp) : mlp(mlp) {}
+    ScopedMLString(MLINK mlp) : mlp(mlp), str(NULL), b(), c() {}
     
     ~ScopedMLString() {
         if (str != NULL) {
@@ -90,10 +90,10 @@ public:
 
 class ScopedMLSymbol {
     MLINK mlp;
-    const char *sym = NULL;
+    const char *sym;
 public:
     
-    ScopedMLSymbol(MLINK mlp) : mlp(mlp) {}
+    ScopedMLSymbol(MLINK mlp) : mlp(mlp), sym(NULL) {}
     
     ~ScopedMLSymbol() {
         if (sym != NULL) {
@@ -112,11 +112,11 @@ public:
 
 class ScopedMLFunction {
     MLINK mlp;
-    const char *func = NULL;
+    const char *func;
     int a;
 public:
     
-    ScopedMLFunction(MLINK mlp) : mlp(mlp) {}
+    ScopedMLFunction(MLINK mlp) : mlp(mlp), func(NULL), a() {}
     
     ~ScopedMLFunction() {
         if (func != NULL) {
