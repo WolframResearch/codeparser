@@ -12,6 +12,10 @@
 #include <functional> // for function with GCC and MSVC
 #include <memory>
 #include <cstring> // for strcmp with GCC and MSVC
+#ifdef WINDOWS_MATHLINK
+#else
+#include <signal.h>
+#endif
 
 class Node;
 

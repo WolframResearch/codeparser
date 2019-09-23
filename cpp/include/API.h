@@ -31,6 +31,7 @@
 
 
 #include <fstream>
+#include <memory>
 
 //
 // CMake defines ast_lib_EXPORTS
