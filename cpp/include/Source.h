@@ -18,15 +18,6 @@
 ( (CHECK) ? void(0) : []{assert(false && #CHECK);}() )
 #endif
 
-
-enum Associativity {
-    ASSOCIATIVITY_NONE,
-    ASSOCIATIVITY_LEFT,
-    ASSOCIATIVITY_RIGHT,
-    ASSOCIATIVITY_NONASSOCIATIVE,
-};
-
-
 enum SyntaxError {
     
     SYNTAXERROR_UNKNOWN,

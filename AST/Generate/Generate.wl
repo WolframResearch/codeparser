@@ -135,7 +135,7 @@ longNameToHexDigits["RawBackslash"] := "CODEPOINT_STRINGMETA_BACKSLASH"
 
 
 (*
-longNameToHexDigits["Alpha"] is "03b1"
+longNameToHexDigits["Alpha"] is "0x03b1"
 *)
 longNameToHexDigits[longName_String] :=
   "0x"<>IntegerString[longNameToCharacterCode[longName], 16, 4]
@@ -191,53 +191,8 @@ If[FailureQ[FindFile["AST`Generate`"]],
   Quit[1]
 ]
 
-(* setup *)
 Print["Setup"]
-(*
-If[!($VersionNumber >= 12.0),
-PrependTo[$Path, pacletASTDir];
-]
-*)
-(*
-res = PacletDirectoryAdd[pacletASTDir];
-Print["PacletDirectoryAdd returned: ", res]
-*)
-(*
-If[FailureQ[FindFile["AST`"]],
-  Print["AST could not be found."];
-  Quit[1]
-]
-*)
-(*
-If[FindFile["AST`"] =!= FileNameJoin[{pacletASTDir, "Kernel", "AST.wl"}],
-  Print["Conflicting location for AST was found."];
-  Print["Expected to find AST here: ", FileNameJoin[{pacletASTDir, "Kernel", "AST.wl"}]];
-  Print["Actually found AST here: ", FindFile["AST`"]];
-  If[FindFile["AST`"] === FileNameJoin[{packageDir, "AST", "AST.wl"}],
-    Print["It looks like the AST source is being used. This is not supported during build time."];
-    Print["There may be a problem with the version of Wolfram Engine that is being used."];
-    ,
-    Print["Consider running:\nPacletUninstall[\"AST\"]\nto ensure that no other installations of AST interfere with the build."];
-  ];
-  Quit[1]
-]
-*)
-(*
-Catch[
-res = Needs[#];
 
-If[FailureQ[res],
-  Print["Needs[" <> # <> "] failed: ", res];
-  Quit[1];
-]
-,
-_
-,
-(Print[#];Quit[1])&
-]& /@ {"AST`", "AST`Utils`", "AST`Build`"}
-*)
-
-(* clean *)
 Print["Clean..."]
 
 Quiet[DeleteDirectory[generatedCPPDir, DeleteContents -> True], DeleteDirectory::nodir]

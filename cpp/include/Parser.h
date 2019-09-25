@@ -24,6 +24,13 @@ class GroupParselet;
 class Parselet;
 class ExpectedPossibleExpressionErrorParselet;
 
+enum Associativity {
+    ASSOCIATIVITY_NONE,
+    ASSOCIATIVITY_LEFT,
+    ASSOCIATIVITY_RIGHT,
+    ASSOCIATIVITY_NONASSOCIATIVE,
+};
+
 //
 // How many _ are currently being parsed?
 //

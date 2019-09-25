@@ -931,8 +931,6 @@ std::vector<SyntaxIssue> CharacterDecoder::getIssues() const {
 }
 
 //
-// TODO: implement a suggestion mechanism for long name typos
-//
 // example:
 // input: Alpa
 // return Alpha

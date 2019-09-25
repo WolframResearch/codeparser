@@ -48,13 +48,6 @@ Module[{head, children, aggHead, aggChildren, data},
 
 	aggChildren = aggregate /@ children;
 
-	If[Length[head] != 1 || Length[children] != Length[aggChildren],
-		(*
-		recalculate Sources
-		*)
-		data[Source] = { aggHead[[3, Key[Source], 1]], aggChildren[[-1, 3, Key[Source], 2]] };
-	];
-
 	CallNode[aggHead, aggChildren, data]
 ]]
 
@@ -67,21 +60,6 @@ Module[{children, aggChildren, data},
 
 	aggChildren = aggregate /@ children;
 
-	If[Length[children] != Length[aggChildren],
-
-		If[Length[aggChildren] > 0,
-			(*
-			recalculate Sources
-			*)
-			data[Source] = { aggChildren[[1, 3, Key[Source], 1]], aggChildren[[-1, 3, Key[Source], 2]] };
-			,
-			(*
-			There is nothing left after aggregating
-			*)
-			data[Source] =.
-		];
-	];
-
 	FileNode[File, aggChildren, data]
 ]]
 
@@ -93,21 +71,6 @@ Module[{children, aggChildren, data},
 	data = dataIn;
 
 	aggChildren = aggregate /@ children;
-
-	If[Length[children] != Length[aggChildren],
-
-		If[Length[aggChildren] > 0,
-			(*
-			recalculate Sources
-			*)
-			data[Source] = { aggChildren[[1, 3, Key[Source], 1]], aggChildren[[-1, 3, Key[Source], 2]] };
-			,
-			(*
-			There is nothing left after aggregating
-			*)
-			data[Source] =.
-		];
-	];
 
 	HoldNode[Hold, aggChildren, data]
 ]]
@@ -124,13 +87,6 @@ Module[{children, aggChildren, data},
 	data = dataIn;
 
 	aggChildren = aggregate /@ children;
-
-	If[Length[children] != Length[aggChildren],
-		(*
-		recalculate Sources
-		*)
-		data[Source] = { aggChildren[[1, 3, Key[Source], 1]], aggChildren[[-1, 3, Key[Source], 2]] };
-	];
 
 	node[tag, aggChildren, data]
 ]
