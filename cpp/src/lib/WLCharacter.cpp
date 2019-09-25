@@ -678,11 +678,19 @@ bool WLCharacter::isStrangeLetterlikeCharacter() const {
 }
 
 bool WLCharacter::isStrangeSpaceCharacter() const {
+    auto esc = escape();
     
     //
-    // Dump out if not a letterlike character
+    // Dump out if not a space character
     //
     if (!isSpaceCharacter()) {
+        return false;
+    }
+    
+    //
+    // Assume that if some high character is directly encoded with no escaping, then it is purposeful
+    //
+    if (esc == ESCAPE_NONE) {
         return false;
     }
     
@@ -694,11 +702,19 @@ bool WLCharacter::isStrangeSpaceCharacter() const {
 }
 
 bool WLCharacter::isStrangeNewlineCharacter() const {
+    auto esc = escape();
     
     //
-    // Dump out if not a letterlike character
+    // Dump out if not a newline character
     //
     if (!isNewlineCharacter()) {
+        return false;
+    }
+    
+    //
+    // Assume that if some high character is directly encoded with no escaping, then it is purposeful
+    //
+    if (esc == ESCAPE_NONE) {
         return false;
     }
     
