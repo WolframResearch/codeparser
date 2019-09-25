@@ -14,16 +14,16 @@ TEST_F(NodeTest, Bug1) {
 
     auto Args = std::unique_ptr<NodeSeq>(new NodeSeq);
 
-    auto T1 = Token(TOKEN_SYMBOL, "a", Source(SourceLocation(1, 1), SourceLocation(1, 1)));
+    auto T1 = Token(TOKEN_SYMBOL, "a", Source(SourceLocation(LineCol(1, 1))));
     Args->append(std::unique_ptr<Node>(new LeafNode(T1)));
 
-    auto T2 = Token(TOKEN_UNDERDOT, "_.", Source(SourceLocation(1, 2), SourceLocation(1, 3)));
+    auto T2 = Token(TOKEN_UNDERDOT, "_.", Source(SourceLocation(LineCol(1, 2)), SourceLocation(LineCol(1, 3))));
     Args->append(std::unique_ptr<Node>(new LeafNode(T2)));
 
     auto N = std::unique_ptr<Node>(new OptionalDefaultPatternNode(std::move(Args)));
 
-    auto NSource = N->getSourceSpan();
+    auto NSource = N->getSource();
 
-    EXPECT_EQ(NSource.lines.start, SourceLocation(1, 1));
-    EXPECT_EQ(NSource.lines.end, SourceLocation(1, 3));
+    EXPECT_EQ(NSource.lineCol.start, LineCol(1, 1));
+    EXPECT_EQ(NSource.lineCol.end, LineCol(1, 3));
 }

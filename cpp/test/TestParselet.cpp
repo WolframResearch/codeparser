@@ -39,7 +39,7 @@ TEST_F(ParseletTest, Bug1) {
     
     auto iss = std::stringstream("a /: b := c");
     
-    TheParserSession->init(nullptr, iss, false);
+    TheParserSession->init(nullptr, iss, SOURCESTYLE_LINECOL, false);
     
     ParserContext Ctxt;
     

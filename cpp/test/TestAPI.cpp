@@ -10,7 +10,7 @@
 
 static std::unique_ptr<MLSession> mlSession;
 
-class CharacterDecoderTest : public ::testing::Test {
+class APITest : public ::testing::Test {
 protected:
     static void SetUpTestSuite() {
         
@@ -31,25 +31,24 @@ protected:
     }
     
     void TearDown() override {
-        TheParserSession->deinit();
+        
     }
 };
 
-TEST_F(CharacterDecoderTest, Basic) {
+//
+// this used to assert
+//
+TEST_F(APITest, Bug1) {
     
-    auto iss = std::stringstream("1+2");
+    auto link = mlSession->getMLINK();
     
-    TheParserSession->init(nullptr, iss, SOURCESTYLE_LINECOL, false);
+    MLPutFunction(link, "List", 2);
     
-    auto T = TheTokenizer->currentToken();
-    EXPECT_EQ(T, Token(TOKEN_INTEGER, "1", Source(SourceLocation(LineCol(1, 1)))));
+    MLPutString(link, "abc[]");
     
-    auto C = TheCharacterDecoder->currentWLCharacter();
-    EXPECT_EQ(C, WLCharacter('+'));
+    MLPutString(link, "LineCol");
     
-    C = TheCharacterDecoder->nextWLCharacter();
-    EXPECT_EQ(C, WLCharacter('2'));
+    ParseLeaf_LibraryLink(nullptr, link);
     
-    C = TheCharacterDecoder->nextWLCharacter();
-    EXPECT_EQ(C, WLCharacter(CODEPOINT_ENDOFFILE));
+    SUCCEED();
 }

@@ -47,7 +47,7 @@ TEST_F(TokenizerTest, Bug1) {
     
     auto iss = std::stringstream("\\.GG");
     
-    TheParserSession->init(nullptr, iss, false);
+    TheParserSession->init(nullptr, iss, SOURCESTYLE_LINECOL, false);
     
     SUCCEED();
 }
