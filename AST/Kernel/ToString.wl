@@ -110,6 +110,30 @@ toInputFormString[LeafNode[Token`Fake`ImplicitOne, _, _]] :=
 
 
 
+(*
+a is a List of boxes
+*)
+toInputFormString[BoxNode[RowBox, {a_}, _]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ a;
+	nodeStrs = ToString[#, InputForm]& /@ nodeStrs;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin["\\!\\(\\*" <> ToString[RowBox] <> "[", "{", Riffle[nodeStrs, ", "], "}", "]", "\\)"]
+]]
+
+toInputFormString[BoxNode[List, children_, _]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ children;
+	nodeStrs = ToString[#, InputForm]& /@ nodeStrs;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin["{", Riffle[nodeStrs, ", "], "}"]
+]]
 
 toInputFormString[BoxNode[box_, children_, _]] :=
 Catch[
@@ -459,7 +483,8 @@ toFullFormString[p:PrefixNode[PrefixLinearSyntaxBang, _, _]] :=
 toFullFormString[g:GroupNode[GroupLinearSyntaxParen, _, _]] :=
 	ToInputFormString[g]
 
-
+toFullFormString[args:BoxNode[box_, children_, _]] :=
+	Failure["CannotConvertBoxesToFullForm", <|"Function"->ToFullFormString, "Arguments"->HoldForm[{args}]|>]
 
 
 
@@ -632,53 +657,8 @@ Module[{nodes, nodeStrs},
 ]]
 
 
-toSourceCharacterString[BoxNode[box_, children_, _], insideBoxes_] :=
-Catch[
-Module[{nodeStrs, args},
-  nodeStrs = toSourceCharacterString[#, True]& /@ children;
-  If[AnyTrue[nodeStrs, FailureQ],
-    Throw[SelectFirst[nodeStrs, FailureQ]]
-  ];
-  args = StringJoin[Riffle[nodeStrs, ", "]];
-
-  If[insideBoxes, "\\*\\(", "\\!\\(\\*"] <> ToString[box] <> "[" <> args <> "]\\)"
-]]
-
-(*
-if there is a RowBox, then we know there is an extra list
-*)
-toSourceCharacterString[BoxNode[RowBox, {a_}, _], insideBoxes_] :=
-Catch[
-Module[{nodeStrs, args},
-  nodeStrs = toSourceCharacterString[#, True]& /@ a;
-  If[AnyTrue[nodeStrs, FailureQ],
-    Throw[SelectFirst[nodeStrs, FailureQ]]
-  ];
-  args = StringJoin["{", Riffle[nodeStrs, ", "], "}"];
-
-  If[insideBoxes, "\\*\\(", "\\!\\(\\*"] <> ToString[RowBox] <> "[" <> args <> "]\\)"
-]]
-
-(*
-if there is a GridBox, then we know there are 2 extra lists
-*)
-toSourceCharacterString[BoxNode[GridBox, {a_, rest___}, _], insideBoxes_] :=
-Catch[
-Module[{nodeStrsA, nodeStrsRest, argsA, args},
-  
-  nodeStrsA = Map[toSourceCharacterString[#, True]&, a, {2}];
-
-  nodeStrsRest = toSourceCharacterString[#, True]& /@ {rest};
-
-  argsA = StringJoin["{", Riffle[StringJoin["{", Riffle[#, ", "], "}"]& /@ nodeStrsA, ", "], "}"];
-
-  args = StringJoin["{", Riffle[{argsA} ~Join~ nodeStrsRest, ", "], "}"];
-
-  If[insideBoxes, "\\*\\(", "\\!\\(\\*"] <> ToString[GridBox] <> "[" <> args <> "]\\)"
-]]
-
-toSourceCharacterString[CodeNode[Null, code_, data_], insideBoxes_] :=
-	ToString[Unevaluated[code], InputForm]
+toSourceCharacterString[args:BoxNode[box_, children_, _], insideBoxes_] :=
+	Failure["CannotConvertBoxesToSourceCharacterString", <|"Function"->ToSourceCharacterString, "Arguments"->HoldForm[{args}]|>]
 
 
 toSourceCharacterString[_[op_, nodes_, data_], insideBoxes_] :=

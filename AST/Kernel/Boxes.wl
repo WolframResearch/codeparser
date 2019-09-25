@@ -56,7 +56,7 @@ Module[{handledChildren, aggregatedChildren},
     {_, LeafNode[Token`LongName`And | Token`AmpAmp, _, _], ___}, InfixNode[And, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`Or | Token`BarBar, _, _], ___}, InfixNode[Or, handledChildren, <|Source->Append[pos, 1]|>],
     
-    {_, LeafNode[Token`Semi, _, _], ___}, InfixNode[CompoundElement, handledChildren ~Join~
+    {_, LeafNode[Token`Semi, _, _], ___}, InfixNode[CompoundExpression, handledChildren ~Join~
                                               If[MatchQ[handledChildren[[-1]], LeafNode[Token`Semi, _, _]],
                                                 { LeafNode[Token`Fake`ImplicitNull, "", handledChildren[[-1, 3]]] },
                                                 {}], <|Source->Append[pos, 1]|>],
@@ -387,13 +387,18 @@ Module[{handledChildren, aggregatedChildren},
     (*
     the second arg is a box, so we know it is implicit Times
     *)
-    
     {_, LeafNode[Symbol | Integer | Slot | String | Real | Out, _, _] |
         BinaryNode[_, _, _] | CallNode[_, _, _] | GroupNode[_, _, _] | BoxNode[_, _, _] | InfixNode[_, _, _] |
         PostfixNode[_, _, _] | PatternBlankNode[_, _, _], ___},
         InfixNode[Times, Riffle[handledChildren, LeafNode[Token`Fake`ImplicitTimes, "", <||>]], <|Source->Append[pos, 1]|>],
+
+    (*
+    if there is an error, then just return the last non-trivia node
+    *)
+    {_, LeafNode[Token`Error`UnhandledCharacter, _, _], ___},
+        aggregatedChildren[[-1]],
     _,
-    Throw[handledChildren, {parseBox, RowBox, Unhandled}]
+    Failure["InternalUnhandled", <|"Function"->parseBox, "Arguments"->HoldForm[RowBox[children]]|>]
     ]
    ]]
 
@@ -405,7 +410,7 @@ Module[{handledChildren, aggregatedChildren},
 parseBox[{args___}, pos_] :=
   Module[{children},
     children = MapIndexed[parseBox[#1, pos ~Join~ #2]&, {args}];
-    MultiBoxNode[List, children, <|Source->pos|>]
+    BoxNode[List, children, <|Source->pos|>]
   ]
 
 
@@ -779,6 +784,8 @@ The Front End treats comments as a collection of code, and not a single token
 parseBox["(*", pos_] := LeafNode[Token`Boxes`OpenParenStar, "(*", <|Source -> pos|>]
 parseBox["*)", pos_] := LeafNode[Token`Boxes`StarCloseParen, "*)", <|Source -> pos|>]
 
+
+
 (*
 The Front End treats ''' as a single token
 *)
@@ -786,15 +793,24 @@ parseBox[s_String /; StringMatchQ[s, "'"~~___], pos_] := LeafNode[Token`Boxes`Mu
 
 
 parseBox[str_String, pos_] :=
-Module[{parsed, data},
-  parsed = ParseLeaf[str];
+Module[{parsed, data, issues},
+  parsed = ParseLeaf[str, "SourceStyle"->"Null"];
+
+  (*
+    Source is filled in here
+  *)
   data = parsed[[3]];
   data[Source] = pos;
+
+  issues = data[SyntaxIssues];
+  issues = SyntaxIssue[#[[1]], #[[2]], #[[3]], <| #[[4]], Source->pos |>]& /@ issues;
+  data[SyntaxIssues] = issues;
+
   parsed[[3]] = data;
   parsed
 ]
 
-parseBox[args___] := Throw[{args}, {parseBox, "Unhandled"}]
+parseBox[args___] := Failure["InternalUnhandled", <|"Function"->parseBox, "Arguments"->HoldForm[{args}]|>]
 
 
 
@@ -1218,16 +1234,6 @@ Module[{heldRest, heldChildren},
   With[{heldChildren = heldChildren}, ReleaseHold[StyleBox @@ heldChildren]]
 ]]
 
-toStandardFormBoxes[BoxNode[GridBox, {a_, rest___}, _]] :=
-Catch[
-Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
-
-  With[{aBox = Map[toStandardFormBoxes, a, {2}]}, heldChildren = { Hold[aBox] } ~Join~ heldRest];
-
-  With[{heldChildren = heldChildren}, ReleaseHold[GridBox @@ heldChildren]]
-]]
-
 toStandardFormBoxes[BoxNode[SuperscriptBox, {a_, b_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
@@ -1524,29 +1530,31 @@ Module[{heldRest, heldChildren},
   With[{heldChildren = heldChildren}, ReleaseHold[TogglerBox @@ heldChildren]]
 ]]
 
+(*
+a is a List of Lists
+*)
+toStandardFormBoxes[BoxNode[GridBox, {a_, rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, Hold]& /@ {rest};
 
+  With[{aBox = Map[toStandardFormBoxes, a, {2}]}, heldChildren = { Hold[aBox] } ~Join~ heldRest];
 
-
-
-
-
-
-
-
+  With[{heldChildren = heldChildren}, ReleaseHold[GridBox @@ heldChildren]]
+]]
 
 (*
 a is a List of boxes
 *)
 toStandardFormBoxes[BoxNode[RowBox, {a_}, _]] :=
 Catch[
-Module[{nodeBoxes},
+Module[{aBox, boxes},
 
-  nodeBoxes = toStandardFormBoxes /@ a;
-  If[AnyTrue[nodeBoxes, FailureQ],
-    Throw[SelectFirst[nodeBoxes, FailureQ]]
-  ];
+  aBox = toStandardFormBoxes /@ a;
 
-  RowBox[nodeBoxes]
+  boxes = {aBox};
+
+  RowBox @@ boxes
 ]]
 
 (*

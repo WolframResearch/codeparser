@@ -148,7 +148,6 @@ LeafNode
 BoxNode
 CodeNode
 DirectiveNode
-MultiBoxNode
 
 PrefixNode
 BinaryNode

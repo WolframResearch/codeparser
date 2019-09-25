@@ -112,6 +112,11 @@ Module[{children, aggChildren, data},
 	HoldNode[Hold, aggChildren, data]
 ]]
 
+(*
+BoxNode[RowBox] and BoxNode[GridBox] have lists as children
+*)
+aggregate[l_List] := aggregate /@ l
+
 aggregate[node_[tag_, childrenIn_, dataIn_]] :=
 Module[{children, aggChildren, data},
 	

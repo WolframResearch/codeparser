@@ -1735,12 +1735,14 @@ abstract[BoxNode[SqrtBox, children_, data_]] := BoxNode[SqrtBox, abstract /@ chi
 
 abstract[BoxNode[FractionBox, children_, data_]] := BoxNode[FractionBox, abstract /@ children, KeyTake[data, keysToTake]]
 
-
 abstract[BoxNode[RasterBox, children_, data_]] := BoxNode[RasterBox, children, KeyTake[data, keysToTake]]
 
+abstract[BoxNode[List, children_, data_]] := BoxNode[List, abstract /@ children, KeyTake[data, keysToTake]]
 
-
-abstract[MultiBoxNode[List, children_, data_]] := BoxNode[List, abstract /@ children, KeyTake[data, keysToTake]]
+(*
+a is a List of boxes
+*)
+abstract[BoxNode[RowBox, {a_}, data_]] := BoxNode[RowBox, {abstract /@ a}, KeyTake[data, keysToTake]]
 
 
 
