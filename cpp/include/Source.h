@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "Token.h"
+#include "TokenEnum.h"
 
 #include "mathlink.h"
 

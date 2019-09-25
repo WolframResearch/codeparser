@@ -527,7 +527,7 @@ symbolCPPHeader = {
 
 #pragma once
 
-#include \"Token.h\"
+#include \"TokenEnum.h\"
 #include \"API.h\"
 
 #include \"mathlink.h\"

@@ -145,7 +145,7 @@ longNameToHexDigits[longName_String] :=
 
 
 
-Print["Generating additional required C++ files..."]
+Print["Generating additional required C++ and WL files..."]
 
 
 packageDir = Directory[]
@@ -287,20 +287,20 @@ If[FailureQ[importedTokenEnumSource],
 
 
 
-Get["AST`Generate`LongNameDefines`"]
+Get["AST`Generate`LongNames`"]
 
 Get["AST`Generate`CharacterMaps`"]
 
 Get["AST`Generate`CodePoint`"]
 
-Get["AST`Generate`Token`"]
+Get["AST`Generate`TokenEnum`"]
 
 Get["AST`Generate`Precedence`"]
 
 Get["AST`Generate`Symbol`"]
 
 
-Print["Done generating additional required C++ files"]
+Print["Done generating additional required C++ and WL files"]
 
 End[]
 

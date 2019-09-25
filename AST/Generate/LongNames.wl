@@ -1,10 +1,10 @@
-BeginPackage["AST`Generate`LongNameDefines`"]
+BeginPackage["AST`Generate`LongNames`"]
 
 Begin["`Private`"]
 
 Needs["AST`Generate`"]
 
-Print["Generating LongNameDefines..."]
+Print["Generating LongNames..."]
 
 Check[
 longNameDefines = ("constexpr int " <> toGlobal["CodePoint`LongName`" <> #] <> "(" <> longNameToHexDigits[#] <> ");")& /@ Keys[importedLongNames]
@@ -68,7 +68,7 @@ If[FailureQ[res],
 
 
 
-Print["Done LongNameDefines"]
+Print["Done LongNames"]
 
 End[]
 

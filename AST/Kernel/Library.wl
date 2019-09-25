@@ -268,20 +268,27 @@ MakeSyntaxIssue[tag_, msg_, severity_, startLine_, startCol_, endLine_, endCol_]
 $longNames
 
 LongNameSuggestion[input_String] :=
+Catch[
 Module[{nearest},
 	If[$Debug,
 		Print["input: ", input];
 	];
 	If[!ListQ[$longNames],
-		$longNames = Get["AST`LongNames`"];
+		$longNames = Quiet[Get["AST`LongNames`"], {Get::noopen}];
+		If[FailureQ[$longNames],
+			Throw["LongNameSuggestionFailure"]
+		];
 	];
 	nearest = Nearest[$longNames, input, {1, 2}];
 	If[nearest == {},
-		""
-		,
-		nearest[[1]]
-	]
-]
+		Throw[""]
+	];
+
+	If[$Debug,
+		Print["nearest: ", nearest[[1]]];
+	];
+	nearest[[1]]
+]]
 
 
 

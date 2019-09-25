@@ -1,4 +1,4 @@
-BeginPackage["AST`Generate`Token`"]
+BeginPackage["AST`Generate`TokenEnum`"]
 
 Begin["`Private`"]
 
@@ -48,7 +48,7 @@ tokenToSymbol[s_] := "Symbol`"<>ToString[s]
 
 
 
-Print["Generating Token..."]
+Print["Generating TokenEnum..."]
 
 operatorMacros = 
   Association[
@@ -99,8 +99,8 @@ namespace std {
 "
 }
 
-Print["exporting Token.h"]
-res = Export[FileNameJoin[{generatedCPPIncludeDir, "Token.h"}], Column[tokenCPPHeader], "String"]
+Print["exporting TokenEnum.h"]
+res = Export[FileNameJoin[{generatedCPPIncludeDir, "TokenEnum.h"}], Column[tokenCPPHeader], "String"]
 
 If[FailureQ[res],
   Print[res];
@@ -140,7 +140,7 @@ tokenCPPSource = {
 // DO NOT MODIFY
 //
 
-#include \"Token.h\"
+#include \"TokenEnum.h\"
 
 #include \"Symbol.h\"
 
@@ -157,8 +157,8 @@ tokenCPPSource = {
     {"bool isError(TokenEnum Tok) { return TOKEN_ERROR_FIRST <= Tok && Tok < TOKEN_ERROR_END; }"} ~Join~
     {""}
 
-Print["exporting Token.cpp"]
-res = Export[FileNameJoin[{generatedCPPSrcDir, "Token.cpp"}], Column[tokenCPPSource], "String"]
+Print["exporting TokenEnum.cpp"]
+res = Export[FileNameJoin[{generatedCPPSrcDir, "TokenEnum.cpp"}], Column[tokenCPPSource], "String"]
 
 If[FailureQ[res],
   Print[res];

@@ -3,6 +3,7 @@
 
 #include "Source.h"
 #include "Symbol.h"
+#include "Token.h"
 
 #include "mathlink.h"
 

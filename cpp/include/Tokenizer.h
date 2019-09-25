@@ -4,6 +4,7 @@
 #include "CharacterDecoder.h"
 #include "Source.h"
 #include "WLCharacter.h"
+#include "Token.h"
 
 #include <sstream>
 #include <vector>

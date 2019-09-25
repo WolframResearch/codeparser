@@ -15,7 +15,7 @@ message(STATUS "WOLFRAMKERNEL: ${WOLFRAMKERNEL}")
 message(STATUS "BUILD_DOCS: ${BUILD_DOCS}")
 message(STATUS "BUILD_EXE: ${BUILD_EXE}")
 
-set(WL_PACLET_SOURCES
+set(STATIC_WL_PACLET_SOURCES
 	${CMAKE_SOURCE_DIR}/AST/Kernel/Abstract.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/AST.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/Boxes.wl
@@ -31,6 +31,11 @@ set(GENERATED_WL_PACLET_SOURCES
 	${CMAKE_BINARY_DIR}/generated/wl/LongNames.wl
 )
 
+set(WL_PACLET_SOURCES
+	${STATIC_WL_PACLET_SOURCES}
+	${GENERATED_WL_PACLET_SOURCES}
+)
+
 #
 # Used during the build process
 #
@@ -38,10 +43,10 @@ set(WL_GENERATE_SOURCES
 	${CMAKE_SOURCE_DIR}/AST/Generate/Generate.wl
 	${CMAKE_SOURCE_DIR}/AST/Generate/CharacterMaps.wl
 	${CMAKE_SOURCE_DIR}/AST/Generate/CodePoint.wl
-	${CMAKE_SOURCE_DIR}/AST/Generate/LongNameDefines.wl
+	${CMAKE_SOURCE_DIR}/AST/Generate/LongNames.wl
 	${CMAKE_SOURCE_DIR}/AST/Generate/Precedence.wl
 	${CMAKE_SOURCE_DIR}/AST/Generate/Symbol.wl
-	${CMAKE_SOURCE_DIR}/AST/Generate/Token.wl
+	${CMAKE_SOURCE_DIR}/AST/Generate/TokenEnum.wl
 )
 
 set(PACLETINFO_SOURCE
@@ -58,14 +63,14 @@ set(GENERATED_CPP_INCLUDES
 	${CMAKE_BINARY_DIR}/generated/cpp/include/LongNameDefines.h
 	${CMAKE_BINARY_DIR}/generated/cpp/include/Precedence.h
 	${CMAKE_BINARY_DIR}/generated/cpp/include/Symbol.h
-	${CMAKE_BINARY_DIR}/generated/cpp/include/Token.h
+	${CMAKE_BINARY_DIR}/generated/cpp/include/TokenEnum.h
 )
 
 set(GENERATED_CPP_LIB_SOURCES
 	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/CharacterMaps.cpp
 	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/CodePoint.cpp
 	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/Symbol.cpp
-	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/Token.cpp
+	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/TokenEnum.cpp
 )
 
 set(GENERATED_SOURCES
@@ -190,6 +195,7 @@ set(CPP_INCLUDES
 	${CMAKE_SOURCE_DIR}/cpp/include/Parser.h
 	${CMAKE_SOURCE_DIR}/cpp/include/Source.h
 	${CMAKE_SOURCE_DIR}/cpp/include/SourceManager.h
+	${CMAKE_SOURCE_DIR}/cpp/include/Token.h
 	${CMAKE_SOURCE_DIR}/cpp/include/Tokenizer.h
 	${CMAKE_SOURCE_DIR}/cpp/include/Utils.h
 	${CMAKE_SOURCE_DIR}/cpp/include/WLCharacter.h
@@ -206,7 +212,8 @@ set(CPP_LIB_SOURCES
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/SemiSemiParselet.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/Source.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/SourceManager.cpp
-	${CMAKE_SOURCE_DIR}/cpp/src/lib/Tokenizer.cpp
+	${CMAKE_SOURCE_DIR}/cpp/src/lib/Token.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/lib/Tokenizer.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/Utils.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/WLCharacter.cpp
 )

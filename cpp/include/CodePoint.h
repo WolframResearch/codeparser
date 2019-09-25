@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "Token.h"
+#include "TokenEnum.h"
 
 constexpr int CODEPOINT_BEL(0x07);
 constexpr int CODEPOINT_ESC(0x1b);
