@@ -84,7 +84,7 @@ class Tokenizer {
 public:
     Tokenizer();
     
-    void init(bool skipFirstLine);
+    void init(SourceStyle style, bool skipFirstLine);
     void deinit();
     
     Token nextToken(TokenizerContext Ctxt);

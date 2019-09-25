@@ -7,6 +7,7 @@
 
 #include "Parselet.h"
 
+#include "SourceManager.h"
 #include "Utils.h"
 #include "Symbol.h"
 
@@ -25,7 +26,7 @@ NodePtr SemiSemiParselet::parse(ParserContext CtxtIn) const {
     
     auto TokIn = TheParser->currentToken();
     
-    auto Implicit = Token(TOKEN_FAKE_IMPLICITONE, "", Source(TokIn.Span.lines.start));
+    auto Implicit = Token(TOKEN_FAKE_IMPLICITONE, "", Source(TokIn.Src.start()));
     
     auto One = std::unique_ptr<Node>(new LeafNode(Implicit));
     
@@ -82,7 +83,7 @@ NodePtr SemiSemiParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext Ctx
             //
             if (TheParser->isAbort()) {
                 
-                auto A = Token(TOKEN_ERROR_ABORTED, "", Source());
+                auto A = Token(TOKEN_ERROR_ABORTED, "", Source(TheSourceManager->getSourceLocation()));
                 
                 auto Aborted = std::unique_ptr<Node>(new LeafNode(A));
                 
@@ -117,18 +118,18 @@ NodePtr SemiSemiParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext Ctx
 
                 Args->append(std::move(ArgsTest2));
                 
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_IMPLICITTIMESSPAN, "Implicit ``Times`` between ``Spans``.", SYNTAXISSUESEVERITY_WARNING, Source(Tok.Span.lines.start));
+                auto Issue = SyntaxIssue(SYNTAXISSUETAG_IMPLICITTIMESSPAN, "Implicit ``Times`` between ``Spans``.", SYNTAXISSUESEVERITY_WARNING, Source(Tok.Src.start()));
 
                 TheParser->addIssue(Issue);
                 
-                auto Implicit = Token(TOKEN_FAKE_IMPLICITTIMES, "", Source(Tok.Span.lines.start));
+                auto Implicit = Token(TOKEN_FAKE_IMPLICITTIMES, "", Source(Tok.Src.start()));
                 
                 Args->append(std::unique_ptr<Node>(new LeafNode(Implicit)));
 
                 
                 auto OperandLeft = std::unique_ptr<NodeSeq>(new NodeSeq);
                 
-                auto Implicit2 = Token(TOKEN_FAKE_IMPLICITONE, "", Source(Tok.Span.lines.start));
+                auto Implicit2 = Token(TOKEN_FAKE_IMPLICITONE, "", Source(Tok.Src.start()));
                 
                 OperandLeft->append(std::unique_ptr<Node>(new LeafNode(Implicit2)));
                 
@@ -189,7 +190,7 @@ NodePtr SemiSemiParselet::parse0(std::unique_ptr<NodeSeq> Left, ParserContext Ct
             
             TheParser->nextToken(Ctxt);
             
-            auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, "", Source(TokIn.Span.lines.end));
+            auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, "", Source(TokIn.Src.end()));
             
             Args->append(std::unique_ptr<Node>(new LeafNode(Implicit)));
             
@@ -341,7 +342,7 @@ NodePtr SemiSemiParselet::parse0(std::unique_ptr<NodeSeq> Left, ParserContext Ct
                 
                 TheParser->nextToken(Ctxt);
                 
-                auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, "", Source(TokIn.Span.lines.end));
+                auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, "", Source(TokIn.Src.end()));
                 
                 Args->append(std::unique_ptr<Node>(new LeafNode(Implicit)));
                 
@@ -368,7 +369,7 @@ NodePtr SemiSemiParselet::parse0(std::unique_ptr<NodeSeq> Left, ParserContext Ct
                 
                 auto FirstArg = TheParser->parse(Ctxt);
                 
-                auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, "", Source(TokIn.Span.lines.end));
+                auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, "", Source(TokIn.Src.end()));
                 
                 Args->append(std::unique_ptr<Node>(new LeafNode(Implicit)));
                 
@@ -398,7 +399,7 @@ NodePtr SemiSemiParselet::parse0(std::unique_ptr<NodeSeq> Left, ParserContext Ct
                 auto FourthTok = TheParser->nextToken(Ctxt);
                 FourthTok = Parser::eatAndPreserveToplevelNewlines(FourthTok, CtxtIn, ArgsTest3);
                 
-                auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, "", Source(TokIn.Span.lines.end));
+                auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, "", Source(TokIn.Src.end()));
                 
                 Args->append(std::unique_ptr<Node>(new LeafNode(Implicit)));
                 

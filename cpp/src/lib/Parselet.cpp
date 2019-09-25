@@ -1,6 +1,7 @@
 
 #include "Parselet.h"
 
+#include "SourceManager.h"
 #include "Symbol.h"
 #include "Utils.h"
 
@@ -206,7 +207,7 @@ NodePtr InfixOperatorParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContex
         //
         if (TheParser->isAbort()) {
             
-            auto A = Token(TOKEN_ERROR_ABORTED, "", Source());
+            auto A = Token(TOKEN_ERROR_ABORTED, "", Source(TheSourceManager->getSourceLocation()));
             
             auto Aborted = std::unique_ptr<Node>(new LeafNode(A));
             
@@ -327,7 +328,7 @@ NodePtr GroupParselet::parse(ParserContext CtxtIn) const {
         //
         if (TheParser->isAbort()) {
             
-            auto A = Token(TOKEN_ERROR_ABORTED, "", Source());
+            auto A = Token(TOKEN_ERROR_ABORTED, "", Source(TheSourceManager->getSourceLocation()));
             
             auto Aborted = std::unique_ptr<Node>(new LeafNode(A));
             
@@ -966,7 +967,7 @@ NodePtr LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn) const {
         //
         if (TheParser->isAbort()) {
             
-            auto A = Token(TOKEN_ERROR_ABORTED, "", Source());
+            auto A = Token(TOKEN_ERROR_ABORTED, "", Source(TheSourceManager->getSourceLocation()));
             
             auto Aborted = std::unique_ptr<Node>(new LeafNode(A));
             
@@ -1169,7 +1170,7 @@ NodePtr InequalityParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext C
         //
         if (TheParser->isAbort()) {
             
-            auto A = Token(TOKEN_ERROR_ABORTED, "", Source());
+            auto A = Token(TOKEN_ERROR_ABORTED, "", Source(TheSourceManager->getSourceLocation()));
             
             auto Aborted = std::unique_ptr<Node>(new LeafNode(A));
             
@@ -1229,7 +1230,7 @@ NodePtr VectorInequalityParselet::parse(std::unique_ptr<NodeSeq> Left, ParserCon
         //
         if (TheParser->isAbort()) {
             
-            auto A = Token(TOKEN_ERROR_ABORTED, "", Source());
+            auto A = Token(TOKEN_ERROR_ABORTED, "", Source(TheSourceManager->getSourceLocation()));
             
             auto Aborted = std::unique_ptr<Node>(new LeafNode(A));
             
@@ -1289,7 +1290,7 @@ NodePtr InfixOperatorWithTrailingParselet::parse(std::unique_ptr<NodeSeq> Left, 
         //
         if (TheParser->isAbort()) {
             
-            auto A = Token(TOKEN_ERROR_ABORTED, "", Source());
+            auto A = Token(TOKEN_ERROR_ABORTED, "", Source(TheSourceManager->getSourceLocation()));
             
             auto Aborted = std::unique_ptr<Node>(new LeafNode(A));
             
@@ -1348,7 +1349,7 @@ NodePtr InfixOperatorWithTrailingParselet::parse(std::unique_ptr<NodeSeq> Left, 
                         // Something like  a; ;
                         //
                         
-                        auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, "", Source(lastOperatorToken.Span.lines.start));
+                        auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, "", Source(lastOperatorToken.Src.start()));
                         
                         lastOperatorToken = Tok;
                         
@@ -1372,7 +1373,7 @@ NodePtr InfixOperatorWithTrailingParselet::parse(std::unique_ptr<NodeSeq> Left, 
                         // For example:  a;&
                         //
                         
-                        auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, "", Source(lastOperatorToken.Span.lines.end));
+                        auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, "", Source(lastOperatorToken.Src.end()));
                         
                         Args->append(std::unique_ptr<Node>(new LeafNode(Implicit)));
                         

@@ -169,100 +169,178 @@ struct SourceCharacter {
 std::ostream& operator<<(std::ostream& stream, const SourceCharacter);
 
 
-struct SourceLocation {
+
+
+
+
+
+
+struct LineCol {
     size_t Line;
     size_t Col;
     
+    LineCol();
+    
+    LineCol(size_t Line, size_t Col);
+    
+    LineCol operator+(size_t i) const {
+        return LineCol(Line, Col+i);
+    }
+    
+    LineCol operator-(size_t i) const {
+        assert(Col > 0);
+        return LineCol(Line, Col-i);
+    }
+};
+
+bool isContiguous(LineCol a, LineCol b);
+
+bool operator==(LineCol a, LineCol b);
+bool operator<=(LineCol a, LineCol b);
+
+
+struct Source_LineCol_struct {
+    LineCol start;
+    LineCol end;
+    
+    Source_LineCol_struct();
+    Source_LineCol_struct(LineCol, LineCol);
+};
+
+bool operator==(Source_LineCol_struct a, Source_LineCol_struct b);
+
+
+
+struct Offset {
+    
+    size_t val;
+    
+    Offset();
+    
+    Offset(size_t offset);
+    
+    Offset operator+(size_t i) const {
+        return Offset(val + i);
+    }
+    
+    void operator++(int ignored) {
+        val++;
+    }
+};
+
+Offset operator-(Offset a, Offset b);
+
+bool operator==(Offset a, Offset b);
+bool operator<=(Offset a, Offset b);
+
+struct Source_OffsetLen_struct {
+    Offset offset;
+    size_t len;
+};
+
+
+
+
+
+enum SourceStyle {
+    SOURCESTYLE_UNKNOWN,
+    SOURCESTYLE_LINECOL,
+    SOURCESTYLE_OFFSETLEN,
+};
+
+struct SourceLocation {
+    
+    SourceStyle style;
+    
+    union {
+        
+        LineCol lineCol;
+        
+        Offset offset;
+    };
+    
     SourceLocation();
+    SourceLocation(SourceStyle);
+    SourceLocation(LineCol loc);
+    SourceLocation(Offset loc);
     
-    SourceLocation(size_t Line, size_t Col);
+    SourceLocation(size_t loc) = delete;
     
-    SourceLocation operator+(size_t i) const {
-        return SourceLocation{Line, Col+i};
-    }
+    SourceLocation operator+(int);
+    SourceLocation operator-(int);
     
-    SourceLocation operator-(size_t i) const {
-        return SourceLocation{Line, Col-i};
-    }
+    void operator++(int);
+    
+    SourceLocation nextLine();
 };
 
-struct Source_SourceLocation_struct {
-    SourceLocation start;
-    SourceLocation end;
-};
-
-bool operator==(Source_SourceLocation_struct a, Source_SourceLocation_struct b);
+bool operator<=(SourceLocation a, SourceLocation b);
 
 
-struct Source_File_struct {
-    uint64_t offset;
-    uint64_t len;
-};
+
+
+
 
 //
-// There are 2 different origins for Source
+// There are several different kinds of Sources
 //
 // 1. The traditional {{startLine, startCol}, {endLine, endCol}} information
-// 2. The less common identifier that is used by boxes
+// 2. The less common positional identifier that is used by boxes
 //
-union Source {
+// There could be more kinds:
+// Box ids
+// Buffer offset and length
+//
+struct Source {
     
-    //
-    // Lines
-    //
-    Source_SourceLocation_struct lines;
+    SourceStyle style;
     
-    //
-    // Front end boxes
-    //
-    uint64_t iid;
-    
-    //
-    // File bytes
-    //
-    Source_File_struct file;
+    union {
+        
+        Source_LineCol_struct lineCol;
+        
+        Source_OffsetLen_struct offsetLen;
+    };
     
     Source();
-    
+    Source(SourceStyle);
     Source(SourceLocation loc);
+    
+    Source(LineCol) = delete;
+    Source(size_t) = delete;
     
     Source(SourceLocation start, SourceLocation end);
     
-    void putLineCols(MLINK mlp) const;
+    Source(Source start, Source end);
+    
+    ~Source();
+    
+    void put(MLINK mlp) const;
     
     size_t size() const;
+    
+    size_t count() const;
+    
+    SourceLocation start() const;
+    SourceLocation end() const;
+    
+    // copy ctor
+    Source(const Source& o);
+    
+    // copy assignment
+    Source& operator=(Source o);
 };
 
-bool isContiguous(SourceLocation a, SourceLocation b);
 bool isContiguous(Source a, Source b);
-
-bool operator==(SourceLocation a, SourceLocation b);
-bool operator<=(SourceLocation a, SourceLocation b);
-
-struct Token {
-    
-    TokenEnum Tok;
-    std::string Str;
-    Source Span;
-    
-    Token(TokenEnum, std::string, Source);
-};
-
-bool operator==(Token a, Token b);
 
 
 struct SyntaxIssue {
     const SyntaxIssueTag Tag;
     const std::string Msg;
-    const SyntaxIssueSeverity Severity;
-    const Source Span;
+    const SyntaxIssueSeverity Sev;
+    const Source Src;
     
-    //
-    // Tag + Msg + Severity + 4 Source integers = 7
-    //
-    static const size_t SYNTAXISSUE_LENGTH = 7;
-    
-    SyntaxIssue(std::string Tag, std::string Msg, std::string Severity, Source Span) : Tag(Tag), Msg(Msg), Severity(Severity), Span(Span) {}
+    SyntaxIssue(std::string Tag, std::string Msg, std::string Sev, Source Src) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src) {}
     
     void put(MLINK mlp) const;
 };

@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "Source.h"
+
 //
 // Despite being mentioned here:
 // language/LibraryLink/tutorial/LibraryStructure.html
@@ -154,7 +156,7 @@ public:
     
     ~ParserSession();
     
-    void init(WolframLibraryData libData, std::istream& is, bool skipFirstLine);
+    void init(WolframLibraryData libData, std::istream& is, SourceStyle style, bool skipFirstLine);
     
     void deinit();
 };

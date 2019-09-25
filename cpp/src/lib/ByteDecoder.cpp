@@ -32,11 +32,11 @@ SourceCharacter ByteDecoder::nextSourceCharacter() {
         byteQueue.erase(byteQueue.begin());
         
         auto b = p.first;
-        auto location = p.second;
+        auto loc = p.second;
         
         auto c = SourceCharacter(b);
         
-        TheSourceManager->setSourceLocation(location);
+        TheSourceManager->setSourceLocation(loc);
         
         return c;
     }
@@ -57,18 +57,18 @@ SourceCharacter ByteDecoder::nextSourceCharacter() {
     return c;
 }
 
-void ByteDecoder::append(unsigned char b, SourceLocation location) {
-    byteQueue.push_back(std::make_pair(b, location));
+void ByteDecoder::append(unsigned char b, SourceLocation loc) {
+    byteQueue.push_back(std::make_pair(b, loc));
 }
 
 SourceCharacter ByteDecoder::invalid(unsigned char first) {
     
-    auto Loc = TheSourceManager->getSourceLocation();
+    auto loc = TheSourceManager->getSourceLocation();
     
     // Has not advanced yet at this point
-    Loc = SourceLocation(Loc.Line, Loc.Col+1);
+    loc++;
     
-    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file as valid UTF-8.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
+    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file as valid UTF-8.", SYNTAXISSUESEVERITY_REMARK, Source(loc));
     
     Issues.push_back(Issue);
     
@@ -77,51 +77,51 @@ SourceCharacter ByteDecoder::invalid(unsigned char first) {
 
 SourceCharacter ByteDecoder::invalid(unsigned char first, unsigned char second) {
     
-    auto Loc = TheSourceManager->getSourceLocation();
+    auto loc = TheSourceManager->getSourceLocation();
     
     // Has not advanced yet at this point
-    Loc = SourceLocation(Loc.Line, Loc.Col+1);
+    loc++;
     
-    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file as valid UTF-8.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
+    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file as valid UTF-8.", SYNTAXISSUESEVERITY_REMARK, Source(loc));
     
     Issues.push_back(Issue);
     
-    append(second, Loc+1);
+    append(second, loc+1);
     
     return SourceCharacter(first);
 }
 
 SourceCharacter ByteDecoder::invalid(unsigned char first, unsigned char second, unsigned char third) {
     
-    auto Loc = TheSourceManager->getSourceLocation();
+    auto loc = TheSourceManager->getSourceLocation();
     
     // Has not advanced yet at this point
-    Loc = SourceLocation(Loc.Line, Loc.Col+1);
+    loc++;
     
-    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file as valid UTF-8.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
+    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file as valid UTF-8.", SYNTAXISSUESEVERITY_REMARK, Source(loc));
     
     Issues.push_back(Issue);
     
-    append(second, Loc+1);
-    append(third, Loc+2);
+    append(second, loc+1);
+    append(third, loc+2);
     
     return SourceCharacter(first);
 }
 
 SourceCharacter ByteDecoder::invalid(unsigned char first, unsigned char second, unsigned char third, unsigned char fourth) {
     
-    auto Loc = TheSourceManager->getSourceLocation();
+    auto loc = TheSourceManager->getSourceLocation();
     
     // Has not advanced yet at this point
-    Loc = SourceLocation(Loc.Line, Loc.Col+1);
+    loc++;
     
-    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file as valid UTF-8.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
+    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file as valid UTF-8.", SYNTAXISSUESEVERITY_REMARK, Source(loc));
     
     Issues.push_back(Issue);
     
-    append(second, Loc+1);
-    append(third, Loc+2);
-    append(fourth, Loc+3);
+    append(second, loc+1);
+    append(third, loc+2);
+    append(fourth, loc+3);
     
     return SourceCharacter(first);
 }

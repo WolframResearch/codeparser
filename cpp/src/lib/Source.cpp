@@ -16,9 +16,7 @@
 
 #include <sstream>
 #include <cctype> // for isalnum, isxdigit, isupper, isdigit, isalpha, ispunct, iscntrl with GCC and MSVC
-
-bool containsOnlyASCII(std::string s);
-
+#include <utility> // for swap
 
 //
 // SyntaxIssue
@@ -26,15 +24,15 @@ bool containsOnlyASCII(std::string s);
 
 void SyntaxIssue::put(MLINK mlp) const {
     
-    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKESYNTAXISSUE->name(), SYNTAXISSUE_LENGTH);
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKESYNTAXISSUE->name(), 3 + Src.count());
     
     MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Tag.c_str()), static_cast<int>(Tag.size()));
     
     MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Msg.c_str()), static_cast<int>(Msg.size()));
     
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Severity.c_str()), static_cast<int>(Severity.size()));
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Sev.c_str()), static_cast<int>(Sev.size()));
     
-    Span.putLineCols(mlp);
+    Src.put(mlp);
 }
 
 
@@ -87,22 +85,22 @@ SyntaxError TokenErrorToSyntaxError(TokenEnum Tok) {
 
 
 //
-// SourceLocation
+// LineCol
 //
 
-SourceLocation::SourceLocation() : Line(0), Col(0) {}
+LineCol::LineCol() : Line(1), Col(0) {}
 
-SourceLocation::SourceLocation(size_t Line, size_t Col) : Line(Line), Col(Col) {}
+LineCol::LineCol(size_t Line, size_t Col) : Line(Line), Col(Col) {}
 
-bool isContiguous(SourceLocation a, SourceLocation b) {
+bool isContiguous(LineCol a, LineCol b) {
     return a.Line == b.Line && a.Col + 1 == b.Col;
 }
 
-bool operator==(SourceLocation a, SourceLocation b) {
+bool operator==(LineCol a, LineCol b) {
     return (a.Line == b.Line) && (a.Col == b.Col);
 }
 
-bool operator<=(SourceLocation a, SourceLocation b) {
+bool operator<=(LineCol a, LineCol b) {
     
     if (a.Line < b.Line) {
         return true;
@@ -121,44 +119,358 @@ bool operator<=(SourceLocation a, SourceLocation b) {
     return false;
 }
 
+
+
+Offset::Offset(size_t offset) : val(offset) {}
+
+Offset operator-(Offset a, Offset b) {
+    return Offset(a.val - b.val);
+}
+
+bool operator==(Offset a, Offset b) {
+    return a.val == b.val;
+}
+
+bool operator<=(Offset a, Offset b) {
+    return a.val <= b.val;
+}
+
+
+
+
+SourceLocation::SourceLocation() : style(SOURCESTYLE_UNKNOWN) {}
+
+SourceLocation::SourceLocation(SourceStyle style) : style(style) {
+    switch (style) {
+        case SOURCESTYLE_UNKNOWN:
+            break;
+        case SOURCESTYLE_LINECOL:
+            lineCol = LineCol();
+            break;
+        case SOURCESTYLE_OFFSETLEN:
+            offset = 0;
+            break;
+        default:
+            assert(false);
+    }
+}
+
+SourceLocation::SourceLocation(LineCol lineCol) : style(SOURCESTYLE_LINECOL), lineCol(lineCol) {}
+
+SourceLocation::SourceLocation(Offset offset) : style(SOURCESTYLE_OFFSETLEN), offset(offset) {}
+
+SourceLocation SourceLocation::operator+(int d) {
+    switch (style) {
+        case SOURCESTYLE_UNKNOWN:
+            return SourceLocation();
+        case SOURCESTYLE_LINECOL:
+            return SourceLocation(LineCol(lineCol.Line, lineCol.Col + d));
+        default:
+            assert(false);
+            return *this;
+    }
+}
+
+SourceLocation SourceLocation::operator-(int d) {
+    switch (style) {
+        case SOURCESTYLE_UNKNOWN:
+            return SourceLocation();
+        case SOURCESTYLE_LINECOL:
+            return SourceLocation(LineCol(lineCol.Line, lineCol.Col - d));
+        default:
+            assert(false);
+            return *this;
+    }
+}
+
+void SourceLocation::operator++(int ignored) {
+    switch (style) {
+        case SOURCESTYLE_UNKNOWN:
+            break;
+        case SOURCESTYLE_LINECOL:
+            lineCol.Col++;
+            break;
+        case SOURCESTYLE_OFFSETLEN:
+            offset++;
+            break;
+        default:
+            assert(false);
+            break;
+    }
+}
+
+SourceLocation SourceLocation::nextLine() {
+    switch (style) {
+        case SOURCESTYLE_UNKNOWN:
+            return SourceLocation();
+        case SOURCESTYLE_LINECOL:
+            return SourceLocation(LineCol(lineCol.Line+1, 0));
+        case SOURCESTYLE_OFFSETLEN:
+            return SourceLocation(offset + 1);
+        default:
+            assert(false);
+            break;
+    }
+}
+
+bool operator<=(SourceLocation a, SourceLocation b) {
+    switch (a.style) {
+        case SOURCESTYLE_UNKNOWN:
+            assert(b.style == SOURCESTYLE_UNKNOWN);
+            return true;
+        case SOURCESTYLE_LINECOL:
+            assert(b.style == SOURCESTYLE_LINECOL);
+            return a.lineCol <= b.lineCol;
+        case SOURCESTYLE_OFFSETLEN:
+            assert(b.style == SOURCESTYLE_OFFSETLEN);
+            return a.offset <= b.offset;
+        default:
+            assert(false);
+            return false;
+    }
+}
+
+
+
+
+
+
+
+
+//
+// Source_LineCol_struct
+//
+
+Source_LineCol_struct::Source_LineCol_struct() : start(), end() {}
+Source_LineCol_struct::Source_LineCol_struct(LineCol start, LineCol end) : start(start), end(end) {}
+
+bool operator==(Source_LineCol_struct a, Source_LineCol_struct b) {
+    return a.start == b.start && a.end == b.end;
+}
+
+
+
 //
 // Source
 //
 
-bool operator==(Source_SourceLocation_struct a, Source_SourceLocation_struct b) {
-    return a.start == b.start && a.end == b.end;
+Source::Source(SourceLocation loc) {
+    switch (loc.style) {
+        case SOURCESTYLE_UNKNOWN:
+            style = SOURCESTYLE_UNKNOWN;
+            break;
+        case SOURCESTYLE_LINECOL:
+            style = SOURCESTYLE_LINECOL;
+            lineCol.start = loc.lineCol;
+            lineCol.end = loc.lineCol;
+            break;
+        case SOURCESTYLE_OFFSETLEN:
+            style = SOURCESTYLE_OFFSETLEN;
+            offsetLen.offset = loc.offset;
+            offsetLen.len = 1;
+            break;
+        default:
+            assert(false);
+            break;
+    }
+}
+
+Source::Source() : style(SOURCESTYLE_UNKNOWN) {}
+
+Source::Source(SourceStyle style) : style(style) {}
+
+Source::Source(SourceLocation start, SourceLocation end) {
+    switch (start.style) {
+        case SOURCESTYLE_UNKNOWN:
+            assert(end.style == SOURCESTYLE_UNKNOWN);
+            style = SOURCESTYLE_UNKNOWN;
+            break;
+        case SOURCESTYLE_LINECOL:
+            assert(end.style == SOURCESTYLE_LINECOL);
+            //
+            // This is a really good way to uncover problems
+            //
+            assert(start <= end);
+            style = SOURCESTYLE_LINECOL;
+            lineCol.start = start.lineCol;
+            lineCol.end = end.lineCol;
+            break;
+        case SOURCESTYLE_OFFSETLEN:
+            assert(end.style == SOURCESTYLE_OFFSETLEN);
+            style = SOURCESTYLE_OFFSETLEN;
+            offsetLen.offset = start.offset;
+            offsetLen.len = (end.offset - start.offset + 1).val;
+            break;
+        default:
+            assert(false);
+            break;
+    }
+}
+
+Source::Source(Source start, Source end) {
+    switch (start.style) {
+        case SOURCESTYLE_UNKNOWN:
+            assert(end.style == SOURCESTYLE_UNKNOWN);
+            style = SOURCESTYLE_UNKNOWN;
+            break;
+        case SOURCESTYLE_LINECOL:
+            assert(end.style == SOURCESTYLE_LINECOL);
+            style = SOURCESTYLE_LINECOL;
+            lineCol.start = start.lineCol.start;
+            lineCol.end = end.lineCol.end;
+            break;
+        case SOURCESTYLE_OFFSETLEN:
+            assert(end.style == SOURCESTYLE_OFFSETLEN);
+            assert(start.offsetLen.offset + start.offsetLen.len <= end.offsetLen.offset);
+            style = SOURCESTYLE_OFFSETLEN;
+            offsetLen.offset = start.offsetLen.offset;
+            offsetLen.len = ((end.offsetLen.offset - start.offsetLen.offset) + end.offsetLen.len).val;
+            break;
+        default:
+            assert(false);
+            break;
+    }
+}
+
+Source::~Source() {
+    switch (style) {
+        case SOURCESTYLE_UNKNOWN:
+            break;
+        case SOURCESTYLE_LINECOL:
+            lineCol.~Source_LineCol_struct();
+            break;
+        case SOURCESTYLE_OFFSETLEN:
+            offsetLen.~Source_OffsetLen_struct();
+            break;
+        default:
+            assert(false);
+    }
+}
+
+Source::Source(const Source& o) {
+    style = o.style;
+    switch (o.style) {
+        case SOURCESTYLE_UNKNOWN:
+            break;
+        case SOURCESTYLE_LINECOL:
+            lineCol = o.lineCol;
+            break;
+        case SOURCESTYLE_OFFSETLEN:
+            offsetLen = o.offsetLen;
+            break;
+        default:
+            assert(false);
+            break;
+    }
+}
+
+Source& Source::operator=(Source o) {
+    style = o.style;
+    switch (o.style) {
+        case SOURCESTYLE_UNKNOWN:
+            break;
+        case SOURCESTYLE_LINECOL:
+            std::swap(lineCol, o.lineCol);
+            break;
+        case SOURCESTYLE_OFFSETLEN:
+            std::swap(offsetLen, o.offsetLen);
+            break;
+        default:
+            assert(false);
+            break;
+    }
+    return *this;
 }
 
 bool isContiguous(Source a, Source b) {
-    return isContiguous(a.lines.end, b.lines.start);
-}
-
-Source::Source() : lines{SourceLocation(), SourceLocation()} {}
-
-Source::Source(SourceLocation loc) : lines{loc, loc} {}
-
-Source::Source(SourceLocation start, SourceLocation end) : lines{start, end} {
-    
-    //
-    // This is a really good way to uncover problems
-    //
-    assert( start <= end );
+    switch (a.style) {
+        case SOURCESTYLE_LINECOL:
+            assert(b.style == SOURCESTYLE_LINECOL);
+            return isContiguous(a.lineCol.end, b.lineCol.start);
+        default:
+            assert(false);
+            return false;
+    }
 }
 
 size_t Source::size() const {
-    assert(lines.start.Line == lines.end.Line);
-    return lines.end.Col - lines.start.Col + 1;
+    switch (style) {
+        case SOURCESTYLE_UNKNOWN:
+            return 0;
+        case SOURCESTYLE_LINECOL:
+            assert(lineCol.start.Line == lineCol.end.Line);
+            return lineCol.end.Col - lineCol.start.Col + 1;
+        case SOURCESTYLE_OFFSETLEN:
+            return offsetLen.len;
+        default:
+            assert(false);
+            return 0;
+    }
 }
 
-void Source::putLineCols(MLINK mlp) const {
-    
-    assert(lines.start <= lines.end);
-    
-    MLPutInteger(mlp, static_cast<int>(lines.start.Line));
-    MLPutInteger(mlp, static_cast<int>(lines.start.Col));
-    MLPutInteger(mlp, static_cast<int>(lines.end.Line));
-    MLPutInteger(mlp, static_cast<int>(lines.end.Col));
+size_t Source::count() const {
+    switch (style) {
+        case SOURCESTYLE_UNKNOWN:
+            return 0;
+        case SOURCESTYLE_LINECOL:
+            return 4;
+        case SOURCESTYLE_OFFSETLEN:
+            return 2;
+        default:
+            assert(false);
+            return 0;
+    }
 }
+
+SourceLocation Source::start() const {
+    switch (style) {
+        case SOURCESTYLE_UNKNOWN:
+            return SourceLocation();
+        case SOURCESTYLE_LINECOL:
+            return lineCol.start;
+        case SOURCESTYLE_OFFSETLEN:
+            return offsetLen.offset;
+        default:
+            assert(false);
+            return SourceLocation();
+    }
+}
+
+SourceLocation Source::end() const {
+    switch (style) {
+        case SOURCESTYLE_UNKNOWN:
+            return SourceLocation();
+        case SOURCESTYLE_LINECOL:
+            return lineCol.end;
+        case SOURCESTYLE_OFFSETLEN:
+            return offsetLen.offset + offsetLen.len;
+        default:
+            assert(false);
+            return SourceLocation();
+    }
+}
+
+void Source::put(MLINK mlp) const {
+    switch (style) {
+        case SOURCESTYLE_UNKNOWN:
+            break;
+        case SOURCESTYLE_LINECOL:
+            assert(lineCol.start <= lineCol.end);
+            MLPutInteger(mlp, static_cast<int>(lineCol.start.Line));
+            MLPutInteger(mlp, static_cast<int>(lineCol.start.Col));
+            MLPutInteger(mlp, static_cast<int>(lineCol.end.Line));
+            MLPutInteger(mlp, static_cast<int>(lineCol.end.Col));
+            break;
+        case SOURCESTYLE_OFFSETLEN:
+            MLPutInteger(mlp, static_cast<int>(offsetLen.offset.val));
+            MLPutInteger(mlp, static_cast<int>(offsetLen.len));
+            break;
+        default:
+            assert(false);
+            break;
+    }
+}
+
 
 
 //
@@ -230,70 +542,3 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
     
     return stream;
 }
-
-
-//
-// Token
-//
-
-Token::Token(TokenEnum Tok, std::string Str, Source Span) : Tok(Tok), Str(Str), Span(Span) {
-    
-    switch (Tok) {
-        //
-        // These are the tokens that do not quite have correct spans.
-        // start and end are set to the same character, so size is 1
-        // But they take up 0 characters
-        //
-        case TOKEN_ENDOFFILE:
-        case TOKEN_UNKNOWN:
-        case TOKEN_FAKE_IMPLICITTIMES:
-        case TOKEN_ERROR_EMPTYSTRING:
-        case TOKEN_ERROR_ABORTED:
-        case TOKEN_FAKE_IMPLICITNULL:
-        case TOKEN_FAKE_IMPLICITONE:
-        case TOKEN_FAKE_IMPLICITALL:
-        case TOKEN_ERROR_EXPECTEDOPERAND:
-            assert(Span.lines.start.Line == Span.lines.end.Line);
-            assert(Span.lines.start.Col == Span.lines.end.Col);
-            break;
-        default:
-            //
-            // This is all just to do an assert.
-            // But it's a good assert because it catches problems.
-            //
-            // Only bother checking if the token is all on one line
-            // Spanning multiple lines is too complicated to care about
-            //
-            if (Span.lines.start.Line == Span.lines.end.Line) {
-                if (Span.size() != Str.size()) {
-                    //
-                    // If the sizes do not match, then check if there are multi-byte characters
-                    // If there are multi-bytes characters, then it is too complicated to compare sizes
-                    //
-                    // Note that this also catches changes in character representation, e.g.,
-                    // If a character was in source with \XXX notation but was stringified with \:XXXX notation
-                    //
-                    assert(!containsOnlyASCII(Str));
-                }
-            }
-            break;
-    }
-    
-}
-
-bool operator==(Token a, Token b) {
-    return a.Span.lines == b.Span.lines;
-}
-
-bool containsOnlyASCII(std::string s) {
-    for (auto c : s) {
-        //
-        // Take care to cast to int before comparing
-        //
-        if ((static_cast<int>(c) & 0xff) >= 0x80) {
-            return false;
-        }
-    }
-    return true;
-}
-

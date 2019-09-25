@@ -11,7 +11,6 @@
 
 #include <functional> // for function with GCC and MSVC
 #include <memory> // for unique_ptr
-#include <cstring> // for strcmp with GCC and MSVC
 #ifdef WINDOWS_MATHLINK
 #else
 #include <signal.h>
@@ -54,12 +53,17 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK ml
     if (!MLTestHead(mlp, SYMBOL_LIST->name(), &len))  {
         return res;
     }
-    if (len != 2) {
+    if (len != 3) {
         return res;
     }
     
     ScopedMLString inStr(mlp);
     if (!inStr.read()) {
+        return res;
+    }
+    
+    ScopedMLString styleStr(mlp);
+    if (!styleStr.read()) {
         return res;
     }
     
@@ -77,7 +81,9 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK ml
         return res;
     }
     
-    auto skipFirstLine = (strcmp(skipFirstLineSym.get(), SYMBOL_TRUE->name()) == 0);
+    auto style = Utils::parseSourceStyle(reinterpret_cast<const char *>(styleStr.get()));
+    
+    auto skipFirstLine = Utils::parseBooleanSymbol(skipFirstLineSym.get());
     
     ScopedIFS ifs(inStr.get());
     
@@ -85,7 +91,7 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK ml
         return res;
     }
     
-    TheParserSession->init(libData, ifs, skipFirstLine);
+    TheParserSession->init(libData, ifs, style, skipFirstLine);
     
     auto nodes = parseExpressions();
     
@@ -106,7 +112,7 @@ DLLEXPORT int ConcreteParseString_LibraryLink(WolframLibraryData libData, MLINK 
     if (!MLTestHead(mlp, SYMBOL_LIST->name(), &len)) {
         return res;
     }
-    if (len != 1) {
+    if (len != 2) {
         return res;
     }
     
@@ -115,14 +121,20 @@ DLLEXPORT int ConcreteParseString_LibraryLink(WolframLibraryData libData, MLINK 
         return res;
     }
     
+    ScopedMLString styleStr(mlp);
+    if (!styleStr.read()) {
+        return res;
+    }
+    
     if (!MLNewPacket(mlp) ) {
         return res;
     }
     
-    auto skipFirstLine = false;
     auto iss = std::stringstream(reinterpret_cast<const char *>(inStr.get()));
     
-    TheParserSession->init(libData, iss, skipFirstLine);
+    auto style = Utils::parseSourceStyle(reinterpret_cast<const char *>(styleStr.get()));
+    
+    TheParserSession->init(libData, iss, style, false);
     
     auto nodes = parseExpressions();
     
@@ -143,7 +155,7 @@ DLLEXPORT int TokenizeString_LibraryLink(WolframLibraryData libData, MLINK mlp) 
     if (!MLTestHead(mlp, SYMBOL_LIST->name(), &len)) {
         return res;
     }
-    if (len != 1) {
+    if (len != 2) {
         return res;
     }
     
@@ -152,14 +164,20 @@ DLLEXPORT int TokenizeString_LibraryLink(WolframLibraryData libData, MLINK mlp) 
         return res;
     }
     
+    ScopedMLString styleStr(mlp);
+    if (!styleStr.read()) {
+        return res;
+    }
+    
     if (!MLNewPacket(mlp) ) {
         return res;
     }
     
-    auto skipFirstLine = false;
     auto iss = std::stringstream(reinterpret_cast<const char *>(inStr.get()));
     
-    TheParserSession->init(libData, iss, skipFirstLine);
+    auto style = Utils::parseSourceStyle(reinterpret_cast<const char *>(styleStr.get()));
+    
+    TheParserSession->init(libData, iss, style, false);
     
     std::vector<NodePtr> nodes = tokenize();
     
@@ -180,12 +198,17 @@ DLLEXPORT int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     if (!MLTestHead( mlp, SYMBOL_LIST->name(), &len)) {
         return res;
     }
-    if (len != 1) {
+    if (len != 2) {
         return res;
     }
     
     ScopedMLString inStr(mlp);
     if (!inStr.read()) {
+        return res;
+    }
+    
+    ScopedMLString styleStr(mlp);
+    if (!styleStr.read()) {
         return res;
     }
     
@@ -198,14 +221,15 @@ DLLEXPORT int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         return res;
     }
     
-    auto skipFirstLine = false;
     ScopedIFS ifs(inStr.get());
     
     if (ifs.fail()) {
         return res;
     }
     
-    TheParserSession->init(libData, ifs, skipFirstLine);
+    auto style = Utils::parseSourceStyle(reinterpret_cast<const char *>(styleStr.get()));
+    
+    TheParserSession->init(libData, ifs, style, false);
     
     std::vector<NodePtr> nodes = tokenize();
     
@@ -228,7 +252,7 @@ DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     if (!MLTestHead(mlp, SYMBOL_LIST->name(), &len))  {
         return res;
     }
-    if (len != 1) {
+    if (len != 2) {
         return res;
     }
     
@@ -237,9 +261,16 @@ DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         return res;
     }
     
+    ScopedMLString styleStr(mlp);
+    if (!styleStr.read()) {
+        return res;
+    }
+    
     auto iss = std::stringstream(reinterpret_cast<const char *>(inStr.get()));
     
-    TheParserSession->init(libData, iss, false);
+    auto style = Utils::parseSourceStyle(reinterpret_cast<const char *>(styleStr.get()));
+    
+    TheParserSession->init(libData, iss, style, false);
     
     auto node = parseLeaf();
     
@@ -462,12 +493,15 @@ NodePtr parseLeaf() {
         }
         
         //
-        // Other is invented, so invent source
+        // Other is invented, so also invent source
         //
-        auto StartSpan = N->getSourceSpan().lines.start;
-        auto EndSpan = StartSpan + AccumStr.size() - 1;
         
-        auto OtherTok = Token(TOKEN_OTHER, AccumStr, Source(StartSpan, EndSpan));
+        auto NSrc = N->getSource();
+        
+        auto Start = NSrc.start();
+        auto End = Start + AccumStr.size() - 1;
+        
+        auto OtherTok = Token(TOKEN_OTHER, AccumStr, Source(Start, End));
         auto OtherLeaf = std::unique_ptr<LeafNode>(new LeafNode(OtherTok));
         return OtherLeaf;
     }
@@ -515,12 +549,12 @@ ParserSession::~ParserSession() {
     freeSymbols();
 }
 
-void ParserSession::init(WolframLibraryData libData, std::istream& is, bool skipFirstLine) {
+void ParserSession::init(WolframLibraryData libData, std::istream& is, SourceStyle sourceStyle, bool skipFirstLine) {
     
-    TheSourceManager->init(is, libData);
+    TheSourceManager->init(sourceStyle, is, libData);
     TheByteDecoder->init();
     TheCharacterDecoder->init(libData);
-    TheTokenizer->init(skipFirstLine);
+    TheTokenizer->init(sourceStyle, skipFirstLine);
     TheParser->init( [libData]() {
         if (!libData) {
             return false;

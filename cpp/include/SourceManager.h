@@ -26,7 +26,7 @@ class SourceManager {
     
     std::vector<SyntaxIssue> Issues;
     
-    SourceLocation SourceLoc;
+    SourceLocation SrcLoc;
     
     SourceLocation TokenStartLoc;
     
@@ -41,7 +41,7 @@ class SourceManager {
 public:
     SourceManager();
     
-    void init(std::istream& is, WolframLibraryData libData);
+    void init(SourceStyle style, std::istream& is, WolframLibraryData libData);
     
     void deinit();
     
@@ -56,11 +56,11 @@ public:
     void setWLCharacterStart();
     void setWLCharacterEnd();
     
-    Source getTokenSpan() const;
+    Source getTokenSource() const;
     
     SourceLocation getWLCharacterStart() const;
     
-    Source getWLCharacterSpan() const;
+    Source getWLCharacterSource() const;
     
     SourceLocation getTokenStart() const;
     

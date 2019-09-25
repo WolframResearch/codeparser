@@ -67,17 +67,17 @@ size_t LeafSeq::size() const {
 }
 
 
-Source Node::getSourceSpan() const {
+Source Node::getSource() const {
     
-    if (!Children->empty()) {
+    assert(!Children->empty());
         
-        const auto& First = Children->first();
-        const auto& Last = Children->last();
-        
-        return Source(First->getSourceSpan().lines.start, Last->getSourceSpan().lines.end);
-    }
+    const auto& First = Children->first();
+    const auto& Last = Children->last();
     
-    return Source();
+    auto FirstSrc = First->getSource();
+    auto LastSrc = Last->getSource();
+    
+    return Source(FirstSrc, LastSrc);
 }
 
 void Node::putChildren(MLINK mlp) const {
@@ -88,59 +88,68 @@ void Node::putChildren(MLINK mlp) const {
 
 void OperatorNode::put(MLINK mlp) const {
     
-    MLPutFunction(mlp, MakeSym->name(), NODE_LENGTH);
+    auto Src = getSource();
+    
+    MLPutFunction(mlp, MakeSym->name(), 2 + Src.count());
     
     MLPutSymbol(mlp, Op->name());
     
     putChildren(mlp);
     
-    getSourceSpan().putLineCols(mlp);
+    getSource().put(mlp);
 }
 
 
 void LeafNode::put(MLINK mlp) const {
     
-    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKELEAFNODE->name(), NODE_LENGTH);
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKELEAFNODE->name(), 2 + Tok.Src.count());
     
     MLPutSymbol(mlp, TokenToSymbol(Tok.Tok)->name());
     
     MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Tok.Str.c_str()), static_cast<int>(Tok.Str.size()));
     
-    Tok.Span.putLineCols(mlp);
+    Tok.Src.put(mlp);
 }
 
 
 void CallNode::put(MLINK mlp) const {
     
-    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKECALLNODE->name(), NODE_LENGTH);
+    auto Src = getSource();
+    
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKECALLNODE->name(), 2 + Src.count());
     
     Head->put(mlp);
     
     putChildren(mlp);
     
-    getSourceSpan().putLineCols(mlp);
+    Src.put(mlp);
 }
 
-Source CallNode::getSourceSpan() const {
+Source CallNode::getSource() const {
     
-    const auto& FirstHead = Head->first();
+    const auto& First = Head->first();
     
     const auto& Children = getChildren();
-    const auto& LastChild = Children->last();
+    const auto& Last = Children->last();
     
-    return Source(FirstHead->getSourceSpan().lines.start, LastChild->getSourceSpan().lines.end);
+    auto FirstSrc = First->getSource();
+    auto LastSrc = Last->getSource();
+    
+    return Source(FirstSrc, LastSrc);
 }
 
 
 void SyntaxErrorNode::put(MLINK mlp) const {
     
-    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKESYNTAXERRORNODE->name(), NODE_LENGTH);
+    auto Src = getSource();
+    
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKESYNTAXERRORNODE->name(), 2 + Src.count());
     
     MLPutSymbol(mlp, SyntaxErrorToString(Err).c_str());
     
     putChildren(mlp);
     
-    getSourceSpan().putLineCols(mlp);
+    Src.put(mlp);
 }
 
 

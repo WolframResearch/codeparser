@@ -11,11 +11,11 @@ int toDigit(int val);
 
 Tokenizer::Tokenizer() : stringifyNextToken_symbol(false), stringifyNextToken_file(false), _currentToken(Token(TOKEN_UNKNOWN, "", Source())), _currentWLCharacter(0), wlCharacterQueue(), String(), Issues() {}
 
-void Tokenizer::init(bool skipFirstLine) {
+void Tokenizer::init(SourceStyle style, bool skipFirstLine) {
     
     stringifyNextToken_symbol = false;
     stringifyNextToken_file = false;
-    _currentToken = Token(TOKEN_UNKNOWN, "", Source());
+    _currentToken = Token(TOKEN_UNKNOWN, "", Source(style));
     
     _currentWLCharacter = WLCharacter(0);
     wlCharacterQueue.clear();
@@ -88,22 +88,24 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
         //
         // So invent source
         //
+        
         auto Start = TheSourceManager->getTokenStart();
         
         if (stringifyNextToken_symbol) {
             
             stringifyNextToken_symbol = false;
             
-            _currentToken = Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start, Start));
+            _currentToken = Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start));
             
         } else if (stringifyNextToken_file) {
             
             stringifyNextToken_file = false;
             
-            _currentToken = Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start, Start));
+            _currentToken = Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start));
             
         } else {
-            _currentToken = Token(TOKEN_ENDOFFILE, String.str(), Source(Start, Start));
+            
+            _currentToken = Token(TOKEN_ENDOFFILE, String.str(), Source(Start));
         }
         
         return _currentToken;
@@ -143,7 +145,7 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
                 c = nextWLCharacter(TOPLEVEL);
             }
             
-            _currentToken = Token(TOKEN_WHITESPACE, String.str(), TheSourceManager->getTokenSpan());
+            _currentToken = Token(TOKEN_WHITESPACE, String.str(), TheSourceManager->getTokenSource());
             
             return _currentToken;
         }
@@ -180,7 +182,7 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
         
         c = nextWLCharacter(TOPLEVEL);
         
-        _currentToken = Token(TOKEN_NEWLINE, String.str(), TheSourceManager->getTokenSpan());
+        _currentToken = Token(TOKEN_NEWLINE, String.str(), TheSourceManager->getTokenSource());
         
     } else if (c.isSpace()) {
         
@@ -192,9 +194,9 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
             
             if (c.isStrangeSpace()) {
                 
-                auto Span = TheSourceManager->getWLCharacterSpan();
+                auto Src = TheSourceManager->getWLCharacterSource();
                 
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange space character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Span);
+                auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange space character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src);
                 
                 Issues.push_back(Issue);
             }
@@ -208,7 +210,7 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
             c = nextWLCharacter(TOPLEVEL);
         }
         
-        _currentToken = Token(TOKEN_WHITESPACE, String.str(), TheSourceManager->getTokenSpan());
+        _currentToken = Token(TOKEN_WHITESPACE, String.str(), TheSourceManager->getTokenSource());
         
     } else if (c.isPunctuation() && c.to_point() != '\\') {
         
@@ -224,7 +226,7 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
         
         c = nextWLCharacter(TOPLEVEL);
         
-        _currentToken = Token(TOKEN_LINECONTINUATION, String.str(), TheSourceManager->getTokenSpan());
+        _currentToken = Token(TOKEN_LINECONTINUATION, String.str(), TheSourceManager->getTokenSource());
         
     }
     //
@@ -237,9 +239,10 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
     } else if (c.isSpaceCharacter()) {
         
         if (c.isStrangeSpaceCharacter()) {
-            auto Span = TheSourceManager->getWLCharacterSpan();
             
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange space character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Span);
+            auto Src = TheSourceManager->getWLCharacterSource();
+            
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange space character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src);
             
             Issues.push_back(Issue);
         }
@@ -248,15 +251,15 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
         
         c = nextWLCharacter(TOPLEVEL);
         
-        _currentToken = Token(TOKEN_WHITESPACE, String.str(), TheSourceManager->getTokenSpan());
+        _currentToken = Token(TOKEN_WHITESPACE, String.str(), TheSourceManager->getTokenSource());
         
     } else if (c.isNewlineCharacter()) {
         
         if (c.isStrangeNewlineCharacter()) {
             
-            auto Span = TheSourceManager->getWLCharacterSpan();
+            auto Src = TheSourceManager->getWLCharacterSource();
             
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange newline character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Span);
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange newline character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src);
             
             Issues.push_back(Issue);
         }
@@ -265,7 +268,7 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
         
         c = nextWLCharacter(TOPLEVEL);
         
-        _currentToken = Token(TOKEN_NEWLINE, String.str(), TheSourceManager->getTokenSpan());
+        _currentToken = Token(TOKEN_NEWLINE, String.str(), TheSourceManager->getTokenSource());
         
     } else if (c.isLinearSyntax()) {
         
@@ -318,7 +321,7 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
                     }
                 }
                 
-                _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSpan());
+                _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
             }
                 break;
             case ':': {
@@ -349,7 +352,7 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
                     }
                 }
                 
-                _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSpan());
+                _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
             }
                 break;
             case '.': {
@@ -380,7 +383,7 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
                     }
                 }
                 
-                _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSpan());
+                _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
             }
                 break;
             case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': {
@@ -412,7 +415,7 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
                     }
                 }
                 
-                _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSpan());
+                _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
             }
                 break;
             case '|': {
@@ -444,7 +447,7 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
                     }
                 }
                 
-                _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSpan());
+                _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
             }
                 break;
             default: {
@@ -457,7 +460,7 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
                 
                 c = nextWLCharacter(TOPLEVEL);
                 
-                _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSpan());
+                _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
             }
                 break;
         }
@@ -474,7 +477,7 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
         
         c = nextWLCharacter(TOPLEVEL);
         
-        _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSpan());
+        _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
     }
     
     return _currentToken;
@@ -494,9 +497,9 @@ WLCharacter Tokenizer::nextWLCharacter(NextWLCharacterPolicy policy) {
         //
         // Make sure to set source information
         //
-        TheSourceManager->setSourceLocation(p.second.lines.start);
+        TheSourceManager->setSourceLocation(p.second.lineCol.start);
         TheSourceManager->setWLCharacterStart();
-        TheSourceManager->setSourceLocation(p.second.lines.end);
+        TheSourceManager->setSourceLocation(p.second.lineCol.end);
         TheSourceManager->setWLCharacterEnd();
         
         // erase first
@@ -627,7 +630,7 @@ Token Tokenizer::handleLinearSyntax(TokenizerContext Ctxt) {
     
     c = nextWLCharacter(TOPLEVEL);
     
-    return Token(Operator, String.str(), TheSourceManager->getTokenSpan());
+    return Token(Operator, String.str(), TheSourceManager->getTokenSource());
 }
 
 Token Tokenizer::handleComment(TokenizerContext Ctxt) {
@@ -649,7 +652,7 @@ Token Tokenizer::handleComment(TokenizerContext Ctxt) {
     c = nextWLCharacter(INSIDE_COMMENT);
     
     if (c.to_point() == CODEPOINT_ENDOFFILE) {
-        return Token(TOKEN_ERROR_UNTERMINATEDCOMMENT, String.str(), TheSourceManager->getTokenSpan());
+        return Token(TOKEN_ERROR_UNTERMINATEDCOMMENT, String.str(), TheSourceManager->getTokenSource());
     }
     
     while (true) {
@@ -705,7 +708,7 @@ Token Tokenizer::handleComment(TokenizerContext Ctxt) {
             
         } else if (c.to_point() == CODEPOINT_ENDOFFILE) {
             
-            return Token(TOKEN_ERROR_UNTERMINATEDCOMMENT, String.str(), TheSourceManager->getTokenSpan());
+            return Token(TOKEN_ERROR_UNTERMINATEDCOMMENT, String.str(), TheSourceManager->getTokenSource());
             
         } else {
             
@@ -716,7 +719,7 @@ Token Tokenizer::handleComment(TokenizerContext Ctxt) {
         
     } // while
     
-    return Token(TOKEN_COMMENT, String.str(), TheSourceManager->getTokenSpan());
+    return Token(TOKEN_COMMENT, String.str(), TheSourceManager->getTokenSource());
 }
 
 //
@@ -744,9 +747,9 @@ Token Tokenizer::handleSymbol(TokenizerContext Ctxt) {
         
         if (Ctxt.SlotFlag) {
             
-            auto Span = TheSourceManager->getWLCharacterSpan();
+            auto Src = TheSourceManager->getWLCharacterSource();
             
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.\n``#`` is not documented to allow **`** characters.", SYNTAXISSUESEVERITY_REMARK, Span);
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.\n``#`` is not documented to allow **`** characters.", SYNTAXISSUESEVERITY_REMARK, Src);
             
             Issues.push_back(Issue);
         }
@@ -760,14 +763,14 @@ Token Tokenizer::handleSymbol(TokenizerContext Ctxt) {
             handleSymbolSegment(Ctxt);
             
         } else {
-            return Token(TOKEN_OTHER, String.str(), TheSourceManager->getTokenSpan());
+            return Token(TOKEN_OTHER, String.str(), TheSourceManager->getTokenSource());
         }
         
         c = currentWLCharacter();
         
     } // while
     
-    return Token(TOKEN_SYMBOL, String.str(), TheSourceManager->getTokenSpan());
+    return Token(TOKEN_SYMBOL, String.str(), TheSourceManager->getTokenSource());
 }
 
 void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
@@ -780,9 +783,9 @@ void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
         
         if (Ctxt.SlotFlag) {
             
-            auto Span = TheSourceManager->getWLCharacterSpan();
+            auto Src = TheSourceManager->getWLCharacterSource();
             
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.\n``#`` is not documented to allow ``$`` characters.", SYNTAXISSUESEVERITY_REMARK, Span);
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.\n``#`` is not documented to allow ``$`` characters.", SYNTAXISSUESEVERITY_REMARK, Src);
             
             Issues.push_back(Issue);
         }
@@ -790,9 +793,9 @@ void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
     
     if (c.isStrangeLetterlike() || c.isStrangeLetterlikeCharacter()) {
         
-        auto Span = TheSourceManager->getWLCharacterSpan();
+        auto Src = TheSourceManager->getWLCharacterSource();
         
-        auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange character in symbol: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Span);
+        auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange character in symbol: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src);
         
         Issues.push_back(Issue);
     }
@@ -819,9 +822,9 @@ void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
                 
                 if (Ctxt.SlotFlag) {
                     
-                    auto Span = TheSourceManager->getWLCharacterSpan();
+                    auto Src = TheSourceManager->getWLCharacterSource();
                     
-                    auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.\n``#`` is not documented to allow ``$`` characters.", SYNTAXISSUESEVERITY_REMARK, Span);
+                    auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.\n``#`` is not documented to allow ``$`` characters.", SYNTAXISSUESEVERITY_REMARK, Src);
                     
                     Issues.push_back(Issue);
                 }
@@ -829,9 +832,9 @@ void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
             
             if (c.isStrangeLetterlike() || c.isStrangeLetterlikeCharacter()) {
                 
-                auto Span = TheSourceManager->getWLCharacterSpan();
+                auto Src = TheSourceManager->getWLCharacterSource();
                 
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange character in symbol: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Span);
+                auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange character in symbol: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src);
                 
                 Issues.push_back(Issue);
             }
@@ -901,9 +904,10 @@ Token Tokenizer::handleString(TokenizerContext Ctxt) {
             //
             // So invent source
             //
+            
             auto Start = TheSourceManager->getTokenStart();
             
-            return Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start, Start));
+            return Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start));
         }
         
         //
@@ -926,7 +930,7 @@ Token Tokenizer::handleString(TokenizerContext Ctxt) {
             
             handleSymbolSegment(Ctxt);
             
-            return Token(TOKEN_STRING, String.str(), TheSourceManager->getTokenSpan());
+            return Token(TOKEN_STRING, String.str(), TheSourceManager->getTokenSource());
             
         } else {
             
@@ -938,7 +942,7 @@ Token Tokenizer::handleString(TokenizerContext Ctxt) {
             
             nextToken(Ctxt);
             
-            return Token(TOKEN_OTHER, String.str(), TheSourceManager->getTokenSpan());
+            return Token(TOKEN_OTHER, String.str(), TheSourceManager->getTokenSource());
         }
         
     } else if (stringifyNextToken_file && c.to_point() != '"') {
@@ -1002,7 +1006,7 @@ Token Tokenizer::handleString(TokenizerContext Ctxt) {
         
         assert(!empty);
         
-        return Token(TOKEN_STRING, String.str(), TheSourceManager->getTokenSpan());
+        return Token(TOKEN_STRING, String.str(), TheSourceManager->getTokenSource());
         
     } else {
         
@@ -1020,7 +1024,7 @@ Token Tokenizer::handleString(TokenizerContext Ctxt) {
             
             if (c.to_point() == CODEPOINT_ENDOFFILE) {
                 
-                return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), TheSourceManager->getTokenSpan());
+                return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), TheSourceManager->getTokenSource());
                 
             } else if (c.to_point() == '"') {
                 //
@@ -1041,7 +1045,7 @@ Token Tokenizer::handleString(TokenizerContext Ctxt) {
         stringifyNextToken_symbol = false;
         stringifyNextToken_file = false;
         
-        return Token(TOKEN_STRING, String.str(), TheSourceManager->getTokenSpan());
+        return Token(TOKEN_STRING, String.str(), TheSourceManager->getTokenSource());
     }
 }
 
@@ -1068,7 +1072,7 @@ Token Tokenizer::handleFileOpsBrackets(TokenizerContext Ctxt) {
     c = nextWLCharacter(INSIDE_STRING_FILEIFY);
     
     if (c.to_point() == CODEPOINT_ENDOFFILE) {
-        return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), TheSourceManager->getTokenSpan());
+        return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), TheSourceManager->getTokenSource());
     }
     
     while (true) {
@@ -1084,7 +1088,7 @@ Token Tokenizer::handleFileOpsBrackets(TokenizerContext Ctxt) {
             c = nextWLCharacter(INSIDE_STRING_FILEIFY);
             
             if (c.to_point() == CODEPOINT_ENDOFFILE) {
-                return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), TheSourceManager->getTokenSpan());
+                return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), TheSourceManager->getTokenSource());
             }
             
             depth = depth + 1;
@@ -1108,7 +1112,7 @@ Token Tokenizer::handleFileOpsBrackets(TokenizerContext Ctxt) {
                 c = nextWLCharacter(INSIDE_STRING_FILEIFY);
                 
                 if (c.to_point() == CODEPOINT_ENDOFFILE) {
-                    return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), TheSourceManager->getTokenSpan());
+                    return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), TheSourceManager->getTokenSource());
                 }
             }
             
@@ -1117,19 +1121,19 @@ Token Tokenizer::handleFileOpsBrackets(TokenizerContext Ctxt) {
             String << c;
             
             if (c.isSpace() || c.isNewline() || c.isSpaceCharacter() || c.isNewlineCharacter()) {
-                return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), TheSourceManager->getTokenSpan());
+                return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), TheSourceManager->getTokenSource());
             }
             
             c = nextWLCharacter(INSIDE_STRING_FILEIFY);
             
             if (c.to_point() == CODEPOINT_ENDOFFILE) {
-                return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), TheSourceManager->getTokenSpan());
+                return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), TheSourceManager->getTokenSource());
             }
         }
         
     } // while
     
-    return Token(TOKEN_STRING, String.str(), TheSourceManager->getTokenSpan());
+    return Token(TOKEN_STRING, String.str(), TheSourceManager->getTokenSource());
 }
 
 //
@@ -1193,7 +1197,7 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
                 
                 c = nextWLCharacter(INSIDE_NUMBER);
                 
-                return Token(TOKEN_ERROR_INVALIDBASE, String.str(), TheSourceManager->getTokenSpan());
+                return Token(TOKEN_ERROR_INVALIDBASE, String.str(), TheSourceManager->getTokenSource());
             }
             
             String << Caret1Char;
@@ -1206,7 +1210,7 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
                 auto handle = handleDigitsOrAlpha(Ctxt, base);
                 if (handle == -1) {
                     
-                    return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSpan());
+                    return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
                 }
                 
             } else if (c.to_point() != '.') {
@@ -1218,7 +1222,7 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
                 
                 c = nextWLCharacter(INSIDE_NUMBER);
                 
-                return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSpan());
+                return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
             }
             
         } else {
@@ -1229,7 +1233,7 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
             // Must now do surgery and back up
             //
             
-            auto Span = TheSourceManager->getWLCharacterSpan();
+            auto Src = TheSourceManager->getWLCharacterSource();
             
             //
             // FIXME: CaretLoc-1 is not correct because of something like this:
@@ -1246,9 +1250,9 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
             TheSourceManager->setWLCharacterEnd();
             _currentWLCharacter = Caret1Char;
             
-            append(c, Span);
+            append(c, Src);
             
-            return Token(TOKEN_INTEGER, String.str(), TheSourceManager->getTokenSpan());
+            return Token(TOKEN_INTEGER, String.str(), TheSourceManager->getTokenSource());
         }
     }
     
@@ -1260,7 +1264,7 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
         
         auto handle = handleFractionalPart(Ctxt, base);
         if (handle == -1) {
-            return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSpan());
+            return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
         }
         
         real = true;
@@ -1340,7 +1344,7 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
                     
                     c = nextWLCharacter(INSIDE_NUMBER);
                     
-                    return Token(TOKEN_ERROR_EXPECTEDACCURACY, String.str(), TheSourceManager->getTokenSpan());
+                    return Token(TOKEN_ERROR_EXPECTEDACCURACY, String.str(), TheSourceManager->getTokenSource());
                     
                 } else {
                     
@@ -1362,7 +1366,7 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
                     
                     
                     
-                    auto Span = TheSourceManager->getWLCharacterSpan();
+                    auto Src = TheSourceManager->getWLCharacterSource();
                     
                     //
                     // FIXME: SignLoc-1 is not correct because of something like this:
@@ -1379,9 +1383,9 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
                     TheSourceManager->setWLCharacterEnd();
                     _currentWLCharacter = s;
                     
-                    append(c, Span);
+                    append(c, Src);
                     
-                    return Token(TOKEN_REAL, String.str(), TheSourceManager->getTokenSpan());
+                    return Token(TOKEN_REAL, String.str(), TheSourceManager->getTokenSource());
                 }
             }
             
@@ -1415,7 +1419,7 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
                     // look ahead
                     auto NextChar = nextWLCharacter(INSIDE_NUMBER);
                     
-                    auto Span = TheSourceManager->getWLCharacterSpan();
+                    auto Src = TheSourceManager->getWLCharacterSource();
                     
                     //
                     // Must now do surgery and back up
@@ -1430,7 +1434,7 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
                     TheSourceManager->setWLCharacterEnd();
                     _currentWLCharacter = DotChar;
                     
-                    append(NextChar, Span);
+                    append(NextChar, Src);
                     
                     if (!NextChar.isDigit()) {
                         
@@ -1448,7 +1452,7 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
                             // this grabs the next character
                             c = nextWLCharacter(INSIDE_NUMBER);
                             
-                            return Token(TOKEN_ERROR_EXPECTEDACCURACY, String.str(), TheSourceManager->getTokenSpan());
+                            return Token(TOKEN_ERROR_EXPECTEDACCURACY, String.str(), TheSourceManager->getTokenSource());
                             
                         } else {
                             
@@ -1456,7 +1460,7 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
                             // Something like  123`.xxx  where the . could be a Dot operator
                             //
                             
-                            return Token(TOKEN_REAL, String.str(), TheSourceManager->getTokenSpan());
+                            return Token(TOKEN_REAL, String.str(), TheSourceManager->getTokenSource());
                         }
                     }
                 }
@@ -1483,7 +1487,7 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
                     
                     c = nextWLCharacter(INSIDE_NUMBER);
                     
-                    return Token(TOKEN_ERROR_EXPECTEDACCURACY, String.str(), TheSourceManager->getTokenSpan());
+                    return Token(TOKEN_ERROR_EXPECTEDACCURACY, String.str(), TheSourceManager->getTokenSource());
                 }
             }
         }
@@ -1523,7 +1527,7 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
                 
                 c = nextWLCharacter(INSIDE_NUMBER);
                 
-                return Token(TOKEN_ERROR_EXPECTEDEXPONENT, String.str(), TheSourceManager->getTokenSpan());
+                return Token(TOKEN_ERROR_EXPECTEDEXPONENT, String.str(), TheSourceManager->getTokenSource());
             }
             
             c = currentWLCharacter();
@@ -1538,7 +1542,7 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
                 
                 c = nextWLCharacter(INSIDE_NUMBER);
                 
-                return Token(TOKEN_ERROR_EXPECTEDEXPONENT, String.str(), TheSourceManager->getTokenSpan());
+                return Token(TOKEN_ERROR_EXPECTEDEXPONENT, String.str(), TheSourceManager->getTokenSource());
             }
             
         } else {
@@ -1549,7 +1553,7 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
             // Must now do surgery and back up
             //
             
-            auto Span = TheSourceManager->getWLCharacterSpan();
+            auto Src = TheSourceManager->getWLCharacterSource();
             
             //
             // FIXME: StarLoc-1 is not correct because of something like this:
@@ -1566,20 +1570,20 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
             TheSourceManager->setWLCharacterEnd();
             _currentWLCharacter = StarChar;
             
-            append(c, Span);
+            append(c, Src);
             
             if (real) {
-                return Token(TOKEN_REAL, String.str(), TheSourceManager->getTokenSpan());
+                return Token(TOKEN_REAL, String.str(), TheSourceManager->getTokenSource());
             } else {
-                return Token(TOKEN_INTEGER, String.str(), TheSourceManager->getTokenSpan());
+                return Token(TOKEN_INTEGER, String.str(), TheSourceManager->getTokenSource());
             }
         }
     }
     
     if (real) {
-        return Token(TOKEN_REAL, String.str(), TheSourceManager->getTokenSpan());
+        return Token(TOKEN_REAL, String.str(), TheSourceManager->getTokenSource());
     } else {
-        return Token(TOKEN_INTEGER, String.str(), TheSourceManager->getTokenSpan());
+        return Token(TOKEN_INTEGER, String.str(), TheSourceManager->getTokenSource());
     }
 }
 
@@ -2014,7 +2018,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                         // Must now do surgery and back up
                         //
                         
-                        auto Span = TheSourceManager->getWLCharacterSpan();
+                        auto Src = TheSourceManager->getWLCharacterSource();
                         
                         //
                         // FIXME: DotLoc-1 is not correct because of something like this:
@@ -2031,7 +2035,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                         TheSourceManager->setWLCharacterEnd();
                         _currentWLCharacter = DotChar;
                         
-                        append(c, Span);
+                        append(c, Src);
                         
                         Operator = TOKEN_EQUAL;
                         
@@ -2082,7 +2086,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                         // Must now do surgery and back up
                         //
                         
-                        auto Span = TheSourceManager->getWLCharacterSpan();
+                        auto Src = TheSourceManager->getWLCharacterSource();
                         
                         //
                         // FIXME: BangLoc-1 is not correct because of something like this:
@@ -2099,7 +2103,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                         TheSourceManager->setWLCharacterEnd();
                         _currentWLCharacter = BangChar;
                         
-                        append(c, Span);
+                        append(c, Src);
                         
                         Operator = TOKEN_EQUAL;
                     }
@@ -2156,7 +2160,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                         Issues.push_back(Issue);
                         
                         
-                        auto Span = TheSourceManager->getWLCharacterSpan();
+                        auto Src = TheSourceManager->getWLCharacterSource();
                         
                         //
                         // FIXME: DotLoc-1 is not correct because of something like this:
@@ -2173,7 +2177,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                         TheSourceManager->setWLCharacterEnd();
                         _currentWLCharacter = DotChar;
                         
-                        append(c, Span);
+                        append(c, Src);
                         
                         Operator = TOKEN_UNDER; // _
                         
@@ -2200,7 +2204,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                     break;
             }
             
-            return Token(Operator, String.str(), TheSourceManager->getTokenSpan());
+            return Token(Operator, String.str(), TheSourceManager->getTokenSource());
         }
             break;
         case '<': {
@@ -2272,7 +2276,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                         // Must now do surgery and back up
                         //
                         
-                        auto Span = TheSourceManager->getWLCharacterSpan();
+                        auto Src = TheSourceManager->getWLCharacterSource();
                         
                         //
                         // FIXME: MinusLoc-1 is not correct because of something like this:
@@ -2289,7 +2293,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                         TheSourceManager->setWLCharacterEnd();
                         _currentWLCharacter = MinusChar;
                         
-                        append(c, Span);
+                        append(c, Src);
                         
                         Operator = TOKEN_LESS;
                     }
@@ -2956,7 +2960,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
         }
     }
     
-    return Token(Operator, String.str(), TheSourceManager->getTokenSpan());
+    return Token(Operator, String.str(), TheSourceManager->getTokenSource());
 }
 
 std::vector<SyntaxIssue> Tokenizer::getIssues() const {

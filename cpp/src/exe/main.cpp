@@ -12,9 +12,11 @@ int EXPRESSION = 0;
 int TOKENIZE = 1;
 int LEAF = 2;
 
+std::string Style = "LineCol";
+
 int readStdIn(int mode, bool printOutput);
 
-int readFile(std::string file, bool printOutput);
+int readFile(std::string file, int mode, bool printOutput);
 void printExpression(MLINK mlp);
 
 int main(int argc, char *argv[]) {
@@ -53,13 +55,21 @@ int main(int argc, char *argv[]) {
     }
     
     if (file) {
-        return readFile(fileInput, printOutput);
-    } else if (leaf) {
-        return readStdIn(LEAF, printOutput);
-    } else if (tokenize) {
-        return readStdIn(TOKENIZE, printOutput);
+        if (leaf) {
+            return readFile(fileInput, LEAF, printOutput);
+        } else if (tokenize) {
+            return readFile(fileInput,TOKENIZE, printOutput);
+        } else {
+            return readFile(fileInput,EXPRESSION, printOutput);
+        }
     } else {
-        return readStdIn(EXPRESSION, printOutput);
+        if (leaf) {
+            return readStdIn(LEAF, printOutput);
+        } else if (tokenize) {
+            return readStdIn(TOKENIZE, printOutput);
+        } else {
+            return readStdIn(EXPRESSION, printOutput);
+        }
     }
 }
 
@@ -77,18 +87,46 @@ int readStdIn(int mode, bool printOutput) {
     
     auto mlp = TheMLSession.getMLINK();
     
-    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 1)) {
-        return res;
-    }
-    if (!MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(input.c_str()), static_cast<int>(input.size()))) {
-        return res;
-    }
-    
     if (mode == TOKENIZE) {
+        
+        if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 2)) {
+            return res;
+        }
+        if (!MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(input.c_str()), static_cast<int>(input.size()))) {
+            return res;
+        }
+        if (!MLPutString(mlp, Style.c_str())) {
+            return res;
+        }
+        
         res = TokenizeString_LibraryLink(nullptr, mlp);
+        
     } else if (mode == LEAF) {
+        
+        if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 2)) {
+            return res;
+        }
+        if (!MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(input.c_str()), static_cast<int>(input.size()))) {
+            return res;
+        }
+        if (!MLPutString(mlp, Style.c_str())) {
+            return res;
+        }
+        
         res = ParseLeaf_LibraryLink(nullptr, mlp);
+        
     } else {
+        
+        if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 2)) {
+            return res;
+        }
+        if (!MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(input.c_str()), static_cast<int>(input.size()))) {
+            return res;
+        }
+        if (!MLPutString(mlp, Style.c_str())) {
+            return res;
+        }
+        
         res = ConcreteParseString_LibraryLink(nullptr, mlp);
     }
     
@@ -104,7 +142,7 @@ int readStdIn(int mode, bool printOutput) {
     return res;
 }
 
-int readFile(std::string file, bool printOutput) {
+int readFile(std::string file, int mode, bool printOutput) {
     
     int res = LIBRARY_FUNCTION_ERROR;
     
@@ -114,17 +152,41 @@ int readFile(std::string file, bool printOutput) {
     
     auto mlp = TheMLSession.getMLINK();
     
-    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 2)) {
-        return res;
+    if (mode == TOKENIZE) {
+        
+        if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 3)) {
+            return res;
+        }
+        if (!MLPutString(mlp, file.c_str())) {
+            return res;
+        }
+        if (!MLPutSymbol(mlp, "False")) {
+            return res;
+        }
+        if (!MLPutString(mlp, Style.c_str())) {
+            return res;
+        }
+        
+        res = TokenizeFile_LibraryLink(nullptr, mlp);
+        
+    } else {
+        
+        if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 3)) {
+            return res;
+        }
+        if (!MLPutString(mlp, file.c_str())) {
+            return res;
+        }
+        if (!MLPutSymbol(mlp, "False")) {
+            return res;
+        }
+        if (!MLPutString(mlp, Style.c_str())) {
+            return res;
+        }
+        
+        res = ConcreteParseFile_LibraryLink(nullptr, mlp);
+        
     }
-    if (!MLPutString(mlp, file.c_str())) {
-        return res;
-    }
-    if (!MLPutSymbol(mlp, "False")) {
-        return res;
-    }
-    
-    res = ConcreteParseFile_LibraryLink(nullptr, mlp);
     if (res != LIBRARY_NO_ERROR) {
         return res;
     }

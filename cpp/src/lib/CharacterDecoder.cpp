@@ -233,7 +233,7 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
                         // CharacterStart is the first \, so then queuedCharacterStart is
                         // start of the next line
                         //
-                        auto queuedCharacterStart = SourceLocation(CharacterStart.Line+1, 0);
+                        auto queuedCharacterStart = CharacterStart.nextLine();
                         
                         TheByteDecoder->append('\n', queuedCharacterStart);
                         

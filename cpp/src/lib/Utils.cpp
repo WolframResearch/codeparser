@@ -5,6 +5,7 @@
 
 #include <sstream>
 #include <unordered_set>
+#include <cstring> // for strcmp with GCC and MSVC
 
 //
 // s MUST contain an integer
@@ -122,11 +123,18 @@ void Utils::differentLineWarning(Token Tok1, Token Tok2, SyntaxIssueSeverity Sev
         return;
     }
     
-    if (Tok1.Span.lines.end.Line == Tok2.Span.lines.start.Line) {
+    //
+    // Only check if LineCol
+    //
+    if (Tok1.Src.style != SOURCESTYLE_LINECOL) {
         return;
     }
     
-    auto Issue = SyntaxIssue(SYNTAXISSUETAG_DIFFERENTLINE, "``" + Tok1.Str + "`` and ``" + Tok2.Str + "`` are on different lines.", Severity, Source(Tok1.Span.lines.start, Tok2.Span.lines.end));
+    if (Tok1.Src.lineCol.end.Line == Tok2.Src.lineCol.start.Line) {
+        return;
+    }
+    
+    auto Issue = SyntaxIssue(SYNTAXISSUETAG_DIFFERENTLINE, "``" + Tok1.Str + "`` and ``" + Tok2.Str + "`` are on different lines.", Severity, Source(Tok1.Src, Tok2.Src));
     
     TheParser->addIssue(Issue);
 }
@@ -153,7 +161,14 @@ void Utils::endOfLineWarning(Token Tok, Token EndTok) {
         return;
     }
     
-    auto Issue = SyntaxIssue(SYNTAXISSUETAG_ENDOFLINE, "``;;`` is at the end of a line.\nThis could be confused for ``;``.\nDid you mean ``;``?", SYNTAXISSUESEVERITY_WARNING, Tok.Span);
+    //
+    // Only check if LineCol
+    //
+    if (Tok.Src.style != SOURCESTYLE_LINECOL) {
+        return;
+    }
+    
+    auto Issue = SyntaxIssue(SYNTAXISSUETAG_ENDOFLINE, "``;;`` is at the end of a line.\nThis could be confused for ``;``.\nDid you mean ``;``?", SYNTAXISSUESEVERITY_WARNING, Tok.Src);
     
     TheParser->addIssue(Issue);
 }
@@ -167,11 +182,44 @@ void Utils::notContiguousWarning(Token Tok1, Token Tok2) {
         return;
     }
     
-    if (isContiguous(Tok1.Span, Tok2.Span)) {
+    //
+    // Only check if LineCol or OffsetLen
+    //
+    if (!(Tok1.Src.style == SOURCESTYLE_LINECOL ||
+         Tok1.Src.style == SOURCESTYLE_OFFSETLEN)) {
         return;
     }
     
-    auto Issue = SyntaxIssue(SYNTAXISSUETAG_NOTCONTIGUOUS, std::string("Tokens are not contiguous"), SYNTAXISSUESEVERITY_FORMATTING, Source(Tok1.Span.lines.end, Tok2.Span.lines.start));
+    if (isContiguous(Tok1.Src, Tok2.Src)) {
+        return;
+    }
+    
+    auto Issue = SyntaxIssue(SYNTAXISSUETAG_NOTCONTIGUOUS, std::string("Tokens are not contiguous"), SYNTAXISSUESEVERITY_FORMATTING, Source(Tok1.Src, Tok2.Src));
     
     TheParser->addIssue(Issue);
 }
+
+
+bool Utils::parseBooleanSymbol(const char * sym) {
+    
+    if (strcmp(sym, SYMBOL_TRUE->name()) == 0) {
+        return true;
+    }
+    
+    return false;
+}
+
+SourceStyle Utils::parseSourceStyle(const char *str) {
+    
+    if (strcmp(str, "LineCol") == 0) {
+        return SOURCESTYLE_LINECOL;
+    } else if (strcmp(str, "OffsetLen") == 0) {
+        return SOURCESTYLE_OFFSETLEN;
+    }
+    
+    return SOURCESTYLE_UNKNOWN;
+}
+
+
+
+

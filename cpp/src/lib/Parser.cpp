@@ -3,6 +3,7 @@
 
 #include "Parselet.h"
 #include "Tokenizer.h"
+#include "SourceManager.h"
 #include "Utils.h"
 #include "Symbol.h"
 
@@ -591,7 +592,8 @@ bool Parser::isPossibleBeginningOfExpression(const Token& Tok, ParserContext Ctx
     // StartOfLine parselet?
     //
     if (CtxtIn.getGroupDepth() == 0) {
-        if (Tok.Span.lines.start.Col == 1) {
+        if (Tok.Src.style == SOURCESTYLE_LINECOL &&
+            Tok.Src.lineCol.start.Col == 1) {
             auto& S = startOfLineParselets[Tok.Tok];
             if (S != nullptr) {
                 return true;
@@ -741,7 +743,7 @@ Precedence Parser::getCurrentTokenPrecedence(Token& TokIn, ParserContext Ctxt) {
         // So invent source
         //
         
-        auto Implicit = Token(TOKEN_FAKE_IMPLICITTIMES, "", Source(TokIn.Span.lines.start));
+        auto Implicit = Token(TOKEN_FAKE_IMPLICITTIMES, "", Source(TokIn.Src.start()));
         
         prepend(Implicit);
     }
@@ -753,7 +755,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
     
     if (isAbort()) {
         
-        auto A = Token(TOKEN_ERROR_ABORTED, "", Source());
+        auto A = Token(TOKEN_ERROR_ABORTED, "", Source(TheSourceManager->getSourceLocation()));
         
         //        const auto& Aborted = std::unique_ptr<const Node>(new LeafNode(A));
         NodePtr Aborted = std::unique_ptr<Node>(new LeafNode(A));
@@ -781,7 +783,8 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
     // StartOfLine
     //
     if (CtxtIn.getGroupDepth() == 0) {
-        if (token.Span.lines.start.Col == 1) {
+        if (token.Src.style == SOURCESTYLE_LINECOL &&
+            token.Src.lineCol.start.Col == 1) {
             auto& S = startOfLineParselets[token.Tok];
             if (S != nullptr) {
                 
@@ -825,7 +828,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
                     // Also, invent Source
                     //
                     
-                    auto createdToken = Token( token.Tok == TOKEN_COMMA ? TOKEN_FAKE_IMPLICITNULL : TOKEN_ERROR_EXPECTEDOPERAND, "", Source(token.Span.lines.start, token.Span.lines.start));
+                    auto createdToken = Token( token.Tok == TOKEN_COMMA ? TOKEN_FAKE_IMPLICITNULL : TOKEN_ERROR_EXPECTEDOPERAND, "", Source(token.Src.start()));
                     
                     Left = std::unique_ptr<Node>(new LeafNode(createdToken));
                     
@@ -842,7 +845,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
                     // Do not take next token
                     //
                     
-                    auto createdToken = Token(token.Tok == TOKEN_COMMA ? TOKEN_FAKE_IMPLICITNULL : TOKEN_ERROR_EXPECTEDOPERAND, "", Source(token.Span.lines.start, token.Span.lines.start));
+                    auto createdToken = Token(token.Tok == TOKEN_COMMA ? TOKEN_FAKE_IMPLICITNULL : TOKEN_ERROR_EXPECTEDOPERAND, "", Source(token.Src));
                     
                     Left = std::unique_ptr<Node>(new LeafNode(createdToken));
                     
@@ -882,7 +885,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
         
         if (isAbort()) {
             
-            auto A = Token(TOKEN_ERROR_ABORTED, "", Source());
+            auto A = Token(TOKEN_ERROR_ABORTED, "", Source(TheSourceManager->getSourceLocation()));
             
             return std::unique_ptr<Node>(new LeafNode(A));
         }

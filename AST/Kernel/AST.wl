@@ -237,15 +237,24 @@ loadAllFuncs[]
 
 ConcreteParseString::usage = "ConcreteParseString[string] returns a concrete syntax tree by interpreting string as WL input."
 
-ConcreteParseString[s_String, h_:Automatic] :=
-	concreteParseString[s, h]
+Options[ConcreteParseString] = {
+	"SourceStyle" -> "LineCol"
+}
+
+ConcreteParseString[s_String, h_:Automatic, opts:OptionsPattern[]] :=
+	concreteParseString[s, h, opts]
+
+
+Options[concreteParseString] = Options[ConcreteParseString]
 
 concreteParseString[sIn_String, hIn_, OptionsPattern[]] :=
 Catch[
-Module[{s, h, res},
+Module[{s, h, res, style},
 
 	s = sIn;
 	h = hIn;
+
+	style = OptionValue["SourceStyle"];
 
 	If[h === Automatic,
 		(*
@@ -272,7 +281,7 @@ Module[{s, h, res},
 	and the next use throws LIBRARY_FUNCTION_ERROR
 	*)
 	CheckAbort[
-	res = concreteParseStringFunc[s];
+	res = concreteParseStringFunc[s, style];
 	,
 	loadAllFuncs[];
 	Abort[]
@@ -300,17 +309,21 @@ Note: If there are multiple expressions in string, then only the last expression
 ParseString[string, h] wraps the output with h and allows multiple expressions to be returned. \
 This is similar to how ToExpression operates."
 
+Options[ParseString] = {
+	"SourceStyle" -> "LineCol"
+}
+
 (*
 may return:
 a node
 or Null if input was an empty string
 or something FailureQ if e.g., no permission to run wl-ast
 *)
-ParseString[s_String, h_:Automatic] :=
+ParseString[s_String, h_:Automatic, opts:OptionsPattern[]] :=
 Catch[
 Module[{cst, ast, agg},
 	
-	cst = ConcreteParseString[s, h];
+	cst = ConcreteParseString[s, h, opts];
 
 	If[FailureQ[cst],
 		Throw[cst]
@@ -329,7 +342,8 @@ Module[{cst, ast, agg},
 ConcreteParseFile::usage = "ConcreteParseFile[file] returns a concrete syntax tree by interpreting file as WL input."
 
 Options[ConcreteParseFile] = {
-	CharacterEncoding -> "UTF8"
+	CharacterEncoding -> "UTF8",
+	"SourceStyle" -> "LineCol"
 }
 
 (*
@@ -343,9 +357,13 @@ Options[concreteParseFile] = Options[ConcreteParseFile]
 
 concreteParseFile[file_String, hIn_, OptionsPattern[]] :=
 Catch[
-Module[{h, encoding, full, res, skipFirstLine = False, shebangWarn = False, data, issues, firstLine, start, end, children},
+Module[{h, encoding, full, res, skipFirstLine = False, shebangWarn = False, data, issues, firstLine, start, end, children,
+	style},
 
 	h = hIn;
+
+	encoding = OptionValue[CharacterEncoding];
+	style = OptionValue["SourceStyle"];
 
 	(*
 	The <||> will be filled in with Source later
@@ -355,7 +373,6 @@ Module[{h, encoding, full, res, skipFirstLine = False, shebangWarn = False, data
 		h = FileNode[File, #[[1]], <| SyntaxIssues -> #[[2]] |>]&
 	];
 
-	encoding = OptionValue[CharacterEncoding];
 	If[encoding =!= "UTF8",
 		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
 	];
@@ -412,7 +429,7 @@ Module[{h, encoding, full, res, skipFirstLine = False, shebangWarn = False, data
 	$ConcreteParseTime = Quantity[0, "Seconds"];
 	$MathLinkTime = Quantity[0, "Seconds"];
 	CheckAbort[
-	res = concreteParseFileFunc[full, skipFirstLine];
+	res = concreteParseFileFunc[full, style, skipFirstLine];
 	,
 	loadAllFuncs[];
 	Abort[]
@@ -465,7 +482,8 @@ Module[{h, encoding, full, res, skipFirstLine = False, shebangWarn = False, data
 ParseFile::usage = "ParseFile[file] returns an abstract syntax tree by interpreting file as WL input."
 
 Options[ParseFile] = {
-	CharacterEncoding -> "UTF8"
+	CharacterEncoding -> "UTF8",
+	"SourceStyle" -> "LineCol"
 }
 
 ParseFile[file_String | File[file_String], h_:Automatic, opts:OptionsPattern[]] :=
@@ -490,12 +508,21 @@ Module[{cst, ast, agg},
 
 TokenizeString::usage = "TokenizeString[string] returns a list of tokens by interpreting string as WL input."
 
+Options[TokenizeString] = {
+	"SourceStyle" -> "LineCol"
+}
+
 TokenizeString[s_String] :=
 	tokenizeString[s]
 
+
+Options[tokenizeString] = Options[TokenizeString]
+
 tokenizeString[sIn_String, OptionsPattern[]] :=
 Catch[
-Module[{s = sIn, res},
+Module[{s = sIn, res, style},
+
+	style = OptionValue["SourceStyle"];
 
 	If[FailureQ[tokenizeStringFunc],
 		Throw[tokenizeStringFunc]
@@ -506,7 +533,7 @@ Module[{s = sIn, res},
 	$ConcreteParseTime = Quantity[0, "Seconds"];
 	$MathLinkTime = Quantity[0, "Seconds"];
 	CheckAbort[
-	res = tokenizeStringFunc[s];
+	res = tokenizeStringFunc[s, style];
 	,
 	loadAllFuncs[];
 	Abort[]
@@ -534,7 +561,8 @@ Module[{s = sIn, res},
 TokenizeFile::usage = "TokenizeFile[file] returns a list of tokens by interpreting file as WL input."
 
 Options[TokenizeFile] = {
-	CharacterEncoding -> "UTF8"
+	CharacterEncoding -> "UTF8",
+	"SourceStyle" -> "LineCol"
 }
 
 TokenizeFile[s_String | File[s_String], opts:OptionsPattern[]] :=
@@ -547,11 +575,13 @@ Options[tokenizeFile] = Options[TokenizeFile]
 
 tokenizeFile[sIn_String, OptionsPattern[]] :=
 Catch[
-Module[{s, encoding, res},
+Module[{s, encoding, res, style},
 
 	s = sIn;
 
 	encoding = OptionValue[CharacterEncoding];
+	style = OptionValue["SourceStyle"];
+
 	If[encoding =!= "UTF8",
 		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
 	];
@@ -565,7 +595,7 @@ Module[{s, encoding, res},
 	$ConcreteParseTime = Quantity[0, "Seconds"];
 	$MathLinkTime = Quantity[0, "Seconds"];
 	CheckAbort[
-	res = tokenizeFileFunc[s];
+	res = tokenizeFileFunc[s, style];
 	,
 	loadAllFuncs[];
 	Abort[]
@@ -589,14 +619,23 @@ Module[{s, encoding, res},
 
 ParseLeaf::usage = "ParseLeaf[str] returns a LeafNode by interpreting str as a leaf."
 
-ParseLeaf[str_String] :=
-	parseLeaf[str]
+Options[ParseLeaf] = {
+	"SourceStyle" -> "LineCol"
+}
+
+ParseLeaf[str_String, opts:OptionsPattern[]] :=
+	parseLeaf[str, opts]
+
+
+Options[parseLeaf] = Options[ParseLeaf]
 
 parseLeaf[strIn_String, OptionsPattern[]] :=
 Catch[
-Module[{str, res, leaf, data, exprs, issues},
+Module[{str, res, leaf, data, exprs, issues, style},
 
 	str = strIn;
+
+	style = OptionValue["SourceStyle"];
 
 	If[FailureQ[parseLeafFunc],
 		Throw[parseLeafFunc]
@@ -612,7 +651,7 @@ Module[{str, res, leaf, data, exprs, issues},
 	and the next use throws LIBRARY_FUNCTION_ERROR
 	*)
 	CheckAbort[
-	res = parseLeafFunc[str];
+	res = parseLeafFunc[str, style];
 	,
 	loadAllFuncs[];
 	Abort[]

@@ -35,5 +35,9 @@ public:
     // Warn if not contiguous
     //
     static void notContiguousWarning(Token Tok1, Token Tok2);
+    
+    static bool parseBooleanSymbol(const char *);
+    
+    static SourceStyle parseSourceStyle(const char *);
 };
 

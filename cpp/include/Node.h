@@ -89,18 +89,13 @@ public:
 class Node {
     std::unique_ptr<NodeSeq> Children;
 public:
-    
-    //
-    // Tag + Children + 4 Source Ints
-    //
-    static const size_t NODE_LENGTH = 6;
 
     Node() : Children() {}
     Node(std::unique_ptr<NodeSeq> Children) : Children(std::move(Children)) {}
 
     virtual void put(MLINK mlp) const = 0;
 
-    virtual Source getSourceSpan() const;
+    virtual Source getSource() const;
 
     void putChildren(MLINK mlp) const;
 
@@ -143,8 +138,8 @@ public:
 
     void put(MLINK mlp) const override;
 
-    Source getSourceSpan() const override {
-        return Tok.Span;
+    Source getSource() const override {
+        return Tok.Src;
     }
 
     const Token getToken() const {
@@ -196,7 +191,7 @@ public:
     
     void put(MLINK mlp) const override;
     
-    Source getSourceSpan() const override;
+    Source getSource() const override;
 };
 
 

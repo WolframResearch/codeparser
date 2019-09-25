@@ -3,9 +3,9 @@
 
 #include "CodePoint.h"
 
-SourceManager::SourceManager() : buffer(), length(), idx(), lastCharacterWasCarriageReturn(false), advancedToEOF(false), Issues(), SourceLoc(1, 0), TokenStartLoc(0, 0), WLCharacterStartLoc(0, 0), WLCharacterEndLoc(0, 0), PrevWLCharacterStartLoc(0, 0), PrevWLCharacterEndLoc(0, 0), libData() {}
+SourceManager::SourceManager() : buffer(), length(), idx(), lastCharacterWasCarriageReturn(false), advancedToEOF(false), Issues(), SrcLoc(), TokenStartLoc(), WLCharacterStartLoc(), WLCharacterEndLoc(), PrevWLCharacterStartLoc(), PrevWLCharacterEndLoc(), libData() {}
 
-void SourceManager::init(std::istream& is, WolframLibraryData libDataIn) {
+void SourceManager::init(SourceStyle style, std::istream& is, WolframLibraryData libDataIn) {
     
     is.seekg(0, is.end);
     
@@ -33,12 +33,12 @@ void SourceManager::init(std::istream& is, WolframLibraryData libDataIn) {
     
     Issues.clear();
     
-    SourceLoc = SourceLocation(1, 0);
-    TokenStartLoc = SourceLocation(0, 0);
-    WLCharacterStartLoc = SourceLocation(0 ,0);
-    WLCharacterEndLoc = SourceLocation(0, 0);
-    PrevWLCharacterStartLoc = SourceLocation(0, 0);
-    PrevWLCharacterEndLoc = SourceLocation(0, 0);
+    SrcLoc = SourceLocation(style);
+    TokenStartLoc = SourceLocation(style);
+    WLCharacterStartLoc = SourceLocation(style);
+    WLCharacterEndLoc = SourceLocation(style);
+    PrevWLCharacterStartLoc = SourceLocation(style);
+    PrevWLCharacterEndLoc = SourceLocation(style);
     
     libData = libDataIn;
 }
@@ -108,7 +108,7 @@ void SourceManager::advanceSourceLocation(SourceCharacter c) {
         // Then make sure to treat it as a newline.
         //
         if (lastCharacterWasCarriageReturn) {
-            auto Loc = SourceLoc;
+            auto Loc = SrcLoc;
             
             //
             // Do not need to advance Col here
@@ -121,7 +121,7 @@ void SourceManager::advanceSourceLocation(SourceCharacter c) {
         
         lastCharacterWasCarriageReturn = false;
         
-        SourceLoc = SourceLocation(SourceLoc.Line+1, 0);
+        SrcLoc = SrcLoc.nextLine();
         
         advancedToEOF = true;
         
@@ -135,7 +135,7 @@ void SourceManager::advanceSourceLocation(SourceCharacter c) {
         //
         if (!lastCharacterWasCarriageReturn) {
             
-            SourceLoc = SourceLocation(SourceLoc.Line+1, 0);
+            SrcLoc = SrcLoc.nextLine();
         }
         
         lastCharacterWasCarriageReturn = false;
@@ -149,7 +149,7 @@ void SourceManager::advanceSourceLocation(SourceCharacter c) {
     //
     if (lastCharacterWasCarriageReturn) {
         
-        auto Loc = SourceLoc;
+        auto Loc = SrcLoc;
         
         //
         // Do not need to advance Col here
@@ -163,14 +163,14 @@ void SourceManager::advanceSourceLocation(SourceCharacter c) {
     if (c == SourceCharacter('\r')) {
         lastCharacterWasCarriageReturn = true;
         
-        SourceLoc = SourceLocation(SourceLoc.Line+1, 0);
+        SrcLoc = SrcLoc.nextLine();
         
         return;
     }
     
     lastCharacterWasCarriageReturn = false;
     
-    SourceLoc = SourceLocation(SourceLoc.Line, SourceLoc.Col+1);
+    SrcLoc++;
 }
 
 void SourceManager::setWLCharacterStart() {
@@ -178,12 +178,12 @@ void SourceManager::setWLCharacterStart() {
     PrevWLCharacterStartLoc = WLCharacterStartLoc;
     PrevWLCharacterEndLoc = WLCharacterEndLoc;
     
-    WLCharacterStartLoc = SourceLoc;
+    WLCharacterStartLoc = SrcLoc;
 }
 
 void SourceManager::setWLCharacterEnd() {
     
-    WLCharacterEndLoc = SourceLoc;
+    WLCharacterEndLoc = SrcLoc;
     
     assert(WLCharacterStartLoc <= WLCharacterEndLoc);
 }
@@ -192,7 +192,7 @@ void SourceManager::setTokenStart() {
     TokenStartLoc = WLCharacterStartLoc;
 }
 
-Source SourceManager::getTokenSpan() const {
+Source SourceManager::getTokenSource() const {
     return Source(TokenStartLoc, PrevWLCharacterEndLoc);
 }
 
@@ -200,7 +200,7 @@ SourceLocation SourceManager::getWLCharacterStart() const {
     return WLCharacterStartLoc;
 }
 
-Source SourceManager::getWLCharacterSpan() const {
+Source SourceManager::getWLCharacterSource() const {
     return Source(WLCharacterStartLoc, WLCharacterEndLoc);
 }
 
@@ -209,11 +209,11 @@ SourceLocation SourceManager::getTokenStart() const {
 }
 
 void SourceManager::setSourceLocation(SourceLocation Loc) {
-    SourceLoc = Loc;
+    SrcLoc = Loc;
 }
 
 SourceLocation SourceManager::getSourceLocation() const {
-    return SourceLoc;
+    return SrcLoc;
 }
 
 std::vector<SyntaxIssue> SourceManager::getIssues() const {
