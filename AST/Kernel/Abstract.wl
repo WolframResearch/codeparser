@@ -148,7 +148,7 @@ abstract[LeafNode[BlankSequence, _, data_]] := CallNode[ToNode[BlankSequence], {
 abstract[LeafNode[BlankNullSequence, _, data_]] := CallNode[ToNode[BlankNullSequence], {}, KeyTake[data, keysToTake]]
 abstract[LeafNode[OptionalDefault, _, data_]] := CallNode[ToNode[Optional], {CallNode[ToNode[Blank], {}, <||>]}, KeyTake[data, keysToTake]]
 
-abstract[LeafNode[Token`Error`UnhandledCharacter, str_, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`Unhandled, str, KeyTake[data, keysToTake]]
+abstract[LeafNode[Token`Error`UnhandledCharacter, str_, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`UnhandledCharacter, str, KeyTake[data, keysToTake]]
 
 abstract[LeafNode[Token`Fake`ImplicitNull, _, data_]] := LeafNode[Symbol, "Null", KeyTake[data, keysToTake] ~Join~ <|AbstractSyntaxIssues->{SyntaxIssue["Comma", "Comma encountered with no adjacent expression.\n\
 The expression will be treated as ``Null``.", "Error", <|data, CodeActions->{CodeAction["Delete Comma", DeleteNode, <||>]}|>]}|>]
@@ -171,6 +171,11 @@ abstract[PatternBlankSequenceNode[PatternBlankSequence, {sym1_, _, sym2_}, data_
 abstract[PatternBlankNullSequenceNode[PatternBlankNullSequence, {sym1_, _}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[BlankNullSequence], {}, <||>]}, KeyTake[data, keysToTake]]
 abstract[PatternBlankNullSequenceNode[PatternBlankNullSequence, {sym1_, _, sym2_}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[BlankNullSequence], {abstract[sym2]}, <||>]}, KeyTake[data, keysToTake]]
 abstract[OptionalDefaultPatternNode[OptionalDefaultPattern, {sym1_, _}, data_]] := CallNode[ToNode[Optional], {CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[Blank], {}, <||>]}, <||>]}, KeyTake[data, keysToTake]]
+
+
+abstract[LeafNode[_, str_, data_]] :=
+	AbstractSyntaxErrorNode[AbstractSyntaxError`UnhandledToken, str, KeyTake[data, keysToTake]]
+
 
 
 (*
@@ -311,6 +316,8 @@ abstract[BinaryNode[Unset, {left_, _, _}, data_]] := CallNode[ToNode[Unset], {ab
 
 abstract[BinaryNode[op_, {left_, _, right_}, data_]] := CallNode[ToNode[op], {abstract[left], abstract[right]}, KeyTake[data, keysToTake]]
 
+abstract[BinaryNode[op_, children_, data_]] :=
+	AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, children, KeyTake[data, keysToTake]]
 
 
 
@@ -331,8 +338,10 @@ abstract[InfixNode[StringJoin, children_, data_]] := abstractStringJoin[InfixNod
 
 abstract[InfixNode[MessageName, children_, data_]] := abstractMessageName[InfixNode[MessageName, children[[;;;;2]], KeyTake[data, keysToTake]]]
 
-abstract[InfixNode[op_, children_, data_]] := CallNode[ToNode[op], abstract /@ children[[;;;;2]], KeyTake[data, keysToTake]]
+abstract[InfixNode[op_, children_ /; OddQ[Length[children]], data_]] := CallNode[ToNode[op], abstract /@ children[[;;;;2]], KeyTake[data, keysToTake]]
 
+abstract[InfixNode[op_, children_, data_]] :=
+	AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, children, KeyTake[data, keysToTake]]
 
 
 
