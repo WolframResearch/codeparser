@@ -30,8 +30,12 @@ Module[{handledChildren, aggregatedChildren},
 
 	handledChildren = MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ #2]&, handledChildren];
   
-  aggregatedChildren = DeleteCases[handledChildren, LeafNode[Token`Newline | Token`WhiteSpace, _, _]];
+  aggregatedChildren = DeleteCases[handledChildren, LeafNode[Token`Newline | Token`WhiteSpace, _, _] | GroupNode[Comment, _, _]];
   
+  If[$Debug,
+    Print["aggregatedChildren: ", aggregatedChildren]
+  ];
+
   If[Length[aggregatedChildren] == 1,
     Throw[BoxNode[RowBox, {handledChildren}, <|Source->pos|>]]
   ];
@@ -329,7 +333,7 @@ Module[{handledChildren, aggregatedChildren},
 
     {LeafNode[Symbol, _, _], LeafNode[Token`Colon, _, _], ___}, BinaryNode[Pattern, handledChildren, <|Source->Append[pos, 1]|>],
     {PatternBlankNode[_, _, _], LeafNode[Token`Colon, _, _], ___}, BinaryNode[Optional, handledChildren, <|Source->Append[pos, 1]|>],
-    
+    {_, LeafNode[Token`Colon, _, _], ___}, SyntaxErrorNode[SyntaxError`ColonError, handledChildren, <|Source -> Append[pos, 1]|>],
 
     (*
     Ternary
@@ -384,6 +388,13 @@ Module[{handledChildren, aggregatedChildren},
     {LeafNode[Token`OpenParen, _, _], ___, LeafNode[Token`CloseParen, _, _]}, GroupNode[GroupParen, handledChildren, <|Source->Append[pos, 1]|>],
     {LeafNode[Token`LongName`LeftAssociation, _, _], ___, LeafNode[Token`LongName`RightAssociation, _, _]}, GroupNode[Association, handledChildren, <|Source->Append[pos, 1]|>],
     
+    (*
+    Treat comments like groups
+    *)
+    {LeafNode[Token`Boxes`OpenParenStar, _, _], ___, LeafNode[Token`Boxes`StarCloseParen, _, _]}, GroupNode[Comment, handledChildren, <|Source->Append[pos, 1]|>],
+
+    {___, LeafNode[Token`CloseCurly, _, _]}, SyntaxErrorNode[SyntaxError`ExpectedPossibleExpression, handledChildren, <|Source -> Append[pos, 1]|>],
+
     (*
     the second arg is a box, so we know it is implicit Times
     *)
