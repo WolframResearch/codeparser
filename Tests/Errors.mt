@@ -144,21 +144,14 @@ TestMatch[
 Test[
 	ParseString["(a[b[])"]
 	,
-	CallNode[LeafNode[Symbol, 
-  "a", <|Source -> {{1, 2}, {1, 2}}|>], {AbstractSyntaxErrorNode[
-   AbstractSyntaxError`GroupMissingOpener, {LeafNode[Token`OpenSquare,
-      "[", <|Source -> {{1, 3}, {1, 3}}|>], 
-    CallNode[
-     LeafNode[Symbol, 
-      "b", <|Source -> {{1, 4}, {1, 4}}|>], {GroupNode[
-       GroupSquare, {LeafNode[Token`OpenSquare, 
-         "[", <|Source -> {{1, 5}, {1, 5}}|>], 
-        LeafNode[Token`CloseSquare, 
-         "]", <|Source -> {{1, 6}, {1, 6}}|>]}, <|Source -> {{1, 
-           5}, {1, 6}}|>]}, <|Source -> {{1, 4}, {1, 6}}|>], 
-    LeafNode[Token`CloseParen, 
-     ")", <|Source -> {{1, 7}, {1, 7}}|>]}, <|Source -> {{1, 3}, {1, 
-       7}}|>]}, <|Source -> {{1, 2}, {1, 7}}|>]
+	CallNode[LeafNode[Symbol, "a", <|Source -> {{1, 2}, {1, 2}}|>], {
+		AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingCloser, {
+			LeafNode[Token`OpenSquare, "[", <|Source -> {{1, 3}, {1, 3}}|>],
+			CallNode[LeafNode[Symbol, "b", <|Source -> {{1, 4}, {1, 4}}|>], {
+				GroupNode[GroupSquare, {
+					LeafNode[Token`OpenSquare, "[", <|Source -> {{1, 5}, {1, 5}}|>],
+					LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 6}, {1, 6}}|>]}, <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 4}, {1, 6}}|>],
+			LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 7}, {1, 7}}|>]}, <|Source -> {{1, 3}, {1, 7}}|>]}, <|Source -> {{1, 2}, {1, 7}}|>]
 	,
 	TestID->"Errors-20190803-C7O2S5"
 ]

@@ -31,8 +31,12 @@ Precedence`Equal -> Precedence[Set], (* 40 *)
 Precedence`ColonEqual -> Precedence[SetDelayed], (* 40 *)
 Precedence`CaretEqual -> Precedence[UpSet], (* 40 *)
 Precedence`CaretColonEqual -> Precedence[UpSetDelayed], (* 40 *)
-Precedence`SlashColon -> Precedence`Equal,
 Precedence`LongName`Function -> Precedence`Equal,
+
+(*
+Make /: higher than = and :=
+*)
+Precedence`SlashColon -> Next,
 
 Precedence`LongName`Because -> Precedence[Because], (* 50 *)
 Precedence`LongName`Therefore -> Precedence[Therefore], (* 50 *)

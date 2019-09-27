@@ -22,8 +22,6 @@ class SourceManager {
     
     bool lastCharacterWasCarriageReturn;
     
-    bool advancedToEOF;
-    
     std::vector<SyntaxIssue> Issues;
     
     SourceLocation SrcLoc;

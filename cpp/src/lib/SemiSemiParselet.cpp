@@ -62,12 +62,9 @@ NodePtr SemiSemiParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext Ctx
     
         if (Tok.Tok != TOKEN_SEMISEMI) {
             
-            TheParser->nextToken(CtxtIn);
-            
             //
             // Prepend in correct order
             //
-            TheParser->prepend(Tok);
             TheParser->prependInReverse(std::move(ArgsTest));
             
             return Operand;
@@ -103,12 +100,9 @@ NodePtr SemiSemiParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext Ctx
 
                 if (Tok.Tok != TOKEN_SEMISEMI) {
                     
-                    TheParser->nextToken(CtxtIn);
-                    
                     //
                     // Prepend in correct order
                     //
-                    TheParser->prepend(Tok);
                     TheParser->prependInReverse(std::move(ArgsTest2));
                     
                     auto ImplicitTimes = std::unique_ptr<Node>(new InfixNode(SYMBOL_TIMES, std::move(Args)));
@@ -188,8 +182,6 @@ NodePtr SemiSemiParselet::parse0(std::unique_ptr<NodeSeq> Left, ParserContext Ct
             // a;;&
             //
             
-            TheParser->nextToken(Ctxt);
-            
             auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, "", Source(TokIn.Src.end()));
             
             Args->append(std::unique_ptr<Node>(new LeafNode(Implicit)));
@@ -197,7 +189,6 @@ NodePtr SemiSemiParselet::parse0(std::unique_ptr<NodeSeq> Left, ParserContext Ct
             //
             // Prepend in correct order
             //
-            TheParser->prepend(SecondTok);
             TheParser->prependInReverse(std::move(ArgsTest));
             
             auto Span = std::unique_ptr<Node>(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
@@ -235,6 +226,10 @@ NodePtr SemiSemiParselet::parse0(std::unique_ptr<NodeSeq> Left, ParserContext Ct
                     // a;;b&
                     //
                     
+                    //
+                    // Prepend in correct order
+                    //
+                    
                     TheParser->prependInReverse(std::move(ArgsTest2));
                     
                     auto Span = std::unique_ptr<Node>(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
@@ -263,14 +258,11 @@ NodePtr SemiSemiParselet::parse0(std::unique_ptr<NodeSeq> Left, ParserContext Ct
                         // a;;b;;&
                         //
                         
-                        TheParser->nextToken(Ctxt);
-                        
                         auto Span = std::unique_ptr<Node>(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
                         
                         //
                         // Prepend in correct order
                         //
-                        TheParser->prepend(FourthTok);
                         TheParser->prependInReverse(std::move(ArgsTest3));
                         TheParser->prepend(ThirdTok);
                         TheParser->prependInReverse(std::move(ArgsTest2));
@@ -340,8 +332,6 @@ NodePtr SemiSemiParselet::parse0(std::unique_ptr<NodeSeq> Left, ParserContext Ct
                 // a;;;;&
                 //
                 
-                TheParser->nextToken(Ctxt);
-                
                 auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, "", Source(TokIn.Src.end()));
                 
                 Args->append(std::unique_ptr<Node>(new LeafNode(Implicit)));
@@ -351,7 +341,6 @@ NodePtr SemiSemiParselet::parse0(std::unique_ptr<NodeSeq> Left, ParserContext Ct
                 //
                 // Prepend in correct order
                 //
-                TheParser->prepend(ThirdTok);
                 TheParser->prependInReverse(std::move(ArgsTest2));
                 TheParser->prepend(SecondTok);
                 TheParser->prependInReverse(std::move(ArgsTest));
@@ -372,13 +361,9 @@ NodePtr SemiSemiParselet::parse0(std::unique_ptr<NodeSeq> Left, ParserContext Ct
                 auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, "", Source(TokIn.Src.end()));
                 
                 Args->append(std::unique_ptr<Node>(new LeafNode(Implicit)));
-                
                 Args->append(std::move(ArgsTest));
-                
                 Args->append(std::unique_ptr<Node>(new LeafNode(SecondTok)));
-                
                 Args->append(std::move(ArgsTest2));
-                
                 Args->append(std::move(FirstArg));
                 
                 auto Span = std::unique_ptr<Node>(new TernaryNode(SYMBOL_SPAN, std::move(Args)));

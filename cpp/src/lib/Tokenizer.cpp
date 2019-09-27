@@ -36,7 +36,10 @@ void Tokenizer::init(SourceStyle style, bool skipFirstLine) {
             //
             // What line-like characters?
             //
-            if (c.to_point() == '\n' || c.to_point() == CODEPOINT_ENDOFFILE || c.to_point() == CODEPOINT_LINECONTINUATION) {
+            if (c.isNewline() || c.isNewlineCharacter() ||
+                c.to_point() == CODEPOINT_ENDOFFILE ||
+                c.isLineContinuation()) {
+                
                 c = TheCharacterDecoder->nextWLCharacter();
                 break;
             }
@@ -75,7 +78,7 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
     String.str("");
     
     auto Ctxt = CtxtIn;
-    Ctxt.SlotFlag = false;
+    Ctxt.clear(TOKENIZER_SLOT);
     
     TheSourceManager->setTokenStart();
     
@@ -110,7 +113,7 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
         
         return _currentToken;
         
-    } else if (Ctxt.StringifyCurrentLine) {
+    } else if ((Ctxt & TOKENIZER_STRINGIFY_CURRENT_LINE) == TOKENIZER_STRINGIFY_CURRENT_LINE) {
         
         _currentToken = handleString(Ctxt);
         
@@ -220,7 +223,7 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
         
         _currentToken = handleOperator(Ctxt);
         
-    } else if (c.to_point() == CODEPOINT_LINECONTINUATION) {
+    } else if (c.isLineContinuation()) {
         
         String << c;
         
@@ -497,9 +500,9 @@ WLCharacter Tokenizer::nextWLCharacter(NextWLCharacterPolicy policy) {
         //
         // Make sure to set source information
         //
-        TheSourceManager->setSourceLocation(p.second.lineCol.start);
+        TheSourceManager->setSourceLocation(p.second.start());
         TheSourceManager->setWLCharacterStart();
-        TheSourceManager->setSourceLocation(p.second.lineCol.end);
+        TheSourceManager->setSourceLocation(p.second.end());
         TheSourceManager->setWLCharacterEnd();
         
         // erase first
@@ -512,7 +515,7 @@ WLCharacter Tokenizer::nextWLCharacter(NextWLCharacterPolicy policy) {
     
     _currentWLCharacter = TheCharacterDecoder->nextWLCharacter(policy);
     
-    while (_currentWLCharacter.to_point() == CODEPOINT_LINECONTINUATION) {
+    while (_currentWLCharacter.isLineContinuation()) {
         
         if ((policy & LC_IS_MEANINGFUL) != LC_IS_MEANINGFUL) {
             
@@ -745,7 +748,7 @@ Token Tokenizer::handleSymbol(TokenizerContext Ctxt) {
         // No need to check isAbort() inside tokenizer loops
         //
         
-        if (Ctxt.SlotFlag) {
+        if ((Ctxt & TOKENIZER_SLOT) == TOKENIZER_SLOT) {
             
             auto Src = TheSourceManager->getWLCharacterSource();
             
@@ -781,7 +784,7 @@ void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
     
     if (c.to_point() == '$') {
         
-        if (Ctxt.SlotFlag) {
+        if ((Ctxt & TOKENIZER_SLOT) == TOKENIZER_SLOT) {
             
             auto Src = TheSourceManager->getWLCharacterSource();
             
@@ -820,7 +823,7 @@ void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
             
             if (c.to_point() == '$') {
                 
-                if (Ctxt.SlotFlag) {
+                if ((Ctxt & TOKENIZER_SLOT) == TOKENIZER_SLOT) {
                     
                     auto Src = TheSourceManager->getWLCharacterSource();
                     
@@ -854,7 +857,7 @@ Token Tokenizer::handleString(TokenizerContext Ctxt) {
     
     auto c = currentWLCharacter();
     
-    if (Ctxt.StringifyCurrentLine) {
+    if ((Ctxt & TOKENIZER_STRINGIFY_CURRENT_LINE) == TOKENIZER_STRINGIFY_CURRENT_LINE) {
         
         auto lastGoodLocation = TheSourceManager->getSourceLocation();
         
@@ -875,7 +878,7 @@ Token Tokenizer::handleString(TokenizerContext Ctxt) {
                 
                 break;
                 
-            } else if (c == WLCharacter(CODEPOINT_LINECONTINUATION, ESCAPE_SINGLE)) {
+            } else if (c.isLineContinuation()) {
                 
                 break;
             }
@@ -1004,7 +1007,20 @@ Token Tokenizer::handleString(TokenizerContext Ctxt) {
         
         stringifyNextToken_file = false;
         
-        assert(!empty);
+        if (empty) {
+            
+            //
+            // Something like   <<EOF
+            //
+            // EndOfFile is special because there is no source
+            //
+            // So invent source
+            //
+            
+            auto Start = TheSourceManager->getTokenStart();
+            
+            return Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start));
+        }
         
         return Token(TOKEN_STRING, String.str(), TheSourceManager->getTokenSource());
         
@@ -1027,6 +1043,7 @@ Token Tokenizer::handleString(TokenizerContext Ctxt) {
                 return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), TheSourceManager->getTokenSource());
                 
             } else if (c.to_point() == '"') {
+                
                 //
                 // OK to check c == WLCharacter('"') here because we only care about un-escaped "
                 //
@@ -1146,7 +1163,6 @@ Token Tokenizer::handleFileOpsBrackets(TokenizerContext Ctxt) {
 //number`                 machine-precision approximate number
 //number`s                arbitrary-precision number with precision s
 //number``s               arbitrary-precision number with accuracy s
-//
 //
 // base = (digits^^)?
 // approximate = digits(.digits?)?|.digits
@@ -1307,10 +1323,12 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
             
             auto Loc2 = TheSourceManager->getSourceLocation();
             
+            auto cGraphicalStr = c.graphicalString();
+            
             //
             // Use ** markup syntax here because of ` character
             //
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between **`** and ``" + c.string() + "`` to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, Source(TickLoc, Loc2));
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between **`** and ``" + cGraphicalStr + "`` to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, Source(TickLoc, Loc2));
             
             Issues.push_back(Issue);
         }
@@ -1813,7 +1831,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                     
                     c = nextWLCharacter(TOPLEVEL);
                     
-                    if (Ctxt.EnableStringifyNextToken) {
+                    if ((Ctxt & TOKENIZER_ENABLE_STRINGIFY_NEXT_TOKEN) == TOKENIZER_ENABLE_STRINGIFY_NEXT_TOKEN) {
                         stringifyNextToken_symbol = true;
                     }
                 }
@@ -2230,7 +2248,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                     
                     c = nextWLCharacter(TOPLEVEL);
                     
-                    if (Ctxt.EnableStringifyNextToken) {
+                    if ((Ctxt & TOKENIZER_ENABLE_STRINGIFY_NEXT_TOKEN) == TOKENIZER_ENABLE_STRINGIFY_NEXT_TOKEN) {
                         stringifyNextToken_file = true;
                     }
                 }
@@ -2327,7 +2345,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                         c = nextWLCharacter(TOPLEVEL);
                     }
                     
-                    if (Ctxt.EnableStringifyNextToken) {
+                    if ((Ctxt & TOKENIZER_ENABLE_STRINGIFY_NEXT_TOKEN) == TOKENIZER_ENABLE_STRINGIFY_NEXT_TOKEN) {
                         stringifyNextToken_file = true;
                     }
                 }
@@ -2529,7 +2547,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                 
                 Operator = TOKEN_HASH; // #
                 
-                Ctxt.SlotFlag = true;
+                Ctxt |= TOKENIZER_SLOT;
                 
                 handleSymbol(Ctxt);
                 
@@ -2537,7 +2555,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                 
                 Operator = TOKEN_HASH; // #
                 
-                Ctxt.SlotFlag = true;
+                Ctxt |= TOKENIZER_SLOT;
                 
                 handleSymbol(Ctxt);
                 

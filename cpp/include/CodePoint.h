@@ -57,7 +57,9 @@ constexpr int CODEPOINT_STRINGMETA_TAB(-12);
 //
 // Create a line continuation character for CharacterDecoder to communicate to Tokenizer
 //
-constexpr int CODEPOINT_LINECONTINUATION(-13);
+constexpr int CODEPOINT_LINECONTINUATION_LF(-13);
+constexpr int CODEPOINT_LINECONTINUATION_CR(-14);
+constexpr int CODEPOINT_LINECONTINUATION_CRLF(-15);
 
 TokenEnum LongNameCodePointToOperator(int c);
 int LongNameOperatorToCodePoint(TokenEnum t);

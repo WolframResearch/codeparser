@@ -91,15 +91,14 @@ ExpectedSet:
 Test[
 	ParseString["a /: b * c"]
 	,
-SyntaxErrorNode[SyntaxError`ExpectedSet, {LeafNode[Symbol, 
-   "a", <|Source -> {{1, 1}, {1, 1}}|>], 
-  LeafNode[Token`SlashColon, "/:", <|Source -> {{1, 3}, {1, 4}}|>], 
-  InfixNode[
-   Times, {LeafNode[Symbol, "b", <|Source -> {{1, 6}, {1, 6}}|>], 
-    LeafNode[Token`Star, "*", <|Source -> {{1, 8}, {1, 8}}|>], 
-    LeafNode[Symbol, 
-     "c", <|Source -> {{1, 10}, {1, 10}}|>]}, <|Source -> {{1, 6}, {1,
-        10}}|>]}, <|Source -> {{1, 1}, {1, 10}}|>]
+	SyntaxErrorNode[SyntaxError`ExpectedSet, {
+		LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
+		LeafNode[Token`SlashColon, "/:", <|Source -> {{1, 3}, {1, 4}}|>],
+		InfixNode[Times, {
+			LeafNode[Symbol, "b", <|Source -> {{1, 6}, {1, 6}}|>], 
+	    	LeafNode[Token`Star, "*", <|Source -> {{1, 8}, {1, 8}}|>], 
+	    	LeafNode[Symbol, "c", <|Source -> {{1, 10}, {1, 10}}|>]}, <|Source -> {{1, 6}, {1, 10}}|>],
+	    LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{2, 0}, {2, 0}}|>]}, <|Source -> {{1, 1}, {2, 0}}|>]
 	,
 	TestID->"SyntaxErrorNodes-20190521-D9G5L2"
 ]
@@ -133,12 +132,10 @@ SyntaxError:
 TestMatch[
 	ConcreteParseString["\\"]
 	,
-	SyntaxErrorNode[SyntaxError`UnhandledCharacter, {LeafNode[
-   Token`Error`UnhandledCharacter, 
-   "\\", <|Source -> {{1, 1}, {2, 0}}|>]}, <|Source -> {{1, 1}, {2, 
-     0}}|>]
+	SyntaxErrorNode[SyntaxError`UnhandledCharacter, {
+		LeafNode[Token`Error`UnhandledCharacter, "\\", <|Source -> {{1, 1}, {2, 0}}|>]}, <|Source -> {{1, 1}, {2, 0}}|>]
 	,
-	TestID->"SyntaxIssues-20190521-P7R3O7"
+	TestID->"SyntaxErrorNodes-20190521-P7R3O7"
 ]
 
 

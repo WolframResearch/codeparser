@@ -142,7 +142,7 @@ public:
 class ScopedIFS : public std::ifstream {
 public:
     
-    ScopedIFS(const unsigned char *inStr) : std::ifstream(reinterpret_cast<const char *>(inStr), std::ifstream::in) {}
+    ScopedIFS(const unsigned char *inStr) : std::ifstream(reinterpret_cast<const char *>(inStr), std::ifstream::in | std::ifstream::binary) {}
     
     ~ScopedIFS() {
         close();

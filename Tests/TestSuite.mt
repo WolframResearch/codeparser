@@ -14,10 +14,10 @@ TestSuite[{
 	"Span.mt",
 	"SyntaxErrorNodes.mt",
 	"SyntaxIssues.mt",
-	"ToInputFormString.mt",
 	"TokenErrors.mt",
 	"Tokenize.mt",
 	"ToNode.mt",
+	"ToString.mt",
 	"Weird.mt",
 	Nothing
 }]

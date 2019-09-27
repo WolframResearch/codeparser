@@ -3,7 +3,7 @@
 
 #include "CodePoint.h"
 
-SourceManager::SourceManager() : buffer(), length(), idx(), lastCharacterWasCarriageReturn(false), advancedToEOF(false), Issues(), SrcLoc(), TokenStartLoc(), WLCharacterStartLoc(), WLCharacterEndLoc(), PrevWLCharacterStartLoc(), PrevWLCharacterEndLoc(), libData() {}
+SourceManager::SourceManager() : buffer(), length(), idx(), lastCharacterWasCarriageReturn(false), Issues(), SrcLoc(), TokenStartLoc(), WLCharacterStartLoc(), WLCharacterEndLoc(), PrevWLCharacterStartLoc(), PrevWLCharacterEndLoc(), libData() {}
 
 void SourceManager::init(SourceStyle style, std::istream& is, WolframLibraryData libDataIn) {
     
@@ -28,8 +28,6 @@ void SourceManager::init(SourceStyle style, std::istream& is, WolframLibraryData
     idx = 0;
     
     lastCharacterWasCarriageReturn = false;
-    
-    advancedToEOF = false;
     
     Issues.clear();
     
@@ -99,10 +97,6 @@ void SourceManager::advanceSourceLocation(SourceCharacter c) {
     
     if (c == SourceCharacter(CODEPOINT_ENDOFFILE)) {
         
-        if (advancedToEOF) {
-            return;
-        }
-        
         //
         // It can happen that single \r occurs.
         // Then make sure to treat it as a newline.
@@ -114,7 +108,7 @@ void SourceManager::advanceSourceLocation(SourceCharacter c) {
             // Do not need to advance Col here
             //
             
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRAYCARRIAGERETURN, "Stray ``\\r`` character.\nMac OS 9 line ending?\nTry resaving the file.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
+            auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRAYCARRIAGERETURN, "Stray ``\\r`` character.\nMac OS 9 line ending?\nTry resaving the file.", SYNTAXISSUESEVERITY_REMARK, Source(Loc));
             
             Issues.push_back(Issue);
         }
@@ -122,8 +116,6 @@ void SourceManager::advanceSourceLocation(SourceCharacter c) {
         lastCharacterWasCarriageReturn = false;
         
         SrcLoc = SrcLoc.nextLine();
-        
-        advancedToEOF = true;
         
         return;
     }
@@ -185,7 +177,16 @@ void SourceManager::setWLCharacterEnd() {
     
     WLCharacterEndLoc = SrcLoc;
     
-    assert(WLCharacterStartLoc <= WLCharacterEndLoc);
+    switch (WLCharacterStartLoc.style) {
+        case SOURCESTYLE_UNKNOWN:
+            break;
+        case SOURCESTYLE_LINECOL:
+            assert(WLCharacterStartLoc <= WLCharacterEndLoc);
+            break;
+        case SOURCESTYLE_OFFSETLEN:
+            assert(WLCharacterStartLoc <= WLCharacterEndLoc);
+            break;
+    }
 }
 
 void SourceManager::setTokenStart() {

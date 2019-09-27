@@ -11,7 +11,7 @@ Token::Token(TokenEnum Tok, std::string Str, Source Src) : Tok(Tok), Str(Str), S
         //
         // These are the tokens that do not quite have correct spans.
         // start and end are set to the same character, so size is 1
-        // But they take up 0 characters
+        // But they actually take up 0 characters
         //
         case TOKEN_ENDOFFILE:
         case TOKEN_FAKE_IMPLICITTIMES:
@@ -51,16 +51,13 @@ Token::Token(TokenEnum Tok, std::string Str, Source Src) : Tok(Tok), Str(Str), S
                             // If there are multi-bytes characters, then it is too complicated to compare sizes
                             //
                             // Note that this also catches changes in character representation, e.g.,
-                            // If a character was in source with \XXX notation but was stringified with \:XXXX notation
+                            // If a character was in source with \XXX octal notation but was stringified with \:XXXX hex notation
                             //
                             assert(!containsOnlyASCII(Str));
                         }
                     }
                     break;
                 case SOURCESTYLE_OFFSETLEN:
-                    if (Src.size() != Str.size()) {
-                        assert(!containsOnlyASCII(Str));
-                    }
                     break;
             }
             break;
@@ -78,6 +75,19 @@ bool containsOnlyASCII(std::string s) {
         }
     }
     return true;
+}
+
+bool Token::isTrivia() const {
+    switch (Tok) {
+        case TOKEN_WHITESPACE:
+        case TOKEN_NEWLINE:
+        case TOKEN_COMMENT:
+        case TOKEN_LINECONTINUATION:
+            return true;
+        default:
+            return false;
+            
+    }
 }
 
 bool operator==(Token a, Token b) {

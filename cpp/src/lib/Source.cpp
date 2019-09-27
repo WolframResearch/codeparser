@@ -516,13 +516,9 @@ bool SourceCharacter::isEndOfFile() const {
     return valBits == EOF;
 }
 
-std::string SourceCharacter::string() const {
-    
-    std::ostringstream String;
-    
-    String << *this;
-    
-    return String.str();
+SourceCharacter::SourceCharacter_iterator::SourceCharacter_iterator(int32_t val) : val(val), idx(0) {
+    size = ByteEncoder::size(val);
+    ByteEncoder::encodeBytes(arr, val);
 }
 
 std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {

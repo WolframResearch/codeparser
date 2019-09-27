@@ -370,10 +370,7 @@ std::vector<NodePtr> parseExpressions() {
                 break;
             }
             
-            if (peek.Tok == TOKEN_WHITESPACE ||
-                peek.Tok == TOKEN_NEWLINE ||
-                peek.Tok == TOKEN_COMMENT ||
-                peek.Tok == TOKEN_LINECONTINUATION) {
+            if (peek.isTrivia()) {
                 
                 exprs.push_back(std::unique_ptr<LeafNode>(new LeafNode(peek)));
                 

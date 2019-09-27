@@ -67,6 +67,18 @@ size_t LeafSeq::size() const {
 }
 
 
+Node::Node(std::unique_ptr<NodeSeq> ChildrenIn) : Children(std::move(ChildrenIn)) {
+    //
+    // These are very useful asserts to help find problems with trivia
+    //
+    assert(!Children->first()->isTrivia());
+    assert(!Children->last()->isTrivia());
+}
+
+bool Node::isTrivia() const {
+    return false;
+}
+
 Source Node::getSource() const {
     
     assert(!Children->empty());
@@ -111,6 +123,9 @@ void LeafNode::put(MLINK mlp) const {
     Tok.Src.put(mlp);
 }
 
+bool LeafNode::isTrivia() const {
+    return Tok.isTrivia();
+}
 
 void CallNode::put(MLINK mlp) const {
     

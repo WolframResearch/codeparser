@@ -131,11 +131,17 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
                     stream << SourceCharacter('\\');
                     stream << SourceCharacter(' ');
                     break;
-                case CODEPOINT_LINECONTINUATION:
-                    //
-                    // FIXME: could have come from source \\\r\n or even just \\\r
-                    //
+                case CODEPOINT_LINECONTINUATION_LF:
                     stream << SourceCharacter('\\');
+                    stream << SourceCharacter('\n');
+                    break;
+                case CODEPOINT_LINECONTINUATION_CR:
+                    stream << SourceCharacter('\\');
+                    stream << SourceCharacter('\r');
+                    break;
+                case CODEPOINT_LINECONTINUATION_CRLF:
+                    stream << SourceCharacter('\\');
+                    stream << SourceCharacter('\r');
                     stream << SourceCharacter('\n');
                     break;
                 default:
@@ -335,16 +341,6 @@ std::ostream& set_graphical(std::ostream& stream) {
 std::ostream& clear_graphical(std::ostream& stream) {
     stream.iword(get_graphical_i()) = 0;
     return stream;
-}
-
-
-std::string WLCharacter::string() const {
-    
-    std::ostringstream String;
-    
-    String << clear_graphical << *this;
-    
-    return String.str();
 }
 
 std::string WLCharacter::graphicalString() const {
@@ -595,7 +591,7 @@ bool WLCharacter::isLetterlikeCharacter() const {
     // Must handle all of the specially defined CodePoints
     //
     
-    if (val == CODEPOINT_LINECONTINUATION) {
+    if (isLineContinuation()) {
         return false;
     }
     
@@ -743,6 +739,19 @@ bool WLCharacter::isControlCharacter() const {
     }
     
     return false;
+}
+
+bool WLCharacter::isLineContinuation() const {
+    auto val = to_point();
+    
+    switch (val) {
+        case CODEPOINT_LINECONTINUATION_LF:
+        case CODEPOINT_LINECONTINUATION_CR:
+        case CODEPOINT_LINECONTINUATION_CRLF:
+            return true;
+        default:
+            return false;
+    }
 }
 
 //

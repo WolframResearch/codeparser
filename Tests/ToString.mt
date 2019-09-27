@@ -8,7 +8,7 @@ Test[
 	,
 	" 1 + 1 "
 	,
-	TestID->"ToInputFormString-20181230-P1F9Q9"
+	TestID->"ToString-20181230-P1F9Q9"
 ]
 
 Test[
@@ -16,7 +16,7 @@ Test[
 	,
 	" _ +  __*___  "
 	,
-	TestID->"ToInputFormString-20181230-S7R9U8"
+	TestID->"ToString-20181230-S7R9U8"
 ]
 
 Test[
@@ -24,7 +24,7 @@ Test[
 	,
 	" %^ #^ ##^  f' ' [x]   "
 	,
-	TestID->"ToInputFormString-20181230-E6E4O1"
+	TestID->"ToString-20181230-E6E4O1"
 ]
 
 
@@ -33,7 +33,7 @@ Test[
 	,
 	" @   "
 	,
-	TestID->"ToInputFormString-20181230-V8O8B1"
+	TestID->"ToString-20181230-V8O8B1"
 ]
 
 Test[
@@ -41,7 +41,7 @@ Test[
 	,
 	"{ a_b,c__d,e___f,_.,g_. }"
 	,
-	TestID->"ToInputFormString-20181230-U1H3E1"
+	TestID->"ToString-20181230-U1H3E1"
 ]
 
 
@@ -50,7 +50,7 @@ Test[
 	,
 	"   aaa - bbb  + ccc  -  !ddd  "
 	,
-	TestID->"ToInputFormString-20181230-Z9F3L8"
+	TestID->"ToString-20181230-Z9F3L8"
 ]
 
 
@@ -60,7 +60,7 @@ Test[
 	,
 	" a::b::c "
 	,
-	TestID->"ToInputFormString-20181230-P0K1Y7"
+	TestID->"ToString-20181230-P0K1Y7"
 ]
 
 Test[
@@ -68,7 +68,7 @@ Test[
 	,
 	" a/:b:=c "
 	,
-	TestID->"ToInputFormString-20181230-H9T6O8"
+	TestID->"ToString-20181230-H9T6O8"
 ]
 
 
@@ -77,7 +77,7 @@ Test[
 	,
 	" ##& "
 	,
-	TestID->"ToInputFormString-20181230-A2F7W1"
+	TestID->"ToString-20181230-A2F7W1"
 ]
 
 
@@ -86,7 +86,7 @@ Test[
 	,
 	"f[]"
 	,
-	TestID->"ToInputFormString-20181230-R5Q3J4"
+	TestID->"ToString-20181230-R5Q3J4"
 ]
 
 Test[
@@ -94,7 +94,7 @@ Test[
 	,
 	"f["
 	,
-	TestID->"ToInputFormString-20181230-T4A0R3"
+	TestID->"ToString-20181230-T4A0R3"
 ]
 
 
@@ -103,7 +103,7 @@ Test[
 	,
 	"f[[4]]"
 	,
-	TestID->"ToInputFormString-20181230-C6W4M5"
+	TestID->"ToString-20181230-C6W4M5"
 ]
 
 
@@ -120,7 +120,7 @@ Test[
 	,
 	"\\(x\\)"
 	,
-	TestID->"ToInputFormString-20181230-U6K9Q7"
+	TestID->"ToString-20181230-U6K9Q7"
 ]
 
 Test[
@@ -128,7 +128,7 @@ Test[
 	,
 	"\\(x"
 	,
-	TestID->"ToInputFormString-20181230-R6R9E5"
+	TestID->"ToString-20181230-R6R9E5"
 ]
 
 Test[
@@ -136,7 +136,7 @@ Test[
 	,
 	"\\(x,y\\)"
 	,
-	TestID->"ToInputFormString-20181231-U3W4B3"
+	TestID->"ToString-20181231-U3W4B3"
 ]
 
 
@@ -155,7 +155,7 @@ Test[
 	,
 	""
 	,
-	TestID->"ToInputFormString-20181231-R6I0L4"
+	TestID->"ToString-20181231-R6I0L4"
 ]
 
 
@@ -165,7 +165,7 @@ Test[
 	,
 	"   a& &  + b "
 	,
-	TestID->"ToInputFormString-20181231-F0J3L4"
+	TestID->"ToString-20181231-F0J3L4"
 ]
 
 
@@ -181,7 +181,7 @@ Test[
 	,
 	" A   B:C :  . Ne   "
 	,
-	TestID->"ToInputFormString-20190523-V1I4S4"
+	TestID->"ToString-20190523-V1I4S4"
 ]
 
 
@@ -190,7 +190,7 @@ Test[
 	,
 	" a:   "
 	,
-	TestID->"ToInputFormString-20190523-H5C9J2"
+	TestID->"ToString-20190523-H5C9J2"
 ]
 
 
@@ -198,6 +198,13 @@ Test[
 
 
 
+Test[
+	StringJoin[ToSourceCharacterString /@ ConcreteParseString["{]", #[[1]] &]]
+	,
+	"{]"
+	,
+	TestID->"ToString-20190926-T4I8S1"
+]
 
 
 

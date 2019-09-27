@@ -19,7 +19,6 @@ class PostfixParselet;
 class ContextSensitivePrefixParselet;
 class ContextSensitiveInfixParselet;
 class StartOfLineParselet;
-class CleanupParselet;
 class GroupParselet;
 class Parselet;
 class ExpectedPossibleExpressionErrorParselet;
@@ -41,6 +40,62 @@ enum UnderEnum {
     UNDER_3
 };
 
+enum ParserContextFlagBits : uint8_t {
+    //
+    // when parsing a in a:b  then ColonFlag is false
+    // when parsing b in a:b  then ColonFlag is true
+    //
+    PARSER_COLON = 0x01,
+    
+    //
+    // Inside of linear syntax \( \)  ?
+    //
+    PARSER_LINEARSYNTAX = 0x02,
+    
+    //
+    //
+    //
+    PARSER_STRINGIFY_CURRENT_LINE = 0x04,
+    
+    //
+    //
+    //
+    PARSER_INTEGRAL = 0x08,
+    
+    //
+    //
+    //
+    PARSER_PARSED_SYMBOL = 0x10,
+    
+    //
+    //
+    //
+    PARSER_INSIDE_SLASHCOLON = 0x20,
+};
+
+class ParserContextFlag {
+    uint8_t val;
+public:
+    constexpr ParserContextFlag() : val() {}
+    constexpr ParserContextFlag(uint8_t val) : val(val) {}
+    
+    ParserContextFlagBits operator&(const ParserContextFlagBits bits) const {
+        return static_cast<ParserContextFlagBits>(val & bits);
+    }
+    
+    ParserContextFlagBits operator|(const ParserContextFlagBits bits) const {
+        return static_cast<ParserContextFlagBits>(val | bits);
+    }
+    
+    void operator|=(const ParserContextFlagBits bits) {
+        val |= bits;
+    }
+    
+    void clear(const ParserContextFlagBits bits) {
+        val &= ~bits;
+    }
+};
+
 struct ParserContext {
     
     //
@@ -60,27 +115,6 @@ struct ParserContext {
     Associativity Assoc;
     
     //
-    // when parsing a in a:b  then ColonFlag is false
-    // when parsing b in a:b  then ColonFlag is true
-    //
-    bool ColonFlag;
-    
-    //
-    // Inside of linear syntax \( \)  ?
-    //
-    bool LinearSyntaxFlag;
-    
-    //
-    //
-    //
-    bool StringifyCurrentLine;
-    
-    //
-    //
-    //
-    bool IntegralFlag;
-    
-    //
     // The Closer of the innermost Group being parsed
     //
     TokenEnum Closer;
@@ -90,14 +124,9 @@ struct ParserContext {
     //
     UnderEnum UnderCount;
     
-    //
-    //
-    //
-    bool AllowTrailing;
+    ParserContextFlag Flag;
     
-    ParserContext() : GroupDepth(0), Prec(PRECEDENCE_LOWEST), Assoc(ASSOCIATIVITY_NONE), ColonFlag(false), LinearSyntaxFlag(false), StringifyCurrentLine(false), IntegralFlag(false), Closer(TOKEN_UNKNOWN), UnderCount(UNDER_UNKNOWN), AllowTrailing(false) {}
-    
-    ParserContext(size_t GroupDepth, Precedence Prec, Associativity Assoc, bool ColonFlag, bool LinearSyntaxFlag, bool StringifyCurrentLine, bool IntegralFlag, TokenEnum Closer, UnderEnum UnderCount, bool AllowTrailing) : GroupDepth(GroupDepth), Prec(Prec), Assoc(Assoc), ColonFlag(ColonFlag), LinearSyntaxFlag(LinearSyntaxFlag), StringifyCurrentLine(StringifyCurrentLine), IntegralFlag(IntegralFlag), Closer(Closer), UnderCount(UnderCount), AllowTrailing(AllowTrailing) {}
+    ParserContext() : GroupDepth(0), Prec(PRECEDENCE_LOWEST), Assoc(ASSOCIATIVITY_NONE), Closer(TOKEN_UNKNOWN), UnderCount(UNDER_UNKNOWN), Flag() {}
     
     size_t getGroupDepth() {
         return GroupDepth;
@@ -167,6 +196,9 @@ public:
     NodePtr parse(ParserContext Ctxt);
     
     bool isPossibleBeginningOfExpression(const Token& Tok, ParserContext Ctxt) const;
+    
+    
+    const std::unique_ptr<PrefixParselet>& findPrefixParselet(TokenEnum Tok) const;
     
     const std::unique_ptr<InfixParselet>& findInfixParselet(TokenEnum Tok) const;
     

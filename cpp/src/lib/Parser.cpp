@@ -506,8 +506,9 @@ void Parser::nextToken0(ParserContext Ctxt) {
     //
     // if Ctxt.LinearSyntaxFlag, then we are in linear syntax, and we disable stringifying next tokens
     //
-    auto EnableStringifyNextToken = !Ctxt.LinearSyntaxFlag;
-    TokenizerContext tokenizerCtxt(false, EnableStringifyNextToken, Ctxt.StringifyCurrentLine);
+    auto E = ((Ctxt.Flag & PARSER_LINEARSYNTAX) == PARSER_LINEARSYNTAX) ? 0 : TOKENIZER_ENABLE_STRINGIFY_NEXT_TOKEN;
+    auto S = ((Ctxt.Flag & PARSER_STRINGIFY_CURRENT_LINE) == PARSER_STRINGIFY_CURRENT_LINE) ? TOKENIZER_STRINGIFY_CURRENT_LINE : 0;
+    auto tokenizerCtxt = E | S;
     
     TheTokenizer->nextToken(tokenizerCtxt);
 }
@@ -578,13 +579,7 @@ bool Parser::isPossibleBeginningOfExpression(const Token& Tok, ParserContext Ctx
         return false;
     }
     
-    //
-    // trivia
-    //
-    if (Tok.Tok == TOKEN_WHITESPACE ||
-        Tok.Tok == TOKEN_NEWLINE ||
-        Tok.Tok == TOKEN_COMMENT ||
-        Tok.Tok == TOKEN_LINECONTINUATION) {
+    if (Tok.isTrivia()) {
         return false;
     }
     
@@ -634,6 +629,12 @@ bool Parser::isPossibleBeginningOfExpression(const Token& Tok, ParserContext Ctx
     return true;
 }
 
+const std::unique_ptr<PrefixParselet>& Parser::findPrefixParselet(TokenEnum Tok) const {
+    auto& P = prefixParselets[Tok];
+    assert(P != nullptr);
+    return P;
+}
+
 const std::unique_ptr<InfixParselet>& Parser::findInfixParselet(TokenEnum Tok) const {
     auto& I = infixParselets[Tok];
     assert(I != nullptr);
@@ -641,9 +642,9 @@ const std::unique_ptr<InfixParselet>& Parser::findInfixParselet(TokenEnum Tok) c
 }
 
 const std::unique_ptr<ContextSensitivePrefixParselet>& Parser::findContextSensitivePrefixParselet(TokenEnum Tok) const {
-    auto& I = contextSensitivePrefixParselets[Tok];
-    assert(I != nullptr);
-    return I;
+    auto& P = contextSensitivePrefixParselets[Tok];
+    assert(P != nullptr);
+    return P;
 }
 
 const std::unique_ptr<ContextSensitiveInfixParselet>& Parser::findContextSensitiveInfixParselet(TokenEnum Tok) const {
@@ -651,6 +652,8 @@ const std::unique_ptr<ContextSensitiveInfixParselet>& Parser::findContextSensiti
     assert(I != nullptr);
     return I;
 }
+
+
 
 Precedence Parser::getCurrentTokenPrecedence(Token& TokIn, ParserContext Ctxt) {
     
@@ -697,12 +700,16 @@ Precedence Parser::getCurrentTokenPrecedence(Token& TokIn, ParserContext Ctxt) {
         return Infix->getPrecedence();
     }
     
-    if (TokIn.Tok == TOKEN_LONGNAME_DIFFERENTIALD && Ctxt.IntegralFlag) {
-        //
-        // Inside \[Integral], so \[DifferentialD] is treated specially
-        //
+    if (TokIn.Tok == TOKEN_LONGNAME_DIFFERENTIALD) {
         
-        return PRECEDENCE_LOWEST;
+        if ((Ctxt.Flag & PARSER_INTEGRAL) == PARSER_INTEGRAL) {
+            
+            //
+            // Inside \[Integral], so \[DifferentialD] is treated specially
+            //
+            
+            return PRECEDENCE_LOWEST;
+        }
     }
     
     //
@@ -726,7 +733,7 @@ Precedence Parser::getCurrentTokenPrecedence(Token& TokIn, ParserContext Ctxt) {
     //
     // ImplicitTimes should not have gotten here
     //
-    assert(!Ctxt.LinearSyntaxFlag);
+    assert((Ctxt.Flag & PARSER_LINEARSYNTAX) != PARSER_LINEARSYNTAX);
     
     //
     // Note: Only insert token if input will actually be parsed as ImplicitTimes
@@ -757,7 +764,6 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
         
         auto A = Token(TOKEN_ERROR_ABORTED, "", Source(TheSourceManager->getSourceLocation()));
         
-        //        const auto& Aborted = std::unique_ptr<const Node>(new LeafNode(A));
         NodePtr Aborted = std::unique_ptr<Node>(new LeafNode(A));
         
         return Aborted;
@@ -768,10 +774,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
     auto token = currentToken();
     
     assert(token.Tok != TOKEN_UNKNOWN);
-    assert(token.Tok != TOKEN_WHITESPACE);
-    assert(token.Tok != TOKEN_NEWLINE);
-    assert(token.Tok != TOKEN_COMMENT);
-    assert(token.Tok != TOKEN_LINECONTINUATION);
+    assert(!token.isTrivia());
     
     //
     // Prefix start
@@ -845,7 +848,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
                     // Do not take next token
                     //
                     
-                    auto createdToken = Token(token.Tok == TOKEN_COMMA ? TOKEN_FAKE_IMPLICITNULL : TOKEN_ERROR_EXPECTEDOPERAND, "", Source(token.Src));
+                    auto createdToken = Token(token.Tok == TOKEN_COMMA ? TOKEN_FAKE_IMPLICITNULL : TOKEN_ERROR_EXPECTEDOPERAND, "", Source(token.Src.start()));
                     
                     Left = std::unique_ptr<Node>(new LeafNode(createdToken));
                     
@@ -879,7 +882,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
     // Infix loop
     //
     
-    auto Args = std::unique_ptr<LeafSeq>(new LeafSeq);
+    auto ArgsTest = std::unique_ptr<LeafSeq>(new LeafSeq);
     
     while (true) {
         
@@ -893,7 +896,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
         
         token = currentToken();
         
-        token = Parser::eatAndPreserveToplevelNewlines(token, Ctxt, Args);
+        token = Parser::eatAndPreserveToplevelNewlines(token, Ctxt, ArgsTest);
         
         auto TokenPrecedence = getCurrentTokenPrecedence(token, Ctxt);
         
@@ -912,21 +915,19 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
         }
         
         auto LeftSeq = std::unique_ptr<NodeSeq>(new NodeSeq);
-        LeftSeq->reserve(1 + Args->size());
+        LeftSeq->reserve(1 + ArgsTest->size());
         
         LeftSeq->append(std::move(Left));
         
-        LeftSeq->append(std::move(Args));
+        LeftSeq->append(std::move(ArgsTest));
         
-        auto LeftTmp = parse0(std::move(LeftSeq), TokenPrecedence, Ctxt);
+        Left = parse0(std::move(LeftSeq), TokenPrecedence, Ctxt);
         
-        Left.reset(LeftTmp.release());
-        
-        Args.reset(new LeafSeq);
+        ArgsTest.reset(new LeafSeq);
         
     } // while
     
-    prependInReverse(std::move(Args));
+    prependInReverse(std::move(ArgsTest));
     
     return Left;
 }
@@ -963,10 +964,7 @@ const Token Parser::eatAll(const Token& TokIn, ParserContext Ctxt, std::unique_p
     
     auto Tok = TokIn;
     
-    while (Tok.Tok == TOKEN_WHITESPACE ||
-           Tok.Tok == TOKEN_NEWLINE ||
-           Tok.Tok == TOKEN_COMMENT ||
-           Tok.Tok == TOKEN_LINECONTINUATION) {
+    while (Tok.isTrivia()) {
         
         //
         // No need to check isAbort() inside tokenizer loops
@@ -985,10 +983,7 @@ const Token Parser::eatAll(const Token& TokIn, ParserContext Ctxt, std::unique_p
     
     auto Tok = TokIn;
     
-    while (Tok.Tok == TOKEN_WHITESPACE ||
-           Tok.Tok == TOKEN_NEWLINE ||
-           Tok.Tok == TOKEN_COMMENT ||
-           Tok.Tok == TOKEN_LINECONTINUATION) {
+    while (Tok.isTrivia()) {
         
         //
         // No need to check isAbort() inside tokenizer loops

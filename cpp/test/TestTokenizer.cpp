@@ -1,6 +1,6 @@
 
 #include "API.h"
-//#include "Tokenizer.h"
+#include "Tokenizer.h"
 
 //#include "ByteDecoder.h"
 //#include "SourceManager.h"
@@ -51,3 +51,32 @@ TEST_F(TokenizerTest, Bug1) {
     
     SUCCEED();
 }
+
+//
+// This used to assert
+//
+TEST_F(TokenizerTest, Bug3) {
+    
+    auto iss = std::stringstream("<<<");
+    
+    TheParserSession->init(nullptr, iss, SOURCESTYLE_LINECOL, false);
+    
+    TokenizerContext Ctxt;
+    
+    TheTokenizer->nextToken(Ctxt);
+    
+    SUCCEED();
+}
+
+//
+// This used to assert
+//
+TEST_F(TokenizerTest, Bug2) {
+    
+    auto iss = std::stringstream("\\\r");
+    
+    TheParserSession->init(nullptr, iss, SOURCESTYLE_LINECOL, false);
+    
+    SUCCEED();
+}
+

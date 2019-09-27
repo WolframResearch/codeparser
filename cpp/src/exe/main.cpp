@@ -160,10 +160,10 @@ int readFile(std::string file, int mode, bool printOutput) {
         if (!MLPutString(mlp, file.c_str())) {
             return res;
         }
-        if (!MLPutSymbol(mlp, "False")) {
+        if (!MLPutString(mlp, Style.c_str())) {
             return res;
         }
-        if (!MLPutString(mlp, Style.c_str())) {
+        if (!MLPutSymbol(mlp, "False")) {
             return res;
         }
         
@@ -177,10 +177,10 @@ int readFile(std::string file, int mode, bool printOutput) {
         if (!MLPutString(mlp, file.c_str())) {
             return res;
         }
-        if (!MLPutSymbol(mlp, "False")) {
+        if (!MLPutString(mlp, Style.c_str())) {
             return res;
         }
-        if (!MLPutString(mlp, Style.c_str())) {
+        if (!MLPutSymbol(mlp, "False")) {
             return res;
         }
         

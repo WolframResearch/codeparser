@@ -95,7 +95,7 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
     
     switch (curSource.to_point()) {
         case '\n':
-            _currentWLCharacter = WLCharacter(CODEPOINT_LINECONTINUATION, ESCAPE_SINGLE);
+            _currentWLCharacter = WLCharacter(CODEPOINT_LINECONTINUATION_LF, ESCAPE_SINGLE);
             break;
         case '\r': {
             
@@ -121,14 +121,23 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
                     TheSourceManager->setWLCharacterStart();
                     TheSourceManager->setWLCharacterEnd();
                     
-                    auto testStr = c.string();
-                    for (auto b : testStr) {
-                        TheByteDecoder->append(b, Loc);
+                    if (c.isEndOfFile()) {
+                        append(c, Loc);
+                    } else {
+                        for (auto b : c) {
+                            TheByteDecoder->append(b, Loc);
+                        }
                     }
+                    
+                    _currentWLCharacter = WLCharacter(CODEPOINT_LINECONTINUATION_CR, ESCAPE_SINGLE);
+                    
+                } else {
+                    _currentWLCharacter = WLCharacter(CODEPOINT_LINECONTINUATION_CRLF, ESCAPE_SINGLE);
                 }
+                
+            } else {
+                _currentWLCharacter = WLCharacter(CODEPOINT_LINECONTINUATION_CR, ESCAPE_SINGLE);
             }
-            
-            _currentWLCharacter = WLCharacter(CODEPOINT_LINECONTINUATION, ESCAPE_SINGLE);
         }
             break;
         case '[':
@@ -239,15 +248,13 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
                         
                     } else {
                         
-                        auto testStr = test.string();
-                        
                         //
                         // CharacterStart is the first \, so then queuedCharacterStart is the first
                         // character to be queued
                         //
                         auto queuedCharacterStart = CharacterStart+2;
                         
-                        for (auto b : testStr) {
+                        for (auto b : test) {
                             TheByteDecoder->append(b, queuedCharacterStart);
                         }
                     }
@@ -310,12 +317,6 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
         case ' ':
             _currentWLCharacter = WLCharacter(CODEPOINT_LINEARSYNTAX_SPACE, ESCAPE_SINGLE);
             break;
-        case CODEPOINT_ENDOFFILE:
-            //
-            // Just return the naked \
-            //
-            _currentWLCharacter = WLCharacter('\\');
-            break;
         default: {
             
             //
@@ -332,25 +333,25 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
                 
                 if (curSource.isUpper() && curSource.isHex()) {
                     
-                    auto curSourceStr = curSource.string();
+                    auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
                     
-                    auto Issue = SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character ``\\") + curSourceStr + "``.\nDid you mean ``" + curSourceStr + "`` or ``\\[" + curSourceStr + "XXXX]`` or ``\\:" + curSourceStr + "XXX``?", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc));
+                    auto Issue = SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character ``\\") + curSourceGraphicalStr + "``.\nDid you mean ``" + curSourceGraphicalStr + "`` or ``\\[" + curSourceGraphicalStr + "XXXX]`` or ``\\:" + curSourceGraphicalStr + "XXX``?", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc));
                     
                     Issues.push_back(Issue);
                     
                 } else if (curSource.isUpper()) {
                     
-                    auto curSourceStr = curSource.string();
+                    auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
                     
-                    auto Issue = SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character ``\\") + curSourceStr + "``.\nDid you mean ``" + curSourceStr + "`` or ``\\[" + curSourceStr + "XXXX]``?", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc));
+                    auto Issue = SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character ``\\") + curSourceGraphicalStr + "``.\nDid you mean ``" + curSourceGraphicalStr + "`` or ``\\[" + curSourceGraphicalStr + "XXXX]``?", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc));
                     
                     Issues.push_back(Issue);
                     
                 } else if (curSource.isHex()) {
                     
-                    auto curSourceStr = curSource.string();
+                    auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
                     
-                    auto Issue = SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character ``\\") + curSourceStr + "``.\nDid you mean ``" + curSourceStr + "`` or ``\\:" + curSourceStr + "xxx``?", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc));
+                    auto Issue = SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character ``\\") + curSourceGraphicalStr + "``.\nDid you mean ``" + curSourceGraphicalStr + "`` or ``\\:" + curSourceGraphicalStr + "xxx``?", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc));
                     
                     Issues.push_back(Issue);
                     
@@ -482,7 +483,7 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
                 // Make the warning message a little more relevant
                 //
                 
-                auto curSourceStr = curSource.string();
+                auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
                 
                 auto suggestion = longNameSuggestion(LongNameStr);
                 
@@ -491,7 +492,7 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
                 }
                 
                 auto Issue = SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\[") + LongNameStr +
-                                         curSourceStr + "``." + suggestion, SYNTAXISSUESEVERITY_ERROR,
+                                         curSourceGraphicalStr + "``." + suggestion, SYNTAXISSUESEVERITY_ERROR,
                                          Source(CharacterStart, Loc));
                 
                 Issues.push_back(Issue);
@@ -523,7 +524,7 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
         for (size_t i = 0; i < LongNameStr.size(); i++) {
             TheByteDecoder->append(LongNameStr[i], CharacterStart+2+i);
         }
-        for (auto b : curSource.string()) {
+        for (auto b : curSource) {
             TheByteDecoder->append(b, Loc);
         }
         
@@ -680,7 +681,7 @@ WLCharacter CharacterDecoder::handle4Hex(SourceCharacter curSourceIn, SourceLoca
             for (size_t i = 0; i < HexStr.size(); i++) {
                 TheByteDecoder->append(HexStr[i], CharacterStart+2+i);
             }
-            for (auto b : curSource.string()) {
+            for (auto b : curSource) {
                 TheByteDecoder->append(b, Loc);
             }
             
@@ -754,7 +755,7 @@ WLCharacter CharacterDecoder::handle2Hex(SourceCharacter curSourceIn, SourceLoca
             for (size_t i = 0; i < HexStr.size(); i++) {
                 TheByteDecoder->append(HexStr[i], CharacterStart+2+i);
             }
-            for (auto b : curSource.string()) {
+            for (auto b : curSource) {
                 TheByteDecoder->append(b, Loc);
             }
             
@@ -829,7 +830,7 @@ WLCharacter CharacterDecoder::handleOctal(SourceCharacter curSourceIn, SourceLoc
             for (size_t i = 0; i < OctalStr.size(); i++) {
                 TheByteDecoder->append(OctalStr[i], CharacterStart+1+i);
             }
-            for (auto b : curSource.string()) {
+            for (auto b : curSource) {
                 TheByteDecoder->append(b, Loc);
             }
             
@@ -903,7 +904,7 @@ WLCharacter CharacterDecoder::handle6Hex(SourceCharacter curSourceIn, SourceLoca
             for (size_t i = 0; i < HexStr.size(); i++) {
                 TheByteDecoder->append(HexStr[i], CharacterStart+2+i);
             }
-            for (auto b : curSource.string()) {
+            for (auto b : curSource) {
                 TheByteDecoder->append(b, Loc);
             }
             

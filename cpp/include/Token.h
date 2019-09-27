@@ -13,6 +13,8 @@ struct Token {
     Source Src;
     
     Token(TokenEnum, std::string, Source);
+    
+    bool isTrivia() const;
 };
 
 bool operator==(Token a, Token b);

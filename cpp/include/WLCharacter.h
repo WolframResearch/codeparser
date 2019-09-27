@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <string>
+#include <iterator>
 
 //
 // Used to just be Escape, but this was observed:
@@ -75,8 +76,6 @@ struct WLCharacter {
         return static_cast<EscapeFormat>(escapeBits);
     }
     
-    std::string string() const;
-    
     std::string graphicalString() const;
     
     bool isEscaped() const;
@@ -120,6 +119,7 @@ struct WLCharacter {
     bool isStrangeNewlineCharacter() const;
     bool isUninterpretableCharacter() const;
     bool isControlCharacter() const;
+    bool isLineContinuation() const;
 };
 
 std::ostream& operator<<(std::ostream& stream, WLCharacter);

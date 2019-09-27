@@ -9,7 +9,7 @@
 #include <vector>
 #include <memory> // for unique_ptr
 
-enum NextWLCharacterPolicyBits {
+enum NextWLCharacterPolicyBits : uint8_t {
     
     //
     // Preserve whitespace after line continuation
@@ -63,13 +63,13 @@ enum NextWLCharacterPolicyBits {
     //
     // Check for unlikely escape sequences?
     //
-    UNLIKELY_ESCAPE_CHECKING = 0x20
+    UNLIKELY_ESCAPE_CHECKING = 0x20,
 };
 
 class NextWLCharacterPolicy {
-    int val;
+    uint8_t val;
 public:
-    constexpr NextWLCharacterPolicy(int val) : val(val) {}
+    constexpr NextWLCharacterPolicy(uint8_t val) : val(val) {}
     
     bool operator==(const WLCharacter &o) const = delete;
     

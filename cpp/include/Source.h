@@ -7,6 +7,8 @@
 
 #include <string>
 #include <cassert>
+#include <iterator>
+#include <array>
 
 //
 // https://akrzemi1.wordpress.com/2017/05/18/asserts-in-constexpr-functions/
@@ -107,9 +109,6 @@ SyntaxIssueSeverity SYNTAXISSUESEVERITY_WARNING = "Warning";
 SyntaxIssueSeverity SYNTAXISSUESEVERITY_ERROR = "Error";
 SyntaxIssueSeverity SYNTAXISSUESEVERITY_FATAL = "Fatal";
 
-
-
-
 //
 // A single character of source code
 //
@@ -142,8 +141,6 @@ struct SourceCharacter {
         return X_ASSERT(0x00 <= valBits && valBits <= 0xff), valBits;
     }
     
-    std::string string() const;
-    
     bool isAlphaOrDigit() const;
     
     bool isHex() const;
@@ -155,14 +152,50 @@ struct SourceCharacter {
     bool isEndOfFile() const;
     
     bool isDigit() const;
+    
+    
+    class SourceCharacter_iterator {
+        
+    public:
+        int32_t val;
+        size_t size;
+        size_t idx;
+        std::array<unsigned char, 4> arr;
+        
+        SourceCharacter_iterator(int32_t val);
+        
+        unsigned char operator*() {
+            return arr[idx];
+        }
+        
+        bool operator!=(const SourceCharacter_iterator& other) {
+            return val != other.val || idx != other.idx;
+        }
+        
+        SourceCharacter_iterator& operator++() {
+            assert(idx < size);
+            idx++;
+            return *this;
+        }
+    };
+    
+    SourceCharacter_iterator begin() {
+        auto it = SourceCharacter_iterator(valBits);
+        it.idx = 0;
+        return it;
+    }
+    
+    SourceCharacter_iterator end() {
+        auto it = SourceCharacter_iterator(valBits);
+        //
+        // 1 past
+        //
+        it.idx = it.size;
+        return it;
+    }
 };
 
 std::ostream& operator<<(std::ostream& stream, const SourceCharacter);
-
-
-
-
-
 
 
 

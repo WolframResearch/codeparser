@@ -10,13 +10,14 @@
 #include <vector>
 #include <memory> // for unique_ptr
 
-struct TokenizerContext {
+enum TokenizerContextBits : uint8_t {
+    
     //
     // If inside #, then give syntax warnings for #"123" and #a`b syntax (which is undocumented syntax)
     //
     // But obviously "123" and a`b are fine outside of #
     //
-    bool SlotFlag;
+    TOKENIZER_SLOT = 0x01,
     
     //
     // Some tokens are "stringified",  b in  a::b
@@ -25,18 +26,35 @@ struct TokenizerContext {
     //
     // This is used inside linear syntax.
     //
-    bool EnableStringifyNextToken;
+    TOKENIZER_ENABLE_STRINGIFY_NEXT_TOKEN = 0x02,
     
     //
     //
     //
-    bool StringifyCurrentLine;
+    TOKENIZER_STRINGIFY_CURRENT_LINE = 0x04,
+};
+
+class TokenizerContext {
+    uint8_t val;
+public:
+    constexpr TokenizerContext() : val(TOKENIZER_ENABLE_STRINGIFY_NEXT_TOKEN) {}
+    constexpr TokenizerContext(uint8_t val) : val(val) {}
     
+    TokenizerContextBits operator&(const TokenizerContextBits bits) const {
+        return static_cast<TokenizerContextBits>(val & bits);
+    }
     
-    TokenizerContext() : SlotFlag(false), EnableStringifyNextToken(true), StringifyCurrentLine(false) {}
+    TokenizerContextBits operator|(const TokenizerContextBits bits) const {
+        return static_cast<TokenizerContextBits>(val | bits);
+    }
     
-    TokenizerContext(bool SlotFlag, bool EnableStringifyNextToken, bool StringifyCurrentLine) : SlotFlag(SlotFlag), EnableStringifyNextToken(EnableStringifyNextToken), StringifyCurrentLine(StringifyCurrentLine) {}
+    void operator|=(const TokenizerContextBits bits) {
+        val |= bits;
+    }
     
+    void clear(const TokenizerContextBits bits) {
+        val &= ~bits;
+    }
 };
 
 //

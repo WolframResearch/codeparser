@@ -109,7 +109,7 @@ line continuations and newlines
 Test[
 	ConcreteParseString["\"abc\\\r\ndef\""]
 	,
-	LeafNode[String, "\"abc\\\n\ndef\"", <|Source -> {{1, 1}, {2, 4}}|>]
+	LeafNode[String, "\"abc\\\r\ndef\"", <|Source -> {{1, 1}, {2, 4}}|>]
 	,
 	TestID->"Concrete-20190606-U7J9I3"
 ]
@@ -208,12 +208,12 @@ Test[
 	GroupNode[List, {
 		LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 1}}|>],
 		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 2}, {1, 2}}|>],
-		GroupMissingOpenerNode[List, {
+		GroupMissingCloserNode[GroupParen, {
 			LeafNode[Token`OpenParen, "(", <|Source -> {{1, 3}, {1, 3}}|>],
 			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 4}, {1, 4}}|>],
 			LeafNode[Symbol, "a", <|Source -> {{1, 5}, {1, 5}}|>],
 			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 6}, {1, 6}}|>],
-			LeafNode[Token`CloseCurly, "}", <|Source -> {{1, 7}, {1, 7}}|>]}, <|Source -> {{1, 3}, {1, 7}}|>],
+			LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 7}, {1, 7}}|>]}, <|Source -> {{1, 3}, {1, 7}}|>],
 		LeafNode[Token`CloseCurly, "}", <|Source -> {{1, 7}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]
 	,
 	TestID->"Concrete-20190717-L0P2V0"

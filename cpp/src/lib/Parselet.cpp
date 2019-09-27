@@ -104,12 +104,13 @@ NodePtr SymbolParselet::parse(ParserContext CtxtIn) const {
         // because in e.g.,   a_*b:f[]    the b is the last node in the Times expression and needs to bind with :f[]
         // Parsing a_*b completely, and then parsing :f[] would be wrong.
         //
-        if (!Ctxt.ColonFlag) {
+        if ((Ctxt.Flag & PARSER_COLON) != PARSER_COLON) {
             
             if (Tok.Tok == TOKEN_COLON) {
                 
-                Args->append(std::move(Sym));
+                Ctxt.Flag |= PARSER_PARSED_SYMBOL;
                 
+                Args->append(std::move(Sym));
                 Args->append(std::move(ArgsTest));
                 
                 auto& colonParselet = TheParser->findInfixParselet(Tok.Tok);
@@ -118,12 +119,9 @@ NodePtr SymbolParselet::parse(ParserContext CtxtIn) const {
             }
         }
         
-        TheParser->nextToken(Ctxt);
-        
         //
         // Prepend in correct order
         //
-        TheParser->prepend(Tok);
         TheParser->prependInReverse(std::move(ArgsTest));
         
         return Sym;
@@ -252,22 +250,16 @@ NodePtr InfixOperatorParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContex
                 //
                 // Tok.Tok != TokIn.Tok, so break
                 //
-                
-                TheParser->nextToken(Ctxt);
-                
                 //
                 // Prepend in correct order
                 //
-                TheParser->prepend(Tok);
                 TheParser->prependInReverse(std::move(ArgsTest));
                 
-                break;
+                return std::unique_ptr<Node>(new InfixNode(InfixOperatorToSymbol(TokIn.Tok), std::move(Args)));
             }
         }
         
     } // while
-    
-    return std::unique_ptr<Node>(new InfixNode(InfixOperatorToSymbol(TokIn.Tok), std::move(Args)));
 }
 
 NodePtr PostfixOperatorParselet::parse(std::unique_ptr<NodeSeq> Operand, ParserContext CtxtIn) const {
@@ -362,16 +354,20 @@ NodePtr GroupParselet::parse(ParserContext CtxtIn) const {
             //
             // some other closer
             //
-            // e.g.,   { ( a }  or  { a ) }
+            // e.g.,   { ( }
+            //
+            // FIXME: { ) }  is not handled
+            //
+            // Important to not duplicate token's Str here, it may also appear later
+            //
+            // Also, invent Source
             //
             
-            auto MissingOpener = GroupCloserToOpener(Tok.Tok);
+            auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, "", Source(Tok.Src.start()));
             
-            Args->append(std::unique_ptr<Node>(new LeafNode(Tok)));
+            Args->append(std::unique_ptr<Node>(new LeafNode(createdToken)));
             
-            auto& MissingOpenerSymbol = GroupOpenerToSymbol(MissingOpener);
-            
-            auto group = std::unique_ptr<Node>(new GroupMissingOpenerNode(MissingOpenerSymbol, std::move(Args)));
+            auto group = std::unique_ptr<Node>(new GroupMissingCloserNode(Op, std::move(Args)));
             
             return group;
         }
@@ -382,8 +378,6 @@ NodePtr GroupParselet::parse(ParserContext CtxtIn) const {
             //
             
             Args->append(std::unique_ptr<Node>(new LeafNode(Tok)));
-            
-            auto& Op = GroupOpenerToSymbol(Opener.Tok);
             
             auto group = std::unique_ptr<Node>(new GroupMissingCloserNode(Op, std::move(Args)));
             
@@ -397,7 +391,7 @@ NodePtr GroupParselet::parse(ParserContext CtxtIn) const {
         Tok = Parser::eatAll(Tok, Ctxt, Args);
         
         auto Ctxt2 = Ctxt;
-        Ctxt2.ColonFlag = false;
+        Ctxt2.Flag.clear(PARSER_COLON);
         Ctxt2.Prec = PRECEDENCE_LOWEST;
         Ctxt2.Assoc = ASSOCIATIVITY_NONE;
         Ctxt2.UnderCount = UNDER_UNKNOWN;
@@ -429,16 +423,16 @@ NodePtr CallParselet::parse(std::unique_ptr<NodeSeq> Head, ParserContext CtxtIn)
     Ctxt.Prec = PRECEDENCE_HIGHEST;
     Ctxt.Assoc = ASSOCIATIVITY_NONE;
     
-    auto Right = TheParser->parse(Ctxt);
+    auto& groupParselet = TheParser->findPrefixParselet(TokIn.Tok);
     
+    auto Right = groupParselet->parse(Ctxt);
+
 #ifndef NDEBUG
-    
     auto R = Right.get();
     
-    assert(dynamic_cast<const GroupNode*>(R) ||
-           dynamic_cast<const GroupMissingCloserNode*>(R) ||
-           dynamic_cast<const GroupMissingOpenerNode*>(R));
-
+    assert(dynamic_cast<GroupNode*>(R) ||
+           dynamic_cast<GroupMissingCloserNode*>(R) ||
+           dynamic_cast<GroupMissingOpenerNode*>(R));
 #endif
     
     Args->append(std::move(Right));
@@ -461,11 +455,11 @@ NodePtr StartOfLineParselet::parse(ParserContext CtxtIn) const {
     Args->append(std::unique_ptr<Node>(new LeafNode(TokIn)));
     
     auto Ctxt = CtxtIn;
-    Ctxt.StringifyCurrentLine = true;
+    Ctxt.Flag |= PARSER_STRINGIFY_CURRENT_LINE;
     
-    TheParser->nextToken(Ctxt);
+    auto Tok = TheParser->nextToken(Ctxt);
     
-    Ctxt.StringifyCurrentLine = false;
+    Ctxt.Flag.clear(PARSER_STRINGIFY_CURRENT_LINE);
     
     //
     // Cannot use TheParser->findPrefixParselet(TOKEN_STRING) here because TOKEN_ERROR_EMPTYSTRING
@@ -474,7 +468,9 @@ NodePtr StartOfLineParselet::parse(ParserContext CtxtIn) const {
     // So just use general parse
     //
     
-    auto Operand = TheParser->parse(Ctxt);
+    TheParser->nextToken(Ctxt);
+    
+    auto Operand = std::unique_ptr<Node>(new LeafNode(Tok));
     
     Args->append(std::move(Operand));
     
@@ -556,7 +552,7 @@ NodePtr UnderParselet::parse(ParserContext CtxtIn) const {
         // make sure to not parse the second : here
         // We are already inside ColonParselet from the first :, and so ColonParselet will also handle the second :
         //
-        if (!Ctxt.ColonFlag) {
+        if ((Ctxt.Flag & PARSER_COLON) != PARSER_COLON) {
             
             if (Tok.Tok == TOKEN_COLON) {
                 
@@ -569,6 +565,10 @@ NodePtr UnderParselet::parse(ParserContext CtxtIn) const {
                 return colonParselet->parseContextSensitive(std::move(BlankSeq), Ctxt);
             }
         }
+        
+        //
+        // Prepend in correct order
+        //
         
         TheParser->prependInReverse(std::move(ArgsTest));
         
@@ -641,7 +641,7 @@ NodePtr UnderParselet::parseContextSensitive(std::unique_ptr<NodeSeq> Left, Pars
         // For something like a:b_c:d when parsing _
         // ColonFlag == true
         //
-        if (!Ctxt.ColonFlag) {
+        if ((Ctxt.Flag & PARSER_COLON) != PARSER_COLON) {
             
             if (Tok.Tok == TOKEN_COLON) {
                 
@@ -654,6 +654,10 @@ NodePtr UnderParselet::parseContextSensitive(std::unique_ptr<NodeSeq> Left, Pars
                 return colonParselet->parseContextSensitive(std::move(PatSeq), Ctxt);
             }
         }
+        
+        //
+        // Prepend in correct order
+        //
         
         TheParser->prependInReverse(std::move(ArgsTest));
         
@@ -750,33 +754,12 @@ NodePtr TildeParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext CtxtIn
 //
 NodePtr ColonParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext CtxtIn) const {
     
-    assert(!CtxtIn.ColonFlag);
+    assert((CtxtIn.Flag & PARSER_COLON) != PARSER_COLON);
     
     auto Args = std::unique_ptr<NodeSeq>(new NodeSeq);
     Args->reserve(1 + 1 + 1);
     
-    auto symbol = false;
-    
-    auto& LeftVector = Left->getVector();
-    auto& LeftFirst = LeftVector->at(0);
-    auto L = LeftFirst.get();
-    if (auto LeftLeaf = dynamic_cast<LeafNode*>(L)) {
-
-        if (LeftLeaf->getToken().Tok == TOKEN_SYMBOL) {
-
-            symbol = true;
-        }
-    }
-    
-    Args->append(std::move(LeftFirst));
-    
-    //
-    // Move the rest of Left
-    //
-    for (size_t i = 1; i < LeftVector->size(); i++) {
-        auto& N = LeftVector->at(i);
-        Args->append(std::move(N));
-    }
+    Args->append(std::move(Left));
     
     auto TokIn = TheParser->currentToken();
     
@@ -785,7 +768,7 @@ NodePtr ColonParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext CtxtIn
     auto Ctxt = CtxtIn;
     Ctxt.Prec = PRECEDENCE_FAKE_PATTERNCOLON;
     Ctxt.Assoc = ASSOCIATIVITY_NONE;
-    Ctxt.ColonFlag = true;
+    Ctxt.Flag |= PARSER_COLON;
     
     auto Tok = TheParser->nextToken(Ctxt);
     
@@ -795,13 +778,15 @@ NodePtr ColonParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext CtxtIn
     
     Args->append(std::move(Right));
 
-    if (!symbol) {
+    if ((CtxtIn.Flag & PARSER_PARSED_SYMBOL) != PARSER_PARSED_SYMBOL) {
 
         auto Error = std::unique_ptr<Node>(new SyntaxErrorNode(SYNTAXERROR_COLONERROR, std::move(Args)));
 
         return Error;
     }
-
+    
+    Ctxt.Flag.clear(PARSER_PARSED_SYMBOL);
+    
     auto Pat = std::unique_ptr<Node>(new BinaryNode(SYMBOL_PATTERN, std::move(Args)));
 
     //
@@ -816,7 +801,7 @@ NodePtr ColonParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext CtxtIn
         
         if (Tok.Tok == TOKEN_COLON) {
             
-            Ctxt.ColonFlag = false;
+            Ctxt.Flag.clear(PARSER_COLON);
             
             auto PatSeq = std::unique_ptr<NodeSeq>(new NodeSeq);
             
@@ -825,6 +810,10 @@ NodePtr ColonParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext CtxtIn
             
             return parseContextSensitive(std::move(PatSeq), Ctxt);
         }
+        
+        //
+        // Prepend in correct order
+        //
         
         TheParser->prependInReverse(std::move(ArgsTest));
         
@@ -843,7 +832,7 @@ NodePtr ColonParselet::parseContextSensitive(std::unique_ptr<NodeSeq> Left, Pars
     // when parsing a in a:b  then ColonFlag is false
     // when parsing b in a:b  then ColonFlag is true
     //
-    assert(!CtxtIn.ColonFlag);
+    assert((CtxtIn.Flag & PARSER_COLON) != PARSER_COLON);
     
     auto Args = std::unique_ptr<NodeSeq>(new NodeSeq);
     Args->reserve(1 + 1 + 1);
@@ -872,6 +861,11 @@ NodePtr ColonParselet::parseContextSensitive(std::unique_ptr<NodeSeq> Left, Pars
 //
 // Something like  a /: b = c
 //
+// a   /:   b   =   c
+// ^~~~~ Args at the start
+//       ^~~ ArgsTest1
+//           ^~~ ArgsTest2
+//
 NodePtr SlashColonParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext CtxtIn) const {
     
     auto Args = std::unique_ptr<NodeSeq>(new NodeSeq);
@@ -887,40 +881,71 @@ NodePtr SlashColonParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext C
     Ctxt.Prec = getPrecedence();
     Ctxt.Assoc = getAssociativity();
     
+    
+    auto ArgsTest1 = std::unique_ptr<LeafSeq>(new LeafSeq);
+    
     auto Tok = TheParser->nextToken(Ctxt);
     
-    Tok = Parser::eatAll(Tok, Ctxt, Args);
+    Parser::eatAll(Tok, Ctxt, ArgsTest1);
     
     auto Middle = TheParser->parse(Ctxt);
     
-    auto M = Middle.get();
     
-    if (auto BinaryMiddle = dynamic_cast<BinaryNode*>(M)) {
-
-        if (BinaryMiddle->getOperator() == SYMBOL_SET) {
-
-            auto MiddleChildren = BinaryMiddle->getChildrenDestructive();
-            
-            Args->append(std::unique_ptr<NodeSeq>(MiddleChildren));
-            
-            return std::unique_ptr<Node>(new TernaryNode(SYMBOL_TAGSET, std::move(Args)));
-        }
-        if (BinaryMiddle->getOperator() == SYMBOL_SETDELAYED) {
-
-            auto MiddleChildren = BinaryMiddle->getChildrenDestructive();
-
-            Args->append(std::unique_ptr<NodeSeq>(MiddleChildren));
-            
-            return std::unique_ptr<Node>(new TernaryNode(SYMBOL_TAGSETDELAYED, std::move(Args)));
-        }
-        if (BinaryMiddle->getOperator() == SYMBOL_UNSET) {
-
-            auto MiddleChildren = BinaryMiddle->getChildrenDestructive();
-
-            Args->append(std::unique_ptr<NodeSeq>(MiddleChildren));
-            
-            return std::unique_ptr<Node>(new TernaryNode(SYMBOL_TAGUNSET, std::move(Args)));
-        }
+    auto ArgsTest2 = std::unique_ptr<LeafSeq>(new LeafSeq);
+    
+    Tok = TheParser->currentToken();
+    
+    Tok = Parser::eatAll(Tok, Ctxt, ArgsTest2);
+    
+    if (Tok.Tok == TOKEN_EQUAL) {
+        
+        Args->append(std::move(ArgsTest1));
+        Args->append(std::move(Middle));
+        Args->append(std::move(ArgsTest2));
+        
+        Ctxt.Flag |= PARSER_INSIDE_SLASHCOLON;
+        
+        auto& equalParselet = TheParser->findInfixParselet(Tok.Tok);
+        
+        auto N = equalParselet->parse(std::move(Args), Ctxt);
+        
+        return N;
+        
+    } else if (Tok.Tok == TOKEN_COLONEQUAL) {
+        
+        auto Args2 = std::unique_ptr<NodeSeq>(new NodeSeq);
+        Args2->append(std::move(Middle));
+        Args2->append(std::move(ArgsTest2));
+        
+        auto& colonEqualParselet = TheParser->findInfixParselet(Tok.Tok);
+        
+        auto N = colonEqualParselet->parse(std::move(Args2), Ctxt);
+        
+        Args->append(std::move(ArgsTest1));
+        
+        auto C = N->getChildrenDestructive();
+        
+        Args->append(std::unique_ptr<NodeSeq>(C));
+        
+        return std::unique_ptr<Node>(new TernaryNode(SYMBOL_TAGSETDELAYED, std::move(Args)));
+        
+    } else if (Tok.Tok == TOKEN_EQUALDOT) {
+        
+        auto Args2 = std::unique_ptr<NodeSeq>(new NodeSeq);
+        Args2->append(std::move(Middle));
+        Args2->append(std::move(ArgsTest2));
+        
+        auto& equalParselet = TheParser->findInfixParselet(Tok.Tok);
+        
+        auto N = equalParselet->parse(std::move(Args2), Ctxt);
+        
+        Args->append(std::move(ArgsTest1));
+        
+        auto C = N->getChildrenDestructive();
+        
+        Args->append(std::unique_ptr<NodeSeq>(C));
+        
+        return std::unique_ptr<Node>(new TernaryNode(SYMBOL_TAGUNSET, std::move(Args)));
     }
     
     //
@@ -930,7 +955,18 @@ NodePtr SlashColonParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext C
     // a /: b =.
     //
     
+    Args->append(std::move(ArgsTest1));
     Args->append(std::move(Middle));
+    Args->append(std::move(ArgsTest2));
+    //
+    // Important to not duplicate token's Str here, it may also appear later
+    //
+    // Also, invent Source
+    //
+    
+    auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, "", Source(Tok.Src.start()));
+    
+    Args->append(std::unique_ptr<Node>(new LeafNode(createdToken)));
     
     auto Error = std::unique_ptr<Node>(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDSET, std::move(Args)));
     
@@ -951,7 +987,7 @@ NodePtr LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn) const {
     
     auto Ctxt = CtxtIn;
     Ctxt.GroupDepth++;
-    Ctxt.LinearSyntaxFlag = true;
+    Ctxt.Flag |= PARSER_LINEARSYNTAX;
     
     auto Tok = TheParser->nextToken(Ctxt);
     
@@ -1008,9 +1044,8 @@ NodePtr LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn) const {
         if (Tok.Tok == TOKEN_LINEARSYNTAX_OPENPAREN) {
             
             auto Sub = this->parse(Ctxt);
-            
+
 #ifndef NDEBUG
-            
             auto S = Sub.get();
             
             if (auto SubOpenParen = dynamic_cast<GroupNode*>(S)) {
@@ -1025,7 +1060,6 @@ NodePtr LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn) const {
                 assert(false);
             }
 #endif
-            
             Args->append(std::move(Sub));
             
             Tok = TheParser->currentToken();
@@ -1049,6 +1083,8 @@ NodePtr LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn) const {
 //
 // Something like  a =.
 //
+// a /: b = c  and  a /: b = .  are also handled here
+//
 NodePtr EqualParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext CtxtIn) const {
     
     auto Args = std::unique_ptr<NodeSeq>(new NodeSeq);
@@ -1067,6 +1103,10 @@ NodePtr EqualParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext CtxtIn
     if (TokIn.Tok == TOKEN_EQUALDOT) {
         
         TheParser->nextToken(Ctxt);
+        
+        if ((Ctxt.Flag & PARSER_INSIDE_SLASHCOLON) == PARSER_INSIDE_SLASHCOLON) {
+            return std::unique_ptr<Node>(new TernaryNode(SYMBOL_TAGUNSET, std::move(Args)));
+        }
         
         return std::unique_ptr<Node>(new BinaryNode(SYMBOL_UNSET, std::move(Args)));
     }
@@ -1091,12 +1131,20 @@ NodePtr EqualParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext CtxtIn
         
         Args->append(std::unique_ptr<Node>(new LeafNode(Tok)));
         
+        if ((Ctxt.Flag & PARSER_INSIDE_SLASHCOLON) == PARSER_INSIDE_SLASHCOLON) {
+            return std::unique_ptr<Node>(new TernaryNode(SYMBOL_TAGUNSET, std::move(Args)));
+        }
+        
         return std::unique_ptr<Node>(new BinaryNode(SYMBOL_UNSET, std::move(Args)));
     }
     
     auto Right = TheParser->parse(Ctxt);
     
     Args->append(std::move(Right));
+    
+    if ((Ctxt.Flag & PARSER_INSIDE_SLASHCOLON) == PARSER_INSIDE_SLASHCOLON) {
+        return std::unique_ptr<Node>(new TernaryNode(SYMBOL_TAGSET, std::move(Args)));
+    }
     
     return std::unique_ptr<Node>(new BinaryNode(SYMBOL_SET, std::move(Args)));
 }
@@ -1117,35 +1165,52 @@ NodePtr IntegralParselet::parse(ParserContext CtxtIn) const {
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
     Ctxt.Assoc = ASSOCIATIVITY_NONE;
-    Ctxt.IntegralFlag = true;
+    Ctxt.Flag |= PARSER_INTEGRAL;
     
     auto Tok = TheParser->nextToken(Ctxt);
     
     Tok = Parser::eatAll(Tok, Ctxt, Args);
     
-    Utils::differentLineWarning(TokIn, TokIn, SYNTAXISSUESEVERITY_FORMATTING);
+    Utils::differentLineWarning(TokIn, Tok, SYNTAXISSUESEVERITY_FORMATTING);
     
     auto operand = TheParser->parse(Ctxt);
     
     Args->append(std::move(operand));
     
-    Ctxt.IntegralFlag = false;
+    Ctxt.Flag.clear(PARSER_INTEGRAL);
     
     
-    Tok = TheParser->currentToken();
-    
-    Tok = Parser::eatAll(Tok, Ctxt, Args);
-    
-    if (Tok.Tok == TOKEN_LONGNAME_DIFFERENTIALD) {
+    //
+    // LOOKAHEAD
+    //
+    {
+        auto ArgsTest = std::unique_ptr<LeafSeq>(new LeafSeq);
         
-        auto variable = TheParser->parse(Ctxt);
+        Tok = TheParser->currentToken();
         
+        Tok = Parser::eatAll(Tok, Ctxt, ArgsTest);
+        
+        if (Tok.Tok != TOKEN_LONGNAME_DIFFERENTIALD) {
+            
+            //
+            // Prepend in correct order
+            //
+            TheParser->prependInReverse(std::move(ArgsTest));
+            
+            return std::unique_ptr<Node>(new PrefixNode(PrefixOperatorToSymbol(TokIn.Tok), std::move(Args)));
+        }
+            
+        Utils::differentLineWarning(TokIn, Tok, SYNTAXISSUESEVERITY_FORMATTING);
+        
+        auto& differentialDparselet = TheParser->findPrefixParselet(Tok.Tok);
+        
+        auto variable = differentialDparselet->parse(Ctxt);
+        
+        Args->append(std::move(ArgsTest));
         Args->append(std::move(variable));
         
         return std::unique_ptr<Node>(new PrefixBinaryNode(PrefixBinaryOperatorToSymbol(TokIn.Tok), std::move(Args)));
     }
-    
-    return std::unique_ptr<Node>(new PrefixNode(PrefixOperatorToSymbol(TokIn.Tok), std::move(Args)));
 }
 
 //
@@ -1178,29 +1243,41 @@ NodePtr InequalityParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext C
         }
         
         
-        auto Tok = TheParser->currentToken();
-        
-        Tok = Parser::eatAndPreserveToplevelNewlines(Tok, CtxtIn, Args);
-        
-        if (isInequalityOperator(Tok.Tok)) {
+        //
+        // LOOKAHEAD
+        //
+        {
+            auto ArgsTest = std::unique_ptr<LeafSeq>(new LeafSeq);
             
-            Args->append(std::unique_ptr<Node>(new LeafNode(Tok)));
+            auto Tok = TheParser->currentToken();
             
-            Tok = TheParser->nextToken(Ctxt);
+            Tok = Parser::eatAndPreserveToplevelNewlines(Tok, CtxtIn, ArgsTest);
             
-            Tok = Parser::eatAll(Tok, Ctxt, Args);
-            
-            auto operand = TheParser->parse(Ctxt);
-            
-            Args->append(std::move(operand));
-            
-        } else {
-            
-            //
-            // Tok.Tok != TokIn.Tok, so break
-            //
-            
-            break;
+            if (isInequalityOperator(Tok.Tok)) {
+                
+                Args->append(std::move(ArgsTest));
+                Args->append(std::unique_ptr<Node>(new LeafNode(Tok)));
+                
+                Tok = TheParser->nextToken(Ctxt);
+                
+                Tok = Parser::eatAll(Tok, Ctxt, Args);
+                
+                auto operand = TheParser->parse(Ctxt);
+                
+                Args->append(std::move(operand));
+                
+            } else {
+                
+                //
+                // Tok.Tok != TokIn.Tok, so break
+                //
+                //
+                // Prepend in correct order
+                //
+                TheParser->prependInReverse(std::move(ArgsTest));
+                
+                break;
+            }
         }
         
     } // while
@@ -1237,35 +1314,44 @@ NodePtr VectorInequalityParselet::parse(std::unique_ptr<NodeSeq> Left, ParserCon
             return Aborted;
         }
         
-        
-        auto Tok = TheParser->currentToken();
-        
-        Tok = Parser::eatAndPreserveToplevelNewlines(Tok, CtxtIn, Args);
-        
-        if (isVectorInequalityOperator(Tok.Tok)) {
+        //
+        // LOOKAHEAD
+        //
+        {
+            auto ArgsTest = std::unique_ptr<LeafSeq>(new LeafSeq);
             
-            Args->append(std::unique_ptr<Node>(new LeafNode(Tok)));
+            auto Tok = TheParser->currentToken();
             
-            Tok = TheParser->nextToken(Ctxt);
+            Tok = Parser::eatAndPreserveToplevelNewlines(Tok, CtxtIn, ArgsTest);
             
-            Tok = Parser::eatAll(Tok, Ctxt, Args);
-            
-            auto operand = TheParser->parse(Ctxt);
-            
-            Args->append(std::move(operand));
-            
-        } else {
-            
-            //
-            // Tok.Tok != TokIn.Tok, so break
-            //
-            
-            break;
+            if (isVectorInequalityOperator(Tok.Tok)) {
+                
+                Args->append(std::move(ArgsTest));
+                Args->append(std::unique_ptr<Node>(new LeafNode(Tok)));
+                
+                Tok = TheParser->nextToken(Ctxt);
+                
+                Tok = Parser::eatAll(Tok, Ctxt, Args);
+                
+                auto operand = TheParser->parse(Ctxt);
+                
+                Args->append(std::move(operand));
+                
+            } else {
+                
+                //
+                // Tok.Tok != TokIn.Tok, so break
+                //
+                //
+                // Prepend in correct order
+                //
+                TheParser->prependInReverse(std::move(ArgsTest));
+                
+                return std::unique_ptr<Node>(new InfixNode(SYMBOL_DEVELOPER_VECTORINEQUALITY, std::move(Args)));
+            }
         }
         
     } // while
-    
-    return std::unique_ptr<Node>(new InfixNode(SYMBOL_DEVELOPER_VECTORINEQUALITY, std::move(Args)));
 }
 
 NodePtr InfixOperatorWithTrailingParselet::parse(std::unique_ptr<NodeSeq> Left, ParserContext CtxtIn) const {
@@ -1319,7 +1405,6 @@ NodePtr InfixOperatorWithTrailingParselet::parse(std::unique_ptr<NodeSeq> Left, 
                 InfixOperatorToSymbol(Tok.Tok) == InfixOperatorToSymbol(TokIn.Tok)) {
                 
                 Args->append(std::move(ArgsTest1));
-                
                 Args->append(std::unique_ptr<Node>(new LeafNode(Tok)));
                 
                 lastOperatorToken = Tok;
@@ -1377,6 +1462,9 @@ NodePtr InfixOperatorWithTrailingParselet::parse(std::unique_ptr<NodeSeq> Left, 
                         
                         Args->append(std::unique_ptr<Node>(new LeafNode(Implicit)));
                         
+                        //
+                        // Prepend in correct order
+                        //
                         TheParser->prependInReverse(std::move(ArgsTest2));
                         
                         return std::unique_ptr<Node>(new InfixNode(InfixOperatorToSymbol(TokIn.Tok), std::move(Args)));
@@ -1385,12 +1473,9 @@ NodePtr InfixOperatorWithTrailingParselet::parse(std::unique_ptr<NodeSeq> Left, 
                 
             } else {
                 
-                TheParser->nextToken(Ctxt);
-                
                 //
                 // Prepend in correct order
                 //
-                TheParser->prepend(Tok);
                 TheParser->prependInReverse(std::move(ArgsTest1));
                 
                 return std::unique_ptr<Node>(new InfixNode(InfixOperatorToSymbol(TokIn.Tok), std::move(Args)));

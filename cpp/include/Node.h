@@ -91,12 +91,14 @@ class Node {
 public:
 
     Node() : Children() {}
-    Node(std::unique_ptr<NodeSeq> Children) : Children(std::move(Children)) {}
+    Node(std::unique_ptr<NodeSeq> Children);
 
     virtual void put(MLINK mlp) const = 0;
 
     virtual Source getSource() const;
-
+    
+    virtual bool isTrivia() const;
+    
     void putChildren(MLINK mlp) const;
 
     const std::unique_ptr<NodeSeq>& getChildren() const {
@@ -137,7 +139,9 @@ public:
     LeafNode(Token& Tok) : Node(), Tok(Tok) {}
 
     void put(MLINK mlp) const override;
-
+    
+    bool isTrivia() const override;
+    
     Source getSource() const override {
         return Tok.Src;
     }

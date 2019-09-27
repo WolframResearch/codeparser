@@ -117,24 +117,13 @@ ast = ParseFile[package]
 TestMatch[
 	ast
 	,
-	FileNode[File, {CallNode[LeafNode[Symbol, "BeginPackage", <|Source -> {{2, 1}, {2, 12}}|>], {
-		LeafNode[String, "\"Foo.m`\"", <|Source -> {{2, 14}, {2, 21}}|>]}, <|Source -> {{2, 1}, {2, 22}}|>], 
-		CallNode[LeafNode[Symbol, "EndPackage", <|Source -> {{4, 1}, {4, 10}}|>], {}, <|Source -> {{4, 1}, {4, 12}}|>]}, 
-		<|Source -> {{2, 1}, {4, 12}}, AbstractSyntaxIssues -> {
-			SyntaxIssue["Package", "Package directive does not have correct syntax.", "Error", <|Source -> {{2, 1}, {2, 22}}|>]}|>]
+	FileNode[File, {
+		CallNode[LeafNode[Symbol, "BeginPackage", <|Source -> {{2, 1}, {2, 12}}|>], {
+			LeafNode[String, "\"Foo.m`\"", <|Source -> {{2, 14}, {2, 21}}|>]}, <|Source -> {{2, 1}, {2, 22}}|>], 
+		CallNode[LeafNode[Symbol, "EndPackage", <|Source -> {{4, 1}, {4, 10}}|>], {}, <|Source -> {{4, 1}, {4, 12}}|>]}, <|Source -> {{2, 0}, {6, 0}}, AbstractSyntaxIssues -> {SyntaxIssue["Package", "Package directive does not have correct syntax.", "Error", <|Source -> {{2, 1}, {2, 22}}|>]}|>]
 	,
 	TestID->"File-20190601-E8O7Y2"
 ]
-
-
-
-
-
-
-
-
-
-
 
 
 
