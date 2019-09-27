@@ -10,7 +10,7 @@
 
 #include <sstream>
 
-CharacterDecoder::CharacterDecoder() : _currentWLCharacter(0), sourceCharacterQueue(), Issues() {}
+CharacterDecoder::CharacterDecoder() : _currentWLCharacter(0), sourceCharacterQueue(), Issues(), libData() {}
 
 void CharacterDecoder::init(WolframLibraryData libDataIn) {
     _currentWLCharacter = WLCharacter(0);

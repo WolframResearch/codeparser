@@ -102,7 +102,7 @@ void OperatorNode::put(MLINK mlp) const {
     
     auto Src = getSource();
     
-    MLPutFunction(mlp, MakeSym->name(), 2 + Src.count());
+    MLPutFunction(mlp, MakeSym->name(), static_cast<int>(2 + Src.count()));
     
     MLPutSymbol(mlp, Op->name());
     
@@ -114,7 +114,7 @@ void OperatorNode::put(MLINK mlp) const {
 
 void LeafNode::put(MLINK mlp) const {
     
-    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKELEAFNODE->name(), 2 + Tok.Src.count());
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKELEAFNODE->name(), static_cast<int>(2 + Tok.Src.count()));
     
     MLPutSymbol(mlp, TokenToSymbol(Tok.Tok)->name());
     
@@ -131,7 +131,7 @@ void CallNode::put(MLINK mlp) const {
     
     auto Src = getSource();
     
-    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKECALLNODE->name(), 2 + Src.count());
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKECALLNODE->name(), static_cast<int>(2 + Src.count()));
     
     Head->put(mlp);
     
@@ -158,7 +158,7 @@ void SyntaxErrorNode::put(MLINK mlp) const {
     
     auto Src = getSource();
     
-    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKESYNTAXERRORNODE->name(), 2 + Src.count());
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKESYNTAXERRORNODE->name(), static_cast<int>(2 + Src.count()));
     
     MLPutSymbol(mlp, SyntaxErrorToString(Err).c_str());
     

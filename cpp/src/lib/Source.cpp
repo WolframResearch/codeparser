@@ -24,7 +24,7 @@
 
 void SyntaxIssue::put(MLINK mlp) const {
     
-    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKESYNTAXISSUE->name(), 3 + Src.count());
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKESYNTAXISSUE->name(), static_cast<int>(3 + Src.count()));
     
     MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Tag.c_str()), static_cast<int>(Tag.size()));
     
@@ -159,7 +159,7 @@ SourceLocation::SourceLocation(LineCol lineCol) : style(SOURCESTYLE_LINECOL), li
 
 SourceLocation::SourceLocation(Offset offset) : style(SOURCESTYLE_OFFSETLEN), offset(offset) {}
 
-SourceLocation SourceLocation::operator+(int d) {
+SourceLocation SourceLocation::operator+(size_t d) {
     switch (style) {
         case SOURCESTYLE_UNKNOWN:
             return SourceLocation();
@@ -171,7 +171,7 @@ SourceLocation SourceLocation::operator+(int d) {
     }
 }
 
-SourceLocation SourceLocation::operator-(int d) {
+SourceLocation SourceLocation::operator-(size_t d) {
     switch (style) {
         case SOURCESTYLE_UNKNOWN:
             return SourceLocation();
@@ -183,7 +183,8 @@ SourceLocation SourceLocation::operator-(int d) {
     }
 }
 
-void SourceLocation::operator++(int ignored) {
+SourceLocation SourceLocation::operator++(int ignored) {
+    auto Tmp = *this;
     switch (style) {
         case SOURCESTYLE_UNKNOWN:
             break;
@@ -197,6 +198,7 @@ void SourceLocation::operator++(int ignored) {
             assert(false);
             break;
     }
+    return Tmp;
 }
 
 SourceLocation SourceLocation::nextLine() {
@@ -209,7 +211,7 @@ SourceLocation SourceLocation::nextLine() {
             return SourceLocation(offset + 1);
         default:
             assert(false);
-            break;
+            return SourceLocation();
     }
 }
 

@@ -247,8 +247,10 @@ struct Offset {
         return Offset(val + i);
     }
     
-    void operator++(int ignored) {
+    Offset operator++(int ignored) {
+        auto Tmp = *this;
         val++;
+        return Tmp;
     }
 };
 
@@ -290,10 +292,10 @@ struct SourceLocation {
     
     SourceLocation(size_t loc) = delete;
     
-    SourceLocation operator+(int);
-    SourceLocation operator-(int);
+    SourceLocation operator+(size_t);
+    SourceLocation operator-(size_t);
     
-    void operator++(int);
+    SourceLocation operator++(int);
     
     SourceLocation nextLine();
 };
