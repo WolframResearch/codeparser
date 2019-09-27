@@ -30,6 +30,11 @@ do not touch linear syntax
 *)
 aggregate[node:GroupNode[GroupLinearSyntaxParen, _, _]] := node
 
+(*
+from boxes
+*)
+aggregate[node:GroupNode[Comment, _, _]] := Nothing
+
 aggregate[CallNode[headIn_, childrenIn_, dataIn_]] :=
 Catch[
 Module[{head, children, aggHead, aggChildren, data},
@@ -79,6 +84,25 @@ Module[{children, aggChildren, data},
 BoxNode[RowBox] and BoxNode[GridBox] have lists as children
 *)
 aggregate[l_List] := aggregate /@ l
+
+aggregate[BoxNode[RowBox, childrenIn_, dataIn_]] :=
+Catch[
+Module[{children, aggChildren, data},
+
+	children = childrenIn;
+	data = dataIn;
+
+	aggChildren = aggregate /@ children;
+
+	If[MatchQ[aggChildren, {{_}}],
+		(*
+		children is now a single node, so collapse the RowBox
+		*)
+		Throw[aggChildren[[1, 1]]]
+	];
+
+	BoxNode[RowBox, aggChildren, data]
+]]
 
 aggregate[node_[tag_, childrenIn_, dataIn_]] :=
 Module[{children, aggChildren, data},
