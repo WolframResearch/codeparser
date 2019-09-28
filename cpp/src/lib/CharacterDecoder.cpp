@@ -104,7 +104,9 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
             //
             
             if ((policy & LC_UNDERSTANDS_CRLF) == LC_UNDERSTANDS_CRLF) {
-                    
+                
+                auto CRLoc = TheSourceManager->getSourceLocation();
+                
                 auto c = TheByteDecoder->nextSourceCharacter();
                 
                 if (c != SourceCharacter('\n')) {
@@ -119,6 +121,7 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
                     
                     TheSourceManager->setSourceLocation(CharacterStart);
                     TheSourceManager->setWLCharacterStart();
+                    TheSourceManager->setSourceLocation(CRLoc);
                     TheSourceManager->setWLCharacterEnd();
                     
                     if (c.isEndOfFile()) {
