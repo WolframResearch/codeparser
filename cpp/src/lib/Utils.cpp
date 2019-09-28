@@ -139,9 +139,9 @@ void Utils::differentLineWarning(Token Tok1, Token Tok2, SyntaxIssueSeverity Sev
     TheParser->addIssue(Issue);
 }
 
-void Utils::differentLineWarning(std::unique_ptr<NodeSeq>& Args, Token Tok2, SyntaxIssueSeverity Severity) {
+void Utils::differentLineWarning(NodeSeq& Args, Token Tok2, SyntaxIssueSeverity Severity) {
     
-    auto& F = Args->first();
+    auto& F = Args.first();
     
     auto Tok1 = F->lastToken();
     

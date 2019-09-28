@@ -487,7 +487,6 @@ void Parser::registerContextSensitiveInfixParselet(TokenEnum token, std::unique_
 }
 
 
-
 void Parser::nextToken0(ParserContext Ctxt) {
     
     //
@@ -506,9 +505,13 @@ void Parser::nextToken0(ParserContext Ctxt) {
     //
     // if Ctxt.LinearSyntaxFlag, then we are in linear syntax, and we disable stringifying next tokens
     //
-    auto E = ((Ctxt.Flag & PARSER_LINEARSYNTAX) == PARSER_LINEARSYNTAX) ? 0 : TOKENIZER_ENABLE_STRINGIFY_NEXT_TOKEN;
-    auto S = ((Ctxt.Flag & PARSER_STRINGIFY_CURRENT_LINE) == PARSER_STRINGIFY_CURRENT_LINE) ? TOKENIZER_STRINGIFY_CURRENT_LINE : 0;
-    auto tokenizerCtxt = E | S;
+    TokenizerContext tokenizerCtxt;
+    if ((Ctxt.Flag & PARSER_LINEARSYNTAX) != PARSER_LINEARSYNTAX) {
+        tokenizerCtxt |= TOKENIZER_ENABLE_STRINGIFY_NEXT_TOKEN;
+    }
+    if ((Ctxt.Flag & PARSER_STRINGIFY_CURRENT_LINE) == PARSER_STRINGIFY_CURRENT_LINE) {
+        tokenizerCtxt |= TOKENIZER_STRINGIFY_CURRENT_LINE;
+    }
     
     TheTokenizer->nextToken(tokenizerCtxt);
 }
@@ -537,25 +540,19 @@ Token Parser::currentToken() const {
     return Tok;
 }
 
-//
-// Used to insert ImplicitTimes
-//
-void Parser::prepend(const Token& current) {
-    tokenQueue.insert(tokenQueue.begin(), current);
-}
-
-void Parser::prependInReverse(std::unique_ptr<LeafSeq> N) {
+void Parser::prependInReverse(std::vector<LeafNodePtr>& V) {
     
-    if (N->empty()) {
+    if (V.empty()) {
         return;
     }
     
-    auto V = N->getVectorDestructive();
-    auto i = V->rbegin();
-    for (; i != V->rend(); ++i ) {
-        prepend((*i)->getToken());
+    auto i = V.rbegin();
+    for (; i != V.rend(); ++i ) {
+        
+        auto& T = (*i)->getToken();
+        
+        tokenQueue.insert(tokenQueue.begin(), T);
     }
-    delete V;
 }
 
 std::vector<SyntaxIssue> Parser::getIssues() const {
@@ -752,7 +749,7 @@ Precedence Parser::getCurrentTokenPrecedence(Token& TokIn, ParserContext Ctxt) {
         
         auto Implicit = Token(TOKEN_FAKE_IMPLICITTIMES, "", Source(TokIn.Src.start()));
         
-        prepend(Implicit);
+        tokenQueue.insert(tokenQueue.begin(), Implicit);
     }
     
     return PRECEDENCE_FAKE_IMPLICITTIMES;
@@ -860,14 +857,6 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
                     Left = expectedPossibleExpressionErrorParselet->parse(Ctxt);
                 }
                 
-                //
-                // We know this is an error, so make sure to disable ImplicitTimes
-                //
-                // We don't want to treat \ABC as \A * BC
-                //
-                
-                implicitTimesEnabled = false;
-                
             } else {
 
                 nextToken(Ctxt);
@@ -882,8 +871,6 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
     // Infix loop
     //
     
-    auto ArgsTest = std::unique_ptr<LeafSeq>(new LeafSeq);
-    
     while (true) {
         
         if (isAbort()) {
@@ -894,45 +881,59 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
         }
         
         
-        token = currentToken();
-        
-        token = Parser::eatAndPreserveToplevelNewlines(token, Ctxt, ArgsTest);
-        
-        auto TokenPrecedence = getCurrentTokenPrecedence(token, Ctxt);
-        
         //
-        // getCurrentTokenPrecedence() may have inserted something like a new IMPLICITTIMES token, so grab again
+        // LOOKAHEAD
         //
-        token = currentToken();
-        
-        if (Ctxt.Prec > TokenPrecedence) {
-            break;
-        }
-        if (Ctxt.Prec == TokenPrecedence) {
-            if (Ctxt.Assoc != ASSOCIATIVITY_RIGHT) {
+        {
+            LeafSeq ArgsTest;
+            
+            token = currentToken();
+            
+            token = Parser::eatAndPreserveToplevelNewlines(token, Ctxt, ArgsTest);
+            
+            Precedence TokenPrecedence;
+            {
+                auto oldImplicitTimesEnabled = implicitTimesEnabled;
+                if (Left->isError()) {
+                    //
+                    // We know this is an error, so make sure to disable ImplicitTimes
+                    //
+                    // We don't want to treat \ABC as \A * BC
+                    //
+                    implicitTimesEnabled = false;
+                }
+                TokenPrecedence = getCurrentTokenPrecedence(token, Ctxt);
+                implicitTimesEnabled = oldImplicitTimesEnabled;
+            }
+            
+            //
+            // getCurrentTokenPrecedence() may have inserted something like a new IMPLICITTIMES token, so grab again
+            //
+            token = currentToken();
+            
+            if (Ctxt.Prec > TokenPrecedence) {
                 break;
             }
+            if (Ctxt.Prec == TokenPrecedence) {
+                if (Ctxt.Assoc != ASSOCIATIVITY_RIGHT) {
+                    break;
+                }
+            }
+            
+            NodeSeq LeftSeq;
+            LeftSeq.reserve(1 + ArgsTest.size());
+            LeftSeq.append(std::move(Left));
+            LeftSeq.append(std::move(ArgsTest));
+            
+            Left = parse0(std::move(LeftSeq), TokenPrecedence, Ctxt);
         }
         
-        auto LeftSeq = std::unique_ptr<NodeSeq>(new NodeSeq);
-        LeftSeq->reserve(1 + ArgsTest->size());
-        
-        LeftSeq->append(std::move(Left));
-        
-        LeftSeq->append(std::move(ArgsTest));
-        
-        Left = parse0(std::move(LeftSeq), TokenPrecedence, Ctxt);
-        
-        ArgsTest.reset(new LeafSeq);
-        
     } // while
-    
-    prependInReverse(std::move(ArgsTest));
     
     return Left;
 }
 
-NodePtr Parser::parse0(std::unique_ptr<NodeSeq> Left, Precedence TokenPrecedence, ParserContext CtxtIn) {
+NodePtr Parser::parse0(NodeSeq Left, Precedence TokenPrecedence, ParserContext CtxtIn) {
     
     //
     // getCurrentTokenPrecedence() may have inserted something like a new IMPLICITTIMES token, so grab again
@@ -960,7 +961,7 @@ bool Parser::isAbort() const {
     return currentAbortQ();
 }
 
-const Token Parser::eatAll(const Token& TokIn, ParserContext Ctxt, std::unique_ptr<NodeSeq>& Args) {
+const Token Parser::eatAll(const Token& TokIn, ParserContext Ctxt, LeafSeq& Args) {
     
     auto Tok = TokIn;
     
@@ -971,7 +972,7 @@ const Token Parser::eatAll(const Token& TokIn, ParserContext Ctxt, std::unique_p
         //
         
         
-        Args->append(std::unique_ptr<Node>(new LeafNode(Tok)));
+        Args.append(std::unique_ptr<LeafNode>(new LeafNode(Tok)));
         
         Tok = TheParser->nextToken(Ctxt);
     }
@@ -979,26 +980,7 @@ const Token Parser::eatAll(const Token& TokIn, ParserContext Ctxt, std::unique_p
     return Tok;
 }
 
-const Token Parser::eatAll(const Token& TokIn, ParserContext Ctxt, std::unique_ptr<LeafSeq>& Args) {
-    
-    auto Tok = TokIn;
-    
-    while (Tok.isTrivia()) {
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
-        
-        Args->append(std::unique_ptr<LeafNode>(new LeafNode(Tok)));
-        
-        Tok = TheParser->nextToken(Ctxt);
-    }
-    
-    return Tok;
-}
-
-const Token Parser::eatAndPreserveToplevelNewlines(const Token& TokIn, ParserContext Ctxt, std::unique_ptr<NodeSeq>& Args) {
+const Token Parser::eatAndPreserveToplevelNewlines(const Token& TokIn, ParserContext Ctxt, LeafSeq& Args) {
     
     auto Tok = TokIn;
     
@@ -1013,7 +995,7 @@ const Token Parser::eatAndPreserveToplevelNewlines(const Token& TokIn, ParserCon
             Tok.Tok == TOKEN_COMMENT ||
             Tok.Tok == TOKEN_LINECONTINUATION) {
             
-            Args->append(std::unique_ptr<LeafNode>(new LeafNode(Tok)));
+            Args.append(std::unique_ptr<LeafNode>(new LeafNode(Tok)));
             
             Tok = TheParser->nextToken(Ctxt);
             
@@ -1025,47 +1007,7 @@ const Token Parser::eatAndPreserveToplevelNewlines(const Token& TokIn, ParserCon
                 
             } else {
                 
-                Args->append(std::unique_ptr<LeafNode>(new LeafNode(Tok)));
-                
-                Tok = TheParser->nextToken(Ctxt);
-            }
-            
-        } else {
-            break;
-        }
-    }
-    
-    return Tok;
-}
-
-const Token Parser::eatAndPreserveToplevelNewlines(const Token& TokIn, ParserContext Ctxt, std::unique_ptr<LeafSeq>& Args) {
-    
-    auto Tok = TokIn;
-    
-    while (true) {
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
-        
-        if (Tok.Tok == TOKEN_WHITESPACE ||
-            Tok.Tok == TOKEN_COMMENT ||
-            Tok.Tok == TOKEN_LINECONTINUATION) {
-            
-            Args->append(std::unique_ptr<LeafNode>(new LeafNode(Tok)));
-            
-            Tok = TheParser->nextToken(Ctxt);
-            
-        } else if (Tok.Tok == TOKEN_NEWLINE) {
-            
-            if (Ctxt.getGroupDepth() == 0) {
-                
-                break;
-                
-            } else {
-                
-                Args->append(std::unique_ptr<LeafNode>(new LeafNode(Tok)));
+                Args.append(std::unique_ptr<LeafNode>(new LeafNode(Tok)));
                 
                 Tok = TheParser->nextToken(Ctxt);
             }

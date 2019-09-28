@@ -166,7 +166,7 @@ private:
     
     
     
-    NodePtr parse0(std::unique_ptr<NodeSeq> Left, Precedence, ParserContext Ctxt);
+    NodePtr parse0(NodeSeq Left, Precedence, ParserContext Ctxt);
     
     void nextToken0(ParserContext Ctxt);
     
@@ -183,9 +183,7 @@ public:
     
     Token currentToken() const;
     
-    void prepend(const Token& current);
-    
-    void prependInReverse(std::unique_ptr<LeafSeq>);
+    void prependInReverse(std::vector<LeafNodePtr>& );
     
     
     std::vector<SyntaxIssue> getIssues() const;
@@ -209,12 +207,10 @@ public:
     bool isAbort() const;
     
     ~Parser();
+
+    static const Token eatAll(const Token& Tok, ParserContext Ctxt, LeafSeq&);
     
-    static const Token eatAll(const Token& Tok, ParserContext Ctxt, std::unique_ptr<NodeSeq>&);
-    static const Token eatAll(const Token& Tok, ParserContext Ctxt, std::unique_ptr<LeafSeq>&);
-    
-    static const Token eatAndPreserveToplevelNewlines(const Token& Tok, ParserContext Ctxt, std::unique_ptr<NodeSeq>&);
-    static const Token eatAndPreserveToplevelNewlines(const Token& Tok, ParserContext Ctxt, std::unique_ptr<LeafSeq>&);
+    static const Token eatAndPreserveToplevelNewlines(const Token& Tok, ParserContext Ctxt, LeafSeq&);
 };
 
 extern std::unique_ptr<Parser> TheParser;

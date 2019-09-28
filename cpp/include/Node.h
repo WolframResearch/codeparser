@@ -21,11 +21,18 @@ using LeafNodePtr = std::unique_ptr<LeafNode>;
 
 class LeafSeq {
     
-    std::unique_ptr<std::vector<LeafNodePtr>> vec;
+    std::vector<LeafNodePtr> vec;
+    bool moved;
     
 public:
     
-    LeafSeq() : vec(std::unique_ptr<std::vector<LeafNodePtr>>(new std::vector<LeafNodePtr>)) {}
+    LeafSeq() : vec(), moved(false) {}
+    
+    ~LeafSeq();
+    
+    LeafSeq(LeafSeq&& other) : vec(std::move(other.vec)), moved(false) {
+        other.moved = true;
+    }
     
     bool empty() const;
     
@@ -35,8 +42,9 @@ public:
     
     void append(LeafNodePtr );
     
-    std::vector<LeafNodePtr> *getVectorDestructive() {
-        return vec.release();
+    std::vector<LeafNodePtr>& getVectorDestructive() {
+        moved = true;
+        return vec;
     }
 };
 
@@ -53,13 +61,11 @@ public:
 //
 class NodeSeq {
     
-    std::unique_ptr<std::vector<NodePtr>> vec;
-    
-    void append(std::unique_ptr<std::vector<NodePtr>> );
+    std::vector<NodePtr> vec;
     
 public:
     
-    NodeSeq() : vec(std::unique_ptr<std::vector<NodePtr>>(new std::vector<NodePtr>)) {}
+    NodeSeq() : vec() {}
     
     bool empty() const;
     
@@ -67,31 +73,29 @@ public:
     
     void reserve(size_t i);
     
+    void append(NodeSeq );
+    
+    void append(LeafSeq );
+    
+    void append(std::vector<NodePtr> );
+    
     void append(NodePtr );
     
-    void append(std::unique_ptr<NodeSeq> );
-    
-    void append(std::unique_ptr<LeafSeq> );
-    
-    NodePtr& first() const;
-    NodePtr& last() const;
+    const NodePtr& first() const;
+    const NodePtr& last() const;
     
     void put(MLINK ) const;
-    
-    const std::unique_ptr<std::vector<NodePtr>>& getVector() const {
-        return vec;
-    }
 };
 
 //
 // An expression representing a node in the syntax tree
 //
 class Node {
-    std::unique_ptr<NodeSeq> Children;
+    NodeSeq Children;
 public:
 
     Node() : Children() {}
-    Node(std::unique_ptr<NodeSeq> Children);
+    Node(NodeSeq Children);
 
     virtual void put(MLINK mlp) const = 0;
 
@@ -99,18 +103,20 @@ public:
     
     virtual bool isTrivia() const;
     
+    virtual bool isError() const;
+    
     void putChildren(MLINK mlp) const;
 
-    const std::unique_ptr<NodeSeq>& getChildren() const {
+    const NodeSeq& getChildrenSafe() const {
         return Children;
     }
     
-    NodeSeq *getChildrenDestructive() {
-        return Children.release();
+    NodeSeq& getChildrenDestructive() {
+        return Children;
     }
     
     virtual const Token lastToken() const {
-        auto& L = Children->last();
+        auto& L = Children.last();
         return L->lastToken();
     }
     
@@ -122,7 +128,7 @@ class OperatorNode : public Node {
     SymbolPtr& Op;
     SymbolPtr& MakeSym;
 public:
-    OperatorNode(SymbolPtr& Op, SymbolPtr& MakeSym, std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)), Op(Op), MakeSym(MakeSym) {}
+    OperatorNode(SymbolPtr& Op, SymbolPtr& MakeSym, NodeSeq Args) : Node(std::move(Args)), Op(Op), MakeSym(MakeSym) {}
     
     void put(MLINK mlp) const override;
     
@@ -158,40 +164,40 @@ public:
 
 class PrefixNode : public OperatorNode {
 public:
-    PrefixNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEPREFIXNODE, std::move(Args)) {}
+    PrefixNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEPREFIXNODE, std::move(Args)) {}
 };
 
 class BinaryNode : public OperatorNode {
 public:
-    BinaryNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEBINARYNODE, std::move(Args)) {}
+    BinaryNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEBINARYNODE, std::move(Args)) {}
 };
 
 class InfixNode : public OperatorNode {
 public:
-    InfixNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEINFIXNODE, std::move(Args)) {}
+    InfixNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEINFIXNODE, std::move(Args)) {}
 };
 
 
 class TernaryNode : public OperatorNode {
 public:
-    TernaryNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKETERNARYNODE, std::move(Args)) {}
+    TernaryNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKETERNARYNODE, std::move(Args)) {}
 };
 
 class PostfixNode : public OperatorNode {
 public:
-    PostfixNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEPOSTFIXNODE, std::move(Args)) {}
+    PostfixNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEPOSTFIXNODE, std::move(Args)) {}
 };
 
 class PrefixBinaryNode : public OperatorNode {
 public:
-    PrefixBinaryNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEPREFIXBINARYNODE, std::move(Args)) {}
+    PrefixBinaryNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEPREFIXBINARYNODE, std::move(Args)) {}
 };
 
 
 class CallNode : public Node {
-    std::unique_ptr<NodeSeq> Head;
+    NodeSeq Head;
 public:
-    CallNode(std::unique_ptr<NodeSeq> Head, std::unique_ptr<NodeSeq> Body) : Node(std::move(Body)), Head(std::move(Head)) {}
+    CallNode(NodeSeq Head, NodeSeq Body) : Node(std::move(Body)), Head(std::move(Head)) {}
     
     void put(MLINK mlp) const override;
     
@@ -201,69 +207,71 @@ public:
 
 class GroupNode : public OperatorNode {
 public:
-    GroupNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEGROUPNODE, std::move(Args)) {}
+    GroupNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEGROUPNODE, std::move(Args)) {}
 };
 
 
 class StartOfLineNode : public OperatorNode {
 public:
-    StartOfLineNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKESTARTOFLINENODE, std::move(Args)) {}
+    StartOfLineNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKESTARTOFLINENODE, std::move(Args)) {}
 };
 
 
 class BlankNode : public OperatorNode {
 public:
-    BlankNode(std::unique_ptr<NodeSeq> Args) : OperatorNode(SYMBOL_BLANK, SYMBOL_AST_LIBRARY_MAKEBLANKNODE, std::move(Args)) {}
+    BlankNode(NodeSeq Args) : OperatorNode(SYMBOL_BLANK, SYMBOL_AST_LIBRARY_MAKEBLANKNODE, std::move(Args)) {}
 };
 
 class BlankSequenceNode : public OperatorNode {
 public:
-    BlankSequenceNode(std::unique_ptr<NodeSeq> Args) : OperatorNode(SYMBOL_BLANKSEQUENCE, SYMBOL_AST_LIBRARY_MAKEBLANKSEQUENCENODE, std::move(Args)) {}
+    BlankSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_BLANKSEQUENCE, SYMBOL_AST_LIBRARY_MAKEBLANKSEQUENCENODE, std::move(Args)) {}
 };
 
 class BlankNullSequenceNode : public OperatorNode {
 public:
-    BlankNullSequenceNode(std::unique_ptr<NodeSeq> Args) : OperatorNode(SYMBOL_BLANKNULLSEQUENCE, SYMBOL_AST_LIBRARY_MAKEBLANKNULLSEQUENCENODE, std::move(Args)) {}
+    BlankNullSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_BLANKNULLSEQUENCE, SYMBOL_AST_LIBRARY_MAKEBLANKNULLSEQUENCENODE, std::move(Args)) {}
 };
 
 class PatternBlankNode : public OperatorNode {
 public:
-    PatternBlankNode(std::unique_ptr<NodeSeq> Args) : OperatorNode(SYMBOL_AST_PATTERNBLANK, SYMBOL_AST_LIBRARY_MAKEPATTERNBLANKNODE, std::move(Args)) {}
+    PatternBlankNode(NodeSeq Args) : OperatorNode(SYMBOL_AST_PATTERNBLANK, SYMBOL_AST_LIBRARY_MAKEPATTERNBLANKNODE, std::move(Args)) {}
 };
 
 class PatternBlankSequenceNode : public OperatorNode {
 public:
-    PatternBlankSequenceNode(std::unique_ptr<NodeSeq> Args) : OperatorNode(SYMBOL_AST_PATTERNBLANKSEQUENCE, SYMBOL_AST_LIBRARY_MAKEPATTERNBLANKSEQUENCENODE, std::move(Args)) {}
+    PatternBlankSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_AST_PATTERNBLANKSEQUENCE, SYMBOL_AST_LIBRARY_MAKEPATTERNBLANKSEQUENCENODE, std::move(Args)) {}
 };
 
 class PatternBlankNullSequenceNode : public OperatorNode {
 public:
-    PatternBlankNullSequenceNode(std::unique_ptr<NodeSeq> Args) : OperatorNode(SYMBOL_AST_PATTERNBLANKNULLSEQUENCE, SYMBOL_AST_LIBRARY_MAKEPATTERNBLANKNULLSEQUENCENODE, std::move(Args)) {}
+    PatternBlankNullSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_AST_PATTERNBLANKNULLSEQUENCE, SYMBOL_AST_LIBRARY_MAKEPATTERNBLANKNULLSEQUENCENODE, std::move(Args)) {}
 };
 
 
 class OptionalDefaultPatternNode : public OperatorNode {
 public:
-    OptionalDefaultPatternNode(std::unique_ptr<NodeSeq> Args) : OperatorNode(SYMBOL_AST_OPTIONALDEFAULTPATTERN, SYMBOL_AST_LIBRARY_MAKEOPTIONALDEFAULTPATTERNNODE, std::move(Args)) {}
+    OptionalDefaultPatternNode(NodeSeq Args) : OperatorNode(SYMBOL_AST_OPTIONALDEFAULTPATTERN, SYMBOL_AST_LIBRARY_MAKEOPTIONALDEFAULTPATTERNNODE, std::move(Args)) {}
 };
 
 
 class SyntaxErrorNode : public Node {
     const SyntaxError Err;
 public:
-    SyntaxErrorNode(SyntaxError Err, std::unique_ptr<NodeSeq> Args) : Node(std::move(Args)), Err(Err) {}
+    SyntaxErrorNode(SyntaxError Err, NodeSeq Args) : Node(std::move(Args)), Err(Err) {}
     
     void put(MLINK mlp) const override;
+    
+    virtual bool isError() const override;
 };
 
 class GroupMissingCloserNode : public OperatorNode {
 public:
-    GroupMissingCloserNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEGROUPMISSINGCLOSERNODE, std::move(Args)) {}
+    GroupMissingCloserNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEGROUPMISSINGCLOSERNODE, std::move(Args)) {}
 };
 
 class GroupMissingOpenerNode : public OperatorNode {
 public:
-    GroupMissingOpenerNode(SymbolPtr& Op, std::unique_ptr<NodeSeq> Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEGROUPMISSINGOPENERNODE, std::move(Args)) {}
+    GroupMissingOpenerNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEGROUPMISSINGOPENERNODE, std::move(Args)) {}
 };
 
 

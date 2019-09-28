@@ -46,13 +46,11 @@ ExpectedTilde:
 Test[
 	ParseString["a ~f"]
 	,
-SyntaxErrorNode[SyntaxError`ExpectedTilde, {LeafNode[Symbol, 
-   "a", <|Source -> {{1, 1}, {1, 1}}|>], 
-  LeafNode[Token`Tilde, "~", <|Source -> {{1, 3}, {1, 3}}|>], 
-  LeafNode[Symbol, "f", <|Source -> {{1, 4}, {1, 4}}|>], 
-  LeafNode[EndOfFile, 
-   "", <|Source -> {{2, 0}, {2, 0}}|>]}, <|Source -> {{1, 1}, {2, 
-     0}}|>]
+	SyntaxErrorNode[SyntaxError`ExpectedTilde, {
+		LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>], 
+  		LeafNode[Token`Tilde, "~", <|Source -> {{1, 3}, {1, 3}}|>], 
+  		LeafNode[Symbol, "f", <|Source -> {{1, 4}, {1, 4}}|>], 
+  		LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{2, 0}, {2, 0}}|>]}, <|Source -> {{1, 1}, {2, 0}}|>]
 	,
 	TestID->"SyntaxErrorNodes-20190521-T2R4L9"
 ]

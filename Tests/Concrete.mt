@@ -136,15 +136,17 @@ Test[
 (* Syntax Errors *)
 
 Test[
-	ConcreteParseString["a ~f x"]
+	ConcreteParseString["a ~f x", f]
 	,
-	SyntaxErrorNode[SyntaxError`ExpectedTilde, {
-		LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
-		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 2}, {1, 2}}|>],
-		LeafNode[Token`Tilde, "~", <|Source -> {{1, 3}, {1, 3}}|>],
-		LeafNode[Symbol, "f", <|Source -> {{1, 4}, {1, 4}}|>],
-		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 5}, {1, 5}}|>],
-		LeafNode[Symbol, "x", <|Source -> {{1, 6}, {1, 6}}|>] }, <|Source -> {{1, 1}, {1, 6}}|>]
+	f[{{
+		SyntaxErrorNode[SyntaxError`ExpectedTilde, {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
+			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 2}, {1, 2}}|>],
+			LeafNode[Token`Tilde, "~", <|Source -> {{1, 3}, {1, 3}}|>],
+			LeafNode[Symbol, "f", <|Source -> {{1, 4}, {1, 4}}|>],
+			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 5}, {1, 5}}|>],
+			LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 6}, {1, 6}}|>] }, <|Source -> {{1, 1}, {1, 6}}|>],
+		LeafNode[Symbol, "x", <|Source -> {{1, 6}, {1, 6}}|>]}, {}}]
 	,
 	TestID->"Concrete-20190521-L2C2Y8"
 ]
@@ -316,6 +318,28 @@ Test[
 
 
 Test[
+	ConcreteParseString["a;;;;;;"]
+	,
+	InfixNode[Times, {
+		BinaryNode[Span, {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
+    		LeafNode[Token`SemiSemi, ";;", <|Source -> {{1, 2}, {1, 3}}|>], 
+    		LeafNode[Token`Fake`ImplicitAll, "", <|Source -> {{1, 3}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 3}}|>],
+    	LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> {{1, 4}, {1, 4}}|>],
+    	BinaryNode[Span, {
+    		LeafNode[Token`Fake`ImplicitOne, "", <|Source -> {{1, 4}, {1, 4}}|>],
+    		LeafNode[Token`SemiSemi, ";;", <|Source -> {{1, 4}, {1, 5}}|>],
+    		LeafNode[Token`Fake`ImplicitAll, "", <|Source -> {{1, 5}, {1, 5}}|>]}, <|Source -> {{1, 4}, {1, 5}}|>],
+    	LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> {{1, 6}, {1, 6}}|>],
+    	BinaryNode[Span, {
+    		LeafNode[Token`Fake`ImplicitOne, "", <|Source -> {{1, 6}, {1, 6}}|>],
+    		LeafNode[Token`SemiSemi, ";;", <|Source -> {{1, 6}, {1, 7}}|>],
+    		LeafNode[Token`Fake`ImplicitAll, "", <|Source -> {{1, 7}, {1, 7}}|>]}, <|Source -> {{1, 6}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]
+	,
+	TestID->"Concrete-20190928-L8N1U0"
+]
+
+Test[
 	ConcreteParseString["a;;;;(**);;"]
 	,
 	InfixNode[Times, {
@@ -337,7 +361,6 @@ Test[
 	,
 	TestID->"Concrete-20190914-K2Z7E2"
 ]
-
 
 Test[
 	ConcreteParseString["a(**):b"]

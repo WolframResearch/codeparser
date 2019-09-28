@@ -35,7 +35,7 @@ public:
     //
     // Commonly referred to as LED method in the literature
     //
-    virtual NodePtr parse(std::unique_ptr<NodeSeq> Left, ParserContext Ctxt) const = 0;
+    virtual NodePtr parse(NodeSeq Left, ParserContext Ctxt) const = 0;
     
     virtual Precedence getPrecedence() const = 0;
     
@@ -53,7 +53,7 @@ class CallParselet : public InfixParselet {
 public:
     CallParselet() {}
     
-    NodePtr parse(std::unique_ptr<NodeSeq> Left, ParserContext Ctxt) const override;
+    NodePtr parse(NodeSeq Left, ParserContext Ctxt) const override;
     
     Precedence getPrecedence() const override {
         return PRECEDENCE_CALL;
@@ -71,7 +71,7 @@ public:
 class ContextSensitiveInfixParselet : virtual public Parselet {
 public:
     
-    virtual NodePtr parseContextSensitive(std::unique_ptr<NodeSeq> Left, ParserContext Ctxt) const = 0;
+    virtual NodePtr parseContextSensitive(NodeSeq Left, ParserContext Ctxt) const = 0;
     
     virtual ~ContextSensitiveInfixParselet() {}
 };
@@ -105,7 +105,7 @@ class BinaryOperatorParselet : public BinaryParselet {
 public:
     BinaryOperatorParselet(Precedence precedence, Associativity assoc) : precedence(precedence), assoc(assoc) {}
     
-    NodePtr parse(std::unique_ptr<NodeSeq> Left, ParserContext Ctxt) const override;
+    NodePtr parse(NodeSeq Left, ParserContext Ctxt) const override;
     
     Precedence getPrecedence() const override {
         return precedence;
@@ -121,7 +121,7 @@ class InfixOperatorParselet : public InfixParselet {
 public:
     InfixOperatorParselet(Precedence precedence) : precedence(precedence) {}
     
-    NodePtr parse(std::unique_ptr<NodeSeq> Left, ParserContext Ctxt) const override;
+    NodePtr parse(NodeSeq Left, ParserContext Ctxt) const override;
     
     Precedence getPrecedence() const override {
         return precedence;
@@ -133,7 +133,7 @@ class PostfixOperatorParselet : public InfixParselet {
 public:
     PostfixOperatorParselet(Precedence precedence) : precedence(precedence) {}
     
-    NodePtr parse(std::unique_ptr<NodeSeq> Left, ParserContext Ctxt) const override;
+    NodePtr parse(NodeSeq Left, ParserContext Ctxt) const override;
     
     Precedence getPrecedence() const override {
         return precedence;
@@ -172,7 +172,7 @@ class UnderParselet : public PrefixParselet, public ContextSensitiveInfixParsele
 public:
     NodePtr parse(ParserContext Ctxt) const override;
     
-    NodePtr parseContextSensitive(std::unique_ptr<NodeSeq> Left, ParserContext Ctxt) const override;
+    NodePtr parseContextSensitive(NodeSeq Left, ParserContext Ctxt) const override;
     
     Precedence getPrecedence() const override {
         return PRECEDENCE_UNDER;
@@ -189,7 +189,7 @@ public:
     
     InfixOperatorWithTrailingParselet(Precedence precedence) : precedence(precedence) {}
     
-    NodePtr parse(std::unique_ptr<NodeSeq> Left, ParserContext Ctxt) const override;
+    NodePtr parse(NodeSeq Left, ParserContext Ctxt) const override;
     
     Precedence getPrecedence() const override {
         return precedence;
@@ -202,12 +202,12 @@ public:
 //
 class SemiSemiParselet : public PrefixParselet, public InfixParselet {
     
-    NodePtr parse0(std::unique_ptr<NodeSeq> Left, ParserContext Ctxt) const;
+    NodePtr parse0(NodeSeq Left, ParserContext Ctxt) const;
 public:
     
     NodePtr parse(ParserContext Ctxt) const override;
     
-    NodePtr parse(std::unique_ptr<NodeSeq> Left, ParserContext Ctxt) const override;
+    NodePtr parse(NodeSeq Left, ParserContext Ctxt) const override;
     
     Precedence getPrecedence() const override {
         return PRECEDENCE_SEMISEMI;
@@ -219,7 +219,7 @@ public:
 class TildeParselet : public BinaryParselet {
 public:
     
-    NodePtr parse(std::unique_ptr<NodeSeq> Left, ParserContext Ctxt) const override;
+    NodePtr parse(NodeSeq Left, ParserContext Ctxt) const override;
     
     Precedence getPrecedence() const override {
         return PRECEDENCE_TILDE;
@@ -235,9 +235,9 @@ public:
     
     ColonParselet() {}
     
-    NodePtr parse(std::unique_ptr<NodeSeq> Left, ParserContext Ctxt) const override;
+    NodePtr parse(NodeSeq Left, ParserContext Ctxt) const override;
     
-    NodePtr parseContextSensitive(std::unique_ptr<NodeSeq> Left, ParserContext Ctxt) const override;
+    NodePtr parseContextSensitive(NodeSeq Left, ParserContext Ctxt) const override;
     
     Precedence getPrecedence() const override {
         return PRECEDENCE_FAKE_OPTIONALCOLON;
@@ -253,7 +253,7 @@ public:
 class SlashColonParselet : public BinaryParselet {
 public:
     
-    NodePtr parse(std::unique_ptr<NodeSeq> Left, ParserContext Ctxt) const override;
+    NodePtr parse(NodeSeq Left, ParserContext Ctxt) const override;
     
     Precedence getPrecedence() const override {
         return PRECEDENCE_SLASHCOLON;
@@ -277,7 +277,7 @@ class EqualParselet : public BinaryOperatorParselet {
 public:
     EqualParselet() : BinaryOperatorParselet(PRECEDENCE_EQUAL, ASSOCIATIVITY_RIGHT) {}
     
-    NodePtr parse(std::unique_ptr<NodeSeq> Left, ParserContext Ctxt) const override;
+    NodePtr parse(NodeSeq Left, ParserContext Ctxt) const override;
 };
 
 class IntegralParselet : public PrefixParselet {
@@ -292,7 +292,7 @@ public:
 class InequalityParselet : public InfixParselet {
 public:
     
-    NodePtr parse(std::unique_ptr<NodeSeq> Left, ParserContext Ctxt) const override;
+    NodePtr parse(NodeSeq Left, ParserContext Ctxt) const override;
     
     Precedence getPrecedence() const override {
         return PRECEDENCE_FAKE_INEQUALITY;
@@ -303,7 +303,7 @@ public:
 class VectorInequalityParselet : public InfixParselet {
 public:
     
-    NodePtr parse(std::unique_ptr<NodeSeq> Left, ParserContext Ctxt) const override;
+    NodePtr parse(NodeSeq Left, ParserContext Ctxt) const override;
     
     Precedence getPrecedence() const override {
         return PRECEDENCE_FAKE_VECTORINEQUALITY;
