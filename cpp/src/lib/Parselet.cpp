@@ -653,7 +653,7 @@ NodePtr TildeParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
     Ctxt.Prec = getPrecedence();
     Ctxt.Assoc = ASSOCIATIVITY_NONE;
     
-    auto Tok = TheParser->nextToken(Ctxt);
+    auto FirstTok = TheParser->nextToken(Ctxt);
     
     //
     // LOOKAHEAD
@@ -661,11 +661,9 @@ NodePtr TildeParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
     {
         LeafSeq ArgsTest1;
         
-        Tok = Parser::eatAll(Tok, Ctxt, ArgsTest1);
+        FirstTok = Parser::eatAll(FirstTok, Ctxt, ArgsTest1);
         
-        Utils::differentLineWarning(FirstTilde, Tok, SYNTAXISSUESEVERITY_FORMATTING);
-        
-        auto FirstTok = Tok;
+        Utils::differentLineWarning(FirstTilde, FirstTok, SYNTAXISSUESEVERITY_FORMATTING);
         
         auto Middle = TheParser->parse(Ctxt);
         
@@ -675,13 +673,13 @@ NodePtr TildeParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
         {
             LeafSeq ArgsTest2;
             
-            Tok = TheParser->currentToken();
+            auto Tok1 = TheParser->currentToken();
             
-            Tok = Parser::eatAll(Tok, Ctxt, ArgsTest2);
+            Tok1 = Parser::eatAll(Tok1, Ctxt, ArgsTest2);
             
-            Utils::differentLineWarning(FirstTok, Tok, SYNTAXISSUESEVERITY_FORMATTING);
+            Utils::differentLineWarning(FirstTok, Tok1, SYNTAXISSUESEVERITY_FORMATTING);
             
-            if (Tok.Tok == TOKEN_TILDE) {
+            if (Tok1.Tok == TOKEN_TILDE) {
                 
                 //
                 // LOOKAHEAD
@@ -689,9 +687,9 @@ NodePtr TildeParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
                 {
                     LeafSeq ArgsTest3;
                     
-                    Tok = TheParser->nextToken(Ctxt);
+                    auto Tok2 = TheParser->nextToken(Ctxt);
                     
-                    Tok = Parser::eatAll(Tok, Ctxt, ArgsTest3);
+                    Tok2 = Parser::eatAll(Tok2, Ctxt, ArgsTest3);
                     
                     auto Right = TheParser->parse(Ctxt);
                     
@@ -702,7 +700,7 @@ NodePtr TildeParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
                     Args.append(std::move(ArgsTest1));
                     Args.append(std::move(Middle));
                     Args.append(std::move(ArgsTest2));
-                    Args.append(std::unique_ptr<Node>(new LeafNode(Tok)));
+                    Args.append(std::unique_ptr<Node>(new LeafNode(Tok1)));
                     Args.append(std::move(ArgsTest3));
                     Args.append(std::move(Right));
                     
@@ -718,7 +716,7 @@ NodePtr TildeParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
             // Also, invent Source
             //
             
-            auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, "", Source(Tok.Src.start()));
+            auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, "", Source(Tok1.Src.start()));
             
             NodeSeq Args;
             Args.reserve(Left.size() + 1 + ArgsTest1.size() + 1 + ArgsTest2.size() + 1);

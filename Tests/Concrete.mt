@@ -476,4 +476,16 @@ Test[
 	TestID->"Concrete-20190916-N2A8O1"
 ]
 
+Test[
+	ConcreteParseString["a~f~b"]
+	,
+	TernaryNode[TernaryTilde, {
+		LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
+		LeafNode[Token`Tilde, "~", <|Source -> {{1, 2}, {1, 2}}|>],
+		LeafNode[Symbol, "f", <|Source -> {{1, 3}, {1, 3}}|>],
+		LeafNode[Token`Tilde, "~", <|Source -> {{1, 4}, {1, 4}}|>],
+		LeafNode[Symbol, "b", <|Source -> {{1, 5}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>]
+	,
+	TestID->"Concrete-20190928-H3B3V1"
+]
 
