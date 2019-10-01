@@ -503,7 +503,7 @@ symbols = Union[Join[
             AST`Library`MakeBlankNullSequenceNode, AST`Library`MakePatternBlankNode, AST`Library`MakePatternBlankSequenceNode,
             AST`Library`MakePatternBlankNullSequenceNode, AST`Library`MakeOptionalDefaultPatternNode, AST`Library`MakeSyntaxErrorNode,
             AST`Library`MakeGroupMissingCloserNode, AST`Library`MakeGroupMissingOpenerNode, AST`Library`MakePrefixBinaryNode,
-            AST`Library`MakeSyntaxIssue},
+            AST`Library`MakeSyntaxIssue, AST`Library`MakeFormatIssue},
     {AST`InternalInvalid, AST`Metadata, AST`PatternBlank, AST`PatternBlankSequence, AST`PatternBlankNullSequence,
       AST`OptionalDefault, AST`OptionalDefaultPattern, AST`TernaryTilde},
     DownValues[PrefixOperatorToSymbol][[All, 2]],

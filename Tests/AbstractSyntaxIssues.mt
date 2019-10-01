@@ -225,7 +225,7 @@ TestMatch[
 	FirstCase[ParseString[" a[[] ] ", HoldNode[Hold, #[[1]], <||>] &],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["NotContiguous", _, _, _]}]
+	KeyValuePattern[AbstractSyntaxIssues -> {FormatIssue["NotContiguous", _, _, _]}]
 	,
 	TestID->"AbstractSyntaxIssues-20190520-U1R2G5"
 ]

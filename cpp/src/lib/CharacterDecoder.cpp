@@ -338,33 +338,33 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
                     
                     auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
                     
-                    auto Issue = SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character ``\\") + curSourceGraphicalStr + "``.\nDid you mean ``" + curSourceGraphicalStr + "`` or ``\\[" + curSourceGraphicalStr + "XXXX]`` or ``\\:" + curSourceGraphicalStr + "XXX``?", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc));
+                    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character ``\\") + curSourceGraphicalStr + "``.\nDid you mean ``\\[" + curSourceGraphicalStr + "XXXX]`` or ``\\:" + curSourceGraphicalStr + "XXX``?", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 1.0));
                     
-                    Issues.push_back(Issue);
+                    Issues.push_back(std::move(I));
                     
                 } else if (curSource.isUpper()) {
                     
                     auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
                     
-                    auto Issue = SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character ``\\") + curSourceGraphicalStr + "``.\nDid you mean ``" + curSourceGraphicalStr + "`` or ``\\[" + curSourceGraphicalStr + "XXXX]``?", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc));
+                    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character ``\\") + curSourceGraphicalStr + "``.\nDid you mean ``\\[" + curSourceGraphicalStr + "XXXX]``?", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 1.0));
                     
-                    Issues.push_back(Issue);
+                    Issues.push_back(std::move(I));
                     
                 } else if (curSource.isHex()) {
                     
                     auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
                     
-                    auto Issue = SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character ``\\") + curSourceGraphicalStr + "``.\nDid you mean ``" + curSourceGraphicalStr + "`` or ``\\:" + curSourceGraphicalStr + "xxx``?", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc));
+                    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character ``\\") + curSourceGraphicalStr + "``.\nDid you mean ``\\:" + curSourceGraphicalStr + "xxx``?", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 1.0));
                     
-                    Issues.push_back(Issue);
+                    Issues.push_back(std::move(I));
                     
                 } else {
                     
                     auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
                     
-                    auto Issue = SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character ``\\") + curSourceGraphicalStr + "``.\nDid you mean ``" + curSourceGraphicalStr + "`` or ``\\\\" + curSourceGraphicalStr + "``?", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc));
+                    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character ``\\") + curSourceGraphicalStr + "``.\nDid you mean ``\\\\" + curSourceGraphicalStr + "``?", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 1.0));
                     
-                    Issues.push_back(Issue);
+                    Issues.push_back(std::move(I));
                 }
             }
             
@@ -494,11 +494,9 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
                     suggestion = std::string("\nDid you mean ``\\[") + suggestion + "]``?";
                 }
                 
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\[") + LongNameStr +
-                                         curSourceGraphicalStr + "``." + suggestion, SYNTAXISSUESEVERITY_ERROR,
-                                         Source(CharacterStart, Loc));
+                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\[") + LongNameStr + curSourceGraphicalStr + "``." + suggestion, SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 1.0));
                 
-                Issues.push_back(Issue);
+                Issues.push_back(std::move(I));
                 
             } else {
                 
@@ -511,11 +509,9 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
                 
                 auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
                 
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\[") + LongNameStr +
-                                         curSourceGraphicalStr + "``.\nDid you mean ``[" + LongNameStr + curSourceGraphicalStr + "`` or ``\\\\[" + LongNameStr + curSourceGraphicalStr +
-                                         "``?", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc));
+                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\[") + LongNameStr + curSourceGraphicalStr + "``.\nDid you mean ``\\\\[" + LongNameStr + curSourceGraphicalStr + "``?", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 1.0));
                 
-                Issues.push_back(Issue);
+                Issues.push_back(std::move(I));
             }
         }
         
@@ -563,11 +559,9 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
                     suggestion = std::string("\nDid you mean ``\\[") + suggestion + "]``?";
                 }
                 
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\[") + LongNameStr +
-                                         "]``." + suggestion, SYNTAXISSUESEVERITY_ERROR,
-                                         Source(CharacterStart, Loc));
+                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\[") + LongNameStr + "]``." + suggestion, SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 1.0));
                 
-                Issues.push_back(Issue);
+                Issues.push_back(std::move(I));
                 
             } else if (unlikelyEscapeChecking) {
                 
@@ -577,11 +571,9 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
                     suggestion = std::string("\nDid you mean ``\\[") + suggestion + "]``?";
                 }
                 
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_UNLIKELYESCAPESEQUENCE, std::string("Unlikely escape sequence: ``\\\\[") + LongNameStr +
-                                         "]``." + suggestion, SYNTAXISSUESEVERITY_REMARK,
-                                         Source(CharacterStart-1, Loc));
+                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNLIKELYESCAPESEQUENCE, std::string("Unlikely escape sequence: ``\\\\[") + LongNameStr + "]``." + suggestion, SYNTAXISSUESEVERITY_REMARK, Source(CharacterStart-1, Loc), 0.33));
                 
-                Issues.push_back(Issue);
+                Issues.push_back(std::move(I));
             }
         }
         
@@ -613,19 +605,15 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
         //
         if (Utils::isUnsupportedLongName(LongNameStr)) {
             
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_UNSUPPORTEDCHARACTER, std::string("Unsupported character: ``\\[") + LongNameStr +
-                                     "]``.", SYNTAXISSUESEVERITY_ERROR,
-                                     Source(CharacterStart, Loc));
+            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNSUPPORTEDCHARACTER, std::string("Unsupported character: ``\\[") + LongNameStr + "]``.", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 0.95));
             
-            Issues.push_back(Issue);
+            Issues.push_back(std::move(I));
             
         } else if (Utils::isUndocumentedLongName(LongNameStr)) {
             
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_UNDOCUMENTEDCHARACTER, std::string("Undocumented character: ``\\[") + LongNameStr +
-                                     "]``.", SYNTAXISSUESEVERITY_REMARK,
-                                     Source(CharacterStart, Loc));
+            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNDOCUMENTEDCHARACTER, std::string("Undocumented character: ``\\[") + LongNameStr + "]``.", SYNTAXISSUESEVERITY_REMARK, Source(CharacterStart, Loc), 0.95));
             
-            Issues.push_back(Issue);
+            Issues.push_back(std::move(I));
         }
     }
     
@@ -670,10 +658,9 @@ WLCharacter CharacterDecoder::handle4Hex(SourceCharacter curSourceIn, SourceLoca
                 
                 auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
                 
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\:") + HexStr + curSourceGraphicalStr +
-                                         "``.\nDid you mean ``:" + HexStr + curSourceGraphicalStr + "`` or ``\\\\:" + HexStr + curSourceGraphicalStr + "``?", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc));
+                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\:") + HexStr + curSourceGraphicalStr + "``.\nDid you mean ``\\\\:" + HexStr + curSourceGraphicalStr + "``?", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 1.0));
                 
-                Issues.push_back(Issue);
+                Issues.push_back(std::move(I));
             }
             
             TheSourceManager->setSourceLocation(CharacterStart);
@@ -744,10 +731,9 @@ WLCharacter CharacterDecoder::handle2Hex(SourceCharacter curSourceIn, SourceLoca
                 
                 auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
                 
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, "Unrecognized character: ``\\." + HexStr +
-                                         curSourceGraphicalStr + "``.\nDid you mean ``." + HexStr + curSourceGraphicalStr + "`` or ``\\\\." + HexStr + curSourceGraphicalStr + "``?", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc));
+                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, "Unrecognized character: ``\\." + HexStr + curSourceGraphicalStr + "``.\nDid you mean ``\\\\." + HexStr + curSourceGraphicalStr + "``?", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 1.0));
                 
-                Issues.push_back(Issue);
+                Issues.push_back(std::move(I));
             }
             
             TheSourceManager->setSourceLocation(CharacterStart);
@@ -820,10 +806,9 @@ WLCharacter CharacterDecoder::handleOctal(SourceCharacter curSourceIn, SourceLoc
                 
                 auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
                 
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\") + OctalStr +
-                                         curSourceGraphicalStr + "``.\nDid you mean ``" + OctalStr + curSourceGraphicalStr + "`` or ``\\\\" + OctalStr + curSourceGraphicalStr + "``?", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc));
+                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\") + OctalStr + curSourceGraphicalStr + "``.\nDid you mean ``\\\\" + OctalStr + curSourceGraphicalStr + "``?", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 1.0));
                 
-                Issues.push_back(Issue);
+                Issues.push_back(std::move(I));
             }
             
             TheSourceManager->setSourceLocation(CharacterStart);
@@ -893,10 +878,9 @@ WLCharacter CharacterDecoder::handle6Hex(SourceCharacter curSourceIn, SourceLoca
                 
                 auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
                 
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\|") + HexStr +
-                                         curSourceGraphicalStr + "``.\nDid you mean ``|" + HexStr + curSourceGraphicalStr + "`` or ``\\\\|" + HexStr + curSourceGraphicalStr + "``?", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc));
+                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\|") + HexStr + curSourceGraphicalStr + "``.\nDid you mean ``\\\\|" + HexStr + curSourceGraphicalStr + "``?", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 1.0));
                 
-                Issues.push_back(Issue);
+                Issues.push_back(std::move(I));
             }
             
             TheSourceManager->setSourceLocation(CharacterStart);
@@ -930,7 +914,7 @@ WLCharacter CharacterDecoder::handle6Hex(SourceCharacter curSourceIn, SourceLoca
     return WLCharacter(point, ESCAPE_6HEX);
 }
 
-std::vector<SyntaxIssue> CharacterDecoder::getIssues() const {
+std::vector<std::unique_ptr<Issue>>& CharacterDecoder::getIssues() {
     return Issues;
 }
 

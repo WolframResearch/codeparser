@@ -1,6 +1,8 @@
 
 #include "Token.h"
 
+#include <cassert>
+
 bool containsOnlyASCII(std::string s);
 
 Token::Token(TokenEnum Tok, std::string Str, Source Src) : Tok(Tok), Str(Str), Src(Src) {

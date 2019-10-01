@@ -72,7 +72,7 @@ class Tokenizer {
     
     std::ostringstream String;
     
-    std::vector<SyntaxIssue> Issues;
+    std::vector<std::unique_ptr<Issue>> Issues;
     
     
     bool expectDigits(TokenizerContext Ctxt);
@@ -109,7 +109,7 @@ public:
     
     Token currentToken() const;
     
-    std::vector<SyntaxIssue> getIssues() const;
+    std::vector<std::unique_ptr<Issue>>& getIssues();
 };
 
 extern std::unique_ptr<Tokenizer> TheTokenizer;

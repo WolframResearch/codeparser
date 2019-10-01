@@ -200,9 +200,12 @@ CodeAction
 CodeAction commands
 *)
 DeleteNode
+InsertNode
 ReplaceNode
-
+DeleteText
+InsertText
 ReplaceText
+DeleteTrivia
 
 
 (*
@@ -211,6 +214,7 @@ Used to report f[,] or "\[Alpa]" as an option, e.g. SyntaxIssues -> {SyntaxIssue
 SyntaxIssues
 AbstractSyntaxIssues
 SyntaxIssue
+FormatIssue
 
 
 

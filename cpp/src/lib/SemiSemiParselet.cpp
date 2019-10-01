@@ -100,9 +100,9 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
                     return ImplicitTimes;
                 }
                 
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_IMPLICITTIMESSPAN, "Implicit ``Times`` between ``Spans``.", SYNTAXISSUESEVERITY_WARNING, Source(Tok.Src.start()));
+                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_IMPLICITTIMESSPAN, "Implicit ``Times`` between ``Spans``.", SYNTAXISSUESEVERITY_WARNING, Source(Tok.Src.start()), 0.75));
 
-                TheParser->addIssue(Issue);
+                TheParser->addIssue(std::move(I));
                 
                 auto Implicit = Token(TOKEN_FAKE_IMPLICITTIMES, "", Source(Tok.Src.start()));
                 
@@ -134,7 +134,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
 
     auto TokIn = TheParser->currentToken();
     
-    Utils::differentLineWarning(Left, TokIn, SYNTAXISSUESEVERITY_WARNING);
+    Utils::differentLineWarning(Left, TokIn);
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
@@ -176,7 +176,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
             return Span;
         }
 
-        Utils::differentLineWarning(TokIn, SecondTok, SYNTAXISSUESEVERITY_WARNING);
+        Utils::differentLineWarning(TokIn, SecondTok);
         
         if (SecondTok.Tok != TOKEN_SEMISEMI) {
 
@@ -216,7 +216,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
                     return Span;
                 }
 
-                Utils::differentLineWarning(SecondTok, ThirdTok, SYNTAXISSUESEVERITY_WARNING);
+                Utils::differentLineWarning(SecondTok, ThirdTok);
 
                 //
                 // a;;b;;
@@ -255,7 +255,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
                         return Span;
                     }
 
-                    Utils::differentLineWarning(ThirdTok, FourthTok, SYNTAXISSUESEVERITY_WARNING);
+                    Utils::differentLineWarning(ThirdTok, FourthTok);
                     
                     if (FourthTok.Tok != TOKEN_SEMISEMI) {
 
@@ -339,7 +339,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
                 return Span;
             }
 
-            Utils::differentLineWarning(SecondTok, ThirdTok, SYNTAXISSUESEVERITY_WARNING);
+            Utils::differentLineWarning(SecondTok, ThirdTok);
             
             if (ThirdTok.Tok != TOKEN_SEMISEMI) {
                 

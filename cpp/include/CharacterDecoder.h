@@ -102,7 +102,7 @@ class CharacterDecoder {
     
     std::vector<std::pair<SourceCharacter, SourceLocation>> sourceCharacterQueue;
     
-    std::vector<SyntaxIssue> Issues;
+    std::vector<std::unique_ptr<Issue>> Issues;
     
     WolframLibraryData libData;
     
@@ -128,7 +128,7 @@ public:
     
     WLCharacter currentWLCharacter() const;
     
-    std::vector<SyntaxIssue> getIssues() const;
+    std::vector<std::unique_ptr<Issue>>& getIssues();
 };
 
 extern std::unique_ptr<CharacterDecoder> TheCharacterDecoder;

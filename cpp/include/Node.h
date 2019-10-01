@@ -38,8 +38,6 @@ public:
     
     size_t size() const;
     
-    void reserve(size_t i);
-    
     void append(LeafNodePtr );
     
     std::vector<LeafNodePtr>& getVectorDestructive() {
@@ -283,10 +281,10 @@ public:
     void put(MLINK mlp) const override;
 };
 
-class CollectedSyntaxIssuesNode : public Node {
-    std::vector<SyntaxIssue> Issues;
+class CollectedIssuesNode : public Node {
+    std::vector<std::unique_ptr<Issue>> Issues;
 public:
-    CollectedSyntaxIssuesNode(std::vector<SyntaxIssue> Issues) : Node(), Issues(std::move(Issues)) {}
+    CollectedIssuesNode(std::vector<std::unique_ptr<Issue>> Issues) : Node(), Issues(std::move(Issues)) {}
     
     void put(MLINK mlp) const override;
 };

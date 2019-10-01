@@ -398,7 +398,7 @@ Module[{handledChildren, aggregatedChildren},
     (*
     the second arg is a box, so we know it is implicit Times
     *)
-    {_, LeafNode[Symbol | Integer | Slot | String | Real | Out, _, _] |
+    {_, LeafNode[Symbol | Integer | Slot | String | Real | Out | Blank | BlankSequence | BlankNullSequence, _, _] |
         BinaryNode[_, _, _] | CallNode[_, _, _] | GroupNode[_, _, _] | BoxNode[_, _, _] | InfixNode[_, _, _] |
         PostfixNode[_, _, _] | PatternBlankNode[_, _, _], ___},
         InfixNode[Times, Riffle[handledChildren, LeafNode[Token`Fake`ImplicitTimes, "", <||>]], <|Source->Append[pos, 1]|>],

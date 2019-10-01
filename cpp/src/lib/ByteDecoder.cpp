@@ -68,9 +68,9 @@ SourceCharacter ByteDecoder::invalid(unsigned char first) {
     // Has not advanced yet at this point
     loc++;
     
-    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file as valid UTF-8.", SYNTAXISSUESEVERITY_REMARK, Source(loc));
+    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.", FORMATISSUESEVERITY_FORMATTING, Source(loc)));
     
-    Issues.push_back(Issue);
+    Issues.push_back(std::move(I));
     
     return SourceCharacter(first);
 }
@@ -82,9 +82,9 @@ SourceCharacter ByteDecoder::invalid(unsigned char first, unsigned char second) 
     // Has not advanced yet at this point
     loc++;
     
-    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file as valid UTF-8.", SYNTAXISSUESEVERITY_REMARK, Source(loc));
+    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.", FORMATISSUESEVERITY_FORMATTING, Source(loc)));
     
-    Issues.push_back(Issue);
+    Issues.push_back(std::move(I));
     
     append(second, loc+1);
     
@@ -98,9 +98,9 @@ SourceCharacter ByteDecoder::invalid(unsigned char first, unsigned char second, 
     // Has not advanced yet at this point
     loc++;
     
-    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file as valid UTF-8.", SYNTAXISSUESEVERITY_REMARK, Source(loc));
+    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.", FORMATISSUESEVERITY_FORMATTING, Source(loc)));
     
-    Issues.push_back(Issue);
+    Issues.push_back(std::move(I));
     
     append(second, loc+1);
     append(third, loc+2);
@@ -115,9 +115,9 @@ SourceCharacter ByteDecoder::invalid(unsigned char first, unsigned char second, 
     // Has not advanced yet at this point
     loc++;
     
-    auto Issue = SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.\nTry resaving the file as valid UTF-8.", SYNTAXISSUESEVERITY_REMARK, Source(loc));
+    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.", FORMATISSUESEVERITY_FORMATTING, Source(loc)));
     
-    Issues.push_back(Issue);
+    Issues.push_back(std::move(I));
     
     append(second, loc+1);
     append(third, loc+2);
@@ -390,7 +390,7 @@ SourceCharacter ByteDecoder::decodeBytes(unsigned char cIn) {
     return invalid(cIn);
 }
 
-std::vector<SyntaxIssue> ByteDecoder::getIssues() const {
+std::vector<std::unique_ptr<Issue>>& ByteDecoder::getIssues() {
     return Issues;
 }
 

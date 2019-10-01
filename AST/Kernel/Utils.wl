@@ -132,7 +132,15 @@ input: src1:{{line,col}, {line,col}}   src2:{{line,col}, {line,col}}
 
 contiguousQ[srcs_List] := And @@ contiguousQ @@@ Partition[srcs, 2, 1]
 
+(*
+LineCol-style
+*)
 contiguousQ[{{_, _}, {line_, col1_}}, {{line_, col2_}, {_, _}}] := col1 + 1 == col2
+
+(*
+Position-style
+*)
+contiguousQ[{_Integer..., idx1_Integer}, {_Integer..., idx2_Integer}] := idx1 + 1 == idx2
 
 contiguousQ[_, _] := False
 

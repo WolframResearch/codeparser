@@ -54,11 +54,14 @@ unsigned char SourceManager::nextByte() {
     
     assert(idx < length);
     
+#ifndef NDEBUG
     auto oldProgress = (100 * idx / length);
+#endif
     
     auto b = buffer[idx];
     idx++;
-    
+
+#ifndef NDEBUG
     auto progress = (100 * idx / length);
     
     if (progress != oldProgress) {
@@ -78,6 +81,7 @@ unsigned char SourceManager::nextByte() {
             }
         }
     }
+#endif
     
     return b;
 }
@@ -108,9 +112,9 @@ void SourceManager::advanceSourceLocation(SourceCharacter c) {
             // Do not need to advance Col here
             //
             
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRAYCARRIAGERETURN, "Stray ``\\r`` character.\nMac OS 9 line ending?\nTry resaving the file.", SYNTAXISSUESEVERITY_REMARK, Source(Loc));
+            auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_STRAYCARRIAGERETURN, "Stray ``\\r`` character.", FORMATISSUESEVERITY_FORMATTING, Source(Loc)));
             
-            Issues.push_back(Issue);
+            Issues.push_back(std::move(I));
         }
         
         lastCharacterWasCarriageReturn = false;
@@ -147,9 +151,9 @@ void SourceManager::advanceSourceLocation(SourceCharacter c) {
         // Do not need to advance Col here
         //
         
-        auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRAYCARRIAGERETURN, "Stray ``\\r`` character.\nMac OS 9 line ending?\nTry resaving the file.", SYNTAXISSUESEVERITY_REMARK, Source(Loc, Loc));
+        auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_STRAYCARRIAGERETURN, "Stray ``\\r`` character.", FORMATISSUESEVERITY_FORMATTING, Source(Loc)));
         
-        Issues.push_back(Issue);
+        Issues.push_back(std::move(I));
     }
     
     if (c == SourceCharacter('\r')) {
@@ -217,7 +221,7 @@ SourceLocation SourceManager::getSourceLocation() const {
     return SrcLoc;
 }
 
-std::vector<SyntaxIssue> SourceManager::getIssues() const {
+std::vector<std::unique_ptr<Issue>>& SourceManager::getIssues() {
     return Issues;
 }
 

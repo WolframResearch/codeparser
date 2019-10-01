@@ -555,15 +555,15 @@ void Parser::prependInReverse(std::vector<LeafNodePtr>& V) {
     }
 }
 
-std::vector<SyntaxIssue> Parser::getIssues() const {
+std::vector<std::unique_ptr<Issue>>& Parser::getIssues() {
     return Issues;
 }
 
 //
 // Only to be used by Parselets
 //
-void Parser::addIssue(SyntaxIssue I) {
-    Issues.push_back(I);
+void Parser::addIssue(std::unique_ptr<Issue> I) {
+    Issues.push_back(std::move(I));
 }
 
 bool Parser::isPossibleBeginningOfExpression(const Token& Tok, ParserContext CtxtIn) const {
@@ -905,11 +905,6 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
                 TokenPrecedence = getCurrentTokenPrecedence(token, Ctxt);
                 implicitTimesEnabled = oldImplicitTimesEnabled;
             }
-            
-            //
-            // getCurrentTokenPrecedence() may have inserted something like a new IMPLICITTIMES token, so grab again
-            //
-            token = currentToken();
             
             if (Ctxt.Prec > TokenPrecedence) {
                 break;

@@ -145,7 +145,7 @@ NodePtr PrefixOperatorParselet::parse(ParserContext CtxtIn) const {
         
         Tok = Parser::eatAll(Tok, Ctxt, ArgsTest);
         
-        Utils::differentLineWarning(TokIn, Tok, SYNTAXISSUESEVERITY_FORMATTING);
+        Utils::differentLineWarning(TokIn, Tok);
         
         auto operand = TheParser->parse(Ctxt);
         
@@ -200,6 +200,8 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
     
     auto TokIn = TheParser->currentToken();
     
+    auto& Op = InfixOperatorToSymbol(TokIn.Tok);
+    
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
     Ctxt.Assoc = ASSOCIATIVITY_NONE;
@@ -237,7 +239,7 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
             // and we want only a single Infix node created
             //
             if (isInfixOperator(Tok1.Tok) &&
-                InfixOperatorToSymbol(Tok1.Tok) == InfixOperatorToSymbol(TokIn.Tok)) {
+                InfixOperatorToSymbol(Tok1.Tok) == Op) {
                 
                 auto Tok2 = TheParser->nextToken(Ctxt);
                 
@@ -251,7 +253,10 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
                     
                     auto operand = TheParser->parse(Ctxt);
                     
-                    Args.reserve(Args.size() + ArgsTest1.size() + 1 + ArgsTest2.size() + 1);
+                    //
+                    // Do not reserve inside loop
+                    // Allow default resizing strategy, which is hopefully exponential
+                    //
                     Args.append(std::move(ArgsTest1));
                     Args.append(std::unique_ptr<Node>(new LeafNode(Tok1)));
                     Args.append(std::move(ArgsTest2));
@@ -264,7 +269,7 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
                 // Tok.Tok != TokIn.Tok, so break
                 //
                 
-                return std::unique_ptr<Node>(new InfixNode(InfixOperatorToSymbol(TokIn.Tok), std::move(Args)));
+                return std::unique_ptr<Node>(new InfixNode(Op, std::move(Args)));
             }
         }
         
@@ -276,7 +281,7 @@ NodePtr PostfixOperatorParselet::parse(NodeSeq Left, ParserContext CtxtIn) const
     
     auto TokIn = TheParser->currentToken();
     
-    Utils::differentLineWarning(Left, TokIn, SYNTAXISSUESEVERITY_FORMATTING);
+    Utils::differentLineWarning(Left, TokIn);
     
     auto Ctxt = CtxtIn;
     
@@ -408,7 +413,10 @@ NodePtr GroupParselet::parse(ParserContext CtxtIn) const {
             
             auto operand = TheParser->parse(Ctxt2);
             
-            Args.reserve(Args.size() + ArgsTest1.size() + 1);
+            //
+            // Do not reserve inside loop
+            // Allow default resizing strategy, which is hopefully exponential
+            //
             Args.append(std::move(ArgsTest1));
             Args.append(std::move(operand));
         }
@@ -663,7 +671,7 @@ NodePtr TildeParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
         
         FirstTok = Parser::eatAll(FirstTok, Ctxt, ArgsTest1);
         
-        Utils::differentLineWarning(FirstTilde, FirstTok, SYNTAXISSUESEVERITY_FORMATTING);
+        Utils::differentLineWarning(FirstTilde, FirstTok);
         
         auto Middle = TheParser->parse(Ctxt);
         
@@ -677,7 +685,7 @@ NodePtr TildeParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
             
             Tok1 = Parser::eatAll(Tok1, Ctxt, ArgsTest2);
             
-            Utils::differentLineWarning(FirstTok, Tok1, SYNTAXISSUESEVERITY_FORMATTING);
+            Utils::differentLineWarning(FirstTok, Tok1);
             
             if (Tok1.Tok == TOKEN_TILDE) {
                 
@@ -1054,7 +1062,10 @@ NodePtr LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn) const {
             
             auto Sub = this->parse(Ctxt);
             
-            Args.reserve(Args.size() + 1);
+            //
+            // Do not reserve inside loop
+            // Allow default resizing strategy, which is hopefully exponential
+            //
             Args.append(std::move(Sub));
             
             Tok = TheParser->currentToken();
@@ -1065,7 +1076,10 @@ NodePtr LinearSyntaxOpenParenParselet::parse(ParserContext CtxtIn) const {
             // COMMENT, WHITESPACE, and NEWLINE are handled here
             //
             
-            Args.reserve(Args.size() + 1);
+            //
+            // Do not reserve inside loop
+            // Allow default resizing strategy, which is hopefully exponential
+            //
             Args.append(std::unique_ptr<Node>(new LeafNode(Tok)));
             
             Tok = TheParser->nextToken(Ctxt);
@@ -1141,6 +1155,10 @@ NodePtr EqualParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
             return std::unique_ptr<Node>(new BinaryNode(SYMBOL_UNSET, std::move(Args)));
         }
         
+        auto wasInsideSlashColon = ((Ctxt.Flag & PARSER_INSIDE_SLASHCOLON) == PARSER_INSIDE_SLASHCOLON);
+        
+        Ctxt.Flag.clear(PARSER_INSIDE_SLASHCOLON);
+        
         auto Right = TheParser->parse(Ctxt);
         
         NodeSeq Args;
@@ -1150,7 +1168,7 @@ NodePtr EqualParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
         Args.append(std::move(ArgsTest));
         Args.append(std::move(Right));
         
-        if ((Ctxt.Flag & PARSER_INSIDE_SLASHCOLON) == PARSER_INSIDE_SLASHCOLON) {
+        if (wasInsideSlashColon) {
             return std::unique_ptr<Node>(new TernaryNode(SYMBOL_TAGSET, std::move(Args)));
         }
         
@@ -1181,7 +1199,7 @@ NodePtr IntegralParselet::parse(ParserContext CtxtIn) const {
         
         Tok = Parser::eatAll(Tok, Ctxt, ArgsTest1);
         
-        Utils::differentLineWarning(TokIn, Tok, SYNTAXISSUESEVERITY_FORMATTING);
+        Utils::differentLineWarning(TokIn, Tok);
         
         auto operand = TheParser->parse(Ctxt);
         
@@ -1209,7 +1227,7 @@ NodePtr IntegralParselet::parse(ParserContext CtxtIn) const {
                 return std::unique_ptr<Node>(new PrefixNode(PrefixOperatorToSymbol(TokIn.Tok), std::move(Args)));
             }
             
-            Utils::differentLineWarning(TokIn, Tok, SYNTAXISSUESEVERITY_FORMATTING);
+            Utils::differentLineWarning(TokIn, Tok);
             
             auto& differentialDparselet = TheParser->findPrefixParselet(Tok.Tok);
             
@@ -1282,7 +1300,10 @@ NodePtr InequalityParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
                     
                     auto operand = TheParser->parse(Ctxt);
                     
-                    Args.reserve(Args.size() + ArgsTest1.size() + 1 + ArgsTest2.size() + 1);
+                    //
+                    // Do not reserve inside loop
+                    // Allow default resizing strategy, which is hopefully exponential
+                    //
                     Args.append(std::move(ArgsTest1));
                     Args.append(std::unique_ptr<Node>(new LeafNode(Tok1)));
                     Args.append(std::move(ArgsTest2));
@@ -1355,7 +1376,10 @@ NodePtr VectorInequalityParselet::parse(NodeSeq Left, ParserContext CtxtIn) cons
                     
                     auto operand = TheParser->parse(Ctxt);
                     
-                    Args.reserve(Args.size() + ArgsTest1.size() + 1 + ArgsTest2.size() + 1);
+                    //
+                    // Do not reserve inside loop
+                    // Allow default resizing strategy, which is hopefully exponential
+                    //
                     Args.append(std::move(ArgsTest1));
                     Args.append(std::unique_ptr<Node>(new LeafNode(Tok1)));
                     Args.append(std::move(ArgsTest2));
@@ -1382,6 +1406,8 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, ParserContext Ctx
     Args.append(std::move(Left));
     
     auto TokIn = TheParser->currentToken();
+    
+    auto& Op = InfixOperatorToSymbol(TokIn.Tok);
     
     auto lastOperatorToken = TokIn;
     
@@ -1422,7 +1448,7 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, ParserContext Ctx
             // and we want only a single Infix node created
             //
             if (isInfixOperator(Tok1.Tok) &&
-                InfixOperatorToSymbol(Tok1.Tok) == InfixOperatorToSymbol(TokIn.Tok)) {
+                InfixOperatorToSymbol(Tok1.Tok) == Op) {
                 
                 lastOperatorToken = Tok1;
                 
@@ -1445,7 +1471,7 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, ParserContext Ctx
                     Tok2 = Parser::eatAndPreserveToplevelNewlines(Tok2, Ctxt, ArgsTest2);
                     
                     if (isInfixOperator(Tok2.Tok) &&
-                        InfixOperatorToSymbol(Tok2.Tok) == InfixOperatorToSymbol(TokIn.Tok)) {
+                        InfixOperatorToSymbol(Tok2.Tok) == Op) {
                         
                         //
                         // Something like  a; ;
@@ -1455,7 +1481,10 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, ParserContext Ctx
                         
                         lastOperatorToken = Tok2;
                         
-                        Args.reserve(Args.size() + ArgsTest1.size() + 1 + ArgsTest2.size() + 1);
+                        //
+                        // Do not reserve inside loop
+                        // Allow default resizing strategy, which is hopefully exponential
+                        //
                         Args.append(std::move(ArgsTest1));
                         Args.append(std::unique_ptr<Node>(new LeafNode(Tok1)));
                         Args.append(std::unique_ptr<Node>(new LeafNode(Implicit)));
@@ -1465,7 +1494,10 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, ParserContext Ctx
                         
                         auto operand = TheParser->parse(Ctxt);
                         
-                        Args.reserve(Args.size() + ArgsTest1.size() + 1 + ArgsTest2.size() + 1);
+                        //
+                        // Do not reserve inside loop
+                        // Allow default resizing strategy, which is hopefully exponential
+                        //
                         Args.append(std::move(ArgsTest1));
                         Args.append(std::unique_ptr<Node>(new LeafNode(Tok1)));
                         Args.append(std::move(ArgsTest2));
@@ -1486,13 +1518,13 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, ParserContext Ctx
                         Args.append(std::unique_ptr<Node>(new LeafNode(Tok1)));
                         Args.append(std::unique_ptr<Node>(new LeafNode(Implicit)));
                         
-                        return std::unique_ptr<Node>(new InfixNode(InfixOperatorToSymbol(TokIn.Tok), std::move(Args)));
+                        return std::unique_ptr<Node>(new InfixNode(Op, std::move(Args)));
                     }
                 }
                 
             } else {
                 
-                return std::unique_ptr<Node>(new InfixNode(InfixOperatorToSymbol(TokIn.Tok), std::move(Args)));
+                return std::unique_ptr<Node>(new InfixNode(Op, std::move(Args)));
             }
         }
         

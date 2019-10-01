@@ -742,6 +742,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "SystemFiles/Links/JLink/Examples/Part1/Spirograph.nb",
         prefix <> "SystemFiles/Links/NETLink/Examples/Part1/Windows and Dialogs/AsteroidsGame/AsteroidsGame.nb",
         prefix <> "CompileUtilities/CompileUtilities/RuntimeChecks/RuntimeChecks.m",
+        prefix <> "SystemFiles/Components/CompileUtilities/RuntimeChecks/RuntimeChecks.m",
         Nothing
         }, fileIn],
       f = Failure["CannotRegexTooWeird", <|"FileName" -> fileIn|>];

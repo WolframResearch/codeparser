@@ -151,7 +151,7 @@ abstract[LeafNode[OptionalDefault, _, data_]] := CallNode[ToNode[Optional], {Cal
 abstract[LeafNode[Token`Error`UnhandledCharacter, str_, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`UnhandledCharacter, str, KeyTake[data, keysToTake]]
 
 abstract[LeafNode[Token`Fake`ImplicitNull, _, data_]] := LeafNode[Symbol, "Null", KeyTake[data, keysToTake] ~Join~ <|AbstractSyntaxIssues->{SyntaxIssue["Comma", "Comma encountered with no adjacent expression.\n\
-The expression will be treated as ``Null``.", "Error", <|data, CodeActions->{CodeAction["Delete Comma", DeleteNode, <||>]}|>]}|>]
+The expression will be treated as ``Null``.", "Error", <| data, CodeActions->{CodeAction["Delete Comma", DeleteNode, <| Source->data[Source] |>]}, ConfidenceLevel -> 1.0 |>]}|>]
 
 abstract[LeafNode[Token`Error`ExpectedOperand, str_, data_]] :=
 	AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, str, data]
@@ -682,7 +682,7 @@ topLevelChildIssues[InfixNode[CompoundExpression, {
 
 
 topLevelChildIssues[InfixNode[CompoundExpression, _, data_], True] := { SyntaxIssue["TopLevel", "Strange expression is at top-level.\n\
-Consider breaking up expression on separate lines or removing the ``;``.", "Warning", data] }
+Consider breaking up expression on separate lines or removing the ``;``.", "Warning", <| data, ConfidenceLevel -> 0.75 |>] }
 
 
 
@@ -693,7 +693,7 @@ Anything else, then warn
 Specifically add a DidYouMean for /
 *)
 topLevelChildIssues[BinaryNode[Divide, _, data_], True] := { SyntaxIssue["TopLevel", "Strange expression is at top-level.\n\
-Did you mean ``/@``?", "Warning", data] }
+Did you mean ``/@``?", "Warning", <| data, ConfidenceLevel -> 0.75 |>] }
 
 (*
 No need to issue warning for errors being strange
@@ -702,7 +702,7 @@ topLevelChildIssues[SyntaxErrorNode[_, _, _], True] := {}
 
 topLevelChildIssues[AbstractSyntaxErrorNode[_, _, _], True] := {}
 
-topLevelChildIssues[node_, True] := { SyntaxIssue["TopLevel", "Strange expression is at top-level.", "Warning", node[[3]]] }
+topLevelChildIssues[node_, True] := { SyntaxIssue["TopLevel", "Strange expression is at top-level.", "Warning", <| node[[3]], ConfidenceLevel -> 0.75 |>] }
 
 
 
@@ -735,42 +735,42 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		BeginPackage["Foo`"]
 		*)
 		CallNode[LeafNode[Symbol, "BeginPackage", _], {LeafNode[String, _?contextQ, _], LeafNode[String, _?contextQ, _] | CallNode[LeafNode[Symbol, "List", <||>], { LeafNode[String, _?contextQ, _]... }, _] | PatternSequence[]}, _],
-			AppendTo[operatorStack, PackageNode[x[[2]], {}, <|Source->{x[[3]][Source][[1]], (*partially constructed Source*)Indeterminate}|>]];
+			AppendTo[operatorStack, PackageNode[x[[2]], {}, <|Source->{x[[3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
 			AppendTo[nodeListStack, {}];
 		,
 		(*
 		BeginPackage["Foo`"] ;
 		*)
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "BeginPackage", _], {LeafNode[String, _?contextQ, _], LeafNode[String, _?contextQ, _] | CallNode[LeafNode[Symbol, "List", <||>], { LeafNode[String, _?contextQ, _]... }, _] | PatternSequence[]}, _], LeafNode[Symbol, "Null", _]}, _],
-   		AppendTo[operatorStack, PackageNode[x[[2]][[1]][[2]], {}, <|Source->{x[[2]][[1]][[3]][Source][[1]], (*partially constructed Source*)Indeterminate}|>]];
+   		AppendTo[operatorStack, PackageNode[x[[2, 1, 2]], {}, <|Source->{x[[2, 1, 3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
 			AppendTo[nodeListStack, {}];
    	,
    	(*
 		Begin["`Private`"]
 		*)
 		CallNode[LeafNode[Symbol, "Begin", _], {LeafNode[String, _?contextQ, _]}, _],
-			AppendTo[operatorStack, ContextNode[x[[2]], {}, <|Source->{x[[3]][Source][[1]], (*partially constructed Source*)Indeterminate}|>]];
+			AppendTo[operatorStack, ContextNode[x[[2]], {}, <|Source->{x[[3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
 			AppendTo[nodeListStack, {}];
 		,
 		(*
 		Begin["`Private`"] ;
 		*)
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "Begin", _], {LeafNode[String, _?contextQ, _]}, _], LeafNode[Symbol, "Null", _]}, _],
-   		AppendTo[operatorStack, ContextNode[x[[2]][[1]][[2]], {}, <|Source->{x[[2]][[1]][[3]][Source][[1]], (*partially constructed Source*)Indeterminate}|>]];
+   		AppendTo[operatorStack, ContextNode[x[[2, 1, 2]], {}, <|Source->{x[[2, 1, 3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
 			AppendTo[nodeListStack, {}];
    	,
    	(*
 		BeginStaticAnalysisIgnore[]
 		*)
 		CallNode[LeafNode[Symbol, "BeginStaticAnalysisIgnore" | "AST`BeginStaticAnalysisIgnore", _], {}, _],
-			AppendTo[operatorStack, StaticAnalysisIgnoreNode[x[[2]], {}, <|Source->{x[[3]][Source][[1]], (*partially constructed Source*)Indeterminate}|>]];
+			AppendTo[operatorStack, StaticAnalysisIgnoreNode[x[[2]], {}, <|Source->{x[[3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
 			AppendTo[nodeListStack, {}];
 		,
 		(*
 		BeginStaticAnalysisIgnore[] ;
 		*)
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "BeginStaticAnalysisIgnore" | "AST`BeginStaticAnalysisIgnore", _], {}, _], LeafNode[Symbol, "Null", _]}, _],
-   		AppendTo[operatorStack, StaticAnalysisIgnoreNode[x[[2]][[1]][[2]], {}, <|Source->{x[[2]][[1]][[3]][Source][[1]], (*partially constructed Source*)Indeterminate}|>]];
+   		AppendTo[operatorStack, StaticAnalysisIgnoreNode[x[[2, 1, 2]], {}, <|Source->{x[[2, 1, 3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
 			AppendTo[nodeListStack, {}];
    	,
    	(*
@@ -781,7 +781,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		CallNode[LeafNode[Symbol, "EndPackage" | "End" | "EndStaticAnalysisIgnore" | "AST`EndStaticAnalysisIgnore", _], {}, _],
 			currentOperator = operatorStack[[-1]];
 			If[!MatchQ[currentOperator, matchingOperatorPatterns[x]],
-				AppendTo[issues, SyntaxIssue["Package", "There are unbalanced package directives.", "Error", x[[3]]]];
+				AppendTo[issues, SyntaxIssue["Package", "There are unbalanced package directives.", "Error", <| x[[3]], ConfidenceLevel -> 1.0 |> ]];
 				Throw[{list, issues}];
 			];
 			operatorStack = Drop[operatorStack, -1];
@@ -789,7 +789,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 			nodeListStack = Drop[nodeListStack, -1];
 			currentOperator[[2]] = currentList;
 			(* finish constructing Source *)
-			currentOperator[[3, Key[Source], 2]] = x[[3]][Source][[2]];
+			currentOperator[[3, Key[Source], 2]] = x[[3, Key[Source], 2]];
 			AppendTo[nodeListStack[[-1]], currentOperator];
 		,
 		(*
@@ -799,8 +799,8 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		*)
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "EndPackage" | "End" | "EndStaticAnalysisIgnore" | "AST`EndStaticAnalysisIgnore", _], {}, _], LeafNode[Symbol, "Null", _]}, _],
    		currentOperator = operatorStack[[-1]];
-			If[!MatchQ[currentOperator, matchingOperatorPatterns[x[[2]][[1]]]],
-				AppendTo[issues, SyntaxIssue["Package", "There are unbalanced package directives.", "Error", x[[2]][[1]][[3]]]];
+			If[!MatchQ[currentOperator, matchingOperatorPatterns[x[[2, 1]]]],
+				AppendTo[issues, SyntaxIssue["Package", "There are unbalanced package directives.", "Error", <| x[[2, 1, 3]], ConfidenceLevel -> 1.0 |>]];
 				Throw[{list, issues}];
 			];
 			operatorStack = Drop[operatorStack, -1];
@@ -808,7 +808,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 			nodeListStack = Drop[nodeListStack, -1];
 			currentOperator[[2]] = currentList;
 			(* finish constructing Source *)
-			currentOperator[[3, Key[Source], 2]] = x[[2]][[1]][[3]][Source][[2]];
+			currentOperator[[3, Key[Source], 2]] = x[[2, 1, 3, Key[Source], 2]];
 			AppendTo[nodeListStack[[-1]], currentOperator];
    	,
    	(*
@@ -816,7 +816,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
    	*)
 		CallNode[LeafNode[Symbol, "BeginPackage" | "Begin" | "BeginStaticAnalysisIgnore" | "AST`BeginStaticAnalysisIgnore" |
 											"EndPackage" | "End" | "EndStaticAnalysisIgnore" | "AST`EndStaticAnalysisIgnore", _], _, _],
-			AppendTo[issues, SyntaxIssue["Package", "Package directive does not have correct syntax.", "Error", x[[3]]]];
+			AppendTo[issues, SyntaxIssue["Package", "Package directive does not have correct syntax.", "Error", <| x[[3]], ConfidenceLevel -> 1.0 |> ]];
 			Throw[{list, issues}];
 		,
 		(*
@@ -824,7 +824,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
    	*)
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "BeginPackage" | "Begin" | "BeginStaticAnalysisIgnore" | "AST`BeginStaticAnalysisIgnore" |
 																													"EndPackage" | "End" | "EndStaticAnalysisIgnore" | "AST`EndStaticAnalysisIgnore", _], _, _], LeafNode[Symbol, "Null", _]}, _],
-			AppendTo[issues, SyntaxIssue["Package", "Package directive does not have correct syntax.", "Error", x[[2]][[1]][[3]]]];
+			AppendTo[issues, SyntaxIssue["Package", "Package directive does not have correct syntax.", "Error", <| x[[2, 1, 3]], ConfidenceLevel -> 1.0 |>]];
 			Throw[{list, issues}];
 		,
 		(*
@@ -837,11 +837,11 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
    {i, 1, Length[list]}
 	];
 	If[operatorStack =!= {None},
-		AppendTo[issues, SyntaxIssue["Package", "There are unbalanced package directives.", "Error", list[[1]][[3]]]];
+		AppendTo[issues, SyntaxIssue["Package", "There are unbalanced package directives.", "Error", <| list[[1, 3]], ConfidenceLevel -> 1.0 |>]];
 		Throw[{list, issues}];
 	];
 	If[Length[nodeListStack] != 1,
-		AppendTo[issues, SyntaxIssue["Package", "There are unbalanced package directives.", "Error", list[[1]][[3]]]];
+		AppendTo[issues, SyntaxIssue["Package", "There are unbalanced package directives.", "Error", <| list[[1, 3]], ConfidenceLevel -> 1.0 |>]];
 		Throw[{list, issues}];
 	];
 
@@ -1190,7 +1190,7 @@ Module[{head, data, groupData, issues},
 
 	issues = Lookup[data, AbstractSyntaxIssues, {}];
 
-	AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Error", <|Source->groupData[Source]|>]];
+	AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Error", <|Source->groupData[Source], ConfidenceLevel -> 1.0|>]];
 
 	AssociateTo[data, AbstractSyntaxIssues -> issues];
 
@@ -1211,7 +1211,7 @@ Module[{head, data, groupData, issues},
 
 	issues = Lookup[data, AbstractSyntaxIssues, {}];
 
-	AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Error", <|Source->groupData[Source]|>]];
+	AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Error", <|Source->groupData[Source], ConfidenceLevel -> 1.0|>]];
 
 	AssociateTo[data, AbstractSyntaxIssues -> issues];
 
@@ -1233,7 +1233,7 @@ Module[{head, data, groupData, issues},
 
     issues = Lookup[data, AbstractSyntaxIssues, {}];
 
-    AppendTo[issues, SyntaxIssue["StrangeCall", "Strange Part call.", "Error", <|Source->groupData[Source]|>]];
+    AppendTo[issues, SyntaxIssue["StrangeCall", "Strange Part call.", "Error", <|Source->groupData[Source], ConfidenceLevel -> 1.0|>]];
 
     AssociateTo[data, AbstractSyntaxIssues -> issues];
 
@@ -1254,7 +1254,7 @@ Module[{head, data, groupData, issues},
 
     issues = Lookup[data, AbstractSyntaxIssues, {}];
 
-    AppendTo[issues, SyntaxIssue["StrangeCall", "Strange Part call.", "Error", <|Source->groupData[Source]|>]];
+    AppendTo[issues, SyntaxIssue["StrangeCall", "Strange Part call.", "Error", <|Source->groupData[Source], ConfidenceLevel -> 1.0|>]];
 
     AssociateTo[data, AbstractSyntaxIssues -> issues];
 
@@ -1321,7 +1321,7 @@ Module[{data, issues},
 	a::b::c::d
 	*)
 	If[Length[{rest}] > 2,
-		AppendTo[issues, SyntaxIssue["SyntaxUndocumentedMessageName", "This syntax is not documented.", "Error", <|Source->data[Source]|>]];
+		AppendTo[issues, SyntaxIssue["SyntaxUndocumentedMessageName", "This syntax is not documented.", "Error", <|Source->data[Source], ConfidenceLevel -> 1.0|>]];
 	];
 	
 	If[issues != {},
@@ -1467,7 +1467,7 @@ So convert from concrete [[ syntax to abstract Part syntax
 
 *)
 abstractCallNode[CallNode[headIn_, {outer:GroupNode[GroupSquare, {inner:GroupNode[GroupSquare, _, _]}, _]}, dataIn_]] :=
-Module[{head, data, part, innerData, outerData, issues, partData},
+Module[{head, data, part, innerData, outerData, issues, partData, src},
 	head = headIn;
 	data = dataIn;
 	part = inner;
@@ -1481,7 +1481,7 @@ Module[{head, data, part, innerData, outerData, issues, partData},
 			##2 represents a sequence of arguments, so it is wrong to call
     		*)
     		LeafNode[SlotSequence, _, _],
-    		AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Strange ``Part`` call.", "Error", <|Source->data[Source]|>]];
+    		AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Strange ``Part`` call.", "Error", <|Source->data[Source], ConfidenceLevel -> 1.0|>]];
     		,
         LeafNode[Symbol | Slot | Blank | BlankSequence | BlankNullSequence, _, _] (* |_StringNode*) | _CallNode | _BlankNode | _BlankSequenceNode | _BlankNullSequenceNode (*| _OptionalDefaultNode*) |
             _PatternBlankNode | _PatternBlankSequenceNode | _PatternBlankNullSequenceNode (*| _SlotSequenceNode *),
@@ -1489,10 +1489,10 @@ Module[{head, data, part, innerData, outerData, issues, partData},
         Null
         ,
         LeafNode[Out, _, _],
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange ``Part`` call.", "Warning", <|Source->data[Source]|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange ``Part`` call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
         ,
         PrefixNode[PrefixLinearSyntaxBang, _, _],
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange ``Part`` call.", "Remark", <|Source->data[Source]|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange ``Part`` call.", "Remark", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
         ,
         InfixNode[CompoundExpression, _, _],
         (* CompoundExpression was already handled *)
@@ -1508,10 +1508,10 @@ Module[{head, data, part, innerData, outerData, issues, partData},
         Null
         ,
         GroupNode[GroupLinearSyntaxParen, _, _],
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange ``Part`` call.", "Remark", <|Source->data[Source]|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange ``Part`` call.", "Remark", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
         ,
         GroupNode[_, _, _],
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange ``Part`` call.", "Warning", <|Source->data[Source]|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange ``Part`` call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
         ,
         (*
         PostfixNode[Function | Derivative, _, _],
@@ -1522,7 +1522,7 @@ Module[{head, data, part, innerData, outerData, issues, partData},
         (*
         warn about anything else
         *)
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange ``Part`` call.", "Error", <|Source->data[Source]|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange ``Part`` call.", "Error", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
     ];
 
 	head = abstract[head];
@@ -1532,11 +1532,13 @@ Module[{head, data, part, innerData, outerData, issues, partData},
 	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
 
 	If[outerData[Source][[1,2]]+1 != innerData[Source][[1,2]],
-		AppendTo[issues, SyntaxIssue["NotContiguous", "``Part`` brackets ``[[`` are not contiguous.", "Formatting", <|Source->{outerData[Source][[1]], innerData[Source][[1]]}|>]];
+		src = {outerData[Source][[1]], innerData[Source][[1]]};
+		AppendTo[issues, FormatIssue["NotContiguous", "``Part`` brackets ``[[`` are not contiguous.", "Formatting", <|Source->src, CodeActions->{CodeAction["DeleteTrivia", DeleteTrivia, <|Source->src|>]}|>]];
 	];
 
 	If[innerData[Source][[2,2]]+1 != outerData[Source][[2,2]],
-		AppendTo[issues, SyntaxIssue["NotContiguous", "``Part`` brackets ``]]`` are not contiguous.", "Formatting", <|Source->{innerData[Source][[2]], outerData[Source][[2]]}|>]];
+		src = {innerData[Source][[2]], outerData[Source][[2]]};
+		AppendTo[issues, FormatIssue["NotContiguous", "``Part`` brackets ``]]`` are not contiguous.", "Formatting", <|Source->src, CodeActions->{CodeAction["DeleteTrivia", DeleteTrivia, <|Source->src|>]}|>]];
 	];
 
 	If[issues != {},
@@ -1569,7 +1571,7 @@ Module[{head, part, partData, issues, data},
 			##2 represents a sequence of arguments, so it is wrong to call
     		*)
     		LeafNode[SlotSequence, _, _],
-    		AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Strange call.", "Error", <|Source->data[Source]|>]];
+    		AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Strange call.", "Error", <|Source->data[Source], ConfidenceLevel -> 1.0|>]];
     		,
         LeafNode[Symbol | String | Slot | Blank | BlankSequence | BlankNullSequence, _, _] | _CallNode | _BlankNode | _BlankSequenceNode | _BlankNullSequenceNode (*| _OptionalDefaultNode*)|
             _PatternBlankNode | _PatternBlankSequenceNode | _PatternBlankNullSequenceNode (*| _SlotSequenceNode*),
@@ -1577,7 +1579,7 @@ Module[{head, part, partData, issues, data},
         Null
         ,
         LeafNode[Out, _, _],
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Warning", <|Source->data[Source]|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
         ,
         BinaryNode[PatternTest, _, _],
         (* these are fine *)
@@ -1596,7 +1598,7 @@ Module[{head, part, partData, issues, data},
         Null
         ,
         GroupNode[_, _, _],
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Warning", <|Source->data[Source]|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
         ,
         PostfixNode[Function | Derivative, _, _],
         (* these are fine *)
@@ -1606,7 +1608,7 @@ Module[{head, part, partData, issues, data},
         (*
         warn about anything else
         *)
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Error", <|Source->data[Source]|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Error", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
     ];
 
 	head = abstract[head];
@@ -1643,7 +1645,7 @@ Module[{head, part, partData, data, issues},
 			##2 represents a sequence of arguments, so it is wrong to call
     		*)
     		LeafNode[SlotSequence, _, _],
-    		AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Strange call.", "Error", <|Source->data[Source]|>]];
+    		AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Strange call.", "Error", <|Source->data[Source], ConfidenceLevel -> 1.0|>]];
     		,
         LeafNode[Symbol | Slot | Blank | BlankSequence | BlankNullSequence, _, _] (* |_StringNode*) | _CallNode | _BlankNode | _BlankSequenceNode | _BlankNullSequenceNode (*| _OptionalDefaultNode*) |
             _PatternBlankNode | _PatternBlankSequenceNode | _PatternBlankNullSequenceNode (*| _SlotSequenceNode *),
@@ -1651,10 +1653,10 @@ Module[{head, part, partData, data, issues},
         Null
         ,
         LeafNode[Out, _, _],
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Warning", <|Source->data[Source]|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
         ,
         PrefixNode[PrefixLinearSyntaxBang, _, _],
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Remark", <|Source->data[Source]|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Remark", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
         ,
         (*
         BinaryNode[PatternTest, _, _],
@@ -1670,10 +1672,10 @@ Module[{head, part, partData, data, issues},
         Null
         ,
         GroupNode[GroupLinearSyntaxParen, _, _],
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Remark", <|Source->data[Source]|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Remark", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
         ,
         GroupNode[_, _, _],
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Warning", <|Source->data[Source]|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
         ,
         (*
         PostfixNode[Function | Derivative, _, _],
@@ -1684,7 +1686,7 @@ Module[{head, part, partData, data, issues},
         (*
         warn about anything else
         *)
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Error", <|Source->data[Source]|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Error", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
     ];
 
 	head = abstract[head];

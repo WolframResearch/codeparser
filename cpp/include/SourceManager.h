@@ -22,7 +22,7 @@ class SourceManager {
     
     bool lastCharacterWasCarriageReturn;
     
-    std::vector<SyntaxIssue> Issues;
+    std::vector<std::unique_ptr<Issue>> Issues;
     
     SourceLocation SrcLoc;
     
@@ -65,7 +65,7 @@ public:
     void setSourceLocation(SourceLocation Loc);
     SourceLocation getSourceLocation() const;
     
-    std::vector<SyntaxIssue> getIssues() const;
+    std::vector<std::unique_ptr<Issue>>& getIssues();
 };
 
 extern std::unique_ptr<SourceManager> TheSourceManager;

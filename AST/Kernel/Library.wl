@@ -46,6 +46,7 @@ MakeAbstractSyntaxErrorNode
 
 
 MakeSyntaxIssue
+MakeFormatIssue
 
 
 SetConcreteParseProgress
@@ -264,8 +265,28 @@ MakeAbstractSyntaxErrorNode[tag_, payload_, srcArgs___] :=
 
 
 
-MakeSyntaxIssue[tag_, msg_, severity_, srcArgs___] :=
-	SyntaxIssue[tag, msg, severity, <|Source->structureSrcArgs[srcArgs]|>]
+MakeSyntaxIssue[tag_, msg_, severity_, srcArgs___, confidence_] :=
+	SyntaxIssue[tag, msg, severity, <|Source->structureSrcArgs[srcArgs], ConfidenceLevel->confidence|>]
+
+
+
+
+MakeFormatIssue["SyntaxAmbiguitySpace", msg_, severity_, srcArgs___] :=
+	FormatIssue["SyntaxAmbiguity", msg, severity, <|Source->structureSrcArgs[srcArgs], CodeActions->{CodeAction["Insert", InsertText, <|Source -> structureSrcArgs[srcArgs], "InsertionText"->" "|>]}|>]
+
+MakeFormatIssue["StrayLineContinuation", msg_, severity_, srcArgs___] :=
+	FormatIssue["SyntaxAmbiguity", msg, severity, <|Source->structureSrcArgs[srcArgs], CodeActions->{CodeAction["Delete", DeleteNode, <|Source -> structureSrcArgs[srcArgs]|>]}|>]
+
+MakeFormatIssue["DifferentLine", msg_, severity_, srcArgs___] :=
+	FormatIssue["SyntaxAmbiguity", msg, severity, <|Source->structureSrcArgs[srcArgs], CodeActions->{CodeAction["Delete", DeleteTrivia, <|Source -> structureSrcArgs[srcArgs]|>]}|>]
+
+MakeFormatIssue["NotContiguous", msg_, severity_, srcArgs___] :=
+	FormatIssue["SyntaxAmbiguity", msg, severity, <|Source->structureSrcArgs[srcArgs], CodeActions->{CodeAction["Delete", DeleteTrivia, <|Source -> structureSrcArgs[srcArgs]|>]}|>]
+
+MakeFormatIssue[tag_, msg_, severity_, srcArgs___] :=
+	FormatIssue[tag, msg, severity, <|Source->structureSrcArgs[srcArgs]|>]
+
+
 
 
 

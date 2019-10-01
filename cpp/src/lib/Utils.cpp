@@ -104,7 +104,7 @@ bool Utils::isUndocumentedLongName(std::string s) {
 
 
 
-void Utils::differentLineWarning(Token Tok1, Token Tok2, SyntaxIssueSeverity Severity) {
+void Utils::differentLineWarning(Token Tok1, Token Tok2) {
     
     if (Tok1.Tok == TOKEN_ERROR_ABORTED) {
         return;
@@ -134,18 +134,18 @@ void Utils::differentLineWarning(Token Tok1, Token Tok2, SyntaxIssueSeverity Sev
         return;
     }
     
-    auto Issue = SyntaxIssue(SYNTAXISSUETAG_DIFFERENTLINE, "``" + Tok1.Str + "`` and ``" + Tok2.Str + "`` are on different lines.", Severity, Source(Tok1.Src, Tok2.Src));
+    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_DIFFERENTLINE, "``" + Tok1.Str + "`` and ``" + Tok2.Str + "`` are on different lines.", FORMATISSUESEVERITY_FORMATTING, Source(Tok1.Src, Tok2.Src)));
     
-    TheParser->addIssue(Issue);
+    TheParser->addIssue(std::move(I));
 }
 
-void Utils::differentLineWarning(NodeSeq& Args, Token Tok2, SyntaxIssueSeverity Severity) {
+void Utils::differentLineWarning(NodeSeq& Args, Token Tok2) {
     
     auto& F = Args.first();
     
     auto Tok1 = F->lastToken();
     
-    Utils::differentLineWarning(Tok1, Tok2, Severity);
+    Utils::differentLineWarning(Tok1, Tok2);
 }
 
 void Utils::endOfLineWarning(Token Tok, Token EndTok) {
@@ -168,9 +168,9 @@ void Utils::endOfLineWarning(Token Tok, Token EndTok) {
         return;
     }
     
-    auto Issue = SyntaxIssue(SYNTAXISSUETAG_ENDOFLINE, "``;;`` is at the end of a line.\nThis could be confused for ``;``.\nDid you mean ``;``?", SYNTAXISSUESEVERITY_WARNING, Tok.Src);
+    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SYNTAXAMBIGUITY_ENDOFLINE, "``;;`` is at the end of a line.\nThis could be confused for ``;``.\nDid you mean ``;``?", FORMATISSUESEVERITY_FORMATTING, Tok.Src));
     
-    TheParser->addIssue(Issue);
+    TheParser->addIssue(std::move(I));
 }
 
 void Utils::notContiguousWarning(Token Tok1, Token Tok2) {
@@ -194,9 +194,9 @@ void Utils::notContiguousWarning(Token Tok1, Token Tok2) {
         return;
     }
     
-    auto Issue = SyntaxIssue(SYNTAXISSUETAG_NOTCONTIGUOUS, std::string("Tokens are not contiguous"), SYNTAXISSUESEVERITY_FORMATTING, Source(Tok1.Src, Tok2.Src));
+    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_NOTCONTIGUOUS, std::string("Tokens are not contiguous"), FORMATISSUESEVERITY_FORMATTING, Source(Tok1.Src, Tok2.Src)));
     
-    TheParser->addIssue(Issue);
+    TheParser->addIssue(std::move(I));
 }
 
 

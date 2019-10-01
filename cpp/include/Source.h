@@ -83,16 +83,23 @@ SyntaxIssueTag SYNTAXISSUETAG_UNDOCUMENTEDCHARACTER = "UndocumentedCharacter";
 SyntaxIssueTag SYNTAXISSUETAG_UNLIKELYESCAPESEQUENCE = "UnlikelyEscapeSequence";
 SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDEXPRESSION = "UnexpectedExpression";
 SyntaxIssueTag SYNTAXISSUETAG_STRANGECHARACTER = "StrangeCharacter";
-SyntaxIssueTag SYNTAXISSUETAG_SYNTAXAMBIGUITY = "SyntaxAmbiguity";
-SyntaxIssueTag SYNTAXISSUETAG_NOTCONTIGUOUS = "NotContiguous";
-SyntaxIssueTag SYNTAXISSUETAG_DIFFERENTLINE = "DifferentLine";
-SyntaxIssueTag SYNTAXISSUETAG_ENDOFLINE = "EndOfLine";
 SyntaxIssueTag SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT = "SyntaxUndocumentedSlot";
-SyntaxIssueTag SYNTAXISSUETAG_CHARACTERENCODING = "CharacterEncoding";
-SyntaxIssueTag SYNTAXISSUETAG_STRAYCARRIAGERETURN = "StrayCarriageReturn";
-SyntaxIssueTag SYNTAXISSUETAG_STRAYLINECONTINUATION = "StrayLineContinuation";
 SyntaxIssueTag SYNTAXISSUETAG_IMPLICITTIMESSPAN = "ImplicitTimesSpan";
 
+typedef const std::string FormatIssueTag;
+
+//
+// When the FormatIssue is made, details for SyntaxAmbiguitySpace will be filled in
+//
+// SyntaxAmbiguitySpace is: insert space between characters
+//
+FormatIssueTag FORMATISSUETAG_SYNTAXAMBIGUITY_SPACE = "SyntaxAmbiguitySpace";
+FormatIssueTag FORMATISSUETAG_SYNTAXAMBIGUITY_ENDOFLINE = "SyntaxAmbiguityEndOfLine";
+FormatIssueTag FORMATISSUETAG_NOTCONTIGUOUS = "NotContiguous";
+FormatIssueTag FORMATISSUETAG_DIFFERENTLINE = "DifferentLine";
+FormatIssueTag FORMATISSUETAG_CHARACTERENCODING = "CharacterEncoding";
+FormatIssueTag FORMATISSUETAG_STRAYCARRIAGERETURN = "StrayCarriageReturn";
+FormatIssueTag FORMATISSUETAG_STRAYLINECONTINUATION = "StrayLineContinuation";
 
 
 //
@@ -103,11 +110,14 @@ SyntaxIssueTag SYNTAXISSUETAG_IMPLICITTIMESSPAN = "ImplicitTimesSpan";
 
 typedef const std::string SyntaxIssueSeverity;
 
-SyntaxIssueSeverity SYNTAXISSUESEVERITY_FORMATTING = "Formatting";
 SyntaxIssueSeverity SYNTAXISSUESEVERITY_REMARK = "Remark";
 SyntaxIssueSeverity SYNTAXISSUESEVERITY_WARNING = "Warning";
 SyntaxIssueSeverity SYNTAXISSUESEVERITY_ERROR = "Error";
 SyntaxIssueSeverity SYNTAXISSUESEVERITY_FATAL = "Fatal";
+
+typedef const std::string FormatIssueSeverity;
+
+FormatIssueSeverity FORMATISSUESEVERITY_FORMATTING = "Formatting";
 
 //
 // A single character of source code
@@ -360,14 +370,38 @@ struct Source {
 bool isContiguous(Source a, Source b);
 
 
-struct SyntaxIssue {
+class Issue {
+public:
+    virtual void put(MLINK mlp) const = 0;
+    
+    virtual ~Issue() {}
+};
+
+class SyntaxIssue : public Issue {
+public:
     const SyntaxIssueTag Tag;
     const std::string Msg;
     const SyntaxIssueSeverity Sev;
     const Source Src;
+    const double Con;
     
-    SyntaxIssue(std::string Tag, std::string Msg, std::string Sev, Source Src) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src) {}
+    SyntaxIssue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Con) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Con(Con) {}
     
-    void put(MLINK mlp) const;
+    void put(MLINK mlp) const override;
 };
+
+class FormatIssue : public Issue {
+public:
+    const FormatIssueTag Tag;
+    const std::string Msg;
+    const FormatIssueSeverity Sev;
+    const Source Src;
+    
+    FormatIssue(std::string Tag, std::string Msg, std::string Sev, Source Src) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src) {}
+    
+    void put(MLINK mlp) const override;
+};
+
+
+
 

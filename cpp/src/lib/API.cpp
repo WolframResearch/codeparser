@@ -293,24 +293,34 @@ DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     // Collect all issues from the various components
     //
     {
-        std::vector<SyntaxIssue> issues;
+        std::vector<std::unique_ptr<Issue>> issues;
         
-        auto ParserIssues = TheParser->getIssues();
-        std::copy(ParserIssues.begin(), ParserIssues.end(), std::back_inserter(issues));
+        auto& ParserIssues = TheParser->getIssues();
+        for (auto& I : ParserIssues) {
+            issues.push_back(std::move(I));
+        }
         
-        auto TokenizerIssues = TheTokenizer->getIssues();
-        std::copy(TokenizerIssues.begin(), TokenizerIssues.end(), std::back_inserter(issues));
+        auto& TokenizerIssues = TheTokenizer->getIssues();
+        for (auto& I : TokenizerIssues) {
+            issues.push_back(std::move(I));
+        }
         
-        auto CharacterDecoderIssues = TheCharacterDecoder->getIssues();
-        std::copy(CharacterDecoderIssues.begin(), CharacterDecoderIssues.end(), std::back_inserter(issues));
+        auto& CharacterDecoderIssues = TheCharacterDecoder->getIssues();
+        for (auto& I : CharacterDecoderIssues) {
+            issues.push_back(std::move(I));
+        }
         
-        auto ByteDecoderIssues = TheByteDecoder->getIssues();
-        std::copy(ByteDecoderIssues.begin(), ByteDecoderIssues.end(), std::back_inserter(issues));
+        auto& ByteDecoderIssues = TheByteDecoder->getIssues();
+        for (auto& I : ByteDecoderIssues) {
+            issues.push_back(std::move(I));
+        }
         
-        auto SourceManagerIssues = TheSourceManager->getIssues();
-        std::copy(SourceManagerIssues.begin(), SourceManagerIssues.end(), std::back_inserter(issues));
+        auto& SourceManagerIssues = TheSourceManager->getIssues();
+        for (auto& I : SourceManagerIssues) {
+            issues.push_back(std::move(I));
+        }
         
-        nodes.push_back(std::unique_ptr<Node>(new CollectedSyntaxIssuesNode(issues)));
+        nodes.push_back(std::unique_ptr<Node>(new CollectedIssuesNode(std::move(issues))));
     }
     
     putExpressions(std::move(nodes), mlp);
@@ -398,24 +408,34 @@ std::vector<NodePtr> parseExpressions() {
     // Collect all issues from the various components
     //
     {
-        std::vector<SyntaxIssue> issues;
+        std::vector<std::unique_ptr<Issue>> issues;
         
-        auto ParserIssues = TheParser->getIssues();
-        std::copy(ParserIssues.begin(), ParserIssues.end(), std::back_inserter(issues));
+        auto& ParserIssues = TheParser->getIssues();
+        for (auto& I : ParserIssues) {
+            issues.push_back(std::move(I));
+        }
         
-        auto TokenizerIssues = TheTokenizer->getIssues();
-        std::copy(TokenizerIssues.begin(), TokenizerIssues.end(), std::back_inserter(issues));
+        auto& TokenizerIssues = TheTokenizer->getIssues();
+        for (auto& I : TokenizerIssues) {
+            issues.push_back(std::move(I));
+        }
         
-        auto CharacterDecoderIssues = TheCharacterDecoder->getIssues();
-        std::copy(CharacterDecoderIssues.begin(), CharacterDecoderIssues.end(), std::back_inserter(issues));
+        auto& CharacterDecoderIssues = TheCharacterDecoder->getIssues();
+        for (auto& I : CharacterDecoderIssues) {
+            issues.push_back(std::move(I));
+        }
         
-        auto ByteDecoderIssues = TheByteDecoder->getIssues();
-        std::copy(ByteDecoderIssues.begin(), ByteDecoderIssues.end(), std::back_inserter(issues));
+        auto& ByteDecoderIssues = TheByteDecoder->getIssues();
+        for (auto& I : ByteDecoderIssues) {
+            issues.push_back(std::move(I));
+        }
         
-        auto SourceManagerIssues = TheSourceManager->getIssues();
-        std::copy(SourceManagerIssues.begin(), SourceManagerIssues.end(), std::back_inserter(issues));
+        auto& SourceManagerIssues = TheSourceManager->getIssues();
+        for (auto& I : SourceManagerIssues) {
+            issues.push_back(std::move(I));
+        }
         
-        nodes.push_back(std::unique_ptr<Node>(new CollectedSyntaxIssuesNode(issues)));
+        nodes.push_back(std::unique_ptr<Node>(new CollectedIssuesNode(std::move(issues))));
     }
     
     return nodes;

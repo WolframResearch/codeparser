@@ -192,12 +192,12 @@ void CollectedExpressionsNode::put(MLINK mlp) const {
     }
 }
 
-void CollectedSyntaxIssuesNode::put(MLINK mlp) const {
+void CollectedIssuesNode::put(MLINK mlp) const {
     
     MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(Issues.size()));
     
     for (auto& I : Issues) {
-        I.put(mlp);
+        I->put(mlp);
     }
 }
 

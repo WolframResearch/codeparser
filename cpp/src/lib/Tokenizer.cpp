@@ -78,7 +78,6 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
     String.str("");
     
     auto Ctxt = CtxtIn;
-    Ctxt.clear(TOKENIZER_SLOT);
     
     TheSourceManager->setTokenStart();
     
@@ -137,16 +136,9 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
         
         if (c.isSpace() || c.isNewline() || c.isSpaceCharacter() || c.isNewlineCharacter()) {
             
-            while (c.isSpace() || c.isNewline() || c.isSpaceCharacter() || c.isNewlineCharacter()) {
-                
-                //
-                // No need to check isAbort() inside tokenizer loops
-                //
-                
-                String << c;
-                
-                c = nextWLCharacter(TOPLEVEL);
-            }
+            String << c;
+            
+            c = nextWLCharacter(TOPLEVEL);
             
             _currentToken = Token(TOKEN_WHITESPACE, String.str(), TheSourceManager->getTokenSource());
             
@@ -189,29 +181,18 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
         
     } else if (c.isSpace()) {
         
-        //
-        // Handle whitespace
-        //
-        
-        while (c.isSpace()) {
+        if (c.isStrangeSpace()) {
             
-            if (c.isStrangeSpace()) {
-                
-                auto Src = TheSourceManager->getWLCharacterSource();
-                
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange space character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src);
-                
-                Issues.push_back(Issue);
-            }
+            auto Src = TheSourceManager->getWLCharacterSource();
             
-            //
-            // No need to check isAbort() inside tokenizer loops
-            //
+            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange space character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95));
             
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
+            Issues.push_back(std::move(I));
         }
+        
+        String << c;
+        
+        c = nextWLCharacter(TOPLEVEL);
         
         _currentToken = Token(TOKEN_WHITESPACE, String.str(), TheSourceManager->getTokenSource());
         
@@ -245,9 +226,9 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
             
             auto Src = TheSourceManager->getWLCharacterSource();
             
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange space character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src);
+            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange space character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95));
             
-            Issues.push_back(Issue);
+            Issues.push_back(std::move(I));
         }
         
         String << c;
@@ -262,9 +243,9 @@ Token Tokenizer::nextToken(TokenizerContext CtxtIn) {
             
             auto Src = TheSourceManager->getWLCharacterSource();
             
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange newline character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src);
+            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange newline character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95));
             
-            Issues.push_back(Issue);
+            Issues.push_back(std::move(I));
         }
         
         String << c;
@@ -525,9 +506,9 @@ WLCharacter Tokenizer::nextWLCharacter(NextWLCharacterPolicy policy) {
             
             auto CharacterStart = TheSourceManager->getWLCharacterStart();
             
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRAYLINECONTINUATION, std::string("Stray line continuation.\nConsider removing."), SYNTAXISSUESEVERITY_FORMATTING, Source(CharacterStart, CharacterStart));
+            auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_STRAYLINECONTINUATION, std::string("Stray line continuation."), FORMATISSUESEVERITY_FORMATTING, Source(CharacterStart)));
             
-            Issues.push_back(Issue);
+            Issues.push_back(std::move(I));
             
             if ((policy & PRESERVE_WS_AFTER_LC) != PRESERVE_WS_AFTER_LC) {
                 
@@ -752,9 +733,9 @@ Token Tokenizer::handleSymbol(TokenizerContext Ctxt) {
             
             auto Src = TheSourceManager->getWLCharacterSource();
             
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.\n``#`` is not documented to allow **`** characters.", SYNTAXISSUESEVERITY_REMARK, Src);
+            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.\n``#`` is not documented to allow **`** characters.", SYNTAXISSUESEVERITY_REMARK, Src, 0.33));
             
-            Issues.push_back(Issue);
+            Issues.push_back(std::move(I));
         }
         
         String << c;
@@ -788,9 +769,9 @@ void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
             
             auto Src = TheSourceManager->getWLCharacterSource();
             
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.\n``#`` is not documented to allow ``$`` characters.", SYNTAXISSUESEVERITY_REMARK, Src);
+            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.\n``#`` is not documented to allow ``$`` characters.", SYNTAXISSUESEVERITY_REMARK, Src, 0.33));
             
-            Issues.push_back(Issue);
+            Issues.push_back(std::move(I));
         }
     }
     
@@ -798,9 +779,9 @@ void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
         
         auto Src = TheSourceManager->getWLCharacterSource();
         
-        auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange character in symbol: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src);
+        auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange character in symbol: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.90));
         
-        Issues.push_back(Issue);
+        Issues.push_back(std::move(I));
     }
     
     String << c;
@@ -827,9 +808,9 @@ void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
                     
                     auto Src = TheSourceManager->getWLCharacterSource();
                     
-                    auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.\n``#`` is not documented to allow ``$`` characters.", SYNTAXISSUESEVERITY_REMARK, Src);
+                    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.\n``#`` is not documented to allow ``$`` characters.", SYNTAXISSUESEVERITY_REMARK, Src, 0.33));
                     
-                    Issues.push_back(Issue);
+                    Issues.push_back(std::move(I));
                 }
             }
             
@@ -837,9 +818,9 @@ void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
                 
                 auto Src = TheSourceManager->getWLCharacterSource();
                 
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange character in symbol: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src);
+                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange character in symbol: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.90));
                 
-                Issues.push_back(Issue);
+                Issues.push_back(std::move(I));
             }
             
             String << c;
@@ -1328,9 +1309,9 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
             //
             // Use ** markup syntax here because of ` character
             //
-            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between **`** and ``" + cGraphicalStr + "`` to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, Source(TickLoc, Loc2));
+            auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SYNTAXAMBIGUITY_SPACE, "Put a space between **`** and ``" + cGraphicalStr + "`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc2)));
             
-            Issues.push_back(Issue);
+            Issues.push_back(std::move(I));
         }
         
         if (accuracy || c.isDigit() || c.to_point() == '-' || c.to_point() == '+' || c.to_point() == '.') {
@@ -1378,9 +1359,9 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
                     } else {
                         msg = "Put a space between **`** and ``+`` to reduce ambiguity";
                     }
-                    auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, msg, SYNTAXISSUESEVERITY_REMARK, Source(TickLoc, SignLoc));
+                    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SYNTAXAMBIGUITY_SPACE, msg, FORMATISSUESEVERITY_FORMATTING, Source(SignLoc)));
                     
-                    Issues.push_back(Issue);
+                    Issues.push_back(std::move(I));
                     
                     
                     
@@ -1632,11 +1613,9 @@ int Tokenizer::handleFractionalPart(TokenizerContext Ctxt, int base) {
         // Must now do surgery and back up
         //
         
-        auto DigitLoc = DotLoc1-1;
+        auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SYNTAXAMBIGUITY_SPACE, "Put a space before the ``.`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(DotLoc1)));
         
-        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space before the ``.`` to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, Source(DigitLoc,DotLoc1));
-        
-        Issues.push_back(Issue);
+        Issues.push_back(std::move(I));
         
         
         auto Loc = TheSourceManager->getSourceLocation();
@@ -1683,11 +1662,10 @@ int Tokenizer::handleFractionalPart(TokenizerContext Ctxt, int base) {
         //
         
         auto Loc2 = TheSourceManager->getSourceLocation();
-        auto Loc1 = Loc2-1;
         
-        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space before the ``.`` to reduce ambiguity", SYNTAXISSUESEVERITY_ERROR, Source(Loc1,Loc2));
+        auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SYNTAXAMBIGUITY_SPACE, "Put a space before the ``.`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc2)));
         
-        Issues.push_back(Issue);
+        Issues.push_back(std::move(I));
     }
     
     return handle;
@@ -1961,7 +1939,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                 TheSourceManager->setWLCharacterEnd();
                 _currentWLCharacter = DotChar;
                 
-                append(c, Source(Loc, Loc));
+                append(c, Source(Loc));
                 
                 return handleNumber(Ctxt);
             }
@@ -2171,11 +2149,9 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                         // Must now do surgery and back up
                         //
                         
-                        auto UnderLoc = DotLoc-1;
+                        auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SYNTAXAMBIGUITY_SPACE, "Put a space between ``_`` and ``.`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(DotLoc)));
                         
-                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between ``_`` and ``.`` to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, Source(UnderLoc,DotLoc));
-                        
-                        Issues.push_back(Issue);
+                        Issues.push_back(std::move(I));
                         
                         
                         auto Src = TheSourceManager->getWLCharacterSource();
@@ -2209,11 +2185,9 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                             // Something like _.0
                             //
                             
-                            auto UnderLoc = DotLoc-1;
+                            auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SYNTAXAMBIGUITY_SPACE, "Put a space between ``.`` and number to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(DotLoc)));
                             
-                            auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between ``.`` and number to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, Source(UnderLoc,DotLoc));
-                            
-                            Issues.push_back(Issue);
+                            Issues.push_back(std::move(I));
                         }
                         
                         Operator = TOKEN_UNDERDOT; // _.
@@ -2400,11 +2374,10 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                         //
                         
                         auto Loc = TheSourceManager->getSourceLocation();
-                        auto MinusLoc = Loc-1;
                         
-                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between ``-`` and ``>`` to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, Source(MinusLoc,Loc));
+                        auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SYNTAXAMBIGUITY_SPACE, "Put a space between ``-`` and ``>`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc)));
                         
-                        Issues.push_back(Issue);
+                        Issues.push_back(std::move(I));
                         
                     } else if (c.to_point() == '=') {
                         
@@ -2413,11 +2386,10 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                         //
                         
                         auto Loc = TheSourceManager->getSourceLocation();
-                        auto MinusLoc = Loc-1;
                         
-                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between ``-`` and ``=`` to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, Source(MinusLoc,Loc));
+                        auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SYNTAXAMBIGUITY_SPACE, "Put a space between ``-`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc)));
                         
-                        Issues.push_back(Issue);
+                        Issues.push_back(std::move(I));
                     }
                 }
                     break;
@@ -2454,11 +2426,10 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                         //
                         
                         auto Loc = TheSourceManager->getSourceLocation();
-                        auto GreaterLoc = Loc-1;
                         
-                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between ``>`` and ``=`` to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, Source(GreaterLoc,Loc));
+                        auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SYNTAXAMBIGUITY_SPACE, "Put a space between ``>`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc)));
                         
-                        Issues.push_back(Issue);
+                        Issues.push_back(std::move(I));
                         
                     }
                     
@@ -2551,6 +2522,8 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                 
                 handleSymbol(Ctxt);
                 
+                Ctxt.clear(TOKENIZER_SLOT);
+                
             } else if (c.to_point() == '`') {
                 
                 Operator = TOKEN_HASH; // #
@@ -2558,6 +2531,8 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                 Ctxt |= TOKENIZER_SLOT;
                 
                 handleSymbol(Ctxt);
+                
+                Ctxt.clear(TOKENIZER_SLOT);
                 
             } else if (c.to_point() == '"') {
                 
@@ -2567,9 +2542,9 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                 
                 handleString(Ctxt);
                 
-                auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.\n``#`` is not documented to allow ``\"`` characters.", SYNTAXISSUESEVERITY_REMARK, Source(Loc,Loc));
+                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.\n``#`` is not documented to allow ``\"`` characters.", SYNTAXISSUESEVERITY_REMARK, Source(Loc), 0.33));
                 
-                Issues.push_back(Issue);
+                Issues.push_back(std::move(I));
                 
             } else if (c.to_point() == '#') {
                 
@@ -2677,11 +2652,9 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                         // Must now do surgery and back up
                         //
                         
-                        auto SlashLoc = DotLoc-1;
+                        auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SYNTAXAMBIGUITY_SPACE, "Put a space between ``/`` and ``.`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(DotLoc)));
                         
-                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between ``/`` and ``.`` to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, Source(SlashLoc,DotLoc));
-                        
-                        Issues.push_back(Issue);
+                        Issues.push_back(std::move(I));
                         
                         
                         auto Loc = TheSourceManager->getSourceLocation();
@@ -2824,11 +2797,10 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                         //
                         
                         auto Loc = TheSourceManager->getSourceLocation();
-                        auto PlusLoc = Loc-1;
                         
-                        auto Issue = SyntaxIssue(SYNTAXISSUETAG_SYNTAXAMBIGUITY, "Put a space between ``+`` and ``=`` to reduce ambiguity", SYNTAXISSUESEVERITY_REMARK, Source(PlusLoc,Loc));
+                        auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SYNTAXAMBIGUITY_SPACE, "Put a space between ``+`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc)));
                         
-                        Issues.push_back(Issue);
+                        Issues.push_back(std::move(I));
                         
                     }
                 }
@@ -2981,7 +2953,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
     return Token(Operator, String.str(), TheSourceManager->getTokenSource());
 }
 
-std::vector<SyntaxIssue> Tokenizer::getIssues() const {
+std::vector<std::unique_ptr<Issue>>& Tokenizer::getIssues() {
     return Issues;
 }
 

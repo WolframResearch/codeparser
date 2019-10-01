@@ -489,3 +489,47 @@ Test[
 	TestID->"Concrete-20190928-H3B3V1"
 ]
 
+Test[
+	ConcreteParseString["a /: b = (c = d)"]
+	,
+	TernaryNode[TagSet, {
+		LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
+		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 2}, {1, 2}}|>],
+		LeafNode[Token`SlashColon, "/:", <|Source -> {{1, 3}, {1, 4}}|>],
+		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 5}, {1, 5}}|>],
+		LeafNode[Symbol, "b", <|Source -> {{1, 6}, {1, 6}}|>],
+		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 7}, {1, 7}}|>],
+		LeafNode[Token`Equal, "=", <|Source -> {{1, 8}, {1, 8}}|>],
+		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 9}, {1, 9}}|>],
+		GroupNode[GroupParen, {
+			LeafNode[Token`OpenParen, "(", <|Source -> {{1, 10}, {1, 10}}|>],
+			BinaryNode[Set, {
+				LeafNode[Symbol, "c", <|Source -> {{1, 11}, {1, 11}}|>],
+				LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 12}, {1, 12}}|>],
+				LeafNode[Token`Equal, "=", <|Source -> {{1, 13}, {1, 13}}|>],
+				LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 14}, {1, 14}}|>],
+				LeafNode[Symbol, "d", <|Source -> {{1, 15}, {1, 15}}|>]}, <|Source -> {{1, 11}, {1, 15}}|>],
+			LeafNode[Token`CloseParen, ")", <|Source -> {{1, 16}, {1, 16}}|>]}, <|Source -> {{1, 10}, {1, 16}}|>]}, <|Source -> {{1, 1}, {1, 16}}|>]
+	,
+	TestID->"Concrete-20190929-V7J8D5"
+]
+			
+Test[
+	ConcreteparseString["{12,\\\n3}"]
+	,
+	GroupNode[List, {
+		LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 1}}|>],
+		InfixNode[Comma, {
+			LeafNode[Integer, "12", <|Source -> {{1, 2}, {1, 3}}|>],
+			LeafNode[Token`Comma, ",", <|Source -> {{1, 4}, {1, 4}}|>],
+			LeafNode[Token`LineContinuation, "\\\n", <|Source -> {{1, 5}, {2, 0}}|>],
+			LeafNode[Integer, "3", <|Source -> {{2, 1}, {2, 1}}|>]}, <|Source -> {{1, 2}, {2, 1}}|>],
+		LeafNode[Token`CloseCurly, "}", <|Source -> {{2, 2}, {2, 2}}|>]}, <|Source -> {{1, 1}, {2, 2}}|>]
+	,
+	TestID->"Concrete-20190930-B8P9Y9"
+]
+
+
+
+
+			

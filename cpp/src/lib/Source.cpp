@@ -18,13 +18,24 @@
 #include <cctype> // for isalnum, isxdigit, isupper, isdigit, isalpha, ispunct, iscntrl with GCC and MSVC
 #include <utility> // for swap
 
-//
-// SyntaxIssue
-//
-
 void SyntaxIssue::put(MLINK mlp) const {
     
-    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKESYNTAXISSUE->name(), static_cast<int>(3 + Src.count()));
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKESYNTAXISSUE->name(), static_cast<int>(3 + Src.count() + 1));
+    
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Tag.c_str()), static_cast<int>(Tag.size()));
+    
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Msg.c_str()), static_cast<int>(Msg.size()));
+    
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Sev.c_str()), static_cast<int>(Sev.size()));
+    
+    Src.put(mlp);
+    
+    MLPutReal(mlp, Con);
+}
+
+void FormatIssue::put(MLINK mlp) const {
+    
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEFORMATISSUE->name(), static_cast<int>(3 + Src.count()));
     
     MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Tag.c_str()), static_cast<int>(Tag.size()));
     

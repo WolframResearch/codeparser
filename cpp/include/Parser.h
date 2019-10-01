@@ -147,7 +147,7 @@ private:
     
     std::deque<Token> tokenQueue;
     
-    std::vector<SyntaxIssue> Issues;
+    std::vector<std::unique_ptr<Issue>> Issues;
     
     std::function<bool ()> currentAbortQ;
     
@@ -186,10 +186,10 @@ public:
     void prependInReverse(std::vector<LeafNodePtr>& );
     
     
-    std::vector<SyntaxIssue> getIssues() const;
+    std::vector<std::unique_ptr<Issue>>& getIssues();
     
     
-    void addIssue(SyntaxIssue);
+    void addIssue(std::unique_ptr<Issue>);
     
     NodePtr parse(ParserContext Ctxt);
     

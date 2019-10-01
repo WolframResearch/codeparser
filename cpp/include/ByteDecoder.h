@@ -14,7 +14,7 @@ private:
     bool eof;
     std::vector<std::pair<unsigned char, SourceLocation>> byteQueue;
     
-    std::vector<SyntaxIssue> Issues;
+    std::vector<std::unique_ptr<Issue>> Issues;
     
     SourceCharacter decodeBytes(unsigned char);
     
@@ -35,7 +35,7 @@ public:
     
     void append(unsigned char, SourceLocation);
     
-    std::vector<SyntaxIssue> getIssues() const;
+    std::vector<std::unique_ptr<Issue>>& getIssues();
 };
 
 extern std::unique_ptr<ByteDecoder> TheByteDecoder;
