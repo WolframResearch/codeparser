@@ -318,7 +318,7 @@ Source::Source() : style(SOURCESTYLE_UNKNOWN) {}
 
 Source::Source(SourceStyle style) : style(style) {}
 
-Source::Source(SourceLocation start, SourceLocation end) {
+Source::Source(SourceLocation start, SourceLocation end) : style(SOURCESTYLE_UNKNOWN) {
     switch (start.style) {
         case SOURCESTYLE_UNKNOWN:
             assert(end.style == SOURCESTYLE_UNKNOWN);
@@ -346,7 +346,7 @@ Source::Source(SourceLocation start, SourceLocation end) {
     }
 }
 
-Source::Source(Source start, Source end) {
+Source::Source(Source start, Source end) : style(SOURCESTYLE_UNKNOWN) {
     switch (start.style) {
         case SOURCESTYLE_UNKNOWN:
             assert(end.style == SOURCESTYLE_UNKNOWN);
@@ -570,7 +570,7 @@ bool SourceCharacter::isEndOfFile() const {
     return valBits == EOF;
 }
 
-SourceCharacter::SourceCharacter_iterator::SourceCharacter_iterator(int32_t val) : val(val), idx(0) {
+SourceCharacter::SourceCharacter_iterator::SourceCharacter_iterator(int32_t val) : val(val), size(0), idx(0), arr() {
     size = ByteEncoder::size(val);
     ByteEncoder::encodeBytes(arr, val);
 }
