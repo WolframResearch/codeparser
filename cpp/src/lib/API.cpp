@@ -91,7 +91,7 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK ml
         return res;
     }
     
-    TheParserSession->init(libData, ifs, style, skipFirstLine);
+    TheParserSession->init(libData, ifs, style, false, skipFirstLine);
     
     auto nodes = parseExpressions();
     
@@ -134,7 +134,7 @@ DLLEXPORT int ConcreteParseString_LibraryLink(WolframLibraryData libData, MLINK 
     
     auto style = Utils::parseSourceStyle(reinterpret_cast<const char *>(styleStr.get()));
     
-    TheParserSession->init(libData, iss, style, false);
+    TheParserSession->init(libData, iss, style, false, false);
     
     auto nodes = parseExpressions();
     
@@ -177,7 +177,7 @@ DLLEXPORT int TokenizeString_LibraryLink(WolframLibraryData libData, MLINK mlp) 
     
     auto style = Utils::parseSourceStyle(reinterpret_cast<const char *>(styleStr.get()));
     
-    TheParserSession->init(libData, iss, style, false);
+    TheParserSession->init(libData, iss, style, false, false);
     
     std::vector<NodePtr> nodes = tokenize();
     
@@ -229,7 +229,7 @@ DLLEXPORT int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     auto style = Utils::parseSourceStyle(reinterpret_cast<const char *>(styleStr.get()));
     
-    TheParserSession->init(libData, ifs, style, false);
+    TheParserSession->init(libData, ifs, style, false, false);
     
     std::vector<NodePtr> nodes = tokenize();
     
@@ -252,7 +252,7 @@ DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     if (!MLTestHead(mlp, SYMBOL_LIST->name(), &len))  {
         return res;
     }
-    if (len != 2) {
+    if (len != 3) {
         return res;
     }
     
@@ -266,11 +266,18 @@ DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         return res;
     }
     
+    ScopedMLSymbol stringifyNextTokenSymbolSym(mlp);
+    if (!stringifyNextTokenSymbolSym.read()) {
+        return res;
+    }
+    
     auto iss = std::stringstream(reinterpret_cast<const char *>(inStr.get()));
     
     auto style = Utils::parseSourceStyle(reinterpret_cast<const char *>(styleStr.get()));
     
-    TheParserSession->init(libData, iss, style, false);
+    auto stringifyNextTokenSymbol = Utils::parseBooleanSymbol(stringifyNextTokenSymbolSym.get());
+    
+    TheParserSession->init(libData, iss, style, stringifyNextTokenSymbol, false);
     
     auto node = parseLeaf();
     
@@ -284,7 +291,7 @@ DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         
         exprs.push_back(std::move(node));
         
-        NodePtr Collected = std::unique_ptr<Node>(new CollectedExpressionsNode(std::move(exprs)));
+        NodePtr Collected = NodePtr(new CollectedExpressionsNode(std::move(exprs)));
         
         nodes.push_back(std::move(Collected));
     }
@@ -320,7 +327,7 @@ DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
             issues.push_back(std::move(I));
         }
         
-        nodes.push_back(std::unique_ptr<Node>(new CollectedIssuesNode(std::move(issues))));
+        nodes.push_back(NodePtr(new CollectedIssuesNode(std::move(issues))));
     }
     
     putExpressions(std::move(nodes), mlp);
@@ -382,7 +389,7 @@ std::vector<NodePtr> parseExpressions() {
             
             if (peek.isTrivia()) {
                 
-                exprs.push_back(std::unique_ptr<LeafNode>(new LeafNode(peek)));
+                exprs.push_back(LeafNodePtr(new LeafNode(std::move(peek))));
                 
                 TheParser->nextToken(Ctxt);
                 
@@ -395,7 +402,7 @@ std::vector<NodePtr> parseExpressions() {
             
         } // while (true)
         
-        NodePtr Collected = std::unique_ptr<Node>(new CollectedExpressionsNode(std::move(exprs)));
+        NodePtr Collected = NodePtr(new CollectedExpressionsNode(std::move(exprs)));
         
         nodes.push_back(std::move(Collected));
     }
@@ -435,7 +442,7 @@ std::vector<NodePtr> parseExpressions() {
             issues.push_back(std::move(I));
         }
         
-        nodes.push_back(std::unique_ptr<Node>(new CollectedIssuesNode(std::move(issues))));
+        nodes.push_back(NodePtr(new CollectedIssuesNode(std::move(issues))));
     }
     
     return nodes;
@@ -461,7 +468,7 @@ std::vector<NodePtr> tokenize() {
             break;
         }
         
-        auto N = std::unique_ptr<Node>(new LeafNode(Tok));
+        auto N = NodePtr(new LeafNode(Tok));
         
         nodes.push_back(std::move(N));
         
@@ -474,13 +481,15 @@ std::vector<NodePtr> tokenize() {
 
 NodePtr parseLeaf() {
     
-    TokenizerContext Ctxt;
+    ParserContext PCtxt;
     
     auto Tok = TheTokenizer->currentToken();
     
-    auto N = std::unique_ptr<LeafNode>(new LeafNode(Tok));
+    auto N = LeafNodePtr(new LeafNode(Tok));
     
-    Tok = TheTokenizer->nextToken(Ctxt);
+    TheParser->nextToken(PCtxt);
+    
+    Tok = TheParser->currentToken();
     
     //
     // There may be more input
@@ -498,7 +507,9 @@ NodePtr parseLeaf() {
         auto Str = Tok.Str;
         AccumStr = AccumStr + Str;
         
-        Tok = TheTokenizer->nextToken(Ctxt);
+        TheParser->nextToken(PCtxt);
+        
+        Tok = TheParser->currentToken();
         
         while (!(Tok.Tok == TOKEN_ENDOFFILE ||
                  Tok.Tok == TOKEN_ERROR_EMPTYSTRING)) {
@@ -506,7 +517,9 @@ NodePtr parseLeaf() {
             auto Str = Tok.Str;
             AccumStr = AccumStr + Str;
             
-            Tok = TheTokenizer->nextToken(Ctxt);
+            TheParser->nextToken(PCtxt);
+            
+            Tok = TheParser->currentToken();
         }
         
         //
@@ -518,8 +531,8 @@ NodePtr parseLeaf() {
         auto Start = NSrc.start();
         auto End = Start + AccumStr.size() - 1;
         
-        auto OtherTok = Token(TOKEN_OTHER, AccumStr, Source(Start, End));
-        auto OtherLeaf = std::unique_ptr<LeafNode>(new LeafNode(OtherTok));
+        auto OtherTok = Token(TOKEN_OTHER, std::move(AccumStr), Source(Start, End));
+        auto OtherLeaf = LeafNodePtr(new LeafNode(OtherTok));
         return OtherLeaf;
     }
     
@@ -566,12 +579,12 @@ ParserSession::~ParserSession() {
     freeSymbols();
 }
 
-void ParserSession::init(WolframLibraryData libData, std::istream& is, SourceStyle sourceStyle, bool skipFirstLine) {
+void ParserSession::init(WolframLibraryData libData, std::istream& is, SourceStyle sourceStyle, bool stringifyNextTokenSymbol, bool skipFirstLine) {
     
     TheSourceManager->init(sourceStyle, is, libData);
     TheByteDecoder->init();
     TheCharacterDecoder->init(libData);
-    TheTokenizer->init(sourceStyle, skipFirstLine);
+    TheTokenizer->init(sourceStyle, stringifyNextTokenSymbol, skipFirstLine);
     TheParser->init( [libData]() {
         if (!libData) {
             return false;

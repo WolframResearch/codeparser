@@ -138,9 +138,6 @@ Module[{src, originalNodePos, cst, replacementNode, func, trivia, lineNumber, co
 
    ];
 
-
-
-
    (*
    resolve ReplaceText and InsertText and DeleteText actions into nodes
 	*)
@@ -207,17 +204,25 @@ Module[{src, originalNodePos, cst, replacementNode, func, trivia, lineNumber, co
      src = Lookup[actionData, Source];
      originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> src]]];
      If[originalNodePos == {},
-     	Throw[Failure["CannotFindNode", actionData]]
+     	Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->src |>]]
      ];
      originalNodePos = originalNodePos[[1]];
 
      replacementNode = actionData["ReplacementNode"];
-     cst = ReplacePart[cst, originalNodePos -> replacementNode];
+     If[$Debug,
+     	Print["replacementNode: ", replacementNode];
+     ];
+     If[originalNodePos == {},
+     	cst = replacementNode
+     	,
+     	cst = ReplacePart[cst, originalNodePos -> replacementNode];
+     ];
      cst
 
      ,
 
      InsertNode,
+
      src = Lookup[actionData, Source];
    	lineNumber = src[[1, 1]];
    	col1 = src[[1, 2]];
@@ -238,8 +243,13 @@ Module[{src, originalNodePos, cst, replacementNode, func, trivia, lineNumber, co
    	cst = Insert[cst, insertionNode, pos];
    	cst
 
+   	,
+
+   	Identity,
+   	cst
+
      ,
-     _, Failure["unknownCommand", <|"Command"->command|>]
+     _, If[$Debug, Print["unknownCommand: ", command]];Failure["unknownCommand", <|"Command"->command|>]
    ]
 ]]
 

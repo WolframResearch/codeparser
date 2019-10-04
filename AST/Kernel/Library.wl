@@ -46,6 +46,8 @@ MakeAbstractSyntaxErrorNode
 
 
 MakeSyntaxIssue
+MakeReplaceTextCodeAction
+MakeInsertTextCodeAction
 MakeFormatIssue
 
 
@@ -265,25 +267,27 @@ MakeAbstractSyntaxErrorNode[tag_, payload_, srcArgs___] :=
 
 
 
-MakeSyntaxIssue[tag_, msg_, severity_, srcArgs___, confidence_] :=
-	SyntaxIssue[tag, msg, severity, <|Source->structureSrcArgs[srcArgs], ConfidenceLevel->confidence|>]
+MakeSyntaxIssue[tag_String, msg_String, severity_String, srcArgs___Integer, confidence_Real, actions:CodeAction[_, _, _]...] :=
+	SyntaxIssue[tag, msg, severity, <|Source->structureSrcArgs[srcArgs], ConfidenceLevel->confidence, CodeActions->{actions}|>]
 
 
+MakeReplaceTextCodeAction[label_String, srcArgs___Integer, replacementText_String] :=
+	CodeAction[label, ReplaceText, <|Source->structureSrcArgs[srcArgs], "ReplacementText"->replacementText|>]
+
+MakeInsertTextCodeAction[label_String, srcArgs___Integer, insertionText_String] :=
+	CodeAction[label, InsertText, <|Source->structureSrcArgs[srcArgs], "InsertionText"->insertionText|>]
 
 
-MakeFormatIssue["SyntaxAmbiguitySpace", msg_, severity_, srcArgs___] :=
+MakeFormatIssue["Space", msg_String, severity_String, srcArgs___Integer] :=
 	FormatIssue["SyntaxAmbiguity", msg, severity, <|Source->structureSrcArgs[srcArgs], CodeActions->{CodeAction["Insert", InsertText, <|Source -> structureSrcArgs[srcArgs], "InsertionText"->" "|>]}|>]
 
-MakeFormatIssue["StrayLineContinuation", msg_, severity_, srcArgs___] :=
+MakeFormatIssue["StrayLineContinuation", msg_String, severity_String, srcArgs___Integer] :=
 	FormatIssue["SyntaxAmbiguity", msg, severity, <|Source->structureSrcArgs[srcArgs], CodeActions->{CodeAction["Delete", DeleteNode, <|Source -> structureSrcArgs[srcArgs]|>]}|>]
 
-MakeFormatIssue["DifferentLine", msg_, severity_, srcArgs___] :=
+MakeFormatIssue["NotContiguous", msg_String, severity_String, srcArgs___Integer] :=
 	FormatIssue["SyntaxAmbiguity", msg, severity, <|Source->structureSrcArgs[srcArgs], CodeActions->{CodeAction["Delete", DeleteTrivia, <|Source -> structureSrcArgs[srcArgs]|>]}|>]
 
-MakeFormatIssue["NotContiguous", msg_, severity_, srcArgs___] :=
-	FormatIssue["SyntaxAmbiguity", msg, severity, <|Source->structureSrcArgs[srcArgs], CodeActions->{CodeAction["Delete", DeleteTrivia, <|Source -> structureSrcArgs[srcArgs]|>]}|>]
-
-MakeFormatIssue[tag_, msg_, severity_, srcArgs___] :=
+MakeFormatIssue[tag_String, msg_String, severity_String, srcArgs___Integer] :=
 	FormatIssue[tag, msg, severity, <|Source->structureSrcArgs[srcArgs]|>]
 
 

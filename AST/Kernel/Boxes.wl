@@ -3,7 +3,7 @@ BeginPackage["AST`Boxes`"]
 Begin["`Private`"]
 
 Needs["AST`"]
-
+Needs["AST`Utils`"]
 
 (*
 
@@ -20,6 +20,13 @@ Do not want to reimplement MakeExpression.
 
 ConcreteParseBox[box_] :=
   parseBox[box, {}]
+
+
+
+
+Options[parseBox] = {
+    "StringifyNextTokenSymbol" -> False
+}
 
 
 parseBox[RowBox[children_], pos_] :=
@@ -76,7 +83,6 @@ Module[{handledChildren, aggregatedChildren},
     {_, LeafNode[Token`TildeTilde, _, _], ___}, InfixNode[StringExpression, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`NotElement, _, _], ___}, InfixNode[NotElement, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`EqualBangEqual, _, _], ___}, InfixNode[UnsameQ, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`ColonColon, _, _], ___}, InfixNode[MessageName, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`CenterDot, _, _], ___}, InfixNode[CenterDot, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`NotReverseElement, _, _], ___}, InfixNode[NotReverseElement, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`CircleTimes, _, _], ___}, InfixNode[CircleTimes, handledChildren, <|Source->Append[pos, 1]|>],
@@ -290,6 +296,11 @@ Module[{handledChildren, aggregatedChildren},
     {_, LeafNode[Token`LongName`Xnor, _, _], ___}, InfixNode[Xnor, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`Xor, _, _], ___}, InfixNode[Xor, handledChildren, <|Source->Append[pos, 1]|>],
 
+    (*
+    :: stringifies its args
+    *)
+    {_, LeafNode[Token`ColonColon, _, _], ___}, InfixNode[MessageName, {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~ MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2 + 1), "StringifyNextTokenSymbol" -> True]&, children[[2;;-1]] ], <|Source->Append[pos, 1]|>],
+
 
     (*
     Binary
@@ -355,7 +366,7 @@ Module[{handledChildren, aggregatedChildren},
     (*
     StartOfLine
     *)
-    {LeafNode[Token`Question, _, _], ___}, StartOfLineNode[Information, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`Question, _, _], ___}, StartOfLineNode[Information, {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~ MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2+1), "StringifyNextTokenSymbol" -> True]&, children[[2;;-1]]], <|Source->Append[pos, 1]|>],
     
     (*
     Postfix
@@ -378,7 +389,8 @@ Module[{handledChildren, aggregatedChildren},
     *)
     {_, LeafNode[Token`OpenSquare, _, _], ___, LeafNode[Token`CloseSquare, _, _]}, CallNode[{handledChildren[[1]]}, {GroupNode[GroupSquare, Rest[handledChildren], <||>]}, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`LeftDoubleBracket, _, _], ___, LeafNode[Token`LongName`RightDoubleBracket, _, _]}, CallNode[{handledChildren[[1]]}, {GroupNode[GroupDoubleBracket, Rest[handledChildren], <||>]}, <|Source->Append[pos, 1]|>],
-    
+    {_, LeafNode[Token`OpenSquare, _, _], ___}, CallNode[{handledChildren[[1]]}, {GroupMissingCloserNode[GroupSquare, Rest[handledChildren], <||>]}, <|Source->Append[pos, 1]|>],
+
     (*
     Groups
     *)
@@ -392,6 +404,7 @@ Module[{handledChildren, aggregatedChildren},
     Treat comments like groups
     *)
     {LeafNode[Token`Boxes`OpenParenStar, _, _], ___, LeafNode[Token`Boxes`StarCloseParen, _, _]}, GroupNode[Comment, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`Boxes`OpenParenStar, _, _], ___}, SyntaxErrorNode[SyntaxError`UnterminatedComment, handledChildren, <|Source->Append[pos, 1]|>],
 
     {___, LeafNode[Token`CloseCurly, _, _]}, SyntaxErrorNode[SyntaxError`ExpectedPossibleExpression, handledChildren, <|Source -> Append[pos, 1]|>],
 
@@ -803,9 +816,12 @@ The Front End treats ''' as a single token
 parseBox[s_String /; StringMatchQ[s, "'"~~___], pos_] := LeafNode[Token`Boxes`MultiSingleQuote, s, <|Source -> pos|>]
 
 
-parseBox[str_String, pos_] :=
-Module[{parsed, data, issues},
-  parsed = ParseLeaf[str, "SourceStyle"->"Null"];
+parseBox[str_String, pos_, OptionsPattern[]] :=
+Module[{parsed, data, issues, stringifyNextTokenSymbol},
+
+    stringifyNextTokenSymbol = OptionValue["StringifyNextTokenSymbol"];
+
+  parsed = ParseLeaf[str, "StringifyNextTokenSymbol" -> stringifyNextTokenSymbol];
 
   (*
     Source is filled in here
@@ -814,11 +830,33 @@ Module[{parsed, data, issues},
   data[Source] = pos;
 
   issues = data[SyntaxIssues];
-  issues = SyntaxIssue[#[[1]], #[[2]], #[[3]], <| #[[4]], Source->pos |>]& /@ issues;
+  issues = replacePosition[#, pos]& /@ issues;
   data[SyntaxIssues] = issues;
 
   parsed[[3]] = data;
   parsed
+]
+
+replacePosition[SyntaxIssue[tag_, msg_, severity_, dataIn_], pos_] :=
+Module[{data, actions},
+    data = dataIn;
+    data[Source] = pos;
+    actions = data[CodeActions];
+    If[!empty[actions],
+        actions = replacePosition[#, pos]& /@ actions;
+        data[CodeActions] = actions
+    ];
+    SyntaxIssue[tag, msg, severity, data]
+]
+
+replacePosition[CodeAction[label_, command_, dataIn_], pos_] :=
+Module[{data, src},
+    data = dataIn;
+    src = data[Source];
+    (*src = pos ~Join~ {LineColumn[src]};*)
+    src = pos;
+    data[Source] = src;
+    CodeAction[label, command, data]
 ]
 
 parseBox[args___] := Failure["InternalUnhandled", <|"Function"->parseBox, "Arguments"->HoldForm[{args}]|>]
@@ -1655,7 +1693,7 @@ Module[{nodeBoxes},
   RowBox[nodeBoxes]
 ]]
 
-toStandardFormBoxes[CallNode[op_, { node_ }, data_]] :=
+toStandardFormBoxes[CallNode[op_List, { node_ }, data_]] :=
 Catch[
 Module[{opBoxes, nodeBox},
   opBoxes = toStandardFormBoxes /@ op;
@@ -1667,6 +1705,24 @@ Module[{opBoxes, nodeBox},
     Throw[nodeBox]
   ];
   RowBox[opBoxes ~Join~ nodeBox[[1]]]
+]]
+
+(*
+this is a convenience, and is not technically correct
+FIXME: need a way to turn Aggregate syntax into boxes
+*)
+toStandardFormBoxes[CallNode[op_, { node_ }, data_]] :=
+Catch[
+Module[{opBoxes, nodeBox},
+  opBoxes = toStandardFormBoxes[op];
+  If[AnyTrue[opBoxes, FailureQ],
+    Throw[SelectFirst[opBoxes, FailureQ]]
+  ];
+  nodeBox = toStandardFormBoxes[node];
+  If[FailureQ[nodeBox],
+    Throw[nodeBox]
+  ];
+  RowBox[ {opBoxes} ~Join~ nodeBox[[1]]]
 ]]
 
 toStandardFormBoxes[GroupNode[op_, nodes_, data_]] :=

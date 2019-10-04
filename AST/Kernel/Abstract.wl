@@ -150,8 +150,7 @@ abstract[LeafNode[OptionalDefault, _, data_]] := CallNode[ToNode[Optional], {Cal
 
 abstract[LeafNode[Token`Error`UnhandledCharacter, str_, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`UnhandledCharacter, str, KeyTake[data, keysToTake]]
 
-abstract[LeafNode[Token`Fake`ImplicitNull, _, data_]] := LeafNode[Symbol, "Null", KeyTake[data, keysToTake] ~Join~ <|AbstractSyntaxIssues->{SyntaxIssue["Comma", "Comma encountered with no adjacent expression.\n\
-The expression will be treated as ``Null``.", "Error", <| data, CodeActions->{CodeAction["Delete Comma", DeleteNode, <| Source->data[Source] |>]}, ConfidenceLevel -> 1.0 |>]}|>]
+abstract[LeafNode[Token`Fake`ImplicitNull, _, data_]] := LeafNode[Symbol, "Null", KeyTake[data, keysToTake] ~Join~ <|AbstractSyntaxIssues->{SyntaxIssue["Comma", "Extra comma.", "Error", <| data, CodeActions->{CodeAction["Delete Comma", DeleteNode, <| Source->data[Source] |>]}, ConfidenceLevel -> 1.0 |>]}|>]
 
 abstract[LeafNode[Token`Error`ExpectedOperand, str_, data_]] :=
 	AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, str, data]
@@ -217,7 +216,7 @@ abstractLineContinuation[s_String] := s
 
 We need to do a test for line continuation because \\\n does not NECESSARILY mean a line continuation
 
-There could be preceding \\, thus changing the semantics of \\\n
+There could be a preceding \\, thus changing the semantics of \\\n
 
 
 s: input string
@@ -1468,6 +1467,7 @@ So convert from concrete [[ syntax to abstract Part syntax
 *)
 abstractCallNode[CallNode[headIn_, {outer:GroupNode[GroupSquare, {inner:GroupNode[GroupSquare, _, _]}, _]}, dataIn_]] :=
 Module[{head, data, part, innerData, outerData, issues, partData, src},
+
 	head = headIn;
 	data = dataIn;
 	part = inner;
@@ -1531,14 +1531,20 @@ Module[{head, data, part, innerData, outerData, issues, partData, src},
 
 	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
 
-	If[outerData[Source][[1,2]]+1 != innerData[Source][[1,2]],
-		src = {outerData[Source][[1]], innerData[Source][[1]]};
-		AppendTo[issues, FormatIssue["NotContiguous", "``Part`` brackets ``[[`` are not contiguous.", "Formatting", <|Source->src, CodeActions->{CodeAction["DeleteTrivia", DeleteTrivia, <|Source->src|>]}|>]];
-	];
+	(*
+	Only warn if LineCol style
+	*)
+	If[MatchQ[outerData[[ Key[Source] ]], {{_Integer, _Integer}, {_Integer, _Integer}}],
 
-	If[innerData[Source][[2,2]]+1 != outerData[Source][[2,2]],
-		src = {innerData[Source][[2]], outerData[Source][[2]]};
-		AppendTo[issues, FormatIssue["NotContiguous", "``Part`` brackets ``]]`` are not contiguous.", "Formatting", <|Source->src, CodeActions->{CodeAction["DeleteTrivia", DeleteTrivia, <|Source->src|>]}|>]];
+		If[outerData[[ Key[Source], 1, 2]]+1 != innerData[[ Key[Source], 1, 2]],
+			src = {outerData[[ Key[Source], 1]], innerData[[ Key[Source], 1]]};
+			AppendTo[issues, FormatIssue["NotContiguous", "``Part`` brackets ``[[`` are not contiguous.", "Formatting", <|Source->src, CodeActions->{CodeAction["DeleteTrivia", DeleteTrivia, <|Source->src|>]}|>]];
+		];
+
+		If[innerData[[ Key[Source], 2, 2]]+1 != outerData[[ Key[Source], 2, 2]],
+			src = {innerData[[ Key[Source], 2]], outerData[[ Key[Source], 2]]};
+			AppendTo[issues, FormatIssue["NotContiguous", "``Part`` brackets ``]]`` are not contiguous.", "Formatting", <|Source->src, CodeActions->{CodeAction["DeleteTrivia", DeleteTrivia, <|Source->src|>]}|>]];
+		];
 	];
 
 	If[issues != {},

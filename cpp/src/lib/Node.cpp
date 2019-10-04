@@ -4,24 +4,15 @@
 #include "Parser.h"
 #include "Symbol.h"
 
+#include <numeric> // for accumulate
+
 void NodeSeq::append(NodePtr N) {
     vec.push_back(std::move(N));
 }
 
-void NodeSeq::append(NodeSeq Args) {
-    append(std::move(Args.vec));
-}
-
-void NodeSeq::append(LeafSeq Args) {
-    auto& V = Args.getVectorDestructive();
-    for (auto& N : V) {
-        vec.push_back(std::move(N));
-    }
-}
-
-void NodeSeq::append(std::vector<NodePtr> V) {
-    for (auto& N : V) {
-        vec.push_back(std::move(N));
+void NodeSeq::appendIfNonEmpty(LeafSeq L) {
+    if (!L.empty()) {
+        append(NodePtr(new LeafSeqNode(std::move(L))));
     }
 }
 
@@ -30,30 +21,55 @@ bool NodeSeq::empty() const {
 }
 
 size_t NodeSeq::size() const {
-    return vec.size();
+    
+    auto accum = std::accumulate(vec.begin(), vec.end(), static_cast<size_t>(0), [](size_t a, const NodePtr& b){ return a + b->size(); });
+    
+    return accum;
 }
 
 void NodeSeq::reserve(size_t i) {
     vec.reserve(i);
 }
 
-const NodePtr& NodeSeq::first() const {
-    return vec.at(0);
+const Node* NodeSeq::first() const {
+    
+    auto F = vec.at(0).get();
+    
+    auto FF = F->first();
+    
+    return FF;
 }
 
-const NodePtr& NodeSeq::last() const {
-    return vec.at(vec.size()-1);
+const Node* NodeSeq::last() const {
+    auto L = vec.at(vec.size()-1).get();
+    
+    auto LL = L->last();
+    
+    return LL;
 }
 
 void NodeSeq::put(MLINK mlp) const {
     
-    MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(vec.size()));
+    auto s = size();
+    
+    MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(s));
+    
+    put0(mlp);
+}
+
+void NodeSeq::put0(MLINK mlp) const {
     
     for (auto& C : vec) {
         C->put(mlp);
     }
 }
 
+void LeafSeq::put0(MLINK mlp) const {
+    
+    for (auto& C : vec) {
+        C->put(mlp);
+    }
+}
 
 LeafSeq::~LeafSeq() {
     
@@ -71,16 +87,25 @@ bool LeafSeq::empty() const {
 }
 
 size_t LeafSeq::size() const {
-    return vec.size();
+    
+    auto accum = std::accumulate(vec.begin(), vec.end(), static_cast<size_t>(0), [](size_t a, const LeafNodePtr& b){ return a + b->size(); });
+    
+    return accum;
 }
 
 
 Node::Node(NodeSeq ChildrenIn) : Children(std::move(ChildrenIn)) {
+#ifndef NDEBUG
     //
     // These are very useful asserts to help find problems with trivia
     //
-    assert(!Children.first()->isTrivia());
-    assert(!Children.last()->isTrivia());
+
+    auto F = Children.first();
+    auto L = Children.last();
+    
+    assert(!F->isTrivia());
+    assert(!L->isTrivia());
+#endif
 }
 
 bool Node::isTrivia() const {
@@ -94,9 +119,9 @@ bool Node::isError() const {
 Source Node::getSource() const {
     
     assert(!Children.empty());
-        
-    const auto& First = Children.first();
-    const auto& Last = Children.last();
+    
+    auto First = Children.first();
+    auto Last = Children.last();
     
     auto FirstSrc = First->getSource();
     auto LastSrc = Last->getSource();
@@ -104,11 +129,52 @@ Source Node::getSource() const {
     return Source(FirstSrc, LastSrc);
 }
 
+size_t Node::size() const {
+    return 1;
+}
+
+const Node* Node::first() const {
+    return this;
+}
+
+const Node* Node::last() const {
+    return this;
+}
+
 void Node::putChildren(MLINK mlp) const {
     
     Children.put(mlp);
 }
 
+
+void LeafSeqNode::put(MLINK mlp) const {
+    
+    Children.put0(mlp);
+}
+
+size_t LeafSeqNode::size() const {
+    return Children.size();
+}
+
+
+size_t NodeSeqNode::size() const {
+    return Children.size();
+}
+
+const Node* NodeSeqNode::first() const {
+    assert(!Children.empty());
+    return Children.first();
+}
+
+const Node* NodeSeqNode::last() const {
+    assert(!Children.empty());
+    return Children.last();
+}
+
+void NodeSeqNode::put(MLINK mlp) const {
+    
+    Children.put0(mlp);
+}
 
 void OperatorNode::put(MLINK mlp) const {
     

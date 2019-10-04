@@ -20,7 +20,7 @@
 
 void SyntaxIssue::put(MLINK mlp) const {
     
-    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKESYNTAXISSUE->name(), static_cast<int>(3 + Src.count() + 1));
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKESYNTAXISSUE->name(), static_cast<int>(3 + Src.count() + 1 + Actions.size()));
     
     MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Tag.c_str()), static_cast<int>(Tag.size()));
     
@@ -31,6 +31,32 @@ void SyntaxIssue::put(MLINK mlp) const {
     Src.put(mlp);
     
     MLPutReal(mlp, Con);
+    
+    for (auto& A : Actions) {
+        A->put(mlp);
+    }
+}
+
+void ReplaceTextCodeAction::put(MLINK mlp) const {
+    
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEREPLACETEXTCODEACTION->name(), static_cast<int>(1 + Src.count() + 1));
+    
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Label.c_str()), static_cast<int>(Label.size()));
+    
+    Src.put(mlp);
+    
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(ReplacementText.c_str()), static_cast<int>(ReplacementText.size()));
+}
+
+void InsertTextCodeAction::put(MLINK mlp) const {
+    
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEINSERTTEXTCODEACTION->name(), static_cast<int>(1 + Src.count() + 1));
+    
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Label.c_str()), static_cast<int>(Label.size()));
+    
+    Src.put(mlp);
+    
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(InsertionText.c_str()), static_cast<int>(InsertionText.size()));
 }
 
 void FormatIssue::put(MLINK mlp) const {
@@ -360,8 +386,23 @@ Source::~Source() {
     }
 }
 
-Source::Source(const Source& o) {
-    style = o.style;
+Source::Source(const Source& o) : style(o.style) {
+    switch (o.style) {
+        case SOURCESTYLE_UNKNOWN:
+            break;
+        case SOURCESTYLE_LINECOL:
+            lineCol = o.lineCol;
+            break;
+        case SOURCESTYLE_OFFSETLEN:
+            offsetLen = o.offsetLen;
+            break;
+        default:
+            assert(false);
+            break;
+    }
+}
+
+Source::Source(Source&& o) : style(o.style) {
     switch (o.style) {
         case SOURCESTYLE_UNKNOWN:
             break;

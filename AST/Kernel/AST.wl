@@ -624,7 +624,8 @@ Module[{s, encoding, res, style},
 ParseLeaf::usage = "ParseLeaf[str] returns a LeafNode by interpreting str as a leaf."
 
 Options[ParseLeaf] = {
-	"SourceStyle" -> "LineCol"
+	"SourceStyle" -> "LineCol",
+	"StringifyNextTokenSymbol" -> False
 }
 
 ParseLeaf[str_String, opts:OptionsPattern[]] :=
@@ -635,11 +636,12 @@ Options[parseLeaf] = Options[ParseLeaf]
 
 parseLeaf[strIn_String, OptionsPattern[]] :=
 Catch[
-Module[{str, res, leaf, data, exprs, issues, style},
+Module[{str, res, leaf, data, exprs, issues, style, stringifyNextTokenSymbol},
 
 	str = strIn;
 
 	style = OptionValue["SourceStyle"];
+	stringifyNextTokenSymbol = OptionValue["StringifyNextTokenSymbol"];
 
 	If[FailureQ[parseLeafFunc],
 		Throw[parseLeafFunc]
@@ -655,7 +657,7 @@ Module[{str, res, leaf, data, exprs, issues, style},
 	and the next use throws LIBRARY_FUNCTION_ERROR
 	*)
 	CheckAbort[
-	res = parseLeafFunc[str, style];
+	res = parseLeafFunc[str, style, stringifyNextTokenSymbol];
 	,
 	loadAllFuncs[];
 	Abort[]

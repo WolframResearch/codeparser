@@ -5,7 +5,7 @@
 
 bool containsOnlyASCII(std::string s);
 
-Token::Token(TokenEnum Tok, std::string Str, Source Src) : Tok(Tok), Str(Str), Src(Src) {
+Token::Token(TokenEnum Tok, std::string&& StrIn, Source&& SrcIn) : Tok(Tok), Str(std::move(StrIn)), Src(std::move(SrcIn)) {
     
     switch (Tok) {
         case TOKEN_UNKNOWN:
@@ -67,6 +67,24 @@ Token::Token(TokenEnum Tok, std::string Str, Source Src) : Tok(Tok), Str(Str), S
     
 }
 
+Token::Token(const Token& o) : Tok(o.Tok), Str(o.Str), Src(o.Src) {}
+
+Token::Token(Token&& o) : Tok(o.Tok), Str(std::move(o.Str)), Src(std::move(o.Src)) {}
+
+Token& Token::operator=(const Token& o) {
+    Tok = o.Tok;
+    Str = o.Str;
+    Src = o.Src;
+    return *this;
+}
+
+Token& Token::operator=(Token&& o) {
+    Tok = o.Tok;
+    Str = std::move(o.Str);
+    Src = std::move(o.Src);
+    return *this;
+}
+
 bool containsOnlyASCII(std::string s) {
     for (auto c : s) {
         //
@@ -93,5 +111,6 @@ bool Token::isTrivia() const {
 }
 
 bool operator==(Token a, Token b) {
+    assert(a.Src.style == SOURCESTYLE_LINECOL);
     return a.Src.lineCol == b.Src.lineCol;
 }

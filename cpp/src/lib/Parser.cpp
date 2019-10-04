@@ -487,7 +487,7 @@ void Parser::registerContextSensitiveInfixParselet(TokenEnum token, std::unique_
 }
 
 
-void Parser::nextToken0(ParserContext Ctxt) {
+void Parser::nextToken(ParserContext Ctxt) {
     
     //
     // handle the queue before anything else
@@ -516,17 +516,7 @@ void Parser::nextToken0(ParserContext Ctxt) {
     TheTokenizer->nextToken(tokenizerCtxt);
 }
 
-Token Parser::nextToken(ParserContext Ctxt) {
-    
-    nextToken0(Ctxt);
-    
-    auto T = currentToken();
-    
-    
-    return T;
-}
-
-Token Parser::currentToken() const {
+Token Parser::currentToken() {
     
     if (!tokenQueue.empty()) {
         
@@ -535,9 +525,7 @@ Token Parser::currentToken() const {
         return Tok;
     }
     
-    auto Tok = TheTokenizer->currentToken();
-    
-    return Tok;
+    return TheTokenizer->currentToken();
 }
 
 void Parser::prependInReverse(std::vector<LeafNodePtr>& V) {
@@ -566,7 +554,7 @@ void Parser::addIssue(std::unique_ptr<Issue> I) {
     Issues.push_back(std::move(I));
 }
 
-bool Parser::isPossibleBeginningOfExpression(const Token& Tok, ParserContext CtxtIn) const {
+bool Parser::isPossibleBeginningOfExpression(Token& Tok, ParserContext CtxtIn) const {
     
     if (isError(Tok.Tok)) {
         return false;
@@ -761,7 +749,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
         
         auto A = Token(TOKEN_ERROR_ABORTED, "", Source(TheSourceManager->getSourceLocation()));
         
-        NodePtr Aborted = std::unique_ptr<Node>(new LeafNode(A));
+        NodePtr Aborted = NodePtr(new LeafNode(A));
         
         return Aborted;
     }
@@ -830,14 +818,14 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
                     
                     auto createdToken = Token( token.Tok == TOKEN_COMMA ? TOKEN_FAKE_IMPLICITNULL : TOKEN_ERROR_EXPECTEDOPERAND, "", Source(token.Src.start()));
                     
-                    Left = std::unique_ptr<Node>(new LeafNode(createdToken));
+                    Left = NodePtr(new LeafNode(createdToken));
                     
                 } else if (token.Tok == Ctxt.Closer) {
                     //
                     // Handle the special cases of:
                     // { + }
-                    // ( a + }
-                    // ( a @ }
+                    // { a + }
+                    // { a @ }
                     // We are here parsing the operators, but we don't want to descend and treat the } as the problem
                     //
                     
@@ -847,7 +835,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
                     
                     auto createdToken = Token(token.Tok == TOKEN_COMMA ? TOKEN_FAKE_IMPLICITNULL : TOKEN_ERROR_EXPECTEDOPERAND, "", Source(token.Src.start()));
                     
-                    Left = std::unique_ptr<Node>(new LeafNode(createdToken));
+                    Left = NodePtr(new LeafNode(createdToken));
                     
                 } else {
                     
@@ -861,7 +849,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
 
                 nextToken(Ctxt);
 
-                Left = std::unique_ptr<Node>(new LeafNode(token));
+                Left = NodePtr(new LeafNode(std::move(token)));
             }
         }
     }
@@ -877,7 +865,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
             
             auto A = Token(TOKEN_ERROR_ABORTED, "", Source(TheSourceManager->getSourceLocation()));
             
-            return std::unique_ptr<Node>(new LeafNode(A));
+            return NodePtr(new LeafNode(A));
         }
         
         
@@ -887,9 +875,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
         {
             LeafSeq ArgsTest;
             
-            token = currentToken();
-            
-            token = Parser::eatAndPreserveToplevelNewlines(token, Ctxt, ArgsTest);
+            auto token = Parser::eatAndPreserveToplevelNewlines(Ctxt, ArgsTest);
             
             Precedence TokenPrecedence;
             {
@@ -916,9 +902,9 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
             }
             
             NodeSeq LeftSeq;
-            LeftSeq.reserve(1 + ArgsTest.size());
+            LeftSeq.reserve(1 + 1);
             LeftSeq.append(std::move(Left));
-            LeftSeq.append(std::move(ArgsTest));
+            LeftSeq.appendIfNonEmpty(std::move(ArgsTest));
             
             Left = parse0(std::move(LeftSeq), TokenPrecedence, Ctxt);
         }
@@ -956,9 +942,9 @@ bool Parser::isAbort() const {
     return currentAbortQ();
 }
 
-const Token Parser::eatAll(const Token& TokIn, ParserContext Ctxt, LeafSeq& Args) {
+Token Parser::eatAll(ParserContext Ctxt, LeafSeq& Args) {
     
-    auto Tok = TokIn;
+    auto Tok = TheParser->currentToken();
     
     while (Tok.isTrivia()) {
         
@@ -967,17 +953,19 @@ const Token Parser::eatAll(const Token& TokIn, ParserContext Ctxt, LeafSeq& Args
         //
         
         
-        Args.append(std::unique_ptr<LeafNode>(new LeafNode(Tok)));
+        Args.append(LeafNodePtr(new LeafNode(Tok)));
         
-        Tok = TheParser->nextToken(Ctxt);
+        TheParser->nextToken(Ctxt);
+        
+        Tok = TheParser->currentToken();
     }
     
     return Tok;
 }
 
-const Token Parser::eatAndPreserveToplevelNewlines(const Token& TokIn, ParserContext Ctxt, LeafSeq& Args) {
+Token Parser::eatAndPreserveToplevelNewlines(ParserContext Ctxt, LeafSeq& Args) {
     
-    auto Tok = TokIn;
+    auto Tok = TheParser->currentToken();
     
     while (true) {
         
@@ -990,9 +978,11 @@ const Token Parser::eatAndPreserveToplevelNewlines(const Token& TokIn, ParserCon
             Tok.Tok == TOKEN_COMMENT ||
             Tok.Tok == TOKEN_LINECONTINUATION) {
             
-            Args.append(std::unique_ptr<LeafNode>(new LeafNode(Tok)));
+            Args.append(LeafNodePtr(new LeafNode(std::move(Tok))));
             
-            Tok = TheParser->nextToken(Ctxt);
+            TheParser->nextToken(Ctxt);
+            
+            Tok = TheParser->currentToken();
             
         } else if (Tok.Tok == TOKEN_NEWLINE) {
             
@@ -1002,9 +992,11 @@ const Token Parser::eatAndPreserveToplevelNewlines(const Token& TokIn, ParserCon
                 
             } else {
                 
-                Args.append(std::unique_ptr<LeafNode>(new LeafNode(Tok)));
+                Args.append(LeafNodePtr(new LeafNode(std::move(Tok))));
                 
-                Tok = TheParser->nextToken(Ctxt);
+                TheParser->nextToken(Ctxt);
+                
+                Tok = TheParser->currentToken();
             }
             
         } else {

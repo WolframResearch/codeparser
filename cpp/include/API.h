@@ -156,7 +156,7 @@ public:
     
     ~ParserSession();
     
-    void init(WolframLibraryData libData, std::istream& is, SourceStyle style, bool skipFirstLine);
+    void init(WolframLibraryData libData, std::istream& is, SourceStyle style, bool stringifyNextTokenSymbol, bool skipFirstLine);
     
     void deinit();
 };

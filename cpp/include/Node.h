@@ -15,24 +15,25 @@ using SymbolPtr = std::unique_ptr<Symbol>;
 
 class Node;
 class LeafNode;
+class NodeSeqNode;
 
 using NodePtr = std::unique_ptr<Node>;
 using LeafNodePtr = std::unique_ptr<LeafNode>;
+using NodeSeqNodePtr = std::unique_ptr<NodeSeqNode>;
 
 class LeafSeq {
-    
     std::vector<LeafNodePtr> vec;
-    bool moved;
-    
 public:
+    bool moved;
     
     LeafSeq() : vec(), moved(false) {}
     
-    ~LeafSeq();
-    
     LeafSeq(LeafSeq&& other) : vec(std::move(other.vec)), moved(false) {
         other.moved = true;
+        
     }
+    
+    ~LeafSeq();
     
     bool empty() const;
     
@@ -44,6 +45,8 @@ public:
         moved = true;
         return vec;
     }
+    
+    void put0(MLINK ) const;
 };
 
 //
@@ -71,24 +74,23 @@ public:
     
     void reserve(size_t i);
     
-    void append(NodeSeq );
-    
-    void append(LeafSeq );
-    
-    void append(std::vector<NodePtr> );
-    
     void append(NodePtr );
     
-    const NodePtr& first() const;
-    const NodePtr& last() const;
+    void appendIfNonEmpty(LeafSeq );
+    
+    const Node* first() const;
+    const Node* last() const;
     
     void put(MLINK ) const;
+    
+    void put0(MLINK ) const;
 };
 
 //
 // An expression representing a node in the syntax tree
 //
 class Node {
+protected:
     NodeSeq Children;
 public:
 
@@ -103,6 +105,11 @@ public:
     
     virtual bool isError() const;
     
+    virtual size_t size() const;
+    
+    virtual const Node* first() const;
+    virtual const Node* last() const;
+    
     void putChildren(MLINK mlp) const;
 
     const NodeSeq& getChildrenSafe() const {
@@ -114,13 +121,36 @@ public:
     }
     
     virtual const Token lastToken() const {
-        auto& L = Children.last();
+        auto L = Children.last();
         return L->lastToken();
     }
     
     virtual ~Node() {}
 };
 
+class LeafSeqNode : public Node {
+    LeafSeq Children;
+public:
+    LeafSeqNode(LeafSeq Children) : Children(std::move(Children)) {}
+    
+    size_t size() const override;
+    
+    void put(MLINK mlp) const override;
+    
+};
+
+class NodeSeqNode : public Node {
+public:
+    NodeSeqNode(NodeSeq Children) : Node(std::move(Children)) {}
+    
+    size_t size() const override;
+    
+    const Node* first() const override;
+    const Node* last() const override;
+    
+    void put(MLINK mlp) const override;
+    
+};
 
 class OperatorNode : public Node {
     SymbolPtr& Op;
@@ -142,6 +172,8 @@ public:
 
     LeafNode(Token& Tok) : Node(), Tok(Tok) {}
 
+    LeafNode(Token&& Tok) : Node(), Tok(std::move(Tok)) {}
+    
     void put(MLINK mlp) const override;
     
     bool isTrivia() const override;

@@ -168,8 +168,6 @@ private:
     
     NodePtr parse0(NodeSeq Left, Precedence, ParserContext Ctxt);
     
-    void nextToken0(ParserContext Ctxt);
-    
     Precedence getCurrentTokenPrecedence(Token& current, ParserContext Ctxt);
     
 public:
@@ -179,9 +177,9 @@ public:
     
     void deinit();
     
-    Token nextToken(ParserContext Ctxt);
+    void nextToken(ParserContext Ctxt);
     
-    Token currentToken() const;
+    Token currentToken();
     
     void prependInReverse(std::vector<LeafNodePtr>& );
     
@@ -193,7 +191,7 @@ public:
     
     NodePtr parse(ParserContext Ctxt);
     
-    bool isPossibleBeginningOfExpression(const Token& Tok, ParserContext Ctxt) const;
+    bool isPossibleBeginningOfExpression(Token& Tok, ParserContext Ctxt) const;
     
     
     const std::unique_ptr<PrefixParselet>& findPrefixParselet(TokenEnum Tok) const;
@@ -208,9 +206,9 @@ public:
     
     ~Parser();
 
-    static const Token eatAll(const Token& Tok, ParserContext Ctxt, LeafSeq&);
+    static Token eatAll(ParserContext Ctxt, LeafSeq&);
     
-    static const Token eatAndPreserveToplevelNewlines(const Token& Tok, ParserContext Ctxt, LeafSeq&);
+    static Token eatAndPreserveToplevelNewlines(ParserContext Ctxt, LeafSeq&);
 };
 
 extern std::unique_ptr<Parser> TheParser;

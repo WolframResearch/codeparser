@@ -134,14 +134,14 @@ void Utils::differentLineWarning(Token Tok1, Token Tok2) {
         return;
     }
     
-    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_DIFFERENTLINE, "``" + Tok1.Str + "`` and ``" + Tok2.Str + "`` are on different lines.", FORMATISSUESEVERITY_FORMATTING, Source(Tok1.Src, Tok2.Src)));
+    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_DIFFERENTLINE, "``" + Tok1.Str + "`` and ``" + Tok2.Str + "`` are on different lines.", SYNTAXISSUESEVERITY_WARNING, Source(Tok1.Src, Tok2.Src), 0.75, {}));
     
     TheParser->addIssue(std::move(I));
 }
 
 void Utils::differentLineWarning(NodeSeq& Args, Token Tok2) {
     
-    auto& F = Args.first();
+    auto F = Args.first();
     
     auto Tok1 = F->lastToken();
     
@@ -168,7 +168,7 @@ void Utils::endOfLineWarning(Token Tok, Token EndTok) {
         return;
     }
     
-    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SYNTAXAMBIGUITY_ENDOFLINE, "``;;`` is at the end of a line.\nThis could be confused for ``;``.\nDid you mean ``;``?", FORMATISSUESEVERITY_FORMATTING, Tok.Src));
+    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_ENDOFLINE, "Suspicious syntax.", SYNTAXISSUESEVERITY_REMARK, Tok.Src, 0.80, {}));
     
     TheParser->addIssue(std::move(I));
 }

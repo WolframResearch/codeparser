@@ -503,7 +503,8 @@ symbols = Union[Join[
             AST`Library`MakeBlankNullSequenceNode, AST`Library`MakePatternBlankNode, AST`Library`MakePatternBlankSequenceNode,
             AST`Library`MakePatternBlankNullSequenceNode, AST`Library`MakeOptionalDefaultPatternNode, AST`Library`MakeSyntaxErrorNode,
             AST`Library`MakeGroupMissingCloserNode, AST`Library`MakeGroupMissingOpenerNode, AST`Library`MakePrefixBinaryNode,
-            AST`Library`MakeSyntaxIssue, AST`Library`MakeFormatIssue},
+            AST`Library`MakeSyntaxIssue, AST`Library`MakeReplaceTextCodeAction, AST`Library`MakeInsertTextCodeAction,
+            AST`Library`MakeFormatIssue},
     {AST`InternalInvalid, AST`Metadata, AST`PatternBlank, AST`PatternBlankSequence, AST`PatternBlankNullSequence,
       AST`OptionalDefault, AST`OptionalDefaultPattern, AST`TernaryTilde},
     DownValues[PrefixOperatorToSymbol][[All, 2]],
@@ -528,12 +529,24 @@ symbolCPPHeader = {
 #pragma once
 
 #include \"TokenEnum.h\"
-#include \"API.h\"
 
 #include \"mathlink.h\"
 
 #include <string>
 #include <memory>
+
+//
+// CMake defines ast_lib_EXPORTS
+//
+#ifdef _WIN32
+# ifdef ast_lib_EXPORTS
+#   define ASTLIB_EXPORTED  __declspec( dllexport )
+# else
+#   define ASTLIB_EXPORTED  __declspec( dllimport )
+# endif
+#else
+# define ASTLIB_EXPORTED
+#endif
 
 class ASTLIB_EXPORTED Symbol {
 public:

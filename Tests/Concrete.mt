@@ -515,7 +515,7 @@ Test[
 ]
 			
 Test[
-	ConcreteparseString["{12,\\\n3}"]
+	ConcreteParseString["{12,\\\n3}"]
 	,
 	GroupNode[List, {
 		LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 1}}|>],

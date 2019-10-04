@@ -102,12 +102,12 @@ class Tokenizer {
 public:
     Tokenizer();
     
-    void init(SourceStyle style, bool skipFirstLine);
+    void init(SourceStyle style, bool stringifyNextTokenSymbol, bool skipFirstLine);
     void deinit();
     
-    Token nextToken(TokenizerContext Ctxt);
+    void nextToken(TokenizerContext Ctxt);
     
-    Token currentToken() const;
+    Token currentToken();
     
     std::vector<std::unique_ptr<Issue>>& getIssues();
 };

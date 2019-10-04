@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "Symbol.h"
 #include "TokenEnum.h"
 
 #include "mathlink.h"
@@ -9,6 +10,8 @@
 #include <cassert>
 #include <iterator>
 #include <array>
+#include <vector>
+#include <memory>
 
 //
 // https://akrzemi1.wordpress.com/2017/05/18/asserts-in-constexpr-functions/
@@ -19,6 +22,10 @@
 # define X_ASSERT(CHECK) \
 ( (CHECK) ? void(0) : []{assert(false && #CHECK);}() )
 #endif
+
+class CodeAction;
+
+using CodeActionPtr = std::unique_ptr<CodeAction>;
 
 enum SyntaxError {
     
@@ -85,6 +92,9 @@ SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDEXPRESSION = "UnexpectedExpression";
 SyntaxIssueTag SYNTAXISSUETAG_STRANGECHARACTER = "StrangeCharacter";
 SyntaxIssueTag SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT = "SyntaxUndocumentedSlot";
 SyntaxIssueTag SYNTAXISSUETAG_IMPLICITTIMESSPAN = "ImplicitTimesSpan";
+SyntaxIssueTag SYNTAXISSUETAG_DIFFERENTLINE = "DifferentLine";
+SyntaxIssueTag SYNTAXISSUETAG_ENDOFLINE = "EndOfLine";
+SyntaxIssueTag SYNTAXISSUETAG_SPACE = "Space";
 
 typedef const std::string FormatIssueTag;
 
@@ -93,10 +103,8 @@ typedef const std::string FormatIssueTag;
 //
 // SyntaxAmbiguitySpace is: insert space between characters
 //
-FormatIssueTag FORMATISSUETAG_SYNTAXAMBIGUITY_SPACE = "SyntaxAmbiguitySpace";
-FormatIssueTag FORMATISSUETAG_SYNTAXAMBIGUITY_ENDOFLINE = "SyntaxAmbiguityEndOfLine";
+FormatIssueTag FORMATISSUETAG_SPACE = "Space";
 FormatIssueTag FORMATISSUETAG_NOTCONTIGUOUS = "NotContiguous";
-FormatIssueTag FORMATISSUETAG_DIFFERENTLINE = "DifferentLine";
 FormatIssueTag FORMATISSUETAG_CHARACTERENCODING = "CharacterEncoding";
 FormatIssueTag FORMATISSUETAG_STRAYCARRIAGERETURN = "StrayCarriageReturn";
 FormatIssueTag FORMATISSUETAG_STRAYLINECONTINUATION = "StrayLineContinuation";
@@ -349,6 +357,11 @@ struct Source {
     
     Source(Source start, Source end);
     
+    Source(const Source& o);
+    Source(Source&& o);
+    
+    Source& operator=(Source o);
+    
     ~Source();
     
     void put(MLINK mlp) const;
@@ -359,12 +372,6 @@ struct Source {
     
     SourceLocation start() const;
     SourceLocation end() const;
-    
-    // copy ctor
-    Source(const Source& o);
-    
-    // copy assignment
-    Source& operator=(Source o);
 };
 
 bool isContiguous(Source a, Source b);
@@ -377,6 +384,36 @@ public:
     virtual ~Issue() {}
 };
 
+class CodeAction {
+protected:
+    const std::string Label;
+    Source Src;
+public:
+    CodeAction(std::string Label, Source Src) : Label(Label), Src(Src) {}
+    
+    virtual void put(MLINK mlp) const = 0;
+    
+    virtual ~CodeAction() {}
+};
+
+class ReplaceTextCodeAction : public CodeAction {
+    std::string ReplacementText;
+public:
+    
+    ReplaceTextCodeAction(std::string Label, Source Src, std::string ReplacementText) : CodeAction(Label, Src), ReplacementText(ReplacementText) {}
+    
+    void put(MLINK mlp) const override;
+};
+
+class InsertTextCodeAction : public CodeAction {
+    std::string InsertionText;
+public:
+    
+    InsertTextCodeAction(std::string Label, Source Src, std::string InsertionText) : CodeAction(Label, Src), InsertionText(InsertionText) {}
+    
+    void put(MLINK mlp) const override;
+};
+
 class SyntaxIssue : public Issue {
 public:
     const SyntaxIssueTag Tag;
@@ -384,8 +421,9 @@ public:
     const SyntaxIssueSeverity Sev;
     const Source Src;
     const double Con;
+    const std::vector<CodeActionPtr> Actions;
     
-    SyntaxIssue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Con) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Con(Con) {}
+    SyntaxIssue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Con, std::vector<CodeActionPtr> Actions) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Con(Con), Actions(std::move(Actions)) {}
     
     void put(MLINK mlp) const override;
 };
