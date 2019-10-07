@@ -94,6 +94,8 @@ struct WLCharacter {
     
     bool isStrangeLetterlike() const;
     
+    bool isVeryStrangeLetterlike() const;
+    
     bool isPunctuation() const;
     
     bool isSpace() const;
@@ -112,6 +114,7 @@ struct WLCharacter {
     
     bool isLetterlikeCharacter() const;
     bool isStrangeLetterlikeCharacter() const;
+    bool isVeryStrangeLetterlikeCharacter() const;
     bool isPunctuationCharacter() const;
     bool isSpaceCharacter() const;
     bool isStrangeSpaceCharacter() const;

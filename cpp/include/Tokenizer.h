@@ -109,6 +109,8 @@ public:
     
     Token currentToken();
     
+    void addIssue(std::unique_ptr<Issue>);
+    
     std::vector<std::unique_ptr<Issue>>& getIssues();
 };
 

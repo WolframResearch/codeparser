@@ -777,12 +777,7 @@ void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
     }
     
     if (c.isStrangeLetterlike() || c.isStrangeLetterlikeCharacter()) {
-        
-        auto Src = TheSourceManager->getWLCharacterSource();
-        
-        auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange character in symbol: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
-        
-        Issues.push_back(std::move(I));
+        Utils::strangeLetterlikeWarning(c);
     }
     
     String << c;
@@ -816,12 +811,7 @@ void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
             }
             
             if (c.isStrangeLetterlike() || c.isStrangeLetterlikeCharacter()) {
-                
-                auto Src = TheSourceManager->getWLCharacterSource();
-                
-                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange character in symbol: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
-                
-                Issues.push_back(std::move(I));
+                Utils::strangeLetterlikeWarning(c);
             }
             
             String << c;
@@ -2964,6 +2954,10 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
     }
     
     return Token(Operator, String.str(), TheSourceManager->getTokenSource());
+}
+
+void Tokenizer::addIssue(std::unique_ptr<Issue> I) {
+    Issues.push_back(std::move(I));
 }
 
 std::vector<std::unique_ptr<Issue>>& Tokenizer::getIssues() {

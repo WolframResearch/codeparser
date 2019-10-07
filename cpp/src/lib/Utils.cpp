@@ -2,10 +2,13 @@
 #include "Utils.h"
 
 #include "Parser.h"
+#include "Tokenizer.h"
+#include "SourceManager.h"
 
 #include <sstream>
 #include <unordered_set>
 #include <cstring> // for strcmp with GCC and MSVC
+#include <cassert>
 
 //
 // s MUST contain an integer
@@ -14,6 +17,13 @@ int Utils::parseInteger(std::string s, int base) {
     return std::stoi(s, nullptr, base);
 }
 
+
+//
+// These have been downgraded from very strange to just strange, because they do appear in actual code
+//
+std::unordered_set<std::string> strangeLetterlikeLongNames {
+    "Placeholder", "Checkmark", "SpanFromLeft" };
+
 //
 // Completely arbitrary list of long names that would make someone pause and reconsider the code.
 //
@@ -21,7 +31,7 @@ int Utils::parseInteger(std::string s, int base) {
 //
 // But \[SZ] = 2  is completely legal but strange
 //
-std::unordered_set<std::string> strangeLetterlikeLongNames {
+std::unordered_set<std::string> veryStrangeLetterlikeLongNames {
     "DownExclamation", "Cent", "Sterling", "Currency", "Yen", "Section","DoubleDot", "Copyright", "LeftGuillemet",
     "DiscretionaryHyphen", "RegisteredTrademark",
     "Micro", "Paragraph", "Cedilla", "RightGuillemet", "DownQuestion",
@@ -50,10 +60,15 @@ std::unordered_set<std::string> strangeLetterlikeLongNames {
     "LeoSign", "VirgoSign", "LibraSign", "ScorpioSign", "SagittariusSign", "CapricornSign", "AquariusSign", "PiscesSign", "WhiteKing",
     "WhiteQueen", "WhiteRook", "WhiteBishop", "WhiteKnight", "WhitePawn", "BlackKing", "BlackQueen", "BlackRook", "BlackBishop",
     "BlackKnight", "BlackPawn", "SpadeSuit", "HeartSuit", "DiamondSuit", "ClubSuit", "QuarterNote", "EighthNote", "BeamedEighthNote",
-    "BeamedSixteenthNote", "Flat", "Natural", "Sharp", "Uranus", "Checkmark", "SixPointedStar", "Shah", "WolframLanguageLogo",
+    "BeamedSixteenthNote", "Flat", "Natural", "Sharp", "Uranus",
+//    "Checkmark",
+    "SixPointedStar", "Shah", "WolframLanguageLogo",
     "WolframLanguageLogoCircle", "FreeformPrompt", "WolframAlphaPrompt", "Null", "AutoPlaceholder", "AutoOperand",
-    "EntityStart", "EntityEnd", "SpanFromLeft", "SpanFromAbove", "SpanFromBoth", "StepperRight", "StepperLeft", "StepperUp",
-    "StepperDown", "Earth", "SelectionPlaceholder", "Placeholder",
+    "EntityStart", "EntityEnd",
+//    "SpanFromLeft",
+    "SpanFromAbove", "SpanFromBoth", "StepperRight", "StepperLeft", "StepperUp",
+    "StepperDown", "Earth", "SelectionPlaceholder",
+//    "Placeholder",
     "Wolf", "FreakedSmiley", "NeutralSmiley", "LightBulb", "NumberSign", "WarningSign", "Villa", "Akuz",
     "Andy", "Spooky",
     "FilledSmallCircle", "DottedSquare", "GraySquare", "GrayCircle", "LetterSpace", "DownBreve", "KernelIcon", "MathematicaIcon",
@@ -89,6 +104,10 @@ std::unordered_set<std::string> undocumentedLongNames {
 
 bool Utils::isStrangeLetterlikeLongName(std::string s) {
     return strangeLetterlikeLongNames.find(s) != strangeLetterlikeLongNames.end();
+}
+
+bool Utils::isVeryStrangeLetterlikeLongName(std::string s) {
+    return veryStrangeLetterlikeLongNames.find(s) != strangeLetterlikeLongNames.end();
 }
 
 bool Utils::isUnsupportedLongName(std::string s) {
@@ -198,6 +217,28 @@ void Utils::notContiguousWarning(Token Tok1, Token Tok2) {
     
     TheParser->addIssue(std::move(I));
 }
+
+void Utils::strangeLetterlikeWarning(WLCharacter c) {
+    
+    assert(c.isStrangeLetterlike() || c.isStrangeLetterlikeCharacter());
+    
+    if (c.isVeryStrangeLetterlike() || c.isVeryStrangeLetterlikeCharacter()) {
+        
+        auto Src = TheSourceManager->getWLCharacterSource();
+        
+        auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange character in symbol: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+        
+        TheTokenizer->addIssue(std::move(I));
+    }
+    
+    auto Src = TheSourceManager->getWLCharacterSource();
+    
+    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange character in symbol: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.90, {}));
+    
+    TheTokenizer->addIssue(std::move(I));
+}
+
+
 
 
 bool Utils::parseBooleanSymbol(const char * sym) {

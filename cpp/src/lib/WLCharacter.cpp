@@ -319,12 +319,25 @@ void makeGraphical(std::ostream& stream, int i) {
         case '\x9e': case '\x9f':
             stream << WLCharacter(i, ESCAPE_2HEX);
             break;
-        //
-        // everything else is untouched
-        //
         default:
-            stream << SourceCharacter(i);
-            break;
+            if (i > 0xffff) {
+                stream << WLCharacter(i, ESCAPE_6HEX);
+                break;
+            } else if (i > 0xff) {
+                stream << WLCharacter(i, ESCAPE_4HEX);
+                break;
+            } else if (i > 0x7f) {
+                stream << WLCharacter(i, ESCAPE_2HEX);
+                break;
+            } else {
+                
+                //
+                // ASCII is untouched
+                //
+                
+                stream << SourceCharacter(i);
+                break;
+            }
     }
 }
 
@@ -399,8 +412,29 @@ bool WLCharacter::isStrangeLetterlike() const {
         return false;
     }
     
+    if (isVeryStrangeLetterlike()) {
+        return true;
+    }
+    
+    return false;
+}
+
+bool WLCharacter::isVeryStrangeLetterlike() const {
+    auto val = to_point();
+    
+    if (!(0x00 <= val && val <= 0x7f)) {
+        return false;
+    }
+    
     //
-    // Using control character as letterlike is strange
+    // Dump out if not a letterlike character
+    //
+    if (!isLetterlike()) {
+        return false;
+    }
+    
+    //
+    // Using control character as letterlike is very strange
     //
     if (isControl()) {
         return true;
@@ -603,10 +637,6 @@ bool WLCharacter::isLetterlikeCharacter() const {
         return false;
     }
     
-//    if (val == CODEPOINT_NAKED_BACKSLASH) {
-//        return false;
-//    }
-    
     if (isLinearSyntax()) {
         return false;
     }
@@ -645,11 +675,8 @@ bool WLCharacter::isStrangeLetterlikeCharacter() const {
         return false;
     }
     
-    //
-    // Assume that if some high character like 0xf456 is directly encoded with no escaping, then it is purposeful
-    //
-    if (esc == ESCAPE_NONE) {
-        return false;
+    if (isVeryStrangeLetterlikeCharacter()) {
+        return true;
     }
     
     //
@@ -660,17 +687,38 @@ bool WLCharacter::isStrangeLetterlikeCharacter() const {
     }
     
     //
-    // Using control character as letterlike is strange
+    // Assume that using other escapes is strange
+    //
+    
+    return true;
+}
+
+bool WLCharacter::isVeryStrangeLetterlikeCharacter() const {
+    auto esc = escape();
+    auto val = to_point();
+    
+    //
+    // Dump out if not a letterlike character
+    //
+    if (!isLetterlikeCharacter()) {
+        return false;
+    }
+    
+    //
+    //
+    //
+    if (esc == ESCAPE_LONGNAME) {
+        return Utils::isVeryStrangeLetterlikeLongName(CodePointToLongNameMap[val]);
+    }
+    
+    //
+    // Using control character as letterlike is very strange
     //
     if (isControlCharacter()) {
         return true;
     }
     
-    //
-    // Assume that using other escapes is strange
-    //
-    
-    return true;
+    return false;
 }
 
 bool WLCharacter::isStrangeSpaceCharacter() const {

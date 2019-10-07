@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Node.h"
+#include "WLCharacter.h"
 
 #include <string>
 #include <memory> // for unique_ptr
@@ -11,6 +12,8 @@ public:
     static int parseInteger(std::string s, int base);
     
     static bool isStrangeLetterlikeLongName(std::string s);
+    
+    static bool isVeryStrangeLetterlikeLongName(std::string s);
     
     static bool isUnsupportedLongName(std::string s);
     
@@ -35,6 +38,9 @@ public:
     // Warn if not contiguous
     //
     static void notContiguousWarning(Token Tok1, Token Tok2);
+    
+    static void strangeLetterlikeWarning(WLCharacter c);
+    
     
     static bool parseBooleanSymbol(const char *);
     

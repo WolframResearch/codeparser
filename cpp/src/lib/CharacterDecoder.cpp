@@ -532,6 +532,15 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
                 Issues.push_back(std::move(I));
             }
         }
+        //
+        // Should we report "\\[]" as unlikely?
+        //
+//        else if (unlikelyEscapeChecking) {
+//
+//            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNLIKELYESCAPESEQUENCE, std::string("Unlikely escape sequence: ``\\\\[") + LongNameStr + "``", SYNTAXISSUESEVERITY_REMARK, Source(CharacterStart-1, Loc), 0.33, {}));
+//
+//            Issues.push_back(std::move(I));
+//        }
         
         TheSourceManager->setSourceLocation(CharacterStart);
         TheSourceManager->setWLCharacterStart();
