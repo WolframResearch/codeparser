@@ -257,8 +257,12 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
                         //
                         auto queuedCharacterStart = CharacterStart+2;
                         
-                        for (auto b : test) {
-                            TheByteDecoder->append(b, queuedCharacterStart);
+                        if (test.isEndOfFile()) {
+                            append(test, queuedCharacterStart);
+                        } else {
+                            for (auto b : test) {
+                                TheByteDecoder->append(b, queuedCharacterStart);
+                            }
                         }
                     }
                     
@@ -499,19 +503,40 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
                 // Make the warning message a little more relevant
                 //
                 
-                auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
-                
-                auto suggestion = longNameSuggestion(LongNameStr);
-                
-                std::vector<CodeActionPtr> Actions;
-                
-                if (!suggestion.empty()) {
-                    Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with \\[" + suggestion + "]", Source(CharacterStart, Loc), "\\[" + suggestion + "]")));
+                if (curSource.isEndOfFile()) {
+                    
+                    //
+                    // Special case of \[A<EOF>
+                    //
+                    
+                    auto suggestion = longNameSuggestion(LongNameStr);
+                    
+                    std::vector<CodeActionPtr> Actions;
+                    
+                    if (!suggestion.empty()) {
+                        Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with \\[" + suggestion + "]", Source(CharacterStart, CharacterStart+1+LongNameStr.size()), "\\[" + suggestion + "]")));
+                    }
+                    
+                    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\[") + LongNameStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, CharacterStart+1+LongNameStr.size()), 1.0, std::move(Actions)));
+                    
+                    Issues.push_back(std::move(I));
+                    
+                } else {
+                    
+                    auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
+                    
+                    auto suggestion = longNameSuggestion(LongNameStr);
+                    
+                    std::vector<CodeActionPtr> Actions;
+                    
+                    if (!suggestion.empty()) {
+                        Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with \\[" + suggestion + "]", Source(CharacterStart, Loc), "\\[" + suggestion + "]")));
+                    }
+                    
+                    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\[") + LongNameStr + curSourceGraphicalStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 1.0, std::move(Actions)));
+                    
+                    Issues.push_back(std::move(I));
                 }
-                
-                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\[") + LongNameStr + curSourceGraphicalStr + "``", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 1.0, std::move(Actions)));
-                
-                Issues.push_back(std::move(I));
                 
             } else {
                 
@@ -522,14 +547,30 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
                 // Something like \[*
                 //
                 
-                auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
-                
-                std::vector<CodeActionPtr> Actions;
-                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with \\\\[" + LongNameStr + curSourceGraphicalStr, Source(CharacterStart, Loc), "\\\\[" + LongNameStr + curSourceGraphicalStr)));
-                
-                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\[") + LongNameStr + curSourceGraphicalStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 1.0, std::move(Actions)));
-                
-                Issues.push_back(std::move(I));
+                if (curSource.isEndOfFile()) {
+                    
+                    //
+                    // Special case of \[<EOF>
+                    //
+                    
+                    std::vector<CodeActionPtr> Actions;
+                    Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with \\\\[" + LongNameStr, Source(CharacterStart, CharacterStart+1+LongNameStr.size()), "\\\\[" + LongNameStr)));
+                    
+                    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\[") + LongNameStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, CharacterStart+1+LongNameStr.size()), 1.0, std::move(Actions)));
+                    
+                    Issues.push_back(std::move(I));
+                    
+                } else {
+                    
+                    auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
+                    
+                    std::vector<CodeActionPtr> Actions;
+                    Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with \\\\[" + LongNameStr + curSourceGraphicalStr, Source(CharacterStart, Loc), "\\\\[" + LongNameStr + curSourceGraphicalStr)));
+                    
+                    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\[") + LongNameStr + curSourceGraphicalStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 1.0, std::move(Actions)));
+                    
+                    Issues.push_back(std::move(I));
+                }
             }
         }
         //
@@ -550,8 +591,12 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
         for (size_t i = 0; i < LongNameStr.size(); i++) {
             TheByteDecoder->append(LongNameStr[i], CharacterStart+2+i);
         }
-        for (auto b : curSource) {
-            TheByteDecoder->append(b, Loc);
+        if (curSource.isEndOfFile()) {
+            append(curSource, Loc);
+        } else {
+            for (auto b : curSource) {
+                TheByteDecoder->append(b, Loc);
+            }
         }
         
         return WLCharacter('\\');
@@ -587,7 +632,7 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
                     Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with \\[" + suggestion + "]", Source(CharacterStart, Loc), "\\[" + suggestion + "]")));
                 }
                 
-                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\[") + LongNameStr + "]``", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 1.0, std::move(Actions)));
+                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\[") + LongNameStr + "]``.", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 1.0, std::move(Actions)));
                 
                 Issues.push_back(std::move(I));
                 
@@ -685,14 +730,30 @@ WLCharacter CharacterDecoder::handle4Hex(SourceCharacter curSourceIn, SourceLoca
             
             if ((policy & DISABLE_CHARACTERDECODINGISSUES) != DISABLE_CHARACTERDECODINGISSUES) {
                 
-                auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
-                
-                std::vector<CodeActionPtr> Actions;
-                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with \\\\:" + HexStr + curSourceGraphicalStr, Source(CharacterStart, Loc), "\\\\:" + HexStr + curSourceGraphicalStr)));
-                
-                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\:") + HexStr + curSourceGraphicalStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 1.0, std::move(Actions)));
-                
-                Issues.push_back(std::move(I));
+                if (curSource.isEndOfFile()) {
+                    
+                    //
+                    // Special case of \:<EOF>
+                    //
+                    
+                    std::vector<CodeActionPtr> Actions;
+                    Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with \\\\:" + HexStr, Source(CharacterStart, CharacterStart+1+HexStr.size()), "\\\\:" + HexStr)));
+                    
+                    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\:") + HexStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, CharacterStart+1+HexStr.size()), 1.0, std::move(Actions)));
+                    
+                    Issues.push_back(std::move(I));
+                    
+                } else {
+                    
+                    auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
+                    
+                    std::vector<CodeActionPtr> Actions;
+                    Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with \\\\:" + HexStr + curSourceGraphicalStr, Source(CharacterStart, Loc), "\\\\:" + HexStr + curSourceGraphicalStr)));
+                    
+                    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\:") + HexStr + curSourceGraphicalStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 1.0, std::move(Actions)));
+                    
+                    Issues.push_back(std::move(I));
+                }
             }
             
             TheSourceManager->setSourceLocation(CharacterStart);
@@ -703,8 +764,12 @@ WLCharacter CharacterDecoder::handle4Hex(SourceCharacter curSourceIn, SourceLoca
             for (size_t i = 0; i < HexStr.size(); i++) {
                 TheByteDecoder->append(HexStr[i], CharacterStart+2+i);
             }
-            for (auto b : curSource) {
-                TheByteDecoder->append(b, Loc);
+            if (curSource.isEndOfFile()) {
+                append(curSource, Loc);
+            } else {
+                for (auto b : curSource) {
+                    TheByteDecoder->append(b, Loc);
+                }
             }
             
             return WLCharacter('\\');
@@ -761,14 +826,30 @@ WLCharacter CharacterDecoder::handle2Hex(SourceCharacter curSourceIn, SourceLoca
             
             if ((policy & DISABLE_CHARACTERDECODINGISSUES) != DISABLE_CHARACTERDECODINGISSUES) {
                 
-                auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
-                
-                std::vector<CodeActionPtr> Actions;
-                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with \\\\." + HexStr + curSourceGraphicalStr, Source(CharacterStart, Loc), "\\\\." + HexStr + curSourceGraphicalStr)));
-                
-                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, "Unrecognized character: ``\\." + HexStr + curSourceGraphicalStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 1.0, std::move(Actions)));
-                
-                Issues.push_back(std::move(I));
+                if (curSource.isEndOfFile()) {
+                    
+                    //
+                    // Special case of \.<EOF>
+                    //
+                    
+                    std::vector<CodeActionPtr> Actions;
+                    Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with \\\\." + HexStr, Source(CharacterStart, CharacterStart+1+HexStr.size()), "\\\\." + HexStr)));
+                    
+                    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, "Unrecognized character: ``\\." + HexStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, CharacterStart+1+HexStr.size()), 1.0, std::move(Actions)));
+                    
+                    Issues.push_back(std::move(I));
+                    
+                } else {
+                    
+                    auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
+                    
+                    std::vector<CodeActionPtr> Actions;
+                    Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with \\\\." + HexStr + curSourceGraphicalStr, Source(CharacterStart, Loc), "\\\\." + HexStr + curSourceGraphicalStr)));
+                    
+                    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, "Unrecognized character: ``\\." + HexStr + curSourceGraphicalStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 1.0, std::move(Actions)));
+                    
+                    Issues.push_back(std::move(I));
+                }
             }
             
             TheSourceManager->setSourceLocation(CharacterStart);
@@ -779,8 +860,12 @@ WLCharacter CharacterDecoder::handle2Hex(SourceCharacter curSourceIn, SourceLoca
             for (size_t i = 0; i < HexStr.size(); i++) {
                 TheByteDecoder->append(HexStr[i], CharacterStart+2+i);
             }
-            for (auto b : curSource) {
-                TheByteDecoder->append(b, Loc);
+            if (curSource.isEndOfFile()) {
+                append(curSource, Loc);
+            } else {
+                for (auto b : curSource) {
+                    TheByteDecoder->append(b, Loc);
+                }
             }
             
             return WLCharacter('\\');
@@ -839,14 +924,30 @@ WLCharacter CharacterDecoder::handleOctal(SourceCharacter curSourceIn, SourceLoc
             
             if ((policy & DISABLE_CHARACTERDECODINGISSUES) != DISABLE_CHARACTERDECODINGISSUES) {
                 
-                auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
-                
-                std::vector<CodeActionPtr> Actions;
-                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with \\\\" + OctalStr + curSourceGraphicalStr, Source(CharacterStart, Loc), "\\\\" + OctalStr + curSourceGraphicalStr)));
-                
-                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\") + OctalStr + curSourceGraphicalStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 1.0, std::move(Actions)));
-                
-                Issues.push_back(std::move(I));
+                if (curSource.isEndOfFile()) {
+                    
+                    //
+                    // Special case of \0<EOF>
+                    //
+                    
+                    std::vector<CodeActionPtr> Actions;
+                    Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with \\\\" + OctalStr, Source(CharacterStart, CharacterStart+OctalStr.size()), "\\\\" + OctalStr)));
+                    
+                    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\") + OctalStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, CharacterStart+OctalStr.size()), 1.0, std::move(Actions)));
+                    
+                    Issues.push_back(std::move(I));
+                    
+                } else {
+                    
+                    auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
+                    
+                    std::vector<CodeActionPtr> Actions;
+                    Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with \\\\" + OctalStr + curSourceGraphicalStr, Source(CharacterStart, Loc), "\\\\" + OctalStr + curSourceGraphicalStr)));
+                    
+                    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\") + OctalStr + curSourceGraphicalStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 1.0, std::move(Actions)));
+                    
+                    Issues.push_back(std::move(I));
+                }
             }
             
             TheSourceManager->setSourceLocation(CharacterStart);
@@ -856,8 +957,12 @@ WLCharacter CharacterDecoder::handleOctal(SourceCharacter curSourceIn, SourceLoc
             for (size_t i = 0; i < OctalStr.size(); i++) {
                 TheByteDecoder->append(OctalStr[i], CharacterStart+1+i);
             }
-            for (auto b : curSource) {
-                TheByteDecoder->append(b, Loc);
+            if (curSource.isEndOfFile()) {
+                append(curSource, Loc);
+            } else {
+                for (auto b : curSource) {
+                    TheByteDecoder->append(b, Loc);
+                }
             }
             
             return WLCharacter('\\');
@@ -914,14 +1019,30 @@ WLCharacter CharacterDecoder::handle6Hex(SourceCharacter curSourceIn, SourceLoca
             
             if ((policy & DISABLE_CHARACTERDECODINGISSUES) != DISABLE_CHARACTERDECODINGISSUES) {
                 
-                auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
-                
-                std::vector<CodeActionPtr> Actions;
-                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with \\\\|" + HexStr + curSourceGraphicalStr, Source(CharacterStart, Loc), "\\\\|" + HexStr + curSourceGraphicalStr)));
-                
-                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\|") + HexStr + curSourceGraphicalStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 1.0, std::move(Actions)));
-                
-                Issues.push_back(std::move(I));
+                if (curSource.isEndOfFile()) {
+                    
+                    //
+                    // Special case of \|<EOF>
+                    //
+                    
+                    std::vector<CodeActionPtr> Actions;
+                    Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with \\\\|" + HexStr, Source(CharacterStart, CharacterStart+1+HexStr.size()), "\\\\|" + HexStr)));
+                    
+                    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\|") + HexStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, CharacterStart+1+HexStr.size()), 1.0, std::move(Actions)));
+                    
+                    Issues.push_back(std::move(I));
+                    
+                } else {
+                    
+                    auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
+                    
+                    std::vector<CodeActionPtr> Actions;
+                    Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with \\\\|" + HexStr + curSourceGraphicalStr, Source(CharacterStart, Loc), "\\\\|" + HexStr + curSourceGraphicalStr)));
+                    
+                    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\|") + HexStr + curSourceGraphicalStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(CharacterStart, Loc), 1.0, std::move(Actions)));
+                    
+                    Issues.push_back(std::move(I));
+                }
             }
             
             TheSourceManager->setSourceLocation(CharacterStart);
@@ -932,8 +1053,12 @@ WLCharacter CharacterDecoder::handle6Hex(SourceCharacter curSourceIn, SourceLoca
             for (size_t i = 0; i < HexStr.size(); i++) {
                 TheByteDecoder->append(HexStr[i], CharacterStart+2+i);
             }
-            for (auto b : curSource) {
-                TheByteDecoder->append(b, Loc);
+            if (curSource.isEndOfFile()) {
+                append(curSource, Loc);
+            } else {
+                for (auto b : curSource) {
+                    TheByteDecoder->append(b, Loc);
+                }
             }
             
             return WLCharacter('\\');

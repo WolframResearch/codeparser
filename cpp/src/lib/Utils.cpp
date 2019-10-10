@@ -229,6 +229,8 @@ void Utils::strangeLetterlikeWarning(WLCharacter c) {
         auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange character in symbol: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
         
         TheTokenizer->addIssue(std::move(I));
+        
+        return;
     }
     
     auto Src = TheSourceManager->getWLCharacterSource();

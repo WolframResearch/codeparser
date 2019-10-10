@@ -47,7 +47,7 @@ TEST_F(TokenizerTest, Bug1) {
     
     auto iss = std::stringstream("\\.GG");
     
-    TheParserSession->init(nullptr, iss, SOURCESTYLE_LINECOL, false);
+    TheParserSession->init(nullptr, iss, SOURCESTYLE_LINECOL, false, false);
     
     SUCCEED();
 }
@@ -55,11 +55,11 @@ TEST_F(TokenizerTest, Bug1) {
 //
 // This used to assert
 //
-TEST_F(TokenizerTest, Bug3) {
+TEST_F(TokenizerTest, Bug2) {
     
     auto iss = std::stringstream("<<<");
     
-    TheParserSession->init(nullptr, iss, SOURCESTYLE_LINECOL, false);
+    TheParserSession->init(nullptr, iss, SOURCESTYLE_LINECOL, false, false);
     
     TokenizerContext Ctxt;
     
@@ -71,11 +71,20 @@ TEST_F(TokenizerTest, Bug3) {
 //
 // This used to assert
 //
-TEST_F(TokenizerTest, Bug2) {
+TEST_F(TokenizerTest, Bug3) {
     
     auto iss = std::stringstream("\\\r");
     
-    TheParserSession->init(nullptr, iss, SOURCESTYLE_LINECOL, false);
+    TheParserSession->init(nullptr, iss, SOURCESTYLE_LINECOL, false, false);
+    
+    SUCCEED();
+}
+
+TEST_F(TokenizerTest, Bug4) {
+    
+    auto iss = std::stringstream("\\[");
+    
+    TheParserSession->init(nullptr, iss, SOURCESTYLE_LINECOL, false, false);
     
     SUCCEED();
 }

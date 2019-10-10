@@ -143,6 +143,9 @@ Synthesized
 Comment
 Metadata
 
+Intra
+
+
 (* node symbols *)
 LeafNode
 BoxNode

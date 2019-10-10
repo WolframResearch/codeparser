@@ -575,6 +575,23 @@ SourceCharacter::SourceCharacter_iterator::SourceCharacter_iterator(int32_t val)
     ByteEncoder::encodeBytes(arr, val);
 }
 
+SourceCharacter::SourceCharacter_iterator SourceCharacter::begin() {
+    assert(!isEndOfFile());
+    auto it = SourceCharacter_iterator(valBits);
+    it.idx = 0;
+    return it;
+}
+
+SourceCharacter::SourceCharacter_iterator SourceCharacter::end() {
+    assert(!isEndOfFile());
+    auto it = SourceCharacter_iterator(valBits);
+    //
+    // 1 past
+    //
+    it.idx = it.size;
+    return it;
+}
+
 std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
     
     if (c.isEndOfFile()) {

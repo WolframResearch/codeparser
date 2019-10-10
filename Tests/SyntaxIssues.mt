@@ -360,7 +360,7 @@ TestMatch[
 	FirstCase[ConcreteParseString["0..", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxAmbiguity", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["Space", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-H5C3T5"
 ]
@@ -369,7 +369,7 @@ TestMatch[
 	FirstCase[ConcreteParseString["1.2.3", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxAmbiguity", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["Space", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-T2M0V0"
 ]
@@ -378,7 +378,7 @@ TestMatch[
 	FirstCase[ConcreteParseString["_...", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxAmbiguity", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["Space", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-U2Z6B3"
 ]
@@ -387,7 +387,7 @@ TestMatch[
 	FirstCase[ConcreteParseString["_.0", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxAmbiguity", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["Space", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-V2H2D5"
 ]

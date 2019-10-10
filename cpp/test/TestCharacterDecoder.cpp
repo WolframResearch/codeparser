@@ -39,7 +39,7 @@ TEST_F(CharacterDecoderTest, Basic) {
     
     auto iss = std::stringstream("1+2");
     
-    TheParserSession->init(nullptr, iss, SOURCESTYLE_LINECOL, false);
+    TheParserSession->init(nullptr, iss, SOURCESTYLE_LINECOL, false, false);
     
     auto T = TheTokenizer->currentToken();
     EXPECT_EQ(T, Token(TOKEN_INTEGER, "1", Source(SourceLocation(LineCol(1, 1)))));

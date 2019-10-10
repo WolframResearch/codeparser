@@ -123,6 +123,14 @@ Which[
 
 
 (*
+Also handle Position Sources
+*)
+SourceMemberQ[{srcInts___Integer}, cursorPos:{_Integer...}] := MatchQ[cursorPos, {srcInts, ___}]
+
+
+
+
+(*
 
 contiguousQ
 

@@ -409,6 +409,11 @@ Module[{handledChildren, aggregatedChildren},
     {___, LeafNode[Token`CloseCurly, _, _]}, SyntaxErrorNode[SyntaxError`ExpectedPossibleExpression, handledChildren, <|Source -> Append[pos, 1]|>],
 
     (*
+    Unrecognized LongName
+    *)
+    {LeafNode[Token`Other, "\\[", _], _, LeafNode[Token`CloseSquare, "]", _]}, BoxNode[RowBox, {handledChildren}, <|Source -> pos|>], 
+
+    (*
     the second arg is a box, so we know it is implicit Times
     *)
     {_, LeafNode[Symbol | Integer | Slot | String | Real | Out | Blank | BlankSequence | BlankNullSequence, _, _] |
@@ -817,7 +822,7 @@ parseBox[s_String /; StringMatchQ[s, "'"~~___], pos_] := LeafNode[Token`Boxes`Mu
 
 
 parseBox[str_String, pos_, OptionsPattern[]] :=
-Module[{parsed, data, issues, stringifyNextTokenSymbol},
+Module[{parsed, data, issues, stringifyNextTokenSymbol, oldLeafSrc},
 
     stringifyNextTokenSymbol = OptionValue["StringifyNextTokenSymbol"];
 
@@ -827,50 +832,54 @@ Module[{parsed, data, issues, stringifyNextTokenSymbol},
     Source is filled in here
   *)
   data = parsed[[3]];
+  
+  oldLeafSrc = data[Source];
+
   data[Source] = pos;
 
   issues = data[SyntaxIssues];
-  issues = replacePosition[#, pos]& /@ issues;
+  issues = replacePosition[#, pos, oldLeafSrc]& /@ issues;
   data[SyntaxIssues] = issues;
 
   parsed[[3]] = data;
   parsed
 ]
 
-replacePosition[SyntaxIssue[tag_, msg_, severity_, dataIn_], pos_] :=
-Module[{data, actions},
+replacePosition[SyntaxIssue[tag_, msg_, severity_, dataIn_], pos_, leafSrc_] :=
+Module[{data, actions, newSrc, oldSyntaxIssueSrc},
+
     data = dataIn;
-    data[Source] = pos;
+
+    oldSyntaxIssueSrc = data[Source];
+
+    newSrc = pos;
+
+    If[!(oldSyntaxIssueSrc[[1,2]] == leafSrc[[1,2]] && oldSyntaxIssueSrc[[2,2]] == leafSrc[[2,2]]),
+        (* this is some sub-part of the leaf *)
+        newSrc = newSrc ~Join~ { Intra[ oldSyntaxIssueSrc[[1,2]], oldSyntaxIssueSrc[[2,2]] ] };
+    ];
+
+    data[Source] = newSrc;
     actions = data[CodeActions];
     If[!empty[actions],
-        actions = replacePosition[#, pos]& /@ actions;
+        actions = replacePosition[#, newSrc]& /@ actions;
         data[CodeActions] = actions
     ];
     SyntaxIssue[tag, msg, severity, data]
 ]
 
-replacePosition[CodeAction[label_, command_, dataIn_], pos_] :=
+replacePosition[CodeAction[label_, command_, dataIn_], newSrc_] :=
 Module[{data, src},
     data = dataIn;
+
     src = data[Source];
     (*src = pos ~Join~ {LineColumn[src]};*)
-    src = pos;
+    src = newSrc;
     data[Source] = src;
     CodeAction[label, command, data]
 ]
 
 parseBox[args___] := Failure["InternalUnhandled", <|"Function"->parseBox, "Arguments"->HoldForm[{args}]|>]
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -734,7 +734,7 @@ Token Tokenizer::handleSymbol(TokenizerContext Ctxt) {
             
             auto Src = TheSourceManager->getWLCharacterSource();
             
-            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.\n``#`` is not documented to allow **`** characters.", SYNTAXISSUESEVERITY_REMARK, Src, 0.33, {}));
+            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "``#`` is not documented to allow **`** characters.", SYNTAXISSUESEVERITY_REMARK, Src, 0.33, {}));
             
             Issues.push_back(std::move(I));
         }
@@ -770,7 +770,7 @@ void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
             
             auto Src = TheSourceManager->getWLCharacterSource();
             
-            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.\n``#`` is not documented to allow ``$`` characters.", SYNTAXISSUESEVERITY_REMARK, Src, 0.33, {}));
+            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "``#`` is not documented to allow ``$`` characters.", SYNTAXISSUESEVERITY_REMARK, Src, 0.33, {}));
             
             Issues.push_back(std::move(I));
         }
@@ -804,7 +804,7 @@ void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
                     
                     auto Src = TheSourceManager->getWLCharacterSource();
                     
-                    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.\n``#`` is not documented to allow ``$`` characters.", SYNTAXISSUESEVERITY_REMARK, Src, 0.33, {}));
+                    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "``#`` is not documented to allow ``$`` characters.", SYNTAXISSUESEVERITY_REMARK, Src, 0.33, {}));
                     
                     Issues.push_back(std::move(I));
                 }
@@ -1607,7 +1607,7 @@ int Tokenizer::handleFractionalPart(TokenizerContext Ctxt, int base) {
         std::vector<CodeActionPtr> Actions;
         Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(DotLoc1), " ")));
         
-        auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SPACE, "Suspicious syntax", SYNTAXISSUESEVERITY_REMARK, Source(DotLoc1), 0.90, std::move(Actions)));
+        auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SPACE, "Suspicious syntax.", SYNTAXISSUESEVERITY_REMARK, Source(DotLoc1), 0.90, std::move(Actions)));
         
         Issues.push_back(std::move(I));
         
@@ -1660,7 +1660,7 @@ int Tokenizer::handleFractionalPart(TokenizerContext Ctxt, int base) {
         std::vector<CodeActionPtr> Actions;
         Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(Loc2), " ")));
         
-        auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SPACE, "Suspicious syntax", SYNTAXISSUESEVERITY_ERROR, Source(Loc2), 0.99, std::move(Actions)));
+        auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SPACE, "Suspicious syntax.", SYNTAXISSUESEVERITY_ERROR, Source(Loc2), 0.99, std::move(Actions)));
         
         Issues.push_back(std::move(I));
     }
@@ -2149,7 +2149,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                         std::vector<CodeActionPtr> Actions;
                         Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(DotLoc), " ")));
                         
-                        auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SPACE, "Suspicious syntax", SYNTAXISSUESEVERITY_REMARK, Source(DotLoc), 0.95, std::move(Actions)));
+                        auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SPACE, "Suspicious syntax.", SYNTAXISSUESEVERITY_REMARK, Source(DotLoc), 0.95, std::move(Actions)));
                         
                         Issues.push_back(std::move(I));
                         
@@ -2188,7 +2188,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                             std::vector<CodeActionPtr> Actions;
                             Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(DotLoc), " ")));
                             
-                            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SPACE, "Suspicious syntax", SYNTAXISSUESEVERITY_WARNING, Source(DotLoc), 0.90, std::move(Actions)));
+                            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SPACE, "Suspicious syntax.", SYNTAXISSUESEVERITY_WARNING, Source(DotLoc), 0.90, std::move(Actions)));
                             
                             Issues.push_back(std::move(I));
                         }
@@ -2545,7 +2545,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                 
                 handleString(Ctxt);
                 
-                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "This syntax is not documented.\n``#`` is not documented to allow ``\"`` characters.", SYNTAXISSUESEVERITY_REMARK, Source(Loc), 0.33, {}));
+                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "``#`` is not documented to allow ``\"`` characters.", SYNTAXISSUESEVERITY_REMARK, Source(Loc), 0.33, {}));
                 
                 Issues.push_back(std::move(I));
                 

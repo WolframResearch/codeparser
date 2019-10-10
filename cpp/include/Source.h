@@ -197,20 +197,9 @@ struct SourceCharacter {
         }
     };
     
-    SourceCharacter_iterator begin() {
-        auto it = SourceCharacter_iterator(valBits);
-        it.idx = 0;
-        return it;
-    }
+    SourceCharacter_iterator begin();
     
-    SourceCharacter_iterator end() {
-        auto it = SourceCharacter_iterator(valBits);
-        //
-        // 1 past
-        //
-        it.idx = it.size;
-        return it;
-    }
+    SourceCharacter_iterator end();
 };
 
 std::ostream& operator<<(std::ostream& stream, const SourceCharacter);

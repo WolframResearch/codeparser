@@ -39,7 +39,7 @@ TEST_F(ParseletTest, Bug1) {
     
     auto iss = std::stringstream("a /: b := c");
     
-    TheParserSession->init(nullptr, iss, SOURCESTYLE_LINECOL, false);
+    TheParserSession->init(nullptr, iss, SOURCESTYLE_LINECOL, false, false);
     
     ParserContext Ctxt;
     
@@ -57,7 +57,7 @@ TEST_F(ParseletTest, Bug2) {
     
     auto iss = std::stringstream("a<b ");
     
-    TheParserSession->init(nullptr, iss, SOURCESTYLE_LINECOL, false);
+    TheParserSession->init(nullptr, iss, SOURCESTYLE_LINECOL, false, false);
     
     ParserContext Ctxt;
     
@@ -73,7 +73,7 @@ TEST_F(ParseletTest, Bug3) {
     
     auto iss = std::stringstream("a\\[Integral]b\\[Integral]c ");
     
-    TheParserSession->init(nullptr, iss, SOURCESTYLE_LINECOL, false);
+    TheParserSession->init(nullptr, iss, SOURCESTYLE_LINECOL, false, false);
     
     ParserContext Ctxt;
     
@@ -89,7 +89,7 @@ TEST_F(ParseletTest, Bug4) {
     
     auto iss = std::stringstream("\\[RawLeftBrace]*\\[RawRightBrace]");
     
-    TheParserSession->init(nullptr, iss, SOURCESTYLE_LINECOL, false);
+    TheParserSession->init(nullptr, iss, SOURCESTYLE_LINECOL, false, false);
     
     ParserContext Ctxt;
     

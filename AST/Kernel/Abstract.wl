@@ -150,7 +150,7 @@ abstract[LeafNode[OptionalDefault, _, data_]] := CallNode[ToNode[Optional], {Cal
 
 abstract[LeafNode[Token`Error`UnhandledCharacter, str_, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`UnhandledCharacter, str, KeyTake[data, keysToTake]]
 
-abstract[LeafNode[Token`Fake`ImplicitNull, _, data_]] := LeafNode[Symbol, "Null", KeyTake[data, keysToTake] ~Join~ <|AbstractSyntaxIssues->{SyntaxIssue["Comma", "Extra comma.", "Error", <| data, CodeActions->{CodeAction["Delete Comma", DeleteNode, <| Source->data[Source] |>]}, ConfidenceLevel -> 1.0 |>]}|>]
+abstract[LeafNode[Token`Fake`ImplicitNull, _, data_]] := LeafNode[Symbol, "Null", KeyTake[data, keysToTake] ~Join~ <|AbstractSyntaxIssues->{SyntaxIssue["Comma", "Extra ``,``.", "Error", <| data, CodeActions->{CodeAction["Delete ``,``", DeleteNode, <| Source->data[Source] |>]}, ConfidenceLevel -> 1.0 |>]}|>]
 
 abstract[LeafNode[Token`Error`ExpectedOperand, str_, data_]] :=
 	AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, str, data]
@@ -780,7 +780,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		CallNode[LeafNode[Symbol, "EndPackage" | "End" | "EndStaticAnalysisIgnore" | "AST`EndStaticAnalysisIgnore", _], {}, _],
 			currentOperator = operatorStack[[-1]];
 			If[!MatchQ[currentOperator, matchingOperatorPatterns[x]],
-				AppendTo[issues, SyntaxIssue["Package", "There are unbalanced package directives.", "Error", <| x[[3]], ConfidenceLevel -> 1.0 |> ]];
+				AppendTo[issues, SyntaxIssue["Package", "There are unbalanced Package directives.", "Error", <| x[[3]], ConfidenceLevel -> 1.0 |> ]];
 				Throw[{list, issues}];
 			];
 			operatorStack = Drop[operatorStack, -1];
@@ -799,7 +799,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "EndPackage" | "End" | "EndStaticAnalysisIgnore" | "AST`EndStaticAnalysisIgnore", _], {}, _], LeafNode[Symbol, "Null", _]}, _],
    		currentOperator = operatorStack[[-1]];
 			If[!MatchQ[currentOperator, matchingOperatorPatterns[x[[2, 1]]]],
-				AppendTo[issues, SyntaxIssue["Package", "There are unbalanced package directives.", "Error", <| x[[2, 1, 3]], ConfidenceLevel -> 1.0 |>]];
+				AppendTo[issues, SyntaxIssue["Package", "There are unbalanced Package directives.", "Error", <| x[[2, 1, 3]], ConfidenceLevel -> 1.0 |>]];
 				Throw[{list, issues}];
 			];
 			operatorStack = Drop[operatorStack, -1];
@@ -836,11 +836,11 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
    {i, 1, Length[list]}
 	];
 	If[operatorStack =!= {None},
-		AppendTo[issues, SyntaxIssue["Package", "There are unbalanced package directives.", "Error", <| list[[1, 3]], ConfidenceLevel -> 1.0 |>]];
+		AppendTo[issues, SyntaxIssue["Package", "There are unbalanced Package directives.", "Error", <| list[[1, 3]], ConfidenceLevel -> 1.0 |>]];
 		Throw[{list, issues}];
 	];
 	If[Length[nodeListStack] != 1,
-		AppendTo[issues, SyntaxIssue["Package", "There are unbalanced package directives.", "Error", <| list[[1, 3]], ConfidenceLevel -> 1.0 |>]];
+		AppendTo[issues, SyntaxIssue["Package", "There are unbalanced Package directives.", "Error", <| list[[1, 3]], ConfidenceLevel -> 1.0 |>]];
 		Throw[{list, issues}];
 	];
 
@@ -1232,7 +1232,7 @@ Module[{head, data, groupData, issues},
 
     issues = Lookup[data, AbstractSyntaxIssues, {}];
 
-    AppendTo[issues, SyntaxIssue["StrangeCall", "Strange Part call.", "Error", <|Source->groupData[Source], ConfidenceLevel -> 1.0|>]];
+    AppendTo[issues, SyntaxIssue["StrangeCall", "Strange ``Part`` call.", "Error", <|Source->groupData[Source], ConfidenceLevel -> 1.0|>]];
 
     AssociateTo[data, AbstractSyntaxIssues -> issues];
 
@@ -1253,7 +1253,7 @@ Module[{head, data, groupData, issues},
 
     issues = Lookup[data, AbstractSyntaxIssues, {}];
 
-    AppendTo[issues, SyntaxIssue["StrangeCall", "Strange Part call.", "Error", <|Source->groupData[Source], ConfidenceLevel -> 1.0|>]];
+    AppendTo[issues, SyntaxIssue["StrangeCall", "Strange ``Part`` call.", "Error", <|Source->groupData[Source], ConfidenceLevel -> 1.0|>]];
 
     AssociateTo[data, AbstractSyntaxIssues -> issues];
 
@@ -1386,15 +1386,14 @@ Removes all commas
 
 Fills in Nulls and gives SyntaxIssues for e.g. {1,,2}
 *)
-abstractGroupNode[GroupNode[tag_, { errs:___SyntaxErrorNode, InfixNode[Comma, children_, _] }, dataIn_]] :=
+abstractGroupNode[GroupNode[tag_, children_, dataIn_]] :=
 Module[{abstractedChildren, issues, data},
+	
 	data = dataIn;
-
-	abstractedChildren = {};
 
 	issues = {};
 
-	abstractedChildren = abstract /@ ( {errs} ~Join~ children[[;;;;2]] );
+	abstractedChildren = abstract /@ Flatten[selectChildren /@ children];
 
    If[issues != {},
    	issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
@@ -1404,30 +1403,13 @@ Module[{abstractedChildren, issues, data},
    CallNode[ToNode[tag], abstractedChildren, data]
 ]
 
-abstractGroupNode[GroupNode[tag_, { errs:___SyntaxErrorNode, child_ }, dataIn_]] :=
-Module[{abstractedChildren, issues, data},
-	data = dataIn;
+selectChildren[InfixNode[Comma, children_, _]] := children[[;;;;2]]
 
-	abstractedChildren = {};
+selectChildren[n_] := n
 
-	issues = {};
 
-	abstractedChildren = abstract /@ { errs, child };
 
-   If[issues != {},
-   	issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
-   	AssociateTo[data, AbstractSyntaxIssues -> issues];
-   ];
-   
-   CallNode[ToNode[tag], abstractedChildren, data]
-]
 
-abstractGroupNode[GroupNode[tag_, { }, dataIn_]] :=
-Module[{data},
-	data = dataIn;
-   
-   CallNode[ToNode[tag], {}, data]
-]
 
 
 
