@@ -383,7 +383,7 @@ std::vector<NodePtr> parseExpressions() {
             
             auto peek = TheParser->currentToken();
             
-            if (peek.Tok == TOKEN_ENDOFFILE) {
+            if (peek.Tok() == TOKEN_ENDOFFILE) {
                 break;
             }
             
@@ -392,6 +392,15 @@ std::vector<NodePtr> parseExpressions() {
                 exprs.push_back(LeafNodePtr(new LeafNode(std::move(peek))));
                 
                 TheParser->nextToken(Ctxt);
+                
+                continue;
+            }
+            
+            if (!TheParser->isPossibleBeginningOfExpression(Ctxt)) {
+                
+                auto NotPossible = TheParser->handleNotPossible(peek, Ctxt, nullptr);
+                
+                exprs.push_back(std::move(NotPossible));
                 
                 continue;
             }
@@ -464,7 +473,7 @@ std::vector<NodePtr> tokenize() {
         
         auto Tok = TheTokenizer->currentToken();
         
-        if (Tok.Tok == TOKEN_ENDOFFILE) {
+        if (Tok.Tok() == TOKEN_ENDOFFILE) {
             break;
         }
         
@@ -498,8 +507,8 @@ NodePtr parseLeaf() {
     //
     // Also handle TOKEN_ERROR_EMPTYSTRING here because we want << to return TOKEN_LESSLESS, not TOKEN_OTHER
     //
-    if (!(Tok.Tok == TOKEN_ENDOFFILE ||
-          Tok.Tok == TOKEN_ERROR_EMPTYSTRING)) {
+    if (!(Tok.Tok() == TOKEN_ENDOFFILE ||
+          Tok.Tok() == TOKEN_ERROR_EMPTYSTRING)) {
         
         auto AccumTok = N->getToken();
         auto AccumStr = AccumTok.Str;
@@ -511,8 +520,8 @@ NodePtr parseLeaf() {
         
         Tok = TheParser->currentToken();
         
-        while (!(Tok.Tok == TOKEN_ENDOFFILE ||
-                 Tok.Tok == TOKEN_ERROR_EMPTYSTRING)) {
+        while (!(Tok.Tok() == TOKEN_ENDOFFILE ||
+                 Tok.Tok() == TOKEN_ERROR_EMPTYSTRING)) {
             
             auto Str = Tok.Str;
             AccumStr = AccumStr + Str;

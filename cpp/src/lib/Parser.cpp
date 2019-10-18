@@ -9,7 +9,7 @@
 
 #include <algorithm> // for generate with GCC and MSVC
 
-Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), contextSensitivePrefixParselets(), contextSensitiveInfixParselets(), expectedPossibleExpressionErrorParselet(), tokenQueue(), Issues(), currentAbortQ(nullptr), implicitTimesEnabled(true) {
+Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), contextSensitivePrefixParselets(), contextSensitiveInfixParselets(), tokenQueue(), Issues(), currentAbortQ(nullptr) {
     
     //
     // Setup all of the parselet lists with nullptr unique_ptrs
@@ -76,7 +76,7 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
     registerInfixParselet(TOKEN_LONGNAME_THEREFORE, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_THEREFORE, ASSOCIATIVITY_RIGHT)));
     registerInfixParselet(TOKEN_LONGNAME_RIGHTTEE, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_RIGHTTEE, ASSOCIATIVITY_RIGHT)));
     registerInfixParselet(TOKEN_LONGNAME_LEFTTEE, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_LEFTTEE, ASSOCIATIVITY_LEFT)));
-    registerInfixParselet(TOKEN_MINUS, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_BINARY_MINUS, ASSOCIATIVITY_LEFT)));
+    registerInfixParselet(TOKEN_MINUS, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_INFIX_MINUS, ASSOCIATIVITY_LEFT)));
     registerInfixParselet(TOKEN_SLASH, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_SLASH, ASSOCIATIVITY_LEFT)));
     registerInfixParselet(TOKEN_CARET, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_CARET, ASSOCIATIVITY_RIGHT)));
     registerInfixParselet(TOKEN_CARETEQUAL, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_CARETEQUAL, ASSOCIATIVITY_RIGHT)));
@@ -306,7 +306,7 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
     registerInfixParselet(TOKEN_LONGNAME_NESTEDGREATERGREATER, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NESTEDGREATERGREATER)));
     registerInfixParselet(TOKEN_LONGNAME_NOTCONGRUENT, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTCONGRUENT)));
     
-    registerInfixParselet(TOKEN_FAKE_IMPLICITTIMES, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_FAKE_IMPLICITTIMES)));
+    registerInfixParselet(TOKEN_FAKE_IMPLICITTIMES, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_STAR)));
     
     
     //
@@ -425,9 +425,6 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
     registerInfixParselet(TOKEN_LONGNAME_VECTORGREATEREQUAL, std::unique_ptr<InfixParselet>(new VectorInequalityParselet()));
     registerInfixParselet(TOKEN_LONGNAME_VECTORLESS, std::unique_ptr<InfixParselet>(new VectorInequalityParselet()));
     registerInfixParselet(TOKEN_LONGNAME_VECTORLESSEQUAL, std::unique_ptr<InfixParselet>(new VectorInequalityParselet()));
-    
-    // Error handling
-    expectedPossibleExpressionErrorParselet = std::unique_ptr<ExpectedPossibleExpressionErrorParselet>(new ExpectedPossibleExpressionErrorParselet());
 }
 
 Parser::~Parser() {}
@@ -439,8 +436,6 @@ void Parser::init(std::function<bool ()> AbortQ, const std::deque<Token>& queued
     Issues.clear();
     
     currentAbortQ = AbortQ;
-    
-    implicitTimesEnabled = true;
 }
 
 void Parser::deinit() {
@@ -516,7 +511,7 @@ void Parser::nextToken(ParserContext Ctxt) {
     TheTokenizer->nextToken(tokenizerCtxt);
 }
 
-Token Parser::currentToken() {
+Token Parser::currentToken() const {
     
     if (!tokenQueue.empty()) {
         
@@ -554,13 +549,15 @@ void Parser::addIssue(std::unique_ptr<Issue> I) {
     Issues.push_back(std::move(I));
 }
 
-bool Parser::isPossibleBeginningOfExpression(Token& Tok, ParserContext CtxtIn) const {
+bool Parser::isPossibleBeginningOfExpression(ParserContext CtxtIn) const {
     
-    if (isError(Tok.Tok)) {
+    const auto& Tok = currentToken();
+    
+    if (isError(Tok.Tok())) {
         return false;
     }
     
-    if (Tok.Tok == TOKEN_ENDOFFILE) {
+    if (Tok.Tok() == TOKEN_ENDOFFILE) {
         return false;
     }
     
@@ -571,11 +568,11 @@ bool Parser::isPossibleBeginningOfExpression(Token& Tok, ParserContext CtxtIn) c
     //
     // StartOfLine parselet?
     //
-    if (CtxtIn.getGroupDepth() == 0) {
-        if (Tok.Src.style == SOURCESTYLE_LINECOL &&
-            Tok.Src.lineCol.start.Col == 1) {
-            auto& S = startOfLineParselets[Tok.Tok];
-            if (S != nullptr) {
+    auto& S = startOfLineParselets[Tok.Tok()];
+    if (S != nullptr) {
+        if (CtxtIn.getGroupDepth() == 0) {
+            if (Tok.Src.style == SOURCESTYLE_LINECOL &&
+                Tok.Src.lineCol.start.Col == 1) {
                 return true;
             }
         }
@@ -587,7 +584,7 @@ bool Parser::isPossibleBeginningOfExpression(Token& Tok, ParserContext CtxtIn) c
     // We want to test if prefix here because a token may be both prefix and infix, so must return true.
     // But if we removed this prefix test first, then we would hit the test for infix first, and then mistakenly return false.
     //
-    auto& P = prefixParselets[Tok.Tok];
+    auto& P = prefixParselets[Tok.Tok()];
     if (P != nullptr) {
         return true;
     }
@@ -595,7 +592,7 @@ bool Parser::isPossibleBeginningOfExpression(Token& Tok, ParserContext CtxtIn) c
     //
     // Infix parselet?
     //
-    auto& I = infixParselets[Tok.Tok];
+    auto& I = infixParselets[Tok.Tok()];
     if (I != nullptr) {
         return false;
     }
@@ -603,12 +600,12 @@ bool Parser::isPossibleBeginningOfExpression(Token& Tok, ParserContext CtxtIn) c
     //
     // TODO: when closers are registered in parser, then check that
     //
-    if (isCloser(Tok.Tok)) {
+    if (isCloser(Tok.Tok())) {
         return false;
     }
     
     //
-    // Literal or Unhandled
+    // Literal or Unhandled leaf
     //
     
     return true;
@@ -640,52 +637,66 @@ const std::unique_ptr<ContextSensitiveInfixParselet>& Parser::findContextSensiti
 
 
 
-Precedence Parser::getCurrentTokenPrecedence(Token& TokIn, ParserContext Ctxt) {
+Precedence Parser::getTokenPrecedence(Token& TokIn, ParserContext Ctxt, bool considerPrefix, bool *implicitTimes) const {
     
-    assert(TokIn.Tok != TOKEN_UNKNOWN);
-    assert(TokIn.Tok != TOKEN_WHITESPACE);
+    assert(TokIn.Tok() != TOKEN_UNKNOWN);
+    assert(TokIn.Tok() != TOKEN_WHITESPACE);
     // allow top-level newlines
-    assert(TokIn.Tok != TOKEN_NEWLINE || Ctxt.getGroupDepth() == 0);
-    assert(TokIn.Tok != TOKEN_COMMENT);
-    assert(TokIn.Tok != TOKEN_LINECONTINUATION);
+    assert(TokIn.Tok() != TOKEN_NEWLINE || Ctxt.getGroupDepth() == 0);
+    assert(TokIn.Tok() != TOKEN_COMMENT);
+    assert(TokIn.Tok() != TOKEN_LINECONTINUATION);
     
-    if (isError(TokIn.Tok)) {
+    if (implicitTimes != nullptr) {
+        *implicitTimes = false;
+    }
+    
+    if (isError(TokIn.Tok())) {
         return PRECEDENCE_LOWEST;
     }
     
-    if (TokIn.Tok == TOKEN_ENDOFFILE) {
+    if (TokIn.Tok() == TOKEN_ENDOFFILE) {
         return PRECEDENCE_LOWEST;
     }
     
     //
     // TODO: review when closers have their own parselets
     //
-    if (isCloser(TokIn.Tok)) {
+    if (isCloser(TokIn.Tok())) {
         return PRECEDENCE_LOWEST;
     }
     
-    auto& Infix = infixParselets[TokIn.Tok];
+    if (considerPrefix) {
+        
+        auto& P = prefixParselets[TokIn.Tok()];
+        
+        if (P != nullptr) {
+            
+            //
+            // There is an ambiguity with tokens that are both prefix and infix, e.g.
+            // +  -  ;;  !  ++  --
+            //
+            // Given the input  ;;;;
+            // when parsing the second  ;;  , we could get here because ;; is registered as infix
+            // But this particular ;; is a new expression, it is not actually infix
+            //
+            // Given the input  1+2
+            // when parsing the +, make sure to treat it as infix and NOT prefix
+            //
+            // Solution is to handle infix parselets where needed, i.e., SemiSemiParselet
+            //
+            
+            return P->getPrecedence();
+        }
+    }
+    
+    auto& Infix = infixParselets[TokIn.Tok()];
     
     if (Infix != nullptr) {
-        
-        //
-        // There is an ambiguity with tokens that are both infix and prefix, e.g.
-        // +  -  ;;
-        //
-        // Given the input  ;;;;
-        // when parsing the second ;;, we could get here because ;; is registered as infix
-        // But this particular ;; is a new expression, it is not actually infix
-        //
-        // Given the input  1+2
-        // when parsing the +, make sure to treat it as infix and NOT prefix
-        //
-        // Solution is to handle infix parselets where needed, i.e., SemiSemiParselet
-        //
         
         return Infix->getPrecedence();
     }
     
-    if (TokIn.Tok == TOKEN_LONGNAME_DIFFERENTIALD) {
+    if (TokIn.Tok() == TOKEN_LONGNAME_DIFFERENTIALD) {
         
         if ((Ctxt.Flag & PARSER_INTEGRAL) == PARSER_INTEGRAL) {
             
@@ -702,16 +713,9 @@ Precedence Parser::getCurrentTokenPrecedence(Token& TokIn, ParserContext Ctxt) {
     //
     
     //
-    // Do not do ImplicitTimes across lines
+    // Do not do Implicit Times across lines
     //
-    if (TokIn.Tok == TOKEN_NEWLINE && Ctxt.getGroupDepth() == 0) {
-        return PRECEDENCE_LOWEST;
-    }
-    
-    if (!implicitTimesEnabled) {
-        
-        implicitTimesEnabled = true;
-        
+    if (TokIn.Tok() == TOKEN_NEWLINE && Ctxt.getGroupDepth() == 0) {
         return PRECEDENCE_LOWEST;
     }
     
@@ -720,27 +724,11 @@ Precedence Parser::getCurrentTokenPrecedence(Token& TokIn, ParserContext Ctxt) {
     //
     assert((Ctxt.Flag & PARSER_LINEARSYNTAX) != PARSER_LINEARSYNTAX);
     
-    //
-    // Note: Only insert token if input will actually be parsed as ImplicitTimes
-    //
-    // Here is an example:  a ~f x
-    // When parsing the x, Ctxt.Precedence is PRECEDENCE_TILDE which is greater than PRECEDENCE_IMPLICITTIMES
-    // We do not want to treat  f x  as a single ImplicitTimes expression here.
-    //
-    if (Ctxt.Prec <= PRECEDENCE_FAKE_IMPLICITTIMES) {
-        
-        //
-        // ImplicitTimes is special because there is no source
-        //
-        // So invent source
-        //
-        
-        auto Implicit = Token(TOKEN_FAKE_IMPLICITTIMES, "", Source(TokIn.Src.start()));
-        
-        tokenQueue.insert(tokenQueue.begin(), Implicit);
+    if (implicitTimes != nullptr) {
+        *implicitTimes = true;
     }
     
-    return PRECEDENCE_FAKE_IMPLICITTIMES;
+    return PRECEDENCE_STAR;
 }
 
 NodePtr Parser::parse(ParserContext CtxtIn) {
@@ -758,8 +746,10 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
     
     auto token = currentToken();
     
-    assert(token.Tok != TOKEN_UNKNOWN);
-    assert(!token.isTrivia());
+    assert(token.Tok() != TOKEN_UNKNOWN);
+    assert(!token.isTrivia() && "Must handle at the call site");
+    assert(token.Tok() != TOKEN_ENDOFFILE && "Must handle at the call site");
+    assert(isPossibleBeginningOfExpression(Ctxt) && "Must handle at the call site");
     
     //
     // Prefix start
@@ -773,7 +763,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
     if (CtxtIn.getGroupDepth() == 0) {
         if (token.Src.style == SOURCESTYLE_LINECOL &&
             token.Src.lineCol.start.Col == 1) {
-            auto& S = startOfLineParselets[token.Tok];
+            auto& S = startOfLineParselets[token.Tok()];
             if (S != nullptr) {
                 
                 Left = S->parse(Ctxt);
@@ -783,7 +773,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
     
     if (Left == nullptr) {
         
-        auto& I = prefixParselets[token.Tok];
+        auto& I = prefixParselets[token.Tok()];
         
         if (I != nullptr) {
             
@@ -798,59 +788,10 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
             //
             // Literal or Unhandled
             //
-            
-            if (!isPossibleBeginningOfExpression(token, Ctxt)) {
-                
-                //
-                // Some kind of error
-                //
-                
-                auto& I = infixParselets[token.Tok];
-                if (I != nullptr) {
-                    
-                    //
-                    // Do not take next token
-                    //
-                    // Important to not duplicate token's Str here, it may also appear later
-                    //
-                    // Also, invent Source
-                    //
-                    
-                    auto createdToken = Token( token.Tok == TOKEN_COMMA ? TOKEN_FAKE_IMPLICITNULL : TOKEN_ERROR_EXPECTEDOPERAND, "", Source(token.Src.start()));
-                    
-                    Left = NodePtr(new LeafNode(createdToken));
-                    
-                } else if (token.Tok == Ctxt.Closer) {
-                    //
-                    // Handle the special cases of:
-                    // { + }
-                    // { a + }
-                    // { a @ }
-                    // We are here parsing the operators, but we don't want to descend and treat the } as the problem
-                    //
-                    
-                    //
-                    // Do not take next token
-                    //
-                    
-                    auto createdToken = Token(token.Tok == TOKEN_COMMA ? TOKEN_FAKE_IMPLICITNULL : TOKEN_ERROR_EXPECTEDOPERAND, "", Source(token.Src.start()));
-                    
-                    Left = NodePtr(new LeafNode(createdToken));
-                    
-                } else {
-                    
-                    //
-                    // Some other kind of error
-                    //
-                    Left = expectedPossibleExpressionErrorParselet->parse(Ctxt);
-                }
-                
-            } else {
 
-                nextToken(Ctxt);
+            nextToken(Ctxt);
 
-                Left = NodePtr(new LeafNode(std::move(token)));
-            }
+            Left = NodePtr(new LeafNode(std::move(token)));
         }
     }
     
@@ -879,17 +820,17 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
             
             Precedence TokenPrecedence;
             {
-                auto oldImplicitTimesEnabled = implicitTimesEnabled;
-                if (Left->isError()) {
-                    //
-                    // We know this is an error, so make sure to disable ImplicitTimes
-                    //
-                    // We don't want to treat \ABC as \A * BC
-                    //
-                    implicitTimesEnabled = false;
+                
+                bool implicitTimes;
+                
+                TokenPrecedence = getTokenPrecedence(token, Ctxt, false, &implicitTimes);
+                
+                if (implicitTimes) {
+                    
+                    auto Implicit = Token(TOKEN_FAKE_IMPLICITTIMES, "", Source(token.Src.start()));
+                    
+                    tokenQueue.insert(tokenQueue.begin(), Implicit);
                 }
-                TokenPrecedence = getCurrentTokenPrecedence(token, Ctxt);
-                implicitTimesEnabled = oldImplicitTimesEnabled;
             }
             
             if (Ctxt.Prec > TokenPrecedence) {
@@ -925,13 +866,137 @@ NodePtr Parser::parse0(NodeSeq Left, Precedence TokenPrecedence, ParserContext C
     Ctxt.Prec = TokenPrecedence;
     Ctxt.Assoc = ASSOCIATIVITY_NONE;
     
-    auto& I = infixParselets[token.Tok];
+    auto& I = infixParselets[token.Tok()];
     
     assert(I != nullptr);
     
     auto Res = I->parse(std::move(Left), Ctxt);
     
     return Res;
+}
+
+NodePtr Parser::handleNotPossible(Token& tokenAnchor, ParserContext CtxtIn, bool *wasCloser) {
+    
+    auto tokenBad = currentToken();
+
+    //
+    // Some kind of error
+    //
+
+    auto& P = prefixParselets[tokenBad.Tok()];
+
+    if (P != nullptr) {
+
+        auto operand = TheParser->parse(CtxtIn);
+
+        if (wasCloser != nullptr) {
+            *wasCloser = false;
+        }
+
+        return operand;
+    }
+    
+    auto& I = infixParselets[tokenBad.Tok()];
+    if (I != nullptr) {
+        
+        //
+        // Handle something like  f[,1]
+        //
+        // We want to make EXPECTEDOPERAND the first arg of the Comma node.
+        //
+        // Do not take next token
+        //
+        // Important to not duplicate token's Str here, it may also appear later
+        //
+        // Also, invent Source
+        //
+        
+        auto NotPossible = NodePtr(new LeafNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, "", Source(tokenAnchor.Src.start()))));
+        
+        NodeSeq LeftSeq;
+        LeftSeq.reserve(1);
+        LeftSeq.append(std::move(NotPossible));
+        
+        auto Ctxt = CtxtIn;
+        //
+        // FIXME: clear other flags here also?
+        //
+        Ctxt.Flag.clear(PARSER_COLON);
+        
+        if (wasCloser != nullptr) {
+            *wasCloser = false;
+        }
+        
+        return I->parse(std::move(LeftSeq), Ctxt);
+    }
+    
+    if (tokenBad.Tok() == CtxtIn.Closer) {
+        //
+        // Handle the special cases of:
+        // { + }
+        // { a + }
+        // { a @ }
+        // We are here parsing the operators, but we don't want to descend and treat the } as the problem
+        //
+
+        //
+        // Do not take next token
+        //
+        
+        auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, "", Source(tokenAnchor.Src.end()));
+
+        if (wasCloser != nullptr) {
+            *wasCloser = true;
+        }
+        
+        return NodePtr(new LeafNode(createdToken));
+    }
+    
+    if (isCloser(tokenBad.Tok())) {
+        //
+        // Handle  { a ) }
+        // which ends up being  MissingCloser[ { a ]  EXPECTEOPERAND
+        //
+        
+        TheParser->nextToken(CtxtIn);
+        
+        NodeSeq Args;
+        Args.reserve(1);
+        Args.append(NodePtr(new LeafNode(tokenBad)));
+        
+        auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_UNEXPECTEDCLOSER, std::move(Args)));
+        
+        if (wasCloser != nullptr) {
+            *wasCloser = true;
+        }
+        
+        return Error;
+    }
+    
+    if (tokenBad.Tok() == TOKEN_ENDOFFILE) {
+        
+        auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, "", Source(tokenAnchor.Src.end()));
+        
+        if (wasCloser != nullptr) {
+            *wasCloser = false;
+        }
+        
+        return NodePtr(new LeafNode(createdToken));
+    }
+    
+    assert(isError(tokenBad.Tok()));
+        
+    TheParser->nextToken(CtxtIn);
+    
+    //
+    // If there is a Token error, then use that specific error
+    //
+    
+    if (wasCloser != nullptr) {
+        *wasCloser = false;
+    }
+    
+    return NodePtr(new LeafNode(tokenBad));
 }
 
 bool Parser::isAbort() const {
@@ -951,7 +1016,6 @@ Token Parser::eatAll(ParserContext Ctxt, LeafSeq& Args) {
         //
         // No need to check isAbort() inside tokenizer loops
         //
-        
         
         Args.append(LeafNodePtr(new LeafNode(Tok)));
         
@@ -974,9 +1038,9 @@ Token Parser::eatAndPreserveToplevelNewlines(ParserContext Ctxt, LeafSeq& Args) 
         //
         
         
-        if (Tok.Tok == TOKEN_WHITESPACE ||
-            Tok.Tok == TOKEN_COMMENT ||
-            Tok.Tok == TOKEN_LINECONTINUATION) {
+        if (Tok.Tok() == TOKEN_WHITESPACE ||
+            Tok.Tok() == TOKEN_COMMENT ||
+            Tok.Tok() == TOKEN_LINECONTINUATION) {
             
             Args.append(LeafNodePtr(new LeafNode(std::move(Tok))));
             
@@ -984,7 +1048,7 @@ Token Parser::eatAndPreserveToplevelNewlines(ParserContext Ctxt, LeafSeq& Args) 
             
             Tok = TheParser->currentToken();
             
-        } else if (Tok.Tok == TOKEN_NEWLINE) {
+        } else if (Tok.Tok() == TOKEN_NEWLINE) {
             
             if (Ctxt.getGroupDepth() == 0) {
                 

@@ -504,7 +504,35 @@ Test[
 	TestID->"Span-20190621-I4J4Y6"
 ]
 
+Test[
+	"a;;!"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Span-20191016-M3L9D1"
+]
 
+Test[
+	"a;;!b"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Span-20191016-Q5A7L0"
+]
+
+Test[
+	"a;;b;;!c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Span-20191017-Y8K1X8"
+]
 
 
 
@@ -530,5 +558,35 @@ TestMatch[
 
 
 
+
+
+Test[
+	ConcreteParseString["a ;; &"]
+	,
+	PostfixNode[Function, {
+		BinaryNode[Span, {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
+			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 2}, {1, 2}}|>],
+			LeafNode[Token`SemiSemi, ";;", <|Source -> {{1, 3}, {1, 4}}|>], 
+			LeafNode[Token`Fake`ImplicitAll, "", <|Source -> {{1, 4}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>],
+		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 5}, {1, 5}}|>],
+		LeafNode[Token`Amp, "&", <|Source -> {{1, 6}, {1, 6}}|>] }, <|Source -> {{1, 1}, {1, 6}}|>]
+	,
+	TestID->"Span-20191016-J5K9B8"
+]
+
+Test[
+	ConcreteParseString["a ;; \\t", f]
+	,
+	f[{{BinaryNode[Span, {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
+			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 2}, {1, 2}}|>],
+			LeafNode[Token`SemiSemi, ";;", <|Source -> {{1, 3}, {1, 4}}|>], 
+			LeafNode[Token`Fake`ImplicitAll, "", <|Source -> {{1, 4}, {1, 4}}|>]}, <|Source->{{1, 1}, {1, 4}}|>],
+		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 5}, {1, 5}}|>],
+		LeafNode[Token`Error`UnhandledCharacter, "\\t", <|Source -> {{1, 6}, {1, 7}}|>]}, {}}]
+	,
+	TestID->"Span-20191016-T6M0R1"
+]
 
 

@@ -148,12 +148,12 @@ abstract[LeafNode[BlankSequence, _, data_]] := CallNode[ToNode[BlankSequence], {
 abstract[LeafNode[BlankNullSequence, _, data_]] := CallNode[ToNode[BlankNullSequence], {}, KeyTake[data, keysToTake]]
 abstract[LeafNode[OptionalDefault, _, data_]] := CallNode[ToNode[Optional], {CallNode[ToNode[Blank], {}, <||>]}, KeyTake[data, keysToTake]]
 
-abstract[LeafNode[Token`Error`UnhandledCharacter, str_, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`UnhandledCharacter, str, KeyTake[data, keysToTake]]
+abstract[LeafNode[Token`Error`UnhandledCharacter, str_, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`UnhandledCharacter, { LeafNode[Token`Error`UnhandledCharacter, str, data] }, KeyTake[data, keysToTake]]
 
 abstract[LeafNode[Token`Fake`ImplicitNull, _, data_]] := LeafNode[Symbol, "Null", KeyTake[data, keysToTake] ~Join~ <|AbstractSyntaxIssues->{SyntaxIssue["Comma", "Extra ``,``.", "Error", <| data, CodeActions->{CodeAction["Delete ``,``", DeleteNode, <| Source->data[Source] |>]}, ConfidenceLevel -> 1.0 |>]}|>]
 
 abstract[LeafNode[Token`Error`ExpectedOperand, str_, data_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, str, data]
+	AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, { LeafNode[Token`Error`ExpectedOperand, str, data] }, data]
 
 abstract[LeafNode[Token`Fake`ImplicitOne, _, data_]] := LeafNode[Integer, "1", KeyTake[data, keysToTake]]
 
@@ -172,9 +172,20 @@ abstract[PatternBlankNullSequenceNode[PatternBlankNullSequence, {sym1_, _, sym2_
 abstract[OptionalDefaultPatternNode[OptionalDefaultPattern, {sym1_, _}, data_]] := CallNode[ToNode[Optional], {CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[Blank], {}, <||>]}, <||>]}, KeyTake[data, keysToTake]]
 
 
-abstract[LeafNode[_, str_, data_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`UnhandledToken, str, KeyTake[data, keysToTake]]
-
+abstract[LeafNode[tok_, str_, data_]] :=
+	Switch[tok,
+		Token`Error`UnterminatedString,
+			AbstractSyntaxErrorNode[AbstractSyntaxError`UnterminatedString, { LeafNode[tok, str, data] }, KeyTake[data, keysToTake]]
+		,
+		Token`Boxes`OpenParenStar,
+			AbstractSyntaxErrorNode[AbstractSyntaxError`UnterminatedComment, { LeafNode[tok, str, data] }, KeyTake[data, keysToTake]]
+		,
+		Token`Question,
+			AbstractSyntaxErrorNode[AbstractSyntaxError`EmptyString, { LeafNode[tok, str, data] }, KeyTake[data, keysToTake]]
+		,
+		_,
+			AbstractSyntaxErrorNode[AbstractSyntaxError`UnhandledToken, { LeafNode[tok, str, data] }, KeyTake[data, keysToTake]]
+	]
 
 
 (*
@@ -300,13 +311,13 @@ abstract[BinaryNode[PutAppend, {left_, _, LeafNode[String, str_, _]}, data_]] :=
 
 (* Abstract NonAssociative errors *)
 
-abstract[BinaryNode[PatternTest, children:{BinaryNode[PatternTest, _, _], _, _}, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociative, children, KeyTake[data, keysToTake]]
+abstract[BinaryNode[PatternTest, children:{BinaryNode[PatternTest, _, _], _, _}, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociativePatternTest, children, KeyTake[data, keysToTake]]
 
 (*
 DirectedEdge and UndirectedEdge do not associate with themselves or each other
 *)
-abstract[BinaryNode[DirectedEdge, children:{BinaryNode[DirectedEdge | UndirectedEdge, _, _], _, _}, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociative, children, KeyTake[data, keysToTake]]
-abstract[BinaryNode[UndirectedEdge, children:{BinaryNode[DirectedEdge | UndirectedEdge, _, _], _, _}, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociative, children, KeyTake[data, keysToTake]]
+abstract[BinaryNode[DirectedEdge, children:{BinaryNode[DirectedEdge | UndirectedEdge, _, _], _, _}, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociativeDirectedEdge, children, KeyTake[data, keysToTake]]
+abstract[BinaryNode[UndirectedEdge, children:{BinaryNode[DirectedEdge | UndirectedEdge, _, _], _, _}, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociativeUndirectedEdge, children, KeyTake[data, keysToTake]]
 
 (* could be  a =. *)
 abstract[BinaryNode[Unset, {left_, _}, data_]] := CallNode[ToNode[Unset], {abstract[left]}, KeyTake[data, keysToTake]]
@@ -321,6 +332,11 @@ abstract[BinaryNode[op_, children_, data_]] :=
 
 
 
+
+(*
+Convert f[,1] into f[Null,1]
+*)
+abstract[InfixNode[Comma, { LeafNode[Token`Error`ExpectedOperand, _, data1_], rest___ }, data_]] := abstract[InfixNode[Comma, { LeafNode[Token`Fake`ImplicitNull, "", data1], rest }, KeyTake[data, keysToTake]]]
 
 
 abstract[InfixNode[Inequality, children_, data_]] := abstractInequality[InfixNode[Inequality, children, KeyTake[data, keysToTake]]]
@@ -417,7 +433,7 @@ take care of specific GroupNodes before calling abstractGroupNode
 (*
 GroupParen
 *)
-abstract[GroupNode[GroupParen, { _, child:InfixNode[Comma, _, _], _ }, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, child, KeyTake[data, keysToTake]]
+abstract[GroupNode[GroupParen, { _, child:InfixNode[Comma, _, _], _ }, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, { child }, KeyTake[data, keysToTake]]
 abstract[GroupNode[GroupParen, { _, child_, _}, data_]] := abstract[child]
 
 (* GroupNode errors *)
@@ -526,9 +542,11 @@ Module[{abstractedChildren, issues, single},
 	single = (Length[Cases[children, Except[_SyntaxErrorNode]]] <= 1);
 
 	abstractedChildren = (
-		If[!single, issues = issues ~Join~ topLevelChildIssues[#, True]];
+		If[!single,
+			issues = issues ~Join~ topLevelChildIssues[#, True]
+		];
 		abstract[#]
-		)& /@ children;
+	)& /@ children;
 
 	{abstractedChildren, issues}
 ]
@@ -680,8 +698,7 @@ topLevelChildIssues[InfixNode[CompoundExpression, {
 												PatternSequence[LeafNode[Symbol, _, _], _LeafNode].., LeafNode[Symbol, _, _] }, _], True] := {}
 
 
-topLevelChildIssues[InfixNode[CompoundExpression, _, data_], True] := { SyntaxIssue["TopLevel", "Strange expression is at top-level.\n\
-Consider breaking up expression on separate lines or removing the ``;``.", "Warning", <| data, ConfidenceLevel -> 0.75 |>] }
+topLevelChildIssues[InfixNode[CompoundExpression, {_, LeafNode[Token`Semi, _, _], next:_[_, _, nextData_], ___}, data_], True] := { SyntaxIssue["TopLevel", "Unexpected expression at top-level.", "Warning", <| Source->data[Source], ConfidenceLevel -> 0.75, CodeActions -> { CodeAction["Insert newline", InsertNode, <|Source->nextData[Source], "InsertionNode"->LeafNode[Token`Newline, "\n", <||>]|>] } |>] }
 
 
 
@@ -689,10 +706,9 @@ Consider breaking up expression on separate lines or removing the ``;``.", "Warn
 (*
 Anything else, then warn
 
-Specifically add a DidYouMean for /
+Specifically add a DidYouMean for / -> /@
 *)
-topLevelChildIssues[BinaryNode[Divide, _, data_], True] := { SyntaxIssue["TopLevel", "Strange expression is at top-level.\n\
-Did you mean ``/@``?", "Warning", <| data, ConfidenceLevel -> 0.75 |>] }
+topLevelChildIssues[BinaryNode[Divide, {_, LeafNode[Token`Slash, _, slashData_], _}, data_], True] := { SyntaxIssue["TopLevel", "Unexpected expression at top-level.", "Warning", <| Source->slashData[Source], ConfidenceLevel -> 0.75, CodeActions -> { CodeAction["Replace ``/`` with ``/@``", ReplaceNode, <|Source->slashData[Source], "ReplacementNode"->LeafNode[Token`SlashAt, "/@", <||>] |>] } |>] }
 
 (*
 No need to issue warning for errors being strange
@@ -701,7 +717,7 @@ topLevelChildIssues[SyntaxErrorNode[_, _, _], True] := {}
 
 topLevelChildIssues[AbstractSyntaxErrorNode[_, _, _], True] := {}
 
-topLevelChildIssues[node_, True] := { SyntaxIssue["TopLevel", "Strange expression is at top-level.", "Warning", <| node[[3]], ConfidenceLevel -> 0.75 |>] }
+topLevelChildIssues[node_, True] := { SyntaxIssue["TopLevel", "Unexpected expression at top-level.", "Warning", <| node[[3]], ConfidenceLevel -> 0.75 |>] }
 
 
 
@@ -1175,8 +1191,6 @@ vectorInequalityOperatorToSymbol[LeafNode[Token`LongName`VectorGreaterEqual, _, 
 
 
 
-
-
 (*
 properly abstract and warn about a;b;[]
 *)
@@ -1189,7 +1203,7 @@ Module[{head, data, groupData, issues},
 
 	issues = Lookup[data, AbstractSyntaxIssues, {}];
 
-	AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Error", <|Source->groupData[Source], ConfidenceLevel -> 1.0|>]];
+	AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source->groupData[Source], ConfidenceLevel -> 1.0|>]];
 
 	AssociateTo[data, AbstractSyntaxIssues -> issues];
 
@@ -1210,7 +1224,7 @@ Module[{head, data, groupData, issues},
 
 	issues = Lookup[data, AbstractSyntaxIssues, {}];
 
-	AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Error", <|Source->groupData[Source], ConfidenceLevel -> 1.0|>]];
+	AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source->groupData[Source], ConfidenceLevel -> 1.0|>]];
 
 	AssociateTo[data, AbstractSyntaxIssues -> issues];
 
@@ -1232,7 +1246,7 @@ Module[{head, data, groupData, issues},
 
     issues = Lookup[data, AbstractSyntaxIssues, {}];
 
-    AppendTo[issues, SyntaxIssue["StrangeCall", "Strange ``Part`` call.", "Error", <|Source->groupData[Source], ConfidenceLevel -> 1.0|>]];
+    AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Error", <|Source->groupData[Source], ConfidenceLevel -> 1.0|>]];
 
     AssociateTo[data, AbstractSyntaxIssues -> issues];
 
@@ -1253,7 +1267,7 @@ Module[{head, data, groupData, issues},
 
     issues = Lookup[data, AbstractSyntaxIssues, {}];
 
-    AppendTo[issues, SyntaxIssue["StrangeCall", "Strange ``Part`` call.", "Error", <|Source->groupData[Source], ConfidenceLevel -> 1.0|>]];
+    AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Error", <|Source->groupData[Source], ConfidenceLevel -> 1.0|>]];
 
     AssociateTo[data, AbstractSyntaxIssues -> issues];
 
@@ -1393,7 +1407,7 @@ Module[{abstractedChildren, issues, data},
 
 	issues = {};
 
-	abstractedChildren = abstract /@ Flatten[selectChildren /@ children];
+	abstractedChildren = Flatten[selectChildren /@ (abstract /@ children)];
 
    If[issues != {},
    	issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
@@ -1403,7 +1417,7 @@ Module[{abstractedChildren, issues, data},
    CallNode[ToNode[tag], abstractedChildren, data]
 ]
 
-selectChildren[InfixNode[Comma, children_, _]] := children[[;;;;2]]
+selectChildren[CallNode[ToNode[Comma], children_, _]] := children
 
 selectChildren[n_] := n
 
@@ -1459,11 +1473,11 @@ Module[{head, data, part, innerData, outerData, issues, partData, src},
 
     Switch[head,
     		(*
-			feel strongly about ##2[arg]
+			feel strongly about ##2[[arg]]
 			##2 represents a sequence of arguments, so it is wrong to call
     		*)
     		LeafNode[SlotSequence, _, _],
-    		AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Strange ``Part`` call.", "Error", <|Source->data[Source], ConfidenceLevel -> 1.0|>]];
+    		AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Unexpected ``Part`` call.", "Error", <|Source->data[Source], ConfidenceLevel -> 1.0|>]];
     		,
         LeafNode[Symbol | Slot | Blank | BlankSequence | BlankNullSequence, _, _] (* |_StringNode*) | _CallNode | _BlankNode | _BlankSequenceNode | _BlankNullSequenceNode (*| _OptionalDefaultNode*) |
             _PatternBlankNode | _PatternBlankSequenceNode | _PatternBlankNullSequenceNode (*| _SlotSequenceNode *),
@@ -1471,10 +1485,10 @@ Module[{head, data, part, innerData, outerData, issues, partData, src},
         Null
         ,
         LeafNode[Out, _, _],
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange ``Part`` call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
         ,
         PrefixNode[PrefixLinearSyntaxBang, _, _],
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange ``Part`` call.", "Remark", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Remark", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
         ,
         InfixNode[CompoundExpression, _, _],
         (* CompoundExpression was already handled *)
@@ -1490,10 +1504,10 @@ Module[{head, data, part, innerData, outerData, issues, partData, src},
         Null
         ,
         GroupNode[GroupLinearSyntaxParen, _, _],
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange ``Part`` call.", "Remark", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Remark", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
         ,
         GroupNode[_, _, _],
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange ``Part`` call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
         ,
         (*
         PostfixNode[Function | Derivative, _, _],
@@ -1504,7 +1518,7 @@ Module[{head, data, part, innerData, outerData, issues, partData, src},
         (*
         warn about anything else
         *)
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange ``Part`` call.", "Error", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Error", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
     ];
 
 	head = abstract[head];
@@ -1559,7 +1573,7 @@ Module[{head, part, partData, issues, data},
 			##2 represents a sequence of arguments, so it is wrong to call
     		*)
     		LeafNode[SlotSequence, _, _],
-    		AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Strange call.", "Error", <|Source->data[Source], ConfidenceLevel -> 1.0|>]];
+    		AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Unexpected call.", "Error", <|Source->data[Source], ConfidenceLevel -> 1.0|>]];
     		,
         LeafNode[Symbol | String | Slot | Blank | BlankSequence | BlankNullSequence, _, _] | _CallNode | _BlankNode | _BlankSequenceNode | _BlankNullSequenceNode (*| _OptionalDefaultNode*)|
             _PatternBlankNode | _PatternBlankSequenceNode | _PatternBlankNullSequenceNode (*| _SlotSequenceNode*),
@@ -1567,7 +1581,7 @@ Module[{head, part, partData, issues, data},
         Null
         ,
         LeafNode[Out, _, _],
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
         ,
         BinaryNode[PatternTest, _, _],
         (* these are fine *)
@@ -1586,7 +1600,7 @@ Module[{head, part, partData, issues, data},
         Null
         ,
         GroupNode[_, _, _],
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
         ,
         PostfixNode[Function | Derivative, _, _],
         (* these are fine *)
@@ -1596,7 +1610,7 @@ Module[{head, part, partData, issues, data},
         (*
         warn about anything else
         *)
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Error", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
     ];
 
 	head = abstract[head];
@@ -1633,7 +1647,7 @@ Module[{head, part, partData, data, issues},
 			##2 represents a sequence of arguments, so it is wrong to call
     		*)
     		LeafNode[SlotSequence, _, _],
-    		AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Strange call.", "Error", <|Source->data[Source], ConfidenceLevel -> 1.0|>]];
+    		AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Unexpected call.", "Error", <|Source->data[Source], ConfidenceLevel -> 1.0|>]];
     		,
         LeafNode[Symbol | Slot | Blank | BlankSequence | BlankNullSequence, _, _] (* |_StringNode*) | _CallNode | _BlankNode | _BlankSequenceNode | _BlankNullSequenceNode (*| _OptionalDefaultNode*) |
             _PatternBlankNode | _PatternBlankSequenceNode | _PatternBlankNullSequenceNode (*| _SlotSequenceNode *),
@@ -1641,10 +1655,10 @@ Module[{head, part, partData, data, issues},
         Null
         ,
         LeafNode[Out, _, _],
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
         ,
         PrefixNode[PrefixLinearSyntaxBang, _, _],
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Remark", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Remark", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
         ,
         (*
         BinaryNode[PatternTest, _, _],
@@ -1660,10 +1674,10 @@ Module[{head, part, partData, data, issues},
         Null
         ,
         GroupNode[GroupLinearSyntaxParen, _, _],
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Remark", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Remark", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
         ,
         GroupNode[_, _, _],
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
         ,
         (*
         PostfixNode[Function | Derivative, _, _],
@@ -1674,7 +1688,7 @@ Module[{head, part, partData, data, issues},
         (*
         warn about anything else
         *)
-        AppendTo[issues, SyntaxIssue["StrangeCall", "Strange call.", "Error", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+        AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
     ];
 
 	head = abstract[head];

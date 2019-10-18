@@ -12,7 +12,7 @@ DirectedEdge and UndirectedEdge do not associate with each other
 TestMatch[
 	ParseString["a \\[DirectedEdge] b \\[UndirectedEdge] c"]
 	,
-	AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociative, _, _]
+	AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociativeUndirectedEdge, _, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-P3J6P0"
 ]
@@ -20,7 +20,7 @@ TestMatch[
 TestMatch[
 	ParseString["a \\[UndirectedEdge] b \\[DirectedEdge] c"]
 	,
-	AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociative, _, _]
+	AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociativeDirectedEdge, _, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-N7Z5C7"
 ]

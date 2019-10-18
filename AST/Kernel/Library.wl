@@ -279,13 +279,13 @@ MakeInsertTextCodeAction[label_String, srcArgs___Integer, insertionText_String] 
 
 
 MakeFormatIssue["Space", msg_String, severity_String, srcArgs___Integer] :=
-	FormatIssue["SyntaxAmbiguity", msg, severity, <|Source->structureSrcArgs[srcArgs], CodeActions->{CodeAction["Insert", InsertText, <|Source -> structureSrcArgs[srcArgs], "InsertionText"->" "|>]}|>]
+	FormatIssue["Space", msg, severity, <|Source->structureSrcArgs[srcArgs], CodeActions->{CodeAction["Insert", InsertText, <|Source -> structureSrcArgs[srcArgs], "InsertionText"->" "|>]}|>]
 
-MakeFormatIssue["StrayLineContinuation", msg_String, severity_String, srcArgs___Integer] :=
-	FormatIssue["SyntaxAmbiguity", msg, severity, <|Source->structureSrcArgs[srcArgs], CodeActions->{CodeAction["Delete", DeleteNode, <|Source -> structureSrcArgs[srcArgs]|>]}|>]
+MakeFormatIssue["UnexpectedLineContinuation", msg_String, severity_String, srcArgs___Integer] :=
+	FormatIssue["UnexpectedLineContinuation", msg, severity, <|Source->structureSrcArgs[srcArgs], CodeActions->{CodeAction["Delete", DeleteNode, <|Source -> structureSrcArgs[srcArgs]|>]}|>]
 
 MakeFormatIssue["NotContiguous", msg_String, severity_String, srcArgs___Integer] :=
-	FormatIssue["SyntaxAmbiguity", msg, severity, <|Source->structureSrcArgs[srcArgs], CodeActions->{CodeAction["Delete", DeleteTrivia, <|Source -> structureSrcArgs[srcArgs]|>]}|>]
+	FormatIssue["NotContiguous", msg, severity, <|Source->structureSrcArgs[srcArgs], CodeActions->{CodeAction["Delete", DeleteTrivia, <|Source -> structureSrcArgs[srcArgs]|>]}|>]
 
 MakeFormatIssue[tag_String, msg_String, severity_String, srcArgs___Integer] :=
 	FormatIssue[tag, msg, severity, <|Source->structureSrcArgs[srcArgs]|>]

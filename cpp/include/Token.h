@@ -6,9 +6,23 @@
 
 #include <string>
 
+//
+// Version 1 of Token encoding
+//
+// 16 bits:
+//
+// fedcba9876543210
+//        ^~~~~~~~~
+//        Enum bits (9 bits)
+//       ^
+//       Possible bit
+// ^~~~~~
+// Currently unused (6 bits)
+//
 struct Token {
     
-    TokenEnum Tok;
+    uint16_t T : 9;
+    
     std::string Str;
     Source Src;
     
@@ -23,6 +37,10 @@ struct Token {
     Token& operator=(Token&& o);
     
     bool isTrivia() const;
+    
+    TokenEnum Tok() const {
+        return static_cast<TokenEnum>(T);
+    }
 };
 
 bool operator==(Token a, Token b);

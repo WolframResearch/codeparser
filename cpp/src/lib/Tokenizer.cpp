@@ -66,7 +66,7 @@ void Tokenizer::deinit() {
 
 void Tokenizer::nextToken(TokenizerContext CtxtIn) {
     
-    if (_currentToken.Tok == TOKEN_ENDOFFILE) {
+    if (_currentToken.Tok() == TOKEN_ENDOFFILE) {
         return;
     }
     
@@ -188,7 +188,7 @@ void Tokenizer::nextToken(TokenizerContext CtxtIn) {
             
             auto Src = TheSourceManager->getWLCharacterSource();
             
-            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange space character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
             
             Issues.push_back(std::move(I));
         }
@@ -229,7 +229,7 @@ void Tokenizer::nextToken(TokenizerContext CtxtIn) {
             
             auto Src = TheSourceManager->getWLCharacterSource();
             
-            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange space character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
             
             Issues.push_back(std::move(I));
         }
@@ -246,7 +246,7 @@ void Tokenizer::nextToken(TokenizerContext CtxtIn) {
             
             auto Src = TheSourceManager->getWLCharacterSource();
             
-            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange newline character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
             
             Issues.push_back(std::move(I));
         }
@@ -437,6 +437,11 @@ void Tokenizer::nextToken(TokenizerContext CtxtIn) {
                 _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
             }
                 break;
+            case CODEPOINT_ENDOFFILE: {
+                
+                _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
+            }
+                break;
             default: {
                 
                 //
@@ -504,38 +509,30 @@ WLCharacter Tokenizer::nextWLCharacter(NextWLCharacterPolicy policy) {
             //
             // Line continuation is NOT meaningful, so warn and break out of loop
             //
+            // NOT meaningful, so do not worry about PRESERVE_WS_AFTER_LC
+            //
             
             auto CharacterStart = TheSourceManager->getWLCharacterStart();
             
-            auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_STRAYLINECONTINUATION, std::string("Stray line continuation."), FORMATISSUESEVERITY_FORMATTING, Source(CharacterStart)));
+            auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_UNEXPECTEDLINECONTINUATION, std::string("Unexpected line continuation."), FORMATISSUESEVERITY_FORMATTING, Source(CharacterStart)));
             
             Issues.push_back(std::move(I));
             
-            if ((policy & PRESERVE_WS_AFTER_LC) != PRESERVE_WS_AFTER_LC) {
-                
-                _currentWLCharacter = TheCharacterDecoder->nextWLCharacter(policy);
-                while (_currentWLCharacter.isSpace()) {
-                    _currentWLCharacter = TheCharacterDecoder->nextWLCharacter(policy);
-                }
-            }
-            
             break;
+        }
             
-        } else {
+        //
+        // Line continuation IS meaningful, so save in current String and continue
+        //
+        
+        String << _currentWLCharacter;
+        
+        _currentWLCharacter = TheCharacterDecoder->nextWLCharacter(policy);
+        
+        if ((policy & PRESERVE_WS_AFTER_LC) != PRESERVE_WS_AFTER_LC) {
             
-            //
-            // Line continuation IS meaningful, so save in current String and continue
-            //
-            
-            String << _currentWLCharacter;
-            
-            _currentWLCharacter = TheCharacterDecoder->nextWLCharacter(policy);
-            
-            if ((policy & PRESERVE_WS_AFTER_LC) != PRESERVE_WS_AFTER_LC) {
-                
-                while (_currentWLCharacter.isSpace()) {
-                    _currentWLCharacter = TheCharacterDecoder->nextWLCharacter(policy);
-                }
+            while (_currentWLCharacter.isSpace()) {
+                _currentWLCharacter = TheCharacterDecoder->nextWLCharacter(policy);
             }
         }
     }
@@ -554,7 +551,7 @@ WLCharacter Tokenizer::currentWLCharacter() const {
 
 Token Tokenizer::currentToken() {
     
-    assert(_currentToken.Tok != TOKEN_UNKNOWN);
+    assert(_currentToken.Tok() != TOKEN_UNKNOWN);
     
     return _currentToken;
 }
@@ -734,7 +731,7 @@ Token Tokenizer::handleSymbol(TokenizerContext Ctxt) {
             
             auto Src = TheSourceManager->getWLCharacterSource();
             
-            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "``#`` is not documented to allow **`** characters.", SYNTAXISSUESEVERITY_REMARK, Src, 0.33, {}));
+            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "The name following ``#`` is not documented to allow the **`** character.", SYNTAXISSUESEVERITY_REMARK, Src, 0.33, {}));
             
             Issues.push_back(std::move(I));
         }
@@ -770,7 +767,7 @@ void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
             
             auto Src = TheSourceManager->getWLCharacterSource();
             
-            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "``#`` is not documented to allow ``$`` characters.", SYNTAXISSUESEVERITY_REMARK, Src, 0.33, {}));
+            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "The name following ``#`` is not documented to allow the ``$`` character.", SYNTAXISSUESEVERITY_REMARK, Src, 0.33, {}));
             
             Issues.push_back(std::move(I));
         }
@@ -804,7 +801,7 @@ void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
                     
                     auto Src = TheSourceManager->getWLCharacterSource();
                     
-                    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "``#`` is not documented to allow ``$`` characters.", SYNTAXISSUESEVERITY_REMARK, Src, 0.33, {}));
+                    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "The name following ``#`` is not documented to allow the ``$`` character.", SYNTAXISSUESEVERITY_REMARK, Src, 0.33, {}));
                     
                     Issues.push_back(std::move(I));
                 }
@@ -964,7 +961,7 @@ Token Tokenizer::handleString(TokenizerContext Ctxt) {
                 empty = false;
                 
                 auto res = handleFileOpsBrackets(Ctxt);
-                if (res.Tok != TOKEN_STRING) {
+                if (res.Tok() != TOKEN_STRING) {
                     return res;
                 }
                 
@@ -1198,7 +1195,7 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
                 auto handle = handleDigitsOrAlpha(Ctxt, base);
                 if (handle == -1) {
                     
-                    return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
+                    return Token(TOKEN_ERROR_UNRECOGNIZEDDIGIT, String.str(), TheSourceManager->getTokenSource());
                 }
                 
             } else if (c.to_point() != '.') {
@@ -1210,7 +1207,7 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
                 
                 c = nextWLCharacter(INSIDE_NUMBER);
                 
-                return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
+                return Token(TOKEN_ERROR_UNRECOGNIZEDDIGIT, String.str(), TheSourceManager->getTokenSource());
             }
             
         } else {
@@ -2545,7 +2542,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                 
                 handleString(Ctxt);
                 
-                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "``#`` is not documented to allow ``\"`` characters.", SYNTAXISSUESEVERITY_REMARK, Source(Loc), 0.33, {}));
+                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "The name following ``#`` is not documented to allow the ``\"`` character.", SYNTAXISSUESEVERITY_REMARK, Source(Loc), 0.33, {}));
                 
                 Issues.push_back(std::move(I));
                 

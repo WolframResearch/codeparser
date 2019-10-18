@@ -228,11 +228,15 @@ FormatIssue
 
 Begin["`Private`"]
 
+(*
+Implementation of Abstract depends on Node (LHS of definitions)
+So load Node before Abstract
+*)
+Needs["AST`Node`"]
 Needs["AST`Abstract`"]
 Needs["AST`Boxes`"]
 Needs["AST`DeclarationName`"]
 Needs["AST`Library`"]
-Needs["AST`Node`"]
 Needs["AST`ToString`"]
 Needs["AST`Utils`"]
 Needs["PacletManager`"]
@@ -680,9 +684,13 @@ Module[{str, res, leaf, data, exprs, issues, style, stringifyNextTokenSymbol},
 	issues = res[[2]];
 
 	leaf = exprs[[1]];
-	data = leaf[[3]];
-	data[SyntaxIssues] = issues;
-	leaf[[3]] = data;
+
+	If[!empty[issues],
+		data = leaf[[3]];
+		data[SyntaxIssues] = issues;
+		leaf[[3]] = data;
+	];
+
 	leaf
 ]]
 

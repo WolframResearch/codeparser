@@ -79,8 +79,8 @@ TestMatch[
 	FileNode[File, {LeafNode[Token`Newline, "\r", <|Source -> {{2, 0}, {2, 0}}|>],
 					LeafNode[Token`Newline, "\r", <|Source -> {{3, 0}, {3, 0}}|>],
 					LeafNode[Symbol, "A", <|Source -> {{3, 1}, {3, 1}}|>]},
-										<| SyntaxIssues->{FormatIssue["StrayCarriageReturn", _, _, <|Source -> {{2, 0}, {2, 0}}|>],
-											FormatIssue["StrayCarriageReturn", _, _, <|Source -> {{3, 0}, {3, 0}}|>]}, Source -> {{2, 0}, {3, 1}}|>]
+										<| SyntaxIssues->{FormatIssue["UnexpectedCarriageReturn", _, _, <|Source -> {{2, 0}, {2, 0}}|>],
+											FormatIssue["UnexpectedCarriageReturn", _, _, <|Source -> {{3, 0}, {3, 0}}|>]}, Source -> {{2, 0}, {3, 1}}|>]
 	,
 	TestID->"File-20190422-C6U5B6"
 ]
@@ -195,7 +195,7 @@ TestMatch[
 			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 3}, {1, 3}}|>],
 			LeafNode[Token`Equal, "=", <|Source -> {{1, 4}, {1, 4}}|>],
 			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 5}, {1, 5}}|>],
-			LeafNode[Integer, "1", <|Source -> {{1, 6}, {1, 6}}|>] }, <|Source -> {{1, 1}, {1, 6}}|>] }, <|SyntaxIssues -> {SyntaxIssue["StrangeCharacter", "Strange character in symbol: ``\\.01``.", "Warning", _]}, Source -> {{1, 1}, {1, 6}}|>]
+			LeafNode[Integer, "1", <|Source -> {{1, 6}, {1, 6}}|>] }, <|Source -> {{1, 1}, {1, 6}}|>] }, <|SyntaxIssues -> {SyntaxIssue["UnexpectedCharacter", "Unexpected character: ``\\.01``.", "Warning", _]}, Source -> {{1, 1}, {1, 6}}|>]
 	,
 	TestID->"File-20190602-N5D1B8"
 ]

@@ -84,7 +84,8 @@ std::string SyntaxErrorToString(SyntaxError Err) {
         case SYNTAXERROR_EXPECTEDSET: return "SyntaxError`ExpectedSet";
         case SYNTAXERROR_COLONERROR: return "SyntaxError`ColonError";
         case SYNTAXERROR_EXPECTEDOPERAND: return "SyntaxError`ExpectedOperand";
-        case SYNTAXERROR_EXPECTEDPOSSIBLEEXPRESSION: return "SyntaxError`ExpectedPossibleExpression";
+        case SYNTAXERROR_EXPECTEDINTEGRAND: return "SyntaxError`ExpectedIntegrand";
+        case SYNTAXERROR_UNEXPECTEDCLOSER: return "SyntaxError`UnexpectedCloser";
         case SYNTAXERROR_TOKEN_EXPECTEDEQUAL: return "SyntaxError`ExpectedEqual";
         case SYNTAXERROR_TOKEN_UNHANDLEDCHARACTER: return "SyntaxError`UnhandledCharacter";
         case SYNTAXERROR_TOKEN_EXPECTEDDIGITORALPHA: return "SyntaxError`ExpectedDigitOrAlpha";
@@ -96,6 +97,7 @@ std::string SyntaxErrorToString(SyntaxError Err) {
         case SYNTAXERROR_TOKEN_EXPECTEDEXPONENT: return "SyntaxError`ExpectedExponent";
         case SYNTAXERROR_TOKEN_EMPTYSTRING: return "SyntaxError`EmptyString";
         case SYNTAXERROR_TOKEN_UNHANDLEDDOT: return "SyntaxError`UnhandledDot";
+        case SYNTAXERROR_TOKEN_UNRECOGNIZEDDIGIT: return "SyntaxError`UnrecognizedDigit";
         default:
             assert(false);
             return "";
@@ -114,6 +116,7 @@ SyntaxError TokenErrorToSyntaxError(TokenEnum Tok) {
         case TOKEN_ERROR_EXPECTEDEXPONENT: return SYNTAXERROR_TOKEN_EXPECTEDEXPONENT;
         case TOKEN_ERROR_EMPTYSTRING: return SYNTAXERROR_TOKEN_EMPTYSTRING;
         case TOKEN_ERROR_UNHANDLEDDOT: return SYNTAXERROR_TOKEN_UNHANDLEDDOT;
+        case TOKEN_ERROR_UNRECOGNIZEDDIGIT: return SYNTAXERROR_TOKEN_UNRECOGNIZEDDIGIT;
         default:
             assert(false);
             return SYNTAXERROR_UNKNOWN;

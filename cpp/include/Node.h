@@ -39,6 +39,9 @@ public:
     
     size_t size() const;
     
+    const Node* first() const;
+    const Node* last() const;
+    
     void append(LeafNodePtr );
     
     std::vector<LeafNodePtr>& getVectorDestructive() {
@@ -134,6 +137,9 @@ public:
     LeafSeqNode(LeafSeq Children) : Children(std::move(Children)) {}
     
     size_t size() const override;
+    
+    const Node* first() const override;
+    const Node* last() const override;
     
     void put(MLINK mlp) const override;
     

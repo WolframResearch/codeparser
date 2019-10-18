@@ -34,6 +34,7 @@ Token`Error`ExpectedExponent -> Next,
 Token`Error`EmptyString -> Next,
 Token`Error`Aborted -> Next,
 Token`Error`ExpectedOperand -> Next,
+Token`Error`UnrecognizedDigit -> Next,
 Token`Error`End -> Next,
 
 (* 1 character tokens *)

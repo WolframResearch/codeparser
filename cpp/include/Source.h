@@ -53,11 +53,9 @@ enum SyntaxError {
     //
     SYNTAXERROR_EXPECTEDOPERAND,
     
-    //
-    // Expected possible beginning of expression
-    // Something like  a }
-    //
-    SYNTAXERROR_EXPECTEDPOSSIBLEEXPRESSION,
+    SYNTAXERROR_EXPECTEDINTEGRAND,
+    
+    SYNTAXERROR_UNEXPECTEDCLOSER,
     
     //
     // These are translated over from Token Errors
@@ -73,6 +71,7 @@ enum SyntaxError {
     SYNTAXERROR_TOKEN_EXPECTEDEXPONENT,
     SYNTAXERROR_TOKEN_EMPTYSTRING,
     SYNTAXERROR_TOKEN_UNHANDLEDDOT,
+    SYNTAXERROR_TOKEN_UNRECOGNIZEDDIGIT,
 };
 
 std::string SyntaxErrorToString(SyntaxError Err);
@@ -87,9 +86,8 @@ SyntaxIssueTag SYNTAXISSUETAG_SYNTAXERROR = "SyntaxError";
 SyntaxIssueTag SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER = "UnrecognizedCharacter";
 SyntaxIssueTag SYNTAXISSUETAG_UNSUPPORTEDCHARACTER = "UnsupportedCharacter";
 SyntaxIssueTag SYNTAXISSUETAG_UNDOCUMENTEDCHARACTER = "UndocumentedCharacter";
-SyntaxIssueTag SYNTAXISSUETAG_UNLIKELYESCAPESEQUENCE = "UnlikelyEscapeSequence";
-SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDEXPRESSION = "UnexpectedExpression";
-SyntaxIssueTag SYNTAXISSUETAG_STRANGECHARACTER = "StrangeCharacter";
+SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDESCAPESEQUENCE = "UnexpectedEscapeSequence";
+SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDCHARACTER = "UnexpectedCharacter";
 SyntaxIssueTag SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT = "SyntaxUndocumentedSlot";
 SyntaxIssueTag SYNTAXISSUETAG_IMPLICITTIMESSPAN = "ImplicitTimesSpan";
 SyntaxIssueTag SYNTAXISSUETAG_DIFFERENTLINE = "DifferentLine";
@@ -106,8 +104,8 @@ typedef const std::string FormatIssueTag;
 FormatIssueTag FORMATISSUETAG_SPACE = "Space";
 FormatIssueTag FORMATISSUETAG_NOTCONTIGUOUS = "NotContiguous";
 FormatIssueTag FORMATISSUETAG_CHARACTERENCODING = "CharacterEncoding";
-FormatIssueTag FORMATISSUETAG_STRAYCARRIAGERETURN = "StrayCarriageReturn";
-FormatIssueTag FORMATISSUETAG_STRAYLINECONTINUATION = "StrayLineContinuation";
+FormatIssueTag FORMATISSUETAG_UNEXPECTEDCARRIAGERETURN = "UnexpectedCarriageReturn";
+FormatIssueTag FORMATISSUETAG_UNEXPECTEDLINECONTINUATION = "UnexpectedLineContinuation";
 
 
 //

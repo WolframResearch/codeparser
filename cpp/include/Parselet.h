@@ -309,21 +309,3 @@ public:
         return PRECEDENCE_FAKE_VECTORINEQUALITY;
     }
 };
-
-
-
-
-//
-// Error handling and cleanup
-//
-
-class ExpectedPossibleExpressionErrorParselet : public PrefixParselet {
-public:
-    NodePtr parse(ParserContext Ctxt) const override;
-    
-    Precedence getPrecedence() const override {
-        return PRECEDENCE_HIGHEST;
-    }
-};
-
-

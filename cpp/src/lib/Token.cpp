@@ -5,7 +5,7 @@
 
 bool containsOnlyASCII(std::string s);
 
-Token::Token(TokenEnum Tok, std::string&& StrIn, Source&& SrcIn) : Tok(Tok), Str(std::move(StrIn)), Src(std::move(SrcIn)) {
+Token::Token(TokenEnum Tok, std::string&& StrIn, Source&& SrcIn) : T(Tok), Str(std::move(StrIn)), Src(std::move(SrcIn)) {
     
     switch (Tok) {
         case TOKEN_UNKNOWN:
@@ -67,19 +67,19 @@ Token::Token(TokenEnum Tok, std::string&& StrIn, Source&& SrcIn) : Tok(Tok), Str
     
 }
 
-Token::Token(const Token& o) : Tok(o.Tok), Str(o.Str), Src(o.Src) {}
+Token::Token(const Token& o) : T(o.T), Str(o.Str), Src(o.Src) {}
 
-Token::Token(Token&& o) : Tok(o.Tok), Str(std::move(o.Str)), Src(std::move(o.Src)) {}
+Token::Token(Token&& o) : T(o.T), Str(std::move(o.Str)), Src(std::move(o.Src)) {}
 
 Token& Token::operator=(const Token& o) {
-    Tok = o.Tok;
+    T = o.T;
     Str = o.Str;
     Src = o.Src;
     return *this;
 }
 
 Token& Token::operator=(Token&& o) {
-    Tok = o.Tok;
+    T = o.T;
     Str = std::move(o.Str);
     Src = std::move(o.Src);
     return *this;
@@ -98,7 +98,7 @@ bool containsOnlyASCII(std::string s) {
 }
 
 bool Token::isTrivia() const {
-    switch (Tok) {
+    switch (T) {
         case TOKEN_WHITESPACE:
         case TOKEN_NEWLINE:
         case TOKEN_COMMENT:

@@ -220,7 +220,10 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       Throw[f, "Unhandled"]
       ];
      Switch[cst[[1]],
-      "FindFileFailed" | "EncodedFile",
+      "EncodedFile",
+      Throw[cst, "OK"]
+      ,
+      "FindFileFailed",
       Print[
        Row[{"index: ", i, " ", 
          StringReplace[fileIn, StartOfString ~~ prefix -> ""]}]];

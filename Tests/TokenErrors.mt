@@ -139,7 +139,7 @@ ExpectedDigitOrAlpha:
 Test[
 	TokenizeString["2^^3"]
 	,
-	{LeafNode[Token`Error`UnhandledCharacter, "2^^3", <|Source -> {{1, 1}, {1, 4}}|>]}
+	{LeafNode[Token`Error`UnrecognizedDigit, "2^^3", <|Source -> {{1, 1}, {1, 4}}|>]}
 	,
 	TestID->"TokenErrors-20190520-B7G4V4"
 ]
@@ -148,7 +148,7 @@ Test[
 Test[
 	TokenizeString["2^^@"]
 	,
-	{LeafNode[Token`Error`UnhandledCharacter, "2^^@", <|Source -> {{1, 1}, {1, 4}}|>]}
+	{LeafNode[Token`Error`UnrecognizedDigit, "2^^@", <|Source -> {{1, 1}, {1, 4}}|>]}
 	,
 	TestID->"TokenErrors-20190520-J3Q2S7"
 ]

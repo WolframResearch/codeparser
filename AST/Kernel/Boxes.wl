@@ -50,6 +50,27 @@ Module[{handledChildren, aggregatedChildren},
   Switch[aggregatedChildren,
 
     (*
+    We want to have Groups before Infix, so that { + } is first handled by Groups, and then Infix
+    *)
+
+    (*
+    Groups
+    *)
+    {LeafNode[Token`OpenSquare, _, _], ___, LeafNode[Token`CloseSquare, _, _]}, GroupNode[GroupSquare, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`OpenCurly, _, _], ___, LeafNode[Token`CloseCurly, _, _]}, GroupNode[List, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`LessBar, _, _], ___, LeafNode[Token`BarGreater, _, _]}, GroupNode[Association, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`OpenParen, _, _], ___, LeafNode[Token`CloseParen, _, _]}, GroupNode[GroupParen, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`LongName`LeftAssociation, _, _], ___, LeafNode[Token`LongName`RightAssociation, _, _]}, GroupNode[Association, handledChildren, <|Source->Append[pos, 1]|>],
+    
+    (*
+    Treat comments like groups
+    *)
+    {LeafNode[Token`Boxes`OpenParenStar, _, _], ___, LeafNode[Token`Boxes`StarCloseParen, _, _]}, GroupNode[Comment, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`Boxes`OpenParenStar, _, _], ___}, SyntaxErrorNode[SyntaxError`UnterminatedComment, handledChildren, <|Source->Append[pos, 1]|>],
+
+    {___, LeafNode[Token`CloseCurly, _, _]}, SyntaxErrorNode[SyntaxError`ExpectedPossibleExpression, handledChildren, <|Source -> Append[pos, 1]|>],
+
+    (*
     Infix
     *)
     {_, LeafNode[Token`Plus, _, _], ___}, InfixNode[Plus, handledChildren, <|Source->Append[pos, 1]|>],
@@ -367,6 +388,7 @@ Module[{handledChildren, aggregatedChildren},
     StartOfLine
     *)
     {LeafNode[Token`Question, _, _], ___}, StartOfLineNode[Information, {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~ MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2+1), "StringifyNextTokenSymbol" -> True]&, children[[2;;-1]]], <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`QuestionQuestion, _, _], ___}, StartOfLineNode[Information, {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~ MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2+1), "StringifyNextTokenSymbol" -> True]&, children[[2;;-1]]], <|Source->Append[pos, 1]|>],
     
     (*
     Postfix
@@ -392,26 +414,9 @@ Module[{handledChildren, aggregatedChildren},
     {_, LeafNode[Token`OpenSquare, _, _], ___}, CallNode[{handledChildren[[1]]}, {GroupMissingCloserNode[GroupSquare, Rest[handledChildren], <||>]}, <|Source->Append[pos, 1]|>],
 
     (*
-    Groups
-    *)
-    {LeafNode[Token`OpenSquare, _, _], ___, LeafNode[Token`CloseSquare, _, _]}, GroupNode[GroupSquare, handledChildren, <|Source->Append[pos, 1]|>],
-    {LeafNode[Token`OpenCurly, _, _], ___, LeafNode[Token`CloseCurly, _, _]}, GroupNode[List, handledChildren, <|Source->Append[pos, 1]|>],
-    {LeafNode[Token`LessBar, _, _], ___, LeafNode[Token`BarGreater, _, _]}, GroupNode[Association, handledChildren, <|Source->Append[pos, 1]|>],
-    {LeafNode[Token`OpenParen, _, _], ___, LeafNode[Token`CloseParen, _, _]}, GroupNode[GroupParen, handledChildren, <|Source->Append[pos, 1]|>],
-    {LeafNode[Token`LongName`LeftAssociation, _, _], ___, LeafNode[Token`LongName`RightAssociation, _, _]}, GroupNode[Association, handledChildren, <|Source->Append[pos, 1]|>],
-    
-    (*
-    Treat comments like groups
-    *)
-    {LeafNode[Token`Boxes`OpenParenStar, _, _], ___, LeafNode[Token`Boxes`StarCloseParen, _, _]}, GroupNode[Comment, handledChildren, <|Source->Append[pos, 1]|>],
-    {LeafNode[Token`Boxes`OpenParenStar, _, _], ___}, SyntaxErrorNode[SyntaxError`UnterminatedComment, handledChildren, <|Source->Append[pos, 1]|>],
-
-    {___, LeafNode[Token`CloseCurly, _, _]}, SyntaxErrorNode[SyntaxError`ExpectedPossibleExpression, handledChildren, <|Source -> Append[pos, 1]|>],
-
-    (*
     Unrecognized LongName
     *)
-    {LeafNode[Token`Other, "\\[", _], _, LeafNode[Token`CloseSquare, "]", _]}, BoxNode[RowBox, {handledChildren}, <|Source -> pos|>], 
+    {LeafNode[Token`Other, "\\[", _], _, LeafNode[Token`CloseSquare, "]", _]}, SyntaxErrorNode[SyntaxError`UnhandledCharacter, { parseBox[ "\\[" <> children[[2]] <> "]", Append[pos, 1] ] }, <|Source -> Append[pos, 1]|>], 
 
     (*
     the second arg is a box, so we know it is implicit Times
@@ -419,7 +424,8 @@ Module[{handledChildren, aggregatedChildren},
     {_, LeafNode[Symbol | Integer | Slot | String | Real | Out | Blank | BlankSequence | BlankNullSequence, _, _] |
         BinaryNode[_, _, _] | CallNode[_, _, _] | GroupNode[_, _, _] | BoxNode[_, _, _] | InfixNode[_, _, _] |
         PostfixNode[_, _, _] | PatternBlankNode[_, _, _], ___},
-        InfixNode[Times, Riffle[handledChildren, LeafNode[Token`Fake`ImplicitTimes, "", <||>]], <|Source->Append[pos, 1]|>],
+
+        InfixNode[Times, Flatten[{First[handledChildren]} ~Join~ Map[If[MatchQ[#, LeafNode[Token`WhiteSpace | Token`Newline | Token`Comment | Token`LineContinuation, _, _]], #, {LeafNode[Token`Fake`ImplicitTimes, "", <||>], #}]&, Rest[handledChildren]]], <|Source->Append[pos, 1]|>],
 
     (*
     if there is an error, then just return the last non-trivia node
@@ -837,9 +843,12 @@ Module[{parsed, data, issues, stringifyNextTokenSymbol, oldLeafSrc},
 
   data[Source] = pos;
 
-  issues = data[SyntaxIssues];
-  issues = replacePosition[#, pos, oldLeafSrc]& /@ issues;
-  data[SyntaxIssues] = issues;
+  issues = Lookup[data, SyntaxIssues, {}];
+
+  If[!empty[issues],
+    issues = replacePosition[#, pos, oldLeafSrc]& /@ issues;
+    data[SyntaxIssues] = issues;
+  ];
 
   parsed[[3]] = data;
   parsed

@@ -281,7 +281,7 @@ Precedence`LongName`Union -> Precedence[Union], (* 300 *)
 Precedence`LongName`Intersection -> Precedence[Intersection], (* 300 *)
 
 Precedence`Infix`Plus -> Precedence[Plus], (* 310 *)
-Precedence`Binary`Minus -> Precedence`Infix`Plus,
+Precedence`Infix`Minus -> Precedence`Infix`Plus,
 Precedence`Infix`LongName`PlusMinus -> Precedence[PlusMinus], (* 310 *)
 Precedence`Infix`LongName`MinusPlus -> Precedence[MinusPlus], (* 310 *)
 
@@ -314,7 +314,6 @@ Precedence`LongName`Star -> Precedence[Star], (* 390 *)
 
 Precedence`Star -> Precedence[Times], (* 400 *)
 Precedence`LongName`Times -> Precedence`Star,
-Precedence`Fake`ImplicitTimes -> Precedence`Star,
 Precedence`LongName`InvisibleTimes -> Precedence`Star,
 
 Precedence`LongName`CenterDot -> Precedence[CenterDot], (* 410 *)

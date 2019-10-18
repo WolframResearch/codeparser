@@ -79,8 +79,9 @@ tokenCPPHeader = {
 #pragma once
 
 #include <unordered_map>
+#include <cstdint> // for uint16_t
 
-enum TokenEnum {"} ~Join~
+enum TokenEnum : uint16_t {"} ~Join~
    KeyValueMap[(Row[{toGlobal[#], " = ", #2, ","}])&, enumMap] ~Join~
    {"};"} ~Join~ {
 "

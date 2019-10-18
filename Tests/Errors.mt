@@ -89,7 +89,7 @@ TestMatch[
 	ParseString["\\n23", HoldNode[Hold, #[[1]], <||>]&]
 	,
 	HoldNode[Hold, {
-		SyntaxErrorNode[SyntaxError`UnhandledCharacter, {LeafNode[Token`Error`UnhandledCharacter, "\\n", _]}, _],
+		AbstractSyntaxErrorNode[AbstractSyntaxError`UnhandledCharacter, {LeafNode[Token`Error`UnhandledCharacter, "\\n", _]}, _],
 		LeafNode[Integer, "23", _] }, _]
 	,
 	TestID->"Errors-20190126-Q9U0H8"
@@ -99,7 +99,7 @@ TestMatch[
 	ParseString["\\t23", HoldNode[Hold, #[[1]], <||>]&]
 	,
 	HoldNode[Hold, {
-		SyntaxErrorNode[SyntaxError`UnhandledCharacter, {LeafNode[Token`Error`UnhandledCharacter, "\\t", _]}, _],
+		AbstractSyntaxErrorNode[AbstractSyntaxError`UnhandledCharacter, {LeafNode[Token`Error`UnhandledCharacter, "\\t", _]}, _],
 		LeafNode[Integer, "23", _] }, _]
 	,
 	TestID->"Errors-20190203-F5C9L1"
@@ -107,6 +107,8 @@ TestMatch[
 
 (*
 important that space after - is not in SyntaxErrorNode
+
+The  a - \t  and  b  are 2 separate expressions
 *)
 Test[
 	ConcreteParseString["a - \\tb"]
@@ -117,12 +119,9 @@ Test[
     		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 2}, {1, 2}}|>], 
     		LeafNode[Token`Minus, "-", <|Source -> {{1, 3}, {1, 3}}|>], 
     		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 4}, {1, 4}}|>], 
-   			SyntaxErrorNode[
-     			SyntaxError`UnhandledCharacter, {LeafNode[
-       			Token`Error`UnhandledCharacter, 
-       			"\\t", <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>],
-   		LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> {{1, 7}, {1, 7}}|>],
-   		LeafNode[Symbol, "b", <|Source -> {{1, 7}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]
+   			LeafNode[Token`Error`UnhandledCharacter, "\\t", <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>],
+       	LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> {{1, 7}, {1, 7}}|>],
+       	LeafNode[Symbol, "b", <|Source -> {{1, 7}, {1, 7}}|>] }, <|Source -> {{1, 1}, {1, 7}}|>]
 	,
 	TestID->"Errors-20190203-G0U2N7"
 ]
@@ -130,7 +129,7 @@ Test[
 TestMatch[
 	ParseString["\\"]
 	,
-	_SyntaxErrorNode
+	_AbstractSyntaxErrorNode
 	,
 	TestID->"Errors-20190203-M3A0S4"
 ]
@@ -150,8 +149,7 @@ Test[
 			CallNode[LeafNode[Symbol, "b", <|Source -> {{1, 4}, {1, 4}}|>], {
 				GroupNode[GroupSquare, {
 					LeafNode[Token`OpenSquare, "[", <|Source -> {{1, 5}, {1, 5}}|>],
-					LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 6}, {1, 6}}|>]}, <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 4}, {1, 6}}|>],
-			LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 7}, {1, 7}}|>]}, <|Source -> {{1, 3}, {1, 7}}|>]}, <|Source -> {{1, 2}, {1, 7}}|>]
+					LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 6}, {1, 6}}|>]}, <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 4}, {1, 6}}|>]}, <|Source -> {{1, 3}, {1, 6}}|>]}, <|Source -> {{1, 2}, {1, 6}}|>]
 	,
 	TestID->"Errors-20190803-C7O2S5"
 ]

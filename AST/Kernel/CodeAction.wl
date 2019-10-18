@@ -209,6 +209,13 @@ Module[{src, originalNodePos, cst, replacementNode, func, trivia, insertionText,
     )
    	,
 
+    Identity, (
+    
+    cst
+    )
+
+    ,
+
     InsertNode, (
 
     insertionNode = actionData["InsertionNode"];

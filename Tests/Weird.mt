@@ -53,6 +53,16 @@ Test[
 	TestID->"Weird-20190601-G4E6Y0"
 ]
 
+Test[
+	"\\[Integral]!b"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Weird-20191016-C1Z5S5"
+]
+
 
 
 
@@ -64,9 +74,10 @@ Error
 Test[
 	ParseString["\\[Integral] f \\[DifferentialD]"]
 	,
-	CallNode[LeafNode[Symbol, "Integrate", <||>], {LeafNode[Symbol, "f", <|Source -> {{1, 13}, {1, 13}}|>],
-		SyntaxErrorNode[SyntaxError`ExpectedPossibleExpression, {LeafNode[EndOfFile, "", <|Source -> {{2, 0}, {2, 0}}|>]},
-			<|Source -> {{2, 0}, {2, 0}}|>]}, <|Source -> {{1, 1}, {2, 0}}|>]
+	CallNode[LeafNode[Symbol, "Integrate", <||>], {
+		LeafNode[Symbol, "f", <|Source -> {{1, 13}, {1, 13}}|>],
+		AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, {
+			LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 30}, {1, 30}}|>]}, <|Source -> {{1, 30}, {1, 30}}|>]}, <|Source -> {{1, 1}, {1, 30}}|>]
 	,
 	TestID->"Weird-20190601-M2O1W0"
 ]

@@ -21,7 +21,6 @@ class ContextSensitiveInfixParselet;
 class StartOfLineParselet;
 class GroupParselet;
 class Parselet;
-class ExpectedPossibleExpressionErrorParselet;
 
 enum Associativity {
     ASSOCIATIVITY_NONE,
@@ -143,15 +142,11 @@ private:
     std::array<std::unique_ptr<ContextSensitivePrefixParselet>, TOKEN_COUNT> contextSensitivePrefixParselets;
     std::array<std::unique_ptr<ContextSensitiveInfixParselet>, TOKEN_COUNT> contextSensitiveInfixParselets;
     
-    std::unique_ptr<ExpectedPossibleExpressionErrorParselet> expectedPossibleExpressionErrorParselet;
-    
     std::deque<Token> tokenQueue;
     
     std::vector<std::unique_ptr<Issue>> Issues;
     
     std::function<bool ()> currentAbortQ;
-    
-    bool implicitTimesEnabled;
     
     
     void registerPrefixParselet(TokenEnum, std::unique_ptr<PrefixParselet> );
@@ -164,11 +159,7 @@ private:
     
     void registerContextSensitiveInfixParselet(TokenEnum, std::unique_ptr<ContextSensitiveInfixParselet> );
     
-    
-    
     NodePtr parse0(NodeSeq Left, Precedence, ParserContext Ctxt);
-    
-    Precedence getCurrentTokenPrecedence(Token& current, ParserContext Ctxt);
     
 public:
     Parser();
@@ -179,7 +170,7 @@ public:
     
     void nextToken(ParserContext Ctxt);
     
-    Token currentToken();
+    Token currentToken() const;
     
     void prependInReverse(std::vector<LeafNodePtr>& );
     
@@ -191,7 +182,11 @@ public:
     
     NodePtr parse(ParserContext Ctxt);
     
-    bool isPossibleBeginningOfExpression(Token& Tok, ParserContext Ctxt) const;
+    NodePtr handleNotPossible(Token& tokenAnchor, ParserContext Ctxt, bool *wasCloser);
+    
+    Precedence getTokenPrecedence(Token& current, ParserContext Ctxt, bool considerPrefix, bool *implicitTimes) const;
+    
+    bool isPossibleBeginningOfExpression(ParserContext Ctxt) const;
     
     
     const std::unique_ptr<PrefixParselet>& findPrefixParselet(TokenEnum Tok) const;

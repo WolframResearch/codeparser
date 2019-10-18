@@ -31,7 +31,7 @@ Test[
 Test[
 	ToInputFormString[Aggregate[ConcreteParseString["@"]]]
 	,
-	" @   "
+	" @ "
 	,
 	TestID->"ToString-20181230-V8O8B1"
 ]
@@ -188,7 +188,7 @@ Test[
 Test[
 	ToInputFormString[Aggregate[ConcreteParseString["a:"]]]
 	,
-	" a:   "
+	" a: "
 	,
 	TestID->"ToString-20190523-H5C9J2"
 ]

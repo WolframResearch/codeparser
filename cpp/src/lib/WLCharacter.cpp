@@ -372,22 +372,6 @@ bool WLCharacter::isEscaped() const {
 bool WLCharacter::isLetterlike() const {
     auto val = to_point();
     
-    if (!(0x00 <= val && val <= 0x7f)) {
-        return false;
-    }
-    
-    if (isSpace()) {
-        return false;
-    }
-    
-    if (isNewline()) {
-        return false;
-    }
-    
-    if (isUninterpretable()) {
-        return false;
-    }
-    
     //
     // Most of ASCII control characters are letterlike.
     //
@@ -395,7 +379,21 @@ bool WLCharacter::isLetterlike() const {
     // They are uninterpretable.
     //
     
-    return isAlpha() || val == '$' || isControl();
+    switch (val) {
+        case '\x00': case '\x01': case '\x02': case '\x03': case '\x04': case '\x05': case '\x06':
+        case '\x08':
+        case '\x0e': case '\x0f': case '\x10': case '\x11': case '\x12': case '\x13': case '\x14':
+        case '\x15': case '\x16': case '\x17': case '\x18': case '\x19': case '\x1a': case '\x1b':
+        case '\x1c': case '\x1d': case '\x1e': case '\x1f':
+        case '$':
+        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M':
+        case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
+        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm':
+        case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
+            return true;
+        default:
+            return false;
+    }
 }
 
 bool WLCharacter::isStrangeLetterlike() const {
@@ -446,21 +444,23 @@ bool WLCharacter::isVeryStrangeLetterlike() const {
 bool WLCharacter::isSpace() const {
     auto val = to_point();
     
-    if (!(0x00 <= val && val <= 0x7f)) {
-        return false;
+    switch (val) {
+        case ' ': case '\t': case '\v': case '\f':
+            return true;
+        default:
+            return false;
     }
-    
-    return val == ' ' || val == '\t' || val == '\v' || val == '\f';
 }
 
 bool WLCharacter::isStrangeSpace() const {
     auto val = to_point();
     
-    if (!(0x00 <= val && val <= 0x7f)) {
-        return false;
+    switch (val) {
+        case '\v': case '\f':
+            return true;
+        default:
+            return false;
     }
-    
-    return val == '\v' || val == '\f';
 }
 
 bool WLCharacter::isNewline() const {
@@ -486,11 +486,12 @@ bool WLCharacter::isAlpha() const {
 bool WLCharacter::isDigit() const {
     auto val = to_point();
     
-    if (!(0x00 <= val && val <= 0x7f)) {
-        return false;
+    switch (val) {
+        case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+            return true;
+        default:
+            return false;
     }
-    
-    return std::isdigit(val);
 }
 
 bool WLCharacter::isAlphaOrDigit() const {

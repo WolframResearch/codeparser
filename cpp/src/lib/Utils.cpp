@@ -125,20 +125,20 @@ bool Utils::isUndocumentedLongName(std::string s) {
 
 void Utils::differentLineWarning(Token Tok1, Token Tok2) {
     
-    if (Tok1.Tok == TOKEN_ERROR_ABORTED) {
+    if (Tok1.Tok() == TOKEN_ERROR_ABORTED) {
         return;
     }
-    if (Tok2.Tok == TOKEN_ERROR_ABORTED) {
+    if (Tok2.Tok() == TOKEN_ERROR_ABORTED) {
         return;
     }
     
     //
     // Skip DifferentLine issues if ENDOFFILE
     //
-    if (Tok1.Tok == TOKEN_ENDOFFILE) {
+    if (Tok1.Tok() == TOKEN_ENDOFFILE) {
         return;
     }
-    if (Tok2.Tok == TOKEN_ENDOFFILE) {
+    if (Tok2.Tok() == TOKEN_ENDOFFILE) {
         return;
     }
     
@@ -169,14 +169,14 @@ void Utils::differentLineWarning(NodeSeq& Args, Token Tok2) {
 
 void Utils::endOfLineWarning(Token Tok, Token EndTok) {
     
-    if (Tok.Tok == TOKEN_ERROR_ABORTED) {
+    if (Tok.Tok() == TOKEN_ERROR_ABORTED) {
         return;
     }
-    if (EndTok.Tok == TOKEN_ERROR_ABORTED) {
+    if (EndTok.Tok() == TOKEN_ERROR_ABORTED) {
         return;
     }
     
-    if (EndTok.Tok != TOKEN_NEWLINE && EndTok.Tok != TOKEN_ENDOFFILE) {
+    if (EndTok.Tok() != TOKEN_NEWLINE && EndTok.Tok() != TOKEN_ENDOFFILE) {
         return;
     }
     
@@ -187,17 +187,20 @@ void Utils::endOfLineWarning(Token Tok, Token EndTok) {
         return;
     }
     
-    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_ENDOFLINE, "Suspicious syntax.", SYNTAXISSUESEVERITY_REMARK, Tok.Src, 0.80, {}));
+    std::vector<CodeActionPtr> Actions;
+    Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``;;`` with ``;``.", Source(Tok.Src), ";")));
+    
+    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_ENDOFLINE, "``" + Tok.Str + "`` is at the end of the line.", SYNTAXISSUESEVERITY_REMARK, Tok.Src, 0.80, std::move(Actions)));
     
     TheParser->addIssue(std::move(I));
 }
 
 void Utils::notContiguousWarning(Token Tok1, Token Tok2) {
     
-    if (Tok1.Tok == TOKEN_ERROR_ABORTED) {
+    if (Tok1.Tok() == TOKEN_ERROR_ABORTED) {
         return;
     }
-    if (Tok2.Tok == TOKEN_ERROR_ABORTED) {
+    if (Tok2.Tok() == TOKEN_ERROR_ABORTED) {
         return;
     }
     
@@ -213,7 +216,7 @@ void Utils::notContiguousWarning(Token Tok1, Token Tok2) {
         return;
     }
     
-    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_NOTCONTIGUOUS, std::string("Tokens are not contiguous"), FORMATISSUESEVERITY_FORMATTING, Source(Tok1.Src, Tok2.Src)));
+    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_NOTCONTIGUOUS, std::string("Tokens are not contiguous."), FORMATISSUESEVERITY_FORMATTING, Source(Tok1.Src, Tok2.Src)));
     
     TheParser->addIssue(std::move(I));
 }
@@ -226,7 +229,7 @@ void Utils::strangeLetterlikeWarning(WLCharacter c) {
         
         auto Src = TheSourceManager->getWLCharacterSource();
         
-        auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange character in symbol: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+        auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
         
         TheTokenizer->addIssue(std::move(I));
         
@@ -235,7 +238,7 @@ void Utils::strangeLetterlikeWarning(WLCharacter c) {
     
     auto Src = TheSourceManager->getWLCharacterSource();
     
-    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_STRANGECHARACTER, "Strange character in symbol: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.90, {}));
+    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.90, {}));
     
     TheTokenizer->addIssue(std::move(I));
 }

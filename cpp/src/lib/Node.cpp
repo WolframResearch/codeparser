@@ -93,18 +93,40 @@ size_t LeafSeq::size() const {
     return accum;
 }
 
+const Node* LeafSeq::first() const {
+    
+    auto F = vec.at(0).get();
+    
+    auto FF = F->first();
+    
+    return FF;
+}
+
+const Node* LeafSeq::last() const {
+    auto L = vec.at(vec.size()-1).get();
+    
+    auto LL = L->last();
+    
+    return LL;
+}
+
 
 Node::Node(NodeSeq ChildrenIn) : Children(std::move(ChildrenIn)) {
 #ifndef NDEBUG
     //
     // These are very useful asserts to help find problems with trivia
     //
+    
+    //
+    // There may be trivia after the Node that we care about, so we cannot test the last
+    // But we can test the first
+    //
 
     auto F = Children.first();
-    auto L = Children.last();
+//    auto L = Children.last();
     
     assert(!F->isTrivia());
-    assert(!L->isTrivia());
+//    assert(!L->isTrivia());
 #endif
 }
 
@@ -156,6 +178,16 @@ size_t LeafSeqNode::size() const {
     return Children.size();
 }
 
+const Node* LeafSeqNode::first() const {
+    assert(!Children.empty());
+    return Children.first();
+}
+
+const Node* LeafSeqNode::last() const {
+    assert(!Children.empty());
+    return Children.last();
+}
+
 
 size_t NodeSeqNode::size() const {
     return Children.size();
@@ -194,7 +226,7 @@ void LeafNode::put(MLINK mlp) const {
     
     MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKELEAFNODE->name(), static_cast<int>(2 + Tok.Src.count()));
     
-    MLPutSymbol(mlp, TokenToSymbol(Tok.Tok)->name());
+    MLPutSymbol(mlp, TokenToSymbol(Tok.Tok())->name());
     
     MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Tok.Str.c_str()), static_cast<int>(Tok.Str.size()));
     

@@ -90,7 +90,7 @@ const NextWLCharacterPolicy INSIDE_NUMBER          = LC_IS_MEANINGFUL | LC_UNDER
 const NextWLCharacterPolicy INSIDE_STRING          = PRESERVE_WS_AFTER_LC | LC_IS_MEANINGFUL | UNLIKELY_ESCAPE_CHECKING;
 const NextWLCharacterPolicy INSIDE_STRING_FILEIFY  = DISABLE_ESCAPES | LC_IS_MEANINGFUL;
 const NextWLCharacterPolicy INSIDE_OPERATOR        = LC_IS_MEANINGFUL | LC_UNDERSTANDS_CRLF;
-const NextWLCharacterPolicy INSIDE_COMMENT         = PRESERVE_WS_AFTER_LC | DISABLE_CHARACTERDECODINGISSUES | LC_UNDERSTANDS_CRLF;
+const NextWLCharacterPolicy INSIDE_COMMENT         = DISABLE_CHARACTERDECODINGISSUES | LC_UNDERSTANDS_CRLF;
 
 //
 // CharacterDecoder is given a stream of integers that represent Unicode code points and decodes

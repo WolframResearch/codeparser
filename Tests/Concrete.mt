@@ -139,14 +139,15 @@ Test[
 	ConcreteParseString["a ~f x", f]
 	,
 	f[{{
-		SyntaxErrorNode[SyntaxError`ExpectedTilde, {
-			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
-			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 2}, {1, 2}}|>],
-			LeafNode[Token`Tilde, "~", <|Source -> {{1, 3}, {1, 3}}|>],
-			LeafNode[Symbol, "f", <|Source -> {{1, 4}, {1, 4}}|>],
+		InfixNode[Times, {
+			SyntaxErrorNode[SyntaxError`ExpectedTilde, {
+				LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
+				LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 2}, {1, 2}}|>],
+				LeafNode[Token`Tilde, "~", <|Source -> {{1, 3}, {1, 3}}|>],
+				LeafNode[Symbol, "f", <|Source -> {{1, 4}, {1, 4}}|>] }, <|Source -> {{1, 1}, {1, 4}}|>],
 			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 5}, {1, 5}}|>],
-			LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 6}, {1, 6}}|>] }, <|Source -> {{1, 1}, {1, 6}}|>],
-		LeafNode[Symbol, "x", <|Source -> {{1, 6}, {1, 6}}|>]}, {}}]
+			LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> {{1, 6}, {1, 6}}|>],
+			LeafNode[Symbol, "x", <|Source -> {{1, 6}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]}, {}}]
 	,
 	TestID->"Concrete-20190521-L2C2Y8"
 ]
@@ -213,9 +214,8 @@ Test[
 		GroupMissingCloserNode[GroupParen, {
 			LeafNode[Token`OpenParen, "(", <|Source -> {{1, 3}, {1, 3}}|>],
 			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 4}, {1, 4}}|>],
-			LeafNode[Symbol, "a", <|Source -> {{1, 5}, {1, 5}}|>],
-			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 6}, {1, 6}}|>],
-			LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 7}, {1, 7}}|>]}, <|Source -> {{1, 3}, {1, 7}}|>],
+			LeafNode[Symbol, "a", <|Source -> {{1, 5}, {1, 5}}|>]}, <|Source -> {{1, 3}, {1, 5}}|>],
+		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 6}, {1, 6}}|>],
 		LeafNode[Token`CloseCurly, "}", <|Source -> {{1, 7}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]
 	,
 	TestID->"Concrete-20190717-L0P2V0"
@@ -224,7 +224,7 @@ Test[
 Test[
 	ConcreteParseString["{ a ) }"]
 	,
-	SyntaxErrorNode[SyntaxError`ExpectedPossibleExpression, {
+	SyntaxErrorNode[SyntaxError`UnexpectedCloser, {
 		LeafNode[Token`CloseCurly, "}", <|Source -> {{1, 7}, {1, 7}}|>]}, <|Source -> {{1, 7}, {1, 7}}|>]
 	,
 	TestID->"Concrete-20190717-N8D4U4"
@@ -468,10 +468,10 @@ Test[
 ]
 
 Test[
-	ConcreteParseString["a=.."]
+	ConcreteParseString["a=..", f]
 	,
-	SyntaxErrorNode[SyntaxError`UnhandledDot, {
-		LeafNode[Token`Error`UnhandledDot, "=..", <|Source -> {{1, 2}, {1, 4}}|>]}, <|Source -> {{1, 2}, {1, 4}}|>]
+	f[{{LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
+		LeafNode[Token`Error`UnhandledDot, "=..", <|Source -> {{1, 2}, {1, 4}}|>]}, {}}]
 	,
 	TestID->"Concrete-20190916-N2A8O1"
 ]
@@ -529,7 +529,18 @@ Test[
 	TestID->"Concrete-20190930-B8P9Y9"
 ]
 
-
-
-
-			
+Test[
+	ConcreteParseString["{ @@ }"]
+	,
+	GroupNode[List, {
+		LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 1}}|>],
+		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 2}, {1, 2}}|>],
+		BinaryNode[Apply, {
+			LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>], 
+    		LeafNode[Token`AtAt, "@@", <|Source -> {{1, 3}, {1, 4}}|>], 
+    		LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 4}, {1, 4}}|>]}, <|Source -> {{1, 3}, {1, 4}}|>],
+    	LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 5}, {1, 5}}|>], 
+    	LeafNode[Token`CloseCurly, "}", <|Source -> {{1, 6}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]
+	,
+	TestID->"Concrete-20191012-S7X3B0"
+]

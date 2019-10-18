@@ -1,4 +1,5 @@
 
+Needs["AST`"]
 
 (*
 CharacterEncoding
@@ -8,18 +9,6 @@ CharacterEncoding
 TODO: invalid UTF-8 sequence
 *)
 
-
-(*
-StrayCarriageReturn
-*)
-TestMatch[
-	FirstCase[ConcreteParseString["{ \r }", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
-		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["StrayCarriageReturn", _, _, _]}]
-	,
-	TestID->"SyntaxIssues-20190521-I5S5I8"
-]
 
 
 
@@ -219,18 +208,6 @@ TestMatch[
 
 
 
-(*
-NotContiguous:
-*)
-TestMatch[
-	FirstCase[ConcreteParseString["a =    .", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
-		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["NotContiguous", _, _, _]}]
-	,
-	TestID->"SyntaxIssues-20190521-Q9Y0M6"
-]
-
 
 
 
@@ -308,7 +285,7 @@ TestMatch[
 	FirstCase[ConcreteParseString["a\\.00", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["StrangeCharacter", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnexpectedCharacter", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-B2V1Z3"
 ]
@@ -317,7 +294,7 @@ TestMatch[
 	FirstCase[ConcreteParseString["a\\:f456", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["StrangeCharacter", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnexpectedCharacter", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-K6H8E0"
 ]
@@ -336,25 +313,6 @@ TestMatch[
 (*
 SyntaxAmbiguity:
 *)
-
-
-TestMatch[
-	FirstCase[ConcreteParseString["1.2`a", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
-		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxAmbiguity", _, _, _]}]
-	,
-	TestID->"SyntaxIssues-20190521-M4P4L8"
-]
-
-TestMatch[
-	FirstCase[ConcreteParseString["1.2`->3", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
-		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxAmbiguity", _, _, _]}]
-	,
-	TestID->"SyntaxIssues-20190521-N6V1Y7"
-]
 
 TestMatch[
 	FirstCase[ConcreteParseString["0..", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
@@ -390,66 +348,6 @@ TestMatch[
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["Space", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-V2H2D5"
-]
-
-TestMatch[
-	FirstCase[ConcreteParseString["a-->0", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
-		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxAmbiguity", _, _, _]}]
-	,
-	TestID->"SyntaxIssues-20190521-L4Q6B3"
-]
-
-TestMatch[
-	FirstCase[ConcreteParseString["a--=0", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
-		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxAmbiguity", _, _, _]}]
-	,
-	TestID->"SyntaxIssues-20190521-B6D1O6"
-]
-
-TestMatch[
-	FirstCase[ConcreteParseString["<||>=0", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
-		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxAmbiguity", _, _, _]}]
-	,
-	TestID->"SyntaxIssues-20190521-M5D3W1"
-]
-
-TestMatch[
-	FirstCase[ConcreteParseString["t/.03", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
-		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxAmbiguity", _, _, _]}]
-	,
-	TestID->"SyntaxIssues-20190521-R4X1R6"
-]
-
-TestMatch[
-	FirstCase[ConcreteParseString["a++=0", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
-		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxAmbiguity", _, _, _]}]
-	,
-	TestID->"SyntaxIssues-20190521-Z7F1E3"
-]
-
-
-
-(*
-LineContinuation
-*)
-
-TestMatch[
-	FirstCase[ConcreteParseString[" { a, \\\n b } ", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
-		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["StrayLineContinuation", _, _, _]}]
-	,
-	TestID->"SyntaxIssues-20190523-B8K3A5"
 ]
 
 

@@ -112,7 +112,7 @@ void SourceManager::advanceSourceLocation(SourceCharacter c) {
             // Do not need to advance Col here
             //
             
-            auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_STRAYCARRIAGERETURN, "Stray ``\\r`` character.", FORMATISSUESEVERITY_FORMATTING, Source(Loc)));
+            auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", FORMATISSUESEVERITY_FORMATTING, Source(Loc)));
             
             Issues.push_back(std::move(I));
         }
@@ -151,7 +151,7 @@ void SourceManager::advanceSourceLocation(SourceCharacter c) {
         // Do not need to advance Col here
         //
         
-        auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_STRAYCARRIAGERETURN, "Stray ``\\r`` character.", FORMATISSUESEVERITY_FORMATTING, Source(Loc)));
+        auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", FORMATISSUESEVERITY_FORMATTING, Source(Loc)));
         
         Issues.push_back(std::move(I));
     }

@@ -372,6 +372,12 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
                     
                     Issues.push_back(std::move(I));
                     
+                } else if (curSource.isEndOfFile()) {
+                    
+                    //
+                    // Do not know what a good suggestion would be for \<EOF>
+                    //
+                    
                 } else {
                     
                     auto curSourceGraphicalStr = WLCharacter(curSource.to_point()).graphicalString();
@@ -645,7 +651,7 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
                     Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with \\[" + suggestion + "]", Source(CharacterStart-1, Loc), "\\[" + suggestion + "]")));
                 }
                 
-                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNLIKELYESCAPESEQUENCE, std::string("Unlikely escape sequence: ``\\\\[") + LongNameStr + "]``", SYNTAXISSUESEVERITY_REMARK, Source(CharacterStart-1, Loc), 0.33, std::move(Actions)));
+                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDESCAPESEQUENCE, std::string("Unexpected escape sequence: ``\\\\[") + LongNameStr + "]``.", SYNTAXISSUESEVERITY_REMARK, Source(CharacterStart-1, Loc), 0.33, std::move(Actions)));
                 
                 Issues.push_back(std::move(I));
             }
