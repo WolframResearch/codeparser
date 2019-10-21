@@ -57,6 +57,15 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
         
         _currentWLCharacter = WLCharacter(curSource.to_point());
         
+        if (_currentWLCharacter.isStrange()) {
+            
+            auto Src = TheSourceManager->getWLCharacterSource();
+            
+            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + _currentWLCharacter.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+            
+            Issues.push_back(std::move(I));
+        }
+        
         return _currentWLCharacter;
     }
     
@@ -79,6 +88,15 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
         TheSourceManager->setWLCharacterEnd();
         
         _currentWLCharacter = WLCharacter(curSource.to_point());
+        
+        if (_currentWLCharacter.isStrange()) {
+            
+            auto Src = TheSourceManager->getWLCharacterSource();
+            
+            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + _currentWLCharacter.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+            
+            Issues.push_back(std::move(I));
+        }
         
         return _currentWLCharacter;
     }
@@ -409,6 +427,15 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
     }
     
     TheSourceManager->setWLCharacterEnd();
+    
+    if (_currentWLCharacter.isStrange()) {
+        
+        auto Src = TheSourceManager->getWLCharacterSource();
+        
+        auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + _currentWLCharacter.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+        
+        Issues.push_back(std::move(I));
+    }
     
     return _currentWLCharacter;
 }

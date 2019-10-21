@@ -123,6 +123,8 @@ struct WLCharacter {
     bool isUninterpretableCharacter() const;
     bool isControlCharacter() const;
     bool isLineContinuation() const;
+    
+    bool isStrange() const;
 };
 
 std::ostream& operator<<(std::ostream& stream, WLCharacter);

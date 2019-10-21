@@ -790,6 +790,30 @@ bool WLCharacter::isControlCharacter() const {
     return false;
 }
 
+bool WLCharacter::isStrange() const {
+
+    auto val = to_point();
+    
+    switch (val) {
+        //
+        // C0 control characters
+        //
+        case '\x00': case '\x01': case '\x02': case '\x03': case '\x04': case '\x05': case '\x06': case '\x07': case '\x08':
+        //
+        // Skip TAB, LF, CR, and ESC. They are not strange.
+        //
+        case '\x0b': case '\x0c': case '\x0e': case '\x0f': case '\x10': case '\x11': case '\x12': case '\x13': case '\x14': case '\x15':
+        case '\x16': case '\x17': case '\x18': case '\x19': case '\x1a': case '\x1c': case '\x1d': case '\x1e': case '\x1f':
+        //
+        // Make sure to include DEL
+        //
+        case CODEPOINT_DEL:
+            return true;
+        default:
+            return false;
+    }
+}
+
 bool WLCharacter::isLineContinuation() const {
     auto val = to_point();
     
