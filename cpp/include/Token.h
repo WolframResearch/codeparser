@@ -14,10 +14,8 @@
 // fedcba9876543210
 //        ^~~~~~~~~
 //        Enum bits (9 bits)
-//       ^
-//       Possible bit
-// ^~~~~~
-// Currently unused (6 bits)
+// ^~~~~~~
+// Currently unused (7 bits)
 //
 struct Token {
     

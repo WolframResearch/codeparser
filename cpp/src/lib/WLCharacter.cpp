@@ -291,12 +291,6 @@ void makeGraphical(std::ostream& stream, int i) {
         case '\r':
             stream << WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
             break;
-        case CODEPOINT_ESC:
-            //
-            // Use \[RawEscape]
-            //
-            stream << WLCharacter(CODEPOINT_ESC, ESCAPE_LONGNAME);
-            break;
         //
         // C0 control characters
         //
@@ -320,7 +314,13 @@ void makeGraphical(std::ostream& stream, int i) {
             stream << WLCharacter(i, ESCAPE_2HEX);
             break;
         default:
-            if (i > 0xffff) {
+            if (CodePointToLongNameMap.find(i) != CodePointToLongNameMap.end()) {
+                //
+                // Use LongName if available
+                //
+                stream << WLCharacter(i, ESCAPE_LONGNAME);
+                break;
+            } else if (i > 0xffff) {
                 stream << WLCharacter(i, ESCAPE_6HEX);
                 break;
             } else if (i > 0xff) {
