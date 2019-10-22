@@ -520,6 +520,8 @@ NodePtr parseLeaf() {
         auto AccumTok = N->getToken();
         auto AccumStr = AccumTok.Str;
         
+        auto allWhitespace = (AccumTok.T == TOKEN_WHITESPACE);
+        
         auto Str = Tok.Str;
         AccumStr = AccumStr + Str;
         
@@ -532,6 +534,8 @@ NodePtr parseLeaf() {
             
             auto Str = Tok.Str;
             AccumStr = AccumStr + Str;
+            
+            allWhitespace = allWhitespace && (Tok.T == TOKEN_WHITESPACE);
             
             TheParser->nextToken(PCtxt);
             
@@ -546,6 +550,15 @@ NodePtr parseLeaf() {
         
         auto Start = NSrc.start();
         auto End = Start + AccumStr.size() - 1;
+        
+        if (allWhitespace) {
+            //
+            // Convenience here, any amount of whitespace will be treated as a single token
+            //
+            auto WhiteSpaceTok = Token(TOKEN_WHITESPACE, std::move(AccumStr), Source(Start, End));
+            auto WhiteSpaceLeaf = LeafNodePtr(new LeafNode(WhiteSpaceTok));
+            return WhiteSpaceLeaf;
+        }
         
         auto OtherTok = Token(TOKEN_OTHER, std::move(AccumStr), Source(Start, End));
         auto OtherLeaf = LeafNodePtr(new LeafNode(OtherTok));
