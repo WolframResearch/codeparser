@@ -916,8 +916,13 @@ Module[{implicitsRemoved},
 
 
 
+toStandardFormBoxes[LeafNode[Token`Fake`ImplicitNull, _, _]] := Nothing
+
+
 toStandardFormBoxes[LeafNode[_, str_, _]] :=
   str
+
+
 
 
 
