@@ -103,13 +103,16 @@ int readStdIn(int mode, bool printOutput) {
         
     } else if (mode == LEAF) {
         
-        if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 3)) {
+        if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 4)) {
             return res;
         }
         if (!MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(input.c_str()), static_cast<int>(input.size()))) {
             return res;
         }
         if (!MLPutString(mlp, Style.c_str())) {
+            return res;
+        }
+        if (!MLPutSymbol(mlp, "False")) {
             return res;
         }
         if (!MLPutSymbol(mlp, "False")) {

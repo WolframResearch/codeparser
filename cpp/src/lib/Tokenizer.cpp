@@ -11,10 +11,10 @@ int toDigit(int val);
 
 Tokenizer::Tokenizer() : stringifyNextToken_symbol(false), stringifyNextToken_file(false), _currentToken(Token(TOKEN_UNKNOWN, "", Source())), _currentWLCharacter(0), wlCharacterQueue(), String(), Issues() {}
 
-void Tokenizer::init(SourceStyle style, bool stringifyNextTokenSymbol, bool skipFirstLine) {
+void Tokenizer::init(SourceStyle style, bool stringifyNextTokenSymbol, bool stringifyNextTokenFile, bool skipFirstLine) {
     
     stringifyNextToken_symbol = stringifyNextTokenSymbol;
-    stringifyNextToken_file = false;
+    stringifyNextToken_file = stringifyNextTokenFile;
     _currentToken = Token(TOKEN_UNKNOWN, "", Source(style));
     
     _currentWLCharacter = WLCharacter(0);

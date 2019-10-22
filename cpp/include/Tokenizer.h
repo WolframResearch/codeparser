@@ -102,7 +102,7 @@ class Tokenizer {
 public:
     Tokenizer();
     
-    void init(SourceStyle style, bool stringifyNextTokenSymbol, bool skipFirstLine);
+    void init(SourceStyle style, bool stringifyNextTokenSymbol, bool stringifyNextTokenFile, bool skipFirstLine);
     void deinit();
     
     void nextToken(TokenizerContext Ctxt);

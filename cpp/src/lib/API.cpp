@@ -91,7 +91,7 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK ml
         return res;
     }
     
-    TheParserSession->init(libData, ifs, style, false, skipFirstLine);
+    TheParserSession->init(libData, ifs, style, false, false, skipFirstLine);
     
     auto nodes = parseExpressions();
     
@@ -134,7 +134,7 @@ DLLEXPORT int ConcreteParseString_LibraryLink(WolframLibraryData libData, MLINK 
     
     auto style = Utils::parseSourceStyle(reinterpret_cast<const char *>(styleStr.get()));
     
-    TheParserSession->init(libData, iss, style, false, false);
+    TheParserSession->init(libData, iss, style, false, false, false);
     
     auto nodes = parseExpressions();
     
@@ -177,7 +177,7 @@ DLLEXPORT int TokenizeString_LibraryLink(WolframLibraryData libData, MLINK mlp) 
     
     auto style = Utils::parseSourceStyle(reinterpret_cast<const char *>(styleStr.get()));
     
-    TheParserSession->init(libData, iss, style, false, false);
+    TheParserSession->init(libData, iss, style, false, false, false);
     
     std::vector<NodePtr> nodes = tokenize();
     
@@ -229,7 +229,7 @@ DLLEXPORT int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     auto style = Utils::parseSourceStyle(reinterpret_cast<const char *>(styleStr.get()));
     
-    TheParserSession->init(libData, ifs, style, false, false);
+    TheParserSession->init(libData, ifs, style, false, false, false);
     
     std::vector<NodePtr> nodes = tokenize();
     
@@ -252,7 +252,7 @@ DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     if (!MLTestHead(mlp, SYMBOL_LIST->name(), &len))  {
         return res;
     }
-    if (len != 3) {
+    if (len != 4) {
         return res;
     }
     
@@ -271,13 +271,20 @@ DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         return res;
     }
     
+    ScopedMLSymbol stringifyNextTokenFileSym(mlp);
+    if (!stringifyNextTokenFileSym.read()) {
+        return res;
+    }
+    
     auto iss = std::stringstream(reinterpret_cast<const char *>(inStr.get()));
     
     auto style = Utils::parseSourceStyle(reinterpret_cast<const char *>(styleStr.get()));
     
     auto stringifyNextTokenSymbol = Utils::parseBooleanSymbol(stringifyNextTokenSymbolSym.get());
     
-    TheParserSession->init(libData, iss, style, stringifyNextTokenSymbol, false);
+    auto stringifyNextTokenFile = Utils::parseBooleanSymbol(stringifyNextTokenFileSym.get());
+    
+    TheParserSession->init(libData, iss, style, stringifyNextTokenSymbol, stringifyNextTokenFile, false);
     
     auto node = parseLeaf();
     
@@ -588,12 +595,12 @@ ParserSession::~ParserSession() {
     freeSymbols();
 }
 
-void ParserSession::init(WolframLibraryData libData, std::istream& is, SourceStyle sourceStyle, bool stringifyNextTokenSymbol, bool skipFirstLine) {
+void ParserSession::init(WolframLibraryData libData, std::istream& is, SourceStyle sourceStyle, bool stringifyNextTokenSymbol, bool stringifyNextTokenFile, bool skipFirstLine) {
     
     TheSourceManager->init(sourceStyle, is, libData);
     TheByteDecoder->init();
     TheCharacterDecoder->init(libData);
-    TheTokenizer->init(sourceStyle, stringifyNextTokenSymbol, skipFirstLine);
+    TheTokenizer->init(sourceStyle, stringifyNextTokenSymbol, stringifyNextTokenFile, skipFirstLine);
     TheParser->init( [libData]() {
         if (!libData) {
             return false;

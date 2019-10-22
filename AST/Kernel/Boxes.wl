@@ -25,7 +25,8 @@ ConcreteParseBox[box_] :=
 
 
 Options[parseBox] = {
-    "StringifyNextTokenSymbol" -> False
+    "StringifyNextTokenSymbol" -> False,
+    "StringifyNextTokenFile" -> False
 }
 
 
@@ -380,9 +381,13 @@ Module[{handledChildren, aggregatedChildren},
     (*
     Prefix
     *)
-    {LeafNode[Token`Minus, _, _], ___}, PrefixNode[Minus, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`Minus, _, _], _}, PrefixNode[Minus, handledChildren, <|Source->Append[pos, 1]|>],
     {LeafNode[Token`LongName`Integral, _, _], LeafNode[Token`LongName`DifferentialD, _, _]}, PrefixNode[Integral, handledChildren, <|Source->Append[pos, 1]|>],
-    {LeafNode[Token`LessLess, _, _], ___}, PrefixNode[Get, handledChildren, <|Source->Append[pos, 1]|>],
+
+    (*
+    << stringifies its args
+    *)
+    {LeafNode[Token`LessLess, _, _], _}, PrefixNode[Get, {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~ {parseBox[children[[2]], Append[pos, 1] ~Join~ {2}, "StringifyNextTokenFile" -> True]}, <|Source->Append[pos, 1]|>],
 
     (*
     StartOfLine
@@ -828,11 +833,12 @@ parseBox[s_String /; StringMatchQ[s, "'"~~___], pos_] := LeafNode[Token`Boxes`Mu
 
 
 parseBox[str_String, pos_, OptionsPattern[]] :=
-Module[{parsed, data, issues, stringifyNextTokenSymbol, oldLeafSrc},
+Module[{parsed, data, issues, stringifyNextTokenSymbol, oldLeafSrc, stringifyNextTokenFile},
 
-    stringifyNextTokenSymbol = OptionValue["StringifyNextTokenSymbol"];
+  stringifyNextTokenSymbol = OptionValue["StringifyNextTokenSymbol"];
+  stringifyNextTokenFile = OptionValue["StringifyNextTokenFile"];
 
-  parsed = ParseLeaf[str, "StringifyNextTokenSymbol" -> stringifyNextTokenSymbol];
+  parsed = ParseLeaf[str, "StringifyNextTokenSymbol" -> stringifyNextTokenSymbol, "StringifyNextTokenFile" -> stringifyNextTokenFile];
 
   (*
     Source is filled in here
