@@ -57,7 +57,7 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
         
         _currentWLCharacter = WLCharacter(curSource.to_point());
         
-        if (_currentWLCharacter.isStrange()) {
+        if (_currentWLCharacter.isStrange() || _currentWLCharacter.isStrangeCharacter()) {
             
             auto Src = TheSourceManager->getWLCharacterSource();
             
@@ -89,7 +89,7 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
         
         _currentWLCharacter = WLCharacter(curSource.to_point());
         
-        if (_currentWLCharacter.isStrange()) {
+        if (_currentWLCharacter.isStrange() || _currentWLCharacter.isStrangeCharacter()) {
             
             auto Src = TheSourceManager->getWLCharacterSource();
             
@@ -428,7 +428,7 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
     
     TheSourceManager->setWLCharacterEnd();
     
-    if (_currentWLCharacter.isStrange()) {
+    if (_currentWLCharacter.isStrange() || _currentWLCharacter.isStrangeCharacter()) {
         
         auto Src = TheSourceManager->getWLCharacterSource();
         

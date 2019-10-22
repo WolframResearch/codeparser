@@ -814,6 +814,21 @@ bool WLCharacter::isStrange() const {
     }
 }
 
+bool WLCharacter::isStrangeCharacter() const {
+    
+    auto val = to_point();
+    
+    switch (val) {
+        //
+        // FUNCTION APPLICATION
+        //
+        case 0x2061:
+            return true;
+        default:
+            return false;
+    }
+}
+
 bool WLCharacter::isLineContinuation() const {
     auto val = to_point();
     
