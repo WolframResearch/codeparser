@@ -10,7 +10,7 @@ Needs["AST`Utils`"]
 ToInputFormString is intended for aggregate syntax trees
 *)
 
-ToInputFormString::usage = "ToInputFormString[concrete] returns a string representation of concrete."
+ToInputFormString::usage = "ToInputFormString[aggregate] returns a string representation of aggregate."
 
 ToInputFormString[agg_] :=
 Block[{$RecursionLimit = Infinity},
@@ -586,6 +586,8 @@ toFullFormString[args___] := Failure["InternalUnhandled", <|"Function"->ToFullFo
 (*
 ToSourceCharacterString is intended for concrete syntax trees
 *)
+
+ToSourceCharacterString::usage = "ToSourceCharacterString[concrete] returns a string representation of concrete."
 
 ToSourceCharacterString[cst_] :=
 Catch[
