@@ -313,12 +313,6 @@ abstract[BinaryNode[PutAppend, {left_, _, LeafNode[String, str_, _]}, data_]] :=
 
 abstract[BinaryNode[PatternTest, children:{BinaryNode[PatternTest, _, _], _, _}, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociativePatternTest, children, KeyTake[data, keysToTake]]
 
-(*
-DirectedEdge and UndirectedEdge do not associate with themselves or each other
-*)
-abstract[BinaryNode[DirectedEdge, children:{BinaryNode[DirectedEdge | UndirectedEdge, _, _], _, _}, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociativeDirectedEdge, children, KeyTake[data, keysToTake]]
-abstract[BinaryNode[UndirectedEdge, children:{BinaryNode[DirectedEdge | UndirectedEdge, _, _], _, _}, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociativeUndirectedEdge, children, KeyTake[data, keysToTake]]
-
 (* could be  a =. *)
 abstract[BinaryNode[Unset, {left_, _}, data_]] := CallNode[ToNode[Unset], {abstract[left]}, KeyTake[data, keysToTake]]
 (* or it could be  a = . *)

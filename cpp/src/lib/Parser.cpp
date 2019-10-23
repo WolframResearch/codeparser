@@ -105,10 +105,10 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
     registerInfixParselet(TOKEN_LONGNAME_DIVISIONSLASH, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_DIVISIONSLASH, ASSOCIATIVITY_LEFT)));
     registerInfixParselet(TOKEN_LONGNAME_IMPLIES, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_IMPLIES, ASSOCIATIVITY_RIGHT)));
     registerInfixParselet(TOKEN_LONGNAME_PLUSMINUS, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_INFIX_LONGNAME_PLUSMINUS, ASSOCIATIVITY_LEFT)));
-    registerInfixParselet(TOKEN_LONGNAME_DIRECTEDEDGE, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_DIRECTEDEDGE, ASSOCIATIVITY_NONASSOCIATIVE)));
+    registerInfixParselet(TOKEN_LONGNAME_DIRECTEDEDGE, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_DIRECTEDEDGE, ASSOCIATIVITY_RIGHT)));
     registerInfixParselet(TOKEN_LONGNAME_RULE, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_RULE, ASSOCIATIVITY_RIGHT)));
     registerInfixParselet(TOKEN_LONGNAME_RULEDELAYED, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_RULEDELAYED, ASSOCIATIVITY_RIGHT)));
-    registerInfixParselet(TOKEN_LONGNAME_UNDIRECTEDEDGE, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_UNDIRECTEDEDGE, ASSOCIATIVITY_NONASSOCIATIVE)));
+    registerInfixParselet(TOKEN_LONGNAME_UNDIRECTEDEDGE, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_UNDIRECTEDEDGE, ASSOCIATIVITY_RIGHT)));
     registerInfixParselet(TOKEN_LONGNAME_FUNCTION, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_FUNCTION, ASSOCIATIVITY_RIGHT)));
     registerInfixParselet(TOKEN_LONGNAME_MINUSPLUS, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_INFIX_LONGNAME_MINUSPLUS, ASSOCIATIVITY_LEFT)));
     registerInfixParselet(TOKEN_LONGNAME_TWOWAYRULE, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_TWOWAYRULE, ASSOCIATIVITY_RIGHT)));
