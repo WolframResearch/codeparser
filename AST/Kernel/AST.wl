@@ -223,7 +223,7 @@ FormatIssue
 
 
 
-
+$Quirks
 
 
 Begin["`Private`"]
@@ -244,6 +244,7 @@ Needs["PacletManager`"]
 
 
 loadAllFuncs[]
+
 
 
 ConcreteParseString::usage = "ConcreteParseString[string] returns a concrete syntax tree by interpreting string as WL input."
@@ -695,6 +696,39 @@ Module[{str, res, leaf, data, exprs, issues, style, stringifyNextTokenSymbol, st
 
 	leaf
 ]]
+
+
+
+
+setupQuirks[] :=
+Module[{},
+	
+	$Quirks = <||>;
+
+	(*
+	Setup "FlattenTimes" quirk
+
+	In non-Prototype builds:
+		a / b / c is parsed as Times[a, Power[b, -1], Power[c, -1]]
+		-a / b is parsed as Times[-1, a, Power[b, -1]]
+
+	In Prototype builds:
+		a / b / c is parsed as Times[Times[a, Power[b, -1]], Power[c, -1]]
+		-a / b is parsed as Times[Times[-1, a], Power[b, -1]]
+	This is considered the correct behavior going into the future.
+
+	This is setup on bugfix/139531_et_al branch
+	Related bugs: 139531
+	*)
+	If[!Internal`$PrototypeBuild,
+		$Quirks["FlattenTimes"] = True
+	];
+
+]
+
+
+
+setupQuirks[]
 
 
 

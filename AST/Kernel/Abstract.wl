@@ -1051,7 +1051,10 @@ abstractPlus[BinaryNode[Minus, {left_, right_}, data_]] :=
 abstract syntax of  -a * b / c d \[InvisibleTimes] e \[Times] f  is a single Times expression
 *)
 flattenTimes[nodes_List, data_] :=
-	Module[{},
+	Module[{flattenTimesQuirk},
+
+		flattenTimesQuirk = Lookup[$Quirks, "FlattenTimes", False];
+
 		(
 			Switch[#,
 				(*
@@ -1069,7 +1072,11 @@ flattenTimes[nodes_List, data_] :=
 					{negate[#[[2,2]], data]}
 				,
 				PrefixNode[Minus, {_, _}, _],
-					{ToNode[-1], #[[2,2]]}
+					If[flattenTimesQuirk,
+						{ToNode[-1], #[[2,2]]}
+						,
+						#
+					]
 				,
 				InfixNode[Times, _, _],
 					flattenTimes[#[[2]][[;;;;2]], data]
@@ -1082,7 +1089,11 @@ flattenTimes[nodes_List, data_] :=
 
 				*)
 				BinaryNode[Divide, {_, _, _}, _],
-					flattenTimes[{#[[2,1]], reciprocate[#[[2,3]], data]}, data]
+					If[flattenTimesQuirk,
+						flattenTimes[{#[[2,1]], reciprocate[#[[2,3]], data]}, data]
+						,
+						#
+					]
 				,
 				_,
 					#
