@@ -309,8 +309,11 @@ abstract[BinaryNode[PutAppend, {left_, _, LeafNode[String, str_, _]}, data_]] :=
 
 
 
-(* Abstract NonAssociative errors *)
+(*
+Abstract NonAssociative errors
 
+a ? b ? c being NonAssociative is alluded to being a bug in bug report 206938
+*)
 abstract[BinaryNode[PatternTest, children:{BinaryNode[PatternTest, _, _], _, _}, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociativePatternTest, children, KeyTake[data, keysToTake]]
 
 (* could be  a =. *)
