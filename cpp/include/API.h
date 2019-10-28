@@ -68,31 +68,37 @@ EXTERN_C DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK m
 
 class ScopedMLString {
     MLINK mlp;
-    const unsigned char *str;
+    const char *str;
     int b;
     int c;
+    
 public:
     
     ScopedMLString(MLINK mlp) : mlp(mlp), str(NULL), b(), c() {}
     
     ~ScopedMLString() {
         if (str != NULL) {
-            MLReleaseUTF8String(mlp, str, b);
+            MLReleaseUTF8String(mlp, reinterpret_cast<const unsigned char *>(str), b);
         }
     }
     
     bool read() {
-        return MLGetUTF8String(mlp, &str, &b, &c);
+        return MLGetUTF8String(mlp, reinterpret_cast<const unsigned char **>(&str), &b, &c);
     }
     
-    const unsigned char *get() const {
+    const char *get() const {
         return str;
+    }
+    
+    size_t size() const {
+        return b;
     }
 };
 
 class ScopedMLSymbol {
     MLINK mlp;
     const char *sym;
+    
 public:
     
     ScopedMLSymbol(MLINK mlp) : mlp(mlp), sym(NULL) {}
@@ -116,6 +122,7 @@ class ScopedMLFunction {
     MLINK mlp;
     const char *func;
     int a;
+    
 public:
     
     ScopedMLFunction(MLINK mlp) : mlp(mlp), func(NULL), a() {}
@@ -140,13 +147,48 @@ public:
 };
 
 class ScopedIFS : public std::ifstream {
+    
+    char *data;
+    size_t dataLength;
+    
 public:
     
-    ScopedIFS(const unsigned char *inStr) : std::ifstream(reinterpret_cast<const char *>(inStr), std::ifstream::in | std::ifstream::binary) {}
+    ScopedIFS(const char *inStr) : std::ifstream(inStr, std::ifstream::in | std::ifstream::binary) {
+        
+        seekg(0, end);
+    
+        auto off = tellg();
+        if (off == -1) {
+            //
+            // FIXME: need to handle better
+            //
+            return;
+        }
+    
+        dataLength = static_cast<size_t>(off);
+    
+        seekg(0, beg);
+    
+        data = new char[dataLength];
+    
+        read(data, dataLength);
+    }
     
     ~ScopedIFS() {
+        
+        delete[] data;
+        
         close();
     }
+    
+    char *getData() const {
+        return data;
+    }
+    
+    size_t getDataLength() const {
+        return dataLength;
+    }
+    
 };
 
 class ParserSession {
@@ -156,7 +198,7 @@ public:
     
     ~ParserSession();
     
-    void init(WolframLibraryData libData, std::istream& is, SourceStyle style, bool stringifyNextTokenSymbol, bool stringifyNextTokenFile, bool skipFirstLine);
+    void init(WolframLibraryData libData, const char *data, size_t dataLen, SourceStyle style, bool stringifyNextTokenSymbol, bool stringifyNextTokenFile, bool skipFirstLine);
     
     void deinit();
 };

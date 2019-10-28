@@ -16,8 +16,8 @@
 
 class SourceManager {
     
-    std::unique_ptr<char[]> buffer;
-    size_t length;
+    const char *data;
+    size_t dataLength;
     size_t idx;
     
     bool lastCharacterWasCarriageReturn;
@@ -39,7 +39,7 @@ class SourceManager {
 public:
     SourceManager();
     
-    void init(SourceStyle style, std::istream& is, WolframLibraryData libData);
+    void init(const char *data, size_t dataLength, SourceStyle style, WolframLibraryData libData);
     
     void deinit();
     

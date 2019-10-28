@@ -3,27 +3,12 @@
 
 #include "CodePoint.h"
 
-SourceManager::SourceManager() : buffer(), length(), idx(), lastCharacterWasCarriageReturn(false), Issues(), SrcLoc(), TokenStartLoc(), WLCharacterStartLoc(), WLCharacterEndLoc(), PrevWLCharacterStartLoc(), PrevWLCharacterEndLoc(), libData() {}
+SourceManager::SourceManager() : data(), dataLength(), idx(), lastCharacterWasCarriageReturn(false), Issues(), SrcLoc(), TokenStartLoc(), WLCharacterStartLoc(), WLCharacterEndLoc(), PrevWLCharacterStartLoc(), PrevWLCharacterEndLoc(), libData() {}
 
-void SourceManager::init(SourceStyle style, std::istream& is, WolframLibraryData libDataIn) {
-    
-    is.seekg(0, is.end);
-    
-    auto off = is.tellg();
-    if (off == -1) {
-        //
-        // FIXME: need to handle better
-        //
-        return;
-    }
-    
-    length = static_cast<size_t>(off);
-    
-    is.seekg(0, is.beg);
-    
-    buffer = std::unique_ptr<char[]>(new char[length]);
-    
-    is.read(buffer.get(), length);
+void SourceManager::init(const char *dataIn, size_t dataLengthIn, SourceStyle style, WolframLibraryData libDataIn) {
+  
+    data = dataIn;
+    dataLength = dataLengthIn;
     
     idx = 0;
     
@@ -45,24 +30,22 @@ void SourceManager::deinit() {
     
     Issues.clear();
     
-    buffer.reset(nullptr);
-    
     libData = nullptr;
 }
 
 unsigned char SourceManager::nextByte() {
     
-    assert(idx < length);
+    assert(idx < dataLength);
     
 #ifndef NDEBUG
-    auto oldProgress = (100 * idx / length);
+    auto oldProgress = (100 * idx / dataLength);
 #endif
     
-    auto b = buffer[idx];
+    auto b = data[idx];
     idx++;
 
 #ifndef NDEBUG
-    auto progress = (100 * idx / length);
+    auto progress = (100 * idx / dataLength);
     
     if (progress != oldProgress) {
         if (libData) {
@@ -87,7 +70,7 @@ unsigned char SourceManager::nextByte() {
 }
 
 bool SourceManager::isEndOfFile() const {
-    return (idx == length);
+    return (idx == dataLength);
 }
 
 //

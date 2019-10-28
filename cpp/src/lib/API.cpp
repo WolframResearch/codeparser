@@ -27,7 +27,7 @@ std::vector<NodePtr> parseExpressions();
 std::vector<NodePtr> tokenize();
 NodePtr parseLeaf();
 
-bool validatePath(WolframLibraryData libData, const unsigned char *inStr);
+bool validatePath(WolframLibraryData libData, const char *inStr);
 
 DLLEXPORT mint WolframLibrary_getVersion() {
     return WolframLibraryVersion;
@@ -91,7 +91,7 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK ml
         return res;
     }
     
-    TheParserSession->init(libData, ifs, style, false, false, skipFirstLine);
+    TheParserSession->init(libData, ifs.getData(), ifs.getDataLength(), style, false, false, skipFirstLine);
     
     auto nodes = parseExpressions();
     
@@ -130,11 +130,9 @@ DLLEXPORT int ConcreteParseString_LibraryLink(WolframLibraryData libData, MLINK 
         return res;
     }
     
-    auto iss = std::stringstream(reinterpret_cast<const char *>(inStr.get()));
-    
     auto style = Utils::parseSourceStyle(reinterpret_cast<const char *>(styleStr.get()));
     
-    TheParserSession->init(libData, iss, style, false, false, false);
+    TheParserSession->init(libData, inStr.get(), inStr.size(), style, false, false, false);
     
     auto nodes = parseExpressions();
     
@@ -173,11 +171,9 @@ DLLEXPORT int TokenizeString_LibraryLink(WolframLibraryData libData, MLINK mlp) 
         return res;
     }
     
-    auto iss = std::stringstream(reinterpret_cast<const char *>(inStr.get()));
-    
     auto style = Utils::parseSourceStyle(reinterpret_cast<const char *>(styleStr.get()));
     
-    TheParserSession->init(libData, iss, style, false, false, false);
+    TheParserSession->init(libData, inStr.get(), inStr.size(), style, false, false, false);
     
     std::vector<NodePtr> nodes = tokenize();
     
@@ -229,7 +225,7 @@ DLLEXPORT int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     auto style = Utils::parseSourceStyle(reinterpret_cast<const char *>(styleStr.get()));
     
-    TheParserSession->init(libData, ifs, style, false, false, false);
+    TheParserSession->init(libData, ifs.getData(), ifs.getDataLength(), style, false, false, false);
     
     std::vector<NodePtr> nodes = tokenize();
     
@@ -276,15 +272,13 @@ DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         return res;
     }
     
-    auto iss = std::stringstream(reinterpret_cast<const char *>(inStr.get()));
-    
     auto style = Utils::parseSourceStyle(reinterpret_cast<const char *>(styleStr.get()));
     
     auto stringifyNextTokenSymbol = Utils::parseBooleanSymbol(stringifyNextTokenSymbolSym.get());
     
     auto stringifyNextTokenFile = Utils::parseBooleanSymbol(stringifyNextTokenFileSym.get());
     
-    TheParserSession->init(libData, iss, style, stringifyNextTokenSymbol, stringifyNextTokenFile, false);
+    TheParserSession->init(libData, inStr.get(), inStr.size(), style, stringifyNextTokenSymbol, stringifyNextTokenFile, false);
     
     auto node = parseLeaf();
     
@@ -574,7 +568,7 @@ NodePtr parseLeaf() {
 //
 // Does the file currently have permission to be read?
 //
-bool validatePath(WolframLibraryData libData, const unsigned char *inStr) {
+bool validatePath(WolframLibraryData libData, const char *inStr) {
     if (!libData) {
         //
         // If running as a stand-alone executable, then always valid
@@ -582,7 +576,7 @@ bool validatePath(WolframLibraryData libData, const unsigned char *inStr) {
         return true;
     }
     
-    auto valid = libData->validatePath(const_cast<char *>(reinterpret_cast<const char *>(inStr)), 'R');
+    auto valid = libData->validatePath(const_cast<char *>(inStr), 'R');
     return valid;
 }
 
@@ -608,9 +602,9 @@ ParserSession::~ParserSession() {
     freeSymbols();
 }
 
-void ParserSession::init(WolframLibraryData libData, std::istream& is, SourceStyle sourceStyle, bool stringifyNextTokenSymbol, bool stringifyNextTokenFile, bool skipFirstLine) {
+void ParserSession::init(WolframLibraryData libData, const char *data, size_t dataLen, SourceStyle sourceStyle, bool stringifyNextTokenSymbol, bool stringifyNextTokenFile, bool skipFirstLine) {
     
-    TheSourceManager->init(sourceStyle, is, libData);
+    TheSourceManager->init(data, dataLen, sourceStyle, libData);
     TheByteDecoder->init();
     TheCharacterDecoder->init(libData);
     TheTokenizer->init(sourceStyle, stringifyNextTokenSymbol, stringifyNextTokenFile, skipFirstLine);
@@ -642,12 +636,7 @@ std::unique_ptr<ParserSession> TheParserSession = nullptr;
 
 MLSession::MLSession() : inited(false), ep(), mlp() {
     
-    inited = false;
-    
-    MLEnvironmentParameter p;
-    int err;
-    
-    p = MLNewParameters(MLREVISION, MLAPIREVISION);
+    MLEnvironmentParameter p = MLNewParameters(MLREVISION, MLAPIREVISION);
 #ifdef WINDOWS_MATHLINK
     
 #else
@@ -658,10 +647,16 @@ MLSession::MLSession() : inited(false), ep(), mlp() {
 #endif
     ep = MLInitialize(p);
     if (ep == (MLENV)0) {
+        
+        MLReleaseParameters(p);
+        
         return;
     }
     
+    int err;
     mlp = MLLoopbackOpen(ep, &err);
+    
+    MLReleaseParameters(p);
     
     inited = true;
 }
@@ -670,12 +665,10 @@ MLSession::~MLSession() {
     if (!inited) {
         return;
     }
-    if (mlp != nullptr) {
-        MLClose(mlp);
-    }
-    if (ep != 0) {
-        MLDeinitialize(ep);
-    }
+    
+    MLClose(mlp);
+    
+    MLDeinitialize(ep);
 }
 
 
