@@ -74,7 +74,7 @@ Module[{agg},
 (*
 what keys do we want to keep when abstracting?
 *)
-keysToTake = {Source, AbstractSyntaxIssues}
+keysToTake = {Source, AbstractSyntaxIssues, AbstractFormatIssues}
 
 
 Abstract::usage = "Abstract[agg] returns an abstract syntax tree from an aggregate syntax tree."
@@ -99,47 +99,130 @@ Module[{ast},
 
 
 
-abstract[LeafNode[Symbol, s_, data_]] := LeafNode[Symbol, abstractLineContinuation[s], KeyTake[data, keysToTake]]
-abstract[LeafNode[String, s_, data_]] := LeafNode[String, abstractLineContinuation[s], KeyTake[data, keysToTake]]
-abstract[LeafNode[Integer, s_, data_]] := LeafNode[Integer, abstractLineContinuation[s], KeyTake[data, keysToTake]]
-abstract[LeafNode[Real, s_, data_]] := LeafNode[Real, abstractLineContinuation[s], KeyTake[data, keysToTake]]
+abstract[LeafNode[Symbol, sIn_, dataIn_]] :=
+Module[{s, issues, data},
 
-abstract[LeafNode[Slot, str_, data_]] :=
-Module[{a},
-	a = abstractLineContinuation[str];
-	Switch[a,
+	data = dataIn;
+
+	{s, issues} = abstractLineContinuation[sIn, data];
+
+	data = KeyTake[data, keysToTake];
+
+	If[!empty[issues],
+		data[AbstractFormatIssues] = issues
+	];
+
+	LeafNode[Symbol, s, data]
+]
+
+abstract[LeafNode[String, sIn_, dataIn_]] :=
+Module[{s, issues, data},
+
+	data = dataIn;
+
+	{s, issues} = abstractLineContinuation[sIn, data];
+
+	data = KeyTake[data, keysToTake];
+
+	If[!empty[issues],
+		data[AbstractFormatIssues] = issues
+	];
+
+	LeafNode[String, s, KeyTake[data, keysToTake]]
+]
+
+abstract[LeafNode[Integer, sIn_, dataIn_]] :=
+Module[{s, issues, data},
+
+	data = dataIn;
+
+	{s, issues} = abstractLineContinuation[sIn, data];
+
+	data = KeyTake[data, keysToTake];
+
+	If[!empty[issues],
+		data[AbstractFormatIssues] = issues
+	];
+
+	LeafNode[Integer, s, KeyTake[data, keysToTake]]
+]
+
+abstract[LeafNode[Real, sIn_, dataIn_]] :=
+Module[{s, issues, data},
+
+	data = dataIn;
+
+	{s, issues} = abstractLineContinuation[sIn, data];
+
+	data = KeyTake[data, keysToTake];
+
+	If[!empty[issues],
+		data[AbstractFormatIssues] = issues
+	];
+
+	LeafNode[Real, s, data]
+]
+
+abstract[LeafNode[Slot, sIn_, dataIn_]] :=
+Module[{s, issues, data},
+
+	data = dataIn;
+
+	{s, issues} = abstractLineContinuation[sIn, data];
+
+	data = KeyTake[data, keysToTake];
+
+	If[!empty[issues],
+		data[AbstractFormatIssues] = issues
+	];
+
+	Switch[s,
 		"#",
-		    CallNode[ToNode[Slot], {ToNode[1]}, KeyTake[data, keysToTake]]
+		    CallNode[ToNode[Slot], {ToNode[1]}, data]
 		,
 		test_ /; StringMatchQ[test, "#"~~DigitCharacter..],
-		    CallNode[ToNode[Slot], {ToNode[FromDigits[StringDrop[a, 1]]]}, KeyTake[data, keysToTake]]
+		    CallNode[ToNode[Slot], {ToNode[FromDigits[StringDrop[s, 1]]]}, data]
 		,
 		_,
-		    CallNode[ToNode[Slot], {ToNode[abstractString[StringDrop[a, 1]]]}, KeyTake[data, keysToTake]]
+		    CallNode[ToNode[Slot], {ToNode[abstractString[StringDrop[s, 1]]]}, data]
 	]
 ]
 
-abstract[LeafNode[SlotSequence, str_, data_]] :=
-Module[{a},
-	a = abstractLineContinuation[str];
-	Switch[a,
+abstract[LeafNode[SlotSequence, sIn_, dataIn_]] :=
+Module[{s, issues, data},
+
+	data = dataIn;
+
+	{s, issues} = abstractLineContinuation[sIn, data];
+
+	data = KeyTake[data, keysToTake];
+
+	If[!empty[issues],
+		data[AbstractFormatIssues] = issues
+	];
+
+	Switch[s,
 		"##",
-		    CallNode[ToNode[SlotSequence], {ToNode[1]}, KeyTake[data, keysToTake]]
+		    CallNode[ToNode[SlotSequence], {ToNode[1]}, data]
 		,
 		_,
-		    CallNode[ToNode[SlotSequence], {ToNode[FromDigits[StringDrop[a, 2]]]}, KeyTake[data, keysToTake]]
+		    CallNode[ToNode[SlotSequence], {ToNode[FromDigits[StringDrop[s, 2]]]}, data]
 	]
 ]
 
-abstract[LeafNode[Out, str_, data_]] :=
-Module[{a},
-   a = abstractLineContinuation[str];
-	Switch[a,
+abstract[LeafNode[Out, sIn_, dataIn_]] :=
+Module[{s, issues, data},
+
+	data = dataIn;
+
+	{s, issues} = abstractLineContinuation[sIn, data];
+
+	Switch[s,
 		"%",
-		    CallNode[ToNode[Out], {}, KeyTake[data, keysToTake]]
+		    CallNode[ToNode[Out], {}, data]
 		,
 		_,
-		    CallNode[ToNode[Out], { ToNode[-StringLength[a]] }, KeyTake[data, keysToTake]]
+		    CallNode[ToNode[Out], { ToNode[-StringLength[s]] }, data]
 	]
 ]
 
@@ -196,19 +279,26 @@ Line continuations might be inside of strings and we want to remove them
 I don't feel like constructing a regex to do the matching for true line continuations
 So use an auxiliary function. This is probably easier to understand.
 *)
-abstractLineContinuation[s_String /; StringContainsQ[s, "\\\n"]] :=
-Module[{candidatePoss, actualLCs, specs},
-	candidatePoss = StringPosition[s, "\\\n"];
+abstractLineContinuation[s_String /; StringContainsQ[s, "\\"~~("\n"|"\r\n"|"\r")], dataIn_] :=
+Module[{candidatePoss, actualLCs, specs, issues, data},
+	
+	issues = {};
+
+	data = dataIn;
+
+	candidatePoss = StringPosition[s, "\\"~~("\n"|"\r\n"|"\r")];
 	actualLCs = Select[candidatePoss, isLineContinuation[s, #]&];
+
+	If[AnyTrue[actualLCs, #[[2]] == StringLength[s]&],
+		AppendTo[issues, FormatIssue["UnexpectedLineContinuation", "Unexpected line continuation.", "Formatting", <|Source->data[Source]|>]]
+	];
 
 	(*
 	Used to be:
 	StringReplacePart[s, "", actualLCs]
 
 	but this is VERY slow
-	*)
 
-	(*
 	Convert the LC poss into Take specs in-between the line continuations
 	*)
 	specs = {#[[1]] + 1, #[[2]] - 1}& /@ Partition[{0} ~Join~ Flatten[actualLCs] ~Join~ {StringLength[s] + 1}, 2];
@@ -216,10 +306,10 @@ Module[{candidatePoss, actualLCs, specs},
 	(*
 	And then StringJoin all of the in-between parts
 	*)
-	StringJoin[StringTake[s, specs]]
+	{StringJoin[StringTake[s, specs]], issues}
 ]
 
-abstractLineContinuation[s_String] := s
+abstractLineContinuation[s_String, _] := {s, {}}
 
 
 
