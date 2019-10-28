@@ -176,11 +176,36 @@ void Tokenizer::nextToken(TokenizerContext CtxtIn) {
         
     } else if (c.isNewline()) {
         
-        String << c;
-        
-        c = nextWLCharacter(TOPLEVEL);
-        
-        _currentToken = Token(TOKEN_NEWLINE, String.str(), TheSourceManager->getTokenSource());
+        switch (c.to_point()) {
+            case '\n': {
+                
+                String << c;
+                
+                c = nextWLCharacter(TOPLEVEL);
+                
+                _currentToken = Token(TOKEN_NEWLINE, String.str(), TheSourceManager->getTokenSource());
+            }
+                break;
+            case '\r': {
+                
+                String << c;
+                
+                c = nextWLCharacter(TOPLEVEL);
+                
+                if (c.to_point() == '\n') {
+                    
+                    String << c;
+                    
+                    c = nextWLCharacter(TOPLEVEL);
+                }
+                
+                _currentToken = Token(TOKEN_NEWLINE, String.str(), TheSourceManager->getTokenSource());
+            }
+                break;
+            default:
+                assert(false);
+                break;
+        }
         
     } else if (c.isSpace()) {
         
@@ -870,7 +895,7 @@ Token Tokenizer::handleString(TokenizerContext Ctxt) {
         if (empty) {
             
             //
-            // Something like   ?EOF
+            // Something like   ?<EOF>
             //
             // EndOfFile is special because there is no source
             //

@@ -34,6 +34,12 @@ Token::Token(TokenEnum Tok, std::string&& StrIn, Source&& SrcIn) : T(Tok), Str(s
                     break;
             }
             break;
+        //
+        // Both \n and \r\n newlines have a size of 1
+        // And other newlines like \[IndentingNewLine] have size > 1
+        //
+        case TOKEN_NEWLINE:
+            break;
         default:
             switch (Src.style) {
                 case SOURCESTYLE_UNKNOWN:
