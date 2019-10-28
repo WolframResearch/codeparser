@@ -91,6 +91,10 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
         
         if (_currentWLCharacter.isStrange() || _currentWLCharacter.isStrangeCharacter()) {
             
+            //
+            // Just generally strange character is in the code
+            //
+            
             auto Src = TheSourceManager->getWLCharacterSource();
             
             auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + _currentWLCharacter.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
@@ -232,16 +236,17 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
                 
                 auto test = TheByteDecoder->nextSourceCharacter();
                 
-                if (test == SourceCharacter('[')) {
-                    
-                    auto tmpPolicy = policy;
-                    
-                    tmpPolicy = tmpPolicy | DISABLE_CHARACTERDECODINGISSUES;
-                    
-                    handleLongName(test, CharacterStart+1, tmpPolicy, true);
-                    
-                } else {
-                    
+                auto testPoint = test.to_point();
+                
+                switch (testPoint) {
+                    case '[': {
+                        auto tmpPolicy = policy;
+                        
+                        tmpPolicy = tmpPolicy | DISABLE_CHARACTERDECODINGISSUES;
+                        
+                        handleLongName(test, CharacterStart+1, tmpPolicy, true);
+                    }
+                        break;
                     //
                     // '[' was not after \\, so must put back whatever was after \\
                     //
@@ -249,16 +254,10 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
                     // Cannot append in TheCharacterDecoder, because only single-SourceCharacter WLCharacters are expected in
                     // TheCharacterDecoder queue
                     //
-                    
-                    //
                     // test for '\n' here because we want to make sure to have the correct SourceLocation
                     // A newline means advancing to next line and resetting Column to 0
-                    // Note: '\n' is not the only single-byte character that can start a newline
-                    // FIXME: If test == SourceCharacter('\r'), then there could also be a newline, either
-                    // as \r\n or as a stray \r that is not paired with a \n
                     //
-                    if (test == SourceCharacter('\n')) {
-                        
+                    case '\n': {
                         //
                         // CharacterStart is the first \, so then queuedCharacterStart is
                         // start of the next line
@@ -267,8 +266,32 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
                         
                         TheByteDecoder->append('\n', queuedCharacterStart);
                         
-                    } else {
+                        //
+                        // and make sure to reset SourceLoc
+                        //
+                        TheSourceManager->setSourceLocation(oldSourceLoc);
+                    }
+                        break;
+                    case '\r': {
+                        //
+                        // If test == SourceCharacter('\r'), then there could also be a newline, either
+                        // as \r\n or as a stray \r that is not paired with a \n
                         
+                        //
+                        // CharacterStart is the first \, so then queuedCharacterStart is
+                        // start of the next line
+                        //
+                        auto queuedCharacterStart = CharacterStart.nextLine();
+                        
+                        TheByteDecoder->append('\r', queuedCharacterStart);
+                        
+                        //
+                        // and make sure to reset SourceLoc
+                        //
+                        TheSourceManager->setSourceLocation(oldSourceLoc);
+                    }
+                        break;
+                    default: {
                         //
                         // CharacterStart is the first \, so then queuedCharacterStart is the first
                         // character to be queued
@@ -282,16 +305,18 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
                                 TheByteDecoder->append(b, queuedCharacterStart);
                             }
                         }
+                        
+                        //
+                        // and make sure to reset SourceLoc
+                        //
+                        TheSourceManager->setSourceLocation(oldSourceLoc);
                     }
-                    
-                    //
-                    // and make sure to reset SourceLoc
-                    //
-                    TheSourceManager->setSourceLocation(oldSourceLoc);
+                        break;
                 }
             }
             
             _currentWLCharacter = WLCharacter(CODEPOINT_STRINGMETA_BACKSLASH, ESCAPE_SINGLE);
+            
             break;
         case '<':
             _currentWLCharacter = WLCharacter(CODEPOINT_STRINGMETA_OPEN, ESCAPE_SINGLE);
