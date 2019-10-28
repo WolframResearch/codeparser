@@ -383,7 +383,7 @@ Module[{h, encoding, full, res, skipFirstLine = False, shebangWarn = False, data
 	The # here is { {exprs}, {issues}, {metadata} }
 	*)
 	If[hIn === Automatic,
-		h = FileNode[File, #[[1]], <| SyntaxIssues -> #[[2]] |>]&
+		h = FileNode[File, #[[1]], If[!empty[#[[2]]], <| SyntaxIssues -> #[[2]] |>, <||>]]&
 	];
 
 	If[encoding =!= "UTF8",
