@@ -64,7 +64,9 @@ Module[{cst, agg, ast, good, expected, actual, str},
   If[good,
     True
     ,
-    Throw[unhandled[<|"actualConcrete"->ToString[actual, InputForm], "expectedConcrete"->ToString[expected, InputForm]|>]]
+    Throw[unhandled[<|"actualConcrete"->ToString[actual, InputForm, CharacterEncoding -> "PrintableASCII"],
+    					"expectedConcrete"->ToString[expected, InputForm, CharacterEncoding -> "PrintableASCII"],
+    					"str"->ToString[str, InputForm, CharacterEncoding -> "PrintableASCII"]|>]]
   ];
 
   (*

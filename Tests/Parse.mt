@@ -1178,9 +1178,13 @@ Test[
 
 (*
 Strange characters in symbols
+
+Make sure to escape the NUL character
+
+"a\:0000" will cause... problems
 *)
 Test[
-	"a\:0000"
+	"a\\:0000"
 	,
 	Null
 	,

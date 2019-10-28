@@ -28,7 +28,7 @@ Test[
 			LeafNode[Integer, "1", <|Source -> {{2, 1}, {2, 1}}|>],
 			LeafNode[Token`Plus, "+", <|Source -> {{2, 2}, {2, 2}}|>],
     		LeafNode[Integer, "1", <|Source -> {{2, 3}, {2, 3}}|>] }, <|Source -> {{2, 1}, {2, 3}}|>],
-    	LeafNode[Token`Newline, "\n", <|Source -> {{3, 0}, {3, 0}}|>] }, <|SyntaxIssues -> {}, Source -> {{2, 0}, {3, 0}}|>]
+    	LeafNode[Token`Newline, "\n", <|Source -> {{3, 0}, {3, 0}}|>] }, <|Source -> {{2, 0}, {3, 0}}|>]
 	,
 	TestID->"File-20181230-J0G3I8"
 ]
@@ -92,7 +92,7 @@ cst = ConcreteParseFile[carriagereturn2]
 TestMatch[
 	cst
 	,
-	FileNode[File, {LeafNode[String, "\"\r\n123\"", <|Source->{{1,1},{2,4}}|>]}, <|SyntaxIssues->{}, Source->{{1,1},{2,4}}|>]
+	FileNode[File, {LeafNode[String, "\"\r\n123\"", <|Source->{{1,1},{2,4}}|>]}, <|Source->{{1,1},{2,4}}|>]
 	,
 	TestID->"File-20190606-O8I6M9"
 ]
@@ -195,7 +195,11 @@ TestMatch[
 			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 3}, {1, 3}}|>],
 			LeafNode[Token`Equal, "=", <|Source -> {{1, 4}, {1, 4}}|>],
 			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 5}, {1, 5}}|>],
-			LeafNode[Integer, "1", <|Source -> {{1, 6}, {1, 6}}|>] }, <|Source -> {{1, 1}, {1, 6}}|>] }, <|SyntaxIssues -> {SyntaxIssue["UnexpectedCharacter", "Unexpected character: ``\\.01``.", "Warning", _]}, Source -> {{1, 1}, {1, 6}}|>]
+			LeafNode[Integer, "1", <|Source -> {{1, 6}, {1, 6}}|>] }, <|Source -> {{1, 1}, {1, 6}}|>] }, <|SyntaxIssues -> {
+				(* from CharacterDecoder, strange character in general *)
+				SyntaxIssue["UnexpectedCharacter", "Unexpected character: ``\\.01``.", "Warning", _],
+				(* from Tokenizer, strange letterlike *)
+				SyntaxIssue["UnexpectedCharacter", "Unexpected character: ``\\.01``.", "Warning", _]}, Source -> {{1, 1}, {1, 6}}|>]
 	,
 	TestID->"File-20190602-N5D1B8"
 ]
@@ -215,12 +219,32 @@ TestMatch[
 		LeafNode[Token`Newline, "\n", <|Source -> {{4, 0}, {4, 0}}|>],
 		LeafNode[Token`Newline, "\n", <|Source -> {{5, 0}, {5, 0}}|>],
 		LeafNode[Symbol, "x", <|Source -> {{5, 1}, {5, 1}}|>],
-		LeafNode[Token`Newline, "\n", <|Source -> {{6, 0}, {6, 0}}|>]}, <|SyntaxIssues -> {}, Source -> {{2, 0}, {6, 0}}|>]
+		LeafNode[Token`Newline, "\n", <|Source -> {{6, 0}, {6, 0}}|>]}, <|Source -> {{2, 0}, {6, 0}}|>]
 	,
 	TestID->"File-20190804-K7V2D8"
 ]
 
 
+
+
+continuation = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "continuation.wl"}]
+
+cst = ConcreteParseFile[continuation]
+
+TestMatch[
+	cst
+	,
+	FileNode[File, {
+		GroupNode[List, {
+			LeafNode[Token`OpenCurly, "{", <|Source->{{1, 1}, {1, 1}}|>],
+			LeafNode[Token`Newline, "\n", <|Source->{{2, 0}, {2, 0}}|>],
+			LeafNode[Token`WhiteSpace, "\t", <|Source->{{2, 1}, {2, 1}}|>],
+			LeafNode[Integer, "1", <|Source->{{2, 2}, {2, 2}}|>],
+			LeafNode[Token`LineContinuation, "\\\n", <|Source->{{2, 2}, {3, 0}}|>],
+			LeafNode[Token`CloseCurly, "}", <|Source->{{3, 1}, {3, 1}}|>]}, <|Source -> {{1, 1}, {3, 1}}|>]}, <|Source -> {{1, 1}, {3, 1}}|>]
+	,
+	TestID->"File-20191025-I3T9F3"
+]
 
 
 
@@ -500,6 +524,18 @@ Test[
 	,
 	TestID->"File-20190904-Q7T9Y5"
 ]
+
+Test[
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "continuation.wl"}], 1]
+	,
+	Null
+	,
+	TestID->"File-20191025-Z3P6E3"
+]
+
+
+
+
 
 
 

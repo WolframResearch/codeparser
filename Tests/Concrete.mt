@@ -544,3 +544,11 @@ Test[
 	,
 	TestID->"Concrete-20191012-S7X3B0"
 ]
+
+Test[
+	ConcreteParseString["\"a\\\\\r\nb\""]
+	,
+	LeafNode[String, "\"a\\\\\r\nb\"", <|Source -> {{1, 1}, {2, 2}}|>]
+	,
+	TestID->"Concrete-20191024-X1D5H3"
+]

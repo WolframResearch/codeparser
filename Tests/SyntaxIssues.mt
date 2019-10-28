@@ -285,7 +285,11 @@ TestMatch[
 	FirstCase[ConcreteParseString["a\\.00", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnexpectedCharacter", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {
+		(* from CharacterDecoder *)
+		SyntaxIssue["UnexpectedCharacter", _, _, _],
+		(* from Tokenizer *)
+		SyntaxIssue["UnexpectedCharacter", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-B2V1Z3"
 ]
