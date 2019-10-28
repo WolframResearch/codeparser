@@ -227,6 +227,13 @@ TestMatch[
 
 
 
+
+(*
+
+Yes, it is unsatisfactory to have 1\\\n be treated as an Integer, with no LineContinuation token coming after
+
+*)
+
 continuation = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "continuation.wl"}]
 
 cst = ConcreteParseFile[continuation]
@@ -239,8 +246,7 @@ TestMatch[
 			LeafNode[Token`OpenCurly, "{", <|Source->{{1, 1}, {1, 1}}|>],
 			LeafNode[Token`Newline, "\n", <|Source->{{2, 0}, {2, 0}}|>],
 			LeafNode[Token`WhiteSpace, "\t", <|Source->{{2, 1}, {2, 1}}|>],
-			LeafNode[Integer, "1", <|Source->{{2, 2}, {2, 2}}|>],
-			LeafNode[Token`LineContinuation, "\\\n", <|Source->{{2, 2}, {3, 0}}|>],
+			LeafNode[Integer, "1\\\n", <|Source->{{2, 2}, {3, 0}}|>],
 			LeafNode[Token`CloseCurly, "}", <|Source->{{3, 1}, {3, 1}}|>]}, <|Source -> {{1, 1}, {3, 1}}|>]}, <|Source -> {{1, 1}, {3, 1}}|>]
 	,
 	TestID->"File-20191025-I3T9F3"

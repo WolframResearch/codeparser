@@ -367,9 +367,8 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       ];
      
      ];
-     (*
-    If[$Debug, Print["cst2: ", cst]];
-    *)
+
+    If[$Debug, Print["cst: ", cst]];
 
     (*
     skip over #! shebang
@@ -387,6 +386,10 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     *)
     {text, expected} = importExpected[file, i, prefix, skipFirstLine];
     
+    If[$Debug,
+      Print["importExpected: {text, expected}: ", {text, expected}]
+    ];
+
     (*
     Now it is ok to throw if there were syntax errors
     
@@ -404,7 +407,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     
     tryString = ToSourceCharacterString[cst];
     
-    If[$DebugString, Print["tryString: ", tryString]];
+    If[$DebugString, Print["ToSourceCharacterString[cst]: ", tryString]];
     
     If[! StringQ[tryString],
      f = Failure[
@@ -494,13 +497,15 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     *)
     agg = AST`Abstract`Aggregate[cst];
 
+    If[$Debug, Print["agg: ", agg]];
+
     (*
     verifyAggregate[agg];
     *)
     
     tryString = ToInputFormString[agg];
     
-    If[$DebugString, Print["tryString: ", tryString]];
+    If[$DebugString, Print["ToInputFormString[agg]: ", tryString]];
     
     If[! StringQ[tryString],
      f = Failure[
@@ -598,6 +603,8 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
 
     ast = AST`Abstract`Abstract[agg];
 
+    If[$Debug, Print["ast: ", ast]];
+
     If[FailureQ[ast],
      Print[
       Style[Row[{"index: ", i, " ", 
@@ -640,7 +647,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
 
     tryString = ToFullFormString[ast];
 
-    If[$DebugString, Print["tryString: ", tryString]];
+    If[$DebugString, Print["ToFullFormString[ast]: ", tryString]];
 
     If[!StringQ[tryString],
      f = Failure[
@@ -692,6 +699,19 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     
     textReplaced = text;
     
+    If[$Debug,
+      Print["textReplaced1: ", textReplaced];
+    ];
+
+    (*
+    Handle line continuations
+    *)
+    textReplaced = AST`Abstract`Private`abstractLineContinuation[textReplaced, <||>][[1]];
+
+    If[$Debug,
+      Print["textReplaced2: ", textReplaced];
+    ];
+
     (*
     if there are no Package errors, 
     then proceed with replacing the text
@@ -995,17 +1015,17 @@ Module[{text, f, expected, msgs, crPos, lfPos},
        (*
       text = StringJoin[Riffle[text, "\n"]];
       *)
-      
+
       (*
       Handle unsupported characters
-      *)
       
-      (*
       FIXME: does not handle  \\\[NumberComma]
       that is, the \ that is before \[NumberComma] may be escaped...
       I don't feel like doing this properly right now...
       *)
       text = StringReplace[text, {RegularExpression["(?<!\\\\)\\\\\\[NumberComma\\]"] -> "\\:f7fc"}];
+
+      If[$Debug, Print["text: ", text//InputForm]];
 
       expected = 
        DeleteCases[ToExpression[text, InputForm, Hold], Null];
