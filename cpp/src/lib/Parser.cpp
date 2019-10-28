@@ -809,46 +809,40 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
             return NodePtr(new LeafNode(A));
         }
         
+        LeafSeq ArgsTest;
         
-        //
-        // LOOKAHEAD
-        //
+        auto token = Parser::eatAndPreserveToplevelNewlines(Ctxt, ArgsTest);
+        
+        Precedence TokenPrecedence;
         {
-            LeafSeq ArgsTest;
             
-            auto token = Parser::eatAndPreserveToplevelNewlines(Ctxt, ArgsTest);
+            bool implicitTimes;
             
-            Precedence TokenPrecedence;
-            {
+            TokenPrecedence = getTokenPrecedence(token, Ctxt, false, &implicitTimes);
+            
+            if (implicitTimes) {
                 
-                bool implicitTimes;
+                auto Implicit = Token(TOKEN_FAKE_IMPLICITTIMES, "", Source(token.Src.start()));
                 
-                TokenPrecedence = getTokenPrecedence(token, Ctxt, false, &implicitTimes);
-                
-                if (implicitTimes) {
-                    
-                    auto Implicit = Token(TOKEN_FAKE_IMPLICITTIMES, "", Source(token.Src.start()));
-                    
-                    tokenQueue.insert(tokenQueue.begin(), Implicit);
-                }
+                tokenQueue.insert(tokenQueue.begin(), Implicit);
             }
-            
-            if (Ctxt.Prec > TokenPrecedence) {
+        }
+        
+        if (Ctxt.Prec > TokenPrecedence) {
+            break;
+        }
+        if (Ctxt.Prec == TokenPrecedence) {
+            if (Ctxt.Assoc != ASSOCIATIVITY_RIGHT) {
                 break;
             }
-            if (Ctxt.Prec == TokenPrecedence) {
-                if (Ctxt.Assoc != ASSOCIATIVITY_RIGHT) {
-                    break;
-                }
-            }
-            
-            NodeSeq LeftSeq;
-            LeftSeq.reserve(1 + 1);
-            LeftSeq.append(std::move(Left));
-            LeftSeq.appendIfNonEmpty(std::move(ArgsTest));
-            
-            Left = parse0(std::move(LeftSeq), TokenPrecedence, Ctxt);
         }
+        
+        NodeSeq LeftSeq;
+        LeftSeq.reserve(1 + 1);
+        LeftSeq.append(std::move(Left));
+        LeftSeq.appendIfNonEmpty(std::move(ArgsTest));
+        
+        Left = parse0(std::move(LeftSeq), TokenPrecedence, Ctxt);
         
     } // while
     

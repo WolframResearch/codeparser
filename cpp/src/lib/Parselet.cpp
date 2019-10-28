@@ -91,41 +91,36 @@ NodePtr SymbolParselet::parse(ParserContext CtxtIn) const {
         return NodePtr(new OptionalDefaultPatternNode(std::move(Args)));
     }
     
+    LeafSeq ArgsTest;
+    
+    Tok = Parser::eatAll(Ctxt, ArgsTest);
+    
     //
-    // LOOKAHEAD
+    // when parsing a in a:b  then ColonFlag is false
+    // when parsing b in a:b  then ColonFlag is true
     //
-    {
-        LeafSeq ArgsTest;
+    // It is necessary to go to colonParselet->parse here (even though it seems non-contextSensitive)
+    // because in e.g.,  a_*b:f[]  the b is the last node in the Times expression and needs to bind with  :f[]
+    // Parsing  a_*b  completely, and then parsing  :f[]  would be wrong.
+    //
+    if ((Ctxt.Flag & PARSER_COLON) != PARSER_COLON) {
         
-        Tok = Parser::eatAll(Ctxt, ArgsTest);
-        
-        //
-        // when parsing a in a:b  then ColonFlag is false
-        // when parsing b in a:b  then ColonFlag is true
-        //
-        // It is necessary to go to colonParselet->parse here (even though it seems non-contextSensitive)
-        // because in e.g.,  a_*b:f[]  the b is the last node in the Times expression and needs to bind with  :f[]
-        // Parsing  a_*b  completely, and then parsing  :f[]  would be wrong.
-        //
-        if ((Ctxt.Flag & PARSER_COLON) != PARSER_COLON) {
+        if (Tok.Tok() == TOKEN_COLON) {
             
-            if (Tok.Tok() == TOKEN_COLON) {
-                
-                Ctxt.Flag |= PARSER_PARSED_SYMBOL;
-                
-                NodeSeq Args;
-                Args.reserve(1 + 1);
-                Args.append(std::move(Sym));
-                Args.appendIfNonEmpty(std::move(ArgsTest));
-                
-                auto& colonParselet = TheParser->findInfixParselet(Tok.Tok());
-                
-                return colonParselet->parse(std::move(Args), Ctxt);
-            }
+            Ctxt.Flag |= PARSER_PARSED_SYMBOL;
+            
+            NodeSeq Args;
+            Args.reserve(1 + 1);
+            Args.append(std::move(Sym));
+            Args.appendIfNonEmpty(std::move(ArgsTest));
+            
+            auto& colonParselet = TheParser->findInfixParselet(Tok.Tok());
+            
+            return colonParselet->parse(std::move(Args), Ctxt);
         }
-        
-        return Sym;
     }
+    
+    return Sym;
 }
 
 
@@ -139,35 +134,30 @@ NodePtr PrefixOperatorParselet::parse(ParserContext CtxtIn) const {
     
     TheParser->nextToken(Ctxt);
     
-    //
-    // LOOKAHEAD
-    //
-    {
-        LeafSeq ArgsTest;
-        
-        auto Tok = Parser::eatAll(Ctxt, ArgsTest);
-        
-        auto wasCloser = false;
-        
-        NodePtr Operand;
-        if (TheParser->isPossibleBeginningOfExpression(Ctxt)) {
-            Operand = TheParser->parse(Ctxt);
-        } else {
-            Operand = TheParser->handleNotPossible(TokIn, Ctxt, &wasCloser);
-        }
-        
-        Utils::differentLineWarning(TokIn, Tok);
-        
-        NodeSeq Args;
-        Args.reserve(1 + 1 + 1);
-        Args.append(NodePtr(new LeafNode(TokIn)));
-        if (!wasCloser) {
-            Args.appendIfNonEmpty(std::move(ArgsTest));
-        }
-        Args.append(std::move(Operand));
-        
-        return NodePtr(new PrefixNode(PrefixOperatorToSymbol(TokIn.Tok()), std::move(Args)));
+    LeafSeq ArgsTest;
+    
+    auto Tok = Parser::eatAll(Ctxt, ArgsTest);
+    
+    auto wasCloser = false;
+    
+    NodePtr Operand;
+    if (TheParser->isPossibleBeginningOfExpression(Ctxt)) {
+        Operand = TheParser->parse(Ctxt);
+    } else {
+        Operand = TheParser->handleNotPossible(TokIn, Ctxt, &wasCloser);
     }
+    
+    Utils::differentLineWarning(TokIn, Tok);
+    
+    NodeSeq Args;
+    Args.reserve(1 + 1 + 1);
+    Args.append(NodePtr(new LeafNode(TokIn)));
+    if (!wasCloser) {
+        Args.appendIfNonEmpty(std::move(ArgsTest));
+    }
+    Args.append(std::move(Operand));
+    
+    return NodePtr(new PrefixNode(PrefixOperatorToSymbol(TokIn.Tok()), std::move(Args)));
 }
 
 
@@ -181,34 +171,29 @@ NodePtr BinaryOperatorParselet::parse(NodeSeq Left, ParserContext CtxtIn) const 
     
     TheParser->nextToken(Ctxt);
     
-    //
-    // LOOKAHEAD
-    //
-    {
-        LeafSeq ArgsTest;
-        
-        auto Tok = Parser::eatAll(Ctxt, ArgsTest);
-        
-        auto wasCloser = false;
-        
-        NodePtr Right;
-        if (TheParser->isPossibleBeginningOfExpression(Ctxt)) {
-            Right = TheParser->parse(Ctxt);
-        } else {
-            Right = TheParser->handleNotPossible(TokIn, Ctxt, &wasCloser);
-        }
-        
-        NodeSeq Args;
-        Args.reserve(1 + 1 + 1 + 1);
-        Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
-        Args.append(NodePtr(new LeafNode(TokIn)));
-        if (!wasCloser) {
-            Args.appendIfNonEmpty(std::move(ArgsTest));
-        }
-        Args.append(std::move(Right));
-        
-        return NodePtr(new BinaryNode(BinaryOperatorToSymbol(TokIn.Tok()), std::move(Args)));
+    LeafSeq ArgsTest;
+    
+    auto Tok = Parser::eatAll(Ctxt, ArgsTest);
+    
+    auto wasCloser = false;
+    
+    NodePtr Right;
+    if (TheParser->isPossibleBeginningOfExpression(Ctxt)) {
+        Right = TheParser->parse(Ctxt);
+    } else {
+        Right = TheParser->handleNotPossible(TokIn, Ctxt, &wasCloser);
     }
+    
+    NodeSeq Args;
+    Args.reserve(1 + 1 + 1 + 1);
+    Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
+    Args.append(NodePtr(new LeafNode(TokIn)));
+    if (!wasCloser) {
+        Args.appendIfNonEmpty(std::move(ArgsTest));
+    }
+    Args.append(std::move(Right));
+    
+    return NodePtr(new BinaryNode(BinaryOperatorToSymbol(TokIn.Tok()), std::move(Args)));
 }
 
 NodePtr InfixOperatorParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
@@ -239,71 +224,60 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
             return Aborted;
         }
         
+        LeafSeq ArgsTest1;
+        
+        auto Tok1 = Parser::eatAndPreserveToplevelNewlines(CtxtIn, ArgsTest1);
         
         //
-        // LOOKAHEAD
+        // Cannot just compare tokens
         //
-        {
-            LeafSeq ArgsTest1;
+        // May be something like  a * b c \[Times] d
+        //
+        // and we want only a single Infix node created
+        //
+        if (isInfixOperator(Tok1.Tok()) &&
+            InfixOperatorToSymbol(Tok1.Tok()) == Op) {
             
-            auto Tok1 = Parser::eatAndPreserveToplevelNewlines(CtxtIn, ArgsTest1);
+            TheParser->nextToken(Ctxt);
             
-            //
-            // Cannot just compare tokens
-            //
-            // May be something like  a * b c \[Times] d
-            //
-            // and we want only a single Infix node created
-            //
-            if (isInfixOperator(Tok1.Tok()) &&
-                InfixOperatorToSymbol(Tok1.Tok()) == Op) {
-                
-                TheParser->nextToken(Ctxt);
-                
-                //
-                // LOOKAHEAD
-                //
-                {
-                    LeafSeq ArgsTest2;
-                    
-                    auto Tok2 = Parser::eatAll(Ctxt, ArgsTest2);
-                    
-                    auto wasCloser = false;
-                    
-                    NodePtr Operand;
-                    bool possible;
-                    if (TheParser->isPossibleBeginningOfExpression(Ctxt)) {
-                        Operand = TheParser->parse(Ctxt);
-                        possible = true;
-                    } else {
-                        Operand = TheParser->handleNotPossible(Tok1, Ctxt, &wasCloser);
-                        possible = false;
-                    }
-                    
-                    //
-                    // Do not reserve inside loop
-                    // Allow default resizing strategy, which is hopefully exponential
-                    //
-                    Args.appendIfNonEmpty(std::move(ArgsTest1));
-                    Args.append(NodePtr(new LeafNode(Tok1)));
-                    if (!wasCloser) {
-                        Args.appendIfNonEmpty(std::move(ArgsTest2));
-                    }
-                    Args.append(std::move(Operand));
-                    
-                    if (!possible) {
-                        return NodePtr(new InfixNode(Op, std::move(Args)));
-                    }
-                }
-                
+            LeafSeq ArgsTest2;
+            
+            auto Tok2 = Parser::eatAll(Ctxt, ArgsTest2);
+            
+            auto wasCloser = false;
+            
+            NodePtr Operand;
+            bool possible;
+            if (TheParser->isPossibleBeginningOfExpression(Ctxt)) {
+                Operand = TheParser->parse(Ctxt);
+                possible = true;
             } else {
-                
-                //
-                // Tok.Tok != TokIn.Tok, so break
-                //
-                
+                Operand = TheParser->handleNotPossible(Tok1, Ctxt, &wasCloser);
+                possible = false;
+            }
+            
+            //
+            // Do not reserve inside loop
+            // Allow default resizing strategy, which is hopefully exponential
+            //
+            Args.appendIfNonEmpty(std::move(ArgsTest1));
+            Args.append(NodePtr(new LeafNode(Tok1)));
+            if (!wasCloser) {
+                Args.appendIfNonEmpty(std::move(ArgsTest2));
+            }
+            Args.append(std::move(Operand));
+            
+            if (!possible) {
                 return NodePtr(new InfixNode(Op, std::move(Args)));
             }
+            
+        } else {
+            
+            //
+            // Tok.Tok != TokIn.Tok, so break
+            //
+            
+            return NodePtr(new InfixNode(Op, std::move(Args)));
         }
         
     } // while
@@ -561,41 +535,36 @@ NodePtr UnderParselet::parse(ParserContext CtxtIn) const {
         Blank = std::move(Under);
     }
     
+    LeafSeq ArgsTest;
+    
+    Tok = Parser::eatAndPreserveToplevelNewlines(CtxtIn, ArgsTest);
+    
     //
-    // LOOKAHEAD
+    // For something like _:""  when parsing _
+    // ColonFlag == false
+    // the : here is Optional, and so we want to go parse with ColonParselet's parseContextSensitive method
     //
-    {
-        LeafSeq ArgsTest;
+    // For something like a:_:""  when parsing _
+    // ColonFlag == true
+    // make sure to not parse the second : here
+    // We are already inside ColonParselet from the first :, and so ColonParselet will also handle the second :
+    //
+    if ((Ctxt.Flag & PARSER_COLON) != PARSER_COLON) {
         
-        auto Tok = Parser::eatAndPreserveToplevelNewlines(CtxtIn, ArgsTest);
-        
-        //
-        // For something like _:""  when parsing _
-        // ColonFlag == false
-        // the : here is Optional, and so we want to go parse with ColonParselet's parseContextSensitive method
-        //
-        // For something like a:_:""  when parsing _
-        // ColonFlag == true
-        // make sure to not parse the second : here
-        // We are already inside ColonParselet from the first :, and so ColonParselet will also handle the second :
-        //
-        if ((Ctxt.Flag & PARSER_COLON) != PARSER_COLON) {
+        if (Tok.Tok() == TOKEN_COLON) {
             
-            if (Tok.Tok() == TOKEN_COLON) {
-                
-                auto& colonParselet = TheParser->findContextSensitiveInfixParselet(Tok.Tok());
-                
-                NodeSeq BlankSeq;
-                BlankSeq.reserve(1 + 1);
-                BlankSeq.append(std::move(Blank));
-                BlankSeq.appendIfNonEmpty(std::move(ArgsTest));
-                
-                return colonParselet->parseContextSensitive(std::move(BlankSeq), Ctxt);
-            }
+            auto& colonParselet = TheParser->findContextSensitiveInfixParselet(Tok.Tok());
+            
+            NodeSeq BlankSeq;
+            BlankSeq.reserve(1 + 1);
+            BlankSeq.append(std::move(Blank));
+            BlankSeq.appendIfNonEmpty(std::move(ArgsTest));
+            
+            return colonParselet->parseContextSensitive(std::move(BlankSeq), Ctxt);
         }
-        
-        return Blank;
     }
+    
+    return Blank;
 }
 
 //
@@ -648,36 +617,30 @@ NodePtr UnderParselet::parseContextSensitive(NodeSeq Left, ParserContext CtxtIn)
             break;
     }
     
+    LeafSeq ArgsTest;
+    
+    Tok = Parser::eatAll(Ctxt, ArgsTest);
     
     //
-    // LOOKAHEAD
+    // For something like a:b_c:d when parsing _
+    // ColonFlag == true
     //
-    {
-        LeafSeq ArgsTest;
+    if ((Ctxt.Flag & PARSER_COLON) != PARSER_COLON) {
         
-        auto Tok = Parser::eatAll(Ctxt, ArgsTest);
-        
-        //
-        // For something like a:b_c:d when parsing _
-        // ColonFlag == true
-        //
-        if ((Ctxt.Flag & PARSER_COLON) != PARSER_COLON) {
+        if (Tok.Tok() == TOKEN_COLON) {
             
-            if (Tok.Tok() == TOKEN_COLON) {
-                
-                auto& colonParselet = TheParser->findContextSensitiveInfixParselet(Tok.Tok());
-                
-                NodeSeq PatSeq;
-                PatSeq.reserve(1 + 1);
-                PatSeq.append(std::move(Pat));
-                PatSeq.appendIfNonEmpty(std::move(ArgsTest));
-                
-                return colonParselet->parseContextSensitive(std::move(PatSeq), Ctxt);
-            }
+            auto& colonParselet = TheParser->findContextSensitiveInfixParselet(Tok.Tok());
+            
+            NodeSeq PatSeq;
+            PatSeq.reserve(1 + 1);
+            PatSeq.append(std::move(Pat));
+            PatSeq.appendIfNonEmpty(std::move(ArgsTest));
+            
+            return colonParselet->parseContextSensitive(std::move(PatSeq), Ctxt);
         }
-        
-        return Pat;
     }
+    
+    return Pat;
 }
 
 //
@@ -693,104 +656,89 @@ NodePtr TildeParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
     
     TheParser->nextToken(Ctxt);
     
-    //
-    // LOOKAHEAD
-    //
-    {
-        LeafSeq ArgsTest1;
+    LeafSeq ArgsTest1;
+    
+    auto FirstTok = Parser::eatAll(Ctxt, ArgsTest1);
+    
+    if (!TheParser->isPossibleBeginningOfExpression(Ctxt)) {
         
-        auto FirstTok = Parser::eatAll(Ctxt, ArgsTest1);
+        bool wasCloser;
         
-        if (!TheParser->isPossibleBeginningOfExpression(Ctxt)) {
-            
-            bool wasCloser;
-            
-            auto NotPossible = TheParser->handleNotPossible(FirstTilde, Ctxt, &wasCloser);
-            
-            NodeSeq Args;
-            Args.reserve(1 + 1 + 1 + 1);
-            Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
-            Args.append(NodePtr(new LeafNode(FirstTilde)));
-            if (!wasCloser) {
-                Args.appendIfNonEmpty(std::move(ArgsTest1));
-            }
-            Args.append(std::move(NotPossible));
-            
-            auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDOPERAND, std::move(Args)));
-            
-            return Error;
+        auto NotPossible = TheParser->handleNotPossible(FirstTilde, Ctxt, &wasCloser);
+        
+        NodeSeq Args;
+        Args.reserve(1 + 1 + 1 + 1);
+        Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
+        Args.append(NodePtr(new LeafNode(FirstTilde)));
+        if (!wasCloser) {
+            Args.appendIfNonEmpty(std::move(ArgsTest1));
         }
+        Args.append(std::move(NotPossible));
         
-        Utils::differentLineWarning(FirstTilde, FirstTok);
+        auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDOPERAND, std::move(Args)));
         
-        auto Middle = TheParser->parse(Ctxt);
-        
-        //
-        // LOOKAHEAD
-        //
-        {
-            LeafSeq ArgsTest2;
-            
-            auto Tok1 = Parser::eatAll(Ctxt, ArgsTest2);
-            
-            if (Tok1.Tok() != TOKEN_TILDE) {
-                
-                TheParser->nextToken(Ctxt);
-                
-                //
-                // Something like   a ~f b
-                //
-                
-                NodeSeq Args;
-                Args.reserve(1 + 1 + 1 + 1);
-                Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
-                Args.append(NodePtr(new LeafNode(FirstTilde)));
-                Args.appendIfNonEmpty(std::move(ArgsTest1));
-                Args.append(std::move(Middle));
-                
-                auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDTILDE, std::move(Args)));
-                
-                return Error;
-            }
-            
-            Utils::differentLineWarning(FirstTok, Tok1);
-            
-            //
-            // LOOKAHEAD
-            //
-            {
-                LeafSeq ArgsTest3;
-                
-                TheParser->nextToken(Ctxt);
-                
-                auto Tok2 = Parser::eatAll(Ctxt, ArgsTest3);
-                
-                auto wasCloser = false;
-                
-                NodePtr Right;
-                if (TheParser->isPossibleBeginningOfExpression(Ctxt)) {
-                    Right = TheParser->parse(Ctxt);
-                } else {
-                    Right = TheParser->handleNotPossible(Tok1, Ctxt, &wasCloser);
-                }
-                
-                NodeSeq Args;
-                Args.reserve(1 + 1 + 1 + 1 + 1 + 1 + 1 + 1);
-                Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
-                Args.append(NodePtr(new LeafNode(FirstTilde)));
-                Args.appendIfNonEmpty(std::move(ArgsTest1));
-                Args.append(std::move(Middle));
-                Args.appendIfNonEmpty(std::move(ArgsTest2));
-                Args.append(NodePtr(new LeafNode(Tok1)));
-                if (!wasCloser) {
-                    Args.appendIfNonEmpty(std::move(ArgsTest3));
-                }
-                Args.append(std::move(Right));
-                
-                return NodePtr(new TernaryNode(SYMBOL_AST_TERNARYTILDE, std::move(Args)));
-            }
-        }
+        return Error;
     }
+    
+    Utils::differentLineWarning(FirstTilde, FirstTok);
+    
+    auto Middle = TheParser->parse(Ctxt);
+    
+    LeafSeq ArgsTest2;
+    
+    auto Tok1 = Parser::eatAll(Ctxt, ArgsTest2);
+    
+    if (Tok1.Tok() != TOKEN_TILDE) {
+        
+        TheParser->nextToken(Ctxt);
+        
+        //
+        // Something like   a ~f b
+        //
+        
+        NodeSeq Args;
+        Args.reserve(1 + 1 + 1 + 1);
+        Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
+        Args.append(NodePtr(new LeafNode(FirstTilde)));
+        Args.appendIfNonEmpty(std::move(ArgsTest1));
+        Args.append(std::move(Middle));
+        
+        auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDTILDE, std::move(Args)));
+        
+        return Error;
+    }
+    
+    Utils::differentLineWarning(FirstTok, Tok1);
+    
+    LeafSeq ArgsTest3;
+    
+    TheParser->nextToken(Ctxt);
+    
+    auto Tok2 = Parser::eatAll(Ctxt, ArgsTest3);
+    
+    auto wasCloser = false;
+    
+    NodePtr Right;
+    if (TheParser->isPossibleBeginningOfExpression(Ctxt)) {
+        Right = TheParser->parse(Ctxt);
+    } else {
+        Right = TheParser->handleNotPossible(Tok1, Ctxt, &wasCloser);
+    }
+    
+    NodeSeq Args;
+    Args.reserve(1 + 1 + 1 + 1 + 1 + 1 + 1 + 1);
+    Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
+    Args.append(NodePtr(new LeafNode(FirstTilde)));
+    Args.appendIfNonEmpty(std::move(ArgsTest1));
+    Args.append(std::move(Middle));
+    Args.appendIfNonEmpty(std::move(ArgsTest2));
+    Args.append(NodePtr(new LeafNode(Tok1)));
+    if (!wasCloser) {
+        Args.appendIfNonEmpty(std::move(ArgsTest3));
+    }
+    Args.append(std::move(Right));
+    
+    return NodePtr(new TernaryNode(SYMBOL_AST_TERNARYTILDE, std::move(Args)));
 }
 
 
@@ -814,76 +762,66 @@ NodePtr ColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
     
     TheParser->nextToken(Ctxt);
     
-    //
-    // LOOKAHEAD
-    //
-    {
-        LeafSeq ArgsTest1;
-        
-        auto Tok = Parser::eatAll(Ctxt, ArgsTest1);
-        
-        auto wasCloser = false;
-        
-        NodePtr Right;
-        bool possible;
-        if (TheParser->isPossibleBeginningOfExpression(Ctxt)) {
-            Right = TheParser->parse(Ctxt);
-            possible = true;
-        } else {
-            Right = TheParser->handleNotPossible(TokIn, Ctxt, &wasCloser);
-            possible = false;
-        }
-        
-        NodeSeq Args;
-        Args.reserve(1 + 1 + 1 + 1);
-        Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
-        Args.append(NodePtr(new LeafNode(TokIn)));
-        if (!wasCloser) {
-            Args.appendIfNonEmpty(std::move(ArgsTest1));
-        }
-        Args.append(std::move(Right));
-        
-        if (!possible) {
-            
-            auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_COLONERROR, std::move(Args)));
-            
-            return Error;
-        }
-        
-        if ((CtxtIn.Flag & PARSER_PARSED_SYMBOL) != PARSER_PARSED_SYMBOL) {
-            
-            auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_COLONERROR, std::move(Args)));
-            
-            return Error;
-        }
-        
-        Ctxt.Flag.clear(PARSER_PARSED_SYMBOL);
-        
-        auto Pat = NodePtr(new BinaryNode(SYMBOL_PATTERN, std::move(Args)));
-        
-        //
-        // LOOKAHEAD
-        //
-        {
-            LeafSeq ArgsTest2;
-            
-            auto Tok = Parser::eatAndPreserveToplevelNewlines(CtxtIn, ArgsTest2);
-            
-            if (Tok.Tok() == TOKEN_COLON) {
-                
-                Ctxt.Flag.clear(PARSER_COLON);
-                
-                NodeSeq PatSeq;
-                PatSeq.reserve(1 + 1);
-                PatSeq.append(std::move(Pat));
-                PatSeq.appendIfNonEmpty(std::move(ArgsTest2));
-                
-                return parseContextSensitive(std::move(PatSeq), Ctxt);
-            }
-            
-            return Pat;
-        }
+    LeafSeq ArgsTest1;
+    
+    auto Tok = Parser::eatAll(Ctxt, ArgsTest1);
+    
+    auto wasCloser = false;
+    
+    NodePtr Right;
+    bool possible;
+    if (TheParser->isPossibleBeginningOfExpression(Ctxt)) {
+        Right = TheParser->parse(Ctxt);
+        possible = true;
+    } else {
+        Right = TheParser->handleNotPossible(TokIn, Ctxt, &wasCloser);
+        possible = false;
     }
+    
+    NodeSeq Args;
+    Args.reserve(1 + 1 + 1 + 1);
+    Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
+    Args.append(NodePtr(new LeafNode(TokIn)));
+    if (!wasCloser) {
+        Args.appendIfNonEmpty(std::move(ArgsTest1));
+    }
+    Args.append(std::move(Right));
+    
+    if (!possible) {
+        
+        auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_COLONERROR, std::move(Args)));
+        
+        return Error;
+    }
+    
+    if ((CtxtIn.Flag & PARSER_PARSED_SYMBOL) != PARSER_PARSED_SYMBOL) {
+        
+        auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_COLONERROR, std::move(Args)));
+        
+        return Error;
+    }
+    
+    Ctxt.Flag.clear(PARSER_PARSED_SYMBOL);
+    
+    auto Pat = NodePtr(new BinaryNode(SYMBOL_PATTERN, std::move(Args)));
+    
+    LeafSeq ArgsTest2;
+    
+    Tok = Parser::eatAndPreserveToplevelNewlines(CtxtIn, ArgsTest2);
+    
+    if (Tok.Tok() == TOKEN_COLON) {
+        
+        Ctxt.Flag.clear(PARSER_COLON);
+        
+        NodeSeq PatSeq;
+        PatSeq.reserve(1 + 1);
+        PatSeq.append(std::move(Pat));
+        PatSeq.appendIfNonEmpty(std::move(ArgsTest2));
+        
+        return parseContextSensitive(std::move(PatSeq), Ctxt);
+    }
+    
+    return Pat;
 }
 
 //
@@ -907,34 +845,29 @@ NodePtr ColonParselet::parseContextSensitive(NodeSeq Left, ParserContext CtxtIn)
     
     TheParser->nextToken(Ctxt);
     
-    //
-    // LOOKAHEAD
-    //
-    {
-        LeafSeq ArgsTest;
-        
-        auto Tok = Parser::eatAll(Ctxt, ArgsTest);
-        
-        auto wasCloser = false;
-        
-        NodePtr Right;
-        if (TheParser->isPossibleBeginningOfExpression(Ctxt)) {
-            Right = TheParser->parse(Ctxt);
-        } else {
-            Right = TheParser->handleNotPossible(TokIn, Ctxt, &wasCloser);
-        }
-        
-        NodeSeq Args;
-        Args.reserve(1 + 1 + 1 + 1);
-        Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
-        Args.append(NodePtr(new LeafNode(TokIn)));
-        if (!wasCloser) {
-            Args.appendIfNonEmpty(std::move(ArgsTest));
-        }
-        Args.append(std::move(Right));
-        
-        return NodePtr(new BinaryNode(SYMBOL_OPTIONAL, std::move(Args)));
+    LeafSeq ArgsTest;
+    
+    auto Tok = Parser::eatAll(Ctxt, ArgsTest);
+    
+    auto wasCloser = false;
+    
+    NodePtr Right;
+    if (TheParser->isPossibleBeginningOfExpression(Ctxt)) {
+        Right = TheParser->parse(Ctxt);
+    } else {
+        Right = TheParser->handleNotPossible(TokIn, Ctxt, &wasCloser);
     }
+    
+    NodeSeq Args;
+    Args.reserve(1 + 1 + 1 + 1);
+    Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
+    Args.append(NodePtr(new LeafNode(TokIn)));
+    if (!wasCloser) {
+        Args.appendIfNonEmpty(std::move(ArgsTest));
+    }
+    Args.append(std::move(Right));
+    
+    return NodePtr(new BinaryNode(SYMBOL_OPTIONAL, std::move(Args)));
 }
 
 //
@@ -955,142 +888,132 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
     
     TheParser->nextToken(Ctxt);
     
-    //
-    // LOOKAHEAD
-    //
-    {
-        LeafSeq ArgsTest1;
+    LeafSeq ArgsTest1;
+    
+    auto Tok = Parser::eatAll(Ctxt, ArgsTest1);
+    
+    if (!TheParser->isPossibleBeginningOfExpression(Ctxt)) {
         
-        auto Tok = Parser::eatAll(Ctxt, ArgsTest1);
+        bool wasCloser;
         
-        if (!TheParser->isPossibleBeginningOfExpression(Ctxt)) {
-            
-            bool wasCloser;
-            
-            auto NotPossible = TheParser->handleNotPossible(TokIn, Ctxt, &wasCloser);
-            
-            NodeSeq Args;
-            Args.reserve(1 + 1 + 1 + 1);
-            Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
-            Args.append(NodePtr(new LeafNode(TokIn)));
-            if (!wasCloser) {
-                Args.appendIfNonEmpty(std::move(ArgsTest1));
-            }
-            Args.append(std::move(NotPossible));
-            
-            return NodePtr(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDOPERAND, std::move(Args)));
-        }
+        auto NotPossible = TheParser->handleNotPossible(TokIn, Ctxt, &wasCloser);
         
-        auto Middle = TheParser->parse(Ctxt);
-        
-        //
-        // LOOKAHEAD
-        //
-        {
-            LeafSeq ArgsTest2;
-            
-            auto Tok = Parser::eatAll(Ctxt, ArgsTest2);
-            
-            if (Tok.Tok() == TOKEN_EQUAL) {
-                
-                NodeSeq Args;
-                Args.reserve(1 + 1 + 1 + 1 + 1);
-                Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
-                Args.append(NodePtr(new LeafNode(TokIn)));
-                Args.appendIfNonEmpty(std::move(ArgsTest1));
-                Args.append(std::move(Middle));
-                Args.appendIfNonEmpty(std::move(ArgsTest2));
-                
-                Ctxt.Flag |= PARSER_INSIDE_SLASHCOLON;
-                
-                auto& equalParselet = TheParser->findInfixParselet(Tok.Tok());
-                
-                auto N = equalParselet->parse(std::move(Args), Ctxt);
-                
-                return N;
-                
-            } else if (Tok.Tok() == TOKEN_COLONEQUAL) {
-                
-                NodeSeq Args2;
-                Args2.reserve(1 + 1);
-                Args2.append(std::move(Middle));
-                Args2.appendIfNonEmpty(std::move(ArgsTest2));
-                
-                auto& colonEqualParselet = TheParser->findInfixParselet(Tok.Tok());
-                
-                auto N = colonEqualParselet->parse(std::move(Args2), Ctxt);
-                
-                auto& C = N->getChildrenDestructive();
-                
-                NodeSeq Args;
-                Args.reserve(1 + 1 + 1 + 1);
-                Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
-                Args.append(NodePtr(new LeafNode(TokIn)));
-                Args.appendIfNonEmpty(std::move(ArgsTest1));
-                Args.append(NodePtr(new NodeSeqNode(std::move(C))));
-                
-                return NodePtr(new TernaryNode(SYMBOL_TAGSETDELAYED, std::move(Args)));
-                
-            } else if (Tok.Tok() == TOKEN_EQUALDOT) {
-                
-                NodeSeq Args2;
-                Args2.reserve(1 + 1);
-                Args2.append(std::move(Middle));
-                Args2.appendIfNonEmpty(std::move(ArgsTest2));
-                
-                auto& equalParselet = TheParser->findInfixParselet(Tok.Tok());
-                
-                auto N = equalParselet->parse(std::move(Args2), Ctxt);
-                
-                auto& C = N->getChildrenDestructive();
-                
-                NodeSeq Args;
-                Args.reserve(1 + 1 + 1 + 1);
-                Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
-                Args.append(NodePtr(new LeafNode(TokIn)));
-                Args.appendIfNonEmpty(std::move(ArgsTest1));
-                Args.append(NodePtr(new NodeSeqNode(std::move(C))));
-                
-                return NodePtr(new TernaryNode(SYMBOL_TAGUNSET, std::move(Args)));
-            }
-            
-            //
-            // Anything other than:
-            // a /: b = c
-            // a /: b := c
-            // a /: b =.
-            //
-            
-            if (Tok.Tok() == TOKEN_ENDOFFILE) {
-                
-                NodeSeq Args;
-                Args.reserve(1 + 1 + 1 + 1);
-                Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
-                Args.append(NodePtr(new LeafNode(TokIn)));
-                Args.appendIfNonEmpty(std::move(ArgsTest1));
-                Args.append(std::move(Middle));
-                
-                auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDSET, std::move(Args)));
-                
-                return Error;
-            }
-            
-            TheParser->nextToken(Ctxt);
-            
-            NodeSeq Args;
-            Args.reserve(1 + 1 + 1 + 1 + 1 + 1);
-            Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
-            Args.append(NodePtr(new LeafNode(TokIn)));
+        NodeSeq Args;
+        Args.reserve(1 + 1 + 1 + 1);
+        Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
+        Args.append(NodePtr(new LeafNode(TokIn)));
+        if (!wasCloser) {
             Args.appendIfNonEmpty(std::move(ArgsTest1));
-            Args.append(std::move(Middle));
-            Args.appendIfNonEmpty(std::move(ArgsTest2));
-            Args.append(NodePtr(new LeafNode(Tok)));
-            
-            auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDSET, std::move(Args)));
-            
-            return Error;
         }
+        Args.append(std::move(NotPossible));
+        
+        return NodePtr(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDOPERAND, std::move(Args)));
     }
+    
+    auto Middle = TheParser->parse(Ctxt);
+    
+    LeafSeq ArgsTest2;
+    
+    Tok = Parser::eatAll(Ctxt, ArgsTest2);
+    
+    if (Tok.Tok() == TOKEN_EQUAL) {
+        
+        NodeSeq Args;
+        Args.reserve(1 + 1 + 1 + 1 + 1);
+        Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
+        Args.append(NodePtr(new LeafNode(TokIn)));
+        Args.appendIfNonEmpty(std::move(ArgsTest1));
+        Args.append(std::move(Middle));
+        Args.appendIfNonEmpty(std::move(ArgsTest2));
+        
+        Ctxt.Flag |= PARSER_INSIDE_SLASHCOLON;
+        
+        auto& equalParselet = TheParser->findInfixParselet(Tok.Tok());
+        
+        auto N = equalParselet->parse(std::move(Args), Ctxt);
+        
+        return N;
+        
+    } else if (Tok.Tok() == TOKEN_COLONEQUAL) {
+        
+        NodeSeq Args2;
+        Args2.reserve(1 + 1);
+        Args2.append(std::move(Middle));
+        Args2.appendIfNonEmpty(std::move(ArgsTest2));
+        
+        auto& colonEqualParselet = TheParser->findInfixParselet(Tok.Tok());
+        
+        auto N = colonEqualParselet->parse(std::move(Args2), Ctxt);
+        
+        auto& C = N->getChildrenDestructive();
+        
+        NodeSeq Args;
+        Args.reserve(1 + 1 + 1 + 1);
+        Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
+        Args.append(NodePtr(new LeafNode(TokIn)));
+        Args.appendIfNonEmpty(std::move(ArgsTest1));
+        Args.append(NodePtr(new NodeSeqNode(std::move(C))));
+        
+        return NodePtr(new TernaryNode(SYMBOL_TAGSETDELAYED, std::move(Args)));
+        
+    } else if (Tok.Tok() == TOKEN_EQUALDOT) {
+        
+        NodeSeq Args2;
+        Args2.reserve(1 + 1);
+        Args2.append(std::move(Middle));
+        Args2.appendIfNonEmpty(std::move(ArgsTest2));
+        
+        auto& equalParselet = TheParser->findInfixParselet(Tok.Tok());
+        
+        auto N = equalParselet->parse(std::move(Args2), Ctxt);
+        
+        auto& C = N->getChildrenDestructive();
+        
+        NodeSeq Args;
+        Args.reserve(1 + 1 + 1 + 1);
+        Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
+        Args.append(NodePtr(new LeafNode(TokIn)));
+        Args.appendIfNonEmpty(std::move(ArgsTest1));
+        Args.append(NodePtr(new NodeSeqNode(std::move(C))));
+        
+        return NodePtr(new TernaryNode(SYMBOL_TAGUNSET, std::move(Args)));
+    }
+    
+    //
+    // Anything other than:
+    // a /: b = c
+    // a /: b := c
+    // a /: b =.
+    //
+    
+    if (Tok.Tok() == TOKEN_ENDOFFILE) {
+        
+        NodeSeq Args;
+        Args.reserve(1 + 1 + 1 + 1);
+        Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
+        Args.append(NodePtr(new LeafNode(TokIn)));
+        Args.appendIfNonEmpty(std::move(ArgsTest1));
+        Args.append(std::move(Middle));
+        
+        auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDSET, std::move(Args)));
+        
+        return Error;
+    }
+    
+    TheParser->nextToken(Ctxt);
+    
+    NodeSeq Args;
+    Args.reserve(1 + 1 + 1 + 1 + 1 + 1);
+    Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
+    Args.append(NodePtr(new LeafNode(TokIn)));
+    Args.appendIfNonEmpty(std::move(ArgsTest1));
+    Args.append(std::move(Middle));
+    Args.appendIfNonEmpty(std::move(ArgsTest2));
+    Args.append(NodePtr(new LeafNode(Tok)));
+    
+    auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDSET, std::move(Args)));
+    
+    return Error;
 }
 
 
@@ -1226,69 +1149,64 @@ NodePtr EqualParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
     
     TheParser->nextToken(Ctxt);
     
-    //
-    // LOOKAHEAD
-    //
-    {
-        LeafSeq ArgsTest;
+    LeafSeq ArgsTest;
+    
+    auto Tok = Parser::eatAll(Ctxt, ArgsTest);
+    
+    if (Tok.Tok() == TOKEN_DOT) {
         
-        auto Tok = Parser::eatAll(Ctxt, ArgsTest);
+        //
+        // Something like a = .
+        //
+        // tutorial/OperatorInputForms
+        // Spaces to Avoid
+        //
         
-        if (Tok.Tok() == TOKEN_DOT) {
-            
-            //
-            // Something like a = .
-            //
-            // tutorial/OperatorInputForms
-            // Spaces to Avoid
-            //
-            
-            Utils::notContiguousWarning(TokIn, Tok);
-            
-            TheParser->nextToken(Ctxt);
-            
-            NodeSeq Args;
-            Args.reserve(1 + 1 + 1 + 1);
-            Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
-            Args.append(NodePtr(new LeafNode(TokIn)));
-            Args.appendIfNonEmpty(std::move(ArgsTest));
-            Args.append(NodePtr(new LeafNode(Tok)));
-            
-            if ((Ctxt.Flag & PARSER_INSIDE_SLASHCOLON) == PARSER_INSIDE_SLASHCOLON) {
-                return NodePtr(new TernaryNode(SYMBOL_TAGUNSET, std::move(Args)));
-            }
-            
-            return NodePtr(new BinaryNode(SYMBOL_UNSET, std::move(Args)));
-        }
+        Utils::notContiguousWarning(TokIn, Tok);
         
-        auto wasInsideSlashColon = ((Ctxt.Flag & PARSER_INSIDE_SLASHCOLON) == PARSER_INSIDE_SLASHCOLON);
-        
-        Ctxt.Flag.clear(PARSER_INSIDE_SLASHCOLON);
-        
-        auto wasCloser = false;
-        
-        NodePtr Right;
-        if (TheParser->isPossibleBeginningOfExpression(Ctxt)) {
-            Right = TheParser->parse(Ctxt);
-        } else {
-            Right = TheParser->handleNotPossible(TokIn, Ctxt, &wasCloser);
-        }
+        TheParser->nextToken(Ctxt);
         
         NodeSeq Args;
         Args.reserve(1 + 1 + 1 + 1);
         Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
         Args.append(NodePtr(new LeafNode(TokIn)));
-        if (!wasCloser) {
-            Args.appendIfNonEmpty(std::move(ArgsTest));
-        }
-        Args.append(std::move(Right));
+        Args.appendIfNonEmpty(std::move(ArgsTest));
+        Args.append(NodePtr(new LeafNode(Tok)));
         
-        if (wasInsideSlashColon) {
-            return NodePtr(new TernaryNode(SYMBOL_TAGSET, std::move(Args)));
+        if ((Ctxt.Flag & PARSER_INSIDE_SLASHCOLON) == PARSER_INSIDE_SLASHCOLON) {
+            return NodePtr(new TernaryNode(SYMBOL_TAGUNSET, std::move(Args)));
         }
         
-        return NodePtr(new BinaryNode(SYMBOL_SET, std::move(Args)));
+        return NodePtr(new BinaryNode(SYMBOL_UNSET, std::move(Args)));
     }
+    
+    auto wasInsideSlashColon = ((Ctxt.Flag & PARSER_INSIDE_SLASHCOLON) == PARSER_INSIDE_SLASHCOLON);
+    
+    Ctxt.Flag.clear(PARSER_INSIDE_SLASHCOLON);
+    
+    auto wasCloser = false;
+    
+    NodePtr Right;
+    if (TheParser->isPossibleBeginningOfExpression(Ctxt)) {
+        Right = TheParser->parse(Ctxt);
+    } else {
+        Right = TheParser->handleNotPossible(TokIn, Ctxt, &wasCloser);
+    }
+    
+    NodeSeq Args;
+    Args.reserve(1 + 1 + 1 + 1);
+    Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
+    Args.append(NodePtr(new LeafNode(TokIn)));
+    if (!wasCloser) {
+        Args.appendIfNonEmpty(std::move(ArgsTest));
+    }
+    Args.append(std::move(Right));
+    
+    if (wasInsideSlashColon) {
+        return NodePtr(new TernaryNode(SYMBOL_TAGSET, std::move(Args)));
+    }
+    
+    return NodePtr(new BinaryNode(SYMBOL_SET, std::move(Args)));
 }
 
 
@@ -1306,75 +1224,64 @@ NodePtr IntegralParselet::parse(ParserContext CtxtIn) const {
     
     TheParser->nextToken(Ctxt);
     
-    //
-    // LOOKAHEAD
-    //
-    {
-        LeafSeq ArgsTest1;
+    LeafSeq ArgsTest1;
+    
+    auto Tok = Parser::eatAll(Ctxt, ArgsTest1);
+    
+    if (!TheParser->isPossibleBeginningOfExpression(Ctxt) ||
+        (TheParser->getTokenPrecedence(Tok, CtxtIn, true, nullptr) < PRECEDENCE_LONGNAME_INTEGRAL)) {
         
-        auto Tok = Parser::eatAll(Ctxt, ArgsTest1);
+        bool wasCloser;
         
-        if (!TheParser->isPossibleBeginningOfExpression(Ctxt) ||
-            (TheParser->getTokenPrecedence(Tok, CtxtIn, true, nullptr) < PRECEDENCE_LONGNAME_INTEGRAL)) {
-            
-            bool wasCloser;
-            
-            auto NotPossible = TheParser->handleNotPossible(TokIn, Ctxt, &wasCloser);
-            
-            NodeSeq Args;
-            Args.reserve(1 + 1 + 1);
-            Args.append(NodePtr(new LeafNode(TokIn)));
-            if (!wasCloser) {
-                Args.appendIfNonEmpty(std::move(ArgsTest1));
-            }
-            Args.append(std::move(NotPossible));
-            
-            return NodePtr(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDINTEGRAND, std::move(Args)));
-        }
+        auto NotPossible = TheParser->handleNotPossible(TokIn, Ctxt, &wasCloser);
         
-        Utils::differentLineWarning(TokIn, Tok);
-        
-        auto operand = TheParser->parse(Ctxt);
-        
-        Ctxt.Flag.clear(PARSER_INTEGRAL);
-        
-        
-        //
-        // LOOKAHEAD
-        //
-        {
-            LeafSeq ArgsTest2;
-            
-            auto Tok = Parser::eatAll(Ctxt, ArgsTest2);
-            
-            if (Tok.Tok() != TOKEN_LONGNAME_DIFFERENTIALD) {
-                
-                NodeSeq Args;
-                Args.reserve(1 + 1 + 1);
-                Args.append(NodePtr(new LeafNode(TokIn)));
-                Args.appendIfNonEmpty(std::move(ArgsTest1));
-                Args.append(std::move(operand));
-                
-                return NodePtr(new PrefixNode(PrefixOperatorToSymbol(TokIn.Tok()), std::move(Args)));
-            }
-            
-            Utils::differentLineWarning(TokIn, Tok);
-            
-            auto& differentialDparselet = TheParser->findPrefixParselet(Tok.Tok());
-            
-            auto variable = differentialDparselet->parse(Ctxt);
-            
-            NodeSeq Args;
-            Args.reserve(1 + 1 + 1 + 1 + 1);
-            Args.append(NodePtr(new LeafNode(TokIn)));
+        NodeSeq Args;
+        Args.reserve(1 + 1 + 1);
+        Args.append(NodePtr(new LeafNode(TokIn)));
+        if (!wasCloser) {
             Args.appendIfNonEmpty(std::move(ArgsTest1));
-            Args.append(std::move(operand));
-            Args.appendIfNonEmpty(std::move(ArgsTest2));
-            Args.append(std::move(variable));
-            
-            return NodePtr(new PrefixBinaryNode(PrefixBinaryOperatorToSymbol(TokIn.Tok()), std::move(Args)));
         }
+        Args.append(std::move(NotPossible));
+        
+        return NodePtr(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDINTEGRAND, std::move(Args)));
     }
+    
+    Utils::differentLineWarning(TokIn, Tok);
+    
+    auto operand = TheParser->parse(Ctxt);
+    
+    Ctxt.Flag.clear(PARSER_INTEGRAL);
+    
+    LeafSeq ArgsTest2;
+    
+    Tok = Parser::eatAll(Ctxt, ArgsTest2);
+    
+    if (Tok.Tok() != TOKEN_LONGNAME_DIFFERENTIALD) {
+        
+        NodeSeq Args;
+        Args.reserve(1 + 1 + 1);
+        Args.append(NodePtr(new LeafNode(TokIn)));
+        Args.appendIfNonEmpty(std::move(ArgsTest1));
+        Args.append(std::move(operand));
+        
+        return NodePtr(new PrefixNode(PrefixOperatorToSymbol(TokIn.Tok()), std::move(Args)));
+    }
+    
+    Utils::differentLineWarning(TokIn, Tok);
+    
+    auto& differentialDparselet = TheParser->findPrefixParselet(Tok.Tok());
+    
+    auto variable = differentialDparselet->parse(Ctxt);
+    
+    NodeSeq Args;
+    Args.reserve(1 + 1 + 1 + 1 + 1);
+    Args.append(NodePtr(new LeafNode(TokIn)));
+    Args.appendIfNonEmpty(std::move(ArgsTest1));
+    Args.append(std::move(operand));
+    Args.appendIfNonEmpty(std::move(ArgsTest2));
+    Args.append(std::move(variable));
+    
+    return NodePtr(new PrefixBinaryNode(PrefixBinaryOperatorToSymbol(TokIn.Tok()), std::move(Args)));
 }
 
 //
@@ -1404,63 +1311,52 @@ NodePtr InequalityParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
             return Aborted;
         }
         
+        LeafSeq ArgsTest1;
         
-        //
-        // LOOKAHEAD
-        //
-        {
-            LeafSeq ArgsTest1;
+        auto Tok1 = Parser::eatAndPreserveToplevelNewlines(CtxtIn, ArgsTest1);
+        
+        if (isInequalityOperator(Tok1.Tok())) {
             
-            auto Tok1 = Parser::eatAndPreserveToplevelNewlines(CtxtIn, ArgsTest1);
+            TheParser->nextToken(Ctxt);
             
-            if (isInequalityOperator(Tok1.Tok())) {
-                
-                TheParser->nextToken(Ctxt);
-                
-                //
-                // LOOKAHEAD
-                //
-                {
-                    LeafSeq ArgsTest2;
-                    
-                    auto Tok2 = Parser::eatAll(Ctxt, ArgsTest2);
-                    
-                    auto wasCloser = false;
-                    
-                    NodePtr Operand;
-                    bool possible;
-                    if (TheParser->isPossibleBeginningOfExpression(Ctxt)) {
-                        Operand = TheParser->parse(Ctxt);
-                        possible = true;
-                    } else {
-                        Operand = TheParser->handleNotPossible(Tok1, Ctxt, &wasCloser);
-                        possible = false;
-                    }
-                    
-                    //
-                    // Do not reserve inside loop
-                    // Allow default resizing strategy, which is hopefully exponential
-                    //
-                    Args.appendIfNonEmpty(std::move(ArgsTest1));
-                    Args.append(NodePtr(new LeafNode(Tok1)));
-                    if (!wasCloser) {
-                        Args.appendIfNonEmpty(std::move(ArgsTest2));
-                    }
-                    Args.append(std::move(Operand));
-                    
-                    if (!possible) {
-                        return NodePtr(new InfixNode(SYMBOL_INEQUALITY, std::move(Args)));
-                    }
-                }
-                
+            LeafSeq ArgsTest2;
+            
+            auto Tok2 = Parser::eatAll(Ctxt, ArgsTest2);
+            
+            auto wasCloser = false;
+            
+            NodePtr Operand;
+            bool possible;
+            if (TheParser->isPossibleBeginningOfExpression(Ctxt)) {
+                Operand = TheParser->parse(Ctxt);
+                possible = true;
             } else {
-                
-                //
-                // Tok.Tok != TokIn.Tok, so break
-                //
-                
+                Operand = TheParser->handleNotPossible(Tok1, Ctxt, &wasCloser);
+                possible = false;
+            }
+            
+            //
+            // Do not reserve inside loop
+            // Allow default resizing strategy, which is hopefully exponential
+            //
+            Args.appendIfNonEmpty(std::move(ArgsTest1));
+            Args.append(NodePtr(new LeafNode(Tok1)));
+            if (!wasCloser) {
+                Args.appendIfNonEmpty(std::move(ArgsTest2));
+            }
+            Args.append(std::move(Operand));
+            
+            if (!possible) {
                 return NodePtr(new InfixNode(SYMBOL_INEQUALITY, std::move(Args)));
             }
+            
+        } else {
+            
+            //
+            // Tok.Tok != TokIn.Tok, so break
+            //
+            
+            return NodePtr(new InfixNode(SYMBOL_INEQUALITY, std::move(Args)));
         }
         
     } // while
@@ -1505,40 +1401,35 @@ NodePtr VectorInequalityParselet::parse(NodeSeq Left, ParserContext CtxtIn) cons
                 
                 TheParser->nextToken(Ctxt);
                 
+                LeafSeq ArgsTest2;
+                
+                auto Tok2 = Parser::eatAll(Ctxt, ArgsTest2);
+                
+                auto wasCloser = false;
+                
+                NodePtr Operand;
+                bool possible;
+                if (TheParser->isPossibleBeginningOfExpression(Ctxt)) {
+                    Operand = TheParser->parse(Ctxt);
+                    possible = true;
+                } else {
+                    Operand = TheParser->handleNotPossible(Tok1, Ctxt, &wasCloser);
+                    possible = false;
+                }
+                
                 //
-                // LOOKAHEAD
+                // Do not reserve inside loop
+                // Allow default resizing strategy, which is hopefully exponential
                 //
-                {
-                    LeafSeq ArgsTest2;
-                    
-                    auto Tok2 = Parser::eatAll(Ctxt, ArgsTest2);
-                    
-                    auto wasCloser = false;
-                    
-                    NodePtr Operand;
-                    bool possible;
-                    if (TheParser->isPossibleBeginningOfExpression(Ctxt)) {
-                        Operand = TheParser->parse(Ctxt);
-                        possible = true;
-                    } else {
-                        Operand = TheParser->handleNotPossible(Tok1, Ctxt, &wasCloser);
-                        possible = false;
-                    }
-                    
-                    //
-                    // Do not reserve inside loop
-                    // Allow default resizing strategy, which is hopefully exponential
-                    //
-                    Args.appendIfNonEmpty(std::move(ArgsTest1));
-                    Args.append(NodePtr(new LeafNode(Tok1)));
-                    if (!wasCloser) {
-                        Args.appendIfNonEmpty(std::move(ArgsTest2));
-                    }
-                    Args.append(std::move(Operand));
-                    
-                    if (!possible) {
-                        return NodePtr(new InfixNode(SYMBOL_DEVELOPER_VECTORINEQUALITY, std::move(Args)));
-                    }
+                Args.appendIfNonEmpty(std::move(ArgsTest1));
+                Args.append(NodePtr(new LeafNode(Tok1)));
+                if (!wasCloser) {
+                    Args.appendIfNonEmpty(std::move(ArgsTest2));
+                }
+                Args.append(std::move(Operand));
+                
+                if (!possible) {
+                    return NodePtr(new InfixNode(SYMBOL_DEVELOPER_VECTORINEQUALITY, std::move(Args)));
                 }
                 
             } else {
@@ -1584,100 +1475,89 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, ParserContext Ctx
             return Aborted;
         }
         
+        LeafSeq ArgsTest1;
+        
+        auto Tok1 = Parser::eatAndPreserveToplevelNewlines(CtxtIn, ArgsTest1);
         
         //
-        // LOOKAHEAD
+        // Cannot just compare tokens
         //
-        {
-            LeafSeq ArgsTest1;
+        // May be something like  a * b c \[Times] d
+        //
+        // and we want only a single Infix node created
+        //
+        if (isInfixOperator(Tok1.Tok()) &&
+            InfixOperatorToSymbol(Tok1.Tok()) == Op) {
             
-            auto Tok1 = Parser::eatAndPreserveToplevelNewlines(CtxtIn, ArgsTest1);
+            lastOperatorToken = Tok1;
             
             //
-            // Cannot just compare tokens
+            // ALLOWTRAILING CODE
             //
-            // May be something like  a * b c \[Times] d
+            
             //
-            // and we want only a single Infix node created
+            // Something like  a;b  or  a,b
             //
-            if (isInfixOperator(Tok1.Tok()) &&
-                InfixOperatorToSymbol(Tok1.Tok()) == Op) {
-                
-                lastOperatorToken = Tok1;
-                
-                //
-                // ALLOWTRAILING CODE
-                //
-                
-                //
-                // Something like  a;b  or  a,b
-                //
-                
-                TheParser->nextToken(Ctxt);
+            
+            TheParser->nextToken(Ctxt);
+            
+            LeafSeq ArgsTest2;
+            
+            auto Tok2 = Parser::eatAndPreserveToplevelNewlines(Ctxt, ArgsTest2);
+            
+            if (isInfixOperator(Tok2.Tok()) &&
+                InfixOperatorToSymbol(Tok2.Tok()) == Op) {
                 
                 //
-                // LOOKAHEAD
+                // Something like  a; ;
                 //
-                {
-                    LeafSeq ArgsTest2;
-                    
-                    auto Tok2 = Parser::eatAndPreserveToplevelNewlines(Ctxt, ArgsTest2);
-                    
-                    if (isInfixOperator(Tok2.Tok()) &&
-                        InfixOperatorToSymbol(Tok2.Tok()) == Op) {
-                        
-                        //
-                        // Something like  a; ;
-                        //
-                        
-                        auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, "", Source(lastOperatorToken.Src.start()));
-                        
-                        lastOperatorToken = Tok2;
-                        
-                        //
-                        // Do not reserve inside loop
-                        // Allow default resizing strategy, which is hopefully exponential
-                        //
-                        Args.appendIfNonEmpty(std::move(ArgsTest1));
-                        Args.append(NodePtr(new LeafNode(Tok1)));
-                        Args.append(NodePtr(new LeafNode(Implicit)));
-                        
-                    } else if (TheParser->isPossibleBeginningOfExpression(Ctxt)) {
-                        
-                        auto operand = TheParser->parse(Ctxt);
-                        
-                        //
-                        // Do not reserve inside loop
-                        // Allow default resizing strategy, which is hopefully exponential
-                        //
-                        Args.appendIfNonEmpty(std::move(ArgsTest1));
-                        Args.append(NodePtr(new LeafNode(std::move(Tok1))));
-                        Args.appendIfNonEmpty(std::move(ArgsTest2));
-                        Args.append(std::move(operand));
-                        
-                    } else {
-                        
-                        //
-                        // Not beginning of an expression
-                        //
-                        // For example:  a;&
-                        //
-                        
-                        auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, "", Source(lastOperatorToken.Src.end()));
-                        
-                        Args.reserve(Args.size() + 1 + 1);
-                        Args.appendIfNonEmpty(std::move(ArgsTest1));
-                        Args.append(NodePtr(new LeafNode(Tok1)));
-                        Args.append(NodePtr(new LeafNode(Implicit)));
-                        
-                        return NodePtr(new InfixNode(Op, std::move(Args)));
-                    }
-                }
+                
+                auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, "", Source(lastOperatorToken.Src.start()));
+                
+                lastOperatorToken = Tok2;
+                
+                //
+                // Do not reserve inside loop
+                // Allow default resizing strategy, which is hopefully exponential
+                //
+                Args.appendIfNonEmpty(std::move(ArgsTest1));
+                Args.append(NodePtr(new LeafNode(Tok1)));
+                Args.append(NodePtr(new LeafNode(Implicit)));
+                
+            } else if (TheParser->isPossibleBeginningOfExpression(Ctxt)) {
+                
+                auto operand = TheParser->parse(Ctxt);
+                
+                //
+                // Do not reserve inside loop
+                // Allow default resizing strategy, which is hopefully exponential
+                //
+                Args.appendIfNonEmpty(std::move(ArgsTest1));
+                Args.append(NodePtr(new LeafNode(std::move(Tok1))));
+                Args.appendIfNonEmpty(std::move(ArgsTest2));
+                Args.append(std::move(operand));
                 
             } else {
                 
+                //
+                // Not beginning of an expression
+                //
+                // For example:  a;&
+                //
+                
+                auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, "", Source(lastOperatorToken.Src.end()));
+                
+                Args.reserve(Args.size() + 1 + 1);
+                Args.appendIfNonEmpty(std::move(ArgsTest1));
+                Args.append(NodePtr(new LeafNode(Tok1)));
+                Args.append(NodePtr(new LeafNode(Implicit)));
+                
                 return NodePtr(new InfixNode(Op, std::move(Args)));
             }
+            
+        } else {
+            
+            return NodePtr(new InfixNode(Op, std::move(Args)));
         }
         
     } // while
