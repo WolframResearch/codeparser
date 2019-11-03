@@ -608,11 +608,20 @@ toSourceCharacterString[LeafNode[_, str_, _], insideBoxes_] :=
 (*
 toSourceCharacterString is intended for concrete syntax, and concrete syntax
 has a List for the head of a Call: i.e. CallNode[{head}, {GroupNode[GroupSquare, {args}]}]
+
+But!
+
+Put in a hack to handle non-List for head of CallNode, because it is convenient
+
 *)
 toSourceCharacterString[CallNode[op_, nodes_, data_], insideBoxes_] :=
 Catch[
 Module[{opStrs, nodeStrs},
-	opStrs = toSourceCharacterString[#, insideBoxes]& /@ op;
+	If[ListQ[op],
+		opStrs = toSourceCharacterString[#, insideBoxes]& /@ op;
+		,
+		opStrs = toSourceCharacterString[#, insideBoxes]& /@ { op };
+	];
 	If[AnyTrue[opStrs, FailureQ],
 		Throw[SelectFirst[opStrs, FailureQ]]
 	];
