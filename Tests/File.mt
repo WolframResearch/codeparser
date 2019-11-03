@@ -15,7 +15,7 @@ Parse File
 
 *)
 
-sample = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "sample.wl"}]
+sample = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "sample.wl"}]
 
 cst = ConcreteParseFile[sample]
 
@@ -51,7 +51,7 @@ Test[
 
 
 
-shebangwarning = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "shebangwarning.wl"}]
+shebangwarning = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "shebangwarning.wl"}]
 
 cst = ConcreteParseFile[shebangwarning]
 
@@ -69,7 +69,7 @@ TestMatch[
 ]
 
 
-carriagereturn = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "carriagereturn.wl"}]
+carriagereturn = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "carriagereturn.wl"}]
 
 cst = ConcreteParseFile[carriagereturn]
 
@@ -85,7 +85,7 @@ TestMatch[
 	TestID->"File-20190422-C6U5B6"
 ]
 
-carriagereturn2 = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "carriagereturn2.wl"}]
+carriagereturn2 = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "carriagereturn2.wl"}]
 
 cst = ConcreteParseFile[carriagereturn2]
 
@@ -136,7 +136,7 @@ Tokenize File
 
 *)
 
-sample = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "sample.wl"}]
+sample = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "sample.wl"}]
 
 Test[
 	TokenizeFile[sample]
@@ -182,7 +182,7 @@ TestMatch[
 
 
 
-strange = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "strange.wl"}]
+strange = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "strange.wl"}]
 
 cst = ConcreteParseFile[strange]
 
@@ -206,7 +206,7 @@ TestMatch[
 
 
 
-strange = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "string1.wl"}]
+strange = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "string1.wl"}]
 
 cst = ConcreteParseFile[strange]
 
@@ -234,7 +234,7 @@ Yes, it is unsatisfactory to have 1\\\n be treated as an Integer, with no LineCo
 
 *)
 
-continuation = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "continuation.wl"}]
+continuation = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "continuation.wl"}]
 
 cst = ConcreteParseFile[continuation]
 
@@ -246,7 +246,7 @@ TestMatch[
 			LeafNode[Token`OpenCurly, "{", <|Source->{{1, 1}, {1, 1}}|>],
 			LeafNode[Token`Newline, "\n", <|Source->{{2, 0}, {2, 0}}|>],
 			LeafNode[Token`WhiteSpace, "\t", <|Source->{{2, 1}, {2, 1}}|>],
-			LeafNode[Integer, "1\\\n", <|Source->{{2, 2}, {3, 0}}|>],
+			LeafNode[Integer, "1", <|Source->{{2, 2}, {2, 2}}|>],
 			LeafNode[Token`CloseCurly, "}", <|Source->{{3, 1}, {3, 1}}|>]}, <|Source -> {{1, 1}, {3, 1}}|>]}, <|Source -> {{1, 1}, {3, 1}}|>]
 	,
 	TestID->"File-20191025-I3T9F3"
@@ -256,6 +256,20 @@ TestMatch[
 
 
 
+crash2 = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash2.txt"}]
+
+cst = ConcreteParseFile[crash2]
+
+TestMatch[
+	cst
+	,
+	FileNode[File, {
+		StartOfLineNode[Information, {
+			LeafNode[Token`Question, "?", <|Source -> {{1, 1}, {1, 1}}|>],
+			LeafNode[String, "123456\"", <|Source -> {{1, 2}, {2, 4}}|>]}, <|Source -> {{1, 1}, {2, 4}}|>]}, <|Source -> {{1, 1}, {2, 4}}|>]
+	,
+	TestID->"File-20191103-T1K0D2"
+]
 
 
 
@@ -275,7 +289,7 @@ parseTest
 
 
 Test[
-	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "carriagereturn2.wl"}], 1]
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "carriagereturn2.wl"}], 1]
 	,
 	Null
 	,
@@ -283,7 +297,7 @@ Test[
 ]
 
 Test[
-	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "carriagereturn3.wl"}], 1]
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "carriagereturn3.wl"}], 1]
 	,
 	Null
 	,
@@ -291,7 +305,7 @@ Test[
 ]
 
 Test[
-	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "carriagereturn4.wl"}], 1]
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "carriagereturn4.wl"}], 1]
 	,
 	Null
 	,
@@ -299,7 +313,7 @@ Test[
 ]
 
 Test[
-	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "carriagereturn.wl"}], 1]
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "carriagereturn.wl"}], 1]
 	,
 	Null
 	,
@@ -315,7 +329,7 @@ Test[
 ]
 
 Test[
-	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "crash.txt"}], 1]
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash.txt"}], 1]
 	,
 	Null
 	,
@@ -368,14 +382,6 @@ Test[
 	ok
 	,
 	TestID->"File-20190606-E9U5Q2"
-]
-
-Test[
-	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-comments.txt"}], 1]
-	,
-	ok
-	,
-	TestID->"File-20190606-L5D5P4"
 ]
 
 Test[
@@ -475,7 +481,7 @@ Test[
 ]
 
 Test[
-	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "sample.wl"}], 1]
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "sample.wl"}], 1]
 	,
 	Null
 	,
@@ -491,7 +497,7 @@ Test[
 ]
 
 Test[
-	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "shebangwarning.wl"}], 1]
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "shebangwarning.wl"}], 1]
 	,
 	Null
 	,
@@ -499,7 +505,7 @@ Test[
 ]
 
 Test[
-	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "strange.wl"}], 1]
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "strange.wl"}], 1]
 	,
 	Null
 	,
@@ -508,7 +514,7 @@ Test[
 
 
 Test[
-	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "span1.wl"}], 1]
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "span1.wl"}], 1]
 	,
 	Null
 	,
@@ -516,7 +522,7 @@ Test[
 ]
 
 Test[
-	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "string1.wl"}], 1]
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "string1.wl"}], 1]
 	,
 	Null
 	,
@@ -524,7 +530,7 @@ Test[
 ]
 
 Test[
-	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "comment.wl"}], 1]
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "comment.wl"}], 1]
 	,
 	Null
 	,
@@ -532,16 +538,86 @@ Test[
 ]
 
 Test[
-	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "continuation.wl"}], 1]
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "continuation.wl"}], 1]
 	,
 	Null
 	,
 	TestID->"File-20191025-Z3P6E3"
 ]
 
+Test[
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash2.txt"}], 1]
+	,
+	Null
+	,
+	TestID->"File-20191102-Z8M8J2"
+]
 
+Test[
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash3.txt"}], 1]
+	,
+	Null
+	,
+	{Syntax::sntoct1}
+	,
+	TestID->"File-20191102-W1Z2A1"
+]
 
+Test[
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash4.txt"}], 1]
+	,
+	Null
+	,
+	TestID->"File-20191103-I6Y6P4"
+]
 
+Test[
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash5.txt"}], 1]
+	,
+	Null
+	,
+	TestID->"File-20191103-V9V1F9"
+]
+
+Test[
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash6.txt"}], 1]
+	,
+	ok
+	,
+	TestID->"File-20191103-B9T6B0"
+]
+
+Test[
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash7.txt"}], 1]
+	,
+	ok
+	,
+	TestID->"File-20191103-A0V5S0"
+]
+
+Test[
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash8.txt"}], 1]
+	,
+	ok
+	,
+	TestID->"File-20191103-D1L3U1"
+]
+
+Test[
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash9.txt"}], 1]
+	,
+	Null
+	,
+	TestID->"File-20191103-F1U3Y6"
+]
+
+Test[
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash10.txt"}], 1]
+	,
+	Null
+	,
+	TestID->"File-20191103-H2O6Z5"
+]
 
 
 

@@ -37,6 +37,31 @@ void SyntaxIssue::put(MLINK mlp) const {
     }
 }
 
+void SyntaxIssue::print(std::ostream& s) const {
+    
+    s << SYMBOL_AST_LIBRARY_MAKESYNTAXISSUE->name() << "[";
+    
+    s << Tag.c_str() << ", ";
+    
+    s << Msg.c_str() << ", ";
+    
+    s << Sev.c_str() << ", ";
+    
+    Src.print(s);
+    
+    s << ", ";
+    
+    s << Con;
+    s << ", ";
+    
+    for (auto& A : Actions) {
+        A->print(s);
+        s << ", ";
+    }
+    
+    s << "]";
+}
+
 void ReplaceTextCodeAction::put(MLINK mlp) const {
     
     MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEREPLACETEXTCODEACTION->name(), static_cast<int>(1 + Src.count() + 1));
@@ -48,6 +73,22 @@ void ReplaceTextCodeAction::put(MLINK mlp) const {
     MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(ReplacementText.c_str()), static_cast<int>(ReplacementText.size()));
 }
 
+void ReplaceTextCodeAction::print(std::ostream& s) const {
+    
+    s << SYMBOL_AST_LIBRARY_MAKEREPLACETEXTCODEACTION->name() << "[";
+    
+    s << Label;
+    s << ", ";
+    
+    Src.print(s);
+    s << ", ";
+    
+    s << ReplacementText;
+    s << ", ";
+    
+    s << "]";
+}
+
 void InsertTextCodeAction::put(MLINK mlp) const {
     
     MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEINSERTTEXTCODEACTION->name(), static_cast<int>(1 + Src.count() + 1));
@@ -57,6 +98,22 @@ void InsertTextCodeAction::put(MLINK mlp) const {
     Src.put(mlp);
     
     MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(InsertionText.c_str()), static_cast<int>(InsertionText.size()));
+}
+
+void InsertTextCodeAction::print(std::ostream& s) const {
+    
+    s << SYMBOL_AST_LIBRARY_MAKEINSERTTEXTCODEACTION->name() << "[";
+    
+    s << Label;
+    s << ", ";
+    
+    Src.print(s);
+    s << ", ";
+    
+    s << InsertionText;
+    s << ", ";
+    
+    s << "]";
 }
 
 void FormatIssue::put(MLINK mlp) const {
@@ -72,6 +129,20 @@ void FormatIssue::put(MLINK mlp) const {
     Src.put(mlp);
 }
 
+void FormatIssue::print(std::ostream& s) const {
+    
+    s << SYMBOL_AST_LIBRARY_MAKEFORMATISSUE->name() << "[";
+    
+    s << Tag.c_str() << ", ";
+    
+    s << Msg.c_str() << ", ";
+    
+    s << Sev.c_str() << ", ";
+    
+    Src.print(s);
+    
+    s << "]";
+}
 
 //
 // SyntaxError
@@ -528,6 +599,26 @@ void Source::put(MLINK mlp) const {
     }
 }
 
+void Source::print(std::ostream& s) const {
+    switch (style) {
+        case SOURCESTYLE_UNKNOWN:
+            break;
+        case SOURCESTYLE_LINECOL:
+            assert(lineCol.start <= lineCol.end);
+            s << lineCol.start.Line;
+            s << lineCol.start.Col;
+            s << lineCol.end.Line;
+            s << lineCol.end.Col;
+            break;
+        case SOURCESTYLE_OFFSETLEN:
+            s << offsetLen.offset.val;
+            s << offsetLen.len;
+            break;
+        default:
+            assert(false);
+            break;
+    }
+}
 
 
 //

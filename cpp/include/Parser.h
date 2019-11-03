@@ -54,7 +54,7 @@ enum ParserContextFlagBits : uint8_t {
     //
     //
     //
-    PARSER_STRINGIFY_CURRENT_LINE = 0x04,
+    PARSER_STRINGIFY_CURRENTLINE = 0x04,
     
     //
     //

@@ -100,81 +100,25 @@ Module[{ast},
 
 
 abstract[LeafNode[Symbol, sIn_, dataIn_]] :=
-Module[{s, issues, data},
-
-	data = dataIn;
-
-	{s, issues} = abstractLineContinuation[sIn, data];
-
-	data = KeyTake[data, keysToTake];
-
-	If[!empty[issues],
-		data[AbstractFormatIssues] = issues
-	];
-
-	LeafNode[Symbol, s, data]
-]
+	LeafNode[Symbol, sIn, KeyTake[dataIn, keysToTake]]
 
 abstract[LeafNode[String, sIn_, dataIn_]] :=
-Module[{s, issues, data},
-
-	data = dataIn;
-
-	{s, issues} = abstractLineContinuation[sIn, data];
-
-	data = KeyTake[data, keysToTake];
-
-	If[!empty[issues],
-		data[AbstractFormatIssues] = issues
-	];
-
-	LeafNode[String, s, KeyTake[data, keysToTake]]
-]
+	LeafNode[String, sIn, KeyTake[dataIn, keysToTake]]
 
 abstract[LeafNode[Integer, sIn_, dataIn_]] :=
-Module[{s, issues, data},
-
-	data = dataIn;
-
-	{s, issues} = abstractLineContinuation[sIn, data];
-
-	data = KeyTake[data, keysToTake];
-
-	If[!empty[issues],
-		data[AbstractFormatIssues] = issues
-	];
-
-	LeafNode[Integer, s, KeyTake[data, keysToTake]]
-]
+	LeafNode[Integer, sIn, KeyTake[dataIn, keysToTake]]
 
 abstract[LeafNode[Real, sIn_, dataIn_]] :=
-Module[{s, issues, data},
-
-	data = dataIn;
-
-	{s, issues} = abstractLineContinuation[sIn, data];
-
-	data = KeyTake[data, keysToTake];
-
-	If[!empty[issues],
-		data[AbstractFormatIssues] = issues
-	];
-
-	LeafNode[Real, s, data]
-]
+	LeafNode[Integer, sIn, KeyTake[dataIn, keysToTake]]
 
 abstract[LeafNode[Slot, sIn_, dataIn_]] :=
-Module[{s, issues, data},
+Module[{s, data},
+
+	s = sIn;
 
 	data = dataIn;
 
-	{s, issues} = abstractLineContinuation[sIn, data];
-
 	data = KeyTake[data, keysToTake];
-
-	If[!empty[issues],
-		data[AbstractFormatIssues] = issues
-	];
 
 	Switch[s,
 		"#",
@@ -189,17 +133,13 @@ Module[{s, issues, data},
 ]
 
 abstract[LeafNode[SlotSequence, sIn_, dataIn_]] :=
-Module[{s, issues, data},
+Module[{s, data},
+
+	s = sIn;
 
 	data = dataIn;
 
-	{s, issues} = abstractLineContinuation[sIn, data];
-
 	data = KeyTake[data, keysToTake];
-
-	If[!empty[issues],
-		data[AbstractFormatIssues] = issues
-	];
 
 	Switch[s,
 		"##",
@@ -211,11 +151,13 @@ Module[{s, issues, data},
 ]
 
 abstract[LeafNode[Out, sIn_, dataIn_]] :=
-Module[{s, issues, data},
+Module[{s, data},
+
+	s = sIn;
 
 	data = dataIn;
 
-	{s, issues} = abstractLineContinuation[sIn, data];
+	data = KeyTake[data, keysToTake];
 
 	Switch[s,
 		"%",
@@ -269,89 +211,6 @@ abstract[LeafNode[tok_, str_, data_]] :=
 		_,
 			AbstractSyntaxErrorNode[AbstractSyntaxError`UnhandledToken, { LeafNode[tok, str, data] }, KeyTake[data, keysToTake]]
 	]
-
-
-(*
-Remove line continuations
-
-Line continuations might be inside of strings and we want to remove them
-
-I don't feel like constructing a regex to do the matching for true line continuations
-So use an auxiliary function. This is probably easier to understand.
-*)
-abstractLineContinuation[s_String /; StringContainsQ[s, "\\"~~("\n"|"\r\n"|"\r")], dataIn_] :=
-Module[{candidatePoss, actualLCs, specs, issues, data},
-	
-	issues = {};
-
-	data = dataIn;
-
-	candidatePoss = StringPosition[s, "\\"~~("\n"|"\r\n"|"\r")];
-	actualLCs = Select[candidatePoss, isLineContinuation[s, #]&];
-
-	If[AnyTrue[actualLCs, #[[2]] == StringLength[s]&],
-		AppendTo[issues, FormatIssue["UnexpectedLineContinuation", "Unexpected line continuation.", "Formatting", <|Source->data[Source]|>]]
-	];
-
-	(*
-	Used to be:
-	StringReplacePart[s, "", actualLCs]
-
-	but this is VERY slow
-
-	Convert the LC poss into Take specs in-between the line continuations
-	*)
-	specs = {#[[1]] + 1, #[[2]] - 1}& /@ Partition[{0} ~Join~ Flatten[actualLCs] ~Join~ {StringLength[s] + 1}, 2];
-
-	(*
-	And then StringJoin all of the in-between parts
-	*)
-	{StringJoin[StringTake[s, specs]], issues}
-]
-
-abstractLineContinuation[s_String, _] := {s, {}}
-
-
-
-(*
-
-We need to do a test for line continuation because \\\n does not NECESSARILY mean a line continuation
-
-There could be a preceding \\, thus changing the semantics of \\\n
-
-
-s: input string
-candidatePos: position of \\\n that looks like a line continuation
-
-go backwards and count an odd number of \\
-
-isLineContinuation["abc\\\ndef", {4, 5}] => True
-
-isLineContinuation["ab\\\\\ndef", {4, 5}] => False
-
-*)
-isLineContinuation[s_String, candidatePos_List] :=
-Catch[
-Module[{acc, nToTest},
-	(*
-	acc: how many \ have we seen so far?
-	*)
-	acc = 1;
-	nToTest = candidatePos[[1]] - 1;
-	While[True,
-		If[nToTest == 0,
-			Throw[OddQ[acc]]
-		];
-		If[StringPart[s, nToTest] != "\\",
-			Throw[OddQ[acc]]
-		];
-		acc++;
-		nToTest--;
-	]
-]]
-
-
-
 
 
 

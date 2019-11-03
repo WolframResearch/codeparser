@@ -84,13 +84,14 @@ public:
     }
 };
 
-const NextWLCharacterPolicy TOPLEVEL               = LC_UNDERSTANDS_CRLF;
-const NextWLCharacterPolicy INSIDE_SYMBOL          = LC_IS_MEANINGFUL | LC_UNDERSTANDS_CRLF;
-const NextWLCharacterPolicy INSIDE_NUMBER          = LC_IS_MEANINGFUL | LC_UNDERSTANDS_CRLF;
-const NextWLCharacterPolicy INSIDE_STRING          = PRESERVE_WS_AFTER_LC | LC_IS_MEANINGFUL | UNLIKELY_ESCAPE_CHECKING;
-const NextWLCharacterPolicy INSIDE_STRING_FILEIFY  = DISABLE_ESCAPES | LC_IS_MEANINGFUL;
-const NextWLCharacterPolicy INSIDE_OPERATOR        = LC_IS_MEANINGFUL | LC_UNDERSTANDS_CRLF;
-const NextWLCharacterPolicy INSIDE_COMMENT         = DISABLE_CHARACTERDECODINGISSUES | LC_UNDERSTANDS_CRLF;
+const NextWLCharacterPolicy TOPLEVEL              = LC_UNDERSTANDS_CRLF;
+const NextWLCharacterPolicy INSIDE_SYMBOL         = LC_IS_MEANINGFUL | LC_UNDERSTANDS_CRLF;
+const NextWLCharacterPolicy INSIDE_NUMBER         = LC_IS_MEANINGFUL | LC_UNDERSTANDS_CRLF;
+const NextWLCharacterPolicy INSIDE_STRING         = PRESERVE_WS_AFTER_LC | LC_IS_MEANINGFUL | UNLIKELY_ESCAPE_CHECKING;
+const NextWLCharacterPolicy INSIDE_STRINGIFY_FILE = DISABLE_ESCAPES | LC_IS_MEANINGFUL;
+const NextWLCharacterPolicy INSIDE_STRINGIFY_LINE = LC_IS_MEANINGFUL | LC_UNDERSTANDS_CRLF;
+const NextWLCharacterPolicy INSIDE_OPERATOR       = LC_IS_MEANINGFUL | LC_UNDERSTANDS_CRLF;
+const NextWLCharacterPolicy INSIDE_COMMENT        = DISABLE_CHARACTERDECODINGISSUES | LC_UNDERSTANDS_CRLF;
 
 //
 // CharacterDecoder is given a stream of integers that represent Unicode code points and decodes
@@ -106,12 +107,15 @@ class CharacterDecoder {
     
     WolframLibraryData libData;
     
+    SourceCharacter nextSourceCharacter();
     
     WLCharacter handleLongName(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy, bool unlikelyEscapeChecking);
     WLCharacter handle2Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy);
     WLCharacter handle4Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy);
     WLCharacter handle6Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy);
     WLCharacter handleOctal(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy);
+    
+    WLCharacter handleLineContinuation(NextWLCharacterPolicy policy);
     
     void append(SourceCharacter, SourceLocation);
     

@@ -8,13 +8,10 @@
 
 #include <sstream>
 
-static std::unique_ptr<MLSession> mlSession;
 
 class APITest : public ::testing::Test {
 protected:
     static void SetUpTestSuite() {
-        
-        mlSession = std::unique_ptr<MLSession>(new MLSession);
         
         TheParserSession = std::unique_ptr<ParserSession>(new ParserSession);
     }
@@ -22,8 +19,6 @@ protected:
     static void TearDownTestSuite() {
         
         TheParserSession.reset(nullptr);
-        
-        mlSession.reset(nullptr);
     }
     
     void SetUp() override {
@@ -40,15 +35,7 @@ protected:
 //
 TEST_F(APITest, Bug1) {
     
-    auto link = mlSession->getMLINK();
-    
-    MLPutFunction(link, "List", 2);
-    
-    MLPutString(link, "abc[]");
-    
-    MLPutString(link, "LineCol");
-    
-    ParseLeaf_LibraryLink(nullptr, link);
+    ParseLeaf(nullptr, "abc[]", "LineCol", "False", "False");
     
     SUCCEED();
 }

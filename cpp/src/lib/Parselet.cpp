@@ -465,13 +465,13 @@ NodePtr StartOfLineParselet::parse(ParserContext CtxtIn) const {
     auto TokIn = TheParser->currentToken();
     
     auto Ctxt = CtxtIn;
-    Ctxt.Flag |= PARSER_STRINGIFY_CURRENT_LINE;
+    Ctxt.Flag |= PARSER_STRINGIFY_CURRENTLINE;
     
     TheParser->nextToken(Ctxt);
     
     auto Tok = TheParser->currentToken();
     
-    Ctxt.Flag.clear(PARSER_STRINGIFY_CURRENT_LINE);
+    Ctxt.Flag.clear(PARSER_STRINGIFY_CURRENTLINE);
     
     //
     // We know there is just a token here, either TOKEN_ERROR_EMPTYSTRING or a legit string

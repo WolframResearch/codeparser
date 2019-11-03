@@ -57,6 +57,15 @@ void NodeSeq::put(MLINK mlp) const {
     put0(mlp);
 }
 
+void NodeSeq::print(std::ostream& s) const {
+    
+    s << SYMBOL_LIST->name() << "[";
+    
+    print0(s);
+    
+    s << "]";
+}
+
 void NodeSeq::put0(MLINK mlp) const {
     
     for (auto& C : vec) {
@@ -64,10 +73,26 @@ void NodeSeq::put0(MLINK mlp) const {
     }
 }
 
+void NodeSeq::print0(std::ostream& s) const {
+    
+    for (auto& C : vec) {
+        C->print(s);
+        s << ", ";
+    }
+}
+
 void LeafSeq::put0(MLINK mlp) const {
     
     for (auto& C : vec) {
         C->put(mlp);
+    }
+}
+
+void LeafSeq::print0(std::ostream& s) const {
+    
+    for (auto& C : vec) {
+        C->print(s);
+        s << ", ";
     }
 }
 
@@ -168,10 +193,19 @@ void Node::putChildren(MLINK mlp) const {
     Children.put(mlp);
 }
 
+void Node::printChildren(std::ostream& s) const {
+    
+    Children.print(s);
+}
 
 void LeafSeqNode::put(MLINK mlp) const {
     
     Children.put0(mlp);
+}
+
+void LeafSeqNode::print(std::ostream& s) const {
+    
+    Children.print0(s);
 }
 
 size_t LeafSeqNode::size() const {
@@ -208,6 +242,11 @@ void NodeSeqNode::put(MLINK mlp) const {
     Children.put0(mlp);
 }
 
+void NodeSeqNode::print(std::ostream& s) const {
+    
+    Children.print0(s);
+}
+
 void OperatorNode::put(MLINK mlp) const {
     
     auto Src = getSource();
@@ -221,6 +260,20 @@ void OperatorNode::put(MLINK mlp) const {
     getSource().put(mlp);
 }
 
+void OperatorNode::print(std::ostream& s) const {
+    
+    s << MakeSym->name() << "[";
+
+    s << Op->name();
+    s << ", ";
+    
+    printChildren(s);
+    s << ", ";
+    
+    getSource().print(s);
+    
+    s << "]";
+}
 
 void LeafNode::put(MLINK mlp) const {
     
@@ -231,6 +284,21 @@ void LeafNode::put(MLINK mlp) const {
     MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Tok.Str.c_str()), static_cast<int>(Tok.Str.size()));
     
     Tok.Src.put(mlp);
+}
+
+void LeafNode::print(std::ostream& s) const {
+    
+    s << SYMBOL_AST_LIBRARY_MAKELEAFNODE->name() << "[";
+    
+    s << TokenToSymbol(Tok.Tok())->name();
+    s << ", ";
+    
+    s << Tok.Str;
+    s << ", ";
+    
+    Tok.Src.print(s);
+    
+    s << "]";
 }
 
 bool LeafNode::isTrivia() const {
@@ -248,6 +316,23 @@ void CallNode::put(MLINK mlp) const {
     putChildren(mlp);
     
     Src.put(mlp);
+}
+
+void CallNode::print(std::ostream& s) const {
+    
+    auto Src = getSource();
+    
+    s << SYMBOL_AST_LIBRARY_MAKECALLNODE->name() << "[";
+    
+    Head.print(s);
+    s << ", ";
+    
+    printChildren(s);
+    s << ", ";
+    
+    Src.print(s);
+    
+    s << "]";
 }
 
 Source CallNode::getSource() const {
@@ -277,6 +362,24 @@ void SyntaxErrorNode::put(MLINK mlp) const {
     Src.put(mlp);
 }
 
+void SyntaxErrorNode::print(std::ostream& s) const {
+    
+    auto Src = getSource();
+    
+    s << SYMBOL_AST_LIBRARY_MAKESYNTAXERRORNODE->name() << "[";
+    
+    s << SyntaxErrorToString(Err);
+    s << ", ";
+    
+    printChildren(s);
+    s << ", ";
+    
+    Src.print(s);
+    s << ", ";
+    
+    s << "]";
+}
+
 bool SyntaxErrorNode::isError() const {
     return true;
 }
@@ -290,6 +393,18 @@ void CollectedExpressionsNode::put(MLINK mlp) const {
     }
 }
 
+void CollectedExpressionsNode::print(std::ostream& s) const {
+    
+    s << "List[";
+    
+    for (auto& E : Exprs) {
+        E->print(s);
+        s << ", ";
+    }
+    
+    s << "]";
+}
+
 void CollectedIssuesNode::put(MLINK mlp) const {
     
     MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(Issues.size()));
@@ -298,4 +413,38 @@ void CollectedIssuesNode::put(MLINK mlp) const {
         I->put(mlp);
     }
 }
+
+void CollectedIssuesNode::print(std::ostream& s) const {
+    
+    s << "List[";
+    
+    for (auto& I : Issues) {
+        I->print(s);
+        s << ", ";
+    }
+    
+    s << "]";
+}
+
+void ListNode::put(MLINK mlp) const {
+    
+    MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(N.size()));
+    
+    for (auto& NN : N) {
+        NN->put(mlp);
+    }
+}
+
+void ListNode::print(std::ostream& s) const {
+    
+    s << "List[";
+    
+    for (auto& NN : N) {
+        NN->print(s);
+        s << ", ";
+    }
+    
+    s << "]";
+}
+
 

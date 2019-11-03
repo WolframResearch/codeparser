@@ -26,18 +26,18 @@ enum TokenizerContextBits : uint8_t {
     //
     // This is used inside linear syntax.
     //
-    TOKENIZER_ENABLE_STRINGIFY_NEXT_TOKEN = 0x02,
+    TOKENIZER_ENABLE_STRINGIFY_NEXTTOKEN = 0x02,
     
     //
     //
     //
-    TOKENIZER_STRINGIFY_CURRENT_LINE = 0x04,
+    TOKENIZER_STRINGIFY_CURRENTLINE = 0x04,
 };
 
 class TokenizerContext {
     uint8_t val;
 public:
-    constexpr TokenizerContext() : val(TOKENIZER_ENABLE_STRINGIFY_NEXT_TOKEN) {}
+    constexpr TokenizerContext() : val(TOKENIZER_ENABLE_STRINGIFY_NEXTTOKEN) {}
     constexpr TokenizerContext(uint8_t val) : val(val) {}
     
     TokenizerContextBits operator&(const TokenizerContextBits bits) const {
@@ -92,6 +92,8 @@ class Tokenizer {
     Token handleOperator(TokenizerContext Ctxt);
     
     Token handleLinearSyntax(TokenizerContext Ctxt);
+    
+    Token handleUnhandledBackSlash(TokenizerContext Ctxt);
     
     void append(WLCharacter, Source);
     

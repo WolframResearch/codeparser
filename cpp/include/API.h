@@ -35,6 +35,8 @@
 #include <fstream>
 #include <memory> // for unique_ptr
 
+class Node;
+
 //
 // CMake defines ast_lib_EXPORTS
 //
@@ -47,6 +49,21 @@
 #else
 # define ASTLIB_EXPORTED
 #endif
+
+
+
+EXTERN_C DLLEXPORT Node *ConcreteParseString(WolframLibraryData libData, const char *input, const char *style);
+
+EXTERN_C DLLEXPORT Node *ConcreteParseFile(WolframLibraryData libData, const char *input, const char *style, const char *skipFirstLine);
+
+EXTERN_C DLLEXPORT Node *TokenizeString(WolframLibraryData libData, const char *input, const char *style);
+
+EXTERN_C DLLEXPORT Node *TokenizeFile(WolframLibraryData libData, const char *input, const char *style, const char *skipFirstLine);
+
+EXTERN_C DLLEXPORT Node *ParseLeaf(WolframLibraryData libData, const char *input, const char *style, const char *stringifyNextTokenSymbol, const char *stringifyNextTokenFile);
+
+EXTERN_C DLLEXPORT void ReleaseNode(Node *node);
+
 
 
 
@@ -151,17 +168,19 @@ class ScopedIFS : public std::ifstream {
     char *data;
     size_t dataLength;
     
+    bool inited;
+    
 public:
     
-    ScopedIFS(const char *inStr) : std::ifstream(inStr, std::ifstream::in | std::ifstream::binary) {
+    ScopedIFS(const char *inStr) : std::ifstream(inStr, std::ifstream::in | std::ifstream::binary), data(), dataLength(), inited(false) {
         
         seekg(0, end);
     
         auto off = tellg();
         if (off == -1) {
-            //
-            // FIXME: need to handle better
-            //
+            
+            close();
+            
             return;
         }
     
@@ -172,9 +191,15 @@ public:
         data = new char[dataLength];
     
         read(data, dataLength);
+        
+        inited = true;
     }
     
     ~ScopedIFS() {
+        
+        if (inited) {
+            return;
+        }
         
         delete[] data;
         
@@ -187,6 +212,23 @@ public:
     
     size_t getDataLength() const {
         return dataLength;
+    }
+    
+};
+
+class ScopedMLEnvironmentParameter {
+    
+    MLEnvironmentParameter p;
+    
+public:
+    ScopedMLEnvironmentParameter() : p(MLNewParameters(MLREVISION, MLAPIREVISION)) {}
+    
+    ~ScopedMLEnvironmentParameter() {
+        MLReleaseParameters(p);
+    }
+    
+    MLEnvironmentParameter get() {
+        return p;
     }
     
 };

@@ -86,14 +86,12 @@ void Tokenizer::nextToken(TokenizerContext CtxtIn) {
     if (c.to_point() == CODEPOINT_ENDOFFILE) {
         
         //
-        // EndOfFile is special because there is no source
-        //
-        // So invent source
+        // EndOfFile is special, so invent source
         //
         
         auto Start = TheSourceManager->getTokenStart();
         
-        if ((Ctxt & TOKENIZER_STRINGIFY_CURRENT_LINE) == TOKENIZER_STRINGIFY_CURRENT_LINE) {
+        if ((Ctxt & TOKENIZER_STRINGIFY_CURRENTLINE) == TOKENIZER_STRINGIFY_CURRENTLINE) {
             
             _currentToken = Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start));
             
@@ -115,7 +113,70 @@ void Tokenizer::nextToken(TokenizerContext CtxtIn) {
         }
         return;
         
-    } else if ((Ctxt & TOKENIZER_STRINGIFY_CURRENT_LINE) == TOKENIZER_STRINGIFY_CURRENT_LINE) {
+    } else if (c.isNewline()) {
+        
+        //
+        // Newline is special, so invent source
+        //
+        
+        auto Start = TheSourceManager->getTokenStart();
+        
+        if ((Ctxt & TOKENIZER_STRINGIFY_CURRENTLINE) == TOKENIZER_STRINGIFY_CURRENTLINE) {
+            
+            _currentToken = Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start));
+            
+        } else if (stringifyNextToken_symbol) {
+            
+            stringifyNextToken_symbol = false;
+            
+            _currentToken = Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start));
+            
+        } else if (stringifyNextToken_file) {
+            
+            stringifyNextToken_file = false;
+            
+            _currentToken = Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start));
+            
+        } else {
+            
+            //
+            // Regular newline
+            //
+            
+            switch (c.to_point()) {
+                case '\n': {
+                    
+                    String << c;
+                    
+                    c = nextWLCharacter(TOPLEVEL);
+                    
+                    _currentToken = Token(TOKEN_NEWLINE, String.str(), TheSourceManager->getTokenSource());
+                }
+                    break;
+                case '\r': {
+                    
+                    String << c;
+                    
+                    c = nextWLCharacter(TOPLEVEL);
+                    
+                    if (c.to_point() == '\n') {
+                        
+                        String << c;
+                        
+                        c = nextWLCharacter(TOPLEVEL);
+                    }
+                    
+                    _currentToken = Token(TOKEN_NEWLINE, String.str(), TheSourceManager->getTokenSource());
+                }
+                    break;
+                default:
+                    assert(false);
+                    break;
+            }
+        }
+        return;
+        
+    } else if ((Ctxt & TOKENIZER_STRINGIFY_CURRENTLINE) == TOKENIZER_STRINGIFY_CURRENTLINE) {
         
         _currentToken = handleString(Ctxt);
         
@@ -174,39 +235,6 @@ void Tokenizer::nextToken(TokenizerContext CtxtIn) {
         
         _currentToken = handleNumber(Ctxt);
         
-    } else if (c.isNewline()) {
-        
-        switch (c.to_point()) {
-            case '\n': {
-                
-                String << c;
-                
-                c = nextWLCharacter(TOPLEVEL);
-                
-                _currentToken = Token(TOKEN_NEWLINE, String.str(), TheSourceManager->getTokenSource());
-            }
-                break;
-            case '\r': {
-                
-                String << c;
-                
-                c = nextWLCharacter(TOPLEVEL);
-                
-                if (c.to_point() == '\n') {
-                    
-                    String << c;
-                    
-                    c = nextWLCharacter(TOPLEVEL);
-                }
-                
-                _currentToken = Token(TOKEN_NEWLINE, String.str(), TheSourceManager->getTokenSource());
-            }
-                break;
-            default:
-                assert(false);
-                break;
-        }
-        
     } else if (c.isSpace()) {
         
         if (c.isStrangeSpace()) {
@@ -239,7 +267,6 @@ void Tokenizer::nextToken(TokenizerContext CtxtIn) {
         c = nextWLCharacter(TOPLEVEL);
         
         _currentToken = Token(TOKEN_LINECONTINUATION, String.str(), TheSourceManager->getTokenSource());
-        
     }
     //
     // Everything else involving Unicode or errors
@@ -292,195 +319,7 @@ void Tokenizer::nextToken(TokenizerContext CtxtIn) {
         
     } else if (c.to_point() == '\\') {
         
-        //
-        // Unhandled \
-        //
-        // If the bad character looks like a special input, then try to reconstruct the character up to the bad SourceCharacter
-        // This duplicates some logic in CharacterDecoder
-        //
-        
-        String << c;
-        
-        c = nextWLCharacter(TOPLEVEL);
-        
-        switch (c.to_point()) {
-            case '[': {
-                
-                String << c;
-                
-                c = nextWLCharacter(TOPLEVEL);
-                
-                while (true) {
-                    
-                    //
-                    // No need to check isAbort() inside decoder loops
-                    //
-                    
-                    if (c.isAlphaOrDigit()) {
-                        
-                        String << c;
-                        
-                        c = nextWLCharacter(TOPLEVEL);
-                        
-                    } else {
-                        
-                        String << c;
-                        
-                        c = nextWLCharacter(TOPLEVEL);
-                        
-                        break;
-                        
-                    }
-                }
-                
-                _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
-            }
-                break;
-            case ':': {
-                
-                String << c;
-                
-                c = nextWLCharacter(TOPLEVEL);
-                
-                for (auto i = 0; i < 4; i++) {
-                    
-                    //
-                    // No need to check isAbort() inside decoder loops
-                    //
-                    
-                    if (c.isHex()) {
-                        
-                        String << c;
-                        
-                        c = nextWLCharacter(TOPLEVEL);
-                        
-                    } else {
-                        
-                        String << c;
-                        
-                        c = nextWLCharacter(TOPLEVEL);
-                        
-                        break;
-                    }
-                }
-                
-                _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
-            }
-                break;
-            case '.': {
-                
-                String << c;
-                
-                c = nextWLCharacter(TOPLEVEL);
-                
-                for (auto i = 0; i < 2; i++) {
-                    
-                    //
-                    // No need to check isAbort() inside decoder loops
-                    //
-                    
-                    if (c.isHex()) {
-                        
-                        String << c;
-                        
-                        c = nextWLCharacter(TOPLEVEL);
-                        
-                    } else {
-                        
-                        String << c;
-                        
-                        c = nextWLCharacter(TOPLEVEL);
-                        
-                        break;
-                    }
-                }
-                
-                _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
-            }
-                break;
-            case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': {
-                
-                String << c;
-                
-                c = nextWLCharacter(TOPLEVEL);
-                
-                for (auto i = 0; i < 3; i++) {
-                    
-                    //
-                    // No need to check isAbort() inside decoder loops
-                    //
-                    
-                    if (c.isOctal()) {
-                        
-                        String << c;
-                        
-                        c = nextWLCharacter(TOPLEVEL);
-                        
-                    } else {
-                        
-                        String << c;
-                        
-                        c = nextWLCharacter(TOPLEVEL);
-                        
-                        break;
-                        
-                    }
-                }
-                
-                _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
-            }
-                break;
-            case '|': {
-                
-                String << c;
-                
-                c = nextWLCharacter(TOPLEVEL);
-                
-                for (auto i = 0; i < 6; i++) {
-                    
-                    //
-                    // No need to check isAbort() inside decoder loops
-                    //
-                    
-                    if (c.isHex()) {
-                        
-                        String << c;
-                        
-                        c = nextWLCharacter(TOPLEVEL);
-                        
-                    } else {
-                        
-                        String << c;
-                        
-                        c = nextWLCharacter(TOPLEVEL);
-                        
-                        break;
-                        
-                    }
-                }
-                
-                _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
-            }
-                break;
-            case CODEPOINT_ENDOFFILE: {
-                
-                _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
-            }
-                break;
-            default: {
-                
-                //
-                // Nothing special, just read next character
-                //
-                
-                String << c;
-                
-                c = nextWLCharacter(TOPLEVEL);
-                
-                _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
-            }
-                break;
-        }
+        _currentToken = handleUnhandledBackSlash(Ctxt);
         
     } else {
         
@@ -503,7 +342,7 @@ WLCharacter Tokenizer::nextWLCharacter(NextWLCharacterPolicy policy) {
     //
     // handle the queue before anything else
     //
-    // Unlike ByteDecoder and CharacterDecoder, the WLCharacters in the queue may be part of a Token with multiple WLCharacters
+    // the WLCharacters in the queue may be part of a Token with multiple WLCharacters
     //
     if (!wlCharacterQueue.empty()) {
         
@@ -526,41 +365,6 @@ WLCharacter Tokenizer::nextWLCharacter(NextWLCharacterPolicy policy) {
     }
     
     _currentWLCharacter = TheCharacterDecoder->nextWLCharacter(policy);
-    
-    while (_currentWLCharacter.isLineContinuation()) {
-        
-        if ((policy & LC_IS_MEANINGFUL) != LC_IS_MEANINGFUL) {
-            
-            //
-            // Line continuation is NOT meaningful, so warn and break out of loop
-            //
-            // NOT meaningful, so do not worry about PRESERVE_WS_AFTER_LC
-            //
-            
-            auto CharacterStart = TheSourceManager->getWLCharacterStart();
-            
-            auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_UNEXPECTEDLINECONTINUATION, std::string("Unexpected line continuation."), FORMATISSUESEVERITY_FORMATTING, Source(CharacterStart)));
-            
-            Issues.push_back(std::move(I));
-            
-            break;
-        }
-            
-        //
-        // Line continuation IS meaningful, so save in current String and continue
-        //
-        
-        String << _currentWLCharacter;
-        
-        _currentWLCharacter = TheCharacterDecoder->nextWLCharacter(policy);
-        
-        if ((policy & PRESERVE_WS_AFTER_LC) != PRESERVE_WS_AFTER_LC) {
-            
-            while (_currentWLCharacter.isSpace()) {
-                _currentWLCharacter = TheCharacterDecoder->nextWLCharacter(policy);
-            }
-        }
-    }
     
     return _currentWLCharacter;
 }
@@ -851,7 +655,7 @@ Token Tokenizer::handleString(TokenizerContext Ctxt) {
     
     auto c = currentWLCharacter();
     
-    if ((Ctxt & TOKENIZER_STRINGIFY_CURRENT_LINE) == TOKENIZER_STRINGIFY_CURRENT_LINE) {
+    if ((Ctxt & TOKENIZER_STRINGIFY_CURRENTLINE) == TOKENIZER_STRINGIFY_CURRENTLINE) {
         
         auto lastGoodLocation = TheSourceManager->getSourceLocation();
         
@@ -883,7 +687,7 @@ Token Tokenizer::handleString(TokenizerContext Ctxt) {
             
             lastGoodLocation = TheSourceManager->getSourceLocation();
             
-            c = nextWLCharacter(INSIDE_STRING);
+            c = nextWLCharacter(INSIDE_STRINGIFY_LINE);
             
         } // while
         
@@ -977,7 +781,7 @@ Token Tokenizer::handleString(TokenizerContext Ctxt) {
                 
                 String << c;
                 
-                c = nextWLCharacter(INSIDE_STRING_FILEIFY);
+                c = nextWLCharacter(INSIDE_STRINGIFY_FILE);
                 
             } else if (c.to_point() == '[') {
                 
@@ -1080,11 +884,9 @@ Token Tokenizer::handleFileOpsBrackets(TokenizerContext Ctxt) {
     
     auto depth = 1;
     
-    c = nextWLCharacter(INSIDE_STRING_FILEIFY);
+    auto lastGoodLocation = TheSourceManager->getSourceLocation();
     
-    if (c.to_point() == CODEPOINT_ENDOFFILE) {
-        return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), TheSourceManager->getTokenSource());
-    }
+    c = nextWLCharacter(INSIDE_STRINGIFY_FILE);
     
     while (true) {
         
@@ -1092,21 +894,27 @@ Token Tokenizer::handleFileOpsBrackets(TokenizerContext Ctxt) {
         // No need to check isAbort() inside tokenizer loops
         //
         
+        if (c.isSpace() || c.isNewline() || c.isSpaceCharacter() || c.isNewlineCharacter()) {
+            
+            //
+            // Cannot have spaces in the string here, so bail out
+            //
+            // Not going to include the space here, so invent source
+            //
+            
+            return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), Source(TheSourceManager->getTokenStart(), lastGoodLocation));
+        }
+        if (c.to_point() == CODEPOINT_ENDOFFILE) {
+            return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), TheSourceManager->getTokenSource());
+        }
+        
+        String << c;
+        
         if (c.to_point() == '[') {
-            
-            String << c;
-            
-            c = nextWLCharacter(INSIDE_STRING_FILEIFY);
-            
-            if (c.to_point() == CODEPOINT_ENDOFFILE) {
-                return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), TheSourceManager->getTokenSource());
-            }
             
             depth = depth + 1;
             
         } else if (c.to_point() == ']') {
-            
-            String << c;
             
             depth = depth - 1;
             
@@ -1114,33 +922,15 @@ Token Tokenizer::handleFileOpsBrackets(TokenizerContext Ctxt) {
                 
                 // Leaving brackets, make sure to grab next character
                 
-                c = nextWLCharacter(INSIDE_STRING_FILEIFY);
+                c = nextWLCharacter(INSIDE_STRINGIFY_FILE);
                 
                 break;
-                
-            } else {
-                
-                c = nextWLCharacter(INSIDE_STRING_FILEIFY);
-                
-                if (c.to_point() == CODEPOINT_ENDOFFILE) {
-                    return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), TheSourceManager->getTokenSource());
-                }
-            }
-            
-        } else {
-            
-            String << c;
-            
-            if (c.isSpace() || c.isNewline() || c.isSpaceCharacter() || c.isNewlineCharacter()) {
-                return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), TheSourceManager->getTokenSource());
-            }
-            
-            c = nextWLCharacter(INSIDE_STRING_FILEIFY);
-            
-            if (c.to_point() == CODEPOINT_ENDOFFILE) {
-                return Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), TheSourceManager->getTokenSource());
             }
         }
+        
+        lastGoodLocation = TheSourceManager->getSourceLocation();
+        
+        c = nextWLCharacter(INSIDE_STRINGIFY_FILE);
         
     } // while
     
@@ -1828,7 +1618,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                     
                     c = nextWLCharacter(TOPLEVEL);
                     
-                    if ((Ctxt & TOKENIZER_ENABLE_STRINGIFY_NEXT_TOKEN) == TOKENIZER_ENABLE_STRINGIFY_NEXT_TOKEN) {
+                    if ((Ctxt & TOKENIZER_ENABLE_STRINGIFY_NEXTTOKEN) == TOKENIZER_ENABLE_STRINGIFY_NEXTTOKEN) {
                         stringifyNextToken_symbol = true;
                     }
                 }
@@ -2247,7 +2037,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                     
                     c = nextWLCharacter(TOPLEVEL);
                     
-                    if ((Ctxt & TOKENIZER_ENABLE_STRINGIFY_NEXT_TOKEN) == TOKENIZER_ENABLE_STRINGIFY_NEXT_TOKEN) {
+                    if ((Ctxt & TOKENIZER_ENABLE_STRINGIFY_NEXTTOKEN) == TOKENIZER_ENABLE_STRINGIFY_NEXTTOKEN) {
                         stringifyNextToken_file = true;
                     }
                 }
@@ -2344,7 +2134,7 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
                         c = nextWLCharacter(TOPLEVEL);
                     }
                     
-                    if ((Ctxt & TOKENIZER_ENABLE_STRINGIFY_NEXT_TOKEN) == TOKENIZER_ENABLE_STRINGIFY_NEXT_TOKEN) {
+                    if ((Ctxt & TOKENIZER_ENABLE_STRINGIFY_NEXTTOKEN) == TOKENIZER_ENABLE_STRINGIFY_NEXTTOKEN) {
                         stringifyNextToken_file = true;
                     }
                 }
@@ -2976,6 +2766,191 @@ Token Tokenizer::handleOperator(TokenizerContext Ctxt) {
     }
     
     return Token(Operator, String.str(), TheSourceManager->getTokenSource());
+}
+
+Token Tokenizer::handleUnhandledBackSlash(TokenizerContext CtxtIn) {
+    
+    //
+    // Unhandled \
+    //
+    // If the bad character looks like a special input, then try to reconstruct the character up to the bad SourceCharacter
+    // This duplicates some logic in CharacterDecoder
+    //
+    
+    auto c = currentWLCharacter();
+    
+    String << c;
+    
+    c = nextWLCharacter(TOPLEVEL);
+    
+    switch (c.to_point()) {
+        case '[': {
+            
+            String << c;
+            
+            c = nextWLCharacter(TOPLEVEL);
+            
+            while (true) {
+                
+                //
+                // No need to check isAbort() inside decoder loops
+                //
+                
+                if (c.isAlphaOrDigit()) {
+                    
+                    String << c;
+                    
+                    c = nextWLCharacter(TOPLEVEL);
+                    
+                } else {
+                    
+                    String << c;
+                    
+                    c = nextWLCharacter(TOPLEVEL);
+                    
+                    break;
+                }
+            }
+            
+            return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
+        }
+        case ':': {
+            
+            String << c;
+            
+            c = nextWLCharacter(TOPLEVEL);
+            
+            for (auto i = 0; i < 4; i++) {
+                
+                //
+                // No need to check isAbort() inside decoder loops
+                //
+                
+                if (c.isHex()) {
+                    
+                    String << c;
+                    
+                    c = nextWLCharacter(TOPLEVEL);
+                    
+                } else {
+                    
+                    String << c;
+                    
+                    c = nextWLCharacter(TOPLEVEL);
+                    
+                    break;
+                }
+            }
+            
+            return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
+        }
+        case '.': {
+            
+            String << c;
+            
+            c = nextWLCharacter(TOPLEVEL);
+            
+            for (auto i = 0; i < 2; i++) {
+                
+                //
+                // No need to check isAbort() inside decoder loops
+                //
+                
+                if (c.isHex()) {
+                    
+                    String << c;
+                    
+                    c = nextWLCharacter(TOPLEVEL);
+                    
+                } else {
+                    
+                    String << c;
+                    
+                    c = nextWLCharacter(TOPLEVEL);
+                    
+                    break;
+                }
+            }
+            
+            return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
+        }
+        case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': {
+            
+            String << c;
+            
+            c = nextWLCharacter(TOPLEVEL);
+            
+            for (auto i = 0; i < 3; i++) {
+                
+                //
+                // No need to check isAbort() inside decoder loops
+                //
+                
+                if (c.isOctal()) {
+                    
+                    String << c;
+                    
+                    c = nextWLCharacter(TOPLEVEL);
+                    
+                } else {
+                    
+                    String << c;
+                    
+                    c = nextWLCharacter(TOPLEVEL);
+                    
+                    break;
+                }
+            }
+            
+            return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
+        }
+        case '|': {
+            
+            String << c;
+            
+            c = nextWLCharacter(TOPLEVEL);
+            
+            for (auto i = 0; i < 6; i++) {
+                
+                //
+                // No need to check isAbort() inside decoder loops
+                //
+                
+                if (c.isHex()) {
+                    
+                    String << c;
+                    
+                    c = nextWLCharacter(TOPLEVEL);
+                    
+                } else {
+                    
+                    String << c;
+                    
+                    c = nextWLCharacter(TOPLEVEL);
+                    
+                    break;
+                }
+            }
+            
+            return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
+        }
+        case CODEPOINT_ENDOFFILE: {
+            
+            return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
+        }
+        default: {
+            
+            //
+            // Nothing special, just read next character
+            //
+            
+            String << c;
+            
+            c = nextWLCharacter(TOPLEVEL);
+            
+            return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), TheSourceManager->getTokenSource());
+        }
+    }
 }
 
 void Tokenizer::addIssue(std::unique_ptr<Issue> I) {

@@ -65,12 +65,16 @@ SourceCharacter ByteDecoder::invalid(unsigned char first) {
     
     auto loc = TheSourceManager->getSourceLocation();
     
+    AdvancementState state;
+    
     // Has not advanced yet at this point
-    loc++;
+    loc = state.advance(SourceCharacter(first), loc);
     
     auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.", FORMATISSUESEVERITY_FORMATTING, Source(loc)));
     
     Issues.push_back(std::move(I));
+    
+    std::move(state.Issues.begin(), state.Issues.end(), std::back_inserter(Issues));
     
     return SourceCharacter(first);
 }
@@ -79,14 +83,20 @@ SourceCharacter ByteDecoder::invalid(unsigned char first, unsigned char second) 
     
     auto loc = TheSourceManager->getSourceLocation();
     
+    AdvancementState state;
+    
     // Has not advanced yet at this point
-    loc++;
+    loc = state.advance(SourceCharacter(first), loc);
     
     auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.", FORMATISSUESEVERITY_FORMATTING, Source(loc)));
     
     Issues.push_back(std::move(I));
     
-    append(second, loc+1);
+    auto secondLoc = state.advance(SourceCharacter(second), loc);
+    
+    append(second, secondLoc);
+    
+    std::move(state.Issues.begin(), state.Issues.end(), std::back_inserter(Issues));
     
     return SourceCharacter(first);
 }
@@ -95,15 +105,24 @@ SourceCharacter ByteDecoder::invalid(unsigned char first, unsigned char second, 
     
     auto loc = TheSourceManager->getSourceLocation();
     
+    AdvancementState state;
+    
     // Has not advanced yet at this point
-    loc++;
+    loc = state.advance(SourceCharacter(first), loc);
     
     auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.", FORMATISSUESEVERITY_FORMATTING, Source(loc)));
     
     Issues.push_back(std::move(I));
     
-    append(second, loc+1);
-    append(third, loc+2);
+    auto secondLoc = state.advance(SourceCharacter(second), loc);
+    
+    append(second, secondLoc);
+    
+    auto thirdLoc = state.advance(SourceCharacter(third), secondLoc);
+    
+    append(third, thirdLoc);
+    
+    std::move(state.Issues.begin(), state.Issues.end(), std::back_inserter(Issues));
     
     return SourceCharacter(first);
 }
@@ -112,16 +131,28 @@ SourceCharacter ByteDecoder::invalid(unsigned char first, unsigned char second, 
     
     auto loc = TheSourceManager->getSourceLocation();
     
+    AdvancementState state;
+    
     // Has not advanced yet at this point
-    loc++;
+    loc = state.advance(SourceCharacter(first), loc);
     
     auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.", FORMATISSUESEVERITY_FORMATTING, Source(loc)));
     
     Issues.push_back(std::move(I));
     
-    append(second, loc+1);
-    append(third, loc+2);
-    append(fourth, loc+3);
+    auto secondLoc = state.advance(SourceCharacter(second), loc);
+    
+    append(second, secondLoc);
+    
+    auto thirdLoc = state.advance(SourceCharacter(third), secondLoc);
+    
+    append(third, thirdLoc);
+    
+    auto fourthLoc = state.advance(SourceCharacter(fourth), thirdLoc);
+    
+    append(fourth, fourthLoc);
+    
+    std::move(state.Issues.begin(), state.Issues.end(), std::back_inserter(Issues));
     
     return SourceCharacter(first);
 }

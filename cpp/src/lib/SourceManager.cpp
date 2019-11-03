@@ -3,7 +3,7 @@
 
 #include "CodePoint.h"
 
-SourceManager::SourceManager() : data(), dataLength(), idx(), lastCharacterWasCarriageReturn(false), Issues(), SrcLoc(), TokenStartLoc(), WLCharacterStartLoc(), WLCharacterEndLoc(), PrevWLCharacterStartLoc(), PrevWLCharacterEndLoc(), libData() {}
+SourceManager::SourceManager() : data(), dataLength(), idx(), Issues(), state(), SrcLoc(), TokenStartLoc(), WLCharacterStartLoc(), WLCharacterEndLoc(), PrevWLCharacterStartLoc(), PrevWLCharacterEndLoc(), libData() {}
 
 void SourceManager::init(const char *dataIn, size_t dataLengthIn, SourceStyle style, WolframLibraryData libDataIn) {
   
@@ -12,7 +12,7 @@ void SourceManager::init(const char *dataIn, size_t dataLengthIn, SourceStyle st
     
     idx = 0;
     
-    lastCharacterWasCarriageReturn = false;
+    state.reset();
     
     Issues.clear();
     
@@ -82,74 +82,7 @@ bool SourceManager::isEndOfFile() const {
 //
 void SourceManager::advanceSourceLocation(SourceCharacter c) {
     
-    if (c == SourceCharacter(CODEPOINT_ENDOFFILE)) {
-        
-        //
-        // It can happen that single \r occurs.
-        // Then make sure to treat it as a newline.
-        //
-        if (lastCharacterWasCarriageReturn) {
-            auto Loc = SrcLoc;
-            
-            //
-            // Do not need to advance Col here
-            //
-            
-            auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", FORMATISSUESEVERITY_FORMATTING, Source(Loc)));
-            
-            Issues.push_back(std::move(I));
-        }
-        
-        lastCharacterWasCarriageReturn = false;
-        
-        SrcLoc = SrcLoc.nextLine();
-        
-        return;
-    }
-    
-    if (c == SourceCharacter('\n')) {
-        
-        //
-        // if lastCharacterWasCarriageReturn, then newline was already handled
-        //
-        if (!lastCharacterWasCarriageReturn) {
-            
-            SrcLoc = SrcLoc.nextLine();
-        }
-        
-        lastCharacterWasCarriageReturn = false;
-        
-        return;
-    }
-    
-    //
-    // It can happen that single \r occurs.
-    // Then make sure to treat it as a newline.
-    //
-    if (lastCharacterWasCarriageReturn) {
-        
-        auto Loc = SrcLoc;
-        
-        //
-        // Do not need to advance Col here
-        //
-        
-        auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", FORMATISSUESEVERITY_FORMATTING, Source(Loc)));
-        
-        Issues.push_back(std::move(I));
-    }
-    
-    if (c == SourceCharacter('\r')) {
-        lastCharacterWasCarriageReturn = true;
-        
-        SrcLoc = SrcLoc.nextLine();
-        
-        return;
-    }
-    
-    lastCharacterWasCarriageReturn = false;
-    
-    SrcLoc++;
+    SrcLoc = state.advance(c, SrcLoc);
 }
 
 void SourceManager::setWLCharacterStart() {
@@ -204,8 +137,93 @@ SourceLocation SourceManager::getSourceLocation() const {
     return SrcLoc;
 }
 
-std::vector<std::unique_ptr<Issue>>& SourceManager::getIssues() {
-    return Issues;
+
+
+void AdvancementState::reset() {
+    
+    lastCharacterWasCarriageReturn = false;
+    
+    Issues.clear();
+}
+
+SourceLocation AdvancementState::advance(SourceCharacter c, SourceLocation SrcLoc) {
+    
+    if (c == SourceCharacter(CODEPOINT_ENDOFFILE)) {
+        
+        //
+        // It can happen that single \r occurs.
+        // Then make sure to treat it as a newline.
+        //
+        if (lastCharacterWasCarriageReturn) {
+            auto Loc = SrcLoc;
+            
+            //
+            // Do not need to advance Col here
+            //
+            
+            auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", FORMATISSUESEVERITY_FORMATTING, Source(Loc)));
+            
+            Issues.push_back(std::move(I));
+        }
+        
+        lastCharacterWasCarriageReturn = false;
+        
+        return SrcLoc.nextLine();
+    }
+    
+    if (c == SourceCharacter('\n')) {
+        
+        //
+        // if lastCharacterWasCarriageReturn, then newline was already handled
+        //
+        if (lastCharacterWasCarriageReturn) {
+            
+            lastCharacterWasCarriageReturn = false;
+            
+            return SrcLoc;
+        }
+        
+        return SrcLoc.nextLine();
+    }
+    
+    //
+    // It can happen that single \r occurs.
+    // Then make sure to treat it as a newline.
+    //
+    if (lastCharacterWasCarriageReturn) {
+        
+        auto Loc = SrcLoc;
+        
+        //
+        // Do not need to advance Col here
+        //
+        
+        auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", FORMATISSUESEVERITY_FORMATTING, Source(Loc)));
+        
+        Issues.push_back(std::move(I));
+    }
+    
+    if (c == SourceCharacter('\r')) {
+        lastCharacterWasCarriageReturn = true;
+        
+        return SrcLoc.nextLine();
+    }
+    
+    lastCharacterWasCarriageReturn = false;
+    
+    return SrcLoc+1;
+}
+
+
+std::vector<std::unique_ptr<Issue>> SourceManager::getIssues() {
+    
+    std::vector<std::unique_ptr<Issue>> TmpIssues;
+    
+    std::move(Issues.begin(), Issues.end(), std::back_inserter(TmpIssues));
+    
+    std::move(state.Issues.begin(), state.Issues.end(), std::back_inserter(TmpIssues));
+    
+    return TmpIssues;
 }
 
 std::unique_ptr<SourceManager> TheSourceManager = nullptr;

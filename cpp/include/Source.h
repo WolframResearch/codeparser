@@ -353,6 +353,8 @@ struct Source {
     
     void put(MLINK mlp) const;
     
+    void print(std::ostream& s) const;
+    
     size_t size() const;
     
     size_t count() const;
@@ -366,7 +368,10 @@ bool isContiguous(Source a, Source b);
 
 class Issue {
 public:
+    
     virtual void put(MLINK mlp) const = 0;
+    
+    virtual void print(std::ostream& s) const = 0;
     
     virtual ~Issue() {}
 };
@@ -380,6 +385,8 @@ public:
     
     virtual void put(MLINK mlp) const = 0;
     
+    virtual void print(std::ostream& s) const = 0;
+    
     virtual ~CodeAction() {}
 };
 
@@ -390,6 +397,8 @@ public:
     ReplaceTextCodeAction(std::string Label, Source Src, std::string ReplacementText) : CodeAction(Label, Src), ReplacementText(ReplacementText) {}
     
     void put(MLINK mlp) const override;
+    
+    void print(std::ostream& s) const override;
 };
 
 class InsertTextCodeAction : public CodeAction {
@@ -399,6 +408,8 @@ public:
     InsertTextCodeAction(std::string Label, Source Src, std::string InsertionText) : CodeAction(Label, Src), InsertionText(InsertionText) {}
     
     void put(MLINK mlp) const override;
+    
+    void print(std::ostream& s) const override;
 };
 
 class SyntaxIssue : public Issue {
@@ -413,6 +424,8 @@ public:
     SyntaxIssue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Con, std::vector<CodeActionPtr> Actions) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Con(Con), Actions(std::move(Actions)) {}
     
     void put(MLINK mlp) const override;
+    
+    void print(std::ostream& s) const override;
 };
 
 class FormatIssue : public Issue {
@@ -425,6 +438,8 @@ public:
     FormatIssue(std::string Tag, std::string Msg, std::string Sev, Source Src) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src) {}
     
     void put(MLINK mlp) const override;
+    
+    void print(std::ostream& s) const override;
 };
 
 

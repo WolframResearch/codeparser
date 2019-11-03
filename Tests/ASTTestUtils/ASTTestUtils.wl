@@ -164,7 +164,10 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     file=tmp;
     ];*)
     
-    If[FileType[file] === File,
+    If[FileType[file] =!= File,
+    	Throw[Failure["NotAFile", <|"File"->file|>], "OK"]
+    ];
+    
      If[FileByteCount[file] > limit[[2]],
       ast = 
       Failure["FileTooLarge", <|"FileName" -> file, 
@@ -176,7 +179,6 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       Failure["FileTooSmall", <|"FileName" -> file, 
         "FileSize" -> FileSize[file]|>];
      Throw[ast, "OK"]
-     ];
      ];
 
 
@@ -704,15 +706,6 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     ];
 
     (*
-    Handle line continuations
-    *)
-    textReplaced = AST`Abstract`Private`abstractLineContinuation[textReplaced, <||>][[1]];
-
-    If[$Debug,
-      Print["textReplaced2: ", textReplaced];
-    ];
-
-    (*
     if there are no Package errors, 
     then proceed with replacing the text
     *)
@@ -730,8 +723,11 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         "$1"];
      ];
     
-    expected = 
-     DeleteCases[ToExpression[textReplaced, InputForm, Hold], Null];
+    If[$Debug,
+      Print["textReplaced2: ", textReplaced];
+    ];
+
+    expected = DeleteCases[ToExpression[textReplaced, InputForm, Hold], Null];
     
     If[actual =!= expected,
      

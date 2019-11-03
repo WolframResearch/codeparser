@@ -21,11 +21,9 @@ class Node;
 // MSVC: error C2338: The C++ Standard forbids containers of const elements because allocator<const T> is ill-formed.
 using NodePtr = std::unique_ptr<Node>;
 
-void putExpressions(std::vector<NodePtr>, MLINK mlp);
-
-std::vector<NodePtr> parseExpressions();
-std::vector<NodePtr> tokenize();
-NodePtr parseLeaf();
+Node *parseExpressions();
+Node *tokenize();
+Node *parseLeaf();
 
 bool validatePath(WolframLibraryData libData, const char *inStr);
 
@@ -43,6 +41,32 @@ DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData) {
 DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData) {
     
     TheParserSession.reset(nullptr);
+}
+
+DLLEXPORT Node *ConcreteParseFile(WolframLibraryData libData, const char *input, const char *styleStr, const char *skipFirstLineSym) {
+    
+    auto valid = validatePath(libData, input);
+    if (!valid) {
+        return nullptr;
+    }
+    
+    auto style = Utils::parseSourceStyle(styleStr);
+    
+    auto skipFirstLine = Utils::parseBooleanSymbol(skipFirstLineSym);
+    
+    ScopedIFS ifs(input);
+    
+    if (ifs.fail()) {
+        return nullptr;
+    }
+    
+    TheParserSession->init(libData, ifs.getData(), ifs.getDataLength(), style, false, false, skipFirstLine);
+    
+    auto N = parseExpressions();
+    
+    TheParserSession->deinit();
+    
+    return N;
 }
 
 DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK mlp) {
@@ -76,32 +100,30 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK ml
         return res;
     }
     
-    auto valid = validatePath(libData, inStr.get());
-    if (!valid) {
-        return res;
-    }
+    auto N = ConcreteParseFile(libData, inStr.get(), styleStr.get(), skipFirstLineSym.get());
     
-    auto style = Utils::parseSourceStyle(reinterpret_cast<const char *>(styleStr.get()));
+    N->put(mlp);
     
-    auto skipFirstLine = Utils::parseBooleanSymbol(skipFirstLineSym.get());
-    
-    ScopedIFS ifs(inStr.get());
-    
-    if (ifs.fail()) {
-        return res;
-    }
-    
-    TheParserSession->init(libData, ifs.getData(), ifs.getDataLength(), style, false, false, skipFirstLine);
-    
-    auto nodes = parseExpressions();
-    
-    putExpressions(std::move(nodes), mlp);
+    ReleaseNode(N);
     
     TheParserSession->deinit();
     
     res = LIBRARY_NO_ERROR;
     
     return res;
+}
+
+DLLEXPORT Node *ConcreteParseString(WolframLibraryData libData, const char *input, const char *styleStr) {
+    
+    auto style = Utils::parseSourceStyle(styleStr);
+    
+    TheParserSession->init(libData, input, strlen(input), style, false, false, false);
+    
+    auto N = parseExpressions();
+    
+    TheParserSession->deinit();
+    
+    return N;
 }
 
 DLLEXPORT int ConcreteParseString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
@@ -130,19 +152,28 @@ DLLEXPORT int ConcreteParseString_LibraryLink(WolframLibraryData libData, MLINK 
         return res;
     }
     
-    auto style = Utils::parseSourceStyle(reinterpret_cast<const char *>(styleStr.get()));
+    auto N = ConcreteParseString(libData, inStr.get(), styleStr.get());
     
-    TheParserSession->init(libData, inStr.get(), inStr.size(), style, false, false, false);
+    N->put(mlp);
     
-    auto nodes = parseExpressions();
-    
-    putExpressions(std::move(nodes), mlp);
-    
-    TheParserSession->deinit();
+    ReleaseNode(N);
     
     res = LIBRARY_NO_ERROR;
     
     return res;
+}
+
+DLLEXPORT Node *TokenizeString(WolframLibraryData libData, const char *input, const char *styleStr) {
+    
+    auto style = Utils::parseSourceStyle(styleStr);
+    
+    TheParserSession->init(libData, input, strlen(input), style, false, false, false);
+    
+    auto N = tokenize();
+    
+    TheParserSession->deinit();
+    
+    return N;
 }
 
 DLLEXPORT int TokenizeString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
@@ -171,19 +202,37 @@ DLLEXPORT int TokenizeString_LibraryLink(WolframLibraryData libData, MLINK mlp) 
         return res;
     }
     
-    auto style = Utils::parseSourceStyle(reinterpret_cast<const char *>(styleStr.get()));
+    auto N = TokenizeString(libData, inStr.get(), styleStr.get());
     
-    TheParserSession->init(libData, inStr.get(), inStr.size(), style, false, false, false);
-    
-    std::vector<NodePtr> nodes = tokenize();
-    
-    putExpressions(std::move(nodes), mlp);
-    
-    TheParserSession->deinit();
+    N->put(mlp);
     
     res = LIBRARY_NO_ERROR;
     
     return res;
+}
+
+DLLEXPORT Node *TokenizeFile(WolframLibraryData libData, const char *input, const char *styleStr, const char *skipFirstLine) {
+    
+    auto valid = validatePath(libData, input);
+    if (!valid) {
+        return nullptr;
+    }
+    
+    ScopedIFS ifs(input);
+    
+    if (ifs.fail()) {
+        return nullptr;
+    }
+    
+    auto style = Utils::parseSourceStyle(styleStr);
+    
+    TheParserSession->init(libData, ifs.getData(), ifs.getDataLength(), style, false, false, false);
+    
+    auto N = tokenize();
+    
+    TheParserSession->deinit();
+    
+    return N;
 }
 
 DLLEXPORT int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK mlp) {
@@ -212,30 +261,30 @@ DLLEXPORT int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         return res;
     }
     
-    auto valid = validatePath(libData, inStr.get());
-    if (!valid) {
-        return res;
-    }
+    auto N = TokenizeFile(libData, inStr.get(), styleStr.get(), "False");
     
-    ScopedIFS ifs(inStr.get());
-    
-    if (ifs.fail()) {
-        return res;
-    }
-    
-    auto style = Utils::parseSourceStyle(reinterpret_cast<const char *>(styleStr.get()));
-    
-    TheParserSession->init(libData, ifs.getData(), ifs.getDataLength(), style, false, false, false);
-    
-    std::vector<NodePtr> nodes = tokenize();
-    
-    putExpressions(std::move(nodes), mlp);
-    
-    TheParserSession->deinit();
+    N->put(mlp);
     
     res = LIBRARY_NO_ERROR;
     
     return res;
+}
+
+DLLEXPORT Node *ParseLeaf(WolframLibraryData libData, const char *input, const char *styleStr, const char *stringifyNextTokenSymbolSym, const char *stringifyNextTokenFileSym) {
+    
+    auto style = Utils::parseSourceStyle(styleStr);
+    
+    auto stringifyNextTokenSymbol = Utils::parseBooleanSymbol(stringifyNextTokenSymbolSym);
+    
+    auto stringifyNextTokenFile = Utils::parseBooleanSymbol(stringifyNextTokenFileSym);
+    
+    TheParserSession->init(libData, input, strlen(input), style, stringifyNextTokenSymbol, stringifyNextTokenFile, false);
+    
+    auto N = parseLeaf();
+    
+    TheParserSession->deinit();
+    
+    return N;
 }
 
 DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
@@ -272,98 +321,21 @@ DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         return res;
     }
     
-    auto style = Utils::parseSourceStyle(reinterpret_cast<const char *>(styleStr.get()));
+    auto N = ParseLeaf(libData, inStr.get(), styleStr.get(), stringifyNextTokenSymbolSym.get(), stringifyNextTokenFileSym.get());
     
-    auto stringifyNextTokenSymbol = Utils::parseBooleanSymbol(stringifyNextTokenSymbolSym.get());
-    
-    auto stringifyNextTokenFile = Utils::parseBooleanSymbol(stringifyNextTokenFileSym.get());
-    
-    TheParserSession->init(libData, inStr.get(), inStr.size(), style, stringifyNextTokenSymbol, stringifyNextTokenFile, false);
-    
-    auto node = parseLeaf();
-    
-    std::vector<NodePtr> nodes;
-    
-    //
-    // Collect all expressions
-    //
-    {
-        std::vector<NodePtr> exprs;
-        
-        exprs.push_back(std::move(node));
-        
-        NodePtr Collected = NodePtr(new CollectedExpressionsNode(std::move(exprs)));
-        
-        nodes.push_back(std::move(Collected));
-    }
-    
-    //
-    // Collect all issues from the various components
-    //
-    {
-        std::vector<std::unique_ptr<Issue>> issues;
-        
-        auto& ParserIssues = TheParser->getIssues();
-        for (auto& I : ParserIssues) {
-            issues.push_back(std::move(I));
-        }
-        
-        auto& TokenizerIssues = TheTokenizer->getIssues();
-        for (auto& I : TokenizerIssues) {
-            issues.push_back(std::move(I));
-        }
-        
-        auto& CharacterDecoderIssues = TheCharacterDecoder->getIssues();
-        for (auto& I : CharacterDecoderIssues) {
-            issues.push_back(std::move(I));
-        }
-        
-        auto& ByteDecoderIssues = TheByteDecoder->getIssues();
-        for (auto& I : ByteDecoderIssues) {
-            issues.push_back(std::move(I));
-        }
-        
-        auto& SourceManagerIssues = TheSourceManager->getIssues();
-        for (auto& I : SourceManagerIssues) {
-            issues.push_back(std::move(I));
-        }
-        
-        nodes.push_back(NodePtr(new CollectedIssuesNode(std::move(issues))));
-    }
-    
-    putExpressions(std::move(nodes), mlp);
-    
-    TheParserSession->deinit();
+    N->put(mlp);
     
     res = LIBRARY_NO_ERROR;
     
     return res;
 }
 
-void putExpressions(std::vector<NodePtr> nodes, MLINK mlp) {
-    
-    //
-    // Check if isAbort() before calling MathLink
-    //
-    if (TheParser->isAbort()) {
-        
-        if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 0)) {
-            return;
-        }
-        
-        return;
-    }
-    
-    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(nodes.size()))) {
-        return;
-    }
-    
-    for (auto& node : nodes) {
-        node->put(mlp);
-    }
+DLLEXPORT void ReleaseNode(Node *node) {
+
+    delete node;
 }
 
-std::vector<NodePtr> parseExpressions() {
+Node *parseExpressions() {
     
     std::vector<NodePtr> nodes;
     
@@ -447,7 +419,7 @@ std::vector<NodePtr> parseExpressions() {
             issues.push_back(std::move(I));
         }
         
-        auto& SourceManagerIssues = TheSourceManager->getIssues();
+        auto SourceManagerIssues = TheSourceManager->getIssues();
         for (auto& I : SourceManagerIssues) {
             issues.push_back(std::move(I));
         }
@@ -455,11 +427,12 @@ std::vector<NodePtr> parseExpressions() {
         nodes.push_back(NodePtr(new CollectedIssuesNode(std::move(issues))));
     }
     
-    return nodes;
+    auto N = new ListNode(std::move(nodes));
+    
+    return N;
 }
 
-
-std::vector<NodePtr> tokenize() {
+Node *tokenize() {
     
     std::vector<NodePtr> nodes;
     
@@ -486,10 +459,12 @@ std::vector<NodePtr> tokenize() {
         
     } // while (true)
     
-    return nodes;
+    auto N = new ListNode(std::move(nodes));
+    
+    return N;
 }
 
-NodePtr parseLeaf() {
+NodePtr parseLeaf0() {
     
     ParserContext PCtxt;
     
@@ -565,6 +540,64 @@ NodePtr parseLeaf() {
     return N;
 }
 
+Node *parseLeaf() {
+    
+    std::vector<NodePtr> nodes;
+    
+    //
+    // Collect all expressions
+    //
+    {
+        std::vector<NodePtr> exprs;
+        
+        auto node = parseLeaf0();
+        
+        exprs.push_back(std::move(node));
+        
+        NodePtr Collected = NodePtr(new CollectedExpressionsNode(std::move(exprs)));
+        
+        nodes.push_back(std::move(Collected));
+    }
+    
+    //
+    // Collect all issues from the various components
+    //
+    {
+        std::vector<std::unique_ptr<Issue>> issues;
+        
+        auto& ParserIssues = TheParser->getIssues();
+        for (auto& I : ParserIssues) {
+            issues.push_back(std::move(I));
+        }
+        
+        auto& TokenizerIssues = TheTokenizer->getIssues();
+        for (auto& I : TokenizerIssues) {
+            issues.push_back(std::move(I));
+        }
+        
+        auto& CharacterDecoderIssues = TheCharacterDecoder->getIssues();
+        for (auto& I : CharacterDecoderIssues) {
+            issues.push_back(std::move(I));
+        }
+        
+        auto& ByteDecoderIssues = TheByteDecoder->getIssues();
+        for (auto& I : ByteDecoderIssues) {
+            issues.push_back(std::move(I));
+        }
+        
+        auto SourceManagerIssues = TheSourceManager->getIssues();
+        for (auto& I : SourceManagerIssues) {
+            issues.push_back(std::move(I));
+        }
+        
+        nodes.push_back(NodePtr(new CollectedIssuesNode(std::move(issues))));
+    }
+    
+    auto N = new ListNode(std::move(nodes));
+    
+    return N;
+}
+
 //
 // Does the file currently have permission to be read?
 //
@@ -636,27 +669,23 @@ std::unique_ptr<ParserSession> TheParserSession = nullptr;
 
 MLSession::MLSession() : inited(false), ep(), mlp() {
     
-    MLEnvironmentParameter p = MLNewParameters(MLREVISION, MLAPIREVISION);
+    ScopedMLEnvironmentParameter p;
+    
 #ifdef WINDOWS_MATHLINK
     
 #else
     //
     // Needed because MathLink intercepts all signals
     //
-    MLDoNotHandleSignalParameter(p, SIGINT);
+    MLDoNotHandleSignalParameter(p.get(), SIGINT);
 #endif
-    ep = MLInitialize(p);
+    ep = MLInitialize(p.get());
     if (ep == (MLENV)0) {
-        
-        MLReleaseParameters(p);
-        
         return;
     }
     
     int err;
     mlp = MLLoopbackOpen(ep, &err);
-    
-    MLReleaseParameters(p);
     
     inited = true;
 }

@@ -18,6 +18,8 @@ private:
     
     SourceCharacter decodeBytes(unsigned char);
     
+    void append(unsigned char, SourceLocation);
+    
     SourceCharacter invalid(unsigned char);
     SourceCharacter invalid(unsigned char, unsigned char);
     SourceCharacter invalid(unsigned char, unsigned char, unsigned char);
@@ -32,8 +34,6 @@ public:
     void deinit();
     
     SourceCharacter nextSourceCharacter();
-    
-    void append(unsigned char, SourceLocation);
     
     std::vector<std::unique_ptr<Issue>>& getIssues();
 };

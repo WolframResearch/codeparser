@@ -14,15 +14,29 @@
 #include <istream>
 #include <memory> // for unique_ptr
 
+struct AdvancementState {
+    
+    bool lastCharacterWasCarriageReturn;
+    
+    std::vector<std::unique_ptr<Issue>> Issues;
+    
+    
+    AdvancementState() : lastCharacterWasCarriageReturn(), Issues() {}
+    
+    void reset();
+    
+    SourceLocation advance(SourceCharacter c, SourceLocation SrcLoc);
+};
+
 class SourceManager {
     
     const char *data;
     size_t dataLength;
     size_t idx;
     
-    bool lastCharacterWasCarriageReturn;
-    
     std::vector<std::unique_ptr<Issue>> Issues;
+    
+    AdvancementState state;
     
     SourceLocation SrcLoc;
     
@@ -65,7 +79,7 @@ public:
     void setSourceLocation(SourceLocation Loc);
     SourceLocation getSourceLocation() const;
     
-    std::vector<std::unique_ptr<Issue>>& getIssues();
+    std::vector<std::unique_ptr<Issue>> getIssues();
 };
 
 extern std::unique_ptr<SourceManager> TheSourceManager;

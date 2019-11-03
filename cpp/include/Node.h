@@ -9,6 +9,7 @@
 
 #include <vector>
 #include <memory> // for unique_ptr
+#include <ostream>
 
 // MSVC: error C2338: The C++ Standard forbids containers of const elements because allocator<const T> is ill-formed.
 using SymbolPtr = std::unique_ptr<Symbol>;
@@ -50,6 +51,8 @@ public:
     }
     
     void put0(MLINK ) const;
+    
+    void print0(std::ostream& s) const;
 };
 
 //
@@ -86,7 +89,11 @@ public:
     
     void put(MLINK ) const;
     
+    void print(std::ostream& s ) const;
+    
     void put0(MLINK ) const;
+    
+    void print0(std::ostream& s ) const;
 };
 
 //
@@ -101,6 +108,8 @@ public:
     Node(NodeSeq Children);
 
     virtual void put(MLINK mlp) const = 0;
+    
+    virtual void print(std::ostream&) const = 0;
 
     virtual Source getSource() const;
     
@@ -114,6 +123,8 @@ public:
     virtual const Node* last() const;
     
     void putChildren(MLINK mlp) const;
+    
+    void printChildren(std::ostream& s) const;
 
     const NodeSeq& getChildrenSafe() const {
         return Children;
@@ -143,6 +154,7 @@ public:
     
     void put(MLINK mlp) const override;
     
+    void print(std::ostream&) const override;
 };
 
 class NodeSeqNode : public Node {
@@ -156,6 +168,7 @@ public:
     
     void put(MLINK mlp) const override;
     
+    void print(std::ostream&) const override;
 };
 
 class OperatorNode : public Node {
@@ -165,6 +178,8 @@ public:
     OperatorNode(SymbolPtr& Op, SymbolPtr& MakeSym, NodeSeq Args) : Node(std::move(Args)), Op(Op), MakeSym(MakeSym) {}
     
     void put(MLINK mlp) const override;
+    
+    void print(std::ostream&) const override;
     
     SymbolPtr& getOperator() const {
         return Op;
@@ -181,6 +196,8 @@ public:
     LeafNode(Token&& Tok) : Node(), Tok(std::move(Tok)) {}
     
     void put(MLINK mlp) const override;
+    
+    void print(std::ostream&) const override;
     
     bool isTrivia() const override;
     
@@ -236,6 +253,8 @@ public:
     CallNode(NodeSeq Head, NodeSeq Body) : Node(std::move(Body)), Head(std::move(Head)) {}
     
     void put(MLINK mlp) const override;
+    
+    void print(std::ostream&) const override;
     
     Source getSource() const override;
 };
@@ -297,6 +316,8 @@ public:
     
     void put(MLINK mlp) const override;
     
+    void print(std::ostream&) const override;
+    
     virtual bool isError() const override;
 };
 
@@ -317,6 +338,8 @@ public:
     CollectedExpressionsNode(std::vector<NodePtr> Exprs) : Node(), Exprs(std::move(Exprs)) {}
     
     void put(MLINK mlp) const override;
+    
+    void print(std::ostream&) const override;
 };
 
 class CollectedIssuesNode : public Node {
@@ -325,5 +348,17 @@ public:
     CollectedIssuesNode(std::vector<std::unique_ptr<Issue>> Issues) : Node(), Issues(std::move(Issues)) {}
     
     void put(MLINK mlp) const override;
+    
+    void print(std::ostream&) const override;
+};
+
+class ListNode : public Node {
+    std::vector<NodePtr> N;
+public:
+    ListNode(std::vector<NodePtr> N) : Node(), N(std::move(N)) {}
+    
+    void put(MLINK mlp) const override;
+    
+    void print(std::ostream&) const override;
 };
 

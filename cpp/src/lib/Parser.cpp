@@ -502,10 +502,10 @@ void Parser::nextToken(ParserContext Ctxt) {
     //
     TokenizerContext tokenizerCtxt;
     if ((Ctxt.Flag & PARSER_LINEARSYNTAX) != PARSER_LINEARSYNTAX) {
-        tokenizerCtxt |= TOKENIZER_ENABLE_STRINGIFY_NEXT_TOKEN;
+        tokenizerCtxt |= TOKENIZER_ENABLE_STRINGIFY_NEXTTOKEN;
     }
-    if ((Ctxt.Flag & PARSER_STRINGIFY_CURRENT_LINE) == PARSER_STRINGIFY_CURRENT_LINE) {
-        tokenizerCtxt |= TOKENIZER_STRINGIFY_CURRENT_LINE;
+    if ((Ctxt.Flag & PARSER_STRINGIFY_CURRENTLINE) == PARSER_STRINGIFY_CURRENTLINE) {
+        tokenizerCtxt |= TOKENIZER_STRINGIFY_CURRENTLINE;
     }
     
     TheTokenizer->nextToken(tokenizerCtxt);

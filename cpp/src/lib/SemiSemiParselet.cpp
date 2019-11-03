@@ -20,7 +20,7 @@
 //
 // Multiple Span expressions are ImplicitTimes together
 //
-// Must also handle  ;;!b  where there is an Implicit Times, but only a single Span
+// Must also handle  ;;!b  where there is an implicit Times, but only a single Span
 //
 NodePtr SemiSemiParselet::parse(ParserContext CtxtIn) const {
     
@@ -46,7 +46,7 @@ NodePtr SemiSemiParselet::parse(ParserContext CtxtIn) const {
 //
 // Multiple Span expressions are ImplicitTimes together
 //
-// Must also handle  a;;!b  where there is an Implicit Times, but only a single Span
+// Must also handle  a;;!b  where there is an implicit Times, but only a single Span
 //
 NodePtr SemiSemiParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
     
@@ -59,7 +59,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
     if (!TheParser->isPossibleBeginningOfExpression(CtxtIn)) {
         
         //
-        // There is only a single ;; and there is no Implicit Times
+        // There is only a single ;; and there is no implicit Times
         //
         
         return Operand;

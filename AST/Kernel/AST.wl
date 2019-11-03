@@ -586,17 +586,20 @@ TokenizeFile[s_String | File[s_String], opts:OptionsPattern[]] :=
 
 Options[tokenizeFile] = Options[TokenizeFile]
 
-tokenizeFile[sIn_String, OptionsPattern[]] :=
+tokenizeFile[file_String, OptionsPattern[]] :=
 Catch[
-Module[{s, encoding, res, style},
-
-	s = sIn;
+Module[{encoding, res, style, full},
 
 	encoding = OptionValue[CharacterEncoding];
 	style = OptionValue["SourceStyle"];
 
 	If[encoding =!= "UTF8",
 		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
+	];
+
+	full = FindFile[file];
+	If[FailureQ[full],
+		Throw[Failure["FindFileFailed", <|"FileName"->file|>]]
 	];
 
 	If[FailureQ[tokenizeFileFunc],
@@ -608,7 +611,7 @@ Module[{s, encoding, res, style},
 	$ConcreteParseTime = Quantity[0, "Seconds"];
 	$MathLinkTime = Quantity[0, "Seconds"];
 	CheckAbort[
-	res = tokenizeFileFunc[s, style];
+	res = tokenizeFileFunc[full, style];
 	,
 	loadAllFuncs[];
 	Abort[]

@@ -106,3 +106,9 @@ token_linearsyntax_slash="\\/"
 token_linearsyntax_amp="\\&"
 token_linearsyntax_space="\\ "
 
+
+
+token_linecontinuation_lf="\\\x0D"
+token_linecontinuation_crlf="\\\x0A\x0D"
+token_linecontinuation_cr="=\\\x0A"
+

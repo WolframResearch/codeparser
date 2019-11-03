@@ -109,7 +109,7 @@ line continuations and newlines
 Test[
 	ConcreteParseString["\"abc\\\r\ndef\""]
 	,
-	LeafNode[String, "\"abc\\\r\ndef\"", <|Source -> {{1, 1}, {2, 4}}|>]
+	LeafNode[String, "\"abc\ndef\"", <|Source -> {{1, 1}, {2, 4}}|>]
 	,
 	TestID->"Concrete-20190606-U7J9I3"
 ]
