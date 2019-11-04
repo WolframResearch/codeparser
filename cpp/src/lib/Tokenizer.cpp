@@ -130,14 +130,24 @@ void Tokenizer::nextToken(TokenizerContext CtxtIn) {
             stringifyNextToken_symbol = false;
             
             _currentToken = Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start));
-            
-        } else if (stringifyNextToken_file) {
-            
-            stringifyNextToken_file = false;
-            
-            _currentToken = Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start));
-            
-        } else {
+        }
+        //
+        // Stringifying as a file can span lines
+        //
+        // Something like  a >>
+        //                    b
+        //
+        // should work
+        //
+        // Do not use TOKEN_ERROR_EMPTYSTRING here
+        //
+//        else if (stringifyNextToken_file) {
+//
+//            stringifyNextToken_file = false;
+//
+//            _currentToken = Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start));
+//        }
+        else {
             
             //
             // Regular newline
@@ -984,7 +994,27 @@ Token Tokenizer::handleNumber(TokenizerContext Ctxt) {
             // Must be a number
             //
             
-            base = Utils::parseInteger(String.str(), 10);
+            auto S = String.str();
+            
+            //
+            // Only parse integer if we know it can possibly be a valid base
+            //
+            if (S.size() > 2) {
+                
+                //
+                // Too large
+                //
+                
+                base = -1;
+                
+            } else {
+                
+                //
+                // parseInteger is only safe to call if we know S is parseable
+                //
+                
+                base = Utils::parseInteger(S, 10);
+            }
             
             if (base < 2 || base > 36) {
                 

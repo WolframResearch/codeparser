@@ -545,10 +545,24 @@ Test[
 	TestID->"File-20191025-Z3P6E3"
 ]
 
+(*
+ToExpression["a >>\n   b", InputForm, Hold] works,
+
+but ToExpression["Hold[a >>\n   b]"] does not
+
+Due to the parsing of >>
+
+But really we are just testing for a crash here, so just ignore the output
+*)
 Test[
-	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash2.txt"}], 1]
+	Catch[
+		parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash2.txt"}], 1]
+		,
+		"Uncaught"
+	];
+	ignored
 	,
-	Null
+	ignored
 	,
 	TestID->"File-20191102-Z8M8J2"
 ]
@@ -571,10 +585,24 @@ Test[
 	TestID->"File-20191103-I6Y6P4"
 ]
 
+(*
+ToExpression["1*\\\n"] returns 1, but should fail
+
+The new parser does the correct thing and gives an error
+
+bug 382006
+
+really, we are just testing if this crashed, so just ignore the output
+*)
 Test[
-	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash5.txt"}], 1]
+	Catch[
+		parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash5.txt"}], 1]
+		,
+		"Uncaught"
+	];
+	ignored
 	,
-	Null
+	ignored
 	,
 	TestID->"File-20191103-V9V1F9"
 ]
@@ -614,9 +642,17 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash10.txt"}], 1]
 	,
-	Null
+	ok
 	,
 	TestID->"File-20191103-H2O6Z5"
+]
+
+Test[
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash11.txt"}], 1]
+	,
+	ok
+	,
+	TestID->"File-20191103-U8W2U9"
 ]
 
 
