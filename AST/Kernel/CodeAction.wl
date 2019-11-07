@@ -79,7 +79,7 @@ output: a cst
 ApplyCodeAction[action:CodeAction[label_, command_, actionData_], cstIn_] :=
 Catch[
 Module[{src, originalNodePos, cst, replacementNode, func, trivia, insertionText,
-	insertionNode, srcInter, srcIntra, replacementText, node, leafText},
+	insertionNode, srcInter, srcIntra, replacementText, node, leafText, insertionNodePos},
 
 	cst = cstIn;
 
@@ -230,6 +230,27 @@ Module[{src, originalNodePos, cst, replacementNode, func, trivia, insertionText,
      originalNodePos = originalNodePos[[1]];
 
     cst = Insert[cst, insertionNode, originalNodePos];
+    cst
+    )
+
+    ,
+
+    InsertNodeAfter, (
+
+    insertionNode = actionData["InsertionNode"];
+    If[$Debug,
+      Print["insertionNode: ", insertionNode];
+    ];
+
+    originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> src]]];
+     If[originalNodePos == {},
+      Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->src |>]]
+     ];
+     originalNodePos = originalNodePos[[1]];
+
+     insertionNodePos = Append[Most[originalNodePos], Last[originalNodePos] + 1];
+
+    cst = Insert[cst, insertionNode, insertionNodePos];
     cst
     )
 

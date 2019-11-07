@@ -205,6 +205,7 @@ CodeAction commands
 *)
 DeleteNode
 InsertNode
+InsertNodeAfter
 ReplaceNode
 DeleteText
 InsertText
