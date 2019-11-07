@@ -17,8 +17,6 @@ std::string Style = "LineCol";
 void readStdIn(int mode, bool printOutput);
 
 void readFile(std::string file, int mode, bool printOutput);
-//void printExpression(MLINK mlp);
-//void printExpression(Node *);
 
 int main(int argc, char *argv[]) {
     
@@ -78,17 +76,11 @@ int main(int argc, char *argv[]) {
 
 void readStdIn(int mode, bool printOutput) {
     
-//    int res = LIBRARY_FUNCTION_ERROR;
-    
     std::string input;
     std::cout << ">>> ";
     std::getline(std::cin, input);
     
-//    MLSession TheMLSession;
-    
     ParserSession TheParserSession;
-    
-//    auto mlp = TheMLSession.getMLINK();
     
     WolframLibraryData libData = nullptr;
     
@@ -96,51 +88,18 @@ void readStdIn(int mode, bool printOutput) {
     
     if (mode == TOKENIZE) {
         
-//        if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 2)) {
-//            return res;
-//        }
-//        if (!MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(input.c_str()), static_cast<int>(input.size()))) {
-//            return res;
-//        }
-//        if (!MLPutString(mlp, Style.c_str())) {
-//            return res;
-//        }
         auto inputStr = reinterpret_cast<const unsigned char*>(input.c_str());
         
         N = TokenizeString(libData, inputStr, input.size(), Style.c_str());
         
     } else if (mode == LEAF) {
         
-//        if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 4)) {
-//            return res;
-//        }
-//        if (!MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(input.c_str()), static_cast<int>(input.size()))) {
-//            return res;
-//        }
-//        if (!MLPutString(mlp, Style.c_str())) {
-//            return res;
-//        }
-//        if (!MLPutSymbol(mlp, "False")) {
-//            return res;
-//        }
-//        if (!MLPutSymbol(mlp, "False")) {
-//            return res;
-//        }
         auto inputStr = reinterpret_cast<const unsigned char*>(input.c_str());
         
         N = ParseLeaf(libData, inputStr, input.size(), Style.c_str(), "False", "False");
         
     } else {
         
-//        if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 2)) {
-//            return res;
-//        }
-//        if (!MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(input.c_str()), static_cast<int>(input.size()))) {
-//            return res;
-//        }
-//        if (!MLPutString(mlp, Style.c_str())) {
-//            return res;
-//        }
         auto inputStr = reinterpret_cast<const unsigned char*>(input.c_str());
         
         N = ConcreteParseString(libData, inputStr, input.size(), Style.c_str());
@@ -150,19 +109,11 @@ void readStdIn(int mode, bool printOutput) {
         N->print(std::cout);
         std::cout << "\n";
     }
-    
-//    return res;
 }
 
 void readFile(std::string file, int mode, bool printOutput) {
     
-//    int res = LIBRARY_FUNCTION_ERROR;
-    
-//    MLSession TheMLSession;
-    
     ParserSession TheParserSession;
-    
-//    auto mlp = TheMLSession.getMLINK();
     
     WolframLibraryData libData = nullptr;
     
@@ -170,36 +121,12 @@ void readFile(std::string file, int mode, bool printOutput) {
     
     if (mode == TOKENIZE) {
         
-//        if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 3)) {
-//            return res;
-//        }
-//        if (!MLPutString(mlp, file.c_str())) {
-//            return res;
-//        }
-//        if (!MLPutString(mlp, Style.c_str())) {
-//            return res;
-//        }
-//        if (!MLPutSymbol(mlp, "False")) {
-//            return res;
-//        }
         auto fileStr = reinterpret_cast<const unsigned char*>(file.c_str());
         
         N = TokenizeFile(libData, fileStr, file.size(), Style.c_str(), "False");
         
     } else {
         
-//        if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 3)) {
-//            return res;
-//        }
-//        if (!MLPutString(mlp, file.c_str())) {
-//            return res;
-//        }
-//        if (!MLPutString(mlp, Style.c_str())) {
-//            return res;
-//        }
-//        if (!MLPutSymbol(mlp, "False")) {
-//            return res;
-//        }
         auto fileStr = reinterpret_cast<const unsigned char*>(file.c_str());
         
         N = ConcreteParseFile(libData, fileStr, file.size(), Style.c_str(), "False");
@@ -210,72 +137,4 @@ void readFile(std::string file, int mode, bool printOutput) {
         N->print(std::cout);
         std::cout << "\n";
     }
-    
-//    return res;
 }
-
-//void printExpression(Node *N) {
-//
-//    auto ready = MLReady(mlp);
-//    if (!ready) {
-//        return;
-//    }
-//
-//    switch(MLGetType(mlp)) {
-//        case MLTKINT: {
-//            int i;
-//            if (!MLGetInteger(mlp, &i)) {
-//                return;
-//            }
-//            std::cout << i;
-//        }
-//            break;
-//        case MLTKREAL: {
-//            double r;
-//            if (!MLGetReal(mlp, &r)) {
-//                return;
-//            }
-//            std::cout << r;
-//        }
-//            break;
-//        case MLTKSTR: {
-//            ScopedMLString string(mlp);
-//            if (!string.read()) {
-//                return;
-//            }
-//            std::cout << string.get();
-//        }
-//            break;
-//        case MLTKSYM: {
-//            ScopedMLSymbol symbol(mlp);
-//            if (!symbol.read()) {
-//                return;
-//            }
-//            std::cout << symbol.get();
-//        }
-//            break;
-//        case MLTKFUNC: {
-//            ScopedMLFunction func(mlp);
-//            if (!func.read()) {
-//                return;
-//            }
-//            std::cout << func.getHead() << "[";
-//            auto a = func.getArgCount();
-//            if (a > 0) {
-//                for (int i = 0; i < a-1; i++) {
-//                    printExpression(mlp);
-//                    std::cout << ", ";
-//                }
-//                printExpression(mlp);
-//            }
-//            std::cout << "]";
-//        }
-//            break;
-//        default: {
-//            auto err = MLError(mlp);
-//            std::cout << "\nerr: " << err << "\n";
-//        }
-//            break;
-//    }
-//}
-

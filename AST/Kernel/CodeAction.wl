@@ -10,64 +10,6 @@ Needs["AST`"]
 Needs["AST`Utils`"]
 
 
-
-(*
-input: a string
-output: a string
-*)
-(*
-ApplyCodeAction[strIn_String, CodeAction[label_, command_, actionData_]] :=
-Catch[
-Module[{str, src, replacementText, lines, lineNumber, line, col1, col2, insertionText},
-
-	str = strIn;
-
-	If[$Debug,
-		Print["command: ", command];
-   ];
-
-   src = Lookup[actionData, Source];
-   If[MissingQ[src],
-   	Throw[Failure["MissingSource", actionData]]
-   ];
-
-   If[!MatchQ[src, {{line_Integer, _Integer}, {line_Integer, _Integer}}],
-   	Throw[Failure["BadSource", actionData]]
-   ];
-
-   lineNumber = src[[1, 1]];
-   col1 = src[[1, 2]];
-   col2 = src[[2, 2]];
-
-   lines = ImportString[str, "Lines"];
-
-   line = lines[[lineNumber]];
-
-   Switch[command,
-     
-   	InsertText,
-   	If[col1 != col2,
-   		Throw[Failure["BadColumn", actionData]]
-   	];
-   	insertionText = actionData["InsertionText"];
-   	line = StringInsert[line, insertionText, {col1}]
-   	,
-
-     	ReplaceText,
-     	replacementText = actionData["ReplacementText"];
-     	line = StringReplacePart[line, replacementText, {col1, col2}];
-
-     ,
-     _, Failure["UnknownCommand", <|"Command"->command|>]
-   ];
-
-   lines[[lineNumber]] = line;
-   str = StringJoin[StringRiffle[lines, "\n"]];
-   str
-
-]]
-*)
-
 ApplyCodeAction[action:CodeAction[label_, command_, actionData_]][cst_] :=
 	ApplyCodeAction[action, cst]
 

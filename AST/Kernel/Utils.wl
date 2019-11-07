@@ -102,23 +102,23 @@ SourceMemberQ[{{srcLine1_Integer, srcCol1_Integer}, {srcLine2_Integer, srcCol2_I
 Which[
 	(* not in-between the lines of the spec, so no *)
 	!(srcLine1 <= cursorLine <= srcLine2),
-	False
+		False
 	,
 	(* everything is on 1 line, so now test cols *)
 	cursorLine == srcLine1 == srcLine2,
-	srcCol1 <= cursorCol <= srcCol2
+		srcCol1 <= cursorCol <= srcCol2
 	,
 	(* on srcLine1, so test that cursor comes after srcCol1 *)
 	cursorLine == srcLine1,
-	srcCol1 <= cursorCol
+		srcCol1 <= cursorCol
 	,
 	(* on srcLine2, so test that cursor comes before srcCol2 *)
 	cursorLine == srcLine2,
-	cursorCol <= srcCol2
+		cursorCol <= srcCol2
 	,
 	(* exclusively in-between start and end, so yes *)
 	True,
-	True
+		True
 ]
 
 
