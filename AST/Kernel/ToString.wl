@@ -383,6 +383,15 @@ Module[{nodeStrs},
 	StringJoin[Riffle[nodeStrs, "\n"]]
 ]]
 
+toInputFormString[StringNode[String, nodes_, data_]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[nodeStrs]
+]]
 
 
 
@@ -501,6 +510,21 @@ Module[{nodeStrs},
 		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];
 	StringJoin[Riffle[nodeStrs, "\n"]]
+]]
+
+toFullFormString[StringNode[String, nodes_, opts_]] :=
+Catch[
+Module[{nodeStrs},
+	If[empty[nodes],
+		nodeStrs = {"Null"}
+		,
+		nodeStrs = toFullFormString /@ nodes;
+		nodeStrs = Flatten[nodeStrs];
+	];
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[nodeStrs]
 ]]
 
 toFullFormString[HoldNode[Hold, nodes_, opts_]] :=
@@ -644,7 +668,22 @@ Module[{nodeStrs},
 	If[AnyTrue[nodeStrs, FailureQ],
 		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];
-	StringJoin[Riffle[nodeStrs, "\n"]]
+	StringJoin[nodeStrs]
+]]
+
+toSourceCharacterString[StringNode[String, nodes_, opts_], insideBoxes_] :=
+Catch[
+Module[{nodeStrs},
+	If[empty[nodes],
+		nodeStrs = {"Null"}
+		,
+		nodeStrs = toSourceCharacterString[#, insideBoxes]& /@ nodes;
+		nodeStrs = Flatten[nodeStrs];
+	];
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[nodeStrs]
 ]]
 
 toSourceCharacterString[HoldNode[Hold, nodesIn_, opts_], insideBoxes_] :=

@@ -171,6 +171,7 @@ PatternBlankNullSequenceNode
 OptionalDefaultPatternNode
 
 FileNode
+StringNode
 HoldNode
 
 
@@ -269,15 +270,12 @@ Module[{s, h, res, style},
 
 	style = OptionValue["SourceStyle"];
 
+	(*
+	The <||> will be filled in with Source later
+	The # here is { {exprs}, {issues}, {metadata} }
+	*)
 	If[h === Automatic,
-		(*
-		The # here is { {exprs}, {issues}, {metadata} }
-
-		Return the last aggregate node, or Null
-
-		Simply drop any leftover syntax issues
-		*)
-		h = SelectFirst[Reverse[DeleteCases[#[[1]], LeafNode[Token`Comment | Token`WhiteSpace | Token`Newline | Token`LineContinuation, _, _]]], True&, Null]&
+		h = StringNode[String, #[[1]], If[!empty[#[[2]]], <| SyntaxIssues -> #[[2]] |>, <||>]]&
 	];
 
 	If[FailureQ[concreteParseStringFunc],
@@ -382,7 +380,7 @@ Module[{h, encoding, full, res, skipFirstLine = False, shebangWarn = False, data
 	The <||> will be filled in with Source later
 	The # here is { {exprs}, {issues}, {metadata} }
 	*)
-	If[hIn === Automatic,
+	If[h === Automatic,
 		h = FileNode[File, #[[1]], If[!empty[#[[2]]], <| SyntaxIssues -> #[[2]] |>, <||>]]&
 	];
 

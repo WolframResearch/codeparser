@@ -435,6 +435,29 @@ Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node},
 	node
 ]
 
+abstract[StringNode[String, children_, dataIn_]] :=
+Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node},
+
+	data = dataIn;
+
+	issues = {};
+
+	{abstractedChildren, issues1} = abstractTopLevelChildren[children];
+
+	{abstracted, issues2} = abstractTopLevel[abstractedChildren];
+
+	issues = issues1 ~Join~ issues2;
+
+	If[issues != {},
+		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+		AssociateTo[data, AbstractSyntaxIssues -> issues];
+   ];
+
+	node = StringNode[String, abstracted, KeyTake[data, keysToTake]];
+
+	node
+]
+
 abstract[HoldNode[Hold, children_, dataIn_]] :=
 Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node},
 
