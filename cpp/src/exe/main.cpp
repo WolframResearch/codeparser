@@ -105,8 +105,9 @@ void readStdIn(int mode, bool printOutput) {
 //        if (!MLPutString(mlp, Style.c_str())) {
 //            return res;
 //        }
+        auto inputStr = reinterpret_cast<const unsigned char*>(input.c_str());
         
-        N = TokenizeString(libData, input.c_str(), Style.c_str());
+        N = TokenizeString(libData, inputStr, input.size(), Style.c_str());
         
     } else if (mode == LEAF) {
         
@@ -125,8 +126,9 @@ void readStdIn(int mode, bool printOutput) {
 //        if (!MLPutSymbol(mlp, "False")) {
 //            return res;
 //        }
+        auto inputStr = reinterpret_cast<const unsigned char*>(input.c_str());
         
-        N = ParseLeaf(libData, input.c_str(), Style.c_str(), "False", "False");
+        N = ParseLeaf(libData, inputStr, input.size(), Style.c_str(), "False", "False");
         
     } else {
         
@@ -139,8 +141,9 @@ void readStdIn(int mode, bool printOutput) {
 //        if (!MLPutString(mlp, Style.c_str())) {
 //            return res;
 //        }
+        auto inputStr = reinterpret_cast<const unsigned char*>(input.c_str());
         
-        N = ConcreteParseString(libData, input.c_str(), Style.c_str());
+        N = ConcreteParseString(libData, inputStr, input.size(), Style.c_str());
     }
     
     if (printOutput) {
@@ -179,8 +182,9 @@ void readFile(std::string file, int mode, bool printOutput) {
 //        if (!MLPutSymbol(mlp, "False")) {
 //            return res;
 //        }
+        auto fileStr = reinterpret_cast<const unsigned char*>(file.c_str());
         
-        N = TokenizeFile(libData, file.c_str(), Style.c_str(), "False");
+        N = TokenizeFile(libData, fileStr, file.size(), Style.c_str(), "False");
         
     } else {
         
@@ -196,8 +200,9 @@ void readFile(std::string file, int mode, bool printOutput) {
 //        if (!MLPutSymbol(mlp, "False")) {
 //            return res;
 //        }
+        auto fileStr = reinterpret_cast<const unsigned char*>(file.c_str());
         
-        N = ConcreteParseFile(libData, file.c_str(), Style.c_str(), "False");
+        N = ConcreteParseFile(libData, fileStr, file.size(), Style.c_str(), "False");
         
     }
     

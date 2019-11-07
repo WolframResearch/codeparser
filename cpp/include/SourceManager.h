@@ -30,7 +30,7 @@ struct AdvancementState {
 
 class SourceManager {
     
-    const char *data;
+    const unsigned char *data;
     size_t dataLength;
     size_t idx;
     
@@ -53,7 +53,7 @@ class SourceManager {
 public:
     SourceManager();
     
-    void init(const char *data, size_t dataLength, SourceStyle style, WolframLibraryData libData);
+    void init(const unsigned char *data, size_t dataLength, SourceStyle style, WolframLibraryData libData);
     
     void deinit();
     

@@ -25,7 +25,7 @@ Node *parseExpressions();
 Node *tokenize();
 Node *parseLeaf();
 
-bool validatePath(WolframLibraryData libData, const char *inStr);
+bool validatePath(WolframLibraryData libData, const unsigned char *inStr, size_t len);
 
 DLLEXPORT mint WolframLibrary_getVersion() {
     return WolframLibraryVersion;
@@ -43,9 +43,9 @@ DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData) {
     TheParserSession.reset(nullptr);
 }
 
-DLLEXPORT Node *ConcreteParseFile(WolframLibraryData libData, const char *input, const char *styleStr, const char *skipFirstLineSym) {
+DLLEXPORT Node *ConcreteParseFile(WolframLibraryData libData, const unsigned char *input, size_t len, const char *styleStr, const char *skipFirstLineSym) {
     
-    auto valid = validatePath(libData, input);
+    auto valid = validatePath(libData, input, len);
     if (!valid) {
         return nullptr;
     }
@@ -54,13 +54,13 @@ DLLEXPORT Node *ConcreteParseFile(WolframLibraryData libData, const char *input,
     
     auto skipFirstLine = Utils::parseBooleanSymbol(skipFirstLineSym);
     
-    ScopedIFS ifs(input);
+    ScopedFileBuffer fb(input, len);
     
-    if (ifs.fail()) {
+    if (fb.fail()) {
         return nullptr;
     }
     
-    TheParserSession->init(libData, ifs.getData(), ifs.getDataLength(), style, false, false, skipFirstLine);
+    TheParserSession->init(libData, fb.getBuf(), fb.getLen(), style, false, false, skipFirstLine);
     
     auto N = parseExpressions();
     
@@ -81,7 +81,7 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK ml
         return res;
     }
     
-    ScopedMLString inStr(mlp);
+    ScopedMLUTF8String inStr(mlp);
     if (!inStr.read()) {
         return res;
     }
@@ -100,7 +100,7 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK ml
         return res;
     }
     
-    auto N = ConcreteParseFile(libData, inStr.get(), styleStr.get(), skipFirstLineSym.get());
+    auto N = ConcreteParseFile(libData, inStr.get(), inStr.getByteCount(), styleStr.get(), skipFirstLineSym.get());
     
     N->put(mlp);
     
@@ -113,11 +113,11 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK ml
     return res;
 }
 
-DLLEXPORT Node *ConcreteParseString(WolframLibraryData libData, const char *input, const char *styleStr) {
+DLLEXPORT Node *ConcreteParseString(WolframLibraryData libData, const unsigned char *input, size_t len, const char *styleStr) {
     
     auto style = Utils::parseSourceStyle(styleStr);
     
-    TheParserSession->init(libData, input, strlen(input), style, false, false, false);
+    TheParserSession->init(libData, input, len, style, false, false, false);
     
     auto N = parseExpressions();
     
@@ -138,7 +138,7 @@ DLLEXPORT int ConcreteParseString_LibraryLink(WolframLibraryData libData, MLINK 
         return res;
     }
     
-    ScopedMLString inStr(mlp);
+    ScopedMLUTF8String inStr(mlp);
     if (!inStr.read()) {
         return res;
     }
@@ -152,7 +152,7 @@ DLLEXPORT int ConcreteParseString_LibraryLink(WolframLibraryData libData, MLINK 
         return res;
     }
     
-    auto N = ConcreteParseString(libData, inStr.get(), styleStr.get());
+    auto N = ConcreteParseString(libData, inStr.get(), inStr.getByteCount(), styleStr.get());
     
     N->put(mlp);
     
@@ -163,11 +163,11 @@ DLLEXPORT int ConcreteParseString_LibraryLink(WolframLibraryData libData, MLINK 
     return res;
 }
 
-DLLEXPORT Node *TokenizeString(WolframLibraryData libData, const char *input, const char *styleStr) {
+DLLEXPORT Node *TokenizeString(WolframLibraryData libData, const unsigned char *input, size_t len, const char *styleStr) {
     
     auto style = Utils::parseSourceStyle(styleStr);
     
-    TheParserSession->init(libData, input, strlen(input), style, false, false, false);
+    TheParserSession->init(libData, input, len, style, false, false, false);
     
     auto N = tokenize();
     
@@ -188,7 +188,7 @@ DLLEXPORT int TokenizeString_LibraryLink(WolframLibraryData libData, MLINK mlp) 
         return res;
     }
     
-    ScopedMLString inStr(mlp);
+    ScopedMLUTF8String inStr(mlp);
     if (!inStr.read()) {
         return res;
     }
@@ -202,7 +202,7 @@ DLLEXPORT int TokenizeString_LibraryLink(WolframLibraryData libData, MLINK mlp) 
         return res;
     }
     
-    auto N = TokenizeString(libData, inStr.get(), styleStr.get());
+    auto N = TokenizeString(libData, inStr.get(), inStr.getByteCount(), styleStr.get());
     
     N->put(mlp);
     
@@ -211,22 +211,22 @@ DLLEXPORT int TokenizeString_LibraryLink(WolframLibraryData libData, MLINK mlp) 
     return res;
 }
 
-DLLEXPORT Node *TokenizeFile(WolframLibraryData libData, const char *input, const char *styleStr, const char *skipFirstLine) {
+DLLEXPORT Node *TokenizeFile(WolframLibraryData libData, const unsigned char *input, size_t len, const char *styleStr, const char *skipFirstLineSym) {
     
-    auto valid = validatePath(libData, input);
+    auto valid = validatePath(libData, input, len);
     if (!valid) {
         return nullptr;
     }
     
-    ScopedIFS ifs(input);
+    ScopedFileBuffer fb(input, len);
     
-    if (ifs.fail()) {
+    if (fb.fail()) {
         return nullptr;
     }
     
     auto style = Utils::parseSourceStyle(styleStr);
     
-    TheParserSession->init(libData, ifs.getData(), ifs.getDataLength(), style, false, false, false);
+    TheParserSession->init(libData, fb.getBuf(), fb.getLen(), style, false, false, false);
     
     auto N = tokenize();
     
@@ -247,7 +247,7 @@ DLLEXPORT int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         return res;
     }
     
-    ScopedMLString inStr(mlp);
+    ScopedMLUTF8String inStr(mlp);
     if (!inStr.read()) {
         return res;
     }
@@ -261,7 +261,7 @@ DLLEXPORT int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         return res;
     }
     
-    auto N = TokenizeFile(libData, inStr.get(), styleStr.get(), "False");
+    auto N = TokenizeFile(libData, inStr.get(), inStr.getByteCount(), styleStr.get(), "False");
     
     N->put(mlp);
     
@@ -270,7 +270,7 @@ DLLEXPORT int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     return res;
 }
 
-DLLEXPORT Node *ParseLeaf(WolframLibraryData libData, const char *input, const char *styleStr, const char *stringifyNextTokenSymbolSym, const char *stringifyNextTokenFileSym) {
+DLLEXPORT Node *ParseLeaf(WolframLibraryData libData, const unsigned char *input, size_t len, const char *styleStr, const char *stringifyNextTokenSymbolSym, const char *stringifyNextTokenFileSym) {
     
     auto style = Utils::parseSourceStyle(styleStr);
     
@@ -278,7 +278,7 @@ DLLEXPORT Node *ParseLeaf(WolframLibraryData libData, const char *input, const c
     
     auto stringifyNextTokenFile = Utils::parseBooleanSymbol(stringifyNextTokenFileSym);
     
-    TheParserSession->init(libData, input, strlen(input), style, stringifyNextTokenSymbol, stringifyNextTokenFile, false);
+    TheParserSession->init(libData, input, len, style, stringifyNextTokenSymbol, stringifyNextTokenFile, false);
     
     auto N = parseLeaf();
     
@@ -301,7 +301,7 @@ DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         return res;
     }
     
-    ScopedMLString inStr(mlp);
+    ScopedMLUTF8String inStr(mlp);
     if (!inStr.read()) {
         return res;
     }
@@ -321,7 +321,7 @@ DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         return res;
     }
     
-    auto N = ParseLeaf(libData, inStr.get(), styleStr.get(), stringifyNextTokenSymbolSym.get(), stringifyNextTokenFileSym.get());
+    auto N = ParseLeaf(libData, inStr.get(), inStr.getByteCount(), styleStr.get(), stringifyNextTokenSymbolSym.get(), stringifyNextTokenFileSym.get());
     
     N->put(mlp);
     
@@ -601,7 +601,8 @@ Node *parseLeaf() {
 //
 // Does the file currently have permission to be read?
 //
-bool validatePath(WolframLibraryData libData, const char *inStr) {
+bool validatePath(WolframLibraryData libData, const unsigned char *inStrIn, size_t len) {
+    
     if (!libData) {
         //
         // If running as a stand-alone executable, then always valid
@@ -609,7 +610,11 @@ bool validatePath(WolframLibraryData libData, const char *inStr) {
         return true;
     }
     
-    auto valid = libData->validatePath(const_cast<char *>(inStr), 'R');
+    auto inStr1 = reinterpret_cast<const char *>(inStrIn);
+    
+    auto inStr2 = const_cast<char *>(inStr1);
+    
+    auto valid = libData->validatePath(inStr2, 'R');
     return valid;
 }
 
@@ -635,7 +640,7 @@ ParserSession::~ParserSession() {
     freeSymbols();
 }
 
-void ParserSession::init(WolframLibraryData libData, const char *data, size_t dataLen, SourceStyle sourceStyle, bool stringifyNextTokenSymbol, bool stringifyNextTokenFile, bool skipFirstLine) {
+void ParserSession::init(WolframLibraryData libData, const unsigned char *data, size_t dataLen, SourceStyle sourceStyle, bool stringifyNextTokenSymbol, bool stringifyNextTokenFile, bool skipFirstLine) {
     
     TheSourceManager->init(data, dataLen, sourceStyle, libData);
     TheByteDecoder->init();
@@ -661,10 +666,6 @@ void ParserSession::deinit() {
     TheByteDecoder->deinit();
     TheSourceManager->deinit();
 }
-
-std::unique_ptr<ParserSession> TheParserSession = nullptr;
-
-
 
 
 MLSession::MLSession() : inited(false), ep(), mlp() {
@@ -700,4 +701,155 @@ MLSession::~MLSession() {
     MLDeinitialize(ep);
 }
 
+MLINK MLSession::getMLINK() const {
+    return mlp;
+}
 
+
+ScopedMLUTF8String::ScopedMLUTF8String(MLINK mlp) : mlp(mlp), buf(NULL), b(), c() {}
+
+ScopedMLUTF8String::~ScopedMLUTF8String() {
+    
+    if (buf == NULL) {
+        return;
+    }
+    
+    MLReleaseUTF8String(mlp, buf, b);
+}
+
+bool ScopedMLUTF8String::read() {
+    return MLGetUTF8String(mlp, &buf, &b, &c);
+}
+
+const unsigned char *ScopedMLUTF8String::get() const {
+    return buf;
+}
+
+size_t ScopedMLUTF8String::getByteCount() const {
+    return b;
+}
+
+
+ScopedMLString::ScopedMLString(MLINK mlp) : mlp(mlp), buf(NULL) {}
+
+ScopedMLString::~ScopedMLString() {
+    
+    if (buf == NULL) {
+        return;
+    }
+    
+    MLReleaseString(mlp, buf);
+}
+
+bool ScopedMLString::read() {
+    return MLGetString(mlp, &buf);
+}
+
+const char *ScopedMLString::get() const {
+    return buf;
+}
+
+
+ScopedMLSymbol::ScopedMLSymbol(MLINK mlp) : mlp(mlp), sym(NULL) {}
+
+ScopedMLSymbol::~ScopedMLSymbol() {
+    if (sym != NULL) {
+        MLReleaseSymbol(mlp, sym);
+    }
+}
+
+bool ScopedMLSymbol::read() {
+    return MLGetSymbol(mlp, &sym);
+}
+
+const char *ScopedMLSymbol::get() const {
+    return sym;
+}
+
+
+ScopedMLFunction::ScopedMLFunction(MLINK mlp) : mlp(mlp), func(NULL), count() {}
+
+ScopedMLFunction::~ScopedMLFunction() {
+    if (func != NULL) {
+        MLReleaseSymbol(mlp, func);
+    }
+}
+
+bool ScopedMLFunction::read() {
+    return MLGetFunction(mlp, &func, &count);
+}
+
+const char *ScopedMLFunction::getHead() const {
+    return func;
+}
+
+int ScopedMLFunction::getArgCount() const {
+    return count;
+}
+
+
+ScopedMLEnvironmentParameter::ScopedMLEnvironmentParameter() : p(MLNewParameters(MLREVISION, MLAPIREVISION)) {}
+
+ScopedMLEnvironmentParameter::~ScopedMLEnvironmentParameter() {
+    MLReleaseParameters(p);
+}
+
+MLEnvironmentParameter ScopedMLEnvironmentParameter::get() {
+    return p;
+}
+
+
+ScopedFileBuffer::ScopedFileBuffer(const unsigned char *inStrIn, size_t inLen) : buf(), len(), inited(false) {
+    
+    auto inStr = reinterpret_cast<const char *>(inStrIn);
+    
+    FILE * file = fopen(inStr, "rb");
+    
+    if (file == NULL) {
+        return;
+    }
+    
+    fseek(file, 0, SEEK_END);
+    
+    len = ftell(file);
+    
+    fclose(file);
+    
+    file = fopen(inStr, "rb");
+    
+    buf = new unsigned char[len];
+    
+    auto read = fread(buf, sizeof(unsigned char), len, file);
+    
+    fclose(file);
+    
+    if (read != len) {
+        return;
+    }
+    
+    inited = true;
+}
+
+ScopedFileBuffer::~ScopedFileBuffer() {
+    
+    if (!inited) {
+        return;
+    }
+    
+    delete[] buf;
+}
+
+unsigned char *ScopedFileBuffer::getBuf() const {
+    return buf;
+}
+
+size_t ScopedFileBuffer::getLen() const {
+    return len;
+}
+
+bool ScopedFileBuffer::fail() const {
+    return !inited;
+}
+
+
+std::unique_ptr<ParserSession> TheParserSession = nullptr;

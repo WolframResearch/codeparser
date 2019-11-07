@@ -37,9 +37,11 @@ protected:
 
 TEST_F(CharacterDecoderTest, Basic) {
     
-    auto str = std::string("1+2");
+    auto strIn = std::string("1+2");
     
-    TheParserSession->init(nullptr, str.c_str(), str.size(), SOURCESTYLE_LINECOL, false, false, false);
+    auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
+    
+    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false, false);
     
     auto T = TheTokenizer->currentToken();
     EXPECT_EQ(T, Token(TOKEN_INTEGER, "1", Source(SourceLocation(LineCol(1, 1)))));

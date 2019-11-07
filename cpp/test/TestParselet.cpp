@@ -37,9 +37,11 @@ protected:
 
 TEST_F(ParseletTest, Bug1) {
     
-    auto str = std::string("a /: b := c");
+    auto strIn = std::string("a /: b := c");
     
-    TheParserSession->init(nullptr, str.c_str(), str.size(), SOURCESTYLE_LINECOL, false, false, false);
+    auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
+    
+    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false, false);
     
     ParserContext Ctxt;
     
@@ -55,9 +57,11 @@ TEST_F(ParseletTest, Bug1) {
 //
 TEST_F(ParseletTest, Bug2) {
     
-    auto str = std::string("a<b ");
+    auto strIn = std::string("a<b ");
     
-    TheParserSession->init(nullptr, str.c_str(), str.size(), SOURCESTYLE_LINECOL, false, false, false);
+    auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
+    
+    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false, false);
     
     ParserContext Ctxt;
     
@@ -71,9 +75,11 @@ TEST_F(ParseletTest, Bug2) {
 //
 TEST_F(ParseletTest, Bug3) {
     
-    auto str = std::string("a\\[Integral]b\\[Integral]c ");
+    auto strIn = std::string("a\\[Integral]b\\[Integral]c ");
     
-    TheParserSession->init(nullptr, str.c_str(), str.size(), SOURCESTYLE_LINECOL, false, false, false);
+    auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
+    
+    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false, false);
     
     ParserContext Ctxt;
     
@@ -87,9 +93,11 @@ TEST_F(ParseletTest, Bug3) {
 //
 TEST_F(ParseletTest, Bug4) {
     
-    auto str = std::string("\\[RawLeftBrace]*\\[RawRightBrace]");
+    auto strIn = std::string("\\[RawLeftBrace]*\\[RawRightBrace]");
     
-    TheParserSession->init(nullptr, str.c_str(), str.size(), SOURCESTYLE_LINECOL, false, false, false);
+    auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
+    
+    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false, false);
     
     ParserContext Ctxt;
     

@@ -52,15 +52,15 @@ class Node;
 
 
 
-EXTERN_C DLLEXPORT Node *ConcreteParseString(WolframLibraryData libData, const char *input, const char *style);
+EXTERN_C DLLEXPORT Node *ConcreteParseString(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style);
 
-EXTERN_C DLLEXPORT Node *ConcreteParseFile(WolframLibraryData libData, const char *input, const char *style, const char *skipFirstLine);
+EXTERN_C DLLEXPORT Node *ConcreteParseFile(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style, const char *skipFirstLine);
 
-EXTERN_C DLLEXPORT Node *TokenizeString(WolframLibraryData libData, const char *input, const char *style);
+EXTERN_C DLLEXPORT Node *TokenizeString(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style);
 
-EXTERN_C DLLEXPORT Node *TokenizeFile(WolframLibraryData libData, const char *input, const char *style, const char *skipFirstLine);
+EXTERN_C DLLEXPORT Node *TokenizeFile(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style, const char *skipFirstLine);
 
-EXTERN_C DLLEXPORT Node *ParseLeaf(WolframLibraryData libData, const char *input, const char *style, const char *stringifyNextTokenSymbol, const char *stringifyNextTokenFile);
+EXTERN_C DLLEXPORT Node *ParseLeaf(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style, const char *stringifyNextTokenSymbol, const char *stringifyNextTokenFile);
 
 EXTERN_C DLLEXPORT void ReleaseNode(Node *node);
 
@@ -83,171 +83,6 @@ EXTERN_C DLLEXPORT int TokenizeFile_LibraryLink(WolframLibraryData libData, MLIN
 
 EXTERN_C DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
-class ScopedMLString {
-    MLINK mlp;
-    const char *str;
-    int b;
-    int c;
-    
-public:
-    
-    ScopedMLString(MLINK mlp) : mlp(mlp), str(NULL), b(), c() {}
-    
-    ~ScopedMLString() {
-        if (str != NULL) {
-            MLReleaseUTF8String(mlp, reinterpret_cast<const unsigned char *>(str), b);
-        }
-    }
-    
-    bool read() {
-        return MLGetUTF8String(mlp, reinterpret_cast<const unsigned char **>(&str), &b, &c);
-    }
-    
-    const char *get() const {
-        return str;
-    }
-    
-    size_t size() const {
-        return b;
-    }
-};
-
-class ScopedMLSymbol {
-    MLINK mlp;
-    const char *sym;
-    
-public:
-    
-    ScopedMLSymbol(MLINK mlp) : mlp(mlp), sym(NULL) {}
-    
-    ~ScopedMLSymbol() {
-        if (sym != NULL) {
-            MLReleaseSymbol(mlp, sym);
-        }
-    }
-    
-    bool read() {
-        return MLGetSymbol(mlp, &sym);
-    }
-    
-    const char *get() const {
-        return sym;
-    }
-};
-
-class ScopedMLFunction {
-    MLINK mlp;
-    const char *func;
-    int a;
-    
-public:
-    
-    ScopedMLFunction(MLINK mlp) : mlp(mlp), func(NULL), a() {}
-    
-    ~ScopedMLFunction() {
-        if (func != NULL) {
-            MLReleaseSymbol(mlp, func);
-        }
-    }
-    
-    bool read() {
-        return MLGetFunction(mlp, &func, &a);
-    }
-    
-    const char *getHead() const {
-        return func;
-    }
-    
-    int getArgCount() const {
-        return a;
-    }
-};
-
-class ScopedIFS : public std::ifstream {
-    
-    char *data;
-    size_t dataLength;
-    
-    bool inited;
-    
-public:
-    
-    ScopedIFS(const char *inStr) : std::ifstream(inStr, std::ifstream::in | std::ifstream::binary), data(), dataLength(), inited(false) {
-        
-        seekg(0, end);
-    
-        auto off = tellg();
-        if (off == -1) {
-            
-            close();
-            
-            return;
-        }
-    
-        dataLength = static_cast<size_t>(off);
-    
-        seekg(0, beg);
-    
-        data = new char[dataLength];
-    
-        read(data, dataLength);
-        
-        inited = true;
-    }
-    
-    ~ScopedIFS() {
-        
-        if (inited) {
-            return;
-        }
-        
-        delete[] data;
-        
-        close();
-    }
-    
-    char *getData() const {
-        return data;
-    }
-    
-    size_t getDataLength() const {
-        return dataLength;
-    }
-    
-};
-
-class ScopedMLEnvironmentParameter {
-    
-    MLEnvironmentParameter p;
-    
-public:
-    ScopedMLEnvironmentParameter() : p(MLNewParameters(MLREVISION, MLAPIREVISION)) {}
-    
-    ~ScopedMLEnvironmentParameter() {
-        MLReleaseParameters(p);
-    }
-    
-    MLEnvironmentParameter get() {
-        return p;
-    }
-    
-};
-
-class ParserSession {
-public:
-    
-    ParserSession();
-    
-    ~ParserSession();
-    
-    void init(WolframLibraryData libData, const char *data, size_t dataLen, SourceStyle style, bool stringifyNextTokenSymbol, bool stringifyNextTokenFile, bool skipFirstLine);
-    
-    void deinit();
-};
-
-extern std::unique_ptr<ParserSession> TheParserSession;
-
-
 class MLSession {
     bool inited;
     MLENV ep;
@@ -259,7 +94,120 @@ public:
     
     ~MLSession();
     
-    MLINK getMLINK() const {
-        return mlp;
-    }
+    MLINK getMLINK() const;
 };
+
+class ScopedMLUTF8String {
+    MLINK mlp;
+    const unsigned char *buf;
+    int b;
+    int c;
+    
+public:
+    
+    ScopedMLUTF8String(MLINK mlp);
+    
+    ~ScopedMLUTF8String();
+    
+    bool read();
+    
+    const unsigned char *get() const;
+    
+    size_t getByteCount() const;
+};
+
+class ScopedMLString {
+    MLINK mlp;
+    const char *buf;
+    
+public:
+    
+    ScopedMLString(MLINK mlp);
+    
+    ~ScopedMLString();
+    
+    bool read();
+    
+    const char *get() const;
+};
+
+class ScopedMLSymbol {
+    MLINK mlp;
+    const char *sym;
+    
+public:
+    
+    ScopedMLSymbol(MLINK mlp);
+    
+    ~ScopedMLSymbol();
+    
+    bool read();
+    
+    const char *get() const;
+};
+
+class ScopedMLFunction {
+    MLINK mlp;
+    const char *func;
+    int count;
+    
+public:
+    
+    ScopedMLFunction(MLINK mlp);
+    
+    ~ScopedMLFunction();
+    
+    bool read();
+    
+    const char *getHead() const;
+    
+    int getArgCount() const;
+};
+
+class ScopedMLEnvironmentParameter {
+    
+    MLEnvironmentParameter p;
+    
+public:
+    ScopedMLEnvironmentParameter();
+    
+    ~ScopedMLEnvironmentParameter();
+    
+    MLEnvironmentParameter get();
+    
+};
+
+class ScopedFileBuffer {
+    
+    unsigned char *buf;
+    size_t len;
+    
+    bool inited;
+    
+public:
+    
+    ScopedFileBuffer(const unsigned char *inStrIn, size_t inLen);
+    
+    ~ScopedFileBuffer();
+    
+    unsigned char *getBuf() const;
+    
+    size_t getLen() const;
+    
+    bool fail() const;
+    
+};
+
+class ParserSession {
+public:
+    
+    ParserSession();
+    
+    ~ParserSession();
+    
+    void init(WolframLibraryData libData, const unsigned char *data, size_t dataLen, SourceStyle style, bool stringifyNextTokenSymbol, bool stringifyNextTokenFile, bool skipFirstLine);
+    
+    void deinit();
+};
+
+extern std::unique_ptr<ParserSession> TheParserSession;

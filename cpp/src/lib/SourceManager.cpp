@@ -5,7 +5,7 @@
 
 SourceManager::SourceManager() : data(), dataLength(), idx(), Issues(), state(), SrcLoc(), TokenStartLoc(), WLCharacterStartLoc(), WLCharacterEndLoc(), PrevWLCharacterStartLoc(), PrevWLCharacterEndLoc(), libData() {}
 
-void SourceManager::init(const char *dataIn, size_t dataLengthIn, SourceStyle style, WolframLibraryData libDataIn) {
+void SourceManager::init(const unsigned char *dataIn, size_t dataLengthIn, SourceStyle style, WolframLibraryData libDataIn) {
   
     data = dataIn;
     dataLength = dataLengthIn;

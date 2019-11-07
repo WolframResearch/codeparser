@@ -35,7 +35,11 @@ protected:
 //
 TEST_F(APITest, Bug1) {
     
-    ParseLeaf(nullptr, "abc[]", "LineCol", "False", "False");
+    auto strIn = std::string("abc[]");
+    
+    auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
+    
+    ParseLeaf(nullptr, str, strIn.size(), "LineCol", "False", "False");
     
     SUCCEED();
 }

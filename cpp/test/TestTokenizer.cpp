@@ -45,9 +45,11 @@ protected:
 //
 TEST_F(TokenizerTest, Bug1) {
     
-    auto str = std::string("\\.GG");
+    auto strIn = std::string("\\.GG");
     
-    TheParserSession->init(nullptr, str.c_str(), str.size(), SOURCESTYLE_LINECOL, false, false, false);
+    auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
+    
+    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false, false);
     
     SUCCEED();
 }
@@ -57,9 +59,11 @@ TEST_F(TokenizerTest, Bug1) {
 //
 TEST_F(TokenizerTest, Bug2) {
     
-    auto str = std::string("<<<");
+    auto strIn = std::string("<<<");
     
-    TheParserSession->init(nullptr, str.c_str(), str.size(), SOURCESTYLE_LINECOL, false, false, false);
+    auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
+    
+    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false, false);
     
     TokenizerContext Ctxt;
     
@@ -73,27 +77,33 @@ TEST_F(TokenizerTest, Bug2) {
 //
 TEST_F(TokenizerTest, Bug3) {
     
-    auto str = std::string("\\\r");
+    auto strIn = std::string("\\\r");
     
-    TheParserSession->init(nullptr, str.c_str(), str.size(), SOURCESTYLE_LINECOL, false, false, false);
+    auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
+    
+    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false, false);
     
     SUCCEED();
 }
 
 TEST_F(TokenizerTest, Bug4) {
     
-    auto str = std::string("\\[");
+    auto strIn = std::string("\\[");
     
-    TheParserSession->init(nullptr, str.c_str(), str.size(), SOURCESTYLE_LINECOL, false, false, false);
+    auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
+    
+    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false, false);
     
     SUCCEED();
 }
 
 TEST_F(TokenizerTest, Bug5) {
     
-    auto str = std::string("\"a\\\\\r\nb\"");
+    auto strIn = std::string("\"a\\\\\r\nb\"");
     
-    TheParserSession->init(nullptr, str.c_str(), str.size(), SOURCESTYLE_LINECOL, false, false, false);
+    auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
+    
+    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false, false);
     
     SUCCEED();
 }

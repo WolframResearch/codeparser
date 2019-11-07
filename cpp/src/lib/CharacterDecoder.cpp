@@ -1176,7 +1176,7 @@ std::string CharacterDecoder::longNameSuggestion(std::string input) {
     auto pkt = MLNextPacket(link);
     if (pkt == RETURNPKT) {
         
-        ScopedMLString str(link);
+        ScopedMLUTF8String str(link);
         str.read();
         
         return reinterpret_cast<const char *>(str.get());
