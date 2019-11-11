@@ -108,6 +108,7 @@ Token`BangEqual -> Next, (* != *)
 Token`BangBang -> Next, (* !! *)
 Token`QuestionQuestion -> Next, (* ?? *)
 Token`EqualDot -> Next, (* =. *)
+Token`HashBang -> Next, (* #! *)
 
 (* 3 character tokens *)
 Token`DotDotDot -> Next, (* ... *)

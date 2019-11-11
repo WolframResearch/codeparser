@@ -3,7 +3,8 @@
 
 #include "Parselet.h"
 #include "Tokenizer.h"
-#include "SourceManager.h"
+#include "ByteDecoder.h"
+#include "ByteBuffer.h"
 #include "Utils.h"
 #include "Symbol.h"
 
@@ -42,7 +43,6 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
     registerPrefixParselet(TOKEN_BANG, std::unique_ptr<PrefixParselet>(new PrefixOperatorParselet(PRECEDENCE_PREFIX_BANG)));
     registerPrefixParselet(TOKEN_PLUSPLUS, std::unique_ptr<PrefixParselet>(new PrefixOperatorParselet(PRECEDENCE_PREFIX_PLUSPLUS)));
     registerPrefixParselet(TOKEN_MINUSMINUS, std::unique_ptr<PrefixParselet>(new PrefixOperatorParselet(PRECEDENCE_PREFIX_MINUSMINUS)));
-    registerPrefixParselet(TOKEN_LESSLESS, std::unique_ptr<PrefixParselet>(new PrefixOperatorParselet(PRECEDENCE_LESSLESS)));
     registerPrefixParselet(TOKEN_LONGNAME_PLUSMINUS, std::unique_ptr<PrefixParselet>(new PrefixOperatorParselet(PRECEDENCE_PREFIX_LONGNAME_PLUSMINUS)));
     registerPrefixParselet(TOKEN_LONGNAME_SUM, std::unique_ptr<PrefixParselet>(new PrefixOperatorParselet(PRECEDENCE_LONGNAME_SUM)));
     registerPrefixParselet(TOKEN_LONGNAME_NOT, std::unique_ptr<PrefixParselet>(new PrefixOperatorParselet(PRECEDENCE_LONGNAME_NOT)));
@@ -98,9 +98,7 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
     registerInfixParselet(TOKEN_ATATAT, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_ATATAT, ASSOCIATIVITY_RIGHT)));
     registerInfixParselet(TOKEN_SLASHSLASH, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_SLASHSLASH, ASSOCIATIVITY_LEFT)));
     registerInfixParselet(TOKEN_COLONEQUAL, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_COLONEQUAL, ASSOCIATIVITY_RIGHT)));
-    registerInfixParselet(TOKEN_GREATERGREATER, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_GREATERGREATER, ASSOCIATIVITY_LEFT)));
     registerInfixParselet(TOKEN_QUESTION, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_INFIX_QUESTION, ASSOCIATIVITY_NONASSOCIATIVE)));
-    registerInfixParselet(TOKEN_GREATERGREATERGREATER, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_GREATERGREATERGREATER, ASSOCIATIVITY_LEFT)));
     registerInfixParselet(TOKEN_LONGNAME_DIVIDE, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_DIVIDE, ASSOCIATIVITY_LEFT)));
     registerInfixParselet(TOKEN_LONGNAME_DIVISIONSLASH, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_DIVISIONSLASH, ASSOCIATIVITY_LEFT)));
     registerInfixParselet(TOKEN_LONGNAME_IMPLIES, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_IMPLIES, ASSOCIATIVITY_RIGHT)));
@@ -152,7 +150,6 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
     registerInfixParselet(TOKEN_BAR, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_BAR)));
     registerInfixParselet(TOKEN_LESSGREATER, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LESSGREATER)));
     registerInfixParselet(TOKEN_TILDETILDE, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_TILDETILDE)));
-    registerInfixParselet(TOKEN_COLONCOLON, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_COLONCOLON)));
     registerInfixParselet(TOKEN_ATSTAR, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_ATSTAR)));
     registerInfixParselet(TOKEN_SLASHSTAR, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_SLASHSTAR)));
     registerInfixParselet(TOKEN_LONGNAME_ELEMENT, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_ELEMENT)));
@@ -361,6 +358,10 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
     //    registerStartOfLineParselet(TOKEN_BANG, std::unique_ptr<StartOfLineParselet>(new StartOfLineParselet()));
     //    registerStartOfLineParselet(TOKEN_BANGBANG, std::unique_ptr<StartOfLineParselet>(new StartOfLineParselet()));
     
+    //
+    // StartOfFile
+    //
+    registerStartOfFileParselet(TOKEN_HASHBANG, std::unique_ptr<StartOfFileParselet>(new StartOfFileParselet()));
     
     
     //
@@ -425,6 +426,14 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
     registerInfixParselet(TOKEN_LONGNAME_VECTORGREATEREQUAL, std::unique_ptr<InfixParselet>(new VectorInequalityParselet()));
     registerInfixParselet(TOKEN_LONGNAME_VECTORLESS, std::unique_ptr<InfixParselet>(new VectorInequalityParselet()));
     registerInfixParselet(TOKEN_LONGNAME_VECTORLESSEQUAL, std::unique_ptr<InfixParselet>(new VectorInequalityParselet()));
+    
+    // stringify next token (as a symbol)
+    registerInfixParselet(TOKEN_COLONCOLON, std::unique_ptr<InfixParselet>(new ColonColonParselet()));
+    
+    // stringify next token (as a file)
+    registerInfixParselet(TOKEN_GREATERGREATER, std::unique_ptr<InfixParselet>(new GreaterGreaterParselet()));
+    registerInfixParselet(TOKEN_GREATERGREATERGREATER, std::unique_ptr<InfixParselet>(new GreaterGreaterGreaterParselet()));
+    registerPrefixParselet(TOKEN_LESSLESS, std::unique_ptr<PrefixParselet>(new LessLessParselet()));
 }
 
 Parser::~Parser() {}
@@ -467,6 +476,13 @@ void Parser::registerStartOfLineParselet(TokenEnum token, std::unique_ptr<StartO
     startOfLineParselets[token] = std::move(P);
 }
 
+void Parser::registerStartOfFileParselet(TokenEnum token, std::unique_ptr<StartOfFileParselet> P) {
+    
+    assert(startOfFileParselets[token] == nullptr);
+    
+    startOfFileParselets[token] = std::move(P);
+}
+
 void Parser::registerContextSensitivePrefixParselet(TokenEnum token, std::unique_ptr<ContextSensitivePrefixParselet> P) {
     
     assert(contextSensitivePrefixParselets[token] == nullptr);
@@ -497,18 +513,61 @@ void Parser::nextToken(ParserContext Ctxt) {
         return;
     }
     
+    TheTokenizer->nextToken();
+}
+
+void Parser::nextToken_stringifyCurrentLine(ParserContext Ctxt) {
+    
     //
-    // if Ctxt.LinearSyntaxFlag, then we are in linear syntax, and we disable stringifying next tokens
+    // handle the queue before anything else
     //
-    TokenizerContext tokenizerCtxt;
-    if ((Ctxt.Flag & PARSER_LINEARSYNTAX) != PARSER_LINEARSYNTAX) {
-        tokenizerCtxt |= TOKENIZER_ENABLE_STRINGIFY_NEXTTOKEN;
-    }
-    if ((Ctxt.Flag & PARSER_STRINGIFY_CURRENTLINE) == PARSER_STRINGIFY_CURRENTLINE) {
-        tokenizerCtxt |= TOKENIZER_STRINGIFY_CURRENTLINE;
+    // We do not know anything about how many Tokens should be read
+    //
+    if (!tokenQueue.empty()) {
+        
+        // erase first
+        tokenQueue.erase(tokenQueue.begin());
+        
+        return;
     }
     
-    TheTokenizer->nextToken(tokenizerCtxt);
+    TheTokenizer->nextToken_stringifyCurrentLine();
+}
+
+void Parser::nextToken_stringifyNextToken_symbol(ParserContext Ctxt) {
+    
+    //
+    // handle the queue before anything else
+    //
+    // We do not know anything about how many Tokens should be read
+    //
+    if (!tokenQueue.empty()) {
+        
+        // erase first
+        tokenQueue.erase(tokenQueue.begin());
+        
+        return;
+    }
+    
+    TheTokenizer->nextToken_stringifyNextToken_symbol();
+}
+
+void Parser::nextToken_stringifyNextToken_file(ParserContext Ctxt) {
+    
+    //
+    // handle the queue before anything else
+    //
+    // We do not know anything about how many Tokens should be read
+    //
+    if (!tokenQueue.empty()) {
+        
+        // erase first
+        tokenQueue.erase(tokenQueue.begin());
+        
+        return;
+    }
+    
+    TheTokenizer->nextToken_stringifyNextToken_file();
 }
 
 Token Parser::currentToken() const {
@@ -563,6 +622,20 @@ bool Parser::isPossibleBeginningOfExpression(ParserContext CtxtIn) const {
     
     if (Tok.isTrivia()) {
         return false;
+    }
+    
+    //
+    // StartOfFile parselet?
+    //
+    auto& SF = startOfFileParselets[Tok.Tok()];
+    if (SF != nullptr) {
+        if (CtxtIn.getGroupDepth() == 0) {
+            if (Tok.Src.style == SOURCESTYLE_LINECOL &&
+                Tok.Src.lineCol.start.Line == 1 &&
+                Tok.Src.lineCol.start.Col == 1) {
+                return true;
+            }
+        }
     }
     
     //
@@ -719,11 +792,6 @@ Precedence Parser::getTokenPrecedence(Token& TokIn, ParserContext Ctxt, bool con
         return PRECEDENCE_LOWEST;
     }
     
-    //
-    // ImplicitTimes should not have gotten here
-    //
-    assert((Ctxt.Flag & PARSER_LINEARSYNTAX) != PARSER_LINEARSYNTAX);
-    
     if (implicitTimes != nullptr) {
         *implicitTimes = true;
     }
@@ -735,7 +803,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
     
     if (isAbort()) {
         
-        auto A = Token(TOKEN_ERROR_ABORTED, "", Source(TheSourceManager->getSourceLocation()));
+        auto A = Token(TOKEN_ERROR_ABORTED, "", Source(TheByteDecoder->getSourceLocation()));
         
         NodePtr Aborted = NodePtr(new LeafNode(A));
         
@@ -757,42 +825,68 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
     
     NodePtr Left = nullptr;
     
-    //
-    // StartOfLine
-    //
-    if (CtxtIn.getGroupDepth() == 0) {
-        if (token.Src.style == SOURCESTYLE_LINECOL &&
-            token.Src.lineCol.start.Col == 1) {
-            auto& S = startOfLineParselets[token.Tok()];
-            if (S != nullptr) {
-                
-                Left = S->parse(Ctxt);
+    if (Left == nullptr) {
+        
+        //
+        // StartOfFile
+        //
+        
+        auto& SF = startOfFileParselets[token.Tok()];
+        if (SF != nullptr) {
+            
+            if (CtxtIn.getGroupDepth() == 0) {
+                if (token.Src.style == SOURCESTYLE_LINECOL &&
+                    token.Src.lineCol.start.Line == 1 &&
+                    token.Src.lineCol.start.Col == 1) {
+                    
+                    Left = SF->parse(Ctxt);
+                }
             }
         }
     }
     
     if (Left == nullptr) {
         
+        //
+        // StartOfLine
+        //
+        
+        auto& S = startOfLineParselets[token.Tok()];
+        if (S != nullptr) {
+            
+            if (CtxtIn.getGroupDepth() == 0) {
+                if (token.Src.style == SOURCESTYLE_LINECOL &&
+                    token.Src.lineCol.start.Col == 1) {
+                    
+                    Left = S->parse(Ctxt);
+                }
+            }
+        }
+    }
+    
+    if (Left == nullptr) {
+        
+        //
+        // Prefix
+        //
+        
         auto& I = prefixParselets[token.Tok()];
         
         if (I != nullptr) {
             
-            //
-            // Prefix
-            //
-            
             Left = I->parse(Ctxt);
-            
-        } else {
-            
-            //
-            // Literal or Unhandled
-            //
-
-            nextToken(Ctxt);
-
-            Left = NodePtr(new LeafNode(std::move(token)));
         }
+    }
+    
+    if (Left == nullptr) {
+        
+        //
+        // Literal or Unhandled
+        //
+        
+        nextToken(Ctxt);
+        
+        Left = NodePtr(new LeafNode(std::move(token)));
     }
     
     
@@ -804,7 +898,7 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
         
         if (isAbort()) {
             
-            auto A = Token(TOKEN_ERROR_ABORTED, "", Source(TheSourceManager->getSourceLocation()));
+            auto A = Token(TOKEN_ERROR_ABORTED, "", Source(TheByteDecoder->getSourceLocation()));
             
             return NodePtr(new LeafNode(A));
         }
@@ -881,7 +975,7 @@ NodePtr Parser::handleNotPossible(Token& tokenAnchor, ParserContext CtxtIn, bool
 
     if (P != nullptr) {
 
-        auto operand = TheParser->parse(CtxtIn);
+        auto operand = parse(CtxtIn);
 
         if (wasCloser != nullptr) {
             *wasCloser = false;
@@ -952,7 +1046,7 @@ NodePtr Parser::handleNotPossible(Token& tokenAnchor, ParserContext CtxtIn, bool
         // which ends up being  MissingCloser[ { a ]  EXPECTEOPERAND
         //
         
-        TheParser->nextToken(CtxtIn);
+        nextToken(CtxtIn);
         
         NodeSeq Args;
         Args.reserve(1);
@@ -980,7 +1074,7 @@ NodePtr Parser::handleNotPossible(Token& tokenAnchor, ParserContext CtxtIn, bool
     
     assert(isError(tokenBad.Tok()));
         
-    TheParser->nextToken(CtxtIn);
+    nextToken(CtxtIn);
     
     //
     // If there is a Token error, then use that specific error
@@ -1003,7 +1097,7 @@ bool Parser::isAbort() const {
 
 Token Parser::eatAll(ParserContext Ctxt, LeafSeq& Args) {
     
-    auto Tok = TheParser->currentToken();
+    auto Tok = currentToken();
     
     while (Tok.isTrivia()) {
         
@@ -1013,9 +1107,29 @@ Token Parser::eatAll(ParserContext Ctxt, LeafSeq& Args) {
         
         Args.append(LeafNodePtr(new LeafNode(Tok)));
         
-        TheParser->nextToken(Ctxt);
+        nextToken(Ctxt);
         
-        Tok = TheParser->currentToken();
+        Tok = currentToken();
+    }
+    
+    return Tok;
+}
+
+Token Parser::eatAll_stringifyNextToken_file(ParserContext Ctxt, LeafSeq& Args) {
+    
+    auto Tok = currentToken();
+    
+    while (Tok.isTrivia()) {
+        
+        //
+        // No need to check isAbort() inside tokenizer loops
+        //
+        
+        Args.append(LeafNodePtr(new LeafNode(Tok)));
+        
+        nextToken_stringifyNextToken_file(Ctxt);
+        
+        Tok = currentToken();
     }
     
     return Tok;
@@ -1023,43 +1137,93 @@ Token Parser::eatAll(ParserContext Ctxt, LeafSeq& Args) {
 
 Token Parser::eatAndPreserveToplevelNewlines(ParserContext Ctxt, LeafSeq& Args) {
     
-    auto Tok = TheParser->currentToken();
+    auto Tok = currentToken();
     
-    while (true) {
+    if (Ctxt.getGroupDepth() == 0) {
+        
+        while (true) {
+            
+            //
+            // No need to check isAbort() inside tokenizer loops
+            //
+            
+            switch (Tok.Tok()) {
+                case TOKEN_WHITESPACE:
+                case TOKEN_COMMENT:
+                case TOKEN_LINECONTINUATION:
+                    Args.append(LeafNodePtr(new LeafNode(std::move(Tok))));
+                    
+                    nextToken(Ctxt);
+                    
+                    Tok = currentToken();
+                    break;
+                case TOKEN_NEWLINE:
+                    return Tok;
+                default:
+                    return Tok;
+            }
+        }
+        
+    }
+    
+    while (Tok.isTrivia()) {
         
         //
         // No need to check isAbort() inside tokenizer loops
         //
         
+        Args.append(LeafNodePtr(new LeafNode(Tok)));
         
-        if (Tok.Tok() == TOKEN_WHITESPACE ||
-            Tok.Tok() == TOKEN_COMMENT ||
-            Tok.Tok() == TOKEN_LINECONTINUATION) {
+        nextToken(Ctxt);
+        
+        Tok = currentToken();
+    }
+    
+    return Tok;
+}
+
+Token Parser::eatAndPreserveToplevelNewlines_stringifyNextToken_file(ParserContext Ctxt, LeafSeq& Args) {
+    
+    auto Tok = currentToken();
+    
+    if (Ctxt.getGroupDepth() == 0) {
+        
+        while (true) {
             
-            Args.append(LeafNodePtr(new LeafNode(std::move(Tok))));
+            //
+            // No need to check isAbort() inside tokenizer loops
+            //
             
-            TheParser->nextToken(Ctxt);
-            
-            Tok = TheParser->currentToken();
-            
-        } else if (Tok.Tok() == TOKEN_NEWLINE) {
-            
-            if (Ctxt.getGroupDepth() == 0) {
-                
-                break;
-                
-            } else {
-                
-                Args.append(LeafNodePtr(new LeafNode(std::move(Tok))));
-                
-                TheParser->nextToken(Ctxt);
-                
-                Tok = TheParser->currentToken();
+            switch (Tok.Tok()) {
+                case TOKEN_WHITESPACE:
+                case TOKEN_COMMENT:
+                case TOKEN_LINECONTINUATION:
+                    Args.append(LeafNodePtr(new LeafNode(std::move(Tok))));
+                    
+                    nextToken_stringifyNextToken_file(Ctxt);
+                    
+                    Tok = currentToken();
+                    break;
+                case TOKEN_NEWLINE:
+                    return Tok;
+                default:
+                    return Tok;
             }
-            
-        } else {
-            break;
         }
+        
+    }
+    
+    while (Tok.isTrivia()) {
+        
+        //
+        // No need to check isAbort() inside tokenizer loops
+        //
+        
+        Args.append(LeafNodePtr(new LeafNode(Tok)));
+        
+        nextToken_stringifyNextToken_file(Ctxt);
+        
+        Tok = currentToken();
     }
     
     return Tok;

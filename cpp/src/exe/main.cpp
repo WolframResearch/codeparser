@@ -57,9 +57,9 @@ int main(int argc, char *argv[]) {
         if (leaf) {
             readFile(fileInput, LEAF, printOutput);
         } else if (tokenize) {
-            readFile(fileInput,TOKENIZE, printOutput);
+            readFile(fileInput, TOKENIZE, printOutput);
         } else {
-            readFile(fileInput,EXPRESSION, printOutput);
+            readFile(fileInput, EXPRESSION, printOutput);
         }
     } else {
         if (leaf) {
@@ -123,13 +123,13 @@ void readFile(std::string file, int mode, bool printOutput) {
         
         auto fileStr = reinterpret_cast<const unsigned char*>(file.c_str());
         
-        N = TokenizeFile(libData, fileStr, file.size(), Style.c_str(), "False");
+        N = TokenizeFile(libData, fileStr, file.size(), Style.c_str());
         
     } else {
         
         auto fileStr = reinterpret_cast<const unsigned char*>(file.c_str());
         
-        N = ConcreteParseFile(libData, fileStr, file.size(), Style.c_str(), "False");
+        N = ConcreteParseFile(libData, fileStr, file.size(), Style.c_str());
         
     }
     

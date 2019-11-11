@@ -186,6 +186,7 @@ message(STATUS "MATHLINK_LIB_DIR: ${MATHLINK_LIB_DIR}")
 
 set(CPP_INCLUDES
 	${CMAKE_SOURCE_DIR}/cpp/include/API.h
+    ${CMAKE_SOURCE_DIR}/cpp/include/ByteBuffer.h
 	${CMAKE_SOURCE_DIR}/cpp/include/ByteDecoder.h
 	${CMAKE_SOURCE_DIR}/cpp/include/ByteEncoder.h
 	${CMAKE_SOURCE_DIR}/cpp/include/CharacterDecoder.h
@@ -195,7 +196,6 @@ set(CPP_INCLUDES
 	${CMAKE_SOURCE_DIR}/cpp/include/Parselet.h
 	${CMAKE_SOURCE_DIR}/cpp/include/Parser.h
 	${CMAKE_SOURCE_DIR}/cpp/include/Source.h
-	${CMAKE_SOURCE_DIR}/cpp/include/SourceManager.h
 	${CMAKE_SOURCE_DIR}/cpp/include/Token.h
 	${CMAKE_SOURCE_DIR}/cpp/include/Tokenizer.h
 	${CMAKE_SOURCE_DIR}/cpp/include/Utils.h
@@ -204,6 +204,7 @@ set(CPP_INCLUDES
 
 set(CPP_LIB_SOURCES
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/API.cpp
+    ${CMAKE_SOURCE_DIR}/cpp/src/lib/ByteBuffer.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/ByteDecoder.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/ByteEncoder.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/CharacterDecoder.cpp
@@ -212,7 +213,6 @@ set(CPP_LIB_SOURCES
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/Parser.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/SemiSemiParselet.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/Source.cpp
-	${CMAKE_SOURCE_DIR}/cpp/src/lib/SourceManager.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/Token.cpp
     ${CMAKE_SOURCE_DIR}/cpp/src/lib/Tokenizer.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/Utils.cpp

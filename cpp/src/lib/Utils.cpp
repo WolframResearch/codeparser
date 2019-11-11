@@ -3,7 +3,6 @@
 
 #include "Parser.h"
 #include "Tokenizer.h"
-#include "SourceManager.h"
 
 #include <sstream>
 #include <unordered_set>
@@ -142,6 +141,10 @@ void Utils::differentLineWarning(Token Tok1, Token Tok2) {
         return;
     }
     
+    if (Tok2.Tok() == TOKEN_ERROR_EMPTYSTRING) {
+        return;
+    }
+    
     //
     // Only check if LineCol
     //
@@ -227,7 +230,7 @@ void Utils::strangeLetterlikeWarning(WLCharacter c) {
     
     if (c.isVeryStrangeLetterlike() || c.isVeryStrangeLetterlikeCharacter()) {
         
-        auto Src = TheSourceManager->getWLCharacterSource();
+        auto Src = TheCharacterDecoder->getWLCharacterSource();
         
         auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
         
@@ -236,7 +239,7 @@ void Utils::strangeLetterlikeWarning(WLCharacter c) {
         return;
     }
     
-    auto Src = TheSourceManager->getWLCharacterSource();
+    auto Src = TheCharacterDecoder->getWLCharacterSource();
     
     auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.90, {}));
     

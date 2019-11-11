@@ -397,6 +397,7 @@ StartOfLineOperatorToSymbol[Token`QuestionQuestion] = Information
 StartOfLineOperatorToSymbol[Token`Bang] = Run
 StartOfLineOperatorToSymbol[Token`BangBang] = FilePrint
 
+StartOfFileOperatorToSymbol[Token`HashBang] = AST`Shebang
 
 
 
@@ -499,7 +500,7 @@ symbols = Union[Join[
     {Developer`VectorInequality},
     {AST`Library`MakeLeafNode, AST`Library`MakePrefixNode, AST`Library`MakeBinaryNode, AST`Library`MakeInfixNode,
             AST`Library`MakeTernaryNode, AST`Library`MakePostfixNode, AST`Library`MakeCallNode, AST`Library`MakeGroupNode,
-            AST`Library`MakeStartOfLineNode, AST`Library`MakeBlankNode, AST`Library`MakeBlankSequenceNode,
+            AST`Library`MakeStartOfLineNode, AST`Library`MakeStartOfFileNode, AST`Library`MakeBlankNode, AST`Library`MakeBlankSequenceNode,
             AST`Library`MakeBlankNullSequenceNode, AST`Library`MakePatternBlankNode, AST`Library`MakePatternBlankSequenceNode,
             AST`Library`MakePatternBlankNullSequenceNode, AST`Library`MakeOptionalDefaultPatternNode, AST`Library`MakeSyntaxErrorNode,
             AST`Library`MakeGroupMissingCloserNode, AST`Library`MakeGroupMissingOpenerNode, AST`Library`MakePrefixBinaryNode,
@@ -515,6 +516,7 @@ symbols = Union[Join[
     DownValues[GroupOpenerToSymbol][[All, 2]],
     DownValues[PrefixBinaryOperatorToSymbol][[All, 2]],
     DownValues[StartOfLineOperatorToSymbol][[All, 2]],
+    DownValues[StartOfFileOperatorToSymbol][[All, 2]],
     tokens
     ]]
 
@@ -561,16 +563,12 @@ private:
 
 using SymbolPtr = std::unique_ptr<Symbol>;
 
-
-void allocSymbols();
-
-void freeSymbols();
-
 SymbolPtr& PrefixOperatorToSymbol(TokenEnum);
 SymbolPtr& PostfixOperatorToSymbol(TokenEnum);
 SymbolPtr& BinaryOperatorToSymbol(TokenEnum);
 SymbolPtr& InfixOperatorToSymbol(TokenEnum);
 SymbolPtr& StartOfLineOperatorToSymbol(TokenEnum);
+SymbolPtr& StartOfFileOperatorToSymbol(TokenEnum);
 
 bool isInfixOperator(TokenEnum);
 bool isInequalityOperator(TokenEnum);
@@ -634,35 +632,15 @@ const char *Symbol::name() const {
 void Symbol::put(MLINK mlp) const {
   MLPutSymbol(mlp, Name);
 }
-"} ~Join~ { "void allocSymbols() {" } ~Join~
-
-    (If[# === String && $WorkaroundBug321344,
-      (*
-      handle String specially because of bug 321344
-      *)
-      "SYMBOL_STRING = SymbolPtr(new Symbol(\"String\"));"
-      ,
-      Row[{toGlobal["Symbol`"<>ToString[#]], " = SymbolPtr(new Symbol(\"", stringifyForTransmitting[#], "\"));"}]]& /@ symbols) ~Join~
-{"}
-"} ~Join~ { "void freeSymbols() {" } ~Join~
-
-    (If[# === String && $WorkaroundBug321344,
-      (*
-      handle String specially because of bug 321344
-      *)
-      "SYMBOL_STRING = nullptr;"
-      ,
-      Row[{toGlobal["Symbol`"<>ToString[#]], " ", "=", " ", "nullptr", ";"}]]& /@ symbols) ~Join~
-{"}
 "} ~Join~
 
   (If[# === String && $WorkaroundBug321344,
       (*
       handle String specially because of bug 321344
       *)
-      "SymbolPtr SYMBOL_STRING = nullptr;"
+      "SymbolPtr SYMBOL_STRING = SymbolPtr(new Symbol(\"String\"));"
       ,
-      Row[{"SymbolPtr", " ", toGlobal["Symbol`"<>ToString[#]], " = nullptr;"}]]& /@ symbols) ~Join~
+      Row[{"SymbolPtr", " ", toGlobal["Symbol`"<>ToString[#]], " = SymbolPtr(new Symbol(\"", stringifyForTransmitting[#], "\"));"}]]& /@ symbols) ~Join~
 
       {""} ~Join~
 
@@ -725,6 +703,14 @@ void Symbol::put(MLINK mlp) const {
      {"SymbolPtr& StartOfLineOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
      
       Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[StartOfLineOperatorToSymbol]] ~Join~
+      {"default: assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
+     "}\n}"} ~Join~
+
+     {""} ~Join~
+
+     {"SymbolPtr& StartOfFileOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
+     
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[StartOfFileOperatorToSymbol]] ~Join~
       {"default: assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
      "}\n}"} ~Join~
 

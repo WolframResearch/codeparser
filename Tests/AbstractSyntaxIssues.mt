@@ -185,9 +185,10 @@ TestMatch[
 TestMatch[
 	ParseString[" f[,1] "]
 	,
-	CallNode[LeafNode[Symbol, "f", _], {
-		LeafNode[Symbol, "Null", KeyValuePattern[AbstractSyntaxIssues -> _]],
-		LeafNode[Integer, "1", _]}, _]
+	StringNode[String, {
+		CallNode[LeafNode[Symbol, "f", _], {
+			LeafNode[Symbol, "Null", KeyValuePattern[AbstractSyntaxIssues -> _]],
+			LeafNode[Integer, "1", _]}, _] }, _]
 	,
 	TestID->"AbstractSyntaxIssues-20190520-V9J1I3"
 ]

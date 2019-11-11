@@ -50,7 +50,7 @@ Test[
 
 
 
-
+(*
 shebangwarning = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "shebangwarning.wl"}]
 
 cst = ConcreteParseFile[shebangwarning]
@@ -67,6 +67,7 @@ TestMatch[
 	,
 	TestID->"File-20181230-M7H7Q7"
 ]
+*)
 
 
 carriagereturn = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "carriagereturn.wl"}]
@@ -496,6 +497,7 @@ Test[
 	TestID->"File-20190610-D7P4F8"
 ]
 
+(*
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "shebangwarning.wl"}], 1]
 	,
@@ -503,6 +505,7 @@ Test[
 	,
 	TestID->"File-20190606-F1E7Z2"
 ]
+*)
 
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "strange.wl"}], 1]

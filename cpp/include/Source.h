@@ -309,9 +309,6 @@ bool operator<=(SourceLocation a, SourceLocation b);
 
 
 
-
-
-
 //
 // There are several different kinds of Sources
 //
@@ -343,11 +340,6 @@ struct Source {
     Source(SourceLocation start, SourceLocation end);
     
     Source(Source start, Source end);
-    
-    Source(const Source& o);
-    Source(Source&& o);
-    
-    Source& operator=(Source o);
     
     ~Source();
     

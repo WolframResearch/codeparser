@@ -64,6 +64,11 @@ enum NextWLCharacterPolicyBits : uint8_t {
     // Check for unlikely escape sequences?
     //
     UNLIKELY_ESCAPE_CHECKING = 0x20,
+    
+    //
+    //
+    //
+    STRANGE_CHARACTER_CHECKING = 0x40,
 };
 
 class NextWLCharacterPolicy {
@@ -84,13 +89,13 @@ public:
     }
 };
 
-const NextWLCharacterPolicy TOPLEVEL              = LC_UNDERSTANDS_CRLF;
-const NextWLCharacterPolicy INSIDE_SYMBOL         = LC_IS_MEANINGFUL | LC_UNDERSTANDS_CRLF;
-const NextWLCharacterPolicy INSIDE_NUMBER         = LC_IS_MEANINGFUL | LC_UNDERSTANDS_CRLF;
-const NextWLCharacterPolicy INSIDE_STRING         = PRESERVE_WS_AFTER_LC | LC_IS_MEANINGFUL | UNLIKELY_ESCAPE_CHECKING;
-const NextWLCharacterPolicy INSIDE_STRINGIFY_FILE = DISABLE_ESCAPES | LC_IS_MEANINGFUL;
-const NextWLCharacterPolicy INSIDE_STRINGIFY_LINE = LC_IS_MEANINGFUL | LC_UNDERSTANDS_CRLF;
-const NextWLCharacterPolicy INSIDE_OPERATOR       = LC_IS_MEANINGFUL | LC_UNDERSTANDS_CRLF;
+const NextWLCharacterPolicy TOPLEVEL              = LC_UNDERSTANDS_CRLF | STRANGE_CHARACTER_CHECKING;
+const NextWLCharacterPolicy INSIDE_SYMBOL         = LC_IS_MEANINGFUL | LC_UNDERSTANDS_CRLF | STRANGE_CHARACTER_CHECKING;
+const NextWLCharacterPolicy INSIDE_NUMBER         = LC_IS_MEANINGFUL | LC_UNDERSTANDS_CRLF | STRANGE_CHARACTER_CHECKING;
+const NextWLCharacterPolicy INSIDE_STRING         = PRESERVE_WS_AFTER_LC | LC_IS_MEANINGFUL | UNLIKELY_ESCAPE_CHECKING | STRANGE_CHARACTER_CHECKING;
+const NextWLCharacterPolicy INSIDE_STRINGIFY_FILE = DISABLE_ESCAPES | LC_IS_MEANINGFUL | STRANGE_CHARACTER_CHECKING;
+const NextWLCharacterPolicy INSIDE_STRINGIFY_LINE = LC_IS_MEANINGFUL | LC_UNDERSTANDS_CRLF | STRANGE_CHARACTER_CHECKING;
+const NextWLCharacterPolicy INSIDE_OPERATOR       = LC_IS_MEANINGFUL | LC_UNDERSTANDS_CRLF | STRANGE_CHARACTER_CHECKING;
 const NextWLCharacterPolicy INSIDE_COMMENT        = DISABLE_CHARACTERDECODINGISSUES | LC_UNDERSTANDS_CRLF;
 
 //
@@ -103,19 +108,26 @@ class CharacterDecoder {
     
     std::vector<std::pair<SourceCharacter, SourceLocation>> sourceCharacterQueue;
     
+    SourceLocation WLCharacterStartLoc;
+    SourceLocation WLCharacterEndLoc;
+    
+    SourceLocation PrevWLCharacterStartLoc;
+    SourceLocation PrevWLCharacterEndLoc;
+    
     std::vector<std::unique_ptr<Issue>> Issues;
     
     WolframLibraryData libData;
     
+    
     SourceCharacter nextSourceCharacter();
     
-    WLCharacter handleLongName(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy, bool unlikelyEscapeChecking);
-    WLCharacter handle2Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy);
-    WLCharacter handle4Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy);
-    WLCharacter handle6Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy);
-    WLCharacter handleOctal(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy);
+    void handleLongName(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy, bool unlikelyEscapeChecking);
+    void handle2Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy);
+    void handle4Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy);
+    void handle6Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy);
+    void handleOctal(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy);
     
-    WLCharacter handleLineContinuation(NextWLCharacterPolicy policy);
+    void handleLineContinuation(NextWLCharacterPolicy policy);
     
     void append(SourceCharacter, SourceLocation);
     
@@ -124,7 +136,7 @@ class CharacterDecoder {
 public:
     CharacterDecoder();
     
-    void init(WolframLibraryData libData);
+    void init(WolframLibraryData libData, SourceStyle style);
     
     void deinit();
     
@@ -133,6 +145,16 @@ public:
     WLCharacter currentWLCharacter() const;
     
     std::vector<std::unique_ptr<Issue>>& getIssues();
+    
+    SourceLocation getWLCharacterStartLoc() const;
+    
+    SourceLocation getPrevWLCharacterEndLoc() const;
+    
+    void setWLCharacterStart();
+    void setWLCharacterEnd();
+    
+    Source getWLCharacterSource() const;
+    
 };
 
 extern std::unique_ptr<CharacterDecoder> TheCharacterDecoder;

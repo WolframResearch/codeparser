@@ -42,7 +42,7 @@ Test[
 Test[
 	ParseString[""]
 	,
-	Null
+	StringNode[String, {}, <||>]
 	,
 	TestID->"Parse-20190227-B2B5G4"
 ]

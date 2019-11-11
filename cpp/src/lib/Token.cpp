@@ -73,24 +73,6 @@ Token::Token(TokenEnum Tok, std::string&& StrIn, Source&& SrcIn) : T(Tok), Str(s
     
 }
 
-Token::Token(const Token& o) : T(o.T), Str(o.Str), Src(o.Src) {}
-
-Token::Token(Token&& o) : T(o.T), Str(std::move(o.Str)), Src(std::move(o.Src)) {}
-
-Token& Token::operator=(const Token& o) {
-    T = o.T;
-    Str = o.Str;
-    Src = o.Src;
-    return *this;
-}
-
-Token& Token::operator=(Token&& o) {
-    T = o.T;
-    Str = std::move(o.Str);
-    Src = std::move(o.Src);
-    return *this;
-}
-
 bool containsOnlyASCII(std::string s) {
     for (auto c : s) {
         //
@@ -120,3 +102,34 @@ bool operator==(Token a, Token b) {
     assert(a.Src.style == SOURCESTYLE_LINECOL);
     return a.Src.lineCol == b.Src.lineCol;
 }
+
+void Token::put(MLINK mlp) const {
+    
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKELEAFNODE->name(), static_cast<int>(2 + Src.count()));
+    
+    MLPutSymbol(mlp, TokenToSymbol(static_cast<TokenEnum>(T))->name());
+    
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
+    
+    Src.put(mlp);
+}
+
+void Token::print(std::ostream& s) const {
+    
+    s << SYMBOL_AST_LIBRARY_MAKELEAFNODE->name() << "[";
+    
+    s << TokenToSymbol(static_cast<TokenEnum>(T))->name();
+    s << ", ";
+    
+    s << Str;
+    s << ", ";
+    
+    Src.print(s);
+    
+    s << "]";
+}
+
+
+
+
+

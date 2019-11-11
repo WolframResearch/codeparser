@@ -4,6 +4,9 @@ Begin["`Private`"]
 
 Needs["AST`"]
 
+
+DeclarationName[StringNode[String, { s_ }, _]] := DeclarationName[s]
+
 (*
 
 given an LHS node, determine its declared name

@@ -544,14 +544,15 @@ verify that nested ImplicitTimes are not created
 TestMatch[
 	ConcreteParseString[";; ;; ;;"]
 	,
-	InfixNode[Times, {
-		BinaryNode[Span, _, _],
-		LeafNode[Token`WhiteSpace, _, _],
-		LeafNode[Token`Fake`ImplicitTimes, _, _],
-		BinaryNode[Span, _, _],
-		LeafNode[Token`WhiteSpace, _, _],
-		LeafNode[Token`Fake`ImplicitTimes, _, _],
-		BinaryNode[Span, _, _] }, _]
+	StringNode[String, {
+		InfixNode[Times, {
+			BinaryNode[Span, _, _],
+			LeafNode[Token`WhiteSpace, _, _],
+			LeafNode[Token`Fake`ImplicitTimes, _, _],
+			BinaryNode[Span, _, _],
+			LeafNode[Token`WhiteSpace, _, _],
+			LeafNode[Token`Fake`ImplicitTimes, _, _],
+			BinaryNode[Span, _, _] }, _] }, _]
 	,
 	TestID->"Span-20190622-C2T8X7"
 ]
@@ -563,14 +564,15 @@ TestMatch[
 Test[
 	ConcreteParseString["a ;; &"]
 	,
-	PostfixNode[Function, {
-		BinaryNode[Span, {
-			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
-			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 2}, {1, 2}}|>],
-			LeafNode[Token`SemiSemi, ";;", <|Source -> {{1, 3}, {1, 4}}|>], 
-			LeafNode[Token`Fake`ImplicitAll, "", <|Source -> {{1, 4}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>],
-		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 5}, {1, 5}}|>],
-		LeafNode[Token`Amp, "&", <|Source -> {{1, 6}, {1, 6}}|>] }, <|Source -> {{1, 1}, {1, 6}}|>]
+	StringNode[String, {
+		PostfixNode[Function, {
+			BinaryNode[Span, {
+				LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
+				LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 2}, {1, 2}}|>],
+				LeafNode[Token`SemiSemi, ";;", <|Source -> {{1, 3}, {1, 4}}|>], 
+				LeafNode[Token`Fake`ImplicitAll, "", <|Source -> {{1, 4}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>],
+			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 5}, {1, 5}}|>],
+			LeafNode[Token`Amp, "&", <|Source -> {{1, 6}, {1, 6}}|>] }, <|Source -> {{1, 1}, {1, 6}}|>] }, <||>]
 	,
 	TestID->"Span-20191016-J5K9B8"
 ]

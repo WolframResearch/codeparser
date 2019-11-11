@@ -31,7 +31,6 @@ public:
     
     LeafSeq(LeafSeq&& other) : vec(std::move(other.vec)), moved(false) {
         other.moved = true;
-        
     }
     
     ~LeafSeq();
@@ -62,9 +61,6 @@ public:
 // But the comment does not affect the parsing: a(**) is still 1 "thing" to the parser
 //
 // So pass around a structure that contains all of the nodes from the left, including comments and whitespace.
-//
-// However, we also know that there is a single, actual node that we care about. So remember with an index
-// for fast access.
 //
 class NodeSeq {
     
@@ -269,6 +265,11 @@ public:
 class StartOfLineNode : public OperatorNode {
 public:
     StartOfLineNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKESTARTOFLINENODE, std::move(Args)) {}
+};
+
+class StartOfFileNode : public OperatorNode {
+public:
+    StartOfFileNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKESTARTOFFILENODE, std::move(Args)) {}
 };
 
 

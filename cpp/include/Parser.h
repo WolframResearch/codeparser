@@ -19,6 +19,7 @@ class PostfixParselet;
 class ContextSensitivePrefixParselet;
 class ContextSensitiveInfixParselet;
 class StartOfLineParselet;
+class StartOfFileParselet;
 class GroupParselet;
 class Parselet;
 
@@ -47,29 +48,19 @@ enum ParserContextFlagBits : uint8_t {
     PARSER_COLON = 0x01,
     
     //
-    // Inside of linear syntax \( \)  ?
     //
-    PARSER_LINEARSYNTAX = 0x02,
+    //
+    PARSER_INTEGRAL = 0x02,
     
     //
     //
     //
-    PARSER_STRINGIFY_CURRENTLINE = 0x04,
+    PARSER_PARSED_SYMBOL = 0x04,
     
     //
     //
     //
-    PARSER_INTEGRAL = 0x08,
-    
-    //
-    //
-    //
-    PARSER_PARSED_SYMBOL = 0x10,
-    
-    //
-    //
-    //
-    PARSER_INSIDE_SLASHCOLON = 0x20,
+    PARSER_INSIDE_SLASHCOLON = 0x08,
 };
 
 class ParserContextFlag {
@@ -139,6 +130,7 @@ private:
     std::array<std::unique_ptr<PrefixParselet>, TOKEN_COUNT> prefixParselets;
     std::array<std::unique_ptr<InfixParselet>, TOKEN_COUNT> infixParselets;
     std::array<std::unique_ptr<StartOfLineParselet>, TOKEN_COUNT> startOfLineParselets;
+    std::array<std::unique_ptr<StartOfFileParselet>, TOKEN_COUNT> startOfFileParselets;
     std::array<std::unique_ptr<ContextSensitivePrefixParselet>, TOKEN_COUNT> contextSensitivePrefixParselets;
     std::array<std::unique_ptr<ContextSensitiveInfixParselet>, TOKEN_COUNT> contextSensitiveInfixParselets;
     
@@ -155,6 +147,8 @@ private:
     
     void registerStartOfLineParselet(TokenEnum, std::unique_ptr<StartOfLineParselet> );
     
+    void registerStartOfFileParselet(TokenEnum, std::unique_ptr<StartOfFileParselet> );
+    
     void registerContextSensitivePrefixParselet(TokenEnum, std::unique_ptr<ContextSensitivePrefixParselet> );
     
     void registerContextSensitiveInfixParselet(TokenEnum, std::unique_ptr<ContextSensitiveInfixParselet> );
@@ -169,6 +163,10 @@ public:
     void deinit();
     
     void nextToken(ParserContext Ctxt);
+    
+    void nextToken_stringifyCurrentLine(ParserContext Ctxt);
+    void nextToken_stringifyNextToken_symbol(ParserContext Ctxt);
+    void nextToken_stringifyNextToken_file(ParserContext Ctxt);
     
     Token currentToken() const;
     
@@ -201,9 +199,10 @@ public:
     
     ~Parser();
 
-    static Token eatAll(ParserContext Ctxt, LeafSeq&);
-    
-    static Token eatAndPreserveToplevelNewlines(ParserContext Ctxt, LeafSeq&);
+    Token eatAll(ParserContext Ctxt, LeafSeq&);
+    Token eatAll_stringifyNextToken_file(ParserContext Ctxt, LeafSeq&);
+    Token eatAndPreserveToplevelNewlines(ParserContext Ctxt, LeafSeq&);
+    Token eatAndPreserveToplevelNewlines_stringifyNextToken_file(ParserContext Ctxt, LeafSeq&);
 };
 
 extern std::unique_ptr<Parser> TheParser;

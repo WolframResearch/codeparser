@@ -261,6 +261,15 @@ Module[{nodeStrs},
 	StringJoin[nodeStrs]
 ]]
 
+toInputFormString[StartOfFileNode[op_, nodes_, data_]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[nodeStrs]
+]]
 
 
 
@@ -481,6 +490,9 @@ Module[{headStr, nodeStrs},
 	StringJoin[{headStr, "[", Riffle[nodeStrs, ", "], "]"}]
 ]]
 
+
+toFullFormString[f:StartOfFileNode[Shebang, _, _]] :=
+	ToInputFormString[f]
 
 
 (*

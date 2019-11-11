@@ -136,6 +136,8 @@ GroupParen
 
 GroupLinearSyntaxParen
 
+Shebang
+
 (* option symbols *)
 Source
 Synthesized
@@ -162,6 +164,7 @@ CallNode
 PrefixBinaryNode
 
 StartOfLineNode
+StartOfFileNode
 BlankNode
 BlankSequenceNode
 BlankNullSequenceNode
@@ -369,7 +372,7 @@ Options[concreteParseFile] = Options[ConcreteParseFile]
 
 concreteParseFile[file_String, hIn_, OptionsPattern[]] :=
 Catch[
-Module[{h, encoding, full, res, skipFirstLine = False, shebangWarn = False, data, issues, firstLine, start, end, children,
+Module[{h, encoding, full, res, data, start, end, children,
 	style},
 
 	h = hIn;
@@ -402,36 +405,6 @@ Module[{h, encoding, full, res, skipFirstLine = False, shebangWarn = False, data
 		Throw[Failure["FindFileFailed", <|"FileName"->file|>]]
 	];
 
-	(*
-	figure out if first line is special
-	*)
-	If[FileByteCount[full] > 0,
-		Quiet[
-			(*
-			Importing a file containing only \n gives a slew of different messages and fails
-			bug 363161
-			Remove this Quiet when bug is resolved
-			*)
-			firstLine = Import[full, {"Lines", 1}];
-			If[FailureQ[firstLine],
-				firstLine = "";
-			]
-		];
-		Which[
-			(* special encoded file format *)
-			StringMatchQ[firstLine, "(*!1"~~("A"|"B"|"C"|"D"|"H"|"I"|"N"|"O")~~"!*)mcm"],
-			Throw[Failure["EncodedFile", <|"FileName"->full|>]]
-			,
-			(* wl script *)
-			StringStartsQ[firstLine, "#!"],
-			skipFirstLine = True
-			,
-			(* looks like a script; warn *)
-			StringStartsQ[firstLine, "#"],
-			shebangWarn = True;
-		];
-	];
-
 	If[FailureQ[concreteParseFileFunc],
 		Throw[concreteParseFileFunc]
 	];
@@ -441,7 +414,7 @@ Module[{h, encoding, full, res, skipFirstLine = False, shebangWarn = False, data
 	$ConcreteParseTime = Quantity[0, "Seconds"];
 	$MathLinkTime = Quantity[0, "Seconds"];
 	CheckAbort[
-	res = concreteParseFileFunc[full, style, skipFirstLine];
+	res = concreteParseFileFunc[full, style];
 	,
 	loadAllFuncs[];
 	Abort[]
@@ -459,13 +432,6 @@ Module[{h, encoding, full, res, skipFirstLine = False, shebangWarn = False, data
 		];
 		res = Failure[res[[1]], Join[res[[2]], <|"FileName"->full|>]];
 		Throw[res]
-	];
-
-
-	If[shebangWarn,
-		issues = res[[2]];
-		AppendTo[issues, SyntaxIssue["Shebang", "# on first line looks like #! shebang", "Remark", <|Source->{{1, 1}, {1, 1}}|>]];
-		res[[2]] = issues;
 	];
 
 	res = h[res];

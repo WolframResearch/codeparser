@@ -2,7 +2,7 @@
 #include "CharacterDecoder.h"
 
 #include "ByteDecoder.h"
-#include "SourceManager.h"
+#include "ByteBuffer.h"
 #include "Utils.h"
 #include "CharacterMaps.h"
 #include "CodePoint.h"
@@ -10,15 +10,58 @@
 
 #include <sstream>
 
-CharacterDecoder::CharacterDecoder() : _currentWLCharacter(0), sourceCharacterQueue(), Issues(), libData() {}
 
-void CharacterDecoder::init(WolframLibraryData libDataIn) {
+void CharacterDecoder::setWLCharacterStart() {
+    
+    PrevWLCharacterStartLoc = WLCharacterStartLoc;
+    PrevWLCharacterEndLoc = WLCharacterEndLoc;
+    
+    WLCharacterStartLoc = TheByteDecoder->getSourceLocation();
+}
+
+void CharacterDecoder::setWLCharacterEnd() {
+    
+    WLCharacterEndLoc = TheByteDecoder->getSourceLocation();
+    
+    switch (WLCharacterStartLoc.style) {
+        case SOURCESTYLE_UNKNOWN:
+            break;
+        case SOURCESTYLE_LINECOL:
+            assert(WLCharacterStartLoc <= WLCharacterEndLoc);
+            break;
+        case SOURCESTYLE_OFFSETLEN:
+            assert(WLCharacterStartLoc <= WLCharacterEndLoc);
+            break;
+    }
+}
+
+SourceLocation CharacterDecoder::getWLCharacterStartLoc() const {
+    return WLCharacterStartLoc;
+}
+
+SourceLocation CharacterDecoder::getPrevWLCharacterEndLoc() const {
+    return PrevWLCharacterEndLoc;
+}
+
+Source CharacterDecoder::getWLCharacterSource() const {
+    return Source(WLCharacterStartLoc, WLCharacterEndLoc);
+}
+
+
+CharacterDecoder::CharacterDecoder() : _currentWLCharacter(0), sourceCharacterQueue(), WLCharacterStartLoc(), WLCharacterEndLoc(), PrevWLCharacterStartLoc(), PrevWLCharacterEndLoc(), Issues(), libData() {}
+
+void CharacterDecoder::init(WolframLibraryData libDataIn, SourceStyle style) {
     
     _currentWLCharacter = WLCharacter(0);
     sourceCharacterQueue.clear();
     Issues.clear();
     
     libData = libDataIn;
+    
+    WLCharacterStartLoc = SourceLocation(style);
+    WLCharacterEndLoc = SourceLocation(style);
+    PrevWLCharacterStartLoc = SourceLocation(style);
+    PrevWLCharacterEndLoc = SourceLocation(style);
 }
 
 void CharacterDecoder::deinit() {
@@ -46,7 +89,7 @@ SourceCharacter CharacterDecoder::nextSourceCharacter() {
         auto curSource = p.first;
         auto location = p.second;
         
-        TheSourceManager->setSourceLocation(location);
+        TheByteDecoder->setSourceLocation(location);
         
         return curSource;
     }
@@ -67,8 +110,8 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
     
     if (curSource == SourceCharacter(CODEPOINT_ENDOFFILE)) {
         
-        TheSourceManager->setWLCharacterStart();
-        TheSourceManager->setWLCharacterEnd();
+        setWLCharacterStart();
+        setWLCharacterEnd();
         
         _currentWLCharacter = WLCharacter(CODEPOINT_ENDOFFILE);
         
@@ -78,22 +121,25 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
     if (curSource != SourceCharacter('\\') ||
         ((policy & DISABLE_ESCAPES) == DISABLE_ESCAPES)) {
         
-        TheSourceManager->setWLCharacterStart();
-        TheSourceManager->setWLCharacterEnd();
+        setWLCharacterStart();
+        setWLCharacterEnd();
         
         _currentWLCharacter = WLCharacter(curSource.to_point());
         
-        if (_currentWLCharacter.isStrange() || _currentWLCharacter.isStrangeCharacter()) {
+        if ((policy & STRANGE_CHARACTER_CHECKING) == STRANGE_CHARACTER_CHECKING) {
             
-            //
-            // Just generally strange character is in the code
-            //
-            
-            auto Src = TheSourceManager->getWLCharacterSource();
-            
-            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + _currentWLCharacter.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
-            
-            Issues.push_back(std::move(I));
+            if (_currentWLCharacter.isStrange() || _currentWLCharacter.isStrangeCharacter()) {
+                
+                //
+                // Just generally strange character is in the code
+                //
+                
+                auto Src = getWLCharacterSource();
+                
+                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + _currentWLCharacter.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+                
+                Issues.push_back(std::move(I));
+            }
         }
         
         return _currentWLCharacter;
@@ -105,15 +151,16 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
     // handle escapes like line continuation and special characters
     //
     
-    TheSourceManager->setWLCharacterStart();
-    auto CharacterStart = TheSourceManager->getWLCharacterStart();
+    setWLCharacterStart();
+    auto CharacterStart = getWLCharacterStartLoc();
     curSource = nextSourceCharacter();
     
     switch (curSource.to_point()) {
         case '\n':
+            
             _currentWLCharacter = WLCharacter(CODEPOINT_LINECONTINUATION_LF, ESCAPE_SINGLE);
             
-            _currentWLCharacter = handleLineContinuation(policy);
+            handleLineContinuation(policy);
             
             break;
         case '\r': {
@@ -124,11 +171,15 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
             
             if ((policy & LC_UNDERSTANDS_CRLF) == LC_UNDERSTANDS_CRLF) {
                 
-                auto CRLoc = TheSourceManager->getSourceLocation();
+                auto CRLoc = TheByteDecoder->getSourceLocation();
                 
                 auto c = nextSourceCharacter();
                 
                 if (c != SourceCharacter('\n')) {
+                    
+                    //
+                    // Need to do surgery and backup
+                    //
                     
                     //
                     // It is possible to have \ followed by a single \r, and no accompanying \n
@@ -136,12 +187,15 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
                     // Stray \r is reported elsewhere
                     //
                     
-                    auto Loc = TheSourceManager->getSourceLocation();
+                    auto Loc = TheByteDecoder->getSourceLocation();
                     
-                    TheSourceManager->setSourceLocation(CharacterStart);
-                    TheSourceManager->setWLCharacterStart();
-                    TheSourceManager->setSourceLocation(CRLoc);
-                    TheSourceManager->setWLCharacterEnd();
+                    //
+                    // setup the single CODEPOINT_LINECONTINUATION_CR WLCharacter that spans from CharacterStart to CRLoc
+                    //
+                    TheByteDecoder->setSourceLocation(CharacterStart);
+                    setWLCharacterStart();
+                    TheByteDecoder->setSourceLocation(CRLoc);
+                    setWLCharacterEnd();
                     
                     append(c, Loc);
                     
@@ -155,23 +209,23 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
                 _currentWLCharacter = WLCharacter(CODEPOINT_LINECONTINUATION_CR, ESCAPE_SINGLE);
             }
             
-            _currentWLCharacter = handleLineContinuation(policy);
+            handleLineContinuation(policy);
         }
             break;
         case '[':
-            _currentWLCharacter = handleLongName(curSource, CharacterStart, policy, false);
+            handleLongName(curSource, CharacterStart, policy, false);
             break;
         case ':':
-            _currentWLCharacter = handle4Hex(curSource, CharacterStart, policy);
+            handle4Hex(curSource, CharacterStart, policy);
             break;
         case '.':
-            _currentWLCharacter = handle2Hex(curSource, CharacterStart, policy);
+            handle2Hex(curSource, CharacterStart, policy);
             break;
         case '|':
-            _currentWLCharacter = handle6Hex(curSource, CharacterStart, policy);
+            handle6Hex(curSource, CharacterStart, policy);
             break;
         case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7':
-            _currentWLCharacter = handleOctal(curSource, CharacterStart, policy);
+            handleOctal(curSource, CharacterStart, policy);
             break;
         //
         // Simple escaped characters
@@ -225,80 +279,34 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
             
             if ((policy & UNLIKELY_ESCAPE_CHECKING) == UNLIKELY_ESCAPE_CHECKING) {
                 
-                auto oldSourceLoc = TheSourceManager->getSourceLocation();
+                auto SecondBackSlashLoc = TheByteDecoder->getSourceLocation();
                 
                 auto test = nextSourceCharacter();
                 
-                auto testPoint = test.to_point();
-                
-                switch (testPoint) {
-                    case '[': {
-                        auto tmpPolicy = policy;
-                        
-                        tmpPolicy = tmpPolicy | DISABLE_CHARACTERDECODINGISSUES;
-                        
-                        handleLongName(test, CharacterStart+1, tmpPolicy, true);
-                    }
-                        break;
+                if (test.to_point() == '[') {
+                    
+                    auto tmpPolicy = policy;
+                    
+                    tmpPolicy = tmpPolicy | DISABLE_CHARACTERDECODINGISSUES;
+                    
+                    handleLongName(test, SecondBackSlashLoc, tmpPolicy, true);
+                    
+                } else {
+                    
+                    AdvancementState state;
+                    
                     //
-                    // '[' was not after \\, so must put back whatever was after \\
+                    // oldSourceLoc is the second \, so then queuedCharacterStart is the first
+                    // character to be queued
                     //
-                    // Must append in TheByteDecoder
-                    // Cannot append in TheCharacterDecoder, because only single-SourceCharacter WLCharacters are expected in
-                    // TheCharacterDecoder queue
+                    auto queuedCharacterStart = state.advance(test, SecondBackSlashLoc);
+                    
+                    append(test, queuedCharacterStart);
+                    
                     //
-                    // test for '\n' here because we want to make sure to have the correct SourceLocation
-                    // A newline means advancing to next line and resetting Column to 0
+                    // and make sure to reset SourceLoc
                     //
-                    case '\n': {
-                        //
-                        // CharacterStart is the first \, so then queuedCharacterStart is
-                        // start of the next line
-                        //
-                        auto queuedCharacterStart = CharacterStart.nextLine();
-                        
-                        append(test, queuedCharacterStart);
-                        
-                        //
-                        // and make sure to reset SourceLoc
-                        //
-                        TheSourceManager->setSourceLocation(oldSourceLoc);
-                    }
-                        break;
-                    case '\r': {
-                        //
-                        // If test == SourceCharacter('\r'), then there could also be a newline, either
-                        // as \r\n or as a stray \r that is not paired with a \n
-                        
-                        //
-                        // CharacterStart is the first \, so then queuedCharacterStart is
-                        // start of the next line
-                        //
-                        auto queuedCharacterStart = CharacterStart.nextLine();
-                        
-                        append(test, queuedCharacterStart);
-                        
-                        //
-                        // and make sure to reset SourceLoc
-                        //
-                        TheSourceManager->setSourceLocation(oldSourceLoc);
-                    }
-                        break;
-                    default: {
-                        //
-                        // CharacterStart is the first \, so then queuedCharacterStart is the first
-                        // character to be queued
-                        //
-                        auto queuedCharacterStart = CharacterStart+2;
-                        
-                        append(test, queuedCharacterStart);
-                        
-                        //
-                        // and make sure to reset SourceLoc
-                        //
-                        TheSourceManager->setSourceLocation(oldSourceLoc);
-                    }
-                        break;
+                    TheByteDecoder->setSourceLocation(SecondBackSlashLoc);
                 }
             }
             
@@ -360,7 +368,7 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
             // Anything else
             //
             
-            auto Loc = TheSourceManager->getSourceLocation();
+            auto Loc = TheByteDecoder->getSourceLocation();
             
             //
             // Make the warnings a little more relevant
@@ -428,9 +436,9 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
             
             _currentWLCharacter = WLCharacter('\\');
             
-            TheSourceManager->setSourceLocation(CharacterStart);
-            TheSourceManager->setWLCharacterStart();
-            TheSourceManager->setWLCharacterEnd();
+            TheByteDecoder->setSourceLocation(CharacterStart);
+            setWLCharacterStart();
+            setWLCharacterEnd();
             
             append(curSource, Loc);
             
@@ -438,19 +446,22 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
         }
     }
     
-    TheSourceManager->setWLCharacterEnd();
+    setWLCharacterEnd();
     
-    if (_currentWLCharacter.isStrange() || _currentWLCharacter.isStrangeCharacter()) {
+    if ((policy & STRANGE_CHARACTER_CHECKING) == STRANGE_CHARACTER_CHECKING) {
         
-        //
-        // Just generally strange character is in the code
-        //
-        
-        auto Src = TheSourceManager->getWLCharacterSource();
-        
-        auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + _currentWLCharacter.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
-        
-        Issues.push_back(std::move(I));
+        if (_currentWLCharacter.isStrange() || _currentWLCharacter.isStrangeCharacter()) {
+            
+            //
+            // Just generally strange character is in the code
+            //
+            
+            auto Src = getWLCharacterSource();
+            
+            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + _currentWLCharacter.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+            
+            Issues.push_back(std::move(I));
+        }
     }
     
     return _currentWLCharacter;
@@ -472,7 +483,7 @@ WLCharacter CharacterDecoder::currentWLCharacter() const {
 //
 // CharacterStart: location of \
 //
-WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy, bool unlikelyEscapeChecking) {
+void CharacterDecoder::handleLongName(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy, bool unlikelyEscapeChecking) {
     
     auto curSource = curSourceIn;
     
@@ -539,7 +550,7 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
         // Not well-formed
         //
         
-        auto Loc = TheSourceManager->getSourceLocation();
+        auto Loc = TheByteDecoder->getSourceLocation();
         
         if ((policy & DISABLE_CHARACTERDECODINGISSUES) != DISABLE_CHARACTERDECODINGISSUES) {
             
@@ -632,9 +643,9 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
 //            Issues.push_back(std::move(I));
 //        }
         
-        TheSourceManager->setSourceLocation(CharacterStart);
-        TheSourceManager->setWLCharacterStart();
-        TheSourceManager->setWLCharacterEnd();
+        TheByteDecoder->setSourceLocation(CharacterStart);
+        setWLCharacterStart();
+        setWLCharacterEnd();
         
         append(SourceCharacter('['), CharacterStart+1);
         for (size_t i = 0; i < LongNameStr.size(); i++) {
@@ -642,7 +653,9 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
         }
         append(curSource, Loc);
         
-        return WLCharacter('\\');
+        _currentWLCharacter = WLCharacter('\\');
+        
+        return;
     }
     
     //
@@ -663,7 +676,7 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
         // If found and unlikelyEscapeChecking, then still come in here.
         //
         
-        auto Loc = TheSourceManager->getSourceLocation();
+        auto Loc = TheByteDecoder->getSourceLocation();
         
         if (!found) {
             if ((policy & DISABLE_CHARACTERDECODINGISSUES) != DISABLE_CHARACTERDECODINGISSUES) {
@@ -694,9 +707,9 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
             }
         }
         
-        TheSourceManager->setSourceLocation(CharacterStart);
-        TheSourceManager->setWLCharacterStart();
-        TheSourceManager->setWLCharacterEnd();
+        TheByteDecoder->setSourceLocation(CharacterStart);
+        setWLCharacterStart();
+        setWLCharacterEnd();
         
         append(SourceCharacter('['), CharacterStart+1);
         for (size_t i = 0; i < LongNameStr.size(); i++) {
@@ -704,14 +717,16 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
         }
         append(SourceCharacter(']'), Loc);
         
-        return WLCharacter('\\');
+        _currentWLCharacter = WLCharacter('\\');
+        
+        return;
     }
     
     //
     // Success!
     //
     
-    auto Loc = TheSourceManager->getSourceLocation();
+    auto Loc = TheByteDecoder->getSourceLocation();
     
     auto point = it->second;
     
@@ -734,7 +749,7 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
         }
     }
     
-    return WLCharacter(point, ESCAPE_LONGNAME);
+    _currentWLCharacter = WLCharacter(point, ESCAPE_LONGNAME);
 }
 
 //
@@ -742,7 +757,7 @@ WLCharacter CharacterDecoder::handleLongName(SourceCharacter curSourceIn, Source
 //
 // CharacterStart: location of \
 //
-WLCharacter CharacterDecoder::handle4Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy) {
+void CharacterDecoder::handle4Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy) {
     
     auto curSource = curSourceIn;
     
@@ -769,7 +784,7 @@ WLCharacter CharacterDecoder::handle4Hex(SourceCharacter curSourceIn, SourceLoca
             
             auto HexStr = Hex.str();
             
-            auto Loc = TheSourceManager->getSourceLocation();
+            auto Loc = TheByteDecoder->getSourceLocation();
             
             if ((policy & DISABLE_CHARACTERDECODINGISSUES) != DISABLE_CHARACTERDECODINGISSUES) {
                 
@@ -799,9 +814,9 @@ WLCharacter CharacterDecoder::handle4Hex(SourceCharacter curSourceIn, SourceLoca
                 }
             }
             
-            TheSourceManager->setSourceLocation(CharacterStart);
-            TheSourceManager->setWLCharacterStart();
-            TheSourceManager->setWLCharacterEnd();
+            TheByteDecoder->setSourceLocation(CharacterStart);
+            setWLCharacterStart();
+            setWLCharacterEnd();
             
             append(SourceCharacter(':'), CharacterStart+1);
             for (size_t i = 0; i < HexStr.size(); i++) {
@@ -809,7 +824,9 @@ WLCharacter CharacterDecoder::handle4Hex(SourceCharacter curSourceIn, SourceLoca
             }
             append(curSource, Loc);
             
-            return WLCharacter('\\');
+            _currentWLCharacter = WLCharacter('\\');
+            
+            return;
         }
     }
     
@@ -820,12 +837,14 @@ WLCharacter CharacterDecoder::handle4Hex(SourceCharacter curSourceIn, SourceLoca
         
         auto point = Utils::parseInteger(HexStr, 16);
         
-        return WLCharacter(point, ESCAPE_4HEX);
+        _currentWLCharacter = WLCharacter(point, ESCAPE_4HEX);
+        
+        return;
     }
     
     auto point = it->second;
     
-    return WLCharacter(point, ESCAPE_4HEX);
+    _currentWLCharacter = WLCharacter(point, ESCAPE_4HEX);
 }
 
 //
@@ -833,7 +852,7 @@ WLCharacter CharacterDecoder::handle4Hex(SourceCharacter curSourceIn, SourceLoca
 //
 // CharacterStart: location of \
 //
-WLCharacter CharacterDecoder::handle2Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy) {
+void CharacterDecoder::handle2Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy) {
     
     auto curSource = curSourceIn;
     
@@ -859,7 +878,7 @@ WLCharacter CharacterDecoder::handle2Hex(SourceCharacter curSourceIn, SourceLoca
             
             auto HexStr = Hex.str();
             
-            auto Loc = TheSourceManager->getSourceLocation();
+            auto Loc = TheByteDecoder->getSourceLocation();
             
             if ((policy & DISABLE_CHARACTERDECODINGISSUES) != DISABLE_CHARACTERDECODINGISSUES) {
                 
@@ -889,9 +908,9 @@ WLCharacter CharacterDecoder::handle2Hex(SourceCharacter curSourceIn, SourceLoca
                 }
             }
             
-            TheSourceManager->setSourceLocation(CharacterStart);
-            TheSourceManager->setWLCharacterStart();
-            TheSourceManager->setWLCharacterEnd();
+            TheByteDecoder->setSourceLocation(CharacterStart);
+            setWLCharacterStart();
+            setWLCharacterEnd();
             
             append(SourceCharacter('.'), CharacterStart+1);
             for (size_t i = 0; i < HexStr.size(); i++) {
@@ -899,7 +918,9 @@ WLCharacter CharacterDecoder::handle2Hex(SourceCharacter curSourceIn, SourceLoca
             }
             append(curSource, Loc);
             
-            return WLCharacter('\\');
+            _currentWLCharacter = WLCharacter('\\');
+            
+            return;
         }
     }
     
@@ -910,12 +931,14 @@ WLCharacter CharacterDecoder::handle2Hex(SourceCharacter curSourceIn, SourceLoca
         
         auto point = Utils::parseInteger(HexStr, 16);
         
-        return WLCharacter(point, ESCAPE_2HEX);
+        _currentWLCharacter = WLCharacter(point, ESCAPE_2HEX);
+        
+        return;
     }
     
     auto point = it->second;
     
-    return WLCharacter(point, ESCAPE_2HEX);
+    _currentWLCharacter = WLCharacter(point, ESCAPE_2HEX);
 }
 
 //
@@ -923,7 +946,7 @@ WLCharacter CharacterDecoder::handle2Hex(SourceCharacter curSourceIn, SourceLoca
 //
 // CharacterStart: location of \
 //
-WLCharacter CharacterDecoder::handleOctal(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy) {
+void CharacterDecoder::handleOctal(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy) {
     
     auto curSource = curSourceIn;
     
@@ -951,7 +974,7 @@ WLCharacter CharacterDecoder::handleOctal(SourceCharacter curSourceIn, SourceLoc
             
             auto OctalStr = Octal.str();
             
-            auto Loc = TheSourceManager->getSourceLocation();
+            auto Loc = TheByteDecoder->getSourceLocation();
             
             if ((policy & DISABLE_CHARACTERDECODINGISSUES) != DISABLE_CHARACTERDECODINGISSUES) {
                 
@@ -981,16 +1004,18 @@ WLCharacter CharacterDecoder::handleOctal(SourceCharacter curSourceIn, SourceLoc
                 }
             }
             
-            TheSourceManager->setSourceLocation(CharacterStart);
-            TheSourceManager->setWLCharacterStart();
-            TheSourceManager->setWLCharacterEnd();
+            TheByteDecoder->setSourceLocation(CharacterStart);
+            setWLCharacterStart();
+            setWLCharacterEnd();
             
             for (size_t i = 0; i < OctalStr.size(); i++) {
                 append(SourceCharacter(OctalStr[i]), CharacterStart+1+i);
             }
             append(curSource, Loc);
             
-            return WLCharacter('\\');
+            _currentWLCharacter = WLCharacter('\\');
+            
+            return;
         }
     }
     
@@ -1001,12 +1026,14 @@ WLCharacter CharacterDecoder::handleOctal(SourceCharacter curSourceIn, SourceLoc
         
         auto point = Utils::parseInteger(OctalStr, 8);
         
-        return WLCharacter(point, ESCAPE_OCTAL);
+        _currentWLCharacter = WLCharacter(point, ESCAPE_OCTAL);
+        
+        return;
     }
     
     auto point = it->second;
     
-    return WLCharacter(point, ESCAPE_OCTAL);
+    _currentWLCharacter = WLCharacter(point, ESCAPE_OCTAL);
 }
 
 //
@@ -1014,7 +1041,7 @@ WLCharacter CharacterDecoder::handleOctal(SourceCharacter curSourceIn, SourceLoc
 //
 // CharacterStart: location of \
 //
-WLCharacter CharacterDecoder::handle6Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy) {
+void CharacterDecoder::handle6Hex(SourceCharacter curSourceIn, SourceLocation CharacterStart, NextWLCharacterPolicy policy) {
     
     auto curSource = curSourceIn;
     
@@ -1040,7 +1067,7 @@ WLCharacter CharacterDecoder::handle6Hex(SourceCharacter curSourceIn, SourceLoca
             
             auto HexStr = Hex.str();
             
-            auto Loc = TheSourceManager->getSourceLocation();
+            auto Loc = TheByteDecoder->getSourceLocation();
             
             if ((policy & DISABLE_CHARACTERDECODINGISSUES) != DISABLE_CHARACTERDECODINGISSUES) {
                 
@@ -1070,9 +1097,9 @@ WLCharacter CharacterDecoder::handle6Hex(SourceCharacter curSourceIn, SourceLoca
                 }
             }
             
-            TheSourceManager->setSourceLocation(CharacterStart);
-            TheSourceManager->setWLCharacterStart();
-            TheSourceManager->setWLCharacterEnd();
+            TheByteDecoder->setSourceLocation(CharacterStart);
+            setWLCharacterStart();
+            setWLCharacterEnd();
             
             append(SourceCharacter('|'), CharacterStart+1);
             for (size_t i = 0; i < HexStr.size(); i++) {
@@ -1080,7 +1107,9 @@ WLCharacter CharacterDecoder::handle6Hex(SourceCharacter curSourceIn, SourceLoca
             }
             append(curSource, Loc);
             
-            return WLCharacter('\\');
+            _currentWLCharacter = WLCharacter('\\');
+            
+            return;
         }
     }
     
@@ -1091,12 +1120,14 @@ WLCharacter CharacterDecoder::handle6Hex(SourceCharacter curSourceIn, SourceLoca
         
         auto point = Utils::parseInteger(HexStr, 16);
         
-        return WLCharacter(point, ESCAPE_6HEX);
+        _currentWLCharacter = WLCharacter(point, ESCAPE_6HEX);
+        
+        return;
     }
     
     auto point = it->second;
     
-    return WLCharacter(point, ESCAPE_6HEX);
+    _currentWLCharacter = WLCharacter(point, ESCAPE_6HEX);
 }
 
 //
@@ -1109,30 +1140,30 @@ WLCharacter CharacterDecoder::handle6Hex(SourceCharacter curSourceIn, SourceLoca
 // TODO: add this middle layer
 //
 // NOTE: this middle layer would need to warn about unneeded line continuations.
-// e.g., with something like  { 123\\\n }  then the line continuation is not needed
+// e.g., with something like  { 123 \\\n }  then the line continuation is not needed
 //
-WLCharacter CharacterDecoder::handleLineContinuation(NextWLCharacterPolicy policy) {
+void CharacterDecoder::handleLineContinuation(NextWLCharacterPolicy policy) {
     
     assert(_currentWLCharacter.isLineContinuation());
     
-    while (_currentWLCharacter.isLineContinuation()) {
+    if ((policy & LC_IS_MEANINGFUL) != LC_IS_MEANINGFUL) {
         
-        if ((policy & LC_IS_MEANINGFUL) != LC_IS_MEANINGFUL) {
-            
-            //
-            // Line continuation is NOT meaningful, so warn and break out of loop
-            //
-            // NOT meaningful, so do not worry about PRESERVE_WS_AFTER_LC
-            //
-            
-            auto CharacterStart = TheSourceManager->getWLCharacterStart();
-            
-            auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_UNEXPECTEDLINECONTINUATION, std::string("Unexpected line continuation."), FORMATISSUESEVERITY_FORMATTING, Source(CharacterStart)));
-            
-            Issues.push_back(std::move(I));
-            
-            break;
-        }
+        //
+        // Line continuation is NOT meaningful, so warn and return
+        //
+        // NOT meaningful, so do not worry about PRESERVE_WS_AFTER_LC
+        //
+        
+        auto CharacterStart = getWLCharacterStartLoc();
+        
+        auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_UNEXPECTEDLINECONTINUATION, std::string("Unexpected line continuation."), FORMATISSUESEVERITY_FORMATTING, Source(CharacterStart)));
+        
+        Issues.push_back(std::move(I));
+        
+        return;
+    }
+    
+    while (_currentWLCharacter.isLineContinuation()) {
         
         //
         // Line continuation IS meaningful, so continue
@@ -1147,13 +1178,12 @@ WLCharacter CharacterDecoder::handleLineContinuation(NextWLCharacterPolicy polic
             }
         }
     }
-    
-    return _currentWLCharacter;
 }
 
 std::vector<std::unique_ptr<Issue>>& CharacterDecoder::getIssues() {
     return Issues;
 }
+
 
 //
 // example:

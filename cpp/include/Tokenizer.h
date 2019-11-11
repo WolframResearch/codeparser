@@ -11,50 +11,51 @@
 #include <memory> // for unique_ptr
 
 enum TokenizerContextBits : uint8_t {
-    
+
     //
     // If inside #, then give syntax warnings for #"123" and #a`b syntax (which is undocumented syntax)
     //
     // But obviously "123" and a`b are fine outside of #
     //
     TOKENIZER_SLOT = 0x01,
-    
-    //
-    // Some tokens are "stringified",  b in  a::b
-    //
-    // This behavior can be controlled with this flag.
-    //
-    // This is used inside linear syntax.
-    //
-    TOKENIZER_ENABLE_STRINGIFY_NEXTTOKEN = 0x02,
-    
-    //
-    //
-    //
-    TOKENIZER_STRINGIFY_CURRENTLINE = 0x04,
 };
 
 class TokenizerContext {
     uint8_t val;
 public:
-    constexpr TokenizerContext() : val(TOKENIZER_ENABLE_STRINGIFY_NEXTTOKEN) {}
+    constexpr TokenizerContext() : val() {}
     constexpr TokenizerContext(uint8_t val) : val(val) {}
-    
+
     TokenizerContextBits operator&(const TokenizerContextBits bits) const {
         return static_cast<TokenizerContextBits>(val & bits);
     }
-    
+
     TokenizerContextBits operator|(const TokenizerContextBits bits) const {
         return static_cast<TokenizerContextBits>(val | bits);
     }
-    
+
     void operator|=(const TokenizerContextBits bits) {
         val |= bits;
     }
-    
+
     void clear(const TokenizerContextBits bits) {
         val &= ~bits;
     }
+};
+
+class sbuffer {
+    
+    std::ostringstream Str;
+    
+public:
+    
+    sbuffer() {}
+    
+    void clear();
+    
+    std::string str();
+    
+    void operator<<(WLCharacter c);
 };
 
 //
@@ -62,38 +63,82 @@ public:
 //
 class Tokenizer {
     
-    bool stringifyNextToken_symbol;
-    bool stringifyNextToken_file;
     Token _currentToken;
     
     WLCharacter _currentWLCharacter;
     
     std::vector<std::pair<WLCharacter, Source>> wlCharacterQueue;
     
-    std::ostringstream String;
+    sbuffer String;
     
     std::vector<std::unique_ptr<Issue>> Issues;
     
+    SourceLocation TokenStartLoc;
     
-    bool expectDigits(TokenizerContext Ctxt);
-    size_t handleDigits(TokenizerContext Ctxt);
-    int handleDigitsOrAlpha(TokenizerContext Ctxt, int base);
     
-    Token handleComment(TokenizerContext Ctxt);
-    Token handleFileOpsBrackets(TokenizerContext Ctxt);
-    Token handleString(TokenizerContext Ctxt);
+    void handleEndOfFile();
+    void handleLineFeed();
+    void handleCarriageReturn();
+    void handleSpace();
+    void handleTab();
+    void handleStrangeSpace();
+    void handleLineContinuation();
     
-    Token handleSymbol(TokenizerContext Ctxt);
+    void handleSpaceCharacter();
+    void handleNewlineCharacter();
+    
+    bool expectDigits();
+    size_t handleDigits();
+    int handleDigitsOrAlpha(int base);
+    
+    void handleComment();
+    void handleFileOpsBrackets();
+    void handleString();
+    void handleString_stringifyCurrentLine();
+    void handleString_stringifyNextToken_symbol();
+    void handleString_stringifyNextToken_file();
+    
+    void handleSymbol(TokenizerContext Ctxt);
     void handleSymbolSegment(TokenizerContext Ctxt);
     
-    Token handleNumber(TokenizerContext Ctxt);
-    int handleFractionalPart(TokenizerContext Ctxt, int base);
+    void handleNumber();
+    int handleFractionalPart(int base);
     
-    Token handleOperator(TokenizerContext Ctxt);
+    void handleColon();
+    void handleOpenParen();
+    void handleCloseParen();
+    void handleOpenSquare();
+    void handleCloseSquare();
+    void handleComma();
+    void handleOpenCurly();
+    void handleCloseCurly();
+    void handleDot();
+    void handleEqual();
+    void handleUnder();
+    void handleLess();
+    void handleGreater();
+    void handleMinus();
+    void handleBar();
+    void handleSemi();
+    void handleBang();
+    void handleHash();
+    void handlePercent();
+    void handleAmp();
+    void handleSlash();
+    void handleAt();
+    void handlePlus();
+    void handleTilde();
+    void handleQuestion();
+    void handleStar();
+    void handleCaret();
+    void handleSingleQuote();
     
-    Token handleLinearSyntax(TokenizerContext Ctxt);
+    void handlePunctuationCharacter();
     
-    Token handleUnhandledBackSlash(TokenizerContext Ctxt);
+    void handleLinearSyntax();
+    
+    void handleUnhandledBackSlash();
+    void handleUninterpretable();
     
     void append(WLCharacter, Source);
     
@@ -101,13 +146,18 @@ class Tokenizer {
     
     WLCharacter currentWLCharacter() const;
     
+    Source getTokenSource() const;
+    
 public:
     Tokenizer();
     
-    void init(SourceStyle style, bool stringifyNextTokenSymbol, bool stringifyNextTokenFile, bool skipFirstLine);
+    void init(SourceStyle style, bool stringifyNextTokenSymbol, bool stringifyNextTokenFile);
     void deinit();
     
-    void nextToken(TokenizerContext Ctxt);
+    void nextToken();
+    void nextToken_stringifyCurrentLine();
+    void nextToken_stringifyNextToken_symbol();
+    void nextToken_stringifyNextToken_file();
     
     Token currentToken();
     

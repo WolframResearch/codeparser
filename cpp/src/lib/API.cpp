@@ -5,7 +5,7 @@
 #include "Tokenizer.h"
 #include "CharacterDecoder.h"
 #include "ByteDecoder.h"
-#include "SourceManager.h"
+#include "ByteBuffer.h"
 #include "Utils.h"
 #include "Symbol.h"
 
@@ -23,7 +23,7 @@ using NodePtr = std::unique_ptr<Node>;
 
 Node *parseExpressions();
 Node *tokenize();
-Node *parseLeaf();
+Node *parseLeaf(bool stringifyNextToken_symbol, bool stringifyNextToken_file);
 
 bool validatePath(WolframLibraryData libData, const unsigned char *inStr, size_t len);
 
@@ -43,7 +43,7 @@ DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData) {
     TheParserSession.reset(nullptr);
 }
 
-DLLEXPORT Node *ConcreteParseFile(WolframLibraryData libData, const unsigned char *input, size_t len, const char *styleStr, const char *skipFirstLineSym) {
+DLLEXPORT Node *ConcreteParseFile(WolframLibraryData libData, const unsigned char *input, size_t len, const char *styleStr) {
     
     auto valid = validatePath(libData, input, len);
     if (!valid) {
@@ -52,15 +52,13 @@ DLLEXPORT Node *ConcreteParseFile(WolframLibraryData libData, const unsigned cha
     
     auto style = Utils::parseSourceStyle(styleStr);
     
-    auto skipFirstLine = Utils::parseBooleanSymbol(skipFirstLineSym);
-    
     ScopedFileBuffer fb(input, len);
     
     if (fb.fail()) {
         return nullptr;
     }
     
-    TheParserSession->init(libData, fb.getBuf(), fb.getLen(), style, false, false, skipFirstLine);
+    TheParserSession->init(libData, fb.getBuf(), fb.getLen(), style, false, false);
     
     auto N = parseExpressions();
     
@@ -77,7 +75,7 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK ml
     if (!MLTestHead(mlp, SYMBOL_LIST->name(), &len))  {
         return res;
     }
-    if (len != 3) {
+    if (len != 2) {
         return res;
     }
     
@@ -91,16 +89,11 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK ml
         return res;
     }
     
-    ScopedMLSymbol skipFirstLineSym(mlp);
-    if (!skipFirstLineSym.read()) {
-        return res;
-    }
-    
     if (!MLNewPacket(mlp)) {
         return res;
     }
     
-    auto N = ConcreteParseFile(libData, inStr.get(), inStr.getByteCount(), styleStr.get(), skipFirstLineSym.get());
+    auto N = ConcreteParseFile(libData, inStr.get(), inStr.getByteCount(), styleStr.get());
     
     N->put(mlp);
     
@@ -117,7 +110,7 @@ DLLEXPORT Node *ConcreteParseString(WolframLibraryData libData, const unsigned c
     
     auto style = Utils::parseSourceStyle(styleStr);
     
-    TheParserSession->init(libData, input, len, style, false, false, false);
+    TheParserSession->init(libData, input, len, style, false, false);
     
     auto N = parseExpressions();
     
@@ -167,7 +160,7 @@ DLLEXPORT Node *TokenizeString(WolframLibraryData libData, const unsigned char *
     
     auto style = Utils::parseSourceStyle(styleStr);
     
-    TheParserSession->init(libData, input, len, style, false, false, false);
+    TheParserSession->init(libData, input, len, style, false, false);
     
     auto N = tokenize();
     
@@ -211,7 +204,7 @@ DLLEXPORT int TokenizeString_LibraryLink(WolframLibraryData libData, MLINK mlp) 
     return res;
 }
 
-DLLEXPORT Node *TokenizeFile(WolframLibraryData libData, const unsigned char *input, size_t len, const char *styleStr, const char *skipFirstLineSym) {
+DLLEXPORT Node *TokenizeFile(WolframLibraryData libData, const unsigned char *input, size_t len, const char *styleStr) {
     
     auto valid = validatePath(libData, input, len);
     if (!valid) {
@@ -226,7 +219,7 @@ DLLEXPORT Node *TokenizeFile(WolframLibraryData libData, const unsigned char *in
     
     auto style = Utils::parseSourceStyle(styleStr);
     
-    TheParserSession->init(libData, fb.getBuf(), fb.getLen(), style, false, false, false);
+    TheParserSession->init(libData, fb.getBuf(), fb.getLen(), style, false, false);
     
     auto N = tokenize();
     
@@ -261,7 +254,7 @@ DLLEXPORT int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         return res;
     }
     
-    auto N = TokenizeFile(libData, inStr.get(), inStr.getByteCount(), styleStr.get(), "False");
+    auto N = TokenizeFile(libData, inStr.get(), inStr.getByteCount(), styleStr.get());
     
     N->put(mlp);
     
@@ -274,13 +267,13 @@ DLLEXPORT Node *ParseLeaf(WolframLibraryData libData, const unsigned char *input
     
     auto style = Utils::parseSourceStyle(styleStr);
     
-    auto stringifyNextTokenSymbol = Utils::parseBooleanSymbol(stringifyNextTokenSymbolSym);
+    auto stringifyNextToken_symbol = Utils::parseBooleanSymbol(stringifyNextTokenSymbolSym);
     
-    auto stringifyNextTokenFile = Utils::parseBooleanSymbol(stringifyNextTokenFileSym);
+    auto stringifyNextToken_file = Utils::parseBooleanSymbol(stringifyNextTokenFileSym);
     
-    TheParserSession->init(libData, input, len, style, stringifyNextTokenSymbol, stringifyNextTokenFile, false);
+    TheParserSession->init(libData, input, len, style, stringifyNextToken_symbol, stringifyNextToken_file);
     
-    auto N = parseLeaf();
+    auto N = parseLeaf(stringifyNextToken_symbol, stringifyNextToken_file);
     
     TheParserSession->deinit();
     
@@ -419,11 +412,6 @@ Node *parseExpressions() {
             issues.push_back(std::move(I));
         }
         
-        auto SourceManagerIssues = TheSourceManager->getIssues();
-        for (auto& I : SourceManagerIssues) {
-            issues.push_back(std::move(I));
-        }
-        
         nodes.push_back(NodePtr(new CollectedIssuesNode(std::move(issues))));
     }
     
@@ -436,14 +424,11 @@ Node *tokenize() {
     
     std::vector<NodePtr> nodes;
     
-    TokenizerContext Ctxt;
-    
     while (true) {
         
         //
         // No need to check isAbort() inside tokenizer loops
         //
-        
         
         auto Tok = TheTokenizer->currentToken();
         
@@ -455,7 +440,7 @@ Node *tokenize() {
         
         nodes.push_back(std::move(N));
         
-        TheTokenizer->nextToken(Ctxt);
+        TheTokenizer->nextToken();
         
     } // while (true)
     
@@ -464,7 +449,7 @@ Node *tokenize() {
     return N;
 }
 
-NodePtr parseLeaf0() {
+NodePtr parseLeaf0(bool stringifyNextToken_symbol, bool stringifyNextToken_file) {
     
     ParserContext PCtxt;
     
@@ -472,14 +457,20 @@ NodePtr parseLeaf0() {
     
     auto N = LeafNodePtr(new LeafNode(Tok));
     
-    TheParser->nextToken(PCtxt);
+    if (stringifyNextToken_symbol) {
+        TheParser->nextToken_stringifyNextToken_symbol(PCtxt);
+    } else if (stringifyNextToken_file) {
+        TheParser->nextToken_stringifyNextToken_file(PCtxt);
+    } else {
+        TheParser->nextToken(PCtxt);
+    }
     
     Tok = TheParser->currentToken();
     
     //
     // There may be more input
-    // For example, parsing f.m would first return f as a Symbol
-    // Still need to grab . and m to finish the parse
+    // For example, parsing <space>f.m would first return <space>
+    // Still need to grab f.m
     //
     // Also handle TOKEN_ERROR_EMPTYSTRING here because we want << to return TOKEN_LESSLESS, not TOKEN_OTHER
     //
@@ -494,7 +485,13 @@ NodePtr parseLeaf0() {
         auto Str = Tok.Str;
         AccumStr = AccumStr + Str;
         
-        TheParser->nextToken(PCtxt);
+        if (stringifyNextToken_symbol) {
+            TheParser->nextToken_stringifyNextToken_symbol(PCtxt);
+        } else if (stringifyNextToken_file) {
+            TheParser->nextToken_stringifyNextToken_file(PCtxt);
+        } else {
+            TheParser->nextToken(PCtxt);
+        }
         
         Tok = TheParser->currentToken();
         
@@ -506,7 +503,13 @@ NodePtr parseLeaf0() {
             
             allWhitespace = allWhitespace && (Tok.T == TOKEN_WHITESPACE);
             
-            TheParser->nextToken(PCtxt);
+            if (stringifyNextToken_symbol) {
+                TheParser->nextToken_stringifyNextToken_symbol(PCtxt);
+            } else if (stringifyNextToken_file) {
+                TheParser->nextToken_stringifyNextToken_file(PCtxt);
+            } else {
+                TheParser->nextToken(PCtxt);
+            }
             
             Tok = TheParser->currentToken();
         }
@@ -540,7 +543,7 @@ NodePtr parseLeaf0() {
     return N;
 }
 
-Node *parseLeaf() {
+Node *parseLeaf(bool stringifyNextToken_symbol, bool stringifyNextToken_file) {
     
     std::vector<NodePtr> nodes;
     
@@ -550,7 +553,7 @@ Node *parseLeaf() {
     {
         std::vector<NodePtr> exprs;
         
-        auto node = parseLeaf0();
+        auto node = parseLeaf0(stringifyNextToken_symbol, stringifyNextToken_file);
         
         exprs.push_back(std::move(node));
         
@@ -585,11 +588,6 @@ Node *parseLeaf() {
             issues.push_back(std::move(I));
         }
         
-        auto SourceManagerIssues = TheSourceManager->getIssues();
-        for (auto& I : SourceManagerIssues) {
-            issues.push_back(std::move(I));
-        }
-        
         nodes.push_back(NodePtr(new CollectedIssuesNode(std::move(issues))));
     }
     
@@ -620,10 +618,8 @@ bool validatePath(WolframLibraryData libData, const unsigned char *inStrIn, size
 
 ParserSession::ParserSession() {
     
-    allocSymbols();
-    
+    TheByteBuffer = std::unique_ptr<ByteBuffer>(new ByteBuffer());
     TheByteDecoder = std::unique_ptr<ByteDecoder>(new ByteDecoder());
-    TheSourceManager = std::unique_ptr<SourceManager>(new SourceManager());
     TheCharacterDecoder = std::unique_ptr<CharacterDecoder>(new CharacterDecoder());
     TheTokenizer = std::unique_ptr<Tokenizer>(new Tokenizer());
     TheParser = std::unique_ptr<Parser>(new Parser());
@@ -633,19 +629,17 @@ ParserSession::~ParserSession() {
     
     TheParser.reset(nullptr);
     TheTokenizer.reset(nullptr);
-    TheSourceManager.reset(nullptr);
     TheCharacterDecoder.reset(nullptr);
     TheByteDecoder.reset(nullptr);
-    
-    freeSymbols();
+    TheByteBuffer.reset(nullptr);
 }
 
-void ParserSession::init(WolframLibraryData libData, const unsigned char *data, size_t dataLen, SourceStyle sourceStyle, bool stringifyNextTokenSymbol, bool stringifyNextTokenFile, bool skipFirstLine) {
+void ParserSession::init(WolframLibraryData libData, const unsigned char *data, size_t dataLen, SourceStyle sourceStyle, bool stringifyNextTokenSymbol, bool stringifyNextTokenFile) {
     
-    TheSourceManager->init(data, dataLen, sourceStyle, libData);
-    TheByteDecoder->init();
-    TheCharacterDecoder->init(libData);
-    TheTokenizer->init(sourceStyle, stringifyNextTokenSymbol, stringifyNextTokenFile, skipFirstLine);
+    TheByteBuffer->init(data, dataLen, libData);
+    TheByteDecoder->init(sourceStyle);
+    TheCharacterDecoder->init(libData, sourceStyle);
+    TheTokenizer->init(sourceStyle, stringifyNextTokenSymbol, stringifyNextTokenFile);
     TheParser->init( [libData]() {
         if (!libData) {
             return false;
@@ -664,7 +658,7 @@ void ParserSession::deinit() {
     TheTokenizer->deinit();
     TheCharacterDecoder->deinit();
     TheByteDecoder->deinit();
-    TheSourceManager->deinit();
+    TheByteBuffer->deinit();
 }
 
 
@@ -819,15 +813,11 @@ ScopedFileBuffer::ScopedFileBuffer(const unsigned char *inStrIn, size_t inLen) :
     
     buf = new unsigned char[len];
     
-    auto read = fread(buf, sizeof(unsigned char), len, file);
+    inited = true;
+    
+    fread(buf, sizeof(unsigned char), len, file);
     
     fclose(file);
-    
-    if (read != len) {
-        return;
-    }
-    
-    inited = true;
 }
 
 ScopedFileBuffer::~ScopedFileBuffer() {

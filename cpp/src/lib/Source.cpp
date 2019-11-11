@@ -424,7 +424,6 @@ Source::Source(Source start, Source end) : style(SOURCESTYLE_UNKNOWN) {
     switch (start.style) {
         case SOURCESTYLE_UNKNOWN:
             assert(end.style == SOURCESTYLE_UNKNOWN);
-            style = SOURCESTYLE_UNKNOWN;
             break;
         case SOURCESTYLE_LINECOL:
             assert(end.style == SOURCESTYLE_LINECOL);
@@ -458,56 +457,6 @@ Source::~Source() {
         default:
             assert(false);
     }
-}
-
-Source::Source(const Source& o) : style(o.style) {
-    switch (o.style) {
-        case SOURCESTYLE_UNKNOWN:
-            break;
-        case SOURCESTYLE_LINECOL:
-            lineCol = o.lineCol;
-            break;
-        case SOURCESTYLE_OFFSETLEN:
-            offsetLen = o.offsetLen;
-            break;
-        default:
-            assert(false);
-            break;
-    }
-}
-
-Source::Source(Source&& o) : style(o.style) {
-    switch (o.style) {
-        case SOURCESTYLE_UNKNOWN:
-            break;
-        case SOURCESTYLE_LINECOL:
-            lineCol = o.lineCol;
-            break;
-        case SOURCESTYLE_OFFSETLEN:
-            offsetLen = o.offsetLen;
-            break;
-        default:
-            assert(false);
-            break;
-    }
-}
-
-Source& Source::operator=(Source o) {
-    style = o.style;
-    switch (o.style) {
-        case SOURCESTYLE_UNKNOWN:
-            break;
-        case SOURCESTYLE_LINECOL:
-            std::swap(lineCol, o.lineCol);
-            break;
-        case SOURCESTYLE_OFFSETLEN:
-            std::swap(offsetLen, o.offsetLen);
-            break;
-        default:
-            assert(false);
-            break;
-    }
-    return *this;
 }
 
 bool isContiguous(Source a, Source b) {
@@ -666,7 +615,10 @@ bool SourceCharacter::isEndOfFile() const {
 
 SourceCharacter::SourceCharacter_iterator::SourceCharacter_iterator(int32_t val) : val(val), size(0), idx(0), arr() {
     size = ByteEncoder::size(val);
-    ByteEncoder::encodeBytes(arr, val);
+    
+    ByteEncoderState state;
+    
+    ByteEncoder::encodeBytes(arr, val, &state);
 }
 
 SourceCharacter::SourceCharacter_iterator SourceCharacter::begin() {
@@ -699,7 +651,9 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
     
     assert(val != CODEPOINT_ERROR_INTERNAL);
     
-    ByteEncoder::encodeBytes(stream, val);
+    ByteEncoderState state;
+    
+    ByteEncoder::encodeBytes(stream, val, &state);
     
     return stream;
 }

@@ -25,7 +25,7 @@ size_t ByteEncoder::size(int val) {
     }
 }
 
-void ByteEncoder::encodeBytes(std::ostream& stream, int val) {
+void ByteEncoder::encodeBytes(std::ostream& stream, int val, ByteEncoderState *state) {
     
     assert(val >= 0);
     
@@ -37,7 +37,7 @@ void ByteEncoder::encodeBytes(std::ostream& stream, int val) {
         
         auto firstByte = static_cast<unsigned char>(((val >> 0) & 0x7f) | 0x00);
         
-        stream << firstByte;
+        stream.put(firstByte);
         
     } else if (val <= 0x7ff) {
         
@@ -48,8 +48,8 @@ void ByteEncoder::encodeBytes(std::ostream& stream, int val) {
         auto firstByte = static_cast<unsigned char>(((val >> 6) & 0x1f) | 0xc0);
         auto secondByte = static_cast<unsigned char>(((val >> 0) & 0x3f) | 0x80);
         
-        stream << firstByte;
-        stream << secondByte;
+        stream.put(firstByte);
+        stream.put(secondByte);
         
     } else if (val <= 0xffff) {
         
@@ -61,9 +61,9 @@ void ByteEncoder::encodeBytes(std::ostream& stream, int val) {
         auto secondByte = static_cast<unsigned char>(((val >> 6) & 0x3f) | 0x80);
         auto thirdByte = static_cast<unsigned char>(((val >> 0) & 0x3f) | 0x80);
         
-        stream << firstByte;
-        stream << secondByte;
-        stream << thirdByte;
+        stream.put(firstByte);
+        stream.put(secondByte);
+        stream.put(thirdByte);
         
     } else {
         
@@ -78,14 +78,14 @@ void ByteEncoder::encodeBytes(std::ostream& stream, int val) {
         auto thirdByte = static_cast<unsigned char>(((val >> 6) & 0x3f) | 0x80);
         auto fourthByte = static_cast<unsigned char>(((val >> 0) & 0x3f) | 0x80);
         
-        stream << firstByte;
-        stream << secondByte;
-        stream << thirdByte;
-        stream << fourthByte;
+        stream.put(firstByte);
+        stream.put(secondByte);
+        stream.put(thirdByte);
+        stream.put(fourthByte);
     }
 }
 
-void ByteEncoder::encodeBytes(std::array<unsigned char, 4>& arr, int val) {
+void ByteEncoder::encodeBytes(std::array<unsigned char, 4>& arr, int val, ByteEncoderState *state) {
     
     assert(val >= 0);
     

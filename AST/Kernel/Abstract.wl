@@ -331,6 +331,14 @@ abstract[StartOfLineNode[Run, {LeafNode[Token`Bang, _, _], LeafNode[String, str_
 abstract[StartOfLineNode[FilePrint, {LeafNode[Token`BangBang, _, _], LeafNode[String, str_, _]}, data_]] := CallNode[ToNode[FilePrint], {ToNode[str]}, KeyTake[data, keysToTake]]
 
 
+(*
+Do not abstract #! nodes
+*)
+abstract[StartOfFileNode[Shebang, children_, data_]] := StartOfFileNode[Shebang, children, KeyTake[data, keysToTake]]
+
+
+
+
 
 (*
 handle CallNode before possible GroupNode errors

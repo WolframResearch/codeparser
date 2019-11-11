@@ -84,6 +84,13 @@ public:
     NodePtr parse(ParserContext Ctxt) const;
 };
 
+class StartOfFileParselet : virtual public Parselet {
+public:
+    //
+    // Commonly referred to as NUD method in the literature
+    //
+    NodePtr parse(ParserContext Ctxt) const;
+};
 
 
 
@@ -309,3 +316,52 @@ public:
         return PRECEDENCE_FAKE_VECTORINEQUALITY;
     }
 };
+
+class ColonColonParselet : public InfixParselet {
+public:
+    
+    NodePtr parse(NodeSeq Left, ParserContext Ctxt) const override;
+    
+    Precedence getPrecedence() const override {
+        return PRECEDENCE_COLONCOLON;
+    }
+};
+
+class GreaterGreaterParselet : public BinaryParselet {
+public:
+    
+    NodePtr parse(NodeSeq Left, ParserContext Ctxt) const override;
+    
+    Precedence getPrecedence() const override {
+        return PRECEDENCE_GREATERGREATER;
+    }
+    
+    Associativity getAssociativity() const override {
+        return ASSOCIATIVITY_LEFT;
+    }
+};
+
+class GreaterGreaterGreaterParselet : public BinaryParselet {
+public:
+    
+    NodePtr parse(NodeSeq Left, ParserContext Ctxt) const override;
+    
+    Precedence getPrecedence() const override {
+        return PRECEDENCE_GREATERGREATERGREATER;
+    }
+    
+    Associativity getAssociativity() const override {
+        return ASSOCIATIVITY_LEFT;
+    }
+};
+
+class LessLessParselet : public PrefixParselet {
+public:
+    
+    NodePtr parse(ParserContext Ctxt) const override;
+    
+    Precedence getPrecedence() const override {
+        return PRECEDENCE_LESSLESS;
+    }
+};
+

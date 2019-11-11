@@ -34,6 +34,11 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
             //
             
             if (stream.iword(get_graphical_i()) == 0) {
+                
+                //
+                // Not doing graphical, so just use SourceCharacter directly
+                //
+                
                 stream << SourceCharacter(i);
                 break;
             }

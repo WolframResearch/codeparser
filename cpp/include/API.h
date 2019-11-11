@@ -54,11 +54,11 @@ class Node;
 
 EXTERN_C DLLEXPORT Node *ConcreteParseString(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style);
 
-EXTERN_C DLLEXPORT Node *ConcreteParseFile(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style, const char *skipFirstLine);
+EXTERN_C DLLEXPORT Node *ConcreteParseFile(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style);
 
 EXTERN_C DLLEXPORT Node *TokenizeString(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style);
 
-EXTERN_C DLLEXPORT Node *TokenizeFile(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style, const char *skipFirstLine);
+EXTERN_C DLLEXPORT Node *TokenizeFile(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style);
 
 EXTERN_C DLLEXPORT Node *ParseLeaf(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style, const char *stringifyNextTokenSymbol, const char *stringifyNextTokenFile);
 
@@ -205,7 +205,7 @@ public:
     
     ~ParserSession();
     
-    void init(WolframLibraryData libData, const unsigned char *data, size_t dataLen, SourceStyle style, bool stringifyNextTokenSymbol, bool stringifyNextTokenFile, bool skipFirstLine);
+    void init(WolframLibraryData libData, const unsigned char *data, size_t dataLen, SourceStyle style, bool stringifyNextTokenSymbol, bool stringifyNextTokenFile);
     
     void deinit();
 };

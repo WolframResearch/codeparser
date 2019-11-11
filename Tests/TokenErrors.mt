@@ -22,9 +22,10 @@ Test[
 Test[
 	TokenizeString["a::\\\""]
 	,
-	{LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
+	{
+		LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
 		LeafNode[Token`ColonColon, "::", <|Source -> {{1, 2}, {1, 3}}|>],
-		LeafNode[Token`Other, "\\\"", <|Source -> {{1, 4}, {1, 5}}|>]}
+		LeafNode[Token`Error`UnhandledCharacter, "\\\"", <|Source -> {{1, 4}, {1, 5}}|>] }
 	,
 	TestID->"TokenErrors-20190520-L5N7B0"
 ]
@@ -74,8 +75,7 @@ Test[
 	,
 	{
 		LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
-		LeafNode[Token`ColonColon, "::", <|Source -> {{1, 2}, {1, 3}}|>],
-		LeafNode[Token`Error`EmptyString, "", <|Source -> {{2, 0}, {2, 0}}|>]}
+		LeafNode[Token`ColonColon, "::", <|Source -> {{1, 2}, {1, 3}}|>] }
 	,
 	TestID->"TokenErrors-20190520-R2P3A3"
 ]
@@ -85,8 +85,7 @@ Test[
 	,
 	{
 		LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 1}}|>],
-		LeafNode[Token`GreaterGreater, ">>", <|Source -> {{1, 2}, {1, 3}}|>],
-		LeafNode[Token`Error`EmptyString, "", <|Source -> {{2, 0}, {2, 0}}|>]}
+		LeafNode[Token`GreaterGreater, ">>", <|Source -> {{1, 2}, {1, 3}}|>] }
 	,
 	TestID->"TokenErrors-20190520-M3H7E9"
 ]

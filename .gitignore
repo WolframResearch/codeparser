@@ -12,3 +12,4 @@ build-exe
 build-test
 build-test-xcode
 build-re
+build-gcov
