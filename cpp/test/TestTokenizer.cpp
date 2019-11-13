@@ -49,7 +49,7 @@ TEST_F(TokenizerTest, Bug1) {
     
     auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
     
-    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false, false);
+    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false);
     
     SUCCEED();
 }
@@ -63,11 +63,9 @@ TEST_F(TokenizerTest, Bug2) {
     
     auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
     
-    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false, false);
+    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false);
     
-    TokenizerContext Ctxt;
-    
-    TheTokenizer->nextToken(Ctxt);
+    TheTokenizer->nextToken();
     
     SUCCEED();
 }
@@ -81,7 +79,7 @@ TEST_F(TokenizerTest, Bug3) {
     
     auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
     
-    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false, false);
+    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false);
     
     SUCCEED();
 }
@@ -92,7 +90,7 @@ TEST_F(TokenizerTest, Bug4) {
     
     auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
     
-    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false, false);
+    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false);
     
     SUCCEED();
 }
@@ -103,7 +101,7 @@ TEST_F(TokenizerTest, Bug5) {
     
     auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
     
-    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false, false);
+    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false);
     
     SUCCEED();
 }

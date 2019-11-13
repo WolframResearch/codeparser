@@ -15,15 +15,22 @@ ApplyCodeAction[action:CodeAction[label_, command_, actionData_]][cst_] :=
 
 (*
 input: a cst
+
+srcPosMapIn: Association of src -> pos of src in cst, or Null
+
+
 output: a cst
+
 *)
 
-ApplyCodeAction[action:CodeAction[label_, command_, actionData_], cstIn_] :=
+ApplyCodeAction[action:CodeAction[label_, command_, actionData_], cstIn_, srcPosMapIn_:Null] :=
 Catch[
 Module[{src, originalNodePos, cst, replacementNode, func, trivia, insertionText,
-	insertionNode, srcInter, srcIntra, replacementText, node, leafText, insertionNodePos},
+	insertionNode, srcInter, srcIntra, replacementText, node, leafText, insertionNodePos,
+  srcPosMap},
 
 	cst = cstIn;
+  srcPosMap = srcPosMapIn;
 
   src = Lookup[actionData, Source];
 
@@ -43,11 +50,18 @@ Module[{src, originalNodePos, cst, replacementNode, func, trivia, insertionText,
 
     DeleteNode, (
 
+      (*
+      was originally:
       originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> src]]];
+
+      but this is super slow
+      *)
+      originalNodePos = If[srcPosMap === Null, Position[cst, src], srcPosMap[src]];
+
      If[originalNodePos == {},
       Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->src |>]]
      ];
-     originalNodePos = originalNodePos[[1]];
+     originalNodePos = Drop[originalNodePos[[1]], -2];
 
      cst = Delete[cst, originalNodePos];
 
@@ -101,6 +115,12 @@ Module[{src, originalNodePos, cst, replacementNode, func, trivia, insertionText,
 
    	DeleteText, (
 
+    src = expandSource[src, cst];
+
+    If[$Debug,
+      Print["src: ", src]
+    ];
+
     If[!MatchQ[Last[src], Intra[___]],
       (*
       There is no Intra in the position, so we can just use DeleteNode
@@ -116,11 +136,18 @@ Module[{src, originalNodePos, cst, replacementNode, func, trivia, insertionText,
     srcInter = Most[src];
     srcIntra = Last[src];
 
+    (*
+    was originally:
    	originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> srcInter]]];
+
+    but this is super slow
+    *)
+    originalNodePos = If[srcPosMap === Null, Position[cst, srcInter], srcPosMap[srcInter]];
+
      If[originalNodePos == {},
       Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->srcInter |>]]
      ];
-     originalNodePos = originalNodePos[[1]];
+     originalNodePos = Drop[originalNodePos[[1]], -2];
 
      node = Extract[cst, {originalNodePos}][[1]];
      leafText = node[[2]];
@@ -165,11 +192,18 @@ Module[{src, originalNodePos, cst, replacementNode, func, trivia, insertionText,
       Print["insertionNode: ", insertionNode];
     ];
 
+    (*
+    was originally:
     originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> src]]];
+
+    but this is super slow
+    *)
+    originalNodePos = If[srcPosMap === Null, Position[cst, src], srcPosMap[src]];
+
      If[originalNodePos == {},
       Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->src |>]]
      ];
-     originalNodePos = originalNodePos[[1]];
+     originalNodePos = Drop[originalNodePos[[1]], -2];
 
     cst = Insert[cst, insertionNode, originalNodePos];
     cst
@@ -184,11 +218,18 @@ Module[{src, originalNodePos, cst, replacementNode, func, trivia, insertionText,
       Print["insertionNode: ", insertionNode];
     ];
 
+    (*
+    was originally:
     originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> src]]];
+
+    but this is super slow
+    *)
+    originalNodePos = If[srcPosMap === Null, Position[cst, src], srcPosMap[src]];
+
      If[originalNodePos == {},
       Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->src |>]]
      ];
-     originalNodePos = originalNodePos[[1]];
+     originalNodePos = Drop[originalNodePos[[1]], -2];
 
      insertionNodePos = Append[Most[originalNodePos], Last[originalNodePos] + 1];
 
@@ -199,6 +240,8 @@ Module[{src, originalNodePos, cst, replacementNode, func, trivia, insertionText,
     ,
 
    	InsertText, (
+
+    src = expandSource[src, cst];
 
    	insertionText = actionData["InsertionText"];
    	If[$Debug,
@@ -224,16 +267,83 @@ Module[{src, originalNodePos, cst, replacementNode, func, trivia, insertionText,
     srcInter = Most[src];
     srcIntra = Last[src];
 
+    (*
+    was originally:
     originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> srcInter]]];
+
+    but this is super slow
+    *)
+    originalNodePos = If[srcPosMap === Null, Position[cst, srcInter], srcPosMap[srcInter]];
+
      If[originalNodePos == {},
       Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->srcInter |>]]
      ];
-     originalNodePos = originalNodePos[[1]];
+     originalNodePos = Drop[originalNodePos[[1]], -2];
 
      node = Extract[cst, {originalNodePos}][[1]];
      leafText = node[[2]];
      
      leafText = StringInsert[leafText, insertionText, srcIntra[[1]]];
+     node[[2]] = leafText;
+
+     If[originalNodePos == {},
+      cst = node
+      ,
+      cst = ReplacePart[cst, originalNodePos -> node];
+     ];
+
+     cst = cleanupIssue[cst, action];
+
+     cst
+    )
+
+    ,
+
+    InsertTextAfter, (
+
+    src = expandSource[src, cst];
+
+    insertionText = actionData["InsertionText"];
+    If[$Debug,
+      Print["insertionText: ", insertionText];
+    ];
+
+    If[!MatchQ[Last[src], Intra[___]],
+      (*
+      There is no Intra in the position, so we can just use InsertNode
+      *)
+      insertionNode = ParseLeaf[insertionText];
+      If[FailureQ[insertionNode],
+        Throw[insertionNode]
+      ];
+      cst = ApplyCodeAction[CodeAction[label, InsertNodeAfter, <|Source->src, "InsertionNode"->insertionNode|>], cst];
+      cst = cleanupIssue[cst, action];
+      Throw[cst]
+    ];
+
+    (*
+    There is Intra in the position
+    *)
+    srcInter = Most[src];
+    srcIntra = Last[src];
+
+    (*
+    was originally:
+    originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> srcInter]]];
+
+    but this is super slow
+    *)
+    originalNodePos = If[srcPosMap === Null, Position[cst, srcInter], srcPosMap[srcInter]];
+
+     If[originalNodePos == {},
+      Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->srcInter |>]]
+     ];
+     originalNodePos = Drop[originalNodePos[[1]], -2];
+
+     node = Extract[cst, {originalNodePos}][[1]];
+     leafText = node[[2]];
+     
+     leafText = StringInsert[leafText, insertionText, srcIntra[[1]] + 1];
      node[[2]] = leafText;
 
      If[originalNodePos == {},
@@ -256,11 +366,18 @@ Module[{src, originalNodePos, cst, replacementNode, func, trivia, insertionText,
       Print["replacementNode: ", replacementNode];
      ];
 
-     originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> src]]];
+     (*
+    was originally:
+    originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> src]]];
+
+    but this is super slow
+    *)
+    originalNodePos = If[srcPosMap === Null, Position[cst, src], srcPosMap[src]];
+
      If[originalNodePos == {},
       Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->src |>]]
      ];
-     originalNodePos = originalNodePos[[1]];
+     originalNodePos = Drop[originalNodePos[[1]], -2];
 
      If[originalNodePos == {},
       cst = replacementNode
@@ -272,6 +389,8 @@ Module[{src, originalNodePos, cst, replacementNode, func, trivia, insertionText,
     ,
 
     ReplaceText, (
+
+    src = expandSource[src, cst];
 
     replacementText = actionData["ReplacementText"];
      If[$Debug,
@@ -297,11 +416,18 @@ Module[{src, originalNodePos, cst, replacementNode, func, trivia, insertionText,
     srcInter = Most[src];
     srcIntra = Last[src];
 
-     originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> srcInter]]];
+     (*
+    was originally:
+    originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> srcInter]]];
+
+    but this is super slow
+    *)
+    originalNodePos = If[srcPosMap === Null, Position[cst, srcInter], srcPosMap[srcInter]];
+
      If[originalNodePos == {},
       Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->srcInter |>]]
      ];
-     originalNodePos = originalNodePos[[1]];
+     originalNodePos = Drop[originalNodePos[[1]], -2];
      If[$Debug,
       Print["originalNodePos: ", originalNodePos];
      ];
@@ -365,11 +491,38 @@ Module[{issue, cst},
 
 
 
+(*
+Find the token that contains the Source
+*)
+containingToken[src_, cst_] :=
+  FirstCase[cst, LeafNode[_, _, KeyValuePattern[Source -> tokSrc_ /; SourceMemberQ[tokSrc, src]]], $Failed, Infinity]
 
+(*
+convert {{1,23},{1,23}} into {{1,3},{2,14},Intra[21,21]}
+*)
+expandSource[textSrc_, cst_] :=
+Catch[
+  Module[{tok, tokSrc, tokStartCol},
 
+    tok = containingToken[textSrc, cst];
+    tokSrc = tok[[3, Key[Source] ]];
 
+    If[textSrc == tokSrc,
+      Throw[textSrc]
+    ];
 
+    If[textSrc[[1,1]] != textSrc[[2,1]],
+      Throw[$Failed, "Unimplemented"]
+    ];
+    If[textSrc[[1,1]] != tokSrc[[1,1]],
+      Throw[$Failed, "Unimplemented"]
+    ];
 
+    tokStartCol = tokSrc[[1,2]];
+
+    Append[tokSrc, Intra[textSrc[[1,2]]-tokStartCol+1, textSrc[[2,2]]-tokStartCol+1]]
+  ]
+]
 
 
 

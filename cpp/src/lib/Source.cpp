@@ -116,9 +116,80 @@ void InsertTextCodeAction::print(std::ostream& s) const {
     s << "]";
 }
 
+void InsertTextAfterCodeAction::put(MLINK mlp) const {
+    
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEINSERTTEXTAFTERCODEACTION->name(), static_cast<int>(1 + Src.count() + 1));
+    
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Label.c_str()), static_cast<int>(Label.size()));
+    
+    Src.put(mlp);
+    
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(InsertionText.c_str()), static_cast<int>(InsertionText.size()));
+}
+
+void InsertTextAfterCodeAction::print(std::ostream& s) const {
+    
+    s << SYMBOL_AST_LIBRARY_MAKEINSERTTEXTAFTERCODEACTION->name() << "[";
+    
+    s << Label;
+    s << ", ";
+    
+    Src.print(s);
+    s << ", ";
+    
+    s << InsertionText;
+    s << ", ";
+    
+    s << "]";
+}
+
+void DeleteTextCodeAction::put(MLINK mlp) const {
+    
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEDELETETEXTCODEACTION->name(), static_cast<int>(1 + Src.count()));
+    
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Label.c_str()), static_cast<int>(Label.size()));
+    
+    Src.put(mlp);
+}
+
+void DeleteTextCodeAction::print(std::ostream& s) const {
+    
+    s << SYMBOL_AST_LIBRARY_MAKEDELETETEXTCODEACTION->name() << "[";
+    
+    s << Label;
+    s << ", ";
+    
+    Src.print(s);
+    s << ", ";
+    
+    s << "]";
+}
+
+void DeleteTriviaCodeAction::put(MLINK mlp) const {
+    
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEDELETETRIVIACODEACTION->name(), static_cast<int>(1 + Src.count()));
+    
+    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Label.c_str()), static_cast<int>(Label.size()));
+    
+    Src.put(mlp);
+}
+
+void DeleteTriviaCodeAction::print(std::ostream& s) const {
+    
+    s << SYMBOL_AST_LIBRARY_MAKEDELETETRIVIACODEACTION->name() << "[";
+    
+    s << Label;
+    s << ", ";
+    
+    Src.print(s);
+    s << ", ";
+    
+    s << "]";
+}
+
 void FormatIssue::put(MLINK mlp) const {
     
-    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEFORMATISSUE->name(), static_cast<int>(3 + Src.count()));
+    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEFORMATISSUE->name(), static_cast<int>(3 + Src.count() + 1 + Actions.size()));
     
     MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Tag.c_str()), static_cast<int>(Tag.size()));
     
@@ -127,6 +198,12 @@ void FormatIssue::put(MLINK mlp) const {
     MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Sev.c_str()), static_cast<int>(Sev.size()));
     
     Src.put(mlp);
+    
+    MLPutReal(mlp, Con);
+    
+    for (auto& A : Actions) {
+        A->put(mlp);
+    }
 }
 
 void FormatIssue::print(std::ostream& s) const {
@@ -140,6 +217,16 @@ void FormatIssue::print(std::ostream& s) const {
     s << Sev.c_str() << ", ";
     
     Src.print(s);
+    
+    s << ", ";
+    
+    s << Con;
+    s << ", ";
+    
+    for (auto& A : Actions) {
+        A->print(s);
+        s << ", ";
+    }
     
     s << "]";
 }

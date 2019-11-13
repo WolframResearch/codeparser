@@ -1440,7 +1440,11 @@ inline void Tokenizer::handleNumber() {
             //
             // Use ** markup syntax here because of ` character
             //
-            auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between **`** and ``" + cGraphicalStr + "`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc2)));
+            
+            std::vector<CodeActionPtr> Actions;
+            Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(Loc2), " ")));
+            
+            auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between **`** and ``" + cGraphicalStr + "`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc2), 1.0, std::move(Actions)));
             
             Issues.push_back(std::move(I));
         }
@@ -1485,6 +1489,14 @@ inline void Tokenizer::handleNumber() {
                     //
                     // Must now do surgery and back up
                     //
+                    // Cannot use SignLoc as source of FormatIssue, because it is expected to be the source for the entire token,
+                    // which we do not have yet
+                    //
+                    // So use the source for number itself and insert space after that
+                    //
+                    
+                    auto NumStartLoc = TokenStartLoc;
+                    auto NumEndLoc = SignLoc - 1;
                     
                     std::string msg;
                     if (s.to_point() == '-') {
@@ -1492,7 +1504,11 @@ inline void Tokenizer::handleNumber() {
                     } else {
                         msg = "Put a space between **`** and ``+`` to reduce ambiguity";
                     }
-                    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, msg, FORMATISSUESEVERITY_FORMATTING, Source(SignLoc)));
+                    
+                    std::vector<CodeActionPtr> Actions;
+                    Actions.push_back(CodeActionPtr(new InsertTextAfterCodeAction("Insert space after", Source(NumStartLoc, NumEndLoc), " ")));
+                    
+                    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACEAFTER, msg, FORMATISSUESEVERITY_FORMATTING, Source(NumStartLoc, NumEndLoc), 1.0, std::move(Actions)));
                     
                     Issues.push_back(std::move(I));
                     
@@ -1771,7 +1787,7 @@ int Tokenizer::handleFractionalPart(int base) {
         std::vector<CodeActionPtr> Actions;
         Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(DotLoc1), " ")));
         
-        auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SPACE, "Suspicious syntax.", SYNTAXISSUESEVERITY_REMARK, Source(DotLoc1), 0.90, std::move(Actions)));
+        auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, Source(DotLoc1), 0.90, std::move(Actions)));
         
         Issues.push_back(std::move(I));
         
@@ -1822,9 +1838,9 @@ int Tokenizer::handleFractionalPart(int base) {
         auto Loc2 = TheByteDecoder->getSourceLocation();
         
         std::vector<CodeActionPtr> Actions;
-        Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(Loc2), " ")));
+        Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert *", Source(Loc2), "*")));
         
-        auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SPACE, "Suspicious syntax.", SYNTAXISSUESEVERITY_ERROR, Source(Loc2), 0.99, std::move(Actions)));
+        auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_IMPLICITTIMES, "Suspicious syntax.", SYNTAXISSUESEVERITY_ERROR, Source(Loc2), 0.99, std::move(Actions)));
         
         Issues.push_back(std::move(I));
     }
@@ -2397,7 +2413,7 @@ inline void Tokenizer::handleUnder() {
                 std::vector<CodeActionPtr> Actions;
                 Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(DotLoc), " ")));
                 
-                auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SPACE, "Suspicious syntax.", SYNTAXISSUESEVERITY_REMARK, Source(DotLoc), 0.95, std::move(Actions)));
+                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, Source(DotLoc), 0.95, std::move(Actions)));
                 
                 Issues.push_back(std::move(I));
                 
@@ -2436,7 +2452,7 @@ inline void Tokenizer::handleUnder() {
                     std::vector<CodeActionPtr> Actions;
                     Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(DotLoc), " ")));
                     
-                    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SPACE, "Suspicious syntax.", SYNTAXISSUESEVERITY_WARNING, Source(DotLoc), 0.90, std::move(Actions)));
+                    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, Source(DotLoc), 0.90, std::move(Actions)));
                     
                     Issues.push_back(std::move(I));
                 }
@@ -2643,7 +2659,10 @@ inline void Tokenizer::handleMinus() {
                 
                 auto Loc = TheByteDecoder->getSourceLocation();
                 
-                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``-`` and ``>`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc)));
+                std::vector<CodeActionPtr> Actions;
+                Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(Loc), " ")));
+                
+                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``-`` and ``>`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc), 1.0, std::move(Actions)));
                 
                 Issues.push_back(std::move(I));
                 
@@ -2655,7 +2674,10 @@ inline void Tokenizer::handleMinus() {
                 
                 auto Loc = TheByteDecoder->getSourceLocation();
                 
-                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``-`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc)));
+                std::vector<CodeActionPtr> Actions;
+                Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(Loc), " ")));
+                
+                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``-`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc), 1.0, std::move(Actions)));
                 
                 Issues.push_back(std::move(I));
             }
@@ -2704,7 +2726,10 @@ inline void Tokenizer::handleBar() {
                 
                 auto Loc = TheByteDecoder->getSourceLocation();
                 
-                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``>`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc)));
+                std::vector<CodeActionPtr> Actions;
+                Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(Loc), " ")));
+                
+                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``>`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc), 1.0, std::move(Actions)));
                 
                 Issues.push_back(std::move(I));
                 
@@ -2999,8 +3024,19 @@ inline void Tokenizer::handleSlash() {
                 //
                 // Must now do surgery and back up
                 //
+                // Cannot use DotLoc as source of FormatIssue, because it is expected to be the source for the entire token,
+                // which we do not have yet
+                //
+                // So use the source for Slash itself and insert space after that
+                //
                 
-                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``/`` and ``.`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(DotLoc)));
+                auto SlashStartLoc = TokenStartLoc;
+                auto SlashEndLoc = DotLoc - 1;
+                
+                std::vector<CodeActionPtr> Actions;
+                Actions.push_back(CodeActionPtr(new InsertTextAfterCodeAction("Insert space", Source(SlashStartLoc, SlashEndLoc), " ")));
+                
+                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACEAFTER, "Put a space between ``/`` and ``.`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(SlashStartLoc, SlashEndLoc), 1.0, std::move(Actions)));
                 
                 Issues.push_back(std::move(I));
                 
@@ -3163,7 +3199,10 @@ inline void Tokenizer::handlePlus() {
                 
                 auto Loc = TheByteDecoder->getSourceLocation();
                 
-                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``+`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc)));
+                std::vector<CodeActionPtr> Actions;
+                Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(Loc), " ")));
+                
+                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``+`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc), 1.0, std::move(Actions)));
                 
                 Issues.push_back(std::move(I));
                 

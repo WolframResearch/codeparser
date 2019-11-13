@@ -132,7 +132,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
             lowerPrec = true;
         }
         
-        auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_IMPLICITTIMESSPAN, "Implicit ``Times`` between ``Spans``.", SYNTAXISSUESEVERITY_WARNING, Source(Tok.Src.start()), 0.75, {}));
+        auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_IMPLICITTIMES, "Implicit ``Times`` between ``Spans``.", SYNTAXISSUESEVERITY_WARNING, Source(Tok.Src.start()), 0.75, {}));
         
         TheParser->addIssue(std::move(I));
         

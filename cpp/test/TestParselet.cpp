@@ -41,7 +41,7 @@ TEST_F(ParseletTest, Bug1) {
     
     auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
     
-    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false, false);
+    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false);
     
     ParserContext Ctxt;
     
@@ -61,7 +61,7 @@ TEST_F(ParseletTest, Bug2) {
     
     auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
     
-    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false, false);
+    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false);
     
     ParserContext Ctxt;
     
@@ -79,7 +79,7 @@ TEST_F(ParseletTest, Bug3) {
     
     auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
     
-    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false, false);
+    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false);
     
     ParserContext Ctxt;
     
@@ -97,7 +97,7 @@ TEST_F(ParseletTest, Bug4) {
     
     auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
     
-    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false, false);
+    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false);
     
     ParserContext Ctxt;
     

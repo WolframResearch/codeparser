@@ -1154,11 +1154,25 @@ void CharacterDecoder::handleLineContinuation(NextWLCharacterPolicy policy) {
         // NOT meaningful, so do not worry about PRESERVE_WS_AFTER_LC
         //
         
-        auto CharacterStart = getWLCharacterStartLoc();
-        
-        auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_UNEXPECTEDLINECONTINUATION, std::string("Unexpected line continuation."), FORMATISSUESEVERITY_FORMATTING, Source(CharacterStart)));
-        
-        Issues.push_back(std::move(I));
+        //
+        // Use DISABLE_CHARACTERDECODINGISSUES here to also talk about line continuations
+        //
+        // This disables unexpected line continuations inside comments
+        //
+        if ((policy & DISABLE_CHARACTERDECODINGISSUES) != DISABLE_CHARACTERDECODINGISSUES) {
+            
+            //
+            // Just remove the \, leave the \n
+            //
+            auto CharacterStart = getWLCharacterStartLoc();
+            
+            std::vector<CodeActionPtr> Actions;
+            Actions.push_back(CodeActionPtr(new DeleteTextCodeAction("Delete \\", Source(CharacterStart))));
+            
+            auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_UNEXPECTEDLINECONTINUATION, std::string("Unexpected line continuation."), FORMATISSUESEVERITY_FORMATTING, Source(CharacterStart), 1.0, std::move(Actions)));
+            
+            Issues.push_back(std::move(I));
+        }
         
         return;
     }

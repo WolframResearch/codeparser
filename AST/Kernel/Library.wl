@@ -9,11 +9,10 @@ loadAllFuncs
 newestLinkObject
 
 
-
-concreteParseStringFunc
 concreteParseFileFunc
-tokenizeStringFunc
+concreteParseBytesFunc
 tokenizeFileFunc
+tokenizeBytesFunc
 parseLeafFunc
 
 
@@ -47,9 +46,13 @@ MakeAbstractSyntaxErrorNode
 
 
 MakeSyntaxIssue
+MakeFormatIssue
+
 MakeReplaceTextCodeAction
 MakeInsertTextCodeAction
-MakeFormatIssue
+MakeInsertTextAfterCodeAction
+MakeDeleteTextCodeAction
+MakeDeleteTriviaCodeAction
 
 
 SetConcreteParseProgress
@@ -125,13 +128,13 @@ Module[{res, loaded, linkObject},
 
 loadAllFuncs[] := (
 
-concreteParseStringFunc := concreteParseStringFunc = loadFunc["ConcreteParseString_LibraryLink"];
-
 concreteParseFileFunc := concreteParseFileFunc = loadFunc["ConcreteParseFile_LibraryLink"];
 
-tokenizeStringFunc := tokenizeStringFunc = loadFunc["TokenizeString_LibraryLink"];
+concreteParseBytesFunc := concreteParseBytesFunc = loadFunc["ConcreteParseBytes_LibraryLink"];
 
 tokenizeFileFunc := tokenizeFileFunc = loadFunc["TokenizeFile_LibraryLink"];
+
+tokenizeBytesFunc := tokenizeBytesFunc = loadFunc["TokenizeBytes_LibraryLink"];
 
 parseLeafFunc := parseLeafFunc = loadFunc["ParseLeaf_LibraryLink"];
 )
@@ -271,8 +274,20 @@ MakeAbstractSyntaxErrorNode[tag_, payload_, srcArgs___] :=
 
 
 
-MakeSyntaxIssue[tag_String, msg_String, severity_String, srcArgs___Integer, confidence_Real, actions:CodeAction[_, _, _]...] :=
+MakeSyntaxIssue[tag_String, msg_String, severity_String, srcArgs___Integer, confidence_Real] :=
+	SyntaxIssue[tag, msg, severity, <|Source->structureSrcArgs[srcArgs], ConfidenceLevel->confidence|>]
+
+MakeFormatIssue[tag_String, msg_String, severity_String, srcArgs___Integer, confidence_Real] :=
+	FormatIssue[tag, msg, severity, <|Source->structureSrcArgs[srcArgs], ConfidenceLevel->confidence|>]
+
+(*
+Only add CodeActions if there is at least 1
+*)
+MakeSyntaxIssue[tag_String, msg_String, severity_String, srcArgs___Integer, confidence_Real, actions:CodeAction[_, _, _]..] :=
 	SyntaxIssue[tag, msg, severity, <|Source->structureSrcArgs[srcArgs], ConfidenceLevel->confidence, CodeActions->{actions}|>]
+
+MakeFormatIssue[tag_String, msg_String, severity_String, srcArgs___Integer, confidence_Real, actions:CodeAction[_, _, _]..] :=
+	FormatIssue[tag, msg, severity, <|Source->structureSrcArgs[srcArgs], ConfidenceLevel->confidence, CodeActions->{actions}|>]
 
 
 MakeReplaceTextCodeAction[label_String, srcArgs___Integer, replacementText_String] :=
@@ -281,19 +296,33 @@ MakeReplaceTextCodeAction[label_String, srcArgs___Integer, replacementText_Strin
 MakeInsertTextCodeAction[label_String, srcArgs___Integer, insertionText_String] :=
 	CodeAction[label, InsertText, <|Source->structureSrcArgs[srcArgs], "InsertionText"->insertionText|>]
 
+MakeInsertTextAfterCodeAction[label_String, srcArgs___Integer, insertionText_String] :=
+	CodeAction[label, InsertTextAfter, <|Source->structureSrcArgs[srcArgs], "InsertionText"->insertionText|>]
 
+MakeDeleteTextCodeAction[label_String, srcArgs___Integer] :=
+	CodeAction[label, DeleteText, <|Source->structureSrcArgs[srcArgs]|>]
+
+MakeDeleteTriviaCodeAction[label_String, srcArgs___Integer] :=
+	CodeAction[label, DeleteTrivia, <|Source->structureSrcArgs[srcArgs]|>]
+
+
+
+(*
 MakeFormatIssue["Space", msg_String, severity_String, srcArgs___Integer] :=
 	FormatIssue["Space", msg, severity, <|Source->structureSrcArgs[srcArgs], CodeActions->{CodeAction["Insert", InsertText, <|Source -> structureSrcArgs[srcArgs], "InsertionText"->" "|>]}|>]
 
+MakeFormatIssue["SpaceAfter", msg_String, severity_String, srcArgs___Integer] :=
+	FormatIssue["SpaceAfter", msg, severity, <|Source->structureSrcArgs[srcArgs], CodeActions->{CodeAction["InsertAfter", InsertTextAfter, <|Source -> structureSrcArgs[srcArgs], "InsertionText"->" "|>]}|>]
+
 MakeFormatIssue["UnexpectedLineContinuation", msg_String, severity_String, srcArgs___Integer] :=
-	FormatIssue["UnexpectedLineContinuation", msg, severity, <|Source->structureSrcArgs[srcArgs], CodeActions->{CodeAction["Delete", DeleteNode, <|Source -> structureSrcArgs[srcArgs]|>]}|>]
+	FormatIssue["UnexpectedLineContinuation", msg, severity, <|Source->structureSrcArgs[srcArgs], CodeActions->{CodeAction["Delete", DeleteText, <|Source -> structureSrcArgs[srcArgs]|>]}|>]
 
 MakeFormatIssue["NotContiguous", msg_String, severity_String, srcArgs___Integer] :=
 	FormatIssue["NotContiguous", msg, severity, <|Source->structureSrcArgs[srcArgs], CodeActions->{CodeAction["Delete", DeleteTrivia, <|Source -> structureSrcArgs[srcArgs]|>]}|>]
 
 MakeFormatIssue[tag_String, msg_String, severity_String, srcArgs___Integer] :=
 	FormatIssue[tag, msg, severity, <|Source->structureSrcArgs[srcArgs]|>]
-
+*)
 
 
 

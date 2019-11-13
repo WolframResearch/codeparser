@@ -89,10 +89,8 @@ SyntaxIssueTag SYNTAXISSUETAG_UNDOCUMENTEDCHARACTER = "UndocumentedCharacter";
 SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDESCAPESEQUENCE = "UnexpectedEscapeSequence";
 SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDCHARACTER = "UnexpectedCharacter";
 SyntaxIssueTag SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT = "SyntaxUndocumentedSlot";
-SyntaxIssueTag SYNTAXISSUETAG_IMPLICITTIMESSPAN = "ImplicitTimesSpan";
-SyntaxIssueTag SYNTAXISSUETAG_DIFFERENTLINE = "DifferentLine";
+SyntaxIssueTag SYNTAXISSUETAG_IMPLICITTIMES = "ImplicitTimes";
 SyntaxIssueTag SYNTAXISSUETAG_ENDOFLINE = "EndOfLine";
-SyntaxIssueTag SYNTAXISSUETAG_SPACE = "Space";
 
 typedef const std::string FormatIssueTag;
 
@@ -102,10 +100,12 @@ typedef const std::string FormatIssueTag;
 // SyntaxAmbiguitySpace is: insert space between characters
 //
 FormatIssueTag FORMATISSUETAG_SPACE = "Space";
+FormatIssueTag FORMATISSUETAG_SPACEAFTER = "SpaceAfter";
 FormatIssueTag FORMATISSUETAG_NOTCONTIGUOUS = "NotContiguous";
 FormatIssueTag FORMATISSUETAG_CHARACTERENCODING = "CharacterEncoding";
 FormatIssueTag FORMATISSUETAG_UNEXPECTEDCARRIAGERETURN = "UnexpectedCarriageReturn";
 FormatIssueTag FORMATISSUETAG_UNEXPECTEDLINECONTINUATION = "UnexpectedLineContinuation";
+SyntaxIssueTag FORMATISSUETAG_DIFFERENTLINE = "DifferentLine";
 
 
 //
@@ -404,6 +404,37 @@ public:
     void print(std::ostream& s) const override;
 };
 
+class InsertTextAfterCodeAction : public CodeAction {
+    std::string InsertionText;
+public:
+    
+    InsertTextAfterCodeAction(std::string Label, Source Src, std::string InsertionText) : CodeAction(Label, Src), InsertionText(InsertionText) {}
+    
+    void put(MLINK mlp) const override;
+    
+    void print(std::ostream& s) const override;
+};
+
+class DeleteTextCodeAction : public CodeAction {
+public:
+    
+    DeleteTextCodeAction(std::string Label, Source Src) : CodeAction(Label, Src) {}
+    
+    void put(MLINK mlp) const override;
+    
+    void print(std::ostream& s) const override;
+};
+
+class DeleteTriviaCodeAction : public CodeAction {
+public:
+    
+    DeleteTriviaCodeAction(std::string Label, Source Src) : CodeAction(Label, Src) {}
+    
+    void put(MLINK mlp) const override;
+    
+    void print(std::ostream& s) const override;
+};
+
 class SyntaxIssue : public Issue {
 public:
     const SyntaxIssueTag Tag;
@@ -426,8 +457,10 @@ public:
     const std::string Msg;
     const FormatIssueSeverity Sev;
     const Source Src;
+    const double Con;
+    const std::vector<CodeActionPtr> Actions;
     
-    FormatIssue(std::string Tag, std::string Msg, std::string Sev, Source Src) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src) {}
+    FormatIssue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Con, std::vector<CodeActionPtr> Actions) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Con(Con), Actions(std::move(Actions)) {}
     
     void put(MLINK mlp) const override;
     

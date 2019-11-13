@@ -41,7 +41,7 @@ TEST_F(CharacterDecoderTest, Basic) {
     
     auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
     
-    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false, false);
+    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false);
     
     auto T = TheTokenizer->currentToken();
     EXPECT_EQ(T, Token(TOKEN_INTEGER, "1", Source(SourceLocation(LineCol(1, 1)))));

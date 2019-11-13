@@ -1,4 +1,3 @@
-
 #include "Utils.h"
 
 #include "Parser.h"
@@ -87,6 +86,8 @@ std::unordered_set<std::string> veryStrangeLetterlikeLongNames {
 //
 // Perhaps they have been deprecated, perhaps the Front End understands the character but the kernel doesn't, etc.
 //
+// FIXME: all of these should be kernel quirks?
+//
 std::unordered_set<std::string> unsupportedLongNames {
     "COMPATIBILITYKanjiSpace", "COMPATIBILITYNoBreak", "NumberComma", "InlinePart" };
 
@@ -156,7 +157,10 @@ void Utils::differentLineWarning(Token Tok1, Token Tok2) {
         return;
     }
     
-    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_DIFFERENTLINE, "``" + Tok1.Str + "`` and ``" + Tok2.Str + "`` are on different lines.", SYNTAXISSUESEVERITY_WARNING, Source(Tok1.Src, Tok2.Src), 0.75, {}));
+    std::vector<CodeActionPtr> Actions;
+    Actions.push_back(CodeActionPtr(new DeleteTriviaCodeAction("Delete newline", Source(Tok1.Src, Tok2.Src))));
+    
+    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_DIFFERENTLINE, "``" + Tok1.Str + "`` and ``" + Tok2.Str + "`` are on different lines.", SYNTAXISSUESEVERITY_WARNING, Source(Tok1.Src, Tok2.Src), 0.75, std::move(Actions)));
     
     TheParser->addIssue(std::move(I));
 }
@@ -219,7 +223,10 @@ void Utils::notContiguousWarning(Token Tok1, Token Tok2) {
         return;
     }
     
-    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_NOTCONTIGUOUS, std::string("Tokens are not contiguous."), FORMATISSUESEVERITY_FORMATTING, Source(Tok1.Src, Tok2.Src)));
+    std::vector<CodeActionPtr> Actions;
+    Actions.push_back(CodeActionPtr(new DeleteTriviaCodeAction("Delete trivia", Source(Tok1.Src, Tok2.Src))));
+    
+    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_NOTCONTIGUOUS, std::string("Tokens are not contiguous."), FORMATISSUESEVERITY_FORMATTING, Source(Tok1.Src, Tok2.Src), 1.0, std::move(Actions)));
     
     TheParser->addIssue(std::move(I));
 }

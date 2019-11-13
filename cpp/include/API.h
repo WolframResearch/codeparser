@@ -52,13 +52,13 @@ class Node;
 
 
 
-EXTERN_C DLLEXPORT Node *ConcreteParseString(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style);
-
 EXTERN_C DLLEXPORT Node *ConcreteParseFile(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style);
 
-EXTERN_C DLLEXPORT Node *TokenizeString(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style);
+EXTERN_C DLLEXPORT Node *ConcreteParseBytes(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style);
 
 EXTERN_C DLLEXPORT Node *TokenizeFile(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style);
+
+EXTERN_C DLLEXPORT Node *TokenizeBytes(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style);
 
 EXTERN_C DLLEXPORT Node *ParseLeaf(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style, const char *stringifyNextTokenSymbol, const char *stringifyNextTokenFile);
 
@@ -75,11 +75,11 @@ EXTERN_C DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData);
 
 EXTERN_C DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
-EXTERN_C DLLEXPORT int ConcreteParseString_LibraryLink(WolframLibraryData libData, MLINK mlp);
-
-EXTERN_C DLLEXPORT int TokenizeString_LibraryLink(WolframLibraryData libData, MLINK mlp);
+EXTERN_C DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
 EXTERN_C DLLEXPORT int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK mlp);
+
+EXTERN_C DLLEXPORT int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
 EXTERN_C DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
@@ -162,6 +162,26 @@ public:
     const char *getHead() const;
     
     int getArgCount() const;
+};
+
+class ScopedMLByteArray {
+    MLINK mlp;
+    unsigned char *buf;
+    int *dims;
+    char **heads;
+    int depth;
+    
+public:
+    
+    ScopedMLByteArray(MLINK mlp);
+    
+    ~ScopedMLByteArray();
+    
+    bool read();
+    
+    const unsigned char *get() const;
+    
+    size_t getByteCount() const;
 };
 
 class ScopedMLEnvironmentParameter {

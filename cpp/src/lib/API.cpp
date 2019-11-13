@@ -106,7 +106,7 @@ DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK ml
     return res;
 }
 
-DLLEXPORT Node *ConcreteParseString(WolframLibraryData libData, const unsigned char *input, size_t len, const char *styleStr) {
+DLLEXPORT Node *ConcreteParseBytes(WolframLibraryData libData, const unsigned char *input, size_t len, const char *styleStr) {
     
     auto style = Utils::parseSourceStyle(styleStr);
     
@@ -119,7 +119,7 @@ DLLEXPORT Node *ConcreteParseString(WolframLibraryData libData, const unsigned c
     return N;
 }
 
-DLLEXPORT int ConcreteParseString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
+DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     int res = LIBRARY_FUNCTION_ERROR;
     int len;
@@ -131,8 +131,8 @@ DLLEXPORT int ConcreteParseString_LibraryLink(WolframLibraryData libData, MLINK 
         return res;
     }
     
-    ScopedMLUTF8String inStr(mlp);
-    if (!inStr.read()) {
+    ScopedMLByteArray arr(mlp);
+    if (!arr.read()) {
         return res;
     }
     
@@ -145,7 +145,7 @@ DLLEXPORT int ConcreteParseString_LibraryLink(WolframLibraryData libData, MLINK 
         return res;
     }
     
-    auto N = ConcreteParseString(libData, inStr.get(), inStr.getByteCount(), styleStr.get());
+    auto N = ConcreteParseBytes(libData, arr.get(), arr.getByteCount(), styleStr.get());
     
     N->put(mlp);
     
@@ -156,7 +156,7 @@ DLLEXPORT int ConcreteParseString_LibraryLink(WolframLibraryData libData, MLINK 
     return res;
 }
 
-DLLEXPORT Node *TokenizeString(WolframLibraryData libData, const unsigned char *input, size_t len, const char *styleStr) {
+DLLEXPORT Node *TokenizeBytes(WolframLibraryData libData, const unsigned char *input, size_t len, const char *styleStr) {
     
     auto style = Utils::parseSourceStyle(styleStr);
     
@@ -169,7 +169,7 @@ DLLEXPORT Node *TokenizeString(WolframLibraryData libData, const unsigned char *
     return N;
 }
 
-DLLEXPORT int TokenizeString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
+DLLEXPORT int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     int res = LIBRARY_FUNCTION_ERROR;
     int len;
@@ -181,8 +181,8 @@ DLLEXPORT int TokenizeString_LibraryLink(WolframLibraryData libData, MLINK mlp) 
         return res;
     }
     
-    ScopedMLUTF8String inStr(mlp);
-    if (!inStr.read()) {
+    ScopedMLByteArray arr(mlp);
+    if (!arr.read()) {
         return res;
     }
     
@@ -195,7 +195,7 @@ DLLEXPORT int TokenizeString_LibraryLink(WolframLibraryData libData, MLINK mlp) 
         return res;
     }
     
-    auto N = TokenizeString(libData, inStr.get(), inStr.getByteCount(), styleStr.get());
+    auto N = TokenizeBytes(libData, arr.get(), arr.getByteCount(), styleStr.get());
     
     N->put(mlp);
     
@@ -779,6 +779,30 @@ const char *ScopedMLFunction::getHead() const {
 
 int ScopedMLFunction::getArgCount() const {
     return count;
+}
+
+
+ScopedMLByteArray::ScopedMLByteArray(MLINK mlp) : mlp(mlp), buf(NULL), dims(), heads(), depth() {}
+
+ScopedMLByteArray::~ScopedMLByteArray() {
+    
+    if (buf == NULL) {
+        return;
+    }
+    
+    MLReleaseByteArray(mlp, buf, dims, heads, depth);
+}
+
+bool ScopedMLByteArray::read() {
+    return MLGetByteArray(mlp, &buf, &dims, &heads, &depth);
+}
+
+const unsigned char *ScopedMLByteArray::get() const {
+    return buf;
+}
+
+size_t ScopedMLByteArray::getByteCount() const {
+    return dims[0];
 }
 
 

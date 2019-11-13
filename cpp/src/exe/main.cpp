@@ -90,7 +90,7 @@ void readStdIn(int mode, bool printOutput) {
         
         auto inputStr = reinterpret_cast<const unsigned char*>(input.c_str());
         
-        N = TokenizeString(libData, inputStr, input.size(), Style.c_str());
+        N = TokenizeBytes(libData, inputStr, input.size(), Style.c_str());
         
     } else if (mode == LEAF) {
         
@@ -102,7 +102,7 @@ void readStdIn(int mode, bool printOutput) {
         
         auto inputStr = reinterpret_cast<const unsigned char*>(input.c_str());
         
-        N = ConcreteParseString(libData, inputStr, input.size(), Style.c_str());
+        N = ConcreteParseBytes(libData, inputStr, input.size(), Style.c_str());
     }
     
     if (printOutput) {
