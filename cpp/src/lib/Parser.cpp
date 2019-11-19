@@ -508,8 +508,8 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitivePrefixPa
     //
     // Literals and Unhandled
     //
-    for (auto T = TOKEN_UNKNOWN; T != TOKEN_COUNT; T = T.next()) {
-        auto& P = prefixParselets[T.value()];
+    for (uint16_t i = 0; i < prefixParselets.size(); i++) {
+        auto& P = prefixParselets[i];
         if (P != nullptr) {
             continue;
         }
@@ -517,7 +517,7 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitivePrefixPa
         //
         // Fill in the gaps
         //
-        registerPrefixParselet(T.value(), std::unique_ptr<PrefixParselet>(new LeafParselet()));
+        registerPrefixParselet(i, std::unique_ptr<PrefixParselet>(new LeafParselet()));
     }
 }
 

@@ -896,9 +896,12 @@ cur = 0
 enumMap = <||>
 KeyValueMap[(
     Which[
-     IntegerQ[#2], cur = #2,
-     #2 === Next, cur = cur + 1,
-     True, cur = enumMap[#2]];
+    	IntegerQ[#2],
+    		cur = #2,
+    	#2 === Next,
+    		cur = cur + 1,
+    	True,
+    		cur = enumMap[#2]];
     AssociateTo[enumMap, #1 -> cur]) &, joined]
 
 
@@ -953,8 +956,6 @@ struct TokenEnum {
   constexpr bool isVectorInequalityOperator() const {
       return static_cast<bool>((T & 0x8000) == 0x8000);
   }
-
-  TokenEnum next() const;
 
 };
 
@@ -1050,14 +1051,7 @@ tokenCPPSource = {
 bool operator!=(TokenEnum a, TokenEnum b) {
   return a.value() != b.value();
 }
-
-TokenEnum TokenEnum::next() const {
-switch(T) {"} ~Join~
-	nextCases ~Join~
-{"default:"} ~Join~
-{"assert(false && \"Unhandled token type\"); return 0;"} ~Join~
-{"}"} ~Join~
-{"}"}
+"}
 
 Print["exporting TokenEnum.cpp"]
 res = Export[FileNameJoin[{generatedCPPSrcDir, "TokenEnum.cpp"}], Column[tokenCPPSource], "String"]
