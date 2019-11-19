@@ -147,7 +147,9 @@ GroupParen
 
 GroupLinearSyntaxParen
 
+(*
 Shebang
+*)
 
 (* option symbols *)
 Source
@@ -174,8 +176,10 @@ GroupNode
 CallNode
 PrefixBinaryNode
 
+(*
 StartOfLineNode
 StartOfFileNode
+*)
 BlankNode
 BlankSequenceNode
 BlankNullSequenceNode
@@ -226,7 +230,7 @@ InsertText
 InsertTextAfter
 ReplaceText
 DeleteTrivia
-
+DeleteTriviaNode
 
 (*
 Used to report f[,] or "\[Alpa]" as an option, e.g. SyntaxIssues -> {SyntaxIssue[], SyntaxIssue[]}
@@ -257,10 +261,11 @@ Needs["AST`DeclarationName`"]
 Needs["AST`Library`"]
 Needs["AST`ToString`"]
 Needs["AST`Utils`"]
-Needs["PacletManager`"]
 
 
-
+(*
+This uses func := func = def idiom and is fast
+*)
 loadAllFuncs[]
 
 
@@ -393,7 +398,7 @@ Options[concreteParseFile] = Options[ConcreteParseFile]
 concreteParseFile[file_String, hIn_, OptionsPattern[]] :=
 Catch[
 Module[{h, encoding, full, res, data, start, end, children,
-	style},
+	style, bytes},
 
 	h = hIn;
 
@@ -429,12 +434,14 @@ Module[{h, encoding, full, res, data, start, end, children,
 		Throw[concreteParseFileFunc]
 	];
 
+	bytes = Import[full, "Byte"];
+
 	$ConcreteParseProgress = 0;
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
 	$MathLinkTime = Quantity[0, "Seconds"];
 	CheckAbort[
-	res = concreteParseFileFunc[full, style];
+	res = concreteParseBytesFunc[bytes, style];
 	,
 	loadAllFuncs[];
 	Abort[]
@@ -697,7 +704,7 @@ Options[tokenizeFile] = Options[TokenizeFile]
 
 tokenizeFile[file_String, OptionsPattern[]] :=
 Catch[
-Module[{encoding, res, style, full},
+Module[{encoding, res, style, full, bytes},
 
 	encoding = OptionValue[CharacterEncoding];
 	style = OptionValue["SourceStyle"];
@@ -715,12 +722,14 @@ Module[{encoding, res, style, full},
 		Throw[tokenizeFileFunc]
 	];
 
+	bytes = Import[full, "Byte"];
+
 	$ConcreteParseProgress = 0;
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
 	$MathLinkTime = Quantity[0, "Seconds"];
 	CheckAbort[
-	res = tokenizeFileFunc[full, style];
+	res = tokenizeBytesFunc[bytes, style];
 	,
 	loadAllFuncs[];
 	Abort[]
@@ -820,13 +829,25 @@ Options[parseLeaf] = Options[ParseLeaf]
 
 parseLeaf[strIn_String, OptionsPattern[]] :=
 Catch[
-Module[{str, res, leaf, data, exprs, issues, style, stringifyNextTokenSymbol, stringifyNextTokenFile},
+Module[{str, res, leaf, data, exprs, issues, style, stringifyNextTokenSymbol, stringifyNextTokenFile,
+	mode},
 
 	str = strIn;
 
 	style = OptionValue["SourceStyle"];
 	stringifyNextTokenSymbol = OptionValue["StringifyNextTokenSymbol"];
 	stringifyNextTokenFile = OptionValue["StringifyNextTokenFile"];
+
+	Which[
+		stringifyNextTokenSymbol,
+			mode = 1
+		,
+		stringifyNextTokenFile,
+			mode = 2
+		,
+		True,
+			mode = 0
+	];
 
 	If[FailureQ[parseLeafFunc],
 		Throw[parseLeafFunc]
@@ -842,7 +863,7 @@ Module[{str, res, leaf, data, exprs, issues, style, stringifyNextTokenSymbol, st
 	and the next use throws LIBRARY_FUNCTION_ERROR
 	*)
 	CheckAbort[
-	res = parseLeafFunc[str, style, stringifyNextTokenSymbol, stringifyNextTokenFile];
+	res = parseLeafFunc[str, style, mode];
 	,
 	loadAllFuncs[];
 	Abort[]
@@ -893,7 +914,7 @@ Module[{},
 	This is considered the correct behavior going into the future.
 
 	This is setup on bugfix/139531_et_al branch
-	Related bugs: 139531
+	Related bugs: 139531, 160919
 	*)
 	If[!Internal`$PrototypeBuild,
 		$Quirks["FlattenTimes"] = True
@@ -910,3 +931,25 @@ setupQuirks[]
 End[]
 
 EndPackage[]
+
+
+
+
+
+
+(*
+mapOffsetToLineCol[offset_, offsetLineMap_] :=
+ 
+ Module[{line, lineOffset, col, prevLineOffset},
+  line = 1;
+  prevLineOffset = -1;
+  lineOffset = offsetLineMap[[line]];
+  While[offset >= lineOffset,
+   prevLineOffset = lineOffset;
+   line++;
+   lineOffset = offsetLineMap[[line]];
+   ];
+  col = offset - prevLineOffset;
+  {line, col}
+  ]
+*)

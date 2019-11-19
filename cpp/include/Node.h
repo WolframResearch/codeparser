@@ -5,7 +5,9 @@
 #include "Symbol.h"
 #include "Token.h"
 
+#if USE_MATHLINK
 #include "mathlink.h"
+#endif
 
 #include <vector>
 #include <memory> // for unique_ptr
@@ -49,7 +51,9 @@ public:
         return vec;
     }
     
+#if USE_MATHLINK
     void put0(MLINK ) const;
+#endif
     
     void print0(std::ostream& s) const;
 };
@@ -83,11 +87,13 @@ public:
     const Node* first() const;
     const Node* last() const;
     
+#if USE_MATHLINK
     void put(MLINK ) const;
     
-    void print(std::ostream& s ) const;
-    
     void put0(MLINK ) const;
+#endif
+    
+    void print(std::ostream& s ) const;
     
     void print0(std::ostream& s ) const;
 };
@@ -102,8 +108,6 @@ public:
 
     Node() : Children() {}
     Node(NodeSeq Children);
-
-    virtual void put(MLINK mlp) const = 0;
     
     virtual void print(std::ostream&) const = 0;
 
@@ -118,7 +122,12 @@ public:
     virtual const Node* first() const;
     virtual const Node* last() const;
     
+#if USE_MATHLINK
+    
+    virtual void put(MLINK mlp) const = 0;
+    
     void putChildren(MLINK mlp) const;
+#endif
     
     void printChildren(std::ostream& s) const;
 
@@ -148,7 +157,9 @@ public:
     const Node* first() const override;
     const Node* last() const override;
     
+#if USE_MATHLINK
     void put(MLINK mlp) const override;
+#endif
     
     void print(std::ostream&) const override;
 };
@@ -162,7 +173,9 @@ public:
     const Node* first() const override;
     const Node* last() const override;
     
+#if USE_MATHLINK
     void put(MLINK mlp) const override;
+#endif
     
     void print(std::ostream&) const override;
 };
@@ -173,7 +186,9 @@ class OperatorNode : public Node {
 public:
     OperatorNode(SymbolPtr& Op, SymbolPtr& MakeSym, NodeSeq Args) : Node(std::move(Args)), Op(Op), MakeSym(MakeSym) {}
     
+#if USE_MATHLINK
     void put(MLINK mlp) const override;
+#endif
     
     void print(std::ostream&) const override;
     
@@ -191,7 +206,9 @@ public:
 
     LeafNode(Token&& Tok) : Node(), Tok(std::move(Tok)) {}
     
+#if USE_MATHLINK
     void put(MLINK mlp) const override;
+#endif
     
     void print(std::ostream&) const override;
     
@@ -248,7 +265,9 @@ class CallNode : public Node {
 public:
     CallNode(NodeSeq Head, NodeSeq Body) : Node(std::move(Body)), Head(std::move(Head)) {}
     
+#if USE_MATHLINK
     void put(MLINK mlp) const override;
+#endif
     
     void print(std::ostream&) const override;
     
@@ -315,7 +334,9 @@ class SyntaxErrorNode : public Node {
 public:
     SyntaxErrorNode(SyntaxError Err, NodeSeq Args) : Node(std::move(Args)), Err(Err) {}
     
+#if USE_MATHLINK
     void put(MLINK mlp) const override;
+#endif
     
     void print(std::ostream&) const override;
     
@@ -338,7 +359,9 @@ class CollectedExpressionsNode : public Node {
 public:
     CollectedExpressionsNode(std::vector<NodePtr> Exprs) : Node(), Exprs(std::move(Exprs)) {}
     
+#if USE_MATHLINK
     void put(MLINK mlp) const override;
+#endif
     
     void print(std::ostream&) const override;
 };
@@ -348,7 +371,9 @@ class CollectedIssuesNode : public Node {
 public:
     CollectedIssuesNode(std::vector<std::unique_ptr<Issue>> Issues) : Node(), Issues(std::move(Issues)) {}
     
+#if USE_MATHLINK
     void put(MLINK mlp) const override;
+#endif
     
     void print(std::ostream&) const override;
 };
@@ -358,7 +383,9 @@ class ListNode : public Node {
 public:
     ListNode(std::vector<NodePtr> N) : Node(), N(std::move(N)) {}
     
+#if USE_MATHLINK
     void put(MLINK mlp) const override;
+#endif
     
     void print(std::ostream&) const override;
 };

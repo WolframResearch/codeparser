@@ -8,13 +8,13 @@
 
 #include <sstream>
 
-static std::unique_ptr<MLSession> mlSession;
+//static std::unique_ptr<MLSession> mlSession;
 
 class CharacterDecoderTest : public ::testing::Test {
 protected:
     static void SetUpTestSuite() {
         
-        mlSession = std::unique_ptr<MLSession>(new MLSession);
+//        mlSession = std::unique_ptr<MLSession>(new MLSession);
         
         TheParserSession = std::unique_ptr<ParserSession>(new ParserSession);
     }
@@ -23,7 +23,7 @@ protected:
         
         TheParserSession.reset(nullptr);
         
-        mlSession.reset(nullptr);
+//        mlSession.reset(nullptr);
     }
     
     void SetUp() override {
@@ -41,7 +41,7 @@ TEST_F(CharacterDecoderTest, Basic) {
     
     auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
     
-    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false);
+    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, 0);
     
     auto T = TheTokenizer->currentToken();
     EXPECT_EQ(T, Token(TOKEN_INTEGER, "1", Source(SourceLocation(LineCol(1, 1)))));

@@ -43,8 +43,8 @@ return TOKEN_ERROR_UNKNOWN;
 LongNameOperatorToCodePointSource = 
   {"
 int LongNameOperatorToCodePoint(TokenEnum t) {
-switch (t) {"} ~Join~
-    (Row[{"case", " ", toGlobal["Token`LongName`"<>#], ":", " ", "return", " ", toGlobal["CodePoint`LongName`"<>#], ";"}]& /@ importedPunctuationLongNames) ~Join~
+switch (t.value()) {"} ~Join~
+    (Row[{"case", " ", toGlobal["Token`LongName`"<>#], ".value():", " ", "return", " ", toGlobal["CodePoint`LongName`"<>#], ";"}]& /@ importedPunctuationLongNames) ~Join~
 {"default:
 assert(false && \"Need to add operator\");
 return CODEPOINT_ERROR_INTERNAL;

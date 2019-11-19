@@ -87,8 +87,8 @@ class Tokenizer {
     void handleSpaceCharacter();
     void handleNewlineCharacter();
     
-    bool expectDigits();
-    size_t handleDigits();
+    bool expectDigits(int *leadingZeroCount);
+    size_t handleDigits(int *leadingZeroCount);
     int handleDigitsOrAlpha(int base);
     
     void handleComment();
@@ -103,6 +103,7 @@ class Tokenizer {
     
     void handleNumber();
     int handleFractionalPart(int base);
+    int handleFractionalPartPastDot(int base, WLCharacter DotChar, SourceLocation DotLoc);
     
     void handleColon();
     void handleOpenParen();
@@ -151,7 +152,8 @@ class Tokenizer {
 public:
     Tokenizer();
     
-    void init(SourceStyle style, bool stringifyNextTokenSymbol, bool stringifyNextTokenFile);
+    void init(SourceStyle style, int mode);
+
     void deinit();
     
     void nextToken();
@@ -160,10 +162,15 @@ public:
     void nextToken_stringifyNextToken_file();
     
     Token currentToken();
-    
+
+#if !NISSUES
     void addIssue(std::unique_ptr<Issue>);
+#endif
     
+#if !NISSUES
     std::vector<std::unique_ptr<Issue>>& getIssues();
+#endif
+    
 };
 
 extern std::unique_ptr<Tokenizer> TheTokenizer;

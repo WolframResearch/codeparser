@@ -97,6 +97,10 @@ BinaryOperatorToSymbol[Token`LongName`Therefore] = Therefore
 
 BinaryOperatorToSymbol[Token`LongName`RightTee] = RightTee
 BinaryOperatorToSymbol[Token`LongName`LeftTee] = LeftTee
+BinaryOperatorToSymbol[Token`LongName`DoubleRightTee] = DoubleRightTee
+BinaryOperatorToSymbol[Token`LongName`DoubleLeftTee] = DoubleLeftTee
+BinaryOperatorToSymbol[Token`LongName`UpTee] = UpTee
+BinaryOperatorToSymbol[Token`LongName`DownTee] = DownTee
 
 BinaryOperatorToSymbol[Token`Minus] = Minus
 BinaryOperatorToSymbol[Token`Slash] = Divide
@@ -135,6 +139,7 @@ BinaryOperatorToSymbol[Token`LongName`Divide] = Divide
 BinaryOperatorToSymbol[Token`LongName`DivisionSlash] = Divide
 
 BinaryOperatorToSymbol[Token`LongName`Implies] = Implies
+BinaryOperatorToSymbol[Token`LongName`RoundImplies] = RoundImplies
 BinaryOperatorToSymbol[Token`LongName`PlusMinus] = PlusMinus
 BinaryOperatorToSymbol[Token`LongName`DirectedEdge] = DirectedEdge
 BinaryOperatorToSymbol[Token`LongName`Rule] = Rule
@@ -153,7 +158,7 @@ BinaryOperatorToSymbol[Token`LongName`InvisibleApplication] = AST`BinaryAt
 BinaryOperatorToSymbol[Token`LongName`CircleMinus] = CircleMinus
 
 BinaryOperatorToSymbol[Token`LongName`SuchThat] = SuchThat
-
+BinaryOperatorToSymbol[Token`LongName`Perpendicular] = Perpendicular
 
 
 
@@ -174,13 +179,25 @@ InfixOperatorToSymbol[Token`Greater] = Greater
 InfixOperatorToSymbol[Token`LessEqual] = LessEqual
 InfixOperatorToSymbol[Token`GreaterEqual] = GreaterEqual
 InfixOperatorToSymbol[Token`LongName`LessFullEqual] = LessFullEqual
+InfixOperatorToSymbol[Token`LongName`NotLessFullEqual] = NotLessFullEqual
+InfixOperatorToSymbol[Token`LongName`LessEqualGreater] = LessEqualGreater
+InfixOperatorToSymbol[Token`LongName`GreaterEqualLess] = GreaterEqualLess
+
 InfixOperatorToSymbol[Token`LongName`NestedLessLess] = NestedLessLess
+InfixOperatorToSymbol[Token`LongName`NotNestedLessLess] = NotNestedLessLess
+
 InfixOperatorToSymbol[Token`LongName`NotLess] = NotLess
+InfixOperatorToSymbol[Token`LongName`NotGreater] = NotGreater
+
 InfixOperatorToSymbol[Token`LongName`NotLessLess] = NotLessLess
 InfixOperatorToSymbol[Token`LongName`LongEqual] = Equal
 InfixOperatorToSymbol[Token`LongName`Equal] = Equal
+
 InfixOperatorToSymbol[Token`LongName`LessEqual] = LessEqual
 InfixOperatorToSymbol[Token`LongName`GreaterEqual] = GreaterEqual
+InfixOperatorToSymbol[Token`LongName`NotLessEqual] = NotLessEqual
+InfixOperatorToSymbol[Token`LongName`NotGreaterEqual] = NotGreaterEqual
+
 InfixOperatorToSymbol[Token`LongName`NotEqual] = Unequal
 (*
 force to be in System`:
@@ -197,6 +214,10 @@ InfixOperatorToSymbol[Token`LongName`VectorLessEqual] = System`VectorLessEqual
 InfixOperatorToSymbol[Token`LongName`NotEqualTilde] = NotEqualTilde
 InfixOperatorToSymbol[Token`LongName`NotHumpEqual] = NotHumpEqual
 InfixOperatorToSymbol[Token`LongName`NotHumpDownHump] = NotHumpDownHump
+
+InfixOperatorToSymbol[Token`LongName`LeftTriangleBar] = LeftTriangleBar
+InfixOperatorToSymbol[Token`LongName`RightTriangleBar] = RightTriangleBar
+
 InfixOperatorToSymbol[Token`LongName`NotLeftTriangleBar] = NotLeftTriangleBar
 InfixOperatorToSymbol[Token`LongName`NotRightTriangleBar] = NotRightTriangleBar
 InfixOperatorToSymbol[Token`LongName`NotNestedLessLess] = NotNestedLessLess
@@ -204,8 +225,6 @@ InfixOperatorToSymbol[Token`LongName`NotLessSlantEqual] = NotLessSlantEqual
 InfixOperatorToSymbol[Token`LongName`NotGreaterGreater] = NotGreaterGreater
 InfixOperatorToSymbol[Token`LongName`NotNestedGreaterGreater] = NotNestedGreaterGreater
 InfixOperatorToSymbol[Token`LongName`NotGreaterSlantEqual] = NotGreaterSlantEqual
-InfixOperatorToSymbol[Token`LongName`NotPrecedesEqual] = NotPrecedesEqual
-InfixOperatorToSymbol[Token`LongName`NotSucceedsEqual] = NotSucceedsEqual
 
 (* other flattening operators *)
 InfixOperatorToSymbol[Token`EqualEqualEqual] = SameQ
@@ -225,8 +244,15 @@ InfixOperatorToSymbol[Token`LongName`NotSubset] = NotSubset
 InfixOperatorToSymbol[Token`LongName`NotSuperset] = NotSuperset
 InfixOperatorToSymbol[Token`LongName`NotSubsetEqual] = NotSubsetEqual
 InfixOperatorToSymbol[Token`LongName`NotSupersetEqual] = NotSupersetEqual
+
+InfixOperatorToSymbol[Token`LongName`SquareSubset] = SquareSubset
+InfixOperatorToSymbol[Token`LongName`SquareSuperset] = SquareSuperset
 InfixOperatorToSymbol[Token`LongName`NotSquareSubset] = NotSquareSubset
 InfixOperatorToSymbol[Token`LongName`NotSquareSuperset] = NotSquareSuperset
+InfixOperatorToSymbol[Token`LongName`SquareSubsetEqual] = SquareSubsetEqual
+InfixOperatorToSymbol[Token`LongName`SquareSupersetEqual] = SquareSupersetEqual
+InfixOperatorToSymbol[Token`LongName`NotSquareSubsetEqual] = NotSquareSubsetEqual
+InfixOperatorToSymbol[Token`LongName`NotSquareSupersetEqual] = NotSquareSupersetEqual
 
 (* Plus and Times *)
 InfixOperatorToSymbol[Token`Plus] = Plus
@@ -329,8 +355,14 @@ InfixOperatorToSymbol[Token`LongName`CenterDot] = CenterDot
 InfixOperatorToSymbol[Token`LongName`TildeTilde] = TildeTilde
 InfixOperatorToSymbol[Token`LongName`NotTildeTilde] = NotTildeTilde
 InfixOperatorToSymbol[Token`LongName`Equivalent] = Equivalent
+
 InfixOperatorToSymbol[Token`LongName`LeftTriangleEqual] = LeftTriangleEqual
+InfixOperatorToSymbol[Token`LongName`RightTriangleEqual] = RightTriangleEqual
+InfixOperatorToSymbol[Token`LongName`NotLeftTriangleEqual] = NotLeftTriangleEqual
+InfixOperatorToSymbol[Token`LongName`NotRightTriangleEqual] = NotRightTriangleEqual
+
 InfixOperatorToSymbol[Token`LongName`TildeEqual] = TildeEqual
+InfixOperatorToSymbol[Token`LongName`NotTildeEqual] = NotTildeEqual
 InfixOperatorToSymbol[Token`LongName`TildeFullEqual] = TildeFullEqual
 InfixOperatorToSymbol[Token`LongName`NotTildeFullEqual] = NotTildeFullEqual
 InfixOperatorToSymbol[Token`LongName`CircleDot] = CircleDot
@@ -341,7 +373,10 @@ InfixOperatorToSymbol[Token`LongName`Intersection] = Intersection
 InfixOperatorToSymbol[Token`LongName`TensorWedge] = TensorWedge
 InfixOperatorToSymbol[Token`LongName`TensorProduct] = TensorProduct
 InfixOperatorToSymbol[Token`LongName`Cross] = Cross
+InfixOperatorToSymbol[Token`LongName`LessTilde] = LessTilde
 InfixOperatorToSymbol[Token`LongName`GreaterTilde] = GreaterTilde
+InfixOperatorToSymbol[Token`LongName`NotLessTilde] = NotLessTilde
+InfixOperatorToSymbol[Token`LongName`NotGreaterTilde] = NotGreaterTilde
 InfixOperatorToSymbol[Token`LongName`Proportional] = Proportional
 InfixOperatorToSymbol[Token`LongName`Proportion] = Proportion
 InfixOperatorToSymbol[Token`LongName`LessLess] = LessLess
@@ -361,8 +396,17 @@ InfixOperatorToSymbol[Token`LongName`Coproduct] = Coproduct
 InfixOperatorToSymbol[Token`LongName`Cap] = Cap
 InfixOperatorToSymbol[Token`LongName`Cup] = Cup
 InfixOperatorToSymbol[Token`LongName`CirclePlus] = CirclePlus
-InfixOperatorToSymbol[Token`LongName`RightTriangle] = RightTriangle
+
+InfixOperatorToSymbol[Token`LongName`VerticalBar] = VerticalBar
+InfixOperatorToSymbol[Token`LongName`DoubleVerticalBar] = DoubleVerticalBar
+InfixOperatorToSymbol[Token`LongName`NotVerticalBar] = NotVerticalBar
+InfixOperatorToSymbol[Token`LongName`NotDoubleVerticalBar] = NotDoubleVerticalBar
+
 InfixOperatorToSymbol[Token`LongName`LeftTriangle] = LeftTriangle
+InfixOperatorToSymbol[Token`LongName`RightTriangle] = RightTriangle
+InfixOperatorToSymbol[Token`LongName`NotLeftTriangle] = NotLeftTriangle
+InfixOperatorToSymbol[Token`LongName`NotRightTriangle] = NotRightTriangle
+
 InfixOperatorToSymbol[Token`LongName`PermutationProduct] = PermutationProduct
 InfixOperatorToSymbol[Token`LongName`Equilibrium] = Equilibrium
 InfixOperatorToSymbol[Token`LongName`ReverseEquilibrium] = ReverseEquilibrium
@@ -370,35 +414,63 @@ InfixOperatorToSymbol[Token`LongName`ReverseElement] = ReverseElement
 InfixOperatorToSymbol[Token`LongName`NotReverseElement] = NotReverseElement
 InfixOperatorToSymbol[Token`LongName`NotTilde] = NotTilde
 InfixOperatorToSymbol[Token`LongName`EqualTilde] = EqualTilde
+
+InfixOperatorToSymbol[Token`LongName`Precedes] = Precedes
+InfixOperatorToSymbol[Token`LongName`Succeeds] = Succeeds
+InfixOperatorToSymbol[Token`LongName`PrecedesEqual] = PrecedesEqual
+InfixOperatorToSymbol[Token`LongName`SucceedsEqual] = SucceedsEqual
+InfixOperatorToSymbol[Token`LongName`PrecedesTilde] = PrecedesTilde
+InfixOperatorToSymbol[Token`LongName`SucceedsTilde] = SucceedsTilde
 InfixOperatorToSymbol[Token`LongName`PrecedesSlantEqual] = PrecedesSlantEqual
 InfixOperatorToSymbol[Token`LongName`SucceedsSlantEqual] = SucceedsSlantEqual
+InfixOperatorToSymbol[Token`LongName`NotPrecedes] = NotPrecedes
+InfixOperatorToSymbol[Token`LongName`NotSucceeds] = NotSucceeds
+InfixOperatorToSymbol[Token`LongName`NotPrecedesEqual] = NotPrecedesEqual
+InfixOperatorToSymbol[Token`LongName`NotSucceedsEqual] = NotSucceedsEqual
+InfixOperatorToSymbol[Token`LongName`NotPrecedesTilde] = NotPrecedesTilde
+InfixOperatorToSymbol[Token`LongName`NotSucceedsTilde] = NotSucceedsTilde
+InfixOperatorToSymbol[Token`LongName`NotPrecedesSlantEqual] = NotPrecedesSlantEqual
+InfixOperatorToSymbol[Token`LongName`NotSucceedsSlantEqual] = NotSucceedsSlantEqual
+
 (*
 LessSlantEqual and GreaterSlandEqual parse to LessEqual and GreaterEqual
 *)
 InfixOperatorToSymbol[Token`LongName`LessSlantEqual] = LessEqual
 InfixOperatorToSymbol[Token`LongName`GreaterSlantEqual] = GreaterEqual
-InfixOperatorToSymbol[Token`LongName`NotPrecedesSlantEqual] = NotPrecedesSlantEqual
-InfixOperatorToSymbol[Token`LongName`NotSucceedsSlantEqual] = NotSucceedsSlantEqual
 InfixOperatorToSymbol[Token`LongName`Colon] = Colon
+
 InfixOperatorToSymbol[Token`LongName`CupCap] = CupCap
+InfixOperatorToSymbol[Token`LongName`NotCupCap] = NotCupCap
+
 InfixOperatorToSymbol[Token`LongName`DotEqual] = DotEqual
 InfixOperatorToSymbol[Token`LongName`GreaterEqualLess] = GreaterEqualLess
+
 InfixOperatorToSymbol[Token`LongName`GreaterFullEqual] = GreaterFullEqual
+InfixOperatorToSymbol[Token`LongName`NotGreaterFullEqual] = NotGreaterFullEqual
+
 InfixOperatorToSymbol[Token`LongName`GreaterGreater] = GreaterGreater
+
 InfixOperatorToSymbol[Token`LongName`GreaterLess] = GreaterLess
+InfixOperatorToSymbol[Token`LongName`LessGreater] = LessGreater
+InfixOperatorToSymbol[Token`LongName`NotGreaterLess] = NotGreaterLess
+InfixOperatorToSymbol[Token`LongName`NotLessGreater] = NotLessGreater
+
 InfixOperatorToSymbol[Token`LongName`HumpEqual] = HumpEqual
 InfixOperatorToSymbol[Token`LongName`HumpDownHump] = HumpDownHump
 InfixOperatorToSymbol[Token`LongName`NestedGreaterGreater] = NestedGreaterGreater
 InfixOperatorToSymbol[Token`LongName`NestedLessLess] = NestedLessLess
 InfixOperatorToSymbol[Token`LongName`NotCongruent] = NotCongruent
 
+(*
 StartOfLineOperatorToSymbol[Token`Question] = Information
 StartOfLineOperatorToSymbol[Token`QuestionQuestion] = Information
 StartOfLineOperatorToSymbol[Token`Bang] = Run
 StartOfLineOperatorToSymbol[Token`BangBang] = FilePrint
+*)
 
+(*
 StartOfFileOperatorToSymbol[Token`HashBang] = AST`Shebang
-
+*)
 
 
 
@@ -474,6 +546,8 @@ InequalityOperatorToSymbol[Token`LongName`Equal] = Inequality
 InequalityOperatorToSymbol[Token`LongName`LessEqual] = Inequality
 InequalityOperatorToSymbol[Token`LongName`GreaterEqual] = Inequality
 InequalityOperatorToSymbol[Token`LongName`NotEqual] = Inequality
+InequalityOperatorToSymbol[Token`LongName`LessEqualGreater] = Inequality
+InequalityOperatorToSymbol[Token`LongName`GreaterEqualLess] = Inequality
 
 
 
@@ -516,8 +590,10 @@ symbols = Union[Join[
     DownValues[TernaryOperatorToSymbol][[All, 2]],
     DownValues[GroupOpenerToSymbol][[All, 2]],
     DownValues[PrefixBinaryOperatorToSymbol][[All, 2]],
+    (*
     DownValues[StartOfLineOperatorToSymbol][[All, 2]],
     DownValues[StartOfFileOperatorToSymbol][[All, 2]],
+    *)
     tokens
     ]]
 
@@ -533,7 +609,9 @@ symbolCPPHeader = {
 
 #include \"TokenEnum.h\"
 
+#if USE_MATHLINK
 #include \"mathlink.h\"
+#endif
 
 #include <string>
 #include <memory>
@@ -556,7 +634,9 @@ public:
   constexpr Symbol(const char *Name) : Name(Name) {}
   const char *name() const;
 
+#if USE_MATHLINK
   void put(MLINK mlp) const;
+#endif
 
 private:
   const char *Name;
@@ -564,26 +644,18 @@ private:
 
 using SymbolPtr = std::unique_ptr<Symbol>;
 
-SymbolPtr& PrefixOperatorToSymbol(TokenEnum);
-SymbolPtr& PostfixOperatorToSymbol(TokenEnum);
-SymbolPtr& BinaryOperatorToSymbol(TokenEnum);
-SymbolPtr& InfixOperatorToSymbol(TokenEnum);
-SymbolPtr& StartOfLineOperatorToSymbol(TokenEnum);
-SymbolPtr& StartOfFileOperatorToSymbol(TokenEnum);
+SymbolPtr& PrefixOperatorToSymbol(TokenEnum T);
+SymbolPtr& PostfixOperatorToSymbol(TokenEnum T);
+SymbolPtr& BinaryOperatorToSymbol(TokenEnum T);
+SymbolPtr& InfixOperatorToSymbol(TokenEnum T);
 
-bool isInfixOperator(TokenEnum);
-bool isInequalityOperator(TokenEnum);
-bool isVectorInequalityOperator(TokenEnum);
+SymbolPtr& GroupOpenerToSymbol(TokenEnum T);
+SymbolPtr& PrefixBinaryOperatorToSymbol(TokenEnum T);
 
-SymbolPtr& GroupOpenerToSymbol(TokenEnum);
-SymbolPtr& PrefixBinaryOperatorToSymbol(TokenEnum);
+TokenEnum GroupOpenerToCloser(TokenEnum T);
+TokenEnum GroupCloserToOpener(TokenEnum T);
 
-TokenEnum GroupOpenerToCloser(TokenEnum);
-TokenEnum GroupCloserToOpener(TokenEnum);
-
-bool isCloser(TokenEnum);
-
-SymbolPtr& TokenToSymbol(TokenEnum type);
+SymbolPtr& TokenToSymbol(TokenEnum T);
 
 "} ~Join~
 (Row[{"ASTLIB_EXPORTED", " ", "extern", " ", "SymbolPtr", " ", toGlobal["Symbol`"<>ToString[#]], ";"}]& /@ symbols) ~Join~
@@ -624,15 +696,19 @@ symbolCPPSource = {
 
 #include \"Symbol.h\"
 
+#include \"Token.h\"
+
 #include <cassert>
 
 const char *Symbol::name() const {
    return Name;
 }
 
+#if USE_MATHLINK
 void Symbol::put(MLINK mlp) const {
   MLPutSymbol(mlp, Name);
 }
+#endif
 "} ~Join~
 
   (If[# === String && $WorkaroundBug321344,
@@ -645,117 +721,68 @@ void Symbol::put(MLINK mlp) const {
 
       {""} ~Join~
 
-      {"SymbolPtr& PrefixOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
+      {"SymbolPtr& PrefixOperatorToSymbol(TokenEnum T) {\nswitch (T.value()) {"} ~Join~
      
-     Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PrefixOperatorToSymbol]] ~Join~ 
+     Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PrefixOperatorToSymbol]] ~Join~ 
       {"default: assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
       "}\n}"} ~Join~
 
      {""} ~Join~
 
-     {"SymbolPtr& PostfixOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
+     {"SymbolPtr& PostfixOperatorToSymbol(TokenEnum T) {\nswitch (T.value()) {"} ~Join~
      
-      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PostfixOperatorToSymbol]] ~Join~
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PostfixOperatorToSymbol]] ~Join~
       {"default: assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
      "}\n}"} ~Join~
 
      {""} ~Join~
 
-     {"SymbolPtr& BinaryOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
+     {"SymbolPtr& BinaryOperatorToSymbol(TokenEnum T) {\nswitch (T.value()) {"} ~Join~
      
-      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[BinaryOperatorToSymbol]] ~Join~
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[BinaryOperatorToSymbol]] ~Join~
       {"default: assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
      "}\n}"} ~Join~
 
      {""} ~Join~
 
-     {"SymbolPtr& InfixOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
+     {"SymbolPtr& InfixOperatorToSymbol(TokenEnum T) {\nswitch (T.value()) {"} ~Join~
      
-      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[InfixOperatorToSymbol]] ~Join~
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[InfixOperatorToSymbol]] ~Join~
       {"default: assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
      "}\n}"} ~Join~
 
      {""} ~Join~
 
-     {"bool isInfixOperator(TokenEnum Type) {\nswitch (Type) {"} ~Join~
-     
-      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", "true", ";"}]&, DownValues[InfixOperatorToSymbol]] ~Join~
-      {"default: return false;",
-     "}\n}"} ~Join~
-
-     {""} ~Join~
-
-     {"bool isInequalityOperator(TokenEnum Type) {\nswitch (Type) {"} ~Join~
-     
-      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", "true", ";"}]&, DownValues[InequalityOperatorToSymbol]] ~Join~
-      {"default: return false;",
-     "}\n}"} ~Join~
-
-     {""} ~Join~
-
-     {"bool isVectorInequalityOperator(TokenEnum Type) {\nswitch (Type) {"} ~Join~
-     
-      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", "true", ";"}]&, DownValues[VectorInequalityOperatorToSymbol]] ~Join~
-      {"default: return false;",
-     "}\n}"} ~Join~
-
-     {""} ~Join~
-
-     {"SymbolPtr& StartOfLineOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
-     
-      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[StartOfLineOperatorToSymbol]] ~Join~
-      {"default: assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
-     "}\n}"} ~Join~
-
-     {""} ~Join~
-
-     {"SymbolPtr& StartOfFileOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
-     
-      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[StartOfFileOperatorToSymbol]] ~Join~
-      {"default: assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
-     "}\n}"} ~Join~
-
-     {""} ~Join~
-
-     {"SymbolPtr& GroupOpenerToSymbol(TokenEnum Type) {"} ~Join~
-     {"switch (Type) {"} ~Join~
-      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[GroupOpenerToSymbol]] ~Join~
+     {"SymbolPtr& GroupOpenerToSymbol(TokenEnum T) {"} ~Join~
+     {"switch (T.value()) {"} ~Join~
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[GroupOpenerToSymbol]] ~Join~
       {"default: assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
      "}"} ~Join~
      {"}"} ~Join~
 
      {""} ~Join~
 
-     {"TokenEnum GroupOpenerToCloser(TokenEnum Type) {"} ~Join~
-     {"switch (Type) {"} ~Join~
-      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal[#[[2]]], ";"}]&, DownValues[GroupOpenerToCloser]] ~Join~
+     {"TokenEnum GroupOpenerToCloser(TokenEnum T) {"} ~Join~
+     {"switch (T.value()) {"} ~Join~
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal[#[[2]]], ";"}]&, DownValues[GroupOpenerToCloser]] ~Join~
       {"default: assert(false && \"Unhandled token\"); return TOKEN_UNKNOWN;",
      "}"} ~Join~
      {"}"} ~Join~
 
      {""} ~Join~
 
-     {"TokenEnum GroupCloserToOpener(TokenEnum Type) {"} ~Join~
-     {"switch (Type) {"} ~Join~
-      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal[#[[2]]], ";"}]&, DownValues[GroupCloserToOpener]] ~Join~
+     {"TokenEnum GroupCloserToOpener(TokenEnum T) {"} ~Join~
+     {"switch (T.value()) {"} ~Join~
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal[#[[2]]], ";"}]&, DownValues[GroupCloserToOpener]] ~Join~
       {"default: assert(false && \"Unhandled token\"); return TOKEN_UNKNOWN;",
      "}"} ~Join~
      {"}"} ~Join~
 
      {""} ~Join~
 
-     {"bool isCloser(TokenEnum Type) {"} ~Join~
-     {"switch (Type) {"} ~Join~
-      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " true;"}]&, DownValues[GroupCloserToOpener]] ~Join~
-      {"default: return false;",
-     "}"} ~Join~
-     {"}"} ~Join~
-
-     {""} ~Join~
-
-     {"SymbolPtr& PrefixBinaryOperatorToSymbol(TokenEnum Type) {\nswitch (Type) {"} ~Join~
+     {"SymbolPtr& PrefixBinaryOperatorToSymbol(TokenEnum T) {\nswitch (T.value()) {"} ~Join~
      
-      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ":", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PrefixBinaryOperatorToSymbol]] ~Join~
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PrefixBinaryOperatorToSymbol]] ~Join~
       {"default: assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
      "}\n}"} ~Join~
 

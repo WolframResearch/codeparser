@@ -4,7 +4,9 @@
 #include "Symbol.h"
 #include "TokenEnum.h"
 
+#if USE_MATHLINK
 #include "mathlink.h"
+#endif
 
 #include <string>
 #include <cassert>
@@ -270,9 +272,6 @@ struct Source_OffsetLen_struct {
 };
 
 
-
-
-
 enum SourceStyle {
     SOURCESTYLE_UNKNOWN,
     SOURCESTYLE_LINECOL,
@@ -308,7 +307,6 @@ struct SourceLocation {
 bool operator<=(SourceLocation a, SourceLocation b);
 
 
-
 //
 // There are several different kinds of Sources
 //
@@ -342,8 +340,10 @@ struct Source {
     Source(Source start, Source end);
     
     ~Source();
-    
+
+#if USE_MATHLINK
     void put(MLINK mlp) const;
+#endif
     
     void print(std::ostream& s) const;
     
@@ -360,8 +360,10 @@ bool isContiguous(Source a, Source b);
 
 class Issue {
 public:
-    
+
+#if USE_MATHLINK
     virtual void put(MLINK mlp) const = 0;
+#endif
     
     virtual void print(std::ostream& s) const = 0;
     
@@ -374,8 +376,10 @@ protected:
     Source Src;
 public:
     CodeAction(std::string Label, Source Src) : Label(Label), Src(Src) {}
-    
+
+#if USE_MATHLINK
     virtual void put(MLINK mlp) const = 0;
+#endif
     
     virtual void print(std::ostream& s) const = 0;
     
@@ -387,8 +391,10 @@ class ReplaceTextCodeAction : public CodeAction {
 public:
     
     ReplaceTextCodeAction(std::string Label, Source Src, std::string ReplacementText) : CodeAction(Label, Src), ReplacementText(ReplacementText) {}
-    
+
+#if USE_MATHLINK
     void put(MLINK mlp) const override;
+#endif
     
     void print(std::ostream& s) const override;
 };
@@ -399,7 +405,9 @@ public:
     
     InsertTextCodeAction(std::string Label, Source Src, std::string InsertionText) : CodeAction(Label, Src), InsertionText(InsertionText) {}
     
+#if USE_MATHLINK
     void put(MLINK mlp) const override;
+#endif
     
     void print(std::ostream& s) const override;
 };
@@ -409,8 +417,10 @@ class InsertTextAfterCodeAction : public CodeAction {
 public:
     
     InsertTextAfterCodeAction(std::string Label, Source Src, std::string InsertionText) : CodeAction(Label, Src), InsertionText(InsertionText) {}
-    
+
+#if USE_MATHLINK
     void put(MLINK mlp) const override;
+#endif
     
     void print(std::ostream& s) const override;
 };
@@ -420,7 +430,9 @@ public:
     
     DeleteTextCodeAction(std::string Label, Source Src) : CodeAction(Label, Src) {}
     
+#if USE_MATHLINK
     void put(MLINK mlp) const override;
+#endif
     
     void print(std::ostream& s) const override;
 };
@@ -430,7 +442,9 @@ public:
     
     DeleteTriviaCodeAction(std::string Label, Source Src) : CodeAction(Label, Src) {}
     
+#if USE_MATHLINK
     void put(MLINK mlp) const override;
+#endif
     
     void print(std::ostream& s) const override;
 };
@@ -446,7 +460,9 @@ public:
     
     SyntaxIssue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Con, std::vector<CodeActionPtr> Actions) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Con(Con), Actions(std::move(Actions)) {}
     
+#if USE_MATHLINK
     void put(MLINK mlp) const override;
+#endif
     
     void print(std::ostream& s) const override;
 };
@@ -462,11 +478,9 @@ public:
     
     FormatIssue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Con, std::vector<CodeActionPtr> Actions) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Con(Con), Actions(std::move(Actions)) {}
     
+#if USE_MATHLINK
     void put(MLINK mlp) const override;
+#endif
     
     void print(std::ostream& s) const override;
 };
-
-
-
-

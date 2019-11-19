@@ -71,10 +71,17 @@ Test[
 Test[
 	ConcreteParseString["?a"]
 	,
+	(*
 	StringNode[String, {
 		StartOfLineNode[Information, {
 			LeafNode[Token`Question, "?", <|Source -> {{1, 1}, {1, 1}}|>],
 			LeafNode[String, "a", <|Source -> {{1, 2}, {1, 2}}|>]}, <|Source -> {{1, 1}, {1, 2}}|>] }, <||>]
+	*)
+	StringNode[String, {
+		BinaryNode[PatternTest, {
+			LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 1}, {1, 1}}|>],
+			LeafNode[Token`Question, "?", <|Source -> {{1, 1}, {1, 1}}|>],
+			LeafNode[Symbol, "a", <|Source -> {{1, 2}, {1, 2}}|>]}, <|Source -> {{1, 1}, {1, 2}}|>]}, <||>]
 	,
 	TestID->"Concrete-20190601-B0Y1X6"
 ]
@@ -582,4 +589,17 @@ Test[
 		LeafNode[String, "\"a\\\\\r\nb\"", <|Source -> {{1, 1}, {2, 2}}|>] }, <||>]
 	,
 	TestID->"Concrete-20191024-X1D5H3"
+]
+
+Test[
+	ConcreteParseString["^ "]
+	,
+	StringNode[String, {
+		BinaryNode[Power, {
+			LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 1}, {1, 1}}|>],
+			LeafNode[Token`Caret, "^", <|Source -> {{1, 1}, {1, 1}}|>],
+			LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 1}, {1, 1}}|>]}, <||>]}],
+		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 2}, {1, 2}}|>]
+	,
+	TestID->"Concrete-20191117-M2R5P9"
 ]

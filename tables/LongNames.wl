@@ -511,7 +511,7 @@ Range 0x2200
 (*
 Range 0x2300
 *)
-"Diameter" -> Punctuation, (* 0x2300 *)
+"Diameter" -> Letterlike, (* 0x2300 *)
 "LeftCeiling" -> Punctuation, (* 0x2308 *)
 "RightCeiling" -> Punctuation, (* 0x2309 *)
 "LeftFloor" -> Punctuation, (* 0x230a *)

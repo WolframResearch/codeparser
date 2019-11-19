@@ -53,6 +53,14 @@ AST aims to be source compatible for Mathematica versions >= 11.0
 
 # Caveats
 
+
+concrete syntax does not preserve line continuations
+
+concrete syntax does not preserve \[Raw] character escapes
+
+
+
+
 linear syntax is not parsed, just tokenized
 
 linear syntax is not abstracted, don't want to reimplement MakeExpression

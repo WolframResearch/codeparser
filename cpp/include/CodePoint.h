@@ -25,7 +25,6 @@ constexpr int CODEPOINT_LINEARSYNTAX_PLUS(0xf7cb);
 constexpr int CODEPOINT_LINEARSYNTAX_SLASH(0xf7cc);
 constexpr int CODEPOINT_LINEARSYNTAX_BACKTICK(0xf7cd);
 
-
 constexpr int CODEPOINT_REPLACEMENT_CHARACTER(0xfffd);
 
 //

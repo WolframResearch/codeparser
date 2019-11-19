@@ -118,31 +118,27 @@ bool Utils::isUndocumentedLongName(std::string s) {
     return undocumentedLongNames.find(s) != undocumentedLongNames.end();
 }
 
-
-
-
-
-
+#if !NISSUES
 void Utils::differentLineWarning(Token Tok1, Token Tok2) {
     
-    if (Tok1.Tok() == TOKEN_ERROR_ABORTED) {
+    if (Tok1.getTokenEnum() == TOKEN_ERROR_ABORTED) {
         return;
     }
-    if (Tok2.Tok() == TOKEN_ERROR_ABORTED) {
+    if (Tok2.getTokenEnum() == TOKEN_ERROR_ABORTED) {
         return;
     }
     
     //
     // Skip DifferentLine issues if ENDOFFILE
     //
-    if (Tok1.Tok() == TOKEN_ENDOFFILE) {
+    if (Tok1.getTokenEnum() == TOKEN_ENDOFFILE) {
         return;
     }
-    if (Tok2.Tok() == TOKEN_ENDOFFILE) {
+    if (Tok2.getTokenEnum() == TOKEN_ENDOFFILE) {
         return;
     }
     
-    if (Tok2.Tok() == TOKEN_ERROR_EMPTYSTRING) {
+    if (Tok2.getTokenEnum() == TOKEN_ERROR_EMPTYSTRING) {
         return;
     }
     
@@ -160,11 +156,13 @@ void Utils::differentLineWarning(Token Tok1, Token Tok2) {
     std::vector<CodeActionPtr> Actions;
     Actions.push_back(CodeActionPtr(new DeleteTriviaCodeAction("Delete newline", Source(Tok1.Src, Tok2.Src))));
     
-    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_DIFFERENTLINE, "``" + Tok1.Str + "`` and ``" + Tok2.Str + "`` are on different lines.", SYNTAXISSUESEVERITY_WARNING, Source(Tok1.Src, Tok2.Src), 0.75, std::move(Actions)));
+    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_DIFFERENTLINE, "``" + Tok1.Str + "`` and ``" + Tok2.Str + "`` are on different lines.", SYNTAXISSUESEVERITY_WARNING, Source(Tok1.Src, Tok2.Src), 0.0, std::move(Actions)));
     
     TheParser->addIssue(std::move(I));
 }
+#endif
 
+#if !NISSUES
 void Utils::differentLineWarning(NodeSeq& Args, Token Tok2) {
     
     auto F = Args.first();
@@ -173,17 +171,19 @@ void Utils::differentLineWarning(NodeSeq& Args, Token Tok2) {
     
     Utils::differentLineWarning(Tok1, Tok2);
 }
+#endif
 
+#if !NISSUES
 void Utils::endOfLineWarning(Token Tok, Token EndTok) {
     
-    if (Tok.Tok() == TOKEN_ERROR_ABORTED) {
+    if (Tok.getTokenEnum() == TOKEN_ERROR_ABORTED) {
         return;
     }
-    if (EndTok.Tok() == TOKEN_ERROR_ABORTED) {
+    if (EndTok.getTokenEnum() == TOKEN_ERROR_ABORTED) {
         return;
     }
     
-    if (EndTok.Tok() != TOKEN_NEWLINE && EndTok.Tok() != TOKEN_ENDOFFILE) {
+    if (EndTok.getTokenEnum() != TOKEN_NEWLINE && EndTok.getTokenEnum() != TOKEN_ENDOFFILE) {
         return;
     }
     
@@ -201,13 +201,15 @@ void Utils::endOfLineWarning(Token Tok, Token EndTok) {
     
     TheParser->addIssue(std::move(I));
 }
+#endif
 
+#if !NISSUES
 void Utils::notContiguousWarning(Token Tok1, Token Tok2) {
     
-    if (Tok1.Tok() == TOKEN_ERROR_ABORTED) {
+    if (Tok1.getTokenEnum() == TOKEN_ERROR_ABORTED) {
         return;
     }
-    if (Tok2.Tok() == TOKEN_ERROR_ABORTED) {
+    if (Tok2.getTokenEnum() == TOKEN_ERROR_ABORTED) {
         return;
     }
     
@@ -226,11 +228,13 @@ void Utils::notContiguousWarning(Token Tok1, Token Tok2) {
     std::vector<CodeActionPtr> Actions;
     Actions.push_back(CodeActionPtr(new DeleteTriviaCodeAction("Delete trivia", Source(Tok1.Src, Tok2.Src))));
     
-    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_NOTCONTIGUOUS, std::string("Tokens are not contiguous."), FORMATISSUESEVERITY_FORMATTING, Source(Tok1.Src, Tok2.Src), 1.0, std::move(Actions)));
+    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_NOTCONTIGUOUS, std::string("Tokens are not contiguous."), FORMATISSUESEVERITY_FORMATTING, Source(Tok1.Src, Tok2.Src), 0.0, std::move(Actions)));
     
     TheParser->addIssue(std::move(I));
 }
+#endif
 
+#if !NISSUES
 void Utils::strangeLetterlikeWarning(WLCharacter c) {
     
     assert(c.isStrangeLetterlike() || c.isStrangeLetterlikeCharacter());
@@ -252,9 +256,7 @@ void Utils::strangeLetterlikeWarning(WLCharacter c) {
     
     TheTokenizer->addIssue(std::move(I));
 }
-
-
-
+#endif
 
 bool Utils::parseBooleanSymbol(const char * sym) {
     
@@ -275,7 +277,3 @@ SourceStyle Utils::parseSourceStyle(const char *str) {
     
     return SOURCESTYLE_UNKNOWN;
 }
-
-
-
-

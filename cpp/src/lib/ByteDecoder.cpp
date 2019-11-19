@@ -37,6 +37,7 @@ SourceCharacter ByteDecoder::invalid(unsigned char first, size_t backup) {
     
     auto idx = TheByteBuffer->getDataByteIndex();
     
+#if !NISSUES
     auto loc = getSourceLocation();
     
     AdvancementState state;
@@ -48,9 +49,10 @@ SourceCharacter ByteDecoder::invalid(unsigned char first, size_t backup) {
     // No CodeAction here
     //
     
-    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.", FORMATISSUESEVERITY_FORMATTING, Source(loc), 1.0, {}));
+    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.", FORMATISSUESEVERITY_FORMATTING, Source(loc), 0.0, {}));
     
     Issues.push_back(std::move(I));
+#endif
     
     TheByteBuffer->setDataByteIndex(idx - backup);
     
@@ -368,10 +370,11 @@ SourceLocation ByteDecoder::getSourceLocation() const {
     return SrcLoc;
 }
 
+#if !NISSUES
 std::vector<std::unique_ptr<Issue>>& ByteDecoder::getIssues() {
     return Issues;
 }
-
+#endif
 
 void AdvancementState::reset() {
     
@@ -382,6 +385,8 @@ SourceLocation AdvancementState::advance(SourceCharacter c, SourceLocation SrcLo
     
     switch (c.to_point()) {
         case CODEPOINT_ENDOFFILE: {
+
+#if !NISSUES
             //
             // It can happen that single \r occurs.
             // Then make sure to treat it as a newline.
@@ -397,10 +402,11 @@ SourceLocation AdvancementState::advance(SourceCharacter c, SourceLocation SrcLo
                 // No CodeAction here
                 //
                 
-                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", FORMATISSUESEVERITY_FORMATTING, Source(Loc), 0.95, {}));
+                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", FORMATISSUESEVERITY_FORMATTING, Source(Loc), 0.0, {}));
                 
                 TheByteDecoder->addIssue(std::move(I));
             }
+#endif
             
             lastCharacterWasCarriageReturn = false;
             
@@ -420,6 +426,8 @@ SourceLocation AdvancementState::advance(SourceCharacter c, SourceLocation SrcLo
             return SrcLoc.nextLine();
         }
         case '\r': {
+
+#if !NISSUES
             //
             // It can happen that single \r occurs.
             // Then make sure to treat it as a newline.
@@ -436,16 +444,19 @@ SourceLocation AdvancementState::advance(SourceCharacter c, SourceLocation SrcLo
                 // No CodeAction here
                 //
                 
-                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", FORMATISSUESEVERITY_FORMATTING, Source(Loc), 0.95, {}));
+                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", FORMATISSUESEVERITY_FORMATTING, Source(Loc), 0.0, {}));
                 
                 TheByteDecoder->addIssue(std::move(I));
             }
+#endif
             
             lastCharacterWasCarriageReturn = true;
             
             return SrcLoc.nextLine();
         }
         default: {
+            
+#if !NISSUES
             //
             // It can happen that single \r occurs.
             // Then make sure to treat it as a newline.
@@ -462,10 +473,11 @@ SourceLocation AdvancementState::advance(SourceCharacter c, SourceLocation SrcLo
                 // No CodeAction here
                 //
                 
-                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", FORMATISSUESEVERITY_FORMATTING, Source(Loc), 0.95, {}));
+                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", FORMATISSUESEVERITY_FORMATTING, Source(Loc), 0.0, {}));
                 
                 TheByteDecoder->addIssue(std::move(I));
             }
+#endif
             
             lastCharacterWasCarriageReturn = false;
             
@@ -477,8 +489,10 @@ SourceLocation AdvancementState::advance(SourceCharacter c, SourceLocation SrcLo
 //
 // Only to be used by AdvancementState
 //
+#if !NISSUES
 void ByteDecoder::addIssue(std::unique_ptr<Issue> I) {
     Issues.push_back(std::move(I));
 }
+#endif
 
 std::unique_ptr<ByteDecoder> TheByteDecoder = nullptr;

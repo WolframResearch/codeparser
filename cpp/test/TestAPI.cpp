@@ -39,7 +39,7 @@ TEST_F(APITest, Bug1) {
     
     auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
     
-    ParseLeaf(nullptr, str, strIn.size(), "LineCol", "False", "False");
+    ParseLeaf(nullptr, str, strIn.size(), "LineCol", 0);
     
     SUCCEED();
 }

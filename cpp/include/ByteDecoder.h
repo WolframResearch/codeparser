@@ -48,13 +48,17 @@ public:
     void deinit();
     
     SourceCharacter nextSourceCharacter();
-    
+
+#if !NISSUES
     std::vector<std::unique_ptr<Issue>>& getIssues();
+#endif
     
     void setSourceLocation(SourceLocation Loc);
     SourceLocation getSourceLocation() const;
     
+#if !NISSUES
     void addIssue(std::unique_ptr<Issue>);
+#endif
 };
 
 extern std::unique_ptr<ByteDecoder> TheByteDecoder;

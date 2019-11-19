@@ -3,7 +3,9 @@
 #include "API.h"
 #include "Symbol.h"
 
+#if USE_MATHLINK
 #include "mathlink.h"
+#endif
 
 #include <string>
 #include <iostream>
@@ -17,6 +19,27 @@ std::string Style = "LineCol";
 void readStdIn(int mode, bool printOutput);
 
 void readFile(std::string file, int mode, bool printOutput);
+
+class ScopedFileBuffer {
+
+    unsigned char *buf;
+    size_t len;
+
+    bool inited;
+
+public:
+
+    ScopedFileBuffer(const unsigned char *inStrIn, size_t inLen);
+
+    ~ScopedFileBuffer();
+
+    unsigned char *getBuf() const;
+
+    size_t getLen() const;
+
+    bool fail() const;
+
+};
 
 int main(int argc, char *argv[]) {
     
@@ -96,7 +119,7 @@ void readStdIn(int mode, bool printOutput) {
         
         auto inputStr = reinterpret_cast<const unsigned char*>(input.c_str());
         
-        N = ParseLeaf(libData, inputStr, input.size(), Style.c_str(), "False", "False");
+        N = ParseLeaf(libData, inputStr, input.size(), Style.c_str(), 0);
         
     } else {
         
@@ -113,6 +136,12 @@ void readStdIn(int mode, bool printOutput) {
 
 void readFile(std::string file, int mode, bool printOutput) {
     
+    ScopedFileBuffer fb(reinterpret_cast<const unsigned char *>(file.c_str()), file.size());
+
+    if (fb.fail()) {
+        return;
+    }
+    
     ParserSession TheParserSession;
     
     WolframLibraryData libData = nullptr;
@@ -121,15 +150,11 @@ void readFile(std::string file, int mode, bool printOutput) {
     
     if (mode == TOKENIZE) {
         
-        auto fileStr = reinterpret_cast<const unsigned char*>(file.c_str());
-        
-        N = TokenizeFile(libData, fileStr, file.size(), Style.c_str());
+        N = TokenizeBytes(libData, fb.getBuf(), fb.getLen(), Style.c_str());
         
     } else {
         
-        auto fileStr = reinterpret_cast<const unsigned char*>(file.c_str());
-        
-        N = ConcreteParseFile(libData, fileStr, file.size(), Style.c_str());
+        N = ConcreteParseBytes(libData, fb.getBuf(), fb.getLen(), Style.c_str());
         
     }
     
@@ -138,3 +163,52 @@ void readFile(std::string file, int mode, bool printOutput) {
         std::cout << "\n";
     }
 }
+
+ScopedFileBuffer::ScopedFileBuffer(const unsigned char *inStrIn, size_t inLen) : buf(), len(), inited(false) {
+
+    auto inStr = reinterpret_cast<const char *>(inStrIn);
+
+    FILE * file = fopen(inStr, "rb");
+
+    if (file == NULL) {
+        return;
+    }
+
+    fseek(file, 0, SEEK_END);
+
+    len = ftell(file);
+
+    fclose(file);
+
+    file = fopen(inStr, "rb");
+
+    buf = new unsigned char[len];
+
+    inited = true;
+
+    fread(buf, sizeof(unsigned char), len, file);
+
+    fclose(file);
+}
+
+ScopedFileBuffer::~ScopedFileBuffer() {
+
+    if (!inited) {
+        return;
+    }
+
+    delete[] buf;
+}
+
+unsigned char *ScopedFileBuffer::getBuf() const {
+    return buf;
+}
+
+size_t ScopedFileBuffer::getLen() const {
+    return len;
+}
+
+bool ScopedFileBuffer::fail() const {
+    return !inited;
+}
+

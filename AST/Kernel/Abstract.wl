@@ -109,7 +109,7 @@ abstract[LeafNode[Integer, sIn_, dataIn_]] :=
 	LeafNode[Integer, sIn, KeyTake[dataIn, keysToTake]]
 
 abstract[LeafNode[Real, sIn_, dataIn_]] :=
-	LeafNode[Integer, sIn, KeyTake[dataIn, keysToTake]]
+	LeafNode[Real, sIn, KeyTake[dataIn, keysToTake]]
 
 abstract[LeafNode[Slot, sIn_, dataIn_]] :=
 Module[{s, data},
@@ -324,18 +324,19 @@ abstract[TernaryNode[Span, {left_, _, middle_, _, right_}, data_]] := CallNode[T
 
 
 
-
+(*
 abstract[StartOfLineNode[Information, {LeafNode[Token`Question, _, _], LeafNode[String, str_, _]}, data_]] := CallNode[ToNode[Information], {ToNode[str], CallNode[ToNode[Rule], { ToNode[LongForm], ToNode[False] }, <||>]}, KeyTake[data, keysToTake]]
 abstract[StartOfLineNode[Information, {LeafNode[Token`QuestionQuestion, _, _], LeafNode[String, str_, _]}, data_]] := CallNode[ToNode[Information], {ToNode[str], CallNode[ToNode[Rule], { ToNode[LongForm], ToNode[True] }, <||>]}, KeyTake[data, keysToTake]]
 abstract[StartOfLineNode[Run, {LeafNode[Token`Bang, _, _], LeafNode[String, str_, _]}, data_]] := CallNode[ToNode[Run], {ToNode[str]}, KeyTake[data, keysToTake]]
 abstract[StartOfLineNode[FilePrint, {LeafNode[Token`BangBang, _, _], LeafNode[String, str_, _]}, data_]] := CallNode[ToNode[FilePrint], {ToNode[str]}, KeyTake[data, keysToTake]]
-
+*)
 
 (*
 Do not abstract #! nodes
 *)
+(*
 abstract[StartOfFileNode[Shebang, children_, data_]] := StartOfFileNode[Shebang, children, KeyTake[data, keysToTake]]
-
+*)
 
 
 
@@ -1120,6 +1121,12 @@ Module[{rators, rands},
 		{ToNode[GreaterEqual]..},
 			CallNode[ToNode[GreaterEqual], rands, data]
 		,
+		{ToNode[NotLessEqual]..},
+			CallNode[ToNode[NotLessEqual], rands, data]
+		,
+		{ToNode[NotGreaterEqual]..},
+			CallNode[ToNode[NotGreaterEqual], rands, data]
+		,
 		_,
 			CallNode[ToNode[Inequality], Riffle[rands, rators], data]
 	]
@@ -1132,7 +1139,8 @@ inequalityOperatorToSymbol[LeafNode[Token`Less, _, _]] := ToNode[Less]
 inequalityOperatorToSymbol[LeafNode[Token`Greater, _, _]] := ToNode[Greater]
 inequalityOperatorToSymbol[LeafNode[Token`LessEqual | Token`LongName`LessEqual, _, _]] := ToNode[LessEqual]
 inequalityOperatorToSymbol[LeafNode[Token`GreaterEqual | Token`LongName`GreaterEqual, _, _]] := ToNode[GreaterEqual]
-
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotLessEqual, _, _]] := ToNode[NotLessEqual]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotGreaterEqual, _, _]] := ToNode[NotGreaterEqual]
 
 
 
@@ -1522,12 +1530,20 @@ Module[{head, data, part, innerData, outerData, issues, partData, src},
 
 		If[outerData[[ Key[Source], 1, 2]]+1 != innerData[[ Key[Source], 1, 2]],
 			src = {outerData[[ Key[Source], 1]], innerData[[ Key[Source], 1]]};
-			AppendTo[issues, FormatIssue["NotContiguous", "``Part`` brackets ``[[`` are not contiguous.", "Formatting", <|Source->src, CodeActions->{CodeAction["DeleteTrivia", DeleteTrivia, <|Source->src|>]}|>]];
+			AppendTo[issues, FormatIssue["NotContiguous", "``Part`` brackets ``[[`` are not contiguous.", "Formatting",
+										<|	Source->src,
+											CodeActions->{CodeAction["DeleteTrivia", DeleteTrivia,
+																<|Source->src|>]},
+											AirynessLevel -> 0.0|>]];
 		];
 
 		If[innerData[[ Key[Source], 2, 2]]+1 != outerData[[ Key[Source], 2, 2]],
 			src = {innerData[[ Key[Source], 2]], outerData[[ Key[Source], 2]]};
-			AppendTo[issues, FormatIssue["NotContiguous", "``Part`` brackets ``]]`` are not contiguous.", "Formatting", <|Source->src, CodeActions->{CodeAction["DeleteTrivia", DeleteTrivia, <|Source->src|>]}|>]];
+			AppendTo[issues, FormatIssue["NotContiguous", "``Part`` brackets ``]]`` are not contiguous.", "Formatting",
+										<|	Source->src,
+											CodeActions->{CodeAction["DeleteTrivia", DeleteTrivia, 
+																<|Source->src|>]},
+											AirynessLevel -> 0.0|>]];
 		];
 	];
 
@@ -1732,18 +1748,16 @@ Abstract any child boxes
 Do not touch CodeNodes
 
 *)
-abstract[BoxNode[SqrtBox, children_, data_]] := BoxNode[SqrtBox, abstract /@ children, KeyTake[data, keysToTake]]
 
-abstract[BoxNode[FractionBox, children_, data_]] := BoxNode[FractionBox, abstract /@ children, KeyTake[data, keysToTake]]
-
-abstract[BoxNode[RasterBox, children_, data_]] := BoxNode[RasterBox, children, KeyTake[data, keysToTake]]
-
-abstract[BoxNode[List, children_, data_]] := BoxNode[List, abstract /@ children, KeyTake[data, keysToTake]]
+abstract[n:CodeNode[_, _, _]] := n
 
 (*
 a is a List of boxes
 *)
 abstract[BoxNode[RowBox, {a_}, data_]] := BoxNode[RowBox, {abstract /@ a}, KeyTake[data, keysToTake]]
+
+abstract[BoxNode[b_, children_, data_]] := BoxNode[b, abstract /@ children, KeyTake[data, keysToTake]]
+
 
 
 

@@ -9,11 +9,17 @@ set(PACLET "AST")
 set(WOLFRAMKERNEL /Applications/Mathematica.app/Contents/MacOS/WolframKernel CACHE FILEPATH "Path to WolframKernel")
 set(BUILD_DOCS OFF CACHE BOOL "Build documentation")
 set(BUILD_EXE OFF CACHE BOOL "Build executable")
+set(USE_MATHLINK ON CACHE BOOL "Use MathLink")
+set(NISSUES OFF CACHE BOOL "NISSUES")
+set(NABORT OFF CACHE BOOL "NABORT")
 
 message(STATUS "PACLET: ${PACLET}")
 message(STATUS "WOLFRAMKERNEL: ${WOLFRAMKERNEL}")
 message(STATUS "BUILD_DOCS: ${BUILD_DOCS}")
 message(STATUS "BUILD_EXE: ${BUILD_EXE}")
+message(STATUS "USE_MATHLINK: ${USE_MATHLINK}")
+message(STATUS "NISSUES: ${NISSUES}")
+message(STATUS "NABORT: ${NABORT}")
 
 set(STATIC_WL_PACLET_SOURCES
 	${CMAKE_SOURCE_DIR}/AST/Kernel/Abstract.wl
@@ -176,6 +182,8 @@ set(WOLFRAMLIBRARY_INCLUDE_DIR /Applications/Mathematica.app/Contents/SystemFile
 
 message(STATUS "WOLFRAMLIBRARY_INCLUDE_DIR: ${WOLFRAMLIBRARY_INCLUDE_DIR}")
 
+if(USE_MATHLINK)
+
 set(MATHLINK_INCLUDE_DIR /Applications/Mathematica.app/Contents/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions CACHE FILEPATH "Path to mathlink.h")
 
 message(STATUS "MATHLINK_INCLUDE_DIR: ${MATHLINK_INCLUDE_DIR}")
@@ -184,9 +192,11 @@ set(MATHLINK_LIB_DIR /Applications/Mathematica.app/Contents/SystemFiles/Links/Ma
 
 message(STATUS "MATHLINK_LIB_DIR: ${MATHLINK_LIB_DIR}")
 
+endif(USE_MATHLINK)
+
 set(CPP_INCLUDES
 	${CMAKE_SOURCE_DIR}/cpp/include/API.h
-    ${CMAKE_SOURCE_DIR}/cpp/include/ByteBuffer.h
+	${CMAKE_SOURCE_DIR}/cpp/include/ByteBuffer.h
 	${CMAKE_SOURCE_DIR}/cpp/include/ByteDecoder.h
 	${CMAKE_SOURCE_DIR}/cpp/include/ByteEncoder.h
 	${CMAKE_SOURCE_DIR}/cpp/include/CharacterDecoder.h
@@ -204,7 +214,7 @@ set(CPP_INCLUDES
 
 set(CPP_LIB_SOURCES
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/API.cpp
-    ${CMAKE_SOURCE_DIR}/cpp/src/lib/ByteBuffer.cpp
+	${CMAKE_SOURCE_DIR}/cpp/src/lib/ByteBuffer.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/ByteDecoder.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/ByteEncoder.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/CharacterDecoder.cpp
@@ -214,7 +224,7 @@ set(CPP_LIB_SOURCES
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/SemiSemiParselet.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/Source.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/Token.cpp
-    ${CMAKE_SOURCE_DIR}/cpp/src/lib/Tokenizer.cpp
+	${CMAKE_SOURCE_DIR}/cpp/src/lib/Tokenizer.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/Utils.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/WLCharacter.cpp
 )
@@ -233,6 +243,10 @@ target_include_directories(ast-lib
 	PRIVATE ${WOLFRAMLIBRARY_INCLUDE_DIR}
 )
 
+
+
+if(USE_MATHLINK)
+
 find_library(MATHLINK_LIB
 	#
 	# mathlink is the mathlink.framework on MacOSX
@@ -244,6 +258,10 @@ find_library(MATHLINK_LIB
 message(STATUS "MATHLINK_LIB: ${MATHLINK_LIB}")
 
 target_link_libraries(ast-lib ${MATHLINK_LIB})
+
+endif(USE_MATHLINK)
+
+
 
 set_target_properties(ast-lib PROPERTIES
 	OUTPUT_NAME
@@ -288,6 +306,20 @@ set_target_properties(ast-lib PROPERTIES
 	PREFIX
 		""
 )
+
+if (NISSUES)
+target_compile_definitions(ast-lib PUBLIC NISSUES=1)
+endif(NISSUES)
+
+if (NABORT)
+target_compile_definitions(ast-lib PUBLIC NABORT=1)
+endif(NABORT)
+
+if (USE_MATHLINK)
+target_compile_definitions(ast-lib PUBLIC USE_MATHLINK=1)
+endif(USE_MATHLINK)
+
+
 
 #
 # Setup warnings

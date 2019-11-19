@@ -148,7 +148,7 @@ TestMatch[
 	FirstCase[ConcreteParseString["-\na", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["DifferentLine", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {FormatIssue["DifferentLine", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-Y8O9L2"
 ]
@@ -157,7 +157,7 @@ TestMatch[
 	FirstCase[ConcreteParseString["{ a\n! }", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["DifferentLine", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {FormatIssue["DifferentLine", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-R2X2T0"
 ]
@@ -180,7 +180,7 @@ TestMatch[
 	FirstCase[ConcreteParseString["{ a\n;; }", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["DifferentLine", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {FormatIssue["DifferentLine", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-E0L3O1"
 ]
@@ -189,7 +189,7 @@ TestMatch[
 	FirstCase[ConcreteParseString["{ a~\nf~b } ", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["DifferentLine", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {FormatIssue["DifferentLine", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-S5U4W8"
 ]
@@ -322,7 +322,7 @@ TestMatch[
 	FirstCase[ConcreteParseString["0..", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["Space", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {FormatIssue["Space", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-H5C3T5"
 ]
@@ -331,7 +331,7 @@ TestMatch[
 	FirstCase[ConcreteParseString["1.2.3", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["Space", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["ImplicitTimes", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-T2M0V0"
 ]
@@ -340,20 +340,24 @@ TestMatch[
 	FirstCase[ConcreteParseString["_...", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["Space", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {FormatIssue["Space", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-U2Z6B3"
 ]
+
+(*
+
+Format issues related to implicit Times are handled by the formatter
 
 TestMatch[
 	FirstCase[ConcreteParseString["_.0", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["Space", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {FormatIssue["Space", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-V2H2D5"
 ]
-
+*)
 
 
 
@@ -366,7 +370,7 @@ TestMatch[
 	FirstCase[ConcreteParseString[";;b;;", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {OrderlessPatternSequence[SyntaxIssue["ImplicitTimesSpan", _, _, _], SyntaxIssue["EndOfLine", _, _, _]]}]
+	KeyValuePattern[SyntaxIssues -> {OrderlessPatternSequence[SyntaxIssue["ImplicitTimes", _, _, _], SyntaxIssue["EndOfLine", _, _, _]]}]
 	,
 	TestID->"SyntaxIssues-20190523-I1D9N0"
 ]
@@ -376,7 +380,7 @@ TestMatch[
 	FirstCase[ConcreteParseString["a;;b;;", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {OrderlessPatternSequence[SyntaxIssue["ImplicitTimesSpan", _, _, _], SyntaxIssue["EndOfLine", _, _, _]]}]
+	KeyValuePattern[SyntaxIssues -> {OrderlessPatternSequence[SyntaxIssue["ImplicitTimes", _, _, _], SyntaxIssue["EndOfLine", _, _, _]]}]
 	,
 	TestID->"SyntaxIssues-20190523-L7M6K3"
 ]

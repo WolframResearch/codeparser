@@ -104,6 +104,11 @@ Module[{children, aggChildren, data},
 	BoxNode[RowBox, aggChildren, data]
 ]]
 
+(*
+Do not descend into CodeNode
+*)
+aggregate[n:CodeNode[_, _, _]] := n
+
 aggregate[node_[tag_, childrenIn_, dataIn_]] :=
 Module[{children, aggChildren, data},
 	

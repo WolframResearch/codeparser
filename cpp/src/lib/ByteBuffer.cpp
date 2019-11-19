@@ -15,14 +15,11 @@ void ByteBuffer::init(const unsigned char *dataIn, size_t dataByteCountIn, Wolfr
     libData = libDataIn;
 }
 
-void ByteBuffer::deinit() {
-    
-    libData = nullptr;
-}
+void ByteBuffer::deinit() {}
 
 unsigned char ByteBuffer::nextByte(unsigned char *eof) {
     
-    assert(dataByteIndex <= dataByteCount);
+    assert(dataByteIndex <= dataByteCount && "Fix at call site");
     
 #ifndef NDEBUG
     size_t oldProgress;
@@ -31,13 +28,18 @@ unsigned char ByteBuffer::nextByte(unsigned char *eof) {
     }
 #endif
     
-    *eof = (dataByteIndex == dataByteCount);
+    if (dataByteIndex == dataByteCount) {
+        *eof = true;
+        return 0xff;
+    }
+    
+    *eof = false;
     
     auto b = data[dataByteIndex];
-    dataByteIndex += (!*eof);
-
-#ifndef NDEBUG
+    dataByteIndex++;
     
+#ifndef NDEBUG
+#if USE_MATHLINK
     if (dataByteCount != 0) {
         
         size_t progress = (100 * dataByteIndex / dataByteCount);
@@ -60,6 +62,7 @@ unsigned char ByteBuffer::nextByte(unsigned char *eof) {
             }
         }
     }
+#endif // USE_MATHLINK
 #endif
     
     //
@@ -68,7 +71,8 @@ unsigned char ByteBuffer::nextByte(unsigned char *eof) {
     // but try really hard to be branchless
     // this will pay off more as more code becomes branchless
     //
-    return b | ((*eof ^ 0xff) - 0xff);
+    //return b | ((*eof ^ 0xff) - 0xff);
+    return b;
 }
 
 size_t ByteBuffer::getDataByteIndex() const {

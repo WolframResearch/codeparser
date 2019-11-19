@@ -6,14 +6,14 @@
 
 #include <sstream>
 
-static std::unique_ptr<MLSession> mlSession;
+//static std::unique_ptr<MLSession> mlSession;
 
 class ParseletTest : public ::testing::Test {
 protected:
     
     static void SetUpTestSuite() {
         
-        mlSession = std::unique_ptr<MLSession>(new MLSession);
+//        mlSession = std::unique_ptr<MLSession>(new MLSession);
         
         TheParserSession = std::unique_ptr<ParserSession>(new ParserSession);
     }
@@ -22,7 +22,7 @@ protected:
         
         TheParserSession.reset(nullptr);
         
-        mlSession.reset(nullptr);
+//        mlSession.reset(nullptr);
     }
     
     void SetUp() override {
@@ -37,11 +37,14 @@ protected:
 
 TEST_F(ParseletTest, Bug1) {
     
+    ASSERT_TRUE(TOKEN_LESS.isInequalityOperator());
+    
+    
     auto strIn = std::string("a /: b := c");
     
     auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
     
-    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false);
+    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, 0);
     
     ParserContext Ctxt;
     
@@ -57,11 +60,14 @@ TEST_F(ParseletTest, Bug1) {
 //
 TEST_F(ParseletTest, Bug2) {
     
+    ASSERT_TRUE(TOKEN_LESS.isInequalityOperator());
+    
+    
     auto strIn = std::string("a<b ");
     
     auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
     
-    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false);
+    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, 0);
     
     ParserContext Ctxt;
     
@@ -75,11 +81,14 @@ TEST_F(ParseletTest, Bug2) {
 //
 TEST_F(ParseletTest, Bug3) {
     
+    ASSERT_TRUE(TOKEN_LESS.isInequalityOperator());
+    
+    
     auto strIn = std::string("a\\[Integral]b\\[Integral]c ");
     
     auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
     
-    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false);
+    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, 0);
     
     ParserContext Ctxt;
     
@@ -93,11 +102,14 @@ TEST_F(ParseletTest, Bug3) {
 //
 TEST_F(ParseletTest, Bug4) {
     
+    ASSERT_TRUE(TOKEN_LESS.isInequalityOperator());
+    
+    
     auto strIn = std::string("\\[RawLeftBrace]*\\[RawRightBrace]");
     
     auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
     
-    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, false, false);
+    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, 0);
     
     ParserContext Ctxt;
     

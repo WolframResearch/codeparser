@@ -25,6 +25,10 @@ TestMatch[
 	TestID->"FormatIssues-20190521-Q9Y0M6"
 ]
 
+(*
+
+FormatIssues related to implicit Times are handled in the formatter
+
 TestMatch[
 	FirstCase[ConcreteParseString["1.2`a", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
@@ -33,12 +37,13 @@ TestMatch[
 	,
 	TestID->"FormatIssues-20190521-M4P4L8"
 ]
+*)
 
 TestMatch[
 	FirstCase[ConcreteParseString["1.2`->3", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {FormatIssue["Space", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {FormatIssue["SpaceAfter", _, _, _]}]
 	,
 	TestID->"FormatIssues-20190521-N6V1Y7"
 ]
@@ -74,7 +79,7 @@ TestMatch[
 	FirstCase[ConcreteParseString["t/.03", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {FormatIssue["Space", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {FormatIssue["SpaceAfter", _, _, _]}]
 	,
 	TestID->"FormatIssues-20190521-R4X1R6"
 ]

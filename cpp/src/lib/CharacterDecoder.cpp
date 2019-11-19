@@ -126,6 +126,7 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
         
         _currentWLCharacter = WLCharacter(curSource.to_point());
         
+#if !NISSUES
         if ((policy & STRANGE_CHARACTER_CHECKING) == STRANGE_CHARACTER_CHECKING) {
             
             if (_currentWLCharacter.isStrange() || _currentWLCharacter.isStrangeCharacter()) {
@@ -141,6 +142,7 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
                 Issues.push_back(std::move(I));
             }
         }
+#endif
         
         return _currentWLCharacter;
     }
@@ -370,6 +372,7 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
             
             auto Loc = TheByteDecoder->getSourceLocation();
             
+#if !NISSUES
             //
             // Make the warnings a little more relevant
             //
@@ -428,6 +431,7 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
                     Issues.push_back(std::move(I));
                 }
             }
+#endif
             
             //
             // Keep these treated as 2 characters. This is how bad escapes are handled in WL strings.
@@ -448,6 +452,7 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
     
     setWLCharacterEnd();
     
+#if !NISSUES
     if ((policy & STRANGE_CHARACTER_CHECKING) == STRANGE_CHARACTER_CHECKING) {
         
         if (_currentWLCharacter.isStrange() || _currentWLCharacter.isStrangeCharacter()) {
@@ -463,6 +468,7 @@ WLCharacter CharacterDecoder::nextWLCharacter(NextWLCharacterPolicy policy) {
             Issues.push_back(std::move(I));
         }
     }
+#endif
     
     return _currentWLCharacter;
 }
@@ -549,9 +555,10 @@ void CharacterDecoder::handleLongName(SourceCharacter curSourceIn, SourceLocatio
         //
         // Not well-formed
         //
-        
+
         auto Loc = TheByteDecoder->getSourceLocation();
         
+#if !NISSUES
         if ((policy & DISABLE_CHARACTERDECODINGISSUES) != DISABLE_CHARACTERDECODINGISSUES) {
             
             if (atleast1DigitOrAlpha) {
@@ -642,6 +649,7 @@ void CharacterDecoder::handleLongName(SourceCharacter curSourceIn, SourceLocatio
 //
 //            Issues.push_back(std::move(I));
 //        }
+#endif
         
         TheByteDecoder->setSourceLocation(CharacterStart);
         setWLCharacterStart();
@@ -678,6 +686,7 @@ void CharacterDecoder::handleLongName(SourceCharacter curSourceIn, SourceLocatio
         
         auto Loc = TheByteDecoder->getSourceLocation();
         
+#if !NISSUES
         if (!found) {
             if ((policy & DISABLE_CHARACTERDECODINGISSUES) != DISABLE_CHARACTERDECODINGISSUES) {
                 
@@ -706,6 +715,7 @@ void CharacterDecoder::handleLongName(SourceCharacter curSourceIn, SourceLocatio
                 Issues.push_back(std::move(I));
             }
         }
+#endif
         
         TheByteDecoder->setSourceLocation(CharacterStart);
         setWLCharacterStart();
@@ -726,11 +736,12 @@ void CharacterDecoder::handleLongName(SourceCharacter curSourceIn, SourceLocatio
     // Success!
     //
     
-    auto Loc = TheByteDecoder->getSourceLocation();
-    
     auto point = it->second;
     
+#if !NISSUES
     if ((policy & DISABLE_CHARACTERDECODINGISSUES) != DISABLE_CHARACTERDECODINGISSUES) {
+        
+        auto Loc = TheByteDecoder->getSourceLocation();
         
         //
         // The well-formed, recognized name could still be unsupported or undocumented
@@ -748,8 +759,13 @@ void CharacterDecoder::handleLongName(SourceCharacter curSourceIn, SourceLocatio
             Issues.push_back(std::move(I));
         }
     }
+#endif
     
-    _currentWLCharacter = WLCharacter(point, ESCAPE_LONGNAME);
+    if (isRaw(LongNameStr)) {
+        _currentWLCharacter = WLCharacter(point, ESCAPE_RAW);
+    } else {
+        _currentWLCharacter = WLCharacter(point, ESCAPE_LONGNAME);
+    }
 }
 
 //
@@ -786,6 +802,7 @@ void CharacterDecoder::handle4Hex(SourceCharacter curSourceIn, SourceLocation Ch
             
             auto Loc = TheByteDecoder->getSourceLocation();
             
+#if !NISSUES
             if ((policy & DISABLE_CHARACTERDECODINGISSUES) != DISABLE_CHARACTERDECODINGISSUES) {
                 
                 if (curSource.isEndOfFile()) {
@@ -813,6 +830,7 @@ void CharacterDecoder::handle4Hex(SourceCharacter curSourceIn, SourceLocation Ch
                     Issues.push_back(std::move(I));
                 }
             }
+#endif
             
             TheByteDecoder->setSourceLocation(CharacterStart);
             setWLCharacterStart();
@@ -880,6 +898,7 @@ void CharacterDecoder::handle2Hex(SourceCharacter curSourceIn, SourceLocation Ch
             
             auto Loc = TheByteDecoder->getSourceLocation();
             
+#if !NISSUES
             if ((policy & DISABLE_CHARACTERDECODINGISSUES) != DISABLE_CHARACTERDECODINGISSUES) {
                 
                 if (curSource.isEndOfFile()) {
@@ -907,6 +926,7 @@ void CharacterDecoder::handle2Hex(SourceCharacter curSourceIn, SourceLocation Ch
                     Issues.push_back(std::move(I));
                 }
             }
+#endif
             
             TheByteDecoder->setSourceLocation(CharacterStart);
             setWLCharacterStart();
@@ -976,6 +996,7 @@ void CharacterDecoder::handleOctal(SourceCharacter curSourceIn, SourceLocation C
             
             auto Loc = TheByteDecoder->getSourceLocation();
             
+#if !NISSUES
             if ((policy & DISABLE_CHARACTERDECODINGISSUES) != DISABLE_CHARACTERDECODINGISSUES) {
                 
                 if (curSource.isEndOfFile()) {
@@ -1003,6 +1024,7 @@ void CharacterDecoder::handleOctal(SourceCharacter curSourceIn, SourceLocation C
                     Issues.push_back(std::move(I));
                 }
             }
+#endif
             
             TheByteDecoder->setSourceLocation(CharacterStart);
             setWLCharacterStart();
@@ -1069,6 +1091,7 @@ void CharacterDecoder::handle6Hex(SourceCharacter curSourceIn, SourceLocation Ch
             
             auto Loc = TheByteDecoder->getSourceLocation();
             
+#if !NISSUES
             if ((policy & DISABLE_CHARACTERDECODINGISSUES) != DISABLE_CHARACTERDECODINGISSUES) {
                 
                 if (curSource.isEndOfFile()) {
@@ -1096,6 +1119,7 @@ void CharacterDecoder::handle6Hex(SourceCharacter curSourceIn, SourceLocation Ch
                     Issues.push_back(std::move(I));
                 }
             }
+#endif
             
             TheByteDecoder->setSourceLocation(CharacterStart);
             setWLCharacterStart();
@@ -1154,6 +1178,7 @@ void CharacterDecoder::handleLineContinuation(NextWLCharacterPolicy policy) {
         // NOT meaningful, so do not worry about PRESERVE_WS_AFTER_LC
         //
         
+#if !NISSUES
         //
         // Use DISABLE_CHARACTERDECODINGISSUES here to also talk about line continuations
         //
@@ -1169,10 +1194,11 @@ void CharacterDecoder::handleLineContinuation(NextWLCharacterPolicy policy) {
             std::vector<CodeActionPtr> Actions;
             Actions.push_back(CodeActionPtr(new DeleteTextCodeAction("Delete \\", Source(CharacterStart))));
             
-            auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_UNEXPECTEDLINECONTINUATION, std::string("Unexpected line continuation."), FORMATISSUESEVERITY_FORMATTING, Source(CharacterStart), 1.0, std::move(Actions)));
+            auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_UNEXPECTEDLINECONTINUATION, std::string("Unexpected line continuation."), FORMATISSUESEVERITY_FORMATTING, Source(CharacterStart), 0.0, std::move(Actions)));
             
             Issues.push_back(std::move(I));
         }
+#endif
         
         return;
     }
@@ -1194,10 +1220,11 @@ void CharacterDecoder::handleLineContinuation(NextWLCharacterPolicy policy) {
     }
 }
 
+#if !NISSUES
 std::vector<std::unique_ptr<Issue>>& CharacterDecoder::getIssues() {
     return Issues;
 }
-
+#endif
 
 //
 // example:
@@ -1206,6 +1233,10 @@ std::vector<std::unique_ptr<Issue>>& CharacterDecoder::getIssues() {
 //
 // Return empty string if no suggestion.
 //
+
+
+#if USE_MATHLINK
+
 std::string CharacterDecoder::longNameSuggestion(std::string input) {
     
     if (!libData) {
@@ -1228,6 +1259,15 @@ std::string CharacterDecoder::longNameSuggestion(std::string input) {
     
     return "";
 }
+
+#else
+
+std::string CharacterDecoder::longNameSuggestion(std::string input) {
+    
+    return "";
+}
+
+#endif // USE_MATHLINK
 
 std::unique_ptr<CharacterDecoder> TheCharacterDecoder = nullptr;
 

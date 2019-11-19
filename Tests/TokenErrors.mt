@@ -56,9 +56,8 @@ ExpectedAlphaOrDollar:
 Test[
 	TokenizeString["aaa`1"]
 	,
-	{LeafNode[Token`Other, 
-  "aaa`", <|Source -> {{1, 1}, {1, 4}}|>], 
- LeafNode[Integer, "1", <|Source -> {{1, 5}, {1, 5}}|>]}
+	{
+		LeafNode[Token`Error`ExpectedLetterlike, "aaa`1", <|Source -> {{1, 1}, {1, 5}}|>]}
 	,
 	TestID->"TokenErrors-20190520-H9P0H9"
 ]

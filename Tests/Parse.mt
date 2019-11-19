@@ -323,8 +323,81 @@ Test[
 	TestID->"Parse-20190826-H8C5S0"
 ]
 
+Test[
+	"1`.+2"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20191116-N2A8P4"
+]
 
 
+Test[
+	"8`."
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20191116-T7X2G0"
+]
+
+Test[
+	"8`+."
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20191116-O7H4T2"
+]
+
+
+
+
+res = (ToExpression["a . -b", InputForm, Hold] =!= $Failed)
+bug382766Fixed = (res)
+
+BeginTestSection["DotNegative", bug382766Fixed]
+
+Test[
+	"a . -b"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20191116-Q8V9U8"
+]
+
+EndTestSection[]
+
+
+
+
+
+
+Test[
+	"002^^111"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20191116-T5D2J8"
+]
+
+Test[
+	"1`+.a"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20191116-D2C6O4"
+]
 
 
 
@@ -960,21 +1033,6 @@ Test[
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 (*
 
 File operations
@@ -1041,19 +1099,6 @@ Test[
 	,
 	TestID->"Parse-20190601-N7G5R3"
 ]
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1867,6 +1912,9 @@ Test[
 
 
 
+(*
+
+Uncomment when ?a is handled
 
 Test[
 	"?LogicalExpand"
@@ -1877,6 +1925,11 @@ Test[
 	,
 	TestID->"Parse-20190717-T7P2K7"
 ]
+*)
+
+(*
+
+Uncomment when ?a is handled
 
 Test[
 	"??LogicalExpand"
@@ -1887,7 +1940,7 @@ Test[
 	,
 	TestID->"Parse-20190717-F0Y3D1"
 ]
-
+*)
 
 
 
@@ -2025,5 +2078,56 @@ Test[
 	,
 	TestID->"Parse-20190920-T8N2C7"
 ]
+
+Test[
+	"\\[RawPercent]"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20191117-S1V0Q8"
+]
+
+Test[
+	"\\[RawPercent]\\[RawPercent]"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20191117-V6B3E9"
+]
+
+Test[
+	"\\[RawPercent]\\[RawPercent]\\[RawPercent]"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20191117-B3A0J1"
+]
+
+Test[
+	"\\[RawNumberSign]"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20191117-T2N7X9"
+]
+
+Test[
+	"\\[RawNumberSign]123"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20191117-J6D4A4"
+]
+
 
 

@@ -27,7 +27,7 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
     auto escape = c.escape();
     
     switch (escape) {
-        case ESCAPE_NONE:
+        case ESCAPE_NONE: {
             
             //
             // Determine whether graphical flag is on
@@ -44,108 +44,121 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
             }
             
             makeGraphical(stream, i);
+        }
+            break;
+        case ESCAPE_RAW: {
             
+            //
+            // Determine whether graphical flag is on
+            //
+            
+            if (stream.iword(get_graphical_i()) == 0) {
+                
+                //
+                // Take care of characters we want to use \x notation first
+                //
+                switch (i) {
+                    case CODEPOINT_STRINGMETA_LINEFEED:
+                        stream << WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
+                        break;
+                    case CODEPOINT_STRINGMETA_CARRIAGERETURN:
+                        stream << WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
+                        break;
+                    case CODEPOINT_STRINGMETA_TAB:
+                        stream << WLCharacter(CODEPOINT_STRINGMETA_TAB, ESCAPE_SINGLE);
+                        break;
+                    case CODEPOINT_STRINGMETA_DOUBLEQUOTE:
+                        stream << WLCharacter(CODEPOINT_STRINGMETA_DOUBLEQUOTE, ESCAPE_SINGLE);
+                        break;
+                    case CODEPOINT_STRINGMETA_BACKSLASH:
+                        stream << WLCharacter(CODEPOINT_STRINGMETA_BACKSLASH, ESCAPE_SINGLE);
+                        break;
+                    default:
+                        stream << SourceCharacter(i);
+                        break;
+                }
+                break;
+            }
+            
+            makeGraphical(stream, i);
+        }
             break;
         case ESCAPE_SINGLE:
+            stream << SourceCharacter('\\');
             switch (i) {
                 case CODEPOINT_STRINGMETA_BACKSPACE:
-                    stream << SourceCharacter('\\');
                     stream << SourceCharacter('b');
                     break;
                 case CODEPOINT_STRINGMETA_FORMFEED:
-                    stream << SourceCharacter('\\');
                     stream << SourceCharacter('f');
                     break;
                 case CODEPOINT_STRINGMETA_LINEFEED:
-                    stream << SourceCharacter('\\');
                     stream << SourceCharacter('n');
                     break;
                 case CODEPOINT_STRINGMETA_CARRIAGERETURN:
-                    stream << SourceCharacter('\\');
                     stream << SourceCharacter('r');
                     break;
                 case CODEPOINT_STRINGMETA_TAB:
-                    stream << SourceCharacter('\\');
                     stream << SourceCharacter('t');
                     break;
                 case CODEPOINT_STRINGMETA_OPEN:
-                    stream << SourceCharacter('\\');
                     stream << SourceCharacter('<');
                     break;
                 case CODEPOINT_STRINGMETA_CLOSE:
-                    stream << SourceCharacter('\\');
                     stream << SourceCharacter('>');
                     break;
                 case CODEPOINT_STRINGMETA_DOUBLEQUOTE:
-                    stream << SourceCharacter('\\');
                     stream << SourceCharacter('"');
                     break;
                 case CODEPOINT_STRINGMETA_BACKSLASH:
                     stream << SourceCharacter('\\');
-                    stream << SourceCharacter('\\');
                     break;
                 case CODEPOINT_LINEARSYNTAX_BANG:
-                    stream << SourceCharacter('\\');
                     stream << SourceCharacter('!');
                     break;
                 case CODEPOINT_LINEARSYNTAX_PERCENT:
-                    stream << SourceCharacter('\\');
                     stream << SourceCharacter('%');
                     break;
                 case CODEPOINT_LINEARSYNTAX_AMP:
-                    stream << SourceCharacter('\\');
                     stream << SourceCharacter('&');
                     break;
                 case CODEPOINT_LINEARSYNTAX_OPENPAREN:
-                    stream << SourceCharacter('\\');
                     stream << SourceCharacter('(');
                     break;
                 case CODEPOINT_LINEARSYNTAX_CLOSEPAREN:
-                    stream << SourceCharacter('\\');
                     stream << SourceCharacter(')');
                     break;
                 case CODEPOINT_LINEARSYNTAX_STAR:
-                    stream << SourceCharacter('\\');
                     stream << SourceCharacter('*');
                     break;
                 case CODEPOINT_LINEARSYNTAX_PLUS:
-                    stream << SourceCharacter('\\');
                     stream << SourceCharacter('+');
                     break;
                 case CODEPOINT_LINEARSYNTAX_SLASH:
-                    stream << SourceCharacter('\\');
                     stream << SourceCharacter('/');
                     break;
                 case CODEPOINT_LINEARSYNTAX_AT:
-                    stream << SourceCharacter('\\');
                     stream << SourceCharacter('@');
                     break;
                 case CODEPOINT_LINEARSYNTAX_CARET:
-                    stream << SourceCharacter('\\');
                     stream << SourceCharacter('^');
                     break;
                 case CODEPOINT_LINEARSYNTAX_UNDER:
-                    stream << SourceCharacter('\\');
                     stream << SourceCharacter('_');
                     break;
                 case CODEPOINT_LINEARSYNTAX_BACKTICK:
-                    stream << SourceCharacter('\\');
                     stream << SourceCharacter('`');
                     break;
                 case CODEPOINT_LINEARSYNTAX_SPACE:
-                    stream << SourceCharacter('\\');
                     stream << SourceCharacter(' ');
                     break;
                 case CODEPOINT_LINECONTINUATION_LF:
-                    stream << SourceCharacter('\\');
                     stream << SourceCharacter('\n');
                     break;
                 case CODEPOINT_LINECONTINUATION_CR:
-                    stream << SourceCharacter('\\');
                     stream << SourceCharacter('\r');
                     break;
                 case CODEPOINT_LINECONTINUATION_CRLF:
-                    stream << SourceCharacter('\\');
                     stream << SourceCharacter('\r');
                     stream << SourceCharacter('\n');
                     break;
@@ -823,15 +836,110 @@ bool WLCharacter::isStrangeCharacter() const {
     
     auto val = to_point();
     
+    //
+    // Reject if ASCII, should use isStrange()
+    //
+    if ((0x00 <= val && val <= 0x7f)) {
+        return false;
+    }
+    
     switch (val) {
+        //
+        // ZERO WIDTH SPACE
+        //
+        case 0x200b:
+            return true;
+        //
+        // ZERO WIDTH NON-JOINER
+        //
+        case 0x200c:
+            return true;
+        //
+        // ZERO WIDTH JOINER
+        //
+        case 0x200d:
+            return true;
+        //
+        // LINE SEPARATOR
+        //
+//        case 0x2028:
+//            return true;
         //
         // FUNCTION APPLICATION
         //
         case 0x2061:
             return true;
-        default:
-            return false;
+        //
+        // ZERO WIDTH NO-BREAK SPACE
+        //
+        case 0xfeff:
+            return true;
+        //
+        // INVALID CHARACTER
+        //
+        case 0x0fffe: case 0x0ffff:
+        case 0x1fffe: case 0x1ffff:
+        case 0x2fffe: case 0x2ffff:
+        case 0x3fffe: case 0x3ffff:
+        case 0x4fffe: case 0x4ffff:
+        case 0x5fffe: case 0x5ffff:
+        case 0x6fffe: case 0x6ffff:
+        case 0x7fffe: case 0x7ffff:
+        case 0x8fffe: case 0x8ffff:
+        case 0x9fffe: case 0x9ffff:
+        case 0xafffe: case 0xaffff:
+        case 0xbfffe: case 0xbffff:
+        case 0xcfffe: case 0xcffff:
+        case 0xdfffe: case 0xdffff:
+        case 0xefffe: case 0xeffff:
+        case 0xffffe: case 0xfffff:
+        case 0x10fffe: case 0x10ffff:
+            return true;
     }
+    
+    //
+    // C1
+    //
+    if (0x0080 <= val && val <= 0x009f) {
+        return true;
+    }
+    
+    //
+    // High surrogates
+    //
+    if (0xd800 <= val && val <= 0xdbff) {
+        return true;
+    }
+    
+    //
+    // Low surrogates
+    //
+    if (0xdc00 <= val && val <= 0xdfff) {
+        return true;
+    }
+    
+    //
+    // BMP PUA
+    //
+    if (0xe000 <= val && val <= 0xf8ff) {
+        return true;
+    }
+    
+    //
+    // Plane 15 PUA
+    //
+    if (0xf0000 <= val && val <= 0xffffd) {
+        return true;
+    }
+    
+    //
+    // Plan 16 PUA
+    //
+    if (0x100000 <= val && val <= 0x10fffd) {
+        return true;
+    }
+    
+    return false;
 }
 
 bool WLCharacter::isLineContinuation() const {

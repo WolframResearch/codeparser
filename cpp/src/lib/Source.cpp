@@ -18,6 +18,7 @@
 #include <cctype> // for isalnum, isxdigit, isupper, isdigit, isalpha, ispunct, iscntrl with GCC and MSVC
 #include <utility> // for swap
 
+#if USE_MATHLINK
 void SyntaxIssue::put(MLINK mlp) const {
     
     MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKESYNTAXISSUE->name(), static_cast<int>(3 + Src.count() + 1 + Actions.size()));
@@ -36,6 +37,7 @@ void SyntaxIssue::put(MLINK mlp) const {
         A->put(mlp);
     }
 }
+#endif
 
 void SyntaxIssue::print(std::ostream& s) const {
     
@@ -62,6 +64,7 @@ void SyntaxIssue::print(std::ostream& s) const {
     s << "]";
 }
 
+#if USE_MATHLINK
 void ReplaceTextCodeAction::put(MLINK mlp) const {
     
     MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEREPLACETEXTCODEACTION->name(), static_cast<int>(1 + Src.count() + 1));
@@ -72,6 +75,7 @@ void ReplaceTextCodeAction::put(MLINK mlp) const {
     
     MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(ReplacementText.c_str()), static_cast<int>(ReplacementText.size()));
 }
+#endif
 
 void ReplaceTextCodeAction::print(std::ostream& s) const {
     
@@ -89,6 +93,7 @@ void ReplaceTextCodeAction::print(std::ostream& s) const {
     s << "]";
 }
 
+#if USE_MATHLINK
 void InsertTextCodeAction::put(MLINK mlp) const {
     
     MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEINSERTTEXTCODEACTION->name(), static_cast<int>(1 + Src.count() + 1));
@@ -99,6 +104,7 @@ void InsertTextCodeAction::put(MLINK mlp) const {
     
     MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(InsertionText.c_str()), static_cast<int>(InsertionText.size()));
 }
+#endif
 
 void InsertTextCodeAction::print(std::ostream& s) const {
     
@@ -116,6 +122,7 @@ void InsertTextCodeAction::print(std::ostream& s) const {
     s << "]";
 }
 
+#if USE_MATHLINK
 void InsertTextAfterCodeAction::put(MLINK mlp) const {
     
     MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEINSERTTEXTAFTERCODEACTION->name(), static_cast<int>(1 + Src.count() + 1));
@@ -126,6 +133,7 @@ void InsertTextAfterCodeAction::put(MLINK mlp) const {
     
     MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(InsertionText.c_str()), static_cast<int>(InsertionText.size()));
 }
+#endif
 
 void InsertTextAfterCodeAction::print(std::ostream& s) const {
     
@@ -143,6 +151,7 @@ void InsertTextAfterCodeAction::print(std::ostream& s) const {
     s << "]";
 }
 
+#if USE_MATHLINK
 void DeleteTextCodeAction::put(MLINK mlp) const {
     
     MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEDELETETEXTCODEACTION->name(), static_cast<int>(1 + Src.count()));
@@ -151,6 +160,7 @@ void DeleteTextCodeAction::put(MLINK mlp) const {
     
     Src.put(mlp);
 }
+#endif
 
 void DeleteTextCodeAction::print(std::ostream& s) const {
     
@@ -165,6 +175,7 @@ void DeleteTextCodeAction::print(std::ostream& s) const {
     s << "]";
 }
 
+#if USE_MATHLINK
 void DeleteTriviaCodeAction::put(MLINK mlp) const {
     
     MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEDELETETRIVIACODEACTION->name(), static_cast<int>(1 + Src.count()));
@@ -173,6 +184,7 @@ void DeleteTriviaCodeAction::put(MLINK mlp) const {
     
     Src.put(mlp);
 }
+#endif
 
 void DeleteTriviaCodeAction::print(std::ostream& s) const {
     
@@ -187,6 +199,7 @@ void DeleteTriviaCodeAction::print(std::ostream& s) const {
     s << "]";
 }
 
+#if USE_MATHLINK
 void FormatIssue::put(MLINK mlp) const {
     
     MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEFORMATISSUE->name(), static_cast<int>(3 + Src.count() + 1 + Actions.size()));
@@ -205,6 +218,7 @@ void FormatIssue::put(MLINK mlp) const {
         A->put(mlp);
     }
 }
+#endif
 
 void FormatIssue::print(std::ostream& s) const {
     
@@ -262,19 +276,19 @@ std::string SyntaxErrorToString(SyntaxError Err) {
     }
 }
 
-SyntaxError TokenErrorToSyntaxError(TokenEnum Tok) {
-    switch (Tok) {
-        case TOKEN_ERROR_EXPECTEDEQUAL: return SYNTAXERROR_TOKEN_EXPECTEDEQUAL;
-        case TOKEN_ERROR_UNHANDLEDCHARACTER: return SYNTAXERROR_TOKEN_UNHANDLEDCHARACTER;
-        case TOKEN_ERROR_EXPECTEDLETTERLIKE: return SYNTAXERROR_TOKEN_EXPECTEDLETTERLIKE;
-        case TOKEN_ERROR_UNTERMINATEDCOMMENT: return SYNTAXERROR_TOKEN_UNTERMINATEDCOMMENT;
-        case TOKEN_ERROR_UNTERMINATEDSTRING: return SYNTAXERROR_TOKEN_UNTERMINATEDSTRING;
-        case TOKEN_ERROR_INVALIDBASE: return SYNTAXERROR_TOKEN_INVALIDBASE;
-        case TOKEN_ERROR_EXPECTEDACCURACY: return SYNTAXERROR_TOKEN_EXPECTEDACCURACY;
-        case TOKEN_ERROR_EXPECTEDEXPONENT: return SYNTAXERROR_TOKEN_EXPECTEDEXPONENT;
-        case TOKEN_ERROR_EMPTYSTRING: return SYNTAXERROR_TOKEN_EMPTYSTRING;
-        case TOKEN_ERROR_UNHANDLEDDOT: return SYNTAXERROR_TOKEN_UNHANDLEDDOT;
-        case TOKEN_ERROR_UNRECOGNIZEDDIGIT: return SYNTAXERROR_TOKEN_UNRECOGNIZEDDIGIT;
+SyntaxError TokenErrorToSyntaxError(TokenEnum T) {
+    switch (T.value()) {
+        case TOKEN_ERROR_EXPECTEDEQUAL.value(): return SYNTAXERROR_TOKEN_EXPECTEDEQUAL;
+        case TOKEN_ERROR_UNHANDLEDCHARACTER.value(): return SYNTAXERROR_TOKEN_UNHANDLEDCHARACTER;
+        case TOKEN_ERROR_EXPECTEDLETTERLIKE.value(): return SYNTAXERROR_TOKEN_EXPECTEDLETTERLIKE;
+        case TOKEN_ERROR_UNTERMINATEDCOMMENT.value(): return SYNTAXERROR_TOKEN_UNTERMINATEDCOMMENT;
+        case TOKEN_ERROR_UNTERMINATEDSTRING.value(): return SYNTAXERROR_TOKEN_UNTERMINATEDSTRING;
+        case TOKEN_ERROR_INVALIDBASE.value(): return SYNTAXERROR_TOKEN_INVALIDBASE;
+        case TOKEN_ERROR_EXPECTEDACCURACY.value(): return SYNTAXERROR_TOKEN_EXPECTEDACCURACY;
+        case TOKEN_ERROR_EXPECTEDEXPONENT.value(): return SYNTAXERROR_TOKEN_EXPECTEDEXPONENT;
+        case TOKEN_ERROR_EMPTYSTRING.value(): return SYNTAXERROR_TOKEN_EMPTYSTRING;
+        case TOKEN_ERROR_UNHANDLEDDOT.value(): return SYNTAXERROR_TOKEN_UNHANDLEDDOT;
+        case TOKEN_ERROR_UNRECOGNIZEDDIGIT.value(): return SYNTAXERROR_TOKEN_UNRECOGNIZEDDIGIT;
         default:
             assert(false);
             return SYNTAXERROR_UNKNOWN;
@@ -332,7 +346,6 @@ bool operator==(Offset a, Offset b) {
 bool operator<=(Offset a, Offset b) {
     return a.val <= b.val;
 }
-
 
 
 
@@ -431,12 +444,6 @@ bool operator<=(SourceLocation a, SourceLocation b) {
 }
 
 
-
-
-
-
-
-
 //
 // Source_LineCol_struct
 //
@@ -447,7 +454,6 @@ Source_LineCol_struct::Source_LineCol_struct(LineCol start, LineCol end) : start
 bool operator==(Source_LineCol_struct a, Source_LineCol_struct b) {
     return a.start == b.start && a.end == b.end;
 }
-
 
 
 //
@@ -614,6 +620,7 @@ SourceLocation Source::end() const {
     }
 }
 
+#if USE_MATHLINK
 void Source::put(MLINK mlp) const {
     switch (style) {
         case SOURCESTYLE_UNKNOWN:
@@ -634,6 +641,7 @@ void Source::put(MLINK mlp) const {
             break;
     }
 }
+#endif
 
 void Source::print(std::ostream& s) const {
     switch (style) {

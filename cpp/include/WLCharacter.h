@@ -6,17 +6,29 @@
 #include <iterator>
 
 //
+// The 8 styles of character escapes
+//
+// None: just regular characters: a, b, c, etc.
+// Raw: Using the \[Raw] style: \[RawWedge], \[RawAt], etc.
+// Single: A single backslash: \n, \t, \r, etc.
+// 2Hex: \.xx style
+// 4Hex: \:xxxx style
+// 6Hex: \|xxxxxx style
+// Octal: \XXX style
+// LongName: Using \[XX] style: \[Alpha], \[Beta], etc.
+//
 // Used to just be Escape, but this was observed:
 // c:\users\brenton\dropbox\wolfram\ast\ast\cpp\include\CharacterDecoder.h(37): error C2061: syntax error: identifier 'Escape'
 //
-enum EscapeFormat {
+enum EscapeStyle {
     ESCAPE_NONE,
+    ESCAPE_RAW,
     ESCAPE_SINGLE,
-    ESCAPE_LONGNAME,
-    ESCAPE_4HEX,
     ESCAPE_2HEX,
-    ESCAPE_OCTAL,
+    ESCAPE_4HEX,
     ESCAPE_6HEX,
+    ESCAPE_OCTAL,
+    ESCAPE_LONGNAME,
 };
 
 //
@@ -30,7 +42,7 @@ enum EscapeFormat {
 //           ^
 //           Sign bit
 //        ^~~
-//        EscapeFormat bits (3 bits)
+//        EscapeStyle bits (3 bits)
 // ^~~~~~~
 // Currently unused (7 bits)
 //
@@ -46,7 +58,7 @@ struct WLCharacter {
     uint8_t signBit : 1;
     uint8_t escapeBits : 3;
     
-    explicit constexpr WLCharacter(int val, EscapeFormat escape = ESCAPE_NONE) : valBits(val), signBit(val < 0), escapeBits(escape) {}
+    explicit constexpr WLCharacter(int val, EscapeStyle escape = ESCAPE_NONE) : valBits(val), signBit(val < 0), escapeBits(escape) {}
     
     explicit operator int() const noexcept = delete;
     
@@ -72,8 +84,8 @@ struct WLCharacter {
         return signBit ? (valBits | -0x200000) : valBits;
     }
     
-    constexpr EscapeFormat escape() const {
-        return static_cast<EscapeFormat>(escapeBits);
+    constexpr EscapeStyle escape() const {
+        return static_cast<EscapeStyle>(escapeBits);
     }
     
     std::string graphicalString() const;

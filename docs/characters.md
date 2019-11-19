@@ -15,8 +15,8 @@ Perhaps essentially unused
 
 A good philosophy that I follow is to treat the Raw characters as escaped versions of their normal characters
 
-\[RawTab] is similar to \t
-\[NewLine] is similar to \n
+\[RawTab] is similar to \t, and is NOT the same as actual 0x09 character
+\[NewLine] is similar to \n, and is NOT the same as actual 0x0a character
 etc.
 
 
@@ -185,42 +185,6 @@ bit 2: isLinearSyntax (only set if punctuation)
 
 
 
-
-
-
-#
-indexing strategies
-
-
-
-
-Want to index WLCharacters similar to indexing UTF-8 strings
-
-
-
-
-UTF-8 indexing strategies
-
-https://nullprogram.com/blog/2019/05/29/
-
-
-
-
-
-
-
-there is an analogy here:
-
-given an index into a byte buffer, what is the SourceCharacter ?
-maybe there is a multi-byte UTF-8 character
-
-given an index into a byte buffer, what is the WLCharacter ?
-maybe there are SourceCharacters like \ [ A l p h a ] that offsets where WLCharacters are
-
-
-given an index into a byte buffer, what is the line and column?
-
-\n (and \r with no \n) can appear anywhere
 
 
 

@@ -27,10 +27,9 @@ Source Tokenizer::getTokenSource() const {
 }
 
 
-
 Tokenizer::Tokenizer() : _currentToken(Token(TOKEN_UNKNOWN, "", Source())), _currentWLCharacter(0), wlCharacterQueue(), String(), Issues(), TokenStartLoc() {}
 
-void Tokenizer::init(SourceStyle style, bool stringifyNextTokenSymbol, bool stringifyNextTokenFile) {
+void Tokenizer::init(SourceStyle style, int mode) {
     
     _currentToken = Token(TOKEN_UNKNOWN, "", Source(style));
     
@@ -45,12 +44,16 @@ void Tokenizer::init(SourceStyle style, bool stringifyNextTokenSymbol, bool stri
     
     TokenStartLoc = SourceLocation(style);
     
-    if (stringifyNextTokenSymbol) {
-        nextToken_stringifyNextToken_symbol();
-    } else if (stringifyNextTokenFile) {
-        nextToken_stringifyNextToken_file();
-    } else {
-        nextToken();
+    switch (mode) {
+        case 0:
+            nextToken();
+            break;
+        case 1:
+            nextToken_stringifyNextToken_symbol();
+            break;
+        case 2:
+            nextToken_stringifyNextToken_file();
+            break;
     }
 }
 
@@ -63,10 +66,9 @@ void Tokenizer::deinit() {
     Issues.clear();
 }
 
-
 void Tokenizer::nextToken() {
     
-    assert((_currentToken.Tok() != TOKEN_ENDOFFILE) && "Must handle at call site");
+    assert((_currentToken.getTokenEnum() != TOKEN_ENDOFFILE) && "Must handle at call site");
     
     //
     // Too complicated to clear string when calling getString and assert here
@@ -213,7 +215,7 @@ void Tokenizer::nextToken() {
 
 void Tokenizer::nextToken_stringifyCurrentLine() {
     
-    assert((_currentToken.Tok() != TOKEN_ENDOFFILE) && "Must handle at call site");
+    assert((_currentToken.getTokenEnum() != TOKEN_ENDOFFILE) && "Must handle at call site");
     
     String.clear();
     
@@ -251,7 +253,7 @@ void Tokenizer::nextToken_stringifyCurrentLine() {
 
 void Tokenizer::nextToken_stringifyNextToken_symbol() {
     
-    assert((_currentToken.Tok() != TOKEN_ENDOFFILE) && "Must handle at call site");
+    assert((_currentToken.getTokenEnum() != TOKEN_ENDOFFILE) && "Must handle at call site");
     
     //
     // Too complicated to clear string when calling getString and assert here
@@ -294,7 +296,7 @@ void Tokenizer::nextToken_stringifyNextToken_symbol() {
 
 void Tokenizer::nextToken_stringifyNextToken_file() {
     
-    assert((_currentToken.Tok() != TOKEN_ENDOFFILE) && "Must handle at call site");
+    assert((_currentToken.getTokenEnum() != TOKEN_ENDOFFILE) && "Must handle at call site");
     
     //
     // Too complicated to clear string when calling getString and assert here
@@ -442,7 +444,7 @@ WLCharacter Tokenizer::currentWLCharacter() const {
 
 Token Tokenizer::currentToken() {
     
-    assert(_currentToken.Tok() != TOKEN_UNKNOWN);
+    assert(_currentToken.getTokenEnum() != TOKEN_UNKNOWN);
     
     return _currentToken;
 }
@@ -491,6 +493,7 @@ inline void Tokenizer::handleNewlineCharacter() {
     
     auto c = currentWLCharacter();
     
+#if !NISSUES
     if (c.isStrangeNewlineCharacter()) {
         
         auto Src = TheCharacterDecoder->getWLCharacterSource();
@@ -499,6 +502,7 @@ inline void Tokenizer::handleNewlineCharacter() {
         
         Issues.push_back(std::move(I));
     }
+#endif
     
     String << c;
     
@@ -540,12 +544,14 @@ inline void Tokenizer::handleTab() {
 inline void Tokenizer::handleStrangeSpace() {
     
     auto c = currentWLCharacter();
-        
+    
+#if !NISSUES
     auto Src = TheCharacterDecoder->getWLCharacterSource();
     
     auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
     
     Issues.push_back(std::move(I));
+#endif
     
     String << c;
     
@@ -558,6 +564,7 @@ inline void Tokenizer::handleSpaceCharacter() {
     
     auto c = currentWLCharacter();
     
+#if !NISSUES
     if (c.isStrangeSpaceCharacter()) {
         
         auto Src = TheCharacterDecoder->getWLCharacterSource();
@@ -566,6 +573,7 @@ inline void Tokenizer::handleSpaceCharacter() {
         
         Issues.push_back(std::move(I));
     }
+#endif
     
     String << c;
     
@@ -762,6 +770,7 @@ void Tokenizer::handleSymbol(TokenizerContext Ctxt) {
         // No need to check isAbort() inside tokenizer loops
         //
         
+#if !NISSUES
         if ((Ctxt & TOKENIZER_SLOT) == TOKENIZER_SLOT) {
             
             auto Src = TheCharacterDecoder->getWLCharacterSource();
@@ -770,6 +779,7 @@ void Tokenizer::handleSymbol(TokenizerContext Ctxt) {
             
             Issues.push_back(std::move(I));
         }
+#endif
         
         String << c;
         
@@ -781,7 +791,11 @@ void Tokenizer::handleSymbol(TokenizerContext Ctxt) {
             
         } else {
             
-            _currentToken = Token(TOKEN_OTHER, String.str(), getTokenSource());
+            String << c;
+            
+            nextWLCharacter(INSIDE_SYMBOL);
+            
+            _currentToken = Token(TOKEN_ERROR_EXPECTEDLETTERLIKE, String.str(), getTokenSource());
             
             return;
         }
@@ -799,6 +813,7 @@ void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
     
     assert(c.isLetterlike() || c.isLetterlikeCharacter());
     
+#if !NISSUES
     if (c.to_point() == '$') {
         
         if ((Ctxt & TOKENIZER_SLOT) == TOKENIZER_SLOT) {
@@ -810,10 +825,13 @@ void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
             Issues.push_back(std::move(I));
         }
     }
+#endif
     
+#if !NISSUES
     if (c.isStrangeLetterlike() || c.isStrangeLetterlikeCharacter()) {
         Utils::strangeLetterlikeWarning(c);
     }
+#endif
     
     String << c;
     
@@ -833,6 +851,7 @@ void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
             
         } else if (c.isLetterlike() || c.isLetterlikeCharacter()) {
             
+#if !NISSUES
             if (c.to_point() == '$') {
                 
                 if ((Ctxt & TOKENIZER_SLOT) == TOKENIZER_SLOT) {
@@ -844,10 +863,13 @@ void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
                     Issues.push_back(std::move(I));
                 }
             }
+#endif
             
+#if !NISSUES
             if (c.isStrangeLetterlike() || c.isStrangeLetterlikeCharacter()) {
                 Utils::strangeLetterlikeWarning(c);
             }
+#endif
             
             String << c;
             
@@ -993,7 +1015,7 @@ void Tokenizer::handleString_stringifyNextToken_symbol() {
         
         nextToken();
         
-        _currentToken = Token(TOKEN_OTHER, String.str(), getTokenSource());
+        _currentToken = Token(TOKEN_ERROR_EXPECTEDLETTERLIKE, String.str(), getTokenSource());
         
         return;
     }
@@ -1084,7 +1106,7 @@ void Tokenizer::handleString_stringifyNextToken_file() {
                 empty = false;
                 
                 handleFileOpsBrackets();
-                if (_currentToken.Tok() != TOKEN_STRING) {
+                if (_currentToken.getTokenEnum() != TOKEN_STRING) {
                     return;
                 }
                 
@@ -1259,7 +1281,8 @@ inline void Tokenizer::handleNumber() {
     
     int base = 0;
     
-    handleDigits();
+    int leadingZeroCount = 0;
+    handleDigits(&leadingZeroCount);
     
     auto c = currentWLCharacter();
     
@@ -1319,7 +1342,9 @@ inline void Tokenizer::handleNumber() {
         //
         // Only parse integer if we know it can possibly be a valid base
         //
-        if (S.size() > 2) {
+        // If string is longer than 2 characters, then cannot be a valid base
+        //
+        if (S.size() - leadingZeroCount > 2) {
             
             //
             // Too large
@@ -1390,7 +1415,7 @@ inline void Tokenizer::handleNumber() {
         
         auto handle = handleFractionalPart(base);
         if (handle == -1) {
-            _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), getTokenSource());
+            _currentToken = Token(TOKEN_ERROR_UNRECOGNIZEDDIGIT, String.str(), getTokenSource());
             
             return;
         }
@@ -1400,6 +1425,8 @@ inline void Tokenizer::handleNumber() {
     
     c = currentWLCharacter();
     
+    //
+    // Handle all ` logic here
     //
     // foo`
     // foo`bar
@@ -1416,6 +1443,8 @@ inline void Tokenizer::handleNumber() {
         c = nextWLCharacter(INSIDE_NUMBER);
         
         bool accuracy = false;
+        bool sign = false;
+        bool supplied = false;
         if (c.to_point() == '`') {
             
             String << c;
@@ -1427,31 +1456,12 @@ inline void Tokenizer::handleNumber() {
             accuracy = true;
         }
         
-        if (c.isLetterlike() || c.isLetterlikeCharacter()) {
-            
-            //
-            // Something like 1.2`a
-            //
-            
-            auto Loc2 = TheByteDecoder->getSourceLocation();
-            
-            auto cGraphicalStr = c.graphicalString();
-            
-            //
-            // Use ** markup syntax here because of ` character
-            //
-            
-            std::vector<CodeActionPtr> Actions;
-            Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(Loc2), " ")));
-            
-            auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between **`** and ``" + cGraphicalStr + "`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc2), 1.0, std::move(Actions)));
-            
-            Issues.push_back(std::move(I));
-        }
-        
-        if (accuracy || c.isDigit() || c.to_point() == '-' || c.to_point() == '+' || c.to_point() == '.') {
-            
-            if (c.to_point() == '-' || c.to_point() == '+') {
+        switch (c.to_point()) {
+            case '-': case '+': {
+                
+                //
+                // Something like 1.2`-
+                //
                 
                 auto s = c;
                 
@@ -1459,175 +1469,245 @@ inline void Tokenizer::handleNumber() {
                 
                 c = nextWLCharacter(INSIDE_NUMBER);
                 
-                if (c.isDigit()) {
-                    
-                    String << s;
-                    
-                } else if (c.to_point() == '.') {
-                    
-                    String << s;
-                    
-                } else if (accuracy) {
-                    
-                    //
-                    // Something like 1.2``->3
-                    //
-                    
-                    String << s;
-                    String << c;
-                    
-                    c = nextWLCharacter(INSIDE_NUMBER);
-                    
-                    _currentToken = Token(TOKEN_ERROR_EXPECTEDACCURACY, String.str(), getTokenSource());
-                    
-                    return;
-                    
-                } else {
-                    
-                    //
-                    // Something like 1.2`->3
-                    //
-                    // Must now do surgery and back up
-                    //
-                    // Cannot use SignLoc as source of FormatIssue, because it is expected to be the source for the entire token,
-                    // which we do not have yet
-                    //
-                    // So use the source for number itself and insert space after that
-                    //
-                    
-                    auto NumStartLoc = TokenStartLoc;
-                    auto NumEndLoc = SignLoc - 1;
-                    
-                    std::string msg;
-                    if (s.to_point() == '-') {
-                        msg = "Put a space between **`** and ``-`` to reduce ambiguity";
-                    } else {
-                        msg = "Put a space between **`** and ``+`` to reduce ambiguity";
-                    }
-                    
-                    std::vector<CodeActionPtr> Actions;
-                    Actions.push_back(CodeActionPtr(new InsertTextAfterCodeAction("Insert space after", Source(NumStartLoc, NumEndLoc), " ")));
-                    
-                    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACEAFTER, msg, FORMATISSUESEVERITY_FORMATTING, Source(NumStartLoc, NumEndLoc), 1.0, std::move(Actions)));
-                    
-                    Issues.push_back(std::move(I));
-                    
-                    auto Src = TheCharacterDecoder->getWLCharacterSource();
-                    
-                    //
-                    // FIXME: SignLoc-1 is not correct because of something like this:
-                    //
-                    // 1.2`\
-                    // ->3
-                    //
-                    TheByteDecoder->setSourceLocation(SignLoc-1);
-                    TheCharacterDecoder->setWLCharacterStart();
-                    TheCharacterDecoder->setWLCharacterEnd();
-                    
-                    TheByteDecoder->setSourceLocation(SignLoc);
-                    TheCharacterDecoder->setWLCharacterStart();
-                    TheCharacterDecoder->setWLCharacterEnd();
-                    _currentWLCharacter = s;
-                    
-                    append(c, Src);
-                    
-                    _currentToken = Token(TOKEN_REAL, String.str(), getTokenSource());
-                    
-                    return;
-                }
-            }
-            
-            bool supplied = false;
-            
-            if (c.isDigit()) {
-                
-                handleDigits();
-                
-                supplied = true;
-            }
-            
-            c = currentWLCharacter();
-            
-            if (c.to_point() == '.') {
-                
-                //
-                // Need to decide if the  .  here is actual decimal point, or something like
-                // the . in  123`.xxx  (which is Dot)
-                //
-                
-                if (!supplied) {
-                    
-                    //
-                    // Something like 123`.xxx
-                    //
-                    
-                    auto DotChar = c;
-                    auto DotLoc = TheByteDecoder->getSourceLocation();
-                    
-                    // look ahead
-                    auto NextChar = nextWLCharacter(INSIDE_NUMBER);
-                    
-                    auto Src = TheCharacterDecoder->getWLCharacterSource();
-                    
-                    //
-                    // Must now do surgery and back up
-                    //
-                    
-                    TheByteDecoder->setSourceLocation(DotLoc-1);
-                    TheCharacterDecoder->setWLCharacterStart();
-                    TheCharacterDecoder->setWLCharacterEnd();
-                    
-                    TheByteDecoder->setSourceLocation(DotLoc);
-                    TheCharacterDecoder->setWLCharacterStart();
-                    TheCharacterDecoder->setWLCharacterEnd();
-                    _currentWLCharacter = DotChar;
-                    
-                    append(NextChar, Src);
-                    
-                    if (!NextChar.isDigit()) {
+                switch (c.to_point()) {
+                    case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+                    case '.': {
                         
-                        if (!accuracy) {
+                        sign = true;
+                        
+                        String << s;
+                    }
+                        break;
+                    default: {
+                        
+                        //
+                        // Something like 1.2`->
+                        //
+                        
+                        if (accuracy) {
                             
                             //
-                            // Something like  123`.xxx  where the . could be a Dot operator
+                            // Something like 1.2``->3
                             //
                             
-                            _currentToken = Token(TOKEN_REAL, String.str(), getTokenSource());
+                            String << s;
+                            String << c;
+                            
+                            c = nextWLCharacter(INSIDE_NUMBER);
+                            
+                            _currentToken = Token(TOKEN_ERROR_EXPECTEDACCURACY, String.str(), getTokenSource());
                             
                             return;
                         }
-                            
+                        
                         //
-                        // Something like  123``.EOF
+                        // Something like 1.2`->3
+                        //
+                        // Must now do surgery and back up
+                        //
+                        // Cannot use SignLoc as source of FormatIssue, because it is expected to be the source for the entire token,
+                        // which we do not have yet
+                        //
+                        // So use the source for number itself and insert space after that
                         //
                         
-                        String << DotChar;
-                        String << NextChar;
+#if !NISSUES
+                        auto NumStartLoc = TokenStartLoc;
+                        auto NumEndLoc = SignLoc - 1;
                         
-                        // this grabs the Dot character
-                        c = nextWLCharacter(INSIDE_NUMBER);
-                        // this grabs the next character
-                        c = nextWLCharacter(INSIDE_NUMBER);
+                        std::string msg;
+                        if (s.to_point() == '-') {
+                            msg = "Put a space between **`** and ``-`` to reduce ambiguity";
+                        } else {
+                            msg = "Put a space between **`** and ``+`` to reduce ambiguity";
+                        }
                         
-                        _currentToken = Token(TOKEN_ERROR_EXPECTEDACCURACY, String.str(), getTokenSource());
+                        std::vector<CodeActionPtr> Actions;
+                        Actions.push_back(CodeActionPtr(new InsertTextAfterCodeAction("Insert space after", Source(NumStartLoc, NumEndLoc), " ")));
+                        
+                        auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACEAFTER, msg, FORMATISSUESEVERITY_FORMATTING, Source(NumStartLoc, NumEndLoc), 0.25, std::move(Actions)));
+                        
+                        Issues.push_back(std::move(I));
+#endif
+                        
+                        auto Src = TheCharacterDecoder->getWLCharacterSource();
+                        
+                        //
+                        // FIXME: SignLoc-1 is not correct because of something like this:
+                        //
+                        // 1.2`\
+                        // ->3
+                        //
+                        TheByteDecoder->setSourceLocation(SignLoc-1);
+                        TheCharacterDecoder->setWLCharacterStart();
+                        TheCharacterDecoder->setWLCharacterEnd();
+                        
+                        TheByteDecoder->setSourceLocation(SignLoc);
+                        TheCharacterDecoder->setWLCharacterStart();
+                        TheCharacterDecoder->setWLCharacterEnd();
+                        _currentWLCharacter = s;
+                        
+                        append(c, Src);
+                        
+                        _currentToken = Token(TOKEN_REAL, String.str(), getTokenSource());
                         
                         return;
                     }
                 }
+            }
+            //
+            // fall-through
+            //
+            case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': {
                 
-                // actual decimal point
-                
-                auto handle = handleFractionalPart(0);
-                if (handle != 0) {
-                    
-                    assert(handle > 0);
-                    
+                int leadingZeroCount;
+                auto handled = handleDigits(&leadingZeroCount);
+                if (handled > 0) {
                     supplied = true;
                 }
+                
+                c = currentWLCharacter();
+                
+                if (c.to_point() != '.') {
+                    break;
+                }
             }
-            
-            if (accuracy) {
+            //
+            // fall-through
+            //
+            case '.': {
+                
+                auto DotChar = c;
+                auto DotLoc = TheByteDecoder->getSourceLocation();
+                
+                bool actualDecimalPoint = false;
+                
+                //
+                // If there was already a sign, or if the leading digits have already been supplied,
+                // then this is an actual decimal point
+                //
+                if (sign || supplied) {
+                    actualDecimalPoint = true;
+                }
+                
+                //
+                // Need to decide if the  .  here is actual radi point, or something like
+                // the . in  123`.xxx  (which is Dot)
+                //
+                
+                if (!actualDecimalPoint) {
+                    
+                    //
+                    // Need to peek ahead
+                    //
+                    // Something like 123`.xxx
+                    //
+                    
+                    // look ahead
+                    auto NextChar = nextWLCharacter(INSIDE_NUMBER);
+                    
+                    if (!NextChar.isDigit()) {
+                        
+                        if (accuracy) {
+                            
+                            //
+                            // Something like  123``.EOF
+                            //
+                            
+                            String << DotChar;
+                            String << NextChar;
+                            
+                            nextWLCharacter(INSIDE_NUMBER);
+                            
+                            _currentToken = Token(TOKEN_ERROR_EXPECTEDDIGIT, String.str(), getTokenSource());
+                            
+                            return;
+                        }
+                        
+                        if (NextChar.to_point() == '-' || NextChar.to_point() == '+') {
+                            
+                            //
+                            // Something like  123`.+4
+                            //
+                            
+                            String << DotChar;
+                            String << NextChar;
+                            
+                            nextWLCharacter(INSIDE_NUMBER);
+                            
+                            _currentToken = Token(TOKEN_ERROR_EXPECTEDDIGIT, String.str(), getTokenSource());
+                            
+                            return;
+                        }
+                        
+                        auto Src = TheCharacterDecoder->getWLCharacterSource();
+                        
+                        //
+                        // Something like  123`.xxx  where the . could be a Dot operator
+                        //
+                        // Number stops at `
+                        //
+                        // NOT actual decimal point
+                        //
+                        // Must now do surgery and back up
+                        //
+                        
+                        TheByteDecoder->setSourceLocation(DotLoc-1);
+                        TheCharacterDecoder->setWLCharacterStart();
+                        TheCharacterDecoder->setWLCharacterEnd();
+                        
+                        TheByteDecoder->setSourceLocation(DotLoc);
+                        TheCharacterDecoder->setWLCharacterStart();
+                        TheCharacterDecoder->setWLCharacterEnd();
+                        _currentWLCharacter = DotChar;
+                        
+                        append(NextChar, Src);
+                        
+                        _currentToken = Token(TOKEN_REAL, String.str(), getTokenSource());
+                        
+                        return;
+                    }
+                    
+                } else {
+                    
+                    //
+                    // actual decimal point
+                    //
+                    
+                    nextWLCharacter(INSIDE_NUMBER);
+                }
+                
+                //
+                // actual decimal point
+                //
+                
+                auto handled = handleFractionalPartPastDot(0, DotChar, DotLoc);
+                if (handled > 0) {
+                    supplied = true;
+                }
+                
                 if (!supplied) {
+                    
+                    //
+                    // Something like 1`+.a
+                    //
+                    
+                    c = currentWLCharacter();
+                    
+                    String << c;
+                    
+                    nextWLCharacter(INSIDE_NUMBER);
+                    
+                    _currentToken = Token(TOKEN_ERROR_EXPECTEDDIGIT, String.str(), getTokenSource());
+                    
+                    return;
+                }
+                
+            } // case '.'
+                break;
+            default: {
+                
+                if (accuracy) {
                     
                     //
                     // Something like  123``EOF
@@ -1642,7 +1722,8 @@ inline void Tokenizer::handleNumber() {
                     return;
                 }
             }
-        }
+                break;
+        } // switch (c.to_point())
     }
     
     c = currentWLCharacter();
@@ -1716,7 +1797,7 @@ inline void Tokenizer::handleNumber() {
         c = nextWLCharacter(INSIDE_NUMBER);
     }
     
-    if (!expectDigits()) {
+    if (!expectDigits(&leadingZeroCount)) {
         
         //
         // Something like 123*^EOF
@@ -1774,7 +1855,21 @@ int Tokenizer::handleFractionalPart(int base) {
     
     auto DotLoc1 = TheByteDecoder->getSourceLocation();
     
-    c = nextWLCharacter(INSIDE_NUMBER);
+    nextWLCharacter(INSIDE_NUMBER);
+    
+    return handleFractionalPartPastDot(base, DotChar1, DotLoc1);
+}
+
+//
+// Precondition: currentWLCharacter is NOT in String
+//
+// Return: number of digits handled after ., possibly 0, or -1 if error
+//
+// Note: if 0 digits, then the . is also not added to String
+//
+int Tokenizer::handleFractionalPartPastDot(int base, WLCharacter DotChar1, SourceLocation DotLoc1) {
+    
+    auto c = currentWLCharacter();
     
     if (c.to_point() == '.') {
         
@@ -1784,13 +1879,14 @@ int Tokenizer::handleFractionalPart(int base) {
         // Must now do surgery and back up
         //
         
+#if !NISSUES
         std::vector<CodeActionPtr> Actions;
         Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(DotLoc1), " ")));
         
-        auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, Source(DotLoc1), 0.90, std::move(Actions)));
+        auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, Source(DotLoc1), 0.25, std::move(Actions)));
         
         Issues.push_back(std::move(I));
-        
+#endif
         
         auto Loc = TheByteDecoder->getSourceLocation();
         
@@ -1829,6 +1925,7 @@ int Tokenizer::handleFractionalPart(int base) {
     
     c = currentWLCharacter();
     
+#if !NISSUES
     if (c.to_point() == '.') {
         
         //
@@ -1844,17 +1941,18 @@ int Tokenizer::handleFractionalPart(int base) {
         
         Issues.push_back(std::move(I));
     }
+#endif
     
     return handle;
 }
 
-bool Tokenizer::expectDigits() {
+bool Tokenizer::expectDigits(int *leadingZeroCount) {
     
     auto c = currentWLCharacter();
     
     if (c.isDigit()) {
         
-        handleDigits();
+        handleDigits(leadingZeroCount);
         
         return true;
     }
@@ -1868,11 +1966,33 @@ bool Tokenizer::expectDigits() {
 // Precondition: currentWLCharacter MAY NOT be a digit
 // Postcondition: currentWLCharacter is the first WLCharacter AFTER all good digits
 //
-size_t Tokenizer::handleDigits() {
+size_t Tokenizer::handleDigits(int *leadingZeroCount) {
     
     auto c = currentWLCharacter();
     
     auto len = 0;
+    
+    while (true) {
+        
+        //
+        // No need to check isAbort() inside tokenizer loops
+        //
+        
+        if (c.to_point() == '0') {
+            
+            *leadingZeroCount = *leadingZeroCount + 1;
+            
+            String << c;
+            
+            c = nextWLCharacter(INSIDE_NUMBER);
+            
+        } else {
+            break;
+        }
+        
+        len++;
+    } // while
+    
     while (true) {
         
         //
@@ -2410,13 +2530,14 @@ inline void Tokenizer::handleUnder() {
                 // Must now do surgery and back up
                 //
                 
+#if !NISSUES
                 std::vector<CodeActionPtr> Actions;
                 Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(DotLoc), " ")));
                 
-                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, Source(DotLoc), 0.95, std::move(Actions)));
+                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, Source(DotLoc), 0.25, std::move(Actions)));
                 
                 Issues.push_back(std::move(I));
-                
+#endif
                 
                 auto Src = TheCharacterDecoder->getWLCharacterSource();
                 
@@ -2442,20 +2563,6 @@ inline void Tokenizer::handleUnder() {
             } else {
                 
                 String << DotChar;
-                
-                if (c.isDigit()) {
-                    
-                    //
-                    // Something like _.0
-                    //
-                    
-                    std::vector<CodeActionPtr> Actions;
-                    Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(DotLoc), " ")));
-                    
-                    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, Source(DotLoc), 0.90, std::move(Actions)));
-                    
-                    Issues.push_back(std::move(I));
-                }
                 
                 Operator = TOKEN_UNDERDOT; // _.
             }
@@ -2651,6 +2758,7 @@ inline void Tokenizer::handleMinus() {
             
             c = nextWLCharacter(TOPLEVEL);
             
+#if !NISSUES
             if (c.to_point() == '>') {
                 
                 //
@@ -2662,7 +2770,7 @@ inline void Tokenizer::handleMinus() {
                 std::vector<CodeActionPtr> Actions;
                 Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(Loc), " ")));
                 
-                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``-`` and ``>`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc), 1.0, std::move(Actions)));
+                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``-`` and ``>`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc), 0.25, std::move(Actions)));
                 
                 Issues.push_back(std::move(I));
                 
@@ -2677,10 +2785,11 @@ inline void Tokenizer::handleMinus() {
                 std::vector<CodeActionPtr> Actions;
                 Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(Loc), " ")));
                 
-                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``-`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc), 1.0, std::move(Actions)));
+                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``-`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc), 0.25, std::move(Actions)));
                 
                 Issues.push_back(std::move(I));
             }
+#endif
         }
             break;
         case '=': {
@@ -2718,6 +2827,7 @@ inline void Tokenizer::handleBar() {
             
             c = nextWLCharacter(TOPLEVEL);
             
+#if !NISSUES
             if (c.to_point() == '=') {
                 
                 //
@@ -2729,12 +2839,12 @@ inline void Tokenizer::handleBar() {
                 std::vector<CodeActionPtr> Actions;
                 Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(Loc), " ")));
                 
-                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``>`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc), 1.0, std::move(Actions)));
+                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``>`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc), 0.25, std::move(Actions)));
                 
                 Issues.push_back(std::move(I));
                 
             }
-            
+#endif
         }
             break;
         case '|': {
@@ -2838,76 +2948,84 @@ inline void Tokenizer::handleHash() {
     // Make sure e.g.  #1a is not parsed as SlotNode["#1a"]
     //
     
-    if (c.isDigit()) {
-        
-        Operator = TOKEN_HASH; // #
-        
-        handleDigits();
-        
-    } else if (c.isLetterlike() || c.isLetterlikeCharacter()) {
-        
-        Operator = TOKEN_HASH; // #
-        
-        TokenizerContext Ctxt;
-        
-        Ctxt |= TOKENIZER_SLOT;
-        
-        handleSymbol(Ctxt);
-        
-    } else if (c.to_point() == '`') {
-        
-        Operator = TOKEN_HASH; // #
-        
-        TokenizerContext Ctxt;
-        
-        Ctxt |= TOKENIZER_SLOT;
-        
-        handleSymbol(Ctxt);
-        
-    } else if (c.to_point() == '"') {
-        
-        auto Loc = TheByteDecoder->getSourceLocation();
-        
-        Operator = TOKEN_HASH; // #
-        
-        handleString();
-        
-        auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "The name following ``#`` is not documented to allow the ``\"`` character.", SYNTAXISSUESEVERITY_REMARK, Source(Loc), 0.33, {}));
-        
-        Issues.push_back(std::move(I));
-        
-    } else if (c.to_point() == '#') {
-        
-        Operator = TOKEN_HASHHASH; // ##
-        
-        String << c;
-        
-        c = nextWLCharacter(INSIDE_OPERATOR);
-        
-        if (c.isDigit()) {
+    switch (c.to_point()) {
+        case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': {
             
-            handleDigits();
+            Operator = TOKEN_HASH; // #
+            
+            int leadingZeroCount;
+            handleDigits(&leadingZeroCount);
         }
-        
-    } else if (c.to_point() == '!') {
-        
-        if (TokenStartLoc.style == SOURCESTYLE_LINECOL &&
-            TokenStartLoc.lineCol == LineCol(1, 1)) {
+            break;
+        //
+        // letterlike
+        //
+        case '\x00': case '\x01': case '\x02': case '\x03': case '\x04': case '\x05': case '\x06':
+        case '\b':
+        case '\x0e': case '\x0f': case '\x10': case '\x11': case '\x12': case '\x13': case '\x14': case '\x15': case '\x16': case '\x17': case '\x18': case '\x19': case '\x1a': case '\x1b': case '\x1c': case '\x1d': case '\x1e': case '\x1f':
+        case '$':
+        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
+        case '`':
+        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm': case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z': {
             
-            Operator = TOKEN_HASHBANG; // #!
+            Operator = TOKEN_HASH; // #
+            
+            TokenizerContext Ctxt;
+            
+            Ctxt |= TOKENIZER_SLOT;
+            
+            handleSymbol(Ctxt);
+        }
+            break;
+        case '"': {
+            
+            Operator = TOKEN_HASH; // #
+            
+            handleString();
+            
+#if !NISSUES
+            auto Loc = TokenStartLoc;
+            
+            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "The name following ``#`` is not documented to allow the ``\"`` character.", SYNTAXISSUESEVERITY_REMARK, Source(Loc), 0.33, {}));
+            
+            Issues.push_back(std::move(I));
+#endif
+        }
+            break;
+        case '#': {
+            
+            Operator = TOKEN_HASHHASH; // ##
             
             String << c;
             
-            c = nextWLCharacter(TOPLEVEL);
+            c = nextWLCharacter(INSIDE_OPERATOR);
             
-        } else {
-            
-            Operator = TOKEN_HASH; // #
+            if (c.isDigit()) {
+                
+                int leadingZeroCount;
+                handleDigits(&leadingZeroCount);
+            }
         }
-        
-    } else {
-        
-        Operator = TOKEN_HASH; // #
+            break;
+        default: {
+            
+            if (c.isLetterlikeCharacter()) {
+                
+                Operator = TOKEN_HASH; // #
+                
+                TokenizerContext Ctxt;
+                
+                Ctxt |= TOKENIZER_SLOT;
+                
+                handleSymbol(Ctxt);
+                
+            } else {
+                
+                Operator = TOKEN_HASH; // #
+            }
+            
+        }
+            break;
     }
     
     _currentToken = Token(Operator, String.str(), getTokenSource());
@@ -2946,7 +3064,8 @@ inline void Tokenizer::handlePercent() {
         
     } else if (c.isDigit()) {
         
-        handleDigits();
+        int leadingZeroCount;
+        handleDigits(&leadingZeroCount);
     }
     
     _currentToken = Token(Operator, String.str(), getTokenSource());
@@ -3030,16 +3149,17 @@ inline void Tokenizer::handleSlash() {
                 // So use the source for Slash itself and insert space after that
                 //
                 
+#if !NISSUES
                 auto SlashStartLoc = TokenStartLoc;
                 auto SlashEndLoc = DotLoc - 1;
                 
                 std::vector<CodeActionPtr> Actions;
                 Actions.push_back(CodeActionPtr(new InsertTextAfterCodeAction("Insert space", Source(SlashStartLoc, SlashEndLoc), " ")));
                 
-                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACEAFTER, "Put a space between ``/`` and ``.`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(SlashStartLoc, SlashEndLoc), 1.0, std::move(Actions)));
+                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACEAFTER, "Put a space between ``/`` and ``.`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(SlashStartLoc, SlashEndLoc), 0.25, std::move(Actions)));
                 
                 Issues.push_back(std::move(I));
-                
+#endif
                 
                 auto Loc = TheByteDecoder->getSourceLocation();
                 
@@ -3191,6 +3311,7 @@ inline void Tokenizer::handlePlus() {
             
             c = nextWLCharacter(TOPLEVEL);
             
+#if !NISSUES
             if (c.to_point() == '=') {
                 
                 //
@@ -3202,11 +3323,11 @@ inline void Tokenizer::handlePlus() {
                 std::vector<CodeActionPtr> Actions;
                 Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(Loc), " ")));
                 
-                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``+`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc), 1.0, std::move(Actions)));
+                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``+`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc), 0.25, std::move(Actions)));
                 
                 Issues.push_back(std::move(I));
-                
             }
+#endif
         }
             break;
         case '=': {
@@ -3605,13 +3726,17 @@ inline void Tokenizer::handleUninterpretable() {
     _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), getTokenSource());
 }
 
+#if !NISSUES
 void Tokenizer::addIssue(std::unique_ptr<Issue> I) {
     Issues.push_back(std::move(I));
 }
+#endif
 
+#if !NISSUES
 std::vector<std::unique_ptr<Issue>>& Tokenizer::getIssues() {
     return Issues;
 }
+#endif
 
 std::unique_ptr<Tokenizer> TheTokenizer = nullptr;
 
@@ -3661,8 +3786,3 @@ int toDigit(int val) {
             return -1;
     }
 }
-
-
-
-
-

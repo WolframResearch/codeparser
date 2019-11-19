@@ -493,8 +493,8 @@ parseBox[TooltipBox[a_, b_, rest___], pos_] :=
 
 
 
-parseBox[TagBox[rest___], pos_] :=
-  BoxNode[TagBox, applyCodeNodesToRest[rest], <|Source->pos|>]
+parseBox[TagBox[a_, rest___], pos_] :=
+  BoxNode[TagBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
 
 parseBox[DynamicBox[rest___], pos_] :=
   BoxNode[DynamicBox, applyCodeNodesToRest[rest], <|Source->pos|>]
@@ -976,12 +976,12 @@ Module[{heldRest, heldChildren},
   With[{heldChildren = heldChildren}, ReleaseHold[RasterBox @@ heldChildren]]
 ]
 
-toStandardFormBoxes[BoxNode[TagBox, {rest___}, _]] :=
+toStandardFormBoxes[BoxNode[TagBox, {a_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
   heldRest = Extract[#, {2}, Hold]& /@ {rest};
 
-  heldChildren = heldRest;
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { Hold[aBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[TagBox @@ heldChildren]]
 ]]

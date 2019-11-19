@@ -21,7 +21,9 @@
 //
 // Also be a good citizen and cleanup the leftover defines from mathlink and WolframLibrary
 //
+#if USE_MATHLINK
 #include "mathlink.h"
+#endif
 
 #undef P
 
@@ -32,7 +34,6 @@
 #undef False
 
 
-#include <fstream>
 #include <memory> // for unique_ptr
 
 class Node;
@@ -51,21 +52,31 @@ class Node;
 #endif
 
 
-
-EXTERN_C DLLEXPORT Node *ConcreteParseFile(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style);
-
 EXTERN_C DLLEXPORT Node *ConcreteParseBytes(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style);
-
-EXTERN_C DLLEXPORT Node *TokenizeFile(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style);
 
 EXTERN_C DLLEXPORT Node *TokenizeBytes(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style);
 
-EXTERN_C DLLEXPORT Node *ParseLeaf(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style, const char *stringifyNextTokenSymbol, const char *stringifyNextTokenFile);
+EXTERN_C DLLEXPORT Node *ParseLeaf(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style, int mode);
 
 EXTERN_C DLLEXPORT void ReleaseNode(Node *node);
 
 
+class ParserSession {
+public:
+    
+    ParserSession();
+    
+    ~ParserSession();
+    
+    void init(WolframLibraryData libData, const unsigned char *data, size_t dataLen, SourceStyle style, int mode);
+    
+    void deinit();
+};
 
+extern std::unique_ptr<ParserSession> TheParserSession;
+
+
+#if USE_MATHLINK
 
 EXTERN_C DLLEXPORT mint WolframLibrary_getVersion();
 
@@ -73,29 +84,13 @@ EXTERN_C DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData);
 
 EXTERN_C DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData);
 
-EXTERN_C DLLEXPORT int ConcreteParseFile_LibraryLink(WolframLibraryData libData, MLINK mlp);
-
 EXTERN_C DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK mlp);
-
-EXTERN_C DLLEXPORT int TokenizeFile_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
 EXTERN_C DLLEXPORT int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
 EXTERN_C DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
-class MLSession {
-    bool inited;
-    MLENV ep;
-    MLINK mlp;
-    
-public:
-    
-    MLSession();
-    
-    ~MLSession();
-    
-    MLINK getMLINK() const;
-};
+EXTERN_C DLLEXPORT int OffsetLineMap_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
 class ScopedMLUTF8String {
     MLINK mlp;
@@ -197,37 +192,4 @@ public:
     
 };
 
-class ScopedFileBuffer {
-    
-    unsigned char *buf;
-    size_t len;
-    
-    bool inited;
-    
-public:
-    
-    ScopedFileBuffer(const unsigned char *inStrIn, size_t inLen);
-    
-    ~ScopedFileBuffer();
-    
-    unsigned char *getBuf() const;
-    
-    size_t getLen() const;
-    
-    bool fail() const;
-    
-};
-
-class ParserSession {
-public:
-    
-    ParserSession();
-    
-    ~ParserSession();
-    
-    void init(WolframLibraryData libData, const unsigned char *data, size_t dataLen, SourceStyle style, bool stringifyNextTokenSymbol, bool stringifyNextTokenFile);
-    
-    void deinit();
-};
-
-extern std::unique_ptr<ParserSession> TheParserSession;
+#endif // USE_MATHLINK

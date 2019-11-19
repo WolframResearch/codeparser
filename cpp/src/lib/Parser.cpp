@@ -10,7 +10,7 @@
 
 #include <algorithm> // for generate with GCC and MSVC
 
-Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), contextSensitivePrefixParselets(), contextSensitiveInfixParselets(), tokenQueue(), Issues(), currentAbortQ(nullptr) {
+Parser::Parser() : prefixParselets(), infixParselets(), contextSensitivePrefixParselets(), contextSensitiveInfixParselets(), tokenQueue(), Issues(), currentAbortQ(nullptr) {
     
     //
     // Setup all of the parselet lists with nullptr unique_ptrs
@@ -22,8 +22,8 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
     std::generate(std::begin(infixParselets), std::end(infixParselets), []() {
         return std::unique_ptr<InfixParselet>(nullptr); });
     
-    std::generate(std::begin(startOfLineParselets), std::end(startOfLineParselets), []() {
-        return std::unique_ptr<StartOfLineParselet>(nullptr); });
+//    std::generate(std::begin(startOfLineParselets), std::end(startOfLineParselets), []() {
+//        return std::unique_ptr<StartOfLineParselet>(nullptr); });
     
     std::generate(std::begin(contextSensitivePrefixParselets), std::end(contextSensitivePrefixParselets), []() {
         return std::unique_ptr<ContextSensitivePrefixParselet>(nullptr); });
@@ -74,8 +74,14 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
     
     registerInfixParselet(TOKEN_LONGNAME_BECAUSE, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_BECAUSE, ASSOCIATIVITY_LEFT)));
     registerInfixParselet(TOKEN_LONGNAME_THEREFORE, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_THEREFORE, ASSOCIATIVITY_RIGHT)));
+    
     registerInfixParselet(TOKEN_LONGNAME_RIGHTTEE, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_RIGHTTEE, ASSOCIATIVITY_RIGHT)));
     registerInfixParselet(TOKEN_LONGNAME_LEFTTEE, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_LEFTTEE, ASSOCIATIVITY_LEFT)));
+    registerInfixParselet(TOKEN_LONGNAME_DOUBLERIGHTTEE, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_DOUBLERIGHTTEE, ASSOCIATIVITY_RIGHT)));
+    registerInfixParselet(TOKEN_LONGNAME_DOUBLELEFTTEE, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_DOUBLELEFTTEE, ASSOCIATIVITY_LEFT)));
+    registerInfixParselet(TOKEN_LONGNAME_UPTEE, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_UPTEE, ASSOCIATIVITY_LEFT)));
+    registerInfixParselet(TOKEN_LONGNAME_DOWNTEE, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_DOWNTEE, ASSOCIATIVITY_LEFT)));
+    
     registerInfixParselet(TOKEN_MINUS, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_INFIX_MINUS, ASSOCIATIVITY_LEFT)));
     registerInfixParselet(TOKEN_SLASH, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_SLASH, ASSOCIATIVITY_LEFT)));
     registerInfixParselet(TOKEN_CARET, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_CARET, ASSOCIATIVITY_RIGHT)));
@@ -102,6 +108,7 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
     registerInfixParselet(TOKEN_LONGNAME_DIVIDE, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_DIVIDE, ASSOCIATIVITY_LEFT)));
     registerInfixParselet(TOKEN_LONGNAME_DIVISIONSLASH, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_DIVISIONSLASH, ASSOCIATIVITY_LEFT)));
     registerInfixParselet(TOKEN_LONGNAME_IMPLIES, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_IMPLIES, ASSOCIATIVITY_RIGHT)));
+    registerInfixParselet(TOKEN_LONGNAME_ROUNDIMPLIES, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_ROUNDIMPLIES, ASSOCIATIVITY_RIGHT)));
     registerInfixParselet(TOKEN_LONGNAME_PLUSMINUS, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_INFIX_LONGNAME_PLUSMINUS, ASSOCIATIVITY_LEFT)));
     registerInfixParselet(TOKEN_LONGNAME_DIRECTEDEDGE, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_DIRECTEDEDGE, ASSOCIATIVITY_RIGHT)));
     registerInfixParselet(TOKEN_LONGNAME_RULE, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_RULE, ASSOCIATIVITY_RIGHT)));
@@ -113,6 +120,8 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
     registerInfixParselet(TOKEN_LONGNAME_INVISIBLEAPPLICATION, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_INVISIBLEAPPLICATION, ASSOCIATIVITY_RIGHT)));
     registerInfixParselet(TOKEN_LONGNAME_CIRCLEMINUS, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_CIRCLEMINUS, ASSOCIATIVITY_LEFT)));
     registerInfixParselet(TOKEN_LONGNAME_SUCHTHAT, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_SUCHTHAT, ASSOCIATIVITY_RIGHT)));
+    registerInfixParselet(TOKEN_LONGNAME_PERPENDICULAR, std::unique_ptr<InfixParselet>(new BinaryOperatorParselet(PRECEDENCE_LONGNAME_PERPENDICULAR, ASSOCIATIVITY_LEFT)));
+    
     
     
     
@@ -126,21 +135,26 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
     registerInfixParselet(TOKEN_EQUALEQUALEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_EQUALEQUALEQUAL)));
     registerInfixParselet(TOKEN_EQUALBANGEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_EQUALBANGEQUAL)));
     registerInfixParselet(TOKEN_LONGNAME_LESSFULLEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_LESSFULLEQUAL)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTLESSFULLEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTLESSFULLEQUAL)));
     registerInfixParselet(TOKEN_LONGNAME_NESTEDLESSLESS, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NESTEDLESSLESS)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTNESTEDLESSLESS, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTNESTEDLESSLESS)));
+    
     registerInfixParselet(TOKEN_LONGNAME_NOTLESS, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTLESS)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTGREATER, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTGREATER)));
+    
     registerInfixParselet(TOKEN_LONGNAME_NOTLESSLESS, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTLESSLESS)));
     registerInfixParselet(TOKEN_LONGNAME_LONGEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_LONGEQUAL)));
     registerInfixParselet(TOKEN_LONGNAME_NOTEQUALTILDE, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTEQUALTILDE)));
     registerInfixParselet(TOKEN_LONGNAME_NOTHUMPEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTHUMPEQUAL)));
     registerInfixParselet(TOKEN_LONGNAME_NOTHUMPDOWNHUMP, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTHUMPDOWNHUMP)));
+    registerInfixParselet(TOKEN_LONGNAME_LEFTTRIANGLEBAR, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_LEFTTRIANGLEBAR)));
+    registerInfixParselet(TOKEN_LONGNAME_RIGHTTRIANGLEBAR, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_RIGHTTRIANGLEBAR)));
     registerInfixParselet(TOKEN_LONGNAME_NOTLEFTTRIANGLEBAR, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTLEFTTRIANGLEBAR)));
     registerInfixParselet(TOKEN_LONGNAME_NOTRIGHTTRIANGLEBAR, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTRIGHTTRIANGLEBAR)));
     registerInfixParselet(TOKEN_LONGNAME_NOTLESSSLANTEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTLESSSLANTEQUAL)));
     registerInfixParselet(TOKEN_LONGNAME_NOTGREATERGREATER, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTGREATERGREATER)));
     registerInfixParselet(TOKEN_LONGNAME_NOTNESTEDGREATERGREATER, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTNESTEDGREATERGREATER)));
     registerInfixParselet(TOKEN_LONGNAME_NOTGREATERSLANTEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTGREATERSLANTEQUAL)));
-    registerInfixParselet(TOKEN_LONGNAME_NOTPRECEDESEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTPRECEDESEQUAL)));
-    registerInfixParselet(TOKEN_LONGNAME_NOTSUCCEEDSEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTSUCCEEDSEQUAL)));
     registerInfixParselet(TOKEN_PLUS, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_INFIX_PLUS)));
     registerInfixParselet(TOKEN_STAR, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_STAR)));
     registerInfixParselet(TOKEN_DOT, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_DOT)));
@@ -162,8 +176,16 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
     registerInfixParselet(TOKEN_LONGNAME_NOTSUPERSET, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTSUPERSET)));
     registerInfixParselet(TOKEN_LONGNAME_NOTSUBSETEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTSUBSETEQUAL)));
     registerInfixParselet(TOKEN_LONGNAME_NOTSUPERSETEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTSUPERSETEQUAL)));
+    
+    registerInfixParselet(TOKEN_LONGNAME_SQUARESUBSET, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_SQUARESUBSET)));
+    registerInfixParselet(TOKEN_LONGNAME_SQUARESUPERSET, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_SQUARESUPERSET)));
     registerInfixParselet(TOKEN_LONGNAME_NOTSQUARESUBSET, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTSQUARESUBSET)));
     registerInfixParselet(TOKEN_LONGNAME_NOTSQUARESUPERSET, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTSQUARESUPERSET)));
+    registerInfixParselet(TOKEN_LONGNAME_SQUARESUBSETEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_SQUARESUBSETEQUAL)));
+    registerInfixParselet(TOKEN_LONGNAME_SQUARESUPERSETEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_SQUARESUPERSETEQUAL)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTSQUARESUBSETEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTSQUARESUBSETEQUAL)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTSQUARESUPERSETEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTSQUARESUPERSETEQUAL)));
+    
     registerInfixParselet(TOKEN_LONGNAME_IMPLICITPLUS, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_IMPLICITPLUS)));
     registerInfixParselet(TOKEN_LONGNAME_TIMES, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_TIMES)));
     registerInfixParselet(TOKEN_LONGNAME_INVISIBLETIMES, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_INVISIBLETIMES)));
@@ -202,6 +224,7 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
     registerInfixParselet(TOKEN_LONGNAME_RIGHTTEEVECTOR, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_RIGHTTEEVECTOR)));
     registerInfixParselet(TOKEN_LONGNAME_DOWNLEFTTEEVECTOR, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_DOWNLEFTTEEVECTOR)));
     registerInfixParselet(TOKEN_LONGNAME_DOWNRIGHTTEEVECTOR, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_DOWNRIGHTTEEVECTOR)));
+    
     registerInfixParselet(TOKEN_LONGNAME_SHORTRIGHTARROW, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_SHORTRIGHTARROW)));
     registerInfixParselet(TOKEN_LONGNAME_SHORTLEFTARROW, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_SHORTLEFTARROW)));
     registerInfixParselet(TOKEN_LONGNAME_UPARROW, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_UPARROW)));
@@ -244,8 +267,14 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
     registerInfixParselet(TOKEN_LONGNAME_TILDETILDE, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_TILDETILDE)));
     registerInfixParselet(TOKEN_LONGNAME_NOTTILDETILDE, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTTILDETILDE)));
     registerInfixParselet(TOKEN_LONGNAME_EQUIVALENT, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_EQUIVALENT)));
+    
     registerInfixParselet(TOKEN_LONGNAME_LEFTTRIANGLEEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_LEFTTRIANGLEEQUAL)));
+    registerInfixParselet(TOKEN_LONGNAME_RIGHTTRIANGLEEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_RIGHTTRIANGLEEQUAL)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTLEFTTRIANGLEEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTLEFTTRIANGLEEQUAL)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTRIGHTTRIANGLEEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTRIGHTTRIANGLEEQUAL)));
+    
     registerInfixParselet(TOKEN_LONGNAME_TILDEEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_TILDEEQUAL)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTTILDEEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTTILDEEQUAL)));
     registerInfixParselet(TOKEN_LONGNAME_TILDEFULLEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_TILDEFULLEQUAL)));
     registerInfixParselet(TOKEN_LONGNAME_NOTTILDEFULLEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTTILDEFULLEQUAL)));
     registerInfixParselet(TOKEN_LONGNAME_CIRCLEDOT, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_CIRCLEDOT)));
@@ -256,7 +285,10 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
     registerInfixParselet(TOKEN_LONGNAME_TENSORWEDGE, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_TENSORWEDGE)));
     registerInfixParselet(TOKEN_LONGNAME_TENSORPRODUCT, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_TENSORPRODUCT)));
     registerInfixParselet(TOKEN_LONGNAME_CROSS, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_CROSS)));
+    registerInfixParselet(TOKEN_LONGNAME_LESSTILDE, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_LESSTILDE)));
     registerInfixParselet(TOKEN_LONGNAME_GREATERTILDE, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_GREATERTILDE)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTLESSTILDE, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTLESSTILDE)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTGREATERTILDE, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTGREATERTILDE)));
     registerInfixParselet(TOKEN_LONGNAME_PROPORTIONAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_PROPORTIONAL)));
     registerInfixParselet(TOKEN_LONGNAME_PROPORTION, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_PROPORTION)));
     registerInfixParselet(TOKEN_LONGNAME_LESSLESS, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_LESSLESS)));
@@ -276,8 +308,17 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
     registerInfixParselet(TOKEN_LONGNAME_CAP, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_CAP)));
     registerInfixParselet(TOKEN_LONGNAME_CUP, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_CUP)));
     registerInfixParselet(TOKEN_LONGNAME_CIRCLEPLUS, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_CIRCLEPLUS)));
-    registerInfixParselet(TOKEN_LONGNAME_RIGHTTRIANGLE, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_RIGHTTRIANGLE)));
+    
+    registerInfixParselet(TOKEN_LONGNAME_VERTICALBAR, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_VERTICALBAR)));
+    registerInfixParselet(TOKEN_LONGNAME_DOUBLEVERTICALBAR, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_DOUBLEVERTICALBAR)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTVERTICALBAR, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTVERTICALBAR)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTDOUBLEVERTICALBAR, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTDOUBLEVERTICALBAR)));
+    
     registerInfixParselet(TOKEN_LONGNAME_LEFTTRIANGLE, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_LEFTTRIANGLE)));
+    registerInfixParselet(TOKEN_LONGNAME_RIGHTTRIANGLE, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_RIGHTTRIANGLE)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTLEFTTRIANGLE, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTLEFTTRIANGLE)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTRIGHTTRIANGLE, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTRIGHTTRIANGLE)));
+    
     registerInfixParselet(TOKEN_LONGNAME_PERMUTATIONPRODUCT, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_PERMUTATIONPRODUCT)));
     registerInfixParselet(TOKEN_LONGNAME_EQUILIBRIUM, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_EQUILIBRIUM)));
     registerInfixParselet(TOKEN_LONGNAME_REVERSEEQUILIBRIUM, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_REVERSEEQUILIBRIUM)));
@@ -285,23 +326,47 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
     registerInfixParselet(TOKEN_LONGNAME_NOTREVERSEELEMENT, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTREVERSEELEMENT)));
     registerInfixParselet(TOKEN_LONGNAME_NOTTILDE, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTTILDE)));
     registerInfixParselet(TOKEN_LONGNAME_EQUALTILDE, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_EQUALTILDE)));
-    registerInfixParselet(TOKEN_LONGNAME_PRECEDESSLANTEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_PRECEDESSLANTEQUAL)));
-    registerInfixParselet(TOKEN_LONGNAME_SUCCEEDSSLANTEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_SUCCEEDSSLANTEQUAL)));
     registerInfixParselet(TOKEN_LONGNAME_LESSSLANTEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_LESSSLANTEQUAL)));
     registerInfixParselet(TOKEN_LONGNAME_GREATERSLANTEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_GREATERSLANTEQUAL)));
-    registerInfixParselet(TOKEN_LONGNAME_NOTPRECEDESSLANTEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTPRECEDESSLANTEQUAL)));
-    registerInfixParselet(TOKEN_LONGNAME_NOTSUCCEEDSSLANTEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTSUCCEEDSSLANTEQUAL)));
     registerInfixParselet(TOKEN_LONGNAME_COLON, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_COLON)));
+    
     registerInfixParselet(TOKEN_LONGNAME_CUPCAP, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_CUPCAP)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTCUPCAP, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTCUPCAP)));
+    
     registerInfixParselet(TOKEN_LONGNAME_DOTEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_DOTEQUAL)));
-    registerInfixParselet(TOKEN_LONGNAME_GREATEREQUALLESS, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_GREATEREQUALLESS)));
+    
     registerInfixParselet(TOKEN_LONGNAME_GREATERFULLEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_GREATERFULLEQUAL)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTGREATERFULLEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTGREATERFULLEQUAL)));
+    
     registerInfixParselet(TOKEN_LONGNAME_GREATERGREATER, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_GREATERGREATER)));
+    
     registerInfixParselet(TOKEN_LONGNAME_GREATERLESS, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_GREATERLESS)));
+    registerInfixParselet(TOKEN_LONGNAME_LESSGREATER, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_LESSGREATER)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTGREATERLESS, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTGREATERLESS)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTLESSGREATER, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTLESSGREATER)));
+    
     registerInfixParselet(TOKEN_LONGNAME_HUMPEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_HUMPEQUAL)));
     registerInfixParselet(TOKEN_LONGNAME_HUMPDOWNHUMP, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_HUMPDOWNHUMP)));
     registerInfixParselet(TOKEN_LONGNAME_NESTEDGREATERGREATER, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NESTEDGREATERGREATER)));
     registerInfixParselet(TOKEN_LONGNAME_NOTCONGRUENT, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTCONGRUENT)));
+    
+    registerInfixParselet(TOKEN_LONGNAME_PRECEDES, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_PRECEDES)));
+    registerInfixParselet(TOKEN_LONGNAME_SUCCEEDS, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_SUCCEEDS)));
+    registerInfixParselet(TOKEN_LONGNAME_PRECEDESEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_PRECEDESEQUAL)));
+    registerInfixParselet(TOKEN_LONGNAME_SUCCEEDSEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_SUCCEEDSEQUAL)));
+    registerInfixParselet(TOKEN_LONGNAME_PRECEDESTILDE, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_PRECEDESTILDE)));
+    registerInfixParselet(TOKEN_LONGNAME_SUCCEEDSTILDE, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_SUCCEEDSTILDE)));
+    registerInfixParselet(TOKEN_LONGNAME_PRECEDESSLANTEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_PRECEDESSLANTEQUAL)));
+    registerInfixParselet(TOKEN_LONGNAME_SUCCEEDSSLANTEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_SUCCEEDSSLANTEQUAL)));
+    
+    registerInfixParselet(TOKEN_LONGNAME_NOTPRECEDES, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTPRECEDES)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTSUCCEEDS, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTSUCCEEDS)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTPRECEDESEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTPRECEDESEQUAL)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTSUCCEEDSEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTSUCCEEDSEQUAL)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTPRECEDESTILDE, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTPRECEDESTILDE)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTSUCCEEDSTILDE, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTSUCCEEDSTILDE)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTPRECEDESSLANTEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTPRECEDESSLANTEQUAL)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTSUCCEEDSSLANTEQUAL, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_LONGNAME_NOTSUCCEEDSSLANTEQUAL)));
     
     registerInfixParselet(TOKEN_FAKE_IMPLICITTIMES, std::unique_ptr<InfixParselet>(new InfixOperatorParselet(PRECEDENCE_STAR)));
     
@@ -350,8 +415,8 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
     //
     // StartOfLine
     //
-    registerStartOfLineParselet(TOKEN_QUESTION, std::unique_ptr<StartOfLineParselet>(new StartOfLineParselet()));
-    registerStartOfLineParselet(TOKEN_QUESTIONQUESTION, std::unique_ptr<StartOfLineParselet>(new StartOfLineParselet()));
+//    registerStartOfLineParselet(TOKEN_QUESTION, std::unique_ptr<StartOfLineParselet>(new StartOfLineParselet()));
+//    registerStartOfLineParselet(TOKEN_QUESTIONQUESTION, std::unique_ptr<StartOfLineParselet>(new StartOfLineParselet()));
     //
     // TODO: uncomment when there is support for different modes
     //
@@ -361,7 +426,7 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
     //
     // StartOfFile
     //
-    registerStartOfFileParselet(TOKEN_HASHBANG, std::unique_ptr<StartOfFileParselet>(new StartOfFileParselet()));
+//    registerStartOfFileParselet(TOKEN_HASHBANG, std::unique_ptr<StartOfFileParselet>(new StartOfFileParselet()));
     
     
     //
@@ -418,8 +483,12 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
     registerInfixParselet(TOKEN_GREATEREQUAL, std::unique_ptr<InfixParselet>(new InequalityParselet()));
     registerInfixParselet(TOKEN_LONGNAME_EQUAL, std::unique_ptr<InfixParselet>(new InequalityParselet()));
     registerInfixParselet(TOKEN_LONGNAME_LESSEQUAL, std::unique_ptr<InfixParselet>(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_NOTLESSEQUAL, std::unique_ptr<InfixParselet>(new InequalityParselet()));
     registerInfixParselet(TOKEN_LONGNAME_GREATEREQUAL, std::unique_ptr<InfixParselet>(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_NOTGREATEREQUAL, std::unique_ptr<InfixParselet>(new InequalityParselet()));
     registerInfixParselet(TOKEN_LONGNAME_NOTEQUAL, std::unique_ptr<InfixParselet>(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_LESSEQUALGREATER, std::unique_ptr<InfixParselet>(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_GREATEREQUALLESS, std::unique_ptr<InfixParselet>(new InequalityParselet()));
     
     // special VectorInequality
     registerInfixParselet(TOKEN_LONGNAME_VECTORGREATER, std::unique_ptr<InfixParselet>(new VectorInequalityParselet()));
@@ -434,10 +503,25 @@ Parser::Parser() : prefixParselets(), infixParselets(), startOfLineParselets(), 
     registerInfixParselet(TOKEN_GREATERGREATER, std::unique_ptr<InfixParselet>(new GreaterGreaterParselet()));
     registerInfixParselet(TOKEN_GREATERGREATERGREATER, std::unique_ptr<InfixParselet>(new GreaterGreaterGreaterParselet()));
     registerPrefixParselet(TOKEN_LESSLESS, std::unique_ptr<PrefixParselet>(new LessLessParselet()));
+    
+    
+    //
+    // Literals and Unhandled
+    //
+    for (auto T = TOKEN_UNKNOWN; T != TOKEN_COUNT; T = T.next()) {
+        auto& P = prefixParselets[T.value()];
+        if (P != nullptr) {
+            continue;
+        }
+        
+        //
+        // Fill in the gaps
+        //
+        registerPrefixParselet(T.value(), std::unique_ptr<PrefixParselet>(new LeafParselet()));
+    }
 }
 
 Parser::~Parser() {}
-
 
 void Parser::init(std::function<bool ()> AbortQ, const std::deque<Token>& queued) {
     
@@ -455,46 +539,46 @@ void Parser::deinit() {
     currentAbortQ = nullptr;
 }
 
-void Parser::registerPrefixParselet(TokenEnum token, std::unique_ptr<PrefixParselet> P) {
+void Parser::registerPrefixParselet(TokenEnum T, std::unique_ptr<PrefixParselet> P) {
     
-    assert(prefixParselets[token] == nullptr);
+    assert(prefixParselets[T.value()] == nullptr);
     
-    prefixParselets[token] = std::move(P);
+    prefixParselets[T.value()] = std::move(P);
 }
 
-void Parser::registerInfixParselet(TokenEnum token, std::unique_ptr<InfixParselet> P) {
+void Parser::registerInfixParselet(TokenEnum T, std::unique_ptr<InfixParselet> P) {
     
-    assert(infixParselets[token] == nullptr);
+    assert(infixParselets[T.value()] == nullptr);
     
-    infixParselets[token] = std::move(P);
+    infixParselets[T.value()] = std::move(P);
 }
 
-void Parser::registerStartOfLineParselet(TokenEnum token, std::unique_ptr<StartOfLineParselet> P) {
+//void Parser::registerStartOfLineParselet(TokenEnum token, std::unique_ptr<StartOfLineParselet> P) {
+//    
+//    assert(startOfLineParselets[token] == nullptr);
+//    
+//    startOfLineParselets[token] = std::move(P);
+//}
+
+//void Parser::registerStartOfFileParselet(TokenEnum token, std::unique_ptr<StartOfFileParselet> P) {
+//
+//    assert(startOfFileParselets[token] == nullptr);
+//
+//    startOfFileParselets[token] = std::move(P);
+//}
+
+void Parser::registerContextSensitivePrefixParselet(TokenEnum T, std::unique_ptr<ContextSensitivePrefixParselet> P) {
     
-    assert(startOfLineParselets[token] == nullptr);
+    assert(contextSensitivePrefixParselets[T.value()] == nullptr);
     
-    startOfLineParselets[token] = std::move(P);
+    contextSensitivePrefixParselets[T.value()] = std::move(P);
 }
 
-void Parser::registerStartOfFileParselet(TokenEnum token, std::unique_ptr<StartOfFileParselet> P) {
+void Parser::registerContextSensitiveInfixParselet(TokenEnum T, std::unique_ptr<ContextSensitiveInfixParselet> P) {
     
-    assert(startOfFileParselets[token] == nullptr);
+    assert(contextSensitiveInfixParselets[T.value()] == nullptr);
     
-    startOfFileParselets[token] = std::move(P);
-}
-
-void Parser::registerContextSensitivePrefixParselet(TokenEnum token, std::unique_ptr<ContextSensitivePrefixParselet> P) {
-    
-    assert(contextSensitivePrefixParselets[token] == nullptr);
-    
-    contextSensitivePrefixParselets[token] = std::move(P);
-}
-
-void Parser::registerContextSensitiveInfixParselet(TokenEnum token, std::unique_ptr<ContextSensitiveInfixParselet> P) {
-    
-    assert(contextSensitiveInfixParselets[token] == nullptr);
-    
-    contextSensitiveInfixParselets[token] = std::move(P);
+    contextSensitiveInfixParselets[T.value()] = std::move(P);
 }
 
 
@@ -597,150 +681,76 @@ void Parser::prependInReverse(std::vector<LeafNodePtr>& V) {
     }
 }
 
+#if !NISSUES
 std::vector<std::unique_ptr<Issue>>& Parser::getIssues() {
     return Issues;
 }
+#endif
 
+#if !NISSUES
 //
 // Only to be used by Parselets
 //
 void Parser::addIssue(std::unique_ptr<Issue> I) {
     Issues.push_back(std::move(I));
 }
+#endif
 
-bool Parser::isPossibleBeginningOfExpression(ParserContext CtxtIn) const {
-    
-    const auto& Tok = currentToken();
-    
-    if (isError(Tok.Tok())) {
-        return false;
-    }
-    
-    if (Tok.Tok() == TOKEN_ENDOFFILE) {
-        return false;
-    }
-    
-    if (Tok.isTrivia()) {
-        return false;
-    }
-    
-    //
-    // StartOfFile parselet?
-    //
-    auto& SF = startOfFileParselets[Tok.Tok()];
-    if (SF != nullptr) {
-        if (CtxtIn.getGroupDepth() == 0) {
-            if (Tok.Src.style == SOURCESTYLE_LINECOL &&
-                Tok.Src.lineCol.start.Line == 1 &&
-                Tok.Src.lineCol.start.Col == 1) {
-                return true;
-            }
-        }
-    }
-    
-    //
-    // StartOfLine parselet?
-    //
-    auto& S = startOfLineParselets[Tok.Tok()];
-    if (S != nullptr) {
-        if (CtxtIn.getGroupDepth() == 0) {
-            if (Tok.Src.style == SOURCESTYLE_LINECOL &&
-                Tok.Src.lineCol.start.Col == 1) {
-                return true;
-            }
-        }
-    }
-    
-    //
-    // Prefix parselet?
-    //
-    // We want to test if prefix here because a token may be both prefix and infix, so must return true.
-    // But if we removed this prefix test first, then we would hit the test for infix first, and then mistakenly return false.
-    //
-    auto& P = prefixParselets[Tok.Tok()];
-    if (P != nullptr) {
-        return true;
-    }
-    
-    //
-    // Infix parselet?
-    //
-    auto& I = infixParselets[Tok.Tok()];
-    if (I != nullptr) {
-        return false;
-    }
-    
-    //
-    // TODO: when closers are registered in parser, then check that
-    //
-    if (isCloser(Tok.Tok())) {
-        return false;
-    }
-    
-    //
-    // Literal or Unhandled leaf
-    //
-    
-    return true;
-}
-
-const std::unique_ptr<PrefixParselet>& Parser::findPrefixParselet(TokenEnum Tok) const {
-    auto& P = prefixParselets[Tok];
+const std::unique_ptr<PrefixParselet>& Parser::findPrefixParselet(TokenEnum T) const {
+    auto& P = prefixParselets[T.value()];
     assert(P != nullptr);
     return P;
 }
 
-const std::unique_ptr<InfixParselet>& Parser::findInfixParselet(TokenEnum Tok) const {
-    auto& I = infixParselets[Tok];
+const std::unique_ptr<InfixParselet>& Parser::findInfixParselet(TokenEnum T) const {
+    auto& I = infixParselets[T.value()];
     assert(I != nullptr);
     return I;
 }
 
-const std::unique_ptr<ContextSensitivePrefixParselet>& Parser::findContextSensitivePrefixParselet(TokenEnum Tok) const {
-    auto& P = contextSensitivePrefixParselets[Tok];
+const std::unique_ptr<ContextSensitivePrefixParselet>& Parser::findContextSensitivePrefixParselet(TokenEnum T) const {
+    auto& P = contextSensitivePrefixParselets[T.value()];
     assert(P != nullptr);
     return P;
 }
 
-const std::unique_ptr<ContextSensitiveInfixParselet>& Parser::findContextSensitiveInfixParselet(TokenEnum Tok) const {
-    auto& I = contextSensitiveInfixParselets[Tok];
+const std::unique_ptr<ContextSensitiveInfixParselet>& Parser::findContextSensitiveInfixParselet(TokenEnum T) const {
+    auto& I = contextSensitiveInfixParselets[T.value()];
     assert(I != nullptr);
     return I;
 }
-
-
 
 Precedence Parser::getTokenPrecedence(Token& TokIn, ParserContext Ctxt, bool considerPrefix, bool *implicitTimes) const {
     
-    assert(TokIn.Tok() != TOKEN_UNKNOWN);
-    assert(TokIn.Tok() != TOKEN_WHITESPACE);
+    assert(TokIn.getTokenEnum() != TOKEN_UNKNOWN);
+    assert(TokIn.getTokenEnum() != TOKEN_WHITESPACE);
     // allow top-level newlines
-    assert(TokIn.Tok() != TOKEN_NEWLINE || Ctxt.getGroupDepth() == 0);
-    assert(TokIn.Tok() != TOKEN_COMMENT);
-    assert(TokIn.Tok() != TOKEN_LINECONTINUATION);
+    assert(TokIn.getTokenEnum() != TOKEN_NEWLINE || Ctxt.getGroupDepth() == 0);
+    assert(TokIn.getTokenEnum() != TOKEN_COMMENT);
+    assert(TokIn.getTokenEnum() != TOKEN_LINECONTINUATION);
     
     if (implicitTimes != nullptr) {
         *implicitTimes = false;
     }
     
-    if (isError(TokIn.Tok())) {
+    if (TokIn.getTokenEnum().isError()) {
         return PRECEDENCE_LOWEST;
     }
     
-    if (TokIn.Tok() == TOKEN_ENDOFFILE) {
+    if (TokIn.getTokenEnum() == TOKEN_ENDOFFILE) {
         return PRECEDENCE_LOWEST;
     }
     
     //
     // TODO: review when closers have their own parselets
     //
-    if (isCloser(TokIn.Tok())) {
+    if (TokIn.getTokenEnum().isCloser()) {
         return PRECEDENCE_LOWEST;
     }
     
     if (considerPrefix) {
         
-        auto& P = prefixParselets[TokIn.Tok()];
+        auto& P = prefixParselets[TokIn.getTokenEnum().value()];
         
         if (P != nullptr) {
             
@@ -762,14 +772,14 @@ Precedence Parser::getTokenPrecedence(Token& TokIn, ParserContext Ctxt, bool con
         }
     }
     
-    auto& Infix = infixParselets[TokIn.Tok()];
+    auto& Infix = infixParselets[TokIn.getTokenEnum().value()];
     
     if (Infix != nullptr) {
         
         return Infix->getPrecedence();
     }
     
-    if (TokIn.Tok() == TOKEN_LONGNAME_DIFFERENTIALD) {
+    if (TokIn.getTokenEnum() == TOKEN_LONGNAME_DIFFERENTIALD) {
         
         if ((Ctxt.Flag & PARSER_INTEGRAL) == PARSER_INTEGRAL) {
             
@@ -788,7 +798,7 @@ Precedence Parser::getTokenPrecedence(Token& TokIn, ParserContext Ctxt, bool con
     //
     // Do not do Implicit Times across lines
     //
-    if (TokIn.Tok() == TOKEN_NEWLINE && Ctxt.getGroupDepth() == 0) {
+    if (TokIn.getTokenEnum() == TOKEN_NEWLINE && Ctxt.getGroupDepth() == 0) {
         return PRECEDENCE_LOWEST;
     }
     
@@ -800,7 +810,8 @@ Precedence Parser::getTokenPrecedence(Token& TokIn, ParserContext Ctxt, bool con
 }
 
 NodePtr Parser::parse(ParserContext CtxtIn) {
-    
+
+#if !NABORT
     if (isAbort()) {
         
         auto A = Token(TOKEN_ERROR_ABORTED, "", Source(TheByteDecoder->getSourceLocation()));
@@ -809,85 +820,24 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
         
         return Aborted;
     }
+#endif
     
     auto Ctxt = CtxtIn;
     
     auto token = currentToken();
     
-    assert(token.Tok() != TOKEN_UNKNOWN);
-    assert(!token.isTrivia() && "Must handle at the call site");
-    assert(token.Tok() != TOKEN_ENDOFFILE && "Must handle at the call site");
-    assert(isPossibleBeginningOfExpression(Ctxt) && "Must handle at the call site");
+    assert(token.getTokenEnum() != TOKEN_UNKNOWN);
+    assert(!token.getTokenEnum().isTrivia() && "Must handle at the call site");
+    assert(token.getTokenEnum() != TOKEN_ENDOFFILE && "Must handle at the call site");
+    assert(token.getTokenEnum().isPossibleBeginningOfExpression() && "Must handle at the call site");
     
     //
     // Prefix start
     //
     
-    NodePtr Left = nullptr;
+    auto& P = findPrefixParselet(token.getTokenEnum());
     
-    if (Left == nullptr) {
-        
-        //
-        // StartOfFile
-        //
-        
-        auto& SF = startOfFileParselets[token.Tok()];
-        if (SF != nullptr) {
-            
-            if (CtxtIn.getGroupDepth() == 0) {
-                if (token.Src.style == SOURCESTYLE_LINECOL &&
-                    token.Src.lineCol.start.Line == 1 &&
-                    token.Src.lineCol.start.Col == 1) {
-                    
-                    Left = SF->parse(Ctxt);
-                }
-            }
-        }
-    }
-    
-    if (Left == nullptr) {
-        
-        //
-        // StartOfLine
-        //
-        
-        auto& S = startOfLineParselets[token.Tok()];
-        if (S != nullptr) {
-            
-            if (CtxtIn.getGroupDepth() == 0) {
-                if (token.Src.style == SOURCESTYLE_LINECOL &&
-                    token.Src.lineCol.start.Col == 1) {
-                    
-                    Left = S->parse(Ctxt);
-                }
-            }
-        }
-    }
-    
-    if (Left == nullptr) {
-        
-        //
-        // Prefix
-        //
-        
-        auto& I = prefixParselets[token.Tok()];
-        
-        if (I != nullptr) {
-            
-            Left = I->parse(Ctxt);
-        }
-    }
-    
-    if (Left == nullptr) {
-        
-        //
-        // Literal or Unhandled
-        //
-        
-        nextToken(Ctxt);
-        
-        Left = NodePtr(new LeafNode(std::move(token)));
-    }
+    auto Left = P->parse(Ctxt);
     
     
     //
@@ -896,30 +846,28 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
     
     while (true) {
         
+#if !NABORT
         if (isAbort()) {
             
             auto A = Token(TOKEN_ERROR_ABORTED, "", Source(TheByteDecoder->getSourceLocation()));
             
             return NodePtr(new LeafNode(A));
         }
+#endif
         
         LeafSeq ArgsTest;
         
         auto token = Parser::eatAndPreserveToplevelNewlines(Ctxt, ArgsTest);
         
-        Precedence TokenPrecedence;
-        {
+        bool implicitTimes;
+        
+        auto TokenPrecedence = getTokenPrecedence(token, Ctxt, false, &implicitTimes);
+        
+        if (implicitTimes) {
             
-            bool implicitTimes;
+            token = Token(TOKEN_FAKE_IMPLICITTIMES, "", Source(token.Src.start()));
             
-            TokenPrecedence = getTokenPrecedence(token, Ctxt, false, &implicitTimes);
-            
-            if (implicitTimes) {
-                
-                auto Implicit = Token(TOKEN_FAKE_IMPLICITTIMES, "", Source(token.Src.start()));
-                
-                tokenQueue.insert(tokenQueue.begin(), Implicit);
-            }
+            tokenQueue.insert(tokenQueue.begin(), token);
         }
         
         if (Ctxt.Prec > TokenPrecedence) {
@@ -935,45 +883,32 @@ NodePtr Parser::parse(ParserContext CtxtIn) {
         LeftSeq.reserve(1 + 1);
         LeftSeq.append(std::move(Left));
         LeftSeq.appendIfNonEmpty(std::move(ArgsTest));
-        
-        Left = parse0(std::move(LeftSeq), TokenPrecedence, Ctxt);
+    
+        auto Ctxt = CtxtIn;
+        Ctxt.Prec = TokenPrecedence;
+        Ctxt.Assoc = ASSOCIATIVITY_NONE;
+    
+        auto& I = findInfixParselet(token.getTokenEnum());
+    
+        Left = I->parse(std::move(LeftSeq), Ctxt);
         
     } // while
     
     return Left;
 }
 
-NodePtr Parser::parse0(NodeSeq Left, Precedence TokenPrecedence, ParserContext CtxtIn) {
+NodePtr Parser::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext CtxtIn, bool *wasCloser) {
     
     //
-    // getCurrentTokenPrecedence() may have inserted something like a new IMPLICITTIMES token, so grab again
+    // It is possible that possibleBeginningOfExpression could get here
     //
-    auto token = currentToken();
-    
-    auto Ctxt = CtxtIn;
-    Ctxt.Prec = TokenPrecedence;
-    Ctxt.Assoc = ASSOCIATIVITY_NONE;
-    
-    auto& I = infixParselets[token.Tok()];
-    
-    assert(I != nullptr);
-    
-    auto Res = I->parse(std::move(Left), Ctxt);
-    
-    return Res;
-}
-
-NodePtr Parser::handleNotPossible(Token& tokenAnchor, ParserContext CtxtIn, bool *wasCloser) {
-    
-    auto tokenBad = currentToken();
-
+    // For example: \[Integral]!b
+    // !b is possible beginning of expression, but ! has lower precedence than \[Integral],
+    // so
     //
-    // Some kind of error
     //
 
-    auto& P = prefixParselets[tokenBad.Tok()];
-
-    if (P != nullptr) {
+    if (tokenBad.getTokenEnum().isPossibleBeginningOfExpression()) {
 
         auto operand = parse(CtxtIn);
 
@@ -984,7 +919,9 @@ NodePtr Parser::handleNotPossible(Token& tokenAnchor, ParserContext CtxtIn, bool
         return operand;
     }
     
-    auto& I = infixParselets[tokenBad.Tok()];
+    
+    
+    auto& I = infixParselets[tokenBad.getTokenEnum().value()];
     if (I != nullptr) {
         
         //
@@ -1018,7 +955,7 @@ NodePtr Parser::handleNotPossible(Token& tokenAnchor, ParserContext CtxtIn, bool
         return I->parse(std::move(LeftSeq), Ctxt);
     }
     
-    if (tokenBad.Tok() == CtxtIn.Closer) {
+    if (tokenBad.getTokenEnum() == CtxtIn.Closer) {
         //
         // Handle the special cases of:
         // { + }
@@ -1040,7 +977,7 @@ NodePtr Parser::handleNotPossible(Token& tokenAnchor, ParserContext CtxtIn, bool
         return NodePtr(new LeafNode(createdToken));
     }
     
-    if (isCloser(tokenBad.Tok())) {
+    if (tokenBad.getTokenEnum().isCloser()) {
         //
         // Handle  { a ) }
         // which ends up being  MissingCloser[ { a ]  EXPECTEOPERAND
@@ -1061,7 +998,7 @@ NodePtr Parser::handleNotPossible(Token& tokenAnchor, ParserContext CtxtIn, bool
         return Error;
     }
     
-    if (tokenBad.Tok() == TOKEN_ENDOFFILE) {
+    if (tokenBad.getTokenEnum() == TOKEN_ENDOFFILE) {
         
         auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, "", Source(tokenAnchor.Src.end()));
         
@@ -1072,7 +1009,7 @@ NodePtr Parser::handleNotPossible(Token& tokenAnchor, ParserContext CtxtIn, bool
         return NodePtr(new LeafNode(createdToken));
     }
     
-    assert(isError(tokenBad.Tok()));
+    assert(tokenBad.getTokenEnum().isError());
         
     nextToken(CtxtIn);
     
@@ -1087,6 +1024,7 @@ NodePtr Parser::handleNotPossible(Token& tokenAnchor, ParserContext CtxtIn, bool
     return NodePtr(new LeafNode(tokenBad));
 }
 
+#if !NABORT
 bool Parser::isAbort() const {
     if (!currentAbortQ) {
         return false;
@@ -1094,142 +1032,122 @@ bool Parser::isAbort() const {
     
     return currentAbortQ();
 }
+#endif
 
 Token Parser::eatAll(ParserContext Ctxt, LeafSeq& Args) {
     
-    auto Tok = currentToken();
+    auto T = currentToken();
     
-    while (Tok.isTrivia()) {
+    while (T.getTokenEnum().isTrivia()) {
         
         //
         // No need to check isAbort() inside tokenizer loops
         //
         
-        Args.append(LeafNodePtr(new LeafNode(Tok)));
+        Args.append(LeafNodePtr(new LeafNode(T)));
         
         nextToken(Ctxt);
         
-        Tok = currentToken();
+        T = currentToken();
     }
     
-    return Tok;
+    return T;
 }
 
 Token Parser::eatAll_stringifyNextToken_file(ParserContext Ctxt, LeafSeq& Args) {
     
-    auto Tok = currentToken();
+    auto T = currentToken();
     
-    while (Tok.isTrivia()) {
+    while (T.getTokenEnum().isTrivia()) {
         
         //
         // No need to check isAbort() inside tokenizer loops
         //
         
-        Args.append(LeafNodePtr(new LeafNode(Tok)));
+        Args.append(LeafNodePtr(new LeafNode(T)));
         
         nextToken_stringifyNextToken_file(Ctxt);
         
-        Tok = currentToken();
+        T = currentToken();
     }
     
-    return Tok;
+    return T;
 }
 
 Token Parser::eatAndPreserveToplevelNewlines(ParserContext Ctxt, LeafSeq& Args) {
     
-    auto Tok = currentToken();
+    auto T = currentToken();
     
-    if (Ctxt.getGroupDepth() == 0) {
-        
-        while (true) {
-            
-            //
-            // No need to check isAbort() inside tokenizer loops
-            //
-            
-            switch (Tok.Tok()) {
-                case TOKEN_WHITESPACE:
-                case TOKEN_COMMENT:
-                case TOKEN_LINECONTINUATION:
-                    Args.append(LeafNodePtr(new LeafNode(std::move(Tok))));
-                    
-                    nextToken(Ctxt);
-                    
-                    Tok = currentToken();
-                    break;
-                case TOKEN_NEWLINE:
-                    return Tok;
-                default:
-                    return Tok;
-            }
-        }
-        
-    }
-    
-    while (Tok.isTrivia()) {
+    while (true) {
         
         //
         // No need to check isAbort() inside tokenizer loops
         //
         
-        Args.append(LeafNodePtr(new LeafNode(Tok)));
-        
-        nextToken(Ctxt);
-        
-        Tok = currentToken();
+        switch (T.getTokenEnum().value()) {
+            case TOKEN_NEWLINE.value(): {
+                
+                if (Ctxt.getGroupDepth() == 0) {
+                    
+                    return T;
+                }
+            }
+            //
+            // Fall through
+            //
+            case TOKEN_WHITESPACE.value():
+            case TOKEN_COMMENT.value():
+            case TOKEN_LINECONTINUATION.value(): {
+                
+                Args.append(LeafNodePtr(new LeafNode(std::move(T))));
+                
+                nextToken(Ctxt);
+                
+                T = currentToken();
+            }
+                break;
+            default:
+                return T;
+        }
     }
-    
-    return Tok;
 }
 
 Token Parser::eatAndPreserveToplevelNewlines_stringifyNextToken_file(ParserContext Ctxt, LeafSeq& Args) {
     
-    auto Tok = currentToken();
-    
-    if (Ctxt.getGroupDepth() == 0) {
+    auto T = currentToken();
         
-        while (true) {
-            
-            //
-            // No need to check isAbort() inside tokenizer loops
-            //
-            
-            switch (Tok.Tok()) {
-                case TOKEN_WHITESPACE:
-                case TOKEN_COMMENT:
-                case TOKEN_LINECONTINUATION:
-                    Args.append(LeafNodePtr(new LeafNode(std::move(Tok))));
-                    
-                    nextToken_stringifyNextToken_file(Ctxt);
-                    
-                    Tok = currentToken();
-                    break;
-                case TOKEN_NEWLINE:
-                    return Tok;
-                default:
-                    return Tok;
-            }
-        }
-        
-    }
-    
-    while (Tok.isTrivia()) {
+    while (true) {
         
         //
         // No need to check isAbort() inside tokenizer loops
         //
         
-        Args.append(LeafNodePtr(new LeafNode(Tok)));
-        
-        nextToken_stringifyNextToken_file(Ctxt);
-        
-        Tok = currentToken();
+        switch (T.getTokenEnum().value()) {
+            case TOKEN_NEWLINE.value(): {
+                
+                if (Ctxt.getGroupDepth() == 0) {
+                    
+                    return T;
+                }
+            }
+            //
+            // Fall through
+            //
+            case TOKEN_WHITESPACE.value():
+            case TOKEN_COMMENT.value():
+            case TOKEN_LINECONTINUATION.value(): {
+                
+                Args.append(LeafNodePtr(new LeafNode(std::move(T))));
+                
+                nextToken_stringifyNextToken_file(Ctxt);
+                
+                T = currentToken();
+            }
+                break;
+            default:
+                return T;
+        }
     }
-    
-    return Tok;
 }
 
 std::unique_ptr<Parser> TheParser = nullptr;
-
-
-

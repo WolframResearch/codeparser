@@ -35,6 +35,7 @@ Token`Error`EmptyString -> Next,
 Token`Error`Aborted -> Next,
 Token`Error`ExpectedOperand -> Next,
 Token`Error`UnrecognizedDigit -> Next,
+Token`Error`ExpectedDigit -> Next,
 Token`Error`End -> Next,
 
 (* 1 character tokens *)
@@ -108,7 +109,6 @@ Token`BangEqual -> Next, (* != *)
 Token`BangBang -> Next, (* !! *)
 Token`QuestionQuestion -> Next, (* ?? *)
 Token`EqualDot -> Next, (* =. *)
-Token`HashBang -> Next, (* #! *)
 
 (* 3 character tokens *)
 Token`DotDotDot -> Next, (* ... *)
@@ -202,7 +202,7 @@ Token`Boxes`MultiSingleQuote -> Next,
 (*
 Parsing f.m as a leaf from the front end (from example input such as <<f.m)
 *)
-Token`Other -> Next,
+(*Token`Other -> Next,*)
 
 Nothing
 |>

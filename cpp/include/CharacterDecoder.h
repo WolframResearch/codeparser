@@ -144,7 +144,9 @@ public:
     
     WLCharacter currentWLCharacter() const;
     
+#if !NISSUES
     std::vector<std::unique_ptr<Issue>>& getIssues();
+#endif
     
     SourceLocation getWLCharacterStartLoc() const;
     
@@ -158,4 +160,3 @@ public:
 };
 
 extern std::unique_ptr<CharacterDecoder> TheCharacterDecoder;
-

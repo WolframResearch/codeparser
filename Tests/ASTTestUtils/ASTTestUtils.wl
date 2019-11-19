@@ -37,7 +37,7 @@ Needs["PacletManager`"]
 
 parseEquivalenceFunction[text_, expectedIgnored_] :=
 Catch[
-Module[{cst, agg, ast, good, expected, actual, str},
+Module[{cst, agg, ast, good, expected, actual, str, str1},
 	
 	expected = DeleteCases[ToExpression[text, InputForm, Hold], Null];
 	
@@ -69,6 +69,12 @@ Module[{cst, agg, ast, good, expected, actual, str},
     					"str"->ToString[str, InputForm, CharacterEncoding -> "PrintableASCII"]|>]]
   ];
 
+  If[$Debug,
+    Print["cst: ", cst];
+    Print["concrete expected: ", expected];
+    Print["concrete actual: ", actual]
+  ];
+
   (*
   Aggregate
   *)
@@ -88,6 +94,11 @@ Module[{cst, agg, ast, good, expected, actual, str},
 		Throw[unhandled[<|"actualAggregate"->ToString[actual, InputForm], "expectedAggregate"->ToString[expected, InputForm]|>]]
 	];
 	
+  If[$Debug,
+    Print["agg concrete expected: ", expected];
+    Print["agg concrete actual: ", actual]
+  ];
+
 	(*
 	Abstract
 	*)
@@ -96,19 +107,42 @@ Module[{cst, agg, ast, good, expected, actual, str},
 		Throw[ast]
 	];
 	
-	str = ToFullFormString[ast];
-	If[!FailureQ[str],
-		actual = DeleteCases[ToExpression[str, InputForm], Null];
+	str1 = ToFullFormString[ast];
+	If[!FailureQ[str1],
+		actual = DeleteCases[ToExpression[str1, InputForm], Null];
 		,
 		actual = $Failed
 	];
 	
 	good = SameQ[expected, actual];
-	If[good,
-		True
-		,
-		unhandled[<|"actualAbstract"->ToString[actual, InputForm], "expectedAbstract"->ToString[expected, InputForm]|>]
-	]
+	If[!good,
+		Throw[unhandled[<|"actualAbstract"->ToString[actual, InputForm], "expectedAbstract"->ToString[expected, InputForm]|>]]
+	];
+
+
+  (*
+  Now test agreement
+  *)
+
+  If[FailureQ[str1],
+    (* actual is failure, expected is NOT failure *)
+    If[!FailureQ[expected],
+      Throw[unhandled["ActualFailure", <|"actualAbstract"->ToString[str1, InputForm], "expectedAbstract"->ToString[expected, InputForm]|>]]
+    ]
+    ,
+    (* actual is NOT failure, expected is failure *)
+    If[FailureQ[expected],
+      Throw[unhandled["ActualNotFailure", <|"actualAbstract"->ToString[str1, InputForm], "expectedAbstract"->ToString[expected, InputForm]|>]]
+    ]
+  ];
+
+  If[$Debug,
+    Print["abs expected: ", expected];
+    Print["abs actual: ", actual]
+  ];
+
+  True
+
 ]]
 
 
@@ -130,7 +164,8 @@ Options[parseTest] = {"FileNamePrefixPattern" -> "", "FileSizeLimit" -> {0, Infi
 
 parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
  Module[{prefix, res, cst, agg, ast, expected, errors, f, 
-   tmp, text, file, errs, tryString, actual, msgs, textReplaced, version, limit, savedFailure},
+   tmp, text, file, errs, tryString, actual, msgs, textReplaced, version, limit, savedFailure,
+   firstLine},
   Catch[
    
    prefix = OptionValue["FileNamePrefixPattern"];
@@ -179,6 +214,32 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         "FileSize" -> FileSize[file]|>];
      Throw[ast, "OK"]
      ];
+
+    (*
+    figure out if first line is special
+    *)
+    If[FileByteCount[file] > 0,
+      Quiet[
+        (*
+        Importing a file containing only \n gives a slew of different messages and fails
+        bug 363161
+        Remove this Quiet when bug is resolved
+        *)
+        firstLine = Import[file, {"Lines", 1}];
+        If[FailureQ[firstLine],
+          firstLine = "";
+        ]
+      ];
+      Which[
+        (* special encoded file format *)
+        StringMatchQ[firstLine, "(*!1"~~("A"|"B"|"C"|"D"|"H"|"I"|"N"|"O")~~"!*)mcm"],
+        Throw[Failure["EncodedFile", <|"FileName"->file|>], "OK"]
+        ,
+        (* wl script *)
+        StringStartsQ[firstLine, "#!"],
+        Throw[Failure["WLScript", <|"FileName"->file|>], "OK"]
+      ];
+    ];
 
 
     version = convertVersionString[PacletFind["AST"][[1]]["Version"]];
@@ -263,7 +324,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      Throw[cst, "OK"]
      ];
     
-    If[! FreeQ[cst, _SyntaxErrorNode],
+    If[!FreeQ[cst, _SyntaxErrorNode],
      errs = Cases[cst, _SyntaxErrorNode, {0, Infinity}];
      f = Failure[
        "SyntaxError", <|"FileName" -> file, 
@@ -273,6 +334,18 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
          StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], Red]];
      Print[Style[Row[{"index: ", i, " ", Shallow[errs]}], Red]];
      savedFailure = f;
+     ];
+
+
+     If[!FreeQ[cst, FormatIssue["CharacterEncoding", _, _, _]],
+      Print[
+      Style[Row[{"index: ", i, " ", 
+         StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], 
+       Darker[Orange]]];
+     Print[
+      Style[Row[{"index: ", i, " ", "Bad UTF-8 encoding"}], 
+       Darker[Orange]]];
+     Throw[cst, "OK"]
      ];
     
     (*If[!($VersionNumber\[GreaterEqual]11.2),

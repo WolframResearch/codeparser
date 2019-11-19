@@ -22,3 +22,62 @@ Test[
 	,
 	TestID->"Boxes-20191015-Q5H2Y6"
 ]
+
+
+
+
+
+box = TagBox["a", Function[BoxForm`e$, BoxForm`e$]]
+
+cst = ConcreteParseBox[box]
+
+Test[
+	cst
+	,
+	BoxNode[TagBox, {
+		LeafNode[Symbol, "a", <|Source -> {1}|>],
+		CodeNode[Null, Function[BoxForm`e$, BoxForm`e$], <||>]}, <|Source -> {}|>]
+	,
+	TestID->"Boxes-20191119-A5T4V2"
+]
+
+agg = AST`Abstract`Aggregate[cst]
+
+Test[
+	agg
+	,
+	BoxNode[TagBox, {
+		LeafNode[Symbol, "a", <|Source -> {1}|>], 
+  		CodeNode[Null, Function[BoxForm`e$, BoxForm`e$], <||>]}, <|Source -> {}|>]
+	,
+	TestID->"Boxes-20191119-F6L1J2"
+]
+
+Test[
+	ToInputFormString[agg]
+	,
+	"\\!\\(\\*TagBox[a, Function[BoxForm`e$, BoxForm`e$]]\\)"
+	,
+	TestID->"Boxes-20191119-R1Q6C7"
+]
+
+ast = AST`Abstract`Abstract[agg]
+
+Test[
+	ast
+	,
+	BoxNode[TagBox, {
+		LeafNode[Symbol, "a", <|Source -> {1}|>],
+		CodeNode[Null, Function[BoxForm`e$, BoxForm`e$], <||>]}, <|Source -> {}|>]
+	,
+	TestID->"Boxes-20191119-R5E0G4"
+]
+
+TestMatch[
+	ToFullFormString[ast]
+	,
+	Failure["CannotConvertBoxesToFullForm", _]
+	,
+	TestID->"Boxes-20191119-Z6J3D5"
+]
+ 

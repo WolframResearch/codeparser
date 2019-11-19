@@ -55,18 +55,6 @@ Internal`$PrototypeBuild
 
 
 
-#
-
-=[x]
-
-SemanticInterpretation
-
-
-
-Prototype build
-
-
-
 
 
 

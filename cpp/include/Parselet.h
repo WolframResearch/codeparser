@@ -76,21 +76,46 @@ public:
     virtual ~ContextSensitiveInfixParselet() {}
 };
 
-class StartOfLineParselet : virtual public Parselet {
+//class StartOfLineParselet : virtual public Parselet {
+//public:
+//    //
+//    // Commonly referred to as NUD method in the literature
+//    //
+//    NodePtr parse(ParserContext Ctxt) const;
+//};
+
+//class StartOfFileParselet : virtual public Parselet {
+//public:
+//    //
+//    // Commonly referred to as NUD method in the literature
+//    //
+//    NodePtr parse(ParserContext Ctxt) const;
+//};
+
+
+class LeafParselet : public PrefixParselet {
 public:
-    //
-    // Commonly referred to as NUD method in the literature
-    //
-    NodePtr parse(ParserContext Ctxt) const;
+    LeafParselet() {}
+    
+    NodePtr parse(ParserContext Ctxt) const override;
+    
+    Precedence getPrecedence() const override {
+        return PRECEDENCE_HIGHEST;
+    }
 };
 
-class StartOfFileParselet : virtual public Parselet {
-public:
-    //
-    // Commonly referred to as NUD method in the literature
-    //
-    NodePtr parse(ParserContext Ctxt) const;
-};
+//class NotPossibleParselet : public PrefixParselet {
+//public:
+//    NotPossibleParselet() {}
+//    
+//    NodePtr parse(ParserContext Ctxt) const override;
+//    
+//    Precedence getPrecedence() const override {
+//        return PRECEDENCE_HIGHEST;
+//    }
+//};
+
+
 
 
 
@@ -364,4 +389,3 @@ public:
         return PRECEDENCE_LESSLESS;
     }
 };
-
