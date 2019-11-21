@@ -43,7 +43,7 @@ TestMatch[
 	FirstCase[ConcreteParseString["1.2`->3", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {FormatIssue["SpaceAfter", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {FormatIssue["Space", _, _, _]}]
 	,
 	TestID->"FormatIssues-20190521-N6V1Y7"
 ]
@@ -79,7 +79,7 @@ TestMatch[
 	FirstCase[ConcreteParseString["t/.03", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {FormatIssue["SpaceAfter", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {FormatIssue["Space", _, _, _]}]
 	,
 	TestID->"FormatIssues-20190521-R4X1R6"
 ]

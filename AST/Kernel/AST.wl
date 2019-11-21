@@ -928,6 +928,26 @@ setupQuirks[]
 
 
 
+
+
+Format[fileNode:FileNode[_, children_, _], StandardForm] :=
+	Interpretation[
+		Row[{"FileNode", "[", "\[LeftSkeleton]", ToString[Length[children]], "\[RightSkeleton]", "]"}]
+		,
+		fileNode]
+
+Format[fileNode:FileNode[_, children_, _], OutputForm] :=
+	"FileNode[\[LeftSkeleton]" <> ToString[Length[children]] <> "\[RightSkeleton]]"
+
+
+
+
+
+
+
+
+
+
 End[]
 
 EndPackage[]

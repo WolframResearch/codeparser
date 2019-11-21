@@ -103,7 +103,7 @@ void readStdIn(int mode, bool printOutput) {
     std::cout << ">>> ";
     std::getline(std::cin, input);
     
-    ParserSession TheParserSession;
+    TheParserSession = std::unique_ptr<ParserSession>(new ParserSession());
     
     WolframLibraryData libData = nullptr;
     
@@ -142,7 +142,7 @@ void readFile(std::string file, int mode, bool printOutput) {
         return;
     }
     
-    ParserSession TheParserSession;
+    TheParserSession = std::unique_ptr<ParserSession>(new ParserSession());
     
     WolframLibraryData libData = nullptr;
     

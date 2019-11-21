@@ -131,7 +131,7 @@ TestMatch[
 	ConcreteParseString["\\"]
 	,
 	StringNode[String, {
-		LeafNode[Token`Error`UnhandledCharacter, "\\", <|Source -> {{1, 1}, {2, 0}}|>] }, <||>]
+		LeafNode[Token`Error`UnhandledCharacter, "\\", <|Source -> {{1, 1}, {1, 1}}|>] }, <||>]
 	,
 	TestID->"SyntaxErrorNodes-20190521-P7R3O7"
 ]

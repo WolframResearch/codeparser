@@ -17,15 +17,6 @@
 #endif
 #include <vector>
 
-class Node;
-
-// MSVC: error C2338: The C++ Standard forbids containers of const elements because allocator<const T> is ill-formed.
-using NodePtr = std::unique_ptr<Node>;
-
-Node *parseExpressions();
-Node *tokenize();
-Node *parseLeaf(int mode);
-
 bool validatePath(WolframLibraryData libData, const unsigned char *inStr, size_t len);
 
 
@@ -35,7 +26,7 @@ DLLEXPORT Node *ConcreteParseBytes(WolframLibraryData libData, const unsigned ch
     
     TheParserSession->init(libData, input, len, style, 0);
     
-    auto N = parseExpressions();
+    auto N = TheParserSession->parseExpressions();
     
     TheParserSession->deinit();
     
@@ -48,7 +39,7 @@ DLLEXPORT Node *TokenizeBytes(WolframLibraryData libData, const unsigned char *i
     
     TheParserSession->init(libData, input, len, style, 0);
     
-    auto N = tokenize();
+    auto N = TheParserSession->tokenize();
     
     TheParserSession->deinit();
     
@@ -61,7 +52,7 @@ DLLEXPORT Node *ParseLeaf(WolframLibraryData libData, const unsigned char *input
     
     TheParserSession->init(libData, input, len, style, mode);
     
-    auto N = parseLeaf(mode);
+    auto N = TheParserSession->parseLeaf(mode);
     
     TheParserSession->deinit();
     
@@ -81,15 +72,15 @@ DLLEXPORT void ReleaseNode(Node *node) {
 // Example: given the list { 'a', 'b', '\n', 'c', 'd', 'e', '\n', 'f'}
 // the result would be < 2, 6 >
 //
-std::vector<size_t> OffsetLineMap(WolframLibraryData libData, const unsigned char *input, size_t len) {
+std::vector<size_t> ParserSession::offsetLineMap() {
     
     AdvancementState state;
     SourceLocation Loc(LineCol(0, 0));
     
     std::vector<size_t> V;
     
-    for (size_t i = 0; i < len; i++) {
-        auto b = input[i];
+    for (size_t i = 0; i < dataLen; i++) {
+        auto b = data[i];
 
         Loc = state.advance(SourceCharacter(b), Loc);
         
@@ -104,7 +95,7 @@ std::vector<size_t> OffsetLineMap(WolframLibraryData libData, const unsigned cha
     return V;
 }
 
-Node *parseExpressions() {
+Node *ParserSession::parseExpressions() {
     
     std::vector<NodePtr> nodes;
     
@@ -199,7 +190,7 @@ Node *parseExpressions() {
     return N;
 }
 
-Node *tokenize() {
+Node *ParserSession::tokenize() {
     
     std::vector<NodePtr> nodes;
     
@@ -228,7 +219,7 @@ Node *tokenize() {
     return N;
 }
 
-NodePtr parseLeaf0(int mode) {
+NodePtr ParserSession::parseLeaf0(int mode) {
     
     ParserContext PCtxt;
     
@@ -326,7 +317,7 @@ NodePtr parseLeaf0(int mode) {
     return N;
 }
 
-Node *parseLeaf(int mode) {
+Node *ParserSession::parseLeaf(int mode) {
     
     std::vector<NodePtr> nodes;
     
@@ -419,9 +410,12 @@ ParserSession::~ParserSession() {
     TheByteBuffer.reset(nullptr);
 }
 
-void ParserSession::init(WolframLibraryData libData, const unsigned char *data, size_t dataLen, SourceStyle sourceStyle, int mode) {
+void ParserSession::init(WolframLibraryData libData, const unsigned char *dataIn, size_t dataLenIn, SourceStyle sourceStyle, int mode) {
     
-    TheByteBuffer->init(data, dataLen, libData);
+    data = dataIn;
+    dataLen = dataLenIn;
+    
+    TheByteBuffer->init(dataIn, dataLenIn, libData);
     TheByteDecoder->init(sourceStyle);
     TheCharacterDecoder->init(libData, sourceStyle);
     TheTokenizer->init(sourceStyle, mode);
@@ -571,40 +565,6 @@ DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     auto N = ParseLeaf(libData, inStr.get(), inStr.getByteCount(), styleStr.get(), mode);
     
     N->put(mlp);
-    
-    res = LIBRARY_NO_ERROR;
-    
-    return res;
-}
-
-DLLEXPORT int OffsetLineMap_LibraryLink(WolframLibraryData libData, MLINK mlp) {
-    
-    int res = LIBRARY_FUNCTION_ERROR;
-    int len;
-    
-    if (!MLTestHead(mlp, SYMBOL_LIST->name(), &len)) {
-        return res;
-    }
-    if (len != 1) {
-        return res;
-    }
-    
-    ScopedMLByteArray arr(mlp);
-    if (!arr.read()) {
-        return res;
-    }
-    
-    if (!MLNewPacket(mlp) ) {
-        return res;
-    }
-    
-    auto M = OffsetLineMap(libData, arr.get(), arr.getByteCount());
-    
-    MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(M.size()));
-    
-    for (size_t i = 0; i < M.size(); i++) {
-        MLPutInteger(mlp, M[i]);
-    }
     
     res = LIBRARY_NO_ERROR;
     

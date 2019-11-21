@@ -1305,24 +1305,7 @@ inline void Tokenizer::handleNumber() {
             // Must now do surgery and back up
             //
             
-            auto Src = TheCharacterDecoder->getWLCharacterSource();
-            
-            //
-            // FIXME: CaretLoc-1 is not correct because of something like this:
-            //
-            // 2\
-            // ^a
-            //
-            TheByteDecoder->setSourceLocation(Caret1Loc-1);
-            TheCharacterDecoder->setWLCharacterStart();
-            TheCharacterDecoder->setWLCharacterEnd();
-            
-            TheByteDecoder->setSourceLocation(Caret1Loc);
-            TheCharacterDecoder->setWLCharacterStart();
-            TheCharacterDecoder->setWLCharacterEnd();
-            _currentWLCharacter = Caret1Char;
-            
-            append(c, Src);
+            backup(Caret1Char, Caret1Loc, c, WarningPosition::NONE);
             
             _currentToken = Token(TOKEN_INTEGER, String.str(), getTokenSource());
             
@@ -1413,7 +1396,7 @@ inline void Tokenizer::handleNumber() {
     
     if (c.to_point() == '.') {
         
-        auto handle = handleFractionalPart(base);
+        auto handle = handlePossibleFractionalPart(base);
         if (handle == -1) {
             _currentToken = Token(TOKEN_ERROR_UNRECOGNIZEDDIGIT, String.str(), getTokenSource());
             
@@ -1463,7 +1446,7 @@ inline void Tokenizer::handleNumber() {
                 // Something like 1.2`-
                 //
                 
-                auto s = c;
+                auto SignChar = c;
                 
                 auto SignLoc = TheByteDecoder->getSourceLocation();
                 
@@ -1475,7 +1458,7 @@ inline void Tokenizer::handleNumber() {
                         
                         sign = true;
                         
-                        String << s;
+                        String << SignChar;
                     }
                         break;
                     default: {
@@ -1490,7 +1473,7 @@ inline void Tokenizer::handleNumber() {
                             // Something like 1.2``->3
                             //
                             
-                            String << s;
+                            String << SignChar;
                             String << c;
                             
                             c = nextWLCharacter(INSIDE_NUMBER);
@@ -1505,49 +1488,7 @@ inline void Tokenizer::handleNumber() {
                         //
                         // Must now do surgery and back up
                         //
-                        // Cannot use SignLoc as source of FormatIssue, because it is expected to be the source for the entire token,
-                        // which we do not have yet
-                        //
-                        // So use the source for number itself and insert space after that
-                        //
-                        
-#if !NISSUES
-                        auto NumStartLoc = TokenStartLoc;
-                        auto NumEndLoc = SignLoc - 1;
-                        
-                        std::string msg;
-                        if (s.to_point() == '-') {
-                            msg = "Put a space between **`** and ``-`` to reduce ambiguity";
-                        } else {
-                            msg = "Put a space between **`** and ``+`` to reduce ambiguity";
-                        }
-                        
-                        std::vector<CodeActionPtr> Actions;
-                        Actions.push_back(CodeActionPtr(new InsertTextAfterCodeAction("Insert space after", Source(NumStartLoc, NumEndLoc), " ")));
-                        
-                        auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACEAFTER, msg, FORMATISSUESEVERITY_FORMATTING, Source(NumStartLoc, NumEndLoc), 0.25, std::move(Actions)));
-                        
-                        Issues.push_back(std::move(I));
-#endif
-                        
-                        auto Src = TheCharacterDecoder->getWLCharacterSource();
-                        
-                        //
-                        // FIXME: SignLoc-1 is not correct because of something like this:
-                        //
-                        // 1.2`\
-                        // ->3
-                        //
-                        TheByteDecoder->setSourceLocation(SignLoc-1);
-                        TheCharacterDecoder->setWLCharacterStart();
-                        TheCharacterDecoder->setWLCharacterEnd();
-                        
-                        TheByteDecoder->setSourceLocation(SignLoc);
-                        TheCharacterDecoder->setWLCharacterStart();
-                        TheCharacterDecoder->setWLCharacterEnd();
-                        _currentWLCharacter = s;
-                        
-                        append(c, Src);
+                        backup(SignChar, SignLoc, c, WarningPosition::BEFORE);
                         
                         _currentToken = Token(TOKEN_REAL, String.str(), getTokenSource());
                         
@@ -1640,8 +1581,6 @@ inline void Tokenizer::handleNumber() {
                             return;
                         }
                         
-                        auto Src = TheCharacterDecoder->getWLCharacterSource();
-                        
                         //
                         // Something like  123`.xxx  where the . could be a Dot operator
                         //
@@ -1651,17 +1590,7 @@ inline void Tokenizer::handleNumber() {
                         //
                         // Must now do surgery and back up
                         //
-                        
-                        TheByteDecoder->setSourceLocation(DotLoc-1);
-                        TheCharacterDecoder->setWLCharacterStart();
-                        TheCharacterDecoder->setWLCharacterEnd();
-                        
-                        TheByteDecoder->setSourceLocation(DotLoc);
-                        TheCharacterDecoder->setWLCharacterStart();
-                        TheCharacterDecoder->setWLCharacterEnd();
-                        _currentWLCharacter = DotChar;
-                        
-                        append(NextChar, Src);
+                        backup(DotChar, DotLoc, NextChar, WarningPosition::BEFORE);
                         
                         _currentToken = Token(TOKEN_REAL, String.str(), getTokenSource());
                         
@@ -1681,7 +1610,7 @@ inline void Tokenizer::handleNumber() {
                 // actual decimal point
                 //
                 
-                auto handled = handleFractionalPartPastDot(0, DotChar, DotLoc);
+                auto handled = handlePossibleFractionalPartPastDot(0, DotChar, DotLoc);
                 if (handled > 0) {
                     supplied = true;
                 }
@@ -1730,6 +1659,10 @@ inline void Tokenizer::handleNumber() {
     
     if (c.to_point() != '*') {
         
+        //
+        // Success!
+        //
+        
         if (real) {
             _currentToken = Token(TOKEN_REAL, String.str(), getTokenSource());
         } else {
@@ -1754,25 +1687,12 @@ inline void Tokenizer::handleNumber() {
         //
         // Must now do surgery and back up
         //
-        
-        auto Src = TheCharacterDecoder->getWLCharacterSource();
+
+        backup(StarChar, StarLoc, c, WarningPosition::NONE);
         
         //
-        // FIXME: StarLoc-1 is not correct because of something like this:
+        // Success!
         //
-        // 1\
-        // *a
-        //
-        TheByteDecoder->setSourceLocation(StarLoc-1);
-        TheCharacterDecoder->setWLCharacterStart();
-        TheCharacterDecoder->setWLCharacterEnd();
-        
-        TheByteDecoder->setSourceLocation(StarLoc);
-        TheCharacterDecoder->setWLCharacterStart();
-        TheCharacterDecoder->setWLCharacterEnd();
-        _currentWLCharacter = StarChar;
-        
-        append(c, Src);
         
         if (real) {
             _currentToken = Token(TOKEN_REAL, String.str(), getTokenSource());
@@ -1816,6 +1736,10 @@ inline void Tokenizer::handleNumber() {
     
     if (c.to_point() != '.') {
         
+        //
+        // Success!
+        //
+        
         if (real) {
             _currentToken = Token(TOKEN_REAL, String.str(), getTokenSource());
         } else {
@@ -1845,7 +1769,7 @@ inline void Tokenizer::handleNumber() {
 //
 // Note: if 0 digits, then the . is also not added to String
 //
-int Tokenizer::handleFractionalPart(int base) {
+int Tokenizer::handlePossibleFractionalPart(int base) {
     
     auto c = currentWLCharacter();
     
@@ -1857,17 +1781,20 @@ int Tokenizer::handleFractionalPart(int base) {
     
     nextWLCharacter(INSIDE_NUMBER);
     
-    return handleFractionalPartPastDot(base, DotChar1, DotLoc1);
+    return handlePossibleFractionalPartPastDot(base, DotChar1, DotLoc1);
 }
 
 //
 // Precondition: currentWLCharacter is NOT in String
 //
-// Return: number of digits handled after ., possibly 0, or -1 if error
+// Return: number of digits handled after ., possibly 0
+//         -1 if base error
+//         -2 if not a radix point (and ok to back up)
+//         -3 error
 //
 // Note: if 0 digits, then the . is also not added to String
 //
-int Tokenizer::handleFractionalPartPastDot(int base, WLCharacter DotChar1, SourceLocation DotLoc1) {
+int Tokenizer::handlePossibleFractionalPartPastDot(int base, WLCharacter DotChar1, SourceLocation DotLoc1) {
     
     auto c = currentWLCharacter();
     
@@ -1879,35 +1806,9 @@ int Tokenizer::handleFractionalPartPastDot(int base, WLCharacter DotChar1, Sourc
         // Must now do surgery and back up
         //
         
-#if !NISSUES
-        std::vector<CodeActionPtr> Actions;
-        Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(DotLoc1), " ")));
+        backup(DotChar1, DotLoc1, c, WarningPosition::BEFORE);
         
-        auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, Source(DotLoc1), 0.25, std::move(Actions)));
-        
-        Issues.push_back(std::move(I));
-#endif
-        
-        auto Loc = TheByteDecoder->getSourceLocation();
-        
-        //
-        // FIXME: DotLoc-1 is not correct because of something like this:
-        //
-        // 0\
-        // ..
-        //
-        TheByteDecoder->setSourceLocation(DotLoc1-1);
-        TheCharacterDecoder->setWLCharacterStart();
-        TheCharacterDecoder->setWLCharacterEnd();
-        
-        TheByteDecoder->setSourceLocation(DotLoc1);
-        TheCharacterDecoder->setWLCharacterStart();
-        TheCharacterDecoder->setWLCharacterEnd();
-        _currentWLCharacter = DotChar1;
-        
-        append(c, Source(Loc, Loc));
-        
-        return false;
+        return 0;
     }
     
     String << DotChar1;
@@ -1944,6 +1845,55 @@ int Tokenizer::handleFractionalPartPastDot(int base, WLCharacter DotChar1, Sourc
 #endif
     
     return handle;
+}
+        
+void Tokenizer::backup(WLCharacter Char1, SourceLocation Loc1, WLCharacter c, WarningPosition pos) {
+    
+#if !NISSUES
+    
+    switch (pos) {
+        case WarningPosition::NONE:
+            break;
+        case WarningPosition::BEFORE: {
+            std::vector<CodeActionPtr> Actions;
+            Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(Loc1), " ")));
+            
+            auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, Source(Loc1), 0.25, std::move(Actions)));
+            
+            Issues.push_back(std::move(I));
+        }
+            break;
+        case WarningPosition::AFTER: {
+            std::vector<CodeActionPtr> Actions;
+            Actions.push_back(CodeActionPtr(new InsertTextAfterCodeAction("Insert space after", Source(Loc1), " ")));
+            
+            auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, Source(Loc1), 0.25, std::move(Actions)));
+            
+            Issues.push_back(std::move(I));
+        }
+            break;
+    }
+    
+#endif
+    
+    auto Src = TheCharacterDecoder->getWLCharacterSource();
+    
+    //
+    // FIXME: DotLoc-1 is not correct because of something like this:
+    //
+    // 0\
+    // ..
+    //
+    TheByteDecoder->setSourceLocation(Loc1-1);
+    TheCharacterDecoder->setWLCharacterStart();
+    TheCharacterDecoder->setWLCharacterEnd();
+    
+    TheByteDecoder->setSourceLocation(Loc1);
+    TheCharacterDecoder->setWLCharacterStart();
+    TheCharacterDecoder->setWLCharacterEnd();
+    _currentWLCharacter = Char1;
+    
+    append(c, Src);
 }
 
 bool Tokenizer::expectDigits(int *leadingZeroCount) {
@@ -2019,7 +1969,7 @@ size_t Tokenizer::handleDigits(int *leadingZeroCount) {
 // Precondition: currentWLCharacter is NOT in String
 // Postcondition: currentWLCharacter is the first WLCharacter AFTER all good digits or alphas
 //
-// Return: number of digits handled after ., possibly 0, or -1 if error
+// Return: number of digits handled, possibly 0, or -1 if error
 //
 // Note: if base == 0, then it is not possible to return an error
 //
@@ -2286,23 +2236,7 @@ inline void Tokenizer::handleDot() {
         // Must now do surgery and back up (and go to handleNumber instead)
         //
         
-        auto Loc = TheByteDecoder->getSourceLocation();
-        
-        //
-        // FIXME: DotLoc-1 is not correct because of something like this:
-        //
-        // .0
-        //
-        TheByteDecoder->setSourceLocation(DotLoc-1);
-        TheCharacterDecoder->setWLCharacterStart();
-        TheCharacterDecoder->setWLCharacterEnd();
-        
-        TheByteDecoder->setSourceLocation(DotLoc);
-        TheCharacterDecoder->setWLCharacterStart();
-        TheCharacterDecoder->setWLCharacterEnd();
-        _currentWLCharacter = DotChar;
-        
-        append(c, Source(Loc));
+        backup(DotChar, DotLoc, c, WarningPosition::NONE);
         
         return handleNumber();
     }
@@ -2386,24 +2320,7 @@ inline void Tokenizer::handleEqual() {
                 // Must now do surgery and back up
                 //
                 
-                auto Src = TheCharacterDecoder->getWLCharacterSource();
-                
-                //
-                // FIXME: DotLoc-1 is not correct because of something like this:
-                //
-                // x=.\
-                // 0
-                //
-                TheByteDecoder->setSourceLocation(DotLoc-1);
-                TheCharacterDecoder->setWLCharacterStart();
-                TheCharacterDecoder->setWLCharacterEnd();
-                
-                TheByteDecoder->setSourceLocation(DotLoc);
-                TheCharacterDecoder->setWLCharacterStart();
-                TheCharacterDecoder->setWLCharacterEnd();
-                _currentWLCharacter = DotChar;
-                
-                append(c, Src);
+                backup(DotChar, DotLoc, c, WarningPosition::BEFORE);
                 
                 Operator = TOKEN_EQUAL;
                 
@@ -2454,24 +2371,7 @@ inline void Tokenizer::handleEqual() {
                 // Must now do surgery and back up
                 //
                 
-                auto Src = TheCharacterDecoder->getWLCharacterSource();
-                
-                //
-                // FIXME: BangLoc-1 is not correct because of something like this:
-                //
-                // x=\
-                // !y
-                //
-                TheByteDecoder->setSourceLocation(BangLoc-1);
-                TheCharacterDecoder->setWLCharacterStart();
-                TheCharacterDecoder->setWLCharacterEnd();
-                
-                TheByteDecoder->setSourceLocation(BangLoc);
-                TheCharacterDecoder->setWLCharacterStart();
-                TheCharacterDecoder->setWLCharacterEnd();
-                _currentWLCharacter = BangChar;
-                
-                append(c, Src);
+                backup(BangChar, BangLoc, c, WarningPosition::BEFORE);
                 
                 Operator = TOKEN_EQUAL;
             }
@@ -2530,33 +2430,7 @@ inline void Tokenizer::handleUnder() {
                 // Must now do surgery and back up
                 //
                 
-#if !NISSUES
-                std::vector<CodeActionPtr> Actions;
-                Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(DotLoc), " ")));
-                
-                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, Source(DotLoc), 0.25, std::move(Actions)));
-                
-                Issues.push_back(std::move(I));
-#endif
-                
-                auto Src = TheCharacterDecoder->getWLCharacterSource();
-                
-                //
-                // FIXME: DotLoc-1 is not correct because of something like this:
-                //
-                // _\
-                // ...
-                //
-                TheByteDecoder->setSourceLocation(DotLoc-1);
-                TheCharacterDecoder->setWLCharacterStart();
-                TheCharacterDecoder->setWLCharacterEnd();
-                
-                TheByteDecoder->setSourceLocation(DotLoc);
-                TheCharacterDecoder->setWLCharacterStart();
-                TheCharacterDecoder->setWLCharacterEnd();
-                _currentWLCharacter = DotChar;
-                
-                append(c, Src);
+                backup(DotChar, DotLoc, c, WarningPosition::BEFORE);
                 
                 Operator = TOKEN_UNDER; // _
                 
@@ -2645,24 +2519,7 @@ inline void Tokenizer::handleLess() {
                 // Must now do surgery and back up
                 //
                 
-                auto Src = TheCharacterDecoder->getWLCharacterSource();
-                
-                //
-                // FIXME: MinusLoc-1 is not correct because of something like this:
-                //
-                // a<\
-                // -4
-                //
-                TheByteDecoder->setSourceLocation(MinusLoc-1);
-                TheCharacterDecoder->setWLCharacterStart();
-                TheCharacterDecoder->setWLCharacterEnd();
-                
-                TheByteDecoder->setSourceLocation(MinusLoc);
-                TheCharacterDecoder->setWLCharacterStart();
-                TheCharacterDecoder->setWLCharacterEnd();
-                _currentWLCharacter = MinusChar;
-                
-                append(c, Src);
+                backup(MinusChar, MinusLoc, c, WarningPosition::BEFORE);
                 
                 Operator = TOKEN_LESS;
             }
@@ -3143,42 +3000,8 @@ inline void Tokenizer::handleSlash() {
                 //
                 // Must now do surgery and back up
                 //
-                // Cannot use DotLoc as source of FormatIssue, because it is expected to be the source for the entire token,
-                // which we do not have yet
-                //
-                // So use the source for Slash itself and insert space after that
-                //
                 
-#if !NISSUES
-                auto SlashStartLoc = TokenStartLoc;
-                auto SlashEndLoc = DotLoc - 1;
-                
-                std::vector<CodeActionPtr> Actions;
-                Actions.push_back(CodeActionPtr(new InsertTextAfterCodeAction("Insert space", Source(SlashStartLoc, SlashEndLoc), " ")));
-                
-                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACEAFTER, "Put a space between ``/`` and ``.`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(SlashStartLoc, SlashEndLoc), 0.25, std::move(Actions)));
-                
-                Issues.push_back(std::move(I));
-#endif
-                
-                auto Loc = TheByteDecoder->getSourceLocation();
-                
-                //
-                // FIXME: DotLoc-1 is not correct because of something like this:
-                //
-                // t/\
-                // .3
-                //
-                TheByteDecoder->setSourceLocation(DotLoc-1);
-                TheCharacterDecoder->setWLCharacterStart();
-                TheCharacterDecoder->setWLCharacterEnd();
-                
-                TheByteDecoder->setSourceLocation(DotLoc);
-                TheCharacterDecoder->setWLCharacterStart();
-                TheCharacterDecoder->setWLCharacterEnd();
-                _currentWLCharacter = DotChar;
-                
-                append(c, Source(Loc, Loc));
+                backup(DotChar, DotLoc, c, WarningPosition::BEFORE);
                 
             } else {
                 
@@ -3570,6 +3393,7 @@ inline void Tokenizer::handleUnhandledBackSlash() {
             
             _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), getTokenSource());
         }
+            break;
         case ':': {
             
             String << c;
@@ -3600,6 +3424,7 @@ inline void Tokenizer::handleUnhandledBackSlash() {
             
             _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), getTokenSource());
         }
+            break;
         case '.': {
             
             String << c;
@@ -3630,6 +3455,7 @@ inline void Tokenizer::handleUnhandledBackSlash() {
             
             _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), getTokenSource());
         }
+            break;
         case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': {
             
             String << c;
@@ -3660,6 +3486,7 @@ inline void Tokenizer::handleUnhandledBackSlash() {
             
             _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), getTokenSource());
         }
+            break;
         case '|': {
             
             String << c;
@@ -3690,10 +3517,12 @@ inline void Tokenizer::handleUnhandledBackSlash() {
             
             _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), getTokenSource());
         }
+            break;
         case CODEPOINT_ENDOFFILE: {
             
             _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), getTokenSource());
         }
+            break;
         default: {
             
             //
@@ -3706,6 +3535,7 @@ inline void Tokenizer::handleUnhandledBackSlash() {
             
             _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), getTokenSource());
         }
+            break;
     }
 }
 

@@ -921,9 +921,12 @@ bool WLCharacter::isStrangeCharacter() const {
     //
     // BMP PUA
     //
-    if (0xe000 <= val && val <= 0xf8ff) {
-        return true;
-    }
+    
+    // Disable BMP PUA for now
+    
+//    if (0xe000 <= val && val <= 0xf8ff) {
+//        return true;
+//    }
     
     //
     // Plane 15 PUA

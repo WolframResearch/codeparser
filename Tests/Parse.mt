@@ -399,6 +399,18 @@ Test[
 	TestID->"Parse-20191116-D2C6O4"
 ]
 
+Test[
+	"1`.a"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID -> "Parse-20191119-Q8Y9U4"
+]
+
+
+
 
 
 

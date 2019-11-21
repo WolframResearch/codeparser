@@ -49,13 +49,19 @@ class sbuffer {
     
 public:
     
-    sbuffer() {}
+    sbuffer() : Str() {}
     
     void clear();
     
     std::string str();
     
     void operator<<(WLCharacter c);
+};
+
+enum class WarningPosition {
+    NONE,
+    BEFORE,
+    AFTER
 };
 
 //
@@ -75,6 +81,7 @@ class Tokenizer {
     
     SourceLocation TokenStartLoc;
     
+    void backup(WLCharacter Char1, SourceLocation Loc1, WLCharacter c, WarningPosition pos);
     
     void handleEndOfFile();
     void handleLineFeed();
@@ -102,8 +109,8 @@ class Tokenizer {
     void handleSymbolSegment(TokenizerContext Ctxt);
     
     void handleNumber();
-    int handleFractionalPart(int base);
-    int handleFractionalPartPastDot(int base, WLCharacter DotChar, SourceLocation DotLoc);
+    int handlePossibleFractionalPart(int base);
+    int handlePossibleFractionalPartPastDot(int base, WLCharacter DotChar, SourceLocation DotLoc);
     
     void handleColon();
     void handleOpenParen();

@@ -38,6 +38,9 @@
 
 class Node;
 
+// MSVC: error C2338: The C++ Standard forbids containers of const elements because allocator<const T> is ill-formed.
+using NodePtr = std::unique_ptr<Node>;
+
 //
 // CMake defines ast_lib_EXPORTS
 //
@@ -61,7 +64,15 @@ EXTERN_C DLLEXPORT Node *ParseLeaf(WolframLibraryData libData, const unsigned ch
 EXTERN_C DLLEXPORT void ReleaseNode(Node *node);
 
 
+
+
 class ParserSession {
+    
+    const unsigned char *data;
+    size_t dataLen;
+    
+    NodePtr parseLeaf0(int mode);
+    
 public:
     
     ParserSession();
@@ -71,6 +82,13 @@ public:
     void init(WolframLibraryData libData, const unsigned char *data, size_t dataLen, SourceStyle style, int mode);
     
     void deinit();
+    
+    
+    Node *parseExpressions();
+    Node *tokenize();
+    Node *parseLeaf(int mode);
+    
+    std::vector<size_t> offsetLineMap();
 };
 
 extern std::unique_ptr<ParserSession> TheParserSession;
@@ -89,8 +107,6 @@ EXTERN_C DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData
 EXTERN_C DLLEXPORT int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
 EXTERN_C DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp);
-
-EXTERN_C DLLEXPORT int OffsetLineMap_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
 class ScopedMLUTF8String {
     MLINK mlp;

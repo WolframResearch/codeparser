@@ -1534,7 +1534,7 @@ Module[{head, data, part, innerData, outerData, issues, partData, src},
 										<|	Source->src,
 											CodeActions->{CodeAction["DeleteTrivia", DeleteTrivia,
 																<|Source->src|>]},
-											AirynessLevel -> 0.0|>]];
+											Format`AirynessLevel -> 0.0|>]];
 		];
 
 		If[innerData[[ Key[Source], 2, 2]]+1 != outerData[[ Key[Source], 2, 2]],
@@ -1543,7 +1543,7 @@ Module[{head, data, part, innerData, outerData, issues, partData, src},
 										<|	Source->src,
 											CodeActions->{CodeAction["DeleteTrivia", DeleteTrivia, 
 																<|Source->src|>]},
-											AirynessLevel -> 0.0|>]];
+											Format`AirynessLevel -> 0.0|>]];
 		];
 	];
 

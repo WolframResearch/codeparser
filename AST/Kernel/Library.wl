@@ -12,7 +12,6 @@ newestLinkObject
 concreteParseBytesFunc
 tokenizeBytesFunc
 parseLeafFunc
-offsetLineMapFunc
 
 
 
@@ -131,8 +130,6 @@ concreteParseBytesFunc := concreteParseBytesFunc = loadFunc["ConcreteParseBytes_
 tokenizeBytesFunc := tokenizeBytesFunc = loadFunc["TokenizeBytes_LibraryLink"];
 
 parseLeafFunc := parseLeafFunc = loadFunc["ParseLeaf_LibraryLink"];
-
-offsetLineMapFunc := offsetLineMapFunc = loadFunc["OffsetLineMap_LibraryLink"];
 )
 
 

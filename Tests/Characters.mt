@@ -14,11 +14,11 @@ Needs["AST`Utils`"]
 guarantee that "\:f3a2" does not get returned as StringNode[String, "\[COMPATIBILITYNoBreak]", <||>]
 *)
 
-Test[
+TestMatch[
 	ConcreteParseString["\"\\:f3a2\""]
 	,
 	StringNode[String, {
-		LeafNode[String, "\"\\:f3a2\"", <|Source->{{1,1},{1,8}}|>] }, <||>]
+		LeafNode[String, "\"\\:f3a2\"", <|Source -> {{1, 1}, {1, 8}}|>] }, _]
 	,
 	TestID->"Characters-20190601-E6Q0I8"
 ]

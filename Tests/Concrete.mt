@@ -168,7 +168,7 @@ Test[
 
 
 
-Test[
+TestMatch[
 	ConcreteParseString["f[1,\\[InvisibleComma]2]"]
 	,
 	StringNode[String, {
@@ -181,7 +181,7 @@ Test[
 					LeafNode[Token`Fake`ImplicitNull, "", <|Source->{{1,4}, {1,4}}|>],
 					LeafNode[Token`LongName`InvisibleComma, "\\[InvisibleComma]", <|Source->{{1,5}, {1,21}}|>],
 					LeafNode[Integer, "2", <|Source->{{1,22}, {1,22}}|>]}, <|Source->{{1,3}, {1,22}}|>],
-				LeafNode[Token`CloseSquare, "]", <|Source->{{1,23}, {1,23}}|>] }, <|Source->{{1,2}, {1,23}}|>] }, <|Source->{{1,1}, {1,23}}|>] }, <||>]
+				LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 23}, {1, 23}}|>] }, <|Source -> {{1, 2}, {1, 23}}|>] }, <|Source -> {{1, 1}, {1, 23}}|>] }, _]
 	,
 	TestID->"Concrete-20190704-F8G9M5"
 ]
@@ -603,3 +603,15 @@ Test[
 	,
 	TestID->"Concrete-20191117-M2R5P9"
 ]
+
+TestMatch[
+	ConcreteParseString["0.."]
+	,
+	StringNode[String, {
+		PostfixNode[Repeated, {
+			LeafNode[Integer, "0", <|Source -> {{2, 1}, {2, 1}}|>],
+			LeafNode[Token`DotDot, "..", <|Source -> {{2, 2}, {2, 3}}|>]}, <|Source -> {{2, 1}, {2, 3}}|>]}, _]
+	,
+	TestID -> "Concrete-20191119-J0T1L1"
+]
+
