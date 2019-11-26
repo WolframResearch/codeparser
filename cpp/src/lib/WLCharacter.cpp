@@ -843,6 +843,9 @@ bool WLCharacter::isStrangeCharacter() const {
         return false;
     }
     
+    //
+    // Individual characters
+    //
     switch (val) {
         //
         // ZERO WIDTH SPACE
@@ -873,6 +876,13 @@ bool WLCharacter::isStrangeCharacter() const {
         // ZERO WIDTH NO-BREAK SPACE
         //
         case 0xfeff:
+            return true;
+        //
+        // REPLACEMENT CHARACTER
+        //
+        // This can be the result of badly encoded UTF8
+        //
+        case 0xfffd:
             return true;
         //
         // INVALID CHARACTER
