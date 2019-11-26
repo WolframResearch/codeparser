@@ -16,6 +16,7 @@ Begin["`Private`"]
 Needs["AST`"]
 Needs["AST`Utils`"]
 Needs["AST`Folds`"]
+Needs["AST`Quirks`"]
 
 (*
 
@@ -112,7 +113,7 @@ abstract[LeafNode[Real, sIn_, dataIn_]] :=
 	LeafNode[Real, sIn, KeyTake[dataIn, keysToTake]]
 
 abstract[LeafNode[Slot, sIn_, dataIn_]] :=
-Module[{s, data},
+Module[{s, data, rest, lastPos},
 
 	s = sIn;
 
@@ -120,20 +121,24 @@ Module[{s, data},
 
 	data = KeyTake[data, keysToTake];
 
-	Switch[s,
-		"#",
+	lastPos = StringPosition[s, "#" | "\\.23" | "\\:0023" | "\\|000023" | "\\043" | "\\[RawNumberSign]"][[-1, 2]];
+
+	rest = StringDrop[s, lastPos];
+
+	Switch[rest,
+		"",
 		    CallNode[ToNode[Slot], {ToNode[1]}, data]
 		,
-		test_ /; StringMatchQ[test, "#"~~DigitCharacter..],
-		    CallNode[ToNode[Slot], {ToNode[FromDigits[StringDrop[s, 1]]]}, data]
+		test_ /; StringMatchQ[test, DigitCharacter..],
+		    CallNode[ToNode[Slot], {ToNode[FromDigits[rest]]}, data]
 		,
 		_,
-		    CallNode[ToNode[Slot], {ToNode[abstractString[StringDrop[s, 1]]]}, data]
+		    CallNode[ToNode[Slot], {ToNode[abstractString[rest]]}, data]
 	]
 ]
 
 abstract[LeafNode[SlotSequence, sIn_, dataIn_]] :=
-Module[{s, data},
+Module[{s, data, rest, lastPos},
 
 	s = sIn;
 
@@ -141,17 +146,21 @@ Module[{s, data},
 
 	data = KeyTake[data, keysToTake];
 
-	Switch[s,
-		"##",
+	lastPos = StringPosition[s, "#" | "\\.23" | "\\:0023" | "\\|000023" | "\\043" | "\\[RawNumberSign]"][[-1, 2]];
+
+	rest = StringDrop[s, lastPos];
+
+	Switch[rest,
+		"",
 		    CallNode[ToNode[SlotSequence], {ToNode[1]}, data]
 		,
 		_,
-		    CallNode[ToNode[SlotSequence], {ToNode[FromDigits[StringDrop[s, 2]]]}, data]
+		    CallNode[ToNode[SlotSequence], {ToNode[FromDigits[rest]]}, data]
 	]
 ]
 
 abstract[LeafNode[Out, sIn_, dataIn_]] :=
-Module[{s, data},
+Module[{s, data, count},
 
 	s = sIn;
 
@@ -159,12 +168,14 @@ Module[{s, data},
 
 	data = KeyTake[data, keysToTake];
 
-	Switch[s,
-		"%",
+	count = StringCount[s, "%" | "\\.25" | "\\:0025" | "\\|000025" | "\\045" | "\\[RawPercent]"];
+
+	Switch[count,
+		1,
 		    CallNode[ToNode[Out], {}, data]
 		,
 		_,
-		    CallNode[ToNode[Out], { ToNode[-StringLength[s]] }, data]
+		    CallNode[ToNode[Out], { ToNode[-count] }, data]
 	]
 ]
 
@@ -371,9 +382,6 @@ abstract[CallNode[op_, { GroupNode[GroupDoubleBracket, { _, inner___, _ }, data2
 must handle this so that AbstractSyntaxErrorNode is created later
 *)
 
-abstract[CallNode[op_, { missing:GroupMissingOpenerNode[_, _, _] }, data1_]] :=
-	abstractCallNode[CallNode[op, { missing }, KeyTake[data1, keysToTake]]]
-
 abstract[CallNode[op_, { missing:GroupMissingCloserNode[_, _, _] }, data1_]] :=
 	abstractCallNode[CallNode[op, { missing }, KeyTake[data1, keysToTake]]]
 
@@ -403,12 +411,10 @@ abstract[GroupNode[GroupLinearSyntaxParen, children_, data_]] := GroupNode[Group
 
 
 (*
-Missing closers and openers
+Missing closers
 *)
 
 abstract[GroupMissingCloserNode[_, children_, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingCloser, children, KeyTake[data, keysToTake]]
-
-abstract[GroupMissingOpenerNode[_, children_, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingOpener, children, KeyTake[data, keysToTake]]
 
 abstract[GroupNode[op_, {_, inner___, _}, data_]] := abstractGroupNode[GroupNode[op, { inner }, KeyTake[data, keysToTake]]]
 
@@ -611,7 +617,7 @@ We want to be able to catch e.g.,
 
 foo[] := Message[foo::bad]; $Failed
 
-where the parsing is ( foo[] := Message[foo::bad]) ; $Failed
+where the parsing is ( foo[] := Message[foo::bad] ) ; $Failed
 
 A recursive call would see the SetDelayed, and say fine
 
@@ -676,7 +682,13 @@ topLevelChildIssues[InfixNode[CompoundExpression, {
 												PatternSequence[LeafNode[Symbol, _, _], _LeafNode].., LeafNode[Symbol, _, _] }, _], True] := {}
 
 
-topLevelChildIssues[InfixNode[CompoundExpression, {_, LeafNode[Token`Semi, _, _], next:_[_, _, nextData_], ___}, data_], True] := { SyntaxIssue["TopLevel", "Unexpected expression at top-level.", "Warning", <| Source->data[Source], ConfidenceLevel -> 0.75, CodeActions -> { CodeAction["Insert newline", InsertNode, <|Source->nextData[Source], "InsertionNode"->LeafNode[Token`Newline, "\n", <||>]|>] } |>] }
+topLevelChildIssues[InfixNode[CompoundExpression, {_, LeafNode[Token`Semi, _, _], next:_[_, _, nextData_], ___}, data_], True] := {
+	SyntaxIssue["TopLevel", "``CompoundExpression`` at top-level. Consider breaking up.", "Warning",
+		<| Source->data[Source],
+			ConfidenceLevel -> 0.75,
+			CodeActions -> { CodeAction["Insert newline", InsertNode,
+									<|	Source->nextData[Source],
+										"InsertionNode"->LeafNode[Token`Newline, "\n", <||>]|>] } |>] }
 
 
 
@@ -686,7 +698,13 @@ Anything else, then warn
 
 Specifically add a DidYouMean for / -> /@
 *)
-topLevelChildIssues[BinaryNode[Divide, {_, LeafNode[Token`Slash, _, slashData_], _}, data_], True] := { SyntaxIssue["TopLevel", "Unexpected expression at top-level.", "Warning", <| Source->slashData[Source], ConfidenceLevel -> 0.75, CodeActions -> { CodeAction["Replace ``/`` with ``/@``", ReplaceNode, <|Source->slashData[Source], "ReplacementNode"->LeafNode[Token`SlashAt, "/@", <||>] |>] } |>] }
+topLevelChildIssues[BinaryNode[Divide, {_, LeafNode[Token`Slash, _, slashData_], _}, data_], True] := {
+	SyntaxIssue["TopLevel", "Unexpected expression at top-level.", "Warning",
+		<| Source->slashData[Source],
+			ConfidenceLevel -> 0.75,
+			CodeActions -> { CodeAction["Replace ``/`` with ``/@``", ReplaceNode,
+									<|	Source->slashData[Source],
+										"ReplacementNode"->LeafNode[Token`SlashAt, "/@", <||>] |>] } |>] }
 
 (*
 No need to issue warning for errors being strange
@@ -695,7 +713,10 @@ topLevelChildIssues[SyntaxErrorNode[_, _, _], True] := {}
 
 topLevelChildIssues[AbstractSyntaxErrorNode[_, _, _], True] := {}
 
-topLevelChildIssues[node_, True] := { SyntaxIssue["TopLevel", "Unexpected expression at top-level.", "Warning", <| node[[3]], ConfidenceLevel -> 0.75 |>] }
+topLevelChildIssues[node_, True] := {
+	SyntaxIssue["TopLevel", "Unexpected expression at top-level.", "Warning",
+		<| node[[3]],
+			ConfidenceLevel -> 0.75 |>] }
 
 
 
@@ -940,13 +961,13 @@ concrete syntax does not have negated numbers
 abstract syntax is allowed to have negated numbers
 *)
 
-negate[LeafNode[Integer, "0", data1_], data_] :=
+negate[LeafNode[Integer, "0", _], data_] :=
 	LeafNode[Integer, "0", data]
 
-negate[LeafNode[Integer, str_, data1_], data_] :=
+negate[LeafNode[Integer, str_, _], data_] :=
 	LeafNode[Integer, "-"<>str, data]
 
-negate[LeafNode[Real, str_, data1_], data_] :=
+negate[LeafNode[Real, str_, _], data_] :=
 	LeafNode[Real, "-"<>str, data]
 
 (*
@@ -956,14 +977,14 @@ something like  -(1.2)  is still parsed as  -1.2
 
 TODO: maybe this is a kernel quirk?
 *)
-negate[GroupNode[GroupParen, {_, child_?possiblyNegatedZeroQ, _}, data1_], data_] :=
+negate[GroupNode[GroupParen, {_, child_?possiblyNegatedZeroQ, _}, _], data_] :=
 	negate[child, data]
 
-negate[PrefixNode[Minus, {_, child_?possiblyNegatedZeroQ}, data1_], data_] :=
+negate[PrefixNode[Minus, {_, child_?possiblyNegatedZeroQ}, _], data_] :=
 	negate[child, data]
 
 negate[node_?parenthesizedIntegerOrRealQ, data_] :=
-	negate[node[[2]][[2]], data]
+	negate[node[[2, 2]], data]
 
 
 
@@ -976,7 +997,7 @@ Important to use InfixNode[Times and not just CallNode[Times,
 This allows these nodes to be merged later e.g., 1-a/b
 *)
 
-negate[InfixNode[Times, children_, data1_], data_] :=
+negate[InfixNode[Times, children_, _], data_] :=
 	InfixNode[Times, { ToNode[-1], LeafNode[Token`Star, "*", <||>] } ~Join~ children, data]
 
 negate[node_, data_] :=
@@ -1004,17 +1025,22 @@ except when it's not, bug 365287
 TODO: add 365287 to kernel quirks mode
 *)
 flattenPlus[nodes_List, data_] :=
-	Module[{},
+	Module[{synthesizedData},
 		(
 			Switch[#,
 				PrefixNode[Plus, {_, _}, _],
-					flattenPlus[{#[[2,2]]}, data]
+					flattenPlus[{#[[2, 2]]}, data]
 				,
 				InfixNode[Plus, _, _],
-					flattenPlus[#[[2]][[;;;;2]], data]
+					flattenPlus[#[[2, ;;;;2]], data]
 				,
 				BinaryNode[Minus, {_, _, _}, _],
-					flattenPlus[{#[[2,1]], negate[#[[2,3]], data]}, data]
+					(*
+					When parsing a - b + c, make sure to give the abstracted Times expression the correct Source.
+					That is, the source of  - b
+					*)
+					synthesizedData = <| Source -> { #[[2, 2, 3, Key[Source], 1]], #[[2, 3, 3, Key[Source], 2]] } |>;
+					flattenPlus[{#[[2, 1]], negate[#[[2, 3]], synthesizedData]}, data]
 				,
 				_,
 					#
@@ -1060,7 +1086,7 @@ flattenTimes[nodes_List, data_] :=
 					]
 				,
 				InfixNode[Times, _, _],
-					flattenTimes[#[[2]][[;;;;2]], data]
+					flattenTimes[#[[2, ;;;;2]], data]
 				,
 				(*
 				This rule for BinaryNode[Divide] illustrates the difference between the FE and kernel
@@ -1071,7 +1097,7 @@ flattenTimes[nodes_List, data_] :=
 				*)
 				BinaryNode[Divide, {_, _, _}, _],
 					If[flattenTimesQuirk,
-						flattenTimes[{#[[2,1]], reciprocate[#[[2,3]], data]}, data]
+						flattenTimes[{#[[2, 1]], reciprocate[#[[2, 3]], data]}, data]
 						,
 						#
 					]
@@ -1427,14 +1453,6 @@ selectChildren[n_] := n
 FIXME: would be good to remember tag somehow
 *)
 
-abstractGroupNode[GroupMissingOpenerNode[tag_, children_, dataIn_]] :=
-Module[{data},
-
-	data = dataIn;
-
-   AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingOpener, children, data]
-]
-
 abstractGroupNode[GroupMissingCloserNode[tag_, children_, dataIn_]] :=
 Module[{data},
 
@@ -1707,19 +1725,6 @@ Module[{head, part, partData, data, issues},
    ];
 
 	CallNode[ToNode[Part], {head} ~Join~ (part[[2]]), data]
-]
-
-
-abstractCallNode[CallNode[headIn_, {partIn:GroupMissingOpenerNode[_, _, _]}, dataIn_]] :=
-Module[{head, part, data},
-	head = headIn;
-	part = partIn;
-	data = dataIn;
-
-	head = abstract[head];
-	part = abstractGroupNode[part];
-
-	CallNode[head, { part }, data]
 ]
 
 abstractCallNode[CallNode[headIn_, {partIn:GroupMissingCloserNode[_, _, _]}, dataIn_]] :=

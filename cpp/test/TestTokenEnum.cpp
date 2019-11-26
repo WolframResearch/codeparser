@@ -8,6 +8,5 @@
 TEST(TokenEnumTest, Inequality) {
     
     EXPECT_TRUE(TOKEN_LESS.isInequalityOperator());
-    
 }
 

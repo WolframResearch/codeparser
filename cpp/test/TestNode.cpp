@@ -14,16 +14,27 @@ TEST_F(NodeTest, Bug1) {
 
     NodeSeq Args;
 
-    auto T1 = Token(TOKEN_SYMBOL, "a", Source(SourceLocation(LineCol(1, 1))));
+    std::string input = "a_.";
+    
+    TheByteBuffer = std::unique_ptr<ByteBuffer>(new ByteBuffer);
+    TheByteDecoder = std::unique_ptr<ByteDecoder>(new ByteDecoder);
+    
+    TheByteBuffer->init(BufferAndLength(Buffer(input.c_str() + 0), 3, false));
+    TheByteDecoder->init();
+    
+    auto T1 = Token(TOKEN_SYMBOL, BufferAndLength(Buffer(input.c_str() + 0), 1, false));
     Args.append(std::unique_ptr<Node>(new LeafNode(T1)));
-
-    auto T2 = Token(TOKEN_UNDERDOT, "_.", Source(SourceLocation(LineCol(1, 2)), SourceLocation(LineCol(1, 3))));
+    
+    auto T2 = Token(TOKEN_UNDERDOT, BufferAndLength(Buffer(input.c_str() + 1), 2, false));
     Args.append(std::unique_ptr<Node>(new LeafNode(T2)));
 
     auto N = std::unique_ptr<Node>(new OptionalDefaultPatternNode(std::move(Args)));
 
     auto NSource = N->getSource();
 
-    EXPECT_EQ(NSource.lineCol.start, LineCol(1, 1));
-    EXPECT_EQ(NSource.lineCol.end, LineCol(1, 3));
+    EXPECT_EQ(NSource.Start, SourceLocation(1, 1));
+    EXPECT_EQ(NSource.End, SourceLocation(1, 4));
+    
+    TheByteDecoder->deinit();
+    TheByteBuffer->deinit();
 }

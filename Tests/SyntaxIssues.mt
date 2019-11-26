@@ -140,61 +140,6 @@ TestMatch[
 
 
 
-(*
-DifferentLine:
-*)
-
-TestMatch[
-	FirstCase[ConcreteParseString["-\na", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
-		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[SyntaxIssues -> {FormatIssue["DifferentLine", _, _, _]}]
-	,
-	TestID->"SyntaxIssues-20190521-Y8O9L2"
-]
-
-TestMatch[
-	FirstCase[ConcreteParseString["{ a\n! }", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
-		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[SyntaxIssues -> {FormatIssue["DifferentLine", _, _, _]}]
-	,
-	TestID->"SyntaxIssues-20190521-R2X2T0"
-]
-
-(*
-
-TODO: should we have "DifferentLine" warnings about ; ?
-
-TestMatch[
-	FirstCase[ConcreteParseString["{ a\n; }", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &],
-		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["DifferentLine", _, _, _]}]
-	,
-	TestID->"SyntaxIssues-20190521-M5K3M2"
-]
-*)
-
-TestMatch[
-	FirstCase[ConcreteParseString["{ a\n;; }", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
-		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[SyntaxIssues -> {FormatIssue["DifferentLine", _, _, _]}]
-	,
-	TestID->"SyntaxIssues-20190521-E0L3O1"
-]
-
-TestMatch[
-	FirstCase[ConcreteParseString["{ a~\nf~b } ", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
-		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[SyntaxIssues -> {FormatIssue["DifferentLine", _, _, _]}]
-	,
-	TestID->"SyntaxIssues-20190521-S5U4W8"
-]
-
-
 
 
 
@@ -358,32 +303,6 @@ TestMatch[
 	TestID->"SyntaxIssues-20190521-V2H2D5"
 ]
 *)
-
-
-
-
-(*
-ImplicitTimesSpan
-*)
-
-TestMatch[
-	FirstCase[ConcreteParseString[";;b;;", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
-		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[SyntaxIssues -> {OrderlessPatternSequence[SyntaxIssue["ImplicitTimes", _, _, _], SyntaxIssue["EndOfLine", _, _, _]]}]
-	,
-	TestID->"SyntaxIssues-20190523-I1D9N0"
-]
-
-
-TestMatch[
-	FirstCase[ConcreteParseString["a;;b;;", HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
-		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[SyntaxIssues -> {OrderlessPatternSequence[SyntaxIssue["ImplicitTimes", _, _, _], SyntaxIssue["EndOfLine", _, _, _]]}]
-	,
-	TestID->"SyntaxIssues-20190523-L7M6K3"
-]
 
 
 

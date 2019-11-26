@@ -3,37 +3,38 @@
 #include "API.h"
 #include "Symbol.h"
 
-#if USE_MATHLINK
-#include "mathlink.h"
-#endif
-
 #include <string>
 #include <iostream>
+#include <fstream>
 
-int EXPRESSION = 0;
-int TOKENIZE = 1;
-int LEAF = 2;
+const int EXPRESSION = 0;
+const int TOKENIZE = 1;
+const int LEAF = 2;
+const int SOURCECHARACTERS = 3;
 
-std::string Style = "LineCol";
+const int NONE = 0;
+const int PRINT = 1;
+const int PUT = 2;
+const int PRINT_DRYRUN = 3;
 
-void readStdIn(int mode, bool printOutput);
+void readStdIn(int mode, int outputMode);
 
-void readFile(std::string file, int mode, bool printOutput);
+void readFile(std::string file, int mode, int outputMode);
 
 class ScopedFileBuffer {
 
-    unsigned char *buf;
+    MBuffer buf;
     size_t len;
 
     bool inited;
 
 public:
 
-    ScopedFileBuffer(const unsigned char *inStrIn, size_t inLen);
+    ScopedFileBuffer(Buffer inStrIn, size_t inLen);
 
     ~ScopedFileBuffer();
 
-    unsigned char *getBuf() const;
+    Buffer getBuf() const;
 
     size_t getLen() const;
 
@@ -46,7 +47,8 @@ int main(int argc, char *argv[]) {
     auto file = false;
     auto tokenize = false;
     auto leaf = false;
-    auto printOutput = true;
+    auto outputMode = PRINT;
+    auto sourceCharacters = false;
     
     std::string fileInput;
     
@@ -69,102 +71,291 @@ int main(int argc, char *argv[]) {
             
         } else if (arg == "-n") {
             
-            printOutput = false;
+            outputMode = NONE;
+            
+        } else if (arg == "-sc") {
+            
+            sourceCharacters = true;
             
         } else {
             return 1;
         }
     }
     
+//    file = true;
+//    fileInput = "/Users/brenton/Downloads/Helped Code Bin and Count.nb";
+//    fileInput = "/Users/brenton/development/stash/WA/alphasource/CalculateParse/Disambiguation/DisambiguationRaw.m";
+//    fileInput = "/Applications/Mathematica121-6519725.app/Contents/AddOns/Applications/FormulaData/Kernel/downvalues.m";
+//    fileInput = "/Users/brenton/development/stash/COD/ast/build/test.m";
+//    fileInput = "/Users/brenton/development/stash/COD/ast/Tests/files/inputs-0001.txt";
+//    outputMode = PUT;
+    
     if (file) {
         if (leaf) {
-            readFile(fileInput, LEAF, printOutput);
+            readFile(fileInput, LEAF, outputMode);
+        } else if (sourceCharacters) {
+            readFile(fileInput, SOURCECHARACTERS, outputMode);
         } else if (tokenize) {
-            readFile(fileInput, TOKENIZE, printOutput);
+            readFile(fileInput, TOKENIZE, outputMode);
         } else {
-            readFile(fileInput, EXPRESSION, printOutput);
+            readFile(fileInput, EXPRESSION, outputMode);
         }
     } else {
         if (leaf) {
-            readStdIn(LEAF, printOutput);
+            readStdIn(LEAF, outputMode);
+        } else if (sourceCharacters) {
+            readStdIn(SOURCECHARACTERS, outputMode);
         } else if (tokenize) {
-            readStdIn(TOKENIZE, printOutput);
+            readStdIn(TOKENIZE, outputMode);
         } else {
-            readStdIn(EXPRESSION, printOutput);
+            readStdIn(EXPRESSION, outputMode);
         }
     }
     
     return 0;
 }
 
-void readStdIn(int mode, bool printOutput) {
+void readStdIn(int mode, int outputMode) {
     
     std::string input;
     std::cout << ">>> ";
     std::getline(std::cin, input);
     
-    TheParserSession = std::unique_ptr<ParserSession>(new ParserSession());
+    TheParserSession = ParserSessionPtr(new ParserSession());
     
     WolframLibraryData libData = nullptr;
     
-    Node *N;
-    
     if (mode == TOKENIZE) {
         
-        auto inputStr = reinterpret_cast<const unsigned char*>(input.c_str());
+        auto inputStr = reinterpret_cast<Buffer>(input.c_str());
         
-        N = TokenizeBytes(libData, inputStr, input.size(), Style.c_str());
+        auto inputBufAndLen = BufferAndLength(inputStr, input.size(), false);
+        
+        TheParserSession->init(inputBufAndLen, libData);
+    
+        auto N = TheParserSession->tokenize();
+        
+        switch (outputMode) {
+            case PRINT:
+                N->print(std::cout);
+                std::cout << "\n";
+                break;
+            case PUT: {
+#if USE_MATHLINK
+                ScopedMLLoopbackLink loop;
+                N->put(loop.get());
+#endif // USE_MATHLINK
+            }
+                break;
+            case PRINT_DRYRUN: {
+                std::ofstream nullStream;
+                N->print(nullStream);
+                nullStream << "\n";
+            }
+                break;
+            case NONE:
+                break;
+        }
+        
+        TheParserSession->releaseNode(N);
+        
+        TheParserSession->deinit();
+        
+    } else if (mode == SOURCECHARACTERS) {
+        
+        auto inputStr = reinterpret_cast<Buffer>(input.c_str());
+        
+        auto inputBufAndLen = BufferAndLength(inputStr, input.size(), false);
+        
+        TheByteBuffer->init(inputBufAndLen, libData);
+        TheByteDecoder->init();
+    
+        auto N = TheParserSession->listSourceCharacters();
+    
+        switch (outputMode) {
+            case PRINT:
+                N->print(std::cout);
+                std::cout << "\n";
+                break;
+            case PUT: {
+#if USE_MATHLINK
+                ScopedMLLoopbackLink loop;
+                N->put(loop.get());
+#endif // USE_MATHLINK
+            }
+                break;
+            case PRINT_DRYRUN: {
+                std::ofstream nullStream;
+                N->print(nullStream);
+                nullStream << "\n";
+            }
+                break;
+            case NONE:
+                break;
+        }
+        
+        TheParserSession->releaseNode(N);
+        
+        TheByteDecoder->deinit();
+        TheByteBuffer->deinit();
         
     } else if (mode == LEAF) {
         
-        auto inputStr = reinterpret_cast<const unsigned char*>(input.c_str());
+        auto inputStr = reinterpret_cast<Buffer>(input.c_str());
         
-        N = ParseLeaf(libData, inputStr, input.size(), Style.c_str(), 0);
+        auto inputBufAndLen = BufferAndLength(inputStr, input.size(), false);
+        
+        TheParserSession->init(inputBufAndLen, libData);
+    
+        auto N = TheParserSession->parseLeaf(mode);
+    
+        switch (outputMode) {
+            case PRINT:
+                N->print(std::cout);
+                std::cout << "\n";
+                break;
+            case PUT: {
+#if USE_MATHLINK
+                ScopedMLLoopbackLink loop;
+                N->put(loop.get());
+#endif // USE_MATHLINK
+            }
+                break;
+            case PRINT_DRYRUN: {
+                std::ofstream nullStream;
+                N->print(nullStream);
+                nullStream << "\n";
+            }
+                break;
+            case NONE:
+                break;
+        }
+        
+        TheParserSession->releaseNode(N);
+        
+        TheParserSession->deinit();
         
     } else {
         
-        auto inputStr = reinterpret_cast<const unsigned char*>(input.c_str());
+        auto inputStr = reinterpret_cast<Buffer>(input.c_str());
         
-        N = ConcreteParseBytes(libData, inputStr, input.size(), Style.c_str());
-    }
-    
-    if (printOutput) {
-        N->print(std::cout);
-        std::cout << "\n";
+        auto inputBufAndLen = BufferAndLength(inputStr, input.size(), false);
+        
+        TheParserSession->init(inputBufAndLen, libData);
+        
+        auto N = TheParserSession->parseExpressions();
+        
+        switch (outputMode) {
+            case PRINT:
+                N->print(std::cout);
+                std::cout << "\n";
+                break;
+            case PUT: {
+#if USE_MATHLINK
+                ScopedMLLoopbackLink loop;
+                N->put(loop.get());
+#endif // USE_MATHLINK
+            }
+                break;
+            case PRINT_DRYRUN: {
+                std::ofstream nullStream;
+                N->print(nullStream);
+                nullStream << "\n";
+            }
+                break;
+            case NONE:
+                break;
+        }
+        
+        TheParserSession->releaseNode(N);
+        
+        TheParserSession->deinit();
     }
 }
 
-void readFile(std::string file, int mode, bool printOutput) {
+void readFile(std::string file, int mode, int outputMode) {
     
-    ScopedFileBuffer fb(reinterpret_cast<const unsigned char *>(file.c_str()), file.size());
+    ScopedFileBuffer fb(reinterpret_cast<Buffer>(file.c_str()), file.size());
 
     if (fb.fail()) {
         return;
     }
     
-    TheParserSession = std::unique_ptr<ParserSession>(new ParserSession());
+    TheParserSession = ParserSessionPtr(new ParserSession());
     
     WolframLibraryData libData = nullptr;
     
-    Node *N;
-    
     if (mode == TOKENIZE) {
         
-        N = TokenizeBytes(libData, fb.getBuf(), fb.getLen(), Style.c_str());
+        auto fBufAndLen = BufferAndLength(fb.getBuf(), fb.getLen(), false);
+        
+        TheParserSession->init(fBufAndLen, libData);
+        
+        auto N = TheParserSession->tokenize();
+        
+        switch (outputMode) {
+            case PRINT:
+                N->print(std::cout);
+                std::cout << "\n";
+                break;
+            case PUT: {
+#if USE_MATHLINK
+                ScopedMLLoopbackLink loop;
+                N->put(loop.get());
+#endif // USE_MATHLINK
+            }
+                break;
+            case PRINT_DRYRUN: {
+                std::ofstream nullStream;
+                N->print(nullStream);
+                nullStream << "\n";
+            }
+                break;
+            case NONE:
+                break;
+        }
+        
+        TheParserSession->releaseNode(N);
+        
+        TheParserSession->deinit();
         
     } else {
         
-        N = ConcreteParseBytes(libData, fb.getBuf(), fb.getLen(), Style.c_str());
+        auto fBufAndLen = BufferAndLength(fb.getBuf(), fb.getLen(), false);
         
-    }
-    
-    if (printOutput) {
-        N->print(std::cout);
-        std::cout << "\n";
+        TheParserSession->init(fBufAndLen, libData);
+        
+        auto N = TheParserSession->parseExpressions();
+        
+        switch (outputMode) {
+            case PRINT:
+                N->print(std::cout);
+                std::cout << "\n";
+                break;
+            case PUT: {
+#if USE_MATHLINK
+                ScopedMLLoopbackLink loop;
+                N->put(loop.get());
+#endif // USE_MATHLINK
+            }
+                break;
+            case PRINT_DRYRUN: {
+                std::ofstream nullStream;
+                N->print(nullStream);
+                nullStream << "\n";
+            }
+                break;
+            case NONE:
+                break;
+        }
+        
+        TheParserSession->releaseNode(N);
+        
+        TheParserSession->deinit();
     }
 }
 
-ScopedFileBuffer::ScopedFileBuffer(const unsigned char *inStrIn, size_t inLen) : buf(), len(), inited(false) {
+ScopedFileBuffer::ScopedFileBuffer(Buffer inStrIn, size_t inLen) : buf(), len(), inited(false) {
 
     auto inStr = reinterpret_cast<const char *>(inStrIn);
 
@@ -187,7 +378,7 @@ ScopedFileBuffer::ScopedFileBuffer(const unsigned char *inStrIn, size_t inLen) :
     inited = true;
 
     fread(buf, sizeof(unsigned char), len, file);
-
+    
     fclose(file);
 }
 
@@ -200,7 +391,7 @@ ScopedFileBuffer::~ScopedFileBuffer() {
     delete[] buf;
 }
 
-unsigned char *ScopedFileBuffer::getBuf() const {
+Buffer ScopedFileBuffer::getBuf() const {
     return buf;
 }
 

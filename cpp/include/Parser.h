@@ -8,7 +8,6 @@
 #include <vector>
 #include <array>
 #include <cstddef>
-#include <functional> // for function with GCC and MSVC
 #include <deque>
 #include <memory> // for unique_ptr
 
@@ -19,10 +18,20 @@ class PostfixParselet;
 class ContextSensitivePrefixParselet;
 class ContextSensitiveInfixParselet;
 class PrefixParselet;
-//class StartOfLineParselet;
-//class StartOfFileParselet;
+#if STARTOFLINE
+class StartOfLineParselet;
+class StartOfFileParselet;
+#endif // STARTOFLINE
 class GroupParselet;
 class Parselet;
+class Parser;
+
+using PrefixParseletPtr = std::unique_ptr<PrefixParselet>;
+using InfixParseletPtr = std::unique_ptr<InfixParselet>;
+using ContextSensitivePrefixParseletPtr = std::unique_ptr<ContextSensitivePrefixParselet>;
+using ContextSensitiveInfixParseletPtr = std::unique_ptr<ContextSensitiveInfixParselet>;
+using ParserPtr = std::unique_ptr<Parser>;
+
 
 enum Associativity {
     ASSOCIATIVITY_NONE,
@@ -64,28 +73,7 @@ enum ParserContextFlagBits : uint8_t {
     PARSER_INSIDE_SLASHCOLON = 0x08,
 };
 
-class ParserContextFlag {
-    uint8_t val;
-public:
-    constexpr ParserContextFlag() : val() {}
-    constexpr ParserContextFlag(uint8_t val) : val(val) {}
-    
-    ParserContextFlagBits operator&(const ParserContextFlagBits bits) const {
-        return static_cast<ParserContextFlagBits>(val & bits);
-    }
-    
-    ParserContextFlagBits operator|(const ParserContextFlagBits bits) const {
-        return static_cast<ParserContextFlagBits>(val | bits);
-    }
-    
-    void operator|=(const ParserContextFlagBits bits) {
-        val |= bits;
-    }
-    
-    void clear(const ParserContextFlagBits bits) {
-        val &= ~bits;
-    }
-};
+using ParserContextFlag = uint8_t;
 
 struct ParserContext {
     
@@ -128,84 +116,92 @@ struct ParserContext {
 class Parser {
 private:
     
-    std::array<std::unique_ptr<PrefixParselet>, TOKEN_COUNT.value()> prefixParselets;
-    std::array<std::unique_ptr<InfixParselet>, TOKEN_COUNT.value()> infixParselets;
-//    std::array<std::unique_ptr<StartOfLineParselet>, TOKEN_COUNT> startOfLineParselets;
-//    std::array<std::unique_ptr<StartOfFileParselet>, TOKEN_COUNT> startOfFileParselets;
-    std::array<std::unique_ptr<ContextSensitivePrefixParselet>, TOKEN_COUNT.value()> contextSensitivePrefixParselets;
-    std::array<std::unique_ptr<ContextSensitiveInfixParselet>, TOKEN_COUNT.value()> contextSensitiveInfixParselets;
+    std::array<PrefixParseletPtr, TOKEN_COUNT.value()> prefixParselets;
+    std::array<InfixParseletPtr, TOKEN_COUNT.value()> infixParselets;
+#if STARTOFLINE
+    std::array<StartOfLineParseletPtr>, TOKEN_COUNT> startOfLineParselets;
+    std::array<StartOfFileParseletPtr, TOKEN_COUNT> startOfFileParselets;
+#endif // STARTOFLINE
+    std::array<ContextSensitivePrefixParseletPtr, TOKEN_COUNT.value()> contextSensitivePrefixParselets;
+    std::array<ContextSensitiveInfixParseletPtr, TOKEN_COUNT.value()> contextSensitiveInfixParselets;
     
     std::deque<Token> tokenQueue;
     
-    std::vector<std::unique_ptr<Issue>> Issues;
-    
-    std::function<bool ()> currentAbortQ;
+    std::vector<IssuePtr> Issues;
     
     
-    void registerPrefixParselet(TokenEnum T, std::unique_ptr<PrefixParselet> );
+    void registerPrefixParselet(TokenEnum T, PrefixParseletPtr );
     
-    void registerInfixParselet(TokenEnum T, std::unique_ptr<InfixParselet> );
+    void registerInfixParselet(TokenEnum T, InfixParseletPtr );
+
+#if STARTOFLINE
+    void registerStartOfLineParselet(TokenEnum, StartOfLineParseletPtr );
     
-//    void registerStartOfLineParselet(TokenEnum, std::unique_ptr<StartOfLineParselet> );
+    void registerStartOfFileParselet(TokenEnum, StartOfFileParseletPtr );
+#endif // STARTOFLINE
     
-//    void registerStartOfFileParselet(TokenEnum, std::unique_ptr<StartOfFileParselet> );
+    void registerContextSensitivePrefixParselet(TokenEnum T, ContextSensitivePrefixParseletPtr );
     
-    void registerContextSensitivePrefixParselet(TokenEnum T, std::unique_ptr<ContextSensitivePrefixParselet> );
-    
-    void registerContextSensitiveInfixParselet(TokenEnum T, std::unique_ptr<ContextSensitiveInfixParselet> );
+    void registerContextSensitiveInfixParselet(TokenEnum T, ContextSensitiveInfixParseletPtr );
     
 public:
     Parser();
     
-    void init(std::function<bool ()> AbortQ, const std::deque<Token>& queued);
+    void init();
     
     void deinit();
     
-    void nextToken(ParserContext Ctxt);
+    void nextToken();
     
-    void nextToken_stringifyCurrentLine(ParserContext Ctxt);
-    void nextToken_stringifyNextToken_symbol(ParserContext Ctxt);
-    void nextToken_stringifyNextToken_file(ParserContext Ctxt);
+#if STARTOFLINE
+    void nextToken_stringifyLine();
+#endif // STARTOFLINE
+    
+    void nextToken_stringifySymbol();
+    void nextToken_stringifyFile();
+    
+    Token nextToken0();
     
     Token currentToken() const;
+
+#if STARTOFLINE
+    Token currentToken_stringifyLine() const;
+#endif // STARTOFLINE
+    
+    Token currentToken_stringifySymbol() const;
+    Token currentToken_stringifyFile() const;
     
     void prependInReverse(std::vector<LeafNodePtr>& );
     
     
 #if !NISSUES
-    std::vector<std::unique_ptr<Issue>>& getIssues();
-#endif
+    std::vector<IssuePtr>& getIssues();
+
+    void addIssue(IssuePtr);
+#endif // !NISSUES
     
-#if !NISSUES
-    void addIssue(std::unique_ptr<Issue>);
-#endif
-    
-    NodePtr parse(ParserContext Ctxt);
+    NodePtr parse(Token firstTok, ParserContext Ctxt);
     
     NodePtr handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext Ctxt, bool *wasCloser);
     
     Precedence getTokenPrecedence(Token& current, ParserContext Ctxt, bool considerPrefix, bool *implicitTimes) const;
     
     
-    const std::unique_ptr<PrefixParselet>& findPrefixParselet(TokenEnum T) const;
+    const PrefixParseletPtr& findPrefixParselet(TokenEnum T) const;
     
-    const std::unique_ptr<InfixParselet>& findInfixParselet(TokenEnum T) const;
+    const InfixParseletPtr& findInfixParselet(TokenEnum T) const;
     
-    const std::unique_ptr<ContextSensitivePrefixParselet>& findContextSensitivePrefixParselet(TokenEnum T) const;
+    const ContextSensitivePrefixParseletPtr& findContextSensitivePrefixParselet(TokenEnum T) const;
     
-    const std::unique_ptr<ContextSensitiveInfixParselet>& findContextSensitiveInfixParselet(TokenEnum T) const;
-    
-#if !NABORT
-    bool isAbort() const;
-#endif
+    const ContextSensitiveInfixParseletPtr& findContextSensitiveInfixParselet(TokenEnum T) const;
     
     ~Parser();
 
     Token eatAll(ParserContext Ctxt, LeafSeq&);
-    Token eatAll_stringifyNextToken_file(ParserContext Ctxt, LeafSeq&);
+    Token eatAll_stringifyFile(ParserContext Ctxt, LeafSeq&);
     Token eatAndPreserveToplevelNewlines(ParserContext Ctxt, LeafSeq&);
-    Token eatAndPreserveToplevelNewlines_stringifyNextToken_file(ParserContext Ctxt, LeafSeq&);
+    Token eatAndPreserveToplevelNewlines_stringifyFile(ParserContext Ctxt, LeafSeq&);
 };
 
-extern std::unique_ptr<Parser> TheParser;
+extern ParserPtr TheParser;
 

@@ -32,7 +32,7 @@ void ByteEncoder::encodeBytes(std::ostream& stream, int val, ByteEncoderState *s
     if (val <= 0x7f) {
         
         //
-        // ASCII character
+        // 1 byte UTF-8 sequence
         //
         
         auto firstByte = static_cast<unsigned char>(((val >> 0) & 0x7f) | 0x00);
@@ -42,7 +42,7 @@ void ByteEncoder::encodeBytes(std::ostream& stream, int val, ByteEncoderState *s
     } else if (val <= 0x7ff) {
         
         //
-        // 2 byte UTF 8 sequence
+        // 2 byte UTF-8 sequence
         //
         
         auto firstByte = static_cast<unsigned char>(((val >> 6) & 0x1f) | 0xc0);
@@ -54,7 +54,7 @@ void ByteEncoder::encodeBytes(std::ostream& stream, int val, ByteEncoderState *s
     } else if (val <= 0xffff) {
         
         //
-        // 3 byte UTF 8 sequence
+        // 3 byte UTF-8 sequence
         //
         
         auto firstByte = static_cast<unsigned char>(((val >> 12) & 0x0f) | 0xe0);
@@ -68,7 +68,7 @@ void ByteEncoder::encodeBytes(std::ostream& stream, int val, ByteEncoderState *s
     } else {
         
         //
-        // 4 byte UTF 8 sequence
+        // 4 byte UTF-8 sequence
         //
         
         assert(val <= 0x10ffff);
@@ -92,7 +92,7 @@ void ByteEncoder::encodeBytes(std::array<unsigned char, 4>& arr, int val, ByteEn
     if (val <= 0x7f) {
         
         //
-        // ASCII character
+        // 1 byte UTF-8 sequence
         //
         
         auto firstByte = static_cast<unsigned char>(((val >> 0) & 0x7f) | 0x00);
@@ -102,7 +102,7 @@ void ByteEncoder::encodeBytes(std::array<unsigned char, 4>& arr, int val, ByteEn
     } else if (val <= 0x7ff) {
         
         //
-        // 2 byte UTF 8 sequence
+        // 2 byte UTF-8 sequence
         //
         
         auto firstByte = static_cast<unsigned char>(((val >> 6) & 0x1f) | 0xc0);
@@ -114,7 +114,7 @@ void ByteEncoder::encodeBytes(std::array<unsigned char, 4>& arr, int val, ByteEn
     } else if (val <= 0xffff) {
         
         //
-        // 3 byte UTF 8 sequence
+        // 3 byte UTF-8 sequence
         //
         
         auto firstByte = static_cast<unsigned char>(((val >> 12) & 0x0f) | 0xe0);
@@ -128,7 +128,7 @@ void ByteEncoder::encodeBytes(std::array<unsigned char, 4>& arr, int val, ByteEn
     } else {
         
         //
-        // 4 byte UTF 8 sequence
+        // 4 byte UTF-8 sequence
         //
         
         assert(val <= 0x10ffff);

@@ -10,7 +10,6 @@ TestSuite[{
 	"DeclarationName.mt",
 	"Errors.mt",
 	"File.mt",
-	"FormatIssues.mt",
 	"Parse.mt",
 	"Span.mt",
 	"SyntaxErrorNodes.mt",

@@ -6,29 +6,37 @@ Needs["AST`Generate`"]
 
 Print["Generating CodePoint..."]
 
+
+(*
+\r\n is technically multi-byte...
+*)
+mbNewlines = toGlobal /@ ( ( ("CodePoint`LongName`"<>#)& /@ importedNewlineLongNames) ~Join~
+  { CodePoint`CRLF } )
+
+
 punctuationSource = 
   {"std::unordered_set<int> punctuationCodePoints {"} ~Join~
     (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ importedPunctuationLongNames) ~Join~
     {"};", "",
-    "bool WLCharacter::isPunctuationCharacter() const { return punctuationCodePoints.find(to_point()) != punctuationCodePoints.end(); }", ""}
+    "bool Utils::isMBPunctuation(int32_t point) { return punctuationCodePoints.find(point) != punctuationCodePoints.end(); }", ""}
 
 spaceSource = 
   {"std::unordered_set<int> spaceCodePoints {"} ~Join~
     (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ importedSpaceLongNames) ~Join~
     {"};", "",
-    "bool WLCharacter::isSpaceCharacter() const { return spaceCodePoints.find(to_point()) != spaceCodePoints.end(); }", ""}
+    "bool Utils::isMBSpace(int32_t point) { return spaceCodePoints.find(point) != spaceCodePoints.end(); }", ""}
 
 newlineSource = 
   {"std::unordered_set<int> newlineCodePoints {"} ~Join~
-    (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ importedNewlineLongNames) ~Join~
+    (Row[{#, ","}]& /@ mbNewlines) ~Join~
     {"};", "",
-    "bool WLCharacter::isNewlineCharacter() const { return newlineCodePoints.find(to_point()) != newlineCodePoints.end();}", ""}
+    "bool Utils::isMBNewline(int32_t point) { return newlineCodePoints.find(point) != newlineCodePoints.end();}", ""}
 
 uninterpretableSource = 
   {"std::unordered_set<int> uninterpretableCodePoints {"} ~Join~
     (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ importedUninterpretableLongNames) ~Join~
     {"};", "",
-    "bool WLCharacter::isUninterpretableCharacter() const { return uninterpretableCodePoints.find(to_point()) != uninterpretableCodePoints.end(); }", ""}
+    "bool Utils::isMBUninterpretable(int32_t point) { return uninterpretableCodePoints.find(point) != uninterpretableCodePoints.end(); }", ""}
 
 LongNameCodePointToOperatorSource = 
   {"TokenEnum LongNameCodePointToOperator(int c) {
@@ -36,7 +44,7 @@ switch (c) {"} ~Join~
     (Row[{"case", " ", toGlobal["CodePoint`LongName`"<>#], ":", " ", "return", " ", toGlobal["Token`LongName`"<>#], ";"}]& /@ importedPunctuationLongNames) ~Join~
     {"default:
 assert(false && \"Need to add operator\");
-return TOKEN_ERROR_UNKNOWN;
+return TOKEN_UNKNOWN;
 }
 }"}
 
@@ -47,7 +55,7 @@ switch (t.value()) {"} ~Join~
     (Row[{"case", " ", toGlobal["Token`LongName`"<>#], ".value():", " ", "return", " ", toGlobal["CodePoint`LongName`"<>#], ";"}]& /@ importedPunctuationLongNames) ~Join~
 {"default:
 assert(false && \"Need to add operator\");
-return CODEPOINT_ERROR_INTERNAL;
+return CODEPOINT_UNKNOWN;
 }
 }
 "}
@@ -59,10 +67,10 @@ codePointCPPSource = Join[{
 // DO NOT MODIFY
 //
 
-#include \"CodePoint.h\"
 
+#include \"Utils.h\"
+#include \"CodePoint.h\"
 #include \"LongNameDefines.h\"
-#include \"CharacterDecoder.h\"
 
 #include <unordered_set>
 #include <cassert>

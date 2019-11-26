@@ -2,6 +2,7 @@
 #include "Node.h"
 
 #include "Parser.h"
+#include "ByteEncoder.h"
 #include "Symbol.h"
 
 #include <numeric> // for accumulate
@@ -33,7 +34,9 @@ void NodeSeq::reserve(size_t i) {
 
 const Node* NodeSeq::first() const {
     
-    auto F = vec.at(0).get();
+    auto i = 0;
+    
+    auto F = vec.at(i).get();
     
     auto FF = F->first();
     
@@ -41,17 +44,15 @@ const Node* NodeSeq::first() const {
 }
 
 const Node* NodeSeq::last() const {
-    auto L = vec.at(vec.size()-1).get();
+    
+    auto i = vec.size()-1;
+    
+    auto L = vec.at(i).get();
     
     auto LL = L->last();
     
     return LL;
 }
-
-
-
-
-
 
 
 void NodeSeq::print(std::ostream& s) const {
@@ -125,17 +126,14 @@ Node::Node(NodeSeq ChildrenIn) : Children(std::move(ChildrenIn)) {
     //
     // These are very useful asserts to help find problems with trivia
     //
+
+    // TODO: enable again after whitespace work
     
-    //
-    // There may be trivia after the Node that we care about, so we cannot test the last
-    // But we can test the first
-    //
-    
-    auto F = Children.first();
-    //    auto L = Children.last();
-    
-    assert(!F->isTrivia());
-    //    assert(!L->isTrivia());
+//    auto F = Children.first();
+//    auto L = Children.last();
+//
+//    assert(!F->isTrivia());
+//    assert(!L->isTrivia());
 #endif
 }
 
@@ -144,6 +142,10 @@ bool Node::isTrivia() const {
 }
 
 bool Node::isError() const {
+    return false;
+}
+
+bool Node::isEmpty() const {
     return false;
 }
 
@@ -234,21 +236,15 @@ void OperatorNode::print(std::ostream& s) const {
 
 void LeafNode::print(std::ostream& s) const {
     
-    s << SYMBOL_AST_LIBRARY_MAKELEAFNODE->name() << "[";
-    
-    s << TokenToSymbol(Tok.getTokenEnum())->name();
-    s << ", ";
-    
-    s << Tok.Str;
-    s << ", ";
-    
-    Tok.Src.print(s);
-    
-    s << "]";
+    Tok.print(s);
 }
 
 bool LeafNode::isTrivia() const {
     return Tok.getTokenEnum().isTrivia();
+}
+
+bool LeafNode::isEmpty() const {
+    return Tok.getTokenEnum().isEmpty();
 }
 
 void CallNode::print(std::ostream& s) const {
@@ -341,6 +337,17 @@ void ListNode::print(std::ostream& s) const {
     s << "]";
 }
 
+void SourceCharacterNode::print(std::ostream& s) const {
+    
+    s << SYMBOL_AST_LIBRARY_MAKESOURCECHARACTERNODE->name() << "[";
+    
+    s << SYMBOL_AST_SOURCECHARACTER->name() << ", ";
+    
+    s << Char;
+    
+    s << "]\n";
+}
+
 
 
 
@@ -350,7 +357,9 @@ void NodeSeq::put(MLINK mlp) const {
     
     auto s = size();
     
-    MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(s));
+    if(!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(s))) {
+        assert(false);
+    }
     
     put0(mlp);
 }
@@ -358,6 +367,18 @@ void NodeSeq::put(MLINK mlp) const {
 void NodeSeq::put0(MLINK mlp) const {
     
     for (auto& C : vec) {
+        
+#if !NABORT
+        //
+        // Check isAbort() inside loops
+        //
+        if (TheParserSession->isAbort()) {
+            
+            TheParserSession->handleAbort();
+            return;
+        }
+#endif // !NABORT
+        
         C->put(mlp);
     }
 }
@@ -365,6 +386,18 @@ void NodeSeq::put0(MLINK mlp) const {
 void LeafSeq::put0(MLINK mlp) const {
     
     for (auto& C : vec) {
+        
+#if !NABORT
+        //
+        // Check isAbort() inside loops
+        //
+        if (TheParserSession->isAbort()) {
+            
+            TheParserSession->handleAbort();
+            return;
+        }
+#endif // !NABORT
+        
         C->put(mlp);
     }
 }
@@ -385,12 +418,14 @@ void NodeSeqNode::put(MLINK mlp) const {
 }
 
 void OperatorNode::put(MLINK mlp) const {
+
+    if(!MLPutFunction(mlp, MakeSym->name(), static_cast<int>(2 + 4))) {
+        assert(false);
+    }
     
-    auto Src = getSource();
-    
-    MLPutFunction(mlp, MakeSym->name(), static_cast<int>(2 + Src.count()));
-    
-    MLPutSymbol(mlp, Op->name());
+    if(!MLPutSymbol(mlp, Op->name())) {
+        assert(false);
+    }
     
     putChildren(mlp);
     
@@ -399,20 +434,16 @@ void OperatorNode::put(MLINK mlp) const {
 
 void LeafNode::put(MLINK mlp) const {
     
-    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKELEAFNODE->name(), static_cast<int>(2 + Tok.Src.count()));
-    
-    MLPutSymbol(mlp, TokenToSymbol(Tok.getTokenEnum())->name());
-    
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Tok.Str.c_str()), static_cast<int>(Tok.Str.size()));
-    
-    Tok.Src.put(mlp);
+    Tok.put(mlp);
 }
 
 void CallNode::put(MLINK mlp) const {
     
     auto Src = getSource();
     
-    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKECALLNODE->name(), static_cast<int>(2 + Src.count()));
+    if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKECALLNODE->name(), static_cast<int>(2 + 4))) {
+        assert(false);
+    }
     
     Head.put(mlp);
     
@@ -425,9 +456,13 @@ void SyntaxErrorNode::put(MLINK mlp) const {
     
     auto Src = getSource();
     
-    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKESYNTAXERRORNODE->name(), static_cast<int>(2 + Src.count()));
+    if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKESYNTAXERRORNODE->name(), static_cast<int>(2 + 4))) {
+        assert(false);
+    }
     
-    MLPutSymbol(mlp, SyntaxErrorToString(Err).c_str());
+    if (!MLPutSymbol(mlp, SyntaxErrorToString(Err).c_str())) {
+        assert(false);
+    }
     
     putChildren(mlp);
     
@@ -436,28 +471,94 @@ void SyntaxErrorNode::put(MLINK mlp) const {
 
 void CollectedExpressionsNode::put(MLINK mlp) const {
     
-    MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(Exprs.size()));
+    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(Exprs.size()))) {
+        assert(false);
+    }
     
     for (auto& E : Exprs) {
+        
+#if !NABORT
+        //
+        // Check isAbort() inside loops
+        //
+        if (TheParserSession->isAbort()) {
+            
+            TheParserSession->handleAbort();
+            return;
+        }
+#endif // !NABORT
+        
         E->put(mlp);
     }
 }
 
 void CollectedIssuesNode::put(MLINK mlp) const {
     
-    MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(Issues.size()));
+    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(Issues.size()))) {
+        assert(false);
+    }
     
     for (auto& I : Issues) {
+        
+#if !NABORT
+        //
+        // Check isAbort() inside loops
+        //
+        if (TheParserSession->isAbort()) {
+            
+            TheParserSession->handleAbort();
+            return;
+        }
+#endif // !NABORT
+        
         I->put(mlp);
     }
 }
 
 void ListNode::put(MLINK mlp) const {
     
-    MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(N.size()));
+    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(N.size()))) {
+        assert(false);
+    }
     
     for (auto& NN : N) {
+        
+#if !NABORT
+        //
+        // Check isAbort() inside loops
+        //
+        if (TheParserSession->isAbort()) {
+            
+            TheParserSession->handleAbort();
+            return;
+        }
+#endif // !NABORT
+        
         NN->put(mlp);
+    }
+}
+
+void SourceCharacterNode::put(MLINK mlp) const {
+    
+    if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKESOURCECHARACTERNODE->name(), static_cast<int>(2))) {
+        assert(false);
+    }
+    
+    if (!MLPutSymbol(mlp, SYMBOL_AST_SOURCECHARACTER->name())) {
+        assert(false);
+    }
+    
+    auto val = Char.to_point();
+    
+    auto S = ByteEncoder::size(val);
+        
+    std::array<unsigned char, 4> Arr;
+    ByteEncoderState state;
+    
+    ByteEncoder::encodeBytes(Arr, val, &state);
+    
+    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Arr.data()), static_cast<int>(S))) {
+        assert(false);
     }
 }
 

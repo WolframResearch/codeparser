@@ -2141,5 +2141,14 @@ Test[
 	TestID->"Parse-20191117-J6D4A4"
 ]
 
+Test[
+	"{a\\\nb}"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20191209-U5S6D3"
+]
 
 

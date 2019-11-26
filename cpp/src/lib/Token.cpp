@@ -1,119 +1,73 @@
 
 #include "Token.h"
 
+#include "ByteDecoder.h"
+
 #include <cassert>
 
-bool containsOnlyASCII(std::string s);
 
-Token::Token(TokenEnum Tok, std::string&& StrIn, Source&& SrcIn) : T(Tok), Str(std::move(StrIn)), Src(std::move(SrcIn)) {
-    
-    switch (Tok.value()) {
-        case TOKEN_UNKNOWN.value():
-            break;
-        //
-        // These are the tokens that do not quite have correct spans.
-        // start and end are set to the same character, so size is 1
-        // But they actually take up 0 characters
-        //
-        case TOKEN_ENDOFFILE.value():
-        case TOKEN_FAKE_IMPLICITTIMES.value():
-        case TOKEN_ERROR_EMPTYSTRING.value():
-        case TOKEN_ERROR_ABORTED.value():
-        case TOKEN_FAKE_IMPLICITNULL.value():
-        case TOKEN_FAKE_IMPLICITONE.value():
-        case TOKEN_FAKE_IMPLICITALL.value():
-        case TOKEN_ERROR_EXPECTEDOPERAND.value():
-            switch (Src.style) {
-                case SOURCESTYLE_UNKNOWN:
-                    break;
-                case SOURCESTYLE_LINECOL:
-                    assert(Src.size() == 1);
-                    break;
-                case SOURCESTYLE_OFFSETLEN:
-                    assert(Src.size() == 1);
-                    break;
-            }
-            break;
-        //
-        // Both \n and \r\n newlines have a size of 1
-        // And other newlines like \[IndentingNewLine] have size > 1
-        //
-        case TOKEN_NEWLINE.value():
-            break;
-        default:
-            switch (Src.style) {
-                case SOURCESTYLE_UNKNOWN:
-                    break;
-                case SOURCESTYLE_LINECOL:
-                    //
-                    // This is all just to do an assert.
-                    // But it's a good assert because it catches problems.
-                    //
-                    // Only bother checking if the token is all on one line
-                    // Spanning multiple lines is too complicated to care about
-                    //
-                    if (Src.lineCol.start.Line == Src.lineCol.end.Line) {
-                        if (Src.size() != Str.size()) {
-                            //
-                            // If the sizes do not match, then check if there are multi-byte characters
-                            // If there are multi-bytes characters, then it is too complicated to compare sizes
-                            //
-                            // Note that this also catches changes in character representation, e.g.,
-                            // If a character was in source with \XXX octal notation but was stringified with \:XXXX hex notation
-                            //
-//                            assert(!containsOnlyASCII(Str));
-                        }
-                    }
-                    break;
-                case SOURCESTYLE_OFFSETLEN:
-                    break;
-            }
-            break;
-    }
-    
-}
-
-bool containsOnlyASCII(std::string s) {
-    for (auto c : s) {
-        //
-        // Take care to cast to int before comparing
-        //
-        if ((static_cast<int>(c) & 0xff) >= 0x80) {
-            return false;
-        }
-    }
-    return true;
-}
+Token::Token(TokenEnum tok, BufferAndLength bufAndLen) : tok(tok), bufferAndLength(bufAndLen) {}
 
 bool operator==(Token a, Token b) {
-    assert(a.Src.style == SOURCESTYLE_LINECOL);
-    return a.Src.lineCol == b.Src.lineCol;
+    return a.tok == b.tok && a.bufferAndLength == b.bufferAndLength;
+}
+
+Source Token::getSource() const {
+    
+    if (bufferAndLength.length == 0) {
+        auto End = TheByteDecoder->convertBufferToEnd(bufferAndLength.buffer);
+        return Source(End);
+    }
+    
+    auto Start = TheByteDecoder->convertBufferToStart(bufferAndLength.buffer);
+    auto End = TheByteDecoder->convertBufferToEnd(bufferAndLength.buffer + bufferAndLength.length);
+    return Source(Start, End);
 }
 
 #if USE_MATHLINK
 void Token::put(MLINK mlp) const {
     
-    MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKELEAFNODE->name(), static_cast<int>(2 + Src.count()));
+    if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKELEAFNODE->name(), static_cast<int>(2 + 4))) {
+        assert(false);
+    }
     
-    MLPutSymbol(mlp, TokenToSymbol(static_cast<TokenEnum>(T))->name());
+    auto& Sym = TokenToSymbol(tok);
     
-    MLPutUTF8String(mlp, reinterpret_cast<unsigned const char *>(Str.c_str()), static_cast<int>(Str.size()));
+    if (!MLPutSymbol(mlp, Sym->name())) {
+        assert(false);
+    }
     
-    Src.put(mlp);
+    bufferAndLength.put(mlp);
+    
+    getSource().put(mlp);
 }
-#endif
+#endif // USE_MATHLINK
 
 void Token::print(std::ostream& s) const {
     
+    auto& Sym = TokenToSymbol(tok);
+    
     s << SYMBOL_AST_LIBRARY_MAKELEAFNODE->name() << "[";
     
-    s << TokenToSymbol(static_cast<TokenEnum>(T))->name();
+    s << Sym->name();
     s << ", ";
     
-    s << Str;
+    if (!tok.isEmpty()) {
+        
+        bufferAndLength.write(s);
+    }
+    
     s << ", ";
     
-    Src.print(s);
+    getSource().print(s);
     
     s << "]";
 }
+
+//
+// For googletest
+//
+void PrintTo(const Token& T, std::ostream* stream) {
+    T.print(*stream);
+}
+

@@ -23,12 +23,12 @@ Test[
 	cst
 	,
 	FileNode[File, {
-		LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 0}}|>],
+		LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 1}}|>],
 		InfixNode[Plus, {
-			LeafNode[Integer, "1", <|Source -> {{2, 1}, {2, 1}}|>],
-			LeafNode[Token`Plus, "+", <|Source -> {{2, 2}, {2, 2}}|>],
-    		LeafNode[Integer, "1", <|Source -> {{2, 3}, {2, 3}}|>] }, <|Source -> {{2, 1}, {2, 3}}|>],
-    	LeafNode[Token`Newline, "\n", <|Source -> {{3, 0}, {3, 0}}|>] }, <|Source -> {{2, 0}, {3, 0}}|>]
+			LeafNode[Integer, "1", <|Source -> {{2, 1}, {2, 2}}|>],
+			LeafNode[Token`Plus, "+", <|Source -> {{2, 2}, {2, 3}}|>],
+    		LeafNode[Integer, "1", <|Source -> {{2, 3}, {2, 4}}|>] }, <|Source -> {{2, 1}, {2, 4}}|>],
+    	LeafNode[Token`Newline, "\n", <|Source -> {{3, 0}, {3, 1}}|>] }, <|Source -> {{2, 0}, {3, 1}}|>]
 	,
 	TestID->"File-20181230-J0G3I8"
 ]
@@ -77,12 +77,12 @@ cst = ConcreteParseFile[carriagereturn]
 TestMatch[
 	cst
 	,
-	FileNode[File, {LeafNode[Token`Newline, "\r", <|Source -> {{2, 0}, {2, 0}}|>],
-					LeafNode[Token`Newline, "\r", <|Source -> {{3, 0}, {3, 0}}|>],
-					LeafNode[Symbol, "A", <|Source -> {{3, 1}, {3, 1}}|>]},
+	FileNode[File, {LeafNode[Token`Newline, "\r", <|Source -> {{2, 0}, {2, 1}}|>],
+					LeafNode[Token`Newline, "\r", <|Source -> {{3, 0}, {3, 1}}|>],
+					LeafNode[Symbol, "A", <|Source -> {{3, 1}, {3, 2}}|>]},
 										<| SyntaxIssues->{
 											FormatIssue["UnexpectedCarriageReturn", _, _, _],
-											FormatIssue["UnexpectedCarriageReturn", _, _, _]}, Source -> {{2, 0}, {3, 1}}|>]
+											FormatIssue["UnexpectedCarriageReturn", _, _, _]}, Source -> {{2, 0}, {3, 2}}|>]
 	,
 	TestID->"File-20190422-C6U5B6"
 ]
@@ -94,7 +94,7 @@ cst = ConcreteParseFile[carriagereturn2]
 TestMatch[
 	cst
 	,
-	FileNode[File, {LeafNode[String, "\"\r\n123\"", <|Source->{{1,1},{2,4}}|>]}, <|Source->{{1,1},{2,4}}|>]
+	FileNode[File, {LeafNode[String, "\"\r\n123\"", <|Source -> {{1, 1}, {2, 5}}|>]}, <|Source -> {{1, 1}, {2, 5}}|>]
 	,
 	TestID->"File-20190606-O8I6M9"
 ]
@@ -120,9 +120,9 @@ TestMatch[
 	ast
 	,
 	FileNode[File, {
-		CallNode[LeafNode[Symbol, "BeginPackage", <|Source -> {{2, 1}, {2, 12}}|>], {
-			LeafNode[String, "\"Foo.m`\"", <|Source -> {{2, 14}, {2, 21}}|>]}, <|Source -> {{2, 1}, {2, 22}}|>], 
-		CallNode[LeafNode[Symbol, "EndPackage", <|Source -> {{4, 1}, {4, 10}}|>], {}, <|Source -> {{4, 1}, {4, 12}}|>]}, <|Source -> {{2, 0}, {6, 0}}, AbstractSyntaxIssues -> {SyntaxIssue["Package", "Package directive does not have correct syntax.", "Error", _]}|>]
+		CallNode[LeafNode[Symbol, "BeginPackage", <|Source -> {{2, 1}, {2, 13}}|>], {
+			LeafNode[String, "\"Foo.m`\"", <|Source -> {{2, 14}, {2, 22}}|>]}, <|Source -> {{2, 1}, {2, 23}}|>], 
+		CallNode[LeafNode[Symbol, "EndPackage", <|Source -> {{4, 1}, {4, 11}}|>], {}, <|Source -> {{4, 1}, {4, 13}}|>]}, <|Source -> {{2, 0}, {6, 1}}, AbstractSyntaxIssues -> {SyntaxIssue["Package", "Package directive does not have correct syntax.", "Error", _]}|>]
 	,
 	TestID->"File-20190601-E8O7Y2"
 ]
@@ -143,11 +143,12 @@ sample = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "sam
 Test[
 	TokenizeFile[sample]
 	,
-	{LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 0}}|>], 
- LeafNode[Integer, "1", <|Source -> {{2, 1}, {2, 1}}|>], 
- LeafNode[Token`Plus, "+", <|Source -> {{2, 2}, {2, 2}}|>], 
- LeafNode[Integer, "1", <|Source -> {{2, 3}, {2, 3}}|>], 
- LeafNode[Token`Newline, "\n", <|Source -> {{3, 0}, {3, 0}}|>]}
+	{
+		LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 1}}|>], 
+		LeafNode[Integer, "1", <|Source -> {{2, 1}, {2, 2}}|>], 
+		LeafNode[Token`Plus, "+", <|Source -> {{2, 2}, {2, 3}}|>], 
+		LeafNode[Integer, "1", <|Source -> {{2, 3}, {2, 4}}|>], 
+		LeafNode[Token`Newline, "\n", <|Source -> {{3, 0}, {3, 1}}|>]}
 	,
 	TestID->"File-20181230-Q3C4N0"
 ]
@@ -193,15 +194,15 @@ TestMatch[
 	,
 	FileNode[File, {
 		BinaryNode[Set, {
-			LeafNode[Symbol, "\.01x", <|Source -> {{1, 1}, {1, 2}}|>],
-			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 3}, {1, 3}}|>],
-			LeafNode[Token`Equal, "=", <|Source -> {{1, 4}, {1, 4}}|>],
-			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 5}, {1, 5}}|>],
-			LeafNode[Integer, "1", <|Source -> {{1, 6}, {1, 6}}|>] }, <|Source -> {{1, 1}, {1, 6}}|>] }, <|SyntaxIssues -> {
+			LeafNode[Symbol, "\.01x", <|Source -> {{1, 1}, {1, 3}}|>],
+			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 3}, {1, 4}}|>],
+			LeafNode[Token`Equal, "=", <|Source -> {{1, 4}, {1, 5}}|>],
+			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 5}, {1, 6}}|>],
+			LeafNode[Integer, "1", <|Source -> {{1, 6}, {1, 7}}|>] }, <|Source -> {{1, 1}, {1, 7}}|>] }, <|SyntaxIssues -> {
 				(* from CharacterDecoder, strange character in general *)
 				SyntaxIssue["UnexpectedCharacter", "Unexpected character: ``\\.01``.", "Warning", _],
 				(* from Tokenizer, strange letterlike *)
-				SyntaxIssue["UnexpectedCharacter", "Unexpected character: ``\\.01``.", "Warning", _]}, Source -> {{1, 1}, {1, 6}}|>]
+				SyntaxIssue["UnexpectedCharacter", "Unexpected character: ``\\.01``.", "Warning", _]}, Source -> {{1, 1}, {1, 7}}|>]
 	,
 	TestID->"File-20190602-N5D1B8"
 ]
@@ -216,12 +217,12 @@ TestMatch[
 	cst
 	,
 	FileNode[File, {
-		LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 0}}|>],
-		LeafNode[String, "\"data\\\\\n\"", <|Source -> {{2, 1}, {3, 1}}|>],
-		LeafNode[Token`Newline, "\n", <|Source -> {{4, 0}, {4, 0}}|>],
-		LeafNode[Token`Newline, "\n", <|Source -> {{5, 0}, {5, 0}}|>],
-		LeafNode[Symbol, "x", <|Source -> {{5, 1}, {5, 1}}|>],
-		LeafNode[Token`Newline, "\n", <|Source -> {{6, 0}, {6, 0}}|>]}, <|Source -> {{2, 0}, {6, 0}}|>]
+		LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 1}}|>],
+		LeafNode[String, "\"data\\\\\n\"", <|Source -> {{2, 1}, {3, 2}}|>],
+		LeafNode[Token`Newline, "\n", <|Source -> {{4, 0}, {4, 1}}|>],
+		LeafNode[Token`Newline, "\n", <|Source -> {{5, 0}, {5, 1}}|>],
+		LeafNode[Symbol, "x", <|Source -> {{5, 1}, {5, 2}}|>],
+		LeafNode[Token`Newline, "\n", <|Source -> {{6, 0}, {6, 1}}|>]}, <|Source -> {{2, 0}, {6, 1}}|>]
 	,
 	TestID->"File-20190804-K7V2D8"
 ]
@@ -230,11 +231,7 @@ TestMatch[
 
 
 
-(*
 
-Yes, it is unsatisfactory to have 1\\\n be treated as an Integer, with no LineContinuation token coming after
-
-*)
 
 continuation = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "continuation.wl"}]
 
@@ -245,11 +242,17 @@ TestMatch[
 	,
 	FileNode[File, {
 		GroupNode[List, {
-			LeafNode[Token`OpenCurly, "{", <|Source->{{1, 1}, {1, 1}}|>],
-			LeafNode[Token`Newline, "\n", <|Source->{{2, 0}, {2, 0}}|>],
-			LeafNode[Token`WhiteSpace, "\t", <|Source->{{2, 1}, {2, 1}}|>],
-			LeafNode[Integer, "1", <|Source->{{2, 2}, {2, 2}}|>],
-			LeafNode[Token`CloseCurly, "}", <|Source->{{3, 1}, {3, 1}}|>]}, <|Source -> {{1, 1}, {3, 1}}|>]}, <|Source -> {{1, 1}, {3, 1}}|>]
+			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
+			LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 1}}|>],
+			LeafNode[Token`WhiteSpace, "\t", <|Source -> {{2, 1}, {2, 2}}|>],
+			LeafNode[Integer, "1", <|Source -> {{2, 2}, {2, 3}}|>],
+			LeafNode[Token`LineContinuation, "\\\n", <|Source -> {{2, 3}, {3, 1}}|>],
+			LeafNode[Token`CloseCurly, "}", <|Source -> {{3, 1}, {3, 2}}|>]}, <|Source -> {{1, 1}, {3, 2}}|>]},
+		<|	SyntaxIssues -> {FormatIssue["UnexpectedLineContinuation", "Unexpected line continuation.", "Formatting",
+								<|	Source -> {{2, 3}, {2, 4}},
+									Format`AirynessLevel -> 0.,
+									CodeActions -> {CodeAction["Delete \\", DeleteText, <|Source -> {{2, 3}, {2, 4}}|>]}|>]},
+			Source -> {{1, 1}, {3, 2}}|>]
 	,
 	TestID->"File-20191025-I3T9F3"
 ]

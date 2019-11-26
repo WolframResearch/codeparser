@@ -1,19 +1,21 @@
 
 #include "Parser.h"
+#include "Tokenizer.h"
 #include "API.h"
 
 #include "gtest/gtest.h"
 
 #include <sstream>
 
-//static std::unique_ptr<MLSession> mlSession;
+
+//const NextCharacterPolicy TOPLEVEL = ENABLE_BYTE_DECODING_ISSUES | ENABLE_ESCAPES | ENABLE_CHARACTER_DECODING_ISSUES | LC_UNDERSTANDS_CRLF | ENABLE_STRANGE_CHARACTER_CHECKING;
+const NextCharacterPolicy TOPLEVEL = ENABLE_BYTE_DECODING_ISSUES | ENABLE_CHARACTER_DECODING_ISSUES | ENABLE_STRANGE_CHARACTER_CHECKING;
+
 
 class ParseletTest : public ::testing::Test {
 protected:
     
     static void SetUpTestSuite() {
-        
-//        mlSession = std::unique_ptr<MLSession>(new MLSession);
         
         TheParserSession = std::unique_ptr<ParserSession>(new ParserSession);
     }
@@ -21,8 +23,6 @@ protected:
     static void TearDownTestSuite() {
         
         TheParserSession.reset(nullptr);
-        
-//        mlSession.reset(nullptr);
     }
     
     void SetUp() override {
@@ -37,18 +37,17 @@ protected:
 
 TEST_F(ParseletTest, Bug1) {
     
-    ASSERT_TRUE(TOKEN_LESS.isInequalityOperator());
-    
-    
     auto strIn = std::string("a /: b := c");
     
     auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
     
-    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, 0);
+    TheParserSession->init(BufferAndLength(str, strIn.size(), false));
+    
+    auto Tok = TheTokenizer->currentToken(TOPLEVEL);
     
     ParserContext Ctxt;
     
-    auto NP = TheParser->parse(Ctxt);
+    auto NP = TheParser->parse(Tok, Ctxt);
     
     auto N = NP.get();
     
@@ -60,18 +59,17 @@ TEST_F(ParseletTest, Bug1) {
 //
 TEST_F(ParseletTest, Bug2) {
     
-    ASSERT_TRUE(TOKEN_LESS.isInequalityOperator());
-    
-    
     auto strIn = std::string("a<b ");
     
-    auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
+    auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, 0);
+    TheParserSession->init(BufferAndLength(str, strIn.size(), false));
+    
+    auto Tok = TheTokenizer->currentToken(TOPLEVEL);
     
     ParserContext Ctxt;
     
-    TheParser->parse(Ctxt);
+    TheParser->parse(Tok, Ctxt);
     
     SUCCEED();
 }
@@ -81,18 +79,17 @@ TEST_F(ParseletTest, Bug2) {
 //
 TEST_F(ParseletTest, Bug3) {
     
-    ASSERT_TRUE(TOKEN_LESS.isInequalityOperator());
-    
-    
     auto strIn = std::string("a\\[Integral]b\\[Integral]c ");
     
-    auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
+    auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, 0);
+    TheParserSession->init(BufferAndLength(str, strIn.size(), false));
+    
+    auto Tok = TheTokenizer->currentToken(TOPLEVEL);
     
     ParserContext Ctxt;
     
-    TheParser->parse(Ctxt);
+    TheParser->parse(Tok, Ctxt);
     
     SUCCEED();
 }
@@ -102,18 +99,17 @@ TEST_F(ParseletTest, Bug3) {
 //
 TEST_F(ParseletTest, Bug4) {
     
-    ASSERT_TRUE(TOKEN_LESS.isInequalityOperator());
-    
-    
     auto strIn = std::string("\\[RawLeftBrace]*\\[RawRightBrace]");
     
-    auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
+    auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, 0);
+    TheParserSession->init(BufferAndLength(str, strIn.size(), false));
+    
+    auto Tok = TheTokenizer->currentToken(TOPLEVEL);
     
     ParserContext Ctxt;
     
-    TheParser->parse(Ctxt);
+    TheParser->parse(Tok, Ctxt);
     
     SUCCEED();
 }

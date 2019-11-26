@@ -878,6 +878,38 @@ isVectorInequalityOperator[_] = False
 
 
 
+isEmpty[Token`EndOfFile] = True
+isEmpty[Token`Fake`ImplicitTimes] = True
+isEmpty[Token`Error`EmptyString] = True
+isEmpty[Token`Error`Aborted] = True
+isEmpty[Token`Fake`ImplicitNull] = True
+isEmpty[Token`Fake`ImplicitOne] = True
+isEmpty[Token`Fake`ImplicitAll] = True
+isEmpty[Token`Error`ExpectedOperand] = True
+(*
+isEmpty[Token`Newline] = True
+*)
+
+isEmpty[_] = False
+
+
+
+
+
+group1Bits[tok_] := group1Bits[tok] =
+Which[
+	isPossibleBeginningOfExpression[tok], BitShiftLeft[2^^000, 9],
+	isCloser[tok],                        BitShiftLeft[2^^001, 9],
+	isError[tok],                         BitShiftLeft[2^^010, 9],
+	isTrivia[tok],                        BitShiftLeft[2^^011, 9],
+	isInequalityOperator[tok],            BitShiftLeft[2^^100, 9],
+	isVectorInequalityOperator[tok],      BitShiftLeft[2^^101, 9],
+	(* unused                             BitShiftLeft[2^^110, 9],*)
+	True,                                 BitShiftLeft[2^^111, 9]
+]
+
+
+
 
 
 
@@ -930,31 +962,35 @@ struct TokenEnum {
   }
 
   constexpr bool isPossibleBeginningOfExpression() const {
-      return static_cast<bool>((T & 0x200) == 0x200);
+      return static_cast<bool>((T & 0xe00) == 0x000);
   }
   
   constexpr bool isCloser() const {
-      return static_cast<bool>((T & 0x400) == 0x400);
+      return static_cast<bool>((T & 0xe00) == 0x200);
   }
   
   constexpr bool isError() const {
-      return static_cast<bool>((T & 0x800) == 0x800);
+      return static_cast<bool>((T & 0xe00) == 0x400);
   }
   
   constexpr bool isTrivia() const {
-      return static_cast<bool>((T & 0x1000) == 0x1000);
-  }
-  
-  constexpr bool isInfixOperator() const {
-      return static_cast<bool>((T & 0x2000) == 0x2000);
+      return static_cast<bool>((T & 0xe00) == 0x600);
   }
   
   constexpr bool isInequalityOperator() const {
-      return static_cast<bool>((T & 0x4000) == 0x4000);
+      return static_cast<bool>((T & 0xe00) == 0x800);
   }
   
   constexpr bool isVectorInequalityOperator() const {
-      return static_cast<bool>((T & 0x8000) == 0x8000);
+      return static_cast<bool>((T & 0xe00) == 0xa00);
+  }
+
+  constexpr bool isInfixOperator() const {
+      return static_cast<bool>((T & 0x1000) == 0x1000);
+  }
+
+  constexpr bool isEmpty() const {
+      return static_cast<bool>((T & 0x2000) == 0x2000);
   }
 
 };
@@ -964,14 +1000,12 @@ bool operator==(TokenEnum a, TokenEnum b);
 bool operator!=(TokenEnum a, TokenEnum b);
 "} ~Join~
    KeyValueMap[(Row[{"constexpr TokenEnum ", toGlobal[#1], "(",
-      If[isVectorInequalityOperator[#1], "0x8000|", ""],
-      If[isInequalityOperator[#1], "0x4000|", ""],
-      If[isInfixOperator[#1], "0x2000|", ""],
-      If[isTrivia[#1], "0x1000|", ""],
-      If[isError[#1], "0x800|", ""],
-      If[isCloser[#1], "0x400|", ""],
-      If[isPossibleBeginningOfExpression[#1], "0x200|", ""],
-      #2, ");"}])&, enumMap] ~Join~
+   	BitOr[
+   		If[isEmpty[#1], 16^^2000, 0],
+   		If[isInfixOperator[#1], 16^^1000, 0],
+   		group1Bits[#1],
+   		#2
+   	], "); // { isEmpty:", isEmpty[#1], ", isInfixOperator:", isInfixOperator[#1], ", group1Bits:", group1Bits[#1], ", enum:", #2, " }"}])&, enumMap] ~Join~
 {
 "
 namespace std {
@@ -999,10 +1033,10 @@ If[FailureQ[res],
 
 
 (*
-remove values like Error`UNKNOWN in:
+remove values like Error`First in:
 <|
-Error`FIRST -> Next,
-Error`UNKNOWN -> Error`FIRST
+Error`Unknown -> Next,
+Error`First -> Error`Unknown,
 |>
 
 because C switch statements cannot have duplicate cases

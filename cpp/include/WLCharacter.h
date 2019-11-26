@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "CodePoint.h"
+
 #include <cassert>
 #include <string>
 #include <iterator>
@@ -14,7 +16,7 @@
 // 2Hex: \.xx style
 // 4Hex: \:xxxx style
 // 6Hex: \|xxxxxx style
-// Octal: \XXX style
+// Octal: \xxx style
 // LongName: Using \[XX] style: \[Alpha], \[Beta], etc.
 //
 // Used to just be Escape, but this was observed:
@@ -32,22 +34,6 @@ enum EscapeStyle {
 };
 
 //
-// Version 1 of WLCharacter encoding
-//
-// 32 bits:
-//
-// vutsrqponmlkjihgfedcba9876543210
-//            ^~~~~~~~~~~~~~~~~~~~~
-//            Character bits (21 bits)
-//           ^
-//           Sign bit
-//        ^~~
-//        EscapeStyle bits (3 bits)
-// ^~~~~~~
-// Currently unused (7 bits)
-//
-
-//
 // A single WL character
 //
 // The text  \[Alpha]  would be 1 WLCharacter
@@ -58,16 +44,20 @@ struct WLCharacter {
     uint8_t signBit : 1;
     uint8_t escapeBits : 3;
     
-    explicit constexpr WLCharacter(int val, EscapeStyle escape = ESCAPE_NONE) : valBits(val), signBit(val < 0), escapeBits(escape) {}
+    explicit constexpr WLCharacter(int val = CODEPOINT_UNKNOWN, EscapeStyle escape = ESCAPE_NONE) : valBits(val), signBit(val < 0), escapeBits(escape) {}
     
     explicit operator int() const noexcept = delete;
     
     constexpr bool operator==(const WLCharacter &o) const {
-        return valBits == o.valBits && signBit == o.signBit && escapeBits == o.escapeBits;
+        return valBits == o.valBits &&
+            signBit == o.signBit &&
+            escapeBits == o.escapeBits;
     }
     
     constexpr bool operator!=(const WLCharacter &o) const {
-        return valBits != o.valBits || signBit != o.signBit || escapeBits != o.escapeBits;
+        return valBits != o.valBits ||
+            signBit != o.signBit ||
+            escapeBits != o.escapeBits;
     }
     
     //
@@ -77,7 +67,7 @@ struct WLCharacter {
         return to_point() < o.to_point();
     }
     
-    constexpr int to_point() const {
+    constexpr int32_t to_point() const {
         //
         // Sign extend the value
         //
@@ -91,6 +81,7 @@ struct WLCharacter {
     std::string graphicalString() const;
     
     bool isEscaped() const;
+    
     
     bool isAlpha() const;
     
@@ -108,36 +99,33 @@ struct WLCharacter {
     
     bool isVeryStrangeLetterlike() const;
     
-    bool isPunctuation() const;
-    
     bool isSpace() const;
     
     bool isStrangeSpace() const;
     
     bool isNewline() const;
     
-    bool isLinearSyntax() const;
-    
-    bool isStringMeta() const;
-    
-    bool isUninterpretable() const;
-    
     bool isControl() const;
     
-    bool isLetterlikeCharacter() const;
-    bool isStrangeLetterlikeCharacter() const;
-    bool isVeryStrangeLetterlikeCharacter() const;
-    bool isPunctuationCharacter() const;
-    bool isSpaceCharacter() const;
-    bool isStrangeSpaceCharacter() const;
-    bool isNewlineCharacter() const;
-    bool isStrangeNewlineCharacter() const;
-    bool isUninterpretableCharacter() const;
-    bool isControlCharacter() const;
-    bool isLineContinuation() const;
-    
     bool isStrange() const;
-    bool isStrangeCharacter() const;
+    
+    bool isSign() const;
+    
+    bool isMBLinearSyntax() const;
+    bool isMBStringMeta() const;
+    bool isMBLineContinuation() const;
+    bool isMBLetterlike() const;
+    bool isMBStrangeLetterlike() const;
+    bool isMBVeryStrangeLetterlike() const;
+    bool isMBPunctuation() const;
+    bool isMBSpace() const;
+    bool isMBStrangeSpace() const;
+    bool isMBNewline() const;
+    bool isMBStrangeNewline() const;
+    bool isMBUninterpretable() const;
+    bool isMBControl() const;
+    bool isMBStrange() const;
+    bool isMBUnsupported() const;
 };
 
 std::ostream& operator<<(std::ostream& stream, WLCharacter);

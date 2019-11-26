@@ -6,9 +6,13 @@
 #include "WLCharacter.h"
 #include "Token.h"
 
-#include <sstream>
 #include <vector>
 #include <memory> // for unique_ptr
+
+
+class Tokenizer;
+using TokenizerPtr = std::unique_ptr<Tokenizer>;
+
 
 enum TokenizerContextBits : uint8_t {
 
@@ -20,165 +24,118 @@ enum TokenizerContextBits : uint8_t {
     TOKENIZER_SLOT = 0x01,
 };
 
-class TokenizerContext {
-    uint8_t val;
-public:
-    constexpr TokenizerContext() : val() {}
-    constexpr TokenizerContext(uint8_t val) : val(val) {}
-
-    TokenizerContextBits operator&(const TokenizerContextBits bits) const {
-        return static_cast<TokenizerContextBits>(val & bits);
-    }
-
-    TokenizerContextBits operator|(const TokenizerContextBits bits) const {
-        return static_cast<TokenizerContextBits>(val | bits);
-    }
-
-    void operator|=(const TokenizerContextBits bits) {
-        val |= bits;
-    }
-
-    void clear(const TokenizerContextBits bits) {
-        val &= ~bits;
-    }
-};
-
-class sbuffer {
-    
-    std::ostringstream Str;
-    
-public:
-    
-    sbuffer() : Str() {}
-    
-    void clear();
-    
-    std::string str();
-    
-    void operator<<(WLCharacter c);
-};
-
-enum class WarningPosition {
-    NONE,
-    BEFORE,
-    AFTER
-};
+using TokenizerContext = uint8_t;
 
 //
 // Tokenizer takes a stream of WL characters and tokenizes them
 //
 class Tokenizer {
     
-    Token _currentToken;
+    std::vector<IssuePtr> Issues;
     
-    WLCharacter _currentWLCharacter;
     
-    std::vector<std::pair<WLCharacter, Source>> wlCharacterQueue;
+    void backup(Buffer resetBuf, bool warn);
     
-    sbuffer String;
+    Token handleStrangeSpace(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
     
-    std::vector<std::unique_ptr<Issue>> Issues;
+    Token handleMBStrangeSpace(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleMBStrangeNewline(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
     
-    SourceLocation TokenStartLoc;
+    Token handleComment(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    SourceCharacter handleFileOpsBrackets(Buffer tokenStartBuf, SourceCharacter firstChar, NextCharacterPolicy policy, int *handled);
+    Token handleString(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
     
-    void backup(WLCharacter Char1, SourceLocation Loc1, WLCharacter c, WarningPosition pos);
+#if STARTOFLINE
+    Token handleString_stringifyLine(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+#endif // STARTOFLINE
     
-    void handleEndOfFile();
-    void handleLineFeed();
-    void handleCarriageReturn();
-    void handleSpace();
-    void handleTab();
-    void handleStrangeSpace();
-    void handleLineContinuation();
+    Token handleString_stringifySymbol(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleString_stringifyFile(Buffer tokenStartBuf, SourceCharacter firstChar, NextCharacterPolicy policy);
     
-    void handleSpaceCharacter();
-    void handleNewlineCharacter();
+    Token handleSymbol(Buffer symbolStartBuf, WLCharacter firstChar, NextCharacterPolicy policy, TokenizerContext Ctxt);
+    WLCharacter handleSymbolSegment(Buffer firstCharBuf, WLCharacter firstChar, NextCharacterPolicy policy, TokenizerContext Ctxt);
     
-    bool expectDigits(int *leadingZeroCount);
-    size_t handleDigits(int *leadingZeroCount);
-    int handleDigitsOrAlpha(int base);
+    Token handleNumber(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    WLCharacter handleDigits(NextCharacterPolicy policy, WLCharacter firstChar, size_t *count);
+    WLCharacter handleAlphaOrDigits(WLCharacter firstChar, size_t base, NextCharacterPolicy policy, int *handled);
+    WLCharacter handlePossibleFractionalPart(Buffer dotBuf, WLCharacter firstChar, int base, NextCharacterPolicy policy, int *handled);
+    WLCharacter handlePossibleFractionalPartPastDot(Buffer dotBuf, WLCharacter firstChar, int base, NextCharacterPolicy policy, int *handled);
     
-    void handleComment();
-    void handleFileOpsBrackets();
-    void handleString();
-    void handleString_stringifyCurrentLine();
-    void handleString_stringifyNextToken_symbol();
-    void handleString_stringifyNextToken_file();
+    Token handleColon(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleOpenParen(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleDot(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleEqual(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleUnder(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleLess(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleGreater(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleMinus(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleBar(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleSemi(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleBang(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleHash(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handlePercent(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleAmp(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleSlash(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleAt(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handlePlus(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleTilde(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleQuestion(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleStar(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleCaret(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
     
-    void handleSymbol(TokenizerContext Ctxt);
-    void handleSymbolSegment(TokenizerContext Ctxt);
+    Token handleMBPunctuation(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
     
-    void handleNumber();
-    int handlePossibleFractionalPart(int base);
-    int handlePossibleFractionalPartPastDot(int base, WLCharacter DotChar, SourceLocation DotLoc);
+    Token handleMBLinearSyntax(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
     
-    void handleColon();
-    void handleOpenParen();
-    void handleCloseParen();
-    void handleOpenSquare();
-    void handleCloseSquare();
-    void handleComma();
-    void handleOpenCurly();
-    void handleCloseCurly();
-    void handleDot();
-    void handleEqual();
-    void handleUnder();
-    void handleLess();
-    void handleGreater();
-    void handleMinus();
-    void handleBar();
-    void handleSemi();
-    void handleBang();
-    void handleHash();
-    void handlePercent();
-    void handleAmp();
-    void handleSlash();
-    void handleAt();
-    void handlePlus();
-    void handleTilde();
-    void handleQuestion();
-    void handleStar();
-    void handleCaret();
-    void handleSingleQuote();
+    Token handleUnhandledBackSlash(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
     
-    void handlePunctuationCharacter();
     
-    void handleLinearSyntax();
+    Source getTokenSource(SourceLocation tokStartLoc) const;
     
-    void handleUnhandledBackSlash();
-    void handleUninterpretable();
+    BufferAndLength getTokenBufferAndLength(Buffer tokStartBuf) const;
     
-    void append(WLCharacter, Source);
-    
-    WLCharacter nextWLCharacter(NextWLCharacterPolicy policy);
-    
-    WLCharacter currentWLCharacter() const;
-    
-    Source getTokenSource() const;
     
 public:
     Tokenizer();
     
-    void init(SourceStyle style, int mode);
+    void init();
 
     void deinit();
     
-    void nextToken();
-    void nextToken_stringifyCurrentLine();
-    void nextToken_stringifyNextToken_symbol();
-    void nextToken_stringifyNextToken_file();
+    void nextToken(NextCharacterPolicy policy);
     
-    Token currentToken();
+#if STARTOFLINE
+    void nextToken_stringifyLine();
+#endif // STARTOFLINE
+    
+    void nextToken_stringifySymbol();
+    void nextToken_stringifyFile();
+    
+    Token nextToken0(NextCharacterPolicy policy);
+    
+#if STARTOFLINE
+    Token nextToken0_stringifyLine();
+#endif // STARTOFLINE
+    
+    Token nextToken0_stringifySymbol();
+    Token nextToken0_stringifyFile();
+    
+    Token currentToken(NextCharacterPolicy policy);
+    
+#if STARTOFLINE
+    Token currentToken_stringifyLine();
+#endif // STARTOFLINE
+    
+    Token currentToken_stringifySymbol();
+    Token currentToken_stringifyFile();
 
 #if !NISSUES
-    void addIssue(std::unique_ptr<Issue>);
-#endif
-    
-#if !NISSUES
-    std::vector<std::unique_ptr<Issue>>& getIssues();
-#endif
+    void addIssue(IssuePtr);
+
+    std::vector<IssuePtr>& getIssues();
+#endif // !NISSUES
     
 };
 
-extern std::unique_ptr<Tokenizer> TheTokenizer;
+extern TokenizerPtr TheTokenizer;
 

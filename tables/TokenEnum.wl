@@ -20,15 +20,17 @@ Token`WhiteSpace -> Next,
 Token`LineContinuation -> Next,
 
 (* errors *)
-Token`Error`First -> Next,
-Token`Error`Unknown -> Token`Error`First,
 Token`Error`ExpectedEqual -> Next,
+(*
+Order of First appearing here is important.
+During generation, values that are not Next are removed
+*)
+Token`Error`First -> Token`Error`ExpectedEqual,
 Token`Error`UnhandledDot -> Next,
 Token`Error`UnhandledCharacter -> Next,
 Token`Error`ExpectedLetterlike -> Next,
 Token`Error`UnterminatedComment -> Next,
 Token`Error`UnterminatedString -> Next,
-Token`Error`InvalidBase -> Next,
 Token`Error`ExpectedAccuracy -> Next,
 Token`Error`ExpectedExponent -> Next,
 Token`Error`EmptyString -> Next,
@@ -36,6 +38,9 @@ Token`Error`Aborted -> Next,
 Token`Error`ExpectedOperand -> Next,
 Token`Error`UnrecognizedDigit -> Next,
 Token`Error`ExpectedDigit -> Next,
+Token`Error`UninterpretableCharacter -> Next,
+Token`Error`UnsupportedCharacter -> Next,
+Token`Error`InvalidBase -> Next,
 Token`Error`End -> Next,
 
 (* 1 character tokens *)
@@ -142,48 +147,12 @@ Token`LinearSyntax`Space -> Next, (* \<space> *)
 (* implicit Times operator in  a b  *)
 Token`Fake`ImplicitTimes -> Next,
 
-(* implicit  Null  in  a; *)
+(* implicit  Null  in  a;  and  f[1,]  *)
 Token`Fake`ImplicitNull -> Next,
 (* implicit  1  in  ;;b  *)
 Token`Fake`ImplicitOne -> Next,
 (* implicit  All  in  a;;  *)
 Token`Fake`ImplicitAll -> Next,
-
-(* missing } *)
-Token`Fake`MissingCloseCurly -> Next,
-
-(* missing |> *)
-Token`Fake`MissingBarGreater -> Next,
-
-(* missing \[RightAngleBracket] *)
-Token`Fake`LongName`MissingRightAngleBracket -> Next,
-
-(* missing \[RightCeiling] *)
-Token`Fake`LongName`MissingRightCeiling -> Next,
-
-(* missing \[RightFloor] *)
-Token`Fake`LongName`MissingRightFloor -> Next,
-
-(* missing \[RightDoubleBracket] *)
-Token`Fake`LongName`MissingRightDoubleBracket -> Next,
-
-(* missing ] *)
-Token`Fake`MissingCloseSquare -> Next,
-
-(* missing \[RightBracketingBar] *)
-Token`Fake`LongName`MissingRightBracketingBar -> Next,
-
-(* missing \[RightDoubleBracketingBar] *)
-Token`Fake`LongName`MissingRightDoubleBracketingBar -> Next,
-
-(* missing \[RightDoubleBracketingBar] *)
-Token`Fake`LongName`MissingRightAssociation -> Next,
-
-(* missing ) *)
-Token`Fake`MissingCloseParen -> Next,
-
-(* missing \) *)
-Token`Fake`LinearSyntax`MissingCloseParen -> Next,
 
 
 (*

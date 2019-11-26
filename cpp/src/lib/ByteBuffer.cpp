@@ -3,67 +3,84 @@
 
 #include "CodePoint.h"
 
-ByteBuffer::ByteBuffer() : data(), dataByteCount(), dataByteIndex(), libData() {}
+ByteBuffer::ByteBuffer() : origBufAndLen(), libData(), buffer(), end() {}
 
-void ByteBuffer::init(const unsigned char *dataIn, size_t dataByteCountIn, WolframLibraryData libDataIn) {
+void ByteBuffer::init(BufferAndLength bufAndLenIn, WolframLibraryData libDataIn) {
   
-    data = dataIn;
-    dataByteCount = dataByteCountIn;
+    origBufAndLen = bufAndLenIn;
     
-    dataByteIndex = 0;
+    buffer = bufAndLenIn.buffer;
     
     libData = libDataIn;
+    
+    end = origBufAndLen.end();
+    
+    wasEOF = false;
 }
 
 void ByteBuffer::deinit() {}
 
-unsigned char ByteBuffer::nextByte(unsigned char *eof) {
+//
+// Precondition: buffer is pointing to current byte
+// Postcondition: buffer is pointing to 1 byte past current byte
+//
+// Return current byte
+//
+unsigned char ByteBuffer::nextByte0() {
     
-    assert(dataByteIndex <= dataByteCount && "Fix at call site");
+    assert((origBufAndLen.buffer <= buffer && buffer <= end) && "Fix at call site");
     
 #ifndef NDEBUG
     size_t oldProgress;
-    if (dataByteCount != 0) {
-        oldProgress= (100 * dataByteIndex / dataByteCount);
+    if (origBufAndLen.length != 0) {
+        oldProgress = (100 * (buffer - origBufAndLen.buffer) / origBufAndLen.length);
     }
 #endif
     
-    if (dataByteIndex == dataByteCount) {
-        *eof = true;
+    if (buffer == end) {
+        
+        wasEOF = true;
+        
         return 0xff;
     }
     
-    *eof = false;
-    
-    auto b = data[dataByteIndex];
-    dataByteIndex++;
+    auto b = *buffer;
+    ++buffer;
     
 #ifndef NDEBUG
 #if USE_MATHLINK
-    if (dataByteCount != 0) {
+    if (origBufAndLen.length != 0) {
         
-        size_t progress = (100 * dataByteIndex / dataByteCount);
+        size_t progress = (100 * (buffer - origBufAndLen.buffer) / origBufAndLen.length);
         
         if (progress != oldProgress) {
             if (libData) {
                 MLINK link = libData->getMathLink(libData);
-                MLPutFunction(link, "EvaluatePacket", 1);
-                MLPutFunction(link, "AST`Library`SetConcreteParseProgress", 1);
-                MLPutInteger(link, static_cast<int>(progress));
-                libData->processMathLink(link);
+                if (!MLPutFunction(link, "EvaluatePacket", 1)) {
+                    assert(false);
+                }
+                if (!MLPutFunction(link, "AST`Library`SetConcreteParseProgress", 1)) {
+                    assert(false);
+                }
+                if (!MLPutInteger(link, static_cast<int>(progress))) {
+                    assert(false);
+                }
+                if (!libData->processMathLink(link)) {
+                    assert(false);
+                }
                 auto pkt = MLNextPacket(link);
                 if (pkt == RETURNPKT) {
                     if(!MLNewPacket(link)) {
-                        b = -1;
+                        assert(false);
                     }
                 } else {
-                    b = -1;
+                    assert(false);
                 }
             }
         }
     }
 #endif // USE_MATHLINK
-#endif
+#endif // NDEBUG
     
     //
     // if eof, then force 0xff to be returned
@@ -75,13 +92,74 @@ unsigned char ByteBuffer::nextByte(unsigned char *eof) {
     return b;
 }
 
-size_t ByteBuffer::getDataByteIndex() const {
-    return dataByteIndex;
+void ByteBuffer::nextByte() {
+    
+    assert((origBufAndLen.buffer <= buffer && buffer <= end) && "Fix at call site");
+    
+#ifndef NDEBUG
+    size_t oldProgress;
+    if (origBufAndLen.length != 0) {
+        oldProgress = (100 * (buffer - origBufAndLen.buffer) / origBufAndLen.length);
+    }
+#endif
+    
+    if (buffer == end) {
+        
+        return;
+    }
+    
+    ++buffer;
+    
+#ifndef NDEBUG
+#if USE_MATHLINK
+    if (origBufAndLen.length != 0) {
+        
+        size_t progress = (100 * (buffer - origBufAndLen.buffer) / origBufAndLen.length);
+        
+        if (progress != oldProgress) {
+            if (libData) {
+                MLINK link = libData->getMathLink(libData);
+                if (!MLPutFunction(link, "EvaluatePacket", 1)) {
+                    assert(false);
+                }
+                if (!MLPutFunction(link, "AST`Library`SetConcreteParseProgress", 1)) {
+                    assert(false);
+                }
+                if (!MLPutInteger(link, static_cast<int>(progress))) {
+                    assert(false);
+                }
+                if (!libData->processMathLink(link)) {
+                    assert(false);
+                }
+                auto pkt = MLNextPacket(link);
+                if (pkt == RETURNPKT) {
+                    if(!MLNewPacket(link)) {
+                        assert(false);
+                    }
+                } else {
+                    assert(false);
+                }
+            }
+        }
+    }
+#endif // USE_MATHLINK
+#endif // NDEBUG
 }
 
-void ByteBuffer::setDataByteIndex(size_t idx) {
-    dataByteIndex = idx;
+unsigned char ByteBuffer::currentByte() {
+    
+    assert((origBufAndLen.buffer <= buffer && buffer <= end) && "Fix at call site");
+    
+    if (buffer == end) {
+        
+        return 0xff;
+    }
+    
+    return *buffer;
 }
 
-std::unique_ptr<ByteBuffer> TheByteBuffer = nullptr;
+bool ByteBuffer::eof() const {
+    return buffer == end;
+}
 
+ByteBufferPtr TheByteBuffer = nullptr;

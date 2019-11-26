@@ -7,14 +7,12 @@
 
 #if USE_MATHLINK
 #include "mathlink.h"
-#endif
+#undef P
+#endif // USE_MATHLINK
 
 #include <vector>
 #include <memory> // for unique_ptr
 #include <ostream>
-
-// MSVC: error C2338: The C++ Standard forbids containers of const elements because allocator<const T> is ill-formed.
-using SymbolPtr = std::unique_ptr<Symbol>;
 
 class Node;
 class LeafNode;
@@ -53,7 +51,7 @@ public:
     
 #if USE_MATHLINK
     void put0(MLINK ) const;
-#endif
+#endif // USE_MATHLINK
     
     void print0(std::ostream& s) const;
 };
@@ -91,7 +89,7 @@ public:
     void put(MLINK ) const;
     
     void put0(MLINK ) const;
-#endif
+#endif // USE_MATHLINK
     
     void print(std::ostream& s ) const;
     
@@ -117,17 +115,18 @@ public:
     
     virtual bool isError() const;
     
+    virtual bool isEmpty() const;
+    
     virtual size_t size() const;
     
     virtual const Node* first() const;
     virtual const Node* last() const;
     
 #if USE_MATHLINK
-    
     virtual void put(MLINK mlp) const = 0;
     
     void putChildren(MLINK mlp) const;
-#endif
+#endif // USE_MATHLINK
     
     void printChildren(std::ostream& s) const;
 
@@ -159,7 +158,7 @@ public:
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
-#endif
+#endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
 };
@@ -175,7 +174,7 @@ public:
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
-#endif
+#endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
 };
@@ -188,7 +187,7 @@ public:
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
-#endif
+#endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
     
@@ -208,14 +207,16 @@ public:
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
-#endif
+#endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
     
     bool isTrivia() const override;
     
+    bool isEmpty() const override;
+    
     Source getSource() const override {
-        return Tok.Src;
+        return Tok.getSource();
     }
 
     const Token getToken() const {
@@ -267,7 +268,7 @@ public:
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
-#endif
+#endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
     
@@ -281,6 +282,7 @@ public:
 };
 
 
+#if STARTOFLINE
 class StartOfLineNode : public OperatorNode {
 public:
     StartOfLineNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKESTARTOFLINENODE, std::move(Args)) {}
@@ -290,6 +292,7 @@ class StartOfFileNode : public OperatorNode {
 public:
     StartOfFileNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKESTARTOFFILENODE, std::move(Args)) {}
 };
+#endif // STARTOFLINE
 
 
 class BlankNode : public OperatorNode {
@@ -336,21 +339,17 @@ public:
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
-#endif
+#endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
     
     virtual bool isError() const override;
 };
 
+
 class GroupMissingCloserNode : public OperatorNode {
 public:
     GroupMissingCloserNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEGROUPMISSINGCLOSERNODE, std::move(Args)) {}
-};
-
-class GroupMissingOpenerNode : public OperatorNode {
-public:
-    GroupMissingOpenerNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEGROUPMISSINGOPENERNODE, std::move(Args)) {}
 };
 
 
@@ -361,19 +360,19 @@ public:
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
-#endif
+#endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
 };
 
 class CollectedIssuesNode : public Node {
-    std::vector<std::unique_ptr<Issue>> Issues;
+    std::vector<IssuePtr> Issues;
 public:
-    CollectedIssuesNode(std::vector<std::unique_ptr<Issue>> Issues) : Node(), Issues(std::move(Issues)) {}
+    CollectedIssuesNode(std::vector<IssuePtr> Issues) : Node(), Issues(std::move(Issues)) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
-#endif
+#endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
 };
@@ -385,7 +384,22 @@ public:
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
-#endif
+#endif // USE_MATHLINK
+    
+    void print(std::ostream&) const override;
+};
+
+class SourceCharacterNode : public Node {
+    const SourceCharacter Char;
+public:
+    
+    SourceCharacterNode(SourceCharacter& Char) : Node(), Char(Char) {}
+    
+    SourceCharacterNode(SourceCharacter&& Char) : Node(), Char(std::move(Char)) {}
+    
+#if USE_MATHLINK
+    void put(MLINK mlp) const override;
+#endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
 };

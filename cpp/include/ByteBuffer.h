@@ -1,40 +1,48 @@
 
 #pragma once
 
-#include "Source.h"
-
-#include "WolframLibrary.h"
-
-#undef True
-
-#undef False
+#include "API.h"
 
 #include <cstddef>
 #include <vector>
 #include <istream>
 #include <memory> // for unique_ptr
+#include <ostream>
+
+class ByteBuffer;
+using ByteBufferPtr = std::unique_ptr<ByteBuffer>;
+
 
 class ByteBuffer {
     
-    const unsigned char *data;
-    size_t dataByteCount;
-    size_t dataByteIndex;
+    BufferAndLength origBufAndLen;
     
     WolframLibraryData libData;
     
+    
 public:
+    
+    Buffer buffer;
+    
+    Buffer end;
+    
+    bool wasEOF;
+    
+    
     ByteBuffer();
     
-    void init(const unsigned char *data, size_t dataLength, WolframLibraryData libData);
+    void init(BufferAndLength bufAndLen, WolframLibraryData libData = nullptr);
     
     void deinit();
     
-    unsigned char nextByte(unsigned char *eof);
+    unsigned char currentByte();
     
-    size_t getDataByteIndex() const;
+    void nextByte();
     
-    void setDataByteIndex(size_t );
+    unsigned char nextByte0();
+    
+    bool eof() const;
 };
 
-extern std::unique_ptr<ByteBuffer> TheByteBuffer;
+extern ByteBufferPtr TheByteBuffer;
 

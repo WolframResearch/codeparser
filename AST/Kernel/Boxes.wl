@@ -25,8 +25,7 @@ ConcreteParseBox[box_] :=
 
 
 Options[parseBox] = {
-    "StringifyNextTokenSymbol" -> False,
-    "StringifyNextTokenFile" -> False
+    "StringifyMode" -> 0
 }
 
 
@@ -321,7 +320,7 @@ Module[{handledChildren, aggregatedChildren},
     (*
     :: stringifies its args
     *)
-    {_, LeafNode[Token`ColonColon, _, _], ___}, InfixNode[MessageName, {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~ MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2 + 1), "StringifyNextTokenSymbol" -> True]&, children[[2;;-1]] ], <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`ColonColon, _, _], ___}, InfixNode[MessageName, {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~ MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2 + 1), "StringifyMode" -> 1]&, children[[2;;-1]] ], <|Source->Append[pos, 1]|>],
 
 
     (*
@@ -387,13 +386,13 @@ Module[{handledChildren, aggregatedChildren},
     (*
     << stringifies its args
     *)
-    {LeafNode[Token`LessLess, _, _], _}, PrefixNode[Get, {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~ {parseBox[children[[2]], Append[pos, 1] ~Join~ {2}, "StringifyNextTokenFile" -> True]}, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`LessLess, _, _], _}, PrefixNode[Get, {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~ {parseBox[children[[2]], Append[pos, 1] ~Join~ {2}, "StringifyMode" -> 2]}, <|Source->Append[pos, 1]|>],
 
     (*
     StartOfLine
     *)
-    {LeafNode[Token`Question, _, _], ___}, StartOfLineNode[Information, {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~ MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2+1), "StringifyNextTokenSymbol" -> True]&, children[[2;;-1]]], <|Source->Append[pos, 1]|>],
-    {LeafNode[Token`QuestionQuestion, _, _], ___}, StartOfLineNode[Information, {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~ MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2+1), "StringifyNextTokenSymbol" -> True]&, children[[2;;-1]]], <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`Question, _, _], ___}, StartOfLineNode[Information, {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~ MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2+1), "StringifyMode" -> 1]&, children[[2;;-1]]], <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`QuestionQuestion, _, _], ___}, StartOfLineNode[Information, {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~ MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2+1), "StringifyMode" -> 1]&, children[[2;;-1]]], <|Source->Append[pos, 1]|>],
     
     (*
     Postfix
@@ -833,12 +832,11 @@ parseBox[s_String /; StringMatchQ[s, "'"~~___], pos_] := LeafNode[Token`Boxes`Mu
 
 
 parseBox[str_String, pos_, OptionsPattern[]] :=
-Module[{parsed, data, issues, stringifyNextTokenSymbol, oldLeafSrc, stringifyNextTokenFile},
+Module[{parsed, data, issues, stringifyMode, oldLeafSrc},
 
-  stringifyNextTokenSymbol = OptionValue["StringifyNextTokenSymbol"];
-  stringifyNextTokenFile = OptionValue["StringifyNextTokenFile"];
+  stringifyMode = OptionValue["StringifyMode"];
 
-  parsed = ParseLeaf[str, "StringifyNextTokenSymbol" -> stringifyNextTokenSymbol, "StringifyNextTokenFile" -> stringifyNextTokenFile];
+  parsed = ParseLeaf[str, "StringifyMode" -> stringifyMode];
 
   (*
     Source is filled in here
@@ -1897,16 +1895,6 @@ Module[{nodeBoxes},
 ]]
 
 toStandardFormBoxes[GroupMissingCloserNode[op_, nodes_, data_]] :=
-Catch[
-Module[{nodeBoxes},
-  nodeBoxes = toStandardFormBoxes /@ nodes;
-  If[AnyTrue[nodeBoxes, FailureQ],
-    Throw[SelectFirst[nodeBoxes, FailureQ]]
-  ];
-  RowBox[nodeBoxes]
-]]
-
-toStandardFormBoxes[GroupMissingOpenerNode[op_, nodes_, data_]] :=
 Catch[
 Module[{nodeBoxes},
   nodeBoxes = toStandardFormBoxes /@ nodes;

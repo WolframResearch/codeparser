@@ -16,3 +16,11 @@ TEST_F(WLCharacterTest, Bug1) {
 
     EXPECT_EQ(C.graphicalString(), "\\t");
 }
+
+TEST_F(WLCharacterTest, Bug2) {
+    
+    auto C = WLCharacter(' ');
+    
+    EXPECT_EQ(C.graphicalString(), " ");
+}
+

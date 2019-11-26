@@ -25,6 +25,9 @@ constexpr int CODEPOINT_LINEARSYNTAX_PLUS(0xf7cb);
 constexpr int CODEPOINT_LINEARSYNTAX_SLASH(0xf7cc);
 constexpr int CODEPOINT_LINEARSYNTAX_BACKTICK(0xf7cd);
 
+//
+//
+//
 constexpr int CODEPOINT_REPLACEMENT_CHARACTER(0xfffd);
 
 //
@@ -32,7 +35,10 @@ constexpr int CODEPOINT_REPLACEMENT_CHARACTER(0xfffd);
 //
 constexpr int CODEPOINT_ENDOFFILE(EOF);
 
-constexpr int CODEPOINT_ERROR_INTERNAL(-2);
+//
+//
+//
+constexpr int CODEPOINT_UNKNOWN(-2);
 
 //
 // There is an inconsistency in WL, such that LINEARSYNTAX_SPACE does not have a dedicated code point
@@ -57,11 +63,17 @@ constexpr int CODEPOINT_STRINGMETA_CARRIAGERETURN(-11);
 constexpr int CODEPOINT_STRINGMETA_TAB(-12);
 
 //
+// \r\n is a single SourceCharacter
+//
+constexpr int CODEPOINT_CRLF(-13);
+
+//
 // Create a line continuation character for CharacterDecoder to communicate to Tokenizer
 //
-constexpr int CODEPOINT_LINECONTINUATION_LF(-13);
-constexpr int CODEPOINT_LINECONTINUATION_CR(-14);
-constexpr int CODEPOINT_LINECONTINUATION_CRLF(-15);
+constexpr int CODEPOINT_LINECONTINUATION_LF(-14);
+constexpr int CODEPOINT_LINECONTINUATION_CR(-15);
+constexpr int CODEPOINT_LINECONTINUATION_CRLF(-16);
+
 
 TokenEnum LongNameCodePointToOperator(int c);
 int LongNameOperatorToCodePoint(TokenEnum t);

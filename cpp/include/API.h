@@ -23,23 +23,24 @@
 //
 #if USE_MATHLINK
 #include "mathlink.h"
-#endif
-
 #undef P
+#endif // USE_MATHLINK
 
 #include "WolframLibrary.h"
-
 #undef True
-
 #undef False
 
-
 #include <memory> // for unique_ptr
+#include <functional> // for function with GCC and MSVC
 
 class Node;
+class ParserSession;
 
 // MSVC: error C2338: The C++ Standard forbids containers of const elements because allocator<const T> is ill-formed.
 using NodePtr = std::unique_ptr<Node>;
+using ParserSessionPtr = std::unique_ptr<ParserSession>;
+using Buffer = const unsigned char *;
+using MBuffer = unsigned char *;
 
 //
 // CMake defines ast_lib_EXPORTS
@@ -55,23 +56,38 @@ using NodePtr = std::unique_ptr<Node>;
 #endif
 
 
-EXTERN_C DLLEXPORT Node *ConcreteParseBytes(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style);
+struct BufferAndLength {
+    
+    Buffer buffer;
+    size_t length;
+    bool error;
+    Buffer _end;
+    
+    BufferAndLength();
+    BufferAndLength(Buffer buffer, size_t length, bool error);
+    
+    Buffer end() const;
+    
+    void write(std::ostream& s) const;
+    
+#if USE_MATHLINK
+    void put(MLINK ) const;
+#endif // USE_MATHLINK
+    
+};
 
-EXTERN_C DLLEXPORT Node *TokenizeBytes(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style);
-
-EXTERN_C DLLEXPORT Node *ParseLeaf(WolframLibraryData libData, const unsigned char *input, size_t len, const char *style, int mode);
-
-EXTERN_C DLLEXPORT void ReleaseNode(Node *node);
-
-
+bool operator==(BufferAndLength a, BufferAndLength b);
 
 
 class ParserSession {
     
-    const unsigned char *data;
-    size_t dataLen;
+    BufferAndLength bufAndLen;
     
     NodePtr parseLeaf0(int mode);
+    
+#if !NABORT
+    std::function<bool ()> currentAbortQ;
+#endif // !NABORT
     
 public:
     
@@ -79,28 +95,37 @@ public:
     
     ~ParserSession();
     
-    void init(WolframLibraryData libData, const unsigned char *data, size_t dataLen, SourceStyle style, int mode);
+    void init(BufferAndLength bufAndLen, WolframLibraryData libData = nullptr);
     
     void deinit();
     
     
     Node *parseExpressions();
     Node *tokenize();
+    Node *listSourceCharacters();
     Node *parseLeaf(int mode);
     
-    std::vector<size_t> offsetLineMap();
+    void releaseNode(Node *N);
+    
+#if !NABORT
+    bool isAbort() const;
+    
+    NodePtr handleAbort() const;
+#endif // !NABORT
 };
 
-extern std::unique_ptr<ParserSession> TheParserSession;
+extern ParserSessionPtr TheParserSession;
 
 
-#if USE_MATHLINK
 
 EXTERN_C DLLEXPORT mint WolframLibrary_getVersion();
 
 EXTERN_C DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData);
 
 EXTERN_C DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData);
+
+
+#if USE_MATHLINK
 
 EXTERN_C DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
@@ -122,7 +147,7 @@ public:
     
     bool read();
     
-    const unsigned char *get() const;
+    Buffer get() const;
     
     size_t getByteCount() const;
 };
@@ -177,7 +202,7 @@ public:
 
 class ScopedMLByteArray {
     MLINK mlp;
-    unsigned char *buf;
+    MBuffer buf;
     int *dims;
     char **heads;
     int depth;
@@ -190,7 +215,7 @@ public:
     
     bool read();
     
-    const unsigned char *get() const;
+    Buffer get() const;
     
     size_t getByteCount() const;
 };
@@ -205,6 +230,19 @@ public:
     ~ScopedMLEnvironmentParameter();
     
     MLEnvironmentParameter get();
+    
+};
+
+class ScopedMLLoopbackLink {
+    
+    MLINK mlp;
+    
+public:
+    ScopedMLLoopbackLink();
+    
+    ~ScopedMLLoopbackLink();
+    
+    MLINK get();
     
 };
 

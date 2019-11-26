@@ -1,54 +1,37 @@
 
 #pragma once
 
+#include "ByteDecoder.h"
+#include "API.h"
 #include "Source.h"
 #include "TokenEnum.h"
 
 #include <string>
 #include <ostream>
 
-//
-// Version 1 of Token encoding
-//
-// There are currently ~422 tokens, so 9 bits are required to enumerate them
-//
-// 16 bits:
-//
-// fedcba9876543210
-//        ^~~~~~~~~
-//        Enum bits (9 bits)
-//       ^
-//       Possible bit
-//      ^
-//      Closer bit
-//     ^
-//     Error bit
-//    ^
-//    Trivia bit
-//   ^
-//   Infix bit
-//  ^
-//  Inequality bit
-// ^
-// VectorInequality bit
-//
 struct Token {
     
-    TokenEnum T;
-    std::string Str;
-    Source Src;
+    TokenEnum tok;
+    BufferAndLength bufferAndLength;
     
-    Token(TokenEnum, std::string&&, Source&& );
+    Token(TokenEnum, BufferAndLength);
     
     TokenEnum getTokenEnum() const {
-        return T;
+        return tok;
     }
+    
+    Source getSource() const;
     
 #if USE_MATHLINK
     void put(MLINK ) const;
-#endif
+#endif // USE_MATHLINK
     
     void print(std::ostream&) const;
 };
 
 bool operator==(Token a, Token b);
+
+//
+// For googletest
+//
+void PrintTo(const Token&, std::ostream*);

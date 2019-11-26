@@ -2,23 +2,19 @@
 #include "API.h"
 #include "Tokenizer.h"
 
-//#include "ByteDecoder.h"
-//#include "SourceManager.h"
-//#include "CharacterDecoder.h"
-//#include "Symbol.h"
-
 #include "gtest/gtest.h"
 
 #include <sstream>
 
-//static std::unique_ptr<MLSession> mlSession;
+
+//const NextCharacterPolicy TOPLEVEL = ENABLE_BYTE_DECODING_ISSUES | ENABLE_ESCAPES | ENABLE_CHARACTER_DECODING_ISSUES | LC_UNDERSTANDS_CRLF | ENABLE_STRANGE_CHARACTER_CHECKING;
+const NextCharacterPolicy TOPLEVEL = ENABLE_BYTE_DECODING_ISSUES | ENABLE_CHARACTER_DECODING_ISSUES | ENABLE_STRANGE_CHARACTER_CHECKING;
+
 
 class TokenizerTest : public ::testing::Test {
 protected:
     
     static void SetUpTestSuite() {
-        
-//        mlSession = std::unique_ptr<MLSession>(new MLSession);
         
         TheParserSession = std::unique_ptr<ParserSession>(new ParserSession);
     }
@@ -26,8 +22,6 @@ protected:
     static void TearDownTestSuite() {
         
         TheParserSession.reset(nullptr);
-        
-//        mlSession.reset(nullptr);
     }
     
     void SetUp() override {
@@ -47,9 +41,9 @@ TEST_F(TokenizerTest, Bug1) {
     
     auto strIn = std::string("\\.GG");
     
-    auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
+    auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, 0);
+    TheParserSession->init(BufferAndLength(str, strIn.size(), false));
     
     SUCCEED();
 }
@@ -61,11 +55,13 @@ TEST_F(TokenizerTest, Bug2) {
     
     auto strIn = std::string("<<<");
     
-    auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
+    auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, 0);
+    TheParserSession->init(BufferAndLength(str, strIn.size(), false));
     
-    TheTokenizer->nextToken();
+    TheTokenizer->currentToken(TOPLEVEL);
+    
+    TheTokenizer->nextToken(TOPLEVEL);
     
     SUCCEED();
 }
@@ -77,9 +73,9 @@ TEST_F(TokenizerTest, Bug3) {
     
     auto strIn = std::string("\\\r");
     
-    auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
+    auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, 0);
+    TheParserSession->init(BufferAndLength(str, strIn.size(), false));
     
     SUCCEED();
 }
@@ -88,9 +84,9 @@ TEST_F(TokenizerTest, Bug4) {
     
     auto strIn = std::string("\\[");
     
-    auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
+    auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, 0);
+    TheParserSession->init(BufferAndLength(str, strIn.size(), false));
     
     SUCCEED();
 }
@@ -99,10 +95,110 @@ TEST_F(TokenizerTest, Bug5) {
     
     auto strIn = std::string("\"a\\\\\r\nb\"");
     
-    auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
+    auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(nullptr, str, strIn.size(), SOURCESTYLE_LINECOL, 0);
+    TheParserSession->init(BufferAndLength(str, strIn.size(), false));
     
     SUCCEED();
 }
+
+TEST_F(TokenizerTest, IntegerRealMixup) {
+    
+    auto strIn = std::string("0..");
+    
+    auto str = reinterpret_cast<Buffer>(strIn.c_str());
+    
+    TheParserSession->init(BufferAndLength(str, strIn.size(), false));
+    
+    auto Tok1 = TheTokenizer->currentToken(TOPLEVEL);
+    
+    EXPECT_EQ(Tok1, Token(TOKEN_INTEGER, BufferAndLength(Buffer(str), 1, false)));
+    
+    TheTokenizer->nextToken(TOPLEVEL);
+    
+    auto Tok2 = TheTokenizer->currentToken(TOPLEVEL);
+    
+    EXPECT_EQ(Tok2, Token(TOKEN_DOTDOT, BufferAndLength(Buffer(str + 1), 2, false)));
+    
+    TheTokenizer->nextToken(TOPLEVEL);
+    
+    auto Tok3 = TheTokenizer->currentToken(TOPLEVEL);
+    
+    EXPECT_EQ(Tok3, Token(TOKEN_ENDOFFILE, BufferAndLength(Buffer(str + 3), 0, false)));
+}
+
+TEST_F(TokenizerTest, Basic2) {
+    
+    auto strIn = std::string("\\[Alpha]bc+1");
+    
+    auto str = reinterpret_cast<Buffer>(strIn.c_str());
+    
+    TheParserSession->init(BufferAndLength(str, strIn.size(), false));
+    
+    auto Tok1 = TheTokenizer->currentToken(TOPLEVEL);
+    
+    EXPECT_EQ(Tok1, Token(TOKEN_SYMBOL, BufferAndLength(Buffer(str + 0), 10, false)));
+    
+    TheTokenizer->nextToken(TOPLEVEL);
+    
+    auto Tok2 = TheTokenizer->currentToken(TOPLEVEL);
+    
+    EXPECT_EQ(Tok2, Token(TOKEN_PLUS, BufferAndLength(Buffer(str + 10), 1, false)));
+    
+    TheTokenizer->nextToken(TOPLEVEL);
+    
+    auto Tok3 = TheTokenizer->currentToken(TOPLEVEL);
+    
+    EXPECT_EQ(Tok3, Token(TOKEN_INTEGER, BufferAndLength(Buffer(str + 11), 1, false)));
+    
+    TheTokenizer->nextToken(TOPLEVEL);
+    
+    auto Tok4 = TheTokenizer->currentToken(TOPLEVEL);
+    
+    EXPECT_EQ(Tok4, Token(TOKEN_ENDOFFILE, BufferAndLength(Buffer(str + 12), 0, false)));
+}
+
+TEST_F(TokenizerTest, OldAssert1) {
+    
+    auto strIn = std::string("8*");
+    
+    auto str = reinterpret_cast<Buffer>(strIn.c_str());
+    
+    TheParserSession->init(BufferAndLength(str, strIn.size(), false));
+    
+    auto Tok = TheTokenizer->currentToken(TOPLEVEL);
+    
+    EXPECT_EQ(Tok, Token(TOKEN_INTEGER, BufferAndLength(Buffer(str), 1, false)));
+}
+
+TEST_F(TokenizerTest, Basic3) {
+    
+    auto strIn = std::string("{\n}");
+    
+    auto str = reinterpret_cast<Buffer>(strIn.c_str());
+    
+    TheParserSession->init(BufferAndLength(str, strIn.size(), false));
+    
+    auto Tok = TheTokenizer->currentToken(TOPLEVEL);
+    
+    EXPECT_EQ(Tok, Token(TOKEN_OPENCURLY, BufferAndLength(Buffer(str), 1, false)));
+    
+    TheTokenizer->nextToken(TOPLEVEL);
+    
+    Tok = TheTokenizer->currentToken(TOPLEVEL);
+    
+    EXPECT_EQ(Tok, Token(TOKEN_NEWLINE, BufferAndLength(Buffer(str + 1), 1, false)));
+    
+    TheTokenizer->nextToken(TOPLEVEL);
+    
+    Tok = TheTokenizer->currentToken(TOPLEVEL);
+    
+    EXPECT_EQ(Tok, Token(TOKEN_CLOSECURLY, BufferAndLength(Buffer(str + 2), 1, false)));
+    
+    TheTokenizer->nextToken(TOPLEVEL);
+}
+
+
+
+
 

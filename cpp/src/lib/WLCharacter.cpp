@@ -1,15 +1,16 @@
 
 #include "WLCharacter.h"
 
+#include "ByteEncoder.h"
 #include "Utils.h"
 #include "Source.h"
 #include "CodePoint.h"
 #include "CharacterMaps.h"
 
-#include <sstream>
 #include <cctype> // for isdigit, isalpha, ispunct, iscntrl with GCC and MSVC
+#include <sstream>
 
-int fromDigit(int d);
+char fromDigit(size_t d);
 
 int get_graphical_i();
 
@@ -22,7 +23,7 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
     
     auto i = c.to_point();
     
-    assert(i != CODEPOINT_ERROR_INTERNAL);
+    assert(i != CODEPOINT_UNKNOWN);
     
     auto escape = c.escape();
     
@@ -310,6 +311,12 @@ void makeGraphical(std::ostream& stream, int i) {
             stream << WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
             break;
         //
+        // escape
+        //
+        case '\x1b':
+            stream << WLCharacter(CODEPOINT_ESC, ESCAPE_LONGNAME);
+            break;
+        //
         // C0 control characters
         //
         case '\x00': case '\x01': case '\x02': case '\x03': case '\x04': case '\x05': case '\x06': case '\x07': case '\x08':
@@ -332,25 +339,47 @@ void makeGraphical(std::ostream& stream, int i) {
             stream << WLCharacter(i, ESCAPE_2HEX);
             break;
         default:
-            if (CodePointToLongNameMap.find(i) != CodePointToLongNameMap.end()) {
-                //
-                // Use LongName if available
-                //
-                stream << WLCharacter(i, ESCAPE_LONGNAME);
-                break;
-            } else if (i > 0xffff) {
+            if (i > 0xffff) {
+                
+                if (CodePointToLongNameMap.find(i) != CodePointToLongNameMap.end()) {
+                    //
+                    // Use LongName if available
+                    //
+                    stream << WLCharacter(i, ESCAPE_LONGNAME);
+                    break;
+                }
+                
                 stream << WLCharacter(i, ESCAPE_6HEX);
                 break;
             } else if (i > 0xff) {
+                
+                if (CodePointToLongNameMap.find(i) != CodePointToLongNameMap.end()) {
+                    //
+                    // Use LongName if available
+                    //
+                    stream << WLCharacter(i, ESCAPE_LONGNAME);
+                    break;
+                }
+                
                 stream << WLCharacter(i, ESCAPE_4HEX);
                 break;
             } else if (i > 0x7f) {
+                
+                if (CodePointToLongNameMap.find(i) != CodePointToLongNameMap.end()) {
+                    //
+                    // Use LongName if available
+                    //
+                    stream << WLCharacter(i, ESCAPE_LONGNAME);
+                    break;
+                }
+                
                 stream << WLCharacter(i, ESCAPE_2HEX);
                 break;
             } else {
                 
                 //
                 // ASCII is untouched
+                // Do not use CodePointToLongNameMap to find Raw names
                 //
                 
                 stream << SourceCharacter(i);
@@ -415,11 +444,6 @@ bool WLCharacter::isLetterlike() const {
 }
 
 bool WLCharacter::isStrangeLetterlike() const {
-    auto val = to_point();
-    
-    if (!(0x00 <= val && val <= 0x7f)) {
-        return false;
-    }
     
     //
     // Dump out if not a letterlike character
@@ -436,11 +460,6 @@ bool WLCharacter::isStrangeLetterlike() const {
 }
 
 bool WLCharacter::isVeryStrangeLetterlike() const {
-    auto val = to_point();
-    
-    if (!(0x00 <= val && val <= 0x7f)) {
-        return false;
-    }
     
     //
     // Dump out if not a letterlike character
@@ -484,21 +503,26 @@ bool WLCharacter::isStrangeSpace() const {
 bool WLCharacter::isNewline() const {
     auto val = to_point();
     
-    if (!(0x00 <= val && val <= 0x7f)) {
-        return false;
+    switch (val) {
+        case '\n': case '\r':
+            return true;
+        default:
+            return false;
     }
-    
-    return val == '\n' || val == '\r';
 }
 
 bool WLCharacter::isAlpha() const {
     auto val = to_point();
     
-    if (!(0 <= val && val <= 0x7f)) {
-        return false;
+    switch (val) {
+        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M':
+        case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
+        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm':
+        case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
+            return true;
+        default:
+            return false;
     }
-    
-    return std::isalpha(val);
 }
 
 bool WLCharacter::isDigit() const {
@@ -515,61 +539,93 @@ bool WLCharacter::isDigit() const {
 bool WLCharacter::isAlphaOrDigit() const {
     auto val = to_point();
     
-    if (!(0 <= val && val <= 0x7f)) {
-        return false;
+    switch (val) {
+        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M':
+        case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
+        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm':
+        case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
+        case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+            return true;
+        default:
+            return false;
     }
-    
-    return std::isalnum(val);
 }
 
 bool WLCharacter::isHex() const {
     auto val = to_point();
     
-    if (!(0 <= val && val <= 0x7f)) {
-        return false;
+    switch (val) {
+        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
+        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
+        case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+            return true;
+        default:
+            return false;
     }
-    
-    return std::isxdigit(val);
 }
 
 bool WLCharacter::isOctal() const {
     auto val = to_point();
     
-    if (!(0 <= val && val <= 0x7f)) {
-        return false;
+    switch (val) {
+        case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7':
+            return true;
+        default:
+            return false;
     }
-    
-    return '0' <= val && val <= '7';
 }
 
-bool WLCharacter::isPunctuation() const {
+bool WLCharacter::isControl() const {
     auto val = to_point();
     
     if (!(0x00 <= val && val <= 0x7f)) {
         return false;
     }
-    
-    return std::ispunct(val);
+    return std::iscntrl(val);
 }
 
-bool WLCharacter::isUninterpretable() const {
-    auto val = to_point();
+bool WLCharacter::isStrange() const {
     
-    if (!(0x00 <= val && val <= 0x7f)) {
-        return false;
-    }
+    auto val = to_point();
     
     switch (val) {
-        case CODEPOINT_BEL:
+            //
+            // C0 control characters
+            //
+        case '\x00': case '\x01': case '\x02': case '\x03': case '\x04': case '\x05': case '\x06': case '\x07': case '\x08':
+            //
+            // Skip TAB, LF, CR, and ESC. They are not strange.
+            //
+        case '\x0b': case '\x0c': case '\x0e': case '\x0f': case '\x10': case '\x11': case '\x12': case '\x13': case '\x14': case '\x15':
+        case '\x16': case '\x17': case '\x18': case '\x19': case '\x1a': case '\x1c': case '\x1d': case '\x1e': case '\x1f':
+            //
+            // Make sure to include DEL
+            //
         case CODEPOINT_DEL:
             return true;
         default:
             return false;
     }
-    
 }
 
-bool WLCharacter::isLinearSyntax() const {
+bool WLCharacter::isSign() const {
+    
+    auto val = to_point();
+    
+    switch (val) {
+        case '-': case '+':
+            return true;
+        default:
+            return false;
+    }
+}
+
+
+//
+// Multi-byte character properties
+//
+
+bool WLCharacter::isMBLinearSyntax() const {
     auto val = to_point();
     
     switch (val) {
@@ -592,7 +648,7 @@ bool WLCharacter::isLinearSyntax() const {
     }
 }
 
-bool WLCharacter::isStringMeta() const {
+bool WLCharacter::isMBStringMeta() const {
     auto val = to_point();
     
     switch (val) {
@@ -611,13 +667,20 @@ bool WLCharacter::isStringMeta() const {
     }
 }
 
-bool WLCharacter::isControl() const {
-    auto val = to_point();
+bool WLCharacter::isMBUnsupported() const {
     
-    if (!(0x00 <= val && val <= 0x7f)) {
-        return false;
+    auto esc = escape();
+    
+    if (esc == ESCAPE_LONGNAME) {
+        
+        auto val = to_point();
+        
+        if (Utils::isUnsupportedLongName(CodePointToLongNameMap[val])) {
+            return true;
+        }
     }
-    return std::iscntrl(val);
+    
+    return false;
 }
 
 //
@@ -625,18 +688,17 @@ bool WLCharacter::isControl() const {
 //
 // basically, if it's not anything else, then it's letterlike
 //
-bool WLCharacter::isLetterlikeCharacter() const {
+bool WLCharacter::isMBLetterlike() const {
     auto val = to_point();
-    auto esc = escape();
     
     //
-    // Reject if ASCII, should use isLetterlike()
+    // Reject if single byte, should use isLetterlike()
     //
     if ((0x00 <= val && val <= 0x7f)) {
         return false;
     }
     
-    if (isPunctuationCharacter()) {
+    if (isMBPunctuation()) {
         return false;
     }
     
@@ -644,7 +706,7 @@ bool WLCharacter::isLetterlikeCharacter() const {
     // Must handle all of the specially defined CodePoints
     //
     
-    if (isLineContinuation()) {
+    if (isMBLineContinuation()) {
         return false;
     }
     
@@ -652,55 +714,56 @@ bool WLCharacter::isLetterlikeCharacter() const {
         return false;
     }
     
-    if (val == CODEPOINT_ERROR_INTERNAL) {
+    if (val == CODEPOINT_UNKNOWN) {
         return false;
     }
     
-    if (isLinearSyntax()) {
+    if (val == CODEPOINT_CRLF) {
         return false;
     }
     
-    if (isStringMeta()) {
+    if (isMBLinearSyntax()) {
         return false;
     }
     
-    if (isSpaceCharacter()) {
+    if (isMBStringMeta()) {
         return false;
     }
     
-    if (isNewlineCharacter()) {
+    if (isMBSpace()) {
         return false;
     }
     
-    if (isUninterpretableCharacter()) {
+    if (isMBNewline()) {
         return false;
     }
     
-    if (esc == ESCAPE_LONGNAME && Utils::isUnsupportedLongName(CodePointToLongNameMap[val])) {
+    if (isMBUninterpretable()) {
+        return false;
+    }
+    
+    if (isMBUnsupported()) {
         return false;
     }
     
     return true;
 }
 
-bool WLCharacter::isStrangeLetterlikeCharacter() const {
-    auto esc = escape();
-    auto val = to_point();
+bool WLCharacter::isMBStrangeLetterlike() const {
     
     //
     // Dump out if not a letterlike character
     //
-    if (!isLetterlikeCharacter()) {
+    if (!isMBLetterlike()) {
         return false;
     }
     
-    if (isVeryStrangeLetterlikeCharacter()) {
+    if (isMBVeryStrangeLetterlike()) {
         return true;
     }
     
-    //
-    //
-    //
+    auto esc = escape();
+    auto val = to_point();
     if (esc == ESCAPE_LONGNAME) {
         return Utils::isStrangeLetterlikeLongName(CodePointToLongNameMap[val]);
     }
@@ -712,20 +775,17 @@ bool WLCharacter::isStrangeLetterlikeCharacter() const {
     return true;
 }
 
-bool WLCharacter::isVeryStrangeLetterlikeCharacter() const {
-    auto esc = escape();
-    auto val = to_point();
+bool WLCharacter::isMBVeryStrangeLetterlike() const {
     
     //
     // Dump out if not a letterlike character
     //
-    if (!isLetterlikeCharacter()) {
+    if (!isMBLetterlike()) {
         return false;
     }
     
-    //
-    //
-    //
+    auto esc = escape();
+    auto val = to_point();
     if (esc == ESCAPE_LONGNAME) {
         return Utils::isVeryStrangeLetterlikeLongName(CodePointToLongNameMap[val]);
     }
@@ -733,23 +793,23 @@ bool WLCharacter::isVeryStrangeLetterlikeCharacter() const {
     //
     // Using control character as letterlike is very strange
     //
-    if (isControlCharacter()) {
+    if (isMBControl()) {
         return true;
     }
     
     return false;
 }
 
-bool WLCharacter::isStrangeSpaceCharacter() const {
-    auto esc = escape();
+bool WLCharacter::isMBStrangeSpace() const {
     
     //
     // Dump out if not a space character
     //
-    if (!isSpaceCharacter()) {
+    if (!isMBSpace()) {
         return false;
     }
     
+    auto esc = escape();
     //
     // Assume that if some high character is directly encoded with no escaping, then it is purposeful
     //
@@ -764,16 +824,16 @@ bool WLCharacter::isStrangeSpaceCharacter() const {
     return true;
 }
 
-bool WLCharacter::isStrangeNewlineCharacter() const {
-    auto esc = escape();
+bool WLCharacter::isMBStrangeNewline() const {
     
     //
     // Dump out if not a newline character
     //
-    if (!isNewlineCharacter()) {
+    if (!isMBNewline()) {
         return false;
     }
     
+    auto esc = escape();
     //
     // Assume that if some high character is directly encoded with no escaping, then it is purposeful
     //
@@ -788,15 +848,8 @@ bool WLCharacter::isStrangeNewlineCharacter() const {
     return true;
 }
 
-bool WLCharacter::isControlCharacter() const {
+bool WLCharacter::isMBControl() const {
     auto val = to_point();
-    
-    //
-    // Reject if ASCII, should use isControl()
-    //
-    if ((0x00 <= val && val <= 0x7f)) {
-        return false;
-    }
     
     //
     // C1 block of Unicode
@@ -808,31 +861,7 @@ bool WLCharacter::isControlCharacter() const {
     return false;
 }
 
-bool WLCharacter::isStrange() const {
-
-    auto val = to_point();
-    
-    switch (val) {
-        //
-        // C0 control characters
-        //
-        case '\x00': case '\x01': case '\x02': case '\x03': case '\x04': case '\x05': case '\x06': case '\x07': case '\x08':
-        //
-        // Skip TAB, LF, CR, and ESC. They are not strange.
-        //
-        case '\x0b': case '\x0c': case '\x0e': case '\x0f': case '\x10': case '\x11': case '\x12': case '\x13': case '\x14': case '\x15':
-        case '\x16': case '\x17': case '\x18': case '\x19': case '\x1a': case '\x1c': case '\x1d': case '\x1e': case '\x1f':
-        //
-        // Make sure to include DEL
-        //
-        case CODEPOINT_DEL:
-            return true;
-        default:
-            return false;
-    }
-}
-
-bool WLCharacter::isStrangeCharacter() const {
+bool WLCharacter::isMBStrange() const {
     
     auto val = to_point();
     
@@ -843,6 +872,9 @@ bool WLCharacter::isStrangeCharacter() const {
         return false;
     }
     
+    //
+    // Individual characters
+    //
     switch (val) {
         //
         // ZERO WIDTH SPACE
@@ -873,6 +905,13 @@ bool WLCharacter::isStrangeCharacter() const {
         // ZERO WIDTH NO-BREAK SPACE
         //
         case 0xfeff:
+            return true;
+        //
+        // REPLACEMENT CHARACTER
+        //
+        // This can be the result of badly encoded UTF8
+        //
+        case 0xfffd:
             return true;
         //
         // INVALID CHARACTER
@@ -922,7 +961,7 @@ bool WLCharacter::isStrangeCharacter() const {
     // BMP PUA
     //
     
-    // Disable BMP PUA for now
+    // Disable checking BMP PUA for now
     
 //    if (0xe000 <= val && val <= 0xf8ff) {
 //        return true;
@@ -945,7 +984,7 @@ bool WLCharacter::isStrangeCharacter() const {
     return false;
 }
 
-bool WLCharacter::isLineContinuation() const {
+bool WLCharacter::isMBLineContinuation() const {
     auto val = to_point();
     
     switch (val) {
@@ -958,10 +997,36 @@ bool WLCharacter::isLineContinuation() const {
     }
 }
 
+bool WLCharacter::isMBNewline() const {
+    auto val = to_point();
+    
+    return Utils::isMBNewline(val);
+}
+
+bool WLCharacter::isMBSpace() const {
+    auto val = to_point();
+    
+    return Utils::isMBSpace(val);
+}
+
+bool WLCharacter::isMBPunctuation() const {
+    auto val = to_point();
+    
+    return Utils::isMBPunctuation(val);
+}
+
+bool WLCharacter::isMBUninterpretable() const {
+    auto val = to_point();
+    
+    return Utils::isMBUninterpretable(val);
+}
+
+
+
 //
 // Given a digit, return the character
 //
-int fromDigit(int d) {
+char fromDigit(size_t d) {
     switch (d) {
         case 0: return '0';
         case 1: return '1';
@@ -1000,7 +1065,8 @@ int fromDigit(int d) {
         case 34: return 'y';
         case 35: return 'z';
         default:
-            return -1;
+            assert(false);
+            return '!';
     }
 }
 

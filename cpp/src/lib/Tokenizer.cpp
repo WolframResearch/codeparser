@@ -7,86 +7,53 @@
 #include "Utils.h"
 #include "CodePoint.h"
 
-int toDigit(int val);
+size_t toDigit(int val);
+
+#if STARTOFLINE
+const NextCharacterPolicy INSIDE_STRINGIFY_LINE = ENABLE_BYTE_DECODING_ISSUES | ENABLE_CHARACTER_DECODING_ISSUES | LC_IS_MEANINGFUL | ENABLE_STRANGE_CHARACTER_CHECKING;
+#endif // STARTOFLINE
+const NextCharacterPolicy INSIDE_STRINGIFY_SYMBOL = ENABLE_BYTE_DECODING_ISSUES | PRESERVE_WS_AFTER_LC | ENABLE_CHARACTER_DECODING_ISSUES | LC_IS_MEANINGFUL | ENABLE_STRANGE_CHARACTER_CHECKING;
+const NextCharacterPolicy INSIDE_STRINGIFY_FILE = ENABLE_BYTE_DECODING_ISSUES | LC_IS_MEANINGFUL | ENABLE_STRANGE_CHARACTER_CHECKING;
 
 
-void sbuffer::clear() {
-    Str.str("");
-}
+Tokenizer::Tokenizer() : Issues() {}
 
-std::string sbuffer::str() {
-    return Str.str();
-}
-
-void sbuffer::operator<<(WLCharacter c) {
-    Str << c;
-}
-
-Source Tokenizer::getTokenSource() const {
-    return Source(TokenStartLoc, TheCharacterDecoder->getPrevWLCharacterEndLoc());
-}
-
-
-Tokenizer::Tokenizer() : _currentToken(Token(TOKEN_UNKNOWN, "", Source())), _currentWLCharacter(0), wlCharacterQueue(), String(), Issues(), TokenStartLoc() {}
-
-void Tokenizer::init(SourceStyle style, int mode) {
-    
-    _currentToken = Token(TOKEN_UNKNOWN, "", Source(style));
-    
-    _currentWLCharacter = WLCharacter(0);
-    wlCharacterQueue.clear();
-    
-    String.clear();
+void Tokenizer::init() {
     
     Issues.clear();
-    
-    _currentWLCharacter = TheCharacterDecoder->nextWLCharacter();
-    
-    TokenStartLoc = SourceLocation(style);
-    
-    switch (mode) {
-        case 0:
-            nextToken();
-            break;
-        case 1:
-            nextToken_stringifyNextToken_symbol();
-            break;
-        case 2:
-            nextToken_stringifyNextToken_file();
-            break;
-    }
 }
 
 void Tokenizer::deinit() {
     
-    wlCharacterQueue.clear();
-    
-    String.clear();
-    
     Issues.clear();
 }
 
-void Tokenizer::nextToken() {
+// Precondition: buffer is pointing to current token
+// Postcondition: buffer is pointing to next token
+//
+// Example:
+// memory: 1+\[Alpha]-2
+//           ^
+//           buffer
+//
+// after calling nextWLCharacter:
+// memory: 1+\[Alpha]-2
+//                   ^
+//                   buffer
+// return \[Alpha]
+//
+Token Tokenizer::nextToken0(NextCharacterPolicy policy) {
     
-    assert((_currentToken.getTokenEnum() != TOKEN_ENDOFFILE) && "Must handle at call site");
+    TokenizerContext Ctxt = 0;
     
-    //
-    // Too complicated to clear string when calling getString and assert here
-    //
-    // assert(String.str().empty());
-    //
-    String.clear();
+    auto tokenStartBuf = TheByteBuffer->buffer;
     
-    TokenizerContext Ctxt;
-    
-    TokenStartLoc = TheCharacterDecoder->getWLCharacterStartLoc();
-    
-    auto c = currentWLCharacter();
+    auto c = TheCharacterDecoder->nextWLCharacter0(policy);
     
     switch (c.to_point()) {
         
         //
-        // all ASCII characters
+        // all single-byte characters
         //
         
         case '\x00': case '\x01': case '\x02': case '\x03': case '\x04': case '\x05': case '\x06':
@@ -96,132 +63,191 @@ void Tokenizer::nextToken() {
         case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
         case '`':
         case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm': case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
-            handleSymbol(Ctxt); break;
+            return handleSymbol(tokenStartBuf, c, policy, Ctxt);
         case '\x07':
         case '\x7f':
-            handleUninterpretable(); break;
+            return Token(TOKEN_ERROR_UNINTERPRETABLECHARACTER, getTokenBufferAndLength(tokenStartBuf));
         case '\t':
-            handleTab(); break;
+            return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf));
         case '\n':
-            handleLineFeed(); break;
+            return Token(TOKEN_NEWLINE, getTokenBufferAndLength(tokenStartBuf));
         case '\v': case '\f':
-            handleStrangeSpace(); break;
+            return handleStrangeSpace(tokenStartBuf, c, policy);
         case '\r':
-            handleCarriageReturn(); break;
+            return Token(TOKEN_NEWLINE, getTokenBufferAndLength(tokenStartBuf));
         case ' ':
-            handleSpace(); break;
+            return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf));
         case '!':
-            handleBang(); break;
-        case '\"':
-            handleString(); break;
+            return handleBang(tokenStartBuf, c, policy);
+        case '"':
+            return handleString(tokenStartBuf, c, policy);
         case '#':
-            handleHash(); break;
+            return handleHash(tokenStartBuf, c, policy);
         case '%':
-            handlePercent(); break;
+            return handlePercent(tokenStartBuf, c, policy);
         case '&':
-            handleAmp(); break;
+            return handleAmp(tokenStartBuf, c, policy);
         case '\'':
-            handleSingleQuote(); break;
+            return Token(TOKEN_SINGLEQUOTE, getTokenBufferAndLength(tokenStartBuf));
         case '(':
-            handleOpenParen(); break;
+            return handleOpenParen(tokenStartBuf, c, policy);
         case ')':
-            handleCloseParen(); break;
+            return Token(TOKEN_CLOSEPAREN, getTokenBufferAndLength(tokenStartBuf));
         case '*':
-            handleStar(); break;
+            return handleStar(tokenStartBuf, c, policy);
         case '+':
-            handlePlus(); break;
+            return handlePlus(tokenStartBuf, c, policy);
         case ',':
-            handleComma(); break;
+            return Token(TOKEN_COMMA, getTokenBufferAndLength(tokenStartBuf));
         case '-':
-            handleMinus(); break;
+            return handleMinus(tokenStartBuf, c, policy);
         case '.':
-            handleDot(); break;
+            return handleDot(tokenStartBuf, c, policy);
         case '/':
-            handleSlash(); break;
+            return handleSlash(tokenStartBuf, c, policy);
         case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-            handleNumber(); break;
+            return handleNumber(tokenStartBuf, c, policy);
         case ':':
-            handleColon(); break;
+            return handleColon(tokenStartBuf, c, policy);
         case ';':
-            handleSemi(); break;
+            return handleSemi(tokenStartBuf, c, policy);
         case '<':
-            handleLess(); break;
+            return handleLess(tokenStartBuf, c, policy);
         case '=':
-            handleEqual(); break;
+            return handleEqual(tokenStartBuf, c, policy);
         case '>':
-            handleGreater(); break;
+            return handleGreater(tokenStartBuf, c, policy);
         case '?':
-            handleQuestion(); break;
+            return handleQuestion(tokenStartBuf, c, policy);
         case '@':
-            handleAt(); break;
+            return handleAt(tokenStartBuf, c, policy);
         case '[':
-            handleOpenSquare(); break;
+            return Token(TOKEN_OPENSQUARE, getTokenBufferAndLength(tokenStartBuf));
         case '\\':
-            handleUnhandledBackSlash(); break;
+            return handleUnhandledBackSlash(tokenStartBuf, c, policy);
         case ']':
-            handleCloseSquare(); break;
+            return Token(TOKEN_CLOSESQUARE, getTokenBufferAndLength(tokenStartBuf));
         case '^':
-            handleCaret(); break;
+            return handleCaret(tokenStartBuf, c, policy);
         case '_':
-            handleUnder(); break;
+            return handleUnder(tokenStartBuf, c, policy);
         case '{':
-            handleOpenCurly(); break;
+            return Token(TOKEN_OPENCURLY, getTokenBufferAndLength(tokenStartBuf));
         case '|':
-            handleBar(); break;
+            return handleBar(tokenStartBuf, c, policy);
         case '}':
-            handleCloseCurly(); break;
+            return Token(TOKEN_CLOSECURLY, getTokenBufferAndLength(tokenStartBuf));
         case '~':
-            handleTilde(); break;
+            return handleTilde(tokenStartBuf, c, policy);
         default: {
             
             //
-            // Everything else involving non-ASCII
+            // Everything else involving multi-byte characters
             //
             
             if (c.to_point() == CODEPOINT_ENDOFFILE) {
                 
-                handleEndOfFile();
+                return Token(TOKEN_ENDOFFILE, getTokenBufferAndLength(tokenStartBuf));
                 
-            } else if (c.isLineContinuation()) {
+            } else if (c.to_point() == CODEPOINT_CRLF) {
                 
-                handleLineContinuation();
+                return Token(TOKEN_NEWLINE, getTokenBufferAndLength(tokenStartBuf));
                 
-            } else if (c.isLetterlikeCharacter()) {
+            } else if (c.isMBLinearSyntax()) {
                 
-                handleSymbol(Ctxt);
+                return handleMBLinearSyntax(tokenStartBuf, c, policy);
                 
-            } else if (c.isSpaceCharacter()) {
+            } else if (c.isMBLineContinuation()) {
                 
-                handleSpaceCharacter();
+                return Token(TOKEN_LINECONTINUATION, getTokenBufferAndLength(tokenStartBuf));
                 
-            } else if (c.isNewlineCharacter()) {
+            } else if (c.isMBUninterpretable()) {
                 
-                handleNewlineCharacter();
+                return Token(TOKEN_ERROR_UNINTERPRETABLECHARACTER, getTokenBufferAndLength(tokenStartBuf));
                 
-            } else if (c.isLinearSyntax()) {
+            } else if (c.isMBStrangeSpace()) {
                 
-                handleLinearSyntax();
+                return handleMBStrangeSpace(tokenStartBuf, c, policy);
                 
-            } else if (c.isPunctuationCharacter()) {
+            } else if (c.isMBSpace()) {
                 
-                handlePunctuationCharacter();
+                return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf));
+                
+            } else if (c.isMBStrangeNewline()) {
+                
+                return handleMBStrangeNewline(tokenStartBuf, c, policy);
+                
+            } else if (c.isMBNewline()) {
+                
+                return Token(TOKEN_NEWLINE, BufferAndLength(tokenStartBuf, 0, false));
+                
+            } else if (c.isMBPunctuation()) {
+                
+                return handleMBPunctuation(tokenStartBuf, c, policy);
+                
+            } else if (c.isMBStringMeta()) {
+                
+                return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, getTokenBufferAndLength(tokenStartBuf));
+                
+            } else if (c.isMBUnsupported()) {
+                
+                return Token(TOKEN_ERROR_UNSUPPORTEDCHARACTER, getTokenBufferAndLength(tokenStartBuf));
                 
             } else {
-                handleUninterpretable();
+                
+                //
+                // if nothing else, then it is letterlike
+                //
+                
+                assert(c.isMBLetterlike());
+                
+                return handleSymbol(tokenStartBuf, c, policy, Ctxt);
             }
         }
     }
 }
 
-void Tokenizer::nextToken_stringifyCurrentLine() {
+
+#if STARTOFLINE
+
+Token Tokenizer::nextToken0_stringifyLine() {
+
+    auto tokenStartBuf = TheByteBuffer->getBuffer();
+
+    auto policy = INSIDE_STRINGIFY_LINE;
+
+    auto c = TheCharacterDecoder->nextWLCharacter0(policy);
+
+    if (c.to_point() == CODEPOINT_ENDOFFILE) {
+
+        //
+        // EndOfFile is special, so invent source
+        //
+
+        return Token(TOKEN_ERROR_EMPTYSTRING, BufferAndLength(tokenStartBuf, 0, false));
+
+    } else if (c.isNewline()) {
+
+        //
+        // Newline is special, so invent source
+        //
+
+        return Token(TOKEN_ERROR_EMPTYSTRING, BufferAndLength(tokenStartBuf, 0, false));
+    }
+
+    return handleString_stringifyLine(tokenStartBuf, c, policy);
+}
+
+#endif // STARTOFLINE
+
+
+Token Tokenizer::nextToken0_stringifySymbol() {
     
-    assert((_currentToken.getTokenEnum() != TOKEN_ENDOFFILE) && "Must handle at call site");
+    auto tokenStartBuf = TheByteBuffer->buffer;
     
-    String.clear();
+    auto policy = INSIDE_STRINGIFY_SYMBOL;
     
-    TokenStartLoc = TheCharacterDecoder->getWLCharacterStartLoc();
-    
-    auto c = currentWLCharacter();
+    auto c = TheCharacterDecoder->nextWLCharacter0(policy);
     
     if (c.to_point() == CODEPOINT_ENDOFFILE) {
         
@@ -229,11 +255,7 @@ void Tokenizer::nextToken_stringifyCurrentLine() {
         // EndOfFile is special, so invent source
         //
         
-        auto Start = TokenStartLoc;
-        
-        _currentToken = Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start));
-        
-        return;
+        return Token(TOKEN_ERROR_EMPTYSTRING, BufferAndLength(tokenStartBuf, 0, false));
         
     } else if (c.isNewline()) {
         
@@ -241,85 +263,23 @@ void Tokenizer::nextToken_stringifyCurrentLine() {
         // Newline is special, so invent source
         //
         
-        auto Start = TokenStartLoc;
-        
-        _currentToken = Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start));
-        
-        return;
+        return Token(TOKEN_ERROR_EMPTYSTRING, BufferAndLength(tokenStartBuf, 0, false));
     }
     
-    handleString_stringifyCurrentLine();
+    return handleString_stringifySymbol(tokenStartBuf, c, policy);
 }
 
-void Tokenizer::nextToken_stringifyNextToken_symbol() {
+Token Tokenizer::nextToken0_stringifyFile() {
     
-    assert((_currentToken.getTokenEnum() != TOKEN_ENDOFFILE) && "Must handle at call site");
+    auto tokenStartBuf = TheByteBuffer->buffer;
     
-    //
-    // Too complicated to clear string when calling getString and assert here
-    //
-    // assert(String.str().empty());
-    //
-    String.clear();
+    auto policy = INSIDE_STRINGIFY_FILE;
     
-    TokenStartLoc = TheCharacterDecoder->getWLCharacterStartLoc();
-    
-    auto c = currentWLCharacter();
+    auto c = TheByteDecoder->nextSourceCharacter0(policy);
     
     if (c.to_point() == CODEPOINT_ENDOFFILE) {
         
-        //
-        // EndOfFile is special, so invent source
-        //
-        
-        auto Start = TokenStartLoc;
-        
-        _currentToken = Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start));
-        
-        return;
-        
-    } else if (c.isNewline()) {
-        
-        //
-        // Newline is special, so invent source
-        //
-        
-        auto Start = TokenStartLoc;
-        
-        _currentToken = Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start));
-        
-        return;
-    }
-    
-    handleString_stringifyNextToken_symbol();
-}
-
-void Tokenizer::nextToken_stringifyNextToken_file() {
-    
-    assert((_currentToken.getTokenEnum() != TOKEN_ENDOFFILE) && "Must handle at call site");
-    
-    //
-    // Too complicated to clear string when calling getString and assert here
-    //
-    // assert(String.str().empty());
-    //
-    String.clear();
-    
-    TokenStartLoc = TheCharacterDecoder->getWLCharacterStartLoc();
-    
-    auto c = currentWLCharacter();
-    
-    if (c.to_point() == CODEPOINT_ENDOFFILE) {
-        
-        //
-        // EndOfFile is special, so invent source
-        //
-        
-        auto Start = TokenStartLoc;
-        
-        _currentToken = Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start));
-        
-        return;
+        return Token(TOKEN_ERROR_EMPTYSTRING, BufferAndLength(tokenStartBuf, 0, false));
         
     } else if (c.isNewline()) {
         
@@ -333,50 +293,8 @@ void Tokenizer::nextToken_stringifyNextToken_file() {
         //
         // Do not use TOKEN_ERROR_EMPTYSTRING here
         //
-        //        else if (stringifyNextToken_file) {
-        //
-        //            stringifyNextToken_file = false;
-        //
-        //            _currentToken = Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start));
-        //        }
-//        else {
         
-        //
-        // Regular newline
-        //
-        
-        switch (c.to_point()) {
-            case '\n': {
-                
-                String << c;
-                
-                c = nextWLCharacter(TOPLEVEL);
-                
-                _currentToken = Token(TOKEN_NEWLINE, String.str(), getTokenSource());
-            }
-                break;
-            case '\r': {
-                
-                String << c;
-                
-                c = nextWLCharacter(TOPLEVEL);
-                
-                if (c.to_point() == '\n') {
-                    
-                    String << c;
-                    
-                    c = nextWLCharacter(TOPLEVEL);
-                }
-                
-                _currentToken = Token(TOKEN_NEWLINE, String.str(), getTokenSource());
-            }
-                break;
-            default:
-                assert(false);
-                break;
-        }
-//        }
-        return;
+        return Token(TOKEN_NEWLINE, getTokenBufferAndLength(tokenStartBuf));
     }
     
     //
@@ -387,217 +305,2843 @@ void Tokenizer::nextToken_stringifyNextToken_file() {
     //   b
     //
     
-    if (c.isSpace() || c.isNewline() || c.isSpaceCharacter() || c.isNewlineCharacter()) {
+    if (c.isSpace()) {
         
-        String << c;
-        
-        c = nextWLCharacter(TOPLEVEL);
-        
-        _currentToken = Token(TOKEN_WHITESPACE, String.str(), getTokenSource());
-        
-        return;
+        return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf));
     }
     
-    handleString_stringifyNextToken_file();
+    return handleString_stringifyFile(tokenStartBuf, c, policy);
 }
 
-WLCharacter Tokenizer::nextWLCharacter(NextWLCharacterPolicy policy) {
+void Tokenizer::nextToken(NextCharacterPolicy policy) {
     
-    //
-    // handle the queue before anything else
-    //
-    // the WLCharacters in the queue may be part of a Token with multiple WLCharacters
-    //
-    if (!wlCharacterQueue.empty()) {
-        
-        auto p = wlCharacterQueue[0];
-        
-        //
-        // Make sure to set source information
-        //
-        TheByteDecoder->setSourceLocation(p.second.start());
-        TheCharacterDecoder->setWLCharacterStart();
-        TheByteDecoder->setSourceLocation(p.second.end());
-        TheCharacterDecoder->setWLCharacterEnd();
-        
-        // erase first
-        wlCharacterQueue.erase(wlCharacterQueue.begin());
-        
-        _currentWLCharacter = p.first;
-        
-        return _currentWLCharacter;
-    }
+    nextToken0(policy);
     
-    _currentWLCharacter = TheCharacterDecoder->nextWLCharacter(policy);
-    
-    return _currentWLCharacter;
+    TheByteDecoder->clearError();
 }
 
-void Tokenizer::append(WLCharacter c, Source Span) {
-    wlCharacterQueue.push_back(std::make_pair(c, Span));
+#if STARTOFLINE
+
+void Tokenizer::nextToken_stringifyLine() {
+
+    nextToken0_stringifyLine();
+
+    TheByteDecoder->clearError();
 }
 
-WLCharacter Tokenizer::currentWLCharacter() const {
+#endif // STARTOFLINE
+
+void Tokenizer::nextToken_stringifySymbol() {
     
-    return _currentWLCharacter;
+    nextToken0_stringifySymbol();
+    
+    TheByteDecoder->clearError();
 }
 
-Token Tokenizer::currentToken() {
+void Tokenizer::nextToken_stringifyFile() {
     
-    assert(_currentToken.getTokenEnum() != TOKEN_UNKNOWN);
+    nextToken0_stringifyFile();
     
-    return _currentToken;
+    TheByteDecoder->clearError();
 }
 
-inline void Tokenizer::handleEndOfFile() {
+
+//
+//
+//
+Token Tokenizer::currentToken(NextCharacterPolicy policy) {
     
-    //
-    // EndOfFile is special, so invent source
-    //
+    auto resetBuf = TheByteBuffer->buffer;
     
-    auto Start = TokenStartLoc;
+    auto newPolicy = policy;
     
-    _currentToken = Token(TOKEN_ENDOFFILE, String.str(), Source(Start));
+    newPolicy = newPolicy & DISABLE_CHECKS_MASK;
+    
+    auto Tok = nextToken0(newPolicy);
+    
+    TheByteBuffer->buffer = resetBuf;
+    
+    TheByteDecoder->clearError();
+    
+    return Tok;
 }
 
-inline void Tokenizer::handleLineFeed() {
-    
-    auto c = WLCharacter('\n');
-    
-    String << c;
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    _currentToken = Token(TOKEN_NEWLINE, String.str(), getTokenSource());
+#if STARTOFLINE
+
+Token Tokenizer::currentToken_stringifyLine() {
+
+    auto resetBuf = TheByteBuffer->getBuffer();
+
+    auto Tok = nextToken0_stringifyLine();
+
+    TheByteBuffer->setBuffer(resetBuf);
+
+    TheByteDecoder->clearError();
+
+    return Tok;
 }
 
-inline void Tokenizer::handleCarriageReturn() {
+#endif // STARTOFLINE
+
+Token Tokenizer::currentToken_stringifySymbol() {
     
-    auto c = WLCharacter('\r');
+    auto resetBuf = TheByteBuffer->buffer;
     
-    String << c;
+    auto Tok = nextToken0_stringifySymbol();
     
-    c = nextWLCharacter(TOPLEVEL);
+    TheByteBuffer->buffer = resetBuf;
     
-    if (c.to_point() == '\n') {
-        
-        String << c;
-        
-        c = nextWLCharacter(TOPLEVEL);
-    }
+    TheByteDecoder->clearError();
     
-    _currentToken = Token(TOKEN_NEWLINE, String.str(), getTokenSource());
+    return Tok;
 }
 
-inline void Tokenizer::handleNewlineCharacter() {
+Token Tokenizer::currentToken_stringifyFile() {
     
-    auto c = currentWLCharacter();
+    auto resetBuf = TheByteBuffer->buffer;
+    
+    auto Tok = nextToken0_stringifyFile();
+    
+    TheByteBuffer->buffer = resetBuf;
+    
+    TheByteDecoder->clearError();
+    
+    return Tok;
+}
+
+inline Token Tokenizer::handleStrangeSpace(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    assert(firstChar.isStrangeSpace());
     
 #if !NISSUES
-    if (c.isStrangeNewlineCharacter()) {
+    if ((policy & ENABLE_STRANGE_CHARACTER_CHECKING) == ENABLE_STRANGE_CHARACTER_CHECKING) {
         
-        auto Src = TheCharacterDecoder->getWLCharacterSource();
+        auto tokenStartLoc = TheByteDecoder->convertBufferToStart(tokenStartBuf);
         
-        auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+        auto Src = getTokenSource(tokenStartLoc);
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
         
         Issues.push_back(std::move(I));
     }
-#endif
+#endif // !NISSUES
     
-    String << c;
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    _currentToken = Token(TOKEN_NEWLINE, String.str(), getTokenSource());
+    return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline void Tokenizer::handleSpace() {
+inline Token Tokenizer::handleComment(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
     
     //
-    // Could be <space> or \[RawSpace]
+    // comment is already started
+    //
+    // Comments deal with literal (**) characters
+    // Escaped characters do not work
     //
     
-    auto c = currentWLCharacter();
+    auto c = firstChar;
     
-    String << c;
+    assert(c.to_point() == '*');
     
-    c = nextWLCharacter(TOPLEVEL);
+    auto depth = 1;
     
-    _currentToken = Token(TOKEN_WHITESPACE, String.str(), getTokenSource());
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    if (c.to_point() == CODEPOINT_ENDOFFILE) {
+        
+        return Token(TOKEN_ERROR_UNTERMINATEDCOMMENT, getTokenBufferAndLength(tokenStartBuf));
+    }
+    
+    while (true) {
+        
+        //
+        // No need to check isAbort() inside tokenizer loops
+        //
+        
+        //
+        // No need to check for comment length
+        //
+        
+        if (c == WLCharacter('(')) {
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+            
+            if (c == WLCharacter('*')) {
+                
+                depth = depth + 1;
+                
+                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                
+                c = TheCharacterDecoder->currentWLCharacter(policy);
+            }
+            
+        } else if (c == WLCharacter('*')) {
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+            
+            if (c == WLCharacter(')')) {
+                
+                // This comment is closing
+                
+                depth = depth - 1;
+                
+                if (depth == 0) {
+                    
+                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                    
+                    break;
+                }
+                
+                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                
+                c = TheCharacterDecoder->currentWLCharacter(policy);
+            }
+            
+        } else if (c.to_point() == CODEPOINT_ENDOFFILE) {
+            
+            return Token(TOKEN_ERROR_UNTERMINATEDCOMMENT, getTokenBufferAndLength(tokenStartBuf));
+            
+        } else {
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+        }
+        
+    } // while
+    
+    return Token(TOKEN_COMMENT, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline void Tokenizer::handleTab() {
+//
+// a segment is: [a-z$]([a-z$0-9])*
+// a symbol is: (segment)?(`segment)*
+//
+inline Token Tokenizer::handleSymbol(Buffer symbolStartBuf, WLCharacter firstChar, NextCharacterPolicy policyIn, TokenizerContext Ctxt) {
+    
+    auto policy = policyIn;
+    policy = policy | LC_IS_MEANINGFUL;
+    
+    auto c = firstChar;
+    
+    assert(c.to_point() == '`' || c.isLetterlike() || c.isMBLetterlike());
+    
+    if (c.isLetterlike() || c.isMBLetterlike()) {
+        
+        c = handleSymbolSegment(symbolStartBuf, c, policy, Ctxt);
+    }
     
     //
-    // Could be \t or \[RawTab]
+    // if c == '`', then buffer is pointing past ` now
     //
     
-    auto c = currentWLCharacter();
+    while (true) {
+        
+        if (c.to_point() != '`') {
+            break;
+        }
+        
+        //
+        // No need to check isAbort() inside tokenizer loops
+        //
+        
+#if !NISSUES
+        if ((policy & ENABLE_STRANGE_CHARACTER_CHECKING) == ENABLE_STRANGE_CHARACTER_CHECKING) {
+            
+            if ((Ctxt & TOKENIZER_SLOT) == TOKENIZER_SLOT) {
+                
+                //
+                // It's hard to keep track of the ` characters, so just report the entire symbol. Oh well
+                //
+                
+                auto symbolStartLoc = TheByteDecoder->convertBufferToStart(symbolStartBuf);
+                
+                auto Src = getTokenSource(symbolStartLoc);
+                
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "The name following ``#`` is not documented to allow the **`** character.", SYNTAXISSUESEVERITY_REMARK, Src, 0.33, {}));
+                
+                Issues.push_back(std::move(I));
+            }
+        }
+#endif // !NISSUES
+        
+        c = TheCharacterDecoder->currentWLCharacter(policy);
+        
+        if (c.isLetterlike() || c.isMBLetterlike()) {
+            
+            auto letterlikeBuf = TheByteBuffer->buffer;
+            
+            c = handleSymbolSegment(letterlikeBuf, c, policy, Ctxt);
+            
+        } else {
+            
+            //
+            // Something like  a`1
+            //
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            return Token(TOKEN_ERROR_EXPECTEDLETTERLIKE, getTokenBufferAndLength(symbolStartBuf));
+        }
+        
+    } // while
     
-    String << c;
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    _currentToken = Token(TOKEN_WHITESPACE, String.str(), getTokenSource());
+    return Token(TOKEN_SYMBOL, getTokenBufferAndLength(symbolStartBuf));
 }
 
-inline void Tokenizer::handleStrangeSpace() {
+//
+// Precondition: currentWLCharacter is letterlike
+// Postcondition: buffer is pointing to first NON-SYMBOLSEGMENT character after all symbol segment characters
+//
+// return: the first NON-SYMBOLSEGMENT character after all symbol segment characters
+//
+inline WLCharacter Tokenizer::handleSymbolSegment(Buffer firstCharBuf, WLCharacter firstChar, NextCharacterPolicy policy, TokenizerContext Ctxt) {
     
-    auto c = currentWLCharacter();
+    auto charBuf = firstCharBuf;
+    auto c = firstChar;
+    
+    assert(c.isLetterlike() || c.isMBLetterlike());
     
 #if !NISSUES
-    auto Src = TheCharacterDecoder->getWLCharacterSource();
+    if ((policy & ENABLE_STRANGE_CHARACTER_CHECKING) == ENABLE_STRANGE_CHARACTER_CHECKING) {
+        
+        if (c.to_point() == '$') {
+            
+            if ((Ctxt & TOKENIZER_SLOT) == TOKENIZER_SLOT) {
+                
+                auto charLoc = TheByteDecoder->convertBufferToStart(charBuf);
+                
+                auto Src = getTokenSource(charLoc);
+                
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "The name following ``#`` is not documented to allow the ``$`` character.", SYNTAXISSUESEVERITY_REMARK, Src, 0.33, {}));
+                
+                Issues.push_back(std::move(I));
+            }
+        } else if (c.isStrangeLetterlike() || c.isMBStrangeLetterlike()) {
+            Utils::strangeLetterlikeWarning(getTokenBufferAndLength(firstCharBuf), c);
+        }
+    }
+#endif // !NISSUES
     
-    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+    charBuf = TheByteBuffer->buffer;
+    c = TheCharacterDecoder->currentWLCharacter(policy);
     
-    Issues.push_back(std::move(I));
-#endif
+    while (true) {
+        
+        //
+        // No need to check isAbort() inside tokenizer loops
+        //
+        
+        if (c.isDigit()) {
+            ;
+        } else if (c.isLetterlike() || c.isMBLetterlike()) {
+            
+#if !NISSUES
+            if ((policy & ENABLE_STRANGE_CHARACTER_CHECKING) == ENABLE_STRANGE_CHARACTER_CHECKING) {
+                
+                if (c.to_point() == '$') {
+                    
+                    if ((Ctxt & TOKENIZER_SLOT) == TOKENIZER_SLOT) {
+                        
+                        auto charLoc = TheByteDecoder->convertBufferToStart(charBuf);
+                        
+                        auto Src = getTokenSource(charLoc);
+                        
+                        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "The name following ``#`` is not documented to allow the ``$`` character.", SYNTAXISSUESEVERITY_REMARK, Src, 0.33, {}));
+                        
+                        Issues.push_back(std::move(I));
+                    }
+                } else if (c.isStrangeLetterlike() || c.isMBStrangeLetterlike()) {
+                    
+                    auto buf = TheByteBuffer->buffer;
+                    auto strangeBuf = buf - 1;
+                    
+                    Utils::strangeLetterlikeWarning(getTokenBufferAndLength(strangeBuf), c);
+                }
+            }
+#endif // !NISSUES
+            
+        } else if (c.to_point() == '`') {
+            
+            //
+            // Advance past trailing `
+            //
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            break;
+            
+        } else {
+            
+            break;
+        }
+        
+        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        
+        charBuf = TheByteBuffer->buffer;
+        c = TheCharacterDecoder->currentWLCharacter(policy);
+        
+    } // while
     
-    String << c;
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    _currentToken = Token(TOKEN_WHITESPACE, String.str(), getTokenSource());
+    return c;
 }
 
-inline void Tokenizer::handleSpaceCharacter() {
+inline Token Tokenizer::handleString(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
     
-    auto c = currentWLCharacter();
+    auto c = firstChar;
+        
+    assert(c.to_point() == '"');
+    
+    auto newPolicy = policy;
+    
+    newPolicy = newPolicy | PRESERVE_WS_AFTER_LC | LC_IS_MEANINGFUL;
+//    newPolicy = newPolicy & ~(LC_UNDERSTANDS_CRLF);
+    
+    while (true) {
+        
+        //
+        // No need to check isAbort() inside tokenizer loops
+        //
+        
+        c = TheCharacterDecoder->nextWLCharacter0(newPolicy);
+        
+        switch (c.to_point()) {
+            case '"':
+                return Token(TOKEN_STRING, getTokenBufferAndLength(tokenStartBuf));
+            case CODEPOINT_ENDOFFILE:
+                return Token(TOKEN_ERROR_UNTERMINATEDSTRING, getTokenBufferAndLength(tokenStartBuf));
+        }
+        
+    } // while
+}
+
+#if STARTOFLINE
+
+inline Token Tokenizer::handleString_stringifyLine(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    auto c = firstChar;
+    
+    //
+    // Nothing to assert
+    //
+    
+    auto newPolicy = policy & ~PRESERVE_WS_AFTER_LC;
+    
+    auto lastGoodBuffer = TheByteBuffer->getBuffer();
+    
+    auto empty = true;
+    while (true) {
+        
+        //
+        // No need to check isAbort() inside tokenizer loops
+        //
+        
+        if (c == WLCharacter(CODEPOINT_ENDOFFILE)) {
+            
+            break;
+            
+        } else if (c.isNewline() || c.isMBNewline()) {
+            
+            break;
+            
+        } else if (c.isMBLineContinuation()) {
+            
+            break;
+        }
+        
+        empty = false;
+        
+        lastGoodBuffer = TheByteBuffer->getBuffer();
+        
+        TheCharacterDecoder->nextWLCharacter(newPolicy);
+        
+        c = TheCharacterDecoder->currentWLCharacter(newPolicy);
+        
+    } // while
+    
+    if (empty) {
+        
+        //
+        // Something like   ?<EOF>
+        //
+        // EndOfFile is special because there is no source
+        //
+        // So invent source
+        //
+        
+        return Token(TOKEN_ERROR_EMPTYSTRING, BufferAndLength(tokenStartBuf, 0, false));
+    }
+    
+    //
+    // ?? syntax is special because we want to ignore the newline that was read.
+    //
+    // So invent source
+    //
+    
+    return Token(TOKEN_STRING, BufferAndLength(tokenStartBuf, lastGoodBuffer - tokenStartBuf + 1, false));
+}
+
+#endif // STARTOFLINE
+
+inline Token Tokenizer::handleString_stringifySymbol(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    auto c = firstChar;
+    
+    //
+    // Nothing to assert
+    //
+    
+    if (c.to_point() == '"') {
+        
+        return handleString(tokenStartBuf, c, policy);
+    }
+    
+    //
+    // magically turn into a string
+    //
+    
+    if (c.isLetterlike() || c.isMBLetterlike()) {
+        
+        TokenizerContext Ctxt = 0;
+        
+        auto letterlikeBuf = TheByteBuffer->buffer;
+        
+        handleSymbolSegment(letterlikeBuf, c, policy, Ctxt);
+        
+        return Token(TOKEN_STRING, getTokenBufferAndLength(tokenStartBuf));
+    }
+        
+    //
+    // Something like   a::5
+    //
+    
+    nextToken(policy);
+    
+    return Token(TOKEN_ERROR_EXPECTEDLETTERLIKE, getTokenBufferAndLength(tokenStartBuf));
+}
+
+inline Token Tokenizer::handleString_stringifyFile(Buffer tokenStartBuf, SourceCharacter firstChar, NextCharacterPolicy policy) {
+    
+    auto c = firstChar;
+    
+    //
+    // Nothing to assert
+    //
+    
+    if (c.to_point() == '"') {
+        
+        return handleString(tokenStartBuf, WLCharacter('"'), policy);
+    }
+        
+    //
+    // magically turn into a string
+    //
+    
+    switch (c.to_point()) {
+        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
+        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm': case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
+        case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+        case '$': case '`': case '/': case '.': case '\\': case '!': case '-': case '_': case ':': case '*': case '~': case '?': {
+            
+            c = TheByteDecoder->currentSourceCharacter(policy);
+        }
+            break;
+        case '[': {
+            
+            // handle matched pairs of [] enclosing any characters other than spaces, tabs, and newlines
+            
+            int handled;
+            c = handleFileOpsBrackets(tokenStartBuf, c, policy, &handled);
+            
+            if (handled < 0) {
+                return Token(TOKEN_ERROR_UNTERMINATEDSTRING, BufferAndLength(tokenStartBuf, 0, false));
+            }
+        }
+            break;
+        default: {
+            //
+            // Something like   <<EOF
+            //
+            // EndOfFile is special because there is no source
+            //
+            // So invent source
+            //
+            
+            return Token(TOKEN_ERROR_EMPTYSTRING, BufferAndLength(tokenStartBuf, 0, false));
+        }
+            break;
+    }
+    
+    auto breakWhile = false;
+    while (true) {
+        
+        if (breakWhile) {
+            break;
+        }
+        
+        //
+        // No need to check isAbort() inside tokenizer loops
+        //
+        
+        //
+        // tutorial/OperatorInputForms
+        //
+        // File Names
+        //
+        // Any file name can be given in quotes after <<, >>, and >>>.
+        // File names can also be given without quotes if they contain only alphanumeric
+        // characters and the characters `, /, ., \[Backslash], !, -, _, :, $, *, ~, and ?, together with
+        // matched pairs of square brackets enclosing any characters other than spaces, tabs, and newlines.
+        // Note that file names given without quotes can be followed only by spaces, tabs, or newlines, or
+        // by the characters ), ], or }, as well as semicolons and commas.
+        //
+        
+        switch (c.to_point()) {
+            case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
+            case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm': case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
+            case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+            case '$': case '`': case '/': case '.': case '\\': case '!': case '-': case '_': case ':': case '*': case '~': case '?': {
+                
+                TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+                
+                c = TheByteDecoder->currentSourceCharacter(policy);
+            }
+                break;
+            case '[': {
+                
+                // handle matched pairs of [] enclosing any characters other than spaces, tabs, and newlines
+                
+                TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+                
+                int handled;
+                c = handleFileOpsBrackets(tokenStartBuf, c, policy, &handled);
+                
+                if (handled < 0) {
+                    return Token(TOKEN_ERROR_UNTERMINATEDSTRING, getTokenBufferAndLength(tokenStartBuf));
+                }
+                
+            }
+                break;
+            default: {
+                breakWhile = true;
+            }
+                break;
+        }
+        
+    } // while
+    
+    return Token(TOKEN_STRING, getTokenBufferAndLength(tokenStartBuf));
+}
+
+
+
+const int UNTERMINATED_STRING = -1;
+
+//
+// Handle parsing the brackets in:
+// a >> foo[[]]
+//
+// tutorial/OperatorInputForms
+//
+// File Names
+//
+// handle matched pairs of [] enclosing any characters other than spaces, tabs, and newlines
+//
+inline SourceCharacter Tokenizer::handleFileOpsBrackets(Buffer tokenStartBuf, SourceCharacter firstChar, NextCharacterPolicy policy, int *handled) {
+    
+    auto c = firstChar;
+    
+    assert(c.to_point() == '[');
+    
+    auto depth = 1;
+    
+    c = TheByteDecoder->currentSourceCharacter(policy);
+    
+    bool breakWhile = false;
+    while (true) {
+        
+        if (breakWhile) {
+            break;
+        }
+        
+        //
+        // No need to check isAbort() inside tokenizer loops
+        //
+        
+        switch (c.to_point()) {
+                //
+                // Spaces and Newlines
+                //
+            case ' ': case '\t': case '\v': case '\f':
+            case '\n': case '\r': case CODEPOINT_CRLF:
+                
+                TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+                
+                //
+                // Cannot have spaces in the string here, so bail out
+                //
+                
+                *handled = UNTERMINATED_STRING;
+                
+                return c;
+            case CODEPOINT_ENDOFFILE:
+                
+                *handled = UNTERMINATED_STRING;
+                
+                return c;
+            case '[':
+                
+                TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+                
+                depth = depth + 1;
+                
+                break;
+            case ']':
+                
+                TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+                
+                depth = depth - 1;
+                
+                if (depth == 0) {
+                    
+                    breakWhile = true;
+                }
+                break;
+            default:
+                
+                if (c.isMBSpace() || c.isMBNewline()) {
+                    
+                    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+                    
+                    *handled = UNTERMINATED_STRING;
+                    
+                    return c;
+                    
+                }
+                
+                TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+                break;
+        }
+        
+        c = TheByteDecoder->currentSourceCharacter(policy);
+        
+    } // while
+    
+    *handled = 0;
+    
+    return c;
+}
+
+
+
+const int UNRECOGNIZED_DIGIT = -1;
+const int BAILOUT = -2;
+
+//
+//digits                  integer
+//digits.digits           approximate number
+//base^^digits            integer in specified base
+//base^^digits.digits     approximate number in specified base
+//mantissa*^n             scientific notation (mantissa*10^n)
+//base^^mantissa*^n       scientific notation in specified base (mantissa*base^n)
+//number`                 machine-precision approximate number
+//number`s                arbitrary-precision number with precision s
+//number``s               arbitrary-precision number with accuracy s
+//
+// base = (digits^^)?
+// approximate = digits(.digits?)?|.digits
+// precision = `(-?approximate)?
+// accuracy = ``-?approximate
+// mantissa = approximate+(precision|accuracy)?
+// exponent = (*^-?digits)?
+//
+// numer = base+mantissa+exponent
+//
+inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policyIn) {
+    
+    auto c = firstChar;
+    
+    assert(c.isDigit() || c.to_point() == '.');
+    
+    auto policy = policyIn;
+    policy = policy | LC_IS_MEANINGFUL;
+    
+    //
+    // given 16^^0.F, leadingDigitsEnd will point to .
+    // given 16^^.F, leadingDigitsEnd will point to .
+    // given 0.123, leadingDigitsEnd will point to .
+    //
+    auto leadingDigitsEnd = tokenStartBuf;
+    
+    //
+    // Use the convention that base of 0 means the default, unspecified base
+    //
+    size_t base = 0;
+    bool real = false;
+    
+    if (c.isDigit()) {
+        
+        //
+        // With input of 002^^111, this will point to '2'
+        //
+        auto nonZeroStartBuf = tokenStartBuf;
+        
+        //
+        // Count leading zeros
+        //
+        if (c.to_point() == '0') {
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+            
+            while (true) {
+                
+                //
+                // No need to check isAbort() inside tokenizer loops
+                //
+                
+                if (c.to_point() != '0') {
+                    
+                    nonZeroStartBuf = TheByteBuffer->buffer;
+                    
+                    break;
+                }
+                
+                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                
+                c = TheCharacterDecoder->currentWLCharacter(policy);
+                
+            } // while
+        }
+        
+        leadingDigitsEnd = TheByteBuffer->buffer;
+        
+        if (c.isDigit()) {
+            
+            size_t count;
+            c = handleDigits(policy, c, &count);
+            
+            leadingDigitsEnd = TheByteBuffer->buffer;
+        }
+        
+        if (c.to_point() == '.') {
+            
+            //
+            // Eat the dot
+            //
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        }
+        
+        if (c.to_point() == '^') {
+            
+            //
+            // Could be 16^^blah
+            //
+            
+            auto caret1Buffer = TheByteBuffer->buffer;
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+            
+            if (c.to_point() != '^') {
+                
+                //
+                // Something like  2^a
+                //
+                // Must now do surgery and back up
+                //
+                
+                backup(caret1Buffer, false);
+                
+                //
+                // Success!
+                //
+                
+                return Token(TOKEN_INTEGER, getTokenBufferAndLength(tokenStartBuf));
+            }
+            
+            // c is '^'
+            
+            //
+            // Something like 2^^
+            //
+            // Must be a number
+            //
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            if (nonZeroStartBuf == caret1Buffer) {
+                
+                //
+                // Something like 0^^2
+                //
+                
+                return Token(TOKEN_ERROR_INVALIDBASE, getTokenBufferAndLength(tokenStartBuf));
+            }
+            
+            auto baseStr = std::string(reinterpret_cast<const char *>(nonZeroStartBuf), caret1Buffer - nonZeroStartBuf);
+            
+            //
+            // bases can only be between 2 and 36, so we know they can only be 1 or 2 characters
+            //
+            if (baseStr.size() > 2) {
+                
+                return Token(TOKEN_ERROR_INVALIDBASE, getTokenBufferAndLength(tokenStartBuf));
+            }
+            
+            base = Utils::parseInteger(baseStr, 10);
+            
+            if (!(2 <= base && base <= 36)) {
+                
+                return Token(TOKEN_ERROR_INVALIDBASE, getTokenBufferAndLength(tokenStartBuf));
+            }
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+            
+            //
+            // What can come after ^^ ?
+            //
+            
+            switch (c.to_point()) {
+                case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
+                case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm': case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
+                case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': {
+                    
+                    int handled;
+                    c = handleAlphaOrDigits(c, base, policy, &handled);
+                    switch (handled) {
+                        case BAILOUT:
+                            assert(false);
+                            break;
+                        case UNRECOGNIZED_DIGIT:
+                            return Token(TOKEN_ERROR_UNRECOGNIZEDDIGIT, getTokenBufferAndLength(tokenStartBuf));
+                    }
+                    
+                    leadingDigitsEnd = TheByteBuffer->buffer;
+                    
+                    if (c.to_point() == '.') {
+                        
+                        //
+                        // Eat the dot
+                        //
+                        
+                        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                        
+                    }
+                }
+                    break;
+                case '.': {
+                    
+                    leadingDigitsEnd = TheByteBuffer->buffer;
+                    
+                    //
+                    // Eat the dot
+                    //
+                    
+                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                }
+                    break;
+                default: {
+                    
+                    //
+                    // Something like 2^^@
+                    //
+                    
+                    //
+                    // Make sure that bad character is read
+                    //
+                    
+                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                    
+                    c = TheCharacterDecoder->currentWLCharacter(policy);
+                    
+                    return Token(TOKEN_ERROR_UNRECOGNIZEDDIGIT, getTokenBufferAndLength(tokenStartBuf));
+                }
+            }
+        }
+    }
+    
+    if (c.to_point() == '.') {
+        
+        // Could be \056, so can't really assert here
+//        assert(*(TheByteBuffer->buffer - 1) == '.');
+        
+        int handled;
+        c = handlePossibleFractionalPart(leadingDigitsEnd, c, base, policy, &handled);
+        switch (handled) {
+            case BAILOUT:
+                real = false;
+                break;
+            case UNRECOGNIZED_DIGIT:
+                return Token(TOKEN_ERROR_UNRECOGNIZEDDIGIT, getTokenBufferAndLength(tokenStartBuf));
+            case 0:
+                real = true;
+                break;
+            default:
+                real = true;
+                break;
+        }
+    }
+    
+    //
+    // Handle all ` logic here
+    //
+    // foo`
+    // foo`bar
+    // foo``bar
+    //
+    if (c.to_point() == '`') {
+        
+        real = true;
+        
+        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        
+        c = TheCharacterDecoder->currentWLCharacter(policy);
+        
+        bool accuracy = false;
+        bool sign = false;
+        bool supplied = false;
+        if (c.to_point() == '`') {
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+            
+            accuracy = true;
+        }
+        
+        bool sawDot{};
+        switch (c.to_point()) {
+            case '-': case '+': {
+                
+                //
+                // Something like 1.2`-
+                //
+                
+                auto SignBuffer = TheByteBuffer->buffer;
+                
+                //
+                // Eat the sign
+                //
+                
+                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                
+                c = TheCharacterDecoder->currentWLCharacter(policy);
+                
+                switch (c.to_point()) {
+                    case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+                        sign = true;
+                        break;
+                    case '.':
+                        sawDot = true;
+                        sign = true;
+                        break;
+                    default: {
+                        
+                        //
+                        // Something like 1.2`->
+                        //
+                        
+                        if (accuracy) {
+                            
+                            //
+                            // Something like 1.2``->3
+                            //
+                            
+                            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                            
+                            return Token(TOKEN_ERROR_EXPECTEDACCURACY, getTokenBufferAndLength(tokenStartBuf));
+                        }
+                        
+                        //
+                        // Something like 1.2`->3
+                        //
+                        // Must now do surgery and back up
+                        //
+                        backup(SignBuffer, true);
+                        
+                        // Success!
+                        
+                        return Token(TOKEN_REAL, getTokenBufferAndLength(tokenStartBuf));
+                    }
+                }
+            }
+            //
+            // fall-through
+            //
+            case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': {
+                
+                //
+                // might jump here or fall-through
+                //
+                // Need to test whether last character was . or not
+                //
+                if (!sawDot) {
+                    size_t count;
+                    c = handleDigits(policy, c, &count);
+                    if (count > 0) {
+                        supplied = true;
+                    }
+                    
+                    if (c.to_point() != '.') {
+                        break;
+                    }
+                }
+            }
+            //
+            // fall-through
+            //
+            case '.': {
+                
+                auto DotBuffer = TheByteBuffer->buffer;
+                
+                bool actualDecimalPoint = false;
+                
+                //
+                // If there was already a sign, or if the leading digits have already been supplied,
+                // then this is an actual decimal point
+                //
+                if (sign || supplied) {
+                    actualDecimalPoint = true;
+                }
+                
+                //
+                // Need to decide if the  .  here is actual radix point, or something like
+                // the . in  123`.xxx  (which is Dot)
+                //
+                
+                if (!actualDecimalPoint) {
+                    
+                    //
+                    // Need to peek ahead
+                    //
+                    // Something like 123`.xxx
+                    //
+                    
+                    // look ahead
+                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                    
+                    auto NextChar = TheCharacterDecoder->currentWLCharacter(policy);
+                    
+                    if (!NextChar.isDigit()) {
+                        
+                        if (accuracy) {
+                            
+                            //
+                            // Something like  123``.EOF
+                            //
+                            
+                            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                            
+                            return Token(TOKEN_ERROR_EXPECTEDDIGIT, getTokenBufferAndLength(tokenStartBuf));
+                        }
+                        
+                        if (NextChar.isSign()) {
+                            
+                            //
+                            // Something like  123`.+4
+                            //
+                            
+                            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                            
+                            return Token(TOKEN_ERROR_EXPECTEDDIGIT, getTokenBufferAndLength(tokenStartBuf));
+                        }
+                        
+                        //
+                        // Something like  123`.xxx  where the . could be a Dot operator
+                        //
+                        // Number stops at `
+                        //
+                        // NOT actual decimal point
+                        //
+                        // Must now do surgery and back up
+                        //
+                        backup(DotBuffer, true);
+                        
+                        //
+                        // Success!
+                        //
+                        return Token(TOKEN_REAL, getTokenBufferAndLength(tokenStartBuf));
+                    }
+                    
+                } else {
+                    
+                    //
+                    // actual decimal point
+                    //
+                    
+                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                    
+                    c = TheCharacterDecoder->currentWLCharacter(policy);
+                }
+                
+                //
+                // actual decimal point
+                //
+                
+                int handled;
+                //
+                // The base to use inside of precision/accuracy processing is 0, i.e., implied 10
+                //
+                size_t baseToUse = 0;
+                c = handlePossibleFractionalPartPastDot(DotBuffer, c, baseToUse, policy, &handled);
+                switch (handled) {
+                    case BAILOUT:
+                        break;
+                    case UNRECOGNIZED_DIGIT:
+                        assert(false);
+                        break;
+                    case 0:
+                        break;
+                    default:
+                        supplied = true;
+                        break;
+                }
+                
+                if (!supplied) {
+                    
+                    //
+                    // Something like 1`+.a
+                    //
+                    
+                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                    
+                    c = TheCharacterDecoder->currentWLCharacter(policy);
+                    
+                    return Token(TOKEN_ERROR_EXPECTEDDIGIT, getTokenBufferAndLength(tokenStartBuf));
+                }
+                
+            } // case '.'
+                break;
+            default: {
+                
+                if (accuracy) {
+                    
+                    //
+                    // Something like  123``EOF
+                    //
+                    
+                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                    
+                    c = TheCharacterDecoder->currentWLCharacter(policy);
+                    
+                    return Token(TOKEN_ERROR_EXPECTEDACCURACY, getTokenBufferAndLength(tokenStartBuf));
+                }
+            }
+                break;
+        } // switch (c.to_point())
+    }
+    
+    if (c.to_point() != '*') {
+        
+        //
+        // Success!
+        //
+        
+        if (real) {
+            return Token(TOKEN_REAL, getTokenBufferAndLength(tokenStartBuf));
+        } else {
+            return Token(TOKEN_INTEGER, getTokenBufferAndLength(tokenStartBuf));
+        }
+    }
+    
+    // c is '*'
+    
+    auto starBuf = TheByteBuffer->buffer;
+    
+    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    if (c.to_point() != '^') {
+        
+        //
+        // Something like 1*a
+        //
+        // Must now do surgery and back up
+        //
+
+        auto resetBuf = starBuf;
+        
+        backup(resetBuf, false);
+        
+        //
+        // Success!
+        //
+        
+        if (real) {
+            return Token(TOKEN_REAL, getTokenBufferAndLength(tokenStartBuf));
+        } else {
+            return Token(TOKEN_INTEGER, getTokenBufferAndLength(tokenStartBuf));
+        }
+    }
+    
+    //
+    // c is '^'
+    //
+    // So now examine *^ notation
+    //
+    
+    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    if (c.isSign()) {
+        
+        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        
+        c = TheCharacterDecoder->currentWLCharacter(policy);
+    }
+    
+    if (!c.isDigit()) {
+        
+        //
+        // Something like 123*^-EOF
+        //
+        
+        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        
+        return Token(TOKEN_ERROR_EXPECTEDEXPONENT, getTokenBufferAndLength(tokenStartBuf));
+    }
+    
+    size_t count;
+    c = handleDigits(policy, c, &count);
+    
+    if (c.to_point() != '.') {
+        
+        //
+        // Success!
+        //
+        
+        if (real) {
+            return Token(TOKEN_REAL, getTokenBufferAndLength(tokenStartBuf));
+        } else {
+            return Token(TOKEN_INTEGER, getTokenBufferAndLength(tokenStartBuf));
+        }
+    }
+    
+    // c is '.'
+        
+    //
+    // Something like 123*^0.5
+    //
+    // Make this an error, do NOT make this Dot[123*^0, 5]
+    //
+    
+    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+    
+    return Token(TOKEN_ERROR_EXPECTEDEXPONENT, getTokenBufferAndLength(tokenStartBuf));
+}
+
+//
+// Precondition: currentWLCharacter is NOT in String
+//
+// Return: number of digits handled after ., possibly 0, or -1 if error
+//
+inline WLCharacter Tokenizer::handlePossibleFractionalPart(Buffer dotBuf, WLCharacter firstChar, int base, NextCharacterPolicy policy, int *handled) {
+    
+    auto c = firstChar;
+    
+    assert(c.to_point() == '.');
+    
+    assert(*dotBuf == '.' || *dotBuf == '\\'/* line continuation */);
+    
+    assert(((*dotBuf == '.') && (TheByteBuffer->buffer == dotBuf + 1)) || (*dotBuf == '\\'));
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    return handlePossibleFractionalPartPastDot(dotBuf, c, base, policy, handled);
+}
+
+//
+// Precondition: currentWLCharacter is NOT in String
+//
+// Return: number of digits handled after ., possibly 0
+//         UNRECOGNIZED_DIGIT if base error
+//         BAILOUT if not a radix point (and also backup before dot)
+//
+inline WLCharacter Tokenizer::handlePossibleFractionalPartPastDot(Buffer dotBuf, WLCharacter firstChar, int base, NextCharacterPolicy policy, int *handled) {
+    
+    auto c = firstChar;
+    
+    //
+    // Nothing to assert
+    //
+
+    if (c.to_point() == '.') {
+        
+        //
+        // Something like 0..
+        //
+        // The first . is not actually a radix point
+        //
+        // Must now do surgery and back up
+        //
+        
+#if !NISSUES
+        if ((policy & ENABLE_STRANGE_CHARACTER_CHECKING) == ENABLE_STRANGE_CHARACTER_CHECKING) {
+            
+            auto dotLoc = TheByteDecoder->convertBufferToStart(dotBuf);
+            
+            std::vector<CodeActionPtr> Actions;
+            Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(dotLoc), " ")));
+            
+            auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, Source(dotLoc), 0.25, std::move(Actions)));
+            
+            Issues.push_back(std::move(I));
+        }
+#endif // !NISSUES
+        
+        backup(dotBuf, false);
+        
+        c = TheCharacterDecoder->currentWLCharacter(policy);
+        
+        *handled = BAILOUT;
+
+        return c;
+    }
+    
+    if (c.isAlphaOrDigit()) {
+        
+        c = handleAlphaOrDigits(c, base, policy, handled);
+        switch (*handled) {
+            case BAILOUT:
+                assert(false);
+                break;
+            case UNRECOGNIZED_DIGIT:
+                return c;
+            case 0:
+                return c;
+        }
+    }
     
 #if !NISSUES
-    if (c.isStrangeSpaceCharacter()) {
+    if ((policy & ENABLE_STRANGE_CHARACTER_CHECKING) == ENABLE_STRANGE_CHARACTER_CHECKING) {
         
-        auto Src = TheCharacterDecoder->getWLCharacterSource();
+        if (c.to_point() == '.') {
+            
+            //
+            // Something like 1.2.3
+            //
+            
+            auto dotLoc = TheByteDecoder->convertBufferToStart(dotBuf);
+            
+            std::vector<CodeActionPtr> Actions;
+            Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert *", getTokenSource(dotLoc), "*")));
+            
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_IMPLICITTIMES, "Suspicious syntax.", SYNTAXISSUESEVERITY_ERROR, Source(dotLoc), 0.99, std::move(Actions)));
+            
+            Issues.push_back(std::move(I));
+        }
+    }
+#endif // !NISSUES
+
+    *handled = 0;
+    
+    return c;
+}
         
-        auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+void Tokenizer::backup(Buffer resetBuf, bool warn) {
+    
+#if !NISSUES
+    
+    if (warn) {
+
+        auto loc = TheByteDecoder->convertBufferToStart(resetBuf);
+        
+        std::vector<CodeActionPtr> Actions;
+        Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(loc), " ")));
+        
+        auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, Source(loc), 0.25, std::move(Actions)));
         
         Issues.push_back(std::move(I));
     }
-#endif
+#endif // !NISSUES
     
-    String << c;
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    _currentToken = Token(TOKEN_WHITESPACE, String.str(), getTokenSource());
+    TheByteBuffer->buffer = resetBuf;
 }
 
-inline void Tokenizer::handleLineContinuation() {
+//
+// Precondition: currentWLCharacter is a digit
+// Postcondition: buffer is pointing to first NON-DIGIT character after all digits
+//
+// return: the first NON-DIGIT character after all digits
+//
+inline WLCharacter Tokenizer::handleDigits(NextCharacterPolicy policy, WLCharacter firstChar, size_t *countP) {
     
-    auto c = currentWLCharacter();
+    auto c = firstChar;
     
-    String << c;
+    assert(c.isDigit());
     
-    c = nextWLCharacter(TOPLEVEL);
+    size_t count = 1;
     
-    _currentToken = Token(TOKEN_LINECONTINUATION, String.str(), getTokenSource());
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    while (true) {
+        
+        //
+        // No need to check isAbort() inside tokenizer loops
+        //
+        
+        if (!c.isDigit()) {
+            
+            break;
+        }
+        
+        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        
+        c = TheCharacterDecoder->currentWLCharacter(policy);
+        
+        count++;
+        
+    } // while
+    
+    *countP = count;
+
+    return c;
 }
 
-inline void Tokenizer::handleLinearSyntax() {
+//
+// Precondition: currentWLCharacter is NOT in String
+// Postcondition: currentWLCharacter is the first WLCharacter AFTER all good digits or alphas
+//
+// Return: number of digits handled, possibly 0, or -1 if error
+//
+inline WLCharacter Tokenizer::handleAlphaOrDigits(WLCharacter firstChar, size_t base, NextCharacterPolicy policy, int *handled) {
     
-    auto c = currentWLCharacter();
+    auto c = firstChar;
     
-    String << c;
+    assert(c.isAlphaOrDigit());
+    
+    int count = 0;
+    
+    while (true) {
+        
+        //
+        // No need to check isAbort() inside tokenizer loops
+        //
+        
+        if (!c.isAlphaOrDigit()) {
+            break;
+        }
+        
+        if (base == 0) {
+            
+            if (!c.isDigit()) {
+                break;
+            }
+            
+        } else {
+            
+            auto dig = toDigit(c.to_point());
+            
+            if (base <= dig) {
+                
+                *handled = UNRECOGNIZED_DIGIT;
+                
+                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                
+                return c;
+            }
+            
+        }
+        
+        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        
+        c = TheCharacterDecoder->currentWLCharacter(policy);
+        
+        count++;
+        
+    } // while
+    
+    *handled = count;
+    
+    return c;
+}
+
+inline Token Tokenizer::handleColon(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    auto c = firstChar;
+    
+    assert(c.to_point() == ':');
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    auto Operator = TOKEN_COLON; // :
+    
+    switch (c.to_point()) {
+        case ':': {
+            Operator = TOKEN_COLONCOLON; // ::
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        }
+            break;
+        case '=': {
+            Operator = TOKEN_COLONEQUAL; // :=
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        }
+            break;
+        case '>': {
+            Operator = TOKEN_COLONGREATER; // :>
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        }
+            break;
+    }
+    
+    return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
+}
+
+inline Token Tokenizer::handleOpenParen(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    auto c = firstChar;
+    
+    assert(c.to_point() == '(');
+    
+    auto ParenChar = c;
+    
+    auto Operator = TOKEN_OPENPAREN; // (
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    //
+    // Comments must start literally with (*
+    // Escaped characters do not work
+    //
+    if ((ParenChar.to_point() == '(' && ParenChar.escape() == ESCAPE_NONE) &&
+        (c.to_point() == '*' && c.escape() == ESCAPE_NONE)) {
+        
+        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        
+        return handleComment(tokenStartBuf, c, policy);
+    }
+    
+    return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
+}
+
+inline Token Tokenizer::handleDot(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    //
+    // handleDot
+    // Could be  .  or  ..  or ...  or  .0
+    //
+    
+    auto c = firstChar;
+    
+    assert(c.to_point() == '.');
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    if (c.isDigit()) {
+        
+//        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        
+        return handleNumber(tokenStartBuf, firstChar, policy);
+    }
+    
+    auto Operator = TOKEN_DOT; // .
+    
+    if (c.to_point() == '.') {
+        
+        Operator = TOKEN_DOTDOT; // ..
+        
+        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        
+        c = TheCharacterDecoder->currentWLCharacter(policy);
+        
+        if (c.to_point() == '.') {
+            
+            Operator = TOKEN_DOTDOTDOT; // ...
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        }
+    }
+    
+    return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
+}
+
+inline Token Tokenizer::handleEqual(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    auto c = firstChar;
+    
+    assert(c.to_point() == '=');
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    auto Operator = TOKEN_EQUAL; // =
+    
+    switch (c.to_point()) {
+        case '=': {
+            
+            Operator = TOKEN_EQUALEQUAL; // ==
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+            
+            if (c.to_point() == '=') {
+                
+                Operator = TOKEN_EQUALEQUALEQUAL; // ===
+                
+                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            }
+        }
+            break;
+        case '.': {
+            
+            //
+            // Could be  =.  or  =..  or  =...  or  =....  or  =.0
+            //
+            
+            auto dotBuf = TheByteBuffer->buffer;
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+            
+            if (c.isDigit()) {
+                
+                //
+                // Something like x=.0
+                //
+                // Must now do surgery and back up
+                //
+                
+                backup(dotBuf, true);
+                
+            } else if (c.to_point() == '.') {
+                
+                //
+                // =..  is a syntax error
+                //
+                
+                Operator = TOKEN_ERROR_UNHANDLEDDOT;
+                
+                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                
+            } else {
+                
+                Operator = TOKEN_EQUALDOT; // =.
+            }
+            
+        }
+            break;
+        case '!': {
+            
+            auto bangBuf = TheByteBuffer->buffer;
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+            
+            if (c.to_point() == '=') {
+                
+                Operator = TOKEN_EQUALBANGEQUAL; // =!=
+                
+                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                
+            } else {
+                
+                //
+                // Something like x=!y
+                //
+                // Must now do surgery and back up
+                //
+                
+                backup(bangBuf, true);
+            }
+        }
+            break;
+    }
+    
+    return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
+}
+
+inline Token Tokenizer::handleUnder(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    auto c = firstChar;
+    
+    assert(c.to_point() == '_');
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    auto Operator = TOKEN_UNDER; // _
+    
+    switch (c.to_point()) {
+        case '_': {
+            
+            Operator = TOKEN_UNDERUNDER; // __
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+            
+            if (c.to_point() == '_') {
+                
+                Operator = TOKEN_UNDERUNDERUNDER; // ___
+                
+                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            }
+        }
+            break;
+        case '.': {
+            
+            auto dotBuf = TheByteBuffer->buffer;
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+            
+            if (c.to_point() == '.') {
+                
+                //
+                // Something like  _...
+                //
+                // Must now do surgery and back up
+                //
+                
+                //
+                // Only warn if enabled
+                //
+                auto shouldWarn = ((policy & ENABLE_STRANGE_CHARACTER_CHECKING) == ENABLE_STRANGE_CHARACTER_CHECKING);
+                
+                backup(dotBuf, shouldWarn);
+                
+            } else {
+                
+                Operator = TOKEN_UNDERDOT; // _.
+            }
+        }
+            break;
+    }
+    
+    return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
+}
+
+inline Token Tokenizer::handleLess(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    auto c = firstChar;
+    
+    assert(c.to_point() == '<');
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    auto Operator = TOKEN_LESS; // <
+    
+    switch (c.to_point()) {
+        case '|': {
+            
+            Operator = TOKEN_LESSBAR; // <|
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        }
+            break;
+        case '<': {
+            
+            Operator = TOKEN_LESSLESS; // <<
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        }
+            break;
+        case '>': {
+            
+            Operator = TOKEN_LESSGREATER; // <>
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        }
+            break;
+        case '=': {
+            
+            Operator = TOKEN_LESSEQUAL; // <=
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        }
+            break;
+        case '-': {
+            
+            auto minusBuf = TheByteBuffer->buffer;
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+            
+            if (c.to_point() == '>') {
+                
+                Operator = TOKEN_LESSMINUSGREATER; // <->
+                
+                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                
+            } else {
+                
+                //
+                // Something like  a<-4
+                //
+                // Must now do surgery and back up
+                //
+                
+                backup(minusBuf, true);
+            }
+        }
+            break;
+    }
+    
+    return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
+}
+
+inline Token Tokenizer::handleGreater(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    auto c = firstChar;
+    
+    assert(c.to_point() == '>');
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    auto Operator = TOKEN_GREATER; // >
+    
+    switch (c.to_point()) {
+        case '>': {
+            
+            Operator = TOKEN_GREATERGREATER; // >>
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+            
+            if (c.to_point() == '>') {
+                
+                Operator = TOKEN_GREATERGREATERGREATER; // >>>
+                
+                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            }
+        }
+            break;
+        case '=': {
+            
+            Operator = TOKEN_GREATEREQUAL; // >=
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        }
+            break;
+    }
+    
+    return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
+}
+
+inline Token Tokenizer::handleMinus(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    auto c = firstChar;
+    
+    assert(c.to_point() == '-');
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    auto Operator = TOKEN_MINUS; // -
+    
+    //
+    // Do not lex as a number here
+    // Makes it easier to handle implicit times later
+    //
+    // Because if we lexed - as a number here, then it is
+    // harder to know that b-1 is Plus[b, -1] instead of
+    // b<invisiblespace>-1 which is Times[b, -1]
+    //
+    
+    switch (c.to_point()) {
+        case '>': {
+            
+            Operator = TOKEN_MINUSGREATER; // ->
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        }
+            break;
+        case '-': {
+            
+            Operator = TOKEN_MINUSMINUS; // --
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+#if !NISSUES
+            if ((policy & ENABLE_STRANGE_CHARACTER_CHECKING) == ENABLE_STRANGE_CHARACTER_CHECKING) {
+                
+                auto afterBuf = TheByteBuffer->buffer;
+                
+                c = TheCharacterDecoder->currentWLCharacter(policy);
+                
+                if (c.to_point() == '>') {
+                    
+                    //
+                    // Something like a-->0
+                    //
+                    
+                    auto greaterLoc = TheByteDecoder->convertBufferToStart(afterBuf);
+                    
+                    std::vector<CodeActionPtr> Actions;
+                    Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(greaterLoc), " ")));
+                    
+                    auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``-`` and ``>`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(greaterLoc), 0.25, std::move(Actions)));
+                    
+                    Issues.push_back(std::move(I));
+                    
+                } else if (c.to_point() == '=') {
+                    
+                    //
+                    // Something like a--=0
+                    //
+                    
+                    auto equalLoc = TheByteDecoder->convertBufferToStart(afterBuf);
+                    
+                    std::vector<CodeActionPtr> Actions;
+                    Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(equalLoc), " ")));
+                    
+                    auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``-`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(equalLoc), 0.25, std::move(Actions)));
+                    
+                    Issues.push_back(std::move(I));
+                }
+            }
+#endif // !NISSUES
+        }
+            break;
+        case '=': {
+            
+            Operator = TOKEN_MINUSEQUAL; // -=
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        }
+            break;
+    }
+    
+    return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
+}
+
+inline Token Tokenizer::handleBar(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    auto c = firstChar;
+    
+    assert(c.to_point() == '|');
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    auto Operator = TOKEN_BAR; // |
+    
+    switch (c.to_point()) {
+        case '>': {
+            
+            Operator = TOKEN_BARGREATER; // |>
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+#if !NISSUES
+            if ((policy & ENABLE_STRANGE_CHARACTER_CHECKING) == ENABLE_STRANGE_CHARACTER_CHECKING) {
+                
+                auto afterBuf = TheByteBuffer->buffer;
+                
+                c = TheCharacterDecoder->currentWLCharacter(policy);
+                
+                if (c.to_point() == '=') {
+                    
+                    //
+                    // Something like <||>=0
+                    //
+                    
+                    auto equalLoc = TheByteDecoder->convertBufferToStart(afterBuf);
+                    
+                    std::vector<CodeActionPtr> Actions;
+                    Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(equalLoc), " ")));
+                    
+                    auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``>`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(equalLoc), 0.25, std::move(Actions)));
+                    
+                    Issues.push_back(std::move(I));
+                }
+            }
+#endif // !NISSUES
+            
+        }
+            break;
+        case '|': {
+            
+            Operator = TOKEN_BARBAR; // ||
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        }
+            break;
+    }
+    
+    return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
+}
+
+inline Token Tokenizer::handleSemi(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    auto c = firstChar;
+    
+    assert(c.to_point() == ';');
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    auto Operator = TOKEN_SEMI; // ;
+    
+    if (c.to_point() == ';') {
+        
+        Operator = TOKEN_SEMISEMI; // ;;
+        
+        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+    }
+    
+    return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
+}
+
+inline Token Tokenizer::handleBang(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    auto c = firstChar;
+    
+    assert(c.to_point() == '!');
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    auto Operator = TOKEN_BANG; // !
+    
+    switch (c.to_point()) {
+        case '=': {
+            
+            Operator = TOKEN_BANGEQUAL; // !=
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        }
+            break;
+        case '!': {
+            
+            Operator = TOKEN_BANGBANG; // !!
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        }
+            break;
+    }
+    
+    return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
+}
+
+inline Token Tokenizer::handleHash(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    auto c = firstChar;
+    
+    assert(c.to_point() == '#');
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    auto Operator = TOKEN_UNKNOWN;
+    
+    //
+    // From Slot documentation:
+    //
+    // In the form #name, the characters in name can be any combination of alphanumeric characters not beginning with digits.
+    //
+    //
+    // A slot that starts with a digit goes down one path
+    // And a slot that starts with a letter goes down another path
+    //
+    // Make sure e.g.  #1a is not parsed as SlotNode["#1a"]
+    //
+    
+    switch (c.to_point()) {
+        case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': {
+            
+            Operator = TOKEN_HASH; // #
+            
+            size_t count;
+            c = handleDigits(policy, c, &count);
+        }
+            break;
+        //
+        // letterlike
+        //
+        case '\x00': case '\x01': case '\x02': case '\x03': case '\x04': case '\x05': case '\x06':
+        case '\b':
+        case '\x0e': case '\x0f': case '\x10': case '\x11': case '\x12': case '\x13': case '\x14': case '\x15': case '\x16': case '\x17': case '\x18': case '\x19': case '\x1a': case '\x1b': case '\x1c': case '\x1d': case '\x1e': case '\x1f':
+        case '$':
+        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
+        case '`':
+        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm': case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z': {
+            
+            auto symbolStartBuf = TheByteBuffer->buffer;
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            Operator = TOKEN_HASH; // #
+            
+            TokenizerContext Ctxt = 0;
+            
+            Ctxt |= TOKENIZER_SLOT;
+            
+            handleSymbol(symbolStartBuf, c, policy, Ctxt);
+        }
+            break;
+        case '"': {
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            Operator = TOKEN_HASH; // #
+            
+            handleString(tokenStartBuf, c, policy);
+            
+#if !NISSUES
+            if ((policy & ENABLE_STRANGE_CHARACTER_CHECKING) == ENABLE_STRANGE_CHARACTER_CHECKING) {
+                
+                auto tokenStartLoc = TheByteDecoder->convertBufferToStart(tokenStartBuf);
+                
+                auto Src = getTokenSource(tokenStartLoc);
+                
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "The name following ``#`` is not documented to allow the ``\"`` character.", SYNTAXISSUESEVERITY_REMARK, Src, 0.33, {}));
+                
+                Issues.push_back(std::move(I));
+            }
+#endif // !NISSUES
+        }
+            break;
+        case '#': {
+            
+            Operator = TOKEN_HASHHASH; // ##
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+            
+            if (c.isDigit()) {
+                
+                size_t count;
+                handleDigits(policy, c, &count);
+            }
+        }
+            break;
+        default: {
+            
+            //
+            // All other multi-byte characters
+            //
+            
+            if (c.isMBLetterlike()) {
+                
+                auto symbolStartBuf = TheByteBuffer->buffer;
+                
+                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                
+                Operator = TOKEN_HASH; // #
+                
+                TokenizerContext Ctxt = 0;
+                
+                Ctxt |= TOKENIZER_SLOT;
+                
+                handleSymbol(symbolStartBuf, c, policy, Ctxt);
+                
+            } else {
+                
+                Operator = TOKEN_HASH; // #
+            }
+            
+        }
+            break;
+    }
+    
+    return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
+}
+
+inline Token Tokenizer::handlePercent(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    auto c = firstChar;
+    
+    assert(c.to_point() == '%');
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    auto Operator = TOKEN_PERCENT; // %
+    
+    if (c.to_point() == '%') {
+        
+        while (true) {
+            
+            //
+            // No need to check isAbort() inside tokenizer loops
+            //
+            
+            if (c.to_point() != '%') {
+                break;
+            }
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+        }
+        
+    } else if (c.isDigit()) {
+        
+        size_t count;
+        handleDigits(policy, c, &count);
+    }
+    
+    return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
+}
+
+inline Token Tokenizer::handleAmp(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    auto c = firstChar;
+    
+    assert(c.to_point() == '&');
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    auto Operator = TOKEN_AMP; // &
+    
+    if (c.to_point() == '&') {
+        
+        Operator = TOKEN_AMPAMP; // &&
+        
+        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+    }
+    
+    return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
+}
+
+inline Token Tokenizer::handleSlash(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    auto c = firstChar;
+    
+    assert(c.to_point() == '/');
+    
+    auto Operator = TOKEN_SLASH; // /
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    switch (c.to_point()) {
+        case '@': {
+            
+            Operator = TOKEN_SLASHAT; // /@
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        }
+            break;
+        case ';': {
+            
+            Operator = TOKEN_SLASHSEMI; // /;
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        }
+            break;
+        case '.': {
+            
+            auto nextBuf = TheByteBuffer->buffer;
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+            
+            if (c.isDigit()) {
+                
+                //
+                // Something like t/.3
+                //
+                // Must now do surgery and back up
+                //
+                
+                backup(nextBuf, true);
+                
+            } else {
+                
+                Operator = TOKEN_SLASHDOT; // /.
+            }
+        }
+            break;
+        case '/': {
+            
+            Operator = TOKEN_SLASHSLASH; // //
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+            
+            switch (c.to_point()) {
+                case '.': {
+                    
+                    Operator = TOKEN_SLASHSLASHDOT; // //.
+                    
+                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                }
+                    break;
+                case '@': {
+                    
+                    Operator = TOKEN_SLASHSLASHAT; // //@
+                    
+                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                }
+                    break;
+            }
+        }
+            break;
+        case ':': {
+            
+            Operator = TOKEN_SLASHCOLON; // /:
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        }
+            break;
+        case '=': {
+            
+            Operator = TOKEN_SLASHEQUAL; // /=
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        }
+            break;
+        case '*': {
+            
+            Operator = TOKEN_SLASHSTAR; // /*
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        }
+            break;
+    }
+    
+    return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
+}
+
+inline Token Tokenizer::handleAt(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    auto c = firstChar;
+    
+    assert(c.to_point() == '@');
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    auto Operator = TOKEN_AT; // @
+    
+    switch (c.to_point()) {
+        case '@': {
+            
+            Operator = TOKEN_ATAT; // @@
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+            
+            if (c.to_point() == '@') {
+                
+                Operator = TOKEN_ATATAT; // @@@
+                
+                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            }
+        }
+            break;
+        case '*': {
+            
+            Operator = TOKEN_ATSTAR; // @*
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        }
+            break;
+    }
+    
+    return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
+}
+
+inline Token Tokenizer::handlePlus(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    auto c = firstChar;
+    
+    assert(c.to_point() == '+');
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    auto Operator = TOKEN_PLUS; // +
+    
+    switch (c.to_point()) {
+        case '+': {
+            Operator = TOKEN_PLUSPLUS; // ++
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+#if !NISSUES
+            
+            if ((policy & ENABLE_STRANGE_CHARACTER_CHECKING) == ENABLE_STRANGE_CHARACTER_CHECKING) {
+                
+                c = TheCharacterDecoder->currentWLCharacter(policy);
+                
+                if (c.to_point() == '=') {
+                    
+                    //
+                    // Something like a++=0
+                    //
+                    
+                    auto buf = TheByteBuffer->buffer;
+                    auto loc = TheByteDecoder->convertBufferToStart(buf);
+                    
+                    std::vector<CodeActionPtr> Actions;
+                    Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(loc), " ")));
+                    
+                    auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``+`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(loc), 0.25, std::move(Actions)));
+                    
+                    Issues.push_back(std::move(I));
+                }
+            }
+#endif // !NISSUES
+        }
+            break;
+        case '=': {
+            Operator = TOKEN_PLUSEQUAL; // +=
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        }
+            break;
+    }
+    
+    return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
+}
+
+inline Token Tokenizer::handleTilde(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    auto c = firstChar;
+    
+    assert(c.to_point() == '~');
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    auto Operator = TOKEN_TILDE; // ~
+    
+    if (c.to_point() == '~') {
+        
+        Operator = TOKEN_TILDETILDE; // ~~
+        
+        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+    }
+    
+    return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
+}
+
+inline Token Tokenizer::handleQuestion(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    auto c = firstChar;
+    
+    assert(c.to_point() == '?');
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    auto Operator = TOKEN_QUESTION; // ?
+    
+    if (c.to_point() == '?') {
+        
+        Operator = TOKEN_QUESTIONQUESTION; // ??
+        
+        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+    }
+    
+    return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
+}
+
+inline Token Tokenizer::handleStar(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    auto c = firstChar;
+    
+    assert(c.to_point() == '*');
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    auto Operator = TOKEN_STAR; // *
+    
+    switch (c.to_point()) {
+        case '=': {
+            
+            Operator = TOKEN_STAREQUAL; // *=
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        }
+            break;
+        case '*': {
+            
+            Operator = TOKEN_STARSTAR; // **
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        }
+            break;
+    }
+    
+    return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
+}
+
+inline Token Tokenizer::handleCaret(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    auto c = firstChar;
+    
+    assert(c.to_point() == '^');
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    auto Operator = TOKEN_CARET;
+    
+    switch (c.to_point()) {
+        case ':': {
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+            
+            if (c.to_point() == '=') {
+                
+                Operator = TOKEN_CARETCOLONEQUAL; // ^:=
+                
+                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                
+            } else {
+                
+                //
+                // Has to be ^:=
+                //
+                
+                Operator = TOKEN_ERROR_EXPECTEDEQUAL;
+                
+                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            }
+        }
+            break;
+        case '=': {
+            Operator = TOKEN_CARETEQUAL; // ^=
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        }
+            break;
+    }
+    
+    return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
+}
+
+inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    //
+    // Unhandled \
+    //
+    // If the bad character looks like a special input, then try to reconstruct the character up to the bad SourceCharacter
+    // This duplicates some logic in CharacterDecoder
+    //
+    
+    auto c = firstChar;
+    
+    assert(c.to_point() == '\\');
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    switch (c.to_point()) {
+        case '[': {
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+            
+            while (true) {
+                
+                //
+                // No need to check isAbort() inside tokenizer loops
+                //
+                
+                if (c.isAlphaOrDigit()) {
+                    
+                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                    
+                    c = TheCharacterDecoder->currentWLCharacter(policy);
+                    
+                } else {
+                    
+                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                    
+                    break;
+                }
+            }
+            
+            return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, getTokenBufferAndLength(tokenStartBuf));
+        }
+        case ':': {
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+            
+            for (auto i = 0; i < 4; i++) {
+                
+                //
+                // No need to check isAbort() inside tokenizer loops
+                //
+                
+                if (c.isHex()) {
+                    
+                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                    
+                    c = TheCharacterDecoder->currentWLCharacter(policy);
+                    
+                } else {
+                    
+                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                    
+                    break;
+                }
+            }
+            
+            return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, getTokenBufferAndLength(tokenStartBuf));
+        }
+        case '.': {
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+            
+            for (auto i = 0; i < 2; i++) {
+                
+                //
+                // No need to check isAbort() inside tokenizer loops
+                //
+                
+                if (c.isHex()) {
+                    
+                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                    
+                    c = TheCharacterDecoder->currentWLCharacter(policy);
+                    
+                } else {
+                    
+                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                    
+                    break;
+                }
+            }
+            
+            return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, getTokenBufferAndLength(tokenStartBuf));
+        }
+        case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': {
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+            
+            for (auto i = 0; i < 3; i++) {
+                
+                //
+                // No need to check isAbort() inside tokenizer loops
+                //
+                
+                if (c.isOctal()) {
+                    
+                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                    
+                    c = TheCharacterDecoder->currentWLCharacter(policy);
+                    
+                } else {
+                    
+                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                    
+                    break;
+                }
+            }
+            
+            return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, getTokenBufferAndLength(tokenStartBuf));
+        }
+        case '|': {
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+            
+            for (auto i = 0; i < 6; i++) {
+                
+                //
+                // No need to check isAbort() inside tokenizer loops
+                //
+                
+                if (c.isHex()) {
+                    
+                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                    
+                    c = TheCharacterDecoder->currentWLCharacter(policy);
+                    
+                } else {
+                    
+                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                    
+                    break;
+                }
+            }
+            
+            return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, getTokenBufferAndLength(tokenStartBuf));
+        }
+        case CODEPOINT_ENDOFFILE: {
+            
+            return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, getTokenBufferAndLength(tokenStartBuf));
+        }
+        default: {
+            
+            //
+            // Nothing special, just read next character
+            //
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
+            return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, getTokenBufferAndLength(tokenStartBuf));
+        }
+    }
+}
+
+inline Token Tokenizer::handleMBStrangeNewline(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    assert(firstChar.isMBStrangeNewline());
+    
+#if !NISSUES
+    if ((policy & ENABLE_STRANGE_CHARACTER_CHECKING) == ENABLE_STRANGE_CHARACTER_CHECKING) {
+        
+        auto tokenStartLoc = TheByteDecoder->convertBufferToStart(tokenStartBuf);
+        
+        auto Src = getTokenSource(tokenStartLoc);
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+        
+        Issues.push_back(std::move(I));
+    }
+#endif // !NISSUES
+    
+    return Token(TOKEN_NEWLINE, getTokenBufferAndLength(tokenStartBuf));
+}
+
+inline Token Tokenizer::handleMBStrangeSpace(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    assert(firstChar.isMBStrangeSpace());
+    
+#if !NISSUES
+    if ((policy & ENABLE_STRANGE_CHARACTER_CHECKING) == ENABLE_STRANGE_CHARACTER_CHECKING) {
+        
+        auto tokenStartLoc = TheByteDecoder->convertBufferToStart(tokenStartBuf);
+        
+        auto Src = getTokenSource(tokenStartLoc);
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+        
+        Issues.push_back(std::move(I));
+    }
+#endif // !NISSUES
+    
+    return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf));
+}
+
+inline Token Tokenizer::handleMBPunctuation(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    auto c = firstChar;
+    
+    assert(c.isMBPunctuation());
+    
+    auto Operator = LongNameCodePointToOperator(c.to_point());
+    
+    return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
+}
+
+inline Token Tokenizer::handleMBLinearSyntax(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+    
+    auto c = firstChar;
+    
+    assert(c.isMBLinearSyntax());
     
     TokenEnum Operator;
     
@@ -643,2938 +3187,44 @@ inline void Tokenizer::handleLinearSyntax() {
             break;
         default:
             assert(false);
-            Operator = TOKEN_ERROR_UNHANDLEDCHARACTER;
+            Operator = TOKEN_UNKNOWN;
             break;
     }
     
-    c = nextWLCharacter(TOPLEVEL);
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
+    return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline void Tokenizer::handleComment() {
-    
-    //
-    // comment is already started
-    //
-    // Comments deal with literal (**) characters
-    // Escaped characters do not work
-    //
-    
-    auto c = TheCharacterDecoder->currentWLCharacter();
-    
-    assert(c == WLCharacter('*'));
-    
-    String << c;
-    
-    auto depth = 1;
-    
-    c = nextWLCharacter(INSIDE_COMMENT);
-    
-    if (c.to_point() == CODEPOINT_ENDOFFILE) {
-        
-        _currentToken = Token(TOKEN_ERROR_UNTERMINATEDCOMMENT, String.str(), getTokenSource());
-        
-        return;
-    }
-    
-    while (true) {
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
-        //
-        // No need to check for comment length
-        //
-        
-        if (c == WLCharacter('(')) {
-            
-            String << c;
-            
-            c = nextWLCharacter(INSIDE_COMMENT);
-            
-            if (c == WLCharacter('*')) {
-                
-                depth = depth + 1;
-                
-                String << c;
-                
-                c = nextWLCharacter(INSIDE_COMMENT);
-            }
-            
-        } else if (c == WLCharacter('*')) {
-            
-            String << c;
-            
-            c = nextWLCharacter(INSIDE_COMMENT);
-            
-            if (c == WLCharacter(')')) {
-                
-                String << c;
-                
-                // This comment is closing
-                
-                depth = depth - 1;
-                
-                if (depth == 0) {
-                    
-                    // Leaving comments, make sure to grab next character
-                    
-                    c = nextWLCharacter(TOPLEVEL);
-                    
-                    break;
-                }
-                
-                c = nextWLCharacter(INSIDE_COMMENT);
-            }
-            
-        } else if (c.to_point() == CODEPOINT_ENDOFFILE) {
-            
-            _currentToken = Token(TOKEN_ERROR_UNTERMINATEDCOMMENT, String.str(), getTokenSource());
-            
-            return;
-            
-        } else {
-            
-            String << c;
-            
-            c = nextWLCharacter(INSIDE_COMMENT);
-        }
-        
-    } // while
-    
-    _currentToken = Token(TOKEN_COMMENT, String.str(), getTokenSource());
+
+
+Source Tokenizer::getTokenSource(SourceLocation tokStartLoc) const {
+    auto buf = TheByteBuffer->buffer;
+    auto loc = TheByteDecoder->convertBufferToEnd(buf);
+    return Source(tokStartLoc, loc);
 }
 
-//
-// a segment is: [a-z$]([a-z$0-9])*
-// a symbol is: (segment)?(`segment)*
-//
-void Tokenizer::handleSymbol(TokenizerContext Ctxt) {
-    
-    auto c = currentWLCharacter();
-    
-    assert(c.to_point() == '`' || c.isLetterlike() || c.isLetterlikeCharacter());
-    
-    if (c.isLetterlike() || c.isLetterlikeCharacter()) {
-        
-        handleSymbolSegment(Ctxt);
-    }
-    
-    c = currentWLCharacter();
-    
-    while (c.to_point() == '`') {
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
-#if !NISSUES
-        if ((Ctxt & TOKENIZER_SLOT) == TOKENIZER_SLOT) {
-            
-            auto Src = TheCharacterDecoder->getWLCharacterSource();
-            
-            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "The name following ``#`` is not documented to allow the **`** character.", SYNTAXISSUESEVERITY_REMARK, Src, 0.33, {}));
-            
-            Issues.push_back(std::move(I));
-        }
-#endif
-        
-        String << c;
-        
-        c = nextWLCharacter(INSIDE_SYMBOL);
-        
-        if (c.isLetterlike() || c.isLetterlikeCharacter()) {
-            
-            handleSymbolSegment(Ctxt);
-            
-        } else {
-            
-            String << c;
-            
-            nextWLCharacter(INSIDE_SYMBOL);
-            
-            _currentToken = Token(TOKEN_ERROR_EXPECTEDLETTERLIKE, String.str(), getTokenSource());
-            
-            return;
-        }
-        
-        c = currentWLCharacter();
-        
-    } // while
-    
-    _currentToken = Token(TOKEN_SYMBOL, String.str(), getTokenSource());
-}
-
-void Tokenizer::handleSymbolSegment(TokenizerContext Ctxt) {
-    
-    auto c = currentWLCharacter();
-    
-    assert(c.isLetterlike() || c.isLetterlikeCharacter());
-    
-#if !NISSUES
-    if (c.to_point() == '$') {
-        
-        if ((Ctxt & TOKENIZER_SLOT) == TOKENIZER_SLOT) {
-            
-            auto Src = TheCharacterDecoder->getWLCharacterSource();
-            
-            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "The name following ``#`` is not documented to allow the ``$`` character.", SYNTAXISSUESEVERITY_REMARK, Src, 0.33, {}));
-            
-            Issues.push_back(std::move(I));
-        }
-    }
-#endif
-    
-#if !NISSUES
-    if (c.isStrangeLetterlike() || c.isStrangeLetterlikeCharacter()) {
-        Utils::strangeLetterlikeWarning(c);
-    }
-#endif
-    
-    String << c;
-    
-    c = nextWLCharacter(INSIDE_SYMBOL);
-    
-    while (true) {
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
-        if (c.isDigit()) {
-            
-            String << c;
-            
-            c = nextWLCharacter(INSIDE_SYMBOL);
-            
-        } else if (c.isLetterlike() || c.isLetterlikeCharacter()) {
-            
-#if !NISSUES
-            if (c.to_point() == '$') {
-                
-                if ((Ctxt & TOKENIZER_SLOT) == TOKENIZER_SLOT) {
-                    
-                    auto Src = TheCharacterDecoder->getWLCharacterSource();
-                    
-                    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "The name following ``#`` is not documented to allow the ``$`` character.", SYNTAXISSUESEVERITY_REMARK, Src, 0.33, {}));
-                    
-                    Issues.push_back(std::move(I));
-                }
-            }
-#endif
-            
-#if !NISSUES
-            if (c.isStrangeLetterlike() || c.isStrangeLetterlikeCharacter()) {
-                Utils::strangeLetterlikeWarning(c);
-            }
-#endif
-            
-            String << c;
-            
-            c = nextWLCharacter(INSIDE_SYMBOL);
-            
-        } else {
-            break;
-        }
-        
-    } // while
-}
-
-void Tokenizer::handleString() {
-    
-    auto c = currentWLCharacter();
-        
-    assert(c.to_point() == '"');
-    
-    String << c;
-    
-    while (true) {
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
-        c = nextWLCharacter(INSIDE_STRING);
-        
-        if (c.to_point() == CODEPOINT_ENDOFFILE) {
-            
-            _currentToken = Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), getTokenSource());
-            
-            return;
-            
-        } else if (c.to_point() == '"') {
-            
-            //
-            // OK to check c == WLCharacter('"') here because we only care about un-escaped "
-            //
-            
-            break;
-        }
-        
-        String << c;
-        
-    } // while
-    
-    String << c;
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    _currentToken = Token(TOKEN_STRING, String.str(), getTokenSource());
-}
-
-void Tokenizer::handleString_stringifyCurrentLine() {
-    
-    auto c = currentWLCharacter();
-    
-    auto lastGoodLocation = TheByteDecoder->getSourceLocation();
-    
-    auto empty = true;
-    while (true) {
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
-        c = currentWLCharacter();
-        
-        if (c == WLCharacter(CODEPOINT_ENDOFFILE)) {
-            
-            break;
-            
-        } else if (c.isNewline() || c.isNewlineCharacter()) {
-            
-            break;
-            
-        } else if (c.isLineContinuation()) {
-            
-            break;
-        }
-        
-        String << c;
-        
-        empty = false;
-        
-        lastGoodLocation = TheByteDecoder->getSourceLocation();
-        
-        c = nextWLCharacter(INSIDE_STRINGIFY_LINE);
-        
-    } // while
-    
-    if (empty) {
-        
-        //
-        // Something like   ?<EOF>
-        //
-        // EndOfFile is special because there is no source
-        //
-        // So invent source
-        //
-        
-        auto Start = TokenStartLoc;
-        
-        _currentToken = Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start));
-        
-        return;
-    }
-    
-    //
-    // ?? syntax is special because we want to ignore the newline that was read.
-    //
-    // So invent source
-    //
-    
-    _currentToken = Token(TOKEN_STRING, String.str(), Source(TokenStartLoc, lastGoodLocation));
-}
-
-void Tokenizer::handleString_stringifyNextToken_symbol() {
-    
-    auto c = currentWLCharacter();
-    
-    if (c.to_point() != '"') {
-        
-        //
-        // magically turn into a string
-        //
-        
-        if (c.isLetterlike() || c.isLetterlikeCharacter()) {
-            
-            TokenizerContext Ctxt;
-            
-            handleSymbolSegment(Ctxt);
-            
-            _currentToken = Token(TOKEN_STRING, String.str(), getTokenSource());
-            
-            return;
-        }
-            
-        //
-        // Something like   a::5
-        //
-        
-        nextToken();
-        
-        _currentToken = Token(TOKEN_ERROR_EXPECTEDLETTERLIKE, String.str(), getTokenSource());
-        
-        return;
-    }
-        
-    assert(c.to_point() == '"');
-    
-    String << c;
-    
-    while (true) {
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
-        c = nextWLCharacter(INSIDE_STRING);
-        
-        if (c.to_point() == CODEPOINT_ENDOFFILE) {
-            
-            _currentToken = Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), getTokenSource());
-            
-            return;
-            
-        } else if (c.to_point() == '"') {
-            
-            //
-            // OK to check c == WLCharacter('"') here because we only care about un-escaped "
-            //
-            
-            break;
-        }
-        
-        String << c;
-        
-    } // while
-    
-    String << c;
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    _currentToken = Token(TOKEN_STRING, String.str(), getTokenSource());
-}
-
-void Tokenizer::handleString_stringifyNextToken_file() {
-    
-    auto c = currentWLCharacter();
-    
-    if (c.to_point() != '"') {
-        
-        //
-        // magically turn into a string
-        //
-        
-        auto empty = true;
-        while (true) {
-            
-            //
-            // No need to check isAbort() inside tokenizer loops
-            //
-            
-            //
-            // tutorial/OperatorInputForms
-            //
-            // File Names
-            //
-            // Any file name can be given in quotes after <<, >>, and >>>.
-            // File names can also be given without quotes if they contain only alphanumeric
-            // characters and the characters `, /, ., \[Backslash], !, -, _, :, $, *, ~, and ?, together with
-            // matched pairs of square brackets enclosing any characters other than spaces, tabs, and newlines.
-            // Note that file names given without quotes can be followed only by spaces, tabs, or newlines, or
-            // by the characters ), ], or }, as well as semicolons and commas.
-            //
-            
-            if (c.isDigit() || c.isAlpha() || c.to_point() == '$' || c.to_point() == '`' || c.to_point() == '/' ||
-                c.to_point() == '.' || c.to_point() == '\\' || c.to_point() == '!' || c.to_point() == '-' ||
-                c.to_point() == '_' || c.to_point() == ':' || c.to_point() == '*' || c.to_point() == '~' ||
-                c.to_point() == '?') {
-                
-                empty = false;
-                
-                String << c;
-                
-                c = nextWLCharacter(INSIDE_STRINGIFY_FILE);
-                
-            } else if (c.to_point() == '[') {
-                
-                // handle matched pairs of [] enclosing any characters other than spaces, tabs, and newlines
-                
-                empty = false;
-                
-                handleFileOpsBrackets();
-                if (_currentToken.getTokenEnum() != TOKEN_STRING) {
-                    return;
-                }
-                
-                c = currentWLCharacter();
-                
-            } else {
-                
-                break;
-            }
-            
-        } // while
-        
-        if (empty) {
-            
-            //
-            // Something like   <<EOF
-            //
-            // EndOfFile is special because there is no source
-            //
-            // So invent source
-            //
-            
-            auto Start = TokenStartLoc;
-            
-            _currentToken = Token(TOKEN_ERROR_EMPTYSTRING, String.str(), Source(Start));
-            
-            return;
-        }
-        
-        _currentToken = Token(TOKEN_STRING, String.str(), getTokenSource());
-        
-        return;
-    }
-        
-    assert(c.to_point() == '"');
-    
-    String << c;
-    
-    while (true) {
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
-        c = nextWLCharacter(INSIDE_STRING);
-        
-        if (c.to_point() == CODEPOINT_ENDOFFILE) {
-            
-            _currentToken = Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), getTokenSource());
-            
-            return;
-            
-        } else if (c.to_point() == '"') {
-            
-            //
-            // OK to check c == WLCharacter('"') here because we only care about un-escaped "
-            //
-            
-            break;
-        }
-        
-        String << c;
-        
-    } // while
-    
-    String << c;
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    _currentToken = Token(TOKEN_STRING, String.str(), getTokenSource());
-}
-
-//
-// Handle parsing the brackets in:
-// a >> foo[[]]
-//
-// tutorial/OperatorInputForms
-//
-// File Names
-//
-// handle matched pairs of [] enclosing any characters other than spaces, tabs, and newlines
-//
-void Tokenizer::handleFileOpsBrackets() {
-    
-    auto c = currentWLCharacter();
-    
-    assert(c.to_point() == '[');
-    
-    String << c;
-    
-    auto depth = 1;
-    
-    auto lastGoodLocation = TheByteDecoder->getSourceLocation();
-    
-    c = nextWLCharacter(INSIDE_STRINGIFY_FILE);
-    
-    while (true) {
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
-        if (c.isSpace() || c.isNewline() || c.isSpaceCharacter() || c.isNewlineCharacter()) {
-            
-            //
-            // Cannot have spaces in the string here, so bail out
-            //
-            // Not going to include the space here, so invent source
-            //
-            
-            _currentToken = Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), Source(TokenStartLoc, lastGoodLocation));
-            
-            return;
-        }
-        if (c.to_point() == CODEPOINT_ENDOFFILE) {
-            
-            _currentToken = Token(TOKEN_ERROR_UNTERMINATEDSTRING, String.str(), getTokenSource());
-            
-            return;
-        }
-        
-        String << c;
-        
-        if (c.to_point() == '[') {
-            
-            depth = depth + 1;
-            
-        } else if (c.to_point() == ']') {
-            
-            depth = depth - 1;
-            
-            if (depth == 0) {
-                
-                // Leaving brackets, make sure to grab next character
-                
-                c = nextWLCharacter(INSIDE_STRINGIFY_FILE);
-                
-                break;
-            }
-        }
-        
-        lastGoodLocation = TheByteDecoder->getSourceLocation();
-        
-        c = nextWLCharacter(INSIDE_STRINGIFY_FILE);
-        
-    } // while
-    
-    _currentToken = Token(TOKEN_STRING, String.str(), getTokenSource());
-}
-
-//
-//digits                  integer
-//digits.digits           approximate number
-//base^^digits            integer in specified base
-//base^^digits.digits     approximate number in specified base
-//mantissa*^n             scientific notation (mantissa*10^n)
-//base^^mantissa*^n       scientific notation in specified base (mantissa*base^n)
-//number`                 machine-precision approximate number
-//number`s                arbitrary-precision number with precision s
-//number``s               arbitrary-precision number with accuracy s
-//
-// base = (digits^^)?
-// approximate = digits(.digits?)?|.digits
-// precision = `(-?approximate)?
-// accuracy = ``-?approximate
-// mantissa = approximate+(precision|accuracy)?
-// exponent = (*^-?digits)?
-//
-// numer = base+mantissa+exponent
-//
-inline void Tokenizer::handleNumber() {
-    
-    int base = 0;
-    
-    int leadingZeroCount = 0;
-    handleDigits(&leadingZeroCount);
-    
-    auto c = currentWLCharacter();
-    
-    //
-    // Could be 16^^blah
-    //
-    if (c.to_point() == '^') {
-        
-        auto Caret1Char = c;
-        
-        auto Caret1Loc = TheByteDecoder->getSourceLocation();
-        
-        c = nextWLCharacter(INSIDE_NUMBER);
-        
-        if (c.to_point() != '^') {
-            
-            //
-            // Something like  2^a
-            //
-            // Must now do surgery and back up
-            //
-            
-            backup(Caret1Char, Caret1Loc, c, WarningPosition::NONE);
-            
-            _currentToken = Token(TOKEN_INTEGER, String.str(), getTokenSource());
-            
-            return;
-        }
-        
-        // c is '^'
-            
-        //
-        // Something like 2^^
-        //
-        // Must be a number
-        //
-        
-        auto S = String.str();
-        
-        //
-        // Only parse integer if we know it can possibly be a valid base
-        //
-        // If string is longer than 2 characters, then cannot be a valid base
-        //
-        if (S.size() - leadingZeroCount > 2) {
-            
-            //
-            // Too large
-            //
-            
-            base = -1;
-            
-        } else {
-            
-            //
-            // parseInteger is only safe to call if we know S is parseable
-            //
-            
-            base = Utils::parseInteger(S, 10);
-        }
-        
-        if (base < 2 || base > 36) {
-            
-            //
-            // Something like 37^^2, which is an invalid base
-            //
-            
-            String << Caret1Char;
-            String << c;
-            
-            c = nextWLCharacter(INSIDE_NUMBER);
-            
-            _currentToken = Token(TOKEN_ERROR_INVALIDBASE, String.str(), getTokenSource());
-            
-            return;
-        }
-        
-        String << Caret1Char;
-        String << c;
-        
-        c = nextWLCharacter(INSIDE_NUMBER);
-        
-        if (c.isDigit() || c.isAlpha()) {
-            
-            auto handle = handleDigitsOrAlpha(base);
-            if (handle == -1) {
-                
-                _currentToken = Token(TOKEN_ERROR_UNRECOGNIZEDDIGIT, String.str(), getTokenSource());
-                
-                return;
-            }
-            
-        } else if (c.to_point() != '.') {
-            
-            //
-            // Make sure that bad character is added to String
-            //
-            String << c;
-            
-            c = nextWLCharacter(INSIDE_NUMBER);
-            
-            _currentToken = Token(TOKEN_ERROR_UNRECOGNIZEDDIGIT, String.str(), getTokenSource());
-            
-            return;
-        }
-    }
-    
-    c = currentWLCharacter();
-    
-    bool real = false;
-    
-    if (c.to_point() == '.') {
-        
-        auto handle = handlePossibleFractionalPart(base);
-        if (handle == -1) {
-            _currentToken = Token(TOKEN_ERROR_UNRECOGNIZEDDIGIT, String.str(), getTokenSource());
-            
-            return;
-        }
-        
-        real = true;
-    }
-    
-    c = currentWLCharacter();
-    
-    //
-    // Handle all ` logic here
-    //
-    // foo`
-    // foo`bar
-    // foo``bar
-    //
-    if (c.to_point() == '`') {
-        
-        real = true;
-        
-        String << c;
-        
-        auto TickLoc = TheByteDecoder->getSourceLocation();
-        
-        c = nextWLCharacter(INSIDE_NUMBER);
-        
-        bool accuracy = false;
-        bool sign = false;
-        bool supplied = false;
-        if (c.to_point() == '`') {
-            
-            String << c;
-            
-            TickLoc = TheByteDecoder->getSourceLocation();
-            
-            c = nextWLCharacter(INSIDE_NUMBER);
-            
-            accuracy = true;
-        }
-        
-        switch (c.to_point()) {
-            case '-': case '+': {
-                
-                //
-                // Something like 1.2`-
-                //
-                
-                auto SignChar = c;
-                
-                auto SignLoc = TheByteDecoder->getSourceLocation();
-                
-                c = nextWLCharacter(INSIDE_NUMBER);
-                
-                switch (c.to_point()) {
-                    case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-                    case '.': {
-                        
-                        sign = true;
-                        
-                        String << SignChar;
-                    }
-                        break;
-                    default: {
-                        
-                        //
-                        // Something like 1.2`->
-                        //
-                        
-                        if (accuracy) {
-                            
-                            //
-                            // Something like 1.2``->3
-                            //
-                            
-                            String << SignChar;
-                            String << c;
-                            
-                            c = nextWLCharacter(INSIDE_NUMBER);
-                            
-                            _currentToken = Token(TOKEN_ERROR_EXPECTEDACCURACY, String.str(), getTokenSource());
-                            
-                            return;
-                        }
-                        
-                        //
-                        // Something like 1.2`->3
-                        //
-                        // Must now do surgery and back up
-                        //
-                        backup(SignChar, SignLoc, c, WarningPosition::BEFORE);
-                        
-                        _currentToken = Token(TOKEN_REAL, String.str(), getTokenSource());
-                        
-                        return;
-                    }
-                }
-            }
-            //
-            // fall-through
-            //
-            case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': {
-                
-                int leadingZeroCount;
-                auto handled = handleDigits(&leadingZeroCount);
-                if (handled > 0) {
-                    supplied = true;
-                }
-                
-                c = currentWLCharacter();
-                
-                if (c.to_point() != '.') {
-                    break;
-                }
-            }
-            //
-            // fall-through
-            //
-            case '.': {
-                
-                auto DotChar = c;
-                auto DotLoc = TheByteDecoder->getSourceLocation();
-                
-                bool actualDecimalPoint = false;
-                
-                //
-                // If there was already a sign, or if the leading digits have already been supplied,
-                // then this is an actual decimal point
-                //
-                if (sign || supplied) {
-                    actualDecimalPoint = true;
-                }
-                
-                //
-                // Need to decide if the  .  here is actual radi point, or something like
-                // the . in  123`.xxx  (which is Dot)
-                //
-                
-                if (!actualDecimalPoint) {
-                    
-                    //
-                    // Need to peek ahead
-                    //
-                    // Something like 123`.xxx
-                    //
-                    
-                    // look ahead
-                    auto NextChar = nextWLCharacter(INSIDE_NUMBER);
-                    
-                    if (!NextChar.isDigit()) {
-                        
-                        if (accuracy) {
-                            
-                            //
-                            // Something like  123``.EOF
-                            //
-                            
-                            String << DotChar;
-                            String << NextChar;
-                            
-                            nextWLCharacter(INSIDE_NUMBER);
-                            
-                            _currentToken = Token(TOKEN_ERROR_EXPECTEDDIGIT, String.str(), getTokenSource());
-                            
-                            return;
-                        }
-                        
-                        if (NextChar.to_point() == '-' || NextChar.to_point() == '+') {
-                            
-                            //
-                            // Something like  123`.+4
-                            //
-                            
-                            String << DotChar;
-                            String << NextChar;
-                            
-                            nextWLCharacter(INSIDE_NUMBER);
-                            
-                            _currentToken = Token(TOKEN_ERROR_EXPECTEDDIGIT, String.str(), getTokenSource());
-                            
-                            return;
-                        }
-                        
-                        //
-                        // Something like  123`.xxx  where the . could be a Dot operator
-                        //
-                        // Number stops at `
-                        //
-                        // NOT actual decimal point
-                        //
-                        // Must now do surgery and back up
-                        //
-                        backup(DotChar, DotLoc, NextChar, WarningPosition::BEFORE);
-                        
-                        _currentToken = Token(TOKEN_REAL, String.str(), getTokenSource());
-                        
-                        return;
-                    }
-                    
-                } else {
-                    
-                    //
-                    // actual decimal point
-                    //
-                    
-                    nextWLCharacter(INSIDE_NUMBER);
-                }
-                
-                //
-                // actual decimal point
-                //
-                
-                auto handled = handlePossibleFractionalPartPastDot(0, DotChar, DotLoc);
-                if (handled > 0) {
-                    supplied = true;
-                }
-                
-                if (!supplied) {
-                    
-                    //
-                    // Something like 1`+.a
-                    //
-                    
-                    c = currentWLCharacter();
-                    
-                    String << c;
-                    
-                    nextWLCharacter(INSIDE_NUMBER);
-                    
-                    _currentToken = Token(TOKEN_ERROR_EXPECTEDDIGIT, String.str(), getTokenSource());
-                    
-                    return;
-                }
-                
-            } // case '.'
-                break;
-            default: {
-                
-                if (accuracy) {
-                    
-                    //
-                    // Something like  123``EOF
-                    //
-                    
-                    String << c;
-                    
-                    c = nextWLCharacter(INSIDE_NUMBER);
-                    
-                    _currentToken = Token(TOKEN_ERROR_EXPECTEDACCURACY, String.str(), getTokenSource());
-                    
-                    return;
-                }
-            }
-                break;
-        } // switch (c.to_point())
-    }
-    
-    c = currentWLCharacter();
-    
-    if (c.to_point() != '*') {
-        
-        //
-        // Success!
-        //
-        
-        if (real) {
-            _currentToken = Token(TOKEN_REAL, String.str(), getTokenSource());
-        } else {
-            _currentToken = Token(TOKEN_INTEGER, String.str(), getTokenSource());
-        }
-        
-        return;
-    }
-    
-    // c is '*'
-        
-    auto StarChar = c;
-    
-    auto StarLoc = TheByteDecoder->getSourceLocation();
-    
-    c = nextWLCharacter(INSIDE_NUMBER);
-    
-    if (c.to_point() != '^') {
-        
-        //
-        // Something like 1*a
-        //
-        // Must now do surgery and back up
-        //
-
-        backup(StarChar, StarLoc, c, WarningPosition::NONE);
-        
-        //
-        // Success!
-        //
-        
-        if (real) {
-            _currentToken = Token(TOKEN_REAL, String.str(), getTokenSource());
-        } else {
-            _currentToken = Token(TOKEN_INTEGER, String.str(), getTokenSource());
-        }
-        
-        return;
-    }
-    
-    // c is '^'
-        
-    String << StarChar;
-    String << c;
-    
-    c = nextWLCharacter(INSIDE_NUMBER);
-    
-    if (c.to_point() == '-' || c.to_point() == '+') {
-        
-        String << c;
-        
-        c = nextWLCharacter(INSIDE_NUMBER);
-    }
-    
-    if (!expectDigits(&leadingZeroCount)) {
-        
-        //
-        // Something like 123*^EOF
-        //
-        
-        String << c;
-        
-        c = nextWLCharacter(INSIDE_NUMBER);
-        
-        _currentToken = Token(TOKEN_ERROR_EXPECTEDEXPONENT, String.str(), getTokenSource());
-        
-        return;
-    }
-    
-    c = currentWLCharacter();
-    
-    if (c.to_point() != '.') {
-        
-        //
-        // Success!
-        //
-        
-        if (real) {
-            _currentToken = Token(TOKEN_REAL, String.str(), getTokenSource());
-        } else {
-            _currentToken = Token(TOKEN_INTEGER, String.str(), getTokenSource());
-        }
-        
-        return;
-    }
-    
-    // c is '.'
-        
-    //
-    // Something like 123*^0.5
-    //
-    
-    String << c;
-    
-    c = nextWLCharacter(INSIDE_NUMBER);
-    
-    _currentToken = Token(TOKEN_ERROR_EXPECTEDEXPONENT, String.str(), getTokenSource());
-}
-
-//
-// Precondition: currentWLCharacter is NOT in String
-//
-// Return: number of digits handled after ., possibly 0, or -1 if error
-//
-// Note: if 0 digits, then the . is also not added to String
-//
-int Tokenizer::handlePossibleFractionalPart(int base) {
-    
-    auto c = currentWLCharacter();
-    
-    assert(c.to_point() == '.');
-    
-    auto DotChar1 = c;
-    
-    auto DotLoc1 = TheByteDecoder->getSourceLocation();
-    
-    nextWLCharacter(INSIDE_NUMBER);
-    
-    return handlePossibleFractionalPartPastDot(base, DotChar1, DotLoc1);
-}
-
-//
-// Precondition: currentWLCharacter is NOT in String
-//
-// Return: number of digits handled after ., possibly 0
-//         -1 if base error
-//         -2 if not a radix point (and ok to back up)
-//         -3 error
-//
-// Note: if 0 digits, then the . is also not added to String
-//
-int Tokenizer::handlePossibleFractionalPartPastDot(int base, WLCharacter DotChar1, SourceLocation DotLoc1) {
-    
-    auto c = currentWLCharacter();
-    
-    if (c.to_point() == '.') {
-        
-        //
-        // Something like 0..
-        //
-        // Must now do surgery and back up
-        //
-        
-        backup(DotChar1, DotLoc1, c, WarningPosition::BEFORE);
-        
-        return 0;
-    }
-    
-    String << DotChar1;
-    
-    auto handle = 0;
-    if (c.isDigit() || c.isAlpha()) {
-        
-        handle = handleDigitsOrAlpha(base);
-        if (handle == -1) {
-            return -1;
-        } else if (handle == 0) {
-            return 0;
-        }
-    }
-    
-    c = currentWLCharacter();
-    
-#if !NISSUES
-    if (c.to_point() == '.') {
-        
-        //
-        // Something like 1.2.3
-        //
-        
-        auto Loc2 = TheByteDecoder->getSourceLocation();
-        
-        std::vector<CodeActionPtr> Actions;
-        Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert *", Source(Loc2), "*")));
-        
-        auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_IMPLICITTIMES, "Suspicious syntax.", SYNTAXISSUESEVERITY_ERROR, Source(Loc2), 0.99, std::move(Actions)));
-        
-        Issues.push_back(std::move(I));
-    }
-#endif
-    
-    return handle;
-}
-        
-void Tokenizer::backup(WLCharacter Char1, SourceLocation Loc1, WLCharacter c, WarningPosition pos) {
-    
-#if !NISSUES
-    
-    switch (pos) {
-        case WarningPosition::NONE:
-            break;
-        case WarningPosition::BEFORE: {
-            std::vector<CodeActionPtr> Actions;
-            Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(Loc1), " ")));
-            
-            auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, Source(Loc1), 0.25, std::move(Actions)));
-            
-            Issues.push_back(std::move(I));
-        }
-            break;
-        case WarningPosition::AFTER: {
-            std::vector<CodeActionPtr> Actions;
-            Actions.push_back(CodeActionPtr(new InsertTextAfterCodeAction("Insert space after", Source(Loc1), " ")));
-            
-            auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, Source(Loc1), 0.25, std::move(Actions)));
-            
-            Issues.push_back(std::move(I));
-        }
-            break;
-    }
-    
-#endif
-    
-    auto Src = TheCharacterDecoder->getWLCharacterSource();
-    
-    //
-    // FIXME: DotLoc-1 is not correct because of something like this:
-    //
-    // 0\
-    // ..
-    //
-    TheByteDecoder->setSourceLocation(Loc1-1);
-    TheCharacterDecoder->setWLCharacterStart();
-    TheCharacterDecoder->setWLCharacterEnd();
-    
-    TheByteDecoder->setSourceLocation(Loc1);
-    TheCharacterDecoder->setWLCharacterStart();
-    TheCharacterDecoder->setWLCharacterEnd();
-    _currentWLCharacter = Char1;
-    
-    append(c, Src);
-}
-
-bool Tokenizer::expectDigits(int *leadingZeroCount) {
-    
-    auto c = currentWLCharacter();
-    
-    if (c.isDigit()) {
-        
-        handleDigits(leadingZeroCount);
-        
-        return true;
-    }
-    
-    return false;
-}
-
-//
-// Return length of digits
-//
-// Precondition: currentWLCharacter MAY NOT be a digit
-// Postcondition: currentWLCharacter is the first WLCharacter AFTER all good digits
-//
-size_t Tokenizer::handleDigits(int *leadingZeroCount) {
-    
-    auto c = currentWLCharacter();
-    
-    auto len = 0;
-    
-    while (true) {
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
-        if (c.to_point() == '0') {
-            
-            *leadingZeroCount = *leadingZeroCount + 1;
-            
-            String << c;
-            
-            c = nextWLCharacter(INSIDE_NUMBER);
-            
-        } else {
-            break;
-        }
-        
-        len++;
-    } // while
-    
-    while (true) {
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
-        if (c.isDigit()) {
-            
-            String << c;
-            
-            c = nextWLCharacter(INSIDE_NUMBER);
-            
-        } else {
-            break;
-        }
-        
-        len++;
-    } // while
-    
-    return len;
-}
-
-//
-// Precondition: currentWLCharacter is NOT in String
-// Postcondition: currentWLCharacter is the first WLCharacter AFTER all good digits or alphas
-//
-// Return: number of digits handled, possibly 0, or -1 if error
-//
-// Note: if base == 0, then it is not possible to return an error
-//
-int Tokenizer::handleDigitsOrAlpha(int base) {
-    
-    auto c = currentWLCharacter();
-    
-    auto handled = 0;
-    auto error = false;
-    
-    while (true) {
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
-        if (c.isDigit() || c.isAlpha()) {
-            
-            int baseDigit = toDigit(c.to_point());
-            
-            assert(baseDigit >= 0);
-            
-            if (base == 0) {
-                
-                //
-                // base is the unspecified default i.e., 10
-                //
-                
-                if (baseDigit >= 10) {
-                    
-                    //
-                    // Not an error if no base is specified
-                    //
-                    // It's the difference between 2.Pi and 10^^2.Pi
-                    //
-                    
-                    break;
-                }
-                
-            } else {
-                
-                if (baseDigit >= base) {
-                    error = true;
-                }
-            }
-            
-            String << c;
-            
-            handled++;
-            
-        } else {
-            break;
-        }
-        
-        c = nextWLCharacter(INSIDE_NUMBER);
-    }
-    
-    if (error) {
-        return -1;
-    }
-    
-    return handled;
-}
-
-inline void Tokenizer::handleColon() {
-    
-    //
-    // Could be : or \[RawColon]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_COLON; // :
-    
-    String << c;
-    
-    c = nextWLCharacter(INSIDE_OPERATOR);
-    
-    switch (c.to_point()) {
-        case ':': {
-            Operator = TOKEN_COLONCOLON; // ::
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-        }
-            break;
-        case '=': {
-            Operator = TOKEN_COLONEQUAL; // :=
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-        }
-            break;
-        case '>': {
-            Operator = TOKEN_COLONGREATER; // :>
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-        }
-            break;
-    }
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleOpenParen() {
-    
-    //
-    // Could be ( or \[RawLeftParenthesis]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_OPENPAREN; // (
-    
-    auto ParenChar = c;
-    
-    String << c;
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    //
-    // Comments must start literally with (*
-    // Escaped characters do not work
-    //
-    if (ParenChar == WLCharacter('(') &&
-        c == WLCharacter('*')) {
-        
-        return handleComment();
-    }
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleCloseParen() {
-    
-    //
-    // Could be ) or \[RawRightParenthesis]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_CLOSEPAREN; // )
-    
-    String << c;
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleOpenSquare() {
-    
-    //
-    // Could be [ or \[RawLeftBracket]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_OPENSQUARE; // [
-    
-    String << c;
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleCloseSquare() {
-    
-    //
-    // Could be ] or \[RawRightBracket]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_CLOSESQUARE; // ]
-    
-    String << c;
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleComma() {
-    
-    //
-    // Could be , or \[RawComma]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_COMMA; // ,
-    
-    String << c;
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleOpenCurly() {
-    
-    //
-    // Could be { or \[RawLeftBrace]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_OPENCURLY; // {
-    
-    String << c;
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleCloseCurly() {
-    
-    //
-    // Could be } or \[RawRightBrace]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_CLOSECURLY; // }
-    
-    String << c;
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleDot() {
-    
-    //
-    // Could be . or \[RawDot]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    //
-    // handleDot
-    // Could be  .  or  ..  or ...  or  .0
-    //
-    
-    auto DotChar = c;
-    
-    auto DotLoc = TheByteDecoder->getSourceLocation();
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    if (c.isDigit()) {
-        
-        //
-        // Something like .0
-        //
-        // Must now do surgery and back up (and go to handleNumber instead)
-        //
-        
-        backup(DotChar, DotLoc, c, WarningPosition::NONE);
-        
-        return handleNumber();
-    }
-    
-    String << DotChar;
-    
-    auto Operator = TOKEN_DOT; // .
-    
-    if (c.to_point() == '.') {
-        
-        Operator = TOKEN_DOTDOT; // ..
-        
-        String << c;
-        
-        c = nextWLCharacter(TOPLEVEL);
-        
-        if (c.to_point() == '.') {
-            
-            Operator = TOKEN_DOTDOTDOT; // ...
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-        }
-    }
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleEqual() {
-    
-    //
-    // Could be = or \[RawEqual]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_EQUAL; // =
-    
-    String << c;
-    
-    c = nextWLCharacter(INSIDE_OPERATOR);
-    
-    switch (c.to_point()) {
-        case '=': {
-            Operator = TOKEN_EQUALEQUAL; // ==
-            
-            String << c;
-            
-            c = nextWLCharacter(INSIDE_OPERATOR);
-            
-            if (c.to_point() == '=') {
-                
-                Operator = TOKEN_EQUALEQUALEQUAL; // ===
-                
-                String << c;
-                
-                c = nextWLCharacter(TOPLEVEL);
-            }
-        }
-            break;
-        case '.': {
-            
-            //
-            // handleDot
-            //
-            // Could be  =.  or  =..  or  =...  or  =....  or  =.0
-            //
-            
-            auto DotChar = c;
-            
-            auto DotLoc = TheByteDecoder->getSourceLocation();
-            
-            c = nextWLCharacter(INSIDE_OPERATOR);
-            
-            if (c.isDigit()) {
-                
-                //
-                // Something like x=.0
-                //
-                // Must now do surgery and back up
-                //
-                
-                backup(DotChar, DotLoc, c, WarningPosition::BEFORE);
-                
-                Operator = TOKEN_EQUAL;
-                
-            } else if (c.to_point() == '.') {
-                
-                //
-                // =..  is a syntax error
-                //
-                
-                String << DotChar;
-                String << c;
-                
-                Operator = TOKEN_ERROR_UNHANDLEDDOT;
-                
-                c = nextWLCharacter(INSIDE_OPERATOR);
-                
-            } else {
-                
-                Operator = TOKEN_EQUALDOT; // =.
-                
-                String << DotChar;
-            }
-            
-        }
-            break;
-        case '!': {
-            
-            auto BangChar = c;
-            
-            auto BangLoc = TheByteDecoder->getSourceLocation();
-            
-            c = nextWLCharacter(INSIDE_OPERATOR);
-            
-            if (c.to_point() == '=') {
-                
-                Operator = TOKEN_EQUALBANGEQUAL; // =!=
-                
-                String << BangChar;
-                String << c;
-                
-                c = nextWLCharacter(TOPLEVEL);
-                
-            } else {
-                
-                //
-                // Something like x=!y
-                //
-                // Must now do surgery and back up
-                //
-                
-                backup(BangChar, BangLoc, c, WarningPosition::BEFORE);
-                
-                Operator = TOKEN_EQUAL;
-            }
-        }
-            break;
-    }
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleUnder() {
-    
-    //
-    // Could be _ or \[RawUnderscore]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_UNDER; // _
-    
-    String << c;
-    
-    c = nextWLCharacter(INSIDE_OPERATOR);
-    
-    switch (c.to_point()) {
-        case '_': {
-            Operator = TOKEN_UNDERUNDER; // __
-            
-            String << c;
-            
-            c = nextWLCharacter(INSIDE_OPERATOR);
-            
-            if (c.to_point() == '_') {
-                
-                Operator = TOKEN_UNDERUNDERUNDER; // ___
-                
-                String << c;
-                
-                c = nextWLCharacter(TOPLEVEL);
-            }
-        }
-            break;
-        case '.': {
-            
-            auto DotChar = c;
-            
-            auto DotLoc = TheByteDecoder->getSourceLocation();
-            
-            c = nextWLCharacter(INSIDE_OPERATOR);
-            
-            if (c.to_point() == '.') {
-                
-                //
-                // Something like  _...
-                //
-                // Must now do surgery and back up
-                //
-                
-                backup(DotChar, DotLoc, c, WarningPosition::BEFORE);
-                
-                Operator = TOKEN_UNDER; // _
-                
-            } else {
-                
-                String << DotChar;
-                
-                Operator = TOKEN_UNDERDOT; // _.
-            }
-        }
-            break;
-    }
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleLess() {
-    
-    //
-    // Could be < or \[RawLess]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_LESS; // <
-    
-    String << c;
-    
-    c = nextWLCharacter(INSIDE_OPERATOR);
-    
-    switch (c.to_point()) {
-        case '|': {
-            Operator = TOKEN_LESSBAR; // <|
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-        }
-            break;
-        case '<': {
-            Operator = TOKEN_LESSLESS; // <<
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-        }
-            break;
-        case '>': {
-            Operator = TOKEN_LESSGREATER; // <>
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-        }
-            break;
-        case '=': {
-            Operator = TOKEN_LESSEQUAL; // <=
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-        }
-            break;
-        case '-': {
-            
-            auto MinusChar = c;
-            
-            auto MinusLoc = TheByteDecoder->getSourceLocation();
-            
-            c = nextWLCharacter(INSIDE_OPERATOR);
-            
-            if (c.to_point() == '>') {
-                
-                Operator = TOKEN_LESSMINUSGREATER; // <->
-                
-                String << MinusChar;
-                String << c;
-                
-                c = nextWLCharacter(TOPLEVEL);
-                
-            } else {
-                
-                //
-                // Something like  a<-4
-                //
-                // Must now do surgery and back up
-                //
-                
-                backup(MinusChar, MinusLoc, c, WarningPosition::BEFORE);
-                
-                Operator = TOKEN_LESS;
-            }
-        }
-            break;
-    }
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleGreater() {
-    
-    //
-    // Could be > or \[RawGreater]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_GREATER; // >
-    
-    String << c;
-    
-    c = nextWLCharacter(INSIDE_OPERATOR);
-    
-    switch (c.to_point()) {
-        case '>': {
-            
-            Operator = TOKEN_GREATERGREATER; // >>
-            
-            String << c;
-            
-            c = nextWLCharacter(INSIDE_OPERATOR);
-            
-            if (c.to_point() == '>') {
-                
-                Operator = TOKEN_GREATERGREATERGREATER; // >>>
-                
-                String << c;
-                
-                c = nextWLCharacter(TOPLEVEL);
-            }
-        }
-            break;
-        case '=': {
-            Operator = TOKEN_GREATEREQUAL; // >=
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-        }
-            break;
-    }
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleMinus() {
-    
-    //
-    // Could be - or \[RawDash]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_MINUS; // -
-    
-    String << c;
-    
-    c = nextWLCharacter(INSIDE_OPERATOR);
-    
-    //
-    // Do not lex as a number here
-    // Makes it easier to handle implicit times later
-    //
-    // Because if we lexed - as a number here, then it is
-    // harder to know that b-1 is Plus[b, -1] instead of
-    // b<invisiblespace>-1 which is Times[b, -1]
-    //
-    
-    switch (c.to_point()) {
-        case '>': {
-            Operator = TOKEN_MINUSGREATER; // ->
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-        }
-            break;
-        case '-': {
-            Operator = TOKEN_MINUSMINUS; // --
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-            
-#if !NISSUES
-            if (c.to_point() == '>') {
-                
-                //
-                // Something like a-->0
-                //
-                
-                auto Loc = TheByteDecoder->getSourceLocation();
-                
-                std::vector<CodeActionPtr> Actions;
-                Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(Loc), " ")));
-                
-                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``-`` and ``>`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc), 0.25, std::move(Actions)));
-                
-                Issues.push_back(std::move(I));
-                
-            } else if (c.to_point() == '=') {
-                
-                //
-                // Something like a--=0
-                //
-                
-                auto Loc = TheByteDecoder->getSourceLocation();
-                
-                std::vector<CodeActionPtr> Actions;
-                Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(Loc), " ")));
-                
-                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``-`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc), 0.25, std::move(Actions)));
-                
-                Issues.push_back(std::move(I));
-            }
-#endif
-        }
-            break;
-        case '=': {
-            Operator = TOKEN_MINUSEQUAL; // -=
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-        }
-            break;
-    }
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleBar() {
-    
-    //
-    // Could be | or \[RawVerticalBar]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_BAR; // |
-    
-    String << c;
-    
-    c = nextWLCharacter(INSIDE_OPERATOR);
-    
-    switch (c.to_point()) {
-        case '>': {
-            Operator = TOKEN_BARGREATER; // |>
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-            
-#if !NISSUES
-            if (c.to_point() == '=') {
-                
-                //
-                // Something like <||>=0
-                //
-                
-                auto Loc = TheByteDecoder->getSourceLocation();
-                
-                std::vector<CodeActionPtr> Actions;
-                Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(Loc), " ")));
-                
-                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``>`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc), 0.25, std::move(Actions)));
-                
-                Issues.push_back(std::move(I));
-                
-            }
-#endif
-        }
-            break;
-        case '|': {
-            Operator = TOKEN_BARBAR; // ||
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-        }
-            break;
-    }
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleSemi() {
-    
-    //
-    // Could be ; or \[RawSemicolon]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_SEMI; // ;
-    
-    String << c;
-    
-    c = nextWLCharacter(INSIDE_OPERATOR);
-    
-    if (c.to_point() == ';') {
-        
-        Operator = TOKEN_SEMISEMI; // ;;
-        
-        String << c;
-        
-        c = nextWLCharacter(TOPLEVEL);
-    }
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleBang() {
-    
-    //
-    // Could be ! or \[RawExclamation]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_BANG; // !
-    
-    String << c;
-    
-    c = nextWLCharacter(INSIDE_OPERATOR);
-    
-    switch (c.to_point()) {
-        case '=': {
-            Operator = TOKEN_BANGEQUAL; // !=
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-        }
-            break;
-        case '!': {
-            Operator = TOKEN_BANGBANG; // !!
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-        }
-            break;
-    }
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleHash() {
-    
-    //
-    // Could be # or \[RawNumberSign]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_UNKNOWN;
-    
-    String << c;
-    
-    c = nextWLCharacter(INSIDE_OPERATOR);
-    
-    //
-    // From Slot documentation:
-    //
-    // In the form #name, the characters in name can be any combination of alphanumeric characters not beginning with digits.
-    //
-    //
-    // A slot that starts with a digit goes down one path
-    // And a slot that starts with a letter goes down another path
-    //
-    // Make sure e.g.  #1a is not parsed as SlotNode["#1a"]
-    //
-    
-    switch (c.to_point()) {
-        case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': {
-            
-            Operator = TOKEN_HASH; // #
-            
-            int leadingZeroCount;
-            handleDigits(&leadingZeroCount);
-        }
-            break;
-        //
-        // letterlike
-        //
-        case '\x00': case '\x01': case '\x02': case '\x03': case '\x04': case '\x05': case '\x06':
-        case '\b':
-        case '\x0e': case '\x0f': case '\x10': case '\x11': case '\x12': case '\x13': case '\x14': case '\x15': case '\x16': case '\x17': case '\x18': case '\x19': case '\x1a': case '\x1b': case '\x1c': case '\x1d': case '\x1e': case '\x1f':
-        case '$':
-        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
-        case '`':
-        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm': case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z': {
-            
-            Operator = TOKEN_HASH; // #
-            
-            TokenizerContext Ctxt;
-            
-            Ctxt |= TOKENIZER_SLOT;
-            
-            handleSymbol(Ctxt);
-        }
-            break;
-        case '"': {
-            
-            Operator = TOKEN_HASH; // #
-            
-            handleString();
-            
-#if !NISSUES
-            auto Loc = TokenStartLoc;
-            
-            auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT, "The name following ``#`` is not documented to allow the ``\"`` character.", SYNTAXISSUESEVERITY_REMARK, Source(Loc), 0.33, {}));
-            
-            Issues.push_back(std::move(I));
-#endif
-        }
-            break;
-        case '#': {
-            
-            Operator = TOKEN_HASHHASH; // ##
-            
-            String << c;
-            
-            c = nextWLCharacter(INSIDE_OPERATOR);
-            
-            if (c.isDigit()) {
-                
-                int leadingZeroCount;
-                handleDigits(&leadingZeroCount);
-            }
-        }
-            break;
-        default: {
-            
-            if (c.isLetterlikeCharacter()) {
-                
-                Operator = TOKEN_HASH; // #
-                
-                TokenizerContext Ctxt;
-                
-                Ctxt |= TOKENIZER_SLOT;
-                
-                handleSymbol(Ctxt);
-                
-            } else {
-                
-                Operator = TOKEN_HASH; // #
-            }
-            
-        }
-            break;
-    }
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handlePercent() {
-    
-    //
-    // Could be % or \[RawPercent]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_PERCENT; // %
-    
-    String << c;
-    
-    c = nextWLCharacter(INSIDE_OPERATOR);
-    
-    if (c.to_point() == '%') {
-        
-        while (true) {
-            
-            //
-            // No need to check isAbort() inside tokenizer loops
-            //
-            
-            if (c.to_point() != '%') {
-                break;
-            }
-            
-            String << c;
-            
-            c = nextWLCharacter(INSIDE_OPERATOR);
-        }
-        
-    } else if (c.isDigit()) {
-        
-        int leadingZeroCount;
-        handleDigits(&leadingZeroCount);
-    }
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleAmp() {
-    
-    //
-    // Could be & or \[RawAmpersand]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_AMP; // &
-    
-    String << c;
-    
-    c = nextWLCharacter(INSIDE_OPERATOR);
-    
-    if (c.to_point() == '&') {
-        
-        Operator = TOKEN_AMPAMP; // &&
-        
-        String << c;
-        
-        c = nextWLCharacter(TOPLEVEL);
-    }
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleSlash() {
-    
-    //
-    // Could be / or \[RawSlash]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_SLASH; // /
-    
-    String << c;
-    
-    c = nextWLCharacter(INSIDE_OPERATOR);
-    
-    switch (c.to_point()) {
-        case '@': {
-            Operator = TOKEN_SLASHAT; // /@
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-        }
-            break;
-        case ';': {
-            Operator = TOKEN_SLASHSEMI; // /;
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-        }
-            break;
-        case '.': {
-            
-            auto DotChar = c;
-            
-            auto DotLoc = TheByteDecoder->getSourceLocation();
-            
-            c = nextWLCharacter(TOPLEVEL);
-            
-            if (c.isDigit()) {
-                
-                //
-                // Something like t/.3
-                //
-                // Must now do surgery and back up
-                //
-                
-                backup(DotChar, DotLoc, c, WarningPosition::BEFORE);
-                
-            } else {
-                
-                Operator = TOKEN_SLASHDOT; // /.
-                
-                String << DotChar;
-            }
-        }
-            break;
-        case '/': {
-            Operator = TOKEN_SLASHSLASH; // //
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-            
-            switch (c.to_point()) {
-                case '.': {
-                    Operator = TOKEN_SLASHSLASHDOT; // //.
-                    
-                    String << c;
-                    
-                    c = nextWLCharacter(TOPLEVEL);
-                }
-                    break;
-                case '@': {
-                    Operator = TOKEN_SLASHSLASHAT; // //@
-                    
-                    String << c;
-                    
-                    c = nextWLCharacter(TOPLEVEL);
-                }
-                    break;
-            }
-        }
-            break;
-        case ':': {
-            Operator = TOKEN_SLASHCOLON; // /:
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-        }
-            break;
-        case '=': {
-            Operator = TOKEN_SLASHEQUAL; // /=
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-        }
-            break;
-        case '*': {
-            Operator = TOKEN_SLASHSTAR; // /*
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-        }
-            break;
-    }
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleAt() {
-    
-    //
-    // Could be @ or \[RawAt]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_AT; // @
-    
-    String << c;
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    switch (c.to_point()) {
-        case '@': {
-            Operator = TOKEN_ATAT; // @@
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-            
-            if (c.to_point() == '@') {
-                
-                Operator = TOKEN_ATATAT; // @@@
-                
-                String << c;
-                
-                c = nextWLCharacter(TOPLEVEL);
-            }
-        }
-            break;
-        case '*': {
-            Operator = TOKEN_ATSTAR; // @*
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-        }
-            break;
-    }
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handlePlus() {
-    
-    //
-    // Could be + or \[RawPlus]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_PLUS; // +
-    
-    String << c;
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    switch (c.to_point()) {
-        case '+': {
-            Operator = TOKEN_PLUSPLUS; // ++
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-            
-#if !NISSUES
-            if (c.to_point() == '=') {
-                
-                //
-                // Something like a++=0
-                //
-                
-                auto Loc = TheByteDecoder->getSourceLocation();
-                
-                std::vector<CodeActionPtr> Actions;
-                Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(Loc), " ")));
-                
-                auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``+`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(Loc), 0.25, std::move(Actions)));
-                
-                Issues.push_back(std::move(I));
-            }
-#endif
-        }
-            break;
-        case '=': {
-            Operator = TOKEN_PLUSEQUAL; // +=
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-        }
-            break;
-    }
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleTilde() {
-    
-    //
-    // Could be ~ or \[RawTilde]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_TILDE; // ~
-    
-    String << c;
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    if (c.to_point() == '~') {
-        
-        Operator = TOKEN_TILDETILDE; // ~~
-        
-        String << c;
-        
-        c = nextWLCharacter(TOPLEVEL);
-    }
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleQuestion() {
-    
-    //
-    // Could be ? or \[RawQuestion]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_QUESTION; // ?
-    
-    String << c;
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    if (c.to_point() == '?') {
-        
-        Operator = TOKEN_QUESTIONQUESTION; // ??
-        
-        String << c;
-        
-        c = nextWLCharacter(TOPLEVEL);
-    }
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleStar() {
-    
-    //
-    // Could be * or \[RawStar]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_STAR; // *
-    
-    String << c;
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    switch (c.to_point()) {
-        case '=': {
-            Operator = TOKEN_STAREQUAL; // *=
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-        }
-            break;
-        case '*': {
-            Operator = TOKEN_STARSTAR; // **
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-        }
-            break;
-    }
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleCaret() {
-    
-    //
-    // Could be ^ or \[RawWedge]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_UNKNOWN;
-    
-    auto CaretChar = c;
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    switch (c.to_point()) {
-        case ':': {
-            
-            auto ColonChar = c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-            
-            if (c.to_point() == '=') {
-                
-                Operator = TOKEN_CARETCOLONEQUAL; // ^:=
-                
-                String << CaretChar;
-                String << ColonChar;
-                String << c;
-                
-                c = nextWLCharacter(TOPLEVEL);
-                
-            } else {
-                
-                Operator = TOKEN_ERROR_EXPECTEDEQUAL;
-                
-                String << CaretChar;
-                String << ColonChar;
-                String << c;
-                
-                c = nextWLCharacter(TOPLEVEL);
-            }
-        }
-            break;
-        case '=': {
-            Operator = TOKEN_CARETEQUAL; // ^=
-            
-            String << CaretChar;
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-        }
-            break;
-        default: {
-            Operator = TOKEN_CARET; // ^
-            
-            String << CaretChar;
-        }
-            break;
-    }
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleSingleQuote() {
-    
-    //
-    // Could be ' or \[RawQuote]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    auto Operator = TOKEN_SINGLEQUOTE; // '
-    
-    String << c;
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handlePunctuationCharacter() {
-    
-    auto c = currentWLCharacter();
-    
-    String << c;
-    
-    auto Operator = LongNameCodePointToOperator(c.to_point());
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    _currentToken = Token(Operator, String.str(), getTokenSource());
-}
-
-inline void Tokenizer::handleUnhandledBackSlash() {
-    
-    //
-    // Unhandled \
-    //
-    // If the bad character looks like a special input, then try to reconstruct the character up to the bad SourceCharacter
-    // This duplicates some logic in CharacterDecoder
-    //
-    
-    auto c = currentWLCharacter();
-    
-    String << c;
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    switch (c.to_point()) {
-        case '[': {
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-            
-            while (true) {
-                
-                //
-                // No need to check isAbort() inside tokenizer loops
-                //
-                
-                if (c.isAlphaOrDigit()) {
-                    
-                    String << c;
-                    
-                    c = nextWLCharacter(TOPLEVEL);
-                    
-                } else {
-                    
-                    String << c;
-                    
-                    c = nextWLCharacter(TOPLEVEL);
-                    
-                    break;
-                }
-            }
-            
-            _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), getTokenSource());
-        }
-            break;
-        case ':': {
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-            
-            for (auto i = 0; i < 4; i++) {
-                
-                //
-                // No need to check isAbort() inside tokenizer loops
-                //
-                
-                if (c.isHex()) {
-                    
-                    String << c;
-                    
-                    c = nextWLCharacter(TOPLEVEL);
-                    
-                } else {
-                    
-                    String << c;
-                    
-                    c = nextWLCharacter(TOPLEVEL);
-                    
-                    break;
-                }
-            }
-            
-            _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), getTokenSource());
-        }
-            break;
-        case '.': {
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-            
-            for (auto i = 0; i < 2; i++) {
-                
-                //
-                // No need to check isAbort() inside tokenizer loops
-                //
-                
-                if (c.isHex()) {
-                    
-                    String << c;
-                    
-                    c = nextWLCharacter(TOPLEVEL);
-                    
-                } else {
-                    
-                    String << c;
-                    
-                    c = nextWLCharacter(TOPLEVEL);
-                    
-                    break;
-                }
-            }
-            
-            _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), getTokenSource());
-        }
-            break;
-        case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': {
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-            
-            for (auto i = 0; i < 3; i++) {
-                
-                //
-                // No need to check isAbort() inside tokenizer loops
-                //
-                
-                if (c.isOctal()) {
-                    
-                    String << c;
-                    
-                    c = nextWLCharacter(TOPLEVEL);
-                    
-                } else {
-                    
-                    String << c;
-                    
-                    c = nextWLCharacter(TOPLEVEL);
-                    
-                    break;
-                }
-            }
-            
-            _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), getTokenSource());
-        }
-            break;
-        case '|': {
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-            
-            for (auto i = 0; i < 6; i++) {
-                
-                //
-                // No need to check isAbort() inside tokenizer loops
-                //
-                
-                if (c.isHex()) {
-                    
-                    String << c;
-                    
-                    c = nextWLCharacter(TOPLEVEL);
-                    
-                } else {
-                    
-                    String << c;
-                    
-                    c = nextWLCharacter(TOPLEVEL);
-                    
-                    break;
-                }
-            }
-            
-            _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), getTokenSource());
-        }
-            break;
-        case CODEPOINT_ENDOFFILE: {
-            
-            _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), getTokenSource());
-        }
-            break;
-        default: {
-            
-            //
-            // Nothing special, just read next character
-            //
-            
-            String << c;
-            
-            c = nextWLCharacter(TOPLEVEL);
-            
-            _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), getTokenSource());
-        }
-            break;
-    }
-}
-
-inline void Tokenizer::handleUninterpretable() {
-    
-    //
-    // Uninterpretable
-    //
-    // Something like \[ErrorIndicator]
-    //
-    
-    auto c = currentWLCharacter();
-    
-    String << c;
-    
-    c = nextWLCharacter(TOPLEVEL);
-    
-    _currentToken = Token(TOKEN_ERROR_UNHANDLEDCHARACTER, String.str(), getTokenSource());
+BufferAndLength Tokenizer::getTokenBufferAndLength(Buffer tokStartBuf) const {
+    auto buf = TheByteBuffer->buffer;
+    auto error = TheByteDecoder->getError();
+    return BufferAndLength(tokStartBuf, buf - tokStartBuf, error);
 }
 
 #if !NISSUES
-void Tokenizer::addIssue(std::unique_ptr<Issue> I) {
+void Tokenizer::addIssue(IssuePtr I) {
     Issues.push_back(std::move(I));
 }
-#endif
 
-#if !NISSUES
-std::vector<std::unique_ptr<Issue>>& Tokenizer::getIssues() {
+std::vector<IssuePtr>& Tokenizer::getIssues() {
     return Issues;
 }
-#endif
+#endif // !NISSUES
 
-std::unique_ptr<Tokenizer> TheTokenizer = nullptr;
+TokenizerPtr TheTokenizer = nullptr;
 
 
-
-// Convert value_ to the digit that it represents
 //
-int toDigit(int val) {
+// Convert val to the digit that it represents
+//
+size_t toDigit(int val) {
     switch (val) {
         case '0': return 0;
         case '1': return 1;
@@ -3613,6 +3263,7 @@ int toDigit(int val) {
         case 'y': case 'Y': return 34;
         case 'z': case 'Z': return 35;
         default:
-            return -1;
+            assert(false);
+            return 99;
     }
 }

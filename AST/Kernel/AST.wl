@@ -195,7 +195,6 @@ HoldNode
 
 SyntaxErrorNode
 GroupMissingCloserNode
-GroupMissingOpenerNode
 AbstractSyntaxErrorNode
 
 
@@ -242,10 +241,7 @@ SyntaxIssue
 FormatIssue
 
 
-
-
-
-$Quirks
+SourceCharacter
 
 
 Begin["`Private`"]
@@ -255,10 +251,12 @@ Implementation of Abstract depends on Node (LHS of definitions)
 So load Node before Abstract
 *)
 Needs["AST`Node`"]
+
 Needs["AST`Abstract`"]
 Needs["AST`Boxes`"]
 Needs["AST`DeclarationName`"]
 Needs["AST`Library`"]
+Needs["AST`Quirks`"]
 Needs["AST`ToString`"]
 Needs["AST`Utils`"]
 
@@ -268,13 +266,16 @@ This uses func := func = def idiom and is fast
 *)
 loadAllFuncs[]
 
+setupQuirks[]
+
+
+
 
 
 ConcreteParseString::usage = "ConcreteParseString[string] returns a concrete syntax tree by interpreting string as WL input."
 
 Options[ConcreteParseString] = {
-	CharacterEncoding -> "UTF8",
-	"SourceStyle" -> "LineCol"
+	CharacterEncoding -> "UTF8"
 }
 
 ConcreteParseString[s_String, h_:Automatic, opts:OptionsPattern[]] :=
@@ -285,12 +286,11 @@ Options[concreteParseString] = Options[ConcreteParseString]
 
 concreteParseString[sIn_String, hIn_, OptionsPattern[]] :=
 Catch[
-Module[{s, h, res, style, bytes, encoding},
+Module[{s, h, res, bytes, encoding},
 
 	s = sIn;
 	h = hIn;
 
-	style = OptionValue["SourceStyle"];
 	encoding = OptionValue[CharacterEncoding];
 
 	If[encoding =!= "UTF8",
@@ -307,31 +307,14 @@ Module[{s, h, res, style, bytes, encoding},
 		h = StringNode[String, #[[1]], If[!empty[#[[2]]], <| SyntaxIssues -> #[[2]] |>, <||>]]&
 	];
 
-	If[FailureQ[concreteParseBytesFunc],
-		Throw[concreteParseBytesFunc]
-	];
-
 	$ConcreteParseProgress = 0;
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
 	$MathLinkTime = Quantity[0, "Seconds"];
-	(*
-	in the event of an abort, force reload of functions
-	This will fix the transient error that can happen when an abort occurs
-	and the next use throws LIBRARY_FUNCTION_ERROR
-	*)
-	CheckAbort[
-	res = concreteParseBytesFunc[bytes, style];
-	,
-	loadAllFuncs[];
-	Abort[]
-	];
+
+	res = libraryFunctionWrapper[concreteParseBytesFunc, bytes];
 
 	$MathLinkTime = Now - ($ConcreteParseStart + $ConcreteParseTime);
-
-	If[Head[res] === LibraryFunctionError,
-		Throw[Failure["LibraryFunctionError", <|"Result"->res|>]]
-	];
 
 	If[FailureQ[res],
 		Throw[res]
@@ -350,7 +333,7 @@ ParseString[string, h] wraps the output with h and allows multiple expressions t
 This is similar to how ToExpression operates."
 
 Options[ParseString] = {
-	"SourceStyle" -> "LineCol"
+
 }
 
 (*
@@ -382,8 +365,7 @@ Module[{cst, ast, agg},
 ConcreteParseFile::usage = "ConcreteParseFile[file] returns a concrete syntax tree by interpreting file as WL input."
 
 Options[ConcreteParseFile] = {
-	CharacterEncoding -> "UTF8",
-	"SourceStyle" -> "LineCol"
+	CharacterEncoding -> "UTF8"
 }
 
 (*
@@ -397,13 +379,11 @@ Options[concreteParseFile] = Options[ConcreteParseFile]
 
 concreteParseFile[file_String, hIn_, OptionsPattern[]] :=
 Catch[
-Module[{h, encoding, full, res, data, start, end, children,
-	style, bytes},
+Module[{h, encoding, full, res, data, start, end, children, bytes},
 
 	h = hIn;
 
 	encoding = OptionValue[CharacterEncoding];
-	style = OptionValue["SourceStyle"];
 
 	(*
 	The <||> will be filled in with Source later
@@ -430,28 +410,16 @@ Module[{h, encoding, full, res, data, start, end, children,
 		Throw[Failure["FindFileFailed", <|"FileName"->file|>]]
 	];
 
-	If[FailureQ[concreteParseFileFunc],
-		Throw[concreteParseFileFunc]
-	];
-
 	bytes = Import[full, "Byte"];
 
 	$ConcreteParseProgress = 0;
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
 	$MathLinkTime = Quantity[0, "Seconds"];
-	CheckAbort[
-	res = concreteParseBytesFunc[bytes, style];
-	,
-	loadAllFuncs[];
-	Abort[]
-	];
+
+	res = libraryFunctionWrapper[concreteParseBytesFunc, bytes];
 
 	$MathLinkTime = Now - ($ConcreteParseStart + $ConcreteParseTime);
-
-	If[Head[res] === LibraryFunctionError,
-		Throw[Failure["LibraryFunctionError", <|"Result"->res|>]]
-	];
 
 	If[FailureQ[res],
 		If[res === $Failed,
@@ -487,8 +455,7 @@ Module[{h, encoding, full, res, data, start, end, children,
 ParseFile::usage = "ParseFile[file] returns an abstract syntax tree by interpreting file as WL input."
 
 Options[ParseFile] = {
-	CharacterEncoding -> "UTF8",
-	"SourceStyle" -> "LineCol"
+	CharacterEncoding -> "UTF8"
 }
 
 ParseFile[file_String | File[file_String], h_:Automatic, opts:OptionsPattern[]] :=
@@ -515,8 +482,7 @@ Module[{cst, ast, agg},
 ConcreteParseBytes::usage = "ConcreteParseBytes[bytes] returns a concrete syntax tree by interpreting bytes as WL input."
 
 Options[ConcreteParseBytes] = {
-	CharacterEncoding -> "UTF8",
-	"SourceStyle" -> "LineCol"
+	CharacterEncoding -> "UTF8"
 }
 
 (*
@@ -530,13 +496,11 @@ Options[concreteParseBytes] = Options[ConcreteParseBytes]
 
 concreteParseBytes[bytes_List, hIn_, OptionsPattern[]] :=
 Catch[
-Module[{h, encoding, res, data, start, end, children,
-	style},
+Module[{h, encoding, res, data, start, end, children},
 
 	h = hIn;
 
 	encoding = OptionValue[CharacterEncoding];
-	style = OptionValue["SourceStyle"];
 
 	(*
 	The <||> will be filled in with Source later
@@ -550,26 +514,14 @@ Module[{h, encoding, res, data, start, end, children,
 		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
 	];
 
-	If[FailureQ[concreteParseBytesFunc],
-		Throw[concreteParseBytesFunc]
-	];
-
 	$ConcreteParseProgress = 0;
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
 	$MathLinkTime = Quantity[0, "Seconds"];
-	CheckAbort[
-	res = concreteParseBytesFunc[bytes, style];
-	,
-	loadAllFuncs[];
-	Abort[]
-	];
+
+	res = libraryFunctionWrapper[concreteParseBytesFunc, bytes];
 
 	$MathLinkTime = Now - ($ConcreteParseStart + $ConcreteParseTime);
-
-	If[Head[res] === LibraryFunctionError,
-		Throw[Failure["LibraryFunctionError", <|"Result"->res|>]]
-	];
 
 	If[FailureQ[res],
 		Throw[res]
@@ -601,8 +553,7 @@ Module[{h, encoding, res, data, start, end, children,
 ParseBytes::usage = "ParseBytes[bytes] returns an abstract syntax tree by interpreting bytes as WL input."
 
 Options[ParseBytes] = {
-	CharacterEncoding -> "UTF8",
-	"SourceStyle" -> "LineCol"
+	CharacterEncoding -> "UTF8"
 }
 
 ParseBytes[bytes_List, h_:Automatic, opts:OptionsPattern[]] :=
@@ -640,12 +591,11 @@ Options[tokenizeString] = Options[TokenizeString]
 
 tokenizeString[sIn_String, OptionsPattern[]] :=
 Catch[
-Module[{s, res, style, bytes, encoding},
+Module[{s, res, bytes, encoding},
 
 	s = sIn;
 
 	encoding = OptionValue[CharacterEncoding];
-	style = OptionValue["SourceStyle"];
 
 	If[encoding =!= "UTF8",
 		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
@@ -653,26 +603,14 @@ Module[{s, res, style, bytes, encoding},
 
 	bytes = ToCharacterCode[s, "UTF8"];
 
-	If[FailureQ[tokenizeBytesFunc],
-		Throw[tokenizeBytesFunc]
-	];
-
 	$ConcreteParseProgress = 0;
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
 	$MathLinkTime = Quantity[0, "Seconds"];
-	CheckAbort[
-	res = tokenizeBytesFunc[bytes, style];
-	,
-	loadAllFuncs[];
-	Abort[]
-	];
+
+	res = libraryFunctionWrapper[tokenizeBytesFunc, bytes];
 
 	$MathLinkTime = Now - ($ConcreteParseStart + $ConcreteParseTime);
-
-	If[Head[res] === LibraryFunctionError,
-		Throw[Failure["LibraryFunctionError", <|"Result"->res|>]]
-	];
 
 	If[FailureQ[res],
 		Throw[res]
@@ -690,8 +628,7 @@ Module[{s, res, style, bytes, encoding},
 TokenizeFile::usage = "TokenizeFile[file] returns a list of tokens by interpreting file as WL input."
 
 Options[TokenizeFile] = {
-	CharacterEncoding -> "UTF8",
-	"SourceStyle" -> "LineCol"
+	CharacterEncoding -> "UTF8"
 }
 
 TokenizeFile[s_String | File[s_String], opts:OptionsPattern[]] :=
@@ -704,10 +641,9 @@ Options[tokenizeFile] = Options[TokenizeFile]
 
 tokenizeFile[file_String, OptionsPattern[]] :=
 Catch[
-Module[{encoding, res, style, full, bytes},
+Module[{encoding, res, full, bytes},
 
 	encoding = OptionValue[CharacterEncoding];
-	style = OptionValue["SourceStyle"];
 
 	If[encoding =!= "UTF8",
 		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
@@ -718,28 +654,16 @@ Module[{encoding, res, style, full, bytes},
 		Throw[Failure["FindFileFailed", <|"FileName"->file|>]]
 	];
 
-	If[FailureQ[tokenizeFileFunc],
-		Throw[tokenizeFileFunc]
-	];
-
 	bytes = Import[full, "Byte"];
 
 	$ConcreteParseProgress = 0;
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
 	$MathLinkTime = Quantity[0, "Seconds"];
-	CheckAbort[
-	res = tokenizeBytesFunc[bytes, style];
-	,
-	loadAllFuncs[];
-	Abort[]
-	];
 
+	res = libraryFunctionWrapper[tokenizeBytesFunc, bytes];
+	
 	$MathLinkTime = Now - ($ConcreteParseStart + $ConcreteParseTime);
-
-	If[Head[res] === LibraryFunctionError,
-		Throw[Failure["LibraryFunctionError", <|"Result"->res|>]]
-	];
 
 	If[FailureQ[res],
 		Throw[res]
@@ -756,8 +680,7 @@ Module[{encoding, res, style, full, bytes},
 TokenizeBytes::usage = "TokenizeBytes[bytes] returns a list of tokens by interpreting bytes as WL input."
 
 Options[TokenizeBytes] = {
-	CharacterEncoding -> "UTF8",
-	"SourceStyle" -> "LineCol"
+	CharacterEncoding -> "UTF8"
 }
 
 TokenizeBytes[bytes_List, opts:OptionsPattern[]] :=
@@ -770,35 +693,22 @@ Options[tokenizeBytes] = Options[TokenizeBytes]
 
 tokenizeBytes[bytes_List, OptionsPattern[]] :=
 Catch[
-Module[{encoding, res, style},
+Module[{encoding, res},
 
 	encoding = OptionValue[CharacterEncoding];
-	style = OptionValue["SourceStyle"];
 
 	If[encoding =!= "UTF8",
 		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
-	];
-
-	If[FailureQ[tokenizeBytesFunc],
-		Throw[tokenizeBytesFunc]
 	];
 
 	$ConcreteParseProgress = 0;
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
 	$MathLinkTime = Quantity[0, "Seconds"];
-	CheckAbort[
-	res = tokenizeBytesFunc[bytes, style];
-	,
-	loadAllFuncs[];
-	Abort[]
-	];
+
+	res = libraryFunctionWrapper[tokenizeBytesFunc, bytes];
 
 	$MathLinkTime = Now - ($ConcreteParseStart + $ConcreteParseTime);
-
-	If[Head[res] === LibraryFunctionError,
-		Throw[Failure["LibraryFunctionError", <|"Result"->res|>]]
-	];
 
 	If[FailureQ[res],
 		Throw[res]
@@ -816,9 +726,7 @@ Module[{encoding, res, style},
 ParseLeaf::usage = "ParseLeaf[str] returns a LeafNode by interpreting str as a leaf."
 
 Options[ParseLeaf] = {
-	"SourceStyle" -> "LineCol",
-	"StringifyNextTokenSymbol" -> False,
-	"StringifyNextTokenFile" -> False
+	"StringifyMode" -> 0
 }
 
 ParseLeaf[str_String, opts:OptionsPattern[]] :=
@@ -829,51 +737,20 @@ Options[parseLeaf] = Options[ParseLeaf]
 
 parseLeaf[strIn_String, OptionsPattern[]] :=
 Catch[
-Module[{str, res, leaf, data, exprs, issues, style, stringifyNextTokenSymbol, stringifyNextTokenFile,
-	mode},
+Module[{str, res, leaf, data, exprs, issues, stringifyMode},
 
 	str = strIn;
 
-	style = OptionValue["SourceStyle"];
-	stringifyNextTokenSymbol = OptionValue["StringifyNextTokenSymbol"];
-	stringifyNextTokenFile = OptionValue["StringifyNextTokenFile"];
-
-	Which[
-		stringifyNextTokenSymbol,
-			mode = 1
-		,
-		stringifyNextTokenFile,
-			mode = 2
-		,
-		True,
-			mode = 0
-	];
-
-	If[FailureQ[parseLeafFunc],
-		Throw[parseLeafFunc]
-	];
+	stringifyMode = OptionValue["StringifyMode"];
 
 	$ConcreteParseProgress = 0;
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
 	$MathLinkTime = Quantity[0, "Seconds"];
-	(*
-	in the event of an abort, force reload of functions
-	This will fix the transient error that can happen when an abort occurs
-	and the next use throws LIBRARY_FUNCTION_ERROR
-	*)
-	CheckAbort[
-	res = parseLeafFunc[str, style, mode];
-	,
-	loadAllFuncs[];
-	Abort[]
-	];
+	
+	res = libraryFunctionWrapper[parseLeafFunc, str, stringifyMode];
 
 	$MathLinkTime = Now - ($ConcreteParseStart + $ConcreteParseTime);
-
-	If[Head[res] === LibraryFunctionError,
-		Throw[Failure["LibraryFunctionError", <|"Result"->res|>]]
-	];
 
 	If[FailureQ[res],
 		Throw[res]
@@ -895,36 +772,6 @@ Module[{str, res, leaf, data, exprs, issues, style, stringifyNextTokenSymbol, st
 
 
 
-
-setupQuirks[] :=
-Module[{},
-	
-	$Quirks = <||>;
-
-	(*
-	Setup "FlattenTimes" quirk
-
-	In non-Prototype builds:
-		a / b / c is parsed as Times[a, Power[b, -1], Power[c, -1]]
-		-a / b is parsed as Times[-1, a, Power[b, -1]]
-
-	In Prototype builds:
-		a / b / c is parsed as Times[Times[a, Power[b, -1]], Power[c, -1]]
-		-a / b is parsed as Times[Times[-1, a], Power[b, -1]]
-	This is considered the correct behavior going into the future.
-
-	This is setup on bugfix/139531_et_al branch
-	Related bugs: 139531, 160919
-	*)
-	If[!Internal`$PrototypeBuild,
-		$Quirks["FlattenTimes"] = True
-	];
-
-]
-
-
-
-setupQuirks[]
 
 
 

@@ -34,9 +34,11 @@ cst = ConcreteParseBox[box]
 Test[
 	cst
 	,
-	BoxNode[TagBox, {
-		LeafNode[Symbol, "a", <|Source -> {1}|>],
-		CodeNode[Null, Function[BoxForm`e$, BoxForm`e$], <||>]}, <|Source -> {}|>]
+	With[{evaledData = <||>},
+		BoxNode[TagBox, {
+			LeafNode[Symbol, "a", <|Source -> {1}|>],
+			CodeNode[Null, Function[BoxForm`e$, BoxForm`e$], evaledData]}, <|Source -> {}|>]
+	]
 	,
 	TestID->"Boxes-20191119-A5T4V2"
 ]
@@ -46,9 +48,11 @@ agg = AST`Abstract`Aggregate[cst]
 Test[
 	agg
 	,
-	BoxNode[TagBox, {
-		LeafNode[Symbol, "a", <|Source -> {1}|>], 
-  		CodeNode[Null, Function[BoxForm`e$, BoxForm`e$], <||>]}, <|Source -> {}|>]
+	With[{evaledData = <||>},
+		BoxNode[TagBox, {
+			LeafNode[Symbol, "a", <|Source -> {1}|>], 
+  			CodeNode[Null, Function[BoxForm`e$, BoxForm`e$], evaledData]}, <|Source -> {}|>]
+	]
 	,
 	TestID->"Boxes-20191119-F6L1J2"
 ]
@@ -66,9 +70,11 @@ ast = AST`Abstract`Abstract[agg]
 Test[
 	ast
 	,
-	BoxNode[TagBox, {
-		LeafNode[Symbol, "a", <|Source -> {1}|>],
-		CodeNode[Null, Function[BoxForm`e$, BoxForm`e$], <||>]}, <|Source -> {}|>]
+	With[{evaledData = <||>},
+		BoxNode[TagBox, {
+			LeafNode[Symbol, "a", <|Source -> {1}|>],
+			CodeNode[Null, Function[BoxForm`e$, BoxForm`e$], evaledData]}, <|Source -> {}|>]
+	]
 	,
 	TestID->"Boxes-20191119-R5E0G4"
 ]

@@ -1,26 +1,15 @@
 
 #pragma once
 
+#include "ByteBuffer.h"
 #include "Source.h"
 
 #include <vector>
 #include <memory> // for unique_ptr
 
-//
-// Contain the state needed for advancing to newlines and EOF
-//
-// i.e., need to keep track of \r\n
-//
-struct AdvancementState {
-    
-    bool lastCharacterWasCarriageReturn;
-    
-    AdvancementState() : lastCharacterWasCarriageReturn() {}
-    
-    void reset();
-    
-    SourceLocation advance(SourceCharacter c, SourceLocation SrcLoc);
-};
+class ByteDecoder;
+using ByteDecoderPtr = std::unique_ptr<ByteDecoder>;
+
 
 //
 // Decode a sequence of UTF-8 encoded bytes into Source characters
@@ -28,38 +17,53 @@ struct AdvancementState {
 class ByteDecoder {
 private:
     
-    SourceLocation SrcLoc;
+    std::vector<Buffer> offsetLineMap;
     
-    AdvancementState state;
+    std::vector<IssuePtr> Issues;
     
-    std::vector<std::unique_ptr<Issue>> Issues;
+    bool error;
     
+    SourceCharacter invalid(Buffer errBuf, NextCharacterPolicy policy);
     
-    SourceCharacter decodeBytes(unsigned char, bool eof);
-    
-    SourceCharacter invalid(unsigned char, size_t backup);
     
 public:
     
+    Buffer lastBuf;
+    
+    size_t actualOffsetLineMapSize;
+    
+    
+    
     ByteDecoder();
     
-    void init(SourceStyle style);
+    void init();
     
     void deinit();
     
-    SourceCharacter nextSourceCharacter();
-
-#if !NISSUES
-    std::vector<std::unique_ptr<Issue>>& getIssues();
-#endif
+    SourceCharacter nextSourceCharacter0(NextCharacterPolicy policy);
     
-    void setSourceLocation(SourceLocation Loc);
-    SourceLocation getSourceLocation() const;
+    SourceCharacter currentSourceCharacter(NextCharacterPolicy policy);
+    
+    
+    SourceLocation convertBufferToStart(Buffer ) const;
+    
+    SourceLocation convertBufferToEnd(Buffer ) const;
+    
     
 #if !NISSUES
-    void addIssue(std::unique_ptr<Issue>);
-#endif
+    std::vector<IssuePtr>& getIssues();
+    
+    void addIssue(IssuePtr);
+#endif // !NISSUES
+    
+    std::vector<Buffer> getOffsetLineMap() const;
+    
+    void setError(bool err);
+    
+    bool getError() const;
+    
+    void clearError();
 };
 
-extern std::unique_ptr<ByteDecoder> TheByteDecoder;
+extern ByteDecoderPtr TheByteDecoder;
 

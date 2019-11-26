@@ -3,7 +3,6 @@
 #include "Parser.h"
 #include "Tokenizer.h"
 
-#include <sstream>
 #include <unordered_set>
 #include <cstring> // for strcmp with GCC and MSVC
 #include <cassert>
@@ -11,7 +10,7 @@
 //
 // s MUST contain an integer
 //
-int Utils::parseInteger(std::string s, int base) {
+size_t Utils::parseInteger(std::string s, size_t base) {
     return std::stoi(s, nullptr, base);
 }
 
@@ -119,161 +118,28 @@ bool Utils::isUndocumentedLongName(std::string s) {
 }
 
 #if !NISSUES
-void Utils::differentLineWarning(Token Tok1, Token Tok2) {
+void Utils::strangeLetterlikeWarning(BufferAndLength bufAndLen, WLCharacter c) {
     
-    if (Tok1.getTokenEnum() == TOKEN_ERROR_ABORTED) {
-        return;
-    }
-    if (Tok2.getTokenEnum() == TOKEN_ERROR_ABORTED) {
-        return;
-    }
+    assert(c.isStrangeLetterlike() || c.isMBStrangeLetterlike());
     
-    //
-    // Skip DifferentLine issues if ENDOFFILE
-    //
-    if (Tok1.getTokenEnum() == TOKEN_ENDOFFILE) {
-        return;
-    }
-    if (Tok2.getTokenEnum() == TOKEN_ENDOFFILE) {
-        return;
-    }
-    
-    if (Tok2.getTokenEnum() == TOKEN_ERROR_EMPTYSTRING) {
-        return;
-    }
-    
-    //
-    // Only check if LineCol
-    //
-    if (Tok1.Src.style != SOURCESTYLE_LINECOL) {
-        return;
-    }
-    
-    if (Tok1.Src.lineCol.end.Line == Tok2.Src.lineCol.start.Line) {
-        return;
-    }
-    
-    std::vector<CodeActionPtr> Actions;
-    Actions.push_back(CodeActionPtr(new DeleteTriviaCodeAction("Delete newline", Source(Tok1.Src, Tok2.Src))));
-    
-    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_DIFFERENTLINE, "``" + Tok1.Str + "`` and ``" + Tok2.Str + "`` are on different lines.", SYNTAXISSUESEVERITY_WARNING, Source(Tok1.Src, Tok2.Src), 0.0, std::move(Actions)));
-    
-    TheParser->addIssue(std::move(I));
-}
-#endif
-
-#if !NISSUES
-void Utils::differentLineWarning(NodeSeq& Args, Token Tok2) {
-    
-    auto F = Args.first();
-    
-    auto Tok1 = F->lastToken();
-    
-    Utils::differentLineWarning(Tok1, Tok2);
-}
-#endif
-
-#if !NISSUES
-void Utils::endOfLineWarning(Token Tok, Token EndTok) {
-    
-    if (Tok.getTokenEnum() == TOKEN_ERROR_ABORTED) {
-        return;
-    }
-    if (EndTok.getTokenEnum() == TOKEN_ERROR_ABORTED) {
-        return;
-    }
-    
-    if (EndTok.getTokenEnum() != TOKEN_NEWLINE && EndTok.getTokenEnum() != TOKEN_ENDOFFILE) {
-        return;
-    }
-    
-    //
-    // Only check if LineCol
-    //
-    if (Tok.Src.style != SOURCESTYLE_LINECOL) {
-        return;
-    }
-    
-    std::vector<CodeActionPtr> Actions;
-    Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``;;`` with ``;``.", Source(Tok.Src), ";")));
-    
-    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_ENDOFLINE, "``" + Tok.Str + "`` is at the end of the line.", SYNTAXISSUESEVERITY_REMARK, Tok.Src, 0.80, std::move(Actions)));
-    
-    TheParser->addIssue(std::move(I));
-}
-#endif
-
-#if !NISSUES
-void Utils::notContiguousWarning(Token Tok1, Token Tok2) {
-    
-    if (Tok1.getTokenEnum() == TOKEN_ERROR_ABORTED) {
-        return;
-    }
-    if (Tok2.getTokenEnum() == TOKEN_ERROR_ABORTED) {
-        return;
-    }
-    
-    //
-    // Only check if LineCol or OffsetLen
-    //
-    if (!(Tok1.Src.style == SOURCESTYLE_LINECOL ||
-         Tok1.Src.style == SOURCESTYLE_OFFSETLEN)) {
-        return;
-    }
-    
-    if (isContiguous(Tok1.Src, Tok2.Src)) {
-        return;
-    }
-    
-    std::vector<CodeActionPtr> Actions;
-    Actions.push_back(CodeActionPtr(new DeleteTriviaCodeAction("Delete trivia", Source(Tok1.Src, Tok2.Src))));
-    
-    auto I = std::unique_ptr<Issue>(new FormatIssue(FORMATISSUETAG_NOTCONTIGUOUS, std::string("Tokens are not contiguous."), FORMATISSUESEVERITY_FORMATTING, Source(Tok1.Src, Tok2.Src), 0.0, std::move(Actions)));
-    
-    TheParser->addIssue(std::move(I));
-}
-#endif
-
-#if !NISSUES
-void Utils::strangeLetterlikeWarning(WLCharacter c) {
-    
-    assert(c.isStrangeLetterlike() || c.isStrangeLetterlikeCharacter());
-    
-    if (c.isVeryStrangeLetterlike() || c.isVeryStrangeLetterlikeCharacter()) {
+    if (c.isVeryStrangeLetterlike() || c.isMBVeryStrangeLetterlike()) {
         
-        auto Src = TheCharacterDecoder->getWLCharacterSource();
+        auto loc1 = TheByteDecoder->convertBufferToStart(bufAndLen.buffer);
+        auto loc2 = TheByteDecoder->convertBufferToEnd(bufAndLen.end());
         
-        auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Source(loc1, loc2), 0.95, {}));
         
         TheTokenizer->addIssue(std::move(I));
         
         return;
     }
     
-    auto Src = TheCharacterDecoder->getWLCharacterSource();
+    auto loc1 = TheByteDecoder->convertBufferToStart(bufAndLen.buffer);
+    auto loc2 = TheByteDecoder->convertBufferToEnd(bufAndLen.end());
     
-    auto I = std::unique_ptr<Issue>(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.90, {}));
+    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Source(loc1, loc2), 0.90, {}));
     
     TheTokenizer->addIssue(std::move(I));
 }
-#endif
+#endif // !NISSUES
 
-bool Utils::parseBooleanSymbol(const char * sym) {
-    
-    if (strcmp(sym, SYMBOL_TRUE->name()) == 0) {
-        return true;
-    }
-    
-    return false;
-}
-
-SourceStyle Utils::parseSourceStyle(const char *str) {
-    
-    if (strcmp(str, "LineCol") == 0) {
-        return SOURCESTYLE_LINECOL;
-    } else if (strcmp(str, "OffsetLen") == 0) {
-        return SOURCESTYLE_OFFSETLEN;
-    }
-    
-    return SOURCESTYLE_UNKNOWN;
-}

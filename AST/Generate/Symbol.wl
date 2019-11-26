@@ -577,12 +577,13 @@ symbols = Union[Join[
             AST`Library`MakeStartOfLineNode, AST`Library`MakeStartOfFileNode, AST`Library`MakeBlankNode, AST`Library`MakeBlankSequenceNode,
             AST`Library`MakeBlankNullSequenceNode, AST`Library`MakePatternBlankNode, AST`Library`MakePatternBlankSequenceNode,
             AST`Library`MakePatternBlankNullSequenceNode, AST`Library`MakeOptionalDefaultPatternNode, AST`Library`MakeSyntaxErrorNode,
-            AST`Library`MakeGroupMissingCloserNode, AST`Library`MakeGroupMissingOpenerNode, AST`Library`MakePrefixBinaryNode,
+            AST`Library`MakeGroupMissingCloserNode, AST`Library`MakePrefixBinaryNode,
             AST`Library`MakeSyntaxIssue, AST`Library`MakeReplaceTextCodeAction, AST`Library`MakeInsertTextCodeAction,
             AST`Library`MakeFormatIssue, AST`Library`MakeDeleteTextCodeAction, AST`Library`MakeDeleteTriviaCodeAction,
-            AST`Library`MakeInsertTextAfterCodeAction},
+            AST`Library`MakeInsertTextAfterCodeAction, AST`Library`MakeSourceCharacterNode},
     {AST`InternalInvalid, AST`Metadata, AST`PatternBlank, AST`PatternBlankSequence, AST`PatternBlankNullSequence,
       AST`OptionalDefault, AST`OptionalDefaultPattern, AST`TernaryTilde},
+    {AST`SourceCharacter},
     DownValues[PrefixOperatorToSymbol][[All, 2]],
     DownValues[PostfixOperatorToSymbol][[All, 2]],
     DownValues[BinaryOperatorToSymbol][[All, 2]],
@@ -607,11 +608,13 @@ symbolCPPHeader = {
 
 #pragma once
 
+#include \"API.h\"
 #include \"TokenEnum.h\"
 
 #if USE_MATHLINK
 #include \"mathlink.h\"
-#endif
+#undef P
+#endif // USE_MATHLINK
 
 #include <string>
 #include <memory>
@@ -706,7 +709,9 @@ const char *Symbol::name() const {
 
 #if USE_MATHLINK
 void Symbol::put(MLINK mlp) const {
-  MLPutSymbol(mlp, Name);
+    if (!MLPutSymbol(mlp, Name)) {
+        assert(false);
+    }
 }
 #endif
 "} ~Join~
@@ -724,7 +729,7 @@ void Symbol::put(MLINK mlp) const {
       {"SymbolPtr& PrefixOperatorToSymbol(TokenEnum T) {\nswitch (T.value()) {"} ~Join~
      
      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PrefixOperatorToSymbol]] ~Join~ 
-      {"default: assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
+      {"default: return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
       "}\n}"} ~Join~
 
      {""} ~Join~
@@ -732,7 +737,7 @@ void Symbol::put(MLINK mlp) const {
      {"SymbolPtr& PostfixOperatorToSymbol(TokenEnum T) {\nswitch (T.value()) {"} ~Join~
      
       Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PostfixOperatorToSymbol]] ~Join~
-      {"default: assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
+      {"default: return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
      "}\n}"} ~Join~
 
      {""} ~Join~
@@ -740,7 +745,7 @@ void Symbol::put(MLINK mlp) const {
      {"SymbolPtr& BinaryOperatorToSymbol(TokenEnum T) {\nswitch (T.value()) {"} ~Join~
      
       Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[BinaryOperatorToSymbol]] ~Join~
-      {"default: assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
+      {"default: return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
      "}\n}"} ~Join~
 
      {""} ~Join~
@@ -748,7 +753,7 @@ void Symbol::put(MLINK mlp) const {
      {"SymbolPtr& InfixOperatorToSymbol(TokenEnum T) {\nswitch (T.value()) {"} ~Join~
      
       Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[InfixOperatorToSymbol]] ~Join~
-      {"default: assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
+      {"default: return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
      "}\n}"} ~Join~
 
      {""} ~Join~
@@ -756,7 +761,7 @@ void Symbol::put(MLINK mlp) const {
      {"SymbolPtr& GroupOpenerToSymbol(TokenEnum T) {"} ~Join~
      {"switch (T.value()) {"} ~Join~
       Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[GroupOpenerToSymbol]] ~Join~
-      {"default: assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
+      {"default: return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
      "}"} ~Join~
      {"}"} ~Join~
 
@@ -783,7 +788,7 @@ void Symbol::put(MLINK mlp) const {
      {"SymbolPtr& PrefixBinaryOperatorToSymbol(TokenEnum T) {\nswitch (T.value()) {"} ~Join~
      
       Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PrefixBinaryOperatorToSymbol]] ~Join~
-      {"default: assert(false && \"Unhandled token\"); return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
+      {"default: return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
      "}\n}"} ~Join~
 
      {""}

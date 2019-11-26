@@ -6,7 +6,8 @@
 
 #if USE_MATHLINK
 #include "mathlink.h"
-#endif
+#undef P
+#endif // USE_MATHLINK
 
 #include <string>
 #include <cassert>
@@ -15,19 +16,104 @@
 #include <vector>
 #include <memory>
 
-//
-// https://akrzemi1.wordpress.com/2017/05/18/asserts-in-constexpr-functions/
-//
-#if defined NDEBUG
-# define X_ASSERT(CHECK) void(0)
-#else
-# define X_ASSERT(CHECK) \
-( (CHECK) ? void(0) : []{assert(false && #CHECK);}() )
-#endif
-
+class Issue;
 class CodeAction;
 
+using IssuePtr = std::unique_ptr<Issue>;
 using CodeActionPtr = std::unique_ptr<CodeAction>;
+
+
+enum NextCharacterPolicyBits : uint8_t {
+    
+    //
+    // Enable byte decoding issues
+    //
+    // This is used when peeking: no need to report issues while peeking
+    //
+    ENABLE_BYTE_DECODING_ISSUES = 0x01,
+    
+    //
+    // Preserve whitespace after line continuation
+    //
+    // ToExpression["0.\\\n  6"] evaluates to 0.6 (whitespace is NOT preserved)
+    //
+    // But ToExpression["\"0.\\\n  6\""] evaluates to "0.  6" (whitespace IS preserved)
+    //
+    // FIXME: this could be handled by line continuation processing
+    //
+    PRESERVE_WS_AFTER_LC = 0x02,
+    
+    //
+    // Enable character decoding issues
+    //
+    // "\c" gives a CharacterDecoding error (issues are ENABLED)
+    //
+    // (*\c*) does NOT give a CharacterDecoding error (issues are DISABLED)
+    //
+    // This is also used when peeking: no need to report issues while peeking
+    //
+    ENABLE_CHARACTER_DECODING_ISSUES = 0x04,
+    
+    //
+    // This code:
+    // { a, \
+    //   b }
+    //
+    // would give a line continuation warning (line continuation is NOT meaningful)
+    //
+    // This code:
+    // { a, "x\
+    //   y", b }
+    //
+    // would NOT give a warning (line continuation IS meaningful)
+    //
+    LC_IS_MEANINGFUL = 0x08,
+    
+    //
+    // After a line continuation, is \r \n consumed as a single newline?
+    //
+    // This may be due to a bug in the kernel
+    //
+    // TODO: add to kernel quirks mode
+    //
+//    LC_UNDERSTANDS_CRLF = 0x20,
+    
+    //
+    // Check for unlikely escape sequences?
+    //
+    // Check for sequences like \\[Alpa] and report them
+    //
+    ENABLE_UNLIKELY_ESCAPE_CHECKING = 0x10,
+    
+    //
+    // Check for strange characters, such as control characters, REPLACEMENT CHARACTER, etc.
+    //
+    ENABLE_STRANGE_CHARACTER_CHECKING = 0x20,
+};
+
+using NextCharacterPolicy = uint8_t;
+
+//class NextCharacterPolicy {
+//    uint8_t val;
+//public:
+//    constexpr NextCharacterPolicy(uint8_t val) : val(val) {}
+//    
+//    NextCharacterPolicyBits operator&(const NextCharacterPolicyBits bits) const;
+//    
+//    NextCharacterPolicyBits operator|(const NextCharacterPolicyBits bits) const;
+//    
+//    NextCharacterPolicy operator&(const NextCharacterPolicy) const;
+//};
+
+//
+// Use this to disable checks
+//
+// newPolicy = policy & DISABLE_CHECKS_MASK;
+//
+// Using ~ and | promotes to int, so make sure to static_cast back to uint8_t
+//
+const NextCharacterPolicy DISABLE_CHECKS_MASK = static_cast<uint8_t>(~(ENABLE_BYTE_DECODING_ISSUES | ENABLE_CHARACTER_DECODING_ISSUES | ENABLE_UNLIKELY_ESCAPE_CHECKING | ENABLE_STRANGE_CHARACTER_CHECKING) );
+
 
 enum SyntaxError {
     
@@ -134,29 +220,22 @@ FormatIssueSeverity FORMATISSUESEVERITY_FORMATTING = "Formatting";
 //
 struct SourceCharacter {
     
-    int32_t valBits;
+    int32_t val;
     
-    explicit constexpr SourceCharacter(int val) : valBits(val) {}
+    explicit constexpr SourceCharacter(int val) : val(val) {}
     
     explicit operator int() const noexcept = delete;
     
     constexpr bool operator==(const SourceCharacter &o) const {
-        return valBits == o.valBits;
+        return val == o.val;
     }
     
     constexpr bool operator!=(const SourceCharacter &o) const {
-        return valBits != o.valBits;
+        return val != o.val;
     }
     
-    constexpr int to_point() const {
-        return valBits;
-    }
-    
-    constexpr char to_char() const {
-        //
-        // https://akrzemi1.wordpress.com/2017/05/18/asserts-in-constexpr-functions/
-        //
-        return X_ASSERT(0x00 <= valBits && valBits <= 0xff), valBits;
+    constexpr int32_t to_point() const {
+        return val;
     }
     
     bool isAlphaOrDigit() const;
@@ -170,6 +249,13 @@ struct SourceCharacter {
     bool isEndOfFile() const;
     
     bool isDigit() const;
+    
+    bool isSpace() const;
+    
+    bool isNewline() const;
+    
+    bool isMBSpace() const;
+    bool isMBNewline() const;
     
     
     class SourceCharacter_iterator {
@@ -192,7 +278,7 @@ struct SourceCharacter {
         
         SourceCharacter_iterator& operator++() {
             assert(idx < size);
-            idx++;
+            ++idx;
             return *this;
         }
     };
@@ -205,157 +291,70 @@ struct SourceCharacter {
 std::ostream& operator<<(std::ostream& stream, const SourceCharacter);
 
 
-
-struct LineCol {
-    size_t Line;
-    size_t Col;
-    
-    LineCol();
-    
-    LineCol(size_t Line, size_t Col);
-    
-    LineCol operator+(size_t i) const {
-        return LineCol(Line, Col+i);
-    }
-    
-    LineCol operator-(size_t i) const {
-        assert(Col > 0);
-        return LineCol(Line, Col-i);
-    }
-};
-
-bool isContiguous(LineCol a, LineCol b);
-
-bool operator==(LineCol a, LineCol b);
-bool operator<=(LineCol a, LineCol b);
-
-
-struct Source_LineCol_struct {
-    LineCol start;
-    LineCol end;
-    
-    Source_LineCol_struct();
-    Source_LineCol_struct(LineCol, LineCol);
-};
-
-bool operator==(Source_LineCol_struct a, Source_LineCol_struct b);
-
-
-
-struct Offset {
-    
-    size_t val;
-    
-    Offset();
-    
-    Offset(size_t offset);
-    
-    Offset operator+(size_t i) const {
-        return Offset(val + i);
-    }
-    
-    Offset operator++(int ignored) {
-        auto Tmp = *this;
-        val++;
-        return Tmp;
-    }
-};
-
-Offset operator-(Offset a, Offset b);
-
-bool operator==(Offset a, Offset b);
-bool operator<=(Offset a, Offset b);
-
-struct Source_OffsetLen_struct {
-    Offset offset;
-    size_t len;
-};
-
-
-enum SourceStyle {
-    SOURCESTYLE_UNKNOWN,
-    SOURCESTYLE_LINECOL,
-    SOURCESTYLE_OFFSETLEN,
-};
-
 struct SourceLocation {
     
-    SourceStyle style;
-    
-    union {
-        
-        LineCol lineCol;
-        
-        Offset offset;
-    };
+    size_t Line;
+    size_t Column;
     
     SourceLocation();
-    SourceLocation(SourceStyle);
-    SourceLocation(LineCol loc);
-    SourceLocation(Offset loc);
     
-    SourceLocation(size_t loc) = delete;
+    SourceLocation(size_t Line, size_t Column);
     
-    SourceLocation operator+(size_t);
-    SourceLocation operator-(size_t);
+//    void nextLine();
+//    void nextColumn();
     
-    SourceLocation operator++(int);
+#if USE_MATHLINK
+    void put(MLINK mlp) const;
+#endif // USE_MATHLINK
     
-    SourceLocation nextLine();
+    void print(std::ostream& s) const;
 };
+
+bool operator==(SourceLocation a, SourceLocation b);
 
 bool operator<=(SourceLocation a, SourceLocation b);
 
+bool isContiguous(SourceLocation a, SourceLocation b);
 
 //
-// There are several different kinds of Sources
+// For googletest
 //
-// 1. The traditional {{startLine, startCol}, {endLine, endCol}} information
-// 2. The less common positional identifier that is used by boxes
-//
-// There could be more kinds:
-// Box ids
-// Buffer offset and length
-//
+void PrintTo(const SourceLocation&, std::ostream*);
+
+
+
 struct Source {
     
-    SourceStyle style;
-    
-    union {
-        
-        Source_LineCol_struct lineCol;
-        
-        Source_OffsetLen_struct offsetLen;
-    };
+    SourceLocation Start;
+    SourceLocation End;
     
     Source();
-    Source(SourceStyle);
-    Source(SourceLocation loc);
     
-    Source(LineCol) = delete;
-    Source(size_t) = delete;
+    Source(SourceLocation only);
+    
+    Source(size_t ) = delete;
     
     Source(SourceLocation start, SourceLocation end);
     
     Source(Source start, Source end);
-    
-    ~Source();
 
 #if USE_MATHLINK
     void put(MLINK mlp) const;
-#endif
+#endif // USE_MATHLINK
     
     void print(std::ostream& s) const;
-    
-    size_t size() const;
-    
-    size_t count() const;
-    
-    SourceLocation start() const;
-    SourceLocation end() const;
 };
 
+bool operator==(Source a, Source b);
+
 bool isContiguous(Source a, Source b);
+
+//
+// For googletest
+//
+void PrintTo(const Source&, std::ostream*);
+
+
 
 
 class Issue {
@@ -363,7 +362,7 @@ public:
 
 #if USE_MATHLINK
     virtual void put(MLINK mlp) const = 0;
-#endif
+#endif // USE_MATHLINK
     
     virtual void print(std::ostream& s) const = 0;
     
@@ -379,7 +378,7 @@ public:
 
 #if USE_MATHLINK
     virtual void put(MLINK mlp) const = 0;
-#endif
+#endif // USE_MATHLINK
     
     virtual void print(std::ostream& s) const = 0;
     
@@ -394,7 +393,7 @@ public:
 
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
-#endif
+#endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
 };
@@ -407,7 +406,7 @@ public:
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
-#endif
+#endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
 };
@@ -420,7 +419,7 @@ public:
 
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
-#endif
+#endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
 };
@@ -432,7 +431,7 @@ public:
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
-#endif
+#endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
 };
@@ -444,7 +443,7 @@ public:
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
-#endif
+#endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
 };
@@ -462,7 +461,7 @@ public:
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
-#endif
+#endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
 };
@@ -480,7 +479,7 @@ public:
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
-#endif
+#endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
 };

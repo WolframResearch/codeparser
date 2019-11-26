@@ -37,9 +37,156 @@ TEST_F(APITest, Bug1) {
     
     auto strIn = std::string("abc[]");
     
-    auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
+    auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    ParseLeaf(nullptr, str, strIn.size(), "LineCol", 0);
+    auto bufAndLen = BufferAndLength(str, strIn.size(), false);
+    
+    TheParserSession->init(bufAndLen);
+    
+    TheParserSession->parseLeaf(0);
+    
+    TheParserSession->deinit();
     
     SUCCEED();
 }
+
+//
+// this used to hang
+//
+TEST_F(APITest, Hang1) {
+    
+    auto strIn = std::string("<<rr[R");
+    
+    auto str = reinterpret_cast<Buffer>(strIn.c_str());
+    
+    auto bufAndLen = BufferAndLength(str, strIn.size(), false);
+    
+    TheParserSession->init(bufAndLen);
+    
+    TheParserSession->parseExpressions();
+    
+    TheParserSession->deinit();
+    
+    SUCCEED();
+}
+
+//
+// this used to crash
+//
+TEST_F(APITest, Crash1) {
+    
+    auto strIn = std::string("0^^");
+    
+    auto str = reinterpret_cast<Buffer>(strIn.c_str());
+    
+    auto bufAndLen = BufferAndLength(str, strIn.size(), false);
+    
+    TheParserSession->init(bufAndLen);
+    
+    TheParserSession->parseExpressions();
+    
+    TheParserSession->deinit();
+    
+    SUCCEED();
+}
+
+//
+// this used to crash
+//
+TEST_F(APITest, Crash2) {
+    
+    auto strIn = std::string(".2^^0");
+    
+    auto str = reinterpret_cast<Buffer>(strIn.c_str());
+    
+    auto bufAndLen = BufferAndLength(str, strIn.size(), false);
+    
+    TheParserSession->init(bufAndLen);
+    
+    TheParserSession->parseExpressions();
+    
+    TheParserSession->deinit();
+    
+    SUCCEED();
+}
+
+//
+// this used to crash
+//
+TEST_F(APITest, Crash3) {
+    
+    auto strIn = std::string("12^^a.a");
+    
+    auto str = reinterpret_cast<Buffer>(strIn.c_str());
+    
+    auto bufAndLen = BufferAndLength(str, strIn.size(), false);
+    
+    TheParserSession->init(bufAndLen);
+    
+    TheParserSession->parseExpressions();
+    
+    TheParserSession->deinit();
+    
+    SUCCEED();
+}
+
+//
+// this used to crash
+//
+TEST_F(APITest, Crash4) {
+    
+    auto strIn = std::string("12..");
+    
+    auto str = reinterpret_cast<Buffer>(strIn.c_str());
+    
+    auto bufAndLen = BufferAndLength(str, strIn.size(), false);
+    
+    TheParserSession->init(bufAndLen);
+    
+    TheParserSession->parseExpressions();
+    
+    TheParserSession->deinit();
+    
+    SUCCEED();
+}
+
+//
+// this used to crash
+//
+TEST_F(APITest, Crash5) {
+    
+    auto strIn = std::string("123\\\n.45");
+    
+    auto str = reinterpret_cast<Buffer>(strIn.c_str());
+    
+    auto bufAndLen = BufferAndLength(str, strIn.size(), false);
+    
+    TheParserSession->init(bufAndLen);
+    
+    TheParserSession->parseExpressions();
+    
+    TheParserSession->deinit();
+    
+    SUCCEED();
+}
+
+//
+// this used to crash
+//
+TEST_F(APITest, Crash6) {
+    
+    auto strIn = std::string("\\0560");
+    
+    auto str = reinterpret_cast<Buffer>(strIn.c_str());
+    
+    auto bufAndLen = BufferAndLength(str, strIn.size(), false);
+    
+    TheParserSession->init(bufAndLen);
+    
+    TheParserSession->parseExpressions();
+    
+    TheParserSession->deinit();
+    
+    SUCCEED();
+}
+

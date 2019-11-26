@@ -18,10 +18,14 @@ escapeString[s_] :=
 Print["Generating Character Maps..."]
 
 longNameToCodePointMap = {
-"std::map<std::string, int> LongNameToCodePointMap {"} ~Join~ (Row[{"{", escapeString[#], ",", " ", toGlobal["CodePoint`LongName`"<>#], "}", ","}]& /@ Keys[importedLongNames]) ~Join~ {"};", ""}
+"std::map<std::string, int> LongNameToCodePointMap {"} ~Join~
+	(Row[{"{", escapeString[#], ",", " ", toGlobal["CodePoint`LongName`"<>#], "}", ","}]& /@ Keys[importedLongNames]) ~Join~
+	{"};", ""}
 
 codePointToLongNameMap = {
-"std::map<int, std::string> CodePointToLongNameMap {"} ~Join~ (Row[{"{", toGlobal["CodePoint`LongName`"<>#], ",", " ", escapeString[#], "}", ","}] & /@ Keys[importedLongNames])~Join~{"};", ""}
+"std::map<int, std::string> CodePointToLongNameMap {"} ~Join~
+	(Row[{"{", toGlobal["CodePoint`LongName`"<>#], ",", " ", escapeString[#], "}", ","}] & /@ Keys[importedLongNames]) ~Join~
+	{"};", ""}
 
 toSpecialMap = {
 "std::map<std::string, int> ToSpecialMap {"} ~Join~

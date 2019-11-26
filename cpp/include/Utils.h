@@ -9,7 +9,7 @@
 
 class Utils {
 public:
-    static int parseInteger(std::string s, int base);
+    static size_t parseInteger(std::string s, size_t base);
     
     static bool isStrangeLetterlikeLongName(std::string s);
     
@@ -19,40 +19,37 @@ public:
     
     static bool isUndocumentedLongName(std::string s);
     
+    static bool isMBSpace(int32_t point);
+    
+    static bool isMBPunctuation(int32_t point);
+    
+    static bool isMBNewline(int32_t point);
+    
+    static bool isMBUninterpretable(int32_t point);
+    
 #if !NISSUES
     //
     // Warn if tokens are on different lines
     //
-    static void differentLineWarning(Token Tok1, Token Tok2);
-#endif
+//    static void differentLineWarning(Token Tok1, Token Tok2);
     
-#if !NISSUES
     //
     // Warn if node and token are on different lines
     //
-    static void differentLineWarning(NodeSeq& Args, Token Tok2);
-#endif
-    
-#if !NISSUES
+//    static void differentLineWarning(NodeSeq& Args, Token Tok2);
+
     //
     // Warn if end of line
     //
-    static void endOfLineWarning(Token Tok, Token EndTok);
-#endif
-    
-#if !NISSUES
+//    static void endOfLineWarning(Token Tok, Token EndTok);
+
     //
     // Warn if not contiguous
     //
-    static void notContiguousWarning(Token Tok1, Token Tok2);
-#endif
+//    static void notContiguousWarning(Token Tok1, Token Tok2);
+
+    static void strangeLetterlikeWarning(BufferAndLength bufAndLen, WLCharacter c);
+#endif // !NISSUES
     
-#if !NISSUES
-    static void strangeLetterlikeWarning(WLCharacter c);
-#endif
-    
-    static bool parseBooleanSymbol(const char *);
-    
-    static SourceStyle parseSourceStyle(const char *);
 };
 

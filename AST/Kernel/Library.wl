@@ -8,13 +8,20 @@ loadAllFuncs
 
 newestLinkObject
 
+libraryFunctionWrapper
 
+
+(*
+library functions calling INTO lib
+*)
 concreteParseBytesFunc
 tokenizeBytesFunc
 parseLeafFunc
 
 
-
+(*
+library functions coming FROM lib
+*)
 MakeLeafNode
 
 MakePrefixNode
@@ -38,9 +45,9 @@ MakeOptionalDefaultPatternNode
 
 MakeSyntaxErrorNode
 MakeGroupMissingCloserNode
-MakeGroupMissingOpenerNode
 MakeAbstractSyntaxErrorNode
 
+MakeSourceCharacterNode
 
 MakeSyntaxIssue
 MakeFormatIssue
@@ -53,6 +60,9 @@ MakeDeleteTriviaCodeAction
 
 
 SetConcreteParseProgress
+
+
+
 
 
 $ConcreteParseProgress
@@ -166,6 +176,43 @@ Module[{before, after, res, set, first},
 ]]
 
 
+(*
+Handle the errors that may occur when calling LibraryLink functions
+*)
+libraryFunctionWrapper[libFunc_, args___] :=
+Catch[
+Module[{res},
+
+	If[FailureQ[libFunc],
+		Throw[libFunc]
+	];
+
+	(*
+	in the event of an abort, force reload of functions
+	This will fix the transient error that can happen when an abort occurs
+	and the next use throws LIBRARY_FUNCTION_ERROR
+	*)
+	CheckAbort[
+	res = libFunc[args];
+	,
+	loadAllFuncs[];
+	Abort[]
+	];
+
+	(*
+	There may still be a hiccup when there is a LIBRARY_FUNCTION_ERROR and the next
+	use of the function returns unevaluated
+	*)
+	If[MatchQ[res, _LibraryFunctionError | Verbatim[LibraryFunction][___][___]],
+		(*
+		Need to specify PageWidth, or else ToString does not do anything with Short
+		*)
+		Throw[Failure["LibraryFunctionError", <|"Result"->ToString[Short[res], OutputForm, PageWidth -> 100]|>]]
+	];
+
+	res
+]]
+
 
 
 
@@ -256,10 +303,6 @@ MakeSyntaxErrorNode[tag_, payload_, srcArgs___] :=
 
 MakeGroupMissingCloserNode[tag_, payload_, srcArgs___] :=
 	GroupMissingCloserNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
-
-
-MakeGroupMissingOpenerNode[tag_, payload_, srcArgs___] :=
-	GroupMissingOpenerNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
 
 
 MakeAbstractSyntaxErrorNode[tag_, payload_, srcArgs___] :=
