@@ -195,7 +195,6 @@ HoldNode
 
 SyntaxErrorNode
 GroupMissingCloserNode
-GroupMissingOpenerNode
 AbstractSyntaxErrorNode
 
 

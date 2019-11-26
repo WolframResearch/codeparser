@@ -38,7 +38,6 @@ MakeOptionalDefaultPatternNode
 
 MakeSyntaxErrorNode
 MakeGroupMissingCloserNode
-MakeGroupMissingOpenerNode
 MakeAbstractSyntaxErrorNode
 
 
@@ -256,10 +255,6 @@ MakeSyntaxErrorNode[tag_, payload_, srcArgs___] :=
 
 MakeGroupMissingCloserNode[tag_, payload_, srcArgs___] :=
 	GroupMissingCloserNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
-
-
-MakeGroupMissingOpenerNode[tag_, payload_, srcArgs___] :=
-	GroupMissingOpenerNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
 
 
 MakeAbstractSyntaxErrorNode[tag_, payload_, srcArgs___] :=

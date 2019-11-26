@@ -371,9 +371,6 @@ abstract[CallNode[op_, { GroupNode[GroupDoubleBracket, { _, inner___, _ }, data2
 must handle this so that AbstractSyntaxErrorNode is created later
 *)
 
-abstract[CallNode[op_, { missing:GroupMissingOpenerNode[_, _, _] }, data1_]] :=
-	abstractCallNode[CallNode[op, { missing }, KeyTake[data1, keysToTake]]]
-
 abstract[CallNode[op_, { missing:GroupMissingCloserNode[_, _, _] }, data1_]] :=
 	abstractCallNode[CallNode[op, { missing }, KeyTake[data1, keysToTake]]]
 
@@ -403,12 +400,10 @@ abstract[GroupNode[GroupLinearSyntaxParen, children_, data_]] := GroupNode[Group
 
 
 (*
-Missing closers and openers
+Missing closers
 *)
 
 abstract[GroupMissingCloserNode[_, children_, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingCloser, children, KeyTake[data, keysToTake]]
-
-abstract[GroupMissingOpenerNode[_, children_, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingOpener, children, KeyTake[data, keysToTake]]
 
 abstract[GroupNode[op_, {_, inner___, _}, data_]] := abstractGroupNode[GroupNode[op, { inner }, KeyTake[data, keysToTake]]]
 
@@ -1427,14 +1422,6 @@ selectChildren[n_] := n
 FIXME: would be good to remember tag somehow
 *)
 
-abstractGroupNode[GroupMissingOpenerNode[tag_, children_, dataIn_]] :=
-Module[{data},
-
-	data = dataIn;
-
-   AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingOpener, children, data]
-]
-
 abstractGroupNode[GroupMissingCloserNode[tag_, children_, dataIn_]] :=
 Module[{data},
 
@@ -1707,19 +1694,6 @@ Module[{head, part, partData, data, issues},
    ];
 
 	CallNode[ToNode[Part], {head} ~Join~ (part[[2]]), data]
-]
-
-
-abstractCallNode[CallNode[headIn_, {partIn:GroupMissingOpenerNode[_, _, _]}, dataIn_]] :=
-Module[{head, part, data},
-	head = headIn;
-	part = partIn;
-	data = dataIn;
-
-	head = abstract[head];
-	part = abstractGroupNode[part];
-
-	CallNode[head, { part }, data]
 ]
 
 abstractCallNode[CallNode[headIn_, {partIn:GroupMissingCloserNode[_, _, _]}, dataIn_]] :=

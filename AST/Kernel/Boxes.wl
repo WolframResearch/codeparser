@@ -1906,16 +1906,6 @@ Module[{nodeBoxes},
   RowBox[nodeBoxes]
 ]]
 
-toStandardFormBoxes[GroupMissingOpenerNode[op_, nodes_, data_]] :=
-Catch[
-Module[{nodeBoxes},
-  nodeBoxes = toStandardFormBoxes /@ nodes;
-  If[AnyTrue[nodeBoxes, FailureQ],
-    Throw[SelectFirst[nodeBoxes, FailureQ]]
-  ];
-  RowBox[nodeBoxes]
-]]
-
 
 
 
