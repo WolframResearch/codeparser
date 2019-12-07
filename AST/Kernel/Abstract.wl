@@ -999,17 +999,22 @@ except when it's not, bug 365287
 TODO: add 365287 to kernel quirks mode
 *)
 flattenPlus[nodes_List, data_] :=
-	Module[{},
+	Module[{synthesizedData},
 		(
 			Switch[#,
 				PrefixNode[Plus, {_, _}, _],
-					flattenPlus[{#[[2,2]]}, data]
+					flattenPlus[{#[[2, 2]]}, data]
 				,
 				InfixNode[Plus, _, _],
-					flattenPlus[#[[2]][[;;;;2]], data]
+					flattenPlus[#[[2, ;;;;2]], data]
 				,
 				BinaryNode[Minus, {_, _, _}, _],
-					flattenPlus[{#[[2,1]], negate[#[[2,3]], data]}, data]
+					(*
+					When parsing a - b + c, make sure to give the abstracted Times expression the correct Source.
+					That is, the source of  - b
+					*)
+					synthesizedData = <| Source -> { #[[2, 2, 3, Key[Source], 1]], #[[2, 3, 3, Key[Source], 2]] } |>;
+					flattenPlus[{#[[2, 1]], negate[#[[2, 3]], synthesizedData]}, data]
 				,
 				_,
 					#
