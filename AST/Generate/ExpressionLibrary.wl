@@ -1,6 +1,3 @@
-
-PacletDirectoryAdd["/Users/brenton/development/stash/COM/compile/Compile/"]
-
 BeginPackage["AST`Generate`ExpressionLibrary`"]
 
 Begin["`Private`"]
