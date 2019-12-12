@@ -30,7 +30,7 @@ macro(CheckWolframKernel)
 
 	# get Version from PacletInfo.m
 	execute_process(
-		COMMAND ${WOLFRAMKERNEL} -noinit -noprompt -run Print[OutputForm[Version\ /.\ Get["${PACLETINFO_SOURCE}"]["PacletInfo"]]]\;Exit[]
+		COMMAND ${WOLFRAMKERNEL} -noinit -noprompt -run Print[OutputForm[Version\ /.\ List\ @@\ Get["${PACLETINFO_SOURCE}"]]]\;Exit[]
 		OUTPUT_VARIABLE PACLET_VERSION
 		OUTPUT_STRIP_TRAILING_WHITESPACE
 		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
