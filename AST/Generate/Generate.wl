@@ -112,7 +112,7 @@ CubeRoot
 longNameToCharacterCode["CubeRoot"] = 16^^221b
 
 (*
-specify the long names that are not supported
+specify the long names that are unsupported
 *)
 longNameToCharacterCode["COMPATIBILITYKanjiSpace"] = 16^^3000
 longNameToCharacterCode["COMPATIBILITYNoBreak"] = 16^^f3a2
@@ -145,7 +145,7 @@ longNameToHexDigits[longName_String] :=
 
 
 
-Print["Generating additional required C++ and WL files..."]
+Print["Generating additional required source files and libraries..."]
 
 
 packageDir = Directory[]
@@ -254,8 +254,9 @@ Get["AST`Generate`Precedence`"]
 
 Get["AST`Generate`Symbol`"]
 
+Get["AST`Generate`ExpressionLibrary`"]
 
-Print["Done generating additional required C++ and WL files"]
+Print["Done generating additional required source files and libraries"]
 
 End[]
 
