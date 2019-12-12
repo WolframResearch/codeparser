@@ -51,6 +51,7 @@ set(WL_GENERATE_SOURCES
 	${CMAKE_SOURCE_DIR}/AST/Generate/Generate.wl
 	${CMAKE_SOURCE_DIR}/AST/Generate/CharacterMaps.wl
 	${CMAKE_SOURCE_DIR}/AST/Generate/CodePoint.wl
+	${CMAKE_SOURCE_DIR}/AST/Generate/ExpressionLibrary.wl
 	${CMAKE_SOURCE_DIR}/AST/Generate/LongNames.wl
 	${CMAKE_SOURCE_DIR}/AST/Generate/Precedence.wl
 	${CMAKE_SOURCE_DIR}/AST/Generate/Symbol.wl
@@ -116,6 +117,13 @@ include(WolframKernel)
 CheckWolframKernel()
 
 
+set(GENERATED_LIBS
+	${CMAKE_BINARY_DIR}/paclet/AST/LibraryResources/${SYSTEMID}/expr${CMAKE_SHARED_LIBRARY_SUFFIX}
+)
+
+message(STATUS "GENERATED_LIBS: ${GENERATED_LIBS}")
+
+
 
 file(MAKE_DIRECTORY
 	${CMAKE_BINARY_DIR}/paclet/${PACLET}
@@ -165,6 +173,7 @@ endif(BUILD_DOCS)
 add_custom_command(
 	OUTPUT
 		${GENERATED_SOURCES}
+		${GENERATED_LIBS}
 	DEPENDS
 		${WL_DATA_SOURCES}
 		${WL_GENERATE_SOURCES}
@@ -176,7 +185,7 @@ add_custom_command(
 
 
 #
-# Build library
+# Build AST library
 #
 
 set(WOLFRAMLIBRARY_INCLUDE_DIR /Applications/Mathematica.app/Contents/SystemFiles/IncludeFiles/C CACHE FILEPATH "Path to WolframLibrary.h")
