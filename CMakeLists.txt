@@ -117,11 +117,17 @@ include(WolframKernel)
 CheckWolframKernel()
 
 
+
+if(${VERSION_NUMBER} GREATER_EQUAL 1220)
+
 set(GENERATED_LIBS
 	${CMAKE_BINARY_DIR}/paclet/AST/LibraryResources/${SYSTEMID}/expr${CMAKE_SHARED_LIBRARY_SUFFIX}
 )
 
 message(STATUS "GENERATED_LIBS: ${GENERATED_LIBS}")
+
+endif()
+
 
 
 
