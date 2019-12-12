@@ -632,3 +632,32 @@ Test[
 	,
 	TestID->"Concrete-20191209-A4X1E9"
 ]
+
+Test[
+	ConcreteParseString["(*\\a*)"]
+	,
+	StringNode[String, {
+		LeafNode[Token`Comment, "(*\\a*)", <|Source -> {{1, 1}, {1, 7}}|>]}, <||>]
+	,
+	TestID->"Concrete-20191210-U8V1Y3"
+]
+
+Test[
+	(* yes, actual \[Alpha] character on purpose *)
+	ConcreteParseString["{\[Alpha],b}"]
+	,
+	StringNode[String, {
+		GroupNode[List, {
+			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
+			InfixNode[Comma, {
+				LeafNode[Symbol, "\[Alpha]", <|Source -> {{1, 2}, {1, 3}}|>],
+				LeafNode[Token`Comma, ",", <|Source -> {{1, 3}, {1, 4}}|>],
+				LeafNode[Symbol, "b", <|Source -> {{1, 4}, {1, 5}}|>]}, <|Source -> {{1, 2}, {1, 5}}|>],
+			LeafNode[Token`CloseCurly, "}", <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]}
+			,
+			<|SyntaxIssues -> {SyntaxIssue["UnexpectedCharacter", "Unexpected letterlike character: ``\\[Alpha]``.", "Warning", <|Source -> {{1, 2}, {1, 3}}, ConfidenceLevel -> 0.9|>]}|>]
+	,
+	TestID->"Concrete-20191212-V5Q2Y2"
+]
+
+	

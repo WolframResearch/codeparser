@@ -88,6 +88,7 @@ int main(int argc, char *argv[]) {
 //    fileInput = "/Applications/Mathematica121-6519725.app/Contents/AddOns/Applications/FormulaData/Kernel/downvalues.m";
 //    fileInput = "/Users/brenton/development/stash/COD/ast/build/test.m";
 //    fileInput = "/Users/brenton/development/stash/COD/ast/Tests/files/inputs-0001.txt";
+//    fileInput = "/Users/brenton/development/stash/PAC/semanticimport/mathematica/scoresAndSpellings/data/UnitScores.m";
 //    outputMode = PUT;
     
     if (file) {

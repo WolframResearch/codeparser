@@ -127,7 +127,7 @@ void Utils::strangeLetterlikeWarning(BufferAndLength bufAndLen, WLCharacter c) {
         auto loc1 = TheByteDecoder->convertBufferToStart(bufAndLen.buffer);
         auto loc2 = TheByteDecoder->convertBufferToEnd(bufAndLen.end());
         
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Source(loc1, loc2), 0.95, {}));
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Source(loc1, loc2), 0.95, {}));
         
         TheTokenizer->addIssue(std::move(I));
         
@@ -137,7 +137,7 @@ void Utils::strangeLetterlikeWarning(BufferAndLength bufAndLen, WLCharacter c) {
     auto loc1 = TheByteDecoder->convertBufferToStart(bufAndLen.buffer);
     auto loc2 = TheByteDecoder->convertBufferToEnd(bufAndLen.end());
     
-    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Source(loc1, loc2), 0.90, {}));
+    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Source(loc1, loc2), 0.90, {}));
     
     TheTokenizer->addIssue(std::move(I));
 }

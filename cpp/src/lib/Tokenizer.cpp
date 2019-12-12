@@ -36,7 +36,7 @@ void Tokenizer::deinit() {
 //           ^
 //           buffer
 //
-// after calling nextWLCharacter:
+// after calling nextToken0:
 // memory: 1+\[Alpha]-2
 //                   ^
 //                   buffer
@@ -55,17 +55,21 @@ Token Tokenizer::nextToken0(NextCharacterPolicy policy) {
         //
         // all single-byte characters
         //
-        
-        case '\x00': case '\x01': case '\x02': case '\x03': case '\x04': case '\x05': case '\x06':
-        case '\b':
-        case '\x0e': case '\x0f': case '\x10': case '\x11': case '\x12': case '\x13': case '\x14': case '\x15': case '\x16': case '\x17': case '\x18': case '\x19': case '\x1a': case '\x1b': case '\x1c': case '\x1d': case '\x1e': case '\x1f':
+        // most control characters are letterlike
+        // jessef: There may be such a thing as *too* binary-safe...
+        //
+        case '\x00': case '\x01': case '\x02': case '\x03': case '\x04': case '\x05': case '\x06': /*    \x07*/
+        case '\x08': /*    \x09*/ /*    \x0a*/ /*    \x0b*/ /*    \x0c*/ /*    \x0d*/ case '\x0e': case '\x0f':
+        case '\x10': case '\x11': case '\x12': case '\x13': case '\x14': case '\x15': case '\x16': case '\x17':
+        case '\x18': case '\x19': case '\x1a': case '\x1b': case '\x1c': case '\x1d': case '\x1e': case '\x1f':
         case '$':
-        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
+        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M':
+        case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
         case '`':
-        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm': case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
+        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm':
+        case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
             return handleSymbol(tokenStartBuf, c, policy, Ctxt);
-        case '\x07':
-        case '\x7f':
+        case CODEPOINT_BEL: case CODEPOINT_DEL:
             return Token(TOKEN_ERROR_UNINTERPRETABLECHARACTER, getTokenBufferAndLength(tokenStartBuf));
         case '\t':
             return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf));
@@ -149,10 +153,6 @@ Token Tokenizer::nextToken0(NextCharacterPolicy policy) {
                 
                 return Token(TOKEN_ENDOFFILE, getTokenBufferAndLength(tokenStartBuf));
                 
-            } else if (c.to_point() == CODEPOINT_CRLF) {
-                
-                return Token(TOKEN_NEWLINE, getTokenBufferAndLength(tokenStartBuf));
-                
             } else if (c.isMBLinearSyntax()) {
                 
                 return handleMBLinearSyntax(tokenStartBuf, c, policy);
@@ -179,7 +179,7 @@ Token Tokenizer::nextToken0(NextCharacterPolicy policy) {
                 
             } else if (c.isMBNewline()) {
                 
-                return Token(TOKEN_NEWLINE, BufferAndLength(tokenStartBuf, 0, false));
+                return Token(TOKEN_NEWLINE, getTokenBufferAndLength(tokenStartBuf));
                 
             } else if (c.isMBPunctuation()) {
                 
@@ -269,6 +269,9 @@ Token Tokenizer::nextToken0_stringifySymbol() {
     return handleString_stringifySymbol(tokenStartBuf, c, policy);
 }
 
+//
+// Use SourceCharacters here, not WLCharacters
+//
 Token Tokenizer::nextToken0_stringifyFile() {
     
     auto tokenStartBuf = TheByteBuffer->buffer;
@@ -353,11 +356,11 @@ Token Tokenizer::currentToken(NextCharacterPolicy policy) {
     
     auto resetBuf = TheByteBuffer->buffer;
     
-    auto newPolicy = policy;
+    policy &= DISABLE_BYTE_CHECKS_MASK;
     
-    newPolicy = newPolicy & DISABLE_CHECKS_MASK;
+    policy &= DISABLE_CHARACTER_CHECKS_MASK;
     
-    auto Tok = nextToken0(newPolicy);
+    auto Tok = nextToken0(policy);
     
     TheByteBuffer->buffer = resetBuf;
     
@@ -409,9 +412,9 @@ Token Tokenizer::currentToken_stringifyFile() {
     return Tok;
 }
 
-inline Token Tokenizer::handleStrangeSpace(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+inline Token Tokenizer::handleStrangeSpace(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
-    assert(firstChar.isStrangeSpace());
+    assert(c.isStrangeSpace());
     
 #if !NISSUES
     if ((policy & ENABLE_STRANGE_CHARACTER_CHECKING) == ENABLE_STRANGE_CHARACTER_CHECKING) {
@@ -420,7 +423,7 @@ inline Token Tokenizer::handleStrangeSpace(Buffer tokenStartBuf, WLCharacter fir
         
         auto Src = getTokenSource(tokenStartLoc);
         
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected space character.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
         
         Issues.push_back(std::move(I));
     }
@@ -429,22 +432,23 @@ inline Token Tokenizer::handleStrangeSpace(Buffer tokenStartBuf, WLCharacter fir
     return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline Token Tokenizer::handleComment(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+//
+// Use SourceCharacters here, not WLCharacters
+//
+// Comments deal with (**) SourceCharacters
+// Escaped characters do not work
+//
+inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceCharacter c, NextCharacterPolicy policy) {
     
     //
     // comment is already started
     //
-    // Comments deal with literal (**) characters
-    // Escaped characters do not work
-    //
-    
-    auto c = firstChar;
     
     assert(c.to_point() == '*');
     
     auto depth = 1;
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheByteDecoder->currentSourceCharacter(policy);
     
     if (c.to_point() == CODEPOINT_ENDOFFILE) {
         
@@ -461,71 +465,65 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, WLCharacter firstCha
         // No need to check for comment length
         //
         
-        if (c == WLCharacter('(')) {
-            
-            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-            
-            c = TheCharacterDecoder->currentWLCharacter(policy);
-            
-            if (c == WLCharacter('*')) {
+        switch (c.to_point()) {
+            case '(':
+                TheByteBuffer->buffer = TheByteDecoder->lastBuf;
                 
-                depth = depth + 1;
+                c = TheByteDecoder->currentSourceCharacter(policy);
                 
-                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-                
-                c = TheCharacterDecoder->currentWLCharacter(policy);
-            }
-            
-        } else if (c == WLCharacter('*')) {
-            
-            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-            
-            c = TheCharacterDecoder->currentWLCharacter(policy);
-            
-            if (c == WLCharacter(')')) {
-                
-                // This comment is closing
-                
-                depth = depth - 1;
-                
-                if (depth == 0) {
+                if (c.to_point() == '*') {
                     
-                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                    depth = depth + 1;
                     
-                    break;
+                    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+                    
+                    c = TheByteDecoder->currentSourceCharacter(policy);
                 }
                 
-                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                break;
+            case '*':
+                TheByteBuffer->buffer = TheByteDecoder->lastBuf;
                 
-                c = TheCharacterDecoder->currentWLCharacter(policy);
-            }
-            
-        } else if (c.to_point() == CODEPOINT_ENDOFFILE) {
-            
-            return Token(TOKEN_ERROR_UNTERMINATEDCOMMENT, getTokenBufferAndLength(tokenStartBuf));
-            
-        } else {
-            
-            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-            
-            c = TheCharacterDecoder->currentWLCharacter(policy);
+                c = TheByteDecoder->currentSourceCharacter(policy);
+                
+                if (c.to_point() == ')') {
+                    
+                    // This comment is closing
+                    
+                    depth = depth - 1;
+                    
+                    if (depth == 0) {
+                        
+                        TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+                        
+                        return Token(TOKEN_COMMENT, getTokenBufferAndLength(tokenStartBuf));
+                    }
+                    
+                    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+                    
+                    c = TheByteDecoder->currentSourceCharacter(policy);
+                }
+                break;
+            case CODEPOINT_ENDOFFILE:
+                return Token(TOKEN_ERROR_UNTERMINATEDCOMMENT, getTokenBufferAndLength(tokenStartBuf));
+            default:
+                
+                TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+                
+                c = TheByteDecoder->currentSourceCharacter(policy);
+                break;
         }
         
     } // while
-    
-    return Token(TOKEN_COMMENT, getTokenBufferAndLength(tokenStartBuf));
 }
 
 //
 // a segment is: [a-z$]([a-z$0-9])*
 // a symbol is: (segment)?(`segment)*
 //
-inline Token Tokenizer::handleSymbol(Buffer symbolStartBuf, WLCharacter firstChar, NextCharacterPolicy policyIn, TokenizerContext Ctxt) {
+inline Token Tokenizer::handleSymbol(Buffer symbolStartBuf, WLCharacter c, NextCharacterPolicy policy, TokenizerContext Ctxt) {
     
-    auto policy = policyIn;
-    policy = policy | LC_IS_MEANINGFUL;
-    
-    auto c = firstChar;
+    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '`' || c.isLetterlike() || c.isMBLetterlike());
     
@@ -574,6 +572,8 @@ inline Token Tokenizer::handleSymbol(Buffer symbolStartBuf, WLCharacter firstCha
             
             auto letterlikeBuf = TheByteBuffer->buffer;
             
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            
             c = handleSymbolSegment(letterlikeBuf, c, policy, Ctxt);
             
         } else {
@@ -598,10 +598,7 @@ inline Token Tokenizer::handleSymbol(Buffer symbolStartBuf, WLCharacter firstCha
 //
 // return: the first NON-SYMBOLSEGMENT character after all symbol segment characters
 //
-inline WLCharacter Tokenizer::handleSymbolSegment(Buffer firstCharBuf, WLCharacter firstChar, NextCharacterPolicy policy, TokenizerContext Ctxt) {
-    
-    auto charBuf = firstCharBuf;
-    auto c = firstChar;
+inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, WLCharacter c, NextCharacterPolicy policy, TokenizerContext Ctxt) {
     
     assert(c.isLetterlike() || c.isMBLetterlike());
     
@@ -621,7 +618,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer firstCharBuf, WLCharact
                 Issues.push_back(std::move(I));
             }
         } else if (c.isStrangeLetterlike() || c.isMBStrangeLetterlike()) {
-            Utils::strangeLetterlikeWarning(getTokenBufferAndLength(firstCharBuf), c);
+            Utils::strangeLetterlikeWarning(getTokenBufferAndLength(charBuf), c);
         }
     }
 #endif // !NISSUES
@@ -689,15 +686,11 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer firstCharBuf, WLCharact
     return c;
 }
 
-inline Token Tokenizer::handleString(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
-    
-    auto c = firstChar;
+inline Token Tokenizer::handleString(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
         
     assert(c.to_point() == '"');
     
-    auto newPolicy = policy;
-    
-    newPolicy = newPolicy | PRESERVE_WS_AFTER_LC | LC_IS_MEANINGFUL;
+    policy |= PRESERVE_WS_AFTER_LC | LC_IS_MEANINGFUL;
 //    newPolicy = newPolicy & ~(LC_UNDERSTANDS_CRLF);
     
     while (true) {
@@ -706,7 +699,7 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, WLCharacter firstChar
         // No need to check isAbort() inside tokenizer loops
         //
         
-        c = TheCharacterDecoder->nextWLCharacter0(newPolicy);
+        c = TheCharacterDecoder->nextWLCharacter0(policy);
         
         switch (c.to_point()) {
             case '"':
@@ -720,15 +713,13 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, WLCharacter firstChar
 
 #if STARTOFLINE
 
-inline Token Tokenizer::handleString_stringifyLine(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
-    
-    auto c = firstChar;
+inline Token Tokenizer::handleString_stringifyLine(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
     //
     // Nothing to assert
     //
     
-    auto newPolicy = policy & ~PRESERVE_WS_AFTER_LC;
+    policy &= ~PRESERVE_WS_AFTER_LC;
     
     auto lastGoodBuffer = TheByteBuffer->getBuffer();
     
@@ -756,9 +747,9 @@ inline Token Tokenizer::handleString_stringifyLine(Buffer tokenStartBuf, WLChara
         
         lastGoodBuffer = TheByteBuffer->getBuffer();
         
-        TheCharacterDecoder->nextWLCharacter(newPolicy);
+        TheCharacterDecoder->nextWLCharacter(policy);
         
-        c = TheCharacterDecoder->currentWLCharacter(newPolicy);
+        c = TheCharacterDecoder->currentWLCharacter(policy);
         
     } // while
     
@@ -786,9 +777,7 @@ inline Token Tokenizer::handleString_stringifyLine(Buffer tokenStartBuf, WLChara
 
 #endif // STARTOFLINE
 
-inline Token Tokenizer::handleString_stringifySymbol(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
-    
-    auto c = firstChar;
+inline Token Tokenizer::handleString_stringifySymbol(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
     //
     // Nothing to assert
@@ -823,9 +812,10 @@ inline Token Tokenizer::handleString_stringifySymbol(Buffer tokenStartBuf, WLCha
     return Token(TOKEN_ERROR_EXPECTEDLETTERLIKE, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline Token Tokenizer::handleString_stringifyFile(Buffer tokenStartBuf, SourceCharacter firstChar, NextCharacterPolicy policy) {
-    
-    auto c = firstChar;
+//
+// Use SourceCharacters here, not WLCharacters
+//
+inline Token Tokenizer::handleString_stringifyFile(Buffer tokenStartBuf, SourceCharacter c, NextCharacterPolicy policy) {
     
     //
     // Nothing to assert
@@ -841,8 +831,10 @@ inline Token Tokenizer::handleString_stringifyFile(Buffer tokenStartBuf, SourceC
     //
     
     switch (c.to_point()) {
-        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
-        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm': case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
+        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M':
+        case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
+        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm':
+        case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
         case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
         case '$': case '`': case '/': case '.': case '\\': case '!': case '-': case '_': case ':': case '*': case '~': case '?': {
             
@@ -900,8 +892,10 @@ inline Token Tokenizer::handleString_stringifyFile(Buffer tokenStartBuf, SourceC
         //
         
         switch (c.to_point()) {
-            case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
-            case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm': case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
+            case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M':
+            case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
+            case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm':
+            case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
             case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
             case '$': case '`': case '/': case '.': case '\\': case '!': case '-': case '_': case ':': case '*': case '~': case '?': {
                 
@@ -950,9 +944,9 @@ const int UNTERMINATED_STRING = -1;
 //
 // handle matched pairs of [] enclosing any characters other than spaces, tabs, and newlines
 //
-inline SourceCharacter Tokenizer::handleFileOpsBrackets(Buffer tokenStartBuf, SourceCharacter firstChar, NextCharacterPolicy policy, int *handled) {
-    
-    auto c = firstChar;
+// Use SourceCharacters here, not WLCharacters
+//
+inline SourceCharacter Tokenizer::handleFileOpsBrackets(Buffer tokenStartBuf, SourceCharacter c, NextCharacterPolicy policy, int *handled) {
     
     assert(c.to_point() == '[');
     
@@ -1060,14 +1054,11 @@ const int BAILOUT = -2;
 //
 // numer = base+mantissa+exponent
 //
-inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policyIn) {
-    
-    auto c = firstChar;
+inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
     assert(c.isDigit() || c.to_point() == '.');
     
-    auto policy = policyIn;
-    policy = policy | LC_IS_MEANINGFUL;
+    policy |= LC_IS_MEANINGFUL;
     
     //
     // given 16^^0.F, leadingDigitsEnd will point to .
@@ -1267,8 +1258,11 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, WLCharacter firstChar
     
     if (c.to_point() == '.') {
         
-        // Could be \056, so can't really assert here
-//        assert(*(TheByteBuffer->buffer - 1) == '.');
+        //
+        // assert(*(TheByteBuffer->buffer - 1) == '.');
+        //
+        // The dot could be a sequence of SourceCharacters, e.g. \056, so can't really assert here
+        //
         
         int handled;
         c = handlePossibleFractionalPart(leadingDigitsEnd, c, base, policy, &handled);
@@ -1642,9 +1636,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, WLCharacter firstChar
 //
 // Return: number of digits handled after ., possibly 0, or -1 if error
 //
-inline WLCharacter Tokenizer::handlePossibleFractionalPart(Buffer dotBuf, WLCharacter firstChar, int base, NextCharacterPolicy policy, int *handled) {
-    
-    auto c = firstChar;
+inline WLCharacter Tokenizer::handlePossibleFractionalPart(Buffer dotBuf, WLCharacter c, int base, NextCharacterPolicy policy, int *handled) {
     
     assert(c.to_point() == '.');
     
@@ -1664,9 +1656,7 @@ inline WLCharacter Tokenizer::handlePossibleFractionalPart(Buffer dotBuf, WLChar
 //         UNRECOGNIZED_DIGIT if base error
 //         BAILOUT if not a radix point (and also backup before dot)
 //
-inline WLCharacter Tokenizer::handlePossibleFractionalPartPastDot(Buffer dotBuf, WLCharacter firstChar, int base, NextCharacterPolicy policy, int *handled) {
-    
-    auto c = firstChar;
+inline WLCharacter Tokenizer::handlePossibleFractionalPartPastDot(Buffer dotBuf, WLCharacter c, int base, NextCharacterPolicy policy, int *handled) {
     
     //
     // Nothing to assert
@@ -1771,9 +1761,7 @@ void Tokenizer::backup(Buffer resetBuf, bool warn) {
 //
 // return: the first NON-DIGIT character after all digits
 //
-inline WLCharacter Tokenizer::handleDigits(NextCharacterPolicy policy, WLCharacter firstChar, size_t *countP) {
-    
-    auto c = firstChar;
+inline WLCharacter Tokenizer::handleDigits(NextCharacterPolicy policy, WLCharacter c, size_t *countP) {
     
     assert(c.isDigit());
     
@@ -1811,9 +1799,7 @@ inline WLCharacter Tokenizer::handleDigits(NextCharacterPolicy policy, WLCharact
 //
 // Return: number of digits handled, possibly 0, or -1 if error
 //
-inline WLCharacter Tokenizer::handleAlphaOrDigits(WLCharacter firstChar, size_t base, NextCharacterPolicy policy, int *handled) {
-    
-    auto c = firstChar;
+inline WLCharacter Tokenizer::handleAlphaOrDigits(WLCharacter c, size_t base, NextCharacterPolicy policy, int *handled) {
     
     assert(c.isAlphaOrDigit());
     
@@ -1863,9 +1849,9 @@ inline WLCharacter Tokenizer::handleAlphaOrDigits(WLCharacter firstChar, size_t 
     return c;
 }
 
-inline Token Tokenizer::handleColon(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+inline Token Tokenizer::handleColon(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
-    auto c = firstChar;
+    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == ':');
     
@@ -1897,9 +1883,7 @@ inline Token Tokenizer::handleColon(Buffer tokenStartBuf, WLCharacter firstChar,
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline Token Tokenizer::handleOpenParen(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
-    
-    auto c = firstChar;
+inline Token Tokenizer::handleOpenParen(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
     assert(c.to_point() == '(');
     
@@ -1918,7 +1902,7 @@ inline Token Tokenizer::handleOpenParen(Buffer tokenStartBuf, WLCharacter firstC
         
         TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
         
-        return handleComment(tokenStartBuf, c, policy);
+        return handleComment(tokenStartBuf, SourceCharacter(c.to_point()), policy);
     }
     
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
@@ -1926,20 +1910,20 @@ inline Token Tokenizer::handleOpenParen(Buffer tokenStartBuf, WLCharacter firstC
 
 inline Token Tokenizer::handleDot(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
     
+    auto c = firstChar;
+    
     //
     // handleDot
     // Could be  .  or  ..  or ...  or  .0
     //
     
-    auto c = firstChar;
+    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '.');
     
     c = TheCharacterDecoder->currentWLCharacter(policy);
     
     if (c.isDigit()) {
-        
-//        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
         
         return handleNumber(tokenStartBuf, firstChar, policy);
     }
@@ -1965,9 +1949,9 @@ inline Token Tokenizer::handleDot(Buffer tokenStartBuf, WLCharacter firstChar, N
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline Token Tokenizer::handleEqual(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+inline Token Tokenizer::handleEqual(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
-    auto c = firstChar;
+    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '=');
     
@@ -2062,9 +2046,9 @@ inline Token Tokenizer::handleEqual(Buffer tokenStartBuf, WLCharacter firstChar,
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline Token Tokenizer::handleUnder(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+inline Token Tokenizer::handleUnder(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
-    auto c = firstChar;
+    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '_');
     
@@ -2123,9 +2107,9 @@ inline Token Tokenizer::handleUnder(Buffer tokenStartBuf, WLCharacter firstChar,
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline Token Tokenizer::handleLess(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+inline Token Tokenizer::handleLess(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
-    auto c = firstChar;
+    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '<');
     
@@ -2193,9 +2177,9 @@ inline Token Tokenizer::handleLess(Buffer tokenStartBuf, WLCharacter firstChar, 
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline Token Tokenizer::handleGreater(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+inline Token Tokenizer::handleGreater(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
-    auto c = firstChar;
+    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '>');
     
@@ -2232,9 +2216,9 @@ inline Token Tokenizer::handleGreater(Buffer tokenStartBuf, WLCharacter firstCha
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline Token Tokenizer::handleMinus(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+inline Token Tokenizer::handleMinus(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
-    auto c = firstChar;
+    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '-');
     
@@ -2318,9 +2302,9 @@ inline Token Tokenizer::handleMinus(Buffer tokenStartBuf, WLCharacter firstChar,
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline Token Tokenizer::handleBar(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+inline Token Tokenizer::handleBar(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
-    auto c = firstChar;
+    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '|');
     
@@ -2374,9 +2358,9 @@ inline Token Tokenizer::handleBar(Buffer tokenStartBuf, WLCharacter firstChar, N
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline Token Tokenizer::handleSemi(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+inline Token Tokenizer::handleSemi(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
-    auto c = firstChar;
+    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == ';');
     
@@ -2394,9 +2378,9 @@ inline Token Tokenizer::handleSemi(Buffer tokenStartBuf, WLCharacter firstChar, 
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline Token Tokenizer::handleBang(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+inline Token Tokenizer::handleBang(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
-    auto c = firstChar;
+    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '!');
     
@@ -2424,9 +2408,9 @@ inline Token Tokenizer::handleBang(Buffer tokenStartBuf, WLCharacter firstChar, 
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline Token Tokenizer::handleHash(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+inline Token Tokenizer::handleHash(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
-    auto c = firstChar;
+    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '#');
     
@@ -2458,13 +2442,16 @@ inline Token Tokenizer::handleHash(Buffer tokenStartBuf, WLCharacter firstChar, 
         //
         // letterlike
         //
-        case '\x00': case '\x01': case '\x02': case '\x03': case '\x04': case '\x05': case '\x06':
-        case '\b':
-        case '\x0e': case '\x0f': case '\x10': case '\x11': case '\x12': case '\x13': case '\x14': case '\x15': case '\x16': case '\x17': case '\x18': case '\x19': case '\x1a': case '\x1b': case '\x1c': case '\x1d': case '\x1e': case '\x1f':
+        case '\x00': case '\x01': case '\x02': case '\x03': case '\x04': case '\x05': case '\x06': /*    \x07*/
+        case '\x08': /*    \x09*/ /*    \x0a*/ /*    \x0b*/ /*    \x0c*/ /*    \x0d*/ case '\x0e': case '\x0f':
+        case '\x10': case '\x11': case '\x12': case '\x13': case '\x14': case '\x15': case '\x16': case '\x17':
+        case '\x18': case '\x19': case '\x1a': case '\x1b': case '\x1c': case '\x1d': case '\x1e': case '\x1f':
         case '$':
-        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
+        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M':
+        case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
         case '`':
-        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm': case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z': {
+        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm':
+        case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z': {
             
             auto symbolStartBuf = TheByteBuffer->buffer;
             
@@ -2548,9 +2535,9 @@ inline Token Tokenizer::handleHash(Buffer tokenStartBuf, WLCharacter firstChar, 
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline Token Tokenizer::handlePercent(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+inline Token Tokenizer::handlePercent(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
-    auto c = firstChar;
+    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '%');
     
@@ -2584,9 +2571,9 @@ inline Token Tokenizer::handlePercent(Buffer tokenStartBuf, WLCharacter firstCha
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline Token Tokenizer::handleAmp(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+inline Token Tokenizer::handleAmp(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
-    auto c = firstChar;
+    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '&');
     
@@ -2604,9 +2591,9 @@ inline Token Tokenizer::handleAmp(Buffer tokenStartBuf, WLCharacter firstChar, N
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline Token Tokenizer::handleSlash(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+inline Token Tokenizer::handleSlash(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
-    auto c = firstChar;
+    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '/');
     
@@ -2705,9 +2692,9 @@ inline Token Tokenizer::handleSlash(Buffer tokenStartBuf, WLCharacter firstChar,
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline Token Tokenizer::handleAt(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+inline Token Tokenizer::handleAt(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
-    auto c = firstChar;
+    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '@');
     
@@ -2744,9 +2731,9 @@ inline Token Tokenizer::handleAt(Buffer tokenStartBuf, WLCharacter firstChar, Ne
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline Token Tokenizer::handlePlus(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+inline Token Tokenizer::handlePlus(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
-    auto c = firstChar;
+    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '+');
     
@@ -2797,9 +2784,9 @@ inline Token Tokenizer::handlePlus(Buffer tokenStartBuf, WLCharacter firstChar, 
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline Token Tokenizer::handleTilde(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+inline Token Tokenizer::handleTilde(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
-    auto c = firstChar;
+    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '~');
     
@@ -2817,9 +2804,9 @@ inline Token Tokenizer::handleTilde(Buffer tokenStartBuf, WLCharacter firstChar,
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline Token Tokenizer::handleQuestion(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+inline Token Tokenizer::handleQuestion(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
-    auto c = firstChar;
+    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '?');
     
@@ -2837,9 +2824,9 @@ inline Token Tokenizer::handleQuestion(Buffer tokenStartBuf, WLCharacter firstCh
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline Token Tokenizer::handleStar(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+inline Token Tokenizer::handleStar(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
-    auto c = firstChar;
+    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '*');
     
@@ -2867,9 +2854,9 @@ inline Token Tokenizer::handleStar(Buffer tokenStartBuf, WLCharacter firstChar, 
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline Token Tokenizer::handleCaret(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+inline Token Tokenizer::handleCaret(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
-    auto c = firstChar;
+    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '^');
     
@@ -2913,7 +2900,7 @@ inline Token Tokenizer::handleCaret(Buffer tokenStartBuf, WLCharacter firstChar,
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
     //
     // Unhandled \
@@ -2921,8 +2908,6 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, WLCharact
     // If the bad character looks like a special input, then try to reconstruct the character up to the bad SourceCharacter
     // This duplicates some logic in CharacterDecoder
     //
-    
-    auto c = firstChar;
     
     assert(c.to_point() == '\\');
     
@@ -3086,9 +3071,9 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, WLCharact
     }
 }
 
-inline Token Tokenizer::handleMBStrangeNewline(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+inline Token Tokenizer::handleMBStrangeNewline(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
-    assert(firstChar.isMBStrangeNewline());
+    assert(c.isMBStrangeNewline());
     
 #if !NISSUES
     if ((policy & ENABLE_STRANGE_CHARACTER_CHECKING) == ENABLE_STRANGE_CHARACTER_CHECKING) {
@@ -3097,7 +3082,7 @@ inline Token Tokenizer::handleMBStrangeNewline(Buffer tokenStartBuf, WLCharacter
         
         auto Src = getTokenSource(tokenStartLoc);
         
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected newline character.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
         
         Issues.push_back(std::move(I));
     }
@@ -3106,9 +3091,9 @@ inline Token Tokenizer::handleMBStrangeNewline(Buffer tokenStartBuf, WLCharacter
     return Token(TOKEN_NEWLINE, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline Token Tokenizer::handleMBStrangeSpace(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
+inline Token Tokenizer::handleMBStrangeSpace(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
-    assert(firstChar.isMBStrangeSpace());
+    assert(c.isMBStrangeSpace());
     
 #if !NISSUES
     if ((policy & ENABLE_STRANGE_CHARACTER_CHECKING) == ENABLE_STRANGE_CHARACTER_CHECKING) {
@@ -3117,7 +3102,7 @@ inline Token Tokenizer::handleMBStrangeSpace(Buffer tokenStartBuf, WLCharacter f
         
         auto Src = getTokenSource(tokenStartLoc);
         
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected space character.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
         
         Issues.push_back(std::move(I));
     }
@@ -3126,9 +3111,7 @@ inline Token Tokenizer::handleMBStrangeSpace(Buffer tokenStartBuf, WLCharacter f
     return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline Token Tokenizer::handleMBPunctuation(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
-    
-    auto c = firstChar;
+inline Token Tokenizer::handleMBPunctuation(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
     assert(c.isMBPunctuation());
     
@@ -3137,9 +3120,7 @@ inline Token Tokenizer::handleMBPunctuation(Buffer tokenStartBuf, WLCharacter fi
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf));
 }
 
-inline Token Tokenizer::handleMBLinearSyntax(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy) {
-    
-    auto c = firstChar;
+inline Token Tokenizer::handleMBLinearSyntax(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
     
     assert(c.isMBLinearSyntax());
     

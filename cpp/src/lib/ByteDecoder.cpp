@@ -54,17 +54,22 @@ void ByteDecoder::init() {
     //
     size_t newlineCount = 0;
     for (auto p = start; p < end; ++p) {
-        auto b = *p;
-        //
-        // Might overshoot the number of newlines because of
-        // double-counting \r and \n inside \r\n, oh well
-        //
-        if (b == '\n' || b == '\r') {
-            ++newlineCount;
+        switch (*p) {
+                //
+                // Might overshoot the number of newlines because of
+                // double-counting \r and \n inside \r\n, oh well
+                //
+        case '\n': case '\r':
+                ++newlineCount;
+            break;
         }
+        
     }
     
-    offsetLineMap = std::vector<Buffer>(2 + newlineCount);
+    //
+    // Add 2 for start and end
+    //
+    offsetLineMap.resize(2 + newlineCount);
     
 #if !NISSUES
     SourceLocation Loc(1, 1);

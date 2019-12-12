@@ -935,28 +935,14 @@ WLCharacter CharacterDecoder::handleLineContinuation(SourceCharacter firstChar, 
     
     assert(firstChar.isNewline());
     
-    WLCharacter c;
-    
-    switch (firstChar.to_point()) {
-        case '\n':
-            c = WLCharacter(CODEPOINT_LINECONTINUATION_LF, ESCAPE_SINGLE);
-            break;
-        case '\r':
-            c = WLCharacter(CODEPOINT_LINECONTINUATION_CR, ESCAPE_SINGLE);
-            break;
-        case CODEPOINT_CRLF:
-            c = WLCharacter(CODEPOINT_LINECONTINUATION_CRLF, ESCAPE_SINGLE);
-            break;
-    }
-    
     if ((policy & LC_IS_MEANINGFUL) != LC_IS_MEANINGFUL) {
-        
+
         //
         // Line continuation is NOT meaningful, so warn and return
         //
         // NOT meaningful, so do not worry about PRESERVE_WS_AFTER_LC
         //
-        
+
 #if !NISSUES
         //
         // Use ENABLE_CHARACTER_DECODING_ISSUES here to also talk about line continuations
@@ -964,41 +950,70 @@ WLCharacter CharacterDecoder::handleLineContinuation(SourceCharacter firstChar, 
         // This disables unexpected line continuations inside comments
         //
         if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
-            
+
             auto afterBuf = TheByteBuffer->buffer;
-            
+
             auto firstCharBuf = afterBuf - 1;
-            if (c.to_point() == CODEPOINT_LINECONTINUATION_CRLF) {
+            if (firstChar.to_point() == CODEPOINT_CRLF) {
                 firstCharBuf--;
             }
             auto currentWLCharacterStart = firstCharBuf - 1;
-            
-            assert(currentWLCharacterStart[0] == '\\');
-            
+
+            assert(*currentWLCharacterStart == '\\');
+
             auto currentWLCharacterStartLoc = TheByteDecoder->convertBufferToStart(currentWLCharacterStart);
             auto firstCharLoc = TheByteDecoder->convertBufferToEnd(firstCharBuf);
-            
+
             //
             // Just remove the \, leave the \n
             //
-            
+
             std::vector<CodeActionPtr> Actions;
             Actions.push_back(CodeActionPtr(new DeleteTextCodeAction("Delete \\", Source(currentWLCharacterStartLoc, firstCharLoc))));
-            
+
             auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_UNEXPECTEDLINECONTINUATION, std::string("Unexpected line continuation."), FORMATISSUESEVERITY_FORMATTING, Source(currentWLCharacterStartLoc, firstCharLoc), 0.0, std::move(Actions)));
-            
+
             Issues.push_back(std::move(I));
         }
 #endif // !NISSUES
         
-        return c;
+        switch (firstChar.to_point()) {
+            case '\n':
+                return WLCharacter(CODEPOINT_LINECONTINUATION_LF, ESCAPE_SINGLE);
+            case '\r':
+                return WLCharacter(CODEPOINT_LINECONTINUATION_CR, ESCAPE_SINGLE);
+            case CODEPOINT_CRLF:
+                return WLCharacter(CODEPOINT_LINECONTINUATION_CRLF, ESCAPE_SINGLE);
+            default:
+                assert(false);
+                return WLCharacter(CODEPOINT_UNKNOWN);
+        }
     }
     
-    while (c.isMBLineContinuation()) {
+    auto c = currentWLCharacter(policy);
+    
+    if ((policy & PRESERVE_WS_AFTER_LC) != PRESERVE_WS_AFTER_LC) {
         
-        //
-        // Line continuation IS meaningful, so continue
-        //
+        while (c.isSpace()) {
+            
+            TheByteBuffer->buffer = lastBuf;
+            
+            c = currentWLCharacter(policy);
+        }
+    }
+    
+    //
+    // Eat any more line continuations
+    //
+    // Yes, this is recursive, oh well
+    //
+    while (true) {
+        
+        if (!c.isMBLineContinuation()) {
+            break;
+        }
+        
+        TheByteBuffer->buffer = lastBuf;
         
         c = currentWLCharacter(policy);
         

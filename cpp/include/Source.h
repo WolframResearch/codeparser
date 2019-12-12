@@ -112,8 +112,9 @@ using NextCharacterPolicy = uint8_t;
 //
 // Using ~ and | promotes to int, so make sure to static_cast back to uint8_t
 //
-const NextCharacterPolicy DISABLE_CHECKS_MASK = static_cast<uint8_t>(~(ENABLE_BYTE_DECODING_ISSUES | ENABLE_CHARACTER_DECODING_ISSUES | ENABLE_UNLIKELY_ESCAPE_CHECKING | ENABLE_STRANGE_CHARACTER_CHECKING) );
+const NextCharacterPolicy DISABLE_BYTE_CHECKS_MASK = static_cast<uint8_t>(~(ENABLE_BYTE_DECODING_ISSUES) );
 
+const NextCharacterPolicy DISABLE_CHARACTER_CHECKS_MASK = static_cast<uint8_t>(~(ENABLE_CHARACTER_DECODING_ISSUES | ENABLE_UNLIKELY_ESCAPE_CHECKING | ENABLE_STRANGE_CHARACTER_CHECKING) );
 
 enum SyntaxError {
     

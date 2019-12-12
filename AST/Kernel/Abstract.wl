@@ -682,7 +682,7 @@ topLevelChildIssues[InfixNode[CompoundExpression, {
 												PatternSequence[LeafNode[Symbol, _, _], _LeafNode].., LeafNode[Symbol, _, _] }, _], True] := {}
 
 
-topLevelChildIssues[InfixNode[CompoundExpression, {_, LeafNode[Token`Semi, _, _], next:_[_, _, nextData_], ___}, data_], True] := {
+topLevelChildIssues[InfixNode[CompoundExpression, {_, LeafNode[Token`Semi, _, _], _[Except[Token`Fake`ImplicitNull], _, _], ___}, data_], True] := {
 	SyntaxIssue["TopLevel", "``CompoundExpression`` at top-level. Consider breaking up.", "Warning",
 		<| Source->data[Source],
 			ConfidenceLevel -> 0.75,
