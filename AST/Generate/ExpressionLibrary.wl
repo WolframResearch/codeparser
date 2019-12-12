@@ -33,11 +33,11 @@ Module[{},
   }]
 ]
 
-buildExpressionLibrary[] /; $VersionNumber < 12.1 := (
+buildExpressionLibrary[] /; $VersionNumber < 12.2 := (
   Print["Skipping Expression Library"]
 )
 
-buildExpressionLibrary[] /; $VersionNumber >= 12.1 :=
+buildExpressionLibrary[] /; $VersionNumber >= 12.2 :=
 Module[{targetDir, prog, compLib},
 
   targetDir = FileNameJoin[{ buildDir, "paclet", "AST", "LibraryResources", $SystemID }];
