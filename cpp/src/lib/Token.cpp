@@ -27,7 +27,26 @@ Source Token::getSource() const {
 #if USE_MATHLINK
 void Token::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKELEAFNODE->name(), static_cast<int>(2 + 4))) {
+    if ((TheParserSession->policy & INCLUDE_SOURCE) == INCLUDE_SOURCE) {
+        
+        if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKELEAFNODE->name(), static_cast<int>(2 + 4))) {
+            assert(false);
+        }
+        
+        auto& Sym = TokenToSymbol(tok);
+        
+        if (!MLPutSymbol(mlp, Sym->name())) {
+            assert(false);
+        }
+        
+        bufferAndLength.putUTF8String(mlp);
+        
+        getSource().put(mlp);
+        
+        return;
+    }
+    
+    if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKELEAFNODE->name(), static_cast<int>(2))) {
         assert(false);
     }
     
@@ -37,13 +56,34 @@ void Token::put(MLINK mlp) const {
         assert(false);
     }
     
-    bufferAndLength.put(mlp);
-    
-    getSource().put(mlp);
+    bufferAndLength.putUTF8String(mlp);
 }
 #endif // USE_MATHLINK
 
 void Token::print(std::ostream& s) const {
+    
+    if ((TheParserSession->policy & INCLUDE_SOURCE) == INCLUDE_SOURCE) {
+        
+        auto& Sym = TokenToSymbol(tok);
+        
+        s << SYMBOL_AST_LIBRARY_MAKELEAFNODE->name() << "[";
+        
+        s << Sym->name();
+        s << ", ";
+        
+        if (!tok.isEmpty()) {
+            
+            bufferAndLength.printUTF8String(s);
+        }
+        
+        s << ", ";
+        
+        getSource().print(s);
+        
+        s << "]";
+        
+        return;
+    }
     
     auto& Sym = TokenToSymbol(tok);
     
@@ -54,12 +94,8 @@ void Token::print(std::ostream& s) const {
     
     if (!tok.isEmpty()) {
         
-        bufferAndLength.write(s);
+        bufferAndLength.printUTF8String(s);
     }
-    
-    s << ", ";
-    
-    getSource().print(s);
     
     s << "]";
 }

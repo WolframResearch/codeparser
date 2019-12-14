@@ -27,12 +27,12 @@ Buffer BufferAndLength::end() const {
     return _end;
 }
 
-void BufferAndLength::write(std::ostream& s) const {
+void BufferAndLength::printUTF8String(std::ostream& s) const {
     s.write(reinterpret_cast<const char *>(buffer), length);
 }
 
 #if USE_MATHLINK
-void BufferAndLength::put(MLINK mlp) const {
+void BufferAndLength::putUTF8String(MLINK mlp) const {
     
     if (!error) {
         if (!MLPutUTF8String(mlp, buffer, static_cast<int>(length))) {
@@ -85,7 +85,7 @@ void BufferAndLength::put(MLINK mlp) const {
     
     auto newBufAndLen = BufferAndLength(newB, newLength, false);
     
-    newBufAndLen.put(mlp);
+    newBufAndLen.putUTF8String(mlp);
 }
 #endif // USE_MATHLINK
 
@@ -112,9 +112,11 @@ ParserSession::~ParserSession() {
     TheByteBuffer.reset(nullptr);
 }
 
-void ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libData) {
+void ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libData, ParserSessionPolicy policyIn) {
     
     bufAndLen = bufAndLenIn;
+    
+    policy = policyIn;
     
     TheByteBuffer->init(bufAndLen, libData);
     TheByteDecoder->init();
@@ -469,7 +471,7 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK m
     
     auto bufAndLen = BufferAndLength(arr.get(), arr.getByteCount(), false);
     
-    TheParserSession->init(bufAndLen, libData);
+    TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE);
     
     auto N = TheParserSession->parseExpressions();
     
@@ -504,7 +506,7 @@ DLLEXPORT int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     auto bufAndLen = BufferAndLength(arr.get(), arr.getByteCount(), false);
     
-    TheParserSession->init(bufAndLen, libData);
+    TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE);
     
     auto N = TheParserSession->tokenize();
     
@@ -542,7 +544,7 @@ DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     auto bufAndLen = BufferAndLength(inStr.get(), inStr.getByteCount(), false);
     
-    TheParserSession->init(bufAndLen, libData);
+    TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE);
     
     auto N = TheParserSession->parseLeaf(mode);
     

@@ -132,7 +132,7 @@ void readStdIn(int mode, int outputMode) {
         
         auto inputBufAndLen = BufferAndLength(inputStr, input.size(), false);
         
-        TheParserSession->init(inputBufAndLen, libData);
+        TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE);
     
         auto N = TheParserSession->tokenize();
         
@@ -206,7 +206,7 @@ void readStdIn(int mode, int outputMode) {
         
         auto inputBufAndLen = BufferAndLength(inputStr, input.size(), false);
         
-        TheParserSession->init(inputBufAndLen, libData);
+        TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE);
     
         auto N = TheParserSession->parseLeaf(mode);
     
@@ -242,7 +242,7 @@ void readStdIn(int mode, int outputMode) {
         
         auto inputBufAndLen = BufferAndLength(inputStr, input.size(), false);
         
-        TheParserSession->init(inputBufAndLen, libData);
+        TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE);
         
         auto N = TheParserSession->parseExpressions();
         
@@ -290,7 +290,7 @@ void readFile(std::string file, int mode, int outputMode) {
         
         auto fBufAndLen = BufferAndLength(fb.getBuf(), fb.getLen(), false);
         
-        TheParserSession->init(fBufAndLen, libData);
+        TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE);
         
         auto N = TheParserSession->tokenize();
         
@@ -324,7 +324,7 @@ void readFile(std::string file, int mode, int outputMode) {
         
         auto fBufAndLen = BufferAndLength(fb.getBuf(), fb.getLen(), false);
         
-        TheParserSession->init(fBufAndLen, libData);
+        TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE);
         
         auto N = TheParserSession->parseExpressions();
         

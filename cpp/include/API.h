@@ -68,15 +68,27 @@ struct BufferAndLength {
     
     Buffer end() const;
     
-    void write(std::ostream& s) const;
+    void printUTF8String(std::ostream& s) const;
     
 #if USE_MATHLINK
-    void put(MLINK ) const;
+    void putUTF8String(MLINK ) const;
 #endif // USE_MATHLINK
     
 };
 
 bool operator==(BufferAndLength a, BufferAndLength b);
+
+
+
+enum ParserSessionBits : uint8_t {
+    
+    //
+    //
+    //
+    INCLUDE_SOURCE = 0x01,
+};
+
+using ParserSessionPolicy = uint8_t;
 
 
 class ParserSession {
@@ -91,11 +103,14 @@ class ParserSession {
     
 public:
     
+    ParserSessionPolicy policy;
+    
+    
     ParserSession();
     
     ~ParserSession();
     
-    void init(BufferAndLength bufAndLen, WolframLibraryData libData = nullptr);
+    void init(BufferAndLength bufAndLen, WolframLibraryData libData, ParserSessionPolicy policy);
     
     void deinit();
     
