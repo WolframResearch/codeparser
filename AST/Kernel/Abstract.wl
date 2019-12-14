@@ -522,13 +522,13 @@ Module[{abstractedChildren, issues, single},
 	ignore SyntaxErrorNodes, do not count SyntaxErrorNodes as being strange at top-level
 
 	TODO: handle as a Data file
-	*)
+
 	single = (Length[Cases[children, Except[_SyntaxErrorNode]]] <= 1);
 
+	*)
+
 	abstractedChildren = (
-		If[!single,
-			issues = issues ~Join~ topLevelChildIssues[#, True]
-		];
+		issues = issues ~Join~ topLevelChildIssues[#, True];
 		abstract[#]
 	)& /@ children;
 
@@ -684,7 +684,7 @@ topLevelChildIssues[InfixNode[CompoundExpression, {
 
 topLevelChildIssues[InfixNode[CompoundExpression, {_, LeafNode[Token`Semi, _, _], _[Except[Token`Fake`ImplicitNull], _, _], ___}, data_], True] := {
 	SyntaxIssue["TopLevel", "``CompoundExpression`` at top-level. Consider breaking up.", "Warning",
-		<| Source->data[Source],
+		<| Source -> data[Source],
 			ConfidenceLevel -> 0.75,
 			CodeActions -> { CodeAction["Insert newline", InsertNode,
 									<|	Source->nextData[Source],
@@ -700,11 +700,21 @@ Specifically add a DidYouMean for / -> /@
 *)
 topLevelChildIssues[BinaryNode[Divide, {_, LeafNode[Token`Slash, _, slashData_], _}, data_], True] := {
 	SyntaxIssue["TopLevel", "Unexpected expression at top-level.", "Warning",
-		<| Source->slashData[Source],
+		<| Source -> slashData[Source],
 			ConfidenceLevel -> 0.75,
 			CodeActions -> { CodeAction["Replace ``/`` with ``/@``", ReplaceNode,
 									<|	Source->slashData[Source],
 										"ReplacementNode"->LeafNode[Token`SlashAt, "/@", <||>] |>] } |>] }
+
+topLevelChildIssues[BinaryNode[Span, {___, LeafNode[Token`Fake`ImplicitAll, _, _]}, data_], True] := {
+	SyntaxIssue["EndOfLine", "Suspicious ``Span`` is at end of line.", "Warning",
+		<| Source -> data[Source],
+			ConfidenceLevel -> 0.95 |>] }
+
+topLevelChildIssues[InfixNode[Times, {___, BinaryNode[Span, {___, LeafNode[Token`Fake`ImplicitAll, _, _]}, data_]}, _], True] := {
+	SyntaxIssue["EndOfLine", "Suspicious ``Span`` is at end of line.", "Warning",
+		<| Source -> data[Source],
+			ConfidenceLevel -> 0.95 |>] }
 
 (*
 No need to issue warning for errors being strange
@@ -1345,7 +1355,7 @@ abstract syntax MessageName[a, "b"]
 concrete syntax: a::"b"
 abstract syntax MessageName[a, "b"]
 *)
-abstractMessageName[InfixNode[MessageName, {left_, rest:LeafNode[String, _, _]..}, dataIn_]] :=
+abstractMessageName[InfixNode[MessageName, {left_, rest__}, dataIn_]] :=
 Module[{data, issues},
 	
 	data = dataIn;
@@ -1364,8 +1374,18 @@ Module[{data, issues},
    	AssociateTo[data, AbstractSyntaxIssues -> issues];
    ];
 
-	CallNode[ToNode[MessageName], {abstract[left]} ~Join~ (ToNode[abstractString[#["String"]]]& /@ {rest}), data]
+	CallNode[ToNode[MessageName], {abstract[left]} ~Join~ (abstractMessageNameChild /@ {rest}), data]
 ]
+
+
+abstractMessageNameChild[LeafNode[String, str_, _]] := ToNode[abstractString[str]]
+
+abstractMessageNameChild[LeafNode[Token`Error`EmptyString, str_, data_]] :=
+	AbstractSyntaxErrorNode[AbstractSyntaxError`EmptyString, { LeafNode[Token`Error`EmptyString, str, data] }, data]
+
+abstractMessageNameChild[LeafNode[Token`Error`ExpectedLetterlike, str_, data_]] :=
+	AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedLetterlike, { LeafNode[Token`Error`ExpectedOperand, str, data] }, data]
+
 
 
 

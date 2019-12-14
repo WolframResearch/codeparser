@@ -22,21 +22,6 @@ enum TokenizerContextBits : uint8_t {
     // But obviously "123" and a`b are fine outside of #
     //
     TOKENIZER_SLOT = 0x01,
-    
-    //
-    // This code:
-    // { a, \
-    //   b }
-    //
-    // would give a line continuation warning (line continuation is NOT meaningful)
-    //
-    // This code:
-    // { a, "x\
-    //   y", b }
-    //
-    // would NOT give a warning (line continuation IS meaningful)
-    //
-//    LC_IS_MEANINGFUL = 0x02,
 };
 
 using TokenizerContext = uint8_t;

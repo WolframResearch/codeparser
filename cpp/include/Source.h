@@ -70,15 +70,6 @@ enum NextCharacterPolicyBits : uint8_t {
     LC_IS_MEANINGFUL = 0x08,
     
     //
-    // After a line continuation, is \r \n consumed as a single newline?
-    //
-    // This may be due to a bug in the kernel
-    //
-    // TODO: add to kernel quirks mode
-    //
-//    LC_UNDERSTANDS_CRLF = 0x20,
-    
-    //
     // Check for unlikely escape sequences?
     //
     // Check for sequences like \\[Alpa] and report them
@@ -93,17 +84,7 @@ enum NextCharacterPolicyBits : uint8_t {
 
 using NextCharacterPolicy = uint8_t;
 
-//class NextCharacterPolicy {
-//    uint8_t val;
-//public:
-//    constexpr NextCharacterPolicy(uint8_t val) : val(val) {}
-//    
-//    NextCharacterPolicyBits operator&(const NextCharacterPolicyBits bits) const;
-//    
-//    NextCharacterPolicyBits operator|(const NextCharacterPolicyBits bits) const;
-//    
-//    NextCharacterPolicy operator&(const NextCharacterPolicy) const;
-//};
+const NextCharacterPolicy TOPLEVEL = ENABLE_BYTE_DECODING_ISSUES | ENABLE_CHARACTER_DECODING_ISSUES | ENABLE_STRANGE_CHARACTER_CHECKING;
 
 //
 // Use this to disable checks
@@ -300,9 +281,6 @@ struct SourceLocation {
     SourceLocation();
     
     SourceLocation(size_t Line, size_t Column);
-    
-//    void nextLine();
-//    void nextColumn();
     
 #if USE_MATHLINK
     void put(MLINK mlp) const;

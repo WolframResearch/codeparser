@@ -19,11 +19,6 @@
 
 bool validatePath(WolframLibraryData libData, const unsigned char *inStr, size_t len);
 
-
-//const NextCharacterPolicy TOPLEVEL = ENABLE_BYTE_DECODING_ISSUES | ENABLE_CHARACTER_DECODING_ISSUES | LC_UNDERSTANDS_CRLF | ENABLE_STRANGE_CHARACTER_CHECKING;
-const NextCharacterPolicy TOPLEVEL = ENABLE_BYTE_DECODING_ISSUES | ENABLE_CHARACTER_DECODING_ISSUES | ENABLE_STRANGE_CHARACTER_CHECKING;
-
-
 BufferAndLength::BufferAndLength() : buffer(), length(), error() {}
 
 BufferAndLength::BufferAndLength(Buffer buffer, size_t length, bool error) : buffer(buffer), length(length), error(error), _end(buffer + length) {}

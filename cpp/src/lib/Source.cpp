@@ -9,19 +9,6 @@
 #include <utility> // for swap
 
 
-//NextCharacterPolicyBits NextCharacterPolicy::operator&(const NextCharacterPolicyBits bits) const {
-//    return static_cast<NextCharacterPolicyBits>(val & bits);
-//}
-//
-//NextCharacterPolicyBits NextCharacterPolicy::operator|(const NextCharacterPolicyBits bits) const {
-//    return static_cast<NextCharacterPolicyBits>(val | bits);
-//}
-//
-//NextCharacterPolicy NextCharacterPolicy::operator&(const NextCharacterPolicy policy) const {
-//    return val & policy.val;
-//}
-
-
 void SyntaxIssue::print(std::ostream& s) const {
     
     s << SYMBOL_AST_LIBRARY_MAKESYNTAXISSUE->name() << "[";
@@ -230,15 +217,6 @@ bool operator<=(SourceLocation a, SourceLocation b) {
 
     return false;
 }
-
-//void SourceLocation::nextLine() {
-//    ++Line;
-//    Column = 0;
-//}
-//
-//void SourceLocation::nextColumn() {
-//    ++Column;
-//}
 
 void SourceLocation::print(std::ostream& s) const {
     s << Line;

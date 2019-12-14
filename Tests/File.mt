@@ -199,9 +199,9 @@ TestMatch[
 			LeafNode[Token`Equal, "=", <|Source -> {{1, 4}, {1, 5}}|>],
 			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 5}, {1, 6}}|>],
 			LeafNode[Integer, "1", <|Source -> {{1, 6}, {1, 7}}|>] }, <|Source -> {{1, 1}, {1, 7}}|>] }, <|SyntaxIssues -> {
-				(* from CharacterDecoder, strange character in general *)
-				SyntaxIssue["UnexpectedCharacter", "Unexpected character: ``\\.01``.", "Warning", _],
 				(* from Tokenizer, strange letterlike *)
+				SyntaxIssue["UnexpectedCharacter", "Unexpected letterlike character: ``\\.01``.", "Warning", _],
+				(* from CharacterDecoder, strange character in general *)
 				SyntaxIssue["UnexpectedCharacter", "Unexpected character: ``\\.01``.", "Warning", _]}, Source -> {{1, 1}, {1, 7}}|>]
 	,
 	TestID->"File-20190602-N5D1B8"

@@ -71,14 +71,17 @@ Test[
 Error
 *)
 
-Test[
+TestMatch[
 	ParseString["\\[Integral] f \\[DifferentialD]"]
 	,
 	StringNode[String, {
 		CallNode[LeafNode[Symbol, "Integrate", <||>], {
 			LeafNode[Symbol, "f", <|Source -> {{1, 13}, {1, 14}}|>],
 			AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, {
-				LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 31}, {1, 31}}|>]}, <|Source -> {{1, 31}, {1, 31}}|>]}, <|Source -> {{1, 1}, {1, 31}}|>] }, <||>]
+				LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 31}, {1, 31}}|>]},
+				<|Source -> {{1, 31}, {1, 31}}|>]},
+			<|Source -> {{1, 1}, {1, 31}}|>] },
+		<| AbstractSyntaxIssues -> { SyntaxIssue["TopLevel", _, _, _] } |>]
 	,
 	TestID->"Weird-20190601-M2O1W0"
 ]

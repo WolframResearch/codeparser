@@ -691,7 +691,6 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, WLCharacter c, NextCh
     assert(c.to_point() == '"');
     
     policy |= PRESERVE_WS_AFTER_LC | LC_IS_MEANINGFUL;
-//    newPolicy = newPolicy & ~(LC_UNDERSTANDS_CRLF);
     
     while (true) {
         

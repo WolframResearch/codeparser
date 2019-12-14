@@ -34,7 +34,7 @@ Module[{},
 ]
 
 buildExpressionLibrary[] /; $VersionNumber < 12.2 := (
-  Print["Skipping Expression Library"]
+  Print["Skipping ExpressionLibrary"]
 )
 
 buildExpressionLibrary[] /; $VersionNumber >= 12.2 :=
@@ -43,6 +43,8 @@ Module[{targetDir, prog, compLib},
   targetDir = FileNameJoin[{ buildDir, "paclet", "AST", "LibraryResources", $SystemID }];
 
   prog = ExpressionLibraryProgram[];
+
+  Print["Exporting expr shared library"]
 
   compLib = CompileToLibrary[prog, "LibraryName" -> "expr", "EntryFunctionName" -> "Main", "TargetDirectory" -> targetDir];
 

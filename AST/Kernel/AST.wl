@@ -272,7 +272,9 @@ setupQuirks[]
 
 
 
-ConcreteParseString::usage = "ConcreteParseString[string] returns a concrete syntax tree by interpreting string as WL input."
+ConcreteParseString::usage = "ConcreteParseString[string] returns a concrete syntax tree by interpreting string as WL input. \
+ConcreteParseString[string, nodeFunc] applies nodeFunc to the result.
+"
 
 Options[ConcreteParseString] = {
 	CharacterEncoding -> "UTF8"
@@ -328,9 +330,7 @@ Module[{s, h, res, bytes, encoding},
 
 
 ParseString::usage = "ParseString[string] returns an abstract syntax tree by interpreting string as WL input. \
-Note: If there are multiple expressions in string, then only the last expression is returned. \
-ParseString[string, h] wraps the output with h and allows multiple expressions to be returned. \
-This is similar to how ToExpression operates."
+ParseString[string, nodeFunc] applies nodeFunc to the result."
 
 Options[ParseString] = {
 

@@ -23,8 +23,8 @@ private:
     
     bool error;
     
-    SourceCharacter invalid(Buffer errBuf, NextCharacterPolicy policy);
     
+    SourceCharacter invalid(Buffer errBuf, NextCharacterPolicy policy);
     
 public:
     
