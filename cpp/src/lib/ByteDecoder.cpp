@@ -3,7 +3,7 @@
 
 #include "CodePoint.h" // for CODEPOINT_REPLACEMENT_CHARACTER
 
-ByteDecoder::ByteDecoder() : Issues() {}
+ByteDecoder::ByteDecoder() : Issues(), error(), lastBuf(), lastLoc(), SrcLoc() {}
 
 void ByteDecoder::init() {
     

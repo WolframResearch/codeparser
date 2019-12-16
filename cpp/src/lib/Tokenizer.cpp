@@ -1705,7 +1705,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
 //
 // Return: number of digits handled after ., possibly 0, or -1 if error
 //
-inline WLCharacter Tokenizer::handlePossibleFractionalPart(Buffer dotBuf, SourceLocation dotLoc, WLCharacter c, int base, NextCharacterPolicy policy, int *handled) {
+inline WLCharacter Tokenizer::handlePossibleFractionalPart(Buffer dotBuf, SourceLocation dotLoc, WLCharacter c, size_t base, NextCharacterPolicy policy, int *handled) {
     
     assert(c.to_point() == '.');
     
@@ -1725,7 +1725,7 @@ inline WLCharacter Tokenizer::handlePossibleFractionalPart(Buffer dotBuf, Source
 //         UNRECOGNIZED_DIGIT if base error
 //         BAILOUT if not a radix point (and also backup before dot)
 //
-inline WLCharacter Tokenizer::handlePossibleFractionalPartPastDot(Buffer dotBuf, SourceLocation dotLoc, WLCharacter c, int base, NextCharacterPolicy policy, int *handled) {
+inline WLCharacter Tokenizer::handlePossibleFractionalPartPastDot(Buffer dotBuf, SourceLocation dotLoc, WLCharacter c, size_t base, NextCharacterPolicy policy, int *handled) {
     
     //
     // Nothing to assert

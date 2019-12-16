@@ -59,8 +59,8 @@ class Tokenizer {
     Token handleNumber(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
     WLCharacter handleDigits(NextCharacterPolicy policy, WLCharacter firstChar, size_t *count);
     WLCharacter handleAlphaOrDigits(WLCharacter firstChar, size_t base, NextCharacterPolicy policy, int *handled);
-    WLCharacter handlePossibleFractionalPart(Buffer dotBuf, SourceLocation dotLoc, WLCharacter firstChar, int base, NextCharacterPolicy policy, int *handled);
-    WLCharacter handlePossibleFractionalPartPastDot(Buffer dotBuf, SourceLocation dotLoc, WLCharacter firstChar, int base, NextCharacterPolicy policy, int *handled);
+    WLCharacter handlePossibleFractionalPart(Buffer dotBuf, SourceLocation dotLoc, WLCharacter firstChar, size_t base, NextCharacterPolicy policy, int *handled);
+    WLCharacter handlePossibleFractionalPartPastDot(Buffer dotBuf, SourceLocation dotLoc, WLCharacter firstChar, size_t base, NextCharacterPolicy policy, int *handled);
     
     Token handleColon(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
     Token handleOpenParen(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);

@@ -11,7 +11,9 @@
 //
 // s MUST contain an integer
 //
-size_t Utils::parseInteger(std::string s, size_t base) {
+// Don't be weird: return an int, not size_t
+//
+int Utils::parseInteger(std::string s, size_t base) {
     return std::stoi(s, nullptr, base);
 }
 

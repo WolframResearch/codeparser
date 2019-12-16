@@ -8,7 +8,8 @@
 
 class Utils {
 public:
-    static size_t parseInteger(std::string s, size_t base);
+    
+    static int parseInteger(std::string s, size_t base);
     
     static bool isStrangeLetterlikeLongName(std::string s);
     

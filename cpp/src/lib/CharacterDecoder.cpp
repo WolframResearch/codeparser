@@ -9,7 +9,7 @@
 #include "API.h"
 
 
-CharacterDecoder::CharacterDecoder() : Issues(), libData() {}
+CharacterDecoder::CharacterDecoder() : Issues(), libData(), lastBuf(), lastLoc() {}
 
 void CharacterDecoder::init(WolframLibraryData libDataIn) {
     

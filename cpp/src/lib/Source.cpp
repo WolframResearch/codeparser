@@ -12,7 +12,7 @@
 #include <sstream>
 
 
-BufferAndLength::BufferAndLength() : buffer(), length(), error() {}
+BufferAndLength::BufferAndLength() : buffer(), length(), error(), _end() {}
 
 BufferAndLength::BufferAndLength(Buffer buffer, size_t length, bool error) : buffer(buffer), length(length), error(error), _end(buffer + length) {}
 
@@ -334,7 +334,7 @@ void PrintTo(const SourceLocation& Loc, std::ostream* s) {
 // Source
 //
 
-Source::Source() {}
+Source::Source() : Start(), End() {}
 
 Source::Source(SourceLocation loc) : Start(loc), End(loc) {
     assert(Start <= End);

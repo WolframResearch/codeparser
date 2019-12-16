@@ -1603,9 +1603,12 @@ NodePtr ColonColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
     Args.reserve(1);
     Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
     
-    auto Ctxt = CtxtIn;
-    Ctxt.Prec = PRECEDENCE_COLONCOLON;
-    Ctxt.Assoc = ASSOCIATIVITY_NONE;
+    //
+    // Not used here because of the special rules for tokenizing after ::
+    //
+    //auto Ctxt = CtxtIn;
+    //Ctxt.Prec = PRECEDENCE_COLONCOLON;
+    //Ctxt.Assoc = ASSOCIATIVITY_NONE;
     
     while (true) {
         
