@@ -33,17 +33,18 @@ class CharacterDecoder {
     WLCharacter handle6Hex(NextCharacterPolicy policy);
     WLCharacter handleOctal(SourceCharacter firstDigit, NextCharacterPolicy policy);
     
-    WLCharacter handleLineContinuation(SourceCharacter firstChar, NextCharacterPolicy policy);
+    WLCharacter handleLineContinuation(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer escapedBuf, SourceLocation escapedLoc, SourceCharacter firstChar, NextCharacterPolicy policy);
     
     WLCharacter handleBackSlash(NextCharacterPolicy policy);
     
-    WLCharacter handleUnhandledEscape(Buffer currentWLCharacterStart, SourceCharacter curSource, NextCharacterPolicy policy);
+    WLCharacter handleUnhandledEscape(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, SourceCharacter curSource, NextCharacterPolicy policy);
     
     std::string longNameSuggestion(BufferAndLength );
     
 public:
     
     Buffer lastBuf;
+    SourceLocation lastLoc;
     
     CharacterDecoder();
     

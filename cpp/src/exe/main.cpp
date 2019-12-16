@@ -1,4 +1,6 @@
 
+#include "ByteDecoder.h"
+#include "ByteBuffer.h"
 #include "Node.h"
 #include "API.h"
 #include "Symbol.h"
@@ -88,8 +90,11 @@ int main(int argc, char *argv[]) {
 //    fileInput = "/Applications/Mathematica121-6519725.app/Contents/AddOns/Applications/FormulaData/Kernel/downvalues.m";
 //    fileInput = "/Users/brenton/development/stash/COD/ast/build/test.m";
 //    fileInput = "/Users/brenton/development/stash/COD/ast/Tests/files/inputs-0001.txt";
+//    fileInput = "/Users/brenton/development/stash/COD/ast/Tests/files/small/crash10.txt";
 //    fileInput = "/Users/brenton/development/stash/PAC/semanticimport/mathematica/scoresAndSpellings/data/UnitScores.m";
-//    outputMode = PUT;
+//    fileInput = "/Users/brenton/development/stash/PAC/companydata/Construction/Curation/CorrectingBadAddresses-201503/IntermediateFiles/expandedCompanyCoordinateSearchesChecked2.m";
+//    fileInput = "/Users/brenton/development/stash/PAC/mortalitydata/MortalityData/Kernel/MD-Data.m";
+//    outputMode = NONE;
     
     if (file) {
         if (leaf) {
@@ -354,6 +359,8 @@ void readFile(std::string file, int mode, int outputMode) {
         
         TheParserSession->deinit();
     }
+    
+    TheParserSession.reset(nullptr);
 }
 
 ScopedFileBuffer::ScopedFileBuffer(Buffer inStrIn, size_t inLen) : buf(), len(), inited(false) {

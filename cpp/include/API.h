@@ -39,8 +39,6 @@ class ParserSession;
 // MSVC: error C2338: The C++ Standard forbids containers of const elements because allocator<const T> is ill-formed.
 using NodePtr = std::unique_ptr<Node>;
 using ParserSessionPtr = std::unique_ptr<ParserSession>;
-using Buffer = const unsigned char *;
-using MBuffer = unsigned char *;
 
 //
 // CMake defines ast_lib_EXPORTS
@@ -54,30 +52,6 @@ using MBuffer = unsigned char *;
 #else
 # define ASTLIB_EXPORTED
 #endif
-
-
-struct BufferAndLength {
-    
-    Buffer buffer;
-    size_t length;
-    bool error;
-    Buffer _end;
-    
-    BufferAndLength();
-    BufferAndLength(Buffer buffer, size_t length, bool error);
-    
-    Buffer end() const;
-    
-    void printUTF8String(std::ostream& s) const;
-    
-#if USE_MATHLINK
-    void putUTF8String(MLINK ) const;
-#endif // USE_MATHLINK
-    
-};
-
-bool operator==(BufferAndLength a, BufferAndLength b);
-
 
 
 enum ParserSessionBits : uint8_t {

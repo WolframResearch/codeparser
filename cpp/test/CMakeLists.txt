@@ -15,11 +15,12 @@ set(CPP_TEST_SOURCES
     ${CMAKE_SOURCE_DIR}/cpp/test/TestByteDecoder.cpp
     ${CMAKE_SOURCE_DIR}/cpp/test/TestCharacterDecoder.cpp
     ${CMAKE_SOURCE_DIR}/cpp/test/TestNode.cpp
-    ${CMAKE_SOURCE_DIR}/cpp/test/TestOffsetLineMap.cpp
     ${CMAKE_SOURCE_DIR}/cpp/test/TestParselet.cpp
     ${CMAKE_SOURCE_DIR}/cpp/test/TestTokenEnum.cpp
     ${CMAKE_SOURCE_DIR}/cpp/test/TestTokenizer.cpp
     ${CMAKE_SOURCE_DIR}/cpp/test/TestWLCharacter.cpp
+
+    ${CMAKE_SOURCE_DIR}/cpp/test/TestCrashers.cpp
 )
 
 add_executable(test-exe

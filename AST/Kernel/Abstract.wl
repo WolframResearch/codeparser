@@ -414,9 +414,11 @@ abstract[GroupNode[GroupLinearSyntaxParen, children_, data_]] := GroupNode[Group
 Missing closers
 *)
 
-abstract[GroupMissingCloserNode[_, children_, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingCloser, children, KeyTake[data, keysToTake]]
+abstract[GroupMissingCloserNode[_, children_, data_]] :=
+	AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingCloser, children, KeyTake[data, keysToTake]]
 
-abstract[GroupNode[op_, {_, inner___, _}, data_]] := abstractGroupNode[GroupNode[op, { inner }, KeyTake[data, keysToTake]]]
+abstract[GroupNode[op_, {_, inner___, _}, data_]] :=
+	abstractGroupNode[GroupNode[op, { inner }, KeyTake[data, keysToTake]]]
 
 
 
@@ -434,7 +436,7 @@ Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node},
 
 	issues = {};
 
-	{abstractedChildren, issues1} = abstractTopLevelChildren[children];
+	{abstractedChildren, issues1} = abstractTopLevelChildren[children, True];
 
 	{abstracted, issues2} = abstractTopLevel[abstractedChildren];
 
@@ -457,7 +459,7 @@ Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node},
 
 	issues = {};
 
-	{abstractedChildren, issues1} = abstractTopLevelChildren[children];
+	{abstractedChildren, issues1} = abstractTopLevelChildren[children, False];
 
 	{abstracted, issues2} = abstractTopLevel[abstractedChildren];
 
@@ -480,7 +482,7 @@ Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node},
 
 	issues = {};
 
-	{abstractedChildren, issues1} = abstractTopLevelChildren[children];
+	{abstractedChildren, issues1} = abstractTopLevelChildren[children, False];
 
 	{abstracted, issues2} = abstractTopLevel[abstractedChildren];
 
@@ -511,24 +513,13 @@ Call abstract on children
 But also warn if something strange is at top-level
 
 *)
-abstractTopLevelChildren[children_] :=
+abstractTopLevelChildren[children_, reportIssues_] :=
 Module[{abstractedChildren, issues, single},
 
 	issues = {};
 
-	(*
-	if there is only 1 expression in the file, then assume it could be a data file or an expression from ParseString[]
-
-	ignore SyntaxErrorNodes, do not count SyntaxErrorNodes as being strange at top-level
-
-	TODO: handle as a Data file
-
-	single = (Length[Cases[children, Except[_SyntaxErrorNode]]] <= 1);
-
-	*)
-
 	abstractedChildren = (
-		issues = issues ~Join~ topLevelChildIssues[#, True];
+		issues = issues ~Join~ topLevelChildIssues[#, reportIssues];
 		abstract[#]
 	)& /@ children;
 

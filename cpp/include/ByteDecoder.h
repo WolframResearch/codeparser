@@ -17,21 +17,18 @@ using ByteDecoderPtr = std::unique_ptr<ByteDecoder>;
 class ByteDecoder {
 private:
     
-    std::vector<Buffer> offsetLineMap;
-    
     std::vector<IssuePtr> Issues;
     
     bool error;
     
-    
-    SourceCharacter invalid(Buffer errBuf, NextCharacterPolicy policy);
+    SourceCharacter invalid(SourceLocation errSrcLoc, NextCharacterPolicy policy);
     
 public:
     
     Buffer lastBuf;
+    SourceLocation lastLoc;
     
-    size_t actualOffsetLineMapSize;
-    
+    SourceLocation SrcLoc;
     
     
     ByteDecoder();
@@ -44,19 +41,11 @@ public:
     
     SourceCharacter currentSourceCharacter(NextCharacterPolicy policy);
     
-    
-    SourceLocation convertBufferToStart(Buffer ) const;
-    
-    SourceLocation convertBufferToEnd(Buffer ) const;
-    
-    
 #if !NISSUES
     std::vector<IssuePtr>& getIssues();
     
     void addIssue(IssuePtr);
 #endif // !NISSUES
-    
-    std::vector<Buffer> getOffsetLineMap() const;
     
     void setError(bool err);
     

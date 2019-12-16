@@ -3,7 +3,7 @@
 
 #include "CodePoint.h" // for CODEPOINT_REPLACEMENT_CHARACTER
 
-ByteDecoder::ByteDecoder() : offsetLineMap(), Issues() {}
+ByteDecoder::ByteDecoder() : Issues() {}
 
 void ByteDecoder::init() {
     
@@ -11,179 +11,12 @@ void ByteDecoder::init() {
     
     error = false;
     
-    //
-    // calculate offset line map
-    //
-    // Example: given the list { 'a', 'b', '\n', 'c', 'd', 'e', '\n', 'f'}
-    // the result would be < 0, 2, 6 >
-    //
-    // Example: given the list { 'a', 'b', '\r', '\n', 'c', 'd', 'e', '\r', '\n', 'f'}
-    // the result would be < 0, 3, 8 >
-    //
-    // Example: given the list { '\n', 'c', 'd', 'e', '\n', 'f'}
-    // the result would be < 0, 0, 4 >
-    //
-    // Example: given the list { '\r', '\n', 'c', 'd', 'e', '\r', '\n', 'f'}
-    // the result would be < 0, 1, 6 >
-    //
-    // With \r\n pairs, store the pointer to \n.
-    // This makes it easier to compute the offsets later in that line.
-    // And only the preceding \r has to be handled specially.
-    //
-    // converting to start locations would look like this: { (1, 1), (1, 2), (2, 0), (2, 1), (2, 2), (2, 3), (3, 0), (3, 1) }
-    //
-    // converting to end locations would look like this:   { (1, 1), (1, 2), (1, 3), (2, 2), (2, 2), (2, 3), (2, 4), (3, 1) }
-    //
-    
-    auto start = TheByteBuffer->buffer;
-    auto end = TheByteBuffer->end;
-    
-    if (start == end) {
-        //
-        // Empty
-        //
-        
-        offsetLineMap = std::vector<Buffer>(0);
-        
-        return;
-    }
-    
-    //
-    // Initial scan to get count of \r and \n
-    //
-    size_t newlineCount = 0;
-    for (auto p = start; p < end; ++p) {
-        switch (*p) {
-                //
-                // Might overshoot the number of newlines because of
-                // double-counting \r and \n inside \r\n, oh well
-                //
-        case '\n': case '\r':
-                ++newlineCount;
-            break;
-        }
-        
-    }
-    
-    //
-    // Add 2 for start and end
-    //
-    offsetLineMap.resize(2 + newlineCount);
-    
-#if !NISSUES
-    auto Loc = SourceLocation(1, 1);
-#endif // NISSUES
-    
-    offsetLineMap[0] = start;
-    actualOffsetLineMapSize = 1;
-    
-    bool lastCharacterWasCR = false;
-    
-    if (*start == '\r') {
-        offsetLineMap[1] = start;
-        ++actualOffsetLineMapSize;
-        lastCharacterWasCR = true;
-#if !NISSUES
-        Loc = SourceLocation(2, 0);
-#endif // NISSUES
-        ++start;
-    }
-    
-    //
-    // This is where unexpected \r are reported
-    //
-    
-    for (auto p = start; p < end; ++p) {
-        
-        switch (*p) {
-            case '\r':
-#if !NISSUES
-                Loc.Line++;
-                Loc.Column = 0;
-                
-                //
-                // It can happen that single \r occurs.
-                // Then make sure to treat it as a newline.
-                //
-                if (lastCharacterWasCR) {
-                    
-                    //
-                    // No CodeAction here
-                    //
-                    
-                    auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", FORMATISSUESEVERITY_FORMATTING, Source(Loc), 0.0, {}));
-                    
-                    TheByteDecoder->addIssue(std::move(I));
-                }
-#endif // NISSUES
-                //
-                // advanced
-                //
-                
-                offsetLineMap[actualOffsetLineMapSize] = p;
-                ++actualOffsetLineMapSize;
-                
-                lastCharacterWasCR = true;
-                
-                break;
-                
-            case '\n':
-#if !NISSUES
-                if (!lastCharacterWasCR) {
-                    Loc.Line++;
-                    Loc.Column = 0;
-                }
-#endif // NISSUES
-                //
-                // advanced
-                //
-                
-                if (lastCharacterWasCR) {
-                    ++offsetLineMap[actualOffsetLineMapSize-1];
-                } else {
-                    //                    offsetLineMap.push_back(p);
-                    offsetLineMap[actualOffsetLineMapSize] = p;
-                    ++actualOffsetLineMapSize;
-                }
-                
-                lastCharacterWasCR = false;
-                
-                break;
-            default:
-#if !NISSUES
-                Loc.Column++;
-                    
-                //
-                // It can happen that single \r occurs.
-                // Then make sure to treat it as a newline.
-                //
-                if (lastCharacterWasCR) {
-                    
-                    //
-                    // No CodeAction here
-                    //
-                    
-                    auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", FORMATISSUESEVERITY_FORMATTING, Source(Loc), 0.0, {}));
-                    
-                    TheByteDecoder->addIssue(std::move(I));
-                }
-                
-#endif // !NISSUES
-                lastCharacterWasCR = false;
-                break;
-        }
-        
-    } // for
-    
-    offsetLineMap[actualOffsetLineMapSize] = end;
-    ++actualOffsetLineMapSize;
+    SrcLoc = SourceLocation(1, 1);
 }
 
 void ByteDecoder::deinit() {
     
     Issues.clear();
-    
-    offsetLineMap.clear();
 }
 
 //
@@ -201,6 +34,10 @@ void ByteDecoder::deinit() {
 // https://unicodebook.readthedocs.io/issues.html#strict-utf8-decoder
 //
 SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
+
+#if !NISSUES
+    auto currentSourceCharacterLoc = SrcLoc;
+#endif // NISSUES
     
     auto firstByte = TheByteBuffer->nextByte0();
     
@@ -214,12 +51,34 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                 
                 TheByteBuffer->nextByte();
                 
+                SrcLoc.Line++;
+                SrcLoc.Column = 1;
+                
                 return SourceCharacter(CODEPOINT_CRLF);
             }
+            
+            SrcLoc.Line++;
+            SrcLoc.Column = 1;
+            
+#if !NISSUES
+            if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
+                
+                //
+                // No CodeAction here
+                //
+                
+                auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", FORMATISSUESEVERITY_FORMATTING, Source(currentSourceCharacterLoc), 0.0, {}));
+                
+                addIssue(std::move(I));
+            }
+#endif // NISSUES
             
             return SourceCharacter('\r');
         }
         case 0x0a: {
+            
+            SrcLoc.Line++;
+            SrcLoc.Column = 1;
             
             return SourceCharacter('\n');
         }
@@ -243,6 +102,8 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
         case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77:
         case 0x78: case 0x79: case 0x7a: case 0x7b: case 0x7c: case 0x7d: case 0x7e: case 0x7f:
             
+            SrcLoc.Column++;
+            
             return SourceCharacter(firstByte);
             //
             // 2 byte UTF-8 sequence
@@ -257,6 +118,8 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             //
             
             auto resetBuf = TheByteBuffer->buffer;
+            auto resetEOF = TheByteBuffer->wasEOF;
+            auto resetLoc = SrcLoc;
             
             auto tmp = TheByteBuffer->nextByte0();
             
@@ -266,9 +129,11 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                     
                     error = true;
                     
-                    auto srcCharStartBuf = resetBuf - 1;
+                    auto srcCharStartLoc = resetLoc;
                     
-                    return invalid(srcCharStartBuf, policy);
+                    SrcLoc.Column++;
+                    
+                    return invalid(srcCharStartLoc, policy);
                 }
             }
             
@@ -287,17 +152,23 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                     
                     auto decoded = (((firstByte & 0x1f) << 6) | (tmp & 0x3f));
                     
+                    SrcLoc.Column++;
+                    
                     return SourceCharacter(decoded);
                 }
             }
             
             TheByteBuffer->buffer = resetBuf;
+            TheByteBuffer->wasEOF = resetEOF;
+            SrcLoc = resetLoc;
             
             error = true;
             
-            auto srcCharStartBuf = resetBuf - 1;
+            auto srcCharStartLoc = resetLoc;
             
-            return invalid(srcCharStartBuf, policy);
+            SrcLoc.Column++;
+            
+            return invalid(srcCharStartLoc, policy);
         }
             //
             // 3 byte UTF-8 sequence
@@ -310,6 +181,8 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             //
             
             auto resetBuf = TheByteBuffer->buffer;
+            auto resetEOF = TheByteBuffer->wasEOF;
+            auto resetLoc = SrcLoc;
             
             auto tmp = TheByteBuffer->nextByte0();
             
@@ -319,9 +192,11 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                     
                     error = true;
                     
-                    auto srcCharStartBuf = resetBuf - 1;
+                    auto srcCharStartLoc = resetLoc;
                     
-                    return invalid(srcCharStartBuf, policy);
+                    SrcLoc.Column++;
+                    
+                    return invalid(srcCharStartLoc, policy);
                 }
             }
             
@@ -336,12 +211,16 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                 if (TheByteBuffer->wasEOF) {
                     
                     TheByteBuffer->buffer = resetBuf;
+                    TheByteBuffer->wasEOF = resetEOF;
+                    SrcLoc = resetLoc;
                     
                     error = true;
                     
-                    auto srcCharStartBuf = resetBuf - 1;
+                    auto srcCharStartLoc = resetLoc;
                     
-                    return invalid(srcCharStartBuf, policy);
+                    SrcLoc.Column++;
+                    
+                    return invalid(srcCharStartLoc, policy);
                 }
             }
             
@@ -363,6 +242,8 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                         //
                         assert(!(0xd800 <= decoded && decoded <= 0xdfff));
                         
+                        SrcLoc.Column++;
+                        
                         return SourceCharacter(decoded);
                     }
                 }
@@ -381,6 +262,8 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                         // Manual test for code points that are surrogates
                         //
                         assert(!(0xd800 <= decoded && decoded <= 0xdfff));
+                        
+                        SrcLoc.Column++;
                         
                         return SourceCharacter(decoded);
                     }
@@ -401,6 +284,8 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                         //
                         assert(!(0xd800 <= decoded && decoded <= 0xdfff));
                         
+                        SrcLoc.Column++;
+                        
                         return SourceCharacter(decoded);
                     }
                 }
@@ -420,18 +305,24 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                         //
                         assert(!(0xd800 <= decoded && decoded <= 0xdfff));
                         
+                        SrcLoc.Column++;
+                        
                         return SourceCharacter(decoded);
                     }
                 }
             }
             
             TheByteBuffer->buffer = resetBuf;
+            TheByteBuffer->wasEOF = resetEOF;
+            SrcLoc = resetLoc;
             
             error = true;
             
-            auto srcCharStartBuf = resetBuf - 1;
+            auto srcCharStartLoc = resetLoc;
             
-            return invalid(srcCharStartBuf, policy);
+            SrcLoc.Column++;
+            
+            return invalid(srcCharStartLoc, policy);
         }
             //
             // 4 byte UTF-8 sequence
@@ -443,6 +334,8 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             //
             
             auto resetBuf = TheByteBuffer->buffer;
+            auto resetEOF = TheByteBuffer->wasEOF;
+            auto resetLoc = SrcLoc;
             
             auto tmp = TheByteBuffer->nextByte0();
             
@@ -452,9 +345,11 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                     
                     error = true;
                     
-                    auto srcCharStartBuf = resetBuf - 1;
+                    auto srcCharStartLoc = resetLoc;
                     
-                    return invalid(srcCharStartBuf, policy);
+                    SrcLoc.Column++;
+                    
+                    return invalid(srcCharStartLoc, policy);
                 }
             }
             
@@ -469,12 +364,16 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                 if (TheByteBuffer->wasEOF) {
                     
                     TheByteBuffer->buffer = resetBuf;
+                    TheByteBuffer->wasEOF = resetEOF;
+                    SrcLoc = resetLoc;
                     
                     error = true;
                     
-                    auto srcCharStartBuf = resetBuf - 1;
+                    auto srcCharStartLoc = resetLoc;
                     
-                    return invalid(srcCharStartBuf, policy);
+                    SrcLoc.Column++;
+                    
+                    return invalid(srcCharStartLoc, policy);
                 }
             }
             
@@ -489,12 +388,16 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                 if (TheByteBuffer->wasEOF) {
                     
                     TheByteBuffer->buffer = resetBuf;
+                    TheByteBuffer->wasEOF = resetEOF;
+                    SrcLoc = resetLoc;
                     
                     error = true;
                     
-                    auto srcCharStartBuf = resetBuf - 1;
+                    auto srcCharStartLoc = resetLoc;
                     
-                    return invalid(srcCharStartBuf, policy);
+                    SrcLoc.Column++;
+                    
+                    return invalid(srcCharStartLoc, policy);
                 }
             }
             
@@ -518,6 +421,8 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                             //
                             assert(decoded <= 0x10ffff);
                             
+                            SrcLoc.Column++;
+                            
                             return SourceCharacter(decoded);
                         }
                     }
@@ -539,6 +444,8 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                             // Manual test for code points that are too large
                             //
                             assert(decoded <= 0x10ffff);
+                            
+                            SrcLoc.Column++;
                             
                             return SourceCharacter(decoded);
                         }
@@ -562,6 +469,8 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                             //
                             assert(decoded <= 0x10ffff);
                             
+                            SrcLoc.Column++;
+                            
                             return SourceCharacter(decoded);
                         }
                     }
@@ -569,46 +478,54 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             }
             
             TheByteBuffer->buffer = resetBuf;
+            TheByteBuffer->wasEOF = resetEOF;
+            SrcLoc = resetLoc;
             
             error = true;
             
-            auto srcCharStartBuf = resetBuf - 1;
+            auto srcCharStartLoc = resetLoc;
             
-            return invalid(srcCharStartBuf, policy);
+            SrcLoc.Column++;
+            
+            return invalid(srcCharStartLoc, policy);
         }
             //
             // Not a valid UTF-8 start
             //
         case 0xff: {
             
-            auto resetBuf = TheByteBuffer->buffer;
-            
             //
             // could be EOF
             //
-            if (TheByteBuffer->eof()) {
+            if (TheByteBuffer->wasEOF) {
+                
+                //
+                // Do not increment Column
+                //
                 
                 return SourceCharacter(CODEPOINT_ENDOFFILE);
             }
             
             error = true;
             
-            auto srcCharStartBuf = resetBuf - 1;
+            auto srcCharStartLoc = SrcLoc;
             
-            return invalid(srcCharStartBuf, policy);
+            SrcLoc.Column++;
+            
+            return invalid(srcCharStartLoc, policy);
         }
             //
             // Not a valid UTF-8 start
             //
         default: {
             
-            auto resetBuf = TheByteBuffer->buffer;
-            
             error = true;
             
-            auto srcCharStartBuf = resetBuf - 1;
+            auto srcCharStartLoc = SrcLoc;
             
-            return invalid(srcCharStartBuf, policy);
+            SrcLoc.Column++;
+            
+            return invalid(srcCharStartLoc, policy);
         }
     }
 }
@@ -617,12 +534,17 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
 SourceCharacter ByteDecoder::currentSourceCharacter(NextCharacterPolicy policy) {
     
     auto resetBuf = TheByteBuffer->buffer;
+    auto resetEOF = TheByteBuffer->wasEOF;
+    auto resetLoc = SrcLoc;
     
     auto c = nextSourceCharacter0(policy);
     
     lastBuf = TheByteBuffer->buffer;
+    lastLoc = SrcLoc;
     
     TheByteBuffer->buffer = resetBuf;
+    TheByteBuffer->wasEOF = resetEOF;
+    SrcLoc = resetLoc;
     
     return c;
 }
@@ -630,19 +552,16 @@ SourceCharacter ByteDecoder::currentSourceCharacter(NextCharacterPolicy policy) 
 //
 //
 //
-SourceCharacter ByteDecoder::invalid(Buffer errReportingBuf, NextCharacterPolicy policy) {
+SourceCharacter ByteDecoder::invalid(SourceLocation errSrcLoc, NextCharacterPolicy policy) {
     
 #if !NISSUES
     if ((policy & ENABLE_BYTE_DECODING_ISSUES) == ENABLE_BYTE_DECODING_ISSUES) {
-        
-        auto loc1 = convertBufferToStart(errReportingBuf);
-        auto loc2 = convertBufferToEnd(errReportingBuf + 1);
         
         //
         // No CodeAction here
         //
         
-        auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.", FORMATISSUESEVERITY_FORMATTING, Source(loc1, loc2), 0.0, {}));
+        auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.", FORMATISSUESEVERITY_FORMATTING, Source(errSrcLoc, errSrcLoc + 1), 0.0, {}));
         
         Issues.push_back(std::move(I));
     }
@@ -658,183 +577,8 @@ SourceCharacter ByteDecoder::invalid(Buffer errReportingBuf, NextCharacterPolicy
     return SourceCharacter(CODEPOINT_REPLACEMENT_CHARACTER);
 }
 
-//
-// input: buf
-// output: SourceLocation of buf
-//
-// if buf is pointer to newline at SourceLocation(2, 0), then this will return SourceLocation(2, 0)
-//
-SourceLocation ByteDecoder::convertBufferToStart(Buffer buf) const {
-    
-    assert(!offsetLineMap.empty());
-    
-    assert(offsetLineMap[0] <= buf || (buf[0] == '\r' && offsetLineMap[0] == buf + 1));
-    assert(buf <= TheByteBuffer->end);
-    
-    //
-    // Handle end
-    //
-    if (offsetLineMap[actualOffsetLineMapSize-1] == buf) {
-        
-        if (actualOffsetLineMapSize > 2) {
-            
-            auto p = offsetLineMap[actualOffsetLineMapSize-2];
-            
-            auto diff = buf - p;
-            return SourceLocation(actualOffsetLineMapSize-1, diff);
-        }
-        
-        auto diff = buf - offsetLineMap[0];
-        return SourceLocation(1, diff + 1);
-    }
-    
-    //
-    // if *buf is \r and *(buf+1) is '\n', then adjust to use the \n
-    //
-    auto adjustedBuf = buf;
-    if (*buf == '\r') {
-        if (buf < offsetLineMap[actualOffsetLineMapSize-1]) {
-            if (*(buf+1) == '\n') {
-                adjustedBuf = buf+1;
-            }
-        }
-    }
-    
-    //
-    // Handle start
-    //
-    if (adjustedBuf < offsetLineMap[1]) {
-        
-        auto diff = adjustedBuf - offsetLineMap[0];
-        return SourceLocation(1, diff + 1);
-    }
-    
-    //
-    // Now do binary search
-    //
-    
-    size_t a = 1;
-    size_t b = actualOffsetLineMapSize-1;
-    
-    size_t good;
-    
-    while (true) {
-        
-        if (a + 1 == b) {
-            good = a;
-            break;
-        }
-        
-        auto mid = (a + b) / 2;
-        
-        if (adjustedBuf < offsetLineMap[mid]) {
-            
-            b = mid;
-            
-        } else {
-            assert(offsetLineMap[mid] <= adjustedBuf);
-            
-            a = mid;
-            
-        }
-        
-    }
-    
-    auto diff = adjustedBuf - offsetLineMap[good];
-    return SourceLocation(good + 1, diff);
-}
-
-//
-// input: buf
-// output: SourceLocation of buf
-//
-// if buf is pointer to newline at SourceLocation(2, 0), then this will return SourceLocation(1, x+1), where x is the length of line 1
-//
-SourceLocation ByteDecoder::convertBufferToEnd(Buffer buf) const {
-
-    assert(!offsetLineMap.empty());
-    
-    assert(offsetLineMap[0] <= buf || (buf[0] == '\r' && offsetLineMap[0] == buf + 1));
-    assert(buf <= TheByteBuffer->end);
-    
-    //
-    // Handle end
-    //
-    if (offsetLineMap[actualOffsetLineMapSize-1] == buf) {
-        
-        if (actualOffsetLineMapSize > 2) {
-            auto o = offsetLineMap[actualOffsetLineMapSize - 2];
-            auto diff = buf - o;
-            return SourceLocation(actualOffsetLineMapSize - 1, diff);
-        }
-        
-        auto diff = buf - offsetLineMap[0];
-        return SourceLocation(1, diff + 1);
-    }
-    
-    //
-    // if *buf is \n and *(buf-1) is '\r', then adjust to use the \r
-    //
-    auto adjustedBuf = buf;
-    if (*buf == '\n') {
-        if (offsetLineMap[0] < buf) {
-            if (*(buf-1) == '\r') {
-                adjustedBuf = buf-1;
-            }
-        }
-    }
-    
-    //
-    // Handle start
-    //
-    
-    if (adjustedBuf <= offsetLineMap[1]) {
-        
-        auto diff = adjustedBuf - offsetLineMap[0];
-        return SourceLocation(1, diff + 1);
-    }
-    
-    //
-    // Now do binary search
-    //
-    
-    size_t a = 1;
-    size_t b = actualOffsetLineMapSize-1;
-    
-    size_t good;
-    
-    while (true) {
-        
-        if (a + 1 == b) {
-            good = a;
-            break;
-        }
-        
-        auto mid = (a + b) / 2;
-        
-        if (adjustedBuf <= offsetLineMap[mid]) {
-            
-            b = mid;
-            
-        } else {
-            assert(offsetLineMap[mid] < adjustedBuf);
-            
-            a = mid;
-            
-        }
-        
-    }
-    
-    auto diff = adjustedBuf - offsetLineMap[good];
-    return SourceLocation(good + 1, diff);
-}
-
-
 
 #if !NISSUES
-//
-// Only to be used by AdvancementState
-//
 void ByteDecoder::addIssue(IssuePtr I) {
     Issues.push_back(std::move(I));
 }
@@ -843,10 +587,6 @@ std::vector<IssuePtr>& ByteDecoder::getIssues() {
     return Issues;
 }
 #endif // !NISSUES
-
-std::vector<Buffer> ByteDecoder::getOffsetLineMap() const {
-    return offsetLineMap;
-}
 
 void ByteDecoder::setError(bool err) {
     error = err;

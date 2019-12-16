@@ -9,7 +9,7 @@
 
 
 //const NextCharacterPolicy TOPLEVEL = ENABLE_BYTE_DECODING_ISSUES | ENABLE_ESCAPES | ENABLE_CHARACTER_DECODING_ISSUES | LC_UNDERSTANDS_CRLF | ENABLE_STRANGE_CHARACTER_CHECKING;
-const NextCharacterPolicy TOPLEVEL = ENABLE_BYTE_DECODING_ISSUES | ENABLE_CHARACTER_DECODING_ISSUES | ENABLE_STRANGE_CHARACTER_CHECKING;
+//const NextCharacterPolicy TOPLEVEL = ENABLE_BYTE_DECODING_ISSUES | ENABLE_CHARACTER_DECODING_ISSUES | ENABLE_STRANGE_CHARACTER_CHECKING;
 
 
 class ByteDecoderTest : public ::testing::Test {
@@ -39,7 +39,7 @@ TEST_F(ByteDecoderTest, Basic1) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size(), false));
+    TheParserSession->init(BufferAndLength(str, strIn.size(), false), nullptr, INCLUDE_SOURCE);
     
     auto c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
@@ -83,7 +83,7 @@ TEST_F(ByteDecoderTest, Basic2) {
     
     const unsigned char arr[] = {'1', '+', 206, 177};
     
-    TheParserSession->init(BufferAndLength(arr, 4, false));
+    TheParserSession->init(BufferAndLength(arr, 4, false), nullptr, INCLUDE_SOURCE);
     
     auto c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
@@ -127,7 +127,7 @@ TEST_F(ByteDecoderTest, Basic3) {
     
     const unsigned char arr[] = {'1', '+', 0xE2, 0x9A, 0xA1};
     
-    TheParserSession->init(BufferAndLength(arr, 5, false));
+    TheParserSession->init(BufferAndLength(arr, 5, false), nullptr, INCLUDE_SOURCE);
     
     auto c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
@@ -168,7 +168,7 @@ TEST_F(ByteDecoderTest, Invalid1) {
     
     const unsigned char arr[] = {'1', '+', 0xf8};
     
-    TheParserSession->init(BufferAndLength(arr, 3, false));
+    TheParserSession->init(BufferAndLength(arr, 3, false), nullptr, INCLUDE_SOURCE);
     
     auto c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
@@ -214,7 +214,7 @@ TEST_F(ByteDecoderTest, Invalid2) {
     
     const unsigned char arr[] = {'1', '+', 206};
     
-    TheParserSession->init(BufferAndLength(arr, 3, false));
+    TheParserSession->init(BufferAndLength(arr, 3, false), nullptr, INCLUDE_SOURCE);
     
     auto c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
@@ -258,7 +258,7 @@ TEST_F(ByteDecoderTest, Invalid3) {
     
     const unsigned char arr[] = {'1', '+', 0xE2};
     
-    TheParserSession->init(BufferAndLength(arr, 3, false));
+    TheParserSession->init(BufferAndLength(arr, 3, false), nullptr, INCLUDE_SOURCE);
     
     auto c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
@@ -303,7 +303,7 @@ TEST_F(ByteDecoderTest, Invalid4) {
     
     const unsigned char arr[] = {'1', '+', 0xE2, 0x9A};
     
-    TheParserSession->init(BufferAndLength(arr, 4, false));
+    TheParserSession->init(BufferAndLength(arr, 4, false), nullptr, INCLUDE_SOURCE);
     
     auto c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     

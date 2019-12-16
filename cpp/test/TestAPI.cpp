@@ -41,7 +41,7 @@ TEST_F(APITest, Bug1) {
     
     auto bufAndLen = BufferAndLength(str, strIn.size(), false);
     
-    TheParserSession->init(bufAndLen);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
     
     TheParserSession->parseLeaf(0);
     
@@ -61,7 +61,7 @@ TEST_F(APITest, Hang1) {
     
     auto bufAndLen = BufferAndLength(str, strIn.size(), false);
     
-    TheParserSession->init(bufAndLen);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
     
     TheParserSession->parseExpressions();
     
@@ -81,7 +81,7 @@ TEST_F(APITest, Crash1) {
     
     auto bufAndLen = BufferAndLength(str, strIn.size(), false);
     
-    TheParserSession->init(bufAndLen);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
     
     TheParserSession->parseExpressions();
     
@@ -101,7 +101,7 @@ TEST_F(APITest, Crash2) {
     
     auto bufAndLen = BufferAndLength(str, strIn.size(), false);
     
-    TheParserSession->init(bufAndLen);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
     
     TheParserSession->parseExpressions();
     
@@ -121,7 +121,7 @@ TEST_F(APITest, Crash3) {
     
     auto bufAndLen = BufferAndLength(str, strIn.size(), false);
     
-    TheParserSession->init(bufAndLen);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
     
     TheParserSession->parseExpressions();
     
@@ -141,7 +141,7 @@ TEST_F(APITest, Crash4) {
     
     auto bufAndLen = BufferAndLength(str, strIn.size(), false);
     
-    TheParserSession->init(bufAndLen);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
     
     TheParserSession->parseExpressions();
     
@@ -161,7 +161,7 @@ TEST_F(APITest, Crash5) {
     
     auto bufAndLen = BufferAndLength(str, strIn.size(), false);
     
-    TheParserSession->init(bufAndLen);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
     
     TheParserSession->parseExpressions();
     
@@ -181,7 +181,7 @@ TEST_F(APITest, Crash6) {
     
     auto bufAndLen = BufferAndLength(str, strIn.size(), false);
     
-    TheParserSession->init(bufAndLen);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
     
     TheParserSession->parseExpressions();
     

@@ -28,7 +28,7 @@ NodePtr SemiSemiParselet::parse(Token firstTok, ParserContext CtxtIn) const {
     
     auto TokIn = firstTok;
     
-    auto Implicit = Token(TOKEN_FAKE_IMPLICITONE, BufferAndLength(TokIn.bufferAndLength.buffer, 0, false));
+    auto Implicit = Token(TOKEN_FAKE_IMPLICITONE, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
     
     auto One = NodePtr(new LeafNode(Implicit));
     
@@ -58,7 +58,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
 
     auto Tok = TheParser->eatAndPreserveToplevelNewlines(CtxtIn, ArgsTest1);
 
-    if (!Tok.getTokenEnum().isPossibleBeginningOfExpression()) {
+    if (!Tok.Tok.isPossibleBeginningOfExpression()) {
         
         //
         // There is only a single ;; and there is no implicit Times
@@ -88,7 +88,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
         
         auto Tok = TheParser->eatAndPreserveToplevelNewlines(CtxtIn, ArgsTest2);
         
-        if (!Tok.getTokenEnum().isPossibleBeginningOfExpression()) {
+        if (!Tok.Tok.isPossibleBeginningOfExpression()) {
             
             //
             // We are done, so return
@@ -108,7 +108,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
             // Higher precedence, so still within the ;;
             //
             
-            auto ImplicitOne = Token(TOKEN_FAKE_IMPLICITONE, BufferAndLength(Tok.bufferAndLength.buffer, 0, false));
+            auto ImplicitOne = Token(TOKEN_FAKE_IMPLICITONE, BufferAndLength(Tok.BufLen.buffer), Source(Tok.Src.Start));
             
             NodeSeq ImplicitOneSeq;
             ImplicitOneSeq.append(NodePtr(new LeafNode(ImplicitOne)));
@@ -131,12 +131,12 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
         }
 
 #if !NISSUES
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_IMPLICITTIMES, "Implicit ``Times`` between ``Spans``.", SYNTAXISSUESEVERITY_WARNING, Source(Tok.getSource().Start), 0.75, {}));
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_IMPLICITTIMES, "Implicit ``Times`` between ``Spans``.", SYNTAXISSUESEVERITY_WARNING, Tok.Src, 0.75, {}));
         
         TheParser->addIssue(std::move(I));
 #endif // !NISSUES
         
-        auto ImplicitTimes = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(Tok.bufferAndLength.buffer, 0, false));
+        auto ImplicitTimes = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(Tok.BufLen.buffer), Source(Tok.Src.Start));
         
         //
         // Do not reserve inside loop
@@ -188,7 +188,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
     //  ^~TokIn
     //
     
-    if (!SecondTok.getTokenEnum().isPossibleBeginningOfExpression()
+    if (!SecondTok.Tok.isPossibleBeginningOfExpression()
         || (TheParser->getTokenPrecedence(SecondTok, Ctxt, true, nullptr) < PRECEDENCE_SEMISEMI)
         ) {
 
@@ -197,7 +197,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
         //    ^SecondTok
         //
         
-        auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.bufferAndLength.end(), 0, false));
+        auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.BufLen.end()), Source(TokIn.Src.End));
         
         NodeSeq Args;
         Args.reserve(1 + 1 + 1);
@@ -210,7 +210,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
         return Span;
     }
     
-    if (SecondTok.getTokenEnum() != TOKEN_SEMISEMI) {
+    if (SecondTok.Tok != TOKEN_SEMISEMI) {
 
         //
         // a;;b
@@ -223,7 +223,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
         
         auto ThirdTok = TheParser->eatAndPreserveToplevelNewlines(CtxtIn, ArgsTest2);
         
-        if (ThirdTok.getTokenEnum() != TOKEN_SEMISEMI) {
+        if (ThirdTok.Tok != TOKEN_SEMISEMI) {
 
             //
             // a;;b&
@@ -257,7 +257,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
         
         auto FourthTok = TheParser->eatAndPreserveToplevelNewlines(CtxtIn, ArgsTest3);
         
-        if (!FourthTok.getTokenEnum().isPossibleBeginningOfExpression()
+        if (!FourthTok.Tok.isPossibleBeginningOfExpression()
             || (TheParser->getTokenPrecedence(FourthTok, Ctxt, true, nullptr) < PRECEDENCE_SEMISEMI)
             ) {
             
@@ -278,7 +278,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
             return Span;
         }
         
-        if (FourthTok.getTokenEnum() != TOKEN_SEMISEMI) {
+        if (FourthTok.Tok != TOKEN_SEMISEMI) {
 
             //
             // a;;b;;c
@@ -335,7 +335,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
     
     auto ThirdTok = TheParser->eatAndPreserveToplevelNewlines(CtxtIn, ArgsTest2);
     
-    if (!ThirdTok.getTokenEnum().isPossibleBeginningOfExpression()
+    if (!ThirdTok.Tok.isPossibleBeginningOfExpression()
         || (TheParser->getTokenPrecedence(ThirdTok, Ctxt, true, nullptr) < PRECEDENCE_SEMISEMI)
         ) {
         
@@ -344,7 +344,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
         //      ^ThirdTok
         //
         
-        auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.bufferAndLength.end(), 0, false));
+        auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.BufLen.end()), Source(TokIn.Src.End));
         
         NodeSeq Args;
         Args.reserve(1 + 1 + 1);
@@ -357,7 +357,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
         return Span;
     }
     
-    if (ThirdTok.getTokenEnum() != TOKEN_SEMISEMI) {
+    if (ThirdTok.Tok != TOKEN_SEMISEMI) {
         
         //
         // a;;;;b
@@ -366,7 +366,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
         
         auto FirstArg = TheParser->parse(ThirdTok, Ctxt);
         
-        auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.bufferAndLength.end(), 0, false));
+        auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.BufLen.end()), Source(TokIn.Src.End));
         
         NodeSeq Args;
         Args.reserve(1 + 1 + 1 + 1 + 1 + 1 + 1);
@@ -390,7 +390,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, ParserContext CtxtIn) const {
     
     LeafSeq ArgsTest3;
     
-    auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.bufferAndLength.end(), 0, false));
+    auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.BufLen.end()), Source(TokIn.Src.End));
     
     NodeSeq Args;
     Args.reserve(1 + 1 + 1);

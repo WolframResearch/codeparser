@@ -3,6 +3,7 @@
 
 #include "Parser.h"
 #include "ByteEncoder.h"
+#include "API.h"
 #include "Symbol.h"
 
 #include <numeric> // for accumulate
@@ -240,11 +241,11 @@ void LeafNode::print(std::ostream& s) const {
 }
 
 bool LeafNode::isTrivia() const {
-    return Tok.getTokenEnum().isTrivia();
+    return Tok.Tok.isTrivia();
 }
 
 bool LeafNode::isEmpty() const {
-    return Tok.getTokenEnum().isEmpty();
+    return Tok.Tok.isEmpty();
 }
 
 void CallNode::print(std::ostream& s) const {

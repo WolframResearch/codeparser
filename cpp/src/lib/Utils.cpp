@@ -1,3 +1,4 @@
+
 #include "Utils.h"
 
 #include "Parser.h"
@@ -118,26 +119,20 @@ bool Utils::isUndocumentedLongName(std::string s) {
 }
 
 #if !NISSUES
-void Utils::strangeLetterlikeWarning(BufferAndLength bufAndLen, WLCharacter c) {
+void Utils::strangeLetterlikeWarning(Source Src, WLCharacter c) {
     
     assert(c.isStrangeLetterlike() || c.isMBStrangeLetterlike());
     
     if (c.isVeryStrangeLetterlike() || c.isMBVeryStrangeLetterlike()) {
         
-        auto loc1 = TheByteDecoder->convertBufferToStart(bufAndLen.buffer);
-        auto loc2 = TheByteDecoder->convertBufferToEnd(bufAndLen.end());
-        
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Source(loc1, loc2), 0.95, {}));
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
         
         TheTokenizer->addIssue(std::move(I));
         
         return;
     }
     
-    auto loc1 = TheByteDecoder->convertBufferToStart(bufAndLen.buffer);
-    auto loc2 = TheByteDecoder->convertBufferToEnd(bufAndLen.end());
-    
-    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Source(loc1, loc2), 0.90, {}));
+    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.90, {}));
     
     TheTokenizer->addIssue(std::move(I));
 }

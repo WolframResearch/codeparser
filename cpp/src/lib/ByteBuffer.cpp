@@ -35,7 +35,7 @@ unsigned char ByteBuffer::nextByte0() {
     if (origBufAndLen.length != 0) {
         oldProgress = (100 * (buffer - origBufAndLen.buffer) / origBufAndLen.length);
     }
-#endif
+#endif // NDEBUG
     
     if (buffer == end) {
         
@@ -156,10 +156,6 @@ unsigned char ByteBuffer::currentByte() {
     }
     
     return *buffer;
-}
-
-bool ByteBuffer::eof() const {
-    return buffer == end;
 }
 
 ByteBufferPtr TheByteBuffer = nullptr;

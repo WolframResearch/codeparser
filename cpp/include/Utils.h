@@ -1,11 +1,10 @@
 
 #pragma once
 
-#include "Node.h"
 #include "WLCharacter.h"
+#include "Source.h"
 
 #include <string>
-#include <memory> // for unique_ptr
 
 class Utils {
 public:
@@ -28,7 +27,7 @@ public:
     static bool isMBUninterpretable(int32_t point);
     
 #if !NISSUES
-    static void strangeLetterlikeWarning(BufferAndLength bufAndLen, WLCharacter c);
+    static void strangeLetterlikeWarning(Source Src, WLCharacter c);
 #endif // !NISSUES
     
 };

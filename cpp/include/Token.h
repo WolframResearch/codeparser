@@ -1,8 +1,6 @@
 
 #pragma once
 
-#include "ByteDecoder.h"
-#include "API.h"
 #include "Source.h"
 #include "TokenEnum.h"
 
@@ -11,16 +9,11 @@
 
 struct Token {
     
-    TokenEnum tok;
-    BufferAndLength bufferAndLength;
+    TokenEnum Tok;
+    BufferAndLength BufLen;
+    Source Src;
     
-    Token(TokenEnum, BufferAndLength);
-    
-    TokenEnum getTokenEnum() const {
-        return tok;
-    }
-    
-    Source getSource() const;
+    Token(TokenEnum Tok, BufferAndLength BufLen, Source Src);
     
 #if USE_MATHLINK
     void put(MLINK ) const;

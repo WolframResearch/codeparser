@@ -39,7 +39,8 @@ void CharacterDecoder::deinit() {
 //
 WLCharacter CharacterDecoder::nextWLCharacter0(NextCharacterPolicy policy) {
     
-    Buffer currentWLCharacterStart = TheByteBuffer->buffer;
+    auto currentWLCharacterStartBuf = TheByteBuffer->buffer;
+    auto currentWLCharacterStartLoc = TheByteDecoder->SrcLoc;
     
     auto curSource = TheByteDecoder->nextSourceCharacter0(policy);
     
@@ -55,145 +56,148 @@ WLCharacter CharacterDecoder::nextWLCharacter0(NextCharacterPolicy policy) {
         
         c = WLCharacter(curSource.to_point());
         
-        goto post;
-    }
-    
-    //
-    // There was a \
-    //
-    
-    curSource = TheByteDecoder->nextSourceCharacter0(policy);
-    
-    switch (curSource.to_point()) {
-        case '\n':
-        case '\r':
-        case CODEPOINT_CRLF:
-            c = handleLineContinuation(curSource, policy);
-            break;
-        case '[':
-            c = handleLongName(policy);
-            break;
-        case ':':
-            c = handle4Hex(policy);
-            break;
-        case '.':
-            c = handle2Hex(policy);
-            break;
-        case '|':
-            c = handle6Hex(policy);
-            break;
-        case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7':
-            c = handleOctal(curSource, policy);
-            break;
+    } else {
+        
         //
-        // Simple escaped characters
-        // \b \f \n \r \t
+        // There was a \
         //
-        case 'b':
-            c = WLCharacter(CODEPOINT_STRINGMETA_BACKSPACE, ESCAPE_SINGLE);
-            break;
-        case 'f':
-            //
-            // \f is NOT a space character (but inside of strings, it does have special meaning)
-            //
-            c = WLCharacter(CODEPOINT_STRINGMETA_FORMFEED, ESCAPE_SINGLE);
-            break;
-        case 'n':
-            //
-            // \n is NOT a newline character (but inside of strings, it does have special meaning)
-            //
-            c = WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
-            break;
-        case 'r':
-            //
-            // \r is NOT a newline character (but inside of strings, it does have special meaning)
-            //
-            c = WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
-            break;
-        case 't':
-            //
-            // \t is NOT a space character (but inside of strings, it does have special meaning)
-            //
-            c = WLCharacter(CODEPOINT_STRINGMETA_TAB, ESCAPE_SINGLE);
-            break;
-        //
-        // \\ \" \< \>
-        //
-        // String meta characters
-        // What are \< and \> ?
-        // https://mathematica.stackexchange.com/questions/105018/what-are-and-delimiters-in-box-expressions
-        // https://stackoverflow.com/q/6065887
-        //
-        case '"':
-            c = WLCharacter(CODEPOINT_STRINGMETA_DOUBLEQUOTE, ESCAPE_SINGLE);
-            break;
-        case '\\':
-            c = handleBackSlash(policy);
-            break;
-        case '<':
-            c = WLCharacter(CODEPOINT_STRINGMETA_OPEN, ESCAPE_SINGLE);
-            break;
-        case '>':
-            c = WLCharacter(CODEPOINT_STRINGMETA_CLOSE, ESCAPE_SINGLE);
-            break;
-        //
-        // Linear syntax characters
-        // \! \% \& \( \) \* \+ \/ \@ \^ \_ \` \<space>
-        //
-        case '!':
-            c = WLCharacter(CODEPOINT_LINEARSYNTAX_BANG, ESCAPE_SINGLE);
-            break;
-        case '%':
-            c = WLCharacter(CODEPOINT_LINEARSYNTAX_PERCENT, ESCAPE_SINGLE);
-            break;
-        case '&':
-            c = WLCharacter(CODEPOINT_LINEARSYNTAX_AMP, ESCAPE_SINGLE);
-            break;
-        case '(':
-            c = WLCharacter(CODEPOINT_LINEARSYNTAX_OPENPAREN, ESCAPE_SINGLE);
-            break;
-        case ')':
-            c = WLCharacter(CODEPOINT_LINEARSYNTAX_CLOSEPAREN, ESCAPE_SINGLE);
-            break;
-        case '*':
-            c = WLCharacter(CODEPOINT_LINEARSYNTAX_STAR, ESCAPE_SINGLE);
-            break;
-        case '+':
-            c = WLCharacter(CODEPOINT_LINEARSYNTAX_PLUS, ESCAPE_SINGLE);
-            break;
-        case '/':
-            c = WLCharacter(CODEPOINT_LINEARSYNTAX_SLASH, ESCAPE_SINGLE);
-            break;
-        case '@':
-            c = WLCharacter(CODEPOINT_LINEARSYNTAX_AT, ESCAPE_SINGLE);
-            break;
-        case '^':
-            c = WLCharacter(CODEPOINT_LINEARSYNTAX_CARET, ESCAPE_SINGLE);
-            break;
-        case '_':
-            c = WLCharacter(CODEPOINT_LINEARSYNTAX_UNDER, ESCAPE_SINGLE);
-            break;
-        case '`':
-            c = WLCharacter(CODEPOINT_LINEARSYNTAX_BACKTICK, ESCAPE_SINGLE);
-            break;
-        case ' ':
-            c = WLCharacter(CODEPOINT_LINEARSYNTAX_SPACE, ESCAPE_SINGLE);
-            break;
-            //
-            // Anything else
-            //
-            // Something like \A or \{
-            //
-        default: {
-            c = handleUnhandledEscape(currentWLCharacterStart, curSource, policy);
-            break;
+        
+        auto escapedBuf = TheByteBuffer->buffer;
+        auto escapedLoc = TheByteDecoder->SrcLoc;
+        
+        curSource = TheByteDecoder->nextSourceCharacter0(policy);
+        
+        switch (curSource.to_point()) {
+            case '\n':
+            case '\r':
+            case CODEPOINT_CRLF:
+                c = handleLineContinuation(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, curSource, policy);
+                break;
+            case '[':
+                c = handleLongName(policy);
+                break;
+            case ':':
+                c = handle4Hex(policy);
+                break;
+            case '.':
+                c = handle2Hex(policy);
+                break;
+            case '|':
+                c = handle6Hex(policy);
+                break;
+            case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7':
+                c = handleOctal(curSource, policy);
+                break;
+                //
+                // Simple escaped characters
+                // \b \f \n \r \t
+                //
+            case 'b':
+                c = WLCharacter(CODEPOINT_STRINGMETA_BACKSPACE, ESCAPE_SINGLE);
+                break;
+            case 'f':
+                //
+                // \f is NOT a space character (but inside of strings, it does have special meaning)
+                //
+                c = WLCharacter(CODEPOINT_STRINGMETA_FORMFEED, ESCAPE_SINGLE);
+                break;
+            case 'n':
+                //
+                // \n is NOT a newline character (but inside of strings, it does have special meaning)
+                //
+                c = WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
+                break;
+            case 'r':
+                //
+                // \r is NOT a newline character (but inside of strings, it does have special meaning)
+                //
+                c = WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
+                break;
+            case 't':
+                //
+                // \t is NOT a space character (but inside of strings, it does have special meaning)
+                //
+                c = WLCharacter(CODEPOINT_STRINGMETA_TAB, ESCAPE_SINGLE);
+                break;
+                //
+                // \\ \" \< \>
+                //
+                // String meta characters
+                // What are \< and \> ?
+                // https://mathematica.stackexchange.com/questions/105018/what-are-and-delimiters-in-box-expressions
+                // https://stackoverflow.com/q/6065887
+                //
+            case '"':
+                c = WLCharacter(CODEPOINT_STRINGMETA_DOUBLEQUOTE, ESCAPE_SINGLE);
+                break;
+            case '\\':
+                c = handleBackSlash(policy);
+                break;
+            case '<':
+                c = WLCharacter(CODEPOINT_STRINGMETA_OPEN, ESCAPE_SINGLE);
+                break;
+            case '>':
+                c = WLCharacter(CODEPOINT_STRINGMETA_CLOSE, ESCAPE_SINGLE);
+                break;
+                //
+                // Linear syntax characters
+                // \! \% \& \( \) \* \+ \/ \@ \^ \_ \` \<space>
+                //
+            case '!':
+                c = WLCharacter(CODEPOINT_LINEARSYNTAX_BANG, ESCAPE_SINGLE);
+                break;
+            case '%':
+                c = WLCharacter(CODEPOINT_LINEARSYNTAX_PERCENT, ESCAPE_SINGLE);
+                break;
+            case '&':
+                c = WLCharacter(CODEPOINT_LINEARSYNTAX_AMP, ESCAPE_SINGLE);
+                break;
+            case '(':
+                c = WLCharacter(CODEPOINT_LINEARSYNTAX_OPENPAREN, ESCAPE_SINGLE);
+                break;
+            case ')':
+                c = WLCharacter(CODEPOINT_LINEARSYNTAX_CLOSEPAREN, ESCAPE_SINGLE);
+                break;
+            case '*':
+                c = WLCharacter(CODEPOINT_LINEARSYNTAX_STAR, ESCAPE_SINGLE);
+                break;
+            case '+':
+                c = WLCharacter(CODEPOINT_LINEARSYNTAX_PLUS, ESCAPE_SINGLE);
+                break;
+            case '/':
+                c = WLCharacter(CODEPOINT_LINEARSYNTAX_SLASH, ESCAPE_SINGLE);
+                break;
+            case '@':
+                c = WLCharacter(CODEPOINT_LINEARSYNTAX_AT, ESCAPE_SINGLE);
+                break;
+            case '^':
+                c = WLCharacter(CODEPOINT_LINEARSYNTAX_CARET, ESCAPE_SINGLE);
+                break;
+            case '_':
+                c = WLCharacter(CODEPOINT_LINEARSYNTAX_UNDER, ESCAPE_SINGLE);
+                break;
+            case '`':
+                c = WLCharacter(CODEPOINT_LINEARSYNTAX_BACKTICK, ESCAPE_SINGLE);
+                break;
+            case ' ':
+                c = WLCharacter(CODEPOINT_LINEARSYNTAX_SPACE, ESCAPE_SINGLE);
+                break;
+                //
+                // Anything else
+                //
+                // Something like \A or \{
+                //
+            default: {
+                c = handleUnhandledEscape(currentWLCharacterStartBuf, currentWLCharacterStartLoc, curSource, policy);
+                break;
+            }
         }
     }
     
     //
     // Post-processing of WLCharacters
     //
-post:
+//post:
     
 #if !NISSUES
     if ((policy & ENABLE_STRANGE_CHARACTER_CHECKING) == ENABLE_STRANGE_CHARACTER_CHECKING) {
@@ -204,10 +208,7 @@ post:
             // Just generally strange character is in the code
             //
             
-            auto currentWLCharacterEnd = TheByteBuffer->buffer;
-            
-            auto currentWLCharacterStartLoc = TheByteDecoder->convertBufferToStart(currentWLCharacterStart);
-            auto currentWLCharacterEndLoc = TheByteDecoder->convertBufferToEnd(currentWLCharacterEnd);
+            auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
             
             auto graphicalStr = c.graphicalString();
             
@@ -227,12 +228,18 @@ post:
 WLCharacter CharacterDecoder::currentWLCharacter(NextCharacterPolicy policy) {
     
     auto resetBuf = TheByteBuffer->buffer;
+    auto resetEOF = TheByteBuffer->wasEOF;
+    
+    auto resetLoc = TheByteDecoder->SrcLoc;
     
     auto c = nextWLCharacter0(policy);
     
     lastBuf = TheByteBuffer->buffer;
+    lastLoc = TheByteDecoder->SrcLoc;
     
     TheByteBuffer->buffer = resetBuf;
+    TheByteBuffer->wasEOF = resetEOF;
+    TheByteDecoder->SrcLoc = resetLoc;
     
     return c;
 }
@@ -244,7 +251,12 @@ WLCharacter CharacterDecoder::currentWLCharacter(NextCharacterPolicy policy) {
 WLCharacter CharacterDecoder::handleLongName(NextCharacterPolicy policy) {
     
     auto alphaBuf = TheByteBuffer->buffer;
+    auto alphaLoc = TheByteDecoder->SrcLoc;
+    
     auto openSquareBuf = alphaBuf - 1;
+    auto openSquareLoc = alphaLoc - 1;
+    
+    assert(*openSquareBuf == '[');
     
     //
     // Do not write leading \[ or trailing ] to LongName
@@ -265,6 +277,7 @@ WLCharacter CharacterDecoder::handleLongName(NextCharacterPolicy policy) {
         atleast1DigitOrAlpha = true;
         
         TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+        TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
         
         curSource = TheByteDecoder->currentSourceCharacter(policy);
         
@@ -277,6 +290,7 @@ WLCharacter CharacterDecoder::handleLongName(NextCharacterPolicy policy) {
             if (curSource.isAlphaOrDigit()) {
                 
                 TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+                TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
                 
                 curSource = TheByteDecoder->currentSourceCharacter(policy);
                 
@@ -308,15 +322,14 @@ WLCharacter CharacterDecoder::handleLongName(NextCharacterPolicy policy) {
 #if !NISSUES
         if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
             
-            auto currentWLCharacterStart = openSquareBuf - 1;
-            auto currentWLCharacterEnd = TheByteBuffer->buffer;
+            auto currentWLCharacterStartLoc = openSquareLoc - 1;
             
-            auto longNameEnd = currentWLCharacterEnd;
+            auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
+            auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
             
-            auto currentWLCharacterStartLoc = TheByteDecoder->convertBufferToStart(currentWLCharacterStart);
-            auto currentWLCharacterEndLoc = TheByteDecoder->convertBufferToEnd(currentWLCharacterEnd);
+            auto longNameEndBuf = currentWLCharacterEndBuf;
             
-            auto longNameBufAndLen = BufferAndLength(longNameStartBuf, longNameEnd - longNameStartBuf, false);
+            auto longNameBufAndLen = BufferAndLength(longNameStartBuf, longNameEndBuf - longNameStartBuf, false);
             auto longNameStr = std::string(reinterpret_cast<const char *>(longNameBufAndLen.buffer), longNameBufAndLen.length);
             
             if (atleast1DigitOrAlpha) {
@@ -410,6 +423,7 @@ WLCharacter CharacterDecoder::handleLongName(NextCharacterPolicy policy) {
 #endif // !NISSUES
         
         TheByteBuffer->buffer = openSquareBuf;
+        TheByteDecoder->SrcLoc = openSquareLoc;
         
         return WLCharacter('\\');
     }
@@ -422,9 +436,9 @@ WLCharacter CharacterDecoder::handleLongName(NextCharacterPolicy policy) {
     // if unlikelyEscapeChecking, then make sure to append all of the Source characters again
     //
     
-    auto longNameEnd = TheByteBuffer->buffer;
+    auto longNameEndBuf = TheByteBuffer->buffer;
     
-    auto longNameBufAndLen = BufferAndLength(longNameStartBuf, longNameEnd - longNameStartBuf, false);
+    auto longNameBufAndLen = BufferAndLength(longNameStartBuf, longNameEndBuf - longNameStartBuf, false);
     auto longNameStr = std::string(reinterpret_cast<const char *>(longNameBufAndLen.buffer), longNameBufAndLen.length);
     
     auto it = LongNameToCodePointMap.find(longNameStr);
@@ -442,11 +456,11 @@ WLCharacter CharacterDecoder::handleLongName(NextCharacterPolicy policy) {
             
             if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
                 
-                auto currentWLCharacterStart = openSquareBuf - 1;
-                auto currentWLCharacterEnd = longNameEnd;
+                auto longNameEndLoc = TheByteDecoder->SrcLoc;
                 
-                auto currentWLCharacterStartLoc = TheByteDecoder->convertBufferToStart(currentWLCharacterStart);
-                auto currentWLCharacterEndLoc = TheByteDecoder->convertBufferToEnd(currentWLCharacterEnd);
+                auto currentWLCharacterStartLoc = openSquareLoc - 1;
+                
+                auto currentWLCharacterEndLoc = longNameEndLoc;
                 
                 auto suggestion = longNameSuggestion(longNameBufAndLen);
                 
@@ -461,13 +475,11 @@ WLCharacter CharacterDecoder::handleLongName(NextCharacterPolicy policy) {
                 
             } else if ((policy & ENABLE_UNLIKELY_ESCAPE_CHECKING) == ENABLE_UNLIKELY_ESCAPE_CHECKING) {
                 
-                auto currentWLCharacterStart = openSquareBuf - 1;
-                auto currentWLCharacterEnd = TheByteBuffer->buffer;
+                auto currentWLCharacterStartLoc = openSquareLoc - 1;
                 
-                auto currentWLCharacterEndLoc = TheByteDecoder->convertBufferToEnd(currentWLCharacterEnd);
+                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
                 
-                auto previousBackSlashBuf = currentWLCharacterStart - 1;
-                auto previousBackSlashLoc = TheByteDecoder->convertBufferToStart(previousBackSlashBuf);
+                auto previousBackSlashLoc = currentWLCharacterStartLoc - 1;
                 
                 auto suggestion = longNameSuggestion(longNameBufAndLen);
                 
@@ -484,6 +496,7 @@ WLCharacter CharacterDecoder::handleLongName(NextCharacterPolicy policy) {
 #endif // !NISSUES
         
         TheByteBuffer->buffer = openSquareBuf;
+        TheByteDecoder->SrcLoc = openSquareLoc;
         
         return WLCharacter('\\');
     }
@@ -493,19 +506,18 @@ WLCharacter CharacterDecoder::handleLongName(NextCharacterPolicy policy) {
     //
     
     TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+    TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
     
     auto point = it->second;
     
 #if !NISSUES
     if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
         
-        auto currentWLCharacterStart = openSquareBuf - 1;
-        auto currentWLCharacterEnd = TheByteBuffer->buffer;
+        auto currentWLCharacterStartLoc = openSquareLoc - 1;
         
-        auto currentWLCharacterStartLoc = TheByteDecoder->convertBufferToStart(currentWLCharacterStart);
-        auto currentWLCharacterEndLoc = TheByteDecoder->convertBufferToEnd(currentWLCharacterEnd);
+        auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
         
-        auto longNameBufAndLen = BufferAndLength(longNameStartBuf, longNameEnd - longNameStartBuf, false);
+        auto longNameBufAndLen = BufferAndLength(longNameStartBuf, longNameEndBuf - longNameStartBuf, false);
         auto longNameStr = std::string(reinterpret_cast<const char *>(longNameBufAndLen.buffer), longNameBufAndLen.length);
         
         //
@@ -539,7 +551,12 @@ WLCharacter CharacterDecoder::handleLongName(NextCharacterPolicy policy) {
 WLCharacter CharacterDecoder::handle4Hex(NextCharacterPolicy policy) {
     
     auto hexStartBuf = TheByteBuffer->buffer;
+    auto hexStartLoc = TheByteDecoder->SrcLoc;
+    
     auto colonBuf = hexStartBuf - 1;
+    auto colonLoc = hexStartLoc - 1;
+    
+    assert(*colonBuf == ':');
     
     for (auto i = 0; i < 4; i++) {
         
@@ -548,6 +565,7 @@ WLCharacter CharacterDecoder::handle4Hex(NextCharacterPolicy policy) {
         if (curSource.isHex()) {
             
             TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+            TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
             
         } else {
             
@@ -560,15 +578,14 @@ WLCharacter CharacterDecoder::handle4Hex(NextCharacterPolicy policy) {
 #if !NISSUES
             if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
                 
-                auto currentWLCharacterStart = colonBuf - 1;
-                auto currentWLCharacterEnd = TheByteBuffer->buffer;
+                auto currentWLCharacterStartLoc = colonLoc - 1;
                 
-                auto currentWLCharacterStartLoc = TheByteDecoder->convertBufferToStart(currentWLCharacterStart);
-                auto currentWLCharacterEndLoc = TheByteDecoder->convertBufferToEnd(currentWLCharacterEnd);
+                auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
+                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
                 
-                auto hexEnd = currentWLCharacterEnd;
+                auto hexEndBuf = currentWLCharacterEndBuf;
                 
-                auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEnd - hexStartBuf, false);
+                auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf, false);
                 auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.buffer), hexBufAndLen.length);
                 
                 if (curSource.isEndOfFile()) {
@@ -599,6 +616,7 @@ WLCharacter CharacterDecoder::handle4Hex(NextCharacterPolicy policy) {
 #endif // !NISSUES
             
             TheByteBuffer->buffer = colonBuf;
+            TheByteDecoder->SrcLoc = colonLoc;
             
             return WLCharacter('\\');
         }
@@ -608,11 +626,11 @@ WLCharacter CharacterDecoder::handle4Hex(NextCharacterPolicy policy) {
     // Success!
     //
     
-    auto currentWLCharacterEnd = TheByteBuffer->buffer;
+    auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
     
-    auto hexEnd = currentWLCharacterEnd;
+    auto hexEndBuf = currentWLCharacterEndBuf;
     
-    auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEnd - hexStartBuf, false);
+    auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf, false);
     auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.buffer), hexBufAndLen.length);
     
     auto it = ToSpecialMap.find(hexStr);
@@ -634,7 +652,12 @@ WLCharacter CharacterDecoder::handle4Hex(NextCharacterPolicy policy) {
 WLCharacter CharacterDecoder::handle2Hex(NextCharacterPolicy policy) {
     
     auto hexStartBuf = TheByteBuffer->buffer;
+    auto hexStartLoc = TheByteDecoder->SrcLoc;
+    
     auto dotBuf = hexStartBuf - 1;
+    auto dotLoc = hexStartLoc - 1;
+    
+    assert(*dotBuf == '.');
     
     for (auto i = 0; i < 2; i++) {
         
@@ -643,6 +666,7 @@ WLCharacter CharacterDecoder::handle2Hex(NextCharacterPolicy policy) {
         if (curSource.isHex()) {
             
             TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+            TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
             
         } else {
             
@@ -655,15 +679,14 @@ WLCharacter CharacterDecoder::handle2Hex(NextCharacterPolicy policy) {
 #if !NISSUES
             if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
                 
-                auto currentWLCharacterStart = dotBuf - 1;
-                auto currentWLCharacterEnd = TheByteBuffer->buffer;
+                auto currentWLCharacterStartLoc = dotLoc - 1;
                 
-                auto currentWLCharacterStartLoc = TheByteDecoder->convertBufferToStart(currentWLCharacterStart);
-                auto currentWLCharacterEndLoc = TheByteDecoder->convertBufferToEnd(currentWLCharacterEnd);
+                auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
+                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
                 
-                auto hexEnd = currentWLCharacterEnd;
+                auto hexEndBuf = currentWLCharacterEndBuf;
                 
-                auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEnd - hexStartBuf, false);
+                auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf, false);
                 auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.buffer), hexBufAndLen.length);
                 
                 if (curSource.isEndOfFile()) {
@@ -694,6 +717,7 @@ WLCharacter CharacterDecoder::handle2Hex(NextCharacterPolicy policy) {
 #endif // !NISSUES
             
             TheByteBuffer->buffer = dotBuf;
+            TheByteDecoder->SrcLoc = dotLoc;
             
             return WLCharacter('\\');
         }
@@ -703,11 +727,11 @@ WLCharacter CharacterDecoder::handle2Hex(NextCharacterPolicy policy) {
     // Success!
     //
     
-    auto currentWLCharacterEnd = TheByteBuffer->buffer;
+    auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
     
-    auto hexEnd = currentWLCharacterEnd;
+    auto hexEndBuf = currentWLCharacterEndBuf;
     
-    auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEnd - hexStartBuf, false);
+    auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf, false);
     auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.buffer), hexBufAndLen.length);
     
     auto it = ToSpecialMap.find(hexStr);
@@ -730,10 +754,15 @@ WLCharacter CharacterDecoder::handleOctal(SourceCharacter firstDigit, NextCharac
     
     assert(firstDigit.isOctal());
     
-    auto secondOctal = TheByteBuffer->buffer;
-    auto firstOctal = secondOctal - 1;
+    auto secondOctalBuf = TheByteBuffer->buffer;
+    auto secondOctalLoc = TheByteDecoder->SrcLoc;
     
-    auto octalStartBuf = firstOctal;
+    auto firstOctalBuf = secondOctalBuf - 1;
+    auto firstOctalLoc = secondOctalLoc - 1;
+    
+    assert(SourceCharacter(*firstOctalBuf).isOctal());
+    
+    auto octalStartBuf = firstOctalBuf;
     
     for (auto i = 0; i < 3-1; i++) {
         
@@ -742,6 +771,7 @@ WLCharacter CharacterDecoder::handleOctal(SourceCharacter firstDigit, NextCharac
         if (curSource.isOctal()) {
             
             TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+            TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
             
         } else {
             
@@ -754,15 +784,14 @@ WLCharacter CharacterDecoder::handleOctal(SourceCharacter firstDigit, NextCharac
 #if !NISSUES
             if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
                 
-                auto currentWLCharacterStart = firstOctal - 1;
-                auto currentWLCharacterEnd = TheByteBuffer->buffer;
+                auto currentWLCharacterStartLoc = firstOctalLoc - 1;
                 
-                auto currentWLCharacterStartLoc = TheByteDecoder->convertBufferToStart(currentWLCharacterStart);
-                auto currentWLCharacterEndLoc = TheByteDecoder->convertBufferToEnd(currentWLCharacterEnd);
+                auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
+                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
                 
-                auto octalEnd = currentWLCharacterEnd;
+                auto octalEndBuf = currentWLCharacterEndBuf;
                 
-                auto octalBufAndLen = BufferAndLength(octalStartBuf, octalEnd - octalStartBuf, false);
+                auto octalBufAndLen = BufferAndLength(octalStartBuf, octalEndBuf - octalStartBuf, false);
                 auto octalStr = std::string(reinterpret_cast<const char *>(octalBufAndLen.buffer), octalBufAndLen.length);
                 
                 if (curSource.isEndOfFile()) {
@@ -792,7 +821,8 @@ WLCharacter CharacterDecoder::handleOctal(SourceCharacter firstDigit, NextCharac
             }
 #endif // !NISSUES
 
-            TheByteBuffer->buffer = firstOctal;
+            TheByteBuffer->buffer = firstOctalBuf;
+            TheByteDecoder->SrcLoc = firstOctalLoc;
             
             return WLCharacter('\\');
         }
@@ -802,11 +832,11 @@ WLCharacter CharacterDecoder::handleOctal(SourceCharacter firstDigit, NextCharac
     // Success!
     //
     
-    auto currentWLCharacterEnd = TheByteBuffer->buffer;
+    auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
     
-    auto octalEnd = currentWLCharacterEnd;
+    auto octalEndBuf = currentWLCharacterEndBuf;
     
-    auto octalBufAndLen = BufferAndLength(octalStartBuf, octalEnd - octalStartBuf, false);
+    auto octalBufAndLen = BufferAndLength(octalStartBuf, octalEndBuf - octalStartBuf, false);
     auto octalStr = std::string(reinterpret_cast<const char *>(octalBufAndLen.buffer), octalBufAndLen.length);
     
     auto it = ToSpecialMap.find(octalStr);
@@ -827,10 +857,15 @@ WLCharacter CharacterDecoder::handleOctal(SourceCharacter firstDigit, NextCharac
 //
 WLCharacter CharacterDecoder::handle6Hex(NextCharacterPolicy policy) {
     
-    auto firstHex = TheByteBuffer->buffer;
-    auto barBuf = firstHex - 1;
+    auto firstHexBuf = TheByteBuffer->buffer;
+    auto firstHexLoc = TheByteDecoder->SrcLoc;
     
-    auto hexStartBuf = firstHex;
+    auto barBuf = firstHexBuf - 1;
+    auto barLoc = firstHexLoc - 1;
+    
+    assert(*barBuf == '|');
+    
+    auto hexStartBuf = firstHexBuf;
     
     for (auto i = 0; i < 6; i++) {
         
@@ -839,6 +874,7 @@ WLCharacter CharacterDecoder::handle6Hex(NextCharacterPolicy policy) {
         if (curSource.isHex()) {
             
             TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+            TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
             
         } else {
             
@@ -851,15 +887,14 @@ WLCharacter CharacterDecoder::handle6Hex(NextCharacterPolicy policy) {
 #if !NISSUES
             if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
                 
-                auto currentWLCharacterStart = barBuf - 1;
-                auto currentWLCharacterEnd = TheByteBuffer->buffer;
+                auto currentWLCharacterStartLoc = barLoc - 1;
                 
-                auto currentWLCharacterStartLoc = TheByteDecoder->convertBufferToStart(currentWLCharacterStart);
-                auto currentWLCharacterEndLoc = TheByteDecoder->convertBufferToEnd(currentWLCharacterEnd);
+                auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
+                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
                 
-                auto hexEnd = currentWLCharacterEnd;
+                auto hexEndBuf = currentWLCharacterEndBuf;
                 
-                auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEnd - hexStartBuf, false);
+                auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf, false);
                 auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.buffer), hexBufAndLen.length);
                 
                 if (curSource.isEndOfFile()) {
@@ -890,6 +925,7 @@ WLCharacter CharacterDecoder::handle6Hex(NextCharacterPolicy policy) {
 #endif // !NISSUES
 
             TheByteBuffer->buffer = barBuf;
+            TheByteDecoder->SrcLoc = barLoc;
             
             return WLCharacter('\\');
         }
@@ -899,11 +935,11 @@ WLCharacter CharacterDecoder::handle6Hex(NextCharacterPolicy policy) {
     // Success!
     //
     
-    auto currentWLCharacterEnd = TheByteBuffer->buffer;
+    auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
     
-    auto hexEnd = currentWLCharacterEnd;
+    auto hexEndBuf = currentWLCharacterEndBuf;
     
-    auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEnd - hexStartBuf, false);
+    auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf, false);
     auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.buffer), hexBufAndLen.length);
     
     auto it = ToSpecialMap.find(hexStr);
@@ -931,8 +967,9 @@ WLCharacter CharacterDecoder::handle6Hex(NextCharacterPolicy policy) {
 // NOTE: this middle layer would need to warn about unneeded line continuations.
 // e.g., with something like  { 123 \\\n }  then the line continuation is not needed
 //
-WLCharacter CharacterDecoder::handleLineContinuation(SourceCharacter firstChar, NextCharacterPolicy policy) {
+WLCharacter CharacterDecoder::handleLineContinuation(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer escapedBuf, SourceLocation escapedLoc, SourceCharacter firstChar, NextCharacterPolicy policy) {
     
+    assert(*currentWLCharacterStartBuf == '\\');
     assert(firstChar.isNewline());
     
     if ((policy & LC_IS_MEANINGFUL) != LC_IS_MEANINGFUL) {
@@ -951,27 +988,14 @@ WLCharacter CharacterDecoder::handleLineContinuation(SourceCharacter firstChar, 
         //
         if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
 
-            auto afterBuf = TheByteBuffer->buffer;
-
-            auto firstCharBuf = afterBuf - 1;
-            if (firstChar.to_point() == CODEPOINT_CRLF) {
-                firstCharBuf--;
-            }
-            auto currentWLCharacterStart = firstCharBuf - 1;
-
-            assert(*currentWLCharacterStart == '\\');
-
-            auto currentWLCharacterStartLoc = TheByteDecoder->convertBufferToStart(currentWLCharacterStart);
-            auto firstCharLoc = TheByteDecoder->convertBufferToEnd(firstCharBuf);
-
             //
             // Just remove the \, leave the \n
             //
 
             std::vector<CodeActionPtr> Actions;
-            Actions.push_back(CodeActionPtr(new DeleteTextCodeAction("Delete \\", Source(currentWLCharacterStartLoc, firstCharLoc))));
+            Actions.push_back(CodeActionPtr(new DeleteTextCodeAction("Delete \\", Source(currentWLCharacterStartLoc, escapedLoc))));
 
-            auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_UNEXPECTEDLINECONTINUATION, std::string("Unexpected line continuation."), FORMATISSUESEVERITY_FORMATTING, Source(currentWLCharacterStartLoc, firstCharLoc), 0.0, std::move(Actions)));
+            auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_UNEXPECTEDLINECONTINUATION, std::string("Unexpected line continuation."), FORMATISSUESEVERITY_FORMATTING, Source(currentWLCharacterStartLoc, escapedLoc), 0.0, std::move(Actions)));
 
             Issues.push_back(std::move(I));
         }
@@ -1014,6 +1038,7 @@ WLCharacter CharacterDecoder::handleLineContinuation(SourceCharacter firstChar, 
         }
         
         TheByteBuffer->buffer = lastBuf;
+        TheByteDecoder->SrcLoc = lastLoc;
         
         c = currentWLCharacter(policy);
         
@@ -1022,6 +1047,7 @@ WLCharacter CharacterDecoder::handleLineContinuation(SourceCharacter firstChar, 
             while (c.isSpace()) {
                 
                 TheByteBuffer->buffer = lastBuf;
+                TheByteDecoder->SrcLoc = lastLoc;
                 
                 c = currentWLCharacter(policy);
             }
@@ -1029,6 +1055,7 @@ WLCharacter CharacterDecoder::handleLineContinuation(SourceCharacter firstChar, 
     }
     
     TheByteBuffer->buffer = lastBuf;
+    TheByteDecoder->SrcLoc = lastLoc;
     
     return c;
 }
@@ -1047,6 +1074,7 @@ WLCharacter CharacterDecoder::handleBackSlash(NextCharacterPolicy policy) {
     if ((policy & ENABLE_UNLIKELY_ESCAPE_CHECKING) == ENABLE_UNLIKELY_ESCAPE_CHECKING) {
         
         auto resetBuf = TheByteBuffer->buffer;
+        auto resetLoc = TheByteDecoder->SrcLoc;
         
         auto test = TheByteDecoder->currentSourceCharacter(policy);
         
@@ -1060,6 +1088,7 @@ WLCharacter CharacterDecoder::handleBackSlash(NextCharacterPolicy policy) {
         }
         
         TheByteBuffer->buffer = resetBuf;
+        TheByteDecoder->SrcLoc = resetLoc;
     }
 #endif // !NISSUES
     
@@ -1069,7 +1098,7 @@ WLCharacter CharacterDecoder::handleBackSlash(NextCharacterPolicy policy) {
 //
 //
 //
-WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterStart, SourceCharacter curSource, NextCharacterPolicy policy) {
+WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, SourceCharacter curSource, NextCharacterPolicy policy) {
     
     //
     // Anything else
@@ -1084,10 +1113,7 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterSta
     
     if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
         
-        Buffer currentWLCharacterEnd = TheByteBuffer->buffer;
-        
-        auto currentWLCharacterStartLoc = TheByteDecoder->convertBufferToStart(currentWLCharacterStart);
-        auto currentWLCharacterEndLoc = TheByteDecoder->convertBufferToEnd(currentWLCharacterEnd);
+        auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
         
         if (curSource.isUpper() && curSource.isHex()) {
             
@@ -1148,9 +1174,11 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterSta
     // And has the nice benefit of the single \ still giving an error at top-level
     //
     
-    auto backSlashEndBuf = currentWLCharacterStart + 1;
+    auto backSlashEndBuf = currentWLCharacterStartBuf + 1;
+    auto backSlashEndLoc = currentWLCharacterStartLoc + 1;
     
     TheByteBuffer->buffer = backSlashEndBuf;
+    TheByteDecoder->SrcLoc = backSlashEndLoc;
     
     return WLCharacter('\\');
 }

@@ -44,7 +44,7 @@ Module[{targetDir, prog, compLib},
 
   prog = ExpressionLibraryProgram[];
 
-  Print["Exporting expr shared library"]
+  Print["Exporting expr shared library"];
 
   compLib = CompileToLibrary[prog, "LibraryName" -> "expr", "EntryFunctionName" -> "Main", "TargetDirectory" -> targetDir];
 

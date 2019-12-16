@@ -216,7 +216,7 @@ public:
     bool isEmpty() const override;
     
     Source getSource() const override {
-        return Tok.getSource();
+        return Tok.Src;
     }
 
     const Token getToken() const {

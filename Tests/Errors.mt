@@ -135,7 +135,7 @@ TestMatch[
 	ParseString["\\"]
 	,
 	StringNode[String, {
-		AbstractSyntaxErrorNode[AbstractSyntaxError`UnhandledCharacter, _, _] }, KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["TopLevel", _, _, _]}] ]
+		AbstractSyntaxErrorNode[AbstractSyntaxError`UnhandledCharacter, _, _] }, <||> ]
 	,
 	TestID->"Errors-20190203-M3A0S4"
 ]

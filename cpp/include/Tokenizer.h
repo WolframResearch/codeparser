@@ -34,61 +34,61 @@ class Tokenizer {
     std::vector<IssuePtr> Issues;
     
     
-    void backup(Buffer resetBuf, bool warn);
+    void backup(Buffer resetBuf, SourceLocation resetLoc, bool warn);
     
-    Token handleStrangeSpace(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleStrangeSpace(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
     
-    Token handleMBStrangeSpace(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
-    Token handleMBStrangeNewline(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleMBStrangeSpace(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleMBStrangeNewline(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
     
-    Token handleComment(Buffer tokenStartBuf, SourceCharacter firstChar, NextCharacterPolicy policy);
+    Token handleComment(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter firstChar, NextCharacterPolicy policy);
     
-    SourceCharacter handleFileOpsBrackets(Buffer tokenStartBuf, SourceCharacter firstChar, NextCharacterPolicy policy, int *handled);
-    Token handleString(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    SourceCharacter handleFileOpsBrackets(SourceLocation tokenStartLoc, SourceCharacter firstChar, NextCharacterPolicy policy, int *handled);
+    Token handleString(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
     
 #if STARTOFLINE
     Token handleString_stringifyLine(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
 #endif // STARTOFLINE
     
-    Token handleString_stringifySymbol(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
-    Token handleString_stringifyFile(Buffer tokenStartBuf, SourceCharacter firstChar, NextCharacterPolicy policy);
+    Token handleString_stringifySymbol(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleString_stringifyFile(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter firstChar, NextCharacterPolicy policy);
     
-    Token handleSymbol(Buffer symbolStartBuf, WLCharacter firstChar, NextCharacterPolicy policy, TokenizerContext Ctxt);
-    WLCharacter handleSymbolSegment(Buffer firstCharBuf, WLCharacter firstChar, NextCharacterPolicy policy, TokenizerContext Ctxt);
+    Token handleSymbol(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy, TokenizerContext Ctxt);
+    WLCharacter handleSymbolSegment(Buffer tokenStartBuf, SourceLocation firstCharLoc, WLCharacter firstChar, NextCharacterPolicy policy, TokenizerContext Ctxt);
     
-    Token handleNumber(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleNumber(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
     WLCharacter handleDigits(NextCharacterPolicy policy, WLCharacter firstChar, size_t *count);
     WLCharacter handleAlphaOrDigits(WLCharacter firstChar, size_t base, NextCharacterPolicy policy, int *handled);
-    WLCharacter handlePossibleFractionalPart(Buffer dotBuf, WLCharacter firstChar, int base, NextCharacterPolicy policy, int *handled);
-    WLCharacter handlePossibleFractionalPartPastDot(Buffer dotBuf, WLCharacter firstChar, int base, NextCharacterPolicy policy, int *handled);
+    WLCharacter handlePossibleFractionalPart(Buffer dotBuf, SourceLocation dotLoc, WLCharacter firstChar, int base, NextCharacterPolicy policy, int *handled);
+    WLCharacter handlePossibleFractionalPartPastDot(Buffer dotBuf, SourceLocation dotLoc, WLCharacter firstChar, int base, NextCharacterPolicy policy, int *handled);
     
-    Token handleColon(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
-    Token handleOpenParen(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
-    Token handleDot(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
-    Token handleEqual(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
-    Token handleUnder(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
-    Token handleLess(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
-    Token handleGreater(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
-    Token handleMinus(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
-    Token handleBar(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
-    Token handleSemi(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
-    Token handleBang(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
-    Token handleHash(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
-    Token handlePercent(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
-    Token handleAmp(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
-    Token handleSlash(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
-    Token handleAt(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
-    Token handlePlus(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
-    Token handleTilde(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
-    Token handleQuestion(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
-    Token handleStar(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
-    Token handleCaret(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleColon(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleOpenParen(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleDot(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleEqual(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleUnder(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleLess(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleGreater(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleMinus(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleBar(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleSemi(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleBang(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleHash(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handlePercent(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleAmp(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleSlash(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleAt(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handlePlus(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleTilde(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleQuestion(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleStar(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleCaret(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
     
-    Token handleMBPunctuation(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleMBPunctuation(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
     
-    Token handleMBLinearSyntax(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleMBLinearSyntax(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
     
-    Token handleUnhandledBackSlash(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
+    Token handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
     
     
     Source getTokenSource(SourceLocation tokStartLoc) const;

@@ -1,13 +1,99 @@
 
-#include "Symbol.h"
+#include "ByteDecoder.h"
 #include "ByteEncoder.h"
+#include "ByteBuffer.h"
+#include "Symbol.h"
 #include "Utils.h"
 #include "Source.h"
 #include "CodePoint.h"
 
 #include <cctype> // for isalnum, isxdigit, isupper, isdigit, isalpha, ispunct, iscntrl with GCC and MSVC
 #include <utility> // for swap
+#include <sstream>
 
+
+BufferAndLength::BufferAndLength() : buffer(), length(), error() {}
+
+BufferAndLength::BufferAndLength(Buffer buffer, size_t length, bool error) : buffer(buffer), length(length), error(error), _end(buffer + length) {}
+
+Buffer BufferAndLength::end() const {
+    return _end;
+}
+
+void BufferAndLength::printUTF8String(std::ostream& s) const {
+    s.write(reinterpret_cast<const char *>(buffer), length);
+}
+
+#if USE_MATHLINK
+void BufferAndLength::putUTF8String(MLINK mlp) const {
+    
+    if (!error) {
+        if (!MLPutUTF8String(mlp, buffer, static_cast<int>(length))) {
+            assert(false);
+        }
+        
+        return;
+    }
+    
+    //
+    // make new Buffer
+    //
+    
+    auto oldBuf = TheByteBuffer->buffer;
+    auto oldError = TheByteDecoder->getError();
+    
+    //
+    // This is an error path, so fine to use things like ostringstream
+    // that might be frowned upon in happier paths
+    //
+    std::ostringstream newStrStream;
+    
+    auto start = buffer;
+    auto end = start + length;
+    
+    NextCharacterPolicy policy = 0;
+    
+    TheByteBuffer->buffer = buffer;
+    while (true) {
+        
+        if (TheByteBuffer->buffer == end) {
+            break;
+        }
+        
+        auto c = TheByteDecoder->currentSourceCharacter(policy);
+        
+        newStrStream << c;
+        
+        TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+    }
+    
+    TheByteBuffer->buffer = oldBuf;
+    TheByteDecoder->setError(oldError);
+    
+    auto newStr = newStrStream.str();
+    
+    auto newB = reinterpret_cast<Buffer>(newStr.c_str());
+    
+    auto newLength = newStr.size();
+    
+    auto newBufAndLen = BufferAndLength(newB, newLength, false);
+    
+    newBufAndLen.putUTF8String(mlp);
+}
+#endif // USE_MATHLINK
+
+bool operator==(BufferAndLength a, BufferAndLength b) {
+    return a.buffer == b.buffer && a.length == b.length;
+}
+
+
+
+
+Issue::Issue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Con, std::vector<CodeActionPtr> Actions) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Con(Con), Actions(std::move(Actions)) {}
+
+Source Issue::getSource() const {
+    return Src;
+}
 
 void SyntaxIssue::print(std::ostream& s) const {
     
@@ -19,7 +105,7 @@ void SyntaxIssue::print(std::ostream& s) const {
     
     s << Sev.c_str() << ", ";
     
-    Src.print(s);
+    getSource().print(s);
     
     s << ", ";
     
@@ -34,6 +120,14 @@ void SyntaxIssue::print(std::ostream& s) const {
     s << "]";
 }
 
+
+
+CodeAction::CodeAction(std::string Label, Source Src) : Label(Label), Src(Src) {}
+
+Source CodeAction::getSource() const {
+    return Src;
+}
+
 void ReplaceTextCodeAction::print(std::ostream& s) const {
     
     s << SYMBOL_AST_LIBRARY_MAKEREPLACETEXTCODEACTION->name() << "[";
@@ -41,7 +135,7 @@ void ReplaceTextCodeAction::print(std::ostream& s) const {
     s << Label;
     s << ", ";
     
-    Src.print(s);
+    getSource().print(s);
     s << ", ";
     
     s << ReplacementText;
@@ -57,7 +151,7 @@ void InsertTextCodeAction::print(std::ostream& s) const {
     s << Label;
     s << ", ";
     
-    Src.print(s);
+    getSource().print(s);
     s << ", ";
     
     s << InsertionText;
@@ -73,7 +167,7 @@ void InsertTextAfterCodeAction::print(std::ostream& s) const {
     s << Label;
     s << ", ";
     
-    Src.print(s);
+    getSource().print(s);
     s << ", ";
     
     s << InsertionText;
@@ -89,7 +183,7 @@ void DeleteTextCodeAction::print(std::ostream& s) const {
     s << Label;
     s << ", ";
     
-    Src.print(s);
+    getSource().print(s);
     s << ", ";
     
     s << "]";
@@ -102,7 +196,7 @@ void DeleteTriviaCodeAction::print(std::ostream& s) const {
     s << Label;
     s << ", ";
     
-    Src.print(s);
+    getSource().print(s);
     s << ", ";
     
     s << "]";
@@ -118,7 +212,7 @@ void FormatIssue::print(std::ostream& s) const {
     
     s << Sev.c_str() << ", ";
     
-    Src.print(s);
+    getSource().print(s);
     
     s << ", ";
     
@@ -194,8 +288,12 @@ SourceLocation::SourceLocation() : Line(1), Column(1) {}
 
 SourceLocation::SourceLocation(size_t Line, size_t Column) : Line(Line), Column(Column) {}
 
-bool isContiguous(SourceLocation a, SourceLocation b) {
-    return a.Line == b.Line && a.Column + 1 == b.Column;
+SourceLocation SourceLocation::operator+(size_t inc) {
+    return SourceLocation(Line, Column + inc);
+}
+
+SourceLocation SourceLocation::operator-(size_t dec) {
+    return SourceLocation(Line, Column - dec);
 }
 
 bool operator==(SourceLocation a, SourceLocation b) {
@@ -254,13 +352,14 @@ bool operator==(Source a, Source b) {
     return a.Start == b.Start && a.End == b.End;
 }
 
-bool isContiguous(Source a, Source b) {
-    return isContiguous(a.End, b.Start);
-}
-
 void Source::print(std::ostream& s) const {
     Start.print(s);
     End.print(s);
+}
+
+size_t Source::size() const {
+    assert(Start.Line == End.Line);
+    return End.Column - Start.Column;
 }
 
 //

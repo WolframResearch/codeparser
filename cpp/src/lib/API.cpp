@@ -15,83 +15,8 @@
 #include <signal.h>
 #endif
 #include <vector>
-#include <sstream>
 
 bool validatePath(WolframLibraryData libData, const unsigned char *inStr, size_t len);
-
-BufferAndLength::BufferAndLength() : buffer(), length(), error() {}
-
-BufferAndLength::BufferAndLength(Buffer buffer, size_t length, bool error) : buffer(buffer), length(length), error(error), _end(buffer + length) {}
-
-Buffer BufferAndLength::end() const {
-    return _end;
-}
-
-void BufferAndLength::printUTF8String(std::ostream& s) const {
-    s.write(reinterpret_cast<const char *>(buffer), length);
-}
-
-#if USE_MATHLINK
-void BufferAndLength::putUTF8String(MLINK mlp) const {
-    
-    if (!error) {
-        if (!MLPutUTF8String(mlp, buffer, static_cast<int>(length))) {
-            assert(false);
-        }
-        
-        return;
-    }
-    
-    //
-    // make new Buffer
-    //
-    
-    auto oldBuf = TheByteBuffer->buffer;
-    auto oldError = TheByteDecoder->getError();
-    
-    //
-    // This is an error path, so fine to use things like ostringstream
-    // that might be frowned upon in happier paths
-    //
-    std::ostringstream newStrStream;
-
-    auto start = buffer;
-    auto end = start + length;
-
-    NextCharacterPolicy policy = 0;
-
-    TheByteBuffer->buffer = buffer;
-    while (true) {
-
-        if (TheByteBuffer->buffer == end) {
-            break;
-        }
-
-        auto c = TheByteDecoder->currentSourceCharacter(policy);
-
-        newStrStream << c;
-
-        TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-    }
-
-    TheByteBuffer->buffer = oldBuf;
-    TheByteDecoder->setError(oldError);
-    
-    auto newStr = newStrStream.str();
-
-    auto newB = reinterpret_cast<Buffer>(newStr.c_str());
-
-    auto newLength = newStr.size();
-    
-    auto newBufAndLen = BufferAndLength(newB, newLength, false);
-    
-    newBufAndLen.putUTF8String(mlp);
-}
-#endif // USE_MATHLINK
-
-bool operator==(BufferAndLength a, BufferAndLength b) {
-    return a.buffer == b.buffer && a.length == b.length;
-}
 
 
 ParserSession::ParserSession() {
@@ -171,11 +96,11 @@ Node *ParserSession::parseExpressions() {
             
             auto peek = TheParser->currentToken();
             
-            if (peek.getTokenEnum() == TOKEN_ENDOFFILE) {
+            if (peek.Tok == TOKEN_ENDOFFILE) {
                 break;
             }
             
-            if (peek.getTokenEnum().isTrivia()) {
+            if (peek.Tok.isTrivia()) {
                 
                 exprs.push_back(LeafNodePtr(new LeafNode(std::move(peek))));
                 
@@ -184,7 +109,7 @@ Node *ParserSession::parseExpressions() {
                 continue;
             }
             
-            if (!peek.getTokenEnum().isPossibleBeginningOfExpression()) {
+            if (!peek.Tok.isPossibleBeginningOfExpression()) {
                 
                 auto NotPossible = TheParser->handleNotPossible(peek, peek, Ctxt, nullptr);
                 
@@ -256,7 +181,7 @@ Node *ParserSession::tokenize() {
         
         auto Tok = TheTokenizer->currentToken(TOPLEVEL);
         
-        if (Tok.getTokenEnum() == TOKEN_ENDOFFILE) {
+        if (Tok.Tok == TOKEN_ENDOFFILE) {
             break;
         }
         
@@ -418,8 +343,9 @@ bool ParserSession::isAbort() const {
 NodePtr ParserSession::handleAbort() const {
     
     auto buf = TheByteBuffer->buffer;
+    auto loc = TheByteDecoder->SrcLoc;
     
-    auto A = Token(TOKEN_ERROR_ABORTED, BufferAndLength(buf, 0, false));
+    auto A = Token(TOKEN_ERROR_ABORTED, BufferAndLength(buf), Source(loc));
     
     auto Aborted = NodePtr(new LeafNode(A));
     

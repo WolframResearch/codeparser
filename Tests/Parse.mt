@@ -2161,10 +2161,7 @@ Test[
 			AbstractSyntaxErrorNode[AbstractSyntaxError`EmptyString, {
 				LeafNode[Token`Error`EmptyString, "", <|Source -> {{1, 4}, {1, 4}}|>]}, <|Source -> {{1, 4}, {1, 4}}|>]},
 			<|Source -> {{1, 1}, {1, 4}}|>]},
-		<|AbstractSyntaxIssues -> {
-			SyntaxIssue["TopLevel", "Unexpected expression at top-level.", "Warning", <|
-				Source -> {{1, 1}, {1, 4}}, 
-				ConfidenceLevel -> 0.75|>]}|>]
+		<||>]
 	,
 	TestID->"Parse-20191213-P6S5K2"
 ]

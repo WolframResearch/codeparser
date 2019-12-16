@@ -40,8 +40,6 @@ public:
     void nextByte();
     
     unsigned char nextByte0();
-    
-    bool eof() const;
 };
 
 extern ByteBufferPtr TheByteBuffer;

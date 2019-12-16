@@ -608,7 +608,6 @@ symbolCPPHeader = {
 
 #pragma once
 
-#include \"API.h\"
 #include \"TokenEnum.h\"
 
 #if USE_MATHLINK
@@ -619,20 +618,7 @@ symbolCPPHeader = {
 #include <string>
 #include <memory>
 
-//
-// CMake defines ast_lib_EXPORTS
-//
-#ifdef _WIN32
-# ifdef ast_lib_EXPORTS
-#   define ASTLIB_EXPORTED  __declspec( dllexport )
-# else
-#   define ASTLIB_EXPORTED  __declspec( dllimport )
-# endif
-#else
-# define ASTLIB_EXPORTED
-#endif
-
-class ASTLIB_EXPORTED Symbol {
+class Symbol {
 public:
   constexpr Symbol(const char *Name) : Name(Name) {}
   const char *name() const;
@@ -661,7 +647,7 @@ TokenEnum GroupCloserToOpener(TokenEnum T);
 SymbolPtr& TokenToSymbol(TokenEnum T);
 
 "} ~Join~
-(Row[{"ASTLIB_EXPORTED", " ", "extern", " ", "SymbolPtr", " ", toGlobal["Symbol`"<>ToString[#]], ";"}]& /@ symbols) ~Join~
+(Row[{"extern", " ", "SymbolPtr", " ", toGlobal["Symbol`"<>ToString[#]], ";"}]& /@ symbols) ~Join~
 {""}
 
 Print["exporting Symbol.h"]

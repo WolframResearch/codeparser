@@ -769,35 +769,35 @@ const ContextSensitiveInfixParseletPtr& Parser::findContextSensitiveInfixParsele
 
 Precedence Parser::getTokenPrecedence(Token& TokIn, ParserContext Ctxt, bool considerPrefix, bool *implicitTimes) const {
     
-    assert(TokIn.getTokenEnum() != TOKEN_UNKNOWN);
-    assert(TokIn.getTokenEnum() != TOKEN_WHITESPACE);
+    assert(TokIn.Tok != TOKEN_UNKNOWN);
+    assert(TokIn.Tok != TOKEN_WHITESPACE);
     // allow top-level newlines
-    assert(TokIn.getTokenEnum() != TOKEN_NEWLINE || Ctxt.getGroupDepth() == 0);
-    assert(TokIn.getTokenEnum() != TOKEN_COMMENT);
-    assert(TokIn.getTokenEnum() != TOKEN_LINECONTINUATION);
+    assert(TokIn.Tok != TOKEN_NEWLINE || Ctxt.getGroupDepth() == 0);
+    assert(TokIn.Tok != TOKEN_COMMENT);
+    assert(TokIn.Tok != TOKEN_LINECONTINUATION);
     
     if (implicitTimes != nullptr) {
         *implicitTimes = false;
     }
     
-    if (TokIn.getTokenEnum().isError()) {
+    if (TokIn.Tok.isError()) {
         return PRECEDENCE_LOWEST;
     }
     
-    if (TokIn.getTokenEnum() == TOKEN_ENDOFFILE) {
+    if (TokIn.Tok == TOKEN_ENDOFFILE) {
         return PRECEDENCE_LOWEST;
     }
     
     //
     // TODO: review when closers have their own parselets
     //
-    if (TokIn.getTokenEnum().isCloser()) {
+    if (TokIn.Tok.isCloser()) {
         return PRECEDENCE_LOWEST;
     }
     
     if (considerPrefix) {
         
-        auto& P = prefixParselets[TokIn.getTokenEnum().value()];
+        auto& P = prefixParselets[TokIn.Tok.value()];
         
         if (P != nullptr) {
             
@@ -819,14 +819,14 @@ Precedence Parser::getTokenPrecedence(Token& TokIn, ParserContext Ctxt, bool con
         }
     }
     
-    auto& Infix = infixParselets[TokIn.getTokenEnum().value()];
+    auto& Infix = infixParselets[TokIn.Tok.value()];
     
     if (Infix != nullptr) {
         
         return Infix->getPrecedence();
     }
     
-    if (TokIn.getTokenEnum() == TOKEN_LONGNAME_DIFFERENTIALD) {
+    if (TokIn.Tok == TOKEN_LONGNAME_DIFFERENTIALD) {
         
         if ((Ctxt.Flag & PARSER_INTEGRAL) == PARSER_INTEGRAL) {
             
@@ -845,7 +845,7 @@ Precedence Parser::getTokenPrecedence(Token& TokIn, ParserContext Ctxt, bool con
     //
     // Do not do Implicit Times across lines
     //
-    if (TokIn.getTokenEnum() == TOKEN_NEWLINE && Ctxt.getGroupDepth() == 0) {
+    if (TokIn.Tok == TOKEN_NEWLINE && Ctxt.getGroupDepth() == 0) {
         return PRECEDENCE_LOWEST;
     }
     
@@ -869,16 +869,16 @@ NodePtr Parser::parse(Token firstTok, ParserContext CtxtIn) {
     
     auto token = firstTok;
     
-    assert(token.getTokenEnum() != TOKEN_UNKNOWN);
-    assert(!token.getTokenEnum().isTrivia() && "Must handle at the call site");
-    assert(token.getTokenEnum() != TOKEN_ENDOFFILE && "Must handle at the call site");
-    assert(token.getTokenEnum().isPossibleBeginningOfExpression() && "Must handle at the call site");
+    assert(token.Tok != TOKEN_UNKNOWN);
+    assert(!token.Tok.isTrivia() && "Must handle at the call site");
+    assert(token.Tok != TOKEN_ENDOFFILE && "Must handle at the call site");
+    assert(token.Tok.isPossibleBeginningOfExpression() && "Must handle at the call site");
     
     //
     // Prefix start
     //
     
-    auto& P = findPrefixParselet(token.getTokenEnum());
+    auto& P = findPrefixParselet(token.Tok);
     
     auto Left = P->parse(token, Ctxt);
     
@@ -906,7 +906,7 @@ NodePtr Parser::parse(Token firstTok, ParserContext CtxtIn) {
         
         if (implicitTimes) {
             
-            token = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(token.bufferAndLength.buffer, 0, false));
+            token = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(token.BufLen.buffer), Source(token.Src.Start));
             
             tokenQueue.insert(tokenQueue.begin(), token);
         }
@@ -929,7 +929,7 @@ NodePtr Parser::parse(Token firstTok, ParserContext CtxtIn) {
         Ctxt.Prec = TokenPrecedence;
         Ctxt.Assoc = ASSOCIATIVITY_NONE;
     
-        auto& I = findInfixParselet(token.getTokenEnum());
+        auto& I = findInfixParselet(token.Tok);
     
         Left = I->parse(std::move(LeftSeq), Ctxt);
         
@@ -949,7 +949,7 @@ NodePtr Parser::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserCon
     //
     //
 
-    if (tokenBad.getTokenEnum().isPossibleBeginningOfExpression()) {
+    if (tokenBad.Tok.isPossibleBeginningOfExpression()) {
 
         auto operand = parse(tokenBad, CtxtIn);
 
@@ -962,7 +962,7 @@ NodePtr Parser::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserCon
     
     
     
-    auto& I = infixParselets[tokenBad.getTokenEnum().value()];
+    auto& I = infixParselets[tokenBad.Tok.value()];
     if (I != nullptr) {
         
         //
@@ -977,7 +977,7 @@ NodePtr Parser::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserCon
         // Also, invent Source
         //
         
-        auto NotPossible = NodePtr(new LeafNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.bufferAndLength.buffer, 0, false))));
+        auto NotPossible = NodePtr(new LeafNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.BufLen.buffer), Source(tokenAnchor.Src.Start))));
         
         NodeSeq LeftSeq;
         LeftSeq.reserve(1);
@@ -996,7 +996,7 @@ NodePtr Parser::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserCon
         return I->parse(std::move(LeftSeq), Ctxt);
     }
     
-    if (tokenBad.getTokenEnum() == CtxtIn.Closer) {
+    if (tokenBad.Tok == CtxtIn.Closer) {
         //
         // Handle the special cases of:
         // { + }
@@ -1009,7 +1009,7 @@ NodePtr Parser::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserCon
         // Do not take next token
         //
         
-        auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.bufferAndLength.end(), 0, false));
+        auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.BufLen.end()), Source(tokenAnchor.Src.End));
 
         if (wasCloser != nullptr) {
             *wasCloser = true;
@@ -1018,7 +1018,7 @@ NodePtr Parser::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserCon
         return NodePtr(new LeafNode(createdToken));
     }
     
-    if (tokenBad.getTokenEnum().isCloser()) {
+    if (tokenBad.Tok.isCloser()) {
         //
         // Handle  { a ) }
         // which ends up being  MissingCloser[ { a ]  EXPECTEOPERAND
@@ -1039,9 +1039,9 @@ NodePtr Parser::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserCon
         return Error;
     }
     
-    if (tokenBad.getTokenEnum() == TOKEN_ENDOFFILE) {
+    if (tokenBad.Tok == TOKEN_ENDOFFILE) {
         
-        auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.bufferAndLength.end(), 0, false));
+        auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.BufLen.end()), Source(tokenAnchor.Src.End));
         
         if (wasCloser != nullptr) {
             *wasCloser = true;
@@ -1050,7 +1050,7 @@ NodePtr Parser::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserCon
         return NodePtr(new LeafNode(createdToken));
     }
     
-    assert(tokenBad.getTokenEnum().isError());
+    assert(tokenBad.Tok.isError());
         
     nextToken();
     
@@ -1069,7 +1069,7 @@ Token Parser::eatAll(ParserContext Ctxt, LeafSeq& Args) {
     
     auto T = currentToken();
     
-    while (T.getTokenEnum().isTrivia()) {
+    while (T.Tok.isTrivia()) {
         
         //
         // No need to check isAbort() inside tokenizer loops
@@ -1089,7 +1089,7 @@ Token Parser::eatAll_stringifyFile(ParserContext Ctxt, LeafSeq& Args) {
     
     auto T = currentToken_stringifyFile();
     
-    while (T.getTokenEnum().isTrivia()) {
+    while (T.Tok.isTrivia()) {
         
         //
         // No need to check isAbort() inside tokenizer loops
@@ -1115,7 +1115,7 @@ Token Parser::eatAndPreserveToplevelNewlines(ParserContext Ctxt, LeafSeq& Args) 
         // No need to check isAbort() inside tokenizer loops
         //
         
-        switch (T.getTokenEnum().value()) {
+        switch (T.Tok.value()) {
             case TOKEN_NEWLINE.value(): {
                 
                 if (Ctxt.getGroupDepth() == 0) {
@@ -1153,7 +1153,7 @@ Token Parser::eatAndPreserveToplevelNewlines_stringifyFile(ParserContext Ctxt, L
         // No need to check isAbort() inside tokenizer loops
         //
         
-        switch (T.getTokenEnum().value()) {
+        switch (T.Tok.value()) {
             case TOKEN_NEWLINE.value(): {
                 
                 if (Ctxt.getGroupDepth() == 0) {

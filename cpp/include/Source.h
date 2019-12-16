@@ -19,8 +19,34 @@
 class Issue;
 class CodeAction;
 
+using Buffer = const unsigned char *;
+using MBuffer = unsigned char *;
 using IssuePtr = std::unique_ptr<Issue>;
 using CodeActionPtr = std::unique_ptr<CodeAction>;
+
+
+struct BufferAndLength {
+    
+    Buffer buffer;
+    size_t length;
+    bool error;
+    Buffer _end;
+    
+    BufferAndLength();
+    BufferAndLength(Buffer buffer, size_t length = 0, bool error = false);
+    
+    Buffer end() const;
+    
+    void printUTF8String(std::ostream& s) const;
+    
+#if USE_MATHLINK
+    void putUTF8String(MLINK ) const;
+#endif // USE_MATHLINK
+    
+};
+
+bool operator==(BufferAndLength a, BufferAndLength b);
+
 
 
 enum NextCharacterPolicyBits : uint8_t {
@@ -85,6 +111,15 @@ enum NextCharacterPolicyBits : uint8_t {
 using NextCharacterPolicy = uint8_t;
 
 const NextCharacterPolicy TOPLEVEL = ENABLE_BYTE_DECODING_ISSUES | ENABLE_CHARACTER_DECODING_ISSUES | ENABLE_STRANGE_CHARACTER_CHECKING;
+
+const NextCharacterPolicy INSIDE_SYMBOL = ENABLE_BYTE_DECODING_ISSUES | ENABLE_CHARACTER_DECODING_ISSUES | LC_IS_MEANINGFUL | ENABLE_STRANGE_CHARACTER_CHECKING;
+
+#if STARTOFLINE
+const NextCharacterPolicy INSIDE_STRINGIFY_LINE = ENABLE_BYTE_DECODING_ISSUES | ENABLE_CHARACTER_DECODING_ISSUES | ENABLE_STRANGE_CHARACTER_CHECKING;
+#endif // STARTOFLINE
+const NextCharacterPolicy INSIDE_STRINGIFY_SYMBOL = ENABLE_BYTE_DECODING_ISSUES | PRESERVE_WS_AFTER_LC | ENABLE_CHARACTER_DECODING_ISSUES | ENABLE_STRANGE_CHARACTER_CHECKING;
+const NextCharacterPolicy INSIDE_STRINGIFY_FILE = ENABLE_BYTE_DECODING_ISSUES | ENABLE_STRANGE_CHARACTER_CHECKING;
+
 
 //
 // Use this to disable checks
@@ -282,6 +317,9 @@ struct SourceLocation {
     
     SourceLocation(size_t Line, size_t Column);
     
+    SourceLocation operator+(size_t inc);
+    SourceLocation operator-(size_t dec);
+    
 #if USE_MATHLINK
     void put(MLINK mlp) const;
 #endif // USE_MATHLINK
@@ -292,8 +330,6 @@ struct SourceLocation {
 bool operator==(SourceLocation a, SourceLocation b);
 
 bool operator<=(SourceLocation a, SourceLocation b);
-
-bool isContiguous(SourceLocation a, SourceLocation b);
 
 //
 // For googletest
@@ -322,11 +358,11 @@ struct Source {
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const;
+    
+    size_t size() const;
 };
 
 bool operator==(Source a, Source b);
-
-bool isContiguous(Source a, Source b);
 
 //
 // For googletest
@@ -339,6 +375,17 @@ void PrintTo(const Source&, std::ostream*);
 class Issue {
 public:
 
+    const SyntaxIssueTag Tag;
+    const std::string Msg;
+    const SyntaxIssueSeverity Sev;
+    const Source Src;
+    const double Con;
+    const std::vector<CodeActionPtr> Actions;
+    
+    Issue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Con, std::vector<CodeActionPtr> Actions);
+    
+    Source getSource() const;
+    
 #if USE_MATHLINK
     virtual void put(MLINK mlp) const = 0;
 #endif // USE_MATHLINK
@@ -352,9 +399,12 @@ class CodeAction {
 protected:
     const std::string Label;
     Source Src;
+    
 public:
-    CodeAction(std::string Label, Source Src) : Label(Label), Src(Src) {}
+    CodeAction(std::string Label, Source Src);
 
+    Source getSource() const;
+    
 #if USE_MATHLINK
     virtual void put(MLINK mlp) const = 0;
 #endif // USE_MATHLINK
@@ -429,14 +479,7 @@ public:
 
 class SyntaxIssue : public Issue {
 public:
-    const SyntaxIssueTag Tag;
-    const std::string Msg;
-    const SyntaxIssueSeverity Sev;
-    const Source Src;
-    const double Con;
-    const std::vector<CodeActionPtr> Actions;
-    
-    SyntaxIssue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Con, std::vector<CodeActionPtr> Actions) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Con(Con), Actions(std::move(Actions)) {}
+    SyntaxIssue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Con, std::vector<CodeActionPtr> Actions) : Issue(Tag, Msg, Sev, Src, Con, std::move(Actions)) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
@@ -447,14 +490,7 @@ public:
 
 class FormatIssue : public Issue {
 public:
-    const FormatIssueTag Tag;
-    const std::string Msg;
-    const FormatIssueSeverity Sev;
-    const Source Src;
-    const double Con;
-    const std::vector<CodeActionPtr> Actions;
-    
-    FormatIssue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Con, std::vector<CodeActionPtr> Actions) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Con(Con), Actions(std::move(Actions)) {}
+    FormatIssue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Con, std::vector<CodeActionPtr> Actions) : Issue(Tag, Msg, Sev, Src, Con, std::move(Actions)) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;

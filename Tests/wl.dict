@@ -112,3 +112,10 @@ token_linecontinuation_lf="\\\x0D"
 token_linecontinuation_crlf="\\\x0A\x0D"
 token_linecontinuation_cr="=\\\x0A"
 
+token_leftpart="[["
+token_leftpart="]]"
+
+token_leftcomment="(*"
+token_rightcomment="*)"
+
+token_base="^^"
