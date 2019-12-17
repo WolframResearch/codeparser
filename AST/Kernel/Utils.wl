@@ -143,7 +143,7 @@ contiguousQ[srcs_List] := And @@ contiguousQ @@@ Partition[srcs, 2, 1]
 (*
 LineCol-style
 *)
-contiguousQ[{{_, _}, {line_, col1_}}, {{line_, col2_}, {_, _}}] := col1 + 1 == col2
+contiguousQ[{{_, _}, {line_, col1_}}, {{line_, col2_}, {_, _}}] := col1 == col2
 
 (*
 Position-style
