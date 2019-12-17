@@ -25,7 +25,7 @@ ConcreteParseBox[box_] :=
 
 
 Options[parseBox] = {
-    "StringifyMode" -> 0
+  "StringifyMode" -> 0
 }
 
 
@@ -35,7 +35,7 @@ Module[{handledChildren, aggregatedChildren},
 
   handledChildren = children;
 
-	handledChildren = MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ #2]&, handledChildren];
+  handledChildren = MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ #2]&, handledChildren];
   
   aggregatedChildren = DeleteCases[handledChildren, LeafNode[Token`Newline | Token`WhiteSpace, _, _] | GroupNode[Comment, _, _]];
   
@@ -391,9 +391,11 @@ Module[{handledChildren, aggregatedChildren},
     (*
     StartOfLine
     *)
+    (*
     {LeafNode[Token`Question, _, _], ___}, StartOfLineNode[Information, {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~ MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2+1), "StringifyMode" -> 1]&, children[[2;;-1]]], <|Source->Append[pos, 1]|>],
     {LeafNode[Token`QuestionQuestion, _, _], ___}, StartOfLineNode[Information, {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~ MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2+1), "StringifyMode" -> 1]&, children[[2;;-1]]], <|Source->Append[pos, 1]|>],
-    
+    *)
+
     (*
     Postfix
     *)
@@ -429,7 +431,18 @@ Module[{handledChildren, aggregatedChildren},
         BinaryNode[_, _, _] | CallNode[_, _, _] | GroupNode[_, _, _] | BoxNode[_, _, _] | InfixNode[_, _, _] |
         PostfixNode[_, _, _] | PatternBlankNode[_, _, _], ___},
 
-        InfixNode[Times, Flatten[{First[handledChildren]} ~Join~ Map[If[MatchQ[#, LeafNode[Token`WhiteSpace | Token`Newline | Token`Comment | Token`LineContinuation, _, _]], #, {LeafNode[Token`Fake`ImplicitTimes, "", <||>], #}]&, Rest[handledChildren]]], <|Source->Append[pos, 1]|>],
+        InfixNode[Times,
+          Flatten[{First[handledChildren]} ~Join~
+            Map[If[
+              MatchQ[#, LeafNode[Token`WhiteSpace | Token`Newline | Token`Comment | Token`LineContinuation, _, _]],
+                #,
+                (*
+                 Give ImplicitTimes the same Source as RHS
+                *)
+                {LeafNode[Token`Fake`ImplicitTimes, "", <|Source->#[[3, Key[Source] ]]|>], #}]&, Rest[handledChildren]
+            ]
+          ],
+          <|Source -> Append[pos, 1]|>],
 
     (*
     if there is an error, then just return the last non-trivia node
@@ -437,7 +450,7 @@ Module[{handledChildren, aggregatedChildren},
     {_, LeafNode[Token`Error`UnhandledCharacter, _, _], ___},
         aggregatedChildren[[-1]],
     _,
-    Failure["InternalUnhandled", <|"Function"->parseBox, "Arguments"->HoldForm[RowBox[children]]|>]
+    Failure["InternalUnhandled", <|"Function" -> parseBox, "Arguments"->HoldForm[RowBox[children]]|>]
     ]
    ]]
 
