@@ -3,6 +3,8 @@
 
 #include "TokenEnum.h"
 
+#include <cstdio> // for EOF
+
 constexpr int CODEPOINT_BEL(0x07);
 constexpr int CODEPOINT_ESC(0x1b);
 constexpr int CODEPOINT_DEL(0x7f);
