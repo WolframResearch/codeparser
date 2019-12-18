@@ -197,10 +197,10 @@ public:
     
     ~Parser();
 
-    Token eatAll(ParserContext Ctxt, LeafSeq&);
-    Token eatAll_stringifyFile(ParserContext Ctxt, LeafSeq&);
-    Token eatAndPreserveToplevelNewlines(ParserContext Ctxt, LeafSeq&);
-    Token eatAndPreserveToplevelNewlines_stringifyFile(ParserContext Ctxt, LeafSeq&);
+    Token eatAll(Token firstTok, ParserContext Ctxt, LeafSeq&);
+    Token eatAll_stringifyFile(Token firstTok, ParserContext Ctxt, LeafSeq&);
+    Token eatAndPreserveToplevelNewlines(Token firstTok, ParserContext Ctxt, LeafSeq&);
+    Token eatAndPreserveToplevelNewlines_stringifyFile(Token firstTok, ParserContext Ctxt, LeafSeq&);
 };
 
 extern ParserPtr TheParser;

@@ -24,9 +24,9 @@ NodePtr LeafParselet::parse(Token firstTok, ParserContext Ctxt) const {
 //
 // Called from other parselets
 //
-NodePtr SymbolParselet::parseContextSensitive(ParserContext Ctxt) const {
+NodePtr SymbolParselet::parseContextSensitive(Token firstTok, ParserContext Ctxt) const {
     
-    auto TokIn = TheParser->currentToken();
+    auto TokIn = firstTok;
     
     TheParser->nextToken();
     
@@ -36,9 +36,7 @@ NodePtr SymbolParselet::parseContextSensitive(ParserContext Ctxt) const {
 //
 // something like  x  or x_
 //
-NodePtr SymbolParselet::parse(Token firstTok, ParserContext CtxtIn) const {
-    
-    auto TokIn = firstTok;
+NodePtr SymbolParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     
     auto Sym = NodePtr(new LeafNode(TokIn));
     
@@ -53,7 +51,7 @@ NodePtr SymbolParselet::parse(Token firstTok, ParserContext CtxtIn) const {
     switch (Tok.Tok.value()) {
         case TOKEN_UNDER.value(): {
             
-            auto& underParselet = TheParser->findContextSensitiveInfixParselet(Tok.Tok);
+            auto& underParselet = TheParser->getContextSensitiveUnderParselet();
             
             auto Ctxt = CtxtIn;
             Ctxt.UnderCount = UNDER_1;
@@ -62,11 +60,11 @@ NodePtr SymbolParselet::parse(Token firstTok, ParserContext CtxtIn) const {
             Args.reserve(1);
             Args.append(std::move(Sym));
             
-            return underParselet->parseContextSensitive(std::move(Args), Ctxt);
+            return underParselet->parseContextSensitive(std::move(Args), Tok, Ctxt);
         }
         case TOKEN_UNDERUNDER.value(): {
             
-            auto& underParselet = TheParser->findContextSensitiveInfixParselet(Tok.Tok);
+            auto& underParselet = TheParser->getContextSensitiveUnderParselet();
             
             auto Ctxt = CtxtIn;
             Ctxt.UnderCount = UNDER_2;
@@ -75,11 +73,11 @@ NodePtr SymbolParselet::parse(Token firstTok, ParserContext CtxtIn) const {
             Args.reserve(1);
             Args.append(std::move(Sym));
             
-            return underParselet->parseContextSensitive(std::move(Args), Ctxt);
+            return underParselet->parseContextSensitive(std::move(Args), Tok, Ctxt);
         }
         case TOKEN_UNDERUNDERUNDER.value(): {
             
-            auto& underParselet = TheParser->findContextSensitiveInfixParselet(Tok.Tok);
+            auto& underParselet = TheParser->getContextSensitiveUnderParselet();
             
             auto Ctxt = CtxtIn;
             Ctxt.UnderCount = UNDER_3;
@@ -88,7 +86,7 @@ NodePtr SymbolParselet::parse(Token firstTok, ParserContext CtxtIn) const {
             Args.reserve(1);
             Args.append(std::move(Sym));
             
-            return underParselet->parseContextSensitive(std::move(Args), Ctxt);
+            return underParselet->parseContextSensitive(std::move(Args), Tok, Ctxt);
         }
         case TOKEN_UNDERDOT.value(): {
             
@@ -105,7 +103,7 @@ NodePtr SymbolParselet::parse(Token firstTok, ParserContext CtxtIn) const {
     
     LeafSeq ArgsTest;
     
-    Tok = TheParser->eatAndPreserveToplevelNewlines(CtxtIn, ArgsTest);
+    Tok = TheParser->eatAndPreserveToplevelNewlines(Tok, CtxtIn, ArgsTest);
     
     //
     // when parsing a in a:b  then ColonFlag is false
@@ -129,7 +127,7 @@ NodePtr SymbolParselet::parse(Token firstTok, ParserContext CtxtIn) const {
             
             auto& colonParselet = TheParser->findInfixParselet(Tok.Tok);
             
-            return colonParselet->parse(std::move(Args), Ctxt);
+            return colonParselet->parse(std::move(Args), Tok, Ctxt);
         }
     }
     
@@ -139,9 +137,7 @@ NodePtr SymbolParselet::parse(Token firstTok, ParserContext CtxtIn) const {
 
 PrefixOperatorParselet::PrefixOperatorParselet(TokenEnum Tok, Precedence precedence) : precedence(precedence), Op(PrefixOperatorToSymbol(Tok)) {}
 
-NodePtr PrefixOperatorParselet::parse(Token firstTok, ParserContext CtxtIn) const {
-    
-    auto TokIn = firstTok;
+NodePtr PrefixOperatorParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
@@ -151,7 +147,8 @@ NodePtr PrefixOperatorParselet::parse(Token firstTok, ParserContext CtxtIn) cons
     
     LeafSeq ArgsTest;
     
-    auto Tok = TheParser->eatAll(Ctxt, ArgsTest);
+    auto Tok = TheParser->currentToken();
+    Tok = TheParser->eatAll(Tok, Ctxt, ArgsTest);
     
     auto wasCloser = false;
     
@@ -176,9 +173,7 @@ NodePtr PrefixOperatorParselet::parse(Token firstTok, ParserContext CtxtIn) cons
 
 BinaryOperatorParselet::BinaryOperatorParselet(TokenEnum Tok, Precedence precedence, Associativity assoc) : precedence(precedence), assoc(assoc), Op(BinaryOperatorToSymbol(Tok)) {}
 
-NodePtr BinaryOperatorParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
-    
-    auto TokIn = TheParser->currentToken();
+NodePtr BinaryOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
@@ -188,7 +183,8 @@ NodePtr BinaryOperatorParselet::parse(NodeSeq Left, ParserContext CtxtIn) const 
     
     LeafSeq ArgsTest;
     
-    auto Tok = TheParser->eatAll(Ctxt, ArgsTest);
+    auto Tok = TheParser->currentToken();
+    Tok = TheParser->eatAll(Tok, Ctxt, ArgsTest);
     
     auto wasCloser = false;
     
@@ -214,7 +210,7 @@ NodePtr BinaryOperatorParselet::parse(NodeSeq Left, ParserContext CtxtIn) const 
 
 InfixOperatorParselet::InfixOperatorParselet(TokenEnum Tok, Precedence precedence) : precedence(precedence), Op(InfixOperatorToSymbol(Tok)) {}
 
-NodePtr InfixOperatorParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
+NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
     NodeSeq Args;
     Args.reserve(1);
@@ -238,7 +234,8 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
         
         LeafSeq ArgsTest1;
         
-        auto Tok1 = TheParser->eatAndPreserveToplevelNewlines(CtxtIn, ArgsTest1);
+        auto Tok1 = TheParser->currentToken();
+        Tok1 = TheParser->eatAndPreserveToplevelNewlines(Tok1, CtxtIn, ArgsTest1);
         
         //
         // Cannot just compare tokens
@@ -253,7 +250,8 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
             
             LeafSeq ArgsTest2;
             
-            auto Tok2 = TheParser->eatAll(Ctxt, ArgsTest2);
+            auto Tok2 = TheParser->currentToken();
+            Tok2 = TheParser->eatAll(Tok2, Ctxt, ArgsTest2);
             
             auto wasCloser = false;
             
@@ -297,9 +295,9 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
 
 PostfixOperatorParselet::PostfixOperatorParselet(TokenEnum Tok, Precedence precedence) : precedence(precedence), Op(PostfixOperatorToSymbol(Tok)) {}
 
-NodePtr PostfixOperatorParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
+NodePtr PostfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
-    auto TokIn = TheParser->nextToken0();
+    TheParser->nextToken();
     
     NodeSeq Args;
     Args.reserve(1 + 1);
@@ -349,7 +347,8 @@ NodePtr GroupParselet::parse(Token firstTok, ParserContext CtxtIn) const {
         
         LeafSeq ArgsTest1;
         
-        auto Tok = TheParser->eatAll(Ctxt, ArgsTest1);
+        auto Tok = TheParser->currentToken();
+        Tok = TheParser->eatAll(Tok, Ctxt, ArgsTest1);
         
         if (Tok.Tok == Closer) {
             
@@ -433,7 +432,7 @@ NodePtr GroupParselet::parse(Token firstTok, ParserContext CtxtIn) const {
 
 CallParselet::CallParselet(PrefixParseletPtr GP) : GP(std::move(GP)) {}
 
-NodePtr CallParselet::parse(NodeSeq Head, ParserContext CtxtIn) const {
+NodePtr CallParselet::parse(NodeSeq Head, Token TokIn, ParserContext CtxtIn) const {
     
     //
     // if we used PRECEDENCE_CALL here, then e.g., a[]?b should technically parse as   a <call> []?b
@@ -443,9 +442,7 @@ NodePtr CallParselet::parse(NodeSeq Head, ParserContext CtxtIn) const {
     Ctxt.Prec = PRECEDENCE_HIGHEST;
     Ctxt.Assoc = ASSOCIATIVITY_NONE;
     
-    auto Tok = TheParser->currentToken();
-    
-    auto Right = GP->parse(Tok, Ctxt);
+    auto Right = GP->parse(TokIn, Ctxt);
     
     NodeSeq Args;
     Args.reserve(1);
@@ -520,9 +517,7 @@ NodePtr StartOfFileParselet::parse(ParserContext CtxtIn) const {
 //
 // Something like  _a
 //
-NodePtr UnderParselet::parse(Token firstTok, ParserContext CtxtIn) const {
-    
-    auto TokIn = firstTok;
+NodePtr UnderParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     
     auto Under = NodePtr(new LeafNode(TokIn));
     
@@ -535,9 +530,9 @@ NodePtr UnderParselet::parse(Token firstTok, ParserContext CtxtIn) const {
     NodePtr Blank;
     if (Tok.Tok == TOKEN_SYMBOL) {
         
-        auto& symbolParselet = TheParser->findContextSensitivePrefixParselet(Tok.Tok);
+        auto& symbolParselet = TheParser->getContextSensitiveSymbolParselet();
         
-        auto Sym2 = symbolParselet->parseContextSensitive(Ctxt);
+        auto Sym2 = symbolParselet->parseContextSensitive(Tok, Ctxt);
         
         NodeSeq Args;
         Args.reserve(1 + 1);
@@ -559,13 +554,15 @@ NodePtr UnderParselet::parse(Token firstTok, ParserContext CtxtIn) const {
                 break;
         }
         
+        Tok = TheParser->currentToken();
+        
     } else {
         Blank = std::move(Under);
     }
     
     LeafSeq ArgsTest;
     
-    Tok = TheParser->eatAndPreserveToplevelNewlines(CtxtIn, ArgsTest);
+    Tok = TheParser->eatAndPreserveToplevelNewlines(Tok, CtxtIn, ArgsTest);
     
     //
     // For something like _:""  when parsing _
@@ -581,14 +578,14 @@ NodePtr UnderParselet::parse(Token firstTok, ParserContext CtxtIn) const {
         
         if (Tok.Tok == TOKEN_COLON) {
             
-            auto& colonParselet = TheParser->findContextSensitiveInfixParselet(Tok.Tok);
+            auto& colonParselet = TheParser->getContextSensitiveColonParselet();
             
             NodeSeq BlankSeq;
             BlankSeq.reserve(1 + 1);
             BlankSeq.append(std::move(Blank));
             BlankSeq.appendIfNonEmpty(std::move(ArgsTest));
             
-            return colonParselet->parseContextSensitive(std::move(BlankSeq), Ctxt);
+            return colonParselet->parseContextSensitive(std::move(BlankSeq), Tok, Ctxt);
         }
     }
     
@@ -602,9 +599,7 @@ NodePtr UnderParselet::parse(Token firstTok, ParserContext CtxtIn) const {
 //
 // Called from other parselets
 //
-NodePtr UnderParselet::parseContextSensitive(NodeSeq Left, ParserContext CtxtIn) const {
-    
-    auto TokIn = TheParser->currentToken();
+NodePtr UnderParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
     NodeSeq Args;
     Args.reserve(1 + 1 + 1/*speculative for Right*/);
@@ -622,11 +617,13 @@ NodePtr UnderParselet::parseContextSensitive(NodeSeq Left, ParserContext CtxtIn)
     
     if (Tok.Tok == TOKEN_SYMBOL) {
         
-        auto& symbolParselet = TheParser->findContextSensitivePrefixParselet(Tok.Tok);
+        auto& symbolParselet = TheParser->getContextSensitiveSymbolParselet();
         
-        auto Right = symbolParselet->parseContextSensitive(Ctxt);
+        auto Right = symbolParselet->parseContextSensitive(Tok, Ctxt);
         
         Args.append(std::move(Right));
+        
+        Tok = TheParser->currentToken();
     }
     
     NodePtr Pat;
@@ -647,7 +644,7 @@ NodePtr UnderParselet::parseContextSensitive(NodeSeq Left, ParserContext CtxtIn)
     
     LeafSeq ArgsTest;
     
-    Tok = TheParser->eatAndPreserveToplevelNewlines(Ctxt, ArgsTest);
+    Tok = TheParser->eatAndPreserveToplevelNewlines(Tok, Ctxt, ArgsTest);
     
     //
     // For something like a:b_c:d when parsing _
@@ -657,14 +654,14 @@ NodePtr UnderParselet::parseContextSensitive(NodeSeq Left, ParserContext CtxtIn)
         
         if (Tok.Tok == TOKEN_COLON) {
             
-            auto& colonParselet = TheParser->findContextSensitiveInfixParselet(Tok.Tok);
+            auto& colonParselet = TheParser->getContextSensitiveColonParselet();
             
             NodeSeq PatSeq;
             PatSeq.reserve(1 + 1);
             PatSeq.append(std::move(Pat));
             PatSeq.appendIfNonEmpty(std::move(ArgsTest));
             
-            return colonParselet->parseContextSensitive(std::move(PatSeq), Ctxt);
+            return colonParselet->parseContextSensitive(std::move(PatSeq), Tok, Ctxt);
         }
     }
     
@@ -674,9 +671,9 @@ NodePtr UnderParselet::parseContextSensitive(NodeSeq Left, ParserContext CtxtIn)
 //
 // Something like  a ~f~ b
 //
-NodePtr TildeParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
+NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
-    auto FirstTilde = TheParser->currentToken();
+    auto FirstTilde = TokIn;
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
@@ -686,7 +683,8 @@ NodePtr TildeParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
     
     LeafSeq ArgsTest1;
     
-    auto FirstTok = TheParser->eatAll(Ctxt, ArgsTest1);
+    auto FirstTok = TheParser->currentToken();
+    FirstTok = TheParser->eatAll(FirstTok, Ctxt, ArgsTest1);
     
     if (!FirstTok.Tok.isPossibleBeginningOfExpression()) {
         
@@ -712,7 +710,8 @@ NodePtr TildeParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
     
     LeafSeq ArgsTest2;
     
-    auto Tok1 = TheParser->eatAll(Ctxt, ArgsTest2);
+    auto Tok1 = TheParser->currentToken();
+    Tok1 = TheParser->eatAll(Tok1, Ctxt, ArgsTest2);
     
     if (Tok1.Tok != TOKEN_TILDE) {
         
@@ -756,7 +755,8 @@ NodePtr TildeParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
     
     TheParser->nextToken();
     
-    auto Tok2 = TheParser->eatAll(Ctxt, ArgsTest3);
+    auto Tok2 = TheParser->currentToken();
+    Tok2 = TheParser->eatAll(Tok2, Ctxt, ArgsTest3);
     
     auto wasCloser = false;
     
@@ -789,11 +789,9 @@ NodePtr TildeParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
 // when parsing a in a:b  then ColonFlag is false
 // when parsing b in a:b  then ColonFlag is true
 //
-NodePtr ColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
+NodePtr ColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
     assert((CtxtIn.Flag & PARSER_COLON) != PARSER_COLON);
-    
-    auto TokIn = TheParser->currentToken();
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = PRECEDENCE_FAKE_PATTERNCOLON;
@@ -804,7 +802,8 @@ NodePtr ColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
     
     LeafSeq ArgsTest1;
     
-    auto Tok = TheParser->eatAll(Ctxt, ArgsTest1);
+    auto Tok = TheParser->currentToken();
+    Tok = TheParser->eatAll(Tok, Ctxt, ArgsTest1);
     
     auto wasCloser = false;
     
@@ -847,7 +846,8 @@ NodePtr ColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
     
     LeafSeq ArgsTest2;
     
-    Tok = TheParser->eatAndPreserveToplevelNewlines(CtxtIn, ArgsTest2);
+    Tok = TheParser->currentToken();
+    Tok = TheParser->eatAndPreserveToplevelNewlines(Tok, CtxtIn, ArgsTest2);
     
     if (Tok.Tok == TOKEN_COLON) {
         
@@ -858,7 +858,7 @@ NodePtr ColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
         PatSeq.append(std::move(Pat));
         PatSeq.appendIfNonEmpty(std::move(ArgsTest2));
         
-        return parseContextSensitive(std::move(PatSeq), Ctxt);
+        return parseContextSensitive(std::move(PatSeq), Tok, Ctxt);
     }
     
     return Pat;
@@ -869,15 +869,13 @@ NodePtr ColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
 //
 // Called from other parselets
 //
-NodePtr ColonParselet::parseContextSensitive(NodeSeq Left, ParserContext CtxtIn) const {
+NodePtr ColonParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
     //
     // when parsing a in a:b  then ColonFlag is false
     // when parsing b in a:b  then ColonFlag is true
     //
     assert((CtxtIn.Flag & PARSER_COLON) != PARSER_COLON);
-    
-    auto TokIn = TheParser->currentToken();
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = PRECEDENCE_FAKE_OPTIONALCOLON;
@@ -887,7 +885,8 @@ NodePtr ColonParselet::parseContextSensitive(NodeSeq Left, ParserContext CtxtIn)
     
     LeafSeq ArgsTest;
     
-    auto Tok = TheParser->eatAll(Ctxt, ArgsTest);
+    auto Tok = TheParser->currentToken();
+    Tok = TheParser->eatAll(Tok, Ctxt, ArgsTest);
     
     auto wasCloser = false;
     
@@ -918,9 +917,7 @@ NodePtr ColonParselet::parseContextSensitive(NodeSeq Left, ParserContext CtxtIn)
 //       ^~~ ArgsTest1
 //           ^~~ ArgsTest2
 //
-NodePtr SlashColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
-    
-    auto TokIn = TheParser->currentToken();
+NodePtr SlashColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
@@ -930,7 +927,8 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
     
     LeafSeq ArgsTest1;
     
-    auto Tok = TheParser->eatAll(Ctxt, ArgsTest1);
+    auto Tok = TheParser->currentToken();
+    Tok = TheParser->eatAll(Tok, Ctxt, ArgsTest1);
     
     if (!Tok.Tok.isPossibleBeginningOfExpression()) {
         
@@ -954,7 +952,8 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
     
     LeafSeq ArgsTest2;
     
-    Tok = TheParser->eatAll(Ctxt, ArgsTest2);
+    Tok = TheParser->currentToken();
+    Tok = TheParser->eatAll(Tok, Ctxt, ArgsTest2);
     
     if (Tok.Tok == TOKEN_EQUAL) {
         
@@ -970,7 +969,7 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
         
         auto& equalParselet = TheParser->findInfixParselet(Tok.Tok);
         
-        auto N = equalParselet->parse(std::move(Args), Ctxt);
+        auto N = equalParselet->parse(std::move(Args), Tok, Ctxt);
         
         return N;
         
@@ -983,7 +982,7 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
         
         auto& colonEqualParselet = TheParser->findInfixParselet(Tok.Tok);
         
-        auto N = colonEqualParselet->parse(std::move(Args2), Ctxt);
+        auto N = colonEqualParselet->parse(std::move(Args2), Tok, Ctxt);
         
         auto& C = N->getChildrenDestructive();
         
@@ -1003,9 +1002,9 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
         Args2.append(std::move(Middle));
         Args2.appendIfNonEmpty(std::move(ArgsTest2));
         
-        auto& equalParselet = TheParser->findInfixParselet(Tok.Tok);
+        auto& equalDotParselet = TheParser->findInfixParselet(Tok.Tok);
         
-        auto N = equalParselet->parse(std::move(Args2), Ctxt);
+        auto N = equalDotParselet->parse(std::move(Args2), Tok, Ctxt);
         
         auto& C = N->getChildrenDestructive();
         
@@ -1159,9 +1158,7 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext CtxtI
 //
 // a /: b = c  and  a /: b = .  are also handled here
 //
-NodePtr EqualParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
-    
-    auto TokIn = TheParser->currentToken();
+NodePtr EqualParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
@@ -1187,7 +1184,8 @@ NodePtr EqualParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
     
     LeafSeq ArgsTest;
     
-    auto Tok = TheParser->eatAll(Ctxt, ArgsTest);
+    auto Tok = TheParser->currentToken();
+    Tok = TheParser->eatAll(Tok, Ctxt, ArgsTest);
     
     if (Tok.Tok == TOKEN_DOT) {
         
@@ -1262,10 +1260,11 @@ NodePtr IntegralParselet::parse(Token firstTok, ParserContext CtxtIn) const {
     
     LeafSeq ArgsTest1;
     
-    auto Tok = TheParser->eatAll(Ctxt, ArgsTest1);
+    auto Tok = TheParser->currentToken();
+    Tok = TheParser->eatAll(Tok, Ctxt, ArgsTest1);
     
     if (!Tok.Tok.isPossibleBeginningOfExpression() ||
-        (TheParser->getTokenPrecedence(Tok, CtxtIn, true, nullptr) < PRECEDENCE_LONGNAME_INTEGRAL)) {
+        (TheParser->getTokenPrecedence(Tok, CtxtIn) < PRECEDENCE_LONGNAME_INTEGRAL)) {
         
         bool wasCloser;
         
@@ -1288,7 +1287,8 @@ NodePtr IntegralParselet::parse(Token firstTok, ParserContext CtxtIn) const {
     
     LeafSeq ArgsTest2;
     
-    Tok = TheParser->eatAll(Ctxt, ArgsTest2);
+    Tok = TheParser->currentToken();
+    Tok = TheParser->eatAll(Tok, Ctxt, ArgsTest2);
     
     if (Tok.Tok != TOKEN_LONGNAME_DIFFERENTIALD) {
         
@@ -1320,7 +1320,7 @@ NodePtr IntegralParselet::parse(Token firstTok, ParserContext CtxtIn) const {
 //
 // Gather all < > == <= => into a single node
 //
-NodePtr InequalityParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
+NodePtr InequalityParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
     NodeSeq Args;
     Args.reserve(1);
@@ -1344,7 +1344,8 @@ NodePtr InequalityParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
         
         LeafSeq ArgsTest1;
         
-        auto Tok1 = TheParser->eatAndPreserveToplevelNewlines(CtxtIn, ArgsTest1);
+        auto Tok1 = TheParser->currentToken();
+        Tok1 = TheParser->eatAndPreserveToplevelNewlines(Tok1, CtxtIn, ArgsTest1);
         
         if (Tok1.Tok.isInequalityOperator()) {
             
@@ -1352,7 +1353,8 @@ NodePtr InequalityParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
             
             LeafSeq ArgsTest2;
             
-            auto Tok2 = TheParser->eatAll(Ctxt, ArgsTest2);
+            auto Tok2 = TheParser->currentToken();
+            Tok2 = TheParser->eatAll(Tok2, Ctxt, ArgsTest2);
             
             auto wasCloser = false;
             
@@ -1397,7 +1399,7 @@ NodePtr InequalityParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
 //
 // Gather all \[VectorGreater] \[VectorLess] \[VectorGreaterEqual] \[VectorLessEqual] into a single node
 //
-NodePtr VectorInequalityParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
+NodePtr VectorInequalityParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
     NodeSeq Args;
     Args.reserve(1);
@@ -1425,7 +1427,8 @@ NodePtr VectorInequalityParselet::parse(NodeSeq Left, ParserContext CtxtIn) cons
         {
             LeafSeq ArgsTest1;
             
-            auto Tok1 = TheParser->eatAndPreserveToplevelNewlines(CtxtIn, ArgsTest1);
+            auto Tok1 = TheParser->currentToken();
+            Tok1 = TheParser->eatAndPreserveToplevelNewlines(Tok1, CtxtIn, ArgsTest1);
             
             if (Tok1.Tok.isVectorInequalityOperator()) {
                 
@@ -1433,7 +1436,8 @@ NodePtr VectorInequalityParselet::parse(NodeSeq Left, ParserContext CtxtIn) cons
                 
                 LeafSeq ArgsTest2;
                 
-                auto Tok2 = TheParser->eatAll(Ctxt, ArgsTest2);
+                auto Tok2 = TheParser->currentToken();
+                Tok2 = TheParser->eatAll(Tok2, Ctxt, ArgsTest2);
                 
                 auto wasCloser = false;
                 
@@ -1478,13 +1482,11 @@ NodePtr VectorInequalityParselet::parse(NodeSeq Left, ParserContext CtxtIn) cons
 
 InfixOperatorWithTrailingParselet::InfixOperatorWithTrailingParselet(TokenEnum Tok, Precedence precedence) : precedence(precedence), Op(InfixOperatorToSymbol(Tok)) {}
 
-NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
+NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
     NodeSeq Args;
     Args.reserve(1);
     Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
-    
-    auto TokIn = TheParser->currentToken();
     
     auto lastOperatorToken = TokIn;
     
@@ -1506,7 +1508,8 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, ParserContext Ctx
         
         LeafSeq ArgsTest1;
         
-        auto Tok1 = TheParser->eatAndPreserveToplevelNewlines(CtxtIn, ArgsTest1);
+        auto Tok1 = TheParser->currentToken();
+        Tok1 = TheParser->eatAndPreserveToplevelNewlines(Tok1, CtxtIn, ArgsTest1);
         
         //
         // Cannot just compare tokens
@@ -1531,7 +1534,8 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, ParserContext Ctx
             
             LeafSeq ArgsTest2;
             
-            auto Tok2 = TheParser->eatAndPreserveToplevelNewlines(Ctxt, ArgsTest2);
+            auto Tok2 = TheParser->currentToken();
+            Tok2 = TheParser->eatAndPreserveToplevelNewlines(Tok2, Ctxt, ArgsTest2);
             
             if (InfixOperatorToSymbol(Tok2.Tok) == Op) {
                 
@@ -1597,7 +1601,7 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, ParserContext Ctx
 //
 // a::b
 //
-NodePtr ColonColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
+NodePtr ColonColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
     NodeSeq Args;
     Args.reserve(1);
@@ -1624,7 +1628,8 @@ NodePtr ColonColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
         
         LeafSeq ArgsTest1;
         
-        auto Tok1 = TheParser->eatAndPreserveToplevelNewlines(CtxtIn, ArgsTest1);
+        auto Tok1 = TheParser->currentToken();
+        Tok1 = TheParser->eatAndPreserveToplevelNewlines(Tok1, CtxtIn, ArgsTest1);
         
         if (Tok1.Tok == TOKEN_COLONCOLON) {
             
@@ -1676,9 +1681,7 @@ NodePtr ColonColonParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
 //
 // a>>b
 //
-NodePtr GreaterGreaterParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
-    
-    auto TokIn = TheParser->currentToken();
+NodePtr GreaterGreaterParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = PRECEDENCE_GREATERGREATER;
@@ -1692,7 +1695,8 @@ NodePtr GreaterGreaterParselet::parse(NodeSeq Left, ParserContext CtxtIn) const 
     // Special tokenization, so must do parsing here
     //
     
-    auto Tok = TheParser->eatAll_stringifyFile(Ctxt, ArgsTest);
+    auto Tok = TheParser->currentToken_stringifyFile();
+    Tok = TheParser->eatAll_stringifyFile(Tok, Ctxt, ArgsTest);
     
     TheParser->nextToken_stringifyFile();
 
@@ -1712,9 +1716,7 @@ NodePtr GreaterGreaterParselet::parse(NodeSeq Left, ParserContext CtxtIn) const 
 //
 // a>>>b
 //
-NodePtr GreaterGreaterGreaterParselet::parse(NodeSeq Left, ParserContext CtxtIn) const {
-    
-    auto TokIn = TheParser->currentToken();
+NodePtr GreaterGreaterGreaterParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = PRECEDENCE_GREATERGREATERGREATER;
@@ -1728,7 +1730,8 @@ NodePtr GreaterGreaterGreaterParselet::parse(NodeSeq Left, ParserContext CtxtIn)
     // Special tokenization, so must do parsing here
     //
     
-    auto Tok = TheParser->eatAll_stringifyFile(Ctxt, ArgsTest);
+    auto Tok = TheParser->currentToken_stringifyFile();
+    Tok = TheParser->eatAll_stringifyFile(Tok, Ctxt, ArgsTest);
     
     TheParser->nextToken_stringifyFile();
     
@@ -1748,9 +1751,7 @@ NodePtr GreaterGreaterGreaterParselet::parse(NodeSeq Left, ParserContext CtxtIn)
 //
 // <<a
 //
-NodePtr LessLessParselet::parse(Token firstTok, ParserContext CtxtIn) const {
-    
-    auto TokIn = firstTok;
+NodePtr LessLessParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = PRECEDENCE_LESSLESS;
@@ -1764,7 +1765,8 @@ NodePtr LessLessParselet::parse(Token firstTok, ParserContext CtxtIn) const {
     // Special tokenization, so must do parsing here
     //
     
-    auto Tok = TheParser->eatAll_stringifyFile(Ctxt, ArgsTest);
+    auto Tok = TheParser->currentToken_stringifyFile();
+    Tok = TheParser->eatAll_stringifyFile(Tok, Ctxt, ArgsTest);
     
     TheParser->nextToken_stringifyFile();
     

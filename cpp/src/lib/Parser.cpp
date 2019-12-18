@@ -898,7 +898,8 @@ NodePtr Parser::parse(Token firstTok, ParserContext CtxtIn) {
         
         LeafSeq ArgsTest;
         
-        auto token = Parser::eatAndPreserveToplevelNewlines(Ctxt, ArgsTest);
+        auto token = currentToken();
+        token = Parser::eatAndPreserveToplevelNewlines(token, Ctxt, ArgsTest);
         
         bool implicitTimes;
         
@@ -931,7 +932,7 @@ NodePtr Parser::parse(Token firstTok, ParserContext CtxtIn) {
     
         auto& I = findInfixParselet(token.Tok);
     
-        Left = I->parse(std::move(LeftSeq), Ctxt);
+        Left = I->parse(std::move(LeftSeq), token, Ctxt);
         
     } // while
     
@@ -959,8 +960,6 @@ NodePtr Parser::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserCon
 
         return operand;
     }
-    
-    
     
     auto& I = infixParselets[tokenBad.Tok.value()];
     if (I != nullptr) {
@@ -993,7 +992,7 @@ NodePtr Parser::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserCon
             *wasCloser = false;
         }
         
-        return I->parse(std::move(LeftSeq), Ctxt);
+        return I->parse(std::move(LeftSeq), tokenBad, Ctxt);
     }
     
     if (tokenBad.Tok == CtxtIn.Closer) {
@@ -1065,9 +1064,7 @@ NodePtr Parser::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserCon
     return NodePtr(new LeafNode(tokenBad));
 }
 
-Token Parser::eatAll(ParserContext Ctxt, LeafSeq& Args) {
-    
-    auto T = currentToken();
+Token Parser::eatAll(Token T, ParserContext Ctxt, LeafSeq& Args) {
     
     while (T.Tok.isTrivia()) {
         
@@ -1085,9 +1082,7 @@ Token Parser::eatAll(ParserContext Ctxt, LeafSeq& Args) {
     return T;
 }
 
-Token Parser::eatAll_stringifyFile(ParserContext Ctxt, LeafSeq& Args) {
-    
-    auto T = currentToken_stringifyFile();
+Token Parser::eatAll_stringifyFile(Token T, ParserContext Ctxt, LeafSeq& Args) {
     
     while (T.Tok.isTrivia()) {
         
@@ -1105,9 +1100,7 @@ Token Parser::eatAll_stringifyFile(ParserContext Ctxt, LeafSeq& Args) {
     return T;
 }
 
-Token Parser::eatAndPreserveToplevelNewlines(ParserContext Ctxt, LeafSeq& Args) {
-    
-    auto T = currentToken();
+Token Parser::eatAndPreserveToplevelNewlines(Token T, ParserContext Ctxt, LeafSeq& Args) {
     
     while (true) {
         
@@ -1143,10 +1136,8 @@ Token Parser::eatAndPreserveToplevelNewlines(ParserContext Ctxt, LeafSeq& Args) 
     }
 }
 
-Token Parser::eatAndPreserveToplevelNewlines_stringifyFile(ParserContext Ctxt, LeafSeq& Args) {
+Token Parser::eatAndPreserveToplevelNewlines_stringifyFile(Token T, ParserContext Ctxt, LeafSeq& Args) {
     
-    auto T = currentToken_stringifyFile();
-        
     while (true) {
         
         //
