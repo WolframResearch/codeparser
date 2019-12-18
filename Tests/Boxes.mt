@@ -17,7 +17,7 @@ Test[
 	InfixNode[Times, {
 		LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
 		LeafNode[Token`WhiteSpace, " ", <|Source -> {1, 2}|>],
-		LeafNode[Token`Fake`ImplicitTimes, "", <||>],
+		LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> {1, 3}|>],
 		LeafNode[Symbol, "b", <|Source -> {1, 3}|>]}, <|Source -> {1}|>]
 	,
 	TestID->"Boxes-20191015-Q5H2Y6"
