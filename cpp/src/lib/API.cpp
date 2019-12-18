@@ -19,7 +19,11 @@
 bool validatePath(WolframLibraryData libData, const unsigned char *inStr, size_t len);
 
 
-ParserSession::ParserSession() : bufAndLen(), currentAbortQ(), policy() {
+ParserSession::ParserSession() : bufAndLen(),
+#if !NABORT
+currentAbortQ(),
+#endif // NABORT
+policy() {
     
     TheByteBuffer = ByteBufferPtr(new ByteBuffer());
     TheByteDecoder = ByteDecoderPtr(new ByteDecoder());

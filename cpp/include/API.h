@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "Node.h"
 #include "Source.h"
 
 //
@@ -33,11 +34,8 @@
 #include <memory> // for unique_ptr
 #include <functional> // for function with GCC and MSVC
 
-class Node;
 class ParserSession;
 
-// MSVC: error C2338: The C++ Standard forbids containers of const elements because allocator<const T> is ill-formed.
-using NodePtr = std::unique_ptr<Node>;
 using ParserSessionPtr = std::unique_ptr<ParserSession>;
 
 //
@@ -124,7 +122,7 @@ EXTERN_C DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK m
 
 class ScopedMLUTF8String {
     MLINK mlp;
-    const unsigned char *buf;
+    Buffer buf;
     int b;
     int c;
     

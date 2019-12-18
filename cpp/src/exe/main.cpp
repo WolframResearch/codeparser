@@ -8,6 +8,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <cstdio> // for rewind
 
 const int EXPRESSION = 0;
 const int TOKENIZE = 1;
@@ -74,6 +75,10 @@ int main(int argc, char *argv[]) {
         } else if (arg == "-n") {
             
             outputMode = NONE;
+            
+        } else if (arg == "-m") {
+            
+            outputMode = PUT;
             
         } else if (arg == "-sc") {
             
@@ -364,28 +369,36 @@ void readFile(std::string file, int mode, int outputMode) {
 }
 
 ScopedFileBuffer::ScopedFileBuffer(Buffer inStrIn, size_t inLen) : buf(), len(), inited(false) {
-
+    
     auto inStr = reinterpret_cast<const char *>(inStrIn);
-
+    
     FILE * file = fopen(inStr, "rb");
-
+    
     if (file == NULL) {
         return;
     }
-
-    fseek(file, 0, SEEK_END);
-
-    len = ftell(file);
-
-    fclose(file);
-
-    file = fopen(inStr, "rb");
-
+    
+    if (fseek(file, 0, SEEK_END)) {
+        return;
+    }
+    
+    auto res = ftell(file);
+    if (res < 0) {
+        return;
+    }
+    len = res;
+    
+    rewind(file);
+    
     buf = new unsigned char[len];
-
+    
     inited = true;
-
-    fread(buf, sizeof(unsigned char), len, file);
+    
+    auto r = fread(buf, sizeof(unsigned char), len, file);
+    if (r != len) {
+        inited = false;
+        delete[] buf;
+    }
     
     fclose(file);
 }
