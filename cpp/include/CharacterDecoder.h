@@ -27,17 +27,17 @@ class CharacterDecoder {
     WolframLibraryData libData;
     
     
-    WLCharacter handleLongName(NextCharacterPolicy policy);
-    WLCharacter handle2Hex(NextCharacterPolicy policy);
-    WLCharacter handle4Hex(NextCharacterPolicy policy);
-    WLCharacter handle6Hex(NextCharacterPolicy policy);
-    WLCharacter handleOctal(SourceCharacter firstDigit, NextCharacterPolicy policy);
+    WLCharacter handleLongName(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer openSquareBuf, SourceLocation openSquareLoc, NextCharacterPolicy policy);
+    WLCharacter handle2Hex(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer dotBuf, SourceLocation dotLoc, NextCharacterPolicy policy);
+    WLCharacter handle4Hex(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer colonBuf, SourceLocation colonLoc, NextCharacterPolicy policy);
+    WLCharacter handle6Hex(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer barBuf, SourceLocation barLoc, NextCharacterPolicy policy);
+    WLCharacter handleOctal(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer firstOctalBuf, SourceLocation firstOctalLoc, NextCharacterPolicy policy);
     
     WLCharacter handleLineContinuation(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer escapedBuf, SourceLocation escapedLoc, SourceCharacter firstChar, NextCharacterPolicy policy);
     
-    WLCharacter handleBackSlash(NextCharacterPolicy policy);
+    WLCharacter handleBackSlash(Buffer escapedBuf, SourceLocation escapedLoc, NextCharacterPolicy policy);
     
-    WLCharacter handleUnhandledEscape(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, SourceCharacter curSource, NextCharacterPolicy policy);
+    WLCharacter handleUnhandledEscape(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer unhandledBuf, SourceLocation unhandledLoc, SourceCharacter escapedChar, NextCharacterPolicy policy);
     
     std::string longNameSuggestion(BufferAndLength );
     
