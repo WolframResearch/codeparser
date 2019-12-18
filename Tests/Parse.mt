@@ -2168,4 +2168,12 @@ Test[
 
 
 
-
+Test[
+	"106`.7"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20191218-G5I8D3"
+]

@@ -1360,7 +1360,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
             accuracy = true;
         }
         
-        bool sawDot{};
+        bool sawDot = false;
         switch (c.to_point()) {
             case '-': case '+': {
                 
@@ -1519,6 +1519,14 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                         // Success!
                         //
                         return Token(TOKEN_REAL, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                        
+                    } else {
+                        
+                        //
+                        // digit
+                        //
+                        
+                        c = NextChar;
                     }
                     
                 } else {
@@ -1773,27 +1781,30 @@ inline WLCharacter Tokenizer::handlePossibleFractionalPartPastDot(Buffer dotBuf,
                 return c;
             case 0:
                 return c;
-        }
-    }
-    
+            default:
+                
 #if !NISSUES
-    if ((policy & ENABLE_STRANGE_CHARACTER_CHECKING) == ENABLE_STRANGE_CHARACTER_CHECKING) {
-        
-        if (c.to_point() == '.') {
-            
-            //
-            // Something like 1.2.3
-            //
-            
-            std::vector<CodeActionPtr> Actions;
-            Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert *", Source(dotLoc), "*")));
-            
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_IMPLICITTIMES, "Suspicious syntax.", SYNTAXISSUESEVERITY_ERROR, Source(dotLoc), 0.99, std::move(Actions)));
-            
-            Issues.push_back(std::move(I));
+                if ((policy & ENABLE_STRANGE_CHARACTER_CHECKING) == ENABLE_STRANGE_CHARACTER_CHECKING) {
+                    
+                    if (c.to_point() == '.') {
+                        
+                        //
+                        // Something like 1.2.3
+                        //
+                        
+                        std::vector<CodeActionPtr> Actions;
+                        Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert *", Source(dotLoc), "*")));
+                        
+                        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_IMPLICITTIMES, "Suspicious syntax.", SYNTAXISSUESEVERITY_ERROR, Source(dotLoc), 0.99, std::move(Actions)));
+                        
+                        Issues.push_back(std::move(I));
+                    }
+                }
+#endif // !NISSUES
+                
+                return c;
         }
     }
-#endif // !NISSUES
 
     *handled = 0;
     
