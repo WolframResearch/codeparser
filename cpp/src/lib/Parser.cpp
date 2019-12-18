@@ -10,7 +10,7 @@
 
 #include <algorithm> // for generate with GCC and MSVC
 
-Parser::Parser() : prefixParselets(), infixParselets(), contextSensitivePrefixParselets(), contextSensitiveInfixParselets(), tokenQueue(), Issues() {
+Parser::Parser() : prefixParselets(), infixParselets(), contextSensitiveSymbolParselet(ContextSensitivePrefixParseletPtr(new SymbolParselet())), contextSensitiveUnderParselet(ContextSensitiveInfixParseletPtr(new UnderParselet())), contextSensitiveColonParselet(ContextSensitiveInfixParseletPtr(new ColonParselet())), tokenQueue(), Issues() {
     
     //
     // Setup all of the parselet lists with nullptr unique_ptrs
@@ -26,12 +26,6 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitivePrefixPa
     std::generate(std::begin(startOfLineParselets), std::end(startOfLineParselets), []() {
         return StartOfLineParseletPtr(nullptr); });
 #endif // STARTOFLINE
-    
-    std::generate(std::begin(contextSensitivePrefixParselets), std::end(contextSensitivePrefixParselets), []() {
-        return ContextSensitivePrefixParseletPtr(nullptr); });
-    
-    std::generate(std::begin(contextSensitiveInfixParselets), std::end(contextSensitiveInfixParselets), []() {
-        return ContextSensitiveInfixParseletPtr(nullptr); });
     
     //
     // Register all of the parselets
@@ -415,15 +409,11 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitivePrefixPa
     
     // context sensitive parsing of  x_
     registerPrefixParselet(TOKEN_SYMBOL, PrefixParseletPtr(new SymbolParselet()));
-    registerContextSensitivePrefixParselet(TOKEN_SYMBOL, ContextSensitivePrefixParseletPtr(new SymbolParselet()));
     
     // context sensitive parsing of _x
     registerPrefixParselet(TOKEN_UNDER, PrefixParseletPtr(new UnderParselet()));
-    registerContextSensitiveInfixParselet(TOKEN_UNDER, ContextSensitiveInfixParseletPtr(new UnderParselet()));
     registerPrefixParselet(TOKEN_UNDERUNDER, PrefixParseletPtr(new UnderParselet()));
-    registerContextSensitiveInfixParselet(TOKEN_UNDERUNDER, ContextSensitiveInfixParseletPtr(new UnderParselet()));
     registerPrefixParselet(TOKEN_UNDERUNDERUNDER, PrefixParseletPtr(new UnderParselet()));
-    registerContextSensitiveInfixParselet(TOKEN_UNDERUNDERUNDER, ContextSensitiveInfixParseletPtr(new UnderParselet()));
     
     // trailing ; and , is allowed
     registerInfixParselet(TOKEN_SEMI, InfixParseletPtr(new InfixOperatorWithTrailingParselet(TOKEN_SEMI, PRECEDENCE_SEMI)));
@@ -439,7 +429,6 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitivePrefixPa
     
     // context sensitive parsing of sym:obj and pat:v
     registerInfixParselet(TOKEN_COLON, InfixParseletPtr(new ColonParselet()));
-    registerContextSensitiveInfixParselet(TOKEN_COLON, ContextSensitiveInfixParseletPtr(new ColonParselet()));
     
     // ternary, with different possibilities for second operator
     registerInfixParselet(TOKEN_SLASHCOLON, InfixParseletPtr(new SlashColonParselet()));
@@ -488,7 +477,7 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitivePrefixPa
     //
     // Literals and Unhandled
     //
-    for (uint16_t i = 0; i < prefixParselets.size(); i++) {
+    for (size_t i = 0; i < prefixParselets.size(); i++) {
         auto& P = prefixParselets[i];
         if (P != nullptr) {
             continue;
@@ -505,7 +494,6 @@ Parser::~Parser() {}
 
 void Parser::init() {
     
-//    tokenQueue = queued;
     Issues.clear();
 }
 
@@ -549,18 +537,16 @@ void Parser::registerStartOfFileParselet(TokenEnum token, StartOfFileParseletPtr
 #endif // STARTOFLINE
 
 
-inline void Parser::registerContextSensitivePrefixParselet(TokenEnum T, ContextSensitivePrefixParseletPtr P) {
-    
-    assert(contextSensitivePrefixParselets[T.value()] == nullptr);
-    
-    contextSensitivePrefixParselets[T.value()] = std::move(P);
+const ContextSensitivePrefixParseletPtr& Parser::getContextSensitiveSymbolParselet() const {
+    return contextSensitiveSymbolParselet;
 }
 
-inline void Parser::registerContextSensitiveInfixParselet(TokenEnum T, ContextSensitiveInfixParseletPtr P) {
-    
-    assert(contextSensitiveInfixParselets[T.value()] == nullptr);
-    
-    contextSensitiveInfixParselets[T.value()] = std::move(P);
+const ContextSensitiveInfixParseletPtr& Parser::getContextSensitiveUnderParselet() const {
+    return contextSensitiveUnderParselet;
+}
+
+const ContextSensitiveInfixParseletPtr& Parser::getContextSensitiveColonParselet() const {
+    return contextSensitiveColonParselet;
 }
 
 void Parser::nextToken() {
@@ -755,19 +741,8 @@ const InfixParseletPtr& Parser::findInfixParselet(TokenEnum T) const {
     return I;
 }
 
-const ContextSensitivePrefixParseletPtr& Parser::findContextSensitivePrefixParselet(TokenEnum T) const {
-    auto& P = contextSensitivePrefixParselets[T.value()];
-    assert(P != nullptr);
-    return P;
-}
 
-const ContextSensitiveInfixParseletPtr& Parser::findContextSensitiveInfixParselet(TokenEnum T) const {
-    auto& I = contextSensitiveInfixParselets[T.value()];
-    assert(I != nullptr);
-    return I;
-}
-
-Precedence Parser::getTokenPrecedence(Token& TokIn, ParserContext Ctxt, bool considerPrefix, bool *implicitTimes) const {
+Precedence Parser::getTokenPrecedence(Token& TokIn, ParserContext Ctxt) const {
     
     assert(TokIn.Tok != TOKEN_UNKNOWN);
     assert(TokIn.Tok != TOKEN_WHITESPACE);
@@ -776,15 +751,13 @@ Precedence Parser::getTokenPrecedence(Token& TokIn, ParserContext Ctxt, bool con
     assert(TokIn.Tok != TOKEN_COMMENT);
     assert(TokIn.Tok != TOKEN_LINECONTINUATION);
     
-    if (implicitTimes != nullptr) {
-        *implicitTimes = false;
-    }
-    
     if (TokIn.Tok.isError()) {
+        
         return PRECEDENCE_LOWEST;
     }
     
     if (TokIn.Tok == TOKEN_ENDOFFILE) {
+        
         return PRECEDENCE_LOWEST;
     }
     
@@ -792,36 +765,67 @@ Precedence Parser::getTokenPrecedence(Token& TokIn, ParserContext Ctxt, bool con
     // TODO: review when closers have their own parselets
     //
     if (TokIn.Tok.isCloser()) {
+        
+        return PRECEDENCE_LOWEST;
+    }
+        
+    auto& P = prefixParselets[TokIn.Tok.value()];
+    
+    //
+    // There is an ambiguity with tokens that are both prefix and infix, e.g.
+    // +  -  ;;  !  ++  --
+    //
+    // Given the input  ;;;;
+    // when parsing the second  ;;  , we could get here because ;; is registered as infix
+    // But this particular ;; is a new expression, it is not actually infix
+    //
+    // Given the input  1+2
+    // when parsing the +, make sure to treat it as infix and NOT prefix
+    //
+    // Solution is to handle infix parselets where needed, i.e., SemiSemiParselet
+    //
+    
+    return P->getPrecedence();
+}
+
+Precedence Parser::getInfixTokenPrecedence(Token& TokIn, ParserContext Ctxt, bool *implicitTimes) const {
+    
+    assert(TokIn.Tok != TOKEN_UNKNOWN);
+    assert(TokIn.Tok != TOKEN_WHITESPACE);
+    // allow top-level newlines
+    assert(TokIn.Tok != TOKEN_NEWLINE || Ctxt.getGroupDepth() == 0);
+    assert(TokIn.Tok != TOKEN_COMMENT);
+    assert(TokIn.Tok != TOKEN_LINECONTINUATION);
+    
+    if (TokIn.Tok.isError()) {
+        
+        *implicitTimes = false;
+        
         return PRECEDENCE_LOWEST;
     }
     
-    if (considerPrefix) {
+    if (TokIn.Tok == TOKEN_ENDOFFILE) {
         
-        auto& P = prefixParselets[TokIn.Tok.value()];
+        *implicitTimes = false;
         
-        if (P != nullptr) {
-            
-            //
-            // There is an ambiguity with tokens that are both prefix and infix, e.g.
-            // +  -  ;;  !  ++  --
-            //
-            // Given the input  ;;;;
-            // when parsing the second  ;;  , we could get here because ;; is registered as infix
-            // But this particular ;; is a new expression, it is not actually infix
-            //
-            // Given the input  1+2
-            // when parsing the +, make sure to treat it as infix and NOT prefix
-            //
-            // Solution is to handle infix parselets where needed, i.e., SemiSemiParselet
-            //
-            
-            return P->getPrecedence();
-        }
+        return PRECEDENCE_LOWEST;
+    }
+    
+    //
+    // TODO: review when closers have their own parselets
+    //
+    if (TokIn.Tok.isCloser()) {
+        
+        *implicitTimes = false;
+        
+        return PRECEDENCE_LOWEST;
     }
     
     auto& Infix = infixParselets[TokIn.Tok.value()];
     
     if (Infix != nullptr) {
+        
+        *implicitTimes = false;
         
         return Infix->getPrecedence();
     }
@@ -833,6 +837,8 @@ Precedence Parser::getTokenPrecedence(Token& TokIn, ParserContext Ctxt, bool con
             //
             // Inside \[Integral], so \[DifferentialD] is treated specially
             //
+            
+            *implicitTimes = false;
             
             return PRECEDENCE_LOWEST;
         }
@@ -846,12 +852,13 @@ Precedence Parser::getTokenPrecedence(Token& TokIn, ParserContext Ctxt, bool con
     // Do not do Implicit Times across lines
     //
     if (TokIn.Tok == TOKEN_NEWLINE && Ctxt.getGroupDepth() == 0) {
+        
+        *implicitTimes = false;
+        
         return PRECEDENCE_LOWEST;
     }
     
-    if (implicitTimes != nullptr) {
-        *implicitTimes = true;
-    }
+    *implicitTimes = true;
     
     return PRECEDENCE_STAR;
 }
@@ -903,7 +910,7 @@ NodePtr Parser::parse(Token firstTok, ParserContext CtxtIn) {
         
         bool implicitTimes;
         
-        auto TokenPrecedence = getTokenPrecedence(token, Ctxt, false, &implicitTimes);
+        auto TokenPrecedence = getInfixTokenPrecedence(token, Ctxt, &implicitTimes);
         
         if (implicitTimes) {
             

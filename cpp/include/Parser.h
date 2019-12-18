@@ -122,8 +122,10 @@ private:
     std::array<StartOfLineParseletPtr>, TOKEN_COUNT> startOfLineParselets;
     std::array<StartOfFileParseletPtr, TOKEN_COUNT> startOfFileParselets;
 #endif // STARTOFLINE
-    std::array<ContextSensitivePrefixParseletPtr, TOKEN_COUNT.value()> contextSensitivePrefixParselets;
-    std::array<ContextSensitiveInfixParseletPtr, TOKEN_COUNT.value()> contextSensitiveInfixParselets;
+    
+    ContextSensitivePrefixParseletPtr contextSensitiveSymbolParselet;
+    ContextSensitiveInfixParseletPtr contextSensitiveUnderParselet;
+    ContextSensitiveInfixParseletPtr contextSensitiveColonParselet;
     
     std::deque<Token> tokenQueue;
     
@@ -139,10 +141,6 @@ private:
     
     void registerStartOfFileParselet(TokenEnum, StartOfFileParseletPtr );
 #endif // STARTOFLINE
-    
-    void registerContextSensitivePrefixParselet(TokenEnum T, ContextSensitivePrefixParseletPtr );
-    
-    void registerContextSensitiveInfixParselet(TokenEnum T, ContextSensitiveInfixParseletPtr );
     
 public:
     Parser();
@@ -184,16 +182,19 @@ public:
     
     NodePtr handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext Ctxt, bool *wasCloser);
     
-    Precedence getTokenPrecedence(Token& current, ParserContext Ctxt, bool considerPrefix, bool *implicitTimes) const;
+    
+    Precedence getTokenPrecedence(Token& current, ParserContext Ctxt) const;
+    Precedence getInfixTokenPrecedence(Token& current, ParserContext Ctxt, bool *implicitTimes) const;
     
     
     const PrefixParseletPtr& findPrefixParselet(TokenEnum T) const;
     
     const InfixParseletPtr& findInfixParselet(TokenEnum T) const;
     
-    const ContextSensitivePrefixParseletPtr& findContextSensitivePrefixParselet(TokenEnum T) const;
     
-    const ContextSensitiveInfixParseletPtr& findContextSensitiveInfixParselet(TokenEnum T) const;
+    const ContextSensitivePrefixParseletPtr& getContextSensitiveSymbolParselet() const;
+    const ContextSensitiveInfixParseletPtr& getContextSensitiveUnderParselet() const;
+    const ContextSensitiveInfixParseletPtr& getContextSensitiveColonParselet() const;
     
     ~Parser();
 
