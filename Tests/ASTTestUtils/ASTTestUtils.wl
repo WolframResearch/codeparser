@@ -243,6 +243,9 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
 
 
     version = convertVersionString[PacletFind["AST"][[1]]["Version"]];
+    If[$Debug,
+    	Print["version: ", version]
+    ];
     Which[
       version >= 12,
       cst = 
@@ -967,10 +970,9 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
 convert "0.9" to 9
 *)
 Clear[convertVersionString]
-convertVersionString[s_String /; StringMatchQ[s, "0." ~~ _]] := 
- FromDigits[StringDrop[s, 2]]
-convertVersionString[s_String /; StringMatchQ[s, "0." ~~ _ ~~ _]] := 
- FromDigits[StringDrop[s, 2]]
+convertVersionString[s_String /; StringMatchQ[s, "0." ~~ _]] := FromDigits[StringDrop[s, 2]]
+convertVersionString[s_String /; StringMatchQ[s, "0." ~~ _ ~~ _]] := FromDigits[StringDrop[s, 2]]
+convertVersionString[s_String /; StringMatchQ[s, "999"]] := 9990
 
 
 
