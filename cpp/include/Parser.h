@@ -132,14 +132,14 @@ private:
     std::vector<IssuePtr> Issues;
     
     
-    void registerPrefixParselet(TokenEnum T, PrefixParseletPtr );
+    void registerPrefixParselet(size_t i, PrefixParseletPtr );
     
-    void registerInfixParselet(TokenEnum T, InfixParseletPtr );
+    void registerInfixParselet(size_t i, InfixParseletPtr );
 
 #if STARTOFLINE
-    void registerStartOfLineParselet(TokenEnum, StartOfLineParseletPtr );
+    void registerStartOfLineParselet(size_t i, StartOfLineParseletPtr );
     
-    void registerStartOfFileParselet(TokenEnum, StartOfFileParseletPtr );
+    void registerStartOfFileParselet(size_t i, StartOfFileParseletPtr );
 #endif // STARTOFLINE
     
 public:
