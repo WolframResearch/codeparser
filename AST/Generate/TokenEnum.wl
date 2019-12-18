@@ -898,14 +898,15 @@ isEmpty[_] = False
 
 group1Bits[tok_] := group1Bits[tok] =
 Which[
-	isPossibleBeginningOfExpression[tok], BitShiftLeft[2^^000, 9],
-	isCloser[tok],                        BitShiftLeft[2^^001, 9],
-	isError[tok],                         BitShiftLeft[2^^010, 9],
-	isTrivia[tok],                        BitShiftLeft[2^^011, 9],
-	isInequalityOperator[tok],            BitShiftLeft[2^^100, 9],
-	isVectorInequalityOperator[tok],      BitShiftLeft[2^^101, 9],
-	(* unused                             BitShiftLeft[2^^110, 9],*)
-	True,                                 BitShiftLeft[2^^111, 9]
+	isPossibleBeginningOfExpression[tok], BitShiftLeft[2^^001, 9],
+	isCloser[tok],                        BitShiftLeft[2^^010, 9],
+	isError[tok],                         BitShiftLeft[2^^011, 9],
+	isTrivia[tok],                        BitShiftLeft[2^^100, 9],
+	isInequalityOperator[tok],            BitShiftLeft[2^^101, 9],
+	isVectorInequalityOperator[tok],      BitShiftLeft[2^^110, 9],
+	(* unused                             BitShiftLeft[2^^111, 9],*)
+
+	True,                                 BitShiftLeft[2^^000, 9]
 ]
 
 
@@ -946,7 +947,6 @@ tokenCPPHeader = {
 
 #pragma once
 
-#include <unordered_map>
 #include <cstdint> // for uint16_t
 
 struct TokenEnum {
@@ -962,27 +962,27 @@ struct TokenEnum {
   }
 
   constexpr bool isPossibleBeginningOfExpression() const {
-      return static_cast<bool>((T & 0xe00) == 0x000);
-  }
-  
-  constexpr bool isCloser() const {
       return static_cast<bool>((T & 0xe00) == 0x200);
   }
   
-  constexpr bool isError() const {
+  constexpr bool isCloser() const {
       return static_cast<bool>((T & 0xe00) == 0x400);
   }
   
-  constexpr bool isTrivia() const {
+  constexpr bool isError() const {
       return static_cast<bool>((T & 0xe00) == 0x600);
   }
   
-  constexpr bool isInequalityOperator() const {
+  constexpr bool isTrivia() const {
       return static_cast<bool>((T & 0xe00) == 0x800);
   }
   
-  constexpr bool isVectorInequalityOperator() const {
+  constexpr bool isInequalityOperator() const {
       return static_cast<bool>((T & 0xe00) == 0xa00);
+  }
+  
+  constexpr bool isVectorInequalityOperator() const {
+      return static_cast<bool>((T & 0xe00) == 0xc00);
   }
 
   constexpr bool isInfixOperator() const {
@@ -1008,16 +1008,6 @@ bool operator!=(TokenEnum a, TokenEnum b);
    	], "); // { isEmpty:", isEmpty[#1], ", isInfixOperator:", isInfixOperator[#1], ", group1Bits:", group1Bits[#1], ", enum:", #2, " }"}])&, enumMap] ~Join~
 {
 "
-namespace std {
-    //
-    // for std::unordered_map
-    //
-    template <> struct hash<TokenEnum> {
-        size_t operator()(const TokenEnum &x) const {
-            return x.value();
-        }
-    };
-}
 "
 }
 
