@@ -195,9 +195,9 @@ TestMatch[
 	FileNode[File, {
 		BinaryNode[Set, {
 			LeafNode[Symbol, "\.01x", <|Source -> {{1, 1}, {1, 3}}|>],
-			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 3}, {1, 4}}|>],
+			LeafNode[Whitespace, " ", <|Source -> {{1, 3}, {1, 4}}|>],
 			LeafNode[Token`Equal, "=", <|Source -> {{1, 4}, {1, 5}}|>],
-			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 5}, {1, 6}}|>],
+			LeafNode[Whitespace, " ", <|Source -> {{1, 5}, {1, 6}}|>],
 			LeafNode[Integer, "1", <|Source -> {{1, 6}, {1, 7}}|>] }, <|Source -> {{1, 1}, {1, 7}}|>] }, <|SyntaxIssues -> {
 				(* from Tokenizer, strange letterlike *)
 				SyntaxIssue["UnexpectedCharacter", "Unexpected letterlike character: ``\\.01``.", "Warning", _],
@@ -244,7 +244,7 @@ TestMatch[
 		GroupNode[List, {
 			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 1}}|>],
-			LeafNode[Token`WhiteSpace, "\t", <|Source -> {{2, 1}, {2, 2}}|>],
+			LeafNode[Whitespace, "\t", <|Source -> {{2, 1}, {2, 2}}|>],
 			LeafNode[Integer, "1", <|Source -> {{2, 2}, {2, 3}}|>],
 			LeafNode[Token`LineContinuation, "\\\n", <|Source -> {{2, 3}, {3, 1}}|>],
 			LeafNode[Token`CloseCurly, "}", <|Source -> {{3, 1}, {3, 2}}|>]}, <|Source -> {{1, 1}, {3, 2}}|>]},

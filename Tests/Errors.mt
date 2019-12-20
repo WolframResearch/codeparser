@@ -121,9 +121,9 @@ Test[
 		InfixNode[Times, {
 			BinaryNode[Minus, {
 				LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>], 
-	    		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 2}, {1, 3}}|>], 
+	    		LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>], 
 	    		LeafNode[Token`Minus, "-", <|Source -> {{1, 3}, {1, 4}}|>], 
-	    		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 4}, {1, 5}}|>], 
+	    		LeafNode[Whitespace, " ", <|Source -> {{1, 4}, {1, 5}}|>], 
 	   			LeafNode[Token`Error`UnhandledCharacter, "\\t", <|Source -> {{1, 5}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>],
 	       	LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> {{1, 7}, {1, 7}}|>],
 	       	LeafNode[Symbol, "b", <|Source -> {{1, 7}, {1, 8}}|>] }, <|Source -> {{1, 1}, {1, 8}}|>] }, <||>]

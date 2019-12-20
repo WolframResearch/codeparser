@@ -37,7 +37,7 @@ Module[{handledChildren, aggregatedChildren},
 
   handledChildren = MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ #2]&, handledChildren];
   
-  aggregatedChildren = DeleteCases[handledChildren, LeafNode[Token`Newline | Token`WhiteSpace, _, _] | GroupNode[Comment, _, _]];
+  aggregatedChildren = DeleteCases[handledChildren, LeafNode[Token`Newline | Whitespace, _, _] | GroupNode[Comment, _, _]];
   
   If[$Debug,
     Print["aggregatedChildren: ", aggregatedChildren]
@@ -76,7 +76,7 @@ Module[{handledChildren, aggregatedChildren},
     {_, LeafNode[Token`Plus, _, _], ___}, InfixNode[Plus, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`Times | Token`Star, _, _], ___}, InfixNode[Times, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`Minus, _, _], ___}, InfixNode[Minus, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`WhiteSpace, _, _], ___}, InfixNode[Times, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Whitespace, _, _], ___}, InfixNode[Times, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`Bar, _, _], ___}, InfixNode[Alternatives, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LessEqual | Token`LongName`LessEqual | Token`Greater | 
        Token`Less | Token`LongName`Equal | 
@@ -434,7 +434,7 @@ Module[{handledChildren, aggregatedChildren},
         InfixNode[Times,
           Flatten[{First[handledChildren]} ~Join~
             Map[If[
-              MatchQ[#, LeafNode[Token`WhiteSpace | Token`Newline | Token`Comment | Token`LineContinuation, _, _]],
+              MatchQ[#, LeafNode[Whitespace | Token`Newline | Token`Comment | Token`LineContinuation, _, _]],
                 #,
                 (*
                  Give ImplicitTimes the same Source as RHS

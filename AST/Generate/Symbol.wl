@@ -570,7 +570,7 @@ Print["Work around Bug 321344: ", $WorkaroundBug321344];
 
 symbols = Union[Join[
     {Blank, BlankSequence, BlankNullSequence, EndOfFile, Inequality, Integer, List, Optional, Out, Pattern, Real, Slot, SlotSequence,
-      String, Symbol, TagSet, TagSetDelayed, TagUnset, True} ~Join~
+      String, Symbol, TagSet, TagSetDelayed, TagUnset, True, Whitespace},
     {Developer`VectorInequality},
     {AST`Library`MakeLeafNode, AST`Library`MakePrefixNode, AST`Library`MakeBinaryNode, AST`Library`MakeInfixNode,
             AST`Library`MakeTernaryNode, AST`Library`MakePostfixNode, AST`Library`MakeCallNode, AST`Library`MakeGroupNode,
@@ -596,7 +596,7 @@ symbols = Union[Join[
     DownValues[StartOfFileOperatorToSymbol][[All, 2]],
     *)
     tokens
-    ]]
+]]
 
 
 symbolCPPHeader = {
@@ -662,8 +662,7 @@ If[FailureQ[res],
 We want to fully-qualify symbol names over the wire.
 This allows library->kernel traffic to work when AST` is not on $ContextPath.
 However, it is still not possible to fully-qualify System` symbols
-bug 283291
-bug 284492
+Related bugs: 283291, 284492
 So also make library->kernel traffic match this behavior
 *)
 stringifyForTransmitting[sym_Symbol] :=

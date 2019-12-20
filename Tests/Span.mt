@@ -547,10 +547,10 @@ TestMatch[
 	StringNode[String, {
 		InfixNode[Times, {
 			BinaryNode[Span, _, _],
-			LeafNode[Token`WhiteSpace, _, _],
+			LeafNode[Whitespace, _, _],
 			LeafNode[Token`Fake`ImplicitTimes, _, _],
 			BinaryNode[Span, _, _],
-			LeafNode[Token`WhiteSpace, _, _],
+			LeafNode[Whitespace, _, _],
 			LeafNode[Token`Fake`ImplicitTimes, _, _],
 			BinaryNode[Span, _, _] }, _] }, _]
 	,
@@ -568,10 +568,10 @@ Test[
 		PostfixNode[Function, {
 			BinaryNode[Span, {
 				LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
-				LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 2}, {1, 3}}|>],
+				LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>],
 				LeafNode[Token`SemiSemi, ";;", <|Source -> {{1, 3}, {1, 5}}|>], 
 				LeafNode[Token`Fake`ImplicitAll, "", <|Source -> {{1, 5}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>],
-			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 5}, {1, 6}}|>],
+			LeafNode[Whitespace, " ", <|Source -> {{1, 5}, {1, 6}}|>],
 			LeafNode[Token`Amp, "&", <|Source -> {{1, 6}, {1, 7}}|>] }, <|Source -> {{1, 1}, {1, 7}}|>] }, <||>]
 	,
 	TestID->"Span-20191016-J5K9B8"
@@ -582,10 +582,10 @@ Test[
 	,
 	f[{{BinaryNode[Span, {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
-			LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 2}, {1, 3}}|>],
+			LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>],
 			LeafNode[Token`SemiSemi, ";;", <|Source -> {{1, 3}, {1, 5}}|>], 
 			LeafNode[Token`Fake`ImplicitAll, "", <|Source -> {{1, 5}, {1, 5}}|>]}, <|Source->{{1, 1}, {1, 5}}|>],
-		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 5}, {1, 6}}|>],
+		LeafNode[Whitespace, " ", <|Source -> {{1, 5}, {1, 6}}|>],
 		LeafNode[Token`Error`UnhandledCharacter, "\\t", <|Source -> {{1, 6}, {1, 8}}|>]}, {}}]
 	,
 	TestID->"Span-20191016-T6M0R1"

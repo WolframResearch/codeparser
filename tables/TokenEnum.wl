@@ -16,7 +16,7 @@ Token`Real -> Next,
 (* trivia *)
 Token`Comment -> Next,
 Token`Newline -> Next,
-Token`WhiteSpace -> Next,
+Token`Whitespace -> Next,
 Token`LineContinuation -> Next,
 
 (* errors *)

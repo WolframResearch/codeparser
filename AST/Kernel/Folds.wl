@@ -21,7 +21,7 @@ Collapse CallNode[{op}, {}] to CallNode[op, {}]
 
 aggregate[Null] := Null
 
-aggregate[LeafNode[Token`Comment | Token`WhiteSpace | Token`Newline | Token`LineContinuation, _, _]] := Nothing
+aggregate[LeafNode[Whitespace | Token`Comment | Token`Newline | Token`LineContinuation, _, _]] := Nothing
 
 aggregate[l_LeafNode] := l
 

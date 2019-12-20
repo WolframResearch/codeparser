@@ -200,7 +200,7 @@ Test[
 	,
 	{
 		LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
-		LeafNode[Token`WhiteSpace, " ", <|Source -> {{1, 2}, {1, 3}}|>],
+		LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>],
 		LeafNode[Token`Error`ExpectedEqual, "^: ", <|Source -> {{1, 3}, {1, 6}}|>],
 		LeafNode[Symbol, "f", <|Source -> {{1, 6}, {1, 7}}|>] }
 	,

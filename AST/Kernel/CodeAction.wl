@@ -214,7 +214,7 @@ Module[{src, cst, func, trivia, srcPosMap},
    ];
 
   func = SourceMemberQ[src];
-    trivia = Cases[cst, LeafNode[Token`WhiteSpace | Token`Newline | Token`Comment | Token`LineContinuation, _, KeyValuePattern[Source -> src_?func]], Infinity];
+    trivia = Cases[cst, LeafNode[Whitespace | Token`Newline | Token`Comment | Token`LineContinuation, _, KeyValuePattern[Source -> src_?func]], Infinity];
 
     Scan[(cst = ApplyCodeAction[CodeAction["delete", DeleteNode, <|Source->#[[3, Key[Source] ]]|>], cst];)&, trivia];
     cst

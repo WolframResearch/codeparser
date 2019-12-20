@@ -18,6 +18,8 @@ tokenToSymbol[Token`String] = "Symbol`String"
 tokenToSymbol[Token`Integer] = "Symbol`Integer"
 tokenToSymbol[Token`Real] = "Symbol`Real"
 
+tokenToSymbol[Token`Whitespace] = "Symbol`Whitespace"
+
 tokenToSymbol[Token`Hash] = "Symbol`Slot"
 tokenToSymbol[Token`HashHash] = "Symbol`SlotSequence"
 
@@ -69,7 +71,7 @@ Trivia
 *)
 isPossibleBeginningOfExpression[Token`Comment] = False
 isPossibleBeginningOfExpression[Token`Newline] = False
-isPossibleBeginningOfExpression[Token`WhiteSpace] = False
+isPossibleBeginningOfExpression[Token`Whitespace] = False
 isPossibleBeginningOfExpression[Token`LineContinuation] = False
 
 
@@ -547,7 +549,7 @@ isError[_] = False
 
 isTrivia[Token`Comment] = True
 isTrivia[Token`Newline] = True
-isTrivia[Token`WhiteSpace] = True
+isTrivia[Token`Whitespace] = True
 isTrivia[Token`LineContinuation] = True
 
 isTrivia[_] = False
