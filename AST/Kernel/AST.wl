@@ -371,13 +371,13 @@ Options[ConcreteParseFile] = {
 (*
 ConcreteParseFile[file_String] returns a FileNode AST or a Failure object
 *)
-ConcreteParseFile[file_String | File[file_String], h_:Automatic, opts:OptionsPattern[]] :=
-	concreteParseFile[file, h, opts]
+ConcreteParseFile[f:File[_String], h_:Automatic, opts:OptionsPattern[]] :=
+	concreteParseFile[f, h, opts]
 
 
 Options[concreteParseFile] = Options[ConcreteParseFile]
 
-concreteParseFile[file_String, hIn_, OptionsPattern[]] :=
+concreteParseFile[File[file_String], hIn_, OptionsPattern[]] :=
 Catch[
 Module[{h, encoding, full, res, data, start, end, children, bytes},
 
@@ -458,11 +458,11 @@ Options[ParseFile] = {
 	CharacterEncoding -> "UTF8"
 }
 
-ParseFile[file_String | File[file_String], h_:Automatic, opts:OptionsPattern[]] :=
+ParseFile[f:File[_String], h_:Automatic, opts:OptionsPattern[]] :=
 Catch[
 Module[{cst, ast, agg},
 
-	cst = ConcreteParseFile[file, h, opts];
+	cst = ConcreteParseFile[f, h, opts];
 
 	If[FailureQ[cst],
 		Throw[cst]
@@ -631,15 +631,15 @@ Options[TokenizeFile] = {
 	CharacterEncoding -> "UTF8"
 }
 
-TokenizeFile[s_String | File[s_String], opts:OptionsPattern[]] :=
-	tokenizeFile[s, opts]
+TokenizeFile[f:File[_String], opts:OptionsPattern[]] :=
+	tokenizeFile[f, opts]
 
 
 
 
 Options[tokenizeFile] = Options[TokenizeFile]
 
-tokenizeFile[file_String, OptionsPattern[]] :=
+tokenizeFile[File[file_String], OptionsPattern[]] :=
 Catch[
 Module[{encoding, res, full, bytes},
 

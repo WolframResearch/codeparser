@@ -249,7 +249,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     Which[
       version >= 12,
       cst = 
-       ConcreteParseFile[file, 
+       ConcreteParseFile[File[file], 
         HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1, 1, 3, Key[Source], 1]], #[[1, -1, 3, Key[Source], 2]]}]|>] &];
       ,
      version >= 11,
@@ -423,7 +423,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      Which[
      version >= 12,
       cst = 
-        ConcreteParseFile[file, 
+        ConcreteParseFile[File[file], 
          HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1, 1, 3, Key[Source], 1]], #[[1, -1, 3, Key[Source], 2]]}]|>]&];
       ,
       version >= 11,
