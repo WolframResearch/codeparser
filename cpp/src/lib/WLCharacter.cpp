@@ -310,6 +310,10 @@ void makeGraphical(std::ostream& stream, int i) {
         case '\r':
             stream << WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
             break;
+        case CODEPOINT_CRLF:
+            stream << WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
+            stream << WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
+            break;
         //
         // escape
         //
