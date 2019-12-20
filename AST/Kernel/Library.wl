@@ -16,6 +16,7 @@ library functions calling INTO lib
 *)
 concreteParseBytesFunc
 tokenizeBytesFunc
+tokenizeBytesListableFunc
 parseLeafFunc
 
 
@@ -138,6 +139,8 @@ loadAllFuncs[] := (
 concreteParseBytesFunc := concreteParseBytesFunc = loadFunc["ConcreteParseBytes_LibraryLink"];
 
 tokenizeBytesFunc := tokenizeBytesFunc = loadFunc["TokenizeBytes_LibraryLink"];
+
+tokenizeBytesListableFunc := tokenizeBytesListableFunc = loadFunc["TokenizeBytes_Listable_LibraryLink"];
 
 parseLeafFunc := parseLeafFunc = loadFunc["ParseLeaf_LibraryLink"];
 )

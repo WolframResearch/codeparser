@@ -579,12 +579,14 @@ Module[{cst, ast, agg},
 TokenizeString::usage = "TokenizeString[string] returns a list of tokens by interpreting string as WL input."
 
 Options[TokenizeString] = {
-	CharacterEncoding -> "UTF8",
-	"SourceStyle" -> "LineCol"
+	CharacterEncoding -> "UTF8"
 }
 
 TokenizeString[s_String] :=
 	tokenizeString[s]
+
+TokenizeString[ss:{_String...}] :=
+	tokenizeStringListable[ss]
 
 
 Options[tokenizeString] = Options[TokenizeString]
@@ -619,6 +621,38 @@ Module[{s, res, bytes, encoding},
 	res
 ]]
 
+Options[tokenizeStringListable] = Options[TokenizeString]
+
+tokenizeStringListable[ssIn:{_String...}, OptionsPattern[]] :=
+Catch[
+Module[{ss, res, bytess, encoding},
+
+	ss = ssIn;
+
+	encoding = OptionValue[CharacterEncoding];
+
+	If[encoding =!= "UTF8",
+		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
+	];
+
+	bytess = ToCharacterCode[ss, "UTF8"];
+
+	$ConcreteParseProgress = 0;
+	$ConcreteParseStart = Now;
+	$ConcreteParseTime = Quantity[0, "Seconds"];
+	$MathLinkTime = Quantity[0, "Seconds"];
+
+	res = libraryFunctionWrapper[tokenizeBytesListableFunc, bytess];
+
+	$MathLinkTime = Now - ($ConcreteParseStart + $ConcreteParseTime);
+
+	If[FailureQ[res],
+		Throw[res]
+	];
+
+	res
+]]
+
 
 
 
@@ -634,6 +668,8 @@ Options[TokenizeFile] = {
 TokenizeFile[f:File[_String], opts:OptionsPattern[]] :=
 	tokenizeFile[f, opts]
 
+TokenizeFile[fs:{File[_String]...}, opts:OptionsPattern[]] :=
+	tokenizeFileListable[fs, opts]
 
 
 
@@ -673,6 +709,42 @@ Module[{encoding, res, full, bytes},
 ]]
 
 
+Options[tokenizeFileListable] = Options[TokenizeFile]
+
+tokenizeFileListable[fs:{File[_String]...}, OptionsPattern[]] :=
+Catch[
+Module[{encoding, res, fulls, bytess},
+
+	encoding = OptionValue[CharacterEncoding];
+
+	If[encoding =!= "UTF8",
+		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
+	];
+
+	fulls = FindFile /@ fs;
+	If[AnyTrue[fulls, FailureQ],
+		Throw[Failure["FindFileFailed", <|"FileNames"->fs|>]]
+	];
+
+	bytess = Import[#, "Byte"]& /@ fulls;
+
+	$ConcreteParseProgress = 0;
+	$ConcreteParseStart = Now;
+	$ConcreteParseTime = Quantity[0, "Seconds"];
+	$MathLinkTime = Quantity[0, "Seconds"];
+
+	res = libraryFunctionWrapper[tokenizeBytesListableFunc, bytess];
+	
+	$MathLinkTime = Now - ($ConcreteParseStart + $ConcreteParseTime);
+
+	If[FailureQ[res],
+		Throw[res]
+	];
+
+	res
+]]
+
+
 
 
 
@@ -683,9 +755,11 @@ Options[TokenizeBytes] = {
 	CharacterEncoding -> "UTF8"
 }
 
-TokenizeBytes[bytes_List, opts:OptionsPattern[]] :=
+TokenizeBytes[bytes:{_Integer...}, opts:OptionsPattern[]] :=
 	tokenizeBytes[bytes, opts]
 
+TokenizeBytes[bytess:{{_Integer...}...}, opts:OptionsPattern[]] :=
+	tokenizeBytesListable[bytess, opts]
 
 
 
@@ -716,6 +790,36 @@ Module[{encoding, res},
 
 	res
 ]]
+
+
+Options[tokenizeBytesListable] = Options[TokenizeBytes]
+
+tokenizeBytesListable[bytess:{{_Integer...}...}, OptionsPattern[]] :=
+Catch[
+Module[{encoding, res},
+
+	encoding = OptionValue[CharacterEncoding];
+
+	If[encoding =!= "UTF8",
+		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
+	];
+
+	$ConcreteParseProgress = 0;
+	$ConcreteParseStart = Now;
+	$ConcreteParseTime = Quantity[0, "Seconds"];
+	$MathLinkTime = Quantity[0, "Seconds"];
+
+	res = libraryFunctionWrapper[tokenizeBytesListableFunc, bytess];
+
+	$MathLinkTime = Now - ($ConcreteParseStart + $ConcreteParseTime);
+
+	If[FailureQ[res],
+		Throw[res]
+	];
+
+	res
+]]
+
 
 
 

@@ -10,6 +10,9 @@
 #include <fstream>
 #include <cstdio> // for rewind
 
+class ScopedFileBuffer;
+using ScopedFileBufferPtr = std::unique_ptr<ScopedFileBuffer>;
+
 const int EXPRESSION = 0;
 const int TOKENIZE = 1;
 const int LEAF = 2;
@@ -286,9 +289,9 @@ void readStdIn(int mode, int outputMode) {
 
 void readFile(std::string file, int mode, int outputMode) {
     
-    ScopedFileBuffer fb(reinterpret_cast<Buffer>(file.c_str()), file.size());
+    auto fb = ScopedFileBufferPtr(new ScopedFileBuffer(reinterpret_cast<Buffer>(file.c_str()), file.size()));
 
-    if (fb.fail()) {
+    if (fb->fail()) {
         return;
     }
     
@@ -298,7 +301,7 @@ void readFile(std::string file, int mode, int outputMode) {
     
     if (mode == TOKENIZE) {
         
-        auto fBufAndLen = BufferAndLength(fb.getBuf(), fb.getLen(), false);
+        auto fBufAndLen = BufferAndLength(fb->getBuf(), fb->getLen(), false);
         
         TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE);
         
@@ -332,7 +335,7 @@ void readFile(std::string file, int mode, int outputMode) {
         
     } else {
         
-        auto fBufAndLen = BufferAndLength(fb.getBuf(), fb.getLen(), false);
+        auto fBufAndLen = BufferAndLength(fb->getBuf(), fb->getLen(), false);
         
         TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE);
         

@@ -35,8 +35,14 @@
 #include <functional> // for function with GCC and MSVC
 
 class ParserSession;
+class ScopedMLByteArray;
+class ScopedMLUTF8String;
+class ScopedMLEnvironmentParameter;
 
 using ParserSessionPtr = std::unique_ptr<ParserSession>;
+using ScopedMLByteArrayPtr = std::unique_ptr<ScopedMLByteArray>;
+using ScopedMLUTF8StringPtr = std::unique_ptr<ScopedMLUTF8String>;
+using ScopedMLEnvironmentParameterPtr = std::unique_ptr<ScopedMLEnvironmentParameter>;
 
 //
 // CMake defines ast_lib_EXPORTS
@@ -117,6 +123,8 @@ EXTERN_C DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData);
 EXTERN_C DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
 EXTERN_C DLLEXPORT int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK mlp);
+
+EXTERN_C DLLEXPORT int TokenizeBytes_Listable_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
 EXTERN_C DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp);
 

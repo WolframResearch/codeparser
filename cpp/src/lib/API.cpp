@@ -381,17 +381,20 @@ DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData) {
 #if USE_MATHLINK
 DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
-    int len;
+    int mlLen;
     
-    if (!MLTestHead(mlp, SYMBOL_LIST->name(), &len)) {
+    if (!MLTestHead(mlp, SYMBOL_LIST->name(), &mlLen)) {
         return LIBRARY_FUNCTION_ERROR;
     }
+    
+    auto len = static_cast<size_t>(mlLen);
+    
     if (len != 1) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    ScopedMLByteArray arr(mlp);
-    if (!arr.read()) {
+    auto arr = ScopedMLByteArrayPtr(new ScopedMLByteArray(mlp));
+    if (!arr->read()) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -399,7 +402,7 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK m
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto bufAndLen = BufferAndLength(arr.get(), arr.getByteCount(), false);
+    auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount(), false);
     
     TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE);
     
@@ -416,17 +419,20 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK m
 
 DLLEXPORT int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
-    int len;
+    int mlLen;
     
-    if (!MLTestHead(mlp, SYMBOL_LIST->name(), &len)) {
+    if (!MLTestHead(mlp, SYMBOL_LIST->name(), &mlLen)) {
         return LIBRARY_FUNCTION_ERROR;
     }
+    
+    auto len = static_cast<size_t>(mlLen);
+    
     if (len != 1) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    ScopedMLByteArray arr(mlp);
-    if (!arr.read()) {
+    auto arr = ScopedMLByteArrayPtr(new ScopedMLByteArray(mlp));
+    if (!arr->read()) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -434,7 +440,7 @@ DLLEXPORT int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto bufAndLen = BufferAndLength(arr.get(), arr.getByteCount(), false);
+    auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount(), false);
     
     TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE);
     
@@ -449,21 +455,84 @@ DLLEXPORT int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     return LIBRARY_NO_ERROR;
 }
 
+DLLEXPORT int TokenizeBytes_Listable_LibraryLink(WolframLibraryData libData, MLINK mlp) {
+    
+    int mlLen;
+    
+    if (!MLTestHead(mlp, SYMBOL_LIST->name(), &mlLen)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    auto len = static_cast<size_t>(mlLen);
+    
+    if (len != 1) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    if (!MLTestHead(mlp, SYMBOL_LIST->name(), &mlLen)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+
+    len = static_cast<size_t>(mlLen);
+    
+    auto arrs = std::vector<ScopedMLByteArrayPtr>();
+    arrs.reserve(len);
+    
+    for (size_t i = 0; i < len; i++) {
+        
+        auto arr = ScopedMLByteArrayPtr(new ScopedMLByteArray(mlp));
+        if (!arr->read()) {
+            return LIBRARY_FUNCTION_ERROR;
+        }
+        
+        arrs.push_back(std::move(arr));
+    }
+    
+    if (!MLNewPacket(mlp) ) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), mlLen)) {
+        assert(false);
+    }
+    for (size_t i = 0; i < len; i++) {
+        
+        const auto& arr = arrs[i];
+        
+        auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount(), false);
+        
+        TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE);
+        
+        auto N = TheParserSession->tokenize();
+        
+        N->put(mlp);
+        
+        TheParserSession->releaseNode(N);
+        
+        TheParserSession->deinit();
+    }
+    
+    return LIBRARY_NO_ERROR;
+}
+
 DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
-    int len;
+    int mlLen;
     
     std::string unescaped;
     
-    if (!MLTestHead(mlp, SYMBOL_LIST->name(), &len))  {
+    if (!MLTestHead(mlp, SYMBOL_LIST->name(), &mlLen))  {
         return LIBRARY_FUNCTION_ERROR;
     }
+    
+    auto len = static_cast<size_t>(mlLen);
+    
     if (len != 2) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    ScopedMLUTF8String inStr(mlp);
-    if (!inStr.read()) {
+    auto inStr = ScopedMLUTF8StringPtr(new ScopedMLUTF8String(mlp));
+    if (!inStr->read()) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -472,7 +541,7 @@ DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto bufAndLen = BufferAndLength(inStr.get(), inStr.getByteCount(), false);
+    auto bufAndLen = BufferAndLength(inStr->get(), inStr->getByteCount(), false);
     
     TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE);
     
@@ -551,9 +620,11 @@ const char *ScopedMLSymbol::get() const {
 ScopedMLFunction::ScopedMLFunction(MLINK mlp) : mlp(mlp), func(NULL), count() {}
 
 ScopedMLFunction::~ScopedMLFunction() {
-    if (func != NULL) {
-        MLReleaseSymbol(mlp, func);
+    if (func == NULL) {
+        return;
     }
+    
+    MLReleaseSymbol(mlp, func);
 }
 
 bool ScopedMLFunction::read() {
@@ -603,10 +674,10 @@ MLEnvironmentParameter ScopedMLEnvironmentParameter::get() {
     return p;
 }
 
-ScopedMLLoopbackLink::ScopedMLLoopbackLink() {
+ScopedMLLoopbackLink::ScopedMLLoopbackLink() : mlp(NULL) {
     
     MLENV ep;
-    ScopedMLEnvironmentParameter p;
+    ScopedMLEnvironmentParameterPtr p;
     int err;
     
 #ifdef WINDOWS_MATHLINK
@@ -620,8 +691,6 @@ ScopedMLLoopbackLink::ScopedMLLoopbackLink() {
     
     ep = MLInitialize(p.get());
     if (ep == (MLENV)0) {
-        
-        mlp = NULL;
         
         return;
     }
