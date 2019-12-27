@@ -298,9 +298,9 @@ void makeGraphical(std::ostream& stream, int i) {
             stream << SourceCharacter('F');
             stream << SourceCharacter('>');
             break;
-        //
-        // whitespace and newline characters
-        //
+            //
+            // whitespace and newline characters
+            //
         case '\t':
             stream << WLCharacter(CODEPOINT_STRINGMETA_TAB, ESCAPE_SINGLE);
             break;
@@ -314,32 +314,33 @@ void makeGraphical(std::ostream& stream, int i) {
             stream << WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
             stream << WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
             break;
-        //
-        // escape
-        //
+            //
+            // escape
+            //
         case '\x1b':
             stream << WLCharacter(CODEPOINT_ESC, ESCAPE_LONGNAME);
             break;
-        //
-        // C0 control characters
-        //
-        case '\x00': case '\x01': case '\x02': case '\x03': case '\x04': case '\x05': case '\x06': case '\x07': case '\x08':
-        //
-        // Skip TAB, LF, CR, and ESC. They are handled above
-        //
-        case '\x0b': case '\x0c': case '\x0e': case '\x0f': case '\x10': case '\x11': case '\x12': case '\x13': case '\x14': case '\x15':
-        case '\x16': case '\x17': case '\x18': case '\x19': case '\x1a': case '\x1c': case '\x1d': case '\x1e': case '\x1f':
-        //
-        // Make sure to include DEL
-        //
+            //
+            // C0 control characters
+            //
+            //
+            // Skip TAB, LF, CR, and ESC. They are handled above
+            //
+        case '\x00': case '\x01': case '\x02': case '\x03': case '\x04': case '\x05': case '\x06': case '\x07':
+        case '\x08': /*    \x09*/ /*    \x0a*/ case '\x0b': case '\x0c': /*    \x0d*/ case '\x0e': case '\x0f':
+        case '\x10': case '\x11': case '\x12': case '\x13': case '\x14': case '\x15': case '\x16': case '\x17':
+        case '\x18': case '\x19': case '\x1a': /*    \x1b*/ case '\x1c': case '\x1d': case '\x1e': case '\x1f':
+            //
+            // Make sure to include DEL
+            //
         case CODEPOINT_DEL:
-        //
-        // C1 control characters
-        //
-        case '\x80': case '\x81': case '\x82': case '\x83': case '\x84': case '\x85': case '\x86': case '\x87': case '\x88': case '\x89':
-        case '\x8a': case '\x8b': case '\x8c': case '\x8d': case '\x8e': case '\x8f': case '\x90': case '\x91': case '\x92': case '\x93':
-        case '\x94': case '\x95': case '\x96': case '\x97': case '\x98': case '\x99': case '\x9a': case '\x9b': case '\x9c': case '\x9d':
-        case '\x9e': case '\x9f':
+            //
+            // C1 control characters
+            //
+        case '\x80': case '\x81': case '\x82': case '\x83': case '\x84': case '\x85': case '\x86': case '\x87':
+        case '\x88': case '\x89': case '\x8a': case '\x8b': case '\x8c': case '\x8d': case '\x8e': case '\x8f':
+        case '\x90': case '\x91': case '\x92': case '\x93': case '\x94': case '\x95': case '\x96': case '\x97':
+        case '\x98': case '\x99': case '\x9a': case '\x9b': case '\x9c': case '\x9d': case '\x9e': case '\x9f':
             stream << WLCharacter(i, ESCAPE_2HEX);
             break;
         default:
