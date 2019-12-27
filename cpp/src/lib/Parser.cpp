@@ -61,6 +61,7 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitiveSymbolPa
     registerPrefixParselet(TOKEN_LONGNAME_NOTEXISTS.value(), PrefixParseletPtr(new PrefixOperatorParselet(TOKEN_LONGNAME_NOTEXISTS, PRECEDENCE_LONGNAME_NOTEXISTS)));
     registerPrefixParselet(TOKEN_LONGNAME_COPRODUCT.value(), PrefixParseletPtr(new PrefixOperatorParselet(TOKEN_LONGNAME_COPRODUCT, PRECEDENCE_LONGNAME_COPRODUCT)));
     registerPrefixParselet(TOKEN_LONGNAME_PIECEWISE.value(), PrefixParseletPtr(new PrefixOperatorParselet(TOKEN_LONGNAME_PIECEWISE, PRECEDENCE_LONGNAME_PIECEWISE)));
+    registerPrefixParselet(TOKEN_BANGBANG.value(), PrefixParseletPtr(new PrefixOperatorParselet(TOKEN_BANGBANG, PRECEDENCE_FAKE_PREFIX_BANGBANG)));
     registerPrefixParselet(TOKEN_LINEARSYNTAX_BANG.value(), PrefixParseletPtr(new PrefixOperatorParselet(TOKEN_LINEARSYNTAX_BANG, PRECEDENCE_LINEARSYNTAX_BANG)));
     
     

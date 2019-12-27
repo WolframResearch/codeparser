@@ -88,6 +88,7 @@ These binary/infix operators are also prefix
 (*isPossibleBeginningOfExpression[Token`MinusMinus] = False*)
 (*isPossibleBeginningOfExpression[Token`PlusPlus] = False*)
 (*isPossibleBeginningOfExpression[Token`SemiSemi] = False*)
+(*isPossibleBeginningOfExpression[Token`BangBang] = False*)
 (*
 Calls
 *)
@@ -450,7 +451,6 @@ Postfix ops
 isPossibleBeginningOfExpression[Token`Amp] = False
 isPossibleBeginningOfExpression[Token`DotDot] = False
 isPossibleBeginningOfExpression[Token`DotDotDot] = False
-isPossibleBeginningOfExpression[Token`BangBang] = False
 isPossibleBeginningOfExpression[Token`SingleQuote] = False
 isPossibleBeginningOfExpression[Token`LongName`Transpose] = False
 isPossibleBeginningOfExpression[Token`LongName`Conjugate] = False

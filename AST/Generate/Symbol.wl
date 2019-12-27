@@ -43,6 +43,7 @@ PrefixOperatorToSymbol[Token`Plus] = Plus
 PrefixOperatorToSymbol[Token`Minus] = Minus
 PrefixOperatorToSymbol[Token`Question] = Information
 PrefixOperatorToSymbol[Token`QuestionQuestion] = Information
+PrefixOperatorToSymbol[Token`BangBang] = AST`PrefixNot2
 
 PrefixOperatorToSymbol[Token`LongName`Sqrt] = Sqrt
 PrefixOperatorToSymbol[Token`LongName`Not] = Not

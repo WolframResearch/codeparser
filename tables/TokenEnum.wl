@@ -111,6 +111,11 @@ Token`StarStar -> Next, (* ** *)
 Token`CaretEqual -> Next, (* ^= *)
 Token`HashHash -> Next, (* ## *)
 Token`BangEqual -> Next, (* != *)
+(*
+!! is a real token: postfix for Factorial2,
+so when prefix !! is encountered, it is convenient to also treat it as a single token
+!!a is Not[Not[a]]
+*)
 Token`BangBang -> Next, (* !! *)
 Token`QuestionQuestion -> Next, (* ?? *)
 Token`EqualDot -> Next, (* =. *)

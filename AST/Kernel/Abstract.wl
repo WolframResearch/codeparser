@@ -227,6 +227,9 @@ abstract[LeafNode[tok_, str_, data_]] :=
 
 
 abstract[PrefixNode[Minus, {_, rand_}, data_]] := abstract[negate[rand, KeyTake[data, keysToTake]]]
+
+abstract[PrefixNode[PrefixNot2, {_, rand_}, data_]] := abstractNot2[rand, KeyTake[data, keysToTake]]
+
 abstract[PrefixNode[PrefixLinearSyntaxBang, children:{_, Except[GroupNode[GroupLinearSyntaxParen, _, _]]}, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`LinearSyntaxBang, children, KeyTake[data, keysToTake]]
 (*
 FIXME: keep linear syntax for now
@@ -1773,6 +1776,15 @@ a is a List of boxes
 abstract[BoxNode[RowBox, {a_}, data_]] := BoxNode[RowBox, {abstract /@ a}, KeyTake[data, keysToTake]]
 
 abstract[BoxNode[b_, children_, data_]] := BoxNode[b, abstract /@ children, KeyTake[data, keysToTake]]
+
+
+
+
+
+abstractNot2[rand_, data_] :=
+	CallNode[LeafNode[Symbol, "Not", <||>], {
+		CallNode[LeafNode[Symbol, "Not", <||>], {
+			abstract[rand]}, <||>]}, data]
 
 
 

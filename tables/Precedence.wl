@@ -137,6 +137,7 @@ Precedence`LongName`Nand -> Precedence`AmpAmp,
 
 Precedence`Prefix`Bang -> Precedence[Not], (* 230 *)
 Precedence`LongName`Not -> Precedence`Prefix`Bang,
+Precedence`Fake`Prefix`BangBang -> Precedence`Prefix`Bang,
 
 Precedence`LongName`ForAll -> Precedence[ForAll], (* 240 *)
 Precedence`LongName`Exists -> Precedence[Exists], (* 240 *)

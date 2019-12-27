@@ -114,6 +114,8 @@ PrefixInvisiblePrefixScriptBase
 PostfixHermitianConjugate
 PostfixInvisiblePostfixScriptBase
 
+PrefixNot2
+
 BinarySlashSlash
 BinaryAt
 BinaryAtAtAt
