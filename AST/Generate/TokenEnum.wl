@@ -399,6 +399,7 @@ isPossibleBeginningOfExpression[Token`LongName`TildeFullEqual] = False
 isPossibleBeginningOfExpression[Token`LongName`TildeTilde] = False
 isPossibleBeginningOfExpression[Token`LongName`Times] = False
 isPossibleBeginningOfExpression[Token`LongName`Union] = False
+isPossibleBeginningOfExpression[Token`LongName`UnionPlus] = False
 
 isPossibleBeginningOfExpression[Token`LongName`UpArrow] = False
 isPossibleBeginningOfExpression[Token`LongName`DownArrow] = False
@@ -456,6 +457,7 @@ isPossibleBeginningOfExpression[Token`LongName`Transpose] = False
 isPossibleBeginningOfExpression[Token`LongName`Conjugate] = False
 isPossibleBeginningOfExpression[Token`LongName`ConjugateTranspose] = False
 isPossibleBeginningOfExpression[Token`LongName`HermitianConjugate] = False
+isPossibleBeginningOfExpression[Token`LongName`InvisiblePostfixScriptBase] = False
 
 (*
 Infix ops with trailing
@@ -808,6 +810,7 @@ isInfixOperator[Token`LongName`TildeFullEqual] = True
 isInfixOperator[Token`LongName`TildeTilde] = True
 isInfixOperator[Token`LongName`Times] = True
 isInfixOperator[Token`LongName`Union] = True
+isInfixOperator[Token`LongName`UnionPlus] = True
 
 isInfixOperator[Token`LongName`UpArrow] = True
 isInfixOperator[Token`LongName`DownArrow] = True
@@ -850,18 +853,41 @@ isInequalityOperator[Token`Greater] = True
 isInequalityOperator[Token`GreaterEqual] = True
 isInequalityOperator[Token`Less] = True
 isInequalityOperator[Token`LessEqual] = True
-
 isInequalityOperator[Token`LongName`Equal] = True
-
-isInequalityOperator[Token`LongName`LessEqual] = True
 isInequalityOperator[Token`LongName`GreaterEqual] = True
-isInequalityOperator[Token`LongName`NotLessEqual] = True
-isInequalityOperator[Token`LongName`NotGreaterEqual] = True
-
-isInequalityOperator[Token`LongName`NotEqual] = True
-
-isInequalityOperator[Token`LongName`LessEqualGreater] = True
 isInequalityOperator[Token`LongName`GreaterEqualLess] = True
+isInequalityOperator[Token`LongName`GreaterFullEqual] = True
+isInequalityOperator[Token`LongName`GreaterGreater] = True
+isInequalityOperator[Token`LongName`GreaterLess] = True
+isInequalityOperator[Token`LongName`GreaterSlantEqual] = True
+isInequalityOperator[Token`LongName`GreaterTilde] = True
+isInequalityOperator[Token`LongName`LessEqual] = True
+isInequalityOperator[Token`LongName`LessEqualGreater] = True
+isInequalityOperator[Token`LongName`LessFullEqual] = True
+isInequalityOperator[Token`LongName`LessGreater] = True
+isInequalityOperator[Token`LongName`LessLess] = True
+isInequalityOperator[Token`LongName`LessSlantEqual] = True
+isInequalityOperator[Token`LongName`LessTilde] = True
+isInequalityOperator[Token`LongName`LongEqual] = True
+isInequalityOperator[Token`LongName`NestedGreaterGreater] = True
+isInequalityOperator[Token`LongName`NestedLessLess] = True
+isInequalityOperator[Token`LongName`NotEqual] = True
+isInequalityOperator[Token`LongName`NotGreater] = True
+isInequalityOperator[Token`LongName`NotGreaterEqual] = True
+isInequalityOperator[Token`LongName`NotGreaterFullEqual] = True
+isInequalityOperator[Token`LongName`NotGreaterGreater] = True
+isInequalityOperator[Token`LongName`NotGreaterLess] = True
+isInequalityOperator[Token`LongName`NotGreaterSlantEqual] = True
+isInequalityOperator[Token`LongName`NotGreaterTilde] = True
+isInequalityOperator[Token`LongName`NotLess] = True
+isInequalityOperator[Token`LongName`NotLessEqual] = True
+isInequalityOperator[Token`LongName`NotLessFullEqual] = True
+isInequalityOperator[Token`LongName`NotLessGreater] = True
+isInequalityOperator[Token`LongName`NotLessLess] = True
+isInequalityOperator[Token`LongName`NotLessSlantEqual] = True
+isInequalityOperator[Token`LongName`NotLessTilde] = True
+isInequalityOperator[Token`LongName`NotNestedGreaterGreater] = True
+isInequalityOperator[Token`LongName`NotNestedLessLess] = True
 
 isInequalityOperator[_] = False
 

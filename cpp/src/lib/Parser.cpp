@@ -59,8 +59,12 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitiveSymbolPa
     registerPrefixParselet(TOKEN_LONGNAME_FORALL.value(), PrefixParseletPtr(new PrefixOperatorParselet(TOKEN_LONGNAME_FORALL, PRECEDENCE_LONGNAME_FORALL)));
     registerPrefixParselet(TOKEN_LONGNAME_EXISTS.value(), PrefixParseletPtr(new PrefixOperatorParselet(TOKEN_LONGNAME_EXISTS, PRECEDENCE_LONGNAME_EXISTS)));
     registerPrefixParselet(TOKEN_LONGNAME_NOTEXISTS.value(), PrefixParseletPtr(new PrefixOperatorParselet(TOKEN_LONGNAME_NOTEXISTS, PRECEDENCE_LONGNAME_NOTEXISTS)));
-    registerPrefixParselet(TOKEN_LONGNAME_COPRODUCT.value(), PrefixParseletPtr(new PrefixOperatorParselet(TOKEN_LONGNAME_COPRODUCT, PRECEDENCE_LONGNAME_COPRODUCT)));
+    registerPrefixParselet(TOKEN_LONGNAME_COPRODUCT.value(), PrefixParseletPtr(new PrefixOperatorParselet(TOKEN_LONGNAME_COPRODUCT, PRECEDENCE_PREFIX_LONGNAME_COPRODUCT)));
     registerPrefixParselet(TOKEN_LONGNAME_PIECEWISE.value(), PrefixParseletPtr(new PrefixOperatorParselet(TOKEN_LONGNAME_PIECEWISE, PRECEDENCE_LONGNAME_PIECEWISE)));
+    registerPrefixParselet(TOKEN_LONGNAME_INVISIBLEPREFIXSCRIPTBASE.value(), PrefixParseletPtr(new PrefixOperatorParselet(TOKEN_LONGNAME_INVISIBLEPREFIXSCRIPTBASE, PRECEDENCE_LONGNAME_INVISIBLEPREFIXSCRIPTBASE)));
+    registerPrefixParselet(TOKEN_LONGNAME_EXPECTATIONE.value(), PrefixParseletPtr(new PrefixOperatorParselet(TOKEN_LONGNAME_EXPECTATIONE, PRECEDENCE_LONGNAME_EXPECTATIONE)));
+    registerPrefixParselet(TOKEN_LONGNAME_CUBEROOT.value(), PrefixParseletPtr(new PrefixOperatorParselet(TOKEN_LONGNAME_CUBEROOT, PRECEDENCE_LONGNAME_CUBEROOT)));
+    registerPrefixParselet(TOKEN_LONGNAME_PROBABILITYPR.value(), PrefixParseletPtr(new PrefixOperatorParselet(TOKEN_LONGNAME_PROBABILITYPR, PRECEDENCE_LONGNAME_PROBABILITYPR)));
     registerPrefixParselet(TOKEN_BANGBANG.value(), PrefixParseletPtr(new PrefixOperatorParselet(TOKEN_BANGBANG, PRECEDENCE_FAKE_PREFIX_BANGBANG)));
     registerPrefixParselet(TOKEN_LINEARSYNTAX_BANG.value(), PrefixParseletPtr(new PrefixOperatorParselet(TOKEN_LINEARSYNTAX_BANG, PRECEDENCE_LINEARSYNTAX_BANG)));
     
@@ -116,6 +120,7 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitiveSymbolPa
     registerInfixParselet(TOKEN_LONGNAME_DOUBLELEFTTEE.value(), InfixParseletPtr(new BinaryOperatorParselet(TOKEN_LONGNAME_DOUBLELEFTTEE, PRECEDENCE_LONGNAME_DOUBLELEFTTEE, ASSOCIATIVITY_LEFT)));
     registerInfixParselet(TOKEN_LONGNAME_UPTEE.value(), InfixParseletPtr(new BinaryOperatorParselet(TOKEN_LONGNAME_UPTEE, PRECEDENCE_LONGNAME_UPTEE, ASSOCIATIVITY_LEFT)));
     registerInfixParselet(TOKEN_LONGNAME_DOWNTEE.value(), InfixParseletPtr(new BinaryOperatorParselet(TOKEN_LONGNAME_DOWNTEE, PRECEDENCE_LONGNAME_DOWNTEE, ASSOCIATIVITY_LEFT)));
+    registerInfixParselet(TOKEN_LONGNAME_MINUS.value(), InfixParseletPtr(new BinaryOperatorParselet(TOKEN_LONGNAME_MINUS, PRECEDENCE_INFIX_LONGNAME_MINUS, ASSOCIATIVITY_LEFT)));
     
     
     //
@@ -138,25 +143,12 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitiveSymbolPa
     registerInfixParselet(TOKEN_TILDETILDE.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_TILDETILDE, PRECEDENCE_TILDETILDE)));
     registerInfixParselet(TOKEN_ATSTAR.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_ATSTAR, PRECEDENCE_ATSTAR)));
     registerInfixParselet(TOKEN_SLASHSTAR.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_SLASHSTAR, PRECEDENCE_SLASHSTAR)));
-    registerInfixParselet(TOKEN_LONGNAME_LESSFULLEQUAL.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_LESSFULLEQUAL, PRECEDENCE_LONGNAME_LESSFULLEQUAL)));
-    registerInfixParselet(TOKEN_LONGNAME_NOTLESSFULLEQUAL.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTLESSFULLEQUAL, PRECEDENCE_LONGNAME_NOTLESSFULLEQUAL)));
-    registerInfixParselet(TOKEN_LONGNAME_NESTEDLESSLESS.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NESTEDLESSLESS, PRECEDENCE_LONGNAME_NESTEDLESSLESS)));
-    registerInfixParselet(TOKEN_LONGNAME_NOTNESTEDLESSLESS.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTNESTEDLESSLESS, PRECEDENCE_LONGNAME_NOTNESTEDLESSLESS)));
-    registerInfixParselet(TOKEN_LONGNAME_NOTLESS.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTLESS, PRECEDENCE_LONGNAME_NOTLESS)));
-    registerInfixParselet(TOKEN_LONGNAME_NOTGREATER.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTGREATER, PRECEDENCE_LONGNAME_NOTGREATER)));
-    registerInfixParselet(TOKEN_LONGNAME_NOTLESSLESS.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTLESSLESS, PRECEDENCE_LONGNAME_NOTLESSLESS)));
-    registerInfixParselet(TOKEN_LONGNAME_LONGEQUAL.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_LONGEQUAL, PRECEDENCE_LONGNAME_LONGEQUAL)));
-    registerInfixParselet(TOKEN_LONGNAME_NOTEQUALTILDE.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTEQUALTILDE, PRECEDENCE_LONGNAME_NOTEQUALTILDE)));
     registerInfixParselet(TOKEN_LONGNAME_NOTHUMPEQUAL.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTHUMPEQUAL, PRECEDENCE_LONGNAME_NOTHUMPEQUAL)));
     registerInfixParselet(TOKEN_LONGNAME_NOTHUMPDOWNHUMP.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTHUMPDOWNHUMP, PRECEDENCE_LONGNAME_NOTHUMPDOWNHUMP)));
     registerInfixParselet(TOKEN_LONGNAME_LEFTTRIANGLEBAR.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_LEFTTRIANGLEBAR, PRECEDENCE_LONGNAME_LEFTTRIANGLEBAR)));
     registerInfixParselet(TOKEN_LONGNAME_RIGHTTRIANGLEBAR.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_RIGHTTRIANGLEBAR, PRECEDENCE_LONGNAME_RIGHTTRIANGLEBAR)));
     registerInfixParselet(TOKEN_LONGNAME_NOTLEFTTRIANGLEBAR.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTLEFTTRIANGLEBAR, PRECEDENCE_LONGNAME_NOTLEFTTRIANGLEBAR)));
     registerInfixParselet(TOKEN_LONGNAME_NOTRIGHTTRIANGLEBAR.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTRIGHTTRIANGLEBAR, PRECEDENCE_LONGNAME_NOTRIGHTTRIANGLEBAR)));
-    registerInfixParselet(TOKEN_LONGNAME_NOTLESSSLANTEQUAL.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTLESSSLANTEQUAL, PRECEDENCE_LONGNAME_NOTLESSSLANTEQUAL)));
-    registerInfixParselet(TOKEN_LONGNAME_NOTGREATERGREATER.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTGREATERGREATER, PRECEDENCE_LONGNAME_NOTGREATERGREATER)));
-    registerInfixParselet(TOKEN_LONGNAME_NOTNESTEDGREATERGREATER.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTNESTEDGREATERGREATER, PRECEDENCE_LONGNAME_NOTNESTEDGREATERGREATER)));
-    registerInfixParselet(TOKEN_LONGNAME_NOTGREATERSLANTEQUAL.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTGREATERSLANTEQUAL, PRECEDENCE_LONGNAME_NOTGREATERSLANTEQUAL)));
     registerInfixParselet(TOKEN_LONGNAME_ELEMENT.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_ELEMENT, PRECEDENCE_LONGNAME_ELEMENT)));
     registerInfixParselet(TOKEN_LONGNAME_SUBSET.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_SUBSET, PRECEDENCE_LONGNAME_SUBSET)));
     registerInfixParselet(TOKEN_LONGNAME_SUPERSET.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_SUPERSET, PRECEDENCE_LONGNAME_SUPERSET)));
@@ -271,13 +263,8 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitiveSymbolPa
     registerInfixParselet(TOKEN_LONGNAME_TENSORWEDGE.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_TENSORWEDGE, PRECEDENCE_LONGNAME_TENSORWEDGE)));
     registerInfixParselet(TOKEN_LONGNAME_TENSORPRODUCT.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_TENSORPRODUCT, PRECEDENCE_LONGNAME_TENSORPRODUCT)));
     registerInfixParselet(TOKEN_LONGNAME_CROSS.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_CROSS, PRECEDENCE_LONGNAME_CROSS)));
-    registerInfixParselet(TOKEN_LONGNAME_LESSTILDE.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_LESSTILDE, PRECEDENCE_LONGNAME_LESSTILDE)));
-    registerInfixParselet(TOKEN_LONGNAME_GREATERTILDE.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_GREATERTILDE, PRECEDENCE_LONGNAME_GREATERTILDE)));
-    registerInfixParselet(TOKEN_LONGNAME_NOTLESSTILDE.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTLESSTILDE, PRECEDENCE_LONGNAME_NOTLESSTILDE)));
-    registerInfixParselet(TOKEN_LONGNAME_NOTGREATERTILDE.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTGREATERTILDE, PRECEDENCE_LONGNAME_NOTGREATERTILDE)));
     registerInfixParselet(TOKEN_LONGNAME_PROPORTIONAL.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_PROPORTIONAL, PRECEDENCE_LONGNAME_PROPORTIONAL)));
     registerInfixParselet(TOKEN_LONGNAME_PROPORTION.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_PROPORTION, PRECEDENCE_LONGNAME_PROPORTION)));
-    registerInfixParselet(TOKEN_LONGNAME_LESSLESS.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_LESSLESS, PRECEDENCE_LONGNAME_LESSLESS)));
     registerInfixParselet(TOKEN_LONGNAME_CONGRUENT.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_CONGRUENT, PRECEDENCE_LONGNAME_CONGRUENT)));
     registerInfixParselet(TOKEN_LONGNAME_TILDE.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_TILDE, PRECEDENCE_LONGNAME_TILDE)));
     registerInfixParselet(TOKEN_LONGNAME_SMALLCIRCLE.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_SMALLCIRCLE, PRECEDENCE_LONGNAME_SMALLCIRCLE)));
@@ -287,10 +274,10 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitiveSymbolPa
     registerInfixParselet(TOKEN_LONGNAME_DIAMOND.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_DIAMOND, PRECEDENCE_LONGNAME_DIAMOND)));
     registerInfixParselet(TOKEN_LONGNAME_WEDGE.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_WEDGE, PRECEDENCE_LONGNAME_WEDGE)));
     registerInfixParselet(TOKEN_LONGNAME_VEE.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_VEE, PRECEDENCE_LONGNAME_VEE)));
-    registerInfixParselet(TOKEN_LONGNAME_CIRCLETIMES.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_CIRCLETIMES, PRECEDENCE_LONGNAME_CIRCLETIMES)));
+    registerInfixParselet(TOKEN_LONGNAME_CIRCLETIMES.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_CIRCLETIMES, PRECEDENCE_INFIX_LONGNAME_CIRCLETIMES)));
     registerInfixParselet(TOKEN_LONGNAME_STAR.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_STAR, PRECEDENCE_LONGNAME_STAR)));
     registerInfixParselet(TOKEN_LONGNAME_VERTICALTILDE.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_VERTICALTILDE, PRECEDENCE_LONGNAME_VERTICALTILDE)));
-    registerInfixParselet(TOKEN_LONGNAME_COPRODUCT.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_COPRODUCT, PRECEDENCE_LONGNAME_COPRODUCT)));
+    registerInfixParselet(TOKEN_LONGNAME_COPRODUCT.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_COPRODUCT, PRECEDENCE_INFIX_LONGNAME_COPRODUCT)));
     registerInfixParselet(TOKEN_LONGNAME_CAP.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_CAP, PRECEDENCE_LONGNAME_CAP)));
     registerInfixParselet(TOKEN_LONGNAME_CUP.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_CUP, PRECEDENCE_LONGNAME_CUP)));
     registerInfixParselet(TOKEN_LONGNAME_CIRCLEPLUS.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_CIRCLEPLUS, PRECEDENCE_LONGNAME_CIRCLEPLUS)));
@@ -309,22 +296,12 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitiveSymbolPa
     registerInfixParselet(TOKEN_LONGNAME_NOTREVERSEELEMENT.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTREVERSEELEMENT, PRECEDENCE_LONGNAME_NOTREVERSEELEMENT)));
     registerInfixParselet(TOKEN_LONGNAME_NOTTILDE.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTTILDE, PRECEDENCE_LONGNAME_NOTTILDE)));
     registerInfixParselet(TOKEN_LONGNAME_EQUALTILDE.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_EQUALTILDE, PRECEDENCE_LONGNAME_EQUALTILDE)));
-    registerInfixParselet(TOKEN_LONGNAME_LESSSLANTEQUAL.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_LESSSLANTEQUAL, PRECEDENCE_LONGNAME_LESSSLANTEQUAL)));
-    registerInfixParselet(TOKEN_LONGNAME_GREATERSLANTEQUAL.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_GREATERSLANTEQUAL, PRECEDENCE_LONGNAME_GREATERSLANTEQUAL)));
     registerInfixParselet(TOKEN_LONGNAME_COLON.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_COLON, PRECEDENCE_LONGNAME_COLON)));
     registerInfixParselet(TOKEN_LONGNAME_CUPCAP.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_CUPCAP, PRECEDENCE_LONGNAME_CUPCAP)));
     registerInfixParselet(TOKEN_LONGNAME_NOTCUPCAP.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTCUPCAP, PRECEDENCE_LONGNAME_NOTCUPCAP)));
     registerInfixParselet(TOKEN_LONGNAME_DOTEQUAL.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_DOTEQUAL, PRECEDENCE_LONGNAME_DOTEQUAL)));
-    registerInfixParselet(TOKEN_LONGNAME_GREATERFULLEQUAL.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_GREATERFULLEQUAL, PRECEDENCE_LONGNAME_GREATERFULLEQUAL)));
-    registerInfixParselet(TOKEN_LONGNAME_NOTGREATERFULLEQUAL.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTGREATERFULLEQUAL, PRECEDENCE_LONGNAME_NOTGREATERFULLEQUAL)));
-    registerInfixParselet(TOKEN_LONGNAME_GREATERGREATER.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_GREATERGREATER, PRECEDENCE_LONGNAME_GREATERGREATER)));
-    registerInfixParselet(TOKEN_LONGNAME_GREATERLESS.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_GREATERLESS, PRECEDENCE_LONGNAME_GREATERLESS)));
-    registerInfixParselet(TOKEN_LONGNAME_LESSGREATER.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_LESSGREATER, PRECEDENCE_LONGNAME_LESSGREATER)));
-    registerInfixParselet(TOKEN_LONGNAME_NOTGREATERLESS.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTGREATERLESS, PRECEDENCE_LONGNAME_NOTGREATERLESS)));
-    registerInfixParselet(TOKEN_LONGNAME_NOTLESSGREATER.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTLESSGREATER, PRECEDENCE_LONGNAME_NOTLESSGREATER)));
     registerInfixParselet(TOKEN_LONGNAME_HUMPEQUAL.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_HUMPEQUAL, PRECEDENCE_LONGNAME_HUMPEQUAL)));
     registerInfixParselet(TOKEN_LONGNAME_HUMPDOWNHUMP.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_HUMPDOWNHUMP, PRECEDENCE_LONGNAME_HUMPDOWNHUMP)));
-    registerInfixParselet(TOKEN_LONGNAME_NESTEDGREATERGREATER.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NESTEDGREATERGREATER, PRECEDENCE_LONGNAME_NESTEDGREATERGREATER)));
     registerInfixParselet(TOKEN_LONGNAME_NOTCONGRUENT.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTCONGRUENT, PRECEDENCE_LONGNAME_NOTCONGRUENT)));
     registerInfixParselet(TOKEN_LONGNAME_PRECEDES.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_PRECEDES, PRECEDENCE_LONGNAME_PRECEDES)));
     registerInfixParselet(TOKEN_LONGNAME_SUCCEEDS.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_SUCCEEDS, PRECEDENCE_LONGNAME_SUCCEEDS)));
@@ -342,6 +319,11 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitiveSymbolPa
     registerInfixParselet(TOKEN_LONGNAME_NOTSUCCEEDSTILDE.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTSUCCEEDSTILDE, PRECEDENCE_LONGNAME_NOTSUCCEEDSTILDE)));
     registerInfixParselet(TOKEN_LONGNAME_NOTPRECEDESSLANTEQUAL.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTPRECEDESSLANTEQUAL, PRECEDENCE_LONGNAME_NOTPRECEDESSLANTEQUAL)));
     registerInfixParselet(TOKEN_LONGNAME_NOTSUCCEEDSSLANTEQUAL.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTSUCCEEDSSLANTEQUAL, PRECEDENCE_LONGNAME_NOTSUCCEEDSSLANTEQUAL)));
+    registerInfixParselet(TOKEN_LONGNAME_SQUAREUNION.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_SQUAREUNION, PRECEDENCE_LONGNAME_SQUAREUNION)));
+    registerInfixParselet(TOKEN_LONGNAME_SQUAREINTERSECTION.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_SQUAREINTERSECTION, PRECEDENCE_LONGNAME_SQUAREINTERSECTION)));
+    registerInfixParselet(TOKEN_LONGNAME_XNOR.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_XNOR, PRECEDENCE_LONGNAME_XNOR)));
+    registerInfixParselet(TOKEN_LONGNAME_NOTEQUALTILDE.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_NOTEQUALTILDE, PRECEDENCE_LONGNAME_NOTEQUALTILDE)));
+    registerInfixParselet(TOKEN_LONGNAME_UNIONPLUS.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_UNIONPLUS, PRECEDENCE_LONGNAME_UNIONPLUS)));
     registerInfixParselet(TOKEN_FAKE_IMPLICITTIMES.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_FAKE_IMPLICITTIMES, PRECEDENCE_STAR)));
     
     
@@ -354,12 +336,13 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitiveSymbolPa
     registerInfixParselet(TOKEN_MINUSMINUS.value(), InfixParseletPtr(new PostfixOperatorParselet(TOKEN_MINUSMINUS, PRECEDENCE_POSTFIX_MINUSMINUS)));
     registerInfixParselet(TOKEN_PLUSPLUS.value(), InfixParseletPtr(new PostfixOperatorParselet(TOKEN_PLUSPLUS, PRECEDENCE_POSTFIX_PLUSPLUS)));
     registerInfixParselet(TOKEN_DOTDOTDOT.value(), InfixParseletPtr(new PostfixOperatorParselet(TOKEN_DOTDOTDOT, PRECEDENCE_DOTDOTDOT)));
-    registerInfixParselet(TOKEN_BANGBANG.value(), InfixParseletPtr(new PostfixOperatorParselet(TOKEN_BANGBANG, PRECEDENCE_BANGBANG)));
+    registerInfixParselet(TOKEN_BANGBANG.value(), InfixParseletPtr(new PostfixOperatorParselet(TOKEN_BANGBANG, PRECEDENCE_POSTFIX_BANGBANG)));
     registerInfixParselet(TOKEN_SINGLEQUOTE.value(), InfixParseletPtr(new PostfixOperatorParselet(TOKEN_SINGLEQUOTE, PRECEDENCE_SINGLEQUOTE)));
     registerInfixParselet(TOKEN_LONGNAME_TRANSPOSE.value(), InfixParseletPtr(new PostfixOperatorParselet(TOKEN_LONGNAME_TRANSPOSE, PRECEDENCE_LONGNAME_TRANSPOSE)));
-    registerInfixParselet(TOKEN_LONGNAME_CONJUGATE.value(), InfixParseletPtr(new PostfixOperatorParselet(TOKEN_LONGNAME_CONJUGATE, PRECEDENCE_LONGNAME_CONGRUENT)));
+    registerInfixParselet(TOKEN_LONGNAME_CONJUGATE.value(), InfixParseletPtr(new PostfixOperatorParselet(TOKEN_LONGNAME_CONJUGATE, PRECEDENCE_LONGNAME_CONJUGATE)));
     registerInfixParselet(TOKEN_LONGNAME_CONJUGATETRANSPOSE.value(), InfixParseletPtr(new PostfixOperatorParselet(TOKEN_LONGNAME_CONJUGATETRANSPOSE, PRECEDENCE_LONGNAME_CONJUGATETRANSPOSE)));
     registerInfixParselet(TOKEN_LONGNAME_HERMITIANCONJUGATE.value(), InfixParseletPtr(new PostfixOperatorParselet(TOKEN_LONGNAME_HERMITIANCONJUGATE, PRECEDENCE_LONGNAME_HERMITIANCONJUGATE)));
+    registerInfixParselet(TOKEN_LONGNAME_INVISIBLEPOSTFIXSCRIPTBASE.value(), InfixParseletPtr(new PostfixOperatorParselet(TOKEN_LONGNAME_INVISIBLEPOSTFIXSCRIPTBASE, PRECEDENCE_LONGNAME_INVISIBLEPOSTFIXSCRIPTBASE)));
     
     
     //
@@ -445,20 +428,48 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitiveSymbolPa
     registerPrefixParselet(TOKEN_LONGNAME_INTEGRAL.value(), PrefixParseletPtr(new IntegralParselet(TOKEN_LONGNAME_INTEGRAL)));
     
     // special Inequality
-    registerInfixParselet(TOKEN_EQUALEQUAL.value(), InfixParseletPtr(new InequalityParselet()));
-    registerInfixParselet(TOKEN_LESSEQUAL.value(), InfixParseletPtr(new InequalityParselet()));
     registerInfixParselet(TOKEN_BANGEQUAL.value(), InfixParseletPtr(new InequalityParselet()));
-    registerInfixParselet(TOKEN_LESS.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_EQUALEQUAL.value(), InfixParseletPtr(new InequalityParselet()));
     registerInfixParselet(TOKEN_GREATER.value(), InfixParseletPtr(new InequalityParselet()));
     registerInfixParselet(TOKEN_GREATEREQUAL.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LESSEQUAL.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LESS.value(), InfixParseletPtr(new InequalityParselet()));
+    
     registerInfixParselet(TOKEN_LONGNAME_EQUAL.value(), InfixParseletPtr(new InequalityParselet()));
-    registerInfixParselet(TOKEN_LONGNAME_LESSEQUAL.value(), InfixParseletPtr(new InequalityParselet()));
-    registerInfixParselet(TOKEN_LONGNAME_NOTLESSEQUAL.value(), InfixParseletPtr(new InequalityParselet()));
     registerInfixParselet(TOKEN_LONGNAME_GREATEREQUAL.value(), InfixParseletPtr(new InequalityParselet()));
-    registerInfixParselet(TOKEN_LONGNAME_NOTGREATEREQUAL.value(), InfixParseletPtr(new InequalityParselet()));
-    registerInfixParselet(TOKEN_LONGNAME_NOTEQUAL.value(), InfixParseletPtr(new InequalityParselet()));
-    registerInfixParselet(TOKEN_LONGNAME_LESSEQUALGREATER.value(), InfixParseletPtr(new InequalityParselet()));
     registerInfixParselet(TOKEN_LONGNAME_GREATEREQUALLESS.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_GREATERFULLEQUAL.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_GREATERGREATER.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_GREATERLESS.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_GREATERSLANTEQUAL.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_GREATERTILDE.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_LESSEQUAL.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_LESSEQUALGREATER.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_LESSFULLEQUAL.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_LESSGREATER.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_LESSLESS.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_LESSSLANTEQUAL.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_LESSTILDE.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_LONGEQUAL.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_NESTEDGREATERGREATER.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_NESTEDLESSLESS.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_NOTEQUAL.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_NOTGREATER.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_NOTGREATEREQUAL.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_NOTGREATERFULLEQUAL.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_NOTGREATERGREATER.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_NOTGREATERLESS.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_NOTGREATERSLANTEQUAL.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_NOTGREATERTILDE.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_NOTLESS.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_NOTLESSEQUAL.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_NOTLESSFULLEQUAL.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_NOTLESSGREATER.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_NOTLESSLESS.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_NOTLESSSLANTEQUAL.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_NOTLESSTILDE.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_NOTNESTEDGREATERGREATER.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_NOTNESTEDLESSLESS.value(), InfixParseletPtr(new InequalityParselet()));
     
     // special VectorInequality
     registerInfixParselet(TOKEN_LONGNAME_VECTORGREATER.value(), InfixParseletPtr(new VectorInequalityParselet()));

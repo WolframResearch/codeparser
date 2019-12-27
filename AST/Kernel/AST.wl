@@ -81,8 +81,7 @@ Out[3]= {ImplicitPlus}
 
 These are not documented symbols, so they are apparently side-effects of parsing.
 
-We want to avoid any confusion about this, so we introduce our own symbols here:
-AST`PostfixHermitianConjugate and AST`BinaryImplicitPlus
+We want to avoid any confusion about this, so we make sure to use System` here
 
 Some examples of these System symbols that are introduced only after parsing:
 HermitianConjugate
@@ -109,10 +108,10 @@ OptionalDefaultPattern
 
 (* operator symbols *)
 PrefixLinearSyntaxBang
-PrefixInvisiblePrefixScriptBase
+System`InvisiblePrefixScriptBase
 
-PostfixHermitianConjugate
-PostfixInvisiblePostfixScriptBase
+System`HermitianConjugate
+System`InvisiblePostfixScriptBase
 
 PrefixNot2
 

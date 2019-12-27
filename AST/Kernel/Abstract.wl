@@ -1139,23 +1139,101 @@ Module[{rators, rands},
 		{ToNode[Unequal]..},
 			CallNode[ToNode[Unequal], rands, data]
 		,
-		{ToNode[Less]..},
-			CallNode[ToNode[Less], rands, data]
-		,
 		{ToNode[Greater]..},
 			CallNode[ToNode[Greater], rands, data]
 		,
-		{ToNode[LessEqual]..},
-			CallNode[ToNode[LessEqual], rands, data]
+		{ToNode[Less]..},
+			CallNode[ToNode[Less], rands, data]
 		,
 		{ToNode[GreaterEqual]..},
 			CallNode[ToNode[GreaterEqual], rands, data]
 		,
-		{ToNode[NotLessEqual]..},
-			CallNode[ToNode[NotLessEqual], rands, data]
+		{ToNode[GreaterEqualLess]..},
+			CallNode[ToNode[GreaterEqualLess], rands, data]
+		,
+		{ToNode[GreaterFullEqual]..},
+			CallNode[ToNode[GreaterFullEqual], rands, data]
+		,
+		{ToNode[GreaterGreater]..},
+			CallNode[ToNode[GreaterGreater], rands, data]
+		,
+		{ToNode[GreaterLess]..},
+			CallNode[ToNode[GreaterLess], rands, data]
+		,
+		{ToNode[GreaterTilde]..},
+			CallNode[ToNode[GreaterTilde], rands, data]
+		,
+		{ToNode[LessEqual]..},
+			CallNode[ToNode[LessEqual], rands, data]
+		,
+		{ToNode[LessEqualGreater]..},
+			CallNode[ToNode[LessEqualGreater], rands, data]
+		,
+		{ToNode[LessFullEqual]..},
+			CallNode[ToNode[LessFullEqual], rands, data]
+		,
+		{ToNode[LessGreater]..},
+			CallNode[ToNode[LessGreater], rands, data]
+		,
+		{ToNode[LessLess]..},
+			CallNode[ToNode[LessLess], rands, data]
+		,
+		{ToNode[LessTilde]..},
+			CallNode[ToNode[LessTilde], rands, data]
+		,
+		{ToNode[NestedGreaterGreater]..},
+			CallNode[ToNode[NestedGreaterGreater], rands, data]
+		,
+		{ToNode[NestedLessLess]..},
+			CallNode[ToNode[NestedLessLess], rands, data]
+		,
+		{ToNode[NotGreater]..},
+			CallNode[ToNode[NotGreater], rands, data]
 		,
 		{ToNode[NotGreaterEqual]..},
 			CallNode[ToNode[NotGreaterEqual], rands, data]
+		,
+		{ToNode[NotGreaterFullEqual]..},
+			CallNode[ToNode[NotGreaterFullEqual], rands, data]
+		,
+		{ToNode[NotGreaterGreater]..},
+			CallNode[ToNode[NotGreaterGreater], rands, data]
+		,
+		{ToNode[NotGreaterLess]..},
+			CallNode[ToNode[NotGreaterLess], rands, data]
+		,
+		{ToNode[NotGreaterSlantEqual]..},
+			CallNode[ToNode[NotGreaterSlantEqual], rands, data]
+		,
+		{ToNode[NotGreaterTilde]..},
+			CallNode[ToNode[NotGreaterTilde], rands, data]
+		,
+		{ToNode[NotLess]..},
+			CallNode[ToNode[NotLess], rands, data]
+		,
+		{ToNode[NotLessEqual]..},
+			CallNode[ToNode[NotLessEqual], rands, data]
+		,
+		{ToNode[NotLessFullEqual]..},
+			CallNode[ToNode[NotLessFullEqual], rands, data]
+		,
+		{ToNode[NotLessGreater]..},
+			CallNode[ToNode[NotLessGreater], rands, data]
+		,
+		{ToNode[NotLessLess]..},
+			CallNode[ToNode[NotLessLess], rands, data]
+		,
+		{ToNode[NotLessSlantEqual]..},
+			CallNode[ToNode[NotLessSlantEqual], rands, data]
+		,
+		{ToNode[NotLessTilde]..},
+			CallNode[ToNode[NotLessTilde], rands, data]
+		,
+		{ToNode[NotNestedGreaterGreater]..},
+			CallNode[ToNode[NotNestedGreaterGreater], rands, data]
+		,
+		{ToNode[NotNestedLessLess]..},
+			CallNode[ToNode[NotNestedLessLess], rands, data]
 		,
 		_,
 			CallNode[ToNode[Inequality], Riffle[rands, rators], data]
@@ -1163,17 +1241,42 @@ Module[{rators, rands},
 ]
 
 
-inequalityOperatorToSymbol[LeafNode[Token`EqualEqual | Token`LongName`Equal, _, _]] := ToNode[Equal]
+inequalityOperatorToSymbol[LeafNode[Token`EqualEqual | Token`LongName`Equal | Token`LongName`LongEqual, _, _]] := ToNode[Equal]
 inequalityOperatorToSymbol[LeafNode[Token`BangEqual | Token`LongName`NotEqual, _, _]] := ToNode[Unequal]
 inequalityOperatorToSymbol[LeafNode[Token`Less, _, _]] := ToNode[Less]
 inequalityOperatorToSymbol[LeafNode[Token`Greater, _, _]] := ToNode[Greater]
 inequalityOperatorToSymbol[LeafNode[Token`LessEqual | Token`LongName`LessEqual, _, _]] := ToNode[LessEqual]
 inequalityOperatorToSymbol[LeafNode[Token`GreaterEqual | Token`LongName`GreaterEqual, _, _]] := ToNode[GreaterEqual]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`NotLessEqual, _, _]] := ToNode[NotLessEqual]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`GreaterEqualLess, _, _]] := ToNode[GreaterEqualLess]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`GreaterFullEqual, _, _]] := ToNode[GreaterFullEqual]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`GreaterGreater, _, _]] := ToNode[GreaterGreater]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`GreaterLess, _, _]] := ToNode[GreaterLess]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`GreaterSlantEqual, _, _]] := ToNode[GreaterEqual]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`GreaterTilde, _, _]] := ToNode[GreaterTilde]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`LessEqualGreater, _, _]] := ToNode[LessEqualGreater]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`LessFullEqual, _, _]] := ToNode[LessFullEqual]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`LessGreater, _, _]] := ToNode[LessGreater]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`LessLess, _, _]] := ToNode[LessLess]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`LessSlantEqual, _, _]] := ToNode[LessEqual]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`LessTilde, _, _]] := ToNode[LessTilde]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NestedGreaterGreater, _, _]] := ToNode[NestedGreaterGreater]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NestedLessLess, _, _]] := ToNode[NestedLessLess]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotGreater, _, _]] := ToNode[NotGreater]
 inequalityOperatorToSymbol[LeafNode[Token`LongName`NotGreaterEqual, _, _]] := ToNode[NotGreaterEqual]
-
-
-
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotGreaterFullEqual, _, _]] := ToNode[NotGreaterFullEqual]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotGreaterGreater, _, _]] := ToNode[NotGreaterGreater]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotGreaterLess, _, _]] := ToNode[NotGreaterLess]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotGreaterSlantEqual, _, _]] := ToNode[NotGreaterSlantEqual]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotGreaterTilde, _, _]] := ToNode[NotGreaterTilde]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotLess, _, _]] := ToNode[NotLess]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotLessEqual, _, _]] := ToNode[NotLessEqual]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotLessFullEqual, _, _]] := ToNode[NotLessFullEqual]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotLessGreater, _, _]] := ToNode[NotLessGreater]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotLessLess, _, _]] := ToNode[NotLessLess]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotLessSlantEqual, _, _]] := ToNode[NotLessSlantEqual]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotLessTilde, _, _]] := ToNode[NotLessTilde]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotNestedGreaterGreater, _, _]] := ToNode[NotNestedGreaterGreater]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotNestedLessLess, _, _]] := ToNode[NotNestedLessLess]
 
 
 abstractVectorInequality[InfixNode[Developer`VectorInequality, children_, data_]] :=

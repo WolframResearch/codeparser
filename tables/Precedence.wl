@@ -219,51 +219,40 @@ Precedence`LongName`DoubleVerticalBar -> Precedence[DoubleVerticalBar], (* 280 *
 Precedence`LongName`NotDoubleVerticalBar -> Precedence[NotDoubleVerticalBar], (* 280 *)
 
 Precedence`Fake`Inequality -> Precedence[Equal], (* 290 *)
-Precedence`LongName`TildeTilde -> Precedence[TildeTilde], (* 290 *)
-Precedence`LongName`NotTildeTilde -> Precedence[NotTildeTilde], (* 290 *)
-
-Precedence`LongName`LeftTriangleEqual -> Precedence[LeftTriangleEqual], (* 290 *)
-Precedence`LongName`RightTriangleEqual -> Precedence[RightTriangleEqual], (* 290 *)
-Precedence`LongName`NotLeftTriangleEqual -> Precedence[NotLeftTriangleEqual], (* 290 *)
-Precedence`LongName`NotRightTriangleEqual -> Precedence[NotRightTriangleEqual], (* 290 *)
-
-Precedence`LongName`TildeEqual -> Precedence[TildeEqual], (* 290 *)
-Precedence`LongName`NotTildeEqual -> Precedence[NotTildeEqual], (* 290 *)
-Precedence`LongName`TildeFullEqual -> Precedence[TildeFullEqual], (* 290 *)
-Precedence`LongName`NotTildeFullEqual -> Precedence[NotTildeFullEqual], (* 290 *)
-Precedence`LongName`LessTilde -> Precedence[LessTilde], (* 290 *)
-Precedence`LongName`GreaterTilde -> Precedence[GreaterTilde], (* 290 *)
-Precedence`LongName`NotLessTilde -> Precedence[NotLessTilde], (* 290 *)
-Precedence`LongName`NotGreaterTilde -> Precedence[NotGreaterTilde], (* 290 *)
-Precedence`LongName`Tilde -> Precedence[Tilde], (* 290 *)
-Precedence`LongName`Proportional -> Precedence[Proportional], (* 290 *)
-Precedence`LongName`Proportion -> Precedence[Proportion], (* 290 *)
-Precedence`LongName`LessLess -> Precedence[LessLess], (* 290 *)
-Precedence`LongName`Congruent -> Precedence[Congruent], (* 290 *)
 
 Precedence`LongName`LeftTriangle -> Precedence[LeftTriangle], (* 290 *)
 Precedence`LongName`RightTriangle -> Precedence[RightTriangle], (* 290 *)
 Precedence`LongName`NotLeftTriangle -> Precedence[NotLeftTriangle], (* 290 *)
 Precedence`LongName`NotRightTriangle -> Precedence[NotRightTriangle], (* 290 *)
+Precedence`LongName`LeftTriangleEqual -> Precedence[LeftTriangleEqual], (* 290 *)
+Precedence`LongName`RightTriangleEqual -> Precedence[RightTriangleEqual], (* 290 *)
+Precedence`LongName`NotLeftTriangleEqual -> Precedence[NotLeftTriangleEqual], (* 290 *)
+Precedence`LongName`NotRightTriangleEqual -> Precedence[NotRightTriangleEqual], (* 290 *)
+Precedence`LongName`LeftTriangleBar -> Precedence[LeftTriangleBar], (* 290 *)
+Precedence`LongName`RightTriangleBar -> Precedence[RightTriangleBar], (* 290 *)
+Precedence`LongName`NotLeftTriangleBar -> Precedence[NotLeftTriangleBar], (* 290 *)
+Precedence`LongName`NotRightTriangleBar -> Precedence[NotRightTriangleBar], (* 290 *)
+
+Precedence`LongName`TildeEqual -> Precedence[TildeEqual], (* 290 *)
+Precedence`LongName`NotTildeEqual -> Precedence[NotTildeEqual], (* 290 *)
+Precedence`LongName`TildeFullEqual -> Precedence[TildeFullEqual], (* 290 *)
+Precedence`LongName`NotTildeFullEqual -> Precedence[NotTildeFullEqual], (* 290 *)
+Precedence`LongName`Tilde -> Precedence[Tilde], (* 290 *)
+Precedence`LongName`NotTilde -> Precedence[NotTilde], (* 290 *)
+Precedence`LongName`EqualTilde -> Precedence[EqualTilde], (* 290 *)
+Precedence`LongName`NotEqualTilde -> Precedence[NotEqualTilde], (* 290 *)
+Precedence`LongName`TildeTilde -> Precedence[TildeTilde], (* 290 *)
+Precedence`LongName`NotTildeTilde -> Precedence[NotTildeTilde], (* 290 *)
+
+Precedence`LongName`Proportional -> Precedence[Proportional], (* 290 *)
+Precedence`LongName`Proportion -> Precedence[Proportion], (* 290 *)
+Precedence`LongName`Congruent -> Precedence[Congruent], (* 290 *)
+Precedence`LongName`NotCongruent -> Precedence[NotCongruent], (* 290 *)
 
 Precedence`LongName`Equilibrium -> Precedence[Equilibrium], (* 290 *)
 Precedence`LongName`ReverseEquilibrium -> Precedence[ReverseEquilibrium], (* 290 *)
 
-Precedence`LongName`LessFullEqual -> Precedence[LessFullEqual], (* 290 *)
-Precedence`LongName`NotLessFullEqual -> Precedence[NotLessFullEqual], (* 290 *)
-
-Precedence`LongName`NestedLessLess -> Precedence[NestedLessLess], (* 290 *)
-Precedence`LongName`NotNestedLessLess -> Precedence[NotNestedLessLess], (* 290 *)
-
-Precedence`LongName`NotLess -> Precedence[NotLess], (* 290 *)
-Precedence`LongName`NotGreater -> Precedence[NotGreater], (* 290 *)
-
-Precedence`LongName`NotLessLess -> Precedence[NotLessLess], (* 290 *)
-Precedence`LongName`LongEqual -> Precedence[Equal], (* 290 *)
-Precedence`LongName`NotTilde -> Precedence[NotTilde], (* 290 *)
-Precedence`LongName`EqualTilde -> Precedence[EqualTilde], (* 290 *)
 Precedence`LongName`DotEqual -> Precedence[DotEqual], (* 290 *)
-Precedence`LongName`NotCongruent -> Precedence[NotCongruent], (* 290 *)
 (*
 added in 12.0:
 VectorGreater
@@ -274,25 +263,6 @@ VectorLessEqual
 so hard-code if building with version less than 12.0
 *)
 Precedence`Fake`VectorInequality -> If[$VersionNumber >= 12.0, Precedence[System`VectorGreater] (* 290 *), 290],
-
-Precedence`LongName`GreaterGreater -> Precedence[GreaterGreater], (* 290 *)
-
-Precedence`LongName`GreaterLess -> Precedence[GreaterLess], (* 290 *)
-Precedence`LongName`LessGreater -> Precedence[LessGreater], (* 290 *)
-Precedence`LongName`NotGreaterLess -> Precedence[NotGreaterLess], (* 290 *)
-Precedence`LongName`NotLessGreater -> Precedence[NotLessGreater], (* 290 *)
-
-Precedence`LongName`NotEqualTilde -> Precedence[NotEqualTilde], (* 290 *)
-Precedence`LongName`NotHumpEqual -> Precedence[NotHumpEqual], (* 290 *)
-Precedence`LongName`NotHumpDownHump -> Precedence[NotHumpDownHump], (* 290 *)
-Precedence`LongName`LeftTriangleBar -> Precedence[LeftTriangleBar], (* 290 *)
-Precedence`LongName`RightTriangleBar -> Precedence[RightTriangleBar], (* 290 *)
-Precedence`LongName`NotLeftTriangleBar -> Precedence[NotLeftTriangleBar], (* 290 *)
-Precedence`LongName`NotRightTriangleBar -> Precedence[NotRightTriangleBar], (* 290 *)
-Precedence`LongName`NotLessSlantEqual -> Precedence[NotLessSlantEqual], (* 290 *)
-Precedence`LongName`NotGreaterGreater -> Precedence[NotGreaterGreater], (* 290 *)
-Precedence`LongName`NotNestedGreaterGreater -> Precedence[NotNestedGreaterGreater], (* 290 *)
-Precedence`LongName`NotGreaterSlantEqual -> Precedence[NotGreaterSlantEqual], (* 290 *)
 
 Precedence`LongName`Precedes -> Precedence[Precedes], (* 290 *)
 Precedence`LongName`Succeeds -> Precedence[Succeeds], (* 290 *)
@@ -311,24 +281,13 @@ Precedence`LongName`NotSucceedsEqual -> Precedence[NotSucceedsEqual], (* 290 *)
 Precedence`LongName`NotPrecedesSlantEqual -> Precedence[PrecedesSlantEqual], (* 290 *)
 Precedence`LongName`NotSucceedsSlantEqual -> Precedence[SucceedsSlantEqual], (* 290 *)
 
-(*
-LessSlantEqual and GreaterSlantEqual are parsed as LessEqual and GreaterEqual
-*)
-Precedence`LongName`LessSlantEqual -> Precedence[LessEqual], (* 290 *)
-Precedence`LongName`GreaterSlantEqual -> Precedence[GreaterEqual], (* 290 *)
-
 Precedence`LongName`CupCap -> Precedence[CupCap], (* 290 *)
 Precedence`LongName`NotCupCap -> Precedence[NotCupCap], (* 290 *)
 
-Precedence`LongName`GreaterEqualLess -> Precedence[GreaterEqualLess], (* 290 *)
-
-Precedence`LongName`GreaterFullEqual -> Precedence[GreaterFullEqual], (* 290 *)
-Precedence`LongName`NotGreaterFullEqual -> Precedence[NotGreaterFullEqual], (* 290 *)
-
 Precedence`LongName`HumpEqual -> Precedence[HumpEqual], (* 290 *)
 Precedence`LongName`HumpDownHump -> Precedence[HumpDownHump], (* 290 *)
-Precedence`LongName`NestedGreaterGreater -> Precedence[NestedGreaterGreater], (* 290 *)
-Precedence`LongName`NotGreaterEqual -> Precedence[NotGreaterEqual], (* 290 *)
+Precedence`LongName`NotHumpEqual -> Precedence[NotHumpEqual], (* 290 *)
+Precedence`LongName`NotHumpDownHump -> Precedence[NotHumpDownHump], (* 290 *)
 
 Precedence`LongName`DirectedEdge -> Precedence[DirectedEdge], (* 295 *)
 Precedence`LongName`UndirectedEdge -> Precedence[UndirectedEdge], (* 295 *)
@@ -341,22 +300,31 @@ But empirically it is lower than \[Union]
 Precedence`SemiSemi -> Next,
 
 Precedence`LongName`Union -> Precedence[Union], (* 300 *)
-Precedence`LongName`Intersection -> Precedence[Intersection], (* 300 *)
+Precedence`LongName`SquareUnion -> Precedence[SquareUnion], (* 300 *)
+Precedence`LongName`UnionPlus -> Precedence[UnionPlus], (* 300 *)
+
+Precedence`LongName`Intersection -> Precedence[Intersection], (* 305 *)
+Precedence`LongName`SquareIntersection -> Precedence[SquareIntersection], (* 305 *)
+
 
 Precedence`Infix`Plus -> Precedence[Plus], (* 310 *)
 Precedence`Infix`Minus -> Precedence`Infix`Plus,
 Precedence`Infix`LongName`PlusMinus -> Precedence[PlusMinus], (* 310 *)
 Precedence`Infix`LongName`MinusPlus -> Precedence[MinusPlus], (* 310 *)
+Precedence`Infix`LongName`Minus -> Precedence`Infix`Minus, (* 310 *)
 
 Precedence`LongName`ImplicitPlus -> Next,
 
 Precedence`LongName`Sum -> Precedence[Sum], (* 320 *)
 
-Precedence`LongName`Integral -> Next,
+Precedence`LongName`Integral -> Precedence[Integrate], (* 325 *)
 Precedence`LongName`ContourIntegral -> Precedence`LongName`Integral,
 Precedence`LongName`DoubleContourIntegral -> Precedence`LongName`Integral,
 Precedence`LongName`ClockwiseContourIntegral -> Precedence`LongName`Integral,
 Precedence`LongName`CounterClockwiseContourIntegral -> Precedence`LongName`Integral,
+
+Precedence`LongName`ExpectationE -> Precedence[ExpectationE], (* 325 *)
+Precedence`LongName`ProbabilityPr -> Precedence[ProbabilityPr], (* 325 *)
 
 Precedence`LongName`CirclePlus -> Precedence[CirclePlus], (* 330 *)
 Precedence`LongName`CircleMinus -> Precedence[CircleMinus], (* 330 *)
@@ -365,7 +333,7 @@ Precedence`LongName`Cup -> Precedence[Cup], (* 340 *)
 
 Precedence`LongName`Cap -> Precedence[Cap], (* 350 *)
 
-Precedence`LongName`Coproduct -> Precedence[Coproduct], (* 360 *)
+Precedence`Infix`LongName`Coproduct -> Precedence[Coproduct], (* 360 *)
 
 Precedence`LongName`VerticalTilde -> Precedence[VerticalTilde], (* 370 *)
 
@@ -378,10 +346,11 @@ Precedence`LongName`Star -> Precedence[Star], (* 390 *)
 Precedence`Star -> Precedence[Times], (* 400 *)
 Precedence`LongName`Times -> Precedence`Star,
 Precedence`LongName`InvisibleTimes -> Precedence`Star,
+Precedence`Fake`ImplicitTimes -> Precedence`Star,
 
 Precedence`LongName`CenterDot -> Precedence[CenterDot], (* 410 *)
 
-Precedence`LongName`CircleTimes -> Precedence[CircleTimes], (* 420 *)
+Precedence`Infix`LongName`CircleTimes -> Precedence[CircleTimes], (* 420 *)
 
 (*
 DISCREPANCY
@@ -458,6 +427,7 @@ Precedence`LongName`DifferentialD -> Next,
 Precedence`LongName`CapitalDifferentialD -> Precedence`LongName`DifferentialD,
 
 Precedence`LongName`Sqrt -> Next,
+Precedence`LongName`CubeRoot -> Precedence`LongName`Sqrt,
 
 (*
 vertical arrow and vector operators
@@ -494,10 +464,11 @@ Precedence`LongName`RightUpTeeVector -> Precedence[RightUpTeeVector], (* 580 *)
 Precedence`LongName`RightDownTeeVector -> Precedence[RightDownTeeVector], (* 580 *)
 Precedence`LongName`LeftUpTeeVector -> Precedence[LeftUpTeeVector], (* 580 *)
 Precedence`LongName`LeftDownTeeVector -> Precedence[LeftDownTeeVector], (* 580 *)
-Precedence`LongName`UpEquilibrium -> Precedence[UpEquilibrium], (* 580 *)
-Precedence`LongName`ReverseUpEquilibrium -> Precedence[ReverseUpEquilibrium], (* 580 *)
 Precedence`LongName`ShortUpArrow -> Precedence[ShortUpArrow], (* 580 *)
 Precedence`LongName`ShortDownArrow -> Precedence[ShortDownArrow], (* 580 *)
+
+Precedence`LongName`UpEquilibrium -> Precedence[UpEquilibrium], (* 580 *)
+Precedence`LongName`ReverseUpEquilibrium -> Precedence[ReverseUpEquilibrium], (* 580 *)
 
 Precedence`Caret -> Precedence[Power], (* 590 *)
 
@@ -511,7 +482,7 @@ Precedence`LongName`ConjugateTranspose -> Precedence`LongName`Transpose,
 Precedence`LongName`HermitianConjugate -> Precedence`LongName`Transpose,
 
 Precedence`Postfix`Bang -> Precedence[Factorial], (* 610 *)
-Precedence`BangBang -> Precedence[Factorial2], (* 610 *)
+Precedence`Postfix`BangBang -> Precedence[Factorial2], (* 610 *)
 
 Precedence`AtAt -> Precedence[Apply], (* 620 *)
 Precedence`SlashAt -> Precedence[Map], (* 620 *)
@@ -546,6 +517,9 @@ Precedence`LinearSyntax`Bang -> Next,
 Precedence`LessLess -> Precedence[Get], (* 720 *)
 
 Precedence`ColonColon -> Precedence[MessageName], (* 750 *)
+
+Precedence`LongName`InvisiblePrefixScriptBase -> Next,
+Precedence`LongName`InvisiblePostfixScriptBase -> Precedence`LongName`InvisiblePrefixScriptBase,
 
 Precedence`Highest -> Precedence["foo"], (* 1000 just an example of any atom *)
 

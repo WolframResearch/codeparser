@@ -68,6 +68,10 @@ PrefixOperatorToSymbol[Token`LongName`Exists] = Exists
 PrefixOperatorToSymbol[Token`LongName`NotExists] = NotExists
 PrefixOperatorToSymbol[Token`LongName`Coproduct] = Coproduct
 PrefixOperatorToSymbol[Token`LongName`Piecewise] = Piecewise
+PrefixOperatorToSymbol[Token`LongName`InvisiblePrefixScriptBase] = System`InvisiblePrefixScriptBase
+PrefixOperatorToSymbol[Token`LongName`ExpectationE] = ExpectationE
+PrefixOperatorToSymbol[Token`LongName`CubeRoot] = CubeRoot
+PrefixOperatorToSymbol[Token`LongName`ProbabilityPr] = ProbabilityPr
 
 PrefixOperatorToSymbol[Token`LinearSyntax`Bang] = AST`PrefixLinearSyntaxBang
 
@@ -85,8 +89,8 @@ PostfixOperatorToSymbol[Token`SingleQuote] = Derivative
 PostfixOperatorToSymbol[Token`LongName`Transpose] = Transpose
 PostfixOperatorToSymbol[Token`LongName`Conjugate] = Conjugate
 PostfixOperatorToSymbol[Token`LongName`ConjugateTranspose] = ConjugateTranspose
-PostfixOperatorToSymbol[Token`LongName`HermitianConjugate] = AST`PostfixHermitianConjugate
-
+PostfixOperatorToSymbol[Token`LongName`HermitianConjugate] = System`HermitianConjugate
+PostfixOperatorToSymbol[Token`LongName`InvisiblePostfixScriptBase] = System`InvisiblePostfixScriptBase
 
 
 (*
@@ -161,6 +165,7 @@ BinaryOperatorToSymbol[Token`LongName`CircleMinus] = CircleMinus
 BinaryOperatorToSymbol[Token`LongName`SuchThat] = SuchThat
 BinaryOperatorToSymbol[Token`LongName`Perpendicular] = Perpendicular
 
+BinaryOperatorToSymbol[Token`LongName`Minus] = Minus
 
 
 
@@ -281,6 +286,7 @@ InfixOperatorToSymbol[Token`LongName`Or] = Or
 InfixOperatorToSymbol[Token`LongName`Xor] = Xor
 InfixOperatorToSymbol[Token`LongName`Nand] = Nand
 InfixOperatorToSymbol[Token`LongName`Nor] = Nor
+InfixOperatorToSymbol[Token`LongName`Xnor] = Xnor
 
 InfixOperatorToSymbol[Token`LongName`LeftArrow] = LeftArrow
 InfixOperatorToSymbol[Token`LongName`RightArrow] = RightArrow
@@ -313,7 +319,7 @@ InfixOperatorToSymbol[Token`LongName`RightTeeVector] = RightTeeVector
 InfixOperatorToSymbol[Token`LongName`DownLeftTeeVector] = DownLeftTeeVector
 InfixOperatorToSymbol[Token`LongName`DownRightTeeVector] = DownRightTeeVector
 InfixOperatorToSymbol[Token`LongName`ShortRightArrow] = ShortRightArrow
-InfixOperatorToSymbol[Token`LongName`ShortLeftArrow] = ShortDownArrow
+InfixOperatorToSymbol[Token`LongName`ShortLeftArrow] = ShortLeftArrow
 
 InfixOperatorToSymbol[Token`LongName`UpArrow] = UpArrow
 InfixOperatorToSymbol[Token`LongName`DownArrow] = DownArrow
@@ -462,6 +468,11 @@ InfixOperatorToSymbol[Token`LongName`NestedGreaterGreater] = NestedGreaterGreate
 InfixOperatorToSymbol[Token`LongName`NestedLessLess] = NestedLessLess
 InfixOperatorToSymbol[Token`LongName`NotCongruent] = NotCongruent
 
+InfixOperatorToSymbol[Token`LongName`SquareUnion] = SquareUnion
+InfixOperatorToSymbol[Token`LongName`SquareIntersection] = SquareIntersection
+
+InfixOperatorToSymbol[Token`LongName`UnionPlus] = UnionPlus
+
 (*
 StartOfLineOperatorToSymbol[Token`Question] = Information
 StartOfLineOperatorToSymbol[Token`QuestionQuestion] = Information
@@ -549,7 +560,8 @@ InequalityOperatorToSymbol[Token`LongName`GreaterEqual] = Inequality
 InequalityOperatorToSymbol[Token`LongName`NotEqual] = Inequality
 InequalityOperatorToSymbol[Token`LongName`LessEqualGreater] = Inequality
 InequalityOperatorToSymbol[Token`LongName`GreaterEqualLess] = Inequality
-
+InequalityOperatorToSymbol[Token`LongName`NotLessLess] = Inequality
+InequalityOperatorToSymbol[Token`LongName`LongEqual] = Inequality
 
 
 
