@@ -884,6 +884,16 @@ bool WLCharacter::isMBControl() const {
     return false;
 }
 
+//
+// https://en.wikipedia.org/wiki/Universal_Character_Set_characters#Non-characters
+//
+bool WLCharacter::isMBNonCharacter() const {
+    
+    auto val = to_point();
+    
+    return Utils::isMBNonCharacter(val);
+}
+
 bool WLCharacter::isMBStrange() const {
     
     auto val = to_point();
@@ -899,63 +909,47 @@ bool WLCharacter::isMBStrange() const {
     // Individual characters
     //
     switch (val) {
-        //
-        // ZERO WIDTH SPACE
-        //
+            //
+            // ZERO WIDTH SPACE
+            //
         case 0x200b:
             return true;
-        //
-        // ZERO WIDTH NON-JOINER
-        //
+            //
+            // ZERO WIDTH NON-JOINER
+            //
         case 0x200c:
             return true;
-        //
-        // ZERO WIDTH JOINER
-        //
+            //
+            // ZERO WIDTH JOINER
+            //
         case 0x200d:
             return true;
-        //
-        // LINE SEPARATOR
-        //
+            //
+            // LINE SEPARATOR
+            //
 //        case 0x2028:
 //            return true;
-        //
-        // FUNCTION APPLICATION
-        //
+            //
+            // WORD JOINER
+            //
+//        case 0x2060:
+//            return true;
+            //
+            // FUNCTION APPLICATION
+            //
         case 0x2061:
             return true;
-        //
-        // ZERO WIDTH NO-BREAK SPACE
-        //
+            //
+            // ZERO WIDTH NO-BREAK SPACE
+            //
         case 0xfeff:
             return true;
-        //
-        // REPLACEMENT CHARACTER
-        //
-        // This can be the result of badly encoded UTF8
-        //
+            //
+            // REPLACEMENT CHARACTER
+            //
+            // This can be the result of badly encoded UTF-8
+            //
         case 0xfffd:
-            return true;
-        //
-        // INVALID CHARACTER
-        //
-        case 0x0fffe: case 0x0ffff:
-        case 0x1fffe: case 0x1ffff:
-        case 0x2fffe: case 0x2ffff:
-        case 0x3fffe: case 0x3ffff:
-        case 0x4fffe: case 0x4ffff:
-        case 0x5fffe: case 0x5ffff:
-        case 0x6fffe: case 0x6ffff:
-        case 0x7fffe: case 0x7ffff:
-        case 0x8fffe: case 0x8ffff:
-        case 0x9fffe: case 0x9ffff:
-        case 0xafffe: case 0xaffff:
-        case 0xbfffe: case 0xbffff:
-        case 0xcfffe: case 0xcffff:
-        case 0xdfffe: case 0xdffff:
-        case 0xefffe: case 0xeffff:
-        case 0xffffe: case 0xfffff:
-        case 0x10fffe: case 0x10ffff:
             return true;
     }
     
@@ -1001,6 +995,10 @@ bool WLCharacter::isMBStrange() const {
     // Plan 16 PUA
     //
     if (0x100000 <= val && val <= 0x10fffd) {
+        return true;
+    }
+    
+    if (isMBNonCharacter()) {
         return true;
     }
     

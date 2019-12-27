@@ -19,7 +19,7 @@ private:
     
     std::vector<IssuePtr> Issues;
     
-    bool error;
+    UTF8Status status;
     
     SourceCharacter invalid(SourceLocation errSrcLoc, NextCharacterPolicy policy);
     
@@ -47,11 +47,11 @@ public:
     void addIssue(IssuePtr);
 #endif // !NISSUES
     
-    void setError(bool err);
+    void setStatus(UTF8Status status);
     
-    bool getError() const;
+    UTF8Status getStatus() const;
     
-    void clearError();
+    void clearStatus();
 };
 
 extern ByteDecoderPtr TheByteDecoder;

@@ -1,9 +1,11 @@
 
 #include "ByteEncoder.h"
 
+#include "Utils.h"
+
 #include <cassert>
 
-size_t ByteEncoder::size(int val) {
+size_t ByteEncoder::size(int32_t val) {
     
     assert(val >= 0);
     
@@ -25,7 +27,7 @@ size_t ByteEncoder::size(int val) {
     }
 }
 
-void ByteEncoder::encodeBytes(std::ostream& stream, int val, ByteEncoderState *state) {
+void ByteEncoder::encodeBytes(std::ostream& stream, int32_t val, ByteEncoderState *state) {
     
     assert(val >= 0);
     
@@ -57,6 +59,9 @@ void ByteEncoder::encodeBytes(std::ostream& stream, int val, ByteEncoderState *s
         // 3 byte UTF-8 sequence
         //
         
+        assert(!Utils::isMBNonCharacter(val));
+        assert(val != 0xfeff);
+        
         auto firstByte = static_cast<unsigned char>(((val >> 12) & 0x0f) | 0xe0);
         auto secondByte = static_cast<unsigned char>(((val >> 6) & 0x3f) | 0x80);
         auto thirdByte = static_cast<unsigned char>(((val >> 0) & 0x3f) | 0x80);
@@ -72,6 +77,7 @@ void ByteEncoder::encodeBytes(std::ostream& stream, int val, ByteEncoderState *s
         //
         
         assert(val <= 0x10ffff);
+        assert(!Utils::isMBNonCharacter(val));
         
         auto firstByte = static_cast<unsigned char>(((val >> 18) & 0x07) | 0xf0);
         auto secondByte = static_cast<unsigned char>(((val >> 12) & 0x3f) | 0x80);
@@ -85,7 +91,7 @@ void ByteEncoder::encodeBytes(std::ostream& stream, int val, ByteEncoderState *s
     }
 }
 
-void ByteEncoder::encodeBytes(std::array<unsigned char, 4>& arr, int val, ByteEncoderState *state) {
+void ByteEncoder::encodeBytes(std::array<unsigned char, 4>& arr, int32_t val, ByteEncoderState *state) {
     
     assert(val >= 0);
     

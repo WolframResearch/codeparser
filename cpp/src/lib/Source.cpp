@@ -12,22 +12,32 @@
 #include <sstream>
 
 
-BufferAndLength::BufferAndLength() : buffer(), length(), error(), _end() {}
+BufferAndLength::BufferAndLength() : buffer(), length(), status(), _end() {}
 
-BufferAndLength::BufferAndLength(Buffer buffer, size_t length, bool error) : buffer(buffer), length(length), error(error), _end(buffer + length) {}
+BufferAndLength::BufferAndLength(Buffer buffer, size_t length, UTF8Status status) : buffer(buffer), length(length), status(status), _end(buffer + length) {}
 
 Buffer BufferAndLength::end() const {
     return _end;
 }
 
 void BufferAndLength::printUTF8String(std::ostream& s) const {
-    s.write(reinterpret_cast<const char *>(buffer), length);
+    
+    if (status == UTF8STATUS_NORMAL) {
+        s.write(reinterpret_cast<const char *>(buffer), length);
+        return;
+    }
+    
+    std::string str;
+    
+    auto niceBufAndLen = createNiceBufferAndLength(&str);
+    
+    niceBufAndLen.printUTF8String(s);
 }
 
 #if USE_MATHLINK
 void BufferAndLength::putUTF8String(MLINK mlp) const {
     
-    if (!error) {
+    if (status == UTF8STATUS_NORMAL) {
         if (!MLPutUTF8String(mlp, buffer, static_cast<int>(length))) {
             assert(false);
         }
@@ -35,18 +45,33 @@ void BufferAndLength::putUTF8String(MLINK mlp) const {
         return;
     }
     
+    std::string str;
+    
+    auto niceBufAndLen = createNiceBufferAndLength(&str);
+    
+    niceBufAndLen.putUTF8String(mlp);
+}
+#endif // USE_MATHLINK
+
+
+BufferAndLength BufferAndLength::createNiceBufferAndLength(std::string *str) const {
+    
     //
     // make new Buffer
     //
     
     auto oldBuf = TheByteBuffer->buffer;
-    auto oldError = TheByteDecoder->getError();
+    auto oldStatus = TheByteDecoder->getStatus();
     
     //
     // This is an error path, so fine to use things like ostringstream
     // that might be frowned upon in happier paths
     //
     std::ostringstream newStrStream;
+    
+    if (status == UTF8STATUS_NONCHARACTER_OR_BOM) {
+        newStrStream << set_graphical;
+    }
     
     auto start = buffer;
     auto end = start + length;
@@ -62,25 +87,31 @@ void BufferAndLength::putUTF8String(MLINK mlp) const {
         
         auto c = TheByteDecoder->currentSourceCharacter(policy);
         
-        newStrStream << c;
+        if (status == UTF8STATUS_NONCHARACTER_OR_BOM) {
+            
+            newStrStream << WLCharacter(c.to_point());
+            
+        } else {
+            
+            newStrStream << c;
+        }
         
         TheByteBuffer->buffer = TheByteDecoder->lastBuf;
     }
     
     TheByteBuffer->buffer = oldBuf;
-    TheByteDecoder->setError(oldError);
+    TheByteDecoder->setStatus(oldStatus);
     
-    auto newStr = newStrStream.str();
+    *str = newStrStream.str();
     
-    auto newB = reinterpret_cast<Buffer>(newStr.c_str());
+    auto newB = reinterpret_cast<Buffer>(str->c_str());
     
-    auto newLength = newStr.size();
+    auto newLength = str->size();
     
-    auto newBufAndLen = BufferAndLength(newB, newLength, false);
+    auto newBufAndLen = BufferAndLength(newB, newLength);
     
-    newBufAndLen.putUTF8String(mlp);
+    return newBufAndLen;
 }
-#endif // USE_MATHLINK
 
 bool operator==(BufferAndLength a, BufferAndLength b) {
     return a.buffer == b.buffer && a.length == b.length;

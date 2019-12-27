@@ -402,7 +402,7 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK m
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount(), false);
+    auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
     
     TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE);
     
@@ -440,7 +440,7 @@ DLLEXPORT int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount(), false);
+    auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
     
     TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE);
     
@@ -499,7 +499,7 @@ DLLEXPORT int TokenizeBytes_Listable_LibraryLink(WolframLibraryData libData, MLI
         
         const auto& arr = arrs[i];
         
-        auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount(), false);
+        auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
         
         TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE);
         
@@ -541,7 +541,7 @@ DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto bufAndLen = BufferAndLength(inStr->get(), inStr->getByteCount(), false);
+    auto bufAndLen = BufferAndLength(inStr->get(), inStr->getByteCount());
     
     TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE);
     

@@ -27,6 +27,8 @@ public:
     
     static bool isMBUninterpretable(int32_t point);
     
+    static bool isMBNonCharacter(int32_t point);
+    
 #if !NISSUES
     static void strangeLetterlikeWarning(Source Src, WLCharacter c);
 #endif // !NISSUES

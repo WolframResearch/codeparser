@@ -126,10 +126,15 @@ struct WLCharacter {
     bool isMBControl() const;
     bool isMBStrange() const;
     bool isMBUnsupported() const;
+    bool isMBNonCharacter() const;
 };
 
 std::ostream& operator<<(std::ostream& stream, WLCharacter);
 
+std::ostream& set_graphical(std::ostream& stream);
+
+std::ostream& clear_graphical(std::ostream& stream);
+    
 //
 // For googletest
 //

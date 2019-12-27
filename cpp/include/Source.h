@@ -25,15 +25,21 @@ using IssuePtr = std::unique_ptr<Issue>;
 using CodeActionPtr = std::unique_ptr<CodeAction>;
 
 
+enum UTF8Status : uint8_t {
+    UTF8STATUS_NORMAL,
+    UTF8STATUS_ERROR,
+    UTF8STATUS_NONCHARACTER_OR_BOM
+};
+
 struct BufferAndLength {
     
     Buffer buffer;
     size_t length;
-    bool error;
+    UTF8Status status;
     Buffer _end;
     
     BufferAndLength();
-    BufferAndLength(Buffer buffer, size_t length = 0, bool error = false);
+    BufferAndLength(Buffer buffer, size_t length = 0, UTF8Status status = UTF8STATUS_NORMAL);
     
     Buffer end() const;
     
@@ -43,6 +49,7 @@ struct BufferAndLength {
     void putUTF8String(MLINK ) const;
 #endif // USE_MATHLINK
     
+    BufferAndLength createNiceBufferAndLength(std::string *str) const;
 };
 
 bool operator==(BufferAndLength a, BufferAndLength b);

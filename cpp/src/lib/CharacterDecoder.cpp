@@ -320,7 +320,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
             
             auto longNameEndBuf = currentWLCharacterEndBuf;
             
-            auto longNameBufAndLen = BufferAndLength(longNameStartBuf, longNameEndBuf - longNameStartBuf, false);
+            auto longNameBufAndLen = BufferAndLength(longNameStartBuf, longNameEndBuf - longNameStartBuf);
             auto longNameStr = std::string(reinterpret_cast<const char *>(longNameBufAndLen.buffer), longNameBufAndLen.length);
             
             if (atleast1DigitOrAlpha) {
@@ -429,7 +429,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
     
     auto longNameEndBuf = TheByteBuffer->buffer;
     
-    auto longNameBufAndLen = BufferAndLength(longNameStartBuf, longNameEndBuf - longNameStartBuf, false);
+    auto longNameBufAndLen = BufferAndLength(longNameStartBuf, longNameEndBuf - longNameStartBuf);
     auto longNameStr = std::string(reinterpret_cast<const char *>(longNameBufAndLen.buffer), longNameBufAndLen.length);
     
     auto it = LongNameToCodePointMap.find(longNameStr);
@@ -506,7 +506,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
         
         auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
         
-        auto longNameBufAndLen = BufferAndLength(longNameStartBuf, longNameEndBuf - longNameStartBuf, false);
+        auto longNameBufAndLen = BufferAndLength(longNameStartBuf, longNameEndBuf - longNameStartBuf);
         auto longNameStr = std::string(reinterpret_cast<const char *>(longNameBufAndLen.buffer), longNameBufAndLen.length);
         
         //
@@ -568,7 +568,7 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
                 
                 auto hexEndBuf = currentWLCharacterEndBuf;
                 
-                auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf, false);
+                auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf);
                 auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.buffer), hexBufAndLen.length);
                 
                 if (curSource.isEndOfFile()) {
@@ -613,7 +613,7 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
     
     auto hexEndBuf = currentWLCharacterEndBuf;
     
-    auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf, false);
+    auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf);
     auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.buffer), hexBufAndLen.length);
     
     auto it = ToSpecialMap.find(hexStr);
@@ -663,7 +663,7 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
                 
                 auto hexEndBuf = currentWLCharacterEndBuf;
                 
-                auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf, false);
+                auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf);
                 auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.buffer), hexBufAndLen.length);
                 
                 if (curSource.isEndOfFile()) {
@@ -708,7 +708,7 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
     
     auto hexEndBuf = currentWLCharacterEndBuf;
     
-    auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf, false);
+    auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf);
     auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.buffer), hexBufAndLen.length);
     
     auto it = ToSpecialMap.find(hexStr);
@@ -758,7 +758,7 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
                 
                 auto octalEndBuf = currentWLCharacterEndBuf;
                 
-                auto octalBufAndLen = BufferAndLength(octalStartBuf, octalEndBuf - octalStartBuf, false);
+                auto octalBufAndLen = BufferAndLength(octalStartBuf, octalEndBuf - octalStartBuf);
                 auto octalStr = std::string(reinterpret_cast<const char *>(octalBufAndLen.buffer), octalBufAndLen.length);
                 
                 if (curSource.isEndOfFile()) {
@@ -803,7 +803,7 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
     
     auto octalEndBuf = currentWLCharacterEndBuf;
     
-    auto octalBufAndLen = BufferAndLength(octalStartBuf, octalEndBuf - octalStartBuf, false);
+    auto octalBufAndLen = BufferAndLength(octalStartBuf, octalEndBuf - octalStartBuf);
     auto octalStr = std::string(reinterpret_cast<const char *>(octalBufAndLen.buffer), octalBufAndLen.length);
     
     auto it = ToSpecialMap.find(octalStr);
@@ -853,7 +853,7 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
                 
                 auto hexEndBuf = currentWLCharacterEndBuf;
                 
-                auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf, false);
+                auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf);
                 auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.buffer), hexBufAndLen.length);
                 
                 if (curSource.isEndOfFile()) {
@@ -898,7 +898,7 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
     
     auto hexEndBuf = currentWLCharacterEndBuf;
     
-    auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf, false);
+    auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf);
     auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.buffer), hexBufAndLen.length);
     
     auto it = ToSpecialMap.find(hexStr);

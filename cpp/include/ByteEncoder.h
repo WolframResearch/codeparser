@@ -14,9 +14,9 @@ struct ByteEncoderState {
 class ByteEncoder {
 public:
     
-    static size_t size(int val);
+    static size_t size(int32_t val);
     
-    static void encodeBytes(std::ostream&, int val, ByteEncoderState *state);
+    static void encodeBytes(std::ostream&, int32_t val, ByteEncoderState *state);
     
-    static void encodeBytes(std::array<unsigned char, 4>& arr, int val, ByteEncoderState *state);
+    static void encodeBytes(std::array<unsigned char, 4>& arr, int32_t val, ByteEncoderState *state);
 };

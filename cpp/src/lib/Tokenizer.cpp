@@ -330,7 +330,7 @@ void Tokenizer::nextToken(NextCharacterPolicy policy) {
     
     nextToken0(policy);
     
-    TheByteDecoder->clearError();
+    TheByteDecoder->clearStatus();
 }
 
 #if STARTOFLINE
@@ -339,7 +339,7 @@ void Tokenizer::nextToken_stringifyLine() {
 
     nextToken0_stringifyLine();
 
-    TheByteDecoder->clearError();
+    TheByteDecoder->clearStatus();
 }
 
 #endif // STARTOFLINE
@@ -348,14 +348,14 @@ void Tokenizer::nextToken_stringifySymbol() {
     
     nextToken0_stringifySymbol();
     
-    TheByteDecoder->clearError();
+    TheByteDecoder->clearStatus();
 }
 
 void Tokenizer::nextToken_stringifyFile() {
     
     nextToken0_stringifyFile();
     
-    TheByteDecoder->clearError();
+    TheByteDecoder->clearStatus();
 }
 
 
@@ -378,7 +378,7 @@ Token Tokenizer::currentToken(NextCharacterPolicy policy) {
     TheByteBuffer->wasEOF = resetEOF;
     TheByteDecoder->SrcLoc = resetLoc;
     
-    TheByteDecoder->clearError();
+    TheByteDecoder->clearStatus();
     
     return Tok;
 }
@@ -416,7 +416,7 @@ Token Tokenizer::currentToken_stringifySymbol() {
     TheByteBuffer->wasEOF = resetEOF;
     TheByteDecoder->SrcLoc = resetLoc;
     
-    TheByteDecoder->clearError();
+    TheByteDecoder->clearStatus();
     
     return Tok;
 }
@@ -433,7 +433,7 @@ Token Tokenizer::currentToken_stringifyFile() {
     TheByteBuffer->wasEOF = resetEOF;
     TheByteDecoder->SrcLoc = resetLoc;
     
-    TheByteDecoder->clearError();
+    TheByteDecoder->clearStatus();
     
     return Tok;
 }
@@ -647,7 +647,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation
     }
 #endif // !NISSUES
     
-    charBuf = TheByteBuffer->buffer;
+//    charBuf = TheByteBuffer->buffer;
     charLoc = TheByteDecoder->SrcLoc;
     
     c = TheCharacterDecoder->currentWLCharacter(policy);
@@ -703,7 +703,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation
         TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
         TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
         
-        charBuf = TheByteBuffer->buffer;
+//        charBuf = TheByteBuffer->buffer;
         charLoc = TheByteDecoder->SrcLoc;
         
         c = TheCharacterDecoder->currentWLCharacter(policy);
@@ -3352,8 +3352,8 @@ Source Tokenizer::getTokenSource(SourceLocation tokStartLoc) const {
 
 BufferAndLength Tokenizer::getTokenBufferAndLength(Buffer tokStartBuf) const {
     auto buf = TheByteBuffer->buffer;
-    auto error = TheByteDecoder->getError();
-    return BufferAndLength(tokStartBuf, buf - tokStartBuf, error);
+    auto status = TheByteDecoder->getStatus();
+    return BufferAndLength(tokStartBuf, buf - tokStartBuf, status);
 }
 
 #if !NISSUES

@@ -140,3 +140,35 @@ void Utils::strangeLetterlikeWarning(Source Src, WLCharacter c) {
 }
 #endif // !NISSUES
 
+//
+// https://en.wikipedia.org/wiki/Universal_Character_Set_characters#Non-characters
+//
+bool Utils::isMBNonCharacter(int32_t point) {
+    
+    switch (point) {
+        case 0xfdd0: case 0xfdd1: case 0xfdd2: case 0xfdd3: case 0xfdd4: case 0xfdd5: case 0xfdd6: case 0xfdd7:
+        case 0xfdd8: case 0xfdd9: case 0xfdda: case 0xfddb: case 0xfddc: case 0xfddd: case 0xfdde: case 0xfddf:
+        case 0xfde0: case 0xfde1: case 0xfde2: case 0xfde3: case 0xfde4: case 0xfde5: case 0xfde6: case 0xfde7:
+        case 0xfde8: case 0xfde9: case 0xfdea: case 0xfdeb: case 0xfdec: case 0xfded: case 0xfdee: case 0xfdef:
+        case 0x0fffe: case 0x0ffff:
+        case 0x1fffe: case 0x1ffff:
+        case 0x2fffe: case 0x2ffff:
+        case 0x3fffe: case 0x3ffff:
+        case 0x4fffe: case 0x4ffff:
+        case 0x5fffe: case 0x5ffff:
+        case 0x6fffe: case 0x6ffff:
+        case 0x7fffe: case 0x7ffff:
+        case 0x8fffe: case 0x8ffff:
+        case 0x9fffe: case 0x9ffff:
+        case 0xafffe: case 0xaffff:
+        case 0xbfffe: case 0xbffff:
+        case 0xcfffe: case 0xcffff:
+        case 0xdfffe: case 0xdffff:
+        case 0xefffe: case 0xeffff:
+        case 0xffffe: case 0xfffff:
+        case 0x10fffe: case 0x10ffff:
+            return true;
+        default:
+            return false;
+    }
+}

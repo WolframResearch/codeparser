@@ -143,7 +143,7 @@ void readStdIn(int mode, int outputMode) {
         
         auto inputStr = reinterpret_cast<Buffer>(input.c_str());
         
-        auto inputBufAndLen = BufferAndLength(inputStr, input.size(), false);
+        auto inputBufAndLen = BufferAndLength(inputStr, input.size());
         
         TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE);
     
@@ -179,7 +179,7 @@ void readStdIn(int mode, int outputMode) {
         
         auto inputStr = reinterpret_cast<Buffer>(input.c_str());
         
-        auto inputBufAndLen = BufferAndLength(inputStr, input.size(), false);
+        auto inputBufAndLen = BufferAndLength(inputStr, input.size());
         
         TheByteBuffer->init(inputBufAndLen, libData);
         TheByteDecoder->init();
@@ -217,7 +217,7 @@ void readStdIn(int mode, int outputMode) {
         
         auto inputStr = reinterpret_cast<Buffer>(input.c_str());
         
-        auto inputBufAndLen = BufferAndLength(inputStr, input.size(), false);
+        auto inputBufAndLen = BufferAndLength(inputStr, input.size());
         
         TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE);
     
@@ -253,7 +253,7 @@ void readStdIn(int mode, int outputMode) {
         
         auto inputStr = reinterpret_cast<Buffer>(input.c_str());
         
-        auto inputBufAndLen = BufferAndLength(inputStr, input.size(), false);
+        auto inputBufAndLen = BufferAndLength(inputStr, input.size());
         
         TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE);
         
@@ -301,7 +301,7 @@ void readFile(std::string file, int mode, int outputMode) {
     
     if (mode == TOKENIZE) {
         
-        auto fBufAndLen = BufferAndLength(fb->getBuf(), fb->getLen(), false);
+        auto fBufAndLen = BufferAndLength(fb->getBuf(), fb->getLen());
         
         TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE);
         
@@ -335,7 +335,7 @@ void readFile(std::string file, int mode, int outputMode) {
         
     } else {
         
-        auto fBufAndLen = BufferAndLength(fb->getBuf(), fb->getLen(), false);
+        auto fBufAndLen = BufferAndLength(fb->getBuf(), fb->getLen());
         
         TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE);
         

@@ -1,15 +1,16 @@
 
 #include "ByteDecoder.h"
 
+#include "Utils.h"
 #include "CodePoint.h" // for CODEPOINT_REPLACEMENT_CHARACTER
 
-ByteDecoder::ByteDecoder() : Issues(), error(), lastBuf(), lastLoc(), SrcLoc() {}
+ByteDecoder::ByteDecoder() : Issues(), status(), lastBuf(), lastLoc(), SrcLoc() {}
 
 void ByteDecoder::init() {
     
     Issues.clear();
     
-    error = false;
+    status = UTF8STATUS_NORMAL;
     
     SrcLoc = SourceLocation(1, 1);
 }
@@ -127,7 +128,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                 
                 if (TheByteBuffer->wasEOF) {
                     
-                    error = true;
+                    status = UTF8STATUS_ERROR;
                     
                     auto srcCharStartLoc = resetLoc;
                     
@@ -162,7 +163,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             TheByteBuffer->wasEOF = resetEOF;
             SrcLoc = resetLoc;
             
-            error = true;
+            status = UTF8STATUS_ERROR;
             
             auto srcCharStartLoc = resetLoc;
             
@@ -190,7 +191,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                 
                 if (TheByteBuffer->wasEOF) {
                     
-                    error = true;
+                    status = UTF8STATUS_ERROR;
                     
                     auto srcCharStartLoc = resetLoc;
                     
@@ -214,7 +215,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                     TheByteBuffer->wasEOF = resetEOF;
                     SrcLoc = resetLoc;
                     
-                    error = true;
+                    status = UTF8STATUS_ERROR;
                     
                     auto srcCharStartLoc = resetLoc;
                     
@@ -242,6 +243,10 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                         //
                         assert(!(0xd800 <= decoded && decoded <= 0xdfff));
                         
+                        if (Utils::isMBNonCharacter(decoded)) {
+                            status = UTF8STATUS_NONCHARACTER_OR_BOM;
+                        }
+                        
                         SrcLoc.Column++;
                         
                         return SourceCharacter(decoded);
@@ -262,6 +267,10 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                         // Manual test for code points that are surrogates
                         //
                         assert(!(0xd800 <= decoded && decoded <= 0xdfff));
+                        
+                        if (Utils::isMBNonCharacter(decoded)) {
+                            status = UTF8STATUS_NONCHARACTER_OR_BOM;
+                        }
                         
                         SrcLoc.Column++;
                         
@@ -284,6 +293,10 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                         //
                         assert(!(0xd800 <= decoded && decoded <= 0xdfff));
                         
+                        if (Utils::isMBNonCharacter(decoded)) {
+                            status = UTF8STATUS_NONCHARACTER_OR_BOM;
+                        }
+                        
                         SrcLoc.Column++;
                         
                         return SourceCharacter(decoded);
@@ -305,6 +318,12 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                         //
                         assert(!(0xd800 <= decoded && decoded <= 0xdfff));
                         
+                        if (Utils::isMBNonCharacter(decoded)) {
+                            status = UTF8STATUS_NONCHARACTER_OR_BOM;
+                        } else if (decoded == 0xfeff) {
+                            status = UTF8STATUS_NONCHARACTER_OR_BOM;
+                        }
+                        
                         SrcLoc.Column++;
                         
                         return SourceCharacter(decoded);
@@ -316,7 +335,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             TheByteBuffer->wasEOF = resetEOF;
             SrcLoc = resetLoc;
             
-            error = true;
+            status = UTF8STATUS_ERROR;
             
             auto srcCharStartLoc = resetLoc;
             
@@ -343,7 +362,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                 
                 if (TheByteBuffer->wasEOF) {
                     
-                    error = true;
+                    status = UTF8STATUS_ERROR;
                     
                     auto srcCharStartLoc = resetLoc;
                     
@@ -367,7 +386,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                     TheByteBuffer->wasEOF = resetEOF;
                     SrcLoc = resetLoc;
                     
-                    error = true;
+                    status = UTF8STATUS_ERROR;
                     
                     auto srcCharStartLoc = resetLoc;
                     
@@ -391,7 +410,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                     TheByteBuffer->wasEOF = resetEOF;
                     SrcLoc = resetLoc;
                     
-                    error = true;
+                    status = UTF8STATUS_ERROR;
                     
                     auto srcCharStartLoc = resetLoc;
                     
@@ -421,6 +440,10 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                             //
                             assert(decoded <= 0x10ffff);
                             
+                            if (Utils::isMBNonCharacter(decoded)) {
+                                status = UTF8STATUS_NONCHARACTER_OR_BOM;
+                            }
+                            
                             SrcLoc.Column++;
                             
                             return SourceCharacter(decoded);
@@ -444,6 +467,10 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                             // Manual test for code points that are too large
                             //
                             assert(decoded <= 0x10ffff);
+                            
+                            if (Utils::isMBNonCharacter(decoded)) {
+                                status = UTF8STATUS_NONCHARACTER_OR_BOM;
+                            }
                             
                             SrcLoc.Column++;
                             
@@ -469,6 +496,10 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                             //
                             assert(decoded <= 0x10ffff);
                             
+                            if (Utils::isMBNonCharacter(decoded)) {
+                                status = UTF8STATUS_NONCHARACTER_OR_BOM;
+                            }
+                            
                             SrcLoc.Column++;
                             
                             return SourceCharacter(decoded);
@@ -481,7 +512,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             TheByteBuffer->wasEOF = resetEOF;
             SrcLoc = resetLoc;
             
-            error = true;
+            status = UTF8STATUS_ERROR;
             
             auto srcCharStartLoc = resetLoc;
             
@@ -506,7 +537,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                 return SourceCharacter(CODEPOINT_ENDOFFILE);
             }
             
-            error = true;
+            status = UTF8STATUS_ERROR;
             
             auto srcCharStartLoc = SrcLoc;
             
@@ -519,7 +550,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             //
         default: {
             
-            error = true;
+            status = UTF8STATUS_ERROR;
             
             auto srcCharStartLoc = SrcLoc;
             
@@ -588,16 +619,16 @@ std::vector<IssuePtr>& ByteDecoder::getIssues() {
 }
 #endif // !NISSUES
 
-void ByteDecoder::setError(bool err) {
-    error = err;
+void ByteDecoder::setStatus(UTF8Status stat) {
+    status = stat;
 }
 
-bool ByteDecoder::getError() const {
-    return error;
+UTF8Status ByteDecoder::getStatus() const {
+    return status;
 }
 
-void ByteDecoder::clearError() {
-    error = false;
+void ByteDecoder::clearStatus() {
+    status = UTF8STATUS_NORMAL;
 }
 
 ByteDecoderPtr TheByteDecoder = nullptr;
