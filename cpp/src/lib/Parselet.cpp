@@ -1290,7 +1290,7 @@ NodePtr IntegralParselet::parse(Token firstTok, ParserContext CtxtIn) const {
     Tok = TheParser->currentToken();
     Tok = TheParser->eatAll(Tok, Ctxt, ArgsTest2);
     
-    if (Tok.Tok != TOKEN_LONGNAME_DIFFERENTIALD) {
+    if (!Tok.Tok.isDifferentialD()) {
         
         NodeSeq Args;
         Args.reserve(1 + 1 + 1);

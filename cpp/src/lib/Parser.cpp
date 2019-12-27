@@ -842,7 +842,7 @@ Precedence Parser::getInfixTokenPrecedence(Token& TokIn, ParserContext Ctxt, boo
         return Infix->getPrecedence();
     }
     
-    if (TokIn.Tok == TOKEN_LONGNAME_DIFFERENTIALD) {
+    if (TokIn.Tok.isDifferentialD()) {
         
         if ((Ctxt.Flag & PARSER_INTEGRAL) == PARSER_INTEGRAL) {
             

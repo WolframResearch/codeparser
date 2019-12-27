@@ -923,6 +923,15 @@ isEmpty[_] = False
 
 
 
+isDifferentialD[Token`LongName`DifferentialD] = True
+isDifferentialD[Token`LongName`CapitalDifferentialD] = True
+
+isDifferentialD[_] = False
+
+
+
+
+
 
 group1Bits[tok_] := group1Bits[tok] =
 Which[
@@ -1021,6 +1030,10 @@ struct TokenEnum {
       return static_cast<bool>((T & 0x2000) == 0x2000);
   }
 
+  constexpr bool isDifferentialD() const {
+      return static_cast<bool>((T & 0x4000) == 0x4000);
+  }
+
 };
 
 bool operator==(TokenEnum a, TokenEnum b);
@@ -1029,11 +1042,12 @@ bool operator!=(TokenEnum a, TokenEnum b);
 "} ~Join~
    KeyValueMap[(Row[{"constexpr TokenEnum ", toGlobal[#1], "(",
    	BitOr[
+   		If[isDifferentialD[#1], 16^^4000, 0],
    		If[isEmpty[#1], 16^^2000, 0],
    		If[isInfixOperator[#1], 16^^1000, 0],
    		group1Bits[#1],
    		#2
-   	], "); // { isEmpty:", isEmpty[#1], ", isInfixOperator:", isInfixOperator[#1], ", group1Bits:", group1Bits[#1], ", enum:", #2, " }"}])&, enumMap] ~Join~
+   	], "); // { isDifferentialD:", isDifferentialD[#1], ", isEmpty:", isEmpty[#1], ", isInfixOperator:", isInfixOperator[#1], ", group1Bits:", group1Bits[#1], ", enum:", #2, " }"}])&, enumMap] ~Join~
 {
 "
 "
