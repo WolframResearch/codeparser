@@ -292,6 +292,23 @@ void readFile(std::string file, int mode, int outputMode) {
     auto fb = ScopedFileBufferPtr(new ScopedFileBuffer(reinterpret_cast<Buffer>(file.c_str()), file.size()));
 
     if (fb->fail()) {
+        switch (outputMode) {
+            case PRINT:
+                std::cout << "file open failed\n";
+                break;
+            case PUT: {
+#if USE_MATHLINK
+
+#endif // USE_MATHLINK
+            }
+                break;
+            case PRINT_DRYRUN: {
+                
+            }
+                break;
+            case NONE:
+                break;
+        }
         return;
     }
     
