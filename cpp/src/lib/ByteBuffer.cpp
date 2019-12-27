@@ -48,13 +48,13 @@ unsigned char ByteBuffer::nextByte0() {
     ++buffer;
     
 #ifndef NDEBUG
-#if USE_MATHLINK
     if (origBufAndLen.length != 0) {
         
         size_t progress = (100 * (buffer - origBufAndLen.buffer) / origBufAndLen.length);
         
         if (progress != oldProgress) {
             if (libData) {
+#if USE_MATHLINK
                 MLINK link = libData->getMathLink(libData);
                 if (!MLPutFunction(link, "EvaluatePacket", 1)) {
                     assert(false);
@@ -79,10 +79,10 @@ unsigned char ByteBuffer::nextByte0() {
                         assert(false);
                     }
                 }
+#endif // USE_MATHLINK
             }
         }
     }
-#endif // USE_MATHLINK
 #endif // NDEBUG
     
     //
@@ -114,13 +114,13 @@ void ByteBuffer::nextByte() {
     ++buffer;
     
 #ifndef NDEBUG
-#if USE_MATHLINK
     if (origBufAndLen.length != 0) {
         
         size_t progress = (100 * (buffer - origBufAndLen.buffer) / origBufAndLen.length);
         
         if (progress != oldProgress) {
             if (libData) {
+#if USE_MATHLINK
                 MLINK link = libData->getMathLink(libData);
                 if (!MLPutFunction(link, "EvaluatePacket", 1)) {
                     assert(false);
@@ -142,10 +142,10 @@ void ByteBuffer::nextByte() {
                 } else {
                     assert(false);
                 }
+#endif // USE_MATHLINK
             }
         }
     }
-#endif // USE_MATHLINK
 #endif // NDEBUG
 }
 
