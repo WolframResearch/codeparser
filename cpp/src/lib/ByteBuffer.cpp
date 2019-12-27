@@ -65,16 +65,19 @@ unsigned char ByteBuffer::nextByte0() {
                 if (!MLPutInteger(link, static_cast<int>(progress))) {
                     assert(false);
                 }
-                if (!libData->processMathLink(link)) {
-                    assert(false);
-                }
-                auto pkt = MLNextPacket(link);
-                if (pkt == RETURNPKT) {
-                    if(!MLNewPacket(link)) {
+                if (libData->processMathLink(link)) {
+                    //
+                    // Do not assert here, Abort may cause error code
+                    //
+                    
+                    auto pkt = MLNextPacket(link);
+                    if (pkt == RETURNPKT) {
+                        if(!MLNewPacket(link)) {
+                            assert(false);
+                        }
+                    } else {
                         assert(false);
                     }
-                } else {
-                    assert(false);
                 }
             }
         }
