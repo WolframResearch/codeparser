@@ -398,7 +398,7 @@ Module[{nodeStrs},
 	If[AnyTrue[nodeStrs, FailureQ],
 		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];
-	StringJoin[nodeStrs]
+	StringJoin[Riffle[nodeStrs, "\n"]]
 ]]
 
 
