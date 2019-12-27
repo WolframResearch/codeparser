@@ -31,6 +31,7 @@ set(STATIC_WL_PACLET_SOURCES
 	${CMAKE_SOURCE_DIR}/AST/Kernel/Library.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/Node.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/Quirks.wl
+	${CMAKE_SOURCE_DIR}/AST/Kernel/Shims.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/ToString.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/Utils.wl
 )

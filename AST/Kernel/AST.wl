@@ -257,6 +257,7 @@ Needs["AST`Boxes`"]
 Needs["AST`DeclarationName`"]
 Needs["AST`Library`"]
 Needs["AST`Quirks`"]
+Needs["AST`Shims`"]
 Needs["AST`ToString`"]
 Needs["AST`Utils`"]
 
@@ -268,13 +269,13 @@ loadAllFuncs[]
 
 setupQuirks[]
 
+setupShims[]
 
 
 
 
 ConcreteParseString::usage = "ConcreteParseString[string] returns a concrete syntax tree by interpreting string as WL input. \
-ConcreteParseString[string, nodeFunc] applies nodeFunc to the result.
-"
+ConcreteParseString[string, nodeFunc] applies nodeFunc to the result."
 
 Options[ConcreteParseString] = {
 	CharacterEncoding -> "UTF8"
