@@ -162,10 +162,10 @@ Module[{s, data, rest, lastPos},
 
 	Switch[rest,
 		"",
-		    CallNode[ToNode[SlotSequence], {ToNode[1]}, data]
+			CallNode[ToNode[SlotSequence], {ToNode[1]}, data]
 		,
 		_,
-		    CallNode[ToNode[SlotSequence], {ToNode[FromDigits[rest]]}, data]
+			CallNode[ToNode[SlotSequence], {ToNode[FromDigits[rest]]}, data]
 	]
 ]
 
@@ -193,14 +193,14 @@ Module[{s, data, count, lastPos, rest},
 
 			Switch[rest,
 				"",
-		    CallNode[ToNode[Out], {}, data]
-		,
+					CallNode[ToNode[Out], {}, data]
+				,
 				_,
 					CallNode[ToNode[Out], {ToNode[FromDigits[rest]]}, data]
 			]
 		,
 		_,
-		    CallNode[ToNode[Out], { ToNode[-count] }, data]
+			CallNode[ToNode[Out], { ToNode[-count] }, data]
 	]
 ]
 
