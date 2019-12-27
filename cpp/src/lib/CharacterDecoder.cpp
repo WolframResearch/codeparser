@@ -312,6 +312,9 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
         // Not well-formed
         //
         
+        TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+        TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+        
 #if !NISSUES
         if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
             
@@ -442,14 +445,15 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
         // If found and unlikelyEscapeChecking, then still come in here.
         //
         
+        TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+        TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+        
 #if !NISSUES
         if (!found) {
             
             if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
                 
                 auto longNameEndLoc = TheByteDecoder->SrcLoc;
-                
-                auto currentWLCharacterStartLoc = openSquareLoc - 1;
                 
                 auto currentWLCharacterEndLoc = longNameEndLoc;
                 
@@ -465,8 +469,6 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
                 Issues.push_back(std::move(I));
                 
             } else if ((policy & ENABLE_UNLIKELY_ESCAPE_CHECKING) == ENABLE_UNLIKELY_ESCAPE_CHECKING) {
-                
-                auto currentWLCharacterStartLoc = openSquareLoc - 1;
                 
                 auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
                 
@@ -559,6 +561,9 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
             //
             // Something like \:z
             //
+            
+            TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+            TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
             
 #if !NISSUES
             if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
@@ -655,6 +660,9 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
             // Something like \.z
             //
             
+            TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+            TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+            
 #if !NISSUES
             if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
                 
@@ -749,6 +757,9 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
             //
             // Something like \1z
             //
+            
+            TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+            TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
             
 #if !NISSUES
             if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
@@ -845,7 +856,11 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
             // Something like \|z
             //
             
+            TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+            TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+            
 #if !NISSUES
+            
             if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
                 
                 auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
