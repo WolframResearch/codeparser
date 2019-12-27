@@ -141,7 +141,6 @@ NodePtr PrefixOperatorParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
-    Ctxt.Assoc = ASSOCIATIVITY_NONE;
     
     TheParser->nextToken();
     
@@ -177,7 +176,6 @@ NodePtr BinaryOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext C
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
-    Ctxt.Assoc = getAssociativity();
     
     TheParser->nextToken();
     
@@ -218,7 +216,6 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ct
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
-    Ctxt.Assoc = ASSOCIATIVITY_NONE;
     
     while (true) {
 
@@ -401,7 +398,6 @@ NodePtr GroupParselet::parse(Token firstTok, ParserContext CtxtIn) const {
         auto Ctxt2 = Ctxt;
         Ctxt2.Flag &= ~(PARSER_COLON);
         Ctxt2.Prec = PRECEDENCE_LOWEST;
-        Ctxt2.Assoc = ASSOCIATIVITY_NONE;
         Ctxt2.UnderCount = UNDER_UNKNOWN;
         
         auto wasCloser = false;
@@ -440,7 +436,6 @@ NodePtr CallParselet::parse(NodeSeq Head, Token TokIn, ParserContext CtxtIn) con
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = PRECEDENCE_HIGHEST;
-    Ctxt.Assoc = ASSOCIATIVITY_NONE;
     
     auto Right = GP->parse(TokIn, Ctxt);
     
@@ -677,7 +672,6 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
-    Ctxt.Assoc = ASSOCIATIVITY_NONE;
     
     TheParser->nextToken();
     
@@ -795,7 +789,6 @@ NodePtr ColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = PRECEDENCE_FAKE_PATTERNCOLON;
-    Ctxt.Assoc = ASSOCIATIVITY_NONE;
     Ctxt.Flag |= PARSER_COLON;
     
     TheParser->nextToken();
@@ -879,7 +872,6 @@ NodePtr ColonParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserCo
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = PRECEDENCE_FAKE_OPTIONALCOLON;
-    Ctxt.Assoc = ASSOCIATIVITY_NONE;
     
     TheParser->nextToken();
     
@@ -921,7 +913,6 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtI
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
-    Ctxt.Assoc = getAssociativity();
     
     TheParser->nextToken();
     
@@ -1104,9 +1095,6 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext CtxtI
             Args.reserve(Args.size() + 1);
             Args.append(NodePtr(new LeafNode(Tok)));
             
-            auto Ctxt2 = Ctxt;
-            Ctxt2.GroupDepth--;
-            
             TheParser->nextToken();
             
             return NodePtr(new GroupNode(SYMBOL_AST_GROUPLINEARSYNTAXPAREN, std::move(Args)));
@@ -1162,7 +1150,6 @@ NodePtr EqualParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
-    Ctxt.Assoc = getAssociativity();
     
     if (TokIn.Tok == TOKEN_EQUALDOT) {
         
@@ -1253,7 +1240,6 @@ NodePtr IntegralParselet::parse(Token firstTok, ParserContext CtxtIn) const {
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
-    Ctxt.Assoc = ASSOCIATIVITY_NONE;
     Ctxt.Flag |= PARSER_INTEGRAL;
     
     TheParser->nextToken();
@@ -1328,7 +1314,6 @@ NodePtr InequalityParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtI
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
-    Ctxt.Assoc = ASSOCIATIVITY_NONE;
     
     while (true) {
         
@@ -1407,7 +1392,6 @@ NodePtr VectorInequalityParselet::parse(NodeSeq Left, Token TokIn, ParserContext
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
-    Ctxt.Assoc = ASSOCIATIVITY_NONE;
     
     while (true) {
       
@@ -1492,7 +1476,6 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, Token TokIn, Pars
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
-    Ctxt.Assoc = ASSOCIATIVITY_NONE;
     
     while (true) {
         
@@ -1685,7 +1668,6 @@ NodePtr GreaterGreaterParselet::parse(NodeSeq Left, Token TokIn, ParserContext C
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = PRECEDENCE_GREATERGREATER;
-    Ctxt.Assoc = ASSOCIATIVITY_LEFT;
     
     TheParser->nextToken();
     
@@ -1720,7 +1702,6 @@ NodePtr GreaterGreaterGreaterParselet::parse(NodeSeq Left, Token TokIn, ParserCo
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = PRECEDENCE_GREATERGREATERGREATER;
-    Ctxt.Assoc = ASSOCIATIVITY_LEFT;
     
     TheParser->nextToken();
     
@@ -1755,7 +1736,6 @@ NodePtr LessLessParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = PRECEDENCE_LESSLESS;
-    Ctxt.Assoc = ASSOCIATIVITY_NONE;
     
     TheParser->nextToken();
     

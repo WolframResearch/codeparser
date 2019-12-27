@@ -36,12 +36,13 @@ public:
     
     virtual Precedence getPrecedence() const = 0;
     
+    virtual Associativity getAssociativity() const = 0;
+    
     virtual ~InfixParselet() {}
 };
 
 class BinaryParselet : virtual public InfixParselet {
 public:
-    virtual Associativity getAssociativity() const = 0;
     
     virtual ~BinaryParselet() {}
 };
@@ -55,6 +56,10 @@ public:
     
     Precedence getPrecedence() const override {
         return PRECEDENCE_CALL;
+    }
+    
+    Associativity getAssociativity() const override {
+        return ASSOCIATIVITY_NONE;
     }
 };
 
@@ -149,6 +154,10 @@ public:
     Precedence getPrecedence() const override {
         return precedence;
     }
+    
+    Associativity getAssociativity() const override {
+        return ASSOCIATIVITY_NONE;
+    }
 };
 
 class PostfixOperatorParselet : public InfixParselet {
@@ -161,6 +170,10 @@ public:
     
     Precedence getPrecedence() const override {
         return precedence;
+    }
+    
+    Associativity getAssociativity() const override {
+        return ASSOCIATIVITY_NONE;
     }
 };
 
@@ -225,6 +238,10 @@ public:
     Precedence getPrecedence() const override {
         return precedence;
     }
+    
+    Associativity getAssociativity() const override {
+        return ASSOCIATIVITY_NONE;
+    }
 };
 
 //
@@ -242,6 +259,10 @@ public:
     
     Precedence getPrecedence() const override {
         return PRECEDENCE_SEMISEMI;
+    }
+    
+    Associativity getAssociativity() const override {
+        return ASSOCIATIVITY_NONE;
     }
 };
 
@@ -333,6 +354,10 @@ public:
     Precedence getPrecedence() const override {
         return PRECEDENCE_FAKE_INEQUALITY;
     }
+    
+    Associativity getAssociativity() const override {
+        return ASSOCIATIVITY_NONE;
+    }
 };
 
 // Gather all \[VectorGreater] \[VectorLess] \[VectorGreaterEqual] \[VectorLessEqual] into a single node
@@ -344,6 +369,10 @@ public:
     Precedence getPrecedence() const override {
         return PRECEDENCE_FAKE_VECTORINEQUALITY;
     }
+    
+    Associativity getAssociativity() const override {
+        return ASSOCIATIVITY_NONE;
+    }
 };
 
 class ColonColonParselet : public InfixParselet {
@@ -353,6 +382,10 @@ public:
     
     Precedence getPrecedence() const override {
         return PRECEDENCE_COLONCOLON;
+    }
+    
+    Associativity getAssociativity() const override {
+        return ASSOCIATIVITY_NONE;
     }
 };
 

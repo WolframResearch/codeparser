@@ -172,7 +172,6 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext CtxtIn
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
-    Ctxt.Assoc = ASSOCIATIVITY_NONE;
     
     TheParser->nextToken();
     

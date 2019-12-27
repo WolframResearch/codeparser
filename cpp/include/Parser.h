@@ -89,11 +89,6 @@ struct ParserContext {
     Precedence Prec;
     
     //
-    // Associativity of the current operator being parsed
-    //
-    Associativity Assoc;
-    
-    //
     // The Closer of the innermost Group being parsed
     //
     TokenEnum Closer;
@@ -105,7 +100,7 @@ struct ParserContext {
     
     ParserContextFlag Flag;
     
-    ParserContext() : GroupDepth(0), Prec(PRECEDENCE_LOWEST), Assoc(ASSOCIATIVITY_NONE), Closer(TOKEN_UNKNOWN), UnderCount(UNDER_UNKNOWN), Flag() {}
+    ParserContext() : GroupDepth(0), Prec(PRECEDENCE_LOWEST), Closer(TOKEN_UNKNOWN), UnderCount(UNDER_UNKNOWN), Flag() {}
     
     size_t getGroupDepth() {
         return GroupDepth;

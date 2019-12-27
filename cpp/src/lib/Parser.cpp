@@ -872,7 +872,7 @@ Precedence Parser::getInfixTokenPrecedence(Token& TokIn, ParserContext Ctxt, boo
     
     *implicitTimes = true;
     
-    return PRECEDENCE_STAR;
+    return PRECEDENCE_FAKE_IMPLICITTIMES;
 }
 
 NodePtr Parser::parse(Token firstTok, ParserContext CtxtIn) {
@@ -934,8 +934,13 @@ NodePtr Parser::parse(Token firstTok, ParserContext CtxtIn) {
         if (Ctxt.Prec > TokenPrecedence) {
             break;
         }
-        if (Ctxt.Prec == TokenPrecedence) {
-            if (Ctxt.Assoc != ASSOCIATIVITY_RIGHT) {
+        if (Ctxt.Prec == TokenPrecedence) {            
+            auto& I = infixParselets[token.Tok.value()];
+            if (I == nullptr) {
+                break;
+            }
+            auto TokenAssociativity = I->getAssociativity();
+            if (TokenAssociativity != ASSOCIATIVITY_RIGHT) {
                 break;
             }
         }
@@ -947,7 +952,6 @@ NodePtr Parser::parse(Token firstTok, ParserContext CtxtIn) {
     
         auto Ctxt = CtxtIn;
         Ctxt.Prec = TokenPrecedence;
-        Ctxt.Assoc = ASSOCIATIVITY_NONE;
     
         auto& I = findInfixParselet(token.Tok);
     
