@@ -86,3 +86,28 @@ TestMatch[
 	TestID->"Weird-20190601-M2O1W0"
 ]
 
+Test[
+	"\\[Integral] 9 \\[CapitalDifferentialD] x"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Weird-20191223-S8T6T5"
+]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

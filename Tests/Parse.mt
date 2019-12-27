@@ -2177,3 +2177,153 @@ Test[
 	,
 	TestID->"Parse-20191218-G5I8D3"
 ]
+
+Test[
+	"#\\\n1"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20191220-Z8C3P1"
+]
+
+Test[
+	"x + + y"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20191221-T5A0M1"
+]
+
+Test[
+	"x - - y"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20191221-X1H5J0"
+]
+
+Test[
+	"f''''[x]"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20191222-A5N8K6"
+]
+
+Test[
+	"f''\\\n''[x]"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20191222-X8S9A3"
+]
+
+
+Test[
+	"!!a"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20191223-D0H4G9"
+]
+
+
+Test[
+	"a \\[DownTee] c \\[DoubleRightTee] d"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20191223-D4U1W6"
+]
+
+Test[
+	"a \\[DoubleRightTee] c \\[DownTee] d"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20191223-V0J6F1"
+]
+
+
+
+
+
+
+
+
+Test[
+	ParseString["a/"]
+	,
+	StringNode[String, {
+		CallNode[LeafNode[Symbol, "Times", <||>], {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
+			AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, {
+				LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>]},
+			<|Source -> {{1, 3}, {1, 3}}|>]},
+		<|Source -> {{1, 1}, {1, 3}}|>]}, <||>]
+	,
+	TestID->"Parse-20191224-I3Q3E6"
+]
+
+Test[
+	ParseString["a-"]
+	,
+	StringNode[String, {
+		CallNode[LeafNode[Symbol, "Plus", <||>], {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
+			AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, {
+				LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>]},
+			<|Source -> {{1, 3}, {1, 3}}|>]},
+		<|Source -> {{1, 1}, {1, 3}}|>]}, <||>]
+	,
+	TestID->"Parse-20191224-Q4A6D4"
+]
+
+Test[
+	ParseString["a,b"]
+	,
+	StringNode[String, {
+		AbstractSyntaxErrorNode[AbstractSyntaxError`CommaTopLevel, {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
+			LeafNode[Symbol, "b", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, <||>]
+	,
+	TestID->"Parse-20191224-O2I9C7"
+]
+
+Test[
+	ParseString["()"]
+	,
+	StringNode[String, {
+		AbstractSyntaxErrorNode[AbstractSyntaxError`EmptyParens, {}, <|Source -> {{1, 1}, {1, 3}}|>]}, <||>]
+	,
+	TestID->"Parse-20191224-W2M0H4"
+]
+
+
+
+
+
+
+
+
+
+
+
+
+
