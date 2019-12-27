@@ -125,6 +125,11 @@ Module[{s, data, rest, lastPos},
 
 	rest = StringDrop[s, lastPos];
 
+	(*
+	Remove line continuations before analyzing
+	*)
+	rest = StringReplace[rest, {"\\\r\n" -> "", "\\\n" -> "", "\\\r" -> ""}];
+	
 	Switch[rest,
 		"",
 		    CallNode[ToNode[Slot], {ToNode[1]}, data]
@@ -150,6 +155,11 @@ Module[{s, data, rest, lastPos},
 
 	rest = StringDrop[s, lastPos];
 
+	(*
+	Remove line continuations before analyzing
+	*)
+	rest = StringReplace[rest, {"\\\r\n" -> "", "\\\n" -> "", "\\\r" -> ""}];
+
 	Switch[rest,
 		"",
 		    CallNode[ToNode[SlotSequence], {ToNode[1]}, data]
@@ -160,7 +170,7 @@ Module[{s, data, rest, lastPos},
 ]
 
 abstract[LeafNode[Out, sIn_, dataIn_]] :=
-Module[{s, data, count},
+Module[{s, data, count, lastPos, rest},
 
 	s = sIn;
 
@@ -172,7 +182,22 @@ Module[{s, data, count},
 
 	Switch[count,
 		1,
+			lastPos = StringPosition[s, "%" | "\\.25" | "\\:0025" | "\\|000025" | "\\045" | "\\[RawPercent]"][[-1, 2]];
+
+			rest = StringDrop[s, lastPos];
+
+			(*
+			Remove line continuations before analyzing
+			*)
+			rest = StringReplace[rest, {"\\\r\n" -> "", "\\\n" -> "", "\\\r" -> ""}];
+
+			Switch[rest,
+				"",
 		    CallNode[ToNode[Out], {}, data]
+		,
+				_,
+					CallNode[ToNode[Out], {ToNode[FromDigits[rest]]}, data]
+			]
 		,
 		_,
 		    CallNode[ToNode[Out], { ToNode[-count] }, data]
