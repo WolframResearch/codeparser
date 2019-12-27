@@ -428,7 +428,11 @@ take care of specific GroupNodes before calling abstractGroupNode
 (*
 GroupParen
 *)
+
+abstract[GroupNode[GroupParen, { _, _ }, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`EmptyParens, {}, KeyTake[data, keysToTake]]
+
 abstract[GroupNode[GroupParen, { _, child:InfixNode[Comma, _, _], _ }, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, { child }, KeyTake[data, keysToTake]]
+
 abstract[GroupNode[GroupParen, { _, child_, _}, data_]] := abstract[child]
 
 (* GroupNode errors *)
@@ -477,7 +481,7 @@ Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node},
 	If[issues != {},
 		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
 		AssociateTo[data, AbstractSyntaxIssues -> issues];
-   ];
+	];
 
 	node = FileNode[File, abstracted, KeyTake[data, keysToTake]];
 
@@ -500,7 +504,7 @@ Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node},
 	If[issues != {},
 		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
 		AssociateTo[data, AbstractSyntaxIssues -> issues];
-   ];
+	];
 
 	node = StringNode[String, abstracted, KeyTake[data, keysToTake]];
 
@@ -523,7 +527,7 @@ Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node},
 	If[issues != {},
 		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
 		AssociateTo[data, AbstractSyntaxIssues -> issues];
-   ];
+	];
 
 	node = HoldNode[Hold, abstracted, KeyTake[data, keysToTake]];
 
@@ -546,14 +550,23 @@ But also warn if something strange is at top-level
 
 *)
 abstractTopLevelChildren[children_, reportIssues_] :=
-Module[{abstractedChildren, issues, single},
+Module[{abstractedChildren, issues, issuesMaybe},
 
-	issues = {};
+	{abstractedChildren, issuesMaybe} =
+		Reap[(
+			Sow[topLevelChildIssues[#, reportIssues]];
+			abstract[#])& /@ children
+			,
+			_
+			,
+			Flatten[#2]&
+		];
 
-	abstractedChildren = (
-		issues = issues ~Join~ topLevelChildIssues[#, reportIssues];
-		abstract[#]
-	)& /@ children;
+	If[issuesMaybe == {},
+		issues = {}
+		,
+		issues = issuesMaybe[[1]]
+	];
 
 	{abstractedChildren, issues}
 ]
@@ -767,11 +780,15 @@ returns: {abstracted top-level nodes, any AbstractSyntaxErrors that occurred}
 *)
 abstractTopLevel[listIn_] :=
 Catch[
-Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, issues, nodeList},
+Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, issues, nodeList, peek, error},
 	
 	list = listIn;
-	nodeListStack = {{}};
-	operatorStack = {None};
+
+	nodeListStack = System`CreateDataStructure["ExpressionStack"];
+	operatorStack = System`CreateDataStructure["ExpressionStack"];
+
+	nodeListStack["Push", System`CreateDataStructure["ExpressionStack"]];
+	operatorStack["Push", None];
 
 	issues = {};
 
@@ -782,62 +799,61 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		BeginPackage["Foo`"]
 		*)
 		CallNode[LeafNode[Symbol, "BeginPackage", _], {LeafNode[String, _?contextQ, _], LeafNode[String, _?contextQ, _] | CallNode[LeafNode[Symbol, "List", <||>], { LeafNode[String, _?contextQ, _]... }, _] | PatternSequence[]}, _],
-			AppendTo[operatorStack, PackageNode[x[[2]], {}, <|Source->{x[[3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
-			AppendTo[nodeListStack, {}];
+			operatorStack["Push", PackageNode[x[[2]], {}, <|Source->{x[[3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
+			nodeListStack["Push", System`CreateDataStructure["ExpressionStack"]];
 		,
 		(*
 		BeginPackage["Foo`"] ;
 		*)
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "BeginPackage", _], {LeafNode[String, _?contextQ, _], LeafNode[String, _?contextQ, _] | CallNode[LeafNode[Symbol, "List", <||>], { LeafNode[String, _?contextQ, _]... }, _] | PatternSequence[]}, _], LeafNode[Symbol, "Null", _]}, _],
-   		AppendTo[operatorStack, PackageNode[x[[2, 1, 2]], {}, <|Source->{x[[2, 1, 3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
-			AppendTo[nodeListStack, {}];
-   	,
-   	(*
+			operatorStack["Push", PackageNode[x[[2, 1, 2]], {}, <|Source->{x[[2, 1, 3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
+			nodeListStack["Push", System`CreateDataStructure["ExpressionStack"]];
+		,
+		(*
 		Begin["`Private`"]
 		*)
 		CallNode[LeafNode[Symbol, "Begin", _], {LeafNode[String, _?contextQ, _]}, _],
-			AppendTo[operatorStack, ContextNode[x[[2]], {}, <|Source->{x[[3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
-			AppendTo[nodeListStack, {}];
+			operatorStack["Push", ContextNode[x[[2]], {}, <|Source->{x[[3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
+			nodeListStack["Push", System`CreateDataStructure["ExpressionStack"]];
 		,
 		(*
 		Begin["`Private`"] ;
 		*)
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "Begin", _], {LeafNode[String, _?contextQ, _]}, _], LeafNode[Symbol, "Null", _]}, _],
-   		AppendTo[operatorStack, ContextNode[x[[2, 1, 2]], {}, <|Source->{x[[2, 1, 3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
-			AppendTo[nodeListStack, {}];
-   	,
-   	(*
+			operatorStack["Push", ContextNode[x[[2, 1, 2]], {}, <|Source->{x[[2, 1, 3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
+			nodeListStack["Push", System`CreateDataStructure["ExpressionStack"]];
+		,
+		(*
 		BeginStaticAnalysisIgnore[]
 		*)
 		CallNode[LeafNode[Symbol, "BeginStaticAnalysisIgnore" | "AST`BeginStaticAnalysisIgnore", _], {}, _],
-			AppendTo[operatorStack, StaticAnalysisIgnoreNode[x[[2]], {}, <|Source->{x[[3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
-			AppendTo[nodeListStack, {}];
+			operatorStack["Push", StaticAnalysisIgnoreNode[x[[2]], {}, <|Source->{x[[3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
+			nodeListStack["Push", System`CreateDataStructure["ExpressionStack"]];
 		,
 		(*
 		BeginStaticAnalysisIgnore[] ;
 		*)
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "BeginStaticAnalysisIgnore" | "AST`BeginStaticAnalysisIgnore", _], {}, _], LeafNode[Symbol, "Null", _]}, _],
-   		AppendTo[operatorStack, StaticAnalysisIgnoreNode[x[[2, 1, 2]], {}, <|Source->{x[[2, 1, 3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
-			AppendTo[nodeListStack, {}];
-   	,
-   	(*
+			operatorStack["Push", StaticAnalysisIgnoreNode[x[[2, 1, 2]], {}, <|Source->{x[[2, 1, 3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
+			nodeListStack["Push", System`CreateDataStructure["ExpressionStack"]];
+		,
+		(*
 		EndPackage[]
 		End[]
 		EndStaticAnalysisIgnore[]
 		*)
 		CallNode[LeafNode[Symbol, "EndPackage" | "End" | "EndStaticAnalysisIgnore" | "AST`EndStaticAnalysisIgnore", _], {}, _],
-			currentOperator = operatorStack[[-1]];
+			currentOperator = operatorStack["Pop"];
 			If[!MatchQ[currentOperator, matchingOperatorPatterns[x]],
 				AppendTo[issues, SyntaxIssue["Package", "There are unbalanced Package directives.", "Error", <| x[[3]], ConfidenceLevel -> 1.0 |> ]];
 				Throw[{list, issues}];
 			];
-			operatorStack = Drop[operatorStack, -1];
-			currentList = nodeListStack[[-1]];
-			nodeListStack = Drop[nodeListStack, -1];
-			currentOperator[[2]] = currentList;
+			currentList = nodeListStack["Pop"];
+			currentOperator[[2]] = Reverse[Normal[currentList]];
 			(* finish constructing Source *)
 			currentOperator[[3, Key[Source], 2]] = x[[3, Key[Source], 2]];
-			AppendTo[nodeListStack[[-1]], currentOperator];
+			peek = nodeListStack["Peek"];
+			peek["Push", currentOperator];
 		,
 		(*
 		EndPackage[] ;
@@ -845,22 +861,21 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		EndStaticAnalysisIgnore[] ;
 		*)
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "EndPackage" | "End" | "EndStaticAnalysisIgnore" | "AST`EndStaticAnalysisIgnore", _], {}, _], LeafNode[Symbol, "Null", _]}, _],
-   		currentOperator = operatorStack[[-1]];
-			If[!MatchQ[currentOperator, matchingOperatorPatterns[x[[2, 1]]]],
+			currentOperator = operatorStack["Pop"];
+			If[!MatchQ[currentOperator, matchingOperatorPatterns[x[[2, 1]] ]],
 				AppendTo[issues, SyntaxIssue["Package", "There are unbalanced Package directives.", "Error", <| x[[2, 1, 3]], ConfidenceLevel -> 1.0 |>]];
 				Throw[{list, issues}];
 			];
-			operatorStack = Drop[operatorStack, -1];
-			currentList = nodeListStack[[-1]];
-			nodeListStack = Drop[nodeListStack, -1];
-			currentOperator[[2]] = currentList;
+			currentList = nodeListStack["Pop"];
+			currentOperator[[2]] = Reverse[Normal[currentList]];
 			(* finish constructing Source *)
 			currentOperator[[3, Key[Source], 2]] = x[[2, 1, 3, Key[Source], 2]];
-			AppendTo[nodeListStack[[-1]], currentOperator];
-   	,
-   	(*
+			peek = nodeListStack["Peek"];
+			peek["Push", currentOperator];
+		,
+		(*
 		All other calls to recognized directives
-   	*)
+		*)
 		CallNode[LeafNode[Symbol, "BeginPackage" | "Begin" | "BeginStaticAnalysisIgnore" | "AST`BeginStaticAnalysisIgnore" |
 											"EndPackage" | "End" | "EndStaticAnalysisIgnore" | "AST`EndStaticAnalysisIgnore", _], _, _],
 			AppendTo[issues, SyntaxIssue["Package", "Package directive does not have correct syntax.", "Error", <| x[[3]], ConfidenceLevel -> 1.0 |> ]];
@@ -868,31 +883,44 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		,
 		(*
 		All other calls to recognized directives, with ;
-   	*)
+		*)
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "BeginPackage" | "Begin" | "BeginStaticAnalysisIgnore" | "AST`BeginStaticAnalysisIgnore" |
 																													"EndPackage" | "End" | "EndStaticAnalysisIgnore" | "AST`EndStaticAnalysisIgnore", _], _, _], LeafNode[Symbol, "Null", _]}, _],
 			AppendTo[issues, SyntaxIssue["Package", "Package directive does not have correct syntax.", "Error", <| x[[2, 1, 3]], ConfidenceLevel -> 1.0 |>]];
 			Throw[{list, issues}];
 		,
 		(*
+		a,b  at top-level is an error
+		*)
+		CallNode[LeafNode[Symbol, "AST`Comma", _], _, _],
+			peek = nodeListStack["Peek"];
+			error = AbstractSyntaxErrorNode[AbstractSyntaxError`CommaTopLevel, x[[2]], x[[3]]];
+			peek["Push", error];
+		,
+		(*
 		All other expressions
 		*)
 		_,
-			AppendTo[nodeListStack[[-1]], x]
+			peek = nodeListStack["Peek"];
+			peek["Push", x];
 		]
-   ,
-   {i, 1, Length[list]}
+	,
+	{i, 1, Length[list]}
 	];
-	If[operatorStack =!= {None},
+	If[operatorStack["Length"] != 1,
 		AppendTo[issues, SyntaxIssue["Package", "There are unbalanced Package directives.", "Error", <| list[[1, 3]], ConfidenceLevel -> 1.0 |>]];
 		Throw[{list, issues}];
 	];
-	If[Length[nodeListStack] != 1,
+	If[operatorStack["Peek"] =!= None,
 		AppendTo[issues, SyntaxIssue["Package", "There are unbalanced Package directives.", "Error", <| list[[1, 3]], ConfidenceLevel -> 1.0 |>]];
 		Throw[{list, issues}];
 	];
-
-	nodeList = nodeListStack[[1]];
+	If[nodeListStack["Length"] != 1,
+		AppendTo[issues, SyntaxIssue["Package", "There are unbalanced Package directives.", "Error", <| list[[1, 3]], ConfidenceLevel -> 1.0 |>]];
+		Throw[{list, issues}];
+	];
+	peek = nodeListStack["Peek"];
+	nodeList = Reverse[Normal[peek]];
 
 	{nodeList, issues}
 ]]
