@@ -24,7 +24,7 @@
 //
 // Must also handle  ;;!b  where there is an implicit Times, but only a single Span
 //
-NodePtr SemiSemiParselet::parse(Token TokIn, ParserContext CtxtIn) const {
+NodePtr SemiSemiParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     auto Implicit = Token(TOKEN_FAKE_IMPLICITONE, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
     
@@ -34,7 +34,7 @@ NodePtr SemiSemiParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     Left.reserve(1);
     Left.append(std::move(One));
     
-    return parse(std::move(Left), TokIn, CtxtIn);
+    return parse(std::move(Left), TokIn, Ctxt);
 }
 
 //
@@ -48,14 +48,14 @@ NodePtr SemiSemiParselet::parse(Token TokIn, ParserContext CtxtIn) const {
 //
 // Must also handle  a;;!b  where there is an implicit Times, but only a single Span
 //
-NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
+NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
     
-    auto Operand = parse0(std::move(Left), TokIn, CtxtIn);
+    auto Operand = parse0(std::move(Left), TokIn, Ctxt);
     
     LeafSeq ArgsTest1;
 
     auto Tok = TheParser->currentToken();
-    Tok = TheParser->eatAndPreserveToplevelNewlines(Tok, CtxtIn, ArgsTest1);
+    Tok = TheParser->eatAndPreserveToplevelNewlines(Tok, Ctxt, ArgsTest1);
 
     if (!Tok.Tok.isPossibleBeginningOfExpression()) {
         
@@ -86,7 +86,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn)
         LeafSeq ArgsTest2;
         
         auto Tok = TheParser->currentToken();
-        Tok = TheParser->eatAndPreserveToplevelNewlines(Tok, CtxtIn, ArgsTest2);
+        Tok = TheParser->eatAndPreserveToplevelNewlines(Tok, Ctxt, ArgsTest2);
         
         if (!Tok.Tok.isPossibleBeginningOfExpression()) {
             
@@ -103,7 +103,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn)
         
         NodePtr Operand;
         
-        if (TheParser->getTokenPrecedence(Tok, CtxtIn) >= PRECEDENCE_SEMISEMI) {
+        if (TheParser->getTokenPrecedence(Tok, Ctxt) >= PRECEDENCE_SEMISEMI) {
             
             //
             // Higher precedence, so still within the ;;
@@ -114,7 +114,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn)
             NodeSeq ImplicitOneSeq;
             ImplicitOneSeq.append(NodePtr(new LeafNode(ImplicitOne)));
             
-            Operand = parse0(std::move(ImplicitOneSeq), Tok, CtxtIn);
+            Operand = parse0(std::move(ImplicitOneSeq), Tok, Ctxt);
             
             lowerPrec = false;
             
@@ -126,7 +126,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn)
             // Must also handle  a;;!b  where there is an Implicit Times, but only a single Span
             //
             
-            Operand = TheParser->parse(Tok, CtxtIn);
+            Operand = TheParser->parse(Tok, Ctxt);
             
             lowerPrec = true;
         }
@@ -168,9 +168,8 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn)
 //
 // Parses a single complete Span
 //
-NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
+NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
     
-    auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence();
     
     TheParser->nextToken();
@@ -179,7 +178,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext CtxtIn
     
     LeafSeq ArgsTest1;
     
-    SecondTok = TheParser->eatAndPreserveToplevelNewlines(SecondTok, CtxtIn, ArgsTest1);
+    SecondTok = TheParser->eatAndPreserveToplevelNewlines(SecondTok, Ctxt, ArgsTest1);
     
     //
     // a;;
@@ -220,7 +219,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext CtxtIn
         LeafSeq ArgsTest2;
         
         auto ThirdTok = TheParser->currentToken();
-        ThirdTok = TheParser->eatAndPreserveToplevelNewlines(ThirdTok, CtxtIn, ArgsTest2);
+        ThirdTok = TheParser->eatAndPreserveToplevelNewlines(ThirdTok, Ctxt, ArgsTest2);
         
         if (ThirdTok.Tok != TOKEN_SEMISEMI) {
 
@@ -255,7 +254,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext CtxtIn
         TheParser->nextToken();
         
         auto FourthTok = TheParser->currentToken();
-        FourthTok = TheParser->eatAndPreserveToplevelNewlines(FourthTok, CtxtIn, ArgsTest3);
+        FourthTok = TheParser->eatAndPreserveToplevelNewlines(FourthTok, Ctxt, ArgsTest3);
         
         if (!FourthTok.Tok.isPossibleBeginningOfExpression()
             || (TheParser->getTokenPrecedence(FourthTok, Ctxt) < PRECEDENCE_SEMISEMI)
@@ -334,7 +333,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext CtxtIn
     TheParser->nextToken();
     
     auto ThirdTok = TheParser->currentToken();
-    ThirdTok = TheParser->eatAndPreserveToplevelNewlines(ThirdTok, CtxtIn, ArgsTest2);
+    ThirdTok = TheParser->eatAndPreserveToplevelNewlines(ThirdTok, Ctxt, ArgsTest2);
     
     if (!ThirdTok.Tok.isPossibleBeginningOfExpression()
         || (TheParser->getTokenPrecedence(ThirdTok, Ctxt) < PRECEDENCE_SEMISEMI)
