@@ -145,7 +145,7 @@ longNameToHexDigits[longName_String] :=
 
 
 
-Print["Generating additional required source files and libraries..."]
+Print["Generating additional required source files..."]
 
 
 packageDir = Directory[]
@@ -254,9 +254,7 @@ Get["AST`Generate`Precedence`"]
 
 Get["AST`Generate`Symbol`"]
 
-Get["AST`Generate`ExpressionLibrary`"]
-
-Print["Done generating additional required source files and libraries"]
+Print["Done generating additional required source files"]
 
 End[]
 

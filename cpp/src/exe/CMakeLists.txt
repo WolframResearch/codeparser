@@ -25,7 +25,10 @@ target_include_directories(ast-exe
 	PRIVATE ${WOLFRAMLIBRARY_INCLUDE_DIR}
 )
 
-target_link_libraries(ast-exe ast-lib)
+target_link_libraries(ast-exe
+	ast-lib
+#	${WOLFRAMRTL_LIB}
+)
 
 set_target_properties(ast-exe PROPERTIES
 	OUTPUT_NAME
@@ -35,7 +38,9 @@ set_target_properties(ast-exe PROPERTIES
 	CXX_STANDARD_REQUIRED
 		ON
 	INSTALL_RPATH
-		"@executable_path/../lib"
+		#"@executable_path/../lib;/Applications/Mathematica121-6597445.app/Contents/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions/;/Applications/Mathematica121-6597445.app/Contents/SystemFiles/Libraries/MacOSX-x86-64/"
+		#"@executable_path/../lib"
+		"@executable_path/../lib;/Applications/Mathematica121-6597445.app/Contents/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions/;"
 )
 
 #
@@ -65,8 +70,10 @@ install(TARGETS ast-exe
 
 if(APPLE)
 
-install(TARGETS ast-lib
-	DESTINATION lib)
+install(TARGETS ast-lib DESTINATION lib)
+
+#install(FILES ${EXPR_LIB} DESTINATION lib)
+
 
 #
 # mathlink.framework has rpath @executable_path/../Frameworks, so accomodate that

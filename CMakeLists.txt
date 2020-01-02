@@ -52,12 +52,15 @@ set(WL_GENERATE_SOURCES
 	${CMAKE_SOURCE_DIR}/AST/Generate/Generate.wl
 	${CMAKE_SOURCE_DIR}/AST/Generate/CharacterMaps.wl
 	${CMAKE_SOURCE_DIR}/AST/Generate/CodePoint.wl
-	${CMAKE_SOURCE_DIR}/AST/Generate/ExpressionLibrary.wl
 	${CMAKE_SOURCE_DIR}/AST/Generate/LongNames.wl
 	${CMAKE_SOURCE_DIR}/AST/Generate/Precedence.wl
 	${CMAKE_SOURCE_DIR}/AST/Generate/Symbol.wl
 	${CMAKE_SOURCE_DIR}/AST/Generate/TokenEnum.wl
 )
+
+#set(WL_GENERATE_EXPRLIB_SOURCES
+#	${CMAKE_SOURCE_DIR}/AST/Generate/ExpressionLibrary.wl
+#)
 
 set(PACLETINFO_SOURCE
 	${CMAKE_SOURCE_DIR}/AST/PacletInfo.m
@@ -119,18 +122,6 @@ CheckWolframKernel()
 
 
 
-if(${VERSION_NUMBER} GREATER_EQUAL 1210)
-
-set(GENERATED_LIBS
-	${CMAKE_BINARY_DIR}/paclet/AST/LibraryResources/${SYSTEMID}/expr${CMAKE_SHARED_LIBRARY_SUFFIX}
-)
-
-message(STATUS "GENERATED_LIBS: ${GENERATED_LIBS}")
-
-endif()
-
-
-
 
 file(MAKE_DIRECTORY
 	${CMAKE_BINARY_DIR}/paclet/${PACLET}
@@ -155,38 +146,80 @@ foreach(SRC ${WL_PACLET_SOURCES})
 	list(APPEND COPIED_WL_PACLET_SOURCES ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC})
 endforeach()
 
-set(PACLET_SOURCES
-	${COPIED_WL_PACLET_SOURCES}
-	${GENERATED_WL_PACLET_SOURCES}
-	ast-lib
-)
-
-if(BUILD_DOCS)
-
-list(APPEND PACLET_SOURCES
-	${BUILT_DOCUMENTATION}
-)
-
-endif(BUILD_DOCS)
-
 
 
 
 #
-# Generate sources
+# generated-srcs target
 #
-# Run the Generate.wl script to generate additional required C++ and WL files
+add_custom_target(generated-srcs
+	DEPENDS
+		${GENERATED_SOURCES}
+)
+
+#
+# Generate source files
+#
+# Run the Generate.wl script to generate additional required source files
 #
 add_custom_command(
 	OUTPUT
 		${GENERATED_SOURCES}
-		${GENERATED_LIBS}
 	DEPENDS
 		${WL_DATA_SOURCES}
 		${WL_GENERATE_SOURCES}
-	COMMAND ${WOLFRAMKERNEL} -noinit -script ${CMAKE_SOURCE_DIR}/AST/Generate/Generate.wl -buildDir ${CMAKE_BINARY_DIR}
-	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+	COMMAND
+		${WOLFRAMKERNEL} -noinit -script ${CMAKE_SOURCE_DIR}/AST/Generate/Generate.wl -buildDir ${CMAKE_BINARY_DIR}
+	WORKING_DIRECTORY
+		${CMAKE_SOURCE_DIR}
 )
+
+
+
+
+
+
+#
+# expr lib target
+#
+#if(${VERSION_NUMBER} GREATER_EQUAL 1210)
+#
+#set(EXPR_LIB ${CMAKE_BINARY_DIR}/paclet/AST/LibraryResources/${SYSTEMID}/expr${CMAKE_SHARED_LIBRARY_SUFFIX})
+#
+#message(STATUS "EXPR_LIB: ${EXPR_LIB}")
+#
+#add_library(expr-lib SHARED IMPORTED)
+#
+#set_property(
+#	TARGET
+#		expr-lib
+#	PROPERTY
+#	IMPORTED_LOCATION
+#		${EXPR_LIB}
+#)
+#
+#add_custom_target(expr-lib-custom
+#	DEPENDS
+#		${EXPR_LIB}
+#)
+#
+#add_custom_command(
+#	OUTPUT
+#		${EXPR_LIB}
+#	DEPENDS
+#		${WL_GENERATE_EXPRLIB_SOURCES}
+#	COMMAND
+#		${WOLFRAMKERNEL} -noinit -script ${CMAKE_SOURCE_DIR}/AST/Generate/ExpressionLibrary.wl -buildDir ${CMAKE_BINARY_DIR}
+#	VERBATIM
+#	WORKING_DIRECTORY
+#		${CMAKE_SOURCE_DIR}
+#)
+#
+#add_dependencies(expr-lib expr-lib-custom)
+#message(STATUS "WOLFRAMRTL_LIB: ${WOLFRAMRTL_LIB}")
+#target_link_libraries(expr-lib INTERFACE ${WOLFRAMRTL_LIB})
+#endif()
+
 
 
 
@@ -278,6 +311,10 @@ target_link_libraries(ast-lib ${MATHLINK_LIB})
 
 endif(USE_MATHLINK)
 
+
+#if(${VERSION_NUMBER} GREATER_EQUAL 1210)
+#target_link_libraries(ast-lib expr-lib)
+#endif()
 
 
 set_target_properties(ast-lib PROPERTIES
@@ -418,11 +455,30 @@ endif(BUILD_DOCS)
 
 
 
-
-
 #
 # paclet target
 #
+
+set(PACLET_SOURCES
+	${COPIED_WL_PACLET_SOURCES}
+	generated-srcs
+	ast-lib
+)
+
+#if(${VERSION_NUMBER} GREATER_EQUAL 1210)
+#list(APPEND PACLET_SOURCES
+#	expr-lib
+#)
+#endif()
+
+if(BUILD_DOCS)
+
+list(APPEND PACLET_SOURCES
+	${BUILT_DOCUMENTATION}
+)
+
+endif(BUILD_DOCS)
+
 add_custom_target(paclet
 	DEPENDS ${CMAKE_BINARY_DIR}/paclet/${PACLET}-${PACLET_VERSION}.paclet
 )

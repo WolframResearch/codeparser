@@ -2,11 +2,35 @@ BeginPackage["AST`Generate`ExpressionLibrary`"]
 
 Begin["`Private`"]
 
-Needs["AST`Generate`"]
+
 Needs["Compile`"]
 Needs["TypeFramework`"]
 
 Print["Generating ExpressionLibrary..."]
+
+
+packageDir = Directory[]
+
+If[FileNameSplit[packageDir][[-1]] =!= "ast",
+  Print["Cannot proceed; Not inside ast directory: ", packageDir];
+  Quit[1]
+]
+
+buildDirFlagPosition = FirstPosition[$CommandLine, "-buildDir"]
+
+If[MissingQ[buildDirFlagPosition],
+  Print["Cannot proceed; Unsupported build directory"];
+  Quit[1]
+]
+
+buildDir = $CommandLine[[buildDirFlagPosition[[1]] + 1]]
+
+If[FileType[buildDir] =!= Directory,
+  Print["Cannot proceed; Unsupported build directory"];
+  Quit[1]
+]
+
+
 
 ExpressionLibraryProgram[] :=
 Module[{},
