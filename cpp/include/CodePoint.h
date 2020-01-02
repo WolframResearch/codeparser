@@ -33,6 +33,14 @@ constexpr int CODEPOINT_LINEARSYNTAX_BACKTICK(0xf7cd);
 constexpr int CODEPOINT_REPLACEMENT_CHARACTER(0xfffd);
 
 //
+// Need a special code point because MathLink does not transmit BOM when it is first character
+//
+// Related bugs: 366106
+//
+constexpr int CODEPOINT_ACTUAL_BOM(0xfeff);
+constexpr int CODEPOINT_VIRTUAL_BOM(0xe001);
+
+//
 // Do the simple thing and have ENDOFFILE be EOF
 //
 constexpr int CODEPOINT_ENDOFFILE(EOF);

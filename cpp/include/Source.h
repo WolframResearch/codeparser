@@ -26,8 +26,24 @@ using CodeActionPtr = std::unique_ptr<CodeAction>;
 
 
 enum UTF8Status : uint8_t {
+    
     UTF8STATUS_NORMAL,
-    UTF8STATUS_ERROR,
+    
+    //
+    // Could be:
+    // invalid first, second, third, or fourth byte
+    // Hit EOF in the middle of a sequence
+    // Surrogate
+    //
+    // It doesn't really matter what the problem is.
+    //
+    // Anything that is invalid gets turned into \[UnknownGlyph]
+    //
+    UTF8STATUS_INVALID,
+    
+    //
+    // Non-characters and BOM is preserved
+    //
     UTF8STATUS_NONCHARACTER_OR_BOM
 };
 

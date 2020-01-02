@@ -344,6 +344,9 @@ void makeGraphical(std::ostream& stream, int i) {
         case '\x98': case '\x99': case '\x9a': case '\x9b': case '\x9c': case '\x9d': case '\x9e': case '\x9f':
             stream << WLCharacter(i, ESCAPE_2HEX);
             break;
+        case CODEPOINT_VIRTUAL_BOM:
+            stream << WLCharacter(CODEPOINT_ACTUAL_BOM, ESCAPE_4HEX);
+            break;
         default:
             if (i > 0xffff) {
                 
@@ -943,7 +946,17 @@ bool WLCharacter::isMBStrange() const {
             //
             // ZERO WIDTH NO-BREAK SPACE
             //
+            // also BOM
+            //
         case 0xfeff:
+            assert(false);
+            return true;
+            //
+            // ZERO WIDTH NO-BREAK SPACE
+            //
+            // also BOM
+            //
+        case 0xe001:
             return true;
             //
             // REPLACEMENT CHARACTER
