@@ -1,8 +1,6 @@
 
 #include "ByteBuffer.h"
 
-#include "CodePoint.h"
-
 ByteBuffer::ByteBuffer() : origBufAndLen(), libData(), buffer(), end(), wasEOF() {}
 
 void ByteBuffer::init(BufferAndLength bufAndLenIn, WolframLibraryData libDataIn) {

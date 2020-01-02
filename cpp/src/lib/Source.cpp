@@ -1,15 +1,17 @@
 
-#include "ByteDecoder.h"
-#include "ByteEncoder.h"
-#include "ByteBuffer.h"
-#include "Symbol.h"
-#include "Utils.h"
 #include "Source.h"
-#include "CodePoint.h"
+
+#include "ByteDecoder.h" // for ByteDecoder
+#include "ByteEncoder.h" // for ByteEncoder
+#include "ByteBuffer.h" // for ByteBuffer
+#include "Symbol.h" // for SYMBOL_AST_LIBRARY_MAKESYNTAXISSUE, etc.
+#include "Utils.h" // for isMBNewline, etc.
+//#include "CodePoint.h"
+#include "WLCharacter.h" // for set_graphical
 
 #include <cctype> // for isalnum, isxdigit, isupper, isdigit, isalpha, ispunct, iscntrl with GCC and MSVC
-#include <utility> // for swap
-#include <sstream>
+//#include <utility> // for swap
+#include <sstream> // for ostringstream
 
 
 BufferAndLength::BufferAndLength() : buffer(), length(), status(), _end() {}

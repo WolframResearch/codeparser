@@ -1,5 +1,6 @@
 
 #include "ByteDecoder.h"
+#include "ByteBuffer.h"
 #include "API.h"
 #include "CodePoint.h"
 

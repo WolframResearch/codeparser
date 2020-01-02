@@ -1,7 +1,8 @@
 
 #pragma once
 
-#include "Parser.h"
+#include "Parser.h" // for ParserContext
+#include "Token.h" // for Token
 
 #include <memory> // for unique_ptr
 

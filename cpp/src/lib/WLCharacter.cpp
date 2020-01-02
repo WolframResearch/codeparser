@@ -1,14 +1,15 @@
 
 #include "WLCharacter.h"
 
-#include "ByteEncoder.h"
-#include "Utils.h"
-#include "Source.h"
-#include "CodePoint.h"
-#include "CharacterMaps.h"
+//#include "ByteEncoder.h"
+#include "Utils.h" // for isUnsupportedLongName
+#include "Source.h" // for SourceCharacer
+//#include "CodePoint.h"
+#include "CharacterMaps.h" // for FromSpecialMap
 
 #include <cctype> // for isdigit, isalpha, ispunct, iscntrl with GCC and MSVC
-#include <sstream>
+#include <sstream> // for ostringstream
+#include <ostream> // for ostream
 
 char fromDigit(size_t d);
 

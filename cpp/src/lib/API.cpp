@@ -1,18 +1,17 @@
 
 #include "API.h"
 
-#include "Parser.h"
-#include "Tokenizer.h"
-#include "CharacterDecoder.h"
-#include "ByteDecoder.h"
-#include "ByteBuffer.h"
-#include "Utils.h"
-#include "Symbol.h"
+#include "Parser.h" // for Parser
+#include "Tokenizer.h" // for Tokenizer
+#include "CharacterDecoder.h" // for CharacterDecoder
+#include "ByteDecoder.h" // for ByteDecoder
+#include "ByteBuffer.h" // for ByteBuffer
+#include "ByteEncoder.h" // for ByteEncoder
 
 #include <memory> // for unique_ptr
 #ifdef WINDOWS_MATHLINK
 #else
-#include <signal.h>
+#include <signal.h> // for SIGINT
 #endif
 #include <vector>
 

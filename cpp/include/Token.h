@@ -1,10 +1,10 @@
 
 #pragma once
 
-#include "Source.h"
-#include "TokenEnum.h"
+#include "Source.h" // for BufferAndLength, Source
+#include "TokenEnum.h" // for TokenEnum
 
-#include <string>
+//#include <string>
 #include <ostream>
 
 struct Token {

@@ -104,7 +104,7 @@ characterMapsCPPSource = {
 
 #include \"LongNameDefines.h\"
 
-#include <unordered_set>
+#include <unordered_set> // for unordered_set
 "} ~Join~
 longNameToCodePointMap ~Join~
 codePointToLongNameMap ~Join~

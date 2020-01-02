@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include "Symbol.h"
-#include "TokenEnum.h"
-
+//#include "Symbol.h"
+#include "TokenEnum.h" // for TokenEnum
+//
 #if USE_MATHLINK
 #include "mathlink.h"
 #undef P
@@ -14,7 +14,7 @@
 #include <iterator>
 #include <array>
 #include <vector>
-#include <memory>
+#include <memory> // for unique_ptr
 
 class Issue;
 class CodeAction;

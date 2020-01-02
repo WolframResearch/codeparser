@@ -1,7 +1,8 @@
 
 #include "CharacterDecoder.h"
+#include "ByteBuffer.h"
 #include "API.h"
-#include "CodePoint.h"
+//#include "CodePoint.h"
 
 #include "gtest/gtest.h"
 

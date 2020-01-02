@@ -1,13 +1,15 @@
 
 #pragma once
 
-#include "Node.h"
-#include "Source.h"
-#include "Precedence.h"
+#include "Node.h" // for LeafNodePtr, etc.
+#include "Source.h" // for IssuePtr
+#include "Token.h" // for Token
+#include "Precedence.h" // for Precedence
+#include "TokenEnum.h" // for TokenEnum
 
 #include <vector>
 #include <array>
-#include <cstddef>
+//#include <cstddef>
 #include <deque>
 #include <memory> // for unique_ptr
 

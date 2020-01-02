@@ -1,12 +1,14 @@
 
 #pragma once
 
-#include "API.h"
-#include "ByteDecoder.h"
-#include "Source.h"
-#include "WLCharacter.h"
+//#include "API.h"
+//#include "ByteDecoder.h"
+#include "Source.h" // for IssuePtr
+#include "WLCharacter.h" // for WLCharacter
 
 #include "WolframLibrary.h"
+#undef True
+#undef False
 
 #include <vector>
 #include <memory> // for unique_ptr

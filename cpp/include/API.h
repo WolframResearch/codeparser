@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "Node.h"
-#include "Source.h"
+#include "Node.h" // for NodePtr, Node, etc.
+#include "Source.h" // for BufferAndLength
 
 //
 // Despite being mentioned here:

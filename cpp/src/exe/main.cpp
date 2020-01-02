@@ -1,13 +1,15 @@
 
-#include "ByteDecoder.h"
-#include "ByteBuffer.h"
-#include "Node.h"
-#include "API.h"
-#include "Symbol.h"
+#include "ByteDecoder.h" // for TheByteDecoder
+#include "ByteBuffer.h" // for TheByteBuffer
+//#include "Node.h"
+#include "API.h" // for TheParserSession
+//#include "Symbol.h"
+#include "Source.h" // for MBuffer
 
-#include <string>
+#include <memory> // for unique_ptr
+//#include <string>
 #include <iostream>
-#include <fstream>
+#include <fstream> // for ofstream
 #include <cstdio> // for rewind
 
 class ScopedFileBuffer;

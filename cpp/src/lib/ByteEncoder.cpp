@@ -1,7 +1,7 @@
 
 #include "ByteEncoder.h"
 
-#include "Utils.h"
+#include "Utils.h" // for isMBNonCharacter
 
 #include <cassert>
 

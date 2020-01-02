@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "WLCharacter.h"
-#include "Source.h"
+#include "WLCharacter.h" // for WLCharacter
+#include "Source.h" // for Source
 
 #include <string>
 

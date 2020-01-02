@@ -1,6 +1,8 @@
 
 #include "API.h"
 #include "Tokenizer.h"
+#include "ByteDecoder.h"
+#include "ByteBuffer.h"
 
 #include "gtest/gtest.h"
 

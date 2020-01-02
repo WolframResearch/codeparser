@@ -1,8 +1,9 @@
 
 #include "ByteDecoder.h"
 
-#include "Utils.h"
-#include "CodePoint.h" // for CODEPOINT_REPLACEMENT_CHARACTER
+#include "ByteBuffer.h" // for TheByteBuffer
+#include "Utils.h" // for isMBNonCharacter, etc.
+#include "CodePoint.h" // for CODEPOINT_REPLACEMENT_CHARACTER, CODEPOINT_CRLF, etc.
 
 ByteDecoder::ByteDecoder() : Issues(), status(), lastBuf(), lastLoc(), SrcLoc() {}
 

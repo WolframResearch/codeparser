@@ -1,11 +1,11 @@
 
 #pragma once
 
-#include "CodePoint.h"
+#include "CodePoint.h" // for CODEPOINT_UNKNOWN
 
-#include <cassert>
+//#include <cassert>
 #include <string>
-#include <iterator>
+//#include <iterator>
 
 //
 // The 8 styles of character escapes

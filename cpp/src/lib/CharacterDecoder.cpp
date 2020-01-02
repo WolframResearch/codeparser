@@ -1,12 +1,12 @@
 
 #include "CharacterDecoder.h"
 
-#include "ByteDecoder.h"
-#include "ByteBuffer.h"
-#include "Utils.h"
-#include "CharacterMaps.h"
-#include "CodePoint.h"
-#include "API.h"
+#include "ByteDecoder.h" // for TheByteDecoder
+#include "ByteBuffer.h" // for TheByteBuffer
+#include "Utils.h" // for isUnsupportedLongName, etc.
+#include "CharacterMaps.h" // for LongNameToCodePointMap, etc.
+//#include "CodePoint.h"
+#include "API.h" // for ScopedMLUTF8String
 
 
 CharacterDecoder::CharacterDecoder() : Issues(), libData(), lastBuf(), lastLoc() {}

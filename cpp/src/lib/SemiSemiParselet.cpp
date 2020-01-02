@@ -7,11 +7,12 @@
 
 #include "Parselet.h"
 
-#include "CharacterDecoder.h"
-#include "ByteDecoder.h"
-#include "ByteBuffer.h"
-#include "Utils.h"
-#include "Symbol.h"
+#include "API.h" // for ParserSession
+//#include "CharacterDecoder.h"
+//#include "ByteDecoder.h"
+//#include "ByteBuffer.h"
+//#include "Utils.h"
+//#include "Symbol.h"
 
 //
 // prefix

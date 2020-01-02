@@ -1,11 +1,11 @@
 
 #include "Tokenizer.h"
 
-#include "CharacterDecoder.h"
-#include "ByteDecoder.h"
-#include "ByteBuffer.h"
-#include "Utils.h"
-#include "CodePoint.h"
+#include "CharacterDecoder.h" // for TheCharacterDecoder
+#include "ByteDecoder.h" // for TheByteDecoder
+#include "ByteBuffer.h" // for TheByteBuffer
+#include "Utils.h" // for strangeLetterlikeWarning
+//#include "CodePoint.h"
 
 size_t toDigit(int val);
 

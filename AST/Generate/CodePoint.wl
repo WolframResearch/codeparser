@@ -68,11 +68,11 @@ codePointCPPSource = Join[{
 //
 
 
-#include \"Utils.h\"
+#include \"Utils.h\" // for isMBPunctuation, etc.
 #include \"CodePoint.h\"
 #include \"LongNameDefines.h\"
 
-#include <unordered_set>
+#include <unordered_set> // for unordered_set
 #include <cassert>
 "}, punctuationSource, spaceSource, newlineSource, uninterpretableSource,
     LongNameCodePointToOperatorSource, 

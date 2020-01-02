@@ -1,10 +1,10 @@
 
 #pragma once
 
-#include "CharacterDecoder.h"
-#include "Source.h"
-#include "WLCharacter.h"
-#include "Token.h"
+//#include "CharacterDecoder.h"
+//#include "Source.h"
+#include "WLCharacter.h" // for WLCharacter
+#include "Token.h" // for Token
 
 #include <vector>
 #include <memory> // for unique_ptr

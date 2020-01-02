@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "ByteBuffer.h"
-#include "Source.h"
+//#include "ByteBuffer.h"
+#include "Source.h" // for IssuePtr, UTF8Status, etc.
 
 #include <vector>
 #include <memory> // for unique_ptr
