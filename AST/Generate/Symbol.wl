@@ -107,7 +107,6 @@ BinaryOperatorToSymbol[Token`LongName`DoubleLeftTee] = DoubleLeftTee
 BinaryOperatorToSymbol[Token`LongName`UpTee] = UpTee
 BinaryOperatorToSymbol[Token`LongName`DownTee] = DownTee
 
-BinaryOperatorToSymbol[Token`Minus] = Minus
 BinaryOperatorToSymbol[Token`Slash] = Divide
 BinaryOperatorToSymbol[Token`SlashAt] = Map
 BinaryOperatorToSymbol[Token`Equal] = Set
@@ -262,6 +261,7 @@ InfixOperatorToSymbol[Token`LongName`NotSquareSupersetEqual] = NotSquareSuperset
 
 (* Plus and Times *)
 InfixOperatorToSymbol[Token`Plus] = Plus
+InfixOperatorToSymbol[Token`Minus] = Plus
 
 InfixOperatorToSymbol[Token`LongName`ImplicitPlus] = Plus
 

@@ -74,7 +74,6 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitiveSymbolPa
     // Binary
     //
     
-    registerInfixParselet(TOKEN_MINUS.value(), InfixParseletPtr(new BinaryOperatorParselet(TOKEN_MINUS, PRECEDENCE_INFIX_MINUS, ASSOCIATIVITY_LEFT)));
     registerInfixParselet(TOKEN_SLASH.value(), InfixParseletPtr(new BinaryOperatorParselet(TOKEN_SLASH, PRECEDENCE_SLASH, ASSOCIATIVITY_LEFT)));
     registerInfixParselet(TOKEN_CARET.value(), InfixParseletPtr(new BinaryOperatorParselet(TOKEN_CARET, PRECEDENCE_CARET, ASSOCIATIVITY_RIGHT)));
     registerInfixParselet(TOKEN_CARETEQUAL.value(), InfixParseletPtr(new BinaryOperatorParselet(TOKEN_CARETEQUAL, PRECEDENCE_CARETEQUAL, ASSOCIATIVITY_RIGHT)));
@@ -131,6 +130,7 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitiveSymbolPa
     //
     // These may not necessarily correspond to Flat functions in WL.
     //
+    registerInfixParselet(TOKEN_MINUS.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_MINUS, PRECEDENCE_INFIX_MINUS)));
     registerInfixParselet(TOKEN_EQUALEQUALEQUAL.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_EQUALEQUALEQUAL, PRECEDENCE_EQUALEQUALEQUAL)));
     registerInfixParselet(TOKEN_EQUALBANGEQUAL.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_EQUALBANGEQUAL, PRECEDENCE_EQUALBANGEQUAL)));
     registerInfixParselet(TOKEN_PLUS.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_PLUS, PRECEDENCE_INFIX_PLUS)));

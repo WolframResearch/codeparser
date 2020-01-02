@@ -287,8 +287,9 @@ abstract[PostfixNode[op_, {operand_, _}, data_]] := CallNode[ToNode[op], {abstra
 
 
 
-
+(*
 abstract[BinaryNode[Minus, { left_, _, right_ }, data_]] := abstractPlus[BinaryNode[Minus, {left, right}, KeyTake[data, keysToTake]]]
+*)
 abstract[BinaryNode[Divide, { left_, _, right_ }, data_]] := abstractTimes[BinaryNode[Divide, {left, right}, KeyTake[data, keysToTake]]]
 
 abstract[BinaryNode[BinaryAt, {left_, _, right_}, data_]] := CallNode[abstract[left], {abstract[right]}, KeyTake[data, keysToTake]]
@@ -1114,6 +1115,7 @@ flattenPlus[nodes_List, data_] :=
 				InfixNode[Plus, _, _],
 					flattenPlus[#[[2, ;;;;2]], data]
 				,
+				(*
 				BinaryNode[Minus, {_, _, _}, _],
 					(*
 					When parsing a - b + c, make sure to give the abstracted Times expression the correct Source.
@@ -1122,6 +1124,7 @@ flattenPlus[nodes_List, data_] :=
 					synthesizedData = <| Source -> { #[[2, 2, 3, Key[Source], 1]], #[[2, 3, 3, Key[Source], 2]] } |>;
 					flattenPlus[{#[[2, 1]], negate[#[[2, 3]], synthesizedData]}, data]
 				,
+				*)
 				_,
 					#
 			]
@@ -1131,8 +1134,10 @@ flattenPlus[nodes_List, data_] :=
 abstractPlus[InfixNode[Plus, children_, data_]] :=
 	CallNode[ToNode[Plus], abstract /@ Flatten[flattenPlus[children, data]], data]
 
+(*
 abstractPlus[BinaryNode[Minus, {left_, right_}, data_]] :=
 	CallNode[ToNode[Plus], abstract /@ Flatten[flattenPlus[{left, negate[right, data]}, data]], data]
+*)
 
 (*
 abstract syntax of  -a * b / c d \[InvisibleTimes] e \[Times] f  is a single Times expression
