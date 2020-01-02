@@ -798,7 +798,7 @@ MinLimit
 (*
 Range 0xf500
 *)
-"InlinePart" -> Punctuation, (* 0xf51e *)
+"InlinePart" -> Unsupported, (* 0xf51e *)
 "RuleDelayed" -> Punctuation, (* 0xf51f *)
 "Square" -> Punctuation, (* 0xf520 *)
 "Rule" -> Punctuation, (* 0xf522 *)
