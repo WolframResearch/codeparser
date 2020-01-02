@@ -1787,7 +1787,7 @@ Module[{nodeBoxes},
 
 
 
-
+(*
 toStandardFormBoxes[StartOfLineNode[op_, nodes_, data_]] :=
 Catch[
 Module[{nodeBoxes},
@@ -1797,7 +1797,7 @@ Module[{nodeBoxes},
   ];
   RowBox[nodeBoxes]
 ]]
-
+*)
 
 
 

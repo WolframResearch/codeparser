@@ -268,13 +268,13 @@ MakeCallNode[tag_, payload_, srcArgs___] :=
 MakePrefixBinaryNode[tag_, payload_, srcArgs___] :=
 	PrefixBinaryNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
 
-
+(*
 MakeStartOfLineNode[tag_, payload_, srcArgs___] :=
 	StartOfLineNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
 
 MakeStartOfFileNode[tag_, payload_, srcArgs___] :=
 	StartOfFileNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
-
+*)
 
 MakeBlankNode[tag_, payload_, srcArgs___] :=
 	BlankNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]

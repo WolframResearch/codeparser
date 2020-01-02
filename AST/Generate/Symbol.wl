@@ -587,7 +587,10 @@ symbols = Union[Join[
     {Developer`VectorInequality},
     {AST`Library`MakeLeafNode, AST`Library`MakePrefixNode, AST`Library`MakeBinaryNode, AST`Library`MakeInfixNode,
             AST`Library`MakeTernaryNode, AST`Library`MakePostfixNode, AST`Library`MakeCallNode, AST`Library`MakeGroupNode,
-            AST`Library`MakeStartOfLineNode, AST`Library`MakeStartOfFileNode, AST`Library`MakeBlankNode, AST`Library`MakeBlankSequenceNode,
+            (*
+            AST`Library`MakeStartOfLineNode, AST`Library`MakeStartOfFileNode,
+            *)
+            AST`Library`MakeBlankNode, AST`Library`MakeBlankSequenceNode,
             AST`Library`MakeBlankNullSequenceNode, AST`Library`MakePatternBlankNode, AST`Library`MakePatternBlankSequenceNode,
             AST`Library`MakePatternBlankNullSequenceNode, AST`Library`MakeOptionalDefaultPatternNode, AST`Library`MakeSyntaxErrorNode,
             AST`Library`MakeGroupMissingCloserNode, AST`Library`MakePrefixBinaryNode,
