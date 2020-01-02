@@ -57,6 +57,7 @@ int main(int argc, char *argv[]) {
     auto leaf = false;
     auto outputMode = PRINT;
     auto sourceCharacters = false;
+    auto safeString = false;
     
     std::string fileInput;
     
@@ -95,6 +96,7 @@ int main(int argc, char *argv[]) {
     }
     
 //    file = true;
+//    safeString = true;
 //    fileInput = "/Users/brenton/Downloads/Helped Code Bin and Count.nb";
 //    fileInput = "/Users/brenton/development/stash/WA/alphasource/CalculateParse/Disambiguation/DisambiguationRaw.m";
 //    fileInput = "/Applications/Mathematica121-6519725.app/Contents/AddOns/Applications/FormulaData/Kernel/downvalues.m";
@@ -113,6 +115,8 @@ int main(int argc, char *argv[]) {
             readFile(fileInput, SOURCECHARACTERS, outputMode);
         } else if (tokenize) {
             readFile(fileInput, TOKENIZE, outputMode);
+        } else if (safeString) {
+            readFile(fileInput, SAFESTRING, outputMode);
         } else {
             readFile(fileInput, EXPRESSION, outputMode);
         }
@@ -123,6 +127,8 @@ int main(int argc, char *argv[]) {
             readStdIn(SOURCECHARACTERS, outputMode);
         } else if (tokenize) {
             readStdIn(TOKENIZE, outputMode);
+        } else if (safeString) {
+            readStdIn(SAFESTRING, outputMode);
         } else {
             readStdIn(EXPRESSION, outputMode);
         }
@@ -188,6 +194,44 @@ void readStdIn(int mode, int outputMode) {
     
         auto N = TheParserSession->listSourceCharacters();
     
+        switch (outputMode) {
+            case PRINT:
+                N->print(std::cout);
+                std::cout << "\n";
+                break;
+            case PUT: {
+#if USE_MATHLINK
+                ScopedMLLoopbackLink loop;
+                N->put(loop.get());
+#endif // USE_MATHLINK
+            }
+                break;
+            case PRINT_DRYRUN: {
+                std::ofstream nullStream;
+                N->print(nullStream);
+                nullStream << "\n";
+            }
+                break;
+            case NONE:
+                break;
+        }
+        
+        TheParserSession->releaseNode(N);
+        
+        TheByteDecoder->deinit();
+        TheByteBuffer->deinit();
+        
+    } else if (mode == SAFESTRING) {
+        
+        auto inputStr = reinterpret_cast<Buffer>(input.c_str());
+        
+        auto inputBufAndLen = BufferAndLength(inputStr, input.size());
+        
+        TheByteBuffer->init(inputBufAndLen, libData);
+        TheByteDecoder->init();
+        
+        auto N = TheParserSession->safeString();
+        
         switch (outputMode) {
             case PRINT:
                 N->print(std::cout);
@@ -325,6 +369,40 @@ void readFile(std::string file, int mode, int outputMode) {
         TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE);
         
         auto N = TheParserSession->tokenize();
+        
+        switch (outputMode) {
+            case PRINT:
+                N->print(std::cout);
+                std::cout << "\n";
+                break;
+            case PUT: {
+#if USE_MATHLINK
+                ScopedMLLoopbackLink loop;
+                N->put(loop.get());
+#endif // USE_MATHLINK
+            }
+                break;
+            case PRINT_DRYRUN: {
+                std::ofstream nullStream;
+                N->print(nullStream);
+                nullStream << "\n";
+            }
+                break;
+            case NONE:
+                break;
+        }
+        
+        TheParserSession->releaseNode(N);
+        
+        TheParserSession->deinit();
+        
+    } else if (mode == SAFESTRING) {
+        
+        auto fBufAndLen = BufferAndLength(fb->getBuf(), fb->getLen());
+        
+        TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE);
+        
+        auto N = TheParserSession->safeString();
         
         switch (outputMode) {
             case PRINT:

@@ -593,7 +593,7 @@ symbols = Union[Join[
             AST`Library`MakeGroupMissingCloserNode, AST`Library`MakePrefixBinaryNode,
             AST`Library`MakeSyntaxIssue, AST`Library`MakeReplaceTextCodeAction, AST`Library`MakeInsertTextCodeAction,
             AST`Library`MakeFormatIssue, AST`Library`MakeDeleteTextCodeAction, AST`Library`MakeDeleteTriviaCodeAction,
-            AST`Library`MakeInsertTextAfterCodeAction, AST`Library`MakeSourceCharacterNode},
+            AST`Library`MakeInsertTextAfterCodeAction, AST`Library`MakeSourceCharacterNode, AST`Library`MakeSafeStringNode},
     {AST`InternalInvalid, AST`Metadata, AST`PatternBlank, AST`PatternBlankSequence, AST`PatternBlankNullSequence,
       AST`OptionalDefault, AST`OptionalDefaultPattern, AST`TernaryTilde},
     {AST`SourceCharacter},

@@ -349,6 +349,15 @@ void SourceCharacterNode::print(std::ostream& s) const {
     s << "]\n";
 }
 
+void SafeStringNode::print(std::ostream& s) const {
+    
+    s << SYMBOL_AST_LIBRARY_MAKESAFESTRINGNODE->name() << "[";
+    
+//    parseIntoAStringAndPrint;
+    
+    s << "]\n";
+}
+
 
 
 
@@ -559,6 +568,17 @@ void SourceCharacterNode::put(MLINK mlp) const {
     ByteEncoder::encodeBytes(Arr, val, &state);
     
     if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Arr.data()), static_cast<int>(S))) {
+        assert(false);
+    }
+}
+
+void SafeStringNode::put(MLINK mlp) const {
+    
+    if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKESAFESTRINGNODE->name(), static_cast<int>(1))) {
+        assert(false);
+    }
+    
+    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(safeBytes.data()), static_cast<int>(safeBytes.size()))) {
         assert(false);
     }
 }

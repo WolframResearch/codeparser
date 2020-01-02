@@ -404,3 +404,19 @@ public:
     void print(std::ostream&) const override;
 };
 
+class SafeStringNode : public Node {
+    std::vector<unsigned char> safeBytes;
+public:
+    
+    SafeStringNode(std::vector<unsigned char>& safeBytes) : Node(), safeBytes(safeBytes) {}
+    
+    SafeStringNode(std::vector<unsigned char>&& safeBytes) : Node(), safeBytes(std::move(safeBytes)) {}
+    
+#if USE_MATHLINK
+    void put(MLINK mlp) const override;
+#endif // USE_MATHLINK
+    
+    void print(std::ostream&) const override;
+};
+
+

@@ -18,6 +18,7 @@ concreteParseBytesFunc
 tokenizeBytesFunc
 tokenizeBytesListableFunc
 parseLeafFunc
+safeStringFunc
 
 
 (*
@@ -49,6 +50,7 @@ MakeGroupMissingCloserNode
 MakeAbstractSyntaxErrorNode
 
 MakeSourceCharacterNode
+MakeSafeStringNode
 
 MakeSyntaxIssue
 MakeFormatIssue
@@ -143,6 +145,8 @@ tokenizeBytesFunc := tokenizeBytesFunc = loadFunc["TokenizeBytes_LibraryLink"];
 tokenizeBytesListableFunc := tokenizeBytesListableFunc = loadFunc["TokenizeBytes_Listable_LibraryLink"];
 
 parseLeafFunc := parseLeafFunc = loadFunc["ParseLeaf_LibraryLink"];
+
+safeStringFunc := safeStringFunc = loadFunc["SafeString_LibraryLink"];
 )
 
 
@@ -345,6 +349,10 @@ MakeDeleteTriviaCodeAction[label_String, srcArgs___Integer] :=
 	CodeAction[label, DeleteTrivia, <|Source->structureSrcArgs[srcArgs]|>]
 
 
+
+
+MakeSafeStringNode[str_] :=
+	str
 
 
 

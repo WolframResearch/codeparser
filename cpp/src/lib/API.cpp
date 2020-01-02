@@ -230,6 +230,43 @@ Node *ParserSession::listSourceCharacters() {
     return N;
 }
 
+Node *ParserSession::safeString() {
+    
+    std::vector<unsigned char> safeBytes;
+
+    std::array<unsigned char, 4> arr;
+    ByteEncoderState state;
+    
+    while (true) {
+
+        //
+        // No need to check isAbort() inside tokenizer loops
+        //
+
+        auto Char = TheByteDecoder->nextSourceCharacter0(TOPLEVEL);
+
+        if (Char.isEndOfFile()) {
+            break;
+        }
+        
+        auto point = Char.to_point();
+        
+        auto size = ByteEncoder::size(point);
+        
+        ByteEncoder::encodeBytes(arr, point, &state);
+        
+        for (size_t i = 0; i < size; i++) {
+            safeBytes.push_back(arr[i]);
+        }
+        
+    } // while (true)
+    
+    auto N = new SafeStringNode(std::move(safeBytes));
+
+    return N;
+}
+
+
 NodePtr ParserSession::parseLeaf0(int mode) {
     
     switch (mode) {
@@ -554,6 +591,48 @@ DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     return LIBRARY_NO_ERROR;
 }
+
+
+
+
+DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
+    
+    int mlLen;
+    
+    if (!MLTestHead(mlp, SYMBOL_LIST->name(), &mlLen)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    auto len = static_cast<size_t>(mlLen);
+    
+    if (len != 1) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    auto arr = ScopedMLByteArrayPtr(new ScopedMLByteArray(mlp));
+    if (!arr->read()) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    if (!MLNewPacket(mlp) ) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
+    
+    TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE);
+    
+    auto N = TheParserSession->safeString();
+    
+    N->put(mlp);
+    
+    TheParserSession->releaseNode(N);
+    
+    TheParserSession->deinit();
+    
+    return LIBRARY_NO_ERROR;
+}
+
 
 ScopedMLUTF8String::ScopedMLUTF8String(MLINK mlp) : mlp(mlp), buf(NULL), b(), c() {}
 

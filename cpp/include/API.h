@@ -97,6 +97,7 @@ public:
     Node *tokenize();
     Node *listSourceCharacters();
     Node *parseLeaf(int mode);
+    Node *safeString();
     
     void releaseNode(Node *N);
     
@@ -127,6 +128,8 @@ EXTERN_C DLLEXPORT int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLI
 EXTERN_C DLLEXPORT int TokenizeBytes_Listable_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
 EXTERN_C DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp);
+
+EXTERN_C DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
 class ScopedMLUTF8String {
     MLINK mlp;

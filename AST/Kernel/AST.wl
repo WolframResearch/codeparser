@@ -17,6 +17,9 @@ ConcreteParseBytes
 
 ParseLeaf
 
+SafeString
+
+
 
 (*
 Tokenizing
@@ -895,7 +898,14 @@ Format[fileNode:FileNode[_, children_, _], OutputForm] :=
 
 
 
+SafeString::usage = "SafeString[bytes] interprets bytes as UTF-8 and returns a \"safe\" string. Invalid \
+sequences and surrogates are replaced with \[UnknownGlyph] and BOM is replaced with special character \\:e001."
 
+SafeString[bytes:{_Integer...}] :=
+Module[{res},
+	res = libraryFunctionWrapper[safeStringFunc, bytes];
+	res
+]
 
 
 
