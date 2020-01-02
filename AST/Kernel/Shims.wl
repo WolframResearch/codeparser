@@ -13,8 +13,8 @@ setupShims[] := (
 setupStackShim[] := (
 
 	System`CreateDataStructure["ExpressionStack"] :=
-		With[{stack = Unique["stack"], stackVal = Unique["stackVal"]},
-
+		Module[{stack, stackVal},
+		
 			stackVal = {};
 
 			stack /: stack["Push", expr_] := (

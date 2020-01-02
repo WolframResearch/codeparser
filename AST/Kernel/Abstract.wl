@@ -923,6 +923,12 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 	peek = nodeListStack["Peek"];
 	nodeList = Reverse[Normal[peek]];
 
+	(*
+	Hack to prevent memory leak with shims
+	*)
+	Quiet[Remove["AST`Shims`Private`stack*"];, {Remove::rmnsm}];
+	Quiet[Remove["AST`Shims`Private`stackVal*"];, {Remove::rmnsm}];
+
 	{nodeList, issues}
 ]]
 
