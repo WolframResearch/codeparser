@@ -427,12 +427,6 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitiveSymbolPa
     
     // Has to handle \[Integral] f \[DifferentialD] x
     registerPrefixParselet(TOKEN_LONGNAME_INTEGRAL.value(), PrefixParseletPtr(new IntegralParselet(TOKEN_LONGNAME_INTEGRAL)));
-    //
-    // Register \[DifferentialD] as infix, to return precedence of LOWEST
-    // This is to prevent  \[Integral] f \[DifferentialD] x  from being parsed as  \[Integral] f * \[DifferentialD] x
-    //
-    registerInfixParselet(TOKEN_LONGNAME_DIFFERENTIALD.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_DIFFERENTIALD, PRECEDENCE_LOWEST)));
-    registerInfixParselet(TOKEN_LONGNAME_CAPITALDIFFERENTIALD.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_CAPITALDIFFERENTIALD, PRECEDENCE_LOWEST)));
     
     // special Inequality
     registerInfixParselet(TOKEN_BANGEQUAL.value(), InfixParseletPtr(new InequalityParselet()));
@@ -859,6 +853,20 @@ Precedence Parser::getInfixTokenPrecedence(Token& TokIn, ParserContext Ctxt, boo
         *implicitTimes = false;
         
         return Infix->getPrecedence();
+    }
+    
+    if (TokIn.Tok.isDifferentialD()) {
+        
+        if ((Ctxt.Flag & PARSER_INTEGRAL) == PARSER_INTEGRAL) {
+            
+            //
+            // Inside \[Integral], so \[DifferentialD] is treated specially
+            //
+            
+            *implicitTimes = false;
+            
+            return PRECEDENCE_LOWEST;
+        }
     }
     
     //
