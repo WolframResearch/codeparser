@@ -270,18 +270,20 @@ Node *ParserSession::safeString() {
 NodePtr ParserSession::parseLeaf0(int mode) {
     
     switch (mode) {
-        case 0: {
-            auto Tok = TheTokenizer->currentToken(TOPLEVEL);
+        case STRINGIFYMODE_NORMAL: {
+            auto Tok = TheTokenizer->nextToken0(TOPLEVEL);
+            
             auto N = LeafNodePtr(new LeafNode(Tok));
             return N;
         }
-        case 1: {
-            auto Tok = TheTokenizer->currentToken_stringifySymbol();
+        case STRINGIFYMODE_SYMBOL: {
+            auto Tok = TheTokenizer->nextToken0_stringifySymbol();
+            
             auto N = LeafNodePtr(new LeafNode(Tok));
             return N;
         }
-        case 2: {
-            auto Tok = TheTokenizer->currentToken_stringifyFile();
+        case STRINGIFYMODE_FILE: {
+            auto Tok = TheTokenizer->nextToken0_stringifyFile();
             auto N = LeafNodePtr(new LeafNode(Tok));
             return N;
         }
@@ -292,7 +294,7 @@ NodePtr ParserSession::parseLeaf0(int mode) {
     }
 }
 
-Node *ParserSession::parseLeaf(int mode) {
+Node *ParserSession::parseLeaf(StringifyMode mode) {
     
     std::vector<NodePtr> nodes;
     
@@ -572,8 +574,8 @@ DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    int mode;
-    if (!MLGetInteger(mlp, &mode)) {
+    int stringifyMode;
+    if (!MLGetInteger(mlp, &stringifyMode)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -581,7 +583,7 @@ DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE);
     
-    auto N = TheParserSession->parseLeaf(mode);
+    auto N = TheParserSession->parseLeaf(static_cast<StringifyMode>(stringifyMode));
     
     N->put(mlp);
     

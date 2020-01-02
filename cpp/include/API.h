@@ -58,6 +58,12 @@ using ScopedMLEnvironmentParameterPtr = std::unique_ptr<ScopedMLEnvironmentParam
 #endif
 
 
+enum StringifyMode {
+    STRINGIFYMODE_NORMAL,
+    STRINGIFYMODE_SYMBOL,
+    STRINGIFYMODE_FILE,
+};
+
 enum ParserSessionBits : uint8_t {
     
     //
@@ -96,7 +102,7 @@ public:
     Node *parseExpressions();
     Node *tokenize();
     Node *listSourceCharacters();
-    Node *parseLeaf(int mode);
+    Node *parseLeaf(StringifyMode mode);
     Node *safeString();
     
     void releaseNode(Node *N);

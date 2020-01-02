@@ -15,19 +15,25 @@
 class ScopedFileBuffer;
 using ScopedFileBufferPtr = std::unique_ptr<ScopedFileBuffer>;
 
-const int EXPRESSION = 0;
-const int TOKENIZE = 1;
-const int LEAF = 2;
-const int SOURCECHARACTERS = 3;
+enum APIMode {
+    EXPRESSION,
+    TOKENIZE,
+    LEAF,
+    SOURCECHARACTERS,
+    SAFESTRING,
+};
 
-const int NONE = 0;
-const int PRINT = 1;
-const int PUT = 2;
-const int PRINT_DRYRUN = 3;
+enum OutputMode {
+    NONE,
+    PRINT,
+    PUT,
+    PRINT_DRYRUN,
+};
 
-void readStdIn(int mode, int outputMode);
 
-void readFile(std::string file, int mode, int outputMode);
+void readStdIn(APIMode mode, OutputMode outputMode);
+
+void readFile(std::string file, APIMode mode, OutputMode outputMode);
 
 class ScopedFileBuffer {
 
@@ -137,7 +143,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-void readStdIn(int mode, int outputMode) {
+void readStdIn(APIMode mode, OutputMode outputMode) {
     
     std::string input;
     std::cout << ">>> ";
@@ -266,8 +272,10 @@ void readStdIn(int mode, int outputMode) {
         auto inputBufAndLen = BufferAndLength(inputStr, input.size());
         
         TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE);
-    
-        auto N = TheParserSession->parseLeaf(mode);
+        
+        auto stringifyMode = STRINGIFYMODE_NORMAL;
+        
+        auto N = TheParserSession->parseLeaf(stringifyMode);
     
         switch (outputMode) {
             case PRINT:
@@ -333,7 +341,7 @@ void readStdIn(int mode, int outputMode) {
     }
 }
 
-void readFile(std::string file, int mode, int outputMode) {
+void readFile(std::string file, APIMode mode, OutputMode outputMode) {
     
     auto fb = ScopedFileBufferPtr(new ScopedFileBuffer(reinterpret_cast<Buffer>(file.c_str()), file.size()));
 
