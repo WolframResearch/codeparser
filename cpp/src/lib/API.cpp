@@ -756,7 +756,6 @@ MLEnvironmentParameter ScopedMLEnvironmentParameter::get() {
 
 ScopedMLLoopbackLink::ScopedMLLoopbackLink() : mlp(NULL) {
     
-    MLENV ep;
     ScopedMLEnvironmentParameterPtr p;
     int err;
     
@@ -785,6 +784,8 @@ ScopedMLLoopbackLink::~ScopedMLLoopbackLink() {
     }
     
     MLClose(mlp);
+    
+    MLDeinitialize(ep);
 }
 
 MLINK ScopedMLLoopbackLink::get() {

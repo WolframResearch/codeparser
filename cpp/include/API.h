@@ -240,6 +240,7 @@ public:
 class ScopedMLLoopbackLink {
     
     MLINK mlp;
+    MLENV ep;
     
 public:
     ScopedMLLoopbackLink();
