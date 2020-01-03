@@ -56,7 +56,7 @@ Module[{head, children, aggHead, aggChildren, data},
 	CallNode[aggHead, aggChildren, data]
 ]]
 
-aggregate[FileNode[File, childrenIn_, dataIn_]] :=
+aggregate[ContainerNode[File, childrenIn_, dataIn_]] :=
 Catch[
 Module[{children, aggChildren, data},
 
@@ -65,10 +65,10 @@ Module[{children, aggChildren, data},
 
 	aggChildren = aggregate /@ children;
 
-	FileNode[File, aggChildren, data]
+	ContainerNode[File, aggChildren, data]
 ]]
 
-aggregate[HoldNode[Hold, childrenIn_, dataIn_]] :=
+aggregate[ContainerNode[Box, childrenIn_, dataIn_]] :=
 Catch[
 Module[{children, aggChildren, data},
 
@@ -77,8 +77,21 @@ Module[{children, aggChildren, data},
 
 	aggChildren = aggregate /@ children;
 
-	HoldNode[Hold, aggChildren, data]
+	ContainerNode[Box, aggChildren, data]
 ]]
+
+aggregate[ContainerNode[Hold, childrenIn_, dataIn_]] :=
+Catch[
+Module[{children, aggChildren, data},
+
+	children = childrenIn;
+	data = dataIn;
+
+	aggChildren = aggregate /@ children;
+
+	ContainerNode[Hold, aggChildren, data]
+]]
+
 
 (*
 BoxNode[RowBox] and BoxNode[GridBox] have lists as children

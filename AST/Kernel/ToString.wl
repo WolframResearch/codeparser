@@ -380,31 +380,7 @@ Module[{nodeStrs},
 
 
 
-
-toInputFormString[FileNode[File, nodes_, data_]] :=
-Catch[
-Module[{nodeStrs},
-	nodeStrs = toInputFormString /@ nodes;
-	If[AnyTrue[nodeStrs, FailureQ],
-		Throw[SelectFirst[nodeStrs, FailureQ]]
-	];
-	StringJoin[Riffle[nodeStrs, "\n"]]
-]]
-
-toInputFormString[StringNode[String, nodes_, data_]] :=
-Catch[
-Module[{nodeStrs},
-	nodeStrs = toInputFormString /@ nodes;
-	If[AnyTrue[nodeStrs, FailureQ],
-		Throw[SelectFirst[nodeStrs, FailureQ]]
-	];
-	StringJoin[Riffle[nodeStrs, "\n"]]
-]]
-
-
-
-
-toInputFormString[HoldNode[Hold, nodes_, data_]] :=
+toInputFormString[ContainerNode[Hold, nodes_, data_]] :=
 Module[{processed},
 	
 	processed = Riffle[nodes, LeafNode[Token`Comma, ",", <||>]];
@@ -416,11 +392,15 @@ Module[{processed},
 									{ LeafNode[Token`CloseSquare, "]", <||>] }, <||>] }, <||> ]]
 ]
 
-
-(*
-ConcreteParseString[""] returns Null, so handle that
-*)
-toInputFormString[Null] := ""
+toInputFormString[ContainerNode[_, nodes_, data_]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[Riffle[nodeStrs, "\n"]]
+]]
 
 
 
@@ -510,37 +490,8 @@ toFullFormString[args:BoxNode[box_, children_, _]] :=
 
 
 
-toFullFormString[FileNode[File, nodes_, opts_]] :=
-Catch[
-Module[{nodeStrs},
-	If[empty[nodes],
-		nodeStrs = {"Null"}
-		,
-		nodeStrs = toFullFormString /@ nodes;
-		nodeStrs = Flatten[nodeStrs];
-	];
-	If[AnyTrue[nodeStrs, FailureQ],
-		Throw[SelectFirst[nodeStrs, FailureQ]]
-	];
-	StringJoin[Riffle[nodeStrs, "\n"]]
-]]
 
-toFullFormString[StringNode[String, nodes_, opts_]] :=
-Catch[
-Module[{nodeStrs},
-	If[empty[nodes],
-		nodeStrs = {"Null"}
-		,
-		nodeStrs = toFullFormString /@ nodes;
-		nodeStrs = Flatten[nodeStrs];
-	];
-	If[AnyTrue[nodeStrs, FailureQ],
-		Throw[SelectFirst[nodeStrs, FailureQ]]
-	];
-	StringJoin[nodeStrs]
-]]
-
-toFullFormString[HoldNode[Hold, nodes_, opts_]] :=
+toFullFormString[ContainerNode[Hold, nodes_, opts_]] :=
 Catch[
 Module[{nodeStrs},
 	If[empty[nodes],
@@ -553,6 +504,21 @@ Module[{nodeStrs},
 		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];
 	StringJoin[{"Hold", "[", Riffle[nodeStrs, ", "], "]"}]
+]]
+
+toFullFormString[ContainerNode[_, nodes_, opts_]] :=
+Catch[
+Module[{nodeStrs},
+	If[empty[nodes],
+		nodeStrs = {"Null"}
+		,
+		nodeStrs = toFullFormString /@ nodes;
+		nodeStrs = Flatten[nodeStrs];
+	];
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[Riffle[nodeStrs, "\n"]]
 ]]
 
 
@@ -669,37 +635,7 @@ Module[{opStrs, nodeStrs},
 	StringJoin[opStrs, nodeStrs]
 ]]
 
-toSourceCharacterString[FileNode[File, nodes_, opts_], insideBoxes_] :=
-Catch[
-Module[{nodeStrs},
-	If[empty[nodes],
-		nodeStrs = {"Null"}
-		,
-		nodeStrs = toSourceCharacterString[#, insideBoxes]& /@ nodes;
-		nodeStrs = Flatten[nodeStrs];
-	];
-	If[AnyTrue[nodeStrs, FailureQ],
-		Throw[SelectFirst[nodeStrs, FailureQ]]
-	];
-	StringJoin[nodeStrs]
-]]
-
-toSourceCharacterString[StringNode[String, nodes_, opts_], insideBoxes_] :=
-Catch[
-Module[{nodeStrs},
-	If[empty[nodes],
-		nodeStrs = {"Null"}
-		,
-		nodeStrs = toSourceCharacterString[#, insideBoxes]& /@ nodes;
-		nodeStrs = Flatten[nodeStrs];
-	];
-	If[AnyTrue[nodeStrs, FailureQ],
-		Throw[SelectFirst[nodeStrs, FailureQ]]
-	];
-	StringJoin[nodeStrs]
-]]
-
-toSourceCharacterString[HoldNode[Hold, nodesIn_, opts_], insideBoxes_] :=
+toSourceCharacterString[ContainerNode[Hold, nodesIn_, opts_], insideBoxes_] :=
 Catch[
 Module[{nodes, nodeStrs},
 	nodes = nodesIn;
@@ -717,6 +653,21 @@ Module[{nodes, nodeStrs},
 		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];
 	StringJoin[{"Hold", "[", Riffle[nodeStrs, ", "], "]"}]
+]]
+
+toSourceCharacterString[ContainerNode[_, nodes_, opts_], insideBoxes_] :=
+Catch[
+Module[{nodeStrs},
+	If[empty[nodes],
+		nodeStrs = {"Null"}
+		,
+		nodeStrs = toSourceCharacterString[#, insideBoxes]& /@ nodes;
+		nodeStrs = Flatten[nodeStrs];
+	];
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[nodeStrs]
 ]]
 
 

@@ -192,9 +192,8 @@ PatternBlankSequenceNode
 PatternBlankNullSequenceNode
 OptionalDefaultPatternNode
 
-FileNode
-StringNode
-HoldNode
+
+ContainerNode
 
 
 SyntaxErrorNode
@@ -311,7 +310,7 @@ Module[{s, h, res, bytes, encoding},
 	The # here is { {exprs}, {issues}, {metadata} }
 	*)
 	If[h === Automatic,
-		h = StringNode[String, #[[1]], If[!empty[#[[2]]], <| SyntaxIssues -> #[[2]] |>, <||>]]&
+		h = ContainerNode[String, #[[1]], If[!empty[#[[2]]], <| SyntaxIssues -> #[[2]] |>, <||>]]&
 	];
 
 	$ConcreteParseProgress = 0;
@@ -395,7 +394,7 @@ Module[{h, encoding, full, res, data, start, end, children, bytes},
 	The # here is { {exprs}, {issues}, {metadata} }
 	*)
 	If[h === Automatic,
-		h = FileNode[File, #[[1]], If[!empty[#[[2]]], <| SyntaxIssues -> #[[2]] |>, <||>]]&
+		h = ContainerNode[File, #[[1]], If[!empty[#[[2]]], <| SyntaxIssues -> #[[2]] |>, <||>]]&
 	];
 
 	If[encoding =!= "UTF8",
@@ -512,7 +511,7 @@ Module[{h, encoding, res, data, start, end, children},
 	The # here is { {exprs}, {issues}, {metadata} }
 	*)
 	If[h === Automatic,
-		h = FileNode[File, #[[1]], If[!empty[#[[2]]], <| SyntaxIssues -> #[[2]] |>, <||>]]&
+		h = ContainerNode[Byte, #[[1]], If[!empty[#[[2]]], <| SyntaxIssues -> #[[2]] |>, <||>]]&
 	];
 
 	If[encoding =!= "UTF8",
@@ -886,14 +885,14 @@ Module[{str, res, leaf, data, exprs, issues, stringifyMode},
 
 
 
-Format[fileNode:FileNode[_, children_, _], StandardForm] :=
+Format[fileNode:ContainerNode[File, children_, _], StandardForm] :=
 	Interpretation[
-		Row[{"FileNode", "[", "\[LeftSkeleton]", ToString[Length[children]], "\[RightSkeleton]", "]"}]
+		Row[{"ContainerNode", "[", "File", ",", "\[LeftSkeleton]", ToString[Length[children]], "\[RightSkeleton]", "]"}]
 		,
 		fileNode]
 
-Format[fileNode:FileNode[_, children_, _], OutputForm] :=
-	"FileNode[\[LeftSkeleton]" <> ToString[Length[children]] <> "\[RightSkeleton]]"
+Format[fileNode:ContainerNode[File, children_, _], OutputForm] :=
+	"ContainerNode[File, \[LeftSkeleton]" <> ToString[Length[children]] <> "\[RightSkeleton]]"
 
 
 

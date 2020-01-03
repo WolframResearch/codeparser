@@ -914,7 +914,7 @@ parseBox[args___] := Failure["InternalUnhandled", <|"Function"->parseBox, "Argum
 
 
 
-ToStandardFormBoxes[cst_] :=
+ToStandardFormBoxes[ContainerNode[Box, {cst_}, _]] :=
 Block[{$RecursionLimit = Infinity},
 Module[{implicitsRemoved},
 
@@ -1920,7 +1920,7 @@ Module[{nodeBoxes},
 
 
 
-toStandardFormBoxes[FileNode[File, nodes_, data_]] :=
+toStandardFormBoxes[ContainerNode[File, nodes_, data_]] :=
 Catch[
 Module[{nodeBoxes},
   nodeBoxes = toStandardFormBoxes /@ nodes;
@@ -1934,7 +1934,7 @@ Module[{nodeBoxes},
 
 
 
-toStandardFormBoxes[HoldNode[Hold, nodes_, data_]] :=
+toStandardFormBoxes[ContainerNode[Hold, nodes_, data_]] :=
 Module[{processed},
   
   processed = Riffle[nodes, LeafNode[Token`Comma, ",", <||>]];

@@ -466,7 +466,7 @@ abstract[PrefixBinaryNode[op_, {_, operand1_, operand2_}, data_]] := CallNode[To
 
 
 
-abstract[FileNode[File, children_, dataIn_]] :=
+abstract[ContainerNode[File, children_, dataIn_]] :=
 Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node},
 
 	data = dataIn;
@@ -484,12 +484,12 @@ Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node},
 		AssociateTo[data, AbstractSyntaxIssues -> issues];
 	];
 
-	node = FileNode[File, abstracted, KeyTake[data, keysToTake]];
+	node = ContainerNode[File, abstracted, KeyTake[data, keysToTake]];
 
 	node
 ]
 
-abstract[StringNode[String, children_, dataIn_]] :=
+abstract[ContainerNode[tag_, children_, dataIn_]] :=
 Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node},
 
 	data = dataIn;
@@ -507,30 +507,7 @@ Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node},
 		AssociateTo[data, AbstractSyntaxIssues -> issues];
 	];
 
-	node = StringNode[String, abstracted, KeyTake[data, keysToTake]];
-
-	node
-]
-
-abstract[HoldNode[Hold, children_, dataIn_]] :=
-Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node},
-
-	data = dataIn;
-
-	issues = {};
-
-	{abstractedChildren, issues1} = abstractTopLevelChildren[children, False];
-
-	{abstracted, issues2} = abstractTopLevel[abstractedChildren];
-
-	issues = issues1 ~Join~ issues2;
-
-	If[issues != {},
-		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
-		AssociateTo[data, AbstractSyntaxIssues -> issues];
-	];
-
-	node = HoldNode[Hold, abstracted, KeyTake[data, keysToTake]];
+	node = ContainerNode[tag, abstracted, KeyTake[data, keysToTake]];
 
 	node
 ]
