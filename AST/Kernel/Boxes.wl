@@ -18,15 +18,41 @@ Do not want to reimplement MakeExpression.
 
 *)
 
-ConcreteParseBox[box_] :=
-  parseBox[box, {}]
+ConcreteParseBox[{boxs___}] :=
+Module[{children},
+  children = MapIndexed[parseBox[#1, {} ~Join~ #2]&, {boxs}];
+  ContainerNode[Box, children, <||>]
+]
 
+ConcreteParseBox[box_] :=
+Module[{},
+  ContainerNode[Box, {parseBox[box, {}]}, <||>]
+]
 
 
 
 Options[parseBox] = {
   "StringifyMode" -> 0
 }
+
+
+(*
+This is reached from within 
+*)
+
+parseBox[Cell[a_, rest___], pos_] :=
+  BoxNode[Cell, {parseBox[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
+
+parseBox[BoxData[a_], pos_] :=
+  BoxNode[BoxData, {parseBox[a, Append[pos, 1]]}, <|Source->pos|>]
+
+
+
+
+parseBox[ErrorBox[a_], pos_] :=
+  BoxNode[ErrorBox, {parseBox[a, Append[pos, 1]]}, <|Source->pos|>]
+
+
 
 
 parseBox[RowBox[children_], pos_] :=
@@ -37,7 +63,7 @@ Module[{handledChildren, aggregatedChildren},
 
   handledChildren = MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ #2]&, handledChildren];
   
-  aggregatedChildren = DeleteCases[handledChildren, LeafNode[Token`Newline | Whitespace, _, _] | GroupNode[Comment, _, _]];
+  aggregatedChildren = DeleteCases[handledChildren, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _]];
   
   If[$Debug,
     Print["aggregatedChildren: ", aggregatedChildren]
@@ -61,7 +87,10 @@ Module[{handledChildren, aggregatedChildren},
     {LeafNode[Token`LessBar, _, _], ___, LeafNode[Token`BarGreater, _, _]}, GroupNode[Association, handledChildren, <|Source->Append[pos, 1]|>],
     {LeafNode[Token`OpenParen, _, _], ___, LeafNode[Token`CloseParen, _, _]}, GroupNode[GroupParen, handledChildren, <|Source->Append[pos, 1]|>],
     {LeafNode[Token`LongName`LeftAssociation, _, _], ___, LeafNode[Token`LongName`RightAssociation, _, _]}, GroupNode[Association, handledChildren, <|Source->Append[pos, 1]|>],
-    
+    {LeafNode[Token`LongName`LeftAngleBracket, _, _], ___, LeafNode[Token`LongName`RightAngleBracket, _, _]}, GroupNode[AngleBracket, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`LongName`LeftBracketingBar, _, _], ___, LeafNode[Token`LongName`RightBracketingBar, _, _]}, GroupNode[BracketingBar, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`LongName`LeftDoubleBracketingBar, _, _], ___, LeafNode[Token`LongName`RightDoubleBracketingBar, _, _]}, GroupNode[DoubleBracketingBar, handledChildren, <|Source->Append[pos, 1]|>],
+
     (*
     Treat comments like groups
     *)
@@ -73,21 +102,231 @@ Module[{handledChildren, aggregatedChildren},
     (*
     Infix
     *)
-    {_, LeafNode[Token`Plus, _, _], ___}, InfixNode[Plus, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Times | Token`Star, _, _], ___}, InfixNode[Times, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`Minus, _, _], ___}, InfixNode[Minus, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Whitespace, _, _], ___}, InfixNode[Times, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`Bar, _, _], ___}, InfixNode[Alternatives, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`Plus | Token`Minus, _, _], _, ___}, InfixNode[Plus, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Times | Token`Star, _, _], _, ___}, InfixNode[Times, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`Boxes`MultiWhitespace, _, _], _, ___}, InfixNode[Times, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`Bar, _, _], _, ___}, InfixNode[Alternatives, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LessEqual | Token`LongName`LessEqual | Token`Greater | 
        Token`Less | Token`LongName`Equal | 
        Token`LongName`GreaterEqual | Token`EqualEqual | 
-       Token`LessGreater | Token`LongName`NotEqual |
-       Token`GreaterEqual | Token`BangEqual, _, _], ___}, InfixNode[Inequality, handledChildren, <|Source->Append[pos, 1]|>],
+       Token`LongName`NotEqual |
+       Token`GreaterEqual | Token`BangEqual |
+       Token`LongName`GreaterEqualLess | Token`LongName`GreaterFullEqual |
+       Token`LongName`GreaterGreater | Token`LongName`GreaterLess |
+       Token`LongName`GreaterTilde | Token`LongName`LessEqualGreater |
+       Token`LongName`LessFullEqual | Token`LongName`LessGreater |
+       Token`LongName`LessLess | Token`LongName`LessTilde |
+       Token`LongName`NestedGreaterGreater | Token`LongName`NestedLessLess |
+       Token`LongName`NotGreater | Token`LongName`NotGreaterEqual |
+       Token`LongName`NotLess | Token`LongName`NotLessEqual |
+       Token`LongName`NotGreaterFullEqual | Token`LongName`NotLessFullEqual |
+       Token`LongName`NotGreaterGreater | Token`LongName`NotLessLess |
+       Token`LongName`NotGreaterLess | Token`LongName`NotLessGreater |
+       Token`LongName`NotGreaterSlantEqual | Token`LongName`NotLessSlantEqual |
+       Token`LongName`NotGreaterTilde | Token`LongName`NotLessTilde |
+       Token`LongName`NotNestedGreaterGreater | Token`LongName`NotNestedLessLess, _, _], _, ___}, InfixNode[Inequality, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`VectorGreater | Token`LongName`VectorGreaterEqual |
-       Token`LongName`VectorLess | Token`LongName`VectorLessEqual , _, _], ___}, InfixNode[Developer`VectorInequality, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`And | Token`AmpAmp, _, _], ___}, InfixNode[And, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Or | Token`BarBar, _, _], ___}, InfixNode[Or, handledChildren, <|Source->Append[pos, 1]|>],
-    
+       Token`LongName`VectorLess | Token`LongName`VectorLessEqual , _, _], _, ___}, InfixNode[Developer`VectorInequality, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`And | Token`AmpAmp, _, _], _, ___}, InfixNode[And, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Or | Token`BarBar, _, _], _, ___}, InfixNode[Or, handledChildren, <|Source->Append[pos, 1]|>],
+
+    {_, LeafNode[Token`LongName`Element, _, _], _, ___}, InfixNode[Element, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Distributed, _, _], _, ___}, InfixNode[Distributed, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`Dot, _, _], _, ___}, InfixNode[Dot, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`TildeTilde, _, _], _, ___}, InfixNode[StringExpression, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotElement, _, _], _, ___}, InfixNode[NotElement, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`EqualBangEqual, _, _], _, ___}, InfixNode[UnsameQ, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`CenterDot, _, _], _, ___}, InfixNode[CenterDot, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotReverseElement, _, _], _, ___}, InfixNode[NotReverseElement, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`CircleTimes, _, _], _, ___}, InfixNode[CircleTimes, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Backslash, _, _], _, ___}, InfixNode[Backslash, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Nand, _, _], _, ___}, InfixNode[Nand, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Nor, _, _], _, ___}, InfixNode[Nor, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Cap, _, _], _, ___}, InfixNode[Cap, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`CircleDot, _, _], _, ___}, InfixNode[CircleDot, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`CirclePlus, _, _], _, ___}, InfixNode[CirclePlus, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Colon, _, _], _, ___}, InfixNode[Colon, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`AtStar, _, _], _, ___}, InfixNode[Composition, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Conditioned, _, _], _, ___}, InfixNode[Conditioned, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Congruent, _, _], _, ___}, InfixNode[Congruent, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Coproduct, _, _], _, ___}, InfixNode[Coproduct, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Cross, _, _], _, ___}, InfixNode[Cross, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Cup, _, _], _, ___}, InfixNode[Cup, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`CupCap, _, _], _, ___}, InfixNode[CupCap, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Diamond, _, _], _, ___}, InfixNode[Diamond, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DotEqual, _, _], _, ___}, InfixNode[DotEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DoubleDownArrow, _, _], _, ___}, InfixNode[DoubleDownArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DoubleLeftArrow, _, _], _, ___}, InfixNode[DoubleLeftArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DoubleLeftRightArrow, _, _], _, ___}, InfixNode[DoubleLeftRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DoubleLongLeftArrow, _, _], _, ___}, InfixNode[DoubleLongLeftArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DoubleLongLeftRightArrow, _, _], _, ___}, InfixNode[DoubleLongLeftRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DoubleLongRightArrow, _, _], _, ___}, InfixNode[DoubleLongRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DoubleRightArrow, _, _], _, ___}, InfixNode[DoubleRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DoubleUpArrow, _, _], _, ___}, InfixNode[DoubleUpArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DoubleUpDownArrow, _, _], _, ___}, InfixNode[DoubleUpDownArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DoubleVerticalBar, _, _], _, ___}, InfixNode[DoubleVerticalBar, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DownArrow, _, _], _, ___}, InfixNode[DownArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DownArrowBar, _, _], _, ___}, InfixNode[DownArrowBar, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DownArrowUpArrow, _, _], _, ___}, InfixNode[DownArrowUpArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DownLeftRightVector, _, _], _, ___}, InfixNode[DownLeftRightVector, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DownLeftTeeVector, _, _], _, ___}, InfixNode[DownLeftTeeVector, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DownLeftVector, _, _], _, ___}, InfixNode[DownLeftVector, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DownLeftVectorBar, _, _], _, ___}, InfixNode[DownLeftVectorBar, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DownRightTeeVector, _, _], _, _, ___}, InfixNode[DownRightTeeVector, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DownRightVector, _, _], _, ___}, InfixNode[DownRightVector, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DownRightVectorBar, _, _], _, ___}, InfixNode[DownRightVectorBar, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DownTeeArrow, _, _], _, ___}, InfixNode[DownTeeArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`EqualTilde, _, _], _, ___}, InfixNode[EqualTilde, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Equilibrium, _, _], _, ___}, InfixNode[Equilibrium, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Equivalent, _, _], _, ___}, InfixNode[Equivalent, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`HumpDownHump, _, _], _, ___}, InfixNode[HumpDownHump, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`HumpEqual, _, _], _, ___}, InfixNode[HumpEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Intersection, _, _], _, ___}, InfixNode[Intersection, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LeftArrow, _, _], _, ___}, InfixNode[LeftArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LeftArrowBar, _, _], _, ___}, InfixNode[LeftArrowBar, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LeftArrowRightArrow, _, _], _, ___}, InfixNode[LeftArrowRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LeftDownTeeVector, _, _], _, ___}, InfixNode[LeftDownTeeVector, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LeftDownVector, _, _], _, ___}, InfixNode[LeftDownVector, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LeftDownVectorBar, _, _], _, ___}, InfixNode[LeftDownVectorBar, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LeftRightArrow, _, _], _, ___}, InfixNode[LeftRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LeftRightVector, _, _], _, ___}, InfixNode[LeftRightVector, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LeftTeeArrow, _, _], _, ___}, InfixNode[LeftTeeArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LeftTeeVector, _, _], _, ___}, InfixNode[LeftTeeVector, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LeftTriangle, _, _], _, ___}, InfixNode[LeftTriangle, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LeftTriangleBar, _, _], _, ___}, InfixNode[LeftTriangleBar, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LeftTriangleEqual, _, _], _, ___}, InfixNode[LeftTriangleEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LeftUpDownVector, _, _], _, ___}, InfixNode[LeftUpDownVector, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LeftUpTeeVector, _, _], _, ___}, InfixNode[LeftUpTeeVector, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LeftUpVector, _, _], _, ___}, InfixNode[LeftUpVector, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LeftUpVectorBar, _, _], _, ___}, InfixNode[LeftUpVectorBar, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LeftVector, _, _], _, ___}, InfixNode[LeftVector, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LeftVectorBar, _, _], _, ___}, InfixNode[LeftVectorBar, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LongLeftArrow, _, _], _, ___}, InfixNode[LongLeftArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LongLeftRightArrow, _, _], _, ___}, InfixNode[LongLeftRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LongRightArrow, _, _], _, ___}, InfixNode[LongRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LowerLeftArrow, _, _], _, ___}, InfixNode[LowerLeftArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LowerRightArrow, _, _], _, ___}, InfixNode[LowerRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`StarStar, _, _], _, ___}, InfixNode[NonCommutativeMultiply, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotCongruent, _, _], _, ___}, InfixNode[NotCongruent, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotCupCap, _, _], _, ___}, InfixNode[NotCupCap, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotDoubleVerticalBar, _, _], _, ___}, InfixNode[NotDoubleVerticalBar, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotEqualTilde, _, _], _, ___}, InfixNode[NotEqualTilde, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotHumpDownHump, _, _], _, ___}, InfixNode[NotHumpDownHump, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotHumpEqual, _, _], _, ___}, InfixNode[NotHumpEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotLeftTriangle, _, _], _, ___}, InfixNode[NotLeftTriangle, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotLeftTriangleBar, _, _], _, ___}, InfixNode[NotLeftTriangleBar, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotLeftTriangleEqual, _, _], _, ___}, InfixNode[NotLeftTriangleEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotPrecedes, _, _], _, ___}, InfixNode[NotPrecedes, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotPrecedesEqual, _, _], _, ___}, InfixNode[NotPrecedesEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotPrecedesSlantEqual, _, _], _, ___}, InfixNode[NotPrecedesSlantEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotPrecedesTilde, _, _], _, ___}, InfixNode[NotPrecedesTilde, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotRightTriangle, _, _], _, ___}, InfixNode[NotRightTriangle, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotRightTriangleBar, _, _], _, ___}, InfixNode[NotRightTriangleBar, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotRightTriangleEqual, _, _], _, ___}, InfixNode[NotRightTriangleEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotSquareSubset, _, _], _, ___}, InfixNode[NotSquareSubset, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotSquareSubsetEqual, _, _], _, ___}, InfixNode[NotSquareSubsetEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotSquareSuperset, _, _], _, ___}, InfixNode[NotSquareSuperset, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotSquareSupersetEqual, _, _], _, ___}, InfixNode[NotSquareSupersetEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotSubset, _, _], _, ___}, InfixNode[NotSubset, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotSubsetEqual, _, _], _, ___}, InfixNode[NotSubsetEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotSucceeds, _, _], _, ___}, InfixNode[NotSucceeds, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotSucceedsEqual, _, _], _, ___}, InfixNode[NotSucceedsEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotSucceedsSlantEqual, _, _], _, ___}, InfixNode[NotSucceedsSlantEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotSucceedsTilde, _, _], _, ___}, InfixNode[NotSucceedsTilde, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotSuperset, _, _], _, ___}, InfixNode[NotSuperset, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotSupersetEqual, _, _], _, ___}, InfixNode[NotSupersetEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotTilde, _, _], _, ___}, InfixNode[NotTilde, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotTildeEqual, _, _], _, ___}, InfixNode[NotTildeEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotTildeFullEqual, _, _], _, ___}, InfixNode[NotTildeFullEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotTildeTilde, _, _], _, ___}, InfixNode[NotTildeTilde, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`NotVerticalBar, _, _], _, ___}, InfixNode[NotVerticalBar, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Precedes, _, _], _, ___}, InfixNode[Precedes, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`PrecedesEqual, _, _], _, ___}, InfixNode[PrecedesEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`PrecedesSlantEqual, _, _], _, ___}, InfixNode[PrecedesSlantEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`PrecedesTilde, _, _], _, ___}, InfixNode[PrecedesTilde, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Proportion, _, _], _, ___}, InfixNode[Proportion, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Proportional, _, _], _, ___}, InfixNode[Proportional, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`ReverseElement, _, _], _, ___}, InfixNode[ReverseElement, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`ReverseEquilibrium, _, _], _, ___}, InfixNode[ReverseEquilibrium, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`ReverseUpEquilibrium, _, _], _, ___}, InfixNode[ReverseUpEquilibrium, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`RightArrow, _, _], _, ___}, InfixNode[RightArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`RightArrowBar, _, _], _, ___}, InfixNode[RightArrowBar, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`RightArrowLeftArrow, _, _], _, ___}, InfixNode[RightArrowLeftArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`RightDownTeeVector, _, _], _, ___}, InfixNode[RightDownTeeVector, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`RightDownVector, _, _], _, ___}, InfixNode[RightDownVector, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`RightDownVectorBar, _, _], _, ___}, InfixNode[RightDownVectorBar, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`RightTeeArrow, _, _], _, ___}, InfixNode[RightTeeArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`RightTeeVector, _, _], _, ___}, InfixNode[RightTeeVector, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`RightTriangle, _, _], _, ___}, InfixNode[RightTriangle, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`RightTriangleBar, _, _], _, ___}, InfixNode[RightTriangleBar, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`RightTriangleEqual, _, _], _, ___}, InfixNode[RightTriangleEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`RightUpDownVector, _, _], _, ___}, InfixNode[RightUpDownVector, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`RightUpTeeVector, _, _], _, ___}, InfixNode[RightUpTeeVector, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`RightUpVector, _, _], _, ___}, InfixNode[RightUpVector, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`RightUpVectorBar, _, _], _, ___}, InfixNode[RightUpVectorBar, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`RightVector, _, _], _, ___}, InfixNode[RightVector, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`RightVectorBar, _, _], _, ___}, InfixNode[RightVectorBar, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`ShortDownArrow, _, _], _, ___}, InfixNode[ShortDownArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`ShortLeftArrow, _, _], _, ___}, InfixNode[ShortLeftArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`ShortRightArrow, _, _], _, ___}, InfixNode[ShortRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`ShortUpArrow, _, _], _, ___}, InfixNode[ShortUpArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`SmallCircle, _, _], _, ___}, InfixNode[SmallCircle, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`SquareIntersection, _, _], _, ___}, InfixNode[SquareIntersection, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`SquareSubset, _, _], _, ___}, InfixNode[SquareSubset, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`SquareSubsetEqual, _, _], _, ___}, InfixNode[SquareSubsetEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`SquareSuperset, _, _], _, ___}, InfixNode[SquareSuperset, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`SquareSupersetEqual, _, _], _, ___}, InfixNode[SquareSupersetEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`SquareUnion, _, _], _, ___}, InfixNode[SquareUnion, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Star, _, _], _, ___}, InfixNode[Star, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Subset, _, _], _, ___}, InfixNode[Subset, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`SubsetEqual, _, _], _, ___}, InfixNode[SubsetEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Succeeds, _, _], _, ___}, InfixNode[Succeeds, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`SucceedsEqual, _, _], _, ___}, InfixNode[SucceedsEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`SucceedsSlantEqual, _, _], _, ___}, InfixNode[SucceedsSlantEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`SucceedsTilde, _, _], _, ___}, InfixNode[SucceedsTilde, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Superset, _, _], _, ___}, InfixNode[Superset, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`SupersetEqual, _, _], _, ___}, InfixNode[SupersetEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`TensorProduct, _, _], _, ___}, InfixNode[TensorProduct, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`TensorWedge, _, _], _, ___}, InfixNode[TensorWedge, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Tilde, _, _], _, ___}, InfixNode[Tilde, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`TildeEqual, _, _], _, ___}, InfixNode[TildeEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`TildeFullEqual, _, _], _, ___}, InfixNode[TildeFullEqual, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`TildeTilde, _, _], _, ___}, InfixNode[TildeTilde, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Union, _, _], _, ___}, InfixNode[Union, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`UnionPlus, _, _], _, ___}, InfixNode[UnionPlus, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`UpArrow, _, _], _, ___}, InfixNode[UpArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`UpArrowBar, _, _], _, ___}, InfixNode[UpArrowBar, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`UpArrowDownArrow, _, _], _, ___}, InfixNode[UpArrowDownArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`UpDownArrow, _, _], _, ___}, InfixNode[UpDownArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`UpEquilibrium, _, _], _, ___}, InfixNode[UpEquilibrium, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`UpperLeftArrow, _, _], _, ___}, InfixNode[UpperLeftArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`UpperRightArrow, _, _], _, ___}, InfixNode[UpperRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`UpTeeArrow, _, _], _, ___}, InfixNode[UpTeeArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`VectorGreater, _, _], _, ___}, InfixNode[UpperRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Vee, _, _], _, ___}, InfixNode[Vee, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`VerticalBar, _, _], _, ___}, InfixNode[VerticalBar, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`VerticalSeparator, _, _], _, ___}, InfixNode[VerticalSeparator, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`VerticalTilde, _, _], _, ___}, InfixNode[VerticalTilde, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Wedge, _, _], _, ___}, InfixNode[Wedge, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Xnor, _, _], _, ___}, InfixNode[Xnor, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Xor, _, _], _, ___}, InfixNode[Xor, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`EqualEqualEqual, _, _], _, ___}, InfixNode[SameQ, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LessGreater, _, _], _, ___}, InfixNode[StringJoin, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`SlashStar, _, _], _, ___}, InfixNode[RightComposition, handledChildren, <|Source->Append[pos, 1]|>],
+
+    (*
+    :: stringifies its args
+    *)
+    {_, LeafNode[Token`ColonColon, _, _], _, ___},
+      InfixNode[MessageName, {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~
+        {parseBox[children[[2]], Append[pos, 1] ~Join~ {2}]} ~Join~
+        MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2 + 3 - 1), "StringifyMode" -> 1]&, children[[3;;]] ],
+      <|Source->Append[pos, 1]|>],
+
+
+    (*
+    Infix with trailing allowed
+    *)
     {_, LeafNode[Token`Semi, _, _], ___}, InfixNode[CompoundExpression, handledChildren ~Join~
                                               If[MatchQ[handledChildren[[-1]], LeafNode[Token`Semi, _, _]],
                                                 { LeafNode[Token`Fake`ImplicitNull, "", handledChildren[[-1, 3]]] },
@@ -98,274 +337,57 @@ Module[{handledChildren, aggregatedChildren},
                                                 { LeafNode[Token`Fake`ImplicitNull, "", handledChildren[[-1, 3]]] },
                                                 {}], <|Source->Append[pos, 1]|>],
 
-    {_, LeafNode[Token`LongName`Element, _, _], ___}, InfixNode[Element, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Distributed, _, _], ___}, InfixNode[Distributed, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`Dot, _, _], ___}, InfixNode[Dot, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`TildeTilde, _, _], ___}, InfixNode[StringExpression, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotElement, _, _], ___}, InfixNode[NotElement, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`EqualBangEqual, _, _], ___}, InfixNode[UnsameQ, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`CenterDot, _, _], ___}, InfixNode[CenterDot, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotReverseElement, _, _], ___}, InfixNode[NotReverseElement, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`CircleTimes, _, _], ___}, InfixNode[CircleTimes, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Backslash, _, _], ___}, InfixNode[Backslash, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Nand, _, _], ___}, InfixNode[Nand, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Nor, _, _], ___}, InfixNode[Nor, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Cap, _, _], ___}, InfixNode[Cap, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`CircleDot, _, _], ___}, InfixNode[CircleDot, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`CircleMinus, _, _], ___}, InfixNode[CircleMinus, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`CirclePlus, _, _], ___}, InfixNode[CirclePlus, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Colon, _, _], ___}, InfixNode[Colon, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`AtStar, _, _], ___}, InfixNode[Composition, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Conditioned, _, _], ___}, InfixNode[Conditioned, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Congruent, _, _], ___}, InfixNode[Congruent, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Coproduct, _, _], ___}, InfixNode[Coproduct, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Cross, _, _], ___}, InfixNode[Cross, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Cup, _, _], ___}, InfixNode[Cup, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`CupCap, _, _], ___}, InfixNode[CupCap, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Diamond, _, _], ___}, InfixNode[Diamond, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DotEqual, _, _], ___}, InfixNode[DotEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DoubleDownArrow, _, _], ___}, InfixNode[DoubleDownArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DoubleLeftArrow, _, _], ___}, InfixNode[DoubleLeftArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DoubleLeftRightArrow, _, _], ___}, InfixNode[DoubleLeftRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DoubleLeftTee, _, _], ___}, InfixNode[DoubleLeftTee, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DoubleLongLeftArrow, _, _], ___}, InfixNode[DoubleLongLeftArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DoubleLongLeftRightArrow, _, _], ___}, InfixNode[DoubleLongLeftRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DoubleLongRightArrow, _, _], ___}, InfixNode[DoubleLongRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DoubleRightArrow, _, _], ___}, InfixNode[DoubleRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DoubleRightTee, _, _], ___}, InfixNode[DoubleRightTee, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DoubleUpArrow, _, _], ___}, InfixNode[DoubleUpArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DoubleUpDownArrow, _, _], ___}, InfixNode[DoubleUpDownArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DoubleVerticalBar, _, _], ___}, InfixNode[DoubleVerticalBar, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DownArrow, _, _], ___}, InfixNode[DownArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DownArrowBar, _, _], ___}, InfixNode[DownArrowBar, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DownArrowUpArrow, _, _], ___}, InfixNode[DownArrowUpArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DownLeftRightVector, _, _], ___}, InfixNode[DownLeftRightVector, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DownLeftTeeVector, _, _], ___}, InfixNode[DownLeftTeeVector, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DownLeftVector, _, _], ___}, InfixNode[DownLeftVector, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DownLeftVectorBar, _, _], ___}, InfixNode[DownLeftVectorBar, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DownRightTeeVector, _, _], ___}, InfixNode[DownRightTeeVector, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DownRightVector, _, _], ___}, InfixNode[DownRightVector, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DownRightVectorBar, _, _], ___}, InfixNode[DownRightVectorBar, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DownTee, _, _], ___}, InfixNode[DownTee, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DownTeeArrow, _, _], ___}, InfixNode[DownTeeArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`EqualTilde, _, _], ___}, InfixNode[EqualTilde, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Equilibrium, _, _], ___}, InfixNode[Equilibrium, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Equivalent, _, _], ___}, InfixNode[Equivalent, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`GreaterEqualLess, _, _], ___}, InfixNode[GreaterEqualLess, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`GreaterFullEqual, _, _], ___}, InfixNode[GreaterFullEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`GreaterGreater, _, _], ___}, InfixNode[GreaterGreater, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`GreaterLess, _, _], ___}, InfixNode[GreaterLess, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`GreaterTilde, _, _], ___}, InfixNode[GreaterTilde, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`HumpDownHump, _, _], ___}, InfixNode[HumpDownHump, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`HumpEqual, _, _], ___}, InfixNode[HumpEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Implies, _, _], ___}, InfixNode[Implies, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Intersection, _, _], ___}, InfixNode[Intersection, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LeftArrow, _, _], ___}, InfixNode[LeftArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LeftArrowBar, _, _], ___}, InfixNode[LeftArrowBar, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LeftArrowRightArrow, _, _], ___}, InfixNode[LeftArrowRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LeftDownTeeVector, _, _], ___}, InfixNode[LeftDownTeeVector, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LeftDownVector, _, _], ___}, InfixNode[LeftDownVector, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LeftDownVectorBar, _, _], ___}, InfixNode[LeftDownVectorBar, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LeftRightArrow, _, _], ___}, InfixNode[LeftRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LeftRightVector, _, _], ___}, InfixNode[LeftRightVector, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LeftTee, _, _], ___}, InfixNode[LeftTee, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LeftTeeArrow, _, _], ___}, InfixNode[LeftTeeArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LeftTeeVector, _, _], ___}, InfixNode[LeftTeeVector, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LeftTriangle, _, _], ___}, InfixNode[LeftTriangle, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LeftTriangleBar, _, _], ___}, InfixNode[LeftTriangleBar, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LeftTriangleEqual, _, _], ___}, InfixNode[LeftTriangleEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LeftUpDownVector, _, _], ___}, InfixNode[LeftUpDownVector, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LeftUpTeeVector, _, _], ___}, InfixNode[LeftUpTeeVector, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LeftUpVector, _, _], ___}, InfixNode[LeftUpVector, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LeftUpVectorBar, _, _], ___}, InfixNode[LeftUpVectorBar, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LeftVector, _, _], ___}, InfixNode[LeftVector, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LeftVectorBar, _, _], ___}, InfixNode[LeftVectorBar, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LessEqualGreater, _, _], ___}, InfixNode[LessEqualGreater, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LessFullEqual, _, _], ___}, InfixNode[LessFullEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LessGreater, _, _], ___}, InfixNode[LessGreater, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LessLess, _, _], ___}, InfixNode[LessLess, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LessTilde, _, _], ___}, InfixNode[LessTilde, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LongLeftArrow, _, _], ___}, InfixNode[LongLeftArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LongLeftRightArrow, _, _], ___}, InfixNode[LongLeftRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LongRightArrow, _, _], ___}, InfixNode[LongRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LowerLeftArrow, _, _], ___}, InfixNode[LowerLeftArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LowerRightArrow, _, _], ___}, InfixNode[LowerRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NestedGreaterGreater, _, _], ___}, InfixNode[NestedGreaterGreater, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NestedLessLess, _, _], ___}, InfixNode[NestedLessLess, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`StarStar, _, _], ___}, InfixNode[NonCommutativeMultiply, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotCongruent, _, _], ___}, InfixNode[NotCongruent, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotCupCap, _, _], ___}, InfixNode[NotCupCap, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotDoubleVerticalBar, _, _], ___}, InfixNode[NotDoubleVerticalBar, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotEqualTilde, _, _], ___}, InfixNode[NotEqualTilde, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotGreater, _, _], ___}, InfixNode[NotGreater, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotGreaterEqual, _, _], ___}, InfixNode[NotGreaterEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotGreaterFullEqual, _, _], ___}, InfixNode[NotGreaterFullEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotGreaterGreater, _, _], ___}, InfixNode[NotGreaterGreater, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotGreaterLess, _, _], ___}, InfixNode[NotGreaterLess, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotGreaterSlantEqual, _, _], ___}, InfixNode[NotGreaterSlantEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotGreaterTilde, _, _], ___}, InfixNode[NotGreaterTilde, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotHumpDownHump, _, _], ___}, InfixNode[NotHumpDownHump, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotHumpEqual, _, _], ___}, InfixNode[NotHumpEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotLeftTriangle, _, _], ___}, InfixNode[NotLeftTriangle, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotLeftTriangleBar, _, _], ___}, InfixNode[NotLeftTriangleBar, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotLeftTriangleEqual, _, _], ___}, InfixNode[NotLeftTriangleEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotLess, _, _], ___}, InfixNode[NotLess, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotLessEqual, _, _], ___}, InfixNode[NotLessEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotLessFullEqual, _, _], ___}, InfixNode[NotLessFullEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotLessGreater, _, _], ___}, InfixNode[NotLessGreater, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotLessLess, _, _], ___}, InfixNode[NotLessLess, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotLessSlantEqual, _, _], ___}, InfixNode[NotLessSlantEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotLessTilde, _, _], ___}, InfixNode[NotLessTilde, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotNestedGreaterGreater, _, _], ___}, InfixNode[NotNestedGreaterGreater, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotNestedLessLess, _, _], ___}, InfixNode[NotNestedLessLess, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotPrecedes, _, _], ___}, InfixNode[NotPrecedes, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotPrecedesEqual, _, _], ___}, InfixNode[NotPrecedesEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotPrecedesSlantEqual, _, _], ___}, InfixNode[NotPrecedesSlantEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotPrecedesTilde, _, _], ___}, InfixNode[NotPrecedesTilde, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotRightTriangle, _, _], ___}, InfixNode[NotRightTriangle, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotRightTriangleBar, _, _], ___}, InfixNode[NotRightTriangleBar, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotRightTriangleEqual, _, _], ___}, InfixNode[NotRightTriangleEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotSquareSubset, _, _], ___}, InfixNode[NotSquareSubset, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotSquareSubsetEqual, _, _], ___}, InfixNode[NotSquareSubsetEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotSquareSuperset, _, _], ___}, InfixNode[NotSquareSuperset, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotSquareSupersetEqual, _, _], ___}, InfixNode[NotSquareSupersetEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotSubset, _, _], ___}, InfixNode[NotSubset, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotSubsetEqual, _, _], ___}, InfixNode[NotSubsetEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotSucceeds, _, _], ___}, InfixNode[NotSucceeds, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotSucceedsEqual, _, _], ___}, InfixNode[NotSucceedsEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotSucceedsSlantEqual, _, _], ___}, InfixNode[NotSucceedsSlantEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotSucceedsTilde, _, _], ___}, InfixNode[NotSucceedsTilde, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotSuperset, _, _], ___}, InfixNode[NotSuperset, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotSupersetEqual, _, _], ___}, InfixNode[NotSupersetEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotTilde, _, _], ___}, InfixNode[NotTilde, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotTildeEqual, _, _], ___}, InfixNode[NotTildeEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotTildeFullEqual, _, _], ___}, InfixNode[NotTildeFullEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotTildeTilde, _, _], ___}, InfixNode[NotTildeTilde, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`NotVerticalBar, _, _], ___}, InfixNode[NotVerticalBar, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Precedes, _, _], ___}, InfixNode[Precedes, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`PrecedesEqual, _, _], ___}, InfixNode[PrecedesEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`PrecedesSlantEqual, _, _], ___}, InfixNode[PrecedesSlantEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`PrecedesTilde, _, _], ___}, InfixNode[PrecedesTilde, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Proportion, _, _], ___}, InfixNode[Proportion, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Proportional, _, _], ___}, InfixNode[Proportional, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`ReverseElement, _, _], ___}, InfixNode[ReverseElement, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`ReverseEquilibrium, _, _], ___}, InfixNode[ReverseEquilibrium, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`ReverseUpEquilibrium, _, _], ___}, InfixNode[ReverseUpEquilibrium, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`RightArrow, _, _], ___}, InfixNode[RightArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`RightArrowBar, _, _], ___}, InfixNode[RightArrowBar, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`RightArrowLeftArrow, _, _], ___}, InfixNode[RightArrowLeftArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`RightDownTeeVector, _, _], ___}, InfixNode[RightDownTeeVector, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`RightDownVector, _, _], ___}, InfixNode[RightDownVector, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`RightDownVectorBar, _, _], ___}, InfixNode[RightDownVectorBar, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`RightTee, _, _], ___}, InfixNode[RightTee, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`RightTeeArrow, _, _], ___}, InfixNode[RightTeeArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`RightTeeVector, _, _], ___}, InfixNode[RightTeeVector, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`RightTriangle, _, _], ___}, InfixNode[RightTriangle, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`RightTriangleBar, _, _], ___}, InfixNode[RightTriangleBar, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`RightTriangleEqual, _, _], ___}, InfixNode[RightTriangleEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`RightUpDownVector, _, _], ___}, InfixNode[RightUpDownVector, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`RightUpTeeVector, _, _], ___}, InfixNode[RightUpTeeVector, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`RightUpVector, _, _], ___}, InfixNode[RightUpVector, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`RightUpVectorBar, _, _], ___}, InfixNode[RightUpVectorBar, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`RightVector, _, _], ___}, InfixNode[RightVector, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`RightVectorBar, _, _], ___}, InfixNode[RightVectorBar, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`ShortDownArrow, _, _], ___}, InfixNode[ShortDownArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`ShortLeftArrow, _, _], ___}, InfixNode[ShortLeftArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`ShortRightArrow, _, _], ___}, InfixNode[ShortRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`ShortUpArrow, _, _], ___}, InfixNode[ShortUpArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`SmallCircle, _, _], ___}, InfixNode[SmallCircle, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`SquareIntersection, _, _], ___}, InfixNode[SquareIntersection, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`SquareSubset, _, _], ___}, InfixNode[SquareSubset, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`SquareSubsetEqual, _, _], ___}, InfixNode[SquareSubsetEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`SquareSuperset, _, _], ___}, InfixNode[SquareSuperset, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`SquareSupersetEqual, _, _], ___}, InfixNode[SquareSupersetEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`SquareUnion, _, _], ___}, InfixNode[SquareUnion, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Star, _, _], ___}, InfixNode[Star, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Subset, _, _], ___}, InfixNode[Subset, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`SubsetEqual, _, _], ___}, InfixNode[SubsetEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Succeeds, _, _], ___}, InfixNode[Succeeds, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`SucceedsEqual, _, _], ___}, InfixNode[SucceedsEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`SucceedsSlantEqual, _, _], ___}, InfixNode[SucceedsSlantEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`SucceedsTilde, _, _], ___}, InfixNode[SucceedsTilde, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`SuchThat, _, _], ___}, InfixNode[SuchThat, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Superset, _, _], ___}, InfixNode[Superset, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`SupersetEqual, _, _], ___}, InfixNode[SupersetEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`TensorProduct, _, _], ___}, InfixNode[TensorProduct, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`TensorWedge, _, _], ___}, InfixNode[TensorWedge, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Therefore, _, _], ___}, InfixNode[Therefore, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Tilde, _, _], ___}, InfixNode[Tilde, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`TildeEqual, _, _], ___}, InfixNode[TildeEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`TildeFullEqual, _, _], ___}, InfixNode[TildeFullEqual, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`TildeTilde, _, _], ___}, InfixNode[TildeTilde, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Union, _, _], ___}, InfixNode[Union, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`UnionPlus, _, _], ___}, InfixNode[UnionPlus, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`UpArrow, _, _], ___}, InfixNode[UpArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`UpArrowBar, _, _], ___}, InfixNode[UpArrowBar, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`UpArrowDownArrow, _, _], ___}, InfixNode[UpArrowDownArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`UpDownArrow, _, _], ___}, InfixNode[UpDownArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`UpEquilibrium, _, _], ___}, InfixNode[UpEquilibrium, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`UpperLeftArrow, _, _], ___}, InfixNode[UpperLeftArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`UpperRightArrow, _, _], ___}, InfixNode[UpperRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`UpTee, _, _], ___}, InfixNode[UpTee, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`UpTeeArrow, _, _], ___}, InfixNode[UpTeeArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`VectorGreater, _, _], ___}, InfixNode[UpperRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Vee, _, _], ___}, InfixNode[Vee, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`VerticalBar, _, _], ___}, InfixNode[VerticalBar, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`VerticalSeparator, _, _], ___}, InfixNode[VerticalSeparator, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`VerticalTilde, _, _], ___}, InfixNode[VerticalTilde, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Wedge, _, _], ___}, InfixNode[Wedge, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Xnor, _, _], ___}, InfixNode[Xnor, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Xor, _, _], ___}, InfixNode[Xor, handledChildren, <|Source->Append[pos, 1]|>],
-
-    (*
-    :: stringifies its args
-    *)
-    {_, LeafNode[Token`ColonColon, _, _], ___}, InfixNode[MessageName, {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~ MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2 + 1), "StringifyMode" -> 1]&, children[[2;;-1]] ], <|Source->Append[pos, 1]|>],
-
-
     (*
     Binary
     *)
-    {_, LeafNode[Token`MinusGreater | Token`LongName`Rule, _, _], ___}, BinaryNode[Rule, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`ColonGreater | Token`LongName`RuleDelayed, _, _], ___}, BinaryNode[RuleDelayed, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`SlashSlash, _, _], ___}, BinaryNode[BinarySlashSlash, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`UndirectedEdge, _, _], ___}, BinaryNode[UndirectedEdge, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`DirectedEdge, _, _], ___}, BinaryNode[DirectedEdge, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`Caret, _, _], ___}, BinaryNode[Power, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`ColonEqual, _, _], ___}, BinaryNode[SetDelayed, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`CaretColonEqual, _, _], ___}, BinaryNode[UpSetDelayed, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`EqualDot, _, _]}, BinaryNode[Unset, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`Equal, _, _], ___}, BinaryNode[Set, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`Slash, _, _], ___}, BinaryNode[Divide, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`SlashAt, _, _], ___}, BinaryNode[Map, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`At, _, _], ___}, BinaryNode[BinaryAt, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`SlashDot, _, _], ___}, BinaryNode[ReplaceAll, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`AtAt, _, _], ___}, BinaryNode[Apply, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`Question, _, _], ___}, BinaryNode[PatternTest, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Function, _, _], ___}, BinaryNode[Function, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`EqualEqualEqual, _, _], ___}, BinaryNode[SameQ, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`SlashSemi, _, _], ___}, BinaryNode[Condition, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`SemiSemi, _, _], ___}, BinaryNode[Span, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`AtAtAt, _, _], ___}, BinaryNode[BinaryAtAtAt, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`SlashSlashDot, _, _], ___}, BinaryNode[ReplaceRepeated, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`PlusEqual, _, _], ___}, BinaryNode[AddTo, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Because, _, _], ___}, BinaryNode[Because, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Divide, _, _], ___}, BinaryNode[Divide, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`SlashEqual, _, _], ___}, BinaryNode[DivideBy, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`SlashSlashAt, _, _], ___}, BinaryNode[MapAll, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`MinusPlus, _, _], ___}, BinaryNode[MinusPlus, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`PlusMinus, _, _], ___}, BinaryNode[PlusMinus, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`GreaterGreater, _, _], ___}, BinaryNode[Put, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`GreaterGreaterGreater, _, _], ___}, BinaryNode[PutAppend, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`SlashStar, _, _], ___}, BinaryNode[RightComposition, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`MinusEqual, _, _], ___}, BinaryNode[SubtractFrom, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`StarEqual, _, _], ___}, BinaryNode[TimesBy, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LessMinusGreater, _, _], ___}, BinaryNode[UndirectedEdge, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`CaretEqual, _, _], ___}, BinaryNode[UpSet, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`MinusGreater | Token`LongName`Rule, _, _], _}, BinaryNode[Rule, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`ColonGreater | Token`LongName`RuleDelayed, _, _], _}, BinaryNode[RuleDelayed, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`SlashSlash, _, _], _}, BinaryNode[BinarySlashSlash, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`UndirectedEdge, _, _], _}, BinaryNode[UndirectedEdge, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DirectedEdge, _, _], _}, BinaryNode[DirectedEdge, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`Caret, _, _], _}, BinaryNode[Power, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`ColonEqual, _, _], _}, BinaryNode[SetDelayed, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`CaretColonEqual, _, _], _}, BinaryNode[UpSetDelayed, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`EqualDot, _, _](* yes, purposefully nothing here *)}, BinaryNode[Unset, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`Equal, _, _], _}, BinaryNode[Set, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`Slash, _, _], _}, BinaryNode[Divide, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`SlashAt, _, _], _}, BinaryNode[Map, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`At, _, _], _}, BinaryNode[BinaryAt, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`SlashDot, _, _], _}, BinaryNode[ReplaceAll, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`AtAt, _, _], _}, BinaryNode[Apply, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`Question, _, _], _}, BinaryNode[PatternTest, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Function, _, _], _}, BinaryNode[Function, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`SlashSemi, _, _], _}, BinaryNode[Condition, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`SemiSemi, _, _], _}, BinaryNode[Span, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`AtAtAt, _, _], _}, BinaryNode[BinaryAtAtAt, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`SlashSlashDot, _, _], _}, BinaryNode[ReplaceRepeated, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`PlusEqual, _, _], _}, BinaryNode[AddTo, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Because, _, _], _}, BinaryNode[Because, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Divide, _, _], _}, BinaryNode[Divide, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`SlashEqual, _, _], _}, BinaryNode[DivideBy, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`SlashSlashAt, _, _], _}, BinaryNode[MapAll, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`MinusPlus, _, _], _}, BinaryNode[MinusPlus, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`PlusMinus, _, _], _}, BinaryNode[PlusMinus, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`GreaterGreater, _, _], _}, BinaryNode[Put, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`GreaterGreaterGreater, _, _], _}, BinaryNode[PutAppend, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`MinusEqual, _, _], _}, BinaryNode[SubtractFrom, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`StarEqual, _, _], _}, BinaryNode[TimesBy, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LessMinusGreater, _, _], _}, BinaryNode[TwoWayRule, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`CaretEqual, _, _], _}, BinaryNode[UpSet, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`CircleMinus, _, _], _}, BinaryNode[CircleMinus, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DoubleLeftTee, _, _], _}, BinaryNode[DoubleLeftTee, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DoubleRightTee, _, _], _}, BinaryNode[DoubleRightTee, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`DownTee, _, _], _}, BinaryNode[DownTee, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`UpTee, _, _], _}, BinaryNode[UpTee, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LeftTee, _, _], _}, BinaryNode[LeftTee, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`RightTee, _, _], _}, BinaryNode[RightTee, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Implies, _, _], _}, BinaryNode[Implies, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`SuchThat, _, _], _, ___}, BinaryNode[SuchThat, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Therefore, _, _], _, ___}, BinaryNode[Therefore, handledChildren, <|Source->Append[pos, 1]|>],
 
-    {LeafNode[Symbol, _, _], LeafNode[Token`Colon, _, _], ___}, BinaryNode[Pattern, handledChildren, <|Source->Append[pos, 1]|>],
-    {PatternBlankNode[_, _, _], LeafNode[Token`Colon, _, _], ___}, BinaryNode[Optional, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`Colon, _, _], ___}, SyntaxErrorNode[SyntaxError`ColonError, handledChildren, <|Source -> Append[pos, 1]|>],
+    {LeafNode[Symbol, _, _], LeafNode[Token`Colon, _, _], _}, BinaryNode[Pattern, handledChildren, <|Source->Append[pos, 1]|>],
+    {PatternBlankNode[_, _, _], LeafNode[Token`Colon, _, _], _}, BinaryNode[Optional, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`Colon, _, _], _}, SyntaxErrorNode[SyntaxError`ColonError, handledChildren, <|Source -> Append[pos, 1]|>],
 
     (*
     Ternary
@@ -373,20 +395,41 @@ Module[{handledChildren, aggregatedChildren},
     {_, LeafNode[Token`SemiSemi, _, _], _, LeafNode[Token`SemiSemi, _, _], _}, TernaryNode[Span, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`SlashColon, _, _], _, LeafNode[Token`ColonEqual, _, _], _}, TernaryNode[TagSetDelayed, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`SlashColon, _, _], _, LeafNode[Token`Equal, _, _], _}, TernaryNode[TagSet, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`SlashColon, _, _], _, LeafNode[Token`EqualDot, _, _], _}, TernaryNode[TagUnset, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`SlashColon, _, _], _}, SyntaxErrorNode[SyntaxError`ExpectedSet, handledChildren, <|Source->Append[pos, 1]|>],
+    (*
+    FIXME: is this an FE quirk?
+    TagUnset boxes are this: RowBox[{"h", "/:", RowBox[{RowBox[{"f", "[", "]"}], "=."}]}]
+    But maybe they should be: RowBox[{"h", "/:", RowBox[{"f", "[", "]"}], "=."}]
+    *)
+    {_, LeafNode[Token`SlashColon, _, _], BinaryNode[Unset, _, _]}, TernaryNode[TagUnset, { handledChildren[[1]], handledChildren[[2]], handledChildren[[3, 2, 1]], handledChildren[[3, 2, 2]] }, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`Tilde, _, _], _, LeafNode[Token`Tilde, _, _], _}, TernaryNode[TernaryTilde, handledChildren, <|Source->Append[pos, 1]|>],
     
     (*
     Prefix
     *)
     {LeafNode[Token`Minus, _, _], _}, PrefixNode[Minus, handledChildren, <|Source->Append[pos, 1]|>],
-    {LeafNode[Token`LongName`Integral, _, _], LeafNode[Token`LongName`DifferentialD, _, _]}, PrefixNode[Integral, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`Bang | Token`LongName`Not, _, _], _}, PrefixNode[Not, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`LongName`DifferentialD, _, _], _}, PrefixNode[DifferentialD, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`LongName`CapitalDifferentialD, _, _], _}, PrefixNode[CapitalDifferentialD, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`LongName`Del, _, _], _}, PrefixNode[Del, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`PlusPlus, _, _], _}, PrefixNode[PreIncrement, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`MinusMinus, _, _], _}, PrefixNode[PreDecrement, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`Plus, _, _], _}, PrefixNode[Plus, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`LongName`Square, _, _], _}, PrefixNode[Square, handledChildren, <|Source->Append[pos, 1]|>],
+
+    {LeafNode[Token`SemiSemi, _, _], _}, BinaryNode[Span, {LeafNode[Token`Fake`ImplicitOne, "", <||>]} ~Join~ handledChildren, <|Source->Append[pos, 1]|>],
 
     (*
     << stringifies its args
+    There might be whitespace after the arg, e.g.
+    '<' '<' 'f' 'o' 'o' '`' ' ' ' ' ' '
     *)
-    {LeafNode[Token`LessLess, _, _], _}, PrefixNode[Get, {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~ {parseBox[children[[2]], Append[pos, 1] ~Join~ {2}, "StringifyMode" -> 2]}, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`LessLess, _, _], _, ___},
+      PrefixNode[Get, {
+        parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~
+          {parseBox[children[[2]], Append[pos, 1] ~Join~ {2}, "StringifyMode" -> 2]} ~Join~
+          MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2 + 3 - 1)]&, children[[3;;]] ]
+        ,
+        <|Source->Append[pos, 1]|>],
 
     (*
     StartOfLine
@@ -412,6 +455,8 @@ Module[{handledChildren, aggregatedChildren},
     {_, LeafNode[Token`DotDotDot, _, _]}, PostfixNode[RepeatedNull, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`BangBang, _, _]}, PostfixNode[Factorial2, handledChildren, <|Source->Append[pos, 1]|>],
 
+    {_, LeafNode[Token`SemiSemi, _, _]}, BinaryNode[Span, handledChildren ~Join~ {LeafNode[Token`Fake`ImplicitAll, "", <||>]}, <|Source->Append[pos, 1]|>],
+
     (*
     Calls
     *)
@@ -428,13 +473,13 @@ Module[{handledChildren, aggregatedChildren},
     the second arg is a box, so we know it is implicit Times
     *)
     {_, LeafNode[Symbol | Integer | Slot | String | Real | Out | Blank | BlankSequence | BlankNullSequence, _, _] |
-        BinaryNode[_, _, _] | CallNode[_, _, _] | GroupNode[_, _, _] | BoxNode[_, _, _] | InfixNode[_, _, _] |
-        PostfixNode[_, _, _] | PatternBlankNode[_, _, _], ___},
+        BinaryNode[_, _, _] | CallNode[_, _, _] | GroupNode[_, _, _] | BoxNode[Except[RowBox], _, _] | InfixNode[_, _, _] |
+        PostfixNode[_, _, _] | PatternBlankNode[_, _, _] | PrefixNode[_, _, _], ___},
 
         InfixNode[Times,
           Flatten[{First[handledChildren]} ~Join~
             Map[If[
-              MatchQ[#, LeafNode[Whitespace | Token`Newline | Token`Comment | Token`LineContinuation, _, _]],
+              MatchQ[#, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline | Token`Comment | Token`LineContinuation, _, _]],
                 #,
                 (*
                  Give ImplicitTimes the same Source as RHS
@@ -450,20 +495,18 @@ Module[{handledChildren, aggregatedChildren},
     {_, LeafNode[Token`Error`UnhandledCharacter, _, _], ___},
         aggregatedChildren[[-1]],
     _,
-    Failure["InternalUnhandled", <|"Function" -> parseBox, "Arguments"->HoldForm[RowBox[children]]|>]
+    (*Failure["InternalUnhandled", <|"Function" -> parseBox, "Arguments"->HoldForm[RowBox[children]]|>]*)
+    (*
+    This catches \[Integral] syntax.
+    \[Integral] syntax is just too complicated to capture here
+    *)
+    BoxNode[RowBox, {handledChildren}, <|Source->Append[pos, 1]|>]
     ]
    ]]
 
 
 
 
-
-
-parseBox[{args___}, pos_] :=
-  Module[{children},
-    children = MapIndexed[parseBox[#1, pos ~Join~ #2]&, {args}];
-    BoxNode[List, children, <|Source->pos|>]
-  ]
 
 
 
@@ -501,7 +544,9 @@ parseBox[RadicalBox[a_, b_, rest___], pos_] :=
   BoxNode[RadicalBox, {parseBox[a, Append[pos, 1]]} ~Join~ {parseBox[b, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
 
 parseBox[TooltipBox[a_, b_, rest___], pos_] :=
-  BoxNode[TooltipBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
+  BoxNode[TooltipBox,
+    {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]]} ~Join~
+    applyCodeNodesToRest[rest], <|Source->pos|>]
 
 
 
@@ -511,8 +556,8 @@ parseBox[TagBox[a_, rest___], pos_] :=
 parseBox[DynamicBox[rest___], pos_] :=
   BoxNode[DynamicBox, applyCodeNodesToRest[rest], <|Source->pos|>]
 
-parseBox[DynamicModuleBox[first_, a_, rest___], pos_] :=
-  BoxNode[DynamicModuleBox, applyCodeNodesToRest[first] ~Join~ {parseBox[a, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
+parseBox[DynamicModuleBox[rest___], pos_] :=
+  BoxNode[DynamicModuleBox, applyCodeNodesToRest[rest], <|Source->pos|>]
 
 parseBox[NamespaceBox[first_, a_, rest___], pos_] :=
   BoxNode[NamespaceBox, applyCodeNodesToRest[first] ~Join~ {parseBox[a, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
@@ -765,69 +810,76 @@ parseBoxPossibleListPossibleDirective[box_, pos_] := parseBox[box, pos]
 a_b
 
 Front End treats a_b as single token
+
+Split things like a_b into correct structures
 *)
-parseBox[str_String /; StringMatchQ[str, Except["_"|"\""].. ~~ "_"], pos_] :=
+
+(*
+Just do simple thing here and disallow _ " and .
+*)
+letterlikePat = Except["_"|"\""|"."]
+
+parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "_"], pos_] :=
 Module[{cases},
-  cases = StringCases[str, a:Except["_"|"\""].. ~~ "_" :> {a, "_"}][[1]];
+  cases = StringCases[str, a:letterlikePat.. ~~ "_" :> {a, "_"}][[1]];
   PatternBlankNode[PatternBlank, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
 ]
 
-parseBox[str_String /; StringMatchQ[str, Except["_"|"\""].. ~~ "__"], pos_] :=
+parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "__"], pos_] :=
 Module[{cases},
-  cases = StringCases[str, a:Except["_"|"\""].. ~~ "__" :> {a, "__"}][[1]];
+  cases = StringCases[str, a:letterlikePat.. ~~ "__" :> {a, "__"}][[1]];
   PatternBlankSequenceNode[PatternBlankSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
 ]
 
-parseBox[str_String /; StringMatchQ[str, Except["_"|"\""].. ~~ "___"], pos_] :=
+parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "___"], pos_] :=
 Module[{cases},
-  cases = StringCases[str, a:Except["_"|"\""].. ~~ "___" :> {a, "___"}][[1]];
+  cases = StringCases[str, a:letterlikePat.. ~~ "___" :> {a, "___"}][[1]];
   PatternBlankNullSequenceNode[PatternBlankNullSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
 ]
 
-parseBox[str_String /; StringMatchQ[str, Except["_"|"\""].. ~~ "_."], pos_] :=
+parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "_."], pos_] :=
 Module[{cases},
-  cases = StringCases[str, a:Except["_"|"\""].. ~~ "_." :> {a, "_."}][[1]];
+  cases = StringCases[str, a:letterlikePat.. ~~ "_." :> {a, "_."}][[1]];
   OptionalDefaultPatternNode[OptionalDefaultPattern, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
 ]
 
 
-parseBox[str_String /; StringMatchQ[str, Except["_"|"\""].. ~~ "_" ~~ Except["_"|"\""]..], pos_] :=
+parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "_" ~~ letterlikePat..], pos_] :=
 Module[{cases},
-  cases = StringCases[str, a:Except["_"|"\""].. ~~ "_" ~~ b:Except["_"|"\""].. :> {a, "_", b}][[1]];
+  cases = StringCases[str, a:letterlikePat.. ~~ "_" ~~ b:letterlikePat.. :> {a, "_", b}][[1]];
   PatternBlankNode[PatternBlank, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
 ]
 
-parseBox[str_String /; StringMatchQ[str, Except["_"|"\""].. ~~ "__" ~~ Except["_"|"\""]..], pos_] :=
+parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "__" ~~ letterlikePat..], pos_] :=
 Module[{cases},
-  cases = StringCases[str, a:Except["_"|"\""].. ~~ "__" ~~ b:Except["_"|"\""].. :> {a, "__", b}][[1]];
+  cases = StringCases[str, a:letterlikePat.. ~~ "__" ~~ b:letterlikePat.. :> {a, "__", b}][[1]];
   PatternBlankSequenceNode[PatternBlankSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
 ]
 
-parseBox[str_String /; StringMatchQ[str, Except["_"|"\""].. ~~ "___" ~~ Except["_"|"\""]..], pos_] :=
+parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "___" ~~ letterlikePat..], pos_] :=
 Module[{cases},
-  cases = StringCases[str, a:Except["_"|"\""].. ~~ "___" ~~ b:Except["_"|"\""].. :> {a, "___", b}][[1]];
+  cases = StringCases[str, a:letterlikePat.. ~~ "___" ~~ b:letterlikePat.. :> {a, "___", b}][[1]];
   PatternBlankNullSequenceNode[PatternBlankNullSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
 ]
 
 
-parseBox[str_String /; StringMatchQ[str, "_" ~~ Except["_"|"\""]..], pos_] :=
+parseBox[str_String /; StringMatchQ[str, "_" ~~ letterlikePat..], pos_] :=
 Module[{cases},
-  cases = StringCases[str, "_" ~~ b:Except["_"|"\""].. :> {"_", b}][[1]];
+  cases = StringCases[str, "_" ~~ b:letterlikePat.. :> {"_", b}][[1]];
   BlankNode[Blank, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
 ]
 
-parseBox[str_String /; StringMatchQ[str, "__" ~~ Except["_"|"\""]..], pos_] :=
+parseBox[str_String /; StringMatchQ[str, "__" ~~ letterlikePat..], pos_] :=
 Module[{cases},
-  cases = StringCases[str, "__" ~~ b:Except["_"|"\""].. :> {"__", b}][[1]];
+  cases = StringCases[str, "__" ~~ b:letterlikePat.. :> {"__", b}][[1]];
   BlankSequenceNode[BlankSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
 ]
 
-parseBox[str_String /; StringMatchQ[str, "___" ~~ Except["_"|"\""]..], pos_] :=
+parseBox[str_String /; StringMatchQ[str, "___" ~~ letterlikePat..], pos_] :=
 Module[{cases},
-  cases = StringCases[str, "___" ~~ b:Except["_"|"\""].. :> {"___", b}][[1]];
+  cases = StringCases[str, "___" ~~ b:letterlikePat.. :> {"___", b}][[1]];
   BlankNullSequenceNode[BlankNullSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
 ]
-
 
 
 (*
@@ -838,21 +890,32 @@ parseBox["*)", pos_] := LeafNode[Token`Boxes`StarCloseParen, "*)", <|Source -> p
 
 
 
-(*
-The Front End treats ''' as a single token
-*)
-parseBox[s_String /; StringMatchQ[s, "'"~~___], pos_] := LeafNode[Token`Boxes`MultiSingleQuote, s, <|Source -> pos|>]
-
-
 parseBox[str_String, pos_, OptionsPattern[]] :=
-Module[{parsed, data, issues, stringifyMode, oldLeafSrc},
-
-  stringifyMode = OptionValue["StringifyMode"];
-
-  parsed = ParseLeaf[str, "StringifyMode" -> stringifyMode];
+Module[{parsed, data, issues, stringifyMode, oldLeafSrc, len, src},
 
   (*
-    Source is filled in here
+  Bypass calling into ParseLeaf if only whitespace,
+  we handle multiple whitespace characters here,
+  because the FE treats '      ' as a single token
+  *)
+  Which[
+    StringMatchQ[str, (" "|"\t")..],
+      len = StringLength[str];
+      src = {{1, 1}, {1, len+1}};
+      parsed = LeafNode[Token`Boxes`MultiWhitespace, str, <|Source -> src|>];
+    ,
+    StringMatchQ[str, ("'")..],
+      len = StringLength[str];
+      src = {{1, 1}, {1, len+1}};
+      parsed = LeafNode[Token`Boxes`MultiSingleQuote, str, <|Source -> src|>];
+    ,
+    True,
+      stringifyMode = OptionValue["StringifyMode"];
+      parsed = ParseLeaf[str, "StringifyMode" -> stringifyMode];
+  ];
+
+  (*
+  Source is filled in here
   *)
   data = parsed[[3]];
   
@@ -929,6 +992,9 @@ Module[{implicitsRemoved},
 
 toStandardFormBoxes[LeafNode[Token`Fake`ImplicitNull, _, _]] := Nothing
 
+toStandardFormBoxes[LeafNode[Token`Fake`ImplicitOne, _, _]] := Nothing
+
+toStandardFormBoxes[LeafNode[Token`Fake`ImplicitAll, _, _]] := Nothing
 
 toStandardFormBoxes[LeafNode[_, str_, _]] :=
   str
@@ -937,6 +1003,15 @@ toStandardFormBoxes[LeafNode[_, str_, _]] :=
 
 
 
+toStandardFormBoxes[BoxNode[Cell, {a_, rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { Hold[aBox] } ~Join~ heldRest];
+
+  With[{heldChildren = heldChildren}, ReleaseHold[Cell @@ heldChildren]]
+]]
 
 
 (*
@@ -952,15 +1027,11 @@ Module[{heldRest, heldChildren},
   With[{heldChildren = heldChildren}, ReleaseHold[DynamicBox @@ heldChildren]]
 ]
 
-toStandardFormBoxes[BoxNode[DynamicModuleBox, {first_, a_, rest___}, _]] :=
-Module[{heldFirst, heldRest, heldChildren},
-  heldFirst = Extract[#, {2}, Hold]& /@ {first};
+toStandardFormBoxes[BoxNode[DynamicModuleBox, {rest___}, _]] :=
+Module[{heldRest, heldChildren},
   heldRest = Extract[#, {2}, Hold]& /@ {rest};
 
-  (*
-  Need to wrap boxes in Hold, so that ReleaseHold does not descend into the boxes (which may contain code that has Hold)
-  *)
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = heldFirst ~Join~ { Hold[aBox] } ~Join~ heldRest];
+  heldChildren = heldRest;
 
   With[{heldChildren = heldChildren}, ReleaseHold[DynamicModuleBox @@ heldChildren]]
 ]
@@ -1619,6 +1690,17 @@ Module[{heldRest, heldChildren},
   With[{heldChildren = heldChildren}, ReleaseHold[TogglerBox @@ heldChildren]]
 ]]
 
+toStandardFormBoxes[BoxNode[TooltipBox, {a_, b_, rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+
+  With[{aBox = toStandardFormBoxes[a], bBox = toStandardFormBoxes[b]},
+    heldChildren = { Hold[aBox], Hold[bBox] } ~Join~ heldRest];
+
+  With[{heldChildren = heldChildren}, ReleaseHold[TooltipBox @@ heldChildren]]
+]]
+
 (*
 a is a List of Lists
 *)
@@ -1710,6 +1792,26 @@ Module[{nodeBoxes},
   RowBox[nodeBoxes]
 ]]
 
+
+(*
+FIXME: is this an FE quirk?
+*)
+toStandardFormBoxes[TernaryNode[TagUnset, nodes:{
+  _, LeafNode[Token`SlashColon, _, _], _, LeafNode[Token`EqualDot, _, _]}, _]] :=
+Catch[
+Module[{nodeBoxes},
+  nodeBoxes = toStandardFormBoxes /@ nodes;
+
+  (*
+  Put RHS inside a RowBox
+  *)
+  nodeBoxes = {nodeBoxes[[1]], nodeBoxes[[2]], RowBox[{nodeBoxes[[3]], nodeBoxes[[4]] }]};
+
+  If[AnyTrue[nodeBoxes, FailureQ],
+    Throw[SelectFirst[nodeBoxes, FailureQ]]
+  ];
+  RowBox[nodeBoxes]
+]]
 
 
 toStandardFormBoxes[TernaryNode[op_, nodes_, _]] :=
