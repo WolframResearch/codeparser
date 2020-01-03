@@ -501,18 +501,6 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitiveSymbolPa
         //
         registerPrefixParselet(i, PrefixParseletPtr(new LeafParselet()));
     }
-    
-//    for (size_t i = 0; i < infixParselets.size(); i++) {
-//        auto& I = infixParselets[i];
-//        if (I != nullptr) {
-//            continue;
-//        }
-//        
-//        //
-//        // Fill in the gaps
-//        //
-//        infixParselets(i, InfixParseletPtr(new DummyParselet()));
-//    }
 }
 
 Parser::~Parser() {}

@@ -913,25 +913,3 @@ Module[{res},
 End[]
 
 EndPackage[]
-
-
-
-
-
-
-(*
-mapOffsetToLineCol[offset_, offsetLineMap_] :=
- 
- Module[{line, lineOffset, col, prevLineOffset},
-  line = 1;
-  prevLineOffset = -1;
-  lineOffset = offsetLineMap[[line]];
-  While[offset >= lineOffset,
-   prevLineOffset = lineOffset;
-   line++;
-   lineOffset = offsetLineMap[[line]];
-   ];
-  col = offset - prevLineOffset;
-  {line, col}
-  ]
-*)

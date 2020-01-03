@@ -211,8 +211,6 @@ Node *ParserSession::listSourceCharacters() {
         // No need to check isAbort() inside tokenizer loops
         //
         
-        //        TheByteDecoder->nextSourceCharacter(TOPLEVEL);
-        
         auto Char = TheByteDecoder->nextSourceCharacter0(TOPLEVEL);
         
         if (Char.isEndOfFile()) {

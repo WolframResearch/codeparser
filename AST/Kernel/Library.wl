@@ -35,8 +35,10 @@ MakeGroupNode
 MakeCallNode
 MakePrefixBinaryNode
 
+(*
 MakeStartOfLineNode
 MakeStartOfFileNode
+*)
 MakeBlankNode
 MakeBlankSequenceNode
 MakeBlankNullSequenceNode
@@ -213,6 +215,7 @@ Module[{res},
 	If[MatchQ[res, _LibraryFunctionError | Verbatim[LibraryFunction][___][___]],
 		(*
 		Need to specify PageWidth, or else ToString does not do anything with Short
+		Related bugs: ?
 		*)
 		Throw[Failure["LibraryFunctionError", <|"Result"->ToString[Short[res], OutputForm, PageWidth -> 100]|>]]
 	];

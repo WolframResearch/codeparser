@@ -14,7 +14,7 @@ ToInputFormString::usage = "ToInputFormString[aggregate] returns a string repres
 
 ToInputFormString[agg_] :=
 Block[{$RecursionLimit = Infinity},
-	StringJoin[toInputFormString[agg]]
+	toInputFormString[agg]
 ]
 
 
@@ -259,7 +259,7 @@ Module[{nodeStrs},
 
 
 
-
+(*
 toInputFormString[StartOfLineNode[op_, nodes_, data_]] :=
 Catch[
 Module[{nodeStrs},
@@ -279,7 +279,7 @@ Module[{nodeStrs},
 	];
 	StringJoin[nodeStrs]
 ]]
-
+*)
 
 
 
@@ -564,11 +564,6 @@ Module[{nodeStrs},
 ]]
 
 
-
-(*
-ParseString[""] returns Null, so handle that
-*)
-toFullFormString[Null] := "Null"
 
 
 

@@ -14,7 +14,7 @@
 // Using wstp.h results in errors like:
 // error: unknown type name 'MLINK'
 //
-// The closest related bug is 357133
+// Related bugs: 357133
 //
 // This bug was fixed in v12.0
 //

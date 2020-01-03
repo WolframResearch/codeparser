@@ -1947,12 +1947,6 @@ Module[{processed},
 ]
 
 
-(*
-ConcreteParseString[""] returns Null, so handle that
-*)
-toStandardFormBoxes[Null] := ""
-
-
 
 
 toStandardFormBoxes[f_Failure] := f

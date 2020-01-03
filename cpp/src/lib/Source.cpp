@@ -475,12 +475,14 @@ bool SourceCharacter::isSpace() const {
 }
 
 bool SourceCharacter::isMBNewline() const {
+    
     auto val = to_point();
     
     return Utils::isMBNewline(val);
 }
 
 bool SourceCharacter::isMBSpace() const {
+    
     auto val = to_point();
     
     return Utils::isMBSpace(val);

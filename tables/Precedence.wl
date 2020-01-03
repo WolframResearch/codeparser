@@ -14,9 +14,6 @@ With modifications based on empirical observations
 *)
 
 <|
-Precedence`Unused -> Indeterminate,
-Precedence`Colon -> Precedence`Unused,
-
 Precedence`Lowest -> 0,
 
 Precedence`Comma -> Next,

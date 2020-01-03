@@ -218,7 +218,7 @@ SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDESCAPESEQUENCE = "UnexpectedEscapeSequen
 SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDCHARACTER = "UnexpectedCharacter";
 SyntaxIssueTag SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT = "SyntaxUndocumentedSlot";
 SyntaxIssueTag SYNTAXISSUETAG_IMPLICITTIMES = "ImplicitTimes";
-SyntaxIssueTag SYNTAXISSUETAG_ENDOFLINE = "EndOfLine";
+SyntaxIssueTag SYNTAXISSUETAG_CHARACTERENCODING = "CharacterEncoding";
 
 typedef const std::string FormatIssueTag;
 
@@ -230,7 +230,6 @@ typedef const std::string FormatIssueTag;
 FormatIssueTag FORMATISSUETAG_SPACE = "Space";
 FormatIssueTag FORMATISSUETAG_SPACEAFTER = "SpaceAfter";
 FormatIssueTag FORMATISSUETAG_NOTCONTIGUOUS = "NotContiguous";
-FormatIssueTag FORMATISSUETAG_CHARACTERENCODING = "CharacterEncoding";
 FormatIssueTag FORMATISSUETAG_UNEXPECTEDCARRIAGERETURN = "UnexpectedCarriageReturn";
 FormatIssueTag FORMATISSUETAG_UNEXPECTEDLINECONTINUATION = "UnexpectedLineContinuation";
 SyntaxIssueTag FORMATISSUETAG_DIFFERENTLINE = "DifferentLine";

@@ -169,7 +169,7 @@ The front end treats  ( *  and  * )  as tokens
 Token`Boxes`OpenParenStar -> Next,
 Token`Boxes`StarCloseParen -> Next,
 (*
-The front end treats ''' as a single token
+The front end treats  ''''  as a single token
 *)
 Token`Boxes`MultiSingleQuote -> Next,
 

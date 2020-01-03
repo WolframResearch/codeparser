@@ -28,7 +28,7 @@ constexpr int CODEPOINT_LINEARSYNTAX_SLASH(0xf7cc);
 constexpr int CODEPOINT_LINEARSYNTAX_BACKTICK(0xf7cd);
 
 //
-//
+// Nice to have
 //
 constexpr int CODEPOINT_REPLACEMENT_CHARACTER(0xfffd);
 
@@ -74,6 +74,8 @@ constexpr int CODEPOINT_STRINGMETA_TAB(-12);
 
 //
 // \r\n is a single SourceCharacter
+//
+// There is a mnemonic here: \r is 13 and CODEPOINT_CRLF is -13
 //
 constexpr int CODEPOINT_CRLF(-13);
 

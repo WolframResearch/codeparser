@@ -18,36 +18,7 @@ Needs["AST`Utils`"]
 Needs["AST`Folds`"]
 Needs["AST`Quirks`"]
 
-(*
 
-concrete syntax is everything
-
-concrete syntax has CallNode[{head, comment}, {child1}]
-
-concrete syntax has InfixNode[Plus, {1, +, comment, 1}]
-
-
-
-
-aggregate syntax
-
-aggregate removes comments, whitespace, and newlines
-
-aggregate syntax has CallNode[head, {child1}]
-
-aggregate syntax has InfixNode[Plus, {1, +, 1}]
-
-
-
-
-
-
-abstract syntax
-
-abstract syntax has CallNode[head, {child1}]
-
-abstract syntax has CallNode[Plus, {1, 1}]
-*)
 
 Aggregate::usage = "Aggregate[cst] returns an aggregate syntax tree from a concrete syntax tree."
 
