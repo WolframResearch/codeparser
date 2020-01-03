@@ -5,7 +5,7 @@ Begin["`Private`"]
 Needs["AST`"]
 
 
-DeclarationName[StringNode[String, { s_ }, _]] := DeclarationName[s]
+DeclarationName[ContainerNode[String, { s_ }, _]] := DeclarationName[s]
 
 (*
 
