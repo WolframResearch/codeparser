@@ -154,59 +154,45 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             auto resetLoc = SrcLoc;
             
             auto tmp = TheByteBuffer->nextByte0();
-            
-            if (tmp == 0xff) {
                 
-                if (TheByteBuffer->wasEOF) {
-                    
-                    status = UTF8STATUS_ERROR;
-                    
-                    auto srcCharStartLoc = resetLoc;
-                    
-                    SrcLoc.Column++;
-                    
-                    return invalid(srcCharStartLoc, policy);
-                }
+            if (TheByteBuffer->wasEOF) {
+                
+                //
+                // EOF
+                //
+                
+                return invalid(resetLoc, policy);
             }
             
             //
             // Continue
             //
             
-            //
-            // Manual test for code points that are over long
-            //
-            if (0xc2 <= firstByte && firstByte <= 0xdf) {
+            if (!(0x80 <= tmp && tmp <= 0xbf)) {
                 
-                if (0x80 <= tmp && tmp <= 0xbf) {
-                    
-                    // Valid
-                    
-                    auto decoded = (((firstByte & 0x1f) << 6) | (tmp & 0x3f));
-                    
-                    SrcLoc.Column++;
-                    
-                    return SourceCharacter(decoded);
-                }
+                //
+                // Invalid
+                //
+                
+                TheByteBuffer->buffer = resetBuf;
+                TheByteBuffer->wasEOF = resetEOF;
+                SrcLoc = resetLoc;
+                
+                return invalid(resetLoc, policy);
             }
             
-            TheByteBuffer->buffer = resetBuf;
-            TheByteBuffer->wasEOF = resetEOF;
-            SrcLoc = resetLoc;
+            // Valid
             
-            status = UTF8STATUS_ERROR;
-            
-            auto srcCharStartLoc = resetLoc;
+            auto decoded = (((firstByte & 0x1f) << 6) | (tmp & 0x3f));
             
             SrcLoc.Column++;
             
-            return invalid(srcCharStartLoc, policy);
+            return SourceCharacter(decoded);
         }
             //
             // 3 byte UTF-8 sequence
             //
-        case 0xe0: case 0xe1: case 0xe2: case 0xe3: case 0xe4: case 0xe5: case 0xe6: case 0xe7:
-        case 0xe8: case 0xe9: case 0xea: case 0xeb: case 0xec: case 0xed: case 0xee: case 0xef: {
+        case 0xe0: {
             
             //
             // Buffer is possibly already pointing to EOF
@@ -218,166 +204,256 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             
             auto tmp = TheByteBuffer->nextByte0();
             
-            if (tmp == 0xff) {
+            if (TheByteBuffer->wasEOF) {
                 
-                if (TheByteBuffer->wasEOF) {
-                    
-                    status = UTF8STATUS_ERROR;
-                    
-                    auto srcCharStartLoc = resetLoc;
-                    
-                    SrcLoc.Column++;
-                    
-                    return invalid(srcCharStartLoc, policy);
-                }
+                //
+                // EOF
+                //
+                
+                return invalid(resetLoc, policy);
             }
             
             // Continue
             
             auto secondByte = tmp;
             
+            if (!(0xa0 <= secondByte && secondByte <= 0xbf)) {
+                
+                //
+                // Invalid
+                //
+                
+                TheByteBuffer->buffer = resetBuf;
+                TheByteBuffer->wasEOF = resetEOF;
+                SrcLoc = resetLoc;
+                
+                return invalid(resetLoc, policy);
+            }
+            
             tmp = TheByteBuffer->nextByte0();
             
-            if (tmp == 0xff) {
+            if (TheByteBuffer->wasEOF) {
                 
-                if (TheByteBuffer->wasEOF) {
-                    
-                    TheByteBuffer->buffer = resetBuf;
-                    TheByteBuffer->wasEOF = resetEOF;
-                    SrcLoc = resetLoc;
-                    
-                    status = UTF8STATUS_ERROR;
-                    
-                    auto srcCharStartLoc = resetLoc;
-                    
-                    SrcLoc.Column++;
-                    
-                    return invalid(srcCharStartLoc, policy);
-                }
+                //
+                // EOF
+                //
+                
+                TheByteBuffer->buffer = resetBuf;
+                TheByteBuffer->wasEOF = resetEOF;
+                SrcLoc = resetLoc;
+                
+                return invalid(resetLoc, policy);
+            }
+                
+            if (!(0x80 <= tmp && tmp <= 0xbf)) {
+                
+                //
+                // Invalid
+                //
+                
+                TheByteBuffer->buffer = resetBuf;
+                TheByteBuffer->wasEOF = resetEOF;
+                SrcLoc = resetLoc;
+                
+                return invalid(resetLoc, policy);
             }
             
-            //
-            // Manual test for code points that are over long
-            //
-            if (0xe0 <= firstByte && firstByte <= 0xe0) {
-                
-                if (0xa0 <= secondByte && secondByte <= 0xbf) {
-                    
-                    if (0x80 <= tmp && tmp <= 0xbf) {
-                        
-                        // Valid
-                        
-                        auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (tmp & 0x3f));
-                        
-                        //
-                        // Manual test for code points that are surrogates
-                        //
-                        assert(!(0xd800 <= decoded && decoded <= 0xdfff));
-                        
-                        if (Utils::isMBNonCharacter(decoded)) {
-                            status = UTF8STATUS_NONCHARACTER_OR_BOM;
-                        }
-                        
-                        SrcLoc.Column++;
-                        
-                        return SourceCharacter(decoded);
-                    }
-                }
-                
-            } else if (0xe1 <= firstByte && firstByte <= 0xec) {
-                
-                if (0x80 <= secondByte && secondByte <= 0xbf) {
-                    
-                    if (0x80 <= tmp && tmp <= 0xbf) {
-                        
-                        // Valid
-                        
-                        auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (tmp & 0x3f));
-                        
-                        //
-                        // Manual test for code points that are surrogates
-                        //
-                        assert(!(0xd800 <= decoded && decoded <= 0xdfff));
-                        
-                        if (Utils::isMBNonCharacter(decoded)) {
-                            status = UTF8STATUS_NONCHARACTER_OR_BOM;
-                        }
-                        
-                        SrcLoc.Column++;
-                        
-                        return SourceCharacter(decoded);
-                    }
-                }
-                
-            } else if (0xed <= firstByte && firstByte <= 0xed) {
-                
-                if (0x80 <= secondByte && secondByte <= 0x9f) {
-                    
-                    if (0x80 <= tmp && tmp <= 0xbf) {
-                        
-                        // Valid
-                        
-                        auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (tmp & 0x3f));
-                        
-                        //
-                        // Manual test for code points that are surrogates
-                        //
-                        assert(!(0xd800 <= decoded && decoded <= 0xdfff));
-                        
-                        if (Utils::isMBNonCharacter(decoded)) {
-                            status = UTF8STATUS_NONCHARACTER_OR_BOM;
-                        }
-                        
-                        SrcLoc.Column++;
-                        
-                        return SourceCharacter(decoded);
-                    }
-                }
-                
-            } else if (0xee <= firstByte && firstByte <= 0xef) {
-                
-                if (0x80 <= secondByte && secondByte <= 0xbf) {
-                    
-                    if (0x80 <= tmp && tmp <= 0xbf) {
-                        
-                        // Valid
-                        
-                        auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (tmp & 0x3f));
-                        
-                        //
-                        // Manual test for code points that are surrogates
-                        //
-                        assert(!(0xd800 <= decoded && decoded <= 0xdfff));
-                        
-                        if (Utils::isMBNonCharacter(decoded)) {
-                            status = UTF8STATUS_NONCHARACTER_OR_BOM;
-                        } else if (decoded == 0xfeff) {
-                            status = UTF8STATUS_NONCHARACTER_OR_BOM;
-                        }
-                        
-                        SrcLoc.Column++;
-                        
-                        return SourceCharacter(decoded);
-                    }
-                }
+            // Valid
+            
+            auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (tmp & 0x3f));
+            
+            if (Utils::isMBNonCharacter(decoded)) {
+                status = UTF8STATUS_NONCHARACTER_OR_BOM;
             }
-            
-            TheByteBuffer->buffer = resetBuf;
-            TheByteBuffer->wasEOF = resetEOF;
-            SrcLoc = resetLoc;
-            
-            status = UTF8STATUS_ERROR;
-            
-            auto srcCharStartLoc = resetLoc;
             
             SrcLoc.Column++;
             
-            return invalid(srcCharStartLoc, policy);
+            return SourceCharacter(decoded);
+        }
+            //
+            // 3 byte UTF-8 sequence
+            //
+        /*      */ case 0xe1: case 0xe2: case 0xe3: case 0xe4: case 0xe5: case 0xe6: case 0xe7:
+        case 0xe8: case 0xe9: case 0xea: case 0xeb: case 0xec: /*      */ case 0xee: case 0xef: {
+            
+            //
+            // Buffer is possibly already pointing to EOF
+            //
+            
+            auto resetBuf = TheByteBuffer->buffer;
+            auto resetEOF = TheByteBuffer->wasEOF;
+            auto resetLoc = SrcLoc;
+            
+            auto tmp = TheByteBuffer->nextByte0();
+            
+            if (TheByteBuffer->wasEOF) {
+                
+                //
+                // EOF
+                //
+                
+                return invalid(resetLoc, policy);
+            }
+            
+            // Continue
+            
+            auto secondByte = tmp;
+            
+            if (!(0x80 <= secondByte && secondByte <= 0xbf)) {
+                
+                //
+                // Invalid
+                //
+                
+                TheByteBuffer->buffer = resetBuf;
+                TheByteBuffer->wasEOF = resetEOF;
+                SrcLoc = resetLoc;
+                
+                return invalid(resetLoc, policy);
+            }
+            
+            tmp = TheByteBuffer->nextByte0();
+            
+            if (TheByteBuffer->wasEOF) {
+                
+                //
+                // EOF
+                //
+                
+                TheByteBuffer->buffer = resetBuf;
+                TheByteBuffer->wasEOF = resetEOF;
+                SrcLoc = resetLoc;
+                
+                return invalid(resetLoc, policy);
+            }
+            
+            if (!(0x80 <= tmp && tmp <= 0xbf)) {
+                
+                //
+                // Invalid
+                //
+                
+                TheByteBuffer->buffer = resetBuf;
+                TheByteBuffer->wasEOF = resetEOF;
+                SrcLoc = resetLoc;
+                
+                return invalid(resetLoc, policy);
+            }
+            
+            // Valid
+            
+            auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (tmp & 0x3f));
+            
+            if (decoded == CODEPOINT_ACTUAL_BOM) {
+                
+                status = UTF8STATUS_NONCHARACTER_OR_BOM;
+            
+                SrcLoc.Column++;
+                
+                decoded = CODEPOINT_VIRTUAL_BOM;
+                
+                return SourceCharacter(decoded);
+            }
+            
+            if (Utils::isMBNonCharacter(decoded)) {
+                status = UTF8STATUS_NONCHARACTER_OR_BOM;
+            }
+            
+            SrcLoc.Column++;
+            
+            return SourceCharacter(decoded);
+        }
+            //
+            // 3 byte UTF-8 sequence
+            //
+            // Possibly a surrogate
+            //
+        case 0xed: {
+            
+            //
+            // Buffer is possibly already pointing to EOF
+            //
+            
+            auto resetBuf = TheByteBuffer->buffer;
+            auto resetEOF = TheByteBuffer->wasEOF;
+            auto resetLoc = SrcLoc;
+            
+            auto tmp = TheByteBuffer->nextByte0();
+            
+            if (TheByteBuffer->wasEOF) {
+                
+                //
+                // EOF
+                //
+                
+                return invalid(resetLoc, policy);
+            }
+            
+            // Continue
+            
+            auto secondByte = tmp;
+            
+            if (!(0x80 <= secondByte && secondByte <= 0x9f)) {
+                
+                //
+                // Invalid
+                //
+                // Possibly a surrogate if 0xa0 <= secondByte <= 0xbf
+                //
+                // Related bugs: 376155
+                //
+                
+                TheByteBuffer->buffer = resetBuf;
+                TheByteBuffer->wasEOF = resetEOF;
+                SrcLoc = resetLoc;
+                
+                return invalid(resetLoc, policy);
+            }
+            
+            tmp = TheByteBuffer->nextByte0();
+            
+            if (TheByteBuffer->wasEOF) {
+                
+                //
+                // EOF
+                //
+                
+                TheByteBuffer->buffer = resetBuf;
+                TheByteBuffer->wasEOF = resetEOF;
+                SrcLoc = resetLoc;
+                
+                return invalid(resetLoc, policy);
+            }
+                
+            if (!(0x80 <= tmp && tmp <= 0xbf)) {
+                
+                //
+                // Invalid
+                //
+                
+                TheByteBuffer->buffer = resetBuf;
+                TheByteBuffer->wasEOF = resetEOF;
+                SrcLoc = resetLoc;
+                
+                return invalid(resetLoc, policy);
+            }
+            
+            // Valid
+            
+            auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (tmp & 0x3f));
+            
+            if (Utils::isMBNonCharacter(decoded)) {
+                status = UTF8STATUS_NONCHARACTER_OR_BOM;
+            }
+            
+            SrcLoc.Column++;
+            
+            return SourceCharacter(decoded);
         }
             //
             // 4 byte UTF-8 sequence
             //
-        case 0xf0: case 0xf1: case 0xf2: case 0xf3: case 0xf4: case 0xf5: case 0xf6: case 0xf7: {
+        case 0xf0: {
             
             //
             // Buffer is possibly already pointing to EOF
@@ -389,176 +465,350 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             
             auto tmp = TheByteBuffer->nextByte0();
             
-            if (tmp == 0xff) {
+            if (TheByteBuffer->wasEOF) {
                 
-                if (TheByteBuffer->wasEOF) {
-                    
-                    status = UTF8STATUS_ERROR;
-                    
-                    auto srcCharStartLoc = resetLoc;
-                    
-                    SrcLoc.Column++;
-                    
-                    return invalid(srcCharStartLoc, policy);
-                }
+                //
+                // EOF
+                //
+                
+                return invalid(resetLoc, policy);
             }
             
             // Continue
             
             auto secondByte = tmp;
             
+            if (!(0x90 <= secondByte && secondByte <= 0xbf)) {
+                
+                //
+                // Invalid
+                //
+                
+                TheByteBuffer->buffer = resetBuf;
+                TheByteBuffer->wasEOF = resetEOF;
+                SrcLoc = resetLoc;
+                
+                return invalid(resetLoc, policy);
+            }
+            
             tmp = TheByteBuffer->nextByte0();
             
-            if (tmp == 0xff) {
+            if (TheByteBuffer->wasEOF) {
                 
-                if (TheByteBuffer->wasEOF) {
-                    
-                    TheByteBuffer->buffer = resetBuf;
-                    TheByteBuffer->wasEOF = resetEOF;
-                    SrcLoc = resetLoc;
-                    
-                    status = UTF8STATUS_ERROR;
-                    
-                    auto srcCharStartLoc = resetLoc;
-                    
-                    SrcLoc.Column++;
-                    
-                    return invalid(srcCharStartLoc, policy);
-                }
+                //
+                // EOF
+                //
+                
+                TheByteBuffer->buffer = resetBuf;
+                TheByteBuffer->wasEOF = resetEOF;
+                SrcLoc = resetLoc;
+                
+                return invalid(resetLoc, policy);
             }
             
             // Continue
             
             auto thirdByte = tmp;
             
+            if (!(0x80 <= thirdByte && thirdByte <= 0xbf)) {
+                
+                //
+                // Invalid
+                //
+                
+                TheByteBuffer->buffer = resetBuf;
+                TheByteBuffer->wasEOF = resetEOF;
+                SrcLoc = resetLoc;
+                
+                return invalid(resetLoc, policy);
+            }
+            
             tmp = TheByteBuffer->nextByte0();
             
-            if (tmp == 0xff) {
+            if (TheByteBuffer->wasEOF) {
                 
-                if (TheByteBuffer->wasEOF) {
-                    
-                    TheByteBuffer->buffer = resetBuf;
-                    TheByteBuffer->wasEOF = resetEOF;
-                    SrcLoc = resetLoc;
-                    
-                    status = UTF8STATUS_ERROR;
-                    
-                    auto srcCharStartLoc = resetLoc;
-                    
-                    SrcLoc.Column++;
-                    
-                    return invalid(srcCharStartLoc, policy);
-                }
+                //
+                // EOF
+                //
+                
+                TheByteBuffer->buffer = resetBuf;
+                TheByteBuffer->wasEOF = resetEOF;
+                SrcLoc = resetLoc;
+                
+                return invalid(resetLoc, policy);
             }
             
-            //
-            // Manual test for code points that are over long
-            //
-            if (0xf0 <= firstByte && firstByte <= 0xf0) {
+            if (!(0x80 <= tmp && tmp <= 0xbf)) {
                 
-                if (0x90 <= secondByte && secondByte <= 0xbf) {
-                    
-                    if (0x80 <= thirdByte && thirdByte <= 0xbf) {
-                        
-                        if (0x80 <= tmp && tmp <= 0xbf) {
-                            
-                            // Valid
-                            
-                            auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((tmp & 0x3f)));
-                            
-                            //
-                            // Manual test for code points that are too large
-                            //
-                            assert(decoded <= 0x10ffff);
-                            
-                            if (Utils::isMBNonCharacter(decoded)) {
-                                status = UTF8STATUS_NONCHARACTER_OR_BOM;
-                            }
-                            
-                            SrcLoc.Column++;
-                            
-                            return SourceCharacter(decoded);
-                        }
-                    }
-                }
+                //
+                // Invalid
+                //
                 
-            } else if (0xf1 <= firstByte && firstByte <= 0xf3) {
+                TheByteBuffer->buffer = resetBuf;
+                TheByteBuffer->wasEOF = resetEOF;
+                SrcLoc = resetLoc;
                 
-                if (0x80 <= secondByte && secondByte <= 0xbf) {
-                    
-                    if (0x80 <= thirdByte && thirdByte <= 0xbf) {
-                        
-                        if (0x80 <= tmp && tmp <= 0xbf) {
-                            
-                            // Valid
-                            
-                            auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((tmp & 0x3f)));
-                            
-                            //
-                            // Manual test for code points that are too large
-                            //
-                            assert(decoded <= 0x10ffff);
-                            
-                            if (Utils::isMBNonCharacter(decoded)) {
-                                status = UTF8STATUS_NONCHARACTER_OR_BOM;
-                            }
-                            
-                            SrcLoc.Column++;
-                            
-                            return SourceCharacter(decoded);
-                        }
-                    }
-                }
-                
-            } else if (0xf4 <= firstByte && firstByte <= 0xf4) {
-                
-                if (0x80 <= secondByte && secondByte <= 0x8f) {
-                    
-                    if (0x80 <= thirdByte && thirdByte <= 0xbf) {
-                        
-                        if (0x80 <= tmp && tmp <= 0xbf) {
-                            
-                            // Valid
-                            
-                            auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((tmp & 0x3f)));
-                            
-                            //
-                            // Manual test for code points that are too large
-                            //
-                            assert(decoded <= 0x10ffff);
-                            
-                            if (Utils::isMBNonCharacter(decoded)) {
-                                status = UTF8STATUS_NONCHARACTER_OR_BOM;
-                            }
-                            
-                            SrcLoc.Column++;
-                            
-                            return SourceCharacter(decoded);
-                        }
-                    }
-                }
+                return invalid(resetLoc, policy);
             }
             
-            TheByteBuffer->buffer = resetBuf;
-            TheByteBuffer->wasEOF = resetEOF;
-            SrcLoc = resetLoc;
+            // Valid
             
-            status = UTF8STATUS_ERROR;
+            auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((tmp & 0x3f)));
             
-            auto srcCharStartLoc = resetLoc;
+            //
+            // Manual test for code points that are too large
+            //
+            assert(decoded <= 0x10ffff);
+            
+            if (Utils::isMBNonCharacter(decoded)) {
+                status = UTF8STATUS_NONCHARACTER_OR_BOM;
+            }
             
             SrcLoc.Column++;
             
-            return invalid(srcCharStartLoc, policy);
+            return SourceCharacter(decoded);
         }
             //
-            // Not a valid UTF-8 start
+            // 4 byte UTF-8 sequence
+            //
+        case 0xf1: case 0xf2: case 0xf3: {
+            
+            //
+            // Buffer is possibly already pointing to EOF
+            //
+            
+            auto resetBuf = TheByteBuffer->buffer;
+            auto resetEOF = TheByteBuffer->wasEOF;
+            auto resetLoc = SrcLoc;
+            
+            auto tmp = TheByteBuffer->nextByte0();
+            
+            if (TheByteBuffer->wasEOF) {
+                
+                //
+                // EOF
+                //
+                
+                return invalid(resetLoc, policy);
+            }
+            
+            // Continue
+            
+            auto secondByte = tmp;
+            
+            if (!(0x80 <= secondByte && secondByte <= 0xbf)) {
+                
+                //
+                // Invalid
+                //
+                
+                TheByteBuffer->buffer = resetBuf;
+                TheByteBuffer->wasEOF = resetEOF;
+                SrcLoc = resetLoc;
+                
+                return invalid(resetLoc, policy);
+            }
+            
+            tmp = TheByteBuffer->nextByte0();
+            
+            if (TheByteBuffer->wasEOF) {
+                
+                //
+                // EOF
+                //
+                
+                TheByteBuffer->buffer = resetBuf;
+                TheByteBuffer->wasEOF = resetEOF;
+                SrcLoc = resetLoc;
+                
+                return invalid(resetLoc, policy);
+            }
+            
+            // Continue
+            
+            auto thirdByte = tmp;
+            
+            if (!(0x80 <= thirdByte && thirdByte <= 0xbf)) {
+                
+                //
+                // Invalid
+                //
+                
+                TheByteBuffer->buffer = resetBuf;
+                TheByteBuffer->wasEOF = resetEOF;
+                SrcLoc = resetLoc;
+                
+                return invalid(resetLoc, policy);
+            }
+            
+            tmp = TheByteBuffer->nextByte0();
+            
+            if (TheByteBuffer->wasEOF) {
+                
+                //
+                // EOF
+                //
+                
+                TheByteBuffer->buffer = resetBuf;
+                TheByteBuffer->wasEOF = resetEOF;
+                SrcLoc = resetLoc;
+                
+                return invalid(resetLoc, policy);
+            }
+            
+            if (!(0x80 <= tmp && tmp <= 0xbf)) {
+                
+                //
+                // Invalid
+                //
+                
+                TheByteBuffer->buffer = resetBuf;
+                TheByteBuffer->wasEOF = resetEOF;
+                SrcLoc = resetLoc;
+                
+                return invalid(resetLoc, policy);
+            }
+            
+            // Valid
+            
+            auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((tmp & 0x3f)));
+            
+            //
+            // Manual test for code points that are too large
+            //
+            assert(decoded <= 0x10ffff);
+            
+            if (Utils::isMBNonCharacter(decoded)) {
+                status = UTF8STATUS_NONCHARACTER_OR_BOM;
+            }
+            
+            SrcLoc.Column++;
+            
+            return SourceCharacter(decoded);
+        }
+            //
+            // 4 byte UTF-8 sequence
+            //
+        case 0xf4: {
+            
+            //
+            // Buffer is possibly already pointing to EOF
+            //
+            
+            auto resetBuf = TheByteBuffer->buffer;
+            auto resetEOF = TheByteBuffer->wasEOF;
+            auto resetLoc = SrcLoc;
+            
+            auto tmp = TheByteBuffer->nextByte0();
+                
+            if (TheByteBuffer->wasEOF) {
+                
+                //
+                // EOF
+                //
+                
+                return invalid(resetLoc, policy);
+            }
+            
+            // Continue
+            
+            auto secondByte = tmp;
+            
+            if (!(0x80 <= secondByte && secondByte <= 0x8f)) {
+                
+                //
+                // Invalid
+                //
+                
+                TheByteBuffer->buffer = resetBuf;
+                TheByteBuffer->wasEOF = resetEOF;
+                SrcLoc = resetLoc;
+                
+                return invalid(resetLoc, policy);
+            }
+            
+            tmp = TheByteBuffer->nextByte0();
+                
+            if (TheByteBuffer->wasEOF) {
+                
+                //
+                // EOF
+                //
+                
+                TheByteBuffer->buffer = resetBuf;
+                TheByteBuffer->wasEOF = resetEOF;
+                SrcLoc = resetLoc;
+                
+                return invalid(resetLoc, policy);
+            }
+            
+            // Continue
+            
+            auto thirdByte = tmp;
+            
+            if (!(0x80 <= thirdByte && thirdByte <= 0xbf)) {
+                
+                //
+                // Invalid
+                //
+                
+                TheByteBuffer->buffer = resetBuf;
+                TheByteBuffer->wasEOF = resetEOF;
+                SrcLoc = resetLoc;
+                
+                return invalid(resetLoc, policy);
+            }
+            
+            tmp = TheByteBuffer->nextByte0();
+                
+            if (TheByteBuffer->wasEOF) {
+                
+                //
+                // EOF
+                //
+                
+                TheByteBuffer->buffer = resetBuf;
+                TheByteBuffer->wasEOF = resetEOF;
+                SrcLoc = resetLoc;
+                
+                return invalid(resetLoc, policy);
+            }
+            
+            if (!(0x80 <= tmp && tmp <= 0xbf)) {
+                
+                //
+                // Invalid
+                //
+                
+                TheByteBuffer->buffer = resetBuf;
+                TheByteBuffer->wasEOF = resetEOF;
+                SrcLoc = resetLoc;
+                
+                return invalid(resetLoc, policy);
+            }
+            
+            // Valid
+            
+            auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((tmp & 0x3f)));
+            
+            //
+            // Manual test for code points that are too large
+            //
+            assert(decoded <= 0x10ffff);
+            
+            if (Utils::isMBNonCharacter(decoded)) {
+                status = UTF8STATUS_NONCHARACTER_OR_BOM;
+            }
+            
+            SrcLoc.Column++;
+            
+            return SourceCharacter(decoded);
+        }
+            //
+            // Not a valid UTF-8 start, handle specially
             //
         case 0xff: {
             
-            //
-            // could be EOF
-            //
             if (TheByteBuffer->wasEOF) {
                 
                 //
@@ -568,26 +818,22 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                 return SourceCharacter(CODEPOINT_ENDOFFILE);
             }
             
-            status = UTF8STATUS_ERROR;
+            //
+            // Invalid
+            //
             
-            auto srcCharStartLoc = SrcLoc;
-            
-            SrcLoc.Column++;
-            
-            return invalid(srcCharStartLoc, policy);
+            return invalid(SrcLoc, policy);
         }
             //
             // Not a valid UTF-8 start
             //
         default: {
             
-            status = UTF8STATUS_ERROR;
+            //
+            // Invalid
+            //
             
-            auto srcCharStartLoc = SrcLoc;
-            
-            SrcLoc.Column++;
-            
-            return invalid(srcCharStartLoc, policy);
+            return invalid(SrcLoc, policy);
         }
     }
 }
@@ -616,6 +862,10 @@ SourceCharacter ByteDecoder::currentSourceCharacter(NextCharacterPolicy policy) 
 //
 SourceCharacter ByteDecoder::invalid(SourceLocation errSrcLoc, NextCharacterPolicy policy) {
     
+    status = UTF8STATUS_INVALID;
+    
+    SrcLoc.Column++;
+    
 #if !NISSUES
     if ((policy & ENABLE_BYTE_DECODING_ISSUES) == ENABLE_BYTE_DECODING_ISSUES) {
         
@@ -623,7 +873,7 @@ SourceCharacter ByteDecoder::invalid(SourceLocation errSrcLoc, NextCharacterPoli
         // No CodeAction here
         //
         
-        auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.", FORMATISSUESEVERITY_FORMATTING, Source(errSrcLoc, errSrcLoc + 1), 0.0, {}));
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.", SYNTAXISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc + 1), 1.0, {}));
         
         Issues.push_back(std::move(I));
     }
