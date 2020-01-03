@@ -455,7 +455,7 @@ bool SourceCharacter::isNewline() const {
     auto val = to_point();
     
     switch (val) {
-        case '\n': case '\r': case CODEPOINT_CRLF:
+        case '\n': case '\r':
             return true;
         default:
             return false;

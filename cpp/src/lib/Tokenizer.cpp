@@ -234,6 +234,10 @@ Token Tokenizer::nextToken0_stringifyLine() {
 
         return Token(TOKEN_ERROR_EMPTYSTRING, BufferAndLength(tokenStartBuf, 0, false));
 
+    } else if () {
+        
+        xx;
+        
     } else if (c.isNewline()) {
 
         //
@@ -266,6 +270,14 @@ Token Tokenizer::nextToken0_stringifySymbol() {
         
         return Token(TOKEN_ERROR_EMPTYSTRING, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
         
+    } else if (c.to_point() == CODEPOINT_CRLF) {
+        
+        //
+        // Newline is special, so invent source
+        //
+        
+        return Token(TOKEN_ERROR_EMPTYSTRING, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
+        
     } else if (c.isNewline()) {
         
         //
@@ -293,6 +305,21 @@ Token Tokenizer::nextToken0_stringifyFile() {
     if (c.to_point() == CODEPOINT_ENDOFFILE) {
         
         return Token(TOKEN_ERROR_EMPTYSTRING, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
+        
+    } else if (c.to_point() == CODEPOINT_CRLF) {
+        
+        //
+        // Stringifying as a file can span lines
+        //
+        // Something like  a >>
+        //                    b
+        //
+        // should work
+        //
+        // Do not use TOKEN_ERROR_EMPTYSTRING here
+        //
+        
+        return Token(TOKEN_NEWLINE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         
     } else if (c.isNewline()) {
         
@@ -757,11 +784,15 @@ inline Token Tokenizer::handleString_stringifyLine(Buffer tokenStartBuf, WLChara
         // No need to check isAbort() inside tokenizer loops
         //
         
-        if (c == WLCharacter(CODEPOINT_ENDOFFILE)) {
+        if (c.to_point() == CODEPOINT_ENDOFFILE) {
             
             break;
             
-        } else if (c.isNewline() || c.isMBNewline()) {
+        } else if (c.to_point() == CODEPOINT_CRLF) {
+            
+            break;
+            
+        } else if (c.isNewline()) {
             
             break;
             

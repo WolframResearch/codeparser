@@ -7,7 +7,12 @@
 
 size_t ByteEncoder::size(int32_t val) {
     
-    assert(val >= 0);
+    assert(val >= 0 || val == CODEPOINT_CRLF);
+    
+    if (val == CODEPOINT_CRLF) {
+        
+        return 2;
+    }
     
     if (val <= 0x7f) {
         
@@ -29,7 +34,13 @@ size_t ByteEncoder::size(int32_t val) {
 
 void ByteEncoder::encodeBytes(std::ostream& stream, int32_t val, ByteEncoderState *state) {
     
-    assert(val >= 0);
+    assert(val >= 0 || val == CODEPOINT_CRLF);
+    
+    if (val == CODEPOINT_CRLF) {
+        
+        stream.put('\r');
+        stream.put('\n');
+    }
     
     if (val <= 0x7f) {
         
@@ -93,7 +104,13 @@ void ByteEncoder::encodeBytes(std::ostream& stream, int32_t val, ByteEncoderStat
 
 void ByteEncoder::encodeBytes(std::array<unsigned char, 4>& arr, int32_t val, ByteEncoderState *state) {
     
-    assert(val >= 0);
+    assert(val >= 0 || val == CODEPOINT_CRLF);
+    
+    if (val == CODEPOINT_CRLF) {
+        
+        arr[0] = '\r';
+        arr[1] = '\n';
+    }
     
     if (val <= 0x7f) {
         

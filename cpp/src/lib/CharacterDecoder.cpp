@@ -944,7 +944,7 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
 WLCharacter CharacterDecoder::handleLineContinuation(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer escapedBuf, SourceLocation escapedLoc, SourceCharacter firstChar, NextCharacterPolicy policy) {
     
     assert(*currentWLCharacterStartBuf == '\\');
-    assert(firstChar.isNewline());
+    assert(firstChar.isNewline() || firstChar.to_point() == CODEPOINT_CRLF);
     
     if ((policy & LC_IS_MEANINGFUL) != LC_IS_MEANINGFUL) {
 
