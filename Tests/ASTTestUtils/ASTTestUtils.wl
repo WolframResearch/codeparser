@@ -1048,14 +1048,14 @@ Module[{f, first, last, firstSource, lastSource},
 
 importExpected[file_, i_, prefix_] :=
 Module[{text, f, expected, msgs},
-       (*
+      (*
       expected
      *)
-         Quiet@Check[
+      Quiet@Check[
       
       text = importFile[file];
       
-       (*
+      (*
       text = StringJoin[Riffle[text, "\n"]];
       *)
 
@@ -1076,6 +1076,9 @@ Module[{text, f, expected, msgs},
       If[$Debug, Print["expected: ", expected]];
       *)
       ,
+
+      msgList = $MessageList;
+
       Print[
        Style[Row[{"index: ", i, " ", 
           StringReplace[file, StartOfString ~~ prefix -> ""]}], 
@@ -1084,9 +1087,9 @@ Module[{text, f, expected, msgs},
        Style[Row[{"index: ", i, " ", 
           "Messages while processing expected input (possibly from previous files):"}], Darker[Orange]]];
       Print[
-       Style[If[$MessageList =!= {}, $MessageList, 
+       Style[If[msgList =!= {}, msgList, 
          "{} (Most likely Syntax Messages, but Syntax Messages don't show up in $MessageList: bug 210020)"], Darker[Orange]]];
-      msgs = Cases[$MessageList, HoldForm[_::shdw]];
+      msgs = Cases[msgList, HoldForm[_::shdw]];
       If[msgs != {},
        Print[
         Style[Row[{"index: ", i, " ", 
@@ -1094,7 +1097,16 @@ Module[{text, f, expected, msgs},
          Darker[Orange]]];
        expected = 
         DeleteCases[ToExpression[text, InputForm, Hold], Null];
-       ]
+       ];
+
+      (*
+      Treat encoding errors as syntax errors
+      *)
+      msgs = Cases[msgList, HoldForm[$CharacterEncoding::utf8]];
+      If[msgs != {},
+        expected = System`$Failed
+      ];
+
       ];
     
     If[expected === System`$Failed,
