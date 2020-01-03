@@ -258,9 +258,6 @@ abstract[PostfixNode[op_, {operand_, _}, data_]] := CallNode[ToNode[op], {abstra
 
 
 
-(*
-abstract[BinaryNode[Minus, { left_, _, right_ }, data_]] := abstractPlus[BinaryNode[Minus, {left, right}, KeyTake[data, keysToTake]]]
-*)
 abstract[BinaryNode[Divide, { left_, _, right_ }, data_]] := abstractTimes[BinaryNode[Divide, {left, right}, KeyTake[data, keysToTake]]]
 
 abstract[BinaryNode[BinaryAt, {left_, _, right_}, data_]] := CallNode[abstract[left], {abstract[right]}, KeyTake[data, keysToTake]]
@@ -302,7 +299,11 @@ abstract[InfixNode[Inequality, children_, data_]] := abstractInequality[InfixNod
 
 abstract[InfixNode[Developer`VectorInequality, children_, data_]] := abstractVectorInequality[InfixNode[Developer`VectorInequality, children, KeyTake[data, keysToTake]]]
 
-abstract[InfixNode[Plus, children_, data_]] := abstractPlus[InfixNode[Plus, children[[;;;;2]], KeyTake[data, keysToTake]]]
+(*
+Do not do children[[;;;;2]]
+need to remember whether Token`Plus or Token`Minus
+*)
+abstract[InfixNode[Plus, children_, data_]] := abstractPlus[InfixNode[Plus, children, KeyTake[data, keysToTake]]]
 
 abstract[InfixNode[Times, children_, data_]] := abstractTimes[InfixNode[Times, children[[;;;;2]], KeyTake[data, keysToTake]]]
 
@@ -1047,6 +1048,28 @@ reciprocate[node_, data_] :=
 
 
 
+processPlusPair[{LeafNode[Token`Plus, _, _], rand_}] := rand
+
+processPlusPair[{LeafNode[Token`Minus, _, opData_], rand_}] :=
+Module[{synthesizedData},
+	(*
+	When parsing a - b + c, make sure to give the abstracted Times expression the correct Source.
+	That is, the source of  - b
+	*)
+	synthesizedData = <| Source -> { opData[[Key[Source], 1]], rand[[3, Key[Source], 2]] } |>;
+	negate[rand, synthesizedData]
+]
+
+(*
+is it a quirk that  a + + b  is parsed as  a + b  ?
+The prefix + is eaten
+TODO: add to kernel quirks mode
+*)
+flattenPrefixPlus[PrefixNode[Plus, {_, rand_}, _]] := rand
+
+flattenPrefixPlus[rand_] := rand
+
+
 
 (*
 abstract syntax of  +a + b - c \[ImplicitPlus] d  is a single Plus expression
@@ -1054,44 +1077,20 @@ except when it's not
 Related bugs: 365287
 TODO: add 365287 to kernel quirks mode
 *)
-flattenPlus[nodes_List, data_] :=
-	Module[{synthesizedData},
-		(
-			Switch[#,
-				(*
-				is it a quirk that  a + + b  is parsed as  a + b  ?
-				The prefix + is eaten
-				TODO: add to kernel quirks mode
-				*)
-				PrefixNode[Plus, {_, _}, _],
-					flattenPlus[{#[[2, 2]]}, data]
-				,
-				InfixNode[Plus, _, _],
-					flattenPlus[#[[2, ;;;;2]], data]
-				,
-				(*
-				BinaryNode[Minus, {_, _, _}, _],
-					(*
-					When parsing a - b + c, make sure to give the abstracted Times expression the correct Source.
-					That is, the source of  - b
-					*)
-					synthesizedData = <| Source -> { #[[2, 2, 3, Key[Source], 1]], #[[2, 3, 3, Key[Source], 2]] } |>;
-					flattenPlus[{#[[2, 1]], negate[#[[2, 3]], synthesizedData]}, data]
-				,
-				*)
-				_,
-					#
-			]
-		)& /@ nodes
-	]
-
 abstractPlus[InfixNode[Plus, children_, data_]] :=
-	CallNode[ToNode[Plus], abstract /@ Flatten[flattenPlus[children, data]], data]
+Module[{pairs, processedPairs, flattened},
 
-(*
-abstractPlus[BinaryNode[Minus, {left_, right_}, data_]] :=
-	CallNode[ToNode[Plus], abstract /@ Flatten[flattenPlus[{left, negate[right, data]}, data]], data]
-*)
+	pairs = Partition[children[[2;;]], 2];
+
+	processedPairs = processPlusPair /@ pairs;
+
+	flattened = flattenPrefixPlus /@ ( { children[[1]] } ~Join~ processedPairs);
+
+	CallNode[ToNode[Plus], abstract /@ flattened, data]
+]
+
+
+
 
 (*
 abstract syntax of  -a * b / c d \[InvisibleTimes] e \[Times] f  is a single Times expression

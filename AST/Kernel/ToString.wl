@@ -108,55 +108,8 @@ toInputFormString[LeafNode[Token`Fake`ImplicitOne, _, _]] :=
 	""
 
 
-
-
-toInputFormString[CodeNode[_, code_, _]] :=
-	ToString[Unevaluated[code], InputForm]
-
-(*
-a is a List of boxes
-*)
-toInputFormString[BoxNode[RowBox, {a_}, _]] :=
-Catch[
-Module[{nodeStrs},
-	nodeStrs = toInputFormString /@ a;
-	(*
-	nodeStrs = ToString[#, InputForm]& /@ nodeStrs;
-	*)
-	If[AnyTrue[nodeStrs, FailureQ],
-		Throw[SelectFirst[nodeStrs, FailureQ]]
-	];
-	StringJoin["\\!\\(\\*" <> ToString[RowBox] <> "[", "{", Riffle[nodeStrs, ", "], "}", "]", "\\)"]
-]]
-
-toInputFormString[BoxNode[List, children_, _]] :=
-Catch[
-Module[{nodeStrs},
-	nodeStrs = toInputFormString /@ children;
-	(*
-	nodeStrs = ToString[#, InputForm]& /@ nodeStrs;
-	*)
-	If[AnyTrue[nodeStrs, FailureQ],
-		Throw[SelectFirst[nodeStrs, FailureQ]]
-	];
-	StringJoin["{", Riffle[nodeStrs, ", "], "}"]
-]]
-
-toInputFormString[BoxNode[box_, children_, _]] :=
-Catch[
-Module[{nodeStrs},
-	nodeStrs = toInputFormString /@ children;
-	(*
-	nodeStrs = ToString[#, InputForm]& /@ nodeStrs;
-	*)
-	If[AnyTrue[nodeStrs, FailureQ],
-		Throw[SelectFirst[nodeStrs, FailureQ]]
-	];
-	StringJoin["\\!\\(\\*" <> ToString[box] <> "[", Riffle[nodeStrs, ", "], "]\\)"]
-]]
-
-
-
+toInputFormString[args:BoxNode[box_, children_, _]] :=
+	Failure["CannotConvertBoxesToInputFormString", <|"Function"->ToInputFormString, "Arguments"->HoldForm[{args}]|>]
 
 
 toInputFormString[PrefixNode[op_, nodes_, _]] :=

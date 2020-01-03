@@ -174,7 +174,12 @@ The front end treats  ''''  as a single token
 Token`Boxes`MultiSingleQuote -> Next,
 
 (*
-Parsing f.m as a leaf from the front end (from example input such as <<f.m)
+The front end treats  <space><space><space>  as a single token
+*)
+Token`Boxes`MultiWhitespace -> Next,
+
+(*
+Parsing  f.m  as a leaf from the front end (from example input such as <<f.m)
 *)
 (*Token`Other -> Next,*)
 
