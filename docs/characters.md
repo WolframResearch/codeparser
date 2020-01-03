@@ -10,7 +10,20 @@ if a character is not something else, then it is letterlike
 
 ## Character Encodings
 
-TODO
+
+UTF-8 input is assumed everywhere.
+
+There is an API function SafeString that will accept an array of bytes and return a "safe" string, i.e., a string that has assumed UTF-8 input with these changes:
+
+Any invalid byte sequences are converted into \[UnknownGlyph]
+
+Any high or low surrogates are converted into \[UnknownGlyph]
+
+BOM character 0xfeff is converted into 0xe001, to enable transferring through MathLink.
+
+
+
+
 
 
 
@@ -32,30 +45,6 @@ etc.
 
 
 
-## SourceCharacter encoding
-
- 32 bits:
-```
- vutsrqponmlkjihgfedcba9876543210
-            ^~~~~~~~~~~~~~~~~~~~~
-            Character bits (21 bits)
-           ^
-           Sign bit
-        ^~~
-        Count bits (3 bits)
- ^~~~~~~
- Unused (7 bits)
-```
-
-Count bits: encodes the number of bytes used by this SourceCharacter
-000: (unused)
-001: 1 byte
-010: 2 bytes
-011: 3 bytes
-100: 4 bytes
-101: (unused)
-110: (unused)
-111: (unused)
 
 
 

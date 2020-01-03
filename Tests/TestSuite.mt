@@ -11,6 +11,7 @@ TestSuite[{
 	"Errors.mt",
 	"File.mt",
 	"Parse.mt",
+	"SafeString.mt",
 	"Span.mt",
 	"SyntaxErrorNodes.mt",
 	"SyntaxIssues.mt",

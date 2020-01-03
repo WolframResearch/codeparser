@@ -102,7 +102,6 @@ public:
     Node *tokenize();
     Node *listSourceCharacters();
     Node *parseLeaf(StringifyMode mode);
-    Node *safeString();
     
     void releaseNode(Node *N);
     

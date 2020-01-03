@@ -228,42 +228,6 @@ Node *ParserSession::listSourceCharacters() {
     return N;
 }
 
-Node *ParserSession::safeString() {
-    
-    std::vector<unsigned char> safeBytes;
-
-    std::array<unsigned char, 4> arr;
-    ByteEncoderState state;
-    
-    while (true) {
-
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-
-        auto Char = TheByteDecoder->nextSourceCharacter0(TOPLEVEL);
-
-        if (Char.isEndOfFile()) {
-            break;
-        }
-        
-        auto point = Char.to_point();
-        
-        auto size = ByteEncoder::size(point);
-        
-        ByteEncoder::encodeBytes(arr, point, &state);
-        
-        for (size_t i = 0; i < size; i++) {
-            safeBytes.push_back(arr[i]);
-        }
-        
-    } // while (true)
-    
-    auto N = new SafeStringNode(std::move(safeBytes));
-
-    return N;
-}
-
 
 NodePtr ParserSession::parseLeaf0(int mode) {
     
@@ -618,17 +582,18 @@ DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
+    //
+    // Force this buffer to be UTF8STATUS_INVALID in order to trigger conversion to nice \[UnknownGlyph] characters
+    //
+    auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount(), UTF8STATUS_INVALID);
     
-    TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE);
+    TheByteBuffer->init(bufAndLen, libData);
+    TheByteDecoder->init();
     
-    auto N = TheParserSession->safeString();
+    bufAndLen.putUTF8String(mlp);
     
-    N->put(mlp);
-    
-    TheParserSession->releaseNode(N);
-    
-    TheParserSession->deinit();
+    TheByteDecoder->deinit();
+    TheByteBuffer->deinit();
     
     return LIBRARY_NO_ERROR;
 }
