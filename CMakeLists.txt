@@ -9,6 +9,7 @@ set(PACLET "AST")
 set(WOLFRAMKERNEL /Applications/Mathematica.app/Contents/MacOS/WolframKernel CACHE FILEPATH "Path to WolframKernel")
 set(BUILD_DOCS OFF CACHE BOOL "Build documentation")
 set(BUILD_EXE OFF CACHE BOOL "Build executable")
+set(BUILD_EXPR_LIB ON CACHE BOOL "Build expr library")
 set(USE_MATHLINK ON CACHE BOOL "Use MathLink")
 set(NISSUES OFF CACHE BOOL "NISSUES")
 set(NABORT OFF CACHE BOOL "NABORT")
@@ -17,6 +18,7 @@ message(STATUS "PACLET: ${PACLET}")
 message(STATUS "WOLFRAMKERNEL: ${WOLFRAMKERNEL}")
 message(STATUS "BUILD_DOCS: ${BUILD_DOCS}")
 message(STATUS "BUILD_EXE: ${BUILD_EXE}")
+message(STATUS "BUILD_EXPR_LIB: ${BUILD_EXPR_LIB}")
 message(STATUS "USE_MATHLINK: ${USE_MATHLINK}")
 message(STATUS "NISSUES: ${NISSUES}")
 message(STATUS "NABORT: ${NABORT}")
@@ -58,9 +60,9 @@ set(WL_GENERATE_SOURCES
 	${CMAKE_SOURCE_DIR}/AST/Generate/TokenEnum.wl
 )
 
-#set(WL_GENERATE_EXPRLIB_SOURCES
-#	${CMAKE_SOURCE_DIR}/AST/Generate/ExpressionLibrary.wl
-#)
+set(WL_GENERATE_EXPRLIB_SOURCES
+	${CMAKE_SOURCE_DIR}/AST/Generate/ExpressionLibrary.wl
+)
 
 set(PACLETINFO_SOURCE
 	${CMAKE_SOURCE_DIR}/AST/PacletInfo.m
@@ -182,43 +184,42 @@ add_custom_command(
 #
 # expr lib target
 #
-#if(${VERSION_NUMBER} GREATER_EQUAL 1210)
-#
-#set(EXPR_LIB ${CMAKE_BINARY_DIR}/paclet/AST/LibraryResources/${SYSTEMID}/expr${CMAKE_SHARED_LIBRARY_SUFFIX})
-#
-#message(STATUS "EXPR_LIB: ${EXPR_LIB}")
-#
-#add_library(expr-lib SHARED IMPORTED)
-#
-#set_property(
-#	TARGET
-#		expr-lib
-#	PROPERTY
-#	IMPORTED_LOCATION
-#		${EXPR_LIB}
-#)
-#
-#add_custom_target(expr-lib-custom
-#	DEPENDS
-#		${EXPR_LIB}
-#)
-#
-#add_custom_command(
-#	OUTPUT
-#		${EXPR_LIB}
-#	DEPENDS
-#		${WL_GENERATE_EXPRLIB_SOURCES}
-#	COMMAND
-#		${WOLFRAMKERNEL} -noinit -script ${CMAKE_SOURCE_DIR}/AST/Generate/ExpressionLibrary.wl -buildDir ${CMAKE_BINARY_DIR}
-#	VERBATIM
-#	WORKING_DIRECTORY
-#		${CMAKE_SOURCE_DIR}
-#)
-#
-#add_dependencies(expr-lib expr-lib-custom)
-#message(STATUS "WOLFRAMRTL_LIB: ${WOLFRAMRTL_LIB}")
-#target_link_libraries(expr-lib INTERFACE ${WOLFRAMRTL_LIB})
-#endif()
+if(${BUILD_EXPR_LIB})
+
+set(EXPR_LIB ${CMAKE_BINARY_DIR}/paclet/AST/LibraryResources/${SYSTEMID}/expr${CMAKE_SHARED_LIBRARY_SUFFIX})
+
+message(STATUS "EXPR_LIB: ${EXPR_LIB}")
+
+add_library(expr-lib SHARED IMPORTED)
+
+set_property(
+	TARGET
+		expr-lib
+	PROPERTY
+	IMPORTED_LOCATION
+		${EXPR_LIB}
+)
+
+add_custom_target(expr-lib-custom
+	DEPENDS
+		${EXPR_LIB}
+)
+
+add_custom_command(
+	OUTPUT
+		${EXPR_LIB}
+	DEPENDS
+		${WL_GENERATE_EXPRLIB_SOURCES}
+	COMMAND
+		${WOLFRAMKERNEL} -noinit -script ${CMAKE_SOURCE_DIR}/AST/Generate/ExpressionLibrary.wl -buildDir ${CMAKE_BINARY_DIR}
+	VERBATIM
+	WORKING_DIRECTORY
+		${CMAKE_SOURCE_DIR}
+)
+
+add_dependencies(expr-lib expr-lib-custom)
+
+endif(${BUILD_EXPR_LIB})
 
 
 
@@ -262,6 +263,14 @@ set(CPP_INCLUDES
 	${CMAKE_SOURCE_DIR}/cpp/include/WLCharacter.h
 )
 
+if(${BUILD_EXPR_LIB})
+list(APPEND CPP_INCLUDES
+    ${CMAKE_SOURCE_DIR}/cpp/include/ExpressionLibrary.h
+)
+endif()
+
+
+
 set(CPP_LIB_SOURCES
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/API.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/ByteBuffer.cpp
@@ -278,6 +287,14 @@ set(CPP_LIB_SOURCES
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/Utils.cpp
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/WLCharacter.cpp
 )
+
+if(${BUILD_EXPR_LIB})
+list(APPEND CPP_LIB_SOURCES
+${CMAKE_SOURCE_DIR}/cpp/src/lib/ExpressionLibrary.cpp
+)
+endif()
+
+
 
 add_library(ast-lib SHARED
 	${CPP_INCLUDES}
@@ -311,11 +328,9 @@ target_link_libraries(ast-lib ${MATHLINK_LIB})
 
 endif(USE_MATHLINK)
 
-
-#if(${VERSION_NUMBER} GREATER_EQUAL 1210)
-#target_link_libraries(ast-lib expr-lib)
-#endif()
-
+if(${BUILD_EXPR_LIB})
+target_link_libraries(ast-lib expr-lib)
+endif()
 
 set_target_properties(ast-lib PROPERTIES
 	OUTPUT_NAME
@@ -361,15 +376,16 @@ set_target_properties(ast-lib PROPERTIES
 		""
 )
 
-if (NISSUES)
+
+if(NISSUES)
 target_compile_definitions(ast-lib PUBLIC NISSUES=1)
 endif(NISSUES)
 
-if (NABORT)
+if(NABORT)
 target_compile_definitions(ast-lib PUBLIC NABORT=1)
 endif(NABORT)
 
-if (USE_MATHLINK)
+if(USE_MATHLINK)
 target_compile_definitions(ast-lib PUBLIC USE_MATHLINK=1)
 endif(USE_MATHLINK)
 
@@ -465,11 +481,11 @@ set(PACLET_SOURCES
 	ast-lib
 )
 
-#if(${VERSION_NUMBER} GREATER_EQUAL 1210)
-#list(APPEND PACLET_SOURCES
-#	expr-lib
-#)
-#endif()
+if(${BUILD_EXPR_LIB})
+list(APPEND PACLET_SOURCES
+	expr-lib
+)
+endif()
 
 if(BUILD_DOCS)
 

@@ -21,13 +21,17 @@ add_executable(ast-exe
 target_include_directories(ast-exe
 	PRIVATE ${CMAKE_SOURCE_DIR}/cpp/include
 	PRIVATE ${CMAKE_BINARY_DIR}/generated/cpp/include
-	PRIVATE ${MATHLINK_INCLUDE_DIR}
 	PRIVATE ${WOLFRAMLIBRARY_INCLUDE_DIR}
 )
 
+if(USE_MATHLINK)
+target_include_directories(ast-exe
+	PRIVATE ${MATHLINK_INCLUDE_DIR}
+)
+endif()
+
 target_link_libraries(ast-exe
 	ast-lib
-#	${WOLFRAMRTL_LIB}
 )
 
 set_target_properties(ast-exe PROPERTIES
@@ -38,9 +42,7 @@ set_target_properties(ast-exe PROPERTIES
 	CXX_STANDARD_REQUIRED
 		ON
 	INSTALL_RPATH
-		#"@executable_path/../lib;/Applications/Mathematica121-6597445.app/Contents/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions/;/Applications/Mathematica121-6597445.app/Contents/SystemFiles/Libraries/MacOSX-x86-64/"
-		#"@executable_path/../lib"
-		"@executable_path/../lib;/Applications/Mathematica121-6597445.app/Contents/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions/;"
+		"@executable_path/../lib"
 )
 
 #
@@ -65,22 +67,18 @@ endif(MSVC)
 # setup installation
 #
 
-install(TARGETS ast-exe
-	DESTINATION bin)
+install(TARGETS ast-exe DESTINATION bin)
 
 if(APPLE)
 
 install(TARGETS ast-lib DESTINATION lib)
-
-#install(FILES ${EXPR_LIB} DESTINATION lib)
 
 
 #
 # mathlink.framework has rpath @executable_path/../Frameworks, so accomodate that
 #
 
-#install(DIRECTORY ${MATHLINK_LIB}
-#	DESTINATION Frameworks)
+#install(DIRECTORY ${MATHLINK_LIB} DESTINATION Frameworks)
 
 elseif(WIN32)
 
@@ -106,10 +104,8 @@ elseif(WIN32)
 # install AST.dll and ml64i4.dll to same directory as ast.exe (bin)
 #
 
-install(TARGETS ast-lib
-	DESTINATION bin)
+install(TARGETS ast-lib DESTINATION bin)
 
-#install(FILES ${MATHLINK_DLL}
-#	DESTINATION bin)
+#install(FILES ${MATHLINK_DLL} DESTINATION bin)
 
 endif(APPLE)

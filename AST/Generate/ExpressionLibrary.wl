@@ -3,8 +3,8 @@ BeginPackage["AST`Generate`ExpressionLibrary`"]
 Begin["`Private`"]
 
 
-Needs["Compile`"]
-Needs["TypeFramework`"]
+Needs["Compile`"] (* for Program *)
+Needs["TypeFramework`"] (* for MetaData *)
 
 Print["Generating ExpressionLibrary..."]
 
@@ -40,6 +40,53 @@ Module[{},
       True
     ]
     ,
+    MetaData[<|"Exported" -> True, "Name" -> Expr`Length|>
+    ]@Function[{Typed[arg1, "Expression"]},
+      Length[arg1]
+    ]
+    ,
+    MetaData[<|"Exported" -> True, "Name" -> Expr`ToInteger|>
+    ]@Function[{Typed[arg1, "Expression"]},
+      Module[{hand = Native`Handle[]},
+        Native`PrimitiveFunction["ExprToInteger64"][hand,  arg1];
+        Native`Load[hand]
+      ]
+    ]
+    ,
+    MetaData[<|"Exported" -> True, "Name" -> Expr`FromInteger|>
+    ]@Function[{Typed[arg1, "Integer64"]},
+      Native`PrimitiveFunction["Integer64ToExpr"][arg1]
+    ]
+    ,
+    MetaData[<|"Exported" -> True, "Name" -> Expr`LookupSymbol|>
+    ]@Function[{Typed[arg1, "MachineInteger"]},
+      Module[ {cstr = Native`BitCast[arg1, "CString"], str, sym},
+        str = String`CloneNew[cstr];
+        sym = Native`LookupSymbol[str];
+        sym
+      ]
+    ]
+    ,
+    MetaData[<|"Exported" -> True, "Name" -> Expr`BuildExpression0|>
+    ]@Function[{Typed[arg1, "Expression"]},
+      Native`BuildExpression[arg1]
+    ]
+    ,
+    MetaData[<|"Exported" -> True, "Name" -> Expr`BuildExpression1|>
+    ]@Function[{Typed[arg1, "Expression"], Typed[arg2, "Expression"]},
+      Native`BuildExpression[arg1, arg2]
+    ]
+    ,
+    MetaData[<|"Exported" -> True, "Name" -> Expr`BuildExpression2|>
+    ]@Function[{Typed[arg1, "Expression"], Typed[arg2, "Expression"], Typed[arg3, "Expression"]},
+      Native`BuildExpression[arg1, arg2, arg3]
+    ]
+    ,
+    MetaData[<|"Exported" -> True, "Name" -> Expr`Evaluate|>
+    ]@Function[{Typed[arg1, "Expression"]},
+      Native`Evaluate[arg1]
+    ]
+    ,
     MetaData[<|"Exported" -> True, "Name" -> Expr`BuildExpression|>
     ]@Function[{Typed[head, "Expression"], Typed[length, "MachineInteger"]},
       Module[{ef},
@@ -54,21 +101,41 @@ Module[{},
         Native`PrimitiveFunction["SetElement_EIE_Void"][expr, index, part];
       ]
     ]
+    ,
+    MetaData[<|"Exported" -> True, "Name" -> Expr`Pointer|>
+    ]@Function[{Typed[arg1, "Expression"]},
+      Native`BitCast[arg1, "MachineInteger"]
+    ]
+    ,
+    MetaData[<|"Exported" -> True, "Name" -> Expr`FromPointer|>
+    ]@Function[{Typed[arg1, "MachineInteger"]},
+      Native`BitCast[arg1, "Expression"]
+    ]
+    (*
+    ,
+    MetaData[<|"Exported" -> True, "Name" -> Expr`DecrementRefCount|>
+    ]@Function[{Typed[expr, "Expression"]},
+      Native`PrimitiveFunction["DecrementReferenceCount"][expr];
+    ]
+    *)
   }]
 ]
 
-buildExpressionLibrary[] /; $VersionNumber < 12.1 := (
-  Print["Skipping ExpressionLibrary"]
-)
 
-buildExpressionLibrary[] /; $VersionNumber >= 12.1 :=
+buildExpressionLibrary[] :=
+Catch[
 Module[{targetDir, prog, compLib},
+
+  If[$VersionNumber < 12.1,
+    Print["Skipping ExpressionLibrary"];
+    Throw[Null]
+  ];
 
   targetDir = FileNameJoin[{ buildDir, "paclet", "AST", "LibraryResources", $SystemID }];
 
   prog = ExpressionLibraryProgram[];
 
-  Print["Exporting expr shared library"];
+  Print["Exporting expr shared library (this might take a while...)"];
 
   compLib = CompileToLibrary[prog, "LibraryName" -> "expr", "EntryFunctionName" -> "Main", "TargetDirectory" -> targetDir];
 
@@ -76,7 +143,7 @@ Module[{targetDir, prog, compLib},
     Print[compLib];
     Quit[1]
   ]
-]
+]]
 
 buildExpressionLibrary[]
 

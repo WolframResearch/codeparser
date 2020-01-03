@@ -150,13 +150,6 @@ Test[
 
 
 
-Test[
-	ToInputFormString[Null]
-	,
-	""
-	,
-	TestID->"ToString-20181231-R6I0L4"
-]
 
 
 

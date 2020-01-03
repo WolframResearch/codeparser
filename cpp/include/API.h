@@ -3,6 +3,7 @@
 
 #include "Node.h" // for NodePtr, Node, etc.
 #include "Source.h" // for BufferAndLength
+#include "ExpressionLibrary.h" // for expr
 
 //
 // Despite being mentioned here:
@@ -113,7 +114,6 @@ public:
 };
 
 extern ParserSessionPtr TheParserSession;
-
 
 
 EXTERN_C DLLEXPORT mint WolframLibrary_getVersion();

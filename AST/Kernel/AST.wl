@@ -19,6 +19,8 @@ ParseLeaf
 
 SafeString
 
+ExprTest
+
 
 
 (*
@@ -265,6 +267,7 @@ Needs["AST`ToString`"]
 Needs["AST`Utils`"]
 
 
+setupLibraries[]
 (*
 This uses func := func = def idiom and is fast
 *)
@@ -906,6 +909,22 @@ Module[{res},
 	res
 ]
 
+
+
+
+ExprTest[] :=
+Module[{e, res},
+	
+	e = libraryFunctionWrapper[exprTestFunc];
+
+	res = AST`Library`Private`$exprCompiledLibFuns["Expr_FromPointer"][e];
+
+	(*
+	AST`Library`Private`$exprCompiledLibFuns["Expr_DecrementRefCount"][e];
+	*)
+	
+	res
+]
 
 
 

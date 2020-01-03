@@ -1,6 +1,6 @@
 BeginPackage["AST`Library`"]
 
-$lib
+setupLibraries
 
 loadFunc
 
@@ -19,6 +19,7 @@ tokenizeBytesFunc
 tokenizeBytesListableFunc
 parseLeafFunc
 safeStringFunc
+exprTestFunc
 
 
 (*
@@ -83,12 +84,15 @@ LongNameSuggestion
 Begin["`Private`"]
 
 Needs["AST`"]
+Needs["CompiledLibrary`"] (* for CompiledLibrary, etc. *)
 
 
-
-$lib := $lib =
+$ASTLib := $ASTLib =
 Catch[
 Module[{res},
+	
+	LibraryLoad["expr"];
+
 	res = FindLibrary["AST"];
 	If[FailureQ[res],
 		Throw[Failure["ASTLibraryNotFound", <||>]]
@@ -97,18 +101,79 @@ Module[{res},
 ]]
 
 (*
-LibraryLink creates a separate loopback link for each library function
+$exprLib := $exprLib =
+Catch[
+Module[{res},
+	res = FindLibrary["expr"];
+	If[FailureQ[res],
+		Throw[Failure["ExpressionLibraryNotFound", <||>]]
+	];
+	res
+]]
 *)
 
-loadFunc[name_String] :=
+$exprCompiledLib
+
+$exprCompiledLibFuns
+
+
+
+
+$sharedExt = 
+	Switch[$OperatingSystem, 
+		"MacOSX", "dylib",
+		"Windows", "dll",
+		_, "so"]
+
+setupLibraries[] :=
+Module[{location, libraryResources},
+	
+	location = "Location" /. PacletInformation["AST"];
+
+	libraryResources = FileNameJoin[{location, "LibraryResources", $SystemID}];
+
+	(*
+	This allows expr lib to be found
+	*)
+	(*
+	PrependTo[$LibraryPath, libraryResources];
+	*)
+
+	$exprCompiledLib = CompiledLibrary[ FileNameJoin[{libraryResources, "expr."<>$sharedExt}] ];
+
+	$exprCompiledLibFuns = CompiledLibraryLoadFunctions[$exprCompiledLib]
+]
+
+
+
+
+
+loadFunc[name_String, params_, ret_] :=
 Catch[
 Module[{res, loaded, linkObject},
 
-	If[FailureQ[$lib],
-		Throw[$lib]
+	If[FailureQ[$ASTLib],
+		Throw[$ASTLib]
 	];
 
-	res = newestLinkObject[LibraryFunctionLoad[$lib, name, LinkObject, LinkObject]];
+	If[{params, ret} =!= {LinkObject, LinkObject},
+
+		(*
+		"regular" LibraryLink with no MathLink silliness
+		*)
+		loaded = LibraryFunctionLoad[$ASTLib, name, params, ret];
+
+		If[Head[loaded] =!= LibraryFunction,
+			Throw[Failure["LibraryFunctionLoad", <|"Result"->loaded|>]]
+		];
+
+		Throw[loaded]
+	];
+
+	(*
+	LibraryLink creates a separate loopback link for each library function
+	*)
+	res = newestLinkObject[LibraryFunctionLoad[$ASTLib, name, params, ret]];
 
 	If[FailureQ[res],
 		Throw[res]
@@ -140,15 +205,17 @@ Module[{res, loaded, linkObject},
 
 loadAllFuncs[] := (
 
-concreteParseBytesFunc := concreteParseBytesFunc = loadFunc["ConcreteParseBytes_LibraryLink"];
+concreteParseBytesFunc := concreteParseBytesFunc = loadFunc["ConcreteParseBytes_LibraryLink", LinkObject, LinkObject];
 
-tokenizeBytesFunc := tokenizeBytesFunc = loadFunc["TokenizeBytes_LibraryLink"];
+tokenizeBytesFunc := tokenizeBytesFunc = loadFunc["TokenizeBytes_LibraryLink", LinkObject, LinkObject];
 
-tokenizeBytesListableFunc := tokenizeBytesListableFunc = loadFunc["TokenizeBytes_Listable_LibraryLink"];
+tokenizeBytesListableFunc := tokenizeBytesListableFunc = loadFunc["TokenizeBytes_Listable_LibraryLink", LinkObject, LinkObject];
 
-parseLeafFunc := parseLeafFunc = loadFunc["ParseLeaf_LibraryLink"];
+parseLeafFunc := parseLeafFunc = loadFunc["ParseLeaf_LibraryLink", LinkObject, LinkObject];
 
-safeStringFunc := safeStringFunc = loadFunc["SafeString_LibraryLink"];
+safeStringFunc := safeStringFunc = loadFunc["SafeString_LibraryLink", LinkObject, LinkObject];
+
+exprTestFunc := exprTestFunc = loadFunc["ExprTest_LibraryLink", {}, Integer];
 )
 
 
