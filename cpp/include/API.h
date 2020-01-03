@@ -8,8 +8,7 @@
 // Despite being mentioned here:
 // language/LibraryLink/tutorial/LibraryStructure.html
 //
-// It is not actually possible to include "wstp.h" for use with
-// WolframLibrary.h
+// It is not actually possible to include "wstp.h" for use with WolframLibrary.h
 //
 // Using wstp.h results in errors like:
 // error: unknown type name 'MLINK'

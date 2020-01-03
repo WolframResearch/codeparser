@@ -1,7 +1,6 @@
 
 #include "Token.h"
 
-//#include "ByteDecoder.h"
 #include "API.h" // for TheParserSession
 
 #include <cassert>

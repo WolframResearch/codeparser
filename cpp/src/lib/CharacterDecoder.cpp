@@ -5,7 +5,6 @@
 #include "ByteBuffer.h" // for TheByteBuffer
 #include "Utils.h" // for isUnsupportedLongName, etc.
 #include "CharacterMaps.h" // for LongNameToCodePointMap, etc.
-//#include "CodePoint.h"
 #include "API.h" // for ScopedMLUTF8String
 
 

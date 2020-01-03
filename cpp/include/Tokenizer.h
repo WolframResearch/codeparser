@@ -1,8 +1,6 @@
 
 #pragma once
 
-//#include "CharacterDecoder.h"
-//#include "Source.h"
 #include "WLCharacter.h" // for WLCharacter
 #include "Token.h" // for Token
 

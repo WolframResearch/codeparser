@@ -6,11 +6,9 @@
 #include "ByteBuffer.h" // for ByteBuffer
 #include "Symbol.h" // for SYMBOL_AST_LIBRARY_MAKESYNTAXISSUE, etc.
 #include "Utils.h" // for isMBNewline, etc.
-//#include "CodePoint.h"
 #include "WLCharacter.h" // for set_graphical
 
 #include <cctype> // for isalnum, isxdigit, isupper, isdigit, isalpha, ispunct, iscntrl with GCC and MSVC
-//#include <utility> // for swap
 #include <sstream> // for ostringstream
 
 

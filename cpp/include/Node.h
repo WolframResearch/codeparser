@@ -4,11 +4,6 @@
 #include "Source.h" // for Source
 #include "Symbol.h" // for SymbolPtr
 #include "Token.h" // for Token
-//
-//#if USE_MATHLINK
-//#include "mathlink.h"
-//#undef P
-//#endif // USE_MATHLINK
 
 #include <vector>
 #include <memory> // for unique_ptr

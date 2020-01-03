@@ -4,7 +4,6 @@
 #include "Parser.h" // for TheParser
 #include "ByteEncoder.h" // for ByteEncoder
 #include "API.h" // for TheParserSession
-//#include "Symbol.h"
 
 #include <numeric> // for accumulate
 

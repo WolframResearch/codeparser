@@ -1,8 +1,6 @@
 
 #pragma once
 
-//#include "API.h"
-//#include "ByteDecoder.h"
 #include "Source.h" // for IssuePtr
 #include "WLCharacter.h" // for WLCharacter
 

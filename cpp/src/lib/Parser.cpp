@@ -4,10 +4,6 @@
 #include "API.h" // for TheParserSession
 #include "Parselet.h" // for SymbolParselet, UnderParselet, etc.
 #include "Tokenizer.h" // for Tokenizer
-//#include "ByteDecoder.h"
-//#include "ByteBuffer.h"
-//#include "Utils.h"
-//#include "Symbol.h"
 
 #include <algorithm> // for generate with GCC and MSVC
 

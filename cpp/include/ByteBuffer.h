@@ -1,18 +1,13 @@
 
 #pragma once
 
-//#include "API.h"
 #include "Source.h" // for BufferAndLength
 
 #include "WolframLibrary.h"
 #undef True
 #undef False
 
-//#include <cstddef>
-//#include <vector>
-//#include <istream>
 #include <memory> // for unique_ptr
-//#include <ostream>
 
 class ByteBuffer;
 using ByteBufferPtr = std::unique_ptr<ByteBuffer>;

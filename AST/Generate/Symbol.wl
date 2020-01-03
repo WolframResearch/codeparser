@@ -631,7 +631,6 @@ symbolCPPHeader = {
 #undef P
 #endif // USE_MATHLINK
 
-//#include <string>
 #include <memory>
 
 class Symbol {

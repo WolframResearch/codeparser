@@ -5,7 +5,6 @@
 #include "ByteDecoder.h" // for TheByteDecoder
 #include "ByteBuffer.h" // for TheByteBuffer
 #include "Utils.h" // for strangeLetterlikeWarning
-//#include "CodePoint.h"
 
 size_t toDigit(int val);
 

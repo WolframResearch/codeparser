@@ -3,9 +3,7 @@
 
 #include "CodePoint.h" // for CODEPOINT_UNKNOWN
 
-//#include <cassert>
 #include <string>
-//#include <iterator>
 
 //
 // The 8 styles of character escapes

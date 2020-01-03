@@ -4,7 +4,6 @@
 #include "Source.h" // for BufferAndLength, Source
 #include "TokenEnum.h" // for TokenEnum
 
-//#include <string>
 #include <ostream>
 
 struct Token {
