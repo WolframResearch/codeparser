@@ -34,13 +34,33 @@ TEST_F(CrashTest, Crash1) {
     
     const unsigned char arr[] = {'1', ':', ':', '*', '\\', '\r', '\n'};
     
-    auto bufAndLen = BufferAndLength(arr, 7, false);
+    auto bufAndLen = BufferAndLength(arr, 7);
     
     TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
     
-    TheParserSession->parseExpressions();
+    auto N = TheParserSession->parseExpressions();
+    
+    TheParserSession->releaseNode(N);
     
     TheParserSession->deinit();
     
     SUCCEED();
 }
+
+TEST_F(CrashTest, Crash2) {
+    
+    const unsigned char arr[] = {'1', '+', '\r', '\n', '1'};
+    
+    auto bufAndLen = BufferAndLength(arr, 6);
+    
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
+    
+    auto N = TheParserSession->safeString();
+    
+    TheParserSession->releaseNode(N);
+    
+    TheParserSession->deinit();
+    
+    SUCCEED();
+}
+

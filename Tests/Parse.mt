@@ -42,7 +42,7 @@ Test[
 Test[
 	ParseString[""]
 	,
-	StringNode[String, {}, <||>]
+	ContainerNode[String, {}, <||>]
 	,
 	TestID->"Parse-20190227-B2B5G4"
 ]
@@ -2155,7 +2155,7 @@ Test[
 Test[
 	ParseString["a::"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "MessageName", <||>], {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
 			AbstractSyntaxErrorNode[AbstractSyntaxError`EmptyString, {
@@ -2270,7 +2270,7 @@ Test[
 Test[
 	ParseString["a/"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Times", <||>], {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
 			AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, {
@@ -2284,7 +2284,7 @@ Test[
 Test[
 	ParseString["a-"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Plus", <||>], {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
 			AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, {
@@ -2298,7 +2298,7 @@ Test[
 Test[
 	ParseString["a,b"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		AbstractSyntaxErrorNode[AbstractSyntaxError`CommaTopLevel, {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Symbol, "b", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, <||>]
@@ -2309,13 +2309,21 @@ Test[
 Test[
 	ParseString["()"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		AbstractSyntaxErrorNode[AbstractSyntaxError`EmptyParens, {}, <|Source -> {{1, 1}, {1, 3}}|>]}, <||>]
 	,
 	TestID->"Parse-20191224-W2M0H4"
 ]
 
-
+Test[
+	"a - +b"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200102-W8Y0U5"
+]
 
 
 

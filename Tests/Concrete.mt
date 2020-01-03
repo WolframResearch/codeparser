@@ -8,7 +8,7 @@ PatternColon and OptionalColon
 Test[
 	ConcreteParseString["a:b"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		BinaryNode[Pattern, {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>], 
   			LeafNode[Token`Colon, ":", <|Source -> {{1, 2}, {1, 3}}|>], 
@@ -20,7 +20,7 @@ Test[
 Test[
 	ConcreteParseString["a_:b"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		BinaryNode[Optional, {
 			PatternBlankNode[PatternBlank, {
 				LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
@@ -45,7 +45,7 @@ make sure that both InternalNullNodes have correct Sources (and not the same one
 Test[
 	ConcreteParseString["a; ;"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		InfixNode[CompoundExpression, {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Token`Semi, ";", <|Source -> {{1, 2}, {1, 3}}|>],
@@ -77,7 +77,7 @@ Test[
 			LeafNode[Token`Question, "?", <|Source -> {{1, 1}, {1, 1}}|>],
 			LeafNode[String, "a", <|Source -> {{1, 2}, {1, 2}}|>]}, <|Source -> {{1, 1}, {1, 2}}|>] }, <||>]
 	*)
-	StringNode[String, {
+	ContainerNode[String, {
 		BinaryNode[PatternTest, {
 			LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 1}, {1, 1}}|>],
 			LeafNode[Token`Question, "?", <|Source -> {{1, 1}, {1, 2}}|>],
@@ -91,7 +91,7 @@ Test[
 Test[
 	ConcreteParseString["{\n?a}"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		GroupNode[List, {
 			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 1}}|>],
@@ -115,7 +115,7 @@ line continuations and newlines
 Test[
 	ConcreteParseString["\"abc\\\r\ndef\""]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		LeafNode[String, "\"abc\\\r\ndef\"", <|Source -> {{1, 1}, {2, 5}}|>] }, <||>]
 	,
 	TestID->"Concrete-20190606-U7J9I3"
@@ -130,7 +130,7 @@ Test[
 Test[
 	ConcreteParseString[""]
 	,
-	StringNode[String, {}, <||>]
+	ContainerNode[String, {}, <||>]
 	,
 	TestID->"Concrete-20190227-H6C1K7"
 ]
@@ -171,7 +171,7 @@ Test[
 TestMatch[
 	ConcreteParseString["f[1,\\[InvisibleComma]2]"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		CallNode[{ LeafNode[Symbol, "f", <|Source->{{1, 1}, {1, 2}}|>] }, {
 			GroupNode[GroupSquare, {
 				LeafNode[Token`OpenSquare, "[", <|Source->{{1, 2}, {1, 3}}|>],
@@ -193,7 +193,7 @@ TestMatch[
 Test[
 	ConcreteParseString["f[b : c]"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 			CallNode[{LeafNode[Symbol, "f", <|Source -> {{1, 1}, {1, 2}}|>]}, {
 			GroupNode[GroupSquare, {
 				LeafNode[Token`OpenSquare, "[", <|Source -> {{1, 2}, {1, 3}}|>],
@@ -217,7 +217,7 @@ Test[
 Test[
 	ConcreteParseString["{ ( a }"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		GroupNode[List, {
 			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>],
@@ -234,7 +234,7 @@ Test[
 Test[
 	ConcreteParseString["{ a ) }"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		GroupMissingCloserNode[List, {
 			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>],
@@ -257,7 +257,7 @@ Test[
 TestMatch[
 	ConcreteParseString[";;(**);;"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		InfixNode[Times, {
 			BinaryNode[Span, {
 				LeafNode[Token`Fake`ImplicitOne, "", <|Source -> {{1, 1}, {1, 1}}|>],
@@ -276,7 +276,7 @@ TestMatch[
 TestMatch[
 	ConcreteParseString["a;;b;;(**)&"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		PostfixNode[Function, {
 			InfixNode[Times, {
 				BinaryNode[Span, {
@@ -296,7 +296,7 @@ TestMatch[
 Test[
 	ConcreteParseString["a;(**)&"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		PostfixNode[Function, {
 			InfixNode[CompoundExpression, {
 				LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
@@ -311,7 +311,7 @@ Test[
 Test[
 	ConcreteParseString["a;(**);"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		InfixNode[CompoundExpression, {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Token`Semi, ";", <|Source -> {{1, 2}, {1, 3}}|>],
@@ -326,7 +326,7 @@ Test[
 Test[
 	ConcreteParseString["{a;\n}"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		GroupNode[List, {
 			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
 			InfixNode[CompoundExpression, {
@@ -344,7 +344,7 @@ Test[
 TestMatch[
 	ConcreteParseString["a;;;;;;"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		InfixNode[Times, {
 			BinaryNode[Span, {
 				LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
@@ -367,7 +367,7 @@ TestMatch[
 TestMatch[
 	ConcreteParseString["a;;;;(**);;"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		InfixNode[Times, {
 			BinaryNode[Span, {
 				LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
@@ -391,7 +391,7 @@ TestMatch[
 Test[
 	ConcreteParseString["a(**):b"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		BinaryNode[Pattern, {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Token`Comment, "(**)", <|Source -> {{1, 2}, {1, 6}}|>],
@@ -404,7 +404,7 @@ Test[
 Test[
 	ConcreteParseString["a:(**)b"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		BinaryNode[Pattern, {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Token`Colon, ":", <|Source -> {{1, 2}, {1, 3}}|>],
@@ -417,7 +417,7 @@ Test[
 Test[
 	ConcreteParseString[";;(**)*2"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		InfixNode[Times, {
 			BinaryNode[Span, {
 				LeafNode[Token`Fake`ImplicitOne, "", <|Source -> {{1, 1}, {1, 1}}|>],
@@ -433,7 +433,7 @@ Test[
 Test[
 	ConcreteParseString["{ headIn__ }"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		GroupNode[List, {
 			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>],
@@ -449,7 +449,7 @@ Test[
 Test[
 	ConcreteParseString["a(*1*)+(*2*)b(*3*);"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		InfixNode[CompoundExpression, {
 			InfixNode[Plus, {
 				LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
@@ -467,7 +467,7 @@ Test[
 Test[
 	ConcreteParseString["{(*1*)[(*2*)](*3*)}"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		GroupNode[List, {
 			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Token`Comment, "(*1*)", <|Source -> {{1, 2}, {1, 7}}|>],
@@ -484,7 +484,7 @@ Test[
 TestMatch[
 	ConcreteParseString["{(*0*)a(*1*),(*2*)b(*3*)}"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		GroupNode[List, {
 			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Token`Comment, "(*0*)", <|Source -> {{1, 2}, {1, 7}}|>],
@@ -512,7 +512,7 @@ Test[
 Test[
 	ConcreteParseString["a~f~b"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		TernaryNode[TernaryTilde, {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Token`Tilde, "~", <|Source -> {{1, 2}, {1, 3}}|>],
@@ -526,7 +526,7 @@ Test[
 Test[
 	ConcreteParseString["a /: b = (c = d)"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		TernaryNode[TagSet, {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>],
@@ -552,7 +552,7 @@ Test[
 TestMatch[
 	ConcreteParseString["{12,\\\n3}"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		GroupNode[List, {
 			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
 			InfixNode[Comma, {
@@ -568,7 +568,7 @@ TestMatch[
 Test[
 	ConcreteParseString["{ @@ }"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		GroupNode[List, {
 			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>],
@@ -585,7 +585,7 @@ Test[
 Test[
 	ConcreteParseString["\"a\\\\\r\nb\""]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		LeafNode[String, "\"a\\\\\r\nb\"", <|Source -> {{1, 1}, {2, 3}}|>] }, <||>]
 	,
 	TestID->"Concrete-20191024-X1D5H3"
@@ -594,7 +594,7 @@ Test[
 Test[
 	ConcreteParseString["^ "]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		BinaryNode[Power, {
 			LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 1}, {1, 1}}|>],
 			LeafNode[Token`Caret, "^", <|Source -> {{1, 1}, {1, 2}}|>],
@@ -607,7 +607,7 @@ Test[
 TestMatch[
 	ConcreteParseString["0.."]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		PostfixNode[Repeated, {
 			LeafNode[Integer, "0", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Token`DotDot, "..", <|Source -> {{1, 2}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, _]
@@ -618,7 +618,7 @@ TestMatch[
 Test[
 	ConcreteParseString["(*)a"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		LeafNode[Token`Error`UnterminatedComment, "(*)a", <|Source -> {{1, 1}, {1, 5}}|>]}, <||>]
 	,
 	TestID->"Concrete-20191209-I8G4F9"
@@ -627,7 +627,7 @@ Test[
 Test[
 	ConcreteParseString["12^^a.a"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		LeafNode[Real, "12^^a.a", <|Source -> {{1, 1}, {1, 8}}|>]}, <||>]
 	,
 	TestID->"Concrete-20191209-A4X1E9"
@@ -636,7 +636,7 @@ Test[
 Test[
 	ConcreteParseString["(*\\a*)"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		LeafNode[Token`Comment, "(*\\a*)", <|Source -> {{1, 1}, {1, 7}}|>]}, <||>]
 	,
 	TestID->"Concrete-20191210-U8V1Y3"
@@ -646,7 +646,7 @@ Test[
 	(* yes, actual \[Alpha] character on purpose *)
 	ConcreteParseString["{\[Alpha],b}"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		GroupNode[List, {
 			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
 			InfixNode[Comma, {

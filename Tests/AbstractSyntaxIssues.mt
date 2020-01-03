@@ -6,7 +6,7 @@ Package:
 *)
 
 TestMatch[
-	FirstCase[ParseString["BeginPackage[\"Foo`\"]", HoldNode[Hold, #[[1]], <||>] &],
+	FirstCase[ParseString["BeginPackage[\"Foo`\"]", ContainerNode[Hold, #[[1]], <||>] &],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["Package", _, _, _]}]
@@ -15,7 +15,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ParseString["EndPackage[]", HoldNode[Hold, #[[1]], <||>] &],
+	FirstCase[ParseString["EndPackage[]", ContainerNode[Hold, #[[1]], <||>] &],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["Package", _, _, _]}]
@@ -24,7 +24,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ParseString["Begin[\"Foo`\"]", HoldNode[Hold, #[[1]], <||>] &],
+	FirstCase[ParseString["Begin[\"Foo`\"]", ContainerNode[Hold, #[[1]], <||>] &],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["Package", _, _, _]}]
@@ -33,7 +33,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ParseString["End[]", HoldNode[Hold, #[[1]], <||>] &],
+	FirstCase[ParseString["End[]", ContainerNode[Hold, #[[1]], <||>] &],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["Package", _, _, _]}]
@@ -43,7 +43,7 @@ TestMatch[
 
 
 TestMatch[
-	FirstCase[ParseString["BeginStaticAnalysisIgnore[]", HoldNode[Hold, #[[1]], <||>] &],
+	FirstCase[ParseString["BeginStaticAnalysisIgnore[]", ContainerNode[Hold, #[[1]], <||>] &],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["Package", _, _, _]}]
@@ -52,7 +52,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ParseString["EndStaticAnalysisIgnore[]", HoldNode[Hold, #[[1]], <||>] &],
+	FirstCase[ParseString["EndStaticAnalysisIgnore[]", ContainerNode[Hold, #[[1]], <||>] &],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["Package", _, _, _]}]
@@ -70,7 +70,7 @@ StrangeCall:
 *)
 
 TestMatch[
-	FirstCase[ParseString["a;b;[]", HoldNode[Hold, #[[1]], <||>] &],
+	FirstCase[ParseString["a;b;[]", ContainerNode[Hold, #[[1]], <||>] &],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["StrangeCall", _, _, _]}]
@@ -79,7 +79,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ParseString["a;b;[];c", HoldNode[Hold, #[[1]], <||>] &],
+	FirstCase[ParseString["a;b;[];c", ContainerNode[Hold, #[[1]], <||>] &],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["StrangeCall", _, _, _]}]
@@ -88,7 +88,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ParseString[" a;b;\[LeftDoubleBracket]\[RightDoubleBracket] ", HoldNode[Hold, #[[1]], <||>] &],
+	FirstCase[ParseString[" a;b;\[LeftDoubleBracket]\[RightDoubleBracket] ", ContainerNode[Hold, #[[1]], <||>] &],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["StrangeCall", _, _, _]}]
@@ -97,7 +97,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ParseString[" a;b;\[LeftDoubleBracket]\[RightDoubleBracket];c ", HoldNode[Hold, #[[1]], <||>] &],
+	FirstCase[ParseString[" a;b;\[LeftDoubleBracket]\[RightDoubleBracket];c ", ContainerNode[Hold, #[[1]], <||>] &],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["StrangeCall", _, _, _]}]
@@ -106,7 +106,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ParseString[" %[] ", HoldNode[Hold, #[[1]], <||>] &],
+	FirstCase[ParseString[" %[] ", ContainerNode[Hold, #[[1]], <||>] &],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["StrangeCall", _, _, _]}]
@@ -115,7 +115,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ParseString[" \\!\\(x\\)[] ", HoldNode[Hold, #[[1]], <||>] &],
+	FirstCase[ParseString[" \\!\\(x\\)[] ", ContainerNode[Hold, #[[1]], <||>] &],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["StrangeCall", _, _, _]}]
@@ -124,7 +124,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[ParseString[" \\(x\\)[] ", HoldNode[Hold, #[[1]], <||>] &],
+	FirstCase[ParseString[" \\(x\\)[] ", ContainerNode[Hold, #[[1]], <||>] &],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["StrangeCall", _, _, _]}]
@@ -134,7 +134,7 @@ TestMatch[
 
 
 TestMatch[
-	FirstCase[ParseString[" x--[] ", HoldNode[Hold, #[[1]], <||>] &],
+	FirstCase[ParseString[" x--[] ", ContainerNode[Hold, #[[1]], <||>] &],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["StrangeCall", _, _, _]}]
@@ -153,7 +153,7 @@ SyntaxUndocumentedMessageName:
 *)
 
 TestMatch[
-	FirstCase[ParseString[" a::b::c::d ", HoldNode[Hold, #[[1]], <||>] &],
+	FirstCase[ParseString[" a::b::c::d ", ContainerNode[Hold, #[[1]], <||>] &],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["SyntaxUndocumentedMessageName", _, _, _]}]
@@ -174,7 +174,7 @@ Comma:
 
 
 TestMatch[
-	FirstCase[ParseString[" f[1,2,] ", HoldNode[Hold, #[[1]], <||>] &],
+	FirstCase[ParseString[" f[1,2,] ", ContainerNode[Hold, #[[1]], <||>] &],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["Comma", _, _, _]}]
@@ -185,7 +185,7 @@ TestMatch[
 TestMatch[
 	ParseString[" f[,1] "]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "f", _], {
 			LeafNode[Symbol, "Null", KeyValuePattern[AbstractSyntaxIssues -> _]],
 			LeafNode[Integer, "1", _]}, _] }, _]
@@ -205,7 +205,7 @@ StrangeCallSlotSequence:
 *)
 
 TestMatch[
-	FirstCase[ParseString[" ##2[] ", HoldNode[Hold, #[[1]], <||>] &],
+	FirstCase[ParseString[" ##2[] ", ContainerNode[Hold, #[[1]], <||>] &],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["StrangeCallSlotSequence", _, _, _]}]
@@ -223,7 +223,7 @@ NotContiguous:
 
 
 TestMatch[
-	FirstCase[ParseString[" a[[] ] ", HoldNode[Hold, #[[1]], <||>] &],
+	FirstCase[ParseString[" a[[] ] ", ContainerNode[Hold, #[[1]], <||>] &],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {FormatIssue["NotContiguous", _, _, _]}]

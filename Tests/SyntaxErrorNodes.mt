@@ -6,7 +6,7 @@ ExpectedOperand:
 TestMatch[
 	ParseString["{ + }"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "List", <||>], {
 			CallNode[LeafNode[Symbol, "Plus", <||>], {
 	    		AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, {
@@ -31,7 +31,7 @@ TODO: is this a quirk?
 TestMatch[
 	ParseString["a ? b ? c"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociativePatternTest, {
 			BinaryNode[PatternTest, {
 				LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
@@ -54,7 +54,7 @@ ExpectedTilde:
 Test[
 	ParseString["a ~f"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		SyntaxErrorNode[SyntaxError`ExpectedTilde, {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>], 
 	  		LeafNode[Token`Tilde, "~", <|Source -> {{1, 3}, {1, 4}}|>], 
@@ -74,7 +74,7 @@ ExpectedSymbol:
 Test[
 	ParseString["1:2"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		SyntaxErrorNode[SyntaxError`ColonError, {
 			LeafNode[Integer, "1", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Token`Colon, ":", <|Source -> {{1, 2}, {1, 3}}|>],
@@ -96,7 +96,7 @@ ExpectedSet:
 Test[
 	ParseString["a /: b * c"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		SyntaxErrorNode[SyntaxError`ExpectedSet, {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Token`SlashColon, "/:", <|Source -> {{1, 3}, {1, 5}}|>],
@@ -119,7 +119,7 @@ ExpectedPossibleExpression:
 TestMatch[
 	ParseString["&"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Function", <||>], {
 			AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, {
 				LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 1}, {1, 1}}|>]},
@@ -142,7 +142,7 @@ SyntaxError:
 TestMatch[
 	ConcreteParseString["\\"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		LeafNode[Token`Error`UnhandledCharacter, "\\", <|Source -> {{1, 1}, {1, 2}}|>] }, <||>]
 	,
 	TestID->"SyntaxErrorNodes-20190521-P7R3O7"

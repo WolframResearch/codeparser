@@ -44,7 +44,7 @@ Module[{cst, agg, ast, good, expected, actual, str, str1},
 	(*
 	Concrete
 	*)
-	cst = ConcreteParseString[text, HoldNode[Hold, #[[1]], <||>]&];
+	cst = ConcreteParseString[text, ContainerNode[Hold, #[[1]], <||>]&];
 	If[FailureQ[cst],
 		Throw[cst]
 	];
@@ -102,7 +102,7 @@ Module[{cst, agg, ast, good, expected, actual, str, str1},
 	(*
 	Abstract
 	*)
-	ast = ParseString[text, HoldNode[Hold, #[[1]], <||>]&];
+	ast = ParseString[text, ContainerNode[Hold, #[[1]], <||>]&];
 	If[FailureQ[ast],
 		Throw[ast]
 	];
@@ -247,6 +247,11 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     	Print["version: ", version]
     ];
     Which[
+      version >= 15,
+            cst = 
+       ConcreteParseFile[File[file], 
+        ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1, 1, 3, Key[Source], 1]], #[[1, -1, 3, Key[Source], 2]]}]|>] &];
+      ,
       version >= 12,
       cst = 
        ConcreteParseFile[File[file], 
@@ -316,7 +321,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       ];
      ];
     
-    If[MatchQ[cst, FileNode[File, {Null}, _]],
+    If[MatchQ[cst, ContainerNode[File, {Null}, _]],
      Print[
       Style[Row[{"index: ", i, " ", 
          StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], 
@@ -421,6 +426,11 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      
      version = convertVersionString[PacletFind["AST"][[1]]["Version"]];
      Which[
+     version >= 15,
+      cst = 
+        ConcreteParseFile[File[file], 
+         ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1, 1, 3, Key[Source], 1]], #[[1, -1, 3, Key[Source], 2]]}]|>]&];
+      ,
      version >= 12,
       cst = 
         ConcreteParseFile[File[file], 

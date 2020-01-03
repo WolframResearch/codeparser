@@ -22,13 +22,13 @@ TEST_F(NodeTest, Bug1) {
     TheByteBuffer = std::unique_ptr<ByteBuffer>(new ByteBuffer);
     TheByteDecoder = std::unique_ptr<ByteDecoder>(new ByteDecoder);
     
-    TheByteBuffer->init(BufferAndLength(Buffer(input.c_str() + 0), 3, false));
+    TheByteBuffer->init(BufferAndLength(Buffer(input.c_str() + 0), 3));
     TheByteDecoder->init();
     
-    auto T1 = Token(TOKEN_SYMBOL, BufferAndLength(Buffer(input.c_str() + 0), 1, false), Source(SourceLocation(1, 1), SourceLocation(1, 2)));
+    auto T1 = Token(TOKEN_SYMBOL, BufferAndLength(Buffer(input.c_str() + 0), 1), Source(SourceLocation(1, 1), SourceLocation(1, 2)));
     Args.append(std::unique_ptr<Node>(new LeafNode(T1)));
     
-    auto T2 = Token(TOKEN_UNDERDOT, BufferAndLength(Buffer(input.c_str() + 1), 2, false), Source(SourceLocation(1, 2), SourceLocation(1, 4)));
+    auto T2 = Token(TOKEN_UNDERDOT, BufferAndLength(Buffer(input.c_str() + 1), 2), Source(SourceLocation(1, 2), SourceLocation(1, 4)));
     Args.append(std::unique_ptr<Node>(new LeafNode(T2)));
 
     auto N = std::unique_ptr<Node>(new OptionalDefaultPatternNode(std::move(Args)));

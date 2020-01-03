@@ -544,7 +544,7 @@ verify that nested ImplicitTimes are not created
 TestMatch[
 	ConcreteParseString[";; ;; ;;"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		InfixNode[Times, {
 			BinaryNode[Span, _, _],
 			LeafNode[Whitespace, _, _],
@@ -564,7 +564,7 @@ TestMatch[
 Test[
 	ConcreteParseString["a ;; &"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		PostfixNode[Function, {
 			BinaryNode[Span, {
 				LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],

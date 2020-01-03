@@ -146,6 +146,12 @@ when parsing   a @
 mark it as a @ EOF
 
 
+concrete syntax is everything
+
+concrete syntax has CallNode[{head, comment}, {child1}]
+
+concrete syntax has InfixNode[Plus, {1, +, comment, 1}]
+
 
 
 
@@ -177,6 +183,17 @@ Implicit tokens are kept
 
 Trivia is removed
 
+aggregate syntax
+
+aggregate removes comments, whitespace, and newlines
+
+aggregate syntax has CallNode[head, {child1}]
+
+aggregate syntax has InfixNode[Plus, {1, +, 1}]
+
+
+
+
 
 
 
@@ -204,7 +221,11 @@ type information is lost because everything is a CallNode
 
 Implicit tokens are converted to actual tokens
 
+abstract syntax
 
+abstract syntax has CallNode[head, {child1}]
+
+abstract syntax has CallNode[Plus, {1, 1}]
 
 
 

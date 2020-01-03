@@ -9,10 +9,6 @@
 #include <sstream>
 
 
-//const NextCharacterPolicy TOPLEVEL = ENABLE_BYTE_DECODING_ISSUES | ENABLE_ESCAPES | ENABLE_CHARACTER_DECODING_ISSUES | LC_UNDERSTANDS_CRLF | ENABLE_STRANGE_CHARACTER_CHECKING;
-//const NextCharacterPolicy TOPLEVEL = ENABLE_BYTE_DECODING_ISSUES | ENABLE_CHARACTER_DECODING_ISSUES | ENABLE_STRANGE_CHARACTER_CHECKING;
-
-
 class ByteDecoderTest : public ::testing::Test {
 protected:
     static void SetUpTestSuite() {
@@ -40,7 +36,7 @@ TEST_F(ByteDecoderTest, Basic1) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size(), false), nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE);
     
     auto c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
@@ -84,7 +80,7 @@ TEST_F(ByteDecoderTest, Basic2) {
     
     const unsigned char arr[] = {'1', '+', 206, 177};
     
-    TheParserSession->init(BufferAndLength(arr, 4, false), nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(BufferAndLength(arr, 4), nullptr, INCLUDE_SOURCE);
     
     auto c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
@@ -128,7 +124,7 @@ TEST_F(ByteDecoderTest, Basic3) {
     
     const unsigned char arr[] = {'1', '+', 0xE2, 0x9A, 0xA1};
     
-    TheParserSession->init(BufferAndLength(arr, 5, false), nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(BufferAndLength(arr, 5), nullptr, INCLUDE_SOURCE);
     
     auto c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
@@ -169,7 +165,7 @@ TEST_F(ByteDecoderTest, Invalid1) {
     
     const unsigned char arr[] = {'1', '+', 0xf8};
     
-    TheParserSession->init(BufferAndLength(arr, 3, false), nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(BufferAndLength(arr, 3), nullptr, INCLUDE_SOURCE);
     
     auto c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
@@ -215,7 +211,7 @@ TEST_F(ByteDecoderTest, Invalid2) {
     
     const unsigned char arr[] = {'1', '+', 206};
     
-    TheParserSession->init(BufferAndLength(arr, 3, false), nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(BufferAndLength(arr, 3), nullptr, INCLUDE_SOURCE);
     
     auto c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
@@ -259,7 +255,7 @@ TEST_F(ByteDecoderTest, Invalid3) {
     
     const unsigned char arr[] = {'1', '+', 0xE2};
     
-    TheParserSession->init(BufferAndLength(arr, 3, false), nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(BufferAndLength(arr, 3), nullptr, INCLUDE_SOURCE);
     
     auto c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
@@ -304,7 +300,7 @@ TEST_F(ByteDecoderTest, Invalid4) {
     
     const unsigned char arr[] = {'1', '+', 0xE2, 0x9A};
     
-    TheParserSession->init(BufferAndLength(arr, 4, false), nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(BufferAndLength(arr, 4), nullptr, INCLUDE_SOURCE);
     
     auto c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
@@ -348,5 +344,137 @@ TEST_F(ByteDecoderTest, Invalid4) {
     EXPECT_EQ(c, SourceCharacter(CODEPOINT_ENDOFFILE));
     
     EXPECT_EQ(TheByteDecoder->getIssues().size(), 2u);
+}
+
+//
+// Surrogates
+//
+TEST_F(ByteDecoderTest, Surrogate1) {
+    
+    const unsigned char arr[] = {'1', '+', 0xed, 0xa0, 0x80};
+    
+    TheParserSession->init(BufferAndLength(arr, 5), nullptr, INCLUDE_SOURCE);
+    
+    auto c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
+    
+    EXPECT_EQ(c, SourceCharacter('1'));
+    
+    EXPECT_EQ(TheByteBuffer->buffer, arr + 0);
+    
+    //    TheByteDecoder->nextSourceCharacter(TOPLEVEL);
+    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+    
+    c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
+    
+    EXPECT_EQ(c, SourceCharacter('+'));
+    
+    EXPECT_EQ(TheByteBuffer->buffer, arr + 1);
+    
+    //    TheByteDecoder->nextSourceCharacter(TOPLEVEL);
+    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+    
+    c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
+    
+    // from 0xED byte
+    EXPECT_EQ(c, SourceCharacter(CODEPOINT_REPLACEMENT_CHARACTER));
+    
+    EXPECT_EQ(TheByteBuffer->buffer, arr + 2);
+    
+    //    TheByteDecoder->nextSourceCharacter(TOPLEVEL);
+    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+    
+    c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
+    
+    // from 0xA0 byte
+    EXPECT_EQ(c, SourceCharacter(CODEPOINT_REPLACEMENT_CHARACTER));
+    
+    EXPECT_EQ(TheByteBuffer->buffer, arr + 3);
+    
+    //    TheByteDecoder->nextSourceCharacter(TOPLEVEL);
+    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+    
+    c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
+    
+    // from 0x80 byte
+    EXPECT_EQ(c, SourceCharacter(CODEPOINT_REPLACEMENT_CHARACTER));
+    
+    EXPECT_EQ(TheByteBuffer->buffer, arr + 4);
+    
+    //    TheByteDecoder->nextSourceCharacter(TOPLEVEL);
+    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+    
+    c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
+    
+    EXPECT_EQ(c, SourceCharacter(CODEPOINT_ENDOFFILE));
+    
+    EXPECT_EQ(TheByteBuffer->buffer, arr + 5);
+    
+    EXPECT_EQ(TheByteDecoder->getIssues().size(), 3u);
+}
+
+//
+// Surrogates
+//
+TEST_F(ByteDecoderTest, Surrogate2) {
+    
+    const unsigned char arr[] = {'1', '+', 0xed, 0xb0, 0x80};
+    
+    TheParserSession->init(BufferAndLength(arr, 5), nullptr, INCLUDE_SOURCE);
+    
+    auto c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
+    
+    EXPECT_EQ(c, SourceCharacter('1'));
+    
+    EXPECT_EQ(TheByteBuffer->buffer, arr + 0);
+    
+    //    TheByteDecoder->nextSourceCharacter(TOPLEVEL);
+    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+    
+    c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
+    
+    EXPECT_EQ(c, SourceCharacter('+'));
+    
+    EXPECT_EQ(TheByteBuffer->buffer, arr + 1);
+    
+    //    TheByteDecoder->nextSourceCharacter(TOPLEVEL);
+    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+    
+    c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
+    
+    // from 0xED byte
+    EXPECT_EQ(c, SourceCharacter(CODEPOINT_REPLACEMENT_CHARACTER));
+    
+    EXPECT_EQ(TheByteBuffer->buffer, arr + 2);
+    
+    //    TheByteDecoder->nextSourceCharacter(TOPLEVEL);
+    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+    
+    c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
+    
+    // from 0xB0 byte
+    EXPECT_EQ(c, SourceCharacter(CODEPOINT_REPLACEMENT_CHARACTER));
+    
+    EXPECT_EQ(TheByteBuffer->buffer, arr + 3);
+    
+    //    TheByteDecoder->nextSourceCharacter(TOPLEVEL);
+    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+    
+    c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
+    
+    // from 0x80 byte
+    EXPECT_EQ(c, SourceCharacter(CODEPOINT_REPLACEMENT_CHARACTER));
+    
+    EXPECT_EQ(TheByteBuffer->buffer, arr + 4);
+    
+    //    TheByteDecoder->nextSourceCharacter(TOPLEVEL);
+    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+    
+    c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
+    
+    EXPECT_EQ(c, SourceCharacter(CODEPOINT_ENDOFFILE));
+    
+    EXPECT_EQ(TheByteBuffer->buffer, arr + 5);
+    
+    EXPECT_EQ(TheByteDecoder->getIssues().size(), 3u);
 }
 

@@ -48,7 +48,7 @@ Test[
 Test[
 	ToInputFormString[Aggregate[ConcreteParseString["aaa - bbb + ccc - !ddd"]]]
 	,
-	"   aaa - bbb  + ccc  -  !ddd  "
+	" aaa - bbb + ccc -  !ddd  "
 	,
 	TestID->"ToString-20181230-Z9F3L8"
 ]

@@ -39,11 +39,13 @@ TEST_F(APITest, Bug1) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    auto bufAndLen = BufferAndLength(str, strIn.size(), false);
+    auto bufAndLen = BufferAndLength(str, strIn.size());
     
     TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
     
-    TheParserSession->parseLeaf(0);
+    auto N = TheParserSession->parseLeaf(STRINGIFYMODE_NORMAL);
+    
+    TheParserSession->releaseNode(N);
     
     TheParserSession->deinit();
     
@@ -59,11 +61,13 @@ TEST_F(APITest, Hang1) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    auto bufAndLen = BufferAndLength(str, strIn.size(), false);
+    auto bufAndLen = BufferAndLength(str, strIn.size());
     
     TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
     
-    TheParserSession->parseExpressions();
+    auto N = TheParserSession->parseExpressions();
+    
+    TheParserSession->releaseNode(N);
     
     TheParserSession->deinit();
     
@@ -79,11 +83,13 @@ TEST_F(APITest, Crash1) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    auto bufAndLen = BufferAndLength(str, strIn.size(), false);
+    auto bufAndLen = BufferAndLength(str, strIn.size());
     
     TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
     
-    TheParserSession->parseExpressions();
+    auto N = TheParserSession->parseExpressions();
+    
+    TheParserSession->releaseNode(N);
     
     TheParserSession->deinit();
     
@@ -99,11 +105,13 @@ TEST_F(APITest, Crash2) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    auto bufAndLen = BufferAndLength(str, strIn.size(), false);
+    auto bufAndLen = BufferAndLength(str, strIn.size());
     
     TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
     
-    TheParserSession->parseExpressions();
+    auto N = TheParserSession->parseExpressions();
+    
+    TheParserSession->releaseNode(N);
     
     TheParserSession->deinit();
     
@@ -119,11 +127,13 @@ TEST_F(APITest, Crash3) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    auto bufAndLen = BufferAndLength(str, strIn.size(), false);
+    auto bufAndLen = BufferAndLength(str, strIn.size());
     
     TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
     
-    TheParserSession->parseExpressions();
+    auto N = TheParserSession->parseExpressions();
+    
+    TheParserSession->releaseNode(N);
     
     TheParserSession->deinit();
     
@@ -139,11 +149,13 @@ TEST_F(APITest, Crash4) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    auto bufAndLen = BufferAndLength(str, strIn.size(), false);
+    auto bufAndLen = BufferAndLength(str, strIn.size());
     
     TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
     
-    TheParserSession->parseExpressions();
+    auto N = TheParserSession->parseExpressions();
+    
+    TheParserSession->releaseNode(N);
     
     TheParserSession->deinit();
     
@@ -159,11 +171,13 @@ TEST_F(APITest, Crash5) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    auto bufAndLen = BufferAndLength(str, strIn.size(), false);
+    auto bufAndLen = BufferAndLength(str, strIn.size());
     
     TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
     
-    TheParserSession->parseExpressions();
+    auto N = TheParserSession->parseExpressions();
+    
+    TheParserSession->releaseNode(N);
     
     TheParserSession->deinit();
     
@@ -179,11 +193,13 @@ TEST_F(APITest, Crash6) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    auto bufAndLen = BufferAndLength(str, strIn.size(), false);
+    auto bufAndLen = BufferAndLength(str, strIn.size());
     
     TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
     
-    TheParserSession->parseExpressions();
+    auto N = TheParserSession->parseExpressions();
+    
+    TheParserSession->releaseNode(N);
     
     TheParserSession->deinit();
     

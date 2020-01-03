@@ -12,7 +12,7 @@ Needs["AST`Utils`"]
 TestMatch[
 	ParseString["f["]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		CallNode[_, { _AbstractSyntaxErrorNode }, _] }, <||>]
 	,
 	TestID->"Errors-20190701-H7G3R7"
@@ -90,9 +90,9 @@ Test[
 ]
 
 TestMatch[
-	ParseString["\\n23", HoldNode[Hold, #[[1]], <||>]&]
+	ParseString["\\n23", ContainerNode[Hold, #[[1]], <||>]&]
 	,
-	HoldNode[Hold, {
+	ContainerNode[Hold, {
 		AbstractSyntaxErrorNode[AbstractSyntaxError`UnhandledCharacter, {LeafNode[Token`Error`UnhandledCharacter, "\\n", _]}, _],
 		LeafNode[Integer, "23", _] }, _]
 	,
@@ -100,9 +100,9 @@ TestMatch[
 ]
 
 TestMatch[
-	ParseString["\\t23", HoldNode[Hold, #[[1]], <||>]&]
+	ParseString["\\t23", ContainerNode[Hold, #[[1]], <||>]&]
 	,
-	HoldNode[Hold, {
+	ContainerNode[Hold, {
 		AbstractSyntaxErrorNode[AbstractSyntaxError`UnhandledCharacter, {LeafNode[Token`Error`UnhandledCharacter, "\\t", _]}, _],
 		LeafNode[Integer, "23", _] }, _]
 	,
@@ -117,9 +117,9 @@ The  a - \t  and  b  are 2 separate expressions
 Test[
 	ConcreteParseString["a - \\tb"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		InfixNode[Times, {
-			BinaryNode[Minus, {
+			InfixNode[Plus, {
 				LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>], 
 	    		LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>], 
 	    		LeafNode[Token`Minus, "-", <|Source -> {{1, 3}, {1, 4}}|>], 
@@ -134,7 +134,7 @@ Test[
 TestMatch[
 	ParseString["\\"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		AbstractSyntaxErrorNode[AbstractSyntaxError`UnhandledCharacter, _, _] }, <||> ]
 	,
 	TestID->"Errors-20190203-M3A0S4"
@@ -149,7 +149,7 @@ TestMatch[
 Test[
 	ParseString["(a[b[])"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "a", <|Source -> {{1, 2}, {1, 3}}|>], {
 			AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingCloser, {
 				LeafNode[Token`OpenSquare, "[", <|Source -> {{1, 3}, {1, 4}}|>],

@@ -22,7 +22,7 @@ cst = ConcreteParseFile[File[sample]]
 Test[
 	cst
 	,
-	FileNode[File, {
+	ContainerNode[File, {
 		LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 1}}|>],
 		InfixNode[Plus, {
 			LeafNode[Integer, "1", <|Source -> {{2, 1}, {2, 2}}|>],
@@ -77,7 +77,7 @@ cst = ConcreteParseFile[File[carriagereturn]]
 TestMatch[
 	cst
 	,
-	FileNode[File, {LeafNode[Token`Newline, "\r", <|Source -> {{2, 0}, {2, 1}}|>],
+	ContainerNode[File, {LeafNode[Token`Newline, "\r", <|Source -> {{2, 0}, {2, 1}}|>],
 					LeafNode[Token`Newline, "\r", <|Source -> {{3, 0}, {3, 1}}|>],
 					LeafNode[Symbol, "A", <|Source -> {{3, 1}, {3, 2}}|>]},
 										<| SyntaxIssues->{
@@ -94,7 +94,7 @@ cst = ConcreteParseFile[File[carriagereturn2]]
 TestMatch[
 	cst
 	,
-	FileNode[File, {LeafNode[String, "\"\r\n123\"", <|Source -> {{1, 1}, {2, 5}}|>]}, <|Source -> {{1, 1}, {2, 5}}|>]
+	ContainerNode[File, {LeafNode[String, "\"\r\n123\"", <|Source -> {{1, 1}, {2, 5}}|>]}, <|Source -> {{1, 1}, {2, 5}}|>]
 	,
 	TestID->"File-20190606-O8I6M9"
 ]
@@ -119,7 +119,7 @@ ast = ParseFile[File[package]]
 TestMatch[
 	ast
 	,
-	FileNode[File, {
+	ContainerNode[File, {
 		CallNode[LeafNode[Symbol, "BeginPackage", <|Source -> {{2, 1}, {2, 13}}|>], {
 			LeafNode[String, "\"Foo.m`\"", <|Source -> {{2, 14}, {2, 22}}|>]}, <|Source -> {{2, 1}, {2, 23}}|>], 
 		CallNode[LeafNode[Symbol, "EndPackage", <|Source -> {{4, 1}, {4, 11}}|>], {}, <|Source -> {{4, 1}, {4, 13}}|>]}, <|Source -> {{2, 0}, {6, 1}}, AbstractSyntaxIssues -> {SyntaxIssue["Package", "Package directive does not have correct syntax.", "Error", _]}|>]
@@ -174,7 +174,7 @@ cst = ConcreteParseFile[File[comments]]
 TestMatch[
 	cst
 	,
-	FileNode[File, _, _]
+	ContainerNode[File, _, _]
 	,
 	TestID->"File-20190601-G6E3K9"
 ]
@@ -192,7 +192,7 @@ cst = ConcreteParseFile[File[strange]]
 TestMatch[
 	cst
 	,
-	FileNode[File, {
+	ContainerNode[File, {
 		BinaryNode[Set, {
 			LeafNode[Symbol, "\.01x", <|Source -> {{1, 1}, {1, 3}}|>],
 			LeafNode[Whitespace, " ", <|Source -> {{1, 3}, {1, 4}}|>],
@@ -216,7 +216,7 @@ cst = ConcreteParseFile[File[strange]]
 TestMatch[
 	cst
 	,
-	FileNode[File, {
+	ContainerNode[File, {
 		LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 1}}|>],
 		LeafNode[String, "\"data\\\\\n\"", <|Source -> {{2, 1}, {3, 2}}|>],
 		LeafNode[Token`Newline, "\n", <|Source -> {{4, 0}, {4, 1}}|>],
@@ -240,7 +240,7 @@ cst = ConcreteParseFile[File[continuation]]
 TestMatch[
 	cst
 	,
-	FileNode[File, {
+	ContainerNode[File, {
 		GroupNode[List, {
 			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 1}}|>],

@@ -91,10 +91,12 @@ BufferAndLength BufferAndLength::createNiceBufferAndLength(std::string *str) con
         
         if (status == UTF8STATUS_NONCHARACTER_OR_BOM) {
             
+            //
+            // Convert to a WLCharacter to allowing making graphical
+            //
+            
             newStrStream << WLCharacter(c.to_point());
-            
         } else {
-            
             newStrStream << c;
         }
         

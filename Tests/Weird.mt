@@ -74,7 +74,7 @@ Error
 TestMatch[
 	ParseString["\\[Integral] f \\[DifferentialD]"]
 	,
-	StringNode[String, {
+	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Integrate", <||>], {
 			LeafNode[Symbol, "f", <|Source -> {{1, 13}, {1, 14}}|>],
 			AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, {
