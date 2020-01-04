@@ -1490,7 +1490,7 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, Token TokIn, Pars
                 // Something like  a; ;
                 //
                 
-                auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(lastOperatorToken.BufLen.end()), Source(lastOperatorToken.Src.End));
+                auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(lastOperatorToken.BufLen.end), Source(lastOperatorToken.Src.End));
                 
                 lastOperatorToken = Tok2;
                 
@@ -1523,7 +1523,7 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, Token TokIn, Pars
                 // For example:  a;&
                 //
                 
-                auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(lastOperatorToken.BufLen.end()), Source(lastOperatorToken.Src.End));
+                auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(lastOperatorToken.BufLen.end), Source(lastOperatorToken.Src.End));
                 
                 //
                 // Do not reserve inside loop

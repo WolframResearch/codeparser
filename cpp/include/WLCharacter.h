@@ -127,6 +127,8 @@ struct WLCharacter {
     bool isMBNonCharacter() const;
 };
 
+static_assert(sizeof(WLCharacter) == 4, "Check your assumptions");
+
 std::ostream& operator<<(std::ostream& stream, WLCharacter);
 
 std::ostream& set_graphical(std::ostream& stream);

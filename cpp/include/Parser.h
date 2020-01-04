@@ -82,12 +82,12 @@ struct ParserContext {
     // Each time a GroupNode (or LinearSyntaxOpenParenNode) is entered, then GroupDepth increments
     // This is used for detecting whether we are parsing at top-level.
     //
-    size_t GroupDepth;
+    uint16_t GroupDepth;
     
     //
-    // Precedence of the current operator being parsed
     //
-    Precedence Prec;
+    //
+    uint16_t StackDepth;
     
     //
     // The Closer of the innermost Group being parsed
@@ -95,19 +95,21 @@ struct ParserContext {
     TokenEnum Closer;
     
     //
+    // Precedence of the current operator being parsed
+    //
+    Precedence Prec;
+    
+    //
     // When parsing  _  or __  or ___  , the implementation is the same, so just keep track of which one is being parsed
     //
-    UnderEnum UnderCount;
+    UnderEnum UnderCount : 2;
     
-    ParserContextFlag Flag;
+    ParserContextFlag Flag : 4;
     
-    ParserContext() : GroupDepth(0), Prec(PRECEDENCE_LOWEST), Closer(TOKEN_UNKNOWN), UnderCount(UNDER_UNKNOWN), Flag() {}
-    
-    size_t getGroupDepth() {
-        return GroupDepth;
-    }
-    
+    ParserContext() : GroupDepth(0), StackDepth(0), Closer(TOKEN_UNKNOWN), Prec(PRECEDENCE_LOWEST), UnderCount(UNDER_UNKNOWN), Flag() {}
 };
+
+static_assert(sizeof(ParserContext) == 8, "Check your assumptions");
 
 class Parser {
 private:

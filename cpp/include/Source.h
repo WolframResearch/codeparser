@@ -49,14 +49,14 @@ enum UTF8Status : uint8_t {
 struct BufferAndLength {
     
     Buffer buffer;
-    size_t length;
+    Buffer end;
     UTF8Status status;
-    Buffer _end;
     
     BufferAndLength();
     BufferAndLength(Buffer buffer, size_t length = 0, UTF8Status status = UTF8STATUS_NORMAL);
     
-    Buffer end() const;
+//    Buffer end() const;
+    size_t length() const;
     
     void printUTF8String(std::ostream& s) const;
     
@@ -66,6 +66,8 @@ struct BufferAndLength {
     
     BufferAndLength createNiceBufferAndLength(std::string *str) const;
 };
+
+static_assert(sizeof(BufferAndLength) == 24, "Check your assumptions");
 
 bool operator==(BufferAndLength a, BufferAndLength b);
 
@@ -299,9 +301,9 @@ struct SourceCharacter {
     class SourceCharacter_iterator {
         
     public:
-        int32_t val;
         size_t size;
         size_t idx;
+        int32_t val;
         std::array<unsigned char, 4> arr;
         
         SourceCharacter_iterator(int32_t val);
@@ -326,20 +328,22 @@ struct SourceCharacter {
     SourceCharacter_iterator end();
 };
 
+static_assert(sizeof(SourceCharacter) == 4, "Check your assumptions");
+
 std::ostream& operator<<(std::ostream& stream, const SourceCharacter);
 
 
 struct SourceLocation {
     
-    size_t Line;
-    size_t Column;
+    uint32_t Line;
+    uint32_t Column;
     
     SourceLocation();
     
-    SourceLocation(size_t Line, size_t Column);
+    SourceLocation(uint32_t Line, uint32_t Column);
     
-    SourceLocation operator+(size_t inc);
-    SourceLocation operator-(size_t dec);
+    SourceLocation operator+(uint32_t inc);
+    SourceLocation operator-(uint32_t dec);
     
 #if USE_MATHLINK
     void put(MLINK mlp) const;
@@ -347,6 +351,8 @@ struct SourceLocation {
     
     void print(std::ostream& s) const;
 };
+
+static_assert(sizeof(SourceLocation) == 8, "Check your assumptions");
 
 bool operator==(SourceLocation a, SourceLocation b);
 
@@ -382,6 +388,8 @@ struct Source {
     
     size_t size() const;
 };
+
+static_assert(sizeof(Source) == 16, "Check your assumptions");
 
 bool operator==(Source a, Source b);
 

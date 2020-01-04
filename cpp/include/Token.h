@@ -8,9 +8,9 @@
 
 struct Token {
     
-    TokenEnum Tok;
     BufferAndLength BufLen;
     Source Src;
+    TokenEnum Tok;
     
     Token(TokenEnum Tok, BufferAndLength BufLen, Source Src);
     
@@ -20,6 +20,8 @@ struct Token {
     
     void print(std::ostream&) const;
 };
+
+static_assert(sizeof(Token) == 48, "Check your assumptions");
 
 bool operator==(Token a, Token b);
 

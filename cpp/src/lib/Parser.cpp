@@ -807,7 +807,7 @@ Precedence Parser::getTokenPrecedence(Token& TokIn, ParserContext Ctxt) const {
     assert(TokIn.Tok != TOKEN_UNKNOWN);
     assert(TokIn.Tok != TOKEN_WHITESPACE);
     // allow top-level newlines
-    assert(TokIn.Tok != TOKEN_NEWLINE || Ctxt.getGroupDepth() == 0);
+    assert(TokIn.Tok != TOKEN_NEWLINE || Ctxt.GroupDepth == 0);
     assert(TokIn.Tok != TOKEN_COMMENT);
     assert(TokIn.Tok != TOKEN_LINECONTINUATION);
     
@@ -853,7 +853,7 @@ Precedence Parser::getInfixTokenPrecedence(Token& TokIn, ParserContext Ctxt, boo
     assert(TokIn.Tok != TOKEN_UNKNOWN);
     assert(TokIn.Tok != TOKEN_WHITESPACE);
     // allow top-level newlines
-    assert(TokIn.Tok != TOKEN_NEWLINE || Ctxt.getGroupDepth() == 0);
+    assert(TokIn.Tok != TOKEN_NEWLINE || Ctxt.GroupDepth == 0);
     assert(TokIn.Tok != TOKEN_COMMENT);
     assert(TokIn.Tok != TOKEN_LINECONTINUATION);
     
@@ -911,7 +911,7 @@ Precedence Parser::getInfixTokenPrecedence(Token& TokIn, ParserContext Ctxt, boo
     //
     // Do not do Implicit Times across lines
     //
-    if (TokIn.Tok == TOKEN_NEWLINE && Ctxt.getGroupDepth() == 0) {
+    if (TokIn.Tok == TOKEN_NEWLINE && Ctxt.GroupDepth == 0) {
         
         *implicitTimes = false;
         
@@ -923,7 +923,7 @@ Precedence Parser::getInfixTokenPrecedence(Token& TokIn, ParserContext Ctxt, boo
     return PRECEDENCE_FAKE_IMPLICITTIMES;
 }
 
-NodePtr Parser::parse(Token firstTok, ParserContext CtxtIn) {
+NodePtr Parser::parse(Token token, ParserContext Ctxt) {
 
 #if !NABORT
     if (TheParserSession->isAbort()) {
@@ -932,14 +932,16 @@ NodePtr Parser::parse(Token firstTok, ParserContext CtxtIn) {
     }
 #endif // !NABORT
     
-    auto Ctxt = CtxtIn;
-    
-    auto token = firstTok;
+//    auto Ctxt = CtxtIn;
+
+//    auto token = firstTok;
     
     assert(token.Tok != TOKEN_UNKNOWN);
     assert(!token.Tok.isTrivia() && "Must handle at the call site");
     assert(token.Tok != TOKEN_ENDOFFILE && "Must handle at the call site");
     assert(token.Tok.isPossibleBeginningOfExpression() && "Must handle at the call site");
+    
+    Ctxt.StackDepth++;
     
     //
     // Prefix start
@@ -998,12 +1000,12 @@ NodePtr Parser::parse(Token firstTok, ParserContext CtxtIn) {
         LeftSeq.append(std::move(Left));
         LeftSeq.appendIfNonEmpty(std::move(ArgsTest));
     
-        auto Ctxt = CtxtIn;
-        Ctxt.Prec = TokenPrecedence;
+        auto Ctxt2 = Ctxt;
+        Ctxt2.Prec = TokenPrecedence;
     
         auto& I = findInfixParselet(token.Tok);
     
-        Left = I->parse(std::move(LeftSeq), token, Ctxt);
+        Left = I->parse(std::move(LeftSeq), token, Ctxt2);
         
     } // while
     
@@ -1079,7 +1081,7 @@ NodePtr Parser::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserCon
         // Do not take next token
         //
         
-        auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.BufLen.end()), Source(tokenAnchor.Src.End));
+        auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.BufLen.end), Source(tokenAnchor.Src.End));
 
         if (wasCloser != nullptr) {
             *wasCloser = true;
@@ -1111,7 +1113,7 @@ NodePtr Parser::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserCon
     
     if (tokenBad.Tok == TOKEN_ENDOFFILE) {
         
-        auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.BufLen.end()), Source(tokenAnchor.Src.End));
+        auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.BufLen.end), Source(tokenAnchor.Src.End));
         
         if (wasCloser != nullptr) {
             *wasCloser = true;
@@ -1182,7 +1184,7 @@ Token Parser::eatAndPreserveToplevelNewlines(Token T, ParserContext Ctxt, LeafSe
         switch (T.Tok.value()) {
             case TOKEN_NEWLINE.value(): {
                 
-                if (Ctxt.getGroupDepth() == 0) {
+                if (Ctxt.GroupDepth == 0) {
                     
                     return T;
                 }
@@ -1218,7 +1220,7 @@ Token Parser::eatAndPreserveToplevelNewlines_stringifyFile(Token T, ParserContex
         switch (T.Tok.value()) {
             case TOKEN_NEWLINE.value(): {
                 
-                if (Ctxt.getGroupDepth() == 0) {
+                if (Ctxt.GroupDepth == 0) {
                     
                     return T;
                 }

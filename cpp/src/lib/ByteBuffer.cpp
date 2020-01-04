@@ -11,7 +11,7 @@ void ByteBuffer::init(BufferAndLength bufAndLenIn, WolframLibraryData libDataIn)
     
     libData = libDataIn;
     
-    end = origBufAndLen.end();
+    end = origBufAndLen.end;
     
     wasEOF = false;
 }
@@ -30,8 +30,8 @@ unsigned char ByteBuffer::nextByte0() {
     
 #ifndef NDEBUG
     size_t oldProgress;
-    if (origBufAndLen.length != 0) {
-        oldProgress = (100 * (buffer - origBufAndLen.buffer) / origBufAndLen.length);
+    if (origBufAndLen.length() != 0) {
+        oldProgress = (100 * (buffer - origBufAndLen.buffer) / origBufAndLen.length());
     }
 #endif // NDEBUG
     
@@ -46,9 +46,9 @@ unsigned char ByteBuffer::nextByte0() {
     ++buffer;
     
 #ifndef NDEBUG
-    if (origBufAndLen.length != 0) {
+    if (origBufAndLen.length() != 0) {
         
-        size_t progress = (100 * (buffer - origBufAndLen.buffer) / origBufAndLen.length);
+        size_t progress = (100 * (buffer - origBufAndLen.buffer) / origBufAndLen.length());
         
         if (progress != oldProgress) {
             if (libData) {
@@ -99,8 +99,8 @@ void ByteBuffer::nextByte() {
     
 #ifndef NDEBUG
     size_t oldProgress;
-    if (origBufAndLen.length != 0) {
-        oldProgress = (100 * (buffer - origBufAndLen.buffer) / origBufAndLen.length);
+    if (origBufAndLen.length() != 0) {
+        oldProgress = (100 * (buffer - origBufAndLen.buffer) / origBufAndLen.length());
     }
 #endif
     
@@ -112,9 +112,9 @@ void ByteBuffer::nextByte() {
     ++buffer;
     
 #ifndef NDEBUG
-    if (origBufAndLen.length != 0) {
+    if (origBufAndLen.length() != 0) {
         
-        size_t progress = (100 * (buffer - origBufAndLen.buffer) / origBufAndLen.length);
+        size_t progress = (100 * (buffer - origBufAndLen.buffer) / origBufAndLen.length());
         
         if (progress != oldProgress) {
             if (libData) {

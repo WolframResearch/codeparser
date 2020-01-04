@@ -190,7 +190,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
         //    ^SecondTok
         //
         
-        auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.BufLen.end()), Source(TokIn.Src.End));
+        auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End));
         
         NodeSeq Args;
         Args.reserve(1 + 1 + 1);
@@ -340,7 +340,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
         //      ^ThirdTok
         //
         
-        auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.BufLen.end()), Source(TokIn.Src.End));
+        auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End));
         
         NodeSeq Args;
         Args.reserve(1 + 1 + 1);
@@ -362,7 +362,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
         
         auto FirstArg = TheParser->parse(ThirdTok, Ctxt);
         
-        auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.BufLen.end()), Source(TokIn.Src.End));
+        auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End));
         
         NodeSeq Args;
         Args.reserve(1 + 1 + 1 + 1 + 1 + 1 + 1);
@@ -386,7 +386,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
     
     LeafSeq ArgsTest3;
     
-    auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.BufLen.end()), Source(TokIn.Src.End));
+    auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End));
     
     NodeSeq Args;
     Args.reserve(1 + 1 + 1);

@@ -12,18 +12,18 @@
 #include <sstream> // for ostringstream
 
 
-BufferAndLength::BufferAndLength() : buffer(), length(), status(), _end() {}
+BufferAndLength::BufferAndLength() : buffer(), end(), status() {}
 
-BufferAndLength::BufferAndLength(Buffer buffer, size_t length, UTF8Status status) : buffer(buffer), length(length), status(status), _end(buffer + length) {}
+BufferAndLength::BufferAndLength(Buffer buffer, size_t length, UTF8Status status) : buffer(buffer), end(buffer + length), status(status) {}
 
-Buffer BufferAndLength::end() const {
-    return _end;
+size_t BufferAndLength::length() const {
+    return end - buffer;
 }
 
 void BufferAndLength::printUTF8String(std::ostream& s) const {
     
     if (status == UTF8STATUS_NORMAL) {
-        s.write(reinterpret_cast<const char *>(buffer), length);
+        s.write(reinterpret_cast<const char *>(buffer), length());
         return;
     }
     
@@ -38,7 +38,7 @@ void BufferAndLength::printUTF8String(std::ostream& s) const {
 void BufferAndLength::putUTF8String(MLINK mlp) const {
     
     if (status == UTF8STATUS_NORMAL) {
-        if (!MLPutUTF8String(mlp, buffer, static_cast<int>(length))) {
+        if (!MLPutUTF8String(mlp, buffer, static_cast<int>(length()))) {
             assert(false);
         }
         
@@ -73,8 +73,8 @@ BufferAndLength BufferAndLength::createNiceBufferAndLength(std::string *str) con
         newStrStream << set_graphical;
     }
     
-    auto start = buffer;
-    auto end = start + length;
+//    auto start = buffer;
+//    auto end = start + length;
     
     NextCharacterPolicy policy = 0;
     
@@ -116,7 +116,7 @@ BufferAndLength BufferAndLength::createNiceBufferAndLength(std::string *str) con
 }
 
 bool operator==(BufferAndLength a, BufferAndLength b) {
-    return a.buffer == b.buffer && a.length == b.length;
+    return a.buffer == b.buffer && a.end == b.end;
 }
 
 
@@ -319,13 +319,13 @@ SyntaxError TokenErrorToSyntaxError(TokenEnum T) {
 
 SourceLocation::SourceLocation() : Line(1), Column(1) {}
 
-SourceLocation::SourceLocation(size_t Line, size_t Column) : Line(Line), Column(Column) {}
+SourceLocation::SourceLocation(uint32_t Line, uint32_t Column) : Line(Line), Column(Column) {}
 
-SourceLocation SourceLocation::operator+(size_t inc) {
+SourceLocation SourceLocation::operator+(uint32_t inc) {
     return SourceLocation(Line, Column + inc);
 }
 
-SourceLocation SourceLocation::operator-(size_t dec) {
+SourceLocation SourceLocation::operator-(uint32_t dec) {
     return SourceLocation(Line, Column - dec);
 }
 
@@ -515,7 +515,7 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
 // SourceCharacter_iterator
 //
 
-SourceCharacter::SourceCharacter_iterator::SourceCharacter_iterator(int32_t val) : val(val), size(0), idx(0), arr() {
+SourceCharacter::SourceCharacter_iterator::SourceCharacter_iterator(int32_t val) : size(0), idx(0), val(val), arr() {
     
     size = ByteEncoder::size(val);
     

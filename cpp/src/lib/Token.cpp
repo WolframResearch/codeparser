@@ -9,7 +9,7 @@
 bool containsOnlyASCII(BufferAndLength BufLen);
 #endif // NDEBUG
 
-Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : Tok(Tok), BufLen(BufLen), Src(Src) {
+Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : BufLen(BufLen), Src(Src), Tok(Tok) {
 
 #ifndef NDEBUG
     
@@ -29,9 +29,9 @@ Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : Tok(Tok), BufL
         default:
             
             if (Tok.isEmpty()) {
-                assert(BufLen.length == 0);
+                assert(BufLen.length() == 0);
             } else {
-                assert(BufLen.length > 0);
+                assert(BufLen.length() > 0);
                 //
                 // This is all just to do an assert.
                 // But it's a good assert because it catches problems.
@@ -40,7 +40,7 @@ Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : Tok(Tok), BufL
                 // Spanning multiple lines is too complicated to care about
                 //
                 if (Src.Start.Line == Src.End.Line) {
-                    if (Src.size() != BufLen.length) {
+                    if (Src.size() != BufLen.length()) {
                         //
                         // If the sizes do not match, then check if there are multi-byte characters
                         // If there are multi-bytes characters, then it is too complicated to compare sizes
@@ -60,7 +60,7 @@ Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : Tok(Tok), BufL
 
 #ifndef NDEBUG
 bool containsOnlyASCII(BufferAndLength BufLen) {
-    for (auto p = BufLen.buffer; p < BufLen._end; p++) {
+    for (auto p = BufLen.buffer; p < BufLen.end; p++) {
         auto c = *p;
         //
         // Take care to cast to int before comparing
