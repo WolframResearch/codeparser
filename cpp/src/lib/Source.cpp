@@ -462,7 +462,7 @@ bool SourceCharacter::isNewline() const {
     }
 }
 
-bool SourceCharacter::isSpace() const {
+bool SourceCharacter::isWhitespace() const {
     
     auto val = to_point();
     
@@ -481,11 +481,11 @@ bool SourceCharacter::isMBNewline() const {
     return Utils::isMBNewline(val);
 }
 
-bool SourceCharacter::isMBSpace() const {
+bool SourceCharacter::isMBWhitespace() const {
     
     auto val = to_point();
     
-    return Utils::isMBSpace(val);
+    return Utils::isMBWhitespace(val);
 }
 
 

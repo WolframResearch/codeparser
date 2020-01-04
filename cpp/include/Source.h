@@ -290,11 +290,11 @@ struct SourceCharacter {
     
     bool isDigit() const;
     
-    bool isSpace() const;
+    bool isWhitespace() const;
     
     bool isNewline() const;
     
-    bool isMBSpace() const;
+    bool isMBWhitespace() const;
     bool isMBNewline() const;
     
     

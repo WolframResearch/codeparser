@@ -78,7 +78,7 @@ Token Tokenizer::nextToken0(NextCharacterPolicy policy) {
             return Token(TOKEN_NEWLINE, getTokenBufferAndLength(tokenStartBuf), Source(SourceLocation(newlineLoc.Line, 0), newlineLoc));
         }
         case '\v': case '\f':
-            return handleStrangeSpace(tokenStartBuf, tokenStartLoc, c, policy);
+            return handleStrangeWhitespace(tokenStartBuf, tokenStartLoc, c, policy);
         case ' ':
             return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         case '!':
@@ -165,11 +165,11 @@ Token Tokenizer::nextToken0(NextCharacterPolicy policy) {
                 
                 return Token(TOKEN_ERROR_UNINTERPRETABLECHARACTER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                 
-            } else if (c.isMBStrangeSpace()) {
+            } else if (c.isMBStrangeWhitespace()) {
                 
-                return handleMBStrangeSpace(tokenStartBuf, tokenStartLoc, c, policy);
+                return handleMBStrangeWhitespace(tokenStartBuf, tokenStartLoc, c, policy);
                 
-            } else if (c.isMBSpace()) {
+            } else if (c.isMBWhitespace()) {
                 
                 return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                 
@@ -344,7 +344,7 @@ Token Tokenizer::nextToken0_stringifyFile() {
     //   b
     //
     
-    if (c.isSpace()) {
+    if (c.isWhitespace()) {
         
         return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
     }
@@ -464,9 +464,9 @@ Token Tokenizer::currentToken_stringifyFile() {
     return Tok;
 }
 
-inline Token Tokenizer::handleStrangeSpace(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextCharacterPolicy policy) {
+inline Token Tokenizer::handleStrangeWhitespace(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextCharacterPolicy policy) {
     
-    assert(c.isStrangeSpace());
+    assert(c.isStrangeWhitespace());
     
 #if !NISSUES
     if ((policy & ENABLE_STRANGE_CHARACTER_CHECKING) == ENABLE_STRANGE_CHARACTER_CHECKING) {
@@ -1068,7 +1068,7 @@ inline SourceCharacter Tokenizer::handleFileOpsBrackets(SourceLocation tokenStar
                 break;
             default:
                 
-                if (c.isMBSpace() || c.isMBNewline()) {
+                if (c.isMBWhitespace() || c.isMBNewline()) {
                     
                     TheByteBuffer->buffer = TheByteDecoder->lastBuf;
                     TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
@@ -3293,9 +3293,9 @@ inline Token Tokenizer::handleMBStrangeNewline(Buffer tokenStartBuf, SourceLocat
     return Token(TOKEN_NEWLINE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
 }
 
-inline Token Tokenizer::handleMBStrangeSpace(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextCharacterPolicy policy) {
+inline Token Tokenizer::handleMBStrangeWhitespace(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextCharacterPolicy policy) {
     
-    assert(c.isMBStrangeSpace());
+    assert(c.isMBStrangeWhitespace());
     
 #if !NISSUES
     if ((policy & ENABLE_STRANGE_CHARACTER_CHECKING) == ENABLE_STRANGE_CHARACTER_CHECKING) {

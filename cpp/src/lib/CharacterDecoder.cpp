@@ -973,7 +973,7 @@ WLCharacter CharacterDecoder::handleLineContinuation(Buffer currentWLCharacterSt
     
     if ((policy & PRESERVE_WS_AFTER_LC) != PRESERVE_WS_AFTER_LC) {
         
-        while (c.isSpace()) {
+        while (c.isWhitespace()) {
             
             TheByteBuffer->buffer = lastBuf;
             
@@ -999,7 +999,7 @@ WLCharacter CharacterDecoder::handleLineContinuation(Buffer currentWLCharacterSt
         
         if ((policy & PRESERVE_WS_AFTER_LC) != PRESERVE_WS_AFTER_LC) {
             
-            while (c.isSpace()) {
+            while (c.isWhitespace()) {
                 
                 TheByteBuffer->buffer = lastBuf;
                 TheByteDecoder->SrcLoc = lastLoc;

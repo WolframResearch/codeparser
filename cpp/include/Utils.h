@@ -19,7 +19,7 @@ public:
     
     static bool isUndocumentedLongName(std::string s);
     
-    static bool isMBSpace(int32_t point);
+    static bool isMBWhitespace(int32_t point);
     
     static bool isMBPunctuation(int32_t point);
     

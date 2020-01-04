@@ -23,11 +23,15 @@ importedLongNames
 
 importedPunctuationLongNames
 
-importedSpaceLongNames
+importedWhitespaceLongNames
 
 importedNewlineLongNames
 
 importedUninterpretableLongNames
+
+importedUnsupportedLongNames
+
+
 
 importedTokenEnumSource
 
@@ -215,13 +219,15 @@ importedLongNames = Get[FileNameJoin[{tablesDir, "LongNames.wl"}]]
 
 validateLongNameMap[importedLongNames]
 
-importedPunctuationLongNames = Keys[Select[importedLongNames, # === Punctuation &]]
+importedPunctuationLongNames = Keys[Select[importedLongNames, # === PunctuationCharacter &]]
 
-importedSpaceLongNames = Keys[Select[importedLongNames, # === Space &]]
+importedWhitespaceLongNames = Keys[Select[importedLongNames, # === WhitespaceCharacter &]]
 
-importedNewlineLongNames = Keys[Select[importedLongNames, # === Newline &]]
+importedNewlineLongNames = Keys[Select[importedLongNames, # === NewlineCharacter &]]
 
-importedUninterpretableLongNames = Keys[Select[importedLongNames, # === Uninterpretable &]]
+importedUninterpretableLongNames = Keys[Select[importedLongNames, # === UninterpretableCharacter &]]
+
+importedUnsupportedLongNames = Keys[Select[importedLongNames, # === UnsupportedCharacter &]]
 
 importedPrecedenceSource = Get[FileNameJoin[{tablesDir, "Precedence.wl"}]]
 

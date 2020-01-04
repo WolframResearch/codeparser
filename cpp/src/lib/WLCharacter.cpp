@@ -491,7 +491,7 @@ bool WLCharacter::isVeryStrangeLetterlike() const {
     return false;
 }
 
-bool WLCharacter::isSpace() const {
+bool WLCharacter::isWhitespace() const {
     
     auto val = to_point();
     
@@ -503,7 +503,7 @@ bool WLCharacter::isSpace() const {
     }
 }
 
-bool WLCharacter::isStrangeSpace() const {
+bool WLCharacter::isStrangeWhitespace() const {
     
     auto val = to_point();
     
@@ -754,7 +754,7 @@ bool WLCharacter::isMBLetterlike() const {
         return false;
     }
     
-    if (isMBSpace()) {
+    if (isMBWhitespace()) {
         return false;
     }
     
@@ -824,12 +824,12 @@ bool WLCharacter::isMBVeryStrangeLetterlike() const {
     return false;
 }
 
-bool WLCharacter::isMBStrangeSpace() const {
+bool WLCharacter::isMBStrangeWhitespace() const {
     
     //
     // Dump out if not a space character
     //
-    if (!isMBSpace()) {
+    if (!isMBWhitespace()) {
         return false;
     }
     
@@ -1038,11 +1038,11 @@ bool WLCharacter::isMBNewline() const {
     return Utils::isMBNewline(val);
 }
 
-bool WLCharacter::isMBSpace() const {
+bool WLCharacter::isMBWhitespace() const {
     
     auto val = to_point();
     
-    return Utils::isMBSpace(val);
+    return Utils::isMBWhitespace(val);
 }
 
 bool WLCharacter::isMBPunctuation() const {

@@ -83,16 +83,6 @@ std::unordered_set<std::string> veryStrangeLetterlikeLongNames {
     "OverBrace", "UnderBrace", "UnknownGlyph" };
 
 //
-// Long names that are in an intermediate stage of support within WL.
-//
-// Perhaps they have been deprecated, perhaps the Front End understands the character but the kernel doesn't, etc.
-//
-// FIXME: all of these should be kernel quirks?
-//
-std::unordered_set<std::string> unsupportedLongNames {
-    "COMPATIBILITYKanjiSpace", "COMPATIBILITYNoBreak", "NumberComma", "InlinePart" };
-
-//
 // Defined by grabbing character notebooks from Documentation/English/System/ReferencePages/Characters and comparing with existing long names
 //
 std::unordered_set<std::string> undocumentedLongNames {
@@ -109,10 +99,6 @@ bool Utils::isStrangeLetterlikeLongName(std::string s) {
 
 bool Utils::isVeryStrangeLetterlikeLongName(std::string s) {
     return veryStrangeLetterlikeLongNames.find(s) != strangeLetterlikeLongNames.end();
-}
-
-bool Utils::isUnsupportedLongName(std::string s) {
-    return unsupportedLongNames.find(s) != unsupportedLongNames.end();
 }
 
 bool Utils::isUndocumentedLongName(std::string s) {

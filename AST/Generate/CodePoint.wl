@@ -15,31 +15,37 @@ mbNewlines = toGlobal /@ ( ( ("CodePoint`LongName`"<>#)& /@ importedNewlineLongN
 
 
 punctuationSource = 
-  {"std::unordered_set<int> punctuationCodePoints {"} ~Join~
+  {"std::unordered_set<int32_t> punctuationCodePoints {"} ~Join~
     (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ importedPunctuationLongNames) ~Join~
     {"};", "",
     "bool Utils::isMBPunctuation(int32_t point) { return punctuationCodePoints.find(point) != punctuationCodePoints.end(); }", ""}
 
-spaceSource = 
-  {"std::unordered_set<int> spaceCodePoints {"} ~Join~
-    (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ importedSpaceLongNames) ~Join~
+whitespaceSource = 
+  {"std::unordered_set<int32_t> whitespaceCodePoints {"} ~Join~
+    (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ importedWhitespaceLongNames) ~Join~
     {"};", "",
-    "bool Utils::isMBSpace(int32_t point) { return spaceCodePoints.find(point) != spaceCodePoints.end(); }", ""}
+    "bool Utils::isMBWhitespace(int32_t point) { return whitespaceCodePoints.find(point) != whitespaceCodePoints.end(); }", ""}
 
 newlineSource = 
-  {"std::unordered_set<int> newlineCodePoints {"} ~Join~
+  {"std::unordered_set<int32_t> newlineCodePoints {"} ~Join~
     (Row[{#, ","}]& /@ mbNewlines) ~Join~
     {"};", "",
     "bool Utils::isMBNewline(int32_t point) { return newlineCodePoints.find(point) != newlineCodePoints.end();}", ""}
 
 uninterpretableSource = 
-  {"std::unordered_set<int> uninterpretableCodePoints {"} ~Join~
+  {"std::unordered_set<int32_t> uninterpretableCodePoints {"} ~Join~
     (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ importedUninterpretableLongNames) ~Join~
     {"};", "",
     "bool Utils::isMBUninterpretable(int32_t point) { return uninterpretableCodePoints.find(point) != uninterpretableCodePoints.end(); }", ""}
 
+unsupportedSource = 
+  {"std::unordered_set<std::string> unsupportedLongNames {"} ~Join~
+    (Row[{"\""<>#<>"\"", ","}]& /@ importedUnsupportedLongNames) ~Join~
+    {"};", "",
+    "bool Utils::isUnsupportedLongName(std::string name) { return unsupportedLongNames.find(name) != unsupportedLongNames.end(); }", ""}
+
 LongNameCodePointToOperatorSource = 
-  {"TokenEnum LongNameCodePointToOperator(int c) {
+  {"TokenEnum LongNameCodePointToOperator(int32_t c) {
 switch (c) {"} ~Join~
     (Row[{"case", " ", toGlobal["CodePoint`LongName`"<>#], ":", " ", "return", " ", toGlobal["Token`LongName`"<>#], ";"}]& /@ importedPunctuationLongNames) ~Join~
     {"default:
@@ -50,7 +56,7 @@ return TOKEN_UNKNOWN;
 
 LongNameOperatorToCodePointSource = 
   {"
-int LongNameOperatorToCodePoint(TokenEnum t) {
+int32_t LongNameOperatorToCodePoint(TokenEnum t) {
 switch (t.value()) {"} ~Join~
     (Row[{"case", " ", toGlobal["Token`LongName`"<>#], ".value():", " ", "return", " ", toGlobal["CodePoint`LongName`"<>#], ";"}]& /@ importedPunctuationLongNames) ~Join~
 {"default:
@@ -74,7 +80,7 @@ codePointCPPSource = Join[{
 
 #include <unordered_set> // for unordered_set
 #include <cassert>
-"}, punctuationSource, spaceSource, newlineSource, uninterpretableSource,
+"}, punctuationSource, whitespaceSource, newlineSource, uninterpretableSource, unsupportedSource,
     LongNameCodePointToOperatorSource, 
     LongNameOperatorToCodePointSource]
 
