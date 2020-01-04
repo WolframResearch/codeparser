@@ -47,15 +47,18 @@ TEST_F(CrashTest, Crash1) {
     SUCCEED();
 }
 
-TEST_F(CrashTest, Crash2) {
+TEST_F(CrashTest, StackOverflow1) {
     
-    const unsigned char arr[] = {'1', '+', '\r', '\n', '1'};
+    unsigned char arr[1600];
+    for (auto i = 0; i < 1600 ; i++){
+        arr[i] = '(';
+    }
     
-    auto bufAndLen = BufferAndLength(arr, 6);
+    auto bufAndLen = BufferAndLength(arr, 1600);
     
     TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
     
-    auto N = TheParserSession->safeString();
+    auto N = TheParserSession->parseExpressions();
     
     TheParserSession->releaseNode(N);
     
