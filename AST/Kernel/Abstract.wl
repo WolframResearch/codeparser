@@ -709,11 +709,15 @@ topLevelChildIssues[SyntaxErrorNode[_, _, _], True] := {}
 
 topLevelChildIssues[AbstractSyntaxErrorNode[_, _, _], True] := {}
 
-topLevelChildIssues[node_, True] := {
-	SyntaxIssue["TopLevel", "Unexpected expression at top-level.", "Warning",
-		<| node[[3]],
-			ConfidenceLevel -> 0.75 |>] }
+topLevelChildIssues[node:_[_, _, data_], True] :=
+Module[{src},
+	
+	src = data[Source];
 
+	{ SyntaxIssue["TopLevel", "Unexpected expression at top-level.", "Warning",
+		<| Source -> TakeFirstLine[src],
+			ConfidenceLevel -> 0.75 |>] }
+]
 
 
 
