@@ -42,7 +42,9 @@ precedenceCPPHeader = {
 
 #pragma once
 
-enum Precedence {"} ~Join~
+#include <cstdint> // for uint8_t
+
+enum Precedence : uint8_t {"} ~Join~
    KeyValueMap[(Row[{toGlobal[#1], " = ",
     Which[
       NumberQ[#2], Floor[#2],

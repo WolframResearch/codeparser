@@ -343,7 +343,7 @@ public:
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence() const override {
-        return PRECEDENCE_LONGNAME_INTEGRAL;
+        return PRECEDENCE_CLASS_INTEGRATIONOPERATORS;
     }
 };
 
@@ -353,7 +353,7 @@ public:
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence() const override {
-        return PRECEDENCE_FAKE_INEQUALITY;
+        return PRECEDENCE_CLASS_INEQUALITY;
     }
     
     Associativity getAssociativity() const override {
@@ -368,7 +368,7 @@ public:
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence() const override {
-        return PRECEDENCE_FAKE_VECTORINEQUALITY;
+        return PRECEDENCE_CLASS_VECTORINEQUALITY;
     }
     
     Associativity getAssociativity() const override {

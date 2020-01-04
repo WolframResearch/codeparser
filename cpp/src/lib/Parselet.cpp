@@ -1221,7 +1221,7 @@ NodePtr IntegralParselet::parse(Token firstTok, ParserContext Ctxt) const {
     Tok = TheParser->eatAll(Tok, Ctxt, ArgsTest1);
     
     if (!Tok.Tok.isPossibleBeginningOfExpression() ||
-        (TheParser->getTokenPrecedence(Tok, Ctxt) < PRECEDENCE_LONGNAME_INTEGRAL)) {
+        (TheParser->getTokenPrecedence(Tok, Ctxt) < PRECEDENCE_CLASS_INTEGRATIONOPERATORS)) {
         
         bool wasCloser;
         
