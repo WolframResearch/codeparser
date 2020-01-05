@@ -42,11 +42,6 @@ set(GENERATED_WL_PACLET_SOURCES
 	${CMAKE_BINARY_DIR}/generated/wl/LongNames.wl
 )
 
-set(WL_PACLET_SOURCES
-	${STATIC_WL_PACLET_SOURCES}
-	${GENERATED_WL_PACLET_SOURCES}
-)
-
 #
 # Used during the build process
 #
@@ -139,7 +134,7 @@ add_custom_command(
     MAIN_DEPENDENCY ${CMAKE_SOURCE_DIR}/${PACLET}/PacletInfo.m)
 list(APPEND COPIED_WL_PACLET_SOURCES ${CMAKE_BINARY_DIR}/paclet/${PACLET}/PacletInfo.m)
 
-foreach(SRC ${WL_PACLET_SOURCES})
+foreach(SRC ${STATIC_WL_PACLET_SOURCES})
 	get_filename_component(BARE_SRC ${SRC} NAME)
 	add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC}
@@ -148,6 +143,14 @@ foreach(SRC ${WL_PACLET_SOURCES})
 	list(APPEND COPIED_WL_PACLET_SOURCES ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC})
 endforeach()
 
+foreach(SRC ${GENERATED_WL_PACLET_SOURCES})
+	get_filename_component(BARE_SRC ${SRC} NAME)
+	add_custom_command(
+    OUTPUT ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Generated/${BARE_SRC}
+    COMMAND ${CMAKE_COMMAND} -E copy ${SRC} ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Generated/${BARE_SRC}
+    MAIN_DEPENDENCY ${SRC})
+	list(APPEND COPIED_WL_PACLET_SOURCES ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Generated/${BARE_SRC})
+endforeach()
 
 
 

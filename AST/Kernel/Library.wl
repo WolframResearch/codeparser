@@ -79,6 +79,7 @@ $MathLinkTime
 
 
 LongNameSuggestion
+UndocumentedLongNames
 
 
 Begin["`Private`"]
@@ -430,16 +431,26 @@ $longNames
 
 LongNameSuggestion[input_String] :=
 Catch[
-Module[{nearest},
+Module[{nearest, location, longNamesFile},
 	If[$Debug,
 		Print["input: ", input];
 	];
+
+	(*
+	lazy initialization of $longNames]
+	*)
 	If[!ListQ[$longNames],
-		$longNames = Quiet[Get["AST`LongNames`"], {Get::noopen}];
+
+		location = "Location" /. PacletInformation["AST"];
+
+		longNamesFile = FileNameJoin[{location, "Generated", "LongNames.wl"}];
+
+		$longNames = Quiet[Get[longNamesFile], {Get::noopen}];
 		If[FailureQ[$longNames],
 			Throw["LongNameSuggestionFailure"]
 		];
 	];
+	
 	nearest = Nearest[$longNames, input, {1, 2}];
 	If[nearest == {},
 		Throw[""]
@@ -451,6 +462,39 @@ Module[{nearest},
 	nearest[[1]]
 ]]
 
+
+
+UndocumentedLongNames[] :=
+Catch[
+Module[{names, documentedNames, undocumentedNames, location, longNamesFile},
+
+	(*
+	lazy initialization of $longNames]
+	*)
+	If[!ListQ[$longNames],
+
+		location = "Location" /. PacletInformation["AST"];
+
+		longNamesFile = FileNameJoin[{location, "Generated", "LongNames.wl"}];
+
+		$longNames = Quiet[Get[longNamesFile], {Get::noopen}];
+		If[FailureQ[$longNames],
+			Throw[{"UndocumentedLongNameFailure"}]
+		];
+	];
+
+	SetDirectory[FileNameJoin[{$InstallationDirectory, "Documentation/English/System/ReferencePages/Characters"}]];
+
+	names = FileNames["*.nb", "", Infinity];
+
+	documentedNames = StringDrop[#, -3] & /@ names;
+
+	undocumentedNames = Complement[$longNames, documentedNames];
+
+	ResetDirectory[];
+
+	undocumentedNames
+]]
 
 
 

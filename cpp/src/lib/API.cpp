@@ -7,6 +7,7 @@
 #include "ByteDecoder.h" // for ByteDecoder
 #include "ByteBuffer.h" // for ByteBuffer
 #include "ByteEncoder.h" // for ByteEncoder
+#include "Utils.h" // for undocumentedLongNames
 
 #include <memory> // for unique_ptr
 #ifdef WINDOWS_MATHLINK
@@ -52,19 +53,62 @@ void ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libData
     TheTokenizer->init();
     TheParser->init();
     
-#if !NABORT
     if (libData) {
+        
+#if !NABORT
         currentAbortQ = [libData]() {
             //
-            // For some reason, AbortQ() returns a mint
+            // AbortQ() returns a mint
             //
             bool res = libData->AbortQ();
             return res;
         };
+#else
+        currentAbortQ = nullptr;
+#endif // NABORT
+
+#if USE_MATHLINK
+        //
+        // Setup undocumented long names
+        //
+        
+        MLINK link = libData->getMathLink(libData);
+        if (!MLPutFunction(link, "EvaluatePacket", 1)) {
+            assert(false);
+        }
+        if (!MLPutFunction(link, "AST`Library`UndocumentedLongNames", 0)) {
+            assert(false);
+        }
+        if (!libData->processMathLink(link)) {
+            assert(false);
+        }
+        auto pkt = MLNextPacket(link);
+        if (pkt == RETURNPKT) {
+            
+            ScopedMLFunction result(link);
+            if (!result.read()) {
+                assert(false);
+            }
+            
+            auto argCountInt = result.getArgCount();
+            
+            auto argCount = static_cast<size_t>(argCountInt);
+            
+            for (size_t i = 0; i < argCount; i++) {
+                ScopedMLString str(link);
+                if (!str.read()) {
+                    assert(false);
+                }
+                
+                undocumentedLongNames.insert(str.get());
+            }
+        }
+#endif // USE_MATHLINK
+        
+    
     } else {
         currentAbortQ = nullptr;
     }
-#endif // NABORT
 }
 
 void ParserSession::deinit() {

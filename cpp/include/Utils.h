@@ -5,6 +5,9 @@
 #include "Source.h" // for Source
 
 #include <string>
+#include <unordered_set> // for unordered_set
+
+extern std::unordered_set<std::string> undocumentedLongNames;
 
 class Utils {
 public:

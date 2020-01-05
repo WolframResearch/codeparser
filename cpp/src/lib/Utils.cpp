@@ -3,7 +3,6 @@
 
 #include "Tokenizer.h" // for Tokenizer
 
-#include <unordered_set> // for unordered_set
 #include <cstring> // for strcmp with GCC and MSVC
 #include <cassert>
 
@@ -82,17 +81,6 @@ std::unordered_set<std::string> veryStrangeLetterlikeLongNames {
     "FiLigature", "FlLigature", "OverParenthesis", "UnderParenthesis",
     "OverBrace", "UnderBrace", "UnknownGlyph" };
 
-//
-// Defined by grabbing character notebooks from Documentation/English/System/ReferencePages/Characters and comparing with existing long names
-//
-std::unordered_set<std::string> undocumentedLongNames {
-    "Akuz", "Andy", "CheckmarkedBox", "COMPATIBILITYKanjiSpace", "COMPATIBILITYNoBreak", "ContinuedFractionK", "Curl", "Divergence",
-    "DivisionSlash", "ExpectationE", "FreeformPrompt", "Gradient", "InlinePart", "KeyBar", "Laplacian", "Minus", "Mod1Key", "Mod2Key",
-    "Moon", "NumberComma", "PageBreakAbove", "PageBreakBelow", "Perpendicular", "ProbabilityPr", "Rupee", "Shah", "ShiftKey",
-    "Spooky", "StepperDown", "StepperLeft", "StepperRight", "StepperUp", "Sun", "UnknownGlyph", "Villa", "WolframAlphaPrompt" };
-
-
-
 bool Utils::isStrangeLetterlikeLongName(std::string s) {
     return strangeLetterlikeLongNames.find(s) != strangeLetterlikeLongNames.end();
 }
@@ -101,9 +89,13 @@ bool Utils::isVeryStrangeLetterlikeLongName(std::string s) {
     return veryStrangeLetterlikeLongNames.find(s) != strangeLetterlikeLongNames.end();
 }
 
+
+std::unordered_set<std::string> undocumentedLongNames;
+
 bool Utils::isUndocumentedLongName(std::string s) {
     return undocumentedLongNames.find(s) != undocumentedLongNames.end();
 }
+
 
 #if !NISSUES
 void Utils::strangeLetterlikeWarning(Source Src, WLCharacter c) {
