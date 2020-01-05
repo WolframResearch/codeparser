@@ -402,7 +402,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
             }
         }
         //
-        // Should we report "\\[]" as unlikely?
+        // TODO: Should we report "\\[]" as unlikely?
         //
 //        else if (unlikelyEscapeChecking) {
 //
@@ -448,7 +448,10 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
                 
                 auto longNameEndLoc = TheByteDecoder->SrcLoc;
                 
-                auto currentWLCharacterEndLoc = longNameEndLoc;
+                //
+                // Accomodate the ] character
+                //
+                auto currentWLCharacterEndLoc = longNameEndLoc + 1;
                 
                 auto suggestion = longNameSuggestion(longNameBufAndLen);
                 
@@ -463,7 +466,12 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
                 
             } else if ((policy & ENABLE_UNLIKELY_ESCAPE_CHECKING) == ENABLE_UNLIKELY_ESCAPE_CHECKING) {
                 
-                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
+                auto longNameEndLoc = TheByteDecoder->SrcLoc;
+                
+                //
+                // Accomodate the ] character
+                //
+                auto currentWLCharacterEndLoc = longNameEndLoc + 1;
                 
                 auto previousBackSlashLoc = currentWLCharacterStartLoc - 1;
                 

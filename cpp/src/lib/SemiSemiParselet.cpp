@@ -1,13 +1,12 @@
 
+#include "Parselet.h"
+
+#include "API.h" // for ParserSession
+
 //
 // SemiSemiParselet is complicated enough to warrant its own implementation file.
 // The syntax for ;; is complicated and has a lot of edge cases.
 //
-//
-
-#include "Parselet.h"
-
-#include "API.h" // for ParserSession
 
 //
 // prefix

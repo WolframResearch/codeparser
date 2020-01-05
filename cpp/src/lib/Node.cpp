@@ -128,6 +128,7 @@ Node::Node(NodeSeq ChildrenIn) : Children(std::move(ChildrenIn)) {
     //
 
     // TODO: enable again after whitespace work
+    // "whitespace work" is refactoring of how eatAll() and appendIfEmpty() is done through the code
     
 //    auto F = Children.first();
 //    auto L = Children.last();
@@ -352,7 +353,7 @@ void SafeStringNode::print(std::ostream& s) const {
     
     s << SYMBOL_AST_LIBRARY_MAKESAFESTRINGNODE->name() << "[";
     
-//    parseIntoAStringAndPrint;
+    s << "<<safe string that I'm too lazy to print>>";
     
     s << "]\n";
 }

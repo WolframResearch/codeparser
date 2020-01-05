@@ -40,6 +40,7 @@ void ByteEncoder::encodeBytes(std::ostream& stream, int32_t val, ByteEncoderStat
         
         stream.put('\r');
         stream.put('\n');
+        
         return;
     }
     

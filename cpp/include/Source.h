@@ -55,7 +55,6 @@ struct BufferAndLength {
     BufferAndLength();
     BufferAndLength(Buffer buffer, size_t length = 0, UTF8Status status = UTF8STATUS_NORMAL);
     
-//    Buffer end() const;
     size_t length() const;
     
     void printUTF8String(std::ostream& s) const;

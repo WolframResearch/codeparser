@@ -673,7 +673,6 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation
     }
 #endif // !NISSUES
     
-//    charBuf = TheByteBuffer->buffer;
     charLoc = TheByteDecoder->SrcLoc;
     
     c = TheCharacterDecoder->currentWLCharacter(policy);
@@ -729,7 +728,6 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation
         TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
         TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
         
-//        charBuf = TheByteBuffer->buffer;
         charLoc = TheByteDecoder->SrcLoc;
         
         c = TheCharacterDecoder->currentWLCharacter(policy);

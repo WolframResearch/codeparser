@@ -73,9 +73,6 @@ BufferAndLength BufferAndLength::createNiceBufferAndLength(std::string *str) con
         newStrStream << set_graphical;
     }
     
-//    auto start = buffer;
-//    auto end = start + length;
-    
     NextCharacterPolicy policy = 0;
     
     TheByteBuffer->buffer = buffer;

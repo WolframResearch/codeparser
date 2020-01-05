@@ -934,6 +934,9 @@ bool WLCharacter::isMBStrange() const {
             //
             // WORD JOINER
             //
+            // This is the character that is recommended to use for ZERO WIDTH NON-BREAKING SPACE
+            // https://unicode.org/faq/utf_bom.html#bom6
+            //
 //        case 0x2060:
 //            return true;
             //
@@ -944,7 +947,7 @@ bool WLCharacter::isMBStrange() const {
             //
             // ZERO WIDTH NO-BREAK SPACE
             //
-            // also BOM
+            // But most likely BOM
             //
         case 0xfeff:
             assert(false);
@@ -990,7 +993,11 @@ bool WLCharacter::isMBStrange() const {
     // BMP PUA
     //
     
+    //
     // Disable checking BMP PUA for now
+    //
+    // There are a lot of WL-specific characters in the BMP PUA
+    //
     
 //    if (0xe000 <= val && val <= 0xf8ff) {
 //        return true;

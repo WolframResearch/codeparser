@@ -482,7 +482,6 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitiveSymbolPa
     registerInfixParselet(TOKEN_GREATEREQUAL.value(), InfixParseletPtr(new InequalityParselet()));
     registerInfixParselet(TOKEN_LESSEQUAL.value(), InfixParseletPtr(new InequalityParselet()));
     registerInfixParselet(TOKEN_LESS.value(), InfixParseletPtr(new InequalityParselet()));
-    
     registerInfixParselet(TOKEN_LONGNAME_EQUAL.value(), InfixParseletPtr(new InequalityParselet()));
     registerInfixParselet(TOKEN_LONGNAME_GREATEREQUAL.value(), InfixParseletPtr(new InequalityParselet()));
     registerInfixParselet(TOKEN_LONGNAME_GREATEREQUALLESS.value(), InfixParseletPtr(new InequalityParselet()));
@@ -931,10 +930,6 @@ NodePtr Parser::parse(Token token, ParserContext Ctxt) {
         return TheParserSession->handleAbort();
     }
 #endif // !NABORT
-    
-//    auto Ctxt = CtxtIn;
-
-//    auto token = firstTok;
     
     assert(token.Tok != TOKEN_UNKNOWN);
     assert(!token.Tok.isTrivia() && "Must handle at the call site");
