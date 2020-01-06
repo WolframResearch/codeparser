@@ -109,7 +109,12 @@ struct ParserContext {
     ParserContext() : GroupDepth(0), StackDepth(0), Closer(TOKEN_UNKNOWN), Prec(PRECEDENCE_LOWEST), UnderCount(UNDER_UNKNOWN), Flag() {}
 };
 
+//
+// Sizes of structs with bit-fields are implementation-dependent
+//
+#ifdef __clang__
 static_assert(sizeof(ParserContext) == 8, "Check your assumptions");
+#endif
 
 class Parser {
 private:

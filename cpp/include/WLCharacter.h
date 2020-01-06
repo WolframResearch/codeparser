@@ -127,7 +127,12 @@ struct WLCharacter {
     bool isMBNonCharacter() const;
 };
 
+//
+// Sizes of structs with bit-fields are implementation-dependent
+//
+#ifdef __clang__
 static_assert(sizeof(WLCharacter) == 4, "Check your assumptions");
+#endif
 
 std::ostream& operator<<(std::ostream& stream, WLCharacter);
 
