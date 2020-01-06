@@ -1047,11 +1047,7 @@ bool operator!=(TokenEnum a, TokenEnum b);
    		If[isInfixOperator[#1], 16^^1000, 0],
    		group1Bits[#1],
    		#2
-   	], "); // { isDifferentialD:", isDifferentialD[#1], ", isEmpty:", isEmpty[#1], ", isInfixOperator:", isInfixOperator[#1], ", group1Bits:", group1Bits[#1], ", enum:", #2, " }"}])&, enumMap] ~Join~
-{
-"
-"
-}
+   	], "); // { isDifferentialD:", isDifferentialD[#1], ", isEmpty:", isEmpty[#1], ", isInfixOperator:", isInfixOperator[#1], ", group1Bits:", group1Bits[#1], ", enum:", #2, " }"}])&, enumMap]
 
 Print["exporting TokenEnum.h"]
 res = Export[FileNameJoin[{generatedCPPIncludeDir, "TokenEnum.h"}], Column[tokenCPPHeader], "String"]
@@ -1077,12 +1073,6 @@ because C switch statements cannot have duplicate cases
 uniqueEnums = DeleteCases[importedTokenEnumSource, v_ /; !IntegerQ[v] && UnsameQ[v, Next]]
 
 tokens = Keys[uniqueEnums]
-
-operatorMacros = ToExpression["Token`LongName`" <> #]& /@ importedPunctuationLongNames
-
-
-
-tokens = tokens ~Join~ operatorMacros
 
 tokenToSymbolCases = Row[{"case ", toGlobal[#], ".value(): return ", toGlobal[tokenToSymbol[#]], ";"}]& /@ tokens
 
