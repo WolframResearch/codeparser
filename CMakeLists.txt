@@ -9,7 +9,7 @@ set(PACLET "AST")
 set(WOLFRAMKERNEL /Applications/Mathematica.app/Contents/MacOS/WolframKernel CACHE FILEPATH "Path to WolframKernel")
 set(BUILD_DOCS OFF CACHE BOOL "Build documentation")
 set(BUILD_EXE OFF CACHE BOOL "Build executable")
-set(BUILD_EXPR_LIB OFF CACHE BOOL "Build expr library")
+set(BUILD_EXPR_LIB ON CACHE BOOL "Build expr library")
 set(USE_MATHLINK ON CACHE BOOL "Use MathLink")
 set(NISSUES OFF CACHE BOOL "NISSUES")
 set(NABORT OFF CACHE BOOL "NABORT")
@@ -117,6 +117,11 @@ endforeach()
 include(WolframKernel)
 CheckWolframKernel()
 
+
+if(${VERSION_NUMBER} LESS 1210)
+set(BUILD_EXPR_LIB OFF)
+message(STATUS "VERSION_NUMBER is below 1210; disabling BUILD_EXPR_LIB")
+endif()
 
 
 
