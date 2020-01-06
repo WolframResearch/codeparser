@@ -167,7 +167,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
     
     Ctxt.Prec = getPrecedence();
     
-    TheParser->nextToken();
+    TheParser->nextToken(TokIn);
     
     auto SecondTok = TheParser->currentToken();
     
@@ -246,7 +246,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
         
         LeafSeq ArgsTest3;
         
-        TheParser->nextToken();
+        TheParser->nextToken(ThirdTok);
         
         auto FourthTok = TheParser->currentToken();
         FourthTok = TheParser->eatAndPreserveToplevelNewlines(FourthTok, Ctxt, ArgsTest3);
@@ -325,7 +325,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
     
     LeafSeq ArgsTest2;
     
-    TheParser->nextToken();
+    TheParser->nextToken(SecondTok);
     
     auto ThirdTok = TheParser->currentToken();
     ThirdTok = TheParser->eatAndPreserveToplevelNewlines(ThirdTok, Ctxt, ArgsTest2);

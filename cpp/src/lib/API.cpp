@@ -151,7 +151,7 @@ Node *ParserSession::parseExpressions() {
                 
                 exprs.push_back(LeafNodePtr(new LeafNode(std::move(peek))));
                 
-                TheParser->nextToken();
+                TheParser->nextToken(peek);
                 
                 continue;
             }
@@ -236,7 +236,7 @@ Node *ParserSession::tokenize() {
         
         nodes.push_back(std::move(N));
         
-        TheTokenizer->nextToken(TOPLEVEL);
+        TheTokenizer->nextToken(Tok);
         
     } // while (true)
     

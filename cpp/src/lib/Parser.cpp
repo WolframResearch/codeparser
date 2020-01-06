@@ -608,7 +608,7 @@ const ContextSensitiveInfixParseletPtr& Parser::getContextSensitiveColonParselet
     return contextSensitiveColonParselet;
 }
 
-void Parser::nextToken() {
+void Parser::nextToken(Token Tok) {
     
     //
     // handle the queue before anything else
@@ -617,13 +617,15 @@ void Parser::nextToken() {
     //
     if (!tokenQueue.empty()) {
         
+        assert(Tok == tokenQueue[0]);
+        
         // erase first
         tokenQueue.erase(tokenQueue.begin());
         
         return;
     }
     
-    TheTokenizer->nextToken(TOPLEVEL);
+    TheTokenizer->nextToken(Tok);
 }
 
 
@@ -1091,7 +1093,7 @@ NodePtr Parser::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserCon
         // which ends up being  MissingCloser[ { a ]  EXPECTEOPERAND
         //
         
-        nextToken();
+        nextToken(tokenBad);
         
         NodeSeq Args;
         Args.reserve(1);
@@ -1119,7 +1121,7 @@ NodePtr Parser::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserCon
     
     assert(tokenBad.Tok.isError());
         
-    nextToken();
+    nextToken(tokenBad);
     
     //
     // If there is a Token error, then use that specific error
@@ -1142,7 +1144,7 @@ Token Parser::eatAll(Token T, ParserContext Ctxt, LeafSeq& Args) {
         
         Args.append(LeafNodePtr(new LeafNode(T)));
         
-        nextToken();
+        nextToken(T);
         
         T = currentToken();
     }
@@ -1160,7 +1162,7 @@ Token Parser::eatAll_stringifyFile(Token T, ParserContext Ctxt, LeafSeq& Args) {
         
         Args.append(LeafNodePtr(new LeafNode(T)));
         
-        nextToken();
+        nextToken(T);
         
         T = currentToken_stringifyFile();
     }
@@ -1193,7 +1195,7 @@ Token Parser::eatAndPreserveToplevelNewlines(Token T, ParserContext Ctxt, LeafSe
                 
                 Args.append(LeafNodePtr(new LeafNode(std::move(T))));
                 
-                nextToken();
+                nextToken(T);
                 
                 T = currentToken();
             }
@@ -1229,7 +1231,7 @@ Token Parser::eatAndPreserveToplevelNewlines_stringifyFile(Token T, ParserContex
                 
                 Args.append(LeafNodePtr(new LeafNode(std::move(T))));
                 
-                nextToken();
+                nextToken(T);
                 
                 T = currentToken_stringifyFile();
             }

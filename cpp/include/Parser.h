@@ -147,7 +147,7 @@ public:
     
     void deinit();
     
-    void nextToken();
+    void nextToken(Token Tok);
     
 #if STARTOFLINE
     void nextToken_stringifyLine();

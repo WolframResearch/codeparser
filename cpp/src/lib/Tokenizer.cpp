@@ -352,9 +352,18 @@ Token Tokenizer::nextToken0_stringifyFile() {
     return handleString_stringifyFile(tokenStartBuf, tokenStartLoc, c, policy);
 }
 
-void Tokenizer::nextToken(NextCharacterPolicy policy) {
+void Tokenizer::nextToken(Token Tok) {
     
-    nextToken0(policy);
+    TheByteBuffer->buffer = Tok.BufLen.end;
+    TheByteDecoder->SrcLoc = Tok.Src.End;
+    
+    if (Tok.Tok == TOKEN_ENDOFFILE) {
+        TheByteBuffer->wasEOF = true;
+    } else {
+        TheByteBuffer->wasEOF = false;
+    }
+    
+//    nextToken0(policy);
     
     TheByteDecoder->clearStatus();
 }
@@ -394,9 +403,9 @@ Token Tokenizer::currentToken(NextCharacterPolicy policy) {
     auto resetEOF = TheByteBuffer->wasEOF;
     auto resetLoc = TheByteDecoder->SrcLoc;
     
-    policy &= DISABLE_BYTE_CHECKS_MASK;
+//    policy &= DISABLE_BYTE_CHECKS_MASK;
     
-    policy &= DISABLE_CHARACTER_CHECKS_MASK;
+//    policy &= DISABLE_CHARACTER_CHECKS_MASK;
     
     auto Tok = nextToken0(policy);
     
