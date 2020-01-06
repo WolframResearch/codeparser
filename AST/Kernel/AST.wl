@@ -319,11 +319,11 @@ Module[{s, h, res, bytes, encoding},
 	$ConcreteParseProgress = 0;
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
-	$MathLinkTime = Quantity[0, "Seconds"];
 
 	res = libraryFunctionWrapper[concreteParseBytesFunc, bytes];
 
-	$MathLinkTime = Now - ($ConcreteParseStart + $ConcreteParseTime);
+	$ConcreteParseProgress = 100;
+	$ConcreteParseTime = Now - $ConcreteParseStart;
 
 	If[FailureQ[res],
 		Throw[res]
@@ -422,11 +422,11 @@ Module[{h, encoding, full, res, data, start, end, children, bytes},
 	$ConcreteParseProgress = 0;
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
-	$MathLinkTime = Quantity[0, "Seconds"];
 
 	res = libraryFunctionWrapper[concreteParseBytesFunc, bytes];
 
-	$MathLinkTime = Now - ($ConcreteParseStart + $ConcreteParseTime);
+	$ConcreteParseProgress = 100;
+	$ConcreteParseTime = Now - $ConcreteParseStart;
 
 	If[FailureQ[res],
 		If[res === $Failed,
@@ -524,11 +524,11 @@ Module[{h, encoding, res, data, start, end, children},
 	$ConcreteParseProgress = 0;
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
-	$MathLinkTime = Quantity[0, "Seconds"];
 
 	res = libraryFunctionWrapper[concreteParseBytesFunc, bytes];
 
-	$MathLinkTime = Now - ($ConcreteParseStart + $ConcreteParseTime);
+	$ConcreteParseProgress = 100;
+	$ConcreteParseTime = Now - $ConcreteParseStart;
 
 	If[FailureQ[res],
 		Throw[res]
@@ -615,11 +615,11 @@ Module[{s, res, bytes, encoding},
 	$ConcreteParseProgress = 0;
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
-	$MathLinkTime = Quantity[0, "Seconds"];
 
 	res = libraryFunctionWrapper[tokenizeBytesFunc, bytes];
 
-	$MathLinkTime = Now - ($ConcreteParseStart + $ConcreteParseTime);
+	$ConcreteParseProgress = 100;
+	$ConcreteParseTime = Now - $ConcreteParseStart;
 
 	If[FailureQ[res],
 		Throw[res]
@@ -647,11 +647,11 @@ Module[{ss, res, bytess, encoding},
 	$ConcreteParseProgress = 0;
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
-	$MathLinkTime = Quantity[0, "Seconds"];
 
 	res = libraryFunctionWrapper[tokenizeBytesListableFunc, bytess];
 
-	$MathLinkTime = Now - ($ConcreteParseStart + $ConcreteParseTime);
+	$ConcreteParseProgress = 100;
+	$ConcreteParseTime = Now - $ConcreteParseStart;
 
 	If[FailureQ[res],
 		Throw[res]
@@ -702,11 +702,11 @@ Module[{encoding, res, full, bytes},
 	$ConcreteParseProgress = 0;
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
-	$MathLinkTime = Quantity[0, "Seconds"];
 
 	res = libraryFunctionWrapper[tokenizeBytesFunc, bytes];
 	
-	$MathLinkTime = Now - ($ConcreteParseStart + $ConcreteParseTime);
+	$ConcreteParseProgress = 100;
+	$ConcreteParseTime = Now - $ConcreteParseStart;
 
 	If[FailureQ[res],
 		Throw[res]
@@ -738,11 +738,11 @@ Module[{encoding, res, fulls, bytess},
 	$ConcreteParseProgress = 0;
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
-	$MathLinkTime = Quantity[0, "Seconds"];
 
 	res = libraryFunctionWrapper[tokenizeBytesListableFunc, bytess];
 	
-	$MathLinkTime = Now - ($ConcreteParseStart + $ConcreteParseTime);
+	$ConcreteParseProgress = 100;
+	$ConcreteParseTime = Now - $ConcreteParseStart;
 
 	If[FailureQ[res],
 		Throw[res]
@@ -785,11 +785,11 @@ Module[{encoding, res},
 	$ConcreteParseProgress = 0;
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
-	$MathLinkTime = Quantity[0, "Seconds"];
 
 	res = libraryFunctionWrapper[tokenizeBytesFunc, bytes];
 
-	$MathLinkTime = Now - ($ConcreteParseStart + $ConcreteParseTime);
+	$ConcreteParseProgress = 100;
+	$ConcreteParseTime = Now - $ConcreteParseStart;
 
 	If[FailureQ[res],
 		Throw[res]
@@ -814,11 +814,11 @@ Module[{encoding, res},
 	$ConcreteParseProgress = 0;
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
-	$MathLinkTime = Quantity[0, "Seconds"];
 
 	res = libraryFunctionWrapper[tokenizeBytesListableFunc, bytess];
 
-	$MathLinkTime = Now - ($ConcreteParseStart + $ConcreteParseTime);
+	$ConcreteParseProgress = 100;
+	$ConcreteParseTime = Now - $ConcreteParseStart;
 
 	If[FailureQ[res],
 		Throw[res]
@@ -857,11 +857,11 @@ Module[{str, res, leaf, data, exprs, issues, stringifyMode},
 	$ConcreteParseProgress = 0;
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
-	$MathLinkTime = Quantity[0, "Seconds"];
 	
 	res = libraryFunctionWrapper[parseLeafFunc, str, stringifyMode];
 
-	$MathLinkTime = Now - ($ConcreteParseStart + $ConcreteParseTime);
+	$ConcreteParseProgress = 100;
+	$ConcreteParseTime = Now - $ConcreteParseStart;
 
 	If[FailureQ[res],
 		Throw[res]

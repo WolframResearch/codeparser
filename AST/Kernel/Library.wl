@@ -64,9 +64,9 @@ MakeInsertTextAfterCodeAction
 MakeDeleteTextCodeAction
 MakeDeleteTriviaCodeAction
 
-
+(*
 SetConcreteParseProgress
-
+*)
 
 
 
@@ -74,8 +74,6 @@ SetConcreteParseProgress
 $ConcreteParseProgress
 $ConcreteParseTime
 $ConcreteParseStart
-
-$MathLinkTime
 
 
 LongNameSuggestion
@@ -295,13 +293,15 @@ Module[{res},
 
 
 
-
+(*
 SetConcreteParseProgress[prog_] := (
 	$ConcreteParseProgress = prog;
 	If[prog == 100,
 		$ConcreteParseTime = Now - $ConcreteParseStart;
 	];
 )
+*)
+
 
 
 structureSrcArgs[startLine_, startCol_, endLine_, endCol_] := {{startLine,startCol},{endLine,endCol}}

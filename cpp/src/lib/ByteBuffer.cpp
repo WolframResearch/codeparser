@@ -28,12 +28,14 @@ unsigned char ByteBuffer::nextByte0() {
     
     assert((origBufAndLen.buffer <= buffer && buffer <= end) && "Fix at call site");
     
+#if 0
 #ifndef NDEBUG
     size_t oldProgress;
     if (origBufAndLen.length() != 0) {
         oldProgress = (100 * (buffer - origBufAndLen.buffer) / origBufAndLen.length());
     }
 #endif // NDEBUG
+#endif
     
     if (buffer == end) {
         
@@ -45,6 +47,7 @@ unsigned char ByteBuffer::nextByte0() {
     auto b = *buffer;
     ++buffer;
     
+#if 0
 #ifndef NDEBUG
     if (origBufAndLen.length() != 0) {
         
@@ -82,6 +85,7 @@ unsigned char ByteBuffer::nextByte0() {
         }
     }
 #endif // NDEBUG
+#endif
     
     //
     // if eof, then force 0xff to be returned
@@ -97,11 +101,13 @@ void ByteBuffer::nextByte() {
     
     assert((origBufAndLen.buffer <= buffer && buffer <= end) && "Fix at call site");
     
+#if 0
 #ifndef NDEBUG
     size_t oldProgress;
     if (origBufAndLen.length() != 0) {
         oldProgress = (100 * (buffer - origBufAndLen.buffer) / origBufAndLen.length());
     }
+#endif // NDEBUG
 #endif
     
     if (buffer == end) {
@@ -111,6 +117,7 @@ void ByteBuffer::nextByte() {
     
     ++buffer;
     
+#if 0
 #ifndef NDEBUG
     if (origBufAndLen.length() != 0) {
         
@@ -145,6 +152,7 @@ void ByteBuffer::nextByte() {
         }
     }
 #endif // NDEBUG
+#endif
 }
 
 unsigned char ByteBuffer::currentByte() {
