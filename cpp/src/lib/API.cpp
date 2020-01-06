@@ -762,7 +762,7 @@ MLEnvironmentParameter ScopedMLEnvironmentParameter::get() {
     return p;
 }
 
-ScopedMLLoopbackLink::ScopedMLLoopbackLink() : mlp(NULL) {
+ScopedMLLoopbackLink::ScopedMLLoopbackLink() : mlp(NULL), ep(NULL) {
     
     ScopedMLEnvironmentParameterPtr p;
     int err;
