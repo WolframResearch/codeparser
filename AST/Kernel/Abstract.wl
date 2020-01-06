@@ -237,7 +237,7 @@ abstract[LeafNode[tok_, str_, data_]] :=
 
 abstract[PrefixNode[Minus, {_, rand_}, data_]] := abstract[negate[rand, KeyTake[data, keysToTake]]]
 
-abstract[PrefixNode[PrefixNot2, {_, rand_}, data_]] := abstractNot2[rand, KeyTake[data, keysToTake]]
+abstract[PrefixNode[PrefixNot2, {notNotTok_, rand_}, data_]] := abstractNot2[rand, notNotTok, KeyTake[data, keysToTake]]
 
 abstract[PrefixNode[PrefixLinearSyntaxBang, children:{_, Except[GroupNode[GroupLinearSyntaxParen, _, _]]}, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`LinearSyntaxBang, children, KeyTake[data, keysToTake]]
 (*
@@ -1920,11 +1920,23 @@ abstract[BoxNode[b_, children_, data_]] := BoxNode[b, abstract /@ children, KeyT
 
 
 
-abstractNot2[rand_, data_] :=
+abstractNot2[rand_, notNotTok_, dataIn_] :=
+Module[{notNotData},
+	
+	notNotData = notNotTok[[3]];
+
+	data = dataIn;
+
+	issues = Lookup[data, AbstractSyntaxIssues, {}];
+
+	AppendTo[issues, SyntaxIssue["PrefixNotNot", "Unexpected parse.", "Warning", <|Source->notNotData[Source], ConfidenceLevel -> 1.0|>]];
+
+	AssociateTo[data, AbstractSyntaxIssues -> issues];
+
 	CallNode[LeafNode[Symbol, "Not", <||>], {
 		CallNode[LeafNode[Symbol, "Not", <||>], {
 			abstract[rand]}, <||>]}, data]
-
+]
 
 
 
