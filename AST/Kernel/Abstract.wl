@@ -313,6 +313,11 @@ abstract[InfixNode[Inequality, children_, data_]] := abstractInequality[InfixNod
 abstract[InfixNode[Developer`VectorInequality, children_, data_]] := abstractVectorInequality[InfixNode[Developer`VectorInequality, children, KeyTake[data, keysToTake]]]
 
 (*
+Handle SameQ and UnsameQ specially because they do not participate in the InfixBinaryAt quirk
+*)
+abstract[InfixNode[op:SameQ | UnsameQ, children_ /; OddQ[Length[children]], data_]] := CallNode[ToNode[op], abstract /@ children[[;;;;2]], KeyTake[data, keysToTake]]
+
+(*
 Do not do children[[;;;;2]]
 need to remember whether Token`Plus or Token`Minus
 *)
@@ -324,11 +329,10 @@ abstract[InfixNode[Divisible, children_, data_]] := abstractDivisible[InfixNode[
 
 abstract[InfixNode[CompoundExpression, children_, data_]] := abstractCompoundExpression[InfixNode[CompoundExpression, children[[;;;;2]], KeyTake[data, keysToTake]]]
 
-abstract[InfixNode[StringJoin, children_, data_]] := abstractStringJoin[InfixNode[StringJoin, children[[;;;;2]], KeyTake[data, keysToTake]]]
-
 abstract[InfixNode[MessageName, children_, data_]] := abstractMessageName[InfixNode[MessageName, children[[;;;;2]], KeyTake[data, keysToTake]]]
 
-abstract[InfixNode[op_, children_ /; OddQ[Length[children]], data_]] := CallNode[ToNode[op], abstract /@ children[[;;;;2]], KeyTake[data, keysToTake]]
+abstract[InfixNode[op_, children_ /; OddQ[Length[children]], data_]] :=
+	CallNode[ToNode[op], abstract /@ (processInfixBinaryAtQuirk[#, ToString[op]]& /@ children[[;;;;2]]), KeyTake[data, keysToTake]]
 
 abstract[InfixNode[op_, children_, data_]] :=
 	AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, children, KeyTake[data, keysToTake]]
@@ -953,6 +957,34 @@ abstractString[str_String] := str
 
 
 
+processInfixBinaryAtQuirk[
+	BinaryNode[BinaryAt, {LeafNode[Symbol, symName_, symData_], LeafNode[Token`At, _, atData_], rhsIn_}, _], symName_] /; $Quirks["InfixBinaryAt"] :=
+Module[{data, rhs},
+
+	rhs = rhsIn;
+
+	data = rhs[[3]];
+
+	issues = Lookup[data, AbstractSyntaxIssues, {}];
+
+	synthesizedSource = {symData[[Key[Source], 1 ]], atData[[Key[Source], 2 ]]};
+
+	AppendTo[issues, SyntaxIssue["InfixBinaryAtQuirk", "Unexpected parse.", "Remark", <|Source->synthesizedSource, ConfidenceLevel -> 1.0|>]];
+
+	AssociateTo[data, AbstractSyntaxIssues -> issues];
+
+	rhs[[3]] = data;
+
+	rhs
+]
+
+processInfixBinaryAtQuirk[node_, _] := node
+
+
+
+
+
+
 parenthesizedIntegerOrRealQ[GroupNode[GroupParen, { _, child_, _ }, _]] :=
 	parenthesizedIntegerOrRealQ[child]
 
@@ -1082,7 +1114,7 @@ Related bugs: 365287
 TODO: add 365287 to kernel quirks mode
 *)
 abstractPlus[InfixNode[Plus, children_, data_]] :=
-Module[{pairs, processedPairs, flattened},
+Module[{pairs, processedPairs, flattened, processed},
 
 	pairs = Partition[children[[2;;]], 2];
 
@@ -1090,7 +1122,9 @@ Module[{pairs, processedPairs, flattened},
 
 	flattened = flattenPrefixPlus /@ ( { children[[1]] } ~Join~ processedPairs);
 
-	CallNode[ToNode[Plus], abstract /@ flattened, data]
+	processed = processInfixBinaryAtQuirk[#, "Plus"]& /@ flattened;
+
+	CallNode[ToNode[Plus], abstract /@ processed, data]
 ]
 
 
@@ -1149,7 +1183,14 @@ flattenTimes[nodes_List, data_] :=
 	]
 
 abstractTimes[InfixNode[Times, children_, data_]] :=
-	CallNode[ToNode[Times], abstract /@ Flatten[flattenTimes[children, data]], data]
+Module[{flattened, processed},
+
+	flattened = Flatten[flattenTimes[children, data]];
+
+	processed = processInfixBinaryAtQuirk[#, "Times"]& /@ flattened;
+
+	CallNode[ToNode[Times], abstract /@ processed, data]
+]
 
 abstractTimes[BinaryNode[Divide, {left_, right_}, data_]] :=
 	CallNode[ToNode[Times], abstract /@ Flatten[flattenTimes[{left, reciprocate[right, data]}, data]], data]
@@ -1455,30 +1496,6 @@ abstractCompoundExpression[InfixNode[CompoundExpression, children_, data_]] :=
 
 
 
-
-(*
-handle "featuroid"
-bug 365013
-where a<>StringJoin@b parses as a<>b
-
-Difference between FE and kernel
-
-TODO: add to kernel quirks mode
-*)
-
-abstractStringJoinChild[BinaryNode[BinaryAt, {LeafNode[Symbol, "StringJoin", _], _, c_}, _]] :=
-	abstract[c]
-
-abstractStringJoinChild[c_] :=
-	abstract[c]
-
-abstractStringJoin[InfixNode[StringJoin, children_, data_]] :=
-	CallNode[ToNode[StringJoin], abstractStringJoinChild /@ children, data]
-
-
-
-
-
 (*
 strings may be quoted
 
@@ -1529,7 +1546,12 @@ abstractMessageNameChild[LeafNode[Token`Error`ExpectedLetterlike, str_, data_]] 
 make sure to reverse children of Divisible
 *)
 abstractDivisible[InfixNode[Divisible, children_, data_]] :=
-	CallNode[ToNode[Divisible], abstract /@ Reverse[children], data]
+Module[{processed},
+
+	processed = processInfixBinaryAtQuirk[#, "Divisible"]& /@ children;
+
+	CallNode[ToNode[Divisible], abstract /@ Reverse[processed], data]
+]
 
 
 

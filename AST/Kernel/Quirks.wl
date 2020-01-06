@@ -35,6 +35,17 @@ Module[{},
 		$Quirks["FlattenTimes"] = True
 	];
 
+	(*
+	Setup "InfixBinaryAt" quirk
+
+	The kernel parses  a<>StringJoin@b  as  StringJoin[a, b]
+
+	Most infix operators can be used with this syntax.
+	Notably, SameQ and UnsameQ do NOT work with this syntax.
+
+	Related bugs: 365013
+	*)
+	$Quirks["InfixBinaryAt"] = True;
 ]
 
 
