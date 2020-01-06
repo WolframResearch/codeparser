@@ -137,7 +137,13 @@ Module[{targetDir, prog, compLib},
 
   Print["Exporting expr shared library (this might take a while...)"];
 
-  compLib = CompileToLibrary[prog, "LibraryName" -> "expr", "EntryFunctionName" -> "Main", "TargetDirectory" -> targetDir];
+  compLib =
+    CompileToLibrary[prog,
+      "LibraryName" -> "expr",
+      "EntryFunctionName" -> "Main",
+      "TargetDirectory" -> targetDir,
+      "TraceFunction" -> Print
+    ];
 
   If[FailureQ[compLib],
     Print[compLib];
