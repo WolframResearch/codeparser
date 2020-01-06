@@ -587,6 +587,11 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
 
     If[$Debug, Print["agg: ", agg]];
 
+    If[$DebugTopLevelExpressions,
+      Print[{"index: ", i, " ", StringReplace[fileIn, StartOfString ~~ prefix -> ""]}];
+      Print["# top-level exprs: ", Length[agg[[2]] ]]
+    ];
+
     (*
     verifyAggregate[agg];
     *)
@@ -694,12 +699,19 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     If[$Debug, Print["ast: ", ast]];
 
     If[FailureQ[ast],
-     Print[
+
+      If[ast[[1]] == "TooManyTopLevelExpressions",
+        Print[Style[Row[{"index: ", i, " ", StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], Darker[Orange]]];
+        Print[Style[Row[{"index: ", i, " ", ast}], Darker[Orange]]];
+        Throw[ast, "OK"]
+      ];
+
+      Print[
       Style[Row[{"index: ", i, " ", 
          StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], Red]];
-     Print[Style[Row[{"index: ", i, " ", cst}], Red]];
-     Throw[ast, "Unhandled"]
-     ];
+      Print[Style[Row[{"index: ", i, " ", ast}], Red]];
+      Throw[ast, "Unhandled"]
+    ];
     
     If[! FreeQ[ast, _SyntaxErrorNode | _AbstractSyntaxErrorNode],
      errs = 

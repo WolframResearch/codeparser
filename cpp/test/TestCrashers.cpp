@@ -47,6 +47,7 @@ TEST_F(CrashTest, Crash1) {
     SUCCEED();
 }
 
+#if 0
 TEST_F(CrashTest, StackOverflow1) {
     
     unsigned char arr[1600];
@@ -66,4 +67,4 @@ TEST_F(CrashTest, StackOverflow1) {
     
     SUCCEED();
 }
-
+#endif

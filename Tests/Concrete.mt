@@ -660,4 +660,25 @@ Test[
 	TestID->"Concrete-20191212-V5Q2Y2"
 ]
 
-	
+
+
+Test[
+	ConcreteParseString["\\[Alpa]"]
+	,
+	ContainerNode[String, {
+		LeafNode[Token`Error`UnhandledCharacter, "\\[Alpa]", <|Source -> {{1, 1}, {1, 8}}|>]},
+		<|SyntaxIssues -> {
+			SyntaxIssue["UnrecognizedCharacter", "Unrecognized character: ``\\[Alpa]``.", "Error", <|
+				Source -> {{1, 1}, {1, 8}},
+				ConfidenceLevel -> 1., 
+		     	CodeActions -> {
+		     		CodeAction["Replace with \\[Alpha]", ReplaceText, <|Source -> {{1, 1}, {1, 8}}, "ReplacementText" -> "\\[Alpha]"|>]}|>]}|>]
+	,
+	TestID->"Concrete-20200105-L1E1C8"
+]
+
+
+
+
+
+

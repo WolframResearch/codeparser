@@ -63,8 +63,6 @@ void ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libData
             bool res = libData->AbortQ();
             return res;
         };
-#else
-        currentAbortQ = nullptr;
 #endif // NABORT
 
 #if USE_MATHLINK
@@ -107,7 +105,9 @@ void ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libData
         
     
     } else {
+#if !NABORT
         currentAbortQ = nullptr;
+#endif // NABORT
     }
 }
 

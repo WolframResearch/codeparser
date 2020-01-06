@@ -58,9 +58,9 @@ TEST_F(TokenizerTest, Bug2) {
     
     TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE);
     
-    TheTokenizer->currentToken(TOPLEVEL);
+    auto Tok = TheTokenizer->currentToken(TOPLEVEL);
     
-    TheTokenizer->nextToken(TOPLEVEL);
+    TheTokenizer->nextToken(Tok);
     
     SUCCEED();
 }
@@ -113,13 +113,13 @@ TEST_F(TokenizerTest, IntegerRealMixup) {
     
     EXPECT_EQ(Tok1, Token(TOKEN_INTEGER, BufferAndLength(str, 1), Source(SourceLocation(1, 1), SourceLocation(1, 2))));
     
-    TheTokenizer->nextToken(TOPLEVEL);
+    TheTokenizer->nextToken(Tok1);
     
     auto Tok2 = TheTokenizer->currentToken(TOPLEVEL);
     
     EXPECT_EQ(Tok2, Token(TOKEN_DOTDOT, BufferAndLength(str + 1, 2), Source(SourceLocation(1, 2), SourceLocation(1, 4))));
     
-    TheTokenizer->nextToken(TOPLEVEL);
+    TheTokenizer->nextToken(Tok2);
     
     auto Tok3 = TheTokenizer->currentToken(TOPLEVEL);
     
@@ -138,19 +138,19 @@ TEST_F(TokenizerTest, Basic2) {
     
     EXPECT_EQ(Tok1, Token(TOKEN_SYMBOL, BufferAndLength(str + 0, 10), Source(SourceLocation(1, 1), SourceLocation(1, 11))));
     
-    TheTokenizer->nextToken(TOPLEVEL);
+    TheTokenizer->nextToken(Tok1);
     
     auto Tok2 = TheTokenizer->currentToken(TOPLEVEL);
     
     EXPECT_EQ(Tok2, Token(TOKEN_PLUS, BufferAndLength(str + 10, 1), Source(SourceLocation(1, 11), SourceLocation(1, 12))));
     
-    TheTokenizer->nextToken(TOPLEVEL);
+    TheTokenizer->nextToken(Tok2);
     
     auto Tok3 = TheTokenizer->currentToken(TOPLEVEL);
     
     EXPECT_EQ(Tok3, Token(TOKEN_INTEGER, BufferAndLength(str + 11, 1), Source(SourceLocation(1, 12), SourceLocation(1, 13))));
     
-    TheTokenizer->nextToken(TOPLEVEL);
+    TheTokenizer->nextToken(Tok3);
     
     auto Tok4 = TheTokenizer->currentToken(TOPLEVEL);
     
@@ -182,19 +182,19 @@ TEST_F(TokenizerTest, Basic3) {
     
     EXPECT_EQ(Tok, Token(TOKEN_OPENCURLY, BufferAndLength(str, 1), Source(SourceLocation(1, 1), SourceLocation(1, 2))));
     
-    TheTokenizer->nextToken(TOPLEVEL);
+    TheTokenizer->nextToken(Tok);
     
     Tok = TheTokenizer->currentToken(TOPLEVEL);
     
     EXPECT_EQ(Tok, Token(TOKEN_NEWLINE, BufferAndLength(str + 1, 1), Source(SourceLocation(2, 0), SourceLocation(2, 1))));
     
-    TheTokenizer->nextToken(TOPLEVEL);
+    TheTokenizer->nextToken(Tok);
     
     Tok = TheTokenizer->currentToken(TOPLEVEL);
     
     EXPECT_EQ(Tok, Token(TOKEN_CLOSECURLY, BufferAndLength(str + 2, 1), Source(SourceLocation(2, 1), SourceLocation(2, 2))));
     
-    TheTokenizer->nextToken(TOPLEVEL);
+    TheTokenizer->nextToken(Tok);
 }
 
 TEST_F(TokenizerTest, Basic4) {
@@ -215,13 +215,13 @@ TEST_F(TokenizerTest, Basic4) {
     
     EXPECT_EQ(TheByteBuffer->wasEOF, false);
     
-    TheTokenizer->nextToken(TOPLEVEL);
+    TheTokenizer->nextToken(Tok);
     
     Tok = TheTokenizer->currentToken(TOPLEVEL);
     
     EXPECT_EQ(Tok, Token(TOKEN_ENDOFFILE, BufferAndLength(arr + 1, 0), Source(SourceLocation(1, 2), SourceLocation(1, 2))));
     
-    TheTokenizer->nextToken(TOPLEVEL);
+    TheTokenizer->nextToken(Tok);
     
     EXPECT_EQ(TheByteDecoder->SrcLoc, SourceLocation(1, 2));
     

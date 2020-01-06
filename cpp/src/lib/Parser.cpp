@@ -834,7 +834,7 @@ Precedence Parser::getTokenPrecedence(Token& TokIn, ParserContext Ctxt) const {
     
     //
     // There is an ambiguity with tokens that are both prefix and infix, e.g.
-    // +  -  ;;  !  ++  --
+    // +  -  ;;  !  ++  --  !!
     //
     // Given the input  ;;;;
     // when parsing the second  ;;  , we could get here because ;; is registered as infix

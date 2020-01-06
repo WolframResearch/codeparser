@@ -286,6 +286,7 @@ abstract[BinaryNode[PutAppend, {left_, _, LeafNode[String, str_, _]}, data_]] :=
 Abstract NonAssociative errors
 
 a ? b ? c being NonAssociative is alluded to being a bug in bug report 206938
+Related bugs: 206938
 *)
 abstract[BinaryNode[PatternTest, children:{BinaryNode[PatternTest, _, _], _, _}, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociativePatternTest, children, KeyTake[data, keysToTake]]
 
@@ -852,7 +853,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		*)
 		CallNode[LeafNode[Symbol, "AST`Comma", _], _, _],
 			peek = nodeListStack["Peek"];
-			error = AbstractSyntaxErrorNode[AbstractSyntaxError`CommaTopLevel, x[[2]], x[[3]]];
+			error = AbstractSyntaxErrorNode[AbstractSyntaxError`CommaTopLevel, x[[2]], x[[3]] ];
 			peek["Push", error];
 		,
 		(*
@@ -902,16 +903,6 @@ Symbol Names and Contexts
 
 *)
 contextQ[s_String] := StringMatchQ[s, RegularExpression["\"`?([a-zA-Z][a-zA-Z0-9]*`)+\""]]
-
-
-
-
-
-
-(*
-ConcreteParseString[""] returns Null
-*)
-abstract[Null] := Null
 
 
 
@@ -1148,14 +1139,14 @@ flattenTimes[nodes_List, data_] :=
 				TODO: add to frontend quirks mode
 				*)
 				PrefixNode[Minus, { _, LeafNode[Integer | Real, _, _] }, _],
-					{negate[#[[2,2]], data]}
+					{negate[#[[2, 2]], data]}
 				,
 				PrefixNode[Minus, { _, _?parenthesizedIntegerOrRealQ }, _],
-					{negate[#[[2,2]], data]}
+					{negate[#[[2, 2]], data]}
 				,
 				PrefixNode[Minus, {_, _}, _],
 					If[flattenTimesQuirk,
-						{ToNode[-1], #[[2,2]]}
+						{ToNode[-1], #[[2, 2]]}
 						,
 						#
 					]
