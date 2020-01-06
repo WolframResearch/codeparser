@@ -20,6 +20,19 @@ Needs["AST`Quirks`"]
 
 
 
+(*
+How many top-level expressions are allowed?
+
+Until completely switched over to using new DataStructure stack, we are using O(n^2) AppendTo to create the stack
+of top-level expressions.
+
+Beyond this limit, parsing is infeasible
+*)
+$TopLevelExpressionLimit = 5000
+
+
+
+
 Aggregate::usage = "Aggregate[cst] returns an aggregate syntax tree from a concrete syntax tree."
 
 Aggregate[cst_] :=
@@ -438,37 +451,24 @@ abstract[PrefixBinaryNode[op_, {_, operand1_, operand2_}, data_]] := CallNode[To
 
 
 
-abstract[ContainerNode[File, children_, dataIn_]] :=
-Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node},
 
-	data = dataIn;
+abstract[ContainerNode[tag_, childrenIn_, dataIn_]] :=
+Catch[
+Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node, reportIssues, children},
 
-	issues = {};
+	children = childrenIn;
 
-	{abstractedChildren, issues1} = abstractTopLevelChildren[children, True];
-
-	{abstracted, issues2} = abstractTopLevel[abstractedChildren];
-
-	issues = issues1 ~Join~ issues2;
-
-	If[issues != {},
-		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
-		AssociateTo[data, AbstractSyntaxIssues -> issues];
+	If[Length[children] > $TopLevelExpressionLimit,
+		Throw[Failure["TooManyTopLevelExpressions", <||>]]
 	];
 
-	node = ContainerNode[File, abstracted, KeyTake[data, keysToTake]];
-
-	node
-]
-
-abstract[ContainerNode[tag_, children_, dataIn_]] :=
-Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node},
-
 	data = dataIn;
+
+	reportIssues = (tag === File);
 
 	issues = {};
 
-	{abstractedChildren, issues1} = abstractTopLevelChildren[children, False];
+	{abstractedChildren, issues1} = abstractTopLevelChildren[children, reportIssues];
 
 	{abstracted, issues2} = abstractTopLevel[abstractedChildren];
 
@@ -482,7 +482,7 @@ Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node},
 	node = ContainerNode[tag, abstracted, KeyTake[data, keysToTake]];
 
 	node
-]
+]]
 
 
 
