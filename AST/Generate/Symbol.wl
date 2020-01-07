@@ -262,8 +262,8 @@ InfixOperatorToSymbol[Token`LongName`NotSquareSupersetEqual] = NotSquareSuperset
 (* Plus and Times *)
 InfixOperatorToSymbol[Token`Plus] = Plus
 InfixOperatorToSymbol[Token`Minus] = Plus
-
 InfixOperatorToSymbol[Token`LongName`ImplicitPlus] = Plus
+InfixOperatorToSymbol[Token`LongName`Minus] = Plus
 
 InfixOperatorToSymbol[Token`Star] = Times
 

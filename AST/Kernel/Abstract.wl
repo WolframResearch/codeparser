@@ -1075,9 +1075,9 @@ reciprocate[node_, data_] :=
 
 
 
-processPlusPair[{LeafNode[Token`Plus, _, _], rand_}] := rand
+processPlusPair[{LeafNode[Token`Plus | Token`LongName`ImplicitPlus, _, _], rand_}] := rand
 
-processPlusPair[{LeafNode[Token`Minus, _, opData_], rand_}] :=
+processPlusPair[{LeafNode[Token`Minus | Token`LongName`Minus, _, opData_], rand_}] :=
 Module[{synthesizedData},
 	(*
 	When parsing a - b + c, make sure to give the abstracted Times expression the correct Source.

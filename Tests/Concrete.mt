@@ -678,7 +678,19 @@ Test[
 ]
 
 
-
+TestMatch[
+	ConcreteParseString["a \\[Minus] b"]
+	,
+	ContainerNode[String, {
+		InfixNode[Plus, {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
+			LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>],
+			LeafNode[Token`LongName`Minus, "\\[Minus]", <|Source -> {{1, 3}, {1, 11}}|>],
+			LeafNode[Whitespace, " ", <|Source -> {{1, 11}, {1, 12}}|>],
+			LeafNode[Symbol, "b", <|Source -> {{1, 12}, {1, 13}}|>]}, <|Source -> {{1, 1}, {1, 13}}|>]}, _]
+	,
+	TestID->"Concrete-20200107-T6O6O1"
+]
 
 
 

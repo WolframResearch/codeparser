@@ -123,7 +123,6 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitiveSymbolPa
     registerInfixParselet(TOKEN_LONGNAME_DOUBLELEFTTEE.value(), InfixParseletPtr(new BinaryOperatorParselet(TOKEN_LONGNAME_DOUBLELEFTTEE, PRECEDENCE_LONGNAME_DOUBLELEFTTEE, ASSOCIATIVITY_LEFT)));
     registerInfixParselet(TOKEN_LONGNAME_UPTEE.value(), InfixParseletPtr(new BinaryOperatorParselet(TOKEN_LONGNAME_UPTEE, PRECEDENCE_LONGNAME_UPTEE, ASSOCIATIVITY_LEFT)));
     registerInfixParselet(TOKEN_LONGNAME_DOWNTEE.value(), InfixParseletPtr(new BinaryOperatorParselet(TOKEN_LONGNAME_DOWNTEE, PRECEDENCE_LONGNAME_DOWNTEE, ASSOCIATIVITY_LEFT)));
-    registerInfixParselet(TOKEN_LONGNAME_MINUS.value(), InfixParseletPtr(new BinaryOperatorParselet(TOKEN_LONGNAME_MINUS, PRECEDENCE_INFIX_LONGNAME_MINUS, ASSOCIATIVITY_LEFT)));
     
     
     //
@@ -372,6 +371,7 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitiveSymbolPa
     registerInfixParselet(TOKEN_LONGNAME_PERMUTATIONPRODUCT.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_PERMUTATIONPRODUCT, PRECEDENCE_LONGNAME_PERMUTATIONPRODUCT)));
     registerInfixParselet(TOKEN_LONGNAME_COLON.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_COLON, PRECEDENCE_LONGNAME_COLON)));
     registerInfixParselet(TOKEN_LONGNAME_XNOR.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_XNOR, PRECEDENCE_LONGNAME_XNOR)));
+    registerInfixParselet(TOKEN_LONGNAME_MINUS.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_LONGNAME_MINUS, PRECEDENCE_INFIX_LONGNAME_MINUS)));
     registerInfixParselet(TOKEN_FAKE_IMPLICITTIMES.value(), InfixParseletPtr(new InfixOperatorParselet(TOKEN_FAKE_IMPLICITTIMES, PRECEDENCE_STAR)));
     
     
