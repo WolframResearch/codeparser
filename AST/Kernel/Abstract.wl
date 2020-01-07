@@ -808,7 +808,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 				Throw[{list, issues}];
 			];
 			currentList = nodeListStack["Pop"];
-			currentOperator[[2]] = Reverse[Normal[currentList]];
+			currentOperator[[2]] = Normal[currentList];
 			(* finish constructing Source *)
 			currentOperator[[3, Key[Source], 2]] = x[[3, Key[Source], 2]];
 			peek = nodeListStack["Peek"];
@@ -826,7 +826,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 				Throw[{list, issues}];
 			];
 			currentList = nodeListStack["Pop"];
-			currentOperator[[2]] = Reverse[Normal[currentList]];
+			currentOperator[[2]] = Normal[currentList];
 			(* finish constructing Source *)
 			currentOperator[[3, Key[Source], 2]] = x[[2, 1, 3, Key[Source], 2]];
 			peek = nodeListStack["Peek"];
@@ -879,7 +879,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		Throw[{list, issues}];
 	];
 	peek = nodeListStack["Peek"];
-	nodeList = Reverse[Normal[peek]];
+	nodeList = Normal[peek];
 
 	(*
 	Hack to prevent memory leak with shims
