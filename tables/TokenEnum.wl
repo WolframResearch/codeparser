@@ -494,5 +494,5 @@ Token`LongName`InvisibleComma -> Next,
 Token`LongName`InvisibleApplication -> Next,
 Token`LongName`LongEqual -> Next,
 
-Nothing
+Token`Count -> Next
 |>

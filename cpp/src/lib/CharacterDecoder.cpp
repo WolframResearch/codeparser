@@ -517,13 +517,13 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
         //
         if (Utils::isUnsupportedLongName(longNameStr)) {
             
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNSUPPORTEDCHARACTER, std::string("Unsupported character: ``\\[") + longNameStr + "]``.", SYNTAXISSUESEVERITY_ERROR, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 0.95, {}));
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNSUPPORTEDCHARACTER, std::string("Unsupported character: ``\\[") + longNameStr + "]``.", SYNTAXISSUESEVERITY_ERROR, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, {}));
             
             Issues.push_back(std::move(I));
             
         } else if (Utils::isUndocumentedLongName(longNameStr)) {
             
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNDOCUMENTEDCHARACTER, std::string("Undocumented character: ``\\[") + longNameStr + "]``.", SYNTAXISSUESEVERITY_REMARK, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 0.95, {}));
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNDOCUMENTEDCHARACTER, std::string("Undocumented character: ``\\[") + longNameStr + "]``.", SYNTAXISSUESEVERITY_REMARK, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, {}));
             
             Issues.push_back(std::move(I));
         }

@@ -19,13 +19,13 @@ Print["Generating Character Maps..."]
 
 longNameToCodePointMap = {
 "std::map<std::string, int> LongNameToCodePointMap {"} ~Join~
-	(Row[{"{", escapeString[#], ",", " ", toGlobal["CodePoint`LongName`"<>#], "}", ","}]& /@ Keys[importedLongNames]) ~Join~
-	{"};", ""}
+  (Row[{"{", escapeString[#], ",", " ", toGlobal["CodePoint`LongName`"<>#], "}", ","}]& /@ Keys[importedLongNames]) ~Join~
+  {"};", ""}
 
 codePointToLongNameMap = {
 "std::map<int, std::string> CodePointToLongNameMap {"} ~Join~
-	(Row[{"{", toGlobal["CodePoint`LongName`"<>#], ",", " ", escapeString[#], "}", ","}] & /@ Keys[importedLongNames]) ~Join~
-	{"};", ""}
+  (Row[{"{", toGlobal["CodePoint`LongName`"<>#], ",", " ", escapeString[#], "}", ","}] & /@ Keys[importedLongNames]) ~Join~
+  {"};", ""}
 
 toSpecialMap = {
 "std::map<std::string, int> ToSpecialMap {"} ~Join~
@@ -47,47 +47,11 @@ fromSpecialMap = {
 
 rawSet = {
 "std::unordered_set<std::string> RawSet {"} ~Join~
-{Row[{"{", "\"RawTab\"", "}", ","}]} ~Join~
-{Row[{"{", "\"NewLine\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawReturn\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawEscape\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawSpace\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawExclamation\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawDoubleQuote\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawNumberSign\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawDollar\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawPercent\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawAmpersand\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawQuote\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawLeftParenthesis\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawRightParenthesis\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawStar\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawPlus\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawComma\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawDash\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawDot\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawSlash\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawColon\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawSemicolon\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawLess\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawEqual\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawGreater\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawQuestion\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawAt\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawLeftBracket\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawBackslash\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawRightBracket\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawWedge\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawUnderscore\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawBackquote\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawLeftBrace\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawVerticalBar\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawRightBrace\"", "}", ","}]} ~Join~
-{Row[{"{", "\"RawTilde\"", "}", ","}]} ~Join~
+(Row[{"{", "\""<>#<>"\"", "}", ","}]& /@ importedRawLongNames) ~Join~
 {"};", "
 
 bool isRaw(std::string LongNameStr) {
-	return RawSet.find(LongNameStr) != RawSet.end();
+  return RawSet.find(LongNameStr) != RawSet.end();
 }
 
 "}

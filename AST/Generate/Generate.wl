@@ -31,6 +31,8 @@ importedUninterpretableLongNames
 
 importedUnsupportedLongNames
 
+importedRawLongNames
+
 
 
 importedTokenEnumSource
@@ -121,6 +123,7 @@ specify the long names that are unsupported
 longNameToCharacterCode["COMPATIBILITYKanjiSpace"] = 16^^3000
 longNameToCharacterCode["COMPATIBILITYNoBreak"] = 16^^f3a2
 longNameToCharacterCode["NumberComma"] = 16^^f7fc
+longNameToCharacterCode["InlinePart"] = 16^^f51e
 
 (*
 everything else
@@ -195,8 +198,6 @@ If[FailureQ[FindFile["AST`Generate`"]],
   Quit[1]
 ]
 
-Print["Setup"]
-
 Print["Clean..."]
 
 Quiet[DeleteDirectory[generatedCPPDir, DeleteContents -> True], DeleteDirectory::nodir]
@@ -228,6 +229,8 @@ importedNewlineLongNames = Keys[Select[importedLongNames, # === NewlineCharacter
 importedUninterpretableLongNames = Keys[Select[importedLongNames, # === UninterpretableCharacter &]]
 
 importedUnsupportedLongNames = Keys[Select[importedLongNames, # === UnsupportedCharacter &]]
+
+importedRawLongNames = Keys[Select[importedLongNames, # === RawCharacter &]]
 
 importedPrecedenceSource = Get[FileNameJoin[{tablesDir, "Precedence.wl"}]]
 

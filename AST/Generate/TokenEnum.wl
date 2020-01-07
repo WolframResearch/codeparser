@@ -935,15 +935,15 @@ isDifferentialD[_] = False
 
 group1Bits[tok_] := group1Bits[tok] =
 Which[
-	isPossibleBeginningOfExpression[tok], BitShiftLeft[2^^001, 9],
-	isCloser[tok],                        BitShiftLeft[2^^010, 9],
-	isError[tok],                         BitShiftLeft[2^^011, 9],
-	isTrivia[tok],                        BitShiftLeft[2^^100, 9],
-	isInequalityOperator[tok],            BitShiftLeft[2^^101, 9],
-	isVectorInequalityOperator[tok],      BitShiftLeft[2^^110, 9],
-	(* unused                             BitShiftLeft[2^^111, 9],*)
+  isPossibleBeginningOfExpression[tok], BitShiftLeft[2^^001, 9],
+  isCloser[tok],                        BitShiftLeft[2^^010, 9],
+  isError[tok],                         BitShiftLeft[2^^011, 9],
+  isTrivia[tok],                        BitShiftLeft[2^^100, 9],
+  isInequalityOperator[tok],            BitShiftLeft[2^^101, 9],
+  isVectorInequalityOperator[tok],      BitShiftLeft[2^^110, 9],
+  (* unused                             BitShiftLeft[2^^111, 9],*)
 
-	True,                                 BitShiftLeft[2^^000, 9]
+  True,                                 BitShiftLeft[2^^000, 9]
 ]
 
 
@@ -953,26 +953,35 @@ Which[
 
 Print["Generating TokenEnum..."]
 
-operatorMacros = 
-  Association[
-   ToExpression["Token`LongName`" <> #] -> Next& /@ importedPunctuationLongNames]
-
-joined = importedTokenEnumSource ~Join~ operatorMacros ~Join~ <| Token`Count -> Next |>
-
-oldTokens = ToString /@ Keys[joined]
-
 
 cur = 0
 enumMap = <||>
 KeyValueMap[(
-    Which[
-    	IntegerQ[#2],
-    		cur = #2,
-    	#2 === Next,
-    		cur = cur + 1,
-    	True,
-    		cur = enumMap[#2]];
-    AssociateTo[enumMap, #1 -> cur]) &, joined]
+  Which[
+    #2=== 0, cur = 0,
+    #2 === Next, cur++,
+    True, cur = enumMap[#2]
+  ];
+  AssociateTo[enumMap, #1 -> cur])&
+  ,
+  importedTokenEnumSource
+]
+
+(*
+sanity check that all tokens are in order
+*)
+cur = -Infinity;
+KeyValueMap[
+  If[!TrueQ[#2 >= cur],
+    Print["Token is out of order: ", #1->#2];
+    Quit[1]
+    ,
+    cur = #2
+  ]&
+  ,
+  enumMap
+]
+
 
 
 tokenCPPHeader = {
@@ -1040,14 +1049,19 @@ bool operator==(TokenEnum a, TokenEnum b);
 
 bool operator!=(TokenEnum a, TokenEnum b);
 "} ~Join~
-   KeyValueMap[(Row[{"constexpr TokenEnum ", toGlobal[#1], "(",
-   	BitOr[
-   		If[isDifferentialD[#1], 16^^4000, 0],
-   		If[isEmpty[#1], 16^^2000, 0],
-   		If[isInfixOperator[#1], 16^^1000, 0],
-   		group1Bits[#1],
-   		#2
-   	], "); // { isDifferentialD:", isDifferentialD[#1], ", isEmpty:", isEmpty[#1], ", isInfixOperator:", isInfixOperator[#1], ", group1Bits:", group1Bits[#1], ", enum:", #2, " }"}])&, enumMap]
+KeyValueMap[(
+  Row[{"constexpr TokenEnum ", toGlobal[#1], "(",
+    BitOr[
+      If[isDifferentialD[#1], 16^^4000, 0],
+      If[isEmpty[#1], 16^^2000, 0],
+      If[isInfixOperator[#1], 16^^1000, 0],
+      group1Bits[#1],
+      #2
+    ], "); // { isDifferentialD:", isDifferentialD[#1], ", isEmpty:", isEmpty[#1], ", isInfixOperator:", isInfixOperator[#1], ", group1Bits:", group1Bits[#1], ", enum:", #2, " }"
+  }])&
+  ,
+  enumMap
+]
 
 Print["exporting TokenEnum.h"]
 res = Export[FileNameJoin[{generatedCPPIncludeDir, "TokenEnum.h"}], Column[tokenCPPHeader], "String"]
@@ -1091,16 +1105,15 @@ tokenCPPSource = {
 
 #include <cassert>
 "} ~Join~
-    {"SymbolPtr& TokenToSymbol(TokenEnum T) {"} ~Join~
-    {"switch (T.value()) {"} ~Join~
-    tokenToSymbolCases ~Join~
-    {"default:"} ~Join~
-    {"assert(false && \"Unhandled token type\"); return SYMBOL_TOKEN_UNKNOWN;"} ~Join~
-    {"}"} ~Join~
-    {"}"} ~Join~
-    {""} ~Join~
-    {
-"bool operator==(TokenEnum a, TokenEnum b) {
+{"SymbolPtr& TokenToSymbol(TokenEnum T) {"} ~Join~
+{"switch (T.value()) {"} ~Join~
+tokenToSymbolCases ~Join~
+{"default:"} ~Join~
+{"assert(false && \"Unhandled token type\"); return SYMBOL_TOKEN_UNKNOWN;"} ~Join~
+{"}"} ~Join~
+{"}"} ~Join~
+{""} ~Join~
+{"bool operator==(TokenEnum a, TokenEnum b) {
   return a.value() == b.value();
 }
 
