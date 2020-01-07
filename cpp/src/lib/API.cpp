@@ -77,28 +77,31 @@ void ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libData
         if (!MLPutFunction(link, "AST`Library`UndocumentedLongNames", 0)) {
             assert(false);
         }
-        if (!libData->processMathLink(link)) {
-            assert(false);
-        }
-        auto pkt = MLNextPacket(link);
-        if (pkt == RETURNPKT) {
+        if (libData->processMathLink(link)) {
+            //
+            // Do not assert here, Abort may cause error code
+            //
             
-            ScopedMLFunction result(link);
-            if (!result.read()) {
-                assert(false);
-            }
-            
-            auto argCountInt = result.getArgCount();
-            
-            auto argCount = static_cast<size_t>(argCountInt);
-            
-            for (size_t i = 0; i < argCount; i++) {
-                ScopedMLString str(link);
-                if (!str.read()) {
+            auto pkt = MLNextPacket(link);
+            if (pkt == RETURNPKT) {
+                
+                ScopedMLFunction result(link);
+                if (!result.read()) {
                     assert(false);
                 }
                 
-                undocumentedLongNames.insert(str.get());
+                auto argCountInt = result.getArgCount();
+                
+                auto argCount = static_cast<size_t>(argCountInt);
+                
+                for (size_t i = 0; i < argCount; i++) {
+                    ScopedMLString str(link);
+                    if (!str.read()) {
+                        assert(false);
+                    }
+                    
+                    undocumentedLongNames.insert(str.get());
+                }
             }
         }
 #endif // USE_MATHLINK
