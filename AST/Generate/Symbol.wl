@@ -164,8 +164,6 @@ BinaryOperatorToSymbol[Token`LongName`CircleMinus] = CircleMinus
 BinaryOperatorToSymbol[Token`LongName`SuchThat] = SuchThat
 BinaryOperatorToSymbol[Token`LongName`Perpendicular] = Perpendicular
 
-BinaryOperatorToSymbol[Token`LongName`Minus] = Minus
-
 
 
 
