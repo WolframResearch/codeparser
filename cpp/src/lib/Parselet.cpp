@@ -530,6 +530,38 @@ NodePtr UnderParselet::parse(Token TokIn, ParserContext Ctxt) const {
         
         Tok = TheParser->currentToken();
         
+    } else if (Tok.Tok == TOKEN_ERROR_EXPECTEDLETTERLIKE) {
+        
+        //
+        // It's nice to include the error inside of the blank
+        //
+        
+        auto& parselet = TheParser->findPrefixParselet(Tok.Tok);
+        
+        auto ErrorSym2 = parselet->parse(Tok, Ctxt);
+        
+        NodeSeq Args;
+        Args.reserve(1 + 1);
+        Args.append(std::move(Under));
+        Args.append(std::move(ErrorSym2));
+        
+        switch (TokIn.Tok.value()) {
+            case TOKEN_UNDER.value():
+                Blank = NodePtr(new BlankNode(std::move(Args)));
+                break;
+            case TOKEN_UNDERUNDER.value():
+                Blank = NodePtr(new BlankSequenceNode(std::move(Args)));
+                break;
+            case TOKEN_UNDERUNDERUNDER.value():
+                Blank = NodePtr(new BlankNullSequenceNode(std::move(Args)));
+                break;
+            default:
+                assert(false);
+                break;
+        }
+        
+        Tok = TheParser->currentToken();
+        
     } else {
         Blank = std::move(Under);
     }
@@ -595,6 +627,20 @@ NodePtr UnderParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserCo
         auto Right = symbolParselet->parseContextSensitive(Tok, Ctxt);
         
         Args.append(std::move(Right));
+        
+        Tok = TheParser->currentToken();
+        
+    } else if (Tok.Tok == TOKEN_ERROR_EXPECTEDLETTERLIKE) {
+        
+        //
+        // It's nice to include the error inside of the blank
+        //
+        
+        auto& parselet = TheParser->findPrefixParselet(Tok.Tok);
+        
+        auto ErrorRight = parselet->parse(Tok, Ctxt);
+        
+        Args.append(std::move(ErrorRight));
         
         Tok = TheParser->currentToken();
     }
