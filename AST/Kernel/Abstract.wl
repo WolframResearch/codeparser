@@ -1616,48 +1616,55 @@ Module[{head, data, part, innerData, outerData, issues, partData, src},
 			##2 represents a sequence of arguments, so it is wrong to call
 			*)
 			LeafNode[SlotSequence, _, _],
-			AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Unexpected ``Part`` call.", "Error", <|Source->data[Source], ConfidenceLevel -> 1.0|>]];
+				AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Unexpected ``Part`` call.", "Error", <|Source->data[Source], ConfidenceLevel -> 1.0|>]];
 			,
 			LeafNode[Symbol | Slot | Blank | BlankSequence | BlankNullSequence, _, _] (* |_StringNode*) | _CallNode | _BlankNode | _BlankSequenceNode | _BlankNullSequenceNode (*| _OptionalDefaultNode*) |
 				_PatternBlankNode | _PatternBlankSequenceNode | _PatternBlankNullSequenceNode (*| _SlotSequenceNode *),
-			(* these are fine *)
-			Null
+				(* these are fine *)
+				Null
 			,
 			LeafNode[Out, _, _],
-			AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
 			,
 			PrefixNode[PrefixLinearSyntaxBang, _, _],
-			AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Remark", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Remark", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
 			,
 			InfixNode[CompoundExpression, _, _],
-			(* CompoundExpression was already handled *)
-			Null
+				(* CompoundExpression was already handled *)
+				Null
 			,
 			(*
 			BinaryNode[PatternTest, _, _],
-			(* these are fine *)
-			Null
+				(* these are fine *)
+				Null
 			,*)
 			GroupNode[GroupParen | List | Association, _, _],
-			(* these are fine *)
-			Null
+				(* these are fine *)
+				Null
 			,
 			GroupNode[GroupLinearSyntaxParen, _, _],
-			AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Remark", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Remark", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
 			,
 			GroupNode[_, _, _],
-			AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
 			,
 			(*
 			PostfixNode[Function | Derivative, _, _],
 			(* these are fine *)
 			Null
 			,*)
-			_,
 			(*
-			warn about anything else
+			Now handle boxes
 			*)
-			AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Error", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+			BoxNode[TemplateBox, {CodeNode[Null, _, _], CodeNode[Null, "Entity", _]}, _],
+				(* this is fine *)
+				Null
+			,
+			_,
+				(*
+				warn about anything else
+				*)
+				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Error", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
 	];
 
 	head = abstract[head];
@@ -1720,44 +1727,51 @@ Module[{head, part, partData, issues, data},
 			##2 represents a sequence of arguments, so it is wrong to call
 			*)
 			LeafNode[SlotSequence, _, _],
-			AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Unexpected call.", "Error", <|Source->data[Source], ConfidenceLevel -> 1.0|>]];
+				AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Unexpected call.", "Error", <|Source->data[Source], ConfidenceLevel -> 1.0|>]];
 			,
 			LeafNode[Symbol | String | Slot | Blank | BlankSequence | BlankNullSequence, _, _] | _CallNode | _BlankNode | _BlankSequenceNode | _BlankNullSequenceNode (*| _OptionalDefaultNode*)|
 			   _PatternBlankNode | _PatternBlankSequenceNode | _PatternBlankNullSequenceNode (*| _SlotSequenceNode*),
-			(* these are fine *)
-			Null
+				(* these are fine *)
+				Null
 			,
 			LeafNode[Out, _, _],
-			AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
 			,
 			BinaryNode[PatternTest, _, _],
-			(* these are fine *)
-			Null
+				(* these are fine *)
+				Null
 			,
 			InfixNode[CompoundExpression, _, _],
-			(* CompoundExpression was already handled *)
-			Null
+				(* CompoundExpression was already handled *)
+				Null
 			,
 			GroupNode[GroupParen | List | Association, _, _],
-			(*
-			these are fine
-			List is allowed because this is popular to do:
-			Through[{a, b, c}[1]]
-			*)
-			Null
+				(*
+				these are fine
+				List is allowed because this is popular to do:
+				Through[{a, b, c}[1]]
+				*)
+				Null
 			,
 			GroupNode[_, _, _],
-			AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
 			,
 			PostfixNode[Function | Derivative, _, _],
-			(* these are fine *)
-			Null
+				(* these are fine *)
+				Null
+			,
+			(*
+			Now handle boxes
+			*)
+			BoxNode[TemplateBox, {CodeNode[Null, _, _], CodeNode[Null, "Entity", _]}, _],
+				(* this is fine *)
+				Null
 			,
 			_,
-			(*
-			warn about anything else
-			*)
-			AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+				(*
+				warn about anything else
+				*)
+				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
 	];
 
 	head = abstract[head];
@@ -1794,43 +1808,50 @@ Module[{head, part, partData, data, issues},
 			##2 represents a sequence of arguments, so it is wrong to call
 			*)
 			LeafNode[SlotSequence, _, _],
-			AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Unexpected call.", "Error", <|Source->data[Source], ConfidenceLevel -> 1.0|>]];
+				AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Unexpected call.", "Error", <|Source->data[Source], ConfidenceLevel -> 1.0|>]];
 			,
 			LeafNode[Symbol | Slot | Blank | BlankSequence | BlankNullSequence, _, _] (* |_StringNode*) | _CallNode | _BlankNode | _BlankSequenceNode | _BlankNullSequenceNode (*| _OptionalDefaultNode*) |
 				_PatternBlankNode | _PatternBlankSequenceNode | _PatternBlankNullSequenceNode (*| _SlotSequenceNode *),
-			(* these are fine *)
-			Null
+				(* these are fine *)
+				Null
 			,
 			LeafNode[Out, _, _],
-			AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
 			,
 			PrefixNode[PrefixLinearSyntaxBang, _, _],
-			AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Remark", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Remark", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
 			,
 			(*
 			BinaryNode[PatternTest, _, _],
-			(* these are fine *)
-			Null
+				(* these are fine *)
+				Null
 			,*)
 			InfixNode[CompoundExpression, _, _],
-			(* CompoundExpression was already handled *)
-			Null
+				(* CompoundExpression was already handled *)
+				Null
 			,
 			GroupNode[GroupParen | List | Association, _, _],
-			(* these are fine *)
-			Null
+				(* these are fine *)
+				Null
 			,
 			GroupNode[GroupLinearSyntaxParen, _, _],
-			AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Remark", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Remark", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
 			,
 			GroupNode[_, _, _],
-			AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
 			,
 			(*
 			PostfixNode[Function | Derivative, _, _],
-			(* these are fine *)
-			Null
+				(* these are fine *)
+				Null
 			,*)
+			(*
+			Now handle boxes
+			*)
+			BoxNode[TemplateBox, {CodeNode[Null, _, _], CodeNode[Null, "Entity", _]}, _],
+				(* this is fine *)
+				Null
+			,
 			_,
 			(*
 			warn about anything else
