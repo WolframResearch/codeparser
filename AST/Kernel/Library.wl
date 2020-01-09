@@ -26,6 +26,7 @@ exprTestFunc
 library functions coming FROM lib
 *)
 MakeLeafNode
+MakeErrorNode
 
 MakePrefixNode
 MakeBinaryNode
@@ -314,6 +315,9 @@ structureSrcArgs[] := Null
 
 MakeLeafNode[tag_, payload_, srcArgs___] :=
 	LeafNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
+
+MakeErrorNode[tag_, payload_, srcArgs___] :=
+	ErrorNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
 
 MakePrefixNode[tag_, payload_, srcArgs___] :=
 	PrefixNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]

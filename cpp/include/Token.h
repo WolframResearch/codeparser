@@ -14,10 +14,6 @@ struct Token {
     
     Token(TokenEnum Tok, BufferAndLength BufLen, Source Src);
     
-#if USE_MATHLINK
-    void put(MLINK ) const;
-#endif // USE_MATHLINK
-    
     void print(std::ostream&) const;
 };
 

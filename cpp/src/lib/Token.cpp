@@ -77,42 +77,6 @@ bool operator==(Token a, Token b) {
     return a.Tok == b.Tok && a.BufLen == b.BufLen && a.Src == b.Src;
 }
 
-#if USE_MATHLINK
-void Token::put(MLINK mlp) const {
-    
-    if ((TheParserSession->policy & INCLUDE_SOURCE) == INCLUDE_SOURCE) {
-        
-        if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKELEAFNODE->name(), static_cast<int>(2 + 4))) {
-            assert(false);
-        }
-        
-        auto& Sym = TokenToSymbol(Tok);
-        
-        if (!MLPutSymbol(mlp, Sym->name())) {
-            assert(false);
-        }
-        
-        BufLen.putUTF8String(mlp);
-        
-        Src.put(mlp);
-        
-        return;
-    }
-    
-    if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKELEAFNODE->name(), static_cast<int>(2))) {
-        assert(false);
-    }
-    
-    auto& Sym = TokenToSymbol(Tok);
-    
-    if (!MLPutSymbol(mlp, Sym->name())) {
-        assert(false);
-    }
-    
-    BufLen.putUTF8String(mlp);
-}
-#endif // USE_MATHLINK
-
 void Token::print(std::ostream& s) const {
     
     if ((TheParserSession->policy & INCLUDE_SOURCE) == INCLUDE_SOURCE) {

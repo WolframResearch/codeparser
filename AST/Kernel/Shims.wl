@@ -12,6 +12,9 @@ setupShims[] := (
 
 (*
 TODO when fixes for bugs  385114 and 385768 have completely filtered through the 12.1 builds, then add a conditional
+
+Also: remove use of $TopLevelExpressionLimit in Abstract.wl
+
 *)
 setupStackShim[] := (
 

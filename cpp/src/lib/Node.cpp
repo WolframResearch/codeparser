@@ -142,10 +142,6 @@ bool Node::isTrivia() const {
     return false;
 }
 
-bool Node::isError() const {
-    return false;
-}
-
 bool Node::isEmpty() const {
     return false;
 }
@@ -237,7 +233,42 @@ void OperatorNode::print(std::ostream& s) const {
 
 void LeafNode::print(std::ostream& s) const {
     
-    Tok.print(s);
+    if ((TheParserSession->policy & INCLUDE_SOURCE) == INCLUDE_SOURCE) {
+        
+        auto& Sym = TokenToSymbol(Tok.Tok);
+        
+        s << SYMBOL_AST_LIBRARY_MAKELEAFNODE->name() << "[";
+        
+        s << Sym->name();
+        s << ", ";
+        
+        if (!Tok.Tok.isEmpty()) {
+            
+            Tok.BufLen.printUTF8String(s);
+        }
+        
+        s << ", ";
+        
+        Tok.Src.print(s);
+        
+        s << "]";
+        
+        return;
+    }
+    
+    auto& Sym = TokenToSymbol(Tok.Tok);
+    
+    s << SYMBOL_AST_LIBRARY_MAKELEAFNODE->name() << "[";
+    
+    s << Sym->name();
+    s << ", ";
+    
+    if (!Tok.Tok.isEmpty()) {
+        
+        Tok.BufLen.printUTF8String(s);
+    }
+    
+    s << "]";
 }
 
 bool LeafNode::isTrivia() const {
@@ -247,6 +278,55 @@ bool LeafNode::isTrivia() const {
 bool LeafNode::isEmpty() const {
     return Tok.Tok.isEmpty();
 }
+
+void ErrorNode::print(std::ostream& s) const {
+    
+    if ((TheParserSession->policy & INCLUDE_SOURCE) == INCLUDE_SOURCE) {
+        
+        auto& Sym = TokenToSymbol(Tok.Tok);
+        
+        s << SYMBOL_AST_LIBRARY_MAKEERRORNODE->name() << "[";
+        
+        s << Sym->name();
+        s << ", ";
+        
+        if (!Tok.Tok.isEmpty()) {
+            
+            Tok.BufLen.printUTF8String(s);
+        }
+        
+        s << ", ";
+        
+        Tok.Src.print(s);
+        
+        s << "]";
+        
+        return;
+    }
+    
+    auto& Sym = TokenToSymbol(Tok.Tok);
+    
+    s << SYMBOL_AST_LIBRARY_MAKEERRORNODE->name() << "[";
+    
+    s << Sym->name();
+    s << ", ";
+    
+    if (!Tok.Tok.isEmpty()) {
+        
+        Tok.BufLen.printUTF8String(s);
+    }
+    
+    s << "]";
+}
+
+bool ErrorNode::isTrivia() const {
+    return Tok.Tok.isTrivia();
+}
+
+bool ErrorNode::isEmpty() const {
+    return Tok.Tok.isEmpty();
+}
+
 
 void CallNode::print(std::ostream& s) const {
     
@@ -295,10 +375,6 @@ void SyntaxErrorNode::print(std::ostream& s) const {
     s << ", ";
     
     s << "]";
-}
-
-bool SyntaxErrorNode::isError() const {
-    return true;
 }
 
 void CollectedExpressionsNode::print(std::ostream& s) const {
@@ -444,8 +520,72 @@ void OperatorNode::put(MLINK mlp) const {
 
 void LeafNode::put(MLINK mlp) const {
     
-    Tok.put(mlp);
+    if ((TheParserSession->policy & INCLUDE_SOURCE) == INCLUDE_SOURCE) {
+
+        if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKELEAFNODE->name(), static_cast<int>(2 + 4))) {
+            assert(false);
+        }
+
+        auto& Sym = TokenToSymbol(Tok.Tok);
+
+        if (!MLPutSymbol(mlp, Sym->name())) {
+            assert(false);
+        }
+
+        Tok.BufLen.putUTF8String(mlp);
+
+        Tok.Src.put(mlp);
+
+        return;
+    }
+
+    if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKELEAFNODE->name(), static_cast<int>(2))) {
+        assert(false);
+    }
+
+    auto& Sym = TokenToSymbol(Tok.Tok);
+
+    if (!MLPutSymbol(mlp, Sym->name())) {
+        assert(false);
+    }
+
+    Tok.BufLen.putUTF8String(mlp);
 }
+
+void ErrorNode::put(MLINK mlp) const {
+    
+    if ((TheParserSession->policy & INCLUDE_SOURCE) == INCLUDE_SOURCE) {
+        
+        if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEERRORNODE->name(), static_cast<int>(2 + 4))) {
+            assert(false);
+        }
+        
+        auto& Sym = TokenToSymbol(Tok.Tok);
+        
+        if (!MLPutSymbol(mlp, Sym->name())) {
+            assert(false);
+        }
+        
+        Tok.BufLen.putUTF8String(mlp);
+        
+        Tok.Src.put(mlp);
+        
+        return;
+    }
+    
+    if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEERRORNODE->name(), static_cast<int>(2))) {
+        assert(false);
+    }
+    
+    auto& Sym = TokenToSymbol(Tok.Tok);
+    
+    if (!MLPutSymbol(mlp, Sym->name())) {
+        assert(false);
+    }
+    
+    Tok.BufLen.putUTF8String(mlp);
+}
+
 
 void CallNode::put(MLINK mlp) const {
     

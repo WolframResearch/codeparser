@@ -1046,7 +1046,7 @@ NodePtr Parser::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserCon
         // Also, invent Source
         //
         
-        auto NotPossible = NodePtr(new LeafNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.BufLen.buffer), Source(tokenAnchor.Src.Start))));
+        auto NotPossible = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.BufLen.buffer), Source(tokenAnchor.Src.Start))));
         
         NodeSeq LeftSeq;
         LeftSeq.reserve(1);
@@ -1084,13 +1084,13 @@ NodePtr Parser::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserCon
             *wasCloser = true;
         }
         
-        return NodePtr(new LeafNode(createdToken));
+        return NodePtr(new ErrorNode(createdToken));
     }
     
     if (tokenBad.Tok.isCloser()) {
         //
         // Handle  { a ) }
-        // which ends up being  MissingCloser[ { a ]  EXPECTEOPERAND
+        // which ends up being  MissingCloser[ { a ) ]   UnexpectedCloser[ } ]
         //
         
         nextToken(tokenBad);
@@ -1116,7 +1116,7 @@ NodePtr Parser::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserCon
             *wasCloser = true;
         }
         
-        return NodePtr(new LeafNode(createdToken));
+        return NodePtr(new ErrorNode(createdToken));
     }
     
     assert(tokenBad.Tok.isError());
@@ -1131,7 +1131,7 @@ NodePtr Parser::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserCon
         *wasCloser = false;
     }
     
-    return NodePtr(new LeafNode(tokenBad));
+    return NodePtr(new ErrorNode(tokenBad));
 }
 
 Token Parser::eatAll(Token T, ParserContext Ctxt, LeafSeq& Args) {

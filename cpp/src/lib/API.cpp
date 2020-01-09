@@ -398,7 +398,7 @@ NodePtr ParserSession::handleAbort() const {
     
     auto A = Token(TOKEN_ERROR_ABORTED, BufferAndLength(buf), Source(loc));
     
-    auto Aborted = NodePtr(new LeafNode(A));
+    auto Aborted = NodePtr(new ErrorNode(A));
     
     return Aborted;
 }

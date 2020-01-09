@@ -108,8 +108,6 @@ public:
     
     virtual bool isTrivia() const;
     
-    virtual bool isError() const;
-    
     virtual bool isEmpty() const;
     
     virtual size_t size() const;
@@ -214,6 +212,41 @@ public:
         return Tok.Src;
     }
 
+    const Token getToken() const {
+        return Tok;
+    }
+    
+    const Token lastToken() const override {
+        return Tok;
+    }
+};
+
+class ErrorNode : public Node {
+    const Token Tok;
+public:
+    
+    ErrorNode(Token& Tok) : Node(), Tok(Tok) {
+        assert(Tok.Tok.isError());
+    }
+    
+    ErrorNode(Token&& Tok) : Node(), Tok(std::move(Tok)) {
+        assert(Tok.Tok.isError());
+    }
+    
+#if USE_MATHLINK
+    void put(MLINK mlp) const override;
+#endif // USE_MATHLINK
+    
+    void print(std::ostream&) const override;
+    
+    bool isTrivia() const override;
+    
+    bool isEmpty() const override;
+    
+    Source getSource() const override {
+        return Tok.Src;
+    }
+    
     const Token getToken() const {
         return Tok;
     }
@@ -337,8 +370,6 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
-    
-    virtual bool isError() const override;
 };
 
 

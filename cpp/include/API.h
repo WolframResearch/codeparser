@@ -81,11 +81,11 @@ class ParserSession {
     
     NodePtr parseLeaf0(int mode);
     
+public:
+    
 #if !NABORT
     std::function<bool ()> currentAbortQ;
 #endif // !NABORT
-    
-public:
     
     ParserSessionPolicy policy;
     

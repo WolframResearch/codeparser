@@ -583,7 +583,7 @@ symbols = Union[Join[
     {Blank, BlankSequence, BlankNullSequence, EndOfFile, Inequality, Integer, List, Optional, Out, Pattern, Real, Slot, SlotSequence,
       String, Symbol, TagSet, TagSetDelayed, TagUnset, True, Whitespace},
     {Developer`VectorInequality},
-    {AST`Library`MakeLeafNode, AST`Library`MakePrefixNode, AST`Library`MakeBinaryNode, AST`Library`MakeInfixNode,
+    {AST`Library`MakeLeafNode, AST`Library`MakeErrorNode, AST`Library`MakePrefixNode, AST`Library`MakeBinaryNode, AST`Library`MakeInfixNode,
             AST`Library`MakeTernaryNode, AST`Library`MakePostfixNode, AST`Library`MakeCallNode, AST`Library`MakeGroupNode,
             (*
             AST`Library`MakeStartOfLineNode, AST`Library`MakeStartOfFileNode,

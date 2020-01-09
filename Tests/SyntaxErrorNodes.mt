@@ -9,10 +9,8 @@ TestMatch[
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "List", <||>], {
 			CallNode[LeafNode[Symbol, "Plus", <||>], {
-	    		AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, {
-	    			LeafNode[Token`Error`ExpectedOperand, "", <|
+	    		ErrorNode[Token`Error`ExpectedOperand, "", <|
 	    				Source -> {{1, 4}, {1, 4}} |>]},
-	    			<|Source -> {{1, 4}, {1, 4}}|>]},
 	    		<|Source -> {{1, 3}, {1, 4}}|>]},
 	    	<|Source -> {{1, 1}, {1, 6}}|>] },
 	    <||>]
@@ -121,9 +119,7 @@ TestMatch[
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Function", <||>], {
-			AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, {
-				LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 1}, {1, 1}}|>]},
-				<|Source -> {{1, 1}, {1, 1}}|>]},
+			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 1}, {1, 1}}|>]},
 			<|Source -> {{1, 1}, {1, 2}}|>] },
 		<||>]
 	,
@@ -143,7 +139,7 @@ TestMatch[
 	ConcreteParseString["\\"]
 	,
 	ContainerNode[String, {
-		LeafNode[Token`Error`UnhandledCharacter, "\\", <|Source -> {{1, 1}, {1, 2}}|>] }, <||>]
+		ErrorNode[Token`Error`UnhandledCharacter, "\\", <|Source -> {{1, 1}, {1, 2}}|>] }, <||>]
 	,
 	TestID->"SyntaxErrorNodes-20190521-P7R3O7"
 ]

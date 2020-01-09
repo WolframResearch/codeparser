@@ -31,7 +31,10 @@ if a token is not something else, then it is prefix
     Infix bit
    ^
    Empty bit
- ^~ Unused (2 bits)
+  ^
+  DifferentialD bit
+ ^
+ Unused bit
 ```
 
  Group 1: These are all mutually exclusive categories: Possible, Closer, Error, Trivia, Inequality, VectorInequality

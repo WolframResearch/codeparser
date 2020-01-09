@@ -352,6 +352,7 @@ Token Tokenizer::nextToken0_stringifyFile() {
     return handleString_stringifyFile(tokenStartBuf, tokenStartLoc, c, policy);
 }
 
+
 void Tokenizer::nextToken(Token Tok) {
     
     TheByteBuffer->buffer = Tok.BufLen.end;
@@ -362,8 +363,6 @@ void Tokenizer::nextToken(Token Tok) {
     } else {
         TheByteBuffer->wasEOF = false;
     }
-    
-//    nextToken0(policy);
     
     TheByteDecoder->clearStatus();
 }
@@ -402,10 +401,6 @@ Token Tokenizer::currentToken(NextCharacterPolicy policy) {
     auto resetBuf = TheByteBuffer->buffer;
     auto resetEOF = TheByteBuffer->wasEOF;
     auto resetLoc = TheByteDecoder->SrcLoc;
-    
-//    policy &= DISABLE_BYTE_CHECKS_MASK;
-    
-//    policy &= DISABLE_CHARACTER_CHECKS_MASK;
     
     auto Tok = nextToken0(policy);
     

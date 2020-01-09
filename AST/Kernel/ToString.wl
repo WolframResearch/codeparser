@@ -90,22 +90,18 @@ special case Dot to fix stringifying  x //. 0 as x//.0
 toInputFormString[LeafNode[Token`SlashSlashDot, _, _]] :=
 	" //. "
 
-
-
-toInputFormString[LeafNode[_, str_, _]] :=
-	str
-
 (*
 special case for a; ;, which is   a Semi InternalNullNode Semi
 *)
 toInputFormString[LeafNode[Token`Fake`ImplicitNull, _, _]] :=
 	" "
 
-toInputFormString[LeafNode[Token`Fake`ImplicitAll, _, _]] :=
-	""
+toInputFormString[LeafNode[_, str_, _]] :=
+	str
 
-toInputFormString[LeafNode[Token`Fake`ImplicitOne, _, _]] :=
-	""
+
+toInputFormString[ErrorNode[_, str_, _]] :=
+	str
 
 
 toInputFormString[args:BoxNode[box_, children_, _]] :=
@@ -408,6 +404,11 @@ toFullFormString[LeafNode[Integer, str_, _]] :=
 toFullFormString[LeafNode[Real, str_, _]] :=
 	str
 
+
+toFullFormString[ErrorNode[tag_, str_, data_]] :=
+	Failure["ErrorNode", <|"Tag"->tag, "String"->str, "Data"->data|>]
+
+
 toFullFormString[CallNode[head_, nodes_, _]] :=
 Catch[
 Module[{headStr, nodeStrs},
@@ -554,6 +555,10 @@ Block[{$RecursionLimit = Infinity},
 
 toSourceCharacterString[LeafNode[_, str_, _], insideBoxes_] :=
 	str
+
+toSourceCharacterString[ErrorNode[_, str_, _], insideBoxes_] :=
+	str
+
 
 
 (*

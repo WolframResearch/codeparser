@@ -193,16 +193,16 @@ abstract[LeafNode[BlankSequence, _, data_]] := CallNode[ToNode[BlankSequence], {
 abstract[LeafNode[BlankNullSequence, _, data_]] := CallNode[ToNode[BlankNullSequence], {}, KeyTake[data, keysToTake]]
 abstract[LeafNode[OptionalDefault, _, data_]] := CallNode[ToNode[Optional], {CallNode[ToNode[Blank], {}, <||>]}, KeyTake[data, keysToTake]]
 
-abstract[LeafNode[Token`Error`UnhandledCharacter, str_, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`UnhandledCharacter, { LeafNode[Token`Error`UnhandledCharacter, str, data] }, KeyTake[data, keysToTake]]
-
 abstract[LeafNode[Token`Fake`ImplicitNull, _, data_]] := LeafNode[Symbol, "Null", KeyTake[data, keysToTake] ~Join~ <|AbstractSyntaxIssues->{SyntaxIssue["Comma", "Extra ``,``.", "Error", <| data, CodeActions->{CodeAction["Delete ``,``", DeleteNode, <| Source->data[Source] |>]}, ConfidenceLevel -> 1.0 |>]}|>]
 
-abstract[LeafNode[Token`Error`ExpectedOperand, str_, data_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, { LeafNode[Token`Error`ExpectedOperand, str, data] }, data]
 
 abstract[LeafNode[Token`Fake`ImplicitOne, _, data_]] := LeafNode[Integer, "1", KeyTake[data, keysToTake]]
 
 abstract[LeafNode[Token`Fake`ImplicitAll, _, data_]] := LeafNode[Symbol, "All", KeyTake[data, keysToTake]]
+
+
+abstract[n_ErrorNode] := n
+
 
 abstract[BlankNode[Blank, {_, sym2_}, data_]] := CallNode[ToNode[Blank], {abstract[sym2]}, KeyTake[data, keysToTake]]
 abstract[BlankSequenceNode[BlankSequence, {_, sym2_}, data_]] := CallNode[ToNode[BlankSequence], {abstract[sym2]}, KeyTake[data, keysToTake]]
@@ -215,23 +215,6 @@ abstract[PatternBlankSequenceNode[PatternBlankSequence, {sym1_, _, sym2_}, data_
 abstract[PatternBlankNullSequenceNode[PatternBlankNullSequence, {sym1_, _}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[BlankNullSequence], {}, <||>]}, KeyTake[data, keysToTake]]
 abstract[PatternBlankNullSequenceNode[PatternBlankNullSequence, {sym1_, _, sym2_}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[BlankNullSequence], {abstract[sym2]}, <||>]}, KeyTake[data, keysToTake]]
 abstract[OptionalDefaultPatternNode[OptionalDefaultPattern, {sym1_, _}, data_]] := CallNode[ToNode[Optional], {CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[Blank], {}, <||>]}, <||>]}, KeyTake[data, keysToTake]]
-
-
-abstract[LeafNode[tok_, str_, data_]] :=
-	Switch[tok,
-		Token`Error`UnterminatedString,
-			AbstractSyntaxErrorNode[AbstractSyntaxError`UnterminatedString, { LeafNode[tok, str, data] }, KeyTake[data, keysToTake]]
-		,
-		Token`Boxes`OpenParenStar,
-			AbstractSyntaxErrorNode[AbstractSyntaxError`UnterminatedComment, { LeafNode[tok, str, data] }, KeyTake[data, keysToTake]]
-		,
-		Token`Question,
-			AbstractSyntaxErrorNode[AbstractSyntaxError`EmptyString, { LeafNode[tok, str, data] }, KeyTake[data, keysToTake]]
-		,
-		_,
-			AbstractSyntaxErrorNode[AbstractSyntaxError`UnhandledToken, { LeafNode[tok, str, data] }, KeyTake[data, keysToTake]]
-	]
-
 
 
 
@@ -297,17 +280,13 @@ abstract[BinaryNode[Unset, {left_, _, _}, data_]] := CallNode[ToNode[Unset], {ab
 
 abstract[BinaryNode[op_, {left_, _, right_}, data_]] := CallNode[ToNode[op], {abstract[left], abstract[right]}, KeyTake[data, keysToTake]]
 
-abstract[BinaryNode[op_, children_, data_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, children, KeyTake[data, keysToTake]]
-
-
 
 
 
 (*
 Convert f[,1] into f[Null,1]
 *)
-abstract[InfixNode[Comma, { LeafNode[Token`Error`ExpectedOperand, _, data1_], rest___ }, data_]] := abstract[InfixNode[Comma, { LeafNode[Token`Fake`ImplicitNull, "", data1], rest }, KeyTake[data, keysToTake]]]
+abstract[InfixNode[Comma, { ErrorNode[Token`Error`ExpectedOperand, _, data1_], rest___ }, data_]] := abstract[InfixNode[Comma, { LeafNode[Token`Fake`ImplicitNull, "", data1], rest }, KeyTake[data, keysToTake]]]
 
 abstract[InfixNode[Inequality, children_, data_]] := abstractInequality[InfixNode[Inequality, children, KeyTake[data, keysToTake]]]
 
@@ -334,9 +313,6 @@ abstract[InfixNode[MessageName, children_, data_]] := abstractMessageName[InfixN
 
 abstract[InfixNode[op_, children_ /; OddQ[Length[children]], data_]] :=
 	CallNode[ToNode[op], abstract /@ (processInfixBinaryAtQuirk[#, ToString[op]]& /@ children[[;;;;2]]), KeyTake[data, keysToTake]]
-
-abstract[InfixNode[op_, children_, data_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, children, KeyTake[data, keysToTake]]
 
 
 
@@ -441,8 +417,7 @@ abstract[GroupNode[GroupLinearSyntaxParen, children_, data_]] := GroupNode[Group
 Missing closers
 *)
 
-abstract[GroupMissingCloserNode[_, children_, data_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingCloser, children, KeyTake[data, keysToTake]]
+abstract[n_GroupMissingCloserNode] := n
 
 abstract[GroupNode[op_, {_, inner___, _}, data_]] :=
 	abstractGroupNode[GroupNode[op, { inner }, KeyTake[data, keysToTake]]]
@@ -911,7 +886,7 @@ contextQ[s_String] := StringMatchQ[s, RegularExpression["\"`?([a-zA-Z][a-zA-Z0-9
 (*
 Just pass SyntaxErrorNode pass
 *)
-abstract[SyntaxErrorNode[op_, children_, data_]] := SyntaxErrorNode[op, children, KeyTake[data, keysToTake]]
+abstract[n_SyntaxErrorNode] := n
 
 
 
@@ -1008,7 +983,7 @@ abstract syntax is allowed to have negated numbers
 (*
 This can happen with:  a-EOF
 *)
-negate[node:LeafNode[Token`Error`ExpectedOperand, _, _], _] :=
+negate[node:ErrorNode[Token`Error`ExpectedOperand, _, _], _] :=
 	node
 
 negate[LeafNode[Integer, "0", _], data_] :=
@@ -1063,7 +1038,7 @@ so must still supply GroupNode[ { OpenSquare, CloseSquare } ]
 (*
 This can happen with:  a/EOF
 *)
-reciprocate[node:LeafNode[Token`Error`ExpectedOperand, _, _], _] :=
+reciprocate[node:ErrorNode[Token`Error`ExpectedOperand, _, _], _] :=
 	node
 
 reciprocate[node_, data_] :=
@@ -1612,23 +1587,7 @@ selectChildren[n_] := n
 
 
 
-
-
-
-(*
-FIXME: would be good to remember tag somehow
-*)
-
-abstractGroupNode[GroupMissingCloserNode[tag_, children_, dataIn_]] :=
-Module[{data},
-
-	data = dataIn;
-
-	AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingCloser, children, data]
-]
-
-
-
+abstractGroupNode[n_GroupMissingCloserNode] := n
 
 
 

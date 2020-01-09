@@ -40,8 +40,8 @@ Options[parseBox] = {
 This is reached from within 
 *)
 
-parseBox[Cell[a_, rest___], pos_] :=
-  BoxNode[Cell, {parseBox[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
+parseBox[Cell[d:BoxData[_], rest___], pos_] :=
+  BoxNode[Cell, {parseBox[d, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
 
 parseBox[BoxData[a_], pos_] :=
   BoxNode[BoxData, {parseBox[a, Append[pos, 1]]}, <|Source->pos|>]

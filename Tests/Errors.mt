@@ -13,7 +13,7 @@ TestMatch[
 	ParseString["f["]
 	,
 	ContainerNode[String, {
-		CallNode[_, { _AbstractSyntaxErrorNode }, _] }, <||>]
+		CallNode[_, { _GroupMissingCloserNode }, _] }, <||>]
 	,
 	TestID->"Errors-20190701-H7G3R7"
 ]
@@ -93,7 +93,7 @@ TestMatch[
 	ParseString["\\n23", ContainerNode[Hold, #[[1]], <||>]&]
 	,
 	ContainerNode[Hold, {
-		AbstractSyntaxErrorNode[AbstractSyntaxError`UnhandledCharacter, {LeafNode[Token`Error`UnhandledCharacter, "\\n", _]}, _],
+		ErrorNode[Token`Error`UnhandledCharacter, "\\n", _],
 		LeafNode[Integer, "23", _] }, _]
 	,
 	TestID->"Errors-20190126-Q9U0H8"
@@ -103,7 +103,7 @@ TestMatch[
 	ParseString["\\t23", ContainerNode[Hold, #[[1]], <||>]&]
 	,
 	ContainerNode[Hold, {
-		AbstractSyntaxErrorNode[AbstractSyntaxError`UnhandledCharacter, {LeafNode[Token`Error`UnhandledCharacter, "\\t", _]}, _],
+		ErrorNode[Token`Error`UnhandledCharacter, "\\t", _],
 		LeafNode[Integer, "23", _] }, _]
 	,
 	TestID->"Errors-20190203-F5C9L1"
@@ -124,7 +124,7 @@ Test[
 	    		LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>], 
 	    		LeafNode[Token`Minus, "-", <|Source -> {{1, 3}, {1, 4}}|>], 
 	    		LeafNode[Whitespace, " ", <|Source -> {{1, 4}, {1, 5}}|>], 
-	   			LeafNode[Token`Error`UnhandledCharacter, "\\t", <|Source -> {{1, 5}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>],
+	   			ErrorNode[Token`Error`UnhandledCharacter, "\\t", <|Source -> {{1, 5}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>],
 	       	LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> {{1, 7}, {1, 7}}|>],
 	       	LeafNode[Symbol, "b", <|Source -> {{1, 7}, {1, 8}}|>] }, <|Source -> {{1, 1}, {1, 8}}|>] }, <||>]
 	,
@@ -135,7 +135,7 @@ TestMatch[
 	ParseString["\\"]
 	,
 	ContainerNode[String, {
-		AbstractSyntaxErrorNode[AbstractSyntaxError`UnhandledCharacter, _, _] }, <||> ]
+		ErrorNode[Token`Error`UnhandledCharacter, _, _] }, <||> ]
 	,
 	TestID->"Errors-20190203-M3A0S4"
 ]
@@ -151,7 +151,7 @@ Test[
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "a", <|Source -> {{1, 2}, {1, 3}}|>], {
-			AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingCloser, {
+			GroupMissingCloserNode[GroupSquare, {
 				LeafNode[Token`OpenSquare, "[", <|Source -> {{1, 3}, {1, 4}}|>],
 				CallNode[LeafNode[Symbol, "b", <|Source -> {{1, 4}, {1, 5}}|>], {
 					GroupNode[GroupSquare, {

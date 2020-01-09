@@ -169,6 +169,7 @@ Intra
 
 (* node symbols *)
 LeafNode
+ErrorNode
 BoxNode
 CodeNode
 DirectiveNode
@@ -884,18 +885,6 @@ Module[{str, res, leaf, data, exprs, issues, stringifyMode},
 
 
 
-
-
-
-
-Format[fileNode:ContainerNode[File, children_, _], StandardForm] :=
-	Interpretation[
-		Row[{"ContainerNode", "[", "File", ",", "\[LeftSkeleton]", ToString[Length[children]], "\[RightSkeleton]", "]"}]
-		,
-		fileNode]
-
-Format[fileNode:ContainerNode[File, children_, _], OutputForm] :=
-	"ContainerNode[File, \[LeftSkeleton]" <> ToString[Length[children]] <> "\[RightSkeleton]]"
 
 
 

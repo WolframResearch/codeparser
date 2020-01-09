@@ -586,7 +586,7 @@ Test[
 			LeafNode[Token`SemiSemi, ";;", <|Source -> {{1, 3}, {1, 5}}|>], 
 			LeafNode[Token`Fake`ImplicitAll, "", <|Source -> {{1, 5}, {1, 5}}|>]}, <|Source->{{1, 1}, {1, 5}}|>],
 		LeafNode[Whitespace, " ", <|Source -> {{1, 5}, {1, 6}}|>],
-		LeafNode[Token`Error`UnhandledCharacter, "\\t", <|Source -> {{1, 6}, {1, 8}}|>]}, {}}]
+		ErrorNode[Token`Error`UnhandledCharacter, "\\t", <|Source -> {{1, 6}, {1, 8}}|>]}, {}}]
 	,
 	TestID->"Span-20191016-T6M0R1"
 ]

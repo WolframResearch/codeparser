@@ -37,7 +37,7 @@ GroupMissingCloser:
 TestMatch[
 	ParseString["{"]
 	,
-	ContainerNode[String, {AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingCloser, _, _]}, _]
+	ContainerNode[String, {GroupMissingCloserNode[List, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-M0B3Z5"
 ]
@@ -46,7 +46,7 @@ TestMatch[
 TestMatch[
 	ParseString["<|"]
 	,
-	ContainerNode[String, {AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingCloser, _, _]}, _]
+	ContainerNode[String, {GroupMissingCloserNode[Association, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-U0L5P6"
 ]
@@ -54,7 +54,7 @@ TestMatch[
 TestMatch[
 	ParseString["\[LeftAngleBracket]"]
 	,
-	ContainerNode[String, {AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingCloser, _, _]}, _]
+	ContainerNode[String, {GroupMissingCloserNode[AngleBracket, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-X7G1G5"
 ]
@@ -63,7 +63,7 @@ TestMatch[
 TestMatch[
 	ParseString["\[LeftCeiling]"]
 	,
-	ContainerNode[String, {AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingCloser, _, _]}, _]
+	ContainerNode[String, {GroupMissingCloserNode[Ceiling, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-Q4A4B9"
 ]
@@ -72,7 +72,7 @@ TestMatch[
 TestMatch[
 	ParseString["\[LeftFloor]"]
 	,
-	ContainerNode[String, {AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingCloser, _, _]}, _]
+	ContainerNode[String, {GroupMissingCloserNode[Floor, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-C4T4D9"
 ]
@@ -80,7 +80,7 @@ TestMatch[
 TestMatch[
 	ParseString["\[LeftDoubleBracket]"]
 	,
-	ContainerNode[String, {AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingCloser, _, _]}, _]
+	ContainerNode[String, {GroupMissingCloserNode[GroupDoubleBracket, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-S1C3U4"
 ]
@@ -88,7 +88,7 @@ TestMatch[
 TestMatch[
 	ParseString["\[LeftBracketingBar]"]
 	,
-	ContainerNode[String, {AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingCloser, _, _]}, _]
+	ContainerNode[String, {GroupMissingCloserNode[BracketingBar, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-H0B3W9"
 ]
@@ -96,7 +96,7 @@ TestMatch[
 TestMatch[
 	ParseString["\[LeftDoubleBracketingBar]"]
 	,
-	ContainerNode[String, {AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingCloser, _, _]}, _]
+	ContainerNode[String, {GroupMissingCloserNode[DoubleBracketingBar, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-R4A5I7"
 ]
@@ -104,7 +104,7 @@ TestMatch[
 TestMatch[
 	ParseString["("]
 	,
-	ContainerNode[String, {AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingCloser, _, _]}, _]
+	ContainerNode[String, {GroupMissingCloserNode[GroupParen, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-K6C7J1"
 ]
@@ -112,7 +112,7 @@ TestMatch[
 TestMatch[
 	ParseString["["]
 	,
-	ContainerNode[String, {AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingCloser, _, _]}, _]
+	ContainerNode[String, {GroupMissingCloserNode[GroupSquare, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-Y0H1P1"
 ]
@@ -121,7 +121,7 @@ TestMatch[
 TestMatch[
 	ParseString["\\("]
 	,
-	ContainerNode[String, {AbstractSyntaxErrorNode[AbstractSyntaxError`GroupMissingCloser, _, _]}, _]
+	ContainerNode[String, {GroupMissingCloserNode[GroupLinearSyntaxParen, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-B2V0A0"
 ]

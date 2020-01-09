@@ -705,6 +705,10 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) cons
     
     if (!FirstTok.Tok.isPossibleBeginningOfExpression()) {
         
+        //
+        // Something like  a ~&
+        //
+        
         bool wasCloser;
         
         auto NotPossible = TheParser->handleNotPossible(FirstTok, FirstTilde, Ctxt, &wasCloser);
@@ -1555,7 +1559,7 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, Token TokIn, Pars
                 // Allow default resizing strategy, which is hopefully exponential
                 //
                 Args.appendIfNonEmpty(std::move(ArgsTest1));
-                Args.append(NodePtr(new LeafNode(std::move(Tok1))));
+                Args.append(NodePtr(new LeafNode(Tok1)));
                 Args.appendIfNonEmpty(std::move(ArgsTest2));
                 Args.append(std::move(operand));
                 

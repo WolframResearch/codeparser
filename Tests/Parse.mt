@@ -2273,9 +2273,7 @@ Test[
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Times", <||>], {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
-			AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, {
-				LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>]},
-			<|Source -> {{1, 3}, {1, 3}}|>]},
+			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>]},
 		<|Source -> {{1, 1}, {1, 3}}|>]}, <||>]
 	,
 	TestID->"Parse-20191224-I3Q3E6"
@@ -2287,9 +2285,7 @@ Test[
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Plus", <||>], {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
-			AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedOperand, {
-				LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>]},
-			<|Source -> {{1, 3}, {1, 3}}|>]},
+			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>]},
 		<|Source -> {{1, 1}, {1, 3}}|>]}, <||>]
 	,
 	TestID->"Parse-20191224-Q4A6D4"

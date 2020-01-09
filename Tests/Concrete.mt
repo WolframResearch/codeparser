@@ -79,7 +79,7 @@ Test[
 	*)
 	ContainerNode[String, {
 		BinaryNode[PatternTest, {
-			LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 1}, {1, 1}}|>],
+			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 1}, {1, 1}}|>],
 			LeafNode[Token`Question, "?", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Symbol, "a", <|Source -> {{1, 2}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 3}}|>]}, <||>]
 	,
@@ -96,7 +96,7 @@ Test[
 			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 1}}|>],
 			BinaryNode[PatternTest, {
-				LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{2, 1}, {2, 1}}|>],
+				ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{2, 1}, {2, 1}}|>],
 				LeafNode[Token`Question, "?", <|Source -> {{2, 1}, {2, 2}}|>],
 				LeafNode[Symbol, "a", <|Source -> {{2, 2}, {2, 3}}|>]}, <|Source -> {{2, 1}, {2, 3}}|>],
 			LeafNode[Token`CloseCurly, "}", <|Source -> {{2, 3}, {2, 4}}|>]}, <|Source -> {{1, 1}, {2, 4}}|>] }, <||>]
@@ -504,7 +504,7 @@ Test[
 	ConcreteParseString["a=..", f]
 	,
 	f[{{LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
-		LeafNode[Token`Error`UnhandledDot, "=..", <|Source -> {{1, 2}, {1, 5}}|>]}, {}}]
+		ErrorNode[Token`Error`UnhandledDot, "=..", <|Source -> {{1, 2}, {1, 5}}|>]}, {}}]
 	,
 	TestID->"Concrete-20190916-N2A8O1"
 ]
@@ -573,9 +573,9 @@ Test[
 			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>],
 			BinaryNode[Apply, {
-				LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>], 
+				ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>], 
 	    		LeafNode[Token`AtAt, "@@", <|Source -> {{1, 3}, {1, 5}}|>], 
-	    		LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 5}, {1, 5}}|>]}, <|Source -> {{1, 3}, {1, 5}}|>],
+	    		ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 5}, {1, 5}}|>]}, <|Source -> {{1, 3}, {1, 5}}|>],
 	    	LeafNode[Whitespace, " ", <|Source -> {{1, 5}, {1, 6}}|>], 
 	    	LeafNode[Token`CloseCurly, "}", <|Source -> {{1, 6}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>] }, <||>]
 	,
@@ -596,9 +596,9 @@ Test[
 	,
 	ContainerNode[String, {
 		BinaryNode[Power, {
-			LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 1}, {1, 1}}|>],
+			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 1}, {1, 1}}|>],
 			LeafNode[Token`Caret, "^", <|Source -> {{1, 1}, {1, 2}}|>],
-			LeafNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 2}, {1, 2}}|>]}, <|Source -> {{1, 1}, {1, 2}}|>],
+			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 2}, {1, 2}}|>]}, <|Source -> {{1, 1}, {1, 2}}|>],
 		LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>]}, <||>]
 	,
 	TestID->"Concrete-20191117-M2R5P9"
@@ -619,7 +619,7 @@ Test[
 	ConcreteParseString["(*)a"]
 	,
 	ContainerNode[String, {
-		LeafNode[Token`Error`UnterminatedComment, "(*)a", <|Source -> {{1, 1}, {1, 5}}|>]}, <||>]
+		ErrorNode[Token`Error`UnterminatedComment, "(*)a", <|Source -> {{1, 1}, {1, 5}}|>]}, <||>]
 	,
 	TestID->"Concrete-20191209-I8G4F9"
 ]
@@ -666,7 +666,7 @@ Test[
 	ConcreteParseString["\\[Alpa]"]
 	,
 	ContainerNode[String, {
-		LeafNode[Token`Error`UnhandledCharacter, "\\[Alpa]", <|Source -> {{1, 1}, {1, 8}}|>]},
+		ErrorNode[Token`Error`UnhandledCharacter, "\\[Alpa]", <|Source -> {{1, 1}, {1, 8}}|>]},
 		<|SyntaxIssues -> {
 			SyntaxIssue["UnrecognizedCharacter", "Unrecognized character: ``\\[Alpa]``.", "Error", <|
 				Source -> {{1, 1}, {1, 8}},
