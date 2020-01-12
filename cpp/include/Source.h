@@ -75,13 +75,6 @@ bool operator==(BufferAndLength a, BufferAndLength b);
 enum NextCharacterPolicyBits : uint8_t {
     
     //
-    // Enable byte decoding issues
-    //
-    // This is used when peeking: no need to report issues while peeking
-    //
-    ENABLE_BYTE_DECODING_ISSUES = 0x01,
-    
-    //
     // Preserve whitespace after line continuation
     //
     // ToExpression["0.\\\n  6"] evaluates to 0.6 (whitespace is NOT preserved)
@@ -90,7 +83,7 @@ enum NextCharacterPolicyBits : uint8_t {
     //
     // FIXME: this could be handled by line continuation processing
     //
-    PRESERVE_WS_AFTER_LC = 0x02,
+    PRESERVE_WS_AFTER_LC = 0x01,
     
     //
     // Enable character decoding issues
@@ -101,7 +94,7 @@ enum NextCharacterPolicyBits : uint8_t {
     //
     // This is also used when peeking: no need to report issues while peeking
     //
-    ENABLE_CHARACTER_DECODING_ISSUES = 0x04,
+    ENABLE_CHARACTER_DECODING_ISSUES = 0x02,
     
     //
     // This code:
@@ -116,44 +109,28 @@ enum NextCharacterPolicyBits : uint8_t {
     //
     // would NOT give a warning (line continuation IS meaningful)
     //
-    LC_IS_MEANINGFUL = 0x08,
+    LC_IS_MEANINGFUL = 0x04,
     
     //
     // Check for unlikely escape sequences?
     //
     // Check for sequences like \\[Alpa] and report them
     //
-    ENABLE_UNLIKELY_ESCAPE_CHECKING = 0x10,
-    
-    //
-    // Check for strange characters, such as control characters, REPLACEMENT CHARACTER, etc.
-    //
-    ENABLE_STRANGE_CHARACTER_CHECKING = 0x20,
+    ENABLE_UNLIKELY_ESCAPE_CHECKING = 0x08,
 };
 
 using NextCharacterPolicy = uint8_t;
 
-const NextCharacterPolicy TOPLEVEL = ENABLE_BYTE_DECODING_ISSUES | ENABLE_CHARACTER_DECODING_ISSUES | ENABLE_STRANGE_CHARACTER_CHECKING;
+const NextCharacterPolicy TOPLEVEL = ENABLE_CHARACTER_DECODING_ISSUES;
 
-const NextCharacterPolicy INSIDE_SYMBOL = ENABLE_BYTE_DECODING_ISSUES | ENABLE_CHARACTER_DECODING_ISSUES | LC_IS_MEANINGFUL | ENABLE_STRANGE_CHARACTER_CHECKING;
+const NextCharacterPolicy INSIDE_SYMBOL = ENABLE_CHARACTER_DECODING_ISSUES | LC_IS_MEANINGFUL;
 
 #if STARTOFLINE
-const NextCharacterPolicy INSIDE_STRINGIFY_LINE = ENABLE_BYTE_DECODING_ISSUES | ENABLE_CHARACTER_DECODING_ISSUES | ENABLE_STRANGE_CHARACTER_CHECKING;
+const NextCharacterPolicy INSIDE_STRINGIFY_LINE = ENABLE_CHARACTER_DECODING_ISSUES | ENABLE_STRANGE_CHARACTER_CHECKING;
 #endif // STARTOFLINE
-const NextCharacterPolicy INSIDE_STRINGIFY_SYMBOL = ENABLE_BYTE_DECODING_ISSUES | PRESERVE_WS_AFTER_LC | ENABLE_CHARACTER_DECODING_ISSUES | ENABLE_STRANGE_CHARACTER_CHECKING;
-const NextCharacterPolicy INSIDE_STRINGIFY_FILE = ENABLE_BYTE_DECODING_ISSUES | ENABLE_STRANGE_CHARACTER_CHECKING;
+const NextCharacterPolicy INSIDE_STRINGIFY_SYMBOL = PRESERVE_WS_AFTER_LC | ENABLE_CHARACTER_DECODING_ISSUES;
+const NextCharacterPolicy INSIDE_STRINGIFY_FILE = 0;
 
-
-//
-// Use this to disable checks
-//
-// newPolicy = policy & DISABLE_CHECKS_MASK;
-//
-// Using ~ and | promotes to int, so make sure to static_cast back to uint8_t
-//
-const NextCharacterPolicy DISABLE_BYTE_CHECKS_MASK = static_cast<uint8_t>(~(ENABLE_BYTE_DECODING_ISSUES) );
-
-const NextCharacterPolicy DISABLE_CHARACTER_CHECKS_MASK = static_cast<uint8_t>(~(ENABLE_CHARACTER_DECODING_ISSUES | ENABLE_UNLIKELY_ESCAPE_CHECKING | ENABLE_STRANGE_CHARACTER_CHECKING) );
 
 enum SyntaxError {
     

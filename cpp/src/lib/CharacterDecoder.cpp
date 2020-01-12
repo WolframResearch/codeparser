@@ -1045,7 +1045,7 @@ WLCharacter CharacterDecoder::handleBackSlash(Buffer escapedBuf, SourceLocation 
             
             auto tmpPolicy = policy;
             
-            tmpPolicy = tmpPolicy & ~ENABLE_CHARACTER_DECODING_ISSUES;
+            tmpPolicy &= ~ENABLE_CHARACTER_DECODING_ISSUES;
             
             handleLongName(escapedBuf, escapedLoc, resetBuf, resetLoc, tmpPolicy);
         }

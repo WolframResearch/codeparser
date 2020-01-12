@@ -867,16 +867,13 @@ SourceCharacter ByteDecoder::invalid(SourceLocation errSrcLoc, NextCharacterPoli
     SrcLoc.Column++;
     
 #if !NISSUES
-    if ((policy & ENABLE_BYTE_DECODING_ISSUES) == ENABLE_BYTE_DECODING_ISSUES) {
-        
-        //
-        // No CodeAction here
-        //
-        
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_CHARACTERENCODING, "Invalid UTF-8 sequence.", SYNTAXISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc + 1), 1.0, {}));
-        
-        Issues.push_back(std::move(I));
-    }
+    //
+    // No CodeAction here
+    //
+    
+    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_INVALIDCHARACTERENCODING, "Invalid UTF-8 sequence.", SYNTAXISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc + 1), 1.0, {}));
+    
+    Issues.push_back(std::move(I));
 #endif // !NISSUES
     
     //
