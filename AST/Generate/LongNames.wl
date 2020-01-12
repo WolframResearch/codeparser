@@ -7,7 +7,7 @@ Needs["AST`Generate`"]
 Print["Generating LongNames..."]
 
 Check[
-longNameDefines = ("constexpr int " <> toGlobal["CodePoint`LongName`" <> #] <> "(" <> longNameToHexDigits[#] <> ");")& /@ Keys[importedLongNames]
+longNameDefines = ("constexpr int32_t " <> toGlobal["CodePoint`LongName`" <> #] <> "(" <> longNameToHexDigits[#] <> ");")& /@ Keys[importedLongNames]
 ,
 Print["Message while generating LongNameDefines"];
 Quit[1]

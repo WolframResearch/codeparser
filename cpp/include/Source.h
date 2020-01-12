@@ -261,7 +261,7 @@ struct SourceCharacter {
     
     int32_t val;
     
-    explicit constexpr SourceCharacter(int val) : val(val) {}
+    explicit constexpr SourceCharacter(int32_t val) : val(val) {}
     
     explicit operator int() const noexcept = delete;
     
