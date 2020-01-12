@@ -41,16 +41,6 @@ enum Associativity {
     ASSOCIATIVITY_NONASSOCIATIVE,
 };
 
-//
-// How many _ are currently being parsed?
-//
-enum UnderEnum {
-    UNDER_UNKNOWN,
-    UNDER_1,
-    UNDER_2,
-    UNDER_3
-};
-
 enum ParserContextFlagBits : uint8_t {
     //
     // when parsing a in a:b  then ColonFlag is false
@@ -95,11 +85,8 @@ struct ParserContext {
     Precedence Prec;
     
     //
-    // When parsing  _  or __  or ___  , the implementation is the same, so just keep track of which one is being parsed
     // The Closer of the innermost Group being parsed
     //
-    UnderEnum UnderCount : 2;
-    
     ParserContextFlag Flag : 4;
     Closer Closr : 4;
     
@@ -124,7 +111,9 @@ private:
 #endif // STARTOFLINE
     
     ContextSensitivePrefixParseletPtr contextSensitiveSymbolParselet;
-    ContextSensitiveInfixParseletPtr contextSensitiveUnderParselet;
+    ContextSensitiveInfixParseletPtr contextSensitiveUnder1Parselet;
+    ContextSensitiveInfixParseletPtr contextSensitiveUnder2Parselet;
+    ContextSensitiveInfixParseletPtr contextSensitiveUnder3Parselet;
     ContextSensitiveInfixParseletPtr contextSensitiveColonParselet;
     
     std::deque<Token> tokenQueue;
@@ -193,7 +182,9 @@ public:
     
     
     const ContextSensitivePrefixParseletPtr& getContextSensitiveSymbolParselet() const;
-    const ContextSensitiveInfixParseletPtr& getContextSensitiveUnderParselet() const;
+    const ContextSensitiveInfixParseletPtr& getContextSensitiveUnder1Parselet() const;
+    const ContextSensitiveInfixParseletPtr& getContextSensitiveUnder2Parselet() const;
+    const ContextSensitiveInfixParseletPtr& getContextSensitiveUnder3Parselet() const;
     const ContextSensitiveInfixParseletPtr& getContextSensitiveColonParselet() const;
     
     ~Parser();

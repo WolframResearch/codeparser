@@ -7,7 +7,7 @@
 
 #include <algorithm> // for generate with GCC and MSVC
 
-Parser::Parser() : prefixParselets(), infixParselets(), contextSensitiveSymbolParselet(ContextSensitivePrefixParseletPtr(new SymbolParselet())), contextSensitiveUnderParselet(ContextSensitiveInfixParseletPtr(new UnderParselet())), contextSensitiveColonParselet(ContextSensitiveInfixParseletPtr(new ColonParselet())), tokenQueue(), Issues() {
+Parser::Parser() : prefixParselets(), infixParselets(), contextSensitiveSymbolParselet(ContextSensitivePrefixParseletPtr(new SymbolParselet())), contextSensitiveUnder1Parselet(ContextSensitiveInfixParseletPtr(new UnderParselet(1))), contextSensitiveUnder2Parselet(ContextSensitiveInfixParseletPtr(new UnderParselet(2))), contextSensitiveUnder3Parselet(ContextSensitiveInfixParseletPtr(new UnderParselet(3))), contextSensitiveColonParselet(ContextSensitiveInfixParseletPtr(new ColonParselet())), tokenQueue(), Issues() {
     
     //
     // Setup all of the parselet lists with nullptr unique_ptrs
@@ -443,9 +443,9 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitiveSymbolPa
     registerPrefixParselet(TOKEN_SYMBOL.value(), PrefixParseletPtr(new SymbolParselet()));
     
     // context sensitive parsing of _x
-    registerPrefixParselet(TOKEN_UNDER.value(), PrefixParseletPtr(new UnderParselet()));
-    registerPrefixParselet(TOKEN_UNDERUNDER.value(), PrefixParseletPtr(new UnderParselet()));
-    registerPrefixParselet(TOKEN_UNDERUNDERUNDER.value(), PrefixParseletPtr(new UnderParselet()));
+    registerPrefixParselet(TOKEN_UNDER.value(), PrefixParseletPtr(new UnderParselet(1)));
+    registerPrefixParselet(TOKEN_UNDERUNDER.value(), PrefixParseletPtr(new UnderParselet(2)));
+    registerPrefixParselet(TOKEN_UNDERUNDERUNDER.value(), PrefixParseletPtr(new UnderParselet(3)));
     
     // trailing ; and , is allowed
     registerInfixParselet(TOKEN_SEMI.value(), InfixParseletPtr(new InfixOperatorWithTrailingParselet(TOKEN_SEMI, PRECEDENCE_SEMI)));
@@ -600,8 +600,16 @@ const ContextSensitivePrefixParseletPtr& Parser::getContextSensitiveSymbolParsel
     return contextSensitiveSymbolParselet;
 }
 
-const ContextSensitiveInfixParseletPtr& Parser::getContextSensitiveUnderParselet() const {
-    return contextSensitiveUnderParselet;
+const ContextSensitiveInfixParseletPtr& Parser::getContextSensitiveUnder1Parselet() const {
+    return contextSensitiveUnder1Parselet;
+}
+
+const ContextSensitiveInfixParseletPtr& Parser::getContextSensitiveUnder2Parselet() const {
+    return contextSensitiveUnder2Parselet;
+}
+
+const ContextSensitiveInfixParseletPtr& Parser::getContextSensitiveUnder3Parselet() const {
+    return contextSensitiveUnder3Parselet;
 }
 
 const ContextSensitiveInfixParseletPtr& Parser::getContextSensitiveColonParselet() const {

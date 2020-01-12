@@ -43,39 +43,33 @@ NodePtr SymbolParselet::parse(Token TokIn, ParserContext Ctxt) const {
     switch (Tok.Tok.value()) {
         case TOKEN_UNDER.value(): {
             
-            auto& underParselet = TheParser->getContextSensitiveUnderParselet();
-            
-            Ctxt.UnderCount = UNDER_1;
+            auto& under1Parselet = TheParser->getContextSensitiveUnder1Parselet();
             
             NodeSeq Args;
             Args.reserve(1);
             Args.append(std::move(Sym));
             
-            return underParselet->parseContextSensitive(std::move(Args), Tok, Ctxt);
+            return under1Parselet->parseContextSensitive(std::move(Args), Tok, Ctxt);
         }
         case TOKEN_UNDERUNDER.value(): {
             
-            auto& underParselet = TheParser->getContextSensitiveUnderParselet();
-            
-            Ctxt.UnderCount = UNDER_2;
+            auto& under2Parselet = TheParser->getContextSensitiveUnder2Parselet();
             
             NodeSeq Args;
             Args.reserve(1);
             Args.append(std::move(Sym));
             
-            return underParselet->parseContextSensitive(std::move(Args), Tok, Ctxt);
+            return under2Parselet->parseContextSensitive(std::move(Args), Tok, Ctxt);
         }
         case TOKEN_UNDERUNDERUNDER.value(): {
             
-            auto& underParselet = TheParser->getContextSensitiveUnderParselet();
-            
-            Ctxt.UnderCount = UNDER_3;
+            auto& under3Parselet = TheParser->getContextSensitiveUnder3Parselet();
             
             NodeSeq Args;
             Args.reserve(1);
             Args.append(std::move(Sym));
             
-            return underParselet->parseContextSensitive(std::move(Args), Tok, Ctxt);
+            return under3Parselet->parseContextSensitive(std::move(Args), Tok, Ctxt);
         }
         case TOKEN_UNDERDOT.value(): {
             
@@ -308,7 +302,6 @@ NodePtr GroupParselet::parse(Token firstTok, ParserContext Ctxt) const {
     //
     Ctxt.Flag &= ~(PARSER_COLON);
     Ctxt.Prec = PRECEDENCE_LOWEST;
-    Ctxt.UnderCount = UNDER_UNKNOWN;
     
     NodeSeq Args;
     Args.reserve(1);
@@ -489,6 +482,8 @@ NodePtr StartOfFileParselet::parse(ParserContext CtxtIn) const {
 #endif // STARTOFLINE
 
 
+UnderParselet::UnderParselet(size_t count) : count(count) {}
+
 //
 // prefix
 //
@@ -613,10 +608,6 @@ NodePtr UnderParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserCo
     Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
     Args.append(NodePtr(new LeafNode(TokIn)));
     
-    auto UnderCount = Ctxt.UnderCount;
-    
-    Ctxt.UnderCount = UNDER_UNKNOWN;
-    
     TheParser->nextToken(TokIn);
     
     auto Tok = TheParser->currentToken();
@@ -647,14 +638,14 @@ NodePtr UnderParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserCo
     }
     
     NodePtr Pat;
-    switch (UnderCount) {
-        case UNDER_1:
+    switch (count) {
+        case 1:
             Pat = NodePtr(new PatternBlankNode(std::move(Args)));
             break;
-        case UNDER_2:
+        case 2:
             Pat = NodePtr(new PatternBlankSequenceNode(std::move(Args)));
             break;
-        case UNDER_3:
+        case 3:
             Pat = NodePtr(new PatternBlankNullSequenceNode(std::move(Args)));
             break;
         default:
