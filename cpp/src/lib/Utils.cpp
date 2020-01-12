@@ -2,9 +2,11 @@
 #include "Utils.h"
 
 #include "Tokenizer.h" // for Tokenizer
+#include "CharacterMaps.h" // for CodePointToLongNameMap
 
 #include <cstring> // for strcmp with GCC and MSVC
 #include <cassert>
+
 
 //
 // s MUST contain an integer
@@ -149,3 +151,21 @@ bool Utils::isMBNonCharacter(int32_t point) {
             return false;
     }
 }
+
+
+int get_graphical_i() {
+    static int i = std::ios_base::xalloc();
+    return i;
+}
+
+std::ostream& set_graphical(std::ostream& stream) {
+    stream.iword(get_graphical_i()) = 1;
+    return stream;
+}
+
+std::ostream& clear_graphical(std::ostream& stream) {
+    stream.iword(get_graphical_i()) = 0;
+    return stream;
+}
+
+

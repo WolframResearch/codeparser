@@ -250,6 +250,8 @@ struct SourceCharacter {
         return val;
     }
     
+    std::string graphicalString() const;
+    
     bool isAlphaOrDigit() const;
     
     bool isHex() const;

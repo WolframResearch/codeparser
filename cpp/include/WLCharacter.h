@@ -135,10 +135,6 @@ static_assert(sizeof(WLCharacter) == 4, "Check your assumptions");
 #endif
 
 std::ostream& operator<<(std::ostream& stream, WLCharacter);
-
-std::ostream& set_graphical(std::ostream& stream);
-
-std::ostream& clear_graphical(std::ostream& stream);
     
 //
 // For googletest

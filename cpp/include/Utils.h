@@ -9,6 +9,15 @@
 
 extern std::unordered_set<std::string> undocumentedLongNames;
 
+
+std::ostream& set_graphical(std::ostream& stream);
+
+std::ostream& clear_graphical(std::ostream& stream);
+
+int get_graphical_i();
+
+
+
 class Utils {
 public:
     

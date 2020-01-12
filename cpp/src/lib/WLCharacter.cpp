@@ -11,10 +11,6 @@
 
 char fromDigit(size_t d);
 
-int get_graphical_i();
-
-void makeGraphical(std::ostream& stream, int i);
-
 //
 // Respect the actual escape style
 //
@@ -27,61 +23,9 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
     auto escape = c.escape();
     
     switch (escape) {
-        case ESCAPE_NONE: {
-            
-            //
-            // Determine whether graphical flag is on
-            //
-            
-            if (stream.iword(get_graphical_i()) == 0) {
-                
-                //
-                // Not doing graphical, so just use SourceCharacter directly
-                //
-                
-                stream << SourceCharacter(i);
-                break;
-            }
-            
-            makeGraphical(stream, i);
-        }
-            break;
-        case ESCAPE_RAW: {
-            
-            //
-            // Determine whether graphical flag is on
-            //
-            
-            if (stream.iword(get_graphical_i()) == 0) {
-                
-                //
-                // Take care of characters we want to use \x notation first
-                //
-                switch (i) {
-                    case CODEPOINT_STRINGMETA_LINEFEED:
-                        stream << WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
-                        break;
-                    case CODEPOINT_STRINGMETA_CARRIAGERETURN:
-                        stream << WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
-                        break;
-                    case CODEPOINT_STRINGMETA_TAB:
-                        stream << WLCharacter(CODEPOINT_STRINGMETA_TAB, ESCAPE_SINGLE);
-                        break;
-                    case CODEPOINT_STRINGMETA_DOUBLEQUOTE:
-                        stream << WLCharacter(CODEPOINT_STRINGMETA_DOUBLEQUOTE, ESCAPE_SINGLE);
-                        break;
-                    case CODEPOINT_STRINGMETA_BACKSLASH:
-                        stream << WLCharacter(CODEPOINT_STRINGMETA_BACKSLASH, ESCAPE_SINGLE);
-                        break;
-                    default:
-                        stream << SourceCharacter(i);
-                        break;
-                }
-                break;
-            }
-            
-            makeGraphical(stream, i);
-        }
+        case ESCAPE_NONE:
+        case ESCAPE_RAW:
+            stream << SourceCharacter(i);
             break;
         case ESCAPE_SINGLE:
             stream << SourceCharacter('\\');
@@ -281,132 +225,6 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
         }
     }
     
-    return stream;
-}
-
-void makeGraphical(std::ostream& stream, int i) {
-    
-    switch (i) {
-        case CODEPOINT_ENDOFFILE:
-            //
-            // Invent something for EOF
-            //
-            stream << SourceCharacter('<');
-            stream << SourceCharacter('E');
-            stream << SourceCharacter('O');
-            stream << SourceCharacter('F');
-            stream << SourceCharacter('>');
-            break;
-            //
-            // whitespace and newline characters
-            //
-        case '\t':
-            stream << WLCharacter(CODEPOINT_STRINGMETA_TAB, ESCAPE_SINGLE);
-            break;
-        case '\n':
-            stream << WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
-            break;
-        case '\r':
-            stream << WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
-            break;
-        case CODEPOINT_CRLF:
-            stream << WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
-            stream << WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
-            break;
-            //
-            // escape
-            //
-        case '\x1b':
-            stream << WLCharacter(CODEPOINT_ESC, ESCAPE_LONGNAME);
-            break;
-            //
-            // C0 control characters
-            //
-            //
-            // Skip TAB, LF, CR, and ESC. They are handled above
-            //
-        case '\x00': case '\x01': case '\x02': case '\x03': case '\x04': case '\x05': case '\x06': case '\x07':
-        case '\x08': /*    \x09*/ /*    \x0a*/ case '\x0b': case '\x0c': /*    \x0d*/ case '\x0e': case '\x0f':
-        case '\x10': case '\x11': case '\x12': case '\x13': case '\x14': case '\x15': case '\x16': case '\x17':
-        case '\x18': case '\x19': case '\x1a': /*    \x1b*/ case '\x1c': case '\x1d': case '\x1e': case '\x1f':
-            //
-            // Make sure to include DEL
-            //
-        case CODEPOINT_DEL:
-            //
-            // C1 control characters
-            //
-        case '\x80': case '\x81': case '\x82': case '\x83': case '\x84': case '\x85': case '\x86': case '\x87':
-        case '\x88': case '\x89': case '\x8a': case '\x8b': case '\x8c': case '\x8d': case '\x8e': case '\x8f':
-        case '\x90': case '\x91': case '\x92': case '\x93': case '\x94': case '\x95': case '\x96': case '\x97':
-        case '\x98': case '\x99': case '\x9a': case '\x9b': case '\x9c': case '\x9d': case '\x9e': case '\x9f':
-            stream << WLCharacter(i, ESCAPE_2HEX);
-            break;
-        case CODEPOINT_VIRTUAL_BOM:
-            stream << WLCharacter(CODEPOINT_ACTUAL_BOM, ESCAPE_4HEX);
-            break;
-        default:
-            if (i > 0xffff) {
-                
-                if (CodePointToLongNameMap.find(i) != CodePointToLongNameMap.end()) {
-                    //
-                    // Use LongName if available
-                    //
-                    stream << WLCharacter(i, ESCAPE_LONGNAME);
-                    break;
-                }
-                
-                stream << WLCharacter(i, ESCAPE_6HEX);
-                break;
-            } else if (i > 0xff) {
-                
-                if (CodePointToLongNameMap.find(i) != CodePointToLongNameMap.end()) {
-                    //
-                    // Use LongName if available
-                    //
-                    stream << WLCharacter(i, ESCAPE_LONGNAME);
-                    break;
-                }
-                
-                stream << WLCharacter(i, ESCAPE_4HEX);
-                break;
-            } else if (i > 0x7f) {
-                
-                if (CodePointToLongNameMap.find(i) != CodePointToLongNameMap.end()) {
-                    //
-                    // Use LongName if available
-                    //
-                    stream << WLCharacter(i, ESCAPE_LONGNAME);
-                    break;
-                }
-                
-                stream << WLCharacter(i, ESCAPE_2HEX);
-                break;
-            } else {
-                
-                //
-                // ASCII is untouched
-                // Do not use CodePointToLongNameMap to find Raw names
-                //
-                
-                stream << SourceCharacter(i);
-                break;
-            }
-    }
-}
-
-int get_graphical_i() {
-    static int i = std::ios_base::xalloc();
-    return i;
-}
-
-std::ostream& set_graphical(std::ostream& stream) {
-    stream.iword(get_graphical_i()) = 1;
-    return stream;
-}
-
-std::ostream& clear_graphical(std::ostream& stream) {
-    stream.iword(get_graphical_i()) = 0;
     return stream;
 }
 
@@ -1065,8 +883,6 @@ bool WLCharacter::isMBUninterpretable() const {
     
     return Utils::isMBUninterpretable(val);
 }
-
-
 
 //
 // Given a digit, return the character
