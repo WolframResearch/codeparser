@@ -90,23 +90,20 @@ struct ParserContext {
     uint16_t StackDepth;
     
     //
-    // The Closer of the innermost Group being parsed
-    //
-    TokenEnum Closer;
-    
-    //
     // Precedence of the current operator being parsed
     //
     Precedence Prec;
     
     //
     // When parsing  _  or __  or ___  , the implementation is the same, so just keep track of which one is being parsed
+    // The Closer of the innermost Group being parsed
     //
     UnderEnum UnderCount : 2;
     
     ParserContextFlag Flag : 4;
+    Closer Closr : 4;
     
-    ParserContext() : GroupDepth(0), StackDepth(0), Closer(TOKEN_UNKNOWN), Prec(PRECEDENCE_LOWEST), UnderCount(UNDER_UNKNOWN), Flag() {}
+    ParserContext() : GroupDepth(), Prec(), Flag(), Closr() {}
 };
 
 //

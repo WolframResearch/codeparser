@@ -181,9 +181,8 @@ public:
 
 
 class GroupParselet : public PrefixParselet {
-    TokenEnum Opener;
     SymbolPtr& Op;
-    TokenEnum Closer;
+    Closer Closr;
 public:
     
     GroupParselet(TokenEnum Opener);

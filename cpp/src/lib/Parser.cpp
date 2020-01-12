@@ -1065,29 +1065,30 @@ NodePtr Parser::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserCon
         return I->parse(std::move(LeftSeq), tokenBad, Ctxt);
     }
     
-    if (tokenBad.Tok == CtxtIn.Closer) {
-        //
-        // Handle the special cases of:
-        // { + }
-        // { a + }
-        // { a @ }
-        // We are here parsing the operators, but we don't want to descend and treat the } as the problem
-        //
-
-        //
-        // Do not take next token
-        //
+    if (tokenBad.Tok.isCloser()) {
         
-        auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.BufLen.end), Source(tokenAnchor.Src.End));
-
-        if (wasCloser != nullptr) {
-            *wasCloser = true;
+        if (TokenToCloser(tokenBad.Tok) == CtxtIn.Closr) {
+            //
+            // Handle the special cases of:
+            // { + }
+            // { a + }
+            // { a @ }
+            // We are here parsing the operators, but we don't want to descend and treat the } as the problem
+            //
+            
+            //
+            // Do not take next token
+            //
+            
+            auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.BufLen.end), Source(tokenAnchor.Src.End));
+            
+            if (wasCloser != nullptr) {
+                *wasCloser = true;
+            }
+            
+            return NodePtr(new ErrorNode(createdToken));
         }
         
-        return NodePtr(new ErrorNode(createdToken));
-    }
-    
-    if (tokenBad.Tok.isCloser()) {
         //
         // Handle  { a ) }
         // which ends up being  MissingCloser[ { a ) ]   UnexpectedCloser[ } ]

@@ -503,41 +503,42 @@ GroupOpenerToSymbol[Token`LinearSyntax`OpenParen] = AST`GroupLinearSyntaxParen
 
 
 
-GroupOpenerToCloser[Token`OpenCurly] = Token`CloseCurly
-GroupOpenerToCloser[Token`LessBar] = Token`BarGreater
-GroupOpenerToCloser[Token`OpenSquare] = Token`CloseSquare
-GroupOpenerToCloser[Token`OpenParen] = Token`CloseParen
+GroupOpenerToCloser[Token`OpenCurly] = Closer`CloseCurly
+GroupOpenerToCloser[Token`LessBar] = Closer`BarGreater
+GroupOpenerToCloser[Token`OpenSquare] = Closer`CloseSquare
+GroupOpenerToCloser[Token`OpenParen] = Closer`CloseParen
 
-GroupOpenerToCloser[Token`LongName`LeftAngleBracket] = Token`LongName`RightAngleBracket
-GroupOpenerToCloser[Token`LongName`LeftCeiling] = Token`LongName`RightCeiling
-GroupOpenerToCloser[Token`LongName`LeftFloor] = Token`LongName`RightFloor
-GroupOpenerToCloser[Token`LongName`LeftDoubleBracket] = Token`LongName`RightDoubleBracket
-GroupOpenerToCloser[Token`LongName`LeftBracketingBar] = Token`LongName`RightBracketingBar
-GroupOpenerToCloser[Token`LongName`LeftDoubleBracketingBar] = Token`LongName`RightDoubleBracketingBar
-GroupOpenerToCloser[Token`LongName`LeftAssociation] = Token`LongName`RightAssociation
-GroupOpenerToCloser[Token`LongName`OpenCurlyQuote] = Token`LongName`CloseCurlyQuote
-GroupOpenerToCloser[Token`LongName`OpenCurlyDoubleQuote] = Token`LongName`CloseCurlyDoubleQuote
+GroupOpenerToCloser[Token`LongName`LeftAngleBracket] = Closer`LongName`RightAngleBracket
+GroupOpenerToCloser[Token`LongName`LeftCeiling] = Closer`LongName`RightCeiling
+GroupOpenerToCloser[Token`LongName`LeftFloor] = Closer`LongName`RightFloor
+GroupOpenerToCloser[Token`LongName`LeftDoubleBracket] = Closer`LongName`RightDoubleBracket
+GroupOpenerToCloser[Token`LongName`LeftBracketingBar] = Closer`LongName`RightBracketingBar
+GroupOpenerToCloser[Token`LongName`LeftDoubleBracketingBar] = Closer`LongName`RightDoubleBracketingBar
+GroupOpenerToCloser[Token`LongName`LeftAssociation] = Closer`LongName`RightAssociation
+GroupOpenerToCloser[Token`LongName`OpenCurlyQuote] = Closer`LongName`CloseCurlyQuote
+GroupOpenerToCloser[Token`LongName`OpenCurlyDoubleQuote] = Closer`LongName`CloseCurlyDoubleQuote
 
-GroupOpenerToCloser[Token`LinearSyntax`OpenParen] = Token`LinearSyntax`CloseParen
+GroupOpenerToCloser[Token`LinearSyntax`OpenParen] = Closer`LinearSyntax`CloseParen
 
 
+TokenToCloser[Token`CloseCurly] = Closer`CloseCurly
+TokenToCloser[Token`BarGreater] = Closer`BarGreater
+TokenToCloser[Token`CloseSquare] = Closer`CloseSquare
+TokenToCloser[Token`CloseParen] = Closer`CloseParen
 
-GroupCloserToOpener[Token`CloseCurly] = Token`OpenCurly
-GroupCloserToOpener[Token`BarGreater] = Token`LessBar
-GroupCloserToOpener[Token`CloseSquare] = Token`OpenSquare
-GroupCloserToOpener[Token`CloseParen] = Token`OpenParen
+TokenToCloser[Token`LongName`RightAngleBracket] = Closer`LongName`RightAngleBracket
+TokenToCloser[Token`LongName`RightCeiling] = Closer`LongName`RightCeiling
+TokenToCloser[Token`LongName`RightFloor] = Closer`LongName`RightFloor
+TokenToCloser[Token`LongName`RightDoubleBracket] = Closer`LongName`RightDoubleBracket
+TokenToCloser[Token`LongName`RightBracketingBar] = Closer`LongName`RightBracketingBar
+TokenToCloser[Token`LongName`RightDoubleBracketingBar] = Closer`LongName`RightDoubleBracketingBar
+TokenToCloser[Token`LongName`RightAssociation] = Closer`LongName`RightAssociation
+TokenToCloser[Token`LongName`CloseCurlyQuote] = Closer`LongName`CloseCurlyQuote
+TokenToCloser[Token`LongName`CloseCurlyDoubleQuote] = Closer`LongName`CloseCurlyDoubleQuote
 
-GroupCloserToOpener[Token`LongName`RightAngleBracket] = Token`LongName`LeftAngleBracket
-GroupCloserToOpener[Token`LongName`RightCeiling] = Token`LongName`LeftCeiling
-GroupCloserToOpener[Token`LongName`RightFloor] = Token`LongName`LeftFloor
-GroupCloserToOpener[Token`LongName`RightDoubleBracket] = Token`LongName`LeftDoubleBracket
-GroupCloserToOpener[Token`LongName`RightBracketingBar] = Token`LongName`LeftBracketingBar
-GroupCloserToOpener[Token`LongName`RightDoubleBracketingBar] = Token`LongName`LeftDoubleBracketingBar
-GroupCloserToOpener[Token`LongName`RightAssociation] = Token`LongName`LeftAssociation
-GroupCloserToOpener[Token`LongName`CloseCurlyQuote] = Token`LongName`OpenCurlyQuote
-GroupCloserToOpener[Token`LongName`CloseCurlyDoubleQuote] = Token`LongName`OpenCurlyDoubleQuote
+TokenToCloser[Token`LinearSyntax`CloseParen] = Closer`LinearSyntax`CloseParen
 
-GroupCloserToOpener[Token`LinearSyntax`CloseParen] = Token`LinearSyntax`OpenParen
+
 
 
 
@@ -654,8 +655,8 @@ SymbolPtr& InfixOperatorToSymbol(TokenEnum T);
 SymbolPtr& GroupOpenerToSymbol(TokenEnum T);
 SymbolPtr& PrefixBinaryOperatorToSymbol(TokenEnum T);
 
-TokenEnum GroupOpenerToCloser(TokenEnum T);
-TokenEnum GroupCloserToOpener(TokenEnum T);
+Closer GroupOpenerToCloser(TokenEnum T);
+Closer TokenToCloser(TokenEnum T);
 
 SymbolPtr& TokenToSymbol(TokenEnum T);
 
@@ -765,19 +766,19 @@ void Symbol::put(MLINK mlp) const {
 
      {""} ~Join~
 
-     {"TokenEnum GroupOpenerToCloser(TokenEnum T) {"} ~Join~
+     {"Closer GroupOpenerToCloser(TokenEnum T) {"} ~Join~
      {"switch (T.value()) {"} ~Join~
       Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal[#[[2]]], ";"}]&, DownValues[GroupOpenerToCloser]] ~Join~
-      {"default: assert(false && \"Unhandled token\"); return TOKEN_UNKNOWN;",
+      {"default: assert(false && \"Unhandled token\"); return CLOSER_UNKNOWN;",
      "}"} ~Join~
      {"}"} ~Join~
 
      {""} ~Join~
 
-     {"TokenEnum GroupCloserToOpener(TokenEnum T) {"} ~Join~
+     {"Closer TokenToCloser(TokenEnum T) {"} ~Join~
      {"switch (T.value()) {"} ~Join~
-      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal[#[[2]]], ";"}]&, DownValues[GroupCloserToOpener]] ~Join~
-      {"default: assert(false && \"Unhandled token\"); return TOKEN_UNKNOWN;",
+      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal[#[[2]]], ";"}]&, DownValues[TokenToCloser]] ~Join~
+      {"default: return CLOSER_UNKNOWN;",
      "}"} ~Join~
      {"}"} ~Join~
 

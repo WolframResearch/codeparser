@@ -291,7 +291,7 @@ NodePtr PostfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext 
 
 
 GroupParselet::GroupParselet(TokenEnum Opener) :
-    Opener(Opener), Op(GroupOpenerToSymbol(Opener)), Closer(GroupOpenerToCloser(Opener)) {}
+    Op(GroupOpenerToSymbol(Opener)), Closr(GroupOpenerToCloser(Opener)) {}
 
 NodePtr GroupParselet::parse(Token firstTok, ParserContext Ctxt) const {
     
@@ -301,7 +301,8 @@ NodePtr GroupParselet::parse(Token firstTok, ParserContext Ctxt) const {
     
     TheParser->nextToken(firstTok);
     
-    Ctxt.Closer = Closer;
+    Ctxt.Closr = Closr;
+    
     //
     // FIXME: clear other flags here also?
     //
@@ -337,7 +338,7 @@ NodePtr GroupParselet::parse(Token firstTok, ParserContext Ctxt) const {
         auto Tok = TheParser->currentToken();
         Tok = TheParser->eatAll(Tok, Ctxt, ArgsTest1);
         
-        if (Tok.Tok == Closer) {
+        if (TokenToCloser(Tok.Tok) == Closr) {
             
             //
             // Everything is good
@@ -1084,8 +1085,7 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext Ctxt)
     
     auto Tok = TheParser->currentToken();
     
-    auto CloserTok = TOKEN_LINEARSYNTAX_CLOSEPAREN;
-    Ctxt.Closer = CloserTok;
+    Ctxt.Closr = CLOSER_LINEARSYNTAX_CLOSEPAREN;
     
     NodeSeq Args;
     Args.reserve(1);
@@ -1113,7 +1113,7 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext Ctxt)
             
             return group;
         }
-        if (Tok.Tok == CloserTok) {
+        if (Tok.Tok == TOKEN_LINEARSYNTAX_CLOSEPAREN) {
             
             Args.reserve(Args.size() + 1);
             Args.append(NodePtr(new LeafNode(Tok)));
