@@ -332,8 +332,8 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      Throw[cst, "OK"]
      ];
     
-    If[!FreeQ[cst, _SyntaxErrorNode],
-     errs = Cases[cst, _SyntaxErrorNode, {0, Infinity}];
+    If[!FreeQ[cst, _SyntaxErrorNode | _ErrorNode],
+     errs = Cases[cst, _SyntaxErrorNode | _ErrorNode, {0, Infinity}];
      f = Failure[
        "SyntaxError", <|"FileName" -> file, 
         "SyntaxErrors" -> errs|>];
@@ -713,9 +713,9 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       Throw[ast, "Unhandled"]
     ];
     
-    If[! FreeQ[ast, _SyntaxErrorNode | _AbstractSyntaxErrorNode],
+    If[! FreeQ[ast, _SyntaxErrorNode | _ErrorNode | _AbstractSyntaxErrorNode],
      errs = 
-      Cases[ast, _SyntaxErrorNode | _AbstractSyntaxErrorNode, {0, 
+      Cases[ast, _SyntaxErrorNode | _ErrorNode | _AbstractSyntaxErrorNode, {0, 
         Infinity}];
      f = Failure[
        "SyntaxError2", <|"FileName" -> file, "SyntaxErrors" -> errs|>];

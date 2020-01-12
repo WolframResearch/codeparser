@@ -171,7 +171,7 @@ TestMatch[
 	FirstCase[ConcreteParseString["#$aaa", ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxUndocumentedSlot", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UndocumentedSlotSyntax", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-P7B1J0"
 ]
@@ -195,7 +195,7 @@ TestMatch[
 	FirstCase[ConcreteParseString["#aaa`bbb", ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxUndocumentedSlot", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UndocumentedSlotSyntax", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-B1O4Q3"
 ]
@@ -204,7 +204,7 @@ TestMatch[
 	FirstCase[ConcreteParseString["#\"aaa\"", ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["SyntaxUndocumentedSlot", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UndocumentedSlotSyntax", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-T8A1U7"
 ]
@@ -276,7 +276,7 @@ TestMatch[
 	FirstCase[ConcreteParseString["1.2.3", ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>] &],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["ImplicitTimes", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnexpectedImplicitTimes", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-T2M0V0"
 ]

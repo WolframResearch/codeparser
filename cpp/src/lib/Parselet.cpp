@@ -96,7 +96,7 @@ NodePtr SymbolParselet::parse(Token TokIn, ParserContext Ctxt) const {
     // because in e.g.,  a_*b:f[]  the b is the last node in the Times expression and needs to bind with  :f[]
     // Parsing  a_*b  completely, and then parsing  :f[]  would be wrong.
     //
-    if ((Ctxt.Flag & PARSER_COLON) != PARSER_COLON) {
+    if ((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
         
         if (Tok.Tok == TOKEN_COLON) {
             
@@ -300,7 +300,7 @@ NodePtr GroupParselet::parse(Token firstTok, ParserContext Ctxt) const {
     //
     // FIXME: clear other flags here also?
     //
-    Ctxt.Flag &= ~(PARSER_COLON);
+    Ctxt.Flag &= ~(PARSER_INSIDE_COLON);
     Ctxt.Prec = PRECEDENCE_LOWEST;
     
     NodeSeq Args;
@@ -576,7 +576,7 @@ NodePtr UnderParselet::parse(Token TokIn, ParserContext Ctxt) const {
     // make sure to not parse the second : here
     // We are already inside ColonParselet from the first :, and so ColonParselet will also handle the second :
     //
-    if ((Ctxt.Flag & PARSER_COLON) != PARSER_COLON) {
+    if ((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
         
         if (Tok.Tok == TOKEN_COLON) {
             
@@ -661,7 +661,7 @@ NodePtr UnderParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserCo
     // For something like a:b_c:d when parsing _
     // ColonFlag == true
     //
-    if ((Ctxt.Flag & PARSER_COLON) != PARSER_COLON) {
+    if ((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
         
         if (Tok.Tok == TOKEN_COLON) {
             
@@ -804,10 +804,10 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) cons
 //
 NodePtr ColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
     
-    assert((Ctxt.Flag & PARSER_COLON) != PARSER_COLON);
+    assert((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON);
     
     Ctxt.Prec = PRECEDENCE_FAKE_PATTERNCOLON;
-    Ctxt.Flag |= PARSER_COLON;
+    Ctxt.Flag |= PARSER_INSIDE_COLON;
     
     TheParser->nextToken(TokIn);
     
@@ -862,7 +862,7 @@ NodePtr ColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) cons
     
     if (Tok.Tok == TOKEN_COLON) {
         
-        Ctxt.Flag &= ~(PARSER_COLON);
+        Ctxt.Flag &= ~(PARSER_INSIDE_COLON);
         
         NodeSeq PatSeq;
         PatSeq.reserve(1 + 1);
@@ -886,7 +886,7 @@ NodePtr ColonParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserCo
     // when parsing a in a:b  then ColonFlag is false
     // when parsing b in a:b  then ColonFlag is true
     //
-    assert((Ctxt.Flag & PARSER_COLON) != PARSER_COLON);
+    assert((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON);
     
     Ctxt.Prec = PRECEDENCE_FAKE_OPTIONALCOLON;
     
@@ -1250,7 +1250,7 @@ IntegralParselet::IntegralParselet(TokenEnum Tok) : Op1(PrefixOperatorToSymbol(T
 NodePtr IntegralParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     Ctxt.Prec = getPrecedence();
-    Ctxt.Flag |= PARSER_INTEGRAL;
+    Ctxt.Flag |= PARSER_INSIDE_INTEGRAL;
     
     TheParser->nextToken(TokIn);
     
@@ -1279,7 +1279,7 @@ NodePtr IntegralParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     auto operand = TheParser->parse(Tok, Ctxt);
     
-    Ctxt.Flag &= ~(PARSER_INTEGRAL);
+    Ctxt.Flag &= ~(PARSER_INSIDE_INTEGRAL);
     
     LeafSeq ArgsTest2;
     

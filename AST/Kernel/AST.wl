@@ -242,7 +242,6 @@ Used to report f[,] or "\[Alpa]" as an option, e.g. SyntaxIssues -> {SyntaxIssue
 *)
 SyntaxIssues
 AbstractSyntaxIssues
-AbstractFormatIssues
 SyntaxIssue
 FormatIssue
 

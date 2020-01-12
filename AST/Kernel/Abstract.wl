@@ -187,7 +187,12 @@ abstract[LeafNode[BlankSequence, _, data_]] := CallNode[ToNode[BlankSequence], {
 abstract[LeafNode[BlankNullSequence, _, data_]] := CallNode[ToNode[BlankNullSequence], {}, data]
 abstract[LeafNode[OptionalDefault, _, data_]] := CallNode[ToNode[Optional], {CallNode[ToNode[Blank], {}, <||>]}, data]
 
-abstract[LeafNode[Token`Fake`ImplicitNull, _, data_]] := LeafNode[Symbol, "Null", KeyTake[data, keysToTake] ~Join~ <|AbstractSyntaxIssues->{SyntaxIssue["Comma", "Extra ``,``.", "Error", <| data, CodeActions->{CodeAction["Delete ``,``", DeleteNode, <| Source->data[Source] |>]}, ConfidenceLevel -> 1.0 |>]}|>]
+abstract[LeafNode[Token`Fake`ImplicitNull, _, data_]] :=
+	LeafNode[Symbol, "Null", data ~Join~
+		<| AbstractSyntaxIssues -> {
+				SyntaxIssue["Comma", "Extra ``,``.", "Error",
+					<| data, CodeActions -> {
+						CodeAction["Delete ``,``", DeleteNode, <| Source -> data[Source] |>]}, ConfidenceLevel -> 1.0 |>]}|>]
 
 
 abstract[LeafNode[Token`Fake`ImplicitOne, _, data_]] := LeafNode[Integer, "1", data]

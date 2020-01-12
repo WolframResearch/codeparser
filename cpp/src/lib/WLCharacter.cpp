@@ -189,9 +189,9 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
             }
             
             auto o0 = ii % 8;
-            ii = ii / 8;
+            ii /= 8;
             auto o1 = ii % 8;
-            ii = ii / 8;
+            ii /= 8;
             auto o2 = ii % 8;
             
             stream << SourceCharacter('\\');
@@ -210,7 +210,7 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
             }
             
             auto x0 = ii % 16;
-            ii = ii / 16;
+            ii /= 16;
             auto x1 = ii % 16;
             
             stream << SourceCharacter('\\');
@@ -229,11 +229,11 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
             }
             
             auto x0 = ii % 16;
-            ii = ii / 16;
+            ii /= 16;
             auto x1 = ii % 16;
-            ii = ii / 16;
+            ii /= 16;
             auto x2 = ii % 16;
-            ii = ii / 16;
+            ii /= 16;
             auto x3 = ii % 16;
             
             stream << SourceCharacter('\\');
@@ -254,15 +254,15 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
             }
             
             auto x0 = ii % 16;
-            ii = ii / 16;
+            ii /= 16;
             auto x1 = ii % 16;
-            ii = ii / 16;
+            ii /= 16;
             auto x2 = ii % 16;
-            ii = ii / 16;
+            ii /= 16;
             auto x3 = ii % 16;
-            ii = ii / 16;
+            ii /= 16;
             auto x4 = ii % 16;
-            ii = ii / 16;
+            ii /= 16;
             auto x5 = ii % 16;
             
             stream << SourceCharacter('\\');

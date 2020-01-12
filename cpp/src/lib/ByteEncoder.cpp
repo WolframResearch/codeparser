@@ -112,6 +112,8 @@ void ByteEncoder::encodeBytes(std::array<unsigned char, 4>& arr, int32_t val, By
         
         arr[0] = '\r';
         arr[1] = '\n';
+        
+        return;
     }
     
     if (val <= 0x7f) {

@@ -901,7 +901,7 @@ Precedence Parser::getInfixTokenPrecedence(Token& TokIn, ParserContext Ctxt, boo
     
     if (TokIn.Tok.isDifferentialD()) {
         
-        if ((Ctxt.Flag & PARSER_INTEGRAL) == PARSER_INTEGRAL) {
+        if ((Ctxt.Flag & PARSER_INSIDE_INTEGRAL) == PARSER_INSIDE_INTEGRAL) {
             
             //
             // Inside \[Integral], so \[DifferentialD] is treated specially
@@ -945,8 +945,6 @@ NodePtr Parser::parse(Token token, ParserContext Ctxt) {
     assert(!token.Tok.isTrivia() && "Must handle at the call site");
     assert(token.Tok != TOKEN_ENDOFFILE && "Must handle at the call site");
     assert(token.Tok.isPossibleBeginningOfExpression() && "Must handle at the call site");
-    
-    Ctxt.StackDepth++;
     
     //
     // Prefix start
@@ -1064,7 +1062,7 @@ NodePtr Parser::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserCon
         //
         // FIXME: clear other flags here also?
         //
-        Ctxt.Flag &= ~(PARSER_COLON);
+        Ctxt.Flag &= ~(PARSER_INSIDE_COLON);
         
         if (wasCloser != nullptr) {
             *wasCloser = false;

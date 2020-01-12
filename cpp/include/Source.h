@@ -187,15 +187,14 @@ SyntaxError TokenErrorToSyntaxError(TokenEnum);
 
 typedef const std::string SyntaxIssueTag;
 
-SyntaxIssueTag SYNTAXISSUETAG_SYNTAXERROR = "SyntaxError";
 SyntaxIssueTag SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER = "UnrecognizedCharacter";
 SyntaxIssueTag SYNTAXISSUETAG_UNSUPPORTEDCHARACTER = "UnsupportedCharacter";
 SyntaxIssueTag SYNTAXISSUETAG_UNDOCUMENTEDCHARACTER = "UndocumentedCharacter";
 SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDESCAPESEQUENCE = "UnexpectedEscapeSequence";
 SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDCHARACTER = "UnexpectedCharacter";
-SyntaxIssueTag SYNTAXISSUETAG_SYNTAXUNDOCUMENTEDSLOT = "SyntaxUndocumentedSlot";
-SyntaxIssueTag SYNTAXISSUETAG_IMPLICITTIMES = "ImplicitTimes";
-SyntaxIssueTag SYNTAXISSUETAG_CHARACTERENCODING = "CharacterEncoding";
+SyntaxIssueTag SYNTAXISSUETAG_UNDOCUMENTEDSLOTSYNTAX = "UndocumentedSlotSyntax";
+SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDIMPLICITTIMES = "UnexpectedImplicitTimes";
+SyntaxIssueTag SYNTAXISSUETAG_INVALIDCHARACTERENCODING = "InvalidCharacterEncoding";
 
 typedef const std::string FormatIssueTag;
 
@@ -205,11 +204,8 @@ typedef const std::string FormatIssueTag;
 // SyntaxAmbiguitySpace is: insert space between characters
 //
 FormatIssueTag FORMATISSUETAG_SPACE = "Space";
-FormatIssueTag FORMATISSUETAG_SPACEAFTER = "SpaceAfter";
-FormatIssueTag FORMATISSUETAG_NOTCONTIGUOUS = "NotContiguous";
 FormatIssueTag FORMATISSUETAG_UNEXPECTEDCARRIAGERETURN = "UnexpectedCarriageReturn";
 FormatIssueTag FORMATISSUETAG_UNEXPECTEDLINECONTINUATION = "UnexpectedLineContinuation";
-SyntaxIssueTag FORMATISSUETAG_DIFFERENTLINE = "DifferentLine";
 
 
 //

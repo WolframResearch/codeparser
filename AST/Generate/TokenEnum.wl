@@ -89,6 +89,8 @@ These binary/infix operators are also prefix
 (*isPossibleBeginningOfExpression[Token`PlusPlus] = False*)
 (*isPossibleBeginningOfExpression[Token`SemiSemi] = False*)
 (*isPossibleBeginningOfExpression[Token`BangBang] = False*)
+(*isPossibleBeginningOfExpression[Token`LongName`Minus] = False*)
+
 (*
 Calls
 *)

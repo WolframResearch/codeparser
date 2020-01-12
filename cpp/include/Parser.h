@@ -18,7 +18,6 @@ class CallParselet;
 class PostfixParselet;
 class ContextSensitivePrefixParselet;
 class ContextSensitiveInfixParselet;
-class PrefixParselet;
 #if STARTOFLINE
 class StartOfLineParselet;
 class StartOfFileParselet;
@@ -46,12 +45,12 @@ enum ParserContextFlagBits : uint8_t {
     // when parsing a in a:b  then ColonFlag is false
     // when parsing b in a:b  then ColonFlag is true
     //
-    PARSER_COLON = 0x01,
+    PARSER_INSIDE_COLON = 0x01,
     
     //
     //
     //
-    PARSER_INTEGRAL = 0x02,
+    PARSER_INSIDE_INTEGRAL = 0x02,
     
     //
     //
@@ -75,19 +74,15 @@ struct ParserContext {
     uint16_t GroupDepth;
     
     //
-    //
-    //
-    uint16_t StackDepth;
-    
-    //
     // Precedence of the current operator being parsed
     //
     Precedence Prec;
     
+    ParserContextFlag Flag : 4;
+    
     //
     // The Closer of the innermost Group being parsed
     //
-    ParserContextFlag Flag : 4;
     Closer Closr : 4;
     
     ParserContext() : GroupDepth(), Prec(), Flag(), Closr() {}
@@ -97,7 +92,7 @@ struct ParserContext {
 // Sizes of structs with bit-fields are implementation-dependent
 //
 #ifdef __clang__
-static_assert(sizeof(ParserContext) == 8, "Check your assumptions");
+static_assert(sizeof(ParserContext) == 4, "Check your assumptions");
 #endif
 
 class Parser {
