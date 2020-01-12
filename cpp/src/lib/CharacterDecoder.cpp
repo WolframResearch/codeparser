@@ -49,175 +49,116 @@ WLCharacter CharacterDecoder::nextWLCharacter0(NextCharacterPolicy policy) {
     // handle escapes like line continuation and special characters
     //
     
-    WLCharacter c;
-    
     if (curSource.to_point() != '\\') {
         
-        c = WLCharacter(curSource.to_point());
-        
-    } else {
-        
-        //
-        // There was a \
-        //
-        
-        auto escapedBuf = TheByteBuffer->buffer;
-        auto escapedLoc = TheByteDecoder->SrcLoc;
-        
-        curSource = TheByteDecoder->nextSourceCharacter0(policy);
-        
-        switch (curSource.to_point()) {
-            case '\n':
-            case '\r':
-            case CODEPOINT_CRLF:
-                c = handleLineContinuation(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, curSource, policy);
-                break;
-            case '[':
-                c = handleLongName(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
-                break;
-            case ':':
-                c = handle4Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
-                break;
-            case '.':
-                c = handle2Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
-                break;
-            case '|':
-                c = handle6Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
-                break;
-            case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7':
-                c = handleOctal(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
-                break;
-                //
-                // Simple escaped characters
-                // \b \f \n \r \t
-                //
-            case 'b':
-                c = WLCharacter(CODEPOINT_STRINGMETA_BACKSPACE, ESCAPE_SINGLE);
-                break;
-            case 'f':
-                //
-                // \f is NOT a space character (but inside of strings, it does have special meaning)
-                //
-                c = WLCharacter(CODEPOINT_STRINGMETA_FORMFEED, ESCAPE_SINGLE);
-                break;
-            case 'n':
-                //
-                // \n is NOT a newline character (but inside of strings, it does have special meaning)
-                //
-                c = WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
-                break;
-            case 'r':
-                //
-                // \r is NOT a newline character (but inside of strings, it does have special meaning)
-                //
-                c = WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
-                break;
-            case 't':
-                //
-                // \t is NOT a space character (but inside of strings, it does have special meaning)
-                //
-                c = WLCharacter(CODEPOINT_STRINGMETA_TAB, ESCAPE_SINGLE);
-                break;
-                //
-                // \\ \" \< \>
-                //
-                // String meta characters
-                // What are \< and \> ?
-                // https://mathematica.stackexchange.com/questions/105018/what-are-and-delimiters-in-box-expressions
-                // https://stackoverflow.com/q/6065887
-                //
-            case '"':
-                c = WLCharacter(CODEPOINT_STRINGMETA_DOUBLEQUOTE, ESCAPE_SINGLE);
-                break;
-            case '\\':
-                c = handleBackSlash(escapedBuf, escapedLoc, policy);
-                break;
-            case '<':
-                c = WLCharacter(CODEPOINT_STRINGMETA_OPEN, ESCAPE_SINGLE);
-                break;
-            case '>':
-                c = WLCharacter(CODEPOINT_STRINGMETA_CLOSE, ESCAPE_SINGLE);
-                break;
-                //
-                // Linear syntax characters
-                // \! \% \& \( \) \* \+ \/ \@ \^ \_ \` \<space>
-                //
-            case '!':
-                c = WLCharacter(CODEPOINT_LINEARSYNTAX_BANG, ESCAPE_SINGLE);
-                break;
-            case '%':
-                c = WLCharacter(CODEPOINT_LINEARSYNTAX_PERCENT, ESCAPE_SINGLE);
-                break;
-            case '&':
-                c = WLCharacter(CODEPOINT_LINEARSYNTAX_AMP, ESCAPE_SINGLE);
-                break;
-            case '(':
-                c = WLCharacter(CODEPOINT_LINEARSYNTAX_OPENPAREN, ESCAPE_SINGLE);
-                break;
-            case ')':
-                c = WLCharacter(CODEPOINT_LINEARSYNTAX_CLOSEPAREN, ESCAPE_SINGLE);
-                break;
-            case '*':
-                c = WLCharacter(CODEPOINT_LINEARSYNTAX_STAR, ESCAPE_SINGLE);
-                break;
-            case '+':
-                c = WLCharacter(CODEPOINT_LINEARSYNTAX_PLUS, ESCAPE_SINGLE);
-                break;
-            case '/':
-                c = WLCharacter(CODEPOINT_LINEARSYNTAX_SLASH, ESCAPE_SINGLE);
-                break;
-            case '@':
-                c = WLCharacter(CODEPOINT_LINEARSYNTAX_AT, ESCAPE_SINGLE);
-                break;
-            case '^':
-                c = WLCharacter(CODEPOINT_LINEARSYNTAX_CARET, ESCAPE_SINGLE);
-                break;
-            case '_':
-                c = WLCharacter(CODEPOINT_LINEARSYNTAX_UNDER, ESCAPE_SINGLE);
-                break;
-            case '`':
-                c = WLCharacter(CODEPOINT_LINEARSYNTAX_BACKTICK, ESCAPE_SINGLE);
-                break;
-            case ' ':
-                c = WLCharacter(CODEPOINT_LINEARSYNTAX_SPACE, ESCAPE_SINGLE);
-                break;
-                //
-                // Anything else
-                //
-                // Something like \A or \{
-                //
-            default: {
-                c = handleUnhandledEscape(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, curSource, policy);
-                break;
-            }
-        }
+        return WLCharacter(curSource.to_point());
     }
     
     //
-    // Post-processing of WLCharacters
+    // There was a \
     //
     
-#if !NISSUES
-    if ((policy & ENABLE_STRANGE_CHARACTER_CHECKING) == ENABLE_STRANGE_CHARACTER_CHECKING) {
-        
-        if (c.isStrange() || c.isMBStrange()) {
-            
+    auto escapedBuf = TheByteBuffer->buffer;
+    auto escapedLoc = TheByteDecoder->SrcLoc;
+    
+    curSource = TheByteDecoder->nextSourceCharacter0(policy);
+    
+    switch (curSource.to_point()) {
+        case '\n':
+        case '\r':
+        case CODEPOINT_CRLF:
+            return handleLineContinuation(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, curSource, policy);
+        case '[':
+            return handleLongName(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
+        case ':':
+            return handle4Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
+        case '.':
+            return handle2Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
+        case '|':
+            return handle6Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
+        case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7':
+            return handleOctal(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
             //
-            // Just generally strange character is in the code
+            // Simple escaped characters
+            // \b \f \n \r \t
             //
-            
-            auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
-            
-            auto graphicalStr = c.graphicalString();
-            
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 0.95, {}));
-            
-            Issues.push_back(std::move(I));
+        case 'b':
+            return WLCharacter(CODEPOINT_STRINGMETA_BACKSPACE, ESCAPE_SINGLE);
+        case 'f':
+            //
+            // \f is NOT a space character (but inside of strings, it does have special meaning)
+            //
+            return WLCharacter(CODEPOINT_STRINGMETA_FORMFEED, ESCAPE_SINGLE);
+        case 'n':
+            //
+            // \n is NOT a newline character (but inside of strings, it does have special meaning)
+            //
+            return WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
+        case 'r':
+            //
+            // \r is NOT a newline character (but inside of strings, it does have special meaning)
+            //
+            return WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
+        case 't':
+            //
+            // \t is NOT a space character (but inside of strings, it does have special meaning)
+            //
+            return WLCharacter(CODEPOINT_STRINGMETA_TAB, ESCAPE_SINGLE);
+            //
+            // \\ \" \< \>
+            //
+            // String meta characters
+            // What are \< and \> ?
+            // https://mathematica.stackexchange.com/questions/105018/what-are-and-delimiters-in-box-expressions
+            // https://stackoverflow.com/q/6065887
+            //
+        case '"':
+            return WLCharacter(CODEPOINT_STRINGMETA_DOUBLEQUOTE, ESCAPE_SINGLE);
+        case '\\':
+            return handleBackSlash(escapedBuf, escapedLoc, policy);
+        case '<':
+            return WLCharacter(CODEPOINT_STRINGMETA_OPEN, ESCAPE_SINGLE);
+        case '>':
+            return  WLCharacter(CODEPOINT_STRINGMETA_CLOSE, ESCAPE_SINGLE);
+            //
+            // Linear syntax characters
+            // \! \% \& \( \) \* \+ \/ \@ \^ \_ \` \<space>
+            //
+        case '!':
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_BANG, ESCAPE_SINGLE);
+        case '%':
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_PERCENT, ESCAPE_SINGLE);
+        case '&':
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_AMP, ESCAPE_SINGLE);
+        case '(':
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_OPENPAREN, ESCAPE_SINGLE);
+        case ')':
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_CLOSEPAREN, ESCAPE_SINGLE);
+        case '*':
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_STAR, ESCAPE_SINGLE);
+        case '+':
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_PLUS, ESCAPE_SINGLE);
+        case '/':
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_SLASH, ESCAPE_SINGLE);
+        case '@':
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_AT, ESCAPE_SINGLE);
+        case '^':
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_CARET, ESCAPE_SINGLE);
+        case '_':
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_UNDER, ESCAPE_SINGLE);
+        case '`':
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_BACKTICK, ESCAPE_SINGLE);
+        case ' ':
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_SPACE, ESCAPE_SINGLE);
+            //
+            // Anything else
+            //
+            // Something like \A or \{
+            //
+        default: {
+            return handleUnhandledEscape(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, curSource, policy);
         }
     }
-#endif // !NISSUES
-    
-    return c;
 }
 
 //
@@ -521,6 +462,27 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
             
             Issues.push_back(std::move(I));
             
+        } else if (Utils::isMBStrange(point)) {
+            
+            //
+            // Just generally strange character is in the code
+            //
+            
+            WLCharacter c;
+            if (isRaw(longNameStr)) {
+                c = WLCharacter(point, ESCAPE_RAW);
+            } else {
+                c = WLCharacter(point, ESCAPE_LONGNAME);
+            }
+            
+            auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+            
+            auto graphicalStr = c.graphicalString();
+            
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+            
+            Issues.push_back(std::move(I));
+            
         } else if (Utils::isUndocumentedLongName(longNameStr)) {
             
             auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNDOCUMENTEDCHARACTER, std::string("Undocumented character: ``\\[") + longNameStr + "]``.", SYNTAXISSUESEVERITY_REMARK, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, {}));
@@ -624,6 +586,24 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
         
         auto point = Utils::parseInteger(hexStr, 16);
         
+#if !NISSUES
+        if (Utils::isStrange(point) || Utils::isMBStrange(point)) {
+            //
+            // Just generally strange character is in the code
+            //
+            
+            auto c = WLCharacter(point, ESCAPE_4HEX);
+            
+            auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+            
+            auto graphicalStr = c.graphicalString();
+            
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+            
+            Issues.push_back(std::move(I));
+        }
+#endif // !NISSUES
+        
         return WLCharacter(point, ESCAPE_4HEX);
     }
     
@@ -718,6 +698,24 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
     if (it == ToSpecialMap.end()) {
         
         auto point = Utils::parseInteger(hexStr, 16);
+        
+#if !NISSUES
+        if (Utils::isStrange(point) || Utils::isMBStrange(point)) {
+            //
+            // Just generally strange character is in the code
+            //
+            
+            auto c = WLCharacter(point, ESCAPE_2HEX);
+            
+            auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+            
+            auto graphicalStr = c.graphicalString();
+            
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+            
+            Issues.push_back(std::move(I));
+        }
+#endif // !NISSUES
         
         return WLCharacter(point, ESCAPE_2HEX);
     }
@@ -814,6 +812,24 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
         
         auto point = Utils::parseInteger(octalStr, 8);
         
+#if !NISSUES
+        if (Utils::isStrange(point) || Utils::isMBStrange(point)) {
+            //
+            // Just generally strange character is in the code
+            //
+            
+            auto c = WLCharacter(point, ESCAPE_OCTAL);
+            
+            auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+            
+            auto graphicalStr = c.graphicalString();
+            
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+            
+            Issues.push_back(std::move(I));
+        }
+#endif // !NISSUES
+        
         return WLCharacter(point, ESCAPE_OCTAL);
     }
     
@@ -909,6 +925,24 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
     if (it == ToSpecialMap.end()) {
         
         auto point = Utils::parseInteger(hexStr, 16);
+        
+#if !NISSUES
+        if (Utils::isStrange(point) || Utils::isMBStrange(point)) {
+            //
+            // Just generally strange character is in the code
+            //
+            
+            auto c = WLCharacter(point, ESCAPE_6HEX);
+            
+            auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+            
+            auto graphicalStr = c.graphicalString();
+            
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+            
+            Issues.push_back(std::move(I));
+        }
+#endif // !NISSUES
         
         return WLCharacter(point, ESCAPE_6HEX);
     }

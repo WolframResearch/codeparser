@@ -117,7 +117,155 @@ void Utils::strangeLetterlikeWarning(Source Src, WLCharacter c) {
     
     TheTokenizer->addIssue(std::move(I));
 }
-#endif // !NISSUES
+
+bool Utils::isStrange(int32_t point) {
+
+    switch (point) {
+            //
+            // C0 control characters
+            //
+            // Skipping LF, CR, TAB, and ESC
+            //
+        case '\x00': case '\x01': case '\x02': case '\x03': case '\x04': case '\x05': case '\x06': case '\x07':
+        case '\x08': /*    \x09*/ /*    \x0a*/ case '\x0b': case '\x0c': /*    \x0d*/ case '\x0e': case '\x0f':
+        case '\x10': case '\x11': case '\x12': case '\x13': case '\x14': case '\x15': case '\x16': case '\x17':
+        case '\x18': case '\x19': case '\x1a': /*    \x1b*/ case '\x1c': case '\x1d': case '\x1e': case '\x1f':
+            //
+            // Make sure to include DEL
+            //
+        case '\x7f':
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool Utils::isMBStrange(int32_t point) {
+
+    //
+    // Reject if ASCII, should use isStrange()
+    //
+    if ((0x00 <= point && point <= 0x7f)) {
+        return false;
+    }
+
+    //
+    // Individual characters
+    //
+    switch (point) {
+            //
+            // ZERO WIDTH SPACE
+            //
+        case 0x200b:
+            return true;
+            //
+            // ZERO WIDTH NON-JOINER
+            //
+        case 0x200c:
+            return true;
+            //
+            // ZERO WIDTH JOINER
+            //
+        case 0x200d:
+            return true;
+            //
+            // LINE SEPARATOR
+            //
+//        case 0x2028:
+//            return true;
+            //
+            // WORD JOINER
+            //
+            // This is the character that is recommended to use for ZERO WIDTH NON-BREAKING SPACE
+            // https://unicode.org/faq/utf_bom.html#bom6
+            //
+//        case 0x2060:
+//            return true;
+            //
+            // FUNCTION APPLICATION
+            //
+        case 0x2061:
+            return true;
+            //
+            // ZERO WIDTH NO-BREAK SPACE
+            //
+            // But most likely BOM
+            //
+        case 0xfeff:
+            assert(false);
+            return true;
+            //
+            // ZERO WIDTH NO-BREAK SPACE
+            //
+            // also BOM
+            //
+        case 0xe001:
+            return true;
+            //
+            // REPLACEMENT CHARACTER
+            //
+            // This can be the result of badly encoded UTF-8
+            //
+        case 0xfffd:
+            return true;
+    }
+
+    //
+    // C1
+    //
+    if (0x0080 <= point && point <= 0x009f) {
+        return true;
+    }
+
+    //
+    // High surrogates
+    //
+    if (0xd800 <= point && point <= 0xdbff) {
+        return true;
+    }
+
+    //
+    // Low surrogates
+    //
+    if (0xdc00 <= point && point <= 0xdfff) {
+        return true;
+    }
+
+    //
+    // BMP PUA
+    //
+
+    //
+    // Disable checking BMP PUA for now
+    //
+    // There are a lot of WL-specific characters in the BMP PUA
+    //
+
+//    if (0xe000 <= val && val <= 0xf8ff) {
+//        return true;
+//    }
+
+    //
+    // Plane 15 PUA
+    //
+    if (0xf0000 <= point && point <= 0xffffd) {
+        return true;
+    }
+
+    //
+    // Plane 16 PUA
+    //
+    if (0x100000 <= point && point <= 0x10fffd) {
+        return true;
+    }
+
+    if (Utils::isMBNonCharacter(point)) {
+        return true;
+    }
+
+    return false;
+}
+#endif // NISSUES
 
 //
 // https://en.wikipedia.org/wiki/Universal_Character_Set_characters#Non-characters

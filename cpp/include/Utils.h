@@ -43,6 +43,10 @@ public:
     
 #if !NISSUES
     static void strangeLetterlikeWarning(Source Src, WLCharacter c);
+    
+    static bool isStrange(int32_t point);
+    
+    static bool isMBStrange(int32_t point);
 #endif // !NISSUES
     
 };

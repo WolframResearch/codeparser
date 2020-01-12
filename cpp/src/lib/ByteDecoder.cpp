@@ -63,7 +63,7 @@ void ByteDecoder::deinit() {
 SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
 
 #if !NISSUES
-    auto currentSourceCharacterLoc = SrcLoc;
+    auto currentSourceCharacterStartLoc = SrcLoc;
 #endif // NISSUES
     
     auto firstByte = TheByteBuffer->nextByte0();
@@ -94,7 +94,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                 // No CodeAction here
                 //
                 
-                auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", FORMATISSUESEVERITY_FORMATTING, Source(currentSourceCharacterLoc), 0.0, {}));
+                auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", FORMATISSUESEVERITY_FORMATTING, Source(currentSourceCharacterStartLoc), 0.0, {}));
                 
                 addIssue(std::move(I));
             }
@@ -105,20 +105,56 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             //
             // Handle LF also
             //
-        case 0x0a: {
+        case 0x0a:
             
             SrcLoc.Line++;
             SrcLoc.Column = 1;
             
             return SourceCharacter('\n');
-        }
+        case 0x09: case 0x1b:
+            
+            // Valid
+            
+            SrcLoc.Column++;
+            
+            return SourceCharacter(firstByte);
+            
             //
             // 1 byte UTF-8 sequence
             //
         case 0x00: case 0x01: case 0x02: case 0x03: case 0x04: case 0x05: case 0x06: case 0x07:
-        case 0x08: case 0x09: /*    LF*/ case 0x0b: case 0x0c: /*    CR*/ case 0x0e: case 0x0f:
+        case 0x08: /*   TAB*/ /*    LF*/ case 0x0b: case 0x0c: /*    CR*/ case 0x0e: case 0x0f:
         case 0x10: case 0x11: case 0x12: case 0x13: case 0x14: case 0x15: case 0x16: case 0x17:
-        case 0x18: case 0x19: case 0x1a: case 0x1b: case 0x1c: case 0x1d: case 0x1e: case 0x1f:
+        case 0x18: case 0x19: case 0x1a: /*   ESC*/ case 0x1c: case 0x1d: case 0x1e: case 0x1f:
+        case 0x7f:
+            
+            // Valid
+            
+#if !NISSUES
+        {
+            //
+            // Just generally strange character is in the code
+            //
+            
+            auto c = SourceCharacter(firstByte);
+            
+            auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+            
+            auto graphicalStr = c.graphicalString();
+            
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+            
+            Issues.push_back(std::move(I));
+        }
+#endif // !NISSUES
+            
+            SrcLoc.Column++;
+            
+            return SourceCharacter(firstByte);
+            
+            //
+            // 1 byte UTF-8 sequence
+            //
         case 0x20: case 0x21: case 0x22: case 0x23: case 0x24: case 0x25: case 0x26: case 0x27:
         case 0x28: case 0x29: case 0x2a: case 0x2b: case 0x2c: case 0x2d: case 0x2e: case 0x2f:
         case 0x30: case 0x31: case 0x32: case 0x33: case 0x34: case 0x35: case 0x36: case 0x37:
@@ -130,13 +166,14 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
         case 0x60: case 0x61: case 0x62: case 0x63: case 0x64: case 0x65: case 0x66: case 0x67:
         case 0x68: case 0x69: case 0x6a: case 0x6b: case 0x6c: case 0x6d: case 0x6e: case 0x6f:
         case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77:
-        case 0x78: case 0x79: case 0x7a: case 0x7b: case 0x7c: case 0x7d: case 0x7e: case 0x7f:
+        case 0x78: case 0x79: case 0x7a: case 0x7b: case 0x7c: case 0x7d: case 0x7e: /*   DEL*/
             
             // Valid
             
             SrcLoc.Column++;
             
             return SourceCharacter(firstByte);
+            
             //
             // 2 byte UTF-8 sequence
             //
@@ -184,6 +221,24 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             // Valid
             
             auto decoded = (((firstByte & 0x1f) << 6) | (tmp & 0x3f));
+            
+#if !NISSUES
+            if (Utils::isMBStrange(decoded)) {
+                //
+                // Just generally strange character is in the code
+                //
+                
+                auto c = SourceCharacter(decoded);
+                
+                auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+                
+                auto graphicalStr = c.graphicalString();
+                
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+                
+                Issues.push_back(std::move(I));
+            }
+#endif // !NISSUES
             
             SrcLoc.Column++;
             
@@ -265,6 +320,23 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             if (Utils::isMBNonCharacter(decoded)) {
                 status = UTF8STATUS_NONCHARACTER_OR_BOM;
             }
+#if !NISSUES
+            if (Utils::isMBStrange(decoded)) {
+                //
+                // Just generally strange character is in the code
+                //
+                
+                auto c = SourceCharacter(decoded);
+                
+                auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+                
+                auto graphicalStr = c.graphicalString();
+                
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+                
+                Issues.push_back(std::move(I));
+            }
+#endif // !NISSUES
             
             SrcLoc.Column++;
             
@@ -358,6 +430,23 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             if (Utils::isMBNonCharacter(decoded)) {
                 status = UTF8STATUS_NONCHARACTER_OR_BOM;
             }
+#if !NISSUES
+            if (Utils::isMBStrange(decoded)) {
+                //
+                // Just generally strange character is in the code
+                //
+                
+                auto c = SourceCharacter(decoded);
+                
+                auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+                
+                auto graphicalStr = c.graphicalString();
+                
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+                
+                Issues.push_back(std::move(I));
+            }
+#endif // !NISSUES
             
             SrcLoc.Column++;
             
@@ -445,6 +534,23 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             if (Utils::isMBNonCharacter(decoded)) {
                 status = UTF8STATUS_NONCHARACTER_OR_BOM;
             }
+#if !NISSUES
+            if (Utils::isMBStrange(decoded)) {
+                //
+                // Just generally strange character is in the code
+                //
+                
+                auto c = SourceCharacter(decoded);
+                
+                auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+                
+                auto graphicalStr = c.graphicalString();
+                
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+                
+                Issues.push_back(std::move(I));
+            }
+#endif // !NISSUES
             
             SrcLoc.Column++;
             
@@ -563,6 +669,23 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             if (Utils::isMBNonCharacter(decoded)) {
                 status = UTF8STATUS_NONCHARACTER_OR_BOM;
             }
+#if !NISSUES
+            if (Utils::isMBStrange(decoded)) {
+                //
+                // Just generally strange character is in the code
+                //
+                
+                auto c = SourceCharacter(decoded);
+                
+                auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+                
+                auto graphicalStr = c.graphicalString();
+                
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+                
+                Issues.push_back(std::move(I));
+            }
+#endif // !NISSUES
             
             SrcLoc.Column++;
             
@@ -682,6 +805,24 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                 status = UTF8STATUS_NONCHARACTER_OR_BOM;
             }
             
+#if !NISSUES
+            if (Utils::isMBStrange(decoded)) {
+                //
+                // Just generally strange character is in the code
+                //
+                
+                auto c = SourceCharacter(decoded);
+                
+                auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+                
+                auto graphicalStr = c.graphicalString();
+                
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+                
+                Issues.push_back(std::move(I));
+            }
+#endif // !NISSUES
+            
             SrcLoc.Column++;
             
             return SourceCharacter(decoded);
@@ -799,6 +940,23 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             if (Utils::isMBNonCharacter(decoded)) {
                 status = UTF8STATUS_NONCHARACTER_OR_BOM;
             }
+#if !NISSUES
+            if (Utils::isMBStrange(decoded)) {
+                //
+                // Just generally strange character is in the code
+                //
+                
+                auto c = SourceCharacter(decoded);
+                
+                auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+                
+                auto graphicalStr = c.graphicalString();
+                
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+                
+                Issues.push_back(std::move(I));
+            }
+#endif // !NISSUES
             
             SrcLoc.Column++;
             

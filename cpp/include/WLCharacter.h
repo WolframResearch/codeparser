@@ -105,8 +105,6 @@ struct WLCharacter {
     
     bool isControl() const;
     
-    bool isStrange() const;
-    
     bool isSign() const;
     
     bool isMBLinearSyntax() const;
@@ -122,9 +120,7 @@ struct WLCharacter {
     bool isMBStrangeNewline() const;
     bool isMBUninterpretable() const;
     bool isMBControl() const;
-    bool isMBStrange() const;
     bool isMBUnsupported() const;
-    bool isMBNonCharacter() const;
 };
 
 //
