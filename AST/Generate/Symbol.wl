@@ -541,36 +541,7 @@ TokenToCloser[Token`LinearSyntax`CloseParen] = Closer`LinearSyntax`CloseParen
 
 
 
-
-
 PrefixBinaryOperatorToSymbol[Token`LongName`Integral] = Integrate
-
-
-
-InequalityOperatorToSymbol[Token`EqualEqual] = Inequality
-InequalityOperatorToSymbol[Token`LessEqual] = Inequality
-InequalityOperatorToSymbol[Token`BangEqual] = Inequality
-InequalityOperatorToSymbol[Token`Less] = Inequality
-InequalityOperatorToSymbol[Token`Greater] = Inequality
-InequalityOperatorToSymbol[Token`GreaterEqual] = Inequality
-InequalityOperatorToSymbol[Token`LongName`Equal] = Inequality
-InequalityOperatorToSymbol[Token`LongName`LessEqual] = Inequality
-InequalityOperatorToSymbol[Token`LongName`GreaterEqual] = Inequality
-InequalityOperatorToSymbol[Token`LongName`NotEqual] = Inequality
-InequalityOperatorToSymbol[Token`LongName`LessEqualGreater] = Inequality
-InequalityOperatorToSymbol[Token`LongName`GreaterEqualLess] = Inequality
-InequalityOperatorToSymbol[Token`LongName`NotLessLess] = Inequality
-InequalityOperatorToSymbol[Token`LongName`LongEqual] = Inequality
-
-
-
-VectorInequalityOperatorToSymbol[Token`LongName`VectorGreater] = Developer`VectorInequality
-VectorInequalityOperatorToSymbol[Token`LongName`VectorGreaterEqual] = Developer`VectorInequality
-VectorInequalityOperatorToSymbol[Token`LongName`VectorLess] = Developer`VectorInequality
-VectorInequalityOperatorToSymbol[Token`LongName`VectorLessEqual] = Developer`VectorInequality
-
-
-
 
 
 
