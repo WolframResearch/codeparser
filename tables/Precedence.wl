@@ -534,8 +534,15 @@ Precedence`AtStar -> Next,
 
 Precedence`Prefix`PlusPlus -> Next, (* Precedence[PreIncrement] == 660 *)
 Precedence`Prefix`MinusMinus -> Precedence`Prefix`PlusPlus, (* Precedence[PreDecrement] == 660 *)
-Precedence`Postfix`PlusPlus -> Precedence`Prefix`PlusPlus, (* Precedence[Increment] == 660 *)
-Precedence`Postfix`MinusMinus -> Precedence`Prefix`PlusPlus, (* Precedence[Decrement] == 660 *)
+
+(*
+DISCREPANCY
+Precedence[Increment] is 660
+Precedence[PreIncrement] is 660
+But empirically Increment is higher than PreIncrement
+*)
+Precedence`Postfix`PlusPlus -> Next, (* Precedence[Increment] == 660 *)
+Precedence`Postfix`MinusMinus -> Precedence`Postfix`PlusPlus, (* Precedence[Decrement] == 660 *)
 
 Precedence`Call -> Next, (* Precedence[Do] == 670 just an example of any System symbol that is a function to call *)
 
