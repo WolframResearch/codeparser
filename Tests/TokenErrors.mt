@@ -6,7 +6,7 @@ UnhandledCharacter:
 Test[
 	TokenizeString["\\[SkeletonIndicator]"]
 	,
-	{LeafNode[Token`Error`UninterpretableCharacter, "\\[SkeletonIndicator]", <|Source -> {{1, 1}, {1, 21}}|>]}
+	{LeafNode[Token`Error`UnhandledCharacter, "\\[SkeletonIndicator]", <|Source -> {{1, 1}, {1, 21}}|>]}
 	,
 	TestID->"TokenErrors-20190520-B1H0A6"
 ]

@@ -250,10 +250,6 @@ Test[
 	TestID->"Parse-20190820-G5K3X8"
 ]
 
-
-(*
-should succeed
-*)
 Test[
 	"2.Pi"
 	,
@@ -264,9 +260,17 @@ Test[
 	TestID->"Parse-20190821-G1U3U4"
 ]
 
-(*
-should fail
-*)
+Test[
+	ParseString["2.Pi"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "Times", <||>], {
+			LeafNode[Real, "2.", <|Source -> {{1, 1}, {1, 3}}|>],
+			LeafNode[Symbol, "Pi", <|Source -> {{1, 3}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>]}, <||>]
+	,
+	TestID->"Parse-20200112-B6C6J0"
+]
+
 Test[
 	"10^^2.Pi"
 	,
@@ -275,6 +279,17 @@ Test[
 	EquivalenceFunction -> parseEquivalenceFunction
 	,
 	TestID->"Parse-20190821-P0C8P3"
+]
+
+Test[
+	ParseString["10^^2.Pi"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "Times", <||>], {
+			LeafNode[Real, "10^^2.", <|Source -> {{1, 1}, {1, 7}}|>],
+			LeafNode[Symbol, "Pi", <|Source -> {{1, 7}, {1, 9}}|>]}, <|Source -> {{1, 1}, {1, 9}}|>]}, <||>]
+	,
+	TestID->"Parse-20200112-G6X1N0"
 ]
 
 Test[
@@ -408,6 +423,17 @@ Test[
 	,
 	TestID -> "Parse-20191119-Q8Y9U4"
 ]
+
+Test[
+	"2^^."
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200112-K5W6R9"
+]
+
 
 
 
@@ -2320,6 +2346,28 @@ Test[
 	,
 	TestID->"Parse-20200102-W8Y0U5"
 ]
+
+Test[
+	"++a++"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200112-R8X6M4"
+]
+
+Test[
+	"--a--"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200112-Q6N9J0"
+]
+
+
 
 
 

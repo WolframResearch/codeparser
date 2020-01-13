@@ -289,7 +289,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
           StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], 
         Red]];
       Print[Style[Row[{"index: ", i, " ", f}], Red]];
-      Throw[f, "Unhandled"]
+      Throw[f, "Uncaught"]
       ];
      Switch[cst[[1]],
       "EncodedFile",
@@ -309,7 +309,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
           StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], 
         Red]];
       Print[Style[Row[{"index: ", i, " ", f}], Red]];
-      Throw[f, "Unhandled"]
+      Throw[f, "Uncaught"]
       ,
       _,
       Print[
@@ -317,7 +317,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
           StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], 
         Darker[Orange]]];
       Print[Style[Row[{"index: ", i, " ", cst}], Darker[Orange]]];
-      Throw[cst, "Unhandled"]
+      Throw[cst, "Uncaught"]
       ];
      ];
     
@@ -486,7 +486,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     
     *)
     If[FailureQ[savedFailure],
-    	Throw[savedFailure, "Unhandled"]	
+    	Throw[savedFailure, "Uncaught"]	
     ];
     
     If[!TrueQ[testLeafNodeOrder[cst]],
@@ -505,7 +505,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       Style[Row[{"index: ", i, " ", 
          StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], Red]];
      Print[Style[Row[{"index: ", i, " ", f}], Red]];
-     Throw[f, "Unhandled"]
+     Throw[f, "Uncaught"]
      ];
     
     Quiet@Check[
@@ -608,7 +608,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       Style[Row[{"index: ", i, " ", 
          StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], Red]];
      Print[Style[Row[{"index: ", i, " ", f}], Red]];
-     Throw[f, "Unhandled"]
+     Throw[f, "Uncaught"]
      ];
     
     Quiet@Check[
@@ -710,7 +710,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       Style[Row[{"index: ", i, " ", 
          StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], Red]];
       Print[Style[Row[{"index: ", i, " ", ast}], Red]];
-      Throw[ast, "Unhandled"]
+      Throw[ast, "Uncaught"]
     ];
     
     If[! FreeQ[ast, _SyntaxErrorNode | _ErrorNode | _AbstractSyntaxErrorNode],
@@ -757,7 +757,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       Style[Row[{"index: ", i, " ", 
          StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], Red]];
      Print[Style[Row[{"index: ", i, " ", f}], Red]];
-     Throw[f, "Unhandled"]
+     Throw[f, "Uncaught"]
      ];
     
     
@@ -974,7 +974,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
          StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], Bold,
         Red]];
      Print[Style[Row[{"index: ", i, " ", f}], Bold, Red]];
-     Throw[f, "Unhandled"]
+     Throw[f, "Uncaught"]
      ];
     ,
     Null
