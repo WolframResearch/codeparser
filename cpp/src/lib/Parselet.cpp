@@ -1242,7 +1242,7 @@ NodePtr EqualParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) cons
 }
 
 
-IntegralParselet::IntegralParselet(TokenEnum Tok) : Op1(PrefixOperatorToSymbol(Tok)), Op2(PrefixBinaryOperatorToSymbol(Tok)) {}
+IntegralParselet::IntegralParselet() : Op1(SYMBOL_INTEGRAL), Op2(SYMBOL_INTEGRATE) {}
 
 //
 // Something like  \[Integral] f \[DifferentialD] x

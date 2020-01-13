@@ -473,7 +473,7 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitiveSymbolPa
     registerInfixParselet(TOKEN_EQUALDOT.value(), InfixParseletPtr(new EqualParselet(TOKEN_EQUALDOT)));
     
     // Has to handle \[Integral] f \[DifferentialD] x
-    registerPrefixParselet(TOKEN_LONGNAME_INTEGRAL.value(), PrefixParseletPtr(new IntegralParselet(TOKEN_LONGNAME_INTEGRAL)));
+    registerPrefixParselet(TOKEN_LONGNAME_INTEGRAL.value(), PrefixParseletPtr(new IntegralParselet()));
     
     // special Inequality
     registerInfixParselet(TOKEN_BANGEQUAL.value(), InfixParseletPtr(new InequalityParselet()));

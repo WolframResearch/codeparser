@@ -340,7 +340,7 @@ class IntegralParselet : public PrefixParselet {
     SymbolPtr& Op2;
 public:
     
-    IntegralParselet(TokenEnum Tok);
+    IntegralParselet();
     
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
     

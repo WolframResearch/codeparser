@@ -715,82 +715,82 @@ void Symbol::put(MLINK mlp) const {
 #endif
 "} ~Join~
 
-  (If[# === String && $WorkaroundBug321344,
-      (*
-      handle String specially because of bug 321344
-      *)
-      "SymbolPtr SYMBOL_STRING = SymbolPtr(new Symbol(\"String\"));"
-      ,
-      Row[{"SymbolPtr", " ", toGlobal["Symbol`"<>ToString[#]], " = SymbolPtr(new Symbol(\"", stringifyForTransmitting[#], "\"));"}]]& /@ symbols) ~Join~
+(If[# === String && $WorkaroundBug321344,
+  (*
+  handle String specially because of bug 321344
+  *)
+  "SymbolPtr SYMBOL_STRING = SymbolPtr(new Symbol(\"String\"));"
+  ,
+  Row[{"SymbolPtr", " ", toGlobal["Symbol`"<>ToString[#]], " = SymbolPtr(new Symbol(\"", stringifyForTransmitting[#], "\"));"}]]& /@ symbols) ~Join~
 
-      {""} ~Join~
+{""} ~Join~
 
-      {"SymbolPtr& PrefixOperatorToSymbol(TokenEnum T) {\nswitch (T.value()) {"} ~Join~
-     
-     Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PrefixOperatorToSymbol]] ~Join~ 
-      {"default: return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
-      "}\n}"} ~Join~
+{"SymbolPtr& PrefixOperatorToSymbol(TokenEnum T) {\nswitch (T.value()) {"} ~Join~
 
-     {""} ~Join~
+Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]] ], ".value():", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]] ]], ";"}]&, DownValues[PrefixOperatorToSymbol]] ~Join~ 
+{"default: return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
+"}\n}"} ~Join~
 
-     {"SymbolPtr& PostfixOperatorToSymbol(TokenEnum T) {\nswitch (T.value()) {"} ~Join~
-     
-      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PostfixOperatorToSymbol]] ~Join~
-      {"default: return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
-     "}\n}"} ~Join~
+{""} ~Join~
 
-     {""} ~Join~
+{"SymbolPtr& PostfixOperatorToSymbol(TokenEnum T) {\nswitch (T.value()) {"} ~Join~
 
-     {"SymbolPtr& BinaryOperatorToSymbol(TokenEnum T) {\nswitch (T.value()) {"} ~Join~
-     
-      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[BinaryOperatorToSymbol]] ~Join~
-      {"default: return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
-     "}\n}"} ~Join~
+Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]] ], ".value():", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]] ]], ";"}]&, DownValues[PostfixOperatorToSymbol]] ~Join~
+{"default: return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
+"}\n}"} ~Join~
 
-     {""} ~Join~
+{""} ~Join~
 
-     {"SymbolPtr& InfixOperatorToSymbol(TokenEnum T) {\nswitch (T.value()) {"} ~Join~
-     
-      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[InfixOperatorToSymbol]] ~Join~
-      {"default: return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
-     "}\n}"} ~Join~
+{"SymbolPtr& BinaryOperatorToSymbol(TokenEnum T) {\nswitch (T.value()) {"} ~Join~
 
-     {""} ~Join~
+Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]] ], ".value():", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]] ]], ";"}]&, DownValues[BinaryOperatorToSymbol]] ~Join~
+{"default: return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
+"}\n}"} ~Join~
 
-     {"SymbolPtr& GroupOpenerToSymbol(TokenEnum T) {"} ~Join~
-     {"switch (T.value()) {"} ~Join~
-      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[GroupOpenerToSymbol]] ~Join~
-      {"default: return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
-     "}"} ~Join~
-     {"}"} ~Join~
+{""} ~Join~
 
-     {""} ~Join~
+{"SymbolPtr& InfixOperatorToSymbol(TokenEnum T) {\nswitch (T.value()) {"} ~Join~
 
-     {"Closer GroupOpenerToCloser(TokenEnum T) {"} ~Join~
-     {"switch (T.value()) {"} ~Join~
-      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal[#[[2]]], ";"}]&, DownValues[GroupOpenerToCloser]] ~Join~
-      {"default: assert(false && \"Unhandled token\"); return CLOSER_UNKNOWN;",
-     "}"} ~Join~
-     {"}"} ~Join~
+Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]] ], ".value():", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]] ]], ";"}]&, DownValues[InfixOperatorToSymbol]] ~Join~
+{"default: return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
+"}\n}"} ~Join~
 
-     {""} ~Join~
+{""} ~Join~
 
-     {"Closer TokenToCloser(TokenEnum T) {"} ~Join~
-     {"switch (T.value()) {"} ~Join~
-      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal[#[[2]]], ";"}]&, DownValues[TokenToCloser]] ~Join~
-      {"default: return CLOSER_UNKNOWN;",
-     "}"} ~Join~
-     {"}"} ~Join~
+{"SymbolPtr& GroupOpenerToSymbol(TokenEnum T) {"} ~Join~
+{"switch (T.value()) {"} ~Join~
+Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]] ], ".value():", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]] ]], ";"}]&, DownValues[GroupOpenerToSymbol]] ~Join~
+{"default: return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
+"}"} ~Join~
+{"}"} ~Join~
 
-     {""} ~Join~
+{""} ~Join~
 
-     {"SymbolPtr& PrefixBinaryOperatorToSymbol(TokenEnum T) {\nswitch (T.value()) {"} ~Join~
-     
-      Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]]]], ";"}]&, DownValues[PrefixBinaryOperatorToSymbol]] ~Join~
-      {"default: return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
-     "}\n}"} ~Join~
+{"Closer GroupOpenerToCloser(TokenEnum T) {"} ~Join~
+{"switch (T.value()) {"} ~Join~
+Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]] ], ".value():", " ", "return", " ", toGlobal[#[[2]] ], ";"}]&, DownValues[GroupOpenerToCloser]] ~Join~
+{"default: assert(false && \"Unhandled token\"); return CLOSER_UNKNOWN;",
+"}"} ~Join~
+{"}"} ~Join~
 
-     {""}
+{""} ~Join~
+
+{"Closer TokenToCloser(TokenEnum T) {"} ~Join~
+{"switch (T.value()) {"} ~Join~
+Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]] ], ".value():", " ", "return", " ", toGlobal[#[[2]] ], ";"}]&, DownValues[TokenToCloser]] ~Join~
+{"default: return CLOSER_UNKNOWN;",
+"}"} ~Join~
+{"}"} ~Join~
+
+{""} ~Join~
+
+{"SymbolPtr& PrefixBinaryOperatorToSymbol(TokenEnum T) {\nswitch (T.value()) {"} ~Join~
+
+Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]] ], ".value():", " ", "return", " ", toGlobal["Symbol`"<>ToString[#[[2]] ]], ";"}]&, DownValues[PrefixBinaryOperatorToSymbol]] ~Join~
+{"default: return " <> toGlobal["Symbol`"<>ToString[AST`InternalInvalid]] <> ";",
+"}\n}"} ~Join~
+
+{""}
 
 Print["exporting Symbol.cpp"]
 res = Export[FileNameJoin[{generatedCPPSrcDir, "Symbol.cpp"}], Column[symbolCPPSource], "String"]

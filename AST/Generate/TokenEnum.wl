@@ -960,7 +960,7 @@ cur = 0
 enumMap = <||>
 KeyValueMap[(
   Which[
-    #2=== 0, cur = 0,
+    #2 === 0, cur = 0,
     #2 === Next, cur++,
     True, cur = enumMap[#2]
   ];
