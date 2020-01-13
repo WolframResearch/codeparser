@@ -2184,8 +2184,7 @@ Test[
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "MessageName", <||>], {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
-			AbstractSyntaxErrorNode[AbstractSyntaxError`EmptyString, {
-				LeafNode[Token`Error`EmptyString, "", <|Source -> {{1, 4}, {1, 4}}|>]}, <|Source -> {{1, 4}, {1, 4}}|>]},
+			LeafNode[Token`Error`EmptyString, "", <|Source -> {{1, 4}, {1, 4}}|>]},
 			<|Source -> {{1, 1}, {1, 4}}|>]},
 		<||>]
 	,
@@ -2367,12 +2366,35 @@ Test[
 	TestID->"Parse-20200112-Q6N9J0"
 ]
 
+Test[
+	"a*b\\[Conjugate]"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200113-H7J9Z1"
+]
 
+Test[
+	"a::\\[Beta]"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200113-P3P7D5"	
+]
 
-
-
-
-
+Test[
+	"a::\"\\[Beta]\""
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200113-T5L0G9"	
+]
 
 
 
