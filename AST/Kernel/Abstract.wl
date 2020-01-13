@@ -97,8 +97,6 @@ Module[{s, data, rest, lastPos},
 
 	data = dataIn;
 
-	data = data;
-
 	lastPos = StringPosition[s, "#" | "\\.23" | "\\:0023" | "\\|000023" | "\\043" | "\\[RawNumberSign]"][[-1, 2]];
 
 	rest = StringDrop[s, lastPos];
@@ -127,8 +125,6 @@ Module[{s, data, rest, lastPos},
 
 	data = dataIn;
 
-	data = data;
-
 	lastPos = StringPosition[s, "#" | "\\.23" | "\\:0023" | "\\|000023" | "\\043" | "\\[RawNumberSign]"][[-1, 2]];
 
 	rest = StringDrop[s, lastPos];
@@ -153,8 +149,6 @@ Module[{s, data, count, lastPos, rest},
 	s = sIn;
 
 	data = dataIn;
-
-	data = data;
 
 	count = StringCount[s, "%" | "\\.25" | "\\:0025" | "\\|000025" | "\\045" | "\\[RawPercent]"];
 
@@ -1495,11 +1489,7 @@ Module[{data, issues},
 
 abstractMessageNameChild[LeafNode[String, str_, _]] := ToNode[abstractString[str]]
 
-abstractMessageNameChild[LeafNode[Token`Error`EmptyString, str_, data_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`EmptyString, { LeafNode[Token`Error`EmptyString, str, data] }, data]
-
-abstractMessageNameChild[LeafNode[Token`Error`ExpectedLetterlike, str_, data_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedLetterlike, { LeafNode[Token`Error`ExpectedOperand, str, data] }, data]
+abstractMessageNameChild[n_] := n
 
 
 
