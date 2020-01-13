@@ -64,7 +64,7 @@ Token Tokenizer::nextToken0(NextCharacterPolicy policy) {
         case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
             return handleSymbol(tokenStartBuf, tokenStartLoc, c, policy, Ctxt);
         case CODEPOINT_BEL: case CODEPOINT_DEL:
-            return Token(TOKEN_ERROR_UNINTERPRETABLECHARACTER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+            return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         case '\t':
             return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         case '\n': case '\r': {
@@ -163,7 +163,7 @@ Token Tokenizer::nextToken0(NextCharacterPolicy policy) {
                 
             } else if (c.isMBUninterpretable()) {
                 
-                return Token(TOKEN_ERROR_UNINTERPRETABLECHARACTER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                 
             } else if (c.isMBStrangeWhitespace()) {
                 
