@@ -35,3 +35,9 @@ Print["Done"]
 End[]
 
 EndPackage[]
+
+
+(*
+Needed to guarantee exit code of 0 in older versions
+*)
+Quit[0]
