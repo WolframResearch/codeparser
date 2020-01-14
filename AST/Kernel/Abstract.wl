@@ -699,8 +699,9 @@ Module[{first, firstSrc},
 
 
 firstToken[node:_[_, _String, _]] := node
-firstToken[node:_[_, {}, _]] := Failure["CannotFindFirstToken", <||>]
-firstToken[node:_[_, {first_, ___}, _]] := firstToken[first]
+firstToken[CallNode[first_, ___, _, _]] := firstToken[first]
+firstToken[_[_, {}, _]] := Failure["CannotFindFirstToken", <||>]
+firstToken[_[_, {first_, ___}, _]] := firstToken[first]
 
 
 
