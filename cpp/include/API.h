@@ -37,11 +37,13 @@
 class ParserSession;
 class ScopedMLByteArray;
 class ScopedMLUTF8String;
+class ScopedMLString;
 class ScopedMLEnvironmentParameter;
 
 using ParserSessionPtr = std::unique_ptr<ParserSession>;
 using ScopedMLByteArrayPtr = std::unique_ptr<ScopedMLByteArray>;
 using ScopedMLUTF8StringPtr = std::unique_ptr<ScopedMLUTF8String>;
+using ScopedMLStringPtr = std::unique_ptr<ScopedMLString>;
 using ScopedMLEnvironmentParameterPtr = std::unique_ptr<ScopedMLEnvironmentParameter>;
 
 //
@@ -134,6 +136,8 @@ EXTERN_C DLLEXPORT int TokenizeBytes_Listable_LibraryLink(WolframLibraryData lib
 EXTERN_C DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
 EXTERN_C DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp);
+
+EXTERN_C DLLEXPORT int SetupLongNames_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
 class ScopedMLUTF8String {
     MLINK mlp;

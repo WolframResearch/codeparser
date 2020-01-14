@@ -64,52 +64,6 @@ void ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libData
             return res;
         };
 #endif // NABORT
-
-#if USE_MATHLINK
-        //
-        // Setup undocumented long names
-        //
-        
-        if (undocumentedLongNames.empty()) {
-            
-            MLINK link = libData->getMathLink(libData);
-            if (!MLPutFunction(link, "EvaluatePacket", 1)) {
-                assert(false);
-            }
-            if (!MLPutFunction(link, "AST`Library`UndocumentedLongNames", 0)) {
-                assert(false);
-            }
-            if (libData->processMathLink(link)) {
-                //
-                // Do not assert here, Abort may cause error code
-                //
-                
-                auto pkt = MLNextPacket(link);
-                if (pkt == RETURNPKT) {
-                    
-                    ScopedMLFunction result(link);
-                    if (!result.read()) {
-                        assert(false);
-                    }
-                    
-                    auto argCountInt = result.getArgCount();
-                    
-                    auto argCount = static_cast<size_t>(argCountInt);
-                    
-                    for (size_t i = 0; i < argCount; i++) {
-                        ScopedMLString str(link);
-                        if (!str.read()) {
-                            assert(false);
-                        }
-                        
-                        undocumentedLongNames.insert(str.get());
-                    }
-                }
-            }
-
-        }
-#endif // USE_MATHLINK
-        
     
     } else {
 #if !NABORT
@@ -610,7 +564,6 @@ DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
 
 
 
-
 DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     int mlLen;
@@ -646,6 +599,61 @@ DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     TheByteDecoder->deinit();
     TheByteBuffer->deinit();
+    
+    return LIBRARY_NO_ERROR;
+}
+
+
+DLLEXPORT int SetupLongNames_LibraryLink(WolframLibraryData libData, MLINK mlp) {
+    
+    int mlLen;
+    
+    if (!MLTestHead(mlp, SYMBOL_LIST->name(), &mlLen)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    auto len = static_cast<size_t>(mlLen);
+    
+    if (len != 1) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    if (!MLTestHead(mlp, SYMBOL_LIST->name(), &mlLen)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    len = static_cast<size_t>(mlLen);
+    
+    auto strs = std::vector<ScopedMLStringPtr>();
+    strs.reserve(len);
+    
+    for (size_t i = 0; i < len; i++) {
+        
+        auto str = ScopedMLStringPtr(new ScopedMLString(mlp));
+        if (!str->read()) {
+            return LIBRARY_FUNCTION_ERROR;
+        }
+        
+        strs.push_back(std::move(str));
+    }
+    
+    if (!MLNewPacket(mlp) ) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    for (size_t i = 0; i < len; i++) {
+        
+        const auto& str = strs[i];
+        
+        undocumentedLongNames.insert(str->get());
+    }
+    
+    //
+    // I suppose a result is always expected
+    //
+    if (!MLPutSymbol(mlp, SYMBOL_NULL->name())) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
     
     return LIBRARY_NO_ERROR;
 }

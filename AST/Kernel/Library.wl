@@ -21,6 +21,11 @@ parseLeafFunc
 safeStringFunc
 exprTestFunc
 
+setupLongNamesFunc
+
+SetupLongNames
+
+
 
 (*
 library functions coming FROM lib
@@ -78,7 +83,6 @@ $ConcreteParseStart
 
 
 LongNameSuggestion
-UndocumentedLongNames
 
 
 Begin["`Private`"]
@@ -216,6 +220,8 @@ parseLeafFunc := parseLeafFunc = loadFunc["ParseLeaf_LibraryLink", LinkObject, L
 safeStringFunc := safeStringFunc = loadFunc["SafeString_LibraryLink", LinkObject, LinkObject];
 
 exprTestFunc := exprTestFunc = loadFunc["ExprTest_LibraryLink", {}, Integer];
+
+setupLongNamesFunc := setupLongNamesFunc = loadFunc["SetupLongNames_LibraryLink", LinkObject, LinkObject];
 )
 
 
@@ -284,7 +290,16 @@ Module[{res},
 		Need to specify PageWidth, or else ToString does not do anything with Short
 		Related bugs: ?
 		*)
-		Throw[Failure["LibraryFunctionError", <|"Result"->ToString[Short[res], OutputForm, PageWidth -> 100]|>]]
+		Throw[Failure["LibraryFunctionError",
+			<|
+				"ShortResult" -> ToString[Short[res], OutputForm, PageWidth -> 100],
+				(*
+				"ShortArguments" and "Arguments" is really just taking up space to force "FullResult" to be hidden by default
+				*)
+				"ShortArguments" -> ToString[Short[{args}], OutputForm, PageWidth -> 100],
+				"Arguments" -> {args},
+				"FullResult" -> res
+			|>]]
 	];
 
 	res
@@ -468,7 +483,7 @@ Module[{nearest, location, longNamesFile},
 
 
 
-UndocumentedLongNames[] :=
+SetupLongNames[] :=
 Catch[
 Module[{names, documentedNames, undocumentedNames, location, longNamesFile},
 
@@ -497,7 +512,7 @@ Module[{names, documentedNames, undocumentedNames, location, longNamesFile},
 
 	ResetDirectory[];
 
-	undocumentedNames
+	libraryFunctionWrapper[setupLongNamesFunc, undocumentedNames]
 ]]
 
 
