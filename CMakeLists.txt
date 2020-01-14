@@ -516,7 +516,7 @@ add_custom_command(
 	DEPENDS
 		${PACLET_SOURCES}
 	COMMAND
-		${WOLFRAMKERNEL} -noinit -noprompt -run PackPaclet["${CMAKE_BINARY_DIR}/paclet/${PACLET}"]\;Exit[]
+		${WOLFRAMKERNEL} -noinit -script ${CMAKE_SOURCE_DIR}/${PACLET}/Generate/PackPaclet.wl -pacletDir ${CMAKE_BINARY_DIR}/paclet/${PACLET}
 	VERBATIM
 	WORKING_DIRECTORY
 		${CMAKE_SOURCE_DIR}
