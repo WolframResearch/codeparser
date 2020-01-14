@@ -88,14 +88,21 @@ LongNameSuggestion
 Begin["`Private`"]
 
 Needs["AST`"]
-Needs["CompiledLibrary`"] (* for CompiledLibrary, etc. *)
+If[$VersionNumber >= 12.1,
+	Needs["CompiledLibrary`"] (* for CompiledLibrary, etc. *)
+]
+If[$VersionNumber < 12.1,
+	Needs["PacletManager`"] (* for PacletInformation *)
+]
 
 
 $ASTLib := $ASTLib =
 Catch[
 Module[{res},
 	
-	LibraryLoad["expr"];
+	If[$VersionNumber >= 12.1,
+		LibraryLoad["expr"];
+	];
 
 	res = FindLibrary["AST"];
 	If[FailureQ[res],
