@@ -642,7 +642,7 @@ topLevelChildIssues[InfixNode[CompoundExpression, {
 
 
 topLevelChildIssues[InfixNode[CompoundExpression, {_, LeafNode[Token`Semi, _, _], _[Except[Token`Fake`ImplicitNull], _, _], ___}, data_], True] := {
-	SyntaxIssue["TopLevel", "``CompoundExpression`` at top-level. Consider breaking up.", "Warning",
+	SyntaxIssue["TopLevel", "``CompoundExpression`` at top-level. Consider breaking up onto separate lines..", "Warning",
 		<| Source -> data[Source],
 			ConfidenceLevel -> 0.75,
 			CodeActions -> { CodeAction["Insert newline", InsertNode,
@@ -682,18 +682,25 @@ topLevelChildIssues[SyntaxErrorNode[_, _, _], True] := {}
 
 topLevelChildIssues[AbstractSyntaxErrorNode[_, _, _], True] := {}
 
-topLevelChildIssues[node:_[_, _, data_], True] :=
-Module[{src},
-	
-	src = data[Source];
+topLevelChildIssues[node:_[_, _, _], True] :=
+Module[{first, firstSrc},
+
+	(*
+	Just grab the first token to use
+	*)
+	first = firstToken[node];
+	firstSrc = first[[3, Key[Source] ]];
 
 	{ SyntaxIssue["TopLevel", "Unexpected expression at top-level.", "Warning",
-		<| Source -> TakeFirstLine[src],
+		<| Source -> firstSrc,
 			ConfidenceLevel -> 0.75 |>] }
 ]
 
 
 
+firstToken[node:_[_, _String, _]] := node
+firstToken[node:_[_, {}, _]] := Failure["CannotFindFirstToken", <||>]
+firstToken[node:_[_, {first_, ___}, _]] := firstToken[first]
 
 
 

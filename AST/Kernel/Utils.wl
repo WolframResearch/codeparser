@@ -14,7 +14,6 @@ SourceMemberQFunction
 
 contiguousQ
 
-TakeFirstLine
 
 Begin["`Private`"]
 
@@ -154,9 +153,6 @@ contiguousQ[{_Integer..., idx1_Integer}, {_Integer..., idx2_Integer}] := idx1 + 
 contiguousQ[_, _] := False
 
 
-
-TakeFirstLine[{{line1_, col1_}, {line1_, col2_}}] := {{line1, col1}, {line1, col2}}
-TakeFirstLine[{{line1_, col1_}, {_, col2_}}] := {{line1, col1}, {line1 + 1, 0}}
 
 
 End[]
