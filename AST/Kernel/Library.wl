@@ -152,7 +152,12 @@ Module[{location, libraryResources},
 
 	$exprCompiledLib = CompiledLibrary[ FileNameJoin[{libraryResources, "expr."<>$sharedExt}] ];
 
-	$exprCompiledLibFuns = CompiledLibraryLoadFunctions[$exprCompiledLib]
+	(*
+	If AST was built with an earlier version, then expr lib may not exist
+	*)
+	If[FileExistsQ[$exprCompiledLib],
+		$exprCompiledLibFuns = CompiledLibraryLoadFunctions[$exprCompiledLib]
+	]
 ]
 
 
