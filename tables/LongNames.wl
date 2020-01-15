@@ -399,6 +399,10 @@ Range 0x2200
 "Backslash" -> PunctuationCharacter, (* 0x2216 *)
 "SmallCircle" -> PunctuationCharacter, (* 0x2218 *)
 "Sqrt" -> PunctuationCharacter, (* 0x221a *)
+(*
+added in 12.1:
+CubeRoot
+*)
 "CubeRoot" -> PunctuationCharacter, (* 0x221b *)
 "Proportional" -> PunctuationCharacter, (* 0x221d *)
 "Infinity" -> LetterlikeCharacter, (* 0x221e *)
@@ -697,7 +701,8 @@ Range 0xf100
 "WolframLanguageLogo" -> LetterlikeCharacter, (* 0xf11e *)
 "WolframLanguageLogoCircle" -> LetterlikeCharacter, (* 0xf11f *)
 (*
-TwoWayRule was added in 11.1
+added in 11.1:
+TwoWayRule
 *)
 "TwoWayRule" -> PunctuationCharacter, (* 0xf120 *)
 

@@ -60,6 +60,9 @@ Precedence`LongName`Rule -> Precedence`MinusGreater,
 Precedence`LongName`RuleDelayed -> Precedence`MinusGreater,
 
 (*
+added in 11.1:
+TwoWayRule
+
 TwoWayRule did not have correct precedence until 12.0
 
 <-> was UndirectedEdge before 11.2.
@@ -447,6 +450,10 @@ Precedence`LongName`DifferentialD -> Next,
 Precedence`LongName`CapitalDifferentialD -> Precedence`LongName`DifferentialD,
 
 Precedence`LongName`Sqrt -> Next,
+(*
+added in 12.1:
+CubeRoot
+*)
 Precedence`LongName`CubeRoot -> Precedence`LongName`Sqrt,
 
 (*
