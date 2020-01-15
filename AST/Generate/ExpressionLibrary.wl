@@ -60,31 +60,11 @@ Module[{},
     ,
     MetaData[<|"Exported" -> True, "Name" -> Expr`LookupSymbol|>
     ]@Function[{Typed[arg1, "MachineInteger"]},
-      Module[ {cstr = Native`BitCast[arg1, "CString"], str, sym},
+      Module[{cstr = Native`BitCast[arg1, "CString"], str, sym},
         str = String`CloneNew[cstr];
         sym = Native`LookupSymbol[str];
         sym
       ]
-    ]
-    ,
-    MetaData[<|"Exported" -> True, "Name" -> Expr`BuildExpression0|>
-    ]@Function[{Typed[arg1, "Expression"]},
-      Native`BuildExpression[arg1]
-    ]
-    ,
-    MetaData[<|"Exported" -> True, "Name" -> Expr`BuildExpression1|>
-    ]@Function[{Typed[arg1, "Expression"], Typed[arg2, "Expression"]},
-      Native`BuildExpression[arg1, arg2]
-    ]
-    ,
-    MetaData[<|"Exported" -> True, "Name" -> Expr`BuildExpression2|>
-    ]@Function[{Typed[arg1, "Expression"], Typed[arg2, "Expression"], Typed[arg3, "Expression"]},
-      Native`BuildExpression[arg1, arg2, arg3]
-    ]
-    ,
-    MetaData[<|"Exported" -> True, "Name" -> Expr`Evaluate|>
-    ]@Function[{Typed[arg1, "Expression"]},
-      Native`Evaluate[arg1]
     ]
     ,
     MetaData[<|"Exported" -> True, "Name" -> Expr`BuildExpression|>
@@ -97,9 +77,7 @@ Module[{},
     ,
     MetaData[<|"Exported" -> True, "Name" -> Expr`Insert|>
     ]@Function[{Typed[expr, "Expression"], Typed[index, "MachineInteger"], Typed[part, "Expression"]},
-      Module[{},
-        Native`PrimitiveFunction["SetElement_EIE_Void"][expr, index, part];
-      ]
+      Native`PrimitiveFunction["SetElement_EIE_Void"][expr, index, part];
     ]
     ,
     MetaData[<|"Exported" -> True, "Name" -> Expr`Pointer|>
@@ -111,13 +89,11 @@ Module[{},
     ]@Function[{Typed[arg1, "MachineInteger"]},
       Native`BitCast[arg1, "Expression"]
     ]
-    (*
     ,
-    MetaData[<|"Exported" -> True, "Name" -> Expr`DecrementRefCount|>
-    ]@Function[{Typed[expr, "Expression"]},
-      Native`PrimitiveFunction["DecrementReferenceCount"][expr];
+    MetaData[<|"Exported" -> True, "Name" -> Expr`Release, "MemoryManagement" -> False|>
+    ]@Function[{Typed[arg1, "Expression"]},
+      Memory`Release[arg1];
     ]
-    *)
   }]
 ]
 
@@ -145,8 +121,9 @@ Module[{targetDir, prog, compLib},
       "TraceFunction" -> Print
     ];
 
+  Print[compLib];
+
   If[FailureQ[compLib],
-    Print[compLib];
     Quit[1]
   ]
 ]]

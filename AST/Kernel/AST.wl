@@ -901,17 +901,15 @@ Module[{res},
 
 
 ExprTest[] :=
-Module[{e, res},
+Module[{p, e},
 	
-	e = libraryFunctionWrapper[exprTestFunc];
+	p = libraryFunctionWrapper[exprTestFunc];
 
-	res = AST`Library`Private`$exprCompiledLibFuns["Expr_FromPointer"][e];
-
-	(*
-	AST`Library`Private`$exprCompiledLibFuns["Expr_DecrementRefCount"][e];
-	*)
+	e = AST`Library`Private`$exprCompiledLibFuns["Expr_FromPointer"][p];
 	
-	res
+	AST`Library`Private`$exprCompiledLibFuns["Expr_Release"][e];
+	
+	e
 ]
 
 
