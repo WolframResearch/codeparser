@@ -15,6 +15,8 @@
 execute_process(
   COMMAND
     ${WOLFRAMKERNEL} -noinit -script ${PACKPACLET_WL_SCRIPT} -pacletDir ${PACLETDIR}
+  TIMEOUT
+    10
   RESULT_VARIABLE
     PACKPACLET_RESULT
 )
