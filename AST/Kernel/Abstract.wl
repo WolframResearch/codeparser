@@ -641,14 +641,19 @@ topLevelChildIssues[InfixNode[CompoundExpression, {
 												PatternSequence[LeafNode[Symbol, _, _], _LeafNode].., LeafNode[Symbol, _, _] }, _], True] := {}
 
 
+topLevelChildIssues[InfixNode[CompoundExpression, {BinaryNode[SetDelayed, _, _], LeafNode[Token`Semi, _, _], _[Except[Token`Fake`ImplicitNull], _, _], ___}, data_], True] := {
+	SyntaxIssue["TopLevel", "Definition does not contain the rest of the ``CompoundExpression``.", "Error",
+		<| Source -> data[Source],
+			ConfidenceLevel -> 0.95
+			(*FIXME: wrap parentheses CodeAction*) |>] }
+
 topLevelChildIssues[InfixNode[CompoundExpression, {_, LeafNode[Token`Semi, _, _], _[Except[Token`Fake`ImplicitNull], _, _], ___}, data_], True] := {
-	SyntaxIssue["TopLevel", "``CompoundExpression`` at top-level. Consider breaking up onto separate lines..", "Warning",
+	SyntaxIssue["TopLevel", "``CompoundExpression`` at top-level. Consider breaking up onto separate lines.", "Warning",
 		<| Source -> data[Source],
 			ConfidenceLevel -> 0.75,
 			CodeActions -> { CodeAction["Insert newline", InsertNode,
 									<|	Source->nextData[Source],
 										"InsertionNode"->LeafNode[Token`Newline, "\n", <||>]|>] } |>] }
-
 
 
 
