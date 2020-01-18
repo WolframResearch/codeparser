@@ -998,8 +998,7 @@ NodePtr Parser::parse(Token token, ParserContext Ctxt) {
             }
         }
         
-        NodeSeq LeftSeq;
-        LeftSeq.reserve(1 + 1);
+        NodeSeq LeftSeq(1 + 1);
         LeftSeq.append(std::move(Left));
         LeftSeq.appendIfNonEmpty(std::move(ArgsTest));
     
@@ -1054,8 +1053,7 @@ NodePtr Parser::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserCon
         
         auto NotPossible = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.BufLen.buffer), Source(tokenAnchor.Src.Start))));
         
-        NodeSeq LeftSeq;
-        LeftSeq.reserve(1);
+        NodeSeq LeftSeq(1);
         LeftSeq.append(std::move(NotPossible));
         
         auto Ctxt = CtxtIn;
@@ -1102,8 +1100,7 @@ NodePtr Parser::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserCon
         
         nextToken(tokenBad);
         
-        NodeSeq Args;
-        Args.reserve(1);
+        NodeSeq Args(1);
         Args.append(NodePtr(new LeafNode(tokenBad)));
         
         auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_UNEXPECTEDCLOSER, std::move(Args)));

@@ -66,12 +66,13 @@ class NodeSeq {
 public:
     
     NodeSeq() : vec() {}
+    NodeSeq(size_t i) : vec() {
+        vec.reserve(i);
+    }
     
     bool empty() const;
     
     size_t size() const;
-    
-    void reserve(size_t i);
     
     void append(NodePtr );
     

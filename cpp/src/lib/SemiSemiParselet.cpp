@@ -25,8 +25,7 @@ NodePtr SemiSemiParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     auto One = NodePtr(new LeafNode(Implicit));
     
-    NodeSeq Left;
-    Left.reserve(1);
+    NodeSeq Left(1);
     Left.append(std::move(One));
     
     return parse(std::move(Left), TokIn, Ctxt);
@@ -61,8 +60,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
         return Operand;
     }
     
-    NodeSeq Args;
-    Args.reserve(1 + 1);
+    NodeSeq Args(1 + 1);
     Args.append(std::move(Operand));
     Args.appendIfNonEmpty(std::move(ArgsTest1));
     
@@ -191,8 +189,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
         
         auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End));
         
-        NodeSeq Args;
-        Args.reserve(1 + 1 + 1);
+        NodeSeq Args(1 + 1 + 1);
         Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
         Args.append(NodePtr(new LeafNode(TokIn)));
         Args.append(NodePtr(new LeafNode(Implicit)));
@@ -223,8 +220,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
             //     ^ThirdTok
             //
             
-            NodeSeq Args;
-            Args.reserve(1 + 1 + 1 + 1);
+            NodeSeq Args(1 + 1 + 1 + 1);
             Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
             Args.append(NodePtr(new LeafNode(TokIn)));
             Args.appendIfNonEmpty(std::move(ArgsTest1));
@@ -260,8 +256,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
             //       ^FourthTok
             //
             
-            NodeSeq Args;
-            Args.reserve(1 + 1 + 1 + 1);
+            NodeSeq Args(1 + 1 + 1 + 1);
             Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
             Args.append(NodePtr(new LeafNode(TokIn)));
             Args.appendIfNonEmpty(std::move(ArgsTest1));
@@ -281,8 +276,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
             
             auto SecondArg = TheParser->parse(FourthTok, Ctxt);
             
-            NodeSeq Args;
-            Args.reserve(1 + 1 + 1 + 1 + 1 + 1 + 1 + 1);
+            NodeSeq Args(1 + 1 + 1 + 1 + 1 + 1 + 1 + 1);
             Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
             Args.append(NodePtr(new LeafNode(TokIn)));
             Args.appendIfNonEmpty(std::move(ArgsTest1));
@@ -302,8 +296,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
         //       ^~FourthTok
         //
         
-        NodeSeq Args;
-        Args.reserve(1 + 1 + 1 + 1);
+        NodeSeq Args(1 + 1 + 1 + 1);
         Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
         Args.append(NodePtr(new LeafNode(TokIn)));
         Args.appendIfNonEmpty(std::move(ArgsTest1));
@@ -341,8 +334,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
         
         auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End));
         
-        NodeSeq Args;
-        Args.reserve(1 + 1 + 1);
+        NodeSeq Args(1 + 1 + 1);
         Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
         Args.append(NodePtr(new LeafNode(TokIn)));
         Args.append(NodePtr(new LeafNode(Implicit)));
@@ -363,8 +355,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
         
         auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End));
         
-        NodeSeq Args;
-        Args.reserve(1 + 1 + 1 + 1 + 1 + 1 + 1);
+        NodeSeq Args(1 + 1 + 1 + 1 + 1 + 1 + 1);
         Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
         Args.append(NodePtr(new LeafNode(TokIn)));
         Args.append(NodePtr(new LeafNode(Implicit)));
@@ -387,8 +378,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
     
     auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End));
     
-    NodeSeq Args;
-    Args.reserve(1 + 1 + 1);
+    NodeSeq Args(1 + 1 + 1);
     Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
     Args.append(NodePtr(new LeafNode(TokIn)));
     Args.append(NodePtr(new LeafNode(Implicit)));

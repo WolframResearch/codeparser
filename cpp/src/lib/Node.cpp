@@ -28,10 +28,6 @@ size_t NodeSeq::size() const {
     return accum;
 }
 
-void NodeSeq::reserve(size_t i) {
-    vec.reserve(i);
-}
-
 const Node* NodeSeq::first() const {
     
     auto i = 0;
