@@ -493,7 +493,7 @@ Module[{nearest, location, longNamesFile},
 	];
 
 	If[$Debug,
-		Print["nearest: ", nearest[[1]]];
+		Print["nearest: ", nearest[[1]] ];
 	];
 	nearest[[1]]
 ]]

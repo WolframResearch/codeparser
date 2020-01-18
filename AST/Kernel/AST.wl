@@ -313,7 +313,7 @@ Module[{s, h, res, bytes, encoding},
 	The # here is { {exprs}, {issues}, {metadata} }
 	*)
 	If[h === Automatic,
-		h = ContainerNode[String, #[[1]], If[!empty[#[[2]]], <| SyntaxIssues -> #[[2]] |>, <||>]]&
+		h = ContainerNode[String, #[[1]], If[!empty[#[[2]] ], <| SyntaxIssues -> #[[2]] |>, <||>]]&
 	];
 
 	$ConcreteParseProgress = 0;
@@ -397,7 +397,7 @@ Module[{h, encoding, full, res, data, start, end, children, bytes},
 	The # here is { {exprs}, {issues}, {metadata} }
 	*)
 	If[h === Automatic,
-		h = ContainerNode[File, #[[1]], If[!empty[#[[2]]], <| SyntaxIssues -> #[[2]] |>, <||>]]&
+		h = ContainerNode[File, #[[1]], If[!empty[#[[2]] ], <| SyntaxIssues -> #[[2]] |>, <||>]]&
 	];
 
 	If[encoding =!= "UTF8",
@@ -445,8 +445,8 @@ Module[{h, encoding, full, res, data, start, end, children, bytes},
 		children = res[[2]];
 		(* only fill in if there are actually children nodes to grab *)
 		If[children =!= {},
-			start = First[children][[3]][Source][[1]];
-			end = Last[children][[3]][Source][[2]];
+			start = First[children][[3, Key[Source], 1]];
+			end = Last[children][[3, Key[Source], 2]];
 			data = res[[3]];
 			AssociateTo[data, Source -> {start, end}];
 			res[[3]] = data;
@@ -514,7 +514,7 @@ Module[{h, encoding, res, data, start, end, children},
 	The # here is { {exprs}, {issues}, {metadata} }
 	*)
 	If[h === Automatic,
-		h = ContainerNode[Byte, #[[1]], If[!empty[#[[2]]], <| SyntaxIssues -> #[[2]] |>, <||>]]&
+		h = ContainerNode[Byte, #[[1]], If[!empty[#[[2]] ], <| SyntaxIssues -> #[[2]] |>, <||>]]&
 	];
 
 	If[encoding =!= "UTF8",
@@ -543,8 +543,8 @@ Module[{h, encoding, res, data, start, end, children},
 		children = res[[2]];
 		(* only fill in if there are actually children nodes to grab *)
 		If[children =!= {},
-			start = First[children][[3]][Source][[1]];
-			end = Last[children][[3]][Source][[2]];
+			start = First[children][[3, Key[Source], 1]];
+			end = Last[children][[3, Key[Source], 2]];
 			data = res[[3]];
 			AssociateTo[data, Source -> {start, end}];
 			res[[3]] = data;
