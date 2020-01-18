@@ -1,4 +1,4 @@
-BeginPackage["AST`Generate`ExpressionLibrary`"]
+BeginPackage["AST`Generate`GenerateExpressionLibrary`"]
 
 Begin["`Private`"]
 
@@ -6,27 +6,27 @@ Begin["`Private`"]
 Needs["Compile`"] (* for Program *)
 Needs["TypeFramework`"] (* for MetaData *)
 
-Print["Generating ExpressionLibrary..."]
+Print[OutputForm["Generating ExpressionLibrary..."]]
 
 
 packageDir = Directory[]
 
 If[FileNameSplit[packageDir][[-1]] =!= "ast",
-  Print["Cannot proceed; Not inside ast directory: ", packageDir];
+  Print[OutputForm["Cannot proceed; Not inside ast directory: "], packageDir];
   Quit[1]
 ]
 
 buildDirFlagPosition = FirstPosition[$CommandLine, "-buildDir"]
 
 If[MissingQ[buildDirFlagPosition],
-  Print["Cannot proceed; Unsupported build directory"];
+  Print[OutputForm["Cannot proceed; Unsupported build directory"]];
   Quit[1]
 ]
 
 buildDir = $CommandLine[[buildDirFlagPosition[[1]] + 1]]
 
 If[FileType[buildDir] =!= Directory,
-  Print["Cannot proceed; Unsupported build directory"];
+  Print[OutputForm["Cannot proceed; Unsupported build directory"]];
   Quit[1]
 ]
 
@@ -60,7 +60,8 @@ Module[{},
     ,
     MetaData[<|"Exported" -> True, "Name" -> Expr`LookupSymbol|>
     ]@Function[{Typed[arg1, "MachineInteger"]},
-      Module[{cstr = Native`BitCast[arg1, "CString"], str, sym},
+      Module[{cstr, str, sym},
+        cstr = Native`BitCast[arg1, "CString"];
         str = String`CloneNew[cstr];
         sym = Native`LookupSymbol[str];
         sym
@@ -103,7 +104,7 @@ Catch[
 Module[{targetDir, prog, compLib},
 
   If[$VersionNumber < 12.1,
-    Print["Skipping ExpressionLibrary"];
+    Print[OutputForm["Skipping ExpressionLibrary"]];
     Throw[Null]
   ];
 
@@ -111,11 +112,11 @@ Module[{targetDir, prog, compLib},
 
   prog = ExpressionLibraryProgram[];
 
-  Print["Exporting expr shared library (this might take a while...)"];
+  Print[OutputForm["Exporting expr shared library... (this might take a while)"]];
 
   compLib =
     CompileToLibrary[prog,
-      "LibraryName" -> "expr",
+      "LibraryName" -> "libExpr",
       "EntryFunctionName" -> "Main",
       "TargetDirectory" -> targetDir,
       "TraceFunction" -> Print
@@ -130,7 +131,7 @@ Module[{targetDir, prog, compLib},
 
 buildExpressionLibrary[]
 
-Print["Done ExpressionLibrary"]
+Print[OutputForm["Done ExpressionLibrary"]]
 
 End[]
 

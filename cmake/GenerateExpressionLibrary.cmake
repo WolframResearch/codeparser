@@ -14,13 +14,14 @@
 
 execute_process(
   COMMAND
-    ${WOLFRAMKERNEL} -noinit -noprompt -script ${PACKPACLET_WL_SCRIPT} -pacletDir ${PACLETDIR}
+    ${WOLFRAMKERNEL} -noinit -noprompt -script ${GENERATEEXPRESSIONLIBRARY_WL_SCRIPT} -buildDir ${BUILDDIR}
   TIMEOUT
-    10
+    # make this much longer than 10 seconds, duh
+    600
   RESULT_VARIABLE
-    PACKPACLET_RESULT
+    GENERATEEXPRESSIONLIBRARY_RESULT
 )
 
-if(NOT ${PACKPACLET_RESULT} EQUAL "0")
-  message(WARNING "Bad exit code from PackPaclet script: ${PACKPACLET_RESULT}; Continuing")
+if(NOT ${GENERATEEXPRESSIONLIBRARY_RESULT} EQUAL "0")
+  message(WARNING "Bad exit code from GENERATEExpressionLibrary script: ${GENERATEEXPRESSIONLIBRARY_RESULT}; Continuing")
 endif()

@@ -2,9 +2,9 @@ BeginPackage["AST`Generate`CodePoint`"]
 
 Begin["`Private`"]
 
-Needs["AST`Generate`"]
+Needs["AST`Generate`GenerateSources`"]
 
-Print["Generating CodePoint..."]
+Print[OutputForm["Generating CodePoint..."]]
 
 
 (*
@@ -84,7 +84,7 @@ codePointCPPSource = Join[{
     LongNameCodePointToOperatorSource, 
     LongNameOperatorToCodePointSource]
 
-Print["exporting CodePoint.cpp"]
+Print[OutputForm["exporting CodePoint.cpp"]]
 res = Export[FileNameJoin[{generatedCPPSrcDir, "CodePoint.cpp"}], Column[codePointCPPSource], "String"]
 
 If[FailureQ[res],
@@ -92,7 +92,7 @@ If[FailureQ[res],
   Quit[1]
 ]
 
-Print["Done CodePoint"]
+Print[OutputForm["Done CodePoint"]]
 
 End[]
 

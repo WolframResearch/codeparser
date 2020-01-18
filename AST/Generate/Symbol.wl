@@ -2,7 +2,7 @@ BeginPackage["AST`Generate`Symbol`"]
 
 Begin["`Private`"]
 
-Needs["AST`Generate`"]
+Needs["AST`Generate`GenerateSources`"]
 
 
 
@@ -25,7 +25,7 @@ Module[{res},
     False
     ,
     _,
-    Print["Unhandled result while checking bug 321344: ", res];
+    Print[OutputForm["Unhandled result while checking bug 321344: "], res];
     Quit[1]
   ]
 ]
@@ -546,10 +546,10 @@ PrefixBinaryOperatorToSymbol[Token`LongName`Integral] = Integrate
 
 
 
-Print["Generating Symbol..."]
+Print[OutputForm["Generating Symbol..."]]
 
 $WorkaroundBug321344 = checkBug321344[]
-Print["Work around Bug 321344: ", $WorkaroundBug321344];
+Print[OutputForm["Work around Bug 321344: "], $WorkaroundBug321344];
 
 symbols = Union[Join[
     {Blank, BlankSequence, BlankNullSequence, EndOfFile, Inequality, Integer, List, Null, Optional, Out, Pattern, Real, Slot, SlotSequence,
@@ -635,7 +635,7 @@ SymbolPtr& TokenToSymbol(TokenEnum T);
 (Row[{"extern", " ", "SymbolPtr", " ", toGlobal["Symbol`"<>ToString[#]], ";"}]& /@ symbols) ~Join~
 {""}
 
-Print["exporting Symbol.h"]
+Print[OutputForm["exporting Symbol.h"]]
 res = Export[FileNameJoin[{generatedCPPIncludeDir, "Symbol.h"}], Column[symbolCPPHeader], "String"]
 
 If[FailureQ[res],
@@ -763,7 +763,7 @@ Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]] ], ".value():", " ", "return", " ", 
 
 {""}
 
-Print["exporting Symbol.cpp"]
+Print[OutputForm["exporting Symbol.cpp"]]
 res = Export[FileNameJoin[{generatedCPPSrcDir, "Symbol.cpp"}], Column[symbolCPPSource], "String"]
 
 If[FailureQ[res],
@@ -771,7 +771,7 @@ If[FailureQ[res],
   Quit[1]
 ]
 
-Print["Done Symbol"]
+Print[OutputForm["Done Symbol"]]
 
 End[]
 

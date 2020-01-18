@@ -2,7 +2,7 @@ BeginPackage["AST`Generate`TokenEnum`"]
 
 Begin["`Private`"]
 
-Needs["AST`Generate`"]
+Needs["AST`Generate`GenerateSources`"]
 
 
 
@@ -953,7 +953,7 @@ Which[
 
 
 
-Print["Generating TokenEnum..."]
+Print[OutputForm["Generating TokenEnum..."]]
 
 
 cur = 0
@@ -975,7 +975,7 @@ sanity check that all tokens are in order
 cur = -Infinity;
 KeyValueMap[
   If[!TrueQ[#2 >= cur],
-    Print["Token is out of order: ", #1->#2];
+    Print[OutputForm["Token is out of order: "], #1->#2];
     Quit[1]
     ,
     cur = #2
@@ -1083,7 +1083,7 @@ KeyValueMap[(
   enumMap
 ]
 
-Print["exporting TokenEnum.h"]
+Print[OutputForm["exporting TokenEnum.h"]]
 res = Export[FileNameJoin[{generatedCPPIncludeDir, "TokenEnum.h"}], Column[tokenCPPHeader], "String"]
 
 If[FailureQ[res],
@@ -1142,7 +1142,7 @@ bool operator!=(TokenEnum a, TokenEnum b) {
 }
 "}
 
-Print["exporting TokenEnum.cpp"]
+Print[OutputForm["exporting TokenEnum.cpp"]]
 res = Export[FileNameJoin[{generatedCPPSrcDir, "TokenEnum.cpp"}], Column[tokenCPPSource], "String"]
 
 If[FailureQ[res],
@@ -1150,7 +1150,7 @@ If[FailureQ[res],
   Quit[1]
 ]
 
-Print["Done Token"]
+Print[OutputForm["Done Token"]]
 
 End[]
 

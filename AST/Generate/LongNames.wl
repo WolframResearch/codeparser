@@ -2,14 +2,14 @@ BeginPackage["AST`Generate`LongNames`"]
 
 Begin["`Private`"]
 
-Needs["AST`Generate`"]
+Needs["AST`Generate`GenerateSources`"]
 
-Print["Generating LongNames..."]
+Print[OutputForm["Generating LongNames..."]]
 
 Check[
 longNameDefines = ("constexpr int32_t " <> toGlobal["CodePoint`LongName`" <> #] <> "(" <> longNameToHexDigits[#] <> ");")& /@ Keys[importedLongNames]
 ,
-Print["Message while generating LongNameDefines"];
+Print[OutputForm["Message while generating LongNameDefines"]];
 Quit[1]
 ]
 
@@ -26,7 +26,7 @@ longNameDefinesCPPHeader = {
 #include \"CodePoint.h\"
 "} ~Join~ longNameDefines ~Join~ {""}
 
-Print["exporting LongNameDefines.h"]
+Print[OutputForm["exporting LongNameDefines.h"]]
 res = Export[FileNameJoin[{generatedCPPIncludeDir, "LongNameDefines.h"}], Column[longNameDefinesCPPHeader], "String"]
 
 If[FailureQ[res],
@@ -40,7 +40,7 @@ If[FailureQ[res],
 Check[
 longNames = ("\"" <> # <> "\", ")& /@ Keys[importedLongNames]
 ,
-Print["Message while generating LongNames"];
+Print[OutputForm["Message while generating LongNames"]];
 Quit[1]
 ]
 
@@ -57,7 +57,7 @@ DO NOT MODIFY
 "	
 }
 
-Print["exporting LongNames.wl"]
+Print[OutputForm["exporting LongNames.wl"]]
 res = Export[FileNameJoin[{generatedWLDir, "LongNames.wl"}], Column[longNamesWL], "String"]
 
 If[FailureQ[res],
@@ -68,7 +68,7 @@ If[FailureQ[res],
 
 
 
-Print["Done LongNames"]
+Print[OutputForm["Done LongNames"]]
 
 End[]
 

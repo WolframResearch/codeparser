@@ -2,7 +2,7 @@ BeginPackage["AST`Generate`CharacterMaps`"]
 
 Begin["`Private`"]
 
-Needs["AST`Generate`"]
+Needs["AST`Generate`GenerateSources`"]
 
 
 
@@ -15,7 +15,7 @@ escapeString[s_] :=
 
 
 
-Print["Generating Character Maps..."]
+Print[OutputForm["Generating Character Maps..."]]
 
 longNameToCodePointMap = {
 "std::map<std::string, int32_t> LongNameToCodePointMap {"} ~Join~
@@ -76,7 +76,7 @@ toSpecialMap ~Join~
 fromSpecialMap ~Join~
 rawSet
 
-Print["exporting CharacterMaps.cpp"]
+Print[OutputForm["exporting CharacterMaps.cpp"]]
 res = Export[FileNameJoin[{generatedCPPSrcDir, "CharacterMaps.cpp"}], Column[characterMapsCPPSource], "String"]
 
 If[FailureQ[res],
@@ -84,7 +84,7 @@ If[FailureQ[res],
   Quit[1]
 ]
 
-Print["Done Character Maps"]
+Print[OutputForm["Done Character Maps"]]
 
 End[]
 

@@ -1,4 +1,3 @@
-
 BeginPackage["AST`Generate`PackPaclet`"]
 
 Begin["`Private`"]
@@ -10,25 +9,25 @@ If[$VersionNumber < 12.1,
 pacletDirFlagPosition = FirstPosition[$CommandLine, "-pacletDir"]
 
 If[MissingQ[pacletDirFlagPosition],
-  Print["Cannot proceed; Unsupported paclet directory"];
+  Print[OutputForm["Cannot proceed; Unsupported paclet directory"]];
   Quit[1]
 ]
 
 pacletDir = $CommandLine[[pacletDirFlagPosition[[1]] + 1]]
 
 If[FileType[pacletDir] =!= Directory,
-  Print["Cannot proceed; Unsupported paclet directory"];
+  Print[OutputForm["Cannot proceed; Unsupported paclet directory"]];
   Quit[1]
 ]
 
 
-Print["Calling PackPaclet..."]
+Print[OutputForm["Calling PackPaclet..."]]
 
 res = PackPaclet[pacletDir]
 
 Print[res]
 
-Print["Done"]
+Print[OutputForm["Done"]]
 
 
 

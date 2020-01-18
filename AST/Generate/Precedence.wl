@@ -2,9 +2,9 @@ BeginPackage["AST`Generate`Precedence`"]
 
 Begin["`Private`"]
 
-Needs["AST`Generate`"]
+Needs["AST`Generate`GenerateSources`"]
 
-Print["Generating Precedence..."]
+Print[OutputForm["Generating Precedence..."]]
 
 oldPrecedences = Join[Names["Precedence`*"], Names["Precedence`*`*"]]
 
@@ -30,7 +30,7 @@ sanity check that all precedences are in order
 cur = -Infinity;
 KeyValueMap[
   If[!TrueQ[#2 >= cur],
-    Print["Precedence is out of order: ", #1->#2];
+    Print[OutputForm["Precedence is out of order: "], #1->#2];
     Quit[1]
     ,
     cur = #2
@@ -54,7 +54,7 @@ precedenceCPPHeader = {
 enum Precedence : uint8_t {"} ~Join~
    KeyValueMap[(Row[{toGlobal[#1], " = ", Floor[#2], ","}]) &, enumMap] ~Join~ {"};", ""}
 
-Print["exporting Precedence.h"]
+Print[OutputForm["exporting Precedence.h"]]
 res = Export[FileNameJoin[{generatedCPPIncludeDir, "Precedence.h"}], Column[precedenceCPPHeader], "String"]
 
 If[FailureQ[res],
@@ -62,7 +62,7 @@ If[FailureQ[res],
   Quit[1]
 ]
 
-Print["Done Precedence"]
+Print[OutputForm["Done Precedence"]]
 
 End[]
 

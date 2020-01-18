@@ -14,13 +14,13 @@
 
 execute_process(
   COMMAND
-    ${WOLFRAMKERNEL} -noinit -noprompt -script ${PACKPACLET_WL_SCRIPT} -pacletDir ${PACLETDIR}
+    ${WOLFRAMKERNEL} -noinit -noprompt -script ${GENERATESOURCES_WL_SCRIPT} -buildDir ${BUILDDIR}
   TIMEOUT
     10
   RESULT_VARIABLE
-    PACKPACLET_RESULT
+    GENERATESOURCES_RESULT
 )
 
-if(NOT ${PACKPACLET_RESULT} EQUAL "0")
-  message(WARNING "Bad exit code from PackPaclet script: ${PACKPACLET_RESULT}; Continuing")
+if(NOT ${GENERATESOURCES_RESULT} EQUAL "0")
+  message(WARNING "Bad exit code from GenerateSources script: ${GENERATESOURCES_RESULT}; Continuing")
 endif()

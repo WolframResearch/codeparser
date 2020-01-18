@@ -1,4 +1,4 @@
-BeginPackage["AST`Generate`"]
+BeginPackage["AST`Generate`GenerateSources`"]
 
 toGlobal
 
@@ -54,25 +54,25 @@ toGlobal[n_] :=
  StringReplace[ToUpperCase[ToString[n]], {"`" -> "_", "$" -> "_"}]
 
 validateLongNameMap[m_] := (
-  Print["validating LongName map"];
+  Print[OutputForm["validating LongName map"]];
 
   If[FailureQ[m],
-    Print[m];
+    Print[OutputForm[m]];
     Quit[1]
   ];
 
   If[!AssociationQ[m],
-    Print["LongName map is not an Association"];
+    Print[OutputForm["LongName map is not an Association"]];
     Quit[1]
   ];
 
   If[!DuplicateFreeQ[Keys[m]],
-    Print["LongName map has duplicates"];
+    Print[OutputForm["LongName map has duplicates"]];
     Quit[1]
   ];
 
   If[!OrderedQ[longNameToCharacterCode /@ Keys[m]],
-    Print["LongName map is not ordered"];
+    Print[OutputForm["LongName map is not ordered"]];
     Quit[1]
   ];
 )
@@ -152,27 +152,27 @@ longNameToHexDigits[longName_String] :=
 
 
 
-Print["Generating additional required source files..."]
+Print[OutputForm["Generating additional required source files..."]]
 
 
 packageDir = Directory[]
 
 If[FileNameSplit[packageDir][[-1]] =!= "ast",
-  Print["Cannot proceed; Not inside ast directory: ", packageDir];
+  Print[OutputForm["Cannot proceed; Not inside ast directory: "], packageDir];
   Quit[1]
 ]
 
 buildDirFlagPosition = FirstPosition[$CommandLine, "-buildDir"]
 
 If[MissingQ[buildDirFlagPosition],
-  Print["Cannot proceed; Unsupported build directory"];
+  Print[OutputForm["Cannot proceed; Unsupported build directory"]];
   Quit[1]
 ]
 
 buildDir = $CommandLine[[buildDirFlagPosition[[1]] + 1]]
 
 If[FileType[buildDir] =!= Directory,
-  Print["Cannot proceed; Unsupported build directory"];
+  Print[OutputForm["Cannot proceed; Unsupported build directory"]];
   Quit[1]
 ]
 
@@ -193,12 +193,12 @@ generateSrcDir = FileNameJoin[{packageDir, "AST", "Generate"}]
 
 PrependTo[$Path, generateSrcDir]
 
-If[FailureQ[FindFile["AST`Generate`"]],
-  Print["AST`Generate` could not be found."];
+If[FailureQ[FindFile["AST`Generate`GenerateSources`"]],
+  Print[OutputForm["AST`Generate`GenerateSources` could not be found."]];
   Quit[1]
 ]
 
-Print["Clean..."]
+Print[OutputForm["Clean..."]]
 
 Quiet[DeleteDirectory[generatedCPPDir, DeleteContents -> True], DeleteDirectory::nodir]
 
@@ -212,7 +212,7 @@ Quiet[DeleteDirectory[generatedWLDir, DeleteContents -> True], DeleteDirectory::
 
 Quiet[CreateDirectory[generatedWLDir], CreateDirectory::filex]
 
-Print["Done Clean"]
+Print[OutputForm["Done Clean"]]
 
 
 
@@ -263,7 +263,7 @@ Get["AST`Generate`Precedence`"]
 
 Get["AST`Generate`Symbol`"]
 
-Print["Done generating additional required source files"]
+Print[OutputForm["Done generating additional required source files"]]
 
 End[]
 

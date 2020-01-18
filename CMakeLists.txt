@@ -46,7 +46,7 @@ set(GENERATED_WL_PACLET_SOURCES
 # Used during the build process
 #
 set(WL_GENERATE_SOURCES
-	${CMAKE_SOURCE_DIR}/AST/Generate/Generate.wl
+	${CMAKE_SOURCE_DIR}/AST/Generate/GenerateSources.wl
 	${CMAKE_SOURCE_DIR}/AST/Generate/CharacterMaps.wl
 	${CMAKE_SOURCE_DIR}/AST/Generate/CodePoint.wl
 	${CMAKE_SOURCE_DIR}/AST/Generate/LongNames.wl
@@ -56,7 +56,7 @@ set(WL_GENERATE_SOURCES
 )
 
 set(WL_GENERATE_EXPRLIB_SOURCES
-	${CMAKE_SOURCE_DIR}/AST/Generate/ExpressionLibrary.wl
+	${CMAKE_SOURCE_DIR}/AST/Generate/GenerateExpressionLibrary.wl
 )
 
 set(WL_GENERATE_PACKPACLET_SOURCES
@@ -138,26 +138,38 @@ file(MAKE_DIRECTORY
 # Copy WL source files
 #
 add_custom_command(
-    OUTPUT ${CMAKE_BINARY_DIR}/paclet/${PACLET}/PacletInfo.m
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${PACLET}/PacletInfo.m ${CMAKE_BINARY_DIR}/paclet/${PACLET}/PacletInfo.m
-    MAIN_DEPENDENCY ${CMAKE_SOURCE_DIR}/${PACLET}/PacletInfo.m)
+	OUTPUT
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/PacletInfo.m
+	COMMAND
+		${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${PACLET}/PacletInfo.m ${CMAKE_BINARY_DIR}/paclet/${PACLET}/PacletInfo.m
+	MAIN_DEPENDENCY
+		${CMAKE_SOURCE_DIR}/${PACLET}/PacletInfo.m
+)
 list(APPEND COPIED_WL_PACLET_SOURCES ${CMAKE_BINARY_DIR}/paclet/${PACLET}/PacletInfo.m)
 
 foreach(SRC ${STATIC_WL_PACLET_SOURCES})
 	get_filename_component(BARE_SRC ${SRC} NAME)
 	add_custom_command(
-    OUTPUT ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC}
-    COMMAND ${CMAKE_COMMAND} -E copy ${SRC} ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC}
-    MAIN_DEPENDENCY ${SRC})
+		OUTPUT
+			${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC}
+		COMMAND
+			${CMAKE_COMMAND} -E copy ${SRC} ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC}
+		MAIN_DEPENDENCY
+			${SRC}
+	)
 	list(APPEND COPIED_WL_PACLET_SOURCES ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC})
 endforeach()
 
 foreach(SRC ${GENERATED_WL_PACLET_SOURCES})
 	get_filename_component(BARE_SRC ${SRC} NAME)
 	add_custom_command(
-    OUTPUT ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Generated/${BARE_SRC}
-    COMMAND ${CMAKE_COMMAND} -E copy ${SRC} ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Generated/${BARE_SRC}
-    MAIN_DEPENDENCY ${SRC})
+		OUTPUT
+			${CMAKE_BINARY_DIR}/paclet/${PACLET}/Generated/${BARE_SRC}
+		COMMAND
+			${CMAKE_COMMAND} -E copy ${SRC} ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Generated/${BARE_SRC}
+		MAIN_DEPENDENCY
+			${SRC}
+	)
 	list(APPEND COPIED_WL_PACLET_SOURCES ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Generated/${BARE_SRC})
 endforeach()
 
@@ -183,7 +195,7 @@ add_custom_command(
 		${WL_DATA_SOURCES}
 		${WL_GENERATE_SOURCES}
 	COMMAND
-		${WOLFRAMKERNEL} -noinit -script ${CMAKE_SOURCE_DIR}/AST/Generate/Generate.wl -buildDir ${CMAKE_BINARY_DIR}
+		${CMAKE_COMMAND} -DGENERATESOURCES_WL_SCRIPT=${CMAKE_SOURCE_DIR}/${PACLET}/Generate/GenerateSources.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DBUILDDIR=${CMAKE_BINARY_DIR} -P ${PROJECT_SOURCE_DIR}/cmake/GenerateSources.cmake
 	WORKING_DIRECTORY
 		${CMAKE_SOURCE_DIR}
 )
@@ -198,9 +210,7 @@ add_custom_command(
 #
 if(${BUILD_EXPR_LIB})
 
-set(EXPR_LIB ${CMAKE_BINARY_DIR}/paclet/AST/LibraryResources/${SYSTEMID}/expr${CMAKE_SHARED_LIBRARY_SUFFIX})
-
-message(STATUS "EXPR_LIB: ${EXPR_LIB}")
+set(EXPR_LIB ${CMAKE_BINARY_DIR}/paclet/AST/LibraryResources/${SYSTEMID}/libExpr${CMAKE_SHARED_LIBRARY_SUFFIX})
 
 add_library(expr-lib SHARED IMPORTED)
 
@@ -223,7 +233,9 @@ add_custom_command(
 	DEPENDS
 		${WL_GENERATE_EXPRLIB_SOURCES}
 	COMMAND
-		${WOLFRAMKERNEL} -noinit -script ${CMAKE_SOURCE_DIR}/AST/Generate/ExpressionLibrary.wl -buildDir ${CMAKE_BINARY_DIR}
+		${CMAKE_COMMAND} -E echo "EXPR_LIB: ${EXPR_LIB}"
+	COMMAND
+		${CMAKE_COMMAND} -DGENERATEEXPRESSIONLIBRARY_WL_SCRIPT=${CMAKE_SOURCE_DIR}/${PACLET}/Generate/GenerateExpressionLibrary.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DBUILDDIR=${CMAKE_BINARY_DIR} -P ${PROJECT_SOURCE_DIR}/cmake/GenerateExpressionLibrary.cmake
 	VERBATIM
 	WORKING_DIRECTORY
 		${CMAKE_SOURCE_DIR}
