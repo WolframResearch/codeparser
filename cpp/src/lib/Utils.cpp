@@ -192,7 +192,12 @@ bool Utils::isMBStrange(int32_t point) {
             // But most likely BOM
             //
         case 0xfeff:
-            assert(false);
+            //
+            // Do not assert(false)
+            //
+            // \:feff is completely fine
+            // The problem with 0xfeff is when it is a source character
+            //
             return true;
             //
             // ZERO WIDTH NO-BREAK SPACE

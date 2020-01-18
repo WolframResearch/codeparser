@@ -68,3 +68,21 @@ TEST_F(CrashTest, StackOverflow1) {
     SUCCEED();
 }
 #endif
+
+TEST_F(CrashTest, Crash2) {
+    
+    const unsigned char arr[] = {'\\', ':', 'f', 'e', 'f', 'f'};
+    
+    auto bufAndLen = BufferAndLength(arr, 6);
+    
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
+    
+    auto N = TheParserSession->parseExpressions();
+    
+    TheParserSession->releaseNode(N);
+    
+    TheParserSession->deinit();
+    
+    SUCCEED();
+}
+
