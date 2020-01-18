@@ -236,7 +236,6 @@ public:
     ~ScopedMLEnvironmentParameter();
     
     MLEnvironmentParameter get();
-    
 };
 
 class ScopedMLLoopbackLink {
@@ -250,7 +249,6 @@ public:
     ~ScopedMLLoopbackLink();
     
     MLINK get();
-    
 };
 
 #endif // USE_MATHLINK

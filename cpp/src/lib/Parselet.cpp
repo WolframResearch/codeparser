@@ -1631,12 +1631,19 @@ NodePtr ColonColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
             
             bool possible;
             if (Tok2.Tok.isPossibleBeginningOfExpression()) {
+                assert(Tok2.Tok == TOKEN_STRING);
                 possible = true;
             } else {
+                assert(Tok2.Tok.isError());
                 possible = false;
             }
             
-            auto Operand = NodePtr(new LeafNode(std::move(Tok2)));
+            NodePtr Operand;
+            if (possible) {
+                Operand = NodePtr(new LeafNode(std::move(Tok2)));
+            } else {
+                Operand = NodePtr(new ErrorNode(std::move(Tok2)));
+            }
             
             
             //
