@@ -89,6 +89,7 @@ trivia is only ever RIFFLED between tokens, never at the beginning or end
 
 # concrete
 
+```
 InfixNode[Plus, {
 	LeafNode[Integer, "1", <||>],
 	LeafNode[Token`Plus, "+", <||>],
@@ -100,6 +101,7 @@ InfixNode[Plus, {
 	LeafNode[Token`Plus, "+", <||>],
 	LeafNode[Token`Comment, "(**)", <||>],
 	LeafNode[SqrtBox, "a", <||>] }, <||>]
+```
 
 Trivia is kept
 
@@ -167,6 +169,7 @@ concrete syntax has InfixNode[Plus, {1, +, comment, 1}]
 
 # aggregate
 
+```
 InfixNode[Plus, {
 	LeafNode[Integer, "1", <||>],
 	LeafNode[Token`Plus, "+", <||>],
@@ -176,6 +179,7 @@ InfixNode[Plus, {
 	LeafNode[Integer, "1", <||>],
 	LeafNode[Token`Plus, "+", <||>],
 	LeafNode[SqrtBox, "a", <||>] }, <||>]
+```
 
 type information is kept
 
@@ -207,6 +211,7 @@ aggregate syntax has InfixNode[Plus, {1, +, 1}]
 
 # abstract
 
+```
 CallNode[LeafNode[Symbol, "Plus", <||>], {
 				LeafNode[Integer, "1", <||>],
 				LeafNode[Symbol, "a", <||>] }, <||>]
@@ -214,6 +219,7 @@ CallNode[LeafNode[Symbol, "Plus", <||>], {
 CallNode[LeafNode[Symbol, "Plus", <||>], {
 				LeafNode[Integer, "1", <||>],
 				LeafNode[SqrtBox, "a", <||>] }, <||>]
+```
 
 everything is a Call
 
@@ -226,6 +232,21 @@ abstract syntax
 abstract syntax has CallNode[head, {child1}]
 
 abstract syntax has CallNode[Plus, {1, 1}]
+
+
+
+
+
+# further work that could be done
+
+* removing line continuations
+
+* converting characters (e.g., \[Infinity] and \[Degree]) to symbols (e.g., Infinity and Degree)
+
+* removing \< \> from strings
+
+* more?
+
 
 
 
