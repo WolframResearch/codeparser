@@ -2,7 +2,10 @@
 
 AST is a paclet for parsing Wolfram Language code.
 
-[Parsing the Wolfram Language from WTC 2019](https://www.wolfram.com/broadcast/video.php?c=467&p=5&v=2908)
+[Parsing the Wolfram Language from WTC 2019: Watch Video](https://www.wolfram.com/broadcast/video.php?v=2908)
+
+[Parsing the Wolfram Language from WTC 2019: Download Presentation](https://files.wolframcdn.com/pub/www.wolfram.com/technology-conference/2019/Thursday/2019BrentonBostickParsingTheWL.nb)
+
 
 
 ## Installing
