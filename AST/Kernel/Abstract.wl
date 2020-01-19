@@ -17,18 +17,11 @@ Needs["AST`"]
 Needs["AST`Utils`"]
 Needs["AST`Folds`"]
 Needs["AST`Quirks`"]
+Needs["AST`Shims`"]
 
 
 
-(*
-How many top-level expressions are allowed?
 
-Until completely switched over to using new DataStructure stack, we are using O(n^2) AppendTo to create the stack
-of top-level expressions.
-
-Beyond this limit, parsing is infeasible
-*)
-$TopLevelExpressionLimit = 5000
 
 
 
@@ -882,11 +875,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 	peek = nodeListStack["Peek"];
 	nodeList = Normal[peek];
 
-	(*
-	Hack to prevent memory leak with shims
-	*)
-	Quiet[Remove["AST`Shims`Private`stack*"];, {Remove::rmnsm}];
-	Quiet[Remove["AST`Shims`Private`stackVal*"];, {Remove::rmnsm}];
+	cleanupStackShimMemoryLeak[];
 
 	{nodeList, issues}
 ]]
