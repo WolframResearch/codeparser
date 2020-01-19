@@ -13,6 +13,7 @@ set(BUILD_EXPR_LIB ON CACHE BOOL "Build expr library")
 set(USE_MATHLINK ON CACHE BOOL "Use MathLink")
 set(NISSUES OFF CACHE BOOL "NISSUES")
 set(NABORT OFF CACHE BOOL "NABORT")
+set(LOCAL_BUILD OFF CACHE BOOL "Local build")
 
 message(STATUS "PACLET: ${PACLET}")
 message(STATUS "WOLFRAMKERNEL: ${WOLFRAMKERNEL}")
@@ -22,6 +23,7 @@ message(STATUS "BUILD_EXPR_LIB: ${BUILD_EXPR_LIB}")
 message(STATUS "USE_MATHLINK: ${USE_MATHLINK}")
 message(STATUS "NISSUES: ${NISSUES}")
 message(STATUS "NABORT: ${NABORT}")
+message(STATUS "LOCAL_BUILD: ${LOCAL_BUILD}")
 
 set(STATIC_WL_PACLET_SOURCES
 	${CMAKE_SOURCE_DIR}/AST/Kernel/Abstract.wl
@@ -138,11 +140,16 @@ file(MAKE_DIRECTORY
 #
 # Copy WL source files
 #
+
+set(COPIED_PACLETINFO ${CMAKE_BINARY_DIR}/paclet/${PACLET}/PacletInfo.m)
+
 add_custom_command(
 	OUTPUT
-		${CMAKE_BINARY_DIR}/paclet/${PACLET}/PacletInfo.m
+		${COPIED_PACLETINFO}
 	COMMAND
-		${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${PACLET}/PacletInfo.m ${CMAKE_BINARY_DIR}/paclet/${PACLET}/PacletInfo.m
+		${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${PACLET}/PacletInfo.m ${COPIED_PACLETINFO}
+	COMMAND
+		${CMAKE_COMMAND} -DLOCAL_BUILD=${LOCAL_BUILD} -DCOPIED_PACLETINFO=${COPIED_PACLETINFO} -P ${PROJECT_SOURCE_DIR}/cmake/ReplacePacletInfo.cmake
 	MAIN_DEPENDENCY
 		${CMAKE_SOURCE_DIR}/${PACLET}/PacletInfo.m
 )
@@ -209,7 +216,7 @@ add_custom_command(
 #
 # expr lib target
 #
-if(${BUILD_EXPR_LIB})
+if(BUILD_EXPR_LIB)
 
 set(EXPR_LIB ${CMAKE_BINARY_DIR}/paclet/AST/LibraryResources/${SYSTEMID}/libExpr${CMAKE_SHARED_LIBRARY_SUFFIX})
 
@@ -244,7 +251,7 @@ add_custom_command(
 
 add_dependencies(expr-lib expr-lib-custom)
 
-endif(${BUILD_EXPR_LIB})
+endif(BUILD_EXPR_LIB)
 
 
 
@@ -288,7 +295,7 @@ set(CPP_INCLUDES
 	${CMAKE_SOURCE_DIR}/cpp/include/WLCharacter.h
 )
 
-if(${BUILD_EXPR_LIB})
+if(BUILD_EXPR_LIB)
 list(APPEND CPP_INCLUDES
     ${CMAKE_SOURCE_DIR}/cpp/include/ExpressionLibrary.h
 )
@@ -313,7 +320,7 @@ set(CPP_LIB_SOURCES
 	${CMAKE_SOURCE_DIR}/cpp/src/lib/WLCharacter.cpp
 )
 
-if(${BUILD_EXPR_LIB})
+if(BUILD_EXPR_LIB)
 list(APPEND CPP_LIB_SOURCES
 ${CMAKE_SOURCE_DIR}/cpp/src/lib/ExpressionLibrary.cpp
 )
@@ -353,7 +360,7 @@ target_link_libraries(ast-lib ${MATHLINK_LIB})
 
 endif(USE_MATHLINK)
 
-if(${BUILD_EXPR_LIB})
+if(BUILD_EXPR_LIB)
 target_link_libraries(ast-lib expr-lib)
 endif()
 
@@ -404,15 +411,15 @@ set_target_properties(ast-lib PROPERTIES
 
 if(NISSUES)
 target_compile_definitions(ast-lib PUBLIC NISSUES=1)
-endif(NISSUES)
+endif()
 
 if(NABORT)
 target_compile_definitions(ast-lib PUBLIC NABORT=1)
-endif(NABORT)
+endif()
 
 if(USE_MATHLINK)
 target_compile_definitions(ast-lib PUBLIC USE_MATHLINK=1)
-endif(USE_MATHLINK)
+endif()
 
 
 
@@ -507,7 +514,7 @@ set(PACLET_SOURCES
 	${WL_GENERATE_PACKPACLET_SOURCES}
 )
 
-if(${BUILD_EXPR_LIB})
+if(BUILD_EXPR_LIB)
 list(APPEND PACLET_SOURCES
 	expr-lib
 )
