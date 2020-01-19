@@ -29,6 +29,7 @@ set(STATIC_WL_PACLET_SOURCES
 	${CMAKE_SOURCE_DIR}/AST/Kernel/Boxes.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/CodeAction.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/DeclarationName.wl
+	${CMAKE_SOURCE_DIR}/AST/Kernel/Error.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/Folds.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/Library.wl
 	${CMAKE_SOURCE_DIR}/AST/Kernel/Node.wl

@@ -260,6 +260,7 @@ Needs["AST`Node`"]
 Needs["AST`Abstract`"]
 Needs["AST`Boxes`"]
 Needs["AST`DeclarationName`"]
+Needs["AST`Error`"]
 Needs["AST`Library`"]
 Needs["AST`Quirks`"]
 Needs["AST`Shims`"]
@@ -288,17 +289,8 @@ Options[ConcreteParseString] = {
 }
 
 ConcreteParseString[s_String, h_:Automatic, opts:OptionsPattern[]] :=
-	concreteParseString[s, h, opts]
-
-
-Options[concreteParseString] = Options[ConcreteParseString]
-
-concreteParseString[sIn_String, hIn_, OptionsPattern[]] :=
 Catch[
-Module[{s, h, res, bytes, encoding},
-
-	s = sIn;
-	h = hIn;
+Module[{cst, bytes, encoding},
 
 	encoding = OptionValue[CharacterEncoding];
 
@@ -307,6 +299,26 @@ Module[{s, h, res, bytes, encoding},
 	];
 
 	bytes = ToCharacterCode[s, "UTF8"];
+
+	cst = concreteParseString[bytes, h, opts];
+
+	If[FailureQ[cst],
+		Throw[cst]
+	];
+
+	cst = cst /. node_GroupMissingCloserNode :> reparseMissingCloserNode[node, bytes];
+
+	cst
+]]
+
+
+Options[concreteParseString] = Options[ConcreteParseString]
+
+concreteParseString[bytes_List, hIn_, OptionsPattern[]] :=
+Catch[
+Module[{h, res},
+
+	h = hIn;
 
 	(*
 	The <||> will be filled in with Source later
@@ -379,31 +391,14 @@ Options[ConcreteParseFile] = {
 ConcreteParseFile[file_String] returns a FileNode AST or a Failure object
 *)
 ConcreteParseFile[f:File[_String], h_:Automatic, opts:OptionsPattern[]] :=
-	concreteParseFile[f, h, opts]
-
-
-Options[concreteParseFile] = Options[ConcreteParseFile]
-
-concreteParseFile[File[file_String], hIn_, OptionsPattern[]] :=
 Catch[
-Module[{h, encoding, full, res, data, start, end, children, bytes},
-
-	h = hIn;
+Module[{cst, encoding, full, bytes},
 
 	encoding = OptionValue[CharacterEncoding];
-
-	(*
-	The <||> will be filled in with Source later
-	The # here is { {exprs}, {issues}, {metadata} }
-	*)
-	If[h === Automatic,
-		h = ContainerNode[File, #[[1]], If[!empty[#[[2]] ], <| SyntaxIssues -> #[[2]] |>, <||>]]&
-	];
 
 	If[encoding =!= "UTF8",
 		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
 	];
-
 
 	(*
 	We want to expand anything like ~ before passing to external process
@@ -412,12 +407,44 @@ Module[{h, encoding, full, res, data, start, end, children, bytes},
 
 	FindFile also fails if in sandbox mode
 	*)
-	full = FindFile[file];
+	full = FindFile[f];
 	If[FailureQ[full],
-		Throw[Failure["FindFileFailed", <|"FileName"->file|>]]
+		Throw[Failure["FindFileFailed", <|"FileName"->f|>]]
 	];
 
 	bytes = Import[full, "Byte"];
+
+	cst = concreteParseFile[bytes, h, opts];
+
+	If[FailureQ[cst],
+		If[cst === $Failed,
+			Throw[cst]
+		];
+		cst = Failure[cst[[1]], Join[cst[[2]], <|"FileName"->f|>]];
+		Throw[cst]
+	];
+
+	cst = cst /. node_GroupMissingCloserNode :> reparseMissingCloserNode[node, bytes];
+
+	cst
+]]
+
+
+Options[concreteParseFile] = Options[ConcreteParseFile]
+
+concreteParseFile[bytes_List, hIn_, OptionsPattern[]] :=
+Catch[
+Module[{h, res, data, start, end, children},
+
+	h = hIn;
+
+	(*
+	The <||> will be filled in with Source later
+	The # here is { {exprs}, {issues}, {metadata} }
+	*)
+	If[h === Automatic,
+		h = ContainerNode[File, #[[1]], If[!empty[#[[2]] ], <| SyntaxIssues -> #[[2]] |>, <||>]]&
+	];
 
 	$ConcreteParseProgress = 0;
 	$ConcreteParseStart = Now;
@@ -429,10 +456,6 @@ Module[{h, encoding, full, res, data, start, end, children, bytes},
 	$ConcreteParseTime = Now - $ConcreteParseStart;
 
 	If[FailureQ[res],
-		If[res === $Failed,
-			Throw[res]
-		];
-		res = Failure[res[[1]], Join[res[[2]], <|"FileName"->full|>]];
 		Throw[res]
 	];
 
@@ -496,18 +519,34 @@ Options[ConcreteParseBytes] = {
 ConcreteParseBytes[bytes_List] returns a FileNode AST or a Failure object
 *)
 ConcreteParseBytes[bytes_List, h_:Automatic, opts:OptionsPattern[]] :=
-	concreteParseBytes[bytes, h, opts]
+Catch[
+Module[{cst, encoding},
+
+	encoding = OptionValue[CharacterEncoding];
+
+	If[encoding =!= "UTF8",
+		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
+	];
+
+	cst = concreteParseBytes[bytes, h, opts];
+
+	If[FailureQ[cst],
+		Throw[cst]
+	];
+
+	cst = cst /. node_GroupMissingCloserNode :> reparseMissingCloserNode[node, bytes];
+
+	cst
+]]
 
 
 Options[concreteParseBytes] = Options[ConcreteParseBytes]
 
 concreteParseBytes[bytes_List, hIn_, OptionsPattern[]] :=
 Catch[
-Module[{h, encoding, res, data, start, end, children},
+Module[{h, res, data, start, end, children},
 
 	h = hIn;
-
-	encoding = OptionValue[CharacterEncoding];
 
 	(*
 	The <||> will be filled in with Source later
@@ -515,10 +554,6 @@ Module[{h, encoding, res, data, start, end, children},
 	*)
 	If[h === Automatic,
 		h = ContainerNode[Byte, #[[1]], If[!empty[#[[2]] ], <| SyntaxIssues -> #[[2]] |>, <||>]]&
-	];
-
-	If[encoding =!= "UTF8",
-		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
 	];
 
 	$ConcreteParseProgress = 0;
