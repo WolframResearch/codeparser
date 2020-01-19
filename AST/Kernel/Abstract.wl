@@ -454,7 +454,6 @@ Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node, re
 
 matchingOperatorPatterns[CallNode[LeafNode[Symbol, "EndPackage", _], {}, _]] = _PackageNode
 matchingOperatorPatterns[CallNode[LeafNode[Symbol, "End", _], {}, _]] = _ContextNode
-matchingOperatorPatterns[CallNode[LeafNode[Symbol, "EndStaticAnalysisIgnore", _], {}, _]] = _StaticAnalysisIgnoreNode
 
 
 
@@ -756,25 +755,10 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 			nodeListStack["Push", System`CreateDataStructure["ExpressionStack"]];
 		,
 		(*
-		BeginStaticAnalysisIgnore[]
-		*)
-		CallNode[LeafNode[Symbol, "BeginStaticAnalysisIgnore" | "AST`BeginStaticAnalysisIgnore", _], {}, _],
-			operatorStack["Push", StaticAnalysisIgnoreNode[x[[2]], {}, <|Source->{x[[3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
-			nodeListStack["Push", System`CreateDataStructure["ExpressionStack"]];
-		,
-		(*
-		BeginStaticAnalysisIgnore[] ;
-		*)
-		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "BeginStaticAnalysisIgnore" | "AST`BeginStaticAnalysisIgnore", _], {}, _], LeafNode[Symbol, "Null", _]}, _],
-			operatorStack["Push", StaticAnalysisIgnoreNode[x[[2, 1, 2]], {}, <|Source->{x[[2, 1, 3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
-			nodeListStack["Push", System`CreateDataStructure["ExpressionStack"]];
-		,
-		(*
 		EndPackage[]
 		End[]
-		EndStaticAnalysisIgnore[]
 		*)
-		CallNode[LeafNode[Symbol, "EndPackage" | "End" | "EndStaticAnalysisIgnore" | "AST`EndStaticAnalysisIgnore", _], {}, _],
+		CallNode[LeafNode[Symbol, "EndPackage" | "End", _], {}, _],
 			currentOperator = operatorStack["Pop"];
 			If[!MatchQ[currentOperator, matchingOperatorPatterns[x]],
 				AppendTo[issues, SyntaxIssue["Package", "There are unbalanced Package directives.", "Error", <| Source -> x[[3, Key[Source] ]], ConfidenceLevel -> 1.0 |> ]];
@@ -790,9 +774,8 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		(*
 		EndPackage[] ;
 		End[] ;
-		EndStaticAnalysisIgnore[] ;
 		*)
-		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "EndPackage" | "End" | "EndStaticAnalysisIgnore" | "AST`EndStaticAnalysisIgnore", _], {}, _], LeafNode[Symbol, "Null", _]}, _],
+		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "EndPackage" | "End", _], {}, _], LeafNode[Symbol, "Null", _]}, _],
 			currentOperator = operatorStack["Pop"];
 			If[!MatchQ[currentOperator, matchingOperatorPatterns[x[[2, 1]] ]],
 				AppendTo[issues, SyntaxIssue["Package", "There are unbalanced Package directives.", "Error", <| Source -> x[[2, 1, 3, Key[Source] ]], ConfidenceLevel -> 1.0 |>]];
@@ -810,15 +793,13 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 
 		GroupMissingCloserNode
 		*)
-		CallNode[LeafNode[Symbol, "BeginPackage" | "Begin" | "BeginStaticAnalysisIgnore" | "AST`BeginStaticAnalysisIgnore" |
-											"EndPackage" | "End" | "EndStaticAnalysisIgnore" | "AST`EndStaticAnalysisIgnore", _], { GroupMissingCloserNode[_, _, _] }, _],
+		CallNode[LeafNode[Symbol, "BeginPackage" | "Begin" | "EndPackage" | "End", _], { GroupMissingCloserNode[_, _, _] }, _],
 			(*
 			if GroupMissingCloserNode, then do not complain
 			*)
 			Throw[{list, issues}];
 		,
-		CallNode[LeafNode[Symbol, "BeginPackage" | "Begin" | "BeginStaticAnalysisIgnore" | "AST`BeginStaticAnalysisIgnore" |
-											"EndPackage" | "End" | "EndStaticAnalysisIgnore" | "AST`EndStaticAnalysisIgnore", _], _, _],
+		CallNode[LeafNode[Symbol, "BeginPackage" | "Begin" | "EndPackage" | "End", _], _, _],
 			AppendTo[issues, SyntaxIssue["Package", "Package directive does not have correct syntax.", "Error", <| Source -> x[[3, Key[Source] ]], ConfidenceLevel -> 1.0 |> ]];
 			Throw[{list, issues}];
 		,
@@ -827,8 +808,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 
 		GroupMissingCloserNode
 		*)
-		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "BeginPackage" | "Begin" | "BeginStaticAnalysisIgnore" | "AST`BeginStaticAnalysisIgnore" |
-																													"EndPackage" | "End" | "EndStaticAnalysisIgnore" | "AST`EndStaticAnalysisIgnore", _], { GroupMissingCloserNode[_, _, _] }, _], LeafNode[Symbol, "Null", _]}, _],
+		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "BeginPackage" | "Begin" | "EndPackage" | "End", _], { GroupMissingCloserNode[_, _, _] }, _], LeafNode[Symbol, "Null", _]}, _],
 			(*
 			if GroupMissingCloserNode, then do not complain
 			*)
@@ -837,8 +817,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		(*
 		All other calls to recognized directives, with ;
 		*)
-		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "BeginPackage" | "Begin" | "BeginStaticAnalysisIgnore" | "AST`BeginStaticAnalysisIgnore" |
-																													"EndPackage" | "End" | "EndStaticAnalysisIgnore" | "AST`EndStaticAnalysisIgnore", _], _, _], LeafNode[Symbol, "Null", _]}, _],
+		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "BeginPackage" | "Begin" | "EndPackage" | "End", _], _, _], LeafNode[Symbol, "Null", _]}, _],
 			AppendTo[issues, SyntaxIssue["Package", "Package directive does not have correct syntax.", "Error", <| Source -> x[[2, 1, 3, Key[Source] ]], ConfidenceLevel -> 1.0 |>]];
 			Throw[{list, issues}];
 		,

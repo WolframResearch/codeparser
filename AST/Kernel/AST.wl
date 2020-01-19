@@ -212,7 +212,6 @@ EndStaticAnalysisIgnore
 
 PackageNode
 ContextNode
-StaticAnalysisIgnoreNode
 
 
 
