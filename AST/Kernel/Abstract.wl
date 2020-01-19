@@ -661,25 +661,22 @@ topLevelChildIssues[BinaryNode[Divide, {_, LeafNode[Token`Slash, _, slashData_],
 									<|	Source->slashData[Source],
 										"ReplacementNode"->LeafNode[Token`SlashAt, "/@", <||>] |>] } |>] }
 
-topLevelChildIssues[BinaryNode[Span, {___, LeafNode[Token`Fake`ImplicitAll, _, _]}, data_], True] := {
-	SyntaxIssue["EndOfLine", "Suspicious ``Span`` is at end of line.", "Warning",
-		<| Source -> data[Source],
-			ConfidenceLevel -> 0.95 |>] }
-
-topLevelChildIssues[InfixNode[Times, {___, BinaryNode[Span, {___, LeafNode[Token`Fake`ImplicitAll, _, _]}, data_]}, _], True] := {
-	SyntaxIssue["EndOfLine", "Suspicious ``Span`` is at end of line.", "Warning",
-		<| Source -> data[Source],
-			ConfidenceLevel -> 0.95 |>] }
-
 (*
 No need to issue warning for errors being strange
 *)
+topLevelChildIssues[ErrorNode[_, _, _], True] := {}
+
 topLevelChildIssues[SyntaxErrorNode[_, _, _], True] := {}
 
 topLevelChildIssues[AbstractSyntaxErrorNode[_, _, _], True] := {}
 
+topLevelChildIssues[GroupMissingCloserNode[_, _, _], True] := {}
+
+
 topLevelChildIssues[node:_[_, _, _], True] :=
-Module[{first, firstSrc},
+Module[{first, firstSrc, issues},
+
+	issues = {};
 
 	(*
 	Just grab the first token to use
@@ -687,9 +684,24 @@ Module[{first, firstSrc},
 	first = firstToken[node];
 	firstSrc = first[[3, Key[Source] ]];
 
-	{ SyntaxIssue["TopLevel", "Unexpected expression at top-level.", "Warning",
-		<| Source -> firstSrc,
-			ConfidenceLevel -> 0.75 |>] }
+	Switch[first[[1]],
+		Token`OpenCurly,
+			AppendTo[issues, SyntaxIssue["TopLevelList", "Unexpected list at top-level.", "Warning",
+				<| Source -> firstSrc,
+				ConfidenceLevel -> 0.75 |>]]
+		,
+		Token`LessBar,
+			AppendTo[issues, SyntaxIssue["TopLevelAssociation", "Unexpected association at top-level.", "Warning",
+				<| Source -> firstSrc,
+				ConfidenceLevel -> 0.75 |>]]
+		,
+		_,
+			AppendTo[issues, SyntaxIssue["TopLevel", "Unexpected expression at top-level.", "Warning",
+				<| Source -> firstSrc,
+				ConfidenceLevel -> 0.75 |>]]
+	];
+
+	issues
 ]
 
 
