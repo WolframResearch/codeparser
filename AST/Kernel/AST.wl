@@ -306,7 +306,10 @@ Module[{cst, bytes, encoding},
 		Throw[cst]
 	];
 
-	cst = cst /. node_GroupMissingCloserNode :> reparseMissingCloserNode[node, bytes];
+	cst = cst /. {
+		node_GroupMissingCloserNode :> reparseMissingCloserNode[node, bytes],
+		node:ErrorNode[Token`Error`UnterminatedComment, _, _] :> reparseUnterminatedCommentErrorNode[node, bytes]
+	};
 
 	cst
 ]]
@@ -424,7 +427,10 @@ Module[{cst, encoding, full, bytes},
 		Throw[cst]
 	];
 
-	cst = cst /. node_GroupMissingCloserNode :> reparseMissingCloserNode[node, bytes];
+	cst = cst /. {
+		node_GroupMissingCloserNode :> reparseMissingCloserNode[node, bytes],
+		node:ErrorNode[Token`Error`UnterminatedComment, _, _] :> reparseUnterminatedCommentErrorNode[node, bytes]
+	};
 
 	cst
 ]]
@@ -534,7 +540,10 @@ Module[{cst, encoding},
 		Throw[cst]
 	];
 
-	cst = cst /. node_GroupMissingCloserNode :> reparseMissingCloserNode[node, bytes];
+	cst = cst /. {
+		node_GroupMissingCloserNode :> reparseMissingCloserNode[node, bytes],
+		node:ErrorNode[Token`Error`UnterminatedComment, _, _] :> reparseUnterminatedCommentErrorNode[node, bytes]
+	};
 
 	cst
 ]]

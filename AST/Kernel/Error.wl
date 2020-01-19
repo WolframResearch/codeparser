@@ -3,6 +3,8 @@ BeginPackage["AST`Error`"]
 
 reparseMissingCloserNode
 
+reparseUnterminatedCommentErrorNode
+
 
 Begin["`Private`"]
 
@@ -75,6 +77,39 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
   GroupMissingCloserNode[tag, {}, data]
 ]
 
+
+
+reparseUnterminatedCommentErrorNode[ErrorNode[Token`Error`UnterminatedComment, _, dataIn_], bytes_List] :=
+Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str},
+
+  str = SafeString[bytes];
+
+  lines = StringSplit[str, {"\r\n", "\n", "\r"}, All];
+
+  data = dataIn;
+  src = data[Source];
+  (*
+  lines of the node
+  *)
+  lines = lines[[src[[1, 1]];;src[[2, 1]] ]];
+  
+  chunks = Split[lines, !StringMatchQ[#2, chunkPat]&];
+  
+  firstChunk = chunks[[1]];
+  
+  lastGoodLineIndex = Length[firstChunk];
+  lastGoodLine = firstChunk[[lastGoodLineIndex]];
+  While[lastGoodLine == "",
+    lastGoodLineIndex--;
+    lastGoodLine = firstChunk[[lastGoodLineIndex]];
+  ];
+
+  betterSrc = { src[[1]], { src[[1, 1]] + lastGoodLineIndex - 1, StringLength[lastGoodLine]+1 } };
+
+  data[Source] = betterSrc;
+
+  ErrorNode[Token`Error`UnterminatedComment, "", data]
+]
 
 
 
