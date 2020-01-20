@@ -207,9 +207,6 @@ AbstractSyntaxErrorNode
 
 InternalInvalid
 
-BeginStaticAnalysisIgnore
-EndStaticAnalysisIgnore
-
 
 PackageNode
 ContextNode
