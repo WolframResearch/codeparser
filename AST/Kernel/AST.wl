@@ -201,6 +201,7 @@ ContainerNode
 
 SyntaxErrorNode
 GroupMissingCloserNode
+GroupMissingCloserNeedsReparseNode
 AbstractSyntaxErrorNode
 
 
@@ -306,7 +307,7 @@ Module[{cst, bytes, encoding},
 	];
 
 	cst = cst /. {
-		node_GroupMissingCloserNode :> reparseMissingCloserNode[node, bytes],
+		node_GroupMissingCloserNeedsReparseNode :> reparseMissingCloserNode[node, bytes],
 		node:ErrorNode[Token`Error`UnterminatedComment, _, _] :> reparseUnterminatedCommentErrorNode[node, bytes]
 	};
 
@@ -427,7 +428,7 @@ Module[{cst, encoding, full, bytes},
 	];
 
 	cst = cst /. {
-		node_GroupMissingCloserNode :> reparseMissingCloserNode[node, bytes],
+		node_GroupMissingCloserNeedsReparseNode :> reparseMissingCloserNode[node, bytes],
 		node:ErrorNode[Token`Error`UnterminatedComment, _, _] :> reparseUnterminatedCommentErrorNode[node, bytes]
 	};
 
@@ -540,7 +541,7 @@ Module[{cst, encoding},
 	];
 
 	cst = cst /. {
-		node_GroupMissingCloserNode :> reparseMissingCloserNode[node, bytes],
+		node_GroupMissingCloserNeedsReparseNode :> reparseMissingCloserNode[node, bytes],
 		node:ErrorNode[Token`Error`UnterminatedComment, _, _] :> reparseUnterminatedCommentErrorNode[node, bytes]
 	};
 

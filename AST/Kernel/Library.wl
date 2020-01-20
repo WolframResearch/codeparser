@@ -56,6 +56,7 @@ MakeOptionalDefaultPatternNode
 
 MakeSyntaxErrorNode
 MakeGroupMissingCloserNode
+MakeGroupMissingCloserNeedsReparseNode
 MakeAbstractSyntaxErrorNode
 
 MakeSourceCharacterNode
@@ -418,6 +419,8 @@ MakeSyntaxErrorNode[tag_, payload_, srcArgs___] :=
 MakeGroupMissingCloserNode[tag_, payload_, srcArgs___] :=
 	GroupMissingCloserNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
 
+MakeGroupMissingCloserNeedsReparseNode[tag_, payload_, srcArgs___] :=
+	GroupMissingCloserNeedsReparseNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
 
 MakeAbstractSyntaxErrorNode[tag_, payload_, srcArgs___] :=
 	AbstractSyntaxErrorNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]

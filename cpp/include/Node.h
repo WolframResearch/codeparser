@@ -379,6 +379,11 @@ public:
     GroupMissingCloserNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEGROUPMISSINGCLOSERNODE, std::move(Args)) {}
 };
 
+class GroupMissingCloserNeedsReparseNode : public OperatorNode {
+public:
+    GroupMissingCloserNeedsReparseNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEGROUPMISSINGCLOSERNEEDSREPARSENODE, std::move(Args)) {}
+};
+
 
 class CollectedExpressionsNode : public Node {
     std::vector<NodePtr> Exprs;

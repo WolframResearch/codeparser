@@ -360,7 +360,7 @@ NodePtr GroupParselet::parse(Token firstTok, ParserContext Ctxt) const {
             // Handle something like   { a EOF
             //
             
-            auto group = NodePtr(new GroupMissingCloserNode(Op, std::move(Args)));
+            auto group = NodePtr(new GroupMissingCloserNeedsReparseNode(Op, std::move(Args)));
             
             return group;
         }
@@ -1071,7 +1071,7 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext Ctxt)
             // Handle something like   \( a EOF
             //
             
-            auto group = NodePtr(new GroupMissingCloserNode(SYMBOL_AST_GROUPLINEARSYNTAXPAREN, std::move(Args)));
+            auto group = NodePtr(new GroupMissingCloserNeedsReparseNode(SYMBOL_AST_GROUPLINEARSYNTAXPAREN, std::move(Args)));
             
             return group;
         }

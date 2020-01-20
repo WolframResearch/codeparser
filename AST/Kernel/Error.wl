@@ -45,8 +45,8 @@ chunkPat = RegularExpression["("<>annotationPat<>")|("<>directivePat<>")|("<>ass
 (*
 return: better GroupMissingCloserNode
 *)
-reparseMissingCloserNode[GroupMissingCloserNode[tag_, _, dataIn_], bytes_List] :=
-Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str},
+reparseMissingCloserNode[GroupMissingCloserNeedsReparseNode[tag_, children_, dataIn_], bytes_List] :=
+Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str, opener},
 
   str = SafeString[bytes];
 
@@ -74,7 +74,12 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
 
   data[Source] = betterSrc;
 
-  GroupMissingCloserNode[tag, {}, data]
+  (*
+  Preserve the opener to make ToString easier
+  *)
+  opener = children[[1]];
+
+  GroupMissingCloserNode[tag, { opener }, data]
 ]
 
 
