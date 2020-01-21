@@ -1237,17 +1237,28 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 return Token(TOKEN_ERROR_INVALIDBASE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
             }
             
-            auto baseStr = std::string(reinterpret_cast<const char *>(nonZeroStartBuf), caret1Buf - nonZeroStartBuf);
+            auto baseStrLen = caret1Buf - nonZeroStartBuf;
             
             //
             // bases can only be between 2 and 36, so we know they can only be 1 or 2 characters
             //
-            if (baseStr.size() > 2) {
+            if (baseStrLen > 2) {
                 
                 return Token(TOKEN_ERROR_INVALIDBASE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                
+            } else if (baseStrLen == 2) {
+                
+                auto d1 = Utils::toDigit(nonZeroStartBuf[0]);
+                auto d0 = Utils::toDigit(nonZeroStartBuf[1]);
+                base = d1 * 10 + d0;
+                
+            } else {
+                
+                assert(baseStrLen == 1);
+                
+                auto d0 = Utils::toDigit(nonZeroStartBuf[0]);
+                base = d0;
             }
-            
-            base = Utils::parseInteger(baseStr, 10);
             
             if (!(2 <= base && base <= 36)) {
                 

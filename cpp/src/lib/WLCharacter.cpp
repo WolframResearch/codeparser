@@ -125,18 +125,20 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
             break;
         case ESCAPE_OCTAL: {
             
-            auto ii = i;
-            
-            auto it = FromSpecialMap.find(i);
-            if (it != FromSpecialMap.end()) {
-                ii = it->second;
+            switch (i) {
+                case CODEPOINT_STRINGMETA_DOUBLEQUOTE:
+                    i = CODEPOINT_ACTUAL_DOUBLEQUOTE;
+                    break;
+                case CODEPOINT_STRINGMETA_BACKSLASH:
+                    i = CODEPOINT_ACTUAL_BACKSLASH;
+                    break;
             }
             
-            auto o0 = ii % 8;
-            ii /= 8;
-            auto o1 = ii % 8;
-            ii /= 8;
-            auto o2 = ii % 8;
+            int8_t o0 = i % 8;
+            i /= 8;
+            int8_t o1 = i % 8;
+            i /= 8;
+            int8_t o2 = i % 8;
             
             stream << SourceCharacter('\\');
             stream << SourceCharacter(fromDigit(o2));
@@ -146,16 +148,18 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
             break;
         case ESCAPE_2HEX: {
             
-            auto ii = i;
-            
-            auto it = FromSpecialMap.find(i);
-            if (it != FromSpecialMap.end()) {
-                ii = it->second;
+            switch (i) {
+                case CODEPOINT_STRINGMETA_DOUBLEQUOTE:
+                    i = CODEPOINT_ACTUAL_DOUBLEQUOTE;
+                    break;
+                case CODEPOINT_STRINGMETA_BACKSLASH:
+                    i = CODEPOINT_ACTUAL_BACKSLASH;
+                    break;
             }
             
-            auto x0 = ii % 16;
-            ii /= 16;
-            auto x1 = ii % 16;
+            int8_t x0 = i % 16;
+            i /= 16;
+            int8_t x1 = i % 16;
             
             stream << SourceCharacter('\\');
             stream << SourceCharacter('.');
@@ -165,20 +169,22 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
             break;
         case ESCAPE_4HEX: {
             
-            auto ii = i;
-            
-            auto it = FromSpecialMap.find(i);
-            if (it != FromSpecialMap.end()) {
-                ii = it->second;
+            switch (i) {
+                case CODEPOINT_STRINGMETA_DOUBLEQUOTE:
+                    i = CODEPOINT_ACTUAL_DOUBLEQUOTE;
+                    break;
+                case CODEPOINT_STRINGMETA_BACKSLASH:
+                    i = CODEPOINT_ACTUAL_BACKSLASH;
+                    break;
             }
             
-            auto x0 = ii % 16;
-            ii /= 16;
-            auto x1 = ii % 16;
-            ii /= 16;
-            auto x2 = ii % 16;
-            ii /= 16;
-            auto x3 = ii % 16;
+            int8_t x0 = i % 16;
+            i /= 16;
+            int8_t x1 = i % 16;
+            i /= 16;
+            int8_t x2 = i % 16;
+            i /= 16;
+            int8_t x3 = i % 16;
             
             stream << SourceCharacter('\\');
             stream << SourceCharacter(':');
@@ -190,24 +196,26 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
             break;
         case ESCAPE_6HEX: {
             
-            auto ii = i;
-            
-            auto it = FromSpecialMap.find(i);
-            if (it != FromSpecialMap.end()) {
-                ii = it->second;
+            switch (i) {
+                case CODEPOINT_STRINGMETA_DOUBLEQUOTE:
+                    i = CODEPOINT_ACTUAL_DOUBLEQUOTE;
+                    break;
+                case CODEPOINT_STRINGMETA_BACKSLASH:
+                    i = CODEPOINT_ACTUAL_BACKSLASH;
+                    break;
             }
             
-            auto x0 = ii % 16;
-            ii /= 16;
-            auto x1 = ii % 16;
-            ii /= 16;
-            auto x2 = ii % 16;
-            ii /= 16;
-            auto x3 = ii % 16;
-            ii /= 16;
-            auto x4 = ii % 16;
-            ii /= 16;
-            auto x5 = ii % 16;
+            int8_t x0 = i % 16;
+            i /= 16;
+            int8_t x1 = i % 16;
+            i /= 16;
+            int8_t x2 = i % 16;
+            i /= 16;
+            int8_t x3 = i % 16;
+            i /= 16;
+            int8_t x4 = i % 16;
+            i /= 16;
+            int8_t x5 = i % 16;
             
             stream << SourceCharacter('\\');
             stream << SourceCharacter('|');

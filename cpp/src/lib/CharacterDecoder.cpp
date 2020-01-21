@@ -574,40 +574,38 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
     // Success!
     //
     
-    auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
+    auto d3 = Utils::toDigit(hexStartBuf[0]);
+    auto d2 = Utils::toDigit(hexStartBuf[1]);
+    auto d1 = Utils::toDigit(hexStartBuf[2]);
+    auto d0 = Utils::toDigit(hexStartBuf[3]);
+    codepoint point = d3 << 12 | d2 << 8 | d1 << 4 | d0;
     
-    auto hexEndBuf = currentWLCharacterEndBuf;
-    
-    auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf);
-    auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.buffer), hexBufAndLen.length());
-    
-    auto it = ToSpecialMap.find(hexStr);
-    if (it == ToSpecialMap.end()) {
-        
-        auto point = Utils::parseInteger(hexStr, 16);
-        
-#if !NISSUES
-        if (Utils::isStrange(point) || Utils::isMBStrange(point)) {
-            //
-            // Just generally strange character is in the code
-            //
-            
-            auto c = WLCharacter(point, ESCAPE_4HEX);
-            
-            auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
-            
-            auto graphicalStr = c.graphicalString();
-            
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
-            
-            Issues.push_back(std::move(I));
-        }
-#endif // !NISSUES
-        
-        return WLCharacter(point, ESCAPE_4HEX);
+    switch (point) {
+        case CODEPOINT_ACTUAL_DOUBLEQUOTE:
+            point = CODEPOINT_STRINGMETA_DOUBLEQUOTE;
+            break;
+        case CODEPOINT_ACTUAL_BACKSLASH:
+            point = CODEPOINT_STRINGMETA_BACKSLASH;
+            break;
     }
     
-    auto point = it->second;
+#if !NISSUES
+    if (Utils::isStrange(point) || Utils::isMBStrange(point)) {
+        //
+        // Just generally strange character is in the code
+        //
+        
+        auto c = WLCharacter(point, ESCAPE_4HEX);
+        
+        auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+        
+        auto graphicalStr = c.graphicalString();
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+        
+        Issues.push_back(std::move(I));
+    }
+#endif // !NISSUES
     
     return WLCharacter(point, ESCAPE_4HEX);
 }
@@ -687,40 +685,36 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
     // Success!
     //
     
-    auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
+    auto d1 = Utils::toDigit(hexStartBuf[0]);
+    auto d0 = Utils::toDigit(hexStartBuf[1]);
+    codepoint point = d1 << 4 | d0;
     
-    auto hexEndBuf = currentWLCharacterEndBuf;
-    
-    auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf);
-    auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.buffer), hexBufAndLen.length());
-    
-    auto it = ToSpecialMap.find(hexStr);
-    if (it == ToSpecialMap.end()) {
-        
-        auto point = Utils::parseInteger(hexStr, 16);
-        
-#if !NISSUES
-        if (Utils::isStrange(point) || Utils::isMBStrange(point)) {
-            //
-            // Just generally strange character is in the code
-            //
-            
-            auto c = WLCharacter(point, ESCAPE_2HEX);
-            
-            auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
-            
-            auto graphicalStr = c.graphicalString();
-            
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
-            
-            Issues.push_back(std::move(I));
-        }
-#endif // !NISSUES
-        
-        return WLCharacter(point, ESCAPE_2HEX);
+    switch (point) {
+        case CODEPOINT_ACTUAL_DOUBLEQUOTE:
+            point = CODEPOINT_STRINGMETA_DOUBLEQUOTE;
+            break;
+        case CODEPOINT_ACTUAL_BACKSLASH:
+            point = CODEPOINT_STRINGMETA_BACKSLASH;
+            break;
     }
     
-    auto point = it->second;
+#if !NISSUES
+    if (Utils::isStrange(point) || Utils::isMBStrange(point)) {
+        //
+        // Just generally strange character is in the code
+        //
+        
+        auto c = WLCharacter(point, ESCAPE_2HEX);
+        
+        auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+        
+        auto graphicalStr = c.graphicalString();
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+        
+        Issues.push_back(std::move(I));
+    }
+#endif // !NISSUES
     
     return WLCharacter(point, ESCAPE_2HEX);
 }
@@ -800,40 +794,37 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
     // Success!
     //
     
-    auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
+    auto d2 = Utils::toDigit(octalStartBuf[0]);
+    auto d1 = Utils::toDigit(octalStartBuf[1]);
+    auto d0 = Utils::toDigit(octalStartBuf[2]);
+    codepoint point = d2 << 6 | d1 << 3 | d0;
     
-    auto octalEndBuf = currentWLCharacterEndBuf;
-    
-    auto octalBufAndLen = BufferAndLength(octalStartBuf, octalEndBuf - octalStartBuf);
-    auto octalStr = std::string(reinterpret_cast<const char *>(octalBufAndLen.buffer), octalBufAndLen.length());
-    
-    auto it = ToSpecialMap.find(octalStr);
-    if (it == ToSpecialMap.end()) {
-        
-        auto point = Utils::parseInteger(octalStr, 8);
-        
-#if !NISSUES
-        if (Utils::isStrange(point) || Utils::isMBStrange(point)) {
-            //
-            // Just generally strange character is in the code
-            //
-            
-            auto c = WLCharacter(point, ESCAPE_OCTAL);
-            
-            auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
-            
-            auto graphicalStr = c.graphicalString();
-            
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
-            
-            Issues.push_back(std::move(I));
-        }
-#endif // !NISSUES
-        
-        return WLCharacter(point, ESCAPE_OCTAL);
+    switch (point) {
+        case CODEPOINT_ACTUAL_DOUBLEQUOTE:
+            point = CODEPOINT_STRINGMETA_DOUBLEQUOTE;
+            break;
+        case CODEPOINT_ACTUAL_BACKSLASH:
+            point = CODEPOINT_STRINGMETA_BACKSLASH;
+            break;
     }
     
-    auto point = it->second;
+#if !NISSUES
+    if (Utils::isStrange(point) || Utils::isMBStrange(point)) {
+        //
+        // Just generally strange character is in the code
+        //
+        
+        auto c = WLCharacter(point, ESCAPE_OCTAL);
+        
+        auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+        
+        auto graphicalStr = c.graphicalString();
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+        
+        Issues.push_back(std::move(I));
+    }
+#endif // !NISSUES
     
     return WLCharacter(point, ESCAPE_OCTAL);
 }
@@ -914,40 +905,40 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
     // Success!
     //
     
-    auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
+    auto d5 = Utils::toDigit(hexStartBuf[0]);
+    auto d4 = Utils::toDigit(hexStartBuf[1]);
+    auto d3 = Utils::toDigit(hexStartBuf[2]);
+    auto d2 = Utils::toDigit(hexStartBuf[3]);
+    auto d1 = Utils::toDigit(hexStartBuf[4]);
+    auto d0 = Utils::toDigit(hexStartBuf[5]);
+    codepoint point = d5 << 20 | d4 << 16 | d3 << 12 | d2 << 8 | d1 << 4 | d0;
     
-    auto hexEndBuf = currentWLCharacterEndBuf;
-    
-    auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf);
-    auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.buffer), hexBufAndLen.length());
-    
-    auto it = ToSpecialMap.find(hexStr);
-    if (it == ToSpecialMap.end()) {
-        
-        auto point = Utils::parseInteger(hexStr, 16);
-        
-#if !NISSUES
-        if (Utils::isStrange(point) || Utils::isMBStrange(point)) {
-            //
-            // Just generally strange character is in the code
-            //
-            
-            auto c = WLCharacter(point, ESCAPE_6HEX);
-            
-            auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
-            
-            auto graphicalStr = c.graphicalString();
-            
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
-            
-            Issues.push_back(std::move(I));
-        }
-#endif // !NISSUES
-        
-        return WLCharacter(point, ESCAPE_6HEX);
+    switch (point) {
+        case CODEPOINT_ACTUAL_DOUBLEQUOTE:
+            point = CODEPOINT_STRINGMETA_DOUBLEQUOTE;
+            break;
+        case CODEPOINT_ACTUAL_BACKSLASH:
+            point = CODEPOINT_STRINGMETA_BACKSLASH;
+            break;
     }
     
-    auto point = it->second;
+#if !NISSUES
+    if (Utils::isStrange(point) || Utils::isMBStrange(point)) {
+        //
+        // Just generally strange character is in the code
+        //
+        
+        auto c = WLCharacter(point, ESCAPE_6HEX);
+        
+        auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+        
+        auto graphicalStr = c.graphicalString();
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+        
+        Issues.push_back(std::move(I));
+    }
+#endif // !NISSUES
     
     return WLCharacter(point, ESCAPE_6HEX);
 }
