@@ -42,7 +42,7 @@ struct WLCharacter {
     uint8_t signBit : 1;
     uint8_t escapeBits : 3;
     
-    explicit constexpr WLCharacter(int32_t val = CODEPOINT_UNKNOWN, EscapeStyle escape = ESCAPE_NONE) : valBits(val), signBit(val < 0), escapeBits(escape) {}
+    explicit constexpr WLCharacter(codepoint val = CODEPOINT_UNKNOWN, EscapeStyle escape = ESCAPE_NONE) : valBits(val), signBit(val < 0), escapeBits(escape) {}
     
     explicit operator int() const noexcept = delete;
     
@@ -65,7 +65,7 @@ struct WLCharacter {
         return to_point() < o.to_point();
     }
     
-    constexpr int32_t to_point() const {
+    constexpr codepoint to_point() const {
         //
         // Sign extend the value
         //

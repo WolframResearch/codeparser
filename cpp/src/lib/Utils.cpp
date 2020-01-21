@@ -2,21 +2,10 @@
 #include "Utils.h"
 
 #include "Tokenizer.h" // for Tokenizer
-#include "CharacterMaps.h" // for CodePointToLongNameMap
+#include "LongNames.h" // for CodePointToLongNameMap
 
 #include <cstring> // for strcmp with GCC and MSVC
 #include <cassert>
-
-
-//
-// s MUST contain an integer
-//
-// Don't be weird: return an int, not size_t
-//
-int Utils::parseInteger(std::string s, size_t base) {
-    return std::stoi(s, nullptr, static_cast<int>(base));
-}
-
 
 //
 // These have been downgraded from very strange to just strange, because they do appear in actual code
@@ -118,7 +107,7 @@ void Utils::strangeLetterlikeWarning(Source Src, WLCharacter c) {
     TheTokenizer->addIssue(std::move(I));
 }
 
-bool Utils::isStrange(int32_t point) {
+bool Utils::isStrange(codepoint point) {
 
     switch (point) {
             //
@@ -140,7 +129,7 @@ bool Utils::isStrange(int32_t point) {
     }
 }
 
-bool Utils::isMBStrange(int32_t point) {
+bool Utils::isMBStrange(codepoint point) {
 
     //
     // Reject if ASCII, should use isStrange()
@@ -275,7 +264,7 @@ bool Utils::isMBStrange(int32_t point) {
 //
 // https://en.wikipedia.org/wiki/Universal_Character_Set_characters#Non-characters
 //
-bool Utils::isMBNonCharacter(int32_t point) {
+bool Utils::isMBNonCharacter(codepoint point) {
     
     switch (point) {
         case 0xfdd0: case 0xfdd1: case 0xfdd2: case 0xfdd3: case 0xfdd4: case 0xfdd5: case 0xfdd6: case 0xfdd7:

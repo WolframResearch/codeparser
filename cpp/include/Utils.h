@@ -21,33 +21,23 @@ int get_graphical_i();
 class Utils {
 public:
     
-    static int parseInteger(std::string s, size_t base);
-    
     static bool isStrangeLetterlikeLongName(std::string s);
     
     static bool isVeryStrangeLetterlikeLongName(std::string s);
     
-    static bool isUnsupportedLongName(std::string s);
-    
     static bool isUndocumentedLongName(std::string s);
     
-    static bool isMBWhitespace(int32_t point);
-    
-    static bool isMBPunctuation(int32_t point);
-    
-    static bool isMBNewline(int32_t point);
-    
-    static bool isMBUninterpretable(int32_t point);
-    
-    static bool isMBNonCharacter(int32_t point);
+    static bool isMBNonCharacter(codepoint point);
     
 #if !NISSUES
     static void strangeLetterlikeWarning(Source Src, WLCharacter c);
     
-    static bool isStrange(int32_t point);
+    static bool isStrange(codepoint point);
     
-    static bool isMBStrange(int32_t point);
+    static bool isMBStrange(codepoint point);
 #endif // !NISSUES
+    
+    static uint8_t toDigit(unsigned char val);
     
 };
 

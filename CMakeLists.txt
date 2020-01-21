@@ -50,8 +50,6 @@ set(GENERATED_WL_PACLET_SOURCES
 #
 set(WL_GENERATE_SOURCES
 	${CMAKE_SOURCE_DIR}/AST/Generate/GenerateSources.wl
-	${CMAKE_SOURCE_DIR}/AST/Generate/CharacterMaps.wl
-	${CMAKE_SOURCE_DIR}/AST/Generate/CodePoint.wl
 	${CMAKE_SOURCE_DIR}/AST/Generate/LongNames.wl
 	${CMAKE_SOURCE_DIR}/AST/Generate/Precedence.wl
 	${CMAKE_SOURCE_DIR}/AST/Generate/Symbol.wl
@@ -77,15 +75,14 @@ set(WL_DATA_SOURCES
 )
 
 set(GENERATED_CPP_INCLUDES
-	${CMAKE_BINARY_DIR}/generated/cpp/include/LongNameDefines.h
+	${CMAKE_BINARY_DIR}/generated/cpp/include/LongNames.h
 	${CMAKE_BINARY_DIR}/generated/cpp/include/Precedence.h
 	${CMAKE_BINARY_DIR}/generated/cpp/include/Symbol.h
 	${CMAKE_BINARY_DIR}/generated/cpp/include/TokenEnum.h
 )
 
 set(GENERATED_CPP_LIB_SOURCES
-	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/CharacterMaps.cpp
-	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/CodePoint.cpp
+	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/LongNames.cpp
 	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/Symbol.cpp
 	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/TokenEnum.cpp
 )
@@ -283,7 +280,6 @@ set(CPP_INCLUDES
 	${CMAKE_SOURCE_DIR}/cpp/include/ByteDecoder.h
 	${CMAKE_SOURCE_DIR}/cpp/include/ByteEncoder.h
 	${CMAKE_SOURCE_DIR}/cpp/include/CharacterDecoder.h
-	${CMAKE_SOURCE_DIR}/cpp/include/CharacterMaps.h
 	${CMAKE_SOURCE_DIR}/cpp/include/CodePoint.h
 	${CMAKE_SOURCE_DIR}/cpp/include/Node.h
 	${CMAKE_SOURCE_DIR}/cpp/include/Parselet.h

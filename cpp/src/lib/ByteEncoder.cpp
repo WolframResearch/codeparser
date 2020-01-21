@@ -5,7 +5,7 @@
 
 #include <cassert>
 
-size_t ByteEncoder::size(int32_t val) {
+size_t ByteEncoder::size(codepoint val) {
     
     assert(val >= 0 || val == CODEPOINT_CRLF);
     
@@ -32,7 +32,7 @@ size_t ByteEncoder::size(int32_t val) {
     }
 }
 
-void ByteEncoder::encodeBytes(std::ostream& stream, int32_t val, ByteEncoderState *state) {
+void ByteEncoder::encodeBytes(std::ostream& stream, codepoint val, ByteEncoderState *state) {
     
     assert(val >= 0 || val == CODEPOINT_CRLF);
     
@@ -104,7 +104,7 @@ void ByteEncoder::encodeBytes(std::ostream& stream, int32_t val, ByteEncoderStat
     }
 }
 
-void ByteEncoder::encodeBytes(std::array<unsigned char, 4>& arr, int32_t val, ByteEncoderState *state) {
+void ByteEncoder::encodeBytes(std::array<unsigned char, 4>& arr, codepoint val, ByteEncoderState *state) {
     
     assert(val >= 0 || val == CODEPOINT_CRLF);
     

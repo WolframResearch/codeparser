@@ -4,7 +4,7 @@
 #include "ByteDecoder.h" // for TheByteDecoder
 #include "ByteBuffer.h" // for TheByteBuffer
 #include "Utils.h" // for isUnsupportedLongName, etc.
-#include "CharacterMaps.h" // for LongNameToCodePointMap, etc.
+#include "LongNames.h" // for LongNameToCodePointMap, etc.
 #include "API.h" // for ScopedMLUTF8String
 
 
@@ -456,7 +456,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
         //
         // The well-formed, recognized name could still be unsupported or undocumented
         //
-        if (Utils::isUnsupportedLongName(longNameStr)) {
+        if (LongNames::isUnsupportedLongName(longNameStr)) {
             
             auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNSUPPORTEDCHARACTER, std::string("Unsupported character: ``\\[") + longNameStr + "]``.", SYNTAXISSUESEVERITY_ERROR, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, {}));
             
@@ -469,7 +469,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
             //
             
             WLCharacter c;
-            if (isRaw(longNameStr)) {
+            if (LongNames::isRaw(longNameStr)) {
                 c = WLCharacter(point, ESCAPE_RAW);
             } else {
                 c = WLCharacter(point, ESCAPE_LONGNAME);
@@ -492,7 +492,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
     }
 #endif // !NISSUES
     
-    if (isRaw(longNameStr)) {
+    if (LongNames::isRaw(longNameStr)) {
         return WLCharacter(point, ESCAPE_RAW);
     } else {
         return WLCharacter(point, ESCAPE_LONGNAME);

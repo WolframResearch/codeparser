@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "CodePoint.h" // for codepoint
+
 #include <ostream>
 #include <array>
 
@@ -14,9 +16,9 @@ struct ByteEncoderState {
 class ByteEncoder {
 public:
     
-    static size_t size(int32_t val);
+    static size_t size(codepoint val);
     
-    static void encodeBytes(std::ostream&, int32_t val, ByteEncoderState *state);
+    static void encodeBytes(std::ostream&, codepoint val, ByteEncoderState *state);
     
-    static void encodeBytes(std::array<unsigned char, 4>& arr, int32_t val, ByteEncoderState *state);
+    static void encodeBytes(std::array<unsigned char, 4>& arr, codepoint val, ByteEncoderState *state);
 };

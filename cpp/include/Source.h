@@ -2,7 +2,8 @@
 #pragma once
 
 #include "TokenEnum.h" // for TokenEnum
-//
+#include "CodePoint.h" // for codepoint
+
 #if USE_MATHLINK
 #include "mathlink.h"
 #undef P
@@ -232,9 +233,9 @@ FormatIssueSeverity FORMATISSUESEVERITY_FORMATTING = "Formatting";
 //
 struct SourceCharacter {
     
-    int32_t val;
+    codepoint val;
     
-    explicit constexpr SourceCharacter(int32_t val) : val(val) {}
+    explicit constexpr SourceCharacter(codepoint val) : val(val) {}
     
     explicit operator int() const noexcept = delete;
     
@@ -246,7 +247,7 @@ struct SourceCharacter {
         return val != o.val;
     }
     
-    constexpr int32_t to_point() const {
+    constexpr codepoint to_point() const {
         return val;
     }
     
@@ -277,10 +278,10 @@ struct SourceCharacter {
     public:
         size_t size;
         size_t idx;
-        int32_t val;
+        codepoint val;
         std::array<unsigned char, 4> arr;
         
-        SourceCharacter_iterator(int32_t val);
+        SourceCharacter_iterator(codepoint val);
         
         unsigned char operator*() {
             return arr[idx];

@@ -7,7 +7,7 @@
 #include "Symbol.h" // for SYMBOL_AST_LIBRARY_MAKESYNTAXISSUE, etc.
 #include "Utils.h" // for isMBNewline, etc.
 //#include "WLCharacter.h" // for set_graphical
-#include "CharacterMaps.h" // for CodePointToLongNameMap
+#include "LongNames.h" // for CodePointToLongNameMap
 
 #include <cctype> // for isalnum, isxdigit, isupper, isdigit, isalpha, ispunct, iscntrl with GCC and MSVC
 #include <sstream> // for ostringstream
@@ -476,14 +476,14 @@ bool SourceCharacter::isMBNewline() const {
     
     auto val = to_point();
     
-    return Utils::isMBNewline(val);
+    return LongNames::isMBNewline(val);
 }
 
 bool SourceCharacter::isMBWhitespace() const {
     
     auto val = to_point();
     
-    return Utils::isMBWhitespace(val);
+    return LongNames::isMBWhitespace(val);
 }
 
 std::string SourceCharacter::graphicalString() const {
@@ -658,7 +658,7 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
 // SourceCharacter_iterator
 //
 
-SourceCharacter::SourceCharacter_iterator::SourceCharacter_iterator(int32_t val) : size(0), idx(0), val(val), arr() {
+SourceCharacter::SourceCharacter_iterator::SourceCharacter_iterator(codepoint val) : size(0), idx(0), val(val), arr() {
     
     size = ByteEncoder::size(val);
     

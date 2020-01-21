@@ -253,10 +253,6 @@ If[FailureQ[importedTokenEnumSource],
 
 Get["AST`Generate`LongNames`"]
 
-Get["AST`Generate`CharacterMaps`"]
-
-Get["AST`Generate`CodePoint`"]
-
 Get["AST`Generate`TokenEnum`"]
 
 Get["AST`Generate`Precedence`"]
