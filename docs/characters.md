@@ -19,7 +19,7 @@ Any invalid byte sequences are converted into \[UnknownGlyph]
 
 Any high or low surrogates are converted into \[UnknownGlyph]
 
-BOM character 0xfeff is converted into 0xe001, to enable transferring through MathLink.
+BOM character 0xfeff is converted into 0xe001, to allow transferring through MathLink.
 
 
 
@@ -65,6 +65,15 @@ etc.
  Unused (7 bits)
 ```
 
+
+
+## Private Use Area
+
+No attempt will be made to define or describe characters in the PUA.
+
+The FE defines a number of PUA characters for its own internal use.
+
+This is not a binding contract and usage, values, behavior, and stability is subject to change at any moment.
 
 
 

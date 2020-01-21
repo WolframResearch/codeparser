@@ -42,23 +42,6 @@ TestMatch[
 ]
 
 
-TestMatch[
-	FirstCase[ParseString["BeginStaticAnalysisIgnore[]", ContainerNode[Hold, #[[1]], <||>] &],
-		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["Package", _, _, _]}]
-	,
-	TestID->"AbstractSyntaxIssues-20190520-G8U7Y8"
-]
-
-TestMatch[
-	FirstCase[ParseString["EndStaticAnalysisIgnore[]", ContainerNode[Hold, #[[1]], <||>] &],
-		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["Package", _, _, _]}]
-	,
-	TestID->"AbstractSyntaxIssues-20190520-A9T9G9"
-]
 
 
 

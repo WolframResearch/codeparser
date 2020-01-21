@@ -27,7 +27,29 @@ Common functions like:
 Begin["`Foo`"]
 
 *)
-directivePat = "^(BeginPackage|Begin|Needs|End|EndPackage|Clear|ClearAll|SetOptions|SetAttributes|System`Private`NewContextPath|System`Private`RestoreContextPath|Protect|Unprotect|Package|PackageImport|PackageScope|PackageExport|Get|SetDelayed|UpSetDelayed|TagSetDelayed)\\[.*$"
+directivePat = "^(\
+BeginPackage|\
+Begin|\
+Needs|\
+End|\
+EndPackage|\
+Clear|\
+ClearAll|\
+SetOptions|\
+SetAttributes|\
+System`Private`NewContextPath|\
+System`Private`RestoreContextPath|\
+Protect|\
+Unprotect|\
+Package|\
+PackageImport|\
+PackageScope|\
+PackageExport|\
+Get|\
+SetDelayed|\
+UpSetDelayed|\
+TagSetDelayed\
+)\\[.*$"
 
 (*
 Assignments like:
@@ -44,6 +66,10 @@ chunkPat = RegularExpression["("<>annotationPat<>")|("<>directivePat<>")|("<>ass
 
 (*
 return: better GroupMissingCloserNode
+
+Do not return the previous children, because they are uselss any way.
+
+But return the opener to make ToString stuff easier
 *)
 reparseMissingCloserNode[GroupMissingCloserNeedsReparseNode[tag_, children_, dataIn_], bytes_List] :=
 Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str, opener},
@@ -75,7 +101,7 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
   data[Source] = betterSrc;
 
   (*
-  Preserve the opener to make ToString easier
+  Preserve the opener to make ToString stuff easier
   *)
   opener = children[[1]];
 
@@ -83,7 +109,11 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
 ]
 
 
+(*
+return: better ErrorNode
 
+Do not return the previous children, because they are uselss any way.
+*)
 reparseUnterminatedCommentErrorNode[ErrorNode[Token`Error`UnterminatedComment, _, dataIn_], bytes_List] :=
 Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str},
 

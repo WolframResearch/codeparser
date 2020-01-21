@@ -126,7 +126,7 @@ Test[
 Test[
 	ToInputFormString[Aggregate[ConcreteParseString["\\(x"]]]
 	,
-	"\\(x"
+	"\\("
 	,
 	TestID->"ToString-20181230-R6R9E5"
 ]

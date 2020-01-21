@@ -439,6 +439,7 @@ InfixOperatorToSymbol[Token`LongName`NotSucceedsSlantEqual] = NotSucceedsSlantEq
 
 (*
 LessSlantEqual and GreaterSlandEqual parse to LessEqual and GreaterEqual
+Related bugs: 78439
 *)
 InfixOperatorToSymbol[Token`LongName`LessSlantEqual] = LessEqual
 InfixOperatorToSymbol[Token`LongName`GreaterSlantEqual] = GreaterEqual

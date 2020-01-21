@@ -619,7 +619,7 @@ Test[
 	ConcreteParseString["(*)a"]
 	,
 	ContainerNode[String, {
-		ErrorNode[Token`Error`UnterminatedComment, "(*)a", <|Source -> {{1, 1}, {1, 5}}|>]}, <||>]
+		ErrorNode[Token`Error`UnterminatedComment, "", <|Source -> {{1, 1}, {1, 5}}|>]}, <||>]
 	,
 	TestID->"Concrete-20191209-I8G4F9"
 ]

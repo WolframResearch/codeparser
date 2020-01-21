@@ -2184,7 +2184,7 @@ Test[
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "MessageName", <||>], {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
-			LeafNode[Token`Error`EmptyString, "", <|Source -> {{1, 4}, {1, 4}}|>]},
+			ErrorNode[Token`Error`EmptyString, "", <|Source -> {{1, 4}, {1, 4}}|>]},
 			<|Source -> {{1, 1}, {1, 4}}|>]},
 		<||>]
 	,
