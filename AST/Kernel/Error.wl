@@ -9,10 +9,11 @@ reparseUnterminatedCommentErrorNode
 Begin["`Private`"]
 
 Needs["AST`"]
+Needs["AST`Utils`"]
 
 
 (*
-Annotations
+Annotation Comments
 
 ::Package::
 etc.
@@ -72,7 +73,8 @@ Do not return the previous children, because they are uselss any way.
 But return the opener to make ToString stuff easier
 *)
 reparseMissingCloserNode[GroupMissingCloserNeedsReparseNode[tag_, children_, dataIn_], bytes_List] :=
-Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str, opener},
+Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str, leaves,
+  ignoredNodesSrcMemberFunc},
 
   str = SafeString[bytes];
 
@@ -100,12 +102,15 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
 
   data[Source] = betterSrc;
 
-  (*
-  Preserve the opener to make ToString stuff easier
-  *)
-  opener = children[[1]];
+  srcMemberFunc = SourceMemberQ[{ betterSrc } ];
 
-  GroupMissingCloserNode[tag, { opener }, data]
+  (*
+  Flatten out children, because there may be parsing errors from missing bracket, and
+  we do not want to propagate
+  *)
+  leaves = Cases[children, LeafNode[_, _, data_ /; srcMemberFunc[data[Source]]], Infinity];
+
+  GroupMissingCloserNode[tag, leaves, data]
 ]
 
 
