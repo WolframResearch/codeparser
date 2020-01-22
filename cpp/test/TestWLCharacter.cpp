@@ -1,7 +1,7 @@
 
 #include "WLCharacter.h"
 
-#include "LongNameDefines.h"
+#include "LongNames.h"
 
 #include "gtest/gtest.h"
 

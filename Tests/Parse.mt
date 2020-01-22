@@ -2399,5 +2399,58 @@ Test[
 
 
 
+Test[
+	" a ~f!~ b "
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200121-D9Y3X6"
+]
+
+Test[
+	" a ~f;~ b "
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200121-V7I9V3"
+]
+
+Test[
+	" a ~f,~ b "
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200121-C5U1S2"
+]
+
+Test[
+	" a ~f~ b + c "
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200121-K5D8I7"
+]
+
+Test[
+	" a ~f~ b @ c "
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200121-C2B6F9"
+]
+
+
+
+
 
 

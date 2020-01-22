@@ -244,6 +244,10 @@ abstract[BinaryNode[Divide, { left_, _, right_ }, data_]] := abstractTimes[Binar
 
 abstract[BinaryNode[BinaryAt, {left_, _, right_}, data_]] := CallNode[abstract[left], {abstract[right]}, data]
 abstract[BinaryNode[BinaryAtAtAt, {left_, _, right_}, data_]] := CallNode[ToNode[Apply], abstract /@ {left, right, GroupNode[List, { LeafNode[Token`OpenCurly, "{", <||>], ToNode[1], LeafNode[Token`CloseCurly, "}", <||>] }, <||>]}, data]
+
+(*
+Make sure to reverse the arguments
+*)
 abstract[BinaryNode[BinarySlashSlash, {left_, _, right_}, data_]] := CallNode[abstract[right], {abstract[left]}, data]
 
 abstract[BinaryNode[Put, {left_, _, LeafNode[String, str_, _]}, data_]] := CallNode[ToNode[Put], {abstract[left], ToNode[abstractString[str]]}, data]
@@ -262,7 +266,8 @@ Abstract NonAssociative errors
 a ? b ? c being NonAssociative is alluded to being a bug in bug report 206938
 Related bugs: 206938
 *)
-abstract[BinaryNode[PatternTest, children:{BinaryNode[PatternTest, _, _], _, _}, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociativePatternTest, children, data]
+abstract[BinaryNode[PatternTest, children:{BinaryNode[PatternTest, _, _], _, _}, data_]] :=
+	AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociativePatternTest, children, data]
 
 (* could be  a =. *)
 abstract[BinaryNode[Unset, {left_, _}, data_]] := CallNode[ToNode[Unset], {abstract[left]}, data]

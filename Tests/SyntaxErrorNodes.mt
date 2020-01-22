@@ -73,7 +73,7 @@ Test[
 	ParseString["1:2"]
 	,
 	ContainerNode[String, {
-		SyntaxErrorNode[SyntaxError`ColonError, {
+		AbstractSyntaxErrorNode[AbstractSyntaxError`ColonError, {
 			LeafNode[Integer, "1", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Token`Colon, ":", <|Source -> {{1, 2}, {1, 3}}|>],
 			LeafNode[Integer, "2", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>] }, <||>]
