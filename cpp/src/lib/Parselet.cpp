@@ -71,18 +71,16 @@ NodePtr SymbolParselet::parse(Token TokIn, ParserContext Ctxt) const {
     Tok = TheParser->eatAndPreserveToplevelNewlines(Tok, Ctxt, ArgsTest);
     
     //
-    // when parsing a in a:b  then ColonFlag is false
-    // when parsing b in a:b  then ColonFlag is true
+    // when parsing a in a:b  then PARSER_INSIDE_COLON bit is 0
+    // when parsing b in a:b  then PARSER_INSIDE_COLON bit is 1
     //
     // It is necessary to go to colonParselet->parse here (even though it seems non-contextSensitive)
     // because in e.g.,  a_*b:f[]  the b is the last node in the Times expression and needs to bind with  :f[]
     // Parsing  a_*b  completely, and then parsing  :f[]  would be wrong.
     //
-    if ((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
+    if (Tok.Tok == TOKEN_COLON) {
         
-        if (Tok.Tok == TOKEN_COLON) {
-            
-            Ctxt.Flag |= PARSER_PARSED_SYMBOL;
+        if ((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
             
             NodeSeq Args(1 + 1);
             Args.append(std::move(Sym));
@@ -268,7 +266,7 @@ NodePtr GroupParselet::parse(Token firstTok, ParserContext Ctxt) const {
     
     auto OpenerT = firstTok;
     
-    Ctxt.GroupDepth++;
+    Ctxt.InsideGroup = true;
     
     TheParser->nextToken(firstTok);
     
@@ -552,9 +550,9 @@ NodePtr UnderParselet::parse(Token TokIn, ParserContext Ctxt) const {
     // make sure to not parse the second : here
     // We are already inside ColonParselet from the first :, and so ColonParselet will also handle the second :
     //
-    if ((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
+    if (Tok.Tok == TOKEN_COLON) {
         
-        if (Tok.Tok == TOKEN_COLON) {
+        if ((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
             
             auto& colonParselet = TheParser->getContextSensitiveColonParselet();
             
@@ -635,9 +633,9 @@ NodePtr UnderParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserCo
     // For something like a:b_c:d when parsing _
     // ColonFlag == true
     //
-    if ((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
+    if (Tok.Tok == TOKEN_COLON) {
         
-        if (Tok.Tok == TOKEN_COLON) {
+        if ((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
             
             auto& colonParselet = TheParser->getContextSensitiveColonParselet();
             
@@ -782,13 +780,10 @@ NodePtr ColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) cons
     auto wasCloser = false;
     
     NodePtr Right;
-    bool possible;
     if (Tok.Tok.isPossibleBeginningOfExpression()) {
         Right = TheParser->parse(Tok, Ctxt);
-        possible = true;
     } else {
         Right = TheParser->handleNotPossible(Tok, TokIn, Ctxt, &wasCloser);
-        possible = false;
     }
     
     NodeSeq Args(1 + 1 + 1 + 1);
@@ -798,22 +793,6 @@ NodePtr ColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) cons
         Args.appendIfNonEmpty(std::move(ArgsTest1));
     }
     Args.append(std::move(Right));
-    
-    if (!possible) {
-        
-        auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_COLONERROR, std::move(Args)));
-        
-        return Error;
-    }
-    
-    if ((Ctxt.Flag & PARSER_PARSED_SYMBOL) != PARSER_PARSED_SYMBOL) {
-        
-        auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_COLONERROR, std::move(Args)));
-        
-        return Error;
-    }
-    
-    Ctxt.Flag &= ~(PARSER_PARSED_SYMBOL);
     
     auto Pat = NodePtr(new BinaryNode(SYMBOL_PATTERN, std::move(Args)));
     
@@ -1022,7 +1001,7 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext Ctxt)
     
     auto Opener = firstTok;
     
-    Ctxt.GroupDepth++;
+    Ctxt.InsideGroup = true;
     
     TheParser->nextToken(firstTok);
     

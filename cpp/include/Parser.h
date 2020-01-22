@@ -41,8 +41,8 @@ enum Associativity {
 
 enum ParserContextFlagBits : uint8_t {
     //
-    // when parsing a in a:b  then ColonFlag is false
-    // when parsing b in a:b  then ColonFlag is true
+    // when parsing a in a:b  then PARSER_INSIDE_COLON bit is 0
+    // when parsing b in a:b  then PARSER_INSIDE_COLON bit is 1
     //
     PARSER_INSIDE_COLON = 0x01,
     
@@ -62,31 +62,30 @@ using ParserContextFlag = uint8_t;
 struct ParserContext {
     
     //
-    // Each time a GroupNode (or LinearSyntaxOpenParenNode) is entered, then GroupDepth increments
-    // This is used for detecting whether we are parsing at top-level.
-    //
-    uint16_t GroupDepth;
-    
-    //
     // Precedence of the current operator being parsed
     //
     Precedence Prec;
-    
-    ParserContextFlag Flag : 4;
     
     //
     // The Closer of the innermost Group being parsed
     //
     Closer Closr : 4;
     
-    ParserContext() : GroupDepth(), Prec(), Flag(), Closr() {}
+    ParserContextFlag Flag : 3;
+    
+    //
+    //
+    //
+    bool InsideGroup : 1;
+    
+    ParserContext() : Prec(), Closr(), Flag(), InsideGroup() {}
 };
 
 //
 // Sizes of structs with bit-fields are implementation-dependent
 //
 #ifdef __clang__
-static_assert(sizeof(ParserContext) == 4, "Check your assumptions");
+static_assert(sizeof(ParserContext) == 2, "Check your assumptions");
 #endif
 
 class Parser {

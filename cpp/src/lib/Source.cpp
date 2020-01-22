@@ -269,7 +269,6 @@ std::string SyntaxErrorToString(SyntaxError Err) {
         case SYNTAXERROR_UNKNOWN: return "SyntaxError`Unknown";
         case SYNTAXERROR_EXPECTEDTILDE: return "SyntaxError`ExpectedTilde";
         case SYNTAXERROR_EXPECTEDSET: return "SyntaxError`ExpectedSet";
-        case SYNTAXERROR_COLONERROR: return "SyntaxError`ColonError";
         case SYNTAXERROR_EXPECTEDOPERAND: return "SyntaxError`ExpectedOperand";
         case SYNTAXERROR_EXPECTEDINTEGRAND: return "SyntaxError`ExpectedIntegrand";
         case SYNTAXERROR_UNEXPECTEDCLOSER: return "SyntaxError`UnexpectedCloser";

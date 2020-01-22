@@ -816,7 +816,7 @@ Precedence Parser::getTokenPrecedence(Token& TokIn, ParserContext Ctxt) const {
     assert(TokIn.Tok != TOKEN_UNKNOWN);
     assert(TokIn.Tok != TOKEN_WHITESPACE);
     // allow top-level newlines
-    assert(TokIn.Tok != TOKEN_NEWLINE || Ctxt.GroupDepth == 0);
+    assert(TokIn.Tok != TOKEN_NEWLINE || !Ctxt.InsideGroup);
     assert(TokIn.Tok != TOKEN_COMMENT);
     assert(TokIn.Tok != TOKEN_LINECONTINUATION);
     
@@ -842,7 +842,7 @@ Precedence Parser::getTokenPrecedence(Token& TokIn, ParserContext Ctxt) const {
     
     //
     // There is an ambiguity with tokens that are both prefix and infix, e.g.
-    // +  -  ;;  !  ++  --  !!
+    // +  -  ;;  !  ++  --  !!  \[Minus]  \[MinusPlus]  \[PlusMinus]  \[CircleTimes]  \[Coproduct]
     //
     // Given the input  ;;;;
     // when parsing the second  ;;  , we could get here because ;; is registered as infix
@@ -862,7 +862,7 @@ Precedence Parser::getInfixTokenPrecedence(Token& TokIn, ParserContext Ctxt, boo
     assert(TokIn.Tok != TOKEN_UNKNOWN);
     assert(TokIn.Tok != TOKEN_WHITESPACE);
     // allow top-level newlines
-    assert(TokIn.Tok != TOKEN_NEWLINE || Ctxt.GroupDepth == 0);
+    assert(TokIn.Tok != TOKEN_NEWLINE || !Ctxt.InsideGroup);
     assert(TokIn.Tok != TOKEN_COMMENT);
     assert(TokIn.Tok != TOKEN_LINECONTINUATION);
     
@@ -920,7 +920,7 @@ Precedence Parser::getInfixTokenPrecedence(Token& TokIn, ParserContext Ctxt, boo
     //
     // Do not do Implicit Times across lines
     //
-    if (TokIn.Tok == TOKEN_NEWLINE && Ctxt.GroupDepth == 0) {
+    if (TokIn.Tok == TOKEN_NEWLINE && !Ctxt.InsideGroup) {
         
         *implicitTimes = false;
         
@@ -1185,7 +1185,7 @@ Token Parser::eatAndPreserveToplevelNewlines(Token T, ParserContext Ctxt, LeafSe
         switch (T.Tok.value()) {
             case TOKEN_NEWLINE.value(): {
                 
-                if (Ctxt.GroupDepth == 0) {
+                if (!Ctxt.InsideGroup) {
                     
                     return T;
                 }
@@ -1221,7 +1221,7 @@ Token Parser::eatAndPreserveToplevelNewlines_stringifyFile(Token T, ParserContex
         switch (T.Tok.value()) {
             case TOKEN_NEWLINE.value(): {
                 
-                if (Ctxt.GroupDepth == 0) {
+                if (!Ctxt.InsideGroup) {
                     
                     return T;
                 }

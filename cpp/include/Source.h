@@ -133,7 +133,7 @@ const NextCharacterPolicy INSIDE_STRINGIFY_SYMBOL = PRESERVE_WS_AFTER_LC | ENABL
 const NextCharacterPolicy INSIDE_STRINGIFY_FILE = 0;
 
 
-enum SyntaxError {
+enum SyntaxError : uint8_t {
     
     SYNTAXERROR_UNKNOWN,
     
@@ -146,11 +146,6 @@ enum SyntaxError {
     // Something like  a /: b
     //
     SYNTAXERROR_EXPECTEDSET,
-    
-    //
-    // Something like  1:2  or  a:b:1:2
-    //
-    SYNTAXERROR_COLONERROR,
     
     //
     // Something like:
