@@ -37,15 +37,11 @@ public:
     
     virtual Precedence getPrecedence() const = 0;
     
+    virtual void setPrecedence(Precedence) {}
+    
     virtual Associativity getAssociativity() const = 0;
     
     virtual ~InfixParselet() {}
-};
-
-class BinaryParselet : virtual public InfixParselet {
-public:
-    
-    virtual ~BinaryParselet() {}
 };
 
 class CallParselet : public InfixParselet {
@@ -126,7 +122,7 @@ public:
     }
 };
 
-class BinaryOperatorParselet : public BinaryParselet {
+class BinaryOperatorParselet : public InfixParselet {
     Precedence precedence;
     Associativity assoc;
     SymbolPtr& Op;
@@ -269,7 +265,7 @@ public:
 
 
 // It'd be weird if this were an "infix operator"
-class TildeParselet : public BinaryParselet {
+class TildeParselet : public InfixParselet {
     //
     // Need to be able to control from inside TildeParselet
     //
@@ -293,7 +289,7 @@ public:
     }
 };
 
-class ColonParselet : public BinaryParselet, public ContextSensitiveInfixParselet {
+class ColonParselet : public InfixParselet, public ContextSensitiveInfixParselet {
 public:
     
     ColonParselet() {}
@@ -313,7 +309,7 @@ public:
 };
 
 // It'd be weird if this were an "infix operator"
-class SlashColonParselet : public BinaryParselet {
+class SlashColonParselet : public InfixParselet {
 public:
     
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
@@ -400,7 +396,7 @@ public:
     }
 };
 
-class GreaterGreaterParselet : public BinaryParselet {
+class GreaterGreaterParselet : public InfixParselet {
 public:
     
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
@@ -414,7 +410,7 @@ public:
     }
 };
 
-class GreaterGreaterGreaterParselet : public BinaryParselet {
+class GreaterGreaterGreaterParselet : public InfixParselet {
 public:
     
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
