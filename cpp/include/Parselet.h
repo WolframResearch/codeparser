@@ -200,11 +200,9 @@ public:
 // Special parselets
 //
 
-class SymbolParselet : public PrefixParselet, public ContextSensitivePrefixParselet {
+class SymbolParselet : public PrefixParselet {
 public:
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
-    
-    NodePtr parseContextSensitive(Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence() const override {
         return PRECEDENCE_SYMBOL;

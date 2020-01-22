@@ -250,6 +250,11 @@ abstract[BinaryNode[Put, {left_, _, LeafNode[String, str_, _]}, data_]] := CallN
 abstract[BinaryNode[PutAppend, {left_, _, LeafNode[String, str_, _]}, data_]] := CallNode[ToNode[PutAppend], {abstract[left], ToNode[abstractString[str]]}, data]
 
 
+(*
+First arg must be a symbol
+*)
+abstract[BinaryNode[Pattern, children:{_[Except[Symbol], _, _], _, _}, data_]] :=
+	AbstractSyntaxErrorNode[AbstractSyntaxError`ColonError, children, data]
 
 (*
 Abstract NonAssociative errors

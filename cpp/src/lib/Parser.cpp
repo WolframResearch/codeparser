@@ -7,7 +7,7 @@
 
 #include <algorithm> // for generate with GCC and MSVC
 
-Parser::Parser() : prefixParselets(), infixParselets(), contextSensitiveSymbolParselet(ContextSensitivePrefixParseletPtr(new SymbolParselet())), contextSensitiveUnder1Parselet(ContextSensitiveInfixParseletPtr(new UnderParselet(1))), contextSensitiveUnder2Parselet(ContextSensitiveInfixParseletPtr(new UnderParselet(2))), contextSensitiveUnder3Parselet(ContextSensitiveInfixParseletPtr(new UnderParselet(3))), contextSensitiveColonParselet(ContextSensitiveInfixParseletPtr(new ColonParselet())), tokenQueue(), Issues() {
+Parser::Parser() : prefixParselets(), infixParselets(), contextSensitiveSymbolParselet(PrefixParseletPtr(new LeafParselet())), contextSensitiveUnder1Parselet(ContextSensitiveInfixParseletPtr(new UnderParselet(1))), contextSensitiveUnder2Parselet(ContextSensitiveInfixParseletPtr(new UnderParselet(2))), contextSensitiveUnder3Parselet(ContextSensitiveInfixParseletPtr(new UnderParselet(3))), contextSensitiveColonParselet(ContextSensitiveInfixParseletPtr(new ColonParselet())), tokenQueue(), Issues() {
     
     //
     // Setup all of the parselet lists with nullptr unique_ptrs
@@ -596,7 +596,7 @@ void Parser::registerStartOfFileParselet(size_t i, StartOfFileParseletPtr P) {
 #endif // STARTOFLINE
 
 
-const ContextSensitivePrefixParseletPtr& Parser::getContextSensitiveSymbolParselet() const {
+const PrefixParseletPtr& Parser::getContextSensitiveSymbolParselet() const {
     return contextSensitiveSymbolParselet;
 }
 

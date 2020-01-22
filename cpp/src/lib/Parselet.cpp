@@ -8,20 +8,6 @@ NodePtr LeafParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     TheParser->nextToken(TokIn);
     
-    return NodePtr(new LeafNode(std::move(TokIn)));
-}
-
-//
-// parsing x in _x
-//
-// we know it can only be a symbol
-//
-// Called from other parselets
-//
-NodePtr SymbolParselet::parseContextSensitive(Token TokIn, ParserContext Ctxt) const {
-    
-    TheParser->nextToken(TokIn);
-    
     return NodePtr(new LeafNode(TokIn));
 }
 
@@ -494,7 +480,7 @@ NodePtr UnderParselet::parse(Token TokIn, ParserContext Ctxt) const {
         
         auto& symbolParselet = TheParser->getContextSensitiveSymbolParselet();
         
-        auto Sym2 = symbolParselet->parseContextSensitive(Tok, Ctxt);
+        auto Sym2 = symbolParselet->parse(Tok, Ctxt);
         
         NodeSeq Args(1 + 1);
         Args.append(std::move(Under));
@@ -604,7 +590,7 @@ NodePtr UnderParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserCo
         
         auto& symbolParselet = TheParser->getContextSensitiveSymbolParselet();
         
-        auto Right = symbolParselet->parseContextSensitive(Tok, Ctxt);
+        auto Right = symbolParselet->parse(Tok, Ctxt);
         
         Args.append(std::move(Right));
         

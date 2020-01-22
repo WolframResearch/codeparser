@@ -28,7 +28,6 @@ class Parser;
 
 using PrefixParseletPtr = std::unique_ptr<PrefixParselet>;
 using InfixParseletPtr = std::unique_ptr<InfixParselet>;
-using ContextSensitivePrefixParseletPtr = std::unique_ptr<ContextSensitivePrefixParselet>;
 using ContextSensitiveInfixParseletPtr = std::unique_ptr<ContextSensitiveInfixParselet>;
 using ParserPtr = std::unique_ptr<Parser>;
 
@@ -55,12 +54,7 @@ enum ParserContextFlagBits : uint8_t {
     //
     //
     //
-    PARSER_PARSED_SYMBOL = 0x04,
-    
-    //
-    //
-    //
-    PARSER_INSIDE_SLASHCOLON = 0x08,
+    PARSER_INSIDE_SLASHCOLON = 0x04,
 };
 
 using ParserContextFlag = uint8_t;
@@ -105,7 +99,7 @@ private:
     std::array<StartOfFileParseletPtr, TOKEN_COUNT> startOfFileParselets;
 #endif // STARTOFLINE
     
-    ContextSensitivePrefixParseletPtr contextSensitiveSymbolParselet;
+    PrefixParseletPtr contextSensitiveSymbolParselet;
     ContextSensitiveInfixParseletPtr contextSensitiveUnder1Parselet;
     ContextSensitiveInfixParseletPtr contextSensitiveUnder2Parselet;
     ContextSensitiveInfixParseletPtr contextSensitiveUnder3Parselet;
@@ -176,7 +170,7 @@ public:
     const InfixParseletPtr& findInfixParselet(TokenEnum T) const;
     
     
-    const ContextSensitivePrefixParseletPtr& getContextSensitiveSymbolParselet() const;
+    const PrefixParseletPtr& getContextSensitiveSymbolParselet() const;
     const ContextSensitiveInfixParseletPtr& getContextSensitiveUnder1Parselet() const;
     const ContextSensitiveInfixParseletPtr& getContextSensitiveUnder2Parselet() const;
     const ContextSensitiveInfixParseletPtr& getContextSensitiveUnder3Parselet() const;
