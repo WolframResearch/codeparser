@@ -6,13 +6,12 @@ $TopLevelExpressionLimit
 
 cleanupStackShimMemoryLeak
 
+
 Begin["`Private`"]
 
 
 (*
 How many top-level expressions are allowed?
-
-For versions before 12.1, we are using O(n^2) AppendTo to create the stack of top-level expressions.
 
 Beyond this limit, parsing is infeasible
 *)
@@ -20,22 +19,24 @@ $TopLevelExpressionLimit = Infinity
 
 
 setupShims[] := (
-
-  (*
-  TODO when fixes for bugs  385114 and 385768 have completely filtered through the 12.1 builds, then add a conditional
-  
   If[$VersionNumber < 12.1,
     setupStackShim[]
   ]
-  *)
-  setupStackShim[]
 )
 
 
 setupStackShim[] := (
 
+  (*
+  For versions before 12.1, we are using O(n^2) AppendTo to create the stack of top-level expressions.
+
+  Limit to some low number.
+  *)
   $TopLevelExpressionLimit = 5000;
 
+  (*
+  Define CreateDataStructure for earlier versions
+  *)
   System`CreateDataStructure["ExpressionStack"] :=
     Module[{stack, stackVal},
     
@@ -62,12 +63,12 @@ setupStackShim[] := (
       stack
     ];
 
-    cleanupStackShimMemoryLeak[] := (
-      (*
-      Hack to prevent memory leak with shims
-      *)
-      Quiet[Remove["AST`Shims`Private`stack*"];, {Remove::rmnsm}];
-    )
+  cleanupStackShimMemoryLeak[] := (
+    (*
+    Hack to prevent memory leak with shims
+    *)
+    Quiet[Remove["AST`Shims`Private`stack*"];, {Remove::rmnsm}];
+  )
 )
 
 
