@@ -311,6 +311,14 @@ abstract[InfixNode[op_, children_ /; OddQ[Length[children]], data_]] :=
 all TernaryNodes must be handled separately
 *)
 
+(*
+handle  a ~f,~ b
+
+Cannot have  (f,)[a, b]
+*)
+abstract[TernaryNode[TernaryTilde, children:{_, _, InfixNode[Comma, _, _], _, _}, data_]] :=
+	AbstractSyntaxErrorNode[AbstractSyntaxError`CommaTopLevel, children, data]
+
 abstract[TernaryNode[TernaryTilde, {left_, _, middle_, _, right_}, data_]] := CallNode[abstract[middle], {abstract[left], abstract[right]}, data]
 
 abstract[TernaryNode[TagSet, {left_, _, middle_, _, right_}, data_]] := CallNode[ToNode[TagSet], {abstract[left], abstract[middle], abstract[right]}, data]

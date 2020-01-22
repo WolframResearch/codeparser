@@ -270,16 +270,26 @@ public:
 
 // It'd be weird if this were an "infix operator"
 class TildeParselet : public BinaryParselet {
+    //
+    // Need to be able to control from inside TildeParselet
+    //
+    Precedence Prec;
 public:
+    
+    TildeParselet() : Prec(PRECEDENCE_TILDE) {}
     
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence() const override {
-        return PRECEDENCE_TILDE;
+        return Prec;
     }
     
     Associativity getAssociativity() const override {
         return ASSOCIATIVITY_LEFT;
+    }
+    
+    void setPrecedence(Precedence p) override {
+        Prec = p;
     }
 };
 

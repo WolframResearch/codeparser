@@ -659,7 +659,7 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) cons
     
     auto FirstTilde = TokIn;
     
-    Ctxt.Prec = getPrecedence();
+    Ctxt.Prec = PRECEDENCE_LOWEST;
     
     TheParser->nextToken(TokIn);
     
@@ -691,7 +691,18 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) cons
         return Error;
     }
     
+    //
+    // FIXME: clear other flags here also?
+    //
+    Ctxt.Prec = PRECEDENCE_LOWEST;
+    
+    auto& tildeParselet = TheParser->findInfixParselet(TOKEN_TILDE);
+    tildeParselet->setPrecedence(PRECEDENCE_LOWEST);
+    
     auto Middle = TheParser->parse(FirstTok, Ctxt);
+    
+    Ctxt.Prec = PRECEDENCE_TILDE;
+    tildeParselet->setPrecedence(PRECEDENCE_TILDE);
     
     LeafSeq ArgsTest2;
     
@@ -699,23 +710,6 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) cons
     Tok1 = TheParser->eatAll(Tok1, Ctxt, ArgsTest2);
     
     if (Tok1.Tok != TOKEN_TILDE) {
-        
-        if (Tok1.Tok == TOKEN_ENDOFFILE) {
-            
-            //
-            // Something like   a ~f<EOF>
-            //
-            
-            NodeSeq Args(1 + 1 + 1 + 1);
-            Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
-            Args.append(NodePtr(new LeafNode(FirstTilde)));
-            Args.appendIfNonEmpty(std::move(ArgsTest1));
-            Args.append(std::move(Middle));
-            
-            auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDTILDE, std::move(Args)));
-            
-            return Error;
-        }
         
         TheParser->nextToken(Tok1);
         
