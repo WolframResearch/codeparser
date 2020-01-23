@@ -2396,6 +2396,30 @@ Test[
 	TestID->"Parse-20200113-T5L0G9"	
 ]
 
+Test[
+	"a>>b\\c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200122-L8M2M1"	
+]
+
+Test[
+	"a>>b\\f"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200122-S3W6N2"	
+]
+
+
+
+
+
 
 
 
