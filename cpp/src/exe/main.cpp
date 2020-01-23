@@ -228,7 +228,7 @@ void readStdIn(APIMode mode, OutputMode outputMode) {
         
         auto stringifyMode = STRINGIFYMODE_NORMAL;
         
-        auto N = TheParserSession->parseLeaf(stringifyMode);
+        auto N = TheParserSession->concreteParseLeaf(stringifyMode);
     
         switch (outputMode) {
             case PRINT:

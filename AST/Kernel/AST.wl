@@ -15,7 +15,7 @@ ConcreteParseFile
 
 ConcreteParseBytes
 
-ParseLeaf
+ConcreteParseLeaf
 
 SafeString
 
@@ -875,19 +875,19 @@ Module[{encoding, res},
 
 
 
-ParseLeaf::usage = "ParseLeaf[str] returns a LeafNode by interpreting str as a leaf."
+ConcreteParseLeaf::usage = "ConcreteParseLeaf[str] returns a LeafNode by interpreting str as a leaf."
 
-Options[ParseLeaf] = {
+Options[ConcreteParseLeaf] = {
 	"StringifyMode" -> 0
 }
 
-ParseLeaf[str_String, opts:OptionsPattern[]] :=
-	parseLeaf[str, opts]
+ConcreteParseLeaf[str_String, opts:OptionsPattern[]] :=
+	concreteParseLeaf[str, opts]
 
 
-Options[parseLeaf] = Options[ParseLeaf]
+Options[concreteParseLeaf] = Options[ConcreteParseLeaf]
 
-parseLeaf[strIn_String, OptionsPattern[]] :=
+concreteParseLeaf[strIn_String, OptionsPattern[]] :=
 Catch[
 Module[{str, res, leaf, data, exprs, issues, stringifyMode},
 
@@ -899,7 +899,7 @@ Module[{str, res, leaf, data, exprs, issues, stringifyMode},
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
 	
-	res = libraryFunctionWrapper[parseLeafFunc, str, stringifyMode];
+	res = libraryFunctionWrapper[concreteParseLeafFunc, str, stringifyMode];
 
 	$ConcreteParseProgress = 100;
 	$ConcreteParseTime = Now - $ConcreteParseStart;

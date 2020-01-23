@@ -911,7 +911,7 @@ Module[{parsed, data, issues, stringifyMode, oldLeafSrc, len, src},
     ,
     True,
       stringifyMode = OptionValue["StringifyMode"];
-      parsed = ParseLeaf[str, "StringifyMode" -> stringifyMode];
+      parsed = ConcreteParseLeaf[str, "StringifyMode" -> stringifyMode];
   ];
 
   (*

@@ -234,7 +234,7 @@ Node *ParserSession::listSourceCharacters() {
 }
 
 
-NodePtr ParserSession::parseLeaf0(int mode) {
+NodePtr ParserSession::concreteParseLeaf0(int mode) {
     
     switch (mode) {
         case STRINGIFYMODE_NORMAL: {
@@ -261,7 +261,7 @@ NodePtr ParserSession::parseLeaf0(int mode) {
     }
 }
 
-Node *ParserSession::parseLeaf(StringifyMode mode) {
+Node *ParserSession::concreteParseLeaf(StringifyMode mode) {
     
     std::vector<NodePtr> nodes;
     
@@ -271,7 +271,7 @@ Node *ParserSession::parseLeaf(StringifyMode mode) {
     {
         std::vector<NodePtr> exprs;
         
-        auto node = parseLeaf0(mode);
+        auto node = concreteParseLeaf0(mode);
         
         exprs.push_back(std::move(node));
         
@@ -521,7 +521,7 @@ DLLEXPORT int TokenizeBytes_Listable_LibraryLink(WolframLibraryData libData, MLI
     return LIBRARY_NO_ERROR;
 }
 
-DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
+DLLEXPORT int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     int mlLen;
     
@@ -551,7 +551,7 @@ DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE);
     
-    auto N = TheParserSession->parseLeaf(static_cast<StringifyMode>(stringifyMode));
+    auto N = TheParserSession->concreteParseLeaf(static_cast<StringifyMode>(stringifyMode));
     
     N->put(mlp);
     

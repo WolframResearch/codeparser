@@ -17,7 +17,7 @@ library functions calling INTO lib
 concreteParseBytesFunc
 tokenizeBytesFunc
 tokenizeBytesListableFunc
-parseLeafFunc
+concreteParseLeafFunc
 safeStringFunc
 exprTestFunc
 
@@ -233,7 +233,7 @@ tokenizeBytesFunc := tokenizeBytesFunc = loadFunc["TokenizeBytes_LibraryLink", L
 
 tokenizeBytesListableFunc := tokenizeBytesListableFunc = loadFunc["TokenizeBytes_Listable_LibraryLink", LinkObject, LinkObject];
 
-parseLeafFunc := parseLeafFunc = loadFunc["ParseLeaf_LibraryLink", LinkObject, LinkObject];
+concreteParseLeafFunc := concreteParseLeafFunc = loadFunc["ConcreteParseLeaf_LibraryLink", LinkObject, LinkObject];
 
 safeStringFunc := safeStringFunc = loadFunc["SafeString_LibraryLink", LinkObject, LinkObject];
 

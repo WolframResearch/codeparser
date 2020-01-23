@@ -81,7 +81,7 @@ class ParserSession {
     
     BufferAndLength bufAndLen;
     
-    NodePtr parseLeaf0(int mode);
+    NodePtr concreteParseLeaf0(int mode);
     
 public:
     
@@ -104,7 +104,7 @@ public:
     Node *parseExpressions();
     Node *tokenize();
     Node *listSourceCharacters();
-    Node *parseLeaf(StringifyMode mode);
+    Node *concreteParseLeaf(StringifyMode mode);
     
     void releaseNode(Node *N);
     
@@ -133,7 +133,7 @@ EXTERN_C DLLEXPORT int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLI
 
 EXTERN_C DLLEXPORT int TokenizeBytes_Listable_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
-EXTERN_C DLLEXPORT int ParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp);
+EXTERN_C DLLEXPORT int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
 EXTERN_C DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
