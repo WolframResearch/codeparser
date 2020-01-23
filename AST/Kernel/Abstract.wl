@@ -928,8 +928,6 @@ abstract[args___] := Failure["InternalUnhandled", <|"Function"->abstract, "Argum
 String "a" -> a
 String a -> a
 
-ToNode is normally called after abstractString
-
 for handling the various stringification operators
 #a
 #"a"
@@ -939,7 +937,7 @@ a>>b
 a>>"b"
 *)
 abstractString[str_String /; StringStartsQ[str, "\""]] := ToExpression[str]
-abstractString[str_String] := str
+abstractString[str_String] := Quiet[ToExpression["\""<>str<>"\""], {Syntax::stresc}]
 
 
 
