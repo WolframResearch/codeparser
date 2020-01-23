@@ -157,7 +157,7 @@ Module[{location, libraryResources},
 	(*
 	If AST was built with an earlier version, then expr lib may not exist
 	*)
-	If[FileExistsQ[$exprCompiledLib],
+	If[FileExistsQ[$exprLib],
 
 		$exprCompiledLib = CompiledLibrary[$exprLib];
 
