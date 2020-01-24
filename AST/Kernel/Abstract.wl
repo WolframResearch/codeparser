@@ -560,15 +560,24 @@ kind of a hack
 TODO: handle StartUp files as a format
 
 *)
+
+symbolDeclPat = LeafNode[Symbol | String, _, _] | CallNode[LeafNode[Symbol, "Symbol", _], _, _]
+
 topLevelChildIssues[GroupNode[List, {
 	LeafNode[Token`OpenCurly, _, _],
-	LeafNode[Symbol | String, _, _],
+	symbolDeclPat,
 	LeafNode[Token`CloseCurly, _, _] }, _], True] := {}
 
 topLevelChildIssues[GroupNode[List, {
 	LeafNode[Token`OpenCurly, _, _],
-	InfixNode[Comma, { PatternSequence[LeafNode[Symbol | String, _, _] | CallNode[LeafNode[Symbol, "Symbol", _], _, _], _]...,
-		LeafNode[Symbol | String, _, _] | CallNode[LeafNode[Symbol, "Symbol", _], _, _] }, _],
+	InfixNode[Comma | CompoundExpression, {
+		PatternSequence[symbolDeclPat, _]..., LeafNode[Token`Fake`ImplicitNull, _, _]}, _],
+	LeafNode[Token`CloseCurly, _, _] }, _], True] := {}
+
+topLevelChildIssues[GroupNode[List, {
+	LeafNode[Token`OpenCurly, _, _],
+	InfixNode[Comma | CompoundExpression, {
+		PatternSequence[symbolDeclPat, _]..., symbolDeclPat }, _],
 	LeafNode[Token`CloseCurly, _, _] }, _], True] := {}
 
 (*
@@ -617,15 +626,19 @@ topLevelChildIssues[InfixNode[CompoundExpression, {
 
 topLevelChildIssues[InfixNode[CompoundExpression, {
 												GroupNode[List, {
-												LeafNode[Token`OpenCurly, _, _],
-												InfixNode[Comma, { PatternSequence[LeafNode[Symbol | String, _, _] | CallNode[LeafNode[Symbol, "Symbol", _], _, _], LeafNode[Token`Comma, _, _]]...,
-													LeafNode[Symbol | String, _, _] | CallNode[LeafNode[Symbol, "Symbol", _], _, _] }, _],
+												LeafNode[Token`OpenCurly, _, _], symbolDeclPat,
 												LeafNode[Token`CloseCurly, _, _]}, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
 
 topLevelChildIssues[InfixNode[CompoundExpression, {
 												GroupNode[List, {
 												LeafNode[Token`OpenCurly, _, _],
-												LeafNode[Symbol | String, _, _] | CallNode[LeafNode[Symbol, "Symbol", _], _, _],
+												InfixNode[Comma | CompoundExpression, { PatternSequence[symbolDeclPat, _]..., LeafNode[Token`Fake`ImplicitNull, _, _] }, _],
+												LeafNode[Token`CloseCurly, _, _]}, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
+
+topLevelChildIssues[InfixNode[CompoundExpression, {
+												GroupNode[List, {
+												LeafNode[Token`OpenCurly, _, _],
+												InfixNode[Comma | CompoundExpression, { PatternSequence[symbolDeclPat, _]..., symbolDeclPat }, _],
 												LeafNode[Token`CloseCurly, _, _]}, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
 
 topLevelChildIssues[InfixNode[CompoundExpression, {
