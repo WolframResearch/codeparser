@@ -107,7 +107,7 @@ Module[{s, data, rest, lastPos},
 		    CallNode[ToNode[Slot], {ToNode[FromDigits[rest]]}, data]
 		,
 		_,
-		    CallNode[ToNode[Slot], {ToNode[abstractString[rest]]}, data]
+		    CallNode[ToNode[Slot], {ToNode[abstractSymbolString[rest]]}, data]
 	]
 ]
 
@@ -223,7 +223,7 @@ abstract syntax Get["a"]
 concrete syntax: <<"a"
 abstract syntax Get["a"]
 *)
-abstract[PrefixNode[Get, {_, LeafNode[String, str_, _]}, data_]] := CallNode[ToNode[Get], {ToNode[abstractString[str]]}, data]
+abstract[PrefixNode[Get, {_, LeafNode[String, str_, _]}, data_]] := CallNode[ToNode[Get], {ToNode[abstractFileString[str]]}, data]
 
 abstract[PrefixNode[op_, {_, operand_}, data_]] := CallNode[ToNode[op], {abstract[operand]}, data]
 
@@ -250,8 +250,8 @@ Make sure to reverse the arguments
 *)
 abstract[BinaryNode[BinarySlashSlash, {left_, _, right_}, data_]] := CallNode[abstract[right], {abstract[left]}, data]
 
-abstract[BinaryNode[Put, {left_, _, LeafNode[String, str_, _]}, data_]] := CallNode[ToNode[Put], {abstract[left], ToNode[abstractString[str]]}, data]
-abstract[BinaryNode[PutAppend, {left_, _, LeafNode[String, str_, _]}, data_]] := CallNode[ToNode[PutAppend], {abstract[left], ToNode[abstractString[str]]}, data]
+abstract[BinaryNode[Put, {left_, _, LeafNode[String, str_, _]}, data_]] := CallNode[ToNode[Put], {abstract[left], ToNode[abstractFileString[str]]}, data]
+abstract[BinaryNode[PutAppend, {left_, _, LeafNode[String, str_, _]}, data_]] := CallNode[ToNode[PutAppend], {abstract[left], ToNode[abstractFileString[str]]}, data]
 
 
 (*
@@ -933,17 +933,24 @@ for handling the various stringification operators
 #"a"
 a::b
 a::"b"
+*)
+abstractSymbolString[str_String /; StringStartsQ[str, "\""]] := ToExpression[str]
+abstractSymbolString[str_String] := Quiet[ToExpression["\""<>str<>"\""], {Syntax::stresc}]
+
+(*
 a>>b
 a>>"b"
+
+The strings might be something like:
+b\c => b\\c
+b\f => b\\f
+
+FIXME: once the semantics are completely understood, move this to library
 *)
-abstractString[str_String /; StringStartsQ[str, "\""]] := ToExpression[str]
-abstractString[str_String] := Quiet[ToExpression["\""<>str<>"\""], {Syntax::stresc}]
+abstractFileString[str_String /; StringStartsQ[str, "\""]] := ToExpression[replaceSingleEscapeCharacters[str]]
+abstractFileString[str_String] := Quiet[ToExpression["\""<>replaceSingleEscapeCharacters[str]<>"\""], {Syntax::stresc}]
 
-
-
-
-
-
+replaceSingleEscapeCharacters[str_String] := StringReplace[str, "\\"~~c:("b"|"f"|"n"|"r"|"t") -> "\\\\"~~c]
 
 processInfixBinaryAtQuirk[
 	BinaryNode[BinaryAt, {LeafNode[Symbol, symName_, symData_], LeafNode[Token`At, _, atData_], rhsIn_}, _], symName_] /; $Quirks["InfixBinaryAt"] :=
@@ -1516,7 +1523,7 @@ Module[{data, issues},
 ]
 
 
-abstractMessageNameChild[LeafNode[String, str_, _]] := ToNode[abstractString[str]]
+abstractMessageNameChild[LeafNode[String, str_, _]] := ToNode[abstractSymbolString[str]]
 
 abstractMessageNameChild[n_] := n
 
