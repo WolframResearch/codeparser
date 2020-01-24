@@ -758,10 +758,10 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 	
 	list = listIn;
 
-	nodeListStack = System`CreateDataStructure["ExpressionStack"];
-	operatorStack = System`CreateDataStructure["ExpressionStack"];
+	nodeListStack = System`CreateDataStructure["Stack"];
+	operatorStack = System`CreateDataStructure["Stack"];
 
-	nodeListStack["Push", System`CreateDataStructure["ExpressionStack"]];
+	nodeListStack["Push", System`CreateDataStructure["Stack"]];
 	operatorStack["Push", None];
 
 	issues = {};
@@ -774,28 +774,28 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		*)
 		CallNode[LeafNode[Symbol, "BeginPackage", _], {LeafNode[String, _?contextQ, _], LeafNode[String, _?contextQ, _] | CallNode[LeafNode[Symbol, "List", <||>], { LeafNode[String, _?contextQ, _]... }, _] | PatternSequence[]}, _],
 			operatorStack["Push", PackageNode[x[[2]], {}, <|Source->{x[[3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
-			nodeListStack["Push", System`CreateDataStructure["ExpressionStack"]];
+			nodeListStack["Push", System`CreateDataStructure["Stack"]];
 		,
 		(*
 		BeginPackage["Foo`"] ;
 		*)
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "BeginPackage", _], {LeafNode[String, _?contextQ, _], LeafNode[String, _?contextQ, _] | CallNode[LeafNode[Symbol, "List", <||>], { LeafNode[String, _?contextQ, _]... }, _] | PatternSequence[]}, _], LeafNode[Symbol, "Null", _]}, _],
 			operatorStack["Push", PackageNode[x[[2, 1, 2]], {}, <|Source->{x[[2, 1, 3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
-			nodeListStack["Push", System`CreateDataStructure["ExpressionStack"]];
+			nodeListStack["Push", System`CreateDataStructure["Stack"]];
 		,
 		(*
 		Begin["`Private`"]
 		*)
 		CallNode[LeafNode[Symbol, "Begin", _], {LeafNode[String, _?contextQ, _]}, _],
 			operatorStack["Push", ContextNode[x[[2]], {}, <|Source->{x[[3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
-			nodeListStack["Push", System`CreateDataStructure["ExpressionStack"]];
+			nodeListStack["Push", System`CreateDataStructure["Stack"]];
 		,
 		(*
 		Begin["`Private`"] ;
 		*)
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "Begin", _], {LeafNode[String, _?contextQ, _]}, _], LeafNode[Symbol, "Null", _]}, _],
 			operatorStack["Push", ContextNode[x[[2, 1, 2]], {}, <|Source->{x[[2, 1, 3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
-			nodeListStack["Push", System`CreateDataStructure["ExpressionStack"]];
+			nodeListStack["Push", System`CreateDataStructure["Stack"]];
 		,
 		(*
 		EndPackage[]

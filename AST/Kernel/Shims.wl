@@ -37,7 +37,7 @@ setupStackShim[] := (
   (*
   Define CreateDataStructure for earlier versions
   *)
-  System`CreateDataStructure["ExpressionStack"] :=
+  System`CreateDataStructure["Stack"] :=
     Module[{stack, stackVal},
     
       stackVal = {};
