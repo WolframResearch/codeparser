@@ -862,6 +862,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "SystemFiles/Links/NETLink/Examples/Part1/Windows and Dialogs/AsteroidsGame/AsteroidsGame.nb",
         prefix <> "CompileUtilities/CompileUtilities/RuntimeChecks/RuntimeChecks.m",
         prefix <> "SystemFiles/Components/CompileUtilities/RuntimeChecks/RuntimeChecks.m",
+        prefix <> "TestTools/Legacy/Statistics/NIST/NISTTestTools.m",
         Nothing
         }, fileIn],
       f = Failure["CannotRegexTooWeird", <|"FileName" -> fileIn|>];
@@ -882,6 +883,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "applications/PolynomialControlSystems/PCSauxTest.m",
         prefix <> "control/auxTest2.m",
         prefix <> "control/UpdatedCSP/auxTest.m",
+        prefix <> "TestTools/FrontEnd/GrammarTestGenerator.m",
         Nothing
         }, fileIn],
       f = Failure["CannotRegexTooBroken", <|"FileName" -> fileIn|>];
