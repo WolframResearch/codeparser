@@ -122,9 +122,11 @@ include(WolframKernel)
 CheckWolframKernel()
 
 
+if(BUILD_EXPR_LIB)
 if(${VERSION_NUMBER} LESS 1210)
 set(BUILD_EXPR_LIB OFF)
 message(STATUS "VERSION_NUMBER is below 1210; disabling BUILD_EXPR_LIB")
+endif()
 endif()
 
 
@@ -191,7 +193,7 @@ add_custom_target(generated-srcs
 #
 # Generate source files
 #
-# Run the Generate.wl script to generate additional required source files
+# Run the GenerateSources.wl script to generate additional required source files
 #
 add_custom_command(
 	OUTPUT

@@ -193,7 +193,12 @@ Node *ParserSession::tokenize() {
             break;
         }
         
-        auto N = NodePtr(new LeafNode(Tok));
+        NodePtr N;
+        if (Tok.Tok.isError()) {
+            N = NodePtr(new ErrorNode(Tok));
+        } else {
+            N = NodePtr(new LeafNode(Tok));
+        }
         
         nodes.push_back(std::move(N));
         

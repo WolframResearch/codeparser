@@ -670,6 +670,14 @@ topLevelChildIssues[InfixNode[CompoundExpression, {BinaryNode[Set | SetDelayed, 
 			ConfidenceLevel -> 0.95
 			(*FIXME: wrap parentheses CodeAction*) |>] }
 
+topLevelChildIssues[InfixNode[CompoundExpression, {_, LeafNode[Token`Semi, _, _], LeafNode[Token`Fake`ImplicitNull, _, _]}, data_], True] := {
+	SyntaxIssue["TopLevel", "``CompoundExpression`` at top-level. ``;`` may not be needed at top-level.", "Warning",
+		<| Source -> data[Source],
+			ConfidenceLevel -> 0.75,
+			CodeActions -> { CodeAction["Insert newline", InsertNode,
+									<|	Source->nextData[Source],
+										"InsertionNode"->LeafNode[Token`Newline, "\n", <||>]|>] } |>] }
+
 topLevelChildIssues[InfixNode[CompoundExpression, {_, LeafNode[Token`Semi, _, _], _, ___}, data_], True] := {
 	SyntaxIssue["TopLevel", "``CompoundExpression`` at top-level. Consider breaking up onto separate lines.", "Warning",
 		<| Source -> data[Source],
@@ -677,7 +685,6 @@ topLevelChildIssues[InfixNode[CompoundExpression, {_, LeafNode[Token`Semi, _, _]
 			CodeActions -> { CodeAction["Insert newline", InsertNode,
 									<|	Source->nextData[Source],
 										"InsertionNode"->LeafNode[Token`Newline, "\n", <||>]|>] } |>] }
-
 
 (*
 Anything else, then warn
@@ -687,7 +694,7 @@ Specifically add a DidYouMean for / -> /@
 topLevelChildIssues[BinaryNode[Divide, {_, LeafNode[Token`Slash, _, slashData_], _}, data_], True] := {
 	SyntaxIssue["TopLevel", "Unexpected expression at top-level.", "Warning",
 		<| Source -> slashData[Source],
-			ConfidenceLevel -> 0.75,
+			ConfidenceLevel -> 0.95,
 			CodeActions -> { CodeAction["Replace ``/`` with ``/@``", ReplaceNode,
 									<|	Source->slashData[Source],
 										"ReplacementNode"->LeafNode[Token`SlashAt, "/@", <||>] |>] } |>] }
@@ -726,10 +733,15 @@ Module[{first, firstSrc, issues},
 				<| Source -> firstSrc,
 				ConfidenceLevel -> 0.75 |>]]
 		,
+		String,
+			AppendTo[issues, SyntaxIssue["TopLevelString", "Unexpected string at top-level.", "Warning",
+				<| Source -> firstSrc,
+				ConfidenceLevel -> 0.75 |>]]
+		,
 		_,
 			AppendTo[issues, SyntaxIssue["TopLevel", "Unexpected expression at top-level.", "Warning",
 				<| Source -> firstSrc,
-				ConfidenceLevel -> 0.75 |>]]
+				ConfidenceLevel -> 0.95 |>]]
 	];
 
 	issues

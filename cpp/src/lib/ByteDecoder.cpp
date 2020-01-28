@@ -234,7 +234,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                 
                 auto graphicalStr = c.graphicalString();
                 
-                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.85, {}));
                 
                 Issues.push_back(std::move(I));
             }
@@ -332,7 +332,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                 
                 auto graphicalStr = c.graphicalString();
                 
-                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.85, {}));
                 
                 Issues.push_back(std::move(I));
             }
@@ -442,7 +442,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                 
                 auto graphicalStr = c.graphicalString();
                 
-                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.85, {}));
                 
                 Issues.push_back(std::move(I));
             }
@@ -546,7 +546,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                 
                 auto graphicalStr = c.graphicalString();
                 
-                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.85, {}));
                 
                 Issues.push_back(std::move(I));
             }
@@ -681,7 +681,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                 
                 auto graphicalStr = c.graphicalString();
                 
-                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.85, {}));
                 
                 Issues.push_back(std::move(I));
             }
@@ -817,7 +817,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                 
                 auto graphicalStr = c.graphicalString();
                 
-                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.85, {}));
                 
                 Issues.push_back(std::move(I));
             }
@@ -952,7 +952,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                 
                 auto graphicalStr = c.graphicalString();
                 
-                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.85, {}));
                 
                 Issues.push_back(std::move(I));
             }

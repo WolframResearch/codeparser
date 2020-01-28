@@ -479,7 +479,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
             
             auto graphicalStr = c.graphicalString();
             
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.85, {}));
             
             Issues.push_back(std::move(I));
             
@@ -590,7 +590,7 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
     }
     
 #if !NISSUES
-    if (Utils::isStrange(point) || Utils::isMBStrange(point)) {
+    if (Utils::isStrange(point)) {
         //
         // Just generally strange character is in the code
         //
@@ -602,6 +602,20 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
         auto graphicalStr = c.graphicalString();
         
         auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+        
+        Issues.push_back(std::move(I));
+    } else if (Utils::isMBStrange(point)) {
+        //
+        // Just generally strange character is in the code
+        //
+        
+        auto c = WLCharacter(point, ESCAPE_4HEX);
+        
+        auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+        
+        auto graphicalStr = c.graphicalString();
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.85, {}));
         
         Issues.push_back(std::move(I));
     }
@@ -699,7 +713,7 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
     }
     
 #if !NISSUES
-    if (Utils::isStrange(point) || Utils::isMBStrange(point)) {
+    if (Utils::isStrange(point)) {
         //
         // Just generally strange character is in the code
         //
@@ -713,7 +727,22 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
         auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
         
         Issues.push_back(std::move(I));
-    }
+        
+    } else if (Utils::isMBStrange(point)) {
+        //
+        // Just generally strange character is in the code
+        //
+        
+        auto c = WLCharacter(point, ESCAPE_2HEX);
+        
+        auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+        
+        auto graphicalStr = c.graphicalString();
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.85, {}));
+        
+        Issues.push_back(std::move(I));
+    };
 #endif // !NISSUES
     
     return WLCharacter(point, ESCAPE_2HEX);
@@ -809,7 +838,7 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
     }
     
 #if !NISSUES
-    if (Utils::isStrange(point) || Utils::isMBStrange(point)) {
+    if (Utils::isStrange(point)) {
         //
         // Just generally strange character is in the code
         //
@@ -823,7 +852,22 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
         auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
         
         Issues.push_back(std::move(I));
-    }
+        
+    } else if (Utils::isMBStrange(point)) {
+        //
+        // Just generally strange character is in the code
+        //
+        
+        auto c = WLCharacter(point, ESCAPE_OCTAL);
+        
+        auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+        
+        auto graphicalStr = c.graphicalString();
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.85, {}));
+        
+        Issues.push_back(std::move(I));
+    };
 #endif // !NISSUES
     
     return WLCharacter(point, ESCAPE_OCTAL);
@@ -923,7 +967,7 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
     }
     
 #if !NISSUES
-    if (Utils::isStrange(point) || Utils::isMBStrange(point)) {
+    if (Utils::isStrange(point)) {
         //
         // Just generally strange character is in the code
         //
@@ -937,7 +981,22 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
         auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
         
         Issues.push_back(std::move(I));
-    }
+        
+    } else if (Utils::isMBStrange(point)) {
+        //
+        // Just generally strange character is in the code
+        //
+        
+        auto c = WLCharacter(point, ESCAPE_6HEX);
+        
+        auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+        
+        auto graphicalStr = c.graphicalString();
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.85, {}));
+        
+        Issues.push_back(std::move(I));
+    };
 #endif // !NISSUES
     
     return WLCharacter(point, ESCAPE_6HEX);

@@ -661,8 +661,10 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation
             
             Issues.push_back(std::move(I));
         }
-    } else if (c.isStrangeLetterlike() || c.isMBStrangeLetterlike()) {
+    } else if (c.isStrangeLetterlike()) {
         Utils::strangeLetterlikeWarning(getTokenSource(charLoc), c);
+    } else if (c.isMBStrangeLetterlike()) {
+        Utils::mbStrangeLetterlikeWarning(getTokenSource(charLoc), c);
     }
 #endif // !NISSUES
     
@@ -689,13 +691,21 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation
                     
                     Issues.push_back(std::move(I));
                 }
-            } else if (c.isStrangeLetterlike() || c.isMBStrangeLetterlike()) {
+            } else if (c.isStrangeLetterlike()) {
                 
                 auto loc = TheByteDecoder->SrcLoc;
                 
                 auto strangeLoc = loc - 1;
                 
                 Utils::strangeLetterlikeWarning(getTokenSource(strangeLoc), c);
+                
+            } else if (c.isMBStrangeLetterlike()) {
+                
+                auto loc = TheByteDecoder->SrcLoc;
+                
+                auto strangeLoc = loc - 1;
+                
+                Utils::mbStrangeLetterlikeWarning(getTokenSource(strangeLoc), c);
             }
 #endif // !NISSUES
             
@@ -3258,7 +3268,7 @@ inline Token Tokenizer::handleMBStrangeNewline(Buffer tokenStartBuf, SourceLocat
     assert(c.isMBStrangeNewline());
     
 #if !NISSUES
-    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected newline character.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.95, {}));
+    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected newline character.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.85, {}));
     
     Issues.push_back(std::move(I));
 #endif // !NISSUES
@@ -3271,7 +3281,7 @@ inline Token Tokenizer::handleMBStrangeWhitespace(Buffer tokenStartBuf, SourceLo
     assert(c.isMBStrangeWhitespace());
     
 #if !NISSUES
-    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected space character.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.95, {}));
+    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected space character.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.85, {}));
     
     Issues.push_back(std::move(I));
 #endif // !NISSUES
