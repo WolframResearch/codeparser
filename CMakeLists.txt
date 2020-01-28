@@ -1,11 +1,11 @@
 
 cmake_minimum_required(VERSION 3.0)
 
-project(ast)
+project(codeparser)
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
-set(PACLET "AST")
+set(PACLET "CodeParser")
 set(WOLFRAMKERNEL /Applications/Mathematica.app/Contents/MacOS/WolframKernel CACHE FILEPATH "Path to WolframKernel")
 set(BUILD_DOCS OFF CACHE BOOL "Build documentation")
 set(BUILD_EXE OFF CACHE BOOL "Build executable")
@@ -26,19 +26,19 @@ message(STATUS "NABORT: ${NABORT}")
 message(STATUS "LOCAL_BUILD: ${LOCAL_BUILD}")
 
 set(STATIC_WL_PACLET_SOURCES
-	${CMAKE_SOURCE_DIR}/AST/Kernel/Abstract.wl
-	${CMAKE_SOURCE_DIR}/AST/Kernel/AST.wl
-	${CMAKE_SOURCE_DIR}/AST/Kernel/Boxes.wl
-	${CMAKE_SOURCE_DIR}/AST/Kernel/CodeAction.wl
-	${CMAKE_SOURCE_DIR}/AST/Kernel/DeclarationName.wl
-	${CMAKE_SOURCE_DIR}/AST/Kernel/Error.wl
-	${CMAKE_SOURCE_DIR}/AST/Kernel/Folds.wl
-	${CMAKE_SOURCE_DIR}/AST/Kernel/Library.wl
-	${CMAKE_SOURCE_DIR}/AST/Kernel/Node.wl
-	${CMAKE_SOURCE_DIR}/AST/Kernel/Quirks.wl
-	${CMAKE_SOURCE_DIR}/AST/Kernel/Shims.wl
-	${CMAKE_SOURCE_DIR}/AST/Kernel/ToString.wl
-	${CMAKE_SOURCE_DIR}/AST/Kernel/Utils.wl
+	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/Abstract.wl
+	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/CodeParser.wl
+	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/Boxes.wl
+	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/CodeAction.wl
+	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/DeclarationName.wl
+	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/Error.wl
+	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/Folds.wl
+	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/Library.wl
+	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/Node.wl
+	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/Quirks.wl
+	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/Shims.wl
+	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/ToString.wl
+	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/Utils.wl
 )
 
 set(GENERATED_WL_PACLET_SOURCES
@@ -49,23 +49,23 @@ set(GENERATED_WL_PACLET_SOURCES
 # Used during the build process
 #
 set(WL_GENERATE_SOURCES
-	${CMAKE_SOURCE_DIR}/AST/Generate/GenerateSources.wl
-	${CMAKE_SOURCE_DIR}/AST/Generate/LongNames.wl
-	${CMAKE_SOURCE_DIR}/AST/Generate/Precedence.wl
-	${CMAKE_SOURCE_DIR}/AST/Generate/Symbol.wl
-	${CMAKE_SOURCE_DIR}/AST/Generate/TokenEnum.wl
+	${CMAKE_SOURCE_DIR}/CodeParser/Generate/GenerateSources.wl
+	${CMAKE_SOURCE_DIR}/CodeParser/Generate/LongNames.wl
+	${CMAKE_SOURCE_DIR}/CodeParser/Generate/Precedence.wl
+	${CMAKE_SOURCE_DIR}/CodeParser/Generate/Symbol.wl
+	${CMAKE_SOURCE_DIR}/CodeParser/Generate/TokenEnum.wl
 )
 
 set(WL_GENERATE_EXPRLIB_SOURCES
-	${CMAKE_SOURCE_DIR}/AST/Generate/GenerateExpressionLibrary.wl
+	${CMAKE_SOURCE_DIR}/CodeParser/Generate/GenerateExpressionLibrary.wl
 )
 
 set(WL_GENERATE_PACKPACLET_SOURCES
-	${CMAKE_SOURCE_DIR}/AST/Generate/PackPaclet.wl
+	${CMAKE_SOURCE_DIR}/CodeParser/Generate/PackPaclet.wl
 )
 
 set(PACLETINFO_SOURCE
-	${CMAKE_SOURCE_DIR}/AST/PacletInfo.m
+	${CMAKE_SOURCE_DIR}/CodeParser/PacletInfo.m
 )
 
 set(WL_DATA_SOURCES
@@ -95,12 +95,9 @@ set(GENERATED_SOURCES
 
 
 set(DOCUMENTATION_NOTEBOOK_PATHS
-	English/ReferencePages/Symbols/ConcreteParseFile.nb
-	English/ReferencePages/Symbols/ConcreteParseString.nb
-	English/ReferencePages/Symbols/ParseFile.nb
-	English/ReferencePages/Symbols/ParseString.nb
-	English/ReferencePages/Symbols/TokenizeFile.nb
-	English/ReferencePages/Symbols/TokenizeString.nb
+	English/ReferencePages/Symbols/CodeConcreteParse.nb
+	English/ReferencePages/Symbols/CodeParse.nb
+	English/ReferencePages/Symbols/CodeTokenize.nb
 )
 
 #
@@ -217,7 +214,7 @@ add_custom_command(
 #
 if(BUILD_EXPR_LIB)
 
-set(EXPR_LIB ${CMAKE_BINARY_DIR}/paclet/AST/LibraryResources/${SYSTEMID}/libExpr${CMAKE_SHARED_LIBRARY_SUFFIX})
+set(EXPR_LIB ${CMAKE_BINARY_DIR}/paclet/CodeParser/LibraryResources/${SYSTEMID}/libExpr${CMAKE_SHARED_LIBRARY_SUFFIX})
 
 add_library(expr-lib SHARED IMPORTED)
 
@@ -257,7 +254,7 @@ endif(BUILD_EXPR_LIB)
 
 
 #
-# Build AST library
+# Build CodeParser library
 #
 
 set(WOLFRAMLIBRARY_INCLUDE_DIR /Applications/Mathematica.app/Contents/SystemFiles/IncludeFiles/C CACHE FILEPATH "Path to WolframLibrary.h")
@@ -326,14 +323,14 @@ endif()
 
 
 
-add_library(ast-lib SHARED
+add_library(codeparser-lib SHARED
 	${CPP_INCLUDES}
 	${CPP_LIB_SOURCES}
 	${GENERATED_CPP_INCLUDES}
 	${GENERATED_CPP_LIB_SOURCES}
 )
 
-target_include_directories(ast-lib
+target_include_directories(codeparser-lib
 	PRIVATE ${CMAKE_SOURCE_DIR}/cpp/include
 	PRIVATE ${CMAKE_BINARY_DIR}/generated/cpp/include
 	PRIVATE ${MATHLINK_INCLUDE_DIR}
@@ -354,17 +351,17 @@ find_library(MATHLINK_LIB
 
 message(STATUS "MATHLINK_LIB: ${MATHLINK_LIB}")
 
-target_link_libraries(ast-lib ${MATHLINK_LIB})
+target_link_libraries(codeparser-lib ${MATHLINK_LIB})
 
 endif(USE_MATHLINK)
 
 if(BUILD_EXPR_LIB)
-target_link_libraries(ast-lib expr-lib)
+target_link_libraries(codeparser-lib expr-lib)
 endif()
 
-set_target_properties(ast-lib PROPERTIES
+set_target_properties(codeparser-lib PROPERTIES
 	OUTPUT_NAME
-		AST
+		CodeParser
 	CXX_STANDARD
 		11
 	CXX_STANDARD_REQUIRED
@@ -400,7 +397,7 @@ set_target_properties(ast-lib PROPERTIES
 	RUNTIME_OUTPUT_DIRECTORY_RELEASE
 		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
 	#
-	# WL / LibraryLink style dictates that the library be named "AST.dylib" and not "libAST.dylib"
+	# WL / LibraryLink style dictates that the library be named "CodeParser.dylib" and not "libCodeParser.dylib"
 	#
 	PREFIX
 		""
@@ -408,15 +405,15 @@ set_target_properties(ast-lib PROPERTIES
 
 
 if(NISSUES)
-target_compile_definitions(ast-lib PUBLIC NISSUES=1)
+target_compile_definitions(codeparser-lib PUBLIC NISSUES=1)
 endif()
 
 if(NABORT)
-target_compile_definitions(ast-lib PUBLIC NABORT=1)
+target_compile_definitions(codeparser-lib PUBLIC NABORT=1)
 endif()
 
 if(USE_MATHLINK)
-target_compile_definitions(ast-lib PUBLIC USE_MATHLINK=1)
+target_compile_definitions(codeparser-lib PUBLIC USE_MATHLINK=1)
 endif()
 
 
@@ -425,13 +422,13 @@ endif()
 # Setup warnings
 #
 if(MSVC)
-	target_compile_options(ast-lib
+	target_compile_options(codeparser-lib
 		# specify /MT to statically link runtime on Windows
 		# This prevents "The program can't start because ucrtbased.dll is missing from your computer" error on Windows 7
 		PRIVATE /W3 /EHsc /MT
 	)
 else(MSVC)
-	target_compile_options(ast-lib
+	target_compile_options(codeparser-lib
 		PRIVATE -Wextra -Wall -Weffc++ -Wno-unused-parameter -Wno-unused-function -Wno-comment
 	)
 endif(MSVC)
@@ -508,7 +505,7 @@ endif(BUILD_DOCS)
 set(PACLET_SOURCES
 	${COPIED_WL_PACLET_SOURCES}
 	generated-srcs
-	ast-lib
+	codeparser-lib
 	${WL_GENERATE_PACKPACLET_SOURCES}
 )
 

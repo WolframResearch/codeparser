@@ -1,12 +1,12 @@
 
 
-path = FileNameJoin[{DirectoryName[$CurrentTestSource], "ASTTestUtils"}]
+path = FileNameJoin[{DirectoryName[$CurrentTestSource], "CodeParserTestUtils"}]
 PrependTo[$Path, path]
 
-Needs["ASTTestUtils`"]
+Needs["CodeParserTestUtils`"]
 
-Needs["AST`"]
-Needs["AST`Utils`"]
+Needs["CodeParser`"]
+Needs["CodeParser`Utils`"]
 
 
 

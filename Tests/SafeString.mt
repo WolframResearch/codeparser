@@ -1,5 +1,5 @@
 
-Needs["AST`"]
+Needs["CodeParser`"]
 
 Test[
 	SafeString[ToCharacterCode["1+1"]]

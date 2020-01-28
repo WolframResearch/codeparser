@@ -1,12 +1,12 @@
 
-path = FileNameJoin[{DirectoryName[$CurrentTestSource], "ASTTestUtils"}]
+path = FileNameJoin[{DirectoryName[$CurrentTestSource], "CodeParserTestUtils"}]
 PrependTo[$Path, path]
 
-Needs["ASTTestUtils`"]
+Needs["CodeParserTestUtils`"]
 
 
-Needs["AST`"]
-Needs["AST`Utils`"]
+Needs["CodeParser`"]
+Needs["CodeParser`Utils`"]
 
 
 
@@ -15,7 +15,7 @@ guarantee that "\:f3a2" does not get returned as StringNode[String, "\[COMPATIBI
 *)
 
 TestMatch[
-	ConcreteParseString["\"\\:f3a2\""]
+	CodeConcreteParse["\"\\:f3a2\""]
 	,
 	ContainerNode[String, {
 		LeafNode[String, "\"\\:f3a2\"", <|Source -> {{1, 1}, {1, 9}}|>] }, _]

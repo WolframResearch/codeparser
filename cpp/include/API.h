@@ -47,16 +47,16 @@ using ScopedMLStringPtr = std::unique_ptr<ScopedMLString>;
 using ScopedMLEnvironmentParameterPtr = std::unique_ptr<ScopedMLEnvironmentParameter>;
 
 //
-// CMake defines ast_lib_EXPORTS
+// CMake defines codeparser_lib_EXPORTS
 //
 #ifdef _WIN32
-# ifdef ast_lib_EXPORTS
-#   define ASTLIB_EXPORTED  __declspec( dllexport )
+# ifdef codeparser_lib_EXPORTS
+#   define CODEPARSERLIB_EXPORTED  __declspec( dllexport )
 # else
-#   define ASTLIB_EXPORTED  __declspec( dllimport )
+#   define CODEPARSERLIB_EXPORTED  __declspec( dllimport )
 # endif
 #else
-# define ASTLIB_EXPORTED
+# define CODEPARSERLIB_EXPORTED
 #endif
 
 

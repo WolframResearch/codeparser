@@ -1,8 +1,8 @@
 
-Needs["AST`"]
+Needs["CodeParser`"]
 
 Test[
-	DeclarationName[ParseString["a"]]
+	DeclarationName[CodeParse["a"]]
 	,
 	"a"
 	,
@@ -10,7 +10,7 @@ Test[
 ]
 
 Test[
-	DeclarationName[ParseString["a[]"]]
+	DeclarationName[CodeParse["a[]"]]
 	,
 	"a"
 	,
@@ -18,7 +18,7 @@ Test[
 ]
 
 Test[
-	DeclarationName[ParseString["a /; q"]]
+	DeclarationName[CodeParse["a /; q"]]
 	,
 	"a"
 	,
@@ -30,7 +30,7 @@ Test[
 
 
 TestMatch[
-	DeclarationName[ParseString["123"]]
+	DeclarationName[CodeParse["123"]]
 	,
 	_Failure
 	,

@@ -1,6 +1,6 @@
-# AST
+# CodeParser
 
-AST is a paclet for parsing Wolfram Language code.
+CodeParser is a paclet for parsing Wolfram Language code.
 
 [Parsing the Wolfram Language from WTC 2019: Watch Video](https://www.wolfram.com/broadcast/video.php?v=2908)
 
@@ -10,11 +10,11 @@ AST is a paclet for parsing Wolfram Language code.
 
 ## Installing
 
-Install AST from the public paclet server:
+Install CodeParser from the public paclet server:
 ```
-In[1]:= PacletUpdate["AST", "Site" -> "http://pacletserver.wolfram.com", "UpdateSites" -> True]
+In[1]:= PacletUpdate["CodeParser", "UpdateSites" -> True]
 
-Out[1]= Paclet[AST,0.2,<>]
+Out[1]= Paclet[CodeParser,1.0,<>]
 ```
 
 
@@ -22,17 +22,13 @@ Out[1]= Paclet[AST,0.2,<>]
 
 Make sure that the paclet can be found on your system:
 ```
-In[1]:= Needs["AST`"]
+In[1]:= Needs["CodeParser`"]
 ```
 
 
-## What is an AST?
+## What is CodeParser?
 
-AST stands for Abstract Syntax Tree.
-
-ASTs are a symbolic representation of source code syntax.
-
-The AST package introduces functions for parsing WL source code and returning a tree structure that represents the original source code.
+The CodeParser package introduces functions for parsing WL source code and returning a tree structure that represents the original source code.
 
 
 ## Nodes
@@ -43,10 +39,10 @@ All nodes have a uniform structure:
 
 ## Layout
 
-The AST source layout has the following structure.
+The CodeParser source layout has the following structure.
 ```
-ast/
-  AST/
+codeparser/
+  CodeParser/
     Documentation/
     Kernel/
   cpp/
@@ -61,33 +57,33 @@ ast/
 
 The `cpp` directory contains C++ source code.
 
-The `scripts` directory contains scripts for building AST.
+The `scripts` directory contains scripts for building CodeParser.
 
-The `tables` directory contains data for building AST.
+The `tables` directory contains data for building CodeParser.
 
-The `AST` directory contains WL source code.
+The `CodeParser` directory contains WL source code.
 
-`CMakeLists.txt` is the CMake file for building AST.
+`CMakeLists.txt` is the CMake file for building CodeParser.
 
 
 ## Building
 
-AST uses a Wolfram Language kernel to generate code at build time and a C++ compiler to compile an executable.
+CodeParser uses a Wolfram Language kernel to generate code at build time and a C++ compiler to compile an executable.
 
-AST uses C++11 features and requires a compiler that can support at least C++11.
+CodeParser uses C++11 features and requires a compiler that can support at least C++11.
 
-AST uses CMake to generate build scripts.
+CodeParser uses CMake to generate build scripts.
 
-Here is an example transcript using the default make generator to build AST:
+Here is an example transcript using the default make generator to build CodeParser:
 ```
-cd ast
+cd codeparser
 mkdir build
 cd build
 cmake ..
 cmake --build . --target paclet
 ```
 
-The result is a directory named `paclet` that contains the WL package source code and a built AST `.paclet` file for installing.
+The result is a directory named `paclet` that contains the WL package source code and a built CodeParser `.paclet` file for installing.
 
 You may see an error because the default paths to `WolframKernel`, `MathLink`, or `WolframLibrary` may not be correct.
 
@@ -102,15 +98,15 @@ Here are typical values for the variables:
 * `MATHLINK_INCLUDE_DIR` `/Applications/Mathematica.app/Contents/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions`
 * `WOLFRAMLIBRARY_INCLUDE_DIR` `/Applications/Mathematica.app/Contents/SystemFiles/IncludeFiles/C`
 
-Here is the build directory layout after building AST:
+Here is the build directory layout after building CodeParser:
 ```
 paclet/
-  AST/
+  CodeParser/
     Kernel/
-      AST.wl
+      CodeParser.wl
     LibraryResources/
       <<SystemID>>
-        AST.dll
+        CodeParser.dll
     PacletInfo.m
     ...
 ```
@@ -124,12 +120,12 @@ It is recommended to specify `wolfram.exe` instead of `WolframKernel.exe`.
 Building with Mathematica 11.0 or 11.1: use VS2015, C runtime issue?
 
 
-## Using AST
+## Using CodeParser
 
-After AST is built and installed, it can be used.
+After CodeParser is built and installed, it can be used.
 
 ```
-In[1]:= Needs["AST`"]
+In[1]:= Needs["CodeParser`"]
 
 In[2]:= ParseString["1+1"]
 
@@ -140,10 +136,10 @@ Out[2]= InfixNode[Plus, {IntegerNode[1, {}, <|Source -> {{1, 1}, {1, 1}}|>],
 In[3]:=
 ```
 
-A `wl-ast` command-line tool is also built and can be used.
+A `wl-codeparser` command-line tool is also built and can be used.
 
 ```
-$wl-ast
+$wl-codeparser
 >>> 1+1
 InfixNode[Plus, {IntegerNode["1", {}, <|Source->{{1, 1}, {1, 1}}|>], IntegerNode["1", {}, <|Source->{{1, 3}, {1, 3}}|>]}, <|Source->{{1, 1}, {1, 3}}|>]
 

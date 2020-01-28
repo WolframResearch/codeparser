@@ -1250,7 +1250,7 @@ std::string CharacterDecoder::longNameSuggestion(BufferAndLength input) {
     if (!MLPutFunction(link, "EvaluatePacket", 1)) {
         assert(false);
     }
-    if (!MLPutFunction(link, "AST`Library`LongNameSuggestion", 1)) {
+    if (!MLPutFunction(link, "CodeParser`Library`LongNameSuggestion", 1)) {
         assert(false);
     }
     if (!MLPutUTF8String(link, input.buffer, static_cast<int>(input.length()))) {

@@ -14,29 +14,29 @@ set(CPP_EXE_SOURCES
 	${CMAKE_SOURCE_DIR}/cpp/src/exe/main.cpp
 )
 
-add_executable(ast-exe
+add_executable(codeparser-exe
 	${CPP_EXE_SOURCES}
 )
 
-target_include_directories(ast-exe
+target_include_directories(codeparser-exe
 	PRIVATE ${CMAKE_SOURCE_DIR}/cpp/include
 	PRIVATE ${CMAKE_BINARY_DIR}/generated/cpp/include
 	PRIVATE ${WOLFRAMLIBRARY_INCLUDE_DIR}
 )
 
 if(USE_MATHLINK)
-target_include_directories(ast-exe
+target_include_directories(codeparser-exe
 	PRIVATE ${MATHLINK_INCLUDE_DIR}
 )
 endif()
 
-target_link_libraries(ast-exe
-	ast-lib
+target_link_libraries(codeparser-exe
+	codeparser-lib
 )
 
-set_target_properties(ast-exe PROPERTIES
+set_target_properties(codeparser-exe PROPERTIES
 	OUTPUT_NAME
-		ast
+		codeparser
 	CXX_STANDARD
 		11
 	CXX_STANDARD_REQUIRED
@@ -49,13 +49,13 @@ set_target_properties(ast-exe PROPERTIES
 # Setup warnings
 #
 if(MSVC)
-	target_compile_options(ast-exe
+	target_compile_options(codeparser-exe
 		# specify /MT to statically link runtime on Windows
 		# This prevents "The program can't start because ucrtbased.dll is missing from your computer" error on Windows 7
 		PRIVATE /W3 /EHsc /MT
 	)
 else(MSVC)
-	target_compile_options(ast-exe
+	target_compile_options(codeparser-exe
 		PRIVATE -Wextra -Wall -Weffc++ -Wno-unused-parameter -Wno-unused-function -Wno-comment
 	)
 endif(MSVC)
@@ -67,11 +67,11 @@ endif(MSVC)
 # setup installation
 #
 
-install(TARGETS ast-exe DESTINATION bin)
+install(TARGETS codeparser-exe DESTINATION bin)
 
 if(APPLE)
 
-install(TARGETS ast-lib DESTINATION lib)
+install(TARGETS codeparser-lib DESTINATION lib)
 
 
 #
@@ -101,10 +101,10 @@ elseif(WIN32)
 #message(STATUS "MATHLINK_DLL: ${MATHLINK_DLL}")
 
 #
-# install AST.dll and ml64i4.dll to same directory as ast.exe (bin)
+# install CodeParser.dll and ml64i4.dll to same directory as codeparser.exe (bin)
 #
 
-install(TARGETS ast-lib DESTINATION bin)
+install(TARGETS codeparser-lib DESTINATION bin)
 
 #install(FILES ${MATHLINK_DLL} DESTINATION bin)
 

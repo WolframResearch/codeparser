@@ -83,7 +83,7 @@ void Token::print(std::ostream& s) const {
         
         auto& Sym = TokenToSymbol(Tok);
         
-        s << SYMBOL_AST_LIBRARY_MAKELEAFNODE->name() << "[";
+        s << SYMBOL_CODEPARSER_LIBRARY_MAKELEAFNODE->name() << "[";
         
         s << Sym->name();
         s << ", ";
@@ -104,7 +104,7 @@ void Token::print(std::ostream& s) const {
     
     auto& Sym = TokenToSymbol(Tok);
     
-    s << SYMBOL_AST_LIBRARY_MAKELEAFNODE->name() << "[";
+    s << SYMBOL_CODEPARSER_LIBRARY_MAKELEAFNODE->name() << "[";
     
     s << Sym->name();
     s << ", ";

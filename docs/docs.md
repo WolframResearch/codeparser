@@ -1,10 +1,10 @@
 
-# AST
+# CodeParser
 
 
 ## Compatibility
 
-AST aims to be source compatible for Mathematica versions >= 11.0
+CodeParser aims to be source compatible for Mathematica versions >= 11.0
 
 
 

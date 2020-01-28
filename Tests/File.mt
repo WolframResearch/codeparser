@@ -1,13 +1,13 @@
 
 
-path = FileNameJoin[{DirectoryName[$CurrentTestSource], "ASTTestUtils"}]
+path = FileNameJoin[{DirectoryName[$CurrentTestSource], "CodeParserTestUtils"}]
 PrependTo[$Path, path]
 
-Needs["ASTTestUtils`"]
+Needs["CodeParserTestUtils`"]
 
 
 
-Needs["AST`"]
+Needs["CodeParser`"]
 
 (*
 
@@ -17,7 +17,7 @@ Parse File
 
 sample = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "sample.wl"}]
 
-cst = ConcreteParseFile[File[sample]]
+cst = CodeConcreteParse[File[sample]]
 
 Test[
 	cst
@@ -72,7 +72,7 @@ TestMatch[
 
 carriagereturn = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "carriagereturn.wl"}]
 
-cst = ConcreteParseFile[File[carriagereturn]]
+cst = CodeConcreteParse[File[carriagereturn]]
 
 TestMatch[
 	cst
@@ -89,7 +89,7 @@ TestMatch[
 
 carriagereturn2 = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "carriagereturn2.wl"}]
 
-cst = ConcreteParseFile[File[carriagereturn2]]
+cst = CodeConcreteParse[File[carriagereturn2]]
 
 TestMatch[
 	cst
@@ -114,7 +114,7 @@ warnings
 
 package = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "package.wl"}]
 
-ast = ParseFile[File[package]]
+ast = CodeParse[File[package]]
 
 TestMatch[
 	ast
@@ -141,7 +141,7 @@ Tokenize File
 sample = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "sample.wl"}]
 
 Test[
-	TokenizeFile[File[sample]]
+	CodeTokenize[File[sample]]
 	,
 	{
 		LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 1}}|>], 
@@ -169,7 +169,7 @@ test large number of comments
 
 comments = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "comments.wl"}]
 
-cst = ConcreteParseFile[File[comments]]
+cst = CodeConcreteParse[File[comments]]
 
 TestMatch[
 	cst
@@ -187,7 +187,7 @@ TestMatch[
 
 strange = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "strange.wl"}]
 
-cst = ConcreteParseFile[File[strange]]
+cst = CodeConcreteParse[File[strange]]
 
 TestMatch[
 	cst
@@ -211,7 +211,7 @@ TestMatch[
 
 strange = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "string1.wl"}]
 
-cst = ConcreteParseFile[File[strange]]
+cst = CodeConcreteParse[File[strange]]
 
 TestMatch[
 	cst
@@ -235,7 +235,7 @@ TestMatch[
 
 continuation = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "continuation.wl"}]
 
-cst = ConcreteParseFile[File[continuation]]
+cst = CodeConcreteParse[File[continuation]]
 
 TestMatch[
 	cst

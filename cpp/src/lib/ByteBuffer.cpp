@@ -60,7 +60,7 @@ unsigned char ByteBuffer::nextByte0() {
                 if (!MLPutFunction(link, "EvaluatePacket", 1)) {
                     assert(false);
                 }
-                if (!MLPutFunction(link, "AST`Library`SetConcreteParseProgress", 1)) {
+                if (!MLPutFunction(link, "CodeParser`Library`SetConcreteParseProgress", 1)) {
                     assert(false);
                 }
                 if (!MLPutInteger(link, static_cast<int>(progress))) {
@@ -130,7 +130,7 @@ void ByteBuffer::nextByte() {
                 if (!MLPutFunction(link, "EvaluatePacket", 1)) {
                     assert(false);
                 }
-                if (!MLPutFunction(link, "AST`Library`SetConcreteParseProgress", 1)) {
+                if (!MLPutFunction(link, "CodeParser`Library`SetConcreteParseProgress", 1)) {
                     assert(false);
                 }
                 if (!MLPutInteger(link, static_cast<int>(progress))) {

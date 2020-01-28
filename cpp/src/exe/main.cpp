@@ -97,18 +97,6 @@ int main(int argc, char *argv[]) {
         }
     }
     
-//    file = true;
-//    fileInput = "/Users/brenton/Downloads/Helped Code Bin and Count.nb";
-//    fileInput = "/Users/brenton/development/stash/WA/alphasource/CalculateParse/Disambiguation/DisambiguationRaw.m";
-//    fileInput = "/Applications/Mathematica121-6519725.app/Contents/AddOns/Applications/FormulaData/Kernel/downvalues.m";
-//    fileInput = "/Users/brenton/development/stash/COD/ast/build/test.m";
-//    fileInput = "/Users/brenton/development/stash/COD/ast/Tests/files/inputs-0001.txt";
-//    fileInput = "/Users/brenton/development/stash/COD/ast/Tests/files/small/crash10.txt";
-//    fileInput = "/Users/brenton/development/stash/PAC/semanticimport/mathematica/scoresAndSpellings/data/UnitScores.m";
-//    fileInput = "/Users/brenton/development/stash/PAC/companydata/Construction/Curation/CorrectingBadAddresses-201503/IntermediateFiles/expandedCompanyCoordinateSearchesChecked2.m";
-//    fileInput = "/Users/brenton/development/stash/PAC/mortalitydata/MortalityData/Kernel/MD-Data.m";
-//    outputMode = NONE;
-    
     if (file) {
         if (leaf) {
             readFile(fileInput, LEAF, outputMode);

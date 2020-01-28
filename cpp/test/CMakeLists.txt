@@ -36,7 +36,7 @@ target_include_directories(test-exe
 	PRIVATE ${WOLFRAMLIBRARY_INCLUDE_DIR}
 )
 
-target_link_libraries(test-exe ast-lib ${GTEST_BOTH_LIBRARIES})
+target_link_libraries(test-exe codeparser-lib ${GTEST_BOTH_LIBRARIES})
 
 set_target_properties(test-exe PROPERTIES
 	OUTPUT_NAME
@@ -75,7 +75,7 @@ install(TARGETS test-exe
 
 if(APPLE)
 
-install(TARGETS ast-lib
+install(TARGETS codeparser-lib
 	DESTINATION lib)
 
 #
@@ -106,10 +106,10 @@ find_file(MATHLINK_DLL
 message(STATUS "MATHLINK_DLL: ${MATHLINK_DLL}")
 
 #
-# install AST.dll and ml64i4.dll to same directory as ast.exe (bin)
+# install CodeParser.dll and ml64i4.dll to same directory as codeparser.exe (bin)
 #
 
-install(TARGETS ast-lib
+install(TARGETS codeparser-lib
 	DESTINATION bin)
 
 install(FILES ${MATHLINK_DLL}

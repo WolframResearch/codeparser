@@ -260,33 +260,33 @@ public:
 
 class PrefixNode : public OperatorNode {
 public:
-    PrefixNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEPREFIXNODE, std::move(Args)) {}
+    PrefixNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEPREFIXNODE, std::move(Args)) {}
 };
 
 class BinaryNode : public OperatorNode {
 public:
-    BinaryNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEBINARYNODE, std::move(Args)) {}
+    BinaryNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEBINARYNODE, std::move(Args)) {}
 };
 
 class InfixNode : public OperatorNode {
 public:
-    InfixNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEINFIXNODE, std::move(Args)) {}
+    InfixNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEINFIXNODE, std::move(Args)) {}
 };
 
 
 class TernaryNode : public OperatorNode {
 public:
-    TernaryNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKETERNARYNODE, std::move(Args)) {}
+    TernaryNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKETERNARYNODE, std::move(Args)) {}
 };
 
 class PostfixNode : public OperatorNode {
 public:
-    PostfixNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEPOSTFIXNODE, std::move(Args)) {}
+    PostfixNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEPOSTFIXNODE, std::move(Args)) {}
 };
 
 class PrefixBinaryNode : public OperatorNode {
 public:
-    PrefixBinaryNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEPREFIXBINARYNODE, std::move(Args)) {}
+    PrefixBinaryNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEPREFIXBINARYNODE, std::move(Args)) {}
 };
 
 
@@ -307,57 +307,57 @@ public:
 
 class GroupNode : public OperatorNode {
 public:
-    GroupNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEGROUPNODE, std::move(Args)) {}
+    GroupNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEGROUPNODE, std::move(Args)) {}
 };
 
 
 #if STARTOFLINE
 class StartOfLineNode : public OperatorNode {
 public:
-    StartOfLineNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKESTARTOFLINENODE, std::move(Args)) {}
+    StartOfLineNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKESTARTOFLINENODE, std::move(Args)) {}
 };
 
 class StartOfFileNode : public OperatorNode {
 public:
-    StartOfFileNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKESTARTOFFILENODE, std::move(Args)) {}
+    StartOfFileNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKESTARTOFFILENODE, std::move(Args)) {}
 };
 #endif // STARTOFLINE
 
 
 class BlankNode : public OperatorNode {
 public:
-    BlankNode(NodeSeq Args) : OperatorNode(SYMBOL_BLANK, SYMBOL_AST_LIBRARY_MAKEBLANKNODE, std::move(Args)) {}
+    BlankNode(NodeSeq Args) : OperatorNode(SYMBOL_BLANK, SYMBOL_CODEPARSER_LIBRARY_MAKEBLANKNODE, std::move(Args)) {}
 };
 
 class BlankSequenceNode : public OperatorNode {
 public:
-    BlankSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_BLANKSEQUENCE, SYMBOL_AST_LIBRARY_MAKEBLANKSEQUENCENODE, std::move(Args)) {}
+    BlankSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_BLANKSEQUENCE, SYMBOL_CODEPARSER_LIBRARY_MAKEBLANKSEQUENCENODE, std::move(Args)) {}
 };
 
 class BlankNullSequenceNode : public OperatorNode {
 public:
-    BlankNullSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_BLANKNULLSEQUENCE, SYMBOL_AST_LIBRARY_MAKEBLANKNULLSEQUENCENODE, std::move(Args)) {}
+    BlankNullSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_BLANKNULLSEQUENCE, SYMBOL_CODEPARSER_LIBRARY_MAKEBLANKNULLSEQUENCENODE, std::move(Args)) {}
 };
 
 class PatternBlankNode : public OperatorNode {
 public:
-    PatternBlankNode(NodeSeq Args) : OperatorNode(SYMBOL_AST_PATTERNBLANK, SYMBOL_AST_LIBRARY_MAKEPATTERNBLANKNODE, std::move(Args)) {}
+    PatternBlankNode(NodeSeq Args) : OperatorNode(SYMBOL_CODEPARSER_PATTERNBLANK, SYMBOL_CODEPARSER_LIBRARY_MAKEPATTERNBLANKNODE, std::move(Args)) {}
 };
 
 class PatternBlankSequenceNode : public OperatorNode {
 public:
-    PatternBlankSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_AST_PATTERNBLANKSEQUENCE, SYMBOL_AST_LIBRARY_MAKEPATTERNBLANKSEQUENCENODE, std::move(Args)) {}
+    PatternBlankSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_CODEPARSER_PATTERNBLANKSEQUENCE, SYMBOL_CODEPARSER_LIBRARY_MAKEPATTERNBLANKSEQUENCENODE, std::move(Args)) {}
 };
 
 class PatternBlankNullSequenceNode : public OperatorNode {
 public:
-    PatternBlankNullSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_AST_PATTERNBLANKNULLSEQUENCE, SYMBOL_AST_LIBRARY_MAKEPATTERNBLANKNULLSEQUENCENODE, std::move(Args)) {}
+    PatternBlankNullSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_CODEPARSER_PATTERNBLANKNULLSEQUENCE, SYMBOL_CODEPARSER_LIBRARY_MAKEPATTERNBLANKNULLSEQUENCENODE, std::move(Args)) {}
 };
 
 
 class OptionalDefaultPatternNode : public OperatorNode {
 public:
-    OptionalDefaultPatternNode(NodeSeq Args) : OperatorNode(SYMBOL_AST_OPTIONALDEFAULTPATTERN, SYMBOL_AST_LIBRARY_MAKEOPTIONALDEFAULTPATTERNNODE, std::move(Args)) {}
+    OptionalDefaultPatternNode(NodeSeq Args) : OperatorNode(SYMBOL_CODEPARSER_OPTIONALDEFAULTPATTERN, SYMBOL_CODEPARSER_LIBRARY_MAKEOPTIONALDEFAULTPATTERNNODE, std::move(Args)) {}
 };
 
 
@@ -376,12 +376,12 @@ public:
 
 class GroupMissingCloserNode : public OperatorNode {
 public:
-    GroupMissingCloserNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEGROUPMISSINGCLOSERNODE, std::move(Args)) {}
+    GroupMissingCloserNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEGROUPMISSINGCLOSERNODE, std::move(Args)) {}
 };
 
 class GroupMissingCloserNeedsReparseNode : public OperatorNode {
 public:
-    GroupMissingCloserNeedsReparseNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_AST_LIBRARY_MAKEGROUPMISSINGCLOSERNEEDSREPARSENODE, std::move(Args)) {}
+    GroupMissingCloserNeedsReparseNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEGROUPMISSINGCLOSERNEEDSREPARSENODE, std::move(Args)) {}
 };
 
 

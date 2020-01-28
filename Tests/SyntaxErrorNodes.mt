@@ -1,10 +1,12 @@
 
+Needs["CodeParser`"]
+
 (*
 ExpectedOperand:
 *)
 
 TestMatch[
-	ParseString["{ + }"]
+	CodeParse["{ + }"]
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "List", <||>], {
@@ -27,7 +29,7 @@ TODO: is this a quirk?
 *)
 
 TestMatch[
-	ParseString["a ? b ? c"]
+	CodeParse["a ? b ? c"]
 	,
 	ContainerNode[String, {
 		AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociativePatternTest, {
@@ -50,7 +52,7 @@ ExpectedTilde:
 *)
 
 Test[
-	ParseString["a ~f"]
+	CodeParse["a ~f"]
 	,
 	ContainerNode[String, {
 		SyntaxErrorNode[SyntaxError`ExpectedTilde, {
@@ -70,7 +72,7 @@ ExpectedSymbol:
 *)
 
 Test[
-	ParseString["1:2"]
+	CodeParse["1:2"]
 	,
 	ContainerNode[String, {
 		AbstractSyntaxErrorNode[AbstractSyntaxError`ColonError, {
@@ -92,7 +94,7 @@ ExpectedSet:
 *)
 
 Test[
-	ParseString["a /: b * c"]
+	CodeParse["a /: b * c"]
 	,
 	ContainerNode[String, {
 		SyntaxErrorNode[SyntaxError`ExpectedSet, {
@@ -115,7 +117,7 @@ ExpectedPossibleExpression:
 *)
 
 TestMatch[
-	ParseString["&"]
+	CodeParse["&"]
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Function", <||>], {
@@ -136,7 +138,7 @@ SyntaxError:
 *)
 
 TestMatch[
-	ConcreteParseString["\\"]
+	CodeConcreteParse["\\"]
 	,
 	ContainerNode[String, {
 		ErrorNode[Token`Error`UnhandledCharacter, "\\", <|Source -> {{1, 1}, {1, 2}}|>] }, <||>]

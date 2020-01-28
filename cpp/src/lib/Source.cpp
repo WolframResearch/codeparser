@@ -4,7 +4,7 @@
 #include "ByteDecoder.h" // for ByteDecoder
 #include "ByteEncoder.h" // for ByteEncoder
 #include "ByteBuffer.h" // for ByteBuffer
-#include "Symbol.h" // for SYMBOL_AST_LIBRARY_MAKESYNTAXISSUE, etc.
+#include "Symbol.h" // for SYMBOL_CODEPARSER_LIBRARY_MAKESYNTAXISSUE, etc.
 #include "Utils.h" // for isMBNewline, etc.
 //#include "WLCharacter.h" // for set_graphical
 #include "LongNames.h" // for CodePointToLongNameMap
@@ -128,7 +128,7 @@ Source Issue::getSource() const {
 
 void SyntaxIssue::print(std::ostream& s) const {
     
-    s << SYMBOL_AST_LIBRARY_MAKESYNTAXISSUE->name() << "[";
+    s << SYMBOL_CODEPARSER_LIBRARY_MAKESYNTAXISSUE->name() << "[";
     
     s << Tag.c_str() << ", ";
     
@@ -161,7 +161,7 @@ Source CodeAction::getSource() const {
 
 void ReplaceTextCodeAction::print(std::ostream& s) const {
     
-    s << SYMBOL_AST_LIBRARY_MAKEREPLACETEXTCODEACTION->name() << "[";
+    s << SYMBOL_CODEPARSER_LIBRARY_MAKEREPLACETEXTCODEACTION->name() << "[";
     
     s << Label;
     s << ", ";
@@ -177,7 +177,7 @@ void ReplaceTextCodeAction::print(std::ostream& s) const {
 
 void InsertTextCodeAction::print(std::ostream& s) const {
     
-    s << SYMBOL_AST_LIBRARY_MAKEINSERTTEXTCODEACTION->name() << "[";
+    s << SYMBOL_CODEPARSER_LIBRARY_MAKEINSERTTEXTCODEACTION->name() << "[";
     
     s << Label;
     s << ", ";
@@ -193,7 +193,7 @@ void InsertTextCodeAction::print(std::ostream& s) const {
 
 void InsertTextAfterCodeAction::print(std::ostream& s) const {
     
-    s << SYMBOL_AST_LIBRARY_MAKEINSERTTEXTAFTERCODEACTION->name() << "[";
+    s << SYMBOL_CODEPARSER_LIBRARY_MAKEINSERTTEXTAFTERCODEACTION->name() << "[";
     
     s << Label;
     s << ", ";
@@ -209,7 +209,7 @@ void InsertTextAfterCodeAction::print(std::ostream& s) const {
 
 void DeleteTextCodeAction::print(std::ostream& s) const {
     
-    s << SYMBOL_AST_LIBRARY_MAKEDELETETEXTCODEACTION->name() << "[";
+    s << SYMBOL_CODEPARSER_LIBRARY_MAKEDELETETEXTCODEACTION->name() << "[";
     
     s << Label;
     s << ", ";
@@ -222,7 +222,7 @@ void DeleteTextCodeAction::print(std::ostream& s) const {
 
 void DeleteTriviaCodeAction::print(std::ostream& s) const {
     
-    s << SYMBOL_AST_LIBRARY_MAKEDELETETRIVIACODEACTION->name() << "[";
+    s << SYMBOL_CODEPARSER_LIBRARY_MAKEDELETETRIVIACODEACTION->name() << "[";
     
     s << Label;
     s << ", ";
@@ -235,7 +235,7 @@ void DeleteTriviaCodeAction::print(std::ostream& s) const {
 
 void FormatIssue::print(std::ostream& s) const {
     
-    s << SYMBOL_AST_LIBRARY_MAKEFORMATISSUE->name() << "[";
+    s << SYMBOL_CODEPARSER_LIBRARY_MAKEFORMATISSUE->name() << "[";
     
     s << Tag.c_str() << ", ";
     
@@ -689,7 +689,7 @@ SourceCharacter::SourceCharacter_iterator SourceCharacter::end() {
 #if USE_MATHLINK
 void SyntaxIssue::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKESYNTAXISSUE->name(), static_cast<int>(3 + 4 + 1 + Actions.size()))) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKESYNTAXISSUE->name(), static_cast<int>(3 + 4 + 1 + Actions.size()))) {
         assert(false);
     }
     
@@ -718,7 +718,7 @@ void SyntaxIssue::put(MLINK mlp) const {
 
 void ReplaceTextCodeAction::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEREPLACETEXTCODEACTION->name(), static_cast<int>(1 + 4 + 1))) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEREPLACETEXTCODEACTION->name(), static_cast<int>(1 + 4 + 1))) {
         assert(false);
     }
     
@@ -735,7 +735,7 @@ void ReplaceTextCodeAction::put(MLINK mlp) const {
 
 void InsertTextCodeAction::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEINSERTTEXTCODEACTION->name(), static_cast<int>(1 + 4 + 1))) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEINSERTTEXTCODEACTION->name(), static_cast<int>(1 + 4 + 1))) {
         assert(false);
     }
     
@@ -752,7 +752,7 @@ void InsertTextCodeAction::put(MLINK mlp) const {
 
 void InsertTextAfterCodeAction::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEINSERTTEXTAFTERCODEACTION->name(), static_cast<int>(1 + 4 + 1))) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEINSERTTEXTAFTERCODEACTION->name(), static_cast<int>(1 + 4 + 1))) {
         assert(false);
     }
     
@@ -769,7 +769,7 @@ void InsertTextAfterCodeAction::put(MLINK mlp) const {
 
 void DeleteTextCodeAction::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEDELETETEXTCODEACTION->name(), static_cast<int>(1 + 4))) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEDELETETEXTCODEACTION->name(), static_cast<int>(1 + 4))) {
         assert(false);
     }
     
@@ -782,7 +782,7 @@ void DeleteTextCodeAction::put(MLINK mlp) const {
 
 void DeleteTriviaCodeAction::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEDELETETRIVIACODEACTION->name(), static_cast<int>(1 + 4))) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEDELETETRIVIACODEACTION->name(), static_cast<int>(1 + 4))) {
         assert(false);
     }
     
@@ -795,7 +795,7 @@ void DeleteTriviaCodeAction::put(MLINK mlp) const {
 
 void FormatIssue::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEFORMATISSUE->name(), static_cast<int>(3 + 4 + 1 + Actions.size()))) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEFORMATISSUE->name(), static_cast<int>(3 + 4 + 1 + Actions.size()))) {
         assert(false);
     }
     

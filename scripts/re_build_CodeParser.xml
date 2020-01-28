@@ -1,0 +1,136 @@
+<?xml version="1.0"?>
+<project name='codeparser' basedir='.'>
+
+	<property name='component' value='codeparser' />
+
+	<property environment='env' />
+	<import file='${env.RE_ANTLIBRARY_HOME}/ant-lib.xml' />
+
+	<!--
+		Native libraries (platform-specific)
+	-->
+
+	<target name='NativeLibrary.codeparser.init.custom' extensionOf='NativeLibrary.init.custom'>
+
+		<!-- - CMake generates makefiles here -->
+		<property name='build.dir' value='${checkout_directory}${file.separator}${component}${file.separator}build' />
+
+	</target>
+
+	<target name='NativeLibrary.codeparser.prebuild' extensionOf='NativeLibrary.prebuild'>
+
+		<delete dir='${build.dir}' />
+        <mkdir dir='${build.dir}' />
+
+	</target>
+
+	<target name='NativeLibrary.codeparser.Unix.execute' extensionOf='NativeLibrary.execute' unless='is.windows'>
+
+		<exec dir='${build.dir}' executable='${cmake.exe}' failonerror='true'>
+			<arg line='-DWOLFRAMKERNEL=${mathExe}' />
+			<arg line='-DMATHLINK_INCLUDE_DIR=${checkout_directory}/MathLink/CompilerAdditions' />
+			<arg line='-DMATHLINK_LIB_DIR=${checkout_directory}/MathLink/CompilerAdditions' />
+			<arg line='-DWOLFRAMLIBRARY_INCLUDE_DIR=${checkout_directory}/RuntimeLibrary/${system_id}' />
+			<arg line='-G &quot;${env.CMAKE_GENERATOR}&quot;' />
+			<arg value='${checkout_directory}/${component}' />
+        </exec>
+
+		<exec dir='${build.dir}' executable='${cmake.exe}' failonerror='true'>
+			<arg line='--build .' />
+			<arg line='--target paclet' />
+        </exec>
+
+	</target>
+
+	<target name='NativeLibrary.codeparser.Windows-x86-64.execute' extensionOf='NativeLibrary.execute' if='system_id.Windows-x86-64'>
+
+		<exec dir='${build.dir}' executable='${cmake.exe}' failonerror='true'>
+			<arg line='-DWOLFRAMKERNEL=${mathExe}' />
+			<!--
+			RE is targeting Mathematica 11.1, so use the old path that has "mldev64"
+			-->
+			<arg line='-DMATHLINK_INCLUDE_DIR=${checkout_directory}/MathLink/CompilerAdditions/mldev64/include' />
+			<arg line='-DMATHLINK_LIB_DIR=${checkout_directory}/MathLink/CompilerAdditions/mldev64/lib' />
+			<arg line='-DWOLFRAMLIBRARY_INCLUDE_DIR=${checkout_directory}/RuntimeLibrary/${system_id}' />
+			<arg line='-G &quot;${env.CMAKE_GENERATOR}&quot;' />
+			<arg value='${checkout_directory}/${component}' />
+        </exec>
+
+		<exec dir='${build.dir}' executable='${cmake.exe}' failonerror='true'>
+			<arg line='--build .' />
+			<arg line='--target paclet' />
+        </exec>
+
+	</target>
+
+	<target name='NativeLibrary.codeparser.Windows.execute' extensionOf='NativeLibrary.execute' if='system_id.Windows'>
+
+		<exec dir='${build.dir}' executable='${cmake.exe}' failonerror='true'>
+			<arg line='-DWOLFRAMKERNEL=${mathExe}' />
+			<!--
+			RE is targeting Mathematica 11.1, so use the old path that has "mldev32"
+			-->
+			<arg line='-DMATHLINK_INCLUDE_DIR=${checkout_directory}/MathLink/CompilerAdditions/mldev32/include' />
+			<arg line='-DMATHLINK_LIB_DIR=${checkout_directory}/MathLink/CompilerAdditions/mldev32/lib' />
+			<arg line='-DWOLFRAMLIBRARY_INCLUDE_DIR=${checkout_directory}/RuntimeLibrary/${system_id}' />
+			<arg line='-G &quot;${env.CMAKE_GENERATOR}&quot;' />
+			<arg value='${checkout_directory}/${component}' />
+        </exec>
+
+		<exec dir='${build.dir}' executable='${cmake.exe}' failonerror='true'>
+			<arg line='--build .' />
+			<arg line='--target paclet' />
+        </exec>
+
+	</target>
+
+	<target name='NativeLibrary.codeparser.postbuild' extensionOf='NativeLibrary.postbuild'>
+		<mkdir dir='${files_directory}/CodeParser' />
+		<copy todir='${files_directory}/CodeParser'>
+			<fileset dir='${build.dir}${file.separator}paclet${file.separator}CodeParser' />
+		</copy>
+		
+	</target>
+
+	<!--
+		Paclet (all platforms)
+	-->
+
+	<target name='Paclet.codeparser.init.custom' extensionOf='Paclet.init.custom'>
+
+		<!--
+			Prevent Paclet.clean from deleting files_directory,
+			since CopyAndUnarchiveArtifact just put all the paclet
+			files in there....
+		-->
+
+		<property name='keep.files_directory' value='true' />
+
+	</target>
+
+	<target name='Paclet.codeparser.prebuild' extensionOf='Paclet.prebuild' />
+
+	<target name='Paclet.codeparser.execute' extensionOf='Paclet.execute'>
+
+		<mathematica exe='${mathExe}' fresh='true' quit='true'><![CDATA[
+
+			Print["$Version: ", $Version];
+			Print["$InstallationDirectory: ", $InstallationDirectory];
+
+			Unset[$MessagePrePrint];
+			Needs["PacletManager`"];
+
+			src = AntProperty["files_directory"];
+			dest = FileNameJoin[AntProperty["output_directory"]];
+			PackPaclet[src, dest];
+
+			SetDirectory[dest]
+			If [TrueQ[FileExistsQ[FileNames["codeparser*.paclet"][[1]]]],
+				Print[FileNames["codeparser*.paclet"][[1]] " ... OK"],
+				AntFail["Paclet not produced" ]];
+
+		]]></mathematica>
+
+	</target>
+
+</project>

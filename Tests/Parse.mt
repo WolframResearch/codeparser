@@ -1,11 +1,11 @@
 
-path = FileNameJoin[{DirectoryName[$CurrentTestSource], "ASTTestUtils"}]
+path = FileNameJoin[{DirectoryName[$CurrentTestSource], "CodeParserTestUtils"}]
 PrependTo[$Path, path]
 
-Needs["ASTTestUtils`"]
+Needs["CodeParserTestUtils`"]
 
-Needs["AST`"]
-Needs["AST`Utils`"]
+Needs["CodeParser`"]
+Needs["CodeParser`Utils`"]
 
 
 
@@ -40,7 +40,7 @@ Test[
 ]
 
 Test[
-	ParseString[""]
+	CodeParse[""]
 	,
 	ContainerNode[String, {}, <||>]
 	,
@@ -261,7 +261,7 @@ Test[
 ]
 
 Test[
-	ParseString["2.Pi"]
+	CodeParse["2.Pi"]
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Times", <||>], {
@@ -282,7 +282,7 @@ Test[
 ]
 
 Test[
-	ParseString["10^^2.Pi"]
+	CodeParse["10^^2.Pi"]
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Times", <||>], {
@@ -999,7 +999,7 @@ Test[
 (*
 bug 364202
 <-> and \[TwoWayRule] had different precedences
-found by AST
+found by CodeParser
 *)
 Test[
 	"a > b <-> c"
@@ -2179,7 +2179,7 @@ Test[
 
 
 Test[
-	ParseString["a::"]
+	CodeParse["a::"]
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "MessageName", <||>], {
@@ -2293,7 +2293,7 @@ Test[
 
 
 Test[
-	ParseString["a/"]
+	CodeParse["a/"]
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Times", <||>], {
@@ -2305,7 +2305,7 @@ Test[
 ]
 
 Test[
-	ParseString["a-"]
+	CodeParse["a-"]
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Plus", <||>], {
@@ -2317,7 +2317,7 @@ Test[
 ]
 
 Test[
-	ParseString["a,b"]
+	CodeParse["a,b"]
 	,
 	ContainerNode[String, {
 		AbstractSyntaxErrorNode[AbstractSyntaxError`CommaTopLevel, {
@@ -2328,7 +2328,7 @@ Test[
 ]
 
 Test[
-	ParseString["()"]
+	CodeParse["()"]
 	,
 	ContainerNode[String, {
 		AbstractSyntaxErrorNode[AbstractSyntaxError`EmptyParens, {}, <|Source -> {{1, 1}, {1, 3}}|>]}, <||>]

@@ -1,16 +1,16 @@
 
-path = FileNameJoin[{DirectoryName[$CurrentTestSource], "ASTTestUtils"}]
+path = FileNameJoin[{DirectoryName[$CurrentTestSource], "CodeParserTestUtils"}]
 PrependTo[$Path, path]
 
-Needs["ASTTestUtils`"]
+Needs["CodeParserTestUtils`"]
 
-Needs["AST`"]
-Needs["AST`Utils`"]
+Needs["CodeParser`"]
+Needs["CodeParser`Utils`"]
 
 
 
 TestMatch[
-	ParseString["f["]
+	CodeParse["f["]
 	,
 	ContainerNode[String, {
 		CallNode[_, { _GroupMissingCloserNode }, _] }, <||>]
@@ -25,7 +25,7 @@ Malformed \[] characters
 Unrecognized \[] characters
 *)
 
-ast = ParseString["\"\\[.*\\]\""]
+ast = CodeParse["\"\\[.*\\]\""]
 
 child = ast[[2]][[1]]
 
@@ -77,7 +77,7 @@ Parsing <newline>23 should be fine, but parsing \n23 should fail
 *)
 
 (*
-Use "1\n23" here because "\n23" is parsed as a single expression by AST and as two expressions by the kernel
+Use "1\n23" here because "\n23" is parsed as a single expression by CodeParser and as two expressions by the kernel
 *)
 Test[
 	"1\n23"
@@ -90,7 +90,7 @@ Test[
 ]
 
 TestMatch[
-	ParseString["\\n23", ContainerNode[Hold, #[[1]], <||>]&]
+	CodeParse["\\n23", ContainerNode[Hold, #[[1]], <||>]&]
 	,
 	ContainerNode[Hold, {
 		ErrorNode[Token`Error`UnhandledCharacter, "\\n", _],
@@ -100,7 +100,7 @@ TestMatch[
 ]
 
 TestMatch[
-	ParseString["\\t23", ContainerNode[Hold, #[[1]], <||>]&]
+	CodeParse["\\t23", ContainerNode[Hold, #[[1]], <||>]&]
 	,
 	ContainerNode[Hold, {
 		ErrorNode[Token`Error`UnhandledCharacter, "\\t", _],
@@ -115,7 +115,7 @@ important that space after - is not in SyntaxErrorNode
 The  a - \t  and  b  are 2 separate expressions
 *)
 Test[
-	ConcreteParseString["a - \\tb"]
+	CodeConcreteParse["a - \\tb"]
 	,
 	ContainerNode[String, {
 		InfixNode[Times, {
@@ -132,7 +132,7 @@ Test[
 ]
 
 TestMatch[
-	ParseString["\\"]
+	CodeParse["\\"]
 	,
 	ContainerNode[String, {
 		ErrorNode[Token`Error`UnhandledCharacter, _, _] }, <||> ]
@@ -147,7 +147,7 @@ TestMatch[
 
 
 Test[
-	ParseString["(a[b[])"]
+	CodeParse["(a[b[])"]
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "a", <|Source -> {{1, 2}, {1, 3}}|>], {

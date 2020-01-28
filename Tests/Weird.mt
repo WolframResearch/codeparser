@@ -1,10 +1,10 @@
 
-path = FileNameJoin[{DirectoryName[$CurrentTestSource], "ASTTestUtils"}]
+path = FileNameJoin[{DirectoryName[$CurrentTestSource], "CodeParserTestUtils"}]
 PrependTo[$Path, path]
 
-Needs["ASTTestUtils`"]
+Needs["CodeParserTestUtils`"]
 
-Needs["AST`"]
+Needs["CodeParser`"]
 
 
 
@@ -72,7 +72,7 @@ Error
 *)
 
 TestMatch[
-	ParseString["\\[Integral] f \\[DifferentialD]"]
+	CodeParse["\\[Integral] f \\[DifferentialD]"]
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Integrate", <||>], {

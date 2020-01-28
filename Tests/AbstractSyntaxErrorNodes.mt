@@ -1,5 +1,5 @@
 
-Needs["AST`"]
+Needs["CodeParser`"]
 
 
 (*
@@ -7,7 +7,7 @@ OpenSquare:
 *)
 
 TestMatch[
-	ParseString[" [x] "]
+	CodeParse[" [x] "]
 	,
 	ContainerNode[String, {AbstractSyntaxErrorNode[AbstractSyntaxError`OpenSquare, _, _]}, _]
 	,
@@ -21,7 +21,7 @@ OpenParen:
 *)
 
 TestMatch[
-	ParseString[" (1,2,3) "]
+	CodeParse[" (1,2,3) "]
 	,
 	ContainerNode[String, {AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, _, _]}, _]
 	,
@@ -35,7 +35,7 @@ GroupMissingCloser:
 *)
 
 TestMatch[
-	ParseString["{"]
+	CodeParse["{"]
 	,
 	ContainerNode[String, {GroupMissingCloserNode[List, _, _]}, _]
 	,
@@ -44,7 +44,7 @@ TestMatch[
 
 
 TestMatch[
-	ParseString["<|"]
+	CodeParse["<|"]
 	,
 	ContainerNode[String, {GroupMissingCloserNode[Association, _, _]}, _]
 	,
@@ -52,7 +52,7 @@ TestMatch[
 ]
 
 TestMatch[
-	ParseString["\[LeftAngleBracket]"]
+	CodeParse["\[LeftAngleBracket]"]
 	,
 	ContainerNode[String, {GroupMissingCloserNode[AngleBracket, _, _]}, _]
 	,
@@ -61,7 +61,7 @@ TestMatch[
 
 
 TestMatch[
-	ParseString["\[LeftCeiling]"]
+	CodeParse["\[LeftCeiling]"]
 	,
 	ContainerNode[String, {GroupMissingCloserNode[Ceiling, _, _]}, _]
 	,
@@ -70,7 +70,7 @@ TestMatch[
 
 
 TestMatch[
-	ParseString["\[LeftFloor]"]
+	CodeParse["\[LeftFloor]"]
 	,
 	ContainerNode[String, {GroupMissingCloserNode[Floor, _, _]}, _]
 	,
@@ -78,7 +78,7 @@ TestMatch[
 ]
 
 TestMatch[
-	ParseString["\[LeftDoubleBracket]"]
+	CodeParse["\[LeftDoubleBracket]"]
 	,
 	ContainerNode[String, {GroupMissingCloserNode[GroupDoubleBracket, _, _]}, _]
 	,
@@ -86,7 +86,7 @@ TestMatch[
 ]
 
 TestMatch[
-	ParseString["\[LeftBracketingBar]"]
+	CodeParse["\[LeftBracketingBar]"]
 	,
 	ContainerNode[String, {GroupMissingCloserNode[BracketingBar, _, _]}, _]
 	,
@@ -94,7 +94,7 @@ TestMatch[
 ]
 
 TestMatch[
-	ParseString["\[LeftDoubleBracketingBar]"]
+	CodeParse["\[LeftDoubleBracketingBar]"]
 	,
 	ContainerNode[String, {GroupMissingCloserNode[DoubleBracketingBar, _, _]}, _]
 	,
@@ -102,7 +102,7 @@ TestMatch[
 ]
 
 TestMatch[
-	ParseString["("]
+	CodeParse["("]
 	,
 	ContainerNode[String, {GroupMissingCloserNode[GroupParen, _, _]}, _]
 	,
@@ -110,7 +110,7 @@ TestMatch[
 ]
 
 TestMatch[
-	ParseString["["]
+	CodeParse["["]
 	,
 	ContainerNode[String, {GroupMissingCloserNode[GroupSquare, _, _]}, _]
 	,
@@ -119,7 +119,7 @@ TestMatch[
 
 
 TestMatch[
-	ParseString["\\("]
+	CodeParse["\\("]
 	,
 	ContainerNode[String, {GroupMissingCloserNode[GroupLinearSyntaxParen, _, _]}, _]
 	,
@@ -139,7 +139,7 @@ LinearSyntaxBang:
 
 
 TestMatch[
-	ParseString["\\!123"]
+	CodeParse["\\!123"]
 	,
 	ContainerNode[String, {AbstractSyntaxErrorNode[AbstractSyntaxError`LinearSyntaxBang, _, _]}, _]
 	,

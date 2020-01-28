@@ -1,11 +1,11 @@
 
-path = FileNameJoin[{DirectoryName[$CurrentTestSource], "ASTTestUtils"}]
+path = FileNameJoin[{DirectoryName[$CurrentTestSource], "CodeParserTestUtils"}]
 PrependTo[$Path, path]
 
-Needs["ASTTestUtils`"]
+Needs["CodeParserTestUtils`"]
 
-Needs["AST`"]
-Needs["AST`Utils`"]
+Needs["CodeParser`"]
+Needs["CodeParser`Utils`"]
 
 
 (*
@@ -542,7 +542,7 @@ Test[
 verify that nested ImplicitTimes are not created
 *)
 TestMatch[
-	ConcreteParseString[";; ;; ;;"]
+	CodeConcreteParse[";; ;; ;;"]
 	,
 	ContainerNode[String, {
 		InfixNode[Times, {
@@ -562,7 +562,7 @@ TestMatch[
 
 
 Test[
-	ConcreteParseString["a ;; &"]
+	CodeConcreteParse["a ;; &"]
 	,
 	ContainerNode[String, {
 		PostfixNode[Function, {
@@ -578,7 +578,7 @@ Test[
 ]
 
 Test[
-	ConcreteParseString["a ;; \\t", f]
+	CodeConcreteParse["a ;; \\t", f]
 	,
 	f[{{BinaryNode[Span, {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],

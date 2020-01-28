@@ -754,7 +754,7 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) cons
     }
     Args.append(std::move(Right));
     
-    return NodePtr(new TernaryNode(SYMBOL_AST_TERNARYTILDE, std::move(Args)));
+    return NodePtr(new TernaryNode(SYMBOL_CODEPARSER_TERNARYTILDE, std::move(Args)));
 }
 
 //
@@ -1030,7 +1030,7 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext Ctxt)
             // Handle something like   \( a EOF
             //
             
-            auto group = NodePtr(new GroupMissingCloserNeedsReparseNode(SYMBOL_AST_GROUPLINEARSYNTAXPAREN, std::move(Args)));
+            auto group = NodePtr(new GroupMissingCloserNeedsReparseNode(SYMBOL_CODEPARSER_GROUPLINEARSYNTAXPAREN, std::move(Args)));
             
             return group;
         }
@@ -1044,7 +1044,7 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext Ctxt)
             
             TheParser->nextToken(Tok);
             
-            return NodePtr(new GroupNode(SYMBOL_AST_GROUPLINEARSYNTAXPAREN, std::move(Args)));
+            return NodePtr(new GroupNode(SYMBOL_CODEPARSER_GROUPLINEARSYNTAXPAREN, std::move(Args)));
         }
         
         //

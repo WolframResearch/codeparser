@@ -233,7 +233,7 @@ void LeafNode::print(std::ostream& s) const {
         
         auto& Sym = TokenToSymbol(Tok.Tok);
         
-        s << SYMBOL_AST_LIBRARY_MAKELEAFNODE->name() << "[";
+        s << SYMBOL_CODEPARSER_LIBRARY_MAKELEAFNODE->name() << "[";
         
         s << Sym->name();
         s << ", ";
@@ -254,7 +254,7 @@ void LeafNode::print(std::ostream& s) const {
     
     auto& Sym = TokenToSymbol(Tok.Tok);
     
-    s << SYMBOL_AST_LIBRARY_MAKELEAFNODE->name() << "[";
+    s << SYMBOL_CODEPARSER_LIBRARY_MAKELEAFNODE->name() << "[";
     
     s << Sym->name();
     s << ", ";
@@ -281,7 +281,7 @@ void ErrorNode::print(std::ostream& s) const {
         
         auto& Sym = TokenToSymbol(Tok.Tok);
         
-        s << SYMBOL_AST_LIBRARY_MAKEERRORNODE->name() << "[";
+        s << SYMBOL_CODEPARSER_LIBRARY_MAKEERRORNODE->name() << "[";
         
         s << Sym->name();
         s << ", ";
@@ -302,7 +302,7 @@ void ErrorNode::print(std::ostream& s) const {
     
     auto& Sym = TokenToSymbol(Tok.Tok);
     
-    s << SYMBOL_AST_LIBRARY_MAKEERRORNODE->name() << "[";
+    s << SYMBOL_CODEPARSER_LIBRARY_MAKEERRORNODE->name() << "[";
     
     s << Sym->name();
     s << ", ";
@@ -328,7 +328,7 @@ void CallNode::print(std::ostream& s) const {
     
     auto Src = getSource();
     
-    s << SYMBOL_AST_LIBRARY_MAKECALLNODE->name() << "[";
+    s << SYMBOL_CODEPARSER_LIBRARY_MAKECALLNODE->name() << "[";
     
     Head.print(s);
     s << ", ";
@@ -359,7 +359,7 @@ void SyntaxErrorNode::print(std::ostream& s) const {
     
     auto Src = getSource();
     
-    s << SYMBOL_AST_LIBRARY_MAKESYNTAXERRORNODE->name() << "[";
+    s << SYMBOL_CODEPARSER_LIBRARY_MAKESYNTAXERRORNODE->name() << "[";
     
     s << SyntaxErrorToString(Err);
     s << ", ";
@@ -412,9 +412,9 @@ void ListNode::print(std::ostream& s) const {
 
 void SourceCharacterNode::print(std::ostream& s) const {
     
-    s << SYMBOL_AST_LIBRARY_MAKESOURCECHARACTERNODE->name() << "[";
+    s << SYMBOL_CODEPARSER_LIBRARY_MAKESOURCECHARACTERNODE->name() << "[";
     
-    s << SYMBOL_AST_SOURCECHARACTER->name() << ", ";
+    s << SYMBOL_CODEPARSER_SOURCECHARACTER->name() << ", ";
     
     s << Char;
     
@@ -423,7 +423,7 @@ void SourceCharacterNode::print(std::ostream& s) const {
 
 void SafeStringNode::print(std::ostream& s) const {
     
-    s << SYMBOL_AST_LIBRARY_MAKESAFESTRINGNODE->name() << "[";
+    s << SYMBOL_CODEPARSER_LIBRARY_MAKESAFESTRINGNODE->name() << "[";
     
     s << "<<safe string that I'm too lazy to print>>";
     
@@ -518,7 +518,7 @@ void LeafNode::put(MLINK mlp) const {
     
     if ((TheParserSession->policy & INCLUDE_SOURCE) == INCLUDE_SOURCE) {
 
-        if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKELEAFNODE->name(), static_cast<int>(2 + 4))) {
+        if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKELEAFNODE->name(), static_cast<int>(2 + 4))) {
             assert(false);
         }
 
@@ -535,7 +535,7 @@ void LeafNode::put(MLINK mlp) const {
         return;
     }
 
-    if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKELEAFNODE->name(), static_cast<int>(2))) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKELEAFNODE->name(), static_cast<int>(2))) {
         assert(false);
     }
 
@@ -552,7 +552,7 @@ void ErrorNode::put(MLINK mlp) const {
     
     if ((TheParserSession->policy & INCLUDE_SOURCE) == INCLUDE_SOURCE) {
         
-        if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEERRORNODE->name(), static_cast<int>(2 + 4))) {
+        if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEERRORNODE->name(), static_cast<int>(2 + 4))) {
             assert(false);
         }
         
@@ -569,7 +569,7 @@ void ErrorNode::put(MLINK mlp) const {
         return;
     }
     
-    if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKEERRORNODE->name(), static_cast<int>(2))) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEERRORNODE->name(), static_cast<int>(2))) {
         assert(false);
     }
     
@@ -587,7 +587,7 @@ void CallNode::put(MLINK mlp) const {
     
     auto Src = getSource();
     
-    if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKECALLNODE->name(), static_cast<int>(2 + 4))) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKECALLNODE->name(), static_cast<int>(2 + 4))) {
         assert(false);
     }
     
@@ -602,7 +602,7 @@ void SyntaxErrorNode::put(MLINK mlp) const {
     
     auto Src = getSource();
     
-    if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKESYNTAXERRORNODE->name(), static_cast<int>(2 + 4))) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKESYNTAXERRORNODE->name(), static_cast<int>(2 + 4))) {
         assert(false);
     }
     
@@ -686,11 +686,11 @@ void ListNode::put(MLINK mlp) const {
 
 void SourceCharacterNode::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKESOURCECHARACTERNODE->name(), static_cast<int>(2))) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKESOURCECHARACTERNODE->name(), static_cast<int>(2))) {
         assert(false);
     }
     
-    if (!MLPutSymbol(mlp, SYMBOL_AST_SOURCECHARACTER->name())) {
+    if (!MLPutSymbol(mlp, SYMBOL_CODEPARSER_SOURCECHARACTER->name())) {
         assert(false);
     }
     
@@ -710,7 +710,7 @@ void SourceCharacterNode::put(MLINK mlp) const {
 
 void SafeStringNode::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_AST_LIBRARY_MAKESAFESTRINGNODE->name(), static_cast<int>(1))) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKESAFESTRINGNODE->name(), static_cast<int>(1))) {
         assert(false);
     }
     
