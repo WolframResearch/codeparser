@@ -86,3 +86,21 @@ TEST_F(CrashTest, Crash2) {
     SUCCEED();
 }
 
+TEST_F(CrashTest, Crash3) {
+    
+    const unsigned char arr[] = {'a', ':', 'b', '~', '1', ':', '2'};
+    
+    auto bufAndLen = BufferAndLength(arr, 7);
+    
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
+    
+    auto N = TheParserSession->parseExpressions();
+    
+    TheParserSession->releaseNode(N);
+    
+    TheParserSession->deinit();
+    
+    SUCCEED();
+}
+
+

@@ -43,7 +43,7 @@ TEST_F(APITest, Bug1) {
     
     TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
     
-    auto N = TheParserSession->parseLeaf(STRINGIFYMODE_NORMAL);
+    auto N = TheParserSession->concreteParseLeaf(STRINGIFYMODE_NORMAL);
     
     TheParserSession->releaseNode(N);
     

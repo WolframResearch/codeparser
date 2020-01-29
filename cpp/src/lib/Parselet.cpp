@@ -692,6 +692,7 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) cons
     //
     // FIXME: clear other flags here also?
     //
+    Ctxt.Flag &= ~(PARSER_INSIDE_COLON);
     Ctxt.Prec = PRECEDENCE_LOWEST;
     
     auto& tildeParselet = TheParser->findInfixParselet(TOKEN_TILDE);
