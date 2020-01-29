@@ -4,9 +4,12 @@ cmake_minimum_required(VERSION 3.0)
 project(codeparser)
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+include(WolframKernel)
 
 set(PACLET "CodeParser")
-set(WOLFRAMKERNEL /Applications/Mathematica.app/Contents/MacOS/WolframKernel CACHE FILEPATH "Path to WolframKernel")
+
+set(WOLFRAMKERNEL ${WOLFRAMKERNEL_DEFAULT} CACHE FILEPATH "Path to WolframKernel")
+
 set(BUILD_DOCS OFF CACHE BOOL "Build documentation")
 set(BUILD_EXE OFF CACHE BOOL "Build executable")
 set(BUILD_EXPR_LIB ON CACHE BOOL "Build expr library")
@@ -115,7 +118,6 @@ endforeach()
 #
 # Set VERSION_NUMBER, SYSTEMID, and PACLET_VERSION
 #
-include(WolframKernel)
 CheckWolframKernel()
 
 
@@ -257,17 +259,17 @@ endif(BUILD_EXPR_LIB)
 # Build CodeParser library
 #
 
-set(WOLFRAMLIBRARY_INCLUDE_DIR /Applications/Mathematica.app/Contents/SystemFiles/IncludeFiles/C CACHE FILEPATH "Path to WolframLibrary.h")
+set(WOLFRAMLIBRARY_INCLUDE_DIR ${WOLFRAMLIBRARY_INCLUDE_DIR_DEFAULT} CACHE FILEPATH "Path to WolframLibrary.h")
 
 message(STATUS "WOLFRAMLIBRARY_INCLUDE_DIR: ${WOLFRAMLIBRARY_INCLUDE_DIR}")
 
 if(USE_MATHLINK)
 
-set(MATHLINK_INCLUDE_DIR /Applications/Mathematica.app/Contents/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions CACHE FILEPATH "Path to mathlink.h")
+set(MATHLINK_INCLUDE_DIR ${MATHLINK_INCLUDE_DIR_DEFAULT} CACHE FILEPATH "Path to mathlink.h")
 
 message(STATUS "MATHLINK_INCLUDE_DIR: ${MATHLINK_INCLUDE_DIR}")
 
-set(MATHLINK_LIB_DIR /Applications/Mathematica.app/Contents/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions CACHE FILEPATH "Path to MathLink library")
+set(MATHLINK_LIB_DIR ${MATHLINK_LIB_DIR_DEFAULT} CACHE FILEPATH "Path to MathLink library")
 
 message(STATUS "MATHLINK_LIB_DIR: ${MATHLINK_LIB_DIR}")
 

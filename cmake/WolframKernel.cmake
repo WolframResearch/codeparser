@@ -1,4 +1,24 @@
 
+if(NOT DEFINED INSTALLATION_DIRECTORY)
+if(CMAKE_HOST_WIN32 OR CYGWIN)
+	set(INSTALLATION_DIRECTORY C:/Program Files/Wolfram Research/Mathematica/11.0/)
+elseif(CMAKE_HOST_APPLE)
+	set(INSTALLATION_DIRECTORY /Applications/Mathematica.app/Contents/)
+endif()
+endif()
+
+if(CMAKE_HOST_WIN32 OR CYGWIN)
+	set(WOLFRAMKERNEL_DEFAULT ${INSTALLATION_DIRECTORY}/WolframKernel)
+	set(WOLFRAMLIBRARY_INCLUDE_DIR_DEFAULT ${INSTALLATION_DIRECTORY}/SystemFiles/IncludeFiles/C)
+	set(MATHLINK_INCLUDE_DIR_DEFAULT ${INSTALLATION_DIRECTORY}/SystemFiles/Links/MathLink/DeveloperKit/Windows-x86-64/CompilerAdditions/mldev64/include)
+	set(MATHLINK_LIB_DIR_DEFAULT ${INSTALLATION_DIRECTORY}/SystemFiles/Links/MathLink/DeveloperKit/Windows-x86-64/CompilerAdditions/mldev64/lib)
+elseif (CMAKE_HOST_APPLE)
+	set(WOLFRAMKERNEL_DEFAULT ${INSTALLATION_DIRECTORY}/MacOS/WolframKernel)
+	set(WOLFRAMLIBRARY_INCLUDE_DIR_DEFAULT ${INSTALLATION_DIRECTORY}/SystemFiles/IncludeFiles/C)
+	set(MATHLINK_INCLUDE_DIR_DEFAULT ${INSTALLATION_DIRECTORY}/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions)
+	set(MATHLINK_LIB_DIR_DEFAULT ${INSTALLATION_DIRECTORY}/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions)
+endif()
+
 macro(CheckWolframKernel)
 	# get $VersionNumber
 	execute_process(
