@@ -431,7 +431,7 @@ MakeSyntaxIssue[tag_String, msg_String, severity_String, srcArgs___Integer, conf
 	SyntaxIssue[tag, msg, severity, <|Source->structureSrcArgs[srcArgs], ConfidenceLevel->confidence|>]
 
 MakeFormatIssue[tag_String, msg_String, severity_String, srcArgs___Integer, airyness_Real] :=
-	FormatIssue[tag, msg, severity, <|Source->structureSrcArgs[srcArgs], Format`AirynessLevel->airyness|>]
+	FormatIssue[tag, msg, severity, <|Source->structureSrcArgs[srcArgs], CodeFormatter`AirynessLevel->airyness|>]
 
 (*
 Only add CodeActions if there is at least 1
@@ -440,7 +440,7 @@ MakeSyntaxIssue[tag_String, msg_String, severity_String, srcArgs___Integer, conf
 	SyntaxIssue[tag, msg, severity, <|Source->structureSrcArgs[srcArgs], ConfidenceLevel->confidence, CodeActions->{actions}|>]
 
 MakeFormatIssue[tag_String, msg_String, severity_String, srcArgs___Integer, airyness_Real, actions:CodeAction[_, _, _]..] :=
-	FormatIssue[tag, msg, severity, <|Source->structureSrcArgs[srcArgs], Format`AirynessLevel->airyness, CodeActions->{actions}|>]
+	FormatIssue[tag, msg, severity, <|Source->structureSrcArgs[srcArgs], CodeFormatter`AirynessLevel->airyness, CodeActions->{actions}|>]
 
 
 MakeReplaceTextCodeAction[label_String, srcArgs___Integer, replacementText_String] :=

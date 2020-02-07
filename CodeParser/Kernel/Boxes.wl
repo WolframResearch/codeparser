@@ -18,15 +18,13 @@ Do not want to reimplement MakeExpression.
 
 *)
 
-boxPat = RowBox | TagBox
-
-CodeConcreteParse[{ boxs:(boxPat)[___]... }] :=
+CodeConcreteParseBox[boxs_List] :=
 Module[{children},
-  children = MapIndexed[parseBox[#1, {} ~Join~ #2]&, {boxs}];
+  children = MapIndexed[parseBox[#1, {} ~Join~ #2]&, boxs];
   ContainerNode[Box, children, <||>]
 ]
 
-CodeConcreteParse[box:boxPat[___]] :=
+CodeConcreteParseBox[box_] :=
 Module[{},
   ContainerNode[Box, {parseBox[box, {}]}, <||>]
 ]

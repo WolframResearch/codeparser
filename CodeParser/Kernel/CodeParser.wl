@@ -4,6 +4,8 @@ CodeParse
 
 CodeConcreteParse
 
+CodeConcreteParseBox
+
 CodeConcreteParseLeaf
 
 SafeString

@@ -324,7 +324,7 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
       (*
       There is no Intra in the position, so we can just use InsertNode
       *)
-      insertionNode = ConcreteParseLeaf[insertionText];
+      insertionNode = CodeConcreteParseLeaf[insertionText];
       If[FailureQ[insertionNode],
         Throw[insertionNode]
       ];
@@ -385,7 +385,7 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
       (*
       There is no Intra in the position, so we can just use InsertNode
       *)
-      insertionNode = ConcreteParseLeaf[insertionText];
+      insertionNode = CodeConcreteParseLeaf[insertionText];
       If[FailureQ[insertionNode],
         Throw[insertionNode]
       ];
@@ -454,7 +454,7 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
       (*
       There is no Intra in the position, so we can just use InsertNode
       *)
-      insertionNode = ConcreteParseLeaf[insertionText];
+      insertionNode = CodeConcreteParseLeaf[insertionText];
       If[FailureQ[insertionNode],
         Throw[insertionNode]
       ];
@@ -562,7 +562,7 @@ Module[{src, originalNodePos, cst, replacementNode, srcInter, srcIntra, replacem
       (*
       There is no Intra in the position, so we can just use ReplaceNode
       *)
-      replacementNode = ConcreteParseLeaf[replacementText];
+      replacementNode = CodeConcreteParseLeaf[replacementText];
       If[FailureQ[replacementNode],
         Throw[replacementNode]
       ];

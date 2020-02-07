@@ -14,7 +14,7 @@ Catch[
 Module[{},
 
 cst = Catch[
-   CodeConcreteParse[
+   CodeConcreteParseBox[
     box], {CodeParser`Boxes`Private`parseBox, 
      "Unhandled"} | {CodeParser`Boxes`Private`parseBox, RowBox, 
      CodeParser`Boxes`Private`Unhandled}, (Print[
@@ -37,7 +37,7 @@ Check[agg = CodeParser`Abstract`Aggregate[cst];,
 Check[ast = CodeParser`Abstract`Abstract[agg];, 
   Throw[{"abstract ", box, {name, n, i, j}}]];
 str = ToInputFormString[agg];
-If[! StringQ[str],
+If[!StringQ[str],
   If[MemberQ[Lookup[exceptions, name, {}], {i, j}], 
    Print[{"exception", {name, n, i, j}}]; Throw[continue]];
   If[FailureQ[str] && 
@@ -53,7 +53,7 @@ cst2 = CodeConcreteParse[str];
 agg2 = CodeParser`Abstract`Aggregate[cst2];
 agg = agg[[2]];
 agg2 = agg2[[2]];
-aggToCompare = agg /. {_Association -> <||>};
+aggToCompare = agg /. {_Association -> <||>, LeafNode[EndOfFile, _, _] -> Nothing};
 agg2ToCompare = 
   agg2 /. {_Association -> <||>, 
      Whitespace -> Token`Boxes`MultiWhitespace, 
