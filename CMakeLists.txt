@@ -5,11 +5,10 @@ project(codeparser)
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 include(WolframKernel)
+include(PacletInfo)
 
 set(PACLET "CodeParser")
-
 set(WOLFRAMKERNEL ${WOLFRAMKERNEL_DEFAULT} CACHE FILEPATH "Path to WolframKernel")
-
 set(BUILD_DOCS OFF CACHE BOOL "Build documentation")
 set(BUILD_EXE OFF CACHE BOOL "Build executable")
 set(BUILD_EXPR_LIB ON CACHE BOOL "Build expr library")
@@ -119,6 +118,7 @@ endforeach()
 # Set VERSION_NUMBER, SYSTEMID, and PACLET_VERSION
 #
 CheckWolframKernel()
+CheckPacletInfo()
 
 
 if(BUILD_EXPR_LIB)
