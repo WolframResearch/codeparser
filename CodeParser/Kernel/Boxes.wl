@@ -986,6 +986,48 @@ Module[{implicitsRemoved},
   toStandardFormBoxes[implicitsRemoved]
 ]]
 
+ToStandardFormBoxes[ContainerNode[Box, {cst1_, LeafNode[Token`Newline, newlineStr_, _], cst2_}, _]] :=
+Block[{$RecursionLimit = Infinity},
+Module[{implicitsRemoved1, implicitsRemoved2},
+
+  implicitsRemoved1 = DeleteCases[cst1, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity];
+  implicitsRemoved2 = DeleteCases[cst2, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity];
+
+  { toStandardFormBoxes[implicitsRemoved1], newlineStr, toStandardFormBoxes[implicitsRemoved2] }
+]]
+
+ToStandardFormBoxes[ContainerNode[Box, {
+  cst1_, LeafNode[Token`Newline, newlineStr1_, _],
+  cst2_, LeafNode[Token`Newline, newlineStr2_, _], cst3_}, _]] :=
+Block[{$RecursionLimit = Infinity},
+Module[{implicitsRemoved1, implicitsRemoved2, implicitsRemoved3},
+
+  implicitsRemoved1 = DeleteCases[cst1, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity];
+  implicitsRemoved2 = DeleteCases[cst2, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity];
+  implicitsRemoved3 = DeleteCases[cst3, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity];
+
+  { toStandardFormBoxes[implicitsRemoved1], newlineStr1,
+    toStandardFormBoxes[implicitsRemoved2], newlineStr2,
+    toStandardFormBoxes[implicitsRemoved3] }
+]]
+
+ToStandardFormBoxes[ContainerNode[Box, {
+  cst1_, LeafNode[Token`Newline, newlineStr1_, _],
+  cst2_, LeafNode[Token`Newline, newlineStr2_, _],
+  cst3_, LeafNode[Token`Newline, newlineStr3_, _], cst4_}, _]] :=
+Block[{$RecursionLimit = Infinity},
+Module[{implicitsRemoved1, implicitsRemoved2, implicitsRemoved3, implicitsRemoved4},
+
+  implicitsRemoved1 = DeleteCases[cst1, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity];
+  implicitsRemoved2 = DeleteCases[cst2, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity];
+  implicitsRemoved3 = DeleteCases[cst3, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity];
+  implicitsRemoved4 = DeleteCases[cst4, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity];
+
+  { toStandardFormBoxes[implicitsRemoved1], newlineStr1,
+    toStandardFormBoxes[implicitsRemoved2], newlineStr2,
+    toStandardFormBoxes[implicitsRemoved3], newlineStr3,
+    toStandardFormBoxes[implicitsRemoved4]}
+]]
 
 
 
