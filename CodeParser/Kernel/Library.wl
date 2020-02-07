@@ -101,8 +101,11 @@ $CodeParserLib := $CodeParserLib =
 Catch[
 Module[{res},
 	
-	If[$VersionNumber >= 12.1,
-		LibraryLoad["expr"];
+	(*
+	If CodeParser was built with an earlier version, then expr lib may not exist
+	*)
+	If[FileExistsQ[$exprLib],
+		LibraryLoad[$exprLib];
 	];
 
 	res = FindLibrary["CodeParser"];

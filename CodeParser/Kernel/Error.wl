@@ -73,8 +73,7 @@ Do not return the previous children, because they are uselss any way.
 But return the opener to make ToString stuff easier
 *)
 reparseMissingCloserNode[GroupMissingCloserNeedsReparseNode[tag_, children_, dataIn_], bytes_List] :=
-Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str, leaves,
-  ignoredNodesSrcMemberFunc},
+Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str, leaves},
 
   str = SafeString[bytes];
 

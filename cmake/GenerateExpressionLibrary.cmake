@@ -23,5 +23,5 @@ execute_process(
 )
 
 if(NOT ${GENERATEEXPRESSIONLIBRARY_RESULT} EQUAL "0")
-  message(WARNING "Bad exit code from GENERATEExpressionLibrary script: ${GENERATEEXPRESSIONLIBRARY_RESULT}; Continuing")
+  message(WARNING "Bad exit code from GenerateExpressionLibrary script: ${GENERATEEXPRESSIONLIBRARY_RESULT}; Continuing")
 endif()
