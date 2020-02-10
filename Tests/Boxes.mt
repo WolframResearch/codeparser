@@ -2,7 +2,7 @@
 Needs["CodeParser`"]
 
 Test[
-	CodeConcreteParse[RowBox[{"<<", "ExampleData`FunctionWithAssert`"}]]
+	CodeConcreteParseBox[RowBox[{"<<", "ExampleData`FunctionWithAssert`"}]]
 	,
 	ContainerNode[Box, {
 		PrefixNode[Get, {
@@ -13,7 +13,7 @@ Test[
 ]
 
 Test[
-	CodeConcreteParse[RowBox[{"a", " ", "b"}]]
+	CodeConcreteParseBox[RowBox[{"a", " ", "b"}]]
 	,
 	ContainerNode[Box, {
 		InfixNode[Times, {
@@ -31,7 +31,7 @@ Test[
 
 box = TagBox["a", Function[BoxForm`e$, BoxForm`e$]]
 
-cst = CodeConcreteParse[box]
+cst = CodeConcreteParseBox[box]
 
 Test[
 	cst
@@ -98,7 +98,7 @@ TestMatch[
 box = RowBox[{"<<", "ExampleData`FunctionWithAssert`", " "}]
  
 Test[
-	CodeConcreteParse[box]
+	CodeConcreteParseBox[box]
 	,
 	ContainerNode[Box, {
 		PrefixNode[Get, {
@@ -115,7 +115,7 @@ Test[
 box = RowBox[{"a", "::", "b", "::", "c", "::", "d"}]
  
 Test[
-	CodeConcreteParse[box]
+	CodeConcreteParseBox[box]
 	,
 	ContainerNode[Box, {
 		InfixNode[MessageName, {
@@ -139,7 +139,7 @@ Test[
 box = RowBox[{"\[Integral]", RowBox[{RowBox[{"Sin", "[", "x", "]"}], RowBox[{"\[DifferentialD]", "x"}]}]}]
  
 Test[
-	CodeConcreteParse[box]
+	CodeConcreteParseBox[box]
 	,
 	ContainerNode[Box, {
 		PrefixBinaryNode[Integrate, {
