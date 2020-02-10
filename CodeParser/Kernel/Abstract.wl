@@ -831,7 +831,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		CallNode[LeafNode[Symbol, "EndPackage" | "End" | "System`Private`RestoreContextPath", _], {}, _],
 			currentOperator = operatorStack["Pop"];
 			If[!MatchQ[currentOperator, matchingOperatorPatterns[x]],
-				AppendTo[issues, SyntaxIssue["Package", "There are unbalanced Package directives.", "Error", <| Source -> x[[3, Key[Source] ]], ConfidenceLevel -> 1.0 |> ]];
+				AppendTo[issues, SyntaxIssue["Package", "There are unbalanced directives.", "Error", <| Source -> x[[3, Key[Source] ]], ConfidenceLevel -> 1.0 |> ]];
 				Throw[{list, issues}];
 			];
 			currentList = nodeListStack["Pop"];
@@ -848,7 +848,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "EndPackage" | "End" | "System`Private`RestoreContextPath", _], {}, _], LeafNode[Symbol, "Null", _]}, _],
 			currentOperator = operatorStack["Pop"];
 			If[!MatchQ[currentOperator, matchingOperatorPatterns[x[[2, 1]] ]],
-				AppendTo[issues, SyntaxIssue["Package", "There are unbalanced Package directives.", "Error", <| Source -> x[[2, 1, 3, Key[Source] ]], ConfidenceLevel -> 1.0 |>]];
+				AppendTo[issues, SyntaxIssue["Package", "There are unbalanced directives.", "Error", <| Source -> x[[2, 1, 3, Key[Source] ]], ConfidenceLevel -> 1.0 |>]];
 				Throw[{list, issues}];
 			];
 			currentList = nodeListStack["Pop"];
@@ -870,7 +870,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 			Throw[{list, issues}];
 		,
 		CallNode[LeafNode[Symbol, "BeginPackage" | "Begin" | "System`Private`NewContextPath" | "EndPackage" | "End" | "System`Private`RestoreContextPath", _], _, _],
-			AppendTo[issues, SyntaxIssue["Package", "Package directive does not have correct syntax.", "Error", <| Source -> x[[3, Key[Source] ]], ConfidenceLevel -> 1.0 |> ]];
+			AppendTo[issues, SyntaxIssue["Package", "Directive does not have correct syntax.", "Error", <| Source -> x[[3, Key[Source] ]], ConfidenceLevel -> 1.0 |> ]];
 			Throw[{list, issues}];
 		,
 		(*
@@ -888,7 +888,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		All other calls to recognized directives, with ;
 		*)
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "BeginPackage" | "Begin" | "System`Private`NewContextPath" | "EndPackage" | "End" | "System`Private`RestoreContextPath", _], _, _], LeafNode[Symbol, "Null", _]}, _],
-			AppendTo[issues, SyntaxIssue["Package", "Package directive does not have correct syntax.", "Error", <| Source -> x[[2, 1, 3, Key[Source] ]], ConfidenceLevel -> 1.0 |>]];
+			AppendTo[issues, SyntaxIssue["Package", "Directive does not have correct syntax.", "Error", <| Source -> x[[2, 1, 3, Key[Source] ]], ConfidenceLevel -> 1.0 |>]];
 			Throw[{list, issues}];
 		,
 		(*
@@ -910,15 +910,15 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 	{i, 1, Length[list]}
 	];
 	If[operatorStack["Length"] != 1,
-		AppendTo[issues, SyntaxIssue["Package", "There are unbalanced Package directives.", "Error", <| Source -> list[[1, 3, Key[Source] ]], ConfidenceLevel -> 1.0 |>]];
+		AppendTo[issues, SyntaxIssue["Package", "There are unbalanced directives.", "Error", <| Source -> list[[1, 3, Key[Source] ]], ConfidenceLevel -> 1.0 |>]];
 		Throw[{list, issues}];
 	];
 	If[operatorStack["Peek"] =!= None,
-		AppendTo[issues, SyntaxIssue["Package", "There are unbalanced Package directives.", "Error", <| Source -> list[[1, 3, Key[Source] ]], ConfidenceLevel -> 1.0 |>]];
+		AppendTo[issues, SyntaxIssue["Package", "There are unbalanced directives.", "Error", <| Source -> list[[1, 3, Key[Source] ]], ConfidenceLevel -> 1.0 |>]];
 		Throw[{list, issues}];
 	];
 	If[nodeListStack["Length"] != 1,
-		AppendTo[issues, SyntaxIssue["Package", "There are unbalanced Package directives.", "Error", <| Source -> list[[1, 3, Key[Source] ]], ConfidenceLevel -> 1.0 |>]];
+		AppendTo[issues, SyntaxIssue["Package", "There are unbalanced directives.", "Error", <| Source -> list[[1, 3, Key[Source] ]], ConfidenceLevel -> 1.0 |>]];
 		Throw[{list, issues}];
 	];
 	peek = nodeListStack["Peek"];
