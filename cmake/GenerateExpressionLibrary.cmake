@@ -14,7 +14,7 @@
 
 execute_process(
   COMMAND
-    ${WOLFRAMKERNEL} -noinit -noprompt -script ${GENERATEEXPRESSIONLIBRARY_WL_SCRIPT} -buildDir ${BUILDDIR}
+    ${WOLFRAMKERNEL} -noinit -noprompt -nopaclet -script ${GENERATEEXPRESSIONLIBRARY_WL_SCRIPT} -buildDir ${BUILDDIR}
   TIMEOUT
     # make this much longer than 10 seconds, duh
     600

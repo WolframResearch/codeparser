@@ -14,7 +14,7 @@
 
 execute_process(
   COMMAND
-    ${WOLFRAMKERNEL} -noinit -noprompt -script ${CREATEPACLETARCHIVE_WL_SCRIPT} -pacletDir ${PACLETDIR}
+    ${WOLFRAMKERNEL} -noinit -noprompt -nopaclet -script ${CREATEPACLETARCHIVE_WL_SCRIPT} -pacletDir ${PACLETDIR}
   TIMEOUT
     10
   RESULT_VARIABLE

@@ -23,7 +23,7 @@ macro(CheckWolframKernel)
 	# get $VersionNumber
 	execute_process(
 		COMMAND
-			${WOLFRAMKERNEL} -noinit -noprompt -run Print[OutputForm[Floor[100\ \$VersionNumber\ +\ \$ReleaseNumber]]]\;Exit[]
+			${WOLFRAMKERNEL} -noinit -noprompt -nopaclet -run Print[OutputForm[Floor[100\ \$VersionNumber\ +\ \$ReleaseNumber]]]\;Exit[]
 		OUTPUT_VARIABLE
 			VERSION_NUMBER
 		OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -48,7 +48,7 @@ macro(CheckWolframKernel)
 	# get $SystemID
 	execute_process(
 		COMMAND
-			${WOLFRAMKERNEL} -noinit -noprompt -run Print[OutputForm[\$SystemID]]\;Exit[]
+			${WOLFRAMKERNEL} -noinit -noprompt -nopaclet -run Print[OutputForm[\$SystemID]]\;Exit[]
 		OUTPUT_VARIABLE
 			SYSTEMID
 		OUTPUT_STRIP_TRAILING_WHITESPACE

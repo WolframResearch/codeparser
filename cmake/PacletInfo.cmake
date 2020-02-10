@@ -9,7 +9,7 @@ macro(CheckPacletInfo)
     #
     execute_process(
       COMMAND
-        ${WOLFRAMKERNEL} -noinit -noprompt -run Print[OutputForm[Version\ /.\ List\ @@\ Get["${PACLETINFO_SOURCE}"]]]\;Exit[]
+        ${WOLFRAMKERNEL} -noinit -noprompt -nopaclet -run Print[OutputForm[Version\ /.\ List\ @@\ Get["${PACLETINFO_SOURCE}"]]]\;Exit[]
       OUTPUT_VARIABLE
         PACLET_VERSION
       OUTPUT_STRIP_TRAILING_WHITESPACE

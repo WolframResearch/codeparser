@@ -14,7 +14,7 @@
 
 execute_process(
   COMMAND
-    ${WOLFRAMKERNEL} -noinit -noprompt -script ${GENERATESOURCES_WL_SCRIPT} -buildDir ${BUILDDIR}
+    ${WOLFRAMKERNEL} -noinit -noprompt -nopaclet -script ${GENERATESOURCES_WL_SCRIPT} -buildDir ${BUILDDIR}
   TIMEOUT
     10
   RESULT_VARIABLE
