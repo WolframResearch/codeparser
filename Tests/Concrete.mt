@@ -94,7 +94,7 @@ Test[
 	ContainerNode[String, {
 		GroupNode[List, {
 			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
-			LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 1}}|>],
+			LeafNode[Token`Newline, "\n", <|Source -> {{1, 2}, {2, 1}}|>],
 			BinaryNode[PatternTest, {
 				ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{2, 1}, {2, 1}}|>],
 				LeafNode[Token`Question, "?", <|Source -> {{2, 1}, {2, 2}}|>],
@@ -333,7 +333,7 @@ Test[
 				LeafNode[Symbol, "a", <|Source -> {{1, 2}, {1, 3}}|>],
 				LeafNode[Token`Semi, ";", <|Source -> {{1, 3}, {1, 4}}|>],
 				LeafNode[Token`Fake`ImplicitNull, "", <|Source -> {{1, 4}, {1, 4}}|>]}, <|Source -> {{1, 2}, {1, 4}}|>],
-			LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 1}}|>],
+			LeafNode[Token`Newline, "\n", <|Source -> {{1, 4}, {2, 1}}|>],
 			LeafNode[Token`CloseCurly, "}", <|Source -> {{2, 1}, {2, 2}}|>]}, <|Source -> {{1, 1}, {2, 2}}|>] }, <||>]
 	,
 	TestID->"Concrete-20190914-X0P1Q6"

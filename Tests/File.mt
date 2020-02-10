@@ -23,12 +23,12 @@ Test[
 	cst
 	,
 	ContainerNode[File, {
-		LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 1}}|>],
+		LeafNode[Token`Newline, "\n", <|Source -> {{1, 1}, {2, 1}}|>],
 		InfixNode[Plus, {
 			LeafNode[Integer, "1", <|Source -> {{2, 1}, {2, 2}}|>],
 			LeafNode[Token`Plus, "+", <|Source -> {{2, 2}, {2, 3}}|>],
     		LeafNode[Integer, "1", <|Source -> {{2, 3}, {2, 4}}|>] }, <|Source -> {{2, 1}, {2, 4}}|>],
-    	LeafNode[Token`Newline, "\n", <|Source -> {{3, 0}, {3, 1}}|>] }, <|Source -> {{2, 0}, {3, 1}}|>]
+    	LeafNode[Token`Newline, "\n", <|Source -> {{2, 4}, {3, 1}}|>] }, <|Source -> {{1, 1}, {3, 1}}|>]
 	,
 	TestID->"File-20181230-J0G3I8"
 ]
@@ -77,12 +77,12 @@ cst = CodeConcreteParse[File[carriagereturn]]
 TestMatch[
 	cst
 	,
-	ContainerNode[File, {LeafNode[Token`Newline, "\r", <|Source -> {{2, 0}, {2, 1}}|>],
-					LeafNode[Token`Newline, "\r", <|Source -> {{3, 0}, {3, 1}}|>],
+	ContainerNode[File, {LeafNode[Token`Newline, "\r", <|Source -> {{1, 1}, {2, 1}}|>],
+					LeafNode[Token`Newline, "\r", <|Source -> {{2, 1}, {3, 1}}|>],
 					LeafNode[Symbol, "A", <|Source -> {{3, 1}, {3, 2}}|>]},
 										<| SyntaxIssues->{
 											FormatIssue["UnexpectedCarriageReturn", _, _, _],
-											FormatIssue["UnexpectedCarriageReturn", _, _, _]}, Source -> {{2, 0}, {3, 2}}|>]
+											FormatIssue["UnexpectedCarriageReturn", _, _, _]}, Source -> {{1, 1}, {3, 2}}|>]
 	,
 	TestID->"File-20190422-C6U5B6"
 ]
@@ -122,7 +122,7 @@ TestMatch[
 	ContainerNode[File, {
 		CallNode[LeafNode[Symbol, "BeginPackage", <|Source -> {{2, 1}, {2, 13}}|>], {
 			LeafNode[String, "\"Foo.m`\"", <|Source -> {{2, 14}, {2, 22}}|>]}, <|Source -> {{2, 1}, {2, 23}}|>], 
-		CallNode[LeafNode[Symbol, "EndPackage", <|Source -> {{4, 1}, {4, 11}}|>], {}, <|Source -> {{4, 1}, {4, 13}}|>]}, <|Source -> {{2, 0}, {6, 1}}, AbstractSyntaxIssues -> {SyntaxIssue["Package", "Package directive does not have correct syntax.", "Error", _]}|>]
+		CallNode[LeafNode[Symbol, "EndPackage", <|Source -> {{4, 1}, {4, 11}}|>], {}, <|Source -> {{4, 1}, {4, 13}}|>]}, <|Source -> {{1, 1}, {6, 1}}, AbstractSyntaxIssues -> {SyntaxIssue["Package", "Directive does not have correct syntax.", "Error", _]}|>]
 	,
 	TestID->"File-20190601-E8O7Y2"
 ]
@@ -144,11 +144,11 @@ Test[
 	CodeTokenize[File[sample]]
 	,
 	{
-		LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 1}}|>], 
+		LeafNode[Token`Newline, "\n", <|Source -> {{1, 1}, {2, 1}}|>], 
 		LeafNode[Integer, "1", <|Source -> {{2, 1}, {2, 2}}|>], 
 		LeafNode[Token`Plus, "+", <|Source -> {{2, 2}, {2, 3}}|>], 
 		LeafNode[Integer, "1", <|Source -> {{2, 3}, {2, 4}}|>], 
-		LeafNode[Token`Newline, "\n", <|Source -> {{3, 0}, {3, 1}}|>]}
+		LeafNode[Token`Newline, "\n", <|Source -> {{2, 4}, {3, 1}}|>]}
 	,
 	TestID->"File-20181230-Q3C4N0"
 ]
@@ -217,12 +217,12 @@ TestMatch[
 	cst
 	,
 	ContainerNode[File, {
-		LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 1}}|>],
+		LeafNode[Token`Newline, "\n", <|Source -> {{1, 1}, {2, 1}}|>],
 		LeafNode[String, "\"data\\\\\n\"", <|Source -> {{2, 1}, {3, 2}}|>],
-		LeafNode[Token`Newline, "\n", <|Source -> {{4, 0}, {4, 1}}|>],
-		LeafNode[Token`Newline, "\n", <|Source -> {{5, 0}, {5, 1}}|>],
+		LeafNode[Token`Newline, "\n", <|Source -> {{3, 2}, {4, 1}}|>],
+		LeafNode[Token`Newline, "\n", <|Source -> {{4, 1}, {5, 1}}|>],
 		LeafNode[Symbol, "x", <|Source -> {{5, 1}, {5, 2}}|>],
-		LeafNode[Token`Newline, "\n", <|Source -> {{6, 0}, {6, 1}}|>]}, <|Source -> {{2, 0}, {6, 1}}|>]
+		LeafNode[Token`Newline, "\n", <|Source -> {{5, 2}, {6, 1}}|>]}, <|Source -> {{1, 1}, {6, 1}}|>]
 	,
 	TestID->"File-20190804-K7V2D8"
 ]
@@ -243,14 +243,14 @@ TestMatch[
 	ContainerNode[File, {
 		GroupNode[List, {
 			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
-			LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 1}}|>],
+			LeafNode[Token`Newline, "\n", <|Source -> {{1, 2}, {2, 1}}|>],
 			LeafNode[Whitespace, "\t", <|Source -> {{2, 1}, {2, 2}}|>],
 			LeafNode[Integer, "1", <|Source -> {{2, 2}, {2, 3}}|>],
 			LeafNode[Token`LineContinuation, "\\\n", <|Source -> {{2, 3}, {3, 1}}|>],
 			LeafNode[Token`CloseCurly, "}", <|Source -> {{3, 1}, {3, 2}}|>]}, <|Source -> {{1, 1}, {3, 2}}|>]},
 		<|	SyntaxIssues -> {FormatIssue["UnexpectedLineContinuation", "Unexpected line continuation.", "Formatting",
 								<|	Source -> {{2, 3}, {2, 4}},
-									Format`AirynessLevel -> 0.,
+									CodeFormatter`AirynessLevel -> 0.,
 									CodeActions -> {CodeAction["Delete \\", DeleteText, <|Source -> {{2, 3}, {2, 4}}|>]}|>]},
 			Source -> {{1, 1}, {3, 2}}|>]
 	,

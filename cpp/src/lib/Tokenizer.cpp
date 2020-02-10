@@ -65,16 +65,8 @@ Token Tokenizer::nextToken0(NextCharacterPolicy policy) {
             return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         case '\t':
             return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
-        case '\n': case '\r': {
-            
-            //
-            // ignore tokenStartLoc
-            //
-            
-            auto newlineLoc = TheByteDecoder->SrcLoc;
-            
-            return Token(TOKEN_NEWLINE, getTokenBufferAndLength(tokenStartBuf), Source(SourceLocation(newlineLoc.Line, 0), newlineLoc));
-        }
+        case '\n': case '\r':
+            return Token(TOKEN_NEWLINE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         case '\v': case '\f':
             return handleStrangeWhitespace(tokenStartBuf, tokenStartLoc, c, policy);
         case ' ':
@@ -177,13 +169,7 @@ Token Tokenizer::nextToken0(NextCharacterPolicy policy) {
                 
             } else if (c.isMBNewline()) {
                 
-                //
-                // ignore tokenStartLoc
-                //
-                
-                auto newlineLoc = TheByteDecoder->SrcLoc;
-                
-                return Token(TOKEN_NEWLINE, getTokenBufferAndLength(tokenStartBuf), Source(SourceLocation(newlineLoc.Line, 0), newlineLoc));
+                return Token(TOKEN_NEWLINE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                 
             } else if (c.isMBPunctuation()) {
                 
