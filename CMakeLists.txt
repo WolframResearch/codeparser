@@ -62,12 +62,12 @@ set(WL_GENERATE_EXPRLIB_SOURCES
 	${CMAKE_SOURCE_DIR}/CodeParser/Generate/GenerateExpressionLibrary.wl
 )
 
-set(WL_GENERATE_PACKPACLET_SOURCES
-	${CMAKE_SOURCE_DIR}/CodeParser/Generate/PackPaclet.wl
+set(WL_GENERATE_CREATEPACLETARCHIVE_SOURCES
+	${CMAKE_SOURCE_DIR}/${PACLET}/Generate/CreatePacletArchive.wl
 )
 
 set(PACLETINFO_SOURCE
-	${CMAKE_SOURCE_DIR}/CodeParser/PacletInfo.m
+	${CMAKE_SOURCE_DIR}/${PACLET}/PacletInfo.m
 )
 
 set(WL_DATA_SOURCES
@@ -508,7 +508,7 @@ set(PACLET_SOURCES
 	${COPIED_WL_PACLET_SOURCES}
 	generated-srcs
 	codeparser-lib
-	${WL_GENERATE_PACKPACLET_SOURCES}
+	${WL_GENERATE_CREATEPACLETARCHIVE_SOURCES}
 )
 
 if(BUILD_EXPR_LIB)
@@ -530,7 +530,7 @@ add_custom_target(paclet
 )
 
 #
-# Pack the paclet
+# Create the paclet archive
 #
 add_custom_command(
 	OUTPUT
@@ -538,7 +538,7 @@ add_custom_command(
 	DEPENDS
 		${PACLET_SOURCES}
 	COMMAND
-		${CMAKE_COMMAND} -DPACKPACLET_WL_SCRIPT=${CMAKE_SOURCE_DIR}/${PACLET}/Generate/PackPaclet.wl -DPACLETDIR=${CMAKE_BINARY_DIR}/paclet/${PACLET} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -P ${PROJECT_SOURCE_DIR}/cmake/PackPaclet.cmake
+		${CMAKE_COMMAND} -DCREATEPACLETARCHIVE_WL_SCRIPT=${CMAKE_SOURCE_DIR}/${PACLET}/Generate/CreatePacletArchive.wl -DPACLETDIR=${CMAKE_BINARY_DIR}/paclet/${PACLET} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -P ${PROJECT_SOURCE_DIR}/cmake/CreatePacletArchive.cmake
 	VERBATIM
 	WORKING_DIRECTORY
 		${CMAKE_SOURCE_DIR}

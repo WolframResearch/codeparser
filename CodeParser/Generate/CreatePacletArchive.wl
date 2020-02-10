@@ -1,4 +1,4 @@
-BeginPackage["CodeTools`Generate`PackPaclet`"]
+BeginPackage["CodeTools`Generate`CreatePacletArchive`"]
 
 Begin["`Private`"]
 
@@ -21,7 +21,7 @@ If[FileType[pacletDir] =!= Directory,
 ]
 
 
-Print[OutputForm["Calling PackPaclet..."]]
+Print[OutputForm["Calling CreatePacletArchive..."]]
 
 If[$VersionNumber >= 12.1,
   res = System`CreatePacletArchive[pacletDir]

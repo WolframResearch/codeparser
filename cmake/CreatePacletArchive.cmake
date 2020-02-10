@@ -14,13 +14,13 @@
 
 execute_process(
   COMMAND
-    ${WOLFRAMKERNEL} -noinit -noprompt -script ${PACKPACLET_WL_SCRIPT} -pacletDir ${PACLETDIR}
+    ${WOLFRAMKERNEL} -noinit -noprompt -script ${CREATEPACLETARCHIVE_WL_SCRIPT} -pacletDir ${PACLETDIR}
   TIMEOUT
     10
   RESULT_VARIABLE
-    PACKPACLET_RESULT
+    CREATEPACLETARCHIVE_RESULT
 )
 
-if(NOT ${PACKPACLET_RESULT} EQUAL "0")
-  message(WARNING "Bad exit code from PackPaclet script: ${PACKPACLET_RESULT}; Continuing")
+if(NOT ${CREATEPACLETARCHIVE_RESULT} EQUAL "0")
+  message(WARNING "Bad exit code from CreatePacletArchive script: ${CREATEPACLETARCHIVE_RESULT}; Continuing")
 endif()
