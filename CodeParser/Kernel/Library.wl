@@ -2,11 +2,7 @@ BeginPackage["CodeParser`Library`"]
 
 setupLibraries
 
-loadFunc
-
 loadAllFuncs
-
-newestLinkObject
 
 libraryFunctionWrapper
 
@@ -92,9 +88,7 @@ Needs["CodeParser`"]
 If[$VersionNumber >= 12.1,
 	Needs["CompiledLibrary`"] (* for CompiledLibrary, etc. *)
 ]
-If[$VersionNumber < 12.1,
-	Needs["PacletManager`"] (* for PacletInformation *)
-]
+Needs["PacletManager`"] (* for PacletInformation *)
 
 
 $CodeParserLib := $CodeParserLib =
