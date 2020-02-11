@@ -62,7 +62,7 @@ assignmentPat = "^[a-zA-Z$].*(:?\\=).*$"
 
 
 
-chunkPat = RegularExpression["("<>annotationPat<>")|("<>directivePat<>")|("<>assignmentPat<>")"]
+chunkPat = RegularExpression["(?m)("<>annotationPat<>")|("<>directivePat<>")|("<>assignmentPat<>")"]
 
 
 (*
