@@ -1,9 +1,11 @@
 
 if(NOT DEFINED INSTALLATION_DIRECTORY)
 if(CMAKE_HOST_WIN32 OR CYGWIN)
-	set(INSTALLATION_DIRECTORY C:/Program Files/Wolfram Research/Mathematica/11.0/)
+	set(INSTALLATION_DIRECTORY C:/Program Files/Wolfram Research/Mathematica/12.0/)
 elseif(CMAKE_HOST_APPLE)
 	set(INSTALLATION_DIRECTORY /Applications/Mathematica.app/Contents/)
+else()
+	set(INSTALLATION_DIRECTORY /usr/local/Wolfram/Mathematica/12.0/)
 endif()
 endif()
 
