@@ -41,5 +41,6 @@ public:
     
     static uint8_t toDigit(unsigned char val);
     
+    static SourceConvention parseSourceConvention(std::string s);
 };
 

@@ -314,31 +314,25 @@ SyntaxError TokenErrorToSyntaxError(TokenEnum T) {
 // SourceLocation
 //
 
-SourceLocation::SourceLocation() : Line(1), Column(1) {}
 
-SourceLocation::SourceLocation(uint32_t Line, uint32_t Column) : Line(Line), Column(Column) {}
 
-SourceLocation SourceLocation::operator+(uint32_t inc) {
-    return SourceLocation(Line, Column + inc);
-}
+SourceLocation::SourceLocation() {}
 
-SourceLocation SourceLocation::operator-(uint32_t dec) {
-    return SourceLocation(Line, Column - dec);
-}
+SourceLocation::SourceLocation(uint32_t first, uint32_t second) : first(first), second(second) {}
 
 bool operator==(SourceLocation a, SourceLocation b) {
-    return a.Line == b.Line && a.Column == b.Column;
+    return a.first == b.first && a.second == b.second;
 }
 
 bool operator<=(SourceLocation a, SourceLocation b) {
 
-    if (a.Line < b.Line) {
+    if (a.first < b.first) {
         return true;
     }
 
-    if (a.Line == b.Line) {
-        
-        if (a.Column <= b.Column) {
+    if (a.first == b.first) {
+
+        if (a.second <= b.second) {
             return true;
         }
     }
@@ -346,9 +340,17 @@ bool operator<=(SourceLocation a, SourceLocation b) {
     return false;
 }
 
+SourceLocation SourceLocation::next() {
+    return SourceLocation(first, second + 1);
+}
+
+SourceLocation SourceLocation::previous() {
+    return SourceLocation(first, second - 1);
+}
+
 void SourceLocation::print(std::ostream& s) const {
-    s << Line;
-    s << Column;
+    s << first;
+    s << second;
 }
 
 //
@@ -360,15 +362,22 @@ void PrintTo(const SourceLocation& Loc, std::ostream* s) {
 
 
 
+
+
+
+
+
+
+
+
+
 //
 // Source
 //
 
 Source::Source() : Start(), End() {}
 
-Source::Source(SourceLocation loc) : Start(loc), End(loc) {
-    assert(Start <= End);
-}
+Source::Source(SourceLocation loc) : Start(loc), End(loc) {}
 
 Source::Source(SourceLocation start, SourceLocation end) : Start(start), End(end) {
     assert(start <= end);
@@ -388,8 +397,8 @@ void Source::print(std::ostream& s) const {
 }
 
 size_t Source::size() const {
-    assert(Start.Line == End.Line);
-    return End.Column - Start.Column;
+    assert(Start.first == End.first);
+    return End.second - Start.second;
 }
 
 //
@@ -823,11 +832,11 @@ void FormatIssue::put(MLINK mlp) const {
 }
 
 void SourceLocation::put(MLINK mlp) const {
-    if (!MLPutInteger(mlp, static_cast<int>(Line))) {
+    if (!MLPutInteger(mlp, static_cast<int>(first))) {
         assert(false);
     }
     
-    if (!MLPutInteger(mlp, static_cast<int>(Column))) {
+    if (!MLPutInteger(mlp, static_cast<int>(second))) {
         assert(false);
     }
 }

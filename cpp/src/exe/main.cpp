@@ -138,7 +138,7 @@ void readStdIn(APIMode mode, OutputMode outputMode) {
         
         auto inputBufAndLen = BufferAndLength(inputStr, input.size());
         
-        TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE);
+        TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
     
         auto N = TheParserSession->tokenize();
         
@@ -175,7 +175,7 @@ void readStdIn(APIMode mode, OutputMode outputMode) {
         auto inputBufAndLen = BufferAndLength(inputStr, input.size());
         
         TheByteBuffer->init(inputBufAndLen, libData);
-        TheByteDecoder->init();
+        TheByteDecoder->init(SOURCECONVENTION_LINECOLUMN);
     
         auto N = TheParserSession->listSourceCharacters();
     
@@ -212,7 +212,7 @@ void readStdIn(APIMode mode, OutputMode outputMode) {
         
         auto inputBufAndLen = BufferAndLength(inputStr, input.size());
         
-        TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE);
+        TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
         
         auto stringifyMode = STRINGIFYMODE_NORMAL;
         
@@ -250,7 +250,7 @@ void readStdIn(APIMode mode, OutputMode outputMode) {
         
         auto inputBufAndLen = BufferAndLength(inputStr, input.size());
         
-        TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE);
+        TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
         
         auto N = TheParserSession->parseExpressions();
         
@@ -315,7 +315,7 @@ void readFile(std::string file, APIMode mode, OutputMode outputMode) {
         
         auto fBufAndLen = BufferAndLength(fb->getBuf(), fb->getLen());
         
-        TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE);
+        TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
         
         auto N = TheParserSession->tokenize();
         
@@ -349,7 +349,7 @@ void readFile(std::string file, APIMode mode, OutputMode outputMode) {
         
         auto fBufAndLen = BufferAndLength(fb->getBuf(), fb->getLen());
         
-        TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE);
+        TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
         
         auto N = TheParserSession->parseExpressions();
         

@@ -41,14 +41,14 @@ ParserSession::~ParserSession() {
     TheByteBuffer.reset(nullptr);
 }
 
-void ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libData, ParserSessionPolicy policyIn) {
+void ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libData, ParserSessionPolicy policyIn, SourceConvention srcConvention) {
     
     bufAndLen = bufAndLenIn;
     
     policy = policyIn;
     
     TheByteBuffer->init(bufAndLen, libData);
-    TheByteDecoder->init();
+    TheByteDecoder->init(srcConvention);
     TheCharacterDecoder->init(libData);
     TheTokenizer->init();
     TheParser->init();
@@ -400,7 +400,7 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK m
     
     auto len = static_cast<size_t>(mlLen);
     
-    if (len != 1) {
+    if (len != 2) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -409,13 +409,19 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK m
         return LIBRARY_FUNCTION_ERROR;
     }
     
+    auto conventionStr = ScopedMLStringPtr(new ScopedMLString(mlp));
+    if (!conventionStr->read()) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    auto srcConvention = Utils::parseSourceConvention(conventionStr->get());
+    
     if (!MLNewPacket(mlp) ) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
     
-    TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE);
+    TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention);
     
     auto N = TheParserSession->parseExpressions();
     
@@ -438,7 +444,7 @@ DLLEXPORT int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     auto len = static_cast<size_t>(mlLen);
     
-    if (len != 1) {
+    if (len != 2) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -447,13 +453,19 @@ DLLEXPORT int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
+    auto conventionStr = ScopedMLStringPtr(new ScopedMLString(mlp));
+    if (!conventionStr->read()) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    auto srcConvention = Utils::parseSourceConvention(conventionStr->get());
+    
     if (!MLNewPacket(mlp) ) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
     
-    TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE);
+    TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention);
     
     auto N = TheParserSession->tokenize();
     
@@ -476,7 +488,7 @@ DLLEXPORT int TokenizeBytes_Listable_LibraryLink(WolframLibraryData libData, MLI
     
     auto len = static_cast<size_t>(mlLen);
     
-    if (len != 1) {
+    if (len != 2) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -499,6 +511,12 @@ DLLEXPORT int TokenizeBytes_Listable_LibraryLink(WolframLibraryData libData, MLI
         arrs.push_back(std::move(arr));
     }
     
+    auto conventionStr = ScopedMLStringPtr(new ScopedMLString(mlp));
+    if (!conventionStr->read()) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    auto srcConvention = Utils::parseSourceConvention(conventionStr->get());
+    
     if (!MLNewPacket(mlp) ) {
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -512,7 +530,7 @@ DLLEXPORT int TokenizeBytes_Listable_LibraryLink(WolframLibraryData libData, MLI
         
         auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
         
-        TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE);
+        TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention);
         
         auto N = TheParserSession->tokenize();
         
@@ -538,7 +556,7 @@ DLLEXPORT int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK ml
     
     auto len = static_cast<size_t>(mlLen);
     
-    if (len != 2) {
+    if (len != 3) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -552,9 +570,19 @@ DLLEXPORT int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK ml
         return LIBRARY_FUNCTION_ERROR;
     }
     
+    auto conventionStr = ScopedMLStringPtr(new ScopedMLString(mlp));
+    if (!conventionStr->read()) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    auto srcConvention = Utils::parseSourceConvention(conventionStr->get());
+    
+    if (!MLNewPacket(mlp) ) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
     auto bufAndLen = BufferAndLength(inStr->get(), inStr->getByteCount());
     
-    TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE);
+    TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention);
     
     auto N = TheParserSession->concreteParseLeaf(static_cast<StringifyMode>(stringifyMode));
     
@@ -598,7 +626,10 @@ DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount(), UTF8STATUS_INVALID);
     
     TheByteBuffer->init(bufAndLen, libData);
-    TheByteDecoder->init();
+    //
+    // Arbitrarily choose LineColumn convention, but it is not used
+    //
+    TheByteDecoder->init(SOURCECONVENTION_LINECOLUMN);
     
     bufAndLen.putUTF8String(mlp);
     

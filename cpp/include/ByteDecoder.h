@@ -7,7 +7,39 @@
 #include <memory> // for unique_ptr
 
 class ByteDecoder;
+class SourceConventionManager;
 using ByteDecoderPtr = std::unique_ptr<ByteDecoder>;
+using SourceConventionManagerPtr = std::unique_ptr<SourceConventionManager>;
+
+
+
+class SourceConventionManager {
+public:
+    
+    virtual SourceLocation newSourceLocation() = 0;
+    
+    virtual void newline(SourceLocation& loc) = 0;
+    
+    void increment(SourceLocation& loc);
+    
+    virtual ~SourceConventionManager() {}
+};
+
+class LineColumnManager : public SourceConventionManager {
+    
+    SourceLocation newSourceLocation() override;
+    
+    void newline(SourceLocation& loc) override;
+};
+
+class SourceCharacterIndexManager : public SourceConventionManager {
+    
+    SourceLocation newSourceLocation() override;
+    
+    void newline(SourceLocation& loc) override;
+};
+
+
 
 
 //
@@ -19,6 +51,9 @@ private:
     std::vector<IssuePtr> Issues;
     
     UTF8Status status;
+    
+    SourceConventionManagerPtr srcConventionManager;
+    
     
     SourceCharacter invalid(SourceLocation errSrcLoc, NextCharacterPolicy policy);
     
@@ -32,7 +67,7 @@ public:
     
     ByteDecoder();
     
-    void init();
+    void init(SourceConvention srcConvention);
     
     void deinit();
     

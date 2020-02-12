@@ -303,17 +303,35 @@ static_assert(sizeof(SourceCharacter) == 4, "Check your assumptions");
 std::ostream& operator<<(std::ostream& stream, const SourceCharacter);
 
 
+
+
+
+enum SourceConvention {
+    SOURCECONVENTION_UNKNOWN,
+    SOURCECONVENTION_LINECOLUMN,
+    SOURCECONVENTION_SOURCECHARACTERINDEX
+};
+
 struct SourceLocation {
     
-    uint32_t Line;
-    uint32_t Column;
+    //
+    // if source convention is LineColumn, this is Line
+    // if source convention is SourceCharacterIndex, this is unused (always 0)
+    //
+    uint32_t first;
+    
+    //
+    // if source convention is LineColumn, this is Column
+    // if source convention is SourceCharacterIndex, this is index
+    //
+    uint32_t second;
     
     SourceLocation();
     
-    SourceLocation(uint32_t Line, uint32_t Column);
+    SourceLocation(uint32_t first, uint32_t second);
     
-    SourceLocation operator+(uint32_t inc);
-    SourceLocation operator-(uint32_t dec);
+    SourceLocation next();
+    SourceLocation previous();
     
 #if USE_MATHLINK
     void put(MLINK mlp) const;
@@ -323,10 +341,6 @@ struct SourceLocation {
 };
 
 static_assert(sizeof(SourceLocation) == 8, "Check your assumptions");
-
-bool operator==(SourceLocation a, SourceLocation b);
-
-bool operator<=(SourceLocation a, SourceLocation b);
 
 //
 // For googletest

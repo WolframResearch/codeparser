@@ -392,7 +392,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
                 //
                 // Accomodate the ] character
                 //
-                auto currentWLCharacterEndLoc = longNameEndLoc + 1;
+                auto currentWLCharacterEndLoc = longNameEndLoc.next();
                 
                 auto suggestion = longNameSuggestion(longNameBufAndLen);
                 
@@ -412,9 +412,9 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
                 //
                 // Accomodate the ] character
                 //
-                auto currentWLCharacterEndLoc = longNameEndLoc + 1;
+                auto currentWLCharacterEndLoc = longNameEndLoc.next();
                 
-                auto previousBackSlashLoc = currentWLCharacterStartLoc - 1;
+                auto previousBackSlashLoc = currentWLCharacterStartLoc.previous();
                 
                 auto suggestion = longNameSuggestion(longNameBufAndLen);
                 

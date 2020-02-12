@@ -7,13 +7,25 @@
 
 ByteDecoder::ByteDecoder() : Issues(), status(), lastBuf(), lastLoc(), SrcLoc() {}
 
-void ByteDecoder::init() {
+void ByteDecoder::init(SourceConvention srcConvention) {
     
     Issues.clear();
     
     status = UTF8STATUS_NORMAL;
     
-    SrcLoc = SourceLocation(1, 1);
+    switch (srcConvention) {
+        case SOURCECONVENTION_LINECOLUMN:
+            srcConventionManager = SourceConventionManagerPtr(new LineColumnManager());
+            break;
+        case SOURCECONVENTION_SOURCECHARACTERINDEX:
+            srcConventionManager = SourceConventionManagerPtr(new SourceCharacterIndexManager());
+            break;
+        case SOURCECONVENTION_UNKNOWN:
+            assert(false);
+            break;
+    }
+    
+    SrcLoc = srcConventionManager->newSourceLocation();
 }
 
 void ByteDecoder::deinit() {
@@ -78,14 +90,12 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                 
                 TheByteBuffer->nextByte();
                 
-                SrcLoc.Line++;
-                SrcLoc.Column = 1;
+                srcConventionManager->newline(SrcLoc);
                 
                 return SourceCharacter(CODEPOINT_CRLF);
             }
             
-            SrcLoc.Line++;
-            SrcLoc.Column = 1;
+            srcConventionManager->newline(SrcLoc);
             
 #if !NISSUES
             if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
@@ -107,15 +117,14 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             //
         case 0x0a:
             
-            SrcLoc.Line++;
-            SrcLoc.Column = 1;
+            srcConventionManager->newline(SrcLoc);
             
             return SourceCharacter('\n');
         case 0x09: case 0x1b:
             
             // Valid
             
-            SrcLoc.Column++;
+            srcConventionManager->increment(SrcLoc);
             
             return SourceCharacter(firstByte);
             
@@ -148,7 +157,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
         }
 #endif // !NISSUES
             
-            SrcLoc.Column++;
+            srcConventionManager->increment(SrcLoc);
             
             return SourceCharacter(firstByte);
             
@@ -170,7 +179,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             
             // Valid
             
-            SrcLoc.Column++;
+            srcConventionManager->increment(SrcLoc);
             
             return SourceCharacter(firstByte);
             
@@ -240,7 +249,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             }
 #endif // !NISSUES
             
-            SrcLoc.Column++;
+            srcConventionManager->increment(SrcLoc);
             
             return SourceCharacter(decoded);
         }
@@ -338,7 +347,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             }
 #endif // !NISSUES
             
-            SrcLoc.Column++;
+            srcConventionManager->increment(SrcLoc);
             
             return SourceCharacter(decoded);
         }
@@ -420,7 +429,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                 
                 status = UTF8STATUS_NONCHARACTER_OR_BOM;
             
-                SrcLoc.Column++;
+                srcConventionManager->increment(SrcLoc);
                 
                 decoded = CODEPOINT_VIRTUAL_BOM;
                 
@@ -448,7 +457,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             }
 #endif // !NISSUES
             
-            SrcLoc.Column++;
+            srcConventionManager->increment(SrcLoc);
             
             return SourceCharacter(decoded);
         }
@@ -552,7 +561,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             }
 #endif // !NISSUES
             
-            SrcLoc.Column++;
+            srcConventionManager->increment(SrcLoc);
             
             return SourceCharacter(decoded);
         }
@@ -687,7 +696,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             }
 #endif // !NISSUES
             
-            SrcLoc.Column++;
+            srcConventionManager->increment(SrcLoc);
             
             return SourceCharacter(decoded);
         }
@@ -823,7 +832,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             }
 #endif // !NISSUES
             
-            SrcLoc.Column++;
+            srcConventionManager->increment(SrcLoc);
             
             return SourceCharacter(decoded);
         }
@@ -958,7 +967,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
             }
 #endif // !NISSUES
             
-            SrcLoc.Column++;
+            srcConventionManager->increment(SrcLoc);
             
             return SourceCharacter(decoded);
         }
@@ -1022,14 +1031,14 @@ SourceCharacter ByteDecoder::invalid(SourceLocation errSrcLoc, NextCharacterPoli
     
     status = UTF8STATUS_INVALID;
     
-    SrcLoc.Column++;
+    srcConventionManager->increment(SrcLoc);
     
 #if !NISSUES
     //
     // No CodeAction here
     //
     
-    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_INVALIDCHARACTERENCODING, "Invalid UTF-8 sequence.", SYNTAXISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc + 1), 1.0, {}));
+    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_INVALIDCHARACTERENCODING, "Invalid UTF-8 sequence.", SYNTAXISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0, {}));
     
     Issues.push_back(std::move(I));
 #endif // !NISSUES
@@ -1070,3 +1079,30 @@ void ByteDecoder::clearStatus() {
 }
 
 ByteDecoderPtr TheByteDecoder = nullptr;
+
+
+
+
+
+void SourceConventionManager::increment(SourceLocation& loc) {
+    loc.second++;
+};
+
+SourceLocation LineColumnManager::newSourceLocation() {
+    return SourceLocation(1, 1);
+};
+
+void LineColumnManager::newline(SourceLocation& loc) {
+    loc.first++;
+    loc.second = 1;
+};
+
+
+SourceLocation SourceCharacterIndexManager::newSourceLocation() {
+    return SourceLocation(0, 1);
+};
+
+void SourceCharacterIndexManager::newline(SourceLocation& loc) {
+    loc.second++;
+};
+

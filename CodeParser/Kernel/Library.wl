@@ -73,6 +73,14 @@ SetConcreteParseProgress
 
 
 
+(*
+Blocked when returning from library
+*)
+$StructureSrcArgs
+parseConvention
+
+
+
 
 $ConcreteParseProgress
 $ConcreteParseTime
@@ -334,44 +342,46 @@ SetConcreteParseProgress[prog_] := (
 *)
 
 
+parseConvention["LineColumn"] = structureSrcArgsLineColumn
+parseConvention["SourceCharacterIndex"] = structureSrcArgsSourceCharacterIndex
 
-structureSrcArgs[startLine_, startCol_, endLine_, endCol_] := {{startLine,startCol},{endLine,endCol}}
 
-structureSrcArgs[offset_, len_] := {offset, len}
+structureSrcArgsLineColumn[startLine_, startCol_, endLine_, endCol_] := {{startLine, startCol}, {endLine, endCol}}
 
-structureSrcArgs[] := Null
+structureSrcArgsSourceCharacterIndex[startLineIgnored_, startCol_, endLineIgnored_, endCol_] := {startCol, endCol-1}
+
 
 
 
 MakeLeafNode[tag_, payload_, srcArgs___] :=
-	LeafNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
+	LeafNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 MakeErrorNode[tag_, payload_, srcArgs___] :=
-	ErrorNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
+	ErrorNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 MakePrefixNode[tag_, payload_, srcArgs___] :=
-	PrefixNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
+	PrefixNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 MakeBinaryNode[tag_, payload_, srcArgs___] :=
-	BinaryNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
+	BinaryNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 MakeTernaryNode[tag_, payload_, srcArgs___] :=
-	TernaryNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
+	TernaryNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 MakeInfixNode[tag_, payload_, srcArgs___] :=
-	InfixNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
+	InfixNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 MakePostfixNode[tag_, payload_, srcArgs___] :=
-	PostfixNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
+	PostfixNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 MakeGroupNode[tag_, payload_, srcArgs___] :=
-	GroupNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
+	GroupNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 MakeCallNode[tag_, payload_, srcArgs___] :=
-	CallNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
+	CallNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 MakePrefixBinaryNode[tag_, payload_, srcArgs___] :=
-	PrefixBinaryNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
+	PrefixBinaryNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 (*
 MakeStartOfLineNode[tag_, payload_, srcArgs___] :=
@@ -382,78 +392,78 @@ MakeStartOfFileNode[tag_, payload_, srcArgs___] :=
 *)
 
 MakeBlankNode[tag_, payload_, srcArgs___] :=
-	BlankNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
+	BlankNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 
 MakeBlankSequenceNode[tag_, payload_, srcArgs___] :=
-	BlankSequenceNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
+	BlankSequenceNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 
 MakeBlankNullSequenceNode[tag_, payload_, srcArgs___] :=
-	BlankNullSequenceNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
+	BlankNullSequenceNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 
 MakePatternBlankNode[tag_, payload_, srcArgs___] :=
-	PatternBlankNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
+	PatternBlankNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 
 MakePatternBlankSequenceNode[tag_, payload_, srcArgs___] :=
-	PatternBlankSequenceNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
+	PatternBlankSequenceNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 
 MakePatternBlankNullSequenceNode[tag_, payload_, srcArgs___] :=
-	PatternBlankNullSequenceNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
+	PatternBlankNullSequenceNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 
 MakeOptionalDefaultPatternNode[tag_, payload_, srcArgs___] :=
-	OptionalDefaultPatternNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
+	OptionalDefaultPatternNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 
 MakeSyntaxErrorNode[tag_, payload_, srcArgs___] :=
-	SyntaxErrorNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
+	SyntaxErrorNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 
 MakeGroupMissingCloserNode[tag_, payload_, srcArgs___] :=
-	GroupMissingCloserNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
+	GroupMissingCloserNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 MakeGroupMissingCloserNeedsReparseNode[tag_, payload_, srcArgs___] :=
-	GroupMissingCloserNeedsReparseNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
+	GroupMissingCloserNeedsReparseNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 MakeAbstractSyntaxErrorNode[tag_, payload_, srcArgs___] :=
-	AbstractSyntaxErrorNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
+	AbstractSyntaxErrorNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 
 
 MakeSyntaxIssue[tag_String, msg_String, severity_String, srcArgs___Integer, confidence_Real] :=
-	SyntaxIssue[tag, msg, severity, <|Source->structureSrcArgs[srcArgs], ConfidenceLevel->confidence|>]
+	SyntaxIssue[tag, msg, severity, <| Source -> $StructureSrcArgs[srcArgs], ConfidenceLevel -> confidence |>]
 
 MakeFormatIssue[tag_String, msg_String, severity_String, srcArgs___Integer, airyness_Real] :=
-	FormatIssue[tag, msg, severity, <|Source->structureSrcArgs[srcArgs], CodeFormatter`AirynessLevel->airyness|>]
+	FormatIssue[tag, msg, severity, <| Source -> $StructureSrcArgs[srcArgs], CodeFormatter`AirynessLevel -> airyness |>]
 
 (*
 Only add CodeActions if there is at least 1
 *)
 MakeSyntaxIssue[tag_String, msg_String, severity_String, srcArgs___Integer, confidence_Real, actions:CodeAction[_, _, _]..] :=
-	SyntaxIssue[tag, msg, severity, <|Source->structureSrcArgs[srcArgs], ConfidenceLevel->confidence, CodeActions->{actions}|>]
+	SyntaxIssue[tag, msg, severity, <| Source -> $StructureSrcArgs[srcArgs], ConfidenceLevel -> confidence, CodeActions -> {actions} |>]
 
 MakeFormatIssue[tag_String, msg_String, severity_String, srcArgs___Integer, airyness_Real, actions:CodeAction[_, _, _]..] :=
-	FormatIssue[tag, msg, severity, <|Source->structureSrcArgs[srcArgs], CodeFormatter`AirynessLevel->airyness, CodeActions->{actions}|>]
+	FormatIssue[tag, msg, severity, <| Source -> $StructureSrcArgs[srcArgs], CodeFormatter`AirynessLevel -> airyness, CodeActions -> {actions} |>]
 
 
 MakeReplaceTextCodeAction[label_String, srcArgs___Integer, replacementText_String] :=
-	CodeAction[label, ReplaceText, <|Source->structureSrcArgs[srcArgs], "ReplacementText"->replacementText|>]
+	CodeAction[label, ReplaceText, <| Source -> $StructureSrcArgs[srcArgs], "ReplacementText" -> replacementText |>]
 
 MakeInsertTextCodeAction[label_String, srcArgs___Integer, insertionText_String] :=
-	CodeAction[label, InsertText, <|Source->structureSrcArgs[srcArgs], "InsertionText"->insertionText|>]
+	CodeAction[label, InsertText, <| Source -> $StructureSrcArgs[srcArgs], "InsertionText" -> insertionText |>]
 
 MakeInsertTextAfterCodeAction[label_String, srcArgs___Integer, insertionText_String] :=
-	CodeAction[label, InsertTextAfter, <|Source->structureSrcArgs[srcArgs], "InsertionText"->insertionText|>]
+	CodeAction[label, InsertTextAfter, <| Source -> $StructureSrcArgs[srcArgs], "InsertionText" -> insertionText |>]
 
 MakeDeleteTextCodeAction[label_String, srcArgs___Integer] :=
-	CodeAction[label, DeleteText, <|Source->structureSrcArgs[srcArgs]|>]
+	CodeAction[label, DeleteText, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 MakeDeleteTriviaCodeAction[label_String, srcArgs___Integer] :=
-	CodeAction[label, DeleteTrivia, <|Source->structureSrcArgs[srcArgs]|>]
+	CodeAction[label, DeleteTrivia, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 
 

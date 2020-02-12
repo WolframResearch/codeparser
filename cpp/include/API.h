@@ -96,7 +96,7 @@ public:
     
     ~ParserSession();
     
-    void init(BufferAndLength bufAndLen, WolframLibraryData libData, ParserSessionPolicy policy);
+    void init(BufferAndLength bufAndLen, WolframLibraryData libData, ParserSessionPolicy policy, SourceConvention srcConvention);
     
     void deinit();
     

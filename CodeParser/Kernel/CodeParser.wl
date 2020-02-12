@@ -259,7 +259,8 @@ CodeConcreteParse::usage = "CodeConcreteParse[code] returns a concrete syntax tr
 CodeConcreteParse[code, nodeFunc] applies nodeFunc to the result."
 
 Options[CodeConcreteParse] = {
-	CharacterEncoding -> "UTF8"
+	CharacterEncoding -> "UTF8",
+	"SourceConvention" -> "LineColumn"
 }
 
 CodeConcreteParse[s_String, h_:Automatic, opts:OptionsPattern[]] :=
@@ -293,9 +294,11 @@ Options[concreteParseString] = Options[CodeConcreteParse]
 
 concreteParseString[bytes_List, hIn_, OptionsPattern[]] :=
 Catch[
-Module[{h, res},
+Module[{h, res, convention},
 
 	h = hIn;
+
+	convention = OptionValue["SourceConvention"];
 
 	(*
 	The <||> will be filled in with Source later
@@ -309,7 +312,9 @@ Module[{h, res},
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
 
-	res = libraryFunctionWrapper[concreteParseBytesFunc, bytes];
+	Block[{$StructureSrcArgs = parseConvention[convention]},
+	res = libraryFunctionWrapper[concreteParseBytesFunc, bytes, convention];
+	];
 
 	$ConcreteParseProgress = 100;
 	$ConcreteParseTime = Now - $ConcreteParseStart;
@@ -329,7 +334,8 @@ CodeParse::usage = "CodeParse[code] returns an abstract syntax tree by interpret
 CodeParseString[code, nodeFunc] applies nodeFunc to the result."
 
 Options[CodeParse] = {
-	CharacterEncoding -> "UTF8"
+	CharacterEncoding -> "UTF8",
+	"SourceConvention" -> "LineColumn"
 }
 
 (*
@@ -406,9 +412,11 @@ Options[concreteParseFile] = Options[CodeConcreteParse]
 
 concreteParseFile[bytes_List, hIn_, OptionsPattern[]] :=
 Catch[
-Module[{h, res, data, start, end, children},
+Module[{h, res, data, start, end, children, convention},
 
 	h = hIn;
+
+	convention = OptionValue["SourceConvention"];
 
 	(*
 	The <||> will be filled in with Source later
@@ -422,7 +430,9 @@ Module[{h, res, data, start, end, children},
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
 
-	res = libraryFunctionWrapper[concreteParseBytesFunc, bytes];
+	Block[{$StructureSrcArgs = parseConvention[convention]},
+	res = libraryFunctionWrapper[concreteParseBytesFunc, bytes, convention];
+	];
 
 	$ConcreteParseProgress = 100;
 	$ConcreteParseTime = Now - $ConcreteParseStart;
@@ -506,9 +516,11 @@ Options[concreteParseBytes] = Options[CodeConcreteParse]
 
 concreteParseBytes[bytes_List, hIn_, OptionsPattern[]] :=
 Catch[
-Module[{h, res, data, start, end, children},
+Module[{h, res, data, start, end, children, convention},
 
 	h = hIn;
+
+	convention = OptionValue["SourceConvention"];
 
 	(*
 	The <||> will be filled in with Source later
@@ -522,7 +534,9 @@ Module[{h, res, data, start, end, children},
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
 
-	res = libraryFunctionWrapper[concreteParseBytesFunc, bytes];
+	Block[{$StructureSrcArgs = parseConvention[convention]},
+	res = libraryFunctionWrapper[concreteParseBytesFunc, bytes, convention];
+	];
 
 	$ConcreteParseProgress = 100;
 	$ConcreteParseTime = Now - $ConcreteParseStart;
@@ -578,25 +592,27 @@ Module[{cst, ast, agg},
 CodeTokenize::usage = "CodeTokenize[code] returns a list of tokens by interpreting code as WL input."
 
 Options[CodeTokenize] = {
-	CharacterEncoding -> "UTF8"
+	CharacterEncoding -> "UTF8",
+	"SourceConvention" -> "LineColumn"
 }
 
-CodeTokenize[s_String] :=
-	tokenizeString[s]
+CodeTokenize[s_String, opts:OptionsPattern[]] :=
+	tokenizeString[s, opts]
 
-CodeTokenize[ss:{_String...}] :=
-	tokenizeStringListable[ss]
+CodeTokenize[ss:{_String...}, opts:OptionsPattern[]] :=
+	tokenizeStringListable[ss, opts]
 
 
 Options[tokenizeString] = Options[CodeTokenize]
 
 tokenizeString[sIn_String, OptionsPattern[]] :=
 Catch[
-Module[{s, res, bytes, encoding},
+Module[{s, res, bytes, encoding, convention},
 
 	s = sIn;
 
 	encoding = OptionValue[CharacterEncoding];
+	convention = OptionValue["SourceConvention"];
 
 	If[encoding =!= "UTF8",
 		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
@@ -608,7 +624,9 @@ Module[{s, res, bytes, encoding},
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
 
-	res = libraryFunctionWrapper[tokenizeBytesFunc, bytes];
+	Block[{$StructureSrcArgs = parseConvention[convention]},
+	res = libraryFunctionWrapper[tokenizeBytesFunc, bytes, convention];
+	];
 
 	$ConcreteParseProgress = 100;
 	$ConcreteParseTime = Now - $ConcreteParseStart;
@@ -624,11 +642,12 @@ Options[tokenizeStringListable] = Options[CodeTokenize]
 
 tokenizeStringListable[ssIn:{_String...}, OptionsPattern[]] :=
 Catch[
-Module[{ss, res, bytess, encoding},
+Module[{ss, res, bytess, encoding, convention},
 
 	ss = ssIn;
 
 	encoding = OptionValue[CharacterEncoding];
+	convention = OptionValue["SourceConvention"];
 
 	If[encoding =!= "UTF8",
 		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
@@ -640,7 +659,9 @@ Module[{ss, res, bytess, encoding},
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
 
-	res = libraryFunctionWrapper[tokenizeBytesListableFunc, bytess];
+	Block[{$StructureSrcArgs = parseConvention[convention]},
+	res = libraryFunctionWrapper[tokenizeBytesListableFunc, bytess, convention];
+	];
 
 	$ConcreteParseProgress = 100;
 	$ConcreteParseTime = Now - $ConcreteParseStart;
@@ -671,9 +692,10 @@ Options[tokenizeFile] = Options[CodeTokenize]
 
 tokenizeFile[File[file_String], OptionsPattern[]] :=
 Catch[
-Module[{encoding, res, full, bytes},
+Module[{encoding, res, full, bytes, convention},
 
 	encoding = OptionValue[CharacterEncoding];
+	convention = OptionValue["SourceConvention"];
 
 	If[encoding =!= "UTF8",
 		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
@@ -690,8 +712,10 @@ Module[{encoding, res, full, bytes},
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
 
-	res = libraryFunctionWrapper[tokenizeBytesFunc, bytes];
-	
+	Block[{$StructureSrcArgs = parseConvention[convention]},
+	res = libraryFunctionWrapper[tokenizeBytesFunc, bytes, convention];
+	];
+
 	$ConcreteParseProgress = 100;
 	$ConcreteParseTime = Now - $ConcreteParseStart;
 
@@ -707,9 +731,10 @@ Options[tokenizeFileListable] = Options[CodeTokenize]
 
 tokenizeFileListable[fs:{File[_String]...}, OptionsPattern[]] :=
 Catch[
-Module[{encoding, res, fulls, bytess},
+Module[{encoding, res, fulls, bytess, convention},
 
 	encoding = OptionValue[CharacterEncoding];
+	convention = OptionValue["SourceConvention"];
 
 	If[encoding =!= "UTF8",
 		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
@@ -726,8 +751,10 @@ Module[{encoding, res, fulls, bytess},
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
 
-	res = libraryFunctionWrapper[tokenizeBytesListableFunc, bytess];
-	
+	Block[{$StructureSrcArgs = parseConvention[convention]},
+	res = libraryFunctionWrapper[tokenizeBytesListableFunc, bytess, convention];
+	];
+
 	$ConcreteParseProgress = 100;
 	$ConcreteParseTime = Now - $ConcreteParseStart;
 
@@ -756,9 +783,10 @@ Options[tokenizeBytes] = Options[CodeTokenize]
 
 tokenizeBytes[bytes_List, OptionsPattern[]] :=
 Catch[
-Module[{encoding, res},
+Module[{encoding, res, convention},
 
 	encoding = OptionValue[CharacterEncoding];
+	convention = OptionValue["SourceConvention"];
 
 	If[encoding =!= "UTF8",
 		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
@@ -768,7 +796,9 @@ Module[{encoding, res},
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
 
-	res = libraryFunctionWrapper[tokenizeBytesFunc, bytes];
+	Block[{$StructureSrcArgs = parseConvention[convention]},
+	res = libraryFunctionWrapper[tokenizeBytesFunc, bytes, convention];
+	];
 
 	$ConcreteParseProgress = 100;
 	$ConcreteParseTime = Now - $ConcreteParseStart;
@@ -785,9 +815,10 @@ Options[tokenizeBytesListable] = Options[CodeTokenize]
 
 tokenizeBytesListable[bytess:{{_Integer...}...}, OptionsPattern[]] :=
 Catch[
-Module[{encoding, res},
+Module[{encoding, res, convention},
 
 	encoding = OptionValue[CharacterEncoding];
+	convention = OptionValue["SourceConvention"];
 
 	If[encoding =!= "UTF8",
 		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
@@ -797,7 +828,9 @@ Module[{encoding, res},
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
 
-	res = libraryFunctionWrapper[tokenizeBytesListableFunc, bytess];
+	Block[{$StructureSrcArgs = parseConvention[convention]},
+	res = libraryFunctionWrapper[tokenizeBytesListableFunc, bytess, convention];
+	];
 
 	$ConcreteParseProgress = 100;
 	$ConcreteParseTime = Now - $ConcreteParseStart;
@@ -819,7 +852,8 @@ Module[{encoding, res},
 CodeConcreteParseLeaf::usage = "CodeConcreteParseLeaf[code] returns a LeafNode by interpreting code as a leaf."
 
 Options[CodeConcreteParseLeaf] = {
-	"StringifyMode" -> 0
+	"StringifyMode" -> 0,
+	"SourceConvention" -> "LineColumn"
 }
 
 CodeConcreteParseLeaf[str_String, opts:OptionsPattern[]] :=
@@ -830,17 +864,20 @@ Options[concreteParseLeaf] = Options[CodeConcreteParseLeaf]
 
 concreteParseLeaf[strIn_String, OptionsPattern[]] :=
 Catch[
-Module[{str, res, leaf, data, exprs, issues, stringifyMode},
+Module[{str, res, leaf, data, exprs, issues, stringifyMode, convention},
 
 	str = strIn;
 
 	stringifyMode = OptionValue["StringifyMode"];
+	convention = OptionValue["SourceConvention"];
 
 	$ConcreteParseProgress = 0;
 	$ConcreteParseStart = Now;
 	$ConcreteParseTime = Quantity[0, "Seconds"];
 	
-	res = libraryFunctionWrapper[concreteParseLeafFunc, str, stringifyMode];
+	Block[{$StructureSrcArgs = parseConvention[convention]},
+	res = libraryFunctionWrapper[concreteParseLeafFunc, str, stringifyMode, convention];
+	];
 
 	$ConcreteParseProgress = 100;
 	$ConcreteParseTime = Now - $ConcreteParseStart;

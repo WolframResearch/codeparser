@@ -354,3 +354,16 @@ uint8_t Utils::toDigit(unsigned char val) {
     return digitLookup[val];
 }
 
+SourceConvention Utils::parseSourceConvention(std::string s) {
+    if (s == "LineColumn") {
+        return SOURCECONVENTION_LINECOLUMN;
+    } else if (s == "SourceCharacterIndex") {
+        return SOURCECONVENTION_SOURCECHARACTERINDEX;
+    } else {
+        return SOURCECONVENTION_UNKNOWN;
+    }
+}
+
+
+
+

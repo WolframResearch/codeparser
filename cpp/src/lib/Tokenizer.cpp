@@ -681,7 +681,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation
                 
                 auto loc = TheByteDecoder->SrcLoc;
                 
-                auto strangeLoc = loc - 1;
+                auto strangeLoc = loc.previous();
                 
                 Utils::strangeLetterlikeWarning(getTokenSource(strangeLoc), c);
                 
@@ -689,7 +689,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation
                 
                 auto loc = TheByteDecoder->SrcLoc;
                 
-                auto strangeLoc = loc - 1;
+                auto strangeLoc = loc.previous();
                 
                 Utils::mbStrangeLetterlikeWarning(getTokenSource(strangeLoc), c);
             }

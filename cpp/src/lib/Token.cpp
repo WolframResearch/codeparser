@@ -39,7 +39,7 @@ Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : BufLen(BufLen)
                 // Only bother checking if the token is all on one line
                 // Spanning multiple lines is too complicated to care about
                 //
-                if (Src.Start.Line == Src.End.Line) {
+                if (Src.Start.first == Src.End.first) {
                     if (Src.size() != BufLen.length()) {
                         //
                         // If the sizes do not match, then check if there are multi-byte characters
