@@ -83,12 +83,12 @@ Module[{},
     ,
     MetaData[<|"Exported" -> True, "Name" -> Expr`Pointer|>
     ]@Function[{Typed[arg1, "Expression"]},
-      Native`BitCast[arg1, "MachineInteger"]
+      Native`BitCast[Native`BitCast[arg1, "VoidHandle"], "MachineInteger"]
     ]
     ,
     MetaData[<|"Exported" -> True, "Name" -> Expr`FromPointer|>
     ]@Function[{Typed[arg1, "MachineInteger"]},
-      Native`BitCast[arg1, "Expression"]
+      Native`BitCast[Native`BitCast[arg1, "VoidHandle"], "Expression"]
     ]
     ,
     MetaData[<|"Exported" -> True, "Name" -> Expr`Release, "MemoryManagement" -> False|>
