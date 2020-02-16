@@ -990,7 +990,7 @@ FIXME: once the semantics are completely understood, move this to library
 abstractFileString[str_String /; StringStartsQ[str, "\""]] := ToExpression[replaceSingleEscapeCharacters[str]]
 abstractFileString[str_String] := Quiet[ToExpression["\""<>replaceSingleEscapeCharacters[str]<>"\""], {Syntax::stresc}]
 
-replaceSingleEscapeCharacters[str_String] := StringReplace[str, "\\"~~c:("b"|"f"|"n"|"r"|"t") -> "\\\\"~~c]
+replaceSingleEscapeCharacters[str_String] := StringReplace[str, "\\"~~c:("b"|"f"|"n"|"r"|"t") :> "\\\\"~~c]
 
 
 
