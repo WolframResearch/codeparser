@@ -12,12 +12,12 @@ escapeString[s_] :=
 
 
 
-Print[OutputForm["Generating LongNames..."]]
+Print["Generating LongNames..."]
 
 Check[
 longNameDefines = ("constexpr codepoint " <> toGlobal["CodePoint`LongName`" <> #] <> "(" <> longNameToHexDigits[#] <> ");")& /@ Keys[importedLongNames]
 ,
-Print[OutputForm["Message while generating LongNames"]];
+Print["Message while generating LongNames"];
 Quit[1]
 ]
 
@@ -134,7 +134,7 @@ public:
 longNameDefines ~Join~
 {""}
 
-Print[OutputForm["exporting LongNames.h"]]
+Print["exporting LongNames.h"]
 res = Export[FileNameJoin[{generatedCPPIncludeDir, "LongNames.h"}], Column[longNamesCPPHeader], "String"]
 
 If[FailureQ[res],
@@ -191,7 +191,7 @@ unsupportedSource ~Join~
 LongNameCodePointToOperatorSource ~Join~
 LongNameOperatorToCodePointSource
 
-Print[OutputForm["exporting LongNames.cpp"]]
+Print["exporting LongNames.cpp"]
 res = Export[FileNameJoin[{generatedCPPSrcDir, "LongNames.cpp"}], Column[longNamesCPPSource], "String"]
 
 If[FailureQ[res],
@@ -210,7 +210,7 @@ If[FailureQ[res],
 Check[
 longNames = ("\"" <> # <> "\", ")& /@ Keys[importedLongNames]
 ,
-Print[OutputForm["Message while generating LongNames"]];
+Print["Message while generating LongNames"];
 Quit[1]
 ]
 
@@ -227,7 +227,7 @@ DO NOT MODIFY
 "	
 }
 
-Print[OutputForm["exporting LongNames.wl"]]
+Print["exporting LongNames.wl"]
 res = Export[FileNameJoin[{generatedWLDir, "LongNames.wl"}], Column[longNamesWL], "String"]
 
 If[FailureQ[res],
@@ -238,7 +238,7 @@ If[FailureQ[res],
 
 
 
-Print[OutputForm["Done LongNames"]]
+Print["Done LongNames"]
 
 End[]
 

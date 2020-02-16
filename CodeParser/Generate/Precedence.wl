@@ -4,7 +4,7 @@ Begin["`Private`"]
 
 Needs["CodeParser`Generate`GenerateSources`"]
 
-Print[OutputForm["Generating Precedence..."]]
+Print["Generating Precedence..."]
 
 oldPrecedences = Join[Names["Precedence`*"], Names["Precedence`*`*"]]
 
@@ -30,7 +30,7 @@ sanity check that all precedences are in order
 cur = -Infinity;
 KeyValueMap[
   If[!TrueQ[#2 >= cur],
-    Print[OutputForm["Precedence is out of order: "], #1->#2];
+    Print["Precedence is out of order: ", #1->#2];
     Quit[1]
     ,
     cur = #2
@@ -54,7 +54,7 @@ precedenceCPPHeader = {
 enum Precedence : uint8_t {"} ~Join~
    KeyValueMap[(Row[{toGlobal[#1], " = ", Floor[#2], ","}]) &, enumMap] ~Join~ {"};", ""}
 
-Print[OutputForm["exporting Precedence.h"]]
+Print["exporting Precedence.h"]
 res = Export[FileNameJoin[{generatedCPPIncludeDir, "Precedence.h"}], Column[precedenceCPPHeader], "String"]
 
 If[FailureQ[res],
@@ -62,7 +62,7 @@ If[FailureQ[res],
   Quit[1]
 ]
 
-Print[OutputForm["Done Precedence"]]
+Print["Done Precedence"]
 
 End[]
 

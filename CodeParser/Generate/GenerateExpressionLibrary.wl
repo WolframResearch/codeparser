@@ -6,27 +6,27 @@ Begin["`Private`"]
 Needs["Compile`"] (* for Program *)
 Needs["TypeFramework`"] (* for MetaData *)
 
-Print[OutputForm["Generating ExpressionLibrary..."]]
+Print["Generating ExpressionLibrary..."]
 
 
 packageDir = Directory[]
 
 If[FileNameSplit[packageDir][[-1]] =!= "codeparser",
-  Print[OutputForm["Cannot proceed; Not inside codeparser directory: "], packageDir];
+  Print["Cannot proceed; Not inside codeparser directory: ", packageDir];
   Quit[1]
 ]
 
 buildDirFlagPosition = FirstPosition[$CommandLine, "-buildDir"]
 
 If[MissingQ[buildDirFlagPosition],
-  Print[OutputForm["Cannot proceed; Unsupported build directory"]];
+  Print["Cannot proceed; Unsupported build directory"];
   Quit[1]
 ]
 
 buildDir = $CommandLine[[buildDirFlagPosition[[1]] + 1]]
 
 If[FileType[buildDir] =!= Directory,
-  Print[OutputForm["Cannot proceed; Unsupported build directory"]];
+  Print["Cannot proceed; Unsupported build directory"];
   Quit[1]
 ]
 
@@ -104,7 +104,7 @@ Catch[
 Module[{targetDir, prog, compLib},
 
   If[$VersionNumber < 12.1,
-    Print[OutputForm["Skipping ExpressionLibrary"]];
+    Print["Skipping ExpressionLibrary"];
     Throw[Null]
   ];
 
@@ -112,7 +112,7 @@ Module[{targetDir, prog, compLib},
 
   prog = ExpressionLibraryProgram[];
 
-  Print[OutputForm["Exporting expr shared library... (this might take a while)"]];
+  Print["Exporting expr shared library... (this might take a while)"];
 
   compLib =
     CompileToLibrary[prog,
@@ -131,7 +131,7 @@ Module[{targetDir, prog, compLib},
 
 buildExpressionLibrary[]
 
-Print[OutputForm["Done ExpressionLibrary"]]
+Print["Done ExpressionLibrary"]
 
 End[]
 

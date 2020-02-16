@@ -54,25 +54,25 @@ toGlobal[n_] :=
  StringReplace[ToUpperCase[ToString[n]], {"`" -> "_", "$" -> "_"}]
 
 validateLongNameMap[m_] := (
-  Print[OutputForm["validating LongName map"]];
+  Print["validating LongName map"];
 
   If[FailureQ[m],
-    Print[OutputForm[m]];
+    Print[m];
     Quit[1]
   ];
 
   If[!AssociationQ[m],
-    Print[OutputForm["LongName map is not an Association"]];
+    Print["LongName map is not an Association"];
     Quit[1]
   ];
 
   If[!DuplicateFreeQ[Keys[m]],
-    Print[OutputForm["LongName map has duplicates"]];
+    Print["LongName map has duplicates"];
     Quit[1]
   ];
 
   If[!OrderedQ[longNameToCharacterCode /@ Keys[m]],
-    Print[OutputForm["LongName map is not ordered"]];
+    Print["LongName map is not ordered"];
     Quit[1]
   ];
 )
@@ -152,27 +152,27 @@ longNameToHexDigits[longName_String] :=
 
 
 
-Print[OutputForm["Generating additional required source files..."]]
+Print["Generating additional required source files..."]
 
 
 packageDir = Directory[]
 
 If[FileNameSplit[packageDir][[-1]] =!= "codeparser",
-  Print[OutputForm["Cannot proceed; Not inside codeparser directory: "], packageDir];
+  Print["Cannot proceed; Not inside codeparser directory: ", packageDir];
   Quit[1]
 ]
 
 buildDirFlagPosition = FirstPosition[$CommandLine, "-buildDir"]
 
 If[MissingQ[buildDirFlagPosition],
-  Print[OutputForm["Cannot proceed; Unsupported build directory"]];
+  Print["Cannot proceed; Unsupported build directory"];
   Quit[1]
 ]
 
 buildDir = $CommandLine[[buildDirFlagPosition[[1]] + 1]]
 
 If[FileType[buildDir] =!= Directory,
-  Print[OutputForm["Cannot proceed; Unsupported build directory"]];
+  Print["Cannot proceed; Unsupported build directory"];
   Quit[1]
 ]
 
@@ -191,11 +191,11 @@ generateSrcDir = FileNameJoin[{packageDir, "CodeParser", "Generate"}]
 PrependTo[$Path, generateSrcDir]
 
 If[FailureQ[FindFile["CodeParser`Generate`GenerateSources`"]],
-  Print[OutputForm["CodeParser`Generate`GenerateSources` could not be found."]];
+  Print["CodeParser`Generate`GenerateSources` could not be found."];
   Quit[1]
 ]
 
-Print[OutputForm["Clean..."]]
+Print["Clean..."]
 
 Quiet[DeleteDirectory[generatedCPPDir, DeleteContents -> True], DeleteDirectory::nodir]
 
@@ -209,7 +209,7 @@ Quiet[DeleteDirectory[generatedWLDir, DeleteContents -> True], DeleteDirectory::
 
 Quiet[CreateDirectory[generatedWLDir], CreateDirectory::filex]
 
-Print[OutputForm["Done Clean"]]
+Print["Done Clean"]
 
 
 
@@ -256,7 +256,7 @@ Get["CodeParser`Generate`Precedence`"]
 
 Get["CodeParser`Generate`Symbol`"]
 
-Print[OutputForm["Done generating additional required source files"]]
+Print["Done generating additional required source files"]
 
 End[]
 
