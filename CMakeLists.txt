@@ -216,7 +216,7 @@ add_custom_command(
 #
 if(BUILD_EXPR_LIB)
 
-set(EXPR_LIB ${CMAKE_BINARY_DIR}/paclet/CodeParser/LibraryResources/${SYSTEMID}/libExpr${CMAKE_SHARED_LIBRARY_SUFFIX})
+set(EXPR_LIB ${CMAKE_BINARY_DIR}/paclet/CodeParser/LibraryResources/${SYSTEMID}/expr${CMAKE_SHARED_LIBRARY_SUFFIX})
 
 add_library(expr-lib SHARED IMPORTED)
 

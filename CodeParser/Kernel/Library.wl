@@ -165,9 +165,9 @@ Module[{location, libraryResources},
 	*)
 	If[FileExistsQ[$exprLib],
 
-		$exprCompiledLib = CompiledLibrary[$exprLib];
+		$exprCompiledLib = CompiledLibrary`CompiledLibrary[$exprLib];
 
-		$exprCompiledLibFuns = CompiledLibraryLoadFunctions[$exprCompiledLib]
+		$exprCompiledLibFuns = CompiledLibrary`CompiledLibraryLoadFunctions[$exprCompiledLib]
 	]
 ]
 
