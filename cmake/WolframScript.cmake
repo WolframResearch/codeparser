@@ -1,7 +1,7 @@
 
 execute_process(
   COMMAND
-    ${WOLFRAMKERNEL} -script ${SCRIPT} -buildDir ${BUILDDIR} -paclet ${PACLET}
+    ${WOLFRAMKERNEL} -script ${SCRIPT} -srcDir ${SRCDIR} -buildDir ${BUILDDIR} -paclet ${PACLET}
   TIMEOUT
     300
   RESULT_VARIABLE
