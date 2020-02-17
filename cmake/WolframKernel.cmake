@@ -22,6 +22,29 @@ elseif (CMAKE_HOST_APPLE)
 endif()
 
 macro(CheckWolframKernel)
+	
+	# canary test
+	string(TIMESTAMP CANARY_BEFORE "%s")
+	execute_process(
+		COMMAND
+			${WOLFRAMKERNEL} -noinit -noprompt -nopaclet -runfirst Print[OutputForm[\"canary\ test\"]]\;Exit[]
+		WORKING_DIRECTORY
+			${CMAKE_SOURCE_DIR}
+		TIMEOUT
+			300
+		RESULT_VARIABLE
+			CANARY_RESULT
+	)
+	string(TIMESTAMP CANARY_AFTER "%s")
+
+	math(EXPR CANARY_TIME "${CANARY_AFTER} - ${CANARY_BEFORE}")
+
+	message(STATUS "Canary test took ${CANARY_TIME} seconds")
+
+	if(NOT ${CANARY_RESULT} EQUAL "0")
+		message(WARNING "Bad exit code from Canary script: ${CANARY_RESULT}; Continuing")
+	endif()
+
 	# get $VersionNumber
 	execute_process(
 		COMMAND
