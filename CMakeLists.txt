@@ -71,9 +71,9 @@ set(PACLETINFO_SOURCE
 )
 
 set(WL_DATA_SOURCES
-	${CMAKE_SOURCE_DIR}/tables/LongNames.wl
-	${CMAKE_SOURCE_DIR}/tables/Precedence.wl
-	${CMAKE_SOURCE_DIR}/tables/TokenEnum.wl
+	${CMAKE_SOURCE_DIR}/CodeParser/Data/LongNames.wl
+	${CMAKE_SOURCE_DIR}/CodeParser/Data/Precedence.wl
+	${CMAKE_SOURCE_DIR}/CodeParser/Data/TokenEnum.wl
 )
 
 set(GENERATED_CPP_INCLUDES

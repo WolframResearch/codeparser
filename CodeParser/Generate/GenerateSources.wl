@@ -14,7 +14,7 @@ generatedCPPSrcDir
 
 generatedWLDir
 
-tablesDir
+dataDir
 
 buildSrcDir
 
@@ -184,11 +184,11 @@ generatedCPPSrcDir = FileNameJoin[{generatedCPPDir, "src", "lib"}]
 generatedWLDir = FileNameJoin[{buildDir, "generated", "wl"}]
 
 
-tablesDir = FileNameJoin[{packageDir, "tables"}]
+dataDir = FileNameJoin[{packageDir, "CodeParser", "Data"}]
 
-generateSrcDir = FileNameJoin[{packageDir, "CodeParser", "Generate"}]
+generateDir = FileNameJoin[{packageDir, "CodeParser", "Generate"}]
 
-PrependTo[$Path, generateSrcDir]
+PrependTo[$Path, generateDir]
 
 If[FailureQ[FindFile["CodeParser`Generate`GenerateSources`"]],
   Print["CodeParser`Generate`GenerateSources` could not be found."];
@@ -213,7 +213,7 @@ Print["Done Clean"]
 
 
 
-importedLongNames = Get[FileNameJoin[{tablesDir, "LongNames.wl"}]]
+importedLongNames = Get[FileNameJoin[{dataDir, "LongNames.wl"}]]
 
 validateLongNameMap[importedLongNames]
 
@@ -229,14 +229,14 @@ importedUnsupportedLongNames = Keys[Select[importedLongNames, # === UnsupportedC
 
 importedRawLongNames = Keys[Select[importedLongNames, # === RawCharacter &]]
 
-importedPrecedenceSource = Get[FileNameJoin[{tablesDir, "Precedence.wl"}]]
+importedPrecedenceSource = Get[FileNameJoin[{dataDir, "Precedence.wl"}]]
 
 If[FailureQ[importedPrecedenceSource],
   Print[importedPrecedenceSource];
   Quit[1]
 ]
 
-importedTokenEnumSource = Get[FileNameJoin[{tablesDir, "TokenEnum.wl"}]]
+importedTokenEnumSource = Get[FileNameJoin[{dataDir, "TokenEnum.wl"}]]
 
 If[FailureQ[importedTokenEnumSource],
   Print[importedTokenEnumSource];
