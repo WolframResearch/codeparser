@@ -30,9 +30,17 @@ DeclarationName[GroupNode[GroupParen, {node_}, _]] := DeclarationName[node]
 
 DeclarationName[PatternBlankNode[_, {node_, _}, _]] := DeclarationName[node]
 
-DeclarationName[CallNode[LeafNode[Symbol, "Pattern", _], {node_, _}, _]] := DeclarationName[node]
+(*
+In the declaration:
 
-DeclarationName[BinaryNode[Pattern, {node_, _}, _]] := DeclarationName[node]
+e:InitializationValue[Except[_String | _Symbol],___]
+
+the name is InitializationValue
+
+*)
+DeclarationName[CallNode[LeafNode[Symbol, "Pattern", _], {_, node_}, _]] := DeclarationName[node]
+DeclarationName[BinaryNode[Pattern, {_, node_}, _]] := DeclarationName[node]
+
 
 DeclarationName[BinaryNode[PatternTest, {node_, _}, _]] := DeclarationName[node]
 

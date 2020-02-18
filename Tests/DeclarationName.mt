@@ -39,5 +39,20 @@ TestMatch[
 
 
 
+TestMatch[
+	DeclarationName[CodeParse["e:InitializationValue[Except[_String | _Symbol],___]"]]
+	,
+	"InitializationValue"
+	,
+	TestID->"DeclarationName-20200218-I1H4I7"
+]
+
+
+
+
+
+
+
+
 
 
