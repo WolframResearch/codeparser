@@ -23,7 +23,7 @@ TEST_F(NodeTest, Bug1) {
     TheByteDecoder = std::unique_ptr<ByteDecoder>(new ByteDecoder);
     
     TheByteBuffer->init(BufferAndLength(Buffer(input.c_str() + 0), 3));
-    TheByteDecoder->init();
+    TheByteDecoder->init(SOURCECONVENTION_LINECOLUMN);
     
     auto T1 = Token(TOKEN_SYMBOL, BufferAndLength(Buffer(input.c_str() + 0), 1), Source(SourceLocation(1, 1), SourceLocation(1, 2)));
     Args.append(std::unique_ptr<Node>(new LeafNode(T1)));

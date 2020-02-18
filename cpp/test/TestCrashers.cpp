@@ -36,7 +36,7 @@ TEST_F(CrashTest, Crash1) {
     
     auto bufAndLen = BufferAndLength(arr, 7);
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
     
     auto N = TheParserSession->parseExpressions();
     
@@ -75,7 +75,7 @@ TEST_F(CrashTest, Crash2) {
     
     auto bufAndLen = BufferAndLength(arr, 6);
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
     
     auto N = TheParserSession->parseExpressions();
     
@@ -92,7 +92,7 @@ TEST_F(CrashTest, Crash3) {
     
     auto bufAndLen = BufferAndLength(arr, 7);
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
     
     auto N = TheParserSession->parseExpressions();
     

@@ -38,7 +38,7 @@ TEST_F(ParseletTest, Bug1) {
     
     auto str = reinterpret_cast<const unsigned char *>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
     
     auto Tok = TheTokenizer->currentToken(TOPLEVEL);
     
@@ -60,7 +60,7 @@ TEST_F(ParseletTest, Bug2) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
     
     auto Tok = TheTokenizer->currentToken(TOPLEVEL);
     
@@ -80,7 +80,7 @@ TEST_F(ParseletTest, Bug3) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
     
     auto Tok = TheTokenizer->currentToken(TOPLEVEL);
     
@@ -100,7 +100,7 @@ TEST_F(ParseletTest, Bug4) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
     
     auto Tok = TheTokenizer->currentToken(TOPLEVEL);
     

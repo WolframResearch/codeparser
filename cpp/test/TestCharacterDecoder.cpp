@@ -36,7 +36,7 @@ TEST_F(CharacterDecoderTest, Basic1) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
     
     auto c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
     
@@ -70,7 +70,7 @@ TEST_F(CharacterDecoderTest, LongName) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
     
     auto c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
     
@@ -104,7 +104,7 @@ TEST_F(CharacterDecoderTest, 4Hex) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
     
     auto c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
     
@@ -138,7 +138,7 @@ TEST_F(CharacterDecoderTest, 2Hex) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
     
     auto c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
     
@@ -172,7 +172,7 @@ TEST_F(CharacterDecoderTest, Octal) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
     
     auto c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
     
@@ -206,7 +206,7 @@ TEST_F(CharacterDecoderTest, 6Hex) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
     
     auto c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
     
@@ -240,7 +240,7 @@ TEST_F(CharacterDecoderTest, Raw) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
     
     auto c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
     
@@ -274,7 +274,7 @@ TEST_F(CharacterDecoderTest, LongNameError1) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
     
     auto c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
     
@@ -364,7 +364,7 @@ TEST_F(CharacterDecoderTest, LongNameError2) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
     
     auto c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
     
@@ -454,7 +454,7 @@ TEST_F(CharacterDecoderTest, 4HexError1) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
     
     auto c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
     
@@ -530,7 +530,7 @@ TEST_F(CharacterDecoderTest, LineContinuation1) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
     
     auto c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
     
@@ -571,7 +571,7 @@ TEST_F(CharacterDecoderTest, LineContinuation2) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
     
     auto c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
     
@@ -612,7 +612,7 @@ TEST_F(CharacterDecoderTest, LineContinuation3) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
     
     auto c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
     
