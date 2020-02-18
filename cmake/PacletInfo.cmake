@@ -14,7 +14,7 @@ macro(CheckPacletInfo)
         PACLET_VERSION
       OUTPUT_STRIP_TRAILING_WHITESPACE
       WORKING_DIRECTORY
-        ${CMAKE_SOURCE_DIR}
+        ${PROJECT_SOURCE_DIR}
       TIMEOUT
         10
       RESULT_VARIABLE

@@ -11,7 +11,7 @@ cmake_minimum_required(VERSION 3.14)
 #
 
 set(CPP_EXE_SOURCES
-	${CMAKE_SOURCE_DIR}/cpp/src/exe/main.cpp
+	${PROJECT_SOURCE_DIR}/cpp/src/exe/main.cpp
 )
 
 add_executable(codeparser-exe
@@ -19,8 +19,8 @@ add_executable(codeparser-exe
 )
 
 target_include_directories(codeparser-exe
-	PRIVATE ${CMAKE_SOURCE_DIR}/cpp/include
-	PRIVATE ${CMAKE_BINARY_DIR}/generated/cpp/include
+	PRIVATE ${PROJECT_SOURCE_DIR}/cpp/include
+	PRIVATE ${PROJECT_BINARY_DIR}/generated/cpp/include
 	PRIVATE ${WOLFRAMLIBRARY_INCLUDE_DIR}
 )
 

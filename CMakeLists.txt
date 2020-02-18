@@ -28,65 +28,65 @@ message(STATUS "NABORT: ${NABORT}")
 message(STATUS "LOCAL_BUILD: ${LOCAL_BUILD}")
 
 set(STATIC_WL_PACLET_SOURCES
-	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/Abstract.wl
-	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/CodeParser.wl
-	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/Boxes.wl
-	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/CodeAction.wl
-	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/DeclarationName.wl
-	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/Error.wl
-	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/Folds.wl
-	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/Library.wl
-	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/Node.wl
-	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/Quirks.wl
-	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/Shims.wl
-	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/ToString.wl
-	${CMAKE_SOURCE_DIR}/CodeParser/Kernel/Utils.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Abstract.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/CodeParser.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Boxes.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/CodeAction.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/DeclarationName.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Error.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Folds.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Library.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Node.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Quirks.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Shims.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/ToString.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Utils.wl
 )
 
 set(GENERATED_WL_PACLET_SOURCES
-	${CMAKE_BINARY_DIR}/generated/wl/LongNames.wl
+	${PROJECT_BINARY_DIR}/generated/wl/LongNames.wl
 )
 
 #
 # Used during the build process
 #
 set(WL_GENERATE_SOURCES
-	${CMAKE_SOURCE_DIR}/CodeParser/Generate/GenerateSources.wl
-	${CMAKE_SOURCE_DIR}/CodeParser/Generate/LongNames.wl
-	${CMAKE_SOURCE_DIR}/CodeParser/Generate/Precedence.wl
-	${CMAKE_SOURCE_DIR}/CodeParser/Generate/Symbol.wl
-	${CMAKE_SOURCE_DIR}/CodeParser/Generate/TokenEnum.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Generate/GenerateSources.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Generate/LongNames.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Generate/Precedence.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Generate/Symbol.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Generate/TokenEnum.wl
 )
 
 set(WL_GENERATE_EXPRLIB_SOURCES
-	${CMAKE_SOURCE_DIR}/CodeParser/Generate/GenerateExpressionLibrary.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Generate/GenerateExpressionLibrary.wl
 )
 
 set(WL_GENERATE_CREATEPACLETARCHIVE_SOURCES
-	${CMAKE_SOURCE_DIR}/${PACLET}/Generate/CreatePacletArchive.wl
+	${PROJECT_SOURCE_DIR}/${PACLET}/Generate/CreatePacletArchive.wl
 )
 
 set(PACLETINFO_SOURCE
-	${CMAKE_SOURCE_DIR}/${PACLET}/PacletInfo.m
+	${PROJECT_SOURCE_DIR}/${PACLET}/PacletInfo.m
 )
 
 set(WL_DATA_SOURCES
-	${CMAKE_SOURCE_DIR}/CodeParser/Data/LongNames.wl
-	${CMAKE_SOURCE_DIR}/CodeParser/Data/Precedence.wl
-	${CMAKE_SOURCE_DIR}/CodeParser/Data/TokenEnum.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Data/LongNames.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Data/Precedence.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Data/TokenEnum.wl
 )
 
 set(GENERATED_CPP_INCLUDES
-	${CMAKE_BINARY_DIR}/generated/cpp/include/LongNames.h
-	${CMAKE_BINARY_DIR}/generated/cpp/include/Precedence.h
-	${CMAKE_BINARY_DIR}/generated/cpp/include/Symbol.h
-	${CMAKE_BINARY_DIR}/generated/cpp/include/TokenEnum.h
+	${PROJECT_BINARY_DIR}/generated/cpp/include/LongNames.h
+	${PROJECT_BINARY_DIR}/generated/cpp/include/Precedence.h
+	${PROJECT_BINARY_DIR}/generated/cpp/include/Symbol.h
+	${PROJECT_BINARY_DIR}/generated/cpp/include/TokenEnum.h
 )
 
 set(GENERATED_CPP_LIB_SOURCES
-	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/LongNames.cpp
-	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/Symbol.cpp
-	${CMAKE_BINARY_DIR}/generated/cpp/src/lib/TokenEnum.cpp
+	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/LongNames.cpp
+	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/Symbol.cpp
+	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/TokenEnum.cpp
 )
 
 set(GENERATED_SOURCES
@@ -106,8 +106,8 @@ set(DOCUMENTATION_NOTEBOOK_PATHS
 # Setup documentation notebook paths
 #
 foreach(NB_PATH ${DOCUMENTATION_NOTEBOOK_PATHS})
-	set(SRC ${CMAKE_SOURCE_DIR}/${PACLET}/Documentation/${NB_PATH})
-	set(BUILT ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/${NB_PATH})
+	set(SRC ${PROJECT_SOURCE_DIR}/${PACLET}/Documentation/${NB_PATH})
+	set(BUILT ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Documentation/${NB_PATH})
 	list(APPEND DOCUMENTATION_SOURCE ${SRC})
 	list(APPEND BUILT_DOCUMENTATION ${BUILT})
 endforeach()
@@ -131,7 +131,7 @@ endif()
 
 
 file(MAKE_DIRECTORY
-	${CMAKE_BINARY_DIR}/paclet/${PACLET}
+	${PROJECT_BINARY_DIR}/paclet/${PACLET}
 )
 
 
@@ -139,44 +139,45 @@ file(MAKE_DIRECTORY
 # Copy WL source files
 #
 
-set(COPIED_PACLETINFO ${CMAKE_BINARY_DIR}/paclet/${PACLET}/PacletInfo.m)
+set(COPIED_PACLETINFO ${PROJECT_BINARY_DIR}/paclet/${PACLET}/PacletInfo.m)
 
 add_custom_command(
 	OUTPUT
 		${COPIED_PACLETINFO}
 	COMMAND
-		${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${PACLET}/PacletInfo.m ${COPIED_PACLETINFO}
+		${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/${PACLET}/PacletInfo.m ${COPIED_PACLETINFO}
 	COMMAND
 		${CMAKE_COMMAND} -DLOCAL_BUILD=${LOCAL_BUILD} -DCOPIED_PACLETINFO=${COPIED_PACLETINFO} -P ${PROJECT_SOURCE_DIR}/cmake/ReplacePacletInfo.cmake
 	DEPENDS
-		${CMAKE_SOURCE_DIR}/${PACLET}/PacletInfo.m
+		${PROJECT_SOURCE_DIR}/${PACLET}/PacletInfo.m
+		${PROJECT_SOURCE_DIR}/cmake/ReplacePacletInfo.cmake
 )
-list(APPEND COPIED_WL_PACLET_SOURCES ${CMAKE_BINARY_DIR}/paclet/${PACLET}/PacletInfo.m)
+list(APPEND COPIED_WL_PACLET_SOURCES ${PROJECT_BINARY_DIR}/paclet/${PACLET}/PacletInfo.m)
 
 foreach(SRC ${STATIC_WL_PACLET_SOURCES})
 	get_filename_component(BARE_SRC ${SRC} NAME)
 	add_custom_command(
 		OUTPUT
-			${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC}
+			${PROJECT_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC}
 		COMMAND
-			${CMAKE_COMMAND} -E copy ${SRC} ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC}
+			${CMAKE_COMMAND} -E copy ${SRC} ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC}
 		DEPENDS
 			${SRC}
 	)
-	list(APPEND COPIED_WL_PACLET_SOURCES ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC})
+	list(APPEND COPIED_WL_PACLET_SOURCES ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC})
 endforeach()
 
 foreach(SRC ${GENERATED_WL_PACLET_SOURCES})
 	get_filename_component(BARE_SRC ${SRC} NAME)
 	add_custom_command(
 		OUTPUT
-			${CMAKE_BINARY_DIR}/paclet/${PACLET}/Generated/${BARE_SRC}
+			${PROJECT_BINARY_DIR}/paclet/${PACLET}/Generated/${BARE_SRC}
 		COMMAND
-			${CMAKE_COMMAND} -E copy ${SRC} ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Generated/${BARE_SRC}
+			${CMAKE_COMMAND} -E copy ${SRC} ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Generated/${BARE_SRC}
 		DEPENDS
 			${SRC}
 	)
-	list(APPEND COPIED_WL_PACLET_SOURCES ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Generated/${BARE_SRC})
+	list(APPEND COPIED_WL_PACLET_SOURCES ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Generated/${BARE_SRC})
 endforeach()
 
 
@@ -200,10 +201,12 @@ add_custom_command(
 	DEPENDS
 		${WL_DATA_SOURCES}
 		${WL_GENERATE_SOURCES}
+		${PROJECT_SOURCE_DIR}/${PACLET}/Generate/GenerateSources.wl
+		${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
-		${CMAKE_COMMAND} -DSCRIPT=${CMAKE_SOURCE_DIR}/${PACLET}/Generate/GenerateSources.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${CMAKE_SOURCE_DIR} -DBUILDDIR=${CMAKE_BINARY_DIR} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
+		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/GenerateSources.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	WORKING_DIRECTORY
-		${CMAKE_SOURCE_DIR}
+		${PROJECT_SOURCE_DIR}
 )
 
 
@@ -216,7 +219,7 @@ add_custom_command(
 #
 if(BUILD_EXPR_LIB)
 
-set(EXPR_LIB ${CMAKE_BINARY_DIR}/paclet/CodeParser/LibraryResources/${SYSTEMID}/expr${CMAKE_SHARED_LIBRARY_SUFFIX})
+set(EXPR_LIB ${PROJECT_BINARY_DIR}/paclet/CodeParser/LibraryResources/${SYSTEMID}/expr${CMAKE_SHARED_LIBRARY_SUFFIX})
 
 add_library(expr-lib SHARED IMPORTED)
 
@@ -238,13 +241,15 @@ add_custom_command(
 		${EXPR_LIB}
 	DEPENDS
 		${WL_GENERATE_EXPRLIB_SOURCES}
+		${PROJECT_SOURCE_DIR}/${PACLET}/Generate/GenerateExpressionLibrary.wl
+		${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
 		${CMAKE_COMMAND} -E echo "EXPR_LIB: ${EXPR_LIB}"
 	COMMAND
-		${CMAKE_COMMAND} -DSCRIPT=${CMAKE_SOURCE_DIR}/${PACLET}/Generate/GenerateExpressionLibrary.wl -DSRCDIR=${CMAKE_SOURCE_DIR} -DBUILDDIR=${CMAKE_BINARY_DIR} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
+		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/GenerateExpressionLibrary.wl -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	VERBATIM
 	WORKING_DIRECTORY
-		${CMAKE_SOURCE_DIR}
+		${PROJECT_SOURCE_DIR}
 )
 
 add_dependencies(expr-lib expr-lib-custom)
@@ -276,50 +281,50 @@ message(STATUS "MATHLINK_LIB_DIR: ${MATHLINK_LIB_DIR}")
 endif(USE_MATHLINK)
 
 set(CPP_INCLUDES
-	${CMAKE_SOURCE_DIR}/cpp/include/API.h
-	${CMAKE_SOURCE_DIR}/cpp/include/ByteBuffer.h
-	${CMAKE_SOURCE_DIR}/cpp/include/ByteDecoder.h
-	${CMAKE_SOURCE_DIR}/cpp/include/ByteEncoder.h
-	${CMAKE_SOURCE_DIR}/cpp/include/CharacterDecoder.h
-	${CMAKE_SOURCE_DIR}/cpp/include/CodePoint.h
-	${CMAKE_SOURCE_DIR}/cpp/include/Node.h
-	${CMAKE_SOURCE_DIR}/cpp/include/Parselet.h
-	${CMAKE_SOURCE_DIR}/cpp/include/Parser.h
-	${CMAKE_SOURCE_DIR}/cpp/include/Source.h
-	${CMAKE_SOURCE_DIR}/cpp/include/Token.h
-	${CMAKE_SOURCE_DIR}/cpp/include/Tokenizer.h
-	${CMAKE_SOURCE_DIR}/cpp/include/Utils.h
-	${CMAKE_SOURCE_DIR}/cpp/include/WLCharacter.h
+	${PROJECT_SOURCE_DIR}/cpp/include/API.h
+	${PROJECT_SOURCE_DIR}/cpp/include/ByteBuffer.h
+	${PROJECT_SOURCE_DIR}/cpp/include/ByteDecoder.h
+	${PROJECT_SOURCE_DIR}/cpp/include/ByteEncoder.h
+	${PROJECT_SOURCE_DIR}/cpp/include/CharacterDecoder.h
+	${PROJECT_SOURCE_DIR}/cpp/include/CodePoint.h
+	${PROJECT_SOURCE_DIR}/cpp/include/Node.h
+	${PROJECT_SOURCE_DIR}/cpp/include/Parselet.h
+	${PROJECT_SOURCE_DIR}/cpp/include/Parser.h
+	${PROJECT_SOURCE_DIR}/cpp/include/Source.h
+	${PROJECT_SOURCE_DIR}/cpp/include/Token.h
+	${PROJECT_SOURCE_DIR}/cpp/include/Tokenizer.h
+	${PROJECT_SOURCE_DIR}/cpp/include/Utils.h
+	${PROJECT_SOURCE_DIR}/cpp/include/WLCharacter.h
 )
 
 if(BUILD_EXPR_LIB)
 list(APPEND CPP_INCLUDES
-    ${CMAKE_SOURCE_DIR}/cpp/include/ExpressionLibrary.h
+	${PROJECT_SOURCE_DIR}/cpp/include/ExpressionLibrary.h
 )
 endif()
 
 
 
 set(CPP_LIB_SOURCES
-	${CMAKE_SOURCE_DIR}/cpp/src/lib/API.cpp
-	${CMAKE_SOURCE_DIR}/cpp/src/lib/ByteBuffer.cpp
-	${CMAKE_SOURCE_DIR}/cpp/src/lib/ByteDecoder.cpp
-	${CMAKE_SOURCE_DIR}/cpp/src/lib/ByteEncoder.cpp
-	${CMAKE_SOURCE_DIR}/cpp/src/lib/CharacterDecoder.cpp
-	${CMAKE_SOURCE_DIR}/cpp/src/lib/Node.cpp
-	${CMAKE_SOURCE_DIR}/cpp/src/lib/Parselet.cpp
-	${CMAKE_SOURCE_DIR}/cpp/src/lib/Parser.cpp
-	${CMAKE_SOURCE_DIR}/cpp/src/lib/SemiSemiParselet.cpp
-	${CMAKE_SOURCE_DIR}/cpp/src/lib/Source.cpp
-	${CMAKE_SOURCE_DIR}/cpp/src/lib/Token.cpp
-	${CMAKE_SOURCE_DIR}/cpp/src/lib/Tokenizer.cpp
-	${CMAKE_SOURCE_DIR}/cpp/src/lib/Utils.cpp
-	${CMAKE_SOURCE_DIR}/cpp/src/lib/WLCharacter.cpp
+	${PROJECT_SOURCE_DIR}/cpp/src/lib/API.cpp
+	${PROJECT_SOURCE_DIR}/cpp/src/lib/ByteBuffer.cpp
+	${PROJECT_SOURCE_DIR}/cpp/src/lib/ByteDecoder.cpp
+	${PROJECT_SOURCE_DIR}/cpp/src/lib/ByteEncoder.cpp
+	${PROJECT_SOURCE_DIR}/cpp/src/lib/CharacterDecoder.cpp
+	${PROJECT_SOURCE_DIR}/cpp/src/lib/Node.cpp
+	${PROJECT_SOURCE_DIR}/cpp/src/lib/Parselet.cpp
+	${PROJECT_SOURCE_DIR}/cpp/src/lib/Parser.cpp
+	${PROJECT_SOURCE_DIR}/cpp/src/lib/SemiSemiParselet.cpp
+	${PROJECT_SOURCE_DIR}/cpp/src/lib/Source.cpp
+	${PROJECT_SOURCE_DIR}/cpp/src/lib/Token.cpp
+	${PROJECT_SOURCE_DIR}/cpp/src/lib/Tokenizer.cpp
+	${PROJECT_SOURCE_DIR}/cpp/src/lib/Utils.cpp
+	${PROJECT_SOURCE_DIR}/cpp/src/lib/WLCharacter.cpp
 )
 
 if(BUILD_EXPR_LIB)
 list(APPEND CPP_LIB_SOURCES
-${CMAKE_SOURCE_DIR}/cpp/src/lib/ExpressionLibrary.cpp
+${PROJECT_SOURCE_DIR}/cpp/src/lib/ExpressionLibrary.cpp
 )
 endif()
 
@@ -333,8 +338,8 @@ add_library(codeparser-lib SHARED
 )
 
 target_include_directories(codeparser-lib
-	PRIVATE ${CMAKE_SOURCE_DIR}/cpp/include
-	PRIVATE ${CMAKE_BINARY_DIR}/generated/cpp/include
+	PRIVATE ${PROJECT_SOURCE_DIR}/cpp/include
+	PRIVATE ${PROJECT_BINARY_DIR}/generated/cpp/include
 	PRIVATE ${MATHLINK_INCLUDE_DIR}
 	PRIVATE ${WOLFRAMLIBRARY_INCLUDE_DIR}
 )
@@ -372,32 +377,32 @@ set_target_properties(codeparser-lib PROPERTIES
 	# https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#library-output-artifacts
 	#
 	LIBRARY_OUTPUT_DIRECTORY
-		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
 	#
 	# make sure that it is not created inside ${SYSTEMID}/Debug on Multi-configuration generators (VS, Xcode)
 	#
 	LIBRARY_OUTPUT_DIRECTORY_DEBUG
-		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
 	LIBRARY_OUTPUT_DIRECTORY_RELEASE
-		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
 	#
 	# https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#archive-output-artifacts
 	#
 	ARCHIVE_OUTPUT_DIRECTORY
-		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
 	ARCHIVE_OUTPUT_DIRECTORY_DEBUG
-		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
 	ARCHIVE_OUTPUT_DIRECTORY_RELEASE
-		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
 	#
 	# https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#runtime-output-artifacts
 	#
 	RUNTIME_OUTPUT_DIRECTORY
-		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
 	RUNTIME_OUTPUT_DIRECTORY_DEBUG
-		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
 	RUNTIME_OUTPUT_DIRECTORY_RELEASE
-		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
 	#
 	# WL / LibraryLink style dictates that the library be named "CodeParser.dylib" and not "libCodeParser.dylib"
 	#
@@ -490,9 +495,9 @@ add_custom_command(
 	DEPENDS
 		${DOCUMENTATION_SOURCE}
 	COMMAND
-		ant -DmathExe=${WOLFRAMKERNEL} -DappPath=${DOCS_APPPATH} -Djlinkpath=${DOCS_JLINKPATH} -DinputDir=${CMAKE_SOURCE_DIR}/${PACLET}/Documentation/ -DoutputDir=${CMAKE_BINARY_DIR}/paclet/${PACLET}/Documentation/ -file ${DOCS_APPPATH}/DocumentationBuild/SystemFiles/ant/Build/notebook.xml
+		ant -DmathExe=${WOLFRAMKERNEL} -DappPath=${DOCS_APPPATH} -Djlinkpath=${DOCS_JLINKPATH} -DinputDir=${PROJECT_SOURCE_DIR}/${PACLET}/Documentation/ -DoutputDir=${PROJECT_BINARY_DIR}/paclet/${PACLET}/Documentation/ -file ${DOCS_APPPATH}/DocumentationBuild/SystemFiles/ant/Build/notebook.xml
 	WORKING_DIRECTORY
-		${CMAKE_SOURCE_DIR}
+		${PROJECT_SOURCE_DIR}
 )
 
 endif(BUILD_DOCS)
@@ -526,7 +531,7 @@ list(APPEND PACLET_SOURCES
 endif(BUILD_DOCS)
 
 add_custom_target(paclet
-	DEPENDS ${CMAKE_BINARY_DIR}/paclet/${PACLET}-${PACLET_VERSION}.paclet
+	DEPENDS ${PROJECT_BINARY_DIR}/paclet/${PACLET}-${PACLET_VERSION}.paclet
 )
 
 #
@@ -534,14 +539,16 @@ add_custom_target(paclet
 #
 add_custom_command(
 	OUTPUT
-		${CMAKE_BINARY_DIR}/paclet/${PACLET}-${PACLET_VERSION}.paclet
+		${PROJECT_BINARY_DIR}/paclet/${PACLET}-${PACLET_VERSION}.paclet
 	DEPENDS
 		${PACLET_SOURCES}
+		${PROJECT_SOURCE_DIR}/${PACLET}/Generate/CreatePacletArchive.wl
+		${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
-		${CMAKE_COMMAND} -DSCRIPT=${CMAKE_SOURCE_DIR}/${PACLET}/Generate/CreatePacletArchive.wl -DSRCDIR=${CMAKE_SOURCE_DIR} -DBUILDDIR=${CMAKE_BINARY_DIR} -DPACLET=${PACLET} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
+		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/CreatePacletArchive.wl -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DPACLET=${PACLET} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	VERBATIM
 	WORKING_DIRECTORY
-		${CMAKE_SOURCE_DIR}
+		${PROJECT_SOURCE_DIR}
 )
 
 

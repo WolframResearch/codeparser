@@ -11,17 +11,17 @@ endif()
 #
 
 set(CPP_TEST_SOURCES
-    ${CMAKE_SOURCE_DIR}/cpp/test/TestAPI.cpp
-    ${CMAKE_SOURCE_DIR}/cpp/test/TestByteDecoder.cpp
-    ${CMAKE_SOURCE_DIR}/cpp/test/TestCharacterDecoder.cpp
-    ${CMAKE_SOURCE_DIR}/cpp/test/TestNode.cpp
-    ${CMAKE_SOURCE_DIR}/cpp/test/TestParselet.cpp
-    ${CMAKE_SOURCE_DIR}/cpp/test/TestSourceCharacter.cpp
-    ${CMAKE_SOURCE_DIR}/cpp/test/TestTokenEnum.cpp
-    ${CMAKE_SOURCE_DIR}/cpp/test/TestTokenizer.cpp
-    ${CMAKE_SOURCE_DIR}/cpp/test/TestWLCharacter.cpp
+    ${PROJECT_SOURCE_DIR}/cpp/test/TestAPI.cpp
+    ${PROJECT_SOURCE_DIR}/cpp/test/TestByteDecoder.cpp
+    ${PROJECT_SOURCE_DIR}/cpp/test/TestCharacterDecoder.cpp
+    ${PROJECT_SOURCE_DIR}/cpp/test/TestNode.cpp
+    ${PROJECT_SOURCE_DIR}/cpp/test/TestParselet.cpp
+    ${PROJECT_SOURCE_DIR}/cpp/test/TestSourceCharacter.cpp
+    ${PROJECT_SOURCE_DIR}/cpp/test/TestTokenEnum.cpp
+    ${PROJECT_SOURCE_DIR}/cpp/test/TestTokenizer.cpp
+    ${PROJECT_SOURCE_DIR}/cpp/test/TestWLCharacter.cpp
 
-    ${CMAKE_SOURCE_DIR}/cpp/test/TestCrashers.cpp
+    ${PROJECT_SOURCE_DIR}/cpp/test/TestCrashers.cpp
 )
 
 add_executable(test-exe
@@ -30,8 +30,8 @@ add_executable(test-exe
 
 target_include_directories(test-exe
 	PRIVATE ${GTEST_INCLUDE_DIRS}
-	PRIVATE ${CMAKE_SOURCE_DIR}/cpp/include
-	PRIVATE ${CMAKE_BINARY_DIR}/generated/cpp/include
+	PRIVATE ${PROJECT_SOURCE_DIR}/cpp/include
+	PRIVATE ${PROJECT_BINARY_DIR}/generated/cpp/include
 	PRIVATE ${MATHLINK_INCLUDE_DIR}
 	PRIVATE ${WOLFRAMLIBRARY_INCLUDE_DIR}
 )
