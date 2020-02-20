@@ -97,6 +97,7 @@ set(GENERATED_SOURCES
 
 
 set(DOCUMENTATION_NOTEBOOK_PATHS
+	English/Guides/CodeParser.nb
 	English/ReferencePages/Symbols/CodeConcreteParse.nb
 	English/ReferencePages/Symbols/CodeParse.nb
 	English/ReferencePages/Symbols/CodeTokenize.nb

@@ -1,12 +1,13 @@
 
 Paclet[
-    Name -> "CodeParser",
-    Version -> "1.0",
-    WolframVersion -> "11.0+",
-    Creator ->"Brenton Bostick <brenton@wolfram.com>",
-    Extensions -> {
-    		{"Kernel", Root -> "Kernel", Context -> "CodeParser`"},
-    		{"Documentation", Language -> "English"},
-			{"LibraryLink"}
-    }
+  Name -> "CodeParser",
+  Version -> "1.0",
+  WolframVersion -> "11.0+",
+  Description -> "Parse Wolfram Language code.",
+  Creator ->"Brenton Bostick <brenton@wolfram.com>",
+  Extensions -> {
+    {"Kernel", Root -> "Kernel", Context -> "CodeParser`"},
+    {"Documentation", Language -> "English", MainPage -> "Guides/CodeParser"},
+    {"LibraryLink"}
+  }
 ]

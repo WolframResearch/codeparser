@@ -1,6 +1,6 @@
 # CodeParser
 
-`CodeParser` is a paclet for parsing Wolfram Language code.
+`CodeParser` is a package for parsing Wolfram Language code.
 
 ```
 In[1]:= Needs["CodeParser`"]
@@ -14,15 +14,29 @@ Out[2]= InfixNode[Plus, {LeafNode[Integer, 1, <|Source -> {{1, 1}, {1, 2}}|>],
 In[3]:=
 ```
 
-`CodeParser` provides *symbolic* results.
-
-XX
-
+`CodeParser` is used by the `CodeTools` suite of packages for inspecting code, formatting code, and instrumenting code for coverage reporting and profiling.
 
 
 [Parsing the Wolfram Language from WTC 2019: Watch Video](https://www.wolfram.com/broadcast/video.php?v=2908)
 
 [Parsing the Wolfram Language from WTC 2019: Download Presentation](https://files.wolframcdn.com/pub/www.wolfram.com/technology-conference/2019/Thursday/2019BrentonBostickParsingTheWL.nb)
+
+
+## Setup
+
+Make sure that the paclet can be found on your system:
+```
+In[1]:= Needs["CodeParser`"]
+```
+
+[CodeParser on github.com](https://github.com/xxx)
+
+Install CodeParser from the CodeTools paclet server:
+```
+In[1]:= PacletUpdate["CodeParser", "Site" -> "XXX", "UpdateSites" -> True]
+
+Out[1]= PacletObject[CodeParser, 1.0, <>]
+```
 
 
 ## Building
@@ -41,9 +55,7 @@ cd build
 cmake ..
 cmake --build . --target paclet
 ```
-
 The result is a directory named `paclet` that contains the WL package source code and a built CodeParser `.paclet` file for installing.
-
 
 Specify `INSTALLATION_DIRECTORY` if you have Mathematica installed in a non-default location:
 ```
@@ -80,20 +92,3 @@ InfixNode[Plus, {LeafNode[Integer, "1", <|Source->{{1, 2}, {1, 2}}|>], LeafNode[
 
 >>>
 ```
-
-
-## Troubleshooting
-
-You may see an error because the default paths to `WolframKernel`, `MathLink`, or `WolframLibrary` may not be correct.
-
-Here is the cmake command using supplied values for `WOLFRAMKERNEL`, `MATHLINK_LIB_DIR`, `MATHLINK_INCLUDE_DIR`, and `WOLFRAMLIBRARY_INCLUDE_DIR`:
-```
-cmake -DWOLFRAMKERNEL=/path/to/WolframKernel -DMATHLINK_LIB_DIR=/path/to/mathlink/lib/dir -DMATHLINK_INCLUDE_DIR=/path/to/mathlink/include/dir -DWOLFRAMLIBRARY_INCLUDE_DIR=/path/to/wolfram/library/dir ..
-```
-
-Here are typical values for the variables:
-* `WOLFRAMKERNEL` `/Applications/Mathematica.app/Contents/MacOS/WolframKernel`
-* `MATHLINK_LIB_DIR` `/Applications/Mathematica.app/Contents/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions`
-* `MATHLINK_INCLUDE_DIR` `/Applications/Mathematica.app/Contents/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions`
-* `WOLFRAMLIBRARY_INCLUDE_DIR` `/Applications/Mathematica.app/Contents/SystemFiles/IncludeFiles/C`
-
