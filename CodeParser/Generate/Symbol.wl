@@ -571,7 +571,7 @@ symbols = Union[Join[
             CodeParser`Library`MakeFormatIssue, CodeParser`Library`MakeDeleteTextCodeAction, CodeParser`Library`MakeDeleteTriviaCodeAction,
             CodeParser`Library`MakeInsertTextAfterCodeAction, CodeParser`Library`MakeSourceCharacterNode, CodeParser`Library`MakeSafeStringNode},
     {CodeParser`InternalInvalid, CodeParser`Metadata, CodeParser`PatternBlank, CodeParser`PatternBlankSequence, CodeParser`PatternBlankNullSequence,
-      CodeParser`OptionalDefault, CodeParser`OptionalDefaultPattern, CodeParser`TernaryTilde},
+      CodeParser`OptionalDefault, CodeParser`OptionalDefaultPattern, CodeParser`TernaryTilde, CodeParser`InfixInequality},
     {CodeParser`SourceCharacter},
     DownValues[PrefixOperatorToSymbol][[All, 2]],
     DownValues[PostfixOperatorToSymbol][[All, 2]],

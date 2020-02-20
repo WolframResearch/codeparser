@@ -367,21 +367,6 @@ public:
     }
 };
 
-// Gather all \[VectorGreater] \[VectorLess] \[VectorGreaterEqual] \[VectorLessEqual] into a single node
-class VectorInequalityParselet : public InfixParselet {
-public:
-    
-    NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
-    
-    Precedence getPrecedence() const override {
-        return PRECEDENCE_CLASS_VECTORINEQUALITY;
-    }
-    
-    Associativity getAssociativity() const override {
-        return ASSOCIATIVITY_NONE;
-    }
-};
-
 class ColonColonParselet : public InfixParselet {
 public:
     

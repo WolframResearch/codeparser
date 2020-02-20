@@ -517,12 +517,11 @@ Parser::Parser() : prefixParselets(), infixParselets(), contextSensitiveSymbolPa
     registerInfixParselet(TOKEN_LONGNAME_NOTLESSTILDE.value(), InfixParseletPtr(new InequalityParselet()));
     registerInfixParselet(TOKEN_LONGNAME_NOTNESTEDGREATERGREATER.value(), InfixParseletPtr(new InequalityParselet()));
     registerInfixParselet(TOKEN_LONGNAME_NOTNESTEDLESSLESS.value(), InfixParseletPtr(new InequalityParselet()));
-    
-    // special VectorInequality
-    registerInfixParselet(TOKEN_LONGNAME_VECTORGREATER.value(), InfixParseletPtr(new VectorInequalityParselet()));
-    registerInfixParselet(TOKEN_LONGNAME_VECTORGREATEREQUAL.value(), InfixParseletPtr(new VectorInequalityParselet()));
-    registerInfixParselet(TOKEN_LONGNAME_VECTORLESS.value(), InfixParseletPtr(new VectorInequalityParselet()));
-    registerInfixParselet(TOKEN_LONGNAME_VECTORLESSEQUAL.value(), InfixParseletPtr(new VectorInequalityParselet()));
+    // vector inequality
+    registerInfixParselet(TOKEN_LONGNAME_VECTORGREATER.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_VECTORGREATEREQUAL.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_VECTORLESS.value(), InfixParseletPtr(new InequalityParselet()));
+    registerInfixParselet(TOKEN_LONGNAME_VECTORLESSEQUAL.value(), InfixParseletPtr(new InequalityParselet()));
     
     // stringify next token (as a symbol)
     registerInfixParselet(TOKEN_COLONCOLON.value(), InfixParseletPtr(new ColonColonParselet()));

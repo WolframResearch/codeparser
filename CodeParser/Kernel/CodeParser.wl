@@ -104,6 +104,8 @@ BinaryAtAtAt
 TernaryTilde
 TernarySlashColon
 
+InfixInequality
+
 Comma
 
 

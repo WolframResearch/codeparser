@@ -1301,7 +1301,7 @@ NodePtr InequalityParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
             Args.append(std::move(Operand));
             
             if (!possible) {
-                return NodePtr(new InfixNode(SYMBOL_INEQUALITY, std::move(Args)));
+                return NodePtr(new InfixNode(SYMBOL_CODEPARSER_INFIXINEQUALITY, std::move(Args)));
             }
             
         } else {
@@ -1310,88 +1310,7 @@ NodePtr InequalityParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
             // Tok.Tok != TokIn.Tok, so break
             //
             
-            return NodePtr(new InfixNode(SYMBOL_INEQUALITY, std::move(Args)));
-        }
-        
-    } // while
-}
-
-
-//
-// Gather all \[VectorGreater] \[VectorLess] \[VectorGreaterEqual] \[VectorLessEqual] into a single node
-//
-NodePtr VectorInequalityParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
-    
-    NodeSeq Args(1);
-    Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
-    
-    Ctxt.Prec = getPrecedence();
-    
-    while (true) {
-      
-#if !NABORT
-        //
-        // Check isAbort() inside loops
-        //
-        if (TheParserSession->isAbort()) {
-            
-            return TheParserSession->handleAbort();
-        }
-#endif // !NABORT
-        
-        //
-        // LOOKAHEAD
-        //
-        {
-            LeafSeq ArgsTest1;
-            
-            auto Tok1 = TheParser->currentToken();
-            Tok1 = TheParser->eatAndPreserveToplevelNewlines(Tok1, Ctxt, ArgsTest1);
-            
-            if (Tok1.Tok.isVectorInequalityOperator()) {
-                
-                TheParser->nextToken(Tok1);
-                
-                LeafSeq ArgsTest2;
-                
-                auto Tok2 = TheParser->currentToken();
-                Tok2 = TheParser->eatAll(Tok2, Ctxt, ArgsTest2);
-                
-                auto wasCloser = false;
-                
-                NodePtr Operand;
-                bool possible;
-                if (Tok2.Tok.isPossibleBeginningOfExpression()) {
-                    Operand = TheParser->parse(Tok2, Ctxt);
-                    possible = true;
-                } else {
-                    Operand = TheParser->handleNotPossible(Tok2, Tok1, Ctxt, &wasCloser);
-                    possible = false;
-                }
-                
-                //
-                // Do not reserve inside loop
-                // Allow default resizing strategy, which is hopefully exponential
-                //
-                Args.appendIfNonEmpty(std::move(ArgsTest1));
-                Args.append(NodePtr(new LeafNode(Tok1)));
-                if (!wasCloser) {
-                    Args.appendIfNonEmpty(std::move(ArgsTest2));
-                }
-                Args.append(std::move(Operand));
-                
-                if (!possible) {
-                    return NodePtr(new InfixNode(SYMBOL_DEVELOPER_VECTORINEQUALITY, std::move(Args)));
-                }
-                
-            } else {
-                
-                //
-                // Tok.Tok != TokIn.Tok, so break
-                //
-                
-                return NodePtr(new InfixNode(SYMBOL_DEVELOPER_VECTORINEQUALITY, std::move(Args)));
-            }
+            return NodePtr(new InfixNode(SYMBOL_CODEPARSER_INFIXINEQUALITY, std::move(Args)));
         }
         
     } // while

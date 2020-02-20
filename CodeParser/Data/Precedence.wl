@@ -289,16 +289,8 @@ Precedence`LongName`NotHumpDownHump -> Precedence[NotHumpDownHump], (* 290 *)
 *)
 Precedence`Class`OrderingOperators -> Next, (* Precedence[LeftTriangle] == 290 *)
 
-Precedence`Class`Inequality -> Precedence`Class`OrderingOperators, (* Precedence[Equal] == 290 *)
 
-(*
-added in 12.0:
-VectorGreater
-VectorGreaterEqual
-VectorLess
-VectorLessEqual
-*)
-Precedence`Class`VectorInequality -> Precedence`Class`OrderingOperators, (* Precedence[System`VectorGreater] == 290 *)
+Precedence`Class`Inequality -> Precedence`Class`OrderingOperators, (* Precedence[Equal] == 290 *)
 
 Precedence`LongName`DirectedEdge -> Next, (* Precedence[DirectedEdge] == 295 *)
 Precedence`LongName`UndirectedEdge -> Precedence`LongName`DirectedEdge, (* Precedence[UndirectedEdge] == 295 *)

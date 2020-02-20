@@ -891,18 +891,14 @@ isInequalityOperator[Token`LongName`NotLessTilde] = True
 isInequalityOperator[Token`LongName`NotNestedGreaterGreater] = True
 isInequalityOperator[Token`LongName`NotNestedLessLess] = True
 
+isInequalityOperator[Token`LongName`VectorGreater] = True
+isInequalityOperator[Token`LongName`VectorGreaterEqual] = True
+isInequalityOperator[Token`LongName`VectorLess] = True
+isInequalityOperator[Token`LongName`VectorLessEqual] = True
+
 isInequalityOperator[_] = False
 
 
-
-
-
-isVectorInequalityOperator[Token`LongName`VectorGreater] = True
-isVectorInequalityOperator[Token`LongName`VectorGreaterEqual] = True
-isVectorInequalityOperator[Token`LongName`VectorLess] = True
-isVectorInequalityOperator[Token`LongName`VectorLessEqual] = True
-
-isVectorInequalityOperator[_] = False
 
 
 
@@ -942,7 +938,7 @@ Which[
   isError[tok],                         BitShiftLeft[2^^011, 9],
   isTrivia[tok],                        BitShiftLeft[2^^100, 9],
   isInequalityOperator[tok],            BitShiftLeft[2^^101, 9],
-  isVectorInequalityOperator[tok],      BitShiftLeft[2^^110, 9],
+  (* unused                             BitShiftLeft[2^^110, 9],*)
   (* unused                             BitShiftLeft[2^^111, 9],*)
 
   True,                                 BitShiftLeft[2^^000, 9]
@@ -1045,10 +1041,6 @@ struct TokenEnum {
   
   constexpr bool isInequalityOperator() const {
       return static_cast<bool>((T & 0xe00) == 0xa00);
-  }
-  
-  constexpr bool isVectorInequalityOperator() const {
-      return static_cast<bool>((T & 0xe00) == 0xc00);
   }
 
   constexpr bool isInfixOperator() const {

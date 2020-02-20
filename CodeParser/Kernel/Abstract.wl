@@ -282,11 +282,10 @@ abstract[BinaryNode[op_, {left_, _, right_}, data_]] := CallNode[ToNode[op], {ab
 (*
 Convert f[,1] into f[Null,1]
 *)
-abstract[InfixNode[Comma, { ErrorNode[Token`Error`ExpectedOperand, _, data1_], rest___ }, data_]] := abstract[InfixNode[Comma, { LeafNode[Token`Fake`ImplicitNull, "", data1], rest }, data]]
+abstract[InfixNode[Comma, { ErrorNode[Token`Error`ExpectedOperand, _, data1_], rest___ }, data_]] :=
+	abstract[InfixNode[Comma, { LeafNode[Token`Fake`ImplicitNull, "", data1], rest }, data]]
 
-abstract[InfixNode[Inequality, children_, data_]] := abstractInequality[InfixNode[Inequality, children, data]]
-
-abstract[InfixNode[Developer`VectorInequality, children_, data_]] := abstractVectorInequality[InfixNode[Developer`VectorInequality, children, data]]
+abstract[node:InfixNode[InfixInequality, children_, data_]] := abstractInfixInequality[node]
 
 (*
 Handle SameQ and UnsameQ specially because they do not participate in the InfixBinaryAt quirk
@@ -1214,13 +1213,15 @@ abstractTimes[BinaryNode[Divide, {left_, right_}, data_]] :=
 
 
 
-abstractInequality[InfixNode[Inequality, children_, data_]] :=
-	simplifyInequality[InfixNode[Inequality, children, data]]
+abstractInfixInequality[node:InfixNode[InfixInequality, children_, data_]] :=
+	simplifyInfixInequality[node]
 
 (*
 attempt to simplify e.g. Inequality[a, Less, b, Less, c] to Less[a, b, c]
+
+Yes, make sure that it is VectorLess[{a, b, c}] and not VectorLess[a, b, c]
 *)
-simplifyInequality[InfixNode[Inequality, children_, data_]] :=
+simplifyInfixInequality[InfixNode[InfixInequality, children_, data_]] :=
 Module[{rators, rands},
 	rators = inequalityOperatorToSymbol /@ children[[2;;-2;;2]];
 	rands = abstract /@ children[[1;;-1;;2]];
@@ -1328,8 +1329,27 @@ Module[{rators, rands},
 		{ToNode[NotNestedLessLess]..},
 			CallNode[ToNode[NotNestedLessLess], rands, data]
 		,
-		_,
+		{ToNode[System`VectorLess]..},
+			CallNode[ToNode[System`VectorLess], { CallNode[ToNode[List], rands, <||>] }, data]
+		,
+		{ToNode[System`VectorGreater]..},
+			CallNode[ToNode[System`VectorGreater], { CallNode[ToNode[List], rands, <||>] }, data]
+		,
+		{ToNode[System`VectorLessEqual]..},
+			CallNode[ToNode[System`VectorLessEqual], { CallNode[ToNode[List], rands, <||>] }, data]
+		,
+		{ToNode[System`VectorGreaterEqual]..},
+			CallNode[ToNode[System`VectorGreaterEqual], { CallNode[ToNode[List], rands, <||>] }, data]
+		,
+		{LeafNode[Symbol, $traditionalInequalitySymbolPat, <||>]..},
 			CallNode[ToNode[Inequality], Riffle[rands, rators], data]
+		,
+		_,
+			(*
+			Anything containing a combination inequality and Vector inequality operators is abstracted to VectorInequality
+			Related bugs: 385771
+			*)
+			CallNode[ToNode[Developer`VectorInequality], Riffle[rands, rators], data]
 	]
 ]
 
@@ -1371,43 +1391,57 @@ inequalityOperatorToSymbol[LeafNode[Token`LongName`NotLessTilde, _, _]] := ToNod
 inequalityOperatorToSymbol[LeafNode[Token`LongName`NotNestedGreaterGreater, _, _]] := ToNode[NotNestedGreaterGreater]
 inequalityOperatorToSymbol[LeafNode[Token`LongName`NotNestedLessLess, _, _]] := ToNode[NotNestedLessLess]
 
-
-abstractVectorInequality[InfixNode[Developer`VectorInequality, children_, data_]] :=
-	simplifyVectorInequality[InfixNode[Developer`VectorInequality, children, data]]
-
-(*
-attempt to simplify e.g. Developer`VectorInequality[a, VectorLess, b, VectorLess, c] to VectorLess[{a, b, c}]
-
-Yes, make sure that it is VectorLess[{a, b, c}] and not VectorLess[a, b, c]
-*)
-simplifyVectorInequality[InfixNode[Developer`VectorInequality, children_, data_]] :=
-Module[{rators, rands},
-	rators = vectorInequalityOperatorToSymbol /@ children[[2;;-2;;2]];
-	rands = abstract /@ children[[1;;-1;;2]];
-
-	Switch[rators,
-		{ToNode[System`VectorLess]..},
-			CallNode[ToNode[System`VectorLess], { CallNode[ToNode[List], rands, <||>] }, data]
-		,
-		{ToNode[System`VectorGreater]..},
-			CallNode[ToNode[System`VectorGreater], { CallNode[ToNode[List], rands, <||>] }, data]
-		,
-		{ToNode[System`VectorLessEqual]..},
-			CallNode[ToNode[System`VectorLessEqual], { CallNode[ToNode[List], rands, <||>] }, data]
-		,
-		{ToNode[System`VectorGreaterEqual]..},
-			CallNode[ToNode[System`VectorGreaterEqual], { CallNode[ToNode[List], rands, <||>] }, data]
-		,
-		_,
-			CallNode[ToNode[Developer`VectorInequality], Riffle[rands, rators], data]
-	]
-]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`VectorLess, _, _]] := ToNode[System`VectorLess]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`VectorGreater, _, _]] := ToNode[System`VectorGreater]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`VectorLessEqual, _, _]] := ToNode[System`VectorLessEqual]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`VectorGreaterEqual, _, _]] := ToNode[System`VectorGreaterEqual]
 
 
-vectorInequalityOperatorToSymbol[LeafNode[Token`LongName`VectorLess, _, _]] := ToNode[System`VectorLess]
-vectorInequalityOperatorToSymbol[LeafNode[Token`LongName`VectorGreater, _, _]] := ToNode[System`VectorGreater]
-vectorInequalityOperatorToSymbol[LeafNode[Token`LongName`VectorLessEqual, _, _]] := ToNode[System`VectorLessEqual]
-vectorInequalityOperatorToSymbol[LeafNode[Token`LongName`VectorGreaterEqual, _, _]] := ToNode[System`VectorGreaterEqual]
+
+$traditionalInequalitySymbolPat =
+	"Equal" |
+	"Unequal" |
+	"Less" |
+	"Greater" |
+	"LessEqual" |
+	"GreaterEqual" |
+	"GreaterEqualLess" |
+	"GreaterFullEqual" |
+	"GreaterGreater" |
+	"GreaterLess" |
+	"GreaterSlantEqual" |
+	"GreaterTilde" |
+	"LessEqualGreater" |
+	"LessFullEqual" |
+	"LessGreater" |
+	"LessLess" |
+	"LessSlantEqual" |
+	"LessTilde" |
+	"NestedGreaterGreater" |
+	"NestedLessLess" |
+	"NotGreater" |
+	"NotGreaterEqual" |
+	"NotGreaterFullEqual" |
+	"NotGreaterGreater" |
+	"NotGreaterLess" |
+	"NotGreaterSlantEqual" |
+	"NotGreaterTilde" |
+	"NotLess" |
+	"NotLessEqual" |
+	"NotLessFullEqual" |
+	"NotLessGreater" |
+	"NotLessLess" |
+	"NotLessSlantEqual" |
+	"NotLessTilde" |
+	"NotNestedGreaterGreater" |
+	"NotNestedLessLess"
+
+
+
+
+
+
+
 
 
 
