@@ -256,6 +256,11 @@ setupShims[]
 
 
 
+If[PacletFind["AST"] != {},
+	Message[General::obspkg, "AST`"]
+]
+
+
 
 CodeConcreteParse::usage = "CodeConcreteParse[code] returns a concrete syntax tree by interpreting code as WL input. \
 CodeConcreteParse[code, nodeFunc] applies nodeFunc to the result."
