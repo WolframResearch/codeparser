@@ -353,20 +353,6 @@ public:
     }
 };
 
-class InequalityParselet : public InfixParselet {
-public:
-    
-    NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
-    
-    Precedence getPrecedence() const override {
-        return PRECEDENCE_CLASS_INEQUALITY;
-    }
-    
-    Associativity getAssociativity() const override {
-        return ASSOCIATIVITY_NONE;
-    }
-};
-
 class ColonColonParselet : public InfixParselet {
 public:
     

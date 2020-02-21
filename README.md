@@ -1,6 +1,6 @@
 # CodeParser
 
-`CodeParser` is a package for parsing Wolfram Language code.
+CodeParser is a package for parsing Wolfram Language code.
 
 ```
 In[1]:= Needs["CodeParser`"]

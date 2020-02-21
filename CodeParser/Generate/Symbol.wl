@@ -172,47 +172,7 @@ Infix
 *)
 InfixOperatorToSymbol[Token`Semi] = CompoundExpression
 InfixOperatorToSymbol[Token`Comma] = CodeParser`Comma
-
 InfixOperatorToSymbol[Token`LongName`InvisibleComma] = CodeParser`Comma
-
-InfixOperatorToSymbol[Token`EqualEqual] = Equal
-InfixOperatorToSymbol[Token`BangEqual] = Unequal
-InfixOperatorToSymbol[Token`Less] = Less
-InfixOperatorToSymbol[Token`Greater] = Greater
-InfixOperatorToSymbol[Token`LessEqual] = LessEqual
-InfixOperatorToSymbol[Token`GreaterEqual] = GreaterEqual
-InfixOperatorToSymbol[Token`LongName`LessFullEqual] = LessFullEqual
-InfixOperatorToSymbol[Token`LongName`NotLessFullEqual] = NotLessFullEqual
-InfixOperatorToSymbol[Token`LongName`LessEqualGreater] = LessEqualGreater
-InfixOperatorToSymbol[Token`LongName`GreaterEqualLess] = GreaterEqualLess
-
-InfixOperatorToSymbol[Token`LongName`NestedLessLess] = NestedLessLess
-InfixOperatorToSymbol[Token`LongName`NotNestedLessLess] = NotNestedLessLess
-
-InfixOperatorToSymbol[Token`LongName`NotLess] = NotLess
-InfixOperatorToSymbol[Token`LongName`NotGreater] = NotGreater
-
-InfixOperatorToSymbol[Token`LongName`NotLessLess] = NotLessLess
-InfixOperatorToSymbol[Token`LongName`LongEqual] = Equal
-InfixOperatorToSymbol[Token`LongName`Equal] = Equal
-
-InfixOperatorToSymbol[Token`LongName`LessEqual] = LessEqual
-InfixOperatorToSymbol[Token`LongName`GreaterEqual] = GreaterEqual
-InfixOperatorToSymbol[Token`LongName`NotLessEqual] = NotLessEqual
-InfixOperatorToSymbol[Token`LongName`NotGreaterEqual] = NotGreaterEqual
-
-InfixOperatorToSymbol[Token`LongName`NotEqual] = Unequal
-(*
-force to be in System`:
-VectorGreater
-VectorGreaterEqual
-VectorLess
-VectorLessEqual
-*)
-InfixOperatorToSymbol[Token`LongName`VectorGreater] = System`VectorGreater
-InfixOperatorToSymbol[Token`LongName`VectorGreaterEqual] = System`VectorGreaterEqual
-InfixOperatorToSymbol[Token`LongName`VectorLess] = System`VectorLess
-InfixOperatorToSymbol[Token`LongName`VectorLessEqual] = System`VectorLessEqual
 
 InfixOperatorToSymbol[Token`LongName`NotEqualTilde] = NotEqualTilde
 InfixOperatorToSymbol[Token`LongName`NotHumpEqual] = NotHumpEqual
@@ -224,10 +184,6 @@ InfixOperatorToSymbol[Token`LongName`RightTriangleBar] = RightTriangleBar
 InfixOperatorToSymbol[Token`LongName`NotLeftTriangleBar] = NotLeftTriangleBar
 InfixOperatorToSymbol[Token`LongName`NotRightTriangleBar] = NotRightTriangleBar
 InfixOperatorToSymbol[Token`LongName`NotNestedLessLess] = NotNestedLessLess
-InfixOperatorToSymbol[Token`LongName`NotLessSlantEqual] = NotLessSlantEqual
-InfixOperatorToSymbol[Token`LongName`NotGreaterGreater] = NotGreaterGreater
-InfixOperatorToSymbol[Token`LongName`NotNestedGreaterGreater] = NotNestedGreaterGreater
-InfixOperatorToSymbol[Token`LongName`NotGreaterSlantEqual] = NotGreaterSlantEqual
 
 (* other flattening operators *)
 InfixOperatorToSymbol[Token`EqualEqualEqual] = SameQ
@@ -378,13 +334,8 @@ InfixOperatorToSymbol[Token`LongName`Intersection] = Intersection
 InfixOperatorToSymbol[Token`LongName`TensorWedge] = TensorWedge
 InfixOperatorToSymbol[Token`LongName`TensorProduct] = TensorProduct
 InfixOperatorToSymbol[Token`LongName`Cross] = Cross
-InfixOperatorToSymbol[Token`LongName`LessTilde] = LessTilde
-InfixOperatorToSymbol[Token`LongName`GreaterTilde] = GreaterTilde
-InfixOperatorToSymbol[Token`LongName`NotLessTilde] = NotLessTilde
-InfixOperatorToSymbol[Token`LongName`NotGreaterTilde] = NotGreaterTilde
 InfixOperatorToSymbol[Token`LongName`Proportional] = Proportional
 InfixOperatorToSymbol[Token`LongName`Proportion] = Proportion
-InfixOperatorToSymbol[Token`LongName`LessLess] = LessLess
 InfixOperatorToSymbol[Token`LongName`Congruent] = Congruent
 InfixOperatorToSymbol[Token`LongName`Tilde] = Tilde
 InfixOperatorToSymbol[Token`LongName`SmallCircle] = SmallCircle
@@ -437,33 +388,15 @@ InfixOperatorToSymbol[Token`LongName`NotSucceedsTilde] = NotSucceedsTilde
 InfixOperatorToSymbol[Token`LongName`NotPrecedesSlantEqual] = NotPrecedesSlantEqual
 InfixOperatorToSymbol[Token`LongName`NotSucceedsSlantEqual] = NotSucceedsSlantEqual
 
-(*
-LessSlantEqual and GreaterSlandEqual parse to LessEqual and GreaterEqual
-Related bugs: 78439
-*)
-InfixOperatorToSymbol[Token`LongName`LessSlantEqual] = LessEqual
-InfixOperatorToSymbol[Token`LongName`GreaterSlantEqual] = GreaterEqual
 InfixOperatorToSymbol[Token`LongName`Colon] = Colon
 
 InfixOperatorToSymbol[Token`LongName`CupCap] = CupCap
 InfixOperatorToSymbol[Token`LongName`NotCupCap] = NotCupCap
 
 InfixOperatorToSymbol[Token`LongName`DotEqual] = DotEqual
-InfixOperatorToSymbol[Token`LongName`GreaterEqualLess] = GreaterEqualLess
-
-InfixOperatorToSymbol[Token`LongName`GreaterFullEqual] = GreaterFullEqual
-InfixOperatorToSymbol[Token`LongName`NotGreaterFullEqual] = NotGreaterFullEqual
-
-InfixOperatorToSymbol[Token`LongName`GreaterGreater] = GreaterGreater
-
-InfixOperatorToSymbol[Token`LongName`GreaterLess] = GreaterLess
-InfixOperatorToSymbol[Token`LongName`LessGreater] = LessGreater
-InfixOperatorToSymbol[Token`LongName`NotGreaterLess] = NotGreaterLess
-InfixOperatorToSymbol[Token`LongName`NotLessGreater] = NotLessGreater
 
 InfixOperatorToSymbol[Token`LongName`HumpEqual] = HumpEqual
 InfixOperatorToSymbol[Token`LongName`HumpDownHump] = HumpDownHump
-InfixOperatorToSymbol[Token`LongName`NestedGreaterGreater] = NestedGreaterGreater
 InfixOperatorToSymbol[Token`LongName`NestedLessLess] = NestedLessLess
 InfixOperatorToSymbol[Token`LongName`NotCongruent] = NotCongruent
 
@@ -471,6 +404,58 @@ InfixOperatorToSymbol[Token`LongName`SquareUnion] = SquareUnion
 InfixOperatorToSymbol[Token`LongName`SquareIntersection] = SquareIntersection
 
 InfixOperatorToSymbol[Token`LongName`UnionPlus] = UnionPlus
+
+(*
+Inequality operators
+*)
+InfixOperatorToSymbol[Token`EqualEqual] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`Equal] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`LongEqual] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`BangEqual] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`NotEqual] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`Less] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`Greater] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LessEqual] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`LessEqual] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`GreaterEqual] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`GreaterEqual] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`GreaterEqualLess] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`GreaterFullEqual] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`GreaterGreater] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`GreaterLess] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`GreaterSlantEqual] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`GreaterTilde] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`LessEqualGreater] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`LessFullEqual] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`LessGreater] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`LessLess] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`LessSlantEqual] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`LessTilde] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`NestedGreaterGreater] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`NestedLessLess] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`NotGreater] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`NotGreaterEqual] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`NotGreaterFullEqual] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`NotGreaterGreater] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`NotGreaterLess] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`NotGreaterSlantEqual] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`NotGreaterTilde] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`NotLess] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`NotLessEqual] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`NotLessFullEqual] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`NotLessGreater] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`NotLessLess] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`NotLessSlantEqual] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`NotLessTilde] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`NotNestedGreaterGreater] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`NotNestedLessLess] = CodeParser`InfixInequality
+(*
+Vector Inequality operators
+*)
+InfixOperatorToSymbol[Token`LongName`VectorLess] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`VectorGreater] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`VectorLessEqual] = CodeParser`InfixInequality
+InfixOperatorToSymbol[Token`LongName`VectorGreaterEqual] = CodeParser`InfixInequality
 
 (*
 StartOfLineOperatorToSymbol[Token`Question] = Information

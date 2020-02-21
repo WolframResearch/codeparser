@@ -1218,8 +1218,6 @@ abstractInfixInequality[node:InfixNode[InfixInequality, children_, data_]] :=
 
 (*
 attempt to simplify e.g. Inequality[a, Less, b, Less, c] to Less[a, b, c]
-
-Yes, make sure that it is VectorLess[{a, b, c}] and not VectorLess[a, b, c]
 *)
 simplifyInfixInequality[InfixNode[InfixInequality, children_, data_]] :=
 Module[{rators, rands},
@@ -1330,6 +1328,9 @@ Module[{rators, rands},
 			CallNode[ToNode[NotNestedLessLess], rands, data]
 		,
 		{ToNode[System`VectorLess]..},
+			(*
+			Yes, make sure that it is VectorLess[{a, b, c}] and not VectorLess[a, b, c]
+			*)
 			CallNode[ToNode[System`VectorLess], { CallNode[ToNode[List], rands, <||>] }, data]
 		,
 		{ToNode[System`VectorGreater]..},
@@ -1364,12 +1365,20 @@ inequalityOperatorToSymbol[LeafNode[Token`LongName`GreaterEqualLess, _, _]] := T
 inequalityOperatorToSymbol[LeafNode[Token`LongName`GreaterFullEqual, _, _]] := ToNode[GreaterFullEqual]
 inequalityOperatorToSymbol[LeafNode[Token`LongName`GreaterGreater, _, _]] := ToNode[GreaterGreater]
 inequalityOperatorToSymbol[LeafNode[Token`LongName`GreaterLess, _, _]] := ToNode[GreaterLess]
+(*
+GreaterSlantEqual parses to GreaterEqual
+Related bugs: 78439
+*)
 inequalityOperatorToSymbol[LeafNode[Token`LongName`GreaterSlantEqual, _, _]] := ToNode[GreaterEqual]
 inequalityOperatorToSymbol[LeafNode[Token`LongName`GreaterTilde, _, _]] := ToNode[GreaterTilde]
 inequalityOperatorToSymbol[LeafNode[Token`LongName`LessEqualGreater, _, _]] := ToNode[LessEqualGreater]
 inequalityOperatorToSymbol[LeafNode[Token`LongName`LessFullEqual, _, _]] := ToNode[LessFullEqual]
 inequalityOperatorToSymbol[LeafNode[Token`LongName`LessGreater, _, _]] := ToNode[LessGreater]
 inequalityOperatorToSymbol[LeafNode[Token`LongName`LessLess, _, _]] := ToNode[LessLess]
+(*
+LessSlantEqual parses to LessEqual
+Related bugs: 78439
+*)
 inequalityOperatorToSymbol[LeafNode[Token`LongName`LessSlantEqual, _, _]] := ToNode[LessEqual]
 inequalityOperatorToSymbol[LeafNode[Token`LongName`LessTilde, _, _]] := ToNode[LessTilde]
 inequalityOperatorToSymbol[LeafNode[Token`LongName`NestedGreaterGreater, _, _]] := ToNode[NestedGreaterGreater]

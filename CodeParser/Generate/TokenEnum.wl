@@ -849,61 +849,6 @@ isInfixOperator[_] = False
 
 
 
-isInequalityOperator[Token`BangEqual] = True
-isInequalityOperator[Token`EqualEqual] = True
-isInequalityOperator[Token`Greater] = True
-isInequalityOperator[Token`GreaterEqual] = True
-isInequalityOperator[Token`Less] = True
-isInequalityOperator[Token`LessEqual] = True
-isInequalityOperator[Token`LongName`Equal] = True
-isInequalityOperator[Token`LongName`GreaterEqual] = True
-isInequalityOperator[Token`LongName`GreaterEqualLess] = True
-isInequalityOperator[Token`LongName`GreaterFullEqual] = True
-isInequalityOperator[Token`LongName`GreaterGreater] = True
-isInequalityOperator[Token`LongName`GreaterLess] = True
-isInequalityOperator[Token`LongName`GreaterSlantEqual] = True
-isInequalityOperator[Token`LongName`GreaterTilde] = True
-isInequalityOperator[Token`LongName`LessEqual] = True
-isInequalityOperator[Token`LongName`LessEqualGreater] = True
-isInequalityOperator[Token`LongName`LessFullEqual] = True
-isInequalityOperator[Token`LongName`LessGreater] = True
-isInequalityOperator[Token`LongName`LessLess] = True
-isInequalityOperator[Token`LongName`LessSlantEqual] = True
-isInequalityOperator[Token`LongName`LessTilde] = True
-isInequalityOperator[Token`LongName`LongEqual] = True
-isInequalityOperator[Token`LongName`NestedGreaterGreater] = True
-isInequalityOperator[Token`LongName`NestedLessLess] = True
-isInequalityOperator[Token`LongName`NotEqual] = True
-isInequalityOperator[Token`LongName`NotGreater] = True
-isInequalityOperator[Token`LongName`NotGreaterEqual] = True
-isInequalityOperator[Token`LongName`NotGreaterFullEqual] = True
-isInequalityOperator[Token`LongName`NotGreaterGreater] = True
-isInequalityOperator[Token`LongName`NotGreaterLess] = True
-isInequalityOperator[Token`LongName`NotGreaterSlantEqual] = True
-isInequalityOperator[Token`LongName`NotGreaterTilde] = True
-isInequalityOperator[Token`LongName`NotLess] = True
-isInequalityOperator[Token`LongName`NotLessEqual] = True
-isInequalityOperator[Token`LongName`NotLessFullEqual] = True
-isInequalityOperator[Token`LongName`NotLessGreater] = True
-isInequalityOperator[Token`LongName`NotLessLess] = True
-isInequalityOperator[Token`LongName`NotLessSlantEqual] = True
-isInequalityOperator[Token`LongName`NotLessTilde] = True
-isInequalityOperator[Token`LongName`NotNestedGreaterGreater] = True
-isInequalityOperator[Token`LongName`NotNestedLessLess] = True
-
-isInequalityOperator[Token`LongName`VectorGreater] = True
-isInequalityOperator[Token`LongName`VectorGreaterEqual] = True
-isInequalityOperator[Token`LongName`VectorLess] = True
-isInequalityOperator[Token`LongName`VectorLessEqual] = True
-
-isInequalityOperator[_] = False
-
-
-
-
-
-
-
 isEmpty[Token`EndOfFile] = True
 isEmpty[Token`Fake`ImplicitTimes] = True
 isEmpty[Token`Error`EmptyString] = True
@@ -937,7 +882,7 @@ Which[
   isCloser[tok],                        BitShiftLeft[2^^010, 9],
   isError[tok],                         BitShiftLeft[2^^011, 9],
   isTrivia[tok],                        BitShiftLeft[2^^100, 9],
-  isInequalityOperator[tok],            BitShiftLeft[2^^101, 9],
+  isInfixOperator[tok],                 BitShiftLeft[2^^101, 9],
   (* unused                             BitShiftLeft[2^^110, 9],*)
   (* unused                             BitShiftLeft[2^^111, 9],*)
 
@@ -945,6 +890,15 @@ Which[
 ]
 
 
+
+group2Bits[tok_] := group2Bits[tok] =
+Which[
+  isEmpty[tok],         BitShiftLeft[2^^01, 12],
+  isDifferentialD[tok], BitShiftLeft[2^^10, 12],
+  (* unused             BitShiftLeft[2^^11, 12],*)
+
+  True,                 BitShiftLeft[2^^00, 12]
+]
 
 
 
@@ -1038,21 +992,17 @@ struct TokenEnum {
   constexpr bool isTrivia() const {
       return static_cast<bool>((T & 0xe00) == 0x800);
   }
-  
-  constexpr bool isInequalityOperator() const {
+
+  constexpr bool isInfixOperator() const {
       return static_cast<bool>((T & 0xe00) == 0xa00);
   }
 
-  constexpr bool isInfixOperator() const {
-      return static_cast<bool>((T & 0x1000) == 0x1000);
-  }
-
   constexpr bool isEmpty() const {
-      return static_cast<bool>((T & 0x2000) == 0x2000);
+      return static_cast<bool>((T & 0x3000) == 0x1000);
   }
 
   constexpr bool isDifferentialD() const {
-      return static_cast<bool>((T & 0x4000) == 0x4000);
+      return static_cast<bool>((T & 0x3000) == 0x2000);
   }
 
 };
@@ -1064,12 +1014,10 @@ bool operator!=(TokenEnum a, TokenEnum b);
 KeyValueMap[(
   Row[{"constexpr TokenEnum ", toGlobal[#1], "(",
     BitOr[
-      If[isDifferentialD[#1], 16^^4000, 0],
-      If[isEmpty[#1], 16^^2000, 0],
-      If[isInfixOperator[#1], 16^^1000, 0],
+      group2Bits[#1],
       group1Bits[#1],
       #2
-    ], "); // { isDifferentialD:", isDifferentialD[#1], ", isEmpty:", isEmpty[#1], ", isInfixOperator:", isInfixOperator[#1], ", group1Bits:", group1Bits[#1], ", enum:", #2, " }"
+    ], "); // { group2Bits:", group2Bits[#1], " group1Bits:", group1Bits[#1], ", enum:", #2, " }"
   }])&
   ,
   enumMap
