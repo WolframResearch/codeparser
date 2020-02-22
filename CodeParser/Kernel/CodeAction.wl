@@ -216,7 +216,7 @@ Module[{src, cst, func, trivia, srcPosMap},
   func = SourceMemberQ[src];
     trivia = Cases[cst, LeafNode[Whitespace | Token`Newline | Token`Comment | Token`LineContinuation, _, KeyValuePattern[Source -> src_?func]], Infinity];
 
-    Scan[(cst = ApplyCodeAction[CodeAction["delete", DeleteNode, <|Source->#[[3, Key[Source] ]]|>], cst];)&, trivia];
+    Scan[(cst = ApplyCodeAction[CodeAction["delete", DeleteNode, <| Source -> #[[3, Key[Source] ]]|>], cst];)&, trivia];
     cst
 ]]
 
@@ -355,7 +355,7 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
      node = Extract[cst, {originalNodePos}][[1]];
      leafText = node[[2]];
      
-     leafText = StringInsert[leafText, insertionText, srcIntra[[1]]];
+     leafText = StringInsert[leafText, insertionText, srcIntra[[1]] ];
      node[[2]] = leafText;
 
      If[originalNodePos == {},
@@ -416,7 +416,7 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
      node = Extract[cst, {originalNodePos}][[1]];
      leafText = node[[2]];
      
-     leafText = StringInsert[leafText, insertionText, srcIntra[[1]]];
+     leafText = StringInsert[leafText, insertionText, srcIntra[[1]] ];
      node[[2]] = leafText;
 
      If[originalNodePos == {},
@@ -661,16 +661,16 @@ Catch[
       Throw[textSrc]
     ];
 
-    If[textSrc[[1,1]] != textSrc[[2,1]],
+    If[textSrc[[1, 1]] != textSrc[[2, 1]],
       Throw[$Failed, "Unimplemented"]
     ];
-    If[textSrc[[1,1]] != tokSrc[[1,1]],
+    If[textSrc[[1, 1]] != tokSrc[[1, 1]],
       Throw[$Failed, "Unimplemented"]
     ];
 
-    tokStartCol = tokSrc[[1,2]];
+    tokStartCol = tokSrc[[1, 2]];
 
-    Append[tokSrc, Intra[textSrc[[1,2]]-tokStartCol+1, textSrc[[2,2]]-tokStartCol+1]]
+    Append[tokSrc, Intra[textSrc[[1, 2]]-tokStartCol+1, textSrc[[2, 2]]-tokStartCol+1]]
   ]
 ]
 

@@ -111,7 +111,7 @@ Module[{children, aggChildren, data},
 		(*
 		children is now a single node, so collapse the RowBox
 		*)
-		Throw[aggChildren[[1, 1]]]
+		Throw[aggChildren[[1, 1]] ]
 	];
 
 	BoxNode[RowBox, aggChildren, data]

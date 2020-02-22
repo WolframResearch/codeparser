@@ -329,12 +329,12 @@ Module[{handledChildren, aggregatedChildren},
     *)
     {_, LeafNode[Token`Semi, _, _], ___}, InfixNode[CompoundExpression, handledChildren ~Join~
                                               If[MatchQ[handledChildren[[-1]], LeafNode[Token`Semi, _, _]],
-                                                { LeafNode[Token`Fake`ImplicitNull, "", handledChildren[[-1, 3]]] },
+                                                { LeafNode[Token`Fake`ImplicitNull, "", handledChildren[[-1, 3]] ] },
                                                 {}], <|Source->Append[pos, 1]|>],
 
     {_, LeafNode[Token`Comma, _, _], ___}, InfixNode[Comma, handledChildren ~Join~
                                               If[MatchQ[handledChildren[[-1]], LeafNode[Token`Comma, _, _]],
-                                                { LeafNode[Token`Fake`ImplicitNull, "", handledChildren[[-1, 3]]] },
+                                                { LeafNode[Token`Fake`ImplicitNull, "", handledChildren[[-1, 3]] ] },
                                                 {}], <|Source->Append[pos, 1]|>],
 
     (*
@@ -943,9 +943,9 @@ Module[{data, actions, newSrc, oldSyntaxIssueSrc},
 
     newSrc = pos;
 
-    If[!(oldSyntaxIssueSrc[[1,2]] == leafSrc[[1,2]] && oldSyntaxIssueSrc[[2,2]] == leafSrc[[2,2]]),
+    If[!(oldSyntaxIssueSrc[[1, 2]] == leafSrc[[1, 2]] && oldSyntaxIssueSrc[[2, 2]] == leafSrc[[2, 2]]),
         (* this is some sub-part of the leaf *)
-        newSrc = newSrc ~Join~ { Intra[ oldSyntaxIssueSrc[[1,2]], oldSyntaxIssueSrc[[2,2]] ] };
+        newSrc = newSrc ~Join~ { Intra[ oldSyntaxIssueSrc[[1, 2]], oldSyntaxIssueSrc[[2, 2]] ] };
     ];
 
     data[Source] = newSrc;
@@ -1888,7 +1888,7 @@ Module[{opBoxes, nodeBox},
   If[FailureQ[nodeBox],
     Throw[nodeBox]
   ];
-  RowBox[opBoxes ~Join~ nodeBox[[1]]]
+  RowBox[opBoxes ~Join~ nodeBox[[1]] ]
 ]]
 
 (*
@@ -1906,7 +1906,7 @@ Module[{opBoxes, nodeBox},
   If[FailureQ[nodeBox],
     Throw[nodeBox]
   ];
-  RowBox[ {opBoxes} ~Join~ nodeBox[[1]]]
+  RowBox[ {opBoxes} ~Join~ nodeBox[[1]] ]
 ]]
 
 toStandardFormBoxes[GroupNode[op_, nodes_, data_]] :=
