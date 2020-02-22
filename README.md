@@ -29,11 +29,11 @@ Make sure that the paclet can be found on your system:
 In[1]:= Needs["CodeParser`"]
 ```
 
-[CodeParser on github.com](https://github.com/xxx)
+[CodeParser on github.com](https://github.com/<<TODO_placeholder_for_actual_link>>)
 
 Install CodeParser from the CodeTools paclet server:
 ```
-In[1]:= PacletUpdate["CodeParser", "Site" -> "XXX", "UpdateSites" -> True]
+In[1]:= PacletUpdate["CodeParser", "Site" -> "<<TODO_placeholder_for_actual_link>>", "UpdateSites" -> True]
 
 Out[1]= PacletObject[CodeParser, 1.0, <>]
 ```
