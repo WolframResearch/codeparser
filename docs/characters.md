@@ -20,7 +20,7 @@ Any invalid byte sequences are converted into \[UnknownGlyph]
 Any high or low surrogates are converted into \[UnknownGlyph]
 
 BOM character 0xfeff is converted into 0xe001, to allow transferring through MathLink.
-
+Related bugs: 366106
 
 
 

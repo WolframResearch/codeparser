@@ -27,11 +27,14 @@ We take advantage of the symbolic nature of WL and use the function symbols them
 
 
 a+b is parsed as:
+```
 InfixNode[Plus, {LeafNode[Symbol, "a", <||>], LeafNode[Token`Plus, "+", <||>], LeafNode[Symbol, "b", <||>]}, <||>]
+```
 
 and a::b is parsed as:
-InfixNode[MessageName, {LeafNode[Symbol, "a", <||>], LeafNode[Token`ColonColon, "::", <||>], LeafNode[String, "b", <||>]
-
+```
+InfixNode[MessageName, {LeafNode[Symbol, "a", <||>], LeafNode[Token`ColonColon, "::", <||>], LeafNode[String, "b", <||>]}, <||>]
+```
 
 
 

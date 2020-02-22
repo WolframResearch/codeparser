@@ -48,9 +48,13 @@ different levels of syntax
 
 # boxes
 
+```
 RowBox[{"1", "+", RowBox[{"(*", "*)"}], "a"}]
+```
 
+```
 RowBox[{"1", "+", RowBox[{"(*", "*)"}], SqrtBox["a"]}]
+```
 
 tree structure of tokens
 
@@ -62,8 +66,7 @@ Trivia is kept
 
 
 
-##
-What is trivia?
+## What is trivia?
 
 Taken from:
 https://github.com/dotnet/roslyn/wiki/Roslyn-Overview#syntax-trivia
@@ -115,8 +118,7 @@ and also type information is all of the riffled tokens InfixNode[Plus, { 1, +, 2
 Implicit tokens are added
 
 
-##
-What are Implicit tokens?
+## What are Implicit tokens?
 
 
 when parsing   ;;   it is convenient to remember the implicit   1 ;; All
