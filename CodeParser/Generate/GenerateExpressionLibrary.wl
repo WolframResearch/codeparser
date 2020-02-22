@@ -112,7 +112,7 @@ Module[{targetDir, prog, compLib},
 
   prog = ExpressionLibraryProgram[];
 
-  Print["Exporting expr shared library... (this might take a while)"];
+  Print["Exporting expr shared library... \[WatchIcon]"];
 
   compLib =
     CompileToLibrary[prog,
