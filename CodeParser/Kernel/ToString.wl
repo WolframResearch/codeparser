@@ -507,15 +507,10 @@ Module[{nodeStrs},
 toFullFormString[NewContextPathNode[args_, nodes_, opts_]] :=
 Catch[
 Module[{nodeStrs},
-
-	(*
-	System`Private`NewContextPath[] with ; after is a lot more common
-	*)
-
 	nodeStrs = toFullFormString /@ (
-		{CallNode[ToNode[CompoundExpression], { CallNode[ToNode[System`Private`NewContextPath], args, <||>], ToNode[Null] }, <||>] } ~Join~
+		{CallNode[ToNode[System`Private`NewContextPath], args, <||>]} ~Join~
 		nodes ~Join~
-		{CallNode[ToNode[CompoundExpression], { CallNode[ToNode[System`Private`RestoreContextPath], {}, <||>], ToNode[Null] }, <||>]});
+		{CallNode[ToNode[System`Private`RestoreContextPath], {}, <||>]});
 
 	If[AnyTrue[nodeStrs, FailureQ],
 		Throw[SelectFirst[nodeStrs, FailureQ]]

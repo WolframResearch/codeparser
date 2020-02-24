@@ -821,7 +821,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      textReplaced = 
       StringReplace[textReplaced, 
        RegularExpression[
-         "(?m)(^(BeginPackage|Begin|End|EndPackage)\\s*\\[[\"a-zA-Z0-9`,\\{\\} \\n\\t\\r]*\\])\\s*;"] -> "$1"];
+         "(?m)(^\\s*(BeginPackage|Begin|End|EndPackage|System`Private`NewContextPath|System`Private`RestoreContextPath)\\s*\\[\\s*[\"a-zA-Z0-9`,\\{\\} \\n\\t\\r]*\\])\\s*;"] -> "$1"];
      (* enough people have End[(**)] that it is worth also replacing *)
 
           textReplaced = 
@@ -873,6 +873,10 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "CompileUtilities/CompileUtilities/RuntimeChecks/RuntimeChecks.m",
         prefix <> "SystemFiles/Components/CompileUtilities/RuntimeChecks/RuntimeChecks.m",
         prefix <> "TestTools/Legacy/Statistics/NIST/NISTTestTools.m",
+        (*
+        System`Private`NewContextPath[{"System`"(*, "XXXXXXX"*)}];
+        *)
+        prefix <> "Kernel/StartUp/Audio/Internals/Internals.m",
         Nothing
         }, fileIn],
       f = Failure["CannotRegexTooWeird", <|"FileName" -> fileIn|>];
@@ -894,6 +898,29 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "control/auxTest2.m",
         prefix <> "control/UpdatedCSP/auxTest.m",
         prefix <> "TestTools/FrontEnd/GrammarTestGenerator.m",
+        prefix <> "SystemFiles/Components/GoogleTextToSpeech/Kernel/GoogleSpeech.m",
+        prefix <> "SystemFiles/Components/IBMTextToSpeech/Kernel/IBMWatsonSTT.m",
+        prefix <> "SystemFiles/Components/IBMTextToSpeech/Kernel/IBMWatsonTTS.m",
+        prefix <> "SystemFiles/Components/MicrosoftTextToSpeech/Kernel/MicrosoftSpeech.m",
+        prefix <> "SystemFiles/Links/TravelDirectionsClient/Kernel/TravelDirectionsClientRequests.m",
+        (*
+        System`Private`NewContextPath[LocalObjects`Nodump`defaultContextPath];
+        *)
+        prefix <> "Kernel/StartUp/LocalObjects/Common.m",
+        prefix <> "Kernel/StartUp/LocalObjects/LocalCache.m",
+        prefix <> "Kernel/StartUp/LocalObjects/LocalObject.m",
+        prefix <> "Kernel/StartUp/LocalObjects/LocalSymbol.m",
+        prefix <> "Kernel/StartUp/Persistence/BuildUtilities.m",
+        prefix <> "Kernel/StartUp/Persistence/Common.m",
+        prefix <> "Kernel/StartUp/Persistence/InitializationGlobals.m",
+        prefix <> "Kernel/StartUp/Persistence/InitializationValue.m",
+        prefix <> "Kernel/StartUp/Persistence/KernelInit.m",
+        prefix <> "Kernel/StartUp/Persistence/Once.m",
+        prefix <> "Kernel/StartUp/Persistence/PersistenceGlobals.m",
+        prefix <> "Kernel/StartUp/Persistence/PersistenceLocations.m",
+        prefix <> "Kernel/StartUp/Persistence/PersistentObject.m",
+        prefix <> "Kernel/StartUp/Persistence/PersistentValue.m",
+        prefix <> "Kernel/StartUp/Persistence/StandardLocations.m",
         Nothing
         }, fileIn],
       f = Failure["CannotRegexTooBroken", <|"FileName" -> fileIn|>];
@@ -905,6 +932,23 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       Throw[f, "OK"]
       ];
      
+      If[MemberQ[{
+        (*
+        programmatic use of BeginPackage[] / EndPackage[] or something
+        *)
+        prefix <> "Kernel/StartUp/sysinit.m",
+        prefix <> "Kernel/StartUp/sysmake.m",
+        Nothing
+        }, fileIn],
+      f = Failure["CannotRegexTooProgrammatic", <|"FileName" -> fileIn|>];
+      Print[
+       Style[Row[{"index: ", i, " ", 
+          StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], 
+        Darker[Orange]]];
+      Print[Style[Row[{"index: ", i, " ", f}], Darker[Orange]]];
+      Throw[f, "OK"]
+      ];
+
       If[MemberQ[{
         (*
         too deep
