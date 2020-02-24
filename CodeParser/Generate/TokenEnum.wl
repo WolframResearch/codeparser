@@ -1017,11 +1017,12 @@ KeyValueMap[(
       group2Bits[#1],
       group1Bits[#1],
       #2
-    ], "); // { group2Bits:", group2Bits[#1], " group1Bits:", group1Bits[#1], ", enum:", #2, " }"
+    ], "); // { group2Bits:", group2Bits[#1], ", group1Bits:", group1Bits[#1], ", enum:", #2, " }"
   }])&
   ,
   enumMap
-]
+] ~Join~ {
+}
 
 Print["exporting TokenEnum.h"]
 res = Export[FileNameJoin[{generatedCPPIncludeDir, "TokenEnum.h"}], Column[tokenCPPHeader], "String"]
@@ -1032,21 +1033,6 @@ If[FailureQ[res],
 ]
 
 
-
-
-(*
-remove values like Error`First in:
-<|
-Error`Unknown -> Next,
-Error`First -> Error`Unknown,
-|>
-
-because C switch statements cannot have duplicate cases
-
-*)
-uniqueEnums = DeleteCases[importedTokenEnumSource, v_ /; !IntegerQ[v] && UnsameQ[v, Next]]
-
-tokens = Keys[uniqueEnums]
 
 tokenToSymbolCases = Row[{"case ", toGlobal[#], ".value(): return ", toGlobal[tokenToSymbol[#]], ";"}]& /@ tokens
 

@@ -191,6 +191,20 @@ If[FailureQ[importedTokenEnumSource],
   Quit[1]
 ]
 
+(*
+remove values like Error`First in:
+<|
+Error`Unknown -> Next,
+Error`First -> Error`Unknown,
+|>
+
+because C switch statements cannot have duplicate cases
+
+*)
+uniqueEnums = DeleteCases[importedTokenEnumSource, v_ /; !IntegerQ[v] && UnsameQ[v, Next]]
+
+tokens = Keys[uniqueEnums]
+
 
 
 
