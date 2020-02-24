@@ -113,7 +113,11 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
             break;
         case ESCAPE_LONGNAME: {
             
-            auto LongName = CodePointToLongNameMap[i];
+            auto it = std::lower_bound(CodePointToLongNameMap_points.begin(), CodePointToLongNameMap_points.end(), i);
+            assert(it != CodePointToLongNameMap_points.end());
+            assert(*it == i);
+            auto idx = it - CodePointToLongNameMap_points.begin();
+            auto LongName = CodePointToLongNameMap_names[idx];
             
             stream << SourceCharacter('\\');
             stream << SourceCharacter('[');
@@ -501,7 +505,13 @@ bool WLCharacter::isMBUnsupported() const {
         
         auto val = to_point();
         
-        if (LongNames::isUnsupportedLongName(CodePointToLongNameMap[val])) {
+        auto it = std::lower_bound(CodePointToLongNameMap_points.begin(), CodePointToLongNameMap_points.end(), val);
+        assert(it != CodePointToLongNameMap_points.end());
+        assert(*it == val);
+        auto idx = it - CodePointToLongNameMap_points.begin();
+        auto name = CodePointToLongNameMap_names[idx];
+        
+        if (LongNames::isUnsupportedLongName(name)) {
             return true;
         }
     }
@@ -591,7 +601,14 @@ bool WLCharacter::isMBStrangeLetterlike() const {
     auto esc = escape();
     auto val = to_point();
     if (esc == ESCAPE_LONGNAME) {
-        return Utils::isStrangeLetterlikeLongName(CodePointToLongNameMap[val]);
+        
+        auto it = std::lower_bound(CodePointToLongNameMap_points.begin(), CodePointToLongNameMap_points.end(), val);
+        assert(it != CodePointToLongNameMap_points.end());
+        assert(*it == val);
+        auto idx = it - CodePointToLongNameMap_points.begin();
+        auto name = CodePointToLongNameMap_names[idx];
+        
+        return Utils::isStrangeLetterlikeLongName(name);
     }
     
     //
@@ -613,7 +630,14 @@ bool WLCharacter::isMBVeryStrangeLetterlike() const {
     auto esc = escape();
     auto val = to_point();
     if (esc == ESCAPE_LONGNAME) {
-        return Utils::isVeryStrangeLetterlikeLongName(CodePointToLongNameMap[val]);
+        
+        auto it = std::lower_bound(CodePointToLongNameMap_points.begin(), CodePointToLongNameMap_points.end(), val);
+        assert(it != CodePointToLongNameMap_points.end());
+        assert(*it == val);
+        auto idx = it - CodePointToLongNameMap_points.begin();
+        auto name = CodePointToLongNameMap_names[idx];
+        
+        return Utils::isVeryStrangeLetterlikeLongName(name);
     }
     
     //
