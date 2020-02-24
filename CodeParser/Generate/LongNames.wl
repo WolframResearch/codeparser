@@ -181,6 +181,7 @@ longNamesCPPHeader = {
 #include \"CodePoint.h\" // for codepoint
 
 #include <string>
+#include <array>
 
 extern std::array<std::string, " <> ToString[Length[importedLongNames]]  <> "> LongNameToCodePointMap_names;
 extern std::array<codepoint, " <> ToString[Length[importedLongNames]]  <> "> LongNameToCodePointMap_points;
@@ -270,7 +271,6 @@ longNamesCPPSource = {
 
 #include \"LongNames.h\"
 
-#include <array>
 #include <algorithm> // for std::lower_bound
 #include <cassert>
 "} ~Join~
