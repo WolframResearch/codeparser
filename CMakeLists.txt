@@ -53,6 +53,7 @@ set(GENERATED_WL_PACLET_SOURCES
 set(WL_GENERATE_SOURCES
 	${PROJECT_SOURCE_DIR}/CodeParser/Generate/GenerateSources.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Generate/LongNames.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Generate/ParseletRegistration.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Generate/Precedence.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Generate/Symbol.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Generate/TokenEnum.wl
@@ -78,6 +79,7 @@ set(WL_DATA_SOURCES
 
 set(GENERATED_CPP_INCLUDES
 	${PROJECT_BINARY_DIR}/generated/cpp/include/LongNames.h
+	${PROJECT_BINARY_DIR}/generated/cpp/include/ParseletRegistration.h
 	${PROJECT_BINARY_DIR}/generated/cpp/include/Precedence.h
 	${PROJECT_BINARY_DIR}/generated/cpp/include/Symbol.h
 	${PROJECT_BINARY_DIR}/generated/cpp/include/TokenEnum.h
@@ -85,6 +87,7 @@ set(GENERATED_CPP_INCLUDES
 
 set(GENERATED_CPP_LIB_SOURCES
 	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/LongNames.cpp
+	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/ParseletRegistration.cpp
 	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/Symbol.cpp
 	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/TokenEnum.cpp
 )

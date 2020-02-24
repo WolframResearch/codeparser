@@ -252,6 +252,8 @@ Get["CodeParser`Generate`LongNames`"]
 
 Get["CodeParser`Generate`TokenEnum`"]
 
+Get["CodeParser`Generate`ParseletRegistration`"]
+
 Get["CodeParser`Generate`Precedence`"]
 
 Get["CodeParser`Generate`Symbol`"]
