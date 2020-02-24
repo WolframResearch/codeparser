@@ -12,23 +12,8 @@
 #include <deque>
 #include <memory> // for unique_ptr
 
-class PrefixParselet;
-class InfixParselet;
-class CallParselet;
-class PostfixParselet;
-class ContextSensitivePrefixParselet;
-class ContextSensitiveInfixParselet;
-#if STARTOFLINE
-class StartOfLineParselet;
-class StartOfFileParselet;
-#endif // STARTOFLINE
-class GroupParselet;
-class Parselet;
 class Parser;
 
-using PrefixParseletPtr = std::unique_ptr<PrefixParselet>;
-using InfixParseletPtr = std::unique_ptr<InfixParselet>;
-using ContextSensitiveInfixParseletPtr = std::unique_ptr<ContextSensitiveInfixParselet>;
 using ParserPtr = std::unique_ptr<Parser>;
 
 
@@ -91,33 +76,9 @@ static_assert(sizeof(ParserContext) == 2, "Check your assumptions");
 class Parser {
 private:
     
-    std::array<PrefixParseletPtr, TOKEN_COUNT.value()> prefixParselets;
-    std::array<InfixParseletPtr, TOKEN_COUNT.value()> infixParselets;
-#if STARTOFLINE
-    std::array<StartOfLineParseletPtr>, TOKEN_COUNT> startOfLineParselets;
-    std::array<StartOfFileParseletPtr, TOKEN_COUNT> startOfFileParselets;
-#endif // STARTOFLINE
-    
-    PrefixParseletPtr contextSensitiveSymbolParselet;
-    ContextSensitiveInfixParseletPtr contextSensitiveUnder1Parselet;
-    ContextSensitiveInfixParseletPtr contextSensitiveUnder2Parselet;
-    ContextSensitiveInfixParseletPtr contextSensitiveUnder3Parselet;
-    ContextSensitiveInfixParseletPtr contextSensitiveColonParselet;
-    
     std::deque<Token> tokenQueue;
     
     std::vector<IssuePtr> Issues;
-    
-    
-    void registerPrefixParselet(size_t i, PrefixParseletPtr );
-    
-    void registerInfixParselet(size_t i, InfixParseletPtr );
-
-#if STARTOFLINE
-    void registerStartOfLineParselet(size_t i, StartOfLineParseletPtr );
-    
-    void registerStartOfFileParselet(size_t i, StartOfFileParseletPtr );
-#endif // STARTOFLINE
     
 public:
     Parser();
@@ -159,21 +120,8 @@ public:
     
     NodePtr handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext Ctxt, bool *wasCloser);
     
-    
     Precedence getTokenPrecedence(Token& current, ParserContext Ctxt) const;
     Precedence getInfixTokenPrecedence(Token& current, ParserContext Ctxt, bool *implicitTimes) const;
-    
-    
-    const PrefixParseletPtr& findPrefixParselet(TokenEnum T) const;
-    
-    const InfixParseletPtr& findInfixParselet(TokenEnum T) const;
-    
-    
-    const PrefixParseletPtr& getContextSensitiveSymbolParselet() const;
-    const ContextSensitiveInfixParseletPtr& getContextSensitiveUnder1Parselet() const;
-    const ContextSensitiveInfixParseletPtr& getContextSensitiveUnder2Parselet() const;
-    const ContextSensitiveInfixParseletPtr& getContextSensitiveUnder3Parselet() const;
-    const ContextSensitiveInfixParseletPtr& getContextSensitiveColonParselet() const;
     
     ~Parser();
 

@@ -2,6 +2,7 @@
 #include "API.h"
 
 #include "Parser.h" // for Parser
+#include "ParseletRegistration.h" // for ParserRegistrationInit
 #include "Tokenizer.h" // for Tokenizer
 #include "CharacterDecoder.h" // for CharacterDecoder
 #include "ByteDecoder.h" // for ByteDecoder

@@ -2,7 +2,7 @@
 #include "Parselet.h"
 
 #include "API.h" // for ParserSession
-
+#include "ParseletRegistration.h"
 
 NodePtr LeafParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
@@ -29,7 +29,7 @@ NodePtr SymbolParselet::parse(Token TokIn, ParserContext Ctxt) const {
     switch (Tok.Tok.value()) {
         case TOKEN_UNDER.value(): {
             
-            auto& under1Parselet = TheParser->getContextSensitiveUnder1Parselet();
+            auto& under1Parselet = getContextSensitiveUnder1Parselet();
             
             NodeSeq Args(1);
             Args.append(std::move(Sym));
@@ -38,7 +38,7 @@ NodePtr SymbolParselet::parse(Token TokIn, ParserContext Ctxt) const {
         }
         case TOKEN_UNDERUNDER.value(): {
             
-            auto& under2Parselet = TheParser->getContextSensitiveUnder2Parselet();
+            auto& under2Parselet = getContextSensitiveUnder2Parselet();
             
             NodeSeq Args(1);
             Args.append(std::move(Sym));
@@ -47,7 +47,7 @@ NodePtr SymbolParselet::parse(Token TokIn, ParserContext Ctxt) const {
         }
         case TOKEN_UNDERUNDERUNDER.value(): {
             
-            auto& under3Parselet = TheParser->getContextSensitiveUnder3Parselet();
+            auto& under3Parselet = getContextSensitiveUnder3Parselet();
             
             NodeSeq Args(1);
             Args.append(std::move(Sym));
@@ -86,7 +86,7 @@ NodePtr SymbolParselet::parse(Token TokIn, ParserContext Ctxt) const {
             Args.append(std::move(Sym));
             Args.appendIfNonEmpty(std::move(ArgsTest));
             
-            auto& colonParselet = TheParser->findInfixParselet(Tok.Tok);
+            auto& colonParselet = findInfixParselet(Tok.Tok);
             
             return colonParselet->parse(std::move(Args), Tok, Ctxt);
         }
@@ -476,7 +476,7 @@ NodePtr UnderParselet::parse(Token TokIn, ParserContext Ctxt) const {
     NodePtr Blank;
     if (Tok.Tok == TOKEN_SYMBOL) {
         
-        auto& symbolParselet = TheParser->getContextSensitiveSymbolParselet();
+        auto& symbolParselet = getContextSensitiveSymbolParselet();
         
         auto Sym2 = symbolParselet->parse(Tok, Ctxt);
         
@@ -507,7 +507,7 @@ NodePtr UnderParselet::parse(Token TokIn, ParserContext Ctxt) const {
         // It's nice to include the error inside of the blank
         //
         
-        auto& parselet = TheParser->findPrefixParselet(Tok.Tok);
+        auto& parselet = findPrefixParselet(Tok.Tok);
         
         auto ErrorSym2 = parselet->parse(Tok, Ctxt);
         
@@ -554,7 +554,7 @@ NodePtr UnderParselet::parse(Token TokIn, ParserContext Ctxt) const {
         
         if ((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
             
-            auto& colonParselet = TheParser->getContextSensitiveColonParselet();
+            auto& colonParselet = getContextSensitiveColonParselet();
             
             NodeSeq BlankSeq(1 + 1);
             BlankSeq.append(std::move(Blank));
@@ -586,7 +586,7 @@ NodePtr UnderParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserCo
     
     if (Tok.Tok == TOKEN_SYMBOL) {
         
-        auto& symbolParselet = TheParser->getContextSensitiveSymbolParselet();
+        auto& symbolParselet = getContextSensitiveSymbolParselet();
         
         auto Right = symbolParselet->parse(Tok, Ctxt);
         
@@ -600,7 +600,7 @@ NodePtr UnderParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserCo
         // It's nice to include the error inside of the blank
         //
         
-        auto& parselet = TheParser->findPrefixParselet(Tok.Tok);
+        auto& parselet = findPrefixParselet(Tok.Tok);
         
         auto ErrorRight = parselet->parse(Tok, Ctxt);
         
@@ -637,7 +637,7 @@ NodePtr UnderParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserCo
         
         if ((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
             
-            auto& colonParselet = TheParser->getContextSensitiveColonParselet();
+            auto& colonParselet = getContextSensitiveColonParselet();
             
             NodeSeq PatSeq(1 + 1);
             PatSeq.append(std::move(Pat));
@@ -695,7 +695,7 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) cons
     Ctxt.Flag &= ~(PARSER_INSIDE_COLON);
     Ctxt.Prec = PRECEDENCE_LOWEST;
     
-    auto& tildeParselet = TheParser->findInfixParselet(TOKEN_TILDE);
+    auto& tildeParselet = findInfixParselet(TOKEN_TILDE);
     tildeParselet->setPrecedence(PRECEDENCE_LOWEST);
     
     auto Middle = TheParser->parse(FirstTok, Ctxt);
@@ -912,7 +912,7 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
         
         Ctxt.Flag |= PARSER_INSIDE_SLASHCOLON;
         
-        auto& equalParselet = TheParser->findInfixParselet(Tok.Tok);
+        auto& equalParselet = findInfixParselet(Tok.Tok);
         
         auto N = equalParselet->parse(std::move(Args), Tok, Ctxt);
         
@@ -924,7 +924,7 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
         Args2.append(std::move(Middle));
         Args2.appendIfNonEmpty(std::move(ArgsTest2));
         
-        auto& colonEqualParselet = TheParser->findInfixParselet(Tok.Tok);
+        auto& colonEqualParselet = findInfixParselet(Tok.Tok);
         
         auto N = colonEqualParselet->parse(std::move(Args2), Tok, Ctxt);
         
@@ -944,7 +944,7 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
         Args2.append(std::move(Middle));
         Args2.appendIfNonEmpty(std::move(ArgsTest2));
         
-        auto& equalDotParselet = TheParser->findInfixParselet(Tok.Tok);
+        auto& equalDotParselet = findInfixParselet(Tok.Tok);
         
         auto N = equalDotParselet->parse(std::move(Args2), Tok, Ctxt);
         
@@ -1226,7 +1226,7 @@ NodePtr IntegralParselet::parse(Token TokIn, ParserContext Ctxt) const {
         return NodePtr(new PrefixNode(Op1, std::move(Args)));
     }
     
-    auto& differentialDparselet = TheParser->findPrefixParselet(Tok.Tok);
+    auto& differentialDparselet = findPrefixParselet(Tok.Tok);
     
     auto variable = differentialDparselet->parse(Tok, Ctxt);
     

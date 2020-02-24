@@ -6,6 +6,23 @@
 
 #include <memory> // for unique_ptr
 
+class PrefixParselet;
+class InfixParselet;
+class CallParselet;
+class PostfixParselet;
+class ContextSensitivePrefixParselet;
+class ContextSensitiveInfixParselet;
+#if STARTOFLINE
+class StartOfLineParselet;
+class StartOfFileParselet;
+#endif // STARTOFLINE
+class GroupParselet;
+class Parselet;
+class Parser;
+
+using PrefixParseletPtr = PrefixParselet *;
+using InfixParseletPtr = InfixParselet *;
+using ContextSensitiveInfixParseletPtr = ContextSensitiveInfixParselet *;
 
 //
 // Classes that derive from Parselet are responsible for parsing specific kinds of syntax
