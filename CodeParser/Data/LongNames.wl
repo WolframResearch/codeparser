@@ -37,754 +37,754 @@ FIXME: all of these should be kernel quirks?
 (*
 Range 0x0000
 *)
-"RawTab" -> RawCharacter, (* 0x0009 *)
-"NewLine" -> RawCharacter, (* 0x000a *)
-"RawReturn" -> RawCharacter, (* 0x000d *)
-"RawEscape" -> RawCharacter, (* 0x001b *)
-"RawSpace" -> RawCharacter, (* 0x0020 *)
-"RawExclamation" -> RawCharacter, (* 0x0021 *)
-"RawDoubleQuote" -> RawCharacter, (* 0x0022 *)
-"RawNumberSign" -> RawCharacter, (* 0x0023 *)
-"RawDollar" -> RawCharacter, (* 0x0024 *)
-"RawPercent" -> RawCharacter, (* 0x0025 *)
-"RawAmpersand" -> RawCharacter, (* 0x0026 *)
-"RawQuote" -> RawCharacter, (* 0x0027 *)
-"RawLeftParenthesis" -> RawCharacter, (* 0x0028 *)
-"RawRightParenthesis" -> RawCharacter, (* 0x0029 *)
-"RawStar" -> RawCharacter, (* 0x002a *)
-"RawPlus" -> RawCharacter, (* 0x002b *)
-"RawComma" -> RawCharacter, (* 0x002c *)
-"RawDash" -> RawCharacter, (* 0x002d *)
-"RawDot" -> RawCharacter, (* 0x002e *)
-"RawSlash" -> RawCharacter, (* 0x002f *)
-"RawColon" -> RawCharacter, (* 0x003a *)
-"RawSemicolon" -> RawCharacter, (* 0x003b *)
-"RawLess" -> RawCharacter, (* 0x003c *)
-"RawEqual" -> RawCharacter, (* 0x003d *)
-"RawGreater" -> RawCharacter, (* 0x003e *)
-"RawQuestion" -> RawCharacter, (* 0x003f *)
-"RawAt" -> RawCharacter, (* 0x0040 *)
-"RawLeftBracket" -> RawCharacter, (* 0x005b *)
-"RawBackslash" -> RawCharacter, (* 0x005c *)
-"RawRightBracket" -> RawCharacter, (* 0x005d *)
-"RawWedge" -> RawCharacter, (* 0x005e *)
-"RawUnderscore" -> RawCharacter, (* 0x005f *)
-"RawBackquote" -> RawCharacter, (* 0x0060 *)
-"RawLeftBrace" -> RawCharacter, (* 0x007b *)
-"RawVerticalBar" -> RawCharacter, (* 0x007c *)
-"RawRightBrace" -> RawCharacter, (* 0x007d *)
-"RawTilde" -> RawCharacter, (* 0x007e *)
-"NonBreakingSpace" -> WhitespaceCharacter, (* 0x00a0 *)
-"DownExclamation" -> LetterlikeCharacter, (* 0x00a1 *)
-"Cent" -> LetterlikeCharacter, (* 0x00a2 *)
-"Sterling" -> LetterlikeCharacter, (* 0x00a3 *)
-"Currency" -> LetterlikeCharacter, (* 0x00a4 *)
-"Yen" -> LetterlikeCharacter, (* 0x00a5 *)
-"Section" -> LetterlikeCharacter, (* 0x00a7 *)
-"DoubleDot" -> LetterlikeCharacter, (* 0x00a8 *)
-"Copyright" -> LetterlikeCharacter, (* 0x00a9 *)
-"LeftGuillemet" -> LetterlikeCharacter, (* 0x00ab *)
-"Not" -> PunctuationCharacter, (* 0x00ac *)
-"DiscretionaryHyphen" -> LetterlikeCharacter, (* 0x00ad *)
-"RegisteredTrademark" -> LetterlikeCharacter, (* 0x00ae *)
-"Degree" -> LetterlikeCharacter, (* 0x00b0 *)
-"PlusMinus" -> PunctuationCharacter, (* 0x00b1 *)
-"Micro" -> LetterlikeCharacter, (* 0x00b5 *)
-"Paragraph" -> LetterlikeCharacter, (* 0x00b6 *)
-"CenterDot" -> PunctuationCharacter, (* 0x00b7 *)
-"Cedilla" -> LetterlikeCharacter, (* 0x00b8 *)
-"RightGuillemet" -> LetterlikeCharacter, (* 0x00bb *)
-"DownQuestion" -> LetterlikeCharacter, (* 0x00bf *)
-"CapitalAGrave" -> LetterlikeCharacter, (* 0x00c0 *)
-"CapitalAAcute" -> LetterlikeCharacter, (* 0x00c1 *)
-"CapitalAHat" -> LetterlikeCharacter, (* 0x00c2 *)
-"CapitalATilde" -> LetterlikeCharacter, (* 0x00c3 *)
-"CapitalADoubleDot" -> LetterlikeCharacter, (* 0x00c4 *)
-"CapitalARing" -> LetterlikeCharacter, (* 0x00c5 *)
-"CapitalAE" -> LetterlikeCharacter, (* 0x00c6 *)
-"CapitalCCedilla" -> LetterlikeCharacter, (* 0x00c7 *)
-"CapitalEGrave" -> LetterlikeCharacter, (* 0x00c8 *)
-"CapitalEAcute" -> LetterlikeCharacter, (* 0x00c9 *)
-"CapitalEHat" -> LetterlikeCharacter, (* 0x00ca *)
-"CapitalEDoubleDot" -> LetterlikeCharacter, (* 0x00cb *)
-"CapitalIGrave" -> LetterlikeCharacter, (* 0x00cc *)
-"CapitalIAcute" -> LetterlikeCharacter, (* 0x00cd *)
-"CapitalIHat" -> LetterlikeCharacter, (* 0x00ce *)
-"CapitalIDoubleDot" -> LetterlikeCharacter, (* 0x00cf *)
-"CapitalEth" -> LetterlikeCharacter, (* 0x00d0 *)
-"CapitalNTilde" -> LetterlikeCharacter, (* 0x00d1 *)
-"CapitalOGrave" -> LetterlikeCharacter, (* 0x00d2 *)
-"CapitalOAcute" -> LetterlikeCharacter, (* 0x00d3 *)
-"CapitalOHat" -> LetterlikeCharacter, (* 0x00d4 *)
-"CapitalOTilde" -> LetterlikeCharacter, (* 0x00d5 *)
-"CapitalODoubleDot" -> LetterlikeCharacter, (* 0x00d6 *)
-"Times" -> PunctuationCharacter, (* 0x00d7 *)
-"CapitalOSlash" -> LetterlikeCharacter, (* 0x00d8 *)
-"CapitalUGrave" -> LetterlikeCharacter, (* 0x00d9 *)
-"CapitalUAcute" -> LetterlikeCharacter, (* 0x00da *)
-"CapitalUHat" -> LetterlikeCharacter, (* 0x00db *)
-"CapitalUDoubleDot" -> LetterlikeCharacter, (* 0x00dc *)
-"CapitalYAcute" -> LetterlikeCharacter, (* 0x00dd *)
-"CapitalThorn" -> LetterlikeCharacter, (* 0x00de *)
-"SZ" -> LetterlikeCharacter, (* 0x00df *)
-"AGrave" -> LetterlikeCharacter, (* 0x00e0 *)
-"AAcute" -> LetterlikeCharacter, (* 0x00e1 *)
-"AHat" -> LetterlikeCharacter, (* 0x00e2 *)
-"ATilde" -> LetterlikeCharacter, (* 0x00e3 *)
-"ADoubleDot" -> LetterlikeCharacter, (* 0x00e4 *)
-"ARing" -> LetterlikeCharacter, (* 0x00e5 *)
-"AE" -> LetterlikeCharacter, (* 0x00e6 *)
-"CCedilla" -> LetterlikeCharacter, (* 0x00e7 *)
-"EGrave" -> LetterlikeCharacter, (* 0x00e8 *)
-"EAcute" -> LetterlikeCharacter, (* 0x00e9 *)
-"EHat" -> LetterlikeCharacter, (* 0x00ea *)
-"EDoubleDot" -> LetterlikeCharacter, (* 0x00eb *)
-"IGrave" -> LetterlikeCharacter, (* 0x00ec *)
-"IAcute" -> LetterlikeCharacter, (* 0x00ed *)
-"IHat" -> LetterlikeCharacter, (* 0x00ee *)
-"IDoubleDot" -> LetterlikeCharacter, (* 0x00ef *)
-"Eth" -> LetterlikeCharacter, (* 0x00f0 *)
-"NTilde" -> LetterlikeCharacter, (* 0x00f1 *)
-"OGrave" -> LetterlikeCharacter, (* 0x00f2 *)
-"OAcute" -> LetterlikeCharacter, (* 0x00f3 *)
-"OHat" -> LetterlikeCharacter, (* 0x00f4 *)
-"OTilde" -> LetterlikeCharacter, (* 0x00f5 *)
-"ODoubleDot" -> LetterlikeCharacter, (* 0x00f6 *)
-"Divide" -> PunctuationCharacter, (* 0x00f7 *)
-"OSlash" -> LetterlikeCharacter, (* 0x00f8 *)
-"UGrave" -> LetterlikeCharacter, (* 0x00f9 *)
-"UAcute" -> LetterlikeCharacter, (* 0x00fa *)
-"UHat" -> LetterlikeCharacter, (* 0x00fb *)
-"UDoubleDot" -> LetterlikeCharacter, (* 0x00fc *)
-"YAcute" -> LetterlikeCharacter, (* 0x00fd *)
-"Thorn" -> LetterlikeCharacter, (* 0x00fe *)
-"YDoubleDot" -> LetterlikeCharacter, (* 0x00ff *)
+"RawTab" -> {RawCharacter, 16^^0009},
+"NewLine" -> {RawCharacter, 16^^000a},
+"RawReturn" -> {RawCharacter, 16^^000d},
+"RawEscape" -> {RawCharacter, 16^^001b},
+"RawSpace" -> {RawCharacter, 16^^0020},
+"RawExclamation" -> {RawCharacter, 16^^0021},
+"RawDoubleQuote" -> {RawCharacter, 16^^0022},
+"RawNumberSign" -> {RawCharacter, 16^^0023},
+"RawDollar" -> {RawCharacter, 16^^0024},
+"RawPercent" -> {RawCharacter, 16^^0025},
+"RawAmpersand" -> {RawCharacter, 16^^0026},
+"RawQuote" -> {RawCharacter, 16^^0027},
+"RawLeftParenthesis" -> {RawCharacter, 16^^0028},
+"RawRightParenthesis" -> {RawCharacter, 16^^0029},
+"RawStar" -> {RawCharacter, 16^^002a},
+"RawPlus" -> {RawCharacter, 16^^002b},
+"RawComma" -> {RawCharacter, 16^^002c},
+"RawDash" -> {RawCharacter, 16^^002d},
+"RawDot" -> {RawCharacter, 16^^002e},
+"RawSlash" -> {RawCharacter, 16^^002f},
+"RawColon" -> {RawCharacter, 16^^003a},
+"RawSemicolon" -> {RawCharacter, 16^^003b},
+"RawLess" -> {RawCharacter, 16^^003c},
+"RawEqual" -> {RawCharacter, 16^^003d},
+"RawGreater" -> {RawCharacter, 16^^003e},
+"RawQuestion" -> {RawCharacter, 16^^003f},
+"RawAt" -> {RawCharacter, 16^^0040},
+"RawLeftBracket" -> {RawCharacter, 16^^005b},
+"RawBackslash" -> {RawCharacter, 16^^005c},
+"RawRightBracket" -> {RawCharacter, 16^^005d},
+"RawWedge" -> {RawCharacter, 16^^005e},
+"RawUnderscore" -> {RawCharacter, 16^^005f},
+"RawBackquote" -> {RawCharacter, 16^^0060},
+"RawLeftBrace" -> {RawCharacter, 16^^007b},
+"RawVerticalBar" -> {RawCharacter, 16^^007c},
+"RawRightBrace" -> {RawCharacter, 16^^007d},
+"RawTilde" -> {RawCharacter, 16^^007e},
+"NonBreakingSpace" -> {WhitespaceCharacter, 16^^00a0},
+"DownExclamation" -> {LetterlikeCharacter, 16^^00a1},
+"Cent" -> {LetterlikeCharacter, 16^^00a2},
+"Sterling" -> {LetterlikeCharacter, 16^^00a3},
+"Currency" -> {LetterlikeCharacter, 16^^00a4},
+"Yen" -> {LetterlikeCharacter, 16^^00a5},
+"Section" -> {LetterlikeCharacter, 16^^00a7},
+"DoubleDot" -> {LetterlikeCharacter, 16^^00a8},
+"Copyright" -> {LetterlikeCharacter, 16^^00a9},
+"LeftGuillemet" -> {LetterlikeCharacter, 16^^00ab},
+"Not" -> {PunctuationCharacter, 16^^00ac},
+"DiscretionaryHyphen" -> {LetterlikeCharacter, 16^^00ad},
+"RegisteredTrademark" -> {LetterlikeCharacter, 16^^00ae},
+"Degree" -> {LetterlikeCharacter, 16^^00b0},
+"PlusMinus" -> {PunctuationCharacter, 16^^00b1},
+"Micro" -> {LetterlikeCharacter, 16^^00b5},
+"Paragraph" -> {LetterlikeCharacter, 16^^00b6},
+"CenterDot" -> {PunctuationCharacter, 16^^00b7},
+"Cedilla" -> {LetterlikeCharacter, 16^^00b8},
+"RightGuillemet" -> {LetterlikeCharacter, 16^^00bb},
+"DownQuestion" -> {LetterlikeCharacter, 16^^00bf},
+"CapitalAGrave" -> {LetterlikeCharacter, 16^^00c0},
+"CapitalAAcute" -> {LetterlikeCharacter, 16^^00c1},
+"CapitalAHat" -> {LetterlikeCharacter, 16^^00c2},
+"CapitalATilde" -> {LetterlikeCharacter, 16^^00c3},
+"CapitalADoubleDot" -> {LetterlikeCharacter, 16^^00c4},
+"CapitalARing" -> {LetterlikeCharacter, 16^^00c5},
+"CapitalAE" -> {LetterlikeCharacter, 16^^00c6},
+"CapitalCCedilla" -> {LetterlikeCharacter, 16^^00c7},
+"CapitalEGrave" -> {LetterlikeCharacter, 16^^00c8},
+"CapitalEAcute" -> {LetterlikeCharacter, 16^^00c9},
+"CapitalEHat" -> {LetterlikeCharacter, 16^^00ca},
+"CapitalEDoubleDot" -> {LetterlikeCharacter, 16^^00cb},
+"CapitalIGrave" -> {LetterlikeCharacter, 16^^00cc},
+"CapitalIAcute" -> {LetterlikeCharacter, 16^^00cd},
+"CapitalIHat" -> {LetterlikeCharacter, 16^^00ce},
+"CapitalIDoubleDot" -> {LetterlikeCharacter, 16^^00cf},
+"CapitalEth" -> {LetterlikeCharacter, 16^^00d0},
+"CapitalNTilde" -> {LetterlikeCharacter, 16^^00d1},
+"CapitalOGrave" -> {LetterlikeCharacter, 16^^00d2},
+"CapitalOAcute" -> {LetterlikeCharacter, 16^^00d3},
+"CapitalOHat" -> {LetterlikeCharacter, 16^^00d4},
+"CapitalOTilde" -> {LetterlikeCharacter, 16^^00d5},
+"CapitalODoubleDot" -> {LetterlikeCharacter, 16^^00d6},
+"Times" -> {PunctuationCharacter, 16^^00d7},
+"CapitalOSlash" -> {LetterlikeCharacter, 16^^00d8},
+"CapitalUGrave" -> {LetterlikeCharacter, 16^^00d9},
+"CapitalUAcute" -> {LetterlikeCharacter, 16^^00da},
+"CapitalUHat" -> {LetterlikeCharacter, 16^^00db},
+"CapitalUDoubleDot" -> {LetterlikeCharacter, 16^^00dc},
+"CapitalYAcute" -> {LetterlikeCharacter, 16^^00dd},
+"CapitalThorn" -> {LetterlikeCharacter, 16^^00de},
+"SZ" -> {LetterlikeCharacter, 16^^00df},
+"AGrave" -> {LetterlikeCharacter, 16^^00e0},
+"AAcute" -> {LetterlikeCharacter, 16^^00e1},
+"AHat" -> {LetterlikeCharacter, 16^^00e2},
+"ATilde" -> {LetterlikeCharacter, 16^^00e3},
+"ADoubleDot" -> {LetterlikeCharacter, 16^^00e4},
+"ARing" -> {LetterlikeCharacter, 16^^00e5},
+"AE" -> {LetterlikeCharacter, 16^^00e6},
+"CCedilla" -> {LetterlikeCharacter, 16^^00e7},
+"EGrave" -> {LetterlikeCharacter, 16^^00e8},
+"EAcute" -> {LetterlikeCharacter, 16^^00e9},
+"EHat" -> {LetterlikeCharacter, 16^^00ea},
+"EDoubleDot" -> {LetterlikeCharacter, 16^^00eb},
+"IGrave" -> {LetterlikeCharacter, 16^^00ec},
+"IAcute" -> {LetterlikeCharacter, 16^^00ed},
+"IHat" -> {LetterlikeCharacter, 16^^00ee},
+"IDoubleDot" -> {LetterlikeCharacter, 16^^00ef},
+"Eth" -> {LetterlikeCharacter, 16^^00f0},
+"NTilde" -> {LetterlikeCharacter, 16^^00f1},
+"OGrave" -> {LetterlikeCharacter, 16^^00f2},
+"OAcute" -> {LetterlikeCharacter, 16^^00f3},
+"OHat" -> {LetterlikeCharacter, 16^^00f4},
+"OTilde" -> {LetterlikeCharacter, 16^^00f5},
+"ODoubleDot" -> {LetterlikeCharacter, 16^^00f6},
+"Divide" -> {PunctuationCharacter, 16^^00f7},
+"OSlash" -> {LetterlikeCharacter, 16^^00f8},
+"UGrave" -> {LetterlikeCharacter, 16^^00f9},
+"UAcute" -> {LetterlikeCharacter, 16^^00fa},
+"UHat" -> {LetterlikeCharacter, 16^^00fb},
+"UDoubleDot" -> {LetterlikeCharacter, 16^^00fc},
+"YAcute" -> {LetterlikeCharacter, 16^^00fd},
+"Thorn" -> {LetterlikeCharacter, 16^^00fe},
+"YDoubleDot" -> {LetterlikeCharacter, 16^^00ff},
 
 (*
 Range 0x0100
 *)
-"CapitalABar" -> LetterlikeCharacter, (* 0x0100 *)
-"ABar" -> LetterlikeCharacter, (* 0x0101 *)
-"CapitalACup" -> LetterlikeCharacter, (* 0x0102 *)
-"ACup" -> LetterlikeCharacter, (* 0x0103 *)
-"CapitalCAcute" -> LetterlikeCharacter, (* 0x0106 *)
-"CAcute" -> LetterlikeCharacter, (* 0x0107 *)
-"CapitalCHacek" -> LetterlikeCharacter, (* 0x010c *)
-"CHacek" -> LetterlikeCharacter, (* 0x010d *)
-"CapitalDHacek" -> LetterlikeCharacter, (* 0x010e *)
-"DHacek" -> LetterlikeCharacter, (* 0x010f *)
-"CapitalEBar" -> LetterlikeCharacter, (* 0x0112 *)
-"EBar" -> LetterlikeCharacter, (* 0x0113 *)
-"CapitalECup" -> LetterlikeCharacter, (* 0x0114 *)
-"ECup" -> LetterlikeCharacter, (* 0x0115 *)
-"CapitalEHacek" -> LetterlikeCharacter, (* 0x011a *)
-"EHacek" -> LetterlikeCharacter, (* 0x011b *)
-"CapitalICup" -> LetterlikeCharacter, (* 0x012c *)
-"ICup" -> LetterlikeCharacter, (* 0x012d *)
-"DotlessI" -> LetterlikeCharacter, (* 0x0131 *)
-"CapitalLSlash" -> LetterlikeCharacter, (* 0x0141 *)
-"LSlash" -> LetterlikeCharacter, (* 0x0142 *)
-"CapitalNHacek" -> LetterlikeCharacter, (* 0x0147 *)
-"NHacek" -> LetterlikeCharacter, (* 0x0148 *)
-"CapitalODoubleAcute" -> LetterlikeCharacter, (* 0x0150 *)
-"ODoubleAcute" -> LetterlikeCharacter, (* 0x0151 *)
-"CapitalOE" -> LetterlikeCharacter, (* 0x0152 *)
-"OE" -> LetterlikeCharacter, (* 0x0153 *)
-"CapitalRHacek" -> LetterlikeCharacter, (* 0x0158 *)
-"RHacek" -> LetterlikeCharacter, (* 0x0159 *)
-"CapitalSHacek" -> LetterlikeCharacter, (* 0x0160 *)
-"SHacek" -> LetterlikeCharacter, (* 0x0161 *)
-"CapitalTHacek" -> LetterlikeCharacter, (* 0x0164 *)
-"THacek" -> LetterlikeCharacter, (* 0x0165 *)
-"CapitalURing" -> LetterlikeCharacter, (* 0x016e *)
-"URing" -> LetterlikeCharacter, (* 0x016f *)
-"CapitalUDoubleAcute" -> LetterlikeCharacter, (* 0x0170 *)
-"UDoubleAcute" -> LetterlikeCharacter, (* 0x0171 *)
-"CapitalZHacek" -> LetterlikeCharacter, (* 0x017d *)
-"ZHacek" -> LetterlikeCharacter, (* 0x017e *)
-"Florin" -> LetterlikeCharacter, (* 0x0192 *)
+"CapitalABar" -> {LetterlikeCharacter, 16^^0100},
+"ABar" -> {LetterlikeCharacter, 16^^0101},
+"CapitalACup" -> {LetterlikeCharacter, 16^^0102},
+"ACup" -> {LetterlikeCharacter, 16^^0103},
+"CapitalCAcute" -> {LetterlikeCharacter, 16^^0106},
+"CAcute" -> {LetterlikeCharacter, 16^^0107},
+"CapitalCHacek" -> {LetterlikeCharacter, 16^^010c},
+"CHacek" -> {LetterlikeCharacter, 16^^010d},
+"CapitalDHacek" -> {LetterlikeCharacter, 16^^010e},
+"DHacek" -> {LetterlikeCharacter, 16^^010f},
+"CapitalEBar" -> {LetterlikeCharacter, 16^^0112},
+"EBar" -> {LetterlikeCharacter, 16^^0113},
+"CapitalECup" -> {LetterlikeCharacter, 16^^0114},
+"ECup" -> {LetterlikeCharacter, 16^^0115},
+"CapitalEHacek" -> {LetterlikeCharacter, 16^^011a},
+"EHacek" -> {LetterlikeCharacter, 16^^011b},
+"CapitalICup" -> {LetterlikeCharacter, 16^^012c},
+"ICup" -> {LetterlikeCharacter, 16^^012d},
+"DotlessI" -> {LetterlikeCharacter, 16^^0131},
+"CapitalLSlash" -> {LetterlikeCharacter, 16^^0141},
+"LSlash" -> {LetterlikeCharacter, 16^^0142},
+"CapitalNHacek" -> {LetterlikeCharacter, 16^^0147},
+"NHacek" -> {LetterlikeCharacter, 16^^0148},
+"CapitalODoubleAcute" -> {LetterlikeCharacter, 16^^0150},
+"ODoubleAcute" -> {LetterlikeCharacter, 16^^0151},
+"CapitalOE" -> {LetterlikeCharacter, 16^^0152},
+"OE" -> {LetterlikeCharacter, 16^^0153},
+"CapitalRHacek" -> {LetterlikeCharacter, 16^^0158},
+"RHacek" -> {LetterlikeCharacter, 16^^0159},
+"CapitalSHacek" -> {LetterlikeCharacter, 16^^0160},
+"SHacek" -> {LetterlikeCharacter, 16^^0161},
+"CapitalTHacek" -> {LetterlikeCharacter, 16^^0164},
+"THacek" -> {LetterlikeCharacter, 16^^0165},
+"CapitalURing" -> {LetterlikeCharacter, 16^^016e},
+"URing" -> {LetterlikeCharacter, 16^^016f},
+"CapitalUDoubleAcute" -> {LetterlikeCharacter, 16^^0170},
+"UDoubleAcute" -> {LetterlikeCharacter, 16^^0171},
+"CapitalZHacek" -> {LetterlikeCharacter, 16^^017d},
+"ZHacek" -> {LetterlikeCharacter, 16^^017e},
+"Florin" -> {LetterlikeCharacter, 16^^0192},
 
 (*
 Range 0x0200
 *)
-"Hacek" -> LetterlikeCharacter, (* 0x02c7 *)
-"Breve" -> LetterlikeCharacter, (* 0x02d8 *)
+"Hacek" -> {LetterlikeCharacter, 16^^02c7},
+"Breve" -> {LetterlikeCharacter, 16^^02d8},
 
 (*
 Range 0x0300
 *)
-"CapitalAlpha" -> LetterlikeCharacter, (* 0x0391 *)
-"CapitalBeta" -> LetterlikeCharacter, (* 0x0392 *)
-"CapitalGamma" -> LetterlikeCharacter, (* 0x0393 *)
-"CapitalDelta" -> LetterlikeCharacter, (* 0x0394 *)
-"CapitalEpsilon" -> LetterlikeCharacter, (* 0x0395 *)
-"CapitalZeta" -> LetterlikeCharacter, (* 0x0396 *)
-"CapitalEta" -> LetterlikeCharacter, (* 0x0397 *)
-"CapitalTheta" -> LetterlikeCharacter, (* 0x0398 *)
-"CapitalIota" -> LetterlikeCharacter, (* 0x0399 *)
-"CapitalKappa" -> LetterlikeCharacter, (* 0x039a *)
-"CapitalLambda" -> LetterlikeCharacter, (* 0x039b *)
-"CapitalMu" -> LetterlikeCharacter, (* 0x039c *)
-"CapitalNu" -> LetterlikeCharacter, (* 0x039d *)
-"CapitalXi" -> LetterlikeCharacter, (* 0x039e *)
-"CapitalOmicron" -> LetterlikeCharacter, (* 0x039f *)
-"CapitalPi" -> LetterlikeCharacter, (* 0x03a0 *)
-"CapitalRho" -> LetterlikeCharacter, (* 0x03a1 *)
-"CapitalSigma" -> LetterlikeCharacter, (* 0x03a3 *)
-"CapitalTau" -> LetterlikeCharacter, (* 0x03a4 *)
-"CapitalUpsilon" -> LetterlikeCharacter, (* 0x03a5 *)
-"CapitalPhi" -> LetterlikeCharacter, (* 0x03a6 *)
-"CapitalChi" -> LetterlikeCharacter, (* 0x03a7 *)
-"CapitalPsi" -> LetterlikeCharacter, (* 0x03a8 *)
-"CapitalOmega" -> LetterlikeCharacter, (* 0x03a9 *)
-"Alpha" -> LetterlikeCharacter, (* 0x03b1 *)
-"Beta" -> LetterlikeCharacter, (* 0x03b2 *)
-"Gamma" -> LetterlikeCharacter, (* 0x03b3 *)
-"Delta" -> LetterlikeCharacter, (* 0x03b4 *)
-"CurlyEpsilon" -> LetterlikeCharacter, (* 0x03b5 *)
-"Zeta" -> LetterlikeCharacter, (* 0x03b6 *)
-"Eta" -> LetterlikeCharacter, (* 0x03b7 *)
-"Theta" -> LetterlikeCharacter, (* 0x03b8 *)
-"Iota" -> LetterlikeCharacter, (* 0x03b9 *)
-"Kappa" -> LetterlikeCharacter, (* 0x03ba *)
-"Lambda" -> LetterlikeCharacter, (* 0x03bb *)
-"Mu" -> LetterlikeCharacter, (* 0x03bc *)
-"Nu" -> LetterlikeCharacter, (* 0x03bd *)
-"Xi" -> LetterlikeCharacter, (* 0x03be *)
-"Omicron" -> LetterlikeCharacter, (* 0x03bf *)
-"Pi" -> LetterlikeCharacter, (* 0x03c0 *)
-"Rho" -> LetterlikeCharacter, (* 0x03c1 *)
-"FinalSigma" -> LetterlikeCharacter, (* 0x03c2 *)
-"Sigma" -> LetterlikeCharacter, (* 0x03c3 *)
-"Tau" -> LetterlikeCharacter, (* 0x03c4 *)
-"Upsilon" -> LetterlikeCharacter, (* 0x03c5 *)
-"CurlyPhi" -> LetterlikeCharacter, (* 0x03c6 *)
-"Chi" -> LetterlikeCharacter, (* 0x03c7 *)
-"Psi" -> LetterlikeCharacter, (* 0x03c8 *)
-"Omega" -> LetterlikeCharacter, (* 0x03c9 *)
-"CurlyTheta" -> LetterlikeCharacter, (* 0x03d1 *)
-"CurlyCapitalUpsilon" -> LetterlikeCharacter, (* 0x03d2 *)
-"Phi" -> LetterlikeCharacter, (* 0x03d5 *)
-"CurlyPi" -> LetterlikeCharacter, (* 0x03d6 *)
-"CapitalStigma" -> LetterlikeCharacter, (* 0x03da *)
-"Stigma" -> LetterlikeCharacter, (* 0x03db *)
-"CapitalDigamma" -> LetterlikeCharacter, (* 0x03dc *)
-"Digamma" -> LetterlikeCharacter, (* 0x03dd *)
-"CapitalKoppa" -> LetterlikeCharacter, (* 0x03de *)
-"Koppa" -> LetterlikeCharacter, (* 0x03df *)
-"CapitalSampi" -> LetterlikeCharacter, (* 0x03e0 *)
-"Sampi" -> LetterlikeCharacter, (* 0x03e1 *)
-"CurlyKappa" -> LetterlikeCharacter, (* 0x03f0 *)
-"CurlyRho" -> LetterlikeCharacter, (* 0x03f1 *)
-"Epsilon" -> LetterlikeCharacter, (* 0x03f5 *)
+"CapitalAlpha" -> {LetterlikeCharacter, 16^^0391},
+"CapitalBeta" -> {LetterlikeCharacter, 16^^0392},
+"CapitalGamma" -> {LetterlikeCharacter, 16^^0393},
+"CapitalDelta" -> {LetterlikeCharacter, 16^^0394},
+"CapitalEpsilon" -> {LetterlikeCharacter, 16^^0395},
+"CapitalZeta" -> {LetterlikeCharacter, 16^^0396},
+"CapitalEta" -> {LetterlikeCharacter, 16^^0397},
+"CapitalTheta" -> {LetterlikeCharacter, 16^^0398},
+"CapitalIota" -> {LetterlikeCharacter, 16^^0399},
+"CapitalKappa" -> {LetterlikeCharacter, 16^^039a},
+"CapitalLambda" -> {LetterlikeCharacter, 16^^039b},
+"CapitalMu" -> {LetterlikeCharacter, 16^^039c},
+"CapitalNu" -> {LetterlikeCharacter, 16^^039d},
+"CapitalXi" -> {LetterlikeCharacter, 16^^039e},
+"CapitalOmicron" -> {LetterlikeCharacter, 16^^039f},
+"CapitalPi" -> {LetterlikeCharacter, 16^^03a0},
+"CapitalRho" -> {LetterlikeCharacter, 16^^03a1},
+"CapitalSigma" -> {LetterlikeCharacter, 16^^03a3},
+"CapitalTau" -> {LetterlikeCharacter, 16^^03a4},
+"CapitalUpsilon" -> {LetterlikeCharacter, 16^^03a5},
+"CapitalPhi" -> {LetterlikeCharacter, 16^^03a6},
+"CapitalChi" -> {LetterlikeCharacter, 16^^03a7},
+"CapitalPsi" -> {LetterlikeCharacter, 16^^03a8},
+"CapitalOmega" -> {LetterlikeCharacter, 16^^03a9},
+"Alpha" -> {LetterlikeCharacter, 16^^03b1},
+"Beta" -> {LetterlikeCharacter, 16^^03b2},
+"Gamma" -> {LetterlikeCharacter, 16^^03b3},
+"Delta" -> {LetterlikeCharacter, 16^^03b4},
+"CurlyEpsilon" -> {LetterlikeCharacter, 16^^03b5},
+"Zeta" -> {LetterlikeCharacter, 16^^03b6},
+"Eta" -> {LetterlikeCharacter, 16^^03b7},
+"Theta" -> {LetterlikeCharacter, 16^^03b8},
+"Iota" -> {LetterlikeCharacter, 16^^03b9},
+"Kappa" -> {LetterlikeCharacter, 16^^03ba},
+"Lambda" -> {LetterlikeCharacter, 16^^03bb},
+"Mu" -> {LetterlikeCharacter, 16^^03bc},
+"Nu" -> {LetterlikeCharacter, 16^^03bd},
+"Xi" -> {LetterlikeCharacter, 16^^03be},
+"Omicron" -> {LetterlikeCharacter, 16^^03bf},
+"Pi" -> {LetterlikeCharacter, 16^^03c0},
+"Rho" -> {LetterlikeCharacter, 16^^03c1},
+"FinalSigma" -> {LetterlikeCharacter, 16^^03c2},
+"Sigma" -> {LetterlikeCharacter, 16^^03c3},
+"Tau" -> {LetterlikeCharacter, 16^^03c4},
+"Upsilon" -> {LetterlikeCharacter, 16^^03c5},
+"CurlyPhi" -> {LetterlikeCharacter, 16^^03c6},
+"Chi" -> {LetterlikeCharacter, 16^^03c7},
+"Psi" -> {LetterlikeCharacter, 16^^03c8},
+"Omega" -> {LetterlikeCharacter, 16^^03c9},
+"CurlyTheta" -> {LetterlikeCharacter, 16^^03d1},
+"CurlyCapitalUpsilon" -> {LetterlikeCharacter, 16^^03d2},
+"Phi" -> {LetterlikeCharacter, 16^^03d5},
+"CurlyPi" -> {LetterlikeCharacter, 16^^03d6},
+"CapitalStigma" -> {LetterlikeCharacter, 16^^03da},
+"Stigma" -> {LetterlikeCharacter, 16^^03db},
+"CapitalDigamma" -> {LetterlikeCharacter, 16^^03dc},
+"Digamma" -> {LetterlikeCharacter, 16^^03dd},
+"CapitalKoppa" -> {LetterlikeCharacter, 16^^03de},
+"Koppa" -> {LetterlikeCharacter, 16^^03df},
+"CapitalSampi" -> {LetterlikeCharacter, 16^^03e0},
+"Sampi" -> {LetterlikeCharacter, 16^^03e1},
+"CurlyKappa" -> {LetterlikeCharacter, 16^^03f0},
+"CurlyRho" -> {LetterlikeCharacter, 16^^03f1},
+"Epsilon" -> {LetterlikeCharacter, 16^^03f5},
 
 (*
 Range 0x2000
 *)
-"ThickSpace" -> WhitespaceCharacter, (* 0x2005 *)
-"ThinSpace" -> WhitespaceCharacter, (* 0x2009 *)
-"VeryThinSpace" -> WhitespaceCharacter, (* 0x200a *)
-"Hyphen" -> LetterlikeCharacter, (* 0x2010 *)
-"Dash" -> LetterlikeCharacter, (* 0x2013 *)
-"LongDash" -> LetterlikeCharacter, (* 0x2014 *)
-"OpenCurlyQuote" -> PunctuationCharacter, (* 0x2018 *)
-"CloseCurlyQuote" -> PunctuationCharacter, (* 0x2019 *)
-"OpenCurlyDoubleQuote" -> PunctuationCharacter, (* 0x201c *)
-"CloseCurlyDoubleQuote" -> PunctuationCharacter, (* 0x201d *)
-"Dagger" -> LetterlikeCharacter, (* 0x2020 *)
-"DoubleDagger" -> LetterlikeCharacter, (* 0x2021 *)
-"Bullet" -> LetterlikeCharacter, (* 0x2022 *)
-"Ellipsis" -> LetterlikeCharacter, (* 0x2026 *)
-"LineSeparator" -> NewlineCharacter, (* 0x2028 *)
-"ParagraphSeparator" -> NewlineCharacter, (* 0x2029 *)
-"Prime" -> LetterlikeCharacter, (* 0x2032 *)
-"DoublePrime" -> LetterlikeCharacter, (* 0x2033 *)
-"ReversePrime" -> LetterlikeCharacter, (* 0x2035 *)
-"ReverseDoublePrime" -> LetterlikeCharacter, (* 0x2036 *)
-"SkeletonIndicator" -> UninterpretableCharacter, (* 0x2043 *)
-"MediumSpace" -> WhitespaceCharacter, (* 0x205f *)
-"NoBreak" -> WhitespaceCharacter, (* 0x2060 *)
-"InvisibleTimes" -> PunctuationCharacter, (* 0x2062 *)
-"Euro" -> LetterlikeCharacter, (* 0x20ac *)
-"Rupee" -> LetterlikeCharacter, (* 0x20b9 *)
+"ThickSpace" -> {WhitespaceCharacter, 16^^2005},
+"ThinSpace" -> {WhitespaceCharacter, 16^^2009},
+"VeryThinSpace" -> {WhitespaceCharacter, 16^^200a},
+"Hyphen" -> {LetterlikeCharacter, 16^^2010},
+"Dash" -> {LetterlikeCharacter, 16^^2013},
+"LongDash" -> {LetterlikeCharacter, 16^^2014},
+"OpenCurlyQuote" -> {PunctuationCharacter, 16^^2018},
+"CloseCurlyQuote" -> {PunctuationCharacter, 16^^2019},
+"OpenCurlyDoubleQuote" -> {PunctuationCharacter, 16^^201c},
+"CloseCurlyDoubleQuote" -> {PunctuationCharacter, 16^^201d},
+"Dagger" -> {LetterlikeCharacter, 16^^2020},
+"DoubleDagger" -> {LetterlikeCharacter, 16^^2021},
+"Bullet" -> {LetterlikeCharacter, 16^^2022},
+"Ellipsis" -> {LetterlikeCharacter, 16^^2026},
+"LineSeparator" -> {NewlineCharacter, 16^^2028},
+"ParagraphSeparator" -> {NewlineCharacter, 16^^2029},
+"Prime" -> {LetterlikeCharacter, 16^^2032},
+"DoublePrime" -> {LetterlikeCharacter, 16^^2033},
+"ReversePrime" -> {LetterlikeCharacter, 16^^2035},
+"ReverseDoublePrime" -> {LetterlikeCharacter, 16^^2036},
+"SkeletonIndicator" -> {UninterpretableCharacter, 16^^2043},
+"MediumSpace" -> {WhitespaceCharacter, 16^^205f},
+"NoBreak" -> {WhitespaceCharacter, 16^^2060},
+"InvisibleTimes" -> {PunctuationCharacter, 16^^2062},
+"Euro" -> {LetterlikeCharacter, 16^^20ac},
+"Rupee" -> {LetterlikeCharacter, 16^^20b9},
 
 (*
 Range 0x2100
 *)
-"ScriptG" -> LetterlikeCharacter, (* 0x210a *)
-"ScriptCapitalH" -> LetterlikeCharacter, (* 0x210b *)
-"GothicCapitalH" -> LetterlikeCharacter, (* 0x210c *)
-"HBar" -> LetterlikeCharacter, (* 0x210f *)
-"ScriptCapitalI" -> LetterlikeCharacter, (* 0x2110 *)
-"GothicCapitalI" -> LetterlikeCharacter, (* 0x2111 *)
-"ScriptCapitalL" -> LetterlikeCharacter, (* 0x2112 *)
-"ScriptL" -> LetterlikeCharacter, (* 0x2113 *)
-"WeierstrassP" -> LetterlikeCharacter, (* 0x2118 *)
-"ScriptCapitalR" -> LetterlikeCharacter, (* 0x211b *)
-"GothicCapitalR" -> LetterlikeCharacter, (* 0x211c *)
-"Trademark" -> LetterlikeCharacter, (* 0x2122 *)
-"Mho" -> LetterlikeCharacter, (* 0x2127 *)
-"GothicCapitalZ" -> LetterlikeCharacter, (* 0x2128 *)
-"Angstrom" -> LetterlikeCharacter, (* 0x212b *)
-"ScriptCapitalB" -> LetterlikeCharacter, (* 0x212c *)
-"GothicCapitalC" -> LetterlikeCharacter, (* 0x212d *)
-"ScriptE" -> LetterlikeCharacter, (* 0x212f *)
-"ScriptCapitalE" -> LetterlikeCharacter, (* 0x2130 *)
-"ScriptCapitalF" -> LetterlikeCharacter, (* 0x2131 *)
-"ScriptCapitalM" -> LetterlikeCharacter, (* 0x2133 *)
-"ScriptO" -> LetterlikeCharacter, (* 0x2134 *)
-"Aleph" -> LetterlikeCharacter, (* 0x2135 *)
-"Bet" -> LetterlikeCharacter, (* 0x2136 *)
-"Gimel" -> LetterlikeCharacter, (* 0x2137 *)
-"Dalet" -> LetterlikeCharacter, (* 0x2138 *)
-"LeftArrow" -> PunctuationCharacter, (* 0x2190 *)
-"UpArrow" -> PunctuationCharacter, (* 0x2191 *)
-"RightArrow" -> PunctuationCharacter, (* 0x2192 *)
-"DownArrow" -> PunctuationCharacter, (* 0x2193 *)
-"LeftRightArrow" -> PunctuationCharacter, (* 0x2194 *)
-"UpDownArrow" -> PunctuationCharacter, (* 0x2195 *)
-"UpperLeftArrow" -> PunctuationCharacter, (* 0x2196 *)
-"UpperRightArrow" -> PunctuationCharacter, (* 0x2197 *)
-"LowerRightArrow" -> PunctuationCharacter, (* 0x2198 *)
-"LowerLeftArrow" -> PunctuationCharacter, (* 0x2199 *)
-"LeftTeeArrow" -> PunctuationCharacter, (* 0x21a4 *)
-"UpTeeArrow" -> PunctuationCharacter, (* 0x21a5 *)
-"RightTeeArrow" -> PunctuationCharacter, (* 0x21a6 *)
-"DownTeeArrow" -> PunctuationCharacter, (* 0x21a7 *)
-"ReturnIndicator" -> LetterlikeCharacter, (* 0x21b5 *)
-"LeftVector" -> PunctuationCharacter, (* 0x21bc *)
-"DownLeftVector" -> PunctuationCharacter, (* 0x21bd *)
-"RightUpVector" -> PunctuationCharacter, (* 0x21be *)
-"LeftUpVector" -> PunctuationCharacter, (* 0x21bf *)
-"RightVector" -> PunctuationCharacter, (* 0x21c0 *)
-"DownRightVector" -> PunctuationCharacter, (* 0x21c1 *)
-"RightDownVector" -> PunctuationCharacter, (* 0x21c2 *)
-"LeftDownVector" -> PunctuationCharacter, (* 0x21c3 *)
-"RightArrowLeftArrow" -> PunctuationCharacter, (* 0x21c4 *)
-"UpArrowDownArrow" -> PunctuationCharacter, (* 0x21c5 *)
-"LeftArrowRightArrow" -> PunctuationCharacter, (* 0x21c6 *)
-"ReverseEquilibrium" -> PunctuationCharacter, (* 0x21cb *)
-"Equilibrium" -> PunctuationCharacter, (* 0x21cc *)
-"DoubleLeftArrow" -> PunctuationCharacter, (* 0x21d0 *)
-"DoubleUpArrow" -> PunctuationCharacter, (* 0x21d1 *)
-"DoubleRightArrow" -> PunctuationCharacter, (* 0x21d2 *)
-"DoubleDownArrow" -> PunctuationCharacter, (* 0x21d3 *)
-"DoubleLeftRightArrow" -> PunctuationCharacter, (* 0x21d4 *)
-"DoubleUpDownArrow" -> PunctuationCharacter, (* 0x21d5 *)
-"LeftArrowBar" -> PunctuationCharacter, (* 0x21e4 *)
-"RightArrowBar" -> PunctuationCharacter, (* 0x21e5 *)
-"DownArrowUpArrow" -> PunctuationCharacter, (* 0x21f5 *)
+"ScriptG" -> {LetterlikeCharacter, 16^^210a},
+"ScriptCapitalH" -> {LetterlikeCharacter, 16^^210b},
+"GothicCapitalH" -> {LetterlikeCharacter, 16^^210c},
+"HBar" -> {LetterlikeCharacter, 16^^210f},
+"ScriptCapitalI" -> {LetterlikeCharacter, 16^^2110},
+"GothicCapitalI" -> {LetterlikeCharacter, 16^^2111},
+"ScriptCapitalL" -> {LetterlikeCharacter, 16^^2112},
+"ScriptL" -> {LetterlikeCharacter, 16^^2113},
+"WeierstrassP" -> {LetterlikeCharacter, 16^^2118},
+"ScriptCapitalR" -> {LetterlikeCharacter, 16^^211b},
+"GothicCapitalR" -> {LetterlikeCharacter, 16^^211c},
+"Trademark" -> {LetterlikeCharacter, 16^^2122},
+"Mho" -> {LetterlikeCharacter, 16^^2127},
+"GothicCapitalZ" -> {LetterlikeCharacter, 16^^2128},
+"Angstrom" -> {LetterlikeCharacter, 16^^212b},
+"ScriptCapitalB" -> {LetterlikeCharacter, 16^^212c},
+"GothicCapitalC" -> {LetterlikeCharacter, 16^^212d},
+"ScriptE" -> {LetterlikeCharacter, 16^^212f},
+"ScriptCapitalE" -> {LetterlikeCharacter, 16^^2130},
+"ScriptCapitalF" -> {LetterlikeCharacter, 16^^2131},
+"ScriptCapitalM" -> {LetterlikeCharacter, 16^^2133},
+"ScriptO" -> {LetterlikeCharacter, 16^^2134},
+"Aleph" -> {LetterlikeCharacter, 16^^2135},
+"Bet" -> {LetterlikeCharacter, 16^^2136},
+"Gimel" -> {LetterlikeCharacter, 16^^2137},
+"Dalet" -> {LetterlikeCharacter, 16^^2138},
+"LeftArrow" -> {PunctuationCharacter, 16^^2190},
+"UpArrow" -> {PunctuationCharacter, 16^^2191},
+"RightArrow" -> {PunctuationCharacter, 16^^2192},
+"DownArrow" -> {PunctuationCharacter, 16^^2193},
+"LeftRightArrow" -> {PunctuationCharacter, 16^^2194},
+"UpDownArrow" -> {PunctuationCharacter, 16^^2195},
+"UpperLeftArrow" -> {PunctuationCharacter, 16^^2196},
+"UpperRightArrow" -> {PunctuationCharacter, 16^^2197},
+"LowerRightArrow" -> {PunctuationCharacter, 16^^2198},
+"LowerLeftArrow" -> {PunctuationCharacter, 16^^2199},
+"LeftTeeArrow" -> {PunctuationCharacter, 16^^21a4},
+"UpTeeArrow" -> {PunctuationCharacter, 16^^21a5},
+"RightTeeArrow" -> {PunctuationCharacter, 16^^21a6},
+"DownTeeArrow" -> {PunctuationCharacter, 16^^21a7},
+"ReturnIndicator" -> {LetterlikeCharacter, 16^^21b5},
+"LeftVector" -> {PunctuationCharacter, 16^^21bc},
+"DownLeftVector" -> {PunctuationCharacter, 16^^21bd},
+"RightUpVector" -> {PunctuationCharacter, 16^^21be},
+"LeftUpVector" -> {PunctuationCharacter, 16^^21bf},
+"RightVector" -> {PunctuationCharacter, 16^^21c0},
+"DownRightVector" -> {PunctuationCharacter, 16^^21c1},
+"RightDownVector" -> {PunctuationCharacter, 16^^21c2},
+"LeftDownVector" -> {PunctuationCharacter, 16^^21c3},
+"RightArrowLeftArrow" -> {PunctuationCharacter, 16^^21c4},
+"UpArrowDownArrow" -> {PunctuationCharacter, 16^^21c5},
+"LeftArrowRightArrow" -> {PunctuationCharacter, 16^^21c6},
+"ReverseEquilibrium" -> {PunctuationCharacter, 16^^21cb},
+"Equilibrium" -> {PunctuationCharacter, 16^^21cc},
+"DoubleLeftArrow" -> {PunctuationCharacter, 16^^21d0},
+"DoubleUpArrow" -> {PunctuationCharacter, 16^^21d1},
+"DoubleRightArrow" -> {PunctuationCharacter, 16^^21d2},
+"DoubleDownArrow" -> {PunctuationCharacter, 16^^21d3},
+"DoubleLeftRightArrow" -> {PunctuationCharacter, 16^^21d4},
+"DoubleUpDownArrow" -> {PunctuationCharacter, 16^^21d5},
+"LeftArrowBar" -> {PunctuationCharacter, 16^^21e4},
+"RightArrowBar" -> {PunctuationCharacter, 16^^21e5},
+"DownArrowUpArrow" -> {PunctuationCharacter, 16^^21f5},
 
 (*
 Range 0x2200
 *)
-"ForAll" -> PunctuationCharacter, (* 0x2200 *)
-"PartialD" -> PunctuationCharacter, (* 0x2202 *)
-"Exists" -> PunctuationCharacter, (* 0x2203 *)
-"NotExists" -> PunctuationCharacter, (* 0x2204 *)
-"EmptySet" -> LetterlikeCharacter, (* 0x2205 *)
-"Laplacian" -> PunctuationCharacter, (* 0x2206 *)
-"Del" -> PunctuationCharacter, (* 0x2207 *)
-"Element" -> PunctuationCharacter, (* 0x2208 *)
-"NotElement" -> PunctuationCharacter, (* 0x2209 *)
-"ReverseElement" -> PunctuationCharacter, (* 0x220b *)
-"NotReverseElement" -> PunctuationCharacter, (* 0x220c *)
-"SuchThat" -> PunctuationCharacter, (* 0x220d *)
-"Product" -> PunctuationCharacter, (* 0x220f *)
-"Coproduct" -> PunctuationCharacter, (* 0x2210 *)
-"Sum" -> PunctuationCharacter, (* 0x2211 *)
-"Minus" -> PunctuationCharacter, (* 0x2212 *)
-"MinusPlus" -> PunctuationCharacter, (* 0x2213 *)
-"DivisionSlash" -> PunctuationCharacter, (* 0x2215 *)
-"Backslash" -> PunctuationCharacter, (* 0x2216 *)
-"SmallCircle" -> PunctuationCharacter, (* 0x2218 *)
-"Sqrt" -> PunctuationCharacter, (* 0x221a *)
+"ForAll" -> {PunctuationCharacter, 16^^2200},
+"PartialD" -> {PunctuationCharacter, 16^^2202},
+"Exists" -> {PunctuationCharacter, 16^^2203},
+"NotExists" -> {PunctuationCharacter, 16^^2204},
+"EmptySet" -> {LetterlikeCharacter, 16^^2205},
+"Laplacian" -> {PunctuationCharacter, 16^^2206},
+"Del" -> {PunctuationCharacter, 16^^2207},
+"Element" -> {PunctuationCharacter, 16^^2208},
+"NotElement" -> {PunctuationCharacter, 16^^2209},
+"ReverseElement" -> {PunctuationCharacter, 16^^220b},
+"NotReverseElement" -> {PunctuationCharacter, 16^^220c},
+"SuchThat" -> {PunctuationCharacter, 16^^220d},
+"Product" -> {PunctuationCharacter, 16^^220f},
+"Coproduct" -> {PunctuationCharacter, 16^^2210},
+"Sum" -> {PunctuationCharacter, 16^^2211},
+"Minus" -> {PunctuationCharacter, 16^^2212},
+"MinusPlus" -> {PunctuationCharacter, 16^^2213},
+"DivisionSlash" -> {PunctuationCharacter, 16^^2215},
+"Backslash" -> {PunctuationCharacter, 16^^2216},
+"SmallCircle" -> {PunctuationCharacter, 16^^2218},
+"Sqrt" -> {PunctuationCharacter, 16^^221a},
 (*
 added in 12.1:
 CubeRoot
 *)
-"CubeRoot" -> PunctuationCharacter, (* 0x221b *)
-"Proportional" -> PunctuationCharacter, (* 0x221d *)
-"Infinity" -> LetterlikeCharacter, (* 0x221e *)
-"RightAngle" -> LetterlikeCharacter, (* 0x221f *)
-"Angle" -> LetterlikeCharacter, (* 0x2220 *)
-"MeasuredAngle" -> LetterlikeCharacter, (* 0x2221 *)
-"SphericalAngle" -> LetterlikeCharacter, (* 0x2222 *)
-"Divides" -> PunctuationCharacter, (* 0x2223 *)
-"DoubleVerticalBar" -> PunctuationCharacter, (* 0x2225 *)
-"NotDoubleVerticalBar" -> PunctuationCharacter, (* 0x2226 *)
-"And" -> PunctuationCharacter, (* 0x2227 *)
-"Or" -> PunctuationCharacter, (* 0x2228 *)
-"Integral" -> PunctuationCharacter, (* 0x222b *)
-"ContourIntegral" -> PunctuationCharacter, (* 0x222e *)
-"DoubleContourIntegral" -> PunctuationCharacter, (* 0x222f *)
-"ClockwiseContourIntegral" -> PunctuationCharacter, (* 0x2232 *)
-"CounterClockwiseContourIntegral" -> PunctuationCharacter, (* 0x2233 *)
-"Therefore" -> PunctuationCharacter, (* 0x2234 *)
-"Because" -> PunctuationCharacter, (* 0x2235 *)
-"Colon" -> PunctuationCharacter, (* 0x2236 *)
-"Proportion" -> PunctuationCharacter, (* 0x2237 *)
-"Tilde" -> PunctuationCharacter, (* 0x223c *)
-"VerticalTilde" -> PunctuationCharacter, (* 0x2240 *)
-"NotTilde" -> PunctuationCharacter, (* 0x2241 *)
-"EqualTilde" -> PunctuationCharacter, (* 0x2242 *)
-"TildeEqual" -> PunctuationCharacter, (* 0x2243 *)
-"NotTildeEqual" -> PunctuationCharacter, (* 0x2244 *)
-"TildeFullEqual" -> PunctuationCharacter, (* 0x2245 *)
-"NotTildeFullEqual" -> PunctuationCharacter, (* 0x2247 *)
-"TildeTilde" -> PunctuationCharacter, (* 0x2248 *)
-"NotTildeTilde" -> PunctuationCharacter, (* 0x2249 *)
-"CupCap" -> PunctuationCharacter, (* 0x224d *)
-"HumpDownHump" -> PunctuationCharacter, (* 0x224e *)
-"HumpEqual" -> PunctuationCharacter, (* 0x224f *)
-"DotEqual" -> PunctuationCharacter, (* 0x2250 *)
-"NotEqual" -> PunctuationCharacter, (* 0x2260 *)
-"Congruent" -> PunctuationCharacter, (* 0x2261 *)
-"NotCongruent" -> PunctuationCharacter, (* 0x2262 *)
-"LessEqual" -> PunctuationCharacter, (* 0x2264 *)
-"GreaterEqual" -> PunctuationCharacter, (* 0x2265 *)
-"LessFullEqual" -> PunctuationCharacter, (* 0x2266 *)
-"GreaterFullEqual" -> PunctuationCharacter, (* 0x2267 *)
-"NotLessFullEqual" -> PunctuationCharacter, (* 0x2268 *)
-"NotGreaterFullEqual" -> PunctuationCharacter, (* 0x2269 *)
-"LessLess" -> PunctuationCharacter, (* 0x226a *)
-"GreaterGreater" -> PunctuationCharacter, (* 0x226b *)
-"NotCupCap" -> PunctuationCharacter, (* 0x226d *)
-"NotLess" -> PunctuationCharacter, (* 0x226e *)
-"NotGreater" -> PunctuationCharacter, (* 0x226f *)
-"NotLessEqual" -> PunctuationCharacter, (* 0x2270 *)
-"NotGreaterEqual" -> PunctuationCharacter, (* 0x2271 *)
-"LessTilde" -> PunctuationCharacter, (* 0x2272 *)
-"GreaterTilde" -> PunctuationCharacter, (* 0x2273 *)
-"NotLessTilde" -> PunctuationCharacter, (* 0x2274 *)
-"NotGreaterTilde" -> PunctuationCharacter, (* 0x2275 *)
-"LessGreater" -> PunctuationCharacter, (* 0x2276 *)
-"GreaterLess" -> PunctuationCharacter, (* 0x2277 *)
-"NotLessGreater" -> PunctuationCharacter, (* 0x2278 *)
-"NotGreaterLess" -> PunctuationCharacter, (* 0x2279 *)
-"Precedes" -> PunctuationCharacter, (* 0x227a *)
-"Succeeds" -> PunctuationCharacter, (* 0x227b *)
-"PrecedesSlantEqual" -> PunctuationCharacter, (* 0x227c *)
-"SucceedsSlantEqual" -> PunctuationCharacter, (* 0x227d *)
-"PrecedesTilde" -> PunctuationCharacter, (* 0x227e *)
-"SucceedsTilde" -> PunctuationCharacter, (* 0x227f *)
-"NotPrecedes" -> PunctuationCharacter, (* 0x2280 *)
-"NotSucceeds" -> PunctuationCharacter, (* 0x2281 *)
-"Subset" -> PunctuationCharacter, (* 0x2282 *)
-"Superset" -> PunctuationCharacter, (* 0x2283 *)
-"NotSubset" -> PunctuationCharacter, (* 0x2284 *)
-"NotSuperset" -> PunctuationCharacter, (* 0x2285 *)
-"SubsetEqual" -> PunctuationCharacter, (* 0x2286 *)
-"SupersetEqual" -> PunctuationCharacter, (* 0x2287 *)
-"NotSubsetEqual" -> PunctuationCharacter, (* 0x2288 *)
-"NotSupersetEqual" -> PunctuationCharacter, (* 0x2289 *)
-"UnionPlus" -> PunctuationCharacter, (* 0x228e *)
-"SquareSubset" -> PunctuationCharacter, (* 0x228f *)
-"SquareSuperset" -> PunctuationCharacter, (* 0x2290 *)
-"SquareSubsetEqual" -> PunctuationCharacter, (* 0x2291 *)
-"SquareSupersetEqual" -> PunctuationCharacter, (* 0x2292 *)
-"SquareIntersection" -> PunctuationCharacter, (* 0x2293 *)
-"SquareUnion" -> PunctuationCharacter, (* 0x2294 *)
-"CirclePlus" -> PunctuationCharacter, (* 0x2295 *)
-"CircleMinus" -> PunctuationCharacter, (* 0x2296 *)
-"CircleTimes" -> PunctuationCharacter, (* 0x2297 *)
-"CircleDot" -> PunctuationCharacter, (* 0x2299 *)
-"RightTee" -> PunctuationCharacter, (* 0x22a2 *)
-"LeftTee" -> PunctuationCharacter, (* 0x22a3 *)
-"DownTee" -> PunctuationCharacter, (* 0x22a4 *)
-"UpTee" -> PunctuationCharacter, (* 0x22a5 *)
-"DoubleRightTee" -> PunctuationCharacter, (* 0x22a8 *)
-"LeftTriangle" -> PunctuationCharacter, (* 0x22b2 *)
-"RightTriangle" -> PunctuationCharacter, (* 0x22b3 *)
-"LeftTriangleEqual" -> PunctuationCharacter, (* 0x22b4 *)
-"RightTriangleEqual" -> PunctuationCharacter, (* 0x22b5 *)
-"Xor" -> PunctuationCharacter, (* 0x22bb *)
-"Nand" -> PunctuationCharacter, (* 0x22bc *)
-"Nor" -> PunctuationCharacter, (* 0x22bd *)
-"Wedge" -> PunctuationCharacter, (* 0x22c0 *)
-"Vee" -> PunctuationCharacter, (* 0x22c1 *)
-"Intersection" -> PunctuationCharacter, (* 0x22c2 *)
-"Union" -> PunctuationCharacter, (* 0x22c3 *)
-"Diamond" -> PunctuationCharacter, (* 0x22c4 *)
-"Star" -> PunctuationCharacter, (* 0x22c6 *)
-"LessEqualGreater" -> PunctuationCharacter, (* 0x22da *)
-"GreaterEqualLess" -> PunctuationCharacter, (* 0x22db *)
-"NotPrecedesSlantEqual" -> PunctuationCharacter, (* 0x22e0 *)
-"NotSucceedsSlantEqual" -> PunctuationCharacter, (* 0x22e1 *)
-"NotSquareSubsetEqual" -> PunctuationCharacter, (* 0x22e2 *)
-"NotSquareSupersetEqual" -> PunctuationCharacter, (* 0x22e3 *)
-"NotPrecedesTilde" -> PunctuationCharacter, (* 0x22e8 *)
-"NotSucceedsTilde" -> PunctuationCharacter, (* 0x22e9 *)
-"NotLeftTriangle" -> PunctuationCharacter, (* 0x22ea *)
-"NotRightTriangle" -> PunctuationCharacter, (* 0x22eb *)
-"NotLeftTriangleEqual" -> PunctuationCharacter, (* 0x22ec *)
-"NotRightTriangleEqual" -> PunctuationCharacter, (* 0x22ed *)
-"VerticalEllipsis" -> LetterlikeCharacter, (* 0x22ee *)
-"CenterEllipsis" -> LetterlikeCharacter, (* 0x22ef *)
-"AscendingEllipsis" -> LetterlikeCharacter, (* 0x22f0 *)
-"DescendingEllipsis" -> LetterlikeCharacter, (* 0x22f1 *)
+"CubeRoot" -> {PunctuationCharacter, 16^^221b},
+"Proportional" -> {PunctuationCharacter, 16^^221d},
+"Infinity" -> {LetterlikeCharacter, 16^^221e},
+"RightAngle" -> {LetterlikeCharacter, 16^^221f},
+"Angle" -> {LetterlikeCharacter, 16^^2220},
+"MeasuredAngle" -> {LetterlikeCharacter, 16^^2221},
+"SphericalAngle" -> {LetterlikeCharacter, 16^^2222},
+"Divides" -> {PunctuationCharacter, 16^^2223},
+"DoubleVerticalBar" -> {PunctuationCharacter, 16^^2225},
+"NotDoubleVerticalBar" -> {PunctuationCharacter, 16^^2226},
+"And" -> {PunctuationCharacter, 16^^2227},
+"Or" -> {PunctuationCharacter, 16^^2228},
+"Integral" -> {PunctuationCharacter, 16^^222b},
+"ContourIntegral" -> {PunctuationCharacter, 16^^222e},
+"DoubleContourIntegral" -> {PunctuationCharacter, 16^^222f},
+"ClockwiseContourIntegral" -> {PunctuationCharacter, 16^^2232},
+"CounterClockwiseContourIntegral" -> {PunctuationCharacter, 16^^2233},
+"Therefore" -> {PunctuationCharacter, 16^^2234},
+"Because" -> {PunctuationCharacter, 16^^2235},
+"Colon" -> {PunctuationCharacter, 16^^2236},
+"Proportion" -> {PunctuationCharacter, 16^^2237},
+"Tilde" -> {PunctuationCharacter, 16^^223c},
+"VerticalTilde" -> {PunctuationCharacter, 16^^2240},
+"NotTilde" -> {PunctuationCharacter, 16^^2241},
+"EqualTilde" -> {PunctuationCharacter, 16^^2242},
+"TildeEqual" -> {PunctuationCharacter, 16^^2243},
+"NotTildeEqual" -> {PunctuationCharacter, 16^^2244},
+"TildeFullEqual" -> {PunctuationCharacter, 16^^2245},
+"NotTildeFullEqual" -> {PunctuationCharacter, 16^^2247},
+"TildeTilde" -> {PunctuationCharacter, 16^^2248},
+"NotTildeTilde" -> {PunctuationCharacter, 16^^2249},
+"CupCap" -> {PunctuationCharacter, 16^^224d},
+"HumpDownHump" -> {PunctuationCharacter, 16^^224e},
+"HumpEqual" -> {PunctuationCharacter, 16^^224f},
+"DotEqual" -> {PunctuationCharacter, 16^^2250},
+"NotEqual" -> {PunctuationCharacter, 16^^2260},
+"Congruent" -> {PunctuationCharacter, 16^^2261},
+"NotCongruent" -> {PunctuationCharacter, 16^^2262},
+"LessEqual" -> {PunctuationCharacter, 16^^2264},
+"GreaterEqual" -> {PunctuationCharacter, 16^^2265},
+"LessFullEqual" -> {PunctuationCharacter, 16^^2266},
+"GreaterFullEqual" -> {PunctuationCharacter, 16^^2267},
+"NotLessFullEqual" -> {PunctuationCharacter, 16^^2268},
+"NotGreaterFullEqual" -> {PunctuationCharacter, 16^^2269},
+"LessLess" -> {PunctuationCharacter, 16^^226a},
+"GreaterGreater" -> {PunctuationCharacter, 16^^226b},
+"NotCupCap" -> {PunctuationCharacter, 16^^226d},
+"NotLess" -> {PunctuationCharacter, 16^^226e},
+"NotGreater" -> {PunctuationCharacter, 16^^226f},
+"NotLessEqual" -> {PunctuationCharacter, 16^^2270},
+"NotGreaterEqual" -> {PunctuationCharacter, 16^^2271},
+"LessTilde" -> {PunctuationCharacter, 16^^2272},
+"GreaterTilde" -> {PunctuationCharacter, 16^^2273},
+"NotLessTilde" -> {PunctuationCharacter, 16^^2274},
+"NotGreaterTilde" -> {PunctuationCharacter, 16^^2275},
+"LessGreater" -> {PunctuationCharacter, 16^^2276},
+"GreaterLess" -> {PunctuationCharacter, 16^^2277},
+"NotLessGreater" -> {PunctuationCharacter, 16^^2278},
+"NotGreaterLess" -> {PunctuationCharacter, 16^^2279},
+"Precedes" -> {PunctuationCharacter, 16^^227a},
+"Succeeds" -> {PunctuationCharacter, 16^^227b},
+"PrecedesSlantEqual" -> {PunctuationCharacter, 16^^227c},
+"SucceedsSlantEqual" -> {PunctuationCharacter, 16^^227d},
+"PrecedesTilde" -> {PunctuationCharacter, 16^^227e},
+"SucceedsTilde" -> {PunctuationCharacter, 16^^227f},
+"NotPrecedes" -> {PunctuationCharacter, 16^^2280},
+"NotSucceeds" -> {PunctuationCharacter, 16^^2281},
+"Subset" -> {PunctuationCharacter, 16^^2282},
+"Superset" -> {PunctuationCharacter, 16^^2283},
+"NotSubset" -> {PunctuationCharacter, 16^^2284},
+"NotSuperset" -> {PunctuationCharacter, 16^^2285},
+"SubsetEqual" -> {PunctuationCharacter, 16^^2286},
+"SupersetEqual" -> {PunctuationCharacter, 16^^2287},
+"NotSubsetEqual" -> {PunctuationCharacter, 16^^2288},
+"NotSupersetEqual" -> {PunctuationCharacter, 16^^2289},
+"UnionPlus" -> {PunctuationCharacter, 16^^228e},
+"SquareSubset" -> {PunctuationCharacter, 16^^228f},
+"SquareSuperset" -> {PunctuationCharacter, 16^^2290},
+"SquareSubsetEqual" -> {PunctuationCharacter, 16^^2291},
+"SquareSupersetEqual" -> {PunctuationCharacter, 16^^2292},
+"SquareIntersection" -> {PunctuationCharacter, 16^^2293},
+"SquareUnion" -> {PunctuationCharacter, 16^^2294},
+"CirclePlus" -> {PunctuationCharacter, 16^^2295},
+"CircleMinus" -> {PunctuationCharacter, 16^^2296},
+"CircleTimes" -> {PunctuationCharacter, 16^^2297},
+"CircleDot" -> {PunctuationCharacter, 16^^2299},
+"RightTee" -> {PunctuationCharacter, 16^^22a2},
+"LeftTee" -> {PunctuationCharacter, 16^^22a3},
+"DownTee" -> {PunctuationCharacter, 16^^22a4},
+"UpTee" -> {PunctuationCharacter, 16^^22a5},
+"DoubleRightTee" -> {PunctuationCharacter, 16^^22a8},
+"LeftTriangle" -> {PunctuationCharacter, 16^^22b2},
+"RightTriangle" -> {PunctuationCharacter, 16^^22b3},
+"LeftTriangleEqual" -> {PunctuationCharacter, 16^^22b4},
+"RightTriangleEqual" -> {PunctuationCharacter, 16^^22b5},
+"Xor" -> {PunctuationCharacter, 16^^22bb},
+"Nand" -> {PunctuationCharacter, 16^^22bc},
+"Nor" -> {PunctuationCharacter, 16^^22bd},
+"Wedge" -> {PunctuationCharacter, 16^^22c0},
+"Vee" -> {PunctuationCharacter, 16^^22c1},
+"Intersection" -> {PunctuationCharacter, 16^^22c2},
+"Union" -> {PunctuationCharacter, 16^^22c3},
+"Diamond" -> {PunctuationCharacter, 16^^22c4},
+"Star" -> {PunctuationCharacter, 16^^22c6},
+"LessEqualGreater" -> {PunctuationCharacter, 16^^22da},
+"GreaterEqualLess" -> {PunctuationCharacter, 16^^22db},
+"NotPrecedesSlantEqual" -> {PunctuationCharacter, 16^^22e0},
+"NotSucceedsSlantEqual" -> {PunctuationCharacter, 16^^22e1},
+"NotSquareSubsetEqual" -> {PunctuationCharacter, 16^^22e2},
+"NotSquareSupersetEqual" -> {PunctuationCharacter, 16^^22e3},
+"NotPrecedesTilde" -> {PunctuationCharacter, 16^^22e8},
+"NotSucceedsTilde" -> {PunctuationCharacter, 16^^22e9},
+"NotLeftTriangle" -> {PunctuationCharacter, 16^^22ea},
+"NotRightTriangle" -> {PunctuationCharacter, 16^^22eb},
+"NotLeftTriangleEqual" -> {PunctuationCharacter, 16^^22ec},
+"NotRightTriangleEqual" -> {PunctuationCharacter, 16^^22ed},
+"VerticalEllipsis" -> {LetterlikeCharacter, 16^^22ee},
+"CenterEllipsis" -> {LetterlikeCharacter, 16^^22ef},
+"AscendingEllipsis" -> {LetterlikeCharacter, 16^^22f0},
+"DescendingEllipsis" -> {LetterlikeCharacter, 16^^22f1},
 
 (*
 Range 0x2300
 *)
-"Diameter" -> LetterlikeCharacter, (* 0x2300 *)
-"LeftCeiling" -> PunctuationCharacter, (* 0x2308 *)
-"RightCeiling" -> PunctuationCharacter, (* 0x2309 *)
-"LeftFloor" -> PunctuationCharacter, (* 0x230a *)
-"RightFloor" -> PunctuationCharacter, (* 0x230b *)
-"CloverLeaf" -> LetterlikeCharacter, (* 0x2318 *)
-"WatchIcon" -> LetterlikeCharacter, (* 0x231a *)
-"Cap" -> PunctuationCharacter, (* 0x2322 *)
-"Cup" -> PunctuationCharacter, (* 0x2323 *)
-"LeftAngleBracket" -> PunctuationCharacter, (* 0x2329 *)
-"RightAngleBracket" -> PunctuationCharacter, (* 0x232a *)
-"OverBracket" -> LetterlikeCharacter, (* 0x23b4 *)
-"UnderBracket" -> LetterlikeCharacter, (* 0x23b5 *)
+"Diameter" -> {LetterlikeCharacter, 16^^2300},
+"LeftCeiling" -> {PunctuationCharacter, 16^^2308},
+"RightCeiling" -> {PunctuationCharacter, 16^^2309},
+"LeftFloor" -> {PunctuationCharacter, 16^^230a},
+"RightFloor" -> {PunctuationCharacter, 16^^230b},
+"CloverLeaf" -> {LetterlikeCharacter, 16^^2318},
+"WatchIcon" -> {LetterlikeCharacter, 16^^231a},
+"Cap" -> {PunctuationCharacter, 16^^2322},
+"Cup" -> {PunctuationCharacter, 16^^2323},
+"LeftAngleBracket" -> {PunctuationCharacter, 16^^2329},
+"RightAngleBracket" -> {PunctuationCharacter, 16^^232a},
+"OverBracket" -> {LetterlikeCharacter, 16^^23b4},
+"UnderBracket" -> {LetterlikeCharacter, 16^^23b5},
 
 (*
 Range 0x2400
 *)
-"SpaceIndicator" -> WhitespaceCharacter, (* 0x2423 *)
+"SpaceIndicator" -> {WhitespaceCharacter, 16^^2423},
 
 (*
 Range 0x2500
 *)
-"HorizontalLine" -> LetterlikeCharacter, (* 0x2500 *)
-"VerticalLine" -> LetterlikeCharacter, (* 0x2502 *)
-"FilledSquare" -> LetterlikeCharacter, (* 0x25a0 *)
-"EmptySquare" -> LetterlikeCharacter, (* 0x25a1 *)
-"FilledVerySmallSquare" -> LetterlikeCharacter, (* 0x25aa *)
-"EmptyVerySmallSquare" -> LetterlikeCharacter, (* 0x25ab *)
-"FilledRectangle" -> LetterlikeCharacter, (* 0x25ae *)
-"EmptyRectangle" -> LetterlikeCharacter, (* 0x25af *)
-"FilledUpTriangle" -> LetterlikeCharacter, (* 0x25b2 *)
-"EmptyUpTriangle" -> LetterlikeCharacter, (* 0x25b3 *)
-"UpPointer" -> LetterlikeCharacter, (* 0x25b4 *)
-"FilledRightTriangle" -> LetterlikeCharacter, (* 0x25b6 *)
-"RightPointer" -> LetterlikeCharacter, (* 0x25b8 *)
-"FilledDownTriangle" -> LetterlikeCharacter, (* 0x25bc *)
-"EmptyDownTriangle" -> LetterlikeCharacter, (* 0x25bd *)
-"DownPointer" -> LetterlikeCharacter, (* 0x25be *)
-"FilledLeftTriangle" -> LetterlikeCharacter, (* 0x25c0 *)
-"LeftPointer" -> LetterlikeCharacter, (* 0x25c2 *)
-"FilledDiamond" -> LetterlikeCharacter, (* 0x25c6 *)
-"EmptyDiamond" -> LetterlikeCharacter, (* 0x25c7 *)
-"EmptyCircle" -> LetterlikeCharacter, (* 0x25cb *)
-"FilledCircle" -> LetterlikeCharacter, (* 0x25cf *)
-"EmptySmallCircle" -> LetterlikeCharacter, (* 0x25e6 *)
-"EmptySmallSquare" -> LetterlikeCharacter, (* 0x25fb *)
-"FilledSmallSquare" -> LetterlikeCharacter, (* 0x25fc *)
+"HorizontalLine" -> {LetterlikeCharacter, 16^^2500},
+"VerticalLine" -> {LetterlikeCharacter, 16^^2502},
+"FilledSquare" -> {LetterlikeCharacter, 16^^25a0},
+"EmptySquare" -> {LetterlikeCharacter, 16^^25a1},
+"FilledVerySmallSquare" -> {LetterlikeCharacter, 16^^25aa},
+"EmptyVerySmallSquare" -> {LetterlikeCharacter, 16^^25ab},
+"FilledRectangle" -> {LetterlikeCharacter, 16^^25ae},
+"EmptyRectangle" -> {LetterlikeCharacter, 16^^25af},
+"FilledUpTriangle" -> {LetterlikeCharacter, 16^^25b2},
+"EmptyUpTriangle" -> {LetterlikeCharacter, 16^^25b3},
+"UpPointer" -> {LetterlikeCharacter, 16^^25b4},
+"FilledRightTriangle" -> {LetterlikeCharacter, 16^^25b6},
+"RightPointer" -> {LetterlikeCharacter, 16^^25b8},
+"FilledDownTriangle" -> {LetterlikeCharacter, 16^^25bc},
+"EmptyDownTriangle" -> {LetterlikeCharacter, 16^^25bd},
+"DownPointer" -> {LetterlikeCharacter, 16^^25be},
+"FilledLeftTriangle" -> {LetterlikeCharacter, 16^^25c0},
+"LeftPointer" -> {LetterlikeCharacter, 16^^25c2},
+"FilledDiamond" -> {LetterlikeCharacter, 16^^25c6},
+"EmptyDiamond" -> {LetterlikeCharacter, 16^^25c7},
+"EmptyCircle" -> {LetterlikeCharacter, 16^^25cb},
+"FilledCircle" -> {LetterlikeCharacter, 16^^25cf},
+"EmptySmallCircle" -> {LetterlikeCharacter, 16^^25e6},
+"EmptySmallSquare" -> {LetterlikeCharacter, 16^^25fb},
+"FilledSmallSquare" -> {LetterlikeCharacter, 16^^25fc},
 
 (*
 Range 0x2600
 *)
-"FivePointedStar" -> LetterlikeCharacter, (* 0x2605 *)
-"Sun" -> LetterlikeCharacter, (* 0x2609 *)
-"CheckmarkedBox" -> LetterlikeCharacter, (* 0x2611 *)
-"CheckedBox" -> LetterlikeCharacter, (* 0x2612 *)
-"SadSmiley" -> LetterlikeCharacter, (* 0x2639 *)
-"HappySmiley" -> LetterlikeCharacter, (* 0x263a *)
-"Moon" -> LetterlikeCharacter, (* 0x263e *)
-"Mercury" -> LetterlikeCharacter, (* 0x263f *)
-"Venus" -> LetterlikeCharacter, (* 0x2640 *)
-"Mars" -> LetterlikeCharacter, (* 0x2642 *)
-"Jupiter" -> LetterlikeCharacter, (* 0x2643 *)
-"Saturn" -> LetterlikeCharacter, (* 0x2644 *)
-"Neptune" -> LetterlikeCharacter, (* 0x2646 *)
-"Pluto" -> LetterlikeCharacter, (* 0x2647 *)
-"AriesSign" -> LetterlikeCharacter, (* 0x2648 *)
-"TaurusSign" -> LetterlikeCharacter, (* 0x2649 *)
-"GeminiSign" -> LetterlikeCharacter, (* 0x264a *)
-"CancerSign" -> LetterlikeCharacter, (* 0x264b *)
-"LeoSign" -> LetterlikeCharacter, (* 0x264c *)
-"VirgoSign" -> LetterlikeCharacter, (* 0x264d *)
-"LibraSign" -> LetterlikeCharacter, (* 0x264e *)
-"ScorpioSign" -> LetterlikeCharacter, (* 0x264f *)
-"SagittariusSign" -> LetterlikeCharacter, (* 0x2650 *)
-"CapricornSign" -> LetterlikeCharacter, (* 0x2651 *)
-"AquariusSign" -> LetterlikeCharacter, (* 0x2652 *)
-"PiscesSign" -> LetterlikeCharacter, (* 0x2653 *)
-"WhiteKing" -> LetterlikeCharacter, (* 0x2654 *)
-"WhiteQueen" -> LetterlikeCharacter, (* 0x2655 *)
-"WhiteRook" -> LetterlikeCharacter, (* 0x2656 *)
-"WhiteBishop" -> LetterlikeCharacter, (* 0x2657 *)
-"WhiteKnight" -> LetterlikeCharacter, (* 0x2658 *)
-"WhitePawn" -> LetterlikeCharacter, (* 0x2659 *)
-"BlackKing" -> LetterlikeCharacter, (* 0x265a *)
-"BlackQueen" -> LetterlikeCharacter, (* 0x265b *)
-"BlackRook" -> LetterlikeCharacter, (* 0x265c *)
-"BlackBishop" -> LetterlikeCharacter, (* 0x265d *)
-"BlackKnight" -> LetterlikeCharacter, (* 0x265e *)
-"BlackPawn" -> LetterlikeCharacter, (* 0x265f *)
-"SpadeSuit" -> LetterlikeCharacter, (* 0x2660 *)
-"HeartSuit" -> LetterlikeCharacter, (* 0x2661 *)
-"DiamondSuit" -> LetterlikeCharacter, (* 0x2662 *)
-"ClubSuit" -> LetterlikeCharacter, (* 0x2663 *)
-"QuarterNote" -> LetterlikeCharacter, (* 0x2669 *)
-"EighthNote" -> LetterlikeCharacter, (* 0x266a *)
-"BeamedEighthNote" -> LetterlikeCharacter, (* 0x266b *)
-"BeamedSixteenthNote" -> LetterlikeCharacter, (* 0x266c *)
-"Flat" -> LetterlikeCharacter, (* 0x266d *)
-"Natural" -> LetterlikeCharacter, (* 0x266e *)
-"Sharp" -> LetterlikeCharacter, (* 0x266f *)
-"Uranus" -> LetterlikeCharacter, (* 0x26e2 *)
+"FivePointedStar" -> {LetterlikeCharacter, 16^^2605},
+"Sun" -> {LetterlikeCharacter, 16^^2609},
+"CheckmarkedBox" -> {LetterlikeCharacter, 16^^2611},
+"CheckedBox" -> {LetterlikeCharacter, 16^^2612},
+"SadSmiley" -> {LetterlikeCharacter, 16^^2639},
+"HappySmiley" -> {LetterlikeCharacter, 16^^263a},
+"Moon" -> {LetterlikeCharacter, 16^^263e},
+"Mercury" -> {LetterlikeCharacter, 16^^263f},
+"Venus" -> {LetterlikeCharacter, 16^^2640},
+"Mars" -> {LetterlikeCharacter, 16^^2642},
+"Jupiter" -> {LetterlikeCharacter, 16^^2643},
+"Saturn" -> {LetterlikeCharacter, 16^^2644},
+"Neptune" -> {LetterlikeCharacter, 16^^2646},
+"Pluto" -> {LetterlikeCharacter, 16^^2647},
+"AriesSign" -> {LetterlikeCharacter, 16^^2648},
+"TaurusSign" -> {LetterlikeCharacter, 16^^2649},
+"GeminiSign" -> {LetterlikeCharacter, 16^^264a},
+"CancerSign" -> {LetterlikeCharacter, 16^^264b},
+"LeoSign" -> {LetterlikeCharacter, 16^^264c},
+"VirgoSign" -> {LetterlikeCharacter, 16^^264d},
+"LibraSign" -> {LetterlikeCharacter, 16^^264e},
+"ScorpioSign" -> {LetterlikeCharacter, 16^^264f},
+"SagittariusSign" -> {LetterlikeCharacter, 16^^2650},
+"CapricornSign" -> {LetterlikeCharacter, 16^^2651},
+"AquariusSign" -> {LetterlikeCharacter, 16^^2652},
+"PiscesSign" -> {LetterlikeCharacter, 16^^2653},
+"WhiteKing" -> {LetterlikeCharacter, 16^^2654},
+"WhiteQueen" -> {LetterlikeCharacter, 16^^2655},
+"WhiteRook" -> {LetterlikeCharacter, 16^^2656},
+"WhiteBishop" -> {LetterlikeCharacter, 16^^2657},
+"WhiteKnight" -> {LetterlikeCharacter, 16^^2658},
+"WhitePawn" -> {LetterlikeCharacter, 16^^2659},
+"BlackKing" -> {LetterlikeCharacter, 16^^265a},
+"BlackQueen" -> {LetterlikeCharacter, 16^^265b},
+"BlackRook" -> {LetterlikeCharacter, 16^^265c},
+"BlackBishop" -> {LetterlikeCharacter, 16^^265d},
+"BlackKnight" -> {LetterlikeCharacter, 16^^265e},
+"BlackPawn" -> {LetterlikeCharacter, 16^^265f},
+"SpadeSuit" -> {LetterlikeCharacter, 16^^2660},
+"HeartSuit" -> {LetterlikeCharacter, 16^^2661},
+"DiamondSuit" -> {LetterlikeCharacter, 16^^2662},
+"ClubSuit" -> {LetterlikeCharacter, 16^^2663},
+"QuarterNote" -> {LetterlikeCharacter, 16^^2669},
+"EighthNote" -> {LetterlikeCharacter, 16^^266a},
+"BeamedEighthNote" -> {LetterlikeCharacter, 16^^266b},
+"BeamedSixteenthNote" -> {LetterlikeCharacter, 16^^266c},
+"Flat" -> {LetterlikeCharacter, 16^^266d},
+"Natural" -> {LetterlikeCharacter, 16^^266e},
+"Sharp" -> {LetterlikeCharacter, 16^^266f},
+"Uranus" -> {LetterlikeCharacter, 16^^26e2},
 
 (*
 Range 0x2700
 *)
-"Checkmark" -> LetterlikeCharacter, (* 0x2713 *)
-"SixPointedStar" -> LetterlikeCharacter, (* 0x2736 *)
-"Perpendicular" -> PunctuationCharacter, (* 0x27c2 *)
-"LongLeftArrow" -> PunctuationCharacter, (* 0x27f5 *)
-"LongRightArrow" -> PunctuationCharacter, (* 0x27f6 *)
-"LongLeftRightArrow" -> PunctuationCharacter, (* 0x27f7 *)
-"DoubleLongLeftArrow" -> PunctuationCharacter, (* 0x27f8 *)
-"DoubleLongRightArrow" -> PunctuationCharacter, (* 0x27f9 *)
-"DoubleLongLeftRightArrow" -> PunctuationCharacter, (* 0x27fa *)
+"Checkmark" -> {LetterlikeCharacter, 16^^2713},
+"SixPointedStar" -> {LetterlikeCharacter, 16^^2736},
+"Perpendicular" -> {PunctuationCharacter, 16^^27c2},
+"LongLeftArrow" -> {PunctuationCharacter, 16^^27f5},
+"LongRightArrow" -> {PunctuationCharacter, 16^^27f6},
+"LongLeftRightArrow" -> {PunctuationCharacter, 16^^27f7},
+"DoubleLongLeftArrow" -> {PunctuationCharacter, 16^^27f8},
+"DoubleLongRightArrow" -> {PunctuationCharacter, 16^^27f9},
+"DoubleLongLeftRightArrow" -> {PunctuationCharacter, 16^^27fa},
 
 (*
 Range 0x2900
 *)
-"UpArrowBar" -> PunctuationCharacter, (* 0x2912 *)
-"DownArrowBar" -> PunctuationCharacter, (* 0x2913 *)
-"LeftRightVector" -> PunctuationCharacter, (* 0x294e *)
-"RightUpDownVector" -> PunctuationCharacter, (* 0x294f *)
-"DownLeftRightVector" -> PunctuationCharacter, (* 0x2950 *)
-"LeftUpDownVector" -> PunctuationCharacter, (* 0x2951 *)
-"LeftVectorBar" -> PunctuationCharacter, (* 0x2952 *)
-"RightVectorBar" -> PunctuationCharacter, (* 0x2953 *)
-"RightUpVectorBar" -> PunctuationCharacter, (* 0x2954 *)
-"RightDownVectorBar" -> PunctuationCharacter, (* 0x2955 *)
-"DownLeftVectorBar" -> PunctuationCharacter, (* 0x2956 *)
-"DownRightVectorBar" -> PunctuationCharacter, (* 0x2957 *)
-"LeftUpVectorBar" -> PunctuationCharacter, (* 0x2958 *)
-"LeftDownVectorBar" -> PunctuationCharacter, (* 0x2959 *)
-"LeftTeeVector" -> PunctuationCharacter, (* 0x295a *)
-"RightTeeVector" -> PunctuationCharacter, (* 0x295b *)
-"RightUpTeeVector" -> PunctuationCharacter, (* 0x295c *)
-"RightDownTeeVector" -> PunctuationCharacter, (* 0x295d *)
-"DownLeftTeeVector" -> PunctuationCharacter, (* 0x295e *)
-"DownRightTeeVector" -> PunctuationCharacter, (* 0x295f *)
-"LeftUpTeeVector" -> PunctuationCharacter, (* 0x2960 *)
-"LeftDownTeeVector" -> PunctuationCharacter, (* 0x2961 *)
-"UpEquilibrium" -> PunctuationCharacter, (* 0x296e *)
-"ReverseUpEquilibrium" -> PunctuationCharacter, (* 0x296f *)
-"RoundImplies" -> PunctuationCharacter, (* 0x2970 *)
-"LeftTriangleBar" -> PunctuationCharacter, (* 0x29cf *)
-"RightTriangleBar" -> PunctuationCharacter, (* 0x29d0 *)
-"Equivalent" -> PunctuationCharacter, (* 0x29e6 *)
+"UpArrowBar" -> {PunctuationCharacter, 16^^2912},
+"DownArrowBar" -> {PunctuationCharacter, 16^^2913},
+"LeftRightVector" -> {PunctuationCharacter, 16^^294e},
+"RightUpDownVector" -> {PunctuationCharacter, 16^^294f},
+"DownLeftRightVector" -> {PunctuationCharacter, 16^^2950},
+"LeftUpDownVector" -> {PunctuationCharacter, 16^^2951},
+"LeftVectorBar" -> {PunctuationCharacter, 16^^2952},
+"RightVectorBar" -> {PunctuationCharacter, 16^^2953},
+"RightUpVectorBar" -> {PunctuationCharacter, 16^^2954},
+"RightDownVectorBar" -> {PunctuationCharacter, 16^^2955},
+"DownLeftVectorBar" -> {PunctuationCharacter, 16^^2956},
+"DownRightVectorBar" -> {PunctuationCharacter, 16^^2957},
+"LeftUpVectorBar" -> {PunctuationCharacter, 16^^2958},
+"LeftDownVectorBar" -> {PunctuationCharacter, 16^^2959},
+"LeftTeeVector" -> {PunctuationCharacter, 16^^295a},
+"RightTeeVector" -> {PunctuationCharacter, 16^^295b},
+"RightUpTeeVector" -> {PunctuationCharacter, 16^^295c},
+"RightDownTeeVector" -> {PunctuationCharacter, 16^^295d},
+"DownLeftTeeVector" -> {PunctuationCharacter, 16^^295e},
+"DownRightTeeVector" -> {PunctuationCharacter, 16^^295f},
+"LeftUpTeeVector" -> {PunctuationCharacter, 16^^2960},
+"LeftDownTeeVector" -> {PunctuationCharacter, 16^^2961},
+"UpEquilibrium" -> {PunctuationCharacter, 16^^296e},
+"ReverseUpEquilibrium" -> {PunctuationCharacter, 16^^296f},
+"RoundImplies" -> {PunctuationCharacter, 16^^2970},
+"LeftTriangleBar" -> {PunctuationCharacter, 16^^29cf},
+"RightTriangleBar" -> {PunctuationCharacter, 16^^29d0},
+"Equivalent" -> {PunctuationCharacter, 16^^29e6},
 
 (*
 Range 0x2a00
 *)
-"LessSlantEqual" -> PunctuationCharacter, (* 0x2a7d *)
-"GreaterSlantEqual" -> PunctuationCharacter, (* 0x2a7e *)
-"NestedLessLess" -> PunctuationCharacter, (* 0x2aa1 *)
-"NestedGreaterGreater" -> PunctuationCharacter, (* 0x2aa2 *)
-"PrecedesEqual" -> PunctuationCharacter, (* 0x2aaf *)
-"SucceedsEqual" -> PunctuationCharacter, (* 0x2ab0 *)
-"DoubleLeftTee" -> PunctuationCharacter, (* 0x2ae4 *)
+"LessSlantEqual" -> {PunctuationCharacter, 16^^2a7d},
+"GreaterSlantEqual" -> {PunctuationCharacter, 16^^2a7e},
+"NestedLessLess" -> {PunctuationCharacter, 16^^2aa1},
+"NestedGreaterGreater" -> {PunctuationCharacter, 16^^2aa2},
+"PrecedesEqual" -> {PunctuationCharacter, 16^^2aaf},
+"SucceedsEqual" -> {PunctuationCharacter, 16^^2ab0},
+"DoubleLeftTee" -> {PunctuationCharacter, 16^^2ae4},
 
 (*
 Range 0x3000
 *)
-"COMPATIBILITYKanjiSpace" -> UnsupportedCharacter, (* 0x3000 *)
-"LeftDoubleBracket" -> PunctuationCharacter, (* 0x301a *)
-"RightDoubleBracket" -> PunctuationCharacter, (* 0x301b *)
+"COMPATIBILITYKanjiSpace" -> {UnsupportedCharacter, 16^^3000},
+"LeftDoubleBracket" -> {PunctuationCharacter, 16^^301a},
+"RightDoubleBracket" -> {PunctuationCharacter, 16^^301b},
 
 (*
 Range 0xf100
 *)
-"LeftAssociation" -> PunctuationCharacter, (* 0xf113 *)
-"RightAssociation" -> PunctuationCharacter, (* 0xf114 *)
-"Shah" -> LetterlikeCharacter, (* 0xf11d *)
-"WolframLanguageLogo" -> LetterlikeCharacter, (* 0xf11e *)
-"WolframLanguageLogoCircle" -> LetterlikeCharacter, (* 0xf11f *)
+"LeftAssociation" -> {PunctuationCharacter, 16^^f113},
+"RightAssociation" -> {PunctuationCharacter, 16^^f114},
+"Shah" -> {LetterlikeCharacter, 16^^f11d},
+"WolframLanguageLogo" -> {LetterlikeCharacter, 16^^f11e},
+"WolframLanguageLogoCircle" -> {LetterlikeCharacter, 16^^f11f},
 (*
 added in 11.1:
 TwoWayRule
 *)
-"TwoWayRule" -> PunctuationCharacter, (* 0xf120 *)
+"TwoWayRule" -> {PunctuationCharacter, 16^^f120},
 
 (*
 Range 0xf300
 *)
-"FreeformPrompt" -> LetterlikeCharacter, (* 0xf351 *)
-"WolframAlphaPrompt" -> LetterlikeCharacter, (* 0xf352 *)
-"InvisibleSpace" -> WhitespaceCharacter, (* 0xf360 *)
-"Piecewise" -> PunctuationCharacter, (* 0xf361 *)
-"NegativeVeryThinSpace" -> WhitespaceCharacter, (* 0xf380 *)
-"NegativeThinSpace" -> WhitespaceCharacter, (* 0xf382 *)
-"NegativeMediumSpace" -> WhitespaceCharacter, (* 0xf383 *)
-"NegativeThickSpace" -> WhitespaceCharacter, (* 0xf384 *)
-"ImplicitPlus" -> PunctuationCharacter, (* 0xf39e *)
-"Null" -> LetterlikeCharacter, (* 0xf3a0 *)
-"COMPATIBILITYNoBreak" -> UnsupportedCharacter, (* 0xf3a2 *)
-"IndentingNewLine" -> NewlineCharacter, (* 0xf3a3 *)
-"AutoPlaceholder" -> LetterlikeCharacter, (* 0xf3a4 *)
-"AutoLeftMatch" -> PunctuationCharacter, (* 0xf3a8 *)
-"AutoRightMatch" -> PunctuationCharacter, (* 0xf3a9 *)
-"AutoSpace" -> WhitespaceCharacter, (* 0xf3ad *)
-"AutoOperand" -> LetterlikeCharacter, (* 0xf3ae *)
-"SystemsModelDelay" -> LetterlikeCharacter, (* 0xf3af *)
-"Continuation" -> WhitespaceCharacter, (* 0xf3b1 *)
-"RoundSpaceIndicator" -> WhitespaceCharacter, (* 0xf3b2 *)
-"InvisiblePrefixScriptBase" -> PunctuationCharacter, (* 0xf3b3 *)
-"InvisiblePostfixScriptBase" -> PunctuationCharacter, (* 0xf3b4 *)
-"EntityStart" -> LetterlikeCharacter, (* 0xf3b8 *)
-"EntityEnd" -> LetterlikeCharacter, (* 0xf3b9 *)
-"SpanFromLeft" -> LetterlikeCharacter, (* 0xf3ba *)
-"SpanFromAbove" -> LetterlikeCharacter, (* 0xf3bb *)
-"SpanFromBoth" -> LetterlikeCharacter, (* 0xf3bc *)
-"PageBreakAbove" -> WhitespaceCharacter, (* 0xf3bd *)
-"PageBreakBelow" -> WhitespaceCharacter, (* 0xf3be *)
-"DiscretionaryPageBreakAbove" -> WhitespaceCharacter, (* 0xf3bf *)
-"DiscretionaryPageBreakBelow" -> WhitespaceCharacter, (* 0xf3c6 *)
-"Transpose" -> PunctuationCharacter, (* 0xf3c7 *)
-"Conjugate" -> PunctuationCharacter, (* 0xf3c8 *)
-"ConjugateTranspose" -> PunctuationCharacter, (* 0xf3c9 *)
-"StepperRight" -> LetterlikeCharacter, (* 0xf3ca *)
-"StepperLeft" -> LetterlikeCharacter, (* 0xf3cb *)
-"StepperUp" -> LetterlikeCharacter, (* 0xf3cc *)
-"StepperDown" -> LetterlikeCharacter, (* 0xf3cd *)
-"HermitianConjugate" -> PunctuationCharacter, (* 0xf3ce *)
-"VerticalBar" -> PunctuationCharacter, (* 0xf3d0 *)
-"NotVerticalBar" -> PunctuationCharacter, (* 0xf3d1 *)
-"Distributed" -> PunctuationCharacter, (* 0xf3d2 *)
-"Conditioned" -> PunctuationCharacter, (* 0xf3d3 *)
-"UndirectedEdge" -> PunctuationCharacter, (* 0xf3d4 *)
-"DirectedEdge" -> PunctuationCharacter, (* 0xf3d5 *)
-"Gradient" -> PunctuationCharacter, (* 0xf3d6 *)
-"Divergence" -> PunctuationCharacter, (* 0xf3d7 *)
-"Curl" -> PunctuationCharacter, (* 0xf3d8 *)
-"ContinuedFractionK" -> PunctuationCharacter, (* 0xf3d9 *)
-"TensorProduct" -> PunctuationCharacter, (* 0xf3da *)
-"TensorWedge" -> PunctuationCharacter, (* 0xf3db *)
-"ProbabilityPr" -> PunctuationCharacter, (* 0xf3dc *)
-"ExpectationE" -> PunctuationCharacter, (* 0xf3dd *)
-"PermutationProduct" -> PunctuationCharacter, (* 0xf3de *)
-"Earth" -> LetterlikeCharacter, (* 0xf3df *)
+"FreeformPrompt" -> {LetterlikeCharacter, 16^^f351},
+"WolframAlphaPrompt" -> {LetterlikeCharacter, 16^^f352},
+"InvisibleSpace" -> {WhitespaceCharacter, 16^^f360},
+"Piecewise" -> {PunctuationCharacter, 16^^f361},
+"NegativeVeryThinSpace" -> {WhitespaceCharacter, 16^^f380},
+"NegativeThinSpace" -> {WhitespaceCharacter, 16^^f382},
+"NegativeMediumSpace" -> {WhitespaceCharacter, 16^^f383},
+"NegativeThickSpace" -> {WhitespaceCharacter, 16^^f384},
+"ImplicitPlus" -> {PunctuationCharacter, 16^^f39e},
+"Null" -> {LetterlikeCharacter, 16^^f3a0},
+"COMPATIBILITYNoBreak" -> {UnsupportedCharacter, 16^^f3a2},
+"IndentingNewLine" -> {NewlineCharacter, 16^^f3a3},
+"AutoPlaceholder" -> {LetterlikeCharacter, 16^^f3a4},
+"AutoLeftMatch" -> {PunctuationCharacter, 16^^f3a8},
+"AutoRightMatch" -> {PunctuationCharacter, 16^^f3a9},
+"AutoSpace" -> {WhitespaceCharacter, 16^^f3ad},
+"AutoOperand" -> {LetterlikeCharacter, 16^^f3ae},
+"SystemsModelDelay" -> {LetterlikeCharacter, 16^^f3af},
+"Continuation" -> {WhitespaceCharacter, 16^^f3b1},
+"RoundSpaceIndicator" -> {WhitespaceCharacter, 16^^f3b2},
+"InvisiblePrefixScriptBase" -> {PunctuationCharacter, 16^^f3b3},
+"InvisiblePostfixScriptBase" -> {PunctuationCharacter, 16^^f3b4},
+"EntityStart" -> {LetterlikeCharacter, 16^^f3b8},
+"EntityEnd" -> {LetterlikeCharacter, 16^^f3b9},
+"SpanFromLeft" -> {LetterlikeCharacter, 16^^f3ba},
+"SpanFromAbove" -> {LetterlikeCharacter, 16^^f3bb},
+"SpanFromBoth" -> {LetterlikeCharacter, 16^^f3bc},
+"PageBreakAbove" -> {WhitespaceCharacter, 16^^f3bd},
+"PageBreakBelow" -> {WhitespaceCharacter, 16^^f3be},
+"DiscretionaryPageBreakAbove" -> {WhitespaceCharacter, 16^^f3bf},
+"DiscretionaryPageBreakBelow" -> {WhitespaceCharacter, 16^^f3c6},
+"Transpose" -> {PunctuationCharacter, 16^^f3c7},
+"Conjugate" -> {PunctuationCharacter, 16^^f3c8},
+"ConjugateTranspose" -> {PunctuationCharacter, 16^^f3c9},
+"StepperRight" -> {LetterlikeCharacter, 16^^f3ca},
+"StepperLeft" -> {LetterlikeCharacter, 16^^f3cb},
+"StepperUp" -> {LetterlikeCharacter, 16^^f3cc},
+"StepperDown" -> {LetterlikeCharacter, 16^^f3cd},
+"HermitianConjugate" -> {PunctuationCharacter, 16^^f3ce},
+"VerticalBar" -> {PunctuationCharacter, 16^^f3d0},
+"NotVerticalBar" -> {PunctuationCharacter, 16^^f3d1},
+"Distributed" -> {PunctuationCharacter, 16^^f3d2},
+"Conditioned" -> {PunctuationCharacter, 16^^f3d3},
+"UndirectedEdge" -> {PunctuationCharacter, 16^^f3d4},
+"DirectedEdge" -> {PunctuationCharacter, 16^^f3d5},
+"Gradient" -> {PunctuationCharacter, 16^^f3d6},
+"Divergence" -> {PunctuationCharacter, 16^^f3d7},
+"Curl" -> {PunctuationCharacter, 16^^f3d8},
+"ContinuedFractionK" -> {PunctuationCharacter, 16^^f3d9},
+"TensorProduct" -> {PunctuationCharacter, 16^^f3da},
+"TensorWedge" -> {PunctuationCharacter, 16^^f3db},
+"ProbabilityPr" -> {PunctuationCharacter, 16^^f3dc},
+"ExpectationE" -> {PunctuationCharacter, 16^^f3dd},
+"PermutationProduct" -> {PunctuationCharacter, 16^^f3de},
+"Earth" -> {LetterlikeCharacter, 16^^f3df},
 
 (*
 Range 0xf400
 *)
-"NotEqualTilde" -> PunctuationCharacter, (* 0xf400 *)
-"NotHumpEqual" -> PunctuationCharacter, (* 0xf401 *)
-"NotHumpDownHump" -> PunctuationCharacter, (* 0xf402 *)
-"NotLeftTriangleBar" -> PunctuationCharacter, (* 0xf412 *)
-"NotRightTriangleBar" -> PunctuationCharacter, (* 0xf413 *)
-"NotLessLess" -> PunctuationCharacter, (* 0xf422 *)
-"NotNestedLessLess" -> PunctuationCharacter, (* 0xf423 *)
-"NotLessSlantEqual" -> PunctuationCharacter, (* 0xf424 *)
-"NotGreaterGreater" -> PunctuationCharacter, (* 0xf427 *)
-"NotNestedGreaterGreater" -> PunctuationCharacter, (* 0xf428 *)
-"NotGreaterSlantEqual" -> PunctuationCharacter, (* 0xf429 *)
-"NotPrecedesEqual" -> PunctuationCharacter, (* 0xf42b *)
-"NotSucceedsEqual" -> PunctuationCharacter, (* 0xf42d *)
-"NotSquareSubset" -> PunctuationCharacter, (* 0xf42e *)
-"NotSquareSuperset" -> PunctuationCharacter, (* 0xf42f *)
-"Equal" -> PunctuationCharacter, (* 0xf431 *)
-"VerticalSeparator" -> PunctuationCharacter, (* 0xf432 *)
+"NotEqualTilde" -> {PunctuationCharacter, 16^^f400},
+"NotHumpEqual" -> {PunctuationCharacter, 16^^f401},
+"NotHumpDownHump" -> {PunctuationCharacter, 16^^f402},
+"NotLeftTriangleBar" -> {PunctuationCharacter, 16^^f412},
+"NotRightTriangleBar" -> {PunctuationCharacter, 16^^f413},
+"NotLessLess" -> {PunctuationCharacter, 16^^f422},
+"NotNestedLessLess" -> {PunctuationCharacter, 16^^f423},
+"NotLessSlantEqual" -> {PunctuationCharacter, 16^^f424},
+"NotGreaterGreater" -> {PunctuationCharacter, 16^^f427},
+"NotNestedGreaterGreater" -> {PunctuationCharacter, 16^^f428},
+"NotGreaterSlantEqual" -> {PunctuationCharacter, 16^^f429},
+"NotPrecedesEqual" -> {PunctuationCharacter, 16^^f42b},
+"NotSucceedsEqual" -> {PunctuationCharacter, 16^^f42d},
+"NotSquareSubset" -> {PunctuationCharacter, 16^^f42e},
+"NotSquareSuperset" -> {PunctuationCharacter, 16^^f42f},
+"Equal" -> {PunctuationCharacter, 16^^f431},
+"VerticalSeparator" -> {PunctuationCharacter, 16^^f432},
 (*
 added in 12.0:
 VectorGreater
@@ -792,420 +792,420 @@ VectorGreaterEqual
 VectorLess
 VectorLessEqual
 *)
-"VectorGreater" -> PunctuationCharacter, (* 0xf434 *)
-"VectorGreaterEqual" -> PunctuationCharacter, (* 0xf435 *)
-"VectorLess" -> PunctuationCharacter, (* 0xf436 *)
-"VectorLessEqual" -> PunctuationCharacter, (* 0xf437 *)
+"VectorGreater" -> {PunctuationCharacter, 16^^f434},
+"VectorGreaterEqual" -> {PunctuationCharacter, 16^^f435},
+"VectorLess" -> {PunctuationCharacter, 16^^f436},
+"VectorLessEqual" -> {PunctuationCharacter, 16^^f437},
 (*
 added in 11.2:
 Limit
 MaxLimit
 MinLimit
 *)
-"Limit" -> PunctuationCharacter, (* 0xf438 *)
-"MaxLimit" -> PunctuationCharacter, (* 0xf439 *)
-"MinLimit" -> PunctuationCharacter, (* 0xf43a *)
-"Cross" -> PunctuationCharacter, (* 0xf4a0 *)
-"Function" -> PunctuationCharacter, (* 0xf4a1 *)
-"Xnor" -> PunctuationCharacter, (* 0xf4a2 *)
-"DiscreteShift" -> PunctuationCharacter, (* 0xf4a3 *)
-"DifferenceDelta" -> PunctuationCharacter, (* 0xf4a4 *)
-"DiscreteRatio" -> PunctuationCharacter, (* 0xf4a5 *)
+"Limit" -> {PunctuationCharacter, 16^^f438},
+"MaxLimit" -> {PunctuationCharacter, 16^^f439},
+"MinLimit" -> {PunctuationCharacter, 16^^f43a},
+"Cross" -> {PunctuationCharacter, 16^^f4a0},
+"Function" -> {PunctuationCharacter, 16^^f4a1},
+"Xnor" -> {PunctuationCharacter, 16^^f4a2},
+"DiscreteShift" -> {PunctuationCharacter, 16^^f4a3},
+"DifferenceDelta" -> {PunctuationCharacter, 16^^f4a4},
+"DiscreteRatio" -> {PunctuationCharacter, 16^^f4a5},
 
 (*
 Range 0xf500
 *)
-"InlinePart" -> UnsupportedCharacter, (* 0xf51e *)
-"RuleDelayed" -> PunctuationCharacter, (* 0xf51f *)
-"Square" -> PunctuationCharacter, (* 0xf520 *)
-"Rule" -> PunctuationCharacter, (* 0xf522 *)
-"Implies" -> PunctuationCharacter, (* 0xf523 *)
-"ShortRightArrow" -> PunctuationCharacter, (* 0xf525 *)
-"ShortLeftArrow" -> PunctuationCharacter, (* 0xf526 *)
-"SelectionPlaceholder" -> LetterlikeCharacter, (* 0xf527 *)
-"Placeholder" -> LetterlikeCharacter, (* 0xf528 *)
-"ShortUpArrow" -> PunctuationCharacter, (* 0xf52a *)
-"ShortDownArrow" -> PunctuationCharacter, (* 0xf52b *)
+"InlinePart" -> {UnsupportedCharacter, 16^^f51e},
+"RuleDelayed" -> {PunctuationCharacter, 16^^f51f},
+"Square" -> {PunctuationCharacter, 16^^f520},
+"Rule" -> {PunctuationCharacter, 16^^f522},
+"Implies" -> {PunctuationCharacter, 16^^f523},
+"ShortRightArrow" -> {PunctuationCharacter, 16^^f525},
+"ShortLeftArrow" -> {PunctuationCharacter, 16^^f526},
+"SelectionPlaceholder" -> {LetterlikeCharacter, 16^^f527},
+"Placeholder" -> {LetterlikeCharacter, 16^^f528},
+"ShortUpArrow" -> {PunctuationCharacter, 16^^f52a},
+"ShortDownArrow" -> {PunctuationCharacter, 16^^f52b},
 
 (*
 Range 0xf600
 *)
-"LeftBracketingBar" -> PunctuationCharacter, (* 0xf603 *)
-"RightBracketingBar" -> PunctuationCharacter, (* 0xf604 *)
-"LeftDoubleBracketingBar" -> PunctuationCharacter, (* 0xf605 *)
-"RightDoubleBracketingBar" -> PunctuationCharacter, (* 0xf606 *)
-"ScriptA" -> LetterlikeCharacter, (* 0xf6b2 *)
-"ScriptB" -> LetterlikeCharacter, (* 0xf6b3 *)
-"ScriptC" -> LetterlikeCharacter, (* 0xf6b4 *)
-"ScriptD" -> LetterlikeCharacter, (* 0xf6b5 *)
-"ScriptF" -> LetterlikeCharacter, (* 0xf6b7 *)
-"ScriptH" -> LetterlikeCharacter, (* 0xf6b9 *)
-"ScriptI" -> LetterlikeCharacter, (* 0xf6ba *)
-"ScriptJ" -> LetterlikeCharacter, (* 0xf6bb *)
-"ScriptK" -> LetterlikeCharacter, (* 0xf6bc *)
-"ScriptM" -> LetterlikeCharacter, (* 0xf6be *)
-"ScriptN" -> LetterlikeCharacter, (* 0xf6bf *)
-"ScriptP" -> LetterlikeCharacter, (* 0xf6c1 *)
-"ScriptQ" -> LetterlikeCharacter, (* 0xf6c2 *)
-"ScriptR" -> LetterlikeCharacter, (* 0xf6c3 *)
-"ScriptS" -> LetterlikeCharacter, (* 0xf6c4 *)
-"ScriptT" -> LetterlikeCharacter, (* 0xf6c5 *)
-"ScriptU" -> LetterlikeCharacter, (* 0xf6c6 *)
-"ScriptV" -> LetterlikeCharacter, (* 0xf6c7 *)
-"ScriptW" -> LetterlikeCharacter, (* 0xf6c8 *)
-"ScriptX" -> LetterlikeCharacter, (* 0xf6c9 *)
-"ScriptY" -> LetterlikeCharacter, (* 0xf6ca *)
-"ScriptZ" -> LetterlikeCharacter, (* 0xf6cb *)
-"GothicA" -> LetterlikeCharacter, (* 0xf6cc *)
-"GothicB" -> LetterlikeCharacter, (* 0xf6cd *)
-"GothicC" -> LetterlikeCharacter, (* 0xf6ce *)
-"GothicD" -> LetterlikeCharacter, (* 0xf6cf *)
-"GothicE" -> LetterlikeCharacter, (* 0xf6d0 *)
-"GothicF" -> LetterlikeCharacter, (* 0xf6d1 *)
-"GothicG" -> LetterlikeCharacter, (* 0xf6d2 *)
-"GothicH" -> LetterlikeCharacter, (* 0xf6d3 *)
-"GothicI" -> LetterlikeCharacter, (* 0xf6d4 *)
-"GothicJ" -> LetterlikeCharacter, (* 0xf6d5 *)
-"GothicK" -> LetterlikeCharacter, (* 0xf6d6 *)
-"GothicL" -> LetterlikeCharacter, (* 0xf6d7 *)
-"GothicM" -> LetterlikeCharacter, (* 0xf6d8 *)
-"GothicN" -> LetterlikeCharacter, (* 0xf6d9 *)
-"GothicO" -> LetterlikeCharacter, (* 0xf6da *)
-"GothicP" -> LetterlikeCharacter, (* 0xf6db *)
-"GothicQ" -> LetterlikeCharacter, (* 0xf6dc *)
-"GothicR" -> LetterlikeCharacter, (* 0xf6dd *)
-"GothicS" -> LetterlikeCharacter, (* 0xf6de *)
-"GothicT" -> LetterlikeCharacter, (* 0xf6df *)
-"GothicU" -> LetterlikeCharacter, (* 0xf6e0 *)
-"GothicV" -> LetterlikeCharacter, (* 0xf6e1 *)
-"GothicW" -> LetterlikeCharacter, (* 0xf6e2 *)
-"GothicX" -> LetterlikeCharacter, (* 0xf6e3 *)
-"GothicY" -> LetterlikeCharacter, (* 0xf6e4 *)
-"GothicZ" -> LetterlikeCharacter, (* 0xf6e5 *)
-"DoubleStruckA" -> LetterlikeCharacter, (* 0xf6e6 *)
-"DoubleStruckB" -> LetterlikeCharacter, (* 0xf6e7 *)
-"DoubleStruckC" -> LetterlikeCharacter, (* 0xf6e8 *)
-"DoubleStruckD" -> LetterlikeCharacter, (* 0xf6e9 *)
-"DoubleStruckE" -> LetterlikeCharacter, (* 0xf6ea *)
-"DoubleStruckF" -> LetterlikeCharacter, (* 0xf6eb *)
-"DoubleStruckG" -> LetterlikeCharacter, (* 0xf6ec *)
-"DoubleStruckH" -> LetterlikeCharacter, (* 0xf6ed *)
-"DoubleStruckI" -> LetterlikeCharacter, (* 0xf6ee *)
-"DoubleStruckJ" -> LetterlikeCharacter, (* 0xf6ef *)
-"DoubleStruckK" -> LetterlikeCharacter, (* 0xf6f0 *)
-"DoubleStruckL" -> LetterlikeCharacter, (* 0xf6f1 *)
-"DoubleStruckM" -> LetterlikeCharacter, (* 0xf6f2 *)
-"DoubleStruckN" -> LetterlikeCharacter, (* 0xf6f3 *)
-"DoubleStruckO" -> LetterlikeCharacter, (* 0xf6f4 *)
-"DoubleStruckP" -> LetterlikeCharacter, (* 0xf6f5 *)
-"DoubleStruckQ" -> LetterlikeCharacter, (* 0xf6f6 *)
-"DoubleStruckR" -> LetterlikeCharacter, (* 0xf6f7 *)
-"DoubleStruckS" -> LetterlikeCharacter, (* 0xf6f8 *)
-"DoubleStruckT" -> LetterlikeCharacter, (* 0xf6f9 *)
-"DoubleStruckU" -> LetterlikeCharacter, (* 0xf6fa *)
-"DoubleStruckV" -> LetterlikeCharacter, (* 0xf6fb *)
-"DoubleStruckW" -> LetterlikeCharacter, (* 0xf6fc *)
-"DoubleStruckX" -> LetterlikeCharacter, (* 0xf6fd *)
-"DoubleStruckY" -> LetterlikeCharacter, (* 0xf6fe *)
-"DoubleStruckZ" -> LetterlikeCharacter, (* 0xf6ff *)
+"LeftBracketingBar" -> {PunctuationCharacter, 16^^f603},
+"RightBracketingBar" -> {PunctuationCharacter, 16^^f604},
+"LeftDoubleBracketingBar" -> {PunctuationCharacter, 16^^f605},
+"RightDoubleBracketingBar" -> {PunctuationCharacter, 16^^f606},
+"ScriptA" -> {LetterlikeCharacter, 16^^f6b2},
+"ScriptB" -> {LetterlikeCharacter, 16^^f6b3},
+"ScriptC" -> {LetterlikeCharacter, 16^^f6b4},
+"ScriptD" -> {LetterlikeCharacter, 16^^f6b5},
+"ScriptF" -> {LetterlikeCharacter, 16^^f6b7},
+"ScriptH" -> {LetterlikeCharacter, 16^^f6b9},
+"ScriptI" -> {LetterlikeCharacter, 16^^f6ba},
+"ScriptJ" -> {LetterlikeCharacter, 16^^f6bb},
+"ScriptK" -> {LetterlikeCharacter, 16^^f6bc},
+"ScriptM" -> {LetterlikeCharacter, 16^^f6be},
+"ScriptN" -> {LetterlikeCharacter, 16^^f6bf},
+"ScriptP" -> {LetterlikeCharacter, 16^^f6c1},
+"ScriptQ" -> {LetterlikeCharacter, 16^^f6c2},
+"ScriptR" -> {LetterlikeCharacter, 16^^f6c3},
+"ScriptS" -> {LetterlikeCharacter, 16^^f6c4},
+"ScriptT" -> {LetterlikeCharacter, 16^^f6c5},
+"ScriptU" -> {LetterlikeCharacter, 16^^f6c6},
+"ScriptV" -> {LetterlikeCharacter, 16^^f6c7},
+"ScriptW" -> {LetterlikeCharacter, 16^^f6c8},
+"ScriptX" -> {LetterlikeCharacter, 16^^f6c9},
+"ScriptY" -> {LetterlikeCharacter, 16^^f6ca},
+"ScriptZ" -> {LetterlikeCharacter, 16^^f6cb},
+"GothicA" -> {LetterlikeCharacter, 16^^f6cc},
+"GothicB" -> {LetterlikeCharacter, 16^^f6cd},
+"GothicC" -> {LetterlikeCharacter, 16^^f6ce},
+"GothicD" -> {LetterlikeCharacter, 16^^f6cf},
+"GothicE" -> {LetterlikeCharacter, 16^^f6d0},
+"GothicF" -> {LetterlikeCharacter, 16^^f6d1},
+"GothicG" -> {LetterlikeCharacter, 16^^f6d2},
+"GothicH" -> {LetterlikeCharacter, 16^^f6d3},
+"GothicI" -> {LetterlikeCharacter, 16^^f6d4},
+"GothicJ" -> {LetterlikeCharacter, 16^^f6d5},
+"GothicK" -> {LetterlikeCharacter, 16^^f6d6},
+"GothicL" -> {LetterlikeCharacter, 16^^f6d7},
+"GothicM" -> {LetterlikeCharacter, 16^^f6d8},
+"GothicN" -> {LetterlikeCharacter, 16^^f6d9},
+"GothicO" -> {LetterlikeCharacter, 16^^f6da},
+"GothicP" -> {LetterlikeCharacter, 16^^f6db},
+"GothicQ" -> {LetterlikeCharacter, 16^^f6dc},
+"GothicR" -> {LetterlikeCharacter, 16^^f6dd},
+"GothicS" -> {LetterlikeCharacter, 16^^f6de},
+"GothicT" -> {LetterlikeCharacter, 16^^f6df},
+"GothicU" -> {LetterlikeCharacter, 16^^f6e0},
+"GothicV" -> {LetterlikeCharacter, 16^^f6e1},
+"GothicW" -> {LetterlikeCharacter, 16^^f6e2},
+"GothicX" -> {LetterlikeCharacter, 16^^f6e3},
+"GothicY" -> {LetterlikeCharacter, 16^^f6e4},
+"GothicZ" -> {LetterlikeCharacter, 16^^f6e5},
+"DoubleStruckA" -> {LetterlikeCharacter, 16^^f6e6},
+"DoubleStruckB" -> {LetterlikeCharacter, 16^^f6e7},
+"DoubleStruckC" -> {LetterlikeCharacter, 16^^f6e8},
+"DoubleStruckD" -> {LetterlikeCharacter, 16^^f6e9},
+"DoubleStruckE" -> {LetterlikeCharacter, 16^^f6ea},
+"DoubleStruckF" -> {LetterlikeCharacter, 16^^f6eb},
+"DoubleStruckG" -> {LetterlikeCharacter, 16^^f6ec},
+"DoubleStruckH" -> {LetterlikeCharacter, 16^^f6ed},
+"DoubleStruckI" -> {LetterlikeCharacter, 16^^f6ee},
+"DoubleStruckJ" -> {LetterlikeCharacter, 16^^f6ef},
+"DoubleStruckK" -> {LetterlikeCharacter, 16^^f6f0},
+"DoubleStruckL" -> {LetterlikeCharacter, 16^^f6f1},
+"DoubleStruckM" -> {LetterlikeCharacter, 16^^f6f2},
+"DoubleStruckN" -> {LetterlikeCharacter, 16^^f6f3},
+"DoubleStruckO" -> {LetterlikeCharacter, 16^^f6f4},
+"DoubleStruckP" -> {LetterlikeCharacter, 16^^f6f5},
+"DoubleStruckQ" -> {LetterlikeCharacter, 16^^f6f6},
+"DoubleStruckR" -> {LetterlikeCharacter, 16^^f6f7},
+"DoubleStruckS" -> {LetterlikeCharacter, 16^^f6f8},
+"DoubleStruckT" -> {LetterlikeCharacter, 16^^f6f9},
+"DoubleStruckU" -> {LetterlikeCharacter, 16^^f6fa},
+"DoubleStruckV" -> {LetterlikeCharacter, 16^^f6fb},
+"DoubleStruckW" -> {LetterlikeCharacter, 16^^f6fc},
+"DoubleStruckX" -> {LetterlikeCharacter, 16^^f6fd},
+"DoubleStruckY" -> {LetterlikeCharacter, 16^^f6fe},
+"DoubleStruckZ" -> {LetterlikeCharacter, 16^^f6ff},
 
 (*
 Range 0xf700
 *)
-"DotlessJ" -> LetterlikeCharacter, (* 0xf700 *)
-"Wolf" -> LetterlikeCharacter, (* 0xf720 *)
-"FreakedSmiley" -> LetterlikeCharacter, (* 0xf721 *)
-"NeutralSmiley" -> LetterlikeCharacter, (* 0xf722 *)
-"LightBulb" -> LetterlikeCharacter, (* 0xf723 *)
-"NumberSign" -> LetterlikeCharacter, (* 0xf724 *)
-"WarningSign" -> LetterlikeCharacter, (* 0xf725 *)
-"Villa" -> LetterlikeCharacter, (* 0xf727 *)
-"Akuz" -> LetterlikeCharacter, (* 0xf728 *)
-"Andy" -> LetterlikeCharacter, (* 0xf729 *)
-"Spooky" -> LetterlikeCharacter, (* 0xf72a *)
-"ScriptDotlessI" -> LetterlikeCharacter, (* 0xf730 *)
-"ScriptDotlessJ" -> LetterlikeCharacter, (* 0xf731 *)
-"DoubledPi" -> LetterlikeCharacter, (* 0xf749 *)
-"DoubledGamma" -> LetterlikeCharacter, (* 0xf74a *)
-"CapitalDifferentialD" -> PunctuationCharacter, (* 0xf74b *)
-"DifferentialD" -> PunctuationCharacter, (* 0xf74c *)
-"ExponentialE" -> LetterlikeCharacter, (* 0xf74d *)
-"ImaginaryI" -> LetterlikeCharacter, (* 0xf74e *)
-"ImaginaryJ" -> LetterlikeCharacter, (* 0xf74f *)
-"FilledSmallCircle" -> LetterlikeCharacter, (* 0xf750 *)
-"DottedSquare" -> LetterlikeCharacter, (* 0xf751 *)
-"GraySquare" -> LetterlikeCharacter, (* 0xf752 *)
-"GrayCircle" -> LetterlikeCharacter, (* 0xf753 *)
-"LetterSpace" -> LetterlikeCharacter, (* 0xf754 *)
-"DownBreve" -> LetterlikeCharacter, (* 0xf755 *)
-"KernelIcon" -> LetterlikeCharacter, (* 0xf756 *)
-"MathematicaIcon" -> LetterlikeCharacter, (* 0xf757 *)
-"TripleDot" -> LetterlikeCharacter, (* 0xf758 *)
-"SystemEnterKey" -> LetterlikeCharacter, (* 0xf75f *)
-"AlignmentMarker" -> WhitespaceCharacter, (* 0xf760 *)
-"LeftSkeleton" -> UninterpretableCharacter, (* 0xf761 *)
-"RightSkeleton" -> UninterpretableCharacter, (* 0xf762 *)
-"ControlKey" -> LetterlikeCharacter, (* 0xf763 *)
-"AliasDelimiter" -> LetterlikeCharacter, (* 0xf764 *)
-"InvisibleComma" -> PunctuationCharacter, (* 0xf765 *)
-"ReturnKey" -> LetterlikeCharacter, (* 0xf766 *)
-"ErrorIndicator" -> UninterpretableCharacter, (* 0xf767 *)
-"AliasIndicator" -> LetterlikeCharacter, (* 0xf768 *)
-"EscapeKey" -> LetterlikeCharacter, (* 0xf769 *)
-"CommandKey" -> LetterlikeCharacter, (* 0xf76a *)
-"LeftModified" -> LetterlikeCharacter, (* 0xf76b *)
-"RightModified" -> LetterlikeCharacter, (* 0xf76c *)
-"InvisibleApplication" -> PunctuationCharacter, (* 0xf76d *)
-"DiscretionaryLineSeparator" -> NewlineCharacter, (* 0xf76e *)
-"DiscretionaryParagraphSeparator" -> NewlineCharacter, (* 0xf76f *)
-"ScriptCapitalA" -> LetterlikeCharacter, (* 0xf770 *)
-"ScriptCapitalC" -> LetterlikeCharacter, (* 0xf772 *)
-"ScriptCapitalD" -> LetterlikeCharacter, (* 0xf773 *)
-"ScriptCapitalG" -> LetterlikeCharacter, (* 0xf776 *)
-"ScriptCapitalJ" -> LetterlikeCharacter, (* 0xf779 *)
-"ScriptCapitalK" -> LetterlikeCharacter, (* 0xf77a *)
-"ScriptCapitalN" -> LetterlikeCharacter, (* 0xf77d *)
-"ScriptCapitalO" -> LetterlikeCharacter, (* 0xf77e *)
-"ScriptCapitalP" -> LetterlikeCharacter, (* 0xf77f *)
-"ScriptCapitalQ" -> LetterlikeCharacter, (* 0xf780 *)
-"ScriptCapitalS" -> LetterlikeCharacter, (* 0xf782 *)
-"ScriptCapitalT" -> LetterlikeCharacter, (* 0xf783 *)
-"ScriptCapitalU" -> LetterlikeCharacter, (* 0xf784 *)
-"ScriptCapitalV" -> LetterlikeCharacter, (* 0xf785 *)
-"ScriptCapitalW" -> LetterlikeCharacter, (* 0xf786 *)
-"ScriptCapitalX" -> LetterlikeCharacter, (* 0xf787 *)
-"ScriptCapitalY" -> LetterlikeCharacter, (* 0xf788 *)
-"ScriptCapitalZ" -> LetterlikeCharacter, (* 0xf789 *)
-"GothicCapitalA" -> LetterlikeCharacter, (* 0xf78a *)
-"GothicCapitalB" -> LetterlikeCharacter, (* 0xf78b *)
-"GothicCapitalD" -> LetterlikeCharacter, (* 0xf78d *)
-"GothicCapitalE" -> LetterlikeCharacter, (* 0xf78e *)
-"GothicCapitalF" -> LetterlikeCharacter, (* 0xf78f *)
-"GothicCapitalG" -> LetterlikeCharacter, (* 0xf790 *)
-"GothicCapitalJ" -> LetterlikeCharacter, (* 0xf793 *)
-"GothicCapitalK" -> LetterlikeCharacter, (* 0xf794 *)
-"GothicCapitalL" -> LetterlikeCharacter, (* 0xf795 *)
-"GothicCapitalM" -> LetterlikeCharacter, (* 0xf796 *)
-"GothicCapitalN" -> LetterlikeCharacter, (* 0xf797 *)
-"GothicCapitalO" -> LetterlikeCharacter, (* 0xf798 *)
-"GothicCapitalP" -> LetterlikeCharacter, (* 0xf799 *)
-"GothicCapitalQ" -> LetterlikeCharacter, (* 0xf79a *)
-"GothicCapitalS" -> LetterlikeCharacter, (* 0xf79c *)
-"GothicCapitalT" -> LetterlikeCharacter, (* 0xf79d *)
-"GothicCapitalU" -> LetterlikeCharacter, (* 0xf79e *)
-"GothicCapitalV" -> LetterlikeCharacter, (* 0xf79f *)
-"GothicCapitalW" -> LetterlikeCharacter, (* 0xf7a0 *)
-"GothicCapitalX" -> LetterlikeCharacter, (* 0xf7a1 *)
-"GothicCapitalY" -> LetterlikeCharacter, (* 0xf7a2 *)
-"DoubleStruckCapitalA" -> LetterlikeCharacter, (* 0xf7a4 *)
-"DoubleStruckCapitalB" -> LetterlikeCharacter, (* 0xf7a5 *)
-"DoubleStruckCapitalC" -> LetterlikeCharacter, (* 0xf7a6 *)
-"DoubleStruckCapitalD" -> LetterlikeCharacter, (* 0xf7a7 *)
-"DoubleStruckCapitalE" -> LetterlikeCharacter, (* 0xf7a8 *)
-"DoubleStruckCapitalF" -> LetterlikeCharacter, (* 0xf7a9 *)
-"DoubleStruckCapitalG" -> LetterlikeCharacter, (* 0xf7aa *)
-"DoubleStruckCapitalH" -> LetterlikeCharacter, (* 0xf7ab *)
-"DoubleStruckCapitalI" -> LetterlikeCharacter, (* 0xf7ac *)
-"DoubleStruckCapitalJ" -> LetterlikeCharacter, (* 0xf7ad *)
-"DoubleStruckCapitalK" -> LetterlikeCharacter, (* 0xf7ae *)
-"DoubleStruckCapitalL" -> LetterlikeCharacter, (* 0xf7af *)
-"DoubleStruckCapitalM" -> LetterlikeCharacter, (* 0xf7b0 *)
-"DoubleStruckCapitalN" -> LetterlikeCharacter, (* 0xf7b1 *)
-"DoubleStruckCapitalO" -> LetterlikeCharacter, (* 0xf7b2 *)
-"DoubleStruckCapitalP" -> LetterlikeCharacter, (* 0xf7b3 *)
-"DoubleStruckCapitalQ" -> LetterlikeCharacter, (* 0xf7b4 *)
-"DoubleStruckCapitalR" -> LetterlikeCharacter, (* 0xf7b5 *)
-"DoubleStruckCapitalS" -> LetterlikeCharacter, (* 0xf7b6 *)
-"DoubleStruckCapitalT" -> LetterlikeCharacter, (* 0xf7b7 *)
-"DoubleStruckCapitalU" -> LetterlikeCharacter, (* 0xf7b8 *)
-"DoubleStruckCapitalV" -> LetterlikeCharacter, (* 0xf7b9 *)
-"DoubleStruckCapitalW" -> LetterlikeCharacter, (* 0xf7ba *)
-"DoubleStruckCapitalX" -> LetterlikeCharacter, (* 0xf7bb *)
-"DoubleStruckCapitalY" -> LetterlikeCharacter, (* 0xf7bc *)
-"DoubleStruckCapitalZ" -> LetterlikeCharacter, (* 0xf7bd *)
-"TabKey" -> LetterlikeCharacter, (* 0xf7be *)
-"SpaceKey" -> LetterlikeCharacter, (* 0xf7bf *)
-"DeleteKey" -> LetterlikeCharacter, (* 0xf7d0 *)
-"AltKey" -> LetterlikeCharacter, (* 0xf7d1 *)
-"OptionKey" -> LetterlikeCharacter, (* 0xf7d2 *)
-"KeyBar" -> LetterlikeCharacter, (* 0xf7d3 *)
-"EnterKey" -> LetterlikeCharacter, (* 0xf7d4 *)
-"ShiftKey" -> LetterlikeCharacter, (* 0xf7d5 *)
-"Mod1Key" -> LetterlikeCharacter, (* 0xf7d6 *)
-"Mod2Key" -> LetterlikeCharacter, (* 0xf7d7 *)
-"LongEqual" -> PunctuationCharacter, (* 0xf7d9 *)
-"ConstantC" -> LetterlikeCharacter, (* 0xf7da *)
-"DoubleStruckZero" -> LetterlikeCharacter, (* 0xf7db *)
-"DoubleStruckOne" -> LetterlikeCharacter, (* 0xf7dc *)
-"DoubleStruckTwo" -> LetterlikeCharacter, (* 0xf7dd *)
-"DoubleStruckThree" -> LetterlikeCharacter, (* 0xf7de *)
-"DoubleStruckFour" -> LetterlikeCharacter, (* 0xf7df *)
-"DoubleStruckFive" -> LetterlikeCharacter, (* 0xf7e0 *)
-"DoubleStruckSix" -> LetterlikeCharacter, (* 0xf7e1 *)
-"DoubleStruckSeven" -> LetterlikeCharacter, (* 0xf7e2 *)
-"DoubleStruckEight" -> LetterlikeCharacter, (* 0xf7e3 *)
-"DoubleStruckNine" -> LetterlikeCharacter, (* 0xf7e4 *)
-"GothicZero" -> LetterlikeCharacter, (* 0xf7e5 *)
-"GothicOne" -> LetterlikeCharacter, (* 0xf7e6 *)
-"GothicTwo" -> LetterlikeCharacter, (* 0xf7e7 *)
-"GothicThree" -> LetterlikeCharacter, (* 0xf7e8 *)
-"GothicFour" -> LetterlikeCharacter, (* 0xf7e9 *)
-"GothicFive" -> LetterlikeCharacter, (* 0xf7ea *)
-"GothicSix" -> LetterlikeCharacter, (* 0xf7eb *)
-"GothicSeven" -> LetterlikeCharacter, (* 0xf7ec *)
-"GothicEight" -> LetterlikeCharacter, (* 0xf7ed *)
-"GothicNine" -> LetterlikeCharacter, (* 0xf7ef *)
-"ScriptZero" -> LetterlikeCharacter, (* 0xf7f0 *)
-"ScriptOne" -> LetterlikeCharacter, (* 0xf7f1 *)
-"ScriptTwo" -> LetterlikeCharacter, (* 0xf7f2 *)
-"ScriptThree" -> LetterlikeCharacter, (* 0xf7f3 *)
-"ScriptFour" -> LetterlikeCharacter, (* 0xf7f4 *)
-"ScriptFive" -> LetterlikeCharacter, (* 0xf7f5 *)
-"ScriptSix" -> LetterlikeCharacter, (* 0xf7f6 *)
-"ScriptSeven" -> LetterlikeCharacter, (* 0xf7f7 *)
-"ScriptEight" -> LetterlikeCharacter, (* 0xf7f8 *)
-"ScriptNine" -> LetterlikeCharacter, (* 0xf7f9 *)
-"FirstPage" -> LetterlikeCharacter, (* 0xf7fa *)
-"LastPage" -> LetterlikeCharacter, (* 0xf7fb *)
-"NumberComma" -> UnsupportedCharacter, (* 0xf7fc *)
+"DotlessJ" -> {LetterlikeCharacter, 16^^f700},
+"Wolf" -> {LetterlikeCharacter, 16^^f720},
+"FreakedSmiley" -> {LetterlikeCharacter, 16^^f721},
+"NeutralSmiley" -> {LetterlikeCharacter, 16^^f722},
+"LightBulb" -> {LetterlikeCharacter, 16^^f723},
+"NumberSign" -> {LetterlikeCharacter, 16^^f724},
+"WarningSign" -> {LetterlikeCharacter, 16^^f725},
+"Villa" -> {LetterlikeCharacter, 16^^f727},
+"Akuz" -> {LetterlikeCharacter, 16^^f728},
+"Andy" -> {LetterlikeCharacter, 16^^f729},
+"Spooky" -> {LetterlikeCharacter, 16^^f72a},
+"ScriptDotlessI" -> {LetterlikeCharacter, 16^^f730},
+"ScriptDotlessJ" -> {LetterlikeCharacter, 16^^f731},
+"DoubledPi" -> {LetterlikeCharacter, 16^^f749},
+"DoubledGamma" -> {LetterlikeCharacter, 16^^f74a},
+"CapitalDifferentialD" -> {PunctuationCharacter, 16^^f74b},
+"DifferentialD" -> {PunctuationCharacter, 16^^f74c},
+"ExponentialE" -> {LetterlikeCharacter, 16^^f74d},
+"ImaginaryI" -> {LetterlikeCharacter, 16^^f74e},
+"ImaginaryJ" -> {LetterlikeCharacter, 16^^f74f},
+"FilledSmallCircle" -> {LetterlikeCharacter, 16^^f750},
+"DottedSquare" -> {LetterlikeCharacter, 16^^f751},
+"GraySquare" -> {LetterlikeCharacter, 16^^f752},
+"GrayCircle" -> {LetterlikeCharacter, 16^^f753},
+"LetterSpace" -> {LetterlikeCharacter, 16^^f754},
+"DownBreve" -> {LetterlikeCharacter, 16^^f755},
+"KernelIcon" -> {LetterlikeCharacter, 16^^f756},
+"MathematicaIcon" -> {LetterlikeCharacter, 16^^f757},
+"TripleDot" -> {LetterlikeCharacter, 16^^f758},
+"SystemEnterKey" -> {LetterlikeCharacter, 16^^f75f},
+"AlignmentMarker" -> {WhitespaceCharacter, 16^^f760},
+"LeftSkeleton" -> {UninterpretableCharacter, 16^^f761},
+"RightSkeleton" -> {UninterpretableCharacter, 16^^f762},
+"ControlKey" -> {LetterlikeCharacter, 16^^f763},
+"AliasDelimiter" -> {LetterlikeCharacter, 16^^f764},
+"InvisibleComma" -> {PunctuationCharacter, 16^^f765},
+"ReturnKey" -> {LetterlikeCharacter, 16^^f766},
+"ErrorIndicator" -> {UninterpretableCharacter, 16^^f767},
+"AliasIndicator" -> {LetterlikeCharacter, 16^^f768},
+"EscapeKey" -> {LetterlikeCharacter, 16^^f769},
+"CommandKey" -> {LetterlikeCharacter, 16^^f76a},
+"LeftModified" -> {LetterlikeCharacter, 16^^f76b},
+"RightModified" -> {LetterlikeCharacter, 16^^f76c},
+"InvisibleApplication" -> {PunctuationCharacter, 16^^f76d},
+"DiscretionaryLineSeparator" -> {NewlineCharacter, 16^^f76e},
+"DiscretionaryParagraphSeparator" -> {NewlineCharacter, 16^^f76f},
+"ScriptCapitalA" -> {LetterlikeCharacter, 16^^f770},
+"ScriptCapitalC" -> {LetterlikeCharacter, 16^^f772},
+"ScriptCapitalD" -> {LetterlikeCharacter, 16^^f773},
+"ScriptCapitalG" -> {LetterlikeCharacter, 16^^f776},
+"ScriptCapitalJ" -> {LetterlikeCharacter, 16^^f779},
+"ScriptCapitalK" -> {LetterlikeCharacter, 16^^f77a},
+"ScriptCapitalN" -> {LetterlikeCharacter, 16^^f77d},
+"ScriptCapitalO" -> {LetterlikeCharacter, 16^^f77e},
+"ScriptCapitalP" -> {LetterlikeCharacter, 16^^f77f},
+"ScriptCapitalQ" -> {LetterlikeCharacter, 16^^f780},
+"ScriptCapitalS" -> {LetterlikeCharacter, 16^^f782},
+"ScriptCapitalT" -> {LetterlikeCharacter, 16^^f783},
+"ScriptCapitalU" -> {LetterlikeCharacter, 16^^f784},
+"ScriptCapitalV" -> {LetterlikeCharacter, 16^^f785},
+"ScriptCapitalW" -> {LetterlikeCharacter, 16^^f786},
+"ScriptCapitalX" -> {LetterlikeCharacter, 16^^f787},
+"ScriptCapitalY" -> {LetterlikeCharacter, 16^^f788},
+"ScriptCapitalZ" -> {LetterlikeCharacter, 16^^f789},
+"GothicCapitalA" -> {LetterlikeCharacter, 16^^f78a},
+"GothicCapitalB" -> {LetterlikeCharacter, 16^^f78b},
+"GothicCapitalD" -> {LetterlikeCharacter, 16^^f78d},
+"GothicCapitalE" -> {LetterlikeCharacter, 16^^f78e},
+"GothicCapitalF" -> {LetterlikeCharacter, 16^^f78f},
+"GothicCapitalG" -> {LetterlikeCharacter, 16^^f790},
+"GothicCapitalJ" -> {LetterlikeCharacter, 16^^f793},
+"GothicCapitalK" -> {LetterlikeCharacter, 16^^f794},
+"GothicCapitalL" -> {LetterlikeCharacter, 16^^f795},
+"GothicCapitalM" -> {LetterlikeCharacter, 16^^f796},
+"GothicCapitalN" -> {LetterlikeCharacter, 16^^f797},
+"GothicCapitalO" -> {LetterlikeCharacter, 16^^f798},
+"GothicCapitalP" -> {LetterlikeCharacter, 16^^f799},
+"GothicCapitalQ" -> {LetterlikeCharacter, 16^^f79a},
+"GothicCapitalS" -> {LetterlikeCharacter, 16^^f79c},
+"GothicCapitalT" -> {LetterlikeCharacter, 16^^f79d},
+"GothicCapitalU" -> {LetterlikeCharacter, 16^^f79e},
+"GothicCapitalV" -> {LetterlikeCharacter, 16^^f79f},
+"GothicCapitalW" -> {LetterlikeCharacter, 16^^f7a0},
+"GothicCapitalX" -> {LetterlikeCharacter, 16^^f7a1},
+"GothicCapitalY" -> {LetterlikeCharacter, 16^^f7a2},
+"DoubleStruckCapitalA" -> {LetterlikeCharacter, 16^^f7a4},
+"DoubleStruckCapitalB" -> {LetterlikeCharacter, 16^^f7a5},
+"DoubleStruckCapitalC" -> {LetterlikeCharacter, 16^^f7a6},
+"DoubleStruckCapitalD" -> {LetterlikeCharacter, 16^^f7a7},
+"DoubleStruckCapitalE" -> {LetterlikeCharacter, 16^^f7a8},
+"DoubleStruckCapitalF" -> {LetterlikeCharacter, 16^^f7a9},
+"DoubleStruckCapitalG" -> {LetterlikeCharacter, 16^^f7aa},
+"DoubleStruckCapitalH" -> {LetterlikeCharacter, 16^^f7ab},
+"DoubleStruckCapitalI" -> {LetterlikeCharacter, 16^^f7ac},
+"DoubleStruckCapitalJ" -> {LetterlikeCharacter, 16^^f7ad},
+"DoubleStruckCapitalK" -> {LetterlikeCharacter, 16^^f7ae},
+"DoubleStruckCapitalL" -> {LetterlikeCharacter, 16^^f7af},
+"DoubleStruckCapitalM" -> {LetterlikeCharacter, 16^^f7b0},
+"DoubleStruckCapitalN" -> {LetterlikeCharacter, 16^^f7b1},
+"DoubleStruckCapitalO" -> {LetterlikeCharacter, 16^^f7b2},
+"DoubleStruckCapitalP" -> {LetterlikeCharacter, 16^^f7b3},
+"DoubleStruckCapitalQ" -> {LetterlikeCharacter, 16^^f7b4},
+"DoubleStruckCapitalR" -> {LetterlikeCharacter, 16^^f7b5},
+"DoubleStruckCapitalS" -> {LetterlikeCharacter, 16^^f7b6},
+"DoubleStruckCapitalT" -> {LetterlikeCharacter, 16^^f7b7},
+"DoubleStruckCapitalU" -> {LetterlikeCharacter, 16^^f7b8},
+"DoubleStruckCapitalV" -> {LetterlikeCharacter, 16^^f7b9},
+"DoubleStruckCapitalW" -> {LetterlikeCharacter, 16^^f7ba},
+"DoubleStruckCapitalX" -> {LetterlikeCharacter, 16^^f7bb},
+"DoubleStruckCapitalY" -> {LetterlikeCharacter, 16^^f7bc},
+"DoubleStruckCapitalZ" -> {LetterlikeCharacter, 16^^f7bd},
+"TabKey" -> {LetterlikeCharacter, 16^^f7be},
+"SpaceKey" -> {LetterlikeCharacter, 16^^f7bf},
+"DeleteKey" -> {LetterlikeCharacter, 16^^f7d0},
+"AltKey" -> {LetterlikeCharacter, 16^^f7d1},
+"OptionKey" -> {LetterlikeCharacter, 16^^f7d2},
+"KeyBar" -> {LetterlikeCharacter, 16^^f7d3},
+"EnterKey" -> {LetterlikeCharacter, 16^^f7d4},
+"ShiftKey" -> {LetterlikeCharacter, 16^^f7d5},
+"Mod1Key" -> {LetterlikeCharacter, 16^^f7d6},
+"Mod2Key" -> {LetterlikeCharacter, 16^^f7d7},
+"LongEqual" -> {PunctuationCharacter, 16^^f7d9},
+"ConstantC" -> {LetterlikeCharacter, 16^^f7da},
+"DoubleStruckZero" -> {LetterlikeCharacter, 16^^f7db},
+"DoubleStruckOne" -> {LetterlikeCharacter, 16^^f7dc},
+"DoubleStruckTwo" -> {LetterlikeCharacter, 16^^f7dd},
+"DoubleStruckThree" -> {LetterlikeCharacter, 16^^f7de},
+"DoubleStruckFour" -> {LetterlikeCharacter, 16^^f7df},
+"DoubleStruckFive" -> {LetterlikeCharacter, 16^^f7e0},
+"DoubleStruckSix" -> {LetterlikeCharacter, 16^^f7e1},
+"DoubleStruckSeven" -> {LetterlikeCharacter, 16^^f7e2},
+"DoubleStruckEight" -> {LetterlikeCharacter, 16^^f7e3},
+"DoubleStruckNine" -> {LetterlikeCharacter, 16^^f7e4},
+"GothicZero" -> {LetterlikeCharacter, 16^^f7e5},
+"GothicOne" -> {LetterlikeCharacter, 16^^f7e6},
+"GothicTwo" -> {LetterlikeCharacter, 16^^f7e7},
+"GothicThree" -> {LetterlikeCharacter, 16^^f7e8},
+"GothicFour" -> {LetterlikeCharacter, 16^^f7e9},
+"GothicFive" -> {LetterlikeCharacter, 16^^f7ea},
+"GothicSix" -> {LetterlikeCharacter, 16^^f7eb},
+"GothicSeven" -> {LetterlikeCharacter, 16^^f7ec},
+"GothicEight" -> {LetterlikeCharacter, 16^^f7ed},
+"GothicNine" -> {LetterlikeCharacter, 16^^f7ef},
+"ScriptZero" -> {LetterlikeCharacter, 16^^f7f0},
+"ScriptOne" -> {LetterlikeCharacter, 16^^f7f1},
+"ScriptTwo" -> {LetterlikeCharacter, 16^^f7f2},
+"ScriptThree" -> {LetterlikeCharacter, 16^^f7f3},
+"ScriptFour" -> {LetterlikeCharacter, 16^^f7f4},
+"ScriptFive" -> {LetterlikeCharacter, 16^^f7f5},
+"ScriptSix" -> {LetterlikeCharacter, 16^^f7f6},
+"ScriptSeven" -> {LetterlikeCharacter, 16^^f7f7},
+"ScriptEight" -> {LetterlikeCharacter, 16^^f7f8},
+"ScriptNine" -> {LetterlikeCharacter, 16^^f7f9},
+"FirstPage" -> {LetterlikeCharacter, 16^^f7fa},
+"LastPage" -> {LetterlikeCharacter, 16^^f7fb},
+"NumberComma" -> {UnsupportedCharacter, 16^^f7fc},
 
 (*
 Range 0xf800
 *)
-"FormalA" -> LetterlikeCharacter, (* 0xf800 *)
-"FormalB" -> LetterlikeCharacter, (* 0xf801 *)
-"FormalC" -> LetterlikeCharacter, (* 0xf802 *)
-"FormalD" -> LetterlikeCharacter, (* 0xf803 *)
-"FormalE" -> LetterlikeCharacter, (* 0xf804 *)
-"FormalF" -> LetterlikeCharacter, (* 0xf805 *)
-"FormalG" -> LetterlikeCharacter, (* 0xf806 *)
-"FormalH" -> LetterlikeCharacter, (* 0xf807 *)
-"FormalI" -> LetterlikeCharacter, (* 0xf808 *)
-"FormalJ" -> LetterlikeCharacter, (* 0xf809 *)
-"FormalK" -> LetterlikeCharacter, (* 0xf80a *)
-"FormalL" -> LetterlikeCharacter, (* 0xf80b *)
-"FormalM" -> LetterlikeCharacter, (* 0xf80c *)
-"FormalN" -> LetterlikeCharacter, (* 0xf80d *)
-"FormalO" -> LetterlikeCharacter, (* 0xf80e *)
-"FormalP" -> LetterlikeCharacter, (* 0xf80f *)
-"FormalQ" -> LetterlikeCharacter, (* 0xf810 *)
-"FormalR" -> LetterlikeCharacter, (* 0xf811 *)
-"FormalS" -> LetterlikeCharacter, (* 0xf812 *)
-"FormalT" -> LetterlikeCharacter, (* 0xf813 *)
-"FormalU" -> LetterlikeCharacter, (* 0xf814 *)
-"FormalV" -> LetterlikeCharacter, (* 0xf815 *)
-"FormalW" -> LetterlikeCharacter, (* 0xf816 *)
-"FormalX" -> LetterlikeCharacter, (* 0xf817 *)
-"FormalY" -> LetterlikeCharacter, (* 0xf818 *)
-"FormalZ" -> LetterlikeCharacter, (* 0xf819 *)
-"FormalCapitalA" -> LetterlikeCharacter, (* 0xf81a *)
-"FormalCapitalB" -> LetterlikeCharacter, (* 0xf81b *)
-"FormalCapitalC" -> LetterlikeCharacter, (* 0xf81c *)
-"FormalCapitalD" -> LetterlikeCharacter, (* 0xf81d *)
-"FormalCapitalE" -> LetterlikeCharacter, (* 0xf81e *)
-"FormalCapitalF" -> LetterlikeCharacter, (* 0xf81f *)
-"FormalCapitalG" -> LetterlikeCharacter, (* 0xf820 *)
-"FormalCapitalH" -> LetterlikeCharacter, (* 0xf821 *)
-"FormalCapitalI" -> LetterlikeCharacter, (* 0xf822 *)
-"FormalCapitalJ" -> LetterlikeCharacter, (* 0xf823 *)
-"FormalCapitalK" -> LetterlikeCharacter, (* 0xf824 *)
-"FormalCapitalL" -> LetterlikeCharacter, (* 0xf825 *)
-"FormalCapitalM" -> LetterlikeCharacter, (* 0xf826 *)
-"FormalCapitalN" -> LetterlikeCharacter, (* 0xf827 *)
-"FormalCapitalO" -> LetterlikeCharacter, (* 0xf828 *)
-"FormalCapitalP" -> LetterlikeCharacter, (* 0xf829 *)
-"FormalCapitalQ" -> LetterlikeCharacter, (* 0xf82a *)
-"FormalCapitalR" -> LetterlikeCharacter, (* 0xf82b *)
-"FormalCapitalS" -> LetterlikeCharacter, (* 0xf82c *)
-"FormalCapitalT" -> LetterlikeCharacter, (* 0xf82d *)
-"FormalCapitalU" -> LetterlikeCharacter, (* 0xf82e *)
-"FormalCapitalV" -> LetterlikeCharacter, (* 0xf82f *)
-"FormalCapitalW" -> LetterlikeCharacter, (* 0xf830 *)
-"FormalCapitalX" -> LetterlikeCharacter, (* 0xf831 *)
-"FormalCapitalY" -> LetterlikeCharacter, (* 0xf832 *)
-"FormalCapitalZ" -> LetterlikeCharacter, (* 0xf833 *)
-"FormalCapitalAlpha" -> LetterlikeCharacter, (* 0xf834 *)
-"FormalCapitalBeta" -> LetterlikeCharacter, (* 0xf835 *)
-"FormalCapitalGamma" -> LetterlikeCharacter, (* 0xf836 *)
-"FormalCapitalDelta" -> LetterlikeCharacter, (* 0xf837 *)
-"FormalCapitalEpsilon" -> LetterlikeCharacter, (* 0xf838 *)
-"FormalCapitalZeta" -> LetterlikeCharacter, (* 0xf839 *)
-"FormalCapitalEta" -> LetterlikeCharacter, (* 0xf83a *)
-"FormalCapitalTheta" -> LetterlikeCharacter, (* 0xf83b *)
-"FormalCapitalIota" -> LetterlikeCharacter, (* 0xf83c *)
-"FormalCapitalKappa" -> LetterlikeCharacter, (* 0xf83d *)
-"FormalCapitalLambda" -> LetterlikeCharacter, (* 0xf83e *)
-"FormalCapitalMu" -> LetterlikeCharacter, (* 0xf83f *)
-"FormalCapitalNu" -> LetterlikeCharacter, (* 0xf840 *)
-"FormalCapitalXi" -> LetterlikeCharacter, (* 0xf841 *)
-"FormalCapitalOmicron" -> LetterlikeCharacter, (* 0xf842 *)
-"FormalCapitalPi" -> LetterlikeCharacter, (* 0xf843 *)
-"FormalCapitalRho" -> LetterlikeCharacter, (* 0xf844 *)
-"FormalCapitalSigma" -> LetterlikeCharacter, (* 0xf846 *)
-"FormalCapitalTau" -> LetterlikeCharacter, (* 0xf847 *)
-"FormalCapitalUpsilon" -> LetterlikeCharacter, (* 0xf848 *)
-"FormalCapitalPhi" -> LetterlikeCharacter, (* 0xf849 *)
-"FormalCapitalChi" -> LetterlikeCharacter, (* 0xf84a *)
-"FormalCapitalPsi" -> LetterlikeCharacter, (* 0xf84b *)
-"FormalCapitalOmega" -> LetterlikeCharacter, (* 0xf84c *)
-"FormalAlpha" -> LetterlikeCharacter, (* 0xf854 *)
-"FormalBeta" -> LetterlikeCharacter, (* 0xf855 *)
-"FormalGamma" -> LetterlikeCharacter, (* 0xf856 *)
-"FormalDelta" -> LetterlikeCharacter, (* 0xf857 *)
-"FormalCurlyEpsilon" -> LetterlikeCharacter, (* 0xf858 *)
-"FormalZeta" -> LetterlikeCharacter, (* 0xf859 *)
-"FormalEta" -> LetterlikeCharacter, (* 0xf85a *)
-"FormalTheta" -> LetterlikeCharacter, (* 0xf85b *)
-"FormalIota" -> LetterlikeCharacter, (* 0xf85c *)
-"FormalKappa" -> LetterlikeCharacter, (* 0xf85d *)
-"FormalLambda" -> LetterlikeCharacter, (* 0xf85e *)
-"FormalMu" -> LetterlikeCharacter, (* 0xf85f *)
-"FormalNu" -> LetterlikeCharacter, (* 0xf860 *)
-"FormalXi" -> LetterlikeCharacter, (* 0xf861 *)
-"FormalOmicron" -> LetterlikeCharacter, (* 0xf862 *)
-"FormalPi" -> LetterlikeCharacter, (* 0xf863 *)
-"FormalRho" -> LetterlikeCharacter, (* 0xf864 *)
-"FormalFinalSigma" -> LetterlikeCharacter, (* 0xf865 *)
-"FormalSigma" -> LetterlikeCharacter, (* 0xf866 *)
-"FormalTau" -> LetterlikeCharacter, (* 0xf867 *)
-"FormalUpsilon" -> LetterlikeCharacter, (* 0xf868 *)
-"FormalCurlyPhi" -> LetterlikeCharacter, (* 0xf869 *)
-"FormalChi" -> LetterlikeCharacter, (* 0xf86a *)
-"FormalPsi" -> LetterlikeCharacter, (* 0xf86b *)
-"FormalOmega" -> LetterlikeCharacter, (* 0xf86c *)
-"FormalCurlyTheta" -> LetterlikeCharacter, (* 0xf874 *)
-"FormalCurlyCapitalUpsilon" -> LetterlikeCharacter, (* 0xf875 *)
-"FormalPhi" -> LetterlikeCharacter, (* 0xf878 *)
-"FormalCurlyPi" -> LetterlikeCharacter, (* 0xf879 *)
-"FormalCapitalStigma" -> LetterlikeCharacter, (* 0xf87d *)
-"FormalStigma" -> LetterlikeCharacter, (* 0xf87e *)
-"FormalCapitalDigamma" -> LetterlikeCharacter, (* 0xf87f *)
-"FormalDigamma" -> LetterlikeCharacter, (* 0xf880 *)
-"FormalCapitalKoppa" -> LetterlikeCharacter, (* 0xf881 *)
-"FormalKoppa" -> LetterlikeCharacter, (* 0xf882 *)
-"FormalCapitalSampi" -> LetterlikeCharacter, (* 0xf883 *)
-"FormalSampi" -> LetterlikeCharacter, (* 0xf884 *)
-"FormalCurlyKappa" -> LetterlikeCharacter, (* 0xf885 *)
-"FormalCurlyRho" -> LetterlikeCharacter, (* 0xf886 *)
-"FormalEpsilon" -> LetterlikeCharacter, (* 0xf88a *)
+"FormalA" -> {LetterlikeCharacter, 16^^f800},
+"FormalB" -> {LetterlikeCharacter, 16^^f801},
+"FormalC" -> {LetterlikeCharacter, 16^^f802},
+"FormalD" -> {LetterlikeCharacter, 16^^f803},
+"FormalE" -> {LetterlikeCharacter, 16^^f804},
+"FormalF" -> {LetterlikeCharacter, 16^^f805},
+"FormalG" -> {LetterlikeCharacter, 16^^f806},
+"FormalH" -> {LetterlikeCharacter, 16^^f807},
+"FormalI" -> {LetterlikeCharacter, 16^^f808},
+"FormalJ" -> {LetterlikeCharacter, 16^^f809},
+"FormalK" -> {LetterlikeCharacter, 16^^f80a},
+"FormalL" -> {LetterlikeCharacter, 16^^f80b},
+"FormalM" -> {LetterlikeCharacter, 16^^f80c},
+"FormalN" -> {LetterlikeCharacter, 16^^f80d},
+"FormalO" -> {LetterlikeCharacter, 16^^f80e},
+"FormalP" -> {LetterlikeCharacter, 16^^f80f},
+"FormalQ" -> {LetterlikeCharacter, 16^^f810},
+"FormalR" -> {LetterlikeCharacter, 16^^f811},
+"FormalS" -> {LetterlikeCharacter, 16^^f812},
+"FormalT" -> {LetterlikeCharacter, 16^^f813},
+"FormalU" -> {LetterlikeCharacter, 16^^f814},
+"FormalV" -> {LetterlikeCharacter, 16^^f815},
+"FormalW" -> {LetterlikeCharacter, 16^^f816},
+"FormalX" -> {LetterlikeCharacter, 16^^f817},
+"FormalY" -> {LetterlikeCharacter, 16^^f818},
+"FormalZ" -> {LetterlikeCharacter, 16^^f819},
+"FormalCapitalA" -> {LetterlikeCharacter, 16^^f81a},
+"FormalCapitalB" -> {LetterlikeCharacter, 16^^f81b},
+"FormalCapitalC" -> {LetterlikeCharacter, 16^^f81c},
+"FormalCapitalD" -> {LetterlikeCharacter, 16^^f81d},
+"FormalCapitalE" -> {LetterlikeCharacter, 16^^f81e},
+"FormalCapitalF" -> {LetterlikeCharacter, 16^^f81f},
+"FormalCapitalG" -> {LetterlikeCharacter, 16^^f820},
+"FormalCapitalH" -> {LetterlikeCharacter, 16^^f821},
+"FormalCapitalI" -> {LetterlikeCharacter, 16^^f822},
+"FormalCapitalJ" -> {LetterlikeCharacter, 16^^f823},
+"FormalCapitalK" -> {LetterlikeCharacter, 16^^f824},
+"FormalCapitalL" -> {LetterlikeCharacter, 16^^f825},
+"FormalCapitalM" -> {LetterlikeCharacter, 16^^f826},
+"FormalCapitalN" -> {LetterlikeCharacter, 16^^f827},
+"FormalCapitalO" -> {LetterlikeCharacter, 16^^f828},
+"FormalCapitalP" -> {LetterlikeCharacter, 16^^f829},
+"FormalCapitalQ" -> {LetterlikeCharacter, 16^^f82a},
+"FormalCapitalR" -> {LetterlikeCharacter, 16^^f82b},
+"FormalCapitalS" -> {LetterlikeCharacter, 16^^f82c},
+"FormalCapitalT" -> {LetterlikeCharacter, 16^^f82d},
+"FormalCapitalU" -> {LetterlikeCharacter, 16^^f82e},
+"FormalCapitalV" -> {LetterlikeCharacter, 16^^f82f},
+"FormalCapitalW" -> {LetterlikeCharacter, 16^^f830},
+"FormalCapitalX" -> {LetterlikeCharacter, 16^^f831},
+"FormalCapitalY" -> {LetterlikeCharacter, 16^^f832},
+"FormalCapitalZ" -> {LetterlikeCharacter, 16^^f833},
+"FormalCapitalAlpha" -> {LetterlikeCharacter, 16^^f834},
+"FormalCapitalBeta" -> {LetterlikeCharacter, 16^^f835},
+"FormalCapitalGamma" -> {LetterlikeCharacter, 16^^f836},
+"FormalCapitalDelta" -> {LetterlikeCharacter, 16^^f837},
+"FormalCapitalEpsilon" -> {LetterlikeCharacter, 16^^f838},
+"FormalCapitalZeta" -> {LetterlikeCharacter, 16^^f839},
+"FormalCapitalEta" -> {LetterlikeCharacter, 16^^f83a},
+"FormalCapitalTheta" -> {LetterlikeCharacter, 16^^f83b},
+"FormalCapitalIota" -> {LetterlikeCharacter, 16^^f83c},
+"FormalCapitalKappa" -> {LetterlikeCharacter, 16^^f83d},
+"FormalCapitalLambda" -> {LetterlikeCharacter, 16^^f83e},
+"FormalCapitalMu" -> {LetterlikeCharacter, 16^^f83f},
+"FormalCapitalNu" -> {LetterlikeCharacter, 16^^f840},
+"FormalCapitalXi" -> {LetterlikeCharacter, 16^^f841},
+"FormalCapitalOmicron" -> {LetterlikeCharacter, 16^^f842},
+"FormalCapitalPi" -> {LetterlikeCharacter, 16^^f843},
+"FormalCapitalRho" -> {LetterlikeCharacter, 16^^f844},
+"FormalCapitalSigma" -> {LetterlikeCharacter, 16^^f846},
+"FormalCapitalTau" -> {LetterlikeCharacter, 16^^f847},
+"FormalCapitalUpsilon" -> {LetterlikeCharacter, 16^^f848},
+"FormalCapitalPhi" -> {LetterlikeCharacter, 16^^f849},
+"FormalCapitalChi" -> {LetterlikeCharacter, 16^^f84a},
+"FormalCapitalPsi" -> {LetterlikeCharacter, 16^^f84b},
+"FormalCapitalOmega" -> {LetterlikeCharacter, 16^^f84c},
+"FormalAlpha" -> {LetterlikeCharacter, 16^^f854},
+"FormalBeta" -> {LetterlikeCharacter, 16^^f855},
+"FormalGamma" -> {LetterlikeCharacter, 16^^f856},
+"FormalDelta" -> {LetterlikeCharacter, 16^^f857},
+"FormalCurlyEpsilon" -> {LetterlikeCharacter, 16^^f858},
+"FormalZeta" -> {LetterlikeCharacter, 16^^f859},
+"FormalEta" -> {LetterlikeCharacter, 16^^f85a},
+"FormalTheta" -> {LetterlikeCharacter, 16^^f85b},
+"FormalIota" -> {LetterlikeCharacter, 16^^f85c},
+"FormalKappa" -> {LetterlikeCharacter, 16^^f85d},
+"FormalLambda" -> {LetterlikeCharacter, 16^^f85e},
+"FormalMu" -> {LetterlikeCharacter, 16^^f85f},
+"FormalNu" -> {LetterlikeCharacter, 16^^f860},
+"FormalXi" -> {LetterlikeCharacter, 16^^f861},
+"FormalOmicron" -> {LetterlikeCharacter, 16^^f862},
+"FormalPi" -> {LetterlikeCharacter, 16^^f863},
+"FormalRho" -> {LetterlikeCharacter, 16^^f864},
+"FormalFinalSigma" -> {LetterlikeCharacter, 16^^f865},
+"FormalSigma" -> {LetterlikeCharacter, 16^^f866},
+"FormalTau" -> {LetterlikeCharacter, 16^^f867},
+"FormalUpsilon" -> {LetterlikeCharacter, 16^^f868},
+"FormalCurlyPhi" -> {LetterlikeCharacter, 16^^f869},
+"FormalChi" -> {LetterlikeCharacter, 16^^f86a},
+"FormalPsi" -> {LetterlikeCharacter, 16^^f86b},
+"FormalOmega" -> {LetterlikeCharacter, 16^^f86c},
+"FormalCurlyTheta" -> {LetterlikeCharacter, 16^^f874},
+"FormalCurlyCapitalUpsilon" -> {LetterlikeCharacter, 16^^f875},
+"FormalPhi" -> {LetterlikeCharacter, 16^^f878},
+"FormalCurlyPi" -> {LetterlikeCharacter, 16^^f879},
+"FormalCapitalStigma" -> {LetterlikeCharacter, 16^^f87d},
+"FormalStigma" -> {LetterlikeCharacter, 16^^f87e},
+"FormalCapitalDigamma" -> {LetterlikeCharacter, 16^^f87f},
+"FormalDigamma" -> {LetterlikeCharacter, 16^^f880},
+"FormalCapitalKoppa" -> {LetterlikeCharacter, 16^^f881},
+"FormalKoppa" -> {LetterlikeCharacter, 16^^f882},
+"FormalCapitalSampi" -> {LetterlikeCharacter, 16^^f883},
+"FormalSampi" -> {LetterlikeCharacter, 16^^f884},
+"FormalCurlyKappa" -> {LetterlikeCharacter, 16^^f885},
+"FormalCurlyRho" -> {LetterlikeCharacter, 16^^f886},
+"FormalEpsilon" -> {LetterlikeCharacter, 16^^f88a},
 
 (*
 Range 0xfb00
 *)
-"FiLigature" -> LetterlikeCharacter, (* 0xfb01 *)
-"FlLigature" -> LetterlikeCharacter, (* 0xfb02 *)
+"FiLigature" -> {LetterlikeCharacter, 16^^fb01},
+"FlLigature" -> {LetterlikeCharacter, 16^^fb02},
 
 (*
 Range 0xfe00
 *)
-"OverParenthesis" -> LetterlikeCharacter, (* 0xfe35 *)
-"UnderParenthesis" -> LetterlikeCharacter, (* 0xfe36 *)
-"OverBrace" -> LetterlikeCharacter, (* 0xfe37 *)
-"UnderBrace" -> LetterlikeCharacter, (* 0xfe38 *)
+"OverParenthesis" -> {LetterlikeCharacter, 16^^fe35},
+"UnderParenthesis" -> {LetterlikeCharacter, 16^^fe36},
+"OverBrace" -> {LetterlikeCharacter, 16^^fe37},
+"UnderBrace" -> {LetterlikeCharacter, 16^^fe38},
 
 (*
 Range 0xff00
 *)
-"UnknownGlyph" -> Letterlike (* 0xfffd *)
+"UnknownGlyph" -> {LetterlikeCharacter, 16^^fffd}
 
 |>

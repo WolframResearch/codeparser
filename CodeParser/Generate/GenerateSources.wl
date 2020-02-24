@@ -53,6 +53,8 @@ uppercases and replaces ` with _
 toGlobal[n_] := 
  StringReplace[ToUpperCase[ToString[n]], {"`" -> "_", "$" -> "_"}]
 
+longNameToCharacterCode[name_] := importedLongNames[name][[2]]
+
 validateLongNameMap[m_] := (
   Print["validating LongName map"];
 
@@ -76,60 +78,6 @@ validateLongNameMap[m_] := (
     Quit[1]
   ];
 )
-
-
-
-(*
-specify the long names that are not in earlier, supported versions
-
-e.g., Generate.wl may be run in a 11.0 kernel, but the target may be a 12.1 kernel
-So we want to recognize characters that are not in 11.0 while building with 11.0
-
-*)
-(*
-added in 11.1:
-TwoWayRule
-*)
-longNameToCharacterCode["TwoWayRule"] = 16^^f120
-(*
-added in 11.2:
-Limit
-MaxLimit
-MinLimit
-*)
-longNameToCharacterCode["Limit"] = 16^^f438
-longNameToCharacterCode["MaxLimit"] = 16^^f439
-longNameToCharacterCode["MinLimit"] = 16^^f43a
-(*
-added in 12.0:
-VectorGreater
-VectorGreaterEqual
-VectorLess
-VectorLessEqual
-*)
-longNameToCharacterCode["VectorGreater"] = 16^^f434
-longNameToCharacterCode["VectorGreaterEqual"] = 16^^f435
-longNameToCharacterCode["VectorLess"] = 16^^f436
-longNameToCharacterCode["VectorLessEqual"] = 16^^f437
-(*
-added in 12.1:
-CubeRoot
-*)
-longNameToCharacterCode["CubeRoot"] = 16^^221b
-
-(*
-specify the long names that are unsupported
-*)
-longNameToCharacterCode["COMPATIBILITYKanjiSpace"] = 16^^3000
-longNameToCharacterCode["COMPATIBILITYNoBreak"] = 16^^f3a2
-longNameToCharacterCode["NumberComma"] = 16^^f7fc
-longNameToCharacterCode["InlinePart"] = 16^^f51e
-
-(*
-everything else
-*)
-longNameToCharacterCode[longName_String] :=
-  ToCharacterCode[ToExpression["\"\\[" <> longName <> "]\""]][[1]]
 
 
 
@@ -217,17 +165,17 @@ importedLongNames = Get[FileNameJoin[{dataDir, "LongNames.wl"}]]
 
 validateLongNameMap[importedLongNames]
 
-importedPunctuationLongNames = Keys[Select[importedLongNames, # === PunctuationCharacter &]]
+importedPunctuationLongNames = Keys[Select[importedLongNames, #[[1]] === PunctuationCharacter &]]
 
-importedWhitespaceLongNames = Keys[Select[importedLongNames, # === WhitespaceCharacter &]]
+importedWhitespaceLongNames = Keys[Select[importedLongNames, #[[1]] === WhitespaceCharacter &]]
 
-importedNewlineLongNames = Keys[Select[importedLongNames, # === NewlineCharacter &]]
+importedNewlineLongNames = Keys[Select[importedLongNames, #[[1]] === NewlineCharacter &]]
 
-importedUninterpretableLongNames = Keys[Select[importedLongNames, # === UninterpretableCharacter &]]
+importedUninterpretableLongNames = Keys[Select[importedLongNames, #[[1]] === UninterpretableCharacter &]]
 
-importedUnsupportedLongNames = Keys[Select[importedLongNames, # === UnsupportedCharacter &]]
+importedUnsupportedLongNames = Keys[Select[importedLongNames, #[[1]] === UnsupportedCharacter &]]
 
-importedRawLongNames = Keys[Select[importedLongNames, # === RawCharacter &]]
+importedRawLongNames = Keys[Select[importedLongNames, #[[1]] === RawCharacter &]]
 
 importedPrecedenceSource = Get[FileNameJoin[{dataDir, "Precedence.wl"}]]
 
