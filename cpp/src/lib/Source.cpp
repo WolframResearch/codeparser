@@ -608,7 +608,9 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
         default:
             if (val > 0xffff) {
                 
-                if (CodePointToLongNameMap.find(val) != CodePointToLongNameMap.end()) {
+                auto it = std::lower_bound(CodePointToLongNameMap_points.begin(), CodePointToLongNameMap_points.end(), val);
+                
+                if (it != CodePointToLongNameMap_points.end() && *it == val) {
                     //
                     // Use LongName if available
                     //
@@ -620,7 +622,9 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
                 break;
             } else if (val > 0xff) {
                 
-                if (CodePointToLongNameMap.find(val) != CodePointToLongNameMap.end()) {
+                auto it = std::lower_bound(CodePointToLongNameMap_points.begin(), CodePointToLongNameMap_points.end(), val);
+                
+                if (it != CodePointToLongNameMap_points.end() && *it == val) {
                     //
                     // Use LongName if available
                     //
@@ -632,7 +636,9 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
                 break;
             } else if (val > 0x7f) {
                 
-                if (CodePointToLongNameMap.find(val) != CodePointToLongNameMap.end()) {
+                auto it = std::lower_bound(CodePointToLongNameMap_points.begin(), CodePointToLongNameMap_points.end(), val);
+                
+                if (it != CodePointToLongNameMap_points.end() && *it == val) {
                     //
                     // Use LongName if available
                     //

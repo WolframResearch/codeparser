@@ -372,8 +372,8 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
     auto longNameBufAndLen = BufferAndLength(longNameStartBuf, longNameEndBuf - longNameStartBuf);
     auto longNameStr = std::string(reinterpret_cast<const char *>(longNameBufAndLen.buffer), longNameBufAndLen.length());
     
-    auto it = LongNameToCodePointMap.find(longNameStr);
-    auto found = (it != LongNameToCodePointMap.end());
+    auto it = std::lower_bound(LongNameToCodePointMap_names.begin(), LongNameToCodePointMap_names.end(), longNameStr);
+    auto found = (it != LongNameToCodePointMap_names.end() && *it == longNameStr);
     if (!found || ((policy & ENABLE_UNLIKELY_ESCAPE_CHECKING) == ENABLE_UNLIKELY_ESCAPE_CHECKING)) {
         
         //
@@ -443,7 +443,8 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
     TheByteBuffer->buffer = TheByteDecoder->lastBuf;
     TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
     
-    auto point = it->second;
+    auto idx = it - LongNameToCodePointMap_names.begin();
+    auto point = LongNameToCodePointMap_points[idx];
     
 #if !NISSUES
     if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
