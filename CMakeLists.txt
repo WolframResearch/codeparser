@@ -50,7 +50,7 @@ set(GENERATED_WL_PACLET_SOURCES
 #
 # Used during the build process
 #
-set(WL_GENERATE_SOURCES
+set(WL_GENERATE_SOURCES_SOURCES
 	${PROJECT_SOURCE_DIR}/CodeParser/Generate/GenerateSources.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Generate/LongNames.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Generate/ParseletRegistration.wl
@@ -204,7 +204,7 @@ add_custom_command(
 		${GENERATED_SOURCES}
 	DEPENDS
 		${WL_DATA_SOURCES}
-		${WL_GENERATE_SOURCES}
+		${WL_GENERATE_SOURCES_SOURCES}
 		${PROJECT_SOURCE_DIR}/${PACLET}/Generate/GenerateSources.wl
 		${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
@@ -535,7 +535,8 @@ list(APPEND PACLET_SOURCES
 endif(BUILD_DOCS)
 
 add_custom_target(paclet
-	DEPENDS ${PROJECT_BINARY_DIR}/paclet/${PACLET}-${PACLET_VERSION}.paclet
+	DEPENDS
+		${PROJECT_BINARY_DIR}/paclet/${PACLET}-${PACLET_VERSION}.paclet
 )
 
 #

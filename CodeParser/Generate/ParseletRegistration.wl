@@ -101,6 +101,16 @@ stringify next token (as a file]
 PrefixOperatorToParselet[Token`LessLess] = LessLessParselet[]
 
 
+(*
+You might think that it makes sense to have the default case be an ErrorNode, but it really should just be a LeafNode
+
+For example, with the input  +  the output is
+MakePrefixNode[Plus, List[
+  MakeLeafNode[Token`Plus, +, 1112],
+  MakeErrorNode[Token`Error`ExpectedOperand, , 1212], ], 1112]
+
+The ErrorNode is handled correctly
+*)
 PrefixOperatorToParselet[_] = LeafParselet[]
 
 
@@ -691,13 +701,13 @@ LeafParselet *reusingLeafParselet = new LeafParselet();
 
 std::array<PrefixParseletPtr, TOKEN_COUNT.value()> prefixParselets {{"} ~Join~
 
-(Row[{"  ", formatPrefix[PrefixOperatorToParselet[#]], ", "}]& /@ tokensSansCount) ~Join~
+(Row[{"  ", formatPrefix[PrefixOperatorToParselet[#]], ", ", "// ", ToString[#]}]& /@ tokensSansCount) ~Join~
 
 {"}};
 
 std::array<InfixParseletPtr, TOKEN_COUNT.value()> infixParselets {{"} ~Join~
 
-(Row[{"  ", formatInfix[InfixOperatorToParselet[#]], ", "}]& /@ tokensSansCount) ~Join~
+(Row[{"  ", formatInfix[InfixOperatorToParselet[#]], ", ", "// ", ToString[#]}]& /@ tokensSansCount) ~Join~
 
 {"}};
 

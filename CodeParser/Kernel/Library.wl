@@ -107,6 +107,16 @@ Module[{res},
 	If CodeParser was built with an earlier version, then expr lib may not exist
 	*)
 	If[FileExistsQ[$exprLib],
+
+		If[$VersionNumber < 12.1,
+			(*
+			Built with 12.1+, and being used in an earlier version
+
+			NOT SUPPORTED!
+			*)
+			Throw[Failure["CodeParserVersion", <| "Message" -> "CodeParser was built with a newer version and is not backwards-compatible." |>]]
+		];
+
 		LibraryLoad[$exprLib];
 	];
 
@@ -164,6 +174,15 @@ Module[{location, libraryResources},
 	If CodeParser was built with an earlier version, then expr lib may not exist
 	*)
 	If[FileExistsQ[$exprLib],
+
+		If[$VersionNumber < 12.1,
+			(*
+			Built with 12.1+, and being used in an earlier version
+
+			NOT SUPPORTED!
+			*)
+			Throw[Failure["CodeParserVersion", <| "Message" -> "CodeParser was built with a newer version and is not backwards-compatible." |>]]
+		];
 
 		$exprCompiledLib = CompiledLibrary`CompiledLibrary[$exprLib];
 

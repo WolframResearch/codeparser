@@ -73,6 +73,7 @@ Print["Work around unreported Sort bug1: ", $WorkaroundUnreportedSortBug1];
 
 bubbleLexSort[listIn_] :=
 Module[{list, len, tmp},
+  Print["bubbleLexSort... \[WatchIcon]"];
   list = listIn;
   len = Length[list];
   Do[
