@@ -72,8 +72,16 @@ Do not return the previous children, because they are uselss any way.
 
 But return the opener to make ToString stuff easier
 *)
-reparseMissingCloserNode[GroupMissingCloserNeedsReparseNode[tag_, children_, dataIn_], bytes_List] :=
-Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str, leaves},
+
+Options[reparseMissingCloserNode] = {
+  "SourceConvention" -> "LineColumn"
+}
+
+reparseMissingCloserNode[GroupMissingCloserNeedsReparseNode[tag_, children_, dataIn_], bytes_List, OptionsPattern[]] :=
+Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str, leaves, convention, test,
+  lineLens, takeSpecsOfLines, poss},
+
+  convention = OptionValue["SourceConvention"];
 
   str = SafeString[bytes];
 
@@ -81,11 +89,27 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
 
   data = dataIn;
   src = data[Source];
-  (*
-  lines of the node
-  *)
-  lines = lines[[src[[1, 1]];;src[[2, 1]] ]];
-  
+
+  Switch[convention,
+    "LineColumn",
+      (*
+      lines of the node
+      *)
+      lines = lines[[src[[1, 1]];;src[[2, 1]] ]];
+    ,
+    "SourceCharacterIndex",
+      
+      lineLens = StringLength /@ lines;
+
+      takeSpecsOfLines = {#[[1]] + 1, #[[2]]}& /@ Partition[FoldList[Plus, 0, lineLens + 1], 2, 1];
+
+      test = (IntervalIntersection[Interval[#], Interval[src]] =!= Interval[])&;
+
+      poss = Position[takeSpecsOfLines, _?test, {1}, Heads -> False];
+
+      lines = Extract[lines, poss];
+  ];
+
   chunks = Split[lines, !StringMatchQ[#2, chunkPat]&];
   
   firstChunk = chunks[[1]];
@@ -97,17 +121,34 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
     lastGoodLine = firstChunk[[lastGoodLineIndex]];
   ];
 
-  betterSrc = { src[[1]], { src[[1, 1]] + lastGoodLineIndex - 1, StringLength[lastGoodLine]+1 } };
-
-  data[Source] = betterSrc;
-
-  srcMemberFunc = SourceMemberQ[{ betterSrc } ];
-
   (*
-  Flatten out children, because there may be parsing errors from missing bracket, and
-  we do not want to propagate
+  Use original src Start, but readjust src End to be the EndOfLine of the last good line of the chunk
   *)
-  leaves = Cases[children, LeafNode[_, _, data_ /; srcMemberFunc[data[Source]]], Infinity];
+  Switch[convention,
+    "LineColumn",
+      betterSrc = { src[[1]], { src[[1, 1]] + lastGoodLineIndex - 1, StringLength[lastGoodLine]+1 } };
+
+      data[Source] = betterSrc;
+
+      srcMemberFunc = SourceMemberQ[{ betterSrc } ];
+
+      (*
+      Flatten out children, because there may be parsing errors from missing bracket, and
+      we do not want to propagate
+      *)
+      leaves = Cases[children, LeafNode[_, _, data_ /; srcMemberFunc[data[Source]]], Infinity];
+    ,
+    "SourceCharacterIndex",
+      betterSrc = { src[[1]], takeSpecsOfLines[[poss[[1, 1]] + lastGoodLineIndex - 1, 2]] };
+
+      data[Source] = betterSrc;
+
+      (*
+      Flatten out children, because there may be parsing errors from missing bracket, and
+      we do not want to propagate
+      *)
+      leaves = Cases[children, LeafNode[_, _, data_ /; IntervalMemberQ[Interval[src], Interval[data[Source]]]], Infinity];
+  ];
 
   GroupMissingCloserNode[tag, leaves, data]
 ]
@@ -118,8 +159,16 @@ return: better ErrorNode
 
 Do not return the previous children, because they are uselss any way.
 *)
-reparseUnterminatedCommentErrorNode[ErrorNode[Token`Error`UnterminatedComment, _, dataIn_], bytes_List] :=
-Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str},
+
+Options[reparseUnterminatedCommentErrorNode] = {
+  "SourceConvention" -> "LineColumn"
+}
+
+reparseUnterminatedCommentErrorNode[ErrorNode[Token`Error`UnterminatedComment, _, dataIn_], bytes_List, OptionsPattern[]] :=
+Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str, convention, test,
+  lineLens, takeSpecsOfLines, poss},
+
+  convention = OptionValue["SourceConvention"];
 
   str = SafeString[bytes];
 
@@ -127,10 +176,26 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
 
   data = dataIn;
   src = data[Source];
-  (*
-  lines of the node
-  *)
-  lines = lines[[src[[1, 1]];;src[[2, 1]] ]];
+  
+  Switch[convention,
+    "LineColumn",
+      (*
+      lines of the node
+      *)
+      lines = lines[[src[[1, 1]];;src[[2, 1]] ]];
+    ,
+    "SourceCharacterIndex",
+      
+      lineLens = StringLength /@ lines;
+
+      takeSpecsOfLines = {#[[1]] + 1, #[[2]]}& /@ Partition[FoldList[Plus, 0, lineLens + 1], 2, 1];
+
+      test = (IntervalIntersection[Interval[#], Interval[src]] =!= Interval[])&;
+
+      poss = Position[takeSpecsOfLines, _?test, {1}, Heads -> False];
+
+      lines = Extract[lines, poss];
+  ];
   
   chunks = Split[lines, !StringMatchQ[#2, chunkPat]&];
   
@@ -143,9 +208,20 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
     lastGoodLine = firstChunk[[lastGoodLineIndex]];
   ];
 
-  betterSrc = { src[[1]], { src[[1, 1]] + lastGoodLineIndex - 1, StringLength[lastGoodLine]+1 } };
+  (*
+  Use original src Start, but readjust src End to be the EndOfLine of the last good line of the chunk
+  *)
+  Switch[convention,
+    "LineColumn",
+      betterSrc = { src[[1]], { src[[1, 1]] + lastGoodLineIndex - 1, StringLength[lastGoodLine]+1 } };
 
-  data[Source] = betterSrc;
+      data[Source] = betterSrc;
+    ,
+    "SourceCharacterIndex",
+      betterSrc = { src[[1]], takeSpecsOfLines[[poss[[1, 1]] + lastGoodLineIndex - 1, 2]] };
+
+      data[Source] = betterSrc;
+  ];
 
   ErrorNode[Token`Error`UnterminatedComment, "", data]
 ]
