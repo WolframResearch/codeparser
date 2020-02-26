@@ -25,16 +25,37 @@ Quit[1]
 
 
 
+(*
+Define lexical ordering to use for generated C++ strings
 
+The default Wolfram Language ordering is not the same as C++ lexical ordering
+
+For example, given this list: {"Or", "OSlash", "OTilde", "OverBrace"}
+
+The Wolfram Language ordering is:
+{"Or", "OSlash", "OTilde", "OverBrace"}
+
+while the C++ lexical ordering is
+{"OSlash", "OTilde", "Or", "OverBrace"}
+
+The differences are:
+Wolfram Language ordering DOES consider length of string
+C++ lexical ordering does NOT consider length of string
+
+Wolfram Language ordering for letters is {a, A, b, B, c, C, ...} (NOT ASCII ordering)
+C++ lexical ordering for letters is {A, B, C, ..., a, b, c, ...} (ASCII ordering)
+
+Punctuation and digits are also ordered differently.
+
+So make sure to call ToCharacterCode to get ASCII codes and
+also compare respective characters BEFORE considering string length
+*)
 lexOrdering["", ""] := 0
 lexOrdering["", b_] := 1
 lexOrdering[a_, ""] := -1
 lexOrdering[a_, b_] :=
   Order[ToCharacterCode[StringTake[a, 1]], ToCharacterCode[StringTake[b, 1]]] /. 
     0 :> lexOrdering[StringDrop[a, 1], StringDrop[b, 1]]
-
-
-checkUnreportedSortBug1[]
 
 (*
 
@@ -94,6 +115,10 @@ Module[{list, len, tmp},
 If[$WorkaroundUnreportedSortBug1,
   lexSort = bubbleLexSort
   ,
+  (*
+  TODO: v12.0 introduced SortBy[list, f, p]
+  when targting v12.0, then can use SortBy[list, ToCharacterCode, lexOrderingForLists]
+  *)
   lexSort = Sort[#, lexOrdering]&
 ]
 
