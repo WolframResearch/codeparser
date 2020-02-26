@@ -29,16 +29,29 @@ endif()
 macro(CheckWolframKernel)
 	
 	#
+	# First run a canary test to test bad paths, license issues, unexplained weirdness, etc.
+	#
+	# Related bugs: 349779
+	# Related issues: RE-514227
+	#
+
+	message(STATUS "Running canary kernel test...")
+
+	#
 	# Canary test
 	#
 	string(TIMESTAMP CANARY_BEFORE "%s")
 	execute_process(
 		COMMAND
-			${WOLFRAMKERNEL} -noinit -noprompt -nopaclet -runfirst Exit[]
+			${WOLFRAMKERNEL} -noinit -noprompt -nopaclet -runfirst Print[OutputForm[\"canary\ kernel\ process\ id:\ \"],\ \$ProcessID]\;Exit[]
 		WORKING_DIRECTORY
 			${PROJECT_SOURCE_DIR}
 		TIMEOUT
-			300
+			#
+			# Evidence suggests that when bug 349779 strikes, the kernel does exit after 30 minutes
+			# So double that and cross fingers.
+			#
+			3600
 		RESULT_VARIABLE
 			CANARY_RESULT
 	)
@@ -46,7 +59,7 @@ macro(CheckWolframKernel)
 
 	math(EXPR CANARY_TIME "${CANARY_AFTER} - ${CANARY_BEFORE}")
 
-	message(STATUS "Canary test took ${CANARY_TIME} seconds")
+	message(STATUS "Canary kernel test took ${CANARY_TIME} seconds")
 
 	if(NOT ${CANARY_RESULT} EQUAL "0")
 		message(WARNING "Bad exit code from Canary script: ${CANARY_RESULT}; Continuing")
