@@ -16,7 +16,12 @@ Token`Real -> Next,
 
 (* trivia *)
 Token`Comment -> Next,
-Token`Newline -> Next,
+(*
+Token`Buffer1 exists to ensure Token`ToplevelNewline has an enum value with LSB of 0
+*)
+Token`Buffer1 -> Next,
+Token`ToplevelNewline -> Next,
+Token`InternalNewline -> Next,
 Token`Whitespace -> Next,
 Token`LineContinuation -> Next,
 

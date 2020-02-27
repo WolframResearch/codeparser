@@ -23,12 +23,12 @@ Test[
 	cst
 	,
 	ContainerNode[File, {
-		LeafNode[Token`Newline, "\n", <|Source -> {{1, 1}, {2, 1}}|>],
+		LeafNode[Token`ToplevelNewline, "\n", <|Source -> {{1, 1}, {2, 1}}|>],
 		InfixNode[Plus, {
 			LeafNode[Integer, "1", <|Source -> {{2, 1}, {2, 2}}|>],
 			LeafNode[Token`Plus, "+", <|Source -> {{2, 2}, {2, 3}}|>],
     		LeafNode[Integer, "1", <|Source -> {{2, 3}, {2, 4}}|>] }, <|Source -> {{2, 1}, {2, 4}}|>],
-    	LeafNode[Token`Newline, "\n", <|Source -> {{2, 4}, {3, 1}}|>] }, <|Source -> {{1, 1}, {3, 1}}|>]
+    	LeafNode[Token`ToplevelNewline, "\n", <|Source -> {{2, 4}, {3, 1}}|>] }, <|Source -> {{1, 1}, {3, 1}}|>]
 	,
 	TestID->"File-20181230-J0G3I8"
 ]
@@ -60,7 +60,7 @@ TestMatch[
 	,
 	FileNode[File, {
 		LeafNode[Slot, "#something", <|Source -> {{1, 1}, {1, 10}}|>],
-		LeafNode[Token`Newline, "\n", <|Source -> {{2, 0}, {2, 0}}|>] },
+		LeafNode[Token`ToplevelNewline, "\n", <|Source -> {{2, 0}, {2, 0}}|>] },
 		KeyValuePattern[{
 			Source -> {{1, 1}, {2, 0}},
 			SyntaxIssues -> {SyntaxIssue["Shebang", "# on first line looks like #! shebang", "Remark", <|Source -> {{1, 1}, {1, 1}}|>]} }] ]
@@ -77,8 +77,8 @@ cst = CodeConcreteParse[File[carriagereturn]]
 TestMatch[
 	cst
 	,
-	ContainerNode[File, {LeafNode[Token`Newline, "\r", <|Source -> {{1, 1}, {2, 1}}|>],
-					LeafNode[Token`Newline, "\r", <|Source -> {{2, 1}, {3, 1}}|>],
+	ContainerNode[File, {LeafNode[Token`ToplevelNewline, "\r", <|Source -> {{1, 1}, {2, 1}}|>],
+					LeafNode[Token`ToplevelNewline, "\r", <|Source -> {{2, 1}, {3, 1}}|>],
 					LeafNode[Symbol, "A", <|Source -> {{3, 1}, {3, 2}}|>]},
 										<| SyntaxIssues->{
 											FormatIssue["UnexpectedCarriageReturn", _, _, _],
@@ -144,11 +144,11 @@ Test[
 	CodeTokenize[File[sample]]
 	,
 	{
-		LeafNode[Token`Newline, "\n", <|Source -> {{1, 1}, {2, 1}}|>], 
+		LeafNode[Token`ToplevelNewline, "\n", <|Source -> {{1, 1}, {2, 1}}|>], 
 		LeafNode[Integer, "1", <|Source -> {{2, 1}, {2, 2}}|>], 
 		LeafNode[Token`Plus, "+", <|Source -> {{2, 2}, {2, 3}}|>], 
 		LeafNode[Integer, "1", <|Source -> {{2, 3}, {2, 4}}|>], 
-		LeafNode[Token`Newline, "\n", <|Source -> {{2, 4}, {3, 1}}|>]}
+		LeafNode[Token`ToplevelNewline, "\n", <|Source -> {{2, 4}, {3, 1}}|>]}
 	,
 	TestID->"File-20181230-Q3C4N0"
 ]
@@ -217,12 +217,12 @@ TestMatch[
 	cst
 	,
 	ContainerNode[File, {
-		LeafNode[Token`Newline, "\n", <|Source -> {{1, 1}, {2, 1}}|>],
+		LeafNode[Token`ToplevelNewline, "\n", <|Source -> {{1, 1}, {2, 1}}|>],
 		LeafNode[String, "\"data\\\\\n\"", <|Source -> {{2, 1}, {3, 2}}|>],
-		LeafNode[Token`Newline, "\n", <|Source -> {{3, 2}, {4, 1}}|>],
-		LeafNode[Token`Newline, "\n", <|Source -> {{4, 1}, {5, 1}}|>],
+		LeafNode[Token`ToplevelNewline, "\n", <|Source -> {{3, 2}, {4, 1}}|>],
+		LeafNode[Token`ToplevelNewline, "\n", <|Source -> {{4, 1}, {5, 1}}|>],
 		LeafNode[Symbol, "x", <|Source -> {{5, 1}, {5, 2}}|>],
-		LeafNode[Token`Newline, "\n", <|Source -> {{5, 2}, {6, 1}}|>]}, <|Source -> {{1, 1}, {6, 1}}|>]
+		LeafNode[Token`ToplevelNewline, "\n", <|Source -> {{5, 2}, {6, 1}}|>]}, <|Source -> {{1, 1}, {6, 1}}|>]
 	,
 	TestID->"File-20190804-K7V2D8"
 ]
@@ -243,7 +243,7 @@ TestMatch[
 	ContainerNode[File, {
 		GroupNode[List, {
 			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
-			LeafNode[Token`Newline, "\n", <|Source -> {{1, 2}, {2, 1}}|>],
+			LeafNode[Token`InternalNewline, "\n", <|Source -> {{1, 2}, {2, 1}}|>],
 			LeafNode[Whitespace, "\t", <|Source -> {{2, 1}, {2, 2}}|>],
 			LeafNode[Integer, "1", <|Source -> {{2, 2}, {2, 3}}|>],
 			LeafNode[Token`LineContinuation, "\\\n", <|Source -> {{2, 3}, {3, 1}}|>],

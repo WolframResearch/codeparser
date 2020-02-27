@@ -48,7 +48,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
     
     LeafSeq ArgsTest1;
 
-    auto Tok = TheParser->currentToken();
+    auto Tok = TheParser->currentToken(Ctxt);
     Tok = TheParser->eatAndPreserveToplevelNewlines(Tok, Ctxt, ArgsTest1);
 
     if (!Tok.Tok.isPossibleBeginningOfExpression()) {
@@ -78,7 +78,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
         
         LeafSeq ArgsTest2;
         
-        auto Tok = TheParser->currentToken();
+        auto Tok = TheParser->currentToken(Ctxt);
         Tok = TheParser->eatAndPreserveToplevelNewlines(Tok, Ctxt, ArgsTest2);
         
         if (!Tok.Tok.isPossibleBeginningOfExpression()) {
@@ -167,7 +167,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
     
     TheParser->nextToken(TokIn);
     
-    auto SecondTok = TheParser->currentToken();
+    auto SecondTok = TheParser->currentToken(Ctxt);
     
     LeafSeq ArgsTest1;
     
@@ -210,7 +210,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
         
         LeafSeq ArgsTest2;
         
-        auto ThirdTok = TheParser->currentToken();
+        auto ThirdTok = TheParser->currentToken(Ctxt);
         ThirdTok = TheParser->eatAndPreserveToplevelNewlines(ThirdTok, Ctxt, ArgsTest2);
         
         if (ThirdTok.Tok != TOKEN_SEMISEMI) {
@@ -244,7 +244,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
         
         TheParser->nextToken(ThirdTok);
         
-        auto FourthTok = TheParser->currentToken();
+        auto FourthTok = TheParser->currentToken(Ctxt);
         FourthTok = TheParser->eatAndPreserveToplevelNewlines(FourthTok, Ctxt, ArgsTest3);
         
         if (!FourthTok.Tok.isPossibleBeginningOfExpression()
@@ -320,7 +320,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
     
     TheParser->nextToken(SecondTok);
     
-    auto ThirdTok = TheParser->currentToken();
+    auto ThirdTok = TheParser->currentToken(Ctxt);
     ThirdTok = TheParser->eatAndPreserveToplevelNewlines(ThirdTok, Ctxt, ArgsTest2);
     
     if (!ThirdTok.Tok.isPossibleBeginningOfExpression()

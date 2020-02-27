@@ -24,7 +24,8 @@ Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : BufLen(BufLen)
             // Both \n and \r\n newlines have a size of 1
             // And other newlines like \[IndentingNewLine] have size > 1
             //
-        case TOKEN_NEWLINE.value():
+        case TOKEN_TOPLEVELNEWLINE.value():
+        case TOKEN_INTERNALNEWLINE.value():
             break;
         default:
             

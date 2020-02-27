@@ -96,9 +96,9 @@ public:
     void nextToken_stringifySymbol();
     void nextToken_stringifyFile();
     
-    Token nextToken0();
+    Token nextToken0(ParserContext Ctxt);
     
-    Token currentToken() const;
+    Token currentToken(ParserContext Ctxt) const;
 
 #if STARTOFLINE
     Token currentToken_stringifyLine() const;

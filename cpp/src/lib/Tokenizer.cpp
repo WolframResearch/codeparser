@@ -66,7 +66,7 @@ Token Tokenizer::nextToken0(NextCharacterPolicy policy) {
         case '\t':
             return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         case '\n': case '\r':
-            return Token(TOKEN_NEWLINE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+            return Token(TOKEN_TOPLEVELNEWLINE.t() | (policy & INTERNAL), getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         case '\v': case '\f':
             return handleStrangeWhitespace(tokenStartBuf, tokenStartLoc, c, policy);
         case ' ':
@@ -169,7 +169,7 @@ Token Tokenizer::nextToken0(NextCharacterPolicy policy) {
                 
             } else if (c.isMBNewline()) {
                 
-                return Token(TOKEN_NEWLINE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                return Token(TOKEN_TOPLEVELNEWLINE.t() | (policy & INTERNAL), getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                 
             } else if (c.isMBPunctuation()) {
                 
@@ -302,7 +302,7 @@ Token Tokenizer::nextToken0_stringifyFile() {
         // Do not use TOKEN_ERROR_EMPTYSTRING here
         //
         
-        return Token(TOKEN_NEWLINE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        return Token(TOKEN_TOPLEVELNEWLINE.t() | (policy & INTERNAL), getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         
     } else if (c.isNewline()) {
         
@@ -317,7 +317,7 @@ Token Tokenizer::nextToken0_stringifyFile() {
         // Do not use TOKEN_ERROR_EMPTYSTRING here
         //
         
-        return Token(TOKEN_NEWLINE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        return Token(TOKEN_TOPLEVELNEWLINE.t() | (policy & INTERNAL), getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
     }
     
     //
@@ -3259,7 +3259,7 @@ inline Token Tokenizer::handleMBStrangeNewline(Buffer tokenStartBuf, SourceLocat
     Issues.push_back(std::move(I));
 #endif // !NISSUES
     
-    return Token(TOKEN_NEWLINE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+    return Token(TOKEN_TOPLEVELNEWLINE.t() | (policy & INTERNAL), getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
 }
 
 inline Token Tokenizer::handleMBStrangeWhitespace(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextCharacterPolicy policy) {

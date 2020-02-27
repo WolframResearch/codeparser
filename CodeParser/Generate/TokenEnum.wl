@@ -70,7 +70,8 @@ isPossibleBeginningOfExpression[Token`EndOfFile] = False
 Trivia
 *)
 isPossibleBeginningOfExpression[Token`Comment] = False
-isPossibleBeginningOfExpression[Token`Newline] = False
+isPossibleBeginningOfExpression[Token`ToplevelNewline] = False
+isPossibleBeginningOfExpression[Token`InternalNewline] = False
 isPossibleBeginningOfExpression[Token`Whitespace] = False
 isPossibleBeginningOfExpression[Token`LineContinuation] = False
 
@@ -494,6 +495,7 @@ isPossibleBeginningOfExpression[Token`GreaterGreaterGreater] = False
 
 
 
+isPossibleBeginningOfExpression[Token`Buffer1] = False
 isPossibleBeginningOfExpression[Token`Count] = False
 
 (*
@@ -552,7 +554,8 @@ isError[_] = False
 
 
 isTrivia[Token`Comment] = True
-isTrivia[Token`Newline] = True
+isTrivia[Token`ToplevelNewline] = True
+isTrivia[Token`InternalNewline] = True
 isTrivia[Token`Whitespace] = True
 isTrivia[Token`LineContinuation] = True
 
@@ -858,7 +861,8 @@ isEmpty[Token`Fake`ImplicitOne] = True
 isEmpty[Token`Fake`ImplicitAll] = True
 isEmpty[Token`Error`ExpectedOperand] = True
 (*
-isEmpty[Token`Newline] = True
+isEmpty[Token`ToplevelNewline] = True
+isEmpty[Token`InternalNewline] = True
 *)
 
 isEmpty[_] = False
@@ -977,6 +981,10 @@ struct TokenEnum {
     return (T & 0x1ff);
   }
 
+  constexpr uint16_t t() const {
+    return T;
+  }
+
   constexpr bool isPossibleBeginningOfExpression() const {
       return static_cast<bool>((T & 0xe00) == 0x200);
   }
@@ -1050,6 +1058,9 @@ tokenCPPSource = {
 #include \"Token.h\"
 
 #include <cassert>
+
+static_assert(TOKEN_TOPLEVELNEWLINE.value() % 2 == 0, \"Check your assumptions\");
+static_assert(TOKEN_INTERNALNEWLINE.value() % 2 == 1, \"Check your assumptions\");
 "} ~Join~
 {"SymbolPtr& TokenToSymbol(TokenEnum T) {"} ~Join~
 {"switch (T.value()) {"} ~Join~

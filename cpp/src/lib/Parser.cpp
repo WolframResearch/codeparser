@@ -103,7 +103,7 @@ void Parser::nextToken_stringifyFile() {
     TheTokenizer->nextToken_stringifyFile();
 }
 
-Token Parser::nextToken0() {
+Token Parser::nextToken0(ParserContext Ctxt) {
     
     //
     // handle the queue before anything else
@@ -120,10 +120,10 @@ Token Parser::nextToken0() {
         return Tok;
     }
     
-    return TheTokenizer->nextToken0(TOPLEVEL);
+    return TheTokenizer->nextToken0(TOPLEVEL | Ctxt.InsideGroup);
 }
 
-Token Parser::currentToken() const {
+Token Parser::currentToken(ParserContext Ctxt) const {
     
     if (!tokenQueue.empty()) {
         
@@ -132,7 +132,7 @@ Token Parser::currentToken() const {
         return Tok;
     }
     
-    return TheTokenizer->currentToken(TOPLEVEL);
+    return TheTokenizer->currentToken(TOPLEVEL | Ctxt.InsideGroup);
 }
 
 
@@ -210,8 +210,7 @@ Precedence Parser::getPrefixTokenPrecedence(Token& TokIn, ParserContext Ctxt) co
     
     assert(TokIn.Tok != TOKEN_UNKNOWN);
     assert(TokIn.Tok != TOKEN_WHITESPACE);
-    // allow top-level newlines
-    assert(TokIn.Tok != TOKEN_NEWLINE || !Ctxt.InsideGroup);
+    assert(TokIn.Tok != TOKEN_INTERNALNEWLINE);
     assert(TokIn.Tok != TOKEN_COMMENT);
     assert(TokIn.Tok != TOKEN_LINECONTINUATION);
     
@@ -256,8 +255,7 @@ Precedence Parser::getInfixTokenPrecedence(Token& TokIn, ParserContext Ctxt, boo
     
     assert(TokIn.Tok != TOKEN_UNKNOWN);
     assert(TokIn.Tok != TOKEN_WHITESPACE);
-    // allow top-level newlines
-    assert(TokIn.Tok != TOKEN_NEWLINE || !Ctxt.InsideGroup);
+    assert(TokIn.Tok != TOKEN_INTERNALNEWLINE);
     assert(TokIn.Tok != TOKEN_COMMENT);
     assert(TokIn.Tok != TOKEN_LINECONTINUATION);
     
@@ -315,7 +313,7 @@ Precedence Parser::getInfixTokenPrecedence(Token& TokIn, ParserContext Ctxt, boo
     //
     // Do not do Implicit Times across lines
     //
-    if (TokIn.Tok == TOKEN_NEWLINE && !Ctxt.InsideGroup) {
+    if (TokIn.Tok == TOKEN_TOPLEVELNEWLINE) {
         
         *implicitTimes = false;
         
@@ -365,7 +363,7 @@ NodePtr Parser::parse(Token token, ParserContext Ctxt) {
         
         LeafSeq ArgsTest;
         
-        auto token = currentToken();
+        auto token = currentToken(Ctxt);
         token = Parser::eatAndPreserveToplevelNewlines(token, Ctxt, ArgsTest);
         
         bool implicitTimes;
@@ -545,7 +543,7 @@ Token Parser::eatAll(Token T, ParserContext Ctxt, LeafSeq& Args) {
         
         nextToken(T);
         
-        T = currentToken();
+        T = currentToken(Ctxt);
     }
     
     return T;
@@ -578,16 +576,14 @@ Token Parser::eatAndPreserveToplevelNewlines(Token T, ParserContext Ctxt, LeafSe
         //
         
         switch (T.Tok.value()) {
-            case TOKEN_NEWLINE.value(): {
+            case TOKEN_TOPLEVELNEWLINE.value(): {
                 
-                if (!Ctxt.InsideGroup) {
-                    
-                    return T;
-                }
+                return T;
             }
             //
             // Fall through
             //
+            case TOKEN_INTERNALNEWLINE.value():
             case TOKEN_WHITESPACE.value():
             case TOKEN_COMMENT.value():
             case TOKEN_LINECONTINUATION.value(): {
@@ -596,7 +592,7 @@ Token Parser::eatAndPreserveToplevelNewlines(Token T, ParserContext Ctxt, LeafSe
                 
                 nextToken(T);
                 
-                T = currentToken();
+                T = currentToken(Ctxt);
             }
                 break;
             default:
@@ -614,16 +610,14 @@ Token Parser::eatAndPreserveToplevelNewlines_stringifyFile(Token T, ParserContex
         //
         
         switch (T.Tok.value()) {
-            case TOKEN_NEWLINE.value(): {
-                
-                if (!Ctxt.InsideGroup) {
+            case TOKEN_TOPLEVELNEWLINE.value(): {
                     
-                    return T;
-                }
+                return T;
             }
             //
             // Fall through
             //
+            case TOKEN_INTERNALNEWLINE.value():
             case TOKEN_WHITESPACE.value():
             case TOKEN_COMMENT.value():
             case TOKEN_LINECONTINUATION.value(): {

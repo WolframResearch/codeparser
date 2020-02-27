@@ -20,7 +20,7 @@ NodePtr SymbolParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     TheParser->nextToken(TokIn);
     
-    auto Tok = TheParser->currentToken();
+    auto Tok = TheParser->currentToken(Ctxt);
     
     //
     // if we are here, then we know that Sym could bind to _
@@ -106,7 +106,7 @@ NodePtr PrefixOperatorParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     LeafSeq ArgsTest;
     
-    auto Tok = TheParser->currentToken();
+    auto Tok = TheParser->currentToken(Ctxt);
     Tok = TheParser->eatAll(Tok, Ctxt, ArgsTest);
     
     auto wasCloser = false;
@@ -139,7 +139,7 @@ NodePtr BinaryOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext C
     
     LeafSeq ArgsTest;
     
-    auto Tok = TheParser->currentToken();
+    auto Tok = TheParser->currentToken(Ctxt);
     Tok = TheParser->eatAll(Tok, Ctxt, ArgsTest);
     
     auto wasCloser = false;
@@ -186,7 +186,7 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ct
         
         LeafSeq ArgsTest1;
         
-        auto Tok1 = TheParser->currentToken();
+        auto Tok1 = TheParser->currentToken(Ctxt);
         Tok1 = TheParser->eatAndPreserveToplevelNewlines(Tok1, Ctxt, ArgsTest1);
         
         //
@@ -202,7 +202,7 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ct
             
             LeafSeq ArgsTest2;
             
-            auto Tok2 = TheParser->currentToken();
+            auto Tok2 = TheParser->currentToken(Ctxt);
             Tok2 = TheParser->eatAll(Tok2, Ctxt, ArgsTest2);
             
             auto wasCloser = false;
@@ -302,7 +302,7 @@ NodePtr GroupParselet::parse(Token firstTok, ParserContext Ctxt) const {
         
         LeafSeq ArgsTest1;
         
-        auto Tok = TheParser->currentToken();
+        auto Tok = TheParser->currentToken(Ctxt);
         Tok = TheParser->eatAll(Tok, Ctxt, ArgsTest1);
         
         if (TokenToCloser(Tok.Tok) == Closr) {
@@ -471,7 +471,7 @@ NodePtr UnderParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     TheParser->nextToken(TokIn);
     
-    auto Tok = TheParser->currentToken();
+    auto Tok = TheParser->currentToken(Ctxt);
     
     NodePtr Blank;
     if (Tok.Tok == TOKEN_SYMBOL) {
@@ -499,7 +499,7 @@ NodePtr UnderParselet::parse(Token TokIn, ParserContext Ctxt) const {
                 break;
         }
         
-        Tok = TheParser->currentToken();
+        Tok = TheParser->currentToken(Ctxt);
         
     } else if (Tok.Tok == TOKEN_ERROR_EXPECTEDLETTERLIKE) {
         
@@ -530,7 +530,7 @@ NodePtr UnderParselet::parse(Token TokIn, ParserContext Ctxt) const {
                 break;
         }
         
-        Tok = TheParser->currentToken();
+        Tok = TheParser->currentToken(Ctxt);
         
     } else {
         Blank = std::move(Under);
@@ -582,7 +582,7 @@ NodePtr UnderParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserCo
     
     TheParser->nextToken(TokIn);
     
-    auto Tok = TheParser->currentToken();
+    auto Tok = TheParser->currentToken(Ctxt);
     
     if (Tok.Tok == TOKEN_SYMBOL) {
         
@@ -592,7 +592,7 @@ NodePtr UnderParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserCo
         
         Args.append(std::move(Right));
         
-        Tok = TheParser->currentToken();
+        Tok = TheParser->currentToken(Ctxt);
         
     } else if (Tok.Tok == TOKEN_ERROR_EXPECTEDLETTERLIKE) {
         
@@ -606,7 +606,7 @@ NodePtr UnderParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserCo
         
         Args.append(std::move(ErrorRight));
         
-        Tok = TheParser->currentToken();
+        Tok = TheParser->currentToken(Ctxt);
     }
     
     NodePtr Pat;
@@ -663,7 +663,7 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) cons
     
     LeafSeq ArgsTest1;
     
-    auto FirstTok = TheParser->currentToken();
+    auto FirstTok = TheParser->currentToken(Ctxt);
     FirstTok = TheParser->eatAll(FirstTok, Ctxt, ArgsTest1);
     
     if (!FirstTok.Tok.isPossibleBeginningOfExpression()) {
@@ -705,7 +705,7 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) cons
     
     LeafSeq ArgsTest2;
     
-    auto Tok1 = TheParser->currentToken();
+    auto Tok1 = TheParser->currentToken(Ctxt);
     Tok1 = TheParser->eatAll(Tok1, Ctxt, ArgsTest2);
     
     if (Tok1.Tok != TOKEN_TILDE) {
@@ -731,7 +731,7 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) cons
     
     TheParser->nextToken(Tok1);
     
-    auto Tok2 = TheParser->currentToken();
+    auto Tok2 = TheParser->currentToken(Ctxt);
     Tok2 = TheParser->eatAll(Tok2, Ctxt, ArgsTest3);
     
     auto wasCloser = false;
@@ -775,7 +775,7 @@ NodePtr ColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) cons
     
     LeafSeq ArgsTest1;
     
-    auto Tok = TheParser->currentToken();
+    auto Tok = TheParser->currentToken(Ctxt);
     Tok = TheParser->eatAll(Tok, Ctxt, ArgsTest1);
     
     auto wasCloser = false;
@@ -799,7 +799,7 @@ NodePtr ColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) cons
     
     LeafSeq ArgsTest2;
     
-    Tok = TheParser->currentToken();
+    Tok = TheParser->currentToken(Ctxt);
     Tok = TheParser->eatAndPreserveToplevelNewlines(Tok, Ctxt, ArgsTest2);
     
     if (Tok.Tok == TOKEN_COLON) {
@@ -835,7 +835,7 @@ NodePtr ColonParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserCo
     
     LeafSeq ArgsTest;
     
-    auto Tok = TheParser->currentToken();
+    auto Tok = TheParser->currentToken(Ctxt);
     Tok = TheParser->eatAll(Tok, Ctxt, ArgsTest);
     
     auto wasCloser = false;
@@ -874,7 +874,7 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
     
     LeafSeq ArgsTest1;
     
-    auto Tok = TheParser->currentToken();
+    auto Tok = TheParser->currentToken(Ctxt);
     Tok = TheParser->eatAll(Tok, Ctxt, ArgsTest1);
     
     if (!Tok.Tok.isPossibleBeginningOfExpression()) {
@@ -898,7 +898,7 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
     
     LeafSeq ArgsTest2;
     
-    Tok = TheParser->currentToken();
+    Tok = TheParser->currentToken(Ctxt);
     Tok = TheParser->eatAll(Tok, Ctxt, ArgsTest2);
     
     if (Tok.Tok == TOKEN_EQUAL) {
@@ -1006,7 +1006,7 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext Ctxt)
     
     TheParser->nextToken(firstTok);
     
-    auto Tok = TheParser->currentToken();
+    auto Tok = TheParser->currentToken(Ctxt);
     
     Ctxt.Closr = CLOSER_LINEARSYNTAX_CLOSEPAREN;
     
@@ -1066,7 +1066,7 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext Ctxt)
             //
             Args.append(std::move(Sub));
             
-            Tok = TheParser->currentToken();
+            Tok = TheParser->currentToken(Ctxt);
             
         } else {
             
@@ -1082,7 +1082,7 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext Ctxt)
             
             TheParser->nextToken(Tok);
             
-            Tok = TheParser->currentToken();
+            Tok = TheParser->currentToken(Ctxt);
         }
         
     } // while
@@ -1117,7 +1117,7 @@ NodePtr EqualParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) cons
     
     LeafSeq ArgsTest;
     
-    auto Tok = TheParser->currentToken();
+    auto Tok = TheParser->currentToken(Ctxt);
     Tok = TheParser->eatAll(Tok, Ctxt, ArgsTest);
     
     if (Tok.Tok == TOKEN_DOT) {
@@ -1187,7 +1187,7 @@ NodePtr IntegralParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     LeafSeq ArgsTest1;
     
-    auto Tok = TheParser->currentToken();
+    auto Tok = TheParser->currentToken(Ctxt);
     Tok = TheParser->eatAll(Tok, Ctxt, ArgsTest1);
     
     if (!Tok.Tok.isPossibleBeginningOfExpression() ||
@@ -1213,7 +1213,7 @@ NodePtr IntegralParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     LeafSeq ArgsTest2;
     
-    Tok = TheParser->currentToken();
+    Tok = TheParser->currentToken(Ctxt);
     Tok = TheParser->eatAll(Tok, Ctxt, ArgsTest2);
     
     if (!Tok.Tok.isDifferentialD()) {
@@ -1266,7 +1266,7 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, Token TokIn, Pars
         
         LeafSeq ArgsTest1;
         
-        auto Tok1 = TheParser->currentToken();
+        auto Tok1 = TheParser->currentToken(Ctxt);
         Tok1 = TheParser->eatAndPreserveToplevelNewlines(Tok1, Ctxt, ArgsTest1);
         
         //
@@ -1288,7 +1288,7 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, Token TokIn, Pars
             
             LeafSeq ArgsTest2;
             
-            auto Tok2 = TheParser->currentToken();
+            auto Tok2 = TheParser->currentToken(Ctxt);
             Tok2 = TheParser->eatAndPreserveToplevelNewlines(Tok2, Ctxt, ArgsTest2);
             
             if (InfixOperatorToSymbol(Tok2.Tok) == Op) {
@@ -1381,7 +1381,7 @@ NodePtr ColonColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
         
         LeafSeq ArgsTest1;
         
-        auto Tok1 = TheParser->currentToken();
+        auto Tok1 = TheParser->currentToken(Ctxt);
         Tok1 = TheParser->eatAndPreserveToplevelNewlines(Tok1, Ctxt, ArgsTest1);
         
         if (Tok1.Tok == TOKEN_COLONCOLON) {

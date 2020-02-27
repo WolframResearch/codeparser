@@ -76,6 +76,11 @@ bool operator==(BufferAndLength a, BufferAndLength b);
 enum NextCharacterPolicyBits : uint8_t {
     
     //
+    // Needs to be first bit, for easy masking
+    //
+    INTERNAL = 0x01,
+    
+    //
     // Preserve whitespace after line continuation
     //
     // ToExpression["0.\\\n  6"] evaluates to 0.6 (whitespace is NOT preserved)
@@ -84,7 +89,7 @@ enum NextCharacterPolicyBits : uint8_t {
     //
     // FIXME: this could be handled by line continuation processing
     //
-    PRESERVE_WS_AFTER_LC = 0x01,
+    PRESERVE_WS_AFTER_LC = 0x02,
     
     //
     // Enable character decoding issues
@@ -95,7 +100,7 @@ enum NextCharacterPolicyBits : uint8_t {
     //
     // This is also used when peeking: no need to report issues while peeking
     //
-    ENABLE_CHARACTER_DECODING_ISSUES = 0x02,
+    ENABLE_CHARACTER_DECODING_ISSUES = 0x04,
     
     //
     // This code:
@@ -110,14 +115,14 @@ enum NextCharacterPolicyBits : uint8_t {
     //
     // would NOT give a warning (line continuation IS meaningful)
     //
-    LC_IS_MEANINGFUL = 0x04,
+    LC_IS_MEANINGFUL = 0x08,
     
     //
     // Check for unlikely escape sequences?
     //
     // Check for sequences like \\[Alpa] and report them
     //
-    ENABLE_UNLIKELY_ESCAPE_CHECKING = 0x08,
+    ENABLE_UNLIKELY_ESCAPE_CHECKING = 0x0a,
 };
 
 using NextCharacterPolicy = uint8_t;
