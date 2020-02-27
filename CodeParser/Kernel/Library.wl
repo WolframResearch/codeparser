@@ -60,6 +60,7 @@ MakeSafeStringNode
 
 MakeSyntaxIssue
 MakeFormatIssue
+MakeEncodingIssue
 
 MakeReplaceTextCodeAction
 MakeInsertTextCodeAction
@@ -467,6 +468,9 @@ MakeSyntaxIssue[tag_String, msg_String, severity_String, srcArgs___Integer, conf
 
 MakeFormatIssue[tag_String, msg_String, severity_String, srcArgs___Integer, airyness_Real, actions:CodeAction[_, _, _]..] :=
 	FormatIssue[tag, msg, severity, <| Source -> $StructureSrcArgs[srcArgs], CodeFormatter`AirynessLevel -> airyness, CodeActions -> {actions} |>]
+
+MakeEncodingIssue[tag_String, msg_String, severity_String, srcArgs___Integer] :=
+	EncodingIssue[tag, msg, severity, <| Source -> $StructureSrcArgs[srcArgs], CodeFormatter`AirynessLevel -> 0.0 |>]
 
 
 MakeReplaceTextCodeAction[label_String, srcArgs___Integer, replacementText_String] :=

@@ -220,6 +220,7 @@ SyntaxIssues
 AbstractSyntaxIssues
 SyntaxIssue
 FormatIssue
+EncodingIssue
 
 
 SourceCharacter

@@ -554,6 +554,7 @@ symbols = Union[Join[
             CodeParser`Library`MakeGroupMissingCloserNode, CodeParser`Library`MakeGroupMissingCloserNeedsReparseNode, CodeParser`Library`MakePrefixBinaryNode,
             CodeParser`Library`MakeSyntaxIssue, CodeParser`Library`MakeReplaceTextCodeAction, CodeParser`Library`MakeInsertTextCodeAction,
             CodeParser`Library`MakeFormatIssue, CodeParser`Library`MakeDeleteTextCodeAction, CodeParser`Library`MakeDeleteTriviaCodeAction,
+            CodeParser`Library`MakeEncodingIssue,
             CodeParser`Library`MakeInsertTextAfterCodeAction, CodeParser`Library`MakeSourceCharacterNode, CodeParser`Library`MakeSafeStringNode},
     {CodeParser`InternalInvalid, CodeParser`Metadata, CodeParser`PatternBlank, CodeParser`PatternBlankSequence, CodeParser`PatternBlankNullSequence,
       CodeParser`OptionalDefault, CodeParser`OptionalDefaultPattern, CodeParser`TernaryTilde, CodeParser`InfixInequality},

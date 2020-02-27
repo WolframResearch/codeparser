@@ -1038,7 +1038,7 @@ SourceCharacter ByteDecoder::invalid(SourceLocation errSrcLoc, NextCharacterPoli
     // No CodeAction here
     //
     
-    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_INVALIDCHARACTERENCODING, "Invalid UTF-8 sequence.", SYNTAXISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0, {}));
+    auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_INVALIDCHARACTERENCODING, "Invalid UTF-8 sequence.", SYNTAXISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next())));
     
     Issues.push_back(std::move(I));
 #endif // !NISSUES

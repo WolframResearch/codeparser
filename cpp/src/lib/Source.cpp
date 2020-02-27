@@ -120,7 +120,7 @@ bool operator==(BufferAndLength a, BufferAndLength b) {
 
 
 
-Issue::Issue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Con, std::vector<CodeActionPtr> Actions) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Con(Con), Actions(std::move(Actions)) {}
+Issue::Issue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Val, std::vector<CodeActionPtr> Actions) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Val(Val), Actions(std::move(Actions)) {}
 
 Source Issue::getSource() const {
     return Src;
@@ -140,7 +140,7 @@ void SyntaxIssue::print(std::ostream& s) const {
     
     s << ", ";
     
-    s << Con;
+    s << Val;
     s << ", ";
     
     for (auto& A : Actions) {
@@ -247,7 +247,32 @@ void FormatIssue::print(std::ostream& s) const {
     
     s << ", ";
     
-    s << Con;
+    s << Val;
+    s << ", ";
+    
+    for (auto& A : Actions) {
+        A->print(s);
+        s << ", ";
+    }
+    
+    s << "]";
+}
+
+void EncodingIssue::print(std::ostream& s) const {
+    
+    s << SYMBOL_CODEPARSER_LIBRARY_MAKEENCODINGISSUE->name() << "[";
+    
+    s << Tag.c_str() << ", ";
+    
+    s << Msg.c_str() << ", ";
+    
+    s << Sev.c_str() << ", ";
+    
+    getSource().print(s);
+    
+    s << ", ";
+    
+    s << Val;
     s << ", ";
     
     for (auto& A : Actions) {
@@ -722,7 +747,7 @@ void SyntaxIssue::put(MLINK mlp) const {
     
     Src.put(mlp);
     
-    if (!MLPutReal(mlp, Con)) {
+    if (!MLPutReal(mlp, Val)) {
         assert(false);
     }
     
@@ -828,13 +853,34 @@ void FormatIssue::put(MLINK mlp) const {
     
     Src.put(mlp);
     
-    if (!MLPutReal(mlp, Con)) {
+    if (!MLPutReal(mlp, Val)) {
         assert(false);
     }
     
     for (auto& A : Actions) {
         A->put(mlp);
     }
+}
+
+void EncodingIssue::put(MLINK mlp) const {
+    
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEENCODINGISSUE->name(), static_cast<int>(3 + 4))) {
+        assert(false);
+    }
+    
+    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Tag.c_str()), static_cast<int>(Tag.size()))) {
+        assert(false);
+    }
+    
+    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Msg.c_str()), static_cast<int>(Msg.size()))) {
+        assert(false);
+    }
+    
+    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Sev.c_str()), static_cast<int>(Sev.size()))) {
+        assert(false);
+    }
+    
+    Src.put(mlp);
 }
 
 void SourceLocation::put(MLINK mlp) const {

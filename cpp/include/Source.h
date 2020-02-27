@@ -190,7 +190,6 @@ SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDESCAPESEQUENCE = "UnexpectedEscapeSequen
 SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDCHARACTER = "UnexpectedCharacter";
 SyntaxIssueTag SYNTAXISSUETAG_UNDOCUMENTEDSLOTSYNTAX = "UndocumentedSlotSyntax";
 SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDIMPLICITTIMES = "UnexpectedImplicitTimes";
-SyntaxIssueTag SYNTAXISSUETAG_INVALIDCHARACTERENCODING = "InvalidCharacterEncoding";
 
 typedef const std::string FormatIssueTag;
 
@@ -202,6 +201,12 @@ typedef const std::string FormatIssueTag;
 FormatIssueTag FORMATISSUETAG_SPACE = "Space";
 FormatIssueTag FORMATISSUETAG_UNEXPECTEDCARRIAGERETURN = "UnexpectedCarriageReturn";
 FormatIssueTag FORMATISSUETAG_UNEXPECTEDLINECONTINUATION = "UnexpectedLineContinuation";
+
+
+typedef const std::string EncodingIssueTag;
+
+EncodingIssueTag ENCODINGISSUETAG_INVALIDCHARACTERENCODING = "InvalidCharacterEncoding";
+
 
 
 //
@@ -392,10 +397,10 @@ public:
     const std::string Msg;
     const SyntaxIssueSeverity Sev;
     const Source Src;
-    const double Con;
+    const double Val;
     const std::vector<CodeActionPtr> Actions;
     
-    Issue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Con, std::vector<CodeActionPtr> Actions);
+    Issue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Val, std::vector<CodeActionPtr> Actions);
     
     Source getSource() const;
     
@@ -497,13 +502,13 @@ public:
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
 #endif // USE_MATHLINK
-    
+
     void print(std::ostream& s) const override;
 };
 
 class FormatIssue : public Issue {
 public:
-    FormatIssue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Con, std::vector<CodeActionPtr> Actions) : Issue(Tag, Msg, Sev, Src, Con, std::move(Actions)) {}
+    FormatIssue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Air, std::vector<CodeActionPtr> Actions) : Issue(Tag, Msg, Sev, Src, Air, std::move(Actions)) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
@@ -511,3 +516,15 @@ public:
     
     void print(std::ostream& s) const override;
 };
+
+class EncodingIssue : public Issue {
+public:
+    EncodingIssue(std::string Tag, std::string Msg, std::string Sev, Source Src) : Issue(Tag, Msg, Sev, Src, 0.0, {}) {}
+    
+#if USE_MATHLINK
+    void put(MLINK mlp) const override;
+#endif // USE_MATHLINK
+    
+    void print(std::ostream& s) const override;
+};
+
