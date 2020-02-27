@@ -120,7 +120,7 @@ public:
     
     NodePtr handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext Ctxt, bool *wasCloser);
     
-    Precedence getTokenPrecedence(Token& current, ParserContext Ctxt) const;
+    Precedence getPrefixTokenPrecedence(Token& current, ParserContext Ctxt) const;
     Precedence getInfixTokenPrecedence(Token& current, ParserContext Ctxt, bool *implicitTimes) const;
     
     ~Parser();

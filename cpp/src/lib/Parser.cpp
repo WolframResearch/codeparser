@@ -206,7 +206,7 @@ void Parser::addIssue(IssuePtr I) {
 #endif // !NISSUES
 
 
-Precedence Parser::getTokenPrecedence(Token& TokIn, ParserContext Ctxt) const {
+Precedence Parser::getPrefixTokenPrecedence(Token& TokIn, ParserContext Ctxt) const {
     
     assert(TokIn.Tok != TOKEN_UNKNOWN);
     assert(TokIn.Tok != TOKEN_WHITESPACE);

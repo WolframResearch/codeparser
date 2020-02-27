@@ -96,7 +96,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
         
         NodePtr Operand;
         
-        if (TheParser->getTokenPrecedence(Tok, Ctxt) >= PRECEDENCE_SEMISEMI) {
+        if (TheParser->getPrefixTokenPrecedence(Tok, Ctxt) >= PRECEDENCE_SEMISEMI) {
             
             //
             // Higher precedence, so still within the ;;
@@ -179,7 +179,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
     //
     
     if (!SecondTok.Tok.isPossibleBeginningOfExpression()
-        || (TheParser->getTokenPrecedence(SecondTok, Ctxt) < PRECEDENCE_SEMISEMI)
+        || (TheParser->getPrefixTokenPrecedence(SecondTok, Ctxt) < PRECEDENCE_SEMISEMI)
         ) {
 
         //
@@ -248,7 +248,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
         FourthTok = TheParser->eatAndPreserveToplevelNewlines(FourthTok, Ctxt, ArgsTest3);
         
         if (!FourthTok.Tok.isPossibleBeginningOfExpression()
-            || (TheParser->getTokenPrecedence(FourthTok, Ctxt) < PRECEDENCE_SEMISEMI)
+            || (TheParser->getPrefixTokenPrecedence(FourthTok, Ctxt) < PRECEDENCE_SEMISEMI)
             ) {
             
             //
@@ -324,7 +324,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
     ThirdTok = TheParser->eatAndPreserveToplevelNewlines(ThirdTok, Ctxt, ArgsTest2);
     
     if (!ThirdTok.Tok.isPossibleBeginningOfExpression()
-        || (TheParser->getTokenPrecedence(ThirdTok, Ctxt) < PRECEDENCE_SEMISEMI)
+        || (TheParser->getPrefixTokenPrecedence(ThirdTok, Ctxt) < PRECEDENCE_SEMISEMI)
         ) {
         
         //
