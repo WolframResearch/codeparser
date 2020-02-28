@@ -3,6 +3,7 @@
 
 #include "Parser.h" // for Parser
 #include "ParseletRegistration.h" // for ParserRegistrationInit
+#include "Parselet.h" // for Parselet impls
 #include "Tokenizer.h" // for Tokenizer
 #include "CharacterDecoder.h" // for CharacterDecoder
 #include "ByteDecoder.h" // for ByteDecoder
@@ -120,7 +121,8 @@ Node *ParserSession::parseExpressions() {
             
             if (!peek.Tok.isPossibleBeginningOfExpression()) {
                 
-                auto NotPossible = TheParser->handleNotPossible(peek, peek, Ctxt, nullptr);
+                bool wasCloser;
+                auto NotPossible = infixParselets[peek.Tok.value()]->handleNotPossible(peek, peek, Ctxt, &wasCloser);
                 
                 exprs.push_back(std::move(NotPossible));
                 

@@ -937,7 +937,15 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         programmatic use of BeginPackage[] / EndPackage[] or something
         *)
         prefix <> "Kernel/StartUp/sysinit.m",
+        prefix <> "SystemFiles/Kernel/SystemResources/MacOSX-x86-64/sysinit.m",
+
         prefix <> "Kernel/StartUp/sysmake.m",
+        prefix <> "AddOns/Applications/UnitTable/Kernel/UnitTable.m",
+        prefix <> "SystemFiles/Components/Chemistry/Kernel/Chemistry.wl",
+        prefix <> "SystemFiles/Components/MUnit/Kernel/TestRun.m",
+        prefix <> "SystemFiles/Components/RobotTools/Kernel/FrontEnd.m",
+        prefix <> "SystemFiles/Links/JLink/Kernel/CallJava.m",
+        prefix <> "SystemFiles/Links/NETLink/Kernel/CallNET.m",
         Nothing
         }, fileIn],
       f = Failure["CannotRegexTooProgrammatic", <|"FileName" -> fileIn|>];

@@ -103,4 +103,19 @@ TEST_F(CrashTest, Crash3) {
     SUCCEED();
 }
 
-
+TEST_F(CrashTest, Crash4) {
+    
+    const unsigned char arr[] = {'\\', '[', 'I', 'n', 't', 'e', 'g', 'r', 'a', 'l', ']', '\\', '[', 'S', 'u', 'm', ']'};
+    
+    auto bufAndLen = BufferAndLength(arr, 17);
+    
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
+    
+    auto N = TheParserSession->parseExpressions();
+    
+    TheParserSession->releaseNode(N);
+    
+    TheParserSession->deinit();
+    
+    SUCCEED();
+}

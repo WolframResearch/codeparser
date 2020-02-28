@@ -120,6 +120,9 @@ Token Parser::nextToken0(ParserContext Ctxt) {
         return Tok;
     }
     
+    //
+    // Treat Ctxt.InsideGroup as a single bit and or with TOPLEVEL to set the RETURN_INTERNALNEWLINE NextCharacterPolicy bit
+    //
     return TheTokenizer->nextToken0(TOPLEVEL | Ctxt.InsideGroup);
 }
 
@@ -132,6 +135,9 @@ Token Parser::currentToken(ParserContext Ctxt) const {
         return Tok;
     }
     
+    //
+    // Treat Ctxt.InsideGroup as a single bit and or with TOPLEVEL to set the RETURN_INTERNALNEWLINE NextCharacterPolicy bit
+    //
     return TheTokenizer->currentToken(TOPLEVEL | Ctxt.InsideGroup);
 }
 
@@ -206,125 +212,6 @@ void Parser::addIssue(IssuePtr I) {
 #endif // !NISSUES
 
 
-Precedence Parser::getPrefixTokenPrecedence(Token& TokIn, ParserContext Ctxt) const {
-    
-    assert(TokIn.Tok != TOKEN_UNKNOWN);
-    assert(TokIn.Tok != TOKEN_WHITESPACE);
-    assert(TokIn.Tok != TOKEN_INTERNALNEWLINE);
-    assert(TokIn.Tok != TOKEN_COMMENT);
-    assert(TokIn.Tok != TOKEN_LINECONTINUATION);
-    
-    if (TokIn.Tok.isError()) {
-        
-        return PRECEDENCE_LOWEST;
-    }
-    
-    if (TokIn.Tok == TOKEN_ENDOFFILE) {
-        
-        return PRECEDENCE_LOWEST;
-    }
-    
-    //
-    // TODO: review when closers have their own parselets
-    //
-    if (TokIn.Tok.isCloser()) {
-        
-        return PRECEDENCE_LOWEST;
-    }
-        
-    auto& P = prefixParselets[TokIn.Tok.value()];
-    
-    //
-    // There is an ambiguity with tokens that are both prefix and infix, e.g.
-    // +  -  ;;  !  ++  --  !!  \[Minus]  \[MinusPlus]  \[PlusMinus]  \[CircleTimes]  \[Coproduct]
-    //
-    // Given the input  ;;;;
-    // when parsing the second  ;;  , we could get here because ;; is registered as infix
-    // But this particular ;; is a new expression, it is not actually infix
-    //
-    // Given the input  1+2
-    // when parsing the +, make sure to treat it as infix and NOT prefix
-    //
-    // Solution is to handle infix parselets where needed, i.e., SemiSemiParselet
-    //
-    
-    return P->getPrecedence();
-}
-
-Precedence Parser::getInfixTokenPrecedence(Token& TokIn, ParserContext Ctxt, bool *implicitTimes) const {
-    
-    assert(TokIn.Tok != TOKEN_UNKNOWN);
-    assert(TokIn.Tok != TOKEN_WHITESPACE);
-    assert(TokIn.Tok != TOKEN_INTERNALNEWLINE);
-    assert(TokIn.Tok != TOKEN_COMMENT);
-    assert(TokIn.Tok != TOKEN_LINECONTINUATION);
-    
-    if (TokIn.Tok.isError()) {
-        
-        *implicitTimes = false;
-        
-        return PRECEDENCE_LOWEST;
-    }
-    
-    if (TokIn.Tok == TOKEN_ENDOFFILE) {
-        
-        *implicitTimes = false;
-        
-        return PRECEDENCE_LOWEST;
-    }
-    
-    //
-    // TODO: review when closers have their own parselets
-    //
-    if (TokIn.Tok.isCloser()) {
-        
-        *implicitTimes = false;
-        
-        return PRECEDENCE_LOWEST;
-    }
-    
-    auto& Infix = infixParselets[TokIn.Tok.value()];
-    
-    if (Infix != nullptr) {
-        
-        *implicitTimes = false;
-        
-        return Infix->getPrecedence();
-    }
-    
-    if (TokIn.Tok.isDifferentialD()) {
-        
-        if ((Ctxt.Flag & PARSER_INSIDE_INTEGRAL) == PARSER_INSIDE_INTEGRAL) {
-            
-            //
-            // Inside \[Integral], so \[DifferentialD] is treated specially
-            //
-            
-            *implicitTimes = false;
-            
-            return PRECEDENCE_LOWEST;
-        }
-    }
-    
-    //
-    // Literals or unhandled
-    //
-    
-    //
-    // Do not do Implicit Times across lines
-    //
-    if (TokIn.Tok == TOKEN_TOPLEVELNEWLINE) {
-        
-        *implicitTimes = false;
-        
-        return PRECEDENCE_LOWEST;
-    }
-    
-    *implicitTimes = true;
-    
-    return PRECEDENCE_FAKE_IMPLICITTIMES;
-}
-
 NodePtr Parser::parse(Token token, ParserContext Ctxt) {
 
 #if !NABORT
@@ -343,7 +230,7 @@ NodePtr Parser::parse(Token token, ParserContext Ctxt) {
     // Prefix start
     //
     
-    auto& P = findPrefixParselet(token.Tok);
+    auto P = prefixParselets[token.Tok.value()];
     
     auto Left = P->parse(token, Ctxt);
     
@@ -366,13 +253,16 @@ NodePtr Parser::parse(Token token, ParserContext Ctxt) {
         auto token = currentToken(Ctxt);
         token = Parser::eatAndPreserveToplevelNewlines(token, Ctxt, ArgsTest);
         
-        bool implicitTimes;
+        auto I = infixParselets[token.Tok.value()];
         
-        auto TokenPrecedence = getInfixTokenPrecedence(token, Ctxt, &implicitTimes);
+        bool implicitTimes;
+        auto TokenPrecedence = I->getPrecedence(Ctxt, &implicitTimes);
         
         if (implicitTimes) {
             
             token = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(token.BufLen.buffer), Source(token.Src.Start));
+            
+            I = infixParselets[TOKEN_FAKE_IMPLICITTIMES.value()];
             
             tokenQueue.insert(tokenQueue.begin(), token);
         }
@@ -380,11 +270,7 @@ NodePtr Parser::parse(Token token, ParserContext Ctxt) {
         if (Ctxt.Prec > TokenPrecedence) {
             break;
         }
-        if (Ctxt.Prec == TokenPrecedence) {            
-            auto& I = infixParselets[token.Tok.value()];
-            if (I == nullptr) {
-                break;
-            }
+        if (Ctxt.Prec == TokenPrecedence) {
             auto TokenAssociativity = I->getAssociativity();
             if (TokenAssociativity != ASSOCIATIVITY_RIGHT) {
                 break;
@@ -398,137 +284,11 @@ NodePtr Parser::parse(Token token, ParserContext Ctxt) {
         auto Ctxt2 = Ctxt;
         Ctxt2.Prec = TokenPrecedence;
     
-        auto& I = findInfixParselet(token.Tok);
-    
         Left = I->parse(std::move(LeftSeq), token, Ctxt2);
         
     } // while
     
     return Left;
-}
-
-NodePtr Parser::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext CtxtIn, bool *wasCloser) {
-    
-    //
-    // It is possible that possibleBeginningOfExpression could get here
-    //
-    // For example: \[Integral]!b
-    // !b is possible beginning of expression, but ! has lower precedence than \[Integral],
-    // so
-    //
-    //
-
-    if (tokenBad.Tok.isPossibleBeginningOfExpression()) {
-
-        auto operand = parse(tokenBad, CtxtIn);
-
-        if (wasCloser != nullptr) {
-            *wasCloser = false;
-        }
-
-        return operand;
-    }
-    
-    auto& I = infixParselets[tokenBad.Tok.value()];
-    if (I != nullptr) {
-        
-        //
-        // Handle something like  f[,1]
-        //
-        // We want to make EXPECTEDOPERAND the first arg of the Comma node.
-        //
-        // Do not take next token
-        //
-        // Important to not duplicate token's Str here, it may also appear later
-        //
-        // Also, invent Source
-        //
-        
-        auto NotPossible = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.BufLen.buffer), Source(tokenAnchor.Src.Start))));
-        
-        NodeSeq LeftSeq(1);
-        LeftSeq.append(std::move(NotPossible));
-        
-        auto Ctxt = CtxtIn;
-        //
-        // FIXME: clear other flags here also?
-        //
-        Ctxt.Flag &= ~(PARSER_INSIDE_COLON);
-        
-        if (wasCloser != nullptr) {
-            *wasCloser = false;
-        }
-        
-        return I->parse(std::move(LeftSeq), tokenBad, Ctxt);
-    }
-    
-    if (tokenBad.Tok.isCloser()) {
-        
-        if (TokenToCloser(tokenBad.Tok) == CtxtIn.Closr) {
-            //
-            // Handle the special cases of:
-            // { + }
-            // { a + }
-            // { a @ }
-            // We are here parsing the operators, but we don't want to descend and treat the } as the problem
-            //
-            
-            //
-            // Do not take next token
-            //
-            
-            auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.BufLen.end), Source(tokenAnchor.Src.End));
-            
-            if (wasCloser != nullptr) {
-                *wasCloser = true;
-            }
-            
-            return NodePtr(new ErrorNode(createdToken));
-        }
-        
-        //
-        // Handle  { a ) }
-        // which ends up being  MissingCloser[ { a ) ]   UnexpectedCloser[ } ]
-        //
-        
-        nextToken(tokenBad);
-        
-        NodeSeq Args(1);
-        Args.append(NodePtr(new LeafNode(tokenBad)));
-        
-        auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_UNEXPECTEDCLOSER, std::move(Args)));
-        
-        if (wasCloser != nullptr) {
-            *wasCloser = true;
-        }
-        
-        return Error;
-    }
-    
-    if (tokenBad.Tok == TOKEN_ENDOFFILE) {
-        
-        auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.BufLen.end), Source(tokenAnchor.Src.End));
-        
-        if (wasCloser != nullptr) {
-            *wasCloser = true;
-        }
-        
-        return NodePtr(new ErrorNode(createdToken));
-    }
-    
-    assert(tokenBad.Tok.isError());
-        
-    nextToken(tokenBad);
-    
-    //
-    // If there is a Token error, then use that specific error
-    //
-    
-    if (wasCloser != nullptr) {
-        *wasCloser = false;
-    }
-    
-    return NodePtr(new ErrorNode(tokenBad));
 }
 
 Token Parser::eatAll(Token T, ParserContext Ctxt, LeafSeq& Args) {

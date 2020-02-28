@@ -2,7 +2,32 @@ BeginPackage["CodeParser`Generate`ParseletRegistration`"]
 
 Begin["`Private`"]
 
+Needs["CodeParser`Generate`TokenEnum`"]
 Needs["CodeParser`Generate`GenerateSources`"]
+
+
+
+PrefixOperatorToParselet[Token`Unknown] = LeafParselet[Precedence`AssertFalse]
+PrefixOperatorToParselet[Token`Whitespace] = LeafParselet[Precedence`AssertFalse]
+PrefixOperatorToParselet[Token`InternalNewline] = LeafParselet[Precedence`AssertFalse]
+PrefixOperatorToParselet[Token`Comment] = LeafParselet[Precedence`AssertFalse]
+PrefixOperatorToParselet[Token`LineContinuation] = LeafParselet[Precedence`AssertFalse]
+
+PrefixOperatorToParselet[Token`EndOfFile] = LeafParselet[Precedence`Lowest]
+
+errors = Cases[DownValues[isError][[All, 1]], Verbatim[HoldPattern][HoldPattern[isError][tok_Symbol]] :> tok]
+
+Scan[(
+  PrefixOperatorToParselet[#] = LeafParselet[Precedence`Lowest]
+)&, errors]
+
+
+closers = Cases[DownValues[isCloser][[All, 1]], Verbatim[HoldPattern][HoldPattern[isCloser][tok_Symbol]] :> tok]
+
+Scan[(
+  PrefixOperatorToParselet[#] = LeafParselet[Precedence`Lowest]
+)&, closers]
+
 
 
 
@@ -111,7 +136,7 @@ MakePrefixNode[Plus, List[
 
 The ErrorNode is handled correctly
 *)
-PrefixOperatorToParselet[_] = LeafParselet[]
+PrefixOperatorToParselet[_] = LeafParselet[Precedence`Highest]
 
 
 
@@ -120,6 +145,39 @@ PrefixOperatorToParselet[_] = LeafParselet[]
 (*
 Infix
 *)
+
+
+InfixOperatorToParselet[Token`Unknown] = LeafInfixParselet[Precedence`AssertFalse]
+InfixOperatorToParselet[Token`Whitespace] = LeafInfixParselet[Precedence`AssertFalse]
+InfixOperatorToParselet[Token`InternalNewline] = LeafInfixParselet[Precedence`AssertFalse]
+InfixOperatorToParselet[Token`Comment] = LeafInfixParselet[Precedence`AssertFalse]
+InfixOperatorToParselet[Token`LineContinuation] = LeafInfixParselet[Precedence`AssertFalse]
+
+InfixOperatorToParselet[Token`EndOfFile] = LeafInfixParselet[Precedence`Lowest]
+
+errors = Cases[DownValues[isError][[All, 1]], Verbatim[HoldPattern][HoldPattern[isError][tok_Symbol]] :> tok]
+
+Scan[(
+  InfixOperatorToParselet[#] = LeafInfixParselet[Precedence`Lowest]
+)&, errors]
+
+
+closers = Cases[DownValues[isCloser][[All, 1]], Verbatim[HoldPattern][HoldPattern[isCloser][tok_Symbol]] :> tok]
+
+Scan[(
+  InfixOperatorToParselet[#] = LeafInfixParselet[Precedence`Lowest]
+)&, closers]
+
+
+differentialds = Cases[DownValues[isDifferentialD][[All, 1]], Verbatim[HoldPattern][HoldPattern[isDifferentialD][tok_Symbol]] :> tok]
+
+Scan[(
+  InfixOperatorToParselet[#] = DifferentialDParselet[]
+)&, differentialds]
+
+
+
+InfixOperatorToParselet[Token`ToplevelNewline] = ToplevelNewlineParselet[]
 
 
 
@@ -549,7 +607,7 @@ InfixOperatorToParselet[Token`GreaterGreater] = GreaterGreaterParselet[]
 InfixOperatorToParselet[Token`GreaterGreaterGreater] = GreaterGreaterGreaterParselet[]
 
 
-InfixOperatorToParselet[_] = Null
+InfixOperatorToParselet[_] = NullInfixParselet[]
 
 
 
@@ -605,16 +663,6 @@ extern ContextSensitiveInfixParseletPtr contextSensitiveUnder1Parselet;
 extern ContextSensitiveInfixParseletPtr contextSensitiveUnder2Parselet;
 extern ContextSensitiveInfixParseletPtr contextSensitiveUnder3Parselet;
 extern ContextSensitiveInfixParseletPtr contextSensitiveColonParselet;
-
-const PrefixParseletPtr& findPrefixParselet(TokenEnum T);
-
-const InfixParseletPtr& findInfixParselet(TokenEnum T);
-
-const PrefixParseletPtr& getContextSensitiveSymbolParselet();
-const ContextSensitiveInfixParseletPtr& getContextSensitiveUnder1Parselet();
-const ContextSensitiveInfixParseletPtr& getContextSensitiveUnder2Parselet();
-const ContextSensitiveInfixParseletPtr& getContextSensitiveUnder3Parselet();
-const ContextSensitiveInfixParseletPtr& getContextSensitiveColonParselet();
 "}
 
 Print["exporting ParseletRegistration.h"]
@@ -633,54 +681,73 @@ tokensSansCount = DeleteCases[tokens, Token`Count]
 
 
 
-formatPrefix[LeafParselet[]] := "PrefixParseletPtr(reusingLeafParselet)"
+formatPrefix[LeafParselet[Precedence`Highest]] := "&highestLeafParselet"
 
-formatPrefix[SymbolParselet[]] := "PrefixParseletPtr(new SymbolParselet())"
+formatPrefix[LeafParselet[Precedence`Lowest]] := "&lowestLeafParselet"
 
-formatPrefix[UnderParselet[i_Integer]] := "PrefixParseletPtr(new UnderParselet(" <> ToString[i] <> "))"
+formatPrefix[LeafParselet[Precedence`AssertFalse]] := "&assertingLeafParselet"
 
-formatPrefix[LessLessParselet[]] := "PrefixParseletPtr(new LessLessParselet())"
-
-formatPrefix[SemiSemiParselet[]] := "PrefixParseletPtr(new SemiSemiParselet())"
-
-formatPrefix[LinearSyntaxOpenParenParselet[]] := "PrefixParseletPtr(new LinearSyntaxOpenParenParselet())"
-
-formatPrefix[IntegralParselet[]] := "PrefixParseletPtr(new IntegralParselet())"
-
-formatPrefix[PrefixOperatorParselet[tok_, precedence_]] := "PrefixParseletPtr(new PrefixOperatorParselet(" <> toGlobal[tok] <> ", " <> toGlobal[precedence] <> "))"
-
-formatPrefix[GroupParselet[tok_]] := "PrefixParseletPtr(new GroupParselet(" <> toGlobal[tok] <> "))"
+formatPrefix[LeafParselet[precedence_]] := "new LeafParselet(" <> toGlobal[precedence] <> ")"
 
 
+formatPrefix[SymbolParselet[]] := "&symbolParselet"
+
+formatPrefix[UnderParselet[i_Integer]] := "new UnderParselet(" <> ToString[i] <> ")"
+
+formatPrefix[LessLessParselet[]] := "&lessLessParselet"
+
+formatPrefix[SemiSemiParselet[]] := "&semiSemiParselet"
+
+formatPrefix[LinearSyntaxOpenParenParselet[]] := "&linearSyntaxOpenParenParselet"
+
+formatPrefix[IntegralParselet[]] := "&integralParselet"
+
+formatPrefix[PrefixOperatorParselet[tok_, precedence_]] := "new PrefixOperatorParselet(" <> toGlobal[tok] <> ", " <> toGlobal[precedence] <> ")"
+
+formatPrefix[GroupParselet[tok_]] := "new GroupParselet(" <> toGlobal[tok] <> ")"
 
 
-formatInfix[BinaryOperatorParselet[tok_, precedence_, associativity_]] := "InfixParseletPtr(new BinaryOperatorParselet(" <> toGlobal[tok] <> ", " <> toGlobal[precedence] <> ", " <> toGlobal[associativity] <> "))"
 
-formatInfix[InfixOperatorParselet[tok_, precedence_]] := "InfixParseletPtr(new InfixOperatorParselet(" <> toGlobal[tok] <> ", " <> toGlobal[precedence] <> "))"
+formatInfix[LeafInfixParselet[Precedence`Lowest]] := "&lowestLeafInfixParselet"
 
-formatInfix[InfixOperatorWithTrailingParselet[tok_, precedence_]] := "InfixParseletPtr(new InfixOperatorWithTrailingParselet(" <> toGlobal[tok] <> ", " <> toGlobal[precedence] <> "))"
+formatInfix[LeafInfixParselet[Precedence`AssertFalse]] := "&assertingLeafInfixParselet"
 
-formatInfix[PostfixOperatorParselet[tok_, precedence_]] := "InfixParseletPtr(new PostfixOperatorParselet(" <> toGlobal[tok] <> ", " <> toGlobal[precedence] <> "))"
+formatInfix[LeafInfixParselet[precedence_]] := "new LeafInfixParselet(" <> toGlobal[precedence] <> ")"
 
-formatInfix[ColonParselet[]] := "InfixParseletPtr(new ColonParselet())"
 
-formatInfix[CallParselet[groupParselet_]] := "InfixParseletPtr(new CallParselet(" <> formatPrefix[groupParselet] <> "))"
+formatInfix[BinaryOperatorParselet[tok_, precedence_, associativity_]] := "new BinaryOperatorParselet(" <> toGlobal[tok] <> ", " <> toGlobal[precedence] <> ", " <> toGlobal[associativity] <> ")"
 
-formatInfix[EqualParselet[tok_]] := "InfixParseletPtr(new EqualParselet(" <> toGlobal[tok] <> "))"
+formatInfix[InfixOperatorParselet[tok_, precedence_]] := "new InfixOperatorParselet(" <> toGlobal[tok] <> ", " <> toGlobal[precedence] <> ")"
 
-formatInfix[TildeParselet[]] := "InfixParseletPtr(new TildeParselet())"
+formatInfix[InfixOperatorWithTrailingParselet[tok_, precedence_]] := "new InfixOperatorWithTrailingParselet(" <> toGlobal[tok] <> ", " <> toGlobal[precedence] <> ")"
 
-formatInfix[SlashColonParselet[]] := "InfixParseletPtr(new SlashColonParselet())"
+formatInfix[PostfixOperatorParselet[tok_, precedence_]] := "new PostfixOperatorParselet(" <> toGlobal[tok] <> ", " <> toGlobal[precedence] <> ")"
 
-formatInfix[SemiSemiParselet[]] := "InfixParseletPtr(new SemiSemiParselet())"
+formatInfix[ColonParselet[]] := "&colonParselet"
 
-formatInfix[ColonColonParselet[]] := "InfixParseletPtr(new ColonColonParselet())"
+formatInfix[CallParselet[groupParselet_]] := "new CallParselet(" <> formatPrefix[groupParselet] <> ")"
 
-formatInfix[GreaterGreaterParselet[]] := "InfixParseletPtr(new GreaterGreaterParselet())"
+formatInfix[EqualParselet[tok_]] := "new EqualParselet(" <> toGlobal[tok] <> ")"
 
-formatInfix[GreaterGreaterGreaterParselet[]] := "InfixParseletPtr(new GreaterGreaterGreaterParselet())"
+formatInfix[TildeParselet[]] := "&tildeParselet"
 
-formatInfix[Null] := "nullptr"
+formatInfix[SlashColonParselet[]] := "&slashColonParselet"
+
+formatInfix[SemiSemiParselet[]] := "&semiSemiParselet"
+
+formatInfix[ColonColonParselet[]] := "&colonColonParselet"
+
+formatInfix[GreaterGreaterParselet[]] := "&greaterGreaterParselet"
+
+formatInfix[GreaterGreaterGreaterParselet[]] := "&greaterGreaterGreaterParselet"
+
+formatInfix[NullInfixParselet[]] := "&nullInfixParselet"
+
+formatInfix[DifferentialDParselet[]] := "&differentialDParselet"
+
+formatInfix[ToplevelNewlineParselet[]] := "&toplevelNewlineParselet"
+
+
 
 
 
@@ -697,7 +764,45 @@ parseletRegistrationCPPSource = {
 
 #include <cassert>
 
-LeafParselet *reusingLeafParselet = new LeafParselet();
+auto highestLeafParselet = LeafParselet(PRECEDENCE_HIGHEST);
+
+auto lowestLeafParselet = LeafParselet(PRECEDENCE_LOWEST);
+
+auto assertingLeafParselet = LeafParselet(PRECEDENCE_ASSERTFALSE);
+
+auto nullInfixParselet = NullInfixParselet();
+
+auto lowestLeafInfixParselet = LeafInfixParselet(PRECEDENCE_LOWEST);
+
+auto assertingLeafInfixParselet = LeafInfixParselet(PRECEDENCE_ASSERTFALSE);
+
+auto symbolParselet = SymbolParselet();
+
+auto lessLessParselet = LessLessParselet();
+
+auto semiSemiParselet = SemiSemiParselet();
+
+auto linearSyntaxOpenParenParselet = LinearSyntaxOpenParenParselet();
+
+auto integralParselet = IntegralParselet();
+
+auto toplevelNewlineParselet = ToplevelNewlineParselet();
+
+auto colonParselet = ColonParselet();
+
+auto tildeParselet = TildeParselet();
+
+auto colonColonParselet = ColonColonParselet();
+
+auto greaterGreaterParselet = GreaterGreaterParselet();
+
+auto slashColonParselet = SlashColonParselet();
+
+auto greaterGreaterGreaterParselet = GreaterGreaterGreaterParselet();
+
+auto differentialDParselet = DifferentialDParselet();
+
+
 
 std::array<PrefixParseletPtr, TOKEN_COUNT.value()> prefixParselets {{"} ~Join~
 
@@ -711,43 +816,11 @@ std::array<InfixParseletPtr, TOKEN_COUNT.value()> infixParselets {{"} ~Join~
 
 {"}};
 
-PrefixParseletPtr contextSensitiveSymbolParselet(PrefixParseletPtr(new LeafParselet()));
-ContextSensitiveInfixParseletPtr contextSensitiveUnder1Parselet(ContextSensitiveInfixParseletPtr(new UnderParselet(1)));
-ContextSensitiveInfixParseletPtr contextSensitiveUnder2Parselet(ContextSensitiveInfixParseletPtr(new UnderParselet(2)));
-ContextSensitiveInfixParseletPtr contextSensitiveUnder3Parselet(ContextSensitiveInfixParseletPtr(new UnderParselet(3)));
-ContextSensitiveInfixParseletPtr contextSensitiveColonParselet(ContextSensitiveInfixParseletPtr(new ColonParselet()));
-
-const PrefixParseletPtr& findPrefixParselet(TokenEnum T) {
-    auto& P = prefixParselets[T.value()];
-    assert(P != nullptr);
-    return P;
-}
-
-const InfixParseletPtr& findInfixParselet(TokenEnum T) {
-    auto& I = infixParselets[T.value()];
-    assert(I != nullptr);
-    return I;
-}
-
-const PrefixParseletPtr& getContextSensitiveSymbolParselet() {
-    return contextSensitiveSymbolParselet;
-}
-
-const ContextSensitiveInfixParseletPtr& getContextSensitiveUnder1Parselet() {
-    return contextSensitiveUnder1Parselet;
-}
-
-const ContextSensitiveInfixParseletPtr& getContextSensitiveUnder2Parselet() {
-    return contextSensitiveUnder2Parselet;
-}
-
-const ContextSensitiveInfixParseletPtr& getContextSensitiveUnder3Parselet() {
-    return contextSensitiveUnder3Parselet;
-}
-
-const ContextSensitiveInfixParseletPtr& getContextSensitiveColonParselet() {
-    return contextSensitiveColonParselet;
-}
+PrefixParseletPtr contextSensitiveSymbolParselet(&highestLeafParselet);
+ContextSensitiveInfixParseletPtr contextSensitiveUnder1Parselet(new UnderParselet(1));
+ContextSensitiveInfixParseletPtr contextSensitiveUnder2Parselet(new UnderParselet(2));
+ContextSensitiveInfixParseletPtr contextSensitiveUnder3Parselet(new UnderParselet(3));
+ContextSensitiveInfixParseletPtr contextSensitiveColonParselet(&colonParselet);
 "}
 
 Print["exporting ParseletRegistration.cpp"]

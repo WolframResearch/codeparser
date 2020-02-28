@@ -184,9 +184,12 @@ TEST_F(TokenizerTest, Basic3) {
     
     TheTokenizer->nextToken(Tok);
     
-    Tok = TheTokenizer->currentToken(TOPLEVEL);
+    //
+    // Set 0x01 because we are inside a group now
+    //
+    Tok = TheTokenizer->currentToken(TOPLEVEL | 0x01);
     
-    EXPECT_EQ(Tok, Token(TOKEN_NEWLINE, BufferAndLength(str + 1, 1), Source(SourceLocation(1, 2), SourceLocation(2, 1))));
+    EXPECT_EQ(Tok, Token(TOKEN_INTERNALNEWLINE, BufferAndLength(str + 1, 1), Source(SourceLocation(1, 2), SourceLocation(2, 1))));
     
     TheTokenizer->nextToken(Tok);
     

@@ -559,5 +559,7 @@ Precedence`LongName`InvisiblePostfixScriptBase -> Precedence`LongName`InvisibleP
 Precedence`Highest -> Next, (* Precedence["foo"] == 1000 just an example of any atom *)
 (* Symbol and Under are needed because they have separate Parselets that have to know about precedence *)
 Precedence`Symbol -> Precedence`Highest,
-Precedence`Under -> Precedence`Highest
+Precedence`Under -> Precedence`Highest,
+
+Precedence`AssertFalse -> Next
 |>

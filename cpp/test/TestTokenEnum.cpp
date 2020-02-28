@@ -5,9 +5,9 @@
 
 #include <sstream>
 
-TEST(TokenEnumTest, Inequality) {
+TEST(TokenEnumTest, Infix) {
     
-    EXPECT_TRUE(TOKEN_LESS.isInequalityOperator());
+    EXPECT_TRUE(TOKEN_LESS.isInfixOperator());
 }
 
 TEST(TokenEnumTest, DifferentialD) {

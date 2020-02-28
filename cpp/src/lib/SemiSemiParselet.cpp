@@ -1,5 +1,6 @@
 
 #include "Parselet.h"
+#include "ParseletRegistration.h"
 
 #include "API.h" // for ParserSession
 
@@ -96,7 +97,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
         
         NodePtr Operand;
         
-        if (TheParser->getPrefixTokenPrecedence(Tok, Ctxt) >= PRECEDENCE_SEMISEMI) {
+        if (prefixParselets[Tok.Tok.value()]->getPrecedence(Ctxt) >= PRECEDENCE_SEMISEMI) {
             
             //
             // Higher precedence, so still within the ;;
@@ -163,7 +164,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
 //
 NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
     
-    Ctxt.Prec = getPrecedence();
+    Ctxt.Prec = getPrecedence(Ctxt);
     
     TheParser->nextToken(TokIn);
     
@@ -179,7 +180,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
     //
     
     if (!SecondTok.Tok.isPossibleBeginningOfExpression()
-        || (TheParser->getPrefixTokenPrecedence(SecondTok, Ctxt) < PRECEDENCE_SEMISEMI)
+        || (prefixParselets[SecondTok.Tok.value()]->getPrecedence(Ctxt) < PRECEDENCE_SEMISEMI)
         ) {
 
         //
@@ -248,7 +249,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
         FourthTok = TheParser->eatAndPreserveToplevelNewlines(FourthTok, Ctxt, ArgsTest3);
         
         if (!FourthTok.Tok.isPossibleBeginningOfExpression()
-            || (TheParser->getPrefixTokenPrecedence(FourthTok, Ctxt) < PRECEDENCE_SEMISEMI)
+            || (prefixParselets[FourthTok.Tok.value()]->getPrecedence(Ctxt) < PRECEDENCE_SEMISEMI)
             ) {
             
             //
@@ -324,7 +325,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
     ThirdTok = TheParser->eatAndPreserveToplevelNewlines(ThirdTok, Ctxt, ArgsTest2);
     
     if (!ThirdTok.Tok.isPossibleBeginningOfExpression()
-        || (TheParser->getPrefixTokenPrecedence(ThirdTok, Ctxt) < PRECEDENCE_SEMISEMI)
+        || (prefixParselets[ThirdTok.Tok.value()]->getPrecedence(Ctxt) < PRECEDENCE_SEMISEMI)
         ) {
         
         //

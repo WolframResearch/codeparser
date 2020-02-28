@@ -1,5 +1,12 @@
 BeginPackage["CodeParser`Generate`TokenEnum`"]
 
+isCloser
+
+isError
+
+isDifferentialD
+
+
 Begin["`Private`"]
 
 Needs["CodeParser`Generate`GenerateSources`"]
@@ -546,6 +553,9 @@ isError[Token`Error`EmptyString] = True
 isError[Token`Error`Aborted] = True
 isError[Token`Error`ExpectedOperand] = True
 isError[Token`Error`UnrecognizedDigit] = True
+isError[Token`Error`ExpectedDigit] = True
+isError[Token`Error`UnsupportedCharacter] = True
+isError[Token`Error`End] = True
 
 isError[_] = False
 
@@ -1059,6 +1069,9 @@ tokenCPPSource = {
 
 #include <cassert>
 
+//
+// TOKEN_TOPLEVELNEWLINE must be 0 % 2 to allow setting the 1 bit to convert to TOKEN_INTERNALNEWLINE
+//
 static_assert(TOKEN_TOPLEVELNEWLINE.value() % 2 == 0, \"Check your assumptions\");
 static_assert(TOKEN_INTERNALNEWLINE.value() % 2 == 1, \"Check your assumptions\");
 "} ~Join~

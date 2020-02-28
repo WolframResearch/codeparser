@@ -76,9 +76,9 @@ bool operator==(BufferAndLength a, BufferAndLength b);
 enum NextCharacterPolicyBits : uint8_t {
     
     //
-    // Needs to be first bit, for easy masking
+    // Needs to be first bit, for easy or-ing of TOKEN_TOPLEVELNEWLINE to TOKEN_INTERNALNEWLINE
     //
-    INTERNAL = 0x01,
+    RETURN_INTERNALNEWLINE = 0x01,
     
     //
     // Preserve whitespace after line continuation

@@ -22,6 +22,7 @@ enum Associativity {
     ASSOCIATIVITY_LEFT,
     ASSOCIATIVITY_RIGHT,
     ASSOCIATIVITY_NONASSOCIATIVE,
+    ASSOCIATIVITY_ASSERTFALSE,
 };
 
 enum ParserContextFlagBits : uint8_t {
@@ -117,11 +118,6 @@ public:
 #endif // !NISSUES
     
     NodePtr parse(Token firstTok, ParserContext Ctxt);
-    
-    NodePtr handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext Ctxt, bool *wasCloser);
-    
-    Precedence getPrefixTokenPrecedence(Token& current, ParserContext Ctxt) const;
-    Precedence getInfixTokenPrecedence(Token& current, ParserContext Ctxt, bool *implicitTimes) const;
     
     ~Parser();
 
