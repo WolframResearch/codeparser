@@ -29,7 +29,7 @@ EXTERN_C void Expr_Insert(expr, mint, expr);
 
 EXTERN_C mint Expr_Pointer(expr);
 
-EXTERN_C expr Expr_FromPointer(mint);
+EXTERN_C expr Expr_FromPointer(void *);
 
 EXTERN_C void Expr_Release(expr);
 
