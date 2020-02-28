@@ -23,14 +23,20 @@ DLLEXPORT int ExprTest_LibraryLink(WolframLibraryData libData, mint Argc, MArgum
   Expr_Insert(bar, 2, arg21);
 
 
+  unsigned char arr[] = {'H', 'e', 'l', 'l', 'o', '!'};
+  auto str = Expr_FromString(arr, 6);
+
+
   auto head3 = Expr_LookupSymbol("baz");
-  auto baz = Expr_BuildExpression(head3, 2);
+  auto baz = Expr_BuildExpression(head3, 3);
   Expr_Insert(baz, 1, foo);
   Expr_Release(foo);
 
   Expr_Insert(baz, 2, bar);
   Expr_Release(bar);
 
+  Expr_Insert(baz, 3, str);
+  
   // auto I0 = (mint)ef;
   
   auto p = Expr_Pointer(baz);

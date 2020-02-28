@@ -33,6 +33,8 @@ EXTERN_C expr Expr_FromPointer(void *);
 
 EXTERN_C void Expr_Release(expr);
 
+EXTERN_C expr Expr_FromString(unsigned char*, mint);
+
 
 
 #if USE_MATHLINK
