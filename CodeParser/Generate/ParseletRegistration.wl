@@ -692,7 +692,11 @@ formatPrefix[LeafParselet[precedence_]] := "new LeafParselet(" <> toGlobal[prece
 
 formatPrefix[SymbolParselet[]] := "&symbolParselet"
 
-formatPrefix[UnderParselet[i_Integer]] := "new UnderParselet(" <> ToString[i] <> ")"
+formatPrefix[UnderParselet[1]] := "new UnderParselet<BlankNode, PatternBlankNode>()"
+
+formatPrefix[UnderParselet[2]] := "new UnderParselet<BlankSequenceNode, PatternBlankSequenceNode>()"
+
+formatPrefix[UnderParselet[3]] := "new UnderParselet<BlankNullSequenceNode, PatternBlankNullSequenceNode>()"
 
 formatPrefix[LessLessParselet[]] := "&lessLessParselet"
 
@@ -804,6 +808,161 @@ auto differentialDParselet = DifferentialDParselet();
 
 
 
+template<class T, class U>
+class UnderParselet : public PrefixParselet, public ContextSensitiveInfixParselet {
+public:
+    
+    UnderParselet() {}
+    
+    //
+    // prefix
+    //
+    // Something like  _a
+    //
+    NodePtr parse(Token TokIn, ParserContext Ctxt) const override {
+        
+        auto Under = NodePtr(new LeafNode(TokIn));
+        
+        TheParser->nextToken(TokIn);
+        
+        auto Tok = TheParser->currentToken(Ctxt);
+        
+        NodePtr Blank;
+        if (Tok.Tok == TOKEN_SYMBOL) {
+            
+            auto Sym2 = contextSensitiveSymbolParselet->parse(Tok, Ctxt);
+            
+            NodeSeq Args(1 + 1);
+            Args.append(std::move(Under));
+            Args.append(std::move(Sym2));
+            
+            Blank = NodePtr(new T(std::move(Args)));
+            
+            Tok = TheParser->currentToken(Ctxt);
+            
+        } else if (Tok.Tok == TOKEN_ERROR_EXPECTEDLETTERLIKE) {
+            
+            //
+            // It's nice to include the error inside of the blank
+            //
+            
+            auto parselet = prefixParselets[Tok.Tok.value()];
+            
+            auto ErrorSym2 = parselet->parse(Tok, Ctxt);
+            
+            NodeSeq Args(1 + 1);
+            Args.append(std::move(Under));
+            Args.append(std::move(ErrorSym2));
+            
+            Blank = NodePtr(new T(std::move(Args)));
+            
+            Tok = TheParser->currentToken(Ctxt);
+            
+        } else {
+            Blank = std::move(Under);
+        }
+        
+        LeafSeq ArgsTest;
+        
+        Tok = TheParser->eatAndPreserveToplevelNewlines(Tok, Ctxt, ArgsTest);
+        
+        //
+        // For something like _:\"\"  when parsing _
+        // ColonFlag == false
+        // the : here is Optional, and so we want to go parse with ColonParselet's parseContextSensitive method
+        //
+        // For something like a:_:\"\"  when parsing _
+        // ColonFlag == true
+        // make sure to not parse the second : here
+        // We are already inside ColonParselet from the first :, and so ColonParselet will also handle the second :
+        //
+        if (Tok.Tok == TOKEN_COLON) {
+            
+            if ((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
+                
+                NodeSeq BlankSeq(1 + 1);
+                BlankSeq.append(std::move(Blank));
+                BlankSeq.appendIfNonEmpty(std::move(ArgsTest));
+                
+                return contextSensitiveColonParselet->parseContextSensitive(std::move(BlankSeq), Tok, Ctxt);
+            }
+        }
+        
+        return Blank;
+    }
+    
+    //
+    // infix
+    //
+    // Something like  a_b
+    //
+    // Called from other parselets
+    //
+    NodePtr parseContextSensitive(NodeSeq Left, Token TokIn, ParserContext Ctxt) const override {
+        
+        NodeSeq Args(1 + 1 + 1/*speculative for Right*/);
+        Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
+        Args.append(NodePtr(new LeafNode(TokIn)));
+        
+        TheParser->nextToken(TokIn);
+        
+        auto Tok = TheParser->currentToken(Ctxt);
+        
+        if (Tok.Tok == TOKEN_SYMBOL) {
+            
+            auto Right = contextSensitiveSymbolParselet->parse(Tok, Ctxt);
+            
+            Args.append(std::move(Right));
+            
+            Tok = TheParser->currentToken(Ctxt);
+            
+        } else if (Tok.Tok == TOKEN_ERROR_EXPECTEDLETTERLIKE) {
+            
+            //
+            // It's nice to include the error inside of the blank
+            //
+            
+            auto parselet = prefixParselets[Tok.Tok.value()];
+            
+            auto ErrorRight = parselet->parse(Tok, Ctxt);
+            
+            Args.append(std::move(ErrorRight));
+            
+            Tok = TheParser->currentToken(Ctxt);
+        }
+        
+        auto Pat = NodePtr(new U(std::move(Args)));
+        
+        LeafSeq ArgsTest;
+        
+        Tok = TheParser->eatAndPreserveToplevelNewlines(Tok, Ctxt, ArgsTest);
+        
+        //
+        // For something like a:b_c:d when parsing _
+        // ColonFlag == true
+        //
+        if (Tok.Tok == TOKEN_COLON) {
+            
+            if ((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
+                
+                NodeSeq PatSeq(1 + 1);
+                PatSeq.append(std::move(Pat));
+                PatSeq.appendIfNonEmpty(std::move(ArgsTest));
+                
+                return contextSensitiveColonParselet->parseContextSensitive(std::move(PatSeq), Tok, Ctxt);
+            }
+        }
+        
+        return Pat;
+    }
+    
+    Precedence getPrecedence(ParserContext Ctxt) const override {
+        return PRECEDENCE_UNDER;
+    }
+};
+
+
+
 std::array<PrefixParseletPtr, TOKEN_COUNT.value()> prefixParselets {{"} ~Join~
 
 (Row[{"  ", formatPrefix[PrefixOperatorToParselet[#]], ", ", "// ", ToString[#]}]& /@ tokensSansCount) ~Join~
@@ -817,9 +976,9 @@ std::array<InfixParseletPtr, TOKEN_COUNT.value()> infixParselets {{"} ~Join~
 {"}};
 
 PrefixParseletPtr contextSensitiveSymbolParselet(&highestLeafParselet);
-ContextSensitiveInfixParseletPtr contextSensitiveUnder1Parselet(new UnderParselet(1));
-ContextSensitiveInfixParseletPtr contextSensitiveUnder2Parselet(new UnderParselet(2));
-ContextSensitiveInfixParseletPtr contextSensitiveUnder3Parselet(new UnderParselet(3));
+ContextSensitiveInfixParseletPtr contextSensitiveUnder1Parselet(new UnderParselet<BlankNode, PatternBlankNode>());
+ContextSensitiveInfixParseletPtr contextSensitiveUnder2Parselet(new UnderParselet<BlankSequenceNode, PatternBlankSequenceNode>());
+ContextSensitiveInfixParseletPtr contextSensitiveUnder3Parselet(new UnderParselet<BlankNullSequenceNode, PatternBlankNullSequenceNode>());
 ContextSensitiveInfixParseletPtr contextSensitiveColonParselet(&colonParselet);
 "}
 

@@ -282,20 +282,6 @@ public:
     }
 };
 
-class UnderParselet : public PrefixParselet, public ContextSensitiveInfixParselet {
-    size_t count;
-public:
-    UnderParselet(size_t count);
-    
-    NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
-    
-    NodePtr parseContextSensitive(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
-    
-    Precedence getPrecedence(ParserContext Ctxt) const override {
-        return PRECEDENCE_UNDER;
-    }
-};
-
 //
 // Deliberately not extending PrefixOperatorParselet and InfixOperatorParselet because I don't feel like bothering with
 // multiple inheritance
