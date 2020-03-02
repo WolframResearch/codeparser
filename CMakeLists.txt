@@ -430,6 +430,8 @@ if(USE_MATHLINK)
 target_compile_definitions(codeparser-lib PUBLIC USE_MATHLINK=1)
 endif()
 
+target_compile_definitions(codeparser-lib PUBLIC SIZEOF_VOID_P=${CMAKE_SIZEOF_VOID_P})
+
 
 
 #

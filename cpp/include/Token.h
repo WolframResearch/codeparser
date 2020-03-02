@@ -17,7 +17,7 @@ struct Token {
     void print(std::ostream&) const;
 };
 
-static_assert(sizeof(Token) == 48, "Check your assumptions");
+static_assert(SIZEOF_VOID_P == 8 && sizeof(Token) == 48 || SIZEOF_VOID_P == 4, "Check your assumptions");
 
 bool operator==(Token a, Token b);
 
