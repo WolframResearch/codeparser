@@ -95,6 +95,14 @@ Module[{},
     ]@Function[{Typed[arg1, "Expression"]},
       Memory`Release[arg1];
     ]
+    ,
+    MetaData[<|"Exported" -> True, "Name" -> Expr`FromUTF8String|>
+    ]@Function[{Typed[arg1, "MachineInteger"], Typed[arg2, "MachineInteger"]},
+      Module[{cast1},
+        cast1 = Native`BitCast[arg1, "CArray"["UnsignedInteger8"]];
+        Native`PrimitiveFunction["UTF8BytesToStringExpression"][cast1, arg2]
+      ]
+    ]
   }]
 ]
 
