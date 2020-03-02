@@ -18,7 +18,7 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
     
     auto i = c.to_point();
     
-    assert(i != CODEPOINT_UNKNOWN);
+    assert(i != CODEPOINT_ASSERTFALSE);
     
     auto escape = c.escape();
     
@@ -544,7 +544,8 @@ bool WLCharacter::isMBLetterlike() const {
         return false;
     }
     
-    if (val == CODEPOINT_UNKNOWN) {
+    if (val == CODEPOINT_ASSERTFALSE) {
+        assert(false);
         return false;
     }
     

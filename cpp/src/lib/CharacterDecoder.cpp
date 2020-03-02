@@ -468,13 +468,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
             //
             // Just generally strange character is in the code
             //
-            
-            WLCharacter c;
-            if (LongNames::isRaw(longNameStr)) {
-                c = WLCharacter(point, ESCAPE_RAW);
-            } else {
-                c = WLCharacter(point, ESCAPE_LONGNAME);
-            }
+            auto c = WLCharacter(point, LongNames::isRaw(longNameStr) ? ESCAPE_RAW : ESCAPE_LONGNAME);
             
             auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
             
@@ -1058,7 +1052,7 @@ WLCharacter CharacterDecoder::handleLineContinuation(Buffer currentWLCharacterSt
                 return WLCharacter(CODEPOINT_LINECONTINUATION_CRLF, ESCAPE_SINGLE);
             default:
                 assert(false);
-                return WLCharacter(CODEPOINT_UNKNOWN);
+                return WLCharacter(CODEPOINT_ASSERTFALSE);
         }
     }
     

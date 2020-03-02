@@ -541,7 +541,7 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
 
         auto val = c.to_point();
 
-        assert(val != CODEPOINT_UNKNOWN);
+        assert(val != CODEPOINT_ASSERTFALSE);
 
         ByteEncoderState state;
 

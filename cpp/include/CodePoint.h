@@ -52,7 +52,7 @@ constexpr codepoint CODEPOINT_ENDOFFILE(EOF);
 //
 //
 //
-constexpr codepoint CODEPOINT_UNKNOWN(-2);
+constexpr codepoint CODEPOINT_ASSERTFALSE(-2);
 
 //
 // There is an inconsistency in WL, such that LINEARSYNTAX_SPACE does not have a dedicated code point

@@ -729,7 +729,7 @@ Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]] ], ".value():", " ", "return", " ", 
 {"Closer GroupOpenerToCloser(TokenEnum T) {"} ~Join~
 {"switch (T.value()) {"} ~Join~
 Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]] ], ".value():", " ", "return", " ", toGlobal[#[[2]] ], ";"}]&, DownValues[GroupOpenerToCloser]] ~Join~
-{"default: assert(false && \"Unhandled token\"); return CLOSER_UNKNOWN;",
+{"default: assert(false && \"Unhandled token\"); return CLOSER_ASSERTFALSE;",
 "}"} ~Join~
 {"}"} ~Join~
 
@@ -738,7 +738,7 @@ Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]] ], ".value():", " ", "return", " ", 
 {"Closer TokenToCloser(TokenEnum T) {"} ~Join~
 {"switch (T.value()) {"} ~Join~
 Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]] ], ".value():", " ", "return", " ", toGlobal[#[[2]] ], ";"}]&, DownValues[TokenToCloser]] ~Join~
-{"default: return CLOSER_UNKNOWN;",
+{"default: return CLOSER_ASSERTFALSE;",
 "}"} ~Join~
 {"}"} ~Join~
 
