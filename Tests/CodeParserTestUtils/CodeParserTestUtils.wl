@@ -946,6 +946,17 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "SystemFiles/Components/RobotTools/Kernel/FrontEnd.m",
         prefix <> "SystemFiles/Links/JLink/Kernel/CallJava.m",
         prefix <> "SystemFiles/Links/NETLink/Kernel/CallNET.m",
+        prefix <> "alphasource/CalculateParse/BuildLexicon.m",
+        prefix <> "alphasource/CalculateParse/Content/ExamplePage.m",
+        prefix <> "alphasource/CalculateParse/TemplateParser4.m",
+        prefix <> "alphasource/CalculateUtilities/CustomBuildUtilities.m",
+        prefix <> "alphasource/CalculateUtilities/DataCloud/Test/DataCloudSpecialcaseTests.mt",
+        prefix <> "alphasource/DataScience/Procedures/DataScienceUtilities.m",
+        prefix <> "datapaclettools/Compiler/Code.m",
+        prefix <> "datapaclettools/Compiler/DatabaseCompiler.m",
+        prefix <> "datapaclettools/Compiler.m",
+        prefix <> "datapaclettools/Repository/Editors.m",
+        prefix <> "datapaclettools/Repository/Interface.m",
         Nothing
         }, fileIn],
       f = Failure["CannotRegexTooProgrammatic", <|"FileName" -> fileIn|>];
