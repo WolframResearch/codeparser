@@ -1,19 +1,27 @@
 
 if(NOT DEFINED INSTALLATION_DIRECTORY)
 if(CMAKE_HOST_WIN32 OR CYGWIN)
-	set(INSTALLATION_DIRECTORY C:/Program Files/Wolfram Research/Mathematica/12.0/)
+	set(INSTALLATION_DIRECTORY C:/Program Files/Wolfram Research/Mathematica/12.0)
 elseif(CMAKE_HOST_APPLE)
-	set(INSTALLATION_DIRECTORY /Applications/Mathematica.app/Contents/)
+	set(INSTALLATION_DIRECTORY /Applications/Mathematica.app/Contents)
 else()
-	set(INSTALLATION_DIRECTORY /usr/local/Wolfram/Mathematica/12.0/)
+	set(INSTALLATION_DIRECTORY /usr/local/Wolfram/Mathematica/12.0)
 endif()
 endif()
 
 if(CMAKE_HOST_WIN32 OR CYGWIN)
 	set(WOLFRAMKERNEL_DEFAULT ${INSTALLATION_DIRECTORY}/wolfram.exe)
 	set(WOLFRAMLIBRARY_INCLUDE_DIR_DEFAULT ${INSTALLATION_DIRECTORY}/SystemFiles/IncludeFiles/C)
-	set(MATHLINK_INCLUDE_DIR_DEFAULT ${INSTALLATION_DIRECTORY}/SystemFiles/Links/MathLink/DeveloperKit/Windows-x86-64/CompilerAdditions/mldev64/include)
-	set(MATHLINK_LIB_DIR_DEFAULT ${INSTALLATION_DIRECTORY}/SystemFiles/Links/MathLink/DeveloperKit/Windows-x86-64/CompilerAdditions/mldev64/lib)
+	#
+	# in versions before 11.2, there were 2 separate paths:
+	# SystemFiles/Links/MathLink/DeveloperKit/Windows-x86-64/CompilerAdditions/mldev64/include
+	# SystemFiles/Links/MathLink/DeveloperKit/Windows-x86-64/CompilerAdditions/mldev64/lib
+	#
+	# starting in 11.2, the single path for MathLink includes and MathLink libs is:
+	# SystemFiles/Links/MathLink/DeveloperKit/Windows-x86-64/CompilerAdditions
+	#
+	set(MATHLINK_INCLUDE_DIR_DEFAULT ${INSTALLATION_DIRECTORY}/SystemFiles/Links/MathLink/DeveloperKit/Windows-x86-64/CompilerAdditions)
+	set(MATHLINK_LIB_DIR_DEFAULT ${INSTALLATION_DIRECTORY}/SystemFiles/Links/MathLink/DeveloperKit/Windows-x86-64/CompilerAdditions)
 elseif (CMAKE_HOST_APPLE)
 	set(WOLFRAMKERNEL_DEFAULT ${INSTALLATION_DIRECTORY}/MacOS/WolframKernel)
 	set(WOLFRAMLIBRARY_INCLUDE_DIR_DEFAULT ${INSTALLATION_DIRECTORY}/SystemFiles/IncludeFiles/C)
