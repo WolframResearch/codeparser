@@ -122,7 +122,7 @@ enum NextCharacterPolicyBits : uint8_t {
     //
     // Check for sequences like \\[Alpa] and report them
     //
-    ENABLE_UNLIKELY_ESCAPE_CHECKING = 0x0a,
+    ENABLE_UNLIKELY_ESCAPE_CHECKING = 0x10,
 };
 
 using NextCharacterPolicy = uint8_t;

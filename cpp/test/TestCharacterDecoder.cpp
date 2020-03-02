@@ -647,3 +647,41 @@ TEST_F(CharacterDecoderTest, LineContinuation3) {
     EXPECT_EQ(c, WLCharacter(CODEPOINT_ENDOFFILE));
 }
 
+//
+// There was a bug where UnexpectedEscapeSequence issues were being added by mistake
+//
+TEST_F(CharacterDecoderTest, UnexpectedEscapeSequence) {
+    
+    auto strIn = std::string("\"\\[Alpha]\"");
+    
+    auto str = reinterpret_cast<Buffer>(strIn.c_str());
+    
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
+    
+    auto c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    
+    EXPECT_EQ(c, WLCharacter('"'));
+    
+    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+    
+    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL | PRESERVE_WS_AFTER_LC | LC_IS_MEANINGFUL);
+    
+    EXPECT_EQ(c, WLCharacter(0x03b1, ESCAPE_LONGNAME));
+    
+    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+    
+    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    
+    EXPECT_EQ(c, WLCharacter('"'));
+    
+    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+    
+    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    
+    EXPECT_EQ(c, WLCharacter(CODEPOINT_ENDOFFILE));
+    
+    auto& Issues = TheCharacterDecoder->getIssues();
+    
+    EXPECT_EQ(Issues.size(), (size_t) 0);
+}
+

@@ -374,59 +374,54 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
     
     auto it = std::lower_bound(LongNameToCodePointMap_names.begin(), LongNameToCodePointMap_names.end(), longNameStr);
     auto found = (it != LongNameToCodePointMap_names.end() && *it == longNameStr);
-    if (!found || ((policy & ENABLE_UNLIKELY_ESCAPE_CHECKING) == ENABLE_UNLIKELY_ESCAPE_CHECKING)) {
+    if (!found) {
         
         //
         // Unrecognized name
         //
-        // If found and unlikelyEscapeChecking, then still come in here.
-        //
         
 #if !NISSUES
-        if (!found) {
+        if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
             
-            if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
-                
-                auto longNameEndLoc = TheByteDecoder->SrcLoc;
-                
-                //
-                // Accomodate the ] character
-                //
-                auto currentWLCharacterEndLoc = longNameEndLoc.next();
-                
-                auto suggestion = longNameSuggestion(longNameBufAndLen);
-                
-                std::vector<CodeActionPtr> Actions;
-                if (!suggestion.empty()) {
-                    Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with \\[" + suggestion + "]", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\[" + suggestion + "]")));
-                }
-                
-                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\[") + longNameStr + "]``.", SYNTAXISSUESEVERITY_ERROR, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
-                
-                Issues.push_back(std::move(I));
-                
-            } else if ((policy & ENABLE_UNLIKELY_ESCAPE_CHECKING) == ENABLE_UNLIKELY_ESCAPE_CHECKING) {
-                
-                auto longNameEndLoc = TheByteDecoder->SrcLoc;
-                
-                //
-                // Accomodate the ] character
-                //
-                auto currentWLCharacterEndLoc = longNameEndLoc.next();
-                
-                auto previousBackSlashLoc = currentWLCharacterStartLoc.previous();
-                
-                auto suggestion = longNameSuggestion(longNameBufAndLen);
-                
-                std::vector<CodeActionPtr> Actions;
-                if (!suggestion.empty()) {
-                    Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with \\[" + suggestion + "]", Source(previousBackSlashLoc, currentWLCharacterEndLoc), "\\[" + suggestion + "]")));
-                }
-                
-                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDESCAPESEQUENCE, std::string("Unexpected escape sequence: ``\\\\[") + longNameStr + "]``.", SYNTAXISSUESEVERITY_REMARK, Source(previousBackSlashLoc, currentWLCharacterEndLoc), 0.33, std::move(Actions)));
-                
-                Issues.push_back(std::move(I));
+            auto longNameEndLoc = TheByteDecoder->SrcLoc;
+            
+            //
+            // Accomodate the ] character
+            //
+            auto currentWLCharacterEndLoc = longNameEndLoc.next();
+            
+            auto suggestion = longNameSuggestion(longNameBufAndLen);
+            
+            std::vector<CodeActionPtr> Actions;
+            if (!suggestion.empty()) {
+                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with \\[" + suggestion + "]", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\[" + suggestion + "]")));
             }
+            
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\[") + longNameStr + "]``.", SYNTAXISSUESEVERITY_ERROR, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
+            
+            Issues.push_back(std::move(I));
+            
+        } else if ((policy & ENABLE_UNLIKELY_ESCAPE_CHECKING) == ENABLE_UNLIKELY_ESCAPE_CHECKING) {
+            
+            auto longNameEndLoc = TheByteDecoder->SrcLoc;
+            
+            //
+            // Accomodate the ] character
+            //
+            auto currentWLCharacterEndLoc = longNameEndLoc.next();
+            
+            auto previousBackSlashLoc = currentWLCharacterStartLoc.previous();
+            
+            auto suggestion = longNameSuggestion(longNameBufAndLen);
+            
+            std::vector<CodeActionPtr> Actions;
+            if (!suggestion.empty()) {
+                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with \\[" + suggestion + "]", Source(previousBackSlashLoc, currentWLCharacterEndLoc), "\\[" + suggestion + "]")));
+            }
+            
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDESCAPESEQUENCE, std::string("Unexpected escape sequence: ``\\\\[") + longNameStr + "]``.", SYNTAXISSUESEVERITY_REMARK, Source(previousBackSlashLoc, currentWLCharacterEndLoc), 0.33, std::move(Actions)));
+            
+            Issues.push_back(std::move(I));
         }
 #endif // !NISSUES
         
@@ -439,6 +434,37 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
     //
     // Success!
     //
+    
+#if !NISSUES
+    if ((policy & ENABLE_UNLIKELY_ESCAPE_CHECKING) == ENABLE_UNLIKELY_ESCAPE_CHECKING) {
+        
+        //
+        // Unexpected escape sequence
+        //
+        // If found and unlikelyEscapeChecking, then still come in here.
+        //
+        
+        auto longNameEndLoc = TheByteDecoder->SrcLoc;
+        
+        //
+        // Accomodate the ] character
+        //
+        auto currentWLCharacterEndLoc = longNameEndLoc.next();
+        
+        auto previousBackSlashLoc = currentWLCharacterStartLoc.previous();
+        
+        auto suggestion = longNameSuggestion(longNameBufAndLen);
+        
+        std::vector<CodeActionPtr> Actions;
+        if (!suggestion.empty()) {
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with \\[" + suggestion + "]", Source(previousBackSlashLoc, currentWLCharacterEndLoc), "\\[" + suggestion + "]")));
+        }
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDESCAPESEQUENCE, std::string("Unexpected escape sequence: ``\\\\[") + longNameStr + "]``.", SYNTAXISSUESEVERITY_REMARK, Source(previousBackSlashLoc, currentWLCharacterEndLoc), 0.33, std::move(Actions)));
+        
+        Issues.push_back(std::move(I));
+    }
+#endif // !NISSUES
     
     TheByteBuffer->buffer = TheByteDecoder->lastBuf;
     TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
