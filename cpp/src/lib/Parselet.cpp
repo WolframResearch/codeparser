@@ -431,7 +431,7 @@ NodePtr GroupParselet::parse(Token firstTok, ParserContext Ctxt) const {
     
     auto OpenerT = firstTok;
     
-    Ctxt.InsideGroup = true;
+    Ctxt.InsideGroup = 0x1;
     
     TheParser->nextToken(firstTok);
     
@@ -979,7 +979,7 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext Ctxt)
     
     auto Opener = firstTok;
     
-    Ctxt.InsideGroup = true;
+    Ctxt.InsideGroup = 0x1;
     
     TheParser->nextToken(firstTok);
     
