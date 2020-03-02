@@ -406,7 +406,17 @@ public:
 
 class EqualParselet : public BinaryOperatorParselet {
 public:
-    EqualParselet(TokenEnum Tok) : BinaryOperatorParselet(Tok, PRECEDENCE_EQUAL, ASSOCIATIVITY_RIGHT) {}
+    EqualParselet() : BinaryOperatorParselet(TOKEN_EQUAL, PRECEDENCE_EQUAL, ASSOCIATIVITY_RIGHT) {}
+    
+    NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
+};
+
+//
+// This is not really a binary operator, but keep it consistent with EqualParselet, which handles  a = .
+//
+class EqualDotParselet : public BinaryOperatorParselet {
+public:
+    EqualDotParselet() : BinaryOperatorParselet(TOKEN_EQUALDOT, PRECEDENCE_EQUAL, ASSOCIATIVITY_RIGHT) {}
     
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
 };

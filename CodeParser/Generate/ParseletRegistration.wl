@@ -592,8 +592,8 @@ InfixOperatorToParselet[Token`SlashColon] = SlashColonParselet[]
 (*
 Has to handle  a =.  and  a = .
 *)
-InfixOperatorToParselet[Token`Equal] = EqualParselet[Token`Equal]
-InfixOperatorToParselet[Token`EqualDot] = EqualParselet[Token`EqualDot]
+InfixOperatorToParselet[Token`Equal] = EqualParselet[]
+InfixOperatorToParselet[Token`EqualDot] = EqualDotParselet[]
 
 (*
 stringify next token (as a symbol)
@@ -731,7 +731,9 @@ formatInfix[ColonParselet[]] := "&colonParselet"
 
 formatInfix[CallParselet[groupParselet_]] := "new CallParselet(" <> formatPrefix[groupParselet] <> ")"
 
-formatInfix[EqualParselet[tok_]] := "new EqualParselet(" <> toGlobal[tok] <> ")"
+formatInfix[EqualParselet[]] := "new EqualParselet()"
+
+formatInfix[EqualDotParselet[]] := "new EqualDotParselet()"
 
 formatInfix[TildeParselet[]] := "&tildeParselet"
 
