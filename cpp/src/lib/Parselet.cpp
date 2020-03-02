@@ -5,54 +5,6 @@
 #include "ParseletRegistration.h"
 
 
-NodePtr InfixParselet::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext CtxtIn, bool *wasCloser) const {
-    
-    //
-    // It is possible that possibleBeginningOfExpression could get here
-    //
-    // For example: \[Integral]!b
-    // !b is possible beginning of expression, but ! has lower precedence than \[Integral],
-    // so
-    //
-    //
-    if (tokenBad.Tok.isPossibleBeginningOfExpression()) {
-        
-        auto operand = TheParser->parse(tokenBad, CtxtIn);
-        
-        *wasCloser = false;
-        
-        return operand;
-    }
-    
-    //
-    // Handle something like  f[,1]
-    //
-    // We want to make EXPECTEDOPERAND the first arg of the Comma node.
-    //
-    // Do not take next token
-    //
-    // Important to not duplicate token's Str here, it may also appear later
-    //
-    // Also, invent Source
-    //
-    
-    auto NotPossible = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.BufLen.buffer), Source(tokenAnchor.Src.Start))));
-    
-    NodeSeq LeftSeq(1);
-    LeftSeq.append(std::move(NotPossible));
-    
-    auto Ctxt = CtxtIn;
-    //
-    // FIXME: clear other flags here also?
-    //
-    Ctxt.Flag &= ~(PARSER_INSIDE_COLON);
-    
-    *wasCloser = false;
-    
-    return parse(std::move(LeftSeq), tokenBad, Ctxt);
-}
-
-
 LeafParselet::LeafParselet(Precedence precedence) : precedence(precedence) {}
 
 NodePtr LeafParselet::parse(Token TokIn, ParserContext Ctxt) const {
@@ -66,128 +18,6 @@ Precedence LeafParselet::getPrecedence(ParserContext Ctxt) const {
     assert(precedence != PRECEDENCE_ASSERTFALSE);
     return precedence;
 }
-
-
-NullInfixParselet::NullInfixParselet() {}
-
-NodePtr NullInfixParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
-    assert(false);
-    return nullptr;
-}
-
-Precedence NullInfixParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
-    *implicitTimes = true;
-    return PRECEDENCE_FAKE_IMPLICITTIMES;
-}
-
-Associativity NullInfixParselet::getAssociativity() const {
-    return ASSOCIATIVITY_NONE;
-}
-
-
-
-LeafInfixParselet::LeafInfixParselet(Precedence precedence) : precedence(precedence) {}
-
-NodePtr LeafInfixParselet::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext CtxtIn, bool *wasCloser) const {
-    
-    if (tokenBad.Tok.isCloser()) {
-        
-        if (TokenToCloser(tokenBad.Tok) == CtxtIn.Closr) {
-            //
-            // Handle the special cases of:
-            // { + }
-            // { a + }
-            // { a @ }
-            // We are here parsing the operators, but we don't want to descend and treat the } as the problem
-            //
-            
-            //
-            // Do not take next token
-            //
-            
-            auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.BufLen.end), Source(tokenAnchor.Src.End));
-            
-            *wasCloser = true;
-            
-            return NodePtr(new ErrorNode(createdToken));
-        }
-        
-        //
-        // Handle  { a ) }
-        // which ends up being  MissingCloser[ { a ) ]   UnexpectedCloser[ } ]
-        //
-        
-        TheParser->nextToken(tokenBad);
-        
-        NodeSeq Args(1);
-        Args.append(NodePtr(new LeafNode(tokenBad)));
-        
-        auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_UNEXPECTEDCLOSER, std::move(Args)));
-        
-        *wasCloser = true;
-        
-        return Error;
-    }
-    
-    if (tokenBad.Tok == TOKEN_ENDOFFILE) {
-        
-        auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.BufLen.end), Source(tokenAnchor.Src.End));
-        
-        *wasCloser = true;
-        
-        return NodePtr(new ErrorNode(createdToken));
-    }
-    
-    assert(tokenBad.Tok.isError());
-    
-    TheParser->nextToken(tokenBad);
-    
-    //
-    // If there is a Token error, then use that specific error
-    //
-    
-    *wasCloser = false;
-    
-    return NodePtr(new ErrorNode(tokenBad));
-}
-
-Precedence LeafInfixParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
-    *implicitTimes = false;
-    return precedence;
-}
-
-
-
-DifferentialDParselet::DifferentialDParselet() {}
-
-Precedence DifferentialDParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
-    
-    if ((Ctxt.Flag & PARSER_INSIDE_INTEGRAL) == PARSER_INSIDE_INTEGRAL) {
-        
-        //
-        // Inside \[Integral], so \[DifferentialD] is treated specially
-        //
-        
-        *implicitTimes = false;
-        
-        return PRECEDENCE_LOWEST;
-    }
-    
-    *implicitTimes = true;
-    
-    return PRECEDENCE_FAKE_IMPLICITTIMES;
-}
-
-NodePtr DifferentialDParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
-    assert(false);
-    return nullptr;
-}
-
-Associativity DifferentialDParselet::getAssociativity() const {
-    assert(false);
-    return ASSOCIATIVITY_ASSERTFALSE;
-}
-
 
 
 ToplevelNewlineParselet::ToplevelNewlineParselet() {}
@@ -321,6 +151,142 @@ NodePtr PrefixOperatorParselet::parse(Token TokIn, ParserContext Ctxt) const {
     Args.append(std::move(Operand));
     
     return NodePtr(new PrefixNode(Op, std::move(Args)));
+}
+
+
+NodePtr InfixParselet::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext CtxtIn, bool *wasCloser) const {
+    
+    //
+    // It is possible that possibleBeginningOfExpression could get here
+    //
+    // For example: \[Integral]!b
+    // !b is possible beginning of expression, but ! has lower precedence than \[Integral],
+    // so
+    //
+    //
+    if (tokenBad.Tok.isPossibleBeginningOfExpression()) {
+        
+        auto operand = TheParser->parse(tokenBad, CtxtIn);
+        
+        *wasCloser = false;
+        
+        return operand;
+    }
+    
+    //
+    // Handle something like  f[,1]
+    //
+    // We want to make EXPECTEDOPERAND the first arg of the Comma node.
+    //
+    // Do not take next token
+    //
+    // Important to not duplicate token's Str here, it may also appear later
+    //
+    // Also, invent Source
+    //
+    
+    auto NotPossible = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.BufLen.buffer), Source(tokenAnchor.Src.Start))));
+    
+    NodeSeq LeftSeq(1);
+    LeftSeq.append(std::move(NotPossible));
+    
+    auto Ctxt = CtxtIn;
+    //
+    // FIXME: clear other flags here also?
+    //
+    Ctxt.Flag &= ~(PARSER_INSIDE_COLON);
+    
+    *wasCloser = false;
+    
+    return parse(std::move(LeftSeq), tokenBad, Ctxt);
+}
+
+
+NullInfixParselet::NullInfixParselet() {}
+
+NodePtr NullInfixParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
+    assert(false);
+    return nullptr;
+}
+
+Precedence NullInfixParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
+    *implicitTimes = true;
+    return PRECEDENCE_FAKE_IMPLICITTIMES;
+}
+
+Associativity NullInfixParselet::getAssociativity() const {
+    return ASSOCIATIVITY_NONE;
+}
+
+
+LeafInfixParselet::LeafInfixParselet(Precedence precedence) : precedence(precedence) {}
+
+NodePtr LeafInfixParselet::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext CtxtIn, bool *wasCloser) const {
+    
+    if (TokenToCloser(tokenBad.Tok) == CtxtIn.Closr) {
+        //
+        // Handle the special cases of:
+        // { + }
+        // { a + }
+        // { a @ }
+        // We are here parsing the operators, but we don't want to descend and treat the } as the problem
+        //
+        
+        //
+        // Do not take next token
+        //
+        
+        auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.BufLen.end), Source(tokenAnchor.Src.End));
+        
+        *wasCloser = true;
+        
+        return NodePtr(new ErrorNode(createdToken));
+    }
+    
+    if (tokenBad.Tok.isCloser()) {
+        
+        //
+        // Handle  { a ) }
+        // which ends up being  MissingCloser[ { a ) ]   UnexpectedCloser[ } ]
+        //
+        
+        TheParser->nextToken(tokenBad);
+        
+        NodeSeq Args(1);
+        Args.append(NodePtr(new LeafNode(tokenBad)));
+        
+        auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_UNEXPECTEDCLOSER, std::move(Args)));
+        
+        *wasCloser = true;
+        
+        return Error;
+    }
+    
+    if (tokenBad.Tok == TOKEN_ENDOFFILE) {
+        
+        auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.BufLen.end), Source(tokenAnchor.Src.End));
+        
+        *wasCloser = true;
+        
+        return NodePtr(new ErrorNode(createdToken));
+    }
+    
+    assert(tokenBad.Tok.isError());
+    
+    TheParser->nextToken(tokenBad);
+    
+    //
+    // If there is a Token error, then use that specific error
+    //
+    
+    *wasCloser = false;
+    
+    return NodePtr(new ErrorNode(tokenBad));
+}
+
+Precedence LeafInfixParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
+    *implicitTimes = false;
+    return precedence;
 }
 
 
@@ -1539,3 +1505,36 @@ NodePtr LessLessParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     return NodePtr(new PrefixNode(SYMBOL_GET, std::move(Args)));
 }
+
+
+DifferentialDParselet::DifferentialDParselet() {}
+
+Precedence DifferentialDParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
+    
+    if ((Ctxt.Flag & PARSER_INSIDE_INTEGRAL) == PARSER_INSIDE_INTEGRAL) {
+        
+        //
+        // Inside \[Integral], so \[DifferentialD] is treated specially
+        //
+        
+        *implicitTimes = false;
+        
+        return PRECEDENCE_LOWEST;
+    }
+    
+    *implicitTimes = true;
+    
+    return PRECEDENCE_FAKE_IMPLICITTIMES;
+}
+
+NodePtr DifferentialDParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
+    assert(false);
+    return nullptr;
+}
+
+Associativity DifferentialDParselet::getAssociativity() const {
+    assert(false);
+    return ASSOCIATIVITY_ASSERTFALSE;
+}
+
+
