@@ -169,13 +169,16 @@ uninterpretableSource =
     "}", ""}
 
 unsupportedSource = 
-  {"std::array<std::string, " <> ToString[Length[importedUnsupportedLongNames]] <> "> unsupportedLongNames {{"} ~Join~
-    (Row[{"\""<>#<>"\"", ","}]& /@ lexSort[importedUnsupportedLongNames]) ~Join~
-    {"}};", "",
-    "bool LongNames::isUnsupportedLongName(std::string name) {",
-    "auto it =  std::lower_bound(unsupportedLongNames.begin(), unsupportedLongNames.end(), name);",
-    "return it != unsupportedLongNames.end() && *it == name;",
-    "}", ""}
+  {"std::array<codepoint, " <> ToString[Length[importedUnsupportedLongNameCodePoints]] <> "> unsupportedLongNameCodePoints {{"} ~Join~
+    (Row[{codePointToHexDigits[#], ","}]& /@ SortBy[importedUnsupportedLongNameCodePoints, Identity]) ~Join~
+    {"}};",
+    "",
+    "bool LongNames::isUnsupportedLongNameCodePoint(codepoint point) {",
+    "auto it =  std::lower_bound(unsupportedLongNameCodePoints.begin(), unsupportedLongNameCodePoints.end(), point);",
+    "return it != unsupportedLongNameCodePoints.end() && *it == point;",
+    "}",
+    ""
+}
 
 LongNameCodePointToOperatorSource = 
   {"TokenEnum LongNameCodePointToOperator(codepoint c) {
@@ -225,7 +228,7 @@ public:
 
     static bool isMBUninterpretable(codepoint point);
 
-    static bool isUnsupportedLongName(std::string s);
+    static bool isUnsupportedLongNameCodePoint(codepoint point);
 
     //
     // Is this \\[Raw] something?

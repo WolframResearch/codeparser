@@ -30,6 +30,7 @@ importedNewlineLongNames
 importedUninterpretableLongNames
 
 importedUnsupportedLongNames
+importedUnsupportedLongNameCodePoints
 
 importedRawLongNames
 
@@ -44,6 +45,9 @@ tokens
 longNameToCharacterCode
 
 longNameToHexDigits
+
+codePointToHexDigits
+
 
 Begin["`Private`"]
 
@@ -95,6 +99,17 @@ longNameToHexDigits["Alpha"] is "0x03b1"
 longNameToHexDigits[longName_String] :=
   "0x"<>IntegerString[longNameToCharacterCode[longName], 16, 4]
 
+codePointToHexDigits[point_Integer] :=
+Which[
+  point <= 16^^ff,
+    "0x"<>IntegerString[point, 16, 2]
+  ,
+  point <= 16^^ffff,
+    "0x"<>IntegerString[point, 16, 4]
+  ,
+  True,
+    "0x"<>IntegerString[point, 16, 6]
+]
 
 
 
@@ -174,6 +189,7 @@ importedNewlineLongNames = Keys[Select[importedLongNames, #[[1]] === NewlineChar
 importedUninterpretableLongNames = Keys[Select[importedLongNames, #[[1]] === UninterpretableCharacter &]]
 
 importedUnsupportedLongNames = Keys[Select[importedLongNames, #[[1]] === UnsupportedCharacter &]]
+importedUnsupportedLongNameCodePoints = importedLongNames[[Key[#], 2]]& /@ importedUnsupportedLongNames
 
 importedRawLongNames = Keys[Select[importedLongNames, #[[1]] === RawCharacter &]]
 

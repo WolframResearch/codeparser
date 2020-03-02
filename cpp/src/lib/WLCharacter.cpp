@@ -505,13 +505,7 @@ bool WLCharacter::isMBUnsupported() const {
         
         auto val = to_point();
         
-        auto it = std::lower_bound(CodePointToLongNameMap_points.begin(), CodePointToLongNameMap_points.end(), val);
-        assert(it != CodePointToLongNameMap_points.end());
-        assert(*it == val);
-        auto idx = it - CodePointToLongNameMap_points.begin();
-        auto name = CodePointToLongNameMap_names[idx];
-        
-        if (LongNames::isUnsupportedLongName(name)) {
+        if (LongNames::isUnsupportedLongNameCodePoint(val)) {
             return true;
         }
     }

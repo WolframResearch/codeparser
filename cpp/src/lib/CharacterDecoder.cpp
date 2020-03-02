@@ -457,7 +457,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
         //
         // The well-formed, recognized name could still be unsupported or undocumented
         //
-        if (LongNames::isUnsupportedLongName(longNameStr)) {
+        if (LongNames::isUnsupportedLongNameCodePoint(point)) {
             
             auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNSUPPORTEDCHARACTER, std::string("Unsupported character: ``\\[") + longNameStr + "]``.", SYNTAXISSUESEVERITY_ERROR, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, {}));
             
