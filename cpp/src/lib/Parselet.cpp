@@ -91,33 +91,35 @@ NodePtr SymbolParselet::parse(Token TokIn, ParserContext Ctxt) const {
             
             return NodePtr(new OptionalDefaultPatternNode(std::move(Args)));
         }
-    }
-    
-    LeafSeq ArgsTest;
-    
-    Tok = TheParser->eatAndPreserveToplevelNewlines(Tok, Ctxt, ArgsTest);
-    
-    //
-    // when parsing a in a:b  then PARSER_INSIDE_COLON bit is 0
-    // when parsing b in a:b  then PARSER_INSIDE_COLON bit is 1
-    //
-    // It is necessary to go to colonParselet->parse here (even though it seems non-contextSensitive)
-    // because in e.g.,  a_*b:f[]  the b is the last node in the Times expression and needs to bind with  :f[]
-    // Parsing  a_*b  completely, and then parsing  :f[]  would be wrong.
-    //
-    if (Tok.Tok == TOKEN_COLON) {
-        
-        if ((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
+        default: {
             
-            NodeSeq Args(1 + 1);
-            Args.append(std::move(Sym));
-            Args.appendIfNonEmpty(std::move(ArgsTest));
+            LeafSeq ArgsTest;
             
-            return infixParselets[Tok.Tok.value()]->parse(std::move(Args), Tok, Ctxt);
+            Tok = TheParser->eatAndPreserveToplevelNewlines(Tok, Ctxt, ArgsTest);
+            
+            //
+            // when parsing a in a:b  then PARSER_INSIDE_COLON bit is 0
+            // when parsing b in a:b  then PARSER_INSIDE_COLON bit is 1
+            //
+            // It is necessary to go to colonParselet->parse here (even though it seems non-contextSensitive)
+            // because in e.g.,  a_*b:f[]  the b is the last node in the Times expression and needs to bind with  :f[]
+            // Parsing  a_*b  completely, and then parsing  :f[]  would be wrong.
+            //
+            if (Tok.Tok == TOKEN_COLON) {
+                
+                if ((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
+                    
+                    NodeSeq Args(1 + 1);
+                    Args.append(std::move(Sym));
+                    Args.appendIfNonEmpty(std::move(ArgsTest));
+                    
+                    return infixParselets[Tok.Tok.value()]->parse(std::move(Args), Tok, Ctxt);
+                }
+            }
+            
+            return Sym;
         }
     }
-    
-    return Sym;
 }
 
 
