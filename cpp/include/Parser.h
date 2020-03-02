@@ -62,7 +62,7 @@ struct ParserContext {
     //
     //
     //
-    int8_t InsideGroup : 1;
+    uint8_t InsideGroup : 1;
     
     ParserContext() : Prec(), Closr(), Flag(), InsideGroup() {}
 };
