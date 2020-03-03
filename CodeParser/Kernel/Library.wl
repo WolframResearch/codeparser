@@ -16,6 +16,7 @@ tokenizeBytesListableFunc
 concreteParseLeafFunc
 safeStringFunc
 exprTestFunc
+concreteParseBytes2Func
 
 setupLongNamesFunc
 
@@ -264,6 +265,8 @@ safeStringFunc := safeStringFunc = loadFunc["SafeString_LibraryLink", LinkObject
 
 exprTestFunc := exprTestFunc = loadFunc["ExprTest_LibraryLink", {}, Integer];
 
+concreteParseBytes2Func := concreteParseBytesFunc = loadFunc["ConcreteParseBytes2_LibraryLink", { {LibraryDataType[ByteArray], "Shared"}, "UTF8String" }, Integer];
+
 setupLongNamesFunc := setupLongNamesFunc = loadFunc["SetupLongNames_LibraryLink", LinkObject, LinkObject];
 )
 
@@ -364,6 +367,8 @@ SetConcreteParseProgress[prog_] := (
 
 parseConvention["LineColumn"] = structureSrcArgsLineColumn
 parseConvention["SourceCharacterIndex"] = structureSrcArgsSourceCharacterIndex
+
+parseConvention["Expr"] = Identity
 
 
 structureSrcArgsLineColumn[startLine_, startCol_, endLine_, endCol_] := {{startLine, startCol}, {endLine, endCol}}

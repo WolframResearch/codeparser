@@ -11,6 +11,8 @@
 #include "ByteEncoder.h" // for ByteEncoder
 #include "Utils.h" // for undocumentedLongNames
 
+#include "WolframNumericArrayLibrary.h"
+
 #include <memory> // for unique_ptr
 #ifdef WINDOWS_MATHLINK
 #else
@@ -696,6 +698,51 @@ DLLEXPORT int SetupLongNames_LibraryLink(WolframLibraryData libData, MLINK mlp) 
     
     return LIBRARY_NO_ERROR;
 }
+
+
+
+
+
+
+
+DLLEXPORT int ConcreteParseBytes2_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
+    
+    auto bytes = MArgument_getMNumericArray(Args[0]);
+    
+    auto convention = MArgument_getUTF8String(Args[1]);
+    
+    auto srcConvention = Utils::parseSourceConvention(convention);
+    
+    size_t numBytes;
+    numBytes = libData->numericarrayLibraryFunctions->MNumericArray_getFlattenedLength(bytes);
+    
+    auto data = reinterpret_cast<unsigned char *>(libData->numericarrayLibraryFunctions->MNumericArray_getData(bytes));
+    
+    auto bufAndLen = BufferAndLength(data, numBytes);
+    
+    TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention);
+    
+    auto N = TheParserSession->parseExpressions();
+    
+    auto e = N->toExpr();
+    
+    TheParserSession->releaseNode(N);
+    
+    TheParserSession->deinit();
+    
+    libData->UTF8String_disown(convention);
+    libData->numericarrayLibraryFunctions->MNumericArray_disown(bytes);
+    
+    auto p = Expr_Pointer(e);
+    
+    MArgument_setInteger(Res, p);
+    
+    return LIBRARY_NO_ERROR;
+}
+
+
+
+
 
 
 ScopedMLUTF8String::ScopedMLUTF8String(MLINK mlp) : mlp(mlp), buf(NULL), b(), c() {}

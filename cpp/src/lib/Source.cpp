@@ -378,6 +378,21 @@ void SourceLocation::print(std::ostream& s) const {
     s << second;
 }
 
+expr SourceLocation::toExpr() const {
+    
+    auto head = Expr_LookupSymbol(SYMBOL_LIST->name());
+    
+    auto e = Expr_BuildExpression(head, static_cast<int>(2));
+    
+    auto FirstExpr = Expr_FromInteger(first);
+    Expr_Insert(e, 1, FirstExpr);
+    
+    auto SecondExpr = Expr_FromInteger(second);
+    Expr_Insert(e, 2, SecondExpr);
+    
+    return e;
+}
+
 //
 // For googletest
 //
@@ -419,6 +434,23 @@ bool operator==(Source a, Source b) {
 void Source::print(std::ostream& s) const {
     Start.print(s);
     End.print(s);
+}
+
+expr Source::toExpr() const {
+    
+    auto head = Expr_LookupSymbol(SYMBOL_LIST->name());
+    
+    auto e = Expr_BuildExpression(head, static_cast<int>(2));
+    
+    auto StartExpr = Start.toExpr();
+    Expr_Insert(e, 1, StartExpr);
+    Expr_Release(StartExpr);
+    
+    auto EndExpr = End.toExpr();
+    Expr_Insert(e, 2, EndExpr);
+    Expr_Release(EndExpr);
+    
+    return e;
 }
 
 size_t Source::size() const {
@@ -756,6 +788,10 @@ void SyntaxIssue::put(MLINK mlp) const {
     }
 }
 
+expr SyntaxIssue::toExpr() const {
+    assert(false);
+}
+
 void ReplaceTextCodeAction::put(MLINK mlp) const {
     
     if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEREPLACETEXTCODEACTION->name(), static_cast<int>(1 + 4 + 1))) {
@@ -862,6 +898,10 @@ void FormatIssue::put(MLINK mlp) const {
     }
 }
 
+expr FormatIssue::toExpr() const {
+    assert(false);
+}
+
 void EncodingIssue::put(MLINK mlp) const {
     
     if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEENCODINGISSUE->name(), static_cast<int>(3 + 4))) {
@@ -881,6 +921,10 @@ void EncodingIssue::put(MLINK mlp) const {
     }
     
     Src.put(mlp);
+}
+
+expr EncodingIssue::toExpr() const {
+    assert(false);
 }
 
 void SourceLocation::put(MLINK mlp) const {

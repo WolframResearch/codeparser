@@ -20,6 +20,9 @@ void ByteDecoder::init(SourceConvention srcConvention) {
         case SOURCECONVENTION_SOURCECHARACTERINDEX:
             srcConventionManager = SourceConventionManagerPtr(new SourceCharacterIndexManager());
             break;
+        case SOURCECONVENTION_EXPR:
+            srcConventionManager = SourceConventionManagerPtr(new LineColumnManager());
+            break;
         case SOURCECONVENTION_UNKNOWN:
             assert(false);
             break;

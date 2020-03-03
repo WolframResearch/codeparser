@@ -139,6 +139,8 @@ EXTERN_C DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, MLINK 
 
 EXTERN_C DLLEXPORT int SetupLongNames_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
+EXTERN_C DLLEXPORT int ConcreteParseBytes2_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
+
 class ScopedMLUTF8String {
     MLINK mlp;
     Buffer buf;

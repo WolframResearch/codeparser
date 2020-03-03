@@ -4,6 +4,7 @@
 #include "Source.h" // for Source
 #include "Symbol.h" // for SymbolPtr
 #include "Token.h" // for Token
+#include "ExpressionLibrary.h"
 
 #include <vector>
 #include <memory> // for unique_ptr
@@ -49,6 +50,8 @@ public:
 #endif // USE_MATHLINK
     
     void print0(std::ostream& s) const;
+    
+    expr toExpr0() const ;
 };
 
 //
@@ -123,7 +126,9 @@ public:
 #endif // USE_MATHLINK
     
     void printChildren(std::ostream& s) const;
-
+    
+    virtual expr toExpr() const = 0;
+    
     const NodeSeq& getChildrenSafe() const {
         return Children;
     }
@@ -155,6 +160,8 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
+    
+    expr toExpr() const override;
 };
 
 class NodeSeqNode : public Node {
@@ -171,6 +178,8 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
+    
+    expr toExpr() const override;
 };
 
 class OperatorNode : public Node {
@@ -184,6 +193,8 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
+    
+    expr toExpr() const override;
     
     SymbolPtr& getOperator() const {
         return Op;
@@ -204,6 +215,8 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
+    
+    expr toExpr() const override;
     
     bool isTrivia() const override;
     
@@ -239,6 +252,8 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
+    
+    expr toExpr() const override;
     
     bool isTrivia() const override;
     
@@ -300,6 +315,8 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
+    
+    expr toExpr() const override;
     
     Source getSource() const override;
 };
@@ -371,6 +388,8 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
+    
+    expr toExpr() const override;
 };
 
 
@@ -395,6 +414,8 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
+    
+    expr toExpr() const override;
 };
 
 class CollectedIssuesNode : public Node {
@@ -407,6 +428,8 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
+    
+    expr toExpr() const override;
 };
 
 class ListNode : public Node {
@@ -419,6 +442,8 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
+    
+    expr toExpr() const override;
 };
 
 class SourceCharacterNode : public Node {
@@ -434,6 +459,8 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
+    
+    expr toExpr() const override;
 };
 
 class SafeStringNode : public Node {
@@ -449,6 +476,8 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
+    
+    expr toExpr() const override;
 };
 
 

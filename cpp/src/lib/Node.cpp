@@ -76,6 +76,11 @@ void LeafSeq::print0(std::ostream& s) const {
     }
 }
 
+expr LeafSeq::toExpr0() const {
+    
+    xx;
+}
+
 LeafSeq::~LeafSeq() {
     
     if (!moved) {
@@ -177,6 +182,11 @@ void LeafSeqNode::print(std::ostream& s) const {
     Children.print0(s);
 }
 
+expr LeafSeqNode::toExpr() const {
+    
+    return Children.toExpr0();
+}
+
 size_t LeafSeqNode::size() const {
     return Children.size();
 }
@@ -211,6 +221,10 @@ void NodeSeqNode::print(std::ostream& s) const {
     Children.print0(s);
 }
 
+expr NodeSeqNode::toExpr() const {
+    assert(false);
+}
+
 void OperatorNode::print(std::ostream& s) const {
     
     s << MakeSym->name() << "[";
@@ -224,6 +238,10 @@ void OperatorNode::print(std::ostream& s) const {
     getSource().print(s);
     
     s << "]";
+}
+
+expr OperatorNode::toExpr() const {
+    assert(false);
 }
 
 
@@ -265,6 +283,46 @@ void LeafNode::print(std::ostream& s) const {
     }
     
     s << "]";
+}
+
+expr LeafNode::toExpr() const {
+    
+    if ((TheParserSession->policy & INCLUDE_SOURCE) == INCLUDE_SOURCE) {
+        
+        auto head = Expr_LookupSymbol(SYMBOL_CODEPARSER_LIBRARY_MAKELEAFNODE->name());
+        
+        auto e = Expr_BuildExpression(head, static_cast<int>(2 + 1));
+        
+        auto& Sym = TokenToSymbol(Tok.Tok);
+        
+        auto SymExpr = Expr_LookupSymbol(Sym->name());
+        Expr_Insert(e, 1, SymExpr);
+
+        auto TokBufLenExpr = Expr_FromUTF8String(Tok.BufLen.buffer, Tok.BufLen.length());
+        Expr_Insert(e, 2, TokBufLenExpr);
+        Expr_Release(TokBufLenExpr);
+        
+        auto SrcExpr = Tok.Src.toExpr();
+        Expr_Insert(e, 3, SrcExpr);
+        Expr_Release(SrcExpr);
+        
+        return e;
+    }
+    
+    auto head = Expr_LookupSymbol(SYMBOL_CODEPARSER_LIBRARY_MAKELEAFNODE->name());
+    
+    auto e = Expr_BuildExpression(head, static_cast<int>(2));
+    
+    auto& Sym = TokenToSymbol(Tok.Tok);
+    
+    auto SymExpr = Expr_LookupSymbol(Sym->name());
+    Expr_Insert(e, 1, SymExpr);
+    
+    auto TokBufLenExpr = Expr_FromUTF8String(Tok.BufLen.buffer, Tok.BufLen.length());
+    Expr_Insert(e, 2, TokBufLenExpr);
+    Expr_Release(TokBufLenExpr);
+    
+    return e;
 }
 
 bool LeafNode::isTrivia() const {
@@ -315,6 +373,10 @@ void ErrorNode::print(std::ostream& s) const {
     s << "]";
 }
 
+expr ErrorNode::toExpr() const {
+    assert(false);
+}
+
 bool ErrorNode::isTrivia() const {
     return Tok.Tok.isTrivia();
 }
@@ -339,6 +401,10 @@ void CallNode::print(std::ostream& s) const {
     Src.print(s);
     
     s << "]";
+}
+
+expr CallNode::toExpr() const {
+    assert(false);
 }
 
 Source CallNode::getSource() const {
@@ -373,6 +439,10 @@ void SyntaxErrorNode::print(std::ostream& s) const {
     s << "]";
 }
 
+expr SyntaxErrorNode::toExpr() const {
+    assert(false);
+}
+
 void CollectedExpressionsNode::print(std::ostream& s) const {
     
     s << "List[";
@@ -383,6 +453,22 @@ void CollectedExpressionsNode::print(std::ostream& s) const {
     }
     
     s << "]";
+}
+
+expr CollectedExpressionsNode::toExpr() const {
+    
+    auto head = Expr_LookupSymbol(SYMBOL_LIST->name());
+    
+    auto e = Expr_BuildExpression(head, static_cast<int>(Exprs.size()));
+    
+    for (size_t i = 0; i < Exprs.size(); i++) {
+        auto NN = Exprs[i];
+        auto NExpr = NN->toExpr();
+        Expr_Insert(e, i + 1, NExpr);
+        Expr_Release(NExpr);
+    }
+    
+    return e;
 }
 
 void CollectedIssuesNode::print(std::ostream& s) const {
@@ -397,6 +483,21 @@ void CollectedIssuesNode::print(std::ostream& s) const {
     s << "]";
 }
 
+expr CollectedIssuesNode::toExpr() const {
+    
+    auto head = Expr_LookupSymbol(SYMBOL_LIST->name());
+    
+    auto e = Expr_BuildExpression(head, static_cast<int>(Issues.size()));
+    
+    for (size_t i = 0; i < Issues.size(); i++) {
+        auto& NN = Issues[i];
+        auto NExpr = NN->toExpr();
+        Expr_Insert(e, i + 1, NExpr);
+        Expr_Release(NExpr);
+    }
+    
+    return e;
+}
 
 void ListNode::print(std::ostream& s) const {
     
@@ -410,6 +511,22 @@ void ListNode::print(std::ostream& s) const {
     s << "]";
 }
 
+expr ListNode::toExpr() const {
+    
+    auto head = Expr_LookupSymbol(SYMBOL_LIST->name());
+    
+    auto e = Expr_BuildExpression(head, static_cast<int>(N.size()));
+    
+    for (size_t i = 0; i < N.size(); i++) {
+        auto NN = N[i];
+        auto NExpr = NN->toExpr();
+        Expr_Insert(e, i + 1, NExpr);
+        Expr_Release(NExpr);
+    }
+    
+    return e;
+}
+
 void SourceCharacterNode::print(std::ostream& s) const {
     
     s << SYMBOL_CODEPARSER_LIBRARY_MAKESOURCECHARACTERNODE->name() << "[";
@@ -421,6 +538,10 @@ void SourceCharacterNode::print(std::ostream& s) const {
     s << "]\n";
 }
 
+expr SourceCharacterNode::toExpr() const {
+    assert(false);
+}
+
 void SafeStringNode::print(std::ostream& s) const {
     
     s << SYMBOL_CODEPARSER_LIBRARY_MAKESAFESTRINGNODE->name() << "[";
@@ -430,6 +551,9 @@ void SafeStringNode::print(std::ostream& s) const {
     s << "]\n";
 }
 
+expr SafeStringNode::toExpr() const {
+    assert(false);
+}
 
 
 

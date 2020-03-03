@@ -4,6 +4,8 @@
 #include "TokenEnum.h" // for TokenEnum
 #include "CodePoint.h" // for codepoint
 
+#include "ExpressionLibrary.h"
+
 #if USE_MATHLINK
 #include "mathlink.h"
 #undef P
@@ -319,7 +321,8 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter);
 enum SourceConvention {
     SOURCECONVENTION_UNKNOWN,
     SOURCECONVENTION_LINECOLUMN,
-    SOURCECONVENTION_SOURCECHARACTERINDEX
+    SOURCECONVENTION_SOURCECHARACTERINDEX,
+    SOURCECONVENTION_EXPR,
 };
 
 struct SourceLocation {
@@ -348,6 +351,8 @@ struct SourceLocation {
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const;
+    
+    expr toExpr() const;
 };
 
 static_assert(sizeof(SourceLocation) == 8, "Check your assumptions");
@@ -379,6 +384,8 @@ struct Source {
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const;
+    
+    expr toExpr() const;
     
     size_t size() const;
 };
@@ -414,6 +421,8 @@ public:
 #endif // USE_MATHLINK
     
     virtual void print(std::ostream& s) const = 0;
+    
+    virtual expr toExpr() const = 0;
     
     virtual ~Issue() {}
 };
@@ -509,6 +518,8 @@ public:
 #endif // USE_MATHLINK
 
     void print(std::ostream& s) const override;
+    
+    expr toExpr() const override;
 };
 
 class FormatIssue : public Issue {
@@ -520,6 +531,8 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
+    
+    expr toExpr() const override;
 };
 
 class EncodingIssue : public Issue {
@@ -531,5 +544,7 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
+    
+    expr toExpr() const override;
 };
 

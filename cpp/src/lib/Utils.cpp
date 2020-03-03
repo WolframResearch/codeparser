@@ -359,6 +359,8 @@ SourceConvention Utils::parseSourceConvention(std::string s) {
         return SOURCECONVENTION_LINECOLUMN;
     } else if (s == "SourceCharacterIndex") {
         return SOURCECONVENTION_SOURCECHARACTERINDEX;
+    } else if (s == "Expr") {
+        return SOURCECONVENTION_EXPR;
     } else {
         return SOURCECONVENTION_UNKNOWN;
     }
