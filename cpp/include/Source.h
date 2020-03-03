@@ -67,7 +67,7 @@ struct BufferAndLength {
     BufferAndLength createNiceBufferAndLength(std::string *str) const;
 };
 
-static_assert(SIZEOF_VOID_P == 8 && sizeof(BufferAndLength) == 24 || SIZEOF_VOID_P == 4, "Check your assumptions");
+static_assert((SIZEOF_VOID_P == 8 && sizeof(BufferAndLength) == 24) || (SIZEOF_VOID_P == 4), "Check your assumptions");
 
 bool operator==(BufferAndLength a, BufferAndLength b);
 
