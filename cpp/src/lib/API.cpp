@@ -393,49 +393,6 @@ DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData) {
 
 
 #if USE_MATHLINK
-DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK mlp) {
-    
-    int mlLen;
-    
-    if (!MLTestHead(mlp, SYMBOL_LIST->name(), &mlLen)) {
-        return LIBRARY_FUNCTION_ERROR;
-    }
-    
-    auto len = static_cast<size_t>(mlLen);
-    
-    if (len != 2) {
-        return LIBRARY_FUNCTION_ERROR;
-    }
-    
-    auto arr = ScopedMLByteArrayPtr(new ScopedMLByteArray(mlp));
-    if (!arr->read()) {
-        return LIBRARY_FUNCTION_ERROR;
-    }
-    
-    auto conventionStr = ScopedMLStringPtr(new ScopedMLString(mlp));
-    if (!conventionStr->read()) {
-        return LIBRARY_FUNCTION_ERROR;
-    }
-    auto srcConvention = Utils::parseSourceConvention(conventionStr->get());
-    
-    if (!MLNewPacket(mlp) ) {
-        return LIBRARY_FUNCTION_ERROR;
-    }
-    
-    auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
-    
-    TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention);
-    
-    auto N = TheParserSession->parseExpressions();
-    
-    N->put(mlp);
-    
-    TheParserSession->releaseNode(N);
-    
-    TheParserSession->deinit();
-    
-    return LIBRARY_NO_ERROR;
-}
 
 DLLEXPORT int ConcreteParseBytes_Listable_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
@@ -499,50 +456,6 @@ DLLEXPORT int ConcreteParseBytes_Listable_LibraryLink(WolframLibraryData libData
         
         TheParserSession->deinit();
     }
-    
-    return LIBRARY_NO_ERROR;
-}
-
-DLLEXPORT int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK mlp) {
-    
-    int mlLen;
-    
-    if (!MLTestHead(mlp, SYMBOL_LIST->name(), &mlLen)) {
-        return LIBRARY_FUNCTION_ERROR;
-    }
-    
-    auto len = static_cast<size_t>(mlLen);
-    
-    if (len != 2) {
-        return LIBRARY_FUNCTION_ERROR;
-    }
-    
-    auto arr = ScopedMLByteArrayPtr(new ScopedMLByteArray(mlp));
-    if (!arr->read()) {
-        return LIBRARY_FUNCTION_ERROR;
-    }
-    
-    auto conventionStr = ScopedMLStringPtr(new ScopedMLString(mlp));
-    if (!conventionStr->read()) {
-        return LIBRARY_FUNCTION_ERROR;
-    }
-    auto srcConvention = Utils::parseSourceConvention(conventionStr->get());
-    
-    if (!MLNewPacket(mlp) ) {
-        return LIBRARY_FUNCTION_ERROR;
-    }
-    
-    auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
-    
-    TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention);
-    
-    auto N = TheParserSession->tokenize();
-    
-    N->put(mlp);
-    
-    TheParserSession->releaseNode(N);
-    
-    TheParserSession->deinit();
     
     return LIBRARY_NO_ERROR;
 }

@@ -273,65 +273,85 @@ Options[CodeConcreteParse] = {
 
 CodeConcreteParse[s_String, h_:Automatic, opts:OptionsPattern[]] :=
 Catch[
-Module[{cst, bytes, encoding},
+Module[{csts},
 
-	encoding = OptionValue[CharacterEncoding];
+	csts = CodeConcreteParse[{s}, h, opts];
 
-	If[encoding =!= "UTF8",
-		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
+	If[FailureQ[csts],
+		Throw[csts]
 	];
 
-	bytes = ToCharacterCode[s, "UTF8"];
+	csts[[1]]
+]]
 
-	cst = concreteParseString[bytes, h, opts];
+CodeConcreteParse[ss:{_String, _String...}, h_:Automatic, opts:OptionsPattern[]] :=
+Catch[
+Module[{csts, bytess, encoding},
 
-	If[FailureQ[cst],
-		Throw[cst]
-	];
+  encoding = OptionValue[CharacterEncoding];
 
-	cst = cst /. {
-		node_GroupMissingCloserNeedsReparseNode :> reparseMissingCloserNode[node, bytes, opts],
-		node:ErrorNode[Token`Error`UnterminatedComment, _, _] :> reparseUnterminatedCommentErrorNode[node, bytes, opts]
-	};
+  If[encoding =!= "UTF8",
+    Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
+  ];
 
-	cst
+  bytess = ToCharacterCode[ss, "UTF8"];
+
+  csts = concreteParseStringListable[bytess, h, opts];
+
+  If[FailureQ[csts],
+    Throw[csts]
+  ];
+
+  csts =
+    MapThread[Function[{cst, bytes},
+      cst /. {
+        node_GroupMissingCloserNeedsReparseNode :> reparseMissingCloserNode[node, bytes, opts],
+        node:ErrorNode[Token`Error`UnterminatedComment, _, _] :> reparseUnterminatedCommentErrorNode[node, bytes, opts]
+      }]
+      ,
+      {csts, bytess}
+    ];
+
+  csts
 ]]
 
 
-Options[concreteParseString] = Options[CodeConcreteParse]
+Options[concreteParseStringListable] = Options[CodeConcreteParse]
 
-concreteParseString[bytes:{_Integer, _Integer...}, hIn_, OptionsPattern[]] :=
+concreteParseStringListable[bytess:{{_Integer...}...}, hIn_, OptionsPattern[]] :=
 Catch[
 Module[{h, res, convention},
 
-	h = hIn;
+  h = hIn;
 
-	convention = OptionValue["SourceConvention"];
+  convention = OptionValue["SourceConvention"];
 
-	(*
-	The <||> will be filled in with Source later
-	The # here is { {exprs}, {issues}, {metadata} }
-	*)
-	If[h === Automatic,
-		h = ContainerNode[String, #[[1]], If[!empty[#[[2]] ], <| SyntaxIssues -> #[[2]] |>, <||>]]&
-	];
+  (*
+  The <||> will be filled in with Source later
+  The # here is { {exprs}, {issues}, {metadata} }
+  *)
+  If[h === Automatic,
+    h = ContainerNode[String, #[[1]], If[!empty[#[[2]] ], <| SyntaxIssues -> #[[2]] |>, <||>]]&
+  ];
 
-	$ConcreteParseProgress = 0;
-	$ConcreteParseStart = Now;
-	$ConcreteParseTime = Quantity[0, "Seconds"];
+  $ConcreteParseProgress = 0;
+  $ConcreteParseStart = Now;
+  $ConcreteParseTime = Quantity[0, "Seconds"];
 
-	Block[{$StructureSrcArgs = parseConvention[convention]},
-	res = libraryFunctionWrapper[concreteParseBytesFunc, bytes, convention];
-	];
+  Block[{$StructureSrcArgs = parseConvention[convention]},
+  res = libraryFunctionWrapper[concreteParseBytesListableFunc, bytess, convention];
+  ];
 
-	$ConcreteParseProgress = 100;
-	$ConcreteParseTime = Now - $ConcreteParseStart;
+  $ConcreteParseProgress = 100;
+  $ConcreteParseTime = Now - $ConcreteParseStart;
 
-	If[FailureQ[res],
-		Throw[res]
-	];
+  If[FailureQ[res],
+    Throw[res]
+  ];
 
-	h[res]
+  res = h /@ res;
+
+  res
 ]]
 
 
@@ -354,20 +374,34 @@ or something FailureQ if e.g., no permission to run wl-codeparser
 *)
 CodeParse[s_String, h_:Automatic, opts:OptionsPattern[]] :=
 Catch[
-Module[{cst, ast, agg},
+Module[{asts},
 	
-	cst = CodeConcreteParse[s, h, opts];
+	asts = CodeParse[{s}, h, opts];
 
-	If[FailureQ[cst],
-		Throw[cst]
+	If[FailureQ[asts],
+		Throw[asts]
 	];
 
-	agg = Aggregate[cst];
-
-	ast = Abstract[agg];
-
-	ast
+	asts[[1]]
 ]]
+
+CodeParse[ss:{_String, _String...}, h_:Automatic, opts:OptionsPattern[]] :=
+Catch[
+Module[{csts, asts, aggs},
+  
+  csts = CodeConcreteParse[ss, h, opts];
+
+  If[FailureQ[csts],
+    Throw[csts]
+  ];
+
+  aggs = Aggregate /@ csts;
+
+  asts = Abstract /@ aggs;
+
+  asts
+]]
+
 
 
 
@@ -375,99 +409,130 @@ Module[{cst, ast, agg},
 
 CodeConcreteParse[f:File[_String], h_:Automatic, opts:OptionsPattern[]] :=
 Catch[
-Module[{cst, encoding, full, bytes},
+Module[{csts},
 
-	encoding = OptionValue[CharacterEncoding];
+  csts = CodeConcreteParse[{f}, h, opts];
 
-	If[encoding =!= "UTF8",
-		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
-	];
+  If[FailureQ[csts],
+    Throw[csts]
+  ];
 
-	(*
-	We want to expand anything like ~ before passing to external process
-
-	FindFile does a better job than AbsoluteFileName because it can handle things like "Foo`" also
-
-	FindFile also fails if in sandbox mode
-	*)
-	full = FindFile[f];
-	If[FailureQ[full],
-		Throw[Failure["FindFileFailed", <|"FileName"->f|>]]
-	];
-
-	bytes = Import[full, "Byte"];
-
-	cst = concreteParseFile[bytes, h, opts];
-
-	If[FailureQ[cst],
-		If[cst === $Failed,
-			Throw[cst]
-		];
-		cst = Failure[cst[[1]], Join[cst[[2]], <|"FileName"->f|>]];
-		Throw[cst]
-	];
-
-	cst = cst /. {
-		node_GroupMissingCloserNeedsReparseNode :> reparseMissingCloserNode[node, bytes, opts],
-		node:ErrorNode[Token`Error`UnterminatedComment, _, _] :> reparseUnterminatedCommentErrorNode[node, bytes, opts]
-	};
-
-	cst
+  csts[[1]]
 ]]
 
-
-Options[concreteParseFile] = Options[CodeConcreteParse]
-
-concreteParseFile[bytes:{_Integer, _Integer...}, hIn_, OptionsPattern[]] :=
+CodeConcreteParse[fs:{File[_String], File[_String]...}, h_:Automatic, opts:OptionsPattern[]] :=
 Catch[
-Module[{h, res, data, start, end, children, convention},
+Module[{csts, encoding, fulls, bytess},
 
-	h = hIn;
+  encoding = OptionValue[CharacterEncoding];
 
-	convention = OptionValue["SourceConvention"];
+  If[encoding =!= "UTF8",
+    Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
+  ];
 
-	(*
-	The <||> will be filled in with Source later
-	The # here is { {exprs}, {issues}, {metadata} }
-	*)
-	If[h === Automatic,
-		h = ContainerNode[File, #[[1]], If[!empty[#[[2]] ], <| SyntaxIssues -> #[[2]] |>, <||>]]&
-	];
+  (*
+  We want to expand anything like ~ before passing to external process
 
-	$ConcreteParseProgress = 0;
-	$ConcreteParseStart = Now;
-	$ConcreteParseTime = Quantity[0, "Seconds"];
+  FindFile does a better job than AbsoluteFileName because it can handle things like "Foo`" also
 
-	Block[{$StructureSrcArgs = parseConvention[convention]},
-	res = libraryFunctionWrapper[concreteParseBytesFunc, bytes, convention];
-	];
+  FindFile also fails if in sandbox mode
+  *)
+  fulls = FindFile /@ fs;
+  If[AnyTrue[fulls, FailureQ],
+    Throw[Failure["FindFileFailed", <|"FileNames"->fs|>]]
+  ];
 
-	$ConcreteParseProgress = 100;
-	$ConcreteParseTime = Now - $ConcreteParseStart;
+  bytess = Import[#, "Byte"]& /@ fulls;
 
-	If[FailureQ[res],
-		Throw[res]
-	];
+  csts = concreteParseFileListable[bytess, h, opts];
 
-	res = h[res];
+  If[FailureQ[csts],
+    If[csts === $Failed,
+      Throw[csts]
+    ];
+    csts = Failure[csts[[1]], Join[csts[[2]], <|"FileNames"->fs|>]];
+    Throw[csts]
+  ];
 
-	(*
-	Fill in Source for FileNode now
-	*)
-	If[hIn === Automatic,
-		children = res[[2]];
-		(* only fill in if there are actually children nodes to grab *)
-		If[children =!= {},
-			start = First[children][[3, Key[Source], 1]];
-			end = Last[children][[3, Key[Source], 2]];
-			data = res[[3]];
-			AssociateTo[data, Source -> {start, end}];
-			res[[3]] = data;
-		];
-	];
+  csts =
+    MapThread[Function[{cst, bytes},
+      cst /. {
+        node_GroupMissingCloserNeedsReparseNode :> reparseMissingCloserNode[node, bytes, opts],
+        node:ErrorNode[Token`Error`UnterminatedComment, _, _] :> reparseUnterminatedCommentErrorNode[node, bytes, opts]
+      }]
+      ,
+      {csts, bytess}
+    ];
 
-	res
+  csts
 ]]
+
+
+
+Options[concreteParseFileListable] = Options[CodeConcreteParse]
+
+concreteParseFileListable[bytess:{{_Integer...}...}, hIn_, OptionsPattern[]] :=
+Catch[
+Module[{h, res, convention},
+
+  h = hIn;
+
+  convention = OptionValue["SourceConvention"];
+
+  (*
+  The <||> will be filled in with Source later
+  The # here is { {exprs}, {issues}, {metadata} }
+  *)
+  If[h === Automatic,
+    h = ContainerNode[File, #[[1]], If[!empty[#[[2]] ], <| SyntaxIssues -> #[[2]] |>, <||>]]&
+  ];
+
+  $ConcreteParseProgress = 0;
+  $ConcreteParseStart = Now;
+  $ConcreteParseTime = Quantity[0, "Seconds"];
+
+  Block[{$StructureSrcArgs = parseConvention[convention]},
+  res = libraryFunctionWrapper[concreteParseBytesListableFunc, bytess, convention];
+  ];
+
+  $ConcreteParseProgress = 100;
+  $ConcreteParseTime = Now - $ConcreteParseStart;
+
+  If[FailureQ[res],
+    Throw[res]
+  ];
+
+  res = h /@ res;
+
+  (*
+  Fill in Source for FileNode now
+  *)
+  If[hIn === Automatic,
+    res = fillinSource /@ res
+  ];
+
+  res
+]]
+
+
+
+fillinSource[cstIn_] :=
+Module[{cst, children, start, end, data},
+
+  cst = cstIn;
+
+  children = cst[[2]];
+  (* only fill in if there are actually children nodes to grab *)
+  If[children =!= {},
+    start = First[children][[3, Key[Source], 1]];
+    end = Last[children][[3, Key[Source], 2]];
+    data = cst[[3]];
+    AssociateTo[data, Source -> {start, end}];
+    cst[[3]] = data;
+  ];
+
+  cst
+]
 
 
 
@@ -475,21 +540,33 @@ Module[{h, res, data, start, end, children, convention},
 
 CodeParse[f:File[_String], h_:Automatic, opts:OptionsPattern[]] :=
 Catch[
-Module[{cst, ast, agg},
+Module[{asts},
 
-	cst = CodeConcreteParse[f, h, opts];
+	asts = CodeParse[{f}, h, opts];
 
-	If[FailureQ[cst],
-		Throw[cst]
+	If[FailureQ[asts],
+		Throw[asts]
 	];
 
-	agg = Aggregate[cst];
-
-	ast = Abstract[agg];
-
-	ast
+	asts[[1]]
 ]]
 
+CodeParse[fs:{File[_String], File[_String]...}, h_:Automatic, opts:OptionsPattern[]] :=
+Catch[
+Module[{csts, asts, aggs},
+
+  csts = CodeConcreteParse[fs, h, opts];
+
+  If[FailureQ[csts],
+    Throw[csts]
+  ];
+
+  aggs = Aggregate /@ csts;
+
+  asts = Abstract /@ aggs;
+
+  asts
+]]
 
 
 
@@ -497,81 +574,86 @@ Module[{cst, ast, agg},
 
 CodeConcreteParse[bytes:{_Integer, _Integer...}, h_:Automatic, opts:OptionsPattern[]] :=
 Catch[
-Module[{cst, encoding},
+Module[{csts},
 
-	encoding = OptionValue[CharacterEncoding];
+	csts = CodeConcreteParse[{bytes}, h, opts];
 
-	If[encoding =!= "UTF8",
-		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
+	If[FailureQ[csts],
+		Throw[csts]
 	];
 
-	cst = concreteParseBytes[bytes, h, opts];
-
-	If[FailureQ[cst],
-		Throw[cst]
-	];
-
-	cst = cst /. {
-		node_GroupMissingCloserNeedsReparseNode :> reparseMissingCloserNode[node, bytes, opts],
-		node:ErrorNode[Token`Error`UnterminatedComment, _, _] :> reparseUnterminatedCommentErrorNode[node, bytes, opts]
-	};
-
-	cst
+	csts[[1]]
 ]]
 
-
-Options[concreteParseBytes] = Options[CodeConcreteParse]
-
-concreteParseBytes[bytes:{_Integer, _Integer...}, hIn_, OptionsPattern[]] :=
+CodeConcreteParse[bytess:{{_Integer, _Integer...}...}, h_:Automatic, opts:OptionsPattern[]] :=
 Catch[
-Module[{h, res, data, start, end, children, convention},
+Module[{csts, encoding},
 
-	h = hIn;
+  encoding = OptionValue[CharacterEncoding];
 
-	convention = OptionValue["SourceConvention"];
+  If[encoding =!= "UTF8",
+    Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
+  ];
 
-	(*
-	The <||> will be filled in with Source later
-	The # here is { {exprs}, {issues}, {metadata} }
-	*)
-	If[h === Automatic,
-		h = ContainerNode[Byte, #[[1]], If[!empty[#[[2]] ], <| SyntaxIssues -> #[[2]] |>, <||>]]&
-	];
+  csts = concreteParseBytesListable[bytess, h, opts];
 
-	$ConcreteParseProgress = 0;
-	$ConcreteParseStart = Now;
-	$ConcreteParseTime = Quantity[0, "Seconds"];
+  If[FailureQ[csts],
+    Throw[csts]
+  ];
 
-	Block[{$StructureSrcArgs = parseConvention[convention]},
-	res = libraryFunctionWrapper[concreteParseBytesFunc, bytes, convention];
-	];
+  csts =
+    MapThread[Function[{cst, bytes},
+      cst /. {
+        node_GroupMissingCloserNeedsReparseNode :> reparseMissingCloserNode[node, bytes, opts],
+        node:ErrorNode[Token`Error`UnterminatedComment, _, _] :> reparseUnterminatedCommentErrorNode[node, bytes, opts]
+      }]
+      ,
+      {csts, bytess}
+    ];
 
-	$ConcreteParseProgress = 100;
-	$ConcreteParseTime = Now - $ConcreteParseStart;
-
-	If[FailureQ[res],
-		Throw[res]
-	];
-
-	res = h[res];
-
-	(*
-	Fill in Source for FileNode now
-	*)
-	If[hIn === Automatic,
-		children = res[[2]];
-		(* only fill in if there are actually children nodes to grab *)
-		If[children =!= {},
-			start = First[children][[3, Key[Source], 1]];
-			end = Last[children][[3, Key[Source], 2]];
-			data = res[[3]];
-			AssociateTo[data, Source -> {start, end}];
-			res[[3]] = data;
-		];
-	];
-
-	res
+  csts
 ]]
+
+
+
+Options[concreteParseBytesListable] = Options[CodeConcreteParse]
+
+concreteParseBytesListable[bytess:{{_Integer...}...}, hIn_, OptionsPattern[]] :=
+Catch[
+Module[{h, res, convention},
+
+  h = hIn;
+
+  convention = OptionValue["SourceConvention"];
+
+  (*
+  The <||> will be filled in with Source later
+  The # here is { {exprs}, {issues}, {metadata} }
+  *)
+  If[h === Automatic,
+    h = ContainerNode[Byte, #[[1]], If[!empty[#[[2]] ], <| SyntaxIssues -> #[[2]] |>, <||>]]&
+  ];
+
+  $ConcreteParseProgress = 0;
+  $ConcreteParseStart = Now;
+  $ConcreteParseTime = Quantity[0, "Seconds"];
+
+  Block[{$StructureSrcArgs = parseConvention[convention]},
+  res = libraryFunctionWrapper[concreteParseBytesListableFunc, bytess, convention];
+  ];
+
+  $ConcreteParseProgress = 100;
+  $ConcreteParseTime = Now - $ConcreteParseStart;
+
+  If[FailureQ[res],
+    Throw[res]
+  ];
+
+  res = h /@ res;
+
+  res
+]]
+
 
 
 
@@ -579,20 +661,54 @@ Module[{h, res, data, start, end, children, convention},
 
 CodeParse[bytes:{_Integer, _Integer...}, h_:Automatic, opts:OptionsPattern[]] :=
 Catch[
-Module[{cst, ast, agg},
+Module[{asts},
 
-	cst = CodeConcreteParse[bytes, h, opts];
+	asts = CodeParse[{bytes}, h, opts];
 
-	If[FailureQ[cst],
-		Throw[cst]
+	If[FailureQ[asts],
+		Throw[asts]
 	];
 
-	agg = Aggregate[cst];
-
-	ast = Abstract[agg];
-
-	ast
+	asts[[1]]
 ]]
+
+CodeParse[bytess:{{_Integer, _Integer...}...}, h_:Automatic, opts:OptionsPattern[]] :=
+Catch[
+Module[{csts, asts, aggs},
+
+  csts = CodeConcreteParse[bytess, h, opts];
+
+  If[FailureQ[csts],
+    Throw[csts]
+  ];
+
+  aggs = Aggregate /@ csts;
+
+  asts = Abstract /@ aggs;
+
+  asts
+]]
+
+
+
+
+
+
+CodeConcreteParse[{}, h_:Automatic, opts:OptionsPattern[]] :=
+Catch[
+Module[{},
+
+  {}
+]]
+
+CodeParse[{}, h_:Automatic, opts:OptionsPattern[]] :=
+Catch[
+Module[{},
+
+  {}
+]]
+
+
 
 
 
@@ -605,54 +721,31 @@ Options[CodeTokenize] = {
 }
 
 CodeTokenize[s_String, opts:OptionsPattern[]] :=
-	tokenizeString[s, opts]
+Catch[
+Module[{tokss},
+
+	tokss = CodeTokenize[{s}, opts];
+
+  If[FailureQ[tokss],
+    Throw[tokss]
+  ];
+
+  tokss[[1]]
+]]
 
 CodeTokenize[ss:{_String, _String...}, opts:OptionsPattern[]] :=
-	tokenizeStringListable[ss, opts]
+Module[{tokss},
+	tokss = tokenizeStringListable[ss, opts];
 
+  tokss
+]
 
-Options[tokenizeString] = Options[CodeTokenize]
-
-tokenizeString[sIn_String, OptionsPattern[]] :=
-Catch[
-Module[{s, res, bytes, encoding, convention},
-
-	s = sIn;
-
-	encoding = OptionValue[CharacterEncoding];
-	convention = OptionValue["SourceConvention"];
-
-	If[encoding =!= "UTF8",
-		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
-	];
-
-	bytes = ToCharacterCode[s, "UTF8"];
-
-	$ConcreteParseProgress = 0;
-	$ConcreteParseStart = Now;
-	$ConcreteParseTime = Quantity[0, "Seconds"];
-
-	Block[{$StructureSrcArgs = parseConvention[convention]},
-	res = libraryFunctionWrapper[tokenizeBytesFunc, bytes, convention];
-	];
-
-	$ConcreteParseProgress = 100;
-	$ConcreteParseTime = Now - $ConcreteParseStart;
-
-	If[FailureQ[res],
-		Throw[res]
-	];
-
-	res
-]]
 
 Options[tokenizeStringListable] = Options[CodeTokenize]
 
-tokenizeStringListable[ssIn:{_String, _String...}, OptionsPattern[]] :=
+tokenizeStringListable[ss:{_String...}, OptionsPattern[]] :=
 Catch[
-Module[{ss, res, bytess, encoding, convention},
-
-	ss = ssIn;
+Module[{res, bytess, encoding, convention},
 
 	encoding = OptionValue[CharacterEncoding];
 	convention = OptionValue["SourceConvention"];
@@ -689,55 +782,31 @@ Module[{ss, res, bytess, encoding, convention},
 
 
 CodeTokenize[f:File[_String], opts:OptionsPattern[]] :=
-	tokenizeFile[f, opts]
+Catch[
+Module[{tokss},
+
+	tokss = CodeTokenize[{f}, opts];
+
+  If[FailureQ[tokss],
+    Throw[tokss]
+  ];
+
+  tokss[[1]]
+]]
 
 CodeTokenize[fs:{File[_String], File[_String]...}, opts:OptionsPattern[]] :=
-	tokenizeFileListable[fs, opts]
+Module[{tokss},
 
+	tokss = tokenizeFileListable[fs, opts];
 
+  tokss
+]
 
-Options[tokenizeFile] = Options[CodeTokenize]
-
-tokenizeFile[File[file_String], OptionsPattern[]] :=
-Catch[
-Module[{encoding, res, full, bytes, convention},
-
-	encoding = OptionValue[CharacterEncoding];
-	convention = OptionValue["SourceConvention"];
-
-	If[encoding =!= "UTF8",
-		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
-	];
-
-	full = FindFile[file];
-	If[FailureQ[full],
-		Throw[Failure["FindFileFailed", <|"FileName"->file|>]]
-	];
-
-	bytes = Import[full, "Byte"];
-
-	$ConcreteParseProgress = 0;
-	$ConcreteParseStart = Now;
-	$ConcreteParseTime = Quantity[0, "Seconds"];
-
-	Block[{$StructureSrcArgs = parseConvention[convention]},
-	res = libraryFunctionWrapper[tokenizeBytesFunc, bytes, convention];
-	];
-
-	$ConcreteParseProgress = 100;
-	$ConcreteParseTime = Now - $ConcreteParseStart;
-
-	If[FailureQ[res],
-		Throw[res]
-	];
-
-	res
-]]
 
 
 Options[tokenizeFileListable] = Options[CodeTokenize]
 
-tokenizeFileListable[fs:{File[_String], File[_String]...}, OptionsPattern[]] :=
+tokenizeFileListable[fs:{File[_String]...}, OptionsPattern[]] :=
 Catch[
 Module[{encoding, res, fulls, bytess, convention},
 
@@ -780,48 +849,31 @@ Module[{encoding, res, fulls, bytess, convention},
 
 
 CodeTokenize[bytes:{_Integer, _Integer...}, opts:OptionsPattern[]] :=
-	tokenizeBytes[bytes, opts]
+Catch[
+Module[{tokss},
+	
+  tokss = CodeTokenize[{bytes}, opts];
+
+  If[FailureQ[tokss],
+    Throw[tokss]
+  ];
+
+  tokss[[1]]
+]]
 
 CodeTokenize[bytess:{{_Integer, _Integer...}...}, opts:OptionsPattern[]] :=
-	tokenizeBytesListable[bytess, opts]
+Module[{tokss},
 
+	tokss = tokenizeBytesListable[bytess, opts];
 
+  tokss
+]
 
-Options[tokenizeBytes] = Options[CodeTokenize]
-
-tokenizeBytes[bytes_List, OptionsPattern[]] :=
-Catch[
-Module[{encoding, res, convention},
-
-	encoding = OptionValue[CharacterEncoding];
-	convention = OptionValue["SourceConvention"];
-
-	If[encoding =!= "UTF8",
-		Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
-	];
-
-	$ConcreteParseProgress = 0;
-	$ConcreteParseStart = Now;
-	$ConcreteParseTime = Quantity[0, "Seconds"];
-
-	Block[{$StructureSrcArgs = parseConvention[convention]},
-	res = libraryFunctionWrapper[tokenizeBytesFunc, bytes, convention];
-	];
-
-	$ConcreteParseProgress = 100;
-	$ConcreteParseTime = Now - $ConcreteParseStart;
-
-	If[FailureQ[res],
-		Throw[res]
-	];
-
-	res
-]]
 
 
 Options[tokenizeBytesListable] = Options[CodeTokenize]
 
-tokenizeBytesListable[bytess:{{_Integer, _Integer...}...}, OptionsPattern[]] :=
+tokenizeBytesListable[bytess:{{_Integer...}...}, OptionsPattern[]] :=
 Catch[
 Module[{encoding, res, convention},
 
@@ -851,6 +903,13 @@ Module[{encoding, res, convention},
 ]]
 
 
+
+CodeTokenize[{}, opts:OptionsPattern[]] :=
+Catch[
+Module[{},
+  
+  {}
+]]
 
 
 
