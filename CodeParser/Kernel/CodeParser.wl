@@ -300,7 +300,7 @@ Module[{cst, bytes, encoding},
 
 Options[concreteParseString] = Options[CodeConcreteParse]
 
-concreteParseString[bytes_List, hIn_, OptionsPattern[]] :=
+concreteParseString[bytes:{_Integer, _Integer...}, hIn_, OptionsPattern[]] :=
 Catch[
 Module[{h, res, convention},
 
@@ -418,7 +418,7 @@ Module[{cst, encoding, full, bytes},
 
 Options[concreteParseFile] = Options[CodeConcreteParse]
 
-concreteParseFile[bytes_List, hIn_, OptionsPattern[]] :=
+concreteParseFile[bytes:{_Integer, _Integer...}, hIn_, OptionsPattern[]] :=
 Catch[
 Module[{h, res, data, start, end, children, convention},
 
@@ -495,7 +495,7 @@ Module[{cst, ast, agg},
 
 
 
-CodeConcreteParse[bytes_List, h_:Automatic, opts:OptionsPattern[]] :=
+CodeConcreteParse[bytes:{_Integer, _Integer...}, h_:Automatic, opts:OptionsPattern[]] :=
 Catch[
 Module[{cst, encoding},
 
@@ -522,7 +522,7 @@ Module[{cst, encoding},
 
 Options[concreteParseBytes] = Options[CodeConcreteParse]
 
-concreteParseBytes[bytes_List, hIn_, OptionsPattern[]] :=
+concreteParseBytes[bytes:{_Integer, _Integer...}, hIn_, OptionsPattern[]] :=
 Catch[
 Module[{h, res, data, start, end, children, convention},
 
@@ -577,7 +577,7 @@ Module[{h, res, data, start, end, children, convention},
 
 
 
-CodeParse[bytes_List, h_:Automatic, opts:OptionsPattern[]] :=
+CodeParse[bytes:{_Integer, _Integer...}, h_:Automatic, opts:OptionsPattern[]] :=
 Catch[
 Module[{cst, ast, agg},
 
@@ -607,7 +607,7 @@ Options[CodeTokenize] = {
 CodeTokenize[s_String, opts:OptionsPattern[]] :=
 	tokenizeString[s, opts]
 
-CodeTokenize[ss:{_String...}, opts:OptionsPattern[]] :=
+CodeTokenize[ss:{_String, _String...}, opts:OptionsPattern[]] :=
 	tokenizeStringListable[ss, opts]
 
 
@@ -648,7 +648,7 @@ Module[{s, res, bytes, encoding, convention},
 
 Options[tokenizeStringListable] = Options[CodeTokenize]
 
-tokenizeStringListable[ssIn:{_String...}, OptionsPattern[]] :=
+tokenizeStringListable[ssIn:{_String, _String...}, OptionsPattern[]] :=
 Catch[
 Module[{ss, res, bytess, encoding, convention},
 
@@ -691,7 +691,7 @@ Module[{ss, res, bytess, encoding, convention},
 CodeTokenize[f:File[_String], opts:OptionsPattern[]] :=
 	tokenizeFile[f, opts]
 
-CodeTokenize[fs:{File[_String]...}, opts:OptionsPattern[]] :=
+CodeTokenize[fs:{File[_String], File[_String]...}, opts:OptionsPattern[]] :=
 	tokenizeFileListable[fs, opts]
 
 
@@ -737,7 +737,7 @@ Module[{encoding, res, full, bytes, convention},
 
 Options[tokenizeFileListable] = Options[CodeTokenize]
 
-tokenizeFileListable[fs:{File[_String]...}, OptionsPattern[]] :=
+tokenizeFileListable[fs:{File[_String], File[_String]...}, OptionsPattern[]] :=
 Catch[
 Module[{encoding, res, fulls, bytess, convention},
 
@@ -779,10 +779,10 @@ Module[{encoding, res, fulls, bytess, convention},
 
 
 
-CodeTokenize[bytes:{_Integer...}, opts:OptionsPattern[]] :=
+CodeTokenize[bytes:{_Integer, _Integer...}, opts:OptionsPattern[]] :=
 	tokenizeBytes[bytes, opts]
 
-CodeTokenize[bytess:{{_Integer...}...}, opts:OptionsPattern[]] :=
+CodeTokenize[bytess:{{_Integer, _Integer...}...}, opts:OptionsPattern[]] :=
 	tokenizeBytesListable[bytess, opts]
 
 
@@ -821,7 +821,7 @@ Module[{encoding, res, convention},
 
 Options[tokenizeBytesListable] = Options[CodeTokenize]
 
-tokenizeBytesListable[bytess:{{_Integer...}...}, OptionsPattern[]] :=
+tokenizeBytesListable[bytess:{{_Integer, _Integer...}...}, OptionsPattern[]] :=
 Catch[
 Module[{encoding, res, convention},
 

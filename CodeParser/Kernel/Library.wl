@@ -11,6 +11,7 @@ libraryFunctionWrapper
 library functions calling INTO lib
 *)
 concreteParseBytesFunc
+concreteParseBytesListableFunc
 tokenizeBytesFunc
 tokenizeBytesListableFunc
 concreteParseLeafFunc
@@ -253,6 +254,8 @@ Module[{res, loaded, linkObject},
 loadAllFuncs[] := (
 
 concreteParseBytesFunc := concreteParseBytesFunc = loadFunc["ConcreteParseBytes_LibraryLink", LinkObject, LinkObject];
+
+concreteParseBytesListableFunc := concreteParseBytesListableFunc = loadFunc["ConcreteParseBytes_Listable_LibraryLink", LinkObject, LinkObject];
 
 tokenizeBytesFunc := tokenizeBytesFunc = loadFunc["TokenizeBytes_LibraryLink", LinkObject, LinkObject];
 
