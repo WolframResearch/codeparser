@@ -18,7 +18,7 @@ If[MissingQ[buildDirFlagPosition],
 
 buildDir = $CommandLine[[buildDirFlagPosition[[1]] + 1]]
 
-If[FileType[buildDir] =!= Directory,
+If[!DirectoryQ[buildDir],
   Print["Cannot proceed; Unsupported build directory"];
   Quit[1]
 ]
