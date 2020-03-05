@@ -1,17 +1,17 @@
 
-if(NOT DEFINED INSTALLATION_DIRECTORY)
+if(NOT DEFINED MATHEMATICA_INSTALL_DIR)
 if(CMAKE_HOST_WIN32 OR CYGWIN)
-	set(INSTALLATION_DIRECTORY C:/Program Files/Wolfram Research/Mathematica/12.0)
+	set(MATHEMATICA_INSTALL_DIR C:/Program Files/Wolfram Research/Mathematica/12.0)
 elseif(CMAKE_HOST_APPLE)
-	set(INSTALLATION_DIRECTORY /Applications/Mathematica.app/Contents)
+	set(MATHEMATICA_INSTALL_DIR /Applications/Mathematica.app/Contents)
 else()
-	set(INSTALLATION_DIRECTORY /usr/local/Wolfram/Mathematica/12.0)
+	set(MATHEMATICA_INSTALL_DIR /usr/local/Wolfram/Mathematica/12.0)
 endif()
 endif()
 
 if(CMAKE_HOST_WIN32 OR CYGWIN)
-	set(WOLFRAMKERNEL_DEFAULT ${INSTALLATION_DIRECTORY}/wolfram.exe)
-	set(WOLFRAMLIBRARY_INCLUDE_DIR_DEFAULT ${INSTALLATION_DIRECTORY}/SystemFiles/IncludeFiles/C)
+	set(WOLFRAMKERNEL_DEFAULT ${MATHEMATICA_INSTALL_DIR}/wolfram.exe)
+	set(WOLFRAMLIBRARY_INCLUDE_DIR_DEFAULT ${MATHEMATICA_INSTALL_DIR}/SystemFiles/IncludeFiles/C)
 	#
 	# in versions before 11.2, there were 2 separate paths:
 	# SystemFiles/Links/MathLink/DeveloperKit/Windows-x86-64/CompilerAdditions/mldev64/include
@@ -20,18 +20,18 @@ if(CMAKE_HOST_WIN32 OR CYGWIN)
 	# starting in 11.2, the single path for MathLink includes and MathLink libs is:
 	# SystemFiles/Links/MathLink/DeveloperKit/Windows-x86-64/CompilerAdditions
 	#
-	set(MATHLINK_INCLUDE_DIR_DEFAULT ${INSTALLATION_DIRECTORY}/SystemFiles/Links/MathLink/DeveloperKit/Windows-x86-64/CompilerAdditions)
-	set(MATHLINK_LIB_DIR_DEFAULT ${INSTALLATION_DIRECTORY}/SystemFiles/Links/MathLink/DeveloperKit/Windows-x86-64/CompilerAdditions)
+	set(MATHLINK_INCLUDE_DIR_DEFAULT ${MATHEMATICA_INSTALL_DIR}/SystemFiles/Links/MathLink/DeveloperKit/Windows-x86-64/CompilerAdditions)
+	set(MATHLINK_LIB_DIR_DEFAULT ${MATHEMATICA_INSTALL_DIR}/SystemFiles/Links/MathLink/DeveloperKit/Windows-x86-64/CompilerAdditions)
 elseif (CMAKE_HOST_APPLE)
-	set(WOLFRAMKERNEL_DEFAULT ${INSTALLATION_DIRECTORY}/MacOS/WolframKernel)
-	set(WOLFRAMLIBRARY_INCLUDE_DIR_DEFAULT ${INSTALLATION_DIRECTORY}/SystemFiles/IncludeFiles/C)
-	set(MATHLINK_INCLUDE_DIR_DEFAULT ${INSTALLATION_DIRECTORY}/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions)
-	set(MATHLINK_LIB_DIR_DEFAULT ${INSTALLATION_DIRECTORY}/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions)
+	set(WOLFRAMKERNEL_DEFAULT ${MATHEMATICA_INSTALL_DIR}/MacOS/WolframKernel)
+	set(WOLFRAMLIBRARY_INCLUDE_DIR_DEFAULT ${MATHEMATICA_INSTALL_DIR}/SystemFiles/IncludeFiles/C)
+	set(MATHLINK_INCLUDE_DIR_DEFAULT ${MATHEMATICA_INSTALL_DIR}/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions)
+	set(MATHLINK_LIB_DIR_DEFAULT ${MATHEMATICA_INSTALL_DIR}/SystemFiles/Links/MathLink/DeveloperKit/MacOSX-x86-64/CompilerAdditions)
 else()
-	set(WOLFRAMKERNEL_DEFAULT ${INSTALLATION_DIRECTORY}/Executables/WolframKernel)
-	set(WOLFRAMLIBRARY_INCLUDE_DIR_DEFAULT ${INSTALLATION_DIRECTORY}/SystemFiles/IncludeFiles/C)
-	set(MATHLINK_INCLUDE_DIR_DEFAULT ${INSTALLATION_DIRECTORY}/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions)
-	set(MATHLINK_LIB_DIR_DEFAULT ${INSTALLATION_DIRECTORY}/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions)
+	set(WOLFRAMKERNEL_DEFAULT ${MATHEMATICA_INSTALL_DIR}/Executables/WolframKernel)
+	set(WOLFRAMLIBRARY_INCLUDE_DIR_DEFAULT ${MATHEMATICA_INSTALL_DIR}/SystemFiles/IncludeFiles/C)
+	set(MATHLINK_INCLUDE_DIR_DEFAULT ${MATHEMATICA_INSTALL_DIR}/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions)
+	set(MATHLINK_LIB_DIR_DEFAULT ${MATHEMATICA_INSTALL_DIR}/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions)
 endif()
 
 macro(CheckWolframKernel)
