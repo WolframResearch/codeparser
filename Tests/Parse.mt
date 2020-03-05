@@ -436,6 +436,131 @@ Test[
 
 
 
+Test[
+  "3`"
+  ,
+  Null
+  ,
+  EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200304-X5V6V9"
+]
+
+Test[
+  "1.25`"
+  ,
+  Null
+  ,
+  EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200304-O9F0P4"
+]
+
+Test[
+  "1.1`"
+  ,
+  Null
+  ,
+  EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200304-C2Y2F2"
+]
+
+Test[
+  "1`*^12"
+  ,
+  Null
+  ,
+  EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200304-W6J4A1"
+]
+
+Test[
+  "3`7.7124"
+  ,
+  Null
+  ,
+  EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200304-S7W5O1"
+]
+
+Test[
+  "1`5.6*^-5"
+  ,
+  Null
+  ,
+  EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200304-A5E4J4"
+]
+
+Test[
+  "0``23"
+  ,
+  Null
+  ,
+  EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200304-L0H6H7"
+]
+
+Test[
+  "3``7.7124"
+  ,
+  Null
+  ,
+  EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200304-V0L6X7"
+]
+
+Test[
+  "1``5.6*^-5"
+  ,
+  Null
+  ,
+  EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200304-X1E9G1"
+]
+
+Test[
+  "2^^101.010111`*^5"
+  ,
+  Null
+  ,
+  EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200304-B5O2C4"
+]
+
+Test[
+  "2^^101.010111`17*^5"
+  ,
+  Null
+  ,
+  EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200304-D7D2L2"
+]
+
+Test[
+  "2^^101.010111``17*^5"
+  ,
+  Null
+  ,
+  EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200304-S0E5B8"
+]
+
+
+
+
+
+
 
 
 
