@@ -222,18 +222,11 @@ Module[{src, cst, func, trivia, srcPosMap},
 
 ApplyCodeAction[action:CodeAction[label_, Identity, actionData_], cstIn_, srcPosMapIn_:Null] :=
 Catch[
-Module[{src, cst, srcPosMap},
+Module[{cst},
 
   cst = cstIn;
-  srcPosMap = srcPosMapIn;
 
-  src = Lookup[actionData, Source];
-
-  If[$Debug,
-    Print["src: ", src];
-   ];
-
-   cst
+  cst
 ]]
 
 ApplyCodeAction[action:CodeAction[label_, InsertNode, actionData_], cstIn_, srcPosMapIn_:Null] :=
@@ -609,6 +602,25 @@ Module[{src, originalNodePos, cst, replacementNode, srcInter, srcIntra, replacem
 
      cst
 ]]
+
+
+
+ApplyCodeAction[action:CodeAction[label_, Composition, actionData_], cstIn_, srcPosMapIn_:Null] :=
+Catch[
+Module[{src, cst, srcPosMap},
+
+  cst = cstIn;
+  srcPosMap = srcPosMapIn;
+
+  actions = src = Lookup[actionData, CodeActions];
+
+  Fold[ApplyCodeAction[#2, #1]&, cst, Reverse[actions]]
+]]
+
+
+
+
+
 
 
 
