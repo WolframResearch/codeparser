@@ -2,11 +2,13 @@ BeginPackage["CodeParser`Generate`GenerateSources`"]
 
 toGlobal
 
-packageDir
-
 buildDirFlagPosition
 
 buildDir
+
+srcDirFlagPosition
+
+srcDir
 
 generatedCPPDir
 generatedCPPIncludeDir
@@ -15,8 +17,6 @@ generatedCPPSrcDir
 generatedWLDir
 
 dataDir
-
-buildSrcDir
 
 
 importedLongNames
@@ -118,13 +118,6 @@ Which[
 Print["Generating additional required source files..."]
 
 
-packageDir = Directory[]
-
-If[FileNameSplit[packageDir][[-1]] =!= "codeparser",
-  Print["Cannot proceed; Not inside codeparser directory: ", packageDir];
-  Quit[1]
-]
-
 buildDirFlagPosition = FirstPosition[$CommandLine, "-buildDir"]
 
 If[MissingQ[buildDirFlagPosition],
@@ -139,6 +132,22 @@ If[FileType[buildDir] =!= Directory,
   Quit[1]
 ]
 
+srcDirFlagPosition = FirstPosition[$CommandLine, "-srcDir"]
+
+If[MissingQ[srcDirFlagPosition],
+  Print["Cannot proceed; Unsupported src directory"];
+  Quit[1]
+]
+
+srcDir = $CommandLine[[srcDirFlagPosition[[1]] + 1]]
+
+If[FileType[srcDir] =!= Directory,
+  Print["Cannot proceed; Unsupported src directory"];
+  Quit[1]
+]
+
+
+
 
 generatedCPPDir = FileNameJoin[{buildDir, "generated", "cpp"}]
 generatedCPPIncludeDir = FileNameJoin[{generatedCPPDir, "include"}]
@@ -147,9 +156,9 @@ generatedCPPSrcDir = FileNameJoin[{generatedCPPDir, "src", "lib"}]
 generatedWLDir = FileNameJoin[{buildDir, "generated", "wl"}]
 
 
-dataDir = FileNameJoin[{packageDir, "CodeParser", "Data"}]
+dataDir = FileNameJoin[{srcDir, "CodeParser", "Data"}]
 
-generateDir = FileNameJoin[{packageDir, "CodeParser", "Generate"}]
+generateDir = FileNameJoin[{srcDir, "CodeParser", "Generate"}]
 
 PrependTo[$Path, generateDir]
 
