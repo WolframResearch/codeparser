@@ -9,13 +9,6 @@ Needs["TypeFramework`"] (* for MetaData *)
 Print["Generating ExpressionLibrary..."]
 
 
-packageDir = Directory[]
-
-If[FileNameSplit[packageDir][[-1]] =!= "codeparser",
-  Print["Cannot proceed; Not inside codeparser directory: ", packageDir];
-  Quit[1]
-]
-
 buildDirFlagPosition = FirstPosition[$CommandLine, "-buildDir"]
 
 If[MissingQ[buildDirFlagPosition],
@@ -25,7 +18,7 @@ If[MissingQ[buildDirFlagPosition],
 
 buildDir = $CommandLine[[buildDirFlagPosition[[1]] + 1]]
 
-If[FileType[buildDir] =!= Directory,
+If[!DirectoryQ[buildDir],
   Print["Cannot proceed; Unsupported build directory"];
   Quit[1]
 ]
