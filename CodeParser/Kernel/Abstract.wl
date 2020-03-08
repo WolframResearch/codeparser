@@ -766,7 +766,7 @@ returns: {abstracted top-level nodes, any AbstractSyntaxErrors that occurred}
 *)
 abstractTopLevel[listIn_] :=
 Catch[
-Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, issues, nodeList, peek, error},
+Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, issues, nodeList, peek, error, def},
 	
 	list = listIn;
 
@@ -897,6 +897,17 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 			peek = nodeListStack["Peek"];
 			error = AbstractSyntaxErrorNode[AbstractSyntaxError`CommaTopLevel, x[[2]], x[[3]] ];
 			peek["Push", error];
+		,
+		(*
+		foo[] := 1+1  at top-level
+
+		insert "Definition" metadata for foo
+		
+		*)
+		CallNode[LeafNode[Symbol, "SetDelayed", _], {_, _}, _],
+			peek = nodeListStack["Peek"];
+			def = CallNode[LeafNode[Symbol, "SetDelayed", x[[1, 3]]], x[[2]], <| x[[3]], "Definition" -> DeclarationName[x[[2, 1]]] |> ];
+			peek["Push", def];
 		,
 		(*
 		All other expressions
