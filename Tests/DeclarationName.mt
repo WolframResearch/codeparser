@@ -1,24 +1,39 @@
 
 Needs["CodeParser`"]
 
+
+ast = CodeParse["a"]
+
+lhs = ast[[2, 1]]
+
 Test[
-	DeclarationName[CodeParse["a"]]
+	DeclarationName[lhs]
 	,
 	"a"
 	,
 	TestID->"DeclarationName-20181230-C3E7Y2"
 ]
 
+
+ast = CodeParse["a[]"]
+
+lhs = ast[[2, 1]]
+
 Test[
-	DeclarationName[CodeParse["a[]"]]
+	DeclarationName[lhs]
 	,
 	"a"
 	,
 	TestID->"DeclarationName-20181230-V6Q8O6"
 ]
 
+
+ast = CodeParse["a /; q"]
+
+lhs = ast[[2, 1]]
+
 Test[
-	DeclarationName[CodeParse["a /; q"]]
+	DeclarationName[lhs]
 	,
 	"a"
 	,
@@ -28,9 +43,12 @@ Test[
 
 
 
+ast = CodeParse["123"]
+
+lhs = ast[[2, 1]]
 
 TestMatch[
-	DeclarationName[CodeParse["123"]]
+	DeclarationName[lhs]
 	,
 	_Failure
 	,
@@ -39,8 +57,12 @@ TestMatch[
 
 
 
+ast = CodeParse["e:InitializationValue[Except[_String | _Symbol],___]"]
+
+lhs = ast[[2, 1]]
+
 TestMatch[
-	DeclarationName[CodeParse["e:InitializationValue[Except[_String | _Symbol],___]"]]
+	DeclarationName[lhs]
 	,
 	"InitializationValue"
 	,
