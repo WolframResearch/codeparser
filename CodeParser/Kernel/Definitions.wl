@@ -1,11 +1,9 @@
-BeginPackage["CodeParser`DeclarationName`"]
+BeginPackage["CodeParser`Definitions`"]
 
 Begin["`Private`"]
 
 Needs["CodeParser`"]
 
-
-DeclarationName[ContainerNode[String, { s_ }, _]] := DeclarationName[s]
 
 (*
 
@@ -13,6 +11,7 @@ given an LHS node, determine its declared name
 
 DeclarationName will try to work with concrete syntax and abstract syntax
 *)
+
 
 DeclarationName[LeafNode[Symbol, s_, _]] := s
 

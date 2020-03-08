@@ -236,7 +236,7 @@ Needs["CodeParser`Node`"]
 
 Needs["CodeParser`Abstract`"]
 Needs["CodeParser`Boxes`"]
-Needs["CodeParser`DeclarationName`"]
+Needs["CodeParser`Definitions`"]
 Needs["CodeParser`Error`"]
 Needs["CodeParser`Library`"]
 Needs["CodeParser`Quirks`"]

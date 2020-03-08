@@ -32,7 +32,7 @@ set(STATIC_WL_PACLET_SOURCES
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/CodeParser.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Boxes.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/CodeAction.wl
-	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/DeclarationName.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Definitions.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Error.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Folds.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Library.wl
