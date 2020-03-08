@@ -86,7 +86,6 @@ OptionalDefault
 PatternBlank
 PatternBlankSequence
 PatternBlankNullSequence
-OptionalDefaultPattern
 
 (* operator symbols *)
 PrefixLinearSyntaxBang
@@ -169,10 +168,10 @@ StartOfFileNode
 BlankNode
 BlankSequenceNode
 BlankNullSequenceNode
+OptionalDefaultNode
 PatternBlankNode
 PatternBlankSequenceNode
 PatternBlankNullSequenceNode
-OptionalDefaultPatternNode
 
 
 ContainerNode

@@ -767,6 +767,7 @@ parseletRegistrationCPPSource = {
 #include \"ParseletRegistration.h\"
 
 #include \"Parselet.h\" // for SymbolParselet, UnderParselet, etc.
+#include \"ByteDecoder.h\" // for TheByteDecoder
 
 #include <cassert>
 
@@ -809,19 +810,17 @@ auto greaterGreaterGreaterParselet = GreaterGreaterGreaterParselet();
 auto differentialDParselet = DifferentialDParselet();
 
 
-
+//
+// T: BlankNode, BlankSequenceNode, BlankNullSequenceNode
+// U: PatternBlankNode, PatternBlankSequenceNode, PatternBlankNullSequenceNode
+//
 template<class T, class U>
 class UnderParselet : public PrefixParselet, public ContextSensitiveInfixParselet {
 public:
     
     UnderParselet() {}
-    
-    //
-    // prefix
-    //
-    // Something like  _a
-    //
-    NodePtr parse(Token TokIn, ParserContext Ctxt) const override {
+
+        NodePtr parse0(Token TokIn, ParserContext Ctxt) const {
         
         auto Under = NodePtr(new LeafNode(TokIn));
         
@@ -845,6 +844,8 @@ public:
         } else if (Tok.Tok == TOKEN_ERROR_EXPECTEDLETTERLIKE) {
             
             //
+            // Something like  _a`
+            //
             // It's nice to include the error inside of the blank
             //
             
@@ -860,9 +861,46 @@ public:
             
             Tok = TheParser->currentToken(Ctxt);
             
+        } else if (Tok.Tok == TOKEN_DOT) {
+            
+            //
+            // Something like  _.
+            //
+            
+            auto Dot = NodePtr(new LeafNode(Tok));
+            
+            NodeSeq Args(1 + 1);
+            Args.append(std::move(Under));
+            Args.append(std::move(Dot));
+            
+            Blank = NodePtr(new OptionalDefaultNode(std::move(Args)));
+            
+            //auto dotLoc = TheByteDecoder->SrcLoc;
+
+            TheParser->nextToken(Tok);
+
         } else {
             Blank = std::move(Under);
+            
+#if !NISSUES
+            auto dotLoc = TheByteDecoder->SrcLoc;
+
+            if (Tok.Tok == TOKEN_DOTDOT || Tok.Tok == TOKEN_DOTDOTDOT) {
+
+              std::vector<CodeActionPtr> Actions;
+              Actions.push_back(CodeActionPtr(new InsertTextCodeAction(\"Insert space\", Source(dotLoc), \" \")));
+        
+              auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, \"Suspicious syntax.\", FORMATISSUESEVERITY_FORMATTING, Source(dotLoc), 0.25, std::move(Actions)));
+        
+              TheParser->addIssue(std::move(I));
+            }
+#endif // !NISSUES
         }
+        
+        return Blank;
+    }
+    
+    NodePtr parse1(NodePtr Blank, Token Tok, ParserContext Ctxt) const {
         
         LeafSeq ArgsTest;
         
@@ -894,68 +932,40 @@ public:
     }
     
     //
+    // prefix
+    //
+    // Something like  _  or  _a  or  _.
+    //
+    NodePtr parse(Token TokIn, ParserContext Ctxt) const override {
+        
+        auto Blank = parse0(TokIn, Ctxt);
+        
+        auto Tok = TheParser->currentToken(Ctxt);
+        
+        return parse1(std::move(Blank), Tok, Ctxt);
+    }
+    
+
+    //
     // infix
     //
-    // Something like  a_b
+    // Something like  a_b  or  a_.
     //
     // Called from other parselets
     //
     NodePtr parseContextSensitive(NodeSeq Left, Token TokIn, ParserContext Ctxt) const override {
         
-        NodeSeq Args(1 + 1 + 1/*speculative for Right*/);
+        NodeSeq Args(1 + 1);
         Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
-        Args.append(NodePtr(new LeafNode(TokIn)));
         
-        TheParser->nextToken(TokIn);
-        
-        auto Tok = TheParser->currentToken(Ctxt);
-        
-        if (Tok.Tok == TOKEN_SYMBOL) {
-            
-            auto Right = contextSensitiveSymbolParselet->parse(Tok, Ctxt);
-            
-            Args.append(std::move(Right));
-            
-            Tok = TheParser->currentToken(Ctxt);
-            
-        } else if (Tok.Tok == TOKEN_ERROR_EXPECTEDLETTERLIKE) {
-            
-            //
-            // It's nice to include the error inside of the blank
-            //
-            
-            auto parselet = prefixParselets[Tok.Tok.value()];
-            
-            auto ErrorRight = parselet->parse(Tok, Ctxt);
-            
-            Args.append(std::move(ErrorRight));
-            
-            Tok = TheParser->currentToken(Ctxt);
-        }
-        
+        auto Blank = parse0(TokIn, Ctxt);
+        Args.append(NodePtr(std::move(Blank)));
+
         auto Pat = NodePtr(new U(std::move(Args)));
         
-        LeafSeq ArgsTest;
-        
-        Tok = TheParser->eatAndPreserveToplevelNewlines(Tok, Ctxt, ArgsTest);
-        
-        //
-        // For something like a:b_c:d when parsing _
-        // ColonFlag == true
-        //
-        if (Tok.Tok == TOKEN_COLON) {
-            
-            if ((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
-                
-                NodeSeq PatSeq(1 + 1);
-                PatSeq.append(std::move(Pat));
-                PatSeq.appendIfNonEmpty(std::move(ArgsTest));
-                
-                return contextSensitiveColonParselet->parseContextSensitive(std::move(PatSeq), Tok, Ctxt);
-            }
-        }
-        
-        return Pat;
+        auto Tok = TheParser->currentToken(Ctxt);
+
+        return parse1(std::move(Pat), Tok, Ctxt);
     }
     
     Precedence getPrecedence(ParserContext Ctxt) const override {

@@ -172,7 +172,6 @@ Module[{s, data, count, lastPos, rest},
 abstract[LeafNode[Blank, _, data_]] := CallNode[ToNode[Blank], {}, data]
 abstract[LeafNode[BlankSequence, _, data_]] := CallNode[ToNode[BlankSequence], {}, data]
 abstract[LeafNode[BlankNullSequence, _, data_]] := CallNode[ToNode[BlankNullSequence], {}, data]
-abstract[LeafNode[OptionalDefault, _, data_]] := CallNode[ToNode[Optional], {CallNode[ToNode[Blank], {}, <||>]}, data]
 
 abstract[LeafNode[Token`Fake`ImplicitNull, _, data_]] :=
 	LeafNode[Symbol, "Null", data ~Join~
@@ -194,13 +193,29 @@ abstract[BlankNode[Blank, {_, sym2_}, data_]] := CallNode[ToNode[Blank], {abstra
 abstract[BlankSequenceNode[BlankSequence, {_, sym2_}, data_]] := CallNode[ToNode[BlankSequence], {abstract[sym2]}, data]
 abstract[BlankNullSequenceNode[BlankNullSequence, {_, sym2_}, data_]] := CallNode[ToNode[BlankNullSequence], {abstract[sym2]}, data]
 
-abstract[PatternBlankNode[PatternBlank, {sym1_, _}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[Blank], {}, <||>]}, data]
-abstract[PatternBlankNode[PatternBlank, {sym1_, _, sym2_}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[Blank], {abstract[sym2]}, <||>]}, data]
-abstract[PatternBlankSequenceNode[PatternBlankSequence, {sym1_, _}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[BlankSequence], {}, <||>]}, data]
-abstract[PatternBlankSequenceNode[PatternBlankSequence, {sym1_, _, sym2_}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[BlankSequence], {abstract[sym2]}, <||>]}, data]
-abstract[PatternBlankNullSequenceNode[PatternBlankNullSequence, {sym1_, _}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[BlankNullSequence], {}, <||>]}, data]
-abstract[PatternBlankNullSequenceNode[PatternBlankNullSequence, {sym1_, _, sym2_}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[BlankNullSequence], {abstract[sym2]}, <||>]}, data]
-abstract[OptionalDefaultPatternNode[OptionalDefaultPattern, {sym1_, _}, data_]] := CallNode[ToNode[Optional], {CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[Blank], {}, <||>]}, <||>]}, data]
+abstract[OptionalDefaultNode[OptionalDefault, _, data_]] := CallNode[ToNode[Optional], { CallNode[ToNode[Blank], {}, data] }, data]
+
+
+(*
+a_.
+*)
+abstract[PatternBlankNode[PatternBlank, {sym1_, OptionalDefaultNode[OptionalDefault, _, optionalDefaultData_]}, data_]] := CallNode[ToNode[Optional], { CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[Blank], {}, optionalDefaultData]}, data] }, data]
+
+abstract[PatternBlankNode[PatternBlank, {sym1_, blank_}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], abstract[blank]}, data]
+
+(*
+a__. => error
+*)
+abstract[PatternBlankSequenceNode[PatternBlankSequence, children:{sym1_, OptionalDefaultNode[OptionalDefault, _, _]}, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`OptionalDefault, children, data]
+
+abstract[PatternBlankSequenceNode[PatternBlankSequence, {sym1_, blankSeq_}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], abstract[blankSeq]}, data]
+
+(*
+a___. => error
+*)
+abstract[PatternBlankNullSequenceNode[PatternBlankNullSequence, children:{sym1_, OptionalDefaultNode[OptionalDefault, _, _]}, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`OptionalDefault, children, data]
+
+abstract[PatternBlankNullSequenceNode[PatternBlankNullSequence, {sym1_, blankNullSeq_}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], abstract[blankNullSeq]}, data]
 
 
 

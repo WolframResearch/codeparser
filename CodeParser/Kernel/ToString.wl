@@ -18,6 +18,13 @@ Block[{$RecursionLimit = Infinity},
 ]
 
 
+(*
+will be scoped when handling  _.
+*)
+$dotString = " . "
+
+
+
 toInputFormString[LeafNode[Symbol, str_, _]] :=
 	str
 
@@ -37,9 +44,6 @@ toInputFormString[LeafNode[SlotSequence, str_, _]] :=
 	str
 
 toInputFormString[LeafNode[Out, str_, _]] :=
-	str
-
-toInputFormString[LeafNode[OptionalDefault, str_, _]] :=
 	str
 
 (*
@@ -64,7 +68,7 @@ toInputFormString[LeafNode[Token`Minus, _, _]] :=
 special case Dot to fix stringifying  c_ . _LinearSolve  as  c_._LinearSolve
 *)
 toInputFormString[LeafNode[Token`Dot, _, _]] :=
-	" . "
+	$dotString
 
 (*
 special case DotDot to fix stringifying  0. .. as 0...
@@ -262,6 +266,20 @@ Module[{nodeStrs},
 	StringJoin[nodeStrs]
 ]]
 
+toInputFormString[OptionalDefaultNode[OptionalDefault, nodes_, _]] :=
+Catch[
+Module[{nodeStrs},
+
+	Block[{$dotString = "."},
+	nodeStrs = toInputFormString /@ nodes;
+	];
+
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[nodeStrs]
+]]
+
 toInputFormString[PatternBlankNode[PatternBlank, nodes_, _]] :=
 Catch[
 Module[{nodeStrs},
@@ -283,16 +301,6 @@ Module[{nodeStrs},
 ]]
 
 toInputFormString[PatternBlankNullSequenceNode[PatternBlankNullSequence, nodes_, _]] :=
-Catch[
-Module[{nodeStrs},
-	nodeStrs = toInputFormString /@ nodes;
-	If[AnyTrue[nodeStrs, FailureQ],
-		Throw[SelectFirst[nodeStrs, FailureQ]]
-	];
-	StringJoin[nodeStrs]
-]]
-
-toInputFormString[OptionalDefaultPatternNode[OptionalDefaultPattern, nodes_, _]] :=
 Catch[
 Module[{nodeStrs},
 	nodeStrs = toInputFormString /@ nodes;

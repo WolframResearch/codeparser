@@ -36,8 +36,6 @@ tokenToSymbol[Token`Under] = "Symbol`Blank"
 tokenToSymbol[Token`UnderUnder] = "Symbol`BlankSequence"
 tokenToSymbol[Token`UnderUnderUnder] = "Symbol`BlankNullSequence"
 
-tokenToSymbol[Token`UnderDot] = "Symbol`CodeParser`OptionalDefault"
-
 (*
 everything else will be Symbol`Token`Foo
 

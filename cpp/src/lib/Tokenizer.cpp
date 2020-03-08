@@ -2180,52 +2180,22 @@ inline Token Tokenizer::handleUnder(Buffer tokenStartBuf, SourceLocation tokenSt
     
     auto Operator = TOKEN_UNDER; // _
     
-    switch (c.to_point()) {
-        case '_': {
+    if (c.to_point() == '_') {
             
-            Operator = TOKEN_UNDERUNDER; // __
+        Operator = TOKEN_UNDERUNDER; // __
+        
+        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+        
+        c = TheCharacterDecoder->currentWLCharacter(policy);
+        
+        if (c.to_point() == '_') {
             
-            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-            TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
-            
-            c = TheCharacterDecoder->currentWLCharacter(policy);
-            
-            if (c.to_point() == '_') {
-                
-                Operator = TOKEN_UNDERUNDERUNDER; // ___
-                
-                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-                TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
-            }
-        }
-            break;
-        case '.': {
-            
-            auto dotBuf = TheByteBuffer->buffer;
-            auto dotLoc = TheByteDecoder->SrcLoc;
+            Operator = TOKEN_UNDERUNDERUNDER; // ___
             
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
-            
-            c = TheCharacterDecoder->currentWLCharacter(policy);
-            
-            if (c.to_point() == '.') {
-                
-                //
-                // Something like  _...
-                //
-                // Must now do surgery and back up
-                //
-                
-                auto shouldWarn = true;
-                backup(dotBuf, dotLoc, shouldWarn);
-                
-            } else {
-                
-                Operator = TOKEN_UNDERDOT; // _.
-            }
         }
-            break;
     }
     
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));

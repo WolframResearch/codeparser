@@ -2626,3 +2626,36 @@ Test[
 
 
 
+(*
+Proper Source
+*)
+Test[
+	CodeParse["a_"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "Pattern", <||>], {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>], 
+			CallNode[LeafNode[Symbol, "Blank", <||>], {}, <|Source -> {{1, 2}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 3}}|>]}, <||>]
+	,
+	TestID->"Parse-20200308-S7F8E6"
+]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

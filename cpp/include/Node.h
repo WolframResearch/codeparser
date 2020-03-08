@@ -339,6 +339,11 @@ public:
     BlankNullSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_BLANKNULLSEQUENCE, SYMBOL_CODEPARSER_LIBRARY_MAKEBLANKNULLSEQUENCENODE, std::move(Args)) {}
 };
 
+class OptionalDefaultNode : public OperatorNode {
+public:
+    OptionalDefaultNode(NodeSeq Args) : OperatorNode(SYMBOL_CODEPARSER_OPTIONALDEFAULT, SYMBOL_CODEPARSER_LIBRARY_MAKEOPTIONALDEFAULTNODE, std::move(Args)) {}
+};
+
 class PatternBlankNode : public OperatorNode {
 public:
     PatternBlankNode(NodeSeq Args) : OperatorNode(SYMBOL_CODEPARSER_PATTERNBLANK, SYMBOL_CODEPARSER_LIBRARY_MAKEPATTERNBLANKNODE, std::move(Args)) {}
@@ -354,11 +359,6 @@ public:
     PatternBlankNullSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_CODEPARSER_PATTERNBLANKNULLSEQUENCE, SYMBOL_CODEPARSER_LIBRARY_MAKEPATTERNBLANKNULLSEQUENCENODE, std::move(Args)) {}
 };
 
-
-class OptionalDefaultPatternNode : public OperatorNode {
-public:
-    OptionalDefaultPatternNode(NodeSeq Args) : OperatorNode(SYMBOL_CODEPARSER_OPTIONALDEFAULTPATTERN, SYMBOL_CODEPARSER_LIBRARY_MAKEOPTIONALDEFAULTPATTERNNODE, std::move(Args)) {}
-};
 
 
 class SyntaxErrorNode : public Node {
