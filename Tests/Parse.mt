@@ -2653,8 +2653,35 @@ Test[
 	TestID->"Parse-20200308-L2L2F0"
 ]
 
+Test[
+	"+ +a"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200309-J3E7R3"
+]
 
+Test[
+	"+ + +a"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200309-W6S7W9"
+]
 
+Test[
+	"+ + + +a"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200309-P4B8L1"
+]
 
 
 

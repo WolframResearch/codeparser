@@ -203,6 +203,8 @@ abstract[PatternOptionalDefaultNode[PatternOptionalDefault, {sym1_, OptionalDefa
 
 abstract[PrefixNode[Minus, {_, rand_}, data_]] := abstract[negate[rand, data]]
 
+abstract[PrefixNode[Plus, {_, rand_}, data_]] := abstractPrefixPlus[rand, data]
+
 abstract[PrefixNode[PrefixNot2, {notNotTok_, rand_}, data_]] := abstractNot2[rand, notNotTok, data]
 
 abstract[PrefixNode[PrefixLinearSyntaxBang, children:{_, Except[GroupNode[GroupLinearSyntaxParen, _, _]]}, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`LinearSyntaxBang, children, data]
@@ -907,6 +909,17 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 			peek["Push", def];
 		,
 		(*
+		foo[] := 1+1  at top-level ;
+
+		insert "Definition" metadata for foo
+		
+		*)
+		CallNode[LeafNode[Symbol, "CompoundExpression", _], { CallNode[LeafNode[Symbol, "SetDelayed", _], {_, _}, _], LeafNode[Symbol, "Null", _] }, _],
+			peek = nodeListStack["Peek"];
+			def = CallNode[LeafNode[Symbol, "SetDelayed", x[[2, 1, 1, 3]]], x[[2, 1, 2]], <| x[[2, 1, 3]], "Definition" -> DeclarationName[x[[2, 1, 2, 1]]] |> ];
+			peek["Push", def];
+		,
+		(*
 		All other expressions
 		*)
 		_,
@@ -1150,6 +1163,13 @@ Module[{pairs, processedPairs, flattened, processed},
 	CallNode[ToNode[Plus], abstract /@ processed, data]
 ]
 
+
+(*
++ +a  parses the same as  +a
+*)
+abstractPrefixPlus[PrefixNode[Plus, {_, rand_}, _], data_] := abstractPrefixPlus[rand, data]
+
+abstractPrefixPlus[rand_, data_] := CallNode[ToNode[Plus], {abstract[rand]}, data]
 
 
 
