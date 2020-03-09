@@ -94,16 +94,18 @@ Special
 *)
 
 (*
-context sensitive parsing of  x`
+context sensitive parsing of  x_
 *)
 PrefixOperatorToParselet[Token`Symbol] = SymbolParselet[]
 
 (*
-context sensitive parsing of `x
+context sensitive parsing of _x
 *)
 PrefixOperatorToParselet[Token`Under] = UnderParselet[1]
 PrefixOperatorToParselet[Token`UnderUnder] = UnderParselet[2]
 PrefixOperatorToParselet[Token`UnderUnderUnder] = UnderParselet[3]
+
+PrefixOperatorToParselet[Token`UnderDot] = UnderDotParselet[]
 
 (*
 prefix, infix, postfix
@@ -662,6 +664,7 @@ extern PrefixParseletPtr contextSensitiveSymbolParselet;
 extern ContextSensitiveInfixParseletPtr contextSensitiveUnder1Parselet;
 extern ContextSensitiveInfixParseletPtr contextSensitiveUnder2Parselet;
 extern ContextSensitiveInfixParseletPtr contextSensitiveUnder3Parselet;
+extern ContextSensitiveInfixParseletPtr contextSensitiveUnderDotParselet;
 extern ContextSensitiveInfixParseletPtr contextSensitiveColonParselet;
 "}
 
@@ -697,6 +700,8 @@ formatPrefix[UnderParselet[1]] := "new UnderParselet<BlankNode, PatternBlankNode
 formatPrefix[UnderParselet[2]] := "new UnderParselet<BlankSequenceNode, PatternBlankSequenceNode>()"
 
 formatPrefix[UnderParselet[3]] := "new UnderParselet<BlankNullSequenceNode, PatternBlankNullSequenceNode>()"
+
+formatPrefix[UnderDotParselet[]] := "new UnderDotParselet()"
 
 formatPrefix[LessLessParselet[]] := "&lessLessParselet"
 
@@ -861,40 +866,8 @@ public:
             
             Tok = TheParser->currentToken(Ctxt);
             
-        } else if (Tok.Tok == TOKEN_DOT) {
-            
-            //
-            // Something like  _.
-            //
-            
-            auto Dot = NodePtr(new LeafNode(Tok));
-            
-            NodeSeq Args(1 + 1);
-            Args.append(std::move(Under));
-            Args.append(std::move(Dot));
-            
-            Blank = NodePtr(new OptionalDefaultNode(std::move(Args)));
-            
-            //auto dotLoc = TheByteDecoder->SrcLoc;
-
-            TheParser->nextToken(Tok);
-
         } else {
             Blank = std::move(Under);
-            
-#if !NISSUES
-            auto dotLoc = TheByteDecoder->SrcLoc;
-
-            if (Tok.Tok == TOKEN_DOTDOT || Tok.Tok == TOKEN_DOTDOTDOT) {
-
-              std::vector<CodeActionPtr> Actions;
-              Actions.push_back(CodeActionPtr(new InsertTextCodeAction(\"Insert space\", Source(dotLoc), \" \")));
-        
-              auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, \"Suspicious syntax.\", FORMATISSUESEVERITY_FORMATTING, Source(dotLoc), 0.25, std::move(Actions)));
-        
-              TheParser->addIssue(std::move(I));
-            }
-#endif // !NISSUES
         }
         
         return Blank;
@@ -934,7 +907,7 @@ public:
     //
     // prefix
     //
-    // Something like  _  or  _a  or  _.
+    // Something like  _  or  _a
     //
     NodePtr parse(Token TokIn, ParserContext Ctxt) const override {
         
@@ -949,7 +922,7 @@ public:
     //
     // infix
     //
-    // Something like  a_b  or  a_.
+    // Something like  a_b
     //
     // Called from other parselets
     //
@@ -966,6 +939,66 @@ public:
         auto Tok = TheParser->currentToken(Ctxt);
 
         return parse1(std::move(Pat), Tok, Ctxt);
+    }
+    
+    Precedence getPrecedence(ParserContext Ctxt) const override {
+        return PRECEDENCE_UNDER;
+    }
+};
+
+class UnderDotParselet : public PrefixParselet, public ContextSensitiveInfixParselet {
+public:
+    
+    UnderDotParselet() {}
+
+    NodePtr parse0(Token TokIn, ParserContext Ctxt) const {
+        
+        auto UnderDot = NodePtr(new LeafNode(TokIn));
+        
+        TheParser->nextToken(TokIn);
+        
+        NodePtr Blank;
+        
+        NodeSeq Args(1);
+        Args.append(std::move(UnderDot));
+        
+        Blank = NodePtr(new OptionalDefaultNode(std::move(Args)));
+        
+        return Blank;
+    }
+    
+    //
+    // prefix
+    //
+    // Something like  _.
+    //
+    NodePtr parse(Token TokIn, ParserContext Ctxt) const override {
+        
+        auto Blank = parse0(TokIn, Ctxt);
+        
+        TheParser->nextToken(TokIn);
+        
+        return Blank;
+    }
+    
+    //
+    // infix
+    //
+    // Something like  a_.
+    //
+    // Called from other parselets
+    //
+    NodePtr parseContextSensitive(NodeSeq Left, Token TokIn, ParserContext Ctxt) const override {
+        
+        NodeSeq Args(1 + 1);
+        Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
+        
+        auto Blank = parse0(TokIn, Ctxt);
+        Args.append(NodePtr(std::move(Blank)));
+
+        auto Pat = NodePtr(new PatternOptionalDefaultNode(std::move(Args)));
+
+        return Pat;
     }
     
     Precedence getPrecedence(ParserContext Ctxt) const override {
@@ -991,6 +1024,7 @@ PrefixParseletPtr contextSensitiveSymbolParselet(&highestLeafParselet);
 ContextSensitiveInfixParseletPtr contextSensitiveUnder1Parselet(new UnderParselet<BlankNode, PatternBlankNode>());
 ContextSensitiveInfixParseletPtr contextSensitiveUnder2Parselet(new UnderParselet<BlankSequenceNode, PatternBlankSequenceNode>());
 ContextSensitiveInfixParseletPtr contextSensitiveUnder3Parselet(new UnderParselet<BlankNullSequenceNode, PatternBlankNullSequenceNode>());
+ContextSensitiveInfixParseletPtr contextSensitiveUnderDotParselet(new UnderDotParselet());
 ContextSensitiveInfixParseletPtr contextSensitiveColonParselet(&colonParselet);
 "}
 

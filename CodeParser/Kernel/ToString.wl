@@ -18,10 +18,6 @@ Block[{$RecursionLimit = Infinity},
 ]
 
 
-(*
-will be scoped when handling  _.
-*)
-$dotString = " . "
 
 
 
@@ -68,7 +64,7 @@ toInputFormString[LeafNode[Token`Minus, _, _]] :=
 special case Dot to fix stringifying  c_ . _LinearSolve  as  c_._LinearSolve
 *)
 toInputFormString[LeafNode[Token`Dot, _, _]] :=
-	$dotString
+	" . "
 
 (*
 special case DotDot to fix stringifying  0. .. as 0...
@@ -310,6 +306,15 @@ Module[{nodeStrs},
 	StringJoin[nodeStrs]
 ]]
 
+toInputFormString[PatternOptionalDefaultNode[PatternOptionalDefault, nodes_, _]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[nodeStrs]
+]]
 
 
 

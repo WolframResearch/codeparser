@@ -2643,7 +2643,15 @@ Test[
 
 
 
-
+Test[
+	"_.1"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200308-L2L2F0"
+]
 
 
 

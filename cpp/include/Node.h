@@ -359,6 +359,11 @@ public:
     PatternBlankNullSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_CODEPARSER_PATTERNBLANKNULLSEQUENCE, SYMBOL_CODEPARSER_LIBRARY_MAKEPATTERNBLANKNULLSEQUENCENODE, std::move(Args)) {}
 };
 
+class PatternOptionalDefaultNode : public OperatorNode {
+public:
+    PatternOptionalDefaultNode(NodeSeq Args) : OperatorNode(SYMBOL_CODEPARSER_PATTERNOPTIONALDEFAULT, SYMBOL_CODEPARSER_LIBRARY_MAKEPATTERNOPTIONALDEFAULTNODE, std::move(Args)) {}
+};
+
 
 
 class SyntaxErrorNode : public Node {

@@ -81,6 +81,13 @@ NodePtr SymbolParselet::parse(Token TokIn, ParserContext Ctxt) const {
             
             return contextSensitiveUnder3Parselet->parseContextSensitive(std::move(Args), Tok, Ctxt);
         }
+        case TOKEN_UNDERDOT.value(): {
+
+            NodeSeq Args(1);
+            Args.append(std::move(Sym));
+            
+            return contextSensitiveUnderDotParselet->parseContextSensitive(std::move(Args), Tok, Ctxt);
+        }
         default: {
             
             LeafSeq ArgsTest;
