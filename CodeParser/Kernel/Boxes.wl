@@ -840,7 +840,7 @@ Module[{cases},
 parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "_."], pos_] :=
 Module[{cases},
   cases = StringCases[str, a:letterlikePat.. ~~ "_." :> {a, "_."}][[1]];
-  OptionalDefaultPatternNode[OptionalDefaultPattern, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+  PatternOptionalDefaultNode[PatternOptionalDefault, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
 ]
 
 
@@ -2026,7 +2026,7 @@ Convert back to form that the FE likes
 
 Single a_. token
 *)
-toStandardFormBoxes[OptionalDefaultPatternNode[OptionalDefaultPattern, nodes_, _]] :=
+toStandardFormBoxes[PatternOptionalDefaultNode[PatternOptionalDefault, nodes_, _]] :=
 Catch[
 Module[{nodeBoxes},
   nodeBoxes = toStandardFormBoxes /@ nodes;
