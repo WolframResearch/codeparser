@@ -1220,18 +1220,84 @@ abstractTimes[BinaryNode[Divide, {left_, right_}, data_]] :=
 
 
 
-
+(*
 abstractInfixInequality[node:InfixNode[InfixInequality, children_, data_]] :=
 	simplifyInfixInequality[node]
+*)
 
 (*
 attempt to simplify e.g. Inequality[a, Less, b, Less, c] to Less[a, b, c]
-*)
-simplifyInfixInequality[InfixNode[InfixInequality, children_, data_]] :=
-Module[{rators, rands},
-	rators = inequalityOperatorToSymbol /@ children[[2;;-2;;2]];
-	rands = abstract /@ children[[1;;-1;;2]];
 
+Also integrate the newer VectorInequality functionality
+*)
+abstractInfixInequality[InfixNode[InfixInequality, children_, data_]] :=
+Module[{processed, first, rator, rand, affinity},
+
+	first = children[[1]];
+	first = abstract[first];
+
+	processed = { first };
+
+	(*
+	affinity is purposely not True nor False when starting
+	*)
+	Do[
+		rator = children[[i]];
+		rand = children[[i + 1]];
+
+		rator = inequalityOperatorToSymbol[rator];
+		rand = abstract[rand];
+
+		Which[
+			vectorInequalityAffinity[rator] === False,
+				If[affinity === True,
+					(*
+					affinity is True, so all operators up to now are 1 sub node
+					*)
+					processed = { simplifyInfixInequality[processed, affinity, data], ToNode[rator], rand };
+					,
+					processed = processed ~Join~ {ToNode[rator], rand}
+				];
+				(*
+				affinity is definitely False now
+				*)
+				affinity = False;
+			,
+			vectorInequalityAffinity[rator] === True,
+				If[affinity === False,
+					(*
+					affinity is True, so all operators up to now are 1 sub node
+					*)
+					processed = { simplifyInfixInequality[processed, affinity, data], ToNode[rator], rand }
+					,
+					processed = processed ~Join~ {ToNode[rator], rand}
+				];
+				(*
+				affinity is definitely True now
+				*)
+				affinity = True;
+			,
+			True,
+				processed = processed ~Join~ {ToNode[rator], rand}
+		];
+
+		,
+		{i, 2, Length[children], 2}
+	];
+
+	simplifyInfixInequality[processed, affinity, data]
+]
+
+
+simplifyInfixInequality[processed_, affinity_, data_] :=
+Module[{rators, rands},
+
+	rators = processed[[2;;-2;;2]];
+	rands = processed[[1;;-1;;2]];
+
+	(*
+	Try simple cases of all the same operator first
+	*)
 	Switch[rators,
 		{ToNode[Equal]..},
 			CallNode[ToNode[Equal], rands, data]
@@ -1350,109 +1416,132 @@ Module[{rators, rands},
 		{ToNode[System`VectorGreaterEqual]..},
 			CallNode[ToNode[System`VectorGreaterEqual], { CallNode[ToNode[List], rands, <||>] }, data]
 		,
-		{LeafNode[Symbol, $traditionalInequalitySymbolPat, <||>]..},
-			CallNode[ToNode[Inequality], Riffle[rands, rators], data]
-		,
 		_,
-			(*
-			Anything containing a combination inequality and Vector inequality operators is abstracted to VectorInequality
-			Related bugs: 385771
-			*)
-			CallNode[ToNode[Developer`VectorInequality], Riffle[rands, rators], data]
+			Which[
+				affinity === True,
+					(*
+					Anything containing a combination inequality and Vector inequality operators is abstracted to VectorInequality
+					Related bugs: 385771
+					*)
+					CallNode[ToNode[Developer`VectorInequality], Riffle[rands, rators], data]
+				,
+				affinity === False,
+					CallNode[ToNode[Inequality], Riffle[rands, rators], data]
+				,
+				True,
+					CallNode[ToNode[Inequality], Riffle[rands, rators], data]
+			]
 	]
 ]
 
 
-inequalityOperatorToSymbol[LeafNode[Token`EqualEqual | Token`LongName`Equal | Token`LongName`LongEqual, _, _]] := ToNode[Equal]
-inequalityOperatorToSymbol[LeafNode[Token`BangEqual | Token`LongName`NotEqual, _, _]] := ToNode[Unequal]
-inequalityOperatorToSymbol[LeafNode[Token`Less, _, _]] := ToNode[Less]
-inequalityOperatorToSymbol[LeafNode[Token`Greater, _, _]] := ToNode[Greater]
-inequalityOperatorToSymbol[LeafNode[Token`LessEqual | Token`LongName`LessEqual, _, _]] := ToNode[LessEqual]
-inequalityOperatorToSymbol[LeafNode[Token`GreaterEqual | Token`LongName`GreaterEqual, _, _]] := ToNode[GreaterEqual]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`GreaterEqualLess, _, _]] := ToNode[GreaterEqualLess]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`GreaterFullEqual, _, _]] := ToNode[GreaterFullEqual]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`GreaterGreater, _, _]] := ToNode[GreaterGreater]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`GreaterLess, _, _]] := ToNode[GreaterLess]
+
+
+
+inequalityOperatorToSymbol[LeafNode[Token`EqualEqual | Token`LongName`Equal | Token`LongName`LongEqual, _, _]] := Equal
+inequalityOperatorToSymbol[LeafNode[Token`BangEqual | Token`LongName`NotEqual, _, _]] := Unequal
+inequalityOperatorToSymbol[LeafNode[Token`Less, _, _]] := Less
+inequalityOperatorToSymbol[LeafNode[Token`Greater, _, _]] := Greater
+inequalityOperatorToSymbol[LeafNode[Token`LessEqual | Token`LongName`LessEqual, _, _]] := LessEqual
+inequalityOperatorToSymbol[LeafNode[Token`GreaterEqual | Token`LongName`GreaterEqual, _, _]] := GreaterEqual
+inequalityOperatorToSymbol[LeafNode[Token`LongName`GreaterEqualLess, _, _]] := GreaterEqualLess
+inequalityOperatorToSymbol[LeafNode[Token`LongName`GreaterFullEqual, _, _]] := GreaterFullEqual
+inequalityOperatorToSymbol[LeafNode[Token`LongName`GreaterGreater, _, _]] := GreaterGreater
+inequalityOperatorToSymbol[LeafNode[Token`LongName`GreaterLess, _, _]] := GreaterLess
 (*
 GreaterSlantEqual parses to GreaterEqual
 Related bugs: 78439
 *)
-inequalityOperatorToSymbol[LeafNode[Token`LongName`GreaterSlantEqual, _, _]] := ToNode[GreaterEqual]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`GreaterTilde, _, _]] := ToNode[GreaterTilde]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`LessEqualGreater, _, _]] := ToNode[LessEqualGreater]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`LessFullEqual, _, _]] := ToNode[LessFullEqual]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`LessGreater, _, _]] := ToNode[LessGreater]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`LessLess, _, _]] := ToNode[LessLess]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`GreaterSlantEqual, _, _]] := GreaterEqual
+inequalityOperatorToSymbol[LeafNode[Token`LongName`GreaterTilde, _, _]] := GreaterTilde
+inequalityOperatorToSymbol[LeafNode[Token`LongName`LessEqualGreater, _, _]] := LessEqualGreater
+inequalityOperatorToSymbol[LeafNode[Token`LongName`LessFullEqual, _, _]] := LessFullEqual
+inequalityOperatorToSymbol[LeafNode[Token`LongName`LessGreater, _, _]] := LessGreater
+inequalityOperatorToSymbol[LeafNode[Token`LongName`LessLess, _, _]] := LessLess
 (*
 LessSlantEqual parses to LessEqual
 Related bugs: 78439
 *)
-inequalityOperatorToSymbol[LeafNode[Token`LongName`LessSlantEqual, _, _]] := ToNode[LessEqual]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`LessTilde, _, _]] := ToNode[LessTilde]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`NestedGreaterGreater, _, _]] := ToNode[NestedGreaterGreater]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`NestedLessLess, _, _]] := ToNode[NestedLessLess]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`NotGreater, _, _]] := ToNode[NotGreater]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`NotGreaterEqual, _, _]] := ToNode[NotGreaterEqual]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`NotGreaterFullEqual, _, _]] := ToNode[NotGreaterFullEqual]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`NotGreaterGreater, _, _]] := ToNode[NotGreaterGreater]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`NotGreaterLess, _, _]] := ToNode[NotGreaterLess]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`NotGreaterSlantEqual, _, _]] := ToNode[NotGreaterSlantEqual]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`NotGreaterTilde, _, _]] := ToNode[NotGreaterTilde]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`NotLess, _, _]] := ToNode[NotLess]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`NotLessEqual, _, _]] := ToNode[NotLessEqual]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`NotLessFullEqual, _, _]] := ToNode[NotLessFullEqual]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`NotLessGreater, _, _]] := ToNode[NotLessGreater]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`NotLessLess, _, _]] := ToNode[NotLessLess]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`NotLessSlantEqual, _, _]] := ToNode[NotLessSlantEqual]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`NotLessTilde, _, _]] := ToNode[NotLessTilde]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`NotNestedGreaterGreater, _, _]] := ToNode[NotNestedGreaterGreater]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`NotNestedLessLess, _, _]] := ToNode[NotNestedLessLess]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`LessSlantEqual, _, _]] := LessEqual
+inequalityOperatorToSymbol[LeafNode[Token`LongName`LessTilde, _, _]] := LessTilde
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NestedGreaterGreater, _, _]] := NestedGreaterGreater
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NestedLessLess, _, _]] := NestedLessLess
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotGreater, _, _]] := NotGreater
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotGreaterEqual, _, _]] := NotGreaterEqual
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotGreaterFullEqual, _, _]] := NotGreaterFullEqual
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotGreaterGreater, _, _]] := NotGreaterGreater
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotGreaterLess, _, _]] := NotGreaterLess
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotGreaterSlantEqual, _, _]] := NotGreaterSlantEqual
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotGreaterTilde, _, _]] := NotGreaterTilde
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotLess, _, _]] := NotLess
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotLessEqual, _, _]] := NotLessEqual
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotLessFullEqual, _, _]] := NotLessFullEqual
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotLessGreater, _, _]] := NotLessGreater
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotLessLess, _, _]] := NotLessLess
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotLessSlantEqual, _, _]] := NotLessSlantEqual
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotLessTilde, _, _]] := NotLessTilde
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotNestedGreaterGreater, _, _]] := NotNestedGreaterGreater
+inequalityOperatorToSymbol[LeafNode[Token`LongName`NotNestedLessLess, _, _]] := NotNestedLessLess
 
-inequalityOperatorToSymbol[LeafNode[Token`LongName`VectorLess, _, _]] := ToNode[System`VectorLess]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`VectorGreater, _, _]] := ToNode[System`VectorGreater]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`VectorLessEqual, _, _]] := ToNode[System`VectorLessEqual]
-inequalityOperatorToSymbol[LeafNode[Token`LongName`VectorGreaterEqual, _, _]] := ToNode[System`VectorGreaterEqual]
+inequalityOperatorToSymbol[LeafNode[Token`LongName`VectorLess, _, _]] := System`VectorLess
+inequalityOperatorToSymbol[LeafNode[Token`LongName`VectorGreater, _, _]] := System`VectorGreater
+inequalityOperatorToSymbol[LeafNode[Token`LongName`VectorLessEqual, _, _]] := System`VectorLessEqual
+inequalityOperatorToSymbol[LeafNode[Token`LongName`VectorGreaterEqual, _, _]] := System`VectorGreaterEqual
 
 
+(*
 
-$traditionalInequalitySymbolPat =
-	"Equal" |
-	"Unequal" |
-	"Less" |
-	"Greater" |
-	"LessEqual" |
-	"GreaterEqual" |
-	"GreaterEqualLess" |
-	"GreaterFullEqual" |
-	"GreaterGreater" |
-	"GreaterLess" |
-	"GreaterSlantEqual" |
-	"GreaterTilde" |
-	"LessEqualGreater" |
-	"LessFullEqual" |
-	"LessGreater" |
-	"LessLess" |
-	"LessSlantEqual" |
-	"LessTilde" |
-	"NestedGreaterGreater" |
-	"NestedLessLess" |
-	"NotGreater" |
-	"NotGreaterEqual" |
-	"NotGreaterFullEqual" |
-	"NotGreaterGreater" |
-	"NotGreaterLess" |
-	"NotGreaterSlantEqual" |
-	"NotGreaterTilde" |
-	"NotLess" |
-	"NotLessEqual" |
-	"NotLessFullEqual" |
-	"NotLessGreater" |
-	"NotLessLess" |
-	"NotLessSlantEqual" |
-	"NotLessTilde" |
-	"NotNestedGreaterGreater" |
-	"NotNestedLessLess"
+Just these operators do not have an affinity, neither True nor False
 
+vectorInequalityAffinity[Equal] := xxx
+vectorInequalityAffinity[Unequal] := xxx
+vectorInequalityAffinity[Less] := xxx
+vectorInequalityAffinity[Greater] := xxx
+vectorInequalityAffinity[LessEqual] := xxx
+vectorInequalityAffinity[GreaterEqual] := xxx
+*)
+
+(*
+Definitely NOT a VectorInequality
+*)
+vectorInequalityAffinity[GreaterEqualLess] := False
+vectorInequalityAffinity[GreaterFullEqual] := False
+vectorInequalityAffinity[GreaterGreater] := False
+vectorInequalityAffinity[GreaterLess] := False
+vectorInequalityAffinity[GreaterSlantEqual] := False
+vectorInequalityAffinity[GreaterTilde] := False
+vectorInequalityAffinity[LessEqualGreater] := False
+vectorInequalityAffinity[LessFullEqual] := False
+vectorInequalityAffinity[LessGreater] := False
+vectorInequalityAffinity[LessLess] := False
+vectorInequalityAffinity[LessSlantEqual] := False
+vectorInequalityAffinity[LessTilde] := False
+vectorInequalityAffinity[NestedGreaterGreater] := False
+vectorInequalityAffinity[NestedLessLess] := False
+vectorInequalityAffinity[NotGreater] := False
+vectorInequalityAffinity[NotGreaterEqual] := False
+vectorInequalityAffinity[NotGreaterFullEqual] := False
+vectorInequalityAffinity[NotGreaterGreater] := False
+vectorInequalityAffinity[NotGreaterLess] := False
+vectorInequalityAffinity[NotGreaterSlantEqual] := False
+vectorInequalityAffinity[NotGreaterTilde] := False
+vectorInequalityAffinity[NotLess] := False
+vectorInequalityAffinity[NotLessEqual] := False
+vectorInequalityAffinity[NotLessFullEqual] := False
+vectorInequalityAffinity[NotLessGreater] := False
+vectorInequalityAffinity[NotLessLess] := False
+vectorInequalityAffinity[NotLessSlantEqual] := False
+vectorInequalityAffinity[NotLessTilde] := False
+vectorInequalityAffinity[NotNestedGreaterGreater] := False
+vectorInequalityAffinity[NotNestedLessLess] := False
+
+(*
+Definitely a VectorInequality
+*)
+vectorInequalityAffinity[System`VectorLess] := True
+vectorInequalityAffinity[System`VectorGreater] := True
+vectorInequalityAffinity[System`VectorLessEqual] := True
+vectorInequalityAffinity[System`VectorGreaterEqual] := True
 
 
 
