@@ -48,465 +48,93 @@ tokenToSymbol[s_] := "Symbol`"<>ToString[s]
 
 
 
-(*
-Errors
-*)
-isPossibleBeginningOfExpression[Token`Error`Unknown] = False
-isPossibleBeginningOfExpression[Token`Error`ExpectedEqual] = False
-isPossibleBeginningOfExpression[Token`Error`UnhandledDot] = False
-isPossibleBeginningOfExpression[Token`Error`UnhandledCharacter] = False
-isPossibleBeginningOfExpression[Token`Error`ExpectedLetterlike] = False
-isPossibleBeginningOfExpression[Token`Error`UnterminatedComment] = False
-isPossibleBeginningOfExpression[Token`Error`UnterminatedString] = False
-isPossibleBeginningOfExpression[Token`Error`InvalidBase] = False
-isPossibleBeginningOfExpression[Token`Error`ExpectedAccuracy] = False
-isPossibleBeginningOfExpression[Token`Error`ExpectedExponent] = False
-isPossibleBeginningOfExpression[Token`Error`EmptyString] = False
-isPossibleBeginningOfExpression[Token`Error`Aborted] = False
-isPossibleBeginningOfExpression[Token`Error`ExpectedOperand] = False
-isPossibleBeginningOfExpression[Token`Error`UnrecognizedDigit] = False
+
+
+
+
+isPossibleBeginningOfExpression[Token`Symbol] = True
+isPossibleBeginningOfExpression[Token`String] = True
+isPossibleBeginningOfExpression[Token`Integer] = True
+isPossibleBeginningOfExpression[Token`Real] = True
+
+isPossibleBeginningOfExpression[Token`Percent] = True
+
+isPossibleBeginningOfExpression[Token`Hash] = True
+isPossibleBeginningOfExpression[Token`HashHash] = True
+
+isPossibleBeginningOfExpression[Token`Under] = True
+isPossibleBeginningOfExpression[Token`UnderUnder] = True
+isPossibleBeginningOfExpression[Token`UnderUnderUnder] = True
+isPossibleBeginningOfExpression[Token`UnderDot] = True
+
+isPossibleBeginningOfExpression[Token`SemiSemi] = True
 
 (*
-EndOfFile
+prefix operators
 *)
-isPossibleBeginningOfExpression[Token`EndOfFile] = False
+isPossibleBeginningOfExpression[Token`Bang] = True
+isPossibleBeginningOfExpression[Token`Minus] = True
+isPossibleBeginningOfExpression[Token`Plus] = True
+isPossibleBeginningOfExpression[Token`LessLess] = True
+isPossibleBeginningOfExpression[Token`MinusMinus] = True
+isPossibleBeginningOfExpression[Token`PlusPlus] = True
+isPossibleBeginningOfExpression[Token`BangBang] = True
 
 (*
-Trivia
+openers
 *)
-isPossibleBeginningOfExpression[Token`Comment] = False
-isPossibleBeginningOfExpression[Token`ToplevelNewline] = False
-isPossibleBeginningOfExpression[Token`InternalNewline] = False
-isPossibleBeginningOfExpression[Token`Whitespace] = False
-isPossibleBeginningOfExpression[Token`LineContinuation] = False
+isPossibleBeginningOfExpression[Token`OpenParen] = True
+isPossibleBeginningOfExpression[Token`OpenSquare] = True
+isPossibleBeginningOfExpression[Token`OpenCurly] = True
+isPossibleBeginningOfExpression[Token`LessBar] = True
+isPossibleBeginningOfExpression[Token`LongName`LeftCeiling] = True
+isPossibleBeginningOfExpression[Token`LongName`LeftFloor] = True
+isPossibleBeginningOfExpression[Token`LongName`LeftAngleBracket] = True
+isPossibleBeginningOfExpression[Token`LongName`LeftDoubleBracket] = True
+isPossibleBeginningOfExpression[Token`LongName`LeftBracketingBar] = True
+isPossibleBeginningOfExpression[Token`LongName`LeftDoubleBracketingBar] = True
+isPossibleBeginningOfExpression[Token`LongName`LeftAssociation] = True
+isPossibleBeginningOfExpression[Token`LongName`OpenCurlyQuote] = True
+isPossibleBeginningOfExpression[Token`LongName`OpenCurlyDoubleQuote] = True
+isPossibleBeginningOfExpression[Token`LinearSyntax`OpenParen] = True
+
+isPossibleBeginningOfExpression[Token`LinearSyntax`Bang] = True
+
+isPossibleBeginningOfExpression[Token`LongName`Integral] = True
+isPossibleBeginningOfExpression[Token`LongName`ContourIntegral] = True
+isPossibleBeginningOfExpression[Token`LongName`DoubleContourIntegral] = True
+isPossibleBeginningOfExpression[Token`LongName`ClockwiseContourIntegral] = True
+isPossibleBeginningOfExpression[Token`LongName`CounterClockwiseContourIntegral] = True
+
+isPossibleBeginningOfExpression[Token`LongName`Not] = True
+isPossibleBeginningOfExpression[Token`LongName`PlusMinus] = True
+isPossibleBeginningOfExpression[Token`LongName`Sum] = True
+isPossibleBeginningOfExpression[Token`LongName`ForAll] = True
+isPossibleBeginningOfExpression[Token`LongName`Exists] = True
+isPossibleBeginningOfExpression[Token`LongName`NotExists] = True
+isPossibleBeginningOfExpression[Token`LongName`Del] = True
+isPossibleBeginningOfExpression[Token`LongName`Product] = True
+isPossibleBeginningOfExpression[Token`LongName`Coproduct] = True
+isPossibleBeginningOfExpression[Token`LongName`Minus] = True
+isPossibleBeginningOfExpression[Token`LongName`MinusPlus] = True
+isPossibleBeginningOfExpression[Token`LongName`Sqrt] = True
+isPossibleBeginningOfExpression[Token`LongName`CubeRoot] = True
+isPossibleBeginningOfExpression[Token`LongName`CircleTimes] = True
+isPossibleBeginningOfExpression[Token`LongName`Piecewise] = True
+isPossibleBeginningOfExpression[Token`LongName`InvisiblePrefixScriptBase] = True
+isPossibleBeginningOfExpression[Token`LongName`ContinuedFractionK] = True
+isPossibleBeginningOfExpression[Token`LongName`ProbabilityPr] = True
+isPossibleBeginningOfExpression[Token`LongName`ExpectationE] = True
+isPossibleBeginningOfExpression[Token`LongName`CapitalDifferentialD] = True
+isPossibleBeginningOfExpression[Token`LongName`DifferentialD] = True
+isPossibleBeginningOfExpression[Token`LongName`Square] = True
 
 
-(*
-These binary/infix operators are also prefix
-*)
-(*isPossibleBeginningOfExpression[Token`Minus] = False*)
-(*isPossibleBeginningOfExpression[Token`LongName`PlusMinus] = False*)
-(*isPossibleBeginningOfExpression[Token`LongName`MinusPlus] = False*)
-(*isPossibleBeginningOfExpression[Token`Plus] = False*)
-(*isPossibleBeginningOfExpression[Token`LongName`CircleTimes] = False*)
-(*isPossibleBeginningOfExpression[Token`LongName`Coproduct] = False*)
-(*isPossibleBeginningOfExpression[Token`Bang] = False*)
-(*isPossibleBeginningOfExpression[Token`MinusMinus] = False*)
-(*isPossibleBeginningOfExpression[Token`PlusPlus] = False*)
-(*isPossibleBeginningOfExpression[Token`SemiSemi] = False*)
-(*isPossibleBeginningOfExpression[Token`BangBang] = False*)
-(*isPossibleBeginningOfExpression[Token`LongName`Minus] = False*)
-
-(*
-Calls
-*)
-(*
-isPossibleBeginningOfExpression[Token`OpenSquare] = False
-isPossibleBeginningOfExpression[Token`LongName`LeftDoubleBracket] = False
-*)
-
-(*
-Binary ops
-*)
-isPossibleBeginningOfExpression[Token`Slash] = False
-isPossibleBeginningOfExpression[Token`Caret] = False
-isPossibleBeginningOfExpression[Token`CaretEqual] = False
-isPossibleBeginningOfExpression[Token`CaretColonEqual] = False
-isPossibleBeginningOfExpression[Token`SlashAt] = False
-isPossibleBeginningOfExpression[Token`MinusGreater] = False
-isPossibleBeginningOfExpression[Token`AtAt] = False
-isPossibleBeginningOfExpression[Token`SlashSemi] = False
-isPossibleBeginningOfExpression[Token`SlashDot] = False
-isPossibleBeginningOfExpression[Token`ColonGreater] = False
-isPossibleBeginningOfExpression[Token`SlashSlashDot] = False
-isPossibleBeginningOfExpression[Token`PlusEqual] = False
-isPossibleBeginningOfExpression[Token`StarEqual] = False
-isPossibleBeginningOfExpression[Token`MinusEqual] = False
-isPossibleBeginningOfExpression[Token`SlashEqual] = False
-isPossibleBeginningOfExpression[Token`LessMinusGreater] = False
-isPossibleBeginningOfExpression[Token`SlashSlashAt] = False
-isPossibleBeginningOfExpression[Token`At] = False
-isPossibleBeginningOfExpression[Token`AtAtAt] = False
-isPossibleBeginningOfExpression[Token`SlashSlash] = False
-isPossibleBeginningOfExpression[Token`ColonEqual] = False
-isPossibleBeginningOfExpression[Token`Question] = False
-isPossibleBeginningOfExpression[Token`LongName`Because] = False
-isPossibleBeginningOfExpression[Token`LongName`Therefore] = False
-isPossibleBeginningOfExpression[Token`LongName`RightTee] = False
-isPossibleBeginningOfExpression[Token`LongName`LeftTee] = False
-isPossibleBeginningOfExpression[Token`LongName`DoubleRightTee] = False
-isPossibleBeginningOfExpression[Token`LongName`DoubleLeftTee] = False
-isPossibleBeginningOfExpression[Token`LongName`UpTee] = False
-isPossibleBeginningOfExpression[Token`LongName`DownTee] = False
-isPossibleBeginningOfExpression[Token`LongName`Divide] = False
-isPossibleBeginningOfExpression[Token`LongName`DivisionSlash] = False
-isPossibleBeginningOfExpression[Token`LongName`Implies] = False
-isPossibleBeginningOfExpression[Token`LongName`RoundImplies] = False
-isPossibleBeginningOfExpression[Token`LongName`DirectedEdge] = False
-isPossibleBeginningOfExpression[Token`LongName`Rule] = False
-isPossibleBeginningOfExpression[Token`LongName`RuleDelayed] = False
-isPossibleBeginningOfExpression[Token`LongName`UndirectedEdge] = False
-isPossibleBeginningOfExpression[Token`LongName`Function] = False
-isPossibleBeginningOfExpression[Token`LongName`TwoWayRule] = False
-isPossibleBeginningOfExpression[Token`LongName`InvisibleApplication] = False
-isPossibleBeginningOfExpression[Token`LongName`CircleMinus] = False
-isPossibleBeginningOfExpression[Token`LongName`SuchThat] = False
-isPossibleBeginningOfExpression[Token`LongName`Perpendicular] = False
-
-(*
-Infix ops
-*)
-isPossibleBeginningOfExpression[Token`AmpAmp] = False
-isPossibleBeginningOfExpression[Token`AtStar] = False
-isPossibleBeginningOfExpression[Token`BangEqual] = False
-isPossibleBeginningOfExpression[Token`Bar] = False
-isPossibleBeginningOfExpression[Token`BarBar] = False
-isPossibleBeginningOfExpression[Token`ColonColon] = False
-isPossibleBeginningOfExpression[Token`Comma] = False
-isPossibleBeginningOfExpression[Token`Dot] = False
-isPossibleBeginningOfExpression[Token`EqualBangEqual] = False
-isPossibleBeginningOfExpression[Token`EqualEqual] = False
-isPossibleBeginningOfExpression[Token`EqualEqualEqual] = False
-isPossibleBeginningOfExpression[Token`Greater] = False
-isPossibleBeginningOfExpression[Token`GreaterEqual] = False
-isPossibleBeginningOfExpression[Token`Less] = False
-isPossibleBeginningOfExpression[Token`LessEqual] = False
-isPossibleBeginningOfExpression[Token`LessGreater] = False
-isPossibleBeginningOfExpression[Token`Semi] = False
-isPossibleBeginningOfExpression[Token`SlashStar] = False
-isPossibleBeginningOfExpression[Token`Star] = False
-isPossibleBeginningOfExpression[Token`StarStar] = False
-isPossibleBeginningOfExpression[Token`TildeTilde] = False
-
-isPossibleBeginningOfExpression[Token`LongName`And] = False
-isPossibleBeginningOfExpression[Token`LongName`Backslash] = False
-isPossibleBeginningOfExpression[Token`LongName`Cap] = False
-isPossibleBeginningOfExpression[Token`LongName`CenterDot] = False
-isPossibleBeginningOfExpression[Token`LongName`CircleDot] = False
-isPossibleBeginningOfExpression[Token`LongName`CirclePlus] = False
-isPossibleBeginningOfExpression[Token`LongName`Colon] = False
-isPossibleBeginningOfExpression[Token`LongName`Conditioned] = False
-isPossibleBeginningOfExpression[Token`LongName`Congruent] = False
-isPossibleBeginningOfExpression[Token`LongName`Cross] = False
-isPossibleBeginningOfExpression[Token`LongName`Cup] = False
-
-isPossibleBeginningOfExpression[Token`LongName`CupCap] = False
-isPossibleBeginningOfExpression[Token`LongName`NotCupCap] = False
-
-isPossibleBeginningOfExpression[Token`LongName`RightTee] = False
-isPossibleBeginningOfExpression[Token`LongName`LeftTee] = False
-isPossibleBeginningOfExpression[Token`LongName`DoubleRightTee] = False
-isPossibleBeginningOfExpression[Token`LongName`DoubleLeftTee] = False
-isPossibleBeginningOfExpression[Token`LongName`UpTee] = False
-isPossibleBeginningOfExpression[Token`LongName`DownTee] = False
-
-isPossibleBeginningOfExpression[Token`LongName`Diamond] = False
-isPossibleBeginningOfExpression[Token`LongName`Distributed] = False
-isPossibleBeginningOfExpression[Token`LongName`Divides] = False
-isPossibleBeginningOfExpression[Token`LongName`DotEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`DoubleDownArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`DoubleLeftArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`DoubleLeftRightArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`DoubleLongLeftArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`DoubleLongLeftRightArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`DoubleLongRightArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`DoubleRightArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`DoubleUpArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`DoubleUpDownArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`DownArrowBar] = False
-isPossibleBeginningOfExpression[Token`LongName`DownArrowUpArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`DownLeftRightVector] = False
-isPossibleBeginningOfExpression[Token`LongName`DownLeftTeeVector] = False
-isPossibleBeginningOfExpression[Token`LongName`DownLeftVector] = False
-isPossibleBeginningOfExpression[Token`LongName`DownLeftVectorBar] = False
-isPossibleBeginningOfExpression[Token`LongName`DownRightTeeVector] = False
-isPossibleBeginningOfExpression[Token`LongName`DownRightVector] = False
-isPossibleBeginningOfExpression[Token`LongName`DownRightVectorBar] = False
-isPossibleBeginningOfExpression[Token`LongName`DownTeeArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`Element] = False
-isPossibleBeginningOfExpression[Token`LongName`Equal] = False
-isPossibleBeginningOfExpression[Token`LongName`EqualTilde] = False
-isPossibleBeginningOfExpression[Token`LongName`Equilibrium] = False
-isPossibleBeginningOfExpression[Token`LongName`Equivalent] = False
-
-isPossibleBeginningOfExpression[Token`LongName`LessEqualGreater] = False
-isPossibleBeginningOfExpression[Token`LongName`GreaterEqualLess] = False
-
-isPossibleBeginningOfExpression[Token`LongName`GreaterFullEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`NotGreaterFullEqual] = False
-
-isPossibleBeginningOfExpression[Token`LongName`GreaterGreater] = False
-
-isPossibleBeginningOfExpression[Token`LongName`GreaterLess] = False
-isPossibleBeginningOfExpression[Token`LongName`LessGreater] = False
-isPossibleBeginningOfExpression[Token`LongName`NotGreaterLess] = False
-isPossibleBeginningOfExpression[Token`LongName`NotLessGreater] = False
-
-isPossibleBeginningOfExpression[Token`LongName`GreaterSlantEqual] = False
-
-isPossibleBeginningOfExpression[Token`LongName`LessTilde] = False
-isPossibleBeginningOfExpression[Token`LongName`GreaterTilde] = False
-isPossibleBeginningOfExpression[Token`LongName`NotLessTilde] = False
-isPossibleBeginningOfExpression[Token`LongName`NotGreaterTilde] = False
-
-isPossibleBeginningOfExpression[Token`LongName`HumpDownHump] = False
-isPossibleBeginningOfExpression[Token`LongName`HumpEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`ImplicitPlus] = False
-isPossibleBeginningOfExpression[Token`LongName`Intersection] = False
-isPossibleBeginningOfExpression[Token`LongName`InvisibleComma] = False
-isPossibleBeginningOfExpression[Token`LongName`InvisibleTimes] = False
-isPossibleBeginningOfExpression[Token`LongName`LeftArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`LeftArrowBar] = False
-isPossibleBeginningOfExpression[Token`LongName`LeftArrowRightArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`LeftDownTeeVector] = False
-isPossibleBeginningOfExpression[Token`LongName`LeftDownVector] = False
-isPossibleBeginningOfExpression[Token`LongName`LeftDownVectorBar] = False
-isPossibleBeginningOfExpression[Token`LongName`LeftRightArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`LeftRightVector] = False
-isPossibleBeginningOfExpression[Token`LongName`LeftTeeArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`LeftTeeVector] = False
-
-isPossibleBeginningOfExpression[Token`LongName`LeftTriangle] = False
-isPossibleBeginningOfExpression[Token`LongName`RightTriangle] = False
-isPossibleBeginningOfExpression[Token`LongName`NotLeftTriangle] = False
-isPossibleBeginningOfExpression[Token`LongName`NotRightTriangle] = False
-
-isPossibleBeginningOfExpression[Token`LongName`LeftTriangleEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`RightTriangleEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`NotLeftTriangleEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`NotRightTriangleEqual] = False
-
-isPossibleBeginningOfExpression[Token`LongName`LeftUpDownVector] = False
-isPossibleBeginningOfExpression[Token`LongName`LeftUpTeeVector] = False
-isPossibleBeginningOfExpression[Token`LongName`LeftUpVector] = False
-isPossibleBeginningOfExpression[Token`LongName`LeftUpVectorBar] = False
-isPossibleBeginningOfExpression[Token`LongName`LeftVector] = False
-isPossibleBeginningOfExpression[Token`LongName`LeftVectorBar] = False
-
-isPossibleBeginningOfExpression[Token`LongName`LessEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`GreaterEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`NotLessEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`NotGreaterEqual] = False
-
-isPossibleBeginningOfExpression[Token`LongName`LessFullEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`NotLessFullEqual] = False
-
-isPossibleBeginningOfExpression[Token`LongName`LessLess] = False
-isPossibleBeginningOfExpression[Token`LongName`LessSlantEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`LongEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`LongLeftArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`LongLeftRightArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`LongRightArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`LowerLeftArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`LowerRightArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`Nand] = False
-isPossibleBeginningOfExpression[Token`LongName`NestedGreaterGreater] = False
-
-isPossibleBeginningOfExpression[Token`LongName`NestedLessLess] = False
-isPossibleBeginningOfExpression[Token`LongName`NotNestedLessLess] = False
-
-isPossibleBeginningOfExpression[Token`LongName`Nor] = False
-isPossibleBeginningOfExpression[Token`LongName`NotCongruent] = False
-isPossibleBeginningOfExpression[Token`LongName`NotElement] = False
-isPossibleBeginningOfExpression[Token`LongName`NotEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`NotEqualTilde] = False
-isPossibleBeginningOfExpression[Token`LongName`NotGreaterGreater] = False
-isPossibleBeginningOfExpression[Token`LongName`NotGreaterSlantEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`NotHumpDownHump] = False
-isPossibleBeginningOfExpression[Token`LongName`NotHumpEqual] = False
-
-isPossibleBeginningOfExpression[Token`LongName`LeftTriangleBar] = False
-isPossibleBeginningOfExpression[Token`LongName`RightTriangleBar] = False
-
-isPossibleBeginningOfExpression[Token`LongName`NotLeftTriangleBar] = False
-
-isPossibleBeginningOfExpression[Token`LongName`NotLess] = False
-isPossibleBeginningOfExpression[Token`LongName`NotGreater] = False
-
-isPossibleBeginningOfExpression[Token`LongName`NotLessLess] = False
-isPossibleBeginningOfExpression[Token`LongName`NotLessSlantEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`NotNestedGreaterGreater] = False
-isPossibleBeginningOfExpression[Token`LongName`NotNestedLessLess] = False
-
-isPossibleBeginningOfExpression[Token`LongName`NotReverseElement] = False
-isPossibleBeginningOfExpression[Token`LongName`NotRightTriangleBar] = False
-
-isPossibleBeginningOfExpression[Token`LongName`SquareSubset] = False
-isPossibleBeginningOfExpression[Token`LongName`SquareSuperset] = False
-isPossibleBeginningOfExpression[Token`LongName`NotSquareSubset] = False
-isPossibleBeginningOfExpression[Token`LongName`NotSquareSuperset] = False
-isPossibleBeginningOfExpression[Token`LongName`SquareSubsetEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`SquareSupersetEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`NotSquareSubsetEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`NotSquareSupersetEqual] = False
-
-isPossibleBeginningOfExpression[Token`LongName`NotSubset] = False
-isPossibleBeginningOfExpression[Token`LongName`NotSubsetEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`NotSuperset] = False
-isPossibleBeginningOfExpression[Token`LongName`NotSupersetEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`NotTilde] = False
-isPossibleBeginningOfExpression[Token`LongName`NotTildeEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`NotTildeFullEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`NotTildeTilde] = False
-isPossibleBeginningOfExpression[Token`LongName`Or] = False
-isPossibleBeginningOfExpression[Token`LongName`PermutationProduct] = False
-
-isPossibleBeginningOfExpression[Token`LongName`Precedes] = False
-isPossibleBeginningOfExpression[Token`LongName`Succeeds] = False
-isPossibleBeginningOfExpression[Token`LongName`PrecedesEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`SucceedsEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`PrecedesTilde] = False
-isPossibleBeginningOfExpression[Token`LongName`SucceedsTilde] = False
-isPossibleBeginningOfExpression[Token`LongName`PrecedesSlantEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`SucceedsSlantEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`NotPrecedes] = False
-isPossibleBeginningOfExpression[Token`LongName`NotSucceeds] = False
-isPossibleBeginningOfExpression[Token`LongName`NotPrecedesEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`NotSucceedsEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`NotPrecedesTilde] = False
-isPossibleBeginningOfExpression[Token`LongName`NotSucceedsTilde] = False
-isPossibleBeginningOfExpression[Token`LongName`NotPrecedesSlantEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`NotSucceedsSlantEqual] = False
-
-isPossibleBeginningOfExpression[Token`LongName`Perpendicular] = False
-isPossibleBeginningOfExpression[Token`LongName`Proportion] = False
-isPossibleBeginningOfExpression[Token`LongName`Proportional] = False
-isPossibleBeginningOfExpression[Token`LongName`ReverseElement] = False
-isPossibleBeginningOfExpression[Token`LongName`ReverseEquilibrium] = False
-isPossibleBeginningOfExpression[Token`LongName`ReverseUpEquilibrium] = False
-isPossibleBeginningOfExpression[Token`LongName`RightArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`RightArrowBar] = False
-isPossibleBeginningOfExpression[Token`LongName`RightArrowLeftArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`RightDownTeeVector] = False
-isPossibleBeginningOfExpression[Token`LongName`RightDownVector] = False
-isPossibleBeginningOfExpression[Token`LongName`RightDownVectorBar] = False
-isPossibleBeginningOfExpression[Token`LongName`RightTeeArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`RightTeeVector] = False
-
-isPossibleBeginningOfExpression[Token`LongName`RightUpDownVector] = False
-isPossibleBeginningOfExpression[Token`LongName`RightUpTeeVector] = False
-isPossibleBeginningOfExpression[Token`LongName`RightUpVector] = False
-isPossibleBeginningOfExpression[Token`LongName`RightUpVectorBar] = False
-isPossibleBeginningOfExpression[Token`LongName`RightVector] = False
-isPossibleBeginningOfExpression[Token`LongName`RightVectorBar] = False
-isPossibleBeginningOfExpression[Token`LongName`ShortDownArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`ShortLeftArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`ShortRightArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`ShortUpArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`SmallCircle] = False
-isPossibleBeginningOfExpression[Token`LongName`Star] = False
-isPossibleBeginningOfExpression[Token`LongName`Subset] = False
-isPossibleBeginningOfExpression[Token`LongName`SubsetEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`Superset] = False
-isPossibleBeginningOfExpression[Token`LongName`SupersetEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`TensorProduct] = False
-isPossibleBeginningOfExpression[Token`LongName`TensorWedge] = False
-isPossibleBeginningOfExpression[Token`LongName`Tilde] = False
-isPossibleBeginningOfExpression[Token`LongName`TildeEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`TildeFullEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`TildeTilde] = False
-isPossibleBeginningOfExpression[Token`LongName`Times] = False
-isPossibleBeginningOfExpression[Token`LongName`Union] = False
-isPossibleBeginningOfExpression[Token`LongName`UnionPlus] = False
-
-isPossibleBeginningOfExpression[Token`LongName`UpArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`DownArrow] = False
-
-isPossibleBeginningOfExpression[Token`LongName`UpArrowBar] = False
-isPossibleBeginningOfExpression[Token`LongName`UpArrowDownArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`UpDownArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`UpEquilibrium] = False
-isPossibleBeginningOfExpression[Token`LongName`UpperLeftArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`UpperRightArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`UpTeeArrow] = False
-isPossibleBeginningOfExpression[Token`LongName`VectorGreater] = False
-isPossibleBeginningOfExpression[Token`LongName`VectorGreaterEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`VectorLess] = False
-isPossibleBeginningOfExpression[Token`LongName`VectorLessEqual] = False
-isPossibleBeginningOfExpression[Token`LongName`Vee] = False
-isPossibleBeginningOfExpression[Token`LongName`VerticalSeparator] = False
-isPossibleBeginningOfExpression[Token`LongName`VerticalTilde] = False
-isPossibleBeginningOfExpression[Token`LongName`Wedge] = False
-isPossibleBeginningOfExpression[Token`LongName`Xor] = False
-
-isPossibleBeginningOfExpression[Token`LongName`VerticalBar] = False
-isPossibleBeginningOfExpression[Token`LongName`DoubleVerticalBar] = False
-isPossibleBeginningOfExpression[Token`LongName`NotVerticalBar] = False
-isPossibleBeginningOfExpression[Token`LongName`NotDoubleVerticalBar] = False
-
-isPossibleBeginningOfExpression[Token`Fake`ImplicitTimes] = False
-
-(*
-Closers
-*)
-isPossibleBeginningOfExpression[Token`BarGreater] = False
-isPossibleBeginningOfExpression[Token`CloseCurly] = False
-isPossibleBeginningOfExpression[Token`CloseParen] = False
-isPossibleBeginningOfExpression[Token`CloseSquare] = False
-isPossibleBeginningOfExpression[Token`LongName`CloseCurlyDoubleQuote] = False
-isPossibleBeginningOfExpression[Token`LongName`CloseCurlyQuote] = False
-isPossibleBeginningOfExpression[Token`LongName`RightAngleBracket] = False
-isPossibleBeginningOfExpression[Token`LongName`RightAssociation] = False
-isPossibleBeginningOfExpression[Token`LongName`RightBracketingBar] = False
-isPossibleBeginningOfExpression[Token`LongName`RightCeiling] = False
-isPossibleBeginningOfExpression[Token`LongName`RightDoubleBracket] = False
-isPossibleBeginningOfExpression[Token`LongName`RightDoubleBracketingBar] = False
-isPossibleBeginningOfExpression[Token`LongName`RightFloor] = False
-isPossibleBeginningOfExpression[Token`LinearSyntax`CloseParen] = False
-
-(*
-Postfix ops
-*)
-isPossibleBeginningOfExpression[Token`Amp] = False
-isPossibleBeginningOfExpression[Token`DotDot] = False
-isPossibleBeginningOfExpression[Token`DotDotDot] = False
-isPossibleBeginningOfExpression[Token`SingleQuote] = False
-isPossibleBeginningOfExpression[Token`LongName`Transpose] = False
-isPossibleBeginningOfExpression[Token`LongName`Conjugate] = False
-isPossibleBeginningOfExpression[Token`LongName`ConjugateTranspose] = False
-isPossibleBeginningOfExpression[Token`LongName`HermitianConjugate] = False
-isPossibleBeginningOfExpression[Token`LongName`InvisiblePostfixScriptBase] = False
-
-(*
-Infix ops with trailing
-*)
-isPossibleBeginningOfExpression[Token`Semi] = False
-isPossibleBeginningOfExpression[Token`Comma] = False
-isPossibleBeginningOfExpression[Token`LongName`InvisibleComma] = False
-
-(*
-Ternary
-*)
-isPossibleBeginningOfExpression[Token`Tilde] = False
-
-(*
-Context sensitive binary
-*)
-isPossibleBeginningOfExpression[Token`Colon] = False
-
-(*
-Ternary
-*)
-isPossibleBeginningOfExpression[Token`SlashColon] = False
-
-(*
-Special binary ops
-*)
-isPossibleBeginningOfExpression[Token`Equal] = False
-isPossibleBeginningOfExpression[Token`EqualDot] = False
-
-isPossibleBeginningOfExpression[Token`GreaterGreater] = False
-isPossibleBeginningOfExpression[Token`GreaterGreaterGreater] = False
-
-
-
-isPossibleBeginningOfExpression[Token`Buffer1] = False
-isPossibleBeginningOfExpression[Token`Count] = False
 
 (*
 Anything else
 *)
-isPossibleBeginningOfExpression[_] = True
+isPossibleBeginningOfExpression[_] = False
 
 
 

@@ -7,6 +7,15 @@ Needs["CodeParser`Generate`GenerateSources`"]
 
 
 
+PrefixOperatorToParselet[Token`String] = LeafParselet[Precedence`Highest]
+PrefixOperatorToParselet[Token`Integer] = LeafParselet[Precedence`Highest]
+PrefixOperatorToParselet[Token`Real] = LeafParselet[Precedence`Highest]
+
+PrefixOperatorToParselet[Token`Percent] = LeafParselet[Precedence`Highest]
+
+PrefixOperatorToParselet[Token`Hash] = LeafParselet[Precedence`Highest]
+PrefixOperatorToParselet[Token`HashHash] = LeafParselet[Precedence`Highest]
+
 PrefixOperatorToParselet[Token`Unknown] = LeafParselet[Precedence`AssertFalse]
 PrefixOperatorToParselet[Token`Whitespace] = LeafParselet[Precedence`AssertFalse]
 PrefixOperatorToParselet[Token`InternalNewline] = LeafParselet[Precedence`AssertFalse]
@@ -33,7 +42,7 @@ Scan[(
 
 PrefixOperatorToParselet[Token`Minus] = PrefixOperatorParselet[Token`Minus, Precedence`Prefix`Minus]
 PrefixOperatorToParselet[Token`Plus] = PrefixOperatorParselet[Token`Plus, Precedence`Prefix`Plus]
-PrefixOperatorToParselet[Token`Bang] = PrefixOperatorParselet[Token`Bang, Precedence`Prefix`bang]
+PrefixOperatorToParselet[Token`Bang] = PrefixOperatorParselet[Token`Bang, Precedence`Prefix`Bang]
 PrefixOperatorToParselet[Token`PlusPlus] = PrefixOperatorParselet[Token`PlusPlus, Precedence`Prefix`PlusPlus]
 PrefixOperatorToParselet[Token`MinusMinus] = PrefixOperatorParselet[Token`MinusMinus, Precedence`Prefix`MinusMinus]
 PrefixOperatorToParselet[Token`LongName`PlusMinus] = PrefixOperatorParselet[Token`LongName`PlusMinus, Precedence`Prefix`LongName`PlusMinus]
