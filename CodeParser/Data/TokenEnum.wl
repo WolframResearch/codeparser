@@ -46,6 +46,7 @@ Token`Error`UnrecognizedDigit -> Next,
 Token`Error`ExpectedDigit -> Next,
 Token`Error`UnsupportedCharacter -> Next,
 Token`Error`InvalidBase -> Next,
+Token`Error`UnsupportedToken -> Next,
 Token`Error`End -> Next,
 
 (* 1 character tokens *)

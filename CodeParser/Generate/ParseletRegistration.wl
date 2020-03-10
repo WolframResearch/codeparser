@@ -618,6 +618,26 @@ InfixOperatorToParselet[Token`GreaterGreater] = GreaterGreaterParselet[]
 InfixOperatorToParselet[Token`GreaterGreaterGreater] = GreaterGreaterGreaterParselet[]
 
 
+
+(*
+FIXME: this is a stop-gap
+*)
+InfixOperatorToParselet[Token`LinearSyntax`Bang] = LeafInfixParselet[Precedence`Lowest]
+InfixOperatorToParselet[Token`LinearSyntax`OpenParen] = LeafInfixParselet[Precedence`Lowest]
+InfixOperatorToParselet[Token`LinearSyntax`Star] = LeafInfixParselet[Precedence`Lowest]
+InfixOperatorToParselet[Token`LinearSyntax`CloseParen] = LeafInfixParselet[Precedence`Lowest]
+InfixOperatorToParselet[Token`LinearSyntax`At] = LeafInfixParselet[Precedence`Lowest]
+InfixOperatorToParselet[Token`LinearSyntax`Caret] = LeafInfixParselet[Precedence`Lowest]
+InfixOperatorToParselet[Token`LinearSyntax`Under] = LeafInfixParselet[Precedence`Lowest]
+InfixOperatorToParselet[Token`LinearSyntax`Percent] = LeafInfixParselet[Precedence`Lowest]
+InfixOperatorToParselet[Token`LinearSyntax`Plus] = LeafInfixParselet[Precedence`Lowest]
+InfixOperatorToParselet[Token`LinearSyntax`Backtick] = LeafInfixParselet[Precedence`Lowest]
+InfixOperatorToParselet[Token`LinearSyntax`Slash] = LeafInfixParselet[Precedence`Lowest]
+InfixOperatorToParselet[Token`LinearSyntax`Amp] = LeafInfixParselet[Precedence`Lowest]
+InfixOperatorToParselet[Token`LinearSyntax`Space] = LeafInfixParselet[Precedence`Lowest]
+
+
+
 InfixOperatorToParselet[_] = NullInfixParselet[]
 
 

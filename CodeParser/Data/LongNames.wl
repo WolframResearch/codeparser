@@ -30,6 +30,26 @@ Long names that are in an intermediate stage of support within WL.
 Perhaps they have been deprecated, perhaps the Front End understands the character but the kernel doesn't, etc.
 
 FIXME: all of these should be kernel quirks?
+
+Also use UnsupportedCharacter for operators that are valid in StandardForm.
+e.g., \[Gradient] does not have an interpretation in InputForm
+
+\[Gradient] is not letterlike, so it needs some kind of categorization,
+but it also needs to be prevented from making any valid parses.
+So use UnsupportedCharacter
+Gradient
+Divergence
+Curl
+Limit
+MaxLimit
+MinLimit
+AutoLeftMatch
+AutoRightMatch
+DiscreteShift
+DifferenceDelta
+DiscreteRatio
+Laplacian
+PartialD
 *)
 
 <|
@@ -379,11 +399,11 @@ Range 0x2100
 Range 0x2200
 *)
 "ForAll" -> {PunctuationCharacter, 16^^2200, <||>},
-"PartialD" -> {PunctuationCharacter, 16^^2202, <||>},
+"PartialD" -> {UnsupportedCharacter, 16^^2202, <||>},
 "Exists" -> {PunctuationCharacter, 16^^2203, <||>},
 "NotExists" -> {PunctuationCharacter, 16^^2204, <||>},
 "EmptySet" -> {LetterlikeCharacter, 16^^2205, <||>},
-"Laplacian" -> {PunctuationCharacter, 16^^2206, <||>},
+"Laplacian" -> {UnsupportedCharacter, 16^^2206, <||>},
 "Del" -> {PunctuationCharacter, 16^^2207, <||>},
 "Element" -> {PunctuationCharacter, 16^^2208, <||>},
 "NotElement" -> {PunctuationCharacter, 16^^2209, <||>},
@@ -722,8 +742,8 @@ Range 0xf300
 "COMPATIBILITYNoBreak" -> {UnsupportedCharacter, 16^^f3a2, <||>},
 "IndentingNewLine" -> {NewlineCharacter, 16^^f3a3, <||>},
 "AutoPlaceholder" -> {LetterlikeCharacter, 16^^f3a4, <||>},
-"AutoLeftMatch" -> {PunctuationCharacter, 16^^f3a8, <||>},
-"AutoRightMatch" -> {PunctuationCharacter, 16^^f3a9, <||>},
+"AutoLeftMatch" -> {UnsupportedCharacter, 16^^f3a8, <||>},
+"AutoRightMatch" -> {UnsupportedCharacter, 16^^f3a9, <||>},
 "AutoSpace" -> {WhitespaceCharacter, 16^^f3ad, <||>},
 "AutoOperand" -> {LetterlikeCharacter, 16^^f3ae, <||>},
 "SystemsModelDelay" -> {LetterlikeCharacter, 16^^f3af, <||>},
@@ -754,9 +774,9 @@ Range 0xf300
 "Conditioned" -> {PunctuationCharacter, 16^^f3d3, <||>},
 "UndirectedEdge" -> {PunctuationCharacter, 16^^f3d4, <||>},
 "DirectedEdge" -> {PunctuationCharacter, 16^^f3d5, <||>},
-"Gradient" -> {PunctuationCharacter, 16^^f3d6, <||>},
-"Divergence" -> {PunctuationCharacter, 16^^f3d7, <||>},
-"Curl" -> {PunctuationCharacter, 16^^f3d8, <||>},
+"Gradient" -> {UnsupportedCharacter, 16^^f3d6, <||>},
+"Divergence" -> {UnsupportedCharacter, 16^^f3d7, <||>},
+"Curl" -> {UnsupportedCharacter, 16^^f3d8, <||>},
 "ContinuedFractionK" -> {PunctuationCharacter, 16^^f3d9, <||>},
 "TensorProduct" -> {PunctuationCharacter, 16^^f3da, <||>},
 "TensorWedge" -> {PunctuationCharacter, 16^^f3db, <||>},
@@ -802,15 +822,15 @@ Limit
 MaxLimit
 MinLimit
 *)
-"Limit" -> {PunctuationCharacter, 16^^f438, <||>},
-"MaxLimit" -> {PunctuationCharacter, 16^^f439, <||>},
-"MinLimit" -> {PunctuationCharacter, 16^^f43a, <||>},
+"Limit" -> {UnsupportedCharacter, 16^^f438, <||>},
+"MaxLimit" -> {UnsupportedCharacter, 16^^f439, <||>},
+"MinLimit" -> {UnsupportedCharacter, 16^^f43a, <||>},
 "Cross" -> {PunctuationCharacter, 16^^f4a0, <||>},
 "Function" -> {PunctuationCharacter, 16^^f4a1, <||>},
 "Xnor" -> {PunctuationCharacter, 16^^f4a2, <||>},
-"DiscreteShift" -> {PunctuationCharacter, 16^^f4a3, <||>},
-"DifferenceDelta" -> {PunctuationCharacter, 16^^f4a4, <||>},
-"DiscreteRatio" -> {PunctuationCharacter, 16^^f4a5, <||>},
+"DiscreteShift" -> {UnsupportedCharacter, 16^^f4a3, <||>},
+"DifferenceDelta" -> {UnsupportedCharacter, 16^^f4a4, <||>},
+"DiscreteRatio" -> {UnsupportedCharacter, 16^^f4a5, <||>},
 
 (*
 Range 0xf500

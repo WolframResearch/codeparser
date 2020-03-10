@@ -45,10 +45,10 @@ if a token is not something else, then it is prefix
 
 
 
- Group 2: These are all mutually exclusive categories: Empty, DifferentialD
+ Group 2: These are all mutually exclusive categories: Empty, DifferentialD, LinearSyntax
  01 Empty
  10 DifferentialD
- 11 (unused)
+ 11 LinearSyntax
  00 Anything Else
 
 

@@ -270,6 +270,22 @@ NodePtr LeafInfixParselet::handleNotPossible(Token& tokenBad, Token& tokenAnchor
         return NodePtr(new ErrorNode(createdToken));
     }
     
+    //
+    // FIXME: this is a stop-gap
+    //
+    // Convert linear syntax into errors
+    //
+    if (tokenBad.Tok.isLinearSyntax()) {
+        
+        TheParser->nextToken(tokenBad);
+        
+        *wasCloser = false;
+        
+        auto createdToken = Token(TOKEN_ERROR_UNSUPPORTEDTOKEN, tokenBad.BufLen, tokenBad.Src);
+        
+        return NodePtr(new ErrorNode(createdToken));
+    }
+    
     assert(tokenBad.Tok.isError());
     
     TheParser->nextToken(tokenBad);
