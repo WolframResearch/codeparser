@@ -916,7 +916,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		*)
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], { CallNode[LeafNode[Symbol, "SetDelayed", _], {_, _}, _], LeafNode[Symbol, "Null", _] }, _],
 			peek = nodeListStack["Peek"];
-			def = CallNode[LeafNode[Symbol, "SetDelayed", x[[2, 1, 1, 3]]], x[[2, 1, 2]], <| x[[2, 1, 3]], "Definition" -> DeclarationName[x[[2, 1, 2, 1]]] |> ];
+			def = CallNode[x[[1]], { CallNode[LeafNode[Symbol, "SetDelayed", x[[2, 1, 1, 3]]], x[[2, 1, 2]], <| x[[2, 1, 3]], "Definition" -> DeclarationName[x[[2, 1, 2, 1]]] |> ], x[[2, 2]] }, x[[3]]];
 			peek["Push", def];
 		,
 		(*
