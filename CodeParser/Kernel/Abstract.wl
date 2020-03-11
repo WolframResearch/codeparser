@@ -1137,7 +1137,7 @@ is it a quirk that  a + + b  is parsed as  a + b  ?
 The prefix + is eaten
 TODO: add to kernel quirks mode
 *)
-flattenPrefixPlus[PrefixNode[Plus, {_, rand_}, _]] := rand
+flattenPrefixPlus[PrefixNode[Plus, {_, rand_}, _]] := flattenPrefixPlus[rand]
 
 flattenPrefixPlus[rand_] := rand
 

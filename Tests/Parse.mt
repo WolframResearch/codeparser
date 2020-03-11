@@ -285,9 +285,8 @@ Test[
 	CodeParse["10^^2.Pi"]
 	,
 	ContainerNode[String, {
-		CallNode[LeafNode[Symbol, "Times", <||>], {
-			LeafNode[Real, "10^^2.", <|Source -> {{1, 1}, {1, 7}}|>],
-			LeafNode[Symbol, "Pi", <|Source -> {{1, 7}, {1, 9}}|>]}, <|Source -> {{1, 1}, {1, 9}}|>]}, <||>]
+		ErrorNode[Token`Error`UnrecognizedDigit, "10^^2.P", <|Source -> {{1, 1}, {1, 8}}|>], 
+		LeafNode[Symbol, "i", <|Source -> {{1, 8}, {1, 9}}|>]}, <||>]
 	,
 	TestID->"Parse-20200112-G6X1N0"
 ]

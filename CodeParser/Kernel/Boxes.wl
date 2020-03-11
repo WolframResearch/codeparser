@@ -320,7 +320,10 @@ Module[{handledChildren, aggregatedChildren},
     {_, LeafNode[Token`ColonColon, _, _], _, ___},
       InfixNode[MessageName, {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~
         {parseBox[children[[2]], Append[pos, 1] ~Join~ {2}]} ~Join~
-        MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2 + 3 - 1), "StringifyMode" -> 1]&, children[[3;;]] ],
+        MapIndexed[
+          If[Mod[#2[[1]], 2] == 1,
+            parseBox[#1, Append[pos, 1] ~Join~ (#2 + 3 - 1), "StringifyMode" -> 1],
+            parseBox[#1, Append[pos, 1] ~Join~ (#2 + 3 - 1), "StringifyMode" -> 0]]&, children[[3;;]] ],
       <|Source->Append[pos, 1]|>],
 
 
@@ -432,6 +435,28 @@ Module[{handledChildren, aggregatedChildren},
         <|Source->Append[pos, 1]|>],
 
     (*
+    PrefixBinary
+    *)
+    {LeafNode[Token`LongName`Integral, _, _], _},
+      Switch[children,
+        {"\[Integral]", RowBox[{_, RowBox[{"\[DifferentialD]", _}]}]},
+          (*
+          Successful match for Integral syntax
+          *)
+          PrefixBinaryNode[Integrate, {
+            LeafNode[Token`LongName`Integral, "\[Integral]", <|Source->Append[pos, 1] ~Join~ {1}|>],
+            parseBox[children[[2, 1, 1]], Append[pos, 1] ~Join~ {2, 1, 1}],
+            parseBox[children[[2, 1, 2]], Append[pos, 1] ~Join~ {2, 1, 2}]
+            }, <|Source->Append[pos, 1]|>]
+        ,
+        _,
+          (*
+          Does not match Integral syntax, so treat as generic RowBox
+          *)
+          BoxNode[RowBox, {handledChildren}, <|Source->Append[pos, 1]|>]
+      ],
+
+    (*
     StartOfLine
     *)
     (*
@@ -496,10 +521,6 @@ Module[{handledChildren, aggregatedChildren},
         aggregatedChildren[[-1]],
     _,
     (*Failure["InternalUnhandled", <|"Function" -> parseBox, "Arguments"->HoldForm[RowBox[children]]|>]*)
-    (*
-    This catches \[Integral] syntax.
-    \[Integral] syntax is just too complicated to capture here
-    *)
     BoxNode[RowBox, {handledChildren}, <|Source->Append[pos, 1]|>]
     ]
    ]]

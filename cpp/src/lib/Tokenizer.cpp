@@ -1122,6 +1122,8 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
     
     policy |= LC_IS_MEANINGFUL;
     
+    int leadingDigitsCount = 0;
+    
     //
     // given 16^^0.F, leadingDigitsEnd will point to .
     // given 16^^.F, leadingDigitsEnd will point to .
@@ -1137,6 +1139,8 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
     bool real = false;
     
     if (c.isDigit()) {
+        
+        leadingDigitsCount++;
         
         //
         // With input of 002^^111, this will point to '2'
@@ -1165,6 +1169,8 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                     break;
                 }
                 
+                leadingDigitsCount++;
+                
                 TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
                 TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
                 
@@ -1180,6 +1186,8 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
             
             size_t count;
             c = handleDigits(policy, c, &count);
+            
+            leadingDigitsCount += count;
             
             leadingDigitsEndBuf = TheByteBuffer->buffer;
             leadingDigitsEndLoc = TheByteDecoder->SrcLoc;
@@ -1280,14 +1288,15 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
             // What can come after ^^ ?
             //
             
+            leadingDigitsCount = 0;
+            
             switch (c.to_point()) {
                 case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
                 case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm': case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
                 case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': {
                     
-                    int handled;
-                    c = handleAlphaOrDigits(c, base, policy, &handled);
-                    switch (handled) {
+                    c = handleAlphaOrDigits(c, base, policy, &leadingDigitsCount);
+                    switch (leadingDigitsCount) {
                         case BAILOUT:
                             assert(false);
                             break;
@@ -1361,6 +1370,16 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
             case UNRECOGNIZED_DIGIT:
                 return Token(TOKEN_ERROR_UNRECOGNIZEDDIGIT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
             case 0:
+                
+                if (leadingDigitsCount == 0) {
+
+                    //
+                    // Something like 2^^.
+                    //
+
+                    return Token(TOKEN_ERROR_UNHANDLEDDOT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                }
+                
                 real = true;
                 break;
             default:

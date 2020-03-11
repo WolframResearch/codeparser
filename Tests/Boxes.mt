@@ -144,14 +144,14 @@ Test[
 	ContainerNode[Box, {
 		PrefixBinaryNode[Integrate, {
 			LeafNode[Token`LongName`Integral, "\[Integral]", <|Source -> {1, 1}|>],
-			CallNode[{LeafNode[Symbol, "Sin", <|Source -> {1, 2, 1}|>]}, {
+			CallNode[{LeafNode[Symbol, "Sin", <|Source -> {1, 2, 1, 1, 1, 1}|>]}, {
 				GroupNode[GroupSquare, {
-					LeafNode[Token`OpenSquare, "[", <|Source -> {1, 2, 2}|>],
-					LeafNode[Symbol, "x", <|Source -> {1, 2, 3}|>], 
-      				LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2, 4, 1}|>]}, <|Source -> {1, 2, 4}|>]}, <|Source -> {1, 2}|>], 
+					LeafNode[Token`OpenSquare, "[", <|Source -> {1, 2, 1, 1, 1, 2}|>],
+					LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 1, 1, 3}|>], 
+      				LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2, 1, 1, 1, 4}|>]}, <||>]}, <|Source -> {1, 2, 1, 1, 1}|>], 
   			PrefixNode[DifferentialD, {
-  				LeafNode[Token`LongName`DifferentialD, "\[DifferentialD]", <|Source -> {1, 3, 1}|>],
-  				LeafNode[Symbol, "x", <|Source -> {1, 3, 2}|>]}, <|Source -> {1, 3}|>]}, <|Source -> {1}|>]}, <||>]
+  				LeafNode[Token`LongName`DifferentialD, "\[DifferentialD]", <|Source -> {1, 2, 1, 2, 1, 1}|>],
+  				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 2, 1, 2}|>]}, <|Source -> {1, 2, 1, 2, 1}|>]}, <|Source -> {1}|>]}, <||>]
 	,
 	TestID->"Boxes-20200126-N4V0N6"
 ]
