@@ -10,8 +10,7 @@ libraryFunctionWrapper
 (*
 library functions calling INTO lib
 *)
-concreteParseBytesFunc
-tokenizeBytesFunc
+concreteParseBytesListableFunc
 tokenizeBytesListableFunc
 concreteParseLeafFunc
 safeStringFunc
@@ -253,9 +252,7 @@ Module[{res, loaded, linkObject},
 
 loadAllFuncs[] := (
 
-concreteParseBytesFunc := concreteParseBytesFunc = loadFunc["ConcreteParseBytes_LibraryLink", LinkObject, LinkObject];
-
-tokenizeBytesFunc := tokenizeBytesFunc = loadFunc["TokenizeBytes_LibraryLink", LinkObject, LinkObject];
+concreteParseBytesListableFunc := concreteParseBytesListableFunc = loadFunc["ConcreteParseBytes_Listable_LibraryLink", LinkObject, LinkObject];
 
 tokenizeBytesListableFunc := tokenizeBytesListableFunc = loadFunc["TokenizeBytes_Listable_LibraryLink", LinkObject, LinkObject];
 

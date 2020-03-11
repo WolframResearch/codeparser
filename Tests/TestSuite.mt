@@ -6,6 +6,7 @@ TestSuite[{
 	"Arrows.mt",
 	"Boxes.mt",
 	"Characters.mt",
+	"CodeParser.mt",
 	"Concrete.mt",
 	"DeclarationName.mt",
 	"Errors.mt",
