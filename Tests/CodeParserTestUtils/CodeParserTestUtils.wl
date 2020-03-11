@@ -844,6 +844,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      *)
      If[MemberQ[{
         prefix <> "SystemFiles/Components/RobotTools/Kernel/Menu.m",
+        prefix <> "robottools/RobotTools/Kernel/Menu.m",
         
         prefix <> "SystemFiles/Components/Yelp/Kernel/YelpFunctions.m",
         prefix <> "serviceconnections/Yelp/Kernel/YelpFunctions.m",
@@ -870,8 +871,10 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "SystemFiles/Links/JLink/Examples/Part1/Palette.nb",
         prefix <> "SystemFiles/Links/JLink/Examples/Part1/Spirograph.nb",
         prefix <> "SystemFiles/Links/NETLink/Examples/Part1/Windows and Dialogs/AsteroidsGame/AsteroidsGame.nb",
+        
         prefix <> "CompileUtilities/CompileUtilities/RuntimeChecks/RuntimeChecks.m",
         prefix <> "SystemFiles/Components/CompileUtilities/RuntimeChecks/RuntimeChecks.m",
+
         prefix <> "TestTools/Legacy/Statistics/NIST/NISTTestTools.m",
         (*
         System`Private`NewContextPath[{"System`"(*, "XXXXXXX"*)}];
@@ -902,7 +905,10 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "SystemFiles/Components/IBMTextToSpeech/Kernel/IBMWatsonSTT.m",
         prefix <> "SystemFiles/Components/IBMTextToSpeech/Kernel/IBMWatsonTTS.m",
         prefix <> "SystemFiles/Components/MicrosoftTextToSpeech/Kernel/MicrosoftSpeech.m",
+
         prefix <> "SystemFiles/Links/TravelDirectionsClient/Kernel/TravelDirectionsClientRequests.m",
+        prefix <> "traveldirectionsclient/TravelDirectionsClient/Kernel/TravelDirectionsClientRequests.m",
+
         (*
         System`Private`NewContextPath[LocalObjects`Nodump`defaultContextPath];
         *)
@@ -921,6 +927,35 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "Kernel/StartUp/Persistence/PersistentObject.m",
         prefix <> "Kernel/StartUp/Persistence/PersistentValue.m",
         prefix <> "Kernel/StartUp/Persistence/StandardLocations.m",
+
+        (*
+        Unbalanced directives
+        *)
+        prefix <> "cudafinancialderivative/CUDAFinancialDerivative/CUDAFinancialDerivative.m",
+        prefix <> "serviceconnections/ATTSpeech/Kernel/ATTSpeech.m",
+        prefix <> "serviceconnections/Automile/Kernel/Automile.m",
+        prefix <> "serviceconnections/BingSearch/build/ServiceConnection_BingSearch/Kernel/BingSearch.m",
+        prefix <> "serviceconnections/CensusBureau/Kernel/CensusBureau.m",
+        prefix <> "serviceconnections/Dropbox/Kernel/Dropbox.m",
+        prefix <> "serviceconnections/Facebook/Kernel/Facebook.m",
+        prefix <> "serviceconnections/Fitbit/Kernel/Fitbit.m",
+        prefix <> "serviceconnections/GitHub/Kernel/GitHub.m",
+        prefix <> "serviceconnections/GoogleBigQuery/Kernel/GoogleBigQuery.m",
+        prefix <> "serviceconnections/GoogleFit/Kernel/GoogleFit.m",
+        prefix <> "serviceconnections/GooglePlus/Kernel/GooglePlus.m",
+        prefix <> "serviceconnections/Gracenote/Kernel/Gracenote.m",
+        prefix <> "serviceconnections/Instagram/Kernel/Instagram.m",
+        prefix <> "serviceconnections/LinkedIn/Kernel/LinkedIn.m",
+        prefix <> "serviceconnections/Nuance/Kernel/Nuance.m",
+        prefix <> "serviceconnections/NYTimes/Kernel/NYTimes.m",
+        prefix <> "serviceconnections/Quandl/Kernel/Quandl.m",
+        prefix <> "serviceconnections/RunKeeper/Kernel/RunKeeper.m",
+        prefix <> "serviceconnections/SugarCRM/Kernel/SugarCRM.m",
+        prefix <> "serviceconnections/Tumblr/Kernel/Tumblr.m",
+        prefix <> "serviceconnections/Twitter/Kernel/Twitter.m",
+        prefix <> "serviceconnections/USAToday/Kernel/USAToday.m",
+        prefix <> "serviceconnections/Yandex/Kernel/Yandex.m",
+
         Nothing
         }, fileIn],
       f = Failure["CannotRegexTooBroken", <|"FileName" -> fileIn|>];
@@ -940,12 +975,25 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "SystemFiles/Kernel/SystemResources/MacOSX-x86-64/sysinit.m",
 
         prefix <> "Kernel/StartUp/sysmake.m",
+        
         prefix <> "AddOns/Applications/UnitTable/Kernel/UnitTable.m",
+        prefix <> "unittable/UnitTable/Kernel/UnitTable.m",
+
         prefix <> "SystemFiles/Components/Chemistry/Kernel/Chemistry.wl",
+        prefix <> "chemistry/Chemistry/Kernel/Chemistry.wl",
+
         prefix <> "SystemFiles/Components/MUnit/Kernel/TestRun.m",
+        prefix <> "munit/MUnit/Kernel/TestRun.m",
+
         prefix <> "SystemFiles/Components/RobotTools/Kernel/FrontEnd.m",
+        prefix <> "robottools/RobotTools/Kernel/FrontEnd.m",
+        
         prefix <> "SystemFiles/Links/JLink/Kernel/CallJava.m",
+        prefix <> "jlink/src/Mathematica/Kernel/CallJava.m",
+
         prefix <> "SystemFiles/Links/NETLink/Kernel/CallNET.m",
+        prefix <> "netlink/Source/Mathematica/CallNET.m",
+
         prefix <> "alphasource/CalculateParse/BuildLexicon.m",
         prefix <> "alphasource/CalculateParse/Content/ExamplePage.m",
         prefix <> "alphasource/CalculateParse/TemplateParser4.m",
@@ -957,6 +1005,13 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "datapaclettools/Compiler.m",
         prefix <> "datapaclettools/Repository/Editors.m",
         prefix <> "datapaclettools/Repository/Interface.m",
+
+        prefix <> "pacletmanager/PacletManager/Notebooks/PublicPacletInstall.wl",
+
+        prefix <> "predictiveinterface/PredictiveInterface/Kernel/PredictiveRuleCompiler.m",
+
+        prefix <> "quantityunits/QuantityUnits/Kernel/QuantityUnits.m",
+
         Nothing
         }, fileIn],
       f = Failure["CannotRegexTooProgrammatic", <|"FileName" -> fileIn|>];

@@ -151,9 +151,9 @@ public:
     }
 };
 
-class NullInfixParselet : public InfixParselet {
+class InfixImplicitTimesParselet : public InfixParselet {
 public:
-    NullInfixParselet();
+    InfixImplicitTimesParselet();
     
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
@@ -162,14 +162,69 @@ public:
     Associativity getAssociativity() const override;
 };
 
-class LeafInfixParselet : public NullInfixParselet {
-    Precedence precedence;
+class InfixAssertFalseParselet : public InfixParselet {
 public:
-    LeafInfixParselet(Precedence precedence);
+    InfixAssertFalseParselet();
+
+    NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
+    
+    NodePtr handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext CtxtIn, bool *wasCloser) const override;
+
+    Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const override;
+    
+    Associativity getAssociativity() const override;
+};
+
+class InfixEndOfFileParselet : public InfixParselet {
+public:
+    InfixEndOfFileParselet();
+    
+    NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     NodePtr handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext CtxtIn, bool *wasCloser) const override;
     
     Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const override;
+    
+    Associativity getAssociativity() const override;
+};
+
+class InfixErrorParselet : public InfixParselet {
+public:
+    InfixErrorParselet();
+    
+    NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
+    
+    NodePtr handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext CtxtIn, bool *wasCloser) const override;
+    
+    Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const override;
+    
+    Associativity getAssociativity() const override;
+};
+
+class InfixUnsupportedTokenParselet : public InfixParselet {
+public:
+    InfixUnsupportedTokenParselet();
+    
+    NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
+    
+    NodePtr handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext CtxtIn, bool *wasCloser) const override;
+    
+    Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const override;
+    
+    Associativity getAssociativity() const override;
+};
+
+class InfixCloserParselet : public InfixParselet {
+public:
+    InfixCloserParselet();
+    
+    NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
+    
+    NodePtr handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext CtxtIn, bool *wasCloser) const override;
+    
+    Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const override;
+    
+    Associativity getAssociativity() const override;
 };
 
 class DifferentialDParselet : public InfixParselet {

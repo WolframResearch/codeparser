@@ -158,25 +158,25 @@ Infix
 *)
 
 
-InfixOperatorToParselet[Token`Unknown] = LeafInfixParselet[Precedence`AssertFalse]
-InfixOperatorToParselet[Token`Whitespace] = LeafInfixParselet[Precedence`AssertFalse]
-InfixOperatorToParselet[Token`InternalNewline] = LeafInfixParselet[Precedence`AssertFalse]
-InfixOperatorToParselet[Token`Comment] = LeafInfixParselet[Precedence`AssertFalse]
-InfixOperatorToParselet[Token`LineContinuation] = LeafInfixParselet[Precedence`AssertFalse]
+InfixOperatorToParselet[Token`Unknown] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`Whitespace] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`InternalNewline] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`Comment] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`LineContinuation] = InfixAssertFalseParselet[]
 
-InfixOperatorToParselet[Token`EndOfFile] = LeafInfixParselet[Precedence`Lowest]
+InfixOperatorToParselet[Token`EndOfFile] = InfixEndOfFileParselet[]
 
 errors = Cases[DownValues[isError][[All, 1]], Verbatim[HoldPattern][HoldPattern[isError][tok_Symbol]] :> tok]
 
 Scan[(
-  InfixOperatorToParselet[#] = LeafInfixParselet[Precedence`Lowest]
+  InfixOperatorToParselet[#] = InfixErrorParselet[]
 )&, errors]
 
 
 closers = Cases[DownValues[isCloser][[All, 1]], Verbatim[HoldPattern][HoldPattern[isCloser][tok_Symbol]] :> tok]
 
 Scan[(
-  InfixOperatorToParselet[#] = LeafInfixParselet[Precedence`Lowest]
+  InfixOperatorToParselet[#] = InfixCloserParselet[]
 )&, closers]
 
 
@@ -619,26 +619,46 @@ InfixOperatorToParselet[Token`GreaterGreaterGreater] = GreaterGreaterGreaterPars
 
 
 
+InfixOperatorToParselet[Token`LinearSyntax`Bang] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LinearSyntax`OpenParen] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LinearSyntax`Star] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LinearSyntax`CloseParen] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LinearSyntax`At] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LinearSyntax`Caret] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LinearSyntax`Under] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LinearSyntax`Percent] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LinearSyntax`Plus] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LinearSyntax`Backtick] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LinearSyntax`Slash] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LinearSyntax`Amp] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LinearSyntax`Space] = InfixUnsupportedTokenParselet[]
+
+InfixOperatorToParselet[Token`QuestionQuestion] = InfixUnsupportedTokenParselet[]
+
 (*
-FIXME: this is a stop-gap
+Also use for operators that are only valid in StandardForm.
+e.g., \[Gradient] does not have an interpretation in InputForm
+
+\[Gradient] is not letterlike, so it needs some kind of categorization,
+but it also needs to be prevented from making any valid parses.
 *)
-InfixOperatorToParselet[Token`LinearSyntax`Bang] = LeafInfixParselet[Precedence`Lowest]
-InfixOperatorToParselet[Token`LinearSyntax`OpenParen] = LeafInfixParselet[Precedence`Lowest]
-InfixOperatorToParselet[Token`LinearSyntax`Star] = LeafInfixParselet[Precedence`Lowest]
-InfixOperatorToParselet[Token`LinearSyntax`CloseParen] = LeafInfixParselet[Precedence`Lowest]
-InfixOperatorToParselet[Token`LinearSyntax`At] = LeafInfixParselet[Precedence`Lowest]
-InfixOperatorToParselet[Token`LinearSyntax`Caret] = LeafInfixParselet[Precedence`Lowest]
-InfixOperatorToParselet[Token`LinearSyntax`Under] = LeafInfixParselet[Precedence`Lowest]
-InfixOperatorToParselet[Token`LinearSyntax`Percent] = LeafInfixParselet[Precedence`Lowest]
-InfixOperatorToParselet[Token`LinearSyntax`Plus] = LeafInfixParselet[Precedence`Lowest]
-InfixOperatorToParselet[Token`LinearSyntax`Backtick] = LeafInfixParselet[Precedence`Lowest]
-InfixOperatorToParselet[Token`LinearSyntax`Slash] = LeafInfixParselet[Precedence`Lowest]
-InfixOperatorToParselet[Token`LinearSyntax`Amp] = LeafInfixParselet[Precedence`Lowest]
-InfixOperatorToParselet[Token`LinearSyntax`Space] = LeafInfixParselet[Precedence`Lowest]
+InfixOperatorToParselet[Token`LongName`Gradient] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LongName`Divergence] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LongName`Curl] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LongName`Limit] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LongName`MaxLimit] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LongName`MinLimit] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LongName`AutoLeftMatch] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LongName`AutoRightMatch] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LongName`DiscreteShift] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LongName`DifferenceDelta] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LongName`DiscreteRatio] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LongName`Laplacian] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LongName`PartialD] = InfixUnsupportedTokenParselet[]
 
 
 
-InfixOperatorToParselet[_] = NullInfixParselet[]
+InfixOperatorToParselet[_] = InfixImplicitTimesParselet[]
 
 
 
@@ -744,13 +764,18 @@ formatPrefix[PrefixOperatorParselet[tok_, precedence_]] := "new PrefixOperatorPa
 
 formatPrefix[GroupParselet[tok_]] := "new GroupParselet(" <> toGlobal[tok] <> ")"
 
+formatInfix[InfixAssertFalseParselet[]] := "&infixAssertFalseParselet"
 
+formatInfix[InfixEndOfFileParselet[]] := "&infixEndOfFileParselet"
 
-formatInfix[LeafInfixParselet[Precedence`Lowest]] := "&lowestLeafInfixParselet"
+formatInfix[InfixErrorParselet[]] := "&infixErrorParselet"
 
-formatInfix[LeafInfixParselet[Precedence`AssertFalse]] := "&assertingLeafInfixParselet"
+formatInfix[InfixCloserParselet[]] := "&infixCloserParselet"
 
-formatInfix[LeafInfixParselet[precedence_]] := "new LeafInfixParselet(" <> toGlobal[precedence] <> ")"
+formatInfix[InfixUnsupportedTokenParselet[]] := "&infixUnsupportedTokenParselet"
+
+formatInfix[InfixImplicitTimesParselet[]] := "&infixImplicitTimesParselet"
+
 
 
 formatInfix[BinaryOperatorParselet[tok_, precedence_, associativity_]] := "new BinaryOperatorParselet(" <> toGlobal[tok] <> ", " <> toGlobal[precedence] <> ", " <> toGlobal[associativity] <> ")"
@@ -781,8 +806,6 @@ formatInfix[GreaterGreaterParselet[]] := "&greaterGreaterParselet"
 
 formatInfix[GreaterGreaterGreaterParselet[]] := "&greaterGreaterGreaterParselet"
 
-formatInfix[NullInfixParselet[]] := "&nullInfixParselet"
-
 formatInfix[DifferentialDParselet[]] := "&differentialDParselet"
 
 formatInfix[ToplevelNewlineParselet[]] := "&toplevelNewlineParselet"
@@ -811,11 +834,18 @@ auto lowestLeafParselet = LeafParselet(PRECEDENCE_LOWEST);
 
 auto assertingLeafParselet = LeafParselet(PRECEDENCE_ASSERTFALSE);
 
-auto nullInfixParselet = NullInfixParselet();
+auto infixImplicitTimesParselet = InfixImplicitTimesParselet();
 
-auto lowestLeafInfixParselet = LeafInfixParselet(PRECEDENCE_LOWEST);
+auto infixAssertFalseParselet = InfixAssertFalseParselet();
 
-auto assertingLeafInfixParselet = LeafInfixParselet(PRECEDENCE_ASSERTFALSE);
+auto infixEndOfFileParselet = InfixEndOfFileParselet();
+
+auto infixErrorParselet = InfixErrorParselet();
+
+auto infixUnsupportedTokenParselet = InfixUnsupportedTokenParselet();
+
+auto infixCloserParselet = InfixCloserParselet();
+
 
 auto symbolParselet = SymbolParselet();
 

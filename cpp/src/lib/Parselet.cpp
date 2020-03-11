@@ -201,26 +201,54 @@ NodePtr InfixParselet::handleNotPossible(Token& tokenBad, Token& tokenAnchor, Pa
 }
 
 
-NullInfixParselet::NullInfixParselet() {}
+InfixImplicitTimesParselet::InfixImplicitTimesParselet() {}
 
-NodePtr NullInfixParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
+NodePtr InfixImplicitTimesParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
     assert(false);
     return nullptr;
 }
 
-Precedence NullInfixParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
+Precedence InfixImplicitTimesParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
     *implicitTimes = true;
     return PRECEDENCE_FAKE_IMPLICITTIMES;
 }
 
-Associativity NullInfixParselet::getAssociativity() const {
+Associativity InfixImplicitTimesParselet::getAssociativity() const {
     return ASSOCIATIVITY_NONE;
 }
 
 
-LeafInfixParselet::LeafInfixParselet(Precedence precedence) : precedence(precedence) {}
+InfixAssertFalseParselet::InfixAssertFalseParselet() {}
 
-NodePtr LeafInfixParselet::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext CtxtIn, bool *wasCloser) const {
+NodePtr InfixAssertFalseParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
+    assert(false);
+    return nullptr;
+}
+
+NodePtr InfixAssertFalseParselet::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext CtxtIn, bool *wasCloser) const {
+    assert(false);
+    return nullptr;
+}
+
+Precedence InfixAssertFalseParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
+    assert(false);
+    return PRECEDENCE_ASSERTFALSE;
+}
+
+Associativity InfixAssertFalseParselet::getAssociativity() const {
+    assert(false);
+    return ASSOCIATIVITY_ASSERTFALSE;
+}
+
+
+InfixCloserParselet::InfixCloserParselet() {}
+
+NodePtr InfixCloserParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
+    assert(false);
+    return nullptr;
+}
+
+NodePtr InfixCloserParselet::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext CtxtIn, bool *wasCloser) const {
     
     if (TokenToCloser(tokenBad.Tok) == CtxtIn.Closr) {
         //
@@ -242,49 +270,99 @@ NodePtr LeafInfixParselet::handleNotPossible(Token& tokenBad, Token& tokenAnchor
         return NodePtr(new ErrorNode(createdToken));
     }
     
-    if (tokenBad.Tok.isCloser()) {
-        
-        //
-        // Handle  { a ) }
-        // which ends up being  MissingCloser[ { a ) ]   UnexpectedCloser[ } ]
-        //
-        
-        TheParser->nextToken(tokenBad);
-        
-        NodeSeq Args(1);
-        Args.append(NodePtr(new LeafNode(tokenBad)));
-        
-        auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_UNEXPECTEDCLOSER, std::move(Args)));
-        
-        *wasCloser = true;
-        
-        return Error;
-    }
+    //
+    // Handle  { a ) }
+    // which ends up being  MissingCloser[ { a ) ]   UnexpectedCloser[ } ]
+    //
     
-    if (tokenBad.Tok == TOKEN_ENDOFFILE) {
-        
-        auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.BufLen.end), Source(tokenAnchor.Src.End));
-        
-        *wasCloser = true;
-        
-        return NodePtr(new ErrorNode(createdToken));
-    }
+    TheParser->nextToken(tokenBad);
+    
+    NodeSeq Args(1);
+    Args.append(NodePtr(new LeafNode(tokenBad)));
+    
+    auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_UNEXPECTEDCLOSER, std::move(Args)));
+    
+    *wasCloser = true;
+    
+    return Error;
+}
+
+Precedence InfixCloserParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
+    *implicitTimes = false;
+    return PRECEDENCE_LOWEST;
+}
+
+Associativity InfixCloserParselet::getAssociativity() const {
+    return ASSOCIATIVITY_NONE;
+}
+
+
+InfixEndOfFileParselet::InfixEndOfFileParselet() {}
+
+NodePtr InfixEndOfFileParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
+    assert(false);
+    return nullptr;
+}
+
+NodePtr InfixEndOfFileParselet::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext CtxtIn, bool *wasCloser) const {
     
     //
-    // FIXME: this is a stop-gap
+    // Something like  a+<EOF>
     //
-    // Convert linear syntax into errors
-    //
-    if (tokenBad.Tok.isLinearSyntax()) {
-        
-        TheParser->nextToken(tokenBad);
-        
-        *wasCloser = false;
-        
-        auto createdToken = Token(TOKEN_ERROR_UNSUPPORTEDTOKEN, tokenBad.BufLen, tokenBad.Src);
-        
-        return NodePtr(new ErrorNode(createdToken));
-    }
+    
+    auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenAnchor.BufLen.end), Source(tokenAnchor.Src.End));
+
+    *wasCloser = true;
+
+    return NodePtr(new ErrorNode(createdToken));
+}
+
+Precedence InfixEndOfFileParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
+    *implicitTimes = false;
+    return PRECEDENCE_LOWEST;
+}
+
+Associativity InfixEndOfFileParselet::getAssociativity() const {
+    return ASSOCIATIVITY_NONE;
+}
+
+
+InfixUnsupportedTokenParselet::InfixUnsupportedTokenParselet() {}
+
+NodePtr InfixUnsupportedTokenParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
+    assert(false);
+    return nullptr;
+}
+
+NodePtr InfixUnsupportedTokenParselet::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext CtxtIn, bool *wasCloser) const {
+
+    TheParser->nextToken(tokenBad);
+
+    *wasCloser = false;
+
+    auto createdToken = Token(TOKEN_ERROR_UNSUPPORTEDTOKEN, tokenBad.BufLen, tokenBad.Src);
+
+    return NodePtr(new ErrorNode(createdToken));
+}
+
+Precedence InfixUnsupportedTokenParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
+    *implicitTimes = false;
+    return PRECEDENCE_LOWEST;
+}
+
+Associativity InfixUnsupportedTokenParselet::getAssociativity() const {
+    return ASSOCIATIVITY_NONE;
+}
+
+
+InfixErrorParselet::InfixErrorParselet() {}
+
+NodePtr InfixErrorParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
+    assert(false);
+    return nullptr;
+}
+
+NodePtr InfixErrorParselet::handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext CtxtIn, bool *wasCloser) const {
     
     assert(tokenBad.Tok.isError());
     
@@ -299,9 +377,13 @@ NodePtr LeafInfixParselet::handleNotPossible(Token& tokenBad, Token& tokenAnchor
     return NodePtr(new ErrorNode(tokenBad));
 }
 
-Precedence LeafInfixParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
+Precedence InfixErrorParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
     *implicitTimes = false;
-    return precedence;
+    return PRECEDENCE_LOWEST;
+}
+
+Associativity InfixErrorParselet::getAssociativity() const {
+    return ASSOCIATIVITY_NONE;
 }
 
 
@@ -386,13 +468,10 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ct
             auto wasCloser = false;
             
             NodePtr Operand;
-            bool possible;
             if (Tok2.Tok.isPossibleBeginningOfExpression()) {
                 Operand = TheParser->parse(Tok2, Ctxt);
-                possible = true;
             } else {
                 Operand = infixParselets[Tok2.Tok.value()]->handleNotPossible(Tok2, Tok1, Ctxt, &wasCloser);
-                possible = false;
             }
             
             //
@@ -405,10 +484,6 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ct
                 Args.appendIfNonEmpty(std::move(ArgsTest2));
             }
             Args.append(std::move(Operand));
-            
-            if (!possible) {
-                return NodePtr(new InfixNode(Op, std::move(Args)));
-            }
             
         } else {
             
