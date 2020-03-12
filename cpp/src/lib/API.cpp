@@ -49,6 +49,10 @@ void ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libData
     
     policy = policyIn;
     
+    if (srcConvention == SOURCECONVENTION_UNKNOWN) {
+        return;
+    }
+    
     TheByteBuffer->init(bufAndLen, libData);
     TheByteDecoder->init(srcConvention);
     TheCharacterDecoder->init(libData);

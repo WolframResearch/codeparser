@@ -206,3 +206,25 @@ TEST_F(APITest, Crash6) {
     SUCCEED();
 }
 
+//
+// this used to crash
+//
+TEST_F(APITest, Crash7) {
+    
+    auto strIn = std::string("1+1");
+    
+    auto str = reinterpret_cast<Buffer>(strIn.c_str());
+    
+    auto bufAndLen = BufferAndLength(str, strIn.size());
+    
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_UNKNOWN);
+    
+    auto N = TheParserSession->parseExpressions();
+    
+    TheParserSession->releaseNode(N);
+    
+    TheParserSession->deinit();
+    
+    SUCCEED();
+}
+
