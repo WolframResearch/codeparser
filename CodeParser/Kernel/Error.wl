@@ -74,7 +74,9 @@ But return the opener to make ToString stuff easier
 *)
 
 Options[reparseMissingCloserNode] = {
-  "SourceConvention" -> "LineColumn"
+  CharacterEncoding -> "UTF8",
+  "SourceConvention" -> "LineColumn",
+  ContainerNode -> Automatic
 }
 
 reparseMissingCloserNode[GroupMissingCloserNeedsReparseNode[tag_, children_, dataIn_], bytes_List, OptionsPattern[]] :=
@@ -161,7 +163,9 @@ Do not return the previous children, because they are uselss any way.
 *)
 
 Options[reparseUnterminatedCommentErrorNode] = {
-  "SourceConvention" -> "LineColumn"
+  CharacterEncoding -> "UTF8",
+  "SourceConvention" -> "LineColumn",
+  ContainerNode -> Automatic
 }
 
 reparseUnterminatedCommentErrorNode[ErrorNode[Token`Error`UnterminatedComment, _, dataIn_], bytes_List, OptionsPattern[]] :=

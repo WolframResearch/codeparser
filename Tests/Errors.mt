@@ -90,7 +90,7 @@ Test[
 ]
 
 TestMatch[
-	CodeParse["\\n23", ContainerNode[Hold, #[[1]], <||>]&]
+	CodeParse["\\n23", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)]
 	,
 	ContainerNode[Hold, {
 		ErrorNode[Token`Error`UnhandledCharacter, "\\n", _],
@@ -100,7 +100,7 @@ TestMatch[
 ]
 
 TestMatch[
-	CodeParse["\\t23", ContainerNode[Hold, #[[1]], <||>]&]
+	CodeParse["\\t23", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)]
 	,
 	ContainerNode[Hold, {
 		ErrorNode[Token`Error`UnhandledCharacter, "\\t", _],

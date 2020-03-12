@@ -44,7 +44,7 @@ Module[{cst, agg, ast, good, expected, actual, str, str1},
 	(*
 	Concrete
 	*)
-	cst = CodeConcreteParse[text, ContainerNode[Hold, #[[1]], <||>]&];
+	cst = CodeConcreteParse[text, ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)];
 	If[FailureQ[cst],
 		Throw[cst]
 	];
@@ -102,7 +102,7 @@ Module[{cst, agg, ast, good, expected, actual, str, str1},
 	(*
 	Abstract
 	*)
-	ast = CodeParse[text, ContainerNode[Hold, #[[1]], <||>]&];
+	ast = CodeParse[text, ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)];
 	If[FailureQ[ast],
 		Throw[ast]
 	];
@@ -247,10 +247,10 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     	Print["version: ", version]
     ];
     Which[
-      version >= 100,
+      version >= 16,
             cst = 
        CodeConcreteParse[File[file], 
-        ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1, 1, 3, Key[Source], 1]], #[[1, -1, 3, Key[Source], 2]]}]|>] &];
+        ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1, 1, 3, Key[Source], 1]], #[[1, -1, 3, Key[Source], 2]]}]|>]&)];
       ,
       version >= 15,
             cst = 
@@ -431,10 +431,10 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      
      version = convertVersionString[PacletFind["CodeParser"][[1]]["Version"]];
      Which[
-     version >= 100,
+     version >= 16,
       cst = 
         CodeConcreteParse[File[file], 
-         ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1, 1, 3, Key[Source], 1]], #[[1, -1, 3, Key[Source], 2]]}]|>]&];
+         ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1, 1, 3, Key[Source], 1]], #[[1, -1, 3, Key[Source], 2]]}]|>]&)];
       ,
      version >= 15,
       cst = 

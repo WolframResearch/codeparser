@@ -67,3 +67,24 @@ Test[
 	TestID->"CodeParser-20200311-B7G5P8"
 ]
 
+
+
+
+
+
+(*
+
+Test options
+
+*)
+
+Test[
+	CodeParse["Plot[f[x,y],{x,0,1},{y,0,1},PlotRange\[Rule]All];", "SourceConvention" -> "Test"]
+	,
+	ContainerNode[String, {}, <||>]
+	,
+	TestID->"CodeParser-20200312-G4J9U7"
+]
+
+
+

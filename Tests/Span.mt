@@ -578,7 +578,7 @@ Test[
 ]
 
 Test[
-	CodeConcreteParse["a ;; \\t", f]
+	CodeConcreteParse["a ;; \\t", ContainerNode -> f]
 	,
 	f[{{BinaryNode[Span, {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],

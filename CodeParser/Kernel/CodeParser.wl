@@ -264,19 +264,19 @@ If[PacletFind["AST"] != {},
 
 
 
-CodeConcreteParse::usage = "CodeConcreteParse[code] returns a concrete syntax tree by interpreting code as WL input. \
-CodeConcreteParse[code, nodeFunc] applies nodeFunc to the result."
+CodeConcreteParse::usage = "CodeConcreteParse[code] returns a concrete syntax tree by interpreting code as WL input."
 
 Options[CodeConcreteParse] = {
   CharacterEncoding -> "UTF8",
-  "SourceConvention" -> "LineColumn"
+  "SourceConvention" -> "LineColumn",
+  ContainerNode -> Automatic
 }
 
-CodeConcreteParse[s_String, h_:Automatic, opts:OptionsPattern[]] :=
+CodeConcreteParse[s_String, opts:OptionsPattern[]] :=
 Catch[
 Module[{csts},
 
-  csts = CodeConcreteParse[{s}, h, opts];
+  csts = CodeConcreteParse[{s}, opts];
 
   If[FailureQ[csts],
     Throw[csts]
@@ -285,7 +285,7 @@ Module[{csts},
   csts[[1]]
 ]]
 
-CodeConcreteParse[ss:{_String, _String...}, h_:Automatic, opts:OptionsPattern[]] :=
+CodeConcreteParse[ss:{_String, _String...}, opts:OptionsPattern[]] :=
 Catch[
 Module[{csts, bytess, encoding},
 
@@ -297,7 +297,7 @@ Module[{csts, bytess, encoding},
 
   bytess = ToCharacterCode[ss, "UTF8"];
 
-  csts = concreteParseStringListable[bytess, h, opts];
+  csts = concreteParseStringListable[bytess, opts];
 
   If[FailureQ[csts],
     Throw[csts]
@@ -319,20 +319,19 @@ Module[{csts, bytess, encoding},
 
 Options[concreteParseStringListable] = Options[CodeConcreteParse]
 
-concreteParseStringListable[bytess:{{_Integer...}...}, hIn_, OptionsPattern[]] :=
+concreteParseStringListable[bytess:{{_Integer...}...}, OptionsPattern[]] :=
 Catch[
-Module[{h, res, convention},
-
-  h = hIn;
+Module[{res, convention, container},
 
   convention = OptionValue["SourceConvention"];
+  container = OptionValue[ContainerNode];
 
   (*
   The <||> will be filled in with Source later
   The # here is { {exprs}, {issues}, {metadata} }
   *)
-  If[h === Automatic,
-    h = ContainerNode[String, #[[1]], If[!empty[#[[2]] ], <| SyntaxIssues -> #[[2]] |>, <||>]]&
+  If[container === Automatic,
+    container = ContainerNode[String, #[[1]], If[!empty[#[[2]]], <| SyntaxIssues -> #[[2]] |>, <||>]]&
   ];
 
   $ConcreteParseProgress = 0;
@@ -350,7 +349,7 @@ Module[{h, res, convention},
     Throw[res]
   ];
 
-  res = h /@ res;
+  res = container /@ res;
 
   res
 ]]
@@ -359,12 +358,12 @@ Module[{h, res, convention},
 
 
 
-CodeParse::usage = "CodeParse[code] returns an abstract syntax tree by interpreting code as WL input. \
-CodeParseString[code, nodeFunc] applies nodeFunc to the result."
+CodeParse::usage = "CodeParse[code] returns an abstract syntax tree by interpreting code as WL input."
 
 Options[CodeParse] = {
   CharacterEncoding -> "UTF8",
-  "SourceConvention" -> "LineColumn"
+  "SourceConvention" -> "LineColumn",
+  ContainerNode -> Automatic
 }
 
 (*
@@ -373,11 +372,11 @@ a node
 or Null if input was an empty string
 or something FailureQ if e.g., no permission to run wl-codeparser
 *)
-CodeParse[s_String, h_:Automatic, opts:OptionsPattern[]] :=
+CodeParse[s_String, opts:OptionsPattern[]] :=
 Catch[
 Module[{asts},
 
-  asts = CodeParse[{s}, h, opts];
+  asts = CodeParse[{s}, opts];
 
   If[FailureQ[asts],
     Throw[asts]
@@ -386,11 +385,11 @@ Module[{asts},
   asts[[1]]
 ]]
 
-CodeParse[ss:{_String, _String...}, h_:Automatic, opts:OptionsPattern[]] :=
+CodeParse[ss:{_String, _String...}, opts:OptionsPattern[]] :=
 Catch[
 Module[{csts, asts, aggs},
   
-  csts = CodeConcreteParse[ss, h, opts];
+  csts = CodeConcreteParse[ss, opts];
 
   If[FailureQ[csts],
     Throw[csts]
@@ -408,11 +407,11 @@ Module[{csts, asts, aggs},
 
 
 
-CodeConcreteParse[f:File[_String], h_:Automatic, opts:OptionsPattern[]] :=
+CodeConcreteParse[f:File[_String], opts:OptionsPattern[]] :=
 Catch[
 Module[{csts},
 
-  csts = CodeConcreteParse[{f}, h, opts];
+  csts = CodeConcreteParse[{f}, opts];
 
   If[FailureQ[csts],
     Throw[csts]
@@ -421,7 +420,7 @@ Module[{csts},
   csts[[1]]
 ]]
 
-CodeConcreteParse[fs:{File[_String], File[_String]...}, h_:Automatic, opts:OptionsPattern[]] :=
+CodeConcreteParse[fs:{File[_String], File[_String]...}, opts:OptionsPattern[]] :=
 Catch[
 Module[{csts, encoding, fulls, bytess},
 
@@ -445,7 +444,7 @@ Module[{csts, encoding, fulls, bytess},
 
   bytess = Import[#, "Byte"]& /@ fulls;
 
-  csts = concreteParseFileListable[bytess, h, opts];
+  csts = concreteParseFileListable[bytess, opts];
 
   If[FailureQ[csts],
     If[csts === $Failed,
@@ -472,20 +471,20 @@ Module[{csts, encoding, fulls, bytess},
 
 Options[concreteParseFileListable] = Options[CodeConcreteParse]
 
-concreteParseFileListable[bytess:{{_Integer...}...}, hIn_, OptionsPattern[]] :=
+concreteParseFileListable[bytess:{{_Integer...}...}, OptionsPattern[]] :=
 Catch[
-Module[{h, res, convention},
-
-  h = hIn;
+Module[{res, convention, container, containerWasAutomatic},
 
   convention = OptionValue["SourceConvention"];
+  container = OptionValue[ContainerNode];
 
   (*
   The <||> will be filled in with Source later
   The # here is { {exprs}, {issues}, {metadata} }
   *)
-  If[h === Automatic,
-    h = ContainerNode[File, #[[1]], If[!empty[#[[2]] ], <| SyntaxIssues -> #[[2]] |>, <||>]]&
+  If[container === Automatic,
+    containerWasAutomatic = True;
+    container = ContainerNode[File, #[[1]], If[!empty[#[[2]]], <| SyntaxIssues -> #[[2]] |>, <||>]]&
   ];
 
   $ConcreteParseProgress = 0;
@@ -503,12 +502,12 @@ Module[{h, res, convention},
     Throw[res]
   ];
 
-  res = h /@ res;
+  res = container /@ res;
 
   (*
   Fill in Source for FileNode now
   *)
-  If[hIn === Automatic,
+  If[containerWasAutomatic,
     res = fillinSource /@ res
   ];
 
@@ -539,11 +538,11 @@ Module[{cst, children, start, end, data},
 
 
 
-CodeParse[f:File[_String], h_:Automatic, opts:OptionsPattern[]] :=
+CodeParse[f:File[_String], opts:OptionsPattern[]] :=
 Catch[
 Module[{asts},
 
-  asts = CodeParse[{f}, h, opts];
+  asts = CodeParse[{f}, opts];
 
   If[FailureQ[asts],
     Throw[asts]
@@ -552,11 +551,11 @@ Module[{asts},
   asts[[1]]
 ]]
 
-CodeParse[fs:{File[_String], File[_String]...}, h_:Automatic, opts:OptionsPattern[]] :=
+CodeParse[fs:{File[_String], File[_String]...}, opts:OptionsPattern[]] :=
 Catch[
 Module[{csts, asts, aggs},
 
-  csts = CodeConcreteParse[fs, h, opts];
+  csts = CodeConcreteParse[fs, opts];
 
   If[FailureQ[csts],
     Throw[csts]
@@ -573,11 +572,11 @@ Module[{csts, asts, aggs},
 
 
 
-CodeConcreteParse[bytes:{_Integer, _Integer...}, h_:Automatic, opts:OptionsPattern[]] :=
+CodeConcreteParse[bytes:{_Integer, _Integer...}, opts:OptionsPattern[]] :=
 Catch[
 Module[{csts},
 
-  csts = CodeConcreteParse[{bytes}, h, opts];
+  csts = CodeConcreteParse[{bytes}, opts];
 
   If[FailureQ[csts],
     Throw[csts]
@@ -586,7 +585,7 @@ Module[{csts},
   csts[[1]]
 ]]
 
-CodeConcreteParse[bytess:{{_Integer, _Integer...}...}, h_:Automatic, opts:OptionsPattern[]] :=
+CodeConcreteParse[bytess:{{_Integer, _Integer...}...}, opts:OptionsPattern[]] :=
 Catch[
 Module[{csts, encoding},
 
@@ -596,7 +595,7 @@ Module[{csts, encoding},
     Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
   ];
 
-  csts = concreteParseBytesListable[bytess, h, opts];
+  csts = concreteParseBytesListable[bytess, opts];
 
   If[FailureQ[csts],
     Throw[csts]
@@ -619,20 +618,19 @@ Module[{csts, encoding},
 
 Options[concreteParseBytesListable] = Options[CodeConcreteParse]
 
-concreteParseBytesListable[bytess:{{_Integer...}...}, hIn_, OptionsPattern[]] :=
+concreteParseBytesListable[bytess:{{_Integer...}...}, OptionsPattern[]] :=
 Catch[
-Module[{h, res, convention},
-
-  h = hIn;
+Module[{res, convention, container},
 
   convention = OptionValue["SourceConvention"];
+  container = OptionValue[ContainerNode];
 
   (*
   The <||> will be filled in with Source later
   The # here is { {exprs}, {issues}, {metadata} }
   *)
-  If[h === Automatic,
-    h = ContainerNode[Byte, #[[1]], If[!empty[#[[2]] ], <| SyntaxIssues -> #[[2]] |>, <||>]]&
+  If[container === Automatic,
+    container = ContainerNode[Byte, #[[1]], If[!empty[#[[2]]], <| SyntaxIssues -> #[[2]] |>, <||>]]&
   ];
 
   $ConcreteParseProgress = 0;
@@ -650,7 +648,7 @@ Module[{h, res, convention},
     Throw[res]
   ];
 
-  res = h /@ res;
+  res = container /@ res;
 
   res
 ]]
@@ -660,11 +658,11 @@ Module[{h, res, convention},
 
 
 
-CodeParse[bytes:{_Integer, _Integer...}, h_:Automatic, opts:OptionsPattern[]] :=
+CodeParse[bytes:{_Integer, _Integer...}, opts:OptionsPattern[]] :=
 Catch[
 Module[{asts},
 
-  asts = CodeParse[{bytes}, h, opts];
+  asts = CodeParse[{bytes}, opts];
 
   If[FailureQ[asts],
     Throw[asts]
@@ -673,11 +671,11 @@ Module[{asts},
   asts[[1]]
 ]]
 
-CodeParse[bytess:{{_Integer, _Integer...}...}, h_:Automatic, opts:OptionsPattern[]] :=
+CodeParse[bytess:{{_Integer, _Integer...}...}, opts:OptionsPattern[]] :=
 Catch[
 Module[{csts, asts, aggs},
 
-  csts = CodeConcreteParse[bytess, h, opts];
+  csts = CodeConcreteParse[bytess, opts];
 
   If[FailureQ[csts],
     Throw[csts]
@@ -695,14 +693,14 @@ Module[{csts, asts, aggs},
 
 
 
-CodeConcreteParse[{}, h_:Automatic, opts:OptionsPattern[]] :=
+CodeConcreteParse[{}, opts:OptionsPattern[]] :=
 Catch[
 Module[{},
 
   {}
 ]]
 
-CodeParse[{}, h_:Automatic, opts:OptionsPattern[]] :=
+CodeParse[{}, opts:OptionsPattern[]] :=
 Catch[
 Module[{},
 

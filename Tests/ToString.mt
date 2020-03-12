@@ -192,7 +192,7 @@ Test[
 
 
 Test[
-	StringJoin[ToSourceCharacterString /@ CodeConcreteParse["{]", #[[1]] &]]
+	StringJoin[ToSourceCharacterString /@ CodeConcreteParse["{]", ContainerNode -> (#[[1]]&)]]
 	,
 	"{]"
 	,

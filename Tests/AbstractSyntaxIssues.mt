@@ -6,7 +6,7 @@ Package:
 *)
 
 TestMatch[
-	FirstCase[CodeParse["BeginPackage[\"Foo`\"]", ContainerNode[Hold, #[[1]], <||>] &],
+	FirstCase[CodeParse["BeginPackage[\"Foo`\"]", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["Package", _, _, _]}]
@@ -15,7 +15,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[CodeParse["EndPackage[]", ContainerNode[Hold, #[[1]], <||>] &],
+	FirstCase[CodeParse["EndPackage[]", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["Package", _, _, _]}]
@@ -24,7 +24,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[CodeParse["Begin[\"Foo`\"]", ContainerNode[Hold, #[[1]], <||>] &],
+	FirstCase[CodeParse["Begin[\"Foo`\"]", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["Package", _, _, _]}]
@@ -33,7 +33,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[CodeParse["End[]", ContainerNode[Hold, #[[1]], <||>] &],
+	FirstCase[CodeParse["End[]", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["Package", _, _, _]}]
@@ -53,7 +53,7 @@ StrangeCall:
 *)
 
 TestMatch[
-	FirstCase[CodeParse["a;b;[]", ContainerNode[Hold, #[[1]], <||>] &],
+	FirstCase[CodeParse["a;b;[]", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["StrangeCall", _, _, _]}]
@@ -62,7 +62,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[CodeParse["a;b;[];c", ContainerNode[Hold, #[[1]], <||>] &],
+	FirstCase[CodeParse["a;b;[];c", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["StrangeCall", _, _, _]}]
@@ -71,7 +71,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[CodeParse[" a;b;\[LeftDoubleBracket]\[RightDoubleBracket] ", ContainerNode[Hold, #[[1]], <||>] &],
+	FirstCase[CodeParse[" a;b;\[LeftDoubleBracket]\[RightDoubleBracket] ", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["StrangeCall", _, _, _]}]
@@ -80,7 +80,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[CodeParse[" a;b;\[LeftDoubleBracket]\[RightDoubleBracket];c ", ContainerNode[Hold, #[[1]], <||>] &],
+	FirstCase[CodeParse[" a;b;\[LeftDoubleBracket]\[RightDoubleBracket];c ", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["StrangeCall", _, _, _]}]
@@ -89,7 +89,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[CodeParse[" %[] ", ContainerNode[Hold, #[[1]], <||>] &],
+	FirstCase[CodeParse[" %[] ", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["StrangeCall", _, _, _]}]
@@ -98,7 +98,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[CodeParse[" \\!\\(x\\)[] ", ContainerNode[Hold, #[[1]], <||>] &],
+	FirstCase[CodeParse[" \\!\\(x\\)[] ", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["StrangeCall", _, _, _]}]
@@ -107,7 +107,7 @@ TestMatch[
 ]
 
 TestMatch[
-	FirstCase[CodeParse[" \\(x\\)[] ", ContainerNode[Hold, #[[1]], <||>] &],
+	FirstCase[CodeParse[" \\(x\\)[] ", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["StrangeCall", _, _, _]}]
@@ -117,7 +117,7 @@ TestMatch[
 
 
 TestMatch[
-	FirstCase[CodeParse[" x--[] ", ContainerNode[Hold, #[[1]], <||>] &],
+	FirstCase[CodeParse[" x--[] ", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["StrangeCall", _, _, _]}]
@@ -136,7 +136,7 @@ SyntaxUndocumentedMessageName:
 *)
 
 TestMatch[
-	FirstCase[CodeParse[" a::b::c::d ", ContainerNode[Hold, #[[1]], <||>] &],
+	FirstCase[CodeParse[" a::b::c::d ", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["SyntaxUndocumentedMessageName", _, _, _]}]
@@ -157,7 +157,7 @@ Comma:
 
 
 TestMatch[
-	FirstCase[CodeParse[" f[1,2,] ", ContainerNode[Hold, #[[1]], <||>] &],
+	FirstCase[CodeParse[" f[1,2,] ", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["Comma", _, _, _]}]
@@ -188,7 +188,7 @@ StrangeCallSlotSequence:
 *)
 
 TestMatch[
-	FirstCase[CodeParse[" ##2[] ", ContainerNode[Hold, #[[1]], <||>] &],
+	FirstCase[CodeParse[" ##2[] ", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["StrangeCallSlotSequence", _, _, _]}]
@@ -206,7 +206,7 @@ NotContiguous:
 
 
 TestMatch[
-	FirstCase[CodeParse[" a[[] ] ", ContainerNode[Hold, #[[1]], <||>] &],
+	FirstCase[CodeParse[" a[[] ] ", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[AbstractSyntaxIssues -> {FormatIssue["NotContiguous", _, _, _]}]

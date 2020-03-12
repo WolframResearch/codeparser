@@ -143,7 +143,7 @@ Test[
 (* Syntax Errors *)
 
 Test[
-	CodeConcreteParse["a ~f x", f]
+	CodeConcreteParse["a ~f x", ContainerNode -> f]
 	,
 	f[{{
 		SyntaxErrorNode[SyntaxError`ExpectedTilde, {
@@ -501,7 +501,7 @@ TestMatch[
 ]
 
 Test[
-	CodeConcreteParse["a=..", f]
+	CodeConcreteParse["a=..", ContainerNode -> f]
 	,
 	f[{{LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
 		ErrorNode[Token`Error`UnhandledDot, "=..", <|Source -> {{1, 2}, {1, 5}}|>]}, {}}]
