@@ -114,7 +114,7 @@ public:
     void addIssue(IssuePtr);
 #endif // !NISSUES
     
-    NodePtr parse(Token firstTok, ParserContext Ctxt);
+    NodePtr infixLoop(NodePtr Left, ParserContext Ctxt);
     
     ~Parser();
 

@@ -574,9 +574,9 @@ Test[
 			LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>],
 			BinaryNode[Apply, {
 				ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>], 
-	    		LeafNode[Token`AtAt, "@@", <|Source -> {{1, 3}, {1, 5}}|>], 
-	    		ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 5}, {1, 5}}|>]}, <|Source -> {{1, 3}, {1, 5}}|>],
-	    	LeafNode[Whitespace, " ", <|Source -> {{1, 5}, {1, 6}}|>], 
+	    		LeafNode[Token`AtAt, "@@", <|Source -> {{1, 3}, {1, 5}}|>],
+	    		LeafNode[Whitespace, " ", <|Source -> {{1, 5}, {1, 6}}|>],
+	    		ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 6}, {1, 6}}|>]}, <|Source -> {{1, 3}, {1, 6}}|>], 
 	    	LeafNode[Token`CloseCurly, "}", <|Source -> {{1, 6}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>] }, <||>]
 	,
 	TestID->"Concrete-20191012-S7X3B0"
@@ -598,8 +598,8 @@ Test[
 		BinaryNode[Power, {
 			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 1}, {1, 1}}|>],
 			LeafNode[Token`Caret, "^", <|Source -> {{1, 1}, {1, 2}}|>],
-			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 2}, {1, 2}}|>]}, <|Source -> {{1, 1}, {1, 2}}|>],
-		LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>]}, <||>]
+			LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>],
+			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 3}}|>]}, <||>]
 	,
 	TestID->"Concrete-20191117-M2R5P9"
 ]

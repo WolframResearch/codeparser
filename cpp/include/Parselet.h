@@ -66,8 +66,6 @@ public:
     //
     virtual NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const = 0;
     
-    virtual NodePtr handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext CtxtIn, bool *wasCloser) const;
-    
     virtual Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const = 0;
     
     virtual void setPrecedence(Precedence) {}
@@ -222,8 +220,6 @@ public:
     InfixAssertFalseParselet();
 
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
-    
-    NodePtr handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext CtxtIn, bool *wasCloser) const override;
 
     Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const override;
     
@@ -236,8 +232,6 @@ public:
     
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
-    NodePtr handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext CtxtIn, bool *wasCloser) const override;
-    
     Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const override;
     
     Associativity getAssociativity() const override;
@@ -248,8 +242,6 @@ public:
     InfixErrorParselet();
     
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
-    
-    NodePtr handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext CtxtIn, bool *wasCloser) const override;
     
     Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const override;
     
@@ -262,8 +254,6 @@ public:
     
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
-    NodePtr handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext CtxtIn, bool *wasCloser) const override;
-    
     Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const override;
     
     Associativity getAssociativity() const override;
@@ -274,8 +264,6 @@ public:
     InfixCloserParselet();
     
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
-    
-    NodePtr handleNotPossible(Token& tokenBad, Token& tokenAnchor, ParserContext CtxtIn, bool *wasCloser) const override;
     
     Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const override;
     

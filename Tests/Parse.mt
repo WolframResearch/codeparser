@@ -2751,7 +2751,7 @@ Test[
 
 
 Test[
-	"a/:b=.c|d:.."
+	"a/:b=c|d"
 	,
 	Null
 	,
@@ -2760,6 +2760,55 @@ Test[
 	TestID->"Parse-20200313-R1I6Y4"
 ]
 
+Test[
+	"a/:b=c|d:.."
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200313-E1G3T9"
+]
+
+Test[
+	"a/:b:=c|d"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200313-A9D9Y9"
+]
+
+Test[
+	"a/:b:=c|d:.."
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200313-C0G3S6"
+]
+
+Test[
+	"a/:b=.c|d"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200313-I7B8T5"
+]
+
+Test[
+	"a/:b=.c|d:.."
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200313-J0R5D7"
+]
 
 Test[
 	"<<_  <a"

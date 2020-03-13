@@ -928,7 +928,7 @@ public:
     
     UnderParselet() {}
 
-        NodePtr parse0(Token TokIn, ParserContext Ctxt) const {
+    NodePtr parse0(Token TokIn, ParserContext Ctxt) const {
         
         auto Under = NodePtr(new LeafNode(TokIn));
         
@@ -978,33 +978,35 @@ public:
     
     NodePtr parse1(NodePtr Blank, Token Tok, ParserContext Ctxt) const {
         
-        LeafSeq ArgsTest;
-        
-        Tok = TheParser->eatAndPreserveToplevelNewlines(Tok, Ctxt, ArgsTest);
-        
-        //
-        // For something like _:\"\"  when parsing _
-        // ColonFlag == false
-        // the : here is Optional, and so we want to go parse with ColonParselet's parseContextSensitive method
-        //
-        // For something like a:_:\"\"  when parsing _
-        // ColonFlag == true
-        // make sure to not parse the second : here
-        // We are already inside ColonParselet from the first :, and so ColonParselet will also handle the second :
-        //
-        if (Tok.Tok == TOKEN_COLON) {
-            
-            if ((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
-                
-                NodeSeq BlankSeq(1 + 1);
-                BlankSeq.append(std::move(Blank));
-                BlankSeq.appendIfNonEmpty(std::move(ArgsTest));
-                
-                return contextSensitiveColonParselet->parseContextSensitive(std::move(BlankSeq), Tok, Ctxt);
-            }
+        {
+          LeafSeq ArgsTest;
+          
+          Tok = TheParser->eatAndPreserveToplevelNewlines(Tok, Ctxt, ArgsTest);
+          
+          //
+          // For something like _:\"\"  when parsing _
+          // ColonFlag == false
+          // the : here is Optional, and so we want to go parse with ColonParselet's parseContextSensitive method
+          //
+          // For something like a:_:\"\"  when parsing _
+          // ColonFlag == true
+          // make sure to not parse the second : here
+          // We are already inside ColonParselet from the first :, and so ColonParselet will also handle the second :
+          //
+          if (Tok.Tok == TOKEN_COLON) {
+              
+              if ((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
+                  
+                  NodeSeq BlankSeq(1 + 1);
+                  BlankSeq.append(std::move(Blank));
+                  BlankSeq.appendIfNonEmpty(std::move(ArgsTest));
+                  
+                  Blank = contextSensitiveColonParselet->parseContextSensitive(std::move(BlankSeq), Tok, Ctxt);
+              }
+          }
         }
-        
-        return Blank;
+
+        return TheParser->infixLoop(std::move(Blank), Ctxt);
     }
     
     //
@@ -1081,7 +1083,7 @@ public:
         
         TheParser->nextToken(TokIn);
         
-        return Blank;
+        return TheParser->infixLoop(std::move(Blank), Ctxt);
     }
     
     //
@@ -1101,7 +1103,7 @@ public:
 
         auto Pat = NodePtr(new PatternOptionalDefaultNode(std::move(Args)));
 
-        return Pat;
+        return TheParser->infixLoop(std::move(Pat), Ctxt);
     }
     
     Precedence getPrecedence(ParserContext Ctxt) const override {

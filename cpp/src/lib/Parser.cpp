@@ -212,32 +212,7 @@ void Parser::addIssue(IssuePtr I) {
 #endif // !NISSUES
 
 
-NodePtr Parser::parse(Token token, ParserContext Ctxt) {
-
-#if !NABORT
-    if (TheParserSession->isAbort()) {
-        
-        return TheParserSession->handleAbort();
-    }
-#endif // !NABORT
-    
-    assert(token.Tok != TOKEN_UNKNOWN);
-    assert(!token.Tok.isTrivia() && "Must handle at the call site");
-    assert(token.Tok != TOKEN_ENDOFFILE && "Must handle at the call site");
-    assert(token.Tok.isPossibleBeginningOfExpression() && "Must handle at the call site");
-    
-    //
-    // Prefix start
-    //
-    
-    auto P = prefixParselets[token.Tok.value()];
-    
-    auto Left = P->parse(token, Ctxt);
-    
-    
-    //
-    // Infix loop
-    //
+NodePtr Parser::infixLoop(NodePtr Left, ParserContext Ctxt) {
     
     while (true) {
         
@@ -251,7 +226,7 @@ NodePtr Parser::parse(Token token, ParserContext Ctxt) {
         LeafSeq ArgsTest;
         
         auto token = currentToken(Ctxt);
-        token = Parser::eatAndPreserveToplevelNewlines(token, Ctxt, ArgsTest);
+        token = eatAndPreserveToplevelNewlines(token, Ctxt, ArgsTest);
         
         auto I = infixParselets[token.Tok.value()];
         
@@ -280,10 +255,10 @@ NodePtr Parser::parse(Token token, ParserContext Ctxt) {
         NodeSeq LeftSeq(1 + 1);
         LeftSeq.append(std::move(Left));
         LeftSeq.appendIfNonEmpty(std::move(ArgsTest));
-    
+        
         auto Ctxt2 = Ctxt;
         Ctxt2.Prec = TokenPrecedence;
-    
+        
         Left = I->parse(std::move(LeftSeq), token, Ctxt2);
         
     } // while

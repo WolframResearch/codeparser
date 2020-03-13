@@ -123,19 +123,9 @@ Node *ParserSession::parseExpressions() {
                 continue;
             }
             
-            if (peek.Tok.isPossibleBeginningOfExpression()) {
-                
-                auto Expr = TheParser->parse(peek, Ctxt);
-                
-                exprs.push_back(std::move(Expr));
-                
-            } else {
-                
-                bool wasCloser;
-                auto NotPossible = infixParselets[peek.Tok.value()]->handleNotPossible(peek, peek, Ctxt, &wasCloser);
-                
-                exprs.push_back(std::move(NotPossible));
-            }
+            auto Expr = prefixParselets[peek.Tok.value()]->parse(peek, Ctxt);
+            
+            exprs.push_back(std::move(Expr));
             
         } // while (true)
         

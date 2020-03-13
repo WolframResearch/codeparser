@@ -76,14 +76,21 @@ BufferAndLength BufferAndLength::createNiceBufferAndLength(std::string *str) con
     
     NextCharacterPolicy policy = 0;
     
+    //
+    // Simulating a new buffer here, so make sure to set both buffer AND wasEOF!
+    //
     TheByteBuffer->buffer = buffer;
+    TheByteBuffer->wasEOF = false;
+    
     while (true) {
         
         if (TheByteBuffer->buffer == end) {
             break;
         }
+        assert(TheByteBuffer->buffer < end);
         
         auto c = TheByteDecoder->currentSourceCharacter(policy);
+        assert(!c.isEndOfFile());
         
         if (status == UTF8STATUS_NONCHARACTER_OR_BOM) {
             

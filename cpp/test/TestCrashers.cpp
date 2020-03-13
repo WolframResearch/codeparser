@@ -57,7 +57,7 @@ TEST_F(CrashTest, StackOverflow1) {
     
     auto bufAndLen = BufferAndLength(arr, 1600);
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
     
     auto N = TheParserSession->parseExpressions();
     

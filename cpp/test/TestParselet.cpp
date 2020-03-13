@@ -2,6 +2,8 @@
 #include "Parser.h"
 #include "Tokenizer.h"
 #include "API.h"
+#include "ParseletRegistration.h"
+#include "Parselet.h" // for Parselet impls
 
 #include "gtest/gtest.h"
 
@@ -44,7 +46,7 @@ TEST_F(ParseletTest, Bug1) {
     
     ParserContext Ctxt;
     
-    auto NP = TheParser->parse(Tok, Ctxt);
+    auto NP = prefixParselets[Tok.Tok.value()]->parse(Tok, Ctxt);
     
     auto N = NP.get();
     
@@ -66,7 +68,7 @@ TEST_F(ParseletTest, Bug2) {
     
     ParserContext Ctxt;
     
-    TheParser->parse(Tok, Ctxt);
+    prefixParselets[Tok.Tok.value()]->parse(Tok, Ctxt);
     
     SUCCEED();
 }
@@ -86,7 +88,7 @@ TEST_F(ParseletTest, Bug3) {
     
     ParserContext Ctxt;
     
-    TheParser->parse(Tok, Ctxt);
+    prefixParselets[Tok.Tok.value()]->parse(Tok, Ctxt);
     
     SUCCEED();
 }
@@ -106,7 +108,7 @@ TEST_F(ParseletTest, Bug4) {
     
     ParserContext Ctxt;
     
-    TheParser->parse(Tok, Ctxt);
+    prefixParselets[Tok.Tok.value()]->parse(Tok, Ctxt);
     
     SUCCEED();
 }
