@@ -16,25 +16,29 @@ PrefixOperatorToParselet[Token`Percent] = LeafParselet[Precedence`Highest]
 PrefixOperatorToParselet[Token`Hash] = LeafParselet[Precedence`Highest]
 PrefixOperatorToParselet[Token`HashHash] = LeafParselet[Precedence`Highest]
 
-PrefixOperatorToParselet[Token`Unknown] = LeafParselet[Precedence`AssertFalse]
-PrefixOperatorToParselet[Token`Whitespace] = LeafParselet[Precedence`AssertFalse]
-PrefixOperatorToParselet[Token`InternalNewline] = LeafParselet[Precedence`AssertFalse]
-PrefixOperatorToParselet[Token`Comment] = LeafParselet[Precedence`AssertFalse]
-PrefixOperatorToParselet[Token`LineContinuation] = LeafParselet[Precedence`AssertFalse]
+PrefixOperatorToParselet[Token`Unknown] = PrefixAssertFalseParselet[]
+PrefixOperatorToParselet[Token`Whitespace] = PrefixAssertFalseParselet[]
+PrefixOperatorToParselet[Token`InternalNewline] = PrefixAssertFalseParselet[]
+PrefixOperatorToParselet[Token`Comment] = PrefixAssertFalseParselet[]
+PrefixOperatorToParselet[Token`LineContinuation] = PrefixAssertFalseParselet[]
 
-PrefixOperatorToParselet[Token`EndOfFile] = LeafParselet[Precedence`Lowest]
+PrefixOperatorToParselet[Token`EndOfFile] = PrefixEndOfFileParselet[]
+
+(*
+Error handling for infix parselets
+*)
 
 errors = Cases[DownValues[isError][[All, 1]], Verbatim[HoldPattern][HoldPattern[isError][tok_Symbol]] :> tok]
 
 Scan[(
-  PrefixOperatorToParselet[#] = LeafParselet[Precedence`Lowest]
+  PrefixOperatorToParselet[#] = PrefixErrorParselet[]
 )&, errors]
 
 
 closers = Cases[DownValues[isCloser][[All, 1]], Verbatim[HoldPattern][HoldPattern[isCloser][tok_Symbol]] :> tok]
 
 Scan[(
-  PrefixOperatorToParselet[#] = LeafParselet[Precedence`Lowest]
+  PrefixOperatorToParselet[#] = PrefixCloserParselet[]
 )&, closers]
 
 
@@ -138,16 +142,48 @@ PrefixOperatorToParselet[Token`LessLess] = LessLessParselet[]
 
 
 (*
-You might think that it makes sense to have the default case be an ErrorNode, but it really should just be a LeafNode
-
-For example, with the input  +  the output is
-MakePrefixNode[Plus, List[
-  MakeLeafNode[Token`Plus, +, 1112],
-  MakeErrorNode[Token`Error`ExpectedOperand, , 1212], ], 1112]
-
-The ErrorNode is handled correctly
+PrefixOperatorToParselet[Token`LinearSyntax`Bang] = PrefixUnsupportedTokenParselet[]
 *)
-PrefixOperatorToParselet[_] = LeafParselet[Precedence`Highest]
+(*
+PrefixOperatorToParselet[Token`LinearSyntax`OpenParen] = PrefixUnsupportedTokenParselet[]
+*)
+PrefixOperatorToParselet[Token`LinearSyntax`Star] = PrefixUnsupportedTokenParselet[]
+PrefixOperatorToParselet[Token`LinearSyntax`CloseParen] = PrefixUnsupportedTokenParselet[]
+PrefixOperatorToParselet[Token`LinearSyntax`At] = PrefixUnsupportedTokenParselet[]
+PrefixOperatorToParselet[Token`LinearSyntax`Caret] = PrefixUnsupportedTokenParselet[]
+PrefixOperatorToParselet[Token`LinearSyntax`Under] = PrefixUnsupportedTokenParselet[]
+PrefixOperatorToParselet[Token`LinearSyntax`Percent] = PrefixUnsupportedTokenParselet[]
+PrefixOperatorToParselet[Token`LinearSyntax`Plus] = PrefixUnsupportedTokenParselet[]
+PrefixOperatorToParselet[Token`LinearSyntax`Backtick] = PrefixUnsupportedTokenParselet[]
+PrefixOperatorToParselet[Token`LinearSyntax`Slash] = PrefixUnsupportedTokenParselet[]
+PrefixOperatorToParselet[Token`LinearSyntax`Amp] = PrefixUnsupportedTokenParselet[]
+PrefixOperatorToParselet[Token`LinearSyntax`Space] = PrefixUnsupportedTokenParselet[]
+
+PrefixOperatorToParselet[Token`QuestionQuestion] = PrefixUnsupportedTokenParselet[]
+
+(*
+Also use for operators that are only valid in StandardForm.
+e.g., \[Gradient] does not have an interpretation in InputForm
+
+\[Gradient] is not letterlike, so it needs some kind of categorization,
+but it also needs to be prevented from making any valid parses.
+*)
+PrefixOperatorToParselet[Token`LongName`Gradient] = PrefixUnsupportedTokenParselet[]
+PrefixOperatorToParselet[Token`LongName`Divergence] = PrefixUnsupportedTokenParselet[]
+PrefixOperatorToParselet[Token`LongName`Curl] = PrefixUnsupportedTokenParselet[]
+PrefixOperatorToParselet[Token`LongName`Limit] = PrefixUnsupportedTokenParselet[]
+PrefixOperatorToParselet[Token`LongName`MaxLimit] = PrefixUnsupportedTokenParselet[]
+PrefixOperatorToParselet[Token`LongName`MinLimit] = PrefixUnsupportedTokenParselet[]
+PrefixOperatorToParselet[Token`LongName`AutoLeftMatch] = PrefixUnsupportedTokenParselet[]
+PrefixOperatorToParselet[Token`LongName`AutoRightMatch] = PrefixUnsupportedTokenParselet[]
+PrefixOperatorToParselet[Token`LongName`DiscreteShift] = PrefixUnsupportedTokenParselet[]
+PrefixOperatorToParselet[Token`LongName`DifferenceDelta] = PrefixUnsupportedTokenParselet[]
+PrefixOperatorToParselet[Token`LongName`DiscreteRatio] = PrefixUnsupportedTokenParselet[]
+PrefixOperatorToParselet[Token`LongName`Laplacian] = PrefixUnsupportedTokenParselet[]
+PrefixOperatorToParselet[Token`LongName`PartialD] = PrefixUnsupportedTokenParselet[]
+
+
+PrefixOperatorToParselet[_] = PrefixUnhandledParselet[]
 
 
 
@@ -188,7 +224,7 @@ Scan[(
 
 
 
-InfixOperatorToParselet[Token`ToplevelNewline] = ToplevelNewlineParselet[]
+InfixOperatorToParselet[Token`ToplevelNewline] = InfixToplevelNewlineParselet[]
 
 
 
@@ -706,7 +742,6 @@ using InfixParseletPtr = InfixParselet *;
 using ContextSensitivePrefixParseletPtr = ContextSensitivePrefixParselet *;
 using ContextSensitiveInfixParseletPtr = ContextSensitiveInfixParselet *;
 
-
 extern std::array<PrefixParseletPtr, TOKEN_COUNT.value()> prefixParselets;
 extern std::array<InfixParseletPtr, TOKEN_COUNT.value()> infixParselets;
 
@@ -733,9 +768,17 @@ tokensSansCount = DeleteCases[tokens, Token`Count]
 
 
 
-formatPrefix[LeafParselet[Precedence`Lowest]] := "&lowestLeafParselet"
+formatPrefix[PrefixAssertFalseParselet[]] := "&prefixAssertFalseParselet"
 
-formatPrefix[LeafParselet[Precedence`AssertFalse]] := "&assertingLeafParselet"
+formatPrefix[PrefixEndOfFileParselet[]] := "&prefixEndOfFileParselet"
+
+formatPrefix[PrefixErrorParselet[]] := "&prefixErrorParselet"
+
+formatPrefix[PrefixCloserParselet[]] := "&prefixCloserParselet"
+
+formatPrefix[PrefixUnsupportedTokenParselet[]] := "&prefixUnsupportedTokenParselet"
+
+formatPrefix[PrefixUnhandledParselet[]] := "&prefixUnhandledParselet"
 
 formatPrefix[LeafParselet[precedence_]] := "new LeafParselet(" <> toGlobal[precedence] <> ")"
 
@@ -806,7 +849,7 @@ formatInfix[GreaterGreaterGreaterParselet[]] := "&greaterGreaterGreaterParselet"
 
 formatInfix[InfixDifferentialDParselet[]] := "&infixDifferentialDParselet"
 
-formatInfix[ToplevelNewlineParselet[]] := "&toplevelNewlineParselet"
+formatInfix[InfixToplevelNewlineParselet[]] := "&infixToplevelNewlineParselet"
 
 
 
@@ -826,9 +869,17 @@ parseletRegistrationCPPSource = {
 
 #include <cassert>
 
-auto lowestLeafParselet = LeafParselet(PRECEDENCE_LOWEST);
+auto prefixEndOfFileParselet = PrefixEndOfFileParselet();
 
-auto assertingLeafParselet = LeafParselet(PRECEDENCE_ASSERTFALSE);
+auto prefixErrorParselet = PrefixErrorParselet();
+
+auto prefixCloserParselet = PrefixCloserParselet();
+
+auto prefixUnsupportedTokenParselet = PrefixUnsupportedTokenParselet();
+
+auto prefixUnhandledParselet = PrefixUnhandledParselet();
+
+auto prefixAssertFalseParselet = PrefixAssertFalseParselet();
 
 auto infixImplicitTimesParselet = InfixImplicitTimesParselet();
 
@@ -850,7 +901,7 @@ auto linearSyntaxOpenParenParselet = LinearSyntaxOpenParenParselet();
 
 auto integralParselet = IntegralParselet();
 
-auto toplevelNewlineParselet = ToplevelNewlineParselet();
+auto infixToplevelNewlineParselet = InfixToplevelNewlineParselet();
 
 auto colonParselet = ColonParselet();
 

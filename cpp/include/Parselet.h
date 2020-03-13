@@ -139,6 +139,60 @@ public:
     Precedence getPrecedence(ParserContext Ctxt) const override;
 };
 
+class PrefixAssertFalseParselet : public PrefixParselet {
+public:
+    PrefixAssertFalseParselet();
+    
+    NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
+    
+    Precedence getPrecedence(ParserContext Ctxt) const override;
+};
+
+class PrefixEndOfFileParselet : public PrefixParselet {
+public:
+    PrefixEndOfFileParselet();
+    
+    NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
+    
+    Precedence getPrecedence(ParserContext Ctxt) const override;
+};
+
+class PrefixErrorParselet : public PrefixParselet {
+public:
+    PrefixErrorParselet();
+    
+    NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
+    
+    Precedence getPrecedence(ParserContext Ctxt) const override;
+};
+
+class PrefixCloserParselet : public PrefixParselet {
+public:
+    PrefixCloserParselet();
+    
+    NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
+    
+    Precedence getPrecedence(ParserContext Ctxt) const override;
+};
+
+class PrefixUnsupportedTokenParselet : public PrefixParselet {
+public:
+    PrefixUnsupportedTokenParselet();
+    
+    NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
+    
+    Precedence getPrecedence(ParserContext Ctxt) const override;
+};
+
+class PrefixUnhandledParselet : public PrefixParselet {
+public:
+    PrefixUnhandledParselet();
+    
+    NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
+    
+    Precedence getPrecedence(ParserContext Ctxt) const override;
+};
+
 class PrefixOperatorParselet : public PrefixParselet {
     Precedence precedence;
     SymbolPtr& Op;
@@ -239,9 +293,9 @@ public:
     Associativity getAssociativity() const override;
 };
 
-class ToplevelNewlineParselet : public InfixParselet {
+class InfixToplevelNewlineParselet : public InfixParselet {
 public:
-    ToplevelNewlineParselet();
+    InfixToplevelNewlineParselet();
     
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     

@@ -20,14 +20,166 @@ Precedence LeafParselet::getPrecedence(ParserContext Ctxt) const {
 }
 
 
-ToplevelNewlineParselet::ToplevelNewlineParselet() {}
+PrefixAssertFalseParselet::PrefixAssertFalseParselet() {}
 
-NodePtr ToplevelNewlineParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
+NodePtr PrefixAssertFalseParselet::parse(Token TokIn, ParserContext Ctxt) const {
     assert(false);
     return nullptr;
 }
 
-Precedence ToplevelNewlineParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
+Precedence PrefixAssertFalseParselet::getPrecedence(ParserContext Ctxt) const {
+    assert(false);
+    return PRECEDENCE_ASSERTFALSE;
+}
+
+
+PrefixErrorParselet::PrefixErrorParselet() {}
+
+NodePtr PrefixErrorParselet::parse(Token TokIn, ParserContext Ctxt) const {
+    
+    assert(TokIn.Tok.isError());
+    
+    TheParser->nextToken(TokIn);
+    
+    //
+    // If there is a Token error, then use that specific error
+    //
+    
+    return NodePtr(new ErrorNode(TokIn));
+}
+
+Precedence PrefixErrorParselet::getPrecedence(ParserContext Ctxt) const {
+    assert(false);
+    return PRECEDENCE_ASSERTFALSE;
+}
+
+
+PrefixCloserParselet::PrefixCloserParselet() {}
+
+NodePtr PrefixCloserParselet::parse(Token TokIn, ParserContext Ctxt) const {
+    
+    assert(TokIn.Tok.isCloser());
+    
+    if (TokenToCloser(TokIn.Tok) == Ctxt.Closr) {
+        //
+        // Handle the special cases of:
+        // { + }
+        // { a + }
+        // { a @ }
+        // We are here parsing the operators, but we don't want to descend and treat the } as the problem
+        //
+        
+        //
+        // Do not take next token
+        //
+        
+        auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
+        
+        return NodePtr(new ErrorNode(createdToken));
+    }
+    
+    //
+    // Handle  { a ) }
+    // which ends up being  MissingCloser[ { a ) ]   UnexpectedCloser[ } ]
+    //
+    
+    TheParser->nextToken(TokIn);
+    
+    NodeSeq Args(1);
+    Args.append(NodePtr(new LeafNode(TokIn)));
+    
+    auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_UNEXPECTEDCLOSER, std::move(Args)));
+    
+    return Error;
+}
+
+Precedence PrefixCloserParselet::getPrecedence(ParserContext Ctxt) const {
+    assert(false);
+    return PRECEDENCE_ASSERTFALSE;
+}
+
+
+PrefixEndOfFileParselet::PrefixEndOfFileParselet() {}
+
+NodePtr PrefixEndOfFileParselet::parse(Token TokIn, ParserContext Ctxt) const {
+    
+    //
+    // Something like  a+<EOF>
+    //
+    
+    auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
+    
+    return NodePtr(new ErrorNode(createdToken));
+}
+
+Precedence PrefixEndOfFileParselet::getPrecedence(ParserContext Ctxt) const {
+    assert(false);
+    return PRECEDENCE_ASSERTFALSE;
+}
+
+
+PrefixUnsupportedTokenParselet::PrefixUnsupportedTokenParselet() {}
+
+NodePtr PrefixUnsupportedTokenParselet::parse(Token TokIn, ParserContext Ctxt) const {
+    
+    TheParser->nextToken(TokIn);
+    
+    auto createdToken = Token(TOKEN_ERROR_UNSUPPORTEDTOKEN, TokIn.BufLen, TokIn.Src);
+    
+    return NodePtr(new ErrorNode(createdToken));
+}
+
+Precedence PrefixUnsupportedTokenParselet::getPrecedence(ParserContext Ctxt) const {
+    assert(false);
+    return PRECEDENCE_ASSERTFALSE;
+}
+
+
+PrefixUnhandledParselet::PrefixUnhandledParselet() {}
+
+NodePtr PrefixUnhandledParselet::parse(Token TokIn, ParserContext Ctxt) const {
+    
+    assert(!TokIn.Tok.isPossibleBeginningOfExpression() && "handle at call site");
+    
+    //
+    // Handle something like  f[,1]
+    //
+    // We want to make EXPECTEDOPERAND the first arg of the Comma node.
+    //
+    // Do not take next token
+    //
+    // Important to not duplicate token's Str here, it may also appear later
+    //
+    // Also, invent Source
+    //
+    
+    auto NotPossible = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start))));
+    
+    NodeSeq LeftSeq(1);
+    LeftSeq.append(std::move(NotPossible));
+    
+    //
+    // FIXME: clear other flags here also?
+    //
+    Ctxt.Flag &= ~(PARSER_INSIDE_COLON);
+    
+    return infixParselets[TokIn.Tok.value()]->parse(std::move(LeftSeq), TokIn, Ctxt);
+}
+
+Precedence PrefixUnhandledParselet::getPrecedence(ParserContext Ctxt) const {
+    assert(false);
+    return PRECEDENCE_ASSERTFALSE;
+}
+
+
+InfixToplevelNewlineParselet::InfixToplevelNewlineParselet() {}
+
+NodePtr InfixToplevelNewlineParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
+    assert(false);
+    return nullptr;
+}
+
+Precedence InfixToplevelNewlineParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
     //
     // Do not do Implicit Times across top-level newlines
     //
@@ -35,7 +187,7 @@ Precedence ToplevelNewlineParselet::getPrecedence(ParserContext Ctxt, bool *impl
     return PRECEDENCE_LOWEST;
 }
 
-Associativity ToplevelNewlineParselet::getAssociativity() const {
+Associativity InfixToplevelNewlineParselet::getAssociativity() const {
     return ASSOCIATIVITY_NONRIGHT;
 }
 
@@ -763,7 +915,6 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) cons
     // FIXME: clear other flags here also?
     //
     Ctxt.Flag &= ~(PARSER_INSIDE_COLON);
-    Ctxt.Prec = PRECEDENCE_LOWEST;
     
     auto tildeParselet = infixParselets[TOKEN_TILDE.value()];
     tildeParselet->setPrecedence(PRECEDENCE_LOWEST);
