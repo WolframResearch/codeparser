@@ -2718,6 +2718,27 @@ Test[
 ]
 
 
+Test[
+	"a/:b=.c|d:.."
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200313-R1I6Y4"
+]
+
+
+Test[
+	"<<_  <a"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200313-D6J6S0"
+]
+
 
 
 
