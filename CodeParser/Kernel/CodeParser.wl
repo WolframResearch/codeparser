@@ -246,7 +246,6 @@ Needs["CodeParser`ToString`"]
 Needs["CodeParser`Utils`"]
 
 
-setupLibraries[]
 (*
 This uses func := func = def idiom and is fast
 *)

@@ -252,17 +252,17 @@ Module[{res, loaded, linkObject},
 
 loadAllFuncs[] := (
 
-concreteParseBytesListableFunc := concreteParseBytesListableFunc = loadFunc["ConcreteParseBytes_Listable_LibraryLink", LinkObject, LinkObject];
+concreteParseBytesListableFunc := (setupLibraries[]; concreteParseBytesListableFunc = loadFunc["ConcreteParseBytes_Listable_LibraryLink", LinkObject, LinkObject]);
 
-tokenizeBytesListableFunc := tokenizeBytesListableFunc = loadFunc["TokenizeBytes_Listable_LibraryLink", LinkObject, LinkObject];
+tokenizeBytesListableFunc := (setupLibraries[]; tokenizeBytesListableFunc = loadFunc["TokenizeBytes_Listable_LibraryLink", LinkObject, LinkObject]);
 
-concreteParseLeafFunc := concreteParseLeafFunc = loadFunc["ConcreteParseLeaf_LibraryLink", LinkObject, LinkObject];
+concreteParseLeafFunc := (setupLibraries[]; concreteParseLeafFunc = loadFunc["ConcreteParseLeaf_LibraryLink", LinkObject, LinkObject]);
 
-safeStringFunc := safeStringFunc = loadFunc["SafeString_LibraryLink", LinkObject, LinkObject];
+safeStringFunc := (setupLibraries[]; safeStringFunc = loadFunc["SafeString_LibraryLink", LinkObject, LinkObject]);
 
-exprTestFunc := exprTestFunc = loadFunc["ExprTest_LibraryLink", {}, Integer];
+exprTestFunc := (setupLibraries[]; exprTestFunc = loadFunc["ExprTest_LibraryLink", {}, Integer]);
 
-setupLongNamesFunc := setupLongNamesFunc = loadFunc["SetupLongNames_LibraryLink", LinkObject, LinkObject];
+setupLongNamesFunc := (setupLibraries[]; setupLongNamesFunc = loadFunc["SetupLongNames_LibraryLink", LinkObject, LinkObject]);
 )
 
 
