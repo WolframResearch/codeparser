@@ -119,6 +119,15 @@ NodePtr SymbolParselet::parse(Token TokIn, ParserContext Ctxt) const {
     }
 }
 
+NodePtr SymbolParselet::parseContextSensitive(Token TokIn, ParserContext Ctxt) const {
+    
+    auto Sym = NodePtr(new LeafNode(TokIn));
+    
+    TheParser->nextToken(TokIn);
+    
+    return Sym;
+}
+
 
 PrefixOperatorParselet::PrefixOperatorParselet(TokenEnum Tok, Precedence precedence) : precedence(precedence), Op(PrefixOperatorToSymbol(Tok)) {}
 

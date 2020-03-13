@@ -703,13 +703,14 @@ class Parser;
 
 using PrefixParseletPtr = PrefixParselet *;
 using InfixParseletPtr = InfixParselet *;
+using ContextSensitivePrefixParseletPtr = ContextSensitivePrefixParselet *;
 using ContextSensitiveInfixParseletPtr = ContextSensitiveInfixParselet *;
 
 
 extern std::array<PrefixParseletPtr, TOKEN_COUNT.value()> prefixParselets;
 extern std::array<InfixParseletPtr, TOKEN_COUNT.value()> infixParselets;
 
-extern PrefixParseletPtr contextSensitiveSymbolParselet;
+extern ContextSensitivePrefixParseletPtr contextSensitiveSymbolParselet;
 extern ContextSensitiveInfixParseletPtr contextSensitiveUnder1Parselet;
 extern ContextSensitiveInfixParseletPtr contextSensitiveUnder2Parselet;
 extern ContextSensitiveInfixParseletPtr contextSensitiveUnder3Parselet;
@@ -732,9 +733,6 @@ tokensSansCount = DeleteCases[tokens, Token`Count]
 
 
 
-
-formatPrefix[LeafParselet[Precedence`Highest]] := "&highestLeafParselet"
-
 formatPrefix[LeafParselet[Precedence`Lowest]] := "&lowestLeafParselet"
 
 formatPrefix[LeafParselet[Precedence`AssertFalse]] := "&assertingLeafParselet"
@@ -742,7 +740,7 @@ formatPrefix[LeafParselet[Precedence`AssertFalse]] := "&assertingLeafParselet"
 formatPrefix[LeafParselet[precedence_]] := "new LeafParselet(" <> toGlobal[precedence] <> ")"
 
 
-formatPrefix[SymbolParselet[]] := "&symbolParselet"
+formatPrefix[SymbolParselet[]] := "new SymbolParselet()"
 
 formatPrefix[UnderParselet[1]] := "new UnderParselet<BlankNode, PatternBlankNode>()"
 
@@ -828,8 +826,6 @@ parseletRegistrationCPPSource = {
 
 #include <cassert>
 
-auto highestLeafParselet = LeafParselet(PRECEDENCE_HIGHEST);
-
 auto lowestLeafParselet = LeafParselet(PRECEDENCE_LOWEST);
 
 auto assertingLeafParselet = LeafParselet(PRECEDENCE_ASSERTFALSE);
@@ -845,9 +841,6 @@ auto infixErrorParselet = InfixErrorParselet();
 auto infixUnsupportedTokenParselet = InfixUnsupportedTokenParselet();
 
 auto infixCloserParselet = InfixCloserParselet();
-
-
-auto symbolParselet = SymbolParselet();
 
 auto lessLessParselet = LessLessParselet();
 
@@ -895,7 +888,7 @@ public:
         NodePtr Blank;
         if (Tok.Tok == TOKEN_SYMBOL) {
             
-            auto Sym2 = contextSensitiveSymbolParselet->parse(Tok, Ctxt);
+            auto Sym2 = contextSensitiveSymbolParselet->parseContextSensitive(Tok, Ctxt);
             
             NodeSeq Args(1 + 1);
             Args.append(std::move(Under));
@@ -1079,7 +1072,7 @@ std::array<InfixParseletPtr, TOKEN_COUNT.value()> infixParselets {{"} ~Join~
 
 {"}};
 
-PrefixParseletPtr contextSensitiveSymbolParselet(&highestLeafParselet);
+ContextSensitivePrefixParseletPtr contextSensitiveSymbolParselet(new SymbolParselet());
 ContextSensitiveInfixParseletPtr contextSensitiveUnder1Parselet(new UnderParselet<BlankNode, PatternBlankNode>());
 ContextSensitiveInfixParseletPtr contextSensitiveUnder2Parselet(new UnderParselet<BlankSequenceNode, PatternBlankSequenceNode>());
 ContextSensitiveInfixParseletPtr contextSensitiveUnder3Parselet(new UnderParselet<BlankNullSequenceNode, PatternBlankNullSequenceNode>());

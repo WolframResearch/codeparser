@@ -22,6 +22,7 @@ class Parser;
 
 using PrefixParseletPtr = PrefixParselet *;
 using InfixParseletPtr = InfixParselet *;
+using ContextSensitivePrefixParseletPtr = ContextSensitivePrefixParselet *;
 using ContextSensitiveInfixParseletPtr = ContextSensitiveInfixParselet *;
 
 //
@@ -328,9 +329,11 @@ public:
 // Special parselets
 //
 
-class SymbolParselet : public PrefixParselet {
+class SymbolParselet : public PrefixParselet, public ContextSensitivePrefixParselet {
 public:
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
+    
+    NodePtr parseContextSensitive(Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt) const override {
         return PRECEDENCE_SYMBOL;
