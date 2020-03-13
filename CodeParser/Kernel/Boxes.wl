@@ -63,7 +63,7 @@ Module[{handledChildren, aggregatedChildren},
 
   handledChildren = MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ #2]&, handledChildren];
   
-  aggregatedChildren = DeleteCases[handledChildren, LeafNode[Token`Boxes`MultiWhitespace | Token`ToplevelNewline | Token`InternalNewline, _, _] | GroupNode[Comment, _, _]];
+  aggregatedChildren = DeleteCases[handledChildren, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _]];
   
   If[$Debug,
     Print["aggregatedChildren: ", aggregatedChildren]
@@ -504,7 +504,7 @@ Module[{handledChildren, aggregatedChildren},
         InfixNode[Times,
           Flatten[{First[handledChildren]} ~Join~
             Map[If[
-              MatchQ[#, LeafNode[Token`Boxes`MultiWhitespace | Token`ToplevelNewline | Token`InternalNewline | Token`Comment | Token`LineContinuation, _, _]],
+              MatchQ[#, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline | Token`Comment | Token`LineContinuation, _, _]],
                 #,
                 (*
                  Give ImplicitTimes the same Source as RHS
@@ -1007,7 +1007,7 @@ Module[{implicitsRemoved},
   toStandardFormBoxes[implicitsRemoved]
 ]]
 
-ToStandardFormBoxes[ContainerNode[Box, {cst1_, LeafNode[Token`ToplevelNewline, newlineStr_, _], cst2_}, _]] :=
+ToStandardFormBoxes[ContainerNode[Box, {cst1_, LeafNode[Token`Newline, newlineStr_, _], cst2_}, _]] :=
 Block[{$RecursionLimit = Infinity},
 Module[{implicitsRemoved1, implicitsRemoved2},
 
@@ -1018,8 +1018,8 @@ Module[{implicitsRemoved1, implicitsRemoved2},
 ]]
 
 ToStandardFormBoxes[ContainerNode[Box, {
-  cst1_, LeafNode[Token`ToplevelNewline, newlineStr1_, _],
-  cst2_, LeafNode[Token`ToplevelNewline, newlineStr2_, _], cst3_}, _]] :=
+  cst1_, LeafNode[Token`Newline, newlineStr1_, _],
+  cst2_, LeafNode[Token`Newline, newlineStr2_, _], cst3_}, _]] :=
 Block[{$RecursionLimit = Infinity},
 Module[{implicitsRemoved1, implicitsRemoved2, implicitsRemoved3},
 
@@ -1033,9 +1033,9 @@ Module[{implicitsRemoved1, implicitsRemoved2, implicitsRemoved3},
 ]]
 
 ToStandardFormBoxes[ContainerNode[Box, {
-  cst1_, LeafNode[Token`ToplevelNewline, newlineStr1_, _],
-  cst2_, LeafNode[Token`ToplevelNewline, newlineStr2_, _],
-  cst3_, LeafNode[Token`ToplevelNewline, newlineStr3_, _], cst4_}, _]] :=
+  cst1_, LeafNode[Token`Newline, newlineStr1_, _],
+  cst2_, LeafNode[Token`Newline, newlineStr2_, _],
+  cst3_, LeafNode[Token`Newline, newlineStr3_, _], cst4_}, _]] :=
 Block[{$RecursionLimit = Infinity},
 Module[{implicitsRemoved1, implicitsRemoved2, implicitsRemoved3, implicitsRemoved4},
 

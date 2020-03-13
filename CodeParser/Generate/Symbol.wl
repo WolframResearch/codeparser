@@ -560,6 +560,7 @@ symbols = Union[Join[
     {CodeParser`InternalInvalid, CodeParser`Metadata, CodeParser`PatternBlank, CodeParser`PatternBlankSequence, CodeParser`PatternBlankNullSequence,
       CodeParser`OptionalDefault, CodeParser`PatternOptionalDefault, CodeParser`TernaryTilde, CodeParser`InfixInequality},
     {CodeParser`SourceCharacter},
+    {Token`Newline},
     DownValues[PrefixOperatorToSymbol][[All, 2]],
     DownValues[PostfixOperatorToSymbol][[All, 2]],
     DownValues[BinaryOperatorToSymbol][[All, 2]],

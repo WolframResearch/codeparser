@@ -675,7 +675,7 @@ topLevelChildIssues[InfixNode[CompoundExpression, {_, LeafNode[Token`Semi, _, _]
 			ConfidenceLevel -> 0.75,
 			CodeActions -> { CodeAction["Insert newline", InsertNode,
 									<|	Source->nextData[Source],
-										"InsertionNode"->LeafNode[Token`ToplevelNewline, "\n", <||>]|>] } |>] }
+										"InsertionNode"->LeafNode[Token`Newline, "\n", <||>]|>] } |>] }
 
 topLevelChildIssues[InfixNode[CompoundExpression, {_, LeafNode[Token`Semi, _, _], _, ___}, data_], True] := {
 	SyntaxIssue["TopLevel", "``CompoundExpression`` at top-level. Consider breaking up onto separate lines.", "Warning",
@@ -683,7 +683,7 @@ topLevelChildIssues[InfixNode[CompoundExpression, {_, LeafNode[Token`Semi, _, _]
 			ConfidenceLevel -> 0.75,
 			CodeActions -> { CodeAction["Insert newline", InsertNode,
 									<|	Source->nextData[Source],
-										"InsertionNode"->LeafNode[Token`ToplevelNewline, "\n", <||>]|>] } |>] }
+										"InsertionNode"->LeafNode[Token`Newline, "\n", <||>]|>] } |>] }
 
 (*
 Anything else, then warn

@@ -610,7 +610,7 @@ Module[{nodes, nodeStrs},
 		(*
 		remove top-level trivia
 		*)
-		nodes = DeleteCases[nodes, LeafNode[Whitespace | Token`ToplevelNewline | Token`InternalNewline | Token`Comment | Token`LineContinuation, _, _]];
+		nodes = DeleteCases[nodes, LeafNode[Whitespace | Token`Newline | Token`Comment | Token`LineContinuation, _, _]];
 		nodeStrs = toSourceCharacterString[#, insideBoxes]& /@ nodes;
 		nodeStrs = Flatten[nodeStrs];
 	];
