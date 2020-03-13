@@ -1605,9 +1605,12 @@ NodePtr LessLessParselet::parse(Token TokIn, ParserContext Ctxt) const {
 }
 
 
-DifferentialDParselet::DifferentialDParselet() {}
+InfixDifferentialDParselet::InfixDifferentialDParselet() {}
 
-Precedence DifferentialDParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
+//
+// InfixDifferentialDParselet only exists to properly supply precedence, depending on context
+//
+Precedence InfixDifferentialDParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
     
     if ((Ctxt.Flag & PARSER_INSIDE_INTEGRAL) == PARSER_INSIDE_INTEGRAL) {
         
@@ -1625,13 +1628,12 @@ Precedence DifferentialDParselet::getPrecedence(ParserContext Ctxt, bool *implic
     return PRECEDENCE_FAKE_IMPLICITTIMES;
 }
 
-NodePtr DifferentialDParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
+NodePtr InfixDifferentialDParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
     assert(false);
     return nullptr;
 }
 
-Associativity DifferentialDParselet::getAssociativity() const {
-    assert(false);
+Associativity InfixDifferentialDParselet::getAssociativity() const {
     return ASSOCIATIVITY_NONRIGHT;
 }
 

@@ -183,7 +183,7 @@ Scan[(
 differentialds = Cases[DownValues[isDifferentialD][[All, 1]], Verbatim[HoldPattern][HoldPattern[isDifferentialD][tok_Symbol]] :> tok]
 
 Scan[(
-  InfixOperatorToParselet[#] = DifferentialDParselet[]
+  InfixOperatorToParselet[#] = InfixDifferentialDParselet[]
 )&, differentialds]
 
 
@@ -806,7 +806,7 @@ formatInfix[GreaterGreaterParselet[]] := "&greaterGreaterParselet"
 
 formatInfix[GreaterGreaterGreaterParselet[]] := "&greaterGreaterGreaterParselet"
 
-formatInfix[DifferentialDParselet[]] := "&differentialDParselet"
+formatInfix[InfixDifferentialDParselet[]] := "&infixDifferentialDParselet"
 
 formatInfix[ToplevelNewlineParselet[]] := "&toplevelNewlineParselet"
 
@@ -871,7 +871,7 @@ auto slashColonParselet = SlashColonParselet();
 
 auto greaterGreaterGreaterParselet = GreaterGreaterGreaterParselet();
 
-auto differentialDParselet = DifferentialDParselet();
+auto infixDifferentialDParselet = InfixDifferentialDParselet();
 
 
 //

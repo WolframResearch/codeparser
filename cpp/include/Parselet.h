@@ -227,9 +227,9 @@ public:
     Associativity getAssociativity() const override;
 };
 
-class DifferentialDParselet : public InfixParselet {
+class InfixDifferentialDParselet : public InfixParselet {
 public:
-    DifferentialDParselet();
+    InfixDifferentialDParselet();
     
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
