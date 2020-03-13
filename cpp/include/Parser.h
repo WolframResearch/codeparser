@@ -18,11 +18,8 @@ using ParserPtr = std::unique_ptr<Parser>;
 
 
 enum Associativity {
-    ASSOCIATIVITY_NONE,
-    ASSOCIATIVITY_LEFT,
+    ASSOCIATIVITY_NONRIGHT,
     ASSOCIATIVITY_RIGHT,
-    ASSOCIATIVITY_NONASSOCIATIVE,
-    ASSOCIATIVITY_ASSERTFALSE,
 };
 
 enum ParserContextFlagBits : uint8_t {

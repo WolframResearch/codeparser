@@ -89,7 +89,7 @@ public:
     }
     
     Associativity getAssociativity() const override {
-        return ASSOCIATIVITY_NONE;
+        return ASSOCIATIVITY_NONRIGHT;
     }
 };
 
@@ -284,7 +284,7 @@ public:
     }
     
     Associativity getAssociativity() const override {
-        return ASSOCIATIVITY_NONE;
+        return ASSOCIATIVITY_NONRIGHT;
     }
 };
 
@@ -302,7 +302,7 @@ public:
     }
     
     Associativity getAssociativity() const override {
-        return ASSOCIATIVITY_NONE;
+        return ASSOCIATIVITY_NONRIGHT;
     }
 };
 
@@ -356,7 +356,7 @@ public:
     }
     
     Associativity getAssociativity() const override {
-        return ASSOCIATIVITY_NONE;
+        return ASSOCIATIVITY_NONRIGHT;
     }
 };
 
@@ -383,7 +383,7 @@ public:
     }
     
     Associativity getAssociativity() const override {
-        return ASSOCIATIVITY_NONE;
+        return ASSOCIATIVITY_NONRIGHT;
     }
 };
 
@@ -406,7 +406,7 @@ public:
     }
     
     Associativity getAssociativity() const override {
-        return ASSOCIATIVITY_LEFT;
+        return ASSOCIATIVITY_NONRIGHT;
     }
     
     void setPrecedence(Precedence p) override {
@@ -429,7 +429,7 @@ public:
     }
     
     Associativity getAssociativity() const override {
-        return ASSOCIATIVITY_LEFT;
+        return ASSOCIATIVITY_NONRIGHT;
     }
     
 };
@@ -501,7 +501,7 @@ public:
     }
     
     Associativity getAssociativity() const override {
-        return ASSOCIATIVITY_NONE;
+        return ASSOCIATIVITY_NONRIGHT;
     }
 };
 
@@ -516,7 +516,7 @@ public:
     }
     
     Associativity getAssociativity() const override {
-        return ASSOCIATIVITY_LEFT;
+        return ASSOCIATIVITY_NONRIGHT;
     }
 };
 
@@ -531,7 +531,7 @@ public:
     }
     
     Associativity getAssociativity() const override {
-        return ASSOCIATIVITY_LEFT;
+        return ASSOCIATIVITY_NONRIGHT;
     }
 };
 

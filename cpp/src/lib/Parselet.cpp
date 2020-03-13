@@ -36,7 +36,7 @@ Precedence ToplevelNewlineParselet::getPrecedence(ParserContext Ctxt, bool *impl
 }
 
 Associativity ToplevelNewlineParselet::getAssociativity() const {
-    return ASSOCIATIVITY_NONE;
+    return ASSOCIATIVITY_NONRIGHT;
 }
 
 
@@ -214,7 +214,7 @@ Precedence InfixImplicitTimesParselet::getPrecedence(ParserContext Ctxt, bool *i
 }
 
 Associativity InfixImplicitTimesParselet::getAssociativity() const {
-    return ASSOCIATIVITY_NONE;
+    return ASSOCIATIVITY_NONRIGHT;
 }
 
 
@@ -237,7 +237,7 @@ Precedence InfixAssertFalseParselet::getPrecedence(ParserContext Ctxt, bool *imp
 
 Associativity InfixAssertFalseParselet::getAssociativity() const {
     assert(false);
-    return ASSOCIATIVITY_ASSERTFALSE;
+    return ASSOCIATIVITY_NONRIGHT;
 }
 
 
@@ -293,7 +293,7 @@ Precedence InfixCloserParselet::getPrecedence(ParserContext Ctxt, bool *implicit
 }
 
 Associativity InfixCloserParselet::getAssociativity() const {
-    return ASSOCIATIVITY_NONE;
+    return ASSOCIATIVITY_NONRIGHT;
 }
 
 
@@ -323,7 +323,7 @@ Precedence InfixEndOfFileParselet::getPrecedence(ParserContext Ctxt, bool *impli
 }
 
 Associativity InfixEndOfFileParselet::getAssociativity() const {
-    return ASSOCIATIVITY_NONE;
+    return ASSOCIATIVITY_NONRIGHT;
 }
 
 
@@ -351,7 +351,7 @@ Precedence InfixUnsupportedTokenParselet::getPrecedence(ParserContext Ctxt, bool
 }
 
 Associativity InfixUnsupportedTokenParselet::getAssociativity() const {
-    return ASSOCIATIVITY_NONE;
+    return ASSOCIATIVITY_NONRIGHT;
 }
 
 
@@ -383,7 +383,7 @@ Precedence InfixErrorParselet::getPrecedence(ParserContext Ctxt, bool *implicitT
 }
 
 Associativity InfixErrorParselet::getAssociativity() const {
-    return ASSOCIATIVITY_NONE;
+    return ASSOCIATIVITY_NONRIGHT;
 }
 
 
@@ -1632,7 +1632,7 @@ NodePtr DifferentialDParselet::parse(NodeSeq Left, Token firstTok, ParserContext
 
 Associativity DifferentialDParselet::getAssociativity() const {
     assert(false);
-    return ASSOCIATIVITY_ASSERTFALSE;
+    return ASSOCIATIVITY_NONRIGHT;
 }
 
 
