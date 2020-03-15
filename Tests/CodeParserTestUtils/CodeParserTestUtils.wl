@@ -976,6 +976,13 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
 
         prefix <> "Kernel/StartUp/sysmake.m",
         
+        prefix <> "Kernel/StartUp/Convert/Load.m",
+        prefix <> "Kernel/StartUp/Convert/MathMLConvert.m",
+
+        prefix <> "Kernel/StartUp/Devices/DeviceAPI/Device.m",
+        prefix <> "Kernel/StartUp/Messages.m",
+        prefix <> "Kernel/StartUp/NotebookCompatibility.m",
+
         prefix <> "AddOns/Applications/UnitTable/Kernel/UnitTable.m",
         prefix <> "unittable/UnitTable/Kernel/UnitTable.m",
 
@@ -1270,10 +1277,24 @@ Module[{text, f, expected, msgs},
 
 
 testLeafNodeOrder[cst_] :=
-Module[{leaves},
+Catch[
+Module[{leaves, a, b},
 	leaves = Cases[cst, _LeafNode, Infinity];
-	OrderedQ[leaves, OrderedQ[{#1[[3]][Source], #2[[3]][Source]}]&]
-]
+	If[OrderedQ[leaves, OrderedQ[{#1[[3]][Source], #2[[3]][Source]}]&],
+    Throw[True]
+  ];
+
+  Do[
+    a = leaves[[i]];
+    b = leaves[[i+1]];
+    If[!OrderedQ[{a, b}, OrderedQ[{#1[[3]][Source], #2[[3]][Source]}]&],
+      Throw[{a, b}, OutOfOrder]
+    ];
+    ,
+    {i, 1, Length[leaves]-1}
+  ]
+
+]]
 
 
 

@@ -2695,6 +2695,38 @@ Test[
 	TestID->"Parse-20200309-C9V5G7"
 ]
 
+Test[
+	"- - a - 1"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200314-L0R3N4"
+]
+
+Test[
+	"- - a b"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200314-N1L5Y5"
+]
+
+Test[
+	"a * - -b"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200314-X2G3W4"
+]
+
+
+
 
 Test[
 	"a;\[SquareUnion]b"
