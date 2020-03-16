@@ -694,3 +694,31 @@ TestMatch[
 
 
 
+(*
+Make sure that the error leaf is with the + and not the |
+*)
+Test[
+	CodeConcreteParse["a + | 2"]
+	,
+	ContainerNode[String, {
+		InfixNode[Alternatives, {
+		    InfixNode[Plus, {
+				LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>], 
+			    LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>], 
+			    LeafNode[Token`Plus, "+", <|Source -> {{1, 3}, {1, 4}}|>], 
+			    LeafNode[Whitespace, " ", <|Source -> {{1, 4}, {1, 5}}|>],
+			    ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 5}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>],
+			LeafNode[Token`Bar, "|", <|Source -> {{1, 5}, {1, 6}}|>], 
+			LeafNode[Whitespace, " ", <|Source -> {{1, 6}, {1, 7}}|>], 
+			LeafNode[Integer, "2", <|Source -> {{1, 7}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]}, <||>]
+	,
+	TestID->"Concrete-20200315-D8O6E4"
+]
+
+
+
+
+
+
+
+

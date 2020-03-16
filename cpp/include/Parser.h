@@ -22,6 +22,11 @@ enum Associativity {
     ASSOCIATIVITY_RIGHT,
 };
 
+//
+// The ParserContextFlagBits tend to contain context-sensitive bits for parsing
+//
+// Generally the parser is a Pratt parser with 1 token of look-ahead, except in these few cases.
+//
 enum ParserContextFlagBits : uint8_t {
     //
     // when parsing a in a:b  then PARSER_INSIDE_COLON bit is 0
@@ -30,14 +35,19 @@ enum ParserContextFlagBits : uint8_t {
     PARSER_INSIDE_COLON = 0x01,
     
     //
-    //
+    // Needs to detect \[Differential] while parsing
     //
     PARSER_INSIDE_INTEGRAL = 0x02,
     
     //
-    //
+    // Needs to detect the = or := or =. while parsing
     //
     PARSER_INSIDE_SLASHCOLON = 0x04,
+    
+    //
+    // Needs to detect the second ~ while parsing
+    //
+    PARSER_INSIDE_TILDE = 0x08,
 };
 
 using ParserContextFlag = uint8_t;
@@ -54,14 +64,9 @@ struct ParserContext {
     //
     Closer Closr : 4;
     
-    ParserContextFlag Flag : 3;
+    ParserContextFlag Flag : 4;
     
-    //
-    //
-    //
-    uint8_t InsideGroup : 1;
-    
-    ParserContext() : Prec(), Closr(), Flag(), InsideGroup() {}
+    ParserContext() : Prec(), Closr(), Flag() {}
 };
 
 //

@@ -123,7 +123,7 @@ Token Parser::nextToken0(ParserContext Ctxt) {
     //
     // Treat Ctxt.InsideGroup as a single bit and or with TOPLEVEL to set the RETURN_INTERNALNEWLINE NextCharacterPolicy bit
     //
-    return TheTokenizer->nextToken0(TOPLEVEL | Ctxt.InsideGroup);
+    return TheTokenizer->nextToken0(TOPLEVEL | static_cast<uint8_t>(Ctxt.Closr != CLOSER_OPEN));
 }
 
 Token Parser::currentToken(ParserContext Ctxt) const {
@@ -138,7 +138,7 @@ Token Parser::currentToken(ParserContext Ctxt) const {
     //
     // Treat Ctxt.InsideGroup as a single bit and or with TOPLEVEL to set the RETURN_INTERNALNEWLINE NextCharacterPolicy bit
     //
-    return TheTokenizer->currentToken(TOPLEVEL | Ctxt.InsideGroup);
+    return TheTokenizer->currentToken(TOPLEVEL | static_cast<uint8_t>(Ctxt.Closr != CLOSER_OPEN));
 }
 
 

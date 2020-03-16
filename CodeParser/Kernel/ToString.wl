@@ -422,6 +422,23 @@ toFullFormString[ErrorNode[tag_, str_, data_]] :=
 	Failure["ErrorNode", <|"Tag"->tag, "String"->str, "Data"->data|>]
 
 
+(*
+The interesting case of  a // -1  not being the same as  -1[a]
+*)
+toFullFormString[CallNode[head:LeafNode[Integer | Real, str_ /; StringStartsQ[str, "-"], _], nodes_, _]] :=
+Catch[
+Module[{headStr, nodeStrs},
+	headStr = toFullFormString[head];
+	If[FailureQ[headStr],
+		Throw[headStr]
+	];
+	nodeStrs = toFullFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[{"(", headStr, ")", "[", Riffle[nodeStrs, ", "], "]"}]
+]]
+
 toFullFormString[CallNode[head_, nodes_, _]] :=
 Catch[
 Module[{headStr, nodeStrs},

@@ -53,16 +53,6 @@ Test[
 	TestID->"Weird-20190601-G4E6Y0"
 ]
 
-Test[
-	"\\[Integral]!b"
-	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
-	,
-	TestID->"Weird-20191016-C1Z5S5"
-]
-
 
 
 

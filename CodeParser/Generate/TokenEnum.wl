@@ -621,7 +621,10 @@ tokenCPPHeader = {
 #include <cstdint> // for uint16_t
 
 enum Closer : uint8_t {
-    CLOSER_UNKNOWN,
+    //
+    // CLOSER_OPEN is used to indicate the lack of a group
+    //
+    CLOSER_OPEN,
     CLOSER_BARGREATER,
     CLOSER_CLOSECURLY,
     CLOSER_CLOSEPAREN,

@@ -435,27 +435,25 @@ public:
 
 // It'd be weird if this were an "infix operator"
 class TildeParselet : public InfixParselet {
-    //
-    // Need to be able to control from inside TildeParselet
-    //
-    Precedence Prec;
 public:
     
-    TildeParselet() : Prec(PRECEDENCE_TILDE) {}
+    TildeParselet() {}
     
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const override {
+        
         *implicitTimes = false;
-        return Prec;
+        
+        if ((Ctxt.Flag & PARSER_INSIDE_TILDE) == PARSER_INSIDE_TILDE) {
+            return PRECEDENCE_LOWEST;
+        }
+        
+        return PRECEDENCE_TILDE;
     }
     
     Associativity getAssociativity() const override {
         return ASSOCIATIVITY_NONRIGHT;
-    }
-    
-    void setPrecedence(Precedence p) override {
-        Prec = p;
     }
 };
 

@@ -144,28 +144,57 @@ NodePtr PrefixUnhandledParselet::parse(Token TokIn, ParserContext Ctxt) const {
     assert(!TokIn.Tok.isPossibleBeginningOfExpression() && "handle at call site");
     
     //
-    // Handle something like  f[,1]
+    // FIXME: clear other flags here also?
     //
-    // We want to make EXPECTEDOPERAND the first arg of the Comma node.
-    //
-    // Do not take next token
-    //
-    // Important to not duplicate token's Str here, it may also appear later
-    //
-    // Also, invent Source
-    //
+    Ctxt.Flag &= ~(PARSER_INSIDE_COLON | PARSER_INSIDE_TILDE);
     
     auto NotPossible = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start))));
     
-    NodeSeq LeftSeq(1);
-    LeftSeq.append(std::move(NotPossible));
+    auto I = infixParselets[TokIn.Tok.value()];
+    
+    bool implicitTimes;
+    auto TokenPrecedence = I->getPrecedence(Ctxt, &implicitTimes);
+    
+    assert(!implicitTimes);
+    
+    if (Ctxt.Prec > TokenPrecedence) {
+        goto prefixUnhandledParseletRet;
+    }
+    if (Ctxt.Prec == TokenPrecedence) {
+        auto TokenAssociativity = I->getAssociativity();
+        if (TokenAssociativity != ASSOCIATIVITY_RIGHT) {
+            goto prefixUnhandledParseletRet;
+        }
+    }
+    
+    {
+        //
+        // Handle something like  f[,1]
+        //
+        // We want to make EXPECTEDOPERAND the first arg of the Comma node.
+        //
+        // Do not take next token
+        //
+        // Important to not duplicate token's Str here, it may also appear later
+        //
+        // Also, invent Source
+        //
+        
+        NodeSeq LeftSeq(1);
+        LeftSeq.append(std::move(NotPossible));
+        
+        auto NotPossible = infixParselets[TokIn.Tok.value()]->parse(std::move(LeftSeq), TokIn, Ctxt);
+        
+        return NotPossible;
+    }
     
     //
-    // FIXME: clear other flags here also?
+    // Something like  a + | 2
     //
-    Ctxt.Flag &= ~(PARSER_INSIDE_COLON);
-    
-    return infixParselets[TokIn.Tok.value()]->parse(std::move(LeftSeq), TokIn, Ctxt);
+    // Make sure that the error leaf is with the + and not the |
+    //
+prefixUnhandledParseletRet:
+    return NotPossible;
 }
 
 Precedence PrefixUnhandledParselet::getPrecedence(ParserContext Ctxt) const {
@@ -493,27 +522,7 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ct
         //
         // and we want only a single Infix node created
         //
-        if (InfixOperatorToSymbol(Tok1.Tok) == Op) {
-            
-            TheParser->nextToken(Tok1);
-            
-            LeafSeq ArgsTest2;
-            
-            auto Tok2 = TheParser->currentToken(Ctxt);
-            Tok2 = TheParser->eatAll(Tok2, Ctxt, ArgsTest2);
-            
-            auto Operand = prefixParselets[Tok2.Tok.value()]->parse(Tok2, Ctxt);
-            
-            //
-            // Do not reserve inside loop
-            // Allow default resizing strategy, which is hopefully exponential
-            //
-            Args.appendIfNonEmpty(std::move(ArgsTest1));
-            Args.append(NodePtr(new LeafNode(Tok1)));
-            Args.appendIfNonEmpty(std::move(ArgsTest2));
-            Args.append(std::move(Operand));
-            
-        } else {
+        if (InfixOperatorToSymbol(Tok1.Tok) != Op) {
             
             //
             // Tok.Tok != TokIn.Tok, so break
@@ -521,6 +530,24 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ct
             
             break;
         }
+        
+        TheParser->nextToken(Tok1);
+        
+        LeafSeq ArgsTest2;
+        
+        auto Tok2 = TheParser->currentToken(Ctxt);
+        Tok2 = TheParser->eatAll(Tok2, Ctxt, ArgsTest2);
+        
+        auto Operand = prefixParselets[Tok2.Tok.value()]->parse(Tok2, Ctxt);
+        
+        //
+        // Do not reserve inside loop
+        // Allow default resizing strategy, which is hopefully exponential
+        //
+        Args.appendIfNonEmpty(std::move(ArgsTest1));
+        Args.append(NodePtr(new LeafNode(Tok1)));
+        Args.appendIfNonEmpty(std::move(ArgsTest2));
+        Args.append(std::move(Operand));
         
     } // while
     
@@ -554,7 +581,6 @@ NodePtr GroupParselet::parse(Token firstTok, ParserContext CtxtIn) const {
     auto OpenerT = firstTok;
     
     auto Ctxt = CtxtIn;
-    Ctxt.InsideGroup = 0x1;
     
     TheParser->nextToken(firstTok);
     
@@ -563,7 +589,7 @@ NodePtr GroupParselet::parse(Token firstTok, ParserContext CtxtIn) const {
     //
     // FIXME: clear other flags here also?
     //
-    Ctxt.Flag &= ~(PARSER_INSIDE_COLON);
+    Ctxt.Flag &= ~(PARSER_INSIDE_COLON | PARSER_INSIDE_TILDE);
     Ctxt.Prec = PRECEDENCE_LOWEST;
     
     NodeSeq Args(1);
@@ -762,18 +788,20 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
     auto FirstTok = TheParser->currentToken(Ctxt);
     FirstTok = TheParser->eatAll(FirstTok, Ctxt, ArgsTest1);
     
+    if ((Ctxt.Flag & PARSER_INSIDE_TILDE) == PARSER_INSIDE_TILDE) {
+        
+        auto Last = prefixParselets[FirstTok.Tok.value()]->parse(FirstTok, Ctxt);
+        
+        return Last;
+    }
+    
+    Ctxt.Flag |= PARSER_INSIDE_TILDE;
     //
     // FIXME: clear other flags here also?
     //
     Ctxt.Flag &= ~(PARSER_INSIDE_COLON);
     
-    auto tildeParselet = infixParselets[TOKEN_TILDE.value()];
-    tildeParselet->setPrecedence(PRECEDENCE_LOWEST);
-    
     auto Middle = prefixParselets[FirstTok.Tok.value()]->parse(FirstTok, Ctxt);
-    
-    Ctxt.Prec = PRECEDENCE_TILDE;
-    tildeParselet->setPrecedence(PRECEDENCE_TILDE);
     
     LeafSeq ArgsTest2;
     
@@ -800,6 +828,12 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
     }
     
     LeafSeq ArgsTest3;
+    
+    //
+    // Reset back to "outside" precedence
+    //
+    Ctxt.Prec = PRECEDENCE_TILDE;
+    Ctxt.Flag &= (~PARSER_INSIDE_TILDE);
     
     TheParser->nextToken(Tok1);
     
@@ -1052,8 +1086,6 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
 NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext Ctxt) const {
     
     auto Opener = firstTok;
-    
-    Ctxt.InsideGroup = 0x1;
     
     TheParser->nextToken(firstTok);
     
@@ -1326,76 +1358,74 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, Token TokIn, Pars
         //
         // and we want only a single Infix node created
         //
-        if (InfixOperatorToSymbol(Tok1.Tok) == Op) {
+        if (InfixOperatorToSymbol(Tok1.Tok) != Op) {
             
-            lastOperatorToken = Tok1;
+            L = NodePtr(new InfixNode(Op, std::move(Args)));
+            
+            break;
+        }
+            
+        lastOperatorToken = Tok1;
+        
+        //
+        // Something like  a;b  or  a,b
+        //
+        
+        TheParser->nextToken(Tok1);
+        
+        LeafSeq ArgsTest2;
+        
+        auto Tok2 = TheParser->currentToken(Ctxt);
+        Tok2 = TheParser->eatAndPreserveToplevelNewlines(Tok2, Ctxt, ArgsTest2);
+        
+        if (InfixOperatorToSymbol(Tok2.Tok) == Op) {
             
             //
-            // Something like  a;b  or  a,b
+            // Something like  a; ;
             //
             
-            TheParser->nextToken(Tok1);
+            auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(lastOperatorToken.BufLen.end), Source(lastOperatorToken.Src.End));
             
-            LeafSeq ArgsTest2;
+            lastOperatorToken = Tok2;
             
-            auto Tok2 = TheParser->currentToken(Ctxt);
-            Tok2 = TheParser->eatAndPreserveToplevelNewlines(Tok2, Ctxt, ArgsTest2);
+            //
+            // Do not reserve inside loop
+            // Allow default resizing strategy, which is hopefully exponential
+            //
+            Args.appendIfNonEmpty(std::move(ArgsTest1));
+            Args.append(NodePtr(new LeafNode(Tok1)));
+            Args.append(NodePtr(new LeafNode(Implicit)));
             
-            if (InfixOperatorToSymbol(Tok2.Tok) == Op) {
-                
-                //
-                // Something like  a; ;
-                //
-                
-                auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(lastOperatorToken.BufLen.end), Source(lastOperatorToken.Src.End));
-                
-                lastOperatorToken = Tok2;
-                
-                //
-                // Do not reserve inside loop
-                // Allow default resizing strategy, which is hopefully exponential
-                //
-                Args.appendIfNonEmpty(std::move(ArgsTest1));
-                Args.append(NodePtr(new LeafNode(Tok1)));
-                Args.append(NodePtr(new LeafNode(Implicit)));
-                
-            } else if (Tok2.Tok.isPossibleBeginningOfExpression()) {
-                
-                auto operand = prefixParselets[Tok2.Tok.value()]->parse(Tok2, Ctxt);
-                
-                //
-                // Do not reserve inside loop
-                // Allow default resizing strategy, which is hopefully exponential
-                //
-                Args.appendIfNonEmpty(std::move(ArgsTest1));
-                Args.append(NodePtr(new LeafNode(Tok1)));
-                Args.appendIfNonEmpty(std::move(ArgsTest2));
-                Args.append(std::move(operand));
-                
-            } else {
-                
-                //
-                // Not beginning of an expression
-                //
-                // For example:  a;&
-                //
-                
-                auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(lastOperatorToken.BufLen.end), Source(lastOperatorToken.Src.End));
-                
-                //
-                // Do not reserve inside loop
-                // Allow default resizing strategy, which is hopefully exponential
-                //
-                Args.appendIfNonEmpty(std::move(ArgsTest1));
-                Args.append(NodePtr(new LeafNode(Tok1)));
-                Args.append(NodePtr(new LeafNode(Implicit)));
-                
-                L = NodePtr(new InfixNode(Op, std::move(Args)));
-                
-                break;
-            }
+        } else if (Tok2.Tok.isPossibleBeginningOfExpression()) {
+            
+            auto operand = prefixParselets[Tok2.Tok.value()]->parse(Tok2, Ctxt);
+            
+            //
+            // Do not reserve inside loop
+            // Allow default resizing strategy, which is hopefully exponential
+            //
+            Args.appendIfNonEmpty(std::move(ArgsTest1));
+            Args.append(NodePtr(new LeafNode(Tok1)));
+            Args.appendIfNonEmpty(std::move(ArgsTest2));
+            Args.append(std::move(operand));
             
         } else {
+            
+            //
+            // Not beginning of an expression
+            //
+            // For example:  a;&
+            //
+            
+            auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(lastOperatorToken.BufLen.end), Source(lastOperatorToken.Src.End));
+            
+            //
+            // Do not reserve inside loop
+            // Allow default resizing strategy, which is hopefully exponential
+            //
+            Args.appendIfNonEmpty(std::move(ArgsTest1));
+            Args.append(NodePtr(new LeafNode(Tok1)));
+            Args.append(NodePtr(new LeafNode(Implicit)));
             
             L = NodePtr(new InfixNode(Op, std::move(Args)));
             

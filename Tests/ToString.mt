@@ -206,5 +206,21 @@ Test[
 
 
 
+ast = CodeParse["a // -1"]
+
+Test[
+	ToFullFormString[ast]
+	,
+	"(-1)[a]"
+	,
+	TestID->"ToString-20200315-Z6K8C4"
+]
+
+
+
+
+
+
+
 
 

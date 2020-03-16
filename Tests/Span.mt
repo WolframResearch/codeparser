@@ -514,26 +514,6 @@ Test[
 	TestID->"Span-20191016-M3L9D1"
 ]
 
-Test[
-	"a;;!b"
-	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
-	,
-	TestID->"Span-20191016-Q5A7L0"
-]
-
-Test[
-	"a;;b;;!c"
-	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
-	,
-	TestID->"Span-20191017-Y8K1X8"
-]
-
 
 
 

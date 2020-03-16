@@ -58,7 +58,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
             // There is only a single ;; and there is no implicit Times
             //
             
-            goto ret1;
+            goto retParse;
         }
         
         NodeSeq Args(1 + 1);
@@ -91,7 +91,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
                     
                     Operand = NodePtr(new InfixNode(SYMBOL_TIMES, std::move(Args)));
                     
-                    goto ret1;
+                    goto retParse;
                 }
                 
                 auto lowerPrec = false;
@@ -148,14 +148,14 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
                     
                     Operand = NodePtr(new InfixNode(SYMBOL_TIMES, std::move(Args)));
                     
-                    goto ret1;
+                    goto retParse;
                 }
             }
             
         } // while
     }
     
-ret1:
+retParse:
     return TheParser->infixLoop(std::move(Operand), Ctxt);
 }
 
@@ -174,7 +174,6 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
     
     auto SecondTok = TheParser->currentToken(Ctxt);
     
-    NodePtr Span;
     {
         LeafSeq ArgsTest1;
         
@@ -199,9 +198,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
             Args.append(NodePtr(new LeafNode(TokIn)));
             Args.append(NodePtr(new LeafNode(Implicit)));
             
-            Span = NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
-            
-            goto ret0;
+            return NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
         }
         
         if (SecondTok.Tok != TOKEN_SEMISEMI) {
@@ -234,9 +231,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
                     Args.appendIfNonEmpty(std::move(ArgsTest1));
                     Args.append(std::move(FirstArg));
                     
-                    Span = NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
-                    
-                    goto ret0;
+                    return NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
                 }
                 
                 //
@@ -269,9 +264,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
                         Args.appendIfNonEmpty(std::move(ArgsTest1));
                         Args.append(std::move(FirstArg));
                         
-                        Span = NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
-                        
-                        goto ret0;
+                        return NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
                     }
                     
                     if (FourthTok.Tok != TOKEN_SEMISEMI) {
@@ -295,9 +288,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
                         Args.appendIfNonEmpty(std::move(ArgsTest3));
                         Args.append(std::move(SecondArg));
                         
-                        Span = NodePtr(new TernaryNode(SYMBOL_SPAN, std::move(Args)));
-                        
-                        goto ret0;
+                        return NodePtr(new TernaryNode(SYMBOL_SPAN, std::move(Args)));
                     }
                     
                     //
@@ -311,9 +302,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
                     Args.appendIfNonEmpty(std::move(ArgsTest1));
                     Args.append(std::move(FirstArg));
                     
-                    Span = NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
-                    
-                    goto ret0;
+                    return NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
                 }
             }
         }
@@ -349,9 +338,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
                 Args.append(NodePtr(new LeafNode(TokIn)));
                 Args.append(NodePtr(new LeafNode(Implicit)));
                 
-                Span = NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
-                
-                goto ret0;
+                return NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
             }
             
             if (ThirdTok.Tok != TOKEN_SEMISEMI) {
@@ -376,9 +363,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
                 Args.appendIfNonEmpty(std::move(ArgsTest2));
                 Args.append(std::move(FirstArg));
                 
-                Span = NodePtr(new TernaryNode(SYMBOL_SPAN, std::move(Args)));
-                
-                goto ret0;
+                return NodePtr(new TernaryNode(SYMBOL_SPAN, std::move(Args)));
             }
             
             //
@@ -396,13 +381,8 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
                 Args.append(NodePtr(new LeafNode(TokIn)));
                 Args.append(NodePtr(new LeafNode(Implicit)));
                 
-                Span = NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
-                
-                goto ret0;
+                return NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
             }
         }
     }
-
-ret0:
-    return TheParser->infixLoop(std::move(Span), Ctxt);
 }

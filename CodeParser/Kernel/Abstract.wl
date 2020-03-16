@@ -1198,7 +1198,11 @@ flattenTimes[nodes_List, data_] :=
 				,
 				PrefixNode[Minus, {_, _}, _],
 					If[flattenTimesQuirk,
-						{ToNode[-1], #[[2, 2]]}
+						(*
+						it is possible to have nested prefix Minus, e.g., - - a
+						so must call recursively into flattenTimes
+						*)
+						{ToNode[-1], flattenTimes[{#[[2, 2]]}, data]}
 						,
 						#
 					]

@@ -2823,4 +2823,20 @@ Test[
 
 
 
+Test[
+	"+;; * a"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200315-G9M6I1"
+]
+
+
+
+
+
+
+
 
