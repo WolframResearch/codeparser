@@ -250,7 +250,6 @@ NodePtr SymbolParselet::parse(Token TokIn, ParserContext Ctxt) const {
             
             return contextSensitiveUnder1Parselet->parseContextSensitive(std::move(Args), Tok, Ctxt);
         }
-            break;
         case TOKEN_UNDERUNDER.value(): {
             
             NodeSeq Args(1);
@@ -258,7 +257,6 @@ NodePtr SymbolParselet::parse(Token TokIn, ParserContext Ctxt) const {
             
             return contextSensitiveUnder2Parselet->parseContextSensitive(std::move(Args), Tok, Ctxt);
         }
-            break;
         case TOKEN_UNDERUNDERUNDER.value(): {
             
             NodeSeq Args(1);
@@ -266,7 +264,6 @@ NodePtr SymbolParselet::parse(Token TokIn, ParserContext Ctxt) const {
             
             return contextSensitiveUnder3Parselet->parseContextSensitive(std::move(Args), Tok, Ctxt);
         }
-            break;
         case TOKEN_UNDERDOT.value(): {
 
             NodeSeq Args(1);
@@ -305,8 +302,10 @@ NodePtr SymbolParselet::parse(Token TokIn, ParserContext Ctxt) const {
             
             return TheParser->infixLoop(std::move(Sym), Ctxt);
         }
-            break;
     }
+    
+    assert(false);
+    return nullptr;
 }
 
 NodePtr SymbolParselet::parseContextSensitive(Token TokIn, ParserContext Ctxt) const {
