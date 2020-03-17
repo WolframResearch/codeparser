@@ -123,10 +123,10 @@ public:
     
     ~Parser();
 
-    Token eatAll(Token firstTok, ParserContext Ctxt, LeafSeq&);
-    Token eatAll_stringifyFile(Token firstTok, ParserContext Ctxt, LeafSeq&);
-    Token eatAndPreserveToplevelNewlines(Token firstTok, ParserContext Ctxt, LeafSeq&);
-    Token eatAndPreserveToplevelNewlines_stringifyFile(Token firstTok, ParserContext Ctxt, LeafSeq&);
+    Token eatTrivia(Token firstTok, ParserContext Ctxt, LeafSeq&);
+    Token eatTrivia_stringifyFile(Token firstTok, ParserContext Ctxt, LeafSeq&);
+    Token eatTriviaButNotToplevelNewlines(Token firstTok, ParserContext Ctxt, LeafSeq&);
+    Token eatTriviaButNotToplevelNewlines_stringifyFile(Token firstTok, ParserContext Ctxt, LeafSeq&);
 };
 
 extern ParserPtr TheParser;

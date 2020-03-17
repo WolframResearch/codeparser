@@ -76,11 +76,6 @@ bool operator==(BufferAndLength a, BufferAndLength b);
 enum NextCharacterPolicyBits : uint8_t {
     
     //
-    // Needs to be first bit, for easy or-ing of TOKEN_TOPLEVELNEWLINE to TOKEN_INTERNALNEWLINE
-    //
-    RETURN_INTERNALNEWLINE = 0x01,
-    
-    //
     // Preserve whitespace after line continuation
     //
     // ToExpression["0.\\\n  6"] evaluates to 0.6 (whitespace is NOT preserved)
@@ -89,7 +84,7 @@ enum NextCharacterPolicyBits : uint8_t {
     //
     // FIXME: this could be handled by line continuation processing
     //
-    PRESERVE_WS_AFTER_LC = 0x02,
+    PRESERVE_WS_AFTER_LC = 0x01,
     
     //
     // Enable character decoding issues
@@ -100,7 +95,12 @@ enum NextCharacterPolicyBits : uint8_t {
     //
     // This is also used when peeking: no need to report issues while peeking
     //
-    ENABLE_CHARACTER_DECODING_ISSUES = 0x04,
+    ENABLE_CHARACTER_DECODING_ISSUES = 0x02,
+    
+    //
+    // Needs to be 0b100, for easy or-ing of TOKEN_INTERNALNEWLINE to TOKEN_TOPLEVELNEWLINE
+    //
+    RETURN_TOPLEVELNEWLINE = 0x04,
     
     //
     // This code:
@@ -127,15 +127,15 @@ enum NextCharacterPolicyBits : uint8_t {
 
 using NextCharacterPolicy = uint8_t;
 
-const NextCharacterPolicy TOPLEVEL = ENABLE_CHARACTER_DECODING_ISSUES;
+const NextCharacterPolicy TOPLEVEL = ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE;
 
-const NextCharacterPolicy INSIDE_SYMBOL = ENABLE_CHARACTER_DECODING_ISSUES | LC_IS_MEANINGFUL;
+const NextCharacterPolicy INSIDE_SYMBOL = ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE | LC_IS_MEANINGFUL;
 
 #if STARTOFLINE
-const NextCharacterPolicy INSIDE_STRINGIFY_LINE = ENABLE_CHARACTER_DECODING_ISSUES | ENABLE_STRANGE_CHARACTER_CHECKING;
+const NextCharacterPolicy INSIDE_STRINGIFY_LINE = ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE | ENABLE_STRANGE_CHARACTER_CHECKING;
 #endif // STARTOFLINE
-const NextCharacterPolicy INSIDE_STRINGIFY_SYMBOL = PRESERVE_WS_AFTER_LC | ENABLE_CHARACTER_DECODING_ISSUES;
-const NextCharacterPolicy INSIDE_STRINGIFY_FILE = 0;
+const NextCharacterPolicy INSIDE_STRINGIFY_SYMBOL = PRESERVE_WS_AFTER_LC | ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE;
+const NextCharacterPolicy INSIDE_STRINGIFY_FILE = RETURN_TOPLEVELNEWLINE;
 
 
 enum SyntaxError : uint8_t {

@@ -5,10 +5,10 @@
 
 #include <sstream>
 
-TEST(TokenEnumTest, Infix) {
-    
-    EXPECT_TRUE(TOKEN_LESS.isInfixOperator());
-}
+//TEST(TokenEnumTest, Infix) {
+//    
+//    EXPECT_TRUE(TOKEN_LESS.isInfixOperator());
+//}
 
 TEST(TokenEnumTest, DifferentialD) {
     

@@ -68,9 +68,9 @@ Token Tokenizer::nextToken0(NextCharacterPolicy policy) {
         case '\n': case '\r':
             
             //
-            // Return TOPLEVELNEWLINE or INTERNALNEWLINE, depending on policy
+            // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
             //
-            return Token(TOKEN_TOPLEVELNEWLINE.t() | (policy & RETURN_INTERNALNEWLINE), getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+            return Token(TOKEN_INTERNALNEWLINE.t() | (policy & RETURN_TOPLEVELNEWLINE), getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         case '\v': case '\f':
             return handleStrangeWhitespace(tokenStartBuf, tokenStartLoc, c, policy);
         case ' ':
@@ -174,9 +174,9 @@ Token Tokenizer::nextToken0(NextCharacterPolicy policy) {
             } else if (c.isMBNewline()) {
                 
                 //
-                // Return TOPLEVELNEWLINE or INTERNALNEWLINE, depending on policy
+                // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
                 //
-                return Token(TOKEN_TOPLEVELNEWLINE.t() | (policy & RETURN_INTERNALNEWLINE), getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                return Token(TOKEN_INTERNALNEWLINE.t() | (policy & RETURN_TOPLEVELNEWLINE), getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                 
             } else if (c.isMBPunctuation()) {
                 
@@ -310,9 +310,9 @@ Token Tokenizer::nextToken0_stringifyFile() {
         //
         
         //
-        // Return TOPLEVELNEWLINE or INTERNALNEWLINE, depending on policy
+        // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
         //
-        return Token(TOKEN_TOPLEVELNEWLINE.t() | (policy & RETURN_INTERNALNEWLINE), getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        return Token(TOKEN_INTERNALNEWLINE.t() | (policy & RETURN_TOPLEVELNEWLINE), getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         
     } else if (c.isNewline()) {
         
@@ -328,9 +328,9 @@ Token Tokenizer::nextToken0_stringifyFile() {
         //
         
         //
-        // Return TOPLEVELNEWLINE or INTERNALNEWLINE, depending on policy
+        // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
         //
-        return Token(TOKEN_TOPLEVELNEWLINE.t() | (policy & RETURN_INTERNALNEWLINE), getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        return Token(TOKEN_INTERNALNEWLINE.t() | (policy & RETURN_TOPLEVELNEWLINE), getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
     }
     
     //
@@ -353,13 +353,9 @@ Token Tokenizer::nextToken0_stringifyFile() {
 void Tokenizer::nextToken(Token Tok) {
     
     TheByteBuffer->buffer = Tok.BufLen.end;
-    TheByteDecoder->SrcLoc = Tok.Src.End;
+    TheByteBuffer->wasEOF = (Tok.Tok == TOKEN_ENDOFFILE);
     
-    if (Tok.Tok == TOKEN_ENDOFFILE) {
-        TheByteBuffer->wasEOF = true;
-    } else {
-        TheByteBuffer->wasEOF = false;
-    }
+    TheByteDecoder->SrcLoc = Tok.Src.End;
     
     TheByteDecoder->clearStatus();
 }
@@ -3292,9 +3288,9 @@ inline Token Tokenizer::handleMBStrangeNewline(Buffer tokenStartBuf, SourceLocat
 #endif // !NISSUES
     
     //
-    // Return TOPLEVELNEWLINE or INTERNALNEWLINE, depending on policy
+    // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
     //
-    return Token(TOKEN_TOPLEVELNEWLINE.t() | (policy & RETURN_INTERNALNEWLINE), getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+    return Token(TOKEN_INTERNALNEWLINE.t() | (policy & RETURN_TOPLEVELNEWLINE), getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
 }
 
 inline Token Tokenizer::handleMBStrangeWhitespace(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextCharacterPolicy policy) {

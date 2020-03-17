@@ -981,7 +981,7 @@ public:
         {
           LeafSeq ArgsTest;
           
-          Tok = TheParser->eatAndPreserveToplevelNewlines(Tok, Ctxt, ArgsTest);
+          Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, ArgsTest);
           
           //
           // For something like _:\"\"  when parsing _

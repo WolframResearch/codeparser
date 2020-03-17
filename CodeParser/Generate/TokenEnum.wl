@@ -61,89 +61,93 @@ tokenToSymbol[s_] := "Symbol`"<>ToString[s]
 
 
 
-isPossibleBeginningOfExpression[Token`Symbol] = True
-isPossibleBeginningOfExpression[Token`String] = True
-isPossibleBeginningOfExpression[Token`Integer] = True
-isPossibleBeginningOfExpression[Token`Real] = True
+isPossibleBeginning[Token`Symbol] = True
+isPossibleBeginning[Token`String] = True
+isPossibleBeginning[Token`Integer] = True
+isPossibleBeginning[Token`Real] = True
 
-isPossibleBeginningOfExpression[Token`Percent] = True
+isPossibleBeginning[Token`Percent] = True
 
-isPossibleBeginningOfExpression[Token`Hash] = True
-isPossibleBeginningOfExpression[Token`HashHash] = True
+isPossibleBeginning[Token`Hash] = True
+isPossibleBeginning[Token`HashHash] = True
 
-isPossibleBeginningOfExpression[Token`Under] = True
-isPossibleBeginningOfExpression[Token`UnderUnder] = True
-isPossibleBeginningOfExpression[Token`UnderUnderUnder] = True
-isPossibleBeginningOfExpression[Token`UnderDot] = True
+isPossibleBeginning[Token`Under] = True
+isPossibleBeginning[Token`UnderUnder] = True
+isPossibleBeginning[Token`UnderUnderUnder] = True
+isPossibleBeginning[Token`UnderDot] = True
 
-isPossibleBeginningOfExpression[Token`SemiSemi] = True
-
-(*
-prefix operators
-*)
-isPossibleBeginningOfExpression[Token`Bang] = True
-isPossibleBeginningOfExpression[Token`Minus] = True
-isPossibleBeginningOfExpression[Token`Plus] = True
-isPossibleBeginningOfExpression[Token`LessLess] = True
-isPossibleBeginningOfExpression[Token`MinusMinus] = True
-isPossibleBeginningOfExpression[Token`PlusPlus] = True
-isPossibleBeginningOfExpression[Token`BangBang] = True
+isPossibleBeginning[Token`SemiSemi] = True
 
 (*
-openers
+Prefix operators
 *)
-isPossibleBeginningOfExpression[Token`OpenParen] = True
-isPossibleBeginningOfExpression[Token`OpenSquare] = True
-isPossibleBeginningOfExpression[Token`OpenCurly] = True
-isPossibleBeginningOfExpression[Token`LessBar] = True
-isPossibleBeginningOfExpression[Token`LongName`LeftCeiling] = True
-isPossibleBeginningOfExpression[Token`LongName`LeftFloor] = True
-isPossibleBeginningOfExpression[Token`LongName`LeftAngleBracket] = True
-isPossibleBeginningOfExpression[Token`LongName`LeftDoubleBracket] = True
-isPossibleBeginningOfExpression[Token`LongName`LeftBracketingBar] = True
-isPossibleBeginningOfExpression[Token`LongName`LeftDoubleBracketingBar] = True
-isPossibleBeginningOfExpression[Token`LongName`LeftAssociation] = True
-isPossibleBeginningOfExpression[Token`LongName`OpenCurlyQuote] = True
-isPossibleBeginningOfExpression[Token`LongName`OpenCurlyDoubleQuote] = True
-isPossibleBeginningOfExpression[Token`LinearSyntax`OpenParen] = True
+isPossibleBeginning[Token`Bang] = True
+isPossibleBeginning[Token`Minus] = True
+isPossibleBeginning[Token`Plus] = True
+isPossibleBeginning[Token`LessLess] = True
+isPossibleBeginning[Token`MinusMinus] = True
+isPossibleBeginning[Token`PlusPlus] = True
+isPossibleBeginning[Token`BangBang] = True
 
-isPossibleBeginningOfExpression[Token`LinearSyntax`Bang] = True
+(*
+Openers
+*)
+isPossibleBeginning[Token`OpenParen] = True
+isPossibleBeginning[Token`OpenSquare] = True
+isPossibleBeginning[Token`OpenCurly] = True
+isPossibleBeginning[Token`LessBar] = True
+isPossibleBeginning[Token`LongName`LeftCeiling] = True
+isPossibleBeginning[Token`LongName`LeftFloor] = True
+isPossibleBeginning[Token`LongName`LeftAngleBracket] = True
+isPossibleBeginning[Token`LongName`LeftDoubleBracket] = True
+isPossibleBeginning[Token`LongName`LeftBracketingBar] = True
+isPossibleBeginning[Token`LongName`LeftDoubleBracketingBar] = True
+isPossibleBeginning[Token`LongName`LeftAssociation] = True
+isPossibleBeginning[Token`LongName`OpenCurlyQuote] = True
+isPossibleBeginning[Token`LongName`OpenCurlyDoubleQuote] = True
+isPossibleBeginning[Token`LinearSyntax`OpenParen] = True
 
-isPossibleBeginningOfExpression[Token`LongName`Integral] = True
-isPossibleBeginningOfExpression[Token`LongName`ContourIntegral] = True
-isPossibleBeginningOfExpression[Token`LongName`DoubleContourIntegral] = True
-isPossibleBeginningOfExpression[Token`LongName`ClockwiseContourIntegral] = True
-isPossibleBeginningOfExpression[Token`LongName`CounterClockwiseContourIntegral] = True
+isPossibleBeginning[Token`LinearSyntax`Bang] = True
 
-isPossibleBeginningOfExpression[Token`LongName`Not] = True
-isPossibleBeginningOfExpression[Token`LongName`PlusMinus] = True
-isPossibleBeginningOfExpression[Token`LongName`Sum] = True
-isPossibleBeginningOfExpression[Token`LongName`ForAll] = True
-isPossibleBeginningOfExpression[Token`LongName`Exists] = True
-isPossibleBeginningOfExpression[Token`LongName`NotExists] = True
-isPossibleBeginningOfExpression[Token`LongName`Del] = True
-isPossibleBeginningOfExpression[Token`LongName`Product] = True
-isPossibleBeginningOfExpression[Token`LongName`Coproduct] = True
-isPossibleBeginningOfExpression[Token`LongName`Minus] = True
-isPossibleBeginningOfExpression[Token`LongName`MinusPlus] = True
-isPossibleBeginningOfExpression[Token`LongName`Sqrt] = True
-isPossibleBeginningOfExpression[Token`LongName`CubeRoot] = True
-isPossibleBeginningOfExpression[Token`LongName`CircleTimes] = True
-isPossibleBeginningOfExpression[Token`LongName`Piecewise] = True
-isPossibleBeginningOfExpression[Token`LongName`InvisiblePrefixScriptBase] = True
-isPossibleBeginningOfExpression[Token`LongName`ContinuedFractionK] = True
-isPossibleBeginningOfExpression[Token`LongName`ProbabilityPr] = True
-isPossibleBeginningOfExpression[Token`LongName`ExpectationE] = True
-isPossibleBeginningOfExpression[Token`LongName`CapitalDifferentialD] = True
-isPossibleBeginningOfExpression[Token`LongName`DifferentialD] = True
-isPossibleBeginningOfExpression[Token`LongName`Square] = True
+(*
+Integration operators
+*)
+isPossibleBeginning[Token`LongName`Integral] = True
+isPossibleBeginning[Token`LongName`ContourIntegral] = True
+isPossibleBeginning[Token`LongName`DoubleContourIntegral] = True
+isPossibleBeginning[Token`LongName`ClockwiseContourIntegral] = True
+isPossibleBeginning[Token`LongName`CounterClockwiseContourIntegral] = True
 
-
+(*
+Prefix LongName operators
+*)
+isPossibleBeginning[Token`LongName`Not] = True
+isPossibleBeginning[Token`LongName`PlusMinus] = True
+isPossibleBeginning[Token`LongName`Sum] = True
+isPossibleBeginning[Token`LongName`ForAll] = True
+isPossibleBeginning[Token`LongName`Exists] = True
+isPossibleBeginning[Token`LongName`NotExists] = True
+isPossibleBeginning[Token`LongName`Del] = True
+isPossibleBeginning[Token`LongName`Product] = True
+isPossibleBeginning[Token`LongName`Coproduct] = True
+isPossibleBeginning[Token`LongName`Minus] = True
+isPossibleBeginning[Token`LongName`MinusPlus] = True
+isPossibleBeginning[Token`LongName`Sqrt] = True
+isPossibleBeginning[Token`LongName`CubeRoot] = True
+isPossibleBeginning[Token`LongName`CircleTimes] = True
+isPossibleBeginning[Token`LongName`Piecewise] = True
+isPossibleBeginning[Token`LongName`InvisiblePrefixScriptBase] = True
+isPossibleBeginning[Token`LongName`ContinuedFractionK] = True
+isPossibleBeginning[Token`LongName`ProbabilityPr] = True
+isPossibleBeginning[Token`LongName`ExpectationE] = True
+isPossibleBeginning[Token`LongName`CapitalDifferentialD] = True
+isPossibleBeginning[Token`LongName`DifferentialD] = True
+isPossibleBeginning[Token`LongName`Square] = True
 
 (*
 Anything else
 *)
-isPossibleBeginningOfExpression[_] = False
+isPossibleBeginning[_] = False
 
 
 
@@ -214,7 +218,7 @@ isTrivia[_] = False
 (*
 Actual infix operators, not binary operators
 *)
-
+(*
 isInfixOperator[Token`AmpAmp] = True
 isInfixOperator[Token`AtStar] = True
 isInfixOperator[Token`BangEqual] = True
@@ -491,9 +495,7 @@ isInfixOperator[Token`LongName`NotDoubleVerticalBar] = True
 isInfixOperator[Token`Fake`ImplicitTimes] = True
 
 isInfixOperator[_] = False
-
-
-
+*)
 
 
 
@@ -507,6 +509,9 @@ isEmpty[Token`Fake`ImplicitOne] = True
 isEmpty[Token`Fake`ImplicitAll] = True
 isEmpty[Token`Error`ExpectedOperand] = True
 (*
+
+Newlines are not empty
+
 isEmpty[Token`ToplevelNewline] = True
 isEmpty[Token`InternalNewline] = True
 *)
@@ -520,8 +525,6 @@ isDifferentialD[Token`LongName`DifferentialD] = True
 isDifferentialD[Token`LongName`CapitalDifferentialD] = True
 
 isDifferentialD[_] = False
-
-
 
 
 
@@ -545,34 +548,22 @@ isLinearSyntax[_] = False
 
 
 
-
-
-
-
 group1Bits[tok_] := group1Bits[tok] =
 Which[
-  isPossibleBeginningOfExpression[tok], BitShiftLeft[2^^001, 9],
-  isCloser[tok],                        BitShiftLeft[2^^010, 9],
-  isError[tok],                         BitShiftLeft[2^^011, 9],
-  isTrivia[tok],                        BitShiftLeft[2^^100, 9],
-  isInfixOperator[tok],                 BitShiftLeft[2^^101, 9],
-  (* unused                             BitShiftLeft[2^^110, 9],*)
-  (* unused                             BitShiftLeft[2^^111, 9],*)
-
-  True,                                 BitShiftLeft[2^^000, 9]
+  isPossibleBeginning[tok], BitShiftLeft[2^^01, 9],
+  isCloser[tok],            BitShiftLeft[2^^10, 9],
+  isError[tok],             BitShiftLeft[2^^11, 9],
+  True,                     BitShiftLeft[2^^00, 9]
 ]
-
 
 
 group2Bits[tok_] := group2Bits[tok] =
 Which[
-  isEmpty[tok],         BitShiftLeft[2^^01, 12],
-  isDifferentialD[tok], BitShiftLeft[2^^10, 12],
-  isLinearSyntax[tok],  BitShiftLeft[2^^11, 12],
-
-  True,                 BitShiftLeft[2^^00, 12]
+  isEmpty[tok],         BitShiftLeft[2^^01, 9 + 2],
+  isDifferentialD[tok], BitShiftLeft[2^^10, 9 + 2],
+  isLinearSyntax[tok],  BitShiftLeft[2^^11, 9 + 2],
+  True,                 BitShiftLeft[2^^00, 9 + 2]
 ]
-
 
 
 
@@ -583,7 +574,7 @@ cur = 0
 enumMap = <||>
 KeyValueMap[(
   Which[
-    #2 === 0, cur = 0,
+    IntegerQ[#2], cur = #2,
     #2 === Next, cur++,
     True, cur = enumMap[#2]
   ];
@@ -658,36 +649,84 @@ struct TokenEnum {
     return T;
   }
 
-  constexpr bool isPossibleBeginningOfExpression() const {
-      return static_cast<bool>((T & 0xe00) == 0x200);
-  }
-  
-  constexpr bool isCloser() const {
-      return static_cast<bool>((T & 0xe00) == 0x400);
-  }
-  
-  constexpr bool isError() const {
-      return static_cast<bool>((T & 0xe00) == 0x600);
-  }
-  
+  //
+  // All trivia matches: 0b0_0000_1xxx (x is unknown)
+  //
+  //         Mask off 0b1_1111_1000 (0x1f8)
+  // And test against 0b0_0000_1000 (0x08)
+  //
   constexpr bool isTrivia() const {
-      return static_cast<bool>((T & 0xe00) == 0x800);
+      return static_cast<bool>((T & 0x1f8) == 0x08);
   }
 
-  constexpr bool isInfixOperator() const {
-      return static_cast<bool>((T & 0xe00) == 0xa00);
+  //
+  // All trivia but ToplevelNewline matches: 0b0_0000_10xx (x is unknown)
+  //
+  //         Mask off 0b1_1111_1100 (0x1fc)
+  // And test against 0b0_0000_1000 (0x08)
+  //
+  constexpr bool isTriviaButNotToplevelNewline() const {
+      return static_cast<bool>((T & 0x1fc) == 0x08);
   }
 
+  //
+  // Group 1 matches: 0b0000_0xx0_0000_0000 (x is unknown)
+  //
+  //         Mask off 0b0000_0110_0000_0000 (0x600)
+  // And test against 0b0000_0010_0000_0000 (0x200)
+  //
+  constexpr bool isPossibleBeginning() const {
+      return static_cast<bool>((T & 0x600) == 0x200);
+  }
+  
+  //
+  // Group 1 matches: 0b0000_0xx0_0000_0000 (x is unknown)
+  //
+  //         Mask off 0b0000_0110_0000_0000 (0x600)
+  // And test against 0b0000_0100_0000_0000 (0x400)
+  //
+  constexpr bool isCloser() const {
+      return static_cast<bool>((T & 0x600) == 0x400);
+  }
+  
+  //
+  // Group 1 matches: 0b0000_0xx0_0000_0000 (x is unknown)
+  //
+  //         Mask off 0b0000_0110_0000_0000 (0x600)
+  // And test against 0b0000_0110_0000_0000 (0x600)
+  //
+  constexpr bool isError() const {
+      return static_cast<bool>((T & 0x600) == 0x600);
+  }
+
+  //
+  // Group 2 matches: 0b000x_x000_0000_0000 (x is unknown)
+  //
+  //         Mask off 0b0001_1000_0000_0000 (0x1800)
+  // And test against 0b0000_1000_0000_0000 (0x0800)
+  //
   constexpr bool isEmpty() const {
-      return static_cast<bool>((T & 0x3000) == 0x1000);
+      return static_cast<bool>((T & 0x1800) == 0x0800);
   }
 
+  //
+  // Group 2 matches: 0b000x_x000_0000_0000 (x is unknown)
+  //
+  //         Mask off 0b0001_1000_0000_0000 (0x1800)
+  // And test against 0b0001_0000_0000_0000 (0x1000)
+  //
   constexpr bool isDifferentialD() const {
-      return static_cast<bool>((T & 0x3000) == 0x2000);
+      return static_cast<bool>((T & 0x1800) == 0x1000);
   }
 
+  //
+  // Group 2 matches: 0b000x_x000_0000_0000 (x is unknown)
+  //
+  //         Mask off 0b0001_1000_0000_0000 (0x1800)
+  // And test against 0b0001_1000_0000_0000 (0x1800)
+  //
   constexpr bool isLinearSyntax() const {
-      return static_cast<bool>((T & 0x3000) == 0x3000);
+      return static_cast<bool>((T & 0x1800) == 0x1800);
   }
 
 };
@@ -702,7 +741,7 @@ KeyValueMap[(
       group2Bits[#1],
       group1Bits[#1],
       #2
-    ], "); // { group2Bits:", group2Bits[#1], ", group1Bits:", group1Bits[#1], ", enum:", #2, " }"
+    ], "); // { group2Bits:", group2Bits[#1], ", group1Bits:", group1Bits[#1], ", enum:", #2, ", ", StringJoin["0b", {StringTake[#, {1, 1}], "_", StringTake[#, {2, 5}], "_", StringTake[#, {6, 9}]}&[IntegerString[#2, 2, 9]]], " }"
   }])&
   ,
   enumMap
@@ -737,10 +776,10 @@ tokenCPPSource = {
 #include <cassert>
 
 //
-// TOKEN_TOPLEVELNEWLINE must be 0 % 2 to allow setting the 1 bit to convert to TOKEN_INTERNALNEWLINE
+// TOKEN_INTERNALNEWLINE must be 0x8 to allow setting the 0b100 bit to convert to TOKEN_TOPLEVELNEWLINE
 //
-static_assert(TOKEN_TOPLEVELNEWLINE.value() % 2 == 0, \"Check your assumptions\");
-static_assert(TOKEN_INTERNALNEWLINE.value() % 2 == 1, \"Check your assumptions\");
+static_assert(TOKEN_INTERNALNEWLINE.value() == 0x8, \"Check your assumptions\");
+static_assert(TOKEN_TOPLEVELNEWLINE.value() == 0xc, \"Check your assumptions\");
 "} ~Join~
 {"SymbolPtr& TokenToSymbol(TokenEnum T) {"} ~Join~
 {"switch (T.value()) {"} ~Join~

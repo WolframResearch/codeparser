@@ -15,7 +15,7 @@ cur = 0
 enumMap = <||>
 KeyValueMap[(
   Which[
-    #2 === 0, cur = 0,
+    IntegerQ[#2], cur = #2,
     #2 === Next, cur++,
     True, cur = enumMap[#2]
   ];

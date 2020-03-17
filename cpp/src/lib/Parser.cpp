@@ -120,10 +120,17 @@ Token Parser::nextToken0(ParserContext Ctxt) {
         return Tok;
     }
     
+    auto insideGroup = (Ctxt.Closr != CLOSER_OPEN);
     //
-    // Treat Ctxt.InsideGroup as a single bit and or with TOPLEVEL to set the RETURN_INTERNALNEWLINE NextCharacterPolicy bit
+    // if insideGroup:
+    //   returnInternalNewlineMask is 0b100
+    // else:
+    //   returnInternalNewlineMask is 0b000
     //
-    return TheTokenizer->nextToken0(TOPLEVEL | static_cast<uint8_t>(Ctxt.Closr != CLOSER_OPEN));
+    auto returnInternalNewlineMask = static_cast<uint8_t>(insideGroup) << 2;
+    auto Tok = TheTokenizer->nextToken0(TOPLEVEL & ~(returnInternalNewlineMask));
+    
+    return Tok;
 }
 
 Token Parser::currentToken(ParserContext Ctxt) const {
@@ -135,10 +142,17 @@ Token Parser::currentToken(ParserContext Ctxt) const {
         return Tok;
     }
     
+    auto insideGroup = (Ctxt.Closr != CLOSER_OPEN);
     //
-    // Treat Ctxt.InsideGroup as a single bit and or with TOPLEVEL to set the RETURN_INTERNALNEWLINE NextCharacterPolicy bit
+    // if insideGroup:
+    //   returnInternalNewlineMask is 0b100
+    // else:
+    //   returnInternalNewlineMask is 0b000
     //
-    return TheTokenizer->currentToken(TOPLEVEL | static_cast<uint8_t>(Ctxt.Closr != CLOSER_OPEN));
+    auto returnInternalNewlineMask = static_cast<uint8_t>(insideGroup) << 2;
+    auto Tok = TheTokenizer->currentToken(TOPLEVEL & ~(returnInternalNewlineMask));
+    
+    return Tok;
 }
 
 
@@ -226,7 +240,7 @@ NodePtr Parser::infixLoop(NodePtr Left, ParserContext Ctxt) {
         LeafSeq ArgsTest;
         
         auto token = currentToken(Ctxt);
-        token = eatAndPreserveToplevelNewlines(token, Ctxt, ArgsTest);
+        token = eatTriviaButNotToplevelNewlines(token, Ctxt, ArgsTest);
         
         auto I = infixParselets[token.Tok.value()];
         
@@ -266,7 +280,7 @@ NodePtr Parser::infixLoop(NodePtr Left, ParserContext Ctxt) {
     return Left;
 }
 
-Token Parser::eatAll(Token T, ParserContext Ctxt, LeafSeq& Args) {
+Token Parser::eatTrivia(Token T, ParserContext Ctxt, LeafSeq& Args) {
     
     while (T.Tok.isTrivia()) {
         
@@ -284,7 +298,7 @@ Token Parser::eatAll(Token T, ParserContext Ctxt, LeafSeq& Args) {
     return T;
 }
 
-Token Parser::eatAll_stringifyFile(Token T, ParserContext Ctxt, LeafSeq& Args) {
+Token Parser::eatTrivia_stringifyFile(Token T, ParserContext Ctxt, LeafSeq& Args) {
     
     while (T.Tok.isTrivia()) {
         
@@ -302,72 +316,40 @@ Token Parser::eatAll_stringifyFile(Token T, ParserContext Ctxt, LeafSeq& Args) {
     return T;
 }
 
-Token Parser::eatAndPreserveToplevelNewlines(Token T, ParserContext Ctxt, LeafSeq& Args) {
+Token Parser::eatTriviaButNotToplevelNewlines(Token T, ParserContext Ctxt, LeafSeq& Args) {
     
-    while (true) {
+    while (T.Tok.isTriviaButNotToplevelNewline()) {
         
         //
         // No need to check isAbort() inside tokenizer loops
         //
         
-        switch (T.Tok.value()) {
-            case TOKEN_TOPLEVELNEWLINE.value(): {
-                
-                return T;
-            }
-            //
-            // Fall through
-            //
-            case TOKEN_INTERNALNEWLINE.value():
-            case TOKEN_WHITESPACE.value():
-            case TOKEN_COMMENT.value():
-            case TOKEN_LINECONTINUATION.value(): {
-                
-                Args.append(LeafNodePtr(new LeafNode(std::move(T))));
-                
-                nextToken(T);
-                
-                T = currentToken(Ctxt);
-            }
-                break;
-            default:
-                return T;
-        }
+        Args.append(LeafNodePtr(new LeafNode(T)));
+        
+        nextToken(T);
+        
+        T = currentToken(Ctxt);
     }
+    
+    return T;
 }
 
-Token Parser::eatAndPreserveToplevelNewlines_stringifyFile(Token T, ParserContext Ctxt, LeafSeq& Args) {
+Token Parser::eatTriviaButNotToplevelNewlines_stringifyFile(Token T, ParserContext Ctxt, LeafSeq& Args) {
     
-    while (true) {
+    while (T.Tok.isTriviaButNotToplevelNewline()) {
         
         //
         // No need to check isAbort() inside tokenizer loops
         //
         
-        switch (T.Tok.value()) {
-            case TOKEN_TOPLEVELNEWLINE.value(): {
-                    
-                return T;
-            }
-            //
-            // Fall through
-            //
-            case TOKEN_INTERNALNEWLINE.value():
-            case TOKEN_WHITESPACE.value():
-            case TOKEN_COMMENT.value():
-            case TOKEN_LINECONTINUATION.value(): {
-                
-                Args.append(LeafNodePtr(new LeafNode(std::move(T))));
-                
-                nextToken(T);
-                
-                T = currentToken_stringifyFile();
-            }
-                break;
-            default:
-                return T;
-        }
+        Args.append(LeafNodePtr(new LeafNode(T)));
+        
+        nextToken(T);
+        
+        T = currentToken_stringifyFile();
     }
+    
+    return T;
 }
 
 ParserPtr TheParser = nullptr;

@@ -50,9 +50,9 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
         LeafSeq ArgsTest1;
         
         auto Tok = TheParser->currentToken(Ctxt);
-        Tok = TheParser->eatAndPreserveToplevelNewlines(Tok, Ctxt, ArgsTest1);
+        Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, ArgsTest1);
         
-        if (!Tok.Tok.isPossibleBeginningOfExpression()) {
+        if (!Tok.Tok.isPossibleBeginning()) {
             
             //
             // There is only a single ;; and there is no implicit Times
@@ -81,9 +81,9 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
                 LeafSeq ArgsTest2;
                 
                 auto Tok = TheParser->currentToken(Ctxt);
-                Tok = TheParser->eatAndPreserveToplevelNewlines(Tok, Ctxt, ArgsTest2);
+                Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, ArgsTest2);
                 
-                if (!Tok.Tok.isPossibleBeginningOfExpression()) {
+                if (!Tok.Tok.isPossibleBeginning()) {
                     
                     //
                     // We are done, so return
@@ -177,14 +177,14 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
     {
         LeafSeq ArgsTest1;
         
-        SecondTok = TheParser->eatAndPreserveToplevelNewlines(SecondTok, Ctxt, ArgsTest1);
+        SecondTok = TheParser->eatTriviaButNotToplevelNewlines(SecondTok, Ctxt, ArgsTest1);
         
         //
         // a;;
         //  ^~TokIn
         //
         
-        if (!SecondTok.Tok.isPossibleBeginningOfExpression()) {
+        if (!SecondTok.Tok.isPossibleBeginning()) {
             
             //
             // a;;&
@@ -208,15 +208,13 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
             //    ^SecondTok
             //
             
-            //        auto FirstArg = TheParser->parse(SecondTok, Ctxt);
-            
             auto FirstArg = prefixParselets[SecondTok.Tok.value()]->parse(SecondTok, Ctxt);
             
             {
                 LeafSeq ArgsTest2;
                 
                 auto ThirdTok = TheParser->currentToken(Ctxt);
-                ThirdTok = TheParser->eatAndPreserveToplevelNewlines(ThirdTok, Ctxt, ArgsTest2);
+                ThirdTok = TheParser->eatTriviaButNotToplevelNewlines(ThirdTok, Ctxt, ArgsTest2);
                 
                 if (ThirdTok.Tok != TOKEN_SEMISEMI) {
                     
@@ -249,9 +247,9 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
                     TheParser->nextToken(ThirdTok);
                     
                     auto FourthTok = TheParser->currentToken(Ctxt);
-                    FourthTok = TheParser->eatAndPreserveToplevelNewlines(FourthTok, Ctxt, ArgsTest3);
+                    FourthTok = TheParser->eatTriviaButNotToplevelNewlines(FourthTok, Ctxt, ArgsTest3);
                     
-                    if (!FourthTok.Tok.isPossibleBeginningOfExpression()) {
+                    if (!FourthTok.Tok.isPossibleBeginning()) {
                         
                         //
                         // a;;b;;&
@@ -273,8 +271,6 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
                         // a;;b;;c
                         //       ^FourthTok
                         //
-                        
-                        //            auto SecondArg = TheParser->parse(FourthTok, Ctxt);
                         
                         auto SecondArg = prefixParselets[FourthTok.Tok.value()]->parse(FourthTok, Ctxt);
                         
@@ -322,9 +318,9 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
             TheParser->nextToken(SecondTok);
             
             auto ThirdTok = TheParser->currentToken(Ctxt);
-            ThirdTok = TheParser->eatAndPreserveToplevelNewlines(ThirdTok, Ctxt, ArgsTest2);
+            ThirdTok = TheParser->eatTriviaButNotToplevelNewlines(ThirdTok, Ctxt, ArgsTest2);
             
-            if (!ThirdTok.Tok.isPossibleBeginningOfExpression()) {
+            if (!ThirdTok.Tok.isPossibleBeginning()) {
                 
                 //
                 // a;;;;&
@@ -347,8 +343,6 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
                 // a;;;;b
                 //      ^ThirdTok
                 //
-                
-                //        auto FirstArg = TheParser->parse(ThirdTok, Ctxt);
                 
                 auto FirstArg = prefixParselets[ThirdTok.Tok.value()]->parse(ThirdTok, Ctxt);
                 
