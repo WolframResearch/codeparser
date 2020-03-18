@@ -256,14 +256,14 @@ NodePtr Parser::infixLoop(NodePtr Left, ParserContext Ctxt) {
             tokenQueue.insert(tokenQueue.begin(), token);
         }
         
-        if (Ctxt.Prec > TokenPrecedence) {
+        //
+        // if (Ctxt.Prec > TokenPrecedence)
+        //   break;
+        // else if (Ctxt.Prec == TokenPrecedence && Ctxt.Prec.Associativity is NonRight)
+        //   break;
+        //
+        if ((Ctxt.Prec | 0x1) > TokenPrecedence) {
             break;
-        }
-        if (Ctxt.Prec == TokenPrecedence) {
-            auto TokenAssociativity = I->getAssociativity();
-            if (TokenAssociativity != ASSOCIATIVITY_RIGHT) {
-                break;
-            }
         }
         
         NodeSeq LeftSeq(1 + 1);

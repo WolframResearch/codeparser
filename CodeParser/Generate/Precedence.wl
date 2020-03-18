@@ -8,36 +8,45 @@ Print["Generating Precedence..."]
 
 oldPrecedences = Join[Names["Precedence`*"], Names["Precedence`*`*"]]
 
+
 (*
 resolve the symbolic values in the Precedence table to integer values
 *)
-cur = 0
+cur = {0, Associativity`NonRight}
 enumMap = <||>
 KeyValueMap[(
   Which[
-    IntegerQ[#2], cur = #2,
-    #2 === Next, cur++,
-    True, cur = enumMap[#2]
+    Head[#2] === Symbol, cur = enumMap[#2],
+    Head[#2[[1]]] === Integer, cur = #2,
+    #2[[1]] === Next, cur[[1]]++;cur[[2]] = #2[[2]],
+    True, Print["Unhandled precedence"]; Quit[1]
   ];
   AssociateTo[enumMap, #1 -> cur])&
   ,
   importedPrecedenceSource
 ]
 
+
 (*
 sanity check that all precedences are in order
 *)
 cur = -Infinity;
 KeyValueMap[
-  If[!TrueQ[#2 >= cur],
+  If[!TrueQ[#2[[1]] >= cur],
     Print["Precedence is out of order: ", #1->#2];
     Quit[1]
     ,
-    cur = #2
+    cur = #2[[1]]
   ]&
   ,
   enumMap
 ]
+
+
+associativityToValue[Associativity`NonRight] = 0
+associativityToValue[Associativity`Right] = 1
+
+
 
 
 precedenceCPPHeader = {
@@ -52,7 +61,7 @@ precedenceCPPHeader = {
 #include <cstdint> // for uint8_t
 
 enum Precedence : uint8_t {"} ~Join~
-   KeyValueMap[(Row[{toGlobal[#1], " = ", Floor[#2], ","}]) &, enumMap] ~Join~ {"};", ""}
+   KeyValueMap[(Row[{toGlobal[#1], " = ", BitShiftLeft[#2[[1]], 1] + associativityToValue[#2[[2]]], ",", "// prec: ", #2[[1]], ", assoc: ", #2[[2]]}]) &, enumMap] ~Join~ {"};", ""}
 
 Print["exporting Precedence.h"]
 res = Export[FileNameJoin[{generatedCPPIncludeDir, "Precedence.h"}], Column[precedenceCPPHeader], "String"]

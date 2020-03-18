@@ -68,10 +68,6 @@ public:
     
     virtual Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const = 0;
     
-    virtual void setPrecedence(Precedence) {}
-    
-    virtual Associativity getAssociativity() const = 0;
-    
     virtual ~InfixParselet() {}
 };
 
@@ -85,10 +81,6 @@ public:
     Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const override {
         *implicitTimes = false;
         return PRECEDENCE_CALL;
-    }
-    
-    Associativity getAssociativity() const override {
-        return ASSOCIATIVITY_NONRIGHT;
     }
 };
 
@@ -211,8 +203,6 @@ public:
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const override;
-    
-    Associativity getAssociativity() const override;
 };
 
 class InfixAssertFalseParselet : public InfixParselet {
@@ -222,8 +212,6 @@ public:
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
 
     Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const override;
-    
-    Associativity getAssociativity() const override;
 };
 
 class InfixEndOfFileParselet : public InfixParselet {
@@ -233,8 +221,6 @@ public:
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const override;
-    
-    Associativity getAssociativity() const override;
 };
 
 class InfixErrorParselet : public InfixParselet {
@@ -244,8 +230,6 @@ public:
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const override;
-    
-    Associativity getAssociativity() const override;
 };
 
 class InfixUnsupportedTokenParselet : public InfixParselet {
@@ -255,8 +239,6 @@ public:
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const override;
-    
-    Associativity getAssociativity() const override;
 };
 
 class InfixCloserParselet : public InfixParselet {
@@ -266,8 +248,6 @@ public:
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const override;
-    
-    Associativity getAssociativity() const override;
 };
 
 class InfixDifferentialDParselet : public InfixParselet {
@@ -277,8 +257,6 @@ public:
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const override;
-    
-    Associativity getAssociativity() const override;
 };
 
 class InfixToplevelNewlineParselet : public InfixParselet {
@@ -288,28 +266,22 @@ public:
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const override;
-    
-    Associativity getAssociativity() const override;
 };
 
 
 
 class BinaryOperatorParselet : public InfixParselet {
     Precedence precedence;
-    Associativity assoc;
+//    Associativity assoc;
     SymbolPtr& Op;
 public:
-    BinaryOperatorParselet(TokenEnum Tok, Precedence precedence, Associativity assoc);
+    BinaryOperatorParselet(TokenEnum Tok, Precedence precedence);
     
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const override {
         *implicitTimes = false;
         return precedence;
-    }
-    
-    Associativity getAssociativity() const override {
-        return assoc;
     }
 };
 
@@ -325,10 +297,6 @@ public:
         *implicitTimes = false;
         return precedence;
     }
-    
-    Associativity getAssociativity() const override {
-        return ASSOCIATIVITY_NONRIGHT;
-    }
 };
 
 class PostfixOperatorParselet : public InfixParselet {
@@ -342,10 +310,6 @@ public:
     Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const override {
         *implicitTimes = false;
         return precedence;
-    }
-    
-    Associativity getAssociativity() const override {
-        return ASSOCIATIVITY_NONRIGHT;
     }
 };
 
@@ -399,10 +363,6 @@ public:
         *implicitTimes = false;
         return precedence;
     }
-    
-    Associativity getAssociativity() const override {
-        return ASSOCIATIVITY_NONRIGHT;
-    }
 };
 
 //
@@ -426,10 +386,6 @@ public:
         *implicitTimes = false;
         return PRECEDENCE_SEMISEMI;
     }
-    
-    Associativity getAssociativity() const override {
-        return ASSOCIATIVITY_NONRIGHT;
-    }
 };
 
 
@@ -451,10 +407,6 @@ public:
         
         return PRECEDENCE_TILDE;
     }
-    
-    Associativity getAssociativity() const override {
-        return ASSOCIATIVITY_NONRIGHT;
-    }
 };
 
 class ColonParselet : public InfixParselet, public ContextSensitiveInfixParselet {
@@ -470,11 +422,6 @@ public:
         *implicitTimes = false;
         return PRECEDENCE_FAKE_OPTIONALCOLON;
     }
-    
-    Associativity getAssociativity() const override {
-        return ASSOCIATIVITY_NONRIGHT;
-    }
-    
 };
 
 // It'd be weird if this were an "infix operator"
@@ -486,10 +433,6 @@ public:
     Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const override {
         *implicitTimes = false;
         return PRECEDENCE_SLASHCOLON;
-    }
-    
-    Associativity getAssociativity() const override {
-        return ASSOCIATIVITY_RIGHT;
     }
 };
 
@@ -504,7 +447,7 @@ public:
 
 class EqualParselet : public BinaryOperatorParselet {
 public:
-    EqualParselet() : BinaryOperatorParselet(TOKEN_EQUAL, PRECEDENCE_EQUAL, ASSOCIATIVITY_RIGHT) {}
+    EqualParselet() : BinaryOperatorParselet(TOKEN_EQUAL, PRECEDENCE_EQUAL) {}
     
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
 };
@@ -514,7 +457,7 @@ public:
 //
 class EqualDotParselet : public BinaryOperatorParselet {
 public:
-    EqualDotParselet() : BinaryOperatorParselet(TOKEN_EQUALDOT, PRECEDENCE_EQUAL, ASSOCIATIVITY_RIGHT) {}
+    EqualDotParselet() : BinaryOperatorParselet(TOKEN_EQUALDOT, PRECEDENCE_EQUAL) {}
     
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
 };
@@ -542,10 +485,6 @@ public:
         *implicitTimes = false;
         return PRECEDENCE_COLONCOLON;
     }
-    
-    Associativity getAssociativity() const override {
-        return ASSOCIATIVITY_NONRIGHT;
-    }
 };
 
 class GreaterGreaterParselet : public InfixParselet {
@@ -557,10 +496,6 @@ public:
         *implicitTimes = false;
         return PRECEDENCE_GREATERGREATER;
     }
-    
-    Associativity getAssociativity() const override {
-        return ASSOCIATIVITY_NONRIGHT;
-    }
 };
 
 class GreaterGreaterGreaterParselet : public InfixParselet {
@@ -571,10 +506,6 @@ public:
     Precedence getPrecedence(ParserContext Ctxt, bool *implicitTimes) const override {
         *implicitTimes = false;
         return PRECEDENCE_GREATERGREATERGREATER;
-    }
-    
-    Associativity getAssociativity() const override {
-        return ASSOCIATIVITY_NONRIGHT;
     }
 };
 

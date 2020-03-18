@@ -66,7 +66,7 @@ struct ParserContext {
     
     ParserContextFlag Flag : 4;
     
-    ParserContext() : Prec(), Closr(), Flag() {}
+    ParserContext() : Prec(PRECEDENCE_LOWEST), Closr(), Flag() {}
 };
 
 //

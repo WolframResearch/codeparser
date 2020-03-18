@@ -157,14 +157,14 @@ NodePtr PrefixUnhandledParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     assert(!implicitTimes);
     
-    if (Ctxt.Prec > TokenPrecedence) {
+    //
+    // if (Ctxt.Prec > TokenPrecedence)
+    //   goto prefixUnhandledParseletRet;
+    // else if (Ctxt.Prec == TokenPrecedence && Ctxt.Prec.Associativity is NonRight)
+    //   goto prefixUnhandledParseletRet;
+    //
+    if ((Ctxt.Prec | 0x1) > TokenPrecedence) {
         goto prefixUnhandledParseletRet;
-    }
-    if (Ctxt.Prec == TokenPrecedence) {
-        auto TokenAssociativity = I->getAssociativity();
-        if (TokenAssociativity != ASSOCIATIVITY_RIGHT) {
-            goto prefixUnhandledParseletRet;
-        }
     }
     
     {
@@ -218,9 +218,6 @@ Precedence InfixToplevelNewlineParselet::getPrecedence(ParserContext Ctxt, bool 
     return PRECEDENCE_LOWEST;
 }
 
-Associativity InfixToplevelNewlineParselet::getAssociativity() const {
-    return ASSOCIATIVITY_NONRIGHT;
-}
 
 
 
@@ -360,9 +357,6 @@ Precedence InfixImplicitTimesParselet::getPrecedence(ParserContext Ctxt, bool *i
     return PRECEDENCE_FAKE_IMPLICITTIMES;
 }
 
-Associativity InfixImplicitTimesParselet::getAssociativity() const {
-    return ASSOCIATIVITY_NONRIGHT;
-}
 
 
 InfixAssertFalseParselet::InfixAssertFalseParselet() {}
@@ -378,10 +372,6 @@ Precedence InfixAssertFalseParselet::getPrecedence(ParserContext Ctxt, bool *imp
     return PRECEDENCE_ASSERTFALSE;
 }
 
-Associativity InfixAssertFalseParselet::getAssociativity() const {
-    assert(false);
-    return ASSOCIATIVITY_NONRIGHT;
-}
 
 
 InfixCloserParselet::InfixCloserParselet() {}
@@ -397,9 +387,6 @@ Precedence InfixCloserParselet::getPrecedence(ParserContext Ctxt, bool *implicit
     return PRECEDENCE_LOWEST;
 }
 
-Associativity InfixCloserParselet::getAssociativity() const {
-    return ASSOCIATIVITY_NONRIGHT;
-}
 
 
 InfixEndOfFileParselet::InfixEndOfFileParselet() {}
@@ -415,9 +402,6 @@ Precedence InfixEndOfFileParselet::getPrecedence(ParserContext Ctxt, bool *impli
     return PRECEDENCE_LOWEST;
 }
 
-Associativity InfixEndOfFileParselet::getAssociativity() const {
-    return ASSOCIATIVITY_NONRIGHT;
-}
 
 
 InfixUnsupportedTokenParselet::InfixUnsupportedTokenParselet() {}
@@ -433,9 +417,6 @@ Precedence InfixUnsupportedTokenParselet::getPrecedence(ParserContext Ctxt, bool
     return PRECEDENCE_LOWEST;
 }
 
-Associativity InfixUnsupportedTokenParselet::getAssociativity() const {
-    return ASSOCIATIVITY_NONRIGHT;
-}
 
 
 InfixErrorParselet::InfixErrorParselet() {}
@@ -451,12 +432,9 @@ Precedence InfixErrorParselet::getPrecedence(ParserContext Ctxt, bool *implicitT
     return PRECEDENCE_LOWEST;
 }
 
-Associativity InfixErrorParselet::getAssociativity() const {
-    return ASSOCIATIVITY_NONRIGHT;
-}
 
 
-BinaryOperatorParselet::BinaryOperatorParselet(TokenEnum Tok, Precedence precedence, Associativity assoc) : precedence(precedence), assoc(assoc), Op(BinaryOperatorToSymbol(Tok)) {}
+BinaryOperatorParselet::BinaryOperatorParselet(TokenEnum Tok, Precedence precedence) : precedence(precedence), Op(BinaryOperatorToSymbol(Tok)) {}
 
 NodePtr BinaryOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
     
@@ -1645,9 +1623,3 @@ NodePtr InfixDifferentialDParselet::parse(NodeSeq Left, Token firstTok, ParserCo
     assert(false);
     return nullptr;
 }
-
-Associativity InfixDifferentialDParselet::getAssociativity() const {
-    return ASSOCIATIVITY_NONRIGHT;
-}
-
-
