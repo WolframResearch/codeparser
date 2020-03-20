@@ -780,6 +780,7 @@ tokenCPPSource = {
 //
 static_assert(TOKEN_INTERNALNEWLINE.value() == 0x8, \"Check your assumptions\");
 static_assert(TOKEN_TOPLEVELNEWLINE.value() == 0xc, \"Check your assumptions\");
+static_assert(TOKEN_ERROR_FIRST.value() == 0x10, \"Check your assumptions\");
 "} ~Join~
 {"SymbolPtr& TokenToSymbol(TokenEnum T) {"} ~Join~
 {"switch (T.value()) {"} ~Join~

@@ -26,7 +26,7 @@ bit 0b100 can be set to turn Token`InternalNewline into Token`ToplevelNewline
 while also allowing fast testing of trivia (just a bit mask) and also fast testing of
 non-ToplevelNewline trivia (also just a bit mask)
 *)
-Token`InternalNewline -> 2^^000001000(*8*),
+Token`InternalNewline -> Next, (*8*)
 Token`Comment -> Next,
 Token`Whitespace -> Next,
 Token`LineContinuation -> Next,
@@ -37,7 +37,7 @@ Token`Buffer4 -> Next,
 Token`Buffer5 -> Next,
 
 (* errors *)
-Token`Error`ExpectedEqual -> 2^^000010000(*16*),
+Token`Error`ExpectedEqual -> Next, (*16*)
 (*
 Order of First appearing here is important.
 During generation, values that are not Next are removed
