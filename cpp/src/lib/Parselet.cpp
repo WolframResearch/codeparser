@@ -152,10 +152,7 @@ NodePtr PrefixUnhandledParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     auto I = infixParselets[TokIn.Tok.value()];
     
-    bool implicitTimes;
-    auto TokenPrecedence = I->getPrecedence(Ctxt, &implicitTimes);
-    
-    assert(!implicitTimes);
+    auto TokenPrecedence = I->getPrecedence(Ctxt);
     
     //
     // if (Ctxt.Prec > TokenPrecedence)
@@ -164,37 +161,34 @@ NodePtr PrefixUnhandledParselet::parse(Token TokIn, ParserContext Ctxt) const {
     //   goto prefixUnhandledParseletRet;
     //
     if ((Ctxt.Prec | 0x1) > TokenPrecedence) {
-        goto prefixUnhandledParseletRet;
-    }
-    
-    {
-        //
-        // Handle something like  f[,1]
-        //
-        // We want to make EXPECTEDOPERAND the first arg of the Comma node.
-        //
-        // Do not take next token
-        //
-        // Important to not duplicate token's Str here, it may also appear later
-        //
-        // Also, invent Source
-        //
         
-        NodeSeq LeftSeq(1);
-        LeftSeq.append(std::move(NotPossible));
-        
-        auto NotPossible = infixParselets[TokIn.Tok.value()]->parse(std::move(LeftSeq), TokIn, Ctxt);
+        //
+        // Something like  a + | 2
+        //
+        // Make sure that the error leaf is with the + and not the |
+        //
         
         return NotPossible;
     }
     
     //
-    // Something like  a + | 2
+    // Handle something like  f[,1]
     //
-    // Make sure that the error leaf is with the + and not the |
+    // We want to make EXPECTEDOPERAND the first arg of the Comma node.
     //
-prefixUnhandledParseletRet:
-    return NotPossible;
+    // Do not take next token
+    //
+    // Important to not duplicate token's Str here, it may also appear later
+    //
+    // Also, invent Source
+    //
+    
+    NodeSeq LeftSeq(1);
+    LeftSeq.append(std::move(NotPossible));
+    
+    auto NotPossible2 = infixParselets[TokIn.Tok.value()]->parse(std::move(LeftSeq), TokIn, Ctxt);
+    
+    return NotPossible2;
 }
 
 Precedence PrefixUnhandledParselet::getPrecedence(ParserContext Ctxt) const {
@@ -210,11 +204,10 @@ NodePtr InfixToplevelNewlineParselet::parse(NodeSeq Left, Token firstTok, Parser
     return nullptr;
 }
 
-Precedence InfixToplevelNewlineParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
+Precedence InfixToplevelNewlineParselet::getPrecedence(ParserContext Ctxt) const {
     //
     // Do not do Implicit Times across top-level newlines
     //
-    *implicitTimes = false;
     return PRECEDENCE_LOWEST;
 }
 
@@ -347,13 +340,20 @@ NodePtr PrefixOperatorParselet::parse(Token TokIn, ParserContext CtxtIn) const {
 
 InfixImplicitTimesParselet::InfixImplicitTimesParselet() {}
 
+//
+// Does not "parse" so much as inserts the implicit Times token, and then allows the rest of the system to do the work
+//
 NodePtr InfixImplicitTimesParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
-    assert(false);
-    return nullptr;
+    
+    auto token = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(firstTok.BufLen.buffer), Source(firstTok.Src.Start));
+
+    TheParser->prepend(token);
+    
+    auto L = NodePtr(new NodeSeqNode(std::move(Left)));
+    return L;
 }
 
-Precedence InfixImplicitTimesParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
-    *implicitTimes = true;
+Precedence InfixImplicitTimesParselet::getPrecedence(ParserContext Ctxt) const {
     return PRECEDENCE_FAKE_IMPLICITTIMES;
 }
 
@@ -367,7 +367,7 @@ NodePtr InfixAssertFalseParselet::parse(NodeSeq Left, Token firstTok, ParserCont
 }
 
 
-Precedence InfixAssertFalseParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
+Precedence InfixAssertFalseParselet::getPrecedence(ParserContext Ctxt) const {
     assert(false);
     return PRECEDENCE_ASSERTFALSE;
 }
@@ -382,8 +382,7 @@ NodePtr InfixCloserParselet::parse(NodeSeq Left, Token firstTok, ParserContext C
 }
 
 
-Precedence InfixCloserParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
-    *implicitTimes = false;
+Precedence InfixCloserParselet::getPrecedence(ParserContext Ctxt) const {
     return PRECEDENCE_LOWEST;
 }
 
@@ -397,8 +396,7 @@ NodePtr InfixEndOfFileParselet::parse(NodeSeq Left, Token firstTok, ParserContex
 }
 
 
-Precedence InfixEndOfFileParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
-    *implicitTimes = false;
+Precedence InfixEndOfFileParselet::getPrecedence(ParserContext Ctxt) const {
     return PRECEDENCE_LOWEST;
 }
 
@@ -412,8 +410,7 @@ NodePtr InfixUnsupportedTokenParselet::parse(NodeSeq Left, Token firstTok, Parse
 }
 
 
-Precedence InfixUnsupportedTokenParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
-    *implicitTimes = false;
+Precedence InfixUnsupportedTokenParselet::getPrecedence(ParserContext Ctxt) const {
     return PRECEDENCE_LOWEST;
 }
 
@@ -427,8 +424,7 @@ NodePtr InfixErrorParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ct
 }
 
 
-Precedence InfixErrorParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
-    *implicitTimes = false;
+Precedence InfixErrorParselet::getPrecedence(ParserContext Ctxt) const {
     return PRECEDENCE_LOWEST;
 }
 
@@ -438,8 +434,7 @@ BinaryOperatorParselet::BinaryOperatorParselet(TokenEnum Tok, Precedence precede
 
 NodePtr BinaryOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
     
-    bool implicitTimes;
-    Ctxt.Prec = getPrecedence(Ctxt, &implicitTimes);
+    Ctxt.Prec = getPrecedence(Ctxt);
     
     TheParser->nextToken(TokIn);
     
@@ -472,8 +467,7 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ct
     NodeSeq Args(1);
     Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
     
-    bool implicitTimes;
-    Ctxt.Prec = getPrecedence(Ctxt, &implicitTimes);
+    Ctxt.Prec = getPrecedence(Ctxt);
     
     while (true) {
 
@@ -931,8 +925,7 @@ NodePtr ColonParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserCo
 //
 NodePtr SlashColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
     
-    bool implicitTimes;
-    Ctxt.Prec = getPrecedence(Ctxt, &implicitTimes);
+    Ctxt.Prec = getPrecedence(Ctxt);
     
     TheParser->nextToken(TokIn);
     
@@ -985,6 +978,7 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
             Args.append(NodePtr(new NodeSeqNode(std::move(C))));
             
             auto L = NodePtr(new TernaryNode(SYMBOL_TAGSETDELAYED, std::move(Args)));
+            
             return TheParser->infixLoop(std::move(L), Ctxt);
         }
         case TOKEN_EQUALDOT.value(): {
@@ -1009,6 +1003,7 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
             Args.append(NodePtr(new NodeSeqNode(std::move(C))));
             
             auto L = NodePtr(new TernaryNode(SYMBOL_TAGUNSET, std::move(Args)));
+            
             return TheParser->infixLoop(std::move(L), Ctxt);
         }
         case TOKEN_ENDOFFILE.value(): {
@@ -1021,7 +1016,7 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
             
             auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDSET, std::move(Args)));
             
-            return TheParser->infixLoop(std::move(Error), Ctxt);
+            return Error;
         }
         default: {
             
@@ -1045,7 +1040,7 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
             
             auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDSET, std::move(Args)));
             
-            return TheParser->infixLoop(std::move(Error), Ctxt);
+            return Error;
         }
     }
 }
@@ -1150,8 +1145,7 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext Ctxt)
 //
 NodePtr EqualParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
     
-    bool implicitTimes;
-    Ctxt.Prec = getPrecedence(Ctxt, &implicitTimes);
+    Ctxt.Prec = getPrecedence(Ctxt);
     
     TheParser->nextToken(TokIn);
     
@@ -1214,8 +1208,7 @@ NodePtr EqualParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) cons
 //
 NodePtr EqualDotParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
     
-    bool implicitTimes;
-    Ctxt.Prec = getPrecedence(Ctxt, &implicitTimes);
+    Ctxt.Prec = getPrecedence(Ctxt);
     
     TheParser->nextToken(TokIn);
     
@@ -1231,9 +1224,9 @@ NodePtr EqualDotParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
     auto L = NodePtr(new BinaryNode(SYMBOL_UNSET, std::move(Args)));
     
     //
-    // FIXME: is it ever needed to call infixLoop() here?
+    // Something like  =.@b  should only produce 1 ExpectedOperand error, so make sure to call infixLoop here
     //
-    return L;
+    return TheParser->infixLoop(std::move(L), Ctxt);
 }
 
 IntegralParselet::IntegralParselet() : Op1(SYMBOL_INTEGRAL), Op2(SYMBOL_INTEGRATE) {}
@@ -1297,9 +1290,8 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, Token TokIn, Pars
     
     auto lastOperatorToken = TokIn;
     
-    bool implicitTimes;
     auto Ctxt = CtxtIn;
-    Ctxt.Prec = getPrecedence(Ctxt, &implicitTimes);
+    Ctxt.Prec = getPrecedence(Ctxt);
     
     NodePtr L;
     
@@ -1601,7 +1593,7 @@ InfixDifferentialDParselet::InfixDifferentialDParselet() {}
 //
 // InfixDifferentialDParselet only exists to properly supply precedence, depending on context
 //
-Precedence InfixDifferentialDParselet::getPrecedence(ParserContext Ctxt, bool *implicitTimes) const {
+Precedence InfixDifferentialDParselet::getPrecedence(ParserContext Ctxt) const {
     
     if ((Ctxt.Flag & PARSER_INSIDE_INTEGRAL) == PARSER_INSIDE_INTEGRAL) {
 
@@ -1609,17 +1601,22 @@ Precedence InfixDifferentialDParselet::getPrecedence(ParserContext Ctxt, bool *i
         // Inside \[Integral], so \[DifferentialD] is treated specially
         //
 
-        *implicitTimes = false;
-
         return PRECEDENCE_LOWEST;
     }
-
-    *implicitTimes = true;
 
     return PRECEDENCE_FAKE_IMPLICITTIMES;
 }
 
+//
+// Does not "parse" so much as inserts the implicit Times token, and then allows the rest of the system to do the work
+//
 NodePtr InfixDifferentialDParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
-    assert(false);
-    return nullptr;
+    
+    auto token = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(firstTok.BufLen.buffer), Source(firstTok.Src.Start));
+    
+    TheParser->prepend(token);
+    
+    auto L = NodePtr(new NodeSeqNode(std::move(Left)));
+    return L;
 }
+

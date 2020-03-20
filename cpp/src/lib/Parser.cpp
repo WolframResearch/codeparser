@@ -197,6 +197,12 @@ Token Parser::currentToken_stringifyFile() const {
     return TheTokenizer->currentToken_stringifyFile();
 }
 
+void Parser::prepend(Token Tok) {
+        
+    tokenQueue.insert(tokenQueue.begin(), Tok);
+}
+
+
 void Parser::prependInReverse(std::vector<LeafNodePtr>& V) {
     
     if (V.empty()) {
@@ -244,17 +250,7 @@ NodePtr Parser::infixLoop(NodePtr Left, ParserContext Ctxt) {
         
         auto I = infixParselets[token.Tok.value()];
         
-        bool implicitTimes;
-        auto TokenPrecedence = I->getPrecedence(Ctxt, &implicitTimes);
-        
-        if (implicitTimes) {
-            
-            token = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(token.BufLen.buffer), Source(token.Src.Start));
-            
-            I = infixParselets[TOKEN_FAKE_IMPLICITTIMES.value()];
-            
-            tokenQueue.insert(tokenQueue.begin(), token);
-        }
+        auto TokenPrecedence = I->getPrecedence(Ctxt);
         
         //
         // if (Ctxt.Prec > TokenPrecedence)

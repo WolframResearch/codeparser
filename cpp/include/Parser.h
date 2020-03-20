@@ -110,6 +110,8 @@ public:
     Token currentToken_stringifySymbol() const;
     Token currentToken_stringifyFile() const;
     
+    void prepend(Token );
+    
     void prependInReverse(std::vector<LeafNodePtr>& );
     
     
