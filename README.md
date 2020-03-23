@@ -1,6 +1,14 @@
 # CodeParser
 
-CodeParser is a package for parsing Wolfram Language code.
+CodeParser is a package for parsing Wolfram Language source code as abstract syntax trees (ASTs) or concrete syntax trees (CSTs).
+CodeParser is useful for inspecting code, formatting code, and instrumenting code (for e.g., coverage reporting or profiling), and much more!
+
+CodeParser has many key features:
+* Understands practically entire Wolfram Language syntax.
+* Fast native library implementation.
+* Tested with combination of suite of hand-written tests and fuzz testing.
+* Gracious error handling and recovery
+
 
 ```
 In[1]:= Needs["CodeParser`"]
@@ -14,9 +22,6 @@ Out[2]= InfixNode[Plus, {LeafNode[Integer, 1, <|Source -> {{1, 1}, {1, 2}}|>],
 In[3]:=
 ```
 
-`CodeParser` is used by the `CodeTools` suite of packages for inspecting code, formatting code, and instrumenting code for coverage reporting and profiling.
-
-
 [Parsing the Wolfram Language from WTC 2019: Watch Video](https://www.wolfram.com/broadcast/video.php?v=2908)
 
 [Parsing the Wolfram Language from WTC 2019: Download Presentation](https://files.wolframcdn.com/pub/www.wolfram.com/technology-conference/2019/Thursday/2019BrentonBostickParsingTheWL.nb)
@@ -24,49 +29,22 @@ In[3]:=
 
 ## Setup
 
-Make sure that the paclet can be found on your system:
+Install CodeParser from the paclet server:
 ```
-In[1]:= Needs["CodeParser`"]
-```
-
-[CodeParser on github.com](https://github.com/<<TODO_placeholder_for_actual_link>>)
-
-Install CodeParser from the CodeTools paclet server:
-```
-In[1]:= PacletUpdate["CodeParser", "Site" -> "<<TODO_placeholder_for_actual_link>>", "UpdateSites" -> True]
+In[1]:= PacletInstall["CodeParser"]
 
 Out[1]= PacletObject[CodeParser, 1.0, <>]
 ```
 
-
-## Building
-
-CodeParser uses a Wolfram Language kernel to generate code at build time and a C++ compiler to compile an executable.
-
-CodeParser uses C++11 features and requires a compiler that can support at least C++11.
-
-CodeParser uses CMake to generate build scripts.
-
-Here is an example transcript using the default make generator to build CodeParser:
+Make sure that the paclet can be found on your system:
 ```
-cd codeparser
-mkdir build
-cd build
-cmake ..
-cmake --build . --target paclet
-```
-The result is a directory named `paclet` that contains the WL package source code and a built CodeParser `.paclet` file for installing.
-
-Specify `MATHEMATICA_INSTALL_DIR` if you have Mathematica installed in a non-default location:
-```
-cmake -DMATHEMATICA_INSTALL_DIR=/Applications/Mathematica111.app/Contents/ ..
-cmake --build . --target paclet
+In[2]:= Needs["CodeParser`"]
 ```
 
 
 ## Using CodeParser
 
-After CodeParser is built and installed, it can be used.
+After CodeParser is installed, it can be used.
 
 ```
 In[1]:= Needs["CodeParser`"]
