@@ -795,7 +795,7 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
         
         auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDTILDE, std::move(Args)));
         
-        return TheParser->infixLoop(std::move(Error), CtxtIn);
+        return Error;
     }
     
     LeafSeq ArgsTest3;
@@ -874,7 +874,7 @@ NodePtr ColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
             PatSeq.appendIfNonEmpty(std::move(ArgsTest2));
             
             auto L = parseContextSensitive(std::move(PatSeq), Tok, Ctxt);
-            return TheParser->infixLoop(std::move(L), Ctxt);
+            return L;
         }
     }
     
@@ -923,9 +923,10 @@ NodePtr ColonParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserCo
 //       ^~~ ArgsTest1
 //           ^~~ ArgsTest2
 //
-NodePtr SlashColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
+NodePtr SlashColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
-    Ctxt.Prec = getPrecedence(Ctxt);
+    auto Ctxt = CtxtIn;
+    Ctxt.Prec = PRECEDENCE_SLASHCOLON;
     
     TheParser->nextToken(TokIn);
     
@@ -943,68 +944,49 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
     
     switch (Tok.Tok.value()) {
         case TOKEN_EQUAL.value(): {
-            NodeSeq Args(1 + 1 + 1 + 1 + 1);
-            Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
-            Args.append(NodePtr(new LeafNode(TokIn)));
-            Args.appendIfNonEmpty(std::move(ArgsTest1));
-            Args.append(std::move(Middle));
-            Args.appendIfNonEmpty(std::move(ArgsTest2));
+            
+            NodeSeq Args2(1 + 1 + 1 + 1 + 1);
+            Args2.append(NodePtr(new NodeSeqNode(std::move(Left))));
+            Args2.append(NodePtr(new LeafNode(TokIn)));
+            Args2.appendIfNonEmpty(std::move(ArgsTest1));
+            Args2.append(std::move(Middle));
+            Args2.appendIfNonEmpty(std::move(ArgsTest2));
             
             Ctxt.Flag |= PARSER_INSIDE_SLASHCOLON;
             
-            auto N = infixParselets[TOKEN_EQUAL.value()]->parse(std::move(Args), Tok, Ctxt);
+            auto N = infixParselets[TOKEN_EQUAL.value()]->parse(std::move(Args2), Tok, Ctxt);
             
-            return TheParser->infixLoop(std::move(N), Ctxt);
+            return N;
         }
         case TOKEN_COLONEQUAL.value(): {
             
-            NodeSeq Args2(1 + 1);
+            NodeSeq Args2(1 + 1 + 1 + 1 + 1);
+            Args2.append(NodePtr(new NodeSeqNode(std::move(Left))));
+            Args2.append(NodePtr(new LeafNode(TokIn)));
+            Args2.appendIfNonEmpty(std::move(ArgsTest1));
             Args2.append(std::move(Middle));
             Args2.appendIfNonEmpty(std::move(ArgsTest2));
+            
+            Ctxt.Flag |= PARSER_INSIDE_SLASHCOLON;
             
             auto N = infixParselets[TOKEN_COLONEQUAL.value()]->parse(std::move(Args2), Tok, Ctxt);
             
-            //
-            // FIXME: need a way to do:
-            // assert(N->isColonEqualNode());
-            //
-            
-            auto& C = N->getChildrenDestructive();
-            
-            NodeSeq Args(1 + 1 + 1 + 1);
-            Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
-            Args.append(NodePtr(new LeafNode(TokIn)));
-            Args.appendIfNonEmpty(std::move(ArgsTest1));
-            Args.append(NodePtr(new NodeSeqNode(std::move(C))));
-            
-            auto L = NodePtr(new TernaryNode(SYMBOL_TAGSETDELAYED, std::move(Args)));
-            
-            return TheParser->infixLoop(std::move(L), Ctxt);
+            return N;
         }
         case TOKEN_EQUALDOT.value(): {
             
-            NodeSeq Args2(1 + 1);
+            NodeSeq Args2(1 + 1 + 1 + 1 + 1);
+            Args2.append(NodePtr(new NodeSeqNode(std::move(Left))));
+            Args2.append(NodePtr(new LeafNode(TokIn)));
+            Args2.appendIfNonEmpty(std::move(ArgsTest1));
             Args2.append(std::move(Middle));
             Args2.appendIfNonEmpty(std::move(ArgsTest2));
             
+            Ctxt.Flag |= PARSER_INSIDE_SLASHCOLON;
+            
             auto N = infixParselets[TOKEN_EQUALDOT.value()]->parse(std::move(Args2), Tok, Ctxt);
             
-            //
-            // FIXME: need a way to do:
-            // assert(N->isEqualDotNode());
-            //
-            
-            auto& C = N->getChildrenDestructive();
-            
-            NodeSeq Args(1 + 1 + 1 + 1);
-            Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
-            Args.append(NodePtr(new LeafNode(TokIn)));
-            Args.appendIfNonEmpty(std::move(ArgsTest1));
-            Args.append(NodePtr(new NodeSeqNode(std::move(C))));
-            
-            auto L = NodePtr(new TernaryNode(SYMBOL_TAGUNSET, std::move(Args)));
-            
-            return TheParser->infixLoop(std::move(L), Ctxt);
+            return N;
         }
         case TOKEN_ENDOFFILE.value(): {
             
@@ -1049,18 +1031,19 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
 //
 // Something like  \( x \)
 //
-NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext Ctxt) const {
+NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext CtxtIn) const {
     
     auto Opener = firstTok;
     
     TheParser->nextToken(firstTok);
     
-    auto Tok = TheParser->currentToken(Ctxt);
-    
+    auto Ctxt = CtxtIn;
     Ctxt.Closr = CLOSER_LINEARSYNTAX_CLOSEPAREN;
     
     NodeSeq Args(1);
     Args.append(NodePtr(new LeafNode(Opener)));
+    
+    NodePtr group;
     
     while (true) {
     
@@ -1074,15 +1057,17 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext Ctxt)
         }
 #endif // !NABORT
         
+        auto Tok = TheParser->currentToken(Ctxt);
+        
         if (Tok.Tok == TOKEN_ENDOFFILE) {
             
             //
             // Handle something like   \( a EOF
             //
             
-            auto group = NodePtr(new GroupMissingCloserNeedsReparseNode(SYMBOL_CODEPARSER_GROUPLINEARSYNTAXPAREN, std::move(Args)));
+            group = NodePtr(new GroupMissingCloserNeedsReparseNode(SYMBOL_CODEPARSER_GROUPLINEARSYNTAXPAREN, std::move(Args)));
             
-            return TheParser->infixLoop(std::move(group), Ctxt);
+            break;
         }
         if (Tok.Tok == TOKEN_LINEARSYNTAX_CLOSEPAREN) {
             
@@ -1094,9 +1079,9 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext Ctxt)
             
             TheParser->nextToken(Tok);
             
-            auto group = NodePtr(new GroupNode(SYMBOL_CODEPARSER_GROUPLINEARSYNTAXPAREN, std::move(Args)));
+            group = NodePtr(new GroupNode(SYMBOL_CODEPARSER_GROUPLINEARSYNTAXPAREN, std::move(Args)));
             
-            return TheParser->infixLoop(std::move(group), Ctxt);
+            break;
         }
         
         //
@@ -1137,15 +1122,18 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext Ctxt)
         }
         
     } // while
+    
+    return TheParser->infixLoop(std::move(group), CtxtIn);
 }
 
 
 //
 // a /: b = c  and  a /: b = .  are handled here
 //
-NodePtr EqualParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
+NodePtr EqualParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
-    Ctxt.Prec = getPrecedence(Ctxt);
+    auto Ctxt = CtxtIn;
+    Ctxt.Prec = PRECEDENCE_EQUAL;
     
     TheParser->nextToken(TokIn);
     
@@ -1172,12 +1160,13 @@ NodePtr EqualParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) cons
         Args.append(NodePtr(new LeafNode(Tok)));
         
         if ((Ctxt.Flag & PARSER_INSIDE_SLASHCOLON) == PARSER_INSIDE_SLASHCOLON) {
+            
             auto L = NodePtr(new TernaryNode(SYMBOL_TAGUNSET, std::move(Args)));
-            return TheParser->infixLoop(std::move(L), Ctxt);
+            return TheParser->infixLoop(std::move(L), CtxtIn);
         }
         
         auto L = NodePtr(new BinaryNode(SYMBOL_UNSET, std::move(Args)));
-        return TheParser->infixLoop(std::move(L), Ctxt);
+        return TheParser->infixLoop(std::move(L), CtxtIn);
     }
     
     auto wasInsideSlashColon = ((Ctxt.Flag & PARSER_INSIDE_SLASHCOLON) == PARSER_INSIDE_SLASHCOLON);
@@ -1194,11 +1183,48 @@ NodePtr EqualParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) cons
     
     if (wasInsideSlashColon) {
         auto L = NodePtr(new TernaryNode(SYMBOL_TAGSET, std::move(Args)));
-        return TheParser->infixLoop(std::move(L), Ctxt);
+        return TheParser->infixLoop(std::move(L), CtxtIn);
     }
     
     auto L = NodePtr(new BinaryNode(SYMBOL_SET, std::move(Args)));
-    return TheParser->infixLoop(std::move(L), Ctxt);
+    return TheParser->infixLoop(std::move(L), CtxtIn);
+}
+
+//
+// a /: b := c  is handled here
+//
+NodePtr ColonEqualParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
+    
+    auto Ctxt = CtxtIn;
+    Ctxt.Prec = PRECEDENCE_EQUAL;
+    
+    TheParser->nextToken(TokIn);
+    
+    LeafSeq ArgsTest;
+    
+    auto Tok = TheParser->currentToken(Ctxt);
+    Tok = TheParser->eatTrivia(Tok, Ctxt, ArgsTest);
+    
+    auto wasInsideSlashColon = ((Ctxt.Flag & PARSER_INSIDE_SLASHCOLON) == PARSER_INSIDE_SLASHCOLON);
+    
+    Ctxt.Flag &= ~(PARSER_INSIDE_SLASHCOLON);
+    
+    auto Right = prefixParselets[Tok.Tok.value()]->parse(Tok, Ctxt);
+    
+    NodeSeq Args(1 + 1 + 1 + 1);
+    Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
+    Args.append(NodePtr(new LeafNode(TokIn)));
+    Args.appendIfNonEmpty(std::move(ArgsTest));
+    Args.append(std::move(Right));
+    
+    if (wasInsideSlashColon) {
+        
+        auto L = NodePtr(new TernaryNode(SYMBOL_TAGSETDELAYED, std::move(Args)));
+        return TheParser->infixLoop(std::move(L), CtxtIn);
+    }
+    
+    auto L = NodePtr(new BinaryNode(SYMBOL_SETDELAYED, std::move(Args)));
+    return TheParser->infixLoop(std::move(L), CtxtIn);
 }
 
 //
@@ -1206,9 +1232,10 @@ NodePtr EqualParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) cons
 //
 // a /: b =.  is also handled here
 //
-NodePtr EqualDotParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
+NodePtr EqualDotParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
-    Ctxt.Prec = getPrecedence(Ctxt);
+    auto Ctxt = CtxtIn;
+    Ctxt.Prec = PRECEDENCE_EQUAL;
     
     TheParser->nextToken(TokIn);
     
@@ -1217,16 +1244,13 @@ NodePtr EqualDotParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
     Args.append(NodePtr(new LeafNode(TokIn)));
     
     if ((Ctxt.Flag & PARSER_INSIDE_SLASHCOLON) == PARSER_INSIDE_SLASHCOLON) {
+        
         auto L = NodePtr(new TernaryNode(SYMBOL_TAGUNSET, std::move(Args)));
-        return TheParser->infixLoop(std::move(L), Ctxt);
+        return TheParser->infixLoop(std::move(L), CtxtIn);
     }
     
     auto L = NodePtr(new BinaryNode(SYMBOL_UNSET, std::move(Args)));
-    
-    //
-    // Something like  =.@b  should only produce 1 ExpectedOperand error, so make sure to call infixLoop here
-    //
-    return TheParser->infixLoop(std::move(L), Ctxt);
+    return TheParser->infixLoop(std::move(L), CtxtIn);
 }
 
 IntegralParselet::IntegralParselet() : Op1(SYMBOL_INTEGRAL), Op2(SYMBOL_INTEGRATE) {}
@@ -1237,7 +1261,7 @@ IntegralParselet::IntegralParselet() : Op1(SYMBOL_INTEGRAL), Op2(SYMBOL_INTEGRAT
 NodePtr IntegralParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     
     auto Ctxt = CtxtIn;
-    Ctxt.Prec = getPrecedence(Ctxt);
+    Ctxt.Prec = PRECEDENCE_CLASS_INTEGRATIONOPERATORS;
     Ctxt.Flag |= PARSER_INSIDE_INTEGRAL;
     
     TheParser->nextToken(TokIn);

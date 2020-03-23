@@ -168,7 +168,7 @@ retParse:
 //
 NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
     
-    Ctxt.Prec = getPrecedence(Ctxt);
+    Ctxt.Prec = PRECEDENCE_SEMISEMI;
     
     TheParser->nextToken(TokIn);
     

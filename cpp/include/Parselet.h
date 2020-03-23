@@ -437,6 +437,13 @@ public:
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
 };
 
+class ColonEqualParselet : public BinaryOperatorParselet {
+public:
+    ColonEqualParselet() : BinaryOperatorParselet(TOKEN_COLONEQUAL, PRECEDENCE_COLONEQUAL) {}
+    
+    NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
+};
+
 //
 // This is not really a binary operator, but keep it consistent with EqualParselet, which handles  a = .
 //

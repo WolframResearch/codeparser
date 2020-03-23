@@ -128,10 +128,6 @@ public:
         return Children;
     }
     
-    NodeSeq& getChildrenDestructive() {
-        return Children;
-    }
-    
     virtual const Token lastToken() const {
         auto L = Children.last();
         return L->lastToken();

@@ -1019,6 +1019,14 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
 
         prefix <> "quantityunits/QuantityUnits/Kernel/QuantityUnits.m",
 
+        prefix <> "entityindex/Tools/GenerateEntityIndex/InputGenerator.m",
+        prefix <> "entityindex/Tools/MakeSummaryBoxes/CommonFunctions.m",
+        prefix <> "entityindex/Tools/MakeSummaryBoxes/MakeSummaryBoxes.m",
+        prefix <> "entityindex/Tools/SynthesizeEssays/CommonFunctions.m",
+        prefix <> "entityindex/Tools/SynthesizeEssays/MakeSummaryBoxes.m",
+        prefix <> "entityindex/Tools/SynthesizeEssays/SynthesizeEssays.m",
+        prefix <> "recognizer/RecognizerUtilities.m",
+
         Nothing
         }, fileIn],
       f = Failure["CannotRegexTooProgrammatic", <|"FileName" -> fileIn|>];

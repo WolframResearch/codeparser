@@ -328,9 +328,13 @@ abstract[TernaryNode[TagSet, {left_, _, middle_, _, right_}, data_]] := CallNode
 abstract[TernaryNode[TagSetDelayed, {left_, _, middle_, _, right_}, data_]] := CallNode[ToNode[TagSetDelayed], {abstract[left], abstract[middle], abstract[right]}, data]
 
 (* could be  a /: b =. *)
-abstract[TernaryNode[TagUnset, {left_, _, middle_, _}, data_]] := CallNode[ToNode[TagUnset], {abstract[left], abstract[middle]}, data]
+abstract[TernaryNode[TagUnset, {left_, _, middle_, LeafNode[Token`EqualDot, _, _]}, data_]] := CallNode[ToNode[TagUnset], {abstract[left], abstract[middle]}, data]
 (* or it could be  a /: b = . *)
-abstract[TernaryNode[TagUnset, {left_, _, middle_, _, _}, data_]] := CallNode[ToNode[TagUnset], {abstract[left], abstract[middle]}, data]
+abstract[TernaryNode[TagUnset, {left_, _, middle_, LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, data_]] := CallNode[ToNode[TagUnset], {abstract[left], abstract[middle]}, data]
+
+abstract[TernaryNode[TagUnset, children_, data_]] :=
+	AbstractSyntaxErrorNode[AbstractSyntaxError`TagUnset, children, data]
+
 
 abstract[TernaryNode[Span, {left_, _, middle_, _, right_}, data_]] := CallNode[ToNode[Span], {abstract[left], abstract[middle], abstract[right]}, data]
 

@@ -2801,6 +2801,16 @@ Test[
 ]
 
 Test[
+	"a/:b= .c|d"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200322-O6F0I5"
+]
+
+Test[
 	"a/:b=.c|d:.."
 	,
 	Null
@@ -2809,6 +2819,19 @@ Test[
 	,
 	TestID->"Parse-20200313-J0R5D7"
 ]
+
+Test[
+	"a/:b= .c|d:.."
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200322-I2K4Z7"
+]
+
+
+
 
 Test[
 	"<<_  <a"
@@ -2833,6 +2856,56 @@ Test[
 	TestID->"Parse-20200315-G9M6I1"
 ]
 
+
+
+Test[
+	"a /: b =."
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200321-W1B5X6"
+]
+
+Test[
+	"a /: b = ."
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200321-L8M7K6"
+]
+
+
+
+
+Test[
+	CodeParse["a /: b =. @ c"]
+	,
+	ContainerNode[String, {
+		CallNode[
+			CallNode[LeafNode[Symbol, "TagUnset", <||>], {
+				LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
+				LeafNode[Symbol, "b", <|Source -> {{1, 6}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 10}}|>], {
+			LeafNode[Symbol, "c", <|Source -> {{1, 13}, {1, 14}}|>]}, <|Source -> {{1, 1}, {1, 14}}|>]}, <||>]
+	,
+	TestID->"Parse-20200320-D5E2I4"
+]
+
+Test[
+	CodeParse["a /: b = . @ c"]
+	,
+	ContainerNode[String, {
+		CallNode[
+			CallNode[LeafNode[Symbol, "TagUnset", <||>], {
+				LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
+				LeafNode[Symbol, "b", <|Source -> {{1, 6}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 11}}|>], {
+			LeafNode[Symbol, "c", <|Source -> {{1, 14}, {1, 15}}|>]}, <|Source -> {{1, 1}, {1, 15}}|>]}, <||>]
+	,
+	TestID->"Parse-20200322-D5O4E5"
+]
 
 
 

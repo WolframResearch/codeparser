@@ -252,7 +252,6 @@ InfixOperatorToParselet[Token`SlashSlashAt] = BinaryOperatorParselet[Token`Slash
 InfixOperatorToParselet[Token`At] = BinaryOperatorParselet[Token`At, Precedence`At]
 InfixOperatorToParselet[Token`AtAtAt] = BinaryOperatorParselet[Token`AtAtAt, Precedence`AtAtAt]
 InfixOperatorToParselet[Token`SlashSlash] = BinaryOperatorParselet[Token`SlashSlash, Precedence`SlashSlash]
-InfixOperatorToParselet[Token`ColonEqual] = BinaryOperatorParselet[Token`ColonEqual, Precedence`ColonEqual]
 InfixOperatorToParselet[Token`Question] = BinaryOperatorParselet[Token`Question, Precedence`Infix`Question]
 InfixOperatorToParselet[Token`LongName`Divide] = BinaryOperatorParselet[Token`LongName`Divide, Precedence`LongName`Divide]
 InfixOperatorToParselet[Token`LongName`DivisionSlash] = BinaryOperatorParselet[Token`LongName`DivisionSlash, Precedence`LongName`DivisionSlash]
@@ -640,6 +639,7 @@ InfixOperatorToParselet[Token`SlashColon] = SlashColonParselet[]
 Has to handle  a =.  and  a = .
 *)
 InfixOperatorToParselet[Token`Equal] = EqualParselet[]
+InfixOperatorToParselet[Token`ColonEqual] = ColonEqualParselet[]
 InfixOperatorToParselet[Token`EqualDot] = EqualDotParselet[]
 
 (*
@@ -832,6 +832,8 @@ formatInfix[ColonParselet[]] := "&colonParselet"
 formatInfix[CallParselet[groupParselet_]] := "new CallParselet(" <> formatPrefix[groupParselet] <> ")"
 
 formatInfix[EqualParselet[]] := "new EqualParselet()"
+
+formatInfix[ColonEqualParselet[]] := "new ColonEqualParselet()"
 
 formatInfix[EqualDotParselet[]] := "new EqualDotParselet()"
 
