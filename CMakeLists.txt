@@ -104,6 +104,7 @@ set(DOCUMENTATION_NOTEBOOK_PATHS
 	English/ReferencePages/Symbols/CodeConcreteParse.nb
 	English/ReferencePages/Symbols/CodeParse.nb
 	English/ReferencePages/Symbols/CodeTokenize.nb
+	English/Tutorials/ReleaseNotes.nb
 )
 
 #
