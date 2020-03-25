@@ -35,8 +35,6 @@ Precedence PrefixAssertFalseParselet::getPrecedence(ParserContext Ctxt) const {
 }
 
 
-PrefixErrorParselet::PrefixErrorParselet() {}
-
 NodePtr PrefixErrorParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     assert(TokIn.Tok.isError());
@@ -55,8 +53,6 @@ Precedence PrefixErrorParselet::getPrecedence(ParserContext Ctxt) const {
     return PRECEDENCE_ASSERTFALSE;
 }
 
-
-PrefixCloserParselet::PrefixCloserParselet() {}
 
 NodePtr PrefixCloserParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
@@ -101,8 +97,6 @@ Precedence PrefixCloserParselet::getPrecedence(ParserContext Ctxt) const {
 }
 
 
-PrefixEndOfFileParselet::PrefixEndOfFileParselet() {}
-
 NodePtr PrefixEndOfFileParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     //
@@ -120,8 +114,6 @@ Precedence PrefixEndOfFileParselet::getPrecedence(ParserContext Ctxt) const {
 }
 
 
-PrefixUnsupportedTokenParselet::PrefixUnsupportedTokenParselet() {}
-
 NodePtr PrefixUnsupportedTokenParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     TheParser->nextToken(TokIn);
@@ -136,8 +128,6 @@ Precedence PrefixUnsupportedTokenParselet::getPrecedence(ParserContext Ctxt) con
     return PRECEDENCE_ASSERTFALSE;
 }
 
-
-PrefixUnhandledParselet::PrefixUnhandledParselet() {}
 
 NodePtr PrefixUnhandledParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
@@ -197,24 +187,10 @@ Precedence PrefixUnhandledParselet::getPrecedence(ParserContext Ctxt) const {
 }
 
 
-InfixToplevelNewlineParselet::InfixToplevelNewlineParselet() {}
-
 NodePtr InfixToplevelNewlineParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
     assert(false);
     return nullptr;
 }
-
-Precedence InfixToplevelNewlineParselet::getPrecedence(ParserContext Ctxt) const {
-    //
-    // Do not do Implicit Times across top-level newlines
-    //
-    return PRECEDENCE_LOWEST;
-}
-
-
-
-
-
 
 
 //
@@ -308,8 +284,6 @@ NodePtr SymbolParselet::parseContextSensitive(Token TokIn, ParserContext Ctxt) c
 }
 
 
-PrefixOperatorParselet::PrefixOperatorParselet(TokenEnum Tok, Precedence precedence) : precedence(precedence), Op(PrefixOperatorToSymbol(Tok)) {}
-
 NodePtr PrefixOperatorParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     
     auto Ctxt = CtxtIn;
@@ -338,28 +312,26 @@ NodePtr PrefixOperatorParselet::parse(Token TokIn, ParserContext CtxtIn) const {
 }
 
 
-InfixImplicitTimesParselet::InfixImplicitTimesParselet() {}
-
 //
 // Does not "parse" so much as inserts the implicit Times token, and then allows the rest of the system to do the work
 //
-NodePtr InfixImplicitTimesParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
-    
-    auto token = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(firstTok.BufLen.buffer), Source(firstTok.Src.Start));
-
-    TheParser->prepend(token);
-    
-    auto L = NodePtr(new NodeSeqNode(std::move(Left)));
-    return L;
+NodePtr InfixImplicitTimesParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
+    assert(false);
+    return nullptr;
 }
 
 Precedence InfixImplicitTimesParselet::getPrecedence(ParserContext Ctxt) const {
-    return PRECEDENCE_FAKE_IMPLICITTIMES;
+    assert(false);
+    return PRECEDENCE_ASSERTFALSE;
 }
 
+Token InfixImplicitTimesParselet::procesImplicitTimes(Token TokIn) const {
+    
+    auto token = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
+    
+    return token;
+}
 
-
-InfixAssertFalseParselet::InfixAssertFalseParselet() {}
 
 NodePtr InfixAssertFalseParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
     assert(false);
@@ -373,22 +345,11 @@ Precedence InfixAssertFalseParselet::getPrecedence(ParserContext Ctxt) const {
 }
 
 
-
-InfixCloserParselet::InfixCloserParselet() {}
-
 NodePtr InfixCloserParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
     assert(false);
     return nullptr;
 }
 
-
-Precedence InfixCloserParselet::getPrecedence(ParserContext Ctxt) const {
-    return PRECEDENCE_LOWEST;
-}
-
-
-
-InfixEndOfFileParselet::InfixEndOfFileParselet() {}
 
 NodePtr InfixEndOfFileParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
     assert(false);
@@ -396,41 +357,17 @@ NodePtr InfixEndOfFileParselet::parse(NodeSeq Left, Token firstTok, ParserContex
 }
 
 
-Precedence InfixEndOfFileParselet::getPrecedence(ParserContext Ctxt) const {
-    return PRECEDENCE_LOWEST;
-}
-
-
-
-InfixUnsupportedTokenParselet::InfixUnsupportedTokenParselet() {}
-
 NodePtr InfixUnsupportedTokenParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
     assert(false);
     return nullptr;
 }
 
 
-Precedence InfixUnsupportedTokenParselet::getPrecedence(ParserContext Ctxt) const {
-    return PRECEDENCE_LOWEST;
-}
-
-
-
-InfixErrorParselet::InfixErrorParselet() {}
-
 NodePtr InfixErrorParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
     assert(false);
     return nullptr;
 }
 
-
-Precedence InfixErrorParselet::getPrecedence(ParserContext Ctxt) const {
-    return PRECEDENCE_LOWEST;
-}
-
-
-
-BinaryOperatorParselet::BinaryOperatorParselet(TokenEnum Tok, Precedence precedence) : precedence(precedence), Op(BinaryOperatorToSymbol(Tok)) {}
 
 NodePtr BinaryOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
     
@@ -460,8 +397,6 @@ NodePtr BinaryOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext C
 }
 
 
-InfixOperatorParselet::InfixOperatorParselet(TokenEnum Tok, Precedence precedence) : precedence(precedence), Op(InfixOperatorToSymbol(Tok)) {}
-
 NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
     
     NodeSeq Args(1);
@@ -486,6 +421,11 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ct
         auto Tok1 = TheParser->currentToken(Ctxt);
         Tok1 = TheParser->eatTriviaButNotToplevelNewlines(Tok1, Ctxt, ArgsTest1);
         
+        auto I = infixParselets[Tok1.Tok.value()];
+        
+        Tok1 = I->procesImplicitTimes(Tok1);
+        I = infixParselets[Tok1.Tok.value()];
+        
         //
         // Cannot just compare tokens
         //
@@ -493,7 +433,7 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ct
         //
         // and we want only a single Infix node created
         //
-        if (InfixOperatorToSymbol(Tok1.Tok) != Op) {
+        if (I->getOp() != Op) {
             
             //
             // Tok.Tok != TokIn.Tok, so break
@@ -528,8 +468,6 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ct
 }
 
 
-PostfixOperatorParselet::PostfixOperatorParselet(TokenEnum Tok, Precedence precedence) : precedence(precedence), Op(PostfixOperatorToSymbol(Tok)) {}
-
 NodePtr PostfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
     
     TheParser->nextToken(TokIn);
@@ -543,9 +481,6 @@ NodePtr PostfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext 
     return TheParser->infixLoop(std::move(L), Ctxt);
 }
 
-
-GroupParselet::GroupParselet(TokenEnum Opener) :
-    Op(GroupOpenerToSymbol(Opener)), Closr(GroupOpenerToCloser(Opener)) {}
 
 NodePtr GroupParselet::parse(Token firstTok, ParserContext CtxtIn) const {
     
@@ -659,8 +594,6 @@ NodePtr GroupParselet::parse(Token firstTok, ParserContext CtxtIn) const {
     return TheParser->infixLoop(std::move(group), CtxtIn);
 }
 
-
-CallParselet::CallParselet(PrefixParseletPtr GP) : GP(std::move(GP)) {}
 
 NodePtr CallParselet::parse(NodeSeq Head, Token TokIn, ParserContext CtxtIn) const {
     
@@ -827,6 +760,7 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
     return TheParser->infixLoop(std::move(L), CtxtIn);
 }
 
+
 //
 // Something like  symbol:object
 //
@@ -914,6 +848,7 @@ NodePtr ColonParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserCo
     auto L = NodePtr(new BinaryNode(SYMBOL_OPTIONAL, std::move(Args)));
     return TheParser->infixLoop(std::move(L), Ctxt);
 }
+
 
 //
 // Something like  a /: b = c
@@ -1190,6 +1125,7 @@ NodePtr EqualParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
     return TheParser->infixLoop(std::move(L), CtxtIn);
 }
 
+
 //
 // a /: b := c  is handled here
 //
@@ -1227,6 +1163,7 @@ NodePtr ColonEqualParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtI
     return TheParser->infixLoop(std::move(L), CtxtIn);
 }
 
+
 //
 // Something like  a =.
 //
@@ -1253,7 +1190,6 @@ NodePtr EqualDotParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn)
     return TheParser->infixLoop(std::move(L), CtxtIn);
 }
 
-IntegralParselet::IntegralParselet() : Op1(SYMBOL_INTEGRAL), Op2(SYMBOL_INTEGRATE) {}
 
 //
 // Something like  \[Integral] f \[DifferentialD] x
@@ -1305,8 +1241,6 @@ NodePtr IntegralParselet::parse(Token TokIn, ParserContext CtxtIn) const {
 }
 
 
-InfixOperatorWithTrailingParselet::InfixOperatorWithTrailingParselet(TokenEnum Tok, Precedence precedence) : precedence(precedence), Op(InfixOperatorToSymbol(Tok)) {}
-
 NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
     NodeSeq Args(1);
@@ -1343,7 +1277,7 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, Token TokIn, Pars
         //
         // and we want only a single Infix node created
         //
-        if (InfixOperatorToSymbol(Tok1.Tok) != Op) {
+        if (infixParselets[Tok1.Tok.value()]->getOp() != Op) {
             
             L = NodePtr(new InfixNode(Op, std::move(Args)));
             
@@ -1363,7 +1297,7 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, Token TokIn, Pars
         auto Tok2 = TheParser->currentToken(Ctxt);
         Tok2 = TheParser->eatTriviaButNotToplevelNewlines(Tok2, Ctxt, ArgsTest2);
         
-        if (InfixOperatorToSymbol(Tok2.Tok) == Op) {
+        if (infixParselets[Tok2.Tok.value()]->getOp() == Op) {
             
             //
             // Something like  a; ;
@@ -1612,8 +1546,6 @@ NodePtr LessLessParselet::parse(Token TokIn, ParserContext CtxtIn) const {
 }
 
 
-InfixDifferentialDParselet::InfixDifferentialDParselet() {}
-
 //
 // InfixDifferentialDParselet only exists to properly supply precedence, depending on context
 //
@@ -1643,4 +1575,3 @@ NodePtr InfixDifferentialDParselet::parse(NodeSeq Left, Token firstTok, ParserCo
     auto L = NodePtr(new NodeSeqNode(std::move(Left)));
     return L;
 }
-
