@@ -1183,7 +1183,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
             size_t count;
             c = handleDigits(policy, c, &count);
             
-            leadingDigitsCount += count;
+            leadingDigitsCount += static_cast<int>(count);
             
             leadingDigitsEndBuf = TheByteBuffer->buffer;
             leadingDigitsEndLoc = TheByteDecoder->SrcLoc;
