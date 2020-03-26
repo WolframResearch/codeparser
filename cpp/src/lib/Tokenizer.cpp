@@ -2216,29 +2216,39 @@ inline Token Tokenizer::handleUnder(Buffer tokenStartBuf, SourceLocation tokenSt
         }
         case '.': {
             
-            auto dotBuf = TheByteBuffer->buffer;
-            auto dotLoc = TheByteDecoder->SrcLoc;
-            
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+            
+#if !NISSUES
+            auto afterLoc = TheByteDecoder->SrcLoc;
             
             c = TheCharacterDecoder->currentWLCharacter(policy);
             
             if (c.to_point() == '.') {
                 
                 //
-                // Something like  _...
+                // Something like  a_..b  or  _...
                 //
-                // Must now do surgery and back up
+                // Prior to 12.2,  a_..b  was parsed as Times[(a_).., b]
+                //
+                // 12.2 and onward,  a_..b  is parsed as Dot[a_., b]
+                //
+                // Related bugs: 390755
                 //
                 
-                auto shouldWarn = true;
-                backup(dotBuf, dotLoc, shouldWarn);
+                auto dotLoc = afterLoc;
                 
-            } else {
+                std::vector<CodeActionPtr> Actions;
+                Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(dotLoc), " ")));
                 
-                Operator = TOKEN_UNDERDOT; // _.
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Suspicious syntax.", SYNTAXISSUESEVERITY_ERROR, Source(dotLoc), 0.95, std::move(Actions)));
+                
+                Issues.push_back(std::move(I));
+                
             }
+#endif // !NISSUES
+            
+            Operator = TOKEN_UNDERDOT; // _.
         }
             break;
     }
