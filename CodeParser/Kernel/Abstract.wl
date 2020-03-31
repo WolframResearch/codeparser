@@ -172,6 +172,7 @@ Module[{s, data, count, lastPos, rest},
 abstract[LeafNode[Blank, _, data_]] := CallNode[ToNode[Blank], {}, data]
 abstract[LeafNode[BlankSequence, _, data_]] := CallNode[ToNode[BlankSequence], {}, data]
 abstract[LeafNode[BlankNullSequence, _, data_]] := CallNode[ToNode[BlankNullSequence], {}, data]
+abstract[LeafNode[Token`UnderDot, _, data_]] := CallNode[ToNode[Optional], { CallNode[ToNode[Blank], {}, data] }, data]
 
 abstract[LeafNode[Token`Fake`ImplicitNull, _, data_]] :=
 	LeafNode[Symbol, "Null", data ~Join~
@@ -192,13 +193,12 @@ abstract[n_ErrorNode] := n
 abstract[BlankNode[Blank, {_, sym2_}, data_]] := CallNode[ToNode[Blank], {abstract[sym2]}, data]
 abstract[BlankSequenceNode[BlankSequence, {_, sym2_}, data_]] := CallNode[ToNode[BlankSequence], {abstract[sym2]}, data]
 abstract[BlankNullSequenceNode[BlankNullSequence, {_, sym2_}, data_]] := CallNode[ToNode[BlankNullSequence], {abstract[sym2]}, data]
-abstract[OptionalDefaultNode[OptionalDefault, _, data_]] := CallNode[ToNode[Optional], { CallNode[ToNode[Blank], {}, data] }, data]
 
 
 abstract[PatternBlankNode[PatternBlank, {sym1_, blank_}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], abstract[blank]}, data]
 abstract[PatternBlankSequenceNode[PatternBlankSequence, {sym1_, blankSeq_}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], abstract[blankSeq]}, data]
 abstract[PatternBlankNullSequenceNode[PatternBlankNullSequence, {sym1_, blankNullSeq_}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], abstract[blankNullSeq]}, data]
-abstract[PatternOptionalDefaultNode[PatternOptionalDefault, {sym1_, OptionalDefaultNode[OptionalDefault, _, optionalDefaultData_]}, data_]] := CallNode[ToNode[Optional], { CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[Blank], {}, optionalDefaultData]}, data] }, data]
+abstract[PatternOptionalDefaultNode[PatternOptionalDefault, {sym1_, LeafNode[Token`UnderDot, _, optionalDefaultData_]}, data_]] := CallNode[ToNode[Optional], { CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[Blank], {}, optionalDefaultData]}, data] }, data]
 
 
 abstract[PrefixNode[Minus, {_, rand_}, data_]] := abstract[negate[rand, data]]

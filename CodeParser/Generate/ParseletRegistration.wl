@@ -1114,15 +1114,8 @@ public:
         auto UnderDot = NodePtr(new LeafNode(TokIn));
         
         TheParser->nextToken(TokIn);
-        
-        NodePtr Blank;
-        
-        NodeSeq Args(1);
-        Args.append(std::move(UnderDot));
-        
-        Blank = NodePtr(new OptionalDefaultNode(std::move(Args)));
-        
-        return Blank;
+
+        return UnderDot;
     }
     
     //

@@ -44,7 +44,6 @@ MakeStartOfFileNode
 MakeBlankNode
 MakeBlankSequenceNode
 MakeBlankNullSequenceNode
-MakeOptionalDefaultNode
 MakePatternBlankNode
 MakePatternBlankSequenceNode
 MakePatternBlankNullSequenceNode
@@ -420,8 +419,6 @@ MakeBlankSequenceNode[tag_, payload_, srcArgs___] :=
 MakeBlankNullSequenceNode[tag_, payload_, srcArgs___] :=
 	BlankNullSequenceNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
-MakeOptionalDefaultNode[tag_, payload_, srcArgs___] :=
-	OptionalDefaultNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 
 MakePatternBlankNode[tag_, payload_, srcArgs___] :=

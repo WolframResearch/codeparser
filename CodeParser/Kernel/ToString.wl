@@ -262,20 +262,6 @@ Module[{nodeStrs},
 	StringJoin[nodeStrs]
 ]]
 
-toInputFormString[OptionalDefaultNode[OptionalDefault, nodes_, _]] :=
-Catch[
-Module[{nodeStrs},
-
-	Block[{$dotString = "."},
-	nodeStrs = toInputFormString /@ nodes;
-	];
-
-	If[AnyTrue[nodeStrs, FailureQ],
-		Throw[SelectFirst[nodeStrs, FailureQ]]
-	];
-	StringJoin[nodeStrs]
-]]
-
 toInputFormString[PatternBlankNode[PatternBlank, nodes_, _]] :=
 Catch[
 Module[{nodeStrs},

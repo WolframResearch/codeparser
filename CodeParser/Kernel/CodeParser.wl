@@ -82,7 +82,6 @@ WLCharacter
 
 
 (* atom symbols *)
-OptionalDefault
 PatternBlank
 PatternBlankSequence
 PatternBlankNullSequence
@@ -169,7 +168,6 @@ StartOfFileNode
 BlankNode
 BlankSequenceNode
 BlankNullSequenceNode
-OptionalDefaultNode
 PatternBlankNode
 PatternBlankSequenceNode
 PatternBlankNullSequenceNode

@@ -91,7 +91,7 @@ symbols = Union[Join[
             CodeParser`Library`MakeStartOfLineNode, CodeParser`Library`MakeStartOfFileNode,
             *)
             CodeParser`Library`MakeBlankNode, CodeParser`Library`MakeBlankSequenceNode,
-            CodeParser`Library`MakeBlankNullSequenceNode, CodeParser`Library`MakeOptionalDefaultNode,
+            CodeParser`Library`MakeBlankNullSequenceNode,
             CodeParser`Library`MakePatternBlankNode, CodeParser`Library`MakePatternBlankSequenceNode,
             CodeParser`Library`MakePatternBlankNullSequenceNode, CodeParser`Library`MakePatternOptionalDefaultNode, CodeParser`Library`MakeSyntaxErrorNode,
             CodeParser`Library`MakeGroupMissingCloserNode, CodeParser`Library`MakeGroupMissingCloserNeedsReparseNode, CodeParser`Library`MakePrefixBinaryNode,
@@ -99,7 +99,7 @@ symbols = Union[Join[
             CodeParser`Library`MakeFormatIssue, CodeParser`Library`MakeDeleteTextCodeAction, CodeParser`Library`MakeDeleteTriviaCodeAction,
             CodeParser`Library`MakeEncodingIssue,
             CodeParser`Library`MakeInsertTextAfterCodeAction, CodeParser`Library`MakeSourceCharacterNode, CodeParser`Library`MakeSafeStringNode},
-    {CodeParser`InternalInvalid, CodeParser`OptionalDefault, CodeParser`PatternBlank, CodeParser`PatternBlankSequence,
+    {CodeParser`InternalInvalid, CodeParser`PatternBlank, CodeParser`PatternBlankSequence,
       CodeParser`PatternBlankNullSequence, CodeParser`PatternOptionalDefault},
     {CodeParser`SourceCharacter},
     {Token`Newline},
