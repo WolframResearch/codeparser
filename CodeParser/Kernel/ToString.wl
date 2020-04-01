@@ -542,7 +542,18 @@ toFullFormString[n_SyntaxErrorNode] := Failure["SyntaxError", <|"Error"->n|>]
 
 toFullFormString[f_?FailureQ] := f
 
-toFullFormString[args___] := Failure["InternalUnhandled", <|"Function"->ToFullFormString, "Arguments"->HoldForm[{args}]|>]
+toFullFormString[args___] :=
+	(*
+	Need to specify PageWidth, or else ToString does not do anything with Short
+	Related bugs: ?
+	*)
+	Failure["InternalUnhandled", <|
+		(*
+		"Function" and "ShortArguments" is really just taking up space to force "Arguments" to be hidden by default
+		*)
+		"Function"->ToFullFormString,
+		"ShortArguments" -> ToString[Short[{args}], OutputForm, PageWidth -> 100],
+		"Arguments"->{args}|>]
 
 
 
