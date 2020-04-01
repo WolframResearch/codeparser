@@ -109,8 +109,6 @@
 
 	</target>
 
-	<target name='Paclet.codeparser.prebuild' extensionOf='Paclet.prebuild' />
-
 	<target name='Paclet.codeparser.execute' extensionOf='Paclet.execute'>
 
 		<mathematica exe='${mathExe}' fresh='true' quit='true'><![CDATA[
@@ -121,13 +119,13 @@
 			Unset[$MessagePrePrint];
 			Needs["PacletManager`"];
 
-			src = AntProperty["files_directory"];
+			src = FileNameJoin[{AntProperty["files_directory"], "CodeParser"}];
 			dest = FileNameJoin[AntProperty["output_directory"]];
 			PackPaclet[src, dest];
 
 			SetDirectory[dest]
-			If [TrueQ[FileExistsQ[FileNames["codeparser*.paclet"][[1]]]],
-				Print[FileNames["codeparser*.paclet"][[1]] " ... OK"],
+			If [TrueQ[FileExistsQ[FileNames["CodeParser*.paclet"][[1]]]],
+				Print[FileNames["CodeParser*.paclet"][[1]] " ... OK"],
 				AntFail["Paclet not produced" ]];
 
 		]]></mathematica>
