@@ -1,8 +1,9 @@
 <?xml version="1.0"?>
-<project name='codeparser' basedir='.'>
+<project name='codeparser' basedir='..'>
 
 	<property name='component' value='codeparser' />
-
+	<property name='app.name' value='CodeParser' />
+	<property name='inputDir' value='${basedir}/${app.name}/Documentation' />
 	<property environment='env' />
 	<import file='${env.RE_ANTLIBRARY_HOME}/ant-lib.xml' />
 
