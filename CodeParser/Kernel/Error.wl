@@ -68,7 +68,7 @@ chunkPat = RegularExpression["(?m)("<>annotationPat<>")|("<>directivePat<>")|("<
 (*
 return: better GroupMissingCloserNode
 
-Do not return the previous children, because they are uselss any way.
+Do not return the previous children, because they are useless any way.
 
 But return the opener to make ToString stuff easier
 *)
@@ -159,7 +159,7 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
 (*
 return: better ErrorNode
 
-Do not return the previous children, because they are uselss any way.
+Do not return the previous children, because they are useless any way.
 *)
 
 Options[reparseUnterminatedCommentErrorNode] = {

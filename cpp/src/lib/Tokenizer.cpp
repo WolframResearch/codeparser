@@ -856,7 +856,7 @@ inline Token Tokenizer::handleString_stringifySymbol(Buffer tokenStartBuf, Sourc
     }
         
     //
-    // Something like   a::5
+    // Something like  a::5
     //
     
     return Token(TOKEN_ERROR_EXPECTEDLETTERLIKE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
@@ -905,7 +905,7 @@ inline Token Tokenizer::handleString_stringifyFile(Buffer tokenStartBuf, SourceL
             break;
         default: {
             //
-            // Something like   <<EOF
+            // Something like  <<EOF
             //
             // EndOfFile is special because there is no source
             //
@@ -1233,7 +1233,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
             // c is '^'
             
             //
-            // Something like 2^^
+            // Something like  2^^
             //
             // Must be a number
             //
@@ -1244,7 +1244,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
             if (nonZeroStartBuf == caret1Buf) {
                 
                 //
-                // Something like 0^^2
+                // Something like  0^^2
                 //
                 
                 return Token(TOKEN_ERROR_INVALIDBASE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
@@ -1331,7 +1331,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 default: {
                     
                     //
-                    // Something like 2^^@
+                    // Something like  2^^@
                     //
                     
                     //
@@ -1347,7 +1347,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 }
             }
         }
-    }
+    } // if (c.isDigit())
     
     if (c.to_point() == '.') {
         
@@ -1370,7 +1370,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 if (leadingDigitsCount == 0) {
 
                     //
-                    // Something like 2^^.
+                    // Something like  2^^.
                     //
 
                     return Token(TOKEN_ERROR_UNHANDLEDDOT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
@@ -1402,7 +1402,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
         
         bool accuracy = false;
         bool sign = false;
-        bool supplied = false;
+        bool precOrAccSupplied = false;
         if (c.to_point() == '`') {
             
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
@@ -1418,7 +1418,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
             case '-': case '+': {
                 
                 //
-                // Something like 1.2`-
+                // Something like  1.2`-
                 //
                 
                 auto signBuf = TheByteBuffer->buffer;
@@ -1444,13 +1444,13 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                     default: {
                         
                         //
-                        // Something like 1.2`->
+                        // Something like  1.2`->
                         //
                         
                         if (accuracy) {
                             
                             //
-                            // Something like 1.2``->3
+                            // Something like  1.2``->3
                             //
                             
                             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
@@ -1460,7 +1460,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                         }
                         
                         //
-                        // Something like 1.2`->3
+                        // Something like  1.2`->3
                         //
                         // Must now do surgery and back up
                         //
@@ -1486,7 +1486,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                     size_t count;
                     c = handleDigits(policy, c, &count);
                     if (count > 0) {
-                        supplied = true;
+                        precOrAccSupplied = true;
                     }
                     
                     if (c.to_point() != '.') {
@@ -1508,7 +1508,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 // If there was already a sign, or if the leading digits have already been supplied,
                 // then this is an actual decimal point
                 //
-                if (sign || supplied) {
+                if (sign || precOrAccSupplied) {
                     actualDecimalPoint = true;
                 }
                 
@@ -1522,7 +1522,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                     //
                     // Need to peek ahead
                     //
-                    // Something like 123`.xxx
+                    // Something like  123`.xxx
                     //
                     
                     // look ahead
@@ -1613,14 +1613,14 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                     case 0:
                         break;
                     default:
-                        supplied = true;
+                        precOrAccSupplied = true;
                         break;
                 }
                 
-                if (!supplied) {
+                if (!precOrAccSupplied) {
                     
                     //
-                    // Something like 1`+.a
+                    // Something like  1`+.a
                     //
                     
                     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
@@ -1651,7 +1651,8 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
             }
                 break;
         } // switch (c.to_point())
-    }
+        
+    } // if (c.to_point() == '`')
     
     if (c.to_point() != '*') {
         
@@ -1679,7 +1680,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
     if (c.to_point() != '^') {
         
         //
-        // Something like 1*a
+        // Something like  1*a
         //
         // Must now do surgery and back up
         //
@@ -1722,7 +1723,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
     if (!c.isDigit()) {
         
         //
-        // Something like 123*^-EOF
+        // Something like  123*^-EOF
         //
         
         TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
@@ -1750,9 +1751,9 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
     // c is '.'
         
     //
-    // Something like 123*^0.5
+    // Something like  123*^0.5
     //
-    // Make this an error, do NOT make this Dot[123*^0, 5]
+    // Make this an error; do NOT make this Dot[123*^0, 5]
     //
     
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
@@ -1795,7 +1796,7 @@ inline WLCharacter Tokenizer::handlePossibleFractionalPartPastDot(Buffer dotBuf,
     if (c.to_point() == '.') {
         
         //
-        // Something like 0..
+        // Something like  0..
         //
         // The first . is not actually a radix point
         //
@@ -1837,7 +1838,7 @@ inline WLCharacter Tokenizer::handlePossibleFractionalPartPastDot(Buffer dotBuf,
                 if (c.to_point() == '.') {
                     
                     //
-                    // Something like 1.2.3
+                    // Something like  1.2.3
                     //
                     
                     std::vector<CodeActionPtr> Actions;
@@ -2408,7 +2409,7 @@ inline Token Tokenizer::handleMinus(Buffer tokenStartBuf, SourceLocation tokenSt
             if (c.to_point() == '>') {
                 
                 //
-                // Something like a-->0
+                // Something like  a-->0
                 //
                 
                 auto greaterLoc = afterLoc;
@@ -2423,7 +2424,7 @@ inline Token Tokenizer::handleMinus(Buffer tokenStartBuf, SourceLocation tokenSt
             } else if (c.to_point() == '=') {
                 
                 //
-                // Something like a--=0
+                // Something like  a--=0
                 //
                 
                 auto equalLoc = afterLoc;
@@ -2477,7 +2478,7 @@ inline Token Tokenizer::handleBar(Buffer tokenStartBuf, SourceLocation tokenStar
             if (c.to_point() == '=') {
                 
                 //
-                // Something like <||>=0
+                // Something like  <||>=0
                 //
                 
                 auto equalLoc = afterLoc;
@@ -2783,7 +2784,7 @@ inline Token Tokenizer::handleSlash(Buffer tokenStartBuf, SourceLocation tokenSt
             if (c.isDigit()) {
                 
                 //
-                // Something like t/.3
+                // Something like  t/.3
                 //
                 // Must now do surgery and back up
                 //
@@ -2919,7 +2920,7 @@ inline Token Tokenizer::handlePlus(Buffer tokenStartBuf, SourceLocation tokenSta
             if (c.to_point() == '=') {
                 
                 //
-                // Something like a++=0
+                // Something like  a++=0
                 //
                 
                 auto loc = TheByteDecoder->SrcLoc;
