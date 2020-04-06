@@ -667,13 +667,13 @@ topLevelChildIssues[InfixNode[CompoundExpression, {
 												PatternSequence[LeafNode[Symbol, _, _], _LeafNode].., LeafNode[Symbol, _, _] }, _], True] := {}
 
 
-topLevelChildIssues[InfixNode[CompoundExpression, {BinaryNode[Set | SetDelayed, _, _], LeafNode[Token`Semi, _, _], _[Except[Token`Fake`ImplicitNull], _, _], ___}, data_], True] := {
+topLevelChildIssues[InfixNode[CompoundExpression, {BinaryNode[Set | SetDelayed, _, _], LeafNode[Token`Semi, _, _], _[Except[Token`Fake`ImplicitNull], _, _], ___}, data_], ignored_] := {
 	SyntaxIssue["TopLevel", "Definition does not contain the rest of the ``CompoundExpression``.", "Error",
 		<| Source -> data[Source],
 			ConfidenceLevel -> 0.95
 			(*FIXME: wrap parentheses CodeAction*) |>] }
 
-topLevelChildIssues[InfixNode[CompoundExpression, {_, LeafNode[Token`Semi, _, _], LeafNode[Token`Fake`ImplicitNull, _, _]}, data_], True] := {
+topLevelChildIssues[InfixNode[CompoundExpression, {_, LeafNode[Token`Semi, _, _], LeafNode[Token`Fake`ImplicitNull, _, _]}, data_], ignored_] := {
 	SyntaxIssue["TopLevel", "``CompoundExpression`` at top-level. ``;`` may not be needed at top-level.", "Warning",
 		<| Source -> data[Source],
 			ConfidenceLevel -> 0.75,
@@ -681,7 +681,7 @@ topLevelChildIssues[InfixNode[CompoundExpression, {_, LeafNode[Token`Semi, _, _]
 									<|	Source->nextData[Source],
 										"InsertionNode"->LeafNode[Token`Newline, "\n", <||>]|>] } |>] }
 
-topLevelChildIssues[InfixNode[CompoundExpression, {_, LeafNode[Token`Semi, _, _], _, ___}, data_], True] := {
+topLevelChildIssues[InfixNode[CompoundExpression, {_, LeafNode[Token`Semi, _, _], _, ___}, data_], ignored_] := {
 	SyntaxIssue["TopLevel", "``CompoundExpression`` at top-level. Consider breaking up onto separate lines.", "Warning",
 		<| Source -> data[Source],
 			ConfidenceLevel -> 0.75,
