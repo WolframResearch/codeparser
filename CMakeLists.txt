@@ -43,6 +43,10 @@ set(STATIC_WL_PACLET_SOURCES
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Utils.wl
 )
 
+set(WL_PACLET_EXAMPLES
+	${PROJECT_SOURCE_DIR}/CodeParser/Resources/Examples/Collatz.m
+)
+
 set(GENERATED_WL_PACLET_SOURCES
 	${PROJECT_BINARY_DIR}/generated/wl/LongNames.wl
 )
@@ -170,6 +174,15 @@ foreach(SRC ${STATIC_WL_PACLET_SOURCES})
 			${SRC}
 	)
 	list(APPEND COPIED_WL_PACLET_SOURCES ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC})
+endforeach()
+
+foreach(SRC ${WL_PACLET_EXAMPLES})
+	get_filename_component(BARE_SRC ${SRC} NAME)
+	add_custom_command(
+    OUTPUT ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Resources/Examples/${BARE_SRC}
+    COMMAND ${CMAKE_COMMAND} -E copy ${SRC} ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Resources/Examples/${BARE_SRC}
+    DEPENDS ${SRC})
+	list(APPEND COPIED_WL_PACLET_EXAMPLES ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Resources/Examples/${BARE_SRC})
 endforeach()
 
 foreach(SRC ${GENERATED_WL_PACLET_SOURCES})
@@ -521,6 +534,7 @@ endif(BUILD_DOCS)
 
 set(PACLET_SOURCES
 	${COPIED_WL_PACLET_SOURCES}
+	${COPIED_WL_PACLET_EXAMPLES}
 	generated-srcs
 	codeparser-lib
 	${WL_GENERATE_CREATEPACLETARCHIVE_SOURCES}
