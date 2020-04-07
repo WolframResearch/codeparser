@@ -37,7 +37,7 @@ Needs["PacletManager`"]
 
 parseEquivalenceFunction[text_, expectedIgnored_] :=
 Catch[
-Module[{cst, agg, ast, good, expected, actual, str, str1},
+Module[{cst, agg, ast, good, expected, actual, str, str1, expectedStr, actualStr},
 	
 	expected = DeleteCases[ToExpression[text, InputForm, Hold], Null];
 	
@@ -119,7 +119,6 @@ Module[{cst, agg, ast, good, expected, actual, str, str1},
 		Throw[unhandled[<|"actualAbstract"->ToString[actual, InputForm], "expectedAbstract"->ToString[expected, InputForm]|>]]
 	];
 
-
   (*
   Now test agreement
   *)
@@ -128,7 +127,8 @@ Module[{cst, agg, ast, good, expected, actual, str, str1},
     (* actual is failure, expected is NOT failure *)
     If[!FailureQ[expected],
       Throw[unhandled["ActualFailure", <|"actualAbstract"->ToString[str1, InputForm], "expectedAbstract"->ToString[expected, InputForm]|>]]
-    ]
+    ];
+    Throw[True]
     ,
     (* actual is NOT failure, expected is failure *)
     If[FailureQ[expected],
@@ -141,11 +141,41 @@ Module[{cst, agg, ast, good, expected, actual, str, str1},
     Print["abs actual: ", actual]
   ];
 
+
+	
+	
+	(*
+	FullForm
+	*)
+	
+	If[!FreeQ[ast, GroupNode[GroupLinearSyntaxParen, _, _]],
+		Throw[True]
+	];
+	
+	expectedStr = ToString[FullForm[expected]];
+
+	Quiet[
+	 actualStr = ToFullFormString[ast /. {
+	      LeafNode[Real, r_, data_] :> LeafNode[Real, ToString[FullForm[ToExpression[r]]], data],
+	      LeafNode[Rational, r_, data_] :> LeafNode[Rational, ToString[FullForm[ToExpression[r]]], data],
+	      LeafNode[Integer, i_, data_] :> LeafNode[Integer, ToString[FullForm[ToExpression[i]]], data],
+	      LeafNode[String, s_ /; StringStartsQ[s, "\""], data_] :> LeafNode[String, ToString[FullForm[ToExpression[s]]], data],
+	      LeafNode[Symbol, s_, data_] :> LeafNode[Symbol, ToExpression[s, InputForm, Function[xx, ToString[Unevaluated[FullForm[xx]]], {HoldFirst}]], data]}];
+	 ];
+
+	good = SameQ[expectedStr, actualStr];
+	If[!good,
+		Throw[unhandled[<|"actualStr"->actualStr, "expectedStr"->expectedStr|>]]
+	];
+
+
+
   True
 
 ]]
 
 
+tokensToString[ts_] := StringJoin[ts[[All, 2]]]
 
 
 
