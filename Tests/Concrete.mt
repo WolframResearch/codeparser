@@ -735,3 +735,13 @@ Test[
 
 
 
+
+Test[
+	CodeConcreteParse["1*^-2"]
+	,
+	ContainerNode[String, {
+		LeafNode[Rational, "1*^-2", <|Source -> {{1, 1}, {1, 6}}|>]}, <||>]
+	,
+	TestID->"Concrete-20200404-E3L1E3"
+]
+

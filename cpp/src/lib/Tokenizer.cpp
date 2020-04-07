@@ -1712,12 +1712,21 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
     
     c = TheCharacterDecoder->currentWLCharacter(policy);
     
-    if (c.isSign()) {
-        
-        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-        TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
-        
-        c = TheCharacterDecoder->currentWLCharacter(policy);
+    auto negativeExponent = false;
+    
+    switch (c.to_point()) {
+        case '-':
+            negativeExponent = true;
+            //
+            // FALL THROUGH
+            //
+        case '+': {
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+        }
+            break;
     }
     
     if (!c.isDigit()) {
@@ -1732,8 +1741,41 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
         return Token(TOKEN_ERROR_EXPECTEDEXPONENT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
     }
     
-    size_t count;
-    c = handleDigits(policy, c, &count);
+    //
+    // Count leading zeros in exponent
+    //
+    if (c.to_point() == '0') {
+        
+        c = TheCharacterDecoder->currentWLCharacter(policy);
+        
+        while (true) {
+            
+            //
+            // No need to check isAbort() inside tokenizer loops
+            //
+            
+            if (c.to_point() != '0') {
+                
+                break;
+            }
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+            
+        } // while
+    }
+    
+    int exponentDigitCount = 0;
+    
+    if (c.isDigit()) {
+        
+        size_t count;
+        c = handleDigits(policy, c, &count);
+        
+        exponentDigitCount = static_cast<int>(count);
+    }
     
     if (c.to_point() != '.') {
         
@@ -1743,6 +1785,13 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
         
         if (real) {
             return Token(TOKEN_REAL, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        } else if (negativeExponent && exponentDigitCount != 0) {
+            
+            //
+            // Something like  1*^-2
+            //
+            
+            return Token(TOKEN_RATIONAL, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         } else {
             return Token(TOKEN_INTEGER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         }

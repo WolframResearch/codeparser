@@ -24,6 +24,7 @@ tokenToSymbol[Token`Symbol] = "Symbol`Symbol"
 tokenToSymbol[Token`String] = "Symbol`String"
 tokenToSymbol[Token`Integer] = "Symbol`Integer"
 tokenToSymbol[Token`Real] = "Symbol`Real"
+tokenToSymbol[Token`Rational] = "Symbol`Rational"
 
 tokenToSymbol[Token`Whitespace] = "Symbol`Whitespace"
 
@@ -65,6 +66,7 @@ isPossibleBeginning[Token`Symbol] = True
 isPossibleBeginning[Token`String] = True
 isPossibleBeginning[Token`Integer] = True
 isPossibleBeginning[Token`Real] = True
+isPossibleBeginning[Token`Rational] = True
 
 isPossibleBeginning[Token`Percent] = True
 
@@ -774,6 +776,13 @@ tokenCPPSource = {
 #include \"Token.h\"
 
 #include <cassert>
+
+//
+// TOKEN_INTEGER must be 0x4 to allow setting the 0b1 bit to convert to TOKEN_REAL, and 0b10 bit to convert to TOKEN_RATIONAL
+//
+static_assert(TOKEN_INTEGER.value() == 0x4, \"Check your assumptions\");
+static_assert(TOKEN_REAL.value() == 0x5, \"Check your assumptions\");
+static_assert(TOKEN_RATIONAL.value() == 0x6, \"Check your assumptions\");
 
 //
 // TOKEN_INTERNALNEWLINE must be 0x8 to allow setting the 0b100 bit to convert to TOKEN_TOPLEVELNEWLINE

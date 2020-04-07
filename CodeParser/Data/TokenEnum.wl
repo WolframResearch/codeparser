@@ -13,9 +13,9 @@ Token`Symbol -> Next,
 Token`String -> Next,
 Token`Integer -> Next,
 Token`Real -> Next,
+Token`Rational -> Next,
 
 Token`Buffer1 -> Next,
-Token`Buffer2 -> Next,
 
 (*
 trivia

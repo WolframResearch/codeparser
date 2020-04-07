@@ -81,8 +81,8 @@ $WorkaroundBug321344 = checkBug321344[]
 Print["Work around Bug 321344: ", $WorkaroundBug321344];
 
 symbols = Union[Join[
-    {Blank, BlankSequence, BlankNullSequence, EndOfFile, Integer, Integral, Integrate, Null, Out, Optional, Pattern, Real,
-      Slot, SlotSequence, String, Symbol, TagSet, TagSetDelayed, TagUnset, Whitespace},
+    {Blank, BlankSequence, BlankNullSequence, EndOfFile, Integer, Integral, Integrate, Null, Out, Optional, Pattern,
+      Rational, Real, Slot, SlotSequence, String, Symbol, TagSet, TagSetDelayed, TagUnset, Whitespace},
     {CodeParser`Library`MakeLeafNode, CodeParser`Library`MakeErrorNode, CodeParser`Library`MakePrefixNode,
       CodeParser`Library`MakeBinaryNode, CodeParser`Library`MakeInfixNode,
             CodeParser`Library`MakeTernaryNode, CodeParser`Library`MakePostfixNode, CodeParser`Library`MakeCallNode,

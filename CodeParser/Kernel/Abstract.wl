@@ -83,6 +83,9 @@ abstract[LeafNode[Integer, sIn_, dataIn_]] :=
 abstract[LeafNode[Real, sIn_, dataIn_]] :=
 	LeafNode[Real, sIn, dataIn]
 
+abstract[LeafNode[Rational, sIn_, dataIn_]] :=
+	LeafNode[Rational, sIn, dataIn]
+
 abstract[LeafNode[Slot, sIn_, dataIn_]] :=
 Module[{s, data, rest, lastPos},
 

@@ -33,6 +33,9 @@ toInputFormString[LeafNode[Integer, str_, _]] :=
 toInputFormString[LeafNode[Real, str_, _]] :=
 	str
 
+toInputFormString[LeafNode[Rational, str_, _]] :=
+	str
+
 toInputFormString[LeafNode[Slot, str_, _]] :=
 	str
 
@@ -401,6 +404,9 @@ toFullFormString[LeafNode[Integer, str_, _]] :=
 	str
 
 toFullFormString[LeafNode[Real, str_, _]] :=
+	str
+
+toFullFormString[LeafNode[Rational, str_, _]] :=
 	str
 
 

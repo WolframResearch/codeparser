@@ -55,6 +55,7 @@ Needs["CodeParser`Generate`GenerateSources`"]
 PrefixOperatorToParselet[Token`String] = LeafParselet[Precedence`Highest]
 PrefixOperatorToParselet[Token`Integer] = LeafParselet[Precedence`Highest]
 PrefixOperatorToParselet[Token`Real] = LeafParselet[Precedence`Highest]
+PrefixOperatorToParselet[Token`Rational] = LeafParselet[Precedence`Highest]
 
 PrefixOperatorToParselet[Token`Percent] = LeafParselet[Precedence`Highest]
 

@@ -555,7 +555,45 @@ Test[
 	TestID->"Parse-20200304-S0E5B8"
 ]
 
+Test[
+	"-1*^-2"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200404-E3B7A4"
+]
 
+Test[
+	"-(-1*^-2)"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200404-X4F5X3"
+]
+
+Test[
+	"-(-(-1*^-2))"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200404-M6K5B2"
+]
+
+Test[
+	"-(-(-(-1*^-2)))"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200404-T1U9Z2"
+]
 
 
 
