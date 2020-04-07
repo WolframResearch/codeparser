@@ -1361,6 +1361,16 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
         c = handlePossibleFractionalPart(leadingDigitsEndBuf, leadingDigitsEndLoc, c, base, policy, &handled);
         switch (handled) {
             case BAILOUT:
+                
+                if (leadingDigitsCount == 0) {
+                    
+                    //
+                    // Something like  2^^..
+                    //
+                    
+                    return Token(TOKEN_ERROR_UNHANDLEDDOT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                }
+                
                 real = false;
                 break;
             case UNRECOGNIZED_DIGIT:
@@ -1798,7 +1808,43 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
     }
     
     // c is '.'
+    
+    auto dotBuf = TheByteBuffer->buffer;
+    auto dotLoc = TheByteDecoder->SrcLoc;
+
+    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+    TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    int handled;
+    c = handlePossibleFractionalPartPastDot(dotBuf, dotLoc, c, base, policy, &handled);
+    
+    if (handled == BAILOUT) {
+        //
+        // Something like  123*^2..
+        //
+        // The first . is not actually a radix point
+        //
         
+        //
+        // Success!
+        //
+        
+        if (real) {
+            return Token(TOKEN_REAL, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        } else if (negativeExponent && exponentDigitCount != 0) {
+            
+            //
+            // Something like  1*^-2
+            //
+            
+            return Token(TOKEN_RATIONAL, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        } else {
+            return Token(TOKEN_INTEGER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        }
+    }
+    
     //
     // Something like  123*^0.5
     //

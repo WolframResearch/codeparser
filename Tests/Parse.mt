@@ -595,8 +595,35 @@ Test[
 	TestID->"Parse-20200404-T1U9Z2"
 ]
 
+Test[
+	"1*^2.."
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200404-O3A7Q1"
+]
 
+Test[
+	"1*^2..."
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200404-E5L2K7"
+]
 
+Test[
+	"2^^.."
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200404-S6W5R8"
+]
 
 
 
