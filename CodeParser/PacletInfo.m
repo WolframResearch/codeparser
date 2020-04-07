@@ -8,6 +8,11 @@ Paclet[
   Extensions -> {
     {"Kernel", Root -> "Kernel", Context -> "CodeParser`"},
     {"Documentation", Language -> "English", MainPage -> "Guides/CodeParser"},
-    {"LibraryLink"}
+    {"LibraryLink"},
+    {"Resource", Root->"Resources",
+      Resources -> {
+        {"Collatz","Examples/Collatz.m"}
+      }
+    }
   }
 ]
