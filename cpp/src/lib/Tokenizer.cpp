@@ -674,8 +674,18 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation
         //
         
         if (c.isDigit()) {
-            ;
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+            
+            charLoc = TheByteDecoder->SrcLoc;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
+            
         } else if (c.isLetterlike() || c.isMBLetterlike()) {
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
 #if !NISSUES
             if (c.to_point() == '$') {
@@ -686,23 +696,20 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation
                     
                     Issues.push_back(std::move(I));
                 }
+                
             } else if (c.isStrangeLetterlike()) {
                 
-                auto loc = TheByteDecoder->SrcLoc;
-                
-                auto strangeLoc = loc.previous();
-                
-                Utils::strangeLetterlikeWarning(getTokenSource(strangeLoc), c);
+                Utils::strangeLetterlikeWarning(getTokenSource(charLoc), c);
                 
             } else if (c.isMBStrangeLetterlike()) {
                 
-                auto loc = TheByteDecoder->SrcLoc;
-                
-                auto strangeLoc = loc.previous();
-                
-                Utils::mbStrangeLetterlikeWarning(getTokenSource(strangeLoc), c);
+                Utils::mbStrangeLetterlikeWarning(getTokenSource(charLoc), c);
             }
 #endif // !NISSUES
+            
+            charLoc = TheByteDecoder->SrcLoc;
+            
+            c = TheCharacterDecoder->currentWLCharacter(policy);
             
         } else if (c.to_point() == '`') {
             
@@ -719,13 +726,6 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation
             
             break;
         }
-        
-        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-        TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
-        
-        charLoc = TheByteDecoder->SrcLoc;
-        
-        c = TheCharacterDecoder->currentWLCharacter(policy);
         
     } // while
     
