@@ -470,12 +470,8 @@ toFullFormString[args:BoxNode[box_, children_, _]] :=
 toFullFormString[ContainerNode[Hold, nodes_, opts_]] :=
 Catch[
 Module[{nodeStrs},
-	If[empty[nodes],
-		nodeStrs = {"Null"}
-		,
-		nodeStrs = toFullFormString /@ nodes;
-		nodeStrs = Flatten[nodeStrs];
-	];
+	nodeStrs = toFullFormString /@ nodes;
+	nodeStrs = Flatten[nodeStrs];
 	If[AnyTrue[nodeStrs, FailureQ],
 		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];
@@ -485,12 +481,8 @@ Module[{nodeStrs},
 toFullFormString[ContainerNode[_, nodes_, opts_]] :=
 Catch[
 Module[{nodeStrs},
-	If[empty[nodes],
-		nodeStrs = {"Null"}
-		,
-		nodeStrs = toFullFormString /@ nodes;
-		nodeStrs = Flatten[nodeStrs];
-	];
+	nodeStrs = toFullFormString /@ nodes;
+	nodeStrs = Flatten[nodeStrs];
 	If[AnyTrue[nodeStrs, FailureQ],
 		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];
