@@ -15,7 +15,7 @@ In[1]:= Needs["CodeParser`"]
 
 In[2]:= CodeParse["1+1"]
 
-Out[2]= InfixNode[Plus, {LeafNode[Integer, 1, <|Source -> {{1, 1}, {1, 2}}|>], LeafNode[Integer, 1, <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]
+Out[2]= ContainerNode[String, {CallNode[LeafNode[Symbol, "Plus", <||>], {LeafNode[Integer, "1", <|Source -> {{1, 1}, {1, 2}}|>], LeafNode[Integer, "1", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, <||>]
 ```
 
 [Parsing the Wolfram Language from WTC 2019: Watch Video](https://www.wolfram.com/broadcast/video.php?v=2908)
