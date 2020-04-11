@@ -2,20 +2,10 @@ BeginPackage["CodeParser`Shims`"]
 
 setupShims
 
-$TopLevelExpressionLimit
-
 cleanupStackShimMemoryLeak
 
 
 Begin["`Private`"]
-
-
-(*
-How many top-level expressions are allowed?
-
-Beyond this limit, parsing is infeasible
-*)
-$TopLevelExpressionLimit = Infinity
 
 
 setupShims[] := (
@@ -28,37 +18,43 @@ setupShims[] := (
 setupStackShim[] := (
 
   (*
-  For versions before 12.1, we are using O(n^2) AppendTo to create the stack of top-level expressions.
+  For versions before 12.1, we implement our own stack to store top-level expressions.
 
-  Limit to some low number.
+  The push, pop and peek operations take O(1), while Normal takes O(n).
   *)
-  $TopLevelExpressionLimit = 5000;
 
   (*
   Define CreateDataStructure for earlier versions
   *)
   System`CreateDataStructure["Stack"] :=
-    Module[{stack, stackVal},
-    
-      stackVal = {};
+    Module[{stack, stackVal, stackDepth, stackCons},
+
+      stackVal = stackCons[];
+
+      stackDepth = 0;
 
       stack /: stack["Push", expr_] := (
-        AppendTo[stackVal, expr];
+        stackVal = stackCons[stackVal, expr];
+        stackDepth += 1;
         Null
       );
 
       stack /: stack["Pop"] :=
         Module[{tmp},
-          tmp = stackVal[[-1]];
-          stackVal = Drop[stackVal, -1];
-          tmp
+          If[stackDepth != 0,
+            stackDepth -= 1;
+            {stackVal, tmp} = List @@ stackVal;
+            tmp
+          ]
         ];
 
-      stack /: stack["Peek"] := stackVal[[-1]];
+      stack /: stack["Peek"] := Last[stackVal];
 
-      stack /: Normal[stack] := stackVal;
+      stack /: Normal[stack] := (
+        Flatten[{stackVal}, Infinity, stackCons]
+      );
 
-      stack /: stack["Length"] := Length[stackVal];
+      stack /: stack["Length"] := stackDepth;
 
       stack
     ];
