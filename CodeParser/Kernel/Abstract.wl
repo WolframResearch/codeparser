@@ -447,10 +447,6 @@ Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node, re
 
 	children = childrenIn;
 
-	If[Length[children] > $TopLevelExpressionLimit,
-		Throw[Failure["TooManyTopLevelExpressions", <||>]]
-	];
-
 	data = dataIn;
 
 	reportIssues = (tag === File);
