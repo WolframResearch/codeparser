@@ -35,7 +35,7 @@ from boxes
 *)
 aggregate[node:GroupNode[Comment, _, _]] := Nothing
 
-aggregate[CallNode[headIn_, childrenIn_, dataIn_]] :=
+aggregate[node:CallNode[headIn_List, childrenIn_, dataIn_]] :=
 Catch[
 Module[{head, children, aggHead, aggChildren, data},
 
@@ -46,7 +46,12 @@ Module[{head, children, aggHead, aggChildren, data},
 	aggHead = aggregate /@ head;
 
 	If[Length[aggHead] != 1,
-		Throw[Failure["InternalUnhandled", <|"Function"->aggregate, "Arguments"->HoldForm[{CallNode[head, children, data]}]|>]]
+		Throw[Failure["InternalUnhandled", <|
+			"Message" -> "Head is not a list of length 1",
+			"Head" -> aggHead,
+			"Function" -> aggregate,
+			"Arguments" -> {node}
+		|>]]
 	];
 
 	aggHead = aggHead[[1]];
@@ -55,6 +60,15 @@ Module[{head, children, aggHead, aggChildren, data},
 
 	CallNode[aggHead, aggChildren, data]
 ]]
+
+aggregate[node:CallNode[headIn_, childrenIn_, dataIn_]] :=
+	Failure["InvalidHead", <|
+			"Message" -> "Head is not a list (Possibly calling Aggregate on abstract syntax)",
+			"Function" -> aggregate,
+			"Arguments" -> {node}
+		|>
+	]
+
 
 aggregate[ContainerNode[File, childrenIn_, dataIn_]] :=
 Catch[
