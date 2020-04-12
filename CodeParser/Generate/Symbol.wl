@@ -87,9 +87,6 @@ symbols = Union[Join[
       CodeParser`Library`MakeBinaryNode, CodeParser`Library`MakeInfixNode,
             CodeParser`Library`MakeTernaryNode, CodeParser`Library`MakePostfixNode, CodeParser`Library`MakeCallNode,
             CodeParser`Library`MakeGroupNode,
-            (*
-            CodeParser`Library`MakeStartOfLineNode, CodeParser`Library`MakeStartOfFileNode,
-            *)
             CodeParser`Library`MakeBlankNode, CodeParser`Library`MakeBlankSequenceNode,
             CodeParser`Library`MakeBlankNullSequenceNode,
             CodeParser`Library`MakePatternBlankNode, CodeParser`Library`MakePatternBlankSequenceNode,
@@ -146,10 +143,6 @@ symbols = Union[Join[
       TildeParselet[] :> CodeParser`TernaryTilde,
       SemiSemiParselet[] :> Span
     },
-    (*
-    DownValues[StartOfLineOperatorToSymbol][[All, 2]],
-    DownValues[StartOfFileOperatorToSymbol][[All, 2]],
-    *)
     tokens
 ]]
 

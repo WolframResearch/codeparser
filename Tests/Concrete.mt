@@ -71,12 +71,6 @@ Test[
 Test[
 	CodeConcreteParse["?a"]
 	,
-	(*
-	StringNode[String, {
-		StartOfLineNode[Information, {
-			LeafNode[Token`Question, "?", <|Source -> {{1, 1}, {1, 1}}|>],
-			LeafNode[String, "a", <|Source -> {{1, 2}, {1, 2}}|>]}, <|Source -> {{1, 1}, {1, 2}}|>] }, <||>]
-	*)
 	ContainerNode[String, {
 		BinaryNode[PatternTest, {
 			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 1}, {1, 1}}|>],

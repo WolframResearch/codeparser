@@ -345,12 +345,14 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
         //
         // TODO: Should we report "\\[]" as unlikely?
         //
-//        else if (unlikelyEscapeChecking) {
-//
-//            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNLIKELYESCAPESEQUENCE, std::string("Unlikely escape sequence: ``\\\\[") + LongNameStr + "``", SYNTAXISSUESEVERITY_REMARK, Source(CharacterStart-1, Loc), 0.33, {}));
-//
-//            Issues.push_back(std::move(I));
-//        }
+#if 0
+        else if (unlikelyEscapeChecking) {
+
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNLIKELYESCAPESEQUENCE, std::string("Unlikely escape sequence: ``\\\\[") + LongNameStr + "``", SYNTAXISSUESEVERITY_REMARK, Source(CharacterStart-1, Loc), 0.33, {}));
+
+            Issues.push_back(std::move(I));
+        }
+#endif // #if 0
 #endif // !NISSUES
         
         TheByteBuffer->buffer = openSquareBuf;

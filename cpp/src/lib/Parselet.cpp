@@ -312,9 +312,6 @@ NodePtr PrefixOperatorParselet::parse(Token TokIn, ParserContext CtxtIn) const {
 }
 
 
-//
-// Does not "parse" so much as inserts the implicit Times token, and then allows the rest of the system to do the work
-//
 NodePtr InfixImplicitTimesParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
     assert(false);
     return nullptr;
@@ -613,66 +610,6 @@ NodePtr CallParselet::parse(NodeSeq Head, Token TokIn, ParserContext CtxtIn) con
     
     return TheParser->infixLoop(std::move(L), CtxtIn);
 }
-
-
-#if STARTOFLINE
-
-//
-// StartOfLine
-//
-
-NodePtr StartOfLineParselet::parse(ParserContext CtxtIn) const {
-    
-    auto TokIn = TheParser->currentToken();
-    
-    auto Ctxt = CtxtIn;
-    
-    TheParser->nextToken_stringifyCurrentLine(Ctxt);
-    
-    auto Tok = TheParser->currentToken();
-    
-    //
-    // We know there is just a token here, either TOKEN_ERROR_EMPTYSTRING or a legit string
-    //
-    TheParser->nextToken(Ctxt);
-    
-    NodeSeq Args;
-    Args.reserve(1 + 1);
-    Args.append(NodePtr(new LeafNode(TokIn)));
-    Args.append(NodePtr(new LeafNode(Tok)));
-    
-    return NodePtr(new StartOfLineNode(StartOfLineOperatorToSymbol(TokIn.Tok()), std::move(Args)));
-}
-
-
-//
-// StartOfFile
-//
-
-NodePtr StartOfFileParselet::parse(ParserContext CtxtIn) const {
-    
-    auto TokIn = TheParser->currentToken();
-    
-    auto Ctxt = CtxtIn;
-    
-    TheParser->nextToken_stringifyCurrentLine(Ctxt);
-    
-    auto Tok = TheParser->currentToken();
-    
-    //
-    // We know there is just a token here, either TOKEN_ERROR_EMPTYSTRING or a legit string
-    //
-    TheParser->nextToken(Ctxt);
-    
-    NodeSeq Args;
-    Args.reserve(1 + 1);
-    Args.append(NodePtr(new LeafNode(TokIn)));
-    Args.append(NodePtr(new LeafNode(Tok)));
-    
-    return NodePtr(new StartOfFileNode(StartOfFileOperatorToSymbol(TokIn.Tok()), std::move(Args)));
-}
-
-#endif // STARTOFLINE
 
 
 //

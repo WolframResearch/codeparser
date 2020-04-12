@@ -211,30 +211,6 @@ Module[{nodeStrs},
 
 
 
-(*
-toInputFormString[StartOfLineNode[op_, nodes_, data_]] :=
-Catch[
-Module[{nodeStrs},
-	nodeStrs = toInputFormString /@ nodes;
-	If[AnyTrue[nodeStrs, FailureQ],
-		Throw[SelectFirst[nodeStrs, FailureQ]]
-	];
-	StringJoin[nodeStrs]
-]]
-
-toInputFormString[StartOfFileNode[op_, nodes_, data_]] :=
-Catch[
-Module[{nodeStrs},
-	nodeStrs = toInputFormString /@ nodes;
-	If[AnyTrue[nodeStrs, FailureQ],
-		Throw[SelectFirst[nodeStrs, FailureQ]]
-	];
-	StringJoin[nodeStrs]
-]]
-*)
-
-
-
 toInputFormString[BlankNode[Blank, nodes_, _]] :=
 Catch[
 Module[{nodeStrs},
@@ -416,6 +392,7 @@ toFullFormString[ErrorNode[tag_, str_, data_]] :=
 
 (*
 The interesting case of  a // -1  not being the same as  -1[a]
+Related bug reports: 391443
 *)
 toFullFormString[CallNode[head:LeafNode[Integer | Real, str_ /; StringStartsQ[str, "-"], _], nodes_, _]] :=
 Catch[
@@ -445,11 +422,6 @@ Module[{headStr, nodeStrs},
 	StringJoin[{headStr, "[", Riffle[nodeStrs, ", "], "]"}]
 ]]
 
-
-(*
-toFullFormString[f:StartOfFileNode[Shebang, _, _]] :=
-	ToInputFormString[f]
-*)
 
 
 (*

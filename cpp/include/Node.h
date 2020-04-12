@@ -307,19 +307,6 @@ public:
 };
 
 
-#if STARTOFLINE
-class StartOfLineNode : public OperatorNode {
-public:
-    StartOfLineNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKESTARTOFLINENODE, std::move(Args)) {}
-};
-
-class StartOfFileNode : public OperatorNode {
-public:
-    StartOfFileNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKESTARTOFFILENODE, std::move(Args)) {}
-};
-#endif // STARTOFLINE
-
-
 class BlankNode : public OperatorNode {
 public:
     BlankNode(NodeSeq Args) : OperatorNode(SYMBOL_BLANK, SYMBOL_CODEPARSER_LIBRARY_MAKEBLANKNODE, std::move(Args)) {}

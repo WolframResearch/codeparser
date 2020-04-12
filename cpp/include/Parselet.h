@@ -13,10 +13,6 @@ class CallParselet;
 class PostfixParselet;
 class ContextSensitivePrefixParselet;
 class ContextSensitiveInfixParselet;
-#if STARTOFLINE
-class StartOfLineParselet;
-class StartOfFileParselet;
-#endif // STARTOFLINE
 class GroupParselet;
 class Parselet;
 class Parser;
@@ -107,24 +103,6 @@ public:
     
     virtual ~ContextSensitiveInfixParselet() {}
 };
-
-#if STARTOFLINE
-class StartOfLineParselet : virtual public Parselet {
-public:
-    //
-    // Commonly referred to as NUD method in the literature
-    //
-    NodePtr parse(ParserContext Ctxt) const;
-};
-
-class StartOfFileParselet : virtual public Parselet {
-public:
-    //
-    // Commonly referred to as NUD method in the literature
-    //
-    NodePtr parse(ParserContext Ctxt) const;
-};
-#endif // STARTOFLINE
 
 
 class LeafParselet : public PrefixParselet {

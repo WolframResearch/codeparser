@@ -44,10 +44,6 @@ class Tokenizer {
     SourceCharacter handleFileOpsBrackets(SourceLocation tokenStartLoc, SourceCharacter firstChar, NextCharacterPolicy policy, int *handled);
     Token handleString(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
     
-#if STARTOFLINE
-    Token handleString_stringifyLine(Buffer tokenStartBuf, WLCharacter firstChar, NextCharacterPolicy policy);
-#endif // STARTOFLINE
-    
     Token handleString_stringifySymbol(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextCharacterPolicy policy);
     Token handleString_stringifyFile(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter firstChar, NextCharacterPolicy policy);
     
@@ -103,27 +99,15 @@ public:
     
     void nextToken(Token Tok);
     
-#if STARTOFLINE
-    void nextToken_stringifyLine();
-#endif // STARTOFLINE
-    
     void nextToken_stringifySymbol();
     void nextToken_stringifyFile();
     
     Token nextToken0(NextCharacterPolicy policy);
     
-#if STARTOFLINE
-    Token nextToken0_stringifyLine();
-#endif // STARTOFLINE
-    
     Token nextToken0_stringifySymbol();
     Token nextToken0_stringifyFile();
     
     Token currentToken(NextCharacterPolicy policy);
-    
-#if STARTOFLINE
-    Token currentToken_stringifyLine();
-#endif // STARTOFLINE
     
     Token currentToken_stringifySymbol();
     Token currentToken_stringifyFile();

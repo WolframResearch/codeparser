@@ -205,44 +205,6 @@ Token Tokenizer::nextToken0(NextCharacterPolicy policy) {
 }
 
 
-#if STARTOFLINE
-
-Token Tokenizer::nextToken0_stringifyLine() {
-
-    auto tokenStartBuf = TheByteBuffer->getBuffer();
-    auto tokenStartLoc = TheByteDecoder->SrcLoc;
-    
-    auto policy = INSIDE_STRINGIFY_LINE;
-
-    auto c = TheCharacterDecoder->nextWLCharacter0(policy);
-
-    if (c.to_point() == CODEPOINT_ENDOFFILE) {
-
-        //
-        // EndOfFile is special, so invent source
-        //
-
-        return Token(TOKEN_ERROR_EMPTYSTRING, BufferAndLength(tokenStartBuf, 0, false));
-
-    } else if () {
-        
-        xx;
-        
-    } else if (c.isNewline()) {
-
-        //
-        // Newline is special, so invent source
-        //
-
-        return Token(TOKEN_ERROR_EMPTYSTRING, BufferAndLength(tokenStartBuf, 0, false));
-    }
-
-    return handleString_stringifyLine(tokenStartBuf, c, policy);
-}
-
-#endif // STARTOFLINE
-
-
 Token Tokenizer::nextToken0_stringifySymbol() {
     
     auto tokenStartBuf = TheByteBuffer->buffer;
@@ -360,16 +322,6 @@ void Tokenizer::nextToken(Token Tok) {
     TheByteDecoder->clearStatus();
 }
 
-#if STARTOFLINE
-
-void Tokenizer::nextToken_stringifyLine() {
-
-    nextToken0_stringifyLine();
-
-    TheByteDecoder->clearStatus();
-}
-
-#endif // STARTOFLINE
 
 void Tokenizer::nextToken_stringifySymbol() {
     
@@ -406,26 +358,6 @@ Token Tokenizer::currentToken(NextCharacterPolicy policy) {
     return Tok;
 }
 
-#if STARTOFLINE
-
-Token Tokenizer::currentToken_stringifyLine() {
-
-    auto resetBuf = TheByteBuffer->getBuffer();
-    auto resetEOF = TheByteBuffer->wasEOF;
-    auto resetLoc = TheByteDecoder->SrcLoc;
-    
-    auto Tok = nextToken0_stringifyLine();
-
-    TheByteBuffer->setBuffer(resetBuf);
-    TheByteBuffer->wasEOF = resetEOF;
-    TheByteDecoder->SrcLoc = resetLoc;
-    
-    TheByteDecoder->clearError();
-
-    return Tok;
-}
-
-#endif // STARTOFLINE
 
 Token Tokenizer::currentToken_stringifySymbol() {
     
@@ -756,77 +688,6 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
     } // while
 }
 
-#if STARTOFLINE
-
-inline Token Tokenizer::handleString_stringifyLine(Buffer tokenStartBuf, WLCharacter c, NextCharacterPolicy policy) {
-    
-    //
-    // Nothing to assert
-    //
-    
-    policy &= ~PRESERVE_WS_AFTER_LC;
-    
-    auto lastGoodBuffer = TheByteBuffer->getBuffer();
-    xx;
-    
-    auto empty = true;
-    while (true) {
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
-        if (c.to_point() == CODEPOINT_ENDOFFILE) {
-            
-            break;
-            
-        } else if (c.to_point() == CODEPOINT_CRLF) {
-            
-            break;
-            
-        } else if (c.isNewline()) {
-            
-            break;
-            
-        } else if (c.isMBLineContinuation()) {
-            
-            break;
-        }
-        
-        empty = false;
-        
-        lastGoodBuffer = TheByteBuffer->getBuffer();
-        xx;
-        
-        TheCharacterDecoder->nextWLCharacter(policy);
-        
-        c = TheCharacterDecoder->currentWLCharacter(policy);
-        
-    } // while
-    
-    if (empty) {
-        
-        //
-        // Something like   ?<EOF>
-        //
-        // EndOfFile is special because there is no source
-        //
-        // So invent source
-        //
-        
-        return Token(TOKEN_ERROR_EMPTYSTRING, BufferAndLength(tokenStartBuf, 0, false));
-    }
-    
-    //
-    // ?? syntax is special because we want to ignore the newline that was read.
-    //
-    // So invent source
-    //
-    
-    return Token(TOKEN_STRING, BufferAndLength(tokenStartBuf, lastGoodBuffer - tokenStartBuf + 1, false));
-}
-
-#endif // STARTOFLINE
 
 inline Token Tokenizer::handleString_stringifySymbol(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextCharacterPolicy policy) {
     

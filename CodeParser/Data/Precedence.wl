@@ -147,32 +147,6 @@ Precedence`LongName`ForAll -> {Next, Associativity`NonRight}, (* Precedence[ForA
 Precedence`LongName`Exists -> Precedence`LongName`ForAll, (* Precedence[Exists] == 240 *)
 Precedence`LongName`NotExists -> Precedence`LongName`ForAll, (* Precedence[NotExists] == 240 *)
 
-(*
-Set relations
-*)
-(*
-Precedence`LongName`Element -> Precedence[Element], (* 250 *)
-Precedence`LongName`Subset -> Precedence[Subset], (* 250 *)
-Precedence`LongName`Superset -> Precedence[Superset], (* 250 *)
-Precedence`LongName`SubsetEqual -> Precedence[SubsetEqual], (* 250 *)
-Precedence`LongName`SupersetEqual -> Precedence[SupersetEqual], (* 250 *)
-Precedence`LongName`NotElement -> Precedence[NotElement], (* 250 *)
-Precedence`LongName`NotSubset -> Precedence[NotSubset], (* 250 *)
-Precedence`LongName`NotSuperset -> Precedence[NotSuperset], (* 250 *)
-Precedence`LongName`NotSubsetEqual -> Precedence[NotSubsetEqual], (* 250 *)
-Precedence`LongName`NotSupersetEqual -> Precedence[NotSupersetEqual], (* 250 *)
-Precedence`LongName`ReverseElement -> Precedence[ReverseElement], (* 250 *)
-Precedence`LongName`NotReverseElement -> Precedence[NotReverseElement], (* 250 *)
-Precedence`LongName`SquareSubset -> Precedence[SquareSubset], (* 250 *)
-Precedence`LongName`SquareSuperset -> Precedence[SquareSuperset], (* 250 *)
-Precedence`LongName`NotSquareSubset -> Precedence[NotSquareSubset], (* 250 *)
-Precedence`LongName`NotSquareSuperset -> Precedence[NotSquareSuperset], (* 250 *)
-Precedence`LongName`SquareSubsetEqual -> Precedence[SquareSubsetEqual], (* 250 *)
-Precedence`LongName`SquareSupersetEqual -> Precedence[SquareSupersetEqual], (* 250 *)
-Precedence`LongName`NotSquareSubsetEqual -> Precedence[NotSquareSubsetEqual], (* 250 *)
-Precedence`LongName`NotSquareSupersetEqual -> Precedence[NotSquareSupersetEqual], (* 250 *)
-Precedence`LongName`Distributed -> Precedence[Distributed], (* 250 *)
-*)
 Precedence`Class`SetRelations -> {Next, Associativity`NonRight}, (* Precedence[Element] == 250 *)
 
 (*
@@ -183,57 +157,10 @@ But empirically it is between \[Element] and \[RightTeeArrow]
 Precedence`EqualEqualEqual -> {Next, Associativity`NonRight},
 Precedence`EqualBangEqual -> Precedence`EqualEqualEqual,
 
-(*
-Horizontal arrows
-*)
-(*
-Precedence`LongName`LeftArrow -> Precedence[LeftArrow], (* 270 *)
-Precedence`LongName`RightArrow -> Precedence[RightArrow], (* 270 *)
-Precedence`LongName`LeftRightArrow -> Precedence[LeftRightArrow], (* 270 *)
-Precedence`LongName`LeftTeeArrow -> Precedence[LeftTeeArrow], (* 270 *)
-Precedence`LongName`RightTeeArrow -> Precedence[RightTeeArrow], (* 270 *)
-Precedence`LongName`RightArrowLeftArrow -> Precedence[RightArrowLeftArrow], (* 270 *)
-Precedence`LongName`LeftArrowRightArrow -> Precedence[LeftArrowRightArrow], (* 270 *)
-Precedence`LongName`DoubleLeftArrow -> Precedence[DoubleLeftArrow], (* 270 *)
-Precedence`LongName`DoubleRightArrow -> Precedence[DoubleRightArrow], (* 270 *)
-Precedence`LongName`DoubleLeftRightArrow -> Precedence[DoubleLeftRightArrow], (* 270 *)
-Precedence`LongName`LeftArrowBar -> Precedence[LeftArrowBar], (* 270 *)
-Precedence`LongName`RightArrowBar -> Precedence[RightArrowBar], (* 270 *)
-Precedence`LongName`ShortRightArrow -> Precedence[ShortRightArrow], (* 270 *)
-Precedence`LongName`ShortLeftArrow -> Precedence[ShortLeftArrow], (* 270 *)
-*)
 Precedence`Class`HorizontalArrows -> {Next, Associativity`NonRight}, (* Precedence[LeftArrow] == 270 *)
 
-(*
-Vector operators
-*)
-(*
-Precedence`LongName`LeftVector -> Precedence[LeftVector], (* 270 *)
-Precedence`LongName`RightVector -> Precedence[RightVector], (* 270 *)
-Precedence`LongName`LeftRightVector -> Precedence[LeftRightVector], (* 270 *)
-Precedence`LongName`LeftVectorBar -> Precedence[LeftVectorBar], (* 270 *)
-Precedence`LongName`RightVectorBar -> Precedence[RightVectorBar], (* 270 *)
-Precedence`LongName`LeftTeeVector -> Precedence[LeftTeeVector], (* 270 *)
-Precedence`LongName`RightTeeVector -> Precedence[RightTeeVector], (* 270 *)
-Precedence`LongName`DownLeftVector -> Precedence[DownLeftVector], (* 270 *)
-Precedence`LongName`DownRightVector -> Precedence[DownRightVector], (* 270 *)
-Precedence`LongName`DownLeftRightVector -> Precedence[DownLeftRightVector], (* 270 *)
-Precedence`LongName`DownLeftVectorBar -> Precedence[DownLeftVectorBar], (* 270 *)
-Precedence`LongName`DownRightVectorBar -> Precedence[DownRightVectorBar], (* 270 *)
-Precedence`LongName`DownLeftTeeVector -> Precedence[DownLeftTeeVector], (* 270 *)
-Precedence`LongName`DownRightTeeVector -> Precedence[DownRightTeeVector], (* 270 *)
-*)
 Precedence`Class`VectorOperators -> Precedence`Class`HorizontalArrows, (* Precedence[LeftVector] == 270 *)
 
-(*
-Diagonal arrow operators
-*)
-(*
-Precedence`LongName`UpperLeftArrow -> Precedence[UpperLeftArrow], (* 270 *)
-Precedence`LongName`UpperRightArrow -> Precedence[UpperRightArrow], (* 270 *)
-Precedence`LongName`LowerRightArrow -> Precedence[LowerRightArrow], (* 270 *)
-Precedence`LongName`LowerLeftArrow -> Precedence[LowerLeftArrow], (* 270 *)
-*)
 Precedence`Class`DiagonalArrowOperators -> Precedence`Class`HorizontalArrows, (* Precedence[UpperLeftArrow] == 270 *)
 
 Precedence`LongName`VerticalBar -> {Next, Associativity`NonRight}, (* Precedence[VerticalBar] == 280 *)
@@ -241,62 +168,6 @@ Precedence`LongName`NotVerticalBar -> Precedence`LongName`VerticalBar, (* Preced
 Precedence`LongName`DoubleVerticalBar -> Precedence`LongName`VerticalBar, (* Precedence[DoubleVerticalBar] == 280 *)
 Precedence`LongName`NotDoubleVerticalBar -> Precedence`LongName`VerticalBar, (* Precedence[NotDoubleVerticalBar] == 280 *)
 
-(*
-Ordering operators
-*)
-(*
-Precedence`LongName`LeftTriangle -> Precedence[LeftTriangle], (* 290 *)
-Precedence`LongName`RightTriangle -> Precedence[RightTriangle], (* 290 *)
-Precedence`LongName`NotLeftTriangle -> Precedence[NotLeftTriangle], (* 290 *)
-Precedence`LongName`NotRightTriangle -> Precedence[NotRightTriangle], (* 290 *)
-Precedence`LongName`LeftTriangleEqual -> Precedence[LeftTriangleEqual], (* 290 *)
-Precedence`LongName`RightTriangleEqual -> Precedence[RightTriangleEqual], (* 290 *)
-Precedence`LongName`NotLeftTriangleEqual -> Precedence[NotLeftTriangleEqual], (* 290 *)
-Precedence`LongName`NotRightTriangleEqual -> Precedence[NotRightTriangleEqual], (* 290 *)
-Precedence`LongName`LeftTriangleBar -> Precedence[LeftTriangleBar], (* 290 *)
-Precedence`LongName`RightTriangleBar -> Precedence[RightTriangleBar], (* 290 *)
-Precedence`LongName`NotLeftTriangleBar -> Precedence[NotLeftTriangleBar], (* 290 *)
-Precedence`LongName`NotRightTriangleBar -> Precedence[NotRightTriangleBar], (* 290 *)
-Precedence`LongName`TildeEqual -> Precedence[TildeEqual], (* 290 *)
-Precedence`LongName`NotTildeEqual -> Precedence[NotTildeEqual], (* 290 *)
-Precedence`LongName`TildeFullEqual -> Precedence[TildeFullEqual], (* 290 *)
-Precedence`LongName`NotTildeFullEqual -> Precedence[NotTildeFullEqual], (* 290 *)
-Precedence`LongName`Tilde -> Precedence[Tilde], (* 290 *)
-Precedence`LongName`NotTilde -> Precedence[NotTilde], (* 290 *)
-Precedence`LongName`EqualTilde -> Precedence[EqualTilde], (* 290 *)
-Precedence`LongName`NotEqualTilde -> Precedence[NotEqualTilde], (* 290 *)
-Precedence`LongName`TildeTilde -> Precedence[TildeTilde], (* 290 *)
-Precedence`LongName`NotTildeTilde -> Precedence[NotTildeTilde], (* 290 *)
-Precedence`LongName`Proportional -> Precedence[Proportional], (* 290 *)
-Precedence`LongName`Proportion -> Precedence[Proportion], (* 290 *)
-Precedence`LongName`Congruent -> Precedence[Congruent], (* 290 *)
-Precedence`LongName`NotCongruent -> Precedence[NotCongruent], (* 290 *)
-Precedence`LongName`Equilibrium -> Precedence[Equilibrium], (* 290 *)
-Precedence`LongName`ReverseEquilibrium -> Precedence[ReverseEquilibrium], (* 290 *)
-Precedence`LongName`DotEqual -> Precedence[DotEqual], (* 290 *)
-Precedence`LongName`Precedes -> Precedence[Precedes], (* 290 *)
-Precedence`LongName`Succeeds -> Precedence[Succeeds], (* 290 *)
-Precedence`LongName`PrecedesEqual -> Precedence[PrecedesEqual], (* 290 *)
-Precedence`LongName`SucceedsEqual -> Precedence[SucceedsEqual], (* 290 *)
-Precedence`LongName`PrecedesTilde -> Precedence[PrecedesTilde], (* 290 *)
-Precedence`LongName`SucceedsTilde -> Precedence[SucceedsTilde], (* 290 *)
-Precedence`LongName`PrecedesSlantEqual -> Precedence[PrecedesSlantEqual], (* 290 *)
-Precedence`LongName`SucceedsSlantEqual -> Precedence[SucceedsSlantEqual], (* 290 *)
-Precedence`LongName`NotPrecedes -> Precedence[NotPrecedes], (* 290 *)
-Precedence`LongName`NotSucceeds -> Precedence[NotSucceeds], (* 290 *)
-Precedence`LongName`NotPrecedesTilde -> Precedence[NotPrecedesTilde], (* 290 *)
-Precedence`LongName`NotSucceedsTilde -> Precedence[NotSucceedsTilde], (* 290 *)
-Precedence`LongName`NotPrecedesEqual -> Precedence[NotPrecedesEqual], (* 290 *)
-Precedence`LongName`NotSucceedsEqual -> Precedence[NotSucceedsEqual], (* 290 *)
-Precedence`LongName`NotPrecedesSlantEqual -> Precedence[PrecedesSlantEqual], (* 290 *)
-Precedence`LongName`NotSucceedsSlantEqual -> Precedence[SucceedsSlantEqual], (* 290 *)
-Precedence`LongName`CupCap -> Precedence[CupCap], (* 290 *)
-Precedence`LongName`NotCupCap -> Precedence[NotCupCap], (* 290 *)
-Precedence`LongName`HumpEqual -> Precedence[HumpEqual], (* 290 *)
-Precedence`LongName`HumpDownHump -> Precedence[HumpDownHump], (* 290 *)
-Precedence`LongName`NotHumpEqual -> Precedence[NotHumpEqual], (* 290 *)
-Precedence`LongName`NotHumpDownHump -> Precedence[NotHumpDownHump], (* 290 *)
-*)
 Precedence`Class`OrderingOperators -> {Next, Associativity`NonRight}, (* Precedence[LeftTriangle] == 290 *)
 
 
@@ -312,23 +183,8 @@ But empirically it is lower than \[Union]
 *)
 Precedence`SemiSemi -> {Next, Associativity`NonRight},
 
-(*
-Union operators
-*)
-(*
-Precedence`LongName`Union -> Precedence[Union], (* 300 *)
-Precedence`LongName`SquareUnion -> Precedence[SquareUnion], (* 300 *)
-Precedence`LongName`UnionPlus -> Precedence[UnionPlus], (* 300 *)
-*)
 Precedence`Class`UnionOperators -> {Next, Associativity`NonRight}, (* Precedence[Union] == 300 *)
 
-(*
-Intersection operators
-*)
-(*
-Precedence`LongName`Intersection -> Precedence[Intersection], (* 305 *)
-Precedence`LongName`SquareIntersection -> Precedence[SquareIntersection], (* 305 *)
-*)
 Precedence`Class`IntersectionOperators -> {Next, Associativity`NonRight}, (* Precedence[Intersection] == 305 *)
 
 Precedence`Infix`Plus -> {Next, Associativity`NonRight}, (* Precedence[Plus] == 310 *)
@@ -341,13 +197,6 @@ Precedence`LongName`ImplicitPlus -> {Next, Associativity`NonRight},
 
 Precedence`LongName`Sum -> {Next, Associativity`NonRight}, (* Precedence[Sum] == 320 *)
 
-(*
-Precedence`LongName`Integral -> Precedence[Integrate], (* 325 *)
-Precedence`LongName`ContourIntegral -> Precedence`LongName`Integral,
-Precedence`LongName`DoubleContourIntegral -> Precedence`LongName`Integral,
-Precedence`LongName`ClockwiseContourIntegral -> Precedence`LongName`Integral,
-Precedence`LongName`CounterClockwiseContourIntegral -> Precedence`LongName`Integral,
-*)
 Precedence`Class`IntegrationOperators -> {Next, Associativity`NonRight}, (* Precedence[Integrate] == 325 *)
 Precedence`LongName`ExpectationE -> Precedence`Class`IntegrationOperators, (* Precedence[ExpectationE] == 325 *)
 Precedence`LongName`ProbabilityPr -> Precedence`Class`IntegrationOperators, (* Precedence[ProbabilityPr] == 325 *)
@@ -458,54 +307,8 @@ CubeRoot
 *)
 Precedence`LongName`CubeRoot -> Precedence`LongName`Sqrt,
 
-(*
-Vertical arrow operators
-*)
-(*
-Precedence`LongName`UpArrow -> Precedence[UpArrow], (* 580 *)
-Precedence`LongName`DownArrow -> Precedence[DownArrow], (* 580 *)
-Precedence`LongName`UpDownArrow -> Precedence[UpDownArrow], (* 580 *)
-Precedence`LongName`UpTeeArrow -> Precedence[UpTeeArrow], (* 580 *)
-Precedence`LongName`DownTeeArrow -> Precedence[DownTeeArrow], (* 580 *)
-Precedence`LongName`UpArrowDownArrow -> Precedence[UpArrowDownArrow], (* 580 *)
-Precedence`LongName`DoubleUpArrow -> Precedence[DoubleUpArrow], (* 580 *)
-Precedence`LongName`DoubleDownArrow -> Precedence[DoubleDownArrow], (* 580 *)
-Precedence`LongName`DoubleUpDownArrow -> Precedence[DoubleUpDownArrow], (* 580 *)
-Precedence`LongName`DownArrowUpArrow -> Precedence[DownArrowUpArrow], (* 580 *)
-Precedence`LongName`LongLeftArrow -> Precedence[LongLeftArrow], (* 580 *)
-Precedence`LongName`LongRightArrow -> Precedence[LongRightArrow], (* 580 *)
-Precedence`LongName`LongLeftRightArrow -> Precedence[LongLeftRightArrow], (* 580 *)
-Precedence`LongName`DoubleLongLeftArrow -> Precedence[DoubleLongLeftArrow], (* 580 *)
-Precedence`LongName`DoubleLongRightArrow -> Precedence[DoubleLongRightArrow], (* 580 *)
-Precedence`LongName`DoubleLongLeftRightArrow -> Precedence[DoubleLongLeftRightArrow], (* 580 *)
-Precedence`LongName`UpArrowBar -> Precedence[UpArrowBar], (* 580 *)
-Precedence`LongName`DownArrowBar -> Precedence[DownArrowBar], (* 580 *)
-Precedence`LongName`ShortUpArrow -> Precedence[ShortUpArrow], (* 580 *)
-Precedence`LongName`ShortDownArrow -> Precedence[ShortDownArrow], (* 580 *)
-*)
 Precedence`Class`VerticalArrowOperators -> {Next, Associativity`NonRight}, (* Precedence[UpArrow] == 580 *)
 
-(*
-Vertical vector operators
-*)
-(*
-Precedence`LongName`RightUpVector -> Precedence[RightUpVector], (* 580 *)
-Precedence`LongName`LeftUpVector -> Precedence[LeftUpVector], (* 580 *)
-Precedence`LongName`RightDownVector -> Precedence[RightDownVector], (* 580 *)
-Precedence`LongName`LeftDownVector -> Precedence[LeftDownVector], (* 580 *)
-Precedence`LongName`RightUpDownVector -> Precedence[RightUpDownVector], (* 580 *)
-Precedence`LongName`LeftUpDownVector -> Precedence[LeftUpDownVector], (* 580 *)
-Precedence`LongName`RightUpVectorBar -> Precedence[RightUpVectorBar], (* 580 *)
-Precedence`LongName`RightDownVectorBar -> Precedence[RightDownVectorBar], (* 580 *)
-Precedence`LongName`LeftUpVectorBar -> Precedence[LeftUpVectorBar], (* 580 *)
-Precedence`LongName`LeftDownVectorBar -> Precedence[LeftDownVectorBar], (* 580 *)
-Precedence`LongName`RightUpTeeVector -> Precedence[RightUpTeeVector], (* 580 *)
-Precedence`LongName`RightDownTeeVector -> Precedence[RightDownTeeVector], (* 580 *)
-Precedence`LongName`LeftUpTeeVector -> Precedence[LeftUpTeeVector], (* 580 *)
-Precedence`LongName`LeftDownTeeVector -> Precedence[LeftDownTeeVector], (* 580 *)
-Precedence`LongName`UpEquilibrium -> Precedence[UpEquilibrium], (* 580 *)
-Precedence`LongName`ReverseUpEquilibrium -> Precedence[ReverseUpEquilibrium], (* 580 *)
-*)
 Precedence`Class`VerticalVectorOperators -> Precedence`Class`VerticalArrowOperators, (* Precedence[RightUpVector] == 580 *)
 
 Precedence`Caret -> {Next, Associativity`Right}, (* Precedence[Power] == 590 *)

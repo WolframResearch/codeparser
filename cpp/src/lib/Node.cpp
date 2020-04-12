@@ -125,12 +125,13 @@ Node::Node(NodeSeq ChildrenIn) : Children(std::move(ChildrenIn)) {
 
     // TODO: enable again after whitespace work
     // "whitespace work" is refactoring of how eatAll() and appendIfEmpty() is done through the code
-    
-//    auto F = Children.first();
-//    auto L = Children.last();
-//
-//    assert(!F->isTrivia());
-//    assert(!L->isTrivia());
+#if 0
+    auto F = Children.first();
+    auto L = Children.last();
+
+    assert(!F->isTrivia());
+    assert(!L->isTrivia());
+#endif // #if 0
 #endif
 }
 

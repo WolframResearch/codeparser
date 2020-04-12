@@ -117,7 +117,7 @@ If[$WorkaroundUnreportedSortBug1,
   ,
   (*
   TODO: v12.0 introduced SortBy[list, f, p]
-  when targting v12.0, then can use SortBy[list, ToCharacterCode, lexOrderingForLists]
+  when targeting v12.0, then can use SortBy[list, ToCharacterCode, lexOrderingForLists]
   *)
   lexSort = Sort[#, lexOrdering]&
 ]

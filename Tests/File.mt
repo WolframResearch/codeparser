@@ -260,33 +260,6 @@ TestMatch[
 
 
 
-(*
-
-?a
-
-Uncomment when ?a is handled
-
-
-crash2 = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash2.txt"}]
-
-cst = ConcreteParseFile[crash2]
-
-TestMatch[
-	cst
-	,
-	FileNode[File, {
-		StartOfLineNode[Information, {
-			LeafNode[Token`Question, "?", <|Source -> {{1, 1}, {1, 1}}|>],
-			LeafNode[String, "123456\"", <|Source -> {{1, 2}, {2, 4}}|>]}, <|Source -> {{1, 1}, {2, 4}}|>]}, <|Source -> {{1, 1}, {2, 4}}|>]
-	,
-	TestID->"File-20191103-T1K0D2"
-]
-
-*)
-
-
-
-
 
 
 

@@ -37,10 +37,6 @@ MakeGroupNode
 MakeCallNode
 MakePrefixBinaryNode
 
-(*
-MakeStartOfLineNode
-MakeStartOfFileNode
-*)
 MakeBlankNode
 MakeBlankSequenceNode
 MakeBlankNullSequenceNode
@@ -400,46 +396,29 @@ MakeCallNode[tag_, payload_, srcArgs___] :=
 MakePrefixBinaryNode[tag_, payload_, srcArgs___] :=
 	PrefixBinaryNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
-(*
-MakeStartOfLineNode[tag_, payload_, srcArgs___] :=
-	StartOfLineNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
-
-MakeStartOfFileNode[tag_, payload_, srcArgs___] :=
-	StartOfFileNode[tag, payload, <|Source->structureSrcArgs[srcArgs]|>]
-*)
-
 MakeBlankNode[tag_, payload_, srcArgs___] :=
 	BlankNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
 
 MakeBlankSequenceNode[tag_, payload_, srcArgs___] :=
 	BlankSequenceNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
-
 MakeBlankNullSequenceNode[tag_, payload_, srcArgs___] :=
 	BlankNullSequenceNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-
 
 MakePatternBlankNode[tag_, payload_, srcArgs___] :=
 	PatternBlankNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
-
 MakePatternBlankSequenceNode[tag_, payload_, srcArgs___] :=
 	PatternBlankSequenceNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
 
 MakePatternBlankNullSequenceNode[tag_, payload_, srcArgs___] :=
 	PatternBlankNullSequenceNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
-
 MakePatternOptionalDefaultNode[tag_, payload_, srcArgs___] :=
 	PatternOptionalDefaultNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
-
 MakeSyntaxErrorNode[tag_, payload_, srcArgs___] :=
 	SyntaxErrorNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
 
 MakeGroupMissingCloserNode[tag_, payload_, srcArgs___] :=
 	GroupMissingCloserNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]

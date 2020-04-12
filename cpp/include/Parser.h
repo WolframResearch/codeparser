@@ -8,7 +8,6 @@
 #include "TokenEnum.h" // for TokenEnum
 
 #include <vector>
-#include <array>
 #include <deque>
 #include <memory> // for unique_ptr
 
@@ -92,20 +91,12 @@ public:
     
     void nextToken(Token Tok);
     
-#if STARTOFLINE
-    void nextToken_stringifyLine();
-#endif // STARTOFLINE
-    
     void nextToken_stringifySymbol();
     void nextToken_stringifyFile();
     
     Token nextToken0(ParserContext Ctxt);
     
     Token currentToken(ParserContext Ctxt) const;
-
-#if STARTOFLINE
-    Token currentToken_stringifyLine() const;
-#endif // STARTOFLINE
     
     Token currentToken_stringifySymbol() const;
     Token currentToken_stringifyFile() const;

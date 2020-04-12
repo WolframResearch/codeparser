@@ -6,8 +6,6 @@
 #include "Tokenizer.h" // for Tokenizer
 #include "ParseletRegistration.h"
 
-#include <algorithm> // for generate with GCC and MSVC
-
 Parser::Parser() : tokenQueue(), Issues() {}
 
 Parser::~Parser() {}
@@ -42,29 +40,6 @@ void Parser::nextToken(Token Tok) {
     
     TheTokenizer->nextToken(Tok);
 }
-
-
-#if STARTOFLINE
-
-void Parser::nextToken_stringifyLine() {
-    
-    //
-    // handle the queue before anything else
-    //
-    // We do not know anything about how many Tokens should be read
-    //
-    if (!tokenQueue.empty()) {
-        
-        // erase first
-        tokenQueue.erase(tokenQueue.begin());
-        
-        return;
-    }
-    
-    TheTokenizer->nextToken_stringifyLine();
-}
-
-#endif // STARTOFLINE
 
 
 void Parser::nextToken_stringifySymbol() {
@@ -154,23 +129,6 @@ Token Parser::currentToken(ParserContext Ctxt) const {
     
     return Tok;
 }
-
-
-#if STARTOFLINE
-
-Token Parser::currentToken_stringifyLine() const {
-    
-    if (!tokenQueue.empty()) {
-        
-        auto Tok = tokenQueue[0];
-        
-        return Tok;
-    }
-    
-    return TheTokenizer->currentToken_stringifyLine();
-}
-
-#endif // STARTOFLINE
 
 
 Token Parser::currentToken_stringifySymbol() const {

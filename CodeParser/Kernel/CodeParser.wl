@@ -161,10 +161,6 @@ GroupNode
 CallNode
 PrefixBinaryNode
 
-(*
-StartOfLineNode
-StartOfFileNode
-*)
 BlankNode
 BlankSequenceNode
 BlankNullSequenceNode

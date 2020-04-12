@@ -457,14 +457,6 @@ Module[{handledChildren, aggregatedChildren},
       ],
 
     (*
-    StartOfLine
-    *)
-    (*
-    {LeafNode[Token`Question, _, _], ___}, StartOfLineNode[Information, {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~ MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2+1), "StringifyMode" -> 1]&, children[[2;;-1]]], <|Source->Append[pos, 1]|>],
-    {LeafNode[Token`QuestionQuestion, _, _], ___}, StartOfLineNode[Information, {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~ MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2+1), "StringifyMode" -> 1]&, children[[2;;-1]]], <|Source->Append[pos, 1]|>],
-    *)
-
-    (*
     Postfix
     *)
     {_, LeafNode[Token`Amp, _, _]}, PostfixNode[Function, handledChildren, <|Source->Append[pos, 1]|>],
@@ -836,7 +828,7 @@ Split things like a_b into correct structures
 *)
 
 (*
-Just do simple thing here and disallow _ " and .
+Just do simple thing here and disallow _ and " and .
 *)
 letterlikePat = Except["_"|"\""|"."]
 
@@ -1949,21 +1941,6 @@ Module[{nodeBoxes},
   ];
   RowBox[nodeBoxes]
 ]]
-
-
-
-(*
-toStandardFormBoxes[StartOfLineNode[op_, nodes_, data_]] :=
-Catch[
-Module[{nodeBoxes},
-  nodeBoxes = toStandardFormBoxes /@ nodes;
-  If[AnyTrue[nodeBoxes, FailureQ],
-    Throw[SelectFirst[nodeBoxes, FailureQ]]
-  ];
-  RowBox[nodeBoxes]
-]]
-*)
-
 
 
 

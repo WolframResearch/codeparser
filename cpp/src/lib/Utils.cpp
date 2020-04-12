@@ -4,7 +4,6 @@
 #include "Tokenizer.h" // for Tokenizer
 #include "LongNames.h" // for CodePointToLongNameMap
 
-#include <cstring> // for strcmp with GCC and MSVC
 #include <cassert>
 
 //

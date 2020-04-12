@@ -343,20 +343,6 @@ abstract[TernaryNode[Span, {left_, _, middle_, _, right_}, data_]] := CallNode[T
 
 
 
-(*
-abstract[StartOfLineNode[Information, {LeafNode[Token`Question, _, _], LeafNode[String, str_, _]}, data_]] := CallNode[ToNode[Information], {ToNode[str], CallNode[ToNode[Rule], { ToNode[LongForm], ToNode[False] }, <||>]}, data]
-abstract[StartOfLineNode[Information, {LeafNode[Token`QuestionQuestion, _, _], LeafNode[String, str_, _]}, data_]] := CallNode[ToNode[Information], {ToNode[str], CallNode[ToNode[Rule], { ToNode[LongForm], ToNode[True] }, <||>]}, data]
-abstract[StartOfLineNode[Run, {LeafNode[Token`Bang, _, _], LeafNode[String, str_, _]}, data_]] := CallNode[ToNode[Run], {ToNode[str]}, data]
-abstract[StartOfLineNode[FilePrint, {LeafNode[Token`BangBang, _, _], LeafNode[String, str_, _]}, data_]] := CallNode[ToNode[FilePrint], {ToNode[str]}, data]
-*)
-
-(*
-Do not abstract #! nodes
-*)
-(*
-abstract[StartOfFileNode[Shebang, children_, data_]] := StartOfFileNode[Shebang, children, data]
-*)
-
 
 
 
@@ -1169,6 +1155,9 @@ Module[{pairs, processedPairs, flattened, processed},
 
 (*
 + +a  parses the same as  +a
+is it a quirk that  + +a  is parsed as  +a  ?
+The first + is eaten
+TODO: add to kernel quirks mode
 *)
 abstractPrefixPlus[PrefixNode[Plus, {_, rand_}, _], data_] := abstractPrefixPlus[rand, data]
 
@@ -1247,10 +1236,6 @@ abstractTimes[BinaryNode[Divide, {left_, right_}, data_]] :=
 
 
 
-(*
-abstractInfixInequality[node:InfixNode[InfixInequality, children_, data_]] :=
-	simplifyInfixInequality[node]
-*)
 
 (*
 attempt to simplify e.g. Inequality[a, Less, b, Less, c] to Less[a, b, c]
