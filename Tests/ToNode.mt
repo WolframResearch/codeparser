@@ -41,4 +41,30 @@ Test[
 
 
 
+rat = 1/16
+
+Test[
+	ToNode[rat]
+	,
+	LeafNode[Rational, "16^^1*^-1", <||>]
+	,
+	TestID->"ToNode-20200413-V3L1T8"
+]
+
+
+rat = 1/37
+
+Test[
+	ToNode[rat]
+	,
+	CallNode[LeafNode[Symbol, "Rational", <||>], {LeafNode[Integer, "1", <||>], LeafNode[Integer, "37", <||>]}, <||>]
+	,
+	TestID->"ToNode-20200413-V2I2X0"
+]
+
+
+
+
+
+
 
