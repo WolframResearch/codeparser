@@ -201,13 +201,13 @@ typedef const std::string FormatIssueTag;
 // SyntaxAmbiguitySpace is: insert space between characters
 //
 FormatIssueTag FORMATISSUETAG_SPACE = "Space";
-FormatIssueTag FORMATISSUETAG_UNEXPECTEDCARRIAGERETURN = "UnexpectedCarriageReturn";
 FormatIssueTag FORMATISSUETAG_UNEXPECTEDLINECONTINUATION = "UnexpectedLineContinuation";
 
 
 typedef const std::string EncodingIssueTag;
 
 EncodingIssueTag ENCODINGISSUETAG_INVALIDCHARACTERENCODING = "InvalidCharacterEncoding";
+EncodingIssueTag ENCODINGISSUETAG_UNEXPECTEDCARRIAGERETURN = "UnexpectedCarriageReturn";
 
 
 
@@ -227,6 +227,12 @@ SyntaxIssueSeverity SYNTAXISSUESEVERITY_FATAL = "Fatal";
 typedef const std::string FormatIssueSeverity;
 
 FormatIssueSeverity FORMATISSUESEVERITY_FORMATTING = "Formatting";
+
+typedef const std::string EncodingIssueSeverity;
+
+EncodingIssueSeverity ENCODINGISSUESEVERITY_ERROR = "Error";
+EncodingIssueSeverity ENCODINGISSUESEVERITY_FATAL = "Fatal";
+
 
 //
 // A single character of source code
@@ -499,7 +505,7 @@ public:
 
 class SyntaxIssue : public Issue {
 public:
-    SyntaxIssue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Con, std::vector<CodeActionPtr> Actions) : Issue(Tag, Msg, Sev, Src, Con, std::move(Actions)) {}
+    SyntaxIssue(SyntaxIssueTag Tag, std::string Msg, SyntaxIssueSeverity Sev, Source Src, double Con, std::vector<CodeActionPtr> Actions) : Issue(Tag, Msg, Sev, Src, Con, std::move(Actions)) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
@@ -510,7 +516,7 @@ public:
 
 class FormatIssue : public Issue {
 public:
-    FormatIssue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Air, std::vector<CodeActionPtr> Actions) : Issue(Tag, Msg, Sev, Src, Air, std::move(Actions)) {}
+    FormatIssue(FormatIssueTag Tag, std::string Msg, FormatIssueSeverity Sev, Source Src, double Air, std::vector<CodeActionPtr> Actions) : Issue(Tag, Msg, Sev, Src, Air, std::move(Actions)) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
@@ -521,7 +527,7 @@ public:
 
 class EncodingIssue : public Issue {
 public:
-    EncodingIssue(std::string Tag, std::string Msg, std::string Sev, Source Src) : Issue(Tag, Msg, Sev, Src, 0.0, {}) {}
+    EncodingIssue(EncodingIssueTag Tag, std::string Msg, EncodingIssueSeverity Sev, Source Src) : Issue(Tag, Msg, Sev, Src, 0.0, {}) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;

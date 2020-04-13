@@ -104,7 +104,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
                 // No CodeAction here
                 //
                 
-                auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", FORMATISSUESEVERITY_FORMATTING, Source(currentSourceCharacterStartLoc), 0.0, {}));
+                auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", ENCODINGISSUESEVERITY_ERROR, Source(currentSourceCharacterStartLoc)));
                 
                 addIssue(std::move(I));
             }
@@ -1038,7 +1038,7 @@ SourceCharacter ByteDecoder::invalid(SourceLocation errSrcLoc, NextCharacterPoli
     // No CodeAction here
     //
     
-    auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_INVALIDCHARACTERENCODING, "Invalid UTF-8 sequence.", SYNTAXISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next())));
+    auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_INVALIDCHARACTERENCODING, "Invalid UTF-8 sequence.", ENCODINGISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next())));
     
     Issues.push_back(std::move(I));
 #endif // !NISSUES

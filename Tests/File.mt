@@ -81,8 +81,8 @@ TestMatch[
 					LeafNode[Token`Newline, "\r", <|Source -> {{2, 1}, {3, 1}}|>],
 					LeafNode[Symbol, "A", <|Source -> {{3, 1}, {3, 2}}|>]},
 										<| SyntaxIssues->{
-											FormatIssue["UnexpectedCarriageReturn", _, _, _],
-											FormatIssue["UnexpectedCarriageReturn", _, _, _]}, Source -> {{1, 1}, {3, 2}}|>]
+											EncodingIssue["UnexpectedCarriageReturn", _, _, _],
+											EncodingIssue["UnexpectedCarriageReturn", _, _, _]}, Source -> {{1, 1}, {3, 2}}|>]
 	,
 	TestID->"File-20190422-C6U5B6"
 ]

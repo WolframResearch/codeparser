@@ -322,3 +322,53 @@ TestMatch[
 
 
 
+
+
+
+
+(*
+
+EncodingIssues
+
+*)
+
+(*
+In[14]:= ToCharacterCode["\[Alpha]", "UTF-8"]
+
+Out[14]= {206, 177}
+*)
+
+TestMatch[
+	FirstCase[CodeConcreteParse[{206}, ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
+		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
+	,
+	KeyValuePattern[SyntaxIssues -> {
+		SyntaxIssue[_, _, _, _],
+		EncodingIssue["InvalidCharacterEncoding", _, "Fatal", KeyValuePattern[Source -> {{1, 1}, {1, 2}}]]}]
+	,
+	TestID->"SyntaxIssues-20200413-T5W0H7"
+]
+
+TestMatch[
+	FirstCase[CodeConcreteParse["{1,\r2}", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
+		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
+	,
+	KeyValuePattern[SyntaxIssues -> {
+		EncodingIssue["UnexpectedCarriageReturn", _, "Error", KeyValuePattern[Source -> {{1, 4}, {1, 4}}]]}]
+	,
+	TestID->"SyntaxIssues-20200413-K2N2U0"
+]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
