@@ -11,7 +11,8 @@ Paclet[
     {"LibraryLink"},
     {"Resource", Root->"Resources",
       Resources -> {
-        {"Collatz","Examples/Collatz.m"}
+        {"Collatz","Examples/Collatz.m"},
+        {"LongNames", "Generated/LongNames.wl"}
       }
     }
   }

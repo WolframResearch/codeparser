@@ -153,6 +153,9 @@ $sharedExt =
 setupLibraries[] :=
 Module[{location, libraryResources},
 	
+	(*
+	TODO: when targeting 12.1 as a minimum, then look into doing paclet["AssetLocation", "LibraryResources"] or similar
+	*)
 	location = "Location" /. PacletInformation["CodeParser"];
 
 	libraryResources = FileNameJoin[{location, "LibraryResources", $SystemID}];
@@ -487,9 +490,12 @@ Module[{nearest, location, longNamesFile},
 	*)
 	If[!ListQ[$longNames],
 
+		(*
+		TODO: when targeting 12.1 as a minimum, then use paclet["AssetLocation", "LongNames"]
+		*)
 		location = "Location" /. PacletInformation["CodeParser"];
 
-		longNamesFile = FileNameJoin[{location, "Generated", "LongNames.wl"}];
+		longNamesFile = FileNameJoin[{location, "Resources", "Generated", "LongNames.wl"}];
 
 		$longNames = Quiet[Get[longNamesFile], {Get::noopen}];
 		If[FailureQ[$longNames],
@@ -519,9 +525,12 @@ Module[{names, documentedNames, undocumentedNames, location, longNamesFile},
 	*)
 	If[!ListQ[$longNames],
 
+		(*
+		TODO: when targeting 12.1 as a minimum, then use paclet["AssetLocation", "LongNames"]
+		*)
 		location = "Location" /. PacletInformation["CodeParser"];
 
-		longNamesFile = FileNameJoin[{location, "Generated", "LongNames.wl"}];
+		longNamesFile = FileNameJoin[{location, "Resources", "Generated", "LongNames.wl"}];
 
 		$longNames = Quiet[Get[longNamesFile], {Get::noopen}];
 		If[FailureQ[$longNames],

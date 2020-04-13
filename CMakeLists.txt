@@ -189,13 +189,13 @@ foreach(SRC ${GENERATED_WL_PACLET_SOURCES})
 	get_filename_component(BARE_SRC ${SRC} NAME)
 	add_custom_command(
 		OUTPUT
-			${PROJECT_BINARY_DIR}/paclet/${PACLET}/Generated/${BARE_SRC}
+			${PROJECT_BINARY_DIR}/paclet/${PACLET}/Resources/Generated/${BARE_SRC}
 		COMMAND
-			${CMAKE_COMMAND} -E copy ${SRC} ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Generated/${BARE_SRC}
+			${CMAKE_COMMAND} -E copy ${SRC} ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Resources/Generated/${BARE_SRC}
 		DEPENDS
 			${SRC}
 	)
-	list(APPEND COPIED_WL_PACLET_SOURCES ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Generated/${BARE_SRC})
+	list(APPEND COPIED_WL_PACLET_SOURCES ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Resources/Generated/${BARE_SRC})
 endforeach()
 
 
