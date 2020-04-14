@@ -668,6 +668,15 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
     
     policy |= PRESERVE_WS_AFTER_LC | LC_IS_MEANINGFUL;
     
+#if !NISSUES
+    if ((policy & ENABLE_SLOT_ISSUES) == ENABLE_SLOT_ISSUES) {
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNDOCUMENTEDSLOTSYNTAX, "The name following ``#`` is not documented to allow the ``\"`` character.", SYNTAXISSUESEVERITY_REMARK, getTokenSource(tokenStartLoc), 0.33, {}));
+        
+        Issues.push_back(std::move(I));
+    }
+#endif // !NISSUES
+    
     while (true) {
         
         //
@@ -2520,115 +2529,14 @@ inline Token Tokenizer::handleHash(Buffer tokenStartBuf, SourceLocation tokenSta
     
     c = TheCharacterDecoder->currentWLCharacter(policy);
     
-    auto Operator = TOKEN_UNKNOWN;
+    auto Operator = TOKEN_HASH; // #
     
-    //
-    // From Slot documentation:
-    //
-    // In the form #name, the characters in name can be any combination of alphanumeric characters not beginning with digits.
-    //
-    //
-    // A slot that starts with a digit goes down one path
-    // And a slot that starts with a letter goes down another path
-    //
-    // Make sure e.g.  #1a is not parsed as SlotNode["#1a"]
-    //
-    
-    switch (c.to_point()) {
-        case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': {
-            
-            Operator = TOKEN_HASH; // #
-            
-            size_t count;
-            c = handleDigits(policy, c, &count);
-        }
-            break;
-        //
-        // letterlike
-        //
-        case '\x00': case '\x01': case '\x02': case '\x03': case '\x04': case '\x05': case '\x06': /*    \x07*/
-        case '\x08': /*    \x09*/ /*    \x0a*/ /*    \x0b*/ /*    \x0c*/ /*    \x0d*/ case '\x0e': case '\x0f':
-        case '\x10': case '\x11': case '\x12': case '\x13': case '\x14': case '\x15': case '\x16': case '\x17':
-        case '\x18': case '\x19': case '\x1a': case '\x1b': case '\x1c': case '\x1d': case '\x1e': case '\x1f':
-        case '$':
-        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M':
-        case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
-        case '`':
-        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm':
-        case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z': {
-            
-            auto symbolStartBuf = TheByteBuffer->buffer;
-            auto symbolStartLoc = TheByteDecoder->SrcLoc;
-            
-            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-            TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
-            
-            Operator = TOKEN_HASH; // #
-            
-            policy |= ENABLE_SLOT_ISSUES;
-            
-            handleSymbol(symbolStartBuf, symbolStartLoc, c, policy);
-        }
-            break;
-        case '"': {
-            
-            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-            TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
-            
-            Operator = TOKEN_HASH; // #
-            
-            handleString(tokenStartBuf, tokenStartLoc, c, policy);
-            
-#if !NISSUES
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNDOCUMENTEDSLOTSYNTAX, "The name following ``#`` is not documented to allow the ``\"`` character.", SYNTAXISSUESEVERITY_REMARK, getTokenSource(tokenStartLoc), 0.33, {}));
-            
-            Issues.push_back(std::move(I));
-#endif // !NISSUES
-        }
-            break;
-        case '#': {
-            
-            Operator = TOKEN_HASHHASH; // ##
-            
-            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-            TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
-            
-            c = TheCharacterDecoder->currentWLCharacter(policy);
-            
-            if (c.isDigit()) {
-                
-                size_t count;
-                handleDigits(policy, c, &count);
-            }
-        }
-            break;
-        default: {
-            
-            //
-            // All other multi-byte characters
-            //
-            
-            if (c.isMBLetterlike()) {
-                
-                auto symbolStartBuf = TheByteBuffer->buffer;
-                auto symbolStartLoc = TheByteDecoder->SrcLoc;
-                
-                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-                TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
-                
-                Operator = TOKEN_HASH; // #
-                
-                policy |= ENABLE_SLOT_ISSUES;
-                
-                handleSymbol(symbolStartBuf, symbolStartLoc, c, policy);
-                
-            } else {
-                
-                Operator = TOKEN_HASH; // #
-            }
-            
-        }
-            break;
+    if (c.to_point() == '#') {
+        
+        Operator = TOKEN_HASHHASH; // ##
+        
+        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
     }
     
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
@@ -2646,6 +2554,10 @@ inline Token Tokenizer::handlePercent(Buffer tokenStartBuf, SourceLocation token
     
     if (c.to_point() == '%') {
         
+        c = TheCharacterDecoder->currentWLCharacter(policy);
+        
+        Operator = TOKEN_PERCENTPERCENT; // %%
+        
         while (true) {
             
             //
@@ -2653,6 +2565,7 @@ inline Token Tokenizer::handlePercent(Buffer tokenStartBuf, SourceLocation token
             //
             
             if (c.to_point() != '%') {
+                
                 break;
             }
             
@@ -2660,12 +2573,8 @@ inline Token Tokenizer::handlePercent(Buffer tokenStartBuf, SourceLocation token
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
             c = TheCharacterDecoder->currentWLCharacter(policy);
-        }
-        
-    } else if (c.isDigit()) {
-        
-        size_t count;
-        handleDigits(policy, c, &count);
+            
+        } // while
     }
     
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));

@@ -82,6 +82,8 @@ enum NextPolicyBits : uint8_t {
     //
     // But ToExpression["\"0.\\\n  6\""] evaluates to "0.  6" (whitespace IS preserved)
     //
+    // Used by CharacterDecoder
+    //
     // FIXME: this could be handled by line continuation processing
     //
     PRESERVE_WS_AFTER_LC = 0x01,
@@ -95,10 +97,14 @@ enum NextPolicyBits : uint8_t {
     //
     // This is also used when peeking: no need to report issues while peeking
     //
+    // Used By ByteDecoder, CharacterDecoder
+    //
     ENABLE_CHARACTER_DECODING_ISSUES = 0x02,
     
     //
     // Needs to be 0b100, for easy or-ing of TOKEN_INTERNALNEWLINE to TOKEN_TOPLEVELNEWLINE
+    //
+    // Used by Tokenizer
     //
     RETURN_TOPLEVELNEWLINE = 0x04,
     
@@ -115,6 +121,8 @@ enum NextPolicyBits : uint8_t {
     //
     // would NOT give a warning (line continuation IS meaningful)
     //
+    // Used by CharacterDecoder
+    //
     LC_IS_MEANINGFUL = 0x08,
     
     //
@@ -122,12 +130,16 @@ enum NextPolicyBits : uint8_t {
     //
     // Check for sequences like \\[Alpa] and report them
     //
+    // Used by CharacterDecoder
+    //
     ENABLE_UNLIKELY_ESCAPE_CHECKING = 0x10,
     
     //
     // If inside #, then give syntax warnings for #"123" and #a`b syntax (which is undocumented syntax)
     //
     // But obviously "123" and a`b are fine outside of #
+    //
+    // Used by Tokenizer
     //
     ENABLE_SLOT_ISSUES = 0x20,
 };

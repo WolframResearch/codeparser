@@ -91,6 +91,7 @@ symbols = Union[Join[
             CodeParser`Library`MakeBlankNullSequenceNode,
             CodeParser`Library`MakePatternBlankNode, CodeParser`Library`MakePatternBlankSequenceNode,
             CodeParser`Library`MakePatternBlankNullSequenceNode, CodeParser`Library`MakePatternOptionalDefaultNode, CodeParser`Library`MakeSyntaxErrorNode,
+            CodeParser`Library`MakeSlotNode, CodeParser`Library`MakeSlotSequenceNode, CodeParser`Library`MakeOutNode,
             CodeParser`Library`MakeGroupMissingCloserNode, CodeParser`Library`MakeGroupMissingCloserNeedsReparseNode, CodeParser`Library`MakePrefixBinaryNode,
             CodeParser`Library`MakeSyntaxIssue, CodeParser`Library`MakeReplaceTextCodeAction, CodeParser`Library`MakeInsertTextCodeAction,
             CodeParser`Library`MakeFormatIssue, CodeParser`Library`MakeDeleteTextCodeAction, CodeParser`Library`MakeDeleteTriviaCodeAction,
@@ -116,6 +117,10 @@ symbols = Union[Join[
       PrefixUnsupportedTokenParselet[] :> Nothing,
       SymbolParselet[] :> Nothing,
       UnderDotParselet[] :> Nothing,
+      HashParselet[] :> Nothing,
+      HashHashParselet[] :> Nothing,
+      PercentParselet[] :> Nothing,
+      PercentPercentParselet[] :> Nothing,
       SemiSemiParselet[] :> Span
     },
     DownValues[InfixOperatorToParselet][[All, 2]] /. {

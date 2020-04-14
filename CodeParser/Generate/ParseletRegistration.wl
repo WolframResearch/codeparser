@@ -34,6 +34,10 @@ SymbolParselet
 TildeParselet
 UnderDotParselet
 UnderParselet
+HashParselet
+HashHashParselet
+PercentParselet
+PercentPercentParselet
 ColonColonParselet
 EqualDotParselet
 ColonEqualParselet
@@ -56,11 +60,6 @@ PrefixOperatorToParselet[Token`String] = LeafParselet[Precedence`Highest]
 PrefixOperatorToParselet[Token`Integer] = LeafParselet[Precedence`Highest]
 PrefixOperatorToParselet[Token`Real] = LeafParselet[Precedence`Highest]
 PrefixOperatorToParselet[Token`Rational] = LeafParselet[Precedence`Highest]
-
-PrefixOperatorToParselet[Token`Percent] = LeafParselet[Precedence`Highest]
-
-PrefixOperatorToParselet[Token`Hash] = LeafParselet[Precedence`Highest]
-PrefixOperatorToParselet[Token`HashHash] = LeafParselet[Precedence`Highest]
 
 PrefixOperatorToParselet[Token`Unknown] = PrefixAssertFalseParselet[]
 PrefixOperatorToParselet[Token`Whitespace] = PrefixAssertFalseParselet[]
@@ -168,6 +167,13 @@ PrefixOperatorToParselet[Token`UnderUnder] = UnderParselet[2]
 PrefixOperatorToParselet[Token`UnderUnderUnder] = UnderParselet[3]
 
 PrefixOperatorToParselet[Token`UnderDot] = UnderDotParselet[]
+
+
+PrefixOperatorToParselet[Token`Hash] = HashParselet[]
+PrefixOperatorToParselet[Token`HashHash] = HashHashParselet[]
+
+PrefixOperatorToParselet[Token`Percent] = PercentParselet[]
+PrefixOperatorToParselet[Token`PercentPercent] = PercentPercentParselet[]
 
 (*
 prefix, infix, postfix
@@ -840,6 +846,14 @@ formatPrefix[UnderParselet[3]] := "new UnderParselet<BlankNullSequenceNode, Patt
 
 formatPrefix[UnderDotParselet[]] := "new UnderDotParselet()"
 
+formatPrefix[HashParselet[]] := "new HashParselet()"
+
+formatPrefix[HashHashParselet[]] := "new HashHashParselet()"
+
+formatPrefix[PercentParselet[]] := "new PercentParselet()"
+
+formatPrefix[PercentPercentParselet[]] := "new PercentPercentParselet()"
+
 formatPrefix[LessLessParselet[]] := "&lessLessParselet"
 
 formatPrefix[SemiSemiParselet[]] := "&semiSemiParselet"
@@ -984,43 +998,46 @@ public:
         
         TheParser->nextToken(TokIn);
         
-        auto Tok = TheParser->currentToken(Ctxt);
-        
         NodePtr Blank;
-        if (Tok.Tok == TOKEN_SYMBOL) {
-            
-            auto Sym2 = contextSensitiveSymbolParselet->parseContextSensitive(Tok, Ctxt);
-            
-            NodeSeq Args(1 + 1);
-            Args.append(std::move(Under));
-            Args.append(std::move(Sym2));
-            
-            Blank = NodePtr(new T(std::move(Args)));
-            
-            Tok = TheParser->currentToken(Ctxt);
-            
-        } else if (Tok.Tok == TOKEN_ERROR_EXPECTEDLETTERLIKE) {
-            
-            //
-            // Something like  _a`
-            //
-            // It's nice to include the error inside of the blank
-            //
-            
-            auto parselet = prefixParselets[Tok.Tok.value()];
-            
-            auto ErrorSym2 = parselet->parse(Tok, Ctxt);
-            
-            NodeSeq Args(1 + 1);
-            Args.append(std::move(Under));
-            Args.append(std::move(ErrorSym2));
-            
-            Blank = NodePtr(new T(std::move(Args)));
-            
-            Tok = TheParser->currentToken(Ctxt);
-            
-        } else {
-            Blank = std::move(Under);
+        {
+          LeafSeq ArgsTest;
+
+          auto Tok = TheParser->currentToken(Ctxt);
+          Tok = TheParser->eatLineContinuations(Tok, Ctxt, ArgsTest);
+
+          if (Tok.Tok == TOKEN_SYMBOL) {
+              
+              auto Sym2 = contextSensitiveSymbolParselet->parseContextSensitive(Tok, Ctxt);
+              
+              NodeSeq Args(1 + 1 + 1);
+              Args.append(std::move(Under));
+              Args.appendIfNonEmpty(std::move(ArgsTest));
+              Args.append(std::move(Sym2));
+              
+              Blank = NodePtr(new T(std::move(Args)));
+              
+          } else if (Tok.Tok == TOKEN_ERROR_EXPECTEDLETTERLIKE) {
+              
+              //
+              // Something like  _a`
+              //
+              // It's nice to include the error inside of the blank
+              //
+              
+              auto parselet = prefixParselets[Tok.Tok.value()];
+              
+              auto ErrorSym2 = parselet->parse(Tok, Ctxt);
+              
+              NodeSeq Args(1 + 1 + 1);
+              Args.append(std::move(Under));
+              Args.appendIfNonEmpty(std::move(ArgsTest));
+              Args.append(std::move(ErrorSym2));
+              
+              Blank = NodePtr(new T(std::move(Args)));
+              
+          } else {
+              Blank = std::move(Under);
+          }
         }
         
         return Blank;

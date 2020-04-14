@@ -45,6 +45,11 @@ MakePatternBlankSequenceNode
 MakePatternBlankNullSequenceNode
 MakePatternOptionalDefaultNode
 
+MakeSlotNode
+MakeSlotSequenceNode
+
+MakeOutNode
+
 MakeSyntaxErrorNode
 MakeGroupMissingCloserNode
 MakeGroupMissingCloserNeedsReparseNode
@@ -419,6 +424,15 @@ MakePatternBlankNullSequenceNode[tag_, payload_, srcArgs___] :=
 
 MakePatternOptionalDefaultNode[tag_, payload_, srcArgs___] :=
 	PatternOptionalDefaultNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
+
+MakeSlotNode[tag_, payload_, srcArgs___] :=
+	SlotNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
+
+MakeSlotSequenceNode[tag_, payload_, srcArgs___] :=
+	SlotSequenceNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
+
+MakeOutNode[tag_, payload_, srcArgs___] :=
+	OutNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 MakeSyntaxErrorNode[tag_, payload_, srcArgs___] :=
 	SyntaxErrorNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]

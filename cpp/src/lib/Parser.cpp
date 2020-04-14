@@ -108,6 +108,36 @@ Token Parser::nextToken0(ParserContext Ctxt) {
     return Tok;
 }
 
+Token Parser::nextToken0(ParserContext Ctxt, NextPolicy policy) {
+    
+    //
+    // handle the queue before anything else
+    //
+    // We do not know anything about how many Tokens should be read
+    //
+    if (!tokenQueue.empty()) {
+        
+        auto Tok = tokenQueue[0];
+        
+        // erase first
+        tokenQueue.erase(tokenQueue.begin());
+        
+        return Tok;
+    }
+    
+    auto insideGroup = (Ctxt.Closr != CLOSER_OPEN);
+    //
+    // if insideGroup:
+    //   returnInternalNewlineMask is 0b100
+    // else:
+    //   returnInternalNewlineMask is 0b000
+    //
+    auto returnInternalNewlineMask = static_cast<uint8_t>(insideGroup) << 2;
+    auto Tok = TheTokenizer->nextToken0(policy & ~(returnInternalNewlineMask));
+    
+    return Tok;
+}
+
 Token Parser::currentToken(ParserContext Ctxt) const {
     
     if (!tokenQueue.empty()) {
@@ -126,6 +156,28 @@ Token Parser::currentToken(ParserContext Ctxt) const {
     //
     auto returnInternalNewlineMask = static_cast<uint8_t>(insideGroup) << 2;
     auto Tok = TheTokenizer->currentToken(TOPLEVEL & ~(returnInternalNewlineMask));
+    
+    return Tok;
+}
+
+Token Parser::currentToken(ParserContext Ctxt, NextPolicy policy) const {
+    
+    if (!tokenQueue.empty()) {
+        
+        auto Tok = tokenQueue[0];
+        
+        return Tok;
+    }
+    
+    auto insideGroup = (Ctxt.Closr != CLOSER_OPEN);
+    //
+    // if insideGroup:
+    //   returnInternalNewlineMask is 0b100
+    // else:
+    //   returnInternalNewlineMask is 0b000
+    //
+    auto returnInternalNewlineMask = static_cast<uint8_t>(insideGroup) << 2;
+    auto Tok = TheTokenizer->currentToken(policy & ~(returnInternalNewlineMask));
     
     return Tok;
 }
@@ -304,6 +356,24 @@ Token Parser::eatTriviaButNotToplevelNewlines_stringifyFile(Token T, ParserConte
         nextToken(T);
         
         T = currentToken_stringifyFile();
+    }
+    
+    return T;
+}
+
+Token Parser::eatLineContinuations(Token T, ParserContext Ctxt, LeafSeq& Args) {
+    
+    while (T.Tok == TOKEN_LINECONTINUATION) {
+        
+        //
+        // No need to check isAbort() inside tokenizer loops
+        //
+        
+        Args.append(LeafNodePtr(new LeafNode(T)));
+        
+        nextToken(T);
+        
+        T = currentToken(Ctxt);
     }
     
     return T;

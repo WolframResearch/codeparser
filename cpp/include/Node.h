@@ -342,6 +342,20 @@ public:
     PatternOptionalDefaultNode(NodeSeq Args) : OperatorNode(SYMBOL_CODEPARSER_PATTERNOPTIONALDEFAULT, SYMBOL_CODEPARSER_LIBRARY_MAKEPATTERNOPTIONALDEFAULTNODE, std::move(Args)) {}
 };
 
+class SlotNode : public OperatorNode {
+public:
+    SlotNode(NodeSeq Args) : OperatorNode(SYMBOL_SLOT, SYMBOL_CODEPARSER_LIBRARY_MAKESLOTNODE, std::move(Args)) {}
+};
+
+class SlotSequenceNode : public OperatorNode {
+public:
+    SlotSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_SLOTSEQUENCE, SYMBOL_CODEPARSER_LIBRARY_MAKESLOTSEQUENCENODE, std::move(Args)) {}
+};
+
+class OutNode : public OperatorNode {
+public:
+    OutNode(NodeSeq Args) : OperatorNode(SYMBOL_OUT, SYMBOL_CODEPARSER_LIBRARY_MAKEOUTNODE, std::move(Args)) {}
+};
 
 
 class SyntaxErrorNode : public Node {

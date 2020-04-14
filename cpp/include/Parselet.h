@@ -518,3 +518,43 @@ public:
         return PRECEDENCE_LESSLESS;
     }
 };
+
+class HashParselet : public PrefixParselet {
+public:
+    
+    NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
+    
+    Precedence getPrecedence(ParserContext Ctxt) const override {
+        return PRECEDENCE_HIGHEST;
+    }
+};
+
+class HashHashParselet : public PrefixParselet {
+public:
+    
+    NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
+    
+    Precedence getPrecedence(ParserContext Ctxt) const override {
+        return PRECEDENCE_HIGHEST;
+    }
+};
+
+class PercentParselet : public PrefixParselet {
+public:
+    
+    NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
+    
+    Precedence getPrecedence(ParserContext Ctxt) const override {
+        return PRECEDENCE_HIGHEST;
+    }
+};
+
+class PercentPercentParselet : public PrefixParselet {
+public:
+    
+    NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
+    
+    Precedence getPrecedence(ParserContext Ctxt) const override {
+        return PRECEDENCE_HIGHEST;
+    }
+};

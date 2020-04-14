@@ -20,31 +20,6 @@ Block[{$RecursionLimit = Infinity},
 
 
 
-
-toInputFormString[LeafNode[Symbol, str_, _]] :=
-	str
-
-toInputFormString[LeafNode[String, str_, _]] :=
-	str
-
-toInputFormString[LeafNode[Integer, str_, _]] :=
-	str
-
-toInputFormString[LeafNode[Real, str_, _]] :=
-	str
-
-toInputFormString[LeafNode[Rational, str_, _]] :=
-	str
-
-toInputFormString[LeafNode[Slot, str_, _]] :=
-	str
-
-toInputFormString[LeafNode[SlotSequence, str_, _]] :=
-	str
-
-toInputFormString[LeafNode[Out, str_, _]] :=
-	str
-
 (*
 special case ImplicitTimes to fill in " " for the operators
 *)
@@ -281,6 +256,35 @@ Module[{nodeStrs},
 	StringJoin[nodeStrs]
 ]]
 
+toInputFormString[SlotNode[Slot, nodes_, _]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[nodeStrs]
+]]
+
+toInputFormString[SlotSequenceNode[SlotSequence, nodes_, _]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[nodeStrs]
+]]
+
+toInputFormString[OutNode[Out, nodes_, _]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[nodeStrs]
+]]
 
 
 

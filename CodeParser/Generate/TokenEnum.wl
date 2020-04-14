@@ -28,15 +28,6 @@ tokenToSymbol[Token`Rational] = "Symbol`Rational"
 
 tokenToSymbol[Token`Whitespace] = "Symbol`Whitespace"
 
-tokenToSymbol[Token`Hash] = "Symbol`Slot"
-tokenToSymbol[Token`HashHash] = "Symbol`SlotSequence"
-
-tokenToSymbol[Token`Percent] = "Symbol`Out"
-
-tokenToSymbol[Token`Under] = "Symbol`Blank"
-tokenToSymbol[Token`UnderUnder] = "Symbol`BlankSequence"
-tokenToSymbol[Token`UnderUnderUnder] = "Symbol`BlankNullSequence"
-
 
 (*
 For parser code, there is a distinction between toplevel and internal newlines

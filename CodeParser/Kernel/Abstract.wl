@@ -86,96 +86,27 @@ abstract[LeafNode[Real, sIn_, dataIn_]] :=
 abstract[LeafNode[Rational, sIn_, dataIn_]] :=
 	LeafNode[Rational, sIn, dataIn]
 
-abstract[LeafNode[Slot, sIn_, dataIn_]] :=
-Module[{s, data, rest, lastPos},
 
-	s = sIn;
+abstract[LeafNode[Token`Under, _, data_]] := CallNode[ToNode[Blank], {}, data]
+abstract[LeafNode[Token`UnderUnder, _, data_]] := CallNode[ToNode[BlankSequence], {}, data]
+abstract[LeafNode[Token`UnderUnderUnder, _, data_]] := CallNode[ToNode[BlankNullSequence], {}, data]
+abstract[LeafNode[Token`UnderDot, _, data_]] := CallNode[ToNode[Optional], { CallNode[ToNode[Blank], {}, data] }, data]
 
-	data = dataIn;
 
-	lastPos = StringPosition[s, "#" | "\\.23" | "\\:0023" | "\\|000023" | "\\043" | "\\[RawNumberSign]"][[-1, 2]];
+abstract[LeafNode[Token`Hash, _, data_]] := CallNode[ToNode[Slot], { ToNode[1] }, data]
+abstract[LeafNode[Token`HashHash, _, data_]] := CallNode[ToNode[SlotSequence], { ToNode[1] }, data]
 
-	rest = StringDrop[s, lastPos];
 
-	(*
-	Remove line continuations before analyzing
-	*)
-	rest = StringReplace[rest, {"\\\r\n" -> "", "\\\n" -> "", "\\\r" -> ""}];
-	
-	Switch[rest,
-		"",
-		    CallNode[ToNode[Slot], {ToNode[1]}, data]
-		,
-		test_ /; StringMatchQ[test, DigitCharacter..],
-		    CallNode[ToNode[Slot], {ToNode[FromDigits[rest]]}, data]
-		,
-		_,
-		    CallNode[ToNode[Slot], {ToNode[abstractSymbolString[rest]]}, data]
-	]
-]
+abstract[LeafNode[Token`Percent, _, data_]] := CallNode[ToNode[Out], {}, data]
 
-abstract[LeafNode[SlotSequence, sIn_, dataIn_]] :=
-Module[{s, data, rest, lastPos},
-
-	s = sIn;
-
-	data = dataIn;
-
-	lastPos = StringPosition[s, "#" | "\\.23" | "\\:0023" | "\\|000023" | "\\043" | "\\[RawNumberSign]"][[-1, 2]];
-
-	rest = StringDrop[s, lastPos];
-
-	(*
-	Remove line continuations before analyzing
-	*)
-	rest = StringReplace[rest, {"\\\r\n" -> "", "\\\n" -> "", "\\\r" -> ""}];
-
-	Switch[rest,
-		"",
-			CallNode[ToNode[SlotSequence], {ToNode[1]}, data]
-		,
-		_,
-			CallNode[ToNode[SlotSequence], {ToNode[FromDigits[rest]]}, data]
-	]
-]
-
-abstract[LeafNode[Out, sIn_, dataIn_]] :=
-Module[{s, data, count, lastPos, rest},
-
-	s = sIn;
-
-	data = dataIn;
+abstract[LeafNode[Token`PercentPercent, s_, data_]] :=
+Module[{count},
 
 	count = StringCount[s, "%" | "\\.25" | "\\:0025" | "\\|000025" | "\\045" | "\\[RawPercent]"];
 
-	Switch[count,
-		1,
-			lastPos = StringPosition[s, "%" | "\\.25" | "\\:0025" | "\\|000025" | "\\045" | "\\[RawPercent]"][[-1, 2]];
-
-			rest = StringDrop[s, lastPos];
-
-			(*
-			Remove line continuations before analyzing
-			*)
-			rest = StringReplace[rest, {"\\\r\n" -> "", "\\\n" -> "", "\\\r" -> ""}];
-
-			Switch[rest,
-				"",
-					CallNode[ToNode[Out], {}, data]
-				,
-				_,
-					CallNode[ToNode[Out], {ToNode[FromDigits[rest]]}, data]
-			]
-		,
-		_,
-			CallNode[ToNode[Out], { ToNode[-count] }, data]
-	]
+	CallNode[ToNode[Out], { ToNode[-count] }, data]
 ]
 
-abstract[LeafNode[Blank, _, data_]] := CallNode[ToNode[Blank], {}, data]
-abstract[LeafNode[BlankSequence, _, data_]] := CallNode[ToNode[BlankSequence], {}, data]
-abstract[LeafNode[BlankNullSequence, _, data_]] := CallNode[ToNode[BlankNullSequence], {}, data]
-abstract[LeafNode[Token`UnderDot, _, data_]] := CallNode[ToNode[Optional], { CallNode[ToNode[Blank], {}, data] }, data]
 
 abstract[LeafNode[Token`Fake`ImplicitNull, _, data_]] :=
 	LeafNode[Symbol, "Null", data ~Join~
@@ -204,6 +135,17 @@ abstract[PatternBlankNullSequenceNode[PatternBlankNullSequence, {sym1_, blankNul
 abstract[PatternOptionalDefaultNode[PatternOptionalDefault, {sym1_, LeafNode[Token`UnderDot, _, optionalDefaultData_]}, data_]] := CallNode[ToNode[Optional], { CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[Blank], {}, optionalDefaultData]}, data] }, data]
 
 
+abstract[SlotNode[Slot, {_, arg:LeafNode[Integer, _, data1_]}, data_]] := CallNode[ToNode[Slot], {abstract[arg]}, data]
+abstract[SlotNode[Slot, {_, arg:LeafNode[Symbol, s_, data1_]}, data_]] := CallNode[ToNode[Slot], {LeafNode[String, escapeString[abstractSymbolString[s]], data1]}, data]
+abstract[SlotNode[Slot, {_, arg:LeafNode[String, s_, data1_]}, data_]] := CallNode[ToNode[Slot], {LeafNode[String, escapeString[abstractSymbolString[s]], data1]}, data]
+
+
+abstract[SlotSequenceNode[SlotSequence, {_, arg:LeafNode[Integer, _, _]}, data_]] := CallNode[ToNode[SlotSequence], {abstract[arg]}, data]
+
+
+abstract[OutNode[Out, {_, arg:LeafNode[Integer, _, _]}, data_]] := CallNode[ToNode[Out], {abstract[arg]}, data]
+
+
 abstract[PrefixNode[Minus, {_, rand_}, data_]] := abstract[negate[rand, data]]
 
 abstract[PrefixNode[Plus, {_, rand_}, data_]] := abstractPrefixPlus[rand, data]
@@ -225,7 +167,7 @@ abstract syntax Get["a"]
 concrete syntax: <<"a"
 abstract syntax Get["a"]
 *)
-abstract[PrefixNode[Get, {_, LeafNode[String, str_, _]}, data_]] := CallNode[ToNode[Get], {ToNode[abstractFileString[str]]}, data]
+abstract[PrefixNode[Get, {_, LeafNode[String, str_, data1_]}, data_]] := CallNode[ToNode[Get], {LeafNode[String, escapeString[abstractFileString[str]], data1]}, data]
 
 abstract[PrefixNode[op_, {_, operand_}, data_]] := CallNode[ToNode[op], {abstract[operand]}, data]
 
@@ -252,8 +194,8 @@ Make sure to reverse the arguments
 *)
 abstract[BinaryNode[BinarySlashSlash, {left_, _, right_}, data_]] := CallNode[abstract[right], {abstract[left]}, data]
 
-abstract[BinaryNode[Put, {left_, _, LeafNode[String, str_, _]}, data_]] := CallNode[ToNode[Put], {abstract[left], ToNode[abstractFileString[str]]}, data]
-abstract[BinaryNode[PutAppend, {left_, _, LeafNode[String, str_, _]}, data_]] := CallNode[ToNode[PutAppend], {abstract[left], ToNode[abstractFileString[str]]}, data]
+abstract[BinaryNode[Put, {left_, _, LeafNode[String, str_, data1_]}, data_]] := CallNode[ToNode[Put], {abstract[left], LeafNode[String, escapeString[abstractFileString[str]], data1]}, data]
+abstract[BinaryNode[PutAppend, {left_, _, LeafNode[String, str_, data1_]}, data_]] := CallNode[ToNode[PutAppend], {abstract[left], LeafNode[String, escapeString[abstractFileString[str]], data1]}, data]
 
 
 (*
@@ -1696,7 +1638,7 @@ Module[{data, issues},
 ]
 
 
-abstractMessageNameChild[LeafNode[String, str_, _]] := ToNode[abstractSymbolString[str]]
+abstractMessageNameChild[LeafNode[String, str_, data_]] := LeafNode[String, escapeString[abstractSymbolString[str]], data]
 
 abstractMessageNameChild[n_] := n
 
@@ -1813,15 +1755,15 @@ Module[{head, data, part, innerData, outerData, issues, partData, src},
 			feel strongly about ##2[[arg]]
 			##2 represents a sequence of arguments, so it is wrong to call
 			*)
-			LeafNode[SlotSequence, _, _],
+			LeafNode[Token`HashHash, _, _] | SlotSequenceNode[SlotSequence, _, _],
 				AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Unexpected ``Part`` call.", "Error", <|Source->data[Source], ConfidenceLevel -> 1.0|>]];
 			,
-			LeafNode[Symbol | Slot | Blank | BlankSequence | BlankNullSequence, _, _] (* |_StringNode*) | _CallNode | _BlankNode | _BlankSequenceNode | _BlankNullSequenceNode (*| _OptionalDefaultNode*) |
-				_PatternBlankNode | _PatternBlankSequenceNode | _PatternBlankNullSequenceNode (*| _SlotSequenceNode *),
+			LeafNode[Symbol | Token`Hash | Token`Under | Token`UnderUnder | Token`UnderUnderUnder, _, _] (* |_StringNode*) | _CallNode | _BlankNode | _BlankSequenceNode | _BlankNullSequenceNode (*| _OptionalDefaultNode*) |
+				_PatternBlankNode | _PatternBlankSequenceNode | _PatternBlankNullSequenceNode (*| _SlotSequenceNode *) | _SlotNode,
 				(* these are fine *)
 				Null
 			,
-			LeafNode[Out, _, _],
+			LeafNode[Token`Percent | Token`PercentPercent, _, _] | _OutNode,
 				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
 			,
 			PrefixNode[PrefixLinearSyntaxBang, _, _],
@@ -1924,15 +1866,15 @@ Module[{head, part, partData, issues, data},
 			feel strongly about ##2[arg]
 			##2 represents a sequence of arguments, so it is wrong to call
 			*)
-			LeafNode[SlotSequence, _, _],
+			LeafNode[Token`HashHash, _, _] | SlotSequenceNode[SlotSequence, _, _],
 				AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Unexpected call.", "Error", <|Source->data[Source], ConfidenceLevel -> 1.0|>]];
 			,
-			LeafNode[Symbol | String | Slot | Blank | BlankSequence | BlankNullSequence, _, _] | _CallNode | _BlankNode | _BlankSequenceNode | _BlankNullSequenceNode (*| _OptionalDefaultNode*)|
-			   _PatternBlankNode | _PatternBlankSequenceNode | _PatternBlankNullSequenceNode (*| _SlotSequenceNode*),
+			LeafNode[Symbol | String | Token`Hash | Token`Under | Token`UnderUnder | Token`UnderUnderUnder, _, _] | _CallNode | _BlankNode | _BlankSequenceNode | _BlankNullSequenceNode (*| _OptionalDefaultNode*)|
+			   _PatternBlankNode | _PatternBlankSequenceNode | _PatternBlankNullSequenceNode (*| _SlotSequenceNode*) | _SlotNode,
 				(* these are fine *)
 				Null
 			,
-			LeafNode[Out, _, _],
+			LeafNode[Token`Percent | Token`PercentPercent, _, _] | _OutNode,
 				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
 			,
 			BinaryNode[PatternTest, _, _],
@@ -2005,15 +1947,15 @@ Module[{head, part, partData, data, issues},
 			feel strongly about ##2[arg]
 			##2 represents a sequence of arguments, so it is wrong to call
 			*)
-			LeafNode[SlotSequence, _, _],
+			LeafNode[Token`HashHash, _, _] | SlotSequenceNode[SlotSequence, _, _],
 				AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Unexpected call.", "Error", <|Source->data[Source], ConfidenceLevel -> 1.0|>]];
 			,
-			LeafNode[Symbol | Slot | Blank | BlankSequence | BlankNullSequence, _, _] (* |_StringNode*) | _CallNode | _BlankNode | _BlankSequenceNode | _BlankNullSequenceNode (*| _OptionalDefaultNode*) |
-				_PatternBlankNode | _PatternBlankSequenceNode | _PatternBlankNullSequenceNode (*| _SlotSequenceNode *),
+			LeafNode[Symbol | Token`Hash | Token`Under | Token`UnderUnder | Token`UnderUnderUnder, _, _] (* |_StringNode*) | _CallNode | _BlankNode | _BlankSequenceNode | _BlankNullSequenceNode (*| _OptionalDefaultNode*) |
+				_PatternBlankNode | _PatternBlankSequenceNode | _PatternBlankNullSequenceNode (*| _SlotSequenceNode *) | _SlotNode,
 				(* these are fine *)
 				Null
 			,
-			LeafNode[Out, _, _],
+			LeafNode[Token`Percent | Token`PercentPercent, _, _] | _OutNode,
 				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
 			,
 			PrefixNode[PrefixLinearSyntaxBang, _, _],

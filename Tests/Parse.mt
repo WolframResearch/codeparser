@@ -2974,7 +2974,191 @@ Test[
 
 
 
+(*
+Verify that Source is preserved
+
+Related GitHub issues: https://github.com/WolframResearch/codeparser/issues/5
+*)
+
+Test[
+	CodeParse["#1"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "Slot", <||>], {
+			LeafNode[Integer, "1", <|Source -> {{1, 2}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 3}}|>]}, <||>]
+	,
+	TestID->"Parse-20200413-B4O4W8"
+]
+
+Test[
+	CodeParse["#abc"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "Slot", <||>], {
+			LeafNode[String, "\"abc\"", <|Source -> {{1, 2}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>]}, <||>]
+	,
+	TestID->"Parse-20200413-T5O4Q3"
+]
+
+Test[
+	CodeParse["##2"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "SlotSequence", <||>], {
+			LeafNode[Integer, "2", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, <||>]
+	,
+	TestID->"Parse-20200413-Q5X3J6"
+]
+
+Test[
+	CodeParse["%45"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "Out", <||>], {
+			LeafNode[Integer, "45", <|Source -> {{1, 2}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, <||>]
+	,
+	TestID->"Parse-20200413-L1I2E4"
+]
+
+Test[
+	CodeParse["a::bcd"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "MessageName", <||>], {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>], 
+    		LeafNode[String, "\"bcd\"", <|Source -> {{1, 4}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]}, <||>]
+	,
+	TestID->"Parse-20200413-G5B7Z1"
+]
+
+Test[
+	CodeParse["<<a`"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "Get", <||>], { 
+    		LeafNode[String, "\"a`\"", <|Source -> {{1, 3}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>]}, <||>]
+	,
+	TestID->"Parse-20200415-P2Y8P6"
+]
+
+Test[
+	CodeParse["<<\"a`\""]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "Get", <||>], { 
+    		LeafNode[String, "\"a`\"", <|Source -> {{1, 3}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]}, <||>]
+	,
+	TestID->"Parse-20200415-I2M5B8"
+]
+
+Test[
+	CodeParse["a >> b"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "Put", <||>], {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>], 
+    		LeafNode[String, "\"b\"", <|Source -> {{1, 6}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]}, <||>]
+	,
+	TestID->"Parse-20200415-W4H4K5"
+]
+
+Test[
+	CodeParse["a >> \"b\""]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "Put", <||>], {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>], 
+    		LeafNode[String, "\"b\"", <|Source -> {{1, 6}, {1, 9}}|>]}, <|Source -> {{1, 1}, {1, 9}}|>]}, <||>]
+	,
+	TestID->"Parse-20200415-X7O6E0"
+]
+
+Test[
+	CodeParse["a >>> b"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "PutAppend", <||>], {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>], 
+    		LeafNode[String, "\"b\"", <|Source -> {{1, 7}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]}, <||>]
+	,
+	TestID->"Parse-20200415-V0C2F3"
+]
+
+Test[
+	CodeParse["a >>> \"b\""]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "PutAppend", <||>], {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>], 
+    		LeafNode[String, "\"b\"", <|Source -> {{1, 7}, {1, 10}}|>]}, <|Source -> {{1, 1}, {1, 10}}|>]}, <||>]
+	,
+	TestID->"Parse-20200415-N1P8Z5"
+]
 
 
 
+(*
+Test line continuations between tokens where other whitespace matters
 
+Whitespace matters here:
+a_
+_b
+a_b
+#1
+#abc
+##2
+%45
+
+These are single notes, and spaces would break them up.
+But line continuations are fine to have between tokens
+*)
+
+Test[
+	"a\\\n_\\\nb"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200415-X5M3W6"
+]
+
+TestMatch[
+	CodeParse["#\\\n1"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "Slot", <||>], {
+			LeafNode[Integer, "1", <|Source -> {{2, 1}, {2, 2}}|>]}, <|Source -> {{1, 1}, {2, 2}}|>]}, _]
+	,
+	TestID->"Parse-20200415-E1Q6O7"
+]
+
+TestMatch[
+	CodeParse["#\\\nabc"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "Slot", <||>], {
+			LeafNode[String, "\"abc\"", <|Source -> {{2, 1}, {2, 4}}|>]}, <|Source -> {{1, 1}, {2, 4}}|>]}, _]
+	,
+	TestID->"Parse-20200415-Q8V1L8"
+]
+
+TestMatch[
+	CodeParse["##\\\n2"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "SlotSequence", <||>], {
+			LeafNode[Integer, "2", <|Source -> {{2, 1}, {2, 2}}|>]}, <|Source -> {{1, 1}, {2, 2}}|>]}, _]
+	,
+	TestID->"Parse-20200415-M9Y6M1"
+]
+
+TestMatch[
+	CodeParse["%\\\n45"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "Out", <||>], {
+			LeafNode[Integer, "45", <|Source -> {{2, 1}, {2, 3}}|>]}, <|Source -> {{1, 1}, {2, 3}}|>]}, _]
+	,
+	TestID->"Parse-20200415-K6V1V1"
+]

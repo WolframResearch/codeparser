@@ -149,6 +149,9 @@ Token`SlashSlashAt -> Next, (* //@ *)
 Token`CaretColonEqual -> Next, (* ^:= *)
 Token`GreaterGreaterGreater -> Next, (* >>> *)
 
+(* variable character tokens *)
+Token`PercentPercent -> Next, (* %% *)
+
 (* Linear syntax tokens *)
 Token`LinearSyntax`Bang -> Next, (* \! *)
 Token`LinearSyntax`OpenParen -> Next, (* \( *)

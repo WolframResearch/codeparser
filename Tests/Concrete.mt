@@ -24,7 +24,7 @@ Test[
 		BinaryNode[Optional, {
 			PatternBlankNode[PatternBlank, {
 				LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
-				LeafNode[Blank, "_", <|Source -> {{1, 2}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 3}}|>],
+				LeafNode[Token`Under, "_", <|Source -> {{1, 2}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 3}}|>],
 			LeafNode[Token`Colon, ":", <|Source -> {{1, 3}, {1, 4}}|>],
 			LeafNode[Symbol, "b", <|Source -> {{1, 4}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>] }, <||>]
 	,
@@ -433,7 +433,7 @@ Test[
 			LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>],
 			PatternBlankSequenceNode[PatternBlankSequence, {
 				LeafNode[Symbol, "headIn", <|Source -> {{1, 3}, {1, 9}}|>],
-				LeafNode[BlankSequence, "__", <|Source -> {{1, 9}, {1, 11}}|>]}, <|Source -> {{1, 3}, {1, 11}}|>],
+				LeafNode[Token`UnderUnder, "__", <|Source -> {{1, 9}, {1, 11}}|>]}, <|Source -> {{1, 3}, {1, 11}}|>],
 			LeafNode[Whitespace, " ", <|Source -> {{1, 11}, {1, 12}}|>],
 			LeafNode[Token`CloseCurly, "}", <|Source -> {{1, 12}, {1, 13}}|>]}, <|Source -> {{1, 1}, {1, 13}}|>] }, <||>]
 	,

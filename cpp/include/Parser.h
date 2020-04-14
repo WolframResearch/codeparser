@@ -95,8 +95,10 @@ public:
     void nextToken_stringifyFile();
     
     Token nextToken0(ParserContext Ctxt);
+    Token nextToken0(ParserContext Ctxt, NextPolicy policy);
     
     Token currentToken(ParserContext Ctxt) const;
+    Token currentToken(ParserContext Ctxt, NextPolicy policy) const;
     
     Token currentToken_stringifySymbol() const;
     Token currentToken_stringifyFile() const;
@@ -120,6 +122,8 @@ public:
     Token eatTrivia_stringifyFile(Token firstTok, ParserContext Ctxt, LeafSeq&);
     Token eatTriviaButNotToplevelNewlines(Token firstTok, ParserContext Ctxt, LeafSeq&);
     Token eatTriviaButNotToplevelNewlines_stringifyFile(Token firstTok, ParserContext Ctxt, LeafSeq&);
+    
+    Token eatLineContinuations(Token firstTok, ParserContext Ctxt, LeafSeq&);
 };
 
 extern ParserPtr TheParser;

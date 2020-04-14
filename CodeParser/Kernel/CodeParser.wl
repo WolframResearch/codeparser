@@ -169,6 +169,10 @@ PatternBlankSequenceNode
 PatternBlankNullSequenceNode
 PatternOptionalDefaultNode
 
+SlotNode
+SlotSequenceNode
+
+OutNode
 
 ContainerNode
 
