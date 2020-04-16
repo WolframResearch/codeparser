@@ -12,17 +12,6 @@ class Tokenizer;
 using TokenizerPtr = std::unique_ptr<Tokenizer>;
 
 
-enum TokenizerContextBits : uint8_t {
-
-    //
-    // If inside #, then give syntax warnings for #"123" and #a`b syntax (which is undocumented syntax)
-    //
-    // But obviously "123" and a`b are fine outside of #
-    //
-    TOKENIZER_SLOT = 0x01,
-};
-
-using TokenizerContext = uint8_t;
 
 //
 // Tokenizer takes a stream of WL characters and tokenizes them
@@ -47,8 +36,8 @@ class Tokenizer {
     Token handleString_stringifySymbol(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
     Token handleString_stringifyFile(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter firstChar, NextPolicy policy);
     
-    Token handleSymbol(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy, TokenizerContext Ctxt);
-    WLCharacter handleSymbolSegment(Buffer tokenStartBuf, SourceLocation firstCharLoc, WLCharacter firstChar, NextPolicy policy, TokenizerContext Ctxt);
+    Token handleSymbol(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
+    WLCharacter handleSymbolSegment(Buffer tokenStartBuf, SourceLocation firstCharLoc, WLCharacter firstChar, NextPolicy policy);
     
     Token handleNumber(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
     WLCharacter handleDigits(NextPolicy policy, WLCharacter firstChar, size_t *count);

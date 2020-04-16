@@ -123,6 +123,13 @@ enum NextPolicyBits : uint8_t {
     // Check for sequences like \\[Alpa] and report them
     //
     ENABLE_UNLIKELY_ESCAPE_CHECKING = 0x10,
+    
+    //
+    // If inside #, then give syntax warnings for #"123" and #a`b syntax (which is undocumented syntax)
+    //
+    // But obviously "123" and a`b are fine outside of #
+    //
+    ENABLE_SLOT_ISSUES = 0x20,
 };
 
 using NextPolicy = uint8_t;

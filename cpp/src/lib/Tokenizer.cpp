@@ -35,8 +35,6 @@ void Tokenizer::deinit() {
 //
 Token Tokenizer::nextToken0(NextPolicy policy) {
     
-    TokenizerContext Ctxt = 0;
-    
     auto tokenStartBuf = TheByteBuffer->buffer;
     auto tokenStartLoc = TheByteDecoder->SrcLoc;
     
@@ -60,7 +58,7 @@ Token Tokenizer::nextToken0(NextPolicy policy) {
         case '`':
         case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm':
         case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
-            return handleSymbol(tokenStartBuf, tokenStartLoc, c, policy, Ctxt);
+            return handleSymbol(tokenStartBuf, tokenStartLoc, c, policy);
         case CODEPOINT_BEL: case CODEPOINT_DEL:
             return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         case '\t':
@@ -198,7 +196,7 @@ Token Tokenizer::nextToken0(NextPolicy policy) {
                 
                 assert(c.isMBLetterlike());
                 
-                return handleSymbol(tokenStartBuf, tokenStartLoc, c, policy, Ctxt);
+                return handleSymbol(tokenStartBuf, tokenStartLoc, c, policy);
             }
         }
     }
@@ -502,7 +500,7 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation token
 // a segment is: [a-z$]([a-z$0-9])*
 // a symbol is: (segment)?(`segment)*
 //
-inline Token Tokenizer::handleSymbol(Buffer symbolStartBuf, SourceLocation symbolStartLoc, WLCharacter c, NextPolicy policy, TokenizerContext Ctxt) {
+inline Token Tokenizer::handleSymbol(Buffer symbolStartBuf, SourceLocation symbolStartLoc, WLCharacter c, NextPolicy policy) {
     
     policy |= LC_IS_MEANINGFUL;
     
@@ -510,7 +508,7 @@ inline Token Tokenizer::handleSymbol(Buffer symbolStartBuf, SourceLocation symbo
     
     if (c.isLetterlike() || c.isMBLetterlike()) {
         
-        c = handleSymbolSegment(symbolStartBuf, symbolStartLoc, c, policy, Ctxt);
+        c = handleSymbolSegment(symbolStartBuf, symbolStartLoc, c, policy);
     }
     
     //
@@ -528,7 +526,7 @@ inline Token Tokenizer::handleSymbol(Buffer symbolStartBuf, SourceLocation symbo
         //
         
 #if !NISSUES
-        if ((Ctxt & TOKENIZER_SLOT) == TOKENIZER_SLOT) {
+        if ((policy & ENABLE_SLOT_ISSUES) == ENABLE_SLOT_ISSUES) {
             
             //
             // It's hard to keep track of the ` characters, so just report the entire symbol. Oh well
@@ -550,7 +548,7 @@ inline Token Tokenizer::handleSymbol(Buffer symbolStartBuf, SourceLocation symbo
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-            c = handleSymbolSegment(letterlikeBuf, letterlikeLoc, c, policy, Ctxt);
+            c = handleSymbolSegment(letterlikeBuf, letterlikeLoc, c, policy);
             
         } else {
             
@@ -575,14 +573,14 @@ inline Token Tokenizer::handleSymbol(Buffer symbolStartBuf, SourceLocation symbo
 //
 // return: the first NON-SYMBOLSEGMENT character after all symbol segment characters
 //
-inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation charLoc, WLCharacter c, NextPolicy policy, TokenizerContext Ctxt) {
+inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation charLoc, WLCharacter c, NextPolicy policy) {
     
     assert(c.isLetterlike() || c.isMBLetterlike());
     
 #if !NISSUES
     if (c.to_point() == '$') {
         
-        if ((Ctxt & TOKENIZER_SLOT) == TOKENIZER_SLOT) {
+        if ((policy & ENABLE_SLOT_ISSUES) == ENABLE_SLOT_ISSUES) {
             
             auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNDOCUMENTEDSLOTSYNTAX, "The name following ``#`` is not documented to allow the ``$`` character.", SYNTAXISSUESEVERITY_REMARK, getTokenSource(charLoc), 0.33, {}));
             
@@ -622,7 +620,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation
 #if !NISSUES
             if (c.to_point() == '$') {
                 
-                if ((Ctxt & TOKENIZER_SLOT) == TOKENIZER_SLOT) {
+                if ((policy & ENABLE_SLOT_ISSUES) == ENABLE_SLOT_ISSUES) {
                     
                     auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNDOCUMENTEDSLOTSYNTAX, "The name following ``#`` is not documented to allow the ``$`` character.", SYNTAXISSUESEVERITY_REMARK, getTokenSource(charLoc), 0.33, {}));
                     
@@ -706,12 +704,10 @@ inline Token Tokenizer::handleString_stringifySymbol(Buffer tokenStartBuf, Sourc
     
     if (c.isLetterlike() || c.isMBLetterlike()) {
         
-        TokenizerContext Ctxt = 0;
-        
         auto letterlikeBuf = TheByteBuffer->buffer;
         auto letterlikeLoc = TheByteDecoder->SrcLoc;
         
-        handleSymbolSegment(letterlikeBuf, letterlikeLoc, c, policy, Ctxt);
+        handleSymbolSegment(letterlikeBuf, letterlikeLoc, c, policy);
         
         return Token(TOKEN_STRING, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
     }
@@ -2569,11 +2565,9 @@ inline Token Tokenizer::handleHash(Buffer tokenStartBuf, SourceLocation tokenSta
             
             Operator = TOKEN_HASH; // #
             
-            TokenizerContext Ctxt = 0;
+            policy |= ENABLE_SLOT_ISSUES;
             
-            Ctxt |= TOKENIZER_SLOT;
-            
-            handleSymbol(symbolStartBuf, symbolStartLoc, c, policy, Ctxt);
+            handleSymbol(symbolStartBuf, symbolStartLoc, c, policy);
         }
             break;
         case '"': {
@@ -2624,11 +2618,9 @@ inline Token Tokenizer::handleHash(Buffer tokenStartBuf, SourceLocation tokenSta
                 
                 Operator = TOKEN_HASH; // #
                 
-                TokenizerContext Ctxt = 0;
+                policy |= ENABLE_SLOT_ISSUES;
                 
-                Ctxt |= TOKENIZER_SLOT;
-                
-                handleSymbol(symbolStartBuf, symbolStartLoc, c, policy, Ctxt);
+                handleSymbol(symbolStartBuf, symbolStartLoc, c, policy);
                 
             } else {
                 
