@@ -3162,3 +3162,25 @@ TestMatch[
 	,
 	TestID->"Parse-20200415-K6V1V1"
 ]
+
+
+
+
+
+(*
+https://github.com/WolframResearch/codeparser/issues/11
+*)
+Test[
+	CodeParse["<<[\"]"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "Get", <||>], {
+			LeafNode[String, "\"[\\\"]\"", <|Source -> {{1, 3}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]}, <||>]
+	,
+	TestID->"Parse-20200416-L5V7S7"
+]
+
+
+
+
+
