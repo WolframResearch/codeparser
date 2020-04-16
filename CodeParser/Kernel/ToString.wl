@@ -6,6 +6,16 @@ Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
 
 
+
+$systemNewline =
+Switch[$OperatingSystem,
+	"Windows", "\r\n",
+	_, "\n"
+]
+
+
+
+
 (*
 ToInputFormString is intended for aggregate syntax trees
 *)
@@ -330,7 +340,7 @@ Module[{nodeStrs},
 	If[AnyTrue[nodeStrs, FailureQ],
 		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];
-	StringJoin[Riffle[nodeStrs, "\n"]]
+	StringJoin[Riffle[nodeStrs, $systemNewline]]
 ]]
 
 
@@ -462,7 +472,7 @@ Module[{nodeStrs},
 	If[AnyTrue[nodeStrs, FailureQ],
 		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];
-	StringJoin[Riffle[nodeStrs, "\n"]]
+	StringJoin[Riffle[nodeStrs, $systemNewline]]
 ]]
 
 

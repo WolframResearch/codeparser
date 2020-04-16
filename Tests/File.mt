@@ -9,6 +9,16 @@ Needs["CodeParserTestUtils`"]
 
 Needs["CodeParser`"]
 
+
+
+$systemNewline =
+Switch[$OperatingSystem,
+	"Windows", "\r\n",
+	_, "\n"
+]
+
+
+
 (*
 
 Parse File
@@ -23,12 +33,12 @@ Test[
 	cst
 	,
 	ContainerNode[File, {
-		LeafNode[Token`Newline, "\n", <|Source -> {{1, 1}, {2, 1}}|>],
+		LeafNode[Token`Newline, $systemNewline, <|Source -> {{1, 1}, {2, 1}}|>],
 		InfixNode[Plus, {
 			LeafNode[Integer, "1", <|Source -> {{2, 1}, {2, 2}}|>],
 			LeafNode[Token`Plus, "+", <|Source -> {{2, 2}, {2, 3}}|>],
     		LeafNode[Integer, "1", <|Source -> {{2, 3}, {2, 4}}|>] }, <|Source -> {{2, 1}, {2, 4}}|>],
-    	LeafNode[Token`Newline, "\n", <|Source -> {{2, 4}, {3, 1}}|>] }, <|Source -> {{1, 1}, {3, 1}}|>]
+    	LeafNode[Token`Newline, $systemNewline, <|Source -> {{2, 4}, {3, 1}}|>] }, <|Source -> {{1, 1}, {3, 1}}|>]
 	,
 	TestID->"File-20181230-J0G3I8"
 ]
@@ -38,7 +48,7 @@ Test[
 Test[
 	ToInputFormString[cst]
 	,
-	"\n\n 1 + 1 \n\n"
+	$systemNewline <> $systemNewline <> " 1 + 1 " <> $systemNewline <> $systemNewline
 	,
 	TestID->"File-20181230-T2D2W6"
 ]
@@ -144,11 +154,11 @@ Test[
 	CodeTokenize[File[sample]]
 	,
 	{
-		LeafNode[Token`Newline, "\n", <|Source -> {{1, 1}, {2, 1}}|>], 
+		LeafNode[Token`Newline, $systemNewline, <|Source -> {{1, 1}, {2, 1}}|>], 
 		LeafNode[Integer, "1", <|Source -> {{2, 1}, {2, 2}}|>], 
 		LeafNode[Token`Plus, "+", <|Source -> {{2, 2}, {2, 3}}|>], 
 		LeafNode[Integer, "1", <|Source -> {{2, 3}, {2, 4}}|>], 
-		LeafNode[Token`Newline, "\n", <|Source -> {{2, 4}, {3, 1}}|>]}
+		LeafNode[Token`Newline, $systemNewline, <|Source -> {{2, 4}, {3, 1}}|>]}
 	,
 	TestID->"File-20181230-Q3C4N0"
 ]
@@ -217,12 +227,12 @@ TestMatch[
 	cst
 	,
 	ContainerNode[File, {
-		LeafNode[Token`Newline, "\n", <|Source -> {{1, 1}, {2, 1}}|>],
-		LeafNode[String, "\"data\\\\\n\"", <|Source -> {{2, 1}, {3, 2}}|>],
-		LeafNode[Token`Newline, "\n", <|Source -> {{3, 2}, {4, 1}}|>],
-		LeafNode[Token`Newline, "\n", <|Source -> {{4, 1}, {5, 1}}|>],
+		LeafNode[Token`Newline, $systemNewline, <|Source -> {{1, 1}, {2, 1}}|>],
+		LeafNode[String, "\"data\\\\" <> $systemNewline <> "\"", <|Source -> {{2, 1}, {3, 2}}|>],
+		LeafNode[Token`Newline, $systemNewline, <|Source -> {{3, 2}, {4, 1}}|>],
+		LeafNode[Token`Newline, $systemNewline, <|Source -> {{4, 1}, {5, 1}}|>],
 		LeafNode[Symbol, "x", <|Source -> {{5, 1}, {5, 2}}|>],
-		LeafNode[Token`Newline, "\n", <|Source -> {{5, 2}, {6, 1}}|>]}, <|Source -> {{1, 1}, {6, 1}}|>]
+		LeafNode[Token`Newline, $systemNewline, <|Source -> {{5, 2}, {6, 1}}|>]}, <|Source -> {{1, 1}, {6, 1}}|>]
 	,
 	TestID->"File-20190804-K7V2D8"
 ]
@@ -243,10 +253,10 @@ TestMatch[
 	ContainerNode[File, {
 		GroupNode[List, {
 			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
-			LeafNode[Token`Newline, "\n", <|Source -> {{1, 2}, {2, 1}}|>],
+			LeafNode[Token`Newline, $systemNewline, <|Source -> {{1, 2}, {2, 1}}|>],
 			LeafNode[Whitespace, "\t", <|Source -> {{2, 1}, {2, 2}}|>],
 			LeafNode[Integer, "1", <|Source -> {{2, 2}, {2, 3}}|>],
-			LeafNode[Token`LineContinuation, "\\\n", <|Source -> {{2, 3}, {3, 1}}|>],
+			LeafNode[Token`LineContinuation, "\\" <> $systemNewline, <|Source -> {{2, 3}, {3, 1}}|>],
 			LeafNode[Token`CloseCurly, "}", <|Source -> {{3, 1}, {3, 2}}|>]}, <|Source -> {{1, 1}, {3, 2}}|>]},
 		<|	SyntaxIssues -> {FormatIssue["UnexpectedLineContinuation", "Unexpected line continuation.", "Formatting",
 								<|	Source -> {{2, 3}, {2, 4}},
@@ -288,13 +298,54 @@ Test[
 	TestID->"File-20190606-M7F7D1"
 ]
 
+
+
+(*
+Bug 363889:
+
+Mathematica 12.0.0 Kernel for Microsoft Windows (64-bit)
+Copyright 1988-2018 Wolfram Research, Inc.
+
+In[1]:= ToExpression["123\n", InputForm, Hold]
+
+Out[1]= Hold[123]
+
+In[2]:= ToExpression["123\r\n", InputForm, Hold]
+
+Out[2]= Hold[123, Null]
+
+In[3]:=
+
+
+In other places, on all platforms, \r\n can be used as a single newline
+
+e.g., inside of line continuations:
+In[27]:= ToExpression["123\\\r\n456"] // InputForm
+
+Out[27]//InputForm=
+123456
+
+But bug 363889 prevents \r\n from being used as a single newline at toplevel
+
+*)
+res = (ToExpression["123\r\n", InputForm, Hold] === Hold[123])
+bug363889Fixed = res
+
+BeginTestSection["ToplevelNewlineSyntaxError", bug363889Fixed]
+
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "carriagereturn4.wl"}], 1]
 	,
-	Null
+	ok
 	,
 	TestID->"File-20190607-H0M3H1"
 ]
+
+EndTestSection[]
+
+
+
+
 
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "carriagereturn.wl"}], 1]
@@ -567,7 +618,7 @@ In[14]:= FromCharacterCode[{34, 241, 34}, "UTF8"]
 During evaluation of In[14]:= $CharacterEncoding::utf8:
 	The byte sequence {241,34} could not be interpreted as a character in the UTF-8 character encoding.
 
-Out[14]= "\"ñ\""
+Out[14]= "\"\[NTilde]\""
 
 I argue that Out[14] should be "\"\[UnknownGlyph]\""
 
