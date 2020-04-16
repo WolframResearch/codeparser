@@ -19,15 +19,30 @@ Do not want to reimplement MakeExpression.
 *)
 
 CodeConcreteParseBox[boxs_List] :=
+Catch[
 Module[{children},
+
   children = MapIndexed[parseBox[#1, {} ~Join~ #2]&, boxs];
+
+  If[AnyTrue[children, FailureQ],
+    Throw[SelectFirst[children, FailureQ]]
+  ];
+
   ContainerNode[Box, children, <||>]
-]
+]]
 
 CodeConcreteParseBox[box_] :=
-Module[{},
-  ContainerNode[Box, {parseBox[box, {}]}, <||>]
-]
+Catch[
+Module[{children},
+
+  children = {parseBox[box, {}]};
+
+  If[AnyTrue[children, FailureQ],
+    Throw[SelectFirst[children, FailureQ]]
+  ];
+
+  ContainerNode[Box, children, <||>]
+]]
 
 
 
@@ -981,7 +996,7 @@ Module[{data, src},
     CodeAction[label, command, data]
 ]
 
-parseBox[args___] := Failure["InternalUnhandled", <|"Function"->parseBox, "Arguments"->HoldForm[{args}]|>]
+parseBox[args___] := Failure["InternalUnhandled", <|"Function"->"parseBox", "Arguments"->HoldForm[{args}]|>]
 
 
 
