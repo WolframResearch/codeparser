@@ -72,7 +72,7 @@ void ByteDecoder::deinit() {
 //  U+40000...U+FFFFF    F1..F3      80..BF      80..BF      80..BF
 // U+100000..U+10FFFF        F4      80..8F      80..BF      80..BF
 //
-SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
+SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
 
 #if !NISSUES
     auto currentSourceCharacterStartLoc = SrcLoc;
@@ -1006,7 +1006,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextCharacterPolicy policy) {
 }
 
 
-SourceCharacter ByteDecoder::currentSourceCharacter(NextCharacterPolicy policy) {
+SourceCharacter ByteDecoder::currentSourceCharacter(NextPolicy policy) {
     
     auto resetBuf = TheByteBuffer->buffer;
     auto resetEOF = TheByteBuffer->wasEOF;
@@ -1027,7 +1027,7 @@ SourceCharacter ByteDecoder::currentSourceCharacter(NextCharacterPolicy policy) 
 //
 //
 //
-SourceCharacter ByteDecoder::invalid(SourceLocation errSrcLoc, NextCharacterPolicy policy) {
+SourceCharacter ByteDecoder::invalid(SourceLocation errSrcLoc, NextPolicy policy) {
     
     status = UTF8STATUS_INVALID;
     

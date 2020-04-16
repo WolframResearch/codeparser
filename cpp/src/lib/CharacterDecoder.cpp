@@ -36,7 +36,7 @@ void CharacterDecoder::deinit() {
 //                   buffer
 // return \[Alpha]
 //
-WLCharacter CharacterDecoder::nextWLCharacter0(NextCharacterPolicy policy) {
+WLCharacter CharacterDecoder::nextWLCharacter0(NextPolicy policy) {
     
     auto currentWLCharacterStartBuf = TheByteBuffer->buffer;
     auto currentWLCharacterStartLoc = TheByteDecoder->SrcLoc;
@@ -164,7 +164,7 @@ WLCharacter CharacterDecoder::nextWLCharacter0(NextCharacterPolicy policy) {
 //
 //
 //
-WLCharacter CharacterDecoder::currentWLCharacter(NextCharacterPolicy policy) {
+WLCharacter CharacterDecoder::currentWLCharacter(NextPolicy policy) {
     
     auto resetBuf = TheByteBuffer->buffer;
     auto resetEOF = TheByteBuffer->wasEOF;
@@ -187,7 +187,7 @@ WLCharacter CharacterDecoder::currentWLCharacter(NextCharacterPolicy policy) {
 //
 //
 //
-WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer openSquareBuf, SourceLocation openSquareLoc, NextCharacterPolicy policy) {
+WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer openSquareBuf, SourceLocation openSquareLoc, NextPolicy policy) {
     
     assert(*openSquareBuf == '[');
     
@@ -525,7 +525,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
 //
 //
 //
-WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer colonBuf, SourceLocation colonLoc, NextCharacterPolicy policy) {
+WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer colonBuf, SourceLocation colonLoc, NextPolicy policy) {
     
     assert(*colonBuf == ':');
     
@@ -650,7 +650,7 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
 //
 //
 //
-WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer dotBuf, SourceLocation dotLoc, NextCharacterPolicy policy) {
+WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer dotBuf, SourceLocation dotLoc, NextPolicy policy) {
     
     assert(*dotBuf == '.');
     
@@ -774,7 +774,7 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
 //
 //
 //
-WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer firstOctalBuf, SourceLocation firstOctalLoc, NextCharacterPolicy policy) {
+WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer firstOctalBuf, SourceLocation firstOctalLoc, NextPolicy policy) {
     
     assert(SourceCharacter(*firstOctalBuf).isOctal());
     
@@ -899,7 +899,7 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
 //
 //
 //
-WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer barBuf, SourceLocation barLoc, NextCharacterPolicy policy) {
+WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer barBuf, SourceLocation barLoc, NextPolicy policy) {
     
     assert(*barBuf == '|');
     
@@ -1037,7 +1037,7 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
 // NOTE: this middle layer would need to warn about unneeded line continuations.
 // e.g., with something like  { 123 \\\n }  then the line continuation is not needed
 //
-WLCharacter CharacterDecoder::handleLineContinuation(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer escapedBuf, SourceLocation escapedLoc, SourceCharacter firstChar, NextCharacterPolicy policy) {
+WLCharacter CharacterDecoder::handleLineContinuation(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer escapedBuf, SourceLocation escapedLoc, SourceCharacter firstChar, NextPolicy policy) {
     
     assert(*currentWLCharacterStartBuf == '\\');
     assert(firstChar.isNewline() || firstChar.to_point() == CODEPOINT_CRLF);
@@ -1133,7 +1133,7 @@ WLCharacter CharacterDecoder::handleLineContinuation(Buffer currentWLCharacterSt
 //
 //
 //
-WLCharacter CharacterDecoder::handleBackSlash(Buffer escapedBuf, SourceLocation escapedLoc, NextCharacterPolicy policy) {
+WLCharacter CharacterDecoder::handleBackSlash(Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy) {
     
 #if !NISSUES
     //
@@ -1168,7 +1168,7 @@ WLCharacter CharacterDecoder::handleBackSlash(Buffer escapedBuf, SourceLocation 
 //
 //
 //
-WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer unhandledBuf, SourceLocation unhandledLoc, SourceCharacter escapedChar, NextCharacterPolicy policy) {
+WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer unhandledBuf, SourceLocation unhandledLoc, SourceCharacter escapedChar, NextPolicy policy) {
     
     //
     // Anything else

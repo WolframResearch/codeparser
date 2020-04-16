@@ -74,7 +74,7 @@ BufferAndLength BufferAndLength::createNiceBufferAndLength(std::string *str) con
         newStrStream << set_graphical;
     }
     
-    NextCharacterPolicy policy = 0;
+    NextPolicy policy = 0;
     
     //
     // Simulating a new buffer here, so make sure to set both buffer AND wasEOF!

@@ -73,7 +73,7 @@ bool operator==(BufferAndLength a, BufferAndLength b);
 
 
 
-enum NextCharacterPolicyBits : uint8_t {
+enum NextPolicyBits : uint8_t {
     
     //
     // Preserve whitespace after line continuation
@@ -125,14 +125,14 @@ enum NextCharacterPolicyBits : uint8_t {
     ENABLE_UNLIKELY_ESCAPE_CHECKING = 0x10,
 };
 
-using NextCharacterPolicy = uint8_t;
+using NextPolicy = uint8_t;
 
-const NextCharacterPolicy TOPLEVEL = ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE;
+const NextPolicy TOPLEVEL = ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE;
 
-const NextCharacterPolicy INSIDE_SYMBOL = ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE | LC_IS_MEANINGFUL;
+const NextPolicy INSIDE_SYMBOL = ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE | LC_IS_MEANINGFUL;
 
-const NextCharacterPolicy INSIDE_STRINGIFY_SYMBOL = PRESERVE_WS_AFTER_LC | ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE;
-const NextCharacterPolicy INSIDE_STRINGIFY_FILE = RETURN_TOPLEVELNEWLINE;
+const NextPolicy INSIDE_STRINGIFY_SYMBOL = PRESERVE_WS_AFTER_LC | ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE;
+const NextPolicy INSIDE_STRINGIFY_FILE = RETURN_TOPLEVELNEWLINE;
 
 
 enum SyntaxError : uint8_t {

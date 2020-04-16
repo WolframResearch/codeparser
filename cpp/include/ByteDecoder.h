@@ -55,7 +55,7 @@ private:
     SourceConventionManagerPtr srcConventionManager;
     
     
-    SourceCharacter invalid(SourceLocation errSrcLoc, NextCharacterPolicy policy);
+    SourceCharacter invalid(SourceLocation errSrcLoc, NextPolicy policy);
     
 public:
     
@@ -71,9 +71,9 @@ public:
     
     void deinit();
     
-    SourceCharacter nextSourceCharacter0(NextCharacterPolicy policy);
+    SourceCharacter nextSourceCharacter0(NextPolicy policy);
     
-    SourceCharacter currentSourceCharacter(NextCharacterPolicy policy);
+    SourceCharacter currentSourceCharacter(NextPolicy policy);
     
 #if !NISSUES
     std::vector<IssuePtr>& getIssues();
