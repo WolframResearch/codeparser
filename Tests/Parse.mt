@@ -371,7 +371,7 @@ Test[
 
 
 
-res = (ToExpression["a . -b", InputForm, Hold] =!= $Failed)
+res = Quiet[ToExpression["a . -b", InputForm, Hold] =!= $Failed, {ToExpression::sntx}]
 bug382766Fixed = (res)
 
 BeginTestSection["DotNegative", bug382766Fixed]
@@ -1483,7 +1483,7 @@ Multi-byte characters
 
 Test[
 	(* the hyphen character below is multiple bytes *)
-	"\"‐\""
+	"\"\[Hyphen]\""
 	,
 	Null
 	,
@@ -1494,7 +1494,7 @@ Test[
 
 Test[
 	(* the copyright character below is multiple bytes *)
-	"(* :Copyright: © 2016 by Wolfram Research, Inc. *)a"
+	"(* :Copyright: \[Copyright] 2016 by Wolfram Research, Inc. *)a"
 	,
 	Null
 	,
@@ -1505,7 +1505,7 @@ Test[
 
 Test[
 	(* the alpha characters below are multiple bytes *)
-	"αα"
+	"\[Alpha]\[Alpha]"
 	,
 	Null
 	,
