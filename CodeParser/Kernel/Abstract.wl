@@ -938,11 +938,43 @@ b\f => b\\f
 
 FIXME: once the semantics are completely understood, move this to library
 *)
-abstractFileString[str_String /; StringStartsQ[str, "\""]] := ToExpression[replaceSingleEscapeCharacters[str]]
-abstractFileString[str_String] := Quiet[ToExpression["\""<>replaceSingleEscapeCharacters[str]<>"\""], {Syntax::stresc}]
+abstractFileString[str_String /; StringStartsQ[str, "\""]] :=
+Module[{replaced},
 
-replaceSingleEscapeCharacters[str_String] := StringReplace[str, "\\"~~c:("b"|"f"|"n"|"r"|"t") :> "\\\\"~~c]
+	replaced = StringReplace[str, {
+			(*
+			single character escapes
+			*)
+			"\\b" -> "\\\\b",
+			"\\f" -> "\\\\f",
+			"\\n" -> "\\\\n",
+			"\\r" -> "\\\\r",
+			"\\t" -> "\\\\t"
+		}];
 
+	ToExpression[replaced]
+]
+
+abstractFileString[str_String] :=
+Module[{replaced},
+
+	replaced = StringReplace[str, {
+			(*
+			single character escapes
+			*)
+			"\\b" -> "\\\\b",
+			"\\f" -> "\\\\f",
+			"\\n" -> "\\\\n",
+			"\\r" -> "\\\\r",
+			"\\t" -> "\\\\t",
+			(*
+			and double quote
+			*)
+			"\"" -> "\\\""
+		}];
+
+	Quiet[ToExpression["\""<>replaced<>"\""], {Syntax::stresc}]
+]
 
 
 
