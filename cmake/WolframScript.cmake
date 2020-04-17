@@ -1,4 +1,8 @@
 
+if(NOT EXISTS ${WOLFRAMKERNEL})
+message(FATAL_ERROR "WOLFRAMKERNEL does not exist. WOLFRAMKERNEL: ${WOLFRAMKERNEL}")
+endif()
+
 execute_process(
   COMMAND
     ${WOLFRAMKERNEL} -script ${SCRIPT} -srcDir ${SRCDIR} -buildDir ${BUILDDIR} -paclet ${PACLET}

@@ -16,6 +16,16 @@ set(USE_MATHLINK ON CACHE BOOL "Use MathLink")
 set(NISSUES OFF CACHE BOOL "NISSUES")
 set(NABORT OFF CACHE BOOL "NABORT")
 set(LOCAL_BUILD OFF CACHE BOOL "Local build")
+# Work-around for bug 349779 is to pause ~1 second
+set(BUG349779_PAUSE 1 CACHE STRING "Bug 349779 pause")
+#
+# Evidence suggests that when bug 349779 strikes, the kernel does exit after 30 minutes
+# So double that and cross fingers.
+#
+# Related bugs: 349779
+# Related issues: RE-514227
+#
+set(BUG349779_TIMEOUT 3600 CACHE STRING "Bug 349779 timeout")
 
 message(STATUS "PACLET: ${PACLET}")
 message(STATUS "WOLFRAMKERNEL: ${WOLFRAMKERNEL}")
@@ -26,6 +36,9 @@ message(STATUS "USE_MATHLINK: ${USE_MATHLINK}")
 message(STATUS "NISSUES: ${NISSUES}")
 message(STATUS "NABORT: ${NABORT}")
 message(STATUS "LOCAL_BUILD: ${LOCAL_BUILD}")
+message(STATUS "CMAKE_SIZEOF_VOID_P: ${CMAKE_SIZEOF_VOID_P}")
+message(STATUS "BUG349779_PAUSE: ${BUG349779_PAUSE}")
+message(STATUS "BUG349779_TIMEOUT: ${BUG349779_TIMEOUT}")
 
 set(STATIC_WL_PACLET_SOURCES
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Abstract.wl

@@ -1,6 +1,10 @@
 
 macro(CheckPacletInfo)
 
+  if(NOT EXISTS ${WOLFRAMKERNEL})
+  message(FATAL_ERROR "WOLFRAMKERNEL does not exist. WOLFRAMKERNEL: ${WOLFRAMKERNEL}")
+  endif()
+
   if(LOCAL_BUILD)
     set(PACLET_VERSION 999)
   else()
@@ -9,7 +13,7 @@ macro(CheckPacletInfo)
     #
     execute_process(
       COMMAND
-        ${WOLFRAMKERNEL} -noinit -noprompt -nopaclet -runfirst Print[OutputForm[Version\ /.\ List\ @@\ Get["${PACLETINFO_SOURCE}"]]]\;Exit[]
+        ${WOLFRAMKERNEL} -noinit -noprompt -nopaclet -runfirst Pause[${BUG349779_PAUSE}]\;Print[OutputForm[Version\ /.\ List\ @@\ Get["${PACLETINFO_SOURCE}"]]]\;Exit[]
       OUTPUT_VARIABLE
         PACLET_VERSION
       OUTPUT_STRIP_TRAILING_WHITESPACE

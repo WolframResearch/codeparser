@@ -36,26 +36,23 @@ endif()
 
 macro(CheckWolframKernel)
 
+	if(NOT EXISTS ${WOLFRAMKERNEL})
+	message(FATAL_ERROR "WOLFRAMKERNEL does not exist. WOLFRAMKERNEL: ${WOLFRAMKERNEL}")
+	endif()
+
 	#
 	# get $VersionNumber
 	#
 	execute_process(
 		COMMAND
-			${WOLFRAMKERNEL} -noinit -noprompt -nopaclet -runfirst Print[OutputForm[Floor[100\ \$VersionNumber\ +\ \$ReleaseNumber]]]\;Exit[]
+			${WOLFRAMKERNEL} -noinit -noprompt -nopaclet -runfirst Pause[${BUG349779_PAUSE}]\;Print[OutputForm[Floor[100\ \$VersionNumber\ +\ \$ReleaseNumber]]]\;Exit[]
 		OUTPUT_VARIABLE
 			VERSION_NUMBER
 		OUTPUT_STRIP_TRAILING_WHITESPACE
 		WORKING_DIRECTORY
 			${PROJECT_SOURCE_DIR}
 		TIMEOUT
-			#
-			# Evidence suggests that when bug 349779 strikes, the kernel does exit after 30 minutes
-			# So double that and cross fingers.
-			#
-			# Related bugs: 349779
-			# Related issues: RE-514227
-			#
-			3600
+			${BUG349779_TIMEOUT}
 		RESULT_VARIABLE
 			VERSION_NUMBER_RESULT
 	)
@@ -75,21 +72,14 @@ macro(CheckWolframKernel)
 	#
 	execute_process(
 		COMMAND
-			${WOLFRAMKERNEL} -noinit -noprompt -nopaclet -runfirst Print[OutputForm[\$SystemID]]\;Exit[]
+			${WOLFRAMKERNEL} -noinit -noprompt -nopaclet -runfirst Pause[${BUG349779_PAUSE}]\;Print[OutputForm[\$SystemID]]\;Exit[]
 		OUTPUT_VARIABLE
 			SYSTEMID
 		OUTPUT_STRIP_TRAILING_WHITESPACE
 		WORKING_DIRECTORY
 			${PROJECT_SOURCE_DIR}
 		TIMEOUT
-			#
-			# Evidence suggests that when bug 349779 strikes, the kernel does exit after 30 minutes
-			# So double that and cross fingers.
-			#
-			# Related bugs: 349779
-			# Related issues: RE-514227
-			#
-			3600
+			${BUG349779_TIMEOUT}
 		RESULT_VARIABLE
 			SYSTEMID_RESULT
 	)
@@ -98,6 +88,44 @@ macro(CheckWolframKernel)
 
 	if(NOT ${SYSTEMID_RESULT} EQUAL "0")
 		message(WARNING "Bad exit code from SystemID script: ${SYSTEMID_RESULT}; Continuing")
+	endif()
+
+	#
+	# get $SystemWordLength
+	#
+	execute_process(
+		COMMAND
+			${WOLFRAMKERNEL} -noinit -noprompt -nopaclet -runfirst Pause[${BUG349779_PAUSE}]\;Print[OutputForm[\$SystemWordLength]]\;Exit[]
+		OUTPUT_VARIABLE
+			SYSTEMWORDLENGTH
+		OUTPUT_STRIP_TRAILING_WHITESPACE
+		WORKING_DIRECTORY
+			${PROJECT_SOURCE_DIR}
+		TIMEOUT
+			${BUG349779_TIMEOUT}
+		RESULT_VARIABLE
+			SYSTEMWORDLENGTH_RESULT
+	)
+
+	message(STATUS "SYSTEMWORDLENGTH: ${SYSTEMWORDLENGTH}")
+
+	if(NOT ${SYSTEMWORDLENGTH_RESULT} EQUAL "0")
+		message(WARNING "Bad exit code from SystemWordLength script: ${SYSTEMWORDLENGTH_RESULT}; Continuing")
+	endif()
+
+	#
+	# Make sure that CMake and Mathematica agree about 32-bit or 64-bit
+	#
+	if(${CMAKE_SIZEOF_VOID_P} EQUAL 4)
+	if(NOT ${SYSTEMWORDLENGTH} EQUAL 32)
+	message(FATAL_ERROR "CMake is reporting 32-bit; Mathematica is reporting: ${SYSTEMWORDLENGTH}")
+	endif()
+	elseif(${CMAKE_SIZEOF_VOID_P} EQUAL 8)
+	if(NOT ${SYSTEMWORDLENGTH} EQUAL 64)
+	message(FATAL_ERROR "CMake is reporting 64-bit; Mathematica is reporting: ${SYSTEMWORDLENGTH}")
+	endif()
+	else()
+	message(FATAL_ERROR "CMake is reporting neither 32-bit nor 64-bit. CMAKE_SIZEOF_VOID_P: ${CMAKE_SIZEOF_VOID_P}")
 	endif()
 
 endmacro(CheckWolframKernel)
