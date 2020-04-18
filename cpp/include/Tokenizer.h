@@ -12,7 +12,6 @@ class Tokenizer;
 using TokenizerPtr = std::unique_ptr<Tokenizer>;
 
 
-
 //
 // Tokenizer takes a stream of WL characters and tokenizes them
 //
@@ -30,6 +29,16 @@ class Tokenizer {
     
     Token handleComment(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter firstChar, NextPolicy policy);
     
+    //
+    // Handle parsing the brackets in:
+    // a >> foo[[]]
+    //
+    // tutorial/OperatorInputForms
+    //
+    // File Names
+    //
+    // handle matched pairs of [] enclosing any characters other than spaces, tabs, and newlines
+    //
     SourceCharacter handleFileOpsBrackets(SourceLocation tokenStartLoc, SourceCharacter firstChar, NextPolicy policy, int *handled);
     Token handleString(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
     
@@ -37,12 +46,47 @@ class Tokenizer {
     Token handleString_stringifyFile(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter firstChar, NextPolicy policy);
     
     Token handleSymbol(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
+    
+    //
+    // Precondition: currentWLCharacter is letterlike
+    // Postcondition: buffer is pointing to first NON-SYMBOLSEGMENT character after all symbol segment characters
+    //
+    // return: the first NON-SYMBOLSEGMENT character after all symbol segment characters
+    //
     WLCharacter handleSymbolSegment(Buffer tokenStartBuf, SourceLocation firstCharLoc, WLCharacter firstChar, NextPolicy policy);
     
     Token handleNumber(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
+    
+    //
+    // Precondition: currentWLCharacter is a digit
+    // Postcondition: buffer is pointing to first NON-DIGIT character after all digits
+    //
+    // return: the first NON-DIGIT character after all digits
+    //
     WLCharacter handleDigits(NextPolicy policy, WLCharacter firstChar, size_t *count);
+    
+    //
+    // Precondition: currentWLCharacter is NOT in String
+    // Postcondition: currentWLCharacter is the first WLCharacter AFTER all good digits or alphas
+    //
+    // Return: number of digits handled, possibly 0, or -1 if error
+    //
     WLCharacter handleAlphaOrDigits(WLCharacter firstChar, size_t base, NextPolicy policy, int *handled);
+    
+    //
+    // Precondition: currentWLCharacter is NOT in String
+    //
+    // Return: number of digits handled after ., possibly 0, or -1 if error
+    //
     WLCharacter handlePossibleFractionalPart(Buffer dotBuf, SourceLocation dotLoc, WLCharacter firstChar, size_t base, NextPolicy policy, int *handled);
+    
+    //
+    // Precondition: currentWLCharacter is NOT in String
+    //
+    // Return: number of digits handled after ., possibly 0
+    //         UNRECOGNIZED_DIGIT if base error
+    //         BAILOUT if not a radix point (and also backup before dot)
+    //
     WLCharacter handlePossibleFractionalPartPastDot(Buffer dotBuf, SourceLocation dotLoc, WLCharacter firstChar, size_t base, NextPolicy policy, int *handled);
     
     Token handleColon(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);

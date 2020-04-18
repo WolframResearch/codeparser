@@ -60,6 +60,9 @@ precedenceCPPHeader = {
 
 #include <cstdint> // for uint8_t
 
+//
+//
+//
 enum Precedence : uint8_t {"} ~Join~
    KeyValueMap[(Row[{toGlobal[#1], " = ", BitShiftLeft[#2[[1]], 1] + associativityToValue[#2[[2]]], ",", "// prec: ", #2[[1]], ", assoc: ", #2[[2]]}]) &, enumMap] ~Join~ {"};", ""}
 

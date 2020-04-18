@@ -11,8 +11,9 @@ class SourceConventionManager;
 using ByteDecoderPtr = std::unique_ptr<ByteDecoder>;
 using SourceConventionManagerPtr = std::unique_ptr<SourceConventionManager>;
 
-
-
+//
+//
+//
 class SourceConventionManager {
 public:
     
@@ -25,6 +26,9 @@ public:
     virtual ~SourceConventionManager() {}
 };
 
+//
+//
+//
 class LineColumnManager : public SourceConventionManager {
     
     SourceLocation newSourceLocation() override;
@@ -32,14 +36,15 @@ class LineColumnManager : public SourceConventionManager {
     void newline(SourceLocation& loc) override;
 };
 
+//
+//
+//
 class SourceCharacterIndexManager : public SourceConventionManager {
     
     SourceLocation newSourceLocation() override;
     
     void newline(SourceLocation& loc) override;
 };
-
-
 
 
 //
@@ -71,6 +76,22 @@ public:
     
     void deinit();
     
+    //
+    // Precondition: buffer is pointing to current SourceCharacter
+    // Postcondition: buffer is pointing to next SourceCharacter
+    //
+    // return the SourceCharacter that was current
+    //
+    // Decode UTF-8 byte sequences
+    //
+    // Also decode \r\n into a single SourceCharacter
+    //
+    // \r\n is akin to a 2-byte UTF-8 sequence
+    //
+    // Also warn about \r line endings
+    //
+    // Do not decode invalid sequences or surrogates.
+    //
     SourceCharacter nextSourceCharacter0(NextPolicy policy);
     
     SourceCharacter currentSourceCharacter(NextPolicy policy);

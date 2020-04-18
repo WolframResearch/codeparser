@@ -16,8 +16,9 @@ std::ostream& clear_graphical(std::ostream& stream);
 
 int get_graphical_i();
 
-
-
+//
+//
+//
 class Utils {
 public:
     
@@ -39,8 +40,10 @@ public:
     static bool isMBStrange(codepoint point);
 #endif // !NISSUES
     
+    //
+    // Convert val to the digit that it represents
+    //
     static uint8_t toDigit(unsigned char val);
     
     static SourceConvention parseSourceConvention(std::string s);
 };
-

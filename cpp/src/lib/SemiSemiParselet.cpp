@@ -9,17 +9,6 @@
 // The syntax for ;; is complicated and has a lot of edge cases.
 //
 
-//
-// prefix
-//
-// Parses a run of multiple Span expressions
-//
-// A run is anything like  ;;;;x;;y;;;;
-//
-// Multiple Span expressions are ImplicitTimes together
-//
-// Must also handle  ;;!b  where there is an implicit Times, but only a single Span
-//
 NodePtr SemiSemiParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     auto Implicit = Token(TOKEN_FAKE_IMPLICITONE, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
@@ -32,17 +21,6 @@ NodePtr SemiSemiParselet::parse(Token TokIn, ParserContext Ctxt) const {
     return parse(std::move(Left), TokIn, Ctxt);
 }
 
-//
-// infix
-//
-// Parses a run of multiple Span expressions
-//
-// A run is anything like  a;;;;x;;y;;;;
-//
-// Multiple Span expressions are ImplicitTimes together
-//
-// Must also handle  a;;!b  where there is an implicit Times, but only a single Span
-//
 NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
     
     auto Operand = parse0(std::move(Left), TokIn, Ctxt);
@@ -159,13 +137,7 @@ retParse:
     return TheParser->infixLoop(std::move(Operand), Ctxt);
 }
 
-//
-// infix
-//
-// Something like  a;;b
-//
-// Parses a single complete Span
-//
+
 NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
     
     Ctxt.Prec = PRECEDENCE_SEMISEMI;

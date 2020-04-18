@@ -321,6 +321,9 @@ tokenCPPHeader = {
 
 #include <cstdint> // for uint16_t
 
+//
+//
+//
 enum Closer : uint8_t {
     //
     // CLOSER_OPEN is used to indicate the lack of a group
@@ -343,6 +346,9 @@ enum Closer : uint8_t {
     CLOSER_ASSERTFALSE,
 };
 
+//
+//
+//
 struct TokenEnum {
 
   uint16_t T;
@@ -444,7 +450,10 @@ struct TokenEnum {
 bool operator==(TokenEnum a, TokenEnum b);
 
 bool operator!=(TokenEnum a, TokenEnum b);
-"} ~Join~
+
+//
+//
+//"} ~Join~
 KeyValueMap[(
   Row[{"constexpr TokenEnum ", toGlobal[#1], "(",
     BitOr[

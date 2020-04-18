@@ -336,9 +336,6 @@ void Tokenizer::nextToken_stringifyFile() {
 }
 
 
-//
-//
-//
 Token Tokenizer::currentToken(NextPolicy policy) {
     
     auto resetBuf = TheByteBuffer->buffer;
@@ -567,12 +564,7 @@ inline Token Tokenizer::handleSymbol(Buffer symbolStartBuf, SourceLocation symbo
     return Token(TOKEN_SYMBOL, getTokenBufferAndLength(symbolStartBuf), getTokenSource(symbolStartLoc));
 }
 
-//
-// Precondition: currentWLCharacter is letterlike
-// Postcondition: buffer is pointing to first NON-SYMBOLSEGMENT character after all symbol segment characters
-//
-// return: the first NON-SYMBOLSEGMENT character after all symbol segment characters
-//
+
 inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation charLoc, WLCharacter c, NextPolicy policy) {
     
     assert(c.isLetterlike() || c.isMBLetterlike());
@@ -852,15 +844,6 @@ inline Token Tokenizer::handleString_stringifyFile(Buffer tokenStartBuf, SourceL
 
 const int UNTERMINATED_STRING = -1;
 
-//
-// Handle parsing the brackets in:
-// a >> foo[[]]
-//
-// tutorial/OperatorInputForms
-//
-// File Names
-//
-// handle matched pairs of [] enclosing any characters other than spaces, tabs, and newlines
 //
 // Use SourceCharacters here, not WLCharacters
 //
@@ -1723,11 +1706,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
     return Token(TOKEN_ERROR_EXPECTEDEXPONENT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
 }
 
-//
-// Precondition: currentWLCharacter is NOT in String
-//
-// Return: number of digits handled after ., possibly 0, or -1 if error
-//
+
 inline WLCharacter Tokenizer::handlePossibleFractionalPart(Buffer dotBuf, SourceLocation dotLoc, WLCharacter c, size_t base, NextPolicy policy, int *handled) {
     
     assert(c.to_point() == '.');
@@ -1741,13 +1720,7 @@ inline WLCharacter Tokenizer::handlePossibleFractionalPart(Buffer dotBuf, Source
     return handlePossibleFractionalPartPastDot(dotBuf, dotLoc, c, base, policy, handled);
 }
 
-//
-// Precondition: currentWLCharacter is NOT in String
-//
-// Return: number of digits handled after ., possibly 0
-//         UNRECOGNIZED_DIGIT if base error
-//         BAILOUT if not a radix point (and also backup before dot)
-//
+
 inline WLCharacter Tokenizer::handlePossibleFractionalPartPastDot(Buffer dotBuf, SourceLocation dotLoc, WLCharacter c, size_t base, NextPolicy policy, int *handled) {
     
     //
@@ -1839,12 +1812,7 @@ void Tokenizer::backup(Buffer resetBuf, SourceLocation resetLoc, bool warn) {
     TheByteDecoder->SrcLoc = resetLoc;
 }
 
-//
-// Precondition: currentWLCharacter is a digit
-// Postcondition: buffer is pointing to first NON-DIGIT character after all digits
-//
-// return: the first NON-DIGIT character after all digits
-//
+
 inline WLCharacter Tokenizer::handleDigits(NextPolicy policy, WLCharacter c, size_t *countP) {
     
     assert(c.isDigit());
@@ -1878,12 +1846,7 @@ inline WLCharacter Tokenizer::handleDigits(NextPolicy policy, WLCharacter c, siz
     return c;
 }
 
-//
-// Precondition: currentWLCharacter is NOT in String
-// Postcondition: currentWLCharacter is the first WLCharacter AFTER all good digits or alphas
-//
-// Return: number of digits handled, possibly 0, or -1 if error
-//
+
 inline WLCharacter Tokenizer::handleAlphaOrDigits(WLCharacter c, size_t base, NextPolicy policy, int *handled) {
     
     assert(c.isAlphaOrDigit());

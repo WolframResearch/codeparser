@@ -169,6 +169,9 @@ symbolCPPHeader = {
 
 #include <memory>
 
+//
+//
+//
 class Symbol {
 public:
   constexpr Symbol(const char *Name) : Name(Name) {}
@@ -189,7 +192,9 @@ Closer TokenToCloser(TokenEnum T);
 
 SymbolPtr& TokenToSymbol(TokenEnum T);
 
-"} ~Join~
+//
+//
+//"} ~Join~
 (Row[{"extern", " ", "SymbolPtr", " ", toGlobal["Symbol`"<>ToString[#]], ";"}]& /@ symbols) ~Join~
 {""}
 

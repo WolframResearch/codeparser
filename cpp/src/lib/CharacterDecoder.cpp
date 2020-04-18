@@ -17,25 +17,13 @@ void CharacterDecoder::init(WolframLibraryData libDataIn) {
     libData = libDataIn;
 }
 
+
 void CharacterDecoder::deinit() {
     
     Issues.clear();
 }
 
-// Precondition: buffer is pointing to current WLCharacter
-// Postcondition: buffer is pointing to next WLCharacter
-//
-// Example:
-// memory: 1+\[Alpha]-2
-//           ^
-//           buffer
-//
-// after calling nextWLCharacter:
-// memory: 1+\[Alpha]-2
-//                   ^
-//                   buffer
-// return \[Alpha]
-//
+
 WLCharacter CharacterDecoder::nextWLCharacter0(NextPolicy policy) {
     
     auto currentWLCharacterStartBuf = TheByteBuffer->buffer;
@@ -161,9 +149,7 @@ WLCharacter CharacterDecoder::nextWLCharacter0(NextPolicy policy) {
     }
 }
 
-//
-//
-//
+
 WLCharacter CharacterDecoder::currentWLCharacter(NextPolicy policy) {
     
     auto resetBuf = TheByteBuffer->buffer;
@@ -184,9 +170,6 @@ WLCharacter CharacterDecoder::currentWLCharacter(NextPolicy policy) {
 }
 
 
-//
-//
-//
 WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer openSquareBuf, SourceLocation openSquareLoc, NextPolicy policy) {
     
     assert(*openSquareBuf == '[');
@@ -522,9 +505,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
     }
 }
 
-//
-//
-//
+
 WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer colonBuf, SourceLocation colonLoc, NextPolicy policy) {
     
     assert(*colonBuf == ':');
@@ -647,9 +628,7 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
     return WLCharacter(point, ESCAPE_4HEX);
 }
 
-//
-//
-//
+
 WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer dotBuf, SourceLocation dotLoc, NextPolicy policy) {
     
     assert(*dotBuf == '.');
@@ -771,9 +750,7 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
     return WLCharacter(point, ESCAPE_2HEX);
 }
 
-//
-//
-//
+
 WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer firstOctalBuf, SourceLocation firstOctalLoc, NextPolicy policy) {
     
     assert(SourceCharacter(*firstOctalBuf).isOctal());
@@ -896,9 +873,7 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
     return WLCharacter(point, ESCAPE_OCTAL);
 }
 
-//
-//
-//
+
 WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer barBuf, SourceLocation barLoc, NextPolicy policy) {
     
     assert(*barBuf == '|');
@@ -1025,18 +1000,7 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
     return WLCharacter(point, ESCAPE_6HEX);
 }
 
-//
-// Handling line continuations belongs in some layer strictly above CharacterDecoder and below Tokenizer.
-//
-// Some middle layer that deals with "parts" of a token.
-//
-// But that layer doesn't exist (yet), so CharacterDecoder must handle line continuations.
-//
-// TODO: add this middle layer
-//
-// NOTE: this middle layer would need to warn about unneeded line continuations.
-// e.g., with something like  { 123 \\\n }  then the line continuation is not needed
-//
+
 WLCharacter CharacterDecoder::handleLineContinuation(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer escapedBuf, SourceLocation escapedLoc, SourceCharacter firstChar, NextPolicy policy) {
     
     assert(*currentWLCharacterStartBuf == '\\');
@@ -1130,9 +1094,7 @@ WLCharacter CharacterDecoder::handleLineContinuation(Buffer currentWLCharacterSt
     return c;
 }
 
-//
-//
-//
+
 WLCharacter CharacterDecoder::handleBackSlash(Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy) {
     
 #if !NISSUES
@@ -1165,9 +1127,7 @@ WLCharacter CharacterDecoder::handleBackSlash(Buffer escapedBuf, SourceLocation 
     return WLCharacter(CODEPOINT_STRINGMETA_BACKSLASH, ESCAPE_SINGLE);
 }
 
-//
-//
-//
+
 WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer unhandledBuf, SourceLocation unhandledLoc, SourceCharacter escapedChar, NextPolicy policy) {
     
     //
@@ -1256,13 +1216,7 @@ std::vector<IssuePtr>& CharacterDecoder::getIssues() {
 
 
 #if USE_MATHLINK
-//
-// example:
-// input: Alpa
-// return Alpha
-//
-// Return empty string if no suggestion.
-//
+
 std::string CharacterDecoder::longNameSuggestion(BufferAndLength input) {
     
     if (!libData) {

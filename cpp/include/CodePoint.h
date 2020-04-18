@@ -4,9 +4,13 @@
 #include "TokenEnum.h"
 
 #include <cstdio> // for EOF
+#include <cstdint> // for int32_t
 
 using codepoint = int32_t;
 
+//
+//
+//
 constexpr codepoint CODEPOINT_BEL(0x07);
 constexpr codepoint CODEPOINT_ESC(0x1b);
 constexpr codepoint CODEPOINT_ACTUAL_DOUBLEQUOTE(0x22);
@@ -50,7 +54,7 @@ constexpr codepoint CODEPOINT_VIRTUAL_BOM(0xe001);
 constexpr codepoint CODEPOINT_ENDOFFILE(EOF);
 
 //
-//
+// xxx
 //
 constexpr codepoint CODEPOINT_ASSERTFALSE(-2);
 

@@ -30,7 +30,6 @@ importedNewlineLongNames
 importedUninterpretableLongNames
 
 importedUnsupportedLongNames
-importedUnsupportedLongNameCodePoints
 
 importedRawLongNames
 
@@ -198,7 +197,6 @@ importedNewlineLongNames = Keys[Select[importedLongNames, #[[1]] === NewlineChar
 importedUninterpretableLongNames = Keys[Select[importedLongNames, #[[1]] === UninterpretableCharacter &]]
 
 importedUnsupportedLongNames = Keys[Select[importedLongNames, #[[1]] === UnsupportedCharacter &]]
-importedUnsupportedLongNameCodePoints = importedLongNames[[Key[#], 2]]& /@ importedUnsupportedLongNames
 
 importedRawLongNames = Keys[Select[importedLongNames, #[[1]] === RawCharacter &]]
 

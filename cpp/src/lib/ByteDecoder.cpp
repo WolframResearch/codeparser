@@ -34,22 +34,6 @@ void ByteDecoder::deinit() {
 }
 
 //
-// Precondition: buffer is pointing to current SourceCharacter
-// Postcondition: buffer is pointing to next SourceCharacter
-//
-// return the SourceCharacter that was current
-//
-// Decode UTF-8 byte sequences
-//
-// Also decode \r\n into a single SourceCharacter
-//
-// \r\n is akin to a 2-byte UTF-8 sequence
-//
-// Also warn about \r line endings
-//
-// Do not decode invalid sequences or surrogates.
-//
-//
 // https://unicodebook.readthedocs.io/issues.html#strict-utf8-decoder
 //
 // Table 3.1B. Legal UTF-8 Byte Sequences
@@ -1024,9 +1008,7 @@ SourceCharacter ByteDecoder::currentSourceCharacter(NextPolicy policy) {
     return c;
 }
 
-//
-//
-//
+
 SourceCharacter ByteDecoder::invalid(SourceLocation errSrcLoc, NextPolicy policy) {
     
     status = UTF8STATUS_INVALID;

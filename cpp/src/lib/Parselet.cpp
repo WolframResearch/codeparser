@@ -193,9 +193,6 @@ NodePtr InfixToplevelNewlineParselet::parse(NodeSeq Left, Token firstTok, Parser
 }
 
 
-//
-// something like  x  or x_
-//
 NodePtr SymbolParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     auto Sym = NodePtr(new LeafNode(TokIn));
@@ -622,9 +619,6 @@ NodePtr CallParselet::parse(NodeSeq Head, Token TokIn, ParserContext CtxtIn) con
 }
 
 
-//
-// Something like  a ~f~ b
-//
 NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
     auto FirstTilde = TokIn;
@@ -708,12 +702,6 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
 }
 
 
-//
-// Something like  symbol:object
-//
-// when parsing a in a:b  then ColonFlag is false
-// when parsing b in a:b  then ColonFlag is true
-//
 NodePtr ColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
     assert((CtxtIn.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON);
@@ -762,11 +750,7 @@ NodePtr ColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
     return TheParser->infixLoop(std::move(Pat), CtxtIn);
 }
 
-//
-// Something like  pattern:optional
-//
-// Called from other parselets
-//
+
 NodePtr ColonParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
     
     //
@@ -797,14 +781,6 @@ NodePtr ColonParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserCo
 }
 
 
-//
-// Something like  a /: b = c
-//
-// a   /:   b   =   c
-// ^~~~~ Args at the start
-//       ^~~ Trivia1
-//           ^~~ Trivia2
-//
 NodePtr SlashColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
     auto Ctxt = CtxtIn;
@@ -910,9 +886,6 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtI
 }
 
 
-//
-// Something like  \( x \)
-//
 NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext CtxtIn) const {
     
     auto Opener = firstTok;
@@ -1009,9 +982,6 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext CtxtI
 }
 
 
-//
-// a /: b = c  and  a /: b = .  are handled here
-//
 NodePtr EqualParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
     auto Ctxt = CtxtIn;
@@ -1073,9 +1043,6 @@ NodePtr EqualParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
 }
 
 
-//
-// a /: b := c  is handled here
-//
 NodePtr ColonEqualParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
     auto Ctxt = CtxtIn;
@@ -1111,11 +1078,6 @@ NodePtr ColonEqualParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtI
 }
 
 
-//
-// Something like  a =.
-//
-// a /: b =.  is also handled here
-//
 NodePtr EqualDotParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
     auto Ctxt = CtxtIn;
@@ -1138,9 +1100,6 @@ NodePtr EqualDotParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn)
 }
 
 
-//
-// Something like  \[Integral] f \[DifferentialD] x
-//
 NodePtr IntegralParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     
     auto Ctxt = CtxtIn;
@@ -1304,9 +1263,6 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, Token TokIn, Pars
 }
 
 
-//
-// a::b
-//
 NodePtr ColonColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
     
     NodeSeq Args(1);
@@ -1392,9 +1348,6 @@ NodePtr ColonColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
 }
 
 
-//
-// a>>b
-//
 NodePtr GreaterGreaterParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
     auto Ctxt = CtxtIn;
@@ -1426,9 +1379,6 @@ NodePtr GreaterGreaterParselet::parse(NodeSeq Left, Token TokIn, ParserContext C
 }
 
 
-//
-// a>>>b
-//
 NodePtr GreaterGreaterGreaterParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
     
     auto Ctxt = CtxtIn;
@@ -1460,9 +1410,6 @@ NodePtr GreaterGreaterGreaterParselet::parse(NodeSeq Left, Token TokIn, ParserCo
 }
 
 
-//
-// <<a
-//
 NodePtr LessLessParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     
     auto Ctxt = CtxtIn;
@@ -1493,9 +1440,6 @@ NodePtr LessLessParselet::parse(Token TokIn, ParserContext CtxtIn) const {
 }
 
 
-//
-// InfixDifferentialDParselet only exists to properly supply precedence, depending on context
-//
 Precedence InfixDifferentialDParselet::getPrecedence(ParserContext Ctxt) const {
     
     if ((Ctxt.Flag & PARSER_INSIDE_INTEGRAL) == PARSER_INSIDE_INTEGRAL) {
@@ -1510,9 +1454,6 @@ Precedence InfixDifferentialDParselet::getPrecedence(ParserContext Ctxt) const {
     return PRECEDENCE_FAKE_IMPLICITTIMES;
 }
 
-//
-// Does not "parse" so much as inserts the implicit Times token, and then allows the rest of the system to do the work
-//
 NodePtr InfixDifferentialDParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
     
     auto token = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(firstTok.BufLen.buffer), Source(firstTok.Src.Start));
@@ -1524,19 +1465,6 @@ NodePtr InfixDifferentialDParselet::parse(NodeSeq Left, Token firstTok, ParserCo
 }
 
 
-//
-// Something like  #  or  #1  or  #abc  or  #"abc"
-//
-// From Slot documentation:
-//
-// In the form #name, the characters in name can be any combination of alphanumeric characters not beginning with digits.
-//
-//
-// A slot that starts with a digit goes down one path
-// And a slot that starts with a letter goes down another path
-//
-// Make sure e.g.  #1a is not parsed as SlotNode["#1a"]
-//
 NodePtr HashParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     
     auto Ctxt = CtxtIn;
@@ -1576,9 +1504,7 @@ NodePtr HashParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     return TheParser->infixLoop(std::move(Slot), CtxtIn);
 }
 
-//
-// Something like  ##  or  ##1
-//
+
 NodePtr HashHashParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     
     auto Ctxt = CtxtIn;

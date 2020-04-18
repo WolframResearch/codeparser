@@ -6,6 +6,9 @@
 #include <ostream>
 #include <array>
 
+//
+//
+//
 struct ByteEncoderState {
     
 };

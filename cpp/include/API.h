@@ -18,7 +18,7 @@
 //
 // This bug was fixed in v12.0
 //
-// When we no longer support any version < 12.0, then we can switch to using WSTP
+// When targeting 12.0 as a minimum, then we can switch to using WSTP
 //
 // Also be a good citizen and cleanup the leftover defines from mathlink and WolframLibrary
 //
@@ -59,13 +59,18 @@ using ScopedMLEnvironmentParameterPtr = std::unique_ptr<ScopedMLEnvironmentParam
 # define CODEPARSERLIB_EXPORTED
 #endif
 
-
+//
+//
+//
 enum StringifyMode {
     STRINGIFYMODE_NORMAL,
     STRINGIFYMODE_SYMBOL,
     STRINGIFYMODE_FILE,
 };
 
+//
+//
+//
 enum ParserSessionBits : uint8_t {
     
     //
@@ -76,7 +81,9 @@ enum ParserSessionBits : uint8_t {
 
 using ParserSessionPolicy = uint8_t;
 
-
+//
+//
+//
 class ParserSession {
     
     BufferAndLength bufAndLen;
@@ -137,6 +144,9 @@ EXTERN_C DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, MLINK 
 
 EXTERN_C DLLEXPORT int SetupLongNames_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
+//
+//
+//
 class ScopedMLUTF8String {
     MLINK mlp;
     Buffer buf;
@@ -156,6 +166,9 @@ public:
     size_t getByteCount() const;
 };
 
+//
+//
+//
 class ScopedMLString {
     MLINK mlp;
     const char *buf;
@@ -171,6 +184,9 @@ public:
     const char *get() const;
 };
 
+//
+//
+//
 class ScopedMLSymbol {
     MLINK mlp;
     const char *sym;
@@ -186,6 +202,9 @@ public:
     const char *get() const;
 };
 
+//
+//
+//
 class ScopedMLFunction {
     MLINK mlp;
     const char *func;
@@ -204,6 +223,9 @@ public:
     int getArgCount() const;
 };
 
+//
+//
+//
 class ScopedMLByteArray {
     MLINK mlp;
     MBuffer buf;
@@ -224,6 +246,9 @@ public:
     size_t getByteCount() const;
 };
 
+//
+//
+//
 class ScopedMLEnvironmentParameter {
     
     MLEnvironmentParameter p;
@@ -236,6 +261,9 @@ public:
     MLEnvironmentParameter get();
 };
 
+//
+//
+//
 class ScopedMLLoopbackLink {
     
     MLINK mlp;

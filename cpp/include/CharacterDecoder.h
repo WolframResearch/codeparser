@@ -13,6 +13,7 @@
 
 
 class CharacterDecoder;
+
 using CharacterDecoderPtr = std::unique_ptr<CharacterDecoder>;
 
 
@@ -33,12 +34,31 @@ class CharacterDecoder {
     WLCharacter handle6Hex(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer barBuf, SourceLocation barLoc, NextPolicy policy);
     WLCharacter handleOctal(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer firstOctalBuf, SourceLocation firstOctalLoc, NextPolicy policy);
     
+    //
+    // Handling line continuations belongs in some layer strictly above CharacterDecoder and below Tokenizer.
+    //
+    // Some middle layer that deals with "parts" of a token.
+    //
+    // But that layer doesn't exist (yet), so CharacterDecoder must handle line continuations.
+    //
+    // TODO: add this middle layer
+    //
+    // NOTE: this middle layer would need to warn about unneeded line continuations.
+    // e.g., with something like  { 123 \\\n }  then the line continuation is not needed
+    //
     WLCharacter handleLineContinuation(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer escapedBuf, SourceLocation escapedLoc, SourceCharacter firstChar, NextPolicy policy);
     
     WLCharacter handleBackSlash(Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy);
     
     WLCharacter handleUnhandledEscape(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer unhandledBuf, SourceLocation unhandledLoc, SourceCharacter escapedChar, NextPolicy policy);
     
+    //
+    // example:
+    // input: Alpa
+    // return Alpha
+    //
+    // Return empty string if no suggestion.
+    //
     std::string longNameSuggestion(BufferAndLength );
     
 public:
@@ -52,6 +72,20 @@ public:
     
     void deinit();
     
+    // Precondition: buffer is pointing to current WLCharacter
+    // Postcondition: buffer is pointing to next WLCharacter
+    //
+    // Example:
+    // memory: 1+\[Alpha]-2
+    //           ^
+    //           buffer
+    //
+    // after calling nextWLCharacter:
+    // memory: 1+\[Alpha]-2
+    //                   ^
+    //                   buffer
+    // return \[Alpha]
+    //
     WLCharacter nextWLCharacter0(NextPolicy policy);
     
     WLCharacter currentWLCharacter(NextPolicy policy);

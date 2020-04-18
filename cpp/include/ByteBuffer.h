@@ -12,13 +12,14 @@
 class ByteBuffer;
 using ByteBufferPtr = std::unique_ptr<ByteBuffer>;
 
-
+//
+//
+//
 class ByteBuffer {
     
     BufferAndLength origBufAndLen;
     
     WolframLibraryData libData;
-    
     
 public:
     
@@ -39,6 +40,12 @@ public:
     
     void nextByte();
     
+    //
+    // Precondition: buffer is pointing to current byte
+    // Postcondition: buffer is pointing to 1 byte past current byte
+    //
+    // Return current byte
+    //
     unsigned char nextByte0();
 };
 

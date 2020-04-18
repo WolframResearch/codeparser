@@ -24,7 +24,9 @@ using MBuffer = unsigned char *;
 using IssuePtr = std::unique_ptr<Issue>;
 using CodeActionPtr = std::unique_ptr<CodeAction>;
 
-
+//
+//
+//
 enum UTF8Status : uint8_t {
     
     UTF8STATUS_NORMAL,
@@ -47,6 +49,9 @@ enum UTF8Status : uint8_t {
     UTF8STATUS_NONCHARACTER_OR_BOM
 };
 
+//
+//
+//
 struct BufferAndLength {
     
     Buffer buffer;
@@ -71,8 +76,9 @@ static_assert((SIZEOF_VOID_P == 8 && sizeof(BufferAndLength) == 24) || (SIZEOF_V
 
 bool operator==(BufferAndLength a, BufferAndLength b);
 
-
-
+//
+//
+//
 enum NextPolicyBits : uint8_t {
     
     //
@@ -153,7 +159,9 @@ const NextPolicy INSIDE_SYMBOL = ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLE
 const NextPolicy INSIDE_STRINGIFY_SYMBOL = PRESERVE_WS_AFTER_LC | ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE;
 const NextPolicy INSIDE_STRINGIFY_FILE = RETURN_TOPLEVELNEWLINE;
 
-
+//
+//
+//
 enum SyntaxError : uint8_t {
     
     SYNTAXERROR_UNKNOWN,
@@ -201,9 +209,11 @@ std::string SyntaxErrorToString(SyntaxError Err);
 SyntaxError TokenErrorToSyntaxError(TokenEnum);
 
 
-
 typedef const std::string SyntaxIssueTag;
 
+//
+//
+//
 SyntaxIssueTag SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER = "UnrecognizedCharacter";
 SyntaxIssueTag SYNTAXISSUETAG_UNSUPPORTEDCHARACTER = "UnsupportedCharacter";
 SyntaxIssueTag SYNTAXISSUETAG_UNDOCUMENTEDCHARACTER = "UndocumentedCharacter";
@@ -215,9 +225,7 @@ SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDIMPLICITTIMES = "UnexpectedImplicitTimes
 typedef const std::string FormatIssueTag;
 
 //
-// When the FormatIssue is made, details for SyntaxAmbiguitySpace will be filled in
-//
-// SyntaxAmbiguitySpace is: insert space between characters
+// xxx
 //
 FormatIssueTag FORMATISSUETAG_SPACE = "Space";
 FormatIssueTag FORMATISSUETAG_UNEXPECTEDLINECONTINUATION = "UnexpectedLineContinuation";
@@ -235,7 +243,7 @@ EncodingIssueTag ENCODINGISSUETAG_UNEXPECTEDCARRIAGERETURN = "UnexpectedCarriage
 // but this was observed:
 // c:\users\brenton\dropbox\wolfram\ast\ast\cpp\include\SyntaxIssue.h(19): warning C4005: 'SEVERITY_ERROR': macro redefinition
 // C:\Program Files (x86)\Windows Kits\10\include\10.0.17763.0\shared\winerror.h(28563): note: see previous definition of 'SEVERITY_ERROR'
-
+//
 typedef const std::string SyntaxIssueSeverity;
 
 SyntaxIssueSeverity SYNTAXISSUESEVERITY_REMARK = "Remark";
@@ -334,16 +342,18 @@ static_assert(sizeof(SourceCharacter) == 4, "Check your assumptions");
 
 std::ostream& operator<<(std::ostream& stream, const SourceCharacter);
 
-
-
-
-
+//
+//
+//
 enum SourceConvention {
     SOURCECONVENTION_UNKNOWN,
     SOURCECONVENTION_LINECOLUMN,
     SOURCECONVENTION_SOURCECHARACTERINDEX
 };
 
+//
+//
+//
 struct SourceLocation {
     
     //
@@ -379,8 +389,9 @@ static_assert(sizeof(SourceLocation) == 8, "Check your assumptions");
 //
 void PrintTo(const SourceLocation&, std::ostream*);
 
-
-
+//
+//
+//
 struct Source {
     
     SourceLocation Start;
@@ -414,9 +425,9 @@ bool operator==(Source a, Source b);
 //
 void PrintTo(const Source&, std::ostream*);
 
-
-
-
+//
+//
+//
 class Issue {
 public:
 
@@ -440,6 +451,9 @@ public:
     virtual ~Issue() {}
 };
 
+//
+//
+//
 class CodeAction {
 protected:
     const std::string Label;
@@ -459,6 +473,9 @@ public:
     virtual ~CodeAction() {}
 };
 
+//
+//
+//
 class ReplaceTextCodeAction : public CodeAction {
     std::string ReplacementText;
 public:
@@ -472,6 +489,9 @@ public:
     void print(std::ostream& s) const override;
 };
 
+//
+//
+//
 class InsertTextCodeAction : public CodeAction {
     std::string InsertionText;
 public:
@@ -485,6 +505,9 @@ public:
     void print(std::ostream& s) const override;
 };
 
+//
+//
+//
 class InsertTextAfterCodeAction : public CodeAction {
     std::string InsertionText;
 public:
@@ -498,6 +521,9 @@ public:
     void print(std::ostream& s) const override;
 };
 
+//
+//
+//
 class DeleteTextCodeAction : public CodeAction {
 public:
     
@@ -510,6 +536,9 @@ public:
     void print(std::ostream& s) const override;
 };
 
+//
+//
+//
 class DeleteTriviaCodeAction : public CodeAction {
 public:
     
@@ -522,6 +551,9 @@ public:
     void print(std::ostream& s) const override;
 };
 
+//
+//
+//
 class SyntaxIssue : public Issue {
 public:
     SyntaxIssue(SyntaxIssueTag Tag, std::string Msg, SyntaxIssueSeverity Sev, Source Src, double Con, std::vector<CodeActionPtr> Actions) : Issue(Tag, Msg, Sev, Src, Con, std::move(Actions)) {}
@@ -533,6 +565,9 @@ public:
     void print(std::ostream& s) const override;
 };
 
+//
+//
+//
 class FormatIssue : public Issue {
 public:
     FormatIssue(FormatIssueTag Tag, std::string Msg, FormatIssueSeverity Sev, Source Src, double Air, std::vector<CodeActionPtr> Actions) : Issue(Tag, Msg, Sev, Src, Air, std::move(Actions)) {}
@@ -544,6 +579,9 @@ public:
     void print(std::ostream& s) const override;
 };
 
+//
+//
+//
 class EncodingIssue : public Issue {
 public:
     EncodingIssue(EncodingIssueTag Tag, std::string Msg, EncodingIssueSeverity Sev, Source Src) : Issue(Tag, Msg, Sev, Src, 0.0, {}) {}
@@ -554,4 +592,3 @@ public:
     
     void print(std::ostream& s) const override;
 };
-

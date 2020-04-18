@@ -31,6 +31,9 @@ public:
     virtual ~Parselet() {}
 };
 
+//
+//
+//
 class PrefixParselet : virtual public Parselet {
 public:
     //
@@ -56,6 +59,9 @@ public:
     virtual ~PrefixParselet() {}
 };
 
+//
+//
+//
 class InfixParselet : virtual public Parselet {
 public:
     //
@@ -76,6 +82,9 @@ public:
     virtual ~InfixParselet() {}
 };
 
+//
+//
+//
 class CallParselet : public InfixParselet {
     PrefixParseletPtr GP;
 public:
@@ -88,6 +97,9 @@ public:
     }
 };
 
+//
+//
+//
 class ContextSensitivePrefixParselet : virtual public Parselet {
 public:
     
@@ -96,6 +108,9 @@ public:
     virtual ~ContextSensitivePrefixParselet() {}
 };
 
+//
+//
+//
 class ContextSensitiveInfixParselet : virtual public Parselet {
 public:
     
@@ -104,7 +119,9 @@ public:
     virtual ~ContextSensitiveInfixParselet() {}
 };
 
-
+//
+//
+//
 class LeafParselet : public PrefixParselet {
     Precedence precedence;
 public:
@@ -115,6 +132,9 @@ public:
     Precedence getPrecedence(ParserContext Ctxt) const override;
 };
 
+//
+//
+//
 class PrefixAssertFalseParselet : public PrefixParselet {
 public:
     PrefixAssertFalseParselet();
@@ -124,6 +144,9 @@ public:
     Precedence getPrecedence(ParserContext Ctxt) const override;
 };
 
+//
+//
+//
 class PrefixEndOfFileParselet : public PrefixParselet {
 public:
     PrefixEndOfFileParselet() {}
@@ -133,6 +156,9 @@ public:
     Precedence getPrecedence(ParserContext Ctxt) const override;
 };
 
+//
+//
+//
 class PrefixErrorParselet : public PrefixParselet {
 public:
     PrefixErrorParselet() {}
@@ -142,6 +168,9 @@ public:
     Precedence getPrecedence(ParserContext Ctxt) const override;
 };
 
+//
+//
+//
 class PrefixCloserParselet : public PrefixParselet {
 public:
     PrefixCloserParselet() {}
@@ -151,6 +180,9 @@ public:
     Precedence getPrecedence(ParserContext Ctxt) const override;
 };
 
+//
+//
+//
 class PrefixUnsupportedTokenParselet : public PrefixParselet {
 public:
     PrefixUnsupportedTokenParselet() {}
@@ -160,6 +192,9 @@ public:
     Precedence getPrecedence(ParserContext Ctxt) const override;
 };
 
+//
+//
+//
 class PrefixUnhandledParselet : public PrefixParselet {
 public:
     PrefixUnhandledParselet() {}
@@ -169,6 +204,9 @@ public:
     Precedence getPrecedence(ParserContext Ctxt) const override;
 };
 
+//
+//
+//
 class PrefixOperatorParselet : public PrefixParselet {
     Precedence precedence;
     SymbolPtr& Op;
@@ -182,6 +220,9 @@ public:
     }
 };
 
+//
+//
+//
 class InfixImplicitTimesParselet : public InfixParselet {
 public:
     InfixImplicitTimesParselet() {}
@@ -193,6 +234,9 @@ public:
     Token procesImplicitTimes(Token TokIn) const override;
 };
 
+//
+//
+//
 class InfixAssertFalseParselet : public InfixParselet {
 public:
     InfixAssertFalseParselet() {}
@@ -202,6 +246,9 @@ public:
     Precedence getPrecedence(ParserContext Ctxt) const override;
 };
 
+//
+//
+//
 class InfixEndOfFileParselet : public InfixParselet {
 public:
     InfixEndOfFileParselet() {}
@@ -213,6 +260,9 @@ public:
     }
 };
 
+//
+//
+//
 class InfixErrorParselet : public InfixParselet {
 public:
     InfixErrorParselet() {}
@@ -224,6 +274,9 @@ public:
     }
 };
 
+//
+//
+//
 class InfixUnsupportedTokenParselet : public InfixParselet {
 public:
     InfixUnsupportedTokenParselet() {}
@@ -235,6 +288,9 @@ public:
     }
 };
 
+//
+//
+//
 class InfixCloserParselet : public InfixParselet {
 public:
     InfixCloserParselet() {}
@@ -246,6 +302,9 @@ public:
     }
 };
 
+//
+// InfixDifferentialDParselet only exists to properly supply precedence, depending on context
+//
 class InfixDifferentialDParselet : public InfixParselet {
 public:
     InfixDifferentialDParselet() {}
@@ -255,6 +314,9 @@ public:
     Precedence getPrecedence(ParserContext Ctxt) const override;
 };
 
+//
+//
+//
 class InfixToplevelNewlineParselet : public InfixParselet {
 public:
     InfixToplevelNewlineParselet() {}
@@ -269,6 +331,9 @@ public:
     }
 };
 
+//
+//
+//
 class BinaryOperatorParselet : public InfixParselet {
     Precedence precedence;
     SymbolPtr& Op;
@@ -286,6 +351,9 @@ public:
     }
 };
 
+//
+//
+//
 class InfixOperatorParselet : public InfixParselet {
     Precedence precedence;
     SymbolPtr& Op;
@@ -303,6 +371,9 @@ public:
     }
 };
 
+//
+//
+//
 class PostfixOperatorParselet : public InfixParselet {
     Precedence precedence;
     SymbolPtr& Op;
@@ -320,6 +391,9 @@ public:
     }
 };
 
+//
+//
+//
 class GroupParselet : public PrefixParselet {
     SymbolPtr& Op;
     Closer Closr;
@@ -338,6 +412,9 @@ public:
 // Special parselets
 //
 
+//
+// something like  x  or x_
+//
 class SymbolParselet : public PrefixParselet, public ContextSensitivePrefixParselet {
 public:
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
@@ -349,6 +426,8 @@ public:
     }
 };
 
+//
+// xxx
 //
 // Deliberately not extending PrefixOperatorParselet and InfixOperatorParselet because I don't feel like bothering with
 // multiple inheritance
@@ -376,11 +455,40 @@ public:
 //
 class SemiSemiParselet : public PrefixParselet, public InfixParselet {
     
+    //
+    // infix
+    //
+    // Something like  a;;b
+    //
+    // Parses a single complete Span
+    //
     NodePtr parse0(NodeSeq Left, Token firstTok, ParserContext Ctxt) const;
 public:
     
+    //
+    // prefix
+    //
+    // Parses a run of multiple Span expressions
+    //
+    // A run is anything like  ;;;;x;;y;;;;
+    //
+    // Multiple Span expressions are ImplicitTimes together
+    //
+    // Must also handle  ;;!b  where there is an implicit Times, but only a single Span
+    //
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
     
+    //
+    // infix
+    //
+    // Parses a run of multiple Span expressions
+    //
+    // A run is anything like  a;;;;x;;y;;;;
+    //
+    // Multiple Span expressions are ImplicitTimes together
+    //
+    // Must also handle  a;;!b  where there is an implicit Times, but only a single Span
+    //
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt) const override {
@@ -388,7 +496,11 @@ public:
     }
 };
 
+//
+// Something like  a ~f~ b
+//
 // It'd be weird if this were an "infix operator"
+//
 class TildeParselet : public InfixParselet {
 public:
     TildeParselet() {}
@@ -405,12 +517,26 @@ public:
     }
 };
 
+//
+// Something like  symbol:object  or  pattern:optional
+//
 class ColonParselet : public InfixParselet, public ContextSensitiveInfixParselet {
 public:
     ColonParselet() {}
     
+    //
+    // Something like  symbol:object
+    //
+    // when parsing a in a:b  then ColonFlag is false
+    // when parsing b in a:b  then ColonFlag is true
+    //
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
+    //
+    // Something like  pattern:optional
+    //
+    // Called from other parselets
+    //
     NodePtr parseContextSensitive(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt) const override {
@@ -418,7 +544,17 @@ public:
     }
 };
 
+//
+// Something like  a /: b = c
+//
+// a   /:   b   =   c
+// ^~~~~ Args at the start
+//       ^~~ Trivia1
+//           ^~~ Trivia2
+//
+//
 // It'd be weird if this were an "infix operator"
+//
 class SlashColonParselet : public InfixParselet {
 public:
     
@@ -429,6 +565,9 @@ public:
     }
 };
 
+//
+// Something like  \( x \)
+//
 class LinearSyntaxOpenParenParselet : public PrefixParselet {
 public:
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
@@ -438,6 +577,9 @@ public:
     }
 };
 
+//
+// a /: b = c  and  a /: b = .  are handled here
+//
 class EqualParselet : public BinaryOperatorParselet {
 public:
     EqualParselet() : BinaryOperatorParselet(TOKEN_EQUAL, PRECEDENCE_EQUAL, SYMBOL_SET) {}
@@ -445,6 +587,9 @@ public:
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
 };
 
+//
+// a /: b := c  is handled here
+//
 class ColonEqualParselet : public BinaryOperatorParselet {
 public:
     ColonEqualParselet() : BinaryOperatorParselet(TOKEN_COLONEQUAL, PRECEDENCE_COLONEQUAL, SYMBOL_SETDELAYED) {}
@@ -452,6 +597,10 @@ public:
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
 };
 
+//
+// Something like  a =.
+//
+// a /: b =.  is also handled here
 //
 // This is not really a binary operator, but keep it consistent with EqualParselet, which handles  a = .
 //
@@ -462,6 +611,9 @@ public:
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
 };
 
+//
+// Something like  \[Integral] f \[DifferentialD] x
+//
 class IntegralParselet : public PrefixParselet {
     SymbolPtr& Op1;
     SymbolPtr& Op2;
@@ -475,6 +627,9 @@ public:
     }
 };
 
+//
+// a::b
+//
 class ColonColonParselet : public InfixParselet {
 public:
     
@@ -489,6 +644,9 @@ public:
     }
 };
 
+//
+// a>>b
+//
 class GreaterGreaterParselet : public InfixParselet {
 public:
     
@@ -499,6 +657,9 @@ public:
     }
 };
 
+//
+// a>>>b
+//
 class GreaterGreaterGreaterParselet : public InfixParselet {
 public:
     
@@ -509,6 +670,9 @@ public:
     }
 };
 
+//
+// <<a
+//
 class LessLessParselet : public PrefixParselet {
 public:
     
@@ -519,6 +683,19 @@ public:
     }
 };
 
+//
+// Something like  #  or  #1  or  #abc  or  #"abc"
+//
+// From Slot documentation:
+//
+// In the form #name, the characters in name can be any combination of alphanumeric characters not beginning with digits.
+//
+//
+// A slot that starts with a digit goes down one path
+// And a slot that starts with a letter goes down another path
+//
+// Make sure e.g.  #1a is not parsed as SlotNode["#1a"]
+//
 class HashParselet : public PrefixParselet {
 public:
     
@@ -529,6 +706,9 @@ public:
     }
 };
 
+//
+// Something like  ##  or  ##1
+//
 class HashHashParselet : public PrefixParselet {
 public:
     
@@ -539,6 +719,9 @@ public:
     }
 };
 
+//
+// Something like  %  or  %1
+//
 class PercentParselet : public PrefixParselet {
 public:
     
@@ -549,6 +732,9 @@ public:
     }
 };
 
+//
+// Something like  %%  or  %%%
+//
 class PercentPercentParselet : public PrefixParselet {
 public:
     

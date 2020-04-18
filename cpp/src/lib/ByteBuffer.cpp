@@ -16,14 +16,10 @@ void ByteBuffer::init(BufferAndLength bufAndLenIn, WolframLibraryData libDataIn)
     wasEOF = false;
 }
 
+
 void ByteBuffer::deinit() {}
 
-//
-// Precondition: buffer is pointing to current byte
-// Postcondition: buffer is pointing to 1 byte past current byte
-//
-// Return current byte
-//
+
 unsigned char ByteBuffer::nextByte0() {
     
     assert((origBufAndLen.buffer <= buffer && buffer <= end) && "Fix at call site");

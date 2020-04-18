@@ -15,7 +15,9 @@ class Parser;
 
 using ParserPtr = std::unique_ptr<Parser>;
 
-
+//
+//
+//
 enum Associativity {
     ASSOCIATIVITY_NONRIGHT,
     ASSOCIATIVITY_RIGHT,
@@ -51,6 +53,9 @@ enum ParserContextFlagBits : uint8_t {
 
 using ParserContextFlag = uint8_t;
 
+//
+//
+//
 struct ParserContext {
     
     //
@@ -75,6 +80,9 @@ struct ParserContext {
 static_assert(sizeof(ParserContext) == 2, "Check your assumptions");
 #endif
 
+//
+//
+//
 class Parser {
 private:
     

@@ -17,6 +17,9 @@ using NodePtr = std::unique_ptr<Node>;
 using LeafNodePtr = std::unique_ptr<LeafNode>;
 using NodeSeqNodePtr = std::unique_ptr<NodeSeqNode>;
 
+//
+// Used mainly for collecting trivia that has been eaten
+//
 class LeafSeq {
     std::vector<LeafNodePtr> vec;
 public:
@@ -136,6 +139,9 @@ public:
     virtual ~Node() {}
 };
 
+//
+// Need to be able to treat a LeafSeq as a Node
+//
 class LeafSeqNode : public Node {
     LeafSeq Children;
 public:
@@ -153,6 +159,12 @@ public:
     void print(std::ostream&) const override;
 };
 
+//
+// Need to be able to treat a NodeSeq as a Node
+//
+// For example, when parsing and we already have a NodeSeq Left and
+// need to insert into a NodeSeq of parent node
+//
 class NodeSeqNode : public Node {
 public:
     NodeSeqNode(NodeSeq Children) : Node(std::move(Children)) {}
@@ -169,6 +181,9 @@ public:
     void print(std::ostream&) const override;
 };
 
+//
+//
+//
 class OperatorNode : public Node {
     SymbolPtr& Op;
     SymbolPtr& MakeSym;
@@ -186,7 +201,9 @@ public:
     }
 };
 
-
+//
+//
+//
 class LeafNode : public Node {
     const Token Tok;
 public:
@@ -218,6 +235,9 @@ public:
     }
 };
 
+//
+//
+//
 class ErrorNode : public Node {
     const Token Tok;
 public:
@@ -253,39 +273,57 @@ public:
     }
 };
 
-
+//
+//
+//
 class PrefixNode : public OperatorNode {
 public:
     PrefixNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEPREFIXNODE, std::move(Args)) {}
 };
 
+//
+//
+//
 class BinaryNode : public OperatorNode {
 public:
     BinaryNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEBINARYNODE, std::move(Args)) {}
 };
 
+//
+//
+//
 class InfixNode : public OperatorNode {
 public:
     InfixNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEINFIXNODE, std::move(Args)) {}
 };
 
-
+//
+//
+//
 class TernaryNode : public OperatorNode {
 public:
     TernaryNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKETERNARYNODE, std::move(Args)) {}
 };
 
+//
+//
+//
 class PostfixNode : public OperatorNode {
 public:
     PostfixNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEPOSTFIXNODE, std::move(Args)) {}
 };
 
+//
+//
+//
 class PrefixBinaryNode : public OperatorNode {
 public:
     PrefixBinaryNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEPREFIXBINARYNODE, std::move(Args)) {}
 };
 
-
+//
+//
+//
 class CallNode : public Node {
     NodeSeq Head;
 public:
@@ -300,64 +338,97 @@ public:
     Source getSource() const override;
 };
 
-
+//
+//
+//
 class GroupNode : public OperatorNode {
 public:
     GroupNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEGROUPNODE, std::move(Args)) {}
 };
 
-
+//
+//
+//
 class BlankNode : public OperatorNode {
 public:
     BlankNode(NodeSeq Args) : OperatorNode(SYMBOL_BLANK, SYMBOL_CODEPARSER_LIBRARY_MAKEBLANKNODE, std::move(Args)) {}
 };
 
+//
+//
+//
 class BlankSequenceNode : public OperatorNode {
 public:
     BlankSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_BLANKSEQUENCE, SYMBOL_CODEPARSER_LIBRARY_MAKEBLANKSEQUENCENODE, std::move(Args)) {}
 };
 
+//
+//
+//
 class BlankNullSequenceNode : public OperatorNode {
 public:
     BlankNullSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_BLANKNULLSEQUENCE, SYMBOL_CODEPARSER_LIBRARY_MAKEBLANKNULLSEQUENCENODE, std::move(Args)) {}
 };
 
+//
+//
+//
 class PatternBlankNode : public OperatorNode {
 public:
     PatternBlankNode(NodeSeq Args) : OperatorNode(SYMBOL_CODEPARSER_PATTERNBLANK, SYMBOL_CODEPARSER_LIBRARY_MAKEPATTERNBLANKNODE, std::move(Args)) {}
 };
 
+//
+//
+//
 class PatternBlankSequenceNode : public OperatorNode {
 public:
     PatternBlankSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_CODEPARSER_PATTERNBLANKSEQUENCE, SYMBOL_CODEPARSER_LIBRARY_MAKEPATTERNBLANKSEQUENCENODE, std::move(Args)) {}
 };
 
+//
+//
+//
 class PatternBlankNullSequenceNode : public OperatorNode {
 public:
     PatternBlankNullSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_CODEPARSER_PATTERNBLANKNULLSEQUENCE, SYMBOL_CODEPARSER_LIBRARY_MAKEPATTERNBLANKNULLSEQUENCENODE, std::move(Args)) {}
 };
 
+//
+//
+//
 class PatternOptionalDefaultNode : public OperatorNode {
 public:
     PatternOptionalDefaultNode(NodeSeq Args) : OperatorNode(SYMBOL_CODEPARSER_PATTERNOPTIONALDEFAULT, SYMBOL_CODEPARSER_LIBRARY_MAKEPATTERNOPTIONALDEFAULTNODE, std::move(Args)) {}
 };
 
+//
+//
+//
 class SlotNode : public OperatorNode {
 public:
     SlotNode(NodeSeq Args) : OperatorNode(SYMBOL_SLOT, SYMBOL_CODEPARSER_LIBRARY_MAKESLOTNODE, std::move(Args)) {}
 };
 
+//
+//
+//
 class SlotSequenceNode : public OperatorNode {
 public:
     SlotSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_SLOTSEQUENCE, SYMBOL_CODEPARSER_LIBRARY_MAKESLOTSEQUENCENODE, std::move(Args)) {}
 };
 
+//
+//
+//
 class OutNode : public OperatorNode {
 public:
     OutNode(NodeSeq Args) : OperatorNode(SYMBOL_OUT, SYMBOL_CODEPARSER_LIBRARY_MAKEOUTNODE, std::move(Args)) {}
 };
 
-
+//
+//
+//
 class SyntaxErrorNode : public Node {
     const SyntaxError Err;
 public:
@@ -370,7 +441,9 @@ public:
     void print(std::ostream&) const override;
 };
 
-
+//
+//
+//
 class GroupMissingCloserNode : public OperatorNode {
 public:
     GroupMissingCloserNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEGROUPMISSINGCLOSERNODE, std::move(Args)) {}
@@ -381,7 +454,9 @@ public:
     GroupMissingCloserNeedsReparseNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEGROUPMISSINGCLOSERNEEDSREPARSENODE, std::move(Args)) {}
 };
 
-
+//
+//
+//
 class CollectedExpressionsNode : public Node {
     std::vector<NodePtr> Exprs;
 public:
@@ -394,6 +469,9 @@ public:
     void print(std::ostream&) const override;
 };
 
+//
+//
+//
 class CollectedIssuesNode : public Node {
     std::vector<IssuePtr> Issues;
 public:
@@ -406,6 +484,9 @@ public:
     void print(std::ostream&) const override;
 };
 
+//
+//
+//
 class ListNode : public Node {
     std::vector<NodePtr> N;
 public:
@@ -418,6 +499,9 @@ public:
     void print(std::ostream&) const override;
 };
 
+//
+//
+//
 class SourceCharacterNode : public Node {
     const SourceCharacter Char;
 public:
@@ -433,6 +517,9 @@ public:
     void print(std::ostream&) const override;
 };
 
+//
+//
+//
 class SafeStringNode : public Node {
     std::vector<unsigned char> safeBytes;
 public:
@@ -447,5 +534,3 @@ public:
     
     void print(std::ostream&) const override;
 };
-
-

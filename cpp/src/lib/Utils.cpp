@@ -346,9 +346,6 @@ uint8_t digitLookup[] = {
     99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99,
     99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99};
 
-//
-// Convert val to the digit that it represents
-//
 uint8_t Utils::toDigit(unsigned char val) {
     return digitLookup[val];
 }
