@@ -7,7 +7,7 @@ parseEquivalenceFunction
 
 parseTest
 
-ok
+$HandledException
 
 
 
@@ -229,20 +229,20 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     ];*)
     
     If[FileType[file] =!= File,
-    	Throw[Failure["NotAFile", <|"File"->file|>], "OK"]
+    	Throw[Failure["NotAFile", <|"File"->file|>], "Handled"]
     ];
     
      If[FileByteCount[file] > limit[[2]],
       ast = 
       Failure["FileTooLarge", <|"FileName" -> file, 
         "FileSize" -> FileSize[file]|>];
-     Throw[ast, "OK"]
+     Throw[ast, "Handled"]
      ];
      If[FileByteCount[file] < limit[[1]],
       ast = 
       Failure["FileTooSmall", <|"FileName" -> file, 
         "FileSize" -> FileSize[file]|>];
-     Throw[ast, "OK"]
+     Throw[ast, "Handled"]
      ];
 
     (*
@@ -263,11 +263,11 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       Which[
         (* special encoded file format *)
         StringMatchQ[firstLine, "(*!1"~~("A"|"B"|"C"|"D"|"H"|"I"|"N"|"O")~~"!*)mcm"],
-        Throw[Failure["EncodedFile", <|"FileName"->file|>], "OK"]
+        Throw[Failure["EncodedFile", <|"FileName"->file|>], "Handled"]
         ,
         (* wl script *)
         StringStartsQ[firstLine, "#!"],
-        Throw[Failure["WLScript", <|"FileName"->file|>], "OK"]
+        Throw[Failure["WLScript", <|"FileName"->file|>], "Handled"]
       ];
     ];
 
@@ -330,7 +330,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       ];
      Switch[cst[[1]],
       "EncodedFile",
-      Throw[cst, "OK"]
+      Throw[cst, "Handled"]
       ,
       "FindFileFailed",
       If[$Interactive,
@@ -339,7 +339,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
            StringReplace[fileIn, StartOfString ~~ prefix -> ""]}]];
         Print[Row[{"index: ", i, " ", cst[[1]], "; skipping"}]];
       ];
-      Throw[cst, "OK"]
+      Throw[cst, "Handled"]
       ,
       "ExitCode",
       f = cst;
@@ -374,7 +374,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         Style[Row[{"index: ", i, " ", "No expressions"}], 
          Darker[Orange]]];
       ];
-     Throw[cst, "OK"]
+     Throw[cst, "Handled"]
      ];
     
     If[!FreeQ[cst, _SyntaxErrorNode | _ErrorNode],
@@ -402,7 +402,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         Style[Row[{"index: ", i, " ", "Bad UTF-8 encoding"}], 
          Darker[Orange]]];
       ];
-     Throw[cst, "OK"]
+     Throw[cst, "Handled"]
      ];
     
     (*If[!($VersionNumber\[GreaterEqual]11.2),
@@ -468,7 +468,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
            StringReplace[fileIn, StartOfString ~~ prefix -> ""]}]];
         Print[Row[{"index: ", i, " ", f}]];
       ];
-      Throw[f, "OK"]
+      Throw[f, "Handled"]
       ];
      file = tmp;
      (*
@@ -617,7 +617,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
             Darker[Orange]]];
           Print[Style[Row[{"index: ", i, " ", f}], Darker[Orange]]];
         ];
-        Throw[f, "OK"]
+        Throw[f, "Handled"]
         ];
       ];
      
@@ -781,7 +781,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
           Print[Style[Row[{"index: ", i, " ", StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], Darker[Orange]]];
           Print[Style[Row[{"index: ", i, " ", ast}], Darker[Orange]]];
         ];
-        Throw[ast, "OK"]
+        Throw[ast, "Handled"]
       ];
 
       If[$Interactive,
@@ -805,7 +805,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
            StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], Red]];
        Print[Style[Row[{"index: ", i, " ", Shallow[errs]}], Red]];
       ];
-     Throw[f, "OK"]
+     Throw[f, "Handled"]
      ];
     
     (*
@@ -968,7 +968,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
           Darker[Orange]]];
         Print[Style[Row[{"index: ", i, " ", f}], Darker[Orange]]];
       ];
-      Throw[f, "OK"]
+      Throw[f, "Handled"]
       ];
 
       If[MemberQ[{
@@ -1046,7 +1046,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
           Darker[Orange]]];
         Print[Style[Row[{"index: ", i, " ", f}], Darker[Orange]]];
       ];
-      Throw[f, "OK"]
+      Throw[f, "Handled"]
       ];
      
       If[MemberQ[{
@@ -1119,7 +1119,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
           Darker[Orange]]];
         Print[Style[Row[{"index: ", i, " ", f}], Darker[Orange]]];
       ];
-      Throw[f, "OK"]
+      Throw[f, "Handled"]
       ];
 
       If[MemberQ[{
@@ -1137,7 +1137,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
           Darker[Orange]]];
         Print[Style[Row[{"index: ", i, " ", f}], Darker[Orange]]];
       ];
-      Throw[f, "OK"]
+      Throw[f, "Handled"]
       ];
 
      (*
@@ -1173,7 +1173,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
           Darker[Orange]]];
         Print[Style[Row[{"index: ", i, " ", f}], Darker[Orange]]];
       ];
-      Throw[f, "OK"]
+      Throw[f, "Handled"]
       ];
      
      (*
@@ -1192,7 +1192,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
           Darker[Orange]]];
         Print[Style[Row[{"index: ", i, " ", f}], Darker[Orange]]];
       ];
-      Throw[f, "OK"]
+      Throw[f, "Handled"]
       ];
      
      $LastFailedFileIn = fileIn;
@@ -1217,9 +1217,9 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     Null
     ]
    ,
-   "OK"
+   "Handled"
    ,
-   (If[StringQ[tmp] && FileExistsQ[tmp], DeleteFile[tmp]];ok) &
+   (If[StringQ[tmp] && FileExistsQ[tmp], DeleteFile[tmp]];$HandledException) &
    ]
   ]
 
@@ -1371,7 +1371,7 @@ Module[{text, f, expected, msgs},
            StringReplace[file, StartOfString ~~ prefix -> ""]}], Red]];
        Print[Style[Row[{"index: ", i, " ", f}], Red]];
       ];
-     Throw[f, "OK"]
+     Throw[f, "Handled"]
      ];
 
      {text, expected}

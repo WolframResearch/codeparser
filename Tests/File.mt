@@ -336,7 +336,10 @@ BeginTestSection["ToplevelNewlineSyntaxError", bug363889Fixed]
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "carriagereturn4.wl"}], 1]
 	,
-	ok
+	(*
+	when bug 363889 is fixed, the expectation is that carriagereturn4.wl will parse with no problems
+	*)
+	Null
 	,
 	TestID->"File-20190607-H0M3H1"
 ]
@@ -374,7 +377,10 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-0001.txt"}], 1]
 	,
-	ok
+	(*
+	Random inputs, so expect bad syntax
+	*)
+	$HandledException
 	,
 	TestID->"File-20190606-P8X5C7"
 ]
@@ -382,7 +388,10 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-0002.txt"}], 1]
 	,
-	ok
+	(*
+	Random inputs, so expect bad syntax
+	*)
+	$HandledException
 	,
 	TestID->"File-20190606-T7B2I1"
 ]
@@ -390,7 +399,10 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-0003.txt"}], 1]
 	,
-	ok
+	(*
+	Random inputs, so expect bad syntax
+	*)
+	$HandledException
 	,
 	TestID->"File-20190606-G9V4A7"
 ]
@@ -398,7 +410,10 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-characternameoperations.txt"}], 1]
 	,
-	ok
+	(*
+	Random inputs, so expect bad syntax
+	*)
+	$HandledException
 	,
 	TestID->"File-20190606-K6L3G0"
 ]
@@ -406,6 +421,9 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-characternamestrings.txt"}], 1]
 	,
+	(*
+	Random inputs, but strings, so expect good syntax
+	*)
 	Null
 	,
 	TestID->"File-20190606-K3I5E7"
@@ -414,7 +432,10 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-characternames.txt"}], 1]
 	,
-	ok
+	(*
+	Random inputs, so expect bad syntax
+	*)
+	$HandledException
 	,
 	TestID->"File-20190606-E9U5Q2"
 ]
@@ -422,7 +443,10 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-contexts.txt"}], 1]
 	,
-	ok
+	(*
+	Random inputs, so expect bad syntax
+	*)
+	$HandledException
 	,
 	TestID->"File-20190606-B4F3R6"
 ]
@@ -430,6 +454,9 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-integers.txt"}], 1]
 	,
+	(*
+	Random inputs, but integers, so expect good syntax
+	*)
 	Null
 	,
 	TestID->"File-20190606-I5H3E5"
@@ -438,6 +465,9 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-nestedsymbolicarithmetic.txt"}], 1]
 	,
+	(*
+	Random inputs, bad exprs, so expect good syntax
+	*)
 	Null
 	,
 	TestID->"File-20190606-I4D8M0"
@@ -446,7 +476,10 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-random.txt"}], 1]
 	,
-	ok
+	(*
+	Random inputs, so expect bad syntax
+	*)
+	$HandledException
 	,
 	TestID->"File-20190606-K8J6I8"
 ]
@@ -454,6 +487,9 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-reals.txt"}], 1]
 	,
+	(*
+	Random inputs, but reals, so expect good syntax
+	*)
 	Null
 	,
 	TestID->"File-20190606-L1U3P6"
@@ -462,7 +498,10 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-specialchararacters.txt"}], 1]
 	,
-	ok
+	(*
+	Random inputs, so expect bad syntax
+	*)
+	$HandledException
 	,
 	TestID->"File-20190606-K8S9K0"
 ]
@@ -680,7 +719,7 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash6.txt"}], 1]
 	,
-	ok
+	$HandledException
 	,
 	TestID->"File-20191103-B9T6B0"
 ]
@@ -688,7 +727,7 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash7.txt"}], 1]
 	,
-	ok
+	$HandledException
 	,
 	TestID->"File-20191103-A0V5S0"
 ]
@@ -696,7 +735,7 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash8.txt"}], 1]
 	,
-	ok
+	$HandledException
 	,
 	TestID->"File-20191103-D1L3U1"
 ]
@@ -717,7 +756,7 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash10.txt"}], 1]
 	,
-	ok
+	$HandledException
 	,
 	TestID->"File-20191103-H2O6Z5"
 ]
@@ -725,7 +764,7 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash11.txt"}], 1]
 	,
-	ok
+	$HandledException
 	,
 	TestID->"File-20191103-U8W2U9"
 ]
