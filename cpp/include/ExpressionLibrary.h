@@ -21,6 +21,8 @@ EXTERN_C mint Expr_ToInteger(expr);
 
 EXTERN_C expr Expr_FromInteger(mint);
 
+EXTERN_C expr Expr_FromReal(double);
+
 EXTERN_C expr Expr_LookupSymbol(const char *);
 
 EXTERN_C expr Expr_BuildExpression(expr, mint);

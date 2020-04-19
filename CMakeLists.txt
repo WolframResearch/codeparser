@@ -252,6 +252,10 @@ if(BUILD_EXPR_LIB)
 
 set(EXPR_LIB ${PROJECT_BINARY_DIR}/paclet/CodeParser/LibraryResources/${SYSTEMID}/expr${CMAKE_SHARED_LIBRARY_SUFFIX})
 
+set(EXPR_LIB_OUTPUTS
+	${EXPR_LIB}
+)
+
 add_library(expr-lib SHARED IMPORTED)
 
 set_property(
@@ -262,20 +266,42 @@ set_property(
 		${EXPR_LIB}
 )
 
+
+#
+# Handle the import library stuff that is specific to Windows
+#
+if(CMAKE_HOST_WIN32 OR CYGWIN)
+
+set(EXPR_IMPLIB ${PROJECT_BINARY_DIR}/paclet/CodeParser/LibraryResources/${SYSTEMID}/expr.lib)
+
+list(APPEND EXPR_LIB_OUTPUTS
+	${EXPR_IMPLIB}
+)
+
+set_property(
+	TARGET
+		expr-lib
+	PROPERTY
+	IMPORTED_IMPLIB
+		${EXPR_IMPLIB}
+)
+endif(CMAKE_HOST_WIN32 OR CYGWIN)
+
+
 add_custom_target(expr-lib-custom
 	DEPENDS
-		${EXPR_LIB}
+		${EXPR_LIB_OUTPUTS}
 )
 
 add_custom_command(
 	OUTPUT
-		${EXPR_LIB}
+		${EXPR_LIB_OUTPUTS}
 	DEPENDS
 		${WL_GENERATE_EXPRLIB_SOURCES}
 		${PROJECT_SOURCE_DIR}/${PACLET}/Generate/GenerateExpressionLibrary.wl
 		${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
-		${CMAKE_COMMAND} -E echo "EXPR_LIB: ${EXPR_LIB}"
+		${CMAKE_COMMAND} -E echo "EXPR_LIB_OUTPUTS: ${EXPR_LIB_OUTPUTS}"
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/GenerateExpressionLibrary.wl -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	VERBATIM

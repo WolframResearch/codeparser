@@ -51,6 +51,11 @@ Module[{},
       Native`PrimitiveFunction["Integer64ToExpr"][arg1]
     ]
     ,
+    MetaData[<|"Exported" -> True, "Name" -> Expr`FromReal|>
+    ]@Function[{Typed[arg1, "Real64"]},
+      Native`PrimitiveFunction["Real64ToExpr"][arg1]
+    ]
+    ,
     MetaData[<|"Exported" -> True, "Name" -> Expr`LookupSymbol|>
     ]@Function[{Typed[arg1, "MachineInteger"]},
       Module[{cstr, str, sym},
@@ -72,6 +77,7 @@ Module[{},
     MetaData[<|"Exported" -> True, "Name" -> Expr`Insert|>
     ]@Function[{Typed[expr, "Expression"], Typed[index, "MachineInteger"], Typed[part, "Expression"]},
       Native`PrimitiveFunction["SetElement_EIE_Void"][expr, index, part];
+      Null
     ]
     ,
     MetaData[<|"Exported" -> True, "Name" -> Expr`Pointer|>
@@ -87,6 +93,7 @@ Module[{},
     MetaData[<|"Exported" -> True, "Name" -> Expr`Release, "MemoryManagement" -> False|>
     ]@Function[{Typed[arg1, "Expression"]},
       Memory`Release[arg1];
+      Null
     ]
     ,
     MetaData[<|"Exported" -> True, "Name" -> Expr`FromUTF8String|>

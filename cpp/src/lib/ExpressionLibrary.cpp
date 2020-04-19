@@ -30,9 +30,10 @@ DLLEXPORT int ExprTest_LibraryLink(WolframLibraryData libData, mint Argc, MArgum
   unsigned char arr2[] = {0xce, 0xb1};
   auto str2 = Expr_FromUTF8String(arr2, 2);
 
+  auto real1 = Expr_FromReal(1.23);
 
   auto head3 = Expr_LookupSymbol("baz");
-  auto baz = Expr_BuildExpression(head3, 4);
+  auto baz = Expr_BuildExpression(head3, 5);
   Expr_Insert(baz, 1, foo);
   Expr_Release(foo);
 
@@ -45,6 +46,8 @@ DLLEXPORT int ExprTest_LibraryLink(WolframLibraryData libData, mint Argc, MArgum
   Expr_Insert(baz, 4, str2);
   Expr_Release(str2);
   
+  Expr_Insert(baz, 5, real1);
+
   // auto I0 = (mint)ef;
   
   auto p = Expr_Pointer(baz);
