@@ -5,8 +5,6 @@
 #include "ParseletRegistration.h"
 
 
-LeafParselet::LeafParselet(Precedence precedence) : precedence(precedence) {}
-
 NodePtr LeafParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     TheParser->nextToken(TokIn);
@@ -16,7 +14,6 @@ NodePtr LeafParselet::parse(Token TokIn, ParserContext Ctxt) const {
     return TheParser->infixLoop(std::move(Left), Ctxt);
 }
 
-PrefixAssertFalseParselet::PrefixAssertFalseParselet() {}
 
 NodePtr PrefixAssertFalseParselet::parse(Token TokIn, ParserContext Ctxt) const {
     assert(false);
@@ -1056,7 +1053,7 @@ NodePtr IntegralParselet::parse(Token TokIn, ParserContext CtxtIn) const {
         Args.appendIfNonEmpty(std::move(Trivia1));
         Args.append(std::move(operand));
         
-        auto L = NodePtr(new PrefixNode(Op1, std::move(Args)));
+        auto L = NodePtr(new PrefixNode(SYMBOL_INTEGRAL, std::move(Args)));
         return TheParser->infixLoop(std::move(L), CtxtIn);
     }
 
@@ -1069,7 +1066,7 @@ NodePtr IntegralParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     Args.appendIfNonEmpty(std::move(Trivia2));
     Args.append(std::move(variable));
     
-    auto L = NodePtr(new PrefixBinaryNode(Op2, std::move(Args)));
+    auto L = NodePtr(new PrefixBinaryNode(SYMBOL_INTEGRATE, std::move(Args)));
     return TheParser->infixLoop(std::move(L), CtxtIn);
 }
 

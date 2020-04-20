@@ -104,7 +104,7 @@ symbols = Union[Join[
     DownValues[PrefixOperatorToParselet][[All, 2]] /. {
       PrefixOperatorParselet[_, _, op_] :> op,
       GroupParselet[_, op_] :> op,
-      LeafParselet[_] :> Nothing,
+      LeafParselet[] :> Nothing,
       UnderParselet[_] :> Nothing,
       IntegralParselet[] :> Nothing,
       LessLessParselet[] :> Get,

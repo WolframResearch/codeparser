@@ -49,10 +49,10 @@ be mutually exclusive.
 
 
 
-Group 2: These are all mutually exclusive categories: Empty, DifferentialD, LinearSyntax
+Group 2: These are all mutually exclusive categories: Empty, DifferentialD
 01 Empty
 10 DifferentialD
-11 LinearSyntax
+11 (unused)
 00 Anything Else
 
 

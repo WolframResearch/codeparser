@@ -56,10 +56,10 @@ Needs["CodeParser`Generate`GenerateSources`"]
 
 
 
-PrefixOperatorToParselet[Token`String] = LeafParselet[Precedence`Highest]
-PrefixOperatorToParselet[Token`Integer] = LeafParselet[Precedence`Highest]
-PrefixOperatorToParselet[Token`Real] = LeafParselet[Precedence`Highest]
-PrefixOperatorToParselet[Token`Rational] = LeafParselet[Precedence`Highest]
+PrefixOperatorToParselet[Token`String] = LeafParselet[]
+PrefixOperatorToParselet[Token`Integer] = LeafParselet[]
+PrefixOperatorToParselet[Token`Real] = LeafParselet[]
+PrefixOperatorToParselet[Token`Rational] = LeafParselet[]
 
 PrefixOperatorToParselet[Token`Unknown] = PrefixAssertFalseParselet[]
 PrefixOperatorToParselet[Token`Whitespace] = PrefixAssertFalseParselet[]
@@ -783,13 +783,8 @@ parseletRegistrationCPPHeader = {
 
 class PrefixParselet;
 class InfixParselet;
-class CallParselet;
-class PostfixParselet;
 class ContextSensitivePrefixParselet;
 class ContextSensitiveInfixParselet;
-class GroupParselet;
-class Parselet;
-class Parser;
 
 using PrefixParseletPtr = PrefixParselet *;
 using InfixParseletPtr = InfixParselet *;
@@ -834,18 +829,17 @@ formatPrefix[PrefixUnsupportedTokenParselet[]] := "&prefixUnsupportedTokenParsel
 
 formatPrefix[PrefixUnhandledParselet[]] := "&prefixUnhandledParselet"
 
-formatPrefix[LeafParselet[precedence_]] := "new LeafParselet(" <> toGlobal[precedence] <> ")"
+formatPrefix[LeafParselet[]] := "&leafParselet"
 
+formatPrefix[SymbolParselet[]] := "&symbolParselet"
 
-formatPrefix[SymbolParselet[]] := "new SymbolParselet()"
+formatPrefix[UnderParselet[1]] := "&under1Parselet"
 
-formatPrefix[UnderParselet[1]] := "new UnderParselet<BlankNode, PatternBlankNode>()"
+formatPrefix[UnderParselet[2]] := "&under2Parselet"
 
-formatPrefix[UnderParselet[2]] := "new UnderParselet<BlankSequenceNode, PatternBlankSequenceNode>()"
+formatPrefix[UnderParselet[3]] := "&under3Parselet"
 
-formatPrefix[UnderParselet[3]] := "new UnderParselet<BlankNullSequenceNode, PatternBlankNullSequenceNode>()"
-
-formatPrefix[UnderDotParselet[]] := "new UnderDotParselet()"
+formatPrefix[UnderDotParselet[]] := "&underDotParselet"
 
 formatPrefix[HashParselet[]] := "new HashParselet()"
 
@@ -855,13 +849,13 @@ formatPrefix[PercentParselet[]] := "new PercentParselet()"
 
 formatPrefix[PercentPercentParselet[]] := "new PercentPercentParselet()"
 
-formatPrefix[LessLessParselet[]] := "&lessLessParselet"
+formatPrefix[LessLessParselet[]] := "new LessLessParselet()"
 
 formatPrefix[SemiSemiParselet[]] := "&semiSemiParselet"
 
-formatPrefix[LinearSyntaxOpenParenParselet[]] := "&linearSyntaxOpenParenParselet"
+formatPrefix[LinearSyntaxOpenParenParselet[]] := "new LinearSyntaxOpenParenParselet()"
 
-formatPrefix[IntegralParselet[]] := "&integralParselet"
+formatPrefix[IntegralParselet[]] := "new IntegralParselet()"
 
 formatPrefix[PrefixOperatorParselet[tok_, precedence_, op_]] := "new PrefixOperatorParselet(" <> toGlobal[tok] <> ", " <> toGlobal[precedence] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
 
@@ -900,21 +894,21 @@ formatInfix[ColonEqualParselet[]] := "new ColonEqualParselet()"
 
 formatInfix[EqualDotParselet[]] := "new EqualDotParselet()"
 
-formatInfix[TildeParselet[]] := "&tildeParselet"
+formatInfix[TildeParselet[]] := "new TildeParselet()"
 
-formatInfix[SlashColonParselet[]] := "&slashColonParselet"
+formatInfix[SlashColonParselet[]] := "new SlashColonParselet()"
 
 formatInfix[SemiSemiParselet[]] := "&semiSemiParselet"
 
-formatInfix[ColonColonParselet[]] := "&colonColonParselet"
+formatInfix[ColonColonParselet[]] := "new ColonColonParselet()"
 
-formatInfix[GreaterGreaterParselet[]] := "&greaterGreaterParselet"
+formatInfix[GreaterGreaterParselet[]] := "new GreaterGreaterParselet()"
 
-formatInfix[GreaterGreaterGreaterParselet[]] := "&greaterGreaterGreaterParselet"
+formatInfix[GreaterGreaterGreaterParselet[]] := "new GreaterGreaterGreaterParselet()"
 
 formatInfix[InfixDifferentialDParselet[]] := "&infixDifferentialDParselet"
 
-formatInfix[InfixToplevelNewlineParselet[]] := "&infixToplevelNewlineParselet"
+formatInfix[InfixToplevelNewlineParselet[]] := "new InfixToplevelNewlineParselet()"
 
 
 
@@ -933,6 +927,10 @@ parseletRegistrationCPPSource = {
 #include \"ByteDecoder.h\" // for TheByteDecoder
 
 #include <cassert>
+
+auto symbolParselet = SymbolParselet();
+
+auto leafParselet = LeafParselet();
 
 auto prefixEndOfFileParselet = PrefixEndOfFileParselet();
 
@@ -958,30 +956,11 @@ auto infixUnsupportedTokenParselet = InfixUnsupportedTokenParselet();
 
 auto infixCloserParselet = InfixCloserParselet();
 
-auto lessLessParselet = LessLessParselet();
-
 auto semiSemiParselet = SemiSemiParselet();
-
-auto linearSyntaxOpenParenParselet = LinearSyntaxOpenParenParselet();
-
-auto integralParselet = IntegralParselet();
-
-auto infixToplevelNewlineParselet = InfixToplevelNewlineParselet();
 
 auto colonParselet = ColonParselet();
 
-auto tildeParselet = TildeParselet();
-
-auto colonColonParselet = ColonColonParselet();
-
-auto greaterGreaterParselet = GreaterGreaterParselet();
-
-auto slashColonParselet = SlashColonParselet();
-
-auto greaterGreaterGreaterParselet = GreaterGreaterGreaterParselet();
-
 auto infixDifferentialDParselet = InfixDifferentialDParselet();
-
 
 //
 // T: BlankNode, BlankSequenceNode, BlankNullSequenceNode
@@ -1167,7 +1146,13 @@ public:
     }
 };
 
+auto under1Parselet = UnderParselet<BlankNode, PatternBlankNode>();
 
+auto under2Parselet = UnderParselet<BlankSequenceNode, PatternBlankSequenceNode>();
+
+auto under3Parselet = UnderParselet<BlankNullSequenceNode, PatternBlankNullSequenceNode>();
+
+auto underDotParselet = UnderDotParselet();
 
 //
 //
@@ -1187,11 +1172,11 @@ std::array<InfixParseletPtr, TOKEN_COUNT.value()> infixParselets {{"} ~Join~
 
 {"}};
 
-ContextSensitivePrefixParseletPtr contextSensitiveSymbolParselet(new SymbolParselet());
-ContextSensitiveInfixParseletPtr contextSensitiveUnder1Parselet(new UnderParselet<BlankNode, PatternBlankNode>());
-ContextSensitiveInfixParseletPtr contextSensitiveUnder2Parselet(new UnderParselet<BlankSequenceNode, PatternBlankSequenceNode>());
-ContextSensitiveInfixParseletPtr contextSensitiveUnder3Parselet(new UnderParselet<BlankNullSequenceNode, PatternBlankNullSequenceNode>());
-ContextSensitiveInfixParseletPtr contextSensitiveUnderDotParselet(new UnderDotParselet());
+ContextSensitivePrefixParseletPtr contextSensitiveSymbolParselet(&symbolParselet);
+ContextSensitiveInfixParseletPtr contextSensitiveUnder1Parselet(&under1Parselet);
+ContextSensitiveInfixParseletPtr contextSensitiveUnder2Parselet(&under2Parselet);
+ContextSensitiveInfixParseletPtr contextSensitiveUnder3Parselet(&under3Parselet);
+ContextSensitiveInfixParseletPtr contextSensitiveUnderDotParselet(&underDotParselet);
 ContextSensitiveInfixParseletPtr contextSensitiveColonParselet(&colonParselet);
 "}
 

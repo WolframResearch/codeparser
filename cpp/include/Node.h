@@ -42,11 +42,6 @@ public:
     
     void append(LeafNodePtr );
     
-    std::vector<LeafNodePtr>& getVectorDestructive() {
-        moved = true;
-        return vec;
-    }
-    
 #if USE_MATHLINK
     void put0(MLINK ) const;
 #endif // USE_MATHLINK
@@ -131,11 +126,6 @@ public:
         return Children;
     }
     
-    virtual const Token lastToken() const {
-        auto L = Children.last();
-        return L->lastToken();
-    }
-    
     virtual ~Node() {}
 };
 
@@ -195,10 +185,6 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
-    
-    SymbolPtr& getOperator() const {
-        return Op;
-    }
 };
 
 //
@@ -227,10 +213,6 @@ public:
     }
 
     const Token getToken() const {
-        return Tok;
-    }
-    
-    const Token lastToken() const override {
         return Tok;
     }
 };
@@ -262,14 +244,6 @@ public:
     
     Source getSource() const override {
         return Tok.Src;
-    }
-    
-    const Token getToken() const {
-        return Tok;
-    }
-    
-    const Token lastToken() const override {
-        return Tok;
     }
 };
 

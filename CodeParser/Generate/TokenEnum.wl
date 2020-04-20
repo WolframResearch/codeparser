@@ -229,33 +229,10 @@ isEmpty[Token`InternalNewline] = True
 isEmpty[_] = False
 
 
-
-
 isDifferentialD[Token`LongName`DifferentialD] = True
 isDifferentialD[Token`LongName`CapitalDifferentialD] = True
 
 isDifferentialD[_] = False
-
-
-
-
-isLinearSyntax[Token`LinearSyntax`Bang] = True
-isLinearSyntax[Token`LinearSyntax`OpenParen] = True
-isLinearSyntax[Token`LinearSyntax`Star] = True
-isLinearSyntax[Token`LinearSyntax`CloseParen] = True
-isLinearSyntax[Token`LinearSyntax`At] = True
-isLinearSyntax[Token`LinearSyntax`Caret] = True
-isLinearSyntax[Token`LinearSyntax`Under] = True
-isLinearSyntax[Token`LinearSyntax`Percent] = True
-isLinearSyntax[Token`LinearSyntax`Plus] = True
-isLinearSyntax[Token`LinearSyntax`Backtick] = True
-isLinearSyntax[Token`LinearSyntax`Slash] = True
-isLinearSyntax[Token`LinearSyntax`Amp] = True
-isLinearSyntax[Token`LinearSyntax`Space] = True
-
-isLinearSyntax[_] = False
-
-
 
 
 group1Bits[tok_] := group1Bits[tok] =
@@ -271,7 +248,7 @@ group2Bits[tok_] := group2Bits[tok] =
 Which[
   isEmpty[tok],         BitShiftLeft[2^^01, 9 + 2],
   isDifferentialD[tok], BitShiftLeft[2^^10, 9 + 2],
-  isLinearSyntax[tok],  BitShiftLeft[2^^11, 9 + 2],
+(*unused,               BitShiftLeft[2^^11, 9 + 2],*)
   True,                 BitShiftLeft[2^^00, 9 + 2]
 ]
 
@@ -433,16 +410,6 @@ struct TokenEnum {
   //
   constexpr bool isDifferentialD() const {
       return static_cast<bool>((T & 0x1800) == 0x1000);
-  }
-
-  //
-  // Group 2 matches: 0b000x_x000_0000_0000 (x is unknown)
-  //
-  //         Mask off 0b0001_1000_0000_0000 (0x1800)
-  // And test against 0b0001_1000_0000_0000 (0x1800)
-  //
-  constexpr bool isLinearSyntax() const {
-      return static_cast<bool>((T & 0x1800) == 0x1800);
   }
 
 };
