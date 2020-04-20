@@ -13,10 +13,8 @@ NodePtr SemiSemiParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     auto Implicit = Token(TOKEN_FAKE_IMPLICITONE, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
     
-    auto One = NodePtr(new LeafNode(Implicit));
-    
     NodeSeq Left(1);
-    Left.append(std::move(One));
+    Left.append(NodePtr(new LeafNode(Implicit)));
     
     return parse(std::move(Left), TokIn, Ctxt);
 }
@@ -34,6 +32,15 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
             
             //
             // There is only a single ;; and there is no implicit Times
+            //
+            
+            goto retParse;
+        }
+        
+        if (Tok.Tok != TOKEN_SEMISEMI) {
+            
+            //
+            // \[Integral];;x\[DifferentialD]x
             //
             
             goto retParse;
@@ -72,24 +79,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
                     goto retParse;
                 }
                 
-                auto lowerPrec = false;
-                
-                if (prefixParselets[Tok.Tok.value()]->getPrecedence(Ctxt) >= PRECEDENCE_SEMISEMI) {
-                    
-                    //
-                    // Higher precedence, so still within the ;;
-                    //
-                    
-                    auto ImplicitOne = Token(TOKEN_FAKE_IMPLICITONE, BufferAndLength(Tok.BufLen.buffer), Source(Tok.Src.Start));
-                    
-                    NodeSeq ImplicitOneSeq;
-                    ImplicitOneSeq.append(NodePtr(new LeafNode(ImplicitOne)));
-                    
-                    Operand = parse0(std::move(ImplicitOneSeq), Tok, Ctxt);
-                    
-                    lowerPrec = false;
-                    
-                } else {
+                if (Tok.Tok != TOKEN_SEMISEMI) {
                     
                     //
                     // Lower precedence, so this is just a general expression
@@ -99,8 +89,40 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
                     
                     Operand = prefixParselets[Tok.Tok.value()]->parse(Tok, Ctxt);
                     
-                    lowerPrec = true;
+#if !NISSUES
+                    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDIMPLICITTIMES, "Unexpected implicit ``Times`` between ``Spans``.", SYNTAXISSUESEVERITY_WARNING, Tok.Src, 0.75, {}));
+                    
+                    TheParser->addIssue(std::move(I));
+#endif // !NISSUES
+                    
+                    auto ImplicitTimes = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(Tok.BufLen.buffer), Source(Tok.Src.Start));
+                    
+                    //
+                    // Could reserve here, if it were possible
+                    //
+                    Args.appendIfNonEmpty(std::move(Trivia2));
+                    Args.append(NodePtr(new LeafNode(ImplicitTimes)));
+                    Args.append(std::move(Operand));
+                        
+                    //
+                    // We are done here, so return
+                    //
+                    
+                    Operand = NodePtr(new InfixNode(SYMBOL_TIMES, std::move(Args)));
+                    
+                    goto retParse;
                 }
+                
+                //
+                // Still within the ;;
+                //
+                
+                auto Implicit = Token(TOKEN_FAKE_IMPLICITONE, BufferAndLength(Tok.BufLen.buffer), Source(Tok.Src.Start));
+                
+                NodeSeq Seq(1);
+                Seq.append(NodePtr(new LeafNode(Implicit)));
+                
+                Operand = parse0(std::move(Seq), Tok, Ctxt);
                 
 #if !NISSUES
                 auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDIMPLICITTIMES, "Unexpected implicit ``Times`` between ``Spans``.", SYNTAXISSUESEVERITY_WARNING, Tok.Src, 0.75, {}));
@@ -117,17 +139,6 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
                 Args.appendIfNonEmpty(std::move(Trivia2));
                 Args.append(NodePtr(new LeafNode(ImplicitTimes)));
                 Args.append(std::move(Operand));
-                
-                if (lowerPrec) {
-                    
-                    //
-                    // We are done here, so return
-                    //
-                    
-                    Operand = NodePtr(new InfixNode(SYMBOL_TIMES, std::move(Args)));
-                    
-                    goto retParse;
-                }
             }
             
         } // while
@@ -188,11 +199,27 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
                 auto ThirdTok = TheParser->currentToken(Ctxt);
                 ThirdTok = TheParser->eatTriviaButNotToplevelNewlines(ThirdTok, Ctxt, Trivia2);
                 
-                if (ThirdTok.Tok != TOKEN_SEMISEMI) {
+                if (!ThirdTok.Tok.isPossibleBeginning()) {
                     
                     //
                     // a;;b&
                     //     ^ThirdTok
+                    //
+                    
+                    NodeSeq Args(1 + 1 + 1 + 1);
+                    Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
+                    Args.append(NodePtr(new LeafNode(TokIn)));
+                    Args.appendIfNonEmpty(std::move(Trivia1));
+                    Args.append(std::move(FirstArg));
+                    
+                    return NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
+                }
+                
+                if (ThirdTok.Tok != TOKEN_SEMISEMI) {
+                    
+                    //
+                    // \[Integral];;x\[DifferentialD]x
+                    //               ^~~~~~~~~~~~~~~~ThirdTok
                     //
                     
                     NodeSeq Args(1 + 1 + 1 + 1);

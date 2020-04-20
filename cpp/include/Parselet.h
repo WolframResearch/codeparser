@@ -41,21 +41,6 @@ public:
     //
     virtual NodePtr parse(Token firstTok, ParserContext Ctxt) const = 0;
     
-    //
-    // There is an ambiguity with tokens that are both prefix and infix, e.g.
-    // +  -  ;;  !  ++  --  !!  \[Minus]  \[MinusPlus]  \[PlusMinus]  \[CircleTimes]  \[Coproduct]
-    //
-    // Given the input  ;;;;
-    // when parsing the second  ;;  , we could get here because ;; is registered as infix
-    // But this particular ;; is a new expression, it is not actually infix
-    //
-    // Given the input  1+2
-    // when parsing the +, make sure to treat it as infix and NOT prefix
-    //
-    // Solution is to handle infix parselets where needed, i.e., SemiSemiParselet
-    //
-    virtual Precedence getPrecedence(ParserContext Ctxt) const = 0;
-    
     virtual ~PrefixParselet() {}
 };
 
@@ -128,8 +113,6 @@ public:
     LeafParselet(Precedence precedence);
     
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
-    
-    Precedence getPrecedence(ParserContext Ctxt) const override;
 };
 
 //
@@ -140,8 +123,6 @@ public:
     PrefixAssertFalseParselet();
     
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
-    
-    Precedence getPrecedence(ParserContext Ctxt) const override;
 };
 
 //
@@ -152,8 +133,6 @@ public:
     PrefixEndOfFileParselet() {}
     
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
-    
-    Precedence getPrecedence(ParserContext Ctxt) const override;
 };
 
 //
@@ -164,8 +143,6 @@ public:
     PrefixErrorParselet() {}
     
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
-    
-    Precedence getPrecedence(ParserContext Ctxt) const override;
 };
 
 //
@@ -176,8 +153,6 @@ public:
     PrefixCloserParselet() {}
     
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
-    
-    Precedence getPrecedence(ParserContext Ctxt) const override;
 };
 
 //
@@ -188,8 +163,6 @@ public:
     PrefixUnsupportedTokenParselet() {}
     
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
-    
-    Precedence getPrecedence(ParserContext Ctxt) const override;
 };
 
 //
@@ -200,8 +173,6 @@ public:
     PrefixUnhandledParselet() {}
     
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
-    
-    Precedence getPrecedence(ParserContext Ctxt) const override;
 };
 
 //
@@ -215,7 +186,7 @@ public:
     
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
     
-    Precedence getPrecedence(ParserContext Ctxt) const override {
+    virtual Precedence getPrecedence(ParserContext Ctxt) const {
         return precedence;
     }
 };
@@ -401,10 +372,6 @@ public:
     GroupParselet(TokenEnum Opener, SymbolPtr& Op) : Op(Op), Closr(GroupOpenerToCloser(Opener)) {}
     
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
-    
-    Precedence getPrecedence(ParserContext Ctxt) const override {
-        return PRECEDENCE_HIGHEST;
-    }
 };
 
 
@@ -420,10 +387,6 @@ public:
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
     
     NodePtr parseContextSensitive(Token firstTok, ParserContext Ctxt) const override;
-    
-    Precedence getPrecedence(ParserContext Ctxt) const override {
-        return PRECEDENCE_SYMBOL;
-    }
 };
 
 //
@@ -571,10 +534,6 @@ public:
 class LinearSyntaxOpenParenParselet : public PrefixParselet {
 public:
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
-    
-    Precedence getPrecedence(ParserContext Ctxt) const override {
-        return PRECEDENCE_HIGHEST;
-    }
 };
 
 //
@@ -621,10 +580,6 @@ public:
     IntegralParselet() : Op1(SYMBOL_INTEGRAL), Op2(SYMBOL_INTEGRATE) {}
     
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
-    
-    Precedence getPrecedence(ParserContext Ctxt) const override {
-        return PRECEDENCE_CLASS_INTEGRATIONOPERATORS;
-    }
 };
 
 //
@@ -677,10 +632,6 @@ class LessLessParselet : public PrefixParselet {
 public:
     
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
-    
-    Precedence getPrecedence(ParserContext Ctxt) const override {
-        return PRECEDENCE_LESSLESS;
-    }
 };
 
 //
@@ -700,10 +651,6 @@ class HashParselet : public PrefixParselet {
 public:
     
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
-    
-    Precedence getPrecedence(ParserContext Ctxt) const override {
-        return PRECEDENCE_HIGHEST;
-    }
 };
 
 //
@@ -713,10 +660,6 @@ class HashHashParselet : public PrefixParselet {
 public:
     
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
-    
-    Precedence getPrecedence(ParserContext Ctxt) const override {
-        return PRECEDENCE_HIGHEST;
-    }
 };
 
 //
@@ -726,10 +669,6 @@ class PercentParselet : public PrefixParselet {
 public:
     
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
-    
-    Precedence getPrecedence(ParserContext Ctxt) const override {
-        return PRECEDENCE_HIGHEST;
-    }
 };
 
 //
@@ -739,8 +678,4 @@ class PercentPercentParselet : public PrefixParselet {
 public:
     
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
-    
-    Precedence getPrecedence(ParserContext Ctxt) const override {
-        return PRECEDENCE_HIGHEST;
-    }
 };

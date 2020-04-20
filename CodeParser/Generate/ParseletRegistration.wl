@@ -711,9 +711,10 @@ InfixOperatorToParselet[Token`GreaterGreater] = GreaterGreaterParselet[]
 InfixOperatorToParselet[Token`GreaterGreaterGreater] = GreaterGreaterGreaterParselet[]
 
 
-
+(*
 InfixOperatorToParselet[Token`LinearSyntax`Bang] = InfixUnsupportedTokenParselet[]
 InfixOperatorToParselet[Token`LinearSyntax`OpenParen] = InfixUnsupportedTokenParselet[]
+*)
 InfixOperatorToParselet[Token`LinearSyntax`Star] = InfixUnsupportedTokenParselet[]
 InfixOperatorToParselet[Token`LinearSyntax`CloseParen] = InfixUnsupportedTokenParselet[]
 InfixOperatorToParselet[Token`LinearSyntax`At] = InfixUnsupportedTokenParselet[]
@@ -1112,10 +1113,6 @@ public:
 
         return parse1(std::move(Pat), Tok, Ctxt);
     }
-    
-    Precedence getPrecedence(ParserContext Ctxt) const override {
-        return PRECEDENCE_UNDER;
-    }
 };
 
 //
@@ -1167,10 +1164,6 @@ public:
         auto Pat = NodePtr(new PatternOptionalDefaultNode(std::move(Args)));
 
         return TheParser->infixLoop(std::move(Pat), Ctxt);
-    }
-    
-    Precedence getPrecedence(ParserContext Ctxt) const override {
-        return PRECEDENCE_UNDER;
     }
 };
 

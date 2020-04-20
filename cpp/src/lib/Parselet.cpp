@@ -16,22 +16,11 @@ NodePtr LeafParselet::parse(Token TokIn, ParserContext Ctxt) const {
     return TheParser->infixLoop(std::move(Left), Ctxt);
 }
 
-Precedence LeafParselet::getPrecedence(ParserContext Ctxt) const {
-    assert(precedence != PRECEDENCE_ASSERTFALSE);
-    return precedence;
-}
-
-
 PrefixAssertFalseParselet::PrefixAssertFalseParselet() {}
 
 NodePtr PrefixAssertFalseParselet::parse(Token TokIn, ParserContext Ctxt) const {
     assert(false);
     return nullptr;
-}
-
-Precedence PrefixAssertFalseParselet::getPrecedence(ParserContext Ctxt) const {
-    assert(false);
-    return PRECEDENCE_ASSERTFALSE;
 }
 
 
@@ -46,11 +35,6 @@ NodePtr PrefixErrorParselet::parse(Token TokIn, ParserContext Ctxt) const {
     //
     
     return NodePtr(new ErrorNode(TokIn));
-}
-
-Precedence PrefixErrorParselet::getPrecedence(ParserContext Ctxt) const {
-    assert(false);
-    return PRECEDENCE_ASSERTFALSE;
 }
 
 
@@ -91,11 +75,6 @@ NodePtr PrefixCloserParselet::parse(Token TokIn, ParserContext Ctxt) const {
     return Error;
 }
 
-Precedence PrefixCloserParselet::getPrecedence(ParserContext Ctxt) const {
-    assert(false);
-    return PRECEDENCE_ASSERTFALSE;
-}
-
 
 NodePtr PrefixEndOfFileParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
@@ -108,11 +87,6 @@ NodePtr PrefixEndOfFileParselet::parse(Token TokIn, ParserContext Ctxt) const {
     return NodePtr(new ErrorNode(createdToken));
 }
 
-Precedence PrefixEndOfFileParselet::getPrecedence(ParserContext Ctxt) const {
-    assert(false);
-    return PRECEDENCE_ASSERTFALSE;
-}
-
 
 NodePtr PrefixUnsupportedTokenParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
@@ -121,11 +95,6 @@ NodePtr PrefixUnsupportedTokenParselet::parse(Token TokIn, ParserContext Ctxt) c
     auto createdToken = Token(TOKEN_ERROR_UNSUPPORTEDTOKEN, TokIn.BufLen, TokIn.Src);
     
     return NodePtr(new ErrorNode(createdToken));
-}
-
-Precedence PrefixUnsupportedTokenParselet::getPrecedence(ParserContext Ctxt) const {
-    assert(false);
-    return PRECEDENCE_ASSERTFALSE;
 }
 
 
@@ -179,11 +148,6 @@ NodePtr PrefixUnhandledParselet::parse(Token TokIn, ParserContext Ctxt) const {
     auto NotPossible2 = infixParselets[TokIn.Tok.value()]->parse(std::move(LeftSeq), TokIn, Ctxt);
     
     return NotPossible2;
-}
-
-Precedence PrefixUnhandledParselet::getPrecedence(ParserContext Ctxt) const {
-    assert(false);
-    return PRECEDENCE_ASSERTFALSE;
 }
 
 
