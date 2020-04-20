@@ -1000,10 +1000,10 @@ public:
         
         NodePtr Blank;
         {
-          LeafSeq ArgsTest;
+          LeafSeq Trivia1;
 
           auto Tok = TheParser->currentToken(Ctxt);
-          Tok = TheParser->eatLineContinuations(Tok, Ctxt, ArgsTest);
+          Tok = TheParser->eatLineContinuations(Tok, Ctxt, Trivia1);
 
           if (Tok.Tok == TOKEN_SYMBOL) {
               
@@ -1011,7 +1011,7 @@ public:
               
               NodeSeq Args(1 + 1 + 1);
               Args.append(std::move(Under));
-              Args.appendIfNonEmpty(std::move(ArgsTest));
+              Args.appendIfNonEmpty(std::move(Trivia1));
               Args.append(std::move(Sym2));
               
               Blank = NodePtr(new T(std::move(Args)));
@@ -1030,7 +1030,7 @@ public:
               
               NodeSeq Args(1 + 1 + 1);
               Args.append(std::move(Under));
-              Args.appendIfNonEmpty(std::move(ArgsTest));
+              Args.appendIfNonEmpty(std::move(Trivia1));
               Args.append(std::move(ErrorSym2));
               
               Blank = NodePtr(new T(std::move(Args)));
@@ -1046,9 +1046,9 @@ public:
     NodePtr parse1(NodePtr Blank, Token Tok, ParserContext Ctxt) const {
         
         {
-          LeafSeq ArgsTest;
+          LeafSeq Trivia1;
           
-          Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, ArgsTest);
+          Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, Trivia1);
           
           //
           // For something like _:\"\"  when parsing _
@@ -1066,7 +1066,7 @@ public:
                   
                   NodeSeq BlankSeq(1 + 1);
                   BlankSeq.append(std::move(Blank));
-                  BlankSeq.appendIfNonEmpty(std::move(ArgsTest));
+                  BlankSeq.appendIfNonEmpty(std::move(Trivia1));
                   
                   Blank = contextSensitiveColonParselet->parseContextSensitive(std::move(BlankSeq), Tok, Ctxt);
               }

@@ -253,10 +253,10 @@ NodePtr Parser::infixLoop(NodePtr Left, ParserContext Ctxt) {
         }
 #endif // !NABORT
         
-        LeafSeq ArgsTest;
+        LeafSeq Trivia1;
         
         auto token = currentToken(Ctxt);
-        token = eatTriviaButNotToplevelNewlines(token, Ctxt, ArgsTest);
+        token = eatTriviaButNotToplevelNewlines(token, Ctxt, Trivia1);
         
         auto I = infixParselets[token.Tok.value()];
         
@@ -277,7 +277,7 @@ NodePtr Parser::infixLoop(NodePtr Left, ParserContext Ctxt) {
         
         NodeSeq LeftSeq(1 + 1);
         LeftSeq.append(std::move(Left));
-        LeftSeq.appendIfNonEmpty(std::move(ArgsTest));
+        LeftSeq.appendIfNonEmpty(std::move(Trivia1));
         
         auto Ctxt2 = Ctxt;
         Ctxt2.Prec = TokenPrecedence;
