@@ -495,12 +495,17 @@ TestMatch[
 ]
 
 Test[
-	CodeConcreteParse["a=..", ContainerNode -> f]
-	,
-	f[{{LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
-		ErrorNode[Token`Error`UnhandledDot, "=..", <|Source -> {{1, 2}, {1, 5}}|>]}, {}}]
-	,
-	TestID->"Concrete-20190916-N2A8O1"
+  CodeConcreteParse["a=.."]
+  ,
+  ContainerNode[String, {
+    BinaryNode[Set, {
+      LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
+      LeafNode[Token`Equal, "=", <|Source -> {{1, 2}, {1, 3}}|>],
+      PostfixNode[Repeated, {
+        ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>],
+        LeafNode[Token`DotDot, "..", <|Source -> {{1, 3}, {1, 5}}|>]}, <|Source -> {{1, 3}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>]}, <||>]
+  ,
+  TestID->"Concrete-20190916-N2A8O1"
 ]
 
 Test[

@@ -135,7 +135,9 @@ so when prefix !! is encountered, it is convenient to also treat it as a single 
 *)
 Token`BangBang -> Next, (* !! *)
 Token`QuestionQuestion -> Next, (* ?? *)
+(*
 Token`EqualDot -> Next, (* =. *)
+*)
 
 (* 3 character tokens *)
 Token`DotDotDot -> Next, (* ... *)
@@ -197,6 +199,11 @@ Token`Boxes`MultiSingleQuote -> Next,
 The front end treats  <space><space><space>  as a single token
 *)
 Token`Boxes`MultiWhitespace -> Next,
+
+(*
+The front end treats  =.  as a single token
+*)
+Token`Boxes`EqualDot -> Next,
 
 (*
 Parsing  f.m  as a leaf from the front end (from example input such as <<f.m)

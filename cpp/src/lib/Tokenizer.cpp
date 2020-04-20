@@ -2034,48 +2034,6 @@ inline Token Tokenizer::handleEqual(Buffer tokenStartBuf, SourceLocation tokenSt
             }
         }
             break;
-        case '.': {
-            
-            //
-            // Could be  =.  or  =..  or  =...  or  =....  or  =.0
-            //
-            
-            auto dotBuf = TheByteBuffer->buffer;
-            auto dotLoc = TheByteDecoder->SrcLoc;
-            
-            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-            TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
-            
-            c = TheCharacterDecoder->currentWLCharacter(policy);
-            
-            if (c.isDigit()) {
-                
-                //
-                // Something like x=.0
-                //
-                // Must now do surgery and back up
-                //
-                
-                backup(dotBuf, dotLoc, true);
-                
-            } else if (c.to_point() == '.') {
-                
-                //
-                // =..  is a syntax error
-                //
-                
-                Operator = TOKEN_ERROR_UNHANDLEDDOT;
-                
-                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-                TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
-                
-            } else {
-                
-                Operator = TOKEN_EQUALDOT; // =.
-            }
-            
-        }
-            break;
         case '!': {
             
             auto bangBuf = TheByteBuffer->buffer;

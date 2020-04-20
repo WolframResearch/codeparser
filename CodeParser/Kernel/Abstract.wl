@@ -213,9 +213,6 @@ Related bugs: 206938
 abstract[BinaryNode[PatternTest, children:{BinaryNode[PatternTest, _, _], _, _}, data_]] :=
 	AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociativePatternTest, children, data]
 
-(* could be  a =. *)
-abstract[BinaryNode[Unset, {left_, _}, data_]] := CallNode[ToNode[Unset], {abstract[left]}, data]
-(* or it could be  a = . *)
 abstract[BinaryNode[Unset, {left_, _, _}, data_]] := CallNode[ToNode[Unset], {abstract[left]}, data]
 
 abstract[BinaryNode[op_, {left_, _, right_}, data_]] := CallNode[ToNode[op], {abstract[left], abstract[right]}, data]

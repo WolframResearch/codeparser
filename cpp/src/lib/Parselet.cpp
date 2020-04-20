@@ -795,21 +795,6 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtI
             
             return N;
         }
-        case TOKEN_EQUALDOT.value(): {
-            
-            NodeSeq Args2(1 + 1 + 1 + 1 + 1);
-            Args2.append(NodePtr(new NodeSeqNode(std::move(Left))));
-            Args2.append(NodePtr(new LeafNode(TokIn)));
-            Args2.appendIfNonEmpty(std::move(Trivia1));
-            Args2.append(std::move(Middle));
-            Args2.appendIfNonEmpty(std::move(Trivia2));
-            
-            Ctxt.Flag |= PARSER_INSIDE_SLASHCOLON;
-            
-            auto N = infixParselets[TOKEN_EQUALDOT.value()]->parse(std::move(Args2), Tok, Ctxt);
-            
-            return N;
-        }
         case TOKEN_ENDOFFILE.value(): {
             
             NodeSeq Args(1 + 1 + 1 + 1);
@@ -1038,28 +1023,6 @@ NodePtr ColonEqualParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtI
     }
     
     auto L = NodePtr(new BinaryNode(SYMBOL_SETDELAYED, std::move(Args)));
-    return TheParser->infixLoop(std::move(L), CtxtIn);
-}
-
-
-NodePtr EqualDotParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
-    
-    auto Ctxt = CtxtIn;
-    Ctxt.Prec = PRECEDENCE_EQUAL;
-    
-    TheParser->nextToken(TokIn);
-    
-    NodeSeq Args(1 + 1);
-    Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
-    Args.append(NodePtr(new LeafNode(TokIn)));
-    
-    if ((Ctxt.Flag & PARSER_INSIDE_SLASHCOLON) == PARSER_INSIDE_SLASHCOLON) {
-        
-        auto L = NodePtr(new TernaryNode(SYMBOL_TAGUNSET, std::move(Args)));
-        return TheParser->infixLoop(std::move(L), CtxtIn);
-    }
-    
-    auto L = NodePtr(new BinaryNode(SYMBOL_UNSET, std::move(Args)));
     return TheParser->infixLoop(std::move(L), CtxtIn);
 }
 
