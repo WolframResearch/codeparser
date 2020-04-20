@@ -148,6 +148,15 @@ enum NextPolicyBits : uint8_t {
     // Used by Tokenizer
     //
     ENABLE_SLOT_ISSUES = 0x20,
+    
+    //
+    // When tokenizing numbers, return immediately when an integer has been tokenized
+    //
+    // This is used when parsing Slot, SlotSequence, and Out
+    //
+    // For example, we must consider  #2.c  to be Slot[2] . c  and NOT  Slot[1] 2. c
+    //
+    INTEGER_SHORT_CIRCUIT = 0x40,
 };
 
 using NextPolicy = uint8_t;

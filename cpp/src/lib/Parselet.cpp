@@ -1402,7 +1402,7 @@ NodePtr HashParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     {
         LeafSeq Trivia1;
         
-        auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL | ENABLE_SLOT_ISSUES);
+        auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL | ENABLE_SLOT_ISSUES | INTEGER_SHORT_CIRCUIT);
         Tok = TheParser->eatLineContinuations(Tok, Ctxt, Trivia1);
         
         switch (Tok.Tok.value()) {
@@ -1442,7 +1442,7 @@ NodePtr HashHashParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     {
         LeafSeq Trivia1;
         
-        auto Tok = TheParser->currentToken(Ctxt);
+        auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL | INTEGER_SHORT_CIRCUIT);
         Tok = TheParser->eatLineContinuations(Tok, Ctxt, Trivia1);
         
         switch (Tok.Tok.value()) {
@@ -1480,7 +1480,7 @@ NodePtr PercentParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     {
         LeafSeq Trivia1;
         
-        auto Tok = TheParser->currentToken(Ctxt);
+        auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL | ENABLE_SLOT_ISSUES | INTEGER_SHORT_CIRCUIT);
         Tok = TheParser->eatLineContinuations(Tok, Ctxt, Trivia1);
         
         switch (Tok.Tok.value()) {

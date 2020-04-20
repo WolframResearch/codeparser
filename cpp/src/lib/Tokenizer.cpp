@@ -1038,6 +1038,11 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
             leadingDigitsEndLoc = TheByteDecoder->SrcLoc;
         }
         
+        if ((policy & INTEGER_SHORT_CIRCUIT) == INTEGER_SHORT_CIRCUIT) {
+            
+            return Token(TOKEN_INTEGER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        }
+        
         if (c.to_point() == '.') {
             
             //

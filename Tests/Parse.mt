@@ -3183,4 +3183,32 @@ Test[
 
 
 
+Test[
+  "#2.c"
+  ,
+  Null
+  ,
+  EquivalenceFunction -> parseEquivalenceFunction
+  ,
+  TestID->"Parse-20200419-X9B9F9"
+]
 
+Test[
+  "##2.c"
+  ,
+  Null
+  ,
+  EquivalenceFunction -> parseEquivalenceFunction
+  ,
+  TestID->"Parse-20200419-Q3Q6W9"
+]
+
+Test[
+  "%2.c"
+  ,
+  Null
+  ,
+  EquivalenceFunction -> parseEquivalenceFunction
+  ,
+  TestID->"Parse-20200419-E2I4C6"
+]
