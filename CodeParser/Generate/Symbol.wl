@@ -170,9 +170,12 @@ symbolCPPHeader = {
 #include <memory>
 
 //
-//
+// A kernel symbol
 //
 class Symbol {
+
+  const char *Name;
+
 public:
   constexpr Symbol(const char *Name) : Name(Name) {}
   const char *name() const;
@@ -180,9 +183,6 @@ public:
 #if USE_MATHLINK
   void put(MLINK mlp) const;
 #endif
-
-private:
-  const char *Name;
 };
 
 using SymbolPtr = std::unique_ptr<Symbol>;
@@ -193,7 +193,7 @@ Closer TokenToCloser(TokenEnum T);
 SymbolPtr& TokenToSymbol(TokenEnum T);
 
 //
-//
+// All symbols that are used by CodeParser
 //"} ~Join~
 (Row[{"extern", " ", "SymbolPtr", " ", toGlobal["Symbol`"<>ToString[#]], ";"}]& /@ symbols) ~Join~
 {""}

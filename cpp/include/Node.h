@@ -172,7 +172,7 @@ public:
 };
 
 //
-//
+// Any kind of prefix, postfix, binary, or infix operator
 //
 class OperatorNode : public Node {
     SymbolPtr& Op;
@@ -188,7 +188,9 @@ public:
 };
 
 //
+// Leaf
 //
+// These are Symbols, String, Integers, Reals, etc.
 //
 class LeafNode : public Node {
     const Token Tok;
@@ -218,7 +220,7 @@ public:
 };
 
 //
-//
+// These are syntax errors similar to LeafNode
 //
 class ErrorNode : public Node {
     const Token Tok;
@@ -248,7 +250,9 @@ public:
 };
 
 //
+// PrefixNode
 //
+// -a
 //
 class PrefixNode : public OperatorNode {
 public:
@@ -256,7 +260,9 @@ public:
 };
 
 //
+// BinaryNode
 //
+// a @ b
 //
 class BinaryNode : public OperatorNode {
 public:
@@ -264,7 +270,9 @@ public:
 };
 
 //
+// InfixNode
 //
+// a + b + c
 //
 class InfixNode : public OperatorNode {
 public:
@@ -272,7 +280,9 @@ public:
 };
 
 //
+// TernaryNode
 //
+// a /: b = c
 //
 class TernaryNode : public OperatorNode {
 public:
@@ -280,7 +290,9 @@ public:
 };
 
 //
+// TernaryNode
 //
+// a!
 //
 class PostfixNode : public OperatorNode {
 public:
@@ -288,7 +300,9 @@ public:
 };
 
 //
+// PrefixBinaryNode
 //
+// \[Integral] f \[DifferentialD] x
 //
 class PrefixBinaryNode : public OperatorNode {
 public:
@@ -296,7 +310,9 @@ public:
 };
 
 //
+// CallNode
 //
+// f[x]
 //
 class CallNode : public Node {
     NodeSeq Head;
@@ -313,7 +329,9 @@ public:
 };
 
 //
+// GroupNode
 //
+// {x}
 //
 class GroupNode : public OperatorNode {
 public:
@@ -401,7 +419,9 @@ public:
 };
 
 //
+// SyntaxErrorNode
 //
+// A syntax error that contains structure.
 //
 class SyntaxErrorNode : public Node {
     const SyntaxError Err;
@@ -416,7 +436,9 @@ public:
 };
 
 //
+// GroupMissingCloserNode
 //
+// f[
 //
 class GroupMissingCloserNode : public OperatorNode {
 public:

@@ -60,6 +60,20 @@ using ScopedMLEnvironmentParameterPtr = std::unique_ptr<ScopedMLEnvironmentParam
 #endif
 
 //
+// The modes that stringifying could happen in
+//
+// Normal:
+// Tokens are treated normally
+//
+// Symbol:
+// Stringify the next token as a symbol:
+// a::bcd
+//
+// File:
+// Stringify the next token as a file:
+// << foo
+// foo >> bar
+// foo >>> bar
 //
 //
 enum StringifyMode {
@@ -69,12 +83,12 @@ enum StringifyMode {
 };
 
 //
-//
+// Control the behavior of the parser
 //
 enum ParserSessionBits : uint8_t {
     
     //
-    //
+    // Include Source in returned nodes?
     //
     INCLUDE_SOURCE = 0x01,
 };
@@ -82,7 +96,7 @@ enum ParserSessionBits : uint8_t {
 using ParserSessionPolicy = uint8_t;
 
 //
-//
+// A parser session
 //
 class ParserSession {
     
@@ -145,7 +159,7 @@ EXTERN_C DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, MLINK 
 EXTERN_C DLLEXPORT int SetupLongNames_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
 //
-//
+// A UTF8 String from MathLink that has lexical scope
 //
 class ScopedMLUTF8String {
     MLINK mlp;
@@ -167,7 +181,7 @@ public:
 };
 
 //
-//
+// A String from MathLink that has lexical scope
 //
 class ScopedMLString {
     MLINK mlp;
@@ -185,7 +199,7 @@ public:
 };
 
 //
-//
+// A Symbol from MathLink that has lexical scope
 //
 class ScopedMLSymbol {
     MLINK mlp;
@@ -203,7 +217,7 @@ public:
 };
 
 //
-//
+// A Function from MathLink that has lexical scope
 //
 class ScopedMLFunction {
     MLINK mlp;
@@ -224,7 +238,7 @@ public:
 };
 
 //
-//
+// A ByteArray from MathLink that has lexical scope
 //
 class ScopedMLByteArray {
     MLINK mlp;
@@ -247,7 +261,7 @@ public:
 };
 
 //
-//
+// An EnvironmentParameter from MathLink that has lexical scope
 //
 class ScopedMLEnvironmentParameter {
     
@@ -262,7 +276,7 @@ public:
 };
 
 //
-//
+// A Loopback Link from MathLink that has lexical scope
 //
 class ScopedMLLoopbackLink {
     

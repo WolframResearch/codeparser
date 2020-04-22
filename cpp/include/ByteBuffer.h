@@ -13,7 +13,7 @@ class ByteBuffer;
 using ByteBufferPtr = std::unique_ptr<ByteBuffer>;
 
 //
-//
+// A byte buffer that can return the current byte and advance to the next byte.
 //
 class ByteBuffer {
     

@@ -197,10 +197,10 @@ PrefixOperatorToParselet[Token`LessLess] = LessLessParselet[]
 
 
 (*
-PrefixOperatorToParselet[Token`LinearSyntax`Bang] = PrefixUnsupportedTokenParselet[]
-*)
-(*
-PrefixOperatorToParselet[Token`LinearSyntax`OpenParen] = PrefixUnsupportedTokenParselet[]
+PrefixOperatorToParselet[Token`LinearSyntax`Bang]
+PrefixOperatorToParselet[Token`LinearSyntax`OpenParen]
+
+Token`LinearSyntax`Bang and Token`LinearSyntax`OpenParen are supported
 *)
 PrefixOperatorToParselet[Token`LinearSyntax`Star] = PrefixUnsupportedTokenParselet[]
 PrefixOperatorToParselet[Token`LinearSyntax`CloseParen] = PrefixUnsupportedTokenParselet[]
@@ -712,8 +712,10 @@ InfixOperatorToParselet[Token`GreaterGreaterGreater] = GreaterGreaterGreaterPars
 
 
 (*
-InfixOperatorToParselet[Token`LinearSyntax`Bang] = InfixUnsupportedTokenParselet[]
-InfixOperatorToParselet[Token`LinearSyntax`OpenParen] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LinearSyntax`Bang]
+InfixOperatorToParselet[Token`LinearSyntax`OpenParen]
+
+Token`LinearSyntax`Bang and Token`LinearSyntax`OpenParen are supported
 *)
 InfixOperatorToParselet[Token`LinearSyntax`Star] = InfixUnsupportedTokenParselet[]
 InfixOperatorToParselet[Token`LinearSyntax`CloseParen] = InfixUnsupportedTokenParselet[]

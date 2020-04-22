@@ -269,7 +269,7 @@ extern std::array<codepoint, LONGNAMES_COUNT> CodePointToLongNameMap_points;
 extern std::array<std::string, LONGNAMES_COUNT> CodePointToLongNameMap_names;
 
 //
-//
+// Collection of utility functions for codepoints and long names
 //
 class LongNames {
 public:
@@ -291,7 +291,7 @@ public:
 };
 
 //
-//
+// All long name code points
 //"} ~Join~
 longNameDefines ~Join~
 {""}

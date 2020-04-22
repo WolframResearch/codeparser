@@ -526,6 +526,8 @@ inline Token Tokenizer::handleSymbol(Buffer symbolStartBuf, SourceLocation symbo
         if ((policy & ENABLE_SLOT_ISSUES) == ENABLE_SLOT_ISSUES) {
             
             //
+            // Something like  #`a
+            //
             // It's hard to keep track of the ` characters, so just report the entire symbol. Oh well
             //
             
@@ -574,6 +576,10 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation
         
         if ((policy & ENABLE_SLOT_ISSUES) == ENABLE_SLOT_ISSUES) {
             
+            //
+            // Something like  #$a
+            //
+            
             auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNDOCUMENTEDSLOTSYNTAX, "The name following ``#`` is not documented to allow the ``$`` character.", SYNTAXISSUESEVERITY_REMARK, getTokenSource(charLoc), 0.33, {}));
             
             Issues.push_back(std::move(I));
@@ -613,6 +619,10 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation
             if (c.to_point() == '$') {
                 
                 if ((policy & ENABLE_SLOT_ISSUES) == ENABLE_SLOT_ISSUES) {
+                    
+                    //
+                    // Something like  #$a
+                    //
                     
                     auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNDOCUMENTEDSLOTSYNTAX, "The name following ``#`` is not documented to allow the ``$`` character.", SYNTAXISSUESEVERITY_REMARK, getTokenSource(charLoc), 0.33, {}));
                     
@@ -662,6 +672,10 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
     
 #if !NISSUES
     if ((policy & ENABLE_SLOT_ISSUES) == ENABLE_SLOT_ISSUES) {
+        
+        //
+        // Something like  #"a"
+        //
         
         auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNDOCUMENTEDSLOTSYNTAX, "The name following ``#`` is not documented to allow the ``\"`` character.", SYNTAXISSUESEVERITY_REMARK, getTokenSource(tokenStartLoc), 0.33, {}));
         
@@ -2077,7 +2091,7 @@ inline Token Tokenizer::handleEqual(Buffer tokenStartBuf, SourceLocation tokenSt
             } else {
                 
                 //
-                // Something like x=!y
+                // Something like  x=!y
                 //
                 // Must now do surgery and back up
                 //
@@ -2122,8 +2136,8 @@ inline Token Tokenizer::handleUnder(Buffer tokenStartBuf, SourceLocation tokenSt
         }
         case '.': {
             
-            auto dotBuf = TheByteBuffer->buffer;
-            auto dotLoc = TheByteDecoder->SrcLoc;
+            auto dot1Buf = TheByteBuffer->buffer;
+            auto dot1Loc = TheByteDecoder->SrcLoc;
             
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
@@ -2139,7 +2153,7 @@ inline Token Tokenizer::handleUnder(Buffer tokenStartBuf, SourceLocation tokenSt
                 //
                 
                 auto shouldWarn = true;
-                backup(dotBuf, dotLoc, shouldWarn);
+                backup(dot1Buf, dot1Loc, shouldWarn);
                 
             } else {
                 
@@ -2574,8 +2588,8 @@ inline Token Tokenizer::handleSlash(Buffer tokenStartBuf, SourceLocation tokenSt
             break;
         case '.': {
             
-            auto nextBuf = TheByteBuffer->buffer;
-            auto nextLoc = TheByteDecoder->SrcLoc;
+            auto dotBuf = TheByteBuffer->buffer;
+            auto dotLoc = TheByteDecoder->SrcLoc;
             
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
@@ -2590,7 +2604,7 @@ inline Token Tokenizer::handleSlash(Buffer tokenStartBuf, SourceLocation tokenSt
                 // Must now do surgery and back up
                 //
                 
-                backup(nextBuf, nextLoc, true);
+                backup(dotBuf, dotLoc, true);
                 
             } else {
                 

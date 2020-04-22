@@ -9,7 +9,7 @@
 using codepoint = int32_t;
 
 //
-//
+// ASCII codepoints
 //
 constexpr codepoint CODEPOINT_BEL(0x07);
 constexpr codepoint CODEPOINT_ESC(0x1b);
@@ -54,7 +54,7 @@ constexpr codepoint CODEPOINT_VIRTUAL_BOM(0xe001);
 constexpr codepoint CODEPOINT_ENDOFFILE(EOF);
 
 //
-// xxx
+// Should never be used
 //
 constexpr codepoint CODEPOINT_ASSERTFALSE(-2);
 

@@ -299,7 +299,7 @@ tokenCPPHeader = {
 #include <cstdint> // for uint16_t
 
 //
-//
+// All group closers
 //
 enum Closer : uint8_t {
     //
@@ -324,7 +324,7 @@ enum Closer : uint8_t {
 };
 
 //
-//
+// Representing a token enum, with various properties exposed
 //
 struct TokenEnum {
 
@@ -419,7 +419,7 @@ bool operator==(TokenEnum a, TokenEnum b);
 bool operator!=(TokenEnum a, TokenEnum b);
 
 //
-//
+// All token enums
 //"} ~Join~
 KeyValueMap[(
   Row[{"constexpr TokenEnum ", toGlobal[#1], "(",

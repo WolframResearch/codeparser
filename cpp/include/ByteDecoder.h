@@ -12,7 +12,7 @@ using ByteDecoderPtr = std::unique_ptr<ByteDecoder>;
 using SourceConventionManagerPtr = std::unique_ptr<SourceConventionManager>;
 
 //
-//
+// How to manage advancing through SourceLocations
 //
 class SourceConventionManager {
 public:
@@ -27,7 +27,8 @@ public:
 };
 
 //
-//
+// Handle next (non-newline) SourceLocation by incrementing column.
+// Handle next newline by incrementing line.
 //
 class LineColumnManager : public SourceConventionManager {
     
@@ -37,7 +38,8 @@ class LineColumnManager : public SourceConventionManager {
 };
 
 //
-//
+// Handle next (non-newline) SourceLocation by incrementing index.
+// Handle next newline by incrementing index.
 //
 class SourceCharacterIndexManager : public SourceConventionManager {
     
