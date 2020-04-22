@@ -1040,6 +1040,24 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
         
         if ((policy & INTEGER_SHORT_CIRCUIT) == INTEGER_SHORT_CIRCUIT) {
             
+#if !NISSUES
+            if (c.to_point() == '.') {
+                
+                //
+                // Something like  #2.a
+                //
+                
+                auto dotLoc = TheByteDecoder->SrcLoc;
+                
+                std::vector<CodeActionPtr> Actions;
+                Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(dotLoc), " ")));
+                
+                auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, getTokenSource(dotLoc), 0.25, std::move(Actions)));
+                
+                Issues.push_back(std::move(I));
+            }
+#endif // !NISSUES
+            
             return Token(TOKEN_INTEGER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         }
         
