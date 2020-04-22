@@ -1,6 +1,6 @@
 
 #include "Parselet.h"
-#include "ParseletRegistration.h"
+#include "ParseletRegistration.h" // for prefixParselets
 
 #include "API.h" // for ParserSession
 

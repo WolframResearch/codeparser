@@ -568,7 +568,6 @@ inline Token Tokenizer::handleSymbol(Buffer symbolStartBuf, SourceLocation symbo
     } else {
         return Token(TOKEN_SYMBOL, getTokenBufferAndLength(symbolStartBuf), getTokenSource(symbolStartLoc));
     }
-
 }
 
 

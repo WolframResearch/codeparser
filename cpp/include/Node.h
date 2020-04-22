@@ -339,83 +339,19 @@ public:
 };
 
 //
+// Any "compound" of tokens:
 //
+// a_
+// _b
+// a_.
+// #a
+// #abc
+// ##2
+// %2
 //
-class BlankNode : public OperatorNode {
+class CompoundNode : public OperatorNode {
 public:
-    BlankNode(NodeSeq Args) : OperatorNode(SYMBOL_BLANK, SYMBOL_CODEPARSER_LIBRARY_MAKEBLANKNODE, std::move(Args)) {}
-};
-
-//
-//
-//
-class BlankSequenceNode : public OperatorNode {
-public:
-    BlankSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_BLANKSEQUENCE, SYMBOL_CODEPARSER_LIBRARY_MAKEBLANKSEQUENCENODE, std::move(Args)) {}
-};
-
-//
-//
-//
-class BlankNullSequenceNode : public OperatorNode {
-public:
-    BlankNullSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_BLANKNULLSEQUENCE, SYMBOL_CODEPARSER_LIBRARY_MAKEBLANKNULLSEQUENCENODE, std::move(Args)) {}
-};
-
-//
-//
-//
-class PatternBlankNode : public OperatorNode {
-public:
-    PatternBlankNode(NodeSeq Args) : OperatorNode(SYMBOL_CODEPARSER_PATTERNBLANK, SYMBOL_CODEPARSER_LIBRARY_MAKEPATTERNBLANKNODE, std::move(Args)) {}
-};
-
-//
-//
-//
-class PatternBlankSequenceNode : public OperatorNode {
-public:
-    PatternBlankSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_CODEPARSER_PATTERNBLANKSEQUENCE, SYMBOL_CODEPARSER_LIBRARY_MAKEPATTERNBLANKSEQUENCENODE, std::move(Args)) {}
-};
-
-//
-//
-//
-class PatternBlankNullSequenceNode : public OperatorNode {
-public:
-    PatternBlankNullSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_CODEPARSER_PATTERNBLANKNULLSEQUENCE, SYMBOL_CODEPARSER_LIBRARY_MAKEPATTERNBLANKNULLSEQUENCENODE, std::move(Args)) {}
-};
-
-//
-//
-//
-class PatternOptionalDefaultNode : public OperatorNode {
-public:
-    PatternOptionalDefaultNode(NodeSeq Args) : OperatorNode(SYMBOL_CODEPARSER_PATTERNOPTIONALDEFAULT, SYMBOL_CODEPARSER_LIBRARY_MAKEPATTERNOPTIONALDEFAULTNODE, std::move(Args)) {}
-};
-
-//
-//
-//
-class SlotNode : public OperatorNode {
-public:
-    SlotNode(NodeSeq Args) : OperatorNode(SYMBOL_SLOT, SYMBOL_CODEPARSER_LIBRARY_MAKESLOTNODE, std::move(Args)) {}
-};
-
-//
-//
-//
-class SlotSequenceNode : public OperatorNode {
-public:
-    SlotSequenceNode(NodeSeq Args) : OperatorNode(SYMBOL_SLOTSEQUENCE, SYMBOL_CODEPARSER_LIBRARY_MAKESLOTSEQUENCENODE, std::move(Args)) {}
-};
-
-//
-//
-//
-class OutNode : public OperatorNode {
-public:
-    OutNode(NodeSeq Args) : OperatorNode(SYMBOL_OUT, SYMBOL_CODEPARSER_LIBRARY_MAKEOUTNODE, std::move(Args)) {}
+    CompoundNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKECOMPOUNDNODE, std::move(Args)) {}
 };
 
 //

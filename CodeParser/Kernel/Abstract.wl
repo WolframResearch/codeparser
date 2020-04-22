@@ -124,26 +124,26 @@ abstract[LeafNode[Token`Fake`ImplicitAll, _, data_]] := LeafNode[Symbol, "All", 
 abstract[n_ErrorNode] := n
 
 
-abstract[BlankNode[Blank, {_, sym2_}, data_]] := CallNode[ToNode[Blank], {abstract[sym2]}, data]
-abstract[BlankSequenceNode[BlankSequence, {_, sym2_}, data_]] := CallNode[ToNode[BlankSequence], {abstract[sym2]}, data]
-abstract[BlankNullSequenceNode[BlankNullSequence, {_, sym2_}, data_]] := CallNode[ToNode[BlankNullSequence], {abstract[sym2]}, data]
+abstract[CompoundNode[Blank, {_, sym2_}, data_]] := CallNode[ToNode[Blank], {abstract[sym2]}, data]
+abstract[CompoundNode[BlankSequence, {_, sym2_}, data_]] := CallNode[ToNode[BlankSequence], {abstract[sym2]}, data]
+abstract[CompoundNode[BlankNullSequence, {_, sym2_}, data_]] := CallNode[ToNode[BlankNullSequence], {abstract[sym2]}, data]
 
 
-abstract[PatternBlankNode[PatternBlank, {sym1_, blank_}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], abstract[blank]}, data]
-abstract[PatternBlankSequenceNode[PatternBlankSequence, {sym1_, blankSeq_}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], abstract[blankSeq]}, data]
-abstract[PatternBlankNullSequenceNode[PatternBlankNullSequence, {sym1_, blankNullSeq_}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], abstract[blankNullSeq]}, data]
-abstract[PatternOptionalDefaultNode[PatternOptionalDefault, {sym1_, LeafNode[Token`UnderDot, _, optionalDefaultData_]}, data_]] := CallNode[ToNode[Optional], { CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[Blank], {}, optionalDefaultData]}, data] }, data]
+abstract[CompoundNode[PatternBlank, {sym1_, blank_}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], abstract[blank]}, data]
+abstract[CompoundNode[PatternBlankSequence, {sym1_, blankSeq_}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], abstract[blankSeq]}, data]
+abstract[CompoundNode[PatternBlankNullSequence, {sym1_, blankNullSeq_}, data_]] := CallNode[ToNode[Pattern], {abstract[sym1], abstract[blankNullSeq]}, data]
+abstract[CompoundNode[PatternOptionalDefault, {sym1_, LeafNode[Token`UnderDot, _, optionalDefaultData_]}, data_]] := CallNode[ToNode[Optional], { CallNode[ToNode[Pattern], {abstract[sym1], CallNode[ToNode[Blank], {}, optionalDefaultData]}, data] }, data]
 
 
-abstract[SlotNode[Slot, {_, arg:LeafNode[Integer, _, data1_]}, data_]] := CallNode[ToNode[Slot], {abstract[arg]}, data]
-abstract[SlotNode[Slot, {_, arg:LeafNode[Symbol, s_, data1_]}, data_]] := CallNode[ToNode[Slot], {LeafNode[String, escapeString[abstractSymbolString[s]], data1]}, data]
-abstract[SlotNode[Slot, {_, arg:LeafNode[String, s_, data1_]}, data_]] := CallNode[ToNode[Slot], {LeafNode[String, escapeString[abstractSymbolString[s]], data1]}, data]
+abstract[CompoundNode[Slot, {_, arg:LeafNode[Integer, _, data1_]}, data_]] := CallNode[ToNode[Slot], {abstract[arg]}, data]
+abstract[CompoundNode[Slot, {_, arg:LeafNode[Symbol, s_, data1_]}, data_]] := CallNode[ToNode[Slot], {LeafNode[String, escapeString[abstractSymbolString[s]], data1]}, data]
+abstract[CompoundNode[Slot, {_, arg:LeafNode[String, s_, data1_]}, data_]] := CallNode[ToNode[Slot], {LeafNode[String, escapeString[abstractSymbolString[s]], data1]}, data]
 
 
-abstract[SlotSequenceNode[SlotSequence, {_, arg:LeafNode[Integer, _, _]}, data_]] := CallNode[ToNode[SlotSequence], {abstract[arg]}, data]
+abstract[CompoundNode[SlotSequence, {_, arg:LeafNode[Integer, _, _]}, data_]] := CallNode[ToNode[SlotSequence], {abstract[arg]}, data]
 
 
-abstract[OutNode[Out, {_, arg:LeafNode[Integer, _, _]}, data_]] := CallNode[ToNode[Out], {abstract[arg]}, data]
+abstract[CompoundNode[Out, {_, arg:LeafNode[Integer, _, _]}, data_]] := CallNode[ToNode[Out], {abstract[arg]}, data]
 
 
 abstract[PrefixNode[Minus, {_, rand_}, data_]] := abstract[negate[rand, data]]
@@ -1784,15 +1784,15 @@ Module[{head, data, part, innerData, outerData, issues, partData, src},
 			feel strongly about ##2[[arg]]
 			##2 represents a sequence of arguments, so it is wrong to call
 			*)
-			LeafNode[Token`HashHash, _, _] | SlotSequenceNode[SlotSequence, _, _],
+			LeafNode[Token`HashHash, _, _] | CompoundNode[SlotSequence, _, _],
 				AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Unexpected ``Part`` call.", "Error", <|Source->data[Source], ConfidenceLevel -> 1.0|>]];
 			,
-			LeafNode[Symbol | Token`Hash | Token`Under | Token`UnderUnder | Token`UnderUnderUnder, _, _] (* |_StringNode*) | _CallNode | _BlankNode | _BlankSequenceNode | _BlankNullSequenceNode (*| _OptionalDefaultNode*) |
-				_PatternBlankNode | _PatternBlankSequenceNode | _PatternBlankNullSequenceNode (*| _SlotSequenceNode *) | _SlotNode,
+			LeafNode[Symbol (* | String *) | Token`Hash | Token`Under | Token`UnderUnder | Token`UnderUnderUnder, _, _] | _CallNode |
+				CompoundNode[Blank | BlankSequence | BlankNullSequence | PatternBlank | PatternBlankSequence | PatternBlankNullSequence | Slot (* | SlotSequence *), _, _],
 				(* these are fine *)
 				Null
 			,
-			LeafNode[Token`Percent | Token`PercentPercent, _, _] | _OutNode,
+			LeafNode[Token`Percent | Token`PercentPercent, _, _] | CompoundNode[Out, _, _],
 				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
 			,
 			PrefixNode[PrefixLinearSyntaxBang, _, _],
@@ -1895,15 +1895,15 @@ Module[{head, part, partData, issues, data},
 			feel strongly about ##2[arg]
 			##2 represents a sequence of arguments, so it is wrong to call
 			*)
-			LeafNode[Token`HashHash, _, _] | SlotSequenceNode[SlotSequence, _, _],
+			LeafNode[Token`HashHash, _, _] | CompoundNode[SlotSequence, _, _],
 				AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Unexpected call.", "Error", <|Source->data[Source], ConfidenceLevel -> 1.0|>]];
 			,
-			LeafNode[Symbol | String | Token`Hash | Token`Under | Token`UnderUnder | Token`UnderUnderUnder, _, _] | _CallNode | _BlankNode | _BlankSequenceNode | _BlankNullSequenceNode (*| _OptionalDefaultNode*)|
-			   _PatternBlankNode | _PatternBlankSequenceNode | _PatternBlankNullSequenceNode (*| _SlotSequenceNode*) | _SlotNode,
+			LeafNode[Symbol | String | Token`Hash | Token`Under | Token`UnderUnder | Token`UnderUnderUnder, _, _] | _CallNode |
+			 CompoundNode[Blank | BlankSequence | BlankNullSequence | PatternBlank | PatternBlankSequence | PatternBlankNullSequence | Slot (*| SlotSequence*), _, _],
 				(* these are fine *)
 				Null
 			,
-			LeafNode[Token`Percent | Token`PercentPercent, _, _] | _OutNode,
+			LeafNode[Token`Percent | Token`PercentPercent, _, _] | CompoundNode[Out, _, _],
 				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
 			,
 			BinaryNode[PatternTest, _, _],
@@ -1976,15 +1976,15 @@ Module[{head, part, partData, data, issues},
 			feel strongly about ##2[arg]
 			##2 represents a sequence of arguments, so it is wrong to call
 			*)
-			LeafNode[Token`HashHash, _, _] | SlotSequenceNode[SlotSequence, _, _],
+			LeafNode[Token`HashHash, _, _] | CompoundNode[SlotSequence, _, _],
 				AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Unexpected call.", "Error", <|Source->data[Source], ConfidenceLevel -> 1.0|>]];
 			,
-			LeafNode[Symbol | Token`Hash | Token`Under | Token`UnderUnder | Token`UnderUnderUnder, _, _] (* |_StringNode*) | _CallNode | _BlankNode | _BlankSequenceNode | _BlankNullSequenceNode (*| _OptionalDefaultNode*) |
-				_PatternBlankNode | _PatternBlankSequenceNode | _PatternBlankNullSequenceNode (*| _SlotSequenceNode *) | _SlotNode,
+			LeafNode[Symbol (* | String *) | Token`Hash | Token`Under | Token`UnderUnder | Token`UnderUnderUnder, _, _] | _CallNode |
+				CompoundNode[Blank | BlankSequence | BlankNullSequence | PatternBlank | PatternBlankSequence | PatternBlankNullSequence | Slot (* | SlotSequence *), _, _],
 				(* these are fine *)
 				Null
 			,
-			LeafNode[Token`Percent | Token`PercentPercent, _, _] | _OutNode,
+			LeafNode[Token`Percent | Token`PercentPercent, _, _] | CompoundNode[Out, _, _],
 				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
 			,
 			PrefixNode[PrefixLinearSyntaxBang, _, _],

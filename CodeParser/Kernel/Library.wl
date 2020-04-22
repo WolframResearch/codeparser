@@ -37,18 +37,7 @@ MakeGroupNode
 MakeCallNode
 MakePrefixBinaryNode
 
-MakeBlankNode
-MakeBlankSequenceNode
-MakeBlankNullSequenceNode
-MakePatternBlankNode
-MakePatternBlankSequenceNode
-MakePatternBlankNullSequenceNode
-MakePatternOptionalDefaultNode
-
-MakeSlotNode
-MakeSlotSequenceNode
-
-MakeOutNode
+MakeCompoundNode
 
 MakeSyntaxErrorNode
 MakeGroupMissingCloserNode
@@ -404,35 +393,8 @@ MakeCallNode[tag_, payload_, srcArgs___] :=
 MakePrefixBinaryNode[tag_, payload_, srcArgs___] :=
 	PrefixBinaryNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
-MakeBlankNode[tag_, payload_, srcArgs___] :=
-	BlankNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-MakeBlankSequenceNode[tag_, payload_, srcArgs___] :=
-	BlankSequenceNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-MakeBlankNullSequenceNode[tag_, payload_, srcArgs___] :=
-	BlankNullSequenceNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-MakePatternBlankNode[tag_, payload_, srcArgs___] :=
-	PatternBlankNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-MakePatternBlankSequenceNode[tag_, payload_, srcArgs___] :=
-	PatternBlankSequenceNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-MakePatternBlankNullSequenceNode[tag_, payload_, srcArgs___] :=
-	PatternBlankNullSequenceNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-MakePatternOptionalDefaultNode[tag_, payload_, srcArgs___] :=
-	PatternOptionalDefaultNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-MakeSlotNode[tag_, payload_, srcArgs___] :=
-	SlotNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-MakeSlotSequenceNode[tag_, payload_, srcArgs___] :=
-	SlotSequenceNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-MakeOutNode[tag_, payload_, srcArgs___] :=
-	OutNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
+MakeCompoundNode[tag_, payload_, srcArgs___] :=
+	CompoundNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 MakeSyntaxErrorNode[tag_, payload_, srcArgs___] :=
 	SyntaxErrorNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]

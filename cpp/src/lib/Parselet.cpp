@@ -1413,7 +1413,7 @@ NodePtr HashParselet::parse(Token TokIn, ParserContext CtxtIn) const {
                 Args.appendIfNonEmpty(std::move(Trivia1));
                 Args.append(NodePtr(new LeafNode(Tok)));
                 
-                Slot = NodePtr(new SlotNode(std::move(Args)));
+                Slot = NodePtr(new CompoundNode(SYMBOL_SLOT, std::move(Args)));
             }
                 break;
             default: {
@@ -1451,7 +1451,7 @@ NodePtr HashHashParselet::parse(Token TokIn, ParserContext CtxtIn) const {
                 Args.appendIfNonEmpty(std::move(Trivia1));
                 Args.append(NodePtr(new LeafNode(Tok)));
                 
-                SlotSequence = NodePtr(new SlotSequenceNode(std::move(Args)));
+                SlotSequence = NodePtr(new CompoundNode(SYMBOL_SLOTSEQUENCE, std::move(Args)));
             }
                 break;
             default: {
@@ -1489,7 +1489,7 @@ NodePtr PercentParselet::parse(Token TokIn, ParserContext CtxtIn) const {
                 Args.appendIfNonEmpty(std::move(Trivia1));
                 Args.append(NodePtr(new LeafNode(Tok)));
                 
-                Out = NodePtr(new OutNode(std::move(Args)));
+                Out = NodePtr(new CompoundNode(SYMBOL_OUT, std::move(Args)));
             }
                 break;
             default: {

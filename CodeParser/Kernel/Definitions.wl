@@ -27,7 +27,7 @@ handle something like:
 *)
 DeclarationName[GroupNode[GroupParen, {node_}, _]] := DeclarationName[node]
 
-DeclarationName[PatternBlankNode[_, {node_, _}, _]] := DeclarationName[node]
+DeclarationName[CompoundNode[PatternBlank, {node_, _}, _]] := DeclarationName[node]
 
 (*
 In the declaration:
@@ -50,7 +50,7 @@ DeclarationName[BinaryNode[BinaryAt, {node_, _}, _]] := DeclarationName[node]
 handle something like:
 _CharacterEncodingData[_] := versionpanic[];
 *)
-DeclarationName[BlankNode[Blank, {node_}, _]] := DeclarationName[node]
+DeclarationName[CompoundNode[Blank, {node_}, _]] := DeclarationName[node]
 
 
 DeclarationName[BinaryNode[BinarySlashSlash, {_, node_}, _]] := DeclarationName[node]

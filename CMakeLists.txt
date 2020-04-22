@@ -375,6 +375,7 @@ set(CPP_LIB_SOURCES
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/Source.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/Token.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/Tokenizer.cpp
+	${PROJECT_SOURCE_DIR}/cpp/src/lib/UnderParselet.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/Utils.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/WLCharacter.cpp
 )

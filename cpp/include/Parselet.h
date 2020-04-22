@@ -641,3 +641,61 @@ public:
     
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
 };
+
+//
+//
+//
+class UnderParselet : public PrefixParselet, public ContextSensitiveInfixParselet {
+    SymbolPtr& BOp;
+    SymbolPtr& PBOp;
+    
+    NodePtr parse0(Token TokIn, ParserContext Ctxt) const;
+    
+    NodePtr parse1(NodePtr Blank, Token Tok, ParserContext Ctxt) const;
+    
+public:
+    
+    UnderParselet(SymbolPtr& BOp, SymbolPtr& PBOp) : BOp(BOp), PBOp(PBOp) {}
+    
+    //
+    // prefix
+    //
+    // Something like  _  or  _a
+    //
+    NodePtr parse(Token TokIn, ParserContext Ctxt) const override;
+    
+    //
+    // infix
+    //
+    // Something like  a_b
+    //
+    // Called from other parselets
+    //
+    NodePtr parseContextSensitive(NodeSeq Left, Token TokIn, ParserContext Ctxt) const override;
+};
+
+//
+//
+//
+class UnderDotParselet : public PrefixParselet, public ContextSensitiveInfixParselet {
+
+    NodePtr parse0(Token TokIn, ParserContext Ctxt) const;
+    
+public:
+    
+    //
+    // prefix
+    //
+    // Something like  _.
+    //
+    NodePtr parse(Token TokIn, ParserContext Ctxt) const override;
+    
+    //
+    // infix
+    //
+    // Something like  a_.
+    //
+    // Called from other parselets
+    //
+    NodePtr parseContextSensitive(NodeSeq Left, Token TokIn, ParserContext Ctxt) const override;
+};

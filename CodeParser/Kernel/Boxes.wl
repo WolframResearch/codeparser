@@ -404,7 +404,7 @@ Module[{handledChildren, aggregatedChildren},
     {_, LeafNode[Token`LongName`Therefore, _, _], _, ___}, BinaryNode[Therefore, handledChildren, <|Source->Append[pos, 1]|>],
 
     {LeafNode[Symbol, _, _], LeafNode[Token`Colon, _, _], _}, BinaryNode[Pattern, handledChildren, <|Source->Append[pos, 1]|>],
-    {PatternBlankNode[_, _, _], LeafNode[Token`Colon, _, _], _}, BinaryNode[Optional, handledChildren, <|Source->Append[pos, 1]|>],
+    {CompoundNode[PatternBlank, _, _], LeafNode[Token`Colon, _, _], _}, BinaryNode[Optional, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`Colon, _, _], _}, SyntaxErrorNode[SyntaxError`ColonError, handledChildren, <|Source -> Append[pos, 1]|>],
 
     (*
@@ -506,7 +506,7 @@ Module[{handledChildren, aggregatedChildren},
     *)
     {_, LeafNode[Symbol | Integer | Slot | String | Real | Out | Blank | BlankSequence | BlankNullSequence, _, _] |
         BinaryNode[_, _, _] | CallNode[_, _, _] | GroupNode[_, _, _] | BoxNode[Except[RowBox], _, _] | InfixNode[_, _, _] |
-        PostfixNode[_, _, _] | PatternBlankNode[_, _, _] | PrefixNode[_, _, _], ___},
+        PostfixNode[_, _, _] | CompoundNode[PatternBlank, _, _] | PrefixNode[_, _, _], ___},
 
         InfixNode[Times,
           Flatten[{First[handledChildren]} ~Join~
@@ -850,63 +850,63 @@ letterlikePat = Except["_"|"\""|"."]
 parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "_"], pos_] :=
 Module[{cases},
   cases = StringCases[str, a:letterlikePat.. ~~ "_" :> {a, "_"}][[1]];
-  PatternBlankNode[PatternBlank, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+  CompoundNode[PatternBlank, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
 ]
 
 parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "__"], pos_] :=
 Module[{cases},
   cases = StringCases[str, a:letterlikePat.. ~~ "__" :> {a, "__"}][[1]];
-  PatternBlankSequenceNode[PatternBlankSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+  CompoundNode[PatternBlankSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
 ]
 
 parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "___"], pos_] :=
 Module[{cases},
   cases = StringCases[str, a:letterlikePat.. ~~ "___" :> {a, "___"}][[1]];
-  PatternBlankNullSequenceNode[PatternBlankNullSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+  CompoundNode[PatternBlankNullSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
 ]
 
 parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "_."], pos_] :=
 Module[{cases},
   cases = StringCases[str, a:letterlikePat.. ~~ "_." :> {a, "_."}][[1]];
-  PatternOptionalDefaultNode[PatternOptionalDefault, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+  CompoundNode[PatternOptionalDefault, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
 ]
 
 
 parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "_" ~~ letterlikePat..], pos_] :=
 Module[{cases},
   cases = StringCases[str, a:letterlikePat.. ~~ "_" ~~ b:letterlikePat.. :> {a, "_", b}][[1]];
-  PatternBlankNode[PatternBlank, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+  CompoundNode[PatternBlank, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
 ]
 
 parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "__" ~~ letterlikePat..], pos_] :=
 Module[{cases},
   cases = StringCases[str, a:letterlikePat.. ~~ "__" ~~ b:letterlikePat.. :> {a, "__", b}][[1]];
-  PatternBlankSequenceNode[PatternBlankSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+  CompoundNode[PatternBlankSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
 ]
 
 parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "___" ~~ letterlikePat..], pos_] :=
 Module[{cases},
   cases = StringCases[str, a:letterlikePat.. ~~ "___" ~~ b:letterlikePat.. :> {a, "___", b}][[1]];
-  PatternBlankNullSequenceNode[PatternBlankNullSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+  CompoundNode[PatternBlankNullSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
 ]
 
 
 parseBox[str_String /; StringMatchQ[str, "_" ~~ letterlikePat..], pos_] :=
 Module[{cases},
   cases = StringCases[str, "_" ~~ b:letterlikePat.. :> {"_", b}][[1]];
-  BlankNode[Blank, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+  CompoundNode[Blank, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
 ]
 
 parseBox[str_String /; StringMatchQ[str, "__" ~~ letterlikePat..], pos_] :=
 Module[{cases},
   cases = StringCases[str, "__" ~~ b:letterlikePat.. :> {"__", b}][[1]];
-  BlankSequenceNode[BlankSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+  CompoundNode[BlankSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
 ]
 
 parseBox[str_String /; StringMatchQ[str, "___" ~~ letterlikePat..], pos_] :=
 Module[{cases},
   cases = StringCases[str, "___" ~~ b:letterlikePat.. :> {"___", b}][[1]];
-  BlankNullSequenceNode[BlankNullSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+  CompoundNode[BlankNullSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
 ]
 
 
@@ -1959,7 +1959,7 @@ Module[{nodeBoxes},
 
 
 
-toStandardFormBoxes[BlankNode[Blank, nodes_, _]] :=
+toStandardFormBoxes[CompoundNode[Blank, nodes_, _]] :=
 Catch[
 Module[{nodeBoxes},
   nodeBoxes = toStandardFormBoxes /@ nodes;
@@ -1969,7 +1969,7 @@ Module[{nodeBoxes},
   StringJoin[nodeBoxes]
 ]]
 
-toStandardFormBoxes[BlankSequenceNode[BlankSequence, nodes_, _]] :=
+toStandardFormBoxes[CompoundNode[BlankSequence, nodes_, _]] :=
 Catch[
 Module[{nodeBoxes},
   nodeBoxes = toStandardFormBoxes /@ nodes;
@@ -1979,7 +1979,7 @@ Module[{nodeBoxes},
   StringJoin[nodeBoxes]
 ]]
 
-toStandardFormBoxes[BlankNullSequenceNode[BlankNullSequence, nodes_, _]] :=
+toStandardFormBoxes[CompoundNode[BlankNullSequence, nodes_, _]] :=
 Catch[
 Module[{nodeBoxes},
   nodeBoxes = toStandardFormBoxes /@ nodes;
@@ -1994,7 +1994,7 @@ Convert back to form that the FE likes
 
 Single a_ token
 *)
-toStandardFormBoxes[PatternBlankNode[PatternBlank, nodes_, _]] :=
+toStandardFormBoxes[CompoundNode[PatternBlank, nodes_, _]] :=
 Catch[
 Module[{nodeBoxes},
   nodeBoxes = toStandardFormBoxes /@ nodes;
@@ -2009,7 +2009,7 @@ Convert back to form that the FE likes
 
 Single a__ token
 *)
-toStandardFormBoxes[PatternBlankSequenceNode[PatternBlankSequence, nodes_, _]] :=
+toStandardFormBoxes[CompoundNode[PatternBlankSequence, nodes_, _]] :=
 Catch[
 Module[{nodeBoxes},
   nodeBoxes = toStandardFormBoxes /@ nodes;
@@ -2024,7 +2024,7 @@ Convert back to form that the FE likes
 
 Single a___ token
 *)
-toStandardFormBoxes[PatternBlankNullSequenceNode[PatternBlankNullSequence, nodes_, _]] :=
+toStandardFormBoxes[CompoundNode[PatternBlankNullSequence, nodes_, _]] :=
 Catch[
 Module[{nodeBoxes},
   nodeBoxes = toStandardFormBoxes /@ nodes;
@@ -2039,7 +2039,7 @@ Convert back to form that the FE likes
 
 Single a_. token
 *)
-toStandardFormBoxes[PatternOptionalDefaultNode[PatternOptionalDefault, nodes_, _]] :=
+toStandardFormBoxes[CompoundNode[PatternOptionalDefault, nodes_, _]] :=
 Catch[
 Module[{nodeBoxes},
   nodeBoxes = toStandardFormBoxes /@ nodes;

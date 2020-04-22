@@ -161,18 +161,7 @@ GroupNode
 CallNode
 PrefixBinaryNode
 
-BlankNode
-BlankSequenceNode
-BlankNullSequenceNode
-PatternBlankNode
-PatternBlankSequenceNode
-PatternBlankNullSequenceNode
-PatternOptionalDefaultNode
-
-SlotNode
-SlotSequenceNode
-
-OutNode
+CompoundNode
 
 ContainerNode
 

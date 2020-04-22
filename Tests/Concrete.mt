@@ -22,7 +22,7 @@ Test[
 	,
 	ContainerNode[String, {
 		BinaryNode[Optional, {
-			PatternBlankNode[PatternBlank, {
+			CompoundNode[PatternBlank, {
 				LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
 				LeafNode[Token`Under, "_", <|Source -> {{1, 2}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 3}}|>],
 			LeafNode[Token`Colon, ":", <|Source -> {{1, 3}, {1, 4}}|>],
@@ -431,7 +431,7 @@ Test[
 		GroupNode[List, {
 			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>],
-			PatternBlankSequenceNode[PatternBlankSequence, {
+			CompoundNode[PatternBlankSequence, {
 				LeafNode[Symbol, "headIn", <|Source -> {{1, 3}, {1, 9}}|>],
 				LeafNode[Token`UnderUnder, "__", <|Source -> {{1, 9}, {1, 11}}|>]}, <|Source -> {{1, 3}, {1, 11}}|>],
 			LeafNode[Whitespace, " ", <|Source -> {{1, 11}, {1, 12}}|>],
