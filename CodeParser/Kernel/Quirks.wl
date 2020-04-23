@@ -23,19 +23,19 @@ Module[{},
 	(*
 	Setup "FlattenTimes" quirk
 
-	In non-Prototype builds:
+	In 12.1 and before:
 		a / b / c is parsed as Times[a, Power[b, -1], Power[c, -1]]
 		-a / b is parsed as Times[-1, a, Power[b, -1]]
 
-	In Prototype builds:
+	In 12.2 and after:
 		a / b / c is parsed as Times[Times[a, Power[b, -1]], Power[c, -1]]
 		-a / b is parsed as Times[Times[-1, a], Power[b, -1]]
-	This is considered the correct behavior going into the future.
 
-	This is setup on bugfix/139531_et_al branch
+	TODO: when targeting v12.2 as a minimum, remove this quirk
+
 	Related bugs: 139531, 160919
 	*)
-	If[!Internal`$PrototypeBuild,
+	If[$VersionNumber <= 12.1,
 		$Quirks["FlattenTimes"] = True
 	];
 
