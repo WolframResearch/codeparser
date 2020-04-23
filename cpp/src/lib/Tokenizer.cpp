@@ -523,7 +523,7 @@ inline Token Tokenizer::handleSymbol(Buffer symbolStartBuf, SourceLocation symbo
         //
         
 #if !NISSUES
-        if ((policy & ENABLE_SLOT_ISSUES) == ENABLE_SLOT_ISSUES) {
+        if ((policy & SLOT_BEHAVIOR_FOR_STRINGS) == SLOT_BEHAVIOR_FOR_STRINGS) {
             
             //
             // Something like  #`a
@@ -563,7 +563,12 @@ inline Token Tokenizer::handleSymbol(Buffer symbolStartBuf, SourceLocation symbo
         
     } // while
     
-    return Token(TOKEN_SYMBOL, getTokenBufferAndLength(symbolStartBuf), getTokenSource(symbolStartLoc));
+    if ((policy & SLOT_BEHAVIOR_FOR_STRINGS) == SLOT_BEHAVIOR_FOR_STRINGS) {
+        return Token(TOKEN_STRING, getTokenBufferAndLength(symbolStartBuf), getTokenSource(symbolStartLoc));
+    } else {
+        return Token(TOKEN_SYMBOL, getTokenBufferAndLength(symbolStartBuf), getTokenSource(symbolStartLoc));
+    }
+
 }
 
 
@@ -574,7 +579,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation
 #if !NISSUES
     if (c.to_point() == '$') {
         
-        if ((policy & ENABLE_SLOT_ISSUES) == ENABLE_SLOT_ISSUES) {
+        if ((policy & SLOT_BEHAVIOR_FOR_STRINGS) == SLOT_BEHAVIOR_FOR_STRINGS) {
             
             //
             // Something like  #$a
@@ -618,7 +623,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation
 #if !NISSUES
             if (c.to_point() == '$') {
                 
-                if ((policy & ENABLE_SLOT_ISSUES) == ENABLE_SLOT_ISSUES) {
+                if ((policy & SLOT_BEHAVIOR_FOR_STRINGS) == SLOT_BEHAVIOR_FOR_STRINGS) {
                     
                     //
                     // Something like  #$a
@@ -671,7 +676,7 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
     policy |= PRESERVE_WS_AFTER_LC | LC_IS_MEANINGFUL;
     
 #if !NISSUES
-    if ((policy & ENABLE_SLOT_ISSUES) == ENABLE_SLOT_ISSUES) {
+    if ((policy & SLOT_BEHAVIOR_FOR_STRINGS) == SLOT_BEHAVIOR_FOR_STRINGS) {
         
         //
         // Something like  #"a"

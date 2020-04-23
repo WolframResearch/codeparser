@@ -101,6 +101,8 @@ enum NextPolicyBits : uint8_t {
     //
     // (*\c*) does NOT give a CharacterDecoding error (issues are DISABLED)
     //
+    // Also controls reporting of unexpected line continuations.
+    //
     // This is also used when peeking: no need to report issues while peeking
     //
     // Used By ByteDecoder, CharacterDecoder
@@ -145,9 +147,11 @@ enum NextPolicyBits : uint8_t {
     //
     // But obviously "123" and a`b are fine outside of #
     //
+    // Also return symbols as strings, e.g., the  abc  in  #abc  is a string
+    //
     // Used by Tokenizer
     //
-    ENABLE_SLOT_ISSUES = 0x20,
+    SLOT_BEHAVIOR_FOR_STRINGS = 0x20,
     
     //
     // When tokenizing numbers, return immediately when an integer has been tokenized
@@ -167,6 +171,12 @@ const NextPolicy INSIDE_SYMBOL = ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLE
 
 const NextPolicy INSIDE_STRINGIFY_AS_SYMBOLSEGMENT = PRESERVE_WS_AFTER_LC | ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE;
 const NextPolicy INSIDE_STRINGIFY_AS_FILE = RETURN_TOPLEVELNEWLINE;
+
+const NextPolicy INSIDE_SLOT = RETURN_TOPLEVELNEWLINE | SLOT_BEHAVIOR_FOR_STRINGS | INTEGER_SHORT_CIRCUIT;
+
+const NextPolicy INSIDE_SLOTSEQUENCE = RETURN_TOPLEVELNEWLINE | INTEGER_SHORT_CIRCUIT;
+
+const NextPolicy INSIDE_OUT = RETURN_TOPLEVELNEWLINE | INTEGER_SHORT_CIRCUIT;
 
 //
 //

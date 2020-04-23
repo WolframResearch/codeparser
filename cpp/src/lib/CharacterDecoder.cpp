@@ -1019,6 +1019,7 @@ WLCharacter CharacterDecoder::handleLineContinuation(Buffer currentWLCharacterSt
         // Use ENABLE_CHARACTER_DECODING_ISSUES here to also talk about line continuations
         //
         // This disables unexpected line continuations inside comments
+        // And also disables unexpected line continuations inside  #  and ##  and %
         //
         if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
 
