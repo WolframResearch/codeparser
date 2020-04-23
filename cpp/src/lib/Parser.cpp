@@ -78,36 +78,6 @@ void Parser::nextToken_stringifyAsFile() {
     TheTokenizer->nextToken_stringifyAsFile();
 }
 
-Token Parser::nextToken0(ParserContext Ctxt) {
-    
-    //
-    // handle the queue before anything else
-    //
-    // We do not know anything about how many Tokens should be read
-    //
-    if (!tokenQueue.empty()) {
-        
-        auto Tok = tokenQueue[0];
-        
-        // erase first
-        tokenQueue.erase(tokenQueue.begin());
-        
-        return Tok;
-    }
-    
-    auto insideGroup = (Ctxt.Closr != CLOSER_OPEN);
-    //
-    // if insideGroup:
-    //   returnInternalNewlineMask is 0b100
-    // else:
-    //   returnInternalNewlineMask is 0b000
-    //
-    auto returnInternalNewlineMask = static_cast<uint8_t>(insideGroup) << 2;
-    auto Tok = TheTokenizer->nextToken0(TOPLEVEL & ~(returnInternalNewlineMask));
-    
-    return Tok;
-}
-
 Token Parser::nextToken0(ParserContext Ctxt, NextPolicy policy) {
     
     //
@@ -134,28 +104,6 @@ Token Parser::nextToken0(ParserContext Ctxt, NextPolicy policy) {
     //
     auto returnInternalNewlineMask = static_cast<uint8_t>(insideGroup) << 2;
     auto Tok = TheTokenizer->nextToken0(policy & ~(returnInternalNewlineMask));
-    
-    return Tok;
-}
-
-Token Parser::currentToken(ParserContext Ctxt) const {
-    
-    if (!tokenQueue.empty()) {
-        
-        auto Tok = tokenQueue[0];
-        
-        return Tok;
-    }
-    
-    auto insideGroup = (Ctxt.Closr != CLOSER_OPEN);
-    //
-    // if insideGroup:
-    //   returnInternalNewlineMask is 0b100
-    // else:
-    //   returnInternalNewlineMask is 0b000
-    //
-    auto returnInternalNewlineMask = static_cast<uint8_t>(insideGroup) << 2;
-    auto Tok = TheTokenizer->currentToken(TOPLEVEL & ~(returnInternalNewlineMask));
     
     return Tok;
 }
@@ -255,8 +203,8 @@ NodePtr Parser::infixLoop(NodePtr Left, ParserContext Ctxt) {
         
         LeafSeq Trivia1;
         
-        auto token = currentToken(Ctxt);
-        token = eatTriviaButNotToplevelNewlines(token, Ctxt, Trivia1);
+        auto token = currentToken(Ctxt, TOPLEVEL);
+        token = eatTriviaButNotToplevelNewlines(token, Ctxt, TOPLEVEL, Trivia1);
         
         auto I = infixParselets[token.Tok.value()];
         
@@ -289,7 +237,7 @@ NodePtr Parser::infixLoop(NodePtr Left, ParserContext Ctxt) {
     return Left;
 }
 
-Token Parser::eatTrivia(Token T, ParserContext Ctxt, LeafSeq& Args) {
+Token Parser::eatTrivia(Token T, ParserContext Ctxt, NextPolicy policy, LeafSeq& Args) {
     
     while (T.Tok.isTrivia()) {
         
@@ -301,7 +249,7 @@ Token Parser::eatTrivia(Token T, ParserContext Ctxt, LeafSeq& Args) {
         
         nextToken(T);
         
-        T = currentToken(Ctxt);
+        T = currentToken(Ctxt, policy);
     }
     
     return T;
@@ -325,7 +273,7 @@ Token Parser::eatTrivia_stringifyAsFile(Token T, ParserContext Ctxt, LeafSeq& Ar
     return T;
 }
 
-Token Parser::eatTriviaButNotToplevelNewlines(Token T, ParserContext Ctxt, LeafSeq& Args) {
+Token Parser::eatTriviaButNotToplevelNewlines(Token T, ParserContext Ctxt, NextPolicy policy, LeafSeq& Args) {
     
     while (T.Tok.isTriviaButNotToplevelNewline()) {
         
@@ -337,7 +285,7 @@ Token Parser::eatTriviaButNotToplevelNewlines(Token T, ParserContext Ctxt, LeafS
         
         nextToken(T);
         
-        T = currentToken(Ctxt);
+        T = currentToken(Ctxt, policy);
     }
     
     return T;
@@ -361,7 +309,7 @@ Token Parser::eatTriviaButNotToplevelNewlines_stringifyAsFile(Token T, ParserCon
     return T;
 }
 
-Token Parser::eatLineContinuations(Token T, ParserContext Ctxt, LeafSeq& Args) {
+Token Parser::eatLineContinuations(Token T, ParserContext Ctxt, NextPolicy policy, LeafSeq& Args) {
     
     while (T.Tok == TOKEN_LINECONTINUATION) {
         
@@ -373,7 +321,7 @@ Token Parser::eatLineContinuations(Token T, ParserContext Ctxt, LeafSeq& Args) {
         
         nextToken(T);
         
-        T = currentToken(Ctxt);
+        T = currentToken(Ctxt, policy);
     }
     
     return T;

@@ -163,8 +163,8 @@ NodePtr SymbolParselet::parse(Token TokIn, ParserContext Ctxt) const {
     {
         LeafSeq Trivia1;
         
-        auto Tok = TheParser->currentToken(Ctxt);
-        Tok = TheParser->eatLineContinuations(Tok, Ctxt, Trivia1);
+        auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+        Tok = TheParser->eatLineContinuations(Tok, Ctxt, TOPLEVEL, Trivia1);
         
         //
         // if we are here, then we know that Sym could bind to _
@@ -209,7 +209,7 @@ NodePtr SymbolParselet::parse(Token TokIn, ParserContext Ctxt) const {
                 {
                     LeafSeq Trivia2;
                     
-                    Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, Trivia2);
+                    Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, TOPLEVEL, Trivia2);
                     
                     //
                     // when parsing a in a:b  then PARSER_INSIDE_COLON bit is 0
@@ -263,8 +263,8 @@ NodePtr PrefixOperatorParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     {
         LeafSeq Trivia1;
         
-        auto Tok = TheParser->currentToken(Ctxt);
-        Tok = TheParser->eatTrivia(Tok, Ctxt, Trivia1);
+        auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+        Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
         
         auto Operand = prefixParselets[Tok.Tok.value()]->parse(Tok, Ctxt);
         
@@ -344,8 +344,8 @@ NodePtr BinaryOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext C
     {
         LeafSeq Trivia1;
     
-        auto Tok = TheParser->currentToken(Ctxt);
-        Tok = TheParser->eatTrivia(Tok, Ctxt, Trivia1);
+        auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+        Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
     
         auto Right = prefixParselets[Tok.Tok.value()]->parse(Tok, Ctxt);
     
@@ -383,8 +383,8 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ct
         
         LeafSeq Trivia1;
         
-        auto Tok1 = TheParser->currentToken(Ctxt);
-        Tok1 = TheParser->eatTriviaButNotToplevelNewlines(Tok1, Ctxt, Trivia1);
+        auto Tok1 = TheParser->currentToken(Ctxt, TOPLEVEL);
+        Tok1 = TheParser->eatTriviaButNotToplevelNewlines(Tok1, Ctxt, TOPLEVEL, Trivia1);
         
         auto I = infixParselets[Tok1.Tok.value()];
         
@@ -411,8 +411,8 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ct
         
         LeafSeq Trivia2;
         
-        auto Tok2 = TheParser->currentToken(Ctxt);
-        Tok2 = TheParser->eatTrivia(Tok2, Ctxt, Trivia2);
+        auto Tok2 = TheParser->currentToken(Ctxt, TOPLEVEL);
+        Tok2 = TheParser->eatTrivia(Tok2, Ctxt, TOPLEVEL, Trivia2);
         
         auto Operand = prefixParselets[Tok2.Tok.value()]->parse(Tok2, Ctxt);
         
@@ -490,8 +490,8 @@ NodePtr GroupParselet::parse(Token firstTok, ParserContext CtxtIn) const {
         
         LeafSeq Trivia1;
         
-        auto Tok = TheParser->currentToken(Ctxt);
-        Tok = TheParser->eatTrivia(Tok, Ctxt, Trivia1);
+        auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+        Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
         
         if (TokenToCloser(Tok.Tok) == Closr) {
             
@@ -591,8 +591,8 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
     
     LeafSeq Trivia1;
     
-    auto FirstTok = TheParser->currentToken(Ctxt);
-    FirstTok = TheParser->eatTrivia(FirstTok, Ctxt, Trivia1);
+    auto FirstTok = TheParser->currentToken(Ctxt, TOPLEVEL);
+    FirstTok = TheParser->eatTrivia(FirstTok, Ctxt, TOPLEVEL, Trivia1);
     
     if ((Ctxt.Flag & PARSER_INSIDE_TILDE) == PARSER_INSIDE_TILDE) {
         
@@ -611,8 +611,8 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
     
     LeafSeq Trivia2;
     
-    auto Tok1 = TheParser->currentToken(Ctxt);
-    Tok1 = TheParser->eatTrivia(Tok1, Ctxt, Trivia2);
+    auto Tok1 = TheParser->currentToken(Ctxt, TOPLEVEL);
+    Tok1 = TheParser->eatTrivia(Tok1, Ctxt, TOPLEVEL, Trivia2);
     
     if (Tok1.Tok != TOKEN_TILDE) {
         
@@ -643,8 +643,8 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
     
     TheParser->nextToken(Tok1);
     
-    auto Tok2 = TheParser->currentToken(Ctxt);
-    Tok2 = TheParser->eatTrivia(Tok2, Ctxt, Trivia3);
+    auto Tok2 = TheParser->currentToken(Ctxt, TOPLEVEL);
+    Tok2 = TheParser->eatTrivia(Tok2, Ctxt, TOPLEVEL, Trivia3);
     
     auto Right = prefixParselets[Tok2.Tok.value()]->parse(Tok2, Ctxt);
     
@@ -677,8 +677,8 @@ NodePtr ColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
     {
         LeafSeq Trivia1;
         
-        auto Tok = TheParser->currentToken(Ctxt);
-        Tok = TheParser->eatTrivia(Tok, Ctxt, Trivia1);
+        auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+        Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
         
         auto Right = prefixParselets[Tok.Tok.value()]->parse(Tok, Ctxt);
         
@@ -692,8 +692,8 @@ NodePtr ColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
         
         LeafSeq Trivia2;
         
-        Tok = TheParser->currentToken(Ctxt);
-        Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, Trivia2);
+        Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+        Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, TOPLEVEL, Trivia2);
         
         if (Tok.Tok == TOKEN_COLON) {
             
@@ -726,8 +726,8 @@ NodePtr ColonParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserCo
     
     LeafSeq Trivia1;
     
-    auto Tok = TheParser->currentToken(Ctxt);
-    Tok = TheParser->eatTrivia(Tok, Ctxt, Trivia1);
+    auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+    Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
     
     auto Right = prefixParselets[Tok.Tok.value()]->parse(Tok, Ctxt);
     
@@ -751,15 +751,15 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtI
     
     LeafSeq Trivia1;
     
-    auto Tok = TheParser->currentToken(Ctxt);
-    Tok = TheParser->eatTrivia(Tok, Ctxt, Trivia1);
+    auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+    Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
     
     auto Middle = prefixParselets[Tok.Tok.value()]->parse(Tok, Ctxt);
     
     LeafSeq Trivia2;
     
-    Tok = TheParser->currentToken(Ctxt);
-    Tok = TheParser->eatTrivia(Tok, Ctxt, Trivia2);
+    Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+    Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia2);
     
     switch (Tok.Tok.value()) {
         case TOKEN_EQUAL.value(): {
@@ -858,7 +858,7 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext CtxtI
         }
 #endif // !NABORT
         
-        auto Tok = TheParser->currentToken(Ctxt);
+        auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
         
         if (Tok.Tok == TOKEN_ENDOFFILE) {
             
@@ -903,7 +903,7 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext CtxtI
             //
             Args.append(std::move(Sub));
             
-            Tok = TheParser->currentToken(Ctxt);
+            Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
             
         } else {
             
@@ -919,7 +919,7 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext CtxtI
             
             TheParser->nextToken(Tok);
             
-            Tok = TheParser->currentToken(Ctxt);
+            Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
         }
         
     } // while
@@ -937,8 +937,8 @@ NodePtr EqualParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
     
     LeafSeq Trivia1;
     
-    auto Tok = TheParser->currentToken(Ctxt);
-    Tok = TheParser->eatTrivia(Tok, Ctxt, Trivia1);
+    auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+    Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
     
     if (Tok.Tok == TOKEN_DOT) {
         
@@ -998,8 +998,8 @@ NodePtr ColonEqualParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtI
     
     LeafSeq Trivia1;
     
-    auto Tok = TheParser->currentToken(Ctxt);
-    Tok = TheParser->eatTrivia(Tok, Ctxt, Trivia1);
+    auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+    Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
     
     auto wasInsideSlashColon = ((Ctxt.Flag & PARSER_INSIDE_SLASHCOLON) == PARSER_INSIDE_SLASHCOLON);
     
@@ -1034,8 +1034,8 @@ NodePtr IntegralParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     
     LeafSeq Trivia1;
     
-    auto Tok = TheParser->currentToken(Ctxt);
-    Tok = TheParser->eatTrivia(Tok, Ctxt, Trivia1);
+    auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+    Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
     
     auto operand = prefixParselets[Tok.Tok.value()]->parse(Tok, Ctxt);
     
@@ -1043,8 +1043,8 @@ NodePtr IntegralParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     
     LeafSeq Trivia2;
     
-    Tok = TheParser->currentToken(Ctxt);
-    Tok = TheParser->eatTrivia(Tok, Ctxt, Trivia2);
+    Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+    Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia2);
     
     if (!Tok.Tok.isDifferentialD()) {
         
@@ -1097,8 +1097,8 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, Token TokIn, Pars
         
         LeafSeq Trivia1;
         
-        auto Tok1 = TheParser->currentToken(Ctxt);
-        Tok1 = TheParser->eatTriviaButNotToplevelNewlines(Tok1, Ctxt, Trivia1);
+        auto Tok1 = TheParser->currentToken(Ctxt, TOPLEVEL);
+        Tok1 = TheParser->eatTriviaButNotToplevelNewlines(Tok1, Ctxt, TOPLEVEL, Trivia1);
         
         //
         // Cannot just compare tokens
@@ -1124,8 +1124,8 @@ NodePtr InfixOperatorWithTrailingParselet::parse(NodeSeq Left, Token TokIn, Pars
         
         LeafSeq Trivia2;
         
-        auto Tok2 = TheParser->currentToken(Ctxt);
-        Tok2 = TheParser->eatTriviaButNotToplevelNewlines(Tok2, Ctxt, Trivia2);
+        auto Tok2 = TheParser->currentToken(Ctxt, TOPLEVEL);
+        Tok2 = TheParser->eatTriviaButNotToplevelNewlines(Tok2, Ctxt, TOPLEVEL, Trivia2);
         
         if (infixParselets[Tok2.Tok.value()]->getOp() == Op) {
             
@@ -1213,8 +1213,8 @@ NodePtr ColonColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
         
         LeafSeq Trivia1;
         
-        auto Tok1 = TheParser->currentToken(Ctxt);
-        Tok1 = TheParser->eatTriviaButNotToplevelNewlines(Tok1, Ctxt, Trivia1);
+        auto Tok1 = TheParser->currentToken(Ctxt, TOPLEVEL);
+        Tok1 = TheParser->eatTriviaButNotToplevelNewlines(Tok1, Ctxt, TOPLEVEL, Trivia1);
         
         if (Tok1.Tok == TOKEN_COLONCOLON) {
             
@@ -1400,7 +1400,7 @@ NodePtr HashParselet::parse(Token TokIn, ParserContext CtxtIn) const {
         LeafSeq Trivia1;
         
         auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL | ENABLE_SLOT_ISSUES | INTEGER_SHORT_CIRCUIT);
-        Tok = TheParser->eatLineContinuations(Tok, Ctxt, Trivia1);
+        Tok = TheParser->eatLineContinuations(Tok, Ctxt, TOPLEVEL | ENABLE_SLOT_ISSUES | INTEGER_SHORT_CIRCUIT, Trivia1);
         
         switch (Tok.Tok.value()) {
             case TOKEN_INTEGER.value():
@@ -1440,7 +1440,7 @@ NodePtr HashHashParselet::parse(Token TokIn, ParserContext CtxtIn) const {
         LeafSeq Trivia1;
         
         auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL | INTEGER_SHORT_CIRCUIT);
-        Tok = TheParser->eatLineContinuations(Tok, Ctxt, Trivia1);
+        Tok = TheParser->eatLineContinuations(Tok, Ctxt, TOPLEVEL | INTEGER_SHORT_CIRCUIT, Trivia1);
         
         switch (Tok.Tok.value()) {
             case TOKEN_INTEGER.value(): {
@@ -1478,7 +1478,7 @@ NodePtr PercentParselet::parse(Token TokIn, ParserContext CtxtIn) const {
         LeafSeq Trivia1;
         
         auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL | ENABLE_SLOT_ISSUES | INTEGER_SHORT_CIRCUIT);
-        Tok = TheParser->eatLineContinuations(Tok, Ctxt, Trivia1);
+        Tok = TheParser->eatLineContinuations(Tok, Ctxt, TOPLEVEL | ENABLE_SLOT_ISSUES | INTEGER_SHORT_CIRCUIT, Trivia1);
         
         switch (Tok.Tok.value()) {
             case TOKEN_INTEGER.value(): {

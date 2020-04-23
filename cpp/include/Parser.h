@@ -102,10 +102,8 @@ public:
     void nextToken_stringifyAsSymbolSegment();
     void nextToken_stringifyAsFile();
     
-    Token nextToken0(ParserContext Ctxt);
     Token nextToken0(ParserContext Ctxt, NextPolicy policy);
     
-    Token currentToken(ParserContext Ctxt) const;
     Token currentToken(ParserContext Ctxt, NextPolicy policy) const;
     
     Token currentToken_stringifyAsSymbolSegment() const;
@@ -126,12 +124,12 @@ public:
     
     ~Parser();
 
-    Token eatTrivia(Token firstTok, ParserContext Ctxt, LeafSeq&);
+    Token eatTrivia(Token firstTok, ParserContext Ctxt, NextPolicy policy, LeafSeq&);
     Token eatTrivia_stringifyAsFile(Token firstTok, ParserContext Ctxt, LeafSeq&);
-    Token eatTriviaButNotToplevelNewlines(Token firstTok, ParserContext Ctxt, LeafSeq&);
+    Token eatTriviaButNotToplevelNewlines(Token firstTok, ParserContext Ctxt, NextPolicy policy, LeafSeq&);
     Token eatTriviaButNotToplevelNewlines_stringifyAsFile(Token firstTok, ParserContext Ctxt, LeafSeq&);
     
-    Token eatLineContinuations(Token firstTok, ParserContext Ctxt, LeafSeq&);
+    Token eatLineContinuations(Token firstTok, ParserContext Ctxt, NextPolicy policy, LeafSeq&);
 };
 
 extern ParserPtr TheParser;

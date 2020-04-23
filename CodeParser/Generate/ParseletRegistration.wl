@@ -984,8 +984,8 @@ public:
         {
           LeafSeq Trivia1;
 
-          auto Tok = TheParser->currentToken(Ctxt);
-          Tok = TheParser->eatLineContinuations(Tok, Ctxt, Trivia1);
+          auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+          Tok = TheParser->eatLineContinuations(Tok, Ctxt, TOPLEVEL, Trivia1);
 
           if (Tok.Tok == TOKEN_SYMBOL) {
               
@@ -1030,7 +1030,7 @@ public:
         {
           LeafSeq Trivia1;
           
-          Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, Trivia1);
+          Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, TOPLEVEL, Trivia1);
           
           //
           // For something like _:\"\"  when parsing _
@@ -1067,7 +1067,7 @@ public:
         
         auto Blank = parse0(TokIn, Ctxt);
         
-        auto Tok = TheParser->currentToken(Ctxt);
+        auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
         
         return parse1(std::move(Blank), Tok, Ctxt);
     }
@@ -1090,7 +1090,7 @@ public:
 
         auto Pat = NodePtr(new U(std::move(Args)));
         
-        auto Tok = TheParser->currentToken(Ctxt);
+        auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
 
         return parse1(std::move(Pat), Tok, Ctxt);
     }

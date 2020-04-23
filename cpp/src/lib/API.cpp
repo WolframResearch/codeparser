@@ -108,7 +108,7 @@ Node *ParserSession::parseExpressions() {
             }
 #endif // !NABORT
             
-            auto peek = TheParser->currentToken(Ctxt);
+            auto peek = TheParser->currentToken(Ctxt, TOPLEVEL);
             
             if (peek.Tok == TOKEN_ENDOFFILE) {
                 break;
