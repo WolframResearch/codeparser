@@ -1224,9 +1224,9 @@ NodePtr ColonColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
             // Special tokenization, so must do parsing here
             //
             
-            auto Tok2 = TheParser->currentToken_stringifySymbol();
+            auto Tok2 = TheParser->currentToken_stringifyAsSymbolSegment();
             
-            TheParser->nextToken_stringifySymbol();
+            TheParser->nextToken_stringifyAsSymbolSegment();
             
             bool possible;
             if (Tok2.Tok.isPossibleBeginning()) {
@@ -1285,10 +1285,10 @@ NodePtr GreaterGreaterParselet::parse(NodeSeq Left, Token TokIn, ParserContext C
     // Special tokenization, so must do parsing here
     //
     
-    auto Tok = TheParser->currentToken_stringifyFile();
-    Tok = TheParser->eatTrivia_stringifyFile(Tok, Ctxt, Trivia1);
+    auto Tok = TheParser->currentToken_stringifyAsFile();
+    Tok = TheParser->eatTrivia_stringifyAsFile(Tok, Ctxt, Trivia1);
     
-    TheParser->nextToken_stringifyFile();
+    TheParser->nextToken_stringifyAsFile();
 
     auto Operand = NodePtr(new LeafNode(std::move(Tok)));
     
@@ -1316,10 +1316,10 @@ NodePtr GreaterGreaterGreaterParselet::parse(NodeSeq Left, Token TokIn, ParserCo
     // Special tokenization, so must do parsing here
     //
     
-    auto Tok = TheParser->currentToken_stringifyFile();
-    Tok = TheParser->eatTrivia_stringifyFile(Tok, Ctxt, Trivia1);
+    auto Tok = TheParser->currentToken_stringifyAsFile();
+    Tok = TheParser->eatTrivia_stringifyAsFile(Tok, Ctxt, Trivia1);
     
-    TheParser->nextToken_stringifyFile();
+    TheParser->nextToken_stringifyAsFile();
     
     auto Operand = NodePtr(new LeafNode(std::move(Tok)));
     
@@ -1347,10 +1347,10 @@ NodePtr LessLessParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     // Special tokenization, so must do parsing here
     //
     
-    auto Tok = TheParser->currentToken_stringifyFile();
-    Tok = TheParser->eatTrivia_stringifyFile(Tok, Ctxt, Trivia1);
+    auto Tok = TheParser->currentToken_stringifyAsFile();
+    Tok = TheParser->eatTrivia_stringifyAsFile(Tok, Ctxt, Trivia1);
     
-    TheParser->nextToken_stringifyFile();
+    TheParser->nextToken_stringifyAsFile();
     
     auto Operand = NodePtr(new LeafNode(std::move(Tok)));
     

@@ -78,7 +78,7 @@ using ScopedMLEnvironmentParameterPtr = std::unique_ptr<ScopedMLEnvironmentParam
 //
 enum StringifyMode {
     STRINGIFYMODE_NORMAL,
-    STRINGIFYMODE_SYMBOL,
+    STRINGIFYMODE_SYMBOLSEGMENT,
     STRINGIFYMODE_FILE,
 };
 

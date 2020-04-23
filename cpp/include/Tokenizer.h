@@ -42,8 +42,8 @@ class Tokenizer {
     SourceCharacter handleFileOpsBrackets(SourceLocation tokenStartLoc, SourceCharacter firstChar, NextPolicy policy, int *handled);
     Token handleString(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
     
-    Token handleString_stringifySymbol(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
-    Token handleString_stringifyFile(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter firstChar, NextPolicy policy);
+    Token handleString_stringifyAsSymbolSegment(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
+    Token handleString_stringifyAsFile(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter firstChar, NextPolicy policy);
     
     Token handleSymbol(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
     
@@ -132,18 +132,18 @@ public:
     
     void nextToken(Token Tok);
     
-    void nextToken_stringifySymbol();
-    void nextToken_stringifyFile();
+    void nextToken_stringifyAsSymbolSegment();
+    void nextToken_stringifyAsFile();
     
     Token nextToken0(NextPolicy policy);
     
-    Token nextToken0_stringifySymbol();
-    Token nextToken0_stringifyFile();
+    Token nextToken0_stringifyAsSymbolSegment();
+    Token nextToken0_stringifyAsFile();
     
     Token currentToken(NextPolicy policy);
     
-    Token currentToken_stringifySymbol();
-    Token currentToken_stringifyFile();
+    Token currentToken_stringifyAsSymbolSegment();
+    Token currentToken_stringifyAsFile();
 
 #if !NISSUES
     void addIssue(IssuePtr);

@@ -245,14 +245,14 @@ NodePtr ParserSession::concreteParseLeaf0(int mode) {
             auto N = LeafNodePtr(new LeafNode(Tok));
             return N;
         }
-        case STRINGIFYMODE_SYMBOL: {
-            auto Tok = TheTokenizer->nextToken0_stringifySymbol();
+        case STRINGIFYMODE_SYMBOLSEGMENT: {
+            auto Tok = TheTokenizer->nextToken0_stringifyAsSymbolSegment();
             
             auto N = LeafNodePtr(new LeafNode(Tok));
             return N;
         }
         case STRINGIFYMODE_FILE: {
-            auto Tok = TheTokenizer->nextToken0_stringifyFile();
+            auto Tok = TheTokenizer->nextToken0_stringifyAsFile();
             auto N = LeafNodePtr(new LeafNode(Tok));
             return N;
         }

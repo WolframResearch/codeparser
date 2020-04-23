@@ -42,7 +42,7 @@ void Parser::nextToken(Token Tok) {
 }
 
 
-void Parser::nextToken_stringifySymbol() {
+void Parser::nextToken_stringifyAsSymbolSegment() {
     
     //
     // handle the queue before anything else
@@ -57,10 +57,10 @@ void Parser::nextToken_stringifySymbol() {
         return;
     }
     
-    TheTokenizer->nextToken_stringifySymbol();
+    TheTokenizer->nextToken_stringifyAsSymbolSegment();
 }
 
-void Parser::nextToken_stringifyFile() {
+void Parser::nextToken_stringifyAsFile() {
     
     //
     // handle the queue before anything else
@@ -75,7 +75,7 @@ void Parser::nextToken_stringifyFile() {
         return;
     }
     
-    TheTokenizer->nextToken_stringifyFile();
+    TheTokenizer->nextToken_stringifyAsFile();
 }
 
 Token Parser::nextToken0(ParserContext Ctxt) {
@@ -183,7 +183,7 @@ Token Parser::currentToken(ParserContext Ctxt, NextPolicy policy) const {
 }
 
 
-Token Parser::currentToken_stringifySymbol() const {
+Token Parser::currentToken_stringifyAsSymbolSegment() const {
     
     if (!tokenQueue.empty()) {
         
@@ -192,10 +192,10 @@ Token Parser::currentToken_stringifySymbol() const {
         return Tok;
     }
     
-    return TheTokenizer->currentToken_stringifySymbol();
+    return TheTokenizer->currentToken_stringifyAsSymbolSegment();
 }
 
-Token Parser::currentToken_stringifyFile() const {
+Token Parser::currentToken_stringifyAsFile() const {
     
     if (!tokenQueue.empty()) {
         
@@ -204,7 +204,7 @@ Token Parser::currentToken_stringifyFile() const {
         return Tok;
     }
     
-    return TheTokenizer->currentToken_stringifyFile();
+    return TheTokenizer->currentToken_stringifyAsFile();
 }
 
 void Parser::prepend(Token Tok) {
@@ -307,7 +307,7 @@ Token Parser::eatTrivia(Token T, ParserContext Ctxt, LeafSeq& Args) {
     return T;
 }
 
-Token Parser::eatTrivia_stringifyFile(Token T, ParserContext Ctxt, LeafSeq& Args) {
+Token Parser::eatTrivia_stringifyAsFile(Token T, ParserContext Ctxt, LeafSeq& Args) {
     
     while (T.Tok.isTrivia()) {
         
@@ -319,7 +319,7 @@ Token Parser::eatTrivia_stringifyFile(Token T, ParserContext Ctxt, LeafSeq& Args
         
         nextToken(T);
         
-        T = currentToken_stringifyFile();
+        T = currentToken_stringifyAsFile();
     }
     
     return T;
@@ -343,7 +343,7 @@ Token Parser::eatTriviaButNotToplevelNewlines(Token T, ParserContext Ctxt, LeafS
     return T;
 }
 
-Token Parser::eatTriviaButNotToplevelNewlines_stringifyFile(Token T, ParserContext Ctxt, LeafSeq& Args) {
+Token Parser::eatTriviaButNotToplevelNewlines_stringifyAsFile(Token T, ParserContext Ctxt, LeafSeq& Args) {
     
     while (T.Tok.isTriviaButNotToplevelNewline()) {
         
@@ -355,7 +355,7 @@ Token Parser::eatTriviaButNotToplevelNewlines_stringifyFile(Token T, ParserConte
         
         nextToken(T);
         
-        T = currentToken_stringifyFile();
+        T = currentToken_stringifyAsFile();
     }
     
     return T;

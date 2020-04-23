@@ -99,8 +99,8 @@ public:
     
     void nextToken(Token Tok);
     
-    void nextToken_stringifySymbol();
-    void nextToken_stringifyFile();
+    void nextToken_stringifyAsSymbolSegment();
+    void nextToken_stringifyAsFile();
     
     Token nextToken0(ParserContext Ctxt);
     Token nextToken0(ParserContext Ctxt, NextPolicy policy);
@@ -108,8 +108,8 @@ public:
     Token currentToken(ParserContext Ctxt) const;
     Token currentToken(ParserContext Ctxt, NextPolicy policy) const;
     
-    Token currentToken_stringifySymbol() const;
-    Token currentToken_stringifyFile() const;
+    Token currentToken_stringifyAsSymbolSegment() const;
+    Token currentToken_stringifyAsFile() const;
     
     void prepend(Token );
     
@@ -127,9 +127,9 @@ public:
     ~Parser();
 
     Token eatTrivia(Token firstTok, ParserContext Ctxt, LeafSeq&);
-    Token eatTrivia_stringifyFile(Token firstTok, ParserContext Ctxt, LeafSeq&);
+    Token eatTrivia_stringifyAsFile(Token firstTok, ParserContext Ctxt, LeafSeq&);
     Token eatTriviaButNotToplevelNewlines(Token firstTok, ParserContext Ctxt, LeafSeq&);
-    Token eatTriviaButNotToplevelNewlines_stringifyFile(Token firstTok, ParserContext Ctxt, LeafSeq&);
+    Token eatTriviaButNotToplevelNewlines_stringifyAsFile(Token firstTok, ParserContext Ctxt, LeafSeq&);
     
     Token eatLineContinuations(Token firstTok, ParserContext Ctxt, LeafSeq&);
 };

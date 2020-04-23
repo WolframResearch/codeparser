@@ -203,12 +203,12 @@ Token Tokenizer::nextToken0(NextPolicy policy) {
 }
 
 
-Token Tokenizer::nextToken0_stringifySymbol() {
+Token Tokenizer::nextToken0_stringifyAsSymbolSegment() {
     
     auto tokenStartBuf = TheByteBuffer->buffer;
     auto tokenStartLoc = TheByteDecoder->SrcLoc;
     
-    auto policy = INSIDE_STRINGIFY_SYMBOL;
+    auto policy = INSIDE_STRINGIFY_AS_SYMBOLSEGMENT;
     
     auto c = TheCharacterDecoder->nextWLCharacter0(policy);
     
@@ -237,18 +237,18 @@ Token Tokenizer::nextToken0_stringifySymbol() {
         return Token(TOKEN_ERROR_EMPTYSTRING, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
     }
     
-    return handleString_stringifySymbol(tokenStartBuf, tokenStartLoc, c, policy);
+    return handleString_stringifyAsSymbolSegment(tokenStartBuf, tokenStartLoc, c, policy);
 }
 
 //
 // Use SourceCharacters here, not WLCharacters
 //
-Token Tokenizer::nextToken0_stringifyFile() {
+Token Tokenizer::nextToken0_stringifyAsFile() {
     
     auto tokenStartBuf = TheByteBuffer->buffer;
     auto tokenStartLoc = TheByteDecoder->SrcLoc;
     
-    auto policy = INSIDE_STRINGIFY_FILE;
+    auto policy = INSIDE_STRINGIFY_AS_FILE;
     
     auto c = TheByteDecoder->nextSourceCharacter0(policy);
     
@@ -306,7 +306,7 @@ Token Tokenizer::nextToken0_stringifyFile() {
         return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
     }
     
-    return handleString_stringifyFile(tokenStartBuf, tokenStartLoc, c, policy);
+    return handleString_stringifyAsFile(tokenStartBuf, tokenStartLoc, c, policy);
 }
 
 
@@ -321,16 +321,16 @@ void Tokenizer::nextToken(Token Tok) {
 }
 
 
-void Tokenizer::nextToken_stringifySymbol() {
+void Tokenizer::nextToken_stringifyAsSymbolSegment() {
     
-    nextToken0_stringifySymbol();
+    nextToken0_stringifyAsSymbolSegment();
     
     TheByteDecoder->clearStatus();
 }
 
-void Tokenizer::nextToken_stringifyFile() {
+void Tokenizer::nextToken_stringifyAsFile() {
     
-    nextToken0_stringifyFile();
+    nextToken0_stringifyAsFile();
     
     TheByteDecoder->clearStatus();
 }
@@ -354,13 +354,13 @@ Token Tokenizer::currentToken(NextPolicy policy) {
 }
 
 
-Token Tokenizer::currentToken_stringifySymbol() {
+Token Tokenizer::currentToken_stringifyAsSymbolSegment() {
     
     auto resetBuf = TheByteBuffer->buffer;
     auto resetEOF = TheByteBuffer->wasEOF;
     auto resetLoc = TheByteDecoder->SrcLoc;
     
-    auto Tok = nextToken0_stringifySymbol();
+    auto Tok = nextToken0_stringifyAsSymbolSegment();
     
     TheByteBuffer->buffer = resetBuf;
     TheByteBuffer->wasEOF = resetEOF;
@@ -371,13 +371,13 @@ Token Tokenizer::currentToken_stringifySymbol() {
     return Tok;
 }
 
-Token Tokenizer::currentToken_stringifyFile() {
+Token Tokenizer::currentToken_stringifyAsFile() {
     
     auto resetBuf = TheByteBuffer->buffer;
     auto resetEOF = TheByteBuffer->wasEOF;
     auto resetLoc = TheByteDecoder->SrcLoc;
     
-    auto Tok = nextToken0_stringifyFile();
+    auto Tok = nextToken0_stringifyAsFile();
     
     TheByteBuffer->buffer = resetBuf;
     TheByteBuffer->wasEOF = resetEOF;
@@ -702,7 +702,7 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
 }
 
 
-inline Token Tokenizer::handleString_stringifySymbol(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
+inline Token Tokenizer::handleString_stringifyAsSymbolSegment(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
     
     //
     // Nothing to assert
@@ -737,7 +737,7 @@ inline Token Tokenizer::handleString_stringifySymbol(Buffer tokenStartBuf, Sourc
 //
 // Use SourceCharacters here, not WLCharacters
 //
-inline Token Tokenizer::handleString_stringifyFile(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter c, NextPolicy policy) {
+inline Token Tokenizer::handleString_stringifyAsFile(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter c, NextPolicy policy) {
     
     //
     // Nothing to assert
