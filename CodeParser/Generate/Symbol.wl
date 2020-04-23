@@ -182,7 +182,7 @@ public:
 
 #if USE_MATHLINK
   void put(MLINK mlp) const;
-#endif
+#endif // USE_MATHLINK
 };
 
 using SymbolPtr = std::unique_ptr<Symbol>;
@@ -246,7 +246,7 @@ void Symbol::put(MLINK mlp) const {
         assert(false);
     }
 }
-#endif
+#endif // USE_MATHLINK
 "} ~Join~
 
 (If[# === String && $WorkaroundBug321344,

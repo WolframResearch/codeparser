@@ -128,7 +128,7 @@ struct WLCharacter {
 //
 #ifdef __clang__
 static_assert(sizeof(WLCharacter) == 4, "Check your assumptions");
-#endif
+#endif // __clang__
 
 std::ostream& operator<<(std::ostream& stream, WLCharacter);
     

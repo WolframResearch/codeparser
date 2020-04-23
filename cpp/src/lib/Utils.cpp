@@ -276,7 +276,7 @@ bool Utils::isMBStrange(codepoint point) {
 
     return false;
 }
-#endif // NISSUES
+#endif // !NISSUES
 
 //
 // https://en.wikipedia.org/wiki/Universal_Character_Set_characters#Non-characters

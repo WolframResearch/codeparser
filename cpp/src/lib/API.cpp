@@ -15,7 +15,7 @@
 #ifdef WINDOWS_MATHLINK
 #else
 #include <signal.h> // for SIGINT
-#endif
+#endif // WINDOWS_MATHLINK
 #include <vector>
 
 bool validatePath(WolframLibraryData libData, const unsigned char *inStr, size_t len);
@@ -24,7 +24,7 @@ bool validatePath(WolframLibraryData libData, const unsigned char *inStr, size_t
 ParserSession::ParserSession() : bufAndLen(),
 #if !NABORT
 currentAbortQ(),
-#endif // NABORT
+#endif // !NABORT
 policy() {
     
     TheByteBuffer = ByteBufferPtr(new ByteBuffer());
@@ -69,12 +69,12 @@ void ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libData
             bool res = libData->AbortQ();
             return res;
         };
-#endif // NABORT
+#endif // !NABORT
     
     } else {
 #if !NABORT
         currentAbortQ = nullptr;
-#endif // NABORT
+#endif // !NABORT
     }
 }
 
@@ -795,13 +795,12 @@ ScopedMLLoopbackLink::ScopedMLLoopbackLink() : mlp(NULL), ep(NULL) {
     int err;
     
 #ifdef WINDOWS_MATHLINK
-    
 #else
     //
     // Needed because MathLink intercepts all signals
     //
     MLDoNotHandleSignalParameter(p.get(), SIGINT);
-#endif
+#endif // WINDOWS_MATHLINK
     
     ep = MLInitialize(p.get());
     if (ep == (MLENV)0) {

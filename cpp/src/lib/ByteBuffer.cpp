@@ -31,7 +31,7 @@ unsigned char ByteBuffer::nextByte0() {
         oldProgress = (100 * (buffer - origBufAndLen.buffer) / origBufAndLen.length());
     }
 #endif // NDEBUG
-#endif
+#endif // #if 0
     
     if (buffer == end) {
         
@@ -81,7 +81,7 @@ unsigned char ByteBuffer::nextByte0() {
         }
     }
 #endif // NDEBUG
-#endif
+#endif // #if 0
     
     //
     // if eof, then force 0xff to be returned
@@ -104,7 +104,7 @@ void ByteBuffer::nextByte() {
         oldProgress = (100 * (buffer - origBufAndLen.buffer) / origBufAndLen.length());
     }
 #endif // NDEBUG
-#endif
+#endif // #if 0
     
     if (buffer == end) {
         
@@ -151,7 +151,7 @@ void ByteBuffer::nextByte() {
         }
     }
 #endif // NDEBUG
-#endif
+#endif // #if 0
 }
 
 unsigned char ByteBuffer::currentByte() {

@@ -132,7 +132,7 @@ Node::Node(NodeSeq ChildrenIn) : Children(std::move(ChildrenIn)) {
     assert(!F->isTrivia());
     assert(!L->isTrivia());
 #endif // #if 0
-#endif
+#endif // NDEBUG
 }
 
 bool Node::isTrivia() const {

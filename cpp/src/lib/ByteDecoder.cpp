@@ -60,7 +60,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
 
 #if !NISSUES
     auto currentSourceCharacterStartLoc = SrcLoc;
-#endif // NISSUES
+#endif // !NISSUES
     
     auto firstByte = TheByteBuffer->nextByte0();
     
@@ -92,7 +92,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 
                 addIssue(std::move(I));
             }
-#endif // NISSUES
+#endif // !NISSUES
             
             return SourceCharacter('\r');
         }

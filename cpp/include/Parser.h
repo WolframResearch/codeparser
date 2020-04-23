@@ -78,7 +78,7 @@ struct ParserContext {
 //
 #ifdef __clang__
 static_assert(sizeof(ParserContext) == 2, "Check your assumptions");
-#endif
+#endif // __clang__
 
 //
 //
