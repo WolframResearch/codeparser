@@ -1030,7 +1030,7 @@ WLCharacter CharacterDecoder::handleLineContinuation(Buffer currentWLCharacterSt
             std::vector<CodeActionPtr> Actions;
             Actions.push_back(CodeActionPtr(new DeleteTextCodeAction("Delete \\", Source(currentWLCharacterStartLoc, escapedLoc))));
 
-            auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_UNEXPECTEDLINECONTINUATION, std::string("Unexpected line continuation."), FORMATISSUESEVERITY_FORMATTING, Source(currentWLCharacterStartLoc, escapedLoc), 0.0, std::move(Actions)));
+            auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_UNEXPECTEDLINECONTINUATION, std::string("Unexpected line continuation."), FORMATISSUESEVERITY_FORMATTING, Source(currentWLCharacterStartLoc, escapedLoc), std::move(Actions)));
 
             Issues.push_back(std::move(I));
         }

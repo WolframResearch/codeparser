@@ -99,6 +99,7 @@ BufferAndLength BufferAndLength::createNiceBufferAndLength(std::string *str) con
             //
             
             newStrStream << WLCharacter(c.to_point());
+            
         } else {
             newStrStream << c;
         }
@@ -254,9 +255,6 @@ void FormatIssue::print(std::ostream& s) const {
     
     s << ", ";
     
-    s << Val;
-    s << ", ";
-    
     for (auto& A : Actions) {
         A->print(s);
         s << ", ";
@@ -277,9 +275,6 @@ void EncodingIssue::print(std::ostream& s) const {
     
     getSource().print(s);
     
-    s << ", ";
-    
-    s << Val;
     s << ", ";
     
     for (auto& A : Actions) {
@@ -833,7 +828,7 @@ void DeleteTriviaCodeAction::put(MLINK mlp) const {
 
 void FormatIssue::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEFORMATISSUE->name(), static_cast<int>(3 + 4 + 1 + Actions.size()))) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEFORMATISSUE->name(), static_cast<int>(3 + 4 + Actions.size()))) {
         assert(false);
     }
     
@@ -851,10 +846,6 @@ void FormatIssue::put(MLINK mlp) const {
     
     Src.put(mlp);
     
-    if (!MLPutReal(mlp, Val)) {
-        assert(false);
-    }
-    
     for (auto& A : Actions) {
         A->put(mlp);
     }
@@ -862,7 +853,7 @@ void FormatIssue::put(MLINK mlp) const {
 
 void EncodingIssue::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEENCODINGISSUE->name(), static_cast<int>(3 + 4))) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEENCODINGISSUE->name(), static_cast<int>(3 + 4 + 0))) {
         assert(false);
     }
     

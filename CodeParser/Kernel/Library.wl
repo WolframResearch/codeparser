@@ -413,8 +413,11 @@ MakeAbstractSyntaxErrorNode[tag_, payload_, srcArgs___] :=
 MakeSyntaxIssue[tag_String, msg_String, severity_String, srcArgs___Integer, confidence_Real] :=
 	SyntaxIssue[tag, msg, severity, <| Source -> $StructureSrcArgs[srcArgs], ConfidenceLevel -> confidence |>]
 
-MakeFormatIssue[tag_String, msg_String, severity_String, srcArgs___Integer, airyness_Real] :=
-	FormatIssue[tag, msg, severity, <| Source -> $StructureSrcArgs[srcArgs], CodeFormatter`AirynessLevel -> airyness |>]
+MakeFormatIssue[tag_String, msg_String, severity_String, srcArgs___Integer] :=
+	FormatIssue[tag, msg, severity, <| Source -> $StructureSrcArgs[srcArgs] |>]
+
+MakeEncodingIssue[tag_String, msg_String, severity_String, srcArgs___Integer] :=
+	EncodingIssue[tag, msg, severity, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 (*
 Only add CodeActions if there is at least 1
@@ -422,11 +425,8 @@ Only add CodeActions if there is at least 1
 MakeSyntaxIssue[tag_String, msg_String, severity_String, srcArgs___Integer, confidence_Real, actions:CodeAction[_, _, _]..] :=
 	SyntaxIssue[tag, msg, severity, <| Source -> $StructureSrcArgs[srcArgs], ConfidenceLevel -> confidence, CodeActions -> {actions} |>]
 
-MakeFormatIssue[tag_String, msg_String, severity_String, srcArgs___Integer, airyness_Real, actions:CodeAction[_, _, _]..] :=
-	FormatIssue[tag, msg, severity, <| Source -> $StructureSrcArgs[srcArgs], CodeFormatter`AirynessLevel -> airyness, CodeActions -> {actions} |>]
-
-MakeEncodingIssue[tag_String, msg_String, severity_String, srcArgs___Integer] :=
-	EncodingIssue[tag, msg, severity, <| Source -> $StructureSrcArgs[srcArgs], CodeFormatter`AirynessLevel -> 0.0 |>]
+MakeFormatIssue[tag_String, msg_String, severity_String, srcArgs___Integer, actions:CodeAction[_, _, _]..] :=
+	FormatIssue[tag, msg, severity, <| Source -> $StructureSrcArgs[srcArgs], CodeActions -> {actions} |>]
 
 
 MakeReplaceTextCodeAction[label_String, srcArgs___Integer, replacementText_String] :=

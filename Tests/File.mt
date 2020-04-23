@@ -260,7 +260,6 @@ TestMatch[
 			LeafNode[Token`CloseCurly, "}", <|Source -> {{3, 1}, {3, 2}}|>]}, <|Source -> {{1, 1}, {3, 2}}|>]},
 		<|	SyntaxIssues -> {FormatIssue["UnexpectedLineContinuation", "Unexpected line continuation.", "Formatting",
 								<|	Source -> {{2, 3}, {2, 4}},
-									CodeFormatter`AirynessLevel -> 0.,
 									CodeActions -> {CodeAction["Delete \\", DeleteText, <|Source -> {{2, 3}, {2, 4}}|>]}|>]},
 			Source -> {{1, 1}, {3, 2}}|>]
 	,

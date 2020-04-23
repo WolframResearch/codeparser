@@ -1070,7 +1070,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 std::vector<CodeActionPtr> Actions;
                 Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(dotLoc), " ")));
                 
-                auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, getTokenSource(dotLoc), 0.25, std::move(Actions)));
+                auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, getTokenSource(dotLoc), std::move(Actions)));
                 
                 Issues.push_back(std::move(I));
             }
@@ -1782,7 +1782,7 @@ inline WLCharacter Tokenizer::handlePossibleFractionalPartPastDot(Buffer dotBuf,
         std::vector<CodeActionPtr> Actions;
         Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(dotLoc), " ")));
         
-        auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, getTokenSource(dotLoc), 0.25, std::move(Actions)));
+        auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, getTokenSource(dotLoc), std::move(Actions)));
         
         Issues.push_back(std::move(I));
 #endif // !NISSUES
@@ -1843,7 +1843,7 @@ void Tokenizer::backup(Buffer resetBuf, SourceLocation resetLoc, bool warn) {
         std::vector<CodeActionPtr> Actions;
         Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(resetLoc), " ")));
         
-        auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, Source(resetLoc), 0.25, std::move(Actions)));
+        auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, Source(resetLoc), std::move(Actions)));
         
         Issues.push_back(std::move(I));
     }
@@ -2340,7 +2340,7 @@ inline Token Tokenizer::handleMinus(Buffer tokenStartBuf, SourceLocation tokenSt
                 std::vector<CodeActionPtr> Actions;
                 Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(greaterLoc), " ")));
                 
-                auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``-`` and ``>`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(greaterLoc), 0.25, std::move(Actions)));
+                auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``-`` and ``>`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(greaterLoc), std::move(Actions)));
                 
                 Issues.push_back(std::move(I));
                 
@@ -2355,7 +2355,7 @@ inline Token Tokenizer::handleMinus(Buffer tokenStartBuf, SourceLocation tokenSt
                 std::vector<CodeActionPtr> Actions;
                 Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(equalLoc), " ")));
                 
-                auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``-`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(equalLoc), 0.25, std::move(Actions)));
+                auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``-`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(equalLoc), std::move(Actions)));
                 
                 Issues.push_back(std::move(I));
             }
@@ -2409,7 +2409,7 @@ inline Token Tokenizer::handleBar(Buffer tokenStartBuf, SourceLocation tokenStar
                 std::vector<CodeActionPtr> Actions;
                 Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(equalLoc), " ")));
                 
-                auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``>`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(equalLoc), 0.25, std::move(Actions)));
+                auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``>`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(equalLoc), std::move(Actions)));
                 
                 Issues.push_back(std::move(I));
             }
@@ -2747,7 +2747,7 @@ inline Token Tokenizer::handlePlus(Buffer tokenStartBuf, SourceLocation tokenSta
                 std::vector<CodeActionPtr> Actions;
                 Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(loc), " ")));
                 
-                auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``+`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(loc), 0.25, std::move(Actions)));
+                auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``+`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(loc), std::move(Actions)));
                 
                 Issues.push_back(std::move(I));
             }

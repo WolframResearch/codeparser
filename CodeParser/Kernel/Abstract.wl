@@ -1852,8 +1852,7 @@ Module[{head, data, part, innerData, outerData, issues, partData, src},
 			AppendTo[issues, FormatIssue["NotContiguous", "``Part`` brackets ``[[`` are not contiguous.", "Formatting",
 										<|	Source->src,
 											CodeActions->{CodeAction["DeleteTrivia", DeleteTrivia,
-																<|Source->src|>]},
-											CodeFormatter`AirynessLevel -> 0.0|>]];
+																<|Source->src|>]}|>]];
 		];
 
 		If[innerData[[ Key[Source], 2, 2]]+1 != outerData[[ Key[Source], 2, 2]],
@@ -1861,8 +1860,7 @@ Module[{head, data, part, innerData, outerData, issues, partData, src},
 			AppendTo[issues, FormatIssue["NotContiguous", "``Part`` brackets ``]]`` are not contiguous.", "Formatting",
 										<|	Source->src,
 											CodeActions->{CodeAction["DeleteTrivia", DeleteTrivia, 
-																<|Source->src|>]},
-											CodeFormatter`AirynessLevel -> 0.0|>]];
+																<|Source->src|>]}|>]];
 		];
 	];
 

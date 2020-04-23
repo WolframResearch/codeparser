@@ -589,7 +589,7 @@ public:
 //
 class FormatIssue : public Issue {
 public:
-    FormatIssue(FormatIssueTag Tag, std::string Msg, FormatIssueSeverity Sev, Source Src, double Air, std::vector<CodeActionPtr> Actions) : Issue(Tag, Msg, Sev, Src, Air, std::move(Actions)) {}
+    FormatIssue(FormatIssueTag Tag, std::string Msg, FormatIssueSeverity Sev, Source Src, std::vector<CodeActionPtr> Actions) : Issue(Tag, Msg, Sev, Src, 0.0, std::move(Actions)) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
