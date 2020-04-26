@@ -135,14 +135,6 @@ Node::Node(NodeSeq ChildrenIn) : Children(std::move(ChildrenIn)) {
 #endif // NDEBUG
 }
 
-bool Node::isTrivia() const {
-    return false;
-}
-
-bool Node::isEmpty() const {
-    return false;
-}
-
 Source Node::getSource() const {
     
     assert(!Children.empty());
@@ -268,13 +260,6 @@ void LeafNode::print(std::ostream& s) const {
     s << "]";
 }
 
-bool LeafNode::isTrivia() const {
-    return Tok.Tok.isTrivia();
-}
-
-bool LeafNode::isEmpty() const {
-    return Tok.Tok.isEmpty();
-}
 
 void ErrorNode::print(std::ostream& s) const {
     
@@ -314,14 +299,6 @@ void ErrorNode::print(std::ostream& s) const {
     }
     
     s << "]";
-}
-
-bool ErrorNode::isTrivia() const {
-    return Tok.Tok.isTrivia();
-}
-
-bool ErrorNode::isEmpty() const {
-    return Tok.Tok.isEmpty();
 }
 
 

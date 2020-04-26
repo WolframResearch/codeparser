@@ -105,10 +105,6 @@ public:
 
     virtual Source getSource() const;
     
-    virtual bool isTrivia() const;
-    
-    virtual bool isEmpty() const;
-    
     virtual size_t size() const;
     
     virtual const Node* first() const;
@@ -206,10 +202,6 @@ public:
     
     void print(std::ostream&) const override;
     
-    bool isTrivia() const override;
-    
-    bool isEmpty() const override;
-    
     Source getSource() const override {
         return Tok.Src;
     }
@@ -239,10 +231,6 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
-    
-    bool isTrivia() const override;
-    
-    bool isEmpty() const override;
     
     Source getSource() const override {
         return Tok.Src;
