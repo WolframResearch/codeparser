@@ -15,12 +15,6 @@ NodePtr LeafParselet::parse(Token TokIn, ParserContext Ctxt) const {
 }
 
 
-NodePtr PrefixAssertFalseParselet::parse(Token TokIn, ParserContext Ctxt) const {
-    assert(false);
-    return nullptr;
-}
-
-
 NodePtr PrefixErrorParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     assert(TokIn.Tok.isError());
@@ -295,18 +289,6 @@ Token InfixImplicitTimesParselet::procesImplicitTimes(Token TokIn) const {
     auto token = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
     
     return token;
-}
-
-
-NodePtr InfixAssertFalseParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
-    assert(false);
-    return nullptr;
-}
-
-
-Precedence InfixAssertFalseParselet::getPrecedence(ParserContext Ctxt) const {
-    assert(false);
-    return PRECEDENCE_ASSERTFALSE;
 }
 
 

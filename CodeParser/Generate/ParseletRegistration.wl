@@ -819,7 +819,7 @@ tokensSansCount = DeleteCases[tokens, Token`Count]
 
 
 
-formatPrefix[PrefixAssertFalseParselet[]] := "&prefixAssertFalseParselet"
+formatPrefix[PrefixAssertFalseParselet[]] := "nullptr"
 
 formatPrefix[PrefixEndOfFileParselet[]] := "&prefixEndOfFileParselet"
 
@@ -864,7 +864,7 @@ formatPrefix[PrefixOperatorParselet[tok_, precedence_, op_]] := "new PrefixOpera
 formatPrefix[GroupParselet[tok_, op_]] := "new GroupParselet(" <> toGlobal[tok] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
 
 
-formatInfix[InfixAssertFalseParselet[]] := "&infixAssertFalseParselet"
+formatInfix[InfixAssertFalseParselet[]] := "nullptr"
 
 formatInfix[InfixEndOfFileParselet[]] := "&infixEndOfFileParselet"
 
@@ -944,11 +944,7 @@ auto prefixUnsupportedTokenParselet = PrefixUnsupportedTokenParselet();
 
 auto prefixUnhandledParselet = PrefixUnhandledParselet();
 
-auto prefixAssertFalseParselet = PrefixAssertFalseParselet();
-
 auto infixImplicitTimesParselet = InfixImplicitTimesParselet();
-
-auto infixAssertFalseParselet = InfixAssertFalseParselet();
 
 auto infixEndOfFileParselet = InfixEndOfFileParselet();
 

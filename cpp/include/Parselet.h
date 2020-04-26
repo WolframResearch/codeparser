@@ -116,15 +116,6 @@ public:
 //
 //
 //
-class PrefixAssertFalseParselet : public PrefixParselet {
-public:
-    
-    NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
-};
-
-//
-//
-//
 class PrefixEndOfFileParselet : public PrefixParselet {
 public:
     
@@ -194,17 +185,6 @@ public:
     Precedence getPrecedence(ParserContext Ctxt) const override;
     
     Token procesImplicitTimes(Token TokIn) const override;
-};
-
-//
-//
-//
-class InfixAssertFalseParselet : public InfixParselet {
-public:
-
-    NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
-
-    Precedence getPrecedence(ParserContext Ctxt) const override;
 };
 
 //
