@@ -31,7 +31,7 @@ TEST_F(NodeTest, Bug1) {
     auto T2 = Token(TOKEN_UNDERDOT, BufferAndLength(Buffer(input.c_str() + 1), 2), Source(SourceLocation(1, 2), SourceLocation(1, 4)));
     Args.append(std::unique_ptr<Node>(new LeafNode(T2)));
 
-    auto N = std::unique_ptr<Node>(new PatternOptionalDefaultNode(std::move(Args)));
+    auto N = std::unique_ptr<Node>(new CompoundNode(SYMBOL_CODEPARSER_PATTERNOPTIONALDEFAULT, std::move(Args)));
 
     auto NSource = N->getSource();
 
