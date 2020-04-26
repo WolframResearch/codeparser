@@ -304,13 +304,21 @@ toFullFormString[LeafNode[_, str_, _]] :=
 	str
 
 
+(*
+used to be:
+Failure["ErrorNode", <|"Tag"->tag, "String"->str, "Data"->data|>]
 
-toFullFormString[ErrorNode[tag_, str_, data_]] :=
-	Failure["ErrorNode", <|"Tag"->tag, "String"->str, "Data"->data|>]
+but Failure object usurps the Tag key, so use Token instead
+*)
+toFullFormString[ErrorNode[tok_, str_, data_]] :=
+	Failure["ErrorNode", <|"Token"->tok, "String"->str, "Data"->data|>]
 
 
 (*
 The interesting case of  a // -1  not being the same as  -1[a]
+
+No need for Rational here, because FullForm of Rational is... Rational[]
+
 Related bug reports: 391443
 *)
 toFullFormString[CallNode[head:LeafNode[Integer | Real, str_ /; StringStartsQ[str, "-"], _], nodes_, _]] :=
