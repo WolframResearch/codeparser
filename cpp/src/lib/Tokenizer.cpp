@@ -1207,6 +1207,10 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                     break;
                 case '.': {
                     
+                    //
+                    // Something like  2^^.0
+                    //
+                    
                     leadingDigitsEndBuf = TheByteBuffer->buffer;
                     leadingDigitsEndLoc = TheByteDecoder->SrcLoc;
                     
@@ -1335,9 +1339,19 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 
                 switch (c.to_point()) {
                     case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+                        
+                        //
+                        // Something like  1.2`-3
+                        //
+                        
                         sign = true;
                         break;
                     case '.':
+                        
+                        //
+                        // Something like  1.2`-.3
+                        //
+                        
                         sawDot = true;
                         sign = true;
                         break;
@@ -2894,6 +2908,8 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLoc
     
     //
     // Unhandled \
+    //
+    // Something like  \A  or  \{  or  \<EOF>
     //
     // If the bad character looks like a special input, then try to reconstruct the character up to the bad SourceCharacter
     // This duplicates some logic in CharacterDecoder
