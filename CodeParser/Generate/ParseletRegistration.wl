@@ -861,6 +861,10 @@ formatPrefix[IntegralParselet[]] := "new IntegralParselet()"
 
 formatPrefix[PrefixOperatorParselet[tok_, precedence_, op_]] := "new PrefixOperatorParselet(" <> toGlobal[tok] <> ", " <> toGlobal[precedence] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
 
+formatPrefix[GroupParselet[Token`OpenSquare, CodeParser`GroupSquare]] := "&squareGroupParselet"
+
+formatPrefix[GroupParselet[Token`LongName`LeftDoubleBracket, CodeParser`GroupDoubleBracket]] := "&doubleBracketGroupParselet"
+
 formatPrefix[GroupParselet[tok_, op_]] := "new GroupParselet(" <> toGlobal[tok] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
 
 
@@ -967,6 +971,10 @@ auto under2Parselet = UnderParselet(SYMBOL_BLANKSEQUENCE, SYMBOL_CODEPARSER_PATT
 auto under3Parselet = UnderParselet(SYMBOL_BLANKNULLSEQUENCE, SYMBOL_CODEPARSER_PATTERNBLANKNULLSEQUENCE);
 
 auto underDotParselet = UnderDotParselet();
+
+auto squareGroupParselet = GroupParselet(TOKEN_OPENSQUARE, SYMBOL_CODEPARSER_GROUPSQUARE);
+
+auto doubleBracketGroupParselet = GroupParselet(TOKEN_LONGNAME_LEFTDOUBLEBRACKET, SYMBOL_CODEPARSER_GROUPDOUBLEBRACKET);
 
 //
 //
