@@ -5,7 +5,7 @@
 ## Terminology
 
 
-trivia: whitespace, newlines, comments, line continuations [1]
+trivia: whitespace, newlines, comments [1]
 
 
 

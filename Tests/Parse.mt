@@ -3128,7 +3128,7 @@ TestMatch[
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Slot", <||>], {
-			LeafNode[Integer, "1", <|Source -> {{2, 1}, {2, 2}}|>]}, <|Source -> {{1, 1}, {2, 2}}|>]}, _]
+			LeafNode[Integer, "\\\n1", <|Source -> {{1, 2}, {2, 2}}|>]}, <|Source -> {{1, 1}, {2, 2}}|>]}, _]
 	,
 	TestID->"Parse-20200415-E1Q6O7"
 ]
@@ -3138,7 +3138,7 @@ TestMatch[
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Slot", <||>], {
-			LeafNode[String, "\"abc\"", <|Source -> {{2, 1}, {2, 4}}|>]}, <|Source -> {{1, 1}, {2, 4}}|>]}, _]
+			LeafNode[String, "\"abc\"", <|Source -> {{1, 2}, {2, 4}}|>]}, <|Source -> {{1, 1}, {2, 4}}|>]}, _]
 	,
 	TestID->"Parse-20200415-Q8V1L8"
 ]
@@ -3148,7 +3148,7 @@ TestMatch[
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "SlotSequence", <||>], {
-			LeafNode[Integer, "2", <|Source -> {{2, 1}, {2, 2}}|>]}, <|Source -> {{1, 1}, {2, 2}}|>]}, _]
+			LeafNode[Integer, "\\\n2", <|Source -> {{1, 3}, {2, 2}}|>]}, <|Source -> {{1, 1}, {2, 2}}|>]}, _]
 	,
 	TestID->"Parse-20200415-M9Y6M1"
 ]
@@ -3158,7 +3158,7 @@ TestMatch[
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Out", <||>], {
-			LeafNode[Integer, "45", <|Source -> {{2, 1}, {2, 3}}|>]}, <|Source -> {{1, 1}, {2, 3}}|>]}, _]
+			LeafNode[Integer, "\\\n45", <|Source -> {{1, 2}, {2, 3}}|>]}, <|Source -> {{1, 1}, {2, 3}}|>]}, _]
 	,
 	TestID->"Parse-20200415-K6V1V1"
 ]
@@ -3212,3 +3212,42 @@ Test[
   ,
   TestID->"Parse-20200419-E2I4C6"
 ]
+
+
+
+
+BeginTestSection["LineContinuationsInFiles", False]
+
+Test[
+	"<< a\\\n~"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200425-S9S2S0"
+]
+
+
+Test[
+	" << a\\\n//"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200425-H9P8O1"
+]
+
+Test[
+	" << a\\\n //"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200425-C1U7J3"
+]
+
+EndTestSection[]
+

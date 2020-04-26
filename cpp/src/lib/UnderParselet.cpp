@@ -9,45 +9,39 @@ NodePtr UnderParselet::parse0(Token TokIn, ParserContext Ctxt) const {
     TheParser->nextToken(TokIn);
     
     NodePtr Blank;
-    {
-        LeafSeq Trivia1;
+    
+    auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+    
+    if (Tok.Tok == TOKEN_SYMBOL) {
         
-        auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
-        Tok = TheParser->eatLineContinuations(Tok, Ctxt, TOPLEVEL, Trivia1);
+        auto Sym2 = contextSensitiveSymbolParselet->parseContextSensitive(Tok, Ctxt);
         
-        if (Tok.Tok == TOKEN_SYMBOL) {
-            
-            auto Sym2 = contextSensitiveSymbolParselet->parseContextSensitive(Tok, Ctxt);
-            
-            NodeSeq Args(1 + 1 + 1);
-            Args.append(std::move(Under));
-            Args.appendIfNonEmpty(std::move(Trivia1));
-            Args.append(std::move(Sym2));
-            
-            Blank = NodePtr(new CompoundNode(BOp, std::move(Args)));
-            
-        } else if (Tok.Tok == TOKEN_ERROR_EXPECTEDLETTERLIKE) {
-            
-            //
-            // Something like  _a`
-            //
-            // It's nice to include the error inside of the blank
-            //
-            
-            auto parselet = prefixParselets[Tok.Tok.value()];
-            
-            auto ErrorSym2 = parselet->parse(Tok, Ctxt);
-            
-            NodeSeq Args(1 + 1 + 1);
-            Args.append(std::move(Under));
-            Args.appendIfNonEmpty(std::move(Trivia1));
-            Args.append(std::move(ErrorSym2));
-            
-            Blank = NodePtr(new CompoundNode(BOp, std::move(Args)));
-            
-        } else {
-            Blank = std::move(Under);
-        }
+        NodeSeq Args(1 + 1);
+        Args.append(std::move(Under));
+        Args.append(std::move(Sym2));
+        
+        Blank = NodePtr(new CompoundNode(BOp, std::move(Args)));
+        
+    } else if (Tok.Tok == TOKEN_ERROR_EXPECTEDLETTERLIKE) {
+        
+        //
+        // Something like  _a`
+        //
+        // It's nice to include the error inside of the blank
+        //
+        
+        auto parselet = prefixParselets[Tok.Tok.value()];
+        
+        auto ErrorSym2 = parselet->parse(Tok, Ctxt);
+        
+        NodeSeq Args(1 + 1);
+        Args.append(std::move(Under));
+        Args.append(std::move(ErrorSym2));
+        
+        Blank = NodePtr(new CompoundNode(BOp, std::move(Args)));
+        
+    } else {
+        Blank = std::move(Under);
     }
     
     return Blank;

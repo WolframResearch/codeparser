@@ -128,8 +128,6 @@ public:
     Token eatTrivia_stringifyAsFile(Token firstTok, ParserContext Ctxt, LeafSeq&);
     Token eatTriviaButNotToplevelNewlines(Token firstTok, ParserContext Ctxt, NextPolicy policy, LeafSeq&);
     Token eatTriviaButNotToplevelNewlines_stringifyAsFile(Token firstTok, ParserContext Ctxt, LeafSeq&);
-    
-    Token eatLineContinuations(Token firstTok, ParserContext Ctxt, NextPolicy policy, LeafSeq&);
 };
 
 extern ParserPtr TheParser;

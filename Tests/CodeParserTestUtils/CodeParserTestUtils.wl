@@ -1036,6 +1036,8 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "serviceconnections/USAToday/Kernel/USAToday.m",
         prefix <> "serviceconnections/Yandex/Kernel/Yandex.m",
 
+        prefix <> "FFmpegTools/FFmpegTools/Kernel/FFmpegTools.m",
+
         Nothing
         }, fileIn],
       f = Failure["CannotRegexTooBroken", <|"FileName" -> fileIn|>];

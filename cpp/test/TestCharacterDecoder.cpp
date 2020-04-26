@@ -536,28 +536,32 @@ TEST_F(CharacterDecoderTest, LineContinuation1) {
     
     EXPECT_EQ(c, WLCharacter('a'));
     
-    //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
+    EXPECT_EQ(TheCharacterDecoder->lastBuf, str + 1);
+    
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
     c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
     
     EXPECT_EQ(c, WLCharacter('b'));
     
-    //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
+    EXPECT_EQ(TheCharacterDecoder->lastBuf, str + 2);
+    
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
     c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
     
     EXPECT_EQ(c, WLCharacter('c'));
     
-    //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
+    EXPECT_EQ(TheCharacterDecoder->lastBuf, str + 5);
+    
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
     c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
     
     EXPECT_EQ(c, WLCharacter('d'));
     
-    //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
+    EXPECT_EQ(TheCharacterDecoder->lastBuf, str + 6);
+    
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
     c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
@@ -577,28 +581,24 @@ TEST_F(CharacterDecoderTest, LineContinuation2) {
     
     EXPECT_EQ(c, WLCharacter('a'));
     
-    //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
     c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
     
     EXPECT_EQ(c, WLCharacter('b'));
     
-    //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
     c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
     
     EXPECT_EQ(c, WLCharacter('c'));
     
-    //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
     c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
     
     EXPECT_EQ(c, WLCharacter('d'));
     
-    //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
     c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
@@ -618,28 +618,24 @@ TEST_F(CharacterDecoderTest, LineContinuation3) {
     
     EXPECT_EQ(c, WLCharacter('a'));
     
-    //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
     c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
     
     EXPECT_EQ(c, WLCharacter('b'));
     
-    //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
     c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
     
     EXPECT_EQ(c, WLCharacter('c'));
     
-    //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
     c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
     
     EXPECT_EQ(c, WLCharacter('d'));
     
-    //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
     c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
@@ -664,7 +660,7 @@ TEST_F(CharacterDecoderTest, UnexpectedEscapeSequence) {
     
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL | PRESERVE_WS_AFTER_LC | LC_IS_MEANINGFUL);
+    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter(0x03b1, ESCAPE_LONGNAME));
     

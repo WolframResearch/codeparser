@@ -149,10 +149,6 @@ Token Tokenizer::nextToken0(NextPolicy policy) {
                 
                 return handleMBLinearSyntax(tokenStartBuf, tokenStartLoc, c, policy);
                 
-            } else if (c.isMBLineContinuation()) {
-                
-                return Token(TOKEN_LINECONTINUATION, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
-                
             } else if (c.isMBUninterpretable()) {
                 
                 return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
@@ -499,8 +495,6 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation token
 //
 inline Token Tokenizer::handleSymbol(Buffer symbolStartBuf, SourceLocation symbolStartLoc, WLCharacter c, NextPolicy policy) {
     
-    policy |= LC_IS_MEANINGFUL;
-    
     assert(c.to_point() == '`' || c.isLetterlike() || c.isMBLetterlike());
     
     if (c.isLetterlike() || c.isMBLetterlike()) {
@@ -671,8 +665,6 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation
 inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
         
     assert(c.to_point() == '"');
-    
-    policy |= PRESERVE_WS_AFTER_LC | LC_IS_MEANINGFUL;
     
 #if !NISSUES
     if ((policy & SLOT_BEHAVIOR_FOR_STRINGS) == SLOT_BEHAVIOR_FOR_STRINGS) {
@@ -982,8 +974,6 @@ const int BAILOUT = -2;
 inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
     
     assert(c.isDigit() || c.to_point() == '.');
-    
-    policy |= LC_IS_MEANINGFUL;
     
     int leadingDigitsCount = 0;
     
@@ -1766,10 +1756,6 @@ inline WLCharacter Tokenizer::handlePossibleFractionalPart(Buffer dotBuf, Source
     
     assert(c.to_point() == '.');
     
-    assert(*dotBuf == '.' || *dotBuf == '\\'/* line continuation */);
-    
-    assert(((*dotBuf == '.') && (TheByteBuffer->buffer == dotBuf + 1)) || (*dotBuf == '\\'));
-    
     c = TheCharacterDecoder->currentWLCharacter(policy);
     
     return handlePossibleFractionalPartPastDot(dotBuf, dotLoc, c, base, policy, handled);
@@ -1956,8 +1942,6 @@ inline WLCharacter Tokenizer::handleAlphaOrDigits(WLCharacter c, size_t base, Ne
 
 inline Token Tokenizer::handleColon(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
     
-    policy |= LC_IS_MEANINGFUL;
-    
     assert(c.to_point() == ':');
     
     c = TheCharacterDecoder->currentWLCharacter(policy);
@@ -2026,8 +2010,6 @@ inline Token Tokenizer::handleDot(Buffer tokenStartBuf, SourceLocation tokenStar
     // Could be  .  or  ..  or ...  or  .0
     //
     
-    policy |= LC_IS_MEANINGFUL;
-    
     assert(c.to_point() == '.');
     
     c = TheCharacterDecoder->currentWLCharacter(policy);
@@ -2061,8 +2043,6 @@ inline Token Tokenizer::handleDot(Buffer tokenStartBuf, SourceLocation tokenStar
 }
 
 inline Token Tokenizer::handleEqual(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
-    
-    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '=');
     
@@ -2125,8 +2105,6 @@ inline Token Tokenizer::handleEqual(Buffer tokenStartBuf, SourceLocation tokenSt
 
 inline Token Tokenizer::handleUnder(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
     
-    policy |= LC_IS_MEANINGFUL;
-    
     assert(c.to_point() == '_');
     
     c = TheCharacterDecoder->currentWLCharacter(policy);
@@ -2185,8 +2163,6 @@ inline Token Tokenizer::handleUnder(Buffer tokenStartBuf, SourceLocation tokenSt
 }
 
 inline Token Tokenizer::handleLess(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
-    
-    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '<');
     
@@ -2263,8 +2239,6 @@ inline Token Tokenizer::handleLess(Buffer tokenStartBuf, SourceLocation tokenSta
 
 inline Token Tokenizer::handleGreater(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
     
-    policy |= LC_IS_MEANINGFUL;
-    
     assert(c.to_point() == '>');
     
     c = TheCharacterDecoder->currentWLCharacter(policy);
@@ -2304,8 +2278,6 @@ inline Token Tokenizer::handleGreater(Buffer tokenStartBuf, SourceLocation token
 }
 
 inline Token Tokenizer::handleMinus(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
-    
-    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '-');
     
@@ -2391,8 +2363,6 @@ inline Token Tokenizer::handleMinus(Buffer tokenStartBuf, SourceLocation tokenSt
 
 inline Token Tokenizer::handleBar(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
     
-    policy |= LC_IS_MEANINGFUL;
-    
     assert(c.to_point() == '|');
     
     c = TheCharacterDecoder->currentWLCharacter(policy);
@@ -2446,8 +2416,6 @@ inline Token Tokenizer::handleBar(Buffer tokenStartBuf, SourceLocation tokenStar
 
 inline Token Tokenizer::handleSemi(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
     
-    policy |= LC_IS_MEANINGFUL;
-    
     assert(c.to_point() == ';');
     
     c = TheCharacterDecoder->currentWLCharacter(policy);
@@ -2466,8 +2434,6 @@ inline Token Tokenizer::handleSemi(Buffer tokenStartBuf, SourceLocation tokenSta
 }
 
 inline Token Tokenizer::handleBang(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
-    
-    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '!');
     
@@ -2499,8 +2465,6 @@ inline Token Tokenizer::handleBang(Buffer tokenStartBuf, SourceLocation tokenSta
 
 inline Token Tokenizer::handleHash(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
     
-    policy |= LC_IS_MEANINGFUL;
-    
     assert(c.to_point() == '#');
     
     c = TheCharacterDecoder->currentWLCharacter(policy);
@@ -2519,8 +2483,6 @@ inline Token Tokenizer::handleHash(Buffer tokenStartBuf, SourceLocation tokenSta
 }
 
 inline Token Tokenizer::handlePercent(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
-    
-    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '%');
     
@@ -2558,8 +2520,6 @@ inline Token Tokenizer::handlePercent(Buffer tokenStartBuf, SourceLocation token
 
 inline Token Tokenizer::handleAmp(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
     
-    policy |= LC_IS_MEANINGFUL;
-    
     assert(c.to_point() == '&');
     
     c = TheCharacterDecoder->currentWLCharacter(policy);
@@ -2578,8 +2538,6 @@ inline Token Tokenizer::handleAmp(Buffer tokenStartBuf, SourceLocation tokenStar
 }
 
 inline Token Tokenizer::handleSlash(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
-    
-    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '/');
     
@@ -2690,8 +2648,6 @@ inline Token Tokenizer::handleSlash(Buffer tokenStartBuf, SourceLocation tokenSt
 
 inline Token Tokenizer::handleAt(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
     
-    policy |= LC_IS_MEANINGFUL;
-    
     assert(c.to_point() == '@');
     
     c = TheCharacterDecoder->currentWLCharacter(policy);
@@ -2731,8 +2687,6 @@ inline Token Tokenizer::handleAt(Buffer tokenStartBuf, SourceLocation tokenStart
 }
 
 inline Token Tokenizer::handlePlus(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
-    
-    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '+');
     
@@ -2782,8 +2736,6 @@ inline Token Tokenizer::handlePlus(Buffer tokenStartBuf, SourceLocation tokenSta
 
 inline Token Tokenizer::handleTilde(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
     
-    policy |= LC_IS_MEANINGFUL;
-    
     assert(c.to_point() == '~');
     
     c = TheCharacterDecoder->currentWLCharacter(policy);
@@ -2803,8 +2755,6 @@ inline Token Tokenizer::handleTilde(Buffer tokenStartBuf, SourceLocation tokenSt
 
 inline Token Tokenizer::handleQuestion(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
     
-    policy |= LC_IS_MEANINGFUL;
-    
     assert(c.to_point() == '?');
     
     c = TheCharacterDecoder->currentWLCharacter(policy);
@@ -2823,8 +2773,6 @@ inline Token Tokenizer::handleQuestion(Buffer tokenStartBuf, SourceLocation toke
 }
 
 inline Token Tokenizer::handleStar(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
-    
-    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '*');
     
@@ -2855,8 +2803,6 @@ inline Token Tokenizer::handleStar(Buffer tokenStartBuf, SourceLocation tokenSta
 }
 
 inline Token Tokenizer::handleCaret(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
-    
-    policy |= LC_IS_MEANINGFUL;
     
     assert(c.to_point() == '^');
     

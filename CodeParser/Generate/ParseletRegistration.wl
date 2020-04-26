@@ -65,7 +65,6 @@ PrefixOperatorToParselet[Token`Unknown] = PrefixAssertFalseParselet[]
 PrefixOperatorToParselet[Token`Whitespace] = PrefixAssertFalseParselet[]
 PrefixOperatorToParselet[Token`InternalNewline] = PrefixAssertFalseParselet[]
 PrefixOperatorToParselet[Token`Comment] = PrefixAssertFalseParselet[]
-PrefixOperatorToParselet[Token`LineContinuation] = PrefixAssertFalseParselet[]
 
 PrefixOperatorToParselet[Token`EndOfFile] = PrefixEndOfFileParselet[]
 
@@ -253,7 +252,6 @@ InfixOperatorToParselet[Token`Unknown] = InfixAssertFalseParselet[]
 InfixOperatorToParselet[Token`Whitespace] = InfixAssertFalseParselet[]
 InfixOperatorToParselet[Token`InternalNewline] = InfixAssertFalseParselet[]
 InfixOperatorToParselet[Token`Comment] = InfixAssertFalseParselet[]
-InfixOperatorToParselet[Token`LineContinuation] = InfixAssertFalseParselet[]
 
 InfixOperatorToParselet[Token`EndOfFile] = InfixEndOfFileParselet[]
 

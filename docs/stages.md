@@ -77,8 +77,6 @@ whitespace
 
 newlines
 
-line continuations
-
 trivia is only ever RIFFLED between tokens, never at the beginning or end
 
 

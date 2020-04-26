@@ -30,7 +30,12 @@ Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : BufLen(BufLen)
         default:
             
             if (Tok.isEmpty()) {
-                assert(BufLen.length() == 0);
+                assert((BufLen.length() == 0) ||
+                       //
+                       // There could be a line continuation in front.
+                       // Token is still empty.
+                       //
+                       (BufLen.buffer[0] == '\\' && SourceCharacter(BufLen.buffer[1]).isNewline()));
             } else {
                 assert(BufLen.length() > 0);
                 //

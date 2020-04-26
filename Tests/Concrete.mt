@@ -557,8 +557,7 @@ TestMatch[
 			InfixNode[Comma, {
 				LeafNode[Integer, "12", <|Source -> {{1, 2}, {1, 4}}|>],
 				LeafNode[Token`Comma, ",", <|Source -> {{1, 4}, {1, 5}}|>],
-				LeafNode[Token`LineContinuation, "\\\n", <|Source -> {{1, 5}, {2, 1}}|>],
-				LeafNode[Integer, "3", <|Source -> {{2, 1}, {2, 2}}|>]}, <|Source -> {{1, 2}, {2, 2}}|>],
+				LeafNode[Integer, "\\\n3", <|Source -> {{1, 5}, {2, 2}}|>]}, <|Source -> {{1, 2}, {2, 2}}|>],
 			LeafNode[Token`CloseCurly, "}", <|Source -> {{2, 2}, {2, 3}}|>]}, <|Source -> {{1, 1}, {2, 3}}|>] }, _]
 	,
 	TestID->"Concrete-20190930-B8P9Y9"

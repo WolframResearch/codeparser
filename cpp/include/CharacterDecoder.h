@@ -39,14 +39,7 @@ class CharacterDecoder {
     //
     // Some middle layer that deals with "parts" of a token.
     //
-    // But that layer doesn't exist (yet), so CharacterDecoder must handle line continuations.
-    //
-    // TODO: add this middle layer
-    //
-    // NOTE: this middle layer would need to warn about unneeded line continuations.
-    // e.g., with something like  { 123 \\\n }  then the line continuation is not needed
-    //
-    WLCharacter handleLineContinuation(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer escapedBuf, SourceLocation escapedLoc, SourceCharacter firstChar, NextPolicy policy);
+    SourceCharacter handleLineContinuation(SourceCharacter c, NextPolicy policy);
     
     WLCharacter handleBackSlash(Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy);
     

@@ -37,116 +37,124 @@ WLCharacter CharacterDecoder::nextWLCharacter0(NextPolicy policy) {
     // handle escapes like line continuation and special characters
     //
     
-    if (curSource.to_point() != '\\') {
+    while (true) {
         
-        return WLCharacter(curSource.to_point());
-    }
-    
-    //
-    // There was a \
-    //
-    
-    auto escapedBuf = TheByteBuffer->buffer;
-    auto escapedLoc = TheByteDecoder->SrcLoc;
-    
-    curSource = TheByteDecoder->nextSourceCharacter0(policy);
-    
-    switch (curSource.to_point()) {
-        case '\n':
-        case '\r':
-        case CODEPOINT_CRLF:
-            return handleLineContinuation(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, curSource, policy);
-        case '[':
-            return handleLongName(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
-        case ':':
-            return handle4Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
-        case '.':
-            return handle2Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
-        case '|':
-            return handle6Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
-        case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7':
-            return handleOctal(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
-            //
-            // Simple escaped characters
-            // \b \f \n \r \t
-            //
-        case 'b':
-            return WLCharacter(CODEPOINT_STRINGMETA_BACKSPACE, ESCAPE_SINGLE);
-        case 'f':
-            //
-            // \f is NOT a space character (but inside of strings, it does have special meaning)
-            //
-            return WLCharacter(CODEPOINT_STRINGMETA_FORMFEED, ESCAPE_SINGLE);
-        case 'n':
-            //
-            // \n is NOT a newline character (but inside of strings, it does have special meaning)
-            //
-            return WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
-        case 'r':
-            //
-            // \r is NOT a newline character (but inside of strings, it does have special meaning)
-            //
-            return WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
-        case 't':
-            //
-            // \t is NOT a space character (but inside of strings, it does have special meaning)
-            //
-            return WLCharacter(CODEPOINT_STRINGMETA_TAB, ESCAPE_SINGLE);
-            //
-            // \\ \" \< \>
-            //
-            // String meta characters
-            // What are \< and \> ?
-            // https://mathematica.stackexchange.com/questions/105018/what-are-and-delimiters-in-box-expressions
-            // https://stackoverflow.com/q/6065887
-            //
-        case '"':
-            return WLCharacter(CODEPOINT_STRINGMETA_DOUBLEQUOTE, ESCAPE_SINGLE);
-        case '\\':
-            return handleBackSlash(escapedBuf, escapedLoc, policy);
-        case '<':
-            return WLCharacter(CODEPOINT_STRINGMETA_OPEN, ESCAPE_SINGLE);
-        case '>':
-            return  WLCharacter(CODEPOINT_STRINGMETA_CLOSE, ESCAPE_SINGLE);
-            //
-            // Linear syntax characters
-            // \! \% \& \( \) \* \+ \/ \@ \^ \_ \` \<space>
-            //
-        case '!':
-            return WLCharacter(CODEPOINT_LINEARSYNTAX_BANG, ESCAPE_SINGLE);
-        case '%':
-            return WLCharacter(CODEPOINT_LINEARSYNTAX_PERCENT, ESCAPE_SINGLE);
-        case '&':
-            return WLCharacter(CODEPOINT_LINEARSYNTAX_AMP, ESCAPE_SINGLE);
-        case '(':
-            return WLCharacter(CODEPOINT_LINEARSYNTAX_OPENPAREN, ESCAPE_SINGLE);
-        case ')':
-            return WLCharacter(CODEPOINT_LINEARSYNTAX_CLOSEPAREN, ESCAPE_SINGLE);
-        case '*':
-            return WLCharacter(CODEPOINT_LINEARSYNTAX_STAR, ESCAPE_SINGLE);
-        case '+':
-            return WLCharacter(CODEPOINT_LINEARSYNTAX_PLUS, ESCAPE_SINGLE);
-        case '/':
-            return WLCharacter(CODEPOINT_LINEARSYNTAX_SLASH, ESCAPE_SINGLE);
-        case '@':
-            return WLCharacter(CODEPOINT_LINEARSYNTAX_AT, ESCAPE_SINGLE);
-        case '^':
-            return WLCharacter(CODEPOINT_LINEARSYNTAX_CARET, ESCAPE_SINGLE);
-        case '_':
-            return WLCharacter(CODEPOINT_LINEARSYNTAX_UNDER, ESCAPE_SINGLE);
-        case '`':
-            return WLCharacter(CODEPOINT_LINEARSYNTAX_BACKTICK, ESCAPE_SINGLE);
-        case ' ':
-            return WLCharacter(CODEPOINT_LINEARSYNTAX_SPACE, ESCAPE_SINGLE);
-            //
-            // Anything else
-            //
-            // Something like \A or \{
-            //
-        default: {
-            return handleUnhandledEscape(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, curSource, policy);
+        if (curSource.to_point() != '\\') {
+            
+            return WLCharacter(curSource.to_point());
         }
-    }
+        
+        //
+        // There was a \
+        //
+        
+        auto escapedBuf = TheByteBuffer->buffer;
+        auto escapedLoc = TheByteDecoder->SrcLoc;
+        
+        curSource = TheByteDecoder->nextSourceCharacter0(policy);
+    
+        switch (curSource.to_point()) {
+            case '\n':
+            case '\r':
+            case CODEPOINT_CRLF:
+                curSource = handleLineContinuation(curSource, policy);
+                //
+                // Do not return
+                // loop around again
+                //
+                continue;
+            case '[':
+                return handleLongName(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
+            case ':':
+                return handle4Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
+            case '.':
+                return handle2Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
+            case '|':
+                return handle6Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
+            case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7':
+                return handleOctal(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
+                //
+                // Simple escaped characters
+                // \b \f \n \r \t
+                //
+            case 'b':
+                return WLCharacter(CODEPOINT_STRINGMETA_BACKSPACE, ESCAPE_SINGLE);
+            case 'f':
+                //
+                // \f is NOT a space character (but inside of strings, it does have special meaning)
+                //
+                return WLCharacter(CODEPOINT_STRINGMETA_FORMFEED, ESCAPE_SINGLE);
+            case 'n':
+                //
+                // \n is NOT a newline character (but inside of strings, it does have special meaning)
+                //
+                return WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
+            case 'r':
+                //
+                // \r is NOT a newline character (but inside of strings, it does have special meaning)
+                //
+                return WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
+            case 't':
+                //
+                // \t is NOT a space character (but inside of strings, it does have special meaning)
+                //
+                return WLCharacter(CODEPOINT_STRINGMETA_TAB, ESCAPE_SINGLE);
+                //
+                // \\ \" \< \>
+                //
+                // String meta characters
+                // What are \< and \> ?
+                // https://mathematica.stackexchange.com/questions/105018/what-are-and-delimiters-in-box-expressions
+                // https://stackoverflow.com/q/6065887
+                //
+            case '"':
+                return WLCharacter(CODEPOINT_STRINGMETA_DOUBLEQUOTE, ESCAPE_SINGLE);
+            case '\\':
+                return handleBackSlash(escapedBuf, escapedLoc, policy);
+            case '<':
+                return WLCharacter(CODEPOINT_STRINGMETA_OPEN, ESCAPE_SINGLE);
+            case '>':
+                return  WLCharacter(CODEPOINT_STRINGMETA_CLOSE, ESCAPE_SINGLE);
+                //
+                // Linear syntax characters
+                // \! \% \& \( \) \* \+ \/ \@ \^ \_ \` \<space>
+                //
+            case '!':
+                return WLCharacter(CODEPOINT_LINEARSYNTAX_BANG, ESCAPE_SINGLE);
+            case '%':
+                return WLCharacter(CODEPOINT_LINEARSYNTAX_PERCENT, ESCAPE_SINGLE);
+            case '&':
+                return WLCharacter(CODEPOINT_LINEARSYNTAX_AMP, ESCAPE_SINGLE);
+            case '(':
+                return WLCharacter(CODEPOINT_LINEARSYNTAX_OPENPAREN, ESCAPE_SINGLE);
+            case ')':
+                return WLCharacter(CODEPOINT_LINEARSYNTAX_CLOSEPAREN, ESCAPE_SINGLE);
+            case '*':
+                return WLCharacter(CODEPOINT_LINEARSYNTAX_STAR, ESCAPE_SINGLE);
+            case '+':
+                return WLCharacter(CODEPOINT_LINEARSYNTAX_PLUS, ESCAPE_SINGLE);
+            case '/':
+                return WLCharacter(CODEPOINT_LINEARSYNTAX_SLASH, ESCAPE_SINGLE);
+            case '@':
+                return WLCharacter(CODEPOINT_LINEARSYNTAX_AT, ESCAPE_SINGLE);
+            case '^':
+                return WLCharacter(CODEPOINT_LINEARSYNTAX_CARET, ESCAPE_SINGLE);
+            case '_':
+                return WLCharacter(CODEPOINT_LINEARSYNTAX_UNDER, ESCAPE_SINGLE);
+            case '`':
+                return WLCharacter(CODEPOINT_LINEARSYNTAX_BACKTICK, ESCAPE_SINGLE);
+            case ' ':
+                return WLCharacter(CODEPOINT_LINEARSYNTAX_SPACE, ESCAPE_SINGLE);
+                //
+                // Anything else
+                //
+                // Something like \A or \{
+                //
+            default: {
+                return handleUnhandledEscape(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, curSource, policy);
+            }
+        } // switch
+    } // while (true)
 }
 
 
@@ -168,7 +176,6 @@ WLCharacter CharacterDecoder::currentWLCharacter(NextPolicy policy) {
     
     return c;
 }
-
 
 WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer openSquareBuf, SourceLocation openSquareLoc, NextPolicy policy) {
     
@@ -1001,98 +1008,52 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
 }
 
 
-WLCharacter CharacterDecoder::handleLineContinuation(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer escapedBuf, SourceLocation escapedLoc, SourceCharacter firstChar, NextPolicy policy) {
+SourceCharacter CharacterDecoder::handleLineContinuation(SourceCharacter c, NextPolicy policy) {
     
-    assert(*currentWLCharacterStartBuf == '\\');
-    assert(firstChar.isNewline() || firstChar.to_point() == CODEPOINT_CRLF);
+    assert(c.to_point() == '\n' || c.to_point() == '\r' || c.to_point() == CODEPOINT_CRLF);
     
-    if ((policy & LC_IS_MEANINGFUL) != LC_IS_MEANINGFUL) {
-
-        //
-        // Line continuation is NOT meaningful, so warn and return
-        //
-        // NOT meaningful, so do not worry about PRESERVE_WS_AFTER_LC
-        //
-
-#if !NISSUES
-        //
-        // Use ENABLE_CHARACTER_DECODING_ISSUES here to also talk about line continuations
-        //
-        // This disables unexpected line continuations inside comments
-        // And also disables unexpected line continuations inside  #  and ##  and %
-        //
-        if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
-
-            //
-            // Just remove the \, leave the \n
-            //
-
-            std::vector<CodeActionPtr> Actions;
-            Actions.push_back(CodeActionPtr(new DeleteTextCodeAction("Delete \\", Source(currentWLCharacterStartLoc, escapedLoc))));
-
-            auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_UNEXPECTEDLINECONTINUATION, std::string("Unexpected line continuation."), FORMATISSUESEVERITY_FORMATTING, Source(currentWLCharacterStartLoc, escapedLoc), std::move(Actions)));
-
-            Issues.push_back(std::move(I));
-        }
-#endif // !NISSUES
-        
-        switch (firstChar.to_point()) {
-            case '\n':
-                return WLCharacter(CODEPOINT_LINECONTINUATION_LF, ESCAPE_SINGLE);
-            case '\r':
-                return WLCharacter(CODEPOINT_LINECONTINUATION_CR, ESCAPE_SINGLE);
-            case CODEPOINT_CRLF:
-                return WLCharacter(CODEPOINT_LINECONTINUATION_CRLF, ESCAPE_SINGLE);
-            default:
-                assert(false);
-                return WLCharacter(CODEPOINT_ASSERTFALSE);
-        }
-    }
+    c = TheByteDecoder->currentSourceCharacter(policy);
     
-    auto c = currentWLCharacter(policy);
-    
-    if ((policy & PRESERVE_WS_AFTER_LC) != PRESERVE_WS_AFTER_LC) {
-        
-        while (c.isWhitespace()) {
-            
-            TheByteBuffer->buffer = lastBuf;
-            
-            c = currentWLCharacter(policy);
-        }
-    }
-    
-    //
-    // Eat any more line continuations
-    //
-    // Yes, this is recursive, oh well
-    //
     while (true) {
         
-        if (!c.isMBLineContinuation()) {
-            break;
-        }
-        
-        TheByteBuffer->buffer = lastBuf;
-        TheByteDecoder->SrcLoc = lastLoc;
-        
-        c = currentWLCharacter(policy);
-        
-        if ((policy & PRESERVE_WS_AFTER_LC) != PRESERVE_WS_AFTER_LC) {
+        //
+        // Eat whitespace
+        //
+        while (c.isWhitespace()) {
             
-            while (c.isWhitespace()) {
-                
-                TheByteBuffer->buffer = lastBuf;
-                TheByteDecoder->SrcLoc = lastLoc;
-                
-                c = currentWLCharacter(policy);
-            }
+            TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+            TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+            
+            c = TheByteDecoder->currentSourceCharacter(policy);
         }
+        
+        //
+        // Eat additional line continuations
+        //
+        switch (c.to_point()) {
+            case '\\':
+                
+                switch (c.to_point()) {
+                    case '\n':
+                    case '\r':
+                    case CODEPOINT_CRLF:
+                        
+                        TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+                        TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+                        
+                        c = TheByteDecoder->currentSourceCharacter(policy);
+                        
+                        continue;
+                }
+                
+                break;
+        }
+        
+        TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+        TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+        
+        return c;
     }
-    
-    TheByteBuffer->buffer = lastBuf;
-    TheByteDecoder->SrcLoc = lastLoc;
-    
-    return c;
 }
 
 

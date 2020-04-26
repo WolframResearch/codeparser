@@ -1,6 +1,8 @@
 
 #include "Tokenizer.h"
 #include "CharacterDecoder.h"
+#include "ByteDecoder.h"
+#include "ByteBuffer.h"
 #include "API.h"
 #include "CodePoint.h"
 
@@ -29,6 +31,63 @@ protected:
         
     }
 };
+
+TEST_F(CrashTest, Crash0_characters) {
+    
+    const unsigned char arr[] = {'1', '\\', '\n'};
+    
+    auto bufAndLen = BufferAndLength(arr, 3);
+    
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
+    
+    auto policy = TOPLEVEL;
+    
+    auto c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    EXPECT_EQ(c.to_point(), '1');
+    
+    EXPECT_EQ(TheCharacterDecoder->lastBuf, arr + 1);
+    EXPECT_EQ(TheCharacterDecoder->lastLoc, SourceLocation(1, 2));
+    
+    
+    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+    TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    EXPECT_EQ(c.to_point(), CODEPOINT_ENDOFFILE);
+    
+    TheParserSession->deinit();
+    
+    SUCCEED();
+}
+
+TEST_F(CrashTest, Crash0_tokens) {
+    
+    const unsigned char arr[] = {'1', '\\', '\n'};
+    
+    auto bufAndLen = BufferAndLength(arr, 3);
+    
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
+    
+    auto policy = TOPLEVEL;
+    
+    auto Tok = TheTokenizer->currentToken(policy);
+    
+    EXPECT_EQ(Tok.Tok.value(), TOKEN_INTEGER);
+    EXPECT_EQ(Tok.Src, Source(SourceLocation(1, 1), SourceLocation(1, 2)));
+    
+    TheTokenizer->nextToken(Tok);
+    
+    Tok = TheTokenizer->currentToken(policy);
+    
+    EXPECT_EQ(Tok.Tok.value(), TOKEN_ENDOFFILE);
+    EXPECT_EQ(Tok.Src, Source(SourceLocation(1, 2), SourceLocation(2, 1)));
+    
+    TheParserSession->deinit();
+    
+    SUCCEED();
+}
 
 TEST_F(CrashTest, Crash1) {
     
@@ -67,7 +126,7 @@ TEST_F(CrashTest, StackOverflow1) {
     
     SUCCEED();
 }
-#endif
+#endif // #if 0
 
 TEST_F(CrashTest, Crash2) {
     

@@ -945,6 +945,9 @@ Module[{replaced},
 abstractFileString[str_String] :=
 Module[{replaced},
 
+	(*
+	convert to the language that is understood by quoted strings, to be given to ToExpression
+	*)
 	replaced = StringReplace[str, {
 			(*
 			single character escapes

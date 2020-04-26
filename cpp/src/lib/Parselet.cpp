@@ -154,81 +154,71 @@ NodePtr SymbolParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     TheParser->nextToken(TokIn);
     
-    {
-        LeafSeq Trivia1;
-        
-        auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
-        Tok = TheParser->eatLineContinuations(Tok, Ctxt, TOPLEVEL, Trivia1);
-        
-        //
-        // if we are here, then we know that Sym could bind to _
-        //
-        
-        switch (Tok.Tok.value()) {
-            case TOKEN_UNDER.value(): {
+    auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+    
+    //
+    // if we are here, then we know that Sym could bind to _
+    //
+    
+    switch (Tok.Tok.value()) {
+        case TOKEN_UNDER.value(): {
+            
+            NodeSeq Args(1);
+            Args.append(std::move(Sym));
+            
+            return contextSensitiveUnder1Parselet->parseContextSensitive(std::move(Args), Tok, Ctxt);
+        }
+        case TOKEN_UNDERUNDER.value(): {
+            
+            NodeSeq Args(1);
+            Args.append(std::move(Sym));
+            
+            return contextSensitiveUnder2Parselet->parseContextSensitive(std::move(Args), Tok, Ctxt);
+        }
+        case TOKEN_UNDERUNDERUNDER.value(): {
+            
+            NodeSeq Args(1);
+            Args.append(std::move(Sym));
+            
+            return contextSensitiveUnder3Parselet->parseContextSensitive(std::move(Args), Tok, Ctxt);
+        }
+        case TOKEN_UNDERDOT.value(): {
+            
+            NodeSeq Args(1);
+            Args.append(std::move(Sym));
+            
+            return contextSensitiveUnderDotParselet->parseContextSensitive(std::move(Args), Tok, Ctxt);
+        }
+            break;
+        default: {
+            
+            {
+                LeafSeq Trivia1;
                 
-                NodeSeq Args(1 + 1);
-                Args.append(std::move(Sym));
-                Args.appendIfNonEmpty(std::move(Trivia1));
+                Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, TOPLEVEL, Trivia1);
                 
-                return contextSensitiveUnder1Parselet->parseContextSensitive(std::move(Args), Tok, Ctxt);
-            }
-            case TOKEN_UNDERUNDER.value(): {
-                
-                NodeSeq Args(1 + 1);
-                Args.append(std::move(Sym));
-                Args.appendIfNonEmpty(std::move(Trivia1));
-                
-                return contextSensitiveUnder2Parselet->parseContextSensitive(std::move(Args), Tok, Ctxt);
-            }
-            case TOKEN_UNDERUNDERUNDER.value(): {
-                
-                NodeSeq Args(1 + 1);
-                Args.append(std::move(Sym));
-                Args.appendIfNonEmpty(std::move(Trivia1));
-                
-                return contextSensitiveUnder3Parselet->parseContextSensitive(std::move(Args), Tok, Ctxt);
-            }
-            case TOKEN_UNDERDOT.value(): {
-                
-                NodeSeq Args(1 + 1);
-                Args.append(std::move(Sym));
-                Args.appendIfNonEmpty(std::move(Trivia1));
-                
-                return contextSensitiveUnderDotParselet->parseContextSensitive(std::move(Args), Tok, Ctxt);
-            }
-                break;
-            default: {
-                
-                {
-                    LeafSeq Trivia2;
+                //
+                // when parsing a in a:b  then PARSER_INSIDE_COLON bit is 0
+                // when parsing b in a:b  then PARSER_INSIDE_COLON bit is 1
+                //
+                // It is necessary to go to colonParselet->parse here (even though it seems non-contextSensitive)
+                // because in e.g.,  a_*b:f[]  the b is the last node in the Times expression and needs to bind with  :f[]
+                // Parsing  a_*b  completely, and then parsing  :f[]  would be wrong.
+                //
+                if (Tok.Tok == TOKEN_COLON) {
                     
-                    Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, TOPLEVEL, Trivia2);
-                    
-                    //
-                    // when parsing a in a:b  then PARSER_INSIDE_COLON bit is 0
-                    // when parsing b in a:b  then PARSER_INSIDE_COLON bit is 1
-                    //
-                    // It is necessary to go to colonParselet->parse here (even though it seems non-contextSensitive)
-                    // because in e.g.,  a_*b:f[]  the b is the last node in the Times expression and needs to bind with  :f[]
-                    // Parsing  a_*b  completely, and then parsing  :f[]  would be wrong.
-                    //
-                    if (Tok.Tok == TOKEN_COLON) {
+                    if ((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
                         
-                        if ((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
-                            
-                            NodeSeq Args(1 + 1 + 1);
-                            Args.append(std::move(Sym));
-                            Args.appendIfNonEmpty(std::move(Trivia1));
-                            Args.appendIfNonEmpty(std::move(Trivia2));
-                            
-                            Sym = infixParselets[TOKEN_COLON.value()]->parse(std::move(Args), Tok, Ctxt);
-                        }
+                        NodeSeq Args(1 + 1);
+                        Args.append(std::move(Sym));
+                        Args.appendIfNonEmpty(std::move(Trivia1));
+                        
+                        Sym = infixParselets[TOKEN_COLON.value()]->parse(std::move(Args), Tok, Ctxt);
                     }
                 }
-                
-                return TheParser->infixLoop(std::move(Sym), Ctxt);
             }
+            
+            return TheParser->infixLoop(std::move(Sym), Ctxt);
         }
     }
     
@@ -1378,32 +1368,27 @@ NodePtr HashParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     TheParser->nextToken(TokIn);
     
     NodePtr Slot;
-    {
-        LeafSeq Trivia1;
-        
-        auto Tok = TheParser->currentToken(Ctxt, INSIDE_SLOT);
-        Tok = TheParser->eatLineContinuations(Tok, Ctxt, INSIDE_SLOT, Trivia1);
-        
-        switch (Tok.Tok.value()) {
-            case TOKEN_INTEGER.value():
-            case TOKEN_STRING.value(): {
-                
-                TheParser->nextToken(Tok);
-                
-                NodeSeq Args(1 + 1 + 1);
-                Args.append(NodePtr(new LeafNode(TokIn)));
-                Args.appendIfNonEmpty(std::move(Trivia1));
-                Args.append(NodePtr(new LeafNode(Tok)));
-                
-                Slot = NodePtr(new CompoundNode(SYMBOL_SLOT, std::move(Args)));
-            }
-                break;
-            default: {
-                
-                Slot = NodePtr(new LeafNode(TokIn));
-            }
-                break;
+    
+    auto Tok = TheParser->currentToken(Ctxt, INSIDE_SLOT);
+    
+    switch (Tok.Tok.value()) {
+        case TOKEN_INTEGER.value():
+        case TOKEN_STRING.value(): {
+            
+            TheParser->nextToken(Tok);
+            
+            NodeSeq Args(1 + 1);
+            Args.append(NodePtr(new LeafNode(TokIn)));
+            Args.append(NodePtr(new LeafNode(Tok)));
+            
+            Slot = NodePtr(new CompoundNode(SYMBOL_SLOT, std::move(Args)));
         }
+            break;
+        default: {
+            
+            Slot = NodePtr(new LeafNode(TokIn));
+        }
+            break;
     }
     
     return TheParser->infixLoop(std::move(Slot), CtxtIn);
@@ -1417,31 +1402,26 @@ NodePtr HashHashParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     TheParser->nextToken(TokIn);
     
     NodePtr SlotSequence;
-    {
-        LeafSeq Trivia1;
-        
-        auto Tok = TheParser->currentToken(Ctxt, INSIDE_SLOTSEQUENCE);
-        Tok = TheParser->eatLineContinuations(Tok, Ctxt, INSIDE_SLOTSEQUENCE, Trivia1);
-        
-        switch (Tok.Tok.value()) {
-            case TOKEN_INTEGER.value(): {
-                
-                TheParser->nextToken(Tok);
-                
-                NodeSeq Args(1 + 1 + 1);
-                Args.append(NodePtr(new LeafNode(TokIn)));
-                Args.appendIfNonEmpty(std::move(Trivia1));
-                Args.append(NodePtr(new LeafNode(Tok)));
-                
-                SlotSequence = NodePtr(new CompoundNode(SYMBOL_SLOTSEQUENCE, std::move(Args)));
-            }
-                break;
-            default: {
-                
-                SlotSequence = NodePtr(new LeafNode(TokIn));
-            }
-                break;
+    
+    auto Tok = TheParser->currentToken(Ctxt, INSIDE_SLOTSEQUENCE);
+    
+    switch (Tok.Tok.value()) {
+        case TOKEN_INTEGER.value(): {
+            
+            TheParser->nextToken(Tok);
+            
+            NodeSeq Args(1 + 1);
+            Args.append(NodePtr(new LeafNode(TokIn)));
+            Args.append(NodePtr(new LeafNode(Tok)));
+            
+            SlotSequence = NodePtr(new CompoundNode(SYMBOL_SLOTSEQUENCE, std::move(Args)));
         }
+            break;
+        default: {
+            
+            SlotSequence = NodePtr(new LeafNode(TokIn));
+        }
+            break;
     }
     
     return TheParser->infixLoop(std::move(SlotSequence), CtxtIn);
@@ -1455,31 +1435,26 @@ NodePtr PercentParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     TheParser->nextToken(TokIn);
     
     NodePtr Out;
-    {
-        LeafSeq Trivia1;
-        
-        auto Tok = TheParser->currentToken(Ctxt, INSIDE_OUT);
-        Tok = TheParser->eatLineContinuations(Tok, Ctxt, INSIDE_OUT, Trivia1);
-        
-        switch (Tok.Tok.value()) {
-            case TOKEN_INTEGER.value(): {
-                
-                TheParser->nextToken(Tok);
-                
-                NodeSeq Args(1 + 1 + 1);
-                Args.append(NodePtr(new LeafNode(TokIn)));
-                Args.appendIfNonEmpty(std::move(Trivia1));
-                Args.append(NodePtr(new LeafNode(Tok)));
-                
-                Out = NodePtr(new CompoundNode(SYMBOL_OUT, std::move(Args)));
-            }
-                break;
-            default: {
-                
-                Out = NodePtr(new LeafNode(TokIn));
-            }
-                break;
+    
+    auto Tok = TheParser->currentToken(Ctxt, INSIDE_OUT);
+    
+    switch (Tok.Tok.value()) {
+        case TOKEN_INTEGER.value(): {
+            
+            TheParser->nextToken(Tok);
+            
+            NodeSeq Args(1 + 1);
+            Args.append(NodePtr(new LeafNode(TokIn)));
+            Args.append(NodePtr(new LeafNode(Tok)));
+            
+            Out = NodePtr(new CompoundNode(SYMBOL_OUT, std::move(Args)));
         }
+            break;
+        default: {
+            
+            Out = NodePtr(new LeafNode(TokIn));
+        }
+            break;
     }
     
     return TheParser->infixLoop(std::move(Out), CtxtIn);

@@ -188,6 +188,7 @@ isError[Token`Error`UnrecognizedDigit] = True
 isError[Token`Error`ExpectedDigit] = True
 isError[Token`Error`UnsupportedCharacter] = True
 isError[Token`Error`UnsupportedToken] = True
+isError[Token`Error`UnexpectedLineContinuation] = True
 isError[Token`Error`End] = True
 
 isError[_] = False
@@ -200,7 +201,6 @@ isTrivia[Token`Comment] = True
 isTrivia[Token`ToplevelNewline] = True
 isTrivia[Token`InternalNewline] = True
 isTrivia[Token`Whitespace] = True
-isTrivia[Token`LineContinuation] = True
 
 isTrivia[_] = False
 

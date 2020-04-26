@@ -309,22 +309,4 @@ Token Parser::eatTriviaButNotToplevelNewlines_stringifyAsFile(Token T, ParserCon
     return T;
 }
 
-Token Parser::eatLineContinuations(Token T, ParserContext Ctxt, NextPolicy policy, LeafSeq& Args) {
-    
-    while (T.Tok == TOKEN_LINECONTINUATION) {
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
-        Args.append(LeafNodePtr(new LeafNode(T)));
-        
-        nextToken(T);
-        
-        T = currentToken(Ctxt, policy);
-    }
-    
-    return T;
-}
-
 ParserPtr TheParser = nullptr;

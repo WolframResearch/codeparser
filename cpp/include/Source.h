@@ -81,18 +81,7 @@ bool operator==(BufferAndLength a, BufferAndLength b);
 //
 enum NextPolicyBits : uint8_t {
     
-    //
-    // Preserve whitespace after line continuation
-    //
-    // ToExpression["0.\\\n  6"] evaluates to 0.6 (whitespace is NOT preserved)
-    //
-    // But ToExpression["\"0.\\\n  6\""] evaluates to "0.  6" (whitespace IS preserved)
-    //
-    // Used by CharacterDecoder
-    //
-    // FIXME: this could be handled by line continuation processing
-    //
-    PRESERVE_WS_AFTER_LC = 0x01,
+//     UNUSED = 0x01,
     
     //
     // Enable character decoding issues
@@ -100,8 +89,6 @@ enum NextPolicyBits : uint8_t {
     // "\c" gives a CharacterDecoding error (issues are ENABLED)
     //
     // (*\c*) does NOT give a CharacterDecoding error (issues are DISABLED)
-    //
-    // Also controls reporting of unexpected line continuations.
     //
     // This is also used when peeking: no need to report issues while peeking
     //
@@ -116,22 +103,7 @@ enum NextPolicyBits : uint8_t {
     //
     RETURN_TOPLEVELNEWLINE = 0x04,
     
-    //
-    // This code:
-    // { a, \
-    //   b }
-    //
-    // would give a line continuation warning (line continuation is NOT meaningful)
-    //
-    // This code:
-    // { a, "x\
-    //   y", b }
-    //
-    // would NOT give a warning (line continuation IS meaningful)
-    //
-    // Used by CharacterDecoder
-    //
-    LC_IS_MEANINGFUL = 0x08,
+//    UNUSED = 0x08,
     
     //
     // Check for unlikely escape sequences?
@@ -167,9 +139,9 @@ using NextPolicy = uint8_t;
 
 const NextPolicy TOPLEVEL = ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE;
 
-const NextPolicy INSIDE_SYMBOL = ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE | LC_IS_MEANINGFUL;
+const NextPolicy INSIDE_SYMBOL = ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE;
 
-const NextPolicy INSIDE_STRINGIFY_AS_SYMBOLSEGMENT = PRESERVE_WS_AFTER_LC | ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE;
+const NextPolicy INSIDE_STRINGIFY_AS_SYMBOLSEGMENT = ENABLE_CHARACTER_DECODING_ISSUES | RETURN_TOPLEVELNEWLINE;
 const NextPolicy INSIDE_STRINGIFY_AS_FILE = RETURN_TOPLEVELNEWLINE;
 
 const NextPolicy INSIDE_SLOT = RETURN_TOPLEVELNEWLINE | SLOT_BEHAVIOR_FOR_STRINGS | INTEGER_SHORT_CIRCUIT;
@@ -247,7 +219,6 @@ typedef const std::string FormatIssueTag;
 // xxx
 //
 FormatIssueTag FORMATISSUETAG_SPACE = "Space";
-FormatIssueTag FORMATISSUETAG_UNEXPECTEDLINECONTINUATION = "UnexpectedLineContinuation";
 
 
 typedef const std::string EncodingIssueTag;

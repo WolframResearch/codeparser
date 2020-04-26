@@ -29,12 +29,12 @@ non-ToplevelNewline trivia (also just a bit mask)
 Token`InternalNewline -> Next, (*8*)
 Token`Comment -> Next,
 Token`Whitespace -> Next,
-Token`LineContinuation -> Next,
+Token`Buffer2 -> Next,
 Token`ToplevelNewline -> Next,
 
-Token`Buffer2 -> Next,
 Token`Buffer3 -> Next,
 Token`Buffer4 -> Next,
+Token`Buffer5 -> Next,
 
 (* errors *)
 Token`Error`ExpectedEqual -> Next, (*16*)

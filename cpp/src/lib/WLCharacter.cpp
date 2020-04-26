@@ -96,16 +96,6 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
                 case CODEPOINT_LINEARSYNTAX_SPACE:
                     stream << SourceCharacter(' ');
                     break;
-                case CODEPOINT_LINECONTINUATION_LF:
-                    stream << SourceCharacter('\n');
-                    break;
-                case CODEPOINT_LINECONTINUATION_CR:
-                    stream << SourceCharacter('\r');
-                    break;
-                case CODEPOINT_LINECONTINUATION_CRLF:
-                    stream << SourceCharacter('\r');
-                    stream << SourceCharacter('\n');
-                    break;
                 default:
                     assert(false);
                     break;
@@ -536,10 +526,6 @@ bool WLCharacter::isMBLetterlike() const {
     // Must handle all of the specially defined CodePoints
     //
     
-    if (isMBLineContinuation()) {
-        return false;
-    }
-    
     if (val == CODEPOINT_ENDOFFILE) {
         return false;
     }
@@ -705,20 +691,6 @@ bool WLCharacter::isMBControl() const {
     }
     
     return false;
-}
-
-bool WLCharacter::isMBLineContinuation() const {
-    
-    auto val = to_point();
-    
-    switch (val) {
-        case CODEPOINT_LINECONTINUATION_LF:
-        case CODEPOINT_LINECONTINUATION_CR:
-        case CODEPOINT_LINECONTINUATION_CRLF:
-            return true;
-        default:
-            return false;
-    }
 }
 
 bool WLCharacter::isMBNewline() const {

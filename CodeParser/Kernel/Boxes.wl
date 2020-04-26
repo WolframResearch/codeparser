@@ -511,7 +511,7 @@ Module[{handledChildren, aggregatedChildren},
         InfixNode[Times,
           Flatten[{First[handledChildren]} ~Join~
             Map[If[
-              MatchQ[#, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline | Token`Comment | Token`LineContinuation, _, _]],
+              MatchQ[#, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline | Token`Comment, _, _]],
                 #,
                 (*
                  Give ImplicitTimes the same Source as RHS

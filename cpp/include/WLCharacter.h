@@ -109,7 +109,6 @@ struct WLCharacter {
     
     bool isMBLinearSyntax() const;
     bool isMBStringMeta() const;
-    bool isMBLineContinuation() const;
     bool isMBLetterlike() const;
     bool isMBStrangeLetterlike() const;
     bool isMBVeryStrangeLetterlike() const;
