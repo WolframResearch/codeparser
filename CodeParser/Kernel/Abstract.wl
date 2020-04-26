@@ -70,23 +70,6 @@ Module[{ast},
 ]]
 
 
-
-abstract[LeafNode[Symbol, sIn_, dataIn_]] :=
-	LeafNode[Symbol, sIn, dataIn]
-
-abstract[LeafNode[String, sIn_, dataIn_]] :=
-	LeafNode[String, sIn, dataIn]
-
-abstract[LeafNode[Integer, sIn_, dataIn_]] :=
-	LeafNode[Integer, sIn, dataIn]
-
-abstract[LeafNode[Real, sIn_, dataIn_]] :=
-	LeafNode[Real, sIn, dataIn]
-
-abstract[LeafNode[Rational, sIn_, dataIn_]] :=
-	LeafNode[Rational, sIn, dataIn]
-
-
 abstract[LeafNode[Token`Under, _, data_]] := CallNode[ToNode[Blank], {}, data]
 abstract[LeafNode[Token`UnderUnder, _, data_]] := CallNode[ToNode[BlankSequence], {}, data]
 abstract[LeafNode[Token`UnderUnderUnder, _, data_]] := CallNode[ToNode[BlankNullSequence], {}, data]
@@ -119,6 +102,12 @@ abstract[LeafNode[Token`Fake`ImplicitNull, _, data_]] :=
 abstract[LeafNode[Token`Fake`ImplicitOne, _, data_]] := LeafNode[Integer, "1", data]
 
 abstract[LeafNode[Token`Fake`ImplicitAll, _, data_]] := LeafNode[Symbol, "All", data]
+
+(*
+Symbols, Strings, Integers, Reals, and Rationals just get passed through
+*)
+abstract[leaf_LeafNode] :=
+	leaf
 
 
 abstract[n_ErrorNode] := n
@@ -187,6 +176,7 @@ abstract[PostfixNode[op_, {operand_, _}, data_]] := CallNode[ToNode[op], {abstra
 abstract[BinaryNode[Divide, { left_, _, right_ }, data_]] := abstractTimes[BinaryNode[Divide, {left, right}, data]]
 
 abstract[BinaryNode[BinaryAt, {left_, _, right_}, data_]] := CallNode[abstract[left], {abstract[right]}, data]
+
 abstract[BinaryNode[BinaryAtAtAt, {left_, _, right_}, data_]] := CallNode[ToNode[Apply], abstract /@ {left, right, GroupNode[List, { LeafNode[Token`OpenCurly, "{", <||>], ToNode[1], LeafNode[Token`CloseCurly, "}", <||>] }, <||>]}, data]
 
 (*

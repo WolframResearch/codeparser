@@ -300,14 +300,9 @@ Catch[
 	str
 ]
 
-toFullFormString[LeafNode[Integer, str_, _]] :=
+toFullFormString[LeafNode[_, str_, _]] :=
 	str
 
-toFullFormString[LeafNode[Real, str_, _]] :=
-	str
-
-toFullFormString[LeafNode[Rational, str_, _]] :=
-	str
 
 
 toFullFormString[ErrorNode[tag_, str_, data_]] :=
