@@ -34,7 +34,7 @@ size_t ByteEncoder::size(codepoint val) {
 
 void ByteEncoder::encodeBytes(std::ostream& stream, codepoint val, ByteEncoderState *state) {
     
-    assert(val >= 0 || val == CODEPOINT_CRLF);
+    assert((val >= 0 || val == CODEPOINT_CRLF) && "Maybe a WLCharacter was created with incorrect Escape?");
     
     if (val == CODEPOINT_CRLF) {
         
