@@ -43,7 +43,7 @@ ParserSession::~ParserSession() {
     TheByteBuffer.reset(nullptr);
 }
 
-void ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libData, ParserSessionPolicy policyIn, SourceConvention srcConvention) {
+void ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libData, ParserSessionPolicy policyIn, SourceConvention srcConvention, size_t tabWidth) {
     
     bufAndLen = bufAndLenIn;
     
@@ -54,7 +54,7 @@ void ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libData
     }
     
     TheByteBuffer->init(bufAndLen, libData);
-    TheByteDecoder->init(srcConvention);
+    TheByteDecoder->init(srcConvention, tabWidth);
     TheCharacterDecoder->init(libData);
     TheTokenizer->init();
     TheParser->init();
@@ -398,7 +398,7 @@ DLLEXPORT int ConcreteParseBytes_Listable_LibraryLink(WolframLibraryData libData
     
     auto len = static_cast<size_t>(mlLen);
     
-    if (len != 2) {
+    if (len != 3) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -427,6 +427,11 @@ DLLEXPORT int ConcreteParseBytes_Listable_LibraryLink(WolframLibraryData libData
     }
     auto srcConvention = Utils::parseSourceConvention(conventionStr->get());
     
+    int tabWidth;
+    if (!MLGetInteger(mlp, &tabWidth)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
     if (!MLNewPacket(mlp) ) {
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -440,7 +445,7 @@ DLLEXPORT int ConcreteParseBytes_Listable_LibraryLink(WolframLibraryData libData
         
         auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
         
-        TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention);
+        TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth);
         
         auto N = TheParserSession->parseExpressions();
         
@@ -464,7 +469,7 @@ DLLEXPORT int TokenizeBytes_Listable_LibraryLink(WolframLibraryData libData, MLI
     
     auto len = static_cast<size_t>(mlLen);
     
-    if (len != 2) {
+    if (len != 3) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -493,6 +498,11 @@ DLLEXPORT int TokenizeBytes_Listable_LibraryLink(WolframLibraryData libData, MLI
     }
     auto srcConvention = Utils::parseSourceConvention(conventionStr->get());
     
+    int tabWidth;
+    if (!MLGetInteger(mlp, &tabWidth)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
     if (!MLNewPacket(mlp) ) {
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -506,7 +516,7 @@ DLLEXPORT int TokenizeBytes_Listable_LibraryLink(WolframLibraryData libData, MLI
         
         auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
         
-        TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention);
+        TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth);
         
         auto N = TheParserSession->tokenize();
         
@@ -532,7 +542,7 @@ DLLEXPORT int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK ml
     
     auto len = static_cast<size_t>(mlLen);
     
-    if (len != 3) {
+    if (len != 4) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -552,13 +562,18 @@ DLLEXPORT int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK ml
     }
     auto srcConvention = Utils::parseSourceConvention(conventionStr->get());
     
+    int tabWidth;
+    if (!MLGetInteger(mlp, &tabWidth)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
     if (!MLNewPacket(mlp) ) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto bufAndLen = BufferAndLength(inStr->get(), inStr->getByteCount());
     
-    TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention);
+    TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth);
     
     auto N = TheParserSession->concreteParseLeaf(static_cast<StringifyMode>(stringifyMode));
     
@@ -605,7 +620,7 @@ DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     //
     // Arbitrarily choose LineColumn convention, but it is not used
     //
-    TheByteDecoder->init(SOURCECONVENTION_LINECOLUMN);
+    TheByteDecoder->init(SOURCECONVENTION_LINECOLUMN, TAB_WIDTH);
     
     bufAndLen.putUTF8String(mlp);
     

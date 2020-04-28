@@ -34,6 +34,10 @@
 #include <memory> // for unique_ptr
 #include <functional> // for function with GCC and MSVC
 
+
+constexpr size_t TAB_WIDTH = 4;
+
+
 class ParserSession;
 class ScopedMLByteArray;
 class ScopedMLUTF8String;
@@ -117,7 +121,7 @@ public:
     
     ~ParserSession();
     
-    void init(BufferAndLength bufAndLen, WolframLibraryData libData, ParserSessionPolicy policy, SourceConvention srcConvention);
+    void init(BufferAndLength bufAndLen, WolframLibraryData libData, ParserSessionPolicy policy, SourceConvention srcConvention, size_t tabWidth);
     
     void deinit();
     

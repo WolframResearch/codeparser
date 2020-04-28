@@ -7,6 +7,7 @@
 
 #ifndef NDEBUG
 bool containsOnlyASCII(BufferAndLength BufLen);
+bool containsTab(BufferAndLength BufLen);
 #endif // NDEBUG
 
 Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : BufLen(BufLen), Src(Src), Tok(Tok) {
@@ -54,7 +55,7 @@ Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : BufLen(BufLen)
                         // Note that this also catches changes in character representation, e.g.,
                         // If a character was in source with \XXX octal notation but was stringified with \:XXXX hex notation
                         //
-                        assert(!containsOnlyASCII(BufLen));
+                        assert(!containsOnlyASCII(BufLen) || containsTab(BufLen));
                     }
                 }
             }
@@ -76,6 +77,19 @@ bool containsOnlyASCII(BufferAndLength BufLen) {
         }
     }
     return true;
+}
+
+bool containsTab(BufferAndLength BufLen) {
+    for (auto p = BufLen.buffer; p < BufLen.end; p++) {
+        auto c = *p;
+        //
+        // Take care to cast to int before comparing
+        //
+        if ((static_cast<int>(c) & 0xff) == 0x09) {
+            return true;
+        }
+    }
+    return false;
 }
 #endif // NDEBUG
 

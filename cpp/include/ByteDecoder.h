@@ -23,6 +23,8 @@ public:
     
     void increment(SourceLocation& loc);
     
+    virtual void tab(SourceLocation& loc) = 0;
+    
     virtual ~SourceConventionManager() {}
 };
 
@@ -32,9 +34,18 @@ public:
 //
 class LineColumnManager : public SourceConventionManager {
     
+    size_t TabWidth;
+    
+public:
+    
+    LineColumnManager(size_t TabWidth) : TabWidth(TabWidth) {}
+    
+    
     SourceLocation newSourceLocation() override;
     
     void newline(SourceLocation& loc) override;
+    
+    void tab(SourceLocation& loc) override;
 };
 
 //
@@ -46,6 +57,8 @@ class SourceCharacterIndexManager : public SourceConventionManager {
     SourceLocation newSourceLocation() override;
     
     void newline(SourceLocation& loc) override;
+    
+    void tab(SourceLocation& loc) override;
 };
 
 
@@ -74,7 +87,7 @@ public:
     
     ByteDecoder();
     
-    void init(SourceConvention srcConvention);
+    void init(SourceConvention srcConvention, size_t TabWidth);
     
     void deinit();
     

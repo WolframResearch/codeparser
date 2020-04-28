@@ -7,7 +7,7 @@
 
 ByteDecoder::ByteDecoder() : Issues(), status(), lastBuf(), lastLoc(), SrcLoc() {}
 
-void ByteDecoder::init(SourceConvention srcConvention) {
+void ByteDecoder::init(SourceConvention srcConvention, size_t TabWidth) {
     
     Issues.clear();
     
@@ -15,7 +15,7 @@ void ByteDecoder::init(SourceConvention srcConvention) {
     
     switch (srcConvention) {
         case SOURCECONVENTION_LINECOLUMN:
-            srcConventionManager = SourceConventionManagerPtr(new LineColumnManager());
+            srcConventionManager = SourceConventionManagerPtr(new LineColumnManager(TabWidth));
             break;
         case SOURCECONVENTION_SOURCECHARACTERINDEX:
             srcConventionManager = SourceConventionManagerPtr(new SourceCharacterIndexManager());
@@ -104,7 +104,15 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             srcConventionManager->newline(SrcLoc);
             
             return SourceCharacter('\n');
-        case 0x09: case 0x1b:
+        case 0x09:
+            
+            // Handle TAB specially
+            
+            srcConventionManager->tab(SrcLoc);
+            
+            return SourceCharacter(firstByte);
+        
+        case 0x1b:
             
             // Valid
             
@@ -1070,6 +1078,7 @@ void SourceConventionManager::increment(SourceLocation& loc) {
     loc.second++;
 };
 
+
 SourceLocation LineColumnManager::newSourceLocation() {
     return SourceLocation(1, 1);
 };
@@ -1077,6 +1086,11 @@ SourceLocation LineColumnManager::newSourceLocation() {
 void LineColumnManager::newline(SourceLocation& loc) {
     loc.first++;
     loc.second = 1;
+};
+
+void LineColumnManager::tab(SourceLocation& loc) {
+    auto currentTabStop = TabWidth * ((loc.second - 1) / TabWidth) + 1;
+    loc.second = currentTabStop + TabWidth;
 };
 
 
@@ -1088,3 +1102,6 @@ void SourceCharacterIndexManager::newline(SourceLocation& loc) {
     loc.second++;
 };
 
+void SourceCharacterIndexManager::tab(SourceLocation& loc) {
+    loc.second++;
+};
