@@ -80,12 +80,17 @@ Options[reparseMissingCloserNode] = {
 }
 
 reparseMissingCloserNode[GroupMissingCloserNeedsReparseNode[tag_, children_, dataIn_], bytes_List, OptionsPattern[]] :=
+Catch[
 Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str, leaves, convention, test,
   lineLens, takeSpecsOfLines, poss},
 
   convention = OptionValue["SourceConvention"];
 
   str = SafeString[bytes];
+
+  If[FailureQ[str],
+    Throw[str]
+  ];
 
   lines = StringSplit[str, {"\r\n", "\n", "\r"}, All];
 
@@ -153,7 +158,7 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
   ];
 
   GroupMissingCloserNode[tag, leaves, data]
-]
+]]
 
 
 (*
@@ -169,12 +174,17 @@ Options[reparseUnterminatedCommentErrorNode] = {
 }
 
 reparseUnterminatedCommentErrorNode[ErrorNode[Token`Error`UnterminatedComment, _, dataIn_], bytes_List, OptionsPattern[]] :=
+Catch[
 Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str, convention, test,
   lineLens, takeSpecsOfLines, poss},
 
   convention = OptionValue["SourceConvention"];
 
   str = SafeString[bytes];
+
+  If[FailureQ[str],
+    Throw[str]
+  ];
 
   lines = StringSplit[str, {"\r\n", "\n", "\r"}, All];
 
@@ -228,7 +238,7 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
   ];
 
   ErrorNode[Token`Error`UnterminatedComment, "", data]
-]
+]]
 
 
 
