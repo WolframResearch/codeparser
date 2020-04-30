@@ -3251,3 +3251,15 @@ Test[
 
 EndTestSection[]
 
+
+
+Test[
+	"{ a, %% }"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200430-G3Y5R8"
+]
+

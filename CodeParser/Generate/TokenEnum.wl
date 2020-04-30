@@ -60,6 +60,7 @@ isPossibleBeginning[Token`Real] = True
 isPossibleBeginning[Token`Rational] = True
 
 isPossibleBeginning[Token`Percent] = True
+isPossibleBeginning[Token`PercentPercent] = True
 
 isPossibleBeginning[Token`Hash] = True
 isPossibleBeginning[Token`HashHash] = True
