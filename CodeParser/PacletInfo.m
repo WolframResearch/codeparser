@@ -1,5 +1,5 @@
 
-Paclet[
+UnbuiltPaclet[
   Name -> "CodeParser",
   Version -> "1.1",
   WolframVersion -> "11.0+",
