@@ -69,8 +69,8 @@ using ScopedMLEnvironmentParameterPtr = std::unique_ptr<ScopedMLEnvironmentParam
 // Normal:
 // Tokens are treated normally
 //
-// Symbol:
-// Stringify the next token as a symbol:
+// SymbolSegment:
+// Stringify the next token as a symbol segment:
 // a::bcd
 //
 // File:

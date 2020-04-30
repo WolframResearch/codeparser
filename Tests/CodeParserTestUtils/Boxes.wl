@@ -78,6 +78,8 @@ If[agg2ToCompare =!= aggToCompare,
   Throw[{"comparing aggs", name, n, i, j}]
   ];
 
+  If[MemberQ[Lookup[exceptions, name, {}], {i, j}], 
+   Print[{"exception is UNUSED", {name, n, i, j}}]];
 ]]
 
 
@@ -103,7 +105,7 @@ exceptions = <|
    "NumericArrayType" -> {{2, 2}},
    
    (* ErrorBox and purposeful bad syntax *)
-   
+   "DelimiterFlashTime" -> {{1, 2}},
    "ErrorBox" -> {{1, 4}, {2, 2}},
    "ShowAutoStyles" -> {{1, 3}, {1, 4}},
    
@@ -114,36 +116,44 @@ exceptions = <|
    "Join" -> {{2, 1}},
    
    (* Recursion errors from using crazy Dataset typesetting *)
-   
    "NetworkPacketTrace" -> {{2, 2}, {3, 2}},
    
    (* weird StyleBox problem *)
    "PlotMarkers" -> {{3, 3}},
    
    (* weird -foo- formatting *)
-   "Predict" -> {{1, 3}, {2, 2}},
-   "PredictorFunction" -> {{1, 4}, {2, 2}},
-   "UtilityFunction" -> {{1, 3}, {1, 11}},
    "AnomalyDetection" -> {{1, 2}},
+   "AnomalyDetector" -> {{1, 2}, {1, 10}, {2, 2}, {2, 4}, {2, 6}, {3, 2}, {3, 14}},
    "AnomalyDetectorFunction" -> {{1, 2}, {2, 2}},
    "ClassifierFunction" -> {{1, 2}, {2, 2}},
    "Classify" -> {{1, 3}, {2, 2}},
+   "ClusterClassify" -> {{1, 2}, {2, 6}, {3, 3}},
    "ComputeUncertainty" -> {{1, 2}},
-   
+   "CriterionFunction" -> {{1, 10}, {1, 12}},
+   "Predict" -> {{1, 3}, {2, 2}},
+   "PredictorFunction" -> {{1, 4}, {2, 2}},
+   "UtilityFunction" -> {{1, 3}, {1, 11}},
+   "ValidationSet" -> {{1, 3}, {1, 7}, {2, 3}, {2, 7}},
+
    (* weird <<>> formatting *)
+   "CombinedEntityClass" -> {{5, 2}, {6, 4}},
+   "FindKPlex" -> {{2, 3}},
+   "PolyhedronDecomposition" -> {{1, 3}},
+   "Shallow" -> {{1, 2}, {2, 4}},
    "ShortestPathFunction" -> {{1, 4}},
+   "Skeleton" -> {{1, 2}, {2, 2}},
+   "WikipediaData" -> {{2, 2}, {2, 4}, {5, 2}, {5, 4}, {5, 9}},
    
    (* weird Cell[foo] thing *)
-   "TextGrid" -> {{1, 2}, {2, 2}},
-   "WolframLanguageData" -> {{5, 10}},
    "AllowInlineCells" -> {{1, 27}},
+   "TextGrid" -> {{1, 2}, {2, 2}},
+   "WolframLanguageData" -> {{5, 12}},
    
    (* weird RowBox[{""}] thing *)
-   
-   "AsymptoticIntegrate" -> {{2, 2}, {2, 6}},
+   "AsymptoticIntegrate" -> {{2, 2}, {2, 6}, {3, 2}, {3, 6}},
    "BernoulliProcess" -> {{1, 2}},
    "BetaRegularized" -> {{1, 2}},
-   "BlankNullSequence" -> {{1, 3}, {3, 3}},
+   "BlankNullSequence" -> {{3, 3}},
    "Chop" -> {{1, 2}},
    "CircularOrthogonalMatrixDistribution" -> {{1, 2}},
    "CircularQuaternionMatrixDistribution" -> {{2, 2}},
@@ -152,6 +162,7 @@ exceptions = <|
    "CompiledFunction" -> {{1, 8}},
    "ConfidenceLevel" -> {{1, 3}, {1, 7}},
    "CovarianceEstimatorFunction" -> {{1, 3}, {1, 7}},
+   "CubeRoot" -> {{3, 4}},
    "DedekindEta" -> {{1, 2}},
    "EllipticLog" -> {{1, 2}, {1, 4}},
    "ExponentialFamily" -> {{1, 3}},
@@ -164,19 +175,23 @@ exceptions = <|
    "GaussianUnitaryMatrixDistribution" -> {{1, 2}},
    "HankelH1" -> {{1, 2}},
    "HankelH2" -> {{1, 2}},
+   "HeunCPrime" -> {{1, 2}},
+   "HeunG" -> {{1, 2}},
+   "HeunGPrime" -> {{1, 2}},
+   "HurwitzLerchPhi" -> {{1, 2}},
    "Hypergeometric2F1" -> {{1, 2}},
    "I" -> {{3, 4}},
    "InflationMethod" -> {{1, 2}, {2, 2}},
    "InverseFourier" -> {{1, 2}, {2, 2}},
-   "InverseJacobiCS" -> {{1, 2}},
+   (*"InverseJacobiCS" -> {{1, 2}},*)
    "InverseJacobiDN" -> {{1, 2}, {1, 4}},
    "InverseJacobiNC" -> {{1, 2}, {1, 4}},
    "InverseJacobiND" -> {{1, 2}, {1, 4}},
-   "InverseJacobiSC" -> {{1, 2}},
+   (*"InverseJacobiSC" -> {{1, 2}},*)
    "JuliaSetBoettcher" -> {{1, 2}, {2, 2}},
    "JuliaSetIterationCount" -> {{2, 1}},
-   "KleinInvariantJ" -> {{1, 2}},
-   "LerchPhi" -> {{2, 2}},
+   (*"KleinInvariantJ" -> {{1, 2}},*)
+   "LerchPhi" -> {{1, 2}, {2, 2}},
    "LinearModelFit" -> {{1, 5}},
    "LinearOffsetFunction" -> {{1, 3}, {1, 5}},
    "LinkFunction" -> {{1, 5}},
@@ -188,9 +203,11 @@ exceptions = <|
    "RamanujanTauL" -> {{1, 2}},
    "RandomComplex" -> {{1, 2}, {2, 2}, {3, 2}, {4, 2}, {5, 2}},
    "Root" -> {{1, 4}},
-   "SiegelTheta" -> {{1, 2}},
+   (*"SiegelTheta" -> {{1, 2}},*)
+   "Sign" -> {{2, 2}},
    "SphericalHankelH1" -> {{1, 2}},
    "SphericalHankelH2" -> {{1, 2}},
+   "Surd" -> {{3, 4}},
    "TransferFunctionModel" -> {{4, 4}},
    "WeierstrassE1" -> {{2, 2}},
    "WeierstrassEta1" -> {{2, 4}},
@@ -201,9 +218,10 @@ exceptions = <|
    "WeierstrassInvariantG2" -> {{1, 2}},
    "WeierstrassInvariantG3" -> {{1, 2}},
    "WeierstrassInvariants" -> {{1, 4}, {1, 6}},
-   "WeierstrassP" -> {{1, 2}},
-   "WeierstrassPPrime" -> {{1, 2}},
+   (*"WeierstrassP" -> {{1, 2}},*)
+   (*"WeierstrassPPrime" -> {{1, 2}},*)
    "WeierstrassSigma" -> {{1, 2}},
+   "WeierstrassZeta" -> {{1, 2}},
    "ZetaZero" -> {{1, 2}},
    "$Post" -> {{2, 5}},
    "$PrePrint" -> {{2, 5}},
@@ -212,7 +230,6 @@ exceptions = <|
    (* ? for Information *)
    "BeginPackage" -> {{1, 9}},
    "Encode" -> {{1, 6}},
-   "Information" -> {{1, 4}},
    "Install" -> {{1, 4}},
    "LinkPatterns" -> {{1, 6}},
    "MessageName" -> {{1, 2}},
@@ -220,13 +237,19 @@ exceptions = <|
    "Remove" -> {{1, 2}},
    "Uninstall" -> {{1, 4}},
    "$CurrentLink" -> {{1, 6}},
+
+   (* ?? for Information *)
+   "Assert" -> {{2, 3}},
+   "Begin" -> {{1, 6}, {1, 7}},
+   "DumpSave" -> {{1, 8}, {1, 10}},
+   "In" -> {{2, 10}},
    
    (*
    RowBox[{"x_:","0"}] idiocy
    Related bugs: 373953, 378774
    *)
-   "OneIdentity" -> {{1, 6}},
-   "Optional" -> {{1, 1}},
+   (*"OneIdentity" -> {{1, 6}},*)
+   (*"Optional" -> {{1, 1}},*)
    
    (*
    \[Integral] syntax
@@ -237,7 +260,7 @@ exceptions = <|
    (*
    dumb BoxData[""] bad input
    *)
-   "ServiceSubmit" -> {{1, 7}},
+   (*"ServiceSubmit" -> {{1, 7}},*)
    
    (*
    bad ; ;
@@ -249,10 +272,21 @@ exceptions = <|
    *)
    "Paste" -> {{1, 4}},
    
+   (*
+    bad "{...}"
+   *)
+   "NetGraph" -> {{1, 8}, {1, 10}},
+
+   (*
+    bad boxes for a /: b =.
+   *)
+   "TagUnset" -> {{1, 2}},
+
    (* combined *)
-   "TraditionalForm" -> {{1, 2}, {2, 2}, {3, 2}},
    "CoxModel" -> {{1, 3}, {1, 9}},
-   "Integrate" -> {{3, 1}, {3, 4}}
+   "Information" -> {{1, 3}, {1, 4}, {1, 5}},
+   "Integrate" -> {{3, 4}},
+   "TraditionalForm" -> {{1, 2}, {2, 2}, {3, 2}}
    |>;
 
 outputFormPatterns = 
@@ -260,7 +294,7 @@ outputFormPatterns =
    "TemporalData" | "Molecule" | "StructuredArray" | "Polyhedron" | 
    "SecuredAuthenticationKey" | "AutocompletionFunction" | 
    "ProofObject" | "DataDistribution" | "ByteArray" | "OutputStream" |
-    "PrivateKey" | "BlockchainTransaction" | "BooleanFunction" | 
+   "PrivateKey" | "BlockchainTransaction" | "BooleanFunction" | 
    "HypothesisTestData" | "Databin" | "ChannelListener" | 
    "InputStream" | "SocketObject" | "CloudExpression" | 
    "ColorDataFunction" | "ColorProfileData" | "HoldForm" | 
@@ -284,7 +318,12 @@ outputFormPatterns =
    "ParametricFunction" | "SystemsConnectionsModel" | 
    "TestResultObject" | "TestReportObject" | "TimeSeriesModel" | 
    "TravelDirectionsData" | "WebElementObject" | 
-   "WebUnit`WebSessionObject" | "WebWindowObject" | "WeightedData";
+   "WebUnit`WebSessionObject" | "WebWindowObject" | "WeightedData" |
+   "KernelObject" | "PacletObject" | "BezierFunction" |
+   "CategoricalDistribution" | "DateInterval" | "ExternalStorageObject" |
+   "FeatureExtractorFunction" | "QuantityArray" | "Take" |
+   "MailServerConnection" | "MailFolder" | "MailItem" |
+   "SymmetrizedArray" | "SystemCredentialData" | "SystemCredentialStoreObject";
 
 
 Clear[findDiff, findDiff0];

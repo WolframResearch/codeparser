@@ -47,6 +47,11 @@ Module[{children},
 
 
 Options[parseBox] = {
+  (*
+  0: normal
+  1: symbol segment
+  2: file
+  *)
   "StringifyMode" -> 0
 }
 
@@ -139,7 +144,7 @@ Module[{handledChildren, aggregatedChildren},
        Token`LongName`NotGreaterLess | Token`LongName`NotLessGreater |
        Token`LongName`NotGreaterSlantEqual | Token`LongName`NotLessSlantEqual |
        Token`LongName`NotGreaterTilde | Token`LongName`NotLessTilde |
-       Token`LongName`NotNestedGreaterGreater | Token`LongName`NotNestedLessLess, _, _], _, ___}, InfixNode[Inequality, handledChildren, <|Source->Append[pos, 1]|>],
+       Token`LongName`NotNestedGreaterGreater | Token`LongName`NotNestedLessLess, _, _], _, ___}, InfixNode[InfixInequality, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`VectorGreater | Token`LongName`VectorGreaterEqual |
        Token`LongName`VectorLess | Token`LongName`VectorLessEqual , _, _], _, ___}, InfixNode[Developer`VectorInequality, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`And | Token`AmpAmp, _, _], _, ___}, InfixNode[And, handledChildren, <|Source->Append[pos, 1]|>],
@@ -366,7 +371,6 @@ Module[{handledChildren, aggregatedChildren},
     {_, LeafNode[Token`Caret, _, _], _}, BinaryNode[Power, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`ColonEqual, _, _], _}, BinaryNode[SetDelayed, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`CaretColonEqual, _, _], _}, BinaryNode[UpSetDelayed, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`EqualDot, _, _](* yes, purposefully nothing here *)}, BinaryNode[Unset, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`Equal, _, _], _}, BinaryNode[Set, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`Slash, _, _], _}, BinaryNode[Divide, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`SlashAt, _, _], _}, BinaryNode[Map, handledChildren, <|Source->Append[pos, 1]|>],
@@ -407,18 +411,24 @@ Module[{handledChildren, aggregatedChildren},
     {CompoundNode[PatternBlank, _, _], LeafNode[Token`Colon, _, _], _}, BinaryNode[Optional, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`Colon, _, _], _}, SyntaxErrorNode[SyntaxError`ColonError, handledChildren, <|Source -> Append[pos, 1]|>],
 
+    {_, LeafNode[Token`Boxes`EqualDot, _, _]},
+      BinaryNode[Unset,
+        handledChildren /. {
+          LeafNode[Token`Boxes`EqualDot, _, data_] :> Sequence @@ {LeafNode[Token`Equal, "=", data], LeafNode[Token`Dot, ".", data]}
+        }, <|Source->Append[pos, 1]|>],
+
     (*
     Ternary
     *)
     {_, LeafNode[Token`SemiSemi, _, _], _, LeafNode[Token`SemiSemi, _, _], _}, TernaryNode[Span, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`SlashColon, _, _], _, LeafNode[Token`ColonEqual, _, _], _}, TernaryNode[TagSetDelayed, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`SlashColon, _, _], _, LeafNode[Token`Equal, _, _], _}, TernaryNode[TagSet, handledChildren, <|Source->Append[pos, 1]|>],
-    (*
-    FIXME: is this an FE quirk?
-    TagUnset boxes are this: RowBox[{"h", "/:", RowBox[{RowBox[{"f", "[", "]"}], "=."}]}]
-    But maybe they should be: RowBox[{"h", "/:", RowBox[{"f", "[", "]"}], "=."}]
-    *)
-    {_, LeafNode[Token`SlashColon, _, _], BinaryNode[Unset, _, _]}, TernaryNode[TagUnset, { handledChildren[[1]], handledChildren[[2]], handledChildren[[3, 2, 1]], handledChildren[[3, 2, 2]] }, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`SlashColon, _, _], _, LeafNode[Token`Boxes`EqualDot, _, _]},
+      TernaryNode[TagUnset, 
+        handledChildren /. {
+          LeafNode[Token`Boxes`EqualDot, _, data_] :> Sequence @@ {LeafNode[Token`Equal, "=", data], LeafNode[Token`Dot, ".", data]}
+        }, <|Source->Append[pos, 1]|>],
+
     {_, LeafNode[Token`Tilde, _, _], _, LeafNode[Token`Tilde, _, _], _}, TernaryNode[TernaryTilde, handledChildren, <|Source->Append[pos, 1]|>],
     
     (*
@@ -504,9 +514,9 @@ Module[{handledChildren, aggregatedChildren},
     (*
     the second arg is a box, so we know it is implicit Times
     *)
-    {_, LeafNode[Symbol | Integer | Slot | String | Real | Out | Blank | BlankSequence | BlankNullSequence, _, _] |
+    {_, LeafNode[_, _, _] |
         BinaryNode[_, _, _] | CallNode[_, _, _] | GroupNode[_, _, _] | BoxNode[Except[RowBox], _, _] | InfixNode[_, _, _] |
-        PostfixNode[_, _, _] | CompoundNode[PatternBlank, _, _] | PrefixNode[_, _, _], ___},
+        PostfixNode[_, _, _] | CompoundNode[_, _, _] | PrefixNode[_, _, _], ___},
 
         InfixNode[Times,
           Flatten[{First[handledChildren]} ~Join~
@@ -573,8 +583,7 @@ parseBox[RadicalBox[a_, b_, rest___], pos_] :=
 
 parseBox[TooltipBox[a_, b_, rest___], pos_] :=
   BoxNode[TooltipBox,
-    {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]]} ~Join~
-    applyCodeNodesToRest[rest], <|Source->pos|>]
+    {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
 
 
 
@@ -785,6 +794,8 @@ parseBox[ProgressIndicatorBox[rest___], pos_] :=
 parseBox[TogglerBox[rest___], pos_] :=
   BoxNode[TogglerBox, applyCodeNodesToRest[rest], <|Source->pos|>]
 
+parseBox[TableViewBox[rest___], pos_] :=
+  BoxNode[TableViewBox, applyCodeNodesToRest[rest], <|Source->pos|>]
 
 
 
@@ -835,6 +846,8 @@ parseBoxPossibleListPossibleDirective[box_, pos_] := parseBox[box, pos]
 
 
 (*
+Handle all of the CompoundNodes
+
 a_b
 
 Front End treats a_b as single token
@@ -845,7 +858,10 @@ Split things like a_b into correct structures
 (*
 Just do simple thing here and disallow _ and " and .
 *)
-letterlikePat = Except["_"|"\""|"."]
+letterlikePat = Except["_"|"\""|"."|"#"]
+
+digitPat = DigitCharacter
+
 
 parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "_"], pos_] :=
 Module[{cases},
@@ -875,19 +891,25 @@ Module[{cases},
 parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "_" ~~ letterlikePat..], pos_] :=
 Module[{cases},
   cases = StringCases[str, a:letterlikePat.. ~~ "_" ~~ b:letterlikePat.. :> {a, "_", b}][[1]];
-  CompoundNode[PatternBlank, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+  CompoundNode[PatternBlank, {
+    parseBox[cases[[1]], pos],
+    CompoundNode[Blank, {parseBox[cases[[2]], pos], parseBox[cases[[3]], pos]}, <|Source -> pos|>]}, <|Source -> pos|>]
 ]
 
 parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "__" ~~ letterlikePat..], pos_] :=
 Module[{cases},
   cases = StringCases[str, a:letterlikePat.. ~~ "__" ~~ b:letterlikePat.. :> {a, "__", b}][[1]];
-  CompoundNode[PatternBlankSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+  CompoundNode[PatternBlankSequence, {
+    parseBox[cases[[1]], pos],
+    CompoundNode[BlankSequence, {parseBox[cases[[2]], pos], parseBox[cases[[3]], pos]}, <|Source -> pos|>]}, <|Source -> pos|>]
 ]
 
 parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "___" ~~ letterlikePat..], pos_] :=
 Module[{cases},
   cases = StringCases[str, a:letterlikePat.. ~~ "___" ~~ b:letterlikePat.. :> {a, "___", b}][[1]];
-  CompoundNode[PatternBlankNullSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+  CompoundNode[PatternBlankNullSequence, {
+    parseBox[cases[[1]], pos],
+    CompoundNode[BlankNullSequence, {parseBox[cases[[2]], pos], parseBox[cases[[3]], pos]}, <|Source -> pos|>]}, <|Source -> pos|>]
 ]
 
 
@@ -910,11 +932,40 @@ Module[{cases},
 ]
 
 
+parseBox[str_String /; StringMatchQ[str, "#" ~~ digitPat..], pos_] :=
+Module[{cases},
+  cases = StringCases[str, "#" ~~ b:digitPat.. :> {"#", b}][[1]];
+  CompoundNode[Slot, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+]
+
+parseBox[str_String /; StringMatchQ[str, "#" ~~ letterlikePat..], pos_] :=
+Module[{cases},
+  cases = StringCases[str, "#" ~~ b:letterlikePat.. :> {"#", b}][[1]];
+  CompoundNode[Slot, {parseBox[cases[[1]], pos], parseBox[cases[[2]], pos, "StringifyMode" -> 1]}, <|Source -> pos|>]
+]
+
+parseBox[str_String /; StringMatchQ[str, "##" ~~ letterlikePat..], pos_] :=
+Module[{cases},
+  cases = StringCases[str, "##" ~~ b:letterlikePat.. :> {"##", b}][[1]];
+  CompoundNode[SlotSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+]
+
+parseBox[str_String /; StringMatchQ[str, "%" ~~ digitPat..], pos_] :=
+Module[{cases},
+  cases = StringCases[str, "%" ~~ b:digitPat.. :> {"%", b}][[1]];
+  CompoundNode[Out, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+]
+
+
+
 (*
 The Front End treats comments as a collection of code, and not a single token
 *)
 parseBox["(*", pos_] := LeafNode[Token`Boxes`OpenParenStar, "(*", <|Source -> pos|>]
 parseBox["*)", pos_] := LeafNode[Token`Boxes`StarCloseParen, "*)", <|Source -> pos|>]
+
+
+parseBox["=.", pos_] := LeafNode[Token`Boxes`EqualDot, "=.", <|Source -> pos|>]
 
 
 
@@ -1771,6 +1822,17 @@ Module[{heldRest, heldChildren},
   With[{heldChildren = heldChildren}, ReleaseHold[TooltipBox @@ heldChildren]]
 ]]
 
+toStandardFormBoxes[BoxNode[TableViewBox, {rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+
+  heldChildren = heldRest;
+
+  With[{heldChildren = heldChildren}, ReleaseHold[TableViewBox @@ heldChildren]]
+]]
+
+
 (*
 a is a List of Lists
 *)
@@ -1838,6 +1900,22 @@ Module[{nodeBoxes},
   RowBox[nodeBoxes]
 ]]
 
+
+
+toStandardFormBoxes[BinaryNode[Unset, nodes:{
+  _, LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, _]] :=
+Catch[
+Module[{nodeBoxes},
+  nodeBoxes = toStandardFormBoxes /@ nodes;
+
+  nodeBoxes = {nodeBoxes[[1]], "=."};
+
+  If[AnyTrue[nodeBoxes, FailureQ],
+    Throw[SelectFirst[nodeBoxes, FailureQ]]
+  ];
+  RowBox[nodeBoxes]
+]]
+
 toStandardFormBoxes[BinaryNode[op_, nodes_, _]] :=
 Catch[
 Module[{nodeBoxes},
@@ -1863,19 +1941,13 @@ Module[{nodeBoxes},
 ]]
 
 
-(*
-FIXME: is this an FE quirk?
-*)
 toStandardFormBoxes[TernaryNode[TagUnset, nodes:{
-  _, LeafNode[Token`SlashColon, _, _], _, LeafNode[Token`EqualDot, _, _]}, _]] :=
+  _, LeafNode[Token`SlashColon, _, _], _, LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, _]] :=
 Catch[
 Module[{nodeBoxes},
   nodeBoxes = toStandardFormBoxes /@ nodes;
 
-  (*
-  Put RHS inside a RowBox
-  *)
-  nodeBoxes = {nodeBoxes[[1]], nodeBoxes[[2]], RowBox[{nodeBoxes[[3]], nodeBoxes[[4]] }]};
+  nodeBoxes = {nodeBoxes[[1]], nodeBoxes[[2]], nodeBoxes[[3]], "=."};
 
   If[AnyTrue[nodeBoxes, FailureQ],
     Throw[SelectFirst[nodeBoxes, FailureQ]]
@@ -1947,14 +2019,16 @@ Module[{nodeBoxes},
   RowBox[nodeBoxes]
 ]]
 
-toStandardFormBoxes[PrefixBinaryNode[op_, nodes_, data_]] :=
+
+
+toStandardFormBoxes[PrefixBinaryNode[Integrate, nodes_, data_]] :=
 Catch[
 Module[{nodeBoxes},
   nodeBoxes = toStandardFormBoxes /@ nodes;
   If[AnyTrue[nodeBoxes, FailureQ],
     Throw[SelectFirst[nodeBoxes, FailureQ]]
   ];
-  RowBox[nodeBoxes]
+  RowBox[{First[nodeBoxes], RowBox[Rest[nodeBoxes]]}]
 ]]
 
 
@@ -2049,8 +2123,50 @@ Module[{nodeBoxes},
   StringJoin[nodeBoxes]
 ]]
 
+(*
+Convert back to form that the FE likes
 
+Single #1 token
+*)
+toStandardFormBoxes[CompoundNode[Slot, nodes_, _]] :=
+Catch[
+Module[{nodeBoxes},
+  nodeBoxes = toStandardFormBoxes /@ nodes;
+  If[AnyTrue[nodeBoxes, FailureQ],
+    Throw[SelectFirst[nodeBoxes, FailureQ]]
+  ];
+  StringJoin[nodeBoxes]
+]]
 
+(*
+Convert back to form that the FE likes
+
+Single ##1 token
+*)
+toStandardFormBoxes[CompoundNode[SlotSequence, nodes_, _]] :=
+Catch[
+Module[{nodeBoxes},
+  nodeBoxes = toStandardFormBoxes /@ nodes;
+  If[AnyTrue[nodeBoxes, FailureQ],
+    Throw[SelectFirst[nodeBoxes, FailureQ]]
+  ];
+  StringJoin[nodeBoxes]
+]]
+
+(*
+Convert back to form that the FE likes
+
+Single %123 token
+*)
+toStandardFormBoxes[CompoundNode[Out, nodes_, _]] :=
+Catch[
+Module[{nodeBoxes},
+  nodeBoxes = toStandardFormBoxes /@ nodes;
+  If[AnyTrue[nodeBoxes, FailureQ],
+    Throw[SelectFirst[nodeBoxes, FailureQ]]
+  ];
+  StringJoin[nodeBoxes]
+]]
 
 
 
