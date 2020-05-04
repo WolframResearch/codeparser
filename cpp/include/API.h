@@ -35,8 +35,6 @@
 #include <functional> // for function with GCC and MSVC
 
 
-constexpr size_t TAB_WIDTH = 4;
-
 
 class ParserSession;
 class ScopedMLByteArray;

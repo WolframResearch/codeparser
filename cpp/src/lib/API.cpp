@@ -2,7 +2,7 @@
 #include "API.h"
 
 #include "Parser.h" // for Parser
-#include "ParseletRegistration.h" // for ParserRegistrationInit
+#include "ParseletRegistration.h" // for prefixParselets
 #include "Parselet.h" // for Parselet impls
 #include "Tokenizer.h" // for Tokenizer
 #include "CharacterDecoder.h" // for CharacterDecoder
@@ -620,7 +620,7 @@ DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     //
     // Arbitrarily choose LineColumn convention, but it is not used
     //
-    TheByteDecoder->init(SOURCECONVENTION_LINECOLUMN, TAB_WIDTH);
+    TheByteDecoder->init(SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
     
     bufAndLen.putUTF8String(mlp);
     

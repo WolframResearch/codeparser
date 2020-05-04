@@ -3,6 +3,7 @@
 
 #include "ByteDecoder.h"
 #include "ByteBuffer.h"
+#include "Source.h"
 
 #include "gtest/gtest.h"
 
@@ -23,7 +24,7 @@ TEST_F(NodeTest, Bug1) {
     TheByteDecoder = std::unique_ptr<ByteDecoder>(new ByteDecoder);
     
     TheByteBuffer->init(BufferAndLength(Buffer(input.c_str() + 0), 3));
-    TheByteDecoder->init(SOURCECONVENTION_LINECOLUMN);
+    TheByteDecoder->init(SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
     
     auto T1 = Token(TOKEN_SYMBOL, BufferAndLength(Buffer(input.c_str() + 0), 1), Source(SourceLocation(1, 1), SourceLocation(1, 2)));
     Args.append(std::unique_ptr<Node>(new LeafNode(T1)));

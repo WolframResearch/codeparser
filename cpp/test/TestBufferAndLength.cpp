@@ -36,7 +36,7 @@ TEST_F(BufferAndLengthTest, Hang1) {
     // The actual test for the hang is with this buffer created to have length < 5.
     // But I have added an assert against that possibility, so this is no longer a direct test.
     //
-    TheParserSession->init(BufferAndLength(arr, 5), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
+    TheParserSession->init(BufferAndLength(arr, 5), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
 
     auto bufLen = BufferAndLength(arr, 5, UTF8STATUS_INVALID);
 

@@ -41,7 +41,7 @@ TEST_F(APITest, Bug1) {
     
     auto bufAndLen = BufferAndLength(str, strIn.size());
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
     
     auto N = TheParserSession->concreteParseLeaf(STRINGIFYMODE_NORMAL);
     
@@ -63,7 +63,7 @@ TEST_F(APITest, Hang1) {
     
     auto bufAndLen = BufferAndLength(str, strIn.size());
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
     
     auto N = TheParserSession->parseExpressions();
     
@@ -85,7 +85,7 @@ TEST_F(APITest, Crash1) {
     
     auto bufAndLen = BufferAndLength(str, strIn.size());
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
     
     auto N = TheParserSession->parseExpressions();
     
@@ -107,7 +107,7 @@ TEST_F(APITest, Crash2) {
     
     auto bufAndLen = BufferAndLength(str, strIn.size());
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
     
     auto N = TheParserSession->parseExpressions();
     
@@ -129,7 +129,7 @@ TEST_F(APITest, Crash3) {
     
     auto bufAndLen = BufferAndLength(str, strIn.size());
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
     
     auto N = TheParserSession->parseExpressions();
     
@@ -151,7 +151,7 @@ TEST_F(APITest, Crash4) {
     
     auto bufAndLen = BufferAndLength(str, strIn.size());
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
     
     auto N = TheParserSession->parseExpressions();
     
@@ -173,7 +173,7 @@ TEST_F(APITest, Crash5) {
     
     auto bufAndLen = BufferAndLength(str, strIn.size());
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
     
     auto N = TheParserSession->parseExpressions();
     
@@ -195,7 +195,7 @@ TEST_F(APITest, Crash6) {
     
     auto bufAndLen = BufferAndLength(str, strIn.size());
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
     
     auto N = TheParserSession->parseExpressions();
     
@@ -217,7 +217,7 @@ TEST_F(APITest, Crash7) {
     
     auto bufAndLen = BufferAndLength(str, strIn.size());
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_UNKNOWN);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_UNKNOWN, DEFAULT_TAB_WIDTH);
     
     auto N = TheParserSession->parseExpressions();
     

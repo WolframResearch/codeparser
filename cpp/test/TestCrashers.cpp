@@ -38,7 +38,7 @@ TEST_F(CrashTest, Crash0_characters) {
     
     auto bufAndLen = BufferAndLength(arr, 3);
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
     
     auto policy = TOPLEVEL;
     
@@ -68,7 +68,7 @@ TEST_F(CrashTest, Crash0_tokens) {
     
     auto bufAndLen = BufferAndLength(arr, 3);
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
     
     auto policy = TOPLEVEL;
     
@@ -95,7 +95,7 @@ TEST_F(CrashTest, Crash1) {
     
     auto bufAndLen = BufferAndLength(arr, 7);
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
     
     auto N = TheParserSession->parseExpressions();
     
@@ -134,7 +134,7 @@ TEST_F(CrashTest, Crash2) {
     
     auto bufAndLen = BufferAndLength(arr, 6);
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
     
     auto N = TheParserSession->parseExpressions();
     
@@ -151,7 +151,7 @@ TEST_F(CrashTest, Crash3) {
     
     auto bufAndLen = BufferAndLength(arr, 7);
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
     
     auto N = TheParserSession->parseExpressions();
     
@@ -168,7 +168,7 @@ TEST_F(CrashTest, Crash4) {
     
     auto bufAndLen = BufferAndLength(arr, 17);
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
     
     auto N = TheParserSession->parseExpressions();
     
