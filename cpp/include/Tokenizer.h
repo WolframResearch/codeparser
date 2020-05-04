@@ -20,7 +20,7 @@ class Tokenizer {
     std::vector<IssuePtr> Issues;
     
     
-    void backup(Buffer resetBuf, SourceLocation resetLoc, bool warn);
+    void backupAndWarn(Buffer resetBuf, SourceLocation resetLoc);
     
     Token handleStrangeWhitespace(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
     
@@ -58,12 +58,20 @@ class Tokenizer {
     Token handleNumber(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
     
     //
+    // Precondition: currentWLCharacter is 0
+    // Postcondition: buffer is pointing to first NON-ZERO character after all zeros
+    //
+    // return: the first NON-ZERO character after all digits
+    //
+    WLCharacter handleZeros(NextPolicy policy, WLCharacter firstChar, int *count);
+    
+    //
     // Precondition: currentWLCharacter is a digit
     // Postcondition: buffer is pointing to first NON-DIGIT character after all digits
     //
     // return: the first NON-DIGIT character after all digits
     //
-    WLCharacter handleDigits(NextPolicy policy, WLCharacter firstChar, size_t *count);
+    WLCharacter handleDigits(NextPolicy policy, WLCharacter firstChar, int *count);
     
     //
     // Precondition: currentWLCharacter is NOT in String

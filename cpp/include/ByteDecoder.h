@@ -109,6 +109,10 @@ public:
     //
     SourceCharacter nextSourceCharacter0(NextPolicy policy);
     
+    //
+    // Postcondition: lastBuf is set to the last value of buffer
+    // Postcondition: lastLoc is set to the last value of SrcLoc
+    //
     SourceCharacter currentSourceCharacter(NextPolicy policy);
     
 #if !NISSUES

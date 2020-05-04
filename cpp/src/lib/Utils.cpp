@@ -361,5 +361,15 @@ SourceConvention Utils::parseSourceConvention(std::string s) {
 }
 
 
+bool Utils::ifASCIIWLCharacter(unsigned char c, char test) {
+    
+    if (c >= 128) {
+        return true;
+    }
+    if (c == '\\') {
+        return true;
+    }
+    return c == test;
+}
 
 

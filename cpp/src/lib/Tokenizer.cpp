@@ -975,15 +975,28 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
     
     assert(c.isDigit() || c.to_point() == '.');
     
-    int leadingDigitsCount = 0;
+    auto leadingDigitsCount = 0;
     
     //
-    // given 16^^0.F, leadingDigitsEnd will point to .
-    // given 16^^.F, leadingDigitsEnd will point to .
-    // given 0.123, leadingDigitsEnd will point to .
+    // leadingDigitsEnd will point to the first character after all leading digits and ^^
+    //
+    // 16^^0.F
+    //      ^leadingDigitsEnd
+    //
+    // 16^^.F
+    //     ^leadingDigitsEnd
+    //
+    // 0.123
+    //  ^leadingDigitsEnd
     //
     auto leadingDigitsEndBuf = tokenStartBuf;
     auto leadingDigitsEndLoc = tokenStartLoc;
+    
+    Buffer caret1Buf;
+    SourceLocation caret1Loc;
+    
+    Buffer starBuf;
+    SourceLocation starLoc;
     
     //
     // Use the convention that base of 0 means the default, unspecified base
@@ -996,51 +1009,41 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
         leadingDigitsCount++;
         
         //
-        // With input of 002^^111, this will point to '2'
+        // Count leading zeros
+        //
+        
+        //
+        // 002^^111
+        //   ^nonZeroStartBuf
         //
         auto nonZeroStartBuf = tokenStartBuf;
         auto nonZeroStartLoc = tokenStartLoc;
         
-        //
-        // Count leading zeros
-        //
         if (c.to_point() == '0') {
             
-            c = TheCharacterDecoder->currentWLCharacter(policy);
+            int leadingZeroCount;
+            c = handleZeros(policy, c, &leadingZeroCount);
             
-            while (true) {
-                
-                //
-                // No need to check isAbort() inside tokenizer loops
-                //
-                
-                if (c.to_point() != '0') {
-                    
-                    nonZeroStartBuf = TheByteBuffer->buffer;
-                    nonZeroStartLoc = TheByteDecoder->SrcLoc;
-                    
-                    break;
-                }
-                
-                leadingDigitsCount++;
-                
-                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-                TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
-                
-                c = TheCharacterDecoder->currentWLCharacter(policy);
-                
-            } // while
+            leadingDigitsCount += leadingZeroCount;
+            
+            nonZeroStartBuf = TheByteBuffer->buffer;
+            nonZeroStartLoc = TheByteDecoder->SrcLoc;
         }
+        
+        
+        //
+        // Count the rest of the leading digits
+        //
         
         leadingDigitsEndBuf = TheByteBuffer->buffer;
         leadingDigitsEndLoc = TheByteDecoder->SrcLoc;
         
         if (c.isDigit()) {
             
-            size_t count;
+            int count;
             c = handleDigits(policy, c, &count);
             
-            leadingDigitsCount += static_cast<int>(count);
+            leadingDigitsCount += count;
             
             leadingDigitsEndBuf = TheByteBuffer->buffer;
             leadingDigitsEndLoc = TheByteDecoder->SrcLoc;
@@ -1066,17 +1069,51 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
             }
 #endif // !NISSUES
             
+            //
+            // Success!
+            //
+            
             return Token(TOKEN_INTEGER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         }
         
-        if (c.to_point() == '.') {
-            
-            //
-            // Eat the dot
-            //
-            
-            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-            TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+        switch (c.to_point()) {
+                //
+                // These are the possible next characters for a number
+                //
+            case '^': case '*': case '.': case '`':
+                
+                if (c.to_point() == '^') {
+                    
+                    caret1Buf = TheByteBuffer->buffer;
+                    caret1Loc = TheByteDecoder->SrcLoc;
+                    
+                    assert(Utils::ifASCIIWLCharacter(*caret1Buf, '^'));
+                    
+                } else if (c.to_point() == '*') {
+                    
+                    starBuf = TheByteBuffer->buffer;
+                    starLoc = TheByteDecoder->SrcLoc;
+                    
+                    assert(Utils::ifASCIIWLCharacter(*starBuf, '*'));
+                }
+                
+                //
+                // Preserve c, but advance buffer to next character
+                //
+                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+                break;
+                
+            default:
+                //
+                // Something else
+                //
+                
+                //
+                // Success!
+                //
+                
+                return Token(TOKEN_INTEGER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         }
         
         if (c.to_point() == '^') {
@@ -1084,12 +1121,6 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
             //
             // Could be 16^^blah
             //
-            
-            auto caret1Buf = TheByteBuffer->buffer;
-            auto caret1Loc = TheByteDecoder->SrcLoc;
-            
-            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-            TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
             c = TheCharacterDecoder->currentWLCharacter(policy);
             
@@ -1101,7 +1132,8 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 // Must now do surgery and back up
                 //
                 
-                backup(caret1Buf, caret1Loc, false);
+                TheByteBuffer->buffer = caret1Buf;
+                TheByteDecoder->SrcLoc = caret1Loc;
                 
                 //
                 // Success!
@@ -1110,7 +1142,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 return Token(TOKEN_INTEGER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
             }
             
-            // c is '^'
+            assert(c.to_point() == '^');
             
             //
             // Something like  2^^
@@ -1183,15 +1215,36 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                     leadingDigitsEndBuf = TheByteBuffer->buffer;
                     leadingDigitsEndLoc = TheByteDecoder->SrcLoc;
                     
-                    if (c.to_point() == '.') {
-                        
-                        //
-                        // Eat the dot
-                        //
-                        
-                        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-                        TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
-                        
+                    switch (c.to_point()) {
+                            //
+                            // These are the possible next characters for a number
+                            //
+                        case '*': case '.': case '`':
+                            
+                            if (c.to_point() == '*') {
+                                
+                                starBuf = TheByteBuffer->buffer;
+                                starLoc = TheByteDecoder->SrcLoc;
+                                
+                                assert(Utils::ifASCIIWLCharacter(*starBuf, '*'));
+                            }
+                            
+                            //
+                            // Preserve c, but advance buffer to next character
+                            //
+                            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                            TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+                            break;
+                        default:
+                            //
+                            // Something else
+                            //
+                            
+                            //
+                            // Success!
+                            //
+                            
+                            return Token(TOKEN_INTEGER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                     }
                 }
                     break;
@@ -1205,9 +1258,8 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                     leadingDigitsEndLoc = TheByteDecoder->SrcLoc;
                     
                     //
-                    // Eat the dot
+                    // Preserve c, but advance buffer to next character
                     //
-                    
                     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
                     TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
                 }
@@ -1230,16 +1282,14 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                     return Token(TOKEN_ERROR_UNRECOGNIZEDDIGIT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                 }
             }
-        }
+            
+        } // if (c.to_point() == '^')
+        
     } // if (c.isDigit())
     
     if (c.to_point() == '.') {
         
-        //
-        // assert(*(TheByteBuffer->buffer - 1) == '.');
-        //
-        // The dot could be a sequence of SourceCharacters, e.g. \056, so can't really assert here
-        //
+        assert(Utils::ifASCIIWLCharacter(*(TheByteBuffer->buffer - 1), '.'));
         
         int handled;
         c = handlePossibleFractionalPart(leadingDigitsEndBuf, leadingDigitsEndLoc, c, base, policy, &handled);
@@ -1255,8 +1305,10 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                     return Token(TOKEN_ERROR_UNHANDLEDDOT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                 }
                 
-                real = false;
-                break;
+                // Success!
+                
+                return Token(TOKEN_INTEGER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                
             case UNRECOGNIZED_DIGIT:
                 return Token(TOKEN_ERROR_UNRECOGNIZEDDIGIT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
             case 0:
@@ -1271,12 +1323,78 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 }
                 
                 real = true;
+                
+                switch (c.to_point()) {
+                        //
+                        // These are the possible next characters for a number
+                        //
+                    case '`': case '*':
+                        
+                        if (c.to_point() == '*') {
+                            
+                            starBuf = TheByteBuffer->buffer;
+                            starLoc = TheByteDecoder->SrcLoc;
+                            
+                            assert(Utils::ifASCIIWLCharacter(*starBuf, '*'));
+                        }
+                        
+                        //
+                        // Preserve c, but advance buffer to next character
+                        //
+                        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                        TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+                        break;
+                    default:
+                        
+                        //
+                        // Something like  123.
+                        //
+                        
+                        // Success!
+                        
+                        return Token(TOKEN_REAL, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                }
+                
                 break;
             default:
+                
                 real = true;
+                
+                switch (c.to_point()) {
+                        //
+                        // These are the possible next characters for a number
+                        //
+                    case '`': case '*':
+                        
+                        if (c.to_point() == '*') {
+                            
+                            starBuf = TheByteBuffer->buffer;
+                            starLoc = TheByteDecoder->SrcLoc;
+                            
+                            assert(Utils::ifASCIIWLCharacter(*starBuf, '*'));
+                        }
+                        
+                        //
+                        // Preserve c, but advance buffer to next character
+                        //
+                        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                        TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+                        break;
+                    default:
+                        
+                        //
+                        // Something like  123.456
+                        //
+                        
+                        // Success!
+                        
+                        return Token(TOKEN_REAL, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                }
                 break;
         }
     }
+    
+    assert(c.to_point() == '`' || c.to_point() == '*');
     
     //
     // Handle all ` logic here
@@ -1288,9 +1406,6 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
     if (c.to_point() == '`') {
         
         real = true;
-        
-        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-        TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
         
         c = TheCharacterDecoder->currentWLCharacter(policy);
         
@@ -1307,7 +1422,6 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
             accuracy = true;
         }
         
-        bool sawDot = false;
         switch (c.to_point()) {
             case '-': case '+': {
                 
@@ -1317,6 +1431,8 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 
                 auto signBuf = TheByteBuffer->buffer;
                 auto signLoc = TheByteDecoder->SrcLoc;
+                
+                assert(Utils::ifASCIIWLCharacter(*signBuf, '-')  || Utils::ifASCIIWLCharacter(*signBuf, '+'));
                 
                 //
                 // Eat the sign
@@ -1328,6 +1444,9 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 c = TheCharacterDecoder->currentWLCharacter(policy);
                 
                 switch (c.to_point()) {
+                        //
+                        // These are the possible next characters for a number
+                        //
                     case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
                         
                         //
@@ -1342,7 +1461,6 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                         // Something like  1.2`-.3
                         //
                         
-                        sawDot = true;
                         sign = true;
                         break;
                     default: {
@@ -1368,43 +1486,55 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                         //
                         // Must now do surgery and back up
                         //
-                        backup(signBuf, signLoc, true);
+                        backupAndWarn(signBuf, signLoc);
                         
+                        //
                         // Success!
+                        //
                         
                         return Token(TOKEN_REAL, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                     }
                 }
-            }
-            //
-            // fall-through
-            //
+                
+            } // case '-': case '+'
+        }
+        
+        switch(c.to_point()) {
             case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': {
                 
-                //
-                // might jump here or fall-through
-                //
-                // Need to test whether last character was . or not
-                //
-                if (!sawDot) {
-                    size_t count;
-                    c = handleDigits(policy, c, &count);
-                    if (count > 0) {
-                        precOrAccSupplied = true;
-                    }
-                    
-                    if (c.to_point() != '.') {
+                int count;
+                c = handleDigits(policy, c, &count);
+                if (count > 0) {
+                    precOrAccSupplied = true;
+                }
+                
+                switch (c.to_point()) {
+                        //
+                        // These are the possible next characters for a number
+                        //
+                    case '.':
                         break;
-                    }
+                    case '*':
+                        break;
+                        
+                    default:
+                        
+                        //
+                        // Success!
+                        //
+                        
+                        return Token(TOKEN_REAL, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                 }
             }
-            //
-            // fall-through
-            //
+        }
+        
+        switch (c.to_point()) {
             case '.': {
                 
                 auto dotBuf = TheByteBuffer->buffer;
                 auto dotLoc = TheByteDecoder->SrcLoc;
+                
+                assert(Utils::ifASCIIWLCharacter(*dotBuf, '.'));
                 
                 bool actualDecimalPoint = false;
                 
@@ -1470,11 +1600,12 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                         //
                         // Must now do surgery and back up
                         //
-                        backup(dotBuf, dotLoc, true);
+                        backupAndWarn(dotBuf, dotLoc);
                         
                         //
                         // Success!
                         //
+                        
                         return Token(TOKEN_REAL, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                         
                     } else {
@@ -1510,6 +1641,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 c = handlePossibleFractionalPartPastDot(dotBuf, dotLoc, c, baseToUse, policy, &handled);
                 switch (handled) {
                     case BAILOUT:
+                        assert(false);
                         break;
                     case UNRECOGNIZED_DIGIT:
                         assert(false);
@@ -1536,48 +1668,76 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 }
                 
             } // case '.'
+                
+        } // switch (c.to_point())
+        
+        switch (c.to_point()) {
+                
+                //
+                // These are the possible next characters for a number
+                //
+            case '*':
+                
+                if (accuracy) {
+                    
+                    if (!precOrAccSupplied) {
+                     
+                        //
+                        // Something like  123.45``*^6
+                        //
+                        
+                        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                        TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+                        
+                        c = TheCharacterDecoder->currentWLCharacter(policy);
+                        
+                        return Token(TOKEN_ERROR_EXPECTEDACCURACY, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                    }
+                }
+                
+                starBuf = TheByteBuffer->buffer;
+                starLoc = TheByteDecoder->SrcLoc;
+                
+                assert(Utils::ifASCIIWLCharacter(*starBuf, '*'));
+                
+                //
+                // Preserve c, but advance buffer to next character
+                //
+                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
                 break;
             default: {
                 
                 if (accuracy) {
                     
-                    //
-                    // Something like  123``EOF
-                    //
-                    
-                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-                    TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
-                    
-                    c = TheCharacterDecoder->currentWLCharacter(policy);
-                    
-                    return Token(TOKEN_ERROR_EXPECTEDACCURACY, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                    if (!precOrAccSupplied) {
+                     
+                        //
+                        // Something like  123``EOF
+                        //
+                        
+                        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                        TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+                        
+                        c = TheCharacterDecoder->currentWLCharacter(policy);
+                        
+                        return Token(TOKEN_ERROR_EXPECTEDACCURACY, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                    }
                 }
+                
+                //
+                // Success!
+                //
+                return Token(TOKEN_REAL, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
             }
-                break;
-        } // switch (c.to_point())
+                
+        }
         
     } // if (c.to_point() == '`')
     
-    if (c.to_point() != '*') {
-        
-        //
-        // Success!
-        //
-        
-        if (real) {
-            return Token(TOKEN_REAL, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
-        } else {
-            return Token(TOKEN_INTEGER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
-        }
-    }
+    assert(c.to_point() == '*');
     
-    // c is '*'
-    
-    auto starBuf = TheByteBuffer->buffer;
-    auto starLoc = TheByteDecoder->SrcLoc;
-    
-    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-    TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+    assert(Utils::ifASCIIWLCharacter(*starBuf, '*'));
     
     c = TheCharacterDecoder->currentWLCharacter(policy);
     
@@ -1588,11 +1748,9 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
         //
         // Must now do surgery and back up
         //
-
-        auto resetBuf = starBuf;
-        auto resetLoc = starLoc;
         
-        backup(resetBuf, resetLoc, false);
+        TheByteBuffer->buffer = starBuf;
+        TheByteDecoder->SrcLoc = starLoc;
         
         //
         // Success!
@@ -1604,6 +1762,8 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
             return Token(TOKEN_INTEGER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         }
     }
+    
+    assert(c.to_point() == '^');
     
     //
     // c is '^'
@@ -1636,7 +1796,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
     if (!c.isDigit()) {
         
         //
-        // Something like  123*^-EOF
+        // Something like  123*^-<EOF>
         //
         
         TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
@@ -1645,40 +1805,22 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
         return Token(TOKEN_ERROR_EXPECTEDEXPONENT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
     }
     
+    assert(c.isDigit());
+    
     //
     // Count leading zeros in exponent
     //
     if (c.to_point() == '0') {
         
-        c = TheCharacterDecoder->currentWLCharacter(policy);
-        
-        while (true) {
-            
-            //
-            // No need to check isAbort() inside tokenizer loops
-            //
-            
-            if (c.to_point() != '0') {
-                
-                break;
-            }
-            
-            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-            TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
-            
-            c = TheCharacterDecoder->currentWLCharacter(policy);
-            
-        } // while
+        int exponentLeadingZeroCount;
+        c = handleZeros(policy, c, &exponentLeadingZeroCount);
     }
     
-    int exponentDigitCount = 0;
+    int nonZeroExponentDigitCount = 0;
     
     if (c.isDigit()) {
         
-        size_t count;
-        c = handleDigits(policy, c, &count);
-        
-        exponentDigitCount = static_cast<int>(count);
+        c = handleDigits(policy, c, &nonZeroExponentDigitCount);
     }
     
     if (c.to_point() != '.') {
@@ -1689,7 +1831,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
         
         if (real) {
             return Token(TOKEN_REAL, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
-        } else if (negativeExponent && exponentDigitCount != 0) {
+        } else if (negativeExponent && nonZeroExponentDigitCount != 0) {
             
             //
             // Something like  1*^-2
@@ -1701,11 +1843,13 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
         }
     }
     
-    // c is '.'
+    assert(c.to_point() == '.');
     
     auto dotBuf = TheByteBuffer->buffer;
     auto dotLoc = TheByteDecoder->SrcLoc;
-
+    
+    assert(Utils::ifASCIIWLCharacter(*dotBuf, '.'));
+    
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
 
@@ -1714,41 +1858,49 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
     int handled;
     c = handlePossibleFractionalPartPastDot(dotBuf, dotLoc, c, base, policy, &handled);
     
-    if (handled == BAILOUT) {
-        //
-        // Something like  123*^2..
-        //
-        // The first . is not actually a radix point
-        //
-        
-        //
-        // Success!
-        //
-        
-        if (real) {
-            return Token(TOKEN_REAL, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
-        } else if (negativeExponent && exponentDigitCount != 0) {
+    switch (handled) {
+        case BAILOUT: {
             
             //
-            // Something like  1*^-2
+            // Something like  123*^2..
+            //
+            // The first . is not actually a radix point
             //
             
-            return Token(TOKEN_RATIONAL, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
-        } else {
-            return Token(TOKEN_INTEGER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+            //
+            // Success!
+            //
+            
+            if (real) {
+                return Token(TOKEN_REAL, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+            } else if (negativeExponent && nonZeroExponentDigitCount != 0) {
+                
+                //
+                // Something like  1*^-2..
+                //
+                
+                return Token(TOKEN_RATIONAL, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+            } else {
+                return Token(TOKEN_INTEGER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+            }
+        }
+        case UNRECOGNIZED_DIGIT:
+            assert(false);
+            break;
+        default: {
+            
+            //
+            // Something like  123*^0.5
+            //
+            // Make this an error; do NOT make this Dot[123*^0, 5]
+            //
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+            
+            return Token(TOKEN_ERROR_EXPECTEDEXPONENT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         }
     }
-    
-    //
-    // Something like  123*^0.5
-    //
-    // Make this an error; do NOT make this Dot[123*^0, 5]
-    //
-    
-    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-    TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
-    
-    return Token(TOKEN_ERROR_EXPECTEDEXPONENT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
 }
 
 
@@ -1787,7 +1939,8 @@ inline WLCharacter Tokenizer::handlePossibleFractionalPartPastDot(Buffer dotBuf,
         Issues.push_back(std::move(I));
 #endif // !NISSUES
         
-        backup(dotBuf, dotLoc, false);
+        TheByteBuffer->buffer = dotBuf;
+        TheByteDecoder->SrcLoc = dotLoc;
         
         c = TheCharacterDecoder->currentWLCharacter(policy);
         
@@ -1834,19 +1987,16 @@ inline WLCharacter Tokenizer::handlePossibleFractionalPartPastDot(Buffer dotBuf,
     return c;
 }
         
-void Tokenizer::backup(Buffer resetBuf, SourceLocation resetLoc, bool warn) {
+void Tokenizer::backupAndWarn(Buffer resetBuf, SourceLocation resetLoc) {
     
 #if !NISSUES
+        
+    std::vector<CodeActionPtr> Actions;
+    Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(resetLoc), " ")));
     
-    if (warn) {
-        
-        std::vector<CodeActionPtr> Actions;
-        Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(resetLoc), " ")));
-        
-        auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, Source(resetLoc), std::move(Actions)));
-        
-        Issues.push_back(std::move(I));
-    }
+    auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, Source(resetLoc), std::move(Actions)));
+    
+    Issues.push_back(std::move(I));
 #endif // !NISSUES
     
     TheByteBuffer->buffer = resetBuf;
@@ -1854,11 +2004,45 @@ void Tokenizer::backup(Buffer resetBuf, SourceLocation resetLoc, bool warn) {
 }
 
 
-inline WLCharacter Tokenizer::handleDigits(NextPolicy policy, WLCharacter c, size_t *countP) {
+inline WLCharacter Tokenizer::handleZeros(NextPolicy policy, WLCharacter c, int *countP) {
+    
+    assert(c.to_point() == '0');
+    
+    auto count = 1;
+    
+    c = TheCharacterDecoder->currentWLCharacter(policy);
+    
+    while (true) {
+        
+        //
+        // No need to check isAbort() inside tokenizer loops
+        //
+        
+        if (c.to_point() != '0') {
+            
+            break;
+        }
+        
+        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+        TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+        
+        c = TheCharacterDecoder->currentWLCharacter(policy);
+        
+        count++;
+        
+    } // while
+    
+    *countP = count;
+    
+    return c;
+}
+
+
+inline WLCharacter Tokenizer::handleDigits(NextPolicy policy, WLCharacter c, int *countP) {
     
     assert(c.isDigit());
     
-    size_t count = 1;
+    auto count = 1;
     
     c = TheCharacterDecoder->currentWLCharacter(policy);
     
@@ -1892,7 +2076,7 @@ inline WLCharacter Tokenizer::handleAlphaOrDigits(WLCharacter c, size_t base, Ne
     
     assert(c.isAlphaOrDigit());
     
-    int count = 0;
+    auto count = 0;
     
     while (true) {
         
@@ -2094,7 +2278,7 @@ inline Token Tokenizer::handleEqual(Buffer tokenStartBuf, SourceLocation tokenSt
                 // Must now do surgery and back up
                 //
                 
-                backup(bangBuf, bangLoc, true);
+                backupAndWarn(bangBuf, bangLoc);
             }
         }
             break;
@@ -2148,8 +2332,7 @@ inline Token Tokenizer::handleUnder(Buffer tokenStartBuf, SourceLocation tokenSt
                 // Must now do surgery and back up
                 //
                 
-                auto shouldWarn = true;
-                backup(dot1Buf, dot1Loc, shouldWarn);
+                backupAndWarn(dot1Buf, dot1Loc);
                 
             } else {
                 
@@ -2228,7 +2411,7 @@ inline Token Tokenizer::handleLess(Buffer tokenStartBuf, SourceLocation tokenSta
                 // Must now do surgery and back up
                 //
                 
-                backup(minusBuf, minusLoc, true);
+                backupAndWarn(minusBuf, minusLoc);
             }
         }
             break;
@@ -2580,7 +2763,7 @@ inline Token Tokenizer::handleSlash(Buffer tokenStartBuf, SourceLocation tokenSt
                 // Must now do surgery and back up
                 //
                 
-                backup(dotBuf, dotLoc, true);
+                backupAndWarn(dotBuf, dotLoc);
                 
             } else {
                 

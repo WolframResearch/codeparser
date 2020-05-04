@@ -81,6 +81,10 @@ public:
     //
     WLCharacter nextWLCharacter0(NextPolicy policy);
     
+    //
+    // Postcondition: lastBuf is set to the last value of buffer
+    // Postcondition: lastLoc is set to the last value of SrcLoc
+    //
     WLCharacter currentWLCharacter(NextPolicy policy);
     
 #if !NISSUES

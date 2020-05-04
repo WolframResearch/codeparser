@@ -318,6 +318,30 @@ TestMatch[
 	TestID->"SyntaxIssues-20200405-H2D3M0"
 ]
 
+(*
+Make sure that Source is correct
+*)
+TestMatch[
+	FirstCase[CodeConcreteParse["\\[Prime] + 2", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
+		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
+	,
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnexpectedCharacter", _, _, KeyValuePattern[Source -> {{1, 1}, {1, 9}}]]}]
+	,
+	TestID->"SyntaxIssues-20200504-H4U1I4"
+]
+
+(*
+Make sure that Source is correct
+*)
+TestMatch[
+	FirstCase[CodeConcreteParse["abc\\[Prime] + 2", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
+		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
+	,
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnexpectedCharacter", _, _, KeyValuePattern[Source -> {{1, 4}, {1, 12}}]]}]
+	,
+	TestID->"SyntaxIssues-20200504-P6Z1C2"
+]
+
 
 
 

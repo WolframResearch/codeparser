@@ -162,7 +162,6 @@ WLCharacter CharacterDecoder::currentWLCharacter(NextPolicy policy) {
     
     auto resetBuf = TheByteBuffer->buffer;
     auto resetEOF = TheByteBuffer->wasEOF;
-    
     auto resetLoc = TheByteDecoder->SrcLoc;
     
     auto c = nextWLCharacter0(policy);

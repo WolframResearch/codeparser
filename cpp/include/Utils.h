@@ -46,4 +46,9 @@ public:
     static uint8_t toDigit(unsigned char val);
     
     static SourceConvention parseSourceConvention(std::string s);
+    
+    //
+    // if c is an ASCII WLCharacter, then compare to test
+    //
+    static bool ifASCIIWLCharacter(unsigned char c, char test);
 };
