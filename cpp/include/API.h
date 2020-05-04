@@ -3,7 +3,7 @@
 
 #include "Node.h" // for NodePtr, Node, etc.
 #include "Source.h" // for BufferAndLength
-#include "ExpressionLibrary.h" // for expr
+#include "ExprLibrary.h" // for expr
 
 //
 // Despite being mentioned here:

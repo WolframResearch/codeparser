@@ -14,7 +14,6 @@ concreteParseBytesListableFunc
 tokenizeBytesListableFunc
 concreteParseLeafFunc
 safeStringFunc
-exprTestFunc
 
 setupLongNamesFunc
 
@@ -80,6 +79,10 @@ $ConcreteParseStart
 LongNameSuggestion
 
 
+exprTestFunc
+getMetadataFunc
+
+
 Begin["`Private`"]
 
 Needs["CodeParser`"]
@@ -98,9 +101,9 @@ Module[{res},
 	*)
 	If[FileExistsQ[$exprLib],
 
-		If[$VersionNumber < 12.1,
+		If[$VersionNumber < 12.2,
 			(*
-			Built with 12.1+, and being used in an earlier version
+			Built with 12.2+, and being used in an earlier version
 
 			NOT SUPPORTED!
 			*)
@@ -168,9 +171,9 @@ Module[{location, libraryResources},
 	*)
 	If[FileExistsQ[$exprLib],
 
-		If[$VersionNumber < 12.1,
+		If[$VersionNumber < 12.2,
 			(*
-			Built with 12.1+, and being used in an earlier version
+			Built with 12.2+, and being used in an earlier version
 
 			NOT SUPPORTED!
 			*)
@@ -253,6 +256,8 @@ concreteParseLeafFunc := (setupLibraries[]; concreteParseLeafFunc = loadFunc["Co
 safeStringFunc := (setupLibraries[]; safeStringFunc = loadFunc["SafeString_LibraryLink", LinkObject, LinkObject]);
 
 exprTestFunc := (setupLibraries[]; exprTestFunc = loadFunc["ExprTest_LibraryLink", {}, Integer]);
+
+getMetadataFunc := (setupLibraries[]; getMetadataFunc = loadFunc["Get_LibraryLink", {Integer}, Integer]);
 
 setupLongNamesFunc := (setupLibraries[]; setupLongNamesFunc = loadFunc["SetupLongNames_LibraryLink", LinkObject, LinkObject]);
 )

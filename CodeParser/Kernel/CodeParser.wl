@@ -10,8 +10,6 @@ CodeConcreteParseLeaf
 
 SafeString
 
-ExprTest
-
 
 
 CodeTokenize
@@ -212,6 +210,11 @@ EncodingIssue
 
 
 SourceCharacter
+
+
+ExprTest
+
+GetMetadata
 
 
 Begin["`Private`"]
@@ -1000,6 +1003,15 @@ Module[{p, e},
   e
 ]
 
+GetMetadata[expr_] :=
+Module[{p, m},
+
+  p = CodeParser`Library`Private`$exprCompiledLibFuns["Expr_Pointer"][expr];
+
+  m = libraryFunctionWrapper[getMetadataFunc, p];
+
+  m
+]
 
 
 
