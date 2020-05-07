@@ -1930,17 +1930,7 @@ inline WLCharacter Tokenizer::handlePossibleFractionalPartPastDot(Buffer dotBuf,
         // Must now do surgery and back up
         //
         
-#if !NISSUES
-        std::vector<CodeActionPtr> Actions;
-        Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(dotLoc), " ")));
-        
-        auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, getTokenSource(dotLoc), std::move(Actions)));
-        
-        Issues.push_back(std::move(I));
-#endif // !NISSUES
-        
-        TheByteBuffer->buffer = dotBuf;
-        TheByteDecoder->SrcLoc = dotLoc;
+        backupAndWarn(dotBuf, dotLoc);
         
         c = TheCharacterDecoder->currentWLCharacter(policy);
         
