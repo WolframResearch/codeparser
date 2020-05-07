@@ -301,8 +301,8 @@ Module[{csts, bytess, encoding},
   csts =
     MapThread[Function[{cst, bytes},
       cst /. {
-        node_GroupMissingCloserNeedsReparseNode :> reparseMissingCloserNode[node, bytes, opts],
-        node:ErrorNode[Token`Error`UnterminatedComment, _, _] :> reparseUnterminatedCommentErrorNode[node, bytes, opts]
+        node_GroupMissingCloserNeedsReparseNode :> reparseMissingCloserNode[node, bytes, FilterRules[{opts}, Options[reparseMissingCloserNode]]],
+        node:ErrorNode[Token`Error`UnterminatedComment, _, _] :> reparseUnterminatedCommentErrorNode[node, bytes, FilterRules[{opts}, Options[reparseUnterminatedCommentErrorNode]]]
       }]
       ,
       {csts, bytess}
@@ -454,8 +454,8 @@ Module[{csts, encoding, fulls, bytess},
   csts =
     MapThread[Function[{cst, bytes},
       cst /. {
-        node_GroupMissingCloserNeedsReparseNode :> reparseMissingCloserNode[node, bytes, opts],
-        node:ErrorNode[Token`Error`UnterminatedComment, _, _] :> reparseUnterminatedCommentErrorNode[node, bytes, opts]
+        node_GroupMissingCloserNeedsReparseNode :> reparseMissingCloserNode[node, bytes, FilterRules[{opts}, Options[reparseMissingCloserNode]]],
+        node:ErrorNode[Token`Error`UnterminatedComment, _, _] :> reparseUnterminatedCommentErrorNode[node, bytes, FilterRules[{opts}, Options[reparseUnterminatedCommentErrorNode]]]
       }]
       ,
       {csts, bytess}
@@ -602,8 +602,8 @@ Module[{csts, encoding},
   csts =
     MapThread[Function[{cst, bytes},
       cst /. {
-        node_GroupMissingCloserNeedsReparseNode :> reparseMissingCloserNode[node, bytes, opts],
-        node:ErrorNode[Token`Error`UnterminatedComment, _, _] :> reparseUnterminatedCommentErrorNode[node, bytes, opts]
+        node_GroupMissingCloserNeedsReparseNode :> reparseMissingCloserNode[node, bytes, FilterRules[{opts}, Options[reparseMissingCloserNode]]],
+        node:ErrorNode[Token`Error`UnterminatedComment, _, _] :> reparseUnterminatedCommentErrorNode[node, bytes, FilterRules[{opts}, Options[reparseUnterminatedCommentErrorNode]]]
       }]
       ,
       {csts, bytess}
