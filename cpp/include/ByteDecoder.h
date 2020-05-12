@@ -41,7 +41,7 @@ class LineColumnManager : public SourceConventionManager {
     
 public:
     
-    LineColumnManager(size_t TabWidth) : TabWidth(TabWidth) {}
+    LineColumnManager(uint32_t TabWidth) : TabWidth(TabWidth) {}
     
     
     SourceLocation newSourceLocation() override;
