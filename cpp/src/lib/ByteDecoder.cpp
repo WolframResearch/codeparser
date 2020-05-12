@@ -7,7 +7,7 @@
 
 ByteDecoder::ByteDecoder() : Issues(), status(), lastBuf(), lastLoc(), SrcLoc() {}
 
-void ByteDecoder::init(SourceConvention srcConvention, size_t TabWidth) {
+void ByteDecoder::init(SourceConvention srcConvention, uint32_t TabWidth) {
     
     Issues.clear();
     

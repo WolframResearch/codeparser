@@ -90,7 +90,7 @@ public:
     
     ByteDecoder();
     
-    void init(SourceConvention srcConvention, size_t TabWidth);
+    void init(SourceConvention srcConvention, uint32_t TabWidth);
     
     void deinit();
     
