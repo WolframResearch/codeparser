@@ -341,7 +341,7 @@ enum SourceConvention {
     SOURCECONVENTION_SOURCECHARACTERINDEX
 };
 
-constexpr size_t DEFAULT_TAB_WIDTH = 4;
+constexpr uint32_t DEFAULT_TAB_WIDTH = 4;
 
 
 //
