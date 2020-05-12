@@ -15,12 +15,12 @@ Token`Integer -> Next,
 Token`Real -> Next,
 Token`Rational -> Next,
 
-Token`Buffer1 -> Next,
+Token`AssertFalse -> Next,
 
 (*
 trivia
 
-The Buffers before trivia and the Buffers after trivia serve the purpose of giving the
+Any Buffers before trivia and any Buffers after trivia serve the purpose of giving the
 correct values to Token`InternalNewline and Token`ToplevelNewline so that the single
 bit 0b100 can be set to turn Token`InternalNewline into Token`ToplevelNewline
 while also allowing fast testing of trivia (just a bit mask) and also fast testing of
@@ -29,12 +29,12 @@ non-ToplevelNewline trivia (also just a bit mask)
 Token`InternalNewline -> Next, (*8*)
 Token`Comment -> Next,
 Token`Whitespace -> Next,
-Token`Buffer2 -> Next,
+Token`Buffer1 -> Next,
 Token`ToplevelNewline -> Next,
 
+Token`Buffer2 -> Next,
 Token`Buffer3 -> Next,
 Token`Buffer4 -> Next,
-Token`Buffer5 -> Next,
 
 (* errors *)
 Token`Error`ExpectedEqual -> Next, (*16*)

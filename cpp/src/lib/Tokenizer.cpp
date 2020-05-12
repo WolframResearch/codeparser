@@ -1886,7 +1886,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
         }
         case UNRECOGNIZED_DIGIT:
             assert(false);
-            break;
+            return Token(TOKEN_ASSERTFALSE, BufferAndLength(), Source());
         default: {
             
             //

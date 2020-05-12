@@ -34,7 +34,10 @@ public:
 //
 class LineColumnManager : public SourceConventionManager {
     
-    size_t TabWidth;
+    //
+    // Use uint32_t here to match SourceLocation members
+    //
+    uint32_t TabWidth;
     
 public:
     
