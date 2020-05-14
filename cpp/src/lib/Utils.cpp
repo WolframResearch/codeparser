@@ -88,42 +88,6 @@ bool Utils::isUndocumentedLongName(std::string s) {
 
 
 #if !NISSUES
-void Utils::strangeLetterlikeWarning(Source Src, WLCharacter c) {
-    
-    assert(c.isStrangeLetterlike());
-    
-    if (c.isVeryStrangeLetterlike()) {
-        
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
-        
-        TheTokenizer->addIssue(std::move(I));
-        
-        return;
-    }
-    
-    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.90, {}));
-    
-    TheTokenizer->addIssue(std::move(I));
-}
-
-void Utils::mbStrangeLetterlikeWarning(Source Src, WLCharacter c) {
-    
-    assert(c.isMBStrangeLetterlike());
-    
-    if (c.isMBVeryStrangeLetterlike()) {
-        
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.85, {}));
-        
-        TheTokenizer->addIssue(std::move(I));
-        
-        return;
-    }
-    
-    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.80, {}));
-    
-    TheTokenizer->addIssue(std::move(I));
-}
-
 bool Utils::isStrange(codepoint point) {
 
     switch (point) {

@@ -274,22 +274,6 @@ bool WLCharacter::isLetterlike() const {
     }
 }
 
-bool WLCharacter::isStrangeLetterlike() const {
-    
-    //
-    // Dump out if not a letterlike character
-    //
-    if (!isLetterlike()) {
-        return false;
-    }
-    
-    if (isVeryStrangeLetterlike()) {
-        return true;
-    }
-    
-    return false;
-}
-
 bool WLCharacter::isVeryStrangeLetterlike() const {
     
     //
@@ -573,10 +557,6 @@ bool WLCharacter::isMBStrangeLetterlike() const {
     //
     if (!isMBLetterlike()) {
         return false;
-    }
-    
-    if (isMBVeryStrangeLetterlike()) {
-        return true;
     }
     
     auto esc = escape();

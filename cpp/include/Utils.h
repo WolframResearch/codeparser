@@ -31,10 +31,6 @@ public:
     static bool isMBNonCharacter(codepoint point);
     
 #if !NISSUES
-    static void strangeLetterlikeWarning(Source Src, WLCharacter c);
-    
-    static void mbStrangeLetterlikeWarning(Source Src, WLCharacter c);
-    
     static bool isStrange(codepoint point);
     
     static bool isMBStrange(codepoint point);

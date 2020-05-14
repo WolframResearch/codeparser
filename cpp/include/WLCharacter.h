@@ -93,8 +93,6 @@ struct WLCharacter {
     
     bool isLetterlike() const;
     
-    bool isStrangeLetterlike() const;
-    
     bool isVeryStrangeLetterlike() const;
     
     bool isWhitespace() const;
