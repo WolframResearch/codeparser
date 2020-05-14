@@ -15,6 +15,9 @@ void CharacterDecoder::init(WolframLibraryData libDataIn) {
     Issues.clear();
     
     libData = libDataIn;
+    
+    lastBuf = nullptr;
+    lastLoc = SourceLocation();
 }
 
 

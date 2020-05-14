@@ -13,6 +13,9 @@ void ByteDecoder::init(SourceConvention srcConvention, uint32_t TabWidth) {
     
     status = UTF8STATUS_NORMAL;
     
+    lastBuf = nullptr;
+    lastLoc = SourceLocation();
+    
     switch (srcConvention) {
         case SOURCECONVENTION_LINECOLUMN:
             srcConventionManager = SourceConventionManagerPtr(new LineColumnManager(TabWidth));

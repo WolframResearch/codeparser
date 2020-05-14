@@ -73,17 +73,7 @@ TEST_F(CharacterDecoderTest, LongName) {
     
     TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
     
-    EXPECT_EQ(TheByteDecoder->lastBuf, nullptr);
-//    EXPECT_EQ(TheByteDecoder->lastLoc, <#val2#>);
-    EXPECT_EQ(TheCharacterDecoder->lastBuf, nullptr);
-//    EXPECT_EQ(TheCharacterDecoder->lastLoc, <#val2#>);
-    
     auto c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
-    
-    EXPECT_EQ(TheByteDecoder->lastBuf, str + 1);
-    EXPECT_EQ(TheByteDecoder->lastLoc, SourceLocation(1, 2));
-    EXPECT_EQ(TheCharacterDecoder->lastBuf, str + 1);
-    EXPECT_EQ(TheCharacterDecoder->lastLoc, SourceLocation(1, 2));
     
     EXPECT_EQ(c, WLCharacter('1'));
     
@@ -91,32 +81,17 @@ TEST_F(CharacterDecoderTest, LongName) {
     
     c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
     
-    EXPECT_EQ(TheByteDecoder->lastBuf, str + 2);
-    EXPECT_EQ(TheByteDecoder->lastLoc, SourceLocation(1, 3));
-    EXPECT_EQ(TheCharacterDecoder->lastBuf, str + 2);
-    EXPECT_EQ(TheCharacterDecoder->lastLoc, SourceLocation(1, 3));
-    
     EXPECT_EQ(c, WLCharacter('+'));
     
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
     c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
     
-    EXPECT_EQ(TheByteDecoder->lastBuf, str + 10);
-    EXPECT_EQ(TheByteDecoder->lastLoc, SourceLocation(1, 11));
-    EXPECT_EQ(TheCharacterDecoder->lastBuf, str + 10);
-    EXPECT_EQ(TheCharacterDecoder->lastLoc, SourceLocation(1, 11));
-    
     EXPECT_EQ(c, WLCharacter(0x03b1, ESCAPE_LONGNAME));
     
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
     c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
-    
-    EXPECT_EQ(TheByteDecoder->lastBuf, str + 10);
-    EXPECT_EQ(TheByteDecoder->lastLoc, SourceLocation(1, 11));
-    EXPECT_EQ(TheCharacterDecoder->lastBuf, str + 10);
-    EXPECT_EQ(TheCharacterDecoder->lastLoc, SourceLocation(1, 11));
     
     EXPECT_EQ(c, WLCharacter(CODEPOINT_ENDOFFILE));
 }

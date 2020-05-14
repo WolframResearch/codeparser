@@ -330,7 +330,10 @@ bool Utils::ifASCIIWLCharacter(unsigned char c, char test) {
     if (c >= 128) {
         return true;
     }
-    if (c == '\\') {
+    //
+    // What is the last possible SourceCharacter of an escaped WLCharacter?
+    //
+    if (std::isalnum(c) || c == ']') {
         return true;
     }
     return c == test;
