@@ -15,6 +15,7 @@ on:
 env:
   WOLFRAM_ID: ${{ secrets.WOLFRAM_ID }}
   WOLFRAM_PW: ${{ secrets.WOLFRAM_PW }}
+  WOLFRAM_AK: ${{ secrets.WOLFRAM_AK }}
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -42,7 +43,7 @@ jobs:
     - name: Activate Wolfram Engine
       run: |
         /usr/bin/wolframscript -authenticate $WOLFRAM_ID $WOLFRAM_PW
-        /usr/bin/wolframscript -activate
+        /usr/bin/wolframscript -activate $WOLFRAM_AK
 
     - name: Build CodeParser
       run: |
