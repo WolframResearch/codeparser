@@ -59,4 +59,5 @@ jobs:
         
     - name: Run Tests
       run: |
-        ./run_tests.wls
+        pwd
+        /usr/bin/wolframscript -file ./run_tests.wls
