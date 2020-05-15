@@ -228,3 +228,25 @@ TEST_F(APITest, Crash7) {
     SUCCEED();
 }
 
+//
+// this used to crash
+//
+// CODETOOLS-62
+//
+TEST_F(APITest, Crash8) {
+    
+    const unsigned char arr[] = {'(', '*', '\r', '\n', '*', ')'};
+    
+    auto bufAndLen = BufferAndLength(arr, 6);
+    
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_SOURCECHARACTERINDEX, DEFAULT_TAB_WIDTH);
+    
+    auto N = TheParserSession->parseExpressions();
+    
+    TheParserSession->releaseNode(N);
+    
+    TheParserSession->deinit();
+    
+    SUCCEED();
+}
+

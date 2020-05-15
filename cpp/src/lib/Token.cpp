@@ -46,16 +46,26 @@ Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : BufLen(BufLen)
                 // Only bother checking if the token is all on one line
                 // Spanning multiple lines is too complicated to care about
                 //
-                if (Src.Start.first == Src.End.first) {
-                    if (Src.size() != BufLen.length()) {
-                        //
-                        // If the sizes do not match, then check if there are multi-byte characters
-                        // If there are multi-bytes characters, then it is too complicated to compare sizes
-                        //
-                        // Note that this also catches changes in character representation, e.g.,
-                        // If a character was in source with \XXX octal notation but was stringified with \:XXXX hex notation
-                        //
-                        assert(!containsOnlyASCII(BufLen) || containsTab(BufLen));
+                if (Src.Start.first == 0 && Src.End.first == 0) {
+                
+                    //
+                    // SourceConvention of "SourceCharacterIndex"
+                    // so nothing to do
+                    //
+                    ;
+                    
+                } else {
+                    if (Src.Start.first == Src.End.first) {
+                        if (Src.size() != BufLen.length()) {
+                            //
+                            // If the sizes do not match, then check if there are multi-byte characters
+                            // If there are multi-bytes characters, then it is too complicated to compare sizes
+                            //
+                            // Note that this also catches changes in character representation, e.g.,
+                            // If a character was in source with \XXX octal notation but was stringified with \:XXXX hex notation
+                            //
+                            assert(!containsOnlyASCII(BufLen) || containsTab(BufLen));
+                        }
                     }
                 }
             }
