@@ -56,3 +56,7 @@ jobs:
       run: |
         ls build
         /usr/bin/wolframscript -code 'PacletInstall["./build/paclet/CodeParser-1.1.paclet"];Exit[]'
+        
+    - name: Run Tests
+      run: |
+        /usr/bin/wolframscript -code 'Needs["MUnit`"];MUnit`TestRun["Tests/TestSuite.mt", MUnit`Loggers :> {MUnit`VerbosePrintLogger[]}];Exit[]'
