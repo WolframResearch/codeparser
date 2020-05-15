@@ -59,4 +59,4 @@ jobs:
         
     - name: Run Tests
       run: |
-        /usr/bin/wolframscript -code 'Needs["MUnit`"];MUnit`TestRun["Tests/TestSuite.mt", MUnit`Loggers :> {MUnit`VerbosePrintLogger[]}];Exit[]'
+        ./run_tests.wls
