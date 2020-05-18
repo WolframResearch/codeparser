@@ -178,3 +178,21 @@ TEST_F(CrashTest, Crash4) {
     
     SUCCEED();
 }
+
+TEST_F(CrashTest, Crash5) {
+    
+    const unsigned char arr[] = {'{', '\t', '1', '\\', '\n', '^'};
+    
+    auto bufAndLen = BufferAndLength(arr, 6);
+    
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_SOURCECHARACTERINDEX, DEFAULT_TAB_WIDTH);
+    
+    auto N = TheParserSession->parseExpressions();
+    
+    TheParserSession->releaseNode(N);
+    
+    TheParserSession->deinit();
+    
+    SUCCEED();
+}
+

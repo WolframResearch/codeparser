@@ -331,9 +331,15 @@ bool Utils::ifASCIIWLCharacter(unsigned char c, char test) {
         return true;
     }
     //
-    // What is the last possible SourceCharacter of an escaped WLCharacter?
+    // What is the last possible byte of an escaped WLCharacter?
     //
     if (std::isalnum(c) || c == ']') {
+        return true;
+    }
+    //
+    // there may be a line continuation and so testing against  '^'  may actually involve the bytes  '\' '\n' '^'
+    //
+    if (c == '\\') {
         return true;
     }
     return c == test;
