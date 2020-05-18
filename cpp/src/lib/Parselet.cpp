@@ -736,31 +736,31 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtI
     switch (Tok.Tok.value()) {
         case TOKEN_EQUAL.value(): {
             
-            NodeSeq Args2(1 + 1 + 1 + 1 + 1);
-            Args2.append(NodePtr(new NodeSeqNode(std::move(Left))));
-            Args2.append(NodePtr(new LeafNode(TokIn)));
-            Args2.appendIfNonEmpty(std::move(Trivia1));
-            Args2.append(std::move(Middle));
-            Args2.appendIfNonEmpty(std::move(Trivia2));
+            NodeSeq Args(1 + 1 + 1 + 1 + 1);
+            Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
+            Args.append(NodePtr(new LeafNode(TokIn)));
+            Args.appendIfNonEmpty(std::move(Trivia1));
+            Args.append(std::move(Middle));
+            Args.appendIfNonEmpty(std::move(Trivia2));
             
             Ctxt.Flag |= PARSER_INSIDE_SLASHCOLON;
             
-            auto N = infixParselets[TOKEN_EQUAL.value()]->parse(std::move(Args2), Tok, Ctxt);
+            auto N = infixParselets[TOKEN_EQUAL.value()]->parse(std::move(Args), Tok, Ctxt);
             
             return N;
         }
         case TOKEN_COLONEQUAL.value(): {
             
-            NodeSeq Args2(1 + 1 + 1 + 1 + 1);
-            Args2.append(NodePtr(new NodeSeqNode(std::move(Left))));
-            Args2.append(NodePtr(new LeafNode(TokIn)));
-            Args2.appendIfNonEmpty(std::move(Trivia1));
-            Args2.append(std::move(Middle));
-            Args2.appendIfNonEmpty(std::move(Trivia2));
+            NodeSeq Args(1 + 1 + 1 + 1 + 1);
+            Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
+            Args.append(NodePtr(new LeafNode(TokIn)));
+            Args.appendIfNonEmpty(std::move(Trivia1));
+            Args.append(std::move(Middle));
+            Args.appendIfNonEmpty(std::move(Trivia2));
             
             Ctxt.Flag |= PARSER_INSIDE_SLASHCOLON;
             
-            auto N = infixParselets[TOKEN_COLONEQUAL.value()]->parse(std::move(Args2), Tok, Ctxt);
+            auto N = infixParselets[TOKEN_COLONEQUAL.value()]->parse(std::move(Args), Tok, Ctxt);
             
             return N;
         }
