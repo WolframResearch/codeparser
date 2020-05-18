@@ -816,9 +816,9 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		insert "Definition" metadata for foo
 		
 		*)
-		CallNode[LeafNode[Symbol, "SetDelayed", _], {_, _}, _],
+		CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {_, _}, _],
 			peek = nodeListStack["Peek"];
-			def = CallNode[LeafNode[Symbol, "SetDelayed", x[[1, 3]]], x[[2]], <| x[[3]], "Definition" -> DeclarationName[x[[2, 1]]] |> ];
+			def = CallNode[LeafNode[Symbol, x[[1, 2]], x[[1, 3]]], x[[2]], <| x[[3]], "Definition" -> DeclarationName[x[[2, 1]]] |> ];
 			peek["Push", def];
 		,
 		(*
@@ -827,9 +827,9 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		insert "Definition" metadata for foo
 		
 		*)
-		CallNode[LeafNode[Symbol, "CompoundExpression", _], { CallNode[LeafNode[Symbol, "SetDelayed", _], {_, _}, _], LeafNode[Symbol, "Null", _] }, _],
+		CallNode[LeafNode[Symbol, "CompoundExpression", _], { CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {_, _}, _], LeafNode[Symbol, "Null", _] }, _],
 			peek = nodeListStack["Peek"];
-			def = CallNode[x[[1]], { CallNode[LeafNode[Symbol, "SetDelayed", x[[2, 1, 1, 3]]], x[[2, 1, 2]], <| x[[2, 1, 3]], "Definition" -> DeclarationName[x[[2, 1, 2, 1]]] |> ], x[[2, 2]] }, x[[3]]];
+			def = CallNode[x[[1]], { CallNode[LeafNode[Symbol, x[[2, 1, 1, 2]], x[[2, 1, 1, 3]]], x[[2, 1, 2]], <| x[[2, 1, 3]], "Definition" -> DeclarationName[x[[2, 1, 2, 1]]] |> ], x[[2, 2]] }, x[[3]]];
 			peek["Push", def];
 		,
 		(*
