@@ -79,7 +79,7 @@ Test options
 *)
 
 Test[
-	CodeParse["Plot[f[x,y],{x,0,1},{y,0,1},PlotRange\[Rule]All];", "SourceConvention" -> "Test"]
+	CodeParse["Plot[f[x,y],{x,0,1},{y,0,1},PlotRange\[Rule]All];", SourceConvention -> "Test"]
 	,
 	ContainerNode[String, {}, <||>]
 	,

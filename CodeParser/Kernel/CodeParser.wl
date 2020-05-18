@@ -135,6 +135,7 @@ Shebang
 
 (* option symbols *)
 Source
+SourceConvention
 Synthesized
 
 Comment
@@ -262,7 +263,7 @@ CodeConcreteParse::usage = "CodeConcreteParse[code] returns a concrete syntax tr
 
 Options[CodeConcreteParse] = {
   CharacterEncoding -> "UTF8",
-  "SourceConvention" -> "LineColumn",
+  SourceConvention -> "LineColumn",
   "TabWidth" -> $TabWidth,
   ContainerNode -> Automatic
 }
@@ -318,7 +319,7 @@ concreteParseStringListable[bytess:{{_Integer...}...}, OptionsPattern[]] :=
 Catch[
 Module[{res, convention, container, tabWidth},
 
-  convention = OptionValue["SourceConvention"];
+  convention = OptionValue[SourceConvention];
   container = OptionValue[ContainerNode];
   tabWidth = OptionValue["TabWidth"];
 
@@ -358,7 +359,7 @@ CodeParse::usage = "CodeParse[code] returns an abstract syntax tree by interpret
 
 Options[CodeParse] = {
   CharacterEncoding -> "UTF8",
-  "SourceConvention" -> "LineColumn",
+  SourceConvention -> "LineColumn",
   "TabWidth" -> $TabWidth,
   ContainerNode -> Automatic
 }
@@ -472,7 +473,7 @@ concreteParseFileListable[bytess:{{_Integer...}...}, OptionsPattern[]] :=
 Catch[
 Module[{res, convention, container, containerWasAutomatic, tabWidth},
 
-  convention = OptionValue["SourceConvention"];
+  convention = OptionValue[SourceConvention];
   container = OptionValue[ContainerNode];
   tabWidth = OptionValue["TabWidth"];
 
@@ -620,7 +621,7 @@ concreteParseBytesListable[bytess:{{_Integer...}...}, OptionsPattern[]] :=
 Catch[
 Module[{res, convention, container, tabWidth},
 
-  convention = OptionValue["SourceConvention"];
+  convention = OptionValue[SourceConvention];
   container = OptionValue[ContainerNode];
   tabWidth = OptionValue["TabWidth"];
 
@@ -715,7 +716,7 @@ CodeTokenize::usage = "CodeTokenize[code] returns a list of tokens by interpreti
 
 Options[CodeTokenize] = {
   CharacterEncoding -> "UTF8",
-  "SourceConvention" -> "LineColumn",
+  SourceConvention -> "LineColumn",
   "TabWidth" -> $TabWidth
 }
 
@@ -748,7 +749,7 @@ Catch[
 Module[{res, bytess, encoding, convention, tabWidth},
 
   encoding = OptionValue[CharacterEncoding];
-  convention = OptionValue["SourceConvention"];
+  convention = OptionValue[SourceConvention];
   tabWidth = OptionValue["TabWidth"];
 
   If[encoding =!= "UTF8",
@@ -812,7 +813,7 @@ Catch[
 Module[{encoding, res, fulls, bytess, convention, tabWidth},
 
   encoding = OptionValue[CharacterEncoding];
-  convention = OptionValue["SourceConvention"];
+  convention = OptionValue[SourceConvention];
   tabWidth = OptionValue["TabWidth"];
 
   If[encoding =!= "UTF8",
@@ -880,7 +881,7 @@ Catch[
 Module[{encoding, res, convention, tabWidth},
 
   encoding = OptionValue[CharacterEncoding];
-  convention = OptionValue["SourceConvention"];
+  convention = OptionValue[SourceConvention];
   tabWidth = OptionValue["TabWidth"];
 
   If[encoding =!= "UTF8",
@@ -923,7 +924,7 @@ CodeConcreteParseLeaf::usage = "CodeConcreteParseLeaf[code] returns a LeafNode b
 
 Options[CodeConcreteParseLeaf] = {
   "StringifyMode" -> 0,
-  "SourceConvention" -> "LineColumn",
+  SourceConvention -> "LineColumn",
   "TabWidth" -> $TabWidth
 }
 
@@ -940,7 +941,7 @@ Module[{str, res, leaf, data, exprs, issues, stringifyMode, convention, tabWidth
   str = strIn;
 
   stringifyMode = OptionValue["StringifyMode"];
-  convention = OptionValue["SourceConvention"];
+  convention = OptionValue[SourceConvention];
   tabWidth = OptionValue["TabWidth"];
 
   $ConcreteParseProgress = 0;

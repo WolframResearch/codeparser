@@ -75,7 +75,7 @@ But return the opener to make ToString stuff easier
 
 Options[reparseMissingCloserNode] = {
   CharacterEncoding -> "UTF8",
-  "SourceConvention" -> "LineColumn",
+  SourceConvention -> "LineColumn",
   ContainerNode -> Automatic
 }
 
@@ -84,7 +84,7 @@ Catch[
 Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str, leaves, convention, test,
   lineLens, takeSpecsOfLines, poss},
 
-  convention = OptionValue["SourceConvention"];
+  convention = OptionValue[SourceConvention];
 
   str = SafeString[bytes];
 
@@ -169,7 +169,7 @@ Do not return the previous children, because they are useless any way.
 
 Options[reparseUnterminatedCommentErrorNode] = {
   CharacterEncoding -> "UTF8",
-  "SourceConvention" -> "LineColumn",
+  SourceConvention -> "LineColumn",
   ContainerNode -> Automatic
 }
 
@@ -178,7 +178,7 @@ Catch[
 Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str, convention, test,
   lineLens, takeSpecsOfLines, poss},
 
-  convention = OptionValue["SourceConvention"];
+  convention = OptionValue[SourceConvention];
 
   str = SafeString[bytes];
 
