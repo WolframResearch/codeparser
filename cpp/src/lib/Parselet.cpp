@@ -33,37 +33,32 @@ NodePtr PrefixCloserParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     assert(TokIn.Tok.isCloser());
     
-    if (TokenToCloser(TokIn.Tok) == Ctxt.Closr) {
-        //
-        // Handle the special cases of:
-        // { + }
-        // { a + }
-        // { a @ }
-        // We are here parsing the operators, but we don't want to descend and treat the } as the problem
-        //
+    if (Ctxt.Closr == CLOSER_OPEN) {
         
         //
-        // Do not take next token
+        // if we are at the top, then make sure to take the token and report it
         //
         
-        auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
+        TheParser->nextToken(TokIn);
         
-        return NodePtr(new ErrorNode(createdToken));
+        NodeSeq Args(1);
+        Args.append(NodePtr(new LeafNode(TokIn)));
+        
+        auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_UNEXPECTEDCLOSER, std::move(Args)));
+        
+        return Error;
     }
-    
+        
     //
-    // Handle  { a ) }
-    // which ends up being  MissingCloser[ { a ) ]   UnexpectedCloser[ } ]
+    // Inside some other parselet that is not GroupParselet
+    //
+    // Do not take the closer.
+    // Delay taking the closer until necessary. This allows  { 1 + }  to be parsed as a GroupNode
     //
     
-    TheParser->nextToken(TokIn);
+    auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
     
-    NodeSeq Args(1);
-    Args.append(NodePtr(new LeafNode(TokIn)));
-    
-    auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_UNEXPECTEDCLOSER, std::move(Args)));
-    
-    return Error;
+    return NodePtr(new ErrorNode(createdToken));
 }
 
 
@@ -489,14 +484,61 @@ NodePtr GroupParselet::parse(Token firstTok, ParserContext CtxtIn) const {
             //
             // some other closer
             //
-            // e.g.,   { ( }
+            // Something like  { ( }  or  { ) }
             //
-            // FIXME: { ) }  is not handled well
+            // Must choose which one to parse correctly.
             //
+            // There are pros and cons with either choice here.
+            //
+            // But it is important to note that either choice here results in strictly better behavior than the FrontEnd choice to parse neither  { ( }  nor  { ) }  correctly.
+            //
+            // The FrontEnd parses  { ( }  as  RowBox[{RowBox[{"{", "("}], "}"}]  but it would be better to parse as  RowBox[{"{", someErrorThing["("], "}"}]
+            // The FrontEnd parses  { ) }  as  RowBox[{RowBox[{"{", ")"}], "}"}]  but it would be better to parse as  RowBox[{"{", someErrorThing[")"], "}"}]
+            //
+            auto arbitraryChoiceToBubbleBadCloserUpTheStack = true;
             
-            group = NodePtr(new GroupMissingCloserNode(Op, std::move(Args)));
-            
-            break;
+            if (arbitraryChoiceToBubbleBadCloserUpTheStack) {
+                
+                //
+                // Do not consume the bad closer now
+                // Bubble it up the stack
+                //
+                // This allows  { ( }  to be parsed as expected
+                //
+                // But also makes  { ) }  get parsed as MissingCloser[ { ] UnexpectedCloser[ ) ] UnexpectedCloser[ } ]
+                //
+                
+                group = NodePtr(new GroupMissingCloserNode(Op, std::move(Args)));
+                
+                break;
+                
+            } else {
+                
+                //
+                // Consume the bad closer now
+                //
+                // This allows  { ) }  to be parsed as expected
+                //
+                // But also makes  { ( }  get parsed as MissingCloser[ {, MissingCloser[ (, UnexpectedCloser[ } ] ] ]
+                //
+                
+                //
+                // Allow PrefixCloserParselet to handle the error
+                //
+                Ctxt.Closr = CLOSER_OPEN;
+                
+                auto Error = prefixParselets[Tok.Tok.value()]->parse(Tok, Ctxt);
+                
+                Ctxt.Closr = Closr;
+                
+                //
+                // Always append here
+                //
+                Args.appendIfNonEmpty(std::move(Trivia1));
+                Args.append(std::move(Error));
+                
+                continue;
+            }
         }
         if (Tok.Tok == TOKEN_ENDOFFILE) {
             
