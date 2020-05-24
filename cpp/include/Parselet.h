@@ -143,6 +143,15 @@ public:
 //
 //
 //
+class PrefixToplevelCloserParselet : public PrefixParselet {
+public:
+    
+    NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
+};
+
+//
+//
+//
 class PrefixUnsupportedTokenParselet : public PrefixParselet {
 public:
     
@@ -354,25 +363,34 @@ public:
 };
 
 //
-// xxx
-//
 // Deliberately not extending PrefixOperatorParselet and InfixOperatorParselet because I don't feel like bothering with
 // multiple inheritance
 //
-class InfixOperatorWithTrailingParselet : public InfixParselet {
-    Precedence precedence;
-    SymbolPtr& Op;
+class CommaParselet : public InfixParselet {
 public:
-    InfixOperatorWithTrailingParselet(TokenEnum Tok, Precedence precedence, SymbolPtr& Op) : precedence(precedence), Op(Op) {}
     
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt) const override {
-        return precedence;
+        return PRECEDENCE_COMMA;
     }
     
     SymbolPtr& getOp() const override {
-        return Op;
+        return SYMBOL_CODEPARSER_COMMA;
+    }
+};
+
+//
+// Deliberately not extending PrefixOperatorParselet and InfixOperatorParselet because I don't feel like bothering with
+// multiple inheritance
+//
+class SemiParselet : public InfixParselet {
+public:
+    
+    NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
+    
+    Precedence getPrecedence(ParserContext Ctxt) const override {
+        return PRECEDENCE_SEMI;
     }
 };
 

@@ -182,7 +182,6 @@ isError[Token`Error`UnterminatedString] = True
 isError[Token`Error`InvalidBase] = True
 isError[Token`Error`ExpectedAccuracy] = True
 isError[Token`Error`ExpectedExponent] = True
-isError[Token`Error`EmptyString] = True
 isError[Token`Error`Aborted] = True
 isError[Token`Error`ExpectedOperand] = True
 isError[Token`Error`UnrecognizedDigit] = True
@@ -213,7 +212,6 @@ isTrivia[_] = False
 
 isEmpty[Token`EndOfFile] = True
 isEmpty[Token`Fake`ImplicitTimes] = True
-isEmpty[Token`Error`EmptyString] = True
 isEmpty[Token`Error`Aborted] = True
 isEmpty[Token`Fake`ImplicitNull] = True
 isEmpty[Token`Fake`ImplicitOne] = True

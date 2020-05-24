@@ -140,9 +140,6 @@ public:
     
     void nextToken(Token Tok);
     
-    void nextToken_stringifyAsSymbolSegment();
-    void nextToken_stringifyAsFile();
-    
     Token nextToken0(NextPolicy policy);
     
     Token nextToken0_stringifyAsSymbolSegment();

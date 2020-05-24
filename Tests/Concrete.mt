@@ -573,8 +573,8 @@ Test[
 			BinaryNode[Apply, {
 				ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>], 
 	    		LeafNode[Token`AtAt, "@@", <|Source -> {{1, 3}, {1, 5}}|>],
-	    		LeafNode[Whitespace, " ", <|Source -> {{1, 5}, {1, 6}}|>],
-	    		ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 6}, {1, 6}}|>]}, <|Source -> {{1, 3}, {1, 6}}|>], 
+	    		ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 5}, {1, 5}}|>]}, <|Source -> {{1, 3}, {1, 5}}|>], 
+	    	LeafNode[Whitespace, " ", <|Source -> {{1, 5}, {1, 6}}|>],
 	    	LeafNode[Token`CloseCurly, "}", <|Source -> {{1, 6}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>] }, <||>]
 	,
 	TestID->"Concrete-20191012-S7X3B0"
@@ -596,8 +596,8 @@ Test[
 		BinaryNode[Power, {
 			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 1}, {1, 1}}|>],
 			LeafNode[Token`Caret, "^", <|Source -> {{1, 1}, {1, 2}}|>],
-			LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>],
-			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 3}}|>]}, <||>]
+			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 2}, {1, 2}}|>]}, <|Source -> {{1, 1}, {1, 2}}|>],
+		LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>]}, <||>]
 	,
 	TestID->"Concrete-20191117-M2R5P9"
 ]
@@ -703,9 +703,9 @@ Test[
 		    InfixNode[Plus, {
 				LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>], 
 			    LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>], 
-			    LeafNode[Token`Plus, "+", <|Source -> {{1, 3}, {1, 4}}|>], 
-			    LeafNode[Whitespace, " ", <|Source -> {{1, 4}, {1, 5}}|>],
-			    ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 5}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>],
+			    LeafNode[Token`Plus, "+", <|Source -> {{1, 3}, {1, 4}}|>],
+			    ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 4}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>],
+			LeafNode[Whitespace, " ", <|Source -> {{1, 4}, {1, 5}}|>],
 			LeafNode[Token`Bar, "|", <|Source -> {{1, 5}, {1, 6}}|>], 
 			LeafNode[Whitespace, " ", <|Source -> {{1, 6}, {1, 7}}|>], 
 			LeafNode[Integer, "2", <|Source -> {{1, 7}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]}, <||>]
@@ -758,3 +758,21 @@ TestMatch[
 	,
 	TestID->"Concrete-20200531-A3H7Q8"
 ]
+
+
+Test[
+	CodeConcreteParse["a,*b"]
+	,
+	ContainerNode[String, {
+		InfixNode[Comma, {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
+			LeafNode[Token`Comma, ",", <|Source -> {{1, 2}, {1, 3}}|>],
+			InfixNode[Times, {
+				ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>],
+				LeafNode[Token`Star, "*", <|Source -> {{1, 3}, {1, 4}}|>],
+				LeafNode[Symbol, "b", <|Source -> {{1, 4}, {1, 5}}|>]}, <|Source -> {{1, 3}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>]}, <||>]
+	,
+	TestID->"Concrete-20200602-Q2L0J5"
+]
+
+

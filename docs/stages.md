@@ -131,23 +131,6 @@ when parsing   a b   it is convenient to remember the implicit   a ImplicitTimes
 
 
 
-empty string error:
-
-
-when parsing   a::
-
-mark it as a::EmptyStringError
-
-
-
-
-EOF
-
-when parsing   a @
-
-mark it as a @ EOF
-
-
 concrete syntax is everything
 
 concrete syntax has CallNode[{head, comment}, {child1}]

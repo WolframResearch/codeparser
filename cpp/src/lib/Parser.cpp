@@ -42,42 +42,6 @@ void Parser::nextToken(Token Tok) {
 }
 
 
-void Parser::nextToken_stringifyAsSymbolSegment() {
-    
-    //
-    // handle the queue before anything else
-    //
-    // We do not know anything about how many Tokens should be read
-    //
-    if (!tokenQueue.empty()) {
-        
-        // erase first
-        tokenQueue.erase(tokenQueue.begin());
-        
-        return;
-    }
-    
-    TheTokenizer->nextToken_stringifyAsSymbolSegment();
-}
-
-void Parser::nextToken_stringifyAsFile() {
-    
-    //
-    // handle the queue before anything else
-    //
-    // We do not know anything about how many Tokens should be read
-    //
-    if (!tokenQueue.empty()) {
-        
-        // erase first
-        tokenQueue.erase(tokenQueue.begin());
-        
-        return;
-    }
-    
-    TheTokenizer->nextToken_stringifyAsFile();
-}
-
 Token Parser::nextToken0(ParserContext Ctxt, NextPolicy policy) {
     
     //
