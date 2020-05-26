@@ -1841,7 +1841,7 @@ Module[{head, data, part, innerData, outerData, issues, partData, src},
 			(*
 			Now handle boxes
 			*)
-			BoxNode[TemplateBox, {CodeNode[Null, _, _], CodeNode[Null, "Entity", _]}, _],
+			BoxNode[TemplateBox | InterpretationBox, _, _],
 				(* this is fine *)
 				Null
 			,
@@ -1946,7 +1946,7 @@ Module[{head, part, partData, issues, data},
 			(*
 			Now handle boxes
 			*)
-			BoxNode[TemplateBox, {CodeNode[Null, _, _], CodeNode[Null, "Entity", _]}, _],
+			BoxNode[TemplateBox | InterpretationBox, _, _],
 				(* this is fine *)
 				Null
 			,
@@ -2031,7 +2031,7 @@ Module[{head, part, partData, data, issues},
 			(*
 			Now handle boxes
 			*)
-			BoxNode[TemplateBox, {CodeNode[Null, _, _], CodeNode[Null, "Entity", _]}, _],
+			BoxNode[TemplateBox | InterpretationBox, _, _],
 				(* this is fine *)
 				Null
 			,
