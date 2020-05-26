@@ -193,16 +193,9 @@ bool Utils::isMBStrange(codepoint point) {
     }
 
     //
-    // High surrogates
+    // High and low surrogates
     //
-    if (0xd800 <= point && point <= 0xdbff) {
-        return true;
-    }
-
-    //
-    // Low surrogates
-    //
-    if (0xdc00 <= point && point <= 0xdfff) {
+    if (0xd800 <= point && point <= 0xdfff) {
         return true;
     }
 
