@@ -10,6 +10,8 @@ empty
 
 SourceMemberQ
 
+SourceMemberIntersectingQ
+
 SourceMemberQFunction
 
 contiguousQ
@@ -125,6 +127,8 @@ Which[
 ]
 
 
+
+
 (*
 Also handle Position Sources
 *)
@@ -158,11 +162,30 @@ contiguousQ[_, _] := False
 
 
 
+expandSrc[{{line_, col1_}, {line_, col2_}}] :=
+  <|line -> {col1, col2}|>
 
+expandSrc[{{line1_, col1_}, {line2_, col2_}}] :=
+  <|
+    line1 -> {col1, Infinity}, 
+    Table[l -> {1, Infinity}, {l, line1 + 1, line2 - 1}], 
+    line2 -> {1, col2}
+  |>
 
+intervalTest[{_}] :=
+  False
+intervalTest[{int1_, int2_}] := 
+   IntervalIntersection[Interval[int1], Interval[int2]] =!= Interval[]
 
-
-
+SourceMemberIntersectingQ[
+  src1:{{_Integer, _Integer}, {_Integer, _Integer}},
+  src2:{{_Integer, _Integer}, {_Integer, _Integer}}] :=
+  Catch[
+  Module[{expanded1, expanded2},
+    expanded1 = expandSrc[src1];
+    expanded2 = expandSrc[src2];
+    Or @@ Merge[{expanded1, expanded2}, intervalTest]
+  ]]
 
 
 
