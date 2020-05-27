@@ -16,6 +16,10 @@ CodeTokenize
 
 
 
+CodeSyntaxQ
+
+
+
 (*
 ToString
 *)
@@ -988,6 +992,14 @@ Module[{res},
   res = libraryFunctionWrapper[safeStringFunc, bytes];
   res
 ]
+
+
+
+
+
+CodeSyntaxQ[str_] :=
+  FreeQ[CodeParse[str], ErrorNode | SyntaxErrorNode | AbstractSyntaxErrorNode | GroupMissingCloserNode]
+
 
 
 
