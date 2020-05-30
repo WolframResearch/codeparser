@@ -111,6 +111,7 @@ symbols = Union[Join[
       PrefixEndOfFileParselet[] :> Nothing,
       PrefixErrorParselet[] :> Nothing,
       PrefixUnhandledParselet[] :> Nothing,
+      PrefixImplicitNullParselet[] :> Nothing,
       PrefixUnsupportedTokenParselet[] :> Nothing,
       SymbolParselet[] :> Nothing,
       UnderDotParselet[] :> Nothing,

@@ -91,6 +91,16 @@ NodePtr PrefixUnsupportedTokenParselet::parse(Token TokIn, ParserContext Ctxt) c
 }
 
 
+NodePtr PrefixImplicitNullParselet::parse(Token TokIn, ParserContext Ctxt) const {
+    
+    auto createdToken = Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
+    
+    auto Left = NodePtr(new LeafNode(createdToken));
+    
+    return TheParser->infixLoop(std::move(Left), Ctxt);
+}
+
+
 NodePtr PrefixUnhandledParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     assert(!TokIn.Tok.isPossibleBeginning() && "handle at call site");

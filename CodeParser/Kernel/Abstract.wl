@@ -1525,27 +1525,50 @@ vectorInequalityAffinity[System`VectorGreaterEqual] := True
 
 
 (*
-Convert f[,1] into f[Null,1]
+Handle leading comma and trailing comma
 *)
-abstractComma[InfixNode[Comma, { ErrorNode[Token`Error`ExpectedOperand, _, data1_], rest___ }, data_]] :=
-	abstractComma[InfixNode[Comma, {
-		LeafNode[Symbol, "Null", data1 ~Join~
+abstractComma[InfixNode[Comma, {
+	first:LeafNode[Token`Fake`ImplicitNull, _, data4_],
+	comma1:LeafNode[Token`Comma, _, data3_],
+	middle___,
+	comma2:LeafNode[Token`Comma, _, data2_],
+	last:LeafNode[Token`Fake`ImplicitNull, _, data1_]}, data_]] :=
+	CallNode[ToNode[Comma],
+		{ LeafNode[Symbol, "Null", data4 ~Join~
+			<| AbstractSyntaxIssues -> {
+				SyntaxIssue["Comma", "Extra ``,``.", "Error",
+					<| data3, CodeActions -> {
+						CodeAction["Delete ``,``", DeleteNode, <| Source -> data3[Source] |>]}, ConfidenceLevel -> 1.0 |>]}|>]} ~Join~
+		(abstract /@ {middle}[[;;;;2]]) ~Join~
+		{ LeafNode[Symbol, "Null", data1 ~Join~
+			<| AbstractSyntaxIssues -> {
+				SyntaxIssue["Comma", "Extra ``,``.", "Error",
+					<| data2, CodeActions -> {
+						CodeAction["Delete ``,``", DeleteNode, <| Source -> data2[Source] |>]}, ConfidenceLevel -> 1.0 |>]}|>]}, data]
+
+(*
+Handle leading comma
+*)
+abstractComma[InfixNode[Comma, { first:LeafNode[Token`Fake`ImplicitNull, _, data2_], comma:LeafNode[Token`Comma, _, data1_], rest___ }, data_]] :=
+	CallNode[ToNode[Comma],
+		{ LeafNode[Symbol, "Null", data2 ~Join~
 			<| AbstractSyntaxIssues -> {
 				SyntaxIssue["Comma", "Extra ``,``.", "Error",
 					<| data1, CodeActions -> {
-						CodeAction["Delete ``,``", DeleteNode, <| Source -> data1[Source] |>]}, ConfidenceLevel -> 1.0 |>]} |>], rest }, data]]
+						CodeAction["Delete ``,``", DeleteNode, <| Source -> data1[Source] |>]}, ConfidenceLevel -> 1.0 |>]}|>]} ~Join~
+		(abstract /@ {rest}[[;;;;2]]), data]
 
 (*
 Handle trailing comma
 *)
-abstractComma[InfixNode[Comma, { most___, comma:LeafNode[Token`Comma, _, data1_], last:LeafNode[Token`Fake`ImplicitNull, _, data2_] }, data_]] :=
+abstractComma[InfixNode[Comma, { most___, comma:LeafNode[Token`Comma, _, data2_], last:LeafNode[Token`Fake`ImplicitNull, _, data1_] }, data_]] :=
 	CallNode[ToNode[Comma],
-		(abstract /@ {most}[[;;;;2]]) ~Join~ {
-			LeafNode[Symbol, "Null", data2 ~Join~
-				<| AbstractSyntaxIssues -> {
-					SyntaxIssue["Comma", "Extra ``,``.", "Error",
-						<| data1, CodeActions -> {
-							CodeAction["Delete ``,``", DeleteNode, <| Source -> data1[Source] |>]}, ConfidenceLevel -> 1.0 |>]}|>]}, data]
+		(abstract /@ {most}[[;;;;2]]) ~Join~
+		{ LeafNode[Symbol, "Null", data1 ~Join~
+			<| AbstractSyntaxIssues -> {
+				SyntaxIssue["Comma", "Extra ``,``.", "Error",
+					<| data2, CodeActions -> {
+						CodeAction["Delete ``,``", DeleteNode, <| Source -> data2[Source] |>]}, ConfidenceLevel -> 1.0 |>]}|>]}, data]
 
 abstractComma[InfixNode[Comma, children_, data_]] :=
 	CallNode[ToNode[Comma], abstract /@ children[[;;;;2]], data]
