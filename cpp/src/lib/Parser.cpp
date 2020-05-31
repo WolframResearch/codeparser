@@ -208,7 +208,7 @@ NodePtr Parser::infixLoop(NodePtr Left, ParserContext Ctxt) {
         
         auto I = infixParselets[token.Tok.value()];
         
-        token = I->procesImplicitTimes(token);
+        token = I->processImplicitTimes(token);
         I = infixParselets[token.Tok.value()];
         
         auto TokenPrecedence = I->getPrecedence(Ctxt);

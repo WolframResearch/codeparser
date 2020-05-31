@@ -60,7 +60,7 @@ public:
         return SYMBOL_CODEPARSER_INTERNALINVALID;
     }
     
-    virtual Token procesImplicitTimes(Token TokIn) const {
+    virtual Token processImplicitTimes(Token TokIn) const {
         return TokIn;
     }
     
@@ -184,7 +184,7 @@ public:
     
     Precedence getPrecedence(ParserContext Ctxt) const override;
     
-    Token procesImplicitTimes(Token TokIn) const override;
+    Token processImplicitTimes(Token TokIn) const override;
 };
 
 //

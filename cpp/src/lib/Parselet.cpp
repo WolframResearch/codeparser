@@ -269,7 +269,7 @@ Precedence InfixImplicitTimesParselet::getPrecedence(ParserContext Ctxt) const {
     return PRECEDENCE_ASSERTFALSE;
 }
 
-Token InfixImplicitTimesParselet::procesImplicitTimes(Token TokIn) const {
+Token InfixImplicitTimesParselet::processImplicitTimes(Token TokIn) const {
     
     auto token = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
     
@@ -355,7 +355,7 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ct
         
         auto I = infixParselets[Tok1.Tok.value()];
         
-        Tok1 = I->procesImplicitTimes(Tok1);
+        Tok1 = I->processImplicitTimes(Tok1);
         I = infixParselets[Tok1.Tok.value()];
         
         //
