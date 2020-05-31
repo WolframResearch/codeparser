@@ -231,6 +231,15 @@ TEST_F(TokenizerTest, Basic4) {
     EXPECT_EQ(TheByteBuffer->wasEOF, true);
 }
 
-
+TEST_F(TokenizerTest, Crash1) {
+    
+    const unsigned char arr[] = { '6', '`', '5', '.', '.' };
+    
+    TheParserSession->init(BufferAndLength(arr, 5), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    
+    TheTokenizer->currentToken(TOPLEVEL);
+    
+    SUCCEED();
+}
 
 

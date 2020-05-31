@@ -743,3 +743,18 @@ Test[
 	TestID->"Concrete-20200404-E3L1E3"
 ]
 
+
+
+TestMatch[
+	CodeConcreteParse["1`+.."]
+	,
+	ContainerNode[String, {
+		PostfixNode[Repeated, {
+			InfixNode[Plus, {
+			    LeafNode[Real, "1`", <|Source -> {{1, 1}, {1, 3}}|>], 
+				LeafNode[Token`Plus, "+", <|Source -> {{1, 3}, {1, 4}}|>], 
+				ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 4}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>],
+			LeafNode[Token`DotDot, "..", <|Source -> {{1, 4}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]}, _]
+	,
+	TestID->"Concrete-20200531-A3H7Q8"
+]

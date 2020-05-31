@@ -625,7 +625,15 @@ Test[
 	TestID->"Parse-20200404-S6W5R8"
 ]
 
-
+Test[
+	"6`5.."
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200531-W0B6N6"
+]
 
 
 

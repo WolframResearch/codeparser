@@ -1435,6 +1435,10 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
         bool accuracy = false;
         bool sign = false;
         bool precOrAccSupplied = false;
+        
+        Buffer signBuf;
+        SourceLocation signLoc;
+        
         if (c.to_point() == '`') {
             
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
@@ -1452,8 +1456,8 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 // Something like  1.2`-
                 //
                 
-                auto signBuf = TheByteBuffer->buffer;
-                auto signLoc = TheByteDecoder->SrcLoc;
+                signBuf = TheByteBuffer->buffer;
+                signLoc = TheByteDecoder->SrcLoc;
                 
                 assert(Utils::ifASCIIWLCharacter(*signBuf, '-')  || Utils::ifASCIIWLCharacter(*signBuf, '+'));
                 
@@ -1505,7 +1509,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                         }
                         
                         //
-                        // Something like  1.2`->3
+                        // Something like  1.2`->3  or  1`+#
                         //
                         // Must now do surgery and back up
                         //
@@ -1559,14 +1563,14 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 
                 assert(Utils::ifASCIIWLCharacter(*dotBuf, '.'));
                 
-                bool actualDecimalPoint = false;
+                bool tentativeActualDecimalPoint = false;
                 
                 //
                 // If there was already a sign, or if the leading digits have already been supplied,
                 // then this is an actual decimal point
                 //
                 if (sign || precOrAccSupplied) {
-                    actualDecimalPoint = true;
+                    tentativeActualDecimalPoint = true;
                 }
                 
                 //
@@ -1574,7 +1578,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 // the . in  123`.xxx  (which is Dot)
                 //
                 
-                if (!actualDecimalPoint) {
+                if (!tentativeActualDecimalPoint) {
                     
                     //
                     // Need to peek ahead
@@ -1664,8 +1668,34 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 c = handlePossibleFractionalPartPastDot(dotBuf, dotLoc, c, baseToUse, policy, &handled);
                 switch (handled) {
                     case BAILOUT:
+                        
+                        if (precOrAccSupplied) {
+                            
+                            //
+                            // Something like  6`5..
+                            //
+                            
+                            // Success!
+                            
+                            return Token(TOKEN_REAL, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                        }
+                        
+                        if (sign) {
+                            
+                            //
+                            // Something like  1`+..
+                            //
+                            
+                            backupAndWarn(signBuf, signLoc);
+                            
+                            // Success!
+                            
+                            return Token(TOKEN_REAL, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                        }
+                        
                         assert(false);
                         break;
+                        
                     case UNRECOGNIZED_DIGIT:
                         assert(false);
                         break;
