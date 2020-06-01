@@ -1037,6 +1037,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "serviceconnections/Yandex/Kernel/Yandex.m",
 
         prefix <> "FFmpegTools/FFmpegTools/Kernel/FFmpegTools.m",
+        prefix <> "SystemFiles/Links/FFmpegTools/LibraryResources/LibraryLinkUtilities.wl",
 
         Nothing
         }, fileIn],

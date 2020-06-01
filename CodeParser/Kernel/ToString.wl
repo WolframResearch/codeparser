@@ -294,10 +294,19 @@ But they become quoted when they are abstracted
 *)
 toFullFormString[node:LeafNode[String, str_, _]] :=
 Catch[
-	If[!StringStartsQ[str, "\""],
-		Throw[Failure["InternalUnhandled", <|"Function"->ToFullFormString, "Arguments"->HoldForm[{node}]|>]]
-	];
-	str
+	Switch[StringPart[str, 1],
+		"\"",
+			str
+		,
+		"\\",
+			(*
+			assume this is a line continuation without checking any further
+			*)
+			str
+		,
+		_,
+			Throw[Failure["InternalUnhandled", <|"Function"->ToFullFormString, "Arguments"->HoldForm[{node}]|>]]
+	]
 ]
 
 toFullFormString[LeafNode[_, str_, _]] :=

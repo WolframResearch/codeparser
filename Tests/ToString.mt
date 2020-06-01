@@ -200,12 +200,6 @@ Test[
 ]
 
 
-
-
-
-
-
-
 ast = CodeParse["a // -1"]
 
 Test[
@@ -217,6 +211,15 @@ Test[
 ]
 
 
+ast = CodeParse["{\"a\", \\\n\"b\"}"]
+
+Test[
+	ToFullFormString[ast]
+	,
+	"List[\"a\", \\\n\"b\"]"
+	,
+	TestID->"ToString-20200601-D9Z8Z8"
+]
 
 
 
