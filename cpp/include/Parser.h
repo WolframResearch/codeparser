@@ -99,9 +99,6 @@ public:
     
     void nextToken(Token Tok);
     
-    void nextToken_stringifyAsSymbolSegment();
-    void nextToken_stringifyAsFile();
-    
     Token nextToken0(ParserContext Ctxt, NextPolicy policy);
     
     Token currentToken(ParserContext Ctxt, NextPolicy policy) const;

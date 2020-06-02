@@ -122,6 +122,10 @@ public:
         return Children;
     }
     
+    virtual bool isExpectedOperandError() const {
+        return false;
+    }
+    
     virtual ~Node() {}
 };
 
@@ -234,6 +238,22 @@ public:
     
     Source getSource() const override {
         return Tok.Src;
+    }
+};
+
+class ExpectedOperandErrorNode : public ErrorNode {
+public:
+    
+    ExpectedOperandErrorNode(Token& Tok) : ErrorNode(Tok) {
+        assert(Tok.Tok == TOKEN_ERROR_EXPECTEDOPERAND);
+    }
+    
+    ExpectedOperandErrorNode(Token&& Tok) : ErrorNode(Tok) {
+        assert(Tok.Tok == TOKEN_ERROR_EXPECTEDOPERAND);
+    }
+    
+    bool isExpectedOperandError() const override {
+        return true;
     }
 };
 

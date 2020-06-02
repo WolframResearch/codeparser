@@ -123,7 +123,17 @@ Node *ParserSession::parseExpressions() {
                 continue;
             }
             
-            auto Expr = prefixParselets[peek.Tok.value()]->parse(peek, Ctxt);
+            NodePtr Expr;
+            //
+            // special top-level handling of stray closers
+            //
+            if (peek.Tok.isCloser()) {
+                
+                Expr = contextSensitivePrefixToplevelCloserParselet->parse(peek, Ctxt);
+                
+            } else {
+                Expr = prefixParselets[peek.Tok.value()]->parse(peek, Ctxt);
+            }
             
             exprs.push_back(std::move(Expr));
             

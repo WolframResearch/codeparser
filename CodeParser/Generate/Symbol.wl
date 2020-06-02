@@ -124,7 +124,6 @@ symbols = Union[Join[
       BinaryOperatorParselet[_, _, op_] :> op,
       CallParselet[_] :> Nothing,
       InfixOperatorParselet[_, _, op_] :> op,
-      InfixOperatorWithTrailingParselet[_, _, op_] :> op,
       PostfixOperatorParselet[_, _, op_] :> op,
       ColonColonParselet[] :> MessageName,
       ColonEqualParselet[] :> SetDelayed,
@@ -143,6 +142,8 @@ symbols = Union[Join[
       InfixUnsupportedTokenParselet[] :> Nothing,
       SlashColonParselet[] :> Nothing,
       TildeParselet[] :> CodeParser`TernaryTilde,
+      CommaParselet[] :> CodeParser`Comma,
+      SemiParselet[] :> CompoundExpression,
       SemiSemiParselet[] :> Span
     },
     tokens

@@ -50,7 +50,6 @@ Token`Error`UnterminatedComment -> Next,
 Token`Error`UnterminatedString -> Next,
 Token`Error`ExpectedAccuracy -> Next,
 Token`Error`ExpectedExponent -> Next,
-Token`Error`EmptyString -> Next,
 Token`Error`Aborted -> Next,
 Token`Error`ExpectedOperand -> Next,
 Token`Error`UnrecognizedDigit -> Next,
@@ -180,7 +179,6 @@ Token`Fake`ImplicitNull -> Next,
 Token`Fake`ImplicitOne -> Next,
 (* implicit  All  in  a;;  *)
 Token`Fake`ImplicitAll -> Next,
-
 
 (*
 Used when parsing boxes

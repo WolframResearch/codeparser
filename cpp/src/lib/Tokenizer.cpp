@@ -214,7 +214,7 @@ Token Tokenizer::nextToken0_stringifyAsSymbolSegment() {
         // EndOfFile is special, so invent source
         //
         
-        return Token(TOKEN_ERROR_EMPTYSTRING, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
+        return Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
         
     } else if (c.to_point() == CODEPOINT_CRLF) {
         
@@ -222,7 +222,7 @@ Token Tokenizer::nextToken0_stringifyAsSymbolSegment() {
         // Newline is special, so invent source
         //
         
-        return Token(TOKEN_ERROR_EMPTYSTRING, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
+        return Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
         
     } else if (c.isNewline()) {
         
@@ -230,7 +230,7 @@ Token Tokenizer::nextToken0_stringifyAsSymbolSegment() {
         // Newline is special, so invent source
         //
         
-        return Token(TOKEN_ERROR_EMPTYSTRING, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
+        return Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
     }
     
     return handleString_stringifyAsSymbolSegment(tokenStartBuf, tokenStartLoc, c, policy);
@@ -250,7 +250,7 @@ Token Tokenizer::nextToken0_stringifyAsFile() {
     
     if (c.to_point() == CODEPOINT_ENDOFFILE) {
         
-        return Token(TOKEN_ERROR_EMPTYSTRING, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
+        return Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
         
     } else if (c.to_point() == CODEPOINT_CRLF) {
         
@@ -312,21 +312,6 @@ void Tokenizer::nextToken(Token Tok) {
     TheByteBuffer->wasEOF = (Tok.Tok == TOKEN_ENDOFFILE);
     
     TheByteDecoder->SrcLoc = Tok.Src.End;
-    
-    TheByteDecoder->clearStatus();
-}
-
-
-void Tokenizer::nextToken_stringifyAsSymbolSegment() {
-    
-    nextToken0_stringifyAsSymbolSegment();
-    
-    TheByteDecoder->clearStatus();
-}
-
-void Tokenizer::nextToken_stringifyAsFile() {
-    
-    nextToken0_stringifyAsFile();
     
     TheByteDecoder->clearStatus();
 }
@@ -750,7 +735,7 @@ inline Token Tokenizer::handleString_stringifyAsSymbolSegment(Buffer tokenStartB
     // Something like  a::5
     //
     
-    return Token(TOKEN_ERROR_EXPECTEDLETTERLIKE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+    return Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
 }
 
 //
@@ -803,7 +788,7 @@ inline Token Tokenizer::handleString_stringifyAsFile(Buffer tokenStartBuf, Sourc
             // So invent source
             //
             
-            return Token(TOKEN_ERROR_EMPTYSTRING, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
+            return Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
         }
             break;
     }

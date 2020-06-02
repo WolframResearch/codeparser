@@ -21,11 +21,12 @@ PrefixOperatorParselet
 GroupParselet
 BinaryOperatorParselet
 InfixOperatorParselet
-InfixOperatorWithTrailingParselet
 PostfixOperatorParselet
 CallParselet
 
 IntegralParselet
+CommaParselet
+SemiParselet
 SemiSemiParselet
 LessLessParselet
 LinearSyntaxOpenParenParselet
@@ -666,9 +667,10 @@ InfixOperatorToParselet[Token`LongName`LeftDoubleBracket] = CallParselet[GroupPa
 (*
 trailing ; and , is allowed
 *)
-InfixOperatorToParselet[Token`Semi] = InfixOperatorWithTrailingParselet[Token`Semi, Precedence`Semi, CompoundExpression]
-InfixOperatorToParselet[Token`Comma] = InfixOperatorWithTrailingParselet[Token`Comma, Precedence`Comma, CodeParser`Comma]
-InfixOperatorToParselet[Token`LongName`InvisibleComma] = InfixOperatorWithTrailingParselet[Token`LongName`InvisibleComma, Precedence`LongName`InvisibleComma, CodeParser`Comma]
+InfixOperatorToParselet[Token`Semi] = SemiParselet[]
+
+InfixOperatorToParselet[Token`Comma] = CommaParselet[]
+InfixOperatorToParselet[Token`LongName`InvisibleComma] = CommaParselet[]
 
 (*
 prefix, infix, postfix
@@ -785,11 +787,13 @@ class PrefixParselet;
 class InfixParselet;
 class ContextSensitivePrefixParselet;
 class ContextSensitiveInfixParselet;
+class PrefixToplevelCloserParselet;
 
 using PrefixParseletPtr = PrefixParselet *;
 using InfixParseletPtr = InfixParselet *;
 using ContextSensitivePrefixParseletPtr = ContextSensitivePrefixParselet *;
 using ContextSensitiveInfixParseletPtr = ContextSensitiveInfixParselet *;
+using PrefixToplevelCloserParseletPtr = PrefixToplevelCloserParselet *;
 
 extern std::array<PrefixParseletPtr, TOKEN_COUNT.value()> prefixParselets;
 extern std::array<InfixParseletPtr, TOKEN_COUNT.value()> infixParselets;
@@ -800,6 +804,8 @@ extern ContextSensitiveInfixParseletPtr contextSensitiveUnder2Parselet;
 extern ContextSensitiveInfixParseletPtr contextSensitiveUnder3Parselet;
 extern ContextSensitiveInfixParseletPtr contextSensitiveUnderDotParselet;
 extern ContextSensitiveInfixParseletPtr contextSensitiveColonParselet;
+
+extern PrefixToplevelCloserParseletPtr contextSensitivePrefixToplevelCloserParselet;
 "}
 
 Print["exporting ParseletRegistration.h"]
@@ -884,8 +890,6 @@ formatInfix[BinaryOperatorParselet[tok_, precedence_, op_]] := "new BinaryOperat
 
 formatInfix[InfixOperatorParselet[tok_, precedence_, op_]] := "new InfixOperatorParselet(" <> toGlobal[tok] <> ", " <> toGlobal[precedence] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
 
-formatInfix[InfixOperatorWithTrailingParselet[tok_, precedence_, op_]] := "new InfixOperatorWithTrailingParselet(" <> toGlobal[tok] <> ", " <> toGlobal[precedence] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
-
 formatInfix[PostfixOperatorParselet[tok_, precedence_, op_]] := "new PostfixOperatorParselet(" <> toGlobal[tok] <> ", " <> toGlobal[precedence] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
 
 formatInfix[ColonParselet[]] := "&colonParselet"
@@ -901,6 +905,10 @@ formatInfix[EqualDotParselet[]] := "new EqualDotParselet()"
 formatInfix[TildeParselet[]] := "new TildeParselet()"
 
 formatInfix[SlashColonParselet[]] := "new SlashColonParselet()"
+
+formatInfix[CommaParselet[]] := "&commaParselet"
+
+formatInfix[SemiParselet[]] := "&semiParselet"
 
 formatInfix[SemiSemiParselet[]] := "&semiSemiParselet"
 
@@ -942,6 +950,8 @@ auto prefixErrorParselet = PrefixErrorParselet();
 
 auto prefixCloserParselet = PrefixCloserParselet();
 
+auto prefixToplevelCloserParselet = PrefixToplevelCloserParselet();
+
 auto prefixUnsupportedTokenParselet = PrefixUnsupportedTokenParselet();
 
 auto prefixUnhandledParselet = PrefixUnhandledParselet();
@@ -955,6 +965,10 @@ auto infixErrorParselet = InfixErrorParselet();
 auto infixUnsupportedTokenParselet = InfixUnsupportedTokenParselet();
 
 auto infixCloserParselet = InfixCloserParselet();
+
+auto commaParselet = CommaParselet();
+
+auto semiParselet = SemiParselet();
 
 auto semiSemiParselet = SemiSemiParselet();
 
@@ -998,6 +1012,8 @@ ContextSensitiveInfixParseletPtr contextSensitiveUnder2Parselet(&under2Parselet)
 ContextSensitiveInfixParseletPtr contextSensitiveUnder3Parselet(&under3Parselet);
 ContextSensitiveInfixParseletPtr contextSensitiveUnderDotParselet(&underDotParselet);
 ContextSensitiveInfixParseletPtr contextSensitiveColonParselet(&colonParselet);
+
+PrefixToplevelCloserParseletPtr contextSensitivePrefixToplevelCloserParselet(&prefixToplevelCloserParselet);
 "}
 
 Print["exporting ParseletRegistration.cpp"]

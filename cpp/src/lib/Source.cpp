@@ -308,7 +308,6 @@ std::string SyntaxErrorToString(SyntaxError Err) {
         case SYNTAXERROR_TOKEN_INVALIDBASE: return "SyntaxError`InvalidBase";
         case SYNTAXERROR_TOKEN_EXPECTEDACCURACY: return "SyntaxError`ExpectedAccuracy";
         case SYNTAXERROR_TOKEN_EXPECTEDEXPONENT: return "SyntaxError`ExpectedExponent";
-        case SYNTAXERROR_TOKEN_EMPTYSTRING: return "SyntaxError`EmptyString";
         case SYNTAXERROR_TOKEN_UNHANDLEDDOT: return "SyntaxError`UnhandledDot";
         case SYNTAXERROR_TOKEN_UNRECOGNIZEDDIGIT: return "SyntaxError`UnrecognizedDigit";
         default:
@@ -326,7 +325,6 @@ SyntaxError TokenErrorToSyntaxError(TokenEnum T) {
         case TOKEN_ERROR_UNTERMINATEDSTRING.value(): return SYNTAXERROR_TOKEN_UNTERMINATEDSTRING;
         case TOKEN_ERROR_EXPECTEDACCURACY.value(): return SYNTAXERROR_TOKEN_EXPECTEDACCURACY;
         case TOKEN_ERROR_EXPECTEDEXPONENT.value(): return SYNTAXERROR_TOKEN_EXPECTEDEXPONENT;
-        case TOKEN_ERROR_EMPTYSTRING.value(): return SYNTAXERROR_TOKEN_EMPTYSTRING;
         case TOKEN_ERROR_UNHANDLEDDOT.value(): return SYNTAXERROR_TOKEN_UNHANDLEDDOT;
         case TOKEN_ERROR_UNRECOGNIZEDDIGIT.value(): return SYNTAXERROR_TOKEN_UNRECOGNIZEDDIGIT;
         default:
