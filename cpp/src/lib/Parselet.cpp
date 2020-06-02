@@ -370,6 +370,38 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ct
     
     Ctxt.Prec = getPrecedence(Ctxt);
     
+    TheParser->nextToken(TokIn);
+    
+    //
+    // Unroll 1 iteration of the loop because we know that TokIn has already been read
+    //
+    {
+        LeafSeq Trivia2;
+        
+        auto Tok2 = TheParser->currentToken(Ctxt, TOPLEVEL);
+        Tok2 = TheParser->eatTrivia(Tok2, Ctxt, TOPLEVEL, Trivia2);
+        
+        auto Operand = prefixParselets[Tok2.Tok.value()]->parse(Tok2, Ctxt);
+        
+        if (Operand->isExpectedOperandError()) {
+            
+            //
+            // Reattach the ExpectedOperand Error to the operator for a better experience
+            //
+            
+            auto ProperExpectedOperandError = NodePtr(new ExpectedOperandErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
+            
+            Args.append(NodePtr(new LeafNode(TokIn)));
+            Args.append(std::move(ProperExpectedOperandError));
+            
+        } else {
+            
+            Args.append(NodePtr(new LeafNode(TokIn)));
+            Args.appendIfNonEmpty(std::move(Trivia2));
+            Args.append(std::move(Operand));
+        }
+    }
+    
     while (true) {
 
 #if !NABORT
@@ -1300,6 +1332,54 @@ NodePtr CommaParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
     
     NodePtr L;
     
+    TheParser->nextToken(TokIn);
+    
+    //
+    // Unroll 1 iteration of the loop because we know that TokIn has already been read
+    //
+    {
+        LeafSeq Trivia2;
+        
+        auto Tok2 = TheParser->currentToken(Ctxt, TOPLEVEL);
+        Tok2 = TheParser->eatTriviaButNotToplevelNewlines(Tok2, Ctxt, TOPLEVEL, Trivia2);
+        
+        if (infixParselets[Tok2.Tok.value()]->getOp() == SYMBOL_CODEPARSER_COMMA) {
+            
+            //
+            // Something like  a,,
+            //
+            
+            auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(lastOperatorToken.BufLen.end), Source(lastOperatorToken.Src.End));
+            
+            lastOperatorToken = Tok2;
+            
+            Args.append(NodePtr(new LeafNode(TokIn)));
+            Args.append(NodePtr(new LeafNode(Implicit)));
+            
+        } else {
+            
+            auto Operand = prefixParselets[Tok2.Tok.value()]->parse(Tok2, Ctxt);
+            
+            if (Operand->isExpectedOperandError()) {
+                
+                //
+                // Convert the ExpectedOperand Error to ImplicitNull and reattach to the operator for a better experience
+                //
+                
+                auto ProperImplicitNull = NodePtr(new LeafNode(Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
+                
+                Args.append(NodePtr(new LeafNode(TokIn)));
+                Args.append(std::move(ProperImplicitNull));
+                
+            } else {
+                
+                Args.append(NodePtr(new LeafNode(TokIn)));
+                Args.appendIfNonEmpty(std::move(Trivia2));
+                Args.append(std::move(Operand));
+            }
+        }
+    }
+    
     while (true) {
         
 #if !NABORT
@@ -1413,6 +1493,57 @@ NodePtr SemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) con
     
     NodePtr L;
     
+    TheParser->nextToken(TokIn);
+    
+    //
+    // Unroll 1 iteration of the loop because we know that TokIn has already been read
+    //
+    {
+        LeafSeq Trivia2;
+        
+        auto Tok2 = TheParser->currentToken(Ctxt, TOPLEVEL);
+        Tok2 = TheParser->eatTriviaButNotToplevelNewlines(Tok2, Ctxt, TOPLEVEL, Trivia2);
+        
+        if (Tok2.Tok == TOKEN_SEMI) {
+            
+            //
+            // Something like  a; ;
+            //
+            
+            auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(lastOperatorToken.BufLen.end), Source(lastOperatorToken.Src.End));
+            
+            lastOperatorToken = Tok2;
+            
+            Args.append(NodePtr(new LeafNode(TokIn)));
+            Args.append(NodePtr(new LeafNode(Implicit)));
+            
+        } else if (Tok2.Tok.isPossibleBeginning()) {
+            
+            auto operand = prefixParselets[Tok2.Tok.value()]->parse(Tok2, Ctxt);
+            
+            Args.append(NodePtr(new LeafNode(TokIn)));
+            Args.appendIfNonEmpty(std::move(Trivia2));
+            Args.append(std::move(operand));
+            
+        } else {
+            
+            //
+            // Not beginning of an expression
+            //
+            // For example:  a;&
+            //
+            
+            auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(lastOperatorToken.BufLen.end), Source(lastOperatorToken.Src.End));
+            
+            Args.append(NodePtr(new LeafNode(TokIn)));
+            Args.append(NodePtr(new LeafNode(Implicit)));
+            
+            L = NodePtr(new InfixNode(SYMBOL_COMPOUNDEXPRESSION, std::move(Args)));
+            
+            goto SemiParseletExit;
+        }
+    }
+    
     while (true) {
         
 #if !NABORT
@@ -1506,6 +1637,8 @@ NodePtr SemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) con
         
     } // while
     
+SemiParseletExit:
+    
     return TheParser->infixLoop(std::move(L), CtxtIn);
 }
 
@@ -1522,6 +1655,30 @@ NodePtr ColonColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
     //Ctxt.Prec = PRECEDENCE_COLONCOLON;
     //Ctxt.Assoc = ASSOCIATIVITY_NONE;
     
+    TheParser->nextToken(TokIn);
+    
+    //
+    // Unroll 1 iteration of the loop because we know that TokIn has already been read
+    //
+    //
+    // Special tokenization, so must do parsing here
+    //
+    
+    auto Tok2 = TheParser->currentToken_stringifyAsSymbolSegment();
+    
+    TheParser->nextToken(Tok2);
+    
+    NodePtr Operand;
+    if (Tok2.Tok.isPossibleBeginning()) {
+        assert(Tok2.Tok == TOKEN_STRING);
+        Operand = NodePtr(new LeafNode(std::move(Tok2)));
+    } else {
+        Operand = NodePtr(new ErrorNode(std::move(Tok2)));
+    }
+    
+    Args.append(NodePtr(new LeafNode(TokIn)));
+    Args.append(std::move(Operand));
+    
     while (true) {
         
 #if !NABORT
@@ -1534,10 +1691,8 @@ NodePtr ColonColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
         }
 #endif // !NABORT
         
-        LeafSeq Trivia1;
         
         auto Tok1 = TheParser->currentToken(Ctxt, TOPLEVEL);
-        Tok1 = TheParser->eatTriviaButNotToplevelNewlines(Tok1, Ctxt, TOPLEVEL, Trivia1);
         
         if (Tok1.Tok != TOKEN_COLONCOLON) {
             break;
@@ -1565,7 +1720,6 @@ NodePtr ColonColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
         // Do not reserve inside loop
         // Allow default resizing strategy, which is hopefully exponential
         //
-        Args.appendIfNonEmpty(std::move(Trivia1));
         Args.append(NodePtr(new LeafNode(Tok1)));
         Args.append(std::move(Operand));
         
