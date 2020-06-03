@@ -5,6 +5,7 @@
 #include "LongNames.h" // for CodePointToLongNameMap
 
 #include <cassert>
+#include <cctype> // for isalnum, isxdigit, isupper, isdigit, isalpha, ispunct, iscntrl with GCC and MSVC
 
 //
 // These have been downgraded from very strange to just strange, because they do appear in actual code
