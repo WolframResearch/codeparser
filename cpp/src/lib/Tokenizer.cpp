@@ -2457,28 +2457,40 @@ inline Token Tokenizer::handleUnder(Buffer tokenStartBuf, SourceLocation tokenSt
         }
         case '.': {
             
-            auto dot1Buf = TheByteBuffer->buffer;
-            auto dot1Loc = TheByteDecoder->SrcLoc;
+            Operator = TOKEN_UNDERDOT; // _.
             
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-            c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
-            
-            if (c.to_point() == '.') {
+#if !NISSUES
+            {
+                auto afterLoc = TheByteDecoder->SrcLoc;
                 
-                //
-                // Something like  _...
-                //
-                // Must now do surgery and back up
-                //
+                c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
                 
-                backupAndWarn(dot1Buf, dot1Loc);
-                
-            } else {
-                
-                Operator = TOKEN_UNDERDOT; // _.
+                if (c.to_point() == '.') {
+                    
+                    //
+                    // Something like  a_..b  or  _...
+                    //
+                    // Prior to 12.2,  a_..b  was parsed as Times[(a_).., b]
+                    //
+                    // 12.2 and onward,  a_..b  is parsed as Dot[a_., b]
+                    //
+                    // Related bugs: 390755
+                    //
+                    
+                    auto dotLoc = afterLoc;
+                    
+                    CodeActionPtrSet Actions;
+                    Actions.insert(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(dotLoc), " ")));
+                    
+                    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Suspicious syntax.", SYNTAXISSUESEVERITY_ERROR, Source(dotLoc), 0.95, std::move(Actions)));
+                    
+                    Issues.insert(std::move(I));
+                }
             }
+#endif // !NISSUES
         }
             break;
     }

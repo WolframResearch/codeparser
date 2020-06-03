@@ -2981,6 +2981,42 @@ Test[
 
 
 
+res = ToExpression["a_..b", InputForm, Hold] === ToExpression["(a_.).b", InputForm, Hold]
+bug390755Fixed = (res)
+
+BeginTestSection["UnderDotDot", bug390755Fixed]
+
+(*
+Prior to 12.2,  a_..b  was parsed as Times[(a_).., b]
+
+12.2 and onward,  a_..b  is parsed as Dot[a_., b]
+
+Related bugs: 390755
+*)
+Test[
+	"a_..b"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200325-F8P4L2"
+]
+
+Test[
+	"a_..."
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200819-W9T2S6"
+]
+
+EndTestSection[]
+
+
+
 (*
 Verify that Source is preserved
 
