@@ -164,4 +164,22 @@ Test[
 
 
 
+Test[
+	CodeConcreteParse["\\[]"]
+	,
+	ContainerNode[String, {
+		ErrorNode[Token`Error`UnhandledCharacter, "\\[]", <|Source -> {{1, 1}, {1, 4}}|>]},
+		<|SyntaxIssues -> {
+			SyntaxIssue["UnrecognizedCharacter", "Unrecognized character: ``\\[]``.", "Error", <|Source -> {{1, 1}, {1, 4}}, ConfidenceLevel -> 1., 
+      			CodeActions -> {CodeAction["Replace with \\\\[]", ReplaceText, <|Source -> {{1, 1}, {1, 4}}, "ReplacementText" -> "\\\\[]"|>]}|>]}|>]
+	,
+	TestID->"Errors-20200602-U2U6P1"
+]
+
+
+
+
+
+
+
 

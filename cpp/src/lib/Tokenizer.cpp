@@ -3074,7 +3074,10 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLoc
     
     assert(c.to_point() == '\\');
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    auto resetBuf = TheByteBuffer->buffer;
+    auto resetLoc = TheByteDecoder->SrcLoc;
+    
+    c = TheCharacterDecoder->nextWLCharacter0(policy);
     
     switch (c.to_point()) {
         case '[': {
@@ -3083,10 +3086,10 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLoc
             // Try to reconstruct \[XXX]
             //
             
-            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-            TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+            resetBuf = TheByteBuffer->buffer;
+            resetLoc = TheByteDecoder->SrcLoc;
             
-            c = TheCharacterDecoder->currentWLCharacter(policy);
+            c = TheCharacterDecoder->nextWLCharacter0(policy);
             
             while (true) {
                 
@@ -3096,15 +3099,19 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLoc
                 
                 if (c.isAlphaOrDigit()) {
                     
-                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-                    TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+                    resetBuf = TheByteBuffer->buffer;
+                    resetLoc = TheByteDecoder->SrcLoc;
                     
-                    c = TheCharacterDecoder->currentWLCharacter(policy);
+                    c = TheCharacterDecoder->nextWLCharacter0(policy);
+                    
+                } else if (c.to_point() == ']') {
+                    
+                    break;
                     
                 } else {
                     
-                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-                    TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+                    TheByteBuffer->buffer = resetBuf;
+                    TheByteDecoder->SrcLoc = resetLoc;
                     
                     break;
                 }
@@ -3118,10 +3125,10 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLoc
             // Try to reconstruct \:XXXX
             //
             
-            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-            TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+            resetBuf = TheByteBuffer->buffer;
+            resetLoc = TheByteDecoder->SrcLoc;
             
-            c = TheCharacterDecoder->currentWLCharacter(policy);
+            c = TheCharacterDecoder->nextWLCharacter0(policy);
             
             for (auto i = 0; i < 4; i++) {
                 
@@ -3131,15 +3138,15 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLoc
                 
                 if (c.isHex()) {
                     
-                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-                    TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+                    resetBuf = TheByteBuffer->buffer;
+                    resetLoc = TheByteDecoder->SrcLoc;
                     
-                    c = TheCharacterDecoder->currentWLCharacter(policy);
+                    c = TheCharacterDecoder->nextWLCharacter0(policy);
                     
                 } else {
                     
-                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-                    TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+                    TheByteBuffer->buffer = resetBuf;
+                    TheByteDecoder->SrcLoc = resetLoc;
                     
                     break;
                 }
@@ -3153,10 +3160,10 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLoc
             // Try to reconstruct \.XX
             //
             
-            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-            TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+            resetBuf = TheByteBuffer->buffer;
+            resetLoc = TheByteDecoder->SrcLoc;
             
-            c = TheCharacterDecoder->currentWLCharacter(policy);
+            c = TheCharacterDecoder->nextWLCharacter0(policy);
             
             for (auto i = 0; i < 2; i++) {
                 
@@ -3166,15 +3173,15 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLoc
                 
                 if (c.isHex()) {
                     
-                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-                    TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+                    resetBuf = TheByteBuffer->buffer;
+                    resetLoc = TheByteDecoder->SrcLoc;
                     
-                    c = TheCharacterDecoder->currentWLCharacter(policy);
+                    c = TheCharacterDecoder->nextWLCharacter0(policy);
                     
                 } else {
                     
-                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-                    TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+                    TheByteBuffer->buffer = resetBuf;
+                    TheByteDecoder->SrcLoc = resetLoc;
                     
                     break;
                 }
@@ -3188,10 +3195,10 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLoc
             // Try to reconstruct \XXX
             //
             
-            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-            TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+            resetBuf = TheByteBuffer->buffer;
+            resetLoc = TheByteDecoder->SrcLoc;
             
-            c = TheCharacterDecoder->currentWLCharacter(policy);
+            c = TheCharacterDecoder->nextWLCharacter0(policy);
             
             for (auto i = 0; i < 3; i++) {
                 
@@ -3201,15 +3208,15 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLoc
                 
                 if (c.isOctal()) {
                     
-                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-                    TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+                    resetBuf = TheByteBuffer->buffer;
+                    resetLoc = TheByteDecoder->SrcLoc;
                     
-                    c = TheCharacterDecoder->currentWLCharacter(policy);
+                    c = TheCharacterDecoder->nextWLCharacter0(policy);
                     
                 } else {
                     
-                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-                    TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+                    TheByteBuffer->buffer = resetBuf;
+                    TheByteDecoder->SrcLoc = resetLoc;
                     
                     break;
                 }
@@ -3223,10 +3230,10 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLoc
             // Try to reconstruct \|XXXXXX
             //
             
-            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-            TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+            resetBuf = TheByteBuffer->buffer;
+            resetLoc = TheByteDecoder->SrcLoc;
             
-            c = TheCharacterDecoder->currentWLCharacter(policy);
+            c = TheCharacterDecoder->nextWLCharacter0(policy);
             
             for (auto i = 0; i < 6; i++) {
                 
@@ -3236,15 +3243,15 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLoc
                 
                 if (c.isHex()) {
                     
-                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-                    TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+                    resetBuf = TheByteBuffer->buffer;
+                    resetLoc = TheByteDecoder->SrcLoc;
                     
-                    c = TheCharacterDecoder->currentWLCharacter(policy);
+                    c = TheCharacterDecoder->nextWLCharacter0(policy);
                     
                 } else {
                     
-                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-                    TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+                    TheByteBuffer->buffer = resetBuf;
+                    TheByteDecoder->SrcLoc = resetLoc;
                     
                     break;
                 }
@@ -3259,11 +3266,11 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLoc
         default: {
             
             //
-            // Nothing special, just read next character
+            // Nothing special, just read next single character
             //
             
-            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-            TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+            TheByteBuffer->buffer = resetBuf;
+            TheByteDecoder->SrcLoc = resetLoc;
             
             return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         }
