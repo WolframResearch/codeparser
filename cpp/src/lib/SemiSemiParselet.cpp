@@ -82,6 +82,10 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
                 if (Tok.Tok != TOKEN_SEMISEMI) {
                     
                     //
+                    // Something like  \[Integral];;;;;;x\[DifferentialD]x
+                    //
+                    
+                    //
                     // Lower precedence, so this is just a general expression
                     //
                     // Must also handle  a;;!b  where there is an Implicit Times, but only a single Span

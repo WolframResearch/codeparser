@@ -297,7 +297,7 @@ Precedence InfixImplicitTimesParselet::getPrecedence(ParserContext Ctxt) const {
     return PRECEDENCE_ASSERTFALSE;
 }
 
-Token InfixImplicitTimesParselet::processImplicitTimes(Token TokIn) const {
+Token InfixImplicitTimesParselet::processImplicitTimes(Token TokIn, ParserContext Ctxt) const {
     
     auto token = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
     
@@ -431,7 +431,7 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ct
         
         auto I = infixParselets[Tok1.Tok.value()];
         
-        Tok1 = I->processImplicitTimes(Tok1);
+        Tok1 = I->processImplicitTimes(Tok1, Ctxt);
         I = infixParselets[Tok1.Tok.value()];
         
         //
@@ -1846,14 +1846,20 @@ Precedence InfixDifferentialDParselet::getPrecedence(ParserContext Ctxt) const {
     return PRECEDENCE_FAKE_IMPLICITTIMES;
 }
 
-NodePtr InfixDifferentialDParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
+Token InfixDifferentialDParselet::processImplicitTimes(Token TokIn, ParserContext Ctxt) const {
     
-    auto token = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(firstTok.BufLen.buffer), Source(firstTok.Src.Start));
+    if ((Ctxt.Flag & PARSER_INSIDE_INTEGRAL) == PARSER_INSIDE_INTEGRAL) {
+        
+        //
+        // Inside \[Integral], so \[DifferentialD] is treated specially
+        //
+        
+        return TokIn;
+    }
     
-    TheParser->prepend(token);
+    auto token = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
     
-    auto L = NodePtr(new NodeSeqNode(std::move(Left)));
-    return L;
+    return token;
 }
 
 

@@ -1828,6 +1828,17 @@ Test[
 
 
 Test[
+	"a * b^2  c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200603-O9O2V2"
+]
+
+
+Test[
 	"-1/2a^2 b^2"
 	,
 	Null

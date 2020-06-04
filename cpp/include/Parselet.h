@@ -60,7 +60,7 @@ public:
         return SYMBOL_CODEPARSER_INTERNALINVALID;
     }
     
-    virtual Token processImplicitTimes(Token TokIn) const {
+    virtual Token processImplicitTimes(Token TokIn, ParserContext Ctxt) const {
         return TokIn;
     }
     
@@ -202,7 +202,7 @@ public:
     
     Precedence getPrecedence(ParserContext Ctxt) const override;
     
-    Token processImplicitTimes(Token TokIn) const override;
+    Token processImplicitTimes(Token TokIn, ParserContext Ctxt) const override;
 };
 
 //
@@ -260,12 +260,12 @@ public:
 //
 // InfixDifferentialDParselet only exists to properly supply precedence, depending on context
 //
-class InfixDifferentialDParselet : public InfixParselet {
+class InfixDifferentialDParselet : public InfixImplicitTimesParselet {
 public:
     
-    NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
-    
     Precedence getPrecedence(ParserContext Ctxt) const override;
+    
+    Token processImplicitTimes(Token TokIn, ParserContext Ctxt) const override;
 };
 
 //
