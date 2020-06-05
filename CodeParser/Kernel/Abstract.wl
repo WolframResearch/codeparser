@@ -585,18 +585,14 @@ topLevelChildIssues[InfixNode[CompoundExpression, {BinaryNode[Set | SetDelayed, 
 topLevelChildIssues[InfixNode[CompoundExpression, {_, LeafNode[Token`Semi, _, _], LeafNode[Token`Fake`ImplicitNull, _, _]}, data_], ignored_] := {
 	SyntaxIssue["TopLevel", "``CompoundExpression`` at top-level. ``;`` may not be needed at top-level.", "Warning",
 		<| Source -> data[Source],
-			ConfidenceLevel -> 0.75,
-			CodeActions -> { CodeAction["Insert newline", InsertNode,
-									<|	Source->nextData[Source],
-										"InsertionNode"->LeafNode[Token`Newline, "\n", <||>]|>] } |>] }
+			ConfidenceLevel -> 0.75
+			(*FIXME: insert newline CodeAction*) |>] }
 
 topLevelChildIssues[InfixNode[CompoundExpression, {_, LeafNode[Token`Semi, _, _], _, ___}, data_], ignored_] := {
 	SyntaxIssue["TopLevel", "``CompoundExpression`` at top-level. Consider breaking up onto separate lines.", "Warning",
 		<| Source -> data[Source],
-			ConfidenceLevel -> 0.75,
-			CodeActions -> { CodeAction["Insert newline", InsertNode,
-									<|	Source->nextData[Source],
-										"InsertionNode"->LeafNode[Token`Newline, "\n", <||>]|>] } |>] }
+			ConfidenceLevel -> 0.75
+			(*FIXME: insert newline CodeAction*) |>] }
 
 (*
 Anything else, then warn
