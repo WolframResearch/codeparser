@@ -21,7 +21,7 @@ The result is a directory named `paclet` that contains the WL package source cod
 Specify `MATHEMATICA_INSTALL_DIR` if you have Mathematica installed in a non-default location:
 
 ```
-cmake -DMATHEMATICA_INSTALL_DIR=/Applications/Mathematica111.app/Contents/ ..
+cmake -DMATHEMATICA_INSTALL_DIR=/Applications/Mathematica120.app/Contents/ ..
 cmake --build . --target paclet
 ```
 
