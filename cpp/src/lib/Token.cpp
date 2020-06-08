@@ -10,6 +10,8 @@ bool containsOnlyASCII(BufferAndLength BufLen);
 bool containsTab(BufferAndLength BufLen);
 #endif // NDEBUG
 
+Token::Token() : BufLen(), Src(), Tok() {}
+
 Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : BufLen(BufLen), Src(Src), Tok(Tok) {
 
 #ifndef NDEBUG
@@ -105,6 +107,10 @@ bool containsTab(BufferAndLength BufLen) {
 
 bool operator==(Token a, Token b) {
     return a.Tok == b.Tok && a.BufLen == b.BufLen && a.Src == b.Src;
+}
+
+bool operator!=(Token a, Token b) {
+    return a.Tok != b.Tok || a.BufLen != b.BufLen || a.Src != b.Src;
 }
 
 void Token::print(std::ostream& s) const {

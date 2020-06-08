@@ -110,6 +110,8 @@ public:
     virtual const Node* first() const;
     virtual const Node* last() const;
     
+    virtual Token lastToken() const;
+    
 #if USE_MATHLINK
     virtual void put(MLINK mlp) const = 0;
     
@@ -213,6 +215,10 @@ public:
     const Token getToken() const {
         return Tok;
     }
+    
+    Token lastToken() const override {
+        return Tok;
+    }
 };
 
 //
@@ -238,6 +244,10 @@ public:
     
     Source getSource() const override {
         return Tok.Src;
+    }
+    
+    Token lastToken() const override {
+        return Tok;
     }
 };
 

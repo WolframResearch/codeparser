@@ -385,6 +385,7 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ct
     //
     // Unroll 1 iteration of the loop because we know that TokIn has already been read
     //
+    Token OperandLastToken;
     {
         LeafSeq Trivia2;
         
@@ -392,6 +393,8 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ct
         Tok2 = TheParser->eatTrivia(Tok2, Ctxt, TOPLEVEL, Trivia2);
         
         auto Operand = prefixParselets[Tok2.Tok.value()]->parse(Tok2, Ctxt);
+        
+        OperandLastToken = Operand->lastToken();
         
         if (Operand->isExpectedOperandError()) {
             
@@ -424,33 +427,52 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ct
         }
 #endif // !NABORT
         
-        LeafSeq Trivia1;
-        
         auto Tok1 = TheParser->currentToken(Ctxt, TOPLEVEL);
-        Tok1 = TheParser->eatTriviaButNotToplevelNewlines(Tok1, Ctxt, TOPLEVEL, Trivia1);
-        
-        auto I = infixParselets[Tok1.Tok.value()];
-        
-        Tok1 = I->processImplicitTimes(Tok1, Ctxt);
-        I = infixParselets[Tok1.Tok.value()];
-        
-        //
-        // Cannot just compare tokens
-        //
-        // May be something like  a * b c \[Times] d
-        //
-        // and we want only a single Infix node created
-        //
-        if (I->getOp() != Op) {
+        {
+            LeafSeq Trivia1;
+            
+            Tok1 = TheParser->eatTriviaButNotToplevelNewlines(Tok1, Ctxt, TOPLEVEL, Trivia1);
+            
+            auto I = infixParselets[Tok1.Tok.value()];
+            
+            Tok1 = I->processImplicitTimes(Tok1, Ctxt);
+            I = infixParselets[Tok1.Tok.value()];
             
             //
-            // Tok.Tok != TokIn.Tok, so break
+            // Cannot just compare tokens
             //
+            // May be something like  a * b c \[Times] d
+            //
+            // and we want only a single Infix node created
+            //
+            if (I->getOp() != Op) {
+                
+                //
+                // Tok.Tok != TokIn.Tok, so break
+                //
+                
+                break;
+            }
             
-            break;
+            if (Tok1.Tok == TOKEN_FAKE_IMPLICITTIMES) {
+                
+                //
+                // Reattach the ImplicitTimes to the operand for a better experience
+                //
+                
+                Tok1 = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(OperandLastToken.BufLen.end), Source(OperandLastToken.Src.End));
+                
+                Args.append(NodePtr(new LeafNode(Tok1)));
+                
+            } else {
+                
+                TheParser->nextToken(Tok1);
+                
+                Args.appendIfNonEmpty(std::move(Trivia1));
+                Args.append(NodePtr(new LeafNode(Tok1)));
+            }
         }
         
-        TheParser->nextToken(Tok1);
         
         LeafSeq Trivia2;
         
@@ -458,6 +480,8 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ct
         Tok2 = TheParser->eatTrivia(Tok2, Ctxt, TOPLEVEL, Trivia2);
         
         auto Operand = prefixParselets[Tok2.Tok.value()]->parse(Tok2, Ctxt);
+        
+        OperandLastToken = Operand->lastToken();
         
         if (Operand->isExpectedOperandError()) {
             
@@ -467,8 +491,6 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ct
             
             auto ProperExpectedOperandError = NodePtr(new ExpectedOperandErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(Tok1.BufLen.end), Source(Tok1.Src.End))));
             
-            Args.appendIfNonEmpty(std::move(Trivia1));
-            Args.append(NodePtr(new LeafNode(Tok1)));
             Args.append(std::move(ProperExpectedOperandError));
             
             continue;
@@ -478,8 +500,6 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ct
         // Do not reserve inside loop
         // Allow default resizing strategy, which is hopefully exponential
         //
-        Args.appendIfNonEmpty(std::move(Trivia1));
-        Args.append(NodePtr(new LeafNode(Tok1)));
         Args.appendIfNonEmpty(std::move(Trivia2));
         Args.append(std::move(Operand));
         
