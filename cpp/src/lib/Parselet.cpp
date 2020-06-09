@@ -299,9 +299,11 @@ Precedence InfixImplicitTimesParselet::getPrecedence(ParserContext Ctxt) const {
 
 Token InfixImplicitTimesParselet::processImplicitTimes(Token TokIn, ParserContext Ctxt) const {
     
-    auto token = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
+    //
+    // BufAndLen and Src will be filled in properly later
+    //
     
-    return token;
+    return Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(), Source());
 }
 
 
@@ -1877,9 +1879,11 @@ Token InfixDifferentialDParselet::processImplicitTimes(Token TokIn, ParserContex
         return TokIn;
     }
     
-    auto token = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
+    //
+    // BufAndLen and Src will be filled in properly later
+    //
     
-    return token;
+    return Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(), Source());
 }
 
 
