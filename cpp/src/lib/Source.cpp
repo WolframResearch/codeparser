@@ -125,6 +125,9 @@ bool operator==(BufferAndLength a, BufferAndLength b) {
     return a.buffer == b.buffer && a.end == b.end;
 }
 
+bool operator!=(BufferAndLength a, BufferAndLength b) {
+    return a.buffer != b.buffer || a.end != b.end;
+}
 
 
 
@@ -349,6 +352,10 @@ bool operator==(SourceLocation a, SourceLocation b) {
     return a.first == b.first && a.second == b.second;
 }
 
+bool operator!=(SourceLocation a, SourceLocation b) {
+    return a.first != b.first || a.second != b.second;
+}
+
 bool operator<=(SourceLocation a, SourceLocation b) {
 
     if (a.first < b.first) {
@@ -405,6 +412,10 @@ Source::Source(Source start, Source end) : Start(start.Start), End(end.End) {
 
 bool operator==(Source a, Source b) {
     return a.Start == b.Start && a.End == b.End;
+}
+
+bool operator!=(Source a, Source b) {
+    return a.Start != b.Start || a.End != b.End;
 }
 
 void Source::print(std::ostream& s) const {

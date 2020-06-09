@@ -75,6 +75,7 @@ struct BufferAndLength {
 static_assert((SIZEOF_VOID_P == 8 && sizeof(BufferAndLength) == 24) || (SIZEOF_VOID_P == 4), "Check your assumptions");
 
 bool operator==(BufferAndLength a, BufferAndLength b);
+bool operator!=(BufferAndLength a, BufferAndLength b);
 
 //
 //
@@ -411,6 +412,7 @@ struct Source {
 static_assert(sizeof(Source) == 16, "Check your assumptions");
 
 bool operator==(Source a, Source b);
+bool operator!=(Source a, Source b);
 
 //
 // For googletest

@@ -30,10 +30,15 @@ void Parser::nextToken(Token Tok) {
     //
     if (!tokenQueue.empty()) {
         
-        assert(Tok == tokenQueue[0]);
-        
-        // erase first
-        tokenQueue.erase(tokenQueue.begin());
+        if (Tok != tokenQueue[0]) {
+            
+            assert(Tok.Tok == TOKEN_FAKE_IMPLICITTIMES);
+            
+        } else {
+            
+            // erase first
+            tokenQueue.erase(tokenQueue.begin());
+        }
         
         return;
     }
@@ -165,31 +170,52 @@ NodePtr Parser::infixLoop(NodePtr Left, ParserContext Ctxt) {
         }
 #endif // !NABORT
         
-        LeafSeq Trivia1;
-        
         auto token = currentToken(Ctxt, TOPLEVEL);
-        token = eatTriviaButNotToplevelNewlines(token, Ctxt, TOPLEVEL, Trivia1);
         
-        auto I = infixParselets[token.Tok.value()];
+        InfixParseletPtr I;
+        Precedence TokenPrecedence;
         
-        token = I->processImplicitTimes(token, Ctxt);
-        I = infixParselets[token.Tok.value()];
-        
-        auto TokenPrecedence = I->getPrecedence(Ctxt);
-        
-        //
-        // if (Ctxt.Prec > TokenPrecedence)
-        //   break;
-        // else if (Ctxt.Prec == TokenPrecedence && Ctxt.Prec.Associativity is NonRight)
-        //   break;
-        //
-        if ((Ctxt.Prec | 0x1) > TokenPrecedence) {
-            break;
+        NodeSeq LeftSeq;
+        {
+            LeafSeq Trivia1;
+            
+            token = eatTriviaButNotToplevelNewlines(token, Ctxt, TOPLEVEL, Trivia1);
+            
+            I = infixParselets[token.Tok.value()];
+            
+            token = I->processImplicitTimes(token, Ctxt);
+            I = infixParselets[token.Tok.value()];
+            
+            TokenPrecedence = I->getPrecedence(Ctxt);
+            
+            //
+            // if (Ctxt.Prec > TokenPrecedence)
+            //   break;
+            // else if (Ctxt.Prec == TokenPrecedence && Ctxt.Prec.Associativity is NonRight)
+            //   break;
+            //
+            if ((Ctxt.Prec | 0x1) > TokenPrecedence) {
+                break;
+            }
+            
+            if (token.Tok == TOKEN_FAKE_IMPLICITTIMES) {
+                
+                //
+                // Reattach the ImplicitTimes to the operand for a better experience
+                //
+                
+                auto last = Left->lastToken();
+                
+                token = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(last.BufLen.end), Source(last.Src.End));
+                
+                LeftSeq.append(std::move(Left));
+                
+            } else {
+                
+                LeftSeq.append(std::move(Left));
+                LeftSeq.appendIfNonEmpty(std::move(Trivia1));
+            }
         }
-        
-        NodeSeq LeftSeq(1 + 1);
-        LeftSeq.append(std::move(Left));
-        LeftSeq.appendIfNonEmpty(std::move(Trivia1));
         
         auto Ctxt2 = Ctxt;
         Ctxt2.Prec = TokenPrecedence;

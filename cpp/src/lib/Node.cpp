@@ -160,6 +160,15 @@ const Node* Node::last() const {
     return this;
 }
 
+Token Node::lastToken() const {
+    
+    assert(!Children.empty());
+    
+    auto Last = Children.last();
+    
+    return Last->lastToken();
+}
+
 void Node::printChildren(std::ostream& s) const {
     
     Children.print(s);
