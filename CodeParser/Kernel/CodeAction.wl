@@ -308,11 +308,12 @@ Module[{src, originalNodePos, cst, insertionNode, insertionNodePos, srcPosMap},
     cst
 ]]
 
-ApplyCodeAction[action:CodeAction[label_, InsertText, actionData_], cstIn_, Null] :=
+ApplyCodeAction[action:CodeAction[label_, InsertText, actionData_], cstIn_, srcPosMapIn_:Null] :=
 Catch[
-Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIntra, node, leafText},
+Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIntra, node, leafText, srcPosMap},
 
   cst = cstIn;
+  srcPosMap = srcPosMapIn;
 
   src = Lookup[actionData, Source];
 
@@ -345,7 +346,7 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
 
     but this is super slow
     *)
-    originalNodePos = Position[cst, srcInter];
+    originalNodePos = If[srcPosMap === Null, Position[cst, srcInter], srcPosMap[srcInter]];
 
      If[originalNodePos == {},
       Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->srcInter |>]]
