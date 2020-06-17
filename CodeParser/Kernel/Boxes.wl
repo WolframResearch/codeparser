@@ -49,8 +49,9 @@ Module[{children},
 Options[parseBox] = {
   (*
   0: normal
-  1: symbol segment
+  1: symbol segment or a quoted string (RHS of :: or #)
   2: file
+  3: passthrough
   *)
   "StringifyMode" -> 0
 }
@@ -96,6 +97,22 @@ Module[{handledChildren, aggregatedChildren},
   Switch[aggregatedChildren,
 
     (*
+    Calls
+
+    Must be before ] is handled as GroupMissingOpenerNode
+    *)
+    {_, LeafNode[Token`OpenSquare, _, _], ___, LeafNode[Token`CloseSquare, _, _]}, CallNode[{handledChildren[[1]]}, {GroupNode[GroupSquare, Rest[handledChildren], <||>]}, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`LeftDoubleBracket, _, _], ___, LeafNode[Token`LongName`RightDoubleBracket, _, _]}, CallNode[{handledChildren[[1]]}, {GroupNode[GroupDoubleBracket, Rest[handledChildren], <||>]}, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`OpenSquare, _, _], ___}, CallNode[{handledChildren[[1]]}, {GroupMissingCloserNode[GroupSquare, Rest[handledChildren], <||>]}, <|Source->Append[pos, 1]|>],
+
+    (*
+    Unrecognized LongName
+
+    Must be before ] is handled as GroupMissingOpenerNode
+    *)
+    {ErrorNode[Token`Error`UnhandledCharacter, "\\[", _], _, LeafNode[Token`CloseSquare, "]", _]}, parseBox["\\[" <> children[[2]] <> "]", Append[pos, 1]], 
+
+    (*
     We want to have Groups before Infix, so that { + } is first handled by Groups, and then Infix
     *)
 
@@ -110,21 +127,68 @@ Module[{handledChildren, aggregatedChildren},
     {LeafNode[Token`LongName`LeftAngleBracket, _, _], ___, LeafNode[Token`LongName`RightAngleBracket, _, _]}, GroupNode[AngleBracket, handledChildren, <|Source->Append[pos, 1]|>],
     {LeafNode[Token`LongName`LeftBracketingBar, _, _], ___, LeafNode[Token`LongName`RightBracketingBar, _, _]}, GroupNode[BracketingBar, handledChildren, <|Source->Append[pos, 1]|>],
     {LeafNode[Token`LongName`LeftDoubleBracketingBar, _, _], ___, LeafNode[Token`LongName`RightDoubleBracketingBar, _, _]}, GroupNode[DoubleBracketingBar, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`LongName`LeftCeiling, _, _], ___, LeafNode[Token`LongName`RightCeiling, _, _]}, GroupNode[Ceiling, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`LongName`LeftFloor, _, _], ___, LeafNode[Token`LongName`RightFloor, _, _]}, GroupNode[Floor, handledChildren, <|Source->Append[pos, 1]|>],
 
     (*
     Treat comments like groups
     *)
-    {LeafNode[Token`Boxes`OpenParenStar, _, _], ___, LeafNode[Token`Boxes`StarCloseParen, _, _]}, GroupNode[Comment, handledChildren, <|Source->Append[pos, 1]|>],
-    {LeafNode[Token`Boxes`OpenParenStar, _, _], ___}, SyntaxErrorNode[SyntaxError`UnterminatedComment, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`Boxes`OpenParenStar, _, _], ___, LeafNode[Token`Boxes`StarCloseParen, _, _]},
+      GroupNode[Comment,
+        {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~
+        MapIndexed[
+          parseBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1), "StringifyMode" -> 3]&, children[[2;;-2]]] ~Join~
+        {parseBox[children[[-1]], Append[pos, 1] ~Join~ {Length[children]}]}, <|Source->Append[pos, 1]|>],
 
-    {___, LeafNode[Token`CloseCurly, _, _]}, SyntaxErrorNode[SyntaxError`ExpectedPossibleExpression, handledChildren, <|Source -> Append[pos, 1]|>],
+    (*
+    Unexpected openers and unexpected closers
+
+    The structure of unexpected closers in boxes is different than in strings
+
+    Unexpected closers in boxes never mate with an opener
+
+    So retain the box structure here
+
+    GroupMissingOpenerNode is only used in Boxes
+    *)
+    {LeafNode[Token`OpenSquare, _, _], ___}, GroupMissingCloserNode[GroupSquare, handledChildren, <|Source -> Append[pos, 1]|>],
+    {___, LeafNode[Token`CloseSquare, _, _]}, GroupMissingOpenerNode[GroupSquare, handledChildren, <|Source -> Append[pos, 1]|>],
+    {LeafNode[Token`OpenCurly, _, _], ___}, GroupMissingCloserNode[List, handledChildren, <|Source -> Append[pos, 1]|>],
+    {___, LeafNode[Token`CloseCurly, _, _]}, GroupMissingOpenerNode[List, handledChildren, <|Source -> Append[pos, 1]|>],
+    {LeafNode[Token`LessBar, _, _], ___}, GroupMissingCloserNode[Association, handledChildren, <|Source -> Append[pos, 1]|>],
+    {___, LeafNode[Token`BarGreater, _, _]}, GroupMissingOpenerNode[Association, handledChildren, <|Source -> Append[pos, 1]|>],
+    {LeafNode[Token`OpenParen, _, _], ___}, GroupMissingCloserNode[GroupParen, handledChildren, <|Source -> Append[pos, 1]|>],
+    {___, LeafNode[Token`CloseParen, _, _]}, GroupMissingOpenerNode[GroupParen, handledChildren, <|Source -> Append[pos, 1]|>],
+    {LeafNode[Token`LongName`LeftAssociation, _, _], ___}, GroupMissingCloserNode[Association, handledChildren, <|Source -> Append[pos, 1]|>],
+    {___, LeafNode[Token`LongName`RightAssociation, _, _]}, GroupMissingOpenerNode[Association, handledChildren, <|Source -> Append[pos, 1]|>],
+    {LeafNode[Token`LongName`LeftAngleBracket, _, _], ___}, GroupMissingCloserNode[AngleBracket, handledChildren, <|Source -> Append[pos, 1]|>],
+    {___, LeafNode[Token`LongName`RightAngleBracket, _, _]}, GroupMissingOpenerNode[AngleBracket, handledChildren, <|Source -> Append[pos, 1]|>],
+    {LeafNode[Token`LongName`LeftBracketingBar, _, _], ___}, GroupMissingCloserNode[BracketingBar, handledChildren, <|Source -> Append[pos, 1]|>],
+    {___, LeafNode[Token`LongName`RightBracketingBar, _, _]}, GroupMissingOpenerNode[BracketingBar, handledChildren, <|Source -> Append[pos, 1]|>],
+    {LeafNode[Token`LongName`LeftDoubleBracketingBar, _, _], ___}, GroupMissingCloserNode[DoubleBracketingBar, handledChildren, <|Source -> Append[pos, 1]|>],
+    {___, LeafNode[Token`LongName`RightDoubleBracketingBar, _, _]}, GroupMissingOpenerNode[DoubleBracketingBar, handledChildren, <|Source -> Append[pos, 1]|>],
+    {LeafNode[Token`LongName`LeftCeiling, _, _], ___}, GroupMissingCloserNode[Ceiling, handledChildren, <|Source -> Append[pos, 1]|>],
+    {___, LeafNode[Token`LongName`RightCeiling, _, _]}, GroupMissingOpenerNode[Ceiling, handledChildren, <|Source -> Append[pos, 1]|>],
+    {LeafNode[Token`LongName`LeftFloor, _, _], ___}, GroupMissingCloserNode[Floor, handledChildren, <|Source -> Append[pos, 1]|>],
+    {___, LeafNode[Token`LongName`RightFloor, _, _]}, GroupMissingOpenerNode[Floor, handledChildren, <|Source -> Append[pos, 1]|>],
+
+    {LeafNode[Token`Boxes`OpenParenStar, _, _], ___},
+      GroupMissingCloserNode[Comment,
+        {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~
+        MapIndexed[
+          parseBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1), "StringifyMode" -> 3]&, children[[2;;]]], <|Source->Append[pos, 1]|>],
+    {___, LeafNode[Token`Boxes`StarCloseParen, _, _]},
+      GroupMissingOpenerNode[Comment,
+        MapIndexed[
+          parseBox[#1, Append[pos, 1] ~Join~ (#2 + 1 - 1), "StringifyMode" -> 3]&, children[[;;-2]]] ~Join~
+        {parseBox[children[[-1]], Append[pos, 1] ~Join~ {Length[children]}]}, <|Source->Append[pos, 1]|>],
+
 
     (*
     Infix
     *)
     {_, LeafNode[Token`Plus | Token`Minus, _, _], _, ___}, InfixNode[Plus, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`Times | Token`Star, _, _], _, ___}, InfixNode[Times, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`Boxes`MultiWhitespace, _, _], _, ___}, InfixNode[Times, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`Bar, _, _], _, ___}, InfixNode[Alternatives, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LessEqual | Token`LongName`LessEqual | Token`Greater | 
        Token`Less | Token`LongName`Equal | 
@@ -133,6 +197,7 @@ Module[{handledChildren, aggregatedChildren},
        Token`GreaterEqual | Token`BangEqual |
        Token`LongName`GreaterEqualLess | Token`LongName`GreaterFullEqual |
        Token`LongName`GreaterGreater | Token`LongName`GreaterLess |
+       Token`LongName`GreaterSlantEqual |
        Token`LongName`GreaterTilde | Token`LongName`LessEqualGreater |
        Token`LongName`LessFullEqual | Token`LongName`LessGreater |
        Token`LongName`LessLess | Token`LongName`LessTilde |
@@ -144,9 +209,9 @@ Module[{handledChildren, aggregatedChildren},
        Token`LongName`NotGreaterLess | Token`LongName`NotLessGreater |
        Token`LongName`NotGreaterSlantEqual | Token`LongName`NotLessSlantEqual |
        Token`LongName`NotGreaterTilde | Token`LongName`NotLessTilde |
-       Token`LongName`NotNestedGreaterGreater | Token`LongName`NotNestedLessLess, _, _], _, ___}, InfixNode[InfixInequality, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`VectorGreater | Token`LongName`VectorGreaterEqual |
-       Token`LongName`VectorLess | Token`LongName`VectorLessEqual , _, _], _, ___}, InfixNode[Developer`VectorInequality, handledChildren, <|Source->Append[pos, 1]|>],
+       Token`LongName`NotNestedGreaterGreater | Token`LongName`NotNestedLessLess |
+       Token`LongName`VectorGreater | Token`LongName`VectorGreaterEqual |
+       Token`LongName`VectorLess | Token`LongName`VectorLessEqual, _, _], _, ___}, InfixNode[InfixInequality, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`And | Token`AmpAmp, _, _], _, ___}, InfixNode[And, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`Or | Token`BarBar, _, _], _, ___}, InfixNode[Or, handledChildren, <|Source->Append[pos, 1]|>],
 
@@ -174,6 +239,7 @@ Module[{handledChildren, aggregatedChildren},
     {_, LeafNode[Token`LongName`Cup, _, _], _, ___}, InfixNode[Cup, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`CupCap, _, _], _, ___}, InfixNode[CupCap, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`Diamond, _, _], _, ___}, InfixNode[Diamond, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Divides, _, _], _, ___}, InfixNode[Divisible, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`DotEqual, _, _], _, ___}, InfixNode[DotEqual, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`DoubleDownArrow, _, _], _, ___}, InfixNode[DoubleDownArrow, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`DoubleLeftArrow, _, _], _, ___}, InfixNode[DoubleLeftArrow, handledChildren, <|Source->Append[pos, 1]|>],
@@ -260,6 +326,7 @@ Module[{handledChildren, aggregatedChildren},
     {_, LeafNode[Token`LongName`NotTildeFullEqual, _, _], _, ___}, InfixNode[NotTildeFullEqual, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`NotTildeTilde, _, _], _, ___}, InfixNode[NotTildeTilde, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`NotVerticalBar, _, _], _, ___}, InfixNode[NotVerticalBar, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`PermutationProduct, _, _], _, ___}, InfixNode[PermutationProduct, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`Precedes, _, _], _, ___}, InfixNode[Precedes, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`PrecedesEqual, _, _], _, ___}, InfixNode[PrecedesEqual, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`PrecedesSlantEqual, _, _], _, ___}, InfixNode[PrecedesSlantEqual, handledChildren, <|Source->Append[pos, 1]|>],
@@ -322,7 +389,6 @@ Module[{handledChildren, aggregatedChildren},
     {_, LeafNode[Token`LongName`UpperLeftArrow, _, _], _, ___}, InfixNode[UpperLeftArrow, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`UpperRightArrow, _, _], _, ___}, InfixNode[UpperRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`UpTeeArrow, _, _], _, ___}, InfixNode[UpTeeArrow, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`VectorGreater, _, _], _, ___}, InfixNode[UpperRightArrow, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`Vee, _, _], _, ___}, InfixNode[Vee, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`VerticalBar, _, _], _, ___}, InfixNode[VerticalBar, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`VerticalSeparator, _, _], _, ___}, InfixNode[VerticalSeparator, handledChildren, <|Source->Append[pos, 1]|>],
@@ -338,12 +404,13 @@ Module[{handledChildren, aggregatedChildren},
     :: stringifies its args
     *)
     {_, LeafNode[Token`ColonColon, _, _], _, ___},
-      InfixNode[MessageName, {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~
+      InfixNode[MessageName,
+        {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~
         {parseBox[children[[2]], Append[pos, 1] ~Join~ {2}]} ~Join~
         MapIndexed[
           If[Mod[#2[[1]], 2] == 1,
             parseBox[#1, Append[pos, 1] ~Join~ (#2 + 3 - 1), "StringifyMode" -> 1],
-            parseBox[#1, Append[pos, 1] ~Join~ (#2 + 3 - 1), "StringifyMode" -> 0]]&, children[[3;;]] ],
+            parseBox[#1, Append[pos, 1] ~Join~ (#2 + 3 - 1)]]&, children[[3;;]]],
       <|Source->Append[pos, 1]|>],
 
 
@@ -352,12 +419,12 @@ Module[{handledChildren, aggregatedChildren},
     *)
     {_, LeafNode[Token`Semi, _, _], ___}, InfixNode[CompoundExpression, handledChildren ~Join~
                                               If[MatchQ[handledChildren[[-1]], LeafNode[Token`Semi, _, _]],
-                                                { LeafNode[Token`Fake`ImplicitNull, "", handledChildren[[-1, 3]] ] },
+                                                { LeafNode[Token`Fake`ImplicitNull, "", handledChildren[[-1, 3]]] },
                                                 {}], <|Source->Append[pos, 1]|>],
 
     {_, LeafNode[Token`Comma, _, _], ___}, InfixNode[Comma, handledChildren ~Join~
                                               If[MatchQ[handledChildren[[-1]], LeafNode[Token`Comma, _, _]],
-                                                { LeafNode[Token`Fake`ImplicitNull, "", handledChildren[[-1, 3]] ] },
+                                                { LeafNode[Token`Fake`ImplicitNull, "", handledChildren[[-1, 3]]] },
                                                 {}], <|Source->Append[pos, 1]|>],
 
     (*
@@ -390,11 +457,9 @@ Module[{handledChildren, aggregatedChildren},
     {_, LeafNode[Token`SlashSlashAt, _, _], _}, BinaryNode[MapAll, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`MinusPlus, _, _], _}, BinaryNode[MinusPlus, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`PlusMinus, _, _], _}, BinaryNode[PlusMinus, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`GreaterGreater, _, _], _}, BinaryNode[Put, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`GreaterGreaterGreater, _, _], _}, BinaryNode[PutAppend, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`MinusEqual, _, _], _}, BinaryNode[SubtractFrom, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`StarEqual, _, _], _}, BinaryNode[TimesBy, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LessMinusGreater, _, _], _}, BinaryNode[TwoWayRule, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LessMinusGreater | Token`LongName`TwoWayRule, _, _], _}, BinaryNode[TwoWayRule, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`CaretEqual, _, _], _}, BinaryNode[UpSet, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`CircleMinus, _, _], _}, BinaryNode[CircleMinus, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`DoubleLeftTee, _, _], _}, BinaryNode[DoubleLeftTee, handledChildren, <|Source->Append[pos, 1]|>],
@@ -404,18 +469,40 @@ Module[{handledChildren, aggregatedChildren},
     {_, LeafNode[Token`LongName`LeftTee, _, _], _}, BinaryNode[LeftTee, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`RightTee, _, _], _}, BinaryNode[RightTee, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LongName`Implies, _, _], _}, BinaryNode[Implies, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`SuchThat, _, _], _, ___}, BinaryNode[SuchThat, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`Therefore, _, _], _, ___}, BinaryNode[Therefore, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`SuchThat, _, _], _, _}, BinaryNode[SuchThat, handledChildren, <|Source->Append[pos, 1]|>],
+    {_, LeafNode[Token`LongName`Therefore, _, _], _, _}, BinaryNode[Therefore, handledChildren, <|Source->Append[pos, 1]|>],
 
-    {LeafNode[Symbol, _, _], LeafNode[Token`Colon, _, _], _}, BinaryNode[Pattern, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`Under, _, _], LeafNode[Token`Colon, _, _], _}, BinaryNode[Optional, handledChildren, <|Source->Append[pos, 1]|>],
     {CompoundNode[PatternBlank, _, _], LeafNode[Token`Colon, _, _], _}, BinaryNode[Optional, handledChildren, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`Colon, _, _], _}, SyntaxErrorNode[SyntaxError`ColonError, handledChildren, <|Source -> Append[pos, 1]|>],
+    {_, LeafNode[Token`Colon, _, _], _}, BinaryNode[Pattern, handledChildren, <|Source->Append[pos, 1]|>],
 
     {_, LeafNode[Token`Boxes`EqualDot, _, _]},
       BinaryNode[Unset,
         handledChildren /. {
           LeafNode[Token`Boxes`EqualDot, _, data_] :> Sequence @@ {LeafNode[Token`Equal, "=", data], LeafNode[Token`Dot, ".", data]}
         }, <|Source->Append[pos, 1]|>],
+
+    (*
+    >> stringifies its args
+    *)
+    {_, LeafNode[Token`GreaterGreater, _, _], _},
+      BinaryNode[Put, {
+        parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~
+          {parseBox[children[[2]], Append[pos, 1] ~Join~ {2}]} ~Join~
+          {parseBox[children[[3]], Append[pos, 1] ~Join~ {3}, "StringifyMode" -> 2]}
+        ,
+        <|Source->Append[pos, 1]|>],
+
+    (*
+    >>> stringifies its args
+    *)
+    {_, LeafNode[Token`GreaterGreaterGreater, _, _], _},
+      BinaryNode[PutAppend, {
+        parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~
+          {parseBox[children[[2]], Append[pos, 1] ~Join~ {2}]} ~Join~
+          {parseBox[children[[3]], Append[pos, 1] ~Join~ {3}, "StringifyMode" -> 2]}
+        ,
+        <|Source->Append[pos, 1]|>],
 
     (*
     Ternary
@@ -429,12 +516,20 @@ Module[{handledChildren, aggregatedChildren},
           LeafNode[Token`Boxes`EqualDot, _, data_] :> Sequence @@ {LeafNode[Token`Equal, "=", data], LeafNode[Token`Dot, ".", data]}
         }, <|Source->Append[pos, 1]|>],
 
+    (*
+    older style that may be possible?
+    *)
+    (*
+    {_, LeafNode[Token`SlashColon, _, _], BinaryNode[Unset, _, _]},
+      xx,
+    *)
+
     {_, LeafNode[Token`Tilde, _, _], _, LeafNode[Token`Tilde, _, _], _}, TernaryNode[TernaryTilde, handledChildren, <|Source->Append[pos, 1]|>],
     
     (*
     Prefix
     *)
-    {LeafNode[Token`Minus, _, _], _}, PrefixNode[Minus, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`Minus | Token`LongName`Minus, _, _], _}, PrefixNode[Minus, handledChildren, <|Source->Append[pos, 1]|>],
     {LeafNode[Token`Bang | Token`LongName`Not, _, _], _}, PrefixNode[Not, handledChildren, <|Source->Append[pos, 1]|>],
     {LeafNode[Token`LongName`DifferentialD, _, _], _}, PrefixNode[DifferentialD, handledChildren, <|Source->Append[pos, 1]|>],
     {LeafNode[Token`LongName`CapitalDifferentialD, _, _], _}, PrefixNode[CapitalDifferentialD, handledChildren, <|Source->Append[pos, 1]|>],
@@ -443,6 +538,9 @@ Module[{handledChildren, aggregatedChildren},
     {LeafNode[Token`MinusMinus, _, _], _}, PrefixNode[PreDecrement, handledChildren, <|Source->Append[pos, 1]|>],
     {LeafNode[Token`Plus, _, _], _}, PrefixNode[Plus, handledChildren, <|Source->Append[pos, 1]|>],
     {LeafNode[Token`LongName`Square, _, _], _}, PrefixNode[Square, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`BangBang, _, _], _}, PrefixNode[PrefixNot2, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`LongName`Sqrt, _, _], _}, PrefixNode[Sqrt, handledChildren, <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`LongName`CubeRoot, _, _], _}, PrefixNode[CubeRoot, handledChildren, <|Source->Append[pos, 1]|>],
 
     {LeafNode[Token`SemiSemi, _, _], _}, BinaryNode[Span, {LeafNode[Token`Fake`ImplicitOne, "", <||>]} ~Join~ handledChildren, <|Source->Append[pos, 1]|>],
 
@@ -454,25 +552,39 @@ Module[{handledChildren, aggregatedChildren},
     {LeafNode[Token`LessLess, _, _], _, ___},
       PrefixNode[Get, {
         parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~
-          {parseBox[children[[2]], Append[pos, 1] ~Join~ {2}, "StringifyMode" -> 2]} ~Join~
-          MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2 + 3 - 1)]&, children[[3;;]] ]
+          MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1), "StringifyMode" -> 2]&, children[[2;;]]]
         ,
         <|Source->Append[pos, 1]|>],
+
+    (*
+    Prefix ? only works with boxes
+    *)
+    {LeafNode[Token`Question, _, _], _},
+      PrefixNode[Information, {
+        parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~
+          MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1), "StringifyMode" -> 3]&, children[[2;;]]]
+        ,
+        <|Source->Append[pos, 1]|>],
+    {LeafNode[Token`QuestionQuestion, _, _], _},
+      PrefixNode[Information, {
+        parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~
+          MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1), "StringifyMode" -> 3]&, children[[2;;]]]
+        ,
+        <|Source->Append[pos, 1]|>],
+
 
     (*
     PrefixBinary
     *)
     {LeafNode[Token`LongName`Integral, _, _], _},
       Switch[children,
-        {"\[Integral]", RowBox[{_, RowBox[{"\[DifferentialD]", _}]}]},
+        {"\[Integral]", RowBox[{_, ___, RowBox[{"\[DifferentialD]", _}]}]},
           (*
           Successful match for Integral syntax
           *)
           PrefixBinaryNode[Integrate, {
-            LeafNode[Token`LongName`Integral, "\[Integral]", <|Source->Append[pos, 1] ~Join~ {1}|>],
-            parseBox[children[[2, 1, 1]], Append[pos, 1] ~Join~ {2, 1, 1}],
-            parseBox[children[[2, 1, 2]], Append[pos, 1] ~Join~ {2, 1, 2}]
-            }, <|Source->Append[pos, 1]|>]
+            LeafNode[Token`LongName`Integral, "\[Integral]", <|Source->Append[pos, 1] ~Join~ {1}|>]} ~Join~
+            MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ {2, 1} ~Join~ (#2 + 1 - 1)]&, children[[2, 1]]], <|Source->Append[pos, 1]|>]
         ,
         _,
           (*
@@ -500,57 +612,38 @@ Module[{handledChildren, aggregatedChildren},
     {_, LeafNode[Token`SemiSemi, _, _]}, BinaryNode[Span, handledChildren ~Join~ {LeafNode[Token`Fake`ImplicitAll, "", <||>]}, <|Source->Append[pos, 1]|>],
 
     (*
-    Calls
-    *)
-    {_, LeafNode[Token`OpenSquare, _, _], ___, LeafNode[Token`CloseSquare, _, _]}, CallNode[{handledChildren[[1]]}, {GroupNode[GroupSquare, Rest[handledChildren], <||>]}, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`LongName`LeftDoubleBracket, _, _], ___, LeafNode[Token`LongName`RightDoubleBracket, _, _]}, CallNode[{handledChildren[[1]]}, {GroupNode[GroupDoubleBracket, Rest[handledChildren], <||>]}, <|Source->Append[pos, 1]|>],
-    {_, LeafNode[Token`OpenSquare, _, _], ___}, CallNode[{handledChildren[[1]]}, {GroupMissingCloserNode[GroupSquare, Rest[handledChildren], <||>]}, <|Source->Append[pos, 1]|>],
-
-    (*
-    Unrecognized LongName
-    *)
-    {LeafNode[Token`Other, "\\[", _], _, LeafNode[Token`CloseSquare, "]", _]}, SyntaxErrorNode[SyntaxError`UnhandledCharacter, { parseBox[ "\\[" <> children[[2]] <> "]", Append[pos, 1] ] }, <|Source -> Append[pos, 1]|>], 
-
-    (*
-    the second arg is a box, so we know it is implicit Times
-    *)
-    {_, LeafNode[_, _, _] |
-        BinaryNode[_, _, _] | CallNode[_, _, _] | GroupNode[_, _, _] | BoxNode[Except[RowBox], _, _] | InfixNode[_, _, _] |
-        PostfixNode[_, _, _] | CompoundNode[_, _, _] | PrefixNode[_, _, _], ___},
-
-        InfixNode[Times,
-          Flatten[{First[handledChildren]} ~Join~
-            Map[If[
-              MatchQ[#, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline | Token`Comment, _, _]],
-                #,
-                (*
-                 Give ImplicitTimes the same Source as RHS
-                *)
-                {LeafNode[Token`Fake`ImplicitTimes, "", <|Source->#[[3, Key[Source] ]]|>], #}]&, Rest[handledChildren]
-            ]
-          ],
-          <|Source -> Append[pos, 1]|>],
-
-    (*
     if there is an error, then just return the last non-trivia node
     *)
-    {_, LeafNode[Token`Error`UnhandledCharacter, _, _], ___},
+    {_, ErrorNode[Token`Error`UnhandledCharacter, _, _], ___},
         aggregatedChildren[[-1]],
+        
     _,
     (*Failure["InternalUnhandled", <|"Function" -> parseBox, "Arguments"->HoldForm[RowBox[children]]|>]*)
     BoxNode[RowBox, {handledChildren}, <|Source->Append[pos, 1]|>]
     ]
    ]]
 
+(*
+There may be RowBoxs inside of comments
+*)
+parseBox[RowBox[children_], pos_, "StringifyMode" -> 3] :=
+  Module[{handledChildren},
+
+    handledChildren = children;
+
+    handledChildren = MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ #2, "StringifyMode" -> 3]&, handledChildren];
+
+    BoxNode[RowBox, {handledChildren}, <|Source->Append[pos, 1]|>]
+  ]
 
 
 
 
 
 
-Attributes[applyCodeNodesToRest] = {HoldAll}
+Attributes[applyCodeNodesToRest] = {HoldAllComplete}
 
-applyCodeNodesToRest[rest___] := List @@ Map[Function[arg, With[{assoc = <||>}, CodeNode[Null, arg, assoc]], {HoldFirst}], Hold[rest]]
+applyCodeNodesToRest[rest___] := List @@ Map[Function[arg, With[{assoc = <||>}, CodeNode[Null, arg, assoc]], {HoldAllComplete}], HoldComplete[rest]]
 
 
 
@@ -857,8 +950,10 @@ Split things like a_b into correct structures
 
 (*
 Just do simple thing here and disallow _ and " and .
+
+It is hard to have a pattern for all multibyte letterlike characters
 *)
-letterlikePat = Except["_"|"\""|"."|"#"]
+letterlikePat = Except["_"|"\""|"."|"#"|"0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9"]
 
 digitPat = DigitCharacter
 
@@ -944,9 +1039,15 @@ Module[{cases},
   CompoundNode[Slot, {parseBox[cases[[1]], pos], parseBox[cases[[2]], pos, "StringifyMode" -> 1]}, <|Source -> pos|>]
 ]
 
-parseBox[str_String /; StringMatchQ[str, "##" ~~ letterlikePat..], pos_] :=
+parseBox[str_String /; StringMatchQ[str, "#" ~~ b:("\""~~___)], pos_] :=
 Module[{cases},
-  cases = StringCases[str, "##" ~~ b:letterlikePat.. :> {"##", b}][[1]];
+  cases = StringCases[str, "#" ~~ b:("\""~~___) :> {"#", b}][[1]];
+  CompoundNode[Slot, {parseBox[cases[[1]], pos], parseBox[cases[[2]], pos, "StringifyMode" -> 1]}, <|Source -> pos|>]
+]
+
+parseBox[str_String /; StringMatchQ[str, "##" ~~ digitPat..], pos_] :=
+Module[{cases},
+  cases = StringCases[str, "##" ~~ b:digitPat.. :> {"##", b}][[1]];
   CompoundNode[SlotSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
 ]
 
@@ -961,12 +1062,48 @@ Module[{cases},
 (*
 The Front End treats comments as a collection of code, and not a single token
 *)
-parseBox["(*", pos_] := LeafNode[Token`Boxes`OpenParenStar, "(*", <|Source -> pos|>]
-parseBox["*)", pos_] := LeafNode[Token`Boxes`StarCloseParen, "*)", <|Source -> pos|>]
+parseBox["(*", pos_] :=
+  LeafNode[Token`Boxes`OpenParenStar, "(*", <|Source -> pos|>]
+
+(*
+The FE parses (***) as RowBox[{"(*", "**)"}], so need to handle variable-length ** ) token
+*)
+parseBox[s_String /; StringMatchQ[s, Verbatim["*"].. ~~ ")"], pos_] :=
+  LeafNode[Token`Boxes`StarCloseParen, s, <|Source -> pos|>]
 
 
 parseBox["=.", pos_] := LeafNode[Token`Boxes`EqualDot, "=.", <|Source -> pos|>]
 
+
+
+(*
+FIXME: if there is ever integration with the build system, then remove this
+hard-coded list and use the build system
+*)
+$mbWhitespace = {
+"\[NonBreakingSpace]",
+"\[ThickSpace]",
+"\[ThinSpace]",
+"\[VeryThinSpace]",
+"\[MediumSpace]",
+"\[NoBreak]",
+"\[SpaceIndicator]",
+"\[InvisibleSpace]",
+"\[NegativeVeryThinSpace]",
+"\[NegativeThinSpace]",
+"\[NegativeMediumSpace]",
+"\[NegativeThickSpace]",
+"\[AutoSpace]",
+"\[Continuation]",
+"\[RoundSpaceIndicator]",
+"\[PageBreakAbove]",
+"\[PageBreakBelow]",
+"\[DiscretionaryPageBreakAbove]",
+"\[DiscretionaryPageBreakBelow]",
+"\[AlignmentMarker]"
+}
+
+$whitespacePat = Alternatives @@ ({" " | "\t"} ~Join~ $mbWhitespace)
 
 
 parseBox[str_String, pos_, OptionsPattern[]] :=
@@ -975,21 +1112,23 @@ Module[{parsed, data, issues, stringifyMode, oldLeafSrc, len, src},
   (*
   Bypass calling into ParseLeaf if only whitespace,
   we handle multiple whitespace characters here,
-  because the FE treats '      ' as a single token
+  because the FE treats  <space><space><space>  as a single token
   *)
+
+  stringifyMode = OptionValue["StringifyMode"];
+
   Which[
-    StringMatchQ[str, (" "|"\t")..],
+    StringMatchQ[str, $whitespacePat..] && (stringifyMode == 0 || stringifyMode == 2),
       len = StringLength[str];
       src = {{1, 1}, {1, len+1}};
       parsed = LeafNode[Token`Boxes`MultiWhitespace, str, <|Source -> src|>];
     ,
-    StringMatchQ[str, ("'")..],
+    StringMatchQ[str, ("'")..] && stringifyMode == 0,
       len = StringLength[str];
       src = {{1, 1}, {1, len+1}};
       parsed = LeafNode[Token`Boxes`MultiSingleQuote, str, <|Source -> src|>];
     ,
     True,
-      stringifyMode = OptionValue["StringifyMode"];
       parsed = CodeConcreteParseLeaf[str, "StringifyMode" -> stringifyMode];
   ];
 
@@ -1013,7 +1152,7 @@ Module[{parsed, data, issues, stringifyMode, oldLeafSrc, len, src},
   parsed
 ]
 
-replacePosition[SyntaxIssue[tag_, msg_, severity_, dataIn_], pos_, leafSrc_] :=
+replacePosition[(head:SyntaxIssue|FormatIssue)[tag_, msg_, severity_, dataIn_], pos_, leafSrc_] :=
 Module[{data, actions, newSrc, oldSyntaxIssueSrc},
 
     data = dataIn;
@@ -1024,7 +1163,7 @@ Module[{data, actions, newSrc, oldSyntaxIssueSrc},
 
     If[!(oldSyntaxIssueSrc[[1, 2]] == leafSrc[[1, 2]] && oldSyntaxIssueSrc[[2, 2]] == leafSrc[[2, 2]]),
         (* this is some sub-part of the leaf *)
-        newSrc = newSrc ~Join~ { Intra[ oldSyntaxIssueSrc[[1, 2]], oldSyntaxIssueSrc[[2, 2]] ] };
+        newSrc = newSrc ~Join~ { Intra[oldSyntaxIssueSrc[[1, 2]], oldSyntaxIssueSrc[[2, 2]]] };
     ];
 
     data[Source] = newSrc;
@@ -1033,7 +1172,7 @@ Module[{data, actions, newSrc, oldSyntaxIssueSrc},
         actions = replacePosition[#, newSrc]& /@ actions;
         data[CodeActions] = actions
     ];
-    SyntaxIssue[tag, msg, severity, data]
+    head[tag, msg, severity, data]
 ]
 
 replacePosition[CodeAction[label_, command_, dataIn_], newSrc_] :=
@@ -1065,47 +1204,20 @@ Module[{implicitsRemoved},
   toStandardFormBoxes[implicitsRemoved]
 ]]
 
-ToStandardFormBoxes[ContainerNode[Box, {cst1_, LeafNode[Token`Newline, newlineStr_, _], cst2_}, _]] :=
+ToStandardFormBoxes[ContainerNode[Box, children:{(*cst*)_, PatternSequence[LeafNode[Token`Newline, _, _], (*cst*)_]..., LeafNode[Token`Newline, _, _] | PatternSequence[]}, _]] :=
 Block[{$RecursionLimit = Infinity},
-Module[{implicitsRemoved1, implicitsRemoved2},
+Module[{csts, newlines, implicitsRemoveds, newlineStrs},
 
-  implicitsRemoved1 = DeleteCases[cst1, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity];
-  implicitsRemoved2 = DeleteCases[cst2, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity];
+  csts = children[[1;;;;2]];
+  newlines = children[[2;;;;2]];
 
-  { toStandardFormBoxes[implicitsRemoved1], newlineStr, toStandardFormBoxes[implicitsRemoved2] }
-]]
+  implicitsRemoveds = DeleteCases[#, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity]& /@ csts;
 
-ToStandardFormBoxes[ContainerNode[Box, {
-  cst1_, LeafNode[Token`Newline, newlineStr1_, _],
-  cst2_, LeafNode[Token`Newline, newlineStr2_, _], cst3_}, _]] :=
-Block[{$RecursionLimit = Infinity},
-Module[{implicitsRemoved1, implicitsRemoved2, implicitsRemoved3},
+  implicitsRemoveds = toStandardFormBoxes /@ implicitsRemoveds;
 
-  implicitsRemoved1 = DeleteCases[cst1, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity];
-  implicitsRemoved2 = DeleteCases[cst2, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity];
-  implicitsRemoved3 = DeleteCases[cst3, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity];
+  newlineStrs = #[[2]]& /@ newlines;
 
-  { toStandardFormBoxes[implicitsRemoved1], newlineStr1,
-    toStandardFormBoxes[implicitsRemoved2], newlineStr2,
-    toStandardFormBoxes[implicitsRemoved3] }
-]]
-
-ToStandardFormBoxes[ContainerNode[Box, {
-  cst1_, LeafNode[Token`Newline, newlineStr1_, _],
-  cst2_, LeafNode[Token`Newline, newlineStr2_, _],
-  cst3_, LeafNode[Token`Newline, newlineStr3_, _], cst4_}, _]] :=
-Block[{$RecursionLimit = Infinity},
-Module[{implicitsRemoved1, implicitsRemoved2, implicitsRemoved3, implicitsRemoved4},
-
-  implicitsRemoved1 = DeleteCases[cst1, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity];
-  implicitsRemoved2 = DeleteCases[cst2, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity];
-  implicitsRemoved3 = DeleteCases[cst3, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity];
-  implicitsRemoved4 = DeleteCases[cst4, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity];
-
-  { toStandardFormBoxes[implicitsRemoved1], newlineStr1,
-    toStandardFormBoxes[implicitsRemoved2], newlineStr2,
-    toStandardFormBoxes[implicitsRemoved3], newlineStr3,
-    toStandardFormBoxes[implicitsRemoved4]}
+  Riffle[implicitsRemoveds, newlineStrs]
 ]]
 
 
@@ -1121,15 +1233,19 @@ toStandardFormBoxes[LeafNode[_, str_, _]] :=
   str
 
 
+toStandardFormBoxes[ErrorNode[_, str_, _]] :=
+  str
+
+
 
 
 
 toStandardFormBoxes[BoxNode[Cell, {a_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { Hold[aBox] } ~Join~ heldRest];
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[Cell @@ heldChildren]]
 ]]
@@ -1141,7 +1257,7 @@ BoxNodes that may contain CodeNodes have to be handled individually
 
 toStandardFormBoxes[BoxNode[DynamicBox, {rest___}, _]] :=
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1150,7 +1266,7 @@ Module[{heldRest, heldChildren},
 
 toStandardFormBoxes[BoxNode[DynamicModuleBox, {rest___}, _]] :=
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1159,20 +1275,20 @@ Module[{heldRest, heldChildren},
 
 toStandardFormBoxes[BoxNode[NamespaceBox, {first_, a_, rest___}, _]] :=
 Module[{heldFirst, heldRest, heldChildren},
-  heldFirst = Extract[#, {2}, Hold]& /@ {first};
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldFirst = Extract[#, {2}, HoldComplete]& /@ {first};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   (*
-  Need to wrap boxes in Hold, so that ReleaseHold does not descend into the boxes (which may contain code that has Hold)
+  Need to wrap boxes in HoldComplete, so that ReleaseHold does not descend into the boxes (which may contain code that has HoldComplete)
   *)
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = heldFirst ~Join~ { Hold[aBox] } ~Join~ heldRest];
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = heldFirst ~Join~ { HoldComplete[aBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[NamespaceBox @@ heldChildren]]
 ]
 
 toStandardFormBoxes[BoxNode[RasterBox, {rest___}, _]] :=
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1182,9 +1298,9 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[TagBox, {a_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { Hold[aBox] } ~Join~ heldRest];
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[TagBox @@ heldChildren]]
 ]]
@@ -1193,7 +1309,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[GraphicsBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1203,7 +1319,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[Graphics3DBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1213,8 +1329,8 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[GraphicsComplexBox, {rest___}, _]] :=
 Catch[
 Module[{heldFirst, heldRest, heldChildren},
-  heldFirst = Extract[#, {2}, Hold]& /@ {first};
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldFirst = Extract[#, {2}, HoldComplete]& /@ {first};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1224,8 +1340,8 @@ Module[{heldFirst, heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[GraphicsComplex3DBox, {rest___}, _]] :=
 Catch[
 Module[{heldFirst, heldRest, heldChildren},
-  heldFirst = Extract[#, {2}, Hold]& /@ {first};
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldFirst = Extract[#, {2}, HoldComplete]& /@ {first};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1235,7 +1351,7 @@ Module[{heldFirst, heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[GraphicsGroupBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1245,7 +1361,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[GraphicsGroup3DBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1255,7 +1371,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[DiskBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1265,7 +1381,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[LineBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1275,7 +1391,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[Line3DBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1285,7 +1401,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[RectangleBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1295,7 +1411,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[PointBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1305,7 +1421,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[Point3DBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1315,7 +1431,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[CuboidBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1325,7 +1441,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[Polygon3DBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1335,7 +1451,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[SphereBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1345,9 +1461,9 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[RotationBox, {a_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { Hold[aBox] } ~Join~ heldRest];
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[RotationBox @@ heldChildren]]
 ]]
@@ -1355,7 +1471,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[BSplineCurveBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1365,7 +1481,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[BSplineCurve3DBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1375,7 +1491,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[BSplineSurface3DBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1385,7 +1501,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[PolygonBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1395,7 +1511,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[ConicHullRegion3DBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1405,7 +1521,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[TubeBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1415,7 +1531,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[Arrow3DBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1425,7 +1541,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[GeometricTransformation3DBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1438,7 +1554,7 @@ too complicated to handle first arg as boxes
 toStandardFormBoxes[BoxNode[TemplateBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1448,9 +1564,9 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[FormBox, {a_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { Hold[aBox] } ~Join~ heldRest];
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[FormBox @@ heldChildren]]
 ]]
@@ -1458,9 +1574,9 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[ButtonBox, {a_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { Hold[aBox] } ~Join~ heldRest];
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[ButtonBox @@ heldChildren]]
 ]]
@@ -1468,9 +1584,9 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[ActionMenuBox, {a_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { Hold[aBox] } ~Join~ heldRest];
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[ActionMenuBox @@ heldChildren]]
 ]]
@@ -1478,7 +1594,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[PaneSelectorBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1488,9 +1604,9 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[PanelBox, {a_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { Hold[aBox] } ~Join~ heldRest];
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[PanelBox @@ heldChildren]]
 ]]
@@ -1498,7 +1614,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[InterpretationBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1508,9 +1624,9 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[StyleBox, {a_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { Hold[aBox] } ~Join~ heldRest];
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[StyleBox @@ heldChildren]]
 ]]
@@ -1518,9 +1634,9 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[SuperscriptBox, {a_, b_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  With[{aBox = toStandardFormBoxes[a], bBox = toStandardFormBoxes[b]}, heldChildren = { Hold[aBox], Hold[bBox] } ~Join~ heldRest];
+  With[{aBox = toStandardFormBoxes[a], bBox = toStandardFormBoxes[b]}, heldChildren = { HoldComplete[aBox], HoldComplete[bBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[SuperscriptBox @@ heldChildren]]
 ]]
@@ -1528,20 +1644,31 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[SubsuperscriptBox, {a_, b_, c_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   With[{aBox = toStandardFormBoxes[a], bBox = toStandardFormBoxes[b], cBox = toStandardFormBoxes[c]},
-    heldChildren = { Hold[aBox], Hold[bBox], Hold[cBox] } ~Join~ heldRest];
+    heldChildren = { HoldComplete[aBox], HoldComplete[bBox], HoldComplete[cBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[SubsuperscriptBox @@ heldChildren]]
+]]
+
+toStandardFormBoxes[BoxNode[UnderoverscriptBox, {a_, b_, c_, rest___}, _]] :=
+Catch[
+Module[{heldRest, heldChildren},
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
+
+  With[{aBox = toStandardFormBoxes[a], bBox = toStandardFormBoxes[b], cBox = toStandardFormBoxes[c]},
+    heldChildren = { HoldComplete[aBox], HoldComplete[bBox], HoldComplete[cBox] } ~Join~ heldRest];
+
+  With[{heldChildren = heldChildren}, ReleaseHold[UnderoverscriptBox @@ heldChildren]]
 ]]
 
 toStandardFormBoxes[BoxNode[ItemBox, {a_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { Hold[aBox] } ~Join~ heldRest];
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[ItemBox @@ heldChildren]]
 ]]
@@ -1549,9 +1676,9 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[InsetBox, {a_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { Hold[aBox] } ~Join~ heldRest];
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[InsetBox @@ heldChildren]]
 ]]
@@ -1559,22 +1686,22 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[AdjustmentBox, {a_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { Hold[aBox] } ~Join~ heldRest];
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[AdjustmentBox @@ heldChildren]]
 ]]
 
 toStandardFormBoxes[BoxNode[LocatorPaneBox, {first_, a_, rest___}, _]] :=
 Module[{heldFirst, heldRest, heldChildren},
-  heldFirst = Extract[#, {2}, Hold]& /@ {first};
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldFirst = Extract[#, {2}, HoldComplete]& /@ {first};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   (*
-  Need to wrap boxes in Hold, so that ReleaseHold does not descend into the boxes (which may contain code that has Hold)
+  Need to wrap boxes in HoldComplete, so that ReleaseHold does not descend into the boxes (which may contain code that has HoldComplete)
   *)
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = heldFirst ~Join~ { Hold[aBox] } ~Join~ heldRest];
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = heldFirst ~Join~ { HoldComplete[aBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[LocatorPaneBox @@ heldChildren]]
 ]
@@ -1582,7 +1709,7 @@ Module[{heldFirst, heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[AnimatorBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1592,7 +1719,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[OpenerBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1602,7 +1729,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[SliderBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1612,7 +1739,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[CylinderBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1622,9 +1749,9 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[OverscriptBox, {a_, b_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  With[{aBox = toStandardFormBoxes[a], bBox = toStandardFormBoxes[b]}, heldChildren = { Hold[aBox], Hold[bBox] } ~Join~ heldRest];
+  With[{aBox = toStandardFormBoxes[a], bBox = toStandardFormBoxes[b]}, heldChildren = { HoldComplete[aBox], HoldComplete[bBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[OverscriptBox @@ heldChildren]]
 ]]
@@ -1632,9 +1759,9 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[UnderscriptBox, {a_, b_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  With[{aBox = toStandardFormBoxes[a], bBox = toStandardFormBoxes[b]}, heldChildren = { Hold[aBox], Hold[bBox] } ~Join~ heldRest];
+  With[{aBox = toStandardFormBoxes[a], bBox = toStandardFormBoxes[b]}, heldChildren = { HoldComplete[aBox], HoldComplete[bBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[UnderscriptBox @@ heldChildren]]
 ]]
@@ -1642,9 +1769,9 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[FrameBox, {a_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { Hold[aBox] } ~Join~ heldRest];
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[FrameBox @@ heldChildren]]
 ]]
@@ -1652,7 +1779,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[CheckboxBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1662,7 +1789,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[ColorSetterBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1672,7 +1799,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[InputFieldBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1682,7 +1809,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[TabViewBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1692,7 +1819,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[RadioButtonBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1702,7 +1829,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[PopupMenuBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1712,7 +1839,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[SetterBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1722,7 +1849,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[Slider2DBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1732,9 +1859,9 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[DynamicWrapperBox, {a_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { Hold[aBox] } ~Join~ heldRest];
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[DynamicWrapperBox @@ heldChildren]]
 ]]
@@ -1742,9 +1869,9 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[PaneBox, {a_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { Hold[aBox] } ~Join~ heldRest];
+  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[PaneBox @@ heldChildren]]
 ]]
@@ -1752,10 +1879,10 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[SqrtBox, {a_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   With[{aBox = toStandardFormBoxes[a]},
-    heldChildren = { Hold[aBox] } ~Join~ heldRest];
+    heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[SqrtBox @@ heldChildren]]
 ]]
@@ -1763,10 +1890,10 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[RadicalBox, {a_, b_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   With[{aBox = toStandardFormBoxes[a], bBox = toStandardFormBoxes[b]},
-    heldChildren = { Hold[aBox], Hold[bBox] } ~Join~ heldRest];
+    heldChildren = { HoldComplete[aBox], HoldComplete[bBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[RadicalBox @@ heldChildren]]
 ]]
@@ -1774,7 +1901,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[ListPickerBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1784,7 +1911,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[OverlayBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1794,7 +1921,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[ProgressIndicatorBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1804,7 +1931,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[TogglerBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1814,10 +1941,10 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[TooltipBox, {a_, b_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   With[{aBox = toStandardFormBoxes[a], bBox = toStandardFormBoxes[b]},
-    heldChildren = { Hold[aBox], Hold[bBox] } ~Join~ heldRest];
+    heldChildren = { HoldComplete[aBox], HoldComplete[bBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[TooltipBox @@ heldChildren]]
 ]]
@@ -1825,7 +1952,7 @@ Module[{heldRest, heldChildren},
 toStandardFormBoxes[BoxNode[TableViewBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
   heldChildren = heldRest;
 
@@ -1839,9 +1966,9 @@ a is a List of Lists
 toStandardFormBoxes[BoxNode[GridBox, {a_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
-  heldRest = Extract[#, {2}, Hold]& /@ {rest};
+  heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  With[{aBox = Map[toStandardFormBoxes, a, {2}]}, heldChildren = { Hold[aBox] } ~Join~ heldRest];
+  With[{aBox = Map[toStandardFormBoxes, a, {2}]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[GridBox @@ heldChildren]]
 ]]
@@ -1902,13 +2029,12 @@ Module[{nodeBoxes},
 
 
 
-toStandardFormBoxes[BinaryNode[Unset, nodes:{
-  _, LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, _]] :=
+toStandardFormBoxes[BinaryNode[Unset, nodes_, _]] :=
 Catch[
 Module[{nodeBoxes},
   nodeBoxes = toStandardFormBoxes /@ nodes;
 
-  nodeBoxes = {nodeBoxes[[1]], "=."};
+  nodeBoxes = nodeBoxes /. {most___, "=", "."} :> {most, "=."};
 
   If[AnyTrue[nodeBoxes, FailureQ],
     Throw[SelectFirst[nodeBoxes, FailureQ]]

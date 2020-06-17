@@ -1,7 +1,7 @@
 BeginPackage["CodeParser`Generate`ParseletRegistration`"]
 
 LeafParselet
-PrefixAssertFalseParselet
+PrefixNullPointerParselet
 PrefixCloserParselet
 PrefixErrorParselet
 PrefixEndOfFileParselet
@@ -9,13 +9,10 @@ PrefixUnhandledParselet
 PrefixImplicitNullParselet
 PrefixUnsupportedTokenParselet
 
-InfixUnsupportedTokenParselet
 InfixToplevelNewlineParselet
+InfixNullPointerParselet
 InfixAssertFalseParselet
-InfixCloserParselet
 InfixDifferentialDParselet
-InfixErrorParselet
-InfixEndOfFileParselet
 InfixImplicitTimesParselet
 
 PrefixOperatorParselet
@@ -63,15 +60,15 @@ PrefixOperatorToParselet[Token`Integer] = LeafParselet[]
 PrefixOperatorToParselet[Token`Real] = LeafParselet[]
 PrefixOperatorToParselet[Token`Rational] = LeafParselet[]
 
-PrefixOperatorToParselet[Token`Unknown] = PrefixAssertFalseParselet[]
-PrefixOperatorToParselet[Token`Whitespace] = PrefixAssertFalseParselet[]
-PrefixOperatorToParselet[Token`InternalNewline] = PrefixAssertFalseParselet[]
-PrefixOperatorToParselet[Token`Comment] = PrefixAssertFalseParselet[]
+PrefixOperatorToParselet[Token`Unknown] = PrefixNullPointerParselet[]
+PrefixOperatorToParselet[Token`Whitespace] = PrefixNullPointerParselet[]
+PrefixOperatorToParselet[Token`InternalNewline] = PrefixNullPointerParselet[]
+PrefixOperatorToParselet[Token`Comment] = PrefixNullPointerParselet[]
 
 PrefixOperatorToParselet[Token`EndOfFile] = PrefixEndOfFileParselet[]
 
 (*
-Error handling for infix parselets
+Error handling for prefix parselets
 *)
 
 errors = Cases[DownValues[isError][[All, 1]], Verbatim[HoldPattern][HoldPattern[isError][tok_Symbol]] :> tok]
@@ -253,24 +250,28 @@ Infix
 *)
 
 
-InfixOperatorToParselet[Token`Unknown] = InfixAssertFalseParselet[]
-InfixOperatorToParselet[Token`Whitespace] = InfixAssertFalseParselet[]
-InfixOperatorToParselet[Token`InternalNewline] = InfixAssertFalseParselet[]
-InfixOperatorToParselet[Token`Comment] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`Unknown] = InfixNullPointerParselet[]
+InfixOperatorToParselet[Token`Whitespace] = InfixNullPointerParselet[]
+InfixOperatorToParselet[Token`InternalNewline] = InfixNullPointerParselet[]
+InfixOperatorToParselet[Token`Comment] = InfixNullPointerParselet[]
 
-InfixOperatorToParselet[Token`EndOfFile] = InfixEndOfFileParselet[]
+InfixOperatorToParselet[Token`EndOfFile] = InfixAssertFalseParselet[]
+
+(*
+Error handling for infix parselets
+*)
 
 errors = Cases[DownValues[isError][[All, 1]], Verbatim[HoldPattern][HoldPattern[isError][tok_Symbol]] :> tok]
 
 Scan[(
-  InfixOperatorToParselet[#] = InfixErrorParselet[]
+  InfixOperatorToParselet[#] = InfixAssertFalseParselet[]
 )&, errors]
 
 
 closers = Cases[DownValues[isCloser][[All, 1]], Verbatim[HoldPattern][HoldPattern[isCloser][tok_Symbol]] :> tok]
 
 Scan[(
-  InfixOperatorToParselet[#] = InfixCloserParselet[]
+  InfixOperatorToParselet[#] = InfixAssertFalseParselet[]
 )&, closers]
 
 
@@ -721,19 +722,19 @@ InfixOperatorToParselet[Token`LinearSyntax`OpenParen]
 
 Token`LinearSyntax`Bang and Token`LinearSyntax`OpenParen are supported
 *)
-InfixOperatorToParselet[Token`LinearSyntax`Star] = InfixUnsupportedTokenParselet[]
-InfixOperatorToParselet[Token`LinearSyntax`CloseParen] = InfixUnsupportedTokenParselet[]
-InfixOperatorToParselet[Token`LinearSyntax`At] = InfixUnsupportedTokenParselet[]
-InfixOperatorToParselet[Token`LinearSyntax`Caret] = InfixUnsupportedTokenParselet[]
-InfixOperatorToParselet[Token`LinearSyntax`Under] = InfixUnsupportedTokenParselet[]
-InfixOperatorToParselet[Token`LinearSyntax`Percent] = InfixUnsupportedTokenParselet[]
-InfixOperatorToParselet[Token`LinearSyntax`Plus] = InfixUnsupportedTokenParselet[]
-InfixOperatorToParselet[Token`LinearSyntax`Backtick] = InfixUnsupportedTokenParselet[]
-InfixOperatorToParselet[Token`LinearSyntax`Slash] = InfixUnsupportedTokenParselet[]
-InfixOperatorToParselet[Token`LinearSyntax`Amp] = InfixUnsupportedTokenParselet[]
-InfixOperatorToParselet[Token`LinearSyntax`Space] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LinearSyntax`Star] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`LinearSyntax`CloseParen] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`LinearSyntax`At] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`LinearSyntax`Caret] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`LinearSyntax`Under] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`LinearSyntax`Percent] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`LinearSyntax`Plus] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`LinearSyntax`Backtick] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`LinearSyntax`Slash] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`LinearSyntax`Amp] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`LinearSyntax`Space] = InfixAssertFalseParselet[]
 
-InfixOperatorToParselet[Token`QuestionQuestion] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`QuestionQuestion] = InfixAssertFalseParselet[]
 
 (*
 Also use for operators that are only valid in StandardForm.
@@ -742,19 +743,19 @@ e.g., \[Gradient] does not have an interpretation in InputForm
 \[Gradient] is not letterlike, so it needs some kind of categorization,
 but it also needs to be prevented from making any valid parses.
 *)
-InfixOperatorToParselet[Token`LongName`Gradient] = InfixUnsupportedTokenParselet[]
-InfixOperatorToParselet[Token`LongName`Divergence] = InfixUnsupportedTokenParselet[]
-InfixOperatorToParselet[Token`LongName`Curl] = InfixUnsupportedTokenParselet[]
-InfixOperatorToParselet[Token`LongName`Limit] = InfixUnsupportedTokenParselet[]
-InfixOperatorToParselet[Token`LongName`MaxLimit] = InfixUnsupportedTokenParselet[]
-InfixOperatorToParselet[Token`LongName`MinLimit] = InfixUnsupportedTokenParselet[]
-InfixOperatorToParselet[Token`LongName`AutoLeftMatch] = InfixUnsupportedTokenParselet[]
-InfixOperatorToParselet[Token`LongName`AutoRightMatch] = InfixUnsupportedTokenParselet[]
-InfixOperatorToParselet[Token`LongName`DiscreteShift] = InfixUnsupportedTokenParselet[]
-InfixOperatorToParselet[Token`LongName`DifferenceDelta] = InfixUnsupportedTokenParselet[]
-InfixOperatorToParselet[Token`LongName`DiscreteRatio] = InfixUnsupportedTokenParselet[]
-InfixOperatorToParselet[Token`LongName`Laplacian] = InfixUnsupportedTokenParselet[]
-InfixOperatorToParselet[Token`LongName`PartialD] = InfixUnsupportedTokenParselet[]
+InfixOperatorToParselet[Token`LongName`Gradient] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`LongName`Divergence] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`LongName`Curl] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`LongName`Limit] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`LongName`MaxLimit] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`LongName`MinLimit] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`LongName`AutoLeftMatch] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`LongName`AutoRightMatch] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`LongName`DiscreteShift] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`LongName`DifferenceDelta] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`LongName`DiscreteRatio] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`LongName`Laplacian] = InfixAssertFalseParselet[]
+InfixOperatorToParselet[Token`LongName`PartialD] = InfixAssertFalseParselet[]
 
 
 
@@ -827,7 +828,7 @@ tokensSansCount = DeleteCases[tokens, Token`Count]
 
 
 
-formatPrefix[PrefixAssertFalseParselet[]] := "nullptr"
+formatPrefix[PrefixNullPointerParselet[]] := "nullptr"
 
 formatPrefix[PrefixEndOfFileParselet[]] := "&prefixEndOfFileParselet"
 
@@ -878,15 +879,9 @@ formatPrefix[GroupParselet[Token`LongName`LeftDoubleBracket, CodeParser`GroupDou
 formatPrefix[GroupParselet[tok_, op_]] := "new GroupParselet(" <> toGlobal[tok] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
 
 
-formatInfix[InfixAssertFalseParselet[]] := "nullptr"
+formatInfix[InfixNullPointerParselet[]] := "nullptr"
 
-formatInfix[InfixEndOfFileParselet[]] := "&infixEndOfFileParselet"
-
-formatInfix[InfixErrorParselet[]] := "&infixErrorParselet"
-
-formatInfix[InfixCloserParselet[]] := "&infixCloserParselet"
-
-formatInfix[InfixUnsupportedTokenParselet[]] := "&infixUnsupportedTokenParselet"
+formatInfix[InfixAssertFalseParselet[]] := "&infixAssertFalseParselet"
 
 formatInfix[InfixImplicitTimesParselet[]] := "&infixImplicitTimesParselet"
 
@@ -964,15 +959,9 @@ auto prefixUnhandledParselet = PrefixUnhandledParselet();
 
 auto prefixImplicitNullParselet = PrefixImplicitNullParselet();
 
+auto infixAssertFalseParselet = InfixAssertFalseParselet();
+
 auto infixImplicitTimesParselet = InfixImplicitTimesParselet();
-
-auto infixEndOfFileParselet = InfixEndOfFileParselet();
-
-auto infixErrorParselet = InfixErrorParselet();
-
-auto infixUnsupportedTokenParselet = InfixUnsupportedTokenParselet();
-
-auto infixCloserParselet = InfixCloserParselet();
 
 auto commaParselet = CommaParselet();
 

@@ -137,31 +137,6 @@ TestMatch[
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 (*
 SyntaxUndocumentedSlot:
 *)
@@ -212,15 +187,6 @@ TestMatch[
 
 
 
-
-
-
-
-
-
-
-
-
 (*
 StrangeCharacter:
 *)
@@ -247,13 +213,6 @@ TestMatch[
 	,
 	TestID->"SyntaxIssues-20190521-K6H8E0"
 ]
-
-
-
-
-
-
-
 
 
 
@@ -388,10 +347,19 @@ TestMatch[
 
 
 
-
-
-
-
+Test[
+	CodeConcreteParse["a\[InvisibleSpace]b"]
+	,
+	ContainerNode[String, {
+		InfixNode[Times, {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
+			LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> {{1, 2}, {1, 2}}|>],
+			LeafNode[Whitespace, "\[InvisibleSpace]", <|Source -> {{1, 2}, {1, 3}}|>],
+			LeafNode[Symbol, "b", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]},
+		<| SyntaxIssues -> { SyntaxIssue["UnexpectedCharacter", "Unexpected space character.", "Warning", <|Source -> {{1, 2}, {1, 3}}, ConfidenceLevel -> 0.85|>] } |>]
+	,
+	TestID->"SyntaxIssues-20200621-C5B3J2"
+]
 
 
 

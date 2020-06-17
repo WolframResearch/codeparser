@@ -764,7 +764,13 @@ Test[
 	TestID->"File-20191103-U8W2U9"
 ]
 
-
+Test[
+	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "empty.wl"}], 1]
+	,
+	Null
+	,
+	TestID->"File-20200619-Y6H2W6"
+]
 
 
 

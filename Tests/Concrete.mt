@@ -234,11 +234,9 @@ Test[
 			LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>],
 			LeafNode[Symbol, "a", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>],
 		LeafNode[Whitespace, " ", <|Source -> {{1, 4}, {1, 5}}|>],
-		SyntaxErrorNode[SyntaxError`UnexpectedCloser, {
-			LeafNode[Token`CloseParen, ")", <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 5}, {1, 6}}|>],
+		ErrorNode[Token`Error`UnexpectedCloser, ")", <|Source -> {{1, 5}, {1, 6}}|>],
 		LeafNode[Whitespace, " ", <|Source -> {{1, 6}, {1, 7}}|>],
-		SyntaxErrorNode[SyntaxError`UnexpectedCloser, {
-			LeafNode[Token`CloseCurly, "}", <|Source -> {{1, 7}, {1, 8}}|>]}, <|Source -> {{1, 7}, {1, 8}}|>]}, <||>]
+		ErrorNode[Token`Error`UnexpectedCloser, "}", <|Source -> {{1, 7}, {1, 8}}|>]}, <||>]
 	,
 	TestID->"Concrete-20190717-N8D4U4"
 ]

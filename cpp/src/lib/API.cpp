@@ -252,19 +252,38 @@ NodePtr ParserSession::concreteParseLeaf0(int mode) {
         case STRINGIFYMODE_NORMAL: {
             auto Tok = TheTokenizer->nextToken0(TOPLEVEL);
             
-            auto N = LeafNodePtr(new LeafNode(Tok));
-            return N;
+            if (Tok.Tok.isError()) {
+                return NodePtr(new ErrorNode(Tok));
+            } else {
+                return NodePtr(new LeafNode(Tok));
+            }
         }
         case STRINGIFYMODE_SYMBOLSEGMENT: {
             auto Tok = TheTokenizer->nextToken0_stringifyAsSymbolSegment();
             
-            auto N = LeafNodePtr(new LeafNode(Tok));
-            return N;
+            if (Tok.Tok.isError()) {
+                return NodePtr(new ErrorNode(Tok));
+            } else {
+                return NodePtr(new LeafNode(Tok));
+            }
         }
         case STRINGIFYMODE_FILE: {
             auto Tok = TheTokenizer->nextToken0_stringifyAsFile();
-            auto N = LeafNodePtr(new LeafNode(Tok));
-            return N;
+            
+            if (Tok.Tok.isError()) {
+                return NodePtr(new ErrorNode(Tok));
+            } else {
+                return NodePtr(new LeafNode(Tok));
+            }
+        }
+        case STRINGIFYMODE_PASSTHROUGH: {
+            auto Tok = TheTokenizer->nextToken0_stringifyAsPassthrough();
+            
+            if (Tok.Tok.isError()) {
+                return NodePtr(new ErrorNode(Tok));
+            } else {
+                return NodePtr(new LeafNode(Tok));
+            }
         }
         default: {
             assert(false);

@@ -225,6 +225,7 @@ public:
 // These are syntax errors similar to LeafNode
 //
 class ErrorNode : public Node {
+protected:
     const Token Tok;
 public:
     
@@ -265,6 +266,19 @@ public:
     bool isExpectedOperandError() const override {
         return true;
     }
+};
+
+class UnterminatedTokenErrorNeedsReparseNode : public ErrorNode {
+public:
+    UnterminatedTokenErrorNeedsReparseNode(Token& Tok) : ErrorNode(Tok) {}
+    
+    UnterminatedTokenErrorNeedsReparseNode(Token&& Tok) : ErrorNode(Tok) {}
+    
+#if USE_MATHLINK
+    void put(MLINK mlp) const override;
+#endif // USE_MATHLINK
+    
+    void print(std::ostream&) const override;
 };
 
 //

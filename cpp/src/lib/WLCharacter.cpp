@@ -620,18 +620,6 @@ bool WLCharacter::isMBStrangeWhitespace() const {
         return false;
     }
     
-    auto esc = escape();
-    //
-    // Assume that if some high character is directly encoded with no escaping, then it is purposeful
-    //
-    if (esc == ESCAPE_NONE) {
-        return false;
-    }
-    
-    //
-    // Assume that all space characters are strange
-    //
-    
     return true;
 }
 
@@ -643,18 +631,6 @@ bool WLCharacter::isMBStrangeNewline() const {
     if (!isMBNewline()) {
         return false;
     }
-    
-    auto esc = escape();
-    //
-    // Assume that if some high character is directly encoded with no escaping, then it is purposeful
-    //
-    if (esc == ESCAPE_NONE) {
-        return false;
-    }
-    
-    //
-    // Assume that all newline characters are strange
-    //
     
     return true;
 }

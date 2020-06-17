@@ -11,6 +11,22 @@
 class Tokenizer;
 using TokenizerPtr = std::unique_ptr<Tokenizer>;
 
+struct NumberTokenizationContext {
+    bool InvalidBase;
+    bool UnrecognizedDigit;
+    bool NegativeExponent;
+    bool Real;
+    int NonZeroExponentDigitCount;
+    //
+    // Use the convention that base of 0 means the default, unspecified base
+    //
+    int Base;
+    
+    NumberTokenizationContext() : InvalidBase(false), UnrecognizedDigit(false), NegativeExponent(false), Real(false), NonZeroExponentDigitCount(0), Base(0) {}
+    
+    TokenEnum computeTok();
+};
+
 
 //
 // Tokenizer takes a stream of WL characters and tokenizes them
@@ -44,6 +60,7 @@ class Tokenizer {
     
     Token handleString_stringifyAsSymbolSegment(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
     Token handleString_stringifyAsFile(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter firstChar, NextPolicy policy);
+    Token handleString_stringifyAsPassthrough(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter firstChar, NextPolicy policy);
     
     Token handleSymbol(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
     
@@ -79,14 +96,14 @@ class Tokenizer {
     //
     // Return: number of digits handled, possibly 0, or -1 if error
     //
-    WLCharacter handleAlphaOrDigits(WLCharacter firstChar, size_t base, NextPolicy policy, int *handled);
+    WLCharacter handleAlphaOrDigits(WLCharacter firstChar, size_t base, NextPolicy policy, int *handled, NumberTokenizationContext *Ctxt);
     
     //
     // Precondition: currentWLCharacter is NOT in String
     //
     // Return: number of digits handled after ., possibly 0, or -1 if error
     //
-    WLCharacter handlePossibleFractionalPart(Buffer dotBuf, SourceLocation dotLoc, WLCharacter firstChar, size_t base, NextPolicy policy, int *handled);
+    WLCharacter handlePossibleFractionalPart(Buffer dotBuf, SourceLocation dotLoc, WLCharacter firstChar, size_t base, NextPolicy policy, int *handled, NumberTokenizationContext *Ctxt);
     
     //
     // Precondition: currentWLCharacter is NOT in String
@@ -95,7 +112,7 @@ class Tokenizer {
     //         UNRECOGNIZED_DIGIT if base error
     //         BAILOUT if not a radix point (and also backup before dot)
     //
-    WLCharacter handlePossibleFractionalPartPastDot(Buffer dotBuf, SourceLocation dotLoc, WLCharacter firstChar, size_t base, NextPolicy policy, int *handled);
+    WLCharacter handlePossibleFractionalPartPastDot(Buffer dotBuf, SourceLocation dotLoc, WLCharacter firstChar, size_t base, NextPolicy policy, int *handled, NumberTokenizationContext *Ctxt);
     
     Token handleColon(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
     Token handleOpenParen(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
@@ -144,6 +161,7 @@ public:
     
     Token nextToken0_stringifyAsSymbolSegment();
     Token nextToken0_stringifyAsFile();
+    Token nextToken0_stringifyAsPassthrough();
     
     Token currentToken(NextPolicy policy);
     

@@ -15,7 +15,7 @@ Token`Integer -> Next,
 Token`Real -> Next,
 Token`Rational -> Next,
 
-Token`AssertFalse -> Next,
+Token`Buffer1 -> Next,
 
 (*
 trivia
@@ -29,12 +29,12 @@ non-ToplevelNewline trivia (also just a bit mask)
 Token`InternalNewline -> Next, (*8*)
 Token`Comment -> Next,
 Token`Whitespace -> Next,
-Token`Buffer1 -> Next,
+Token`Buffer2 -> Next,
 Token`ToplevelNewline -> Next,
 
-Token`Buffer2 -> Next,
 Token`Buffer3 -> Next,
 Token`Buffer4 -> Next,
+Token`Buffer5 -> Next,
 
 (* errors *)
 Token`Error`ExpectedEqual -> Next, (*16*)
@@ -46,8 +46,6 @@ Token`Error`First -> Token`Error`ExpectedEqual,
 Token`Error`UnhandledDot -> Next,
 Token`Error`UnhandledCharacter -> Next,
 Token`Error`ExpectedLetterlike -> Next,
-Token`Error`UnterminatedComment -> Next,
-Token`Error`UnterminatedString -> Next,
 Token`Error`ExpectedAccuracy -> Next,
 Token`Error`ExpectedExponent -> Next,
 Token`Error`Aborted -> Next,
@@ -56,7 +54,18 @@ Token`Error`UnrecognizedDigit -> Next,
 Token`Error`ExpectedDigit -> Next,
 Token`Error`UnsupportedCharacter -> Next,
 Token`Error`InvalidBase -> Next,
-Token`Error`UnsupportedToken -> Next,
+(*
+Unterminated errors
+
+Any buffers before unterminateds and after unterminateds serve the purpose of giving the correct
+value to unterminateds to allow fast checking with a bit mask.
+*)
+Token`Error`UnterminatedComment -> Next, (*28*)
+Token`Error`UnterminatedString -> Next,
+Token`Error`UnterminatedFileString -> Next,
+Token`Buffer6 -> Next,
+Token`Error`UnsupportedToken -> Next, (*32*)
+Token`Error`UnexpectedCloser -> Next,
 Token`Error`End -> Next,
 
 (* 1 character tokens *)
@@ -150,7 +159,7 @@ Token`SlashSlashAt -> Next, (* //@ *)
 Token`CaretColonEqual -> Next, (* ^:= *)
 Token`GreaterGreaterGreater -> Next, (* >>> *)
 
-(* variable character tokens *)
+(* variable length character tokens *)
 Token`PercentPercent -> Next, (* %% *)
 
 (* Linear syntax tokens *)
@@ -183,25 +192,30 @@ Token`Fake`ImplicitAll -> Next,
 (*
 Used when parsing boxes
 
-The front end treats  ( *  and  * )  as tokens
+The FE treats  ( *  and  * )  as tokens
 (broken up here so as to not mess up the comment)
 *)
 Token`Boxes`OpenParenStar -> Next,
+
+(*
+The FE treats  =.  as a single token
+*)
+Token`Boxes`EqualDot -> Next,
+
+(* variable length character tokens *)
+(*
+The FE treats  ***** )  as a single token
+*)
 Token`Boxes`StarCloseParen -> Next,
 (*
-The front end treats  ''''  as a single token
+The FE treats  ''''  as a single token
 *)
 Token`Boxes`MultiSingleQuote -> Next,
 
 (*
-The front end treats  <space><space><space>  as a single token
+The FE treats  <space><space><space>  as a single token
 *)
 Token`Boxes`MultiWhitespace -> Next,
-
-(*
-The front end treats  =.  as a single token
-*)
-Token`Boxes`EqualDot -> Next,
 
 (*
 Parsing  f.m  as a leaf from the front end (from example input such as <<f.m)

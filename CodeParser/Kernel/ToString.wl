@@ -1,5 +1,7 @@
 BeginPackage["CodeParser`ToString`"]
 
+toInputFormStringButNotToplevelNewlines
+
 Begin["`Private`"]
 
 Needs["CodeParser`"]
@@ -91,6 +93,17 @@ toInputFormString[LeafNode[_, str_, _]] :=
 toInputFormString[ErrorNode[_, str_, _]] :=
 	str
 
+
+toInputFormString[BoxNode[RowBox, children_, _]] :=
+	Catch[
+	Module[{nodes, nodeStrs},
+		nodes = children[[1]];
+		nodeStrs = toInputFormString[#]& /@ nodes;
+		If[AnyTrue[nodeStrs, FailureQ],
+			Throw[SelectFirst[nodeStrs, FailureQ]]
+		];
+		StringJoin[Riffle[nodeStrs, " "]]
+	]]
 
 toInputFormString[args:BoxNode[box_, children_, _]] :=
 	Failure["CannotConvertBoxesToInputFormString", <|"Function"->ToInputFormString, "Arguments"->HoldForm[{args}]|>]
@@ -242,6 +255,16 @@ Module[{processed},
 									{ InfixNode[Comma, processed, <||>] } ~Join~
 									{ LeafNode[Token`CloseSquare, "]", <||>] }, <||>] }, <||> ]]
 ]
+
+toInputFormStringButNotToplevelNewlines[ContainerNode[Box, nodes_, data_]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[nodeStrs]
+]]
 
 toInputFormString[ContainerNode[_, nodes_, data_]] :=
 Catch[
@@ -554,6 +577,18 @@ Module[{nodeStrs},
 	];
 	StringJoin[nodeStrs]
 ]]
+
+
+toSourceCharacterString[BoxNode[RowBox, children_, _], insideBoxes_] :=
+	Catch[
+	Module[{nodes, nodeStrs},
+		nodes = children[[1]];
+		nodeStrs = toSourceCharacterString[#, insideBoxes]& /@ nodes;
+		If[AnyTrue[nodeStrs, FailureQ],
+			Throw[SelectFirst[nodeStrs, FailureQ]]
+		];
+		StringJoin[nodeStrs]
+	]]
 
 
 toSourceCharacterString[args:BoxNode[box_, children_, _], insideBoxes_] :=

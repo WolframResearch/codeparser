@@ -1245,8 +1245,12 @@ Cannot use Import[file, "Text"] because it drops \r from \r\n
 
 Cannot use Import[file, "String"] because it assumes "Unicode" character encoding
 
+Was:
+Import[file, "Byte"]
+
+but this is slow
 *)
-importFile[file_String] := FromCharacterCode[Import[file, "Byte"], "UTF8"]
+importFile[file_String] := FromCharacterCode[Normal[ReadByteArray[file]] /. EndOfFile -> {}, "UTF8"]
 
 
 

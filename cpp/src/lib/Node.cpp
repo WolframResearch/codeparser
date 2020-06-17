@@ -311,6 +311,47 @@ void ErrorNode::print(std::ostream& s) const {
 }
 
 
+void UnterminatedTokenErrorNeedsReparseNode::print(std::ostream& s) const {
+    
+    if ((TheParserSession->policy & INCLUDE_SOURCE) == INCLUDE_SOURCE) {
+        
+        auto& Sym = TokenToSymbol(Tok.Tok);
+        
+        s << SYMBOL_CODEPARSER_LIBRARY_MAKEUNTERMINATEDTOKENERRORNEEDSREPARSENODE->name() << "[";
+        
+        s << Sym->name();
+        s << ", ";
+        
+        if (!Tok.Tok.isEmpty()) {
+            
+            Tok.BufLen.printUTF8String(s);
+        }
+        
+        s << ", ";
+        
+        Tok.Src.print(s);
+        
+        s << "]";
+        
+        return;
+    }
+    
+    auto& Sym = TokenToSymbol(Tok.Tok);
+    
+    s << SYMBOL_CODEPARSER_LIBRARY_MAKEUNTERMINATEDTOKENERRORNEEDSREPARSENODE->name() << "[";
+    
+    s << Sym->name();
+    s << ", ";
+    
+    if (!Tok.Tok.isEmpty()) {
+        
+        Tok.BufLen.printUTF8String(s);
+    }
+    
+    s << "]";
+}
+
+
 void CallNode::print(std::ostream& s) const {
     
     auto Src = getSource();
@@ -569,6 +610,39 @@ void ErrorNode::put(MLINK mlp) const {
     Tok.BufLen.putUTF8String(mlp);
 }
 
+void UnterminatedTokenErrorNeedsReparseNode::put(MLINK mlp) const {
+    
+    if ((TheParserSession->policy & INCLUDE_SOURCE) == INCLUDE_SOURCE) {
+        
+        if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEUNTERMINATEDTOKENERRORNEEDSREPARSENODE->name(), static_cast<int>(2 + 4))) {
+            assert(false);
+        }
+        
+        auto& Sym = TokenToSymbol(Tok.Tok);
+        
+        if (!MLPutSymbol(mlp, Sym->name())) {
+            assert(false);
+        }
+        
+        Tok.BufLen.putUTF8String(mlp);
+        
+        Tok.Src.put(mlp);
+        
+        return;
+    }
+    
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEUNTERMINATEDTOKENERRORNEEDSREPARSENODE->name(), static_cast<int>(2))) {
+        assert(false);
+    }
+    
+    auto& Sym = TokenToSymbol(Tok.Tok);
+    
+    if (!MLPutSymbol(mlp, Sym->name())) {
+        assert(false);
+    }
+    
+    Tok.BufLen.putUTF8String(mlp);
+}
 
 void CallNode::put(MLINK mlp) const {
     

@@ -34,7 +34,7 @@ LeafNode[Out, _, _] := Throw["Found LeafNode[Out, _, _]. Must use LeafNode[Token
 Some attributes
 *)
 
-Attributes[CodeNode] = {HoldRest}
+Attributes[CodeNode] = {HoldAllComplete}
 
 
 

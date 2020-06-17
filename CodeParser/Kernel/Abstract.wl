@@ -1772,12 +1772,11 @@ Module[{abstractedChildren, issues, data},
 	
 	data = dataIn;
 
-	issues = {};
-
 	abstractedChildren = Flatten[selectChildren /@ (abstract /@ children)];
 
+	issues = Lookup[data, AbstractSyntaxIssues, {}];
+
 	If[issues != {},
-		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
 		AssociateTo[data, AbstractSyntaxIssues -> issues];
 	];
 
@@ -1913,7 +1912,226 @@ Concrete parse of a[2] returns CallNode[a, GroupNode[Square, {2}]]
 abstract parse of a[2] returns CallNode[a, {2}]
 
 So convert from concrete [ syntax to abstract Call syntax
+*)
 
+(*
+feel strongly about ##2[arg]
+##2 represents a sequence of arguments, so it is wrong to call
+*)
+abstractCallNode[CallNode[headIn:LeafNode[Token`HashHash, _, _] | CompoundNode[SlotSequence, _, _], {partIn:GroupNode[GroupSquare, _, _]}, dataIn_]] :=
+Module[{head, part, partData, issues, data},
+	head = headIn;
+	part = partIn;
+	data = dataIn;
+
+	issues = {};
+
+	AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Unexpected call.", "Error", <|Source->data[Source], ConfidenceLevel -> 1.0|>]];
+
+	head = abstract[head];
+	part = abstractGroupNode[part];
+	partData = part[[3]];
+
+	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+
+	If[issues != {},
+		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+		AssociateTo[data, AbstractSyntaxIssues -> issues];
+	];
+
+	CallNode[head, part[[2]], data]
+]
+
+abstractCallNode[CallNode[headIn:LeafNode[Symbol | String | Token`Hash | Token`Under | Token`UnderUnder | Token`UnderUnderUnder, _, _] | _CallNode |
+			 CompoundNode[Blank | BlankSequence | BlankNullSequence | PatternBlank | PatternBlankSequence | PatternBlankNullSequence | Slot (*| SlotSequence*), _, _], {partIn:GroupNode[GroupSquare, _, _]}, dataIn_]] :=
+Module[{head, part, partData, issues, data},
+	head = headIn;
+	part = partIn;
+	data = dataIn;
+
+	issues = {};
+
+	head = abstract[head];
+	part = abstractGroupNode[part];
+	partData = part[[3]];
+
+	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+
+	If[issues != {},
+		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+		AssociateTo[data, AbstractSyntaxIssues -> issues];
+	];
+
+	CallNode[head, part[[2]], data]
+]
+
+abstractCallNode[CallNode[headIn:LeafNode[Token`Percent | Token`PercentPercent, _, _] | CompoundNode[Out, _, _], {partIn:GroupNode[GroupSquare, _, _]}, dataIn_]] :=
+Module[{head, part, partData, issues, data},
+	head = headIn;
+	part = partIn;
+	data = dataIn;
+
+	issues = {};
+
+	AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+
+	head = abstract[head];
+	part = abstractGroupNode[part];
+	partData = part[[3]];
+
+	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+
+	If[issues != {},
+		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+		AssociateTo[data, AbstractSyntaxIssues -> issues];
+	];
+
+	CallNode[head, part[[2]], data]
+]
+
+abstractCallNode[CallNode[headIn:BinaryNode[PatternTest, _, _], {partIn:GroupNode[GroupSquare, _, _]}, dataIn_]] :=
+Module[{head, part, partData, issues, data},
+	head = headIn;
+	part = partIn;
+	data = dataIn;
+
+	issues = {};
+
+	head = abstract[head];
+	part = abstractGroupNode[part];
+	partData = part[[3]];
+
+	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+
+	If[issues != {},
+		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+		AssociateTo[data, AbstractSyntaxIssues -> issues];
+	];
+
+	CallNode[head, part[[2]], data]
+]
+
+abstractCallNode[CallNode[headIn:InfixNode[CompoundExpression, _, _], {partIn:GroupNode[GroupSquare, _, _]}, dataIn_]] :=
+Module[{head, part, partData, issues, data},
+	head = headIn;
+	part = partIn;
+	data = dataIn;
+
+	issues = {};
+
+	head = abstract[head];
+	part = abstractGroupNode[part];
+	partData = part[[3]];
+
+	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+
+	If[issues != {},
+		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+		AssociateTo[data, AbstractSyntaxIssues -> issues];
+	];
+
+	CallNode[head, part[[2]], data]
+]
+
+(*
+these are fine
+List is allowed because this is popular to do:
+Through[{a, b, c}[1]]
+*)
+abstractCallNode[CallNode[headIn:GroupNode[GroupParen | List | Association, _, _], {partIn:GroupNode[GroupSquare, _, _]}, dataIn_]] :=
+Module[{head, part, partData, issues, data},
+	head = headIn;
+	part = partIn;
+	data = dataIn;
+
+	issues = {};
+
+	head = abstract[head];
+	part = abstractGroupNode[part];
+	partData = part[[3]];
+
+	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+
+	If[issues != {},
+		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+		AssociateTo[data, AbstractSyntaxIssues -> issues];
+	];
+
+	CallNode[head, part[[2]], data]
+]
+
+abstractCallNode[CallNode[headIn:GroupNode[_, _, _], {partIn:GroupNode[GroupSquare, _, _]}, dataIn_]] :=
+Module[{head, part, partData, issues, data},
+	head = headIn;
+	part = partIn;
+	data = dataIn;
+
+	issues = {};
+
+	AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+
+	head = abstract[head];
+	part = abstractGroupNode[part];
+	partData = part[[3]];
+
+	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+
+	If[issues != {},
+		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+		AssociateTo[data, AbstractSyntaxIssues -> issues];
+	];
+
+	CallNode[head, part[[2]], data]
+]
+
+(* these are fine *)
+abstractCallNode[CallNode[headIn:PostfixNode[Function | Derivative, _, _], {partIn:GroupNode[GroupSquare, _, _]}, dataIn_]] :=
+Module[{head, part, partData, issues, data},
+	head = headIn;
+	part = partIn;
+	data = dataIn;
+
+	issues = {};
+
+	head = abstract[head];
+	part = abstractGroupNode[part];
+	partData = part[[3]];
+
+	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+
+	If[issues != {},
+		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+		AssociateTo[data, AbstractSyntaxIssues -> issues];
+	];
+
+	CallNode[head, part[[2]], data]
+]
+
+(* this is fine *)
+abstractCallNode[CallNode[headIn:BoxNode[TemplateBox | InterpretationBox, _, _], {partIn:GroupNode[GroupSquare, _, _]}, dataIn_]] :=
+Module[{head, part, partData, issues, data},
+	head = headIn;
+	part = partIn;
+	data = dataIn;
+
+	issues = {};
+
+	head = abstract[head];
+	part = abstractGroupNode[part];
+	partData = part[[3]];
+
+	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+
+	If[issues != {},
+		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+		AssociateTo[data, AbstractSyntaxIssues -> issues];
+	];
+
+	CallNode[head, part[[2]], data]
+]
+
+(*
+warn about anything else
 *)
 abstractCallNode[CallNode[headIn_, {partIn:GroupNode[GroupSquare, _, _]}, dataIn_]] :=
 Module[{head, part, partData, issues, data},
@@ -1923,58 +2141,7 @@ Module[{head, part, partData, issues, data},
 
 	issues = {};
 
-	Switch[head,
-			(*
-			feel strongly about ##2[arg]
-			##2 represents a sequence of arguments, so it is wrong to call
-			*)
-			LeafNode[Token`HashHash, _, _] | CompoundNode[SlotSequence, _, _],
-				AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Unexpected call.", "Error", <|Source->data[Source], ConfidenceLevel -> 1.0|>]];
-			,
-			LeafNode[Symbol | String | Token`Hash | Token`Under | Token`UnderUnder | Token`UnderUnderUnder, _, _] | _CallNode |
-			 CompoundNode[Blank | BlankSequence | BlankNullSequence | PatternBlank | PatternBlankSequence | PatternBlankNullSequence | Slot (*| SlotSequence*), _, _],
-				(* these are fine *)
-				Null
-			,
-			LeafNode[Token`Percent | Token`PercentPercent, _, _] | CompoundNode[Out, _, _],
-				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
-			,
-			BinaryNode[PatternTest, _, _],
-				(* these are fine *)
-				Null
-			,
-			InfixNode[CompoundExpression, _, _],
-				(* CompoundExpression was already handled *)
-				Null
-			,
-			GroupNode[GroupParen | List | Association, _, _],
-				(*
-				these are fine
-				List is allowed because this is popular to do:
-				Through[{a, b, c}[1]]
-				*)
-				Null
-			,
-			GroupNode[_, _, _],
-				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
-			,
-			PostfixNode[Function | Derivative, _, _],
-				(* these are fine *)
-				Null
-			,
-			(*
-			Now handle boxes
-			*)
-			BoxNode[TemplateBox | InterpretationBox, _, _],
-				(* this is fine *)
-				Null
-			,
-			_,
-				(*
-				warn about anything else
-				*)
-				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
-	];
+	AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
 
 	head = abstract[head];
 	part = abstractGroupNode[part];

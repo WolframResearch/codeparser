@@ -177,7 +177,99 @@ Test[
 ]
 
 
+Test[
+	CodeConcreteParse["{b+)c}"]
+	,
+	ContainerNode[String, {
+		GroupMissingCloserNode[List, {
+			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
+			InfixNode[Plus, {
+				LeafNode[Symbol, "b", <|Source -> {{1, 2}, {1, 3}}|>],
+				LeafNode[Token`Plus, "+", <|Source -> {{1, 3}, {1, 4}}|>],
+				ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 4}, {1, 4}}|>]}, <|Source -> {{1, 2}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>], 
+  		ErrorNode[Token`Error`UnexpectedCloser, ")", <|Source -> {{1, 4}, {1, 5}}|>],
+  		LeafNode[Symbol, "c", <|Source -> {{1, 5}, {1, 6}}|>],
+  		ErrorNode[Token`Error`UnexpectedCloser, "}", <|Source -> {{1, 6}, {1, 7}}|>]}, <||>]
+	,
+	TestID->"Errors-20200516-T4E0K2"
+]
 
+
+(*
+ExpectedOperand:
+*)
+
+TestMatch[
+	CodeParse["{ + }"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "List", <||>], {
+			CallNode[LeafNode[Symbol, "Plus", <||>], {
+	    		ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 4}, {1, 4}} |>]},
+	    		<|Source -> {{1, 3}, {1, 4}}|>]},
+	    	<|Source -> {{1, 1}, {1, 6}}|>] },
+	    <||>]
+	,
+	TestID->"Errors-20190521-C1B3O0"
+]
+
+
+(*
+ExpectedPossibleExpression:
+*)
+
+TestMatch[
+	CodeParse["&"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "Function", <||>], {
+			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 1}, {1, 1}}|>]},
+			<|Source -> {{1, 1}, {1, 2}}|>] },
+		<||>]
+	,
+	TestID->"Errors-20190521-O5D4A9"
+]
+
+
+(*
+SyntaxError:
+*)
+
+TestMatch[
+	CodeConcreteParse["\\"]
+	,
+	ContainerNode[String, {
+		ErrorNode[Token`Error`UnhandledCharacter, "\\", <|Source -> {{1, 1}, {1, 2}}|>] }, <||>]
+	,
+	TestID->"Errors-20190521-P7R3O7"
+]
+
+
+TestMatch[
+	CodeConcreteParse["A`;"]
+	,
+	ContainerNode[String, {
+		ErrorNode[Token`Error`ExpectedLetterlike, "A`", <|Source -> {{1, 1}, {1, 3}}|>],
+		InfixNode[CompoundExpression, {
+			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>],
+			LeafNode[Token`Semi, ";", <|Source -> {{1, 3}, {1, 4}}|>],
+			LeafNode[Token`Fake`ImplicitNull, "", <|Source -> {{1, 4}, {1, 4}}|>]}, <|Source -> {{1, 3}, {1, 4}}|>]}, <||>]
+	,
+	TestID->"Errors-20200621-A3S2X7"
+]
+
+
+TestMatch[
+	CodeConcreteParse["\"123"]
+	,
+	ContainerNode[String, {
+		(*
+		deliberately empty content
+		*)
+		ErrorNode[Token`Error`UnterminatedString, "", <|Source -> {{1, 1}, {1, 5}}|>]}, <||>]
+	,
+	TestID->"Errors-20200623-O0B7Z2"
+]
 
 
 

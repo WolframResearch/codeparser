@@ -208,46 +208,7 @@ public:
 //
 //
 //
-class InfixEndOfFileParselet : public InfixParselet {
-public:
-    
-    NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
-    
-    Precedence getPrecedence(ParserContext Ctxt) const override {
-        return PRECEDENCE_LOWEST;
-    }
-};
-
-//
-//
-//
-class InfixErrorParselet : public InfixParselet {
-public:
-    
-    NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
-    
-    Precedence getPrecedence(ParserContext Ctxt) const override {
-        return PRECEDENCE_LOWEST;
-    }
-};
-
-//
-//
-//
-class InfixUnsupportedTokenParselet : public InfixParselet {
-public:
-    
-    NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
-    
-    Precedence getPrecedence(ParserContext Ctxt) const override {
-        return PRECEDENCE_LOWEST;
-    }
-};
-
-//
-//
-//
-class InfixCloserParselet : public InfixParselet {
+class InfixAssertFalseParselet : public InfixParselet {
 public:
     
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;

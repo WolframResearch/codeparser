@@ -299,40 +299,9 @@ std::string SyntaxErrorToString(SyntaxError Err) {
         case SYNTAXERROR_UNKNOWN: return "SyntaxError`Unknown";
         case SYNTAXERROR_EXPECTEDTILDE: return "SyntaxError`ExpectedTilde";
         case SYNTAXERROR_EXPECTEDSET: return "SyntaxError`ExpectedSet";
-        case SYNTAXERROR_EXPECTEDOPERAND: return "SyntaxError`ExpectedOperand";
-        case SYNTAXERROR_EXPECTEDINTEGRAND: return "SyntaxError`ExpectedIntegrand";
-        case SYNTAXERROR_UNEXPECTEDCLOSER: return "SyntaxError`UnexpectedCloser";
-        case SYNTAXERROR_TOKEN_EXPECTEDEQUAL: return "SyntaxError`ExpectedEqual";
-        case SYNTAXERROR_TOKEN_UNHANDLEDCHARACTER: return "SyntaxError`UnhandledCharacter";
-        case SYNTAXERROR_TOKEN_EXPECTEDDIGITORALPHA: return "SyntaxError`ExpectedDigitOrAlpha";
-        case SYNTAXERROR_TOKEN_EXPECTEDLETTERLIKE: return "SyntaxError`ExpectedLetterlike";
-        case SYNTAXERROR_TOKEN_UNTERMINATEDCOMMENT: return "SyntaxError`UnterminatedComment";
-        case SYNTAXERROR_TOKEN_UNTERMINATEDSTRING: return "SyntaxError`UnterminatedString";
-        case SYNTAXERROR_TOKEN_INVALIDBASE: return "SyntaxError`InvalidBase";
-        case SYNTAXERROR_TOKEN_EXPECTEDACCURACY: return "SyntaxError`ExpectedAccuracy";
-        case SYNTAXERROR_TOKEN_EXPECTEDEXPONENT: return "SyntaxError`ExpectedExponent";
-        case SYNTAXERROR_TOKEN_UNHANDLEDDOT: return "SyntaxError`UnhandledDot";
-        case SYNTAXERROR_TOKEN_UNRECOGNIZEDDIGIT: return "SyntaxError`UnrecognizedDigit";
         default:
             assert(false);
             return "";
-    }
-}
-
-SyntaxError TokenErrorToSyntaxError(TokenEnum T) {
-    switch (T.value()) {
-        case TOKEN_ERROR_EXPECTEDEQUAL.value(): return SYNTAXERROR_TOKEN_EXPECTEDEQUAL;
-        case TOKEN_ERROR_UNHANDLEDCHARACTER.value(): return SYNTAXERROR_TOKEN_UNHANDLEDCHARACTER;
-        case TOKEN_ERROR_EXPECTEDLETTERLIKE.value(): return SYNTAXERROR_TOKEN_EXPECTEDLETTERLIKE;
-        case TOKEN_ERROR_UNTERMINATEDCOMMENT.value(): return SYNTAXERROR_TOKEN_UNTERMINATEDCOMMENT;
-        case TOKEN_ERROR_UNTERMINATEDSTRING.value(): return SYNTAXERROR_TOKEN_UNTERMINATEDSTRING;
-        case TOKEN_ERROR_EXPECTEDACCURACY.value(): return SYNTAXERROR_TOKEN_EXPECTEDACCURACY;
-        case TOKEN_ERROR_EXPECTEDEXPONENT.value(): return SYNTAXERROR_TOKEN_EXPECTEDEXPONENT;
-        case TOKEN_ERROR_UNHANDLEDDOT.value(): return SYNTAXERROR_TOKEN_UNHANDLEDDOT;
-        case TOKEN_ERROR_UNRECOGNIZEDDIGIT.value(): return SYNTAXERROR_TOKEN_UNRECOGNIZEDDIGIT;
-        default:
-            assert(false);
-            return SYNTAXERROR_UNKNOWN;
     }
 }
 

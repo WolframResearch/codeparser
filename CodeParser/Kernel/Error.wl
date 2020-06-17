@@ -3,7 +3,7 @@ BeginPackage["CodeParser`Error`"]
 
 reparseMissingCloserNode
 
-reparseUnterminatedCommentErrorNode
+reparseUnterminatedTokenErrorNode
 
 
 Begin["`Private`"]
@@ -79,7 +79,7 @@ Options[reparseMissingCloserNode] = {
   ContainerNode -> Automatic
 }
 
-reparseMissingCloserNode[GroupMissingCloserNeedsReparseNode[tag_, children_, dataIn_], bytes_List, OptionsPattern[]] :=
+reparseMissingCloserNode[{tag_, children_, dataIn_}, bytes_List, OptionsPattern[]] :=
 Catch[
 Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str, leaves, convention, test,
   lineLens, takeSpecsOfLines, poss},
@@ -102,7 +102,7 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
       (*
       lines of the node
       *)
-      lines = lines[[src[[1, 1]];;src[[2, 1]] ]];
+      lines = lines[[src[[1, 1]];;src[[2, 1]]]];
     ,
     "SourceCharacterIndex",
       
@@ -167,13 +167,13 @@ return: better ErrorNode
 Do not return the previous children, because they are useless any way.
 *)
 
-Options[reparseUnterminatedCommentErrorNode] = {
+Options[reparseUnterminatedTokenErrorNode] = {
   CharacterEncoding -> "UTF8",
   SourceConvention -> "LineColumn",
   ContainerNode -> Automatic
 }
 
-reparseUnterminatedCommentErrorNode[ErrorNode[Token`Error`UnterminatedComment, _, dataIn_], bytes_List, OptionsPattern[]] :=
+reparseUnterminatedTokenErrorNode[{tok_, _, dataIn_}, bytes_List, OptionsPattern[]] :=
 Catch[
 Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str, convention, test,
   lineLens, takeSpecsOfLines, poss},
@@ -196,7 +196,7 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
       (*
       lines of the node
       *)
-      lines = lines[[src[[1, 1]];;src[[2, 1]] ]];
+      lines = lines[[src[[1, 1]];;src[[2, 1]]]];
     ,
     "SourceCharacterIndex",
       
@@ -237,7 +237,10 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
       data[Source] = betterSrc;
   ];
 
-  ErrorNode[Token`Error`UnterminatedComment, "", data]
+  (*
+  deliberately empty content
+  *)
+  ErrorNode[tok, "", data]
 ]]
 
 

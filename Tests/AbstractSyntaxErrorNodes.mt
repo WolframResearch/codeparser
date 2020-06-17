@@ -147,6 +147,43 @@ TestMatch[
 ]
 
 
+(*
+NonAssociative:
+
+TODO: is this a quirk?
+
+*)
+
+TestMatch[
+	CodeParse["a ? b ? c"]
+	,
+	ContainerNode[String, {
+		AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociativePatternTest, {
+			BinaryNode[PatternTest, {
+				LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
+				LeafNode[Token`Question, "?", <|Source -> {{1, 3}, {1, 4}}|>], 
+				LeafNode[Symbol, "b", <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>],
+				LeafNode[Token`Question, "?", <|Source -> {{1, 7}, {1, 8}}|>],
+				LeafNode[Symbol, "c", <|Source -> {{1, 9}, {1, 10}}|>]}, <|Source -> {{1, 1}, {1, 10}}|>] },
+		<||>]
+	,
+	TestID->"AbstractSyntaxErrorNodes-20190521-A6K4H1"
+]
 
 
+(*
+ExpectedSymbol:
+*)
+
+Test[
+	CodeParse["1:2"]
+	,
+	ContainerNode[String, {
+		AbstractSyntaxErrorNode[AbstractSyntaxError`ColonError, {
+			LeafNode[Integer, "1", <|Source -> {{1, 1}, {1, 2}}|>],
+			LeafNode[Token`Colon, ":", <|Source -> {{1, 2}, {1, 3}}|>],
+			LeafNode[Integer, "2", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>] }, <||>]
+	,
+	TestID->"AbstractSyntaxErrorNodes-20190521-Z6D6T1"
+]
 

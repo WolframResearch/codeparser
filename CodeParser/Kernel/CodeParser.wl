@@ -151,6 +151,7 @@ Intra
 (* node symbols *)
 LeafNode
 ErrorNode
+UnterminatedTokenErrorNeedsReparseNode
 BoxNode
 CodeNode
 DirectiveNode
@@ -172,6 +173,10 @@ ContainerNode
 SyntaxErrorNode
 GroupMissingCloserNode
 GroupMissingCloserNeedsReparseNode
+(*
+GroupMissingOpenerNode is only used in Boxes
+*)
+GroupMissingOpenerNode
 AbstractSyntaxErrorNode
 
 
@@ -305,10 +310,15 @@ Module[{csts, bytess, encoding},
 
   csts =
     MapThread[Function[{cst, bytes},
-      cst /. {
-        node_GroupMissingCloserNeedsReparseNode :> reparseMissingCloserNode[node, bytes, FilterRules[{opts}, Options[reparseMissingCloserNode]]],
-        node:ErrorNode[Token`Error`UnterminatedComment, _, _] :> reparseUnterminatedCommentErrorNode[node, bytes, FilterRules[{opts}, Options[reparseUnterminatedCommentErrorNode]]]
-      }]
+      
+        Block[{GroupMissingCloserNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+
+          GroupMissingCloserNeedsReparseNode[args___] := reparseMissingCloserNode[{args}, bytes, FilterRules[{opts}, Options[reparseMissingCloserNode]]];
+          UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedCommentErrorNode]]];
+
+          cst
+        ]
+      ]
       ,
       {csts, bytess}
     ];
@@ -444,7 +454,13 @@ Module[{csts, encoding, fulls, bytess},
     Throw[Failure["FindFileFailed", <|"FileNames"->fs|>]]
   ];
 
+  (*
+  Was:
   bytess = Import[#, "Byte"]& /@ fulls;
+
+  but this is slow
+  *)
+  bytess = (Normal[ReadByteArray[#]] /. EndOfFile -> {})& /@ fulls;
 
   csts = concreteParseFileListable[bytess, opts];
 
@@ -458,10 +474,15 @@ Module[{csts, encoding, fulls, bytess},
 
   csts =
     MapThread[Function[{cst, bytes},
-      cst /. {
-        node_GroupMissingCloserNeedsReparseNode :> reparseMissingCloserNode[node, bytes, FilterRules[{opts}, Options[reparseMissingCloserNode]]],
-        node:ErrorNode[Token`Error`UnterminatedComment, _, _] :> reparseUnterminatedCommentErrorNode[node, bytes, FilterRules[{opts}, Options[reparseUnterminatedCommentErrorNode]]]
-      }]
+    
+        Block[{GroupMissingCloserNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+
+          GroupMissingCloserNeedsReparseNode[args___] := reparseMissingCloserNode[{args}, bytes, FilterRules[{opts}, Options[reparseMissingCloserNode]]];
+          UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedCommentErrorNode]]];
+
+          cst
+        ]
+      ]
       ,
       {csts, bytess}
     ];
@@ -606,10 +627,16 @@ Module[{csts, encoding},
 
   csts =
     MapThread[Function[{cst, bytes},
-      cst /. {
-        node_GroupMissingCloserNeedsReparseNode :> reparseMissingCloserNode[node, bytes, FilterRules[{opts}, Options[reparseMissingCloserNode]]],
-        node:ErrorNode[Token`Error`UnterminatedComment, _, _] :> reparseUnterminatedCommentErrorNode[node, bytes, FilterRules[{opts}, Options[reparseUnterminatedCommentErrorNode]]]
-      }]
+      
+        Block[{GroupMissingCloserNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+
+          GroupMissingCloserNeedsReparseNode[args___] := reparseMissingCloserNode[{args}, bytes, FilterRules[{opts}, Options[reparseMissingCloserNode]]];
+          UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedCommentErrorNode]]];
+
+          cst
+        ]
+
+      ]
       ,
       {csts, bytess}
     ];
@@ -829,7 +856,13 @@ Module[{encoding, res, fulls, bytess, convention, tabWidth},
     Throw[Failure["FindFileFailed", <|"FileNames"->fs|>]]
   ];
 
+  (*
+  Was:
   bytess = Import[#, "Byte"]& /@ fulls;
+
+  but this is slow
+  *)
+  bytess = (Normal[ReadByteArray[#]] /. EndOfFile -> {})& /@ fulls;
 
   $ConcreteParseProgress = 0;
   $ConcreteParseStart = Now;

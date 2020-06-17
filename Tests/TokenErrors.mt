@@ -58,7 +58,9 @@ Test[
 	CodeTokenize["aaa`1"]
 	,
 	{
-		ErrorNode[Token`Error`ExpectedLetterlike, "aaa`1", <|Source -> {{1, 1}, {1, 6}}|>]}
+		ErrorNode[Token`Error`ExpectedLetterlike, "aaa`", <|Source -> {{1, 1}, {1, 5}}|>],
+		LeafNode[Integer, "1", <|Source -> {{1, 5}, {1, 6}}|>]
+	}
 	,
 	TestID->"TokenErrors-20190520-H9P0H9"
 ]
@@ -118,8 +120,7 @@ InvalidBase:
 Test[
 	CodeTokenize["37^^2"]
 	,
-	{ErrorNode[Token`Error`InvalidBase, "37^^", <|Source -> {{1, 1}, {1, 5}}|>],
-		LeafNode[Integer, "2", <|Source -> {{1, 5}, {1, 6}}|>]}
+	{ErrorNode[Token`Error`InvalidBase, "37^^2", <|Source -> {{1, 1}, {1, 6}}|>]}
 	,
 	TestID->"TokenErrors-20190520-Q9B9R6"
 ]

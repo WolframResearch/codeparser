@@ -5,6 +5,9 @@ aggregate
 deparen
 
 
+aggregateButNotToplevelNewlines
+
+
 Begin["`Private`"]
 
 Needs["CodeParser`"]
@@ -23,6 +26,8 @@ aggregate[Null] := Null
 
 aggregate[LeafNode[Whitespace | Token`Comment | Token`Newline | Token`Boxes`MultiWhitespace, _, _]] := Nothing
 
+aggregateButNotToplevelNewlines[LeafNode[Whitespace | Token`Comment | Token`Boxes`MultiWhitespace, _, _]] := Nothing
+
 aggregate[l_LeafNode] := l
 
 (*
@@ -33,33 +38,19 @@ aggregate[node:GroupNode[GroupLinearSyntaxParen, _, _]] := node
 (*
 from boxes
 *)
-aggregate[node:GroupNode[Comment, _, _]] := Nothing
+aggregate[GroupNode[Comment, _, _]] := Nothing
 
-aggregate[node:CallNode[headIn_List, childrenIn_, dataIn_]] :=
-Catch[
-Module[{head, children, aggHead, aggChildren, data},
+aggregateButNotToplevelNewlines[GroupNode[Comment, _, _]] := Nothing
 
-	head = headIn;
-	children = childrenIn;
-	data = dataIn;
 
-	aggHead = aggregate /@ head;
 
-	If[Length[aggHead] != 1,
-		Throw[Failure["InternalUnhandled", <|
-			"Message" -> "Head is not a list of length 1",
-			"Head" -> aggHead,
-			"Function" -> aggregate,
-			"Arguments" -> {node}
-		|>]]
-	];
+aggregate[CallNode[head_List, children_, data_]] :=
+	CallNode[aggregate[head[[1]]], aggregate /@ children, data]
 
-	aggHead = aggHead[[1]];
+aggregateButNotToplevelNewlines[CallNode[head_List, children_, data_]] :=
+	CallNode[aggregate[head[[1]]], aggregate /@ children, data]
 
-	aggChildren = aggregate /@ children;
 
-	CallNode[aggHead, aggChildren, data]
-]]
 
 aggregate[node:CallNode[headIn_, childrenIn_, dataIn_]] :=
 	Failure["InvalidHead", <|
@@ -94,6 +85,18 @@ Module[{children, aggChildren, data},
 	ContainerNode[Box, aggChildren, data]
 ]]
 
+aggregateButNotToplevelNewlines[ContainerNode[Box, childrenIn_, dataIn_]] :=
+Catch[
+Module[{children, aggChildren, data},
+
+	children = childrenIn;
+	data = dataIn;
+
+	aggChildren = aggregateButNotToplevelNewlines /@ children;
+
+	ContainerNode[Box, aggChildren, data]
+]]
+
 aggregate[ContainerNode[Hold, childrenIn_, dataIn_]] :=
 Catch[
 Module[{children, aggChildren, data},
@@ -112,6 +115,28 @@ BoxNode[RowBox] and BoxNode[GridBox] have lists as children
 *)
 aggregate[l_List] := aggregate /@ l
 
+aggregateButNotToplevelNewlines[l_List] := aggregateButNotToplevelNewlines /@ l
+
+
+aggregateButNotToplevelNewlines[BoxNode[RowBox, childrenIn_, dataIn_]] :=
+Catch[
+Module[{children, aggChildren, data},
+
+	children = childrenIn;
+	data = dataIn;
+
+	aggChildren = aggregateButNotToplevelNewlines /@ children;
+
+	If[MatchQ[aggChildren, {{_}}],
+		(*
+		children is now a single node, so collapse the RowBox
+		*)
+		Throw[aggChildren[[1, 1]]]
+	];
+
+	BoxNode[RowBox, aggChildren, data]
+]]
+
 aggregate[BoxNode[RowBox, childrenIn_, dataIn_]] :=
 Catch[
 Module[{children, aggChildren, data},
@@ -125,7 +150,7 @@ Module[{children, aggChildren, data},
 		(*
 		children is now a single node, so collapse the RowBox
 		*)
-		Throw[aggChildren[[1, 1]] ]
+		Throw[aggChildren[[1, 1]]]
 	];
 
 	BoxNode[RowBox, aggChildren, data]
@@ -136,18 +161,15 @@ Do not descend into CodeNode
 *)
 aggregate[n:CodeNode[_, _, _]] := n
 
-aggregate[node_[tag_, childrenIn_, dataIn_]] :=
-Module[{children, aggChildren, data},
-	
-	children = childrenIn;
-	data = dataIn;
+aggregate[node_[tag_, children_, data_]] :=
+	node[tag, aggregate /@ children, data]
 
-	aggChildren = aggregate /@ children;
-
-	node[tag, aggChildren, data]
-]
+aggregateButNotToplevelNewlines[node_[tag_, children_, data_]] :=
+	node[tag, aggregate /@ children, data]
 
 
+
+aggregateButNotToplevelNewlines[arg_] := Failure["bad", <|"function"->"aggregateButNotNewlines", "arguments"->{arg}|>]
 
 
 

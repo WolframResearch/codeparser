@@ -26,6 +26,7 @@ library functions coming FROM lib
 *)
 MakeLeafNode
 MakeErrorNode
+MakeUnterminatedTokenErrorNeedsReparseNode
 
 MakePrefixNode
 MakeBinaryNode
@@ -373,6 +374,9 @@ MakeLeafNode[tag_, payload_, srcArgs___] :=
 
 MakeErrorNode[tag_, payload_, srcArgs___] :=
 	ErrorNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
+
+MakeUnterminatedTokenErrorNeedsReparseNode[tag_, payload_, srcArgs___] :=
+	UnterminatedTokenErrorNeedsReparseNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 MakePrefixNode[tag_, payload_, srcArgs___] :=
 	PrefixNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]

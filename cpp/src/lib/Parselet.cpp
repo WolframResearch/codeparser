@@ -21,11 +21,14 @@ NodePtr PrefixErrorParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     TheParser->nextToken(TokIn);
     
-    //
-    // If there is a Token error, then use that specific error
-    //
+    NodePtr Error;
+    if (TokIn.Tok.isUnterminated()) {
+        Error = NodePtr(new UnterminatedTokenErrorNeedsReparseNode(TokIn));
+    } else {
+        Error = NodePtr(new ErrorNode(TokIn));
+    }
     
-    return NodePtr(new ErrorNode(TokIn));
+    return Error;
 }
 
 
@@ -58,10 +61,7 @@ NodePtr PrefixToplevelCloserParselet::parse(Token TokIn, ParserContext Ctxt) con
     
     TheParser->nextToken(TokIn);
     
-    NodeSeq Args(1);
-    Args.append(NodePtr(new LeafNode(TokIn)));
-    
-    auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_UNEXPECTEDCLOSER, std::move(Args)));
+    auto Error = NodePtr(new ErrorNode(Token(TOKEN_ERROR_UNEXPECTEDCLOSER, TokIn.BufLen, TokIn.Src)));
     
     return Error;
 }
@@ -292,10 +292,12 @@ NodePtr InfixImplicitTimesParselet::parse(NodeSeq Left, Token TokIn, ParserConte
     return nullptr;
 }
 
+
 Precedence InfixImplicitTimesParselet::getPrecedence(ParserContext Ctxt) const {
     assert(false);
     return PRECEDENCE_ASSERTFALSE;
 }
+
 
 Token InfixImplicitTimesParselet::processImplicitTimes(Token TokIn, ParserContext Ctxt) const {
     
@@ -307,25 +309,7 @@ Token InfixImplicitTimesParselet::processImplicitTimes(Token TokIn, ParserContex
 }
 
 
-NodePtr InfixCloserParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
-    assert(false);
-    return nullptr;
-}
-
-
-NodePtr InfixEndOfFileParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
-    assert(false);
-    return nullptr;
-}
-
-
-NodePtr InfixUnsupportedTokenParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
-    assert(false);
-    return nullptr;
-}
-
-
-NodePtr InfixErrorParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
+NodePtr InfixAssertFalseParselet::parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
     assert(false);
     return nullptr;
 }
@@ -544,7 +528,7 @@ NodePtr GroupParselet::parse(Token firstTok, ParserContext CtxtIn) const {
     Ctxt.Prec = PRECEDENCE_LOWEST;
     
     NodeSeq Args(1);
-    Args.append(NodePtr(new LeafNode(std::move(OpenerT))));
+    Args.append(NodePtr(new LeafNode(OpenerT)));
     
     //
     // There will only be 1 "good" node (either a LeafNode or a CommaNode)
@@ -586,7 +570,7 @@ NodePtr GroupParselet::parse(Token firstTok, ParserContext CtxtIn) const {
             // Allow default resizing strategy, which is hopefully exponential
             //
             Args.appendIfNonEmpty(std::move(Trivia1));
-            Args.append(NodePtr(new LeafNode(std::move(Tok))));
+            Args.append(NodePtr(new LeafNode(Tok)));
             
             group = NodePtr(new GroupNode(Op, std::move(Args)));
             
@@ -1701,11 +1685,15 @@ NodePtr ColonColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
     TheParser->nextToken(Tok2);
     
     NodePtr Operand;
-    if (Tok2.Tok.isPossibleBeginning()) {
-        assert(Tok2.Tok == TOKEN_STRING);
-        Operand = NodePtr(new LeafNode(std::move(Tok2)));
+    if (Tok2.Tok.isError()) {
+        if (Tok2.Tok.isUnterminated()) {
+            Operand = NodePtr(new UnterminatedTokenErrorNeedsReparseNode(Tok2));
+        } else {
+            Operand = NodePtr(new ErrorNode(Tok2));
+        }
     } else {
-        Operand = NodePtr(new ErrorNode(std::move(Tok2)));
+        assert(Tok2.Tok == TOKEN_STRING);
+        Operand = NodePtr(new LeafNode(Tok2));
     }
     
     Args.append(NodePtr(new LeafNode(TokIn)));
@@ -1741,11 +1729,15 @@ NodePtr ColonColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
         TheParser->nextToken(Tok2);
     
         NodePtr Operand;
-        if (Tok2.Tok.isPossibleBeginning()) {
-            assert(Tok2.Tok == TOKEN_STRING);
-            Operand = NodePtr(new LeafNode(std::move(Tok2)));
+        if (Tok2.Tok.isError()) {
+            if (Tok2.Tok.isUnterminated()) {
+                Operand = NodePtr(new UnterminatedTokenErrorNeedsReparseNode(Tok2));
+            } else {
+                Operand = NodePtr(new ErrorNode(Tok2));
+            }
         } else {
-            Operand = NodePtr(new ErrorNode(std::move(Tok2)));
+            assert(Tok2.Tok == TOKEN_STRING);
+            Operand = NodePtr(new LeafNode(Tok2));
         }
         
         //
@@ -1779,8 +1771,18 @@ NodePtr GreaterGreaterParselet::parse(NodeSeq Left, Token TokIn, ParserContext C
     Tok = TheParser->eatTrivia_stringifyAsFile(Tok, Ctxt, Trivia1);
     
     TheParser->nextToken(Tok);
-
-    auto Operand = NodePtr(new LeafNode(std::move(Tok)));
+    
+    NodePtr Operand;
+    if (Tok.Tok.isError()) {
+        if (Tok.Tok.isUnterminated()) {
+            Operand = NodePtr(new UnterminatedTokenErrorNeedsReparseNode(Tok));
+        } else {
+            Operand = NodePtr(new ErrorNode(Tok));
+        }
+    } else {
+        assert(Tok.Tok == TOKEN_STRING);
+        Operand = NodePtr(new LeafNode(Tok));
+    }
     
     NodeSeq Args(1 + 1 + 1 + 1);
     Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
@@ -1811,7 +1813,17 @@ NodePtr GreaterGreaterGreaterParselet::parse(NodeSeq Left, Token TokIn, ParserCo
     
     TheParser->nextToken(Tok);
     
-    auto Operand = NodePtr(new LeafNode(std::move(Tok)));
+    NodePtr Operand;
+    if (Tok.Tok.isError()) {
+        if (Tok.Tok.isUnterminated()) {
+            Operand = NodePtr(new UnterminatedTokenErrorNeedsReparseNode(Tok));
+        } else {
+            Operand = NodePtr(new ErrorNode(Tok));
+        }
+    } else {
+        assert(Tok.Tok == TOKEN_STRING);
+        Operand = NodePtr(new LeafNode(Tok));
+    }
     
     NodeSeq Args(1 + 1 + 1 + 1);
     Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
@@ -1842,7 +1854,17 @@ NodePtr LessLessParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     
     TheParser->nextToken(Tok);
     
-    auto Operand = NodePtr(new LeafNode(std::move(Tok)));
+    NodePtr Operand;
+    if (Tok.Tok.isError()) {
+        if (Tok.Tok.isUnterminated()) {
+            Operand = NodePtr(new UnterminatedTokenErrorNeedsReparseNode(Tok));
+        } else {
+            Operand = NodePtr(new ErrorNode(Tok));
+        }
+    } else {
+        assert(Tok.Tok == TOKEN_STRING);
+        Operand = NodePtr(new LeafNode(Tok));
+    }
     
     NodeSeq Args(1 + 1 + 1);
     Args.append(NodePtr(new LeafNode(TokIn)));

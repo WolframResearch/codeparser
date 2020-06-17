@@ -172,14 +172,12 @@ isCloser[_] = False
 
 
 
+isError[Token`Error`First] = True
 isError[Token`Error`Unknown] = True
 isError[Token`Error`ExpectedEqual] = True
 isError[Token`Error`UnhandledDot] = True
 isError[Token`Error`UnhandledCharacter] = True
 isError[Token`Error`ExpectedLetterlike] = True
-isError[Token`Error`UnterminatedComment] = True
-isError[Token`Error`UnterminatedString] = True
-isError[Token`Error`InvalidBase] = True
 isError[Token`Error`ExpectedAccuracy] = True
 isError[Token`Error`ExpectedExponent] = True
 isError[Token`Error`Aborted] = True
@@ -187,11 +185,25 @@ isError[Token`Error`ExpectedOperand] = True
 isError[Token`Error`UnrecognizedDigit] = True
 isError[Token`Error`ExpectedDigit] = True
 isError[Token`Error`UnsupportedCharacter] = True
+isError[Token`Error`InvalidBase] = True
 isError[Token`Error`UnsupportedToken] = True
-isError[Token`Error`UnexpectedLineContinuation] = True
+isError[Token`Error`UnexpectedCloser] = True
+isError[Token`Error`UnterminatedComment] = True
+isError[Token`Error`UnterminatedString] = True
+isError[Token`Error`UnterminatedFileString] = True
 isError[Token`Error`End] = True
 
 isError[_] = False
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -392,6 +404,18 @@ struct TokenEnum {
   }
 
   //
+  // isUnterminated value matches: 0b0000_000x_xxxx_xxxx (x is unknown)
+  //
+  // Only valid is already checked isError
+  //
+  //         Mask off 0b0000_0000_0001_1100 (0x1c)
+  // And test against 0b0000_0000_0001_1100 (0x1c)
+  //
+  constexpr bool isUnterminated() const {
+      return static_cast<bool>((T & 0x1c) == 0x1c);
+  }
+
+  //
   // Group 2 matches: 0b000x_x000_0000_0000 (x is unknown)
   //
   //         Mask off 0b0001_1000_0000_0000 (0x1800)
@@ -473,6 +497,12 @@ static_assert(TOKEN_RATIONAL.value() == 0x6, \"Check your assumptions\");
 static_assert(TOKEN_INTERNALNEWLINE.value() == 0x8, \"Check your assumptions\");
 static_assert(TOKEN_TOPLEVELNEWLINE.value() == 0xc, \"Check your assumptions\");
 static_assert(TOKEN_ERROR_FIRST.value() == 0x10, \"Check your assumptions\");
+
+//
+// TOKEN_ERROR_UNTERMINATEDCOMMENT must be 0x1c to allow checking 0b0_0001_11xx for isUnterminated
+//
+static_assert(TOKEN_ERROR_UNTERMINATEDCOMMENT.value() == 0x1c, \"Check your assumptions\");
+static_assert(TOKEN_ERROR_UNSUPPORTEDTOKEN.value() == 0x20, \"Check your assumptions\");
 "} ~Join~
 {"SymbolPtr& TokenToSymbol(TokenEnum T) {"} ~Join~
 {"switch (T.value()) {"} ~Join~
