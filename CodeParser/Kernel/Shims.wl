@@ -63,7 +63,7 @@ setupStackShim[] := (
     (*
     Hack to prevent memory leak with shims
     *)
-    Quiet[Remove["CodeParser`Shims`Private`stack*"];, {Remove::rmnsm}];
+    Quiet[Remove["CodeParser`Shims`Private`stack*$*"];, {Remove::rmnsm}];
   )
 )
 
