@@ -1039,7 +1039,7 @@ Module[{cases},
   CompoundNode[Slot, {parseBox[cases[[1]], pos], parseBox[cases[[2]], pos, "StringifyMode" -> 1]}, <|Source -> pos|>]
 ]
 
-parseBox[str_String /; StringMatchQ[str, "#" ~~ b:("\""~~___)], pos_] :=
+parseBox[str_String /; StringMatchQ[str, "#" ~~ ("\""~~___)], pos_] :=
 Module[{cases},
   cases = StringCases[str, "#" ~~ b:("\""~~___) :> {"#", b}][[1]];
   CompoundNode[Slot, {parseBox[cases[[1]], pos], parseBox[cases[[2]], pos, "StringifyMode" -> 1]}, <|Source -> pos|>]
