@@ -1190,34 +1190,15 @@ parseBox[args___] := Failure["InternalUnhandled", <|"Function"->"parseBox", "Arg
 
 
 
+removeImplicits[node_] := DeleteCases[node, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity]
 
-
-
-
-
-ToStandardFormBoxes[ContainerNode[Box, {cst_}, _]] :=
+ToStandardFormBoxes[ContainerNode[Box, children_, _]] :=
 Block[{$RecursionLimit = Infinity},
-Module[{implicitsRemoved},
-
-  implicitsRemoved = DeleteCases[cst, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity];
-
-  toStandardFormBoxes[implicitsRemoved]
-]]
-
-ToStandardFormBoxes[ContainerNode[Box, children:{(*cst*)_, PatternSequence[LeafNode[Token`Newline, _, _], (*cst*)_]..., LeafNode[Token`Newline, _, _] | PatternSequence[]}, _]] :=
-Block[{$RecursionLimit = Infinity},
-Module[{csts, newlines, implicitsRemoveds, newlineStrs},
-
-  csts = children[[1;;;;2]];
-  newlines = children[[2;;;;2]];
-
-  implicitsRemoveds = DeleteCases[#, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity]& /@ csts;
-
-  implicitsRemoveds = toStandardFormBoxes /@ implicitsRemoveds;
-
-  newlineStrs = #[[2]]& /@ newlines;
-
-  Riffle[implicitsRemoveds, newlineStrs]
+Module[{},
+  Replace[children, {
+    LeafNode[Token`Newline, str_, _] :> str,
+    else_ :> toStandardFormBoxes[removeImplicits[else]]
+  }, {1}]
 ]]
 
 
