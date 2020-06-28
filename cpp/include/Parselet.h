@@ -161,7 +161,7 @@ public:
 //
 // The comma infix operator can have leading commas with no operand
 //
-class PrefixImplicitNullParselet : public PrefixParselet {
+class PrefixCommaParselet : public PrefixParselet {
 public:
     
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;

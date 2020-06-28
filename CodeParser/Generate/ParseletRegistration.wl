@@ -6,7 +6,7 @@ PrefixCloserParselet
 PrefixErrorParselet
 PrefixEndOfFileParselet
 PrefixUnhandledParselet
-PrefixImplicitNullParselet
+PrefixCommaParselet
 PrefixUnsupportedTokenParselet
 
 InfixToplevelNewlineParselet
@@ -107,7 +107,7 @@ PrefixOperatorToParselet[Token`LongName`Del] = PrefixOperatorParselet[Token`Long
 PrefixOperatorToParselet[Token`LongName`Square] = PrefixOperatorParselet[Token`LongName`Square, Precedence`LongName`Square, Square]
 
 
-PrefixOperatorToParselet[Token`Comma] = PrefixImplicitNullParselet[]
+PrefixOperatorToParselet[Token`Comma] = PrefixCommaParselet[]
 
 
 (*
@@ -840,7 +840,7 @@ formatPrefix[PrefixUnsupportedTokenParselet[]] := "&prefixUnsupportedTokenParsel
 
 formatPrefix[PrefixUnhandledParselet[]] := "&prefixUnhandledParselet"
 
-formatPrefix[PrefixImplicitNullParselet[]] := "&prefixImplicitNullParselet"
+formatPrefix[PrefixCommaParselet[]] := "&prefixCommaParselet"
 
 formatPrefix[LeafParselet[]] := "&leafParselet"
 
@@ -957,7 +957,7 @@ auto prefixUnsupportedTokenParselet = PrefixUnsupportedTokenParselet();
 
 auto prefixUnhandledParselet = PrefixUnhandledParselet();
 
-auto prefixImplicitNullParselet = PrefixImplicitNullParselet();
+auto prefixCommaParselet = PrefixCommaParselet();
 
 auto infixAssertFalseParselet = InfixAssertFalseParselet();
 

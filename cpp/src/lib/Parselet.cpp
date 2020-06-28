@@ -91,9 +91,21 @@ NodePtr PrefixUnsupportedTokenParselet::parse(Token TokIn, ParserContext Ctxt) c
 }
 
 
-NodePtr PrefixImplicitNullParselet::parse(Token TokIn, ParserContext Ctxt) const {
+NodePtr PrefixCommaParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
-    auto createdToken = Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
+    //
+    // if the input is  f[a@,2]  , then we want to return TOKEN_ERROR_EXPECTEDOPERAND
+    //
+    // if the input is  f[,2]  , then we want to return TOKEN_FAKE_IMPLICITNULL
+    //
+    TokenEnum Tok;
+    if (Ctxt.Prec == PRECEDENCE_LOWEST) {
+        Tok = TOKEN_FAKE_IMPLICITNULL;
+    } else {
+        Tok = TOKEN_ERROR_EXPECTEDOPERAND;
+    }
+    
+    auto createdToken = Token(Tok, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
     
     auto Left = NodePtr(new LeafNode(createdToken));
     
@@ -134,9 +146,9 @@ NodePtr PrefixUnhandledParselet::parse(Token TokIn, ParserContext Ctxt) const {
     }
     
     //
-    // Handle something like  f[,1]
+    // Handle something like  f[@2]
     //
-    // We want to make EXPECTEDOPERAND the first arg of the Comma node.
+    // We want to make EXPECTEDOPERAND the first arg of the Operator node.
     //
     // Do not take next token
     //
