@@ -6,8 +6,6 @@ Needs["CodeParser`Generate`GenerateSources`"]
 
 Print["Generating Precedence..."]
 
-oldPrecedences = Join[Names["Precedence`*"], Names["Precedence`*`*"]]
-
 
 (*
 resolve the symbolic values in the Precedence table to integer values
@@ -64,7 +62,8 @@ precedenceCPPHeader = {
 // All levels of precedence
 //
 enum Precedence : uint8_t {"} ~Join~
-   KeyValueMap[(Row[{toGlobal[#1], " = ", BitShiftLeft[#2[[1]], 1] + associativityToValue[#2[[2]]], ",", "// prec: ", #2[[1]], ", assoc: ", #2[[2]]}]) &, enumMap] ~Join~ {"};", ""}
+   KeyValueMap[(Row[{toGlobal[#1], " = ", BitShiftLeft[#2[[1]], 1] + associativityToValue[#2[[2]]], ",", "// prec: ", #2[[1]], ", assoc: ", #2[[2]]}])&, enumMap] ~Join~
+   {"};", ""}
 
 Print["exporting Precedence.h"]
 res = Export[FileNameJoin[{generatedCPPIncludeDir, "Precedence.h"}], Column[precedenceCPPHeader], "String"]
