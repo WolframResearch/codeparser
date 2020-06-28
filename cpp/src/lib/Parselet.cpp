@@ -731,6 +731,8 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
         //
         // Reattach the ExpectedOperand Error to the operator for a better experience
         //
+        // Not structurally correct, so return SyntaxErrorNode
+        //
         
         auto ProperExpectedOperandError = NodePtr(new ExpectedOperandErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(FirstTilde.BufLen.end), Source(FirstTilde.Src.End))));
         
@@ -738,7 +740,7 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
         Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
         Args.append(NodePtr(new LeafNode(FirstTilde)));
         Args.append(std::move(ProperExpectedOperandError));
-        auto Error = NodePtr(new TernaryNode(SYMBOL_CODEPARSER_TERNARYTILDE, std::move(Args)));
+        auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDTILDE, std::move(Args)));
         
         return Error;
     }
@@ -752,6 +754,8 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
         
         //
         // Something like   a ~f b
+        //
+        // Not structurally correct, so return SyntaxErrorNode
         //
         
         NodeSeq Args(1 + 1 + 1 + 1);
@@ -785,12 +789,19 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
         //
         // Reattach the ExpectedOperand Error to the operator for a better experience
         //
+        // Structurally correct, so return TernaryNode
+        //
         
         auto ProperExpectedOperandError = NodePtr(new ExpectedOperandErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(FirstTilde.BufLen.end), Source(FirstTilde.Src.End))));
         
         NodeSeq Args(1 + 1 + 1);
         Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
         Args.append(NodePtr(new LeafNode(FirstTilde)));
+        Args.appendIfNonEmpty(std::move(Trivia1));
+        Args.append(std::move(Middle));
+        Args.appendIfNonEmpty(std::move(Trivia2));
+        Args.append(NodePtr(new LeafNode(Tok1)));
+        Args.appendIfNonEmpty(std::move(Trivia3));
         Args.append(std::move(ProperExpectedOperandError));
         auto Error = NodePtr(new TernaryNode(SYMBOL_CODEPARSER_TERNARYTILDE, std::move(Args)));
         

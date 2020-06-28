@@ -210,7 +210,7 @@ TestMatch[
 			LeafNode[Whitespace, " ", <|Source -> {{1, 5}, {1, 6}}|>],
 			LeafNode[Integer, "1", <|Source -> {{1, 6}, {1, 7}}|>] }, <|Source -> {{1, 1}, {1, 7}}|>] }, <|SyntaxIssues -> {
 				(* from Tokenizer, strange letterlike *)
-				SyntaxIssue["UnexpectedCharacter", "Unexpected letterlike character: ``\\.01``.", "Warning", _],
+				SyntaxIssue["UnexpectedLetterlikeCharacter", "Unexpected letterlike character: ``\\.01``.", "Warning", _],
 				(* from CharacterDecoder, strange character in general *)
 				SyntaxIssue["UnexpectedCharacter", "Unexpected character: ``\\.01``.", "Warning", _]}, Source -> {{1, 1}, {1, 7}}|>]
 	,

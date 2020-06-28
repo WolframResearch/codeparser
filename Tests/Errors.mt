@@ -292,5 +292,18 @@ TestMatch[
 ]
 
 
+Test[
+	CodeConcreteParse["a~b~"]
+	,
+	ContainerNode[String, {
+		TernaryNode[TernaryTilde, {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
+			LeafNode[Token`Tilde, "~", <|Source -> {{1, 2}, {1, 3}}|>],
+			LeafNode[Symbol, "b", <|Source -> {{1, 3}, {1, 4}}|>],
+			LeafNode[Token`Tilde, "~", <|Source -> {{1, 4}, {1, 5}}|>],
+			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 3}}|>]}, <||>]
+	,
+	TestID->"Errors-20200628-R6O2J3"
+]
 
 

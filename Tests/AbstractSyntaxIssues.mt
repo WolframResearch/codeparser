@@ -176,6 +176,17 @@ TestMatch[
 	TestID->"AbstractSyntaxIssues-20190520-V9J1I3"
 ]
 
+TestMatch[
+	CodeParse["f[1,,2]"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "f", _], {
+			LeafNode[Integer, "1", _],
+			LeafNode[Symbol, "Null", KeyValuePattern[AbstractSyntaxIssues -> _]],
+			LeafNode[Integer, "2", _]}, _] }, _]
+	,
+	TestID->"AbstractSyntaxIssues-20200627-G1O2F9"
+]
 
 
 

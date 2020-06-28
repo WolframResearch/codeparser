@@ -198,7 +198,7 @@ TestMatch[
 	,
 	KeyValuePattern[SyntaxIssues -> {
 		(* from CharacterDecoder *)
-		SyntaxIssue["UnexpectedCharacter", _, _, _],
+		SyntaxIssue["UnexpectedLetterlikeCharacter", _, _, _],
 		(* from Tokenizer *)
 		SyntaxIssue["UnexpectedCharacter", _, _, _]}]
 	,
@@ -209,7 +209,7 @@ TestMatch[
 	FirstCase[CodeConcreteParse["a\\:f456", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnexpectedCharacter", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnexpectedLetterlikeCharacter", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-K6H8E0"
 ]
@@ -272,7 +272,7 @@ TestMatch[
 	FirstCase[CodeConcreteParse["a\\[Prime] + 2", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnexpectedCharacter", _, _, KeyValuePattern[Source -> {{1, 2}, {1, 10}}]]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnexpectedLetterlikeCharacter", _, _, KeyValuePattern[Source -> {{1, 2}, {1, 10}}]]}]
 	,
 	TestID->"SyntaxIssues-20200405-H2D3M0"
 ]
@@ -284,7 +284,7 @@ TestMatch[
 	FirstCase[CodeConcreteParse["\\[Prime] + 2", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnexpectedCharacter", _, _, KeyValuePattern[Source -> {{1, 1}, {1, 9}}]]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnexpectedLetterlikeCharacter", _, _, KeyValuePattern[Source -> {{1, 1}, {1, 9}}]]}]
 	,
 	TestID->"SyntaxIssues-20200504-H4U1I4"
 ]
@@ -296,7 +296,7 @@ TestMatch[
 	FirstCase[CodeConcreteParse["abc\\[Prime] + 2", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnexpectedCharacter", _, _, KeyValuePattern[Source -> {{1, 4}, {1, 12}}]]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnexpectedLetterlikeCharacter", _, _, KeyValuePattern[Source -> {{1, 4}, {1, 12}}]]}]
 	,
 	TestID->"SyntaxIssues-20200504-P6Z1C2"
 ]
@@ -356,7 +356,7 @@ Test[
 			LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> {{1, 2}, {1, 2}}|>],
 			LeafNode[Whitespace, "\[InvisibleSpace]", <|Source -> {{1, 2}, {1, 3}}|>],
 			LeafNode[Symbol, "b", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]},
-		<| SyntaxIssues -> { SyntaxIssue["UnexpectedCharacter", "Unexpected space character.", "Warning", <|Source -> {{1, 2}, {1, 3}}, ConfidenceLevel -> 0.85|>] } |>]
+		<| SyntaxIssues -> { SyntaxIssue["UnexpectedSpaceCharacter", "Unexpected space character: ``\\[InvisibleSpace]``.", "Warning", <|Source -> {{1, 2}, {1, 3}}, ConfidenceLevel -> 0.85|>] } |>]
 	,
 	TestID->"SyntaxIssues-20200621-C5B3J2"
 ]

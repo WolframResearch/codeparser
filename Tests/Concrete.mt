@@ -651,7 +651,7 @@ Test[
 				LeafNode[Symbol, "b", <|Source -> {{1, 4}, {1, 5}}|>]}, <|Source -> {{1, 2}, {1, 5}}|>],
 			LeafNode[Token`CloseCurly, "}", <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]}
 			,
-			<|SyntaxIssues -> {SyntaxIssue["UnexpectedCharacter", "Unexpected letterlike character: ``\\[Alpha]``.", "Warning", <|Source -> {{1, 2}, {1, 3}}, ConfidenceLevel -> 0.8|>]}|>]
+			<|SyntaxIssues -> {SyntaxIssue["UnexpectedLetterlikeCharacter", "Unexpected letterlike character: ``\\[Alpha]``.", "Warning", <|Source -> {{1, 2}, {1, 3}}, ConfidenceLevel -> 0.8|>]}|>]
 	,
 	TestID->"Concrete-20191212-V5Q2Y2"
 ]
