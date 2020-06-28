@@ -563,6 +563,19 @@ Module[{nodes, nodeStrs},
 	StringJoin[{"Hold", "[", Riffle[nodeStrs, ", "], "]"}]
 ]]
 
+toSourceCharacterString[ContainerNode[File, nodes_, opts_], insideBoxes_] :=
+Catch[
+Module[{nodeStrs},
+	
+	nodeStrs = toSourceCharacterString[#, insideBoxes]& /@ nodes;
+	nodeStrs = Flatten[nodeStrs];
+
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[nodeStrs]
+]]
+
 toSourceCharacterString[ContainerNode[_, nodes_, opts_], insideBoxes_] :=
 Catch[
 Module[{nodeStrs},
@@ -592,7 +605,7 @@ toSourceCharacterString[BoxNode[RowBox, children_, _], insideBoxes_] :=
 
 
 toSourceCharacterString[args:BoxNode[box_, children_, _], insideBoxes_] :=
-	Failure["CannotConvertBoxesToSourceCharacterString", <|"Function"->ToSourceCharacterString, "Arguments"->HoldForm[{args}]|>]
+	Failure["CannotConvertBoxesToSourceCharacterString", <|"Function"->ToSourceCharacterString, "Arguments"->{args}|>]
 
 
 toSourceCharacterString[_[op_, nodes_, data_], insideBoxes_] :=
@@ -605,7 +618,9 @@ Module[{nodeStrs},
 	StringJoin[nodeStrs]
 ]]
 
-toSourceCharacterString[args___] := Failure["InternalUnhandled", <|"Function"->toSourceCharacterString, "Arguments"->HoldForm[{args}]|>]
+toSourceCharacterString[f_?FailureQ, _] := f
+
+toSourceCharacterString[args___] := Failure["InternalUnhandled", <|"Function"->toSourceCharacterString, "Arguments"->{args}|>]
 
 
 End[]
