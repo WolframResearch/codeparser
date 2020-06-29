@@ -157,9 +157,7 @@ generatedWLDir = FileNameJoin[{buildDir, "generated", "wl"}]
 
 dataDir = FileNameJoin[{srcDir, "CodeParser", "Data"}]
 
-generateDir = FileNameJoin[{srcDir, "CodeParser", "Generate"}]
-
-PrependTo[$Path, generateDir]
+PrependTo[$Path, srcDir]
 
 If[FailureQ[FindFile["CodeParser`Generate`GenerateSources`"]],
   Print["CodeParser`Generate`GenerateSources` could not be found."];
