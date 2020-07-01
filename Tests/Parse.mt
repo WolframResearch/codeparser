@@ -2505,8 +2505,9 @@ Test[
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Times", <||>], {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
-			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>]},
-		<|Source -> {{1, 1}, {1, 3}}|>]}, <||>]
+			CallNode[LeafNode[Symbol, "Power", <||>], {
+				ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>],
+				LeafNode[Integer, "-1", <||>]}, <|Source -> {{1, 1}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 3}}|>]}, <||>]
 	,
 	TestID->"Parse-20191224-I3Q3E6"
 ]
@@ -2517,8 +2518,9 @@ Test[
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Plus", <||>], {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
-			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>]},
-		<|Source -> {{1, 1}, {1, 3}}|>]}, <||>]
+			CallNode[LeafNode[Symbol, "Times", <||>], {
+				LeafNode[Integer, "-1", <||>],
+				ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>]}, <|Source -> {{1, 2}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 3}}|>]}, <||>]
 	,
 	TestID->"Parse-20191224-Q4A6D4"
 ]
@@ -2538,7 +2540,7 @@ Test[
 	CodeParse["()"]
 	,
 	ContainerNode[String, {
-		AbstractSyntaxErrorNode[AbstractSyntaxError`EmptyParens, {}, <|Source -> {{1, 1}, {1, 3}}|>]}, <||>]
+		AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, {}, <|Source -> {{1, 1}, {1, 3}}|>]}, <||>]
 	,
 	TestID->"Parse-20191224-W2M0H4"
 ]

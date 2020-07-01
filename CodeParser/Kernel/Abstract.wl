@@ -136,11 +136,13 @@ abstract[PrefixNode[Plus, {_, rand_}, data_]] := abstractPrefixPlus[rand, data]
 
 abstract[PrefixNode[PrefixNot2, {notNotTok_, rand_}, data_]] := abstractNot2[rand, notNotTok, data]
 
-abstract[PrefixNode[PrefixLinearSyntaxBang, children:{_, Except[GroupNode[GroupLinearSyntaxParen, _, _]]}, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`LinearSyntaxBang, children, data]
+abstract[PrefixNode[PrefixLinearSyntaxBang, children:{_, child:Except[GroupNode[GroupLinearSyntaxParen, _, _]]}, data_]] :=
+	AbstractSyntaxErrorNode[AbstractSyntaxError`LinearSyntaxBang, children, data]
 (*
 FIXME: keep linear syntax for now
 *)
-abstract[PrefixNode[PrefixLinearSyntaxBang, {rator_, rand_}, data_]] := PrefixNode[PrefixLinearSyntaxBang, {rator, abstract[rand]}, data]
+abstract[PrefixNode[PrefixLinearSyntaxBang, {rator_, rand_}, data_]] :=
+	PrefixNode[PrefixLinearSyntaxBang, {rator, abstract[rand]}, data]
 
 (*
 strings may be quoted
@@ -259,8 +261,10 @@ abstract[TernaryNode[TagUnset, {left_, _, middle_, LeafNode[Token`EqualDot, _, _
 (* or it could be  a /: b = . *)
 abstract[TernaryNode[TagUnset, {left_, _, middle_, LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, data_]] := CallNode[ToNode[TagUnset], {abstract[left], abstract[middle]}, data]
 
+(*
 abstract[TernaryNode[TagUnset, children_, data_]] :=
 	AbstractSyntaxErrorNode[AbstractSyntaxError`TagUnset, children, data]
+*)
 
 
 abstract[TernaryNode[Span, {left_, _, middle_, _, right_}, data_]] := CallNode[ToNode[Span], {abstract[left], abstract[middle], abstract[right]}, data]
@@ -315,11 +319,11 @@ take care of specific GroupNodes before calling abstractGroupNode
 GroupParen
 *)
 
-abstract[GroupNode[GroupParen, { _, _ }, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`EmptyParens, {}, data]
-
 abstract[GroupNode[GroupParen, { _, child:InfixNode[Comma, _, _], _ }, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, { child }, data]
 
 abstract[GroupNode[GroupParen, { _, child_, _}, data_]] := abstract[child]
+
+abstract[GroupNode[GroupParen, children_, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, children[[2;;-2]], data]
 
 (* GroupNode errors *)
 abstract[GroupNode[GroupSquare, children_, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`OpenSquare, children, data]
@@ -628,7 +632,7 @@ Module[{first, firstSrc, issues},
 	Just grab the first token to use
 	*)
 	first = firstToken[node];
-	firstSrc = first[[3, Key[Source] ]];
+	firstSrc = first[[3, Key[Source]]];
 
 	Switch[first[[1]],
 		Token`OpenCurly,
@@ -738,7 +742,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		CallNode[LeafNode[Symbol, "EndPackage" | "End" | "System`Private`RestoreContextPath", _], {}, _],
 			currentOperator = operatorStack["Pop"];
 			If[!MatchQ[currentOperator, matchingOperatorPatterns[x]],
-				AppendTo[issues, SyntaxIssue["Package", "There are unbalanced directives.", "Error", <| Source -> x[[3, Key[Source] ]], ConfidenceLevel -> 1.0 |> ]];
+				AppendTo[issues, SyntaxIssue["Package", "There are unbalanced directives.", "Error", <| Source -> x[[3, Key[Source]]], ConfidenceLevel -> 1.0 |> ]];
 				Throw[{list, issues}];
 			];
 			currentList = nodeListStack["Pop"];
@@ -754,8 +758,8 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		*)
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "EndPackage" | "End" | "System`Private`RestoreContextPath", _], {}, _], LeafNode[Symbol, "Null", _]}, _],
 			currentOperator = operatorStack["Pop"];
-			If[!MatchQ[currentOperator, matchingOperatorPatterns[x[[2, 1]] ]],
-				AppendTo[issues, SyntaxIssue["Package", "There are unbalanced directives.", "Error", <| Source -> x[[2, 1, 3, Key[Source] ]], ConfidenceLevel -> 1.0 |>]];
+			If[!MatchQ[currentOperator, matchingOperatorPatterns[x[[2, 1]]]],
+				AppendTo[issues, SyntaxIssue["Package", "There are unbalanced directives.", "Error", <| Source -> x[[2, 1, 3, Key[Source]]], ConfidenceLevel -> 1.0 |>]];
 				Throw[{list, issues}];
 			];
 			currentList = nodeListStack["Pop"];
@@ -777,7 +781,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 			Throw[{list, issues}];
 		,
 		CallNode[LeafNode[Symbol, "BeginPackage" | "Begin" | "System`Private`NewContextPath" | "EndPackage" | "End" | "System`Private`RestoreContextPath", _], _, _],
-			AppendTo[issues, SyntaxIssue["Package", "Directive does not have correct syntax.", "Error", <| Source -> x[[3, Key[Source] ]], ConfidenceLevel -> 1.0 |> ]];
+			AppendTo[issues, SyntaxIssue["Package", "Directive does not have correct syntax.", "Error", <| Source -> x[[3, Key[Source]]], ConfidenceLevel -> 1.0 |> ]];
 			Throw[{list, issues}];
 		,
 		(*
@@ -795,7 +799,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		All other calls to recognized directives, with ;
 		*)
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "BeginPackage" | "Begin" | "System`Private`NewContextPath" | "EndPackage" | "End" | "System`Private`RestoreContextPath", _], _, _], LeafNode[Symbol, "Null", _]}, _],
-			AppendTo[issues, SyntaxIssue["Package", "Directive does not have correct syntax.", "Error", <| Source -> x[[2, 1, 3, Key[Source] ]], ConfidenceLevel -> 1.0 |>]];
+			AppendTo[issues, SyntaxIssue["Package", "Directive does not have correct syntax.", "Error", <| Source -> x[[2, 1, 3, Key[Source]]], ConfidenceLevel -> 1.0 |>]];
 			Throw[{list, issues}];
 		,
 		(*
@@ -803,7 +807,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		*)
 		CallNode[LeafNode[Symbol, "CodeParser`Comma", _], _, _],
 			peek = nodeListStack["Peek"];
-			error = AbstractSyntaxErrorNode[AbstractSyntaxError`CommaTopLevel, x[[2]], x[[3]] ];
+			error = AbstractSyntaxErrorNode[AbstractSyntaxError`CommaTopLevel, x[[2]], x[[3]]];
 			peek["Push", error];
 		,
 		(*
@@ -839,15 +843,15 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 	{i, 1, Length[list]}
 	];
 	If[operatorStack["Length"] != 1,
-		AppendTo[issues, SyntaxIssue["Package", "There are unbalanced directives.", "Error", <| Source -> list[[1, 3, Key[Source] ]], ConfidenceLevel -> 1.0 |>]];
+		AppendTo[issues, SyntaxIssue["Package", "There are unbalanced directives.", "Error", <| Source -> list[[1, 3, Key[Source]]], ConfidenceLevel -> 1.0 |>]];
 		Throw[{list, issues}];
 	];
 	If[operatorStack["Peek"] =!= None,
-		AppendTo[issues, SyntaxIssue["Package", "There are unbalanced directives.", "Error", <| Source -> list[[1, 3, Key[Source] ]], ConfidenceLevel -> 1.0 |>]];
+		AppendTo[issues, SyntaxIssue["Package", "There are unbalanced directives.", "Error", <| Source -> list[[1, 3, Key[Source]]], ConfidenceLevel -> 1.0 |>]];
 		Throw[{list, issues}];
 	];
 	If[nodeListStack["Length"] != 1,
-		AppendTo[issues, SyntaxIssue["Package", "There are unbalanced directives.", "Error", <| Source -> list[[1, 3, Key[Source] ]], ConfidenceLevel -> 1.0 |>]];
+		AppendTo[issues, SyntaxIssue["Package", "There are unbalanced directives.", "Error", <| Source -> list[[1, 3, Key[Source]]], ConfidenceLevel -> 1.0 |>]];
 		Throw[{list, issues}];
 	];
 	peek = nodeListStack["Peek"];
@@ -997,8 +1001,10 @@ abstract syntax is allowed to have negated numbers
 (*
 This can happen with:  a-EOF
 *)
+(*
 negate[node:ErrorNode[Token`Error`ExpectedOperand, _, _], _] :=
 	node
+*)
 
 negate[LeafNode[Integer, "0", _], data_] :=
 	LeafNode[Integer, "0", data]
@@ -1052,8 +1058,10 @@ so must still supply GroupNode[ { OpenSquare, CloseSquare } ]
 (*
 This can happen with:  a/EOF
 *)
+(*
 reciprocate[node:ErrorNode[Token`Error`ExpectedOperand, _, _], _] :=
 	node
+*)
 
 reciprocate[node_, data_] :=
 	CallNode[ToNode[Power], {
@@ -1879,18 +1887,18 @@ Module[{head, data, part, innerData, outerData, issues, partData, src},
 	(*
 	Only warn if LineCol style
 	*)
-	If[MatchQ[outerData[[ Key[Source] ]], {{_Integer, _Integer}, {_Integer, _Integer}}],
+	If[MatchQ[outerData[[Key[Source]]], {{_Integer, _Integer}, {_Integer, _Integer}}],
 
-		If[outerData[[ Key[Source], 1, 2]]+1 != innerData[[ Key[Source], 1, 2]],
-			src = {outerData[[ Key[Source], 1]], innerData[[ Key[Source], 1]]};
+		If[outerData[[Key[Source], 1, 2]]+1 != innerData[[Key[Source], 1, 2]],
+			src = {outerData[[Key[Source], 1]], innerData[[Key[Source], 1]]};
 			AppendTo[issues, FormatIssue["NotContiguous", "``Part`` brackets ``[[`` are not contiguous.", "Formatting",
 										<|	Source->src,
 											CodeActions->{CodeAction["DeleteTrivia", DeleteTrivia,
 																<|Source->src|>]}|>]];
 		];
 
-		If[innerData[[ Key[Source], 2, 2]]+1 != outerData[[ Key[Source], 2, 2]],
-			src = {innerData[[ Key[Source], 2]], outerData[[ Key[Source], 2]]};
+		If[innerData[[Key[Source], 2, 2]]+1 != outerData[[Key[Source], 2, 2]],
+			src = {innerData[[Key[Source], 2]], outerData[[Key[Source], 2]]};
 			AppendTo[issues, FormatIssue["NotContiguous", "``Part`` brackets ``]]`` are not contiguous.", "Formatting",
 										<|	Source->src,
 											CodeActions->{CodeAction["DeleteTrivia", DeleteTrivia, 

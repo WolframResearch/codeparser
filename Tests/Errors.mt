@@ -307,3 +307,14 @@ Test[
 ]
 
 
+
+Test[
+	CodeParse["-"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "Times", <||>], {
+			LeafNode[Integer, "-1", <||>],
+			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 2}, {1, 2}}|>]}, <|Source -> {{1, 1}, {1, 2}}|>]}, <||>]
+	,
+	TestID->"Errors-20200629-Y2S2R8"
+]

@@ -1107,6 +1107,7 @@ $whitespacePat = Alternatives @@ ({" " | "\t"} ~Join~ $mbWhitespace)
 
 
 parseBox[str_String, pos_, OptionsPattern[]] :=
+Catch[
 Module[{parsed, data, issues, stringifyMode, oldLeafSrc, len, src},
 
   (*
@@ -1130,6 +1131,9 @@ Module[{parsed, data, issues, stringifyMode, oldLeafSrc, len, src},
     ,
     True,
       parsed = CodeConcreteParseLeaf[str, "StringifyMode" -> stringifyMode];
+      If[FailureQ[parsed],
+        Throw[parsed]
+      ]
   ];
 
   (*
@@ -1150,7 +1154,7 @@ Module[{parsed, data, issues, stringifyMode, oldLeafSrc, len, src},
 
   parsed[[3]] = data;
   parsed
-]
+]]
 
 replacePosition[(head:SyntaxIssue|FormatIssue)[tag_, msg_, severity_, dataIn_], pos_, leafSrc_] :=
 Module[{data, actions, newSrc, oldSyntaxIssueSrc},

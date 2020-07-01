@@ -494,13 +494,15 @@ Module[{nearest, location, longNamesFile},
 	];
 
 	If[$Debug,
-		Print["nearest: ", nearest[[1]] ];
+		Print["nearest: ", nearest[[1]]];
 	];
 	nearest[[1]]
 ]]
 
 
-
+(*
+To be called manually at top-level
+*)
 SetupLongNames[] :=
 Catch[
 Module[{names, documentedNames, undocumentedNames, location, longNamesFile},
