@@ -907,7 +907,7 @@ for handling the various stringification operators
 a::b
 a::"b"
 *)
-abstractSymbolString[str_String /; StringStartsQ[str, "\""]] := ToExpression[str]
+abstractSymbolString[str_String /; StringStartsQ[str, "\""]] := Quiet[ToExpression[str], {Syntax::stresc}]
 abstractSymbolString[str_String] := Quiet[ToExpression["\""<>str<>"\""], {Syntax::stresc}]
 
 (*
@@ -934,7 +934,7 @@ Module[{replaced},
 			"\\t" -> "\\\\t"
 		}];
 
-	ToExpression[replaced]
+	Quiet[ToExpression[replaced], {Syntax::stresc}]
 ]
 
 abstractFileString[str_String] :=

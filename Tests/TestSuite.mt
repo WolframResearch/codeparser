@@ -7,6 +7,7 @@ TestSuite[{
 	"Boxes.mt",
 	"Characters.mt",
 	"CodeParser.mt",
+	"CodeSyntaxQ.mt",
 	"Concrete.mt",
 	"DeclarationName.mt",
 	"Errors.mt",
