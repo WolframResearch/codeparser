@@ -94,22 +94,26 @@ NodePtr PrefixUnsupportedTokenParselet::parse(Token TokIn, ParserContext Ctxt) c
 NodePtr PrefixCommaParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     //
-    // if the input is  f[a@,2]  , then we want to return TOKEN_ERROR_EXPECTEDOPERAND
+    // if the input is  f[a@,2]  then we want to return TOKEN_ERROR_EXPECTEDOPERAND
     //
-    // if the input is  f[,2]  , then we want to return TOKEN_FAKE_IMPLICITNULL
+    // if the input is  f[,2]  then we want to return TOKEN_FAKE_IMPLICITNULL
     //
-    TokenEnum Tok;
     if (Ctxt.Prec == PRECEDENCE_LOWEST) {
-        Tok = TOKEN_FAKE_IMPLICITNULL;
+        
+        auto createdToken = Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
+        
+        auto Left = NodePtr(new LeafNode(createdToken));
+        
+        return TheParser->infixLoop(std::move(Left), Ctxt);
+        
     } else {
-        Tok = TOKEN_ERROR_EXPECTEDOPERAND;
+        
+        auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
+        
+        auto Left = NodePtr(new ErrorNode(createdToken));
+        
+        return Left;
     }
-    
-    auto createdToken = Token(Tok, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
-    
-    auto Left = NodePtr(new LeafNode(createdToken));
-    
-    return TheParser->infixLoop(std::move(Left), Ctxt);
 }
 
 
