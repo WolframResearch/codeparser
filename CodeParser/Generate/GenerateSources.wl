@@ -21,6 +21,8 @@ dataDir
 
 importedLongNames
 
+importedNotStrangeLetterlikeLongNames
+
 importedPunctuationLongNames
 
 importedWhitespaceLongNames
@@ -185,6 +187,10 @@ Print["Done Clean"]
 importedLongNames = Get[FileNameJoin[{dataDir, "LongNames.wl"}]]
 
 validateLongNameMap[importedLongNames]
+
+
+
+importedNotStrangeLetterlikeLongNames = Keys[Select[importedLongNames, #[[1]] === LetterlikeCharacter && MemberQ[Lookup[#[[3]], "Extra", {}], "NotStrange"] &]]
 
 importedPunctuationLongNames = Keys[Select[importedLongNames, #[[1]] === PunctuationCharacter &]]
 

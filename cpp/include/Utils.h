@@ -22,10 +22,6 @@ int get_graphical_i();
 class Utils {
 public:
     
-    static bool isStrangeLetterlikeLongName(std::string s);
-    
-    static bool isVeryStrangeLetterlikeLongName(std::string s);
-    
     static bool isUndocumentedLongName(std::string s);
     
     static bool isMBNonCharacter(codepoint point);

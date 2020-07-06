@@ -93,7 +93,7 @@ struct WLCharacter {
     
     bool isLetterlike() const;
     
-    bool isVeryStrangeLetterlike() const;
+    bool isStrangeLetterlike() const;
     
     bool isWhitespace() const;
     
@@ -109,7 +109,6 @@ struct WLCharacter {
     bool isMBStringMeta() const;
     bool isMBLetterlike() const;
     bool isMBStrangeLetterlike() const;
-    bool isMBVeryStrangeLetterlike() const;
     bool isMBPunctuation() const;
     bool isMBWhitespace() const;
     bool isMBStrangeWhitespace() const;

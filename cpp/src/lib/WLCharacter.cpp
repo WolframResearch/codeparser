@@ -274,7 +274,7 @@ bool WLCharacter::isLetterlike() const {
     }
 }
 
-bool WLCharacter::isVeryStrangeLetterlike() const {
+bool WLCharacter::isStrangeLetterlike() const {
     
     //
     // Dump out if not a letterlike character
@@ -559,56 +559,9 @@ bool WLCharacter::isMBStrangeLetterlike() const {
         return false;
     }
     
-    auto esc = escape();
     auto val = to_point();
-    if (esc == ESCAPE_LONGNAME) {
-        
-        auto it = std::lower_bound(CodePointToLongNameMap_points.begin(), CodePointToLongNameMap_points.end(), val);
-        assert(it != CodePointToLongNameMap_points.end());
-        assert(*it == val);
-        auto idx = it - CodePointToLongNameMap_points.begin();
-        auto name = CodePointToLongNameMap_names[idx];
-        
-        return Utils::isStrangeLetterlikeLongName(name);
-    }
     
-    //
-    // Assume that using other escapes is strange
-    //
-    
-    return true;
-}
-
-bool WLCharacter::isMBVeryStrangeLetterlike() const {
-    
-    //
-    // Dump out if not a letterlike character
-    //
-    if (!isMBLetterlike()) {
-        return false;
-    }
-    
-    auto esc = escape();
-    auto val = to_point();
-    if (esc == ESCAPE_LONGNAME) {
-        
-        auto it = std::lower_bound(CodePointToLongNameMap_points.begin(), CodePointToLongNameMap_points.end(), val);
-        assert(it != CodePointToLongNameMap_points.end());
-        assert(*it == val);
-        auto idx = it - CodePointToLongNameMap_points.begin();
-        auto name = CodePointToLongNameMap_names[idx];
-        
-        return Utils::isVeryStrangeLetterlikeLongName(name);
-    }
-    
-    //
-    // Using control character as letterlike is very strange
-    //
-    if (isMBControl()) {
-        return true;
-    }
-    
-    return false;
+    return !LongNames::isMBNotStrangeLetterlike(val);
 }
 
 bool WLCharacter::isMBStrangeWhitespace() const {

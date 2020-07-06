@@ -135,6 +135,22 @@ Put CodePoint`CRLF before actual code points
 mbNewlines = toGlobal /@ ( { CodePoint`CRLF } ~Join~ ( ("CodePoint`LongName`"<>#)& /@ SortBy[importedNewlineLongNames, longNameToCharacterCode]))
 
 
+notStrangeLetterlikeSource = 
+  {
+    "//",
+    "//",
+    "//",
+    "std::array<codepoint, MBNOTSTRANGELETTERLIKECODEPOINTS_COUNT> mbNotStrangeLetterlikeCodePoints {{"} ~Join~
+    (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ SortBy[importedNotStrangeLetterlikeLongNames, longNameToCharacterCode]) ~Join~
+    {"}};", "",
+    "//",
+    "//",
+    "//",
+    "bool LongNames::isMBNotStrangeLetterlike(codepoint point) { ",
+    "auto it = std::lower_bound(mbNotStrangeLetterlikeCodePoints.begin(), mbNotStrangeLetterlikeCodePoints.end(), point);",
+    "return it != mbNotStrangeLetterlikeCodePoints.end() && *it == point;",
+    "}", ""}
+
 punctuationSource = 
   {
     "//",
@@ -257,6 +273,7 @@ longNamesCPPHeader = {
 constexpr size_t LONGNAMES_COUNT = " <> ToString[Length[importedLongNames]] <> ";
 constexpr size_t RAWLONGNAMES_COUNT = " <> ToString[Length[importedRawLongNames]] <> ";
 
+constexpr size_t MBNOTSTRANGELETTERLIKECODEPOINTS_COUNT = " <> ToString[Length[importedNotStrangeLetterlikeLongNames]] <> ";
 constexpr size_t MBPUNCTUATIONCODEPOINTS_COUNT = " <> ToString[Length[importedPunctuationLongNames]] <> ";
 constexpr size_t MBWHITESPACECODEPOINTS_COUNT = " <> ToString[Length[importedWhitespaceLongNames]] <> ";
 constexpr size_t MBNEWLINECODEPOINTS_COUNT = " <> ToString[Length[mbNewlines]] <> ";
@@ -274,6 +291,8 @@ extern std::array<std::string, LONGNAMES_COUNT> CodePointToLongNameMap_names;
 class LongNames {
 public:
     
+    static bool isMBNotStrangeLetterlike(codepoint point);
+
     static bool isMBPunctuation(codepoint point);
 
     static bool isMBWhitespace(codepoint point);
@@ -383,6 +402,7 @@ longNameToCodePointMapPoints ~Join~
 codePointToLongNameMapPoints ~Join~
 codePointToLongNameMapNames ~Join~
 rawSet ~Join~
+notStrangeLetterlikeSource ~Join~
 punctuationSource ~Join~
 whitespaceSource ~Join~
 newlineSource ~Join~

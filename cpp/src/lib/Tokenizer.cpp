@@ -575,13 +575,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation
             
             Issues.push_back(std::move(I));
         }
-    } else if (c.isVeryStrangeLetterlike()) {
-        
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.95, {}));
-        
-        TheTokenizer->addIssue(std::move(I));
-        
-    } else if (c.isMBVeryStrangeLetterlike()) {
+    } else if (c.isStrangeLetterlike()) {
         
         auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.85, {}));
         
@@ -633,13 +627,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation
                     Issues.push_back(std::move(I));
                 }
                 
-            } else if (c.isVeryStrangeLetterlike()) {
-                
-                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.95, {}));
-                
-                TheTokenizer->addIssue(std::move(I));
-                
-            } else if (c.isMBVeryStrangeLetterlike()) {
+            } else if (c.isStrangeLetterlike()) {
                 
                 auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.85, {}));
                 
