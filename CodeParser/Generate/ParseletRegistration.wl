@@ -38,7 +38,6 @@ HashHashParselet
 PercentParselet
 PercentPercentParselet
 ColonColonParselet
-EqualDotParselet
 ColonEqualParselet
 GreaterGreaterParselet
 ColonParselet
@@ -702,7 +701,6 @@ Has to handle  a =.  and  a = .
 *)
 InfixOperatorToParselet[Token`Equal] = EqualParselet[]
 InfixOperatorToParselet[Token`ColonEqual] = ColonEqualParselet[]
-InfixOperatorToParselet[Token`EqualDot] = EqualDotParselet[]
 
 (*
 stringify next token (as a symbol)
@@ -900,8 +898,6 @@ formatInfix[CallParselet[groupParselet_]] := "new CallParselet(" <> formatPrefix
 formatInfix[EqualParselet[]] := "new EqualParselet()"
 
 formatInfix[ColonEqualParselet[]] := "new ColonEqualParselet()"
-
-formatInfix[EqualDotParselet[]] := "new EqualDotParselet()"
 
 formatInfix[TildeParselet[]] := "new TildeParselet()"
 

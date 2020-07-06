@@ -143,9 +143,6 @@ so when prefix !! is encountered, it is convenient to also treat it as a single 
 *)
 Token`BangBang -> Next, (* !! *)
 Token`QuestionQuestion -> Next, (* ?? *)
-(*
-Token`EqualDot -> Next, (* =. *)
-*)
 
 (* 3 character tokens *)
 Token`DotDotDot -> Next, (* ... *)

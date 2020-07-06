@@ -82,7 +82,7 @@ Print["Work around Bug 321344: ", $WorkaroundBug321344];
 
 symbols = Union[Join[
     {Blank, BlankSequence, BlankNullSequence, EndOfFile, Integer, Integral, Integrate, Null, Out, Optional, Pattern,
-      Rational, Real, Slot, SlotSequence, String, Symbol, TagSet, TagSetDelayed, TagUnset, Whitespace},
+      Rational, Real, Slot, SlotSequence, String, Symbol, TagSet, TagSetDelayed, TagUnset, Unset, Whitespace},
     {CodeParser`Library`MakeLeafNode,
       CodeParser`Library`MakeErrorNode, CodeParser`Library`MakeUnterminatedTokenErrorNeedsReparseNode,
       CodeParser`Library`MakePrefixNode,
@@ -131,7 +131,6 @@ symbols = Union[Join[
       ColonColonParselet[] :> MessageName,
       ColonEqualParselet[] :> SetDelayed,
       ColonParselet[] :> Nothing,
-      EqualDotParselet[] :> Unset,
       EqualParselet[] :> Set,
       GreaterGreaterGreaterParselet[] :> PutAppend,
       GreaterGreaterParselet[] :> Put,
