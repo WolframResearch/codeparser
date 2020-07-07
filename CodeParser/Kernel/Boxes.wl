@@ -85,10 +85,6 @@ Module[{handledChildren, aggregatedChildren},
   handledChildren = MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ #2]&, handledChildren];
   
   aggregatedChildren = DeleteCases[handledChildren, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _]];
-  
-  If[$Debug,
-    Print["aggregatedChildren: ", aggregatedChildren]
-  ];
 
   If[Length[aggregatedChildren] == 1,
     Throw[BoxNode[RowBox, {handledChildren}, <|Source->pos|>]]
@@ -944,143 +940,20 @@ parseBoxPossibleListPossibleDirective[box_, pos_] := parseBox[box, pos]
 
 
 
-
-(*
-Handle all of the CompoundNodes
-
-a_b
-
-Front End treats a_b as single token
-
-Split things like a_b into correct structures
-*)
-
-(*
-Just do simple thing here and disallow _ and " and .
-
-It is hard to have a pattern for all multibyte letterlike characters
-*)
-letterlikePat = Except["_"|"\""|"."|"#"|"0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9"]
-
-digitPat = DigitCharacter
-
-
-parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "_"], pos_] :=
-Module[{cases},
-  cases = StringCases[str, a:letterlikePat.. ~~ "_" :> {a, "_"}][[1]];
-  CompoundNode[PatternBlank, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
-]
-
-parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "__"], pos_] :=
-Module[{cases},
-  cases = StringCases[str, a:letterlikePat.. ~~ "__" :> {a, "__"}][[1]];
-  CompoundNode[PatternBlankSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
-]
-
-parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "___"], pos_] :=
-Module[{cases},
-  cases = StringCases[str, a:letterlikePat.. ~~ "___" :> {a, "___"}][[1]];
-  CompoundNode[PatternBlankNullSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
-]
-
-parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "_."], pos_] :=
-Module[{cases},
-  cases = StringCases[str, a:letterlikePat.. ~~ "_." :> {a, "_."}][[1]];
-  CompoundNode[PatternOptionalDefault, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
-]
-
-
-parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "_" ~~ letterlikePat..], pos_] :=
-Module[{cases},
-  cases = StringCases[str, a:letterlikePat.. ~~ "_" ~~ b:letterlikePat.. :> {a, "_", b}][[1]];
-  CompoundNode[PatternBlank, {
-    parseBox[cases[[1]], pos],
-    CompoundNode[Blank, {parseBox[cases[[2]], pos], parseBox[cases[[3]], pos]}, <|Source -> pos|>]}, <|Source -> pos|>]
-]
-
-parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "__" ~~ letterlikePat..], pos_] :=
-Module[{cases},
-  cases = StringCases[str, a:letterlikePat.. ~~ "__" ~~ b:letterlikePat.. :> {a, "__", b}][[1]];
-  CompoundNode[PatternBlankSequence, {
-    parseBox[cases[[1]], pos],
-    CompoundNode[BlankSequence, {parseBox[cases[[2]], pos], parseBox[cases[[3]], pos]}, <|Source -> pos|>]}, <|Source -> pos|>]
-]
-
-parseBox[str_String /; StringMatchQ[str, letterlikePat.. ~~ "___" ~~ letterlikePat..], pos_] :=
-Module[{cases},
-  cases = StringCases[str, a:letterlikePat.. ~~ "___" ~~ b:letterlikePat.. :> {a, "___", b}][[1]];
-  CompoundNode[PatternBlankNullSequence, {
-    parseBox[cases[[1]], pos],
-    CompoundNode[BlankNullSequence, {parseBox[cases[[2]], pos], parseBox[cases[[3]], pos]}, <|Source -> pos|>]}, <|Source -> pos|>]
-]
-
-
-parseBox[str_String /; StringMatchQ[str, "_" ~~ letterlikePat..], pos_] :=
-Module[{cases},
-  cases = StringCases[str, "_" ~~ b:letterlikePat.. :> {"_", b}][[1]];
-  CompoundNode[Blank, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
-]
-
-parseBox[str_String /; StringMatchQ[str, "__" ~~ letterlikePat..], pos_] :=
-Module[{cases},
-  cases = StringCases[str, "__" ~~ b:letterlikePat.. :> {"__", b}][[1]];
-  CompoundNode[BlankSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
-]
-
-parseBox[str_String /; StringMatchQ[str, "___" ~~ letterlikePat..], pos_] :=
-Module[{cases},
-  cases = StringCases[str, "___" ~~ b:letterlikePat.. :> {"___", b}][[1]];
-  CompoundNode[BlankNullSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
-]
-
-
-parseBox[str_String /; StringMatchQ[str, "#" ~~ digitPat..], pos_] :=
-Module[{cases},
-  cases = StringCases[str, "#" ~~ b:digitPat.. :> {"#", b}][[1]];
-  CompoundNode[Slot, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
-]
-
-parseBox[str_String /; StringMatchQ[str, "#" ~~ letterlikePat..], pos_] :=
-Module[{cases},
-  cases = StringCases[str, "#" ~~ b:letterlikePat.. :> {"#", b}][[1]];
-  CompoundNode[Slot, {parseBox[cases[[1]], pos], parseBox[cases[[2]], pos, "StringifyMode" -> 1]}, <|Source -> pos|>]
-]
-
-parseBox[str_String /; StringMatchQ[str, "#" ~~ ("\""~~___)], pos_] :=
-Module[{cases},
-  cases = StringCases[str, "#" ~~ b:("\""~~___) :> {"#", b}][[1]];
-  CompoundNode[Slot, {parseBox[cases[[1]], pos], parseBox[cases[[2]], pos, "StringifyMode" -> 1]}, <|Source -> pos|>]
-]
-
-parseBox[str_String /; StringMatchQ[str, "##" ~~ digitPat..], pos_] :=
-Module[{cases},
-  cases = StringCases[str, "##" ~~ b:digitPat.. :> {"##", b}][[1]];
-  CompoundNode[SlotSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
-]
-
-parseBox[str_String /; StringMatchQ[str, "%" ~~ digitPat..], pos_] :=
-Module[{cases},
-  cases = StringCases[str, "%" ~~ b:digitPat.. :> {"%", b}][[1]];
-  CompoundNode[Out, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
-]
-
-
-
 (*
 The Front End treats comments as a collection of code, and not a single token
 *)
 parseBox["(*", pos_] :=
   LeafNode[Token`Boxes`OpenParenStar, "(*", <|Source -> pos|>]
 
-(*
-The FE parses (***) as RowBox[{"(*", "**)"}], so need to handle variable-length ** ) token
-*)
-parseBox[s_String /; StringMatchQ[s, Verbatim["*"].. ~~ ")"], pos_] :=
-  LeafNode[Token`Boxes`StarCloseParen, s, <|Source -> pos|>]
-
-
 parseBox["=.", pos_] := LeafNode[Token`Boxes`EqualDot, "=.", <|Source -> pos|>]
 
+
+(*
+Do not add SyntaxIssues saying that \[IndentingNewLine] is strange
+*)
+parseBox["\[IndentingNewLine]", pos_] :=
+  LeafNode[Token`Newline, "\[IndentingNewLine]", <|Source -> pos|>]
 
 
 (*
@@ -1112,10 +985,22 @@ $mbWhitespace = {
 
 $whitespacePat = Alternatives @@ ({" " | "\t"} ~Join~ $mbWhitespace)
 
+(*
+Just do simple thing here and disallow _ and " and .
+
+It is hard to have a pattern for all multibyte letterlike characters
+*)
+letterlikeStartPat = Except["_"|"\""|"."|"#"|"0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9"]
+
+letterlikePat = Except["_"|"\""|"."|"#"]
+
+
+digitPat = DigitCharacter
+
 
 parseBox[str_String, pos_, OptionsPattern[]] :=
 Catch[
-Module[{parsed, data, issues, stringifyMode, oldLeafSrc, len, src},
+Module[{parsed, data, issues, stringifyMode, oldLeafSrc, len, src, cases},
 
   (*
   Bypass calling into ParseLeaf if only whitespace,
@@ -1126,43 +1011,125 @@ Module[{parsed, data, issues, stringifyMode, oldLeafSrc, len, src},
   stringifyMode = OptionValue["StringifyMode"];
 
   Which[
+    (*
+    Handle all of the CompoundNodes
+
+    a_b
+
+    Front End treats a_b as single token
+
+    Split things like a_b into correct structures
+    *)
+    StringMatchQ[str, (letterlikeStartPat ~~ letterlikePat...) ~~ "_"],
+      cases = StringCases[str, a:(letterlikeStartPat ~~ letterlikePat...) ~~ "_" :> {a, "_"}][[1]];
+      parsed = CompoundNode[PatternBlank, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+    ,
+    StringMatchQ[str, (letterlikeStartPat ~~ letterlikePat...) ~~ "__"],
+      cases = StringCases[str, a:(letterlikeStartPat ~~ letterlikePat...) ~~ "__" :> {a, "__"}][[1]];
+      parsed = CompoundNode[PatternBlankSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+    ,
+    StringMatchQ[str, (letterlikeStartPat ~~ letterlikePat...) ~~ "___"],
+      cases = StringCases[str, a:(letterlikeStartPat ~~ letterlikePat...) ~~ "___" :> {a, "___"}][[1]];
+      parsed = CompoundNode[PatternBlankNullSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+    ,
+    StringMatchQ[str, (letterlikeStartPat ~~ letterlikePat...) ~~ "_."],
+      cases = StringCases[str, a:(letterlikeStartPat ~~ letterlikePat...) ~~ "_." :> {a, "_."}][[1]];
+      parsed = CompoundNode[PatternOptionalDefault, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+    ,
+    StringMatchQ[str, (letterlikeStartPat ~~ letterlikePat...) ~~ "_" ~~ (letterlikeStartPat ~~ letterlikePat...)],
+      cases = StringCases[str, a:(letterlikeStartPat ~~ letterlikePat...) ~~ "_" ~~ b:(letterlikeStartPat ~~ letterlikePat...) :> {a, "_", b}][[1]];
+      parsed = CompoundNode[PatternBlank, {
+        parseBox[cases[[1]], pos],
+        CompoundNode[Blank, {parseBox[cases[[2]], pos], parseBox[cases[[3]], pos]}, <|Source -> pos|>]}, <|Source -> pos|>]
+    ,
+    StringMatchQ[str, (letterlikeStartPat ~~ letterlikePat...) ~~ "__" ~~ (letterlikeStartPat ~~ letterlikePat...)],
+      cases = StringCases[str, a:(letterlikeStartPat ~~ letterlikePat...) ~~ "__" ~~ b:(letterlikeStartPat ~~ letterlikePat...) :> {a, "__", b}][[1]];
+      parsed = CompoundNode[PatternBlankSequence, {
+        parseBox[cases[[1]], pos],
+        CompoundNode[BlankSequence, {parseBox[cases[[2]], pos], parseBox[cases[[3]], pos]}, <|Source -> pos|>]}, <|Source -> pos|>]
+    ,
+    StringMatchQ[str, (letterlikeStartPat ~~ letterlikePat...) ~~ "___" ~~ (letterlikeStartPat ~~ letterlikePat...)],
+      cases = StringCases[str, a:(letterlikeStartPat ~~ letterlikePat...) ~~ "___" ~~ b:(letterlikeStartPat ~~ letterlikePat...) :> {a, "___", b}][[1]];
+      parsed = CompoundNode[PatternBlankNullSequence, {
+        parseBox[cases[[1]], pos],
+        CompoundNode[BlankNullSequence, {parseBox[cases[[2]], pos], parseBox[cases[[3]], pos]}, <|Source -> pos|>]}, <|Source -> pos|>]
+    ,
+    StringMatchQ[str, "_" ~~ (letterlikeStartPat ~~ letterlikePat...)],
+      cases = StringCases[str, "_" ~~ b:(letterlikeStartPat ~~ letterlikePat...) :> {"_", b}][[1]];
+      parsed = CompoundNode[Blank, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+    ,
+    StringMatchQ[str, "__" ~~ (letterlikeStartPat ~~ letterlikePat...)],
+      cases = StringCases[str, "__" ~~ b:(letterlikeStartPat ~~ letterlikePat...) :> {"__", b}][[1]];
+      parsed = CompoundNode[BlankSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+    ,
+    StringMatchQ[str, "___" ~~ (letterlikeStartPat ~~ letterlikePat...)],
+      cases = StringCases[str, "___" ~~ b:(letterlikeStartPat ~~ letterlikePat...) :> {"___", b}][[1]];
+      parsed = CompoundNode[BlankNullSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+    ,
+    StringMatchQ[str, "#" ~~ digitPat..],
+      cases = StringCases[str, "#" ~~ b:digitPat.. :> {"#", b}][[1]];
+      parsed = CompoundNode[Slot, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+    ,
+    StringMatchQ[str, "#" ~~ (letterlikeStartPat ~~ letterlikePat...)],
+      cases = StringCases[str, "#" ~~ b:(letterlikeStartPat ~~ letterlikePat...) :> {"#", b}][[1]];
+      parsed = CompoundNode[Slot, {parseBox[cases[[1]], pos], parseBox[cases[[2]], pos, "StringifyMode" -> 1]}, <|Source -> pos|>]
+    ,
+    StringMatchQ[str, "#" ~~ ("\""~~___)],
+      cases = StringCases[str, "#" ~~ b:("\""~~___) :> {"#", b}][[1]];
+      parsed = CompoundNode[Slot, {parseBox[cases[[1]], pos], parseBox[cases[[2]], pos, "StringifyMode" -> 1]}, <|Source -> pos|>]
+    ,
+    StringMatchQ[str, "##" ~~ digitPat..],
+      cases = StringCases[str, "##" ~~ b:digitPat.. :> {"##", b}][[1]];
+      parsed = CompoundNode[SlotSequence, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+    ,
+    StringMatchQ[str, "%" ~~ digitPat..],
+      cases = StringCases[str, "%" ~~ b:digitPat.. :> {"%", b}][[1]];
+      parsed = CompoundNode[Out, parseBox[#, pos]& /@ cases, <|Source -> pos|>]
+    ,
     StringMatchQ[str, $whitespacePat..] && (stringifyMode == 0 || stringifyMode == 2),
-      len = StringLength[str];
-      src = {{1, 1}, {1, len+1}};
-      parsed = LeafNode[Token`Boxes`MultiWhitespace, str, <|Source -> src|>];
+      parsed = LeafNode[Token`Boxes`MultiWhitespace, str, <|Source -> pos|>];
     ,
     StringMatchQ[str, ("'")..] && stringifyMode == 0,
-      len = StringLength[str];
-      src = {{1, 1}, {1, len+1}};
-      parsed = LeafNode[Token`Boxes`MultiSingleQuote, str, <|Source -> src|>];
+      parsed = LeafNode[Token`Boxes`MultiSingleQuote, str, <|Source -> pos|>];
+    ,
+    StringMatchQ[str, Verbatim["*"].. ~~ ")"],
+      (*
+      The FE parses (***) as RowBox[{"(*", "***)"}], so need to handle variable-length *** ) token
+      *)
+      parsed = LeafNode[Token`Boxes`StarCloseParen, str, <|Source -> pos|>]
     ,
     True,
       parsed = CodeConcreteParseLeaf[str, "StringifyMode" -> stringifyMode];
       If[FailureQ[parsed],
         Throw[parsed]
-      ]
+      ];
+      parsed[[3, Key[Source]]] = pos;
   ];
 
-  (*
-  Source is filled in here
-  *)
-  data = parsed[[3]];
-  
-  oldLeafSrc = data[Source];
+  If[$Debug,
 
-  data[Source] = pos;
+    data = parsed[[3]];
 
-  issues = Lookup[data, SyntaxIssues, {}];
+    issues = Lookup[data, SyntaxIssues, {}];
 
-  If[!empty[issues],
+    (*
     issues = replacePosition[#, pos, oldLeafSrc]& /@ issues;
     data[SyntaxIssues] = issues;
+    *)
+
+    If[!empty[issues],
+      Message[CodeConcreteParseBox::needtohandle, issues]
+    ];
+
+    (*
+    parsed[[3]] = data;
+    *)
   ];
 
-  parsed[[3]] = data;
   parsed
 ]]
 
+(*
 replacePosition[(head:SyntaxIssue|FormatIssue)[tag_, msg_, severity_, dataIn_], pos_, leafSrc_] :=
 Module[{data, actions, newSrc, oldSyntaxIssueSrc},
 
@@ -1185,7 +1152,9 @@ Module[{data, actions, newSrc, oldSyntaxIssueSrc},
     ];
     head[tag, msg, severity, data]
 ]
+*)
 
+(*
 replacePosition[CodeAction[label_, command_, dataIn_], newSrc_] :=
 Module[{data, src},
     data = dataIn;
@@ -1196,6 +1165,7 @@ Module[{data, src},
     data[Source] = src;
     CodeAction[label, command, data]
 ]
+*)
 
 parseBox[args___] := Failure["InternalUnhandled", <|"Function"->"parseBox", "Arguments"->HoldForm[{args}]|>]
 
@@ -1203,6 +1173,7 @@ parseBox[args___] := Failure["InternalUnhandled", <|"Function"->"parseBox", "Arg
 
 removeImplicits[node_] := DeleteCases[node, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity]
 
+(*
 ToStandardFormBoxes[ContainerNode[Box, children_, _]] :=
 Block[{$RecursionLimit = Infinity},
 Module[{},
@@ -1211,7 +1182,11 @@ Module[{},
     else_ :> toStandardFormBoxes[removeImplicits[else]]
   }, {1}]
 ]]
-
+*)
+ToStandardFormBoxes[ContainerNode[Box, {child_}, _]] :=
+Block[{$RecursionLimit = Infinity},
+  toStandardFormBoxes[removeImplicits[child]]
+]
 
 
 
