@@ -908,8 +908,11 @@ for handling the various stringification operators
 a::b
 a::"b"
 *)
-abstractSymbolString[str_String /; StringStartsQ[str, "\""]] := Quiet[ToExpression[str], {Syntax::stresc}]
-abstractSymbolString[str_String] := Quiet[ToExpression["\""<>str<>"\""], {Syntax::stresc}]
+abstractSymbolString[str_String /; StringStartsQ[str, "\""]] :=
+	Quiet[ToExpression[str], {Syntax::stresc, Syntax::snthex, Syntax::sntoct1, Syntax::sntoct2, Syntax::snthex32}]
+	
+abstractSymbolString[str_String] :=
+	Quiet[ToExpression["\""<>str<>"\""], {Syntax::stresc, Syntax::snthex, Syntax::sntoct1, Syntax::sntoct2, Syntax::snthex32}]
 
 (*
 a>>b
@@ -922,20 +925,8 @@ b\f => b\\f
 FIXME: once the semantics are completely understood, move this to library
 *)
 abstractFileString[str_String /; StringStartsQ[str, "\""]] :=
-Module[{replaced},
-
-	replaced = StringReplace[str, {
-			(*
-			single character escapes
-			*)
-			"\\b" -> "\\\\b",
-			"\\f" -> "\\\\f",
-			"\\n" -> "\\\\n",
-			"\\r" -> "\\\\r",
-			"\\t" -> "\\\\t"
-		}];
-
-	Quiet[ToExpression[replaced], {Syntax::stresc}]
+Module[{},
+	Quiet[ToExpression[str], {Syntax::stresc, Syntax::snthex, Syntax::sntoct1, Syntax::sntoct2, Syntax::snthex32}]
 ]
 
 abstractFileString[str_String] :=
@@ -956,10 +947,14 @@ Module[{replaced},
 			(*
 			and double quote
 			*)
-			"\"" -> "\\\""
+			"\"" -> "\\\"",
+			(*
+			and backslash
+			*)
+			"\\" -> "\\\\"
 		}];
 
-	Quiet[ToExpression["\""<>replaced<>"\""], {Syntax::stresc}]
+	Quiet[ToExpression["\""<>replaced<>"\""], {Syntax::stresc, Syntax::snthex, Syntax::sntoct1, Syntax::sntoct2, Syntax::snthex32}]
 ]
 
 

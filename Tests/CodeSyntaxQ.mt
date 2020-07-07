@@ -14,3 +14,13 @@ Test[
 	,
 	TestID->"CodeSyntaxQ-20200702-D6P6W9"
 ]
+
+Test[
+	CodeSyntaxQ["a>>b\\1c"]
+	,
+	True
+	,
+	{}
+	,
+	TestID->"CodeSyntaxQ-20200703-Q2R5G9"
+]

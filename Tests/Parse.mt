@@ -2625,22 +2625,31 @@ Test[
 	TestID->"Parse-20200122-S3W6N2"	
 ]
 
+
+
+
+(*
+I believe these to be the correct interpretations, not the kernel
+*)
+
 Test[
-	"a>>b\\[Beta]"
+	CodeParse["a>>b\\[Beta]"]
 	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "Put", <||>], {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
+			LeafNode[String, "\"b\\\\[Beta]\"", <|Source -> {{1, 4}, {1, 12}}|>]}, <|Source -> {{1, 1}, {1, 12}}|>]}, <||>]
 	,
 	TestID->"Parse-20200123-O1V2G7"	
 ]
 
 Test[
-	"a>>b\\:03b1"
+	CodeParse["a>>b\\:03b1"]
 	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "Put", <||>], {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
+			LeafNode[String, "\"b\\\\:03b1\"", <|Source -> {{1, 4}, {1, 11}}|>]}, <|Source -> {{1, 1}, {1, 11}}|>]}, <||>]
 	,
 	TestID->"Parse-20200123-X3N6W0"	
 ]
