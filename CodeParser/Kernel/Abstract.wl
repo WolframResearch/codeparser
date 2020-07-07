@@ -189,7 +189,7 @@ abstract[BinaryNode[PutAppend, {left_, _, LeafNode[String, str_, data1_]}, data_
 First arg must be a symbol
 *)
 abstract[BinaryNode[Pattern, children:{_[Except[Symbol], _, _], _, _}, data_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`ColonError, children, data]
+	AbstractSyntaxErrorNode[AbstractSyntaxError`PatternColonError, children, data]
 
 (*
 Abstract NonAssociative errors
@@ -251,16 +251,19 @@ Cannot have  (f,)[a, b]
 abstract[TernaryNode[TernaryTilde, children:{_, _, InfixNode[Comma, _, _], _, _}, data_]] :=
 	AbstractSyntaxErrorNode[AbstractSyntaxError`CommaTopLevel, children, data]
 
-abstract[TernaryNode[TernaryTilde, {left_, _, middle_, _, right_}, data_]] := CallNode[abstract[middle], {abstract[left], abstract[right]}, data]
+abstract[TernaryNode[TernaryTilde, {left_, _, middle_, _, right_}, data_]] :=
+	CallNode[abstract[middle], {abstract[left], abstract[right]}, data]
 
-abstract[TernaryNode[TagSet, {left_, _, middle_, _, right_}, data_]] := CallNode[ToNode[TagSet], {abstract[left], abstract[middle], abstract[right]}, data]
-abstract[TernaryNode[TagSetDelayed, {left_, _, middle_, _, right_}, data_]] := CallNode[ToNode[TagSetDelayed], {abstract[left], abstract[middle], abstract[right]}, data]
+abstract[TernaryNode[TagSet, {left_, _, middle_, _, right_}, data_]] :=
+	CallNode[ToNode[TagSet], {abstract[left], abstract[middle], abstract[right]}, data]
+abstract[TernaryNode[TagSetDelayed, {left_, _, middle_, _, right_}, data_]] :=
+	CallNode[ToNode[TagSetDelayed], {abstract[left], abstract[middle], abstract[right]}, data]
 
 abstract[TernaryNode[TagUnset, {left_, _, middle_, LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, data_]] :=
 	CallNode[ToNode[TagUnset], {abstract[left], abstract[middle]}, data]
 
-
-abstract[TernaryNode[Span, {left_, _, middle_, _, right_}, data_]] := CallNode[ToNode[Span], {abstract[left], abstract[middle], abstract[right]}, data]
+abstract[TernaryNode[Span, {left_, _, middle_, _, right_}, data_]] :=
+	CallNode[ToNode[Span], {abstract[left], abstract[middle], abstract[right]}, data]
 
 
 
@@ -312,20 +315,25 @@ take care of specific GroupNodes before calling abstractGroupNode
 GroupParen
 *)
 
-abstract[GroupNode[GroupParen, { _, child:InfixNode[Comma, _, _], _ }, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, { child }, data]
+abstract[GroupNode[GroupParen, { _, child:InfixNode[Comma, _, _], _ }, data_]] :=
+	AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, { child }, data]
 
-abstract[GroupNode[GroupParen, { _, child_, _}, data_]] := abstract[child]
+abstract[GroupNode[GroupParen, { _, child_, _}, data_]] :=
+	abstract[child]
 
-abstract[GroupNode[GroupParen, children_, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, children[[2;;-2]], data]
+abstract[GroupNode[GroupParen, children_, data_]] :=
+	AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, children[[2;;-2]], data]
 
 (* GroupNode errors *)
-abstract[GroupNode[GroupSquare, children_, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`OpenSquare, children, data]
+abstract[GroupNode[GroupSquare, children_, data_]] :=
+	AbstractSyntaxErrorNode[AbstractSyntaxError`OpenSquare, children, data]
 
 (*
 FIXME: skip abstracting linear syntax for now
 GroupLinearSyntaxParen retains its commas, so handle before abstractGroupNode
 *)
-abstract[GroupNode[GroupLinearSyntaxParen, children_, data_]] := GroupNode[GroupLinearSyntaxParen, children, data]
+abstract[GroupNode[GroupLinearSyntaxParen, children_, data_]] :=
+	GroupNode[GroupLinearSyntaxParen, children, data]
 
 
 
