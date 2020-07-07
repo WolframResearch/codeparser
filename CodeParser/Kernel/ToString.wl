@@ -547,16 +547,12 @@ toSourceCharacterString[ContainerNode[Hold, nodesIn_, opts_], insideBoxes_] :=
 Catch[
 Module[{nodes, nodeStrs},
 	nodes = nodesIn;
-	If[empty[nodes],
-		nodeStrs = {"Null"}
-		,
-		(*
-		remove top-level trivia
-		*)
-		nodes = DeleteCases[nodes, LeafNode[Whitespace | Token`Newline | Token`Comment, _, _]];
-		nodeStrs = toSourceCharacterString[#, insideBoxes]& /@ nodes;
-		nodeStrs = Flatten[nodeStrs];
-	];
+	(*
+	remove top-level trivia
+	*)
+	nodes = DeleteCases[nodes, LeafNode[Whitespace | Token`Newline | Token`Comment, _, _]];
+	nodeStrs = toSourceCharacterString[#, insideBoxes]& /@ nodes;
+	nodeStrs = Flatten[nodeStrs];
 	If[AnyTrue[nodeStrs, FailureQ],
 		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];
@@ -579,12 +575,8 @@ Module[{nodeStrs},
 toSourceCharacterString[ContainerNode[_, nodes_, opts_], insideBoxes_] :=
 Catch[
 Module[{nodeStrs},
-	If[empty[nodes],
-		nodeStrs = {"Null"}
-		,
-		nodeStrs = toSourceCharacterString[#, insideBoxes]& /@ nodes;
-		nodeStrs = Flatten[nodeStrs];
-	];
+	nodeStrs = toSourceCharacterString[#, insideBoxes]& /@ nodes;
+	nodeStrs = Flatten[nodeStrs];
 	If[AnyTrue[nodeStrs, FailureQ],
 		Throw[SelectFirst[nodeStrs, FailureQ]]
 	];
