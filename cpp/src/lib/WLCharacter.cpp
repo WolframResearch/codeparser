@@ -585,6 +585,15 @@ bool WLCharacter::isMBStrangeNewline() const {
         return false;
     }
     
+    auto val = to_point();
+    
+    //
+    // \r\n is not strange
+    //
+    if (val == CODEPOINT_CRLF) {
+        return false;
+    }
+    
     return true;
 }
 
