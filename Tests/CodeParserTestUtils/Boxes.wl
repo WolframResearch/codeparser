@@ -27,7 +27,16 @@ back = ToStandardFormBoxes[cst];
 If[back =!= box,
   If[MemberQ[Lookup[exceptions, name, {}], {i, j}], 
    Print[{"exception", {name, n, i, j}}]; Throw[continue]];
-  diff = findDiff[back, box];
+  Which[
+    FailureQ[back],
+      diff = back
+    ,
+    FailureQ[box],
+      diff = box
+    ,
+    True,
+      diff = findDiff[back, box];
+  ];
   (* some weird string from the Example build process *)
   
   If[MatchQ[diff, outputFormPatterns], 
@@ -49,9 +58,9 @@ If[!StringQ[sourceStr],
   If[FailureQ[sourceStr] && 
     sourceStr[[1]] == "CannotConvertBoxesToSourceCharacterString",
    If[$Interactive,
-     Print[Style[Row[{"-",sourceStr[[2]]["Arguments"][[1, 1, 1]],"-"}], Darker[Orange]]];
+     Print[Style[Row[{"-",sourceStr[[2, Key["Arguments"], 1, 1]],"-"}], Darker[Orange]]];
      If[$Debug,
-       Print[Style[sourceStr[[2]]["Arguments"], Darker[Orange]]];
+       Print[Style[sourceStr[[2, Key["Arguments"], 1, 1]], Darker[Orange]]];
      ];
    ];
    (*
@@ -60,9 +69,9 @@ If[!StringQ[sourceStr],
    Throw[continue]
    ];
   If[$Interactive,
-     Print[Style[Row[{"-",sourceStr[[2]]["Arguments"][[1, 1, 1]],"-"}], Red]];
+     Print[Style[Row[{"-",sourceStr[[2, Key["Arguments"], 1, 1]],"-"}], Red]];
      If[$Debug,
-       Print[Style[sourceStr[[2]]["Arguments"], Red]];
+       Print[Style[sourceStr[[2, Key["Arguments"]]], Red]];
      ];
    ];
   $Error = True;
@@ -84,9 +93,9 @@ If[!StringQ[inputStr],
   If[FailureQ[inputStr] && 
     inputStr[[1]] == "CannotConvertBoxesToInputFormString",
    If[$Interactive,
-     Print[Style[Row[{"-",inputStr[[2]]["Arguments"][[1,1,1]],"-"}], Darker[Orange]]];
+     Print[Style[Row[{"-",inputStr[[2, Key["Arguments"], 1, 1]],"-"}], Darker[Orange]]];
      If[$Debug,
-       Print[Style[inputStr[[2]]["Arguments"], Darker[Orange]]];
+       Print[Style[inputStr[[2, Key["Arguments"]]], Darker[Orange]]];
      ];
    ];
    (*
@@ -489,29 +498,6 @@ outputFormPatterns =
    "FeatureExtractorFunction" | "QuantityArray" | "Take" |
    "MailServerConnection" | "MailFolder" | "MailItem" |
    "SymmetrizedArray" | "SystemCredentialData" | "SystemCredentialStoreObject";
-
-
-Clear[findDiff, findDiff0, findDiffShallow];
-findDiff[a_, b_] :=
-  Catch[
-   If[a === b, Throw[SameQ]];
-   findDiff0[a, b];
-   Throw[Indeterminate]
-   ];
-findDiff0[a_, b_] := (
-  If[Length[a] != Length[b],
-   Throw[{Length, Length[a], Length[b], Catch[Do[findDiffShallow[a[[i]], b[[i]], i], {i, 1, Min[Length[a], Length[b]]}]]}]
-  ];
-  If[Length[a] == 0,
-   If[a =!= b, Throw[a]]
-   ];
-  Do[findDiff0[a[[i]], b[[i]]], {i, 1, Length[a]}]
-  )
-findDiffShallow[a_, b_, i_] := (
-  If[a =!= b,
-    Throw[{a, b, i}]
-  ];
-  )
 
 
 End[]
