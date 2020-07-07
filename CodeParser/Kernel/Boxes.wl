@@ -674,9 +674,16 @@ parseBox[SqrtBox[a_, rest___], pos_] :=
 parseBox[RadicalBox[a_, b_, rest___], pos_] :=
   BoxNode[RadicalBox, {parseBox[a, Append[pos, 1]]} ~Join~ {parseBox[b, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
 
-parseBox[TooltipBox[a_, b_, rest___], pos_] :=
+(*
+FullNotationPalette has something like:
+
+TooltipBox[xxx, "\[EscapeKey]notation\[EscapeKey]. Notation template that parses and formats."]
+
+2nd arg is a string, not a box
+*)
+parseBox[TooltipBox[a_, rest___], pos_] :=
   BoxNode[TooltipBox,
-    {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
+    {parseBox[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
 
 
 
@@ -1923,13 +1930,13 @@ Module[{heldRest, heldChildren},
   With[{heldChildren = heldChildren}, ReleaseHold[TogglerBox @@ heldChildren]]
 ]]
 
-toStandardFormBoxes[BoxNode[TooltipBox, {a_, b_, rest___}, _]] :=
+toStandardFormBoxes[BoxNode[TooltipBox, {a_, rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
   heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  With[{aBox = toStandardFormBoxes[a], bBox = toStandardFormBoxes[b]},
-    heldChildren = { HoldComplete[aBox], HoldComplete[bBox] } ~Join~ heldRest];
+  With[{aBox = toStandardFormBoxes[a]},
+    heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
 
   With[{heldChildren = heldChildren}, ReleaseHold[TooltipBox @@ heldChildren]]
 ]]
