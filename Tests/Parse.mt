@@ -3292,3 +3292,15 @@ Test[
 	TestID->"Parse-20200430-G3Y5R8"
 ]
 
+
+
+Test[
+	"{,}"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20200703-O0D8F0"
+]
+
