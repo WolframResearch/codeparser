@@ -205,7 +205,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     Null
     ,
     file = fileIn;
-    If[$Debug, Print["file1: ", file]];
+    If[$Debug, Print["file1: ", File[file]]];
     
     (*If[StringEndsQ[file,".tr"],
     tmp=CreateFile[];
@@ -328,8 +328,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       f = Failure["ConcreteParseFileFailed", <|"File" -> File[fileIn]|>];
       If[$Interactive,
         Print[
-         Style[Row[{"index: ", i, " ", 
-            StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], 
+         Style[Row[{"index: ", i, " ", File[fileIn]}], 
           Red]];
         Print[Style[Row[{"index: ", i, " ", f}], Red]];
       ];
@@ -342,8 +341,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       "FindFileFailed",
       If[$Interactive,
         Print[
-         Row[{"index: ", i, " ", 
-           StringReplace[fileIn, StartOfString ~~ prefix -> ""]}]];
+         Row[{"index: ", i, " ", File[fileIn]}]];
         Print[Row[{"index: ", i, " ", cst[[1]], "; skipping"}]];
       ];
       Throw[cst, "Handled"]
@@ -352,8 +350,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       f = cst;
       If[$Interactive,
         Print[
-         Style[Row[{"index: ", i, " ", 
-            StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], 
+         Style[Row[{"index: ", i, " ", File[fileIn]}], 
           Red]];
         Print[Style[Row[{"index: ", i, " ", f}], Red]];
       ];
@@ -362,8 +359,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       _,
       If[$Interactive,
         Print[
-         Style[Row[{"index: ", i, " ", 
-            StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], 
+         Style[Row[{"index: ", i, " ", File[fileIn]}], 
           Darker[Orange]]];
         Print[Style[Row[{"index: ", i, " ", cst}], Darker[Orange]]];
       ];
@@ -374,8 +370,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     If[MatchQ[cst, ContainerNode[File, {Null}, _]],
       If[$Interactive,
        Print[
-        Style[Row[{"index: ", i, " ", 
-           StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], 
+        Style[Row[{"index: ", i, " ", File[fileIn]}], 
          Darker[Orange]]];
        Print[
         Style[Row[{"index: ", i, " ", "No expressions"}], 
@@ -391,8 +386,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         "SyntaxErrors" -> errs|>];
       If[$Interactive,
        Print[
-        Style[Row[{"index: ", i, " ", 
-           StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], Red]];
+        Style[Row[{"index: ", i, " ", File[fileIn]}], Red]];
        Print[Style[Row[{"index: ", i, " ", Shallow[errs]}], Red]];
       ];
      savedFailure = f;
@@ -402,8 +396,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      If[!FreeQ[cst, FormatIssue["CharacterEncoding", _, _, _]],
       If[$Interactive,
         Print[
-        Style[Row[{"index: ", i, " ", 
-           StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], 
+        Style[Row[{"index: ", i, " ", File[fileIn]}], 
          Darker[Orange]]];
        Print[
         Style[Row[{"index: ", i, " ", "Bad UTF-8 encoding"}], 
@@ -447,8 +440,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     If[!FreeQ[cst, LeafNode[Symbol, "Package", _]],
       If[$Interactive,
        Print[
-        Row[{"index: ", i, " ", 
-          StringReplace[fileIn, StartOfString ~~ prefix -> ""]}]];
+        Row[{"index: ", i, " ", File[fileIn]}]];
        Print[
         Row[{"index: ", i, " ", 
           "Package symbol detected (bug 347012); rewriting Package\[Rule]PackageXXX"}]];
@@ -471,8 +463,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       f = Failure["SedFailed", res];
       If[$Interactive,
         Print[
-         Row[{"index: ", i, " ", 
-           StringReplace[fileIn, StartOfString ~~ prefix -> ""]}]];
+         Row[{"index: ", i, " ", File[fileIn]}]];
         Print[Row[{"index: ", i, " ", f}]];
       ];
       Throw[f, "Handled"]
@@ -575,8 +566,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         "tryString" -> tryString|>];
       If[$Interactive,
        Print[
-        Style[Row[{"index: ", i, " ", 
-           StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], Red]];
+        Style[Row[{"index: ", i, " ", File[fileIn]}], Red]];
        Print[Style[Row[{"index: ", i, " ", f}], Red]];
       ];
      Throw[f, "Uncaught"]
@@ -590,8 +580,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       ,
       If[$Interactive,
         Print[
-         Style[Row[{"index: ", i, " ", 
-            StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], 
+         Style[Row[{"index: ", i, " ", File[fileIn]}], 
           Darker[Orange]]];
         Print[
          Style[Row[{"index: ", i, " ", 
@@ -626,8 +615,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         f = Failure["UsingTwoWayRuleBefore112", <|"File" -> File[fileIn]|>];
         If[$Interactive,
           Print[
-           Style[Row[{"index: ", i, " ", 
-              StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], 
+           Style[Row[{"index: ", i, " ", File[fileIn]}], 
             Darker[Orange]]];
           Print[Style[Row[{"index: ", i, " ", f}], Darker[Orange]]];
         ];
@@ -645,8 +633,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      f = Failure["ConcreteParsingFailure", <|"File" -> File[fileIn]|>];
      If[$Interactive,
        Print[
-        Style[Row[{"index: ", i, " ", 
-           StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], Bold,
+        Style[Row[{"index: ", i, " ", File[fileIn]}], Bold,
           Red]];
        Print[Style[Row[{"index: ", i, " ", f}], Bold, Red]];
       ];
@@ -670,7 +657,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     If[$Debug, Print["agg: ", agg]];
 
     If[$DebugTopLevelExpressions,
-      Print[{"index: ", i, " ", StringReplace[fileIn, StartOfString ~~ prefix -> ""]}];
+      Print[{"index: ", i, " ", File[fileIn]}];
       Print["# top-level exprs: ", Length[agg[[2]] ]]
     ];
 
@@ -688,8 +675,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         "tryString" -> tryString|>];
       If[$Interactive,
        Print[
-        Style[Row[{"index: ", i, " ", 
-           StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], Red]];
+        Style[Row[{"index: ", i, " ", File[fileIn]}], Red]];
        Print[Style[Row[{"index: ", i, " ", f}], Red]];
       ];
      Throw[f, "Uncaught"]
@@ -703,8 +689,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       ,
       If[$Interactive,
         Print[
-         Style[Row[{"index: ", i, " ", 
-            StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], 
+         Style[Row[{"index: ", i, " ", File[fileIn]}], 
           Darker[Orange]]];
         Print[
          Style[Row[{"index: ", i, " ", 
@@ -738,8 +723,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      f = Failure["AggregateParsingFailure", <|"File" -> File[fileIn]|>];
      If[$Interactive,
        Print[
-        Style[Row[{"index: ", i, " ", 
-           StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], Bold,
+        Style[Row[{"index: ", i, " ", File[fileIn]}], Bold,
           Red]];
        Print[Style[Row[{"index: ", i, " ", f}], Bold, Red]];
       ];
@@ -792,7 +776,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
 
       If[ast[[1]] == "TooManyTopLevelExpressions",
         If[$Interactive,
-          Print[Style[Row[{"index: ", i, " ", StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], Darker[Orange]]];
+          Print[Style[Row[{"index: ", i, " ", File[fileIn]}], Darker[Orange]]];
           Print[Style[Row[{"index: ", i, " ", ast}], Darker[Orange]]];
         ];
         Throw[ast, "Handled"]
@@ -815,8 +799,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
        "SyntaxError2", <|"File" -> File[fileIn], "SyntaxErrors" -> errs|>];
       If[$Interactive,
        Print[
-        Style[Row[{"index: ", i, " ", 
-           StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], Red]];
+        Style[Row[{"index: ", i, " ", File[fileIn]}], Red]];
        Print[Style[Row[{"index: ", i, " ", Shallow[errs]}], Red]];
       ];
      Throw[f, "Handled"]
@@ -851,8 +834,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         "tryString" -> tryString|>];
       If[$Interactive,
        Print[
-        Style[Row[{"index: ", i, " ", 
-           StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], Red]];
+        Style[Row[{"index: ", i, " ", File[fileIn]}], Red]];
        Print[Style[Row[{"index: ", i, " ", f}], Red]];
       ];
      Throw[f, "Uncaught"]
@@ -864,8 +846,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       ,
       If[$Interactive,
         Print[
-         Style[Row[{"index: ", i, " ", 
-            StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], 
+         Style[Row[{"index: ", i, " ", File[fileIn]}], 
           Darker[Orange]]];
         Print[
          Style[Row[{"index: ", i, " ", 
@@ -985,8 +966,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       f = Failure["CannotRegexTooWeird", <|"File" -> File[fileIn]|>];
       If[$Interactive,
         Print[
-         Style[Row[{"index: ", i, " ", 
-            StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], 
+         Style[Row[{"index: ", i, " ", File[fileIn]}], 
           Darker[Orange]]];
         Print[Style[Row[{"index: ", i, " ", f}], Darker[Orange]]];
       ];
@@ -1059,6 +1039,8 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "serviceconnections/Yandex/Kernel/Yandex.m",
 
         prefix <> "FFmpegTools/FFmpegTools/Kernel/FFmpegTools.m",
+        prefix <> "SystemFiles/Links/FFmpegTools/Kernel/FFmpegTools.m",
+
         prefix <> "SystemFiles/Links/FFmpegTools/LibraryResources/LibraryLinkUtilities.wl",
         prefix <> "SystemFiles/Links/ImageFileTools/LibraryResources/LibraryLinkUtilities.wl",
         prefix <> "SystemFiles/Links/ITKLink/LibraryResources/LibraryLinkUtilities.wl",
@@ -1071,8 +1053,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       f = Failure["CannotRegexTooBroken", <|"File" -> File[fileIn]|>];
       If[$Interactive,
         Print[
-         Style[Row[{"index: ", i, " ", 
-            StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], 
+         Style[Row[{"index: ", i, " ", File[fileIn]}], 
           Darker[Orange]]];
         Print[Style[Row[{"index: ", i, " ", f}], Darker[Orange]]];
       ];
@@ -1145,8 +1126,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       f = Failure["CannotRegexTooProgrammatic", <|"File" -> File[fileIn]|>];
       If[$Interactive,
         Print[
-         Style[Row[{"index: ", i, " ", 
-            StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], 
+         Style[Row[{"index: ", i, " ", File[fileIn]}], 
           Darker[Orange]]];
         Print[Style[Row[{"index: ", i, " ", f}], Darker[Orange]]];
       ];
@@ -1163,8 +1143,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       f = Failure["TooDeep", <|"File" -> File[fileIn]|>];
       If[$Interactive,
         Print[
-         Style[Row[{"index: ", i, " ", 
-            StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], 
+         Style[Row[{"index: ", i, " ", File[fileIn]}], 
           Darker[Orange]]];
         Print[Style[Row[{"index: ", i, " ", f}], Darker[Orange]]];
       ];
@@ -1199,8 +1178,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       f = Failure["OldTwoWayRule", <|"File" -> File[fileIn]|>];
       If[$Interactive,
         Print[
-         Style[Row[{"index: ", i, " ", 
-            StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], 
+         Style[Row[{"index: ", i, " ", File[fileIn]}], 
           Darker[Orange]]];
         Print[Style[Row[{"index: ", i, " ", f}], Darker[Orange]]];
       ];
@@ -1218,8 +1196,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       f = Failure["Information?Syntax", <|"File" -> File[fileIn]|>];
       If[$Interactive,
         Print[
-         Style[Row[{"index: ", i, " ", 
-            StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], 
+         Style[Row[{"index: ", i, " ", File[fileIn]}], 
           Darker[Orange]]];
         Print[Style[Row[{"index: ", i, " ", f}], Darker[Orange]]];
       ];
@@ -1237,8 +1214,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      f = Failure["AbstractParsingFailure", <|"File" -> File[fileIn]|>];
      If[$Interactive,
        Print[
-        Style[Row[{"index: ", i, " ", 
-           StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], Bold,
+        Style[Row[{"index: ", i, " ", File[fileIn]}], Bold,
           Red]];
        Print[Style[Row[{"index: ", i, " ", f}], Bold, Red]];
       ];
@@ -1366,8 +1342,7 @@ Module[{text, f, expected, msgs},
 
       If[$Interactive,
         Print[
-         Style[Row[{"index: ", i, " ", 
-            StringReplace[file, StartOfString ~~ prefix -> ""]}], 
+         Style[Row[{"index: ", i, " ", File[file]}], 
           Darker[Orange]]];
         Print[
          Style[Row[{"index: ", i, " ", 
@@ -1402,8 +1377,7 @@ Module[{text, f, expected, msgs},
      f = Failure["SyntaxError", <|"File" -> File[file]|>];
      If[$Interactive,
        Print[
-        Style[Row[{"index: ", i, " ", 
-           StringReplace[file, StartOfString ~~ prefix -> ""]}], Red]];
+        Style[Row[{"index: ", i, " ", File[file]}], Red]];
        Print[Style[Row[{"index: ", i, " ", f}], Red]];
       ];
      Throw[f, "Handled"]
