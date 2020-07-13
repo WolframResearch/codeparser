@@ -552,11 +552,29 @@ abstract[CallNode[op_, { GroupNode[GroupDoubleBracket, { _, inner___, _ }, data2
 
 
 (*
-must handle this so that AbstractSyntaxErrorNode is created later
-*)
 
-abstract[CallNode[op_, { missing:GroupMissingCloserNode[_, _, _] }, data1_]] :=
-	abstractCallNode[CallNode[op, { missing }, data1]]
+We need special node CallMissingCloserNode because it used to be the case that both
+
+{[a}
+
+and
+
+List[a
+
+had the same AST:
+
+CallNode[LeafNode[Symbol, "List", <||>], {
+	GroupMissingCloserNode[GroupSquare, {
+		LeafNode[Token`OpenSquare, "[", <||>],
+		LeafNode[Symbol, "a", <||>]}, <||>]}, <||>]
+
+we need to distinguish these cases, so it makes sense to have special node to say
+
+"this is a CallNode, but with the closer missing"
+
+*)
+abstract[CallNode[head_, {GroupMissingCloserNode[GroupSquare, {_, inner___}, _]}, data_]] :=
+	abstractCallNode[CallMissingCloserNode[head, { GroupMissingCloserNode[GroupSquare, { inner }, data] }, data]]
 
 
 
@@ -596,10 +614,11 @@ abstract[GroupNode[GroupLinearSyntaxParen, children_, data_]] :=
 Missing closers
 *)
 
-abstract[n_GroupMissingCloserNode] := n
+abstract[GroupMissingCloserNode[tag_, {_, inner___}, data_]] :=
+	abstractGroupNode[GroupMissingCloserNode[tag, { inner }, data]]
 
-abstract[GroupNode[op_, {_, inner___, _}, data_]] :=
-	abstractGroupNode[GroupNode[op, { inner }, data]]
+abstract[GroupNode[tag_, {_, inner___, _}, data_]] :=
+	abstractGroupNode[GroupNode[tag, { inner }, data]]
 
 
 
@@ -2017,7 +2036,13 @@ selectChildren[n_] := n
 
 
 
-abstractGroupNode[n_GroupMissingCloserNode] := n
+abstractGroupNode[GroupMissingCloserNode[tag_, children_, data_]] :=
+Module[{abstractedChildren},
+
+	abstractedChildren = Flatten[selectChildren /@ (abstract /@ children)];
+
+	GroupMissingCloserNode[tag, abstractedChildren, data]
+]
 
 
 
@@ -2483,19 +2508,29 @@ Module[{head, part, partData, data, issues, first},
 	CallNode[ToNode[Part], {head} ~Join~ (part[[2]]), data]
 ]
 
-abstractCallNode[CallNode[headIn_, {partIn:GroupMissingCloserNode[_, _, _]}, dataIn_]] :=
-Module[{head, part, data},
+
+
+abstractCallNode[CallMissingCloserNode[headIn_, {partIn:GroupMissingCloserNode[GroupSquare, _, _]}, dataIn_]] :=
+Module[{head, part, partData, data, issues},
 	head = headIn;
 	part = partIn;
 	data = dataIn;
 
+	issues = {};
+
 	head = abstract[head];
 	part = abstractGroupNode[part];
+	partData = part[[3]];
 
-	CallNode[head, { part }, data]
+	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+
+	If[issues != {},
+		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+		AssociateTo[data, AbstractSyntaxIssues -> issues];
+	];
+
+	CallMissingCloserNode[head, part[[2]], data]
 ]
-
-
 
 
 

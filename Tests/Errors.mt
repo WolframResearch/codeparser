@@ -9,14 +9,6 @@ Needs["CodeParser`Utils`"]
 
 
 
-TestMatch[
-	CodeParse["f["]
-	,
-	ContainerNode[String, {
-		CallNode[_, { _GroupMissingCloserNode }, _] }, <||>]
-	,
-	TestID->"Errors-20190701-H7G3R7"
-]
 
 
 
@@ -140,26 +132,6 @@ TestMatch[
 	TestID->"Errors-20190203-M3A0S4"
 ]
 
-
-
-
-
-
-
-Test[
-	CodeParse["(a[b[])"]
-	,
-	ContainerNode[String, {
-		CallNode[LeafNode[Symbol, "a", <|Source -> {{1, 2}, {1, 3}}|>], {
-			GroupMissingCloserNode[GroupSquare, {
-				LeafNode[Token`OpenSquare, "[", <|Source -> {{1, 3}, {1, 4}}|>],
-				CallNode[LeafNode[Symbol, "b", <|Source -> {{1, 4}, {1, 5}}|>], {
-					GroupNode[GroupSquare, {
-						LeafNode[Token`OpenSquare, "[", <|Source -> {{1, 5}, {1, 6}}|>],
-						LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 6}, {1, 7}}|>]}, <|Source -> {{1, 5}, {1, 7}}|>]}, <|Source -> {{1, 4}, {1, 7}}|>]}, <|Source -> {{1, 3}, {1, 7}}|>]}, <|Source -> {{1, 2}, {1, 7}}|>] }, <||>]
-	,
-	TestID->"Errors-20190803-C7O2S5"
-]
 
 
 

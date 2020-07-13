@@ -178,6 +178,7 @@ GroupMissingOpenerNode is only used in Boxes
 *)
 GroupMissingOpenerNode
 AbstractSyntaxErrorNode
+CallMissingCloserNode
 
 
 InternalInvalid
@@ -1057,8 +1058,8 @@ Module[{res},
 
 
 
-CodeSyntaxQ[str_] :=
-  FreeQ[CodeParse[str], ErrorNode | SyntaxErrorNode | AbstractSyntaxErrorNode | GroupMissingCloserNode]
+CodeSyntaxQ[code_] :=
+  FreeQ[CodeParse[code], ErrorNode | SyntaxErrorNode | AbstractSyntaxErrorNode | GroupMissingCloserNode | CallMissingCloserNode]
 
 
 

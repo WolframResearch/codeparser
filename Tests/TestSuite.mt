@@ -5,6 +5,7 @@ TestSuite[{
 	"AbstractSyntaxIssues.mt",
 	"Arrows.mt",
 	"Boxes.mt",
+	"CallMissingCloserNodes.mt",
 	"Characters.mt",
 	"CodeParser.mt",
 	"CodeSyntaxQ.mt",
