@@ -387,9 +387,11 @@ inline Token Tokenizer::handleStrangeWhitespace(Buffer tokenStartBuf, SourceLoca
     assert(c.isStrangeWhitespace());
     
 #if !NISSUES
-    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDSPACECHARACTER, "Unexpected space character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.95, {}));
-    
-    Issues.push_back(std::move(I));
+    {
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDSPACECHARACTER, "Unexpected space character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.95, {}));
+        
+        Issues.push_back(std::move(I));
+    }
 #endif // !NISSUES
     
     return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
@@ -2047,13 +2049,14 @@ inline WLCharacter Tokenizer::handlePossibleFractionalPartPastDot(Buffer tokenSt
 void Tokenizer::backupAndWarn(Buffer resetBuf, SourceLocation resetLoc) {
     
 #if !NISSUES
+    {
+        std::vector<CodeActionPtr> Actions;
+        Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(resetLoc), " ")));
         
-    std::vector<CodeActionPtr> Actions;
-    Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(resetLoc), " ")));
-    
-    auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, Source(resetLoc), std::move(Actions)));
-    
-    Issues.push_back(std::move(I));
+        auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, Source(resetLoc), std::move(Actions)));
+        
+        Issues.push_back(std::move(I));
+    }
 #endif // !NISSUES
     
     TheByteBuffer->buffer = resetBuf;
@@ -2545,39 +2548,41 @@ inline Token Tokenizer::handleMinus(Buffer tokenStartBuf, SourceLocation tokenSt
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
 #if !NISSUES
-            auto afterLoc = TheByteDecoder->SrcLoc;
-            
-            c = TheCharacterDecoder->currentWLCharacter(policy);
-            
-            if (c.to_point() == '>') {
+            {
+                auto afterLoc = TheByteDecoder->SrcLoc;
                 
-                //
-                // Something like  a-->0
-                //
+                c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
                 
-                auto greaterLoc = afterLoc;
-                
-                std::vector<CodeActionPtr> Actions;
-                Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(greaterLoc), " ")));
-                
-                auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``-`` and ``>`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(greaterLoc), std::move(Actions)));
-                
-                Issues.push_back(std::move(I));
-                
-            } else if (c.to_point() == '=') {
-                
-                //
-                // Something like  a--=0
-                //
-                
-                auto equalLoc = afterLoc;
-                
-                std::vector<CodeActionPtr> Actions;
-                Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(equalLoc), " ")));
-                
-                auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``-`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(equalLoc), std::move(Actions)));
-                
-                Issues.push_back(std::move(I));
+                if (c.to_point() == '>') {
+                    
+                    //
+                    // Something like  a-->0
+                    //
+                    
+                    auto greaterLoc = afterLoc;
+                    
+                    std::vector<CodeActionPtr> Actions;
+                    Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(greaterLoc), " ")));
+                    
+                    auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``-`` and ``>`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(greaterLoc), std::move(Actions)));
+                    
+                    Issues.push_back(std::move(I));
+                    
+                } else if (c.to_point() == '=') {
+                    
+                    //
+                    // Something like  a--=0
+                    //
+                    
+                    auto equalLoc = afterLoc;
+                    
+                    std::vector<CodeActionPtr> Actions;
+                    Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(equalLoc), " ")));
+                    
+                    auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``-`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(equalLoc), std::move(Actions)));
+                    
+                    Issues.push_back(std::move(I));
+                }
             }
 #endif // !NISSUES
         }
@@ -2612,24 +2617,26 @@ inline Token Tokenizer::handleBar(Buffer tokenStartBuf, SourceLocation tokenStar
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
 #if !NISSUES
-            auto afterLoc = TheByteDecoder->SrcLoc;
-            
-            c = TheCharacterDecoder->currentWLCharacter(policy);
-            
-            if (c.to_point() == '=') {
+            {
+                auto afterLoc = TheByteDecoder->SrcLoc;
                 
-                //
-                // Something like  <||>=0
-                //
+                c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
                 
-                auto equalLoc = afterLoc;
-                
-                std::vector<CodeActionPtr> Actions;
-                Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(equalLoc), " ")));
-                
-                auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``>`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(equalLoc), std::move(Actions)));
-                
-                Issues.push_back(std::move(I));
+                if (c.to_point() == '=') {
+                    
+                    //
+                    // Something like  <||>=0
+                    //
+                    
+                    auto equalLoc = afterLoc;
+                    
+                    std::vector<CodeActionPtr> Actions;
+                    Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(equalLoc), " ")));
+                    
+                    auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``>`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(equalLoc), std::move(Actions)));
+                    
+                    Issues.push_back(std::move(I));
+                }
             }
 #endif // !NISSUES
             
@@ -2936,22 +2943,24 @@ inline Token Tokenizer::handlePlus(Buffer tokenStartBuf, SourceLocation tokenSta
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
 #if !NISSUES
-            c = TheCharacterDecoder->currentWLCharacter(policy);
-            
-            if (c.to_point() == '=') {
+            {
+                c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
                 
-                //
-                // Something like  a++=0
-                //
-                
-                auto loc = TheByteDecoder->SrcLoc;
-                
-                std::vector<CodeActionPtr> Actions;
-                Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(loc), " ")));
-                
-                auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``+`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(loc), std::move(Actions)));
-                
-                Issues.push_back(std::move(I));
+                if (c.to_point() == '=') {
+                    
+                    //
+                    // Something like  a++=0
+                    //
+                    
+                    auto loc = TheByteDecoder->SrcLoc;
+                    
+                    std::vector<CodeActionPtr> Actions;
+                    Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(loc), " ")));
+                    
+                    auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``+`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(loc), std::move(Actions)));
+                    
+                    Issues.push_back(std::move(I));
+                }
             }
 #endif // !NISSUES
         }
@@ -3305,9 +3314,11 @@ inline Token Tokenizer::handleMBStrangeNewline(Buffer tokenStartBuf, SourceLocat
     assert(c.isMBStrangeNewline());
     
 #if !NISSUES
-    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDNEWLINECHARACTER, "Unexpected newline character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.85, {}));
-    
-    Issues.push_back(std::move(I));
+    {
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDNEWLINECHARACTER, "Unexpected newline character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.85, {}));
+        
+        Issues.push_back(std::move(I));
+    }
 #endif // !NISSUES
     
     //
@@ -3321,9 +3332,11 @@ inline Token Tokenizer::handleMBStrangeWhitespace(Buffer tokenStartBuf, SourceLo
     assert(c.isMBStrangeWhitespace());
     
 #if !NISSUES
-    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDSPACECHARACTER, "Unexpected space character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.85, {}));
-    
-    Issues.push_back(std::move(I));
+    {
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDSPACECHARACTER, "Unexpected space character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.85, {}));
+        
+        Issues.push_back(std::move(I));
+    }
 #endif // !NISSUES
     
     return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));

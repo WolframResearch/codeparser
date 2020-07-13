@@ -229,18 +229,18 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     ];*)
     
     If[FileType[file] =!= File,
-    	Throw[Failure["NotAFile", <|"File"->file|>], "Handled"]
+    	Throw[Failure["NotAFile", <|"File"->fileIn|>], "Handled"]
     ];
     
      If[FileByteCount[file] > limit[[2]],
       ast = 
-      Failure["FileTooLarge", <|"FileName" -> file, 
+      Failure["FileTooLarge", <|"File" -> File[fileIn], 
         "FileSize" -> FileSize[file]|>];
      Throw[ast, "Handled"]
      ];
      If[FileByteCount[file] < limit[[1]],
       ast = 
-      Failure["FileTooSmall", <|"FileName" -> file, 
+      Failure["FileTooSmall", <|"File" -> File[fileIn], 
         "FileSize" -> FileSize[file]|>];
      Throw[ast, "Handled"]
      ];
@@ -263,11 +263,11 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       Which[
         (* special encoded file format *)
         StringMatchQ[firstLine, "(*!1"~~("A"|"B"|"C"|"D"|"H"|"I"|"N"|"O")~~"!*)mcm"],
-        Throw[Failure["EncodedFile", <|"FileName"->file|>], "Handled"]
+        Throw[Failure["EncodedFile", <|"File" -> File[fileIn]|>], "Handled"]
         ,
         (* wl script *)
         StringStartsQ[firstLine, "#!"],
-        Throw[Failure["WLScript", <|"FileName"->file|>], "Handled"]
+        Throw[Failure["WLScript", <|"File" -> File[fileIn]|>], "Handled"]
       ];
     ];
 
@@ -325,7 +325,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     
     If[FailureQ[cst],
      If[cst === System`$Failed,
-      f = Failure["ConcreteParseFileFailed", <|"FileName" -> file|>];
+      f = Failure["ConcreteParseFileFailed", <|"File" -> File[fileIn]|>];
       If[$Interactive,
         Print[
          Style[Row[{"index: ", i, " ", 
@@ -387,7 +387,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     If[!FreeQ[cst, _SyntaxErrorNode | _ErrorNode],
      errs = Cases[cst, _SyntaxErrorNode | _ErrorNode, {0, Infinity}];
      f = Failure[
-       "SyntaxError", <|"FileName" -> file, 
+       "SyntaxError", <|"File" -> File[fileIn], 
         "SyntaxErrors" -> errs|>];
       If[$Interactive,
        Print[
@@ -571,7 +571,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     
     If[! StringQ[tryString],
      f = Failure[
-       "ToSourceCharacterString", <|"FileName" -> file, 
+       "ToSourceCharacterString", <|"File" -> File[fileIn], 
         "tryString" -> tryString|>];
       If[$Interactive,
        Print[
@@ -623,7 +623,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
            "SystemFiles/Components/NeuralNetworks/Types/Inference.m",
           Nothing
           }, file],
-        f = Failure["UsingTwoWayRuleBefore112", <|"FileName" -> file|>];
+        f = Failure["UsingTwoWayRuleBefore112", <|"File" -> File[fileIn]|>];
         If[$Interactive,
           Print[
            Style[Row[{"index: ", i, " ", 
@@ -642,7 +642,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      $LastFailedActualCST = cst;
      $LastFailedExpected = expected;
      $LastFailedExpectedText = text;
-     f = Failure["ConcreteParsingFailure", <|"FileName" -> fileIn|>];
+     f = Failure["ConcreteParsingFailure", <|"File" -> File[fileIn]|>];
      If[$Interactive,
        Print[
         Style[Row[{"index: ", i, " ", 
@@ -684,7 +684,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     
     If[! StringQ[tryString],
      f = Failure[
-       "ToInputFormString", <|"FileName" -> file, 
+       "ToInputFormString", <|"File" -> File[fileIn], 
         "tryString" -> tryString|>];
       If[$Interactive,
        Print[
@@ -735,7 +735,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      $LastFailedActualAgg = agg;
      $LastFailedExpected = expected;
      $LastFailedExpectedText = text;
-     f = Failure["AggregateParsingFailure", <|"FileName" -> fileIn|>];
+     f = Failure["AggregateParsingFailure", <|"File" -> File[fileIn]|>];
      If[$Interactive,
        Print[
         Style[Row[{"index: ", i, " ", 
@@ -812,7 +812,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       Cases[ast, _SyntaxErrorNode | _ErrorNode | _AbstractSyntaxErrorNode, {0, 
         Infinity}];
      f = Failure[
-       "SyntaxError2", <|"FileName" -> file, "SyntaxErrors" -> errs|>];
+       "SyntaxError2", <|"File" -> File[fileIn], "SyntaxErrors" -> errs|>];
       If[$Interactive,
        Print[
         Style[Row[{"index: ", i, " ", 
@@ -847,7 +847,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
 
     If[!StringQ[tryString],
      f = Failure[
-       "ToFullFormString", <|"FileName" -> file, 
+       "ToFullFormString", <|"File" -> File[fileIn], 
         "tryString" -> tryString|>];
       If[$Interactive,
        Print[
@@ -982,7 +982,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "Kernel/StartUp/Audio/Internals/Internals.m",
         Nothing
         }, fileIn],
-      f = Failure["CannotRegexTooWeird", <|"FileName" -> fileIn|>];
+      f = Failure["CannotRegexTooWeird", <|"File" -> File[fileIn]|>];
       If[$Interactive,
         Print[
          Style[Row[{"index: ", i, " ", 
@@ -1060,10 +1060,15 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
 
         prefix <> "FFmpegTools/FFmpegTools/Kernel/FFmpegTools.m",
         prefix <> "SystemFiles/Links/FFmpegTools/LibraryResources/LibraryLinkUtilities.wl",
+        prefix <> "SystemFiles/Links/ImageFileTools/LibraryResources/LibraryLinkUtilities.wl",
+        prefix <> "SystemFiles/Links/ITKLink/LibraryResources/LibraryLinkUtilities.wl",
+        prefix <> "SystemFiles/Links/PDFTools/LibraryResources/LibraryLinkUtilities.wl",
+        prefix <> "SystemFiles/Links/RAWTools/LibraryResources/LibraryLinkUtilities.wl",
+        prefix <> "SystemFiles/Links/XMPTools/LibraryResources/LibraryLinkUtilities.wl",
 
         Nothing
         }, fileIn],
-      f = Failure["CannotRegexTooBroken", <|"FileName" -> fileIn|>];
+      f = Failure["CannotRegexTooBroken", <|"File" -> File[fileIn]|>];
       If[$Interactive,
         Print[
          Style[Row[{"index: ", i, " ", 
@@ -1093,6 +1098,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "AddOns/Applications/UnitTable/Kernel/UnitTable.m",
         prefix <> "unittable/UnitTable/Kernel/UnitTable.m",
 
+        prefix <> "SystemFiles/Components/Chemistry/Kernel/init.wl",
         prefix <> "SystemFiles/Components/Chemistry/Kernel/Chemistry.wl",
         prefix <> "chemistry/Chemistry/Kernel/Chemistry.wl",
 
@@ -1136,7 +1142,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
 
         Nothing
         }, fileIn],
-      f = Failure["CannotRegexTooProgrammatic", <|"FileName" -> fileIn|>];
+      f = Failure["CannotRegexTooProgrammatic", <|"File" -> File[fileIn]|>];
       If[$Interactive,
         Print[
          Style[Row[{"index: ", i, " ", 
@@ -1154,7 +1160,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "Documentation/English/System/ExamplePages/SymbolicGeometricTransformations.nb",
         Nothing
         }, fileIn],
-      f = Failure["TooDeep", <|"FileName" -> fileIn|>];
+      f = Failure["TooDeep", <|"File" -> File[fileIn]|>];
       If[$Interactive,
         Print[
          Style[Row[{"index: ", i, " ", 
@@ -1190,7 +1196,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "NeuralNetworks/Tests/Training/CopyNet.m",
         Nothing
         }, fileIn],
-      f = Failure["OldTwoWayRule", <|"FileName" -> fileIn|>];
+      f = Failure["OldTwoWayRule", <|"File" -> File[fileIn]|>];
       If[$Interactive,
         Print[
          Style[Row[{"index: ", i, " ", 
@@ -1209,7 +1215,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      
      If[!FreeQ[expected, 
         HoldPattern[Information][_, LongForm -> False]],
-      f = Failure["Information?Syntax", <|"FileName" -> file|>];
+      f = Failure["Information?Syntax", <|"File" -> File[fileIn]|>];
       If[$Interactive,
         Print[
          Style[Row[{"index: ", i, " ", 
@@ -1228,7 +1234,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      $LastFailedExpected = expected;
      $LastFailedExpectedText = text;
      $LastFailedExpectedTextReplaced = textReplaced;
-     f = Failure["AbstractParsingFailure", <|"FileName" -> fileIn|>];
+     f = Failure["AbstractParsingFailure", <|"File" -> File[fileIn]|>];
      If[$Interactive,
        Print[
         Style[Row[{"index: ", i, " ", 
@@ -1393,7 +1399,7 @@ Module[{text, f, expected, msgs},
       ];
     
     If[expected === System`$Failed,
-     f = Failure["SyntaxError", <|"FileName" -> file|>];
+     f = Failure["SyntaxError", <|"File" -> File[file]|>];
      If[$Interactive,
        Print[
         Style[Row[{"index: ", i, " ", 

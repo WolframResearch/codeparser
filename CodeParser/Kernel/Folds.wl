@@ -184,8 +184,11 @@ deparen[Null] := Null
 deparen[l_LeafNode] := l
 
 
-deparen[GroupNode[GroupParen, { _, child:InfixNode[Comma, _, _], _ }, data_]] := AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, child, KeyTake[data, keysToTake]]
-deparen[GroupNode[GroupParen, { _, child_, _}, data_]] := deparen[child]
+deparen[GroupNode[GroupParen, { _, child:InfixNode[Comma, _, _], _ }, data_]] :=
+	AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, child, KeyTake[data, keysToTake]]
+
+deparen[GroupNode[GroupParen, { _, child_, _}, data_]] :=
+	deparen[child]
 
 deparen[CallNode[head_, children_, dataIn_]] :=
 Catch[

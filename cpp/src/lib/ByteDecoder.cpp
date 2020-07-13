@@ -434,6 +434,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             if (Utils::isMBNonCharacter(decoded)) {
                 status = UTF8STATUS_NONCHARACTER_OR_BOM;
             }
+            
 #if !NISSUES
             if (Utils::isMBStrange(decoded)) {
                 //
@@ -538,6 +539,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             if (Utils::isMBNonCharacter(decoded)) {
                 status = UTF8STATUS_NONCHARACTER_OR_BOM;
             }
+            
 #if !NISSUES
             if (Utils::isMBStrange(decoded)) {
                 //
@@ -673,6 +675,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             if (Utils::isMBNonCharacter(decoded)) {
                 status = UTF8STATUS_NONCHARACTER_OR_BOM;
             }
+            
 #if !NISSUES
             if (Utils::isMBStrange(decoded)) {
                 //
@@ -944,6 +947,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             if (Utils::isMBNonCharacter(decoded)) {
                 status = UTF8STATUS_NONCHARACTER_OR_BOM;
             }
+            
 #if !NISSUES
             if (Utils::isMBStrange(decoded)) {
                 //
@@ -1027,13 +1031,15 @@ SourceCharacter ByteDecoder::invalid(SourceLocation errSrcLoc, NextPolicy policy
     srcConventionManager->increment(SrcLoc);
     
 #if !NISSUES
-    //
-    // No CodeAction here
-    //
-    
-    auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_INVALIDCHARACTERENCODING, "Invalid UTF-8 sequence.", ENCODINGISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next())));
-    
-    Issues.push_back(std::move(I));
+    {
+        //
+        // No CodeAction here
+        //
+        
+        auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_INVALIDCHARACTERENCODING, "Invalid UTF-8 sequence.", ENCODINGISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next())));
+        
+        Issues.push_back(std::move(I));
+    }
 #endif // !NISSUES
     
     //

@@ -189,6 +189,11 @@ SourceMemberIntersectingQ[
 
 
 
+
+(*
+Used by CodeInspector for removing nodes ignored because of BeginStaticAnalysisIgnore[]
+*)
+
 removeIgnoredNodes[Null, _SourceMemberQFunction] := Null
 
 removeIgnoredNodes[l_LeafNode, _SourceMemberQFunction] := l
@@ -203,18 +208,18 @@ Module[{children, data, syntaxIssues, abstractSyntaxIssues},
   children = childrenIn;
   data = dataIn;
 
-  children = DeleteCases[children, n_ /; ignoredNodesSrcMemberFunc[n[[3, Key[Source] ]] ]];
+  children = DeleteCases[children, n_ /; ignoredNodesSrcMemberFunc[n[[3, Key[Source]]]]];
   children = removeIgnoredNodes[#, ignoredNodesSrcMemberFunc]& /@ children;
   
   syntaxIssues = Lookup[data, SyntaxIssues, {}];
   If[syntaxIssues != {},
-    syntaxIssues = DeleteCases[syntaxIssues, n_ /; ignoredNodesSrcMemberFunc[n[[4, Key[Source] ]] ]];
+    syntaxIssues = DeleteCases[syntaxIssues, n_ /; ignoredNodesSrcMemberFunc[n[[4, Key[Source]]]]];
     data[SyntaxIssues] = syntaxIssues;
   ];
 
   abstractSyntaxIssues = Lookup[data, AbstractSyntaxIssues, {}];
   If[abstractSyntaxIssues != {},
-    abstractSyntaxIssues = DeleteCases[abstractSyntaxIssues, n_ /; ignoredNodesSrcMemberFunc[n[[4, Key[Source] ]] ]];
+    abstractSyntaxIssues = DeleteCases[abstractSyntaxIssues, n_ /; ignoredNodesSrcMemberFunc[n[[4, Key[Source]]]]];
     data[AbstractSyntaxIssues] = abstractSyntaxIssues;
   ];
 
