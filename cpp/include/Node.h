@@ -8,6 +8,7 @@
 #include <vector>
 #include <memory> // for unique_ptr
 #include <ostream>
+#include <set>
 
 class Node;
 class LeafNode;
@@ -440,6 +441,36 @@ class CollectedIssuesNode : public Node {
     std::vector<IssuePtr> Issues;
 public:
     CollectedIssuesNode(std::vector<IssuePtr> Issues) : Node(), Issues(std::move(Issues)) {}
+    
+#if USE_MATHLINK
+    void put(MLINK mlp) const override;
+#endif // USE_MATHLINK
+    
+    void print(std::ostream&) const override;
+};
+
+//
+//
+//
+class CollectedLineContinuationsNode : public Node {
+    std::set<SourceLocation> LineContinuations;
+public:
+    CollectedLineContinuationsNode(std::set<SourceLocation> LineContinuations) : Node(), LineContinuations(std::move(LineContinuations)) {}
+    
+#if USE_MATHLINK
+    void put(MLINK mlp) const override;
+#endif // USE_MATHLINK
+    
+    void print(std::ostream&) const override;
+};
+
+//
+//
+//
+class CollectedEmbeddedNewlinesNode : public Node {
+    std::set<SourceLocation> EmbeddedNewlines;
+public:
+    CollectedEmbeddedNewlinesNode(std::set<SourceLocation> EmbeddedNewlines) : Node(), EmbeddedNewlines(std::move(EmbeddedNewlines)) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;

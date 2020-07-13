@@ -339,10 +339,13 @@ Module[{res, convention, container, tabWidth},
 
   (*
   The <||> will be filled in with Source later
-  The # here is { {exprs}, {issues}, {metadata} }
+  The # here is { {exprs}, {issues}, {line conts}, {embedded newlines} }
   *)
   If[container === Automatic,
-    container = ContainerNode[String, #[[1]], If[!empty[#[[2]]], <| SyntaxIssues -> #[[2]] |>, <||>]]&
+    container = ContainerNode[String, #[[1]], <|
+      If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
+      If[!empty[#[[3]]], "LineContinuations" -> #[[3]], Nothing],
+      If[!empty[#[[4]]], "EmbeddedNewlines" -> #[[4]], Nothing] |>]&
   ];
 
   $ConcreteParseProgress = 0;
@@ -504,11 +507,14 @@ Module[{res, convention, container, containerWasAutomatic, tabWidth},
 
   (*
   The <||> will be filled in with Source later
-  The # here is { {exprs}, {issues}, {metadata} }
+  The # here is { {exprs}, {issues}, {line conts}, {embedded newlines} }
   *)
   If[container === Automatic,
     containerWasAutomatic = True;
-    container = ContainerNode[File, #[[1]], If[!empty[#[[2]]], <| SyntaxIssues -> #[[2]] |>, <||>]]&
+    container = ContainerNode[File, #[[1]], <|
+      If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
+      If[!empty[#[[3]]], "LineContinuations" -> #[[3]], Nothing],
+      If[!empty[#[[4]]], "EmbeddedNewlines" -> #[[4]], Nothing] |>]&
   ];
 
   $ConcreteParseProgress = 0;
@@ -658,10 +664,13 @@ Module[{res, convention, container, tabWidth},
 
   (*
   The <||> will be filled in with Source later
-  The # here is { {exprs}, {issues}, {metadata} }
+  The # here is { {exprs}, {issues}, {line conts}, {embedded newlines} }
   *)
   If[container === Automatic,
-    container = ContainerNode[Byte, #[[1]], If[!empty[#[[2]]], <| SyntaxIssues -> #[[2]] |>, <||>]]&
+    container = ContainerNode[Byte, #[[1]], <|
+      If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
+      If[!empty[#[[3]]], "LineContinuations" -> #[[3]], Nothing],
+      If[!empty[#[[4]]], "EmbeddedNewlines" -> #[[4]], Nothing] |>]&
   ];
 
   $ConcreteParseProgress = 0;
@@ -940,6 +949,11 @@ Module[{encoding, res, convention, tabWidth},
     Throw[res]
   ];
 
+
+  (*
+  LineContinuation and EmbeddedNewline data is not returned here
+  *)
+
 	res
 ]]
 
@@ -973,7 +987,7 @@ Options[concreteParseLeaf] = Options[CodeConcreteParseLeaf]
 
 concreteParseLeaf[strIn_String, OptionsPattern[]] :=
 Catch[
-Module[{str, res, leaf, data, exprs, issues, stringifyMode, convention, tabWidth},
+Module[{str, res, leaf, data, exprs, stringifyMode, convention, tabWidth},
 
   str = strIn;
 
@@ -997,16 +1011,29 @@ Module[{str, res, leaf, data, exprs, issues, stringifyMode, convention, tabWidth
   ];
 
   exprs = res[[1]];
-  issues = res[[2]];
 
   leaf = exprs[[1]];
 
-  If[!empty[issues],
+  If[!empty[res[[2]]],
     data = leaf[[3]];
-    data[SyntaxIssues] = issues;
+    data[SyntaxIssues] = res[[2]];
     leaf[[3]] = data;
   ];
 
+  (*
+  If[!empty[res[[3]]],
+    data = leaf[[3]];
+    data["LineContinuations"] = res[[3]];
+    leaf[[3]] = data;
+  ];
+
+  If[!empty[res[[4]]],
+    data = leaf[[3]];
+    data["EmbeddedNewlines"] = res[[4]];
+    leaf[[3]] = data;
+  ];
+  *)
+  
   leaf
 ]]
 

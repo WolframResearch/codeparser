@@ -110,7 +110,7 @@ Test[
 	CodeConcreteParse["\"abc\\\r\ndef\""]
 	,
 	ContainerNode[String, {
-		LeafNode[String, "\"abc\\\r\ndef\"", <|Source -> {{1, 1}, {2, 5}}|>] }, <||>]
+		LeafNode[String, "\"abc\\\r\ndef\"", <|Source -> {{1, 1}, {2, 5}}|>] }, <|"LineContinuations" -> {{1, 1}}|>]
 	,
 	TestID->"Concrete-20190606-U7J9I3"
 ]
@@ -148,7 +148,8 @@ Test[
 				LeafNode[Symbol, "f", <|Source -> {{1, 4}, {1, 5}}|>],
 				LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> {{1, 5}, {1, 5}}|>],
 				LeafNode[Whitespace, " ", <|Source -> {{1, 5}, {1, 6}}|>],
-				LeafNode[Symbol, "x", <|Source -> {{1, 6}, {1, 7}}|>]}, <|Source -> {{1, 4}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]}, {}}]
+				LeafNode[Symbol, "x", <|Source -> {{1, 6}, {1, 7}}|>]}, <|Source -> {{1, 4}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]},
+		{}, {}, {}}]
 	,
 	TestID->"Concrete-20190521-L2C2Y8"
 ]
@@ -582,7 +583,7 @@ Test[
 	CodeConcreteParse["\"a\\\\\r\nb\""]
 	,
 	ContainerNode[String, {
-		LeafNode[String, "\"a\\\\\r\nb\"", <|Source -> {{1, 1}, {2, 3}}|>] }, <||>]
+		LeafNode[String, "\"a\\\\\r\nb\"", <|Source -> {{1, 1}, {2, 3}}|>] }, <|"EmbeddedNewlines" -> {{1, 1}}|>]
 	,
 	TestID->"Concrete-20191024-X1D5H3"
 ]

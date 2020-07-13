@@ -346,12 +346,19 @@ struct SourceLocation {
     
 #if USE_MATHLINK
     void put(MLINK mlp) const;
+    
+    void putStructured(MLINK mlp) const;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const;
 };
 
 static_assert(sizeof(SourceLocation) == 8, "Check your assumptions");
+
+//
+// For LineContinuations and EmbeddedNewlines
+//
+bool operator<(SourceLocation a, SourceLocation b);
 
 //
 // For googletest
@@ -378,6 +385,8 @@ struct Source {
 
 #if USE_MATHLINK
     void put(MLINK mlp) const;
+    
+    void putStructured(MLINK mlp) const;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const;

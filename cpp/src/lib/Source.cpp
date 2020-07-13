@@ -325,6 +325,22 @@ bool operator!=(SourceLocation a, SourceLocation b) {
     return a.first != b.first || a.second != b.second;
 }
 
+bool operator<(SourceLocation a, SourceLocation b) {
+    
+    if (a.first < b.first) {
+        return true;
+    }
+    
+    if (a.first == b.first) {
+        
+        if (a.second < b.second) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
 bool operator<=(SourceLocation a, SourceLocation b) {
 
     if (a.first < b.first) {
@@ -860,10 +876,35 @@ void SourceLocation::put(MLINK mlp) const {
     }
 }
 
+void SourceLocation::putStructured(MLINK mlp) const {
+    
+    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(2))) {
+        assert(false);
+    }
+    
+    if (!MLPutInteger(mlp, static_cast<int>(first))) {
+        assert(false);
+    }
+    
+    if (!MLPutInteger(mlp, static_cast<int>(second))) {
+        assert(false);
+    }
+}
+
 void Source::put(MLINK mlp) const {
     
     Start.put(mlp);
     End.put(mlp);
+}
+
+void Source::putStructured(MLINK mlp) const {
+    
+    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(2))) {
+        assert(false);
+    }
+    
+    Start.putStructured(mlp);
+    End.putStructured(mlp);
 }
 
 #endif // USE_MATHLINK

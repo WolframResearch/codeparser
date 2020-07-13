@@ -425,6 +425,30 @@ void CollectedIssuesNode::print(std::ostream& s) const {
     s << "]";
 }
 
+void CollectedLineContinuationsNode::print(std::ostream& s) const {
+    
+    s << "List[";
+    
+    for (auto& C : LineContinuations) {
+        C.print(s);
+        s << ", ";
+    }
+    
+    s << "]";
+}
+
+void CollectedEmbeddedNewlinesNode::print(std::ostream& s) const {
+    
+    s << "List[";
+    
+    for (auto& N : EmbeddedNewlines) {
+        N.print(s);
+        s << ", ";
+    }
+    
+    s << "]";
+}
+
 
 void ListNode::print(std::ostream& s) const {
     
@@ -719,6 +743,52 @@ void CollectedIssuesNode::put(MLINK mlp) const {
 #endif // !NABORT
         
         I->put(mlp);
+    }
+}
+
+void CollectedLineContinuationsNode::put(MLINK mlp) const {
+    
+    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(LineContinuations.size()))) {
+        assert(false);
+    }
+    
+    for (auto& C : LineContinuations) {
+        
+#if !NABORT
+        //
+        // Check isAbort() inside loops
+        //
+        if (TheParserSession->isAbort()) {
+            
+            TheParserSession->handleAbort();
+            return;
+        }
+#endif // !NABORT
+            
+        C.putStructured(mlp);
+    }
+}
+
+void CollectedEmbeddedNewlinesNode::put(MLINK mlp) const {
+    
+    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(EmbeddedNewlines.size()))) {
+        assert(false);
+    }
+    
+    for (auto& N : EmbeddedNewlines) {
+        
+#if !NABORT
+        //
+        // Check isAbort() inside loops
+        //
+        if (TheParserSession->isAbort()) {
+            
+            TheParserSession->handleAbort();
+            return;
+        }
+#endif // !NABORT
+        
+        N.putStructured(mlp);
     }
 }
 

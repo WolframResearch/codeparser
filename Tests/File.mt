@@ -104,7 +104,7 @@ cst = CodeConcreteParse[File[carriagereturn2]]
 TestMatch[
 	cst
 	,
-	ContainerNode[File, {LeafNode[String, "\"\r\n123\"", <|Source -> {{1, 1}, {2, 5}}|>]}, <|Source -> {{1, 1}, {2, 5}}|>]
+	ContainerNode[File, {LeafNode[String, "\"\r\n123\"", <|Source -> {{1, 1}, {2, 5}}|>]}, <|"EmbeddedNewlines" -> {{1, 1}}, Source -> {{1, 1}, {2, 5}}|>]
 	,
 	TestID->"File-20190606-O8I6M9"
 ]
@@ -232,7 +232,7 @@ TestMatch[
 		LeafNode[Token`Newline, $systemNewline, <|Source -> {{3, 2}, {4, 1}}|>],
 		LeafNode[Token`Newline, $systemNewline, <|Source -> {{4, 1}, {5, 1}}|>],
 		LeafNode[Symbol, "x", <|Source -> {{5, 1}, {5, 2}}|>],
-		LeafNode[Token`Newline, $systemNewline, <|Source -> {{5, 2}, {6, 1}}|>]}, <|Source -> {{1, 1}, {6, 1}}|>]
+		LeafNode[Token`Newline, $systemNewline, <|Source -> {{5, 2}, {6, 1}}|>]}, <|"EmbeddedNewlines" -> {{2, 1}}, Source -> {{1, 1}, {6, 1}}|>]
 	,
 	TestID->"File-20190804-K7V2D8"
 ]
@@ -257,7 +257,7 @@ TestMatch[
 			LeafNode[Whitespace, "\t", <|Source -> {{2, 1}, {2, 5}}|>],
 			LeafNode[Integer, "1", <|Source -> {{2, 5}, {2, 6}}|>],
 			LeafNode[Token`CloseCurly, "\\\n}", <|Source -> {{2, 6}, {3, 2}}|>]}, <|Source -> {{1, 1}, {3, 2}}|>]},
-		<|Source -> {{1, 1}, {3, 2}}|>]
+		<|"LineContinuations" -> {{2, 5}, {2, 6}}, Source -> {{1, 1}, {3, 2}}|>]
 	,
 	TestID->"File-20191025-I3T9F3"
 ]

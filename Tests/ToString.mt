@@ -216,7 +216,7 @@ ast = CodeParse["{\"a\", \\\n\"b\"}"]
 Test[
 	ToFullFormString[ast]
 	,
-	"List[\"a\", \\\n\"b\"]"
+	"List[\"a\", \"b\"]"
 	,
 	TestID->"ToString-20200601-D9Z8Z8"
 ]

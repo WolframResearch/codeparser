@@ -13,6 +13,7 @@ CharacterDecoder::CharacterDecoder() : Issues(), libData(), lastBuf(), lastLoc()
 void CharacterDecoder::init(WolframLibraryData libDataIn) {
     
     Issues.clear();
+    LineContinuations.clear();
     
     libData = libDataIn;
     
@@ -24,10 +25,11 @@ void CharacterDecoder::init(WolframLibraryData libDataIn) {
 void CharacterDecoder::deinit() {
     
     Issues.clear();
+    LineContinuations.clear();
 }
 
 
-WLCharacter CharacterDecoder::nextWLCharacter0(NextPolicy policy) {
+WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy) {
     
     auto currentWLCharacterStartBuf = TheByteBuffer->buffer;
     auto currentWLCharacterStartLoc = TheByteDecoder->SrcLoc;
@@ -60,7 +62,7 @@ WLCharacter CharacterDecoder::nextWLCharacter0(NextPolicy policy) {
             case '\n':
             case '\r':
             case CODEPOINT_CRLF:
-                curSource = handleLineContinuation(curSource, policy);
+                curSource = handleLineContinuation(tokenStartBuf, tokenStartLoc, curSource, policy);
                 //
                 // Do not return
                 // loop around again
@@ -161,13 +163,13 @@ WLCharacter CharacterDecoder::nextWLCharacter0(NextPolicy policy) {
 }
 
 
-WLCharacter CharacterDecoder::currentWLCharacter(NextPolicy policy) {
+WLCharacter CharacterDecoder::currentWLCharacter(Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy) {
     
     auto resetBuf = TheByteBuffer->buffer;
     auto resetEOF = TheByteBuffer->wasEOF;
     auto resetLoc = TheByteDecoder->SrcLoc;
     
-    auto c = nextWLCharacter0(policy);
+    auto c = nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
     
     lastBuf = TheByteBuffer->buffer;
     lastLoc = TheByteDecoder->SrcLoc;
@@ -917,52 +919,34 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
 }
 
 
-SourceCharacter CharacterDecoder::handleLineContinuation(SourceCharacter c, NextPolicy policy) {
+SourceCharacter CharacterDecoder::handleLineContinuation(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter c, NextPolicy policy) {
     
     assert(c.to_point() == '\n' || c.to_point() == '\r' || c.to_point() == CODEPOINT_CRLF);
     
     c = TheByteDecoder->currentSourceCharacter(policy);
     
-    while (true) {
-        
-        //
-        // Eat whitespace
-        //
-        while (c.isWhitespace()) {
-            
-            TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-            TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
-            
-            c = TheByteDecoder->currentSourceCharacter(policy);
-        }
-        
-        //
-        // Eat additional line continuations
-        //
-        switch (c.to_point()) {
-            case '\\':
-                
-                switch (c.to_point()) {
-                    case '\n':
-                    case '\r':
-                    case CODEPOINT_CRLF:
-                        
-                        TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-                        TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
-                        
-                        c = TheByteDecoder->currentSourceCharacter(policy);
-                        
-                        continue;
-                }
-                
-                break;
-        }
+    //
+    // Even though strings preserve the whitespace after a line continuation, and
+    // e.g., integers do NOT preserve the whitespace after a line continuation,
+    // we do not need to worry about that here.
+    //
+    // There are no choices to be made here.
+    // All whitespace after a line continuation can be ignored for the purposes of tokenization
+    //
+    while (c.isWhitespace()) {
         
         TheByteBuffer->buffer = TheByteDecoder->lastBuf;
         TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
         
-        return c;
+        c = TheByteDecoder->currentSourceCharacter(policy);
     }
+    
+    LineContinuations.insert(tokenStartLoc);
+    
+    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+    TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+    
+    return c;
 }
 
 
@@ -1115,6 +1099,10 @@ std::vector<IssuePtr>& CharacterDecoder::getIssues() {
     return Issues;
 }
 #endif // !NISSUES
+
+std::set<SourceLocation>& CharacterDecoder::getLineContinuations() {
+    return LineContinuations;
+}
 
 
 #if USE_MATHLINK

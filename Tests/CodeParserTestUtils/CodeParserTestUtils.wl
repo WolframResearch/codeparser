@@ -277,6 +277,13 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     	Print["version: ", version]
     ];
     Which[
+      version >= 101,
+            cst = 
+       CodeConcreteParse[File[file], 
+        ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1, 1, 3, Key[Source], 1]], #[[1, -1, 3, Key[Source], 2]]}],
+            If[!empty[#[[3]]], "LineContinuations" -> #[[3]], Nothing],
+            If[!empty[#[[4]]], "EmbeddedNewlines" -> #[[4]], Nothing]|>]&)];
+      ,
       version >= 16,
             cst = 
        CodeConcreteParse[File[file], 
@@ -479,6 +486,13 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      
      version = convertVersionString[PacletFind["CodeParser"][[1]]["Version"]];
      Which[
+     version >= 101,
+            cst = 
+       CodeConcreteParse[File[file], 
+        ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1, 1, 3, Key[Source], 1]], #[[1, -1, 3, Key[Source], 2]]}],
+            If[!empty[#[[3]]], "LineContinuations" -> #[[3]], Nothing],
+            If[!empty[#[[4]]], "EmbeddedNewlines" -> #[[4]], Nothing]|>]&)];
+      ,
      version >= 16,
       cst = 
         CodeConcreteParse[File[file], 
@@ -909,6 +923,14 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         "$1"];
      ];
     
+
+    (*
+    Work around bug 382857 where line continuations with \r\n are not treated correctedly
+    Related bugs: 382857
+    *)
+    textReplaced = StringReplace[textReplaced, RegularExpression["((?<!\\\\)\\\\(?:\\\\\\\\)*)\r\n"] :> "$1\n"];
+
+
     If[$Debug,
       Print["textReplaced2: ", textReplaced];
     ];

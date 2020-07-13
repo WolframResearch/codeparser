@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <memory> // for unique_ptr
+#include <set>
 
 
 class CharacterDecoder;
@@ -25,6 +26,9 @@ class CharacterDecoder {
     
     std::vector<IssuePtr> Issues;
     
+    std::set<SourceLocation> LineContinuations;
+    
+    
     WolframLibraryData libData;
     
     
@@ -39,7 +43,7 @@ class CharacterDecoder {
     //
     // Some middle layer that deals with "parts" of a token.
     //
-    SourceCharacter handleLineContinuation(SourceCharacter c, NextPolicy policy);
+    SourceCharacter handleLineContinuation(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter c, NextPolicy policy);
     
     WLCharacter handleBackSlash(Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy);
     
@@ -79,17 +83,19 @@ public:
     //                   buffer
     // return \[Alpha]
     //
-    WLCharacter nextWLCharacter0(NextPolicy policy);
+    WLCharacter nextWLCharacter0(Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy);
     
     //
     // Postcondition: lastBuf is set to the last value of buffer
     // Postcondition: lastLoc is set to the last value of SrcLoc
     //
-    WLCharacter currentWLCharacter(NextPolicy policy);
+    WLCharacter currentWLCharacter(Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy);
     
 #if !NISSUES
     std::vector<IssuePtr>& getIssues();
 #endif // !NISSUES
+    
+    std::set<SourceLocation>& getLineContinuations();
 };
 
 extern CharacterDecoderPtr TheCharacterDecoder;

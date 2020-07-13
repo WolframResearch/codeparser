@@ -179,6 +179,18 @@ Node *ParserSession::parseExpressions() {
         nodes.push_back(NodePtr(new CollectedIssuesNode(std::move(issues))));
     }
     
+    {
+        auto& LineContinuations = TheCharacterDecoder->getLineContinuations();
+
+        nodes.push_back(NodePtr(new CollectedLineContinuationsNode(std::move(LineContinuations))));
+    }
+    
+    {
+        auto& EmbeddedNewlines = TheTokenizer->getEmbeddedNewlines();
+
+        nodes.push_back(NodePtr(new CollectedEmbeddedNewlinesNode(std::move(EmbeddedNewlines))));
+    }
+    
     auto N = new ListNode(std::move(nodes));
     
     return N;
@@ -340,6 +352,18 @@ Node *ParserSession::concreteParseLeaf(StringifyMode mode) {
 #endif // !NISSUES
         
         nodes.push_back(NodePtr(new CollectedIssuesNode(std::move(issues))));
+    }
+    
+    {
+        auto& LineContinuations = TheCharacterDecoder->getLineContinuations();
+        
+        nodes.push_back(NodePtr(new CollectedLineContinuationsNode(std::move(LineContinuations))));
+    }
+    
+    {
+        auto& EmbeddedNewlines = TheTokenizer->getEmbeddedNewlines();
+        
+        nodes.push_back(NodePtr(new CollectedEmbeddedNewlinesNode(std::move(EmbeddedNewlines))));
     }
     
     auto N = new ListNode(std::move(nodes));

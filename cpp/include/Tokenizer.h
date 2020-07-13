@@ -6,7 +6,7 @@
 
 #include <vector>
 #include <memory> // for unique_ptr
-
+#include <set>
 
 class Tokenizer;
 using TokenizerPtr = std::unique_ptr<Tokenizer>;
@@ -34,6 +34,8 @@ struct NumberTokenizationContext {
 class Tokenizer {
     
     std::vector<IssuePtr> Issues;
+    
+    std::set<SourceLocation> EmbeddedNewlines;
     
     
     void backupAndWarn(Buffer resetBuf, SourceLocation resetLoc);
@@ -70,7 +72,7 @@ class Tokenizer {
     //
     // return: the first NON-SYMBOLSEGMENT character after all symbol segment characters
     //
-    WLCharacter handleSymbolSegment(Buffer tokenStartBuf, SourceLocation firstCharLoc, WLCharacter firstChar, NextPolicy policy);
+    WLCharacter handleSymbolSegment(Buffer tokenStartBuf, SourceLocation tokenStartLoc, Buffer firstCharBuf, SourceLocation firstCharLoc, WLCharacter firstChar, NextPolicy policy);
     
     Token handleNumber(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
     
@@ -80,7 +82,7 @@ class Tokenizer {
     //
     // return: the first NON-ZERO character after all digits
     //
-    WLCharacter handleZeros(NextPolicy policy, WLCharacter firstChar, int *count);
+    WLCharacter handleZeros(Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy, WLCharacter firstChar, int *count);
     
     //
     // Precondition: currentWLCharacter is a digit
@@ -88,7 +90,7 @@ class Tokenizer {
     //
     // return: the first NON-DIGIT character after all digits
     //
-    WLCharacter handleDigits(NextPolicy policy, WLCharacter firstChar, int *count);
+    WLCharacter handleDigits(Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy, WLCharacter firstChar, int *count);
     
     //
     // Precondition: currentWLCharacter is NOT in String
@@ -96,14 +98,14 @@ class Tokenizer {
     //
     // Return: number of digits handled, possibly 0, or -1 if error
     //
-    WLCharacter handleAlphaOrDigits(WLCharacter firstChar, size_t base, NextPolicy policy, int *handled, NumberTokenizationContext *Ctxt);
+    WLCharacter handleAlphaOrDigits(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, size_t base, NextPolicy policy, int *handled, NumberTokenizationContext *Ctxt);
     
     //
     // Precondition: currentWLCharacter is NOT in String
     //
     // Return: number of digits handled after ., possibly 0, or -1 if error
     //
-    WLCharacter handlePossibleFractionalPart(Buffer dotBuf, SourceLocation dotLoc, WLCharacter firstChar, size_t base, NextPolicy policy, int *handled, NumberTokenizationContext *Ctxt);
+    WLCharacter handlePossibleFractionalPart(Buffer tokenStartBuf, SourceLocation tokenStartLoc, Buffer dotBuf, SourceLocation dotLoc, WLCharacter firstChar, size_t base, NextPolicy policy, int *handled, NumberTokenizationContext *Ctxt);
     
     //
     // Precondition: currentWLCharacter is NOT in String
@@ -112,7 +114,7 @@ class Tokenizer {
     //         UNRECOGNIZED_DIGIT if base error
     //         BAILOUT if not a radix point (and also backup before dot)
     //
-    WLCharacter handlePossibleFractionalPartPastDot(Buffer dotBuf, SourceLocation dotLoc, WLCharacter firstChar, size_t base, NextPolicy policy, int *handled, NumberTokenizationContext *Ctxt);
+    WLCharacter handlePossibleFractionalPartPastDot(Buffer tokenStartBuf, SourceLocation tokenStartLoc, Buffer dotBuf, SourceLocation dotLoc, WLCharacter firstChar, size_t base, NextPolicy policy, int *handled, NumberTokenizationContext *Ctxt);
     
     Token handleColon(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
     Token handleOpenParen(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
@@ -173,6 +175,8 @@ public:
 
     std::vector<IssuePtr>& getIssues();
 #endif // !NISSUES
+    
+    std::set<SourceLocation>& getEmbeddedNewlines();
     
 };
 

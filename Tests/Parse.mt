@@ -3157,7 +3157,7 @@ TestMatch[
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Slot", <||>], {
-			LeafNode[Integer, "\\\n1", <|Source -> {{1, 2}, {2, 2}}|>]}, <|Source -> {{1, 1}, {2, 2}}|>]}, _]
+			LeafNode[Integer, "1", <|Source -> {{1, 2}, {2, 2}}|>]}, <|Source -> {{1, 1}, {2, 2}}|>]}, _]
 	,
 	TestID->"Parse-20200415-E1Q6O7"
 ]
@@ -3177,7 +3177,7 @@ TestMatch[
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "SlotSequence", <||>], {
-			LeafNode[Integer, "\\\n2", <|Source -> {{1, 3}, {2, 2}}|>]}, <|Source -> {{1, 1}, {2, 2}}|>]}, _]
+			LeafNode[Integer, "2", <|Source -> {{1, 3}, {2, 2}}|>]}, <|Source -> {{1, 1}, {2, 2}}|>]}, _]
 	,
 	TestID->"Parse-20200415-M9Y6M1"
 ]
@@ -3187,7 +3187,7 @@ TestMatch[
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Out", <||>], {
-			LeafNode[Integer, "\\\n45", <|Source -> {{1, 2}, {2, 3}}|>]}, <|Source -> {{1, 1}, {2, 3}}|>]}, _]
+			LeafNode[Integer, "45", <|Source -> {{1, 2}, {2, 3}}|>]}, <|Source -> {{1, 1}, {2, 3}}|>]}, _]
 	,
 	TestID->"Parse-20200415-K6V1V1"
 ]

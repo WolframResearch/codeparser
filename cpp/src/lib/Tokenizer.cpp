@@ -12,11 +12,13 @@ Tokenizer::Tokenizer() : Issues() {}
 void Tokenizer::init() {
     
     Issues.clear();
+    EmbeddedNewlines.clear();
 }
 
 void Tokenizer::deinit() {
     
     Issues.clear();
+    EmbeddedNewlines.clear();
 }
 
 // Precondition: buffer is pointing to current token
@@ -38,7 +40,7 @@ Token Tokenizer::nextToken0(NextPolicy policy) {
     auto tokenStartBuf = TheByteBuffer->buffer;
     auto tokenStartLoc = TheByteDecoder->SrcLoc;
     
-    auto c = TheCharacterDecoder->nextWLCharacter0(policy);
+    auto c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
     
     switch (c.to_point()) {
         
@@ -206,7 +208,7 @@ Token Tokenizer::nextToken0_stringifyAsSymbolSegment() {
     
     auto policy = INSIDE_STRINGIFY_AS_SYMBOLSEGMENT;
     
-    auto c = TheCharacterDecoder->nextWLCharacter0(policy);
+    auto c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
     
     if (c.to_point() == CODEPOINT_ENDOFFILE) {
         
@@ -489,13 +491,13 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation token
 // a segment is: [a-z$]([a-z$0-9])*
 // a symbol is: (segment)?(`segment)*
 //
-inline Token Tokenizer::handleSymbol(Buffer symbolStartBuf, SourceLocation symbolStartLoc, WLCharacter c, NextPolicy policy) {
+inline Token Tokenizer::handleSymbol(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
     
     assert(c.to_point() == '`' || c.isLetterlike() || c.isMBLetterlike());
     
     if (c.isLetterlike() || c.isMBLetterlike()) {
         
-        c = handleSymbolSegment(symbolStartBuf, symbolStartLoc, c, policy);
+        c = handleSymbolSegment(tokenStartBuf, tokenStartLoc, tokenStartBuf, tokenStartLoc, c, policy);
     }
     
     //
@@ -521,13 +523,13 @@ inline Token Tokenizer::handleSymbol(Buffer symbolStartBuf, SourceLocation symbo
             // It's hard to keep track of the ` characters, so just report the entire symbol. Oh well
             //
             
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNDOCUMENTEDSLOTSYNTAX, "The name following ``#`` is not documented to allow the **`** character.", SYNTAXISSUESEVERITY_REMARK, getTokenSource(symbolStartLoc), 0.33, {}));
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNDOCUMENTEDSLOTSYNTAX, "The name following ``#`` is not documented to allow the **`** character.", SYNTAXISSUESEVERITY_REMARK, getTokenSource(tokenStartLoc), 0.33, {}));
             
             Issues.push_back(std::move(I));
         }
 #endif // !NISSUES
         
-        c = TheCharacterDecoder->currentWLCharacter(policy);
+        c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
         
         if (c.isLetterlike() || c.isMBLetterlike()) {
             
@@ -537,7 +539,7 @@ inline Token Tokenizer::handleSymbol(Buffer symbolStartBuf, SourceLocation symbo
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-            c = handleSymbolSegment(letterlikeBuf, letterlikeLoc, c, policy);
+            c = handleSymbolSegment(tokenStartBuf, tokenStartLoc, letterlikeBuf, letterlikeLoc, c, policy);
             
         } else {
             
@@ -545,20 +547,20 @@ inline Token Tokenizer::handleSymbol(Buffer symbolStartBuf, SourceLocation symbo
             // Something like  a`1
             //
             
-            return Token(TOKEN_ERROR_EXPECTEDLETTERLIKE, getTokenBufferAndLength(symbolStartBuf), getTokenSource(symbolStartLoc));
+            return Token(TOKEN_ERROR_EXPECTEDLETTERLIKE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         }
         
     } // while
     
     if ((policy & SLOT_BEHAVIOR_FOR_STRINGS) == SLOT_BEHAVIOR_FOR_STRINGS) {
-        return Token(TOKEN_STRING, getTokenBufferAndLength(symbolStartBuf), getTokenSource(symbolStartLoc));
+        return Token(TOKEN_STRING, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
     } else {
-        return Token(TOKEN_SYMBOL, getTokenBufferAndLength(symbolStartBuf), getTokenSource(symbolStartLoc));
+        return Token(TOKEN_SYMBOL, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
     }
 }
 
 
-inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation charLoc, WLCharacter c, NextPolicy policy) {
+inline WLCharacter Tokenizer::handleSymbolSegment(Buffer tokenStartBuf, SourceLocation tokenStartLoc, Buffer charBuf, SourceLocation charLoc, WLCharacter c, NextPolicy policy) {
     
     assert(c.isLetterlike() || c.isMBLetterlike());
     
@@ -591,7 +593,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation
     
     charLoc = TheByteDecoder->SrcLoc;
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     while (true) {
         
@@ -606,7 +608,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation
             
             charLoc = TheByteDecoder->SrcLoc;
             
-            c = TheCharacterDecoder->currentWLCharacter(policy);
+            c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
             
         } else if (c.isLetterlike() || c.isMBLetterlike()) {
             
@@ -643,7 +645,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer charBuf, SourceLocation
             
             charLoc = TheByteDecoder->SrcLoc;
             
-            c = TheCharacterDecoder->currentWLCharacter(policy);
+            c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
             
         } else if (c.to_point() == '`') {
             
@@ -689,13 +691,18 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
         // No need to check isAbort() inside tokenizer loops
         //
         
-        c = TheCharacterDecoder->nextWLCharacter0(policy);
+        c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
         
         switch (c.to_point()) {
             case '"':
                 return Token(TOKEN_STRING, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
             case CODEPOINT_ENDOFFILE:
                 return Token(TOKEN_ERROR_UNTERMINATEDSTRING, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+            case '\n': case '\r': case CODEPOINT_CRLF:
+                
+                EmbeddedNewlines.insert(tokenStartLoc);
+                
+                break;
         }
         
     } // while
@@ -722,7 +729,7 @@ inline Token Tokenizer::handleString_stringifyAsSymbolSegment(Buffer tokenStartB
         auto letterlikeBuf = TheByteBuffer->buffer;
         auto letterlikeLoc = TheByteDecoder->SrcLoc;
         
-        handleSymbolSegment(letterlikeBuf, letterlikeLoc, c, policy);
+        handleSymbolSegment(tokenStartBuf, tokenStartLoc, letterlikeBuf, letterlikeLoc, c, policy);
         
         return Token(TOKEN_STRING, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
     }
@@ -1039,7 +1046,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
         if (c.to_point() == '0') {
             
             int leadingZeroCount;
-            c = handleZeros(policy, c, &leadingZeroCount);
+            c = handleZeros(tokenStartBuf, tokenStartLoc, policy, c, &leadingZeroCount);
             
             leadingDigitsCount += leadingZeroCount;
             
@@ -1058,7 +1065,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
         if (c.isDigit()) {
             
             int count;
-            c = handleDigits(policy, c, &count);
+            c = handleDigits(tokenStartBuf, tokenStartLoc, policy, c, &count);
             
             leadingDigitsCount += count;
             
@@ -1139,7 +1146,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
             // Could be 16^^blah
             //
             
-            c = TheCharacterDecoder->currentWLCharacter(policy);
+            c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
             
             if (c.to_point() != '^') {
                 
@@ -1209,7 +1216,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 }
             }
             
-            c = TheCharacterDecoder->currentWLCharacter(policy);
+            c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
             
             //
             // What can come after ^^ ?
@@ -1222,7 +1229,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm': case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
                 case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': {
                     
-                    c = handleAlphaOrDigits(c, Ctxt.Base, policy, &leadingDigitsCount, &Ctxt);
+                    c = handleAlphaOrDigits(tokenStartBuf, tokenStartLoc, c, Ctxt.Base, policy, &leadingDigitsCount, &Ctxt);
                     switch (leadingDigitsCount) {
                         case BAILOUT:
                             assert(false);
@@ -1293,7 +1300,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
                     TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
                     
-                    c = TheCharacterDecoder->currentWLCharacter(policy);
+                    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
                     
                     return Token(TOKEN_ERROR_EXPECTEDDIGIT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                 }
@@ -1311,7 +1318,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
                     TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
                     
-                    c = TheCharacterDecoder->currentWLCharacter(policy);
+                    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
                     
                     return Token(TOKEN_ERROR_UNRECOGNIZEDDIGIT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                 }
@@ -1326,7 +1333,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
         assert(Utils::ifASCIIWLCharacter(*(TheByteBuffer->buffer - 1), '.'));
         
         int handled;
-        c = handlePossibleFractionalPart(leadingDigitsEndBuf, leadingDigitsEndLoc, c, Ctxt.Base, policy, &handled, &Ctxt);
+        c = handlePossibleFractionalPart(tokenStartBuf, tokenStartLoc, leadingDigitsEndBuf, leadingDigitsEndLoc, c, Ctxt.Base, policy, &handled, &Ctxt);
         switch (handled) {
             case BAILOUT:
                 
@@ -1439,7 +1446,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
         
         Ctxt.Real = true;
         
-        c = TheCharacterDecoder->currentWLCharacter(policy);
+        c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
         
         bool accuracy = false;
         bool sign = false;
@@ -1453,7 +1460,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-            c = TheCharacterDecoder->currentWLCharacter(policy);
+            c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
             
             accuracy = true;
         }
@@ -1477,7 +1484,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
                 TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
                 
-                c = TheCharacterDecoder->currentWLCharacter(policy);
+                c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
                 
                 switch (c.to_point()) {
                         //
@@ -1539,7 +1546,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
             case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': {
                 
                 int count;
-                c = handleDigits(policy, c, &count);
+                c = handleDigits(tokenStartBuf, tokenStartLoc, policy, c, &count);
                 if (count > 0) {
                     precOrAccSupplied = true;
                 }
@@ -1599,7 +1606,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
                     TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
                     
-                    auto NextChar = TheCharacterDecoder->currentWLCharacter(policy);
+                    auto NextChar = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
                     
                     if (!NextChar.isDigit()) {
                         
@@ -1662,7 +1669,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
                     TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
                     
-                    c = TheCharacterDecoder->currentWLCharacter(policy);
+                    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
                 }
                 
                 //
@@ -1674,7 +1681,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 // The base to use inside of precision/accuracy processing is 0, i.e., implied 10
                 //
                 size_t baseToUse = 0;
-                c = handlePossibleFractionalPartPastDot(dotBuf, dotLoc, c, baseToUse, policy, &handled, &Ctxt);
+                c = handlePossibleFractionalPartPastDot(tokenStartBuf, tokenStartLoc, dotBuf, dotLoc, c, baseToUse, policy, &handled, &Ctxt);
                 switch (handled) {
                     case BAILOUT:
                         
@@ -1721,7 +1728,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
                     TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
                     
-                    c = TheCharacterDecoder->currentWLCharacter(policy);
+                    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
                     
                     return Token(TOKEN_ERROR_EXPECTEDDIGIT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                 }
@@ -1748,7 +1755,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                         TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
                         TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
                         
-                        c = TheCharacterDecoder->currentWLCharacter(policy);
+                        c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
                         
                         return Token(TOKEN_ERROR_EXPECTEDACCURACY, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                     }
@@ -1778,7 +1785,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                         TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
                         TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
                         
-                        c = TheCharacterDecoder->currentWLCharacter(policy);
+                        c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
                         
                         return Token(TOKEN_ERROR_EXPECTEDACCURACY, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                     }
@@ -1799,7 +1806,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
     
     assert(Utils::ifASCIIWLCharacter(*starBuf, '*'));
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     if (c.to_point() != '^') {
         
@@ -1830,7 +1837,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     switch (c.to_point()) {
         case '-':
@@ -1842,7 +1849,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-            c = TheCharacterDecoder->currentWLCharacter(policy);
+            c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
         }
             break;
     }
@@ -1867,12 +1874,12 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
     if (c.to_point() == '0') {
         
         int exponentLeadingZeroCount;
-        c = handleZeros(policy, c, &exponentLeadingZeroCount);
+        c = handleZeros(tokenStartBuf, tokenStartLoc, policy, c, &exponentLeadingZeroCount);
     }
     
     if (c.isDigit()) {
         
-        c = handleDigits(policy, c, &Ctxt.NonZeroExponentDigitCount);
+        c = handleDigits(tokenStartBuf, tokenStartLoc, policy, c, &Ctxt.NonZeroExponentDigitCount);
     }
     
     if (c.to_point() != '.') {
@@ -1894,10 +1901,10 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
 
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     int handled;
-    c = handlePossibleFractionalPartPastDot(dotBuf, dotLoc, c, Ctxt.Base, policy, &handled, &Ctxt);
+    c = handlePossibleFractionalPartPastDot(tokenStartBuf, tokenStartLoc, dotBuf, dotLoc, c, Ctxt.Base, policy, &handled, &Ctxt);
     
     switch (handled) {
         case BAILOUT: {
@@ -1966,17 +1973,17 @@ TokenEnum NumberTokenizationContext::computeTok() {
 }
 
 
-inline WLCharacter Tokenizer::handlePossibleFractionalPart(Buffer dotBuf, SourceLocation dotLoc, WLCharacter c, size_t base, NextPolicy policy, int *handled, NumberTokenizationContext *Ctxt) {
+inline WLCharacter Tokenizer::handlePossibleFractionalPart(Buffer tokenStartBuf, SourceLocation tokenStartLoc, Buffer dotBuf, SourceLocation dotLoc, WLCharacter c, size_t base, NextPolicy policy, int *handled, NumberTokenizationContext *Ctxt) {
     
     assert(c.to_point() == '.');
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
-    return handlePossibleFractionalPartPastDot(dotBuf, dotLoc, c, base, policy, handled, Ctxt);
+    return handlePossibleFractionalPartPastDot(tokenStartBuf, tokenStartLoc, dotBuf, dotLoc, c, base, policy, handled, Ctxt);
 }
 
 
-inline WLCharacter Tokenizer::handlePossibleFractionalPartPastDot(Buffer dotBuf, SourceLocation dotLoc, WLCharacter c, size_t base, NextPolicy policy, int *handled, NumberTokenizationContext *Ctxt) {
+inline WLCharacter Tokenizer::handlePossibleFractionalPartPastDot(Buffer tokenStartBuf, SourceLocation tokenStartLoc, Buffer dotBuf, SourceLocation dotLoc, WLCharacter c, size_t base, NextPolicy policy, int *handled, NumberTokenizationContext *Ctxt) {
     
     //
     // Nothing to assert
@@ -1994,7 +2001,7 @@ inline WLCharacter Tokenizer::handlePossibleFractionalPartPastDot(Buffer dotBuf,
         
         backupAndWarn(dotBuf, dotLoc);
         
-        c = TheCharacterDecoder->currentWLCharacter(policy);
+        c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
         
         *handled = BAILOUT;
 
@@ -2003,7 +2010,7 @@ inline WLCharacter Tokenizer::handlePossibleFractionalPartPastDot(Buffer dotBuf,
     
     if (c.isAlphaOrDigit()) {
         
-        c = handleAlphaOrDigits(c, base, policy, handled, Ctxt);
+        c = handleAlphaOrDigits(tokenStartBuf, tokenStartLoc, c, base, policy, handled, Ctxt);
         switch (*handled) {
             case BAILOUT:
                 assert(false);
@@ -2054,13 +2061,13 @@ void Tokenizer::backupAndWarn(Buffer resetBuf, SourceLocation resetLoc) {
 }
 
 
-inline WLCharacter Tokenizer::handleZeros(NextPolicy policy, WLCharacter c, int *countP) {
+inline WLCharacter Tokenizer::handleZeros(Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy, WLCharacter c, int *countP) {
     
     assert(c.to_point() == '0');
     
     auto count = 1;
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     while (true) {
         
@@ -2076,7 +2083,7 @@ inline WLCharacter Tokenizer::handleZeros(NextPolicy policy, WLCharacter c, int 
         TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
         TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
         
-        c = TheCharacterDecoder->currentWLCharacter(policy);
+        c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
         
         count++;
         
@@ -2088,13 +2095,13 @@ inline WLCharacter Tokenizer::handleZeros(NextPolicy policy, WLCharacter c, int 
 }
 
 
-inline WLCharacter Tokenizer::handleDigits(NextPolicy policy, WLCharacter c, int *countP) {
+inline WLCharacter Tokenizer::handleDigits(Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy, WLCharacter c, int *countP) {
     
     assert(c.isDigit());
     
     auto count = 1;
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     while (true) {
         
@@ -2110,7 +2117,7 @@ inline WLCharacter Tokenizer::handleDigits(NextPolicy policy, WLCharacter c, int
         TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
         TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
         
-        c = TheCharacterDecoder->currentWLCharacter(policy);
+        c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
         
         count++;
         
@@ -2122,7 +2129,7 @@ inline WLCharacter Tokenizer::handleDigits(NextPolicy policy, WLCharacter c, int
 }
 
 
-inline WLCharacter Tokenizer::handleAlphaOrDigits(WLCharacter c, size_t base, NextPolicy policy, int *handled, NumberTokenizationContext *Ctxt) {
+inline WLCharacter Tokenizer::handleAlphaOrDigits(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, size_t base, NextPolicy policy, int *handled, NumberTokenizationContext *Ctxt) {
     
     assert(c.isAlphaOrDigit());
     
@@ -2157,7 +2164,7 @@ inline WLCharacter Tokenizer::handleAlphaOrDigits(WLCharacter c, size_t base, Ne
         TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
         TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
         
-        c = TheCharacterDecoder->currentWLCharacter(policy);
+        c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
         
         count++;
         
@@ -2172,7 +2179,7 @@ inline Token Tokenizer::handleColon(Buffer tokenStartBuf, SourceLocation tokenSt
     
     assert(c.to_point() == ':');
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     auto Operator = TOKEN_COLON; // :
     
@@ -2211,7 +2218,7 @@ inline Token Tokenizer::handleOpenParen(Buffer tokenStartBuf, SourceLocation tok
     
     auto Operator = TOKEN_OPENPAREN; // (
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     //
     // Comments must start literally with (*
@@ -2240,7 +2247,7 @@ inline Token Tokenizer::handleDot(Buffer tokenStartBuf, SourceLocation tokenStar
     
     assert(c.to_point() == '.');
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     if (c.isDigit()) {
         
@@ -2256,7 +2263,7 @@ inline Token Tokenizer::handleDot(Buffer tokenStartBuf, SourceLocation tokenStar
         TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
         TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
         
-        c = TheCharacterDecoder->currentWLCharacter(policy);
+        c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
         
         if (c.to_point() == '.') {
             
@@ -2274,7 +2281,7 @@ inline Token Tokenizer::handleEqual(Buffer tokenStartBuf, SourceLocation tokenSt
     
     assert(c.to_point() == '=');
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     auto Operator = TOKEN_EQUAL; // =
     
@@ -2286,7 +2293,7 @@ inline Token Tokenizer::handleEqual(Buffer tokenStartBuf, SourceLocation tokenSt
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-            c = TheCharacterDecoder->currentWLCharacter(policy);
+            c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
             
             if (c.to_point() == '=') {
                 
@@ -2305,7 +2312,7 @@ inline Token Tokenizer::handleEqual(Buffer tokenStartBuf, SourceLocation tokenSt
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-            c = TheCharacterDecoder->currentWLCharacter(policy);
+            c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
             
             if (c.to_point() == '=') {
                 
@@ -2335,7 +2342,7 @@ inline Token Tokenizer::handleUnder(Buffer tokenStartBuf, SourceLocation tokenSt
     
     assert(c.to_point() == '_');
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     auto Operator = TOKEN_UNDER; // _
     
@@ -2347,7 +2354,7 @@ inline Token Tokenizer::handleUnder(Buffer tokenStartBuf, SourceLocation tokenSt
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-            c = TheCharacterDecoder->currentWLCharacter(policy);
+            c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
             
             if (c.to_point() == '_') {
                 
@@ -2366,7 +2373,7 @@ inline Token Tokenizer::handleUnder(Buffer tokenStartBuf, SourceLocation tokenSt
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-            c = TheCharacterDecoder->currentWLCharacter(policy);
+            c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
             
             if (c.to_point() == '.') {
                 
@@ -2393,7 +2400,7 @@ inline Token Tokenizer::handleLess(Buffer tokenStartBuf, SourceLocation tokenSta
     
     assert(c.to_point() == '<');
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     auto Operator = TOKEN_LESS; // <
     
@@ -2438,7 +2445,7 @@ inline Token Tokenizer::handleLess(Buffer tokenStartBuf, SourceLocation tokenSta
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-            c = TheCharacterDecoder->currentWLCharacter(policy);
+            c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
             
             if (c.to_point() == '>') {
                 
@@ -2468,7 +2475,7 @@ inline Token Tokenizer::handleGreater(Buffer tokenStartBuf, SourceLocation token
     
     assert(c.to_point() == '>');
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     auto Operator = TOKEN_GREATER; // >
     
@@ -2480,7 +2487,7 @@ inline Token Tokenizer::handleGreater(Buffer tokenStartBuf, SourceLocation token
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-            c = TheCharacterDecoder->currentWLCharacter(policy);
+            c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
             
             if (c.to_point() == '>') {
                 
@@ -2508,7 +2515,7 @@ inline Token Tokenizer::handleMinus(Buffer tokenStartBuf, SourceLocation tokenSt
     
     assert(c.to_point() == '-');
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     auto Operator = TOKEN_MINUS; // -
     
@@ -2592,7 +2599,7 @@ inline Token Tokenizer::handleBar(Buffer tokenStartBuf, SourceLocation tokenStar
     
     assert(c.to_point() == '|');
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     auto Operator = TOKEN_BAR; // |
     
@@ -2645,7 +2652,7 @@ inline Token Tokenizer::handleSemi(Buffer tokenStartBuf, SourceLocation tokenSta
     
     assert(c.to_point() == ';');
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     auto Operator = TOKEN_SEMI; // ;
     
@@ -2664,7 +2671,7 @@ inline Token Tokenizer::handleBang(Buffer tokenStartBuf, SourceLocation tokenSta
     
     assert(c.to_point() == '!');
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     auto Operator = TOKEN_BANG; // !
     
@@ -2694,7 +2701,7 @@ inline Token Tokenizer::handleHash(Buffer tokenStartBuf, SourceLocation tokenSta
     
     assert(c.to_point() == '#');
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     auto Operator = TOKEN_HASH; // #
     
@@ -2713,13 +2720,13 @@ inline Token Tokenizer::handlePercent(Buffer tokenStartBuf, SourceLocation token
     
     assert(c.to_point() == '%');
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     auto Operator = TOKEN_PERCENT; // %
     
     if (c.to_point() == '%') {
         
-        c = TheCharacterDecoder->currentWLCharacter(policy);
+        c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
         
         Operator = TOKEN_PERCENTPERCENT; // %%
         
@@ -2737,7 +2744,7 @@ inline Token Tokenizer::handlePercent(Buffer tokenStartBuf, SourceLocation token
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-            c = TheCharacterDecoder->currentWLCharacter(policy);
+            c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
             
         } // while
     }
@@ -2749,7 +2756,7 @@ inline Token Tokenizer::handleAmp(Buffer tokenStartBuf, SourceLocation tokenStar
     
     assert(c.to_point() == '&');
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     auto Operator = TOKEN_AMP; // &
     
@@ -2770,7 +2777,7 @@ inline Token Tokenizer::handleSlash(Buffer tokenStartBuf, SourceLocation tokenSt
     
     auto Operator = TOKEN_SLASH; // /
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     switch (c.to_point()) {
         case '@': {
@@ -2797,7 +2804,7 @@ inline Token Tokenizer::handleSlash(Buffer tokenStartBuf, SourceLocation tokenSt
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-            c = TheCharacterDecoder->currentWLCharacter(policy);
+            c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
             
             if (c.isDigit()) {
                 
@@ -2822,7 +2829,7 @@ inline Token Tokenizer::handleSlash(Buffer tokenStartBuf, SourceLocation tokenSt
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-            c = TheCharacterDecoder->currentWLCharacter(policy);
+            c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
             
             switch (c.to_point()) {
                 case '.': {
@@ -2877,7 +2884,7 @@ inline Token Tokenizer::handleAt(Buffer tokenStartBuf, SourceLocation tokenStart
     
     assert(c.to_point() == '@');
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     auto Operator = TOKEN_AT; // @
     
@@ -2889,7 +2896,7 @@ inline Token Tokenizer::handleAt(Buffer tokenStartBuf, SourceLocation tokenStart
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-            c = TheCharacterDecoder->currentWLCharacter(policy);
+            c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
             
             if (c.to_point() == '@') {
                 
@@ -2917,7 +2924,7 @@ inline Token Tokenizer::handlePlus(Buffer tokenStartBuf, SourceLocation tokenSta
     
     assert(c.to_point() == '+');
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     auto Operator = TOKEN_PLUS; // +
     
@@ -2965,7 +2972,7 @@ inline Token Tokenizer::handleTilde(Buffer tokenStartBuf, SourceLocation tokenSt
     
     assert(c.to_point() == '~');
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     auto Operator = TOKEN_TILDE; // ~
     
@@ -2984,7 +2991,7 @@ inline Token Tokenizer::handleQuestion(Buffer tokenStartBuf, SourceLocation toke
     
     assert(c.to_point() == '?');
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     auto Operator = TOKEN_QUESTION; // ?
     
@@ -3003,7 +3010,7 @@ inline Token Tokenizer::handleStar(Buffer tokenStartBuf, SourceLocation tokenSta
     
     assert(c.to_point() == '*');
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     auto Operator = TOKEN_STAR; // *
     
@@ -3033,7 +3040,7 @@ inline Token Tokenizer::handleCaret(Buffer tokenStartBuf, SourceLocation tokenSt
     
     assert(c.to_point() == '^');
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     auto Operator = TOKEN_CARET;
     
@@ -3043,7 +3050,7 @@ inline Token Tokenizer::handleCaret(Buffer tokenStartBuf, SourceLocation tokenSt
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-            c = TheCharacterDecoder->currentWLCharacter(policy);
+            c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
             
             if (c.to_point() == '=') {
                 
@@ -3093,7 +3100,7 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLoc
     auto resetBuf = TheByteBuffer->buffer;
     auto resetLoc = TheByteDecoder->SrcLoc;
     
-    c = TheCharacterDecoder->nextWLCharacter0(policy);
+    c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
     
     switch (c.to_point()) {
         case '[': {
@@ -3105,7 +3112,7 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLoc
             resetBuf = TheByteBuffer->buffer;
             resetLoc = TheByteDecoder->SrcLoc;
             
-            c = TheCharacterDecoder->nextWLCharacter0(policy);
+            c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
             
             while (true) {
                 
@@ -3118,7 +3125,7 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLoc
                     resetBuf = TheByteBuffer->buffer;
                     resetLoc = TheByteDecoder->SrcLoc;
                     
-                    c = TheCharacterDecoder->nextWLCharacter0(policy);
+                    c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
                     
                 } else if (c.to_point() == ']') {
                     
@@ -3144,7 +3151,7 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLoc
             resetBuf = TheByteBuffer->buffer;
             resetLoc = TheByteDecoder->SrcLoc;
             
-            c = TheCharacterDecoder->nextWLCharacter0(policy);
+            c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
             
             for (auto i = 0; i < 4; i++) {
                 
@@ -3157,7 +3164,7 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLoc
                     resetBuf = TheByteBuffer->buffer;
                     resetLoc = TheByteDecoder->SrcLoc;
                     
-                    c = TheCharacterDecoder->nextWLCharacter0(policy);
+                    c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
                     
                 } else {
                     
@@ -3179,7 +3186,7 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLoc
             resetBuf = TheByteBuffer->buffer;
             resetLoc = TheByteDecoder->SrcLoc;
             
-            c = TheCharacterDecoder->nextWLCharacter0(policy);
+            c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
             
             for (auto i = 0; i < 2; i++) {
                 
@@ -3192,7 +3199,7 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLoc
                     resetBuf = TheByteBuffer->buffer;
                     resetLoc = TheByteDecoder->SrcLoc;
                     
-                    c = TheCharacterDecoder->nextWLCharacter0(policy);
+                    c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
                     
                 } else {
                     
@@ -3214,7 +3221,7 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLoc
             resetBuf = TheByteBuffer->buffer;
             resetLoc = TheByteDecoder->SrcLoc;
             
-            c = TheCharacterDecoder->nextWLCharacter0(policy);
+            c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
             
             for (auto i = 0; i < 3; i++) {
                 
@@ -3227,7 +3234,7 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLoc
                     resetBuf = TheByteBuffer->buffer;
                     resetLoc = TheByteDecoder->SrcLoc;
                     
-                    c = TheCharacterDecoder->nextWLCharacter0(policy);
+                    c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
                     
                 } else {
                     
@@ -3249,7 +3256,7 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLoc
             resetBuf = TheByteBuffer->buffer;
             resetLoc = TheByteDecoder->SrcLoc;
             
-            c = TheCharacterDecoder->nextWLCharacter0(policy);
+            c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
             
             for (auto i = 0; i < 6; i++) {
                 
@@ -3262,7 +3269,7 @@ inline Token Tokenizer::handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLoc
                     resetBuf = TheByteBuffer->buffer;
                     resetLoc = TheByteDecoder->SrcLoc;
                     
-                    c = TheCharacterDecoder->nextWLCharacter0(policy);
+                    c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
                     
                 } else {
                     
@@ -3408,5 +3415,10 @@ std::vector<IssuePtr>& Tokenizer::getIssues() {
     return Issues;
 }
 #endif // !NISSUES
+
+std::set<SourceLocation>& Tokenizer::getEmbeddedNewlines() {
+    return EmbeddedNewlines;
+}
+
 
 TokenizerPtr TheTokenizer = nullptr;
