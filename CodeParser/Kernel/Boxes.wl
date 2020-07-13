@@ -1173,7 +1173,7 @@ parseBox[args___] := Failure["InternalUnhandled", <|"Function"->"parseBox", "Arg
 
 removeImplicits[node_] := DeleteCases[node, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity]
 
-(*
+
 ToStandardFormBoxes[ContainerNode[Box, children_, _]] :=
 Block[{$RecursionLimit = Infinity},
 Module[{},
@@ -1182,12 +1182,6 @@ Module[{},
     else_ :> toStandardFormBoxes[removeImplicits[else]]
   }, {1}]
 ]]
-*)
-ToStandardFormBoxes[ContainerNode[Box, {child_}, _]] :=
-Block[{$RecursionLimit = Infinity},
-  toStandardFormBoxes[removeImplicits[child]]
-]
-
 
 
 toStandardFormBoxes[LeafNode[Token`Fake`ImplicitNull, _, _]] := Nothing
