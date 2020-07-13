@@ -143,7 +143,7 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
       Flatten out children, because there may be parsing errors from missing bracket, and
       we do not want to propagate
       *)
-      leaves = Cases[children, LeafNode[_, _, data_ /; srcMemberFunc[data[Source]]], Infinity];
+      leaves = Cases[children, (LeafNode|ErrorNode)[_, _, data_ /; srcMemberFunc[data[Source]]], Infinity];
     ,
     "SourceCharacterIndex",
       betterSrc = { src[[1]], takeSpecsOfLines[[poss[[1, 1]] + lastGoodLineIndex - 1, 2]] };
@@ -154,7 +154,7 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
       Flatten out children, because there may be parsing errors from missing bracket, and
       we do not want to propagate
       *)
-      leaves = Cases[children, LeafNode[_, _, data_ /; IntervalMemberQ[Interval[src], Interval[data[Source]]]], Infinity];
+      leaves = Cases[children, (LeafNode|ErrorNode)[_, _, data_ /; IntervalMemberQ[Interval[src], Interval[data[Source]]]], Infinity];
   ];
 
   GroupMissingCloserNode[tag, leaves, data]
@@ -189,6 +189,7 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
   lines = StringSplit[str, {"\r\n", "\n", "\r"}, All];
 
   data = dataIn;
+
   src = data[Source];
   
   Switch[convention,
