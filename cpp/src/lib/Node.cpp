@@ -449,6 +449,18 @@ void CollectedEmbeddedNewlinesNode::print(std::ostream& s) const {
     s << "]";
 }
 
+void CollectedEmbeddedTabsNode::print(std::ostream& s) const {
+    
+    s << "List[";
+    
+    for (auto& T : EmbeddedTabs) {
+        T.print(s);
+        s << ", ";
+    }
+    
+    s << "]";
+}
+
 
 void ListNode::print(std::ostream& s) const {
     
@@ -789,6 +801,29 @@ void CollectedEmbeddedNewlinesNode::put(MLINK mlp) const {
 #endif // !NABORT
         
         N.putStructured(mlp);
+    }
+}
+
+void CollectedEmbeddedTabsNode::put(MLINK mlp) const {
+    
+    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(EmbeddedTabs.size()))) {
+        assert(false);
+    }
+    
+    for (auto& T : EmbeddedTabs) {
+        
+#if !NABORT
+        //
+        // Check isAbort() inside loops
+        //
+        if (TheParserSession->isAbort()) {
+            
+            TheParserSession->handleAbort();
+            return;
+        }
+#endif // !NABORT
+        
+        T.putStructured(mlp);
     }
 }
 

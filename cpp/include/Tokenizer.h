@@ -36,6 +36,7 @@ class Tokenizer {
     std::vector<IssuePtr> Issues;
     
     std::set<SourceLocation> EmbeddedNewlines;
+    std::set<SourceLocation> EmbeddedTabs;
     
     
     void backupAndWarn(Buffer resetBuf, SourceLocation resetLoc);
@@ -177,6 +178,8 @@ public:
 #endif // !NISSUES
     
     std::set<SourceLocation>& getEmbeddedNewlines();
+    
+    std::set<SourceLocation>& getEmbeddedTabs();
     
 };
 

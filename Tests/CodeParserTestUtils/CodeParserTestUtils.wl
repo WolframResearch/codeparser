@@ -282,7 +282,8 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
        CodeConcreteParse[File[file], 
         ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1, 1, 3, Key[Source], 1]], #[[1, -1, 3, Key[Source], 2]]}],
             If[!empty[#[[3]]], "LineContinuations" -> #[[3]], Nothing],
-            If[!empty[#[[4]]], "EmbeddedNewlines" -> #[[4]], Nothing]|>]&)];
+            If[!empty[#[[4]]], "EmbeddedNewlines" -> #[[4]], Nothing],
+            If[!empty[#[[5]]], "EmbeddedTabs" -> #[[5]], Nothing]|>]&)];
       ,
       version >= 16,
             cst = 
@@ -482,7 +483,8 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
        CodeConcreteParse[File[file], 
         ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1, 1, 3, Key[Source], 1]], #[[1, -1, 3, Key[Source], 2]]}],
             If[!empty[#[[3]]], "LineContinuations" -> #[[3]], Nothing],
-            If[!empty[#[[4]]], "EmbeddedNewlines" -> #[[4]], Nothing]|>]&)];
+            If[!empty[#[[4]]], "EmbeddedNewlines" -> #[[4]], Nothing],
+            If[!empty[#[[5]]], "EmbeddedTabs" -> #[[5]], Nothing]|>]&)];
       ,
      version >= 16,
       cst = 

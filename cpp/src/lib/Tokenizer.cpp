@@ -13,12 +13,14 @@ void Tokenizer::init() {
     
     Issues.clear();
     EmbeddedNewlines.clear();
+    EmbeddedTabs.clear();
 }
 
 void Tokenizer::deinit() {
     
     Issues.clear();
     EmbeddedNewlines.clear();
+    EmbeddedTabs.clear();
 }
 
 // Precondition: buffer is pointing to current token
@@ -703,6 +705,11 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
             case '\n': case '\r': case CODEPOINT_CRLF:
                 
                 EmbeddedNewlines.insert(tokenStartLoc);
+                
+                break;
+            case '\t':
+                
+                EmbeddedTabs.insert(tokenStartLoc);
                 
                 break;
         }
@@ -3431,6 +3438,10 @@ std::vector<IssuePtr>& Tokenizer::getIssues() {
 
 std::set<SourceLocation>& Tokenizer::getEmbeddedNewlines() {
     return EmbeddedNewlines;
+}
+
+std::set<SourceLocation>& Tokenizer::getEmbeddedTabs() {
+    return EmbeddedTabs;
 }
 
 

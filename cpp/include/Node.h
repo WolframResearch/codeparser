@@ -482,6 +482,21 @@ public:
 //
 //
 //
+class CollectedEmbeddedTabsNode : public Node {
+    std::set<SourceLocation> EmbeddedTabs;
+public:
+    CollectedEmbeddedTabsNode(std::set<SourceLocation> EmbeddedTabs) : Node(), EmbeddedTabs(std::move(EmbeddedTabs)) {}
+    
+#if USE_MATHLINK
+    void put(MLINK mlp) const override;
+#endif // USE_MATHLINK
+    
+    void print(std::ostream&) const override;
+};
+
+//
+//
+//
 class ListNode : public Node {
     std::vector<NodePtr> N;
 public:

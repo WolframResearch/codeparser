@@ -191,6 +191,12 @@ Node *ParserSession::parseExpressions() {
         nodes.push_back(NodePtr(new CollectedEmbeddedNewlinesNode(std::move(EmbeddedNewlines))));
     }
     
+    {
+        auto& EmbeddedTabs = TheTokenizer->getEmbeddedTabs();
+        
+        nodes.push_back(NodePtr(new CollectedEmbeddedTabsNode(std::move(EmbeddedTabs))));
+    }
+    
     auto N = new ListNode(std::move(nodes));
     
     return N;
@@ -364,6 +370,12 @@ Node *ParserSession::concreteParseLeaf(StringifyMode mode) {
         auto& EmbeddedNewlines = TheTokenizer->getEmbeddedNewlines();
         
         nodes.push_back(NodePtr(new CollectedEmbeddedNewlinesNode(std::move(EmbeddedNewlines))));
+    }
+    
+    {
+        auto& EmbeddedTabs = TheTokenizer->getEmbeddedTabs();
+        
+        nodes.push_back(NodePtr(new CollectedEmbeddedTabsNode(std::move(EmbeddedTabs))));
     }
     
     auto N = new ListNode(std::move(nodes));

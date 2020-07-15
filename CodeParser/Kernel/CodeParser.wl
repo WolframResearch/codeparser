@@ -346,7 +346,8 @@ Module[{res, convention, container, tabWidth},
     container = ContainerNode[String, #[[1]], <|
       If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
       If[!empty[#[[3]]], "LineContinuations" -> #[[3]], Nothing],
-      If[!empty[#[[4]]], "EmbeddedNewlines" -> #[[4]], Nothing] |>]&
+      If[!empty[#[[4]]], "EmbeddedNewlines" -> #[[4]], Nothing],
+      If[!empty[#[[5]]], "EmbeddedTabs" -> #[[5]], Nothing] |>]&
   ];
 
   $ConcreteParseProgress = 0;
@@ -508,14 +509,15 @@ Module[{res, convention, container, containerWasAutomatic, tabWidth},
 
   (*
   The <||> will be filled in with Source later
-  The # here is { {exprs}, {issues}, {line conts}, {embedded newlines} }
+  The # here is { {exprs}, {issues}, {line conts}, {embedded newlines}, {embedded tabs} }
   *)
   If[container === Automatic,
     containerWasAutomatic = True;
     container = ContainerNode[File, #[[1]], <|
       If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
       If[!empty[#[[3]]], "LineContinuations" -> #[[3]], Nothing],
-      If[!empty[#[[4]]], "EmbeddedNewlines" -> #[[4]], Nothing] |>]&
+      If[!empty[#[[4]]], "EmbeddedNewlines" -> #[[4]], Nothing],
+      If[!empty[#[[5]]], "EmbeddedTabs" -> #[[5]], Nothing] |>]&
   ];
 
   $ConcreteParseProgress = 0;
@@ -665,13 +667,14 @@ Module[{res, convention, container, tabWidth},
 
   (*
   The <||> will be filled in with Source later
-  The # here is { {exprs}, {issues}, {line conts}, {embedded newlines} }
+  The # here is { {exprs}, {issues}, {line conts}, {embedded newlines}, {embedded tabs} }
   *)
   If[container === Automatic,
     container = ContainerNode[Byte, #[[1]], <|
       If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
       If[!empty[#[[3]]], "LineContinuations" -> #[[3]], Nothing],
-      If[!empty[#[[4]]], "EmbeddedNewlines" -> #[[4]], Nothing] |>]&
+      If[!empty[#[[4]]], "EmbeddedNewlines" -> #[[4]], Nothing],
+      If[!empty[#[[5]]], "EmbeddedTabs" -> #[[5]], Nothing] |>]&
   ];
 
   $ConcreteParseProgress = 0;
@@ -1031,6 +1034,12 @@ Module[{str, res, leaf, data, exprs, stringifyMode, convention, tabWidth},
   If[!empty[res[[4]]],
     data = leaf[[3]];
     data["EmbeddedNewlines"] = res[[4]];
+    leaf[[3]] = data;
+  ];
+
+  If[!empty[res[[5]]],
+    data = leaf[[3]];
+    data["EmbeddedTabs"] = res[[5]];
     leaf[[3]] = data;
   ];
   *)
