@@ -104,7 +104,15 @@ enum NextPolicyBits : uint8_t {
     //
     RETURN_TOPLEVELNEWLINE = 0x04,
     
-//    UNUSED = 0x08,
+    //
+    // Line continuations inside of strings or comments are "complex":
+    // Formatting matters
+    //
+    // All other line continuations are simple:
+    // inside or outside of other tokens
+    // outside of strings or comments
+    //
+    COMPLEX_LINE_CONTINUATIONS = 0x08,
     
     //
     // Check for unlikely escape sequences?

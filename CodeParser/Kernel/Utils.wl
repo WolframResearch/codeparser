@@ -22,6 +22,15 @@ removeIgnoredNodes
 
 normalizeTokens
 
+removeSimpleLineContinuation
+
+removeRemainingSimpleLineContinuation
+
+removeComplexLineContinuations
+
+convertEmbeddedNewlines
+
+convertEmbeddedTabs
 
 (*
 Functions copied from CodeFormatter
@@ -265,8 +274,8 @@ Options[normalizeTokens] = {
 }
 
 normalizeTokens[astIn_, OptionsPattern[]] :=
-  Module[{ast, data, tokStartLocs, lineContinuations, embeddedNewlines, grouped, poss, tuples, mapSpecs, formatOnly,
-    newline, embeddedTabs},
+  Module[{ast, data, tokStartLocs, simpleLineContinuations, complexLineContinuations,
+    embeddedNewlines, grouped, poss, tuples, mapSpecs, formatOnly, newline, embeddedTabs},
 
     ast = astIn;
 
@@ -276,7 +285,10 @@ normalizeTokens[astIn_, OptionsPattern[]] :=
 
     data = ast[[3]];
 
-    If[KeyExistsQ[data, "LineContinuations"] || KeyExistsQ[data, "EmbeddedNewlines"] || KeyExistsQ[data, "EmbeddedTabs"],
+    If[KeyExistsQ[data, "SimpleLineContinuations"] ||
+      KeyExistsQ[data, "ComplexLineContinuations"] ||
+      KeyExistsQ[data, "EmbeddedNewlines"] ||
+      KeyExistsQ[data, "EmbeddedTabs"],
 
       (*
       -5 is where LeafNodes[] are
@@ -288,11 +300,11 @@ normalizeTokens[astIn_, OptionsPattern[]] :=
       (*
       Group by starting SourceLocation
       *)
-      grouped = GroupBy[Transpose[{tokStartLocs, poss}], #[[1]]&];
+      grouped = GroupBy[Transpose[{tokStartLocs, poss}, {2, 1}], #[[1]]&];
 
-      If[KeyExistsQ[data, "LineContinuations"],
+      If[KeyExistsQ[data, "SimpleLineContinuations"],
 
-        lineContinuations = data["LineContinuations"];
+        simpleLineContinuations = data["SimpleLineContinuations"];
 
         mapSpecs = Map[
           Function[{contLoc},
@@ -304,30 +316,60 @@ normalizeTokens[astIn_, OptionsPattern[]] :=
             *)
             If[!MissingQ[tuples],
 
-              Map[
-                Function[{tuple},
-
-                  (*
-                  tuple is {token start loc, pos}
-                  *)
-                  tuple[[2]]
-                ]
-                ,
-                tuples
-              ]
+              tuples
               ,
               Nothing
             ]
           ]
           ,
-          lineContinuations
+          simpleLineContinuations
         ];
 
         mapSpecs = Flatten[mapSpecs, 1];
 
-        ast = MapAt[removeLineContinuations[#, "FormatOnly" -> formatOnly]&, ast, mapSpecs];
+        (*
+        There may be more than 1 simple line continuation, so use FixedPoint
+        *)
+        ast = MapAt[FixedPoint[removeSimpleLineContinuation, #]&, ast, mapSpecs[[All, 2]]];
 
-        KeyDropFrom[data, "LineContinuations"]
+        KeyDropFrom[data, "SimpleLineContinuations"]
+      ];
+
+      (*
+      If formatting, then leave complex line continuations alone
+      If abstracting, then remove them
+      *)
+      If[!formatOnly,
+
+        If[KeyExistsQ[data, "ComplexLineContinuations"],
+
+          complexLineContinuations = data["ComplexLineContinuations"];
+
+          mapSpecs = Map[
+            Function[{contLoc},
+
+              tuples = grouped[contLoc];
+
+              (*
+              The token associated with this location may have been abstracted away and now missing
+              *)
+              If[!MissingQ[tuples],
+
+                tuples
+                ,
+                Nothing
+              ]
+            ]
+            ,
+            complexLineContinuations
+          ];
+
+          mapSpecs = Flatten[mapSpecs, 1];
+
+          ast = MapAt[removeComplexLineContinuations, ast, mapSpecs[[All, 2]]];
+
+          KeyDropFrom[data, "ComplexLineContinuations"]
+        ];
       ];
 
       If[KeyExistsQ[data, "EmbeddedNewlines"],
@@ -344,17 +386,7 @@ normalizeTokens[astIn_, OptionsPattern[]] :=
             *)
             If[!MissingQ[tuples],
 
-              Map[
-                Function[{tuple},
-
-                  (*
-                  tuple is {token start loc, pos}
-                  *)
-                  tuple[[2]]
-                ]
-                ,
-                tuples
-              ]
+              tuples
               ,
               Nothing
             ]
@@ -365,7 +397,7 @@ normalizeTokens[astIn_, OptionsPattern[]] :=
 
         mapSpecs = Flatten[mapSpecs, 1];
 
-        ast = MapAt[convertEmbeddedNewlines[#, "FormatOnly" -> formatOnly, "Newline" -> newline]&, ast, mapSpecs];
+        ast = MapAt[convertEmbeddedNewlines[#, "FormatOnly" -> formatOnly, "Newline" -> newline]&, ast, mapSpecs[[All, 2]]];
 
         KeyDropFrom[data, "EmbeddedNewlines"]
       ];
@@ -384,17 +416,7 @@ normalizeTokens[astIn_, OptionsPattern[]] :=
             *)
             If[!MissingQ[tuples],
 
-              Map[
-                Function[{tuple},
-
-                  (*
-                  tuple is {token start loc, pos}
-                  *)
-                  tuple[[2]]
-                ]
-                ,
-                tuples
-              ]
+              tuples
               ,
               Nothing
             ]
@@ -405,7 +427,7 @@ normalizeTokens[astIn_, OptionsPattern[]] :=
 
         mapSpecs = Flatten[mapSpecs, 1];
 
-        ast = MapAt[convertEmbeddedTabs[#, "TabWidth" -> tabWidth, "Newline" -> newline]&, ast, mapSpecs];
+        ast = MapAt[convertEmbeddedTabs[#, "TabWidth" -> tabWidth, "Newline" -> newline]&, ast, mapSpecs[[All, 2]]];
 
         KeyDropFrom[data, "EmbeddedTabs"]
       ];
@@ -419,9 +441,50 @@ normalizeTokens[astIn_, OptionsPattern[]] :=
 
 
 
+(*
+Remove both external and internal line continuations
+
+Do not need to worry about preceding backslashes or anything like that because
+this is NOT called on multiline strings or multiline comments
+*)
+removeSimpleLineContinuation[LeafNode[tag_, s_String, data_]] :=
+  LeafNode[tag, StringReplace[s, StartOfString ~~ "\\" ~~ ("\n" | "\r\n" | "\r") ~~ WhitespaceCharacter... -> ""], data]
 
 (*
+removeSimpleLineContinuation is called by FixedPoint, so provide an escape hatch
+*)
+removeSimpleLineContinuation[___] :=
+  $Failed
 
+(*
+Remove remaining external line continuation
+
+LineColumn convention
+*)
+removeRemainingSimpleLineContinuation[LeafNode[tag_, s_String, data:KeyValuePattern[Source -> {{_ , _}, {_, _}}]]] :=
+  Module[{cases, ws, rest},
+
+    cases = StringCases[s, StartOfString ~~ "\\" ~~ ("\n" | "\r\n" | "\r") ~~ ws : (WhitespaceCharacter ...) ~~ rest___ :> {ws, rest}];
+
+    If[cases == {},
+      LeafNode[tag, s, data]
+      ,
+      {ws, rest} = cases[[1]];
+      LeafNode[tag, rest, <|data, Source -> {{data[[Key[Source], 1, 1]] + 1, StringLength[ws] + 1}, data[[Key[Source], 2]]}|>]
+    ]
+  ]
+
+removeRemainingSimpleLineContinuation[LeafNode[tag_, s_String, data_]] :=
+  LeafNode[tag, StringReplace[s, StartOfString ~~ "\\" ~~ ("\n" | "\r\n" | "\r") ~~ WhitespaceCharacter... -> ""], data]
+
+(*
+removeRemainingSimpleLineContinuation is called by FixedPoint, so provide an escape hatch
+*)
+removeRemainingSimpleLineContinuation[___] :=
+  $Failed
+
+
+(*
 Strip \<newline> line continuations from str
 
 Must handle \\<newline> correctly, DO NOT STRIP!
@@ -434,14 +497,8 @@ but lookbehinds need to be fixed width.
 So cannot use a regex.
 
 *)
-Options[removeLineContinuations] = {
-  "FormatOnly" -> False
-}
-
-removeLineContinuations[LeafNode[tag_, str_, data_], OptionsPattern[]] :=
-  Module[{continuationPoss, backslashCount, onePastLastPos, pos, takeSpec, formatOnly},
-
-    formatOnly = OptionValue["FormatOnly"];
+removeComplexLineContinuations[LeafNode[tag : String | Token`Comment, str_, data_]] :=
+  Module[{continuationPoss, backslashCount, onePastLastPos, pos, takeSpec},
 
     continuationPoss = StringPosition[str, "\n"|"\r"];
 
@@ -478,58 +535,6 @@ removeLineContinuations[LeafNode[tag_, str_, data_], OptionsPattern[]] :=
     ];
 
     (*
-    Handle trailing whitespace
-    *)
-    Which[
-      tag === String,
-        (*
-        For strings, only strip trailing whitespace from external line continuations
-
-        Whitespace is significant inside of strings, so preserve whitespace after internal line continuations
-        *)
-        continuationPoss = Map[
-          Function[{contPos},
-            (*
-            External line continuations can only occur at the beginning of the token
-            *)
-            If[contPos[[1]] == 1,
-              (*
-              External line continuation
-              *)
-              pos = contPos[[2]];
-              onePastLastPos = NestWhile[# + 1 &, pos + 1, # <= StringLength[str] && isWhitespaceChar[StringTake[str, {#}]] &];
-              {contPos[[1]], onePastLastPos - 1}
-              ,
-              (*
-              Internal line continuation
-              *)
-              If[formatOnly,
-                Nothing
-                ,
-                contPos
-              ]
-            ]
-          ]
-          ,
-          continuationPoss
-        ];
-      ,
-      True,
-        (*
-        must also strip all trailing whitespace for Symbols, Integers, Reals, Rationals, etc.
-        *)
-        continuationPoss = Map[
-          Function[{contPos},
-            pos = contPos[[2]];
-            onePastLastPos = NestWhile[# + 1 &, pos + 1, # <= StringLength[str] && isWhitespaceChar[StringTake[str, {#}]] &];
-            {contPos[[1]], onePastLastPos - 1}
-          ]
-          ,
-          continuationPoss
-        ];
-    ];
-
-    (*
 
     This used to be:
 
@@ -558,7 +563,7 @@ Options[convertEmbeddedNewlines] = {
   "Newline" :> $DefaultNewline
 }
 
-convertEmbeddedNewlines[LeafNode[String, str_, data_], OptionsPattern[]] :=
+convertEmbeddedNewlines[LeafNode[tag : String | Token`Comment, str_, data_], OptionsPattern[]] :=
   Module[{formatOnly, newline, escapedNewline},
 
     formatOnly = OptionValue["FormatOnly"];
@@ -566,10 +571,13 @@ convertEmbeddedNewlines[LeafNode[String, str_, data_], OptionsPattern[]] :=
 
     If[formatOnly,
       (*
-      keep embedded, but still canonicalize newline
+      Formatting, so keep embedded, but still canonicalize newline
       *)
-      LeafNode[String, StringReplace[str, {"\n" -> newline, "\r\n" -> newline, "\r" -> newline}], data]
+      LeafNode[tag, StringReplace[str, {"\n" -> newline, "\r\n" -> newline, "\r" -> newline}], data]
       ,
+      (*
+      Abstracting, so completely escape embedded newlines
+      *)
       Switch[newline,
         "\n",
           escapedNewline = "\\n";
@@ -580,7 +588,7 @@ convertEmbeddedNewlines[LeafNode[String, str_, data_], OptionsPattern[]] :=
         "\r",
           escapedNewline = "\\r";
       ];
-      LeafNode[String, StringReplace[str, {"\n" -> escapedNewline, "\r\n" -> escapedNewline, "\r" -> escapedNewline}], data]
+      LeafNode[tag, StringReplace[str, {"\n" -> escapedNewline, "\r\n" -> escapedNewline, "\r" -> escapedNewline}], data]
     ]
   ]
 
@@ -590,7 +598,7 @@ Options[convertEmbeddedTabs] = {
   "Newline" :> $DefaultNewline
 }
 
-convertEmbeddedTabs[LeafNode[String, str_, data_], OptionsPattern[]] :=
+convertEmbeddedTabs[LeafNode[tag : String | Token`Comment, str_, data_], OptionsPattern[]] :=
   Module[{tabWidth, newline, startingColumn},
 
     tabWidth = OptionValue["TabWidth"];
@@ -602,7 +610,7 @@ convertEmbeddedTabs[LeafNode[String, str_, data_], OptionsPattern[]] :=
         LineColumn convention
         *)
         startingColumn = data[[Key[Source], 1, 2]];
-        LeafNode[String, replaceTabs[str, startingColumn, newline, tabWidth], data]
+        LeafNode[tag, replaceTabs[str, startingColumn, newline, tabWidth], data]
       ,
       _,
         (*
@@ -611,10 +619,9 @@ convertEmbeddedTabs[LeafNode[String, str_, data_], OptionsPattern[]] :=
         replace with " "; we don't know anything about columns
         *)
         startingColumn = 0;
-        LeafNode[String, replaceTabs[str, startingColumn, newline, tabWidth], data]
+        LeafNode[tag, replaceTabs[str, startingColumn, newline, tabWidth], data]
     ]
   ]
-
 
 
 (*

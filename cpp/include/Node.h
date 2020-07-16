@@ -452,40 +452,10 @@ public:
 //
 //
 //
-class CollectedLineContinuationsNode : public Node {
-    std::set<SourceLocation> LineContinuations;
+class CollectedSourceLocationsNode : public Node {
+    std::set<SourceLocation> SourceLocs;
 public:
-    CollectedLineContinuationsNode(std::set<SourceLocation> LineContinuations) : Node(), LineContinuations(std::move(LineContinuations)) {}
-    
-#if USE_MATHLINK
-    void put(MLINK mlp) const override;
-#endif // USE_MATHLINK
-    
-    void print(std::ostream&) const override;
-};
-
-//
-//
-//
-class CollectedEmbeddedNewlinesNode : public Node {
-    std::set<SourceLocation> EmbeddedNewlines;
-public:
-    CollectedEmbeddedNewlinesNode(std::set<SourceLocation> EmbeddedNewlines) : Node(), EmbeddedNewlines(std::move(EmbeddedNewlines)) {}
-    
-#if USE_MATHLINK
-    void put(MLINK mlp) const override;
-#endif // USE_MATHLINK
-    
-    void print(std::ostream&) const override;
-};
-
-//
-//
-//
-class CollectedEmbeddedTabsNode : public Node {
-    std::set<SourceLocation> EmbeddedTabs;
-public:
-    CollectedEmbeddedTabsNode(std::set<SourceLocation> EmbeddedTabs) : Node(), EmbeddedTabs(std::move(EmbeddedTabs)) {}
+    CollectedSourceLocationsNode(std::set<SourceLocation> SourceLocs) : Node(), SourceLocs(std::move(SourceLocs)) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;

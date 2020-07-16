@@ -26,7 +26,8 @@ class CharacterDecoder {
     
     std::vector<IssuePtr> Issues;
     
-    std::set<SourceLocation> LineContinuations;
+    std::set<SourceLocation> SimpleLineContinuations;
+    std::set<SourceLocation> ComplexLineContinuations;
     
     
     WolframLibraryData libData;
@@ -95,7 +96,9 @@ public:
     std::vector<IssuePtr>& getIssues();
 #endif // !NISSUES
     
-    std::set<SourceLocation>& getLineContinuations();
+    std::set<SourceLocation>& getSimpleLineContinuations();
+    
+    std::set<SourceLocation>& getComplexLineContinuations();
 };
 
 extern CharacterDecoderPtr TheCharacterDecoder;

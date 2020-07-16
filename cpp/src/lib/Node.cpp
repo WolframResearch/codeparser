@@ -425,36 +425,12 @@ void CollectedIssuesNode::print(std::ostream& s) const {
     s << "]";
 }
 
-void CollectedLineContinuationsNode::print(std::ostream& s) const {
+void CollectedSourceLocationsNode::print(std::ostream& s) const {
     
     s << "List[";
     
-    for (auto& C : LineContinuations) {
-        C.print(s);
-        s << ", ";
-    }
-    
-    s << "]";
-}
-
-void CollectedEmbeddedNewlinesNode::print(std::ostream& s) const {
-    
-    s << "List[";
-    
-    for (auto& N : EmbeddedNewlines) {
-        N.print(s);
-        s << ", ";
-    }
-    
-    s << "]";
-}
-
-void CollectedEmbeddedTabsNode::print(std::ostream& s) const {
-    
-    s << "List[";
-    
-    for (auto& T : EmbeddedTabs) {
-        T.print(s);
+    for (auto& L : SourceLocs) {
+        L.print(s);
         s << ", ";
     }
     
@@ -758,13 +734,13 @@ void CollectedIssuesNode::put(MLINK mlp) const {
     }
 }
 
-void CollectedLineContinuationsNode::put(MLINK mlp) const {
+void CollectedSourceLocationsNode::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(LineContinuations.size()))) {
+    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(SourceLocs.size()))) {
         assert(false);
     }
     
-    for (auto& C : LineContinuations) {
+    for (auto& L : SourceLocs) {
         
 #if !NABORT
         //
@@ -777,53 +753,7 @@ void CollectedLineContinuationsNode::put(MLINK mlp) const {
         }
 #endif // !NABORT
             
-        C.putStructured(mlp);
-    }
-}
-
-void CollectedEmbeddedNewlinesNode::put(MLINK mlp) const {
-    
-    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(EmbeddedNewlines.size()))) {
-        assert(false);
-    }
-    
-    for (auto& N : EmbeddedNewlines) {
-        
-#if !NABORT
-        //
-        // Check isAbort() inside loops
-        //
-        if (TheParserSession->isAbort()) {
-            
-            TheParserSession->handleAbort();
-            return;
-        }
-#endif // !NABORT
-        
-        N.putStructured(mlp);
-    }
-}
-
-void CollectedEmbeddedTabsNode::put(MLINK mlp) const {
-    
-    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(EmbeddedTabs.size()))) {
-        assert(false);
-    }
-    
-    for (auto& T : EmbeddedTabs) {
-        
-#if !NABORT
-        //
-        // Check isAbort() inside loops
-        //
-        if (TheParserSession->isAbort()) {
-            
-            TheParserSession->handleAbort();
-            return;
-        }
-#endif // !NABORT
-        
-        T.putStructured(mlp);
+        L.putStructured(mlp);
     }
 }
 

@@ -354,9 +354,10 @@ Module[{res, convention, container, tabWidth},
   If[container === Automatic,
     container = ContainerNode[String, #[[1]], <|
       If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
-      If[!empty[#[[3]]], "LineContinuations" -> #[[3]], Nothing],
-      If[!empty[#[[4]]], "EmbeddedNewlines" -> #[[4]], Nothing],
-      If[!empty[#[[5]]], "EmbeddedTabs" -> #[[5]], Nothing] |>]&
+      If[!empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
+      If[!empty[#[[4]]], "ComplexLineContinuations" -> #[[4]], Nothing],
+      If[!empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
+      If[!empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing] |>]&
   ];
 
   $ConcreteParseProgress = 0;
@@ -524,9 +525,10 @@ Module[{res, convention, container, containerWasAutomatic, tabWidth},
     containerWasAutomatic = True;
     container = ContainerNode[File, #[[1]], <|
       If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
-      If[!empty[#[[3]]], "LineContinuations" -> #[[3]], Nothing],
-      If[!empty[#[[4]]], "EmbeddedNewlines" -> #[[4]], Nothing],
-      If[!empty[#[[5]]], "EmbeddedTabs" -> #[[5]], Nothing] |>]&
+      If[!empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
+      If[!empty[#[[4]]], "ComplexLineContinuations" -> #[[4]], Nothing],
+      If[!empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
+      If[!empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing] |>]&
   ];
 
   $ConcreteParseProgress = 0;
@@ -681,9 +683,10 @@ Module[{res, convention, container, tabWidth},
   If[container === Automatic,
     container = ContainerNode[Byte, #[[1]], <|
       If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
-      If[!empty[#[[3]]], "LineContinuations" -> #[[3]], Nothing],
-      If[!empty[#[[4]]], "EmbeddedNewlines" -> #[[4]], Nothing],
-      If[!empty[#[[5]]], "EmbeddedTabs" -> #[[5]], Nothing] |>]&
+      If[!empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
+      If[!empty[#[[4]]], "ComplexLineContinuations" -> #[[4]], Nothing],
+      If[!empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
+      If[!empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing] |>]&
   ];
 
   $ConcreteParseProgress = 0;
@@ -1036,19 +1039,25 @@ Module[{str, res, leaf, data, exprs, stringifyMode, convention, tabWidth},
   (*
   If[!empty[res[[3]]],
     data = leaf[[3]];
-    data["LineContinuations"] = res[[3]];
+    data["SimpleLineContinuations"] = res[[3]];
     leaf[[3]] = data;
   ];
 
   If[!empty[res[[4]]],
     data = leaf[[3]];
-    data["EmbeddedNewlines"] = res[[4]];
+    data["ComplexLineContinuations"] = res[[4]];
     leaf[[3]] = data;
   ];
 
   If[!empty[res[[5]]],
     data = leaf[[3]];
-    data["EmbeddedTabs"] = res[[5]];
+    data["EmbeddedNewlines"] = res[[5]];
+    leaf[[3]] = data;
+  ];
+
+  If[!empty[res[[6]]],
+    data = leaf[[3]];
+    data["EmbeddedTabs"] = res[[6]];
     leaf[[3]] = data;
   ];
   *)

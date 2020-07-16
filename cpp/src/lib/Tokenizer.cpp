@@ -413,6 +413,8 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation token
     
     assert(c.to_point() == '*');
     
+    policy |= COMPLEX_LINE_CONTINUATIONS;
+    
     auto depth = 1;
     
     c = TheByteDecoder->currentSourceCharacter(policy);
@@ -479,6 +481,28 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation token
                 break;
             case CODEPOINT_ENDOFFILE:
                 return Token(TOKEN_ERROR_UNTERMINATEDCOMMENT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+            case '\n': case '\r': case CODEPOINT_CRLF:
+                
+                EmbeddedNewlines.insert(tokenStartLoc);
+                
+                TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+                TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+                
+                c = TheByteDecoder->currentSourceCharacter(policy);
+                
+                break;
+            
+            case '\t':
+                
+                EmbeddedTabs.insert(tokenStartLoc);
+                
+                TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+                TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+                
+                c = TheByteDecoder->currentSourceCharacter(policy);
+                
+                break;
+                
             default:
                 
                 TheByteBuffer->buffer = TheByteDecoder->lastBuf;
@@ -688,6 +712,8 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
         Issues.push_back(std::move(I));
     }
 #endif // !NISSUES
+    
+    policy |= COMPLEX_LINE_CONTINUATIONS;
     
     while (true) {
         

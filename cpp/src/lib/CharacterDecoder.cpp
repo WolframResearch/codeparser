@@ -13,7 +13,8 @@ CharacterDecoder::CharacterDecoder() : Issues(), libData(), lastBuf(), lastLoc()
 void CharacterDecoder::init(WolframLibraryData libDataIn) {
     
     Issues.clear();
-    LineContinuations.clear();
+    SimpleLineContinuations.clear();
+    ComplexLineContinuations.clear();
     
     libData = libDataIn;
     
@@ -25,7 +26,8 @@ void CharacterDecoder::init(WolframLibraryData libDataIn) {
 void CharacterDecoder::deinit() {
     
     Issues.clear();
-    LineContinuations.clear();
+    SimpleLineContinuations.clear();
+    ComplexLineContinuations.clear();
 }
 
 
@@ -941,7 +943,11 @@ SourceCharacter CharacterDecoder::handleLineContinuation(Buffer tokenStartBuf, S
         c = TheByteDecoder->currentSourceCharacter(policy);
     }
     
-    LineContinuations.insert(tokenStartLoc);
+    if ((policy & COMPLEX_LINE_CONTINUATIONS) == COMPLEX_LINE_CONTINUATIONS) {
+        ComplexLineContinuations.insert(tokenStartLoc);
+    } else {
+        SimpleLineContinuations.insert(tokenStartLoc);
+    }
     
     TheByteBuffer->buffer = TheByteDecoder->lastBuf;
     TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
@@ -1100,8 +1106,12 @@ std::vector<IssuePtr>& CharacterDecoder::getIssues() {
 }
 #endif // !NISSUES
 
-std::set<SourceLocation>& CharacterDecoder::getLineContinuations() {
-    return LineContinuations;
+std::set<SourceLocation>& CharacterDecoder::getSimpleLineContinuations() {
+    return SimpleLineContinuations;
+}
+
+std::set<SourceLocation>& CharacterDecoder::getComplexLineContinuations() {
+    return ComplexLineContinuations;
 }
 
 

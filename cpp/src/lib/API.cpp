@@ -180,21 +180,27 @@ Node *ParserSession::parseExpressions() {
     }
     
     {
-        auto& LineContinuations = TheCharacterDecoder->getLineContinuations();
+        auto& SimpleLineContinuations = TheCharacterDecoder->getSimpleLineContinuations();
 
-        nodes.push_back(NodePtr(new CollectedLineContinuationsNode(std::move(LineContinuations))));
+        nodes.push_back(NodePtr(new CollectedSourceLocationsNode(std::move(SimpleLineContinuations))));
+    }
+    
+    {
+        auto& ComplexLineContinuations = TheCharacterDecoder->getComplexLineContinuations();
+        
+        nodes.push_back(NodePtr(new CollectedSourceLocationsNode(std::move(ComplexLineContinuations))));
     }
     
     {
         auto& EmbeddedNewlines = TheTokenizer->getEmbeddedNewlines();
 
-        nodes.push_back(NodePtr(new CollectedEmbeddedNewlinesNode(std::move(EmbeddedNewlines))));
+        nodes.push_back(NodePtr(new CollectedSourceLocationsNode(std::move(EmbeddedNewlines))));
     }
     
     {
         auto& EmbeddedTabs = TheTokenizer->getEmbeddedTabs();
         
-        nodes.push_back(NodePtr(new CollectedEmbeddedTabsNode(std::move(EmbeddedTabs))));
+        nodes.push_back(NodePtr(new CollectedSourceLocationsNode(std::move(EmbeddedTabs))));
     }
     
     auto N = new ListNode(std::move(nodes));
@@ -361,21 +367,27 @@ Node *ParserSession::concreteParseLeaf(StringifyMode mode) {
     }
     
     {
-        auto& LineContinuations = TheCharacterDecoder->getLineContinuations();
+        auto& SimpleLineContinuations = TheCharacterDecoder->getSimpleLineContinuations();
         
-        nodes.push_back(NodePtr(new CollectedLineContinuationsNode(std::move(LineContinuations))));
+        nodes.push_back(NodePtr(new CollectedSourceLocationsNode(std::move(SimpleLineContinuations))));
+    }
+    
+    {
+        auto& ComplexLineContinuations = TheCharacterDecoder->getComplexLineContinuations();
+        
+        nodes.push_back(NodePtr(new CollectedSourceLocationsNode(std::move(ComplexLineContinuations))));
     }
     
     {
         auto& EmbeddedNewlines = TheTokenizer->getEmbeddedNewlines();
         
-        nodes.push_back(NodePtr(new CollectedEmbeddedNewlinesNode(std::move(EmbeddedNewlines))));
+        nodes.push_back(NodePtr(new CollectedSourceLocationsNode(std::move(EmbeddedNewlines))));
     }
     
     {
         auto& EmbeddedTabs = TheTokenizer->getEmbeddedTabs();
         
-        nodes.push_back(NodePtr(new CollectedEmbeddedTabsNode(std::move(EmbeddedTabs))));
+        nodes.push_back(NodePtr(new CollectedSourceLocationsNode(std::move(EmbeddedTabs))));
     }
     
     auto N = new ListNode(std::move(nodes));
