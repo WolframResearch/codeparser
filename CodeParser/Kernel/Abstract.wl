@@ -60,9 +60,16 @@ Module[{ast},
 
 	CodeParser`Abstract`$AbstractParseProgress = 5;
 
-	ast = abstract[agg];
+	ast = agg;
 
+	(*
+	There is some surgery involved with gluing "-" onto numbers and this can screw up removing of line continuations.
+
+	So make sure to normalize tokens BEFORE doing the abstract fold
+	*)
 	ast = normalizeTokens[ast];
+
+	ast = abstract[ast];
 
 	CodeParser`Abstract`$AbstractParseProgress = 100;
 

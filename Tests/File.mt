@@ -257,7 +257,7 @@ TestMatch[
 			LeafNode[Whitespace, "\t", <|Source -> {{2, 1}, {2, 5}}|>],
 			LeafNode[Integer, "1", <|Source -> {{2, 5}, {2, 6}}|>],
 			LeafNode[Token`CloseCurly, "\\\n}", <|Source -> {{2, 6}, {3, 2}}|>]}, <|Source -> {{1, 1}, {3, 2}}|>]},
-		<|"LineContinuations" -> {{2, 5}, {2, 6}}, Source -> {{1, 1}, {3, 2}}|>]
+		<|"SimpleLineContinuations" -> {{2, 5}, {2, 6}}, Source -> {{1, 1}, {3, 2}}|>]
 	,
 	TestID->"File-20191025-I3T9F3"
 ]

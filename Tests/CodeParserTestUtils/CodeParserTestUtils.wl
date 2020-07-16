@@ -887,7 +887,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     textReplaced = text;
     
     If[$Debug,
-      Print["textReplaced1: ", textReplaced];
+      Print["textReplaced1: ", textReplaced //InputForm];
     ];
 
     (*
@@ -912,12 +912,14 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     (*
     Work around bug 382857 where line continuations with \r\n are not treated correctedly
     Related bugs: 382857
+
+    Also make it easier to deal with embedded newlines
     *)
-    textReplaced = StringReplace[textReplaced, RegularExpression["((?<!\\\\)\\\\(?:\\\\\\\\)*)\r\n"] :> "$1\n"];
+    textReplaced = StringReplace[textReplaced, "\r\n" -> "\n"];
 
 
     If[$Debug,
-      Print["textReplaced2: ", textReplaced];
+      Print["textReplaced2: ", textReplaced //InputForm];
     ];
 
     expected = DeleteCases[ToExpression[textReplaced, InputForm, Hold], Null];

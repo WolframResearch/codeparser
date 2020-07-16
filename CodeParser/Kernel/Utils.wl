@@ -448,10 +448,10 @@ Do not need to worry about preceding backslashes or anything like that because
 this is NOT called on multiline strings or multiline comments
 *)
 removeSimpleLineContinuation[LeafNode[tag_, s_String, data_]] :=
-  LeafNode[tag, StringReplace[s, StartOfString ~~ "\\" ~~ ("\n" | "\r\n" | "\r") ~~ WhitespaceCharacter... -> ""], data]
+  LeafNode[tag, StringReplace[s, "\\" ~~ ("\n" | "\r\n" | "\r") ~~ WhitespaceCharacter... -> ""], data]
 
 (*
-removeSimpleLineContinuation is called by FixedPoint, so provide an escape hatch
+removeSimpleLineContinuation is called by FixedPoint, so provide a sentinel escape hatch value
 *)
 removeSimpleLineContinuation[___] :=
   $Failed
@@ -478,7 +478,7 @@ removeRemainingSimpleLineContinuation[LeafNode[tag_, s_String, data_]] :=
   LeafNode[tag, StringReplace[s, StartOfString ~~ "\\" ~~ ("\n" | "\r\n" | "\r") ~~ WhitespaceCharacter... -> ""], data]
 
 (*
-removeRemainingSimpleLineContinuation is called by FixedPoint, so provide an escape hatch
+removeRemainingSimpleLineContinuation is called by FixedPoint, so provide a sentinel escape hatch value
 *)
 removeRemainingSimpleLineContinuation[___] :=
   $Failed
