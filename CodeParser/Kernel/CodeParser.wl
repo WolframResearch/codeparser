@@ -181,6 +181,15 @@ AbstractSyntaxErrorNode
 CallMissingCloserNode
 
 
+(*
+These are not (yet) used by the parser directly, but it is
+good to have them in a central place
+*)
+QuaternaryNode
+FragmentNode
+
+
+
 InternalInvalid
 
 
