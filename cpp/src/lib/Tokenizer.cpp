@@ -7,7 +7,7 @@
 #include "Utils.h" // for strangeLetterlikeWarning
 
 
-Tokenizer::Tokenizer() : Issues() {}
+Tokenizer::Tokenizer() : Issues(), EmbeddedNewlines(), EmbeddedTabs() {}
 
 void Tokenizer::init() {
     
