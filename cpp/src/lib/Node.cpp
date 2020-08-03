@@ -137,23 +137,7 @@ const Node* LeafSeq::last() const {
 }
 
 
-Node::Node(NodeSeq ChildrenIn) : Children(std::move(ChildrenIn)) {
-#ifndef NDEBUG
-    //
-    // These are very useful asserts to help find problems with trivia
-    //
-
-    // TODO: enable again after whitespace work
-    // "whitespace work" is refactoring of how eatAll() and appendIfEmpty() is done through the code
-#if 0
-    auto F = Children.first();
-    auto L = Children.last();
-
-    assert(!F->isTrivia());
-    assert(!L->isTrivia());
-#endif // #if 0
-#endif // NDEBUG
-}
+Node::Node(NodeSeq ChildrenIn) : Children(std::move(ChildrenIn)) {}
 
 Source Node::getSource() const {
     
