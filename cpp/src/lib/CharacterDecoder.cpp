@@ -1115,6 +1115,15 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterSta
     // Keep these treated as 2 characters. This is how bad escapes are handled in WL strings.
     // And has the nice benefit of the single \ still giving an error at top-level
     //
+    // Currently, past the bad character
+    //
+    // Must remember to reset to the bad character
+    //
+    // The tokenizer will use the bad character to decide what to do
+    //
+    
+    TheByteBuffer->buffer = unhandledBuf;
+    TheByteDecoder->SrcLoc = unhandledLoc;
     
     return WLCharacter('\\');
 }
