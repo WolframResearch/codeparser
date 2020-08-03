@@ -407,16 +407,21 @@ public:
 //
 // GroupMissingCloserNode
 //
-// f[
+// {]
 //
 class GroupMissingCloserNode : public OperatorNode {
 public:
     GroupMissingCloserNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEGROUPMISSINGCLOSERNODE, std::move(Args)) {}
 };
 
-class GroupMissingCloserNeedsReparseNode : public OperatorNode {
+//
+// UnterminatedGroupNeedsReparseNode
+//
+// {
+//
+class UnterminatedGroupNeedsReparseNode : public OperatorNode {
 public:
-    GroupMissingCloserNeedsReparseNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEGROUPMISSINGCLOSERNEEDSREPARSENODE, std::move(Args)) {}
+    UnterminatedGroupNeedsReparseNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEUNTERMINATEDGROUPNEEDSREPARSENODE, std::move(Args)) {}
 };
 
 //

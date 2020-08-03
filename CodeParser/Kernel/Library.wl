@@ -41,7 +41,7 @@ MakeCompoundNode
 
 MakeSyntaxErrorNode
 MakeGroupMissingCloserNode
-MakeGroupMissingCloserNeedsReparseNode
+MakeUnterminatedGroupNeedsReparseNode
 MakeAbstractSyntaxErrorNode
 
 MakeSourceCharacterNode
@@ -411,8 +411,8 @@ MakeSyntaxErrorNode[tag_, payload_, srcArgs___] :=
 MakeGroupMissingCloserNode[tag_, payload_, srcArgs___] :=
 	GroupMissingCloserNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
-MakeGroupMissingCloserNeedsReparseNode[tag_, payload_, srcArgs___] :=
-	GroupMissingCloserNeedsReparseNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
+MakeUnterminatedGroupNeedsReparseNode[tag_, payload_, srcArgs___] :=
+	UnterminatedGroupNeedsReparseNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 MakeAbstractSyntaxErrorNode[tag_, payload_, srcArgs___] :=
 	AbstractSyntaxErrorNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]

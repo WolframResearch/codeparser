@@ -660,7 +660,7 @@ NodePtr GroupParselet::parse(Token firstTok, ParserContext CtxtIn) const {
             // Handle something like   { a EOF
             //
             
-            group = NodePtr(new GroupMissingCloserNeedsReparseNode(Op, std::move(Args)));
+            group = NodePtr(new UnterminatedGroupNeedsReparseNode(Op, std::move(Args)));
             
             break;
         }
@@ -1059,7 +1059,17 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext CtxtI
     NodeSeq Args(1);
     Args.append(NodePtr(new LeafNode(Opener)));
     
+    auto depth = 1;
+    
     NodePtr group;
+    
+    //
+    // Do not check for other closers here
+    //
+    // As long as \( \) parses by just doing tokenization, then cannot reliably test for other closers
+    //
+    // e.g., \( ( \)  and  \( ) \)  is completely valid syntax
+    //
     
     while (true) {
     
@@ -1075,75 +1085,104 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext CtxtI
         
         auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
         
-        if (Tok.Tok == TOKEN_ENDOFFILE) {
-            
-            //
-            // Handle something like   \( a EOF
-            //
-            
-            group = NodePtr(new GroupMissingCloserNeedsReparseNode(SYMBOL_CODEPARSER_GROUPLINEARSYNTAXPAREN, std::move(Args)));
-            
-            break;
-        }
-        if (Tok.Tok == TOKEN_LINEARSYNTAX_CLOSEPAREN) {
-            
-            //
-            // Do not reserve inside loop
-            // Allow default resizing strategy, which is hopefully exponential
-            //
-            Args.append(NodePtr(new LeafNode(Tok)));
-            
-            TheParser->nextToken(Tok);
-            
-            group = NodePtr(new GroupNode(SYMBOL_CODEPARSER_GROUPLINEARSYNTAXPAREN, std::move(Args)));
-            
-            break;
-        }
-        
-        //
-        // Do not check for other closers here
-        //
-        // As long as \( \) parses by just doing tokenization, then cannot reliably test for other closers
-        //
-        // e.g., \( ( \)  and  \( ) \)  is completely valid syntax
-        //
-        
-        if (Tok.Tok == TOKEN_LINEARSYNTAX_OPENPAREN) {
-            
-            auto Sub = this->parse(Tok, Ctxt);
-            
-            //
-            // Do not reserve inside loop
-            // Allow default resizing strategy, which is hopefully exponential
-            //
-            Args.append(std::move(Sub));
-            
-            Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
-            
-        } else {
-            
-            //
-            // COMMENT, WHITESPACE, and NEWLINE are handled here
-            //
-            
-            //
-            // Do not reserve inside loop
-            // Allow default resizing strategy, which is hopefully exponential
-            //
-            Args.append(NodePtr(new LeafNode(Tok)));
-            
-            TheParser->nextToken(Tok);
-            
-            Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+        switch (Tok.Tok.value()) {
+            case TOKEN_ENDOFFILE.value(): {
+                
+                //
+                // Handle something like   \( a EOF
+                //
+                
+                group = NodePtr(new UnterminatedGroupNeedsReparseNode(SYMBOL_CODEPARSER_GROUPLINEARSYNTAXPAREN, std::move(Args)));
+                
+                goto LinearSyntaxOpenParenParseletExit;
+            }
+                break;
+            case TOKEN_LINEARSYNTAX_CLOSEPAREN.value(): {
+                
+                depth = depth - 1;
+                
+                if (depth == 0) {
+                    
+                    //
+                    // Do not reserve inside loop
+                    // Allow default resizing strategy, which is hopefully exponential
+                    //
+                    Args.append(NodePtr(new LeafNode(Tok)));
+                    
+                    TheParser->nextToken(Tok);
+                    
+                    group = NodePtr(new GroupNode(SYMBOL_CODEPARSER_GROUPLINEARSYNTAXPAREN, std::move(Args)));
+                    
+                    goto LinearSyntaxOpenParenParseletExit;
+                    
+                } else {
+                    
+                    //
+                    // Do not reserve inside loop
+                    // Allow default resizing strategy, which is hopefully exponential
+                    //
+                    Args.append(NodePtr(new LeafNode(Tok)));
+                    
+                    TheParser->nextToken(Tok);
+                    
+                    Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+                }
+            }
+                break;
+            case TOKEN_LINEARSYNTAX_OPENPAREN.value(): {
+                
+                //
+                // It is important to NOT make a recursive call to the parselet here.
+                //
+                // For example: \( \(a\) b )
+                //
+                // When the inner linear syntax group is done, it will call infixLoop, and will parse an implicit Times
+                // between \(a\) and b
+                //
+                // That is wrong.
+                //
+                // We want to guarantee that infixLoop is only called once for the entire linear syntax group
+                //
+                
+                depth = depth + 1;
+                
+                //
+                // Do not reserve inside loop
+                // Allow default resizing strategy, which is hopefully exponential
+                //
+                Args.append(NodePtr(new LeafNode(Tok)));
+                
+                TheParser->nextToken(Tok);
+                
+                Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+            }
+                break;
+            default: {
+                
+                //
+                // Do not reserve inside loop
+                // Allow default resizing strategy, which is hopefully exponential
+                //
+                Args.append(NodePtr(new LeafNode(Tok)));
+                
+                TheParser->nextToken(Tok);
+                
+                Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+            }
+                break;
         }
         
     } // while
+    
+LinearSyntaxOpenParenParseletExit:
     
     return TheParser->infixLoop(std::move(group), CtxtIn);
 }
 
 
 NodePtr EqualParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) const {
+    
+    NodePtr L;
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = PRECEDENCE_EQUAL;

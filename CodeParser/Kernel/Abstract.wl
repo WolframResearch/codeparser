@@ -327,10 +327,21 @@ we need to distinguish these cases, so it makes sense to have special node to sa
 
 "this is a CallNode, but with the closer missing"
 
+
+GroupMissingCloserNode gets abstracted
+
+strip off opener
 *)
 abstract[CallNode[head_, {GroupMissingCloserNode[GroupSquare, {_, inner___}, _]}, data_]] :=
 	abstractCallNode[CallMissingCloserNode[head, { GroupMissingCloserNode[GroupSquare, { inner }, data] }, data]]
 
+(*
+UnterminatedGroupNode does NOT get abstracted
+
+leave all concrete syntax in tact
+*)
+abstract[CallNode[head_, {UnterminatedGroupNode[GroupSquare, children_, _]}, data_]] :=
+	abstractCallNode[UnterminatedCallNode[head, { UnterminatedGroupNode[GroupSquare, children, data] }, data]]
 
 
 
@@ -371,6 +382,13 @@ Missing closers
 
 abstract[GroupMissingCloserNode[tag_, {_, inner___}, data_]] :=
 	abstractGroupNode[GroupMissingCloserNode[tag, { inner }, data]]
+
+
+
+abstract[n:UnterminatedGroupNode[_, _, _]] :=
+	n
+
+
 
 abstract[GroupNode[tag_, {_, inner___, _}, data_]] :=
 	abstractGroupNode[GroupNode[tag, { inner }, data]]
@@ -1588,7 +1606,7 @@ Module[{head, data, issues, first},
 
 	AssociateTo[data, AbstractSyntaxIssues -> issues];
 
-   head = InfixNode[CompoundExpression, Riffle[{headIn}, LeafNode[Token`Semi, ";", <||>]] ~Join~ {LeafNode[Token`Semi, ";", <||>], LeafNode[Token`Fake`ImplicitNull, "", <||>]}, <||>];
+	head = InfixNode[CompoundExpression, Riffle[{headIn}, LeafNode[Token`Semi, ";", <||>]] ~Join~ {LeafNode[Token`Semi, ";", <||>], LeafNode[Token`Fake`ImplicitNull, "", <||>]}, <||>];
 
 	abstract[CallNode[head, { groupIn }, data]]
 ]
@@ -1784,22 +1802,27 @@ Module[{abstractedChildren, issues, data},
 	CallNode[ToNode[tag], abstractedChildren, data]
 ]
 
+
 selectChildren[CallNode[ToNode[Comma], children_, _]] := children
 
 selectChildren[n_] := n
 
 
+abstractGroupNode[GroupMissingCloserNode[tag_, children_, dataIn_]] :=
+Module[{abstractedChildren, issues, data},
 
-
-abstractGroupNode[GroupMissingCloserNode[tag_, children_, data_]] :=
-Module[{abstractedChildren},
+	data = dataIn;
 
 	abstractedChildren = Flatten[selectChildren /@ (abstract /@ children)];
 
+	issues = Lookup[data, AbstractSyntaxIssues, {}];
+
+	If[issues != {},
+		AssociateTo[data, AbstractSyntaxIssues -> issues];
+	];
+
 	GroupMissingCloserNode[tag, abstractedChildren, data]
 ]
-
-
 
 
 (*
@@ -2266,7 +2289,7 @@ Module[{head, part, partData, data, issues, first},
 
 
 abstractCallNode[CallMissingCloserNode[headIn_, {partIn:GroupMissingCloserNode[GroupSquare, _, _]}, dataIn_]] :=
-Module[{head, part, partData, data, issues},
+Module[{head, part, data, issues},
 	head = headIn;
 	part = partIn;
 	data = dataIn;
@@ -2274,6 +2297,7 @@ Module[{head, part, partData, data, issues},
 	issues = {};
 
 	head = abstract[head];
+	
 	part = abstractGroupNode[part];
 	partData = part[[3]];
 
@@ -2287,6 +2311,31 @@ Module[{head, part, partData, data, issues},
 	CallMissingCloserNode[head, part[[2]], data]
 ]
 
+abstractCallNode[UnterminatedCallNode[headIn_, {partIn:UnterminatedGroupNode[GroupSquare, _, _]}, dataIn_]] :=
+Module[{head, part, data, issues},
+	head = headIn;
+	part = partIn;
+	data = dataIn;
+
+	issues = {};
+
+	head = abstract[head];
+	(*
+	part = abstractGroupNode[part];
+	partData = part[[3]];
+	*)
+
+	(*
+	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+
+	If[issues != {},
+		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+		AssociateTo[data, AbstractSyntaxIssues -> issues];
+	];
+	*)
+
+	UnterminatedCallNode[head, part[[2]], data]
+]
 
 
 

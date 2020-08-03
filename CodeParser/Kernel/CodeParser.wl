@@ -109,6 +109,8 @@ InfixInequality
 
 Comma
 
+MemoizedSetDelayed
+MemoizedTagSetDelayed
 
 (* group symbols *)
 (*List*)
@@ -172,13 +174,15 @@ ContainerNode
 
 SyntaxErrorNode
 GroupMissingCloserNode
-GroupMissingCloserNeedsReparseNode
+UnterminatedGroupNode
+UnterminatedGroupNeedsReparseNode
 (*
 GroupMissingOpenerNode is only used in Boxes
 *)
 GroupMissingOpenerNode
 AbstractSyntaxErrorNode
 CallMissingCloserNode
+UnterminatedCallNode
 
 
 (*
@@ -321,10 +325,10 @@ Module[{csts, bytess, encoding},
   csts =
     MapThread[Function[{cst, bytes},
       
-        Block[{GroupMissingCloserNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+        Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
 
-          GroupMissingCloserNeedsReparseNode[args___] := reparseMissingCloserNode[{args}, bytes, FilterRules[{opts}, Options[reparseMissingCloserNode]]];
-          UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedCommentErrorNode]]];
+          UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
+          UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
 
           cst
         ]
@@ -490,10 +494,10 @@ Module[{csts, encoding, fulls, bytess},
   csts =
     MapThread[Function[{cst, bytes},
     
-        Block[{GroupMissingCloserNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+        Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
 
-          GroupMissingCloserNeedsReparseNode[args___] := reparseMissingCloserNode[{args}, bytes, FilterRules[{opts}, Options[reparseMissingCloserNode]]];
-          UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedCommentErrorNode]]];
+          UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
+          UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
 
           cst
         ]
@@ -648,10 +652,10 @@ Module[{csts, encoding},
   csts =
     MapThread[Function[{cst, bytes},
       
-        Block[{GroupMissingCloserNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+        Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
 
-          GroupMissingCloserNeedsReparseNode[args___] := reparseMissingCloserNode[{args}, bytes, FilterRules[{opts}, Options[reparseMissingCloserNode]]];
-          UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedCommentErrorNode]]];
+          UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
+          UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
 
           cst
         ]
@@ -834,11 +838,6 @@ Module[{res, bytess, encoding, convention, tabWidth},
 
 
 
-
-
-
-
-
 CodeTokenize[f:File[_String], opts:OptionsPattern[]] :=
 Catch[
 Module[{tokss},
@@ -906,10 +905,6 @@ Module[{encoding, res, fulls, bytess, convention, tabWidth},
 
   res
 ]]
-
-
-
-
 
 
 
@@ -1086,7 +1081,11 @@ Module[{res},
 
 
 CodeSyntaxQ[code_] :=
-  FreeQ[CodeParse[code], ErrorNode | SyntaxErrorNode | AbstractSyntaxErrorNode | GroupMissingCloserNode | CallMissingCloserNode]
+  FreeQ[CodeParse[code],
+    ErrorNode |
+    SyntaxErrorNode | AbstractSyntaxErrorNode |
+    GroupMissingCloserNode | UnterminatedGroupNode |
+    CallMissingCloserNode | UnterminatedCallNode]
 
 
 

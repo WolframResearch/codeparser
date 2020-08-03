@@ -1,7 +1,7 @@
 BeginPackage["CodeParser`Error`"]
 
 
-reparseMissingCloserNode
+reparseUnterminatedGroupNode
 
 reparseUnterminatedTokenErrorNode
 
@@ -66,25 +66,31 @@ chunkPat = RegularExpression["(?m)("<>annotationPat<>")|("<>directivePat<>")|("<
 
 
 (*
-return: better GroupMissingCloserNode
+return: better UnterminatedGroupNode
 
 Do not return the previous children, because they are useless any way.
 
 But return the opener to make ToString stuff easier
 *)
 
-Options[reparseMissingCloserNode] = {
+Options[reparseUnterminatedGroupNode] = {
   CharacterEncoding -> "UTF8",
   SourceConvention -> "LineColumn",
-  ContainerNode -> Automatic
+  ContainerNode -> Automatic,
+  "TabWidth" :> ("TabWidth" /. Options[CodeConcreteParse])
 }
 
-reparseMissingCloserNode[{tag_, children_, dataIn_}, bytes_List, OptionsPattern[]] :=
+reparseUnterminatedGroupNode[{tag_, children_, dataIn_}, bytes_List, opts:OptionsPattern[]] :=
 Catch[
 Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str, leaves, convention, test,
-  lineLens, takeSpecsOfLines, poss},
+  lineLens, takeSpecsOfLines, poss, tabWidth},
+
+  If[$Debug,
+    Print["reparseUnterminatedGroupNode: ", {{tag, children, dataIn}, bytes, opts}];
+  ];
 
   convention = OptionValue[SourceConvention];
+  tabWidth = OptionValue["TabWidth"];
 
   str = SafeString[bytes];
 
@@ -93,6 +99,16 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
   ];
 
   lines = StringSplit[str, {"\r\n", "\n", "\r"}, All];
+
+  If[$Debug,
+    Print["lines: ", lines //InputForm];
+  ];
+
+  lines = replaceTabs[#, 1, "\n", tabWidth]& /@ lines;
+
+  If[$Debug,
+    Print["lines: ", lines //InputForm];
+  ];
 
   data = dataIn;
   src = data[Source];
@@ -157,7 +173,7 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
       leaves = Cases[children, (LeafNode|ErrorNode)[_, _, data_ /; IntervalMemberQ[Interval[src], Interval[data[Source]]]], Infinity];
   ];
 
-  GroupMissingCloserNode[tag, leaves, data]
+  UnterminatedGroupNode[tag, leaves, data]
 ]]
 
 
@@ -170,15 +186,17 @@ Do not return the previous children, because they are useless any way.
 Options[reparseUnterminatedTokenErrorNode] = {
   CharacterEncoding -> "UTF8",
   SourceConvention -> "LineColumn",
-  ContainerNode -> Automatic
+  ContainerNode -> Automatic,
+  "TabWidth" :> ("TabWidth" /. Options[CodeConcreteParse])
 }
 
 reparseUnterminatedTokenErrorNode[{tok_, _, dataIn_}, bytes_List, OptionsPattern[]] :=
 Catch[
 Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str, convention, test,
-  lineLens, takeSpecsOfLines, poss},
+  lineLens, takeSpecsOfLines, poss, tabWidth},
 
   convention = OptionValue[SourceConvention];
+  tabWidth = OptionValue["TabWidth"];
 
   str = SafeString[bytes];
 
@@ -187,6 +205,8 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
   ];
 
   lines = StringSplit[str, {"\r\n", "\n", "\r"}, All];
+
+  lines = replaceTabs[#, 1, "\n", tabWidth]& /@ lines;
 
   data = dataIn;
 
