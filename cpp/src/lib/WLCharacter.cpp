@@ -284,7 +284,7 @@ bool WLCharacter::isStrangeLetterlike() const {
     }
     
     //
-    // Using control character as letterlike is very strange
+    // Using control character as letterlike is strange
     //
     // jessef: There may be such a thing as *too* binary-safe...
     //
