@@ -197,10 +197,10 @@ TestMatch[
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {
-		(* from CharacterDecoder *)
-		SyntaxIssue["UnexpectedLetterlikeCharacter", _, _, _],
 		(* from Tokenizer *)
-		SyntaxIssue["UnexpectedCharacter", _, _, _]}]
+		SyntaxIssue["UnexpectedCharacter", _, _, _],
+		(* from CharacterDecoder *)
+		SyntaxIssue["UnexpectedLetterlikeCharacter", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-B2V1Z3"
 ]
@@ -325,9 +325,10 @@ TestMatch[
 	FirstCase[CodeConcreteParse[{206}, ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {
-		SyntaxIssue[_, _, _, _],
-		EncodingIssue["InvalidCharacterEncoding", _, "Fatal", KeyValuePattern[Source -> {{1, 1}, {1, 2}}]]}]
+	<|SyntaxIssues -> {
+		EncodingIssue["InvalidCharacterEncoding", "Invalid UTF-8 sequence.", "Fatal", <|Source -> {{1, 1}, {1, 2}}|>],
+		SyntaxIssue["UnexpectedLetterlikeCharacter", "Unexpected letterlike character: ``\\[UnknownGlyph]``.", "Warning", <|Source -> {{1, 1}, {1, 2}}, ConfidenceLevel -> 0.8|>]
+		}|>
 	,
 	TestID->"SyntaxIssues-20200413-T5W0H7"
 ]

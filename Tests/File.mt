@@ -209,10 +209,10 @@ TestMatch[
 			LeafNode[Token`Equal, "=", <|Source -> {{1, 4}, {1, 5}}|>],
 			LeafNode[Whitespace, " ", <|Source -> {{1, 5}, {1, 6}}|>],
 			LeafNode[Integer, "1", <|Source -> {{1, 6}, {1, 7}}|>] }, <|Source -> {{1, 1}, {1, 7}}|>] }, <|SyntaxIssues -> {
-				(* from Tokenizer, strange letterlike *)
-				SyntaxIssue["UnexpectedLetterlikeCharacter", "Unexpected letterlike character: ``\\.01``.", "Warning", _],
 				(* from CharacterDecoder, strange character in general *)
-				SyntaxIssue["UnexpectedCharacter", "Unexpected character: ``\\.01``.", "Warning", _]}, Source -> {{1, 1}, {1, 7}}|>]
+				SyntaxIssue["UnexpectedCharacter", "Unexpected character: ``\\.01``.", "Warning", _],
+				(* from Tokenizer, strange letterlike *)
+				SyntaxIssue["UnexpectedLetterlikeCharacter", "Unexpected letterlike character: ``\\.01``.", "Warning", _]}, Source -> {{1, 1}, {1, 7}}|>]
 	,
 	TestID->"File-20190602-N5D1B8"
 ]
@@ -375,7 +375,7 @@ Test[
 	(*
 	Random inputs, so expect bad syntax
 	*)
-	$HandledException
+	Failure["SyntaxError", <|"File" -> File[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-0001.txt"}]]|>]
 	,
 	TestID->"File-20190606-P8X5C7"
 ]
@@ -386,7 +386,7 @@ Test[
 	(*
 	Random inputs, so expect bad syntax
 	*)
-	$HandledException
+	Failure["SyntaxError", <|"File" -> File[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-0002.txt"}]]|>]
 	,
 	TestID->"File-20190606-T7B2I1"
 ]
@@ -397,7 +397,7 @@ Test[
 	(*
 	Random inputs, so expect bad syntax
 	*)
-	$HandledException
+	Failure["SyntaxError", <|"File" -> File[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-0003.txt"}]]|>]
 	,
 	TestID->"File-20190606-G9V4A7"
 ]
@@ -408,7 +408,7 @@ Test[
 	(*
 	Random inputs, so expect bad syntax
 	*)
-	$HandledException
+	Failure["SyntaxError", <|"File" -> File[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-characternameoperations.txt"}]]|>]
 	,
 	TestID->"File-20190606-K6L3G0"
 ]
@@ -430,7 +430,7 @@ Test[
 	(*
 	Random inputs, so expect bad syntax
 	*)
-	$HandledException
+	Failure["SyntaxError", <|"File" -> File[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-characternames.txt"}]]|>]
 	,
 	TestID->"File-20190606-E9U5Q2"
 ]
@@ -441,7 +441,7 @@ Test[
 	(*
 	Random inputs, so expect bad syntax
 	*)
-	$HandledException
+	Failure["SyntaxError", <|"File" -> File[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-contexts.txt"}]]|>]
 	,
 	TestID->"File-20190606-B4F3R6"
 ]
@@ -474,7 +474,7 @@ Test[
 	(*
 	Random inputs, so expect bad syntax
 	*)
-	$HandledException
+	Failure["SyntaxError", <|"File" -> File[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-random.txt"}]]|>]
 	,
 	TestID->"File-20190606-K8J6I8"
 ]
@@ -496,7 +496,7 @@ Test[
 	(*
 	Random inputs, so expect bad syntax
 	*)
-	$HandledException
+	Failure["SyntaxError", <|"File" -> File[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "inputs-specialchararacters.txt"}]]|>]
 	,
 	TestID->"File-20190606-K8S9K0"
 ]
@@ -714,7 +714,7 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash6.txt"}], 1]
 	,
-	$HandledException
+	Failure["SyntaxError", <|"File" -> File[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash6.txt"}]]|>]
 	,
 	TestID->"File-20191103-B9T6B0"
 ]
@@ -722,7 +722,7 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash7.txt"}], 1]
 	,
-	$HandledException
+	Failure["SyntaxError", <|"File" -> File[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash7.txt"}]]|>]
 	,
 	TestID->"File-20191103-A0V5S0"
 ]
@@ -730,7 +730,7 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash8.txt"}], 1]
 	,
-	$HandledException
+	Failure["SyntaxError", <|"File" -> File[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash8.txt"}]]|>]
 	,
 	TestID->"File-20191103-D1L3U1"
 ]
@@ -751,7 +751,7 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash10.txt"}], 1]
 	,
-	$HandledException
+	Failure["SyntaxError", <|"File" -> File[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash10.txt"}]]|>]
 	,
 	TestID->"File-20191103-H2O6Z5"
 ]
@@ -759,7 +759,7 @@ Test[
 Test[
 	parseTest[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash11.txt"}], 1]
 	,
-	$HandledException
+	Failure["SyntaxError", <|"File" -> File[FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "crash11.txt"}]]|>]
 	,
 	TestID->"File-20191103-U8W2U9"
 ]

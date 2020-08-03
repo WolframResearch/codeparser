@@ -103,17 +103,7 @@ Test[
 
 
 
-(*
-line continuations and newlines
-*)
-Test[
-	CodeConcreteParse["\"abc\\\r\ndef\""]
-	,
-	ContainerNode[String, {
-		LeafNode[String, "\"abc\\\r\ndef\"", <|Source -> {{1, 1}, {2, 5}}|>] }, <|"ComplexLineContinuations" -> {{1, 1}}|>]
-	,
-	TestID->"Concrete-20190606-U7J9I3"
-]
+
 
 
 
@@ -547,20 +537,7 @@ Test[
 	TestID->"Concrete-20190929-V7J8D5"
 ]
 			
-TestMatch[
-	CodeConcreteParse["{12,\\\n3}"]
-	,
-	ContainerNode[String, {
-		GroupNode[List, {
-			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
-			InfixNode[Comma, {
-				LeafNode[Integer, "12", <|Source -> {{1, 2}, {1, 4}}|>],
-				LeafNode[Token`Comma, ",", <|Source -> {{1, 4}, {1, 5}}|>],
-				LeafNode[Integer, "\\\n3", <|Source -> {{1, 5}, {2, 2}}|>]}, <|Source -> {{1, 2}, {2, 2}}|>],
-			LeafNode[Token`CloseCurly, "}", <|Source -> {{2, 2}, {2, 3}}|>]}, <|Source -> {{1, 1}, {2, 3}}|>] }, _]
-	,
-	TestID->"Concrete-20190930-B8P9Y9"
-]
+
 
 Test[
 	CodeConcreteParse["{ @@ }"]
@@ -773,5 +750,103 @@ Test[
 	,
 	TestID->"Concrete-20200602-Q2L0J5"
 ]
+
+
+
+
+
+
+
+
+
+
+(*
+was the ? missing or something?
+*)
+Test[
+	CodeConcreteParse["<|\t?"]
+	,
+	ContainerNode[String, {
+		UnterminatedGroupNode[Association, {
+			LeafNode[Token`LessBar, "<|", <|Source -> {{1, 1}, {1, 3}}|>],
+			LeafNode[Whitespace, "\t", <|Source -> {{1, 3}, {1, 5}}|>],
+			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 5}, {1, 5}}|>],
+			LeafNode[Token`Question, "?", <|Source -> {{1, 5}, {1, 6}}|>],
+			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 6}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]}, <||>]
+	,
+	TestID->"Concrete-20200803-R2A7L5"
+]
+
+
+
+
+
+
+(*
+bad escaped characters:
+*)
+
+Test[
+	CodeConcreteParse["\\-:a"]
+	,
+	ContainerNode[String, {
+		ErrorNode[Token`Error`UnhandledCharacter, "\\-", <|Source -> {{1, 1}, {1, 3}}|>],
+		BinaryNode[Pattern, {
+			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>], 
+    		LeafNode[Token`Colon, ":", <|Source -> {{1, 3}, {1, 4}}|>], 
+    		LeafNode[Symbol, "a", <|Source -> {{1, 4}, {1, 5}}|>]}, <|Source -> {{1, 3}, {1, 5}}|>]}, <|SyntaxIssues -> {
+    		
+    	SyntaxIssue["UnrecognizedCharacter", "Unrecognized character ``\\-``.", "Error", <|Source -> {{1, 1}, {1, 3}}, ConfidenceLevel -> 1., CodeActions -> {
+    		CodeAction["Replace with \\\\-", ReplaceText, <|Source -> {{1, 1}, {1, 3}}, "ReplacementText" -> "\\\\-"|>]}|>]}|>]
+	,
+	TestID->"Concrete-20200803-T9A8L2"
+]
+
+
+
+(*
+\r\n should count as 2 source characters
+*)
+Test[
+	CodeConcreteParse["1+\r\n2", SourceConvention -> "SourceCharacterIndex"]
+	,
+	ContainerNode[String, {
+		InfixNode[Plus, {
+			LeafNode[Integer, "1", <|Source -> {1, 1}|>],
+			LeafNode[Token`Plus, "+", <|Source -> {2, 2}|>],
+			LeafNode[Token`Newline, "\r\n", <|Source -> {3, 4}|>],
+			LeafNode[Integer, "2", <|Source -> {5, 5}|>]}, <|Source -> {1, 5}|>]}, <||>]
+	,
+	TestID->"Concrete-20200803-D9D1E4"
+]
+
+
+
+
+(*
+this was creating an implicit Times between the \(a\) and the b:
+*)
+Test[
+	CodeConcreteParse["\\( \\(a\\) b \\)"]
+	,
+	ContainerNode[String, {
+		GroupNode[GroupLinearSyntaxParen, {
+			LeafNode[Token`LinearSyntax`OpenParen, "\\(", <|Source -> {{1, 1}, {1, 3}}|>],
+			LeafNode[Whitespace, " ", <|Source -> {{1, 3}, {1, 4}}|>],
+			LeafNode[Token`LinearSyntax`OpenParen, "\\(", <|Source -> {{1, 4}, {1, 6}}|>],
+			LeafNode[Symbol, "a", <|Source -> {{1, 6}, {1, 7}}|>],
+			LeafNode[Token`LinearSyntax`CloseParen, "\\)", <|Source -> {{1, 7}, {1, 9}}|>],
+			LeafNode[Whitespace, " ", <|Source -> {{1, 9}, {1, 10}}|>],
+			LeafNode[Symbol, "b", <|Source -> {{1, 10}, {1, 11}}|>],
+			LeafNode[Whitespace, " ", <|Source -> {{1, 11}, {1, 12}}|>],
+			LeafNode[Token`LinearSyntax`CloseParen, "\\)", <|Source -> {{1, 12}, {1, 14}}|>]}, <|Source -> {{1, 1}, {1, 14}}|>]}, <||>]
+	,
+	TestID->"Concrete-20200803-T9U9J8"
+]
+
+
+
+
+
 
 

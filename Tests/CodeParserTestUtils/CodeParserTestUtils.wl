@@ -7,8 +7,6 @@ parseEquivalenceFunction
 
 parseTest
 
-$HandledException
-
 
 
 $LastFailedFileIn
@@ -27,11 +25,6 @@ Begin["`Private`"]
 Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
 Needs["PacletManager`"]
-
-
-
-
-
 
 
 
@@ -1000,21 +993,23 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         (*
         System`Private`NewContextPath[LocalObjects`Nodump`defaultContextPath];
         *)
-        prefix <> "Kernel/StartUp/LocalObjects/Common.m",
-        prefix <> "Kernel/StartUp/LocalObjects/LocalCache.m",
-        prefix <> "Kernel/StartUp/LocalObjects/LocalObject.m",
-        prefix <> "Kernel/StartUp/LocalObjects/LocalSymbol.m",
-        prefix <> "Kernel/StartUp/Persistence/BuildUtilities.m",
-        prefix <> "Kernel/StartUp/Persistence/Common.m",
-        prefix <> "Kernel/StartUp/Persistence/InitializationGlobals.m",
-        prefix <> "Kernel/StartUp/Persistence/InitializationValue.m",
-        prefix <> "Kernel/StartUp/Persistence/KernelInit.m",
-        prefix <> "Kernel/StartUp/Persistence/Once.m",
-        prefix <> "Kernel/StartUp/Persistence/PersistenceGlobals.m",
-        prefix <> "Kernel/StartUp/Persistence/PersistenceLocations.m",
-        prefix <> "Kernel/StartUp/Persistence/PersistentObject.m",
-        prefix <> "Kernel/StartUp/Persistence/PersistentValue.m",
-        prefix <> "Kernel/StartUp/Persistence/StandardLocations.m",
+        prefix <> "kernel/StartUp/LocalObjects/Common.m",
+        prefix <> "kernel/StartUp/LocalObjects/LocalCache.m",
+        prefix <> "kernel/StartUp/LocalObjects/LocalObject.m",
+        prefix <> "kernel/StartUp/LocalObjects/LocalSymbol.m",
+        prefix <> "kernel/StartUp/Persistence/BuildUtilities.m",
+        prefix <> "kernel/StartUp/Persistence/Common.m",
+        prefix <> "kernel/StartUp/Persistence/InitializationGlobals.m",
+        prefix <> "kernel/StartUp/Persistence/InitializationValue.m",
+        prefix <> "kernel/StartUp/Persistence/KernelInit.m",
+        prefix <> "kernel/StartUp/Persistence/Once.m",
+        prefix <> "kernel/StartUp/Persistence/PersistenceGlobals.m",
+        prefix <> "kernel/StartUp/Persistence/PersistenceLocations.m",
+        prefix <> "kernel/StartUp/Persistence/PersistentObject.m",
+        prefix <> "kernel/StartUp/Persistence/PersistentValue.m",
+        prefix <> "kernel/StartUp/Persistence/StandardLocations.m",
+
+        prefix <> "SystemFiles/Links/FFmpegTools/Kernel/Common.m",
 
         (*
         Unbalanced directives
@@ -1046,6 +1041,15 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
 
         prefix <> "FFmpegTools/FFmpegTools/Kernel/FFmpegTools.m",
         prefix <> "SystemFiles/Links/FFmpegTools/Kernel/FFmpegTools.m",
+        prefix <> "SystemFiles/Links/FFmpegTools/Kernel/Audio/Audio.m",
+        prefix <> "SystemFiles/Links/FFmpegTools/Kernel/Video/ExportUtility.m",
+        prefix <> "SystemFiles/Links/FFmpegTools/Kernel/Video/FilterGraph.m",
+        prefix <> "SystemFiles/Links/FFmpegTools/Kernel/Video/ImportUtility.m",
+        prefix <> "SystemFiles/Links/FFmpegTools/Kernel/Video/VideoPlayback.m",
+        prefix <> "SystemFiles/Links/FFmpegTools/Kernel/Video/VideoProperties.m",
+        prefix <> "SystemFiles/Links/FFmpegTools/Kernel/Video/VideoReader.m",
+        prefix <> "SystemFiles/Links/FFmpegTools/Kernel/Video/VideoUtility.m",
+        prefix <> "SystemFiles/Links/FFmpegTools/Kernel/Video/VideoWriter.m",
 
         prefix <> "SystemFiles/Links/FFmpegTools/LibraryResources/LibraryLinkUtilities.wl",
         prefix <> "SystemFiles/Links/ImageFileTools/LibraryResources/LibraryLinkUtilities.wl",
@@ -1070,17 +1074,17 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         (*
         programmatic use of BeginPackage[] / EndPackage[] or something
         *)
-        prefix <> "Kernel/StartUp/sysinit.m",
+        prefix <> "kernel/StartUp/sysinit.m",
         prefix <> "SystemFiles/Kernel/SystemResources/MacOSX-x86-64/sysinit.m",
 
-        prefix <> "Kernel/StartUp/sysmake.m",
+        prefix <> "kernel/StartUp/sysmake.m",
         
-        prefix <> "Kernel/StartUp/Convert/Load.m",
-        prefix <> "Kernel/StartUp/Convert/MathMLConvert.m",
+        prefix <> "kernel/StartUp/Convert/Load.m",
+        prefix <> "kernel/StartUp/Convert/MathMLConvert.m",
 
-        prefix <> "Kernel/StartUp/Devices/DeviceAPI/Device.m",
-        prefix <> "Kernel/StartUp/Messages.m",
-        prefix <> "Kernel/StartUp/NotebookCompatibility.m",
+        prefix <> "kernel/StartUp/Devices/DeviceAPI/Device.m",
+        prefix <> "kernel/StartUp/Messages.m",
+        prefix <> "kernel/StartUp/NotebookCompatibility.m",
 
         prefix <> "AddOns/Applications/UnitTable/Kernel/UnitTable.m",
         prefix <> "unittable/UnitTable/Kernel/UnitTable.m",
@@ -1161,21 +1165,16 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      and it is an older version
      *)
      If[MemberQ[{
-        prefix <> 
-         "SystemFiles/Components/NeuralNetworks/Inference.m",
-        prefix <> "Kernel/StartUp/Language/EquationalProof.m",
-        prefix <> "Kernel/StartUp/Language/TreeObjects.m",
-        prefix <> 
-         "Kernel/StartUp/PlaneGeometry/GeometryConjecture.m",
-        prefix <> "Kernel/StartUp/Regions/RegionFunctions/Perimeter.m",
-        prefix <> 
-         "Kernel/StartUp/Regions/RegionRelations/RegionRelationsLibrary.m",
-        prefix <> "Kernel/StartUp/SpatialAnalysis/RegionUtilities.m",
-        prefix <> 
-         "NaturalLanguageProcessing/NaturalLanguageProcessing/TextCases/PartOfSpeech/Sentences.m",
+        prefix <> "SystemFiles/Components/NeuralNetworks/Inference.m",
+        prefix <> "kernel/StartUp/Language/EquationalProof.m",
+        prefix <> "kernel/StartUp/Language/TreeObjects.m",
+        prefix <> "kernel/StartUp/PlaneGeometry/GeometryConjecture.m",
+        prefix <> "kernel/StartUp/Regions/RegionFunctions/Perimeter.m",
+        prefix <> "kernel/StartUp/Regions/RegionRelations/RegionRelationsLibrary.m",
+        prefix <> "kernel/StartUp/SpatialAnalysis/RegionUtilities.m",
+        prefix <> "NaturalLanguageProcessing/NaturalLanguageProcessing/TextCases/PartOfSpeech/Sentences.m",
         prefix <> "NeuralNetworks/NeuralNetworks/Define/Shapes.m",
-        prefix <> 
-         "NeuralNetworks/NeuralNetworks/Layers/Structural/Transpose.m",
+        prefix <> "NeuralNetworks/NeuralNetworks/Layers/Structural/Transpose.m",
         prefix <> "NeuralNetworks/NeuralNetworks/Types/Inference.m",
         prefix <> "NeuralNetworks/Tests/Formats/Upgrade.m",
         prefix <> "NeuralNetworks/Tests/Training/CopyNet.m",
@@ -1232,7 +1231,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
    ,
    "Handled"
    ,
-   (If[StringQ[tmp] && FileExistsQ[tmp], DeleteFile[tmp]];$HandledException) &
+   Function[{value, tag}, If[StringQ[tmp] && FileExistsQ[tmp], DeleteFile[tmp]]; value]
    ]
   ]
 

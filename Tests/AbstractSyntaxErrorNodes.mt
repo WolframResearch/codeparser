@@ -37,7 +37,7 @@ GroupMissingCloser:
 TestMatch[
 	CodeParse["{"]
 	,
-	ContainerNode[String, {GroupMissingCloserNode[List, _, _]}, _]
+	ContainerNode[String, {UnterminatedGroupNode[List, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-M0B3Z5"
 ]
@@ -46,7 +46,7 @@ TestMatch[
 TestMatch[
 	CodeParse["<|"]
 	,
-	ContainerNode[String, {GroupMissingCloserNode[Association, _, _]}, _]
+	ContainerNode[String, {UnterminatedGroupNode[Association, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-U0L5P6"
 ]
@@ -54,7 +54,7 @@ TestMatch[
 TestMatch[
 	CodeParse["\[LeftAngleBracket]"]
 	,
-	ContainerNode[String, {GroupMissingCloserNode[AngleBracket, _, _]}, _]
+	ContainerNode[String, {UnterminatedGroupNode[AngleBracket, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-X7G1G5"
 ]
@@ -63,7 +63,7 @@ TestMatch[
 TestMatch[
 	CodeParse["\[LeftCeiling]"]
 	,
-	ContainerNode[String, {GroupMissingCloserNode[Ceiling, _, _]}, _]
+	ContainerNode[String, {UnterminatedGroupNode[Ceiling, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-Q4A4B9"
 ]
@@ -72,7 +72,7 @@ TestMatch[
 TestMatch[
 	CodeParse["\[LeftFloor]"]
 	,
-	ContainerNode[String, {GroupMissingCloserNode[Floor, _, _]}, _]
+	ContainerNode[String, {UnterminatedGroupNode[Floor, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-C4T4D9"
 ]
@@ -80,7 +80,7 @@ TestMatch[
 TestMatch[
 	CodeParse["\[LeftDoubleBracket]"]
 	,
-	ContainerNode[String, {GroupMissingCloserNode[GroupDoubleBracket, _, _]}, _]
+	ContainerNode[String, {UnterminatedGroupNode[GroupDoubleBracket, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-S1C3U4"
 ]
@@ -88,7 +88,7 @@ TestMatch[
 TestMatch[
 	CodeParse["\[LeftBracketingBar]"]
 	,
-	ContainerNode[String, {GroupMissingCloserNode[BracketingBar, _, _]}, _]
+	ContainerNode[String, {UnterminatedGroupNode[BracketingBar, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-H0B3W9"
 ]
@@ -96,7 +96,7 @@ TestMatch[
 TestMatch[
 	CodeParse["\[LeftDoubleBracketingBar]"]
 	,
-	ContainerNode[String, {GroupMissingCloserNode[DoubleBracketingBar, _, _]}, _]
+	ContainerNode[String, {UnterminatedGroupNode[DoubleBracketingBar, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-R4A5I7"
 ]
@@ -104,7 +104,7 @@ TestMatch[
 TestMatch[
 	CodeParse["("]
 	,
-	ContainerNode[String, {GroupMissingCloserNode[GroupParen, _, _]}, _]
+	ContainerNode[String, {UnterminatedGroupNode[GroupParen, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-K6C7J1"
 ]
@@ -112,7 +112,7 @@ TestMatch[
 TestMatch[
 	CodeParse["["]
 	,
-	ContainerNode[String, {GroupMissingCloserNode[GroupSquare, _, _]}, _]
+	ContainerNode[String, {UnterminatedGroupNode[GroupSquare, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-Y0H1P1"
 ]
@@ -121,7 +121,7 @@ TestMatch[
 TestMatch[
 	CodeParse["\\("]
 	,
-	ContainerNode[String, {GroupMissingCloserNode[GroupLinearSyntaxParen, _, _]}, _]
+	ContainerNode[String, {UnterminatedGroupNode[GroupLinearSyntaxParen, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-B2V0A0"
 ]
@@ -159,12 +159,10 @@ TestMatch[
 	,
 	ContainerNode[String, {
 		AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociativePatternTest, {
-			BinaryNode[PatternTest, {
+			CallNode[LeafNode[Symbol, "PatternTest", <||>], {
 				LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
-				LeafNode[Token`Question, "?", <|Source -> {{1, 3}, {1, 4}}|>], 
 				LeafNode[Symbol, "b", <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>],
-				LeafNode[Token`Question, "?", <|Source -> {{1, 7}, {1, 8}}|>],
-				LeafNode[Symbol, "c", <|Source -> {{1, 9}, {1, 10}}|>]}, <|Source -> {{1, 1}, {1, 10}}|>] },
+			LeafNode[Symbol, "c", <|Source -> {{1, 9}, {1, 10}}|>]}, <|Source -> {{1, 1}, {1, 10}}|>] },
 		<||>]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190521-A6K4H1"
@@ -181,7 +179,6 @@ Test[
 	ContainerNode[String, {
 		AbstractSyntaxErrorNode[AbstractSyntaxError`PatternColonError, {
 			LeafNode[Integer, "1", <|Source -> {{1, 1}, {1, 2}}|>],
-			LeafNode[Token`Colon, ":", <|Source -> {{1, 2}, {1, 3}}|>],
 			LeafNode[Integer, "2", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, <||>]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190521-Z6D6T1"

@@ -320,21 +320,7 @@ Test[
 	TestID->"Parse-20190821-N2R2A4"
 ]
 
-Test[
-	"N[-2.338107410459767038489197252446735440638540145672387852483854437213668002700\\
-              283647782164041731329320284760093853265952775225466858359866744868898716819727\\
-              540973152674991112748065999645628353491550367242154602253040142644994178463934\\
-              453444457600947385805599328400354197885486873437032794768373623126914436368456\\
-              216321695224896886771887967253644542964146651161756655217909281106701616013124\\
-              010872087510680153635409304355401733365182436841536888461538337816732637447723\\
-              5216626917898162900770617327677840, {pp,aa}]"
-    ,
-    Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
-	,
-	TestID->"Parse-20190826-H8C5S0"
-]
+
 
 Test[
 	"1`.+2"
@@ -2450,15 +2436,7 @@ Test[
 	TestID->"Parse-20191222-A5N8K6"
 ]
 
-Test[
-	"f''\\\n''[x]"
-	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
-	,
-	TestID->"Parse-20191222-X8S9A3"
-]
+
 
 
 Test[
@@ -3126,71 +3104,7 @@ Test[
 
 
 
-(*
-Test line continuations between tokens where other whitespace matters
 
-Whitespace matters here:
-a_
-_b
-a_b
-#1
-#abc
-##2
-%45
-
-These are single notes, and spaces would break them up.
-But line continuations are fine to have between tokens
-*)
-
-Test[
-	"a\\\n_\\\nb"
-	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
-	,
-	TestID->"Parse-20200415-X5M3W6"
-]
-
-TestMatch[
-	CodeParse["#\\\n1"]
-	,
-	ContainerNode[String, {
-		CallNode[LeafNode[Symbol, "Slot", <||>], {
-			LeafNode[Integer, "1", <|Source -> {{1, 2}, {2, 2}}|>]}, <|Source -> {{1, 1}, {2, 2}}|>]}, _]
-	,
-	TestID->"Parse-20200415-E1Q6O7"
-]
-
-TestMatch[
-	CodeParse["#\\\nabc"]
-	,
-	ContainerNode[String, {
-		CallNode[LeafNode[Symbol, "Slot", <||>], {
-			LeafNode[String, "\"abc\"", <|Source -> {{1, 2}, {2, 4}}|>]}, <|Source -> {{1, 1}, {2, 4}}|>]}, _]
-	,
-	TestID->"Parse-20200415-Q8V1L8"
-]
-
-TestMatch[
-	CodeParse["##\\\n2"]
-	,
-	ContainerNode[String, {
-		CallNode[LeafNode[Symbol, "SlotSequence", <||>], {
-			LeafNode[Integer, "2", <|Source -> {{1, 3}, {2, 2}}|>]}, <|Source -> {{1, 1}, {2, 2}}|>]}, _]
-	,
-	TestID->"Parse-20200415-M9Y6M1"
-]
-
-TestMatch[
-	CodeParse["%\\\n45"]
-	,
-	ContainerNode[String, {
-		CallNode[LeafNode[Symbol, "Out", <||>], {
-			LeafNode[Integer, "45", <|Source -> {{1, 2}, {2, 3}}|>]}, <|Source -> {{1, 1}, {2, 3}}|>]}, _]
-	,
-	TestID->"Parse-20200415-K6V1V1"
-]
 
 
 
@@ -3245,40 +3159,7 @@ Test[
 
 
 
-BeginTestSection["LineContinuationsInFiles", False]
 
-Test[
-	"<< a\\\n~"
-	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
-	,
-	TestID->"Parse-20200425-S9S2S0"
-]
-
-
-Test[
-	" << a\\\n//"
-	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
-	,
-	TestID->"Parse-20200425-H9P8O1"
-]
-
-Test[
-	" << a\\\n //"
-	,
-	Null
-	,
-	EquivalenceFunction -> parseEquivalenceFunction
-	,
-	TestID->"Parse-20200425-C1U7J3"
-]
-
-EndTestSection[]
 
 
 
@@ -3303,4 +3184,74 @@ Test[
 	,
 	TestID->"Parse-20200703-O0D8F0"
 ]
+
+
+
+
+(*
+Test that the embedded \t is converted to \\t
+*)
+Test[
+	CodeParse["\"a\tb\""]
+	,
+	ContainerNode[String, {
+		LeafNode[String, "\"a\\tb\"", <|Source -> {{1, 1}, {1, 7}}|>]}, <||>]
+	,
+	TestID->"Parse-20200803-G3C1P6"
+]
+
+
+
+
+
+(*
+testing embedded newlines, but also we do not reformat linear syntax...
+*)
+Test[
+	CodeParse["\\((*\n*)\\)"]
+	,
+	ContainerNode[String, {
+		GroupNode[GroupLinearSyntaxParen, {
+			LeafNode[Token`LinearSyntax`OpenParen, "\\(", <|Source -> {{1, 1}, {1, 3}}|>],
+			LeafNode[Token`Comment, "(*\n*)", <|Source -> {{1, 3}, {2, 3}}|>],
+			LeafNode[Token`LinearSyntax`CloseParen, "\\)", <|Source -> {{2, 3}, {2, 5}}|>]}, <|Source -> {{1, 1}, {2, 5}}|>]}, <||>]
+	,
+	TestID->"Parse-20200803-R4W5C6"
+]
+
+
+
+
+
+
+
+(*
+make sure Comma is at top-level
+*)
+
+Test[
+	CodeParse["a,?b c"]
+	,
+	ContainerNode[String, {
+		AbstractSyntaxErrorNode[AbstractSyntaxError`CommaTopLevel, {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
+			CallNode[LeafNode[Symbol, "Times", <||>], {
+				CallNode[LeafNode[Symbol, "PatternTest", <||>], {
+					ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>],
+					LeafNode[Symbol, "b", <|Source -> {{1, 4}, {1, 5}}|>]}, <|Source -> {{1, 3}, {1, 5}}|>],
+				LeafNode[Symbol, "c", <|Source -> {{1, 6}, {1, 7}}|>]}, <|Source -> {{1, 3}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]}, <||>]
+	,
+	TestID->"Parse-20200803-X4E2N5"
+]
+
+
+
+
+
+
+
+
+
+
+
 

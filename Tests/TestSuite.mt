@@ -13,6 +13,7 @@ TestSuite[{
 	"DeclarationName.mt",
 	"Errors.mt",
 	"File.mt",
+	"LineContinuations.mt",
 	"Parse.mt",
 	"SafeString.mt",
 	"Span.mt",
