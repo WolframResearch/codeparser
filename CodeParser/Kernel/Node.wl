@@ -10,23 +10,7 @@ Needs["CodeParser`Utils`"]
 Some selectors
 *)
 
-
 LeafNode[_, str_, _]["String"] := str
-
-
-
-(*
-Some warnings
-*)
-LeafNode[Blank, _, _] := Throw["Found LeafNode[Blank, _, _]. Must use LeafNode[Token`Under, _, _]", "Unhandled"]
-LeafNode[BlankSequence, _, _] := Throw["Found LeafNode[BlankSequence, _, _]. Must use LeafNode[Token`Under, _, _]", "Unhandled"]
-LeafNode[BlankNullSequence, _, _] := Throw["Found LeafNode[BlankNullSequence, _, _]. Must use LeafNode[Token`Under, _, _]", "Unhandled"]
-
-LeafNode[Slot, _, _] := Throw["Found LeafNode[Slot, _, _]. Must use LeafNode[Token`Hash, _, _]", "Unhandled"]
-LeafNode[SlotSequence, _, _] := Throw["Found LeafNode[SlotSequence, _, _]. Must use LeafNode[Token`HashHash, _, _]", "Unhandled"]
-
-LeafNode[Out, _, _] := Throw["Found LeafNode[Out, _, _]. Must use LeafNode[Token`Percent, _, _]", "Unhandled"]
-
 
 
 
@@ -35,8 +19,6 @@ Some attributes
 *)
 
 Attributes[CodeNode] = {HoldAllComplete}
-
-
 
 
 
