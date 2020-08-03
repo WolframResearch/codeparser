@@ -138,7 +138,17 @@ public:
 class LeafSeqNode : public Node {
     LeafSeq Children;
 public:
-    LeafSeqNode(LeafSeq Children) : Children(std::move(Children)) {}
+    LeafSeqNode(LeafSeq ChildrenIn) : Children(std::move(ChildrenIn)) {
+        
+        //
+        // Children is owned by this LeafSeqNode, so it has been "moved"
+        //
+        // Setting moved here helps to prevent adding LeafSeqs back to the parser queue
+        // when nodes are being released
+        //
+        
+        Children.moved = true;
+    }
     
     size_t size() const override;
     
