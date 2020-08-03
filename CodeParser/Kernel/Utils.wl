@@ -291,9 +291,14 @@ normalizeTokens[astIn_, OptionsPattern[]] :=
       KeyExistsQ[data, "EmbeddedTabs"],
 
       (*
-      -5 is where LeafNodes[] are
+      -5 is where LeafNode[xxx, xxx, <|Source->{{1,1},{1,1}}|>] is
+
+      -3 is where LeafNode[xxx, xxx, <||>] is
+
+      There may be LeafNodes in metadata such as SyntaxIssues or AbstractSyntaxIssues, so remove those
       *)
-      poss = Position[ast, LeafNode[_, _, _], {-5}];
+      poss = Position[ast, LeafNode[_, _, _], {-5, -3}];
+      poss = Cases[poss, {___Integer}];
 
       tokStartLocs = #[[3, Key[Source], 1]]& /@ Extract[ast, poss];
 
@@ -427,7 +432,7 @@ normalizeTokens[astIn_, OptionsPattern[]] :=
 
         mapSpecs = Flatten[mapSpecs, 1];
 
-        ast = MapAt[convertEmbeddedTabs[#, "TabWidth" -> tabWidth, "Newline" -> newline]&, ast, mapSpecs[[All, 2]]];
+        ast = MapAt[convertEmbeddedTabs[#, "FormatOnly" -> formatOnly, "TabWidth" -> tabWidth, "Newline" -> newline]&, ast, mapSpecs[[All, 2]]];
 
         KeyDropFrom[data, "EmbeddedTabs"]
       ];
@@ -555,7 +560,8 @@ isWhitespaceChar[c_String] := c == " " || c == "\t"
 
 
 (*
-It is not convenient to have actual <newline> characters embedded in strings
+It is not convenient to have actual <newline> characters embedded in strings,
+so convert \n -> \\n
 *)
 
 Options[convertEmbeddedNewlines] = {
@@ -563,7 +569,7 @@ Options[convertEmbeddedNewlines] = {
   "Newline" :> $DefaultNewline
 }
 
-convertEmbeddedNewlines[LeafNode[tag : String | Token`Comment, str_, data_], OptionsPattern[]] :=
+convertEmbeddedNewlines[LeafNode[String, str_, data_], OptionsPattern[]] :=
   Module[{formatOnly, newline, escapedNewline},
 
     formatOnly = OptionValue["FormatOnly"];
@@ -573,7 +579,7 @@ convertEmbeddedNewlines[LeafNode[tag : String | Token`Comment, str_, data_], Opt
       (*
       Formatting, so keep embedded, but still canonicalize newline
       *)
-      LeafNode[tag, StringReplace[str, {"\n" -> newline, "\r\n" -> newline, "\r" -> newline}], data]
+      LeafNode[String, StringReplace[str, {"\r\n" -> newline, "\n" -> newline, "\r" -> newline}], data]
       ,
       (*
       Abstracting, so completely escape embedded newlines
@@ -588,29 +594,118 @@ convertEmbeddedNewlines[LeafNode[tag : String | Token`Comment, str_, data_], Opt
         "\r",
           escapedNewline = "\\r";
       ];
-      LeafNode[tag, StringReplace[str, {"\n" -> escapedNewline, "\r\n" -> escapedNewline, "\r" -> escapedNewline}], data]
+      LeafNode[String, StringReplace[str, {"\r\n" -> escapedNewline, "\n" -> escapedNewline, "\r" -> escapedNewline}], data]
     ]
   ]
 
+convertEmbeddedNewlines[n:LeafNode[Token`Comment, str_, data_], opts:OptionsPattern[]] :=
+  Catch[
+  Module[{formatOnly, newline},
+
+    formatOnly = OptionValue["FormatOnly"];
+    newline = OptionValue["Newline"];
+
+    (*
+    Comments cannot be abstracted (they have already been aggregated away)
+
+    But, e.g. inside linear syntax, we may still have comments with embedded newlines even when we are abstracting
+
+    Example:
+
+    \((*
+    *)\)
+
+    *)
+    If[!formatOnly,
+      Throw[n]
+    ];
+
+    (*
+    Formatting, so keep embedded, but still canonicalize newline
+    *)
+    LeafNode[Token`Comment, StringReplace[str, {"\r\n" -> newline, "\n" -> newline, "\r" -> newline}], data]
+  ]]
+
+(*
+Implicit tokens may erroneously get picked up because they have the same starting location as the token with embedded newlines.
+
+Example:
+
+a;(*
+*)
+
+The implicit Null has the same start location as the multiline comment
+
+*)
+convertEmbeddedNewlines[n:LeafNode[Token`Fake`ImplicitNull | Token`Fake`ImplicitTimes, _, _], OptionsPattern[]] :=
+  n
+
+
 
 Options[convertEmbeddedTabs] = {
+  "FormatOnly" -> False,
   "TabWidth" :> $DefaultTabWidth,
   "Newline" :> $DefaultNewline
 }
 
-convertEmbeddedTabs[LeafNode[tag : String | Token`Comment, str_, data_], OptionsPattern[]] :=
-  Module[{tabWidth, newline, startingColumn},
+convertEmbeddedTabs[LeafNode[String, str_, data_], OptionsPattern[]] :=
+  Module[{tabWidth, newline, startingColumn, formatOnly},
 
+    formatOnly = OptionValue["FormatOnly"];
     tabWidth = OptionValue["TabWidth"];
     newline = OptionValue["Newline"];
 
+    If[formatOnly,
+      (*
+      Formatting, so render tabs down
+      *)
+      Switch[data,
+        KeyValuePattern[Source -> {{_, _}, {_, _}}],
+          (*
+          LineColumn convention
+          *)
+          startingColumn = data[[Key[Source], 1, 2]];
+          LeafNode[String, replaceTabs[str, startingColumn, newline, tabWidth], data]
+        ,
+        _,
+          (*
+          Any other convention
+
+          replace with " "; we don't know anything about columns
+          *)
+          startingColumn = 0;
+          LeafNode[String, replaceTabs[str, startingColumn, newline, tabWidth], data]
+      ]
+      ,
+      (*
+      Abstracting, so escape tabs
+      *)
+      LeafNode[String, StringReplace[str, "\t" -> "\\t"], data]
+    ]
+  ]
+
+convertEmbeddedTabs[n:LeafNode[Token`Comment, str_, data_], opts:OptionsPattern[]] :=
+  Catch[
+  Module[{tabWidth, newline, startingColumn, formatOnly},
+
+    formatOnly = OptionValue["FormatOnly"];
+    tabWidth = OptionValue["TabWidth"];
+    newline = OptionValue["Newline"];
+
+    If[!formatOnly,
+      Throw[n]
+    ];
+
+    (*
+    Formatting, so render tabs down
+    *)
     Switch[data,
       KeyValuePattern[Source -> {{_, _}, {_, _}}],
         (*
         LineColumn convention
         *)
         startingColumn = data[[Key[Source], 1, 2]];
-        LeafNode[tag, replaceTabs[str, startingColumn, newline, tabWidth], data]
+        LeafNode[Token`Comment, replaceTabs[str, startingColumn, newline, tabWidth], data]
       ,
       _,
         (*
@@ -619,9 +714,13 @@ convertEmbeddedTabs[LeafNode[tag : String | Token`Comment, str_, data_], Options
         replace with " "; we don't know anything about columns
         *)
         startingColumn = 0;
-        LeafNode[tag, replaceTabs[str, startingColumn, newline, tabWidth], data]
+        LeafNode[Token`Comment, replaceTabs[str, startingColumn, newline, tabWidth], data]
     ]
-  ]
+  ]]
+
+convertEmbeddedTabs[n:LeafNode[Token`Fake`ImplicitNull | Token`Fake`ImplicitTimes, _, _], OptionsPattern[]] :=
+  n
+
 
 
 (*
