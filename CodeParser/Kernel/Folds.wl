@@ -8,6 +8,9 @@ deparen
 aggregateButNotToplevelNewlines
 
 
+linearize
+
+
 Begin["`Private`"]
 
 Needs["CodeParser`"]
@@ -212,6 +215,79 @@ Module[{deChildren, data},
 
 	node[tag, deChildren, data]
 ]
+
+
+
+linearize[node_] := Flatten[linearize0[node]]
+
+linearize0[ContainerNode[_, fs_List, _]] :=
+  linearize0 /@ fs
+
+linearize0[GroupNode[_, fs_List, _]] :=
+  linearize0 /@ fs
+
+linearize0[BinaryNode[_, fs_List, _]] :=
+  linearize0 /@ fs
+
+linearize0[InfixNode[_, fs_List, _]] :=
+  linearize0 /@ fs
+
+linearize0[TernaryNode[_, fs_List, _]] :=
+  linearize0 /@ fs
+
+linearize0[QuaternaryNode[_, fs_List, _]] :=
+  linearize0 /@ fs
+
+linearize0[PrefixNode[_, fs_List, _]] :=
+  linearize0 /@ fs
+
+linearize0[PostfixNode[_, fs_List, _]] :=
+  linearize0 /@ fs
+
+linearize0[CompoundNode[_, fs_List, _]] :=
+  linearize0 /@ fs
+
+linearize0[BoxNode[_, fs_List, _]] :=
+  linearize0 /@ fs
+
+linearize0[CallNode[head_List, fs_List, _]] :=
+  {linearize0 /@ head, linearize0 /@ fs}
+
+linearize0[SyntaxErrorNode[_, fs_List, _]] :=
+  linearize0 /@ fs
+
+linearize0[GroupMissingCloserNode[_, fs_List, _]] :=
+  linearize0 /@ fs
+
+linearize0[UnterminatedGroupNode[_, fs_List, _]] :=
+  linearize0 /@ fs
+
+linearize0[AbstractSyntaxErrorNode[_, fs_List, _]] :=
+  linearize0 /@ fs
+
+linearize0[CallMissingCloserNode[head_List, fs_List, _]] :=
+  {linearize0 /@ head, linearize0 /@ fs}
+
+linearize0[UnterminatedCallNode[head_List, fs_List, _]] :=
+  {linearize0 /@ head, linearize0 /@ fs}
+
+linearize0[LeafNode[tag_, fs_List, data_]] :=
+  linearize0 /@ fs
+
+linearize0[ErrorNode[tag_, fs_List, _]] :=
+  linearize0 /@ fs
+
+linearize0[n:LeafNode[_, _String, _]] :=
+  n
+
+linearize0[n:ErrorNode[_, _String, _]] :=
+  n
+
+linearize0[n:FragmentNode[_, _String, _]] :=
+  n
+
+linearize0[args___] :=
+	Failure["InternalUnhandled", <|"Function"->linearize0, "Arguments"->{args}|>]
 
 
 
