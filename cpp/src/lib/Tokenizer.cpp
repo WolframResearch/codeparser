@@ -3101,9 +3101,6 @@ inline Token Tokenizer::handleUnhandledBackslash(Buffer tokenStartBuf, SourceLoc
     
     assert(c.to_point() == '\\');
     
-    auto resetBuf = TheByteBuffer->buffer;
-    auto resetLoc = TheByteDecoder->SrcLoc;
-    
     c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
     
     switch (c.to_point()) {
@@ -3113,8 +3110,8 @@ inline Token Tokenizer::handleUnhandledBackslash(Buffer tokenStartBuf, SourceLoc
             // Try to reconstruct \[XXX]
             //
             
-            resetBuf = TheByteBuffer->buffer;
-            resetLoc = TheByteDecoder->SrcLoc;
+            auto resetBuf = TheByteBuffer->buffer;
+            auto resetLoc = TheByteDecoder->SrcLoc;
             
             c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
             
@@ -3152,8 +3149,8 @@ inline Token Tokenizer::handleUnhandledBackslash(Buffer tokenStartBuf, SourceLoc
             // Try to reconstruct \:XXXX
             //
             
-            resetBuf = TheByteBuffer->buffer;
-            resetLoc = TheByteDecoder->SrcLoc;
+            auto resetBuf = TheByteBuffer->buffer;
+            auto resetLoc = TheByteDecoder->SrcLoc;
             
             c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
             
@@ -3187,8 +3184,8 @@ inline Token Tokenizer::handleUnhandledBackslash(Buffer tokenStartBuf, SourceLoc
             // Try to reconstruct \.XX
             //
             
-            resetBuf = TheByteBuffer->buffer;
-            resetLoc = TheByteDecoder->SrcLoc;
+            auto resetBuf = TheByteBuffer->buffer;
+            auto resetLoc = TheByteDecoder->SrcLoc;
             
             c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
             
@@ -3222,8 +3219,8 @@ inline Token Tokenizer::handleUnhandledBackslash(Buffer tokenStartBuf, SourceLoc
             // Try to reconstruct \XXX
             //
             
-            resetBuf = TheByteBuffer->buffer;
-            resetLoc = TheByteDecoder->SrcLoc;
+            auto resetBuf = TheByteBuffer->buffer;
+            auto resetLoc = TheByteDecoder->SrcLoc;
             
             c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
             
@@ -3257,8 +3254,8 @@ inline Token Tokenizer::handleUnhandledBackslash(Buffer tokenStartBuf, SourceLoc
             // Try to reconstruct \|XXXXXX
             //
             
-            resetBuf = TheByteBuffer->buffer;
-            resetLoc = TheByteDecoder->SrcLoc;
+            auto resetBuf = TheByteBuffer->buffer;
+            auto resetLoc = TheByteDecoder->SrcLoc;
             
             c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
             
@@ -3295,9 +3292,6 @@ inline Token Tokenizer::handleUnhandledBackslash(Buffer tokenStartBuf, SourceLoc
             //
             // Nothing special, just read next single character
             //
-            
-            TheByteBuffer->buffer = resetBuf;
-            TheByteDecoder->SrcLoc = resetLoc;
             
             return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         }
