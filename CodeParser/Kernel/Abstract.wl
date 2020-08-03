@@ -198,8 +198,11 @@ abstract[BinaryNode[PutAppend, {left_, _, LeafNode[String, str_, data1_]}, data_
 (*
 First arg must be a symbol
 *)
-abstract[BinaryNode[Pattern, children:{_[Except[Symbol], _, _], _, _}, data_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`PatternColonError, children, data]
+abstract[BinaryNode[Pattern, {left:LeafNode[Symbol, _, _], _, right_}, data_]] :=
+	CallNode[ToNode[Pattern], {abstract[left], abstract[right]}, data]
+
+abstract[BinaryNode[Pattern, {left_, _, right_}, data_]] :=
+	AbstractSyntaxErrorNode[AbstractSyntaxError`PatternColonError, {abstract[left], abstract[right]}, data]
 
 (*
 Abstract NonAssociative errors
@@ -207,8 +210,8 @@ Abstract NonAssociative errors
 a ? b ? c being NonAssociative is alluded to being a bug in bug report 206938
 Related bugs: 206938
 *)
-abstract[BinaryNode[PatternTest, children:{BinaryNode[PatternTest, _, _], _, _}, data_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociativePatternTest, children, data]
+abstract[BinaryNode[PatternTest, {left:BinaryNode[PatternTest, _, _], _, right_}, data_]] :=
+	AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociativePatternTest, {abstract[left], abstract[right]}, data]
 
 abstract[BinaryNode[Unset, {left_, _, _}, data_]] := CallNode[ToNode[Unset], {abstract[left]}, data]
 
@@ -236,7 +239,7 @@ abstract[InfixNode[Divisible, children_, data_]] := abstractDivisible[InfixNode[
 
 (*
 Do not do children[[;;;;2]]
-need to use Source of last comma when abstacting implicit Null
+need to use Source of last comma when abstracting implicit Null
 *)
 abstract[InfixNode[Comma, children_, data_]] := abstractComma[InfixNode[Comma, children, data]]
 
@@ -258,9 +261,11 @@ handle  a ~f,~ b
 
 Cannot have  (f,)[a, b]
 *)
-abstract[TernaryNode[TernaryTilde, children:{_, _, InfixNode[Comma, _, _], _, _}, data_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`CommaTopLevel, children, data]
-
+abstract[TernaryNode[TernaryTilde, {left_, _, middle:InfixNode[Comma, _, _], _, right_}, data_]] :=
+	With[{abstractedMiddle = abstractComma[middle]},
+		CallNode[AbstractSyntaxErrorNode[AbstractSyntaxError`CommaTopLevel, abstractedMiddle[[2]], abstractedMiddle[[3]]], {
+			abstract[left], abstract[right]}, data]
+	]
 abstract[TernaryNode[TernaryTilde, {left_, _, middle_, _, right_}, data_]] :=
 	CallNode[abstract[middle], {abstract[left], abstract[right]}, data]
 
@@ -927,11 +932,12 @@ contextQ[s_String] := StringMatchQ[s, RegularExpression["\"`?([a-zA-Z][a-zA-Z0-9
 
 
 
+abstract[SyntaxErrorNode[SyntaxError`ExpectedTilde, {left_, _, middle_}, data_]] :=
+	SyntaxErrorNode[SyntaxError`ExpectedTilde, {abstract[left], abstract[middle]}, data]
 
-(*
-Just pass SyntaxErrorNode pass
-*)
-abstract[n_SyntaxErrorNode] := n
+abstract[SyntaxErrorNode[SyntaxError`ExpectedSet, {left_, _, middle_}, data_]] :=
+	SyntaxErrorNode[SyntaxError`ExpectedSet, {abstract[left], abstract[middle]}, data]
+
 
 
 
