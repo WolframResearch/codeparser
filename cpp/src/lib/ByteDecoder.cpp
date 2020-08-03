@@ -73,11 +73,11 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             //
         case 0x0d: {
             
-            if (TheByteBuffer->currentByte() == '\n') {
+            if (TheByteBuffer->currentByte() == 0x0a) {
                 
                 TheByteBuffer->nextByte();
                 
-                srcConventionManager->newline(SrcLoc);
+                srcConventionManager->windowsNewline(SrcLoc);
                 
                 return SourceCharacter(CODEPOINT_CRLF);
             }
@@ -1097,6 +1097,11 @@ void LineColumnManager::newline(SourceLocation& loc) {
     loc.second = 1;
 };
 
+void LineColumnManager::windowsNewline(SourceLocation& loc) {
+    loc.first++;
+    loc.second = 1;
+};
+
 void LineColumnManager::tab(SourceLocation& loc) {
     auto currentTabStop = TabWidth * ((loc.second - 1) / TabWidth) + 1;
     loc.second = currentTabStop + TabWidth;
@@ -1109,6 +1114,10 @@ SourceLocation SourceCharacterIndexManager::newSourceLocation() {
 
 void SourceCharacterIndexManager::newline(SourceLocation& loc) {
     loc.second++;
+};
+
+void SourceCharacterIndexManager::windowsNewline(SourceLocation& loc) {
+    loc.second+=2;
 };
 
 void SourceCharacterIndexManager::tab(SourceLocation& loc) {

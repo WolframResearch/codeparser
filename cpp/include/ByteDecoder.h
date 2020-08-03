@@ -21,6 +21,8 @@ public:
     
     virtual void newline(SourceLocation& loc) = 0;
     
+    virtual void windowsNewline(SourceLocation& loc) = 0;
+    
     void increment(SourceLocation& loc);
     
     virtual void tab(SourceLocation& loc) = 0;
@@ -48,6 +50,8 @@ public:
     
     void newline(SourceLocation& loc) override;
     
+    void windowsNewline(SourceLocation& loc) override;
+    
     void tab(SourceLocation& loc) override;
 };
 
@@ -60,6 +64,8 @@ class SourceCharacterIndexManager : public SourceConventionManager {
     SourceLocation newSourceLocation() override;
     
     void newline(SourceLocation& loc) override;
+    
+    void windowsNewline(SourceLocation& loc) override;
     
     void tab(SourceLocation& loc) override;
 };
