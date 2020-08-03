@@ -131,11 +131,40 @@ bool operator!=(BufferAndLength a, BufferAndLength b) {
 
 
 
-Issue::Issue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Val, std::vector<CodeActionPtr> Actions) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Val(Val), Actions(std::move(Actions)) {}
+bool IssuePtrCompare::operator() (const IssuePtr &L, const IssuePtr &R) const {
+    
+    if (L->getSource() < R->getSource()) {
+        return true;
+    }
+    
+    if (L->Tag < R->Tag) {
+        return true;
+    }
+    
+    return false;
+}
+
+
+bool CodeActionPtrCompare::operator() (const CodeActionPtr &L, const CodeActionPtr &R) const {
+    
+    if (L->getSource() < R->getSource()) {
+        return true;
+    }
+    
+    if (L->getLabel() < R->getLabel()) {
+        return true;
+    }
+    
+    return false;
+}
+
+
+Issue::Issue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Val, CodeActionPtrSet Actions) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Val(Val), Actions(std::move(Actions)) {}
 
 Source Issue::getSource() const {
     return Src;
 }
+
 
 void SyntaxIssue::print(std::ostream& s) const {
     
@@ -168,6 +197,10 @@ CodeAction::CodeAction(std::string Label, Source Src) : Label(Label), Src(Src) {
 
 Source CodeAction::getSource() const {
     return Src;
+}
+
+const std::string CodeAction::getLabel() const {
+    return Label;
 }
 
 void ReplaceTextCodeAction::print(std::ostream& s) const {
@@ -401,6 +434,11 @@ bool operator==(Source a, Source b) {
 
 bool operator!=(Source a, Source b) {
     return a.Start != b.Start || a.End != b.End;
+}
+
+bool operator<(Source a, Source b) {
+    
+    return a.Start < b.Start;
 }
 
 void Source::print(std::ostream& s) const {

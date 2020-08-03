@@ -3,7 +3,7 @@
 
 #include "Source.h" // for IssuePtr, UTF8Status, etc.
 
-#include <vector>
+#include <set>
 #include <memory> // for unique_ptr
 
 class ByteDecoder;
@@ -64,14 +64,13 @@ class SourceCharacterIndexManager : public SourceConventionManager {
     void tab(SourceLocation& loc) override;
 };
 
-
 //
 // Decode a sequence of UTF-8 encoded bytes into Source characters
 //
 class ByteDecoder {
 private:
     
-    std::vector<IssuePtr> Issues;
+    IssuePtrSet Issues;
     
     UTF8Status status;
     
@@ -119,7 +118,7 @@ public:
     SourceCharacter currentSourceCharacter(NextPolicy policy);
     
 #if !NISSUES
-    std::vector<IssuePtr>& getIssues();
+    IssuePtrSet& getIssues();
     
     void addIssue(IssuePtr);
 #endif // !NISSUES

@@ -7,7 +7,7 @@
 #include "Precedence.h" // for Precedence
 #include "TokenEnum.h" // for TokenEnum
 
-#include <vector>
+#include <set>
 #include <deque>
 #include <memory> // for unique_ptr
 
@@ -88,7 +88,7 @@ private:
     
     std::deque<Token> tokenQueue;
     
-    std::vector<IssuePtr> Issues;
+    IssuePtrSet Issues;
     
 public:
     Parser();
@@ -112,7 +112,7 @@ public:
     
     
 #if !NISSUES
-    std::vector<IssuePtr>& getIssues();
+    IssuePtrSet& getIssues();
 
     void addIssue(IssuePtr);
 #endif // !NISSUES

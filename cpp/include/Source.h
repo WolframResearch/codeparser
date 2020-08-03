@@ -9,20 +9,26 @@
 #undef P
 #endif // USE_MATHLINK
 
+#include <set>
 #include <string>
 #include <cassert>
 #include <iterator>
 #include <array>
-#include <vector>
 #include <memory> // for unique_ptr
 
 class Issue;
 class CodeAction;
 
+class IssuePtrCompare;
+class CodeActionPtrCompare;
+
 using Buffer = const unsigned char *;
 using MBuffer = unsigned char *;
-using IssuePtr = std::unique_ptr<Issue>;
+using IssuePtr = std::shared_ptr<Issue>;
 using CodeActionPtr = std::unique_ptr<CodeAction>;
+
+using IssuePtrSet = std::set<IssuePtr, IssuePtrCompare>;
+using CodeActionPtrSet = std::set<CodeActionPtr, CodeActionPtrCompare>;
 
 //
 //
@@ -407,10 +413,29 @@ static_assert(sizeof(Source) == 16, "Check your assumptions");
 bool operator==(Source a, Source b);
 bool operator!=(Source a, Source b);
 
+bool operator<(Source a, Source b);
+
 //
 // For googletest
 //
 void PrintTo(const Source&, std::ostream*);
+
+
+//
+// For std::set
+//
+class IssuePtrCompare {
+public:
+    bool operator() (const IssuePtr &L, const IssuePtr &R) const;
+};
+
+//
+// For std::set
+//
+class CodeActionPtrCompare {
+public:
+    bool operator() (const CodeActionPtr &L, const CodeActionPtr &R) const;
+};
 
 //
 //
@@ -423,9 +448,9 @@ public:
     const SyntaxIssueSeverity Sev;
     const Source Src;
     const double Val;
-    const std::vector<CodeActionPtr> Actions;
+    const CodeActionPtrSet Actions;
     
-    Issue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Val, std::vector<CodeActionPtr> Actions);
+    Issue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Val, CodeActionPtrSet Actions);
     
     Source getSource() const;
     
@@ -451,6 +476,8 @@ public:
 
     Source getSource() const;
     
+    const std::string getLabel() const;
+    
 #if USE_MATHLINK
     virtual void put(MLINK mlp) const = 0;
 #endif // USE_MATHLINK
@@ -459,6 +486,7 @@ public:
     
     virtual ~CodeAction() {}
 };
+
 
 //
 //
@@ -543,7 +571,7 @@ public:
 //
 class SyntaxIssue : public Issue {
 public:
-    SyntaxIssue(SyntaxIssueTag Tag, std::string Msg, SyntaxIssueSeverity Sev, Source Src, double Con, std::vector<CodeActionPtr> Actions) : Issue(Tag, Msg, Sev, Src, Con, std::move(Actions)) {}
+    SyntaxIssue(SyntaxIssueTag Tag, std::string Msg, SyntaxIssueSeverity Sev, Source Src, double Con, CodeActionPtrSet Actions) : Issue(Tag, Msg, Sev, Src, Con, std::move(Actions)) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
@@ -557,7 +585,7 @@ public:
 //
 class FormatIssue : public Issue {
 public:
-    FormatIssue(FormatIssueTag Tag, std::string Msg, FormatIssueSeverity Sev, Source Src, std::vector<CodeActionPtr> Actions) : Issue(Tag, Msg, Sev, Src, 0.0, std::move(Actions)) {}
+    FormatIssue(FormatIssueTag Tag, std::string Msg, FormatIssueSeverity Sev, Source Src, CodeActionPtrSet Actions) : Issue(Tag, Msg, Sev, Src, 0.0, std::move(Actions)) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;

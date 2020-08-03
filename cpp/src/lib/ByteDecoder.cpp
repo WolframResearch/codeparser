@@ -148,7 +148,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             
             auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
             
-            Issues.push_back(std::move(I));
+            Issues.insert(std::move(I));
         }
 #endif // !NISSUES
             
@@ -240,7 +240,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 
                 auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.85, {}));
                 
-                Issues.push_back(std::move(I));
+                Issues.insert(std::move(I));
             }
 #endif // !NISSUES
             
@@ -338,7 +338,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 
                 auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.85, {}));
                 
-                Issues.push_back(std::move(I));
+                Issues.insert(std::move(I));
             }
 #endif // !NISSUES
             
@@ -449,7 +449,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 
                 auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.85, {}));
                 
-                Issues.push_back(std::move(I));
+                Issues.insert(std::move(I));
             }
 #endif // !NISSUES
             
@@ -554,7 +554,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 
                 auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.85, {}));
                 
-                Issues.push_back(std::move(I));
+                Issues.insert(std::move(I));
             }
 #endif // !NISSUES
             
@@ -690,7 +690,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 
                 auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.85, {}));
                 
-                Issues.push_back(std::move(I));
+                Issues.insert(std::move(I));
             }
 #endif // !NISSUES
             
@@ -826,7 +826,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 
                 auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.85, {}));
                 
-                Issues.push_back(std::move(I));
+                Issues.insert(std::move(I));
             }
 #endif // !NISSUES
             
@@ -962,7 +962,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 
                 auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.85, {}));
                 
-                Issues.push_back(std::move(I));
+                Issues.insert(std::move(I));
             }
 #endif // !NISSUES
             
@@ -1038,7 +1038,7 @@ SourceCharacter ByteDecoder::invalid(SourceLocation errSrcLoc, NextPolicy policy
         
         auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_INVALIDCHARACTERENCODING, "Invalid UTF-8 sequence.", ENCODINGISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next())));
         
-        Issues.push_back(std::move(I));
+        Issues.insert(std::move(I));
     }
 #endif // !NISSUES
     
@@ -1057,10 +1057,10 @@ SourceCharacter ByteDecoder::invalid(SourceLocation errSrcLoc, NextPolicy policy
 
 #if !NISSUES
 void ByteDecoder::addIssue(IssuePtr I) {
-    Issues.push_back(std::move(I));
+    Issues.insert(std::move(I));
 }
 
-std::vector<IssuePtr>& ByteDecoder::getIssues() {
+IssuePtrSet& ByteDecoder::getIssues() {
     return Issues;
 }
 #endif // !NISSUES

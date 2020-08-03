@@ -17,6 +17,7 @@
 #include <signal.h> // for SIGINT
 #endif // WINDOWS_MATHLINK
 #include <vector>
+#include <set>
 
 bool validatePath(WolframLibraryData libData, const unsigned char *inStr, size_t len);
 
@@ -152,27 +153,27 @@ Node *ParserSession::parseExpressions() {
     // Collect all issues from the various components
     //
     {
-        std::vector<IssuePtr> issues;
+        IssuePtrSet issues;
         
 #if !NISSUES
         auto& ParserIssues = TheParser->getIssues();
         for (auto& I : ParserIssues) {
-            issues.push_back(std::move(I));
+            issues.insert(std::move(I));
         }
         
         auto& TokenizerIssues = TheTokenizer->getIssues();
         for (auto& I : TokenizerIssues) {
-            issues.push_back(std::move(I));
+            issues.insert(std::move(I));
         }
         
         auto& CharacterDecoderIssues = TheCharacterDecoder->getIssues();
         for (auto& I : CharacterDecoderIssues) {
-            issues.push_back(std::move(I));
+            issues.insert(std::move(I));
         }
         
         auto& ByteDecoderIssues = TheByteDecoder->getIssues();
         for (auto& I : ByteDecoderIssues) {
-            issues.push_back(std::move(I));
+            issues.insert(std::move(I));
         }
 #endif // !NISSUES
         
@@ -198,9 +199,19 @@ Node *ParserSession::parseExpressions() {
     }
     
     {
-        auto& EmbeddedTabs = TheTokenizer->getEmbeddedTabs();
+        std::set<SourceLocation> tabs;
         
-        nodes.push_back(NodePtr(new CollectedSourceLocationsNode(std::move(EmbeddedTabs))));
+        auto& TokenizerEmbeddedTabs = TheTokenizer->getEmbeddedTabs();
+        for (auto& T : TokenizerEmbeddedTabs) {
+            tabs.insert(T);
+        }
+        
+        auto& CharacterDecoderEmbeddedTabs = TheCharacterDecoder->getEmbeddedTabs();
+        for (auto& T : CharacterDecoderEmbeddedTabs) {
+            tabs.insert(T);
+        }
+        
+        nodes.push_back(NodePtr(new CollectedSourceLocationsNode(std::move(tabs))));
     }
     
     auto N = new ListNode(std::move(nodes));
@@ -339,27 +350,27 @@ Node *ParserSession::concreteParseLeaf(StringifyMode mode) {
     // Collect all issues from the various components
     //
     {
-        std::vector<IssuePtr> issues;
+        IssuePtrSet issues;
         
 #if !NISSUES
         auto& ParserIssues = TheParser->getIssues();
         for (auto& I : ParserIssues) {
-            issues.push_back(std::move(I));
+            issues.insert(std::move(I));
         }
         
         auto& TokenizerIssues = TheTokenizer->getIssues();
         for (auto& I : TokenizerIssues) {
-            issues.push_back(std::move(I));
+            issues.insert(std::move(I));
         }
         
         auto& CharacterDecoderIssues = TheCharacterDecoder->getIssues();
         for (auto& I : CharacterDecoderIssues) {
-            issues.push_back(std::move(I));
+            issues.insert(std::move(I));
         }
         
         auto& ByteDecoderIssues = TheByteDecoder->getIssues();
         for (auto& I : ByteDecoderIssues) {
-            issues.push_back(std::move(I));
+            issues.insert(std::move(I));
         }
 #endif // !NISSUES
         
@@ -385,9 +396,19 @@ Node *ParserSession::concreteParseLeaf(StringifyMode mode) {
     }
     
     {
-        auto& EmbeddedTabs = TheTokenizer->getEmbeddedTabs();
+        std::set<SourceLocation> tabs;
         
-        nodes.push_back(NodePtr(new CollectedSourceLocationsNode(std::move(EmbeddedTabs))));
+        auto& TokenizerEmbeddedTabs = TheTokenizer->getEmbeddedTabs();
+        for (auto& T : TokenizerEmbeddedTabs) {
+            tabs.insert(T);
+        }
+        
+        auto& CharacterDecoderEmbeddedTabs = TheCharacterDecoder->getEmbeddedTabs();
+        for (auto& T : CharacterDecoderEmbeddedTabs) {
+            tabs.insert(T);
+        }
+        
+        nodes.push_back(NodePtr(new CollectedSourceLocationsNode(std::move(tabs))));
     }
     
     auto N = new ListNode(std::move(nodes));

@@ -8,9 +8,8 @@
 #undef True
 #undef False
 
-#include <vector>
-#include <memory> // for unique_ptr
 #include <set>
+#include <memory> // for unique_ptr
 
 
 class CharacterDecoder;
@@ -24,10 +23,11 @@ using CharacterDecoderPtr = std::unique_ptr<CharacterDecoder>;
 //
 class CharacterDecoder {
     
-    std::vector<IssuePtr> Issues;
+    IssuePtrSet Issues;
     
     std::set<SourceLocation> SimpleLineContinuations;
     std::set<SourceLocation> ComplexLineContinuations;
+    std::set<SourceLocation> EmbeddedTabs;
     
     
     WolframLibraryData libData;
@@ -46,7 +46,7 @@ class CharacterDecoder {
     //
     SourceCharacter handleLineContinuation(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter c, NextPolicy policy);
     
-    WLCharacter handleBackSlash(Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy);
+    WLCharacter handleBackslash(Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy);
     
     WLCharacter handleUnhandledEscape(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer unhandledBuf, SourceLocation unhandledLoc, SourceCharacter escapedChar, NextPolicy policy);
     
@@ -93,12 +93,14 @@ public:
     WLCharacter currentWLCharacter(Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy);
     
 #if !NISSUES
-    std::vector<IssuePtr>& getIssues();
+    IssuePtrSet& getIssues();
 #endif // !NISSUES
     
     std::set<SourceLocation>& getSimpleLineContinuations();
     
     std::set<SourceLocation>& getComplexLineContinuations();
+    
+    std::set<SourceLocation>& getEmbeddedTabs();
 };
 
 extern CharacterDecoderPtr TheCharacterDecoder;

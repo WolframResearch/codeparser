@@ -4,9 +4,8 @@
 #include "WLCharacter.h" // for WLCharacter
 #include "Token.h" // for Token
 
-#include <vector>
-#include <memory> // for unique_ptr
 #include <set>
+#include <memory> // for unique_ptr
 
 class Tokenizer;
 using TokenizerPtr = std::unique_ptr<Tokenizer>;
@@ -33,7 +32,7 @@ struct NumberTokenizationContext {
 //
 class Tokenizer {
     
-    std::vector<IssuePtr> Issues;
+    IssuePtrSet Issues;
     
     std::set<SourceLocation> EmbeddedNewlines;
     std::set<SourceLocation> EmbeddedTabs;
@@ -143,7 +142,7 @@ class Tokenizer {
     
     Token handleMBLinearSyntax(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
     
-    Token handleUnhandledBackSlash(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
+    Token handleUnhandledBackslash(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
     
     
     Source getTokenSource(SourceLocation tokStartLoc) const;
@@ -174,7 +173,7 @@ public:
 #if !NISSUES
     void addIssue(IssuePtr);
 
-    std::vector<IssuePtr>& getIssues();
+    IssuePtrSet& getIssues();
 #endif // !NISSUES
     
     std::set<SourceLocation>& getEmbeddedNewlines();

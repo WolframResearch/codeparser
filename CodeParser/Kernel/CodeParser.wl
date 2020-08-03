@@ -349,7 +349,7 @@ Module[{res, convention, container, tabWidth},
 
   (*
   The <||> will be filled in with Source later
-  The # here is { {exprs}, {issues}, {line conts}, {embedded newlines} }
+  The # here is { {exprs}, {issues}, {line conts}, {embedded newlines}, {embedded tabs} }
   *)
   If[container === Automatic,
     container = ContainerNode[String, #[[1]], <|

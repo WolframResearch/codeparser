@@ -146,7 +146,7 @@ void Parser::prependInReverse(std::vector<LeafNodePtr>& V) {
 }
 
 #if !NISSUES
-std::vector<IssuePtr>& Parser::getIssues() {
+IssuePtrSet& Parser::getIssues() {
     return Issues;
 }
 
@@ -154,7 +154,7 @@ std::vector<IssuePtr>& Parser::getIssues() {
 // Only to be used by Parselets
 //
 void Parser::addIssue(IssuePtr I) {
-    Issues.push_back(std::move(I));
+    Issues.insert(std::move(I));
 }
 #endif // !NISSUES
 

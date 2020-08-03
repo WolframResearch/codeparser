@@ -6,9 +6,9 @@
 #include "Token.h" // for Token
 
 #include <vector>
+#include <set>
 #include <memory> // for unique_ptr
 #include <ostream>
-#include <set>
 
 class Node;
 class LeafNode;
@@ -438,9 +438,9 @@ public:
 //
 //
 class CollectedIssuesNode : public Node {
-    std::vector<IssuePtr> Issues;
+    IssuePtrSet Issues;
 public:
-    CollectedIssuesNode(std::vector<IssuePtr> Issues) : Node(), Issues(std::move(Issues)) {}
+    CollectedIssuesNode(IssuePtrSet Issues) : Node(), Issues(std::move(Issues)) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
