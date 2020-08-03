@@ -212,32 +212,22 @@ Token Tokenizer::nextToken0_stringifyAsSymbolSegment() {
     
     auto c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
     
-    if (c.to_point() == CODEPOINT_ENDOFFILE) {
-        
-        //
-        // EndOfFile is special, so invent source
-        //
-        
-        return Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
-        
-    } else if (c.to_point() == CODEPOINT_CRLF) {
-        
-        //
-        // Newline is special, so invent source
-        //
-        
-        return Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
-        
-    } else if (c.isNewline()) {
-        
-        //
-        // Newline is special, so invent source
-        //
-        
-        return Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
+    switch (c.to_point()) {
+        case CODEPOINT_ENDOFFILE:
+            //
+            // EndOfFile is special, so invent source
+            //
+            
+            return Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
+        case '\n': case '\r': case CODEPOINT_CRLF:
+            //
+            // Newline is special, so invent source
+            //
+            
+            return Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
+        default:
+            return handleString_stringifyAsSymbolSegment(tokenStartBuf, tokenStartLoc, c, policy);
     }
-    
-    return handleString_stringifyAsSymbolSegment(tokenStartBuf, tokenStartLoc, c, policy);
 }
 
 //
@@ -252,61 +242,37 @@ Token Tokenizer::nextToken0_stringifyAsFile() {
     
     auto c = TheByteDecoder->nextSourceCharacter0(policy);
     
-    if (c.to_point() == CODEPOINT_ENDOFFILE) {
-        
-        return Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
-        
-    } else if (c.to_point() == CODEPOINT_CRLF) {
-        
-        //
-        // Stringifying as a file can span lines
-        //
-        // Something like  a >>
-        //                    b
-        //
-        // should work
-        //
-        // Do not use TOKEN_ERROR_EMPTYSTRING here
-        //
-        
-        //
-        // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
-        //
-        return Token(TOKEN_INTERNALNEWLINE.t() | (policy & RETURN_TOPLEVELNEWLINE), getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
-        
-    } else if (c.isNewline()) {
-        
-        //
-        // Stringifying as a file can span lines
-        //
-        // Something like  a >>
-        //                    b
-        //
-        // should work
-        //
-        // Do not use TOKEN_ERROR_EMPTYSTRING here
-        //
-        
-        //
-        // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
-        //
-        return Token(TOKEN_INTERNALNEWLINE.t() | (policy & RETURN_TOPLEVELNEWLINE), getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+    switch (c.to_point()) {
+        case CODEPOINT_ENDOFFILE:
+            return Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
+        case '\n': case '\r': case CODEPOINT_CRLF:
+            //
+            // Stringifying as a file can span lines
+            //
+            // Something like  a >>
+            //                    b
+            //
+            // should work
+            //
+            // Do not use TOKEN_ERROR_EMPTYSTRING here
+            //
+            
+            //
+            // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
+            //
+            return Token(TOKEN_INTERNALNEWLINE.t() | (policy & RETURN_TOPLEVELNEWLINE), getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        case ' ': case '\t':
+            //
+            // There could be space, something like  << abc
+            //
+            // or something like:
+            // a >>
+            //   b
+            //
+            return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        default:
+            return handleString_stringifyAsFile(tokenStartBuf, tokenStartLoc, c, policy);
     }
-    
-    //
-    // There could be space, something like  << abc
-    //
-    // or something like:
-    // a >>
-    //   b
-    //
-    
-    if (c.isWhitespace()) {
-        
-        return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
-    }
-    
-    return handleString_stringifyAsFile(tokenStartBuf, tokenStartLoc, c, policy);
 }
 
 Token Tokenizer::nextToken0_stringifyAsPassthrough() {
@@ -419,11 +385,6 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation token
     
     c = TheByteDecoder->currentSourceCharacter(policy);
     
-    if (c.to_point() == CODEPOINT_ENDOFFILE) {
-        
-        return Token(TOKEN_ERROR_UNTERMINATEDCOMMENT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
-    }
-    
     while (true) {
         
         //
@@ -509,6 +470,7 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation token
                 TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
                 
                 c = TheByteDecoder->currentSourceCharacter(policy);
+                
                 break;
         }
         
