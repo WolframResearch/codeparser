@@ -86,8 +86,6 @@ static_assert(sizeof(ParserContext) == 2, "Check your assumptions");
 class Parser {
 private:
     
-    std::deque<Token> tokenQueue;
-    
     IssuePtrSet Issues;
     
 public:
@@ -105,11 +103,6 @@ public:
     
     Token currentToken_stringifyAsSymbolSegment() const;
     Token currentToken_stringifyAsFile() const;
-    
-    void prepend(Token );
-    
-    void prependInReverse(std::vector<LeafNodePtr>& );
-    
     
 #if !NISSUES
     IssuePtrSet& getIssues();

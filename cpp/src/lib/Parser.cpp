@@ -6,7 +6,7 @@
 #include "Tokenizer.h" // for Tokenizer
 #include "ParseletRegistration.h"
 
-Parser::Parser() : tokenQueue(), Issues() {}
+Parser::Parser() : Issues() {}
 
 Parser::~Parser() {}
 
@@ -17,52 +17,16 @@ void Parser::init() {
 
 void Parser::deinit() {
     
-    tokenQueue.clear();
     Issues.clear();
 }
 
 void Parser::nextToken(Token Tok) {
-    
-    //
-    // handle the queue before anything else
-    //
-    // We do not know anything about how many Tokens should be read
-    //
-    if (!tokenQueue.empty()) {
-        
-        if (Tok != tokenQueue[0]) {
-            
-            assert(Tok.Tok == TOKEN_FAKE_IMPLICITTIMES);
-            
-        } else {
-            
-            // erase first
-            tokenQueue.erase(tokenQueue.begin());
-        }
-        
-        return;
-    }
     
     TheTokenizer->nextToken(Tok);
 }
 
 
 Token Parser::nextToken0(ParserContext Ctxt, NextPolicy policy) {
-    
-    //
-    // handle the queue before anything else
-    //
-    // We do not know anything about how many Tokens should be read
-    //
-    if (!tokenQueue.empty()) {
-        
-        auto Tok = tokenQueue[0];
-        
-        // erase first
-        tokenQueue.erase(tokenQueue.begin());
-        
-        return Tok;
-    }
     
     auto insideGroup = (Ctxt.Closr != CLOSER_OPEN);
     //
@@ -78,13 +42,6 @@ Token Parser::nextToken0(ParserContext Ctxt, NextPolicy policy) {
 }
 
 Token Parser::currentToken(ParserContext Ctxt, NextPolicy policy) const {
-    
-    if (!tokenQueue.empty()) {
-        
-        auto Tok = tokenQueue[0];
-        
-        return Tok;
-    }
     
     auto insideGroup = (Ctxt.Closr != CLOSER_OPEN);
     //
@@ -102,47 +59,12 @@ Token Parser::currentToken(ParserContext Ctxt, NextPolicy policy) const {
 
 Token Parser::currentToken_stringifyAsSymbolSegment() const {
     
-    if (!tokenQueue.empty()) {
-        
-        auto Tok = tokenQueue[0];
-        
-        return Tok;
-    }
-    
     return TheTokenizer->currentToken_stringifyAsSymbolSegment();
 }
 
 Token Parser::currentToken_stringifyAsFile() const {
     
-    if (!tokenQueue.empty()) {
-        
-        auto Tok = tokenQueue[0];
-        
-        return Tok;
-    }
-    
     return TheTokenizer->currentToken_stringifyAsFile();
-}
-
-void Parser::prepend(Token Tok) {
-        
-    tokenQueue.insert(tokenQueue.begin(), Tok);
-}
-
-
-void Parser::prependInReverse(std::vector<LeafNodePtr>& V) {
-    
-    if (V.empty()) {
-        return;
-    }
-    
-    auto i = V.rbegin();
-    for (; i != V.rend(); ++i ) {
-        
-        auto& T = (*i)->getToken();
-        
-        tokenQueue.insert(tokenQueue.begin(), T);
-    }
 }
 
 #if !NISSUES

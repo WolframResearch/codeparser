@@ -4,6 +4,8 @@
 #include "Parser.h" // for TheParser
 #include "ByteEncoder.h" // for ByteEncoder
 #include "API.h" // for TheParserSession
+#include "ByteDecoder.h" // for TheByteDecoder
+#include "ByteBuffer.h" // for TheByteBuffer
 
 #include <numeric> // for accumulate
 
@@ -78,9 +80,27 @@ void LeafSeq::print0(std::ostream& s) const {
 
 LeafSeq::~LeafSeq() {
     
-    if (!moved) {
-        TheParser->prependInReverse(vec);
+    if (moved) {
+        return;
     }
+    
+    //
+    // This sequence is NOT moved, so destructing this sequence should have the effect of putting it
+    // in the front of the "queue" to be read again
+    //
+    // Just need to reset the global buffer to the buffer of the first token in the sequence
+    //
+    
+    if (vec.empty()) {
+        return;
+    }
+    
+    auto& First = vec[0];
+    
+    auto T = First->getToken();
+    
+    TheByteBuffer->buffer = T.BufLen.buffer;
+    TheByteDecoder->SrcLoc = T.Src.Start;
 }
 
 void LeafSeq::append(LeafNodePtr N) {
