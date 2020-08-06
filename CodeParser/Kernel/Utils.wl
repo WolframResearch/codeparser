@@ -276,7 +276,7 @@ Options[normalizeTokens] = {
 normalizeTokens[astIn_, OptionsPattern[]] :=
   Catch[
   Module[{ast, data, tokStartLocs, simpleLineContinuations, complexLineContinuations,
-    embeddedNewlines, grouped, poss, tuples, mapSpecs, formatOnly, newline, embeddedTabs},
+    embeddedNewlines, grouped, poss, tuples, mapSpecs, formatOnly, newline, embeddedTabs, groupedSimple},
 
     ast = astIn;
 
@@ -311,14 +311,43 @@ normalizeTokens[astIn_, OptionsPattern[]] :=
     *)
     grouped = GroupBy[Transpose[{tokStartLocs, poss}, {2, 1}], #[[1]]&];
 
+    If[$Debug,
+      Print["grouped: ", grouped];
+    ];
+    
     If[KeyExistsQ[data, "SimpleLineContinuations"],
 
       simpleLineContinuations = data["SimpleLineContinuations"];
 
+      
+      groupedSimple = grouped;
+
+      (*
+      Filter out multiline strings and multiline comments: they are not simple
+      *)
+      If[KeyExistsQ[data, "EmbeddedNewlines"],
+
+        embeddedNewlineStartLocs = data["EmbeddedNewlines"];
+
+        KeyDropFrom[groupedSimple, embeddedNewlineStartLocs]
+      ];
+
+      If[KeyExistsQ[data, "ComplexLineContinuations"],
+
+        complexLineContinuations = data["ComplexLineContinuations"];
+
+        KeyDropFrom[groupedSimple, complexLineContinuations]
+      ];
+
+      If[$Debug,
+        Print["groupedSimple: ", groupedSimple];
+      ];
+
+
       mapSpecs = Map[
         Function[{contLoc},
 
-          tuples = grouped[contLoc];
+          tuples = groupedSimple[contLoc];
 
           (*
           The token associated with this location may have been abstracted away and now missing
@@ -341,44 +370,90 @@ normalizeTokens[astIn_, OptionsPattern[]] :=
       *)
       ast = MapAt[FixedPoint[removeSimpleLineContinuation, #]&, ast, mapSpecs[[All, 2]]];
 
-      KeyDropFrom[data, "SimpleLineContinuations"]
+      If[$Debug,
+        Print["after SimpleLineContinuations: ", ast];
+      ];
+
+      If[empty[simpleLineContinuations],
+        KeyDropFrom[data, "SimpleLineContinuations"]
+        ,
+        data["SimpleLineContinuations"] = simpleLineContinuations
+      ];
+    ];
+
+    If[KeyExistsQ[data, "ComplexLineContinuations"],
+
+      complexLineContinuations = data["ComplexLineContinuations"];
+
+      mapSpecs = Map[
+        Function[{contLoc},
+
+          tuples = grouped[contLoc];
+
+          (*
+          The token associated with this location may have been abstracted away and now missing
+          *)
+          If[!MissingQ[tuples],
+
+            tuples
+            ,
+            Nothing
+          ]
+        ]
+        ,
+        complexLineContinuations
+      ];
+
+      mapSpecs = Flatten[mapSpecs, 1];
+
+      ast = MapAt[removeComplexLineContinuations, ast, mapSpecs[[All, 2]]];
+
+      If[$Debug,
+        Print["after ComplexLineContinuations: ", ast];
+      ];
+
+      KeyDropFrom[data, "ComplexLineContinuations"]
     ];
 
     (*
-    If formatting, then leave complex line continuations alone
-    If abstracting, then remove them
+    Now do a second, more careful check for remaining simple line continuations
+
+    Any remaining simple line continuations 
     *)
-    If[!formatOnly,
+    If[KeyExistsQ[data, "SimpleLineContinuations"],
 
-      If[KeyExistsQ[data, "ComplexLineContinuations"],
+      simpleLineContinuations = data["SimpleLineContinuations"];
 
-        complexLineContinuations = data["ComplexLineContinuations"];
+      mapSpecs = Map[
+        Function[{contLoc},
 
-        mapSpecs = Map[
-          Function[{contLoc},
+          tuples = grouped[contLoc];
 
-            tuples = grouped[contLoc];
-
-            (*
-            The token associated with this location may have been abstracted away and now missing
-            *)
-            If[!MissingQ[tuples],
-
-              tuples
-              ,
-              Nothing
-            ]
+          (*
+          The token associated with this location may have been processed away and now missing
+          *)
+          If[!MissingQ[tuples],
+            tuples
+            ,
+            Nothing
           ]
-          ,
-          complexLineContinuations
-        ];
-
-        mapSpecs = Flatten[mapSpecs, 1];
-
-        ast = MapAt[removeComplexLineContinuations, ast, mapSpecs[[All, 2]]];
-
-        KeyDropFrom[data, "ComplexLineContinuations"]
+        ]
+        ,
+        simpleLineContinuations
       ];
+
+      mapSpecs = Flatten[mapSpecs, 1];
+
+      (*
+      There may be more than 1 simple line continuation, so use FixedPoint
+      *)
+      ast = MapAt[FixedPoint[removeRemainingSimpleLineContinuation, #]&, ast, mapSpecs[[All, 2]]];
+
+      If[$Debug,
+        Print["after RemainingSimpleLineContinuations: ", ast];
+      ];
+
+      KeyDropFrom[data, "SimpleLineContinuations"];
     ];
 
     If[KeyExistsQ[data, "EmbeddedNewlines"],
@@ -407,6 +482,10 @@ normalizeTokens[astIn_, OptionsPattern[]] :=
       mapSpecs = Flatten[mapSpecs, 1];
 
       ast = MapAt[convertEmbeddedNewlines[#, "FormatOnly" -> formatOnly, "Newline" -> newline]&, ast, mapSpecs[[All, 2]]];
+
+      If[$Debug,
+        Print["after EmbeddedNewlines: ", ast];
+      ];
 
       KeyDropFrom[data, "EmbeddedNewlines"]
     ];
@@ -438,6 +517,10 @@ normalizeTokens[astIn_, OptionsPattern[]] :=
 
       ast = MapAt[convertEmbeddedTabs[#, "FormatOnly" -> formatOnly, "TabWidth" -> tabWidth, "Newline" -> newline]&, ast, mapSpecs[[All, 2]]];
 
+      If[$Debug,
+        Print["after EmbeddedTabs: ", ast];
+      ];
+      
       KeyDropFrom[data, "EmbeddedTabs"]
     ];
 
@@ -453,6 +536,8 @@ Remove both external and internal line continuations
 
 Do not need to worry about preceding backslashes or anything like that because
 this is NOT called on multiline strings or multiline comments
+
+Precondition: multiline strings or multiline comments were filtered before calling this function
 *)
 removeSimpleLineContinuation[LeafNode[tag_, s_String, data_]] :=
   LeafNode[tag, StringReplace[s, "\\" ~~ ("\n" | "\r\n" | "\r") ~~ WhitespaceCharacter... -> ""], data]
@@ -463,8 +548,17 @@ removeSimpleLineContinuation is called by FixedPoint, so provide a sentinel esca
 removeSimpleLineContinuation[___] :=
   $Failed
 
+
 (*
-Remove remaining external line continuation
+Remove remaining simple line continuation
+
+We know these are external so use StartOfString
+
+We need this extra check because it may be possible to have backslashes and embedded newlines that LOOK like a continuation
+
+For example: "ab\\\\\ncd"
+
+Just doing a simple StringReplace with "\\" ~~ ("\n" | "\r\n" | "\r") would be wrong
 
 LineColumn convention
 *)
@@ -503,9 +597,15 @@ but lookbehinds need to be fixed width.
 
 So cannot use a regex.
 
+
+There may also be simple continuations to be removed here.
+
+Since this is only called on strings and comments, then any simple continuations must be external
+
 *)
-removeComplexLineContinuations[LeafNode[tag : String | Token`Comment, str_, data_]] :=
-  Module[{continuationPoss, backslashCount, onePastLastPos, pos, takeSpec},
+
+removeComplexLineContinuations[LeafNode[String, str_, data_]] :=
+  Module[{continuationPoss, backslashCount, onePastLastPos, pos, takeSpec, i, k},
 
     continuationPoss = StringPosition[str, "\n"|"\r"];
 
@@ -542,6 +642,27 @@ removeComplexLineContinuations[LeafNode[tag : String | Token`Comment, str_, data
     ];
 
     (*
+    if there is a continuation at the start of the token, then this is an external simple continuation and should also be removed
+
+    need to scan through trailing whitespace and find any more continuations also
+    *)
+    i = 1;
+    k = 1;
+    While[i <= Length[continuationPoss] && continuationPoss[[i, 1]] == k,
+      k = continuationPoss[[i, 2]];
+      While[k + 1 <= StringLength[str] && MatchQ[StringTake[str, {k + 1}], " " | "\t"],
+        continuationPoss[[i, 2]] = k + 1;
+        k = k + 1;
+      ];
+      k = k + 1;
+      i = i + 1;
+    ];
+
+    If[$Debug,
+      Print["continuationPoss: ", continuationPoss];
+    ];
+
+    (*
 
     This used to be:
 
@@ -555,10 +676,16 @@ removeComplexLineContinuations[LeafNode[tag : String | Token`Comment, str_, data
     takeSpec = {#[[1, 2]] + 1, #[[2, 1]] - 1}& /@
       Partition[{{Null, 0}} ~Join~ continuationPoss ~Join~ {{StringLength[str] + 1, Null}}, 2, 1];
 
-    LeafNode[tag, StringJoin[StringTake[str, takeSpec]], data]
+    LeafNode[String, StringJoin[StringTake[str, takeSpec]], data]
   ]
 
-isWhitespaceChar[c_String] := c == " " || c == "\t"
+(*
+for comments, just leave alone
+
+it's not a "real" continuation; it could be the result of ASCII art or something
+*)
+removeComplexLineContinuations[n:LeafNode[Token`Comment, _, _]] :=
+  n
 
 
 (*
