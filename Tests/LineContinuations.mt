@@ -193,3 +193,25 @@ Test[
  
 
 
+(*
+There are simple continuations
+
+But there are no complex continuations
+
+Verify that simple continuation is removed and the embedded newline is escaped
+*)
+Test[
+	CodeParse["\\\n\"ab\\\\\ncd\""]
+	,
+	ContainerNode[String, {LeafNode[String, "\"ab\\\\\\ncd\"", <|Source -> {{2, 1}, {3, 4}}|>]}, <||>]
+	,
+	TestID->"LineContinuations-20200804-C5K6X8"
+]
+
+
+
+
+
+
+
+
