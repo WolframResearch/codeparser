@@ -1569,31 +1569,28 @@ vectorInequalityAffinity[System`VectorGreaterEqual] := True
 
 
 
-
-
-(*
-Handle trailing comma
-
-For leading and middle commas, the source of the ImplicitNulls is the same as the source of the comma, so we can just use the same source
-
-For trailing commas, the ImplicitNull source is after the comma, so must handle that
-
-*)
-abstractComma[InfixNode[Comma, { most___, comma:LeafNode[Token`Comma, _, data2_], last:LeafNode[Token`Fake`ImplicitNull, _, data1_] }, data_]] :=
-	CallNode[ToNode[Comma],
-		(abstract /@ Replace[{most}[[;;;;2]], LeafNode[Token`Fake`ImplicitNull, _, d_] :> createNullLeafNode[d, d], {1}]) ~Join~ { createNullLeafNode[data1, data2]}, data]
-
 abstractComma[InfixNode[Comma, children_, data_]] :=
-	CallNode[ToNode[Comma], abstract /@ Replace[children[[;;;;2]], LeafNode[Token`Fake`ImplicitNull, _, d_] :> createNullLeafNode[d, d], {1}], data]
-
+	CallNode[ToNode[Comma], abstract /@ (
+		Replace[Partition[Most[children], 2], {
+			{LeafNode[Token`Fake`ImplicitNull, _, nullData_], LeafNode[Token`Comma | Token`LongName`InvisibleComma, _, commaData_]} :>
+				createNullLeafNode[nullData, commaData],
+			{a_, LeafNode[Token`Comma | Token`LongName`InvisibleComma, _, _]} :>
+				a}, {1}] ~Join~
+		Replace[{children[[-2;;-1]]}, {
+			{LeafNode[Token`Comma | Token`LongName`InvisibleComma, _, commaData_], LeafNode[Token`Fake`ImplicitNull, _, nullData_]} :>
+				createNullLeafNode[nullData, commaData],
+			{LeafNode[Token`Comma | Token`LongName`InvisibleComma, _, _], a_} :>
+				a}, {1}]), data]
 
 
 createNullLeafNode[nullData_, commaData_] :=
 	LeafNode[Symbol, "Null", nullData ~Join~
 		<| AbstractSyntaxIssues -> {
 			SyntaxIssue["Comma", "Extra ``,``.", "Error",
-				<| commaData, CodeActions -> {
-					CodeAction["Delete ``,``", DeleteNode, <| Source -> commaData[Source] |>]}, ConfidenceLevel -> 1.0 |>]}|>]
+				<|
+					Source -> commaData[Source],
+					CodeActions -> {
+						CodeAction["Delete ``,``", DeleteNode, <| Source -> commaData[Source] |>]}, ConfidenceLevel -> 1.0 |>]}|>]
 
 
 (*
