@@ -35,6 +35,8 @@ aggregate[l_LeafNode] := l
 
 (*
 do not touch linear syntax
+
+It would be wrong to transform \( a b \) => \(ab\)
 *)
 aggregate[node:GroupNode[GroupLinearSyntaxParen, _, _]] := node
 
@@ -222,6 +224,12 @@ linearize[node_] := Flatten[linearize0[node]]
 
 linearize0[ContainerNode[_, fs_List, _]] :=
   linearize0 /@ fs
+
+(*
+ironic... linear syntax does not participate in linearization...
+*)
+linearize0[n:GroupNode[GroupLinearSyntaxParen, _, _]] :=
+  n
 
 linearize0[GroupNode[_, fs_List, _]] :=
   linearize0 /@ fs
