@@ -21,6 +21,10 @@ dataDir
 
 importedLongNames
 
+importedPrefixParselets
+
+importedInfixParselets
+
 importedNotStrangeLetterlikeLongNames
 
 importedPunctuationLongNames
@@ -185,6 +189,10 @@ Print["Done Clean"]
 
 
 importedLongNames = Get[FileNameJoin[{dataDir, "LongNames.wl"}]]
+
+importedPrefixParselets = Get[FileNameJoin[{dataDir, "PrefixParselets.wl"}]]
+
+importedInfixParselets = Get[FileNameJoin[{dataDir, "InfixParselets.wl"}]]
 
 validateLongNameMap[importedLongNames]
 

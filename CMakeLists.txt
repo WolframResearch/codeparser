@@ -60,7 +60,7 @@ set(WL_PACLET_EXAMPLES
 	${PROJECT_SOURCE_DIR}/CodeParser/Resources/Examples/Collatz.m
 )
 
-set(GENERATED_WL_PACLET_SOURCES
+set(GENERATED_WL_PACLET_RESOURCES_SOURCES
 	${PROJECT_BINARY_DIR}/generated/wl/LongNames.wl
 )
 
@@ -89,8 +89,10 @@ set(PACLETINFO_SOURCE
 )
 
 set(WL_DATA_SOURCES
+	${PROJECT_SOURCE_DIR}/CodeParser/Data/InfixParselets.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Data/LongNames.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Data/Precedence.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Data/PrefixParselets.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Data/TokenEnum.wl
 )
 
@@ -112,7 +114,7 @@ set(GENERATED_CPP_LIB_SOURCES
 set(GENERATED_SOURCES
 	${GENERATED_CPP_INCLUDES}
 	${GENERATED_CPP_LIB_SOURCES}
-	${GENERATED_WL_PACLET_SOURCES}
+	${GENERATED_WL_PACLET_RESOURCES_SOURCES}
 )
 
 
@@ -192,13 +194,16 @@ endforeach()
 foreach(SRC ${WL_PACLET_EXAMPLES})
 	get_filename_component(BARE_SRC ${SRC} NAME)
 	add_custom_command(
-    OUTPUT ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Resources/Examples/${BARE_SRC}
-    COMMAND ${CMAKE_COMMAND} -E copy ${SRC} ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Resources/Examples/${BARE_SRC}
-    DEPENDS ${SRC})
+		OUTPUT
+			${PROJECT_BINARY_DIR}/paclet/${PACLET}/Resources/Examples/${BARE_SRC}
+		COMMAND
+			${CMAKE_COMMAND} -E copy ${SRC} ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Resources/Examples/${BARE_SRC}
+		DEPENDS
+			${SRC})
 	list(APPEND COPIED_WL_PACLET_EXAMPLES ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Resources/Examples/${BARE_SRC})
 endforeach()
 
-foreach(SRC ${GENERATED_WL_PACLET_SOURCES})
+foreach(SRC ${GENERATED_WL_PACLET_RESOURCES_SOURCES})
 	get_filename_component(BARE_SRC ${SRC} NAME)
 	add_custom_command(
 		OUTPUT
