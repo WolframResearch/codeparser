@@ -379,6 +379,8 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation token
     
     assert(c.to_point() == '*');
     
+    auto insideLinearSyntax = ((policy & INSIDE_LINEAR_SYNTAX) == INSIDE_LINEAR_SYNTAX);
+    
     policy |= COMPLEX_LINE_CONTINUATIONS;
     
     auto depth = 1;
@@ -444,7 +446,9 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation token
                 return Token(TOKEN_ERROR_UNTERMINATEDCOMMENT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
             case '\n': case '\r': case CODEPOINT_CRLF:
                 
-                EmbeddedNewlines.insert(tokenStartLoc);
+                if (!insideLinearSyntax) {
+                    EmbeddedNewlines.insert(tokenStartLoc);
+                }
                 
                 TheByteBuffer->buffer = TheByteDecoder->lastBuf;
                 TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
@@ -455,7 +459,9 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation token
             
             case '\t':
                 
-                EmbeddedTabs.insert(tokenStartLoc);
+                if (!insideLinearSyntax) {
+                    EmbeddedTabs.insert(tokenStartLoc);
+                }
                 
                 TheByteBuffer->buffer = TheByteDecoder->lastBuf;
                 TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
@@ -675,6 +681,8 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
     }
 #endif // !NISSUES
     
+    auto insideLinearSyntax = ((policy & INSIDE_LINEAR_SYNTAX) == INSIDE_LINEAR_SYNTAX);
+    
     policy |= COMPLEX_LINE_CONTINUATIONS;
     
     while (true) {
@@ -692,12 +700,16 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
                 return Token(TOKEN_ERROR_UNTERMINATEDSTRING, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
             case '\n': case '\r': case CODEPOINT_CRLF:
                 
-                EmbeddedNewlines.insert(tokenStartLoc);
+                if (!insideLinearSyntax) {
+                    EmbeddedNewlines.insert(tokenStartLoc);
+                }
                 
                 break;
             case '\t':
                 
-                EmbeddedTabs.insert(tokenStartLoc);
+                if (!insideLinearSyntax) {
+                    EmbeddedTabs.insert(tokenStartLoc);
+                }
                 
                 break;
         }

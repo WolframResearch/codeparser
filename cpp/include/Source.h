@@ -148,6 +148,15 @@ enum NextPolicyBits : uint8_t {
     // For example, we must consider  #2.c  to be Slot[2] . c  and NOT  Slot[1] 2. c
     //
     INTEGER_SHORT_CIRCUIT = 0x40,
+    
+    //
+    // If inside linear syntax, then do not participate in keeping track of:
+    // EmbeddedNewlines
+    // EmbeddedTabs
+    // SimpleLineContinuations
+    // ComplexLineContinuations
+    //
+    INSIDE_LINEAR_SYNTAX = 0x80,
 };
 
 using NextPolicy = uint8_t;

@@ -1079,7 +1079,9 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext CtxtI
         }
 #endif // !NABORT
         
-        auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+        auto policy = TOPLEVEL | INSIDE_LINEAR_SYNTAX;
+        
+        auto Tok = TheParser->currentToken(Ctxt, policy);
         
         switch (Tok.Tok.value()) {
             case TOKEN_ENDOFFILE.value(): {
@@ -1121,7 +1123,7 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext CtxtI
                     
                     TheParser->nextToken(Tok);
                     
-                    Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+                    Tok = TheParser->currentToken(Ctxt, policy);
                 }
             }
                 break;
@@ -1150,7 +1152,7 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext CtxtI
                 
                 TheParser->nextToken(Tok);
                 
-                Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+                Tok = TheParser->currentToken(Ctxt, policy);
             }
                 break;
             default: {
@@ -1163,7 +1165,7 @@ NodePtr LinearSyntaxOpenParenParselet::parse(Token firstTok, ParserContext CtxtI
                 
                 TheParser->nextToken(Tok);
                 
-                Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+                Tok = TheParser->currentToken(Ctxt, policy);
             }
                 break;
         }

@@ -928,6 +928,8 @@ SourceCharacter CharacterDecoder::handleLineContinuation(Buffer tokenStartBuf, S
     
     assert(c.to_point() == '\n' || c.to_point() == '\r' || c.to_point() == CODEPOINT_CRLF);
     
+    auto insideLinearSyntax = ((policy & INSIDE_LINEAR_SYNTAX) == INSIDE_LINEAR_SYNTAX);
+    
     c = TheByteDecoder->currentSourceCharacter(policy);
     
     //
@@ -953,7 +955,9 @@ SourceCharacter CharacterDecoder::handleLineContinuation(Buffer tokenStartBuf, S
                 //
                 // Must still count the embedded tab
                 
-                EmbeddedTabs.insert(tokenStartLoc);
+                if (!insideLinearSyntax) {
+                    EmbeddedTabs.insert(tokenStartLoc);
+                }
             }
         }
         
@@ -964,9 +968,13 @@ SourceCharacter CharacterDecoder::handleLineContinuation(Buffer tokenStartBuf, S
     }
     
     if ((policy & COMPLEX_LINE_CONTINUATIONS) == COMPLEX_LINE_CONTINUATIONS) {
-        ComplexLineContinuations.insert(tokenStartLoc);
+        if (!insideLinearSyntax) {
+            ComplexLineContinuations.insert(tokenStartLoc);
+        }
     } else {
-        SimpleLineContinuations.insert(tokenStartLoc);
+        if (!insideLinearSyntax) {
+            SimpleLineContinuations.insert(tokenStartLoc);
+        }
     }
     
     TheByteBuffer->buffer = TheByteDecoder->lastBuf;
