@@ -109,6 +109,8 @@ abstract[LeafNode[Token`Fake`ImplicitAll, _, data_]] := LeafNode[Symbol, "All", 
 
 (*
 Symbols, Strings, Integers, Reals, and Rationals just get passed through
+
+Also, LinearSyntaxBlob just gets passed through
 *)
 abstract[leaf_LeafNode] :=
 	leaf
@@ -146,13 +148,14 @@ abstract[PrefixNode[Plus, {_, rand_}, data_]] := abstractPrefixPlus[rand, data]
 
 abstract[PrefixNode[PrefixNot2, {notNotTok_, rand_}, data_]] := abstractNot2[rand, notNotTok, data]
 
-abstract[PrefixNode[PrefixLinearSyntaxBang, children:{_, child:Except[GroupNode[GroupLinearSyntaxParen, _, _]]}, data_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`LinearSyntaxBang, children, data]
 (*
 FIXME: keep linear syntax for now
 *)
-abstract[PrefixNode[PrefixLinearSyntaxBang, {rator_, rand_}, data_]] :=
+abstract[PrefixNode[PrefixLinearSyntaxBang, {rator_, rand:LeafNode[Token`LinearSyntaxBlob, _, _]}, data_]] :=
 	PrefixNode[PrefixLinearSyntaxBang, {rator, abstract[rand]}, data]
+
+abstract[PrefixNode[PrefixLinearSyntaxBang, children_, data_]] :=
+	AbstractSyntaxErrorNode[AbstractSyntaxError`LinearSyntaxBang, children, data]
 
 (*
 strings may be quoted
@@ -371,13 +374,6 @@ abstract[GroupNode[GroupParen, children_, data_]] :=
 (* GroupNode errors *)
 abstract[GroupNode[GroupSquare, children_, data_]] :=
 	AbstractSyntaxErrorNode[AbstractSyntaxError`OpenSquare, children, data]
-
-(*
-FIXME: skip abstracting linear syntax for now
-GroupLinearSyntaxParen retains its commas, so handle before abstractGroupNode
-*)
-abstract[GroupNode[GroupLinearSyntaxParen, children_, data_]] :=
-	GroupNode[GroupLinearSyntaxParen, children, data]
 
 
 
@@ -1862,6 +1858,9 @@ Module[{head, data, part, innerData, outerData, issues, partData, src},
 			LeafNode[Token`Percent | Token`PercentPercent, _, _] | CompoundNode[Out, _, _],
 				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
 			,
+			LeafNode[LinearSyntaxBlob, _, _],
+				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Remark", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
+			,
 			PrefixNode[PrefixLinearSyntaxBang, _, _],
 				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Remark", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
 			,
@@ -1877,9 +1876,6 @@ Module[{head, data, part, innerData, outerData, issues, partData, src},
 			GroupNode[GroupParen | List | Association, _, _],
 				(* these are fine *)
 				Null
-			,
-			GroupNode[GroupLinearSyntaxParen, _, _],
-				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Remark", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
 			,
 			GroupNode[_, _, _],
 				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
@@ -2230,6 +2226,10 @@ Module[{head, part, partData, data, issues, first},
 				first = firstToken[head];
 				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->first[[3, Key[Source]]], ConfidenceLevel -> 0.95|>]];
 			,
+			LeafNode[LinearSyntaxBlob, _, _],
+				first = firstToken[head];
+				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Remark", <|Source->first[[3, Key[Source]]], ConfidenceLevel -> 0.95|>]];
+			,
 			PrefixNode[PrefixLinearSyntaxBang, _, _],
 				first = firstToken[head];
 				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Remark", <|Source->first[[3, Key[Source]]], ConfidenceLevel -> 0.95|>]];
@@ -2246,10 +2246,6 @@ Module[{head, part, partData, data, issues, first},
 			GroupNode[GroupParen | List | Association, _, _],
 				(* these are fine *)
 				Null
-			,
-			GroupNode[GroupLinearSyntaxParen, _, _],
-				first = firstToken[head];
-				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Remark", <|Source->first[[3, Key[Source]]], ConfidenceLevel -> 0.95|>]];
 			,
 			GroupNode[_, _, _],
 				first = firstToken[head];

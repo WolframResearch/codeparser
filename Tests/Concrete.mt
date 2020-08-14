@@ -830,16 +830,7 @@ Test[
 	CodeConcreteParse["\\( \\(a\\) b \\)"]
 	,
 	ContainerNode[String, {
-		GroupNode[GroupLinearSyntaxParen, {
-			LeafNode[Token`LinearSyntax`OpenParen, "\\(", <|Source -> {{1, 1}, {1, 3}}|>],
-			LeafNode[Whitespace, " ", <|Source -> {{1, 3}, {1, 4}}|>],
-			LeafNode[Token`LinearSyntax`OpenParen, "\\(", <|Source -> {{1, 4}, {1, 6}}|>],
-			LeafNode[Symbol, "a", <|Source -> {{1, 6}, {1, 7}}|>],
-			LeafNode[Token`LinearSyntax`CloseParen, "\\)", <|Source -> {{1, 7}, {1, 9}}|>],
-			LeafNode[Whitespace, " ", <|Source -> {{1, 9}, {1, 10}}|>],
-			LeafNode[Symbol, "b", <|Source -> {{1, 10}, {1, 11}}|>],
-			LeafNode[Whitespace, " ", <|Source -> {{1, 11}, {1, 12}}|>],
-			LeafNode[Token`LinearSyntax`CloseParen, "\\)", <|Source -> {{1, 12}, {1, 14}}|>]}, <|Source -> {{1, 1}, {1, 14}}|>]}, <||>]
+		LeafNode[Token`LinearSyntaxBlob, "\\( \\(a\\) b \\)", <|Source -> {{1, 1}, {1, 14}}|>]}, <||>]
 	,
 	TestID->"Concrete-20200803-T9U9J8"
 ]

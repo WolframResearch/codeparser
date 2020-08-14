@@ -17,7 +17,7 @@ if a token is not something else, then it is prefix
 
 ## TokenEnum encoding
 
- There are currently ~437 tokens, so 9 bits are required to enumerate them
+ There are currently ~427 tokens, so 9 bits are required to enumerate them
 
  16 bits:
 

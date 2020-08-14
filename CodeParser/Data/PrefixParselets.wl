@@ -5,6 +5,7 @@ Token`String -> Parselet`LeafParselet[],
 Token`Integer -> Parselet`LeafParselet[],
 Token`Real -> Parselet`LeafParselet[],
 Token`Rational -> Parselet`LeafParselet[],
+Token`LinearSyntaxBlob -> Parselet`LeafParselet[],
 
 Token`Unknown -> Parselet`PrefixNullPointerParselet[],
 Token`Whitespace -> Parselet`PrefixNullPointerParselet[],
@@ -28,6 +29,7 @@ Token`Error`InvalidBase -> Parselet`PrefixErrorParselet[],
 Token`Error`UnterminatedComment -> Parselet`PrefixErrorParselet[],
 Token`Error`UnterminatedString -> Parselet`PrefixErrorParselet[],
 Token`Error`UnterminatedFileString -> Parselet`PrefixErrorParselet[],
+Token`Error`UnterminatedLinearSyntaxBlob -> Parselet`PrefixErrorParselet[],
 Token`Error`UnsupportedToken -> Parselet`PrefixErrorParselet[],
 Token`Error`UnexpectedCloser -> Parselet`PrefixErrorParselet[],
 
@@ -45,7 +47,6 @@ Token`LongName`RightCeiling -> Parselet`PrefixCloserParselet[],
 Token`LongName`RightDoubleBracket -> Parselet`PrefixCloserParselet[],
 Token`LongName`RightDoubleBracketingBar -> Parselet`PrefixCloserParselet[],
 Token`LongName`RightFloor -> Parselet`PrefixCloserParselet[],
-Token`LinearSyntax`CloseParen -> Parselet`PrefixCloserParselet[],
 
 
 Token`Minus -> Parselet`PrefixOperatorParselet[Token`Minus, Precedence`Prefix`Minus, Minus],
@@ -143,11 +144,6 @@ prefix, infix, postfix
 Token`SemiSemi -> Parselet`SemiSemiParselet[],
 
 (*
-FIXME: punt on parsing box syntax, reads tokens with no parsing
-*)
-Token`LinearSyntax`OpenParen -> Parselet`LinearSyntaxOpenParenParselet[],
-
-(*
 Has to handle \[Integral] f \[DifferentialD] x
 *)
 Token`LongName`Integral -> Parselet`IntegralParselet[],
@@ -157,23 +153,6 @@ stringify next token (as a file]
 *)
 Token`LessLess -> Parselet`LessLessParselet[],
 
-
-(*
-Token`LinearSyntax`Bang
-Token`LinearSyntax`OpenParen
-
-Token`LinearSyntax`Bang and Token`LinearSyntax`OpenParen are supported
-*)
-Token`LinearSyntax`Star -> Parselet`PrefixUnsupportedTokenParselet[],
-Token`LinearSyntax`At -> Parselet`PrefixUnsupportedTokenParselet[],
-Token`LinearSyntax`Caret -> Parselet`PrefixUnsupportedTokenParselet[],
-Token`LinearSyntax`Under -> Parselet`PrefixUnsupportedTokenParselet[],
-Token`LinearSyntax`Percent -> Parselet`PrefixUnsupportedTokenParselet[],
-Token`LinearSyntax`Plus -> Parselet`PrefixUnsupportedTokenParselet[],
-Token`LinearSyntax`Backtick -> Parselet`PrefixUnsupportedTokenParselet[],
-Token`LinearSyntax`Slash -> Parselet`PrefixUnsupportedTokenParselet[],
-Token`LinearSyntax`Amp -> Parselet`PrefixUnsupportedTokenParselet[],
-Token`LinearSyntax`Space -> Parselet`PrefixUnsupportedTokenParselet[],
 
 Token`QuestionQuestion -> Parselet`PrefixUnsupportedTokenParselet[],
 

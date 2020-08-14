@@ -14,8 +14,7 @@ Token`String -> Next,
 Token`Integer -> Next,
 Token`Real -> Next,
 Token`Rational -> Next,
-
-Token`Buffer1 -> Next,
+Token`LinearSyntaxBlob -> Next,
 
 (*
 trivia
@@ -29,12 +28,12 @@ non-ToplevelNewline trivia (also just a bit mask)
 Token`InternalNewline -> Next, (*8*)
 Token`Comment -> Next,
 Token`Whitespace -> Next,
-Token`Buffer2 -> Next,
+Token`Buffer1 -> Next,
 Token`ToplevelNewline -> Next,
 
+Token`Buffer2 -> Next,
 Token`Buffer3 -> Next,
 Token`Buffer4 -> Next,
-Token`Buffer5 -> Next,
 
 (* errors *)
 Token`Error`ExpectedEqual -> Next, (*16*)
@@ -63,7 +62,7 @@ value to unterminateds to allow fast checking with a bit mask.
 Token`Error`UnterminatedComment -> Next, (*28*)
 Token`Error`UnterminatedString -> Next,
 Token`Error`UnterminatedFileString -> Next,
-Token`Buffer6 -> Next,
+Token`Error`UnterminatedLinearSyntaxBlob -> Next,
 Token`Error`UnsupportedToken -> Next, (*32*)
 Token`Error`UnexpectedCloser -> Next,
 Token`Error`End -> Next,
@@ -161,18 +160,6 @@ Token`PercentPercent -> Next, (* %% *)
 
 (* Linear syntax tokens *)
 Token`LinearSyntax`Bang -> Next, (* \! *)
-Token`LinearSyntax`OpenParen -> Next, (* \( *)
-Token`LinearSyntax`Star -> Next, (* \* *)
-Token`LinearSyntax`CloseParen -> Next, (* \) *)
-Token`LinearSyntax`At -> Next, (* \@ *)
-Token`LinearSyntax`Caret -> Next, (* \^ *)
-Token`LinearSyntax`Under -> Next, (* \_ *)
-Token`LinearSyntax`Percent -> Next, (* \% *)
-Token`LinearSyntax`Plus -> Next, (* \+ *)
-Token`LinearSyntax`Backtick -> Next, (* \` *)
-Token`LinearSyntax`Slash -> Next, (* \/ *)
-Token`LinearSyntax`Amp -> Next, (* \& *)
-Token`LinearSyntax`Space -> Next, (* \<space> *)
 
 (* Fake tokens *)
 

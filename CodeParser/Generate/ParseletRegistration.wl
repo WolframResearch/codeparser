@@ -133,8 +133,6 @@ formatPrefix[Parselet`LessLessParselet[]] := "new LessLessParselet()"
 
 formatPrefix[Parselet`SemiSemiParselet[]] := "&semiSemiParselet"
 
-formatPrefix[Parselet`LinearSyntaxOpenParenParselet[]] := "new LinearSyntaxOpenParenParselet()"
-
 formatPrefix[Parselet`IntegralParselet[]] := "new IntegralParselet()"
 
 formatPrefix[Parselet`PrefixOperatorParselet[tok_, precedence_, op_]] := "new PrefixOperatorParselet(" <> toGlobal[tok] <> ", " <> toGlobal[precedence] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"

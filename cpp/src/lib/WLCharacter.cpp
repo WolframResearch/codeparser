@@ -484,6 +484,26 @@ bool WLCharacter::isMBUnsupported() const {
         }
     }
     
+    //
+    // Linear syntax outside of \( \) is unsupported
+    //
+    // Note: \! and \( ARE supported
+    //
+    switch (to_point()) {
+        case CODEPOINT_LINEARSYNTAX_STAR:
+        case CODEPOINT_LINEARSYNTAX_CLOSEPAREN:
+        case CODEPOINT_LINEARSYNTAX_AT:
+        case CODEPOINT_LINEARSYNTAX_CARET:
+        case CODEPOINT_LINEARSYNTAX_UNDER:
+        case CODEPOINT_LINEARSYNTAX_PERCENT:
+        case CODEPOINT_LINEARSYNTAX_AMP:
+        case CODEPOINT_LINEARSYNTAX_SLASH:
+        case CODEPOINT_LINEARSYNTAX_PLUS:
+        case CODEPOINT_LINEARSYNTAX_BACKTICK:
+        case CODEPOINT_LINEARSYNTAX_SPACE:
+            return true;
+    }
+    
     return false;
 }
 

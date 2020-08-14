@@ -479,14 +479,6 @@ public:
 };
 
 //
-// Something like  \( x \)
-//
-class LinearSyntaxOpenParenParselet : public PrefixParselet {
-public:
-    NodePtr parse(Token firstTok, ParserContext Ctxt) const override;
-};
-
-//
 // a /: b = c  and  a /: b = .  are handled here
 //
 class EqualParselet : public BinaryOperatorParselet {

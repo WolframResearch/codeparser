@@ -58,6 +58,7 @@ isPossibleBeginning[Token`String] = True
 isPossibleBeginning[Token`Integer] = True
 isPossibleBeginning[Token`Real] = True
 isPossibleBeginning[Token`Rational] = True
+isPossibleBeginning[Token`LinearSyntaxBlob] = True
 
 isPossibleBeginning[Token`Percent] = True
 isPossibleBeginning[Token`PercentPercent] = True
@@ -99,7 +100,6 @@ isPossibleBeginning[Token`LongName`LeftDoubleBracketingBar] = True
 isPossibleBeginning[Token`LongName`LeftAssociation] = True
 isPossibleBeginning[Token`LongName`OpenCurlyQuote] = True
 isPossibleBeginning[Token`LongName`OpenCurlyDoubleQuote] = True
-isPossibleBeginning[Token`LinearSyntax`OpenParen] = True
 
 isPossibleBeginning[Token`LinearSyntax`Bang] = True
 
@@ -164,7 +164,6 @@ isCloser[Token`LongName`RightCeiling] = True
 isCloser[Token`LongName`RightDoubleBracket] = True
 isCloser[Token`LongName`RightDoubleBracketingBar] = True
 isCloser[Token`LongName`RightFloor] = True
-isCloser[Token`LinearSyntax`CloseParen] = True
 
 isCloser[_] = False
 
@@ -191,6 +190,7 @@ isError[Token`Error`UnexpectedCloser] = True
 isError[Token`Error`UnterminatedComment] = True
 isError[Token`Error`UnterminatedString] = True
 isError[Token`Error`UnterminatedFileString] = True
+isError[Token`Error`UnterminatedLinearSyntaxBlob] = True
 isError[Token`Error`End] = True
 
 isError[_] = False
@@ -330,7 +330,7 @@ enum Closer : uint8_t {
     CLOSER_LONGNAME_RIGHTDOUBLEBRACKET,
     CLOSER_LONGNAME_RIGHTDOUBLEBRACKETINGBAR,
     CLOSER_LONGNAME_RIGHTFLOOR,
-    CLOSER_LINEARSYNTAX_CLOSEPAREN,
+    // UNUSED
     CLOSER_ASSERTFALSE,
 };
 

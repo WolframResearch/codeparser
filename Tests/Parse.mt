@@ -3211,10 +3211,7 @@ Test[
 	CodeParse["\\((*\n*)\\)"]
 	,
 	ContainerNode[String, {
-		GroupNode[GroupLinearSyntaxParen, {
-			LeafNode[Token`LinearSyntax`OpenParen, "\\(", <|Source -> {{1, 1}, {1, 3}}|>],
-			LeafNode[Token`Comment, "(*\n*)", <|Source -> {{1, 3}, {2, 3}}|>],
-			LeafNode[Token`LinearSyntax`CloseParen, "\\)", <|Source -> {{2, 3}, {2, 5}}|>]}, <|Source -> {{1, 1}, {2, 5}}|>]}, <||>]
+		LeafNode[Token`LinearSyntaxBlob, "\\((*\n*)\\)", <|Source -> {{1, 1}, {2, 5}}|>]}, <||>]
 	,
 	TestID->"Parse-20200803-R4W5C6"
 ]

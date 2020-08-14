@@ -47,8 +47,6 @@ GroupOpenerToCloser[Token`LongName`LeftAssociation] = Closer`LongName`RightAssoc
 GroupOpenerToCloser[Token`LongName`OpenCurlyQuote] = Closer`LongName`CloseCurlyQuote
 GroupOpenerToCloser[Token`LongName`OpenCurlyDoubleQuote] = Closer`LongName`CloseCurlyDoubleQuote
 
-GroupOpenerToCloser[Token`LinearSyntax`OpenParen] = Closer`LinearSyntax`CloseParen
-
 
 TokenToCloser[Token`CloseCurly] = Closer`CloseCurly
 TokenToCloser[Token`BarGreater] = Closer`BarGreater
@@ -64,8 +62,6 @@ TokenToCloser[Token`LongName`RightDoubleBracketingBar] = Closer`LongName`RightDo
 TokenToCloser[Token`LongName`RightAssociation] = Closer`LongName`RightAssociation
 TokenToCloser[Token`LongName`CloseCurlyQuote] = Closer`LongName`CloseCurlyQuote
 TokenToCloser[Token`LongName`CloseCurlyDoubleQuote] = Closer`LongName`CloseCurlyDoubleQuote
-
-TokenToCloser[Token`LinearSyntax`CloseParen] = Closer`LinearSyntax`CloseParen
 
 
 
@@ -108,7 +104,6 @@ symbols = Union[Join[
       Parselet`UnderParselet[_] :> Nothing,
       Parselet`IntegralParselet[] :> Nothing,
       Parselet`LessLessParselet[] :> Get,
-      Parselet`LinearSyntaxOpenParenParselet[] :> CodeParser`GroupLinearSyntaxParen,
       Parselet`PrefixNullPointerParselet[] :> Nothing,
       Parselet`PrefixCloserParselet[] :> Nothing,
       Parselet`PrefixEndOfFileParselet[] :> Nothing,

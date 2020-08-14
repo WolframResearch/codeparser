@@ -124,14 +124,6 @@ Test[
 ]
 
 Test[
-	ToInputFormString[Aggregate[CodeConcreteParse["\\(x"]]]
-	,
-	"\\(x"
-	,
-	TestID->"ToString-20181230-R6R9E5"
-]
-
-Test[
 	ToInputFormString[Aggregate[CodeConcreteParse["\\(x,y\\)"]]]
 	,
 	"\\(x,y\\)"

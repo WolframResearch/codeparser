@@ -121,7 +121,7 @@ TestMatch[
 TestMatch[
 	CodeParse["\\("]
 	,
-	ContainerNode[String, {UnterminatedGroupNode[GroupLinearSyntaxParen, _, _]}, _]
+	ContainerNode[String, {ErrorNode[Token`Error`UnterminatedLinearSyntaxBlob, _, _]}, _]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190520-B2V0A0"
 ]

@@ -27,6 +27,7 @@ Token`Error`InvalidBase -> Parselet`InfixAssertFalseParselet[],
 Token`Error`UnterminatedComment -> Parselet`InfixAssertFalseParselet[],
 Token`Error`UnterminatedString -> Parselet`InfixAssertFalseParselet[],
 Token`Error`UnterminatedFileString -> Parselet`InfixAssertFalseParselet[],
+Token`Error`UnterminatedLinearSyntaxBlob -> Parselet`InfixAssertFalseParselet[],
 Token`Error`UnsupportedToken -> Parselet`InfixAssertFalseParselet[],
 Token`Error`UnexpectedCloser -> Parselet`InfixAssertFalseParselet[],
 
@@ -43,7 +44,6 @@ Token`LongName`RightCeiling -> Parselet`InfixAssertFalseParselet[],
 Token`LongName`RightDoubleBracket -> Parselet`InfixAssertFalseParselet[],
 Token`LongName`RightDoubleBracketingBar -> Parselet`InfixAssertFalseParselet[],
 Token`LongName`RightFloor -> Parselet`InfixAssertFalseParselet[],
-Token`LinearSyntax`CloseParen -> Parselet`InfixAssertFalseParselet[],
 
 Token`LongName`DifferentialD -> Parselet`InfixDifferentialDParselet[],
 Token`LongName`CapitalDifferentialD -> Parselet`InfixDifferentialDParselet[],
@@ -476,23 +476,6 @@ stringify next token (as a file)
 Token`GreaterGreater -> Parselet`GreaterGreaterParselet[],
 Token`GreaterGreaterGreater -> Parselet`GreaterGreaterGreaterParselet[],
 
-
-(*
-Token`LinearSyntax`Bang,
-Token`LinearSyntax`OpenParen,
-
-Token`LinearSyntax`Bang and Token`LinearSyntax`OpenParen are supported
-*)
-Token`LinearSyntax`Star -> Parselet`InfixAssertFalseParselet[],
-Token`LinearSyntax`At -> Parselet`InfixAssertFalseParselet[],
-Token`LinearSyntax`Caret -> Parselet`InfixAssertFalseParselet[],
-Token`LinearSyntax`Under -> Parselet`InfixAssertFalseParselet[],
-Token`LinearSyntax`Percent -> Parselet`InfixAssertFalseParselet[],
-Token`LinearSyntax`Plus -> Parselet`InfixAssertFalseParselet[],
-Token`LinearSyntax`Backtick -> Parselet`InfixAssertFalseParselet[],
-Token`LinearSyntax`Slash -> Parselet`InfixAssertFalseParselet[],
-Token`LinearSyntax`Amp -> Parselet`InfixAssertFalseParselet[],
-Token`LinearSyntax`Space -> Parselet`InfixAssertFalseParselet[],
 
 Token`QuestionQuestion -> Parselet`InfixAssertFalseParselet[],
 

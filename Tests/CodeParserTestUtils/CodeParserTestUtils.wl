@@ -141,7 +141,7 @@ Module[{cst, agg, ast, good, expected, actual, str, str1, expectedStr, actualStr
 	FullForm
 	*)
 	
-	If[!FreeQ[ast, GroupNode[GroupLinearSyntaxParen, _, _]],
+	If[!FreeQ[ast, LeafNode[Token`LinearSyntaxBlob, _, _]],
 		Throw[True]
 	];
 	

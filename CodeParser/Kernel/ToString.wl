@@ -398,9 +398,6 @@ FIXME: linear syntax is skipped right now
 toFullFormString[p:PrefixNode[PrefixLinearSyntaxBang, _, _]] :=
 	ToInputFormString[p]
 
-toFullFormString[g:GroupNode[GroupLinearSyntaxParen, _, _]] :=
-	ToInputFormString[g]
-
 toFullFormString[args:BoxNode[box_, children_, _]] :=
 	Failure["CannotConvertBoxesToFullForm", <|"Function"->ToFullFormString, "Arguments"->HoldForm[{args}]|>]
 
