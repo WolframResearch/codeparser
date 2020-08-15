@@ -383,8 +383,6 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation token
     
     assert(c.to_point() == '*');
     
-    auto insideLinearSyntax = ((policy & INSIDE_LINEAR_SYNTAX) == INSIDE_LINEAR_SYNTAX);
-    
     policy |= COMPLEX_LINE_CONTINUATIONS;
     
     auto depth = 1;
@@ -450,9 +448,7 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation token
                 return Token(TOKEN_ERROR_UNTERMINATEDCOMMENT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
             case '\n': case '\r': case CODEPOINT_CRLF:
                 
-                if (!insideLinearSyntax) {
-                    EmbeddedNewlines.insert(tokenStartLoc);
-                }
+                EmbeddedNewlines.insert(tokenStartLoc);
                 
                 TheByteBuffer->buffer = TheByteDecoder->lastBuf;
                 TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
@@ -463,9 +459,7 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation token
             
             case '\t':
                 
-                if (!insideLinearSyntax) {
-                    EmbeddedTabs.insert(tokenStartLoc);
-                }
+                EmbeddedTabs.insert(tokenStartLoc);
                 
                 TheByteBuffer->buffer = TheByteDecoder->lastBuf;
                 TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
@@ -487,13 +481,19 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation token
     } // while
 }
 
-inline Token Tokenizer::handleMBLinearSyntaxBlob(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
+//
+// Use SourceCharacters here, not WLCharacters
+//
+// Linear syntax deal with \(\) SourceCharacters
+// Escaped characters do not work
+//
+inline Token Tokenizer::handleMBLinearSyntaxBlob(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter cIn, NextPolicy policy) {
     
-    assert(c.to_point() == CODEPOINT_LINEARSYNTAX_OPENPAREN);
+    assert(cIn.to_point() == CODEPOINT_LINEARSYNTAX_OPENPAREN);
     
     auto depth = 1;
     
-    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
+    auto c = TheByteDecoder->currentSourceCharacter(policy);
     
     while (true) {
         
@@ -502,32 +502,54 @@ inline Token Tokenizer::handleMBLinearSyntaxBlob(Buffer tokenStartBuf, SourceLoc
         //
         
         switch (c.to_point()) {
-            case CODEPOINT_LINEARSYNTAX_OPENPAREN:
+            case '\\':
                 
-                depth = depth + 1;
+                TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+                TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
                 
-                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-                TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+                c = TheByteDecoder->currentSourceCharacter(policy);
                 
-                c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
-                
-                break;
-            case CODEPOINT_LINEARSYNTAX_CLOSEPAREN:
-                
-                depth = depth - 1;
-                
-                if (depth == 0) {
-                    
-                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-                    TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
-                    
-                    return Token(TOKEN_LINEARSYNTAXBLOB, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                switch (c.to_point()) {
+                    case '(':
+                        
+                        depth = depth + 1;
+                        
+                        TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+                        TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+                        
+                        c = TheByteDecoder->currentSourceCharacter(policy);
+                        
+                        break;
+                    case ')':
+                        
+                        depth = depth - 1;
+                        
+                        if (depth == 0) {
+                            
+                            TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+                            TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+                            
+                            return Token(TOKEN_LINEARSYNTAXBLOB, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                        }
+                        
+                        TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+                        TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+                        
+                        c = TheByteDecoder->currentSourceCharacter(policy);
+                        
+                        break;
+                    case CODEPOINT_ENDOFFILE:
+                        return Token(TOKEN_ERROR_UNTERMINATEDLINEARSYNTAXBLOB, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                        
+                    default:
+                        
+                        TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+                        TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+                        
+                        c = TheByteDecoder->currentSourceCharacter(policy);
+                        
+                        break;
                 }
-                
-                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-                TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
-                
-                c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
                 
                 break;
             case CODEPOINT_ENDOFFILE:
@@ -535,10 +557,10 @@ inline Token Tokenizer::handleMBLinearSyntaxBlob(Buffer tokenStartBuf, SourceLoc
                 
             default:
                 
-                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-                TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+                TheByteBuffer->buffer = TheByteDecoder->lastBuf;
+                TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
                 
-                c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
+                c = TheByteDecoder->currentSourceCharacter(policy);
                 
                 break;
         }
@@ -745,8 +767,6 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
     }
 #endif // !NISSUES
     
-    auto insideLinearSyntax = ((policy & INSIDE_LINEAR_SYNTAX) == INSIDE_LINEAR_SYNTAX);
-    
     policy |= COMPLEX_LINE_CONTINUATIONS;
     
     while (true) {
@@ -764,16 +784,12 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
                 return Token(TOKEN_ERROR_UNTERMINATEDSTRING, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
             case '\n': case '\r': case CODEPOINT_CRLF:
                 
-                if (!insideLinearSyntax) {
-                    EmbeddedNewlines.insert(tokenStartLoc);
-                }
+                EmbeddedNewlines.insert(tokenStartLoc);
                 
                 break;
             case '\t':
                 
-                if (!insideLinearSyntax) {
-                    EmbeddedTabs.insert(tokenStartLoc);
-                }
+                EmbeddedTabs.insert(tokenStartLoc);
                 
                 break;
         }

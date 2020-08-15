@@ -406,7 +406,7 @@ struct TokenEnum {
   //
   // isUnterminated value matches: 0b0000_000x_xxxx_xxxx (x is unknown)
   //
-  // Only valid is already checked isError
+  // Only valid if already checked isError
   //
   //         Mask off 0b0000_0000_0001_1100 (0x1c)
   // And test against 0b0000_0000_0001_1100 (0x1c)

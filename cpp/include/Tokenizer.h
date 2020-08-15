@@ -47,6 +47,8 @@ class Tokenizer {
     
     Token handleComment(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter firstChar, NextPolicy policy);
     
+    Token handleMBLinearSyntaxBlob(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
+    
     //
     // Handle parsing the brackets in:
     // a >> foo[[]]
@@ -139,8 +141,6 @@ class Tokenizer {
     Token handleCaret(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
     
     Token handleMBPunctuation(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
-    
-    Token handleMBLinearSyntaxBlob(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
     
     Token handleUnhandledBackslash(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
     

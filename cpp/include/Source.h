@@ -149,14 +149,7 @@ enum NextPolicyBits : uint8_t {
     //
     INTEGER_SHORT_CIRCUIT = 0x40,
     
-    //
-    // If inside linear syntax, then do not participate in keeping track of:
-    // EmbeddedNewlines
-    // EmbeddedTabs
-    // SimpleLineContinuations
-    // ComplexLineContinuations
-    //
-    INSIDE_LINEAR_SYNTAX = 0x80,
+//    UNUSED = 0x80,
 };
 
 using NextPolicy = uint8_t;
