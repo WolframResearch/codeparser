@@ -105,7 +105,13 @@ Module[{},
     ]
     ,
     MetaData[<|"Exported" -> True, "Name" -> Expr`CStringToIntegerExpr|>
-    ]@Function[{Typed[arg1, "MachineInteger"], Typed[arg2, "MachineInteger"], Typed[arg3, "MBool"]},
+    (*
+    used to be:
+    {Typed[arg1, "MachineInteger"], Typed[arg2, "MachineInteger"], Typed[arg3, "MBool"]}
+
+    but MBool was changed to be 32-bits
+    *)
+    ]@Function[{Typed[arg1, "MachineInteger"], Typed[arg2, "MachineInteger"], Typed[arg3, "Boolean"]},
       Module[{e, cast1},
         cast1 = Native`BitCast[arg1, "CString"];
         e = Native`PrimitiveFunction["CStringToIntegerExpr"][cast1, arg2, arg3];
