@@ -238,7 +238,7 @@ TestMatch[
 		(*
 		deliberately empty content
 		*)
-		ErrorNode[Token`Error`UnterminatedString, "", <|Source -> {{1, 1}, {1, 5}}|>]}, <||>]
+		ErrorNode[Token`Error`UnterminatedString, "\"123", <|Source -> {{1, 1}, {1, 5}}|>]}, <||>]
 	,
 	TestID->"Errors-20200623-O0B7Z2"
 ]
