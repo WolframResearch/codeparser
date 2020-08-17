@@ -82,7 +82,7 @@ Options[reparseUnterminatedGroupNode] = {
 
 reparseUnterminatedGroupNode[{tag_, children_, dataIn_}, bytes_List, opts:OptionsPattern[]] :=
 Catch[
-Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str, leaves, convention, test,
+Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str, betterLeaves, convention, test,
   lineLens, takeSpecsOfLines, poss, tabWidth},
 
   If[$Debug,
@@ -98,7 +98,7 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
     Throw[str]
   ];
 
-  lines = StringSplit[str, {"\r\n", "\n", "\r"}, All];
+  lines = StringSplit[str, "\n", All];
 
   If[$Debug,
     Print["lines: ", lines //InputForm];
@@ -124,6 +124,9 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
       
       lineLens = StringLength /@ lines;
 
+      (*
+      Include the newline at the end
+      *)
       takeSpecsOfLines = {#[[1]] + 1, #[[2]]}& /@ Partition[FoldList[Plus, 0, lineLens + 1], 2, 1];
 
       test = (IntervalIntersection[Interval[#], Interval[src]] =!= Interval[])&;
@@ -149,6 +152,10 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
   *)
   Switch[convention,
     "LineColumn",
+      (*
+      This will NOT include newline at the end
+      FIXME?
+      *)
       betterSrc = { src[[1]], { src[[1, 1]] + lastGoodLineIndex - 1, StringLength[lastGoodLine]+1 } };
 
       data[Source] = betterSrc;
@@ -159,9 +166,13 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
       Flatten out children, because there may be parsing errors from missing bracket, and
       we do not want to propagate
       *)
-      leaves = Cases[children, (LeafNode|ErrorNode)[_, _, data_ /; srcMemberFunc[data[Source]]], Infinity];
+      betterLeaves = Cases[children, (LeafNode|ErrorNode)[_, _, data_ /; srcMemberFunc[data[Source]]], Infinity];
     ,
     "SourceCharacterIndex",
+      (*
+      This will include newline at the end
+      FIXME?
+      *)
       betterSrc = { src[[1]], takeSpecsOfLines[[poss[[1, 1]] + lastGoodLineIndex - 1, 2]] };
 
       data[Source] = betterSrc;
@@ -170,10 +181,15 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
       Flatten out children, because there may be parsing errors from missing bracket, and
       we do not want to propagate
       *)
-      leaves = Cases[children, (LeafNode|ErrorNode)[_, _, data_ /; IntervalMemberQ[Interval[src], Interval[data[Source]]]], Infinity];
+      betterLeaves = Cases[children, (LeafNode|ErrorNode)[_, _, data_ /; IntervalMemberQ[Interval[src], Interval[data[Source]]]], Infinity];
   ];
 
-  UnterminatedGroupNode[tag, leaves, data]
+  (*
+  Purposely only returning leaves that are in the "better" Source
+
+  Rationale: there is not a useful purpose for returning the rest of the file, which may be massive.
+  *)
+  UnterminatedGroupNode[tag, betterLeaves, data]
 ]]
 
 
@@ -193,7 +209,7 @@ Options[reparseUnterminatedTokenErrorNode] = {
 reparseUnterminatedTokenErrorNode[{tok_, _, dataIn_}, bytes_List, OptionsPattern[]] :=
 Catch[
 Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str, convention, test,
-  lineLens, takeSpecsOfLines, poss, tabWidth},
+  lineLens, takeSpecsOfLines, poss, tabWidth, betterStr},
 
   convention = OptionValue[SourceConvention];
   tabWidth = OptionValue["TabWidth"];
@@ -204,7 +220,7 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
     Throw[str]
   ];
 
-  lines = StringSplit[str, {"\r\n", "\n", "\r"}, All];
+  lines = StringSplit[str, "\n", All];
 
   lines = replaceTabs[#, 1, "\n", tabWidth]& /@ lines;
 
@@ -223,6 +239,9 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
       
       lineLens = StringLength /@ lines;
 
+      (*
+      Include the newline at the end
+      *)
       takeSpecsOfLines = {#[[1]] + 1, #[[2]]}& /@ Partition[FoldList[Plus, 0, lineLens + 1], 2, 1];
 
       test = (IntervalIntersection[Interval[#], Interval[src]] =!= Interval[])&;
@@ -248,20 +267,37 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
   *)
   Switch[convention,
     "LineColumn",
+      (*
+      This will NOT include newline at the end
+      FIXME?
+      *)
       betterSrc = { src[[1]], { src[[1, 1]] + lastGoodLineIndex - 1, StringLength[lastGoodLine]+1 } };
 
       data[Source] = betterSrc;
+
+      (*
+      Make sure to drop whatever characters are in the first line, but are before this token
+      *)
+      betterStr = StringJoin[Riffle[{StringDrop[firstChunk[[1]], betterSrc[[1, 2]] - 1]} ~Join~ firstChunk[[2;;lastGoodLineIndex]], "\n"]]
     ,
     "SourceCharacterIndex",
+      (*
+      This will include newline at the end
+      FIXME?
+      *)
       betterSrc = { src[[1]], takeSpecsOfLines[[poss[[1, 1]] + lastGoodLineIndex - 1, 2]] };
 
       data[Source] = betterSrc;
+
+      betterStr = StringTake[str, betterSrc]
   ];
 
   (*
-  deliberately empty content
+  Purposely only returning the characters that are in the "better" Source
+
+  Rationale: there is not a useful purpose for returning the rest of the file, which may be massive.
   *)
-  ErrorNode[tok, "", data]
+  ErrorNode[tok, betterStr, data]
 ]]
 
 
