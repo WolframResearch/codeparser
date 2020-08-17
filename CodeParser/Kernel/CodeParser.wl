@@ -18,6 +18,8 @@ CodeTokenize
 
 CodeSyntaxQ
 
+CodeSyntaxCSTQ
+
 
 
 (*
@@ -1085,6 +1087,11 @@ CodeSyntaxQ[code_] :=
     GroupMissingCloserNode | UnterminatedGroupNode |
     CallMissingCloserNode | UnterminatedCallNode]
 
+CodeSyntaxCSTQ[cst_] :=
+  FreeQ[cst,
+    ErrorNode |
+    SyntaxErrorNode |
+    GroupMissingCloserNode | UnterminatedGroupNode]
 
 
 
