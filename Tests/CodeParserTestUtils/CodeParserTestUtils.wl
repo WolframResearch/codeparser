@@ -903,7 +903,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     
 
     (*
-    Work around bug 382857 where line continuations with \r\n are not treated correctedly
+    Work around bug 382857 where line continuations with \r\n are not treated correctly
     Related bugs: 382857
 
     Also make it easier to deal with embedded newlines
@@ -1199,6 +1199,23 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      If[!FreeQ[expected, 
         HoldPattern[Information][_, LongForm -> False]],
       f = Failure["Information?Syntax", <|"File" -> File[fileIn]|>];
+      If[$Interactive,
+        Print[
+         Style[Row[{"index: ", i, " ", File[fileIn]}], 
+          Darker[Orange]]];
+        Print[Style[Row[{"index: ", i, " ", f}], Darker[Orange]]];
+      ];
+      Throw[f, "Handled"]
+      ];
+
+     If[MemberQ[{
+        (*
+        embedded \r\n in a string in linear syntax (so the \r\n is preserved, but we replace \r\n -> \n up above)
+        *)
+        prefix <> "SystemFiles/Links/MailLink/Kernel/icons.m",
+        Nothing
+        }, fileIn],
+      f = Failure["EmbeddedCRLFInLinearSyntax", <|"File" -> File[fileIn]|>];
       If[$Interactive,
         Print[
          Style[Row[{"index: ", i, " ", File[fileIn]}], 
