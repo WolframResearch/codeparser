@@ -2981,6 +2981,39 @@ Test[
 
 
 
+Test[
+	CodeParse["a_..b"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "Dot", <||>], {
+			CallNode[LeafNode[Symbol, "Optional", <||>], {
+				CallNode[LeafNode[Symbol, "Pattern", <||>], {
+					LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
+					CallNode[LeafNode[Symbol, "Blank", <||>], {}, <|Source -> {{1, 2}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>],
+			LeafNode[Symbol, "b", <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]},
+		<|SyntaxIssues -> {
+			SyntaxIssue["UnexpectedCharacter", "Suspicious syntax.", "Error", <|Source -> {{1, 4}, {1, 4}}, ConfidenceLevel -> 0.95, CodeActions -> {
+				CodeAction["Insert space", InsertText, <|Source -> {{1, 4}, {1, 4}}, "InsertionText" -> " "|>]}|>]}|>]
+	,
+	TestID->"Parse-20200821-Z5I1N7"
+]
+
+Test[
+	CodeParse["a_..."]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "Repeated", <||>], {
+			CallNode[LeafNode[Symbol, "Optional", <||>], {
+				CallNode[LeafNode[Symbol, "Pattern", <||>], {
+					LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
+					CallNode[LeafNode[Symbol, "Blank", <||>], {}, <|Source -> {{1, 2}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]},
+		<|SyntaxIssues -> {
+			SyntaxIssue["UnexpectedCharacter", "Suspicious syntax.", "Error", <|Source -> {{1, 4}, {1, 4}}, ConfidenceLevel -> 0.95, CodeActions -> {
+				CodeAction["Insert space", InsertText, <|Source -> {{1, 4}, {1, 4}}, "InsertionText" -> " "|>]}|>]}|>]
+	,
+	TestID->"Parse-20200821-F1R5P5"
+]
+
 res = ToExpression["a_..b", InputForm, Hold] === ToExpression["(a_.).b", InputForm, Hold]
 bug390755Fixed = (res)
 
