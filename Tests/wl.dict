@@ -9,10 +9,17 @@ integer_1="1"
 
 real_12="1.2"
 
+rational_12="1*^-2"
+
 symbol_a="a"
 
 string_a="\"a\""
 
+linearsyntax_a="\\(a\\)"
+
+comment_a="(*a*)"
+
+# 1 character
 token_dot="."
 token_colon=":"
 token_openparen="("
@@ -41,6 +48,8 @@ token_caret="^"
 token_singlequote="'"
 token_percent="%"
 token_question="?"
+
+# 2 character
 token_dotdot=".."
 token_coloncolon="::"
 token_colonequal=":="
@@ -80,6 +89,8 @@ token_hashhash="##"
 token_bangequal="!="
 token_bangbang="!!"
 token_questionquestion="??"
+
+# 3 character
 token_dotdotdot="..."
 token_equalequalequal="==="
 token_equalbangequal="=!="
@@ -91,46 +102,27 @@ token_slashslashat="//@"
 token_caretcolonequal="^:="
 token_greatergreatergreater=">>>"
 
-
 token_linearsyntax_bang="\\!"
-token_linearsyntax_openParen="\\("
-token_linearsyntax_star="\\*"
-token_linearsyntax_closeParen="\\)"
-token_linearsyntax_at="\\@"
-token_linearsyntax_caret="\\^"
-token_linearsyntax_under="\\_"
-token_linearsyntax_percent="\\%"
-token_linearsyntax_plus="\\+"
-token_linearsyntax_backtick="\\`"
-token_linearsyntax_slash="\\/"
-token_linearsyntax_amp="\\&"
-token_linearsyntax_space="\\ "
 
+token_space=" "
+token_tab="\x09"
 
+token_lf="\x0D"
+token_crlf="\x0A\x0D"
+token_cr="\x0A"
 
-token_linecontinuation_lf="\\\x0D"
-token_linecontinuation_crlf="\\\x0A\x0D"
-token_linecontinuation_cr="=\\\x0A"
+linecontinuation_lf="\\\x0D"
+linecontinuation_crlf="\\\x0A\x0D"
+linecontinuation_cr="\\\x0A"
 
-token_leftpart="[["
-token_rightpart="]]"
+comment_leftcomment="(*"
+comment_rightcomment="*)"
 
-token_leftcomment="(*"
-token_rightcomment="*)"
+number_base="^^"
+real_accuracy="``"
 
-token_base="^^"
-
-
-token_back="\\"
-token_quote="\""
-token_stringopen="\\<"
-token_stringclose="\\>"
-token_string_b="\\b"
-token_string_f="\\f"
-token_string_n="\\n"
-token_string_r="\\r"
-token_string_t="\\t"
-
+unhandled_backslash="\\"
+string_quote="\""
 
 Token_LongName_Not="\\[Not]"
 Token_LongName_PlusMinus="\\[PlusMinus]"
