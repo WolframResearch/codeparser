@@ -109,7 +109,9 @@ Module[{},
     used to be:
     {Typed[arg1, "MachineInteger"], Typed[arg2, "MachineInteger"], Typed[arg3, "MBool"]}
 
-    but MBool was changed to be 32-bits
+    but MBool was changed to be 32-bits and started getting these errors:
+
+    Compile::err: TypeError. Cannot find a definition for the function Native`PrimitiveFunction[CStringToIntegerExpr] that takes arguments with the types CArray[UnsignedInteger8], Integer64 and Integer32.
     *)
     ]@Function[{Typed[arg1, "MachineInteger"], Typed[arg2, "MachineInteger"], Typed[arg3, "Boolean"]},
       Module[{e, cast1},
@@ -137,6 +139,8 @@ Module[{targetDir, prog, compLib},
 
   Print["Exporting expr shared library... \[WatchIcon]"];
 
+  Print[];
+
   compLib =
     CompileToLibrary[prog,
       "LibraryName" -> "expr",
@@ -145,7 +149,7 @@ Module[{targetDir, prog, compLib},
       "TraceFunction" -> Print
     ];
 
-  Print[compLib];
+  Print["compiled library: ", compLib];
 
   If[FailureQ[compLib],
     Quit[1]
