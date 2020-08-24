@@ -209,7 +209,7 @@ Cell["\<\
 
 /Users/brenton/development/github-development/AFL/afl-whatsup afl_out\
 \>", "Program",ExpressionUUID->"76fcd578-4df7-4fa5-8efb-0f2bd4368090"]
-}, Open  ]],
+}, Closed]],
 
 Cell[CellGroupData[{
 
@@ -3923,9 +3923,9 @@ Cell[4896, 164, 89, 0, 35, "Text",ExpressionUUID->"00226de5-6a54-4b4c-9f6c-0be3d
 Cell[4988, 166, 863, 21, 254, "Program",ExpressionUUID->"0b32bb42-3597-4b0a-87ae-daa813551ad1"],
 Cell[5854, 189, 83, 0, 35, "Text",ExpressionUUID->"dfc9f131-dfc7-421b-ac30-a92c6d36a4c5"],
 Cell[5940, 191, 1000, 19, 271, "Program",ExpressionUUID->"76fcd578-4df7-4fa5-8efb-0f2bd4368090"]
-}, Open  ]],
+}, Closed]],
 Cell[CellGroupData[{
-Cell[6977, 215, 97, 0, 67, "Section",ExpressionUUID->"ae12771e-4fcf-48e5-8993-e5f4074ba684"],
+Cell[6977, 215, 97, 0, 53, "Section",ExpressionUUID->"ae12771e-4fcf-48e5-8993-e5f4074ba684"],
 Cell[7077, 217, 316, 5, 67, "Program",ExpressionUUID->"8a43c262-6622-46d7-8096-5414027e05e3"],
 Cell[7396, 224, 90, 0, 35, "Text",ExpressionUUID->"8c2b0673-3473-4bfe-8d55-3983ddbb5ab7"],
 Cell[7489, 226, 248, 8, 152, "Program",ExpressionUUID->"c58e49de-4e9b-47a2-b005-85c324f14da9"],
