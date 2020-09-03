@@ -210,7 +210,7 @@ typedef const std::string FormatIssueTag;
 //
 // xxx
 //
-FormatIssueTag FORMATISSUETAG_SPACE = "Space";
+FormatIssueTag FORMATISSUETAG_INSERTSPACE = "InsertSpace";
 
 
 typedef const std::string EncodingIssueTag;

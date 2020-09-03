@@ -1176,7 +1176,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 CodeActionPtrSet Actions;
                 Actions.insert(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(dotLoc), " ")));
                 
-                auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, getTokenSource(dotLoc), std::move(Actions)));
+                auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_INSERTSPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, getTokenSource(dotLoc), std::move(Actions)));
                 
                 Issues.insert(std::move(I));
             }
@@ -2140,7 +2140,7 @@ void Tokenizer::backupAndWarn(Buffer resetBuf, SourceLocation resetLoc) {
         CodeActionPtrSet Actions;
         Actions.insert(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(resetLoc), " ")));
         
-        auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, Source(resetLoc), std::move(Actions)));
+        auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_INSERTSPACE, "Suspicious syntax.", FORMATISSUESEVERITY_FORMATTING, Source(resetLoc), std::move(Actions)));
         
         Issues.insert(std::move(I));
     }
@@ -2663,7 +2663,7 @@ inline Token Tokenizer::handleMinus(Buffer tokenStartBuf, SourceLocation tokenSt
                     CodeActionPtrSet Actions;
                     Actions.insert(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(greaterLoc), " ")));
                     
-                    auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``-`` and ``>`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(greaterLoc), std::move(Actions)));
+                    auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_INSERTSPACE, "Put a space between ``-`` and ``>`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(greaterLoc), std::move(Actions)));
                     
                     Issues.insert(std::move(I));
                     
@@ -2678,7 +2678,7 @@ inline Token Tokenizer::handleMinus(Buffer tokenStartBuf, SourceLocation tokenSt
                     CodeActionPtrSet Actions;
                     Actions.insert(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(equalLoc), " ")));
                     
-                    auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``-`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(equalLoc), std::move(Actions)));
+                    auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_INSERTSPACE, "Put a space between ``-`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(equalLoc), std::move(Actions)));
                     
                     Issues.insert(std::move(I));
                 }
@@ -2732,7 +2732,7 @@ inline Token Tokenizer::handleBar(Buffer tokenStartBuf, SourceLocation tokenStar
                     CodeActionPtrSet Actions;
                     Actions.insert(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(equalLoc), " ")));
                     
-                    auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``>`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(equalLoc), std::move(Actions)));
+                    auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_INSERTSPACE, "Put a space between ``>`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(equalLoc), std::move(Actions)));
                     
                     Issues.insert(std::move(I));
                 }
@@ -3056,7 +3056,7 @@ inline Token Tokenizer::handlePlus(Buffer tokenStartBuf, SourceLocation tokenSta
                     CodeActionPtrSet Actions;
                     Actions.insert(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(loc), " ")));
                     
-                    auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_SPACE, "Put a space between ``+`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(loc), std::move(Actions)));
+                    auto I = IssuePtr(new FormatIssue(FORMATISSUETAG_INSERTSPACE, "Put a space between ``+`` and ``=`` to reduce ambiguity", FORMATISSUESEVERITY_FORMATTING, Source(loc), std::move(Actions)));
                     
                     Issues.insert(std::move(I));
                 }
