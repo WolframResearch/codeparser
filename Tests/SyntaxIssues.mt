@@ -226,7 +226,7 @@ TestMatch[
 	FirstCase[CodeConcreteParse["0..", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {FormatIssue["Space", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {FormatIssue["InsertSpace", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-H5C3T5"
 ]
