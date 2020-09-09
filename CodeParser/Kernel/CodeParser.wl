@@ -1081,11 +1081,15 @@ Module[{res},
 
 
 CodeSyntaxQ[code_] :=
-  FreeQ[CodeParse[code],
-    ErrorNode |
-    SyntaxErrorNode | AbstractSyntaxErrorNode |
-    GroupMissingCloserNode | UnterminatedGroupNode |
-    CallMissingCloserNode | UnterminatedCallNode]
+  Module[{parsed},
+    parsed = CodeParse[code];
+    MatchQ[parsed, _ContainerNode] &&
+      FreeQ[parsed,
+        ErrorNode |
+        SyntaxErrorNode | AbstractSyntaxErrorNode |
+        GroupMissingCloserNode | UnterminatedGroupNode |
+        CallMissingCloserNode | UnterminatedCallNode]
+  ]
 
 CodeSyntaxCSTQ[cst_] :=
   FreeQ[cst,
