@@ -83,6 +83,8 @@ private:
     SourceConventionManagerPtr srcConventionManager;
     
     
+    void strange(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, double confidence);
+    
     SourceCharacter invalid(SourceLocation errSrcLoc, NextPolicy policy);
     
 public:

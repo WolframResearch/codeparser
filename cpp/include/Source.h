@@ -217,6 +217,7 @@ typedef const std::string EncodingIssueTag;
 
 EncodingIssueTag ENCODINGISSUETAG_INVALIDCHARACTERENCODING = "InvalidCharacterEncoding";
 EncodingIssueTag ENCODINGISSUETAG_UNEXPECTEDCARRIAGERETURN = "UnexpectedCarriageReturn";
+EncodingIssueTag ENCODINGISSUETAG_UNEXPECTEDCHARACTER = "UnexpectedCharacter";
 
 
 
@@ -239,6 +240,7 @@ FormatIssueSeverity FORMATISSUESEVERITY_FORMATTING = "Formatting";
 
 typedef const std::string EncodingIssueSeverity;
 
+EncodingIssueSeverity ENCODINGISSUESEVERITY_WARNING = "Warning";
 EncodingIssueSeverity ENCODINGISSUESEVERITY_ERROR = "Error";
 EncodingIssueSeverity ENCODINGISSUESEVERITY_FATAL = "Fatal";
 
@@ -607,7 +609,7 @@ public:
 //
 class EncodingIssue : public Issue {
 public:
-    EncodingIssue(EncodingIssueTag Tag, std::string Msg, EncodingIssueSeverity Sev, Source Src) : Issue(Tag, Msg, Sev, Src, 0.0, {}) {}
+    EncodingIssue(EncodingIssueTag Tag, std::string Msg, EncodingIssueSeverity Sev, Source Src, double Con, CodeActionPtrSet Actions) : Issue(Tag, Msg, Sev, Src, Con, std::move(Actions)) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;

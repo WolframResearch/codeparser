@@ -27,6 +27,8 @@ importedInfixParselets
 
 importedNotStrangeLetterlikeLongNames
 
+importedASCIIReplacements
+
 importedPunctuationLongNames
 
 importedWhitespaceLongNames
@@ -198,7 +200,9 @@ validateLongNameMap[importedLongNames]
 
 
 
-importedNotStrangeLetterlikeLongNames = Keys[Select[importedLongNames, #[[1]] === LetterlikeCharacter && MemberQ[Lookup[#[[3]], "Extra", {}], "NotStrange"] &]]
+importedNotStrangeLetterlikeLongNames = Keys[Select[importedLongNames, #[[1]] === LetterlikeCharacter && MemberQ[Lookup[#[[3]], "Extra", {}], "NotStrange"]&]]
+
+importedASCIIReplacements = KeyValueMap[Function[{k, v}, k -> v[[3, Key["ASCIIReplacements"]]]], Select[importedLongNames, KeyExistsQ[#[[3]], "ASCIIReplacements"]&]]
 
 importedPunctuationLongNames = Keys[Select[importedLongNames, #[[1]] === PunctuationCharacter &]]
 

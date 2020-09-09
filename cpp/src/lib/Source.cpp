@@ -872,7 +872,7 @@ void DeleteTriviaCodeAction::put(MLINK mlp) const {
 
 void FormatIssue::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEFORMATISSUE->name(), static_cast<int>(3 + 4 + Actions.size()))) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEFORMATISSUE->name(), static_cast<int>(3 + 4 + 1 + Actions.size()))) {
         assert(false);
     }
     
@@ -889,6 +889,10 @@ void FormatIssue::put(MLINK mlp) const {
     }
     
     Src.put(mlp);
+    
+    if (!MLPutReal(mlp, Val)) {
+        assert(false);
+    }
     
     for (auto& A : Actions) {
         A->put(mlp);
@@ -897,7 +901,7 @@ void FormatIssue::put(MLINK mlp) const {
 
 void EncodingIssue::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEENCODINGISSUE->name(), static_cast<int>(3 + 4 + 0))) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEENCODINGISSUE->name(), static_cast<int>(3 + 4 + 1 + Actions.size()))) {
         assert(false);
     }
     
@@ -914,6 +918,14 @@ void EncodingIssue::put(MLINK mlp) const {
     }
     
     Src.put(mlp);
+    
+    if (!MLPutReal(mlp, Val)) {
+        assert(false);
+    }
+    
+    for (auto& A : Actions) {
+        A->put(mlp);
+    }
 }
 
 void SourceLocation::put(MLINK mlp) const {

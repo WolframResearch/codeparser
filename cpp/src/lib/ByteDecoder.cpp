@@ -4,6 +4,7 @@
 #include "ByteBuffer.h" // for TheByteBuffer
 #include "Utils.h" // for isMBNonCharacter, etc.
 #include "CodePoint.h" // for CODEPOINT_REPLACEMENT_CHARACTER, CODEPOINT_CRLF, etc.
+#include "LongNames.h"
 
 ByteDecoder::ByteDecoder() : Issues(), status(), lastBuf(), lastLoc(), SrcLoc() {}
 
@@ -91,7 +92,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 // No CodeAction here
                 //
                 
-                auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", ENCODINGISSUESEVERITY_ERROR, Source(currentSourceCharacterStartLoc)));
+                auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", ENCODINGISSUESEVERITY_ERROR, Source(currentSourceCharacterStartLoc), 1.0, {}));
                 
                 addIssue(std::move(I));
             }
@@ -114,14 +115,6 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             srcConventionManager->tab(SrcLoc);
             
             return SourceCharacter(firstByte);
-        
-        case 0x1b:
-            
-            // Valid
-            
-            srcConventionManager->increment(SrcLoc);
-            
-            return SourceCharacter(firstByte);
             
             //
             // 1 byte UTF-8 sequence
@@ -129,34 +122,28 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
         case 0x00: case 0x01: case 0x02: case 0x03: case 0x04: case 0x05: case 0x06: case 0x07:
         case 0x08: /*   TAB*/ /*    LF*/ case 0x0b: case 0x0c: /*    CR*/ case 0x0e: case 0x0f:
         case 0x10: case 0x11: case 0x12: case 0x13: case 0x14: case 0x15: case 0x16: case 0x17:
-        case 0x18: case 0x19: case 0x1a: /*   ESC*/ case 0x1c: case 0x1d: case 0x1e: case 0x1f:
-        case 0x7f:
+        case 0x18: case 0x19: case 0x1a: case 0x1b: case 0x1c: case 0x1d: case 0x1e: case 0x1f:
+        case 0x7f: {
             
             // Valid
             
-#if !NISSUES
-        {
-            //
-            // Just generally strange character is in the code
-            //
-            // A strange character being decoded from bytes means a higher confidence
-            //
-            
-            auto c = SourceCharacter(firstByte);
-            
-            auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
-            
-            auto graphicalStr = c.graphicalString();
-            
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
-            
-            Issues.insert(std::move(I));
-        }
-#endif // !NISSUES
+            const auto decoded = firstByte;
             
             srcConventionManager->increment(SrcLoc);
             
-            return SourceCharacter(firstByte);
+#if !NISSUES
+            {
+                //
+                // ASCII control character
+                //
+                // Control character being decoded from means a higher confidence
+                //
+                strange(decoded, currentSourceCharacterStartLoc, 0.95);
+            }
+#endif // !NISSUES
+            
+            return SourceCharacter(decoded);
+        }
             
             //
             // 1 byte UTF-8 sequence
@@ -172,13 +159,16 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
         case 0x60: case 0x61: case 0x62: case 0x63: case 0x64: case 0x65: case 0x66: case 0x67:
         case 0x68: case 0x69: case 0x6a: case 0x6b: case 0x6c: case 0x6d: case 0x6e: case 0x6f:
         case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77:
-        case 0x78: case 0x79: case 0x7a: case 0x7b: case 0x7c: case 0x7d: case 0x7e: /*   DEL*/
+        case 0x78: case 0x79: case 0x7a: case 0x7b: case 0x7c: case 0x7d: case 0x7e: /*   DEL*/ {
             
             // Valid
             
             srcConventionManager->increment(SrcLoc);
             
-            return SourceCharacter(firstByte);
+            const auto decoded = firstByte;
+            
+            return SourceCharacter(decoded);
+        }
             
             //
             // 2 byte UTF-8 sequence
@@ -226,29 +216,29 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             
             // Valid
             
-            auto decoded = (((firstByte & 0x1f) << 6) | (tmp & 0x3f));
-            
-#if !NISSUES
-            if (Utils::isMBStrange(decoded)) {
-                //
-                // Just generally strange character is in the code
-                //
-                // A strange character being decoded from bytes means a higher confidence
-                //
-                
-                auto c = SourceCharacter(decoded);
-                
-                auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
-                
-                auto graphicalStr = c.graphicalString();
-                
-                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
-                
-                Issues.insert(std::move(I));
-            }
-#endif // !NISSUES
+            const auto decoded = (((firstByte & 0x1f) << 6) | (tmp & 0x3f));
             
             srcConventionManager->increment(SrcLoc);
+            
+#if !NISSUES
+            {
+                double con;
+                if (Utils::isMBStrange(decoded)) {
+                    //
+                    // Just generally strange character is in the code
+                    //
+                    // A strange character being decoded from bytes means a higher confidence
+                    //
+                    
+                    con = 0.95;
+                    
+                } else {
+                    con = 0.75;
+                }
+                
+                strange(decoded, currentSourceCharacterStartLoc, con);
+            }
+#endif // !NISSUES
             
             return SourceCharacter(decoded);
         }
@@ -323,32 +313,33 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             
             // Valid
             
-            auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (tmp & 0x3f));
+            const auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (tmp & 0x3f));
             
             if (Utils::isMBNonCharacter(decoded)) {
                 status = UTF8STATUS_NONCHARACTER_OR_BOM;
             }
-#if !NISSUES
-            if (Utils::isMBStrange(decoded)) {
-                //
-                // Just generally strange character is in the code
-                //
-                // A strange character being decoded from bytes means a higher confidence
-                //
-                
-                auto c = SourceCharacter(decoded);
-                
-                auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
-                
-                auto graphicalStr = c.graphicalString();
-                
-                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
-                
-                Issues.insert(std::move(I));
-            }
-#endif // !NISSUES
             
             srcConventionManager->increment(SrcLoc);
+            
+#if !NISSUES
+            {
+                double con;
+                if (Utils::isMBStrange(decoded)) {
+                    //
+                    // Just generally strange character is in the code
+                    //
+                    // A strange character being decoded from bytes means a higher confidence
+                    //
+                    
+                    con = 0.95;
+                    
+                } else {
+                    con = 0.75;
+                }
+                
+                strange(decoded, currentSourceCharacterStartLoc, con);
+            }
+#endif // !NISSUES
             
             return SourceCharacter(decoded);
         }
@@ -424,7 +415,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             
             // Valid
             
-            auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (tmp & 0x3f));
+            const auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (tmp & 0x3f));
             
             if (decoded == CODEPOINT_ACTUAL_BOM) {
                 
@@ -432,36 +423,34 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             
                 srcConventionManager->increment(SrcLoc);
                 
-                decoded = CODEPOINT_VIRTUAL_BOM;
-                
-                return SourceCharacter(decoded);
+                return SourceCharacter(CODEPOINT_VIRTUAL_BOM);
             }
             
             if (Utils::isMBNonCharacter(decoded)) {
                 status = UTF8STATUS_NONCHARACTER_OR_BOM;
             }
             
+            srcConventionManager->increment(SrcLoc);
+            
 #if !NISSUES
-            if (Utils::isMBStrange(decoded)) {
-                //
-                // Just generally strange character is in the code
-                //
-                // A strange character being decoded from bytes means a higher confidence
-                //
+            {
+                double con;
+                if (Utils::isMBStrange(decoded)) {
+                    //
+                    // Just generally strange character is in the code
+                    //
+                    // A strange character being decoded from bytes means a higher confidence
+                    //
+                    
+                    con = 0.95;
+                    
+                } else {
+                    con = 0.75;
+                }
                 
-                auto c = SourceCharacter(decoded);
-                
-                auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
-                
-                auto graphicalStr = c.graphicalString();
-                
-                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
-                
-                Issues.insert(std::move(I));
+                strange(decoded, currentSourceCharacterStartLoc, con);
             }
 #endif // !NISSUES
-            
-            srcConventionManager->increment(SrcLoc);
             
             return SourceCharacter(decoded);
         }
@@ -542,33 +531,33 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             
             // Valid
             
-            auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (tmp & 0x3f));
+            const auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (tmp & 0x3f));
             
             if (Utils::isMBNonCharacter(decoded)) {
                 status = UTF8STATUS_NONCHARACTER_OR_BOM;
             }
             
+            srcConventionManager->increment(SrcLoc);
+            
 #if !NISSUES
-            if (Utils::isMBStrange(decoded)) {
-                //
-                // Just generally strange character is in the code
-                //
-                // A strange character being decoded from bytes means a higher confidence
-                //
+            {
+                double con;
+                if (Utils::isMBStrange(decoded)) {
+                    //
+                    // Just generally strange character is in the code
+                    //
+                    // A strange character being decoded from bytes means a higher confidence
+                    //
+                    
+                    con = 0.95;
+                    
+                } else {
+                    con = 0.75;
+                }
                 
-                auto c = SourceCharacter(decoded);
-                
-                auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
-                
-                auto graphicalStr = c.graphicalString();
-                
-                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
-                
-                Issues.insert(std::move(I));
+                strange(decoded, currentSourceCharacterStartLoc, con);
             }
 #endif // !NISSUES
-            
-            srcConventionManager->increment(SrcLoc);
             
             return SourceCharacter(decoded);
         }
@@ -675,7 +664,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             
             // Valid
             
-            auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((tmp & 0x3f)));
+            const auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((tmp & 0x3f)));
             
             //
             // Manual test for code points that are too large
@@ -686,27 +675,27 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 status = UTF8STATUS_NONCHARACTER_OR_BOM;
             }
             
+            srcConventionManager->increment(SrcLoc);
+            
 #if !NISSUES
-            if (Utils::isMBStrange(decoded)) {
-                //
-                // Just generally strange character is in the code
-                //
-                // A strange character being decoded from bytes means a higher confidence
-                //
+            {
+                double con;
+                if (Utils::isMBStrange(decoded)) {
+                    //
+                    // Just generally strange character is in the code
+                    //
+                    // A strange character being decoded from bytes means a higher confidence
+                    //
+                    
+                    con = 0.95;
+                    
+                } else {
+                    con = 0.75;
+                }
                 
-                auto c = SourceCharacter(decoded);
-                
-                auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
-                
-                auto graphicalStr = c.graphicalString();
-                
-                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
-                
-                Issues.insert(std::move(I));
+                strange(decoded, currentSourceCharacterStartLoc, con);
             }
 #endif // !NISSUES
-            
-            srcConventionManager->increment(SrcLoc);
             
             return SourceCharacter(decoded);
         }
@@ -813,7 +802,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             
             // Valid
             
-            auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((tmp & 0x3f)));
+            const auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((tmp & 0x3f)));
             
             //
             // Manual test for code points that are too large
@@ -824,27 +813,27 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 status = UTF8STATUS_NONCHARACTER_OR_BOM;
             }
             
+            srcConventionManager->increment(SrcLoc);
+            
 #if !NISSUES
-            if (Utils::isMBStrange(decoded)) {
-                //
-                // Just generally strange character is in the code
-                //
-                // A strange character being decoded from bytes means a higher confidence
-                //
+            {
+                double con;
+                if (Utils::isMBStrange(decoded)) {
+                    //
+                    // Just generally strange character is in the code
+                    //
+                    // A strange character being decoded from bytes means a higher confidence
+                    //
+                    
+                    con = 0.95;
+                    
+                } else {
+                    con = 0.75;
+                }
                 
-                auto c = SourceCharacter(decoded);
-                
-                auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
-                
-                auto graphicalStr = c.graphicalString();
-                
-                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
-                
-                Issues.insert(std::move(I));
+                strange(decoded, currentSourceCharacterStartLoc, con);
             }
 #endif // !NISSUES
-            
-            srcConventionManager->increment(SrcLoc);
             
             return SourceCharacter(decoded);
         }
@@ -951,7 +940,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             
             // Valid
             
-            auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((tmp & 0x3f)));
+            const auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((tmp & 0x3f)));
             
             //
             // Manual test for code points that are too large
@@ -962,27 +951,27 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 status = UTF8STATUS_NONCHARACTER_OR_BOM;
             }
             
+            srcConventionManager->increment(SrcLoc);
+            
 #if !NISSUES
-            if (Utils::isMBStrange(decoded)) {
-                //
-                // Just generally strange character is in the code
-                //
-                // A strange character being decoded from bytes means a higher confidence
-                //
+            {
+                double con;
+                if (Utils::isMBStrange(decoded)) {
+                    //
+                    // Just generally strange character is in the code
+                    //
+                    // A strange character being decoded from bytes means a higher confidence
+                    //
+                    
+                    con = 0.95;
+                    
+                } else {
+                    con = 0.75;
+                }
                 
-                auto c = SourceCharacter(decoded);
-                
-                auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
-                
-                auto graphicalStr = c.graphicalString();
-                
-                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
-                
-                Issues.insert(std::move(I));
+                strange(decoded, currentSourceCharacterStartLoc, con);
             }
 #endif // !NISSUES
-            
-            srcConventionManager->increment(SrcLoc);
             
             return SourceCharacter(decoded);
         }
@@ -1040,6 +1029,26 @@ SourceCharacter ByteDecoder::currentSourceCharacter(NextPolicy policy) {
 }
 
 
+void ByteDecoder::strange(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, double confidence) {
+    
+    auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+    
+    auto graphicalStr = SourceCharacter(decoded).graphicalString();
+    
+    auto Src = Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc);
+    
+    CodeActionPtrSet Actions;
+    Actions.insert(CodeActionPtr(new ReplaceTextCodeAction("Replace with " + graphicalStr, Src, graphicalStr)));
+    
+    for (const auto& r : LongNames::asciiReplacements(decoded)) {
+        Actions.insert(CodeActionPtr(new ReplaceTextCodeAction("Replace with " + LongNames::replacementGraphical(r), Src, r)));
+    }
+    
+    auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", ENCODINGISSUESEVERITY_WARNING, Src, confidence, std::move(Actions)));
+    
+    Issues.insert(std::move(I));
+}
+
 SourceCharacter ByteDecoder::invalid(SourceLocation errSrcLoc, NextPolicy policy) {
     
     status = UTF8STATUS_INVALID;
@@ -1052,7 +1061,7 @@ SourceCharacter ByteDecoder::invalid(SourceLocation errSrcLoc, NextPolicy policy
         // No CodeAction here
         //
         
-        auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_INVALIDCHARACTERENCODING, "Invalid UTF-8 sequence.", ENCODINGISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next())));
+        auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_INVALIDCHARACTERENCODING, "Invalid UTF-8 sequence.", ENCODINGISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0, {}));
         
         Issues.insert(std::move(I));
     }

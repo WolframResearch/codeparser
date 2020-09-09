@@ -142,14 +142,54 @@ notStrangeLetterlikeSource =
     "//",
     "std::array<codepoint, MBNOTSTRANGELETTERLIKECODEPOINTS_COUNT> mbNotStrangeLetterlikeCodePoints {{"} ~Join~
     (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ SortBy[importedNotStrangeLetterlikeLongNames, longNameToCharacterCode]) ~Join~
-    {"}};", "",
+    {"}};",
+    "",
     "//",
     "//",
     "//",
     "bool LongNames::isMBNotStrangeLetterlike(codepoint point) { ",
     "auto it = std::lower_bound(mbNotStrangeLetterlikeCodePoints.begin(), mbNotStrangeLetterlikeCodePoints.end(), point);",
     "return it != mbNotStrangeLetterlikeCodePoints.end() && *it == point;",
+    "}",
+    ""
+  }
+
+asciiReplacementsSource = 
+  {
+    "//",
+    "//",
+    "//",
+    "std::map<codepoint, std::vector<std::string>> asciiReplacementsMap {{"} ~Join~
+    (Row[{"{", toGlobal["CodePoint`LongName`"<>#[[1]]], ", ", escapeString[#[[2]]], "}", ","}]& /@ SortBy[importedASCIIReplacements, longNameToCharacterCode[#[[1]]]&]) ~Join~
+    {"}};",
+    "",
+    "//",
+    "//",
+    "//",
+    "std::vector<std::string> LongNames::asciiReplacements(codepoint point) { ",
+    "auto it = asciiReplacementsMap.find(point);",
+    "return (it != asciiReplacementsMap.end()) ? it->second : std::vector<std::string>{};",
     "}", ""}
+
+replacementGraphicalSource =
+  {
+    "//",
+    "//",
+    "//",
+    "std::string LongNames::replacementGraphical(std::string replacement) {",
+    "  if (replacement == \" \") {",
+    "    //",
+    "    // \\[SpaceIndicator]",
+    "    //",
+    "    return \"\\u2423\";",
+    "  } else if (replacement == \"\\n\") {",
+    "    return \"\\\\n\";",
+    "  } else {",
+    "    return replacement;",
+    "  }",
+    "}",
+    ""
+  }
 
 punctuationSource = 
   {
@@ -165,7 +205,9 @@ punctuationSource =
     "bool LongNames::isMBPunctuation(codepoint point) { ",
     "auto it = std::lower_bound(mbPunctuationCodePoints.begin(), mbPunctuationCodePoints.end(), point);",
     "return it != mbPunctuationCodePoints.end() && *it == point;",
-    "}", ""}
+    "}",
+    ""
+  }
 
 whitespaceSource = 
   {
@@ -181,7 +223,9 @@ whitespaceSource =
     "bool LongNames::isMBWhitespace(codepoint point) {",
     "auto it = std::lower_bound(mbWhitespaceCodePoints.begin(), mbWhitespaceCodePoints.end(), point);",
     "return it != mbWhitespaceCodePoints.end() && *it == point;",
-    "}", ""}
+    "}",
+    ""
+  }
 
 newlineSource = 
   {
@@ -197,7 +241,9 @@ newlineSource =
     "bool LongNames::isMBNewline(codepoint point) {",
     "auto it = std::lower_bound(mbNewlineCodePoints.begin(), mbNewlineCodePoints.end(), point);",
     "return it != mbNewlineCodePoints.end() && *it == point;",
-    "}", ""}
+    "}",
+    ""
+  }
 
 uninterpretableSource = 
   {
@@ -213,7 +259,9 @@ uninterpretableSource =
     "bool LongNames::isMBUninterpretable(codepoint point) {",
     "auto it = std::lower_bound(mbUninterpretableCodePoints.begin(), mbUninterpretableCodePoints.end(), point);",
     "return it != mbUninterpretableCodePoints.end() && *it == point;",
-    "}", ""}
+    "}",
+    ""
+  }
 
 unsupportedSource = 
   {
@@ -231,7 +279,7 @@ unsupportedSource =
     "return it != unsupportedLongNameCodePoints.end() && *it == point;",
     "}",
     ""
-}
+  }
 
 LongNameCodePointToOperatorSource = 
   {
@@ -246,7 +294,8 @@ LongNameCodePointToOperatorSource =
       "assert(false && \"Need to add operator\");",
       "return TOKEN_UNKNOWN;",
       "}",
-      "}"}
+      "}"
+  }
 
 
 
@@ -269,6 +318,8 @@ longNamesCPPHeader = {
 
 #include <string>
 #include <array>
+#include <map>
+#include <vector>
 
 constexpr size_t LONGNAMES_COUNT = " <> ToString[Length[importedLongNames]] <> ";
 constexpr size_t RAWLONGNAMES_COUNT = " <> ToString[Length[importedRawLongNames]] <> ";
@@ -307,6 +358,10 @@ public:
     // Is this \\[Raw] something?
     //
     static bool isRaw(std::string LongNameStr);
+
+    static std::vector<std::string> asciiReplacements(codepoint point);
+
+    static std::string replacementGraphical(std::string replacement);
 };
 
 //
@@ -403,6 +458,8 @@ codePointToLongNameMapPoints ~Join~
 codePointToLongNameMapNames ~Join~
 rawSet ~Join~
 notStrangeLetterlikeSource ~Join~
+asciiReplacementsSource ~Join~
+replacementGraphicalSource ~Join~
 punctuationSource ~Join~
 whitespaceSource ~Join~
 newlineSource ~Join~
