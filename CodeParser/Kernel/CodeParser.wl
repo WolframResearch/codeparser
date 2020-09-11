@@ -1081,21 +1081,23 @@ Module[{res},
 
 
 CodeSyntaxQ[code_] :=
-  Module[{parsed},
-    parsed = CodeParse[code];
-    MatchQ[parsed, _ContainerNode] &&
-      FreeQ[parsed,
-        ErrorNode |
-        SyntaxErrorNode | AbstractSyntaxErrorNode |
-        GroupMissingCloserNode | UnterminatedGroupNode |
-        CallMissingCloserNode | UnterminatedCallNode]
+  Module[{ast},
+    ast = CodeParse[code];
+    FreeQ[ast,
+      ErrorNode |
+      SyntaxErrorNode | AbstractSyntaxErrorNode |
+      GroupMissingCloserNode | UnterminatedGroupNode |
+      CallMissingCloserNode | UnterminatedCallNode] &&
+    !MemberQ[Lookup[ast[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
   ]
 
 CodeSyntaxCSTQ[cst_] :=
   FreeQ[cst,
     ErrorNode |
     SyntaxErrorNode |
-    GroupMissingCloserNode | UnterminatedGroupNode]
+    GroupMissingCloserNode | UnterminatedGroupNode] &&
+  !MemberQ[Lookup[cst[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
+  
 
 
 
