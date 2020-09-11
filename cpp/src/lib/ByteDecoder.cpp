@@ -1038,10 +1038,10 @@ void ByteDecoder::strange(codepoint decoded, SourceLocation currentSourceCharact
     auto Src = Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc);
     
     CodeActionPtrSet Actions;
-    Actions.insert(CodeActionPtr(new ReplaceTextCodeAction("Replace with " + graphicalStr, Src, graphicalStr)));
+    Actions.insert(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + graphicalStr + "``", Src, graphicalStr)));
     
     for (const auto& r : LongNames::asciiReplacements(decoded)) {
-        Actions.insert(CodeActionPtr(new ReplaceTextCodeAction("Replace with " + LongNames::replacementGraphical(r), Src, r)));
+        Actions.insert(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
     }
     
     auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", ENCODINGISSUESEVERITY_WARNING, Src, confidence, std::move(Actions)));

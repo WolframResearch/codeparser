@@ -2116,7 +2116,7 @@ inline WLCharacter Tokenizer::handlePossibleFractionalPartPastDot(Buffer tokenSt
                     //
                     
                     CodeActionPtrSet Actions;
-                    Actions.insert(CodeActionPtr(new InsertTextCodeAction("Insert *", Source(dotLoc), "*")));
+                    Actions.insert(CodeActionPtr(new InsertTextCodeAction("Insert ``*``", Source(dotLoc), "*")));
                     
                     auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDIMPLICITTIMES, "Suspicious syntax.", SYNTAXISSUESEVERITY_ERROR, Source(dotLoc), 0.99, std::move(Actions)));
                     
