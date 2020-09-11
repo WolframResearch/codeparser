@@ -191,6 +191,10 @@ void SyntaxIssue::print(std::ostream& s) const {
     s << "]";
 }
 
+bool SyntaxIssue::check() const {
+    return Sev != SYNTAXISSUESEVERITY_FATAL;
+}
+
 
 
 CodeAction::CodeAction(std::string Label, Source Src) : Label(Label), Src(Src) {}
@@ -299,6 +303,11 @@ void FormatIssue::print(std::ostream& s) const {
     s << "]";
 }
 
+bool FormatIssue::check() const {
+    return true;
+}
+
+
 void EncodingIssue::print(std::ostream& s) const {
     
     s << SYMBOL_CODEPARSER_LIBRARY_MAKEENCODINGISSUE->name() << "[";
@@ -321,6 +330,9 @@ void EncodingIssue::print(std::ostream& s) const {
     s << "]";
 }
 
+bool EncodingIssue::check() const {
+    return Sev != ENCODINGISSUESEVERITY_FATAL;
+}
 
 
 //

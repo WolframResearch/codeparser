@@ -70,6 +70,14 @@ void NodeSeq::print0(std::ostream& s) const {
     }
 }
 
+bool NodeSeq::check() const {
+    
+    auto accum = std::accumulate(vec.begin(), vec.end(), true, [](bool a, const NodePtr& b){ return a && b->check(); });
+    
+    return accum;
+}
+
+
 void LeafSeq::print0(std::ostream& s) const {
     
     for (auto& C : vec) {
@@ -177,6 +185,11 @@ void Node::printChildren(std::ostream& s) const {
     
     Children.print(s);
 }
+
+bool Node::check() const {
+    return Children.check();
+}
+
 
 void LeafSeqNode::print(std::ostream& s) const {
     
@@ -386,6 +399,10 @@ Source CallNode::getSource() const {
     return Source(FirstSrc, LastSrc);
 }
 
+bool CallNode::check() const {
+    return Children.check() && Head.check();
+}
+
 
 void SyntaxErrorNode::print(std::ostream& s) const {
     
@@ -417,6 +434,14 @@ void CollectedExpressionsNode::print(std::ostream& s) const {
     s << "]";
 }
 
+bool CollectedExpressionsNode::check() const {
+    
+    auto accum = std::accumulate(Exprs.begin(), Exprs.end(), true, [](bool a, const NodePtr& b){ return a && b->check(); });
+    
+    return accum;
+}
+
+
 void CollectedIssuesNode::print(std::ostream& s) const {
     
     s << "List[";
@@ -428,6 +453,14 @@ void CollectedIssuesNode::print(std::ostream& s) const {
     
     s << "]";
 }
+
+bool CollectedIssuesNode::check() const {
+    
+    auto accum = std::accumulate(Issues.begin(), Issues.end(), true, [](bool a, const IssuePtr& b){ return a && b->check(); });
+    
+    return accum;
+}
+
 
 void CollectedSourceLocationsNode::print(std::ostream& s) const {
     
@@ -453,6 +486,14 @@ void ListNode::print(std::ostream& s) const {
     
     s << "]";
 }
+
+bool ListNode::check() const {
+    
+    auto accum = std::accumulate(N.begin(), N.end(), true, [](bool a, const NodePtr& b){ return a && b->check(); });
+    
+    return accum;
+}
+
 
 void SourceCharacterNode::print(std::ostream& s) const {
     

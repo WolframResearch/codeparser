@@ -462,6 +462,8 @@ public:
     
     virtual void print(std::ostream& s) const = 0;
     
+    virtual bool check() const = 0;
+    
     virtual ~Issue() {}
 };
 
@@ -580,6 +582,8 @@ public:
 #endif // USE_MATHLINK
 
     void print(std::ostream& s) const override;
+    
+    bool check() const override;
 };
 
 //
@@ -594,6 +598,8 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
+    
+    bool check() const override;
 };
 
 //
@@ -608,4 +614,6 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
+    
+    bool check() const override;
 };

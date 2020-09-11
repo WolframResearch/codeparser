@@ -9,6 +9,7 @@
 #include <iostream>
 #include <fstream> // for ofstream
 #include <cstdio> // for rewind
+#include <cstdlib> // for EXIT_SUCCESS
 
 class ScopedFileBuffer;
 using ScopedFileBufferPtr = std::unique_ptr<ScopedFileBuffer>;
@@ -25,12 +26,13 @@ enum OutputMode {
     PRINT,
     PUT,
     PRINT_DRYRUN,
+    CHECK,
 };
 
 
-void readStdIn(APIMode mode, OutputMode outputMode);
+int readStdIn(APIMode mode, OutputMode outputMode);
 
-void readFile(std::string file, APIMode mode, OutputMode outputMode);
+int readFile(std::string file, APIMode mode, OutputMode outputMode);
 
 class ScopedFileBuffer {
 
@@ -93,37 +95,43 @@ int main(int argc, char *argv[]) {
             
             sourceCharacters = true;
             
+        } else if (arg == "-check") {
+            
+            outputMode = CHECK;
+            
         } else {
-            return 1;
+            return EXIT_FAILURE;
         }
     }
+    
+    int result;
     
     if (file) {
         if (leaf) {
-            readFile(fileInput, LEAF, outputMode);
+            result = readFile(fileInput, LEAF, outputMode);
         } else if (sourceCharacters) {
-            readFile(fileInput, SOURCECHARACTERS, outputMode);
+            result = readFile(fileInput, SOURCECHARACTERS, outputMode);
         } else if (tokenize) {
-            readFile(fileInput, TOKENIZE, outputMode);
+            result = readFile(fileInput, TOKENIZE, outputMode);
         } else {
-            readFile(fileInput, EXPRESSION, outputMode);
+            result = readFile(fileInput, EXPRESSION, outputMode);
         }
     } else {
         if (leaf) {
-            readStdIn(LEAF, outputMode);
+            result = readStdIn(LEAF, outputMode);
         } else if (sourceCharacters) {
-            readStdIn(SOURCECHARACTERS, outputMode);
+            result = readStdIn(SOURCECHARACTERS, outputMode);
         } else if (tokenize) {
-            readStdIn(TOKENIZE, outputMode);
+            result = readStdIn(TOKENIZE, outputMode);
         } else {
-            readStdIn(EXPRESSION, outputMode);
+            result = readStdIn(EXPRESSION, outputMode);
         }
     }
     
-    return 0;
+    return result;
 }
 
-void readStdIn(APIMode mode, OutputMode outputMode) {
+int readStdIn(APIMode mode, OutputMode outputMode) {
     
     std::string input;
     std::cout << ">>> ";
@@ -132,6 +140,8 @@ void readStdIn(APIMode mode, OutputMode outputMode) {
     TheParserSession = ParserSessionPtr(new ParserSession());
     
     WolframLibraryData libData = nullptr;
+    
+    int result = EXIT_SUCCESS;
     
     if (mode == TOKENIZE) {
         
@@ -161,7 +171,7 @@ void readStdIn(APIMode mode, OutputMode outputMode) {
                 nullStream << "\n";
             }
                 break;
-            case NONE:
+            case NONE: case CHECK:
                 break;
         }
         
@@ -198,7 +208,7 @@ void readStdIn(APIMode mode, OutputMode outputMode) {
                 nullStream << "\n";
             }
                 break;
-            case NONE:
+            case NONE: case CHECK:
                 break;
         }
         
@@ -237,7 +247,7 @@ void readStdIn(APIMode mode, OutputMode outputMode) {
                 nullStream << "\n";
             }
                 break;
-            case NONE:
+            case NONE: case CHECK:
                 break;
         }
         
@@ -273,6 +283,12 @@ void readStdIn(APIMode mode, OutputMode outputMode) {
                 nullStream << "\n";
             }
                 break;
+            case CHECK: {
+                if (!N->check()) {
+                    result = EXIT_FAILURE;
+                }
+            }
+                break;
             case NONE:
                 break;
         }
@@ -281,9 +297,11 @@ void readStdIn(APIMode mode, OutputMode outputMode) {
         
         TheParserSession->deinit();
     }
+    
+    return result;
 }
 
-void readFile(std::string file, APIMode mode, OutputMode outputMode) {
+int readFile(std::string file, APIMode mode, OutputMode outputMode) {
     
     auto fb = ScopedFileBufferPtr(new ScopedFileBuffer(reinterpret_cast<Buffer>(file.c_str()), file.size()));
 
@@ -298,19 +316,19 @@ void readFile(std::string file, APIMode mode, OutputMode outputMode) {
 #endif // USE_MATHLINK
             }
                 break;
-            case PRINT_DRYRUN: {
-                
-            }
+            case PRINT_DRYRUN:
                 break;
-            case NONE:
+            case NONE: case CHECK:
                 break;
         }
-        return;
+        return EXIT_FAILURE;
     }
     
     TheParserSession = ParserSessionPtr(new ParserSession());
     
     WolframLibraryData libData = nullptr;
+    
+    int result = EXIT_SUCCESS;
     
     if (mode == TOKENIZE) {
         
@@ -338,7 +356,7 @@ void readFile(std::string file, APIMode mode, OutputMode outputMode) {
                 nullStream << "\n";
             }
                 break;
-            case NONE:
+            case NONE: case CHECK:
                 break;
         }
         
@@ -374,6 +392,12 @@ void readFile(std::string file, APIMode mode, OutputMode outputMode) {
                 break;
             case NONE:
                 break;
+            case CHECK: {
+                if (!N->check()) {
+                    result = EXIT_FAILURE;
+                }
+            }
+                break;
         }
         
         TheParserSession->releaseNode(N);
@@ -382,6 +406,8 @@ void readFile(std::string file, APIMode mode, OutputMode outputMode) {
     }
     
     TheParserSession.reset(nullptr);
+    
+    return result;
 }
 
 ScopedFileBuffer::ScopedFileBuffer(Buffer inStrIn, size_t inLen) : buf(), len(), inited(false) {

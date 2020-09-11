@@ -89,6 +89,8 @@ public:
     void print(std::ostream& s ) const;
     
     void print0(std::ostream& s ) const;
+    
+    bool check() const;
 };
 
 //
@@ -128,6 +130,8 @@ public:
     virtual bool isExpectedOperandError() const {
         return false;
     }
+    
+    virtual bool check() const;
     
     virtual ~Node() {}
 };
@@ -230,6 +234,10 @@ public:
     Token lastToken() const override {
         return Tok;
     }
+    
+    bool check() const override {
+        return true;
+    }
 };
 
 //
@@ -260,6 +268,10 @@ public:
     
     Token lastToken() const override {
         return Tok;
+    }
+    
+    bool check() const override {
+        return false;
     }
 };
 
@@ -369,6 +381,8 @@ public:
     void print(std::ostream&) const override;
     
     Source getSource() const override;
+    
+    virtual bool check() const override;
 };
 
 //
@@ -412,6 +426,10 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
+    
+    bool check() const override {
+        return false;
+    }
 };
 
 //
@@ -422,6 +440,10 @@ public:
 class GroupMissingCloserNode : public OperatorNode {
 public:
     GroupMissingCloserNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEGROUPMISSINGCLOSERNODE, std::move(Args)) {}
+    
+    bool check() const override {
+        return false;
+    }
 };
 
 //
@@ -432,6 +454,10 @@ public:
 class UnterminatedGroupNeedsReparseNode : public OperatorNode {
 public:
     UnterminatedGroupNeedsReparseNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEUNTERMINATEDGROUPNEEDSREPARSENODE, std::move(Args)) {}
+    
+    bool check() const override {
+        return false;
+    }
 };
 
 //
@@ -447,6 +473,8 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
+    
+    bool check() const override;
 };
 
 //
@@ -462,6 +490,8 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
+    
+    bool check() const override;
 };
 
 //
@@ -492,6 +522,8 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
+    
+    bool check() const override;
 };
 
 //
