@@ -20,6 +20,11 @@ CodeSyntaxQ
 
 CodeSyntaxCSTQ
 
+CodeStructuralSyntaxQ
+
+CodeStructuralSyntaxCSTQ
+
+
 
 
 (*
@@ -1097,7 +1102,23 @@ CodeSyntaxCSTQ[cst_] :=
     SyntaxErrorNode |
     GroupMissingCloserNode | UnterminatedGroupNode] &&
   !MemberQ[Lookup[cst[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
-  
+
+CodeStructuralSyntaxQ[code_] :=
+  Module[{ast},
+    ast = CodeParse[code];
+    FreeQ[ast,
+      SyntaxErrorNode | AbstractSyntaxErrorNode |
+      GroupMissingCloserNode | UnterminatedGroupNode |
+      CallMissingCloserNode | UnterminatedCallNode] &&
+    !MemberQ[Lookup[ast[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
+  ]
+
+CodeStructuralSyntaxCSTQ[cst_] :=
+  FreeQ[cst,
+    SyntaxErrorNode |
+    GroupMissingCloserNode | UnterminatedGroupNode] &&
+  !MemberQ[Lookup[cst[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
+
 
 
 
