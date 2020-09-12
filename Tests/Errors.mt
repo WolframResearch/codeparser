@@ -273,7 +273,7 @@ Test[
 			LeafNode[Token`Tilde, "~", <|Source -> {{1, 2}, {1, 3}}|>],
 			LeafNode[Symbol, "b", <|Source -> {{1, 3}, {1, 4}}|>],
 			LeafNode[Token`Tilde, "~", <|Source -> {{1, 4}, {1, 5}}|>],
-			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 3}}|>]}, <||>]
+			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 5}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>]}, <||>]
 	,
 	TestID->"Errors-20200628-R6O2J3"
 ]

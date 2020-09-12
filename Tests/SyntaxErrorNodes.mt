@@ -20,7 +20,7 @@ Test[
 	CodeConcreteParse["~"]
 	,
 	ContainerNode[String, {
-		SyntaxErrorNode[SyntaxError`ExpectedTilde, {
+		BinaryNode[TernaryTilde, {
 			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 1}, {1, 1}}|>],
 			LeafNode[Token`Tilde, "~", <|Source -> {{1, 1}, {1, 2}}|>],
 			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 2}, {1, 2}}|>]}, <|Source -> {{1, 1}, {1, 2}}|>]}, <||>]

@@ -752,7 +752,7 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
         Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
         Args.append(NodePtr(new LeafNode(FirstTilde)));
         Args.append(std::move(ProperExpectedOperandError));
-        auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDTILDE, std::move(Args)));
+        auto Error = NodePtr(new BinaryNode(SYMBOL_CODEPARSER_TERNARYTILDE, std::move(Args)));
         
         return Error;
     }
@@ -804,7 +804,7 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
         // Structurally correct, so return TernaryNode
         //
         
-        auto ProperExpectedOperandError = NodePtr(new ExpectedOperandErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(FirstTilde.BufLen.end), Source(FirstTilde.Src.End))));
+        auto ProperExpectedOperandError = NodePtr(new ExpectedOperandErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(Tok1.BufLen.end), Source(Tok1.Src.End))));
         
         NodeSeq Args(1 + 1 + 1);
         Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
@@ -979,7 +979,7 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtI
         Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
         Args.append(NodePtr(new LeafNode(TokIn)));
         Args.append(std::move(ProperExpectedOperandError));
-        auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDSET, std::move(Args)));
+        auto Error = NodePtr(new BinaryNode(SYMBOL_TAGSET, std::move(Args)));
         
         return Error;
     }

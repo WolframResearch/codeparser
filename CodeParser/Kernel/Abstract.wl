@@ -503,7 +503,7 @@ topLevelChildIssues[BinaryNode[AddTo | Apply | BinaryAt | BinaryAtAtAt |
 (*
 Side-effecting ternary operators
 *)
-topLevelChildIssues[TernaryNode[TagSet | TagSetDelayed | TernaryTilde, _, _], True] := {}
+topLevelChildIssues[TernaryNode[TagSet | TagSetDelayed | TagUnset, _, _], True] := {}
 
 (*
 Side-effecting prefix operators
