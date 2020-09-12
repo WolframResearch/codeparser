@@ -326,7 +326,7 @@ TestMatch[
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	<|SyntaxIssues -> {
-		EncodingIssue["InvalidCharacterEncoding", "Invalid UTF-8 sequence.", "Fatal", <|Source -> {{1, 1}, {1, 2}}|>],
+		EncodingIssue["InvalidCharacterEncoding", "Invalid UTF-8 sequence.", "Fatal", <|Source -> {{1, 1}, {1, 2}}, ConfidenceLevel -> 1.|>],
 		SyntaxIssue["UnexpectedLetterlikeCharacter", "Unexpected letterlike character: ``\\[UnknownGlyph]``.", "Warning", <|Source -> {{1, 1}, {1, 2}}, ConfidenceLevel -> 0.8|>]
 		}|>
 	,
@@ -348,7 +348,7 @@ TestMatch[
 
 
 
-Test[
+TestMatch[
 	CodeConcreteParse["a\[InvisibleSpace]b"]
 	,
 	ContainerNode[String, {
@@ -357,7 +357,9 @@ Test[
 			LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> {{1, 2}, {1, 2}}|>],
 			LeafNode[Whitespace, "\[InvisibleSpace]", <|Source -> {{1, 2}, {1, 3}}|>],
 			LeafNode[Symbol, "b", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]},
-		<| SyntaxIssues -> { SyntaxIssue["UnexpectedSpaceCharacter", "Unexpected space character: ``\\[InvisibleSpace]``.", "Warning", <|Source -> {{1, 2}, {1, 3}}, ConfidenceLevel -> 0.85|>] } |>]
+		<| SyntaxIssues -> {
+			SyntaxIssue["UnexpectedCharacter", "Unexpected character: ``\\[InvisibleSpace]``.", "Warning", <|Source -> {{1, 2}, {1, 3}}, ConfidenceLevel -> 0.75, CodeActions -> _|>],
+			SyntaxIssue["UnexpectedSpaceCharacter", "Unexpected space character: ``\\[InvisibleSpace]``.", "Warning", <|Source -> {{1, 2}, {1, 3}}, ConfidenceLevel -> 0.85|>] } |>]
 	,
 	TestID->"SyntaxIssues-20200621-C5B3J2"
 ]

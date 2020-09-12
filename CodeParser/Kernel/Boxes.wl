@@ -1103,27 +1103,20 @@ Module[{parsed, data, issues, stringifyMode, oldLeafSrc, len, src, cases},
       If[FailureQ[parsed],
         Throw[parsed]
       ];
-      parsed[[3, Key[Source]]] = pos;
-  ];
-
-  If[$Debug,
-
-    data = parsed[[3]];
-
-    issues = Lookup[data, SyntaxIssues, {}];
-
-    (*
-    issues = replacePosition[#, pos, oldLeafSrc]& /@ issues;
-    data[SyntaxIssues] = issues;
-    *)
-
-    If[!empty[issues],
-      Message[CodeConcreteParseBox::needtohandle, issues]
-    ];
-
-    (*
-    parsed[[3]] = data;
-    *)
+      data = parsed[[3]];
+      data[Source] = pos;
+      (*
+      It's very easy to get UnexpectedCharacter syntax issues when parsing boxes
+      So just ignore them
+      *)
+      issues = Lookup[data, SyntaxIssues, {}];
+      issues = DeleteCases[issues, SyntaxIssue["UnexpectedCharacter", _, _, _]];
+      If[empty[issues],
+        KeyDropFrom[data, SyntaxIssues]
+        ,
+        data[SyntaxIssues] = issues
+      ];
+      parsed[[3]] = data;
   ];
 
   parsed

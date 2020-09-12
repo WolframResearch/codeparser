@@ -616,7 +616,7 @@ Test[
 	TestID->"Concrete-20191210-U8V1Y3"
 ]
 
-Test[
+TestMatch[
 	(* yes, actual \[Alpha] character on purpose *)
 	CodeConcreteParse["{\[Alpha],b}"]
 	,
@@ -629,7 +629,7 @@ Test[
 				LeafNode[Symbol, "b", <|Source -> {{1, 4}, {1, 5}}|>]}, <|Source -> {{1, 2}, {1, 5}}|>],
 			LeafNode[Token`CloseCurly, "}", <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]}
 			,
-			<||>]
+			<| SyntaxIssues -> _ |>]
 	,
 	TestID->"Concrete-20191212-V5Q2Y2"
 ]
@@ -646,7 +646,7 @@ Test[
 				Source -> {{1, 1}, {1, 8}},
 				ConfidenceLevel -> 1., 
 		     	CodeActions -> {
-		     		CodeAction["Replace with \\[Alpha]", ReplaceText, <|Source -> {{1, 1}, {1, 8}}, "ReplacementText" -> "\\[Alpha]"|>]}|>]}|>]
+		     		CodeAction["Replace with ``\\[Alpha]``", ReplaceText, <|Source -> {{1, 1}, {1, 8}}, "ReplacementText" -> "\\[Alpha]"|>]}|>]}|>]
 	,
 	TestID->"Concrete-20200105-L1E1C8"
 ]
@@ -797,7 +797,7 @@ Test[
     		LeafNode[Symbol, "a", <|Source -> {{1, 4}, {1, 5}}|>]}, <|Source -> {{1, 3}, {1, 5}}|>]}, <|SyntaxIssues -> {
     		
     	SyntaxIssue["UnrecognizedCharacter", "Unrecognized character ``\\-``.", "Error", <|Source -> {{1, 1}, {1, 3}}, ConfidenceLevel -> 1., CodeActions -> {
-    		CodeAction["Replace with \\\\-", ReplaceText, <|Source -> {{1, 1}, {1, 3}}, "ReplacementText" -> "\\\\-"|>]}|>]}|>]
+    		CodeAction["Replace with ``\\\\-``", ReplaceText, <|Source -> {{1, 1}, {1, 3}}, "ReplacementText" -> "\\\\-"|>]}|>]}|>]
 	,
 	TestID->"Concrete-20200803-T9A8L2"
 ]
