@@ -116,7 +116,7 @@ Module[{res},
 
 	res = FindLibrary["CodeParser"];
 	If[FailureQ[res],
-		Throw[Failure["CodeParserLibraryNotFound", <||>]]
+		Throw[Failure["CodeParserNativeLibraryNotFound", <||>]]
 	];
 	res
 ]]
