@@ -11,10 +11,11 @@ CodeParser has many key features:
 
 
 ```
-In[1]:= Needs["CodeParser`"]
+Needs["CodeParser`"]
 
-In[2]:= CodeParse["1+1"]
-
+CodeParse["1+1"]
+```
+```
 Out[2]= ContainerNode[String, {CallNode[LeafNode[Symbol, "Plus", <||>], {LeafNode[Integer, "1", <|Source -> {{1, 1}, {1, 2}}|>], LeafNode[Integer, "1", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, <||>]
 ```
 
@@ -27,26 +28,24 @@ Out[2]= ContainerNode[String, {CallNode[LeafNode[Symbol, "Plus", <||>], {LeafNod
 
 Install CodeParser from the paclet server:
 ```
-In[1]:= PacletInstall["CodeParser"]
-
-Out[1]= PacletObject[CodeParser, 1.0, <>]
+PacletInstall["CodeParser"]
 ```
 
 Make sure that the paclet can be found on your system:
 ```
-In[1]:= Needs["CodeParser`"]
+Needs["CodeParser`"]
 ```
-
 
 ## Using CodeParser
 
 After CodeParser is installed, it can be used.
 
 ```
-In[1]:= Needs["CodeParser`"]
+Needs["CodeParser`"]
 
-In[2]:= CodeParse["1+1"]
-
+CodeParse["1+1"]
+```
+```
 Out[2]= ContainerNode[String, {CallNode[LeafNode[Symbol, "Plus", <||>], {LeafNode[Integer, "1", <|Source -> {{1, 1}, {1, 2}}|>], LeafNode[Integer, "1", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, <||>]
 ```
 
