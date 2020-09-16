@@ -1163,8 +1163,45 @@ Module[{data, src},
 parseBox[args___] := Failure["InternalUnhandled", <|"Function"->"parseBox", "Arguments"->HoldForm[{args}]|>]
 
 
-
 removeImplicits[node_] := DeleteCases[node, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity]
+
+
+(*
+We want to coalesce runs of whitespace because that is what the FE prefers
+*)
+coalesceWhitespace[node_] :=
+  Module[{poss, runs, coalesced},
+
+    poss = Position[node, LeafNode[Whitespace, _, _]];
+
+    (*
+    runs of Whitespace
+    *)
+    runs = Split[poss, (
+      Length[#1] == Length[#2] &&
+      Most[#1] == Most[#2] &&
+      Last[#1] + 1 == Last[#2])&];
+
+    coalesced =
+      Fold[
+        Function[{nodeA, run},
+          (*
+          Delete all but the first whitespace in a run
+          Replace the first whitespace with the coalesced
+          *)
+          ReplacePart[Delete[nodeA, Rest[run]], First[run] -> LeafNode[Token`Boxes`MultiWhitespace, StringJoin[#[[2]]& /@ Extract[node, run]], <||>]]
+        ]
+        ,
+        node
+        ,
+        (*
+        Earlier positions may affect later positions, so process in reverse order
+        *)
+        runs // Reverse
+      ];
+
+    coalesced
+  ]
 
 
 ToStandardFormBoxes[ContainerNode[Box, children_, _]] :=
@@ -1172,7 +1209,7 @@ Block[{$RecursionLimit = Infinity},
 Module[{},
   Replace[children, {
     LeafNode[Token`Newline, str_, _] :> str,
-    else_ :> toStandardFormBoxes[removeImplicits[else]]
+    else_ :> toStandardFormBoxes[coalesceWhitespace[removeImplicits[else]]]
   }, {1}]
 ]]
 
