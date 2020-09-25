@@ -998,6 +998,173 @@ letterlikePat = Except["_"|"\""|"."|"#"]
 digitPat = DigitCharacter
 
 
+parseBox[str:"[", pos_] := LeafNode[Token`OpenSquare, str, <|Source -> pos|>]
+
+parseBox[str:"/", pos_] := LeafNode[Token`Slash, str, <|Source -> pos|>]
+
+parseBox[str:",", pos_] := LeafNode[Token`Comma, str, <|Source -> pos|>]
+
+parseBox[str:"]", pos_] := LeafNode[Token`CloseSquare, str, <|Source -> pos|>]
+
+parseBox[str:"{", pos_] := LeafNode[Token`OpenCurly, str, <|Source -> pos|>]
+
+parseBox[str:"}", pos_] := LeafNode[Token`CloseCurly, str, <|Source -> pos|>]
+
+parseBox[str:"=", pos_] := LeafNode[Token`Equal, str, <|Source -> pos|>]
+
+parseBox[str:";", pos_] := LeafNode[Token`Semi, str, <|Source -> pos|>]
+
+parseBox[str:"//", pos_] := LeafNode[Token`SlashSlash, str, <|Source -> pos|>]
+
+parseBox[str:"_", pos_] := LeafNode[Token`Under, str, <|Source -> pos|>]
+
+parseBox[str:":=", pos_] := LeafNode[Token`ColonEqual, str, <|Source -> pos|>]
+
+parseBox[str:">", pos_] := LeafNode[Token`Greater, str, <|Source -> pos|>]
+
+parseBox[str:"^", pos_] := LeafNode[Token`Caret, str, <|Source -> pos|>]
+
+parseBox[str:"+", pos_] := LeafNode[Token`Plus, str, <|Source -> pos|>]
+
+parseBox[str:"#", pos_] := LeafNode[Token`Hash, str, <|Source -> pos|>]
+
+parseBox[str:"&", pos_] := LeafNode[Token`Amp, str, <|Source -> pos|>]
+
+parseBox[str:"-", pos_] := LeafNode[Token`Minus, str, <|Source -> pos|>]
+
+parseBox[str:"(", pos_] := LeafNode[Token`OpenParen, str, <|Source -> pos|>]
+
+parseBox[str:")", pos_] := LeafNode[Token`CloseParen, str, <|Source -> pos|>]
+
+parseBox[str:"%", pos_] := LeafNode[Token`Percent, str, <|Source -> pos|>]
+
+parseBox[str:"/.", pos_] := LeafNode[Token`SlashDot, str, <|Source -> pos|>]
+
+parseBox[str:"!", pos_] := LeafNode[Token`Bang, str, <|Source -> pos|>]
+
+parseBox[str:"/@", pos_] := LeafNode[Token`SlashAt, str, <|Source -> pos|>]
+
+parseBox[str:"+=", pos_] := LeafNode[Token`PlusEqual, str, <|Source -> pos|>]
+
+parseBox[str:"<|", pos_] := LeafNode[Token`LessBar, str, <|Source -> pos|>]
+
+parseBox[str:"|>", pos_] := LeafNode[Token`BarGreater, str, <|Source -> pos|>]
+
+parseBox[str:"?", pos_] := LeafNode[Token`Question, str, <|Source -> pos|>]
+
+parseBox[str:"<", pos_] := LeafNode[Token`Less, str, <|Source -> pos|>]
+
+parseBox[str:"->", pos_] := LeafNode[Token`MinusGreater, str, <|Source -> pos|>]
+
+parseBox[str:"||", pos_] := LeafNode[Token`BarBar, str, <|Source -> pos|>]
+
+parseBox[str:"@", pos_] := LeafNode[Token`At, str, <|Source -> pos|>]
+
+parseBox[str:".", pos_] := LeafNode[Token`Dot, str, <|Source -> pos|>]
+
+parseBox[str:":", pos_] := LeafNode[Token`Colon, str, <|Source -> pos|>]
+
+parseBox[str:"|", pos_] := LeafNode[Token`Bar, str, <|Source -> pos|>]
+
+parseBox[str:"--", pos_] := LeafNode[Token`MinusMinus, str, <|Source -> pos|>]
+
+parseBox[str:"*", pos_] := LeafNode[Token`Star, str, <|Source -> pos|>]
+
+parseBox[str:"&&", pos_] := LeafNode[Token`AmpAmp, str, <|Source -> pos|>]
+
+parseBox[str:"\[LeftAssociation]", pos_] := LeafNode[Token`LongName`LeftAssociation, str, <|Source -> pos|>]
+
+parseBox[str:"\[RightAssociation]", pos_] := LeafNode[Token`LongName`RightAssociation, str, <|Source -> pos|>]
+
+
+
+
+parseBox[str:"\[Rule]", pos_] := LeafNode[Token`LongName`Rule, str, <|Source -> pos|>]
+
+parseBox[str:"\[RuleDelayed]", pos_] := LeafNode[Token`LongName`RuleDelayed, str, <|Source -> pos|>]
+
+parseBox[str:"\[Equal]", pos_] := LeafNode[Token`LongName`Equal, str, <|Source -> pos|>]
+
+parseBox[str:"\[UndirectedEdge]", pos_] := LeafNode[Token`LongName`UndirectedEdge, str, <|Source -> pos|>]
+
+parseBox[str:"\[DirectedEdge]", pos_] := LeafNode[Token`LongName`DirectedEdge, str, <|Source -> pos|>]
+
+parseBox[str:"\[And]", pos_] := LeafNode[Token`LongName`And, str, <|Source -> pos|>]
+
+parseBox[str:"\[LeftAngleBracket]", pos_] := LeafNode[Token`LongName`LeftAngleBracket, str, <|Source -> pos|>]
+
+parseBox[str:"\[RightAngleBracket]", pos_] := LeafNode[Token`LongName`RightAngleBracket, str, <|Source -> pos|>]
+
+
+
+
+parseBox[str:"a", pos_] := LeafNode[Symbol, str, <|Source -> pos|>]
+
+parseBox[str:"b", pos_] := LeafNode[Symbol, str, <|Source -> pos|>]
+
+parseBox[str:"c", pos_] := LeafNode[Symbol, str, <|Source -> pos|>]
+
+parseBox[str:"d", pos_] := LeafNode[Symbol, str, <|Source -> pos|>]
+
+parseBox[str:"f", pos_] := LeafNode[Symbol, str, <|Source -> pos|>]
+
+parseBox[str:"i", pos_] := LeafNode[Symbol, str, <|Source -> pos|>]
+
+parseBox[str:"t", pos_] := LeafNode[Symbol, str, <|Source -> pos|>]
+
+parseBox[str:"x", pos_] := LeafNode[Symbol, str, <|Source -> pos|>]
+
+parseBox[str:"y", pos_] := LeafNode[Symbol, str, <|Source -> pos|>]
+
+
+parseBox[str:"I", pos_] := LeafNode[Symbol, str, <|Source -> pos|>]
+
+parseBox[str:"N", pos_] := LeafNode[Symbol, str, <|Source -> pos|>]
+
+
+
+parseBox[str:"\[Infinity]", pos_] := LeafNode[Symbol, str, <|Source -> pos|>]
+
+parseBox[str:"\[ImaginaryI]", pos_] := LeafNode[Symbol, str, <|Source -> pos|>]
+
+parseBox[str:"\[Pi]", pos_] := LeafNode[Symbol, str, <|Source -> pos|>]
+
+parseBox[str:"\[ExponentialE]", pos_] := LeafNode[Symbol, str, <|Source -> pos|>]
+
+parseBox[str:"\[Degree]", pos_] := LeafNode[Symbol, str, <|Source -> pos|>]
+
+
+
+parseBox[str:"\n", pos_] := LeafNode[Token`Newline, str, <|Source -> pos|>]
+
+parseBox[str:" ", pos_] := LeafNode[Token`Boxes`MultiWhitespace, str, <|Source -> pos|>]
+
+parseBox[str:"  ", pos_] := LeafNode[Token`Boxes`MultiWhitespace, str, <|Source -> pos|>]
+
+parseBox[str:"   ", pos_] := LeafNode[Token`Boxes`MultiWhitespace, str, <|Source -> pos|>]
+
+parseBox[str:"    ", pos_] := LeafNode[Token`Boxes`MultiWhitespace, str, <|Source -> pos|>]
+
+parseBox[str:"     ", pos_] := LeafNode[Token`Boxes`MultiWhitespace, str, <|Source -> pos|>]
+
+parseBox[str:"      ", pos_] := LeafNode[Token`Boxes`MultiWhitespace, str, <|Source -> pos|>]
+
+parseBox[str:"       ", pos_] := LeafNode[Token`Boxes`MultiWhitespace, str, <|Source -> pos|>]
+
+parseBox[str:"        ", pos_] := LeafNode[Token`Boxes`MultiWhitespace, str, <|Source -> pos|>]
+
+
+
+parseBox[str:"\t", pos_] := LeafNode[Token`Boxes`MultiWhitespace, str, <|Source -> pos|>]
+
+
+parseBox[str:"(*", pos_] := LeafNode[Token`Boxes`OpenParenStar, str, <|Source -> pos|>]
+
+parseBox[str:"*)", pos_] := LeafNode[Token`Boxes`StarCloseParen, str, <|Source -> pos|>]
+
+
+
+
 parseBox[str_String, pos_, OptionsPattern[]] :=
 Catch[
 Module[{parsed, data, issues, stringifyMode, oldLeafSrc, len, src, cases},
@@ -1011,6 +1178,12 @@ Module[{parsed, data, issues, stringifyMode, oldLeafSrc, len, src, cases},
   stringifyMode = OptionValue["StringifyMode"];
 
   Which[
+    StringMatchQ[str, (LetterCharacter | "$") ~~ (LetterCharacter | "$" | DigitCharacter)...] && stringifyMode == 0,
+      parsed = LeafNode[Symbol, str, <|Source -> pos|>]
+    ,
+    StringMatchQ[str, DigitCharacter..] && stringifyMode == 0,
+      parsed = LeafNode[Integer, str, <|Source -> pos|>]
+    ,
     (*
     Handle all of the CompoundNodes
 
@@ -2298,6 +2471,16 @@ Module[{nodeBoxes},
 ]]
 
 toStandardFormBoxes[GroupMissingCloserNode[op_, nodes_, data_]] :=
+Catch[
+Module[{nodeBoxes},
+  nodeBoxes = toStandardFormBoxes /@ nodes;
+  If[AnyTrue[nodeBoxes, FailureQ],
+    Throw[SelectFirst[nodeBoxes, FailureQ]]
+  ];
+  RowBox[nodeBoxes]
+]]
+
+toStandardFormBoxes[GroupMissingOpenerNode[op_, nodes_, data_]] :=
 Catch[
 Module[{nodeBoxes},
   nodeBoxes = toStandardFormBoxes /@ nodes;
