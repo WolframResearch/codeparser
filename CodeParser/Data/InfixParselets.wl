@@ -101,6 +101,7 @@ Token`LongName`DoubleRightTee -> Parselet`BinaryOperatorParselet[Token`LongName`
 Token`LongName`DoubleLeftTee -> Parselet`BinaryOperatorParselet[Token`LongName`DoubleLeftTee, Precedence`LongName`DoubleLeftTee, DoubleLeftTee],
 Token`LongName`UpTee -> Parselet`BinaryOperatorParselet[Token`LongName`UpTee, Precedence`LongName`UpTee, UpTee],
 Token`LongName`DownTee -> Parselet`BinaryOperatorParselet[Token`LongName`DownTee, Precedence`LongName`DownTee, DownTee],
+Token`LongName`Application -> Parselet`BinaryOperatorParselet[Token`LongName`Application, Precedence`LongName`Application, System`Application],
 
 
 (*

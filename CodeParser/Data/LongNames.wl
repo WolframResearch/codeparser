@@ -836,6 +836,11 @@ Range 0xf500
 "Placeholder" -> {LetterlikeCharacter, 16^^f528, <| "ASCIIReplacements" -> {"[ ]"} |>},
 "ShortUpArrow" -> {PunctuationCharacter, 16^^f52a, <||>},
 "ShortDownArrow" -> {PunctuationCharacter, 16^^f52b, <||>},
+(*
+added in 12.2:
+Application
+*)
+"Application" -> {PunctuationCharacter, 16^^f530, <||>},
 
 (*
 Range 0xf600

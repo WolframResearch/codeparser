@@ -345,16 +345,16 @@ Precedence`SlashSlashAt -> Precedence`AtAt, (* Precedence[MapAll] == 620 *)
 Precedence`Tilde -> {Next, Associativity`NonRight}, (* Precedence[Infix] == 630 *)
 
 Precedence`At -> {Next, Associativity`Right}, (* Precedence[Prefix] == 640 *)
-Precedence`LongName`InvisibleApplication -> Precedence`At, (* Precedence[InvisibleApplication] == 640 *)
+Precedence`LongName`InvisibleApplication -> Precedence`At,
 
 (*
-DISCREPANCY
-Precedence[RightComposition] is 624
-Precedence[Composition] is 625
-But empirically they are higher than @
+added in 12.2:
+Application
 *)
-Precedence`SlashStar -> {Next, Associativity`NonRight},
-Precedence`AtStar -> {Next, Associativity`NonRight},
+Precedence`LongName`Application -> {Next, Associativity`NonRight}, (* Precedence[??] == 645 *)
+
+Precedence`SlashStar -> {Next, Associativity`NonRight}, (* Precedence[RightComposition] == 648 *)
+Precedence`AtStar -> {Next, Associativity`NonRight}, (* Precedence[Composition] == 650 *)
 
 Precedence`Prefix`PlusPlus -> {Next, Associativity`NonRight}, (* Precedence[PreIncrement] == 660 *)
 Precedence`Prefix`MinusMinus -> Precedence`Prefix`PlusPlus, (* Precedence[PreDecrement] == 660 *)
