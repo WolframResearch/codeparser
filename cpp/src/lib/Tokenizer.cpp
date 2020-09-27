@@ -2749,6 +2749,36 @@ inline Token Tokenizer::handleBar(Buffer tokenStartBuf, SourceLocation tokenStar
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
         }
             break;
+            
+        case '-': {
+            
+            auto barBuf = TheByteBuffer->buffer;
+            auto barLoc = TheByteDecoder->SrcLoc;
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+            
+            c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
+            
+            if (c.to_point() == '>') {
+                
+                Operator = TOKEN_BARMINUSGREATER; // |->
+                
+                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+                
+            } else {
+                
+                //
+                // Something like  x|-y
+                //
+                // Must now do surgery and back up
+                //
+                
+                backupAndWarn(barBuf, barLoc);
+            }
+        }
+            break;
     }
     
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));

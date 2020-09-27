@@ -154,6 +154,11 @@ Token`LessMinusGreater -> Next, (* <-> *)
 Token`SlashSlashAt -> Next, (* //@ *)
 Token`CaretColonEqual -> Next, (* ^:= *)
 Token`GreaterGreaterGreater -> Next, (* >>> *)
+(*
+added in 12.2:
+|->
+*)
+Token`BarMinusGreater -> Next, (* |-> *)
 
 (* variable length character tokens *)
 Token`PercentPercent -> Next, (* %% *)

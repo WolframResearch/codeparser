@@ -310,7 +310,7 @@ NodePtr InfixImplicitTimesParselet::parse(NodeSeq Left, Token TokIn, ParserConte
 
 
 Precedence InfixImplicitTimesParselet::getPrecedence(ParserContext Ctxt) const {
-    assert(false);
+    assert(false && "The last token may not have been added to InfixParselets");
     return PRECEDENCE_ASSERTFALSE;
 }
 
