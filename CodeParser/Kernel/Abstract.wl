@@ -498,7 +498,8 @@ Side-effecting or calling binary operators
 *)
 topLevelChildIssues[BinaryNode[AddTo | Apply | BinaryAt | BinaryAtAtAt |
 												BinarySlashSlash | Map | Set | SetDelayed |
-												SubtractFrom | Unset | UpSet | UpSetDelayed, _, _], True] := {}
+												SubtractFrom | Unset | UpSet | UpSetDelayed |
+												Put | PutAppend, _, _], True] := {}
 
 (*
 Side-effecting ternary operators
@@ -578,7 +579,8 @@ topLevelChildIssues[InfixNode[CompoundExpression, {
 topLevelChildIssues[InfixNode[CompoundExpression, {
 												BinaryNode[AddTo | Apply | BinaryAt | BinaryAtAtAt |
 													BinarySlashSlash | Map | Set | SetDelayed |
-													SubtractFrom | Unset | UpSet | UpSetDelayed, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
+													SubtractFrom | Unset | UpSet | UpSetDelayed |
+													Put | PutAppend, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
 
 topLevelChildIssues[InfixNode[CompoundExpression, {
 												TernaryNode[TagSet | TagSetDelayed | TernaryTilde, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
