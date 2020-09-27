@@ -15,16 +15,19 @@ parseBoxTest[box_, name_, n_, i_, j_] :=
 Catch[
 Module[{},
 
-cst = Catch[
-   CodeConcreteParseBox[
-    box], {CodeParser`Boxes`Private`parseBox, 
-     "Unhandled"} | {CodeParser`Boxes`Private`parseBox, RowBox, 
-     CodeParser`Boxes`Private`Unhandled}, (Print[
-       "bad: ", # // InputForm];) &];
+cst =
+  Catch[
+    CodeConcreteParseBox[box]
+    ,
+    {CodeParser`Boxes`Private`parseBox, "Unhandled"} |
+      {CodeParser`Boxes`Private`parseBox, RowBox, CodeParser`Boxes`Private`Unhandled}
+    ,
+    (Print["bad: ", # // InputForm];) &
+  ];
 
 back = ToStandardFormBoxes[cst];
 
-If[back =!= box,
+If[back =!= box && back =!= {box},
   If[MemberQ[Lookup[exceptions, name, {}], {i, j}], 
    Print[{"exception", {name, n, i, j}}]; Throw[continue]];
   Which[
@@ -39,14 +42,14 @@ If[back =!= box,
   ];
   (* some weird string from the Example build process *)
   
-  If[MatchQ[diff, outputFormPatterns], 
+  If[!FreeQ[diff, outputFormPatterns], 
    Print[{"weird diff", diff, {name, n, i, j}}]; Throw[continue]];
   If[$Interactive,
     Print[Style[{"concrete", diff, {name, n, i, j}}, Red]];
   ];
   $Error = True;
   Throw[{"concrete", diff, {name, n, i, j}}]
-  ];
+];
 
 sourceStr = ToSourceCharacterString[cst];
 If[!StringQ[sourceStr],
@@ -134,7 +137,7 @@ If[!StringQ[inputStr],
      Throw[continue]
     ];
     diff = findDiff[agg2ToCompare, aggToCompare];
-    If[MatchQ[diff, outputFormPatterns], 
+    If[!FreeQ[diff, outputFormPatterns], 
      Print[{"weird diff", diff, {name, n, i, j}}];
      $Error = True;
      Throw[continue]
@@ -161,6 +164,7 @@ If[!StringQ[inputStr],
     ];
 
     $Error = True;
+    Print[{"comparing aggs", {name, n, i, j}}];
     Throw[{"comparing aggs", name, Hash[box]}]
   ];
 
@@ -177,8 +181,10 @@ If[!StringQ[inputStr],
 ]]
 
 
+(*
 rowBoxify[ContainerNode[Box, {first_, second_, rest___}, data_]] :=
   ContainerNode[Box, {BoxNode[RowBox, {rowBoxify /@ {first, second, rest}}, <||>]}, data]
+*)
 
 rowBoxify[ContainerNode[Box, children_, data_]] :=
   ContainerNode[Box, rowBoxify /@ children, data]
@@ -274,11 +280,9 @@ exceptions = <|
    "NumericArrayType" -> {{2, 2}},
    
    (* ErrorBox and purposeful bad syntax *)
-   "DelimiterFlashTime" -> {{1, 2}},
+   (* "DelimiterFlashTime" -> {{1, 2}}, *)
    "ErrorBox" -> {{1, 4}, {2, 2}},
-   (*
    "ShowAutoStyles" -> {{1, 3}, {1, 4}},
-   *)
 
    (* weird empty RowBox[{}] thing *)
    "IncludePods" -> {{1, 2}},
@@ -312,7 +316,7 @@ exceptions = <|
    "PolyhedronDecomposition" -> {{1, 3}},
    "Shallow" -> {{1, 2}, {2, 4}},
    "ShortestPathFunction" -> {{1, 4}},
-   "Skeleton" -> {{1, 2}, {2, 2}},
+   "Skeleton" -> {{2, 2}},
    "WikipediaData" -> {{2, 2}, {2, 4}, {5, 2}, {5, 4}, {5, 9}},
    
    (* weird Cell[foo] thing *)
@@ -321,82 +325,82 @@ exceptions = <|
    "WolframLanguageData" -> {{5, 12}},
    
    (* weird RowBox[{""}] thing *)
-   "AsymptoticIntegrate" -> {{2, 2}, {2, 6}, {3, 2}, {3, 6}},
+   "AsymptoticIntegrate" -> {{2, 2}, {2, 6}},
    "BernoulliProcess" -> {{1, 2}},
-   "BetaRegularized" -> {{1, 2}},
-   "BlankNullSequence" -> {{3, 3}},
-   "Chop" -> {{1, 2}},
-   "CircularOrthogonalMatrixDistribution" -> {{1, 2}},
-   "CircularQuaternionMatrixDistribution" -> {{2, 2}},
-   "CircularSymplecticMatrixDistribution" -> {{2, 2}},
-   "CircularUnitaryMatrixDistribution" -> {{1, 2}, {2, 2}},
-   "CompiledFunction" -> {{1, 8}},
+   (* "BetaRegularized" -> {{1, 2}}, *)
+   (* "BlankNullSequence" -> {{3, 3}}, *)
+   (* "Chop" -> {{1, 2}}, *)
+   (* "CircularOrthogonalMatrixDistribution" -> {{1, 2}}, *)
+   (* "CircularQuaternionMatrixDistribution" -> {{2, 2}}, *)
+   (* "CircularSymplecticMatrixDistribution" -> {{2, 2}}, *)
+   (* "CircularUnitaryMatrixDistribution" -> {{1, 2}, {2, 2}}, *)
+   (* "CompiledFunction" -> {{1, 8}}, *)
    "ConfidenceLevel" -> {{1, 3}, {1, 7}},
    "CovarianceEstimatorFunction" -> {{1, 3}, {1, 7}},
-   "CubeRoot" -> {{3, 4}},
-   "DedekindEta" -> {{1, 2}},
-   "EllipticLog" -> {{1, 2}, {1, 4}},
-   "ExponentialFamily" -> {{1, 3}},
-   "Fit" -> {{1, 3}, {1, 7}},
+   (* "CubeRoot" -> {{3, 4}}, *)
+   (* "DedekindEta" -> {{1, 2}}, *)
+   (* "EllipticLog" -> {{1, 2}, {1, 4}}, *)
+   (* "ExponentialFamily" -> {{1, 3}}, *)
+   "Fit" -> {{1, 7}},
    "FittedModel" -> {{1, 5}},
-   "Fourier" -> {{1, 2}},
-   "FourierParameters" -> {{1, 2}},
+   (* "Fourier" -> {{1, 2}}, *)
+   (* "FourierParameters" -> {{1, 2}}, *)
    "FullInformationOutputRegulator" -> {{1, 3}},
-   "Gamma" -> {{3, 2}},
-   "GaussianUnitaryMatrixDistribution" -> {{1, 2}},
-   "HankelH1" -> {{1, 2}},
-   "HankelH2" -> {{1, 2}},
-   "HeunCPrime" -> {{1, 2}},
-   "HeunG" -> {{1, 2}},
-   "HeunGPrime" -> {{1, 2}},
-   "HurwitzLerchPhi" -> {{1, 2}},
-   "Hypergeometric2F1" -> {{1, 2}},
-   "I" -> {{3, 4}},
+   (* "Gamma" -> {{3, 2}}, *)
+   (* "GaussianUnitaryMatrixDistribution" -> {{1, 2}}, *)
+   (* "HankelH1" -> {{1, 2}}, *)
+   (* "HankelH2" -> {{1, 2}}, *)
+   (* "HeunCPrime" -> {{1, 2}}, *)
+   (* "HeunG" -> {{1, 2}}, *)
+   (* "HeunGPrime" -> {{1, 2}}, *)
+   (* "HurwitzLerchPhi" -> {{1, 2}}, *)
+   (* "Hypergeometric2F1" -> {{1, 2}}, *)
+   (* "I" -> {{3, 4}}, *)
    "InflationMethod" -> {{1, 2}, {2, 2}},
-   "InverseFourier" -> {{1, 2}, {2, 2}},
+   (* "InverseFourier" -> {{1, 2}, {2, 2}}, *)
    (*"InverseJacobiCS" -> {{1, 2}},*)
-   "InverseJacobiDN" -> {{1, 2}, {1, 4}},
-   "InverseJacobiNC" -> {{1, 2}, {1, 4}},
-   "InverseJacobiND" -> {{1, 2}, {1, 4}},
+   (* "InverseJacobiDN" -> {{1, 2}, {1, 4}}, *)
+   (* "InverseJacobiNC" -> {{1, 2}, {1, 4}}, *)
+   (* "InverseJacobiND" -> {{1, 2}, {1, 4}}, *)
    (*"InverseJacobiSC" -> {{1, 2}},*)
-   "JuliaSetBoettcher" -> {{1, 2}, {2, 2}},
-   "JuliaSetIterationCount" -> {{2, 1}},
+   (* "JuliaSetBoettcher" -> {{1, 2}, {2, 2}}, *)
+   (* "JuliaSetIterationCount" -> {{2, 1}}, *)
    (*"KleinInvariantJ" -> {{1, 2}},*)
-   "LerchPhi" -> {{1, 2}, {2, 2}},
-   "LinearModelFit" -> {{1, 5}},
-   "LinearOffsetFunction" -> {{1, 3}, {1, 5}},
-   "LinkFunction" -> {{1, 5}},
-   "MandelbrotSetBoettcher" -> {{1, 2}},
-   "NominalVariables" -> {{1, 5}, {1, 7}},
+   "LerchPhi" -> {{2, 2}},
+   (* "LinearModelFit" -> {{1, 5}}, *)
+   (* "LinearOffsetFunction" -> {{1, 3}, {1, 5}}, *)
+   (* "LinkFunction" -> {{1, 5}}, *)
+   (* "MandelbrotSetBoettcher" -> {{1, 2}}, *)
+   (* "NominalVariables" -> {{1, 5}, {1, 7}}, *)
    "NonlinearModelFit" -> {{1, 5}},
-   "NSolve" -> {{1, 2}, {3, 2}},
+   (* "NSolve" -> {{1, 2}, {3, 2}}, *)
    "OutputResponse" -> {{3, 2}},
-   "RamanujanTauL" -> {{1, 2}},
-   "RandomComplex" -> {{1, 2}, {2, 2}, {3, 2}, {4, 2}, {5, 2}},
-   "Root" -> {{1, 4}},
+   (* "RamanujanTauL" -> {{1, 2}}, *)
+   (* "RandomComplex" -> {{1, 2}, {2, 2}, {3, 2}, {4, 2}, {5, 2}}, *)
+   (* "Root" -> {{1, 4}}, *)
    (*"SiegelTheta" -> {{1, 2}},*)
-   "Sign" -> {{2, 2}},
-   "SphericalHankelH1" -> {{1, 2}},
-   "SphericalHankelH2" -> {{1, 2}},
-   "Surd" -> {{3, 4}},
-   "TransferFunctionModel" -> {{4, 4}},
-   "WeierstrassE1" -> {{2, 2}},
-   "WeierstrassEta1" -> {{2, 4}},
-   "WeierstrassEta3" -> {{2, 2}},
-   "WeierstrassHalfPeriods" -> {{1, 2}, {3, 2}},
-   "WeierstrassHalfPeriodW1" -> {{3, 4}},
-   "WeierstrassHalfPeriodW3" -> {{1, 2}},
-   "WeierstrassInvariantG2" -> {{1, 2}},
-   "WeierstrassInvariantG3" -> {{1, 2}},
-   "WeierstrassInvariants" -> {{1, 4}, {1, 6}},
+   (* "Sign" -> {{2, 2}}, *)
+   (* "SphericalHankelH1" -> {{1, 2}}, *)
+   (* "SphericalHankelH2" -> {{1, 2}}, *)
+   (* "Surd" -> {{3, 4}}, *)
+   (* "TransferFunctionModel" -> {{4, 4}}, *)
+   (* "WeierstrassE1" -> {{2, 2}}, *)
+   (* "WeierstrassEta1" -> {{2, 4}}, *)
+   (* "WeierstrassEta3" -> {{2, 2}}, *)
+   (* "WeierstrassHalfPeriods" -> {{1, 2}, {3, 2}}, *)
+   (* "WeierstrassHalfPeriodW1" -> {{3, 4}}, *)
+   (* "WeierstrassHalfPeriodW3" -> {{1, 2}}, *)
+   (* "WeierstrassInvariantG2" -> {{1, 2}}, *)
+   (* "WeierstrassInvariantG3" -> {{1, 2}}, *)
+   (* "WeierstrassInvariants" -> {{1, 4}, {1, 6}}, *)
    (*"WeierstrassP" -> {{1, 2}},*)
    (*"WeierstrassPPrime" -> {{1, 2}},*)
    "WeierstrassSigma" -> {{1, 2}},
    "WeierstrassZeta" -> {{1, 2}},
-   "ZetaZero" -> {{1, 2}},
-   "$Post" -> {{2, 5}},
-   "$PrePrint" -> {{2, 5}},
-   "$PreRead" -> {{2, 2}},
+   (* "ZetaZero" -> {{1, 2}}, *)
+   (* "$Post" -> {{2, 5}}, *)
+   (* "$PrePrint" -> {{2, 5}}, *)
+   (* "$PreRead" -> {{2, 2}}, *)
    
    (* ? for Information *)
    "BeginPackage" -> {{1, 9}},
@@ -433,7 +437,7 @@ exceptions = <|
    (*
    dumb BoxData[""] bad input
    *)
-   (*"ServiceSubmit" -> {{1, 7}},*)
+   "ServiceSubmit" -> {{1, 7}},
    
    (*
    bad ; ;
@@ -455,6 +459,11 @@ exceptions = <|
     bad boxes for a /: b =.
    *)
    "TagUnset" -> {{1, 2}},
+
+   (*
+    weird RowBox[{"-ExampleData/Caminandes.mp4-"}]
+   *)
+   "Video" -> {{1, 2}},
 
    (* combined *)
    "CoxModel" -> {{1, 3}, {1, 9}},
