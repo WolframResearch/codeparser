@@ -62,17 +62,45 @@ This is reached from within
 *)
 
 parseBox[Cell[d:BoxData[_], rest___], pos_] :=
-  BoxNode[Cell, {parseBox[d, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
+Catch[
+Module[{handledChildren},
+
+  handledChildren = {parseBox[d, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest];
+
+  If[AnyTrue[handledChildren, FailureQ],
+    Throw[SelectFirst[handledChildren, FailureQ]]
+  ];
+
+  BoxNode[Cell, handledChildren, <|Source->pos|>]
+]]
 
 parseBox[BoxData[a_], pos_] :=
-  BoxNode[BoxData, {parseBox[a, Append[pos, 1]]}, <|Source->pos|>]
+Catch[
+Module[{handledChildren},
 
+  handledChildren = {parseBox[a, Append[pos, 1]]};
+
+  If[AnyTrue[handledChildren, FailureQ],
+    Throw[SelectFirst[handledChildren, FailureQ]]
+  ];
+
+  BoxNode[BoxData, handledChildren, <|Source->pos|>]
+]]
 
 
 
 parseBox[ErrorBox[a_], pos_] :=
-  BoxNode[ErrorBox, {parseBox[a, Append[pos, 1]]}, <|Source->pos|>]
+Catch[
+Module[{handledChildren},
 
+  handledChildren = {parseBox[a, Append[pos, 1]]};
+
+  If[AnyTrue[handledChildren, FailureQ],
+    Throw[SelectFirst[handledChildren, FailureQ]]
+  ];
+
+  BoxNode[ErrorBox, handledChildren, <|Source->pos|>]
+]]
 
 
 
@@ -84,6 +112,10 @@ Module[{handledChildren, aggregatedChildren},
 
   handledChildren = MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ #2]&, handledChildren];
   
+  If[AnyTrue[handledChildren, FailureQ],
+    Throw[SelectFirst[handledChildren, FailureQ]]
+  ];
+
   aggregatedChildren = DeleteCases[handledChildren, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _]];
 
   If[Length[aggregatedChildren] == 1,
@@ -130,11 +162,20 @@ Module[{handledChildren, aggregatedChildren},
     Treat comments like groups
     *)
     {LeafNode[Token`Boxes`OpenParenStar, _, _], ___, LeafNode[Token`Boxes`StarCloseParen, _, _]},
-      GroupNode[Comment,
-        {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~
-        MapIndexed[
-          parseBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1), "StringifyMode" -> 3]&, children[[2;;-2]]] ~Join~
-        {parseBox[children[[-1]], Append[pos, 1] ~Join~ {Length[children]}]}, <|Source->Append[pos, 1]|>],
+      Module[{rehandledChildren},
+
+        rehandledChildren =
+          {parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~
+          MapIndexed[
+            parseBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1), "StringifyMode" -> 3]&, children[[2;;-2]]] ~Join~
+          {parseBox[children[[-1]], Append[pos, 1] ~Join~ {Length[children]}]};
+
+        If[AnyTrue[rehandledChildren, FailureQ],
+          Throw[SelectFirst[rehandledChildren, FailureQ]]
+        ];
+        
+        GroupNode[Comment, rehandledChildren, <|Source->Append[pos, 1]|>]
+      ],
 
     (*
     Unexpected openers and unexpected closers
@@ -623,14 +664,19 @@ Module[{handledChildren, aggregatedChildren},
 There may be RowBoxs inside of comments
 *)
 parseBox[RowBox[children_], pos_, "StringifyMode" -> 3] :=
+  Catch[
   Module[{handledChildren},
 
     handledChildren = children;
 
     handledChildren = MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ #2, "StringifyMode" -> 3]&, handledChildren];
 
+    If[AnyTrue[handledChildren, FailureQ],
+      Throw[SelectFirst[handledChildren, FailureQ]]
+    ];
+
     BoxNode[RowBox, {handledChildren}, <|Source->Append[pos, 1]|>]
-  ]
+  ]]
 
 
 

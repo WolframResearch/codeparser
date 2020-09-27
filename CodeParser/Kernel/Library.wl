@@ -108,7 +108,7 @@ Module[{res},
 
 			NOT SUPPORTED!
 			*)
-			Throw[Failure["CodeParserVersion", <| "Message" -> "CodeParser was built with a newer version and is not backwards-compatible." |>]]
+			Throw[Failure["CodeParserNativeLibraryVersion", <| "Message" -> "CodeParser native library was built with a newer version and is not backwards-compatible." |>]]
 		];
 
 		LibraryLoad[$exprLib];
@@ -178,7 +178,7 @@ Module[{location, libraryResources},
 
 			NOT SUPPORTED!
 			*)
-			Throw[Failure["CodeParserVersion", <| "Message" -> "CodeParser was built with a newer version and is not backwards-compatible." |>]]
+			Throw[Failure["CodeParserNativeLibraryVersion", <| "Message" -> "CodeParser native library was built with a newer version and is not backwards-compatible." |>]]
 		];
 
 		$exprCompiledLib = CompiledLibrary`CompiledLibrary[$exprLib];
