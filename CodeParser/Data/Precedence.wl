@@ -53,6 +53,12 @@ Precedence`LongName`VerticalSeparator -> {Next, Associativity`NonRight}, (* Prec
 
 Precedence`SlashSlash -> {Next, Associativity`NonRight}, (* Precedence[Postfix] == 70 *)
 
+(*
+added in 12.2:
+ApplyTo
+*)
+Precedence`AtEqual -> {Next, Associativity`Right}, (* Precedence[ApplyTo] == 75 *)
+
 Precedence`LongName`Colon -> {Next, Associativity`NonRight}, (* Precedence[Colon] == 80 *)
 
 Precedence`Amp -> {Next, Associativity`NonRight}, (* Precedence[Function] == 90 *)
