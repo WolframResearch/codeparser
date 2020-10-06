@@ -3027,6 +3027,14 @@ inline Token Tokenizer::handleAt(Buffer tokenStartBuf, SourceLocation tokenStart
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
         }
             break;
+        case '=': {
+            
+            Operator = TOKEN_ATEQUAL; // @=
+            
+            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+            TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+        }
+            break;
     }
     
     return Token(Operator, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
