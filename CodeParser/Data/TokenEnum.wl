@@ -165,6 +165,17 @@ Token`PercentPercent -> Next, (* %% *)
 
 (* Linear syntax tokens *)
 Token`LinearSyntax`Bang -> Next, (* \! *)
+Token`LinearSyntax`CloseParen -> Next, (* \) *)
+Token`LinearSyntax`At -> Next, (* \@ *)
+Token`LinearSyntax`Amp -> Next, (* \& *)
+Token`LinearSyntax`Star -> Next, (* \* *)
+Token`LinearSyntax`Under -> Next, (* \_ *)
+Token`LinearSyntax`Caret -> Next, (* \^ *)
+Token`LinearSyntax`Space -> Next, (* \  *)
+Token`LinearSyntax`Percent -> Next, (* \% *)
+Token`LinearSyntax`Plus -> Next, (* \+ *)
+Token`LinearSyntax`Slash -> Next, (* \/ *)
+Token`LinearSyntax`BackTick -> Next, (* \` *)
 
 (* Fake tokens *)
 

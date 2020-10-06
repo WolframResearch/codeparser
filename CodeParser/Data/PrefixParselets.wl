@@ -95,6 +95,19 @@ Token`LongName`CubeRoot -> Parselet`PrefixOperatorParselet[Token`LongName`CubeRo
 Token`LongName`ProbabilityPr -> Parselet`PrefixOperatorParselet[Token`LongName`ProbabilityPr, Precedence`LongName`ProbabilityPr, ProbabilityPr],
 
 Token`LinearSyntax`Bang -> Parselet`PrefixOperatorParselet[Token`LinearSyntax`Bang, Precedence`LinearSyntax`Bang, CodeParser`PrefixLinearSyntaxBang],
+Token`LinearSyntax`At -> Parselet`PrefixUnsupportedTokenParselet[],
+Token`LinearSyntax`Amp -> Parselet`PrefixUnsupportedTokenParselet[],
+Token`LinearSyntax`Star -> Parselet`PrefixUnsupportedTokenParselet[],
+Token`LinearSyntax`Under -> Parselet`PrefixUnsupportedTokenParselet[],
+Token`LinearSyntax`Caret -> Parselet`PrefixUnsupportedTokenParselet[],
+Token`LinearSyntax`Space -> Parselet`PrefixUnsupportedTokenParselet[],
+Token`LinearSyntax`Percent -> Parselet`PrefixUnsupportedTokenParselet[],
+Token`LinearSyntax`Plus -> Parselet`PrefixUnsupportedTokenParselet[],
+Token`LinearSyntax`Slash -> Parselet`PrefixUnsupportedTokenParselet[],
+Token`LinearSyntax`BackTick -> Parselet`PrefixUnsupportedTokenParselet[],
+
+Token`LinearSyntax`CloseParen -> Parselet`PrefixUnsupportedTokenParselet[],
+
 
 (*
 Groups
