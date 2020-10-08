@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[    107687,       2355]
-NotebookOptionsPosition[     74522,       1759]
-NotebookOutlinePosition[     74994,       1776]
-CellTagsIndexPosition[     74951,       1773]
+NotebookDataLength[    109595,       2406]
+NotebookOptionsPosition[     75980,       1802]
+NotebookOutlinePosition[     76449,       1819]
+CellTagsIndexPosition[     76406,       1816]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -1754,12 +1754,55 @@ and cleanup\
   3.8093544405404453`*^9}},ExpressionUUID->"7b3c7702-aa73-4e4c-af35-\
 ca956cb5594e"]
 }, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["1.1.1", "Section",
+ CellChangeTimes->{{3.809354176845182*^9, 3.8093541771780157`*^9}, {
+  3.8111746736510143`*^9, 
+  3.811174674000601*^9}},ExpressionUUID->"d49cefef-f2be-4382-92b2-\
+c7bc71f1ac00"],
+
+Cell["October 8, 2020", "Text",
+ CellChangeTimes->{{3.8093541837696867`*^9, 3.809354191745969*^9}, {
+  3.810483921733769*^9, 3.810483922430772*^9}, {3.8111746789395103`*^9, 
+  3.811174682619111*^9}},ExpressionUUID->"c6080b08-63ab-4e64-be1d-\
+a4ad01c93a7f"],
+
+Cell[CellGroupData[{
+
+Cell["Fixes", "Subsection",
+ CellChangeTimes->{{3.809354204476325*^9, 3.809354207855584*^9}, {
+  3.81117468558387*^9, 
+  3.8111746863533*^9}},ExpressionUUID->"38f94879-65d7-4463-b749-ef35d999ca03"],
+
+Cell["\<\
+The parser side of what needs to be fixed for 398836: implicit Times tokens \
+do need to be present in the box cst.
+
+I had been remiss in treating unhandled boxes as implicit Times.
+
+So start doing that now. But do the easy thing and simply riffle in \
+ImplicitTimes tokens.
+
+This is not strictly correct, but the analysis needed to properly insert \
+ImplicitTokens tokens is too complicated in the current location.
+
+Note: Mixing explicit Times operators and implicit Times does not currently \
+work\
+\>", "Text",
+ CellChangeTimes->{{3.809354271765732*^9, 3.809354279878628*^9}, 
+   3.80935445896213*^9, {3.811174709026059*^9, 
+   3.811174765876552*^9}},ExpressionUUID->"7afff1bc-87ba-4399-a1da-\
+8b120f7bf30f"]
+}, Open  ]]
 }, Open  ]]
 }, Open  ]]
 },
 WindowSize->{866, 796},
 WindowMargins->{{4, Automatic}, {Automatic, 0}},
-FrontEndVersion->"12.2 for Mac OS X x86 (64-bit) (September 26, 2020)",
+FrontEndVersion->"12.2 for Mac OS X x86 (64-bit) (October 3, 2020)",
 StyleDefinitions->FrontEnd`FileName[{"Wolfram"}, "TutorialPageStyles.nb", 
   CharacterEncoding -> "UTF-8"],
 ExpressionUUID->"5b3bd2fc-9440-4a4b-9d26-285de4d2ac82"
@@ -2354,6 +2397,14 @@ Cell[73749, 1731, 239, 6, 35, "Text",ExpressionUUID->"10ed6759-f923-43b1-a5d9-9c
 Cell[CellGroupData[{
 Cell[74025, 1742, 162, 3, 54, "Subsection",ExpressionUUID->"b7a3e7da-d6cc-4d0e-a5da-81442bc1d37b"],
 Cell[74190, 1747, 292, 7, 35, "Text",ExpressionUUID->"7b3c7702-aa73-4e4c-af35-ca956cb5594e"]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[74531, 1760, 203, 4, 67, "Section",ExpressionUUID->"d49cefef-f2be-4382-92b2-c7bc71f1ac00"],
+Cell[74737, 1766, 256, 4, 35, "Text",ExpressionUUID->"c6080b08-63ab-4e64-be1d-a4ad01c93a7f"],
+Cell[CellGroupData[{
+Cell[75018, 1774, 197, 3, 54, "Subsection",ExpressionUUID->"38f94879-65d7-4463-b749-ef35d999ca03"],
+Cell[75218, 1779, 722, 18, 242, "Text",ExpressionUUID->"7afff1bc-87ba-4399-a1da-8b120f7bf30f"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]]
