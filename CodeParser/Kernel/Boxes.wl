@@ -225,7 +225,12 @@ Module[{handledChildren, aggregatedChildren},
     Infix
     *)
     {_, LeafNode[Token`Plus | Token`Minus, _, _], _, ___}, InfixNode[Plus, handledChildren, <|Source->Append[pos, 1]|>],
+    
+    (*
+    FIXME: Mixing explicit Times operators and implicit Times does not currently work
+    *)
     {_, LeafNode[Token`LongName`Times | Token`Star, _, _], _, ___}, InfixNode[Times, handledChildren, <|Source->Append[pos, 1]|>],
+    
     {_, LeafNode[Token`Bar, _, _], _, ___}, InfixNode[Alternatives, handledChildren, <|Source->Append[pos, 1]|>],
     {_, LeafNode[Token`LessEqual | Token`LongName`LessEqual | Token`Greater | 
        Token`Less | Token`LongName`Equal | 
@@ -653,10 +658,19 @@ Module[{handledChildren, aggregatedChildren},
     *)
     {_, ErrorNode[Token`Error`UnhandledCharacter, _, _], ___},
         aggregatedChildren[[-1]],
-        
-    _,
-    (*Failure["InternalUnhandled", <|"Function" -> parseBox, "Arguments"->HoldForm[RowBox[children]]|>]*)
-    BoxNode[RowBox, {handledChildren}, <|Source->Append[pos, 1]|>]
+
+    (*
+    Anything that is left over is considered implicit Times
+
+    Kind of a hack here: we insert implicit Times tokens between ALL children, including whitespace.
+
+    Proper analysis is too hard here.
+
+    The excess implicit Times tokens get cleaned up in various places.
+    
+    FIXME: Mixing explicit Times operators and implicit Times does not currently work
+    *)
+    _, InfixNode[Times, Riffle[handledChildren, LeafNode[Token`Fake`ImplicitTimes, "", <||>]], <|Source->Append[pos, 1]|>]
     ]
    ]]
 

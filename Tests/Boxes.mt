@@ -16,10 +16,12 @@ Test[
 	CodeConcreteParseBox[RowBox[{"a", " ", "b"}]]
 	,
 	ContainerNode[Box, {
-		BoxNode[RowBox, {{
+		InfixNode[Times, {
 			LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
+			LeafNode[Token`Fake`ImplicitTimes, "", <||>],
 			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 2}|>],
-			LeafNode[Symbol, "b", <|Source -> {1, 3}|>]}}, <|Source -> {1}|>]}, <||>]
+			LeafNode[Token`Fake`ImplicitTimes, "", <||>],
+			LeafNode[Symbol, "b", <|Source -> {1, 3}|>]}, <|Source -> {1}|>]}, <||>]
 	,
 	TestID->"Boxes-20191015-Q5H2Y6"
 ]
