@@ -6,7 +6,7 @@
 #include "CodePoint.h" // for CODEPOINT_REPLACEMENT_CHARACTER, CODEPOINT_CRLF, etc.
 #include "LongNames.h"
 
-ByteDecoder::ByteDecoder() : Issues(), status(), lastBuf(), lastLoc(), SrcLoc() {}
+ByteDecoder::ByteDecoder() : Issues(), status(), srcConventionManager(), lastBuf(), lastLoc(), SrcLoc() {}
 
 void ByteDecoder::init(SourceConvention srcConvention, uint32_t TabWidth) {
     

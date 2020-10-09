@@ -8,7 +8,7 @@
 #include "API.h" // for ScopedMLUTF8String
 
 
-CharacterDecoder::CharacterDecoder() : Issues(), libData(), lastBuf(), lastLoc() {}
+CharacterDecoder::CharacterDecoder() : Issues(), SimpleLineContinuations(), ComplexLineContinuations(), EmbeddedTabs(), libData(), lastBuf(), lastLoc() {}
 
 void CharacterDecoder::init(WolframLibraryData libDataIn) {
     
