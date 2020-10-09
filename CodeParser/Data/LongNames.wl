@@ -840,7 +840,7 @@ Range 0xf500
 added in 12.2:
 Application
 *)
-"Application" -> {PunctuationCharacter, 16^^f530, <||>},
+"Application" -> {PunctuationCharacter, 16^^f530, <| "Added" -> 12.2 |>},
 
 (*
 Range 0xf600
