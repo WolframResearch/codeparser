@@ -83,7 +83,7 @@ TwoWayRule
 TwoWayRule did not have correct precedence until 12.0
 
 <-> was UndirectedEdge before 11.2.
-From 11.2 forward, <-> is TwoWayRule, but it kept the precedence of UndirectedEdge
+From 11.2 forward, <-> is TwoWayRule, but it kept the precedence of UndirectedEdge (meaning <-> and \[TwoWayRule] had different precedences)
 
 From 12.0 forward, <-> has correct precedence.
 *)
