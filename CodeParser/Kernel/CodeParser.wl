@@ -246,6 +246,12 @@ ExprTest
 GetMetadata
 
 
+(*
+Messages
+*)
+CodeParser
+
+
 Begin["`Private`"]
 
 (*
@@ -266,6 +272,14 @@ Needs["CodeParser`Utils`"]
 
 
 
+CodeParser::old = "The old AST paclet has been renamed to CodeParser. Uninstall AST paclet from your system."
+
+If[PacletFind["AST"] != {},
+  Message[CodeParser::old]
+]
+
+
+
 $TabWidth = 4
 
 
@@ -278,12 +292,6 @@ loadAllFuncs[]
 setupQuirks[]
 
 setupShims[]
-
-
-
-If[PacletFind["AST"] != {},
-  Message[General::obspkg, "AST`"]
-]
 
 
 
