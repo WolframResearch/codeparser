@@ -24,6 +24,7 @@ CodeStructuralSyntaxQ
 
 CodeStructuralSyntaxCSTQ
 
+CodeStructuralSyntaxAggQ
 
 
 
@@ -1126,6 +1127,12 @@ CodeStructuralSyntaxCSTQ[cst_] :=
     SyntaxErrorNode |
     GroupMissingCloserNode | UnterminatedGroupNode] &&
   !MemberQ[Lookup[cst[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
+
+CodeStructuralSyntaxAggQ[agg_] :=
+  FreeQ[agg,
+    SyntaxErrorNode |
+    GroupMissingCloserNode | UnterminatedGroupNode] &&
+  !MemberQ[Lookup[agg[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
 
 
 
