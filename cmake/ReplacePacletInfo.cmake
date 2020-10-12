@@ -7,7 +7,7 @@ string(PREPEND filedata ${DATESTRING_COMMENT})
 
 if(LOCAL_BUILD)
 
-string(REGEX REPLACE "Version -> \"[0-9\\.]+\"" "Version -> \"999\"(* local build *)" filedata ${filedata})
+string(REGEX REPLACE "Version -> \"[0-9\\.]+\"" "Version -> \"${LOCAL_BUILD_VERSION}\"(* local build *)" filedata ${filedata})
 
 endif()
 

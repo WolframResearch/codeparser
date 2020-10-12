@@ -6,7 +6,8 @@ macro(CheckPacletInfo)
   endif()
 
   if(LOCAL_BUILD)
-    set(PACLET_VERSION 999)
+    message(STATUS "Paclet Version ignored in local build")
+    set(LOCAL_BUILD_VERSION 999.9)
   else()
     #
     # if not local build, then get Version from PacletInfo.m
