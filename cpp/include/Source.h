@@ -271,6 +271,8 @@ struct SourceCharacter {
         return val;
     }
     
+    std::string safeEncodedCharString() const;
+    
     std::string graphicalString() const;
     
     bool isAlphaOrDigit() const;

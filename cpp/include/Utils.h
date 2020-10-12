@@ -14,7 +14,13 @@ std::ostream& set_graphical(std::ostream& stream);
 
 std::ostream& clear_graphical(std::ostream& stream);
 
+std::ostream& set_safe(std::ostream& stream);
+
+std::ostream& clear_safe(std::ostream& stream);
+
 int get_graphical_i();
+
+int get_safe_i();
 
 //
 //

@@ -101,6 +101,12 @@ BufferAndLength BufferAndLength::createNiceBufferAndLength(std::string *str) con
             newStrStream << WLCharacter(c.to_point());
             
         } else {
+            
+            //
+            // It is ok to handle UTF8STATUS_INVALID here because
+            // c is \[UnknownGlyph]
+            //
+            
             newStrStream << c;
         }
         
@@ -562,6 +568,15 @@ bool SourceCharacter::isMBWhitespace() const {
     return LongNames::isMBWhitespace(val);
 }
 
+std::string SourceCharacter::safeEncodedCharString() const {
+    
+    std::ostringstream String;
+    
+    String << set_safe << *this << clear_safe;
+    
+    return String.str();
+}
+
 std::string SourceCharacter::graphicalString() const {
     
     std::ostringstream String;
@@ -573,7 +588,10 @@ std::string SourceCharacter::graphicalString() const {
 
 std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
     
-    if (stream.iword(get_graphical_i()) == 0) {
+    auto graphicalFlag = stream.iword(get_graphical_i()) == 1;
+    auto safeFlag = stream.iword(get_safe_i()) == 1;
+    
+    if (!graphicalFlag && !safeFlag) {
 
         if (c.isEndOfFile()) {
             //
@@ -585,16 +603,43 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
         auto val = c.to_point();
 
         assert(val != CODEPOINT_ASSERTFALSE);
-
+        
         ByteEncoderState state;
 
         ByteEncoder::encodeBytes(stream, val, &state);
 
         return stream;
     }
+    
+    if (safeFlag) {
+
+        if (c.isEndOfFile()) {
+            //
+            // Do not print anything for EOF
+            //
+            return stream;
+        }
+
+        auto val = c.to_point();
+
+        assert(val != CODEPOINT_ASSERTFALSE);
+        
+        //
+        // if safeFlag, then only call encodeBytes if safe (i.e., no noncharacters)
+        //
+        
+        if (!Utils::isMBNonCharacter(val)) {
+            
+            ByteEncoderState state;
+
+            ByteEncoder::encodeBytes(stream, val, &state);
+
+            return stream;
+        }
+    }
 
     //
-    // Graphical
+    // Graphical, or noncharacters with safeFlag
     //
     
     auto val = c.to_point();

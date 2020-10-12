@@ -230,6 +230,15 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
     return stream;
 }
 
+std::string WLCharacter::safeEncodedCharString() const {
+    
+    std::ostringstream String;
+    
+    String << set_safe << *this << clear_safe;
+    
+    return String.str();
+}
+
 std::string WLCharacter::graphicalString() const {
     
     std::ostringstream String;

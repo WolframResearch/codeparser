@@ -88,7 +88,7 @@ bool Utils::isMBStrange(codepoint point) {
             //
             // But most likely BOM
             //
-        case 0xfeff:
+        case CODEPOINT_ACTUAL_BOM:
             //
             // Do not assert(false)
             //
@@ -201,6 +201,11 @@ int get_graphical_i() {
     return i;
 }
 
+int get_safe_i() {
+    static int i = std::ios_base::xalloc();
+    return i;
+}
+
 std::ostream& set_graphical(std::ostream& stream) {
     stream.iword(get_graphical_i()) = 1;
     return stream;
@@ -208,6 +213,16 @@ std::ostream& set_graphical(std::ostream& stream) {
 
 std::ostream& clear_graphical(std::ostream& stream) {
     stream.iword(get_graphical_i()) = 0;
+    return stream;
+}
+
+std::ostream& set_safe(std::ostream& stream) {
+    stream.iword(get_safe_i()) = 1;
+    return stream;
+}
+
+std::ostream& clear_safe(std::ostream& stream) {
+    stream.iword(get_safe_i()) = 0;
     return stream;
 }
 

@@ -1033,6 +1033,7 @@ void ByteDecoder::strange(codepoint decoded, SourceLocation currentSourceCharact
     
     auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
     
+    auto safeEncodedCharStr = SourceCharacter(decoded).safeEncodedCharString();
     auto graphicalStr = SourceCharacter(decoded).graphicalString();
     
     auto Src = Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc);
@@ -1044,7 +1045,7 @@ void ByteDecoder::strange(codepoint decoded, SourceLocation currentSourceCharact
         Actions.insert(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
     }
     
-    auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", ENCODINGISSUESEVERITY_WARNING, Src, confidence, std::move(Actions)));
+    auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``\"" + safeEncodedCharStr + "\" (" + graphicalStr + ")``.", ENCODINGISSUESEVERITY_WARNING, Src, confidence, std::move(Actions)));
     
     Issues.insert(std::move(I));
 }
