@@ -240,11 +240,7 @@ abstract[InfixNode[Times, children_, data_]] := abstractTimes[InfixNode[Times, c
 
 abstract[InfixNode[Divisible, children_, data_]] := abstractDivisible[InfixNode[Divisible, children[[;;;;2]], data]]
 
-(*
-Do not do children[[;;;;2]]
-need to use Source of last comma when abstracting implicit Null
-*)
-abstract[InfixNode[Comma, children_, data_]] := abstractComma[InfixNode[Comma, children, data]]
+abstract[InfixNode[Comma, children_, data_]] := abstractComma[InfixNode[Comma, children[[;;;;2]], data]]
 
 abstract[InfixNode[CompoundExpression, children_, data_]] := abstractCompoundExpression[InfixNode[CompoundExpression, children[[;;;;2]], data]]
 
@@ -265,7 +261,7 @@ handle  a ~f,~ b
 Cannot have  (f,)[a, b]
 *)
 abstract[TernaryNode[TernaryTilde, {left_, _, middle:InfixNode[Comma, _, _], _, right_}, data_]] :=
-	With[{abstractedMiddle = abstractComma[middle]},
+	With[{abstractedMiddle = abstract[middle]},
 		CallNode[AbstractSyntaxErrorNode[AbstractSyntaxError`CommaTopLevel, abstractedMiddle[[2]], abstractedMiddle[[3]]], {
 			abstract[left], abstract[right]}, data]
 	]
@@ -1568,27 +1564,7 @@ vectorInequalityAffinity[System`VectorGreaterEqual] := True
 
 
 abstractComma[InfixNode[Comma, children_, data_]] :=
-	CallNode[ToNode[Comma], abstract /@ (
-		Replace[Partition[Most[children], 2], {
-			{LeafNode[Token`Fake`ImplicitNull, _, nullData_], LeafNode[Token`Comma | Token`LongName`InvisibleComma, _, commaData_]} :>
-				createNullLeafNode[nullData, commaData],
-			{a_, LeafNode[Token`Comma | Token`LongName`InvisibleComma, _, _]} :>
-				a}, {1}] ~Join~
-		Replace[{children[[-2;;-1]]}, {
-			{LeafNode[Token`Comma | Token`LongName`InvisibleComma, _, commaData_], LeafNode[Token`Fake`ImplicitNull, _, nullData_]} :>
-				createNullLeafNode[nullData, commaData],
-			{LeafNode[Token`Comma | Token`LongName`InvisibleComma, _, _], a_} :>
-				a}, {1}]), data]
-
-
-createNullLeafNode[nullData_, commaData_] :=
-	LeafNode[Symbol, "Null", nullData ~Join~
-		<| AbstractSyntaxIssues -> {
-			SyntaxIssue["Comma", "Extra ``,``.", "Error",
-				<|
-					Source -> commaData[Source],
-					CodeActions -> {
-						CodeAction["Delete ``,``", DeleteNode, <| Source -> commaData[Source] |>]}, ConfidenceLevel -> 1.0 |>]}|>]
+	CallNode[ToNode[Comma], abstract /@ (children /. LeafNode[Token`Fake`ImplicitNull, _, data1_] :> LeafNode[Symbol, "Null", data1]), data]
 
 
 (*

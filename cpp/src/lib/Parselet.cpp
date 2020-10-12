@@ -100,6 +100,18 @@ NodePtr PrefixCommaParselet::parse(Token TokIn, ParserContext Ctxt) const {
     //
     if (Ctxt.Prec == PRECEDENCE_LOWEST) {
         
+#if !NISSUES
+        {
+            CodeActionPtrSet Actions;
+            
+            Actions.insert(CodeActionPtr(new DeleteTextCodeAction("Delete ``,``", TokIn.Src)));
+            
+            auto I = IssuePtr(new ExtraCommaIssue(TokIn.Src, std::move(Actions)));
+            
+            TheParser->addIssue(std::move(I));
+        }
+#endif // !NISSUES
+        
         auto createdToken = Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
         
         auto Left = NodePtr(new LeafNode(createdToken));
@@ -1303,6 +1315,18 @@ NodePtr CommaParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
             // Something like  a,,
             //
             
+#if !NISSUES
+                {
+                    CodeActionPtrSet Actions;
+                    
+                    Actions.insert(CodeActionPtr(new DeleteTextCodeAction("Delete ``,``", Tok2.Src)));
+                    
+                    auto I = IssuePtr(new ExtraCommaIssue(Tok2.Src, std::move(Actions)));
+                    
+                    TheParser->addIssue(std::move(I));
+                }
+#endif // !NISSUES
+            
             auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(lastOperatorToken.BufLen.end), Source(lastOperatorToken.Src.End));
             
             lastOperatorToken = Tok2;
@@ -1315,6 +1339,22 @@ NodePtr CommaParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
             auto Operand = prefixParselets[Tok2.Tok.value()]->parse(Tok2, Ctxt);
             
             if (Operand->isExpectedOperandError()) {
+                
+                //
+                // Something like  f[1,]
+                //
+                
+#if !NISSUES
+                {
+                    CodeActionPtrSet Actions;
+                    
+                    Actions.insert(CodeActionPtr(new DeleteTextCodeAction("Delete ``,``", TokIn.Src)));
+                    
+                    auto I = IssuePtr(new ExtraCommaIssue(TokIn.Src, std::move(Actions)));
+                    
+                    TheParser->addIssue(std::move(I));
+                }
+#endif // !NISSUES
                 
                 //
                 // Convert the ExpectedOperand Error to ImplicitNull and reattach to the operator for a better experience
@@ -1384,6 +1424,18 @@ NodePtr CommaParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
             // Something like  a,,
             //
             
+#if !NISSUES
+                {
+                    CodeActionPtrSet Actions;
+                    
+                    Actions.insert(CodeActionPtr(new DeleteTextCodeAction("Delete ``,``", Tok2.Src)));
+                    
+                    auto I = IssuePtr(new ExtraCommaIssue(Tok2.Src, std::move(Actions)));
+                    
+                    TheParser->addIssue(std::move(I));
+                }
+#endif // !NISSUES
+            
             auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(lastOperatorToken.BufLen.end), Source(lastOperatorToken.Src.End));
             
             lastOperatorToken = Tok2;
@@ -1402,6 +1454,22 @@ NodePtr CommaParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
         auto Operand = prefixParselets[Tok2.Tok.value()]->parse(Tok2, Ctxt);
         
         if (Operand->isExpectedOperandError()) {
+            
+            //
+            // Something like  f[1,2,]
+            //
+            
+#if !NISSUES
+                {
+                    CodeActionPtrSet Actions;
+                    
+                    Actions.insert(CodeActionPtr(new DeleteTextCodeAction("Delete ``,``", Tok1.Src)));
+                    
+                    auto I = IssuePtr(new ExtraCommaIssue(Tok1.Src, std::move(Actions)));
+                    
+                    TheParser->addIssue(std::move(I));
+                }
+#endif // !NISSUES
             
             //
             // Convert the ExpectedOperand Error to ImplicitNull and reattach to the operator for a better experience

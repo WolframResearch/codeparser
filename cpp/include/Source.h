@@ -204,6 +204,7 @@ SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDSPACECHARACTER = "UnexpectedSpaceCharact
 SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER = "UnexpectedLetterlikeCharacter";
 SyntaxIssueTag SYNTAXISSUETAG_UNDOCUMENTEDSLOTSYNTAX = "UndocumentedSlotSyntax";
 SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDIMPLICITTIMES = "UnexpectedImplicitTimes";
+SyntaxIssueTag SYNTAXISSUETAG_COMMA = "Comma";
 
 typedef const std::string FormatIssueTag;
 
@@ -584,6 +585,16 @@ public:
 #endif // USE_MATHLINK
 
     void print(std::ostream& s) const override;
+    
+    bool check() const override;
+};
+
+//
+// ExtraCommaIssue is special because it is not fatal, but it should return false for check()
+//
+class ExtraCommaIssue : public SyntaxIssue {
+public:
+    ExtraCommaIssue(Source Src, CodeActionPtrSet Actions);
     
     bool check() const override;
 };

@@ -3318,16 +3318,13 @@ Test[
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "f", <|Source -> {{1, 1}, {1, 2}}|>], {
 			LeafNode[Integer, "1", <|Source -> {{1, 3}, {1, 4}}|>],
-			LeafNode[Symbol, "Null", <|Source -> {{1, 5}, {1, 5}},
-				AbstractSyntaxIssues -> {
-					SyntaxIssue["Comma", "Extra ``,``.", "Error", <|
-						Source -> {{1, 5}, {1, 6}},
-						CodeActions -> {CodeAction["Delete ``,``", DeleteNode, <|Source -> {{1, 5}, {1, 6}}|>]}, ConfidenceLevel -> 1.|>]}|>],
-			LeafNode[Symbol, "Null", <|Source -> {{1, 6}, {1, 6}},
-				AbstractSyntaxIssues -> {
-					SyntaxIssue["Comma", "Extra ``,``.", "Error", <|
-						Source -> {{1, 5}, {1, 6}},
-						CodeActions -> {CodeAction["Delete ``,``", DeleteNode, <|Source -> {{1, 5}, {1, 6}}|>]}, ConfidenceLevel -> 1.|>]}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]}, <||>]
+			LeafNode[Symbol, "Null", <|Source -> {{1, 5}, {1, 5}}|>],
+			LeafNode[Symbol, "Null", <|Source -> {{1, 6}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]},
+		<| SyntaxIssues -> {
+			SyntaxIssue["Comma", "Extra ``,``.", "Error", <|
+				Source -> {{1, 5}, {1, 6}},
+				ConfidenceLevel -> 1.,
+				CodeActions -> {CodeAction["Delete ``,``", DeleteText, <|Source -> {{1, 5}, {1, 6}}|>]}|>]} |>]
 	,
 	TestID->"Parse-20200810-R4E3W9"
 ]
@@ -3338,16 +3335,13 @@ Test[
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "f", <|Source -> {{1, 1}, {1, 2}}|>], {
 			LeafNode[Integer, "1", <|Source -> {{1, 3}, {1, 4}}|>],
-			LeafNode[Symbol, "Null", <|Source -> {{1, 21}, {1, 21}},
-				AbstractSyntaxIssues -> {
-					SyntaxIssue["Comma", "Extra ``,``.", "Error", <|
-						Source -> {{1, 21}, {1, 38}},
-						CodeActions -> {CodeAction["Delete ``,``", DeleteNode, <|Source -> {{1, 21}, {1, 38}}|>]}, ConfidenceLevel -> 1.|>]}|>],
-			LeafNode[Symbol, "Null", <|Source -> {{1, 38}, {1, 38}},
-				AbstractSyntaxIssues -> {
-					SyntaxIssue["Comma", "Extra ``,``.", "Error", <|
-						Source -> {{1, 21}, {1, 38}},
-						CodeActions -> {CodeAction["Delete ``,``", DeleteNode, <|Source -> {{1, 21}, {1, 38}}|>]}, ConfidenceLevel -> 1.|>]}|>]}, <|Source -> {{1, 1}, {1, 39}}|>]}, <||>]
+			LeafNode[Symbol, "Null", <|Source -> {{1, 21}, {1, 21}}|>],
+			LeafNode[Symbol, "Null", <|Source -> {{1, 38}, {1, 38}}|>]}, <|Source -> {{1, 1}, {1, 39}}|>]},
+		<| SyntaxIssues -> {
+			SyntaxIssue["Comma", "Extra ``,``.", "Error", <|
+				Source -> {{1, 21}, {1, 38}},
+				ConfidenceLevel -> 1.,
+				CodeActions -> {CodeAction["Delete ``,``", DeleteText, <|Source -> {{1, 21}, {1, 38}}|>]}|>]} |>]
 	,
 	TestID->"Parse-20200810-F0V6V5"
 ]

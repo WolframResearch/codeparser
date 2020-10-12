@@ -367,3 +367,44 @@ TestMatch[
 
 
 
+
+(*
+Comma:
+*)
+
+
+TestMatch[
+	FirstCase[CodeParse[" f[1,2,] "],
+		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
+	,
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["Comma", _, _, _]}]
+	,
+	TestID->"SyntaxIssues-20190520-V4Q1U5"
+]
+
+TestMatch[
+	CodeParse[" f[,1] "]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "f", _], {
+			LeafNode[Symbol, "Null", _],
+			LeafNode[Integer, "1", _]}, _] }, KeyValuePattern[SyntaxIssues -> {SyntaxIssue["Comma", _, _, _]}]]
+	,
+	TestID->"SyntaxIssues-20190520-V9J1I3"
+]
+
+TestMatch[
+	CodeParse["f[1,,2]"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "f", _], {
+			LeafNode[Integer, "1", _],
+			LeafNode[Symbol, "Null", _],
+			LeafNode[Integer, "2", _]}, _] }, KeyValuePattern[SyntaxIssues -> {SyntaxIssue["Comma", _, _, _]}]]
+	,
+	TestID->"SyntaxIssues-20200627-G1O2F9"
+]
+
+
+
+

@@ -150,50 +150,6 @@ TestMatch[
 
 
 
-
-(*
-Comma:
-*)
-
-
-TestMatch[
-	FirstCase[CodeParse[" f[1,2,] ", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)],
-		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["Comma", _, _, _]}]
-	,
-	TestID->"AbstractSyntaxIssues-20190520-V4Q1U5"
-]
-
-TestMatch[
-	CodeParse[" f[,1] "]
-	,
-	ContainerNode[String, {
-		CallNode[LeafNode[Symbol, "f", _], {
-			LeafNode[Symbol, "Null", KeyValuePattern[AbstractSyntaxIssues -> _]],
-			LeafNode[Integer, "1", _]}, _] }, _]
-	,
-	TestID->"AbstractSyntaxIssues-20190520-V9J1I3"
-]
-
-TestMatch[
-	CodeParse["f[1,,2]"]
-	,
-	ContainerNode[String, {
-		CallNode[LeafNode[Symbol, "f", _], {
-			LeafNode[Integer, "1", _],
-			LeafNode[Symbol, "Null", KeyValuePattern[AbstractSyntaxIssues -> _]],
-			LeafNode[Integer, "2", _]}, _] }, _]
-	,
-	TestID->"AbstractSyntaxIssues-20200627-G1O2F9"
-]
-
-
-
-
-
-
-
 (*
 StrangeCallSlotSequence:
 *)

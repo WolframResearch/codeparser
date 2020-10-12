@@ -196,6 +196,12 @@ bool SyntaxIssue::check() const {
 }
 
 
+ExtraCommaIssue::ExtraCommaIssue(Source Src, CodeActionPtrSet Actions) : SyntaxIssue(SYNTAXISSUETAG_COMMA, "Extra ``,``.", SYNTAXISSUESEVERITY_ERROR, Src, 1.0, std::move(Actions)) {}
+
+bool ExtraCommaIssue::check() const {
+    return false;
+}
+
 
 CodeAction::CodeAction(std::string Label, Source Src) : Label(Label), Src(Src) {}
 
