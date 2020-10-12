@@ -1262,6 +1262,7 @@ convertVersionString[s_String /; StringMatchQ[s, "0." ~~ _]] := FromDigits[Strin
 convertVersionString[s_String /; StringMatchQ[s, "0." ~~ _ ~~ _]] := FromDigits[StringDrop[s, 2]]
 convertVersionString[s_String /; StringMatchQ[s, "1." ~~ _]] := 100 + FromDigits[StringDrop[s, 2]]
 convertVersionString[s_String /; StringMatchQ[s, "999"]] := 99900
+convertVersionString[s_String /; StringMatchQ[s, "999.9"]] := 99990
 
 
 
