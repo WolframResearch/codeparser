@@ -238,27 +238,6 @@ Precedence`LongName`CenterDot -> {Next, Associativity`NonRight}, (* Precedence[C
 
 Precedence`Infix`LongName`CircleTimes -> {Next, Associativity`NonRight}, (* Precedence[CircleTimes] == 420 *)
 
-(*
-DISCREPANCY
-Precedence[PermutationProduct] is 520
-But empirically it is between \[CircleTimes] and \[TensorWedge]
-*)
-Precedence`LongName`PermutationProduct -> {Next, Associativity`NonRight},
-
-(*
-DISCREPANCY
-Precedence[TensorProduct] is 495
-But empirically it is between \[PermutationProduct] and \[TensorWedge]
-*)
-Precedence`LongName`TensorProduct -> {Next, Associativity`NonRight},
-
-(*
-DISCREPANCY
-Precedence[TensorWedge] is 500
-But empirically it is between \[TensorProduct] and \[Vee]
-*)
-Precedence`LongName`TensorWedge -> {Next, Associativity`NonRight},
-
 Precedence`LongName`Vee -> {Next, Associativity`NonRight}, (* Precedence[Vee] == 430 *)
 
 Precedence`LongName`Wedge -> {Next, Associativity`NonRight}, (* Precedence[Wedge] == 440 *)
@@ -282,11 +261,15 @@ Precedence`Prefix`LongName`Coproduct -> Precedence`Prefix`Minus,
 
 Precedence`Dot -> {Next, Associativity`NonRight}, (* Precedence[Dot] == 490 *)
 
+Precedence`LongName`TensorProduct -> {Next, Associativity`NonRight}, (* Precedence[TensorProduct] == 495 *)
+
 Precedence`LongName`Cross -> {Next, Associativity`NonRight}, (* Precedence[Cross] == 500 *)
+Precedence`LongName`TensorWedge -> Precedence`LongName`Cross, (* Precedence[TensorWedge] == 500 *)
 
 Precedence`StarStar -> {Next, Associativity`NonRight}, (* Precedence[NonCommutativeMultiply] == 510 *)
 
 Precedence`LongName`CircleDot -> {Next, Associativity`NonRight}, (* Precedence[CircleDot] == 520 *)
+Precedence`LongName`PermutationProduct -> Precedence`LongName`CircleDot, (* Precedence[PermutationProduct] == 520 *)
 
 Precedence`LongName`SmallCircle -> {Next, Associativity`NonRight}, (* Precedence[SmallCircle] == 530 *)
 
