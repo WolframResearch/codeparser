@@ -1437,6 +1437,8 @@ coalesceWhitespace[node_] :=
   ]
 
 
+ToStandardFormBoxes::usage = "ToStandardFormBoxes[cst] converts cst to a box."
+
 ToStandardFormBoxes[ContainerNode[Box, children_, _]] :=
 Block[{$RecursionLimit = Infinity},
 Module[{},

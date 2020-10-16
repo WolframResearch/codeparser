@@ -296,7 +296,8 @@ setupShims[]
 
 
 
-CodeConcreteParse::usage = "CodeConcreteParse[code] returns a concrete syntax tree by interpreting code as WL input."
+CodeConcreteParse::usage = "CodeConcreteParse[code] returns a concrete syntax tree by interpreting code as WL input. \
+code can be a string, a file, or a list of bytes."
 
 Options[CodeConcreteParse] = {
   CharacterEncoding -> "UTF8",
@@ -402,7 +403,8 @@ Module[{res, convention, container, tabWidth},
 
 
 
-CodeParse::usage = "CodeParse[code] returns an abstract syntax tree by interpreting code as WL input."
+CodeParse::usage = "CodeParse[code] returns an abstract syntax tree by interpreting code as WL input. \
+code can be a string, a file, or a list of bytes."
 
 Options[CodeParse] = {
   CharacterEncoding -> "UTF8",
@@ -786,7 +788,8 @@ Module[{},
 
 
 
-CodeTokenize::usage = "CodeTokenize[code] returns a list of tokens by interpreting code as WL input."
+CodeTokenize::usage = "CodeTokenize[code] returns a list of tokens by interpreting code as WL input. \
+code can be a string, a file, or a list of bytes."
 
 Options[CodeTokenize] = {
   CharacterEncoding -> "UTF8",
@@ -996,7 +999,8 @@ Module[{},
 
 
 
-CodeConcreteParseLeaf::usage = "CodeConcreteParseLeaf[code] returns a LeafNode by interpreting code as a leaf."
+CodeConcreteParseLeaf::usage = "CodeConcreteParseLeaf[code] returns a LeafNode by interpreting code as a leaf. \
+code can be a string."
 
 Options[CodeConcreteParseLeaf] = {
   "StringifyMode" -> 0,
@@ -1081,8 +1085,8 @@ Module[{str, res, leaf, data, exprs, stringifyMode, convention, tabWidth},
 
 
 
-SafeString::usage = "SafeString[bytes] interprets bytes as UTF-8 and returns a \"safe\" string. Invalid \
-sequences and surrogates are replaced with \[UnknownGlyph] and BOM is replaced with special character \\:e001."
+SafeString::usage = "SafeString[bytes] interprets bytes as UTF-8 and returns a \"safe\" string. \
+Invalid sequences and surrogates are replaced with \[UnknownGlyph] and BOM is replaced with special character \\:e001."
 
 SafeString[bytes:{_Integer...}] :=
 Module[{res},
