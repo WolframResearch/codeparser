@@ -1858,7 +1858,7 @@ Module[{head, data, part, innerData, outerData, issues, partData, src},
 			LeafNode[Token`Percent | Token`PercentPercent, _, _] | CompoundNode[Out, _, _],
 				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Warning", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
 			,
-			LeafNode[LinearSyntaxBlob, _, _],
+			LeafNode[Token`LinearSyntaxBlob, _, _],
 				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Remark", <|Source->data[Source], ConfidenceLevel -> 0.95|>]];
 			,
 			PrefixNode[PrefixLinearSyntaxBang, _, _],
@@ -2226,7 +2226,7 @@ Module[{head, part, partData, data, issues, first},
 				first = firstToken[head];
 				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->first[[3, Key[Source]]], ConfidenceLevel -> 0.95|>]];
 			,
-			LeafNode[LinearSyntaxBlob, _, _],
+			LeafNode[Token`LinearSyntaxBlob, _, _],
 				first = firstToken[head];
 				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Remark", <|Source->first[[3, Key[Source]]], ConfidenceLevel -> 0.95|>]];
 			,
