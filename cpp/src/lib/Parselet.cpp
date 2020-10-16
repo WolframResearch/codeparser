@@ -122,7 +122,7 @@ NodePtr PrefixCommaParselet::parse(Token TokIn, ParserContext Ctxt) const {
         
         auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
         
-        auto Left = NodePtr(new ErrorNode(createdToken));
+        auto Left = NodePtr(new ExpectedOperandErrorNode(createdToken));
         
         return Left;
     }
