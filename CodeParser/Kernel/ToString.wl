@@ -242,6 +242,19 @@ Module[{nodeStrs},
 	StringJoin[nodeStrs]
 ]]
 
+(*
+Only possible from boxes
+*)
+toInputFormString[GroupMissingOpenerNode[op_, nodes_, data_]] :=
+Catch[
+Module[{nodeStrs},
+	nodeStrs = toInputFormString /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[nodeStrs]
+]]
+
 toInputFormString[UnterminatedGroupNode[op_, nodes_, data_]] :=
 Catch[
 Module[{nodeStrs},
