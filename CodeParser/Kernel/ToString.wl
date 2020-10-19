@@ -2,6 +2,8 @@ BeginPackage["CodeParser`ToString`"]
 
 toInputFormStringButNotToplevelNewlines
 
+toInputFormString
+
 Begin["`Private`"]
 
 Needs["CodeParser`"]

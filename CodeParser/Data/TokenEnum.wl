@@ -222,6 +222,10 @@ The FE treats  <space><space><space>  as a single token
 *)
 Token`Boxes`MultiWhitespace -> Next,
 
+(* Token`Boxes`LongName`LeftSkeleton -> Next,
+
+Token`Boxes`LongName`RightSkeleton -> Next, *)
+
 (*
 Parsing  f.m  as a leaf from the front end (from example input such as <<f.m)
 *)

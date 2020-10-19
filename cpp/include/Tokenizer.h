@@ -64,7 +64,6 @@ class Tokenizer {
     
     Token handleString_stringifyAsSymbolSegment(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
     Token handleString_stringifyAsFile(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter firstChar, NextPolicy policy);
-    Token handleString_stringifyAsPassthrough(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter firstChar, NextPolicy policy);
     
     Token handleSymbol(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
     
@@ -165,7 +164,6 @@ public:
     
     Token nextToken0_stringifyAsSymbolSegment();
     Token nextToken0_stringifyAsFile();
-    Token nextToken0_stringifyAsPassthrough();
     
     Token currentToken(NextPolicy policy);
     

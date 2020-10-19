@@ -13,7 +13,7 @@ Needs["CodeParser`Utils`"]
 
 parseBoxTest[box_, name_, n_, i_, j_] :=
 Catch[
-Module[{},
+Module[{cst, back, diff, sourceStr, agg, inputStr, cst2, agg2, aggToCompare, agg2ToCompare, inputStr2, ast},
 
 cst =
   Catch[
@@ -27,7 +27,7 @@ cst =
 
 back = ToStandardFormBoxes[cst];
 
-If[back =!= box && back =!= {box},
+If[back =!= box,
   If[MemberQ[Lookup[exceptions, name, {}], {i, j}], 
    Print[{"exception", {name, n, i, j}}]; Throw[continue]];
   Which[
@@ -43,7 +43,10 @@ If[back =!= box && back =!= {box},
   (* some weird string from the Example build process *)
   
   If[!FreeQ[diff, outputFormPatterns], 
-   Print[{"weird diff", diff, {name, n, i, j}}]; Throw[continue]];
+   (* Print[{"weird diff", diff, {name, n, i, j}}]; *)
+   Print["weird diff contains: ", Cases[diff, outputFormPatterns, Infinity], " ", {name, n, i, j}];
+   Throw[continue]
+  ];
   If[$Interactive,
     Print[Style[{"concrete", diff, {name, n, i, j}}, Red]];
   ];
@@ -81,11 +84,16 @@ If[!StringQ[sourceStr],
   Throw[{sourceStr, {name, n, i, j}}]
 ];
 
-Check[agg = CodeParser`Folds`aggregateButNotToplevelNewlines[cst];, $Error = True;Throw[{"aggregate ", box, {name, n, i, j}}]];
+(* Check[agg = CodeParser`Folds`aggregateButNotToplevelNewlines[cst];, $Error = True;Throw[{"aggregate ", box, {name, n, i, j}}]];
 
 agg = cleanupImplicitNull[agg];
 
-inputStr = CodeParser`ToString`toInputFormStringButNotToplevelNewlines[agg];
+inputStr = CodeParser`ToString`toInputFormStringButNotToplevelNewlines[agg]; *)
+Check[agg = CodeParser`Folds`aggregate[cst];, $Error = True;Throw[{"aggregate ", box, {name, n, i, j}}]];
+
+agg = cleanupImplicitNull[agg];
+
+inputStr = CodeParser`ToString`toInputFormString[agg];
 
 If[!StringQ[inputStr],
   If[MemberQ[Lookup[exceptions, name, {}], {i, j}], 
@@ -114,6 +122,8 @@ If[!StringQ[inputStr],
   ];
 
   aggToCompare = agg;
+  aggToCompare = convertMultiSingleQuote[aggToCompare];
+  aggToCompare = flattenChildrenInGroupMissingCloser[aggToCompare];
   aggToCompare = aggToCompare /. {_Association -> <||>};
 
   cst2 = CodeConcreteParse[inputStr];
@@ -122,12 +132,14 @@ If[!StringQ[inputStr],
   reset to Box
   *)
   cst2[[1]] = Box;
-  cst2 = cleanupQuestionQuestion[cst2];
+(*   cst2 = cleanupQuestionQuestion[cst2]; *)
   cst2 = cleanupImplicitNull[cst2];
-  agg2 = CodeParser`Folds`aggregateButNotToplevelNewlines[cst2];
+  (* agg2 = CodeParser`Folds`aggregateButNotToplevelNewlines[cst2]; *)
+  agg2 = CodeParser`Folds`aggregate[cst2];
 
   agg2Compare = agg2;
   agg2Compare = rowBoxify[agg2Compare];
+  agg2Compare = convertedUnterminatedToGroupMissingCloser[agg2Compare];
   agg2ToCompare = agg2Compare /. {_Association -> <||>};
 
   If[agg2ToCompare =!= aggToCompare,
@@ -136,9 +148,23 @@ If[!StringQ[inputStr],
      $Error = True;
      Throw[continue]
     ];
+
+    If[!FreeQ[aggToCompare, PrefixNode[Information, _, _]],
+      Print[Style[{"using prefix ?", {name, n, i, j}}, Red]];
+      $Error = True;
+      Throw[continue]
+    ];
+
+    If[!FreeQ[aggToCompare, InfixNode[Times, children_ /; MemberQ[children, LeafNode[Token`Star, _, _]] &&
+        MemberQ[children, LeafNode[Token`Fake`ImplicitTimes, _, _]], _]],
+      Print[Style[{"using * AND implicit Times (not currently supported)", {name, n, i, j}}, Red]];
+      $Error = True;
+      Throw[continue]
+    ];
+
     diff = findDiff[agg2ToCompare, aggToCompare];
     If[!FreeQ[diff, outputFormPatterns], 
-     Print[{"weird diff", diff, {name, n, i, j}}];
+     Print[{"weird diff contains: ", Cases[diff, outputFormPatterns, Infinity], " ", {name, n, i, j}}];
      $Error = True;
      Throw[continue]
     ];
@@ -192,13 +218,13 @@ rowBoxify[ContainerNode[Box, children_, data_]] :=
 rowBoxify[BoxNode[RowBox, {child_}, data_]] :=
   BoxNode[RowBox, {rowBoxify /@ child}, data]
 
-rowBoxify[InfixNode[Times, children_ /; !FreeQ[children, LeafNode[Token`Fake`ImplicitTimes, _, _], 1], data_]] :=
+(* rowBoxify[InfixNode[Times, children_ /; !FreeQ[children, LeafNode[Token`Fake`ImplicitTimes, _, _], 1], data_]] :=
   Module[{stripped},
 
     stripped = DeleteCases[children, LeafNode[Token`Fake`ImplicitTimes, _, _]];
 
     BoxNode[RowBox, {rowBoxify /@ stripped}, data]
-  ]
+  ] *)
 
 (*
 Handle ?x
@@ -207,7 +233,7 @@ rowBoxify[BinaryNode[PatternTest, {ErrorNode[Token`Error`ExpectedOperand, _, _],
   PrefixNode[Information, {op, rand}, data]
 
 
-rowBoxify[PostfixNode[Derivative, {rand_, LeafNode[Token`SingleQuote, str_, data1_]}, data_]] :=
+(* rowBoxify[PostfixNode[Derivative, {rand_, LeafNode[Token`SingleQuote, str_, data1_]}, data_]] :=
   Module[{processed, processedRand, processedOp},
 
     processed = rowBoxify[rand];
@@ -221,7 +247,7 @@ rowBoxify[PostfixNode[Derivative, {rand_, LeafNode[Token`SingleQuote, str_, data
       _,
         PostfixNode[Derivative, {processed, LeafNode[Token`Boxes`MultiSingleQuote, str, data1]}, data]
     ]
-  ]
+  ] *)
 
 rowBoxify[node_LeafNode] := node
 
@@ -232,8 +258,13 @@ rowBoxify[CallNode[head_, children_, data_]] :=
 rowBoxify[node_[tag_, children_, data_]] :=
   node[tag, rowBoxify /@ children, data]
 
+convertMultiSingleQuote[agg_] :=
+  agg /. {
+    PostfixNode[Derivative, {a_, LeafNode[Token`Boxes`MultiSingleQuote, d_, dPos_]}, pos_] :>
+      Nest[PostfixNode[Derivative, {#, LeafNode[Token`SingleQuote, "'", <||>]}, <||>] &, a, StringLength[d]]
+  }
 
-
+(*
 Clear[cleanupQuestionQuestion]
 cleanupQuestionQuestion[node_] :=
   Module[{poss},
@@ -254,11 +285,18 @@ cleanupQuestionQuestion[node_] :=
       poss
     ]
   ]
+*)
 
 cleanupImplicitNull[node_] := DeleteCases[node, LeafNode[Token`Fake`ImplicitNull, _, _], Infinity]
 
 
+flattenChildrenInGroupMissingCloser[node_] := node /. {
+  GroupMissingCloserNode[op_, children_, data_] :> GroupMissingCloserNode[op, Cases[children, (LeafNode|ErrorNode)[_, _, _], Infinity], data]
+}
 
+convertedUnterminatedToGroupMissingCloser[node_] := node /. {
+  UnterminatedGroupNode[op_, children_, data_] :> GroupMissingCloserNode[op, children, data]
+}
 
 
 exceptions = <|
@@ -282,7 +320,7 @@ exceptions = <|
    (* ErrorBox and purposeful bad syntax *)
    (* "DelimiterFlashTime" -> {{1, 2}}, *)
    "ErrorBox" -> {{1, 4}, {2, 2}},
-   "ShowAutoStyles" -> {{1, 3}, {1, 4}},
+   (* "ShowAutoStyles" -> {{1, 3}, {1, 4}}, *)
 
    (* weird empty RowBox[{}] thing *)
    "IncludePods" -> {{1, 2}},
@@ -310,13 +348,12 @@ exceptions = <|
    "UtilityFunction" -> {{1, 3}, {1, 11}},
    "ValidationSet" -> {{1, 3}, {1, 7}, {2, 3}, {2, 7}},
 
-   (* weird <<>> formatting *)
+   (* weird <<>> Skeleton formatting *)
    "CombinedEntityClass" -> {{5, 2}, {6, 4}},
-   "FindKPlex" -> {{2, 3}},
    "PolyhedronDecomposition" -> {{1, 3}},
    "Shallow" -> {{1, 2}, {2, 4}},
    "ShortestPathFunction" -> {{1, 4}},
-   "Skeleton" -> {{2, 2}},
+   "Skeleton" -> {{1, 2}, {2, 2}},
    "WikipediaData" -> {{2, 2}, {2, 4}, {5, 2}, {5, 4}, {5, 9}},
    
    (* weird Cell[foo] thing *)
@@ -395,8 +432,8 @@ exceptions = <|
    (* "WeierstrassInvariants" -> {{1, 4}, {1, 6}}, *)
    (*"WeierstrassP" -> {{1, 2}},*)
    (*"WeierstrassPPrime" -> {{1, 2}},*)
-   "WeierstrassSigma" -> {{1, 2}},
-   "WeierstrassZeta" -> {{1, 2}},
+   (* "WeierstrassSigma" -> {{1, 2}}, *)
+   (* "WeierstrassZeta" -> {{1, 2}}, *)
    (* "ZetaZero" -> {{1, 2}}, *)
    (* "$Post" -> {{2, 5}}, *)
    (* "$PrePrint" -> {{2, 5}}, *)
@@ -465,49 +502,105 @@ exceptions = <|
    *)
    "Video" -> {{1, 2}},
 
+   (*
+
+   FE bug? notebook bug?
+
+   RowBox[] around top-level newlines
+   *)
+   "BenktanderWeibullDistribution" -> {{2, 3}},
+   "ConformAudio" -> {{1, 4}},
+   "EntityClass" -> {{4, 1}},
+   "Fibonacci" -> {{5, 1}, {6, 1}},
+   "HermiteH" -> {{5, 1}},
+   "LabelVisibility" -> {{1, 1}, {2, 1}},
+   "LaguerreL" -> {{6, 1}},
+   "OwenT" -> {{5, 1}, {6, 1}},
+   "RemoveInputStreamMethod" -> {{1, 1}, {1, 3}},
+   "RemoveOutputStreamMethod" -> {{1, 1}, {1, 3}},
+   "WhittakerM" -> {{6, 1}},
+   "WhittakerW" -> {{6, 1}},
+
+   (*
+   Syntax errors in NB file that are too hard to reconcile
+
+   Stuff like just:
+
+   Foo`
+
+   on a line
+   *)
+   "NResidue" -> {{3503936138499392141, 0}},
+   "NSeries" -> {{8919890189976868789, 0}},
+
+   (*
+   bad boxes from old syntax:
+   
+   RowBox[{"!", "!", "a"}]
+   *)
+   "XMLGet" -> {{1822588744129854256, 0}},
+   
+   (*
+   purposely bad syntax like:
+
+   f[{]
+
+   that CodeParser handles better than the FE
+   *)
+   "BalanceBracketsAndBraces" -> {{4558406799838585923, 0}, {8488382433451568354, 0}},
+   "TypeAGreekLetter" -> {{7001789806802778250, 0}},
+   "basic" -> {{8617632462271100898, 0}},
+   "nodiffd" -> {{2739688739500277811, 0}},
+
+   (*
+   Bugs in the FE:
+
+   normally, line breaks between cells just create a List
+
+   But comments can sometimes create a RowBox[{}]
+   *)
+   "FCS" -> {{3796052602696307908, 0}},
+   "DBSCAN" -> {{2692033585825782878, 0}},
+   "GaussianMixture" -> {{7471305673129325172, 0}},
+   "JarvisPatrick" -> {{991752872535796560, 0}},
+
+   (*
+   Linear syntax design errors
+   *)
+   "SVG" -> {{2597693386764080744, 0}},
+
+   (*
+   non-canonical boxes
+
+   Mainly something like RowBox[{RowBox[{"a", "'"}], "'"}]
+   *)
+   "bcnan" -> {{2819023601929632552, 0}, {3038710008220428949, 0}, {5440830809014287756, 0}, {1108732267225547925, 0}},
+   "mxst" -> {{2488069511112766269, 0}, {3811806193775399293, 0}, {8526942517816332329, 0}},
+   "ndnco" -> {{8883637911336105566, 0}, {740805646734919778, 0}},
+
+
+
+
+
    (* combined *)
    "CoxModel" -> {{1, 3}, {1, 9}},
    "Information" -> {{1, 3}, {1, 4}, {1, 5}},
    "Integrate" -> {{3, 4}},
-   "TraditionalForm" -> {{1, 2}, {2, 2}, {3, 2}}
+   "TraditionalForm" -> {{1, 2}, {2, 2}, {3, 2}},
+
+   "diffend" -> {{2457361584107129126, 0}, {7009577529812573332, 0}},
+   "intnest" -> {{6792992189944517856, 0}, {8773133202413536428, 0}},
+
+   (*
+   combined from Derivative::novar and Integrate::novar
+   *)
+   "novar" -> {{6614704763568814001, 0}, {4171545340968173910, 0}, {3040295266473824017, 0}},
+
+
+   "FindKPlex" -> {{1, 1}, {2, 3}}
    |>;
 
-outputFormPatterns = 
-  "SearchIndexObject" | "SearchResultObject" | "Failure" | 
-   "TemporalData" | "Molecule" | "StructuredArray" | "Polyhedron" | 
-   "SecuredAuthenticationKey" | "AutocompletionFunction" | 
-   "ProofObject" | "DataDistribution" | "ByteArray" | "OutputStream" |
-   "PrivateKey" | "BlockchainTransaction" | "BooleanFunction" | 
-   "HypothesisTestData" | "Databin" | "ChannelListener" | 
-   "InputStream" | "SocketObject" | "CloudExpression" | 
-   "ColorDataFunction" | "ColorProfileData" | "HoldForm" | 
-   "ClassifierMeasurementsObject" | "LearnedDistribution" | 
-   "EventData" | ToExpression["\"\\[Backslash]\""] | "Sequence" | 
-   "ContentObject" | "SystemModelSimulationData" | "Root" | 
-   "DatabaseReference" | "Success" | "SymmetricKey" | "DerivedKey" | 
-   "DeviceObject" | "DigitalSignature" | "Dispatch" | "LinkObject" | 
-   "EncryptedObject" | "EntityStore" | "ExternalFunction" | 
-   "ExternalSessionObject" | "ExternalObject" | "HTTPResponse" | 
-   "FormFunction" | "GeoPosition" | "GeoVector" | "GeoGridVector" | 
-   "GeoVectorENU" | "GeoVectorXYZ" | "HTTPRequest" | 
-   "RelationalDatabase" | "PersistenceLocation" | 
-   "InterpolatingFunction" | "LibraryFunction" | "SparseArray" | 
-   "NBodySimulationData" | "NearestFunction" | "NetInformation" | 
-   "Polygon" | "PIDData" | "ProcessObject" | "RegionMemberFunction" | 
-   "RegionNearestFunction" | "RemoteConnectionObject" | 
-   "ResourceObject" | "ResourceSubmissionObject" | "ServiceObject" | 
-   "ServiceRequest" | "ShortTimeFourierData" | 
-   "RegionDistanceFunction" | "WebSessionObject" | 
-   "ParametricFunction" | "SystemsConnectionsModel" | 
-   "TestResultObject" | "TestReportObject" | "TimeSeriesModel" | 
-   "TravelDirectionsData" | "WebElementObject" | 
-   "WebUnit`WebSessionObject" | "WebWindowObject" | "WeightedData" |
-   "KernelObject" | "PacletObject" | "BezierFunction" |
-   "CategoricalDistribution" | "DateInterval" | "ExternalStorageObject" |
-   "FeatureExtractorFunction" | "QuantityArray" | "Take" |
-   "MailServerConnection" | "MailFolder" | "MailItem" |
-   "SymmetrizedArray" | "SystemCredentialData" | "SystemCredentialStoreObject";
-
+outputFormPatterns = ToExpression["\"\\[Backslash]\""]
 
 End[]
 

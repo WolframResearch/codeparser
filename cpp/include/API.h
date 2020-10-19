@@ -80,14 +80,10 @@ using ScopedMLEnvironmentParameterPtr = std::unique_ptr<ScopedMLEnvironmentParam
 // foo >> bar
 // foo >>> bar
 //
-// Passthrough:
-// The FE treats comment content as tokens, but we just want to stringify them
-//
 enum StringifyMode {
     STRINGIFYMODE_NORMAL = 0,
     STRINGIFYMODE_SYMBOLSEGMENT = 1,
     STRINGIFYMODE_FILE = 2,
-    STRINGIFYMODE_PASSTHROUGH = 3
 };
 
 //

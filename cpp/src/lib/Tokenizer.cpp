@@ -283,17 +283,6 @@ Token Tokenizer::nextToken0_stringifyAsFile() {
     }
 }
 
-Token Tokenizer::nextToken0_stringifyAsPassthrough() {
-    
-    auto tokenStartBuf = TheByteBuffer->buffer;
-    auto tokenStartLoc = TheByteDecoder->SrcLoc;
-    
-    auto policy = INSIDE_STRINGIFY_AS_PASSTHROUGH;
-    
-    auto c = TheByteDecoder->nextSourceCharacter0(policy);
-    
-    return handleString_stringifyAsPassthrough(tokenStartBuf, tokenStartLoc, c, policy);
-}
 
 void Tokenizer::nextToken(Token Tok) {
     
@@ -1055,26 +1044,6 @@ inline SourceCharacter Tokenizer::handleFileOpsBrackets(SourceLocation tokenStar
     *handled = 0;
     
     return c;
-}
-
-
-inline Token Tokenizer::handleString_stringifyAsPassthrough(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter c, NextPolicy policy) {
-    
-    while (true) {
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
-        if (c.to_point() == CODEPOINT_ENDOFFILE) {
-            break;
-        }
-        
-        c = TheByteDecoder->nextSourceCharacter0(policy);
-        
-    } // while
-    
-    return Token(TOKEN_STRING, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
 }
 
 
