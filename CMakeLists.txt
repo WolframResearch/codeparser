@@ -22,7 +22,6 @@ find_program(CODEPARSER_EXE
 
 set(PACLET "CodeParser")
 set(WOLFRAMKERNEL ${WOLFRAMKERNEL_DEFAULT} CACHE FILEPATH "Path to WolframKernel")
-set(BUILD_DOCS OFF CACHE BOOL "Build documentation")
 set(BUILD_EXE OFF CACHE BOOL "Build executable")
 set(BUILD_EXPR_LIB OFF CACHE BOOL "Build experimental expr library")
 set(USE_MATHLINK ON CACHE BOOL "Use MathLink")
@@ -43,7 +42,6 @@ set(BUG349779_TIMEOUT 3600 CACHE STRING "Bug 349779 timeout")
 message(STATUS "CMAKE_VERSION: ${CMAKE_VERSION}")
 message(STATUS "PACLET: ${PACLET}")
 message(STATUS "WOLFRAMKERNEL: ${WOLFRAMKERNEL}")
-message(STATUS "BUILD_DOCS: ${BUILD_DOCS}")
 message(STATUS "BUILD_EXE: ${BUILD_EXE}")
 message(STATUS "BUILD_EXPR_LIB: ${BUILD_EXPR_LIB}")
 message(STATUS "USE_MATHLINK: ${USE_MATHLINK}")
@@ -132,24 +130,6 @@ set(GENERATED_SOURCES
 	${GENERATED_WL_PACLET_RESOURCES_SOURCES}
 )
 
-
-set(DOCUMENTATION_NOTEBOOK_PATHS
-	English/Guides/CodeParser.nb
-	English/ReferencePages/Symbols/CodeConcreteParse.nb
-	English/ReferencePages/Symbols/CodeParse.nb
-	English/ReferencePages/Symbols/CodeTokenize.nb
-	English/Tutorials/ReleaseNotes.nb
-)
-
-#
-# Setup documentation notebook paths
-#
-foreach(NB_PATH ${DOCUMENTATION_NOTEBOOK_PATHS})
-	set(SRC ${PROJECT_SOURCE_DIR}/${PACLET}/Documentation/${NB_PATH})
-	set(BUILT ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Documentation/${NB_PATH})
-	list(APPEND DOCUMENTATION_SOURCE ${SRC})
-	list(APPEND BUILT_DOCUMENTATION ${BUILT})
-endforeach()
 
 
 
@@ -551,53 +531,6 @@ endif(BUILD_TESTS)
 
 
 #
-# docs target
-#
-
-if(BUILD_DOCS)
-
-add_custom_target(docs
-	DEPENDS
-		${BUILT_DOCUMENTATION}
-)
-
-set(DOCS_APPPATH /Applications/Eclipse.app/Contents/Eclipse/configuration/org.eclipse.osgi/525/0/.cp/MathematicaSource/ CACHE PATH "Path of MathematicaSource inside Workbench installation")
-
-message(STATUS "DOCS_APPPATH: ${DOCS_APPPATH}")
-
-if (NOT IS_DIRECTORY ${DOCS_APPPATH})
-message(FATAL_ERROR "DOCS_APPPATH (${DOCS_APPPATH}) does not exist")
-endif(NOT IS_DIRECTORY ${DOCS_APPPATH})
-
-set(DOCS_JLINKPATH /Applications/Mathematica.app/Contents/SystemFiles/Links/JLink/ CACHE PATH "Path of JLink")
-
-message(STATUS "DOCS_JLINKPATH: ${DOCS_JLINKPATH}")
-
-if (NOT IS_DIRECTORY ${DOCS_JLINKPATH})
-message(FATAL_ERROR "DOCS_JLINKPATH (${DOCS_JLINKPATH}) does not exist")
-endif(NOT IS_DIRECTORY ${DOCS_JLINKPATH})
-
-
-#
-# build the docs
-#
-add_custom_command(
-	OUTPUT
-		${BUILT_DOCUMENTATION}
-	DEPENDS
-		${DOCUMENTATION_SOURCE}
-	COMMAND
-		ant -DmathExe=${WOLFRAMKERNEL} -DappPath=${DOCS_APPPATH} -Djlinkpath=${DOCS_JLINKPATH} -DinputDir=${PROJECT_SOURCE_DIR}/${PACLET}/Documentation/ -DoutputDir=${PROJECT_BINARY_DIR}/paclet/${PACLET}/Documentation/ -file ${DOCS_APPPATH}/DocumentationBuild/SystemFiles/ant/Build/notebook.xml
-	WORKING_DIRECTORY
-		${PROJECT_SOURCE_DIR}
-)
-
-endif(BUILD_DOCS)
-
-
-
-
-#
 # paclet target
 #
 
@@ -614,14 +547,6 @@ list(APPEND PACLET_SOURCES
 	expr-lib
 )
 endif()
-
-if(BUILD_DOCS)
-
-list(APPEND PACLET_SOURCES
-	${BUILT_DOCUMENTATION}
-)
-
-endif(BUILD_DOCS)
 
 if(LOCAL_BUILD)
 set(PACLET_OUTPUT ${PROJECT_BINARY_DIR}/paclet/${PACLET}-${LOCAL_BUILD_VERSION}.paclet)
