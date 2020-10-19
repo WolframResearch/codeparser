@@ -6,7 +6,6 @@ Needs["CodeParser`Generate`GenerateSources`"]
 Needs["CodeParser`Generate`ParseletRegistration`"]
 
 
-
 (*
 Bug 321344:
 
@@ -64,14 +63,6 @@ TokenToCloser[Token`LongName`CloseCurlyQuote] = Closer`LongName`CloseCurlyQuote
 TokenToCloser[Token`LongName`CloseCurlyDoubleQuote] = Closer`LongName`CloseCurlyDoubleQuote
 
 
-
-
-
-
-
-
-
-Print["Generating Symbol..."]
 
 $WorkaroundBug321344 = checkBug321344[]
 Print["Work around Bug 321344: ", $WorkaroundBug321344];
@@ -144,7 +135,28 @@ symbols = Union[Join[
     tokens
 ]]
 
+(*
+We want to fully-qualify symbol names over the wire.
+This allows library->kernel traffic to work when CodeParser` is not on $ContextPath.
+However, it is still not possible to fully-qualify System` symbols
+Related bugs: 283291, 284492
+So also make library->kernel traffic match this behavior
+*)
+stringifyForTransmitting[sym_Symbol] :=
+Module[{ctxt},
+  ctxt = Context[sym];
+  If[ctxt == "System`",
+    SymbolName[sym]
+    ,
+    Context[sym]<>SymbolName[sym]
+  ]
+]
 
+
+
+generate[] := (
+
+Print["Generating Symbol..."];
 
 symbolCPPHeader = {
 "
@@ -191,32 +203,15 @@ SymbolPtr& TokenToSymbol(TokenEnum T);
 // All symbols that are used by CodeParser
 //"} ~Join~
 (Row[{"extern", " ", "SymbolPtr", " ", toGlobal["Symbol`"<>ToString[#]], ";"}]& /@ symbols) ~Join~
-{""}
+{""};
 
-Print["exporting Symbol.h"]
-res = Export[FileNameJoin[{generatedCPPIncludeDir, "Symbol.h"}], Column[symbolCPPHeader], "String"]
+Print["exporting Symbol.h"];
+res = Export[FileNameJoin[{generatedCPPIncludeDir, "Symbol.h"}], Column[symbolCPPHeader], "String"];
 
 If[FailureQ[res],
   Print[res];
   Quit[1]
-]
-
-(*
-We want to fully-qualify symbol names over the wire.
-This allows library->kernel traffic to work when CodeParser` is not on $ContextPath.
-However, it is still not possible to fully-qualify System` symbols
-Related bugs: 283291, 284492
-So also make library->kernel traffic match this behavior
-*)
-stringifyForTransmitting[sym_Symbol] :=
-Module[{ctxt},
-  ctxt = Context[sym];
-  If[ctxt == "System`",
-    SymbolName[sym]
-    ,
-    Context[sym]<>SymbolName[sym]
-  ]
-]
+];
 
 symbolCPPSource = {
 "
@@ -270,17 +265,22 @@ Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", t
 "}"} ~Join~
 {"}"} ~Join~
 
-{""}
+{""};
 
-Print["exporting Symbol.cpp"]
-res = Export[FileNameJoin[{generatedCPPSrcDir, "Symbol.cpp"}], Column[symbolCPPSource], "String"]
+Print["exporting Symbol.cpp"];
+res = Export[FileNameJoin[{generatedCPPSrcDir, "Symbol.cpp"}], Column[symbolCPPSource], "String"];
 
 If[FailureQ[res],
   Print[res];
   Quit[1]
-]
+];
 
 Print["Done Symbol"]
+)
+
+If[script === $InputFileName,
+generate[]
+]
 
 End[]
 

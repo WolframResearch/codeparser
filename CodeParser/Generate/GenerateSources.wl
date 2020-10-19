@@ -10,6 +10,8 @@ srcDirFlagPosition
 
 srcDir
 
+script
+
 generatedCPPDir
 generatedCPPIncludeDir
 generatedCPPSrcDir
@@ -120,11 +122,6 @@ Which[
 
 
 
-
-
-Print["Generating additional required source files..."]
-
-
 buildDirFlagPosition = FirstPosition[$CommandLine, "-buildDir"]
 
 If[MissingQ[buildDirFlagPosition],
@@ -153,6 +150,14 @@ If[!DirectoryQ[srcDir],
   Quit[1]
 ]
 
+scriptPosition = FirstPosition[$CommandLine, "-script"]
+
+If[MissingQ[scriptPosition],
+  Print["Cannot proceed; Unsupported script"];
+  Quit[1]
+]
+
+script = $CommandLine[[scriptPosition[[1]] + 1]]
 
 
 
@@ -165,29 +170,6 @@ generatedWLDir = FileNameJoin[{buildDir, "generated", "wl"}]
 
 dataDir = FileNameJoin[{srcDir, "CodeParser", "Data"}]
 
-PrependTo[$Path, srcDir]
-
-If[FailureQ[FindFile["CodeParser`Generate`GenerateSources`"]],
-  Print["CodeParser`Generate`GenerateSources` could not be found."];
-  Quit[1]
-]
-
-Print["Clean..."]
-
-Quiet[DeleteDirectory[generatedCPPDir, DeleteContents -> True], DeleteDirectory::nodir]
-
-Quiet[CreateDirectory[generatedCPPDir], CreateDirectory::filex]
-
-Quiet[CreateDirectory[generatedCPPIncludeDir], CreateDirectory::filex]
-
-Quiet[CreateDirectory[generatedCPPSrcDir], CreateDirectory::filex]
-
-Quiet[DeleteDirectory[generatedWLDir, DeleteContents -> True], DeleteDirectory::nodir]
-
-Quiet[CreateDirectory[generatedWLDir], CreateDirectory::filex]
-
-Print["Done Clean"]
-
 
 
 importedLongNames = Get[FileNameJoin[{dataDir, "LongNames.wl"}]]
@@ -196,7 +178,7 @@ importedPrefixParselets = Get[FileNameJoin[{dataDir, "PrefixParselets.wl"}]]
 
 importedInfixParselets = Get[FileNameJoin[{dataDir, "InfixParselets.wl"}]]
 
-validateLongNameMap[importedLongNames]
+
 
 
 
@@ -247,22 +229,6 @@ tokens = Keys[uniqueEnums]
 
 
 
-
-
-Get["CodeParser`Generate`LongNames`"]
-
-Get["CodeParser`Generate`TokenEnum`"]
-
-(*
-ParseletRegistration depends on TokenEnum
-*)
-Get["CodeParser`Generate`ParseletRegistration`"]
-
-Get["CodeParser`Generate`Precedence`"]
-
-Get["CodeParser`Generate`Symbol`"]
-
-Print["Done generating additional required source files"]
 
 End[]
 

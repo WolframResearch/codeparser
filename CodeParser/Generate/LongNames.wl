@@ -5,14 +5,13 @@ Begin["`Private`"]
 Needs["CodeParser`Generate`GenerateSources`"]
 
 
+validateLongNameMap[importedLongNames]
+
 
 escapeString[s_] :=
   ToString[s, InputForm, CharacterEncoding -> "ASCII"]
 
 
-
-
-Print["Generating LongNames..."]
 
 Check[
 longNameDefines = ("constexpr codepoint " <> toGlobal["CodePoint`LongName`" <> #] <> "(" <> longNameToHexDigits[#] <> ");")& /@ Keys[importedLongNames]
@@ -20,8 +19,6 @@ longNameDefines = ("constexpr codepoint " <> toGlobal["CodePoint`LongName`" <> #
 Print["Message while generating LongNames"];
 Quit[1]
 ]
-
-
 
 
 
@@ -309,12 +306,72 @@ LongNameCodePointToOperatorSource =
   }
 
 
+$lexSortedImportedLongNames = lexSort[Keys[importedLongNames]]
 
 
 
 
+longNameToCodePointMapNames = {
+"//",
+"//",
+"//",
+"std::array<std::string, LONGNAMES_COUNT> LongNameToCodePointMap_names {{"} ~Join~
+  (Row[{escapeString[#], ","}]& /@ $lexSortedImportedLongNames) ~Join~
+  {"}};", ""}
+
+longNameToCodePointMapPoints = {
+"//",
+"//",
+"//",
+"std::array<codepoint, LONGNAMES_COUNT> LongNameToCodePointMap_points {{"} ~Join~
+  (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ $lexSortedImportedLongNames) ~Join~
+  {"}};", ""}
+
+codePointToLongNameMapPoints = {
+"//",
+"//",
+"//",
+"std::array<codepoint, LONGNAMES_COUNT> CodePointToLongNameMap_points {{"} ~Join~
+  (Row[{toGlobal["CodePoint`LongName`"<>#], ","}] & /@ SortBy[Keys[importedLongNames], longNameToCharacterCode]) ~Join~
+  {"}};", ""}
+
+codePointToLongNameMapNames = {
+"//",
+"//",
+"//",
+"std::array<std::string, LONGNAMES_COUNT> CodePointToLongNameMap_names {{"} ~Join~
+  (Row[{escapeString[#], ","}] & /@ SortBy[Keys[importedLongNames], longNameToCharacterCode]) ~Join~
+  {"}};", ""}
+
+rawSet = {
+"//",
+"//",
+"//",
+"std::array<std::string, RAWLONGNAMES_COUNT> RawSet {{"} ~Join~
+(Row[{"{", "\""<>#<>"\"", "}", ","}]& /@ lexSort[importedRawLongNames]) ~Join~
+{"}};",
+"
+//
+//
+//
+bool LongNames::isRaw(std::string LongNameStr) {
+  auto it =  std::lower_bound(RawSet.begin(), RawSet.end(), LongNameStr);
+  return it != RawSet.end() && *it == LongNameStr;
+}
+"}
 
 
+Check[
+longNames = ("\"" <> # <> "\", ")& /@ Keys[importedLongNames]
+,
+Print["Message while generating LongNames"];
+Quit[1]
+]
+
+
+generate[] := (
+
+Print["Generating LongNames..."];
 
 longNamesCPPHeader = {
 "
@@ -379,76 +436,15 @@ public:
 // All long name code points
 //"} ~Join~
 longNameDefines ~Join~
-{""}
+{""};
 
-Print["exporting LongNames.h"]
-res = Export[FileNameJoin[{generatedCPPIncludeDir, "LongNames.h"}], Column[longNamesCPPHeader], "String"]
+Print["exporting LongNames.h"];
+res = Export[FileNameJoin[{generatedCPPIncludeDir, "LongNames.h"}], Column[longNamesCPPHeader], "String"];
 
 If[FailureQ[res],
   Print[res];
   Quit[1]
-]
-
-
-
-
-
-
-
-
-$lexSortedImportedLongNames = lexSort[Keys[importedLongNames]]
-
-
-
-
-longNameToCodePointMapNames = {
-"//",
-"//",
-"//",
-"std::array<std::string, LONGNAMES_COUNT> LongNameToCodePointMap_names {{"} ~Join~
-  (Row[{escapeString[#], ","}]& /@ $lexSortedImportedLongNames) ~Join~
-  {"}};", ""}
-
-longNameToCodePointMapPoints = {
-"//",
-"//",
-"//",
-"std::array<codepoint, LONGNAMES_COUNT> LongNameToCodePointMap_points {{"} ~Join~
-  (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ $lexSortedImportedLongNames) ~Join~
-  {"}};", ""}
-
-codePointToLongNameMapPoints = {
-"//",
-"//",
-"//",
-"std::array<codepoint, LONGNAMES_COUNT> CodePointToLongNameMap_points {{"} ~Join~
-  (Row[{toGlobal["CodePoint`LongName`"<>#], ","}] & /@ SortBy[Keys[importedLongNames], longNameToCharacterCode]) ~Join~
-  {"}};", ""}
-
-codePointToLongNameMapNames = {
-"//",
-"//",
-"//",
-"std::array<std::string, LONGNAMES_COUNT> CodePointToLongNameMap_names {{"} ~Join~
-  (Row[{escapeString[#], ","}] & /@ SortBy[Keys[importedLongNames], longNameToCharacterCode]) ~Join~
-  {"}};", ""}
-
-rawSet = {
-"//",
-"//",
-"//",
-"std::array<std::string, RAWLONGNAMES_COUNT> RawSet {{"} ~Join~
-(Row[{"{", "\""<>#<>"\"", "}", ","}]& /@ lexSort[importedRawLongNames]) ~Join~
-{"}};",
-"
-//
-//
-//
-bool LongNames::isRaw(std::string LongNameStr) {
-  auto it =  std::lower_bound(RawSet.begin(), RawSet.end(), LongNameStr);
-  return it != RawSet.end() && *it == LongNameStr;
-}
-"}
+];
 
 
 longNamesCPPSource = {
@@ -476,30 +472,15 @@ whitespaceSource ~Join~
 newlineSource ~Join~
 uninterpretableSource ~Join~
 unsupportedSource ~Join~
-LongNameCodePointToOperatorSource
+LongNameCodePointToOperatorSource;
 
-Print["exporting LongNames.cpp"]
-res = Export[FileNameJoin[{generatedCPPSrcDir, "LongNames.cpp"}], Column[longNamesCPPSource], "String"]
+Print["exporting LongNames.cpp"];
+res = Export[FileNameJoin[{generatedCPPSrcDir, "LongNames.cpp"}], Column[longNamesCPPSource], "String"];
 
 If[FailureQ[res],
   Print[res];
   Quit[1]
-]
-
-
-
-
-
-
-
-
-
-Check[
-longNames = ("\"" <> # <> "\", ")& /@ Keys[importedLongNames]
-,
-Print["Message while generating LongNames"];
-Quit[1]
-]
+];
 
 longNamesWL = {
 "
@@ -512,20 +493,22 @@ DO NOT MODIFY
 "Nothing
 }
 "
-}
+};
 
-Print["exporting LongNames.wl"]
-res = Export[FileNameJoin[{generatedWLDir, "LongNames.wl"}], Column[longNamesWL], "String"]
+Print["exporting LongNames.wl"];
+res = Export[FileNameJoin[{generatedWLDir, "LongNames.wl"}], Column[longNamesWL], "String"];
 
 If[FailureQ[res],
   Print[res];
   Quit[1]
-]
-
-
-
+];
 
 Print["Done LongNames"]
+)
+
+If[script === $InputFileName,
+generate[]
+]
 
 End[]
 

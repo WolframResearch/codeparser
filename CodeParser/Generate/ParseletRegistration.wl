@@ -11,7 +11,6 @@ Needs["CodeParser`Generate`TokenEnum`"]
 Needs["CodeParser`Generate`GenerateSources`"]
 
 
-
 KeyValueMap[
 	Function[{k, v},
 		PrefixOperatorToParselet[k] = v;
@@ -33,61 +32,6 @@ KeyValueMap[
 ]
 
 InfixOperatorToParselet[_] = Parselet`InfixImplicitTimesParselet[]
-
-
-
-
-Print["Generating ParseletRegistration..."]
-
-
-
-
-parseletRegistrationCPPHeader = {
-"
-//
-// AUTO GENERATED FILE
-// DO NOT MODIFY
-//
-
-#pragma once
-
-#include \"TokenEnum.h\"
-
-#include <array>
-
-class PrefixParselet;
-class InfixParselet;
-class ContextSensitivePrefixParselet;
-class ContextSensitiveInfixParselet;
-class PrefixToplevelCloserParselet;
-
-using PrefixParseletPtr = PrefixParselet *;
-using InfixParseletPtr = InfixParselet *;
-using ContextSensitivePrefixParseletPtr = ContextSensitivePrefixParselet *;
-using ContextSensitiveInfixParseletPtr = ContextSensitiveInfixParselet *;
-using PrefixToplevelCloserParseletPtr = PrefixToplevelCloserParselet *;
-
-extern std::array<PrefixParseletPtr, TOKEN_COUNT.value()> prefixParselets;
-extern std::array<InfixParseletPtr, TOKEN_COUNT.value()> infixParselets;
-
-extern ContextSensitivePrefixParseletPtr contextSensitiveSymbolParselet;
-extern ContextSensitiveInfixParseletPtr contextSensitiveUnder1Parselet;
-extern ContextSensitiveInfixParseletPtr contextSensitiveUnder2Parselet;
-extern ContextSensitiveInfixParseletPtr contextSensitiveUnder3Parselet;
-extern ContextSensitiveInfixParseletPtr contextSensitiveUnderDotParselet;
-extern ContextSensitiveInfixParseletPtr contextSensitiveColonParselet;
-
-extern PrefixToplevelCloserParseletPtr contextSensitivePrefixToplevelCloserParselet;
-"}
-
-Print["exporting ParseletRegistration.h"]
-res = Export[FileNameJoin[{generatedCPPIncludeDir, "ParseletRegistration.h"}], Column[parseletRegistrationCPPHeader], "String"]
-
-If[FailureQ[res],
-  Print[res];
-  Quit[1]
-]
-
 
 
 
@@ -188,6 +132,55 @@ formatInfix[Parselet`InfixToplevelNewlineParselet[]] := "new InfixToplevelNewlin
 
 
 
+generate[] := (
+
+Print["Generating ParseletRegistration..."];
+
+parseletRegistrationCPPHeader = {
+"
+//
+// AUTO GENERATED FILE
+// DO NOT MODIFY
+//
+
+#pragma once
+
+#include \"TokenEnum.h\"
+
+#include <array>
+
+class PrefixParselet;
+class InfixParselet;
+class ContextSensitivePrefixParselet;
+class ContextSensitiveInfixParselet;
+class PrefixToplevelCloserParselet;
+
+using PrefixParseletPtr = PrefixParselet *;
+using InfixParseletPtr = InfixParselet *;
+using ContextSensitivePrefixParseletPtr = ContextSensitivePrefixParselet *;
+using ContextSensitiveInfixParseletPtr = ContextSensitiveInfixParselet *;
+using PrefixToplevelCloserParseletPtr = PrefixToplevelCloserParselet *;
+
+extern std::array<PrefixParseletPtr, TOKEN_COUNT.value()> prefixParselets;
+extern std::array<InfixParseletPtr, TOKEN_COUNT.value()> infixParselets;
+
+extern ContextSensitivePrefixParseletPtr contextSensitiveSymbolParselet;
+extern ContextSensitiveInfixParseletPtr contextSensitiveUnder1Parselet;
+extern ContextSensitiveInfixParseletPtr contextSensitiveUnder2Parselet;
+extern ContextSensitiveInfixParseletPtr contextSensitiveUnder3Parselet;
+extern ContextSensitiveInfixParseletPtr contextSensitiveUnderDotParselet;
+extern ContextSensitiveInfixParseletPtr contextSensitiveColonParselet;
+
+extern PrefixToplevelCloserParseletPtr contextSensitivePrefixToplevelCloserParselet;
+"};
+
+Print["exporting ParseletRegistration.h"];
+res = Export[FileNameJoin[{generatedCPPIncludeDir, "ParseletRegistration.h"}], Column[parseletRegistrationCPPHeader], "String"];
+
+If[FailureQ[res],
+  Print[res];
+  Quit[1]
+];
 
 
 parseletRegistrationCPPSource = {
@@ -274,17 +267,22 @@ ContextSensitiveInfixParseletPtr contextSensitiveUnderDotParselet(&underDotParse
 ContextSensitiveInfixParseletPtr contextSensitiveColonParselet(&colonParselet);
 
 PrefixToplevelCloserParseletPtr contextSensitivePrefixToplevelCloserParselet(&prefixToplevelCloserParselet);
-"}
+"};
 
-Print["exporting ParseletRegistration.cpp"]
-res = Export[FileNameJoin[{generatedCPPSrcDir, "ParseletRegistration.cpp"}], Column[parseletRegistrationCPPSource], "String"]
+Print["exporting ParseletRegistration.cpp"];
+res = Export[FileNameJoin[{generatedCPPSrcDir, "ParseletRegistration.cpp"}], Column[parseletRegistrationCPPSource], "String"];
 
 If[FailureQ[res],
   Print[res];
   Quit[1]
-]
+];
 
 Print["Done ParseletRegistration"]
+)
+
+If[script === $InputFileName,
+generate[]
+]
 
 End[]
 

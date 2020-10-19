@@ -13,7 +13,6 @@ Needs["CodeParser`Generate`GenerateSources`"]
 
 
 
-
 (*
 Use the System` context symbols for literals when we can
 
@@ -265,9 +264,6 @@ Which[
 
 
 
-Print["Generating TokenEnum..."]
-
-
 cur = 0
 enumMap = <||>
 KeyValueMap[(
@@ -297,6 +293,13 @@ KeyValueMap[
 ]
 
 
+tokenToSymbolCases = Row[{"case ", toGlobal[#], ".value(): return ", toGlobal[tokenToSymbol[#]], ";"}]& /@ tokens
+
+
+
+generate[] := (
+
+Print["Generating TokenEnum..."];
 
 tokenCPPHeader = {
 "
@@ -455,19 +458,15 @@ KeyValueMap[(
   ,
   enumMap
 ] ~Join~ {
-}
+};
 
-Print["exporting TokenEnum.h"]
-res = Export[FileNameJoin[{generatedCPPIncludeDir, "TokenEnum.h"}], Column[tokenCPPHeader], "String"]
+Print["exporting TokenEnum.h"];
+res = Export[FileNameJoin[{generatedCPPIncludeDir, "TokenEnum.h"}], Column[tokenCPPHeader], "String"];
 
 If[FailureQ[res],
   Print[res];
   Quit[1]
-]
-
-
-
-tokenToSymbolCases = Row[{"case ", toGlobal[#], ".value(): return ", toGlobal[tokenToSymbol[#]], ";"}]& /@ tokens
+];
 
 
 tokenCPPSource = {
@@ -519,17 +518,22 @@ tokenToSymbolCases ~Join~
 bool operator!=(TokenEnum a, TokenEnum b) {
   return a.value() != b.value();
 }
-"}
+"};
 
-Print["exporting TokenEnum.cpp"]
-res = Export[FileNameJoin[{generatedCPPSrcDir, "TokenEnum.cpp"}], Column[tokenCPPSource], "String"]
+Print["exporting TokenEnum.cpp"];
+res = Export[FileNameJoin[{generatedCPPSrcDir, "TokenEnum.cpp"}], Column[tokenCPPSource], "String"];
 
 If[FailureQ[res],
   Print[res];
   Quit[1]
-]
+];
 
 Print["Done Token"]
+)
+
+If[script === $InputFileName,
+generate[]
+]
 
 End[]
 

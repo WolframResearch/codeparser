@@ -2,27 +2,9 @@ BeginPackage["CodeParser`Generate`ExprLibrary`"]
 
 Begin["`Private`"]
 
-
+Needs["CodeParser`Generate`GenerateSources`"]
 Needs["Compile`"] (* for Program *)
 Needs["TypeFramework`"] (* for MetaData *)
-
-Print["Generating ExprLibrary..."]
-
-
-buildDirFlagPosition = FirstPosition[$CommandLine, "-buildDir"]
-
-If[MissingQ[buildDirFlagPosition],
-  Print["Cannot proceed; Unsupported build directory"];
-  Quit[1]
-]
-
-buildDir = $CommandLine[[buildDirFlagPosition[[1]] + 1]]
-
-If[!DirectoryQ[buildDir],
-  Print["Cannot proceed; Unsupported build directory"];
-  Quit[1]
-]
-
 
 
 ExprLibraryProgram[] :=
@@ -128,6 +110,8 @@ buildExprLibrary[] :=
 Catch[
 Module[{targetDir, prog, compLib},
 
+  Print["Generating ExprLibrary..."];
+
   If[$VersionNumber < 12.2,
     Print["Skipping ExprLibrary"];
     Throw[Null]
@@ -153,12 +137,15 @@ Module[{targetDir, prog, compLib},
 
   If[FailureQ[compLib],
     Quit[1]
-  ]
+  ];
+
+  Print["Done ExprLibrary"]
 ]]
 
+If[script === $InputFileName,
 buildExprLibrary[]
+]
 
-Print["Done ExprLibrary"]
 
 End[]
 
