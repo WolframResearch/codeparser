@@ -744,7 +744,14 @@ Module[{parsed, data, issues, stringifyMode, oldLeafSrc, len, src, cases, contai
           parsed = CompoundNode[underToPatternOp[cases[[1, 2]]], parseBox[#, pos]& /@ cases[[1]], <|Source -> pos|>]
       ]
     ,
-    !containsQuote && StringContainsQ[str, "#"],
+    (*
+    I normally do not want to parse strings inside of parseBox, but it is possible to have the syntax:
+
+    #"foo"
+
+    and the FE treats this as a single token.
+    *)
+    StringStartsQ[str, "#"],
       Which[
         (cases = StringCases[str, RegularExpression["^(##)(\\d+)$"] :> {"$1", "$2"}]) != {},
           parsed = CompoundNode[SlotSequence, parseBox[#, pos]& /@ cases[[1]], <|Source -> pos|>]
@@ -756,7 +763,7 @@ Module[{parsed, data, issues, stringifyMode, oldLeafSrc, len, src, cases, contai
           parsed = CompoundNode[Slot, {parseBox[cases[[1, 1]], pos], parseBox[cases[[1, 2]], pos, "StringifyMode" -> 1]}, <|Source -> pos|>]
       ]
     ,
-    !containsQuote && StringContainsQ[str, "%"],
+    StringStartsQ[str, "%"],
       Which[
         (cases = StringCases[str, RegularExpression["^(%)(\\d+)$"] :> {"$1", "$2"}]) != {},
           parsed = CompoundNode[Out, parseBox[#, pos]& /@ cases[[1]], <|Source -> pos|>]
@@ -765,16 +772,16 @@ Module[{parsed, data, issues, stringifyMode, oldLeafSrc, len, src, cases, contai
           parsed = LeafNode[Token`PercentPercent, str, <|Source -> pos|>]
       ]
     ,
-    !containsQuote && StringContainsQ[str, "'"] && stringifyMode == 0,
+    StringStartsQ[str, "'"],
       Which[
         StringMatchQ[str, ("'")..],
           parsed = LeafNode[Token`Boxes`MultiSingleQuote, str, <|Source -> pos|>]
       ]
     ,
-    !containsQuote && StringMatchQ[str, $whitespacePat..] && (stringifyMode == 0 || stringifyMode == 2),
+    StringMatchQ[str, $whitespacePat..] && (stringifyMode == 0 || stringifyMode == 2),
       parsed = LeafNode[Token`Boxes`MultiWhitespace, str, <|Source -> pos|>]
     ,
-    !containsQuote && StringMatchQ[str, Verbatim["*"].. ~~ ")"],
+    StringMatchQ[str, Verbatim["*"].. ~~ ")"],
       (*
       The FE parses (***) as RowBox[{"(*", "***)"}], so need to handle variable-length *** ) token
 
@@ -782,7 +789,12 @@ Module[{parsed, data, issues, stringifyMode, oldLeafSrc, len, src, cases, contai
       *)
       parsed = LeafNode[Token`Boxes`StarCloseParen, str, <|Source -> pos|>]
     ,
-    containsQuote && StringMatchQ[str, RegularExpression["\"[a-zA-Z0-9\\. `_'%,\\[\\]#\\$\\-:;]*\""]],
+    (*
+    Handle the simple case of a string with no backslashes
+
+    Perfectly easy to parse
+    *)
+    containsQuote && StringMatchQ[str, RegularExpression["\"[^\\\\]*\""]],
       parsed = LeafNode[String, str, <|Source -> pos|>]
     ,
     True,
