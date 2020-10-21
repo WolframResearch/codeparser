@@ -281,7 +281,7 @@ If[PacletFind["AST"] != {},
 
 
 
-$TabWidth = 4
+$DefaultTabWidth = 1
 
 
 
@@ -302,7 +302,7 @@ code can be a string, a file, or a list of bytes."
 Options[CodeConcreteParse] = {
   CharacterEncoding -> "UTF8",
   SourceConvention -> "LineColumn",
-  "TabWidth" -> $TabWidth,
+  "TabWidth" :> $DefaultTabWidth,
   ContainerNode -> Automatic
 }
 
@@ -409,7 +409,7 @@ code can be a string, a file, or a list of bytes."
 Options[CodeParse] = {
   CharacterEncoding -> "UTF8",
   SourceConvention -> "LineColumn",
-  "TabWidth" -> $TabWidth,
+  "TabWidth" :> $DefaultTabWidth,
   ContainerNode -> Automatic
 }
 
@@ -794,7 +794,7 @@ code can be a string, a file, or a list of bytes."
 Options[CodeTokenize] = {
   CharacterEncoding -> "UTF8",
   SourceConvention -> "LineColumn",
-  "TabWidth" -> $TabWidth
+  "TabWidth" :> $DefaultTabWidth
 }
 
 CodeTokenize[s_String, opts:OptionsPattern[]] :=
@@ -1005,7 +1005,7 @@ code can be a string."
 Options[CodeConcreteParseLeaf] = {
   "StringifyMode" -> 0,
   SourceConvention -> "LineColumn",
-  "TabWidth" -> $TabWidth
+  "TabWidth" :> $DefaultTabWidth
 }
 
 CodeConcreteParseLeaf[str_String, opts:OptionsPattern[]] :=
