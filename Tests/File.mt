@@ -254,10 +254,10 @@ TestMatch[
 		GroupNode[List, {
 			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Token`Newline, $systemNewline, <|Source -> {{1, 2}, {2, 1}}|>],
-			LeafNode[Whitespace, "\t", <|Source -> {{2, 1}, {2, 5}}|>],
-			LeafNode[Integer, "1", <|Source -> {{2, 5}, {2, 6}}|>],
-			LeafNode[Token`CloseCurly, "\\\n}", <|Source -> {{2, 6}, {3, 2}}|>]}, <|Source -> {{1, 1}, {3, 2}}|>]},
-		<|"SimpleLineContinuations" -> {{2, 5}, {2, 6}}, Source -> {{1, 1}, {3, 2}}|>]
+			LeafNode[Whitespace, "\t", <|Source -> {{2, 1}, {2, 2}}|>],
+			LeafNode[Integer, "1", <|Source -> {{2, 2}, {2, 3}}|>],
+			LeafNode[Token`CloseCurly, "\\\n}", <|Source -> {{2, 3}, {3, 2}}|>]}, <|Source -> {{1, 1}, {3, 2}}|>]},
+		<|"SimpleLineContinuations" -> {{2, 2}, {2, 3}}, Source -> {{1, 1}, {3, 2}}|>]
 	,
 	TestID->"File-20191025-I3T9F3"
 ]

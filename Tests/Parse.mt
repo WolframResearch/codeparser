@@ -3264,7 +3264,7 @@ Test[
 	CodeParse["\"a\tb\""]
 	,
 	ContainerNode[String, {
-		LeafNode[String, "\"a\\tb\"", <|Source -> {{1, 1}, {1, 7}}|>]}, <||>]
+		LeafNode[String, "\"a\\tb\"", <|Source -> {{1, 1}, {1, 6}}|>]}, <||>]
 	,
 	TestID->"Parse-20200803-G3C1P6"
 ]

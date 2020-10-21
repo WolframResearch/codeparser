@@ -186,7 +186,7 @@ Test[
 	CodeParse["\"a\\\n\tb\""]
 	,
 	ContainerNode[String, {
-		LeafNode[String, "\"a\\tb\"", <|Source -> {{1, 1}, {2, 7}}|>]}, <||>]
+		LeafNode[String, "\"a\\tb\"", <|Source -> {{1, 1}, {2, 4}}|>]}, <||>]
 	,
 	TestID->"LineContinuations-20200803-L8I2C9"
 ]

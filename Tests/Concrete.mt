@@ -769,10 +769,10 @@ Test[
 	ContainerNode[String, {
 		UnterminatedGroupNode[Association, {
 			LeafNode[Token`LessBar, "<|", <|Source -> {{1, 1}, {1, 3}}|>],
-			LeafNode[Whitespace, "\t", <|Source -> {{1, 3}, {1, 5}}|>],
-			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 5}, {1, 5}}|>],
-			LeafNode[Token`Question, "?", <|Source -> {{1, 5}, {1, 6}}|>],
-			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 6}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]}, <||>]
+			LeafNode[Whitespace, "\t", <|Source -> {{1, 3}, {1, 4}}|>],
+			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 4}, {1, 4}}|>],
+			LeafNode[Token`Question, "?", <|Source -> {{1, 4}, {1, 5}}|>],
+			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 5}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>]}, <||>]
 	,
 	TestID->"Concrete-20200803-R2A7L5"
 ]
