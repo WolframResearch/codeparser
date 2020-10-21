@@ -132,6 +132,7 @@ file(MAKE_DIRECTORY
 	${PROJECT_BINARY_DIR}/generated/cpp/
 	${PROJECT_BINARY_DIR}/generated/cpp/include/
 	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/
+	${PROJECT_BINARY_DIR}/generated/wl/
 )
 
 
