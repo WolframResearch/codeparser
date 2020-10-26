@@ -519,6 +519,9 @@ Module[{csts, encoding, fulls, bytess, fileFormat, firstLineIsShebang, exts},
       Which[
         AnyTrue[exts, (# == "wls")&],
           firstLineIsShebang = True
+        ,
+        True,
+          firstLineIsShebang = False
       ]
     ,
     _,
@@ -955,6 +958,9 @@ Module[{encoding, res, fulls, bytess, convention, tabWidth, fileFormat, firstLin
       Which[
         AnyTrue[exts, (# == "wls")&],
           firstLineIsShebang = True
+        ,
+        True,
+          firstLineIsShebang = False
       ]
     ,
     _,

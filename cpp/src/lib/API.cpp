@@ -645,7 +645,7 @@ DLLEXPORT int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK ml
     
     auto len = static_cast<size_t>(mlLen);
     
-    if (len != 4) {
+    if (len != 5) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
