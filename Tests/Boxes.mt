@@ -20,7 +20,6 @@ Test[
 			LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
 			LeafNode[Token`Fake`ImplicitTimes, "", <||>],
 			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 2}|>],
-			LeafNode[Token`Fake`ImplicitTimes, "", <||>],
 			LeafNode[Symbol, "b", <|Source -> {1, 3}|>]}, <|Source -> {1}|>]}, <||>]
 	,
 	TestID->"Boxes-20191015-Q5H2Y6"
@@ -579,4 +578,174 @@ Test[
 
 
 
+
+Test[
+	CodeConcreteParseBox[RowBox[{"\n", "a"}]]
+	,
+	ContainerNode[Box, {
+		LeafNode[Token`Newline, "\n", <|Source -> {1, 1}|>],
+		LeafNode[Symbol, "a", <|Source -> {1, 2}|>]}, <||>]
+	,
+	TestID->"Boxes-20201023-R6Y5N5"
+]
+
+
+
+Test[
+	CodeConcreteParseBox[RowBox[{"a", "\n", "b"}]]
+	,
+	ContainerNode[Box, {
+		LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
+		LeafNode[Token`Newline, "\n", <|Source -> {1, 2}|>],
+		LeafNode[Symbol, "b", <|Source -> {1, 3}|>]}, <||>]
+	,
+	TestID->"Boxes-20201023-O0K3H5"
+]
+
+
+
+Test[
+	CodeConcreteParseBox[RowBox[{"a", " ", ":=", "\n", " ", "b"}]]
+	,
+	ContainerNode[Box, {
+		BinaryNode[SetDelayed, {
+			LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
+			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 2}|>],
+			LeafNode[Token`ColonEqual, ":=", <|Source -> {1, 3}|>],
+			LeafNode[Token`Newline, "\n", <|Source -> {1, 4}|>],
+			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 5}|>],
+			LeafNode[Symbol, "b", <|Source -> {1, 6}|>]}, <|Source -> {1}|>]}, <||>]
+	,
+	TestID->"Boxes-20201023-H1C3C8"
+]
+
+
+
+
+
+
+Test[
+	CodeConcreteParseBox[RowBox[{"f", ";", RowBox[{"(*", "*)"}], "\n", "g"}]]
+	,
+	ContainerNode[Box, {
+		InfixNode[CompoundExpression, {
+			LeafNode[Symbol, "f", <|Source -> {1, 1}|>],
+			LeafNode[Token`Semi, ";", <|Source -> {1, 2}|>],
+			LeafNode[Token`Fake`ImplicitNull, "", <||>],
+			GroupNode[Comment, {
+				LeafNode[Token`Boxes`OpenParenStar, "(*", <|Source -> {1, 3, 1, 1}|>],
+				LeafNode[Token`Boxes`StarCloseParen, "*)", <|Source -> {1, 3, 1, 2}|>]}, <|Source -> {1, 3, 1}|>]}, <||>],
+		LeafNode[Token`Newline, "\n", <|Source -> {1, 4}|>],
+		LeafNode[Symbol, "g", <|Source -> {1, 5}|>]}, <||>]
+	,
+	TestID->"Boxes-20201023-V9T4E2"
+]
+
+
+
+Test[
+	CodeConcreteParseBox[RowBox[{"f", ";", RowBox[{"(*", "*)"}], "\n", "g", ";"}]]
+	,
+	ContainerNode[Box, {
+		InfixNode[CompoundExpression, {
+			LeafNode[Symbol, "f", <|Source -> {1, 1}|>],
+			LeafNode[Token`Semi, ";", <|Source -> {1, 2}|>],
+			LeafNode[Token`Fake`ImplicitNull, "", <||>],
+			GroupNode[Comment, {
+				LeafNode[Token`Boxes`OpenParenStar, "(*", <|Source -> {1, 3, 1, 1}|>],
+				LeafNode[Token`Boxes`StarCloseParen, "*)", <|Source -> {1, 3, 1, 2}|>]}, <|Source -> {1, 3, 1}|>]}, <||>],
+		LeafNode[Token`Newline, "\n", <|Source -> {1, 4}|>],
+		InfixNode[CompoundExpression, {
+			LeafNode[Symbol, "g", <|Source -> {1, 5}|>],
+			LeafNode[Token`Semi, ";", <|Source -> {1, 6}|>],
+			LeafNode[Token`Fake`ImplicitNull, "", <|Source -> {1, 6}|>]}, <||>]}, <||>]
+	,
+	TestID->"Boxes-20201023-P9O9Q2"
+]
+
+
+Test[
+	CodeConcreteParseBox[RowBox[{"a", " ", "b", "*", "c"}]]
+	,
+	ContainerNode[Box, {
+		InfixNode[Times, {
+			LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
+			LeafNode[Token`Fake`ImplicitTimes, "", <||>],
+			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 2}|>],
+			LeafNode[Symbol, "b", <|Source -> {1, 3}|>],
+			LeafNode[Token`Star, "*", <|Source -> {1, 4}|>],
+			LeafNode[Symbol, "c", <|Source -> {1, 5}|>]}, <|Source -> {1}|>]}, <||>]
+	,
+	TestID->"Boxes-20201023-I1T9S0"
+]
+
+
+Test[
+	CodeConcreteParseBox[RowBox[{"a", "*", "b", " ", "c"}]]
+	,
+	ContainerNode[Box, {
+		InfixNode[Times, {
+			LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
+			LeafNode[Token`Star, "*", <|Source -> {1, 2}|>],
+			LeafNode[Symbol, "b", <|Source -> {1, 3}|>],
+			LeafNode[Token`Fake`ImplicitTimes, "", <||>],
+			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 4}|>],
+			LeafNode[Symbol, "c", <|Source -> {1, 5}|>]}, <|Source -> {1}|>]}, <||>]
+	,
+	TestID->"Boxes-20201023-W2R0R5"
+]
+
+
+Test[
+	CodeConcreteParseBox[RowBox[{"a", " ", "*", " ", "b"}]]
+	,
+	ContainerNode[Box, {
+		InfixNode[Times, {
+			LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
+			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 2}|>],
+			LeafNode[Token`Star, "*", <|Source -> {1, 3}|>],
+			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 4}|>],
+			LeafNode[Symbol, "b", <|Source -> {1, 5}|>]}, <|Source -> {1}|>]}, <||>]
+	,
+	TestID->"Boxes-20201023-Q9B1K2"
+]
+
+
+
+
+Test[
+	CodeConcreteParseBox[RowBox[{"p", " ", "q", "*", "\n", " ", "r"}]]
+	,
+	ContainerNode[Box, {
+		InfixNode[Times, {
+			LeafNode[Symbol, "p", <|Source -> {1, 1}|>],
+			LeafNode[Token`Fake`ImplicitTimes, "", <||>],
+			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 2}|>],
+			LeafNode[Symbol, "q", <|Source -> {1, 3}|>],
+			LeafNode[Token`Star, "*", <|Source -> {1, 4}|>],
+			LeafNode[Token`Newline, "\n", <|Source -> {1, 5}|>],
+			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 6}|>],
+			LeafNode[Symbol, "r", <|Source -> {1, 7}|>]}, <|Source -> {1}|>]}, <||>]
+	,
+	TestID->"Boxes-20201023-D5E9D4"
+]
+
+
+
+Test[
+	CodeConcreteParseBox[RowBox[{"a", ";", RowBox[{"(*", "*)"}], ";"}]]
+	,
+	ContainerNode[Box, {
+		InfixNode[CompoundExpression, {
+			LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
+			LeafNode[Token`Semi, ";", <|Source -> {1, 2}|>],
+			LeafNode[Token`Fake`ImplicitNull, "", <||>],
+			GroupNode[Comment, {
+				LeafNode[Token`Boxes`OpenParenStar, "(*", <|Source -> {1, 3, 1, 1}|>],
+				LeafNode[Token`Boxes`StarCloseParen, "*)", <|Source -> {1, 3, 1, 2}|>]}, <|Source -> {1, 3, 1}|>],
+			LeafNode[Token`Semi, ";", <|Source -> {1, 4}|>],
+			LeafNode[Token`Fake`ImplicitNull, "", <||>]}, <|Source -> {1}|>]}, <||>]
+	,
+	TestID->"Boxes-20201023-S6K5A5"
+]
 

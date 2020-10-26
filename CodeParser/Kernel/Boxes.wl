@@ -8,6 +8,17 @@ Needs["CodeParser`"]
 Needs["CodeParser`RowBox`"]
 Needs["CodeParser`Utils`"]
 
+
+
+(*
+work around very common FE bug
+
+Related bugs: 395301
+*)
+$WorkAroundToplevelRowBoxBug = True
+
+
+
 (*
 
 ParseBox accepts boxes, which are concrete syntax
@@ -31,8 +42,39 @@ Module[{children},
     Throw[SelectFirst[children, FailureQ]]
   ];
 
+  If[$WorkAroundToplevelRowBoxBug,
+
+    children = children //. {
+      BoxNode[RowBox, {children:{___, LeafNode[Token`Newline, _, _], ___}}, _] :> Sequence @@ children
+    };
+
+    children = Replace[children, {
+        InfixNode[CompoundExpression, children1:{___, LeafNode[Token`Newline, _, _], ___}, _] :>
+          Sequence @@ Flatten[wrapToplevelCompoundExpression /@ SplitBy[children1, MatchQ[#, LeafNode[Token`Newline, _, _]]&]]
+      }, {1}]
+
+  ];
+
   ContainerNode[Box, children, <||>]
 ]]
+
+
+wrapToplevelCompoundExpression[ns:{LeafNode[Token`Newline, _, _]..}] := ns
+
+wrapToplevelCompoundExpression[ns:{___, LeafNode[Token`Semi, _, _], ___}] :=
+  Module[{aggregatedChildren},
+
+    aggregatedChildren = DeleteCases[ns, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _]];
+
+    If[MatchQ[aggregatedChildren, {___, LeafNode[Token`Semi, _, _]}],
+      {InfixNode[CompoundExpression, ns ~Join~ {LeafNode[Token`Fake`ImplicitNull, "", <||>]}, <||>]}
+      ,
+      {InfixNode[CompoundExpression, ns, <||>]}
+    ]
+  ]
+
+wrapToplevelCompoundExpression[ns_] := ns
+
 
 CodeConcreteParseBox[box_] :=
 Catch[
@@ -46,11 +88,24 @@ Module[{children, child},
   If[MatchQ[child, BoxNode[RowBox, _, _]],
     children = child[[2, 1]]
     ,
-    children = {child};
+    children = {child}
   ];
 
   If[AnyTrue[children, FailureQ],
     Throw[SelectFirst[children, FailureQ]]
+  ];
+
+  If[$WorkAroundToplevelRowBoxBug,
+
+    children = children //. {
+      BoxNode[RowBox, {children:{___, LeafNode[Token`Newline, _, _], ___}}, _] :> Sequence @@ children
+    };
+
+    children = Replace[children, {
+        InfixNode[CompoundExpression, children1:{___, LeafNode[Token`Newline, _, _], ___}, _] :>
+          Sequence @@ Flatten[wrapToplevelCompoundExpression /@ SplitBy[children1, MatchQ[#, LeafNode[Token`Newline, _, _]]&]]
+      }, {1}]
+
   ];
 
   ContainerNode[Box, children, <||>]
@@ -129,9 +184,12 @@ Module[{handledChildren, aggregatedChildren},
   aggregatedChildren = DeleteCases[handledChildren, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _]];
 
   If[Length[aggregatedChildren] == 1,
+    (*
+    Make sure to return the concrete children
+    *)
     Throw[BoxNode[RowBox, {handledChildren}, <|Source->pos|>]]
   ];
-
+  
   prbDispatch[aggregatedChildren, handledChildren, children, pos]
 ]]
 
@@ -480,18 +538,6 @@ $mbWhitespace = {
 
 $whitespacePat = Alternatives @@ ({" " | "\t"} ~Join~ $mbWhitespace)
 
-(*
-Just do simple thing here and disallow _ and " and .
-
-It is hard to have a pattern for all multibyte letterlike characters
-*)
-letterlikeStartPat = Except["_"|"\""|"."|"#"|"0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9"]
-
-letterlikePat = Except["_"|"\""|"."|"#"]
-
-
-digitPat = DigitCharacter
-
 
 parseBox[str:"[", pos_] := LeafNode[Token`OpenSquare, str, <|Source -> pos|>]
 
@@ -610,6 +656,9 @@ parseBox[str:"<=", pos_] := LeafNode[Token`LessEqual, str, <|Source -> pos|>]
 parseBox[str:"++", pos_] := LeafNode[Token`PlusPlus, str, <|Source -> pos|>]
 
 parseBox[str:"..", pos_] := LeafNode[Token`DotDot, str, <|Source -> pos|>]
+
+
+parseBox[str:";;", pos_] := LeafNode[Token`SemiSemi, str, <|Source -> pos|>]
 
 
 parseBox[str:"a", pos_] := LeafNode[Symbol, str, <|Source -> pos|>]

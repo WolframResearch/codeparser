@@ -150,10 +150,18 @@ Source
 SourceConvention
 Synthesized
 
+(*
+Used in parsing boxes
+*)
 Comment
 Metadata
 
 Intra
+
+(*
+Used in parsing boxes
+*)
+TernaryOptionalPattern
 
 
 (* node symbols *)
