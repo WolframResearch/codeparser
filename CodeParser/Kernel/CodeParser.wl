@@ -379,12 +379,13 @@ Module[{res, convention, container, tabWidth},
   The # here is { {exprs}, {issues}, {simple line conts}, {complex line conts}, {embedded newlines}, {embedded tabs} }
   *)
   If[container === Automatic,
-    container = ContainerNode[String, #[[1]], <|
-      If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
-      If[!empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
-      If[!empty[#[[4]]], "ComplexLineContinuations" -> #[[4]], Nothing],
-      If[!empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
-      If[!empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing] |>]&
+    container = ContainerNode[String, #[[1]],
+      <| If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
+         If[!empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
+         If[!empty[#[[4]]], "ComplexLineContinuations" -> #[[4]], Nothing],
+         If[!empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
+         If[!empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing] |>
+    ]&
   ];
 
   $ConcreteParseProgress = 0;
@@ -551,12 +552,13 @@ Module[{res, convention, container, containerWasAutomatic, tabWidth},
   *)
   If[container === Automatic,
     containerWasAutomatic = True;
-    container = ContainerNode[File, #[[1]], <|
-      If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
-      If[!empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
-      If[!empty[#[[4]]], "ComplexLineContinuations" -> #[[4]], Nothing],
-      If[!empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
-      If[!empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing] |>]&
+    container = ContainerNode[File, #[[1]],
+      <| If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
+         If[!empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
+         If[!empty[#[[4]]], "ComplexLineContinuations" -> #[[4]], Nothing],
+         If[!empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
+         If[!empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing] |>
+    ]&
   ];
 
   $ConcreteParseProgress = 0;
@@ -709,12 +711,13 @@ Module[{res, convention, container, tabWidth},
   The # here is { {exprs}, {issues}, {simple line conts}, {complex line conts}, {embedded newlines}, {embedded tabs} }
   *)
   If[container === Automatic,
-    container = ContainerNode[Byte, #[[1]], <|
-      If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
-      If[!empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
-      If[!empty[#[[4]]], "ComplexLineContinuations" -> #[[4]], Nothing],
-      If[!empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
-      If[!empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing] |>]&
+    container = ContainerNode[Byte, #[[1]],
+      <| If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
+         If[!empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
+         If[!empty[#[[4]]], "ComplexLineContinuations" -> #[[4]], Nothing],
+         If[!empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
+         If[!empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing] |>
+    ]&
   ];
 
   $ConcreteParseProgress = 0;
