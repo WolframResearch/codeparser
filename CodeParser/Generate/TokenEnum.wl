@@ -546,10 +546,8 @@ If[FailureQ[res],
 Print["Done Token"]
 )
 
-If[script === $InputFileName,
+If[AbsoluteFileName[script] === AbsoluteFileName[$InputFileName],
 generate[]
-,
-Print["script =!= $InputFileName: ", script, " ", $InputFileName]
 ]
 
 End[]

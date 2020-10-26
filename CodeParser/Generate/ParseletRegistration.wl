@@ -281,10 +281,8 @@ If[FailureQ[res],
 Print["Done ParseletRegistration"]
 )
 
-If[script === $InputFileName,
+If[AbsoluteFileName[script] === AbsoluteFileName[$InputFileName],
 generate[]
-,
-Print["script =!= $InputFileName: ", script, " ", $InputFileName]
 ]
 
 End[]

@@ -143,10 +143,8 @@ Module[{targetDir, prog, compLib},
   Print["Done ExprLibrary"]
 ]]
 
-If[script === $InputFileName,
-buildExprLibrary[]
-,
-Print["script =!= $InputFileName: ", script, " ", $InputFileName]
+If[AbsoluteFileName[script] === AbsoluteFileName[$InputFileName],
+generate[]
 ]
 
 
