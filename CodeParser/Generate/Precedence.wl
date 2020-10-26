@@ -84,6 +84,8 @@ Print["Done Precedence"]
 
 If[script === $InputFileName,
 generate[]
+,
+Print["script =!= $InputFileName: ", script, " ", $InputFileName]
 ]
 
 End[]

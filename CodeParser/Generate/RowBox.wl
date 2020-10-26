@@ -745,6 +745,8 @@ Print["Done RowBox..."]
 
 If[script === $InputFileName,
 generate[]
+,
+Print["script =!= $InputFileName: ", script, " ", $InputFileName]
 ]
 
 End[]

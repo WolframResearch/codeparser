@@ -568,6 +568,8 @@ Print["Done LongNames"]
 
 If[script === $InputFileName,
 generate[]
+,
+Print["script =!= $InputFileName: ", script, " ", $InputFileName]
 ]
 
 End[]

@@ -145,6 +145,8 @@ Module[{targetDir, prog, compLib},
 
 If[script === $InputFileName,
 buildExprLibrary[]
+,
+Print["script =!= $InputFileName: ", script, " ", $InputFileName]
 ]
 
 

@@ -548,6 +548,8 @@ Print["Done Token"]
 
 If[script === $InputFileName,
 generate[]
+,
+Print["script =!= $InputFileName: ", script, " ", $InputFileName]
 ]
 
 End[]
