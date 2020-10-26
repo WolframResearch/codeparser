@@ -2,7 +2,8 @@ BeginPackage["CodeParser`Generate`ExprLibrary`"]
 
 Begin["`Private`"]
 
-Needs["CodeParser`Generate`GenerateSources`"]
+Needs["CodeParser`Generate`Common`"]
+Needs["CodeTools`Generate`GenerateSources`"]
 Needs["Compile`"] (* for Program *)
 Needs["TypeFramework`"] (* for MetaData *)
 

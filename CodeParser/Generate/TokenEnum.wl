@@ -1,15 +1,60 @@
 BeginPackage["CodeParser`Generate`TokenEnum`"]
 
-isCloser
-
-isError
-
-isDifferentialD
-
+tokens
 
 Begin["`Private`"]
 
-Needs["CodeParser`Generate`GenerateSources`"]
+Needs["CodeParser`Generate`Common`"]
+Needs["CodeTools`Generate`GenerateSources`"]
+
+
+If[FailureQ[importedTokenEnumSource],
+  Print[importedTokenEnumSource];
+  Quit[1]
+];
+
+
+cur = 0;
+enumMap = <||>;
+KeyValueMap[(
+  Which[
+    IntegerQ[#2], cur = #2,
+    #2 === Next, cur++,
+    True, cur = enumMap[#2]
+  ];
+  AssociateTo[enumMap, #1 -> cur])&
+  ,
+  importedTokenEnumSource
+];
+
+(*
+sanity check that all tokens are in order
+*)
+cur = -Infinity;
+KeyValueMap[
+  If[!TrueQ[#2 >= cur],
+    Print["Token is out of order: ", #1->#2];
+    Quit[1]
+    ,
+    cur = #2
+  ]&
+  ,
+  enumMap
+];
+
+(*
+remove values like Error`First in:
+<|
+Error`Unknown -> Next,
+Error`First -> Error`Unknown,
+|>
+
+because C switch statements cannot have duplicate cases
+
+*)
+uniqueEnums = DeleteCases[importedTokenEnumSource, v_ /; !IntegerQ[v] && UnsameQ[v, Next]];
+
+tokens = Keys[uniqueEnums]
 
 
 
@@ -263,43 +308,13 @@ Which[
 ]
 
 
-
-cur = 0
-enumMap = <||>
-KeyValueMap[(
-  Which[
-    IntegerQ[#2], cur = #2,
-    #2 === Next, cur++,
-    True, cur = enumMap[#2]
-  ];
-  AssociateTo[enumMap, #1 -> cur])&
-  ,
-  importedTokenEnumSource
-]
-
-(*
-sanity check that all tokens are in order
-*)
-cur = -Infinity;
-KeyValueMap[
-  If[!TrueQ[#2 >= cur],
-    Print["Token is out of order: ", #1->#2];
-    Quit[1]
-    ,
-    cur = #2
-  ]&
-  ,
-  enumMap
-]
-
-
-tokenToSymbolCases = Row[{"case ", toGlobal[#], ".value(): return ", toGlobal[tokenToSymbol[#]], ";"}]& /@ tokens
-
+tokenToSymbolCases = Row[{"case ", toGlobal[#], ".value(): return ", toGlobal[tokenToSymbol[#]], ";"}]& /@ tokens;
 
 
 generate[] := (
 
 Print["Generating TokenEnum..."];
+
 
 tokenCPPHeader = {
 "

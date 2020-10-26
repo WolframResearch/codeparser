@@ -2,7 +2,8 @@ BeginPackage["CodeParser`Generate`RowBox`"]
 
 Begin["`Private`"]
 
-Needs["CodeParser`Generate`GenerateSources`"]
+Needs["CodeParser`Generate`Common`"]
+Needs["CodeTools`Generate`GenerateSources`"]
 
 
 normalPrefixParselets = Normal[importedPrefixParselets]

@@ -2,8 +2,10 @@ BeginPackage["CodeParser`Generate`Symbol`"]
 
 Begin["`Private`"]
 
-Needs["CodeParser`Generate`GenerateSources`"]
 Needs["CodeParser`Generate`ParseletRegistration`"]
+Needs["CodeParser`Generate`TokenEnum`"] (* for tokens *)
+Needs["CodeParser`Generate`Common`"]
+Needs["CodeTools`Generate`GenerateSources`"]
 
 
 (*
@@ -28,6 +30,9 @@ Module[{res},
     Quit[1]
   ]
 ]
+
+$WorkaroundBug321344 = checkBug321344[];
+Print["Work around Bug 321344: ", $WorkaroundBug321344];
 
 
 
@@ -63,9 +68,24 @@ TokenToCloser[Token`LongName`CloseCurlyQuote] = Closer`LongName`CloseCurlyQuote
 TokenToCloser[Token`LongName`CloseCurlyDoubleQuote] = Closer`LongName`CloseCurlyDoubleQuote
 
 
+(*
+We want to fully-qualify symbol names over the wire.
+This allows library->kernel traffic to work when CodeParser` is not on $ContextPath.
+However, it is still not possible to fully-qualify System` symbols
+Related bugs: 283291, 284492
+So also make library->kernel traffic match this behavior
+*)
+stringifyForTransmitting[sym_Symbol] :=
+Module[{ctxt},
+  ctxt = Context[sym];
+  If[ctxt == "System`",
+    SymbolName[sym]
+    ,
+    Context[sym]<>SymbolName[sym]
+  ]
+]
 
-$WorkaroundBug321344 = checkBug321344[]
-Print["Work around Bug 321344: ", $WorkaroundBug321344];
+
 
 symbols = Union[Join[
     {Blank, BlankSequence, BlankNullSequence, EndOfFile, Integer, Integral, Integrate, Null, Out, Optional, Pattern,
@@ -135,28 +155,12 @@ symbols = Union[Join[
     tokens
 ]]
 
-(*
-We want to fully-qualify symbol names over the wire.
-This allows library->kernel traffic to work when CodeParser` is not on $ContextPath.
-However, it is still not possible to fully-qualify System` symbols
-Related bugs: 283291, 284492
-So also make library->kernel traffic match this behavior
-*)
-stringifyForTransmitting[sym_Symbol] :=
-Module[{ctxt},
-  ctxt = Context[sym];
-  If[ctxt == "System`",
-    SymbolName[sym]
-    ,
-    Context[sym]<>SymbolName[sym]
-  ]
-]
-
 
 
 generate[] := (
 
 Print["Generating Symbol..."];
+
 
 symbolCPPHeader = {
 "

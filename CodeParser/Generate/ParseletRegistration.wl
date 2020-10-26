@@ -7,8 +7,9 @@ InfixOperatorToParselet
 
 Begin["`Private`"]
 
-Needs["CodeParser`Generate`TokenEnum`"]
-Needs["CodeParser`Generate`GenerateSources`"]
+Needs["CodeParser`Generate`TokenEnum`"] (* for tokens *)
+Needs["CodeParser`Generate`Common`"]
+Needs["CodeTools`Generate`GenerateSources`"]
 
 
 KeyValueMap[

@@ -81,14 +81,6 @@ set(GENERATED_WL_PACLET_RESOURCES_SOURCES
 	${PROJECT_BINARY_DIR}/generated/wl/LongNames.wl
 )
 
-set(WL_GENERATE_EXPRLIB_SOURCES
-	${PROJECT_SOURCE_DIR}/CodeParser/Generate/ExprLibrary.wl
-)
-
-set(WL_GENERATE_CREATEPACLETARCHIVE_SOURCES
-	${PROJECT_SOURCE_DIR}/${PACLET}/Generate/CreatePacletArchive.wl
-)
-
 set(PACLETINFO_SOURCE
 	${PROJECT_SOURCE_DIR}/${PACLET}/PacletInfo.wl.in
 )
@@ -236,7 +228,8 @@ add_custom_command(
 	DEPENDS
 		${PROJECT_SOURCE_DIR}/CodeParser/Data/LongNames.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/LongNames.wl
-		${PROJECT_SOURCE_DIR}/CodeParser/Generate/GenerateSources.wl
+		${PROJECT_SOURCE_DIR}/CodeParser/Generate/Common.wl
+		${PROJECT_SOURCE_DIR}/CodeTools/Generate/GenerateSources.wl
 		${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/LongNames.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
@@ -255,7 +248,8 @@ add_custom_command(
 		# transitively from TokenEnum
 		${PROJECT_SOURCE_DIR}/CodeParser/Data/TokenEnum.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/ParseletRegistration.wl
-		${PROJECT_SOURCE_DIR}/CodeParser/Generate/GenerateSources.wl
+		${PROJECT_SOURCE_DIR}/CodeParser/Generate/Common.wl
+		${PROJECT_SOURCE_DIR}/CodeTools/Generate/GenerateSources.wl
 		${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/ParseletRegistration.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
@@ -270,7 +264,8 @@ add_custom_command(
 	DEPENDS
 		${PROJECT_SOURCE_DIR}/CodeParser/Data/Precedence.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/Precedence.wl
-		${PROJECT_SOURCE_DIR}/CodeParser/Generate/GenerateSources.wl
+		${PROJECT_SOURCE_DIR}/CodeParser/Generate/Common.wl
+		${PROJECT_SOURCE_DIR}/CodeTools/Generate/GenerateSources.wl
 		${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/Precedence.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
@@ -286,7 +281,8 @@ add_custom_command(
 		${PROJECT_SOURCE_DIR}/CodeParser/Data/InfixParselets.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Data/PrefixParselets.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/RowBox.wl
-		${PROJECT_SOURCE_DIR}/CodeParser/Generate/GenerateSources.wl
+		${PROJECT_SOURCE_DIR}/CodeParser/Generate/Common.wl
+		${PROJECT_SOURCE_DIR}/CodeTools/Generate/GenerateSources.wl
 		${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/RowBox.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
@@ -306,7 +302,8 @@ add_custom_command(
 		# transitively from ParseletRegistration -> TokenEnum
 		${PROJECT_SOURCE_DIR}/CodeParser/Data/TokenEnum.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/Symbol.wl
-		${PROJECT_SOURCE_DIR}/CodeParser/Generate/GenerateSources.wl
+		${PROJECT_SOURCE_DIR}/CodeParser/Generate/Common.wl
+		${PROJECT_SOURCE_DIR}/CodeTools/Generate/GenerateSources.wl
 		${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/Symbol.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
@@ -322,7 +319,8 @@ add_custom_command(
 	DEPENDS
 		${PROJECT_SOURCE_DIR}/CodeParser/Data/TokenEnum.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/TokenEnum.wl
-		${PROJECT_SOURCE_DIR}/CodeParser/Generate/GenerateSources.wl
+		${PROJECT_SOURCE_DIR}/CodeParser/Generate/Common.wl
+		${PROJECT_SOURCE_DIR}/CodeTools/Generate/GenerateSources.wl
 		${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/TokenEnum.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
@@ -385,8 +383,8 @@ add_custom_command(
 	OUTPUT
 		${EXPR_LIB_OUTPUTS}
 	DEPENDS
-		${WL_GENERATE_EXPRLIB_SOURCES}
-		${PROJECT_SOURCE_DIR}/${PACLET}/Generate/ExprLibrary.wl
+		${PROJECT_SOURCE_DIR}/CodeParser/Generate/ExprLibrary.wl
+		${PROJECT_SOURCE_DIR}/CodeTools/Generate/GenerateSources.wl
 		${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
 		${CMAKE_COMMAND} -E echo "EXPR_LIB_OUTPUTS: ${EXPR_LIB_OUTPUTS}"
@@ -644,10 +642,10 @@ add_custom_command(
 		${PACLET_OUTPUT}
 	DEPENDS
 		${PACLET_SOURCES}
-		${PROJECT_SOURCE_DIR}/${PACLET}/Generate/CreatePacletArchive.wl
+		${PROJECT_SOURCE_DIR}/CodeTools/Generate/CreatePacletArchive.wl
 		${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
-		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/CreatePacletArchive.wl -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DPACLET=${PACLET} -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
+		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/CodeTools/Generate/CreatePacletArchive.wl -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DPACLET=${PACLET} -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	VERBATIM
 	WORKING_DIRECTORY
 		${PROJECT_SOURCE_DIR}

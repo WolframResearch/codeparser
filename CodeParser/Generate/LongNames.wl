@@ -2,23 +2,58 @@ BeginPackage["CodeParser`Generate`LongNames`"]
 
 Begin["`Private`"]
 
-Needs["CodeParser`Generate`GenerateSources`"]
+Needs["CodeParser`Generate`Common`"]
+Needs["CodeTools`Generate`GenerateSources`"]
+
+
+(*
+Map into string meta characters
+*)
+longNameToHexDigits["RawDoubleQuote"] := "CODEPOINT_STRINGMETA_DOUBLEQUOTE"
+longNameToHexDigits["RawBackslash"] := "CODEPOINT_STRINGMETA_BACKSLASH"
+
+
+(*
+longNameToHexDigits["Alpha"] is "0x03b1"
+*)
+longNameToHexDigits[longName_String] :=
+  "0x"<>IntegerString[longNameToCharacterCode[longName], 16, 4]
+
+
+longNameToCharacterCode[name_] := importedLongNames[name][[2]]
+
+
+validateLongNameMap[m_] := (
+  Print["validating LongName map"];
+
+  If[FailureQ[m],
+    Print[m];
+    Quit[1]
+  ];
+
+  If[!AssociationQ[m],
+    Print["LongName map is not an Association"];
+    Quit[1]
+  ];
+
+  If[!DuplicateFreeQ[Keys[m]],
+    Print["LongName map has duplicates"];
+    Quit[1]
+  ];
+
+  If[!OrderedQ[longNameToCharacterCode /@ Keys[m]],
+    Print["LongName map is not ordered"];
+    Quit[1]
+  ];
+)
 
 
 validateLongNameMap[importedLongNames]
 
 
+
 escapeString[s_] :=
   ToString[s, InputForm, CharacterEncoding -> "ASCII"]
-
-
-
-Check[
-longNameDefines = ("constexpr codepoint " <> toGlobal["CodePoint`LongName`" <> #] <> "(" <> longNameToHexDigits[#] <> ");")& /@ Keys[importedLongNames]
-,
-Print["Message while generating LongNames"];
-Quit[1]
-]
 
 
 
@@ -83,11 +118,6 @@ Module[{res},
 ]
 
 
-
-$WorkaroundUnreportedSortBug1 = checkUnreportedSortBug1[]
-Print["Work around unreported Sort bug1: ", $WorkaroundUnreportedSortBug1];
-
-
 (*
 Yes, this slower than it needs to be
 But it is simple and reliable
@@ -112,6 +142,44 @@ Module[{list, len, tmp},
 ]
 
 
+
+Check[
+longNames = ("\"" <> # <> "\", ")& /@ Keys[importedLongNames]
+,
+Print["Message while generating LongNames"];
+Quit[1]
+];
+
+
+importedNotStrangeLetterlikeLongNames = Keys[Select[importedLongNames, #[[1]] === LetterlikeCharacter && MemberQ[Lookup[#[[3]], "Extra", {}], "NotStrange"]&]];
+
+importedASCIIReplacements = KeyValueMap[Function[{k, v}, k -> v[[3, Key["ASCIIReplacements"]]]], Select[importedLongNames, KeyExistsQ[#[[3]], "ASCIIReplacements"]&]];
+
+importedPunctuationLongNames = Keys[Select[importedLongNames, #[[1]] === PunctuationCharacter &]];
+
+importedWhitespaceLongNames = Keys[Select[importedLongNames, #[[1]] === WhitespaceCharacter &]];
+
+importedNewlineLongNames = Keys[Select[importedLongNames, #[[1]] === NewlineCharacter &]];
+
+importedUninterpretableLongNames = Keys[Select[importedLongNames, #[[1]] === UninterpretableCharacter &]];
+
+importedUnsupportedLongNames = Keys[Select[importedLongNames, #[[1]] === UnsupportedCharacter &]];
+
+importedRawLongNames = Keys[Select[importedLongNames, #[[1]] === RawCharacter &]];
+
+
+
+Check[
+longNameDefines = ("constexpr codepoint " <> toGlobal["CodePoint`LongName`" <> #] <> "(" <> longNameToHexDigits[#] <> ");")& /@ Keys[importedLongNames]
+,
+Print["Message while generating LongNames"];
+Quit[1]
+];
+
+$WorkaroundUnreportedSortBug1 = checkUnreportedSortBug1[];
+Print["Work around unreported Sort bug1: ", $WorkaroundUnreportedSortBug1];
+
+
 If[$WorkaroundUnreportedSortBug1,
   lexSort = bubbleLexSort
   ,
@@ -120,8 +188,9 @@ If[$WorkaroundUnreportedSortBug1,
   when targeting v12.0 as a minimum, then can use SortBy[list, ToCharacterCode, lexOrderingForLists]
   *)
   lexSort = Sort[#, lexOrdering]&
-]
+];
 
+$lexSortedImportedLongNames = lexSort[Keys[importedLongNames]];
 
 
 (*
@@ -129,7 +198,59 @@ If[$WorkaroundUnreportedSortBug1,
 
 Put CodePoint`CRLF before actual code points
 *)
-mbNewlines = toGlobal /@ ( { CodePoint`CRLF } ~Join~ ( ("CodePoint`LongName`"<>#)& /@ SortBy[importedNewlineLongNames, longNameToCharacterCode]))
+mbNewlines = toGlobal /@ ( { CodePoint`CRLF } ~Join~ ( ("CodePoint`LongName`"<>#)& /@ SortBy[importedNewlineLongNames, longNameToCharacterCode]));
+
+
+
+longNameToCodePointMapNames = {
+"//",
+"//",
+"//",
+"std::array<std::string, LONGNAMES_COUNT> LongNameToCodePointMap_names {{"} ~Join~
+  (Row[{escapeString[#], ","}]& /@ $lexSortedImportedLongNames) ~Join~
+  {"}};", ""};
+
+longNameToCodePointMapPoints = {
+"//",
+"//",
+"//",
+"std::array<codepoint, LONGNAMES_COUNT> LongNameToCodePointMap_points {{"} ~Join~
+  (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ $lexSortedImportedLongNames) ~Join~
+  {"}};", ""};
+
+codePointToLongNameMapPoints = {
+"//",
+"//",
+"//",
+"std::array<codepoint, LONGNAMES_COUNT> CodePointToLongNameMap_points {{"} ~Join~
+  (Row[{toGlobal["CodePoint`LongName`"<>#], ","}] & /@ SortBy[Keys[importedLongNames], longNameToCharacterCode]) ~Join~
+  {"}};", ""};
+
+codePointToLongNameMapNames = {
+"//",
+"//",
+"//",
+"std::array<std::string, LONGNAMES_COUNT> CodePointToLongNameMap_names {{"} ~Join~
+  (Row[{escapeString[#], ","}] & /@ SortBy[Keys[importedLongNames], longNameToCharacterCode]) ~Join~
+  {"}};", ""};
+
+rawSet = {
+"//",
+"//",
+"//",
+"std::array<std::string, RAWLONGNAMES_COUNT> RawSet {{"} ~Join~
+(Row[{"{", "\""<>#<>"\"", "}", ","}]& /@ lexSort[importedRawLongNames]) ~Join~
+{"}};",
+"
+//
+//
+//
+bool LongNames::isRaw(std::string LongNameStr) {
+  auto it =  std::lower_bound(RawSet.begin(), RawSet.end(), LongNameStr);
+  return it != RawSet.end() && *it == LongNameStr;
+}
+"};
+
 
 
 notStrangeLetterlikeSource = 
@@ -149,7 +270,7 @@ notStrangeLetterlikeSource =
     "return it != mbNotStrangeLetterlikeCodePoints.end() && *it == point;",
     "}",
     ""
-  }
+  };
 
 asciiReplacementsSource = 
   {
@@ -166,7 +287,7 @@ asciiReplacementsSource =
     "std::vector<std::string> LongNames::asciiReplacements(codepoint point) { ",
     "auto it = asciiReplacementsMap.find(point);",
     "return (it != asciiReplacementsMap.end()) ? it->second : std::vector<std::string>{};",
-    "}", ""}
+    "}", ""};
 
 replacementGraphicalSource =
   {
@@ -197,7 +318,7 @@ replacementGraphicalSource =
     "  }",
     "}",
     ""
-  }
+  };
 
 punctuationSource = 
   {
@@ -215,7 +336,7 @@ punctuationSource =
     "return it != mbPunctuationCodePoints.end() && *it == point;",
     "}",
     ""
-  }
+  };
 
 whitespaceSource = 
   {
@@ -233,7 +354,7 @@ whitespaceSource =
     "return it != mbWhitespaceCodePoints.end() && *it == point;",
     "}",
     ""
-  }
+  };
 
 newlineSource = 
   {
@@ -251,7 +372,7 @@ newlineSource =
     "return it != mbNewlineCodePoints.end() && *it == point;",
     "}",
     ""
-  }
+  };
 
 uninterpretableSource = 
   {
@@ -269,7 +390,7 @@ uninterpretableSource =
     "return it != mbUninterpretableCodePoints.end() && *it == point;",
     "}",
     ""
-  }
+  };
 
 unsupportedSource = 
   {
@@ -287,7 +408,7 @@ unsupportedSource =
     "return it != unsupportedLongNameCodePoints.end() && *it == point;",
     "}",
     ""
-  }
+  };
 
 LongNameCodePointToOperatorSource = 
   {
@@ -303,75 +424,14 @@ LongNameCodePointToOperatorSource =
       "return TOKEN_UNKNOWN;",
       "}",
       "}"
-  }
+  };
 
-
-$lexSortedImportedLongNames = lexSort[Keys[importedLongNames]]
-
-
-
-
-longNameToCodePointMapNames = {
-"//",
-"//",
-"//",
-"std::array<std::string, LONGNAMES_COUNT> LongNameToCodePointMap_names {{"} ~Join~
-  (Row[{escapeString[#], ","}]& /@ $lexSortedImportedLongNames) ~Join~
-  {"}};", ""}
-
-longNameToCodePointMapPoints = {
-"//",
-"//",
-"//",
-"std::array<codepoint, LONGNAMES_COUNT> LongNameToCodePointMap_points {{"} ~Join~
-  (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ $lexSortedImportedLongNames) ~Join~
-  {"}};", ""}
-
-codePointToLongNameMapPoints = {
-"//",
-"//",
-"//",
-"std::array<codepoint, LONGNAMES_COUNT> CodePointToLongNameMap_points {{"} ~Join~
-  (Row[{toGlobal["CodePoint`LongName`"<>#], ","}] & /@ SortBy[Keys[importedLongNames], longNameToCharacterCode]) ~Join~
-  {"}};", ""}
-
-codePointToLongNameMapNames = {
-"//",
-"//",
-"//",
-"std::array<std::string, LONGNAMES_COUNT> CodePointToLongNameMap_names {{"} ~Join~
-  (Row[{escapeString[#], ","}] & /@ SortBy[Keys[importedLongNames], longNameToCharacterCode]) ~Join~
-  {"}};", ""}
-
-rawSet = {
-"//",
-"//",
-"//",
-"std::array<std::string, RAWLONGNAMES_COUNT> RawSet {{"} ~Join~
-(Row[{"{", "\""<>#<>"\"", "}", ","}]& /@ lexSort[importedRawLongNames]) ~Join~
-{"}};",
-"
-//
-//
-//
-bool LongNames::isRaw(std::string LongNameStr) {
-  auto it =  std::lower_bound(RawSet.begin(), RawSet.end(), LongNameStr);
-  return it != RawSet.end() && *it == LongNameStr;
-}
-"}
-
-
-Check[
-longNames = ("\"" <> # <> "\", ")& /@ Keys[importedLongNames]
-,
-Print["Message while generating LongNames"];
-Quit[1]
-]
 
 
 generate[] := (
 
 Print["Generating LongNames..."];
+
 
 longNamesCPPHeader = {
 "

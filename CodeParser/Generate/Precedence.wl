@@ -2,14 +2,28 @@ BeginPackage["CodeParser`Generate`Precedence`"]
 
 Begin["`Private`"]
 
-Needs["CodeParser`Generate`GenerateSources`"]
+Needs["CodeParser`Generate`Common`"]
+Needs["CodeTools`Generate`GenerateSources`"]
 
+
+associativityToValue[Associativity`NonRight] = 0
+associativityToValue[Associativity`Right] = 1
+
+
+generate[] := (
+
+Print["Generating Precedence..."];
+
+If[FailureQ[importedPrecedenceSource],
+  Print[importedPrecedenceSource];
+  Quit[1]
+];
 
 (*
 resolve the symbolic values in the Precedence table to integer values
 *)
-cur = {0, Associativity`NonRight}
-enumMap = <||>
+cur = {0, Associativity`NonRight};
+enumMap = <||>;
 KeyValueMap[(
   Which[
     Head[#2] === Symbol, cur = enumMap[#2],
@@ -20,7 +34,7 @@ KeyValueMap[(
   AssociateTo[enumMap, #1 -> cur])&
   ,
   importedPrecedenceSource
-]
+];
 
 
 (*
@@ -36,17 +50,8 @@ KeyValueMap[
   ]&
   ,
   enumMap
-]
+];
 
-
-associativityToValue[Associativity`NonRight] = 0
-associativityToValue[Associativity`Right] = 1
-
-
-
-generate[] := (
-
-Print["Generating Precedence..."];
 
 precedenceCPPHeader = {
 "
