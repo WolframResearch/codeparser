@@ -3492,6 +3492,7 @@ inline Token Tokenizer::handleNakedMBLinearSyntax(Buffer tokenStartBuf, SourceLo
             return Token(TOKEN_LINEARSYNTAX_SPACE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         default:
             assert(false);
+            return Token();
     }
     
 }
