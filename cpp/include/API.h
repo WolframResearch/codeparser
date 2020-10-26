@@ -121,7 +121,7 @@ public:
     
     ~ParserSession();
     
-    void init(BufferAndLength bufAndLen, WolframLibraryData libData, ParserSessionPolicy policy, SourceConvention srcConvention, uint32_t tabWidth);
+    void init(BufferAndLength bufAndLen, WolframLibraryData libData, ParserSessionPolicy policy, SourceConvention srcConvention, uint32_t tabWidth, bool firstLineIsShebang);
     
     void deinit();
     

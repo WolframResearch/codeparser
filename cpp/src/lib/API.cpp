@@ -44,7 +44,7 @@ ParserSession::~ParserSession() {
     TheByteBuffer.reset(nullptr);
 }
 
-void ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libData, ParserSessionPolicy policyIn, SourceConvention srcConvention, uint32_t tabWidth) {
+void ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libData, ParserSessionPolicy policyIn, SourceConvention srcConvention, uint32_t tabWidth, bool firstLineIsShebang) {
     
     bufAndLen = bufAndLenIn;
     
@@ -58,7 +58,7 @@ void ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libData
     TheByteDecoder->init(srcConvention, tabWidth);
     TheCharacterDecoder->init(libData);
     TheTokenizer->init();
-    TheParser->init();
+    TheParser->init(firstLineIsShebang);
     
     if (libData) {
         
@@ -487,7 +487,7 @@ DLLEXPORT int ConcreteParseBytes_Listable_LibraryLink(WolframLibraryData libData
     
     auto len = static_cast<size_t>(mlLen);
     
-    if (len != 3) {
+    if (len != 4) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -521,6 +521,13 @@ DLLEXPORT int ConcreteParseBytes_Listable_LibraryLink(WolframLibraryData libData
         return LIBRARY_FUNCTION_ERROR;
     }
     
+    int mlSkipFirstLine;
+    if (!MLGetInteger(mlp, &mlSkipFirstLine)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    auto skipFirstLine = static_cast<bool>(mlSkipFirstLine);
+    
     if (!MLNewPacket(mlp) ) {
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -534,7 +541,7 @@ DLLEXPORT int ConcreteParseBytes_Listable_LibraryLink(WolframLibraryData libData
         
         auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
         
-        TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth);
+        TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth, skipFirstLine);
         
         auto N = TheParserSession->parseExpressions();
         
@@ -558,7 +565,7 @@ DLLEXPORT int TokenizeBytes_Listable_LibraryLink(WolframLibraryData libData, MLI
     
     auto len = static_cast<size_t>(mlLen);
     
-    if (len != 3) {
+    if (len != 4) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -592,6 +599,13 @@ DLLEXPORT int TokenizeBytes_Listable_LibraryLink(WolframLibraryData libData, MLI
         return LIBRARY_FUNCTION_ERROR;
     }
     
+    int mlSkipFirstLine;
+    if (!MLGetInteger(mlp, &mlSkipFirstLine)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    auto skipFirstLine = static_cast<bool>(mlSkipFirstLine);
+    
     if (!MLNewPacket(mlp) ) {
         return LIBRARY_FUNCTION_ERROR;
     }
@@ -605,7 +619,7 @@ DLLEXPORT int TokenizeBytes_Listable_LibraryLink(WolframLibraryData libData, MLI
         
         auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
         
-        TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth);
+        TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth, skipFirstLine);
         
         auto N = TheParserSession->tokenize();
         
@@ -656,13 +670,20 @@ DLLEXPORT int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK ml
         return LIBRARY_FUNCTION_ERROR;
     }
     
+    int mlSkipFirstLine;
+    if (!MLGetInteger(mlp, &mlSkipFirstLine)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+    
+    auto skipFirstLine = static_cast<bool>(mlSkipFirstLine);
+    
     if (!MLNewPacket(mlp) ) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto bufAndLen = BufferAndLength(inStr->get(), inStr->getByteCount());
     
-    TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth);
+    TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth, skipFirstLine);
     
     auto N = TheParserSession->concreteParseLeaf(static_cast<StringifyMode>(stringifyMode));
     

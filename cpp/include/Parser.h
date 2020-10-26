@@ -91,7 +91,7 @@ private:
 public:
     Parser();
     
-    void init();
+    void init(bool firstLineIsShebang);
     
     void deinit();
     

@@ -10,9 +10,65 @@ Parser::Parser() : Issues() {}
 
 Parser::~Parser() {}
 
-void Parser::init() {
+void Parser::init(bool firstLineIsShebang) {
     
     Issues.clear();
+    
+    if (!firstLineIsShebang) {
+        return;
+    }
+    
+    //
+    // Handle the #! shebang
+    //
+    
+    ParserContext Ctxt;
+    
+    auto peek = TheParser->currentToken(Ctxt, TOPLEVEL);
+    
+    if (peek.Tok != TOKEN_HASH) {
+        //
+        // TODO: add to Issues
+        //
+    }
+    
+    TheParser->nextToken(peek);
+    
+    peek = TheParser->currentToken(Ctxt, TOPLEVEL);
+    
+    if (peek.Tok != TOKEN_BANG) {
+        //
+        // TODO: add to Issues
+        //
+    }
+    
+    TheParser->nextToken(peek);
+    
+    while (true) {
+        
+#if !NABORT
+        if (TheParserSession->isAbort()) {
+            
+            break;
+        }
+#endif // !NABORT
+        
+        auto peek = TheParser->currentToken(Ctxt, TOPLEVEL);
+        
+        if (peek.Tok == TOKEN_ENDOFFILE) {
+            break;
+        }
+        
+        if (peek.Tok == TOKEN_TOPLEVELNEWLINE) {
+            
+            TheParser->nextToken(peek);
+            
+            break;
+        }
+        
+        TheParser->nextToken(peek);
+        
+    } // while (true)
 }
 
 void Parser::deinit() {
