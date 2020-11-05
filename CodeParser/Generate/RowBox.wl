@@ -62,7 +62,10 @@ parseCommentRowBox[RowBox[children_], pos_] :=
 
     handledChildren = MapIndexed[parseCommentRowBox[#1, Append[pos, 1] ~Join~ #2]&, handledChildren];
 
-    BoxNode[RowBox, {handledChildren}, <|Source -> pos|>]
+    (*
+    toBeSpliced[handledChildren]
+    *)
+    BoxNode[RowBox, {handledChildren}, <|Source->pos|>]
   ]
 
 parseCommentRowBox[child_String, pos_] :=
@@ -456,9 +459,19 @@ prbDispatch[{_, LeafNode[Token`ColonColon, _, _], _, ___}, handledChildren_, chi
     InfixNode[MessageName,
       MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ #2]&, first] ~Join~
       MapIndexed[
-        If[Mod[#2[[1]], 2] == 0,
-          parseBox[#1, Append[pos, 1] ~Join~ (#2 + poss[[1, 1]]-1), \"StringifyMode\" -> 1],
-          parseBox[#1, Append[pos, 1] ~Join~ (#2 + poss[[1, 1]]-1)]]&, children[[ poss[[1, 1]] ;;]]],
+        Switch[#1,
+          \"::\",
+            parseBox[#1, Append[pos, 1] ~Join~ (#2 + poss[[1, 1]]-1)]
+          ,
+          ws_String /; StringMatchQ[ws, (\" \") ~~ ___],
+            parseBox[#1, Append[pos, 1] ~Join~ (#2 + poss[[1, 1]]-1)]
+          ,
+          _String,
+            parseBox[#1, Append[pos, 1] ~Join~ (#2 + poss[[1, 1]]-1), \"StringifyMode\" -> 1]
+          ,
+          _,
+            parseBox[#1, Append[pos, 1] ~Join~ (#2 + poss[[1, 1]]-1)]
+        ]&, children[[ poss[[1, 1]] ;;]]],
     <|Source->Append[pos, 1]|>]
   ]
 
@@ -485,6 +498,9 @@ prbDispatch[{LeafNode[Token`QuestionQuestion, _, _], _}, handledChildren_, child
 (*
 Does not have a regular parselet
 *)
+prbDispatch[{_, LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, handledChildren_, ignored_, pos_] :=
+  BinaryNode[Unset, handledChildren, <|Source->Append[pos, 1]|>]
+
 prbDispatch[{_, LeafNode[Token`Equal, _, _], _}, handledChildren_, ignored_, pos_] :=
   BinaryNode[Set, handledChildren, <|Source->Append[pos, 1]|>]
 
@@ -550,6 +566,8 @@ prbDispatch[{_, ___, LeafNode[Token`Semi, _, _]}, handledChildren_, ignored_, po
 
     (*
     DO NOT COMMIT THIS!!
+
+    SEQUENCEREPLACE IS SLOW!!
     *)
     childrenWithImplicitNull = SequenceReplace[childrenWithImplicitNull, {
         s1:LeafNode[Token`Semi, _, _], ws:(LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _])..., s2:LeafNode[Token`Semi, _, _]
@@ -565,6 +583,8 @@ prbDispatch[{_, LeafNode[Token`Semi, _, _], ___}, handledChildren_, ignored_, po
 
     (*
     DO NOT COMMIT THIS!!
+
+    SEQUENCEREPLACE IS SLOW!!
     *)
     childrenWithImplicitNull = SequenceReplace[childrenWithImplicitNull, {
         s1:LeafNode[Token`Semi, _, _], ws:(LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _])..., s2:LeafNode[Token`Semi, _, _]
@@ -605,6 +625,9 @@ insertImplicitTimes[node_] :=
       *)
       {node}
     ,
+    GroupNode[Comment, _, _],
+      {node}
+    ,
     LeafNode[Token`Star, _, _],
       (*
       Do not insert implicit Times after *
@@ -625,10 +648,19 @@ prbDispatch[{_, LeafNode[Token`Star, _, _], _, ___}, handledChildren_, ignored_,
     childrenWithImplicitTimes = Flatten[(insertImplicitTimes /@ Most[handledChildren]) ~Join~ {Last[handledChildren]}];
 
     (*
+    Remove ImplicitTimes from the end
+    *)
+    childrenWithImplicitTimes = Replace[childrenWithImplicitTimes, {most___,
+        LeafNode[Token`Fake`ImplicitTimes, _, _], ws:(LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _])...
+      } :> {most, ws}];
+
+    (*
     DO NOT COMMIT THIS!!
+
+    SEQUENCEREPLACE IS SLOW!!
     *)
     childrenWithImplicitTimes = SequenceReplace[childrenWithImplicitTimes, {
-        LeafNode[Token`Fake`ImplicitTimes, _, _], ws:LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _]..., s:LeafNode[Token`Star, _, _]
+        LeafNode[Token`Fake`ImplicitTimes, _, _], ws:(LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _])..., s:LeafNode[Token`Star, _, _]
       } :> Sequence[ws, s]];
 
     InfixNode[Times, childrenWithImplicitTimes, <|Source->Append[pos, 1]|>]
@@ -647,17 +679,30 @@ if there is an error, then just return the last non-trivia node
 prbDispatch[{_, ErrorNode[Token`Error`UnhandledCharacter, _, _], ___}, handledChildren_, ignored_, pos_] :=
     BoxNode[RowBox, {handledChildren}, <|Source -> pos|>]
 
+prbDispatch[_, handledChildren_, ignored_, pos_] /; TrueQ[$PreserveRowBox] := (
+  BoxNode[RowBox, {handledChildren}, <|Source -> pos|>]
+)
+
+
+(*
+Only comments or something
+*)
+prbDispatch[{}, handledChildren_, ignored_, pos_] := (
+  toBeSpliced[handledChildren]
+)
 
 (*
 Catch the case of RowBox[{\"a\", \"\\n\", \"b\"}] before hitting the implicit Times fallthrough
+
+Related bugs: 395301
 *)
 prbDispatch[_, handledChildren_ /;
-    !FreeQ[handledChildren, LeafNode[Token`Newline, _, _], 1] &&
-    FreeQ[handledChildren, LeafNode[Token`Star, _, _], 1], ignored_, pos_] := (
+    !FreeQ[handledChildren, LeafNode[Token`Newline | Token`Boxes`LineContinuation, _, _], 1] &&
+    FreeQ[handledChildren, LeafNode[Token`Star, _, _], 1], ignored_, pos_] /; !TrueQ[$ProbablyImplicitTimes] := (
   (*
   make sure to return the concrete children
   *)
-  BoxNode[RowBox, {handledChildren}, <|Source -> pos|>]
+  toBeSpliced[handledChildren]
 )
 
 
@@ -672,7 +717,16 @@ prbDispatch[_, handledChildren_, ignored_, pos_] :=
     childrenWithImplicitTimes = Flatten[(insertImplicitTimes /@ Most[handledChildren]) ~Join~ {Last[handledChildren]}];
 
     (*
+    Remove ImplicitTimes from the end
+    *)
+    childrenWithImplicitTimes = Replace[childrenWithImplicitTimes, {most___,
+      LeafNode[Token`Fake`ImplicitTimes, _, _], ws:(LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _])...
+    } :> {most, ws}];
+    
+    (*
     DO NOT COMMIT THIS!!
+
+    SEQUENCEREPLACE IS SLOW!!
     *)
     childrenWithImplicitTimes = SequenceReplace[childrenWithImplicitTimes, {
         LeafNode[Token`Fake`ImplicitTimes, _, _], ws:LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _]..., s:LeafNode[Token`Star, _, _]

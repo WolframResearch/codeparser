@@ -69,7 +69,7 @@ Trivia is kept
 ## What is trivia?
 
 Taken from:
-https://github.com/dotnet/roslyn/wiki/Roslyn-Overview#syntax-trivia
+https://github.com/dotnet/roslyn/blob/master/docs/wiki/Roslyn-Overview.md#syntax-trivia
 
 comments
 

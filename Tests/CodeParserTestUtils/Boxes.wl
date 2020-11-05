@@ -124,6 +124,7 @@ If[!StringQ[inputStr],
   aggToCompare = agg;
   aggToCompare = convertMultiSingleQuote[aggToCompare];
   aggToCompare = flattenChildrenInGroupMissingCloser[aggToCompare];
+  aggToCompare = expandEqualDot[aggToCompare];
   aggToCompare = aggToCompare /. {_Association -> <||>};
 
   cst2 = CodeConcreteParse[inputStr];
@@ -297,6 +298,12 @@ flattenChildrenInGroupMissingCloser[node_] := node /. {
 convertedUnterminatedToGroupMissingCloser[node_] := node /. {
   UnterminatedGroupNode[op_, children_, data_] :> GroupMissingCloserNode[op, children, data]
 }
+
+expandEqualDot[agg_] :=
+    agg /. {
+        BinaryNode[Unset, {rand_, LeafNode[Token`Boxes`EqualDot, _, _]}, _] :>
+            BinaryNode[Unset, {rand, LeafNode[Token`Equal, "=", <||>], LeafNode[Token`Dot, ".", <||>]}, <||>]
+    }
 
 
 exceptions = <|
@@ -521,81 +528,11 @@ exceptions = <|
    "WhittakerM" -> {{6, 1}},
    "WhittakerW" -> {{6, 1}},
 
-   (*
-   Syntax errors in NB file that are too hard to reconcile
-
-   Stuff like just:
-
-   Foo`
-
-   on a line
-   *)
-   "NResidue" -> {{3503936138499392141, 0}},
-   "NSeries" -> {{8919890189976868789, 0}},
-
-   (*
-   bad boxes from old syntax:
-   
-   RowBox[{"!", "!", "a"}]
-   *)
-   "XMLGet" -> {{1822588744129854256, 0}},
-   
-   (*
-   purposely bad syntax like:
-
-   f[{]
-
-   that CodeParser handles better than the FE
-   *)
-   "BalanceBracketsAndBraces" -> {{4558406799838585923, 0}, {8488382433451568354, 0}},
-   "TypeAGreekLetter" -> {{7001789806802778250, 0}},
-   "basic" -> {{8617632462271100898, 0}},
-   "nodiffd" -> {{2739688739500277811, 0}},
-
-   (*
-   Bugs in the FE:
-
-   normally, line breaks between cells just create a List
-
-   But comments can sometimes create a RowBox[{}]
-   *)
-   "FCS" -> {{3796052602696307908, 0}},
-   "DBSCAN" -> {{2692033585825782878, 0}},
-   "GaussianMixture" -> {{7471305673129325172, 0}},
-   "JarvisPatrick" -> {{991752872535796560, 0}},
-
-   (*
-   Linear syntax design errors
-   *)
-   "SVG" -> {{2597693386764080744, 0}},
-
-   (*
-   non-canonical boxes
-
-   Mainly something like RowBox[{RowBox[{"a", "'"}], "'"}]
-   *)
-   "bcnan" -> {{2819023601929632552, 0}, {3038710008220428949, 0}, {5440830809014287756, 0}, {1108732267225547925, 0}},
-   "mxst" -> {{2488069511112766269, 0}, {3811806193775399293, 0}, {8526942517816332329, 0}},
-   "ndnco" -> {{8883637911336105566, 0}, {740805646734919778, 0}},
-
-
-
-
-
    (* combined *)
    "CoxModel" -> {{1, 3}, {1, 9}},
    "Information" -> {{1, 3}, {1, 4}, {1, 5}},
    "Integrate" -> {{3, 4}},
    "TraditionalForm" -> {{1, 2}, {2, 2}, {3, 2}},
-
-   "diffend" -> {{2457361584107129126, 0}, {7009577529812573332, 0}},
-   "intnest" -> {{6792992189944517856, 0}, {8773133202413536428, 0}},
-
-   (*
-   combined from Derivative::novar and Integrate::novar
-   *)
-   "novar" -> {{6614704763568814001, 0}, {4171545340968173910, 0}, {3040295266473824017, 0}},
-
 
    "FindKPlex" -> {{1, 1}, {2, 3}}
    |>;

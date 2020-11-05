@@ -369,6 +369,42 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, bool firstLi
         
         TheParserSession->deinit();
         
+    } else if (mode == LEAF) {
+        
+        auto fBufAndLen = BufferAndLength(fb->getBuf(), fb->getLen());
+        
+        TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineIsShebang);
+        
+        auto stringifyMode = STRINGIFYMODE_NORMAL;
+        
+        auto N = TheParserSession->concreteParseLeaf(stringifyMode);
+    
+        switch (outputMode) {
+            case PRINT:
+                N->print(std::cout);
+                std::cout << "\n";
+                break;
+            case PUT: {
+#if USE_MATHLINK
+                ScopedMLLoopbackLink loop;
+                N->put(loop.get());
+#endif // USE_MATHLINK
+            }
+                break;
+            case PRINT_DRYRUN: {
+                std::ofstream nullStream;
+                N->print(nullStream);
+                nullStream << "\n";
+            }
+                break;
+            case NONE: case CHECK:
+                break;
+        }
+        
+        TheParserSession->releaseNode(N);
+        
+        TheParserSession->deinit();
+        
     } else {
         
         auto fBufAndLen = BufferAndLength(fb->getBuf(), fb->getLen());

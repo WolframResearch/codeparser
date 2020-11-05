@@ -623,6 +623,9 @@ Test[
 
 
 
+(*
+
+this test is out-of-date
 
 Test[
 	CodeConcreteParseBox[RowBox[{"f", ";", RowBox[{"(*", "*)"}], "\n", "g"}]]
@@ -640,8 +643,11 @@ Test[
 	,
 	TestID->"Boxes-20201023-V9T4E2"
 ]
+*)
 
+(*
 
+this test is out-of-date
 
 Test[
 	CodeConcreteParseBox[RowBox[{"f", ";", RowBox[{"(*", "*)"}], "\n", "g", ";"}]]
@@ -662,6 +668,7 @@ Test[
 	,
 	TestID->"Boxes-20201023-P9O9Q2"
 ]
+*)
 
 
 Test[

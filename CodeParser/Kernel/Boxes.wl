@@ -2,20 +2,19 @@ BeginPackage["CodeParser`Boxes`"]
 
 parseBox
 
+
+
+$ProbablyImplicitTimes
+$PreserveRowBox
+
+toBeSpliced
+toBeSplicedDefinitely
+
 Begin["`Private`"]
 
 Needs["CodeParser`"]
 Needs["CodeParser`RowBox`"]
 Needs["CodeParser`Utils`"]
-
-
-
-(*
-work around very common FE bug
-
-Related bugs: 395301
-*)
-$WorkAroundToplevelRowBoxBug = True
 
 
 
@@ -38,21 +37,26 @@ Module[{children},
 
   children = MapIndexed[parseBox[#1, {} ~Join~ #2]&, boxs];
 
-  If[AnyTrue[children, FailureQ],
-    Throw[SelectFirst[children, FailureQ]]
+  If[!FreeQ[children, toBeSpliced[_]],
+
+    (*
+    toBeSpliced[] is INTERNAL, make sure to handle it before it gets returned
+    *)
+    children = children //. {
+      head_[tag_, {first___, toBeSpliced[children1_ /; FreeQ[children1, toBeSpliced[_]]], last___}, data_] :>
+        head[tag, Flatten[{first, reparsePossibleImplicitTimes[tag, children1, data1[Source]], last}], data]
+      ,
+      {first___, toBeSpliced[children1_ /; FreeQ[children1, toBeSpliced[_]]], last___} :>
+        (* Flatten[{first, reparsePossibleImplicitTimes[Toplevel, children1, data1[Source]], last}] *)
+        Flatten[{first, children1, last}]
+      ,
+      {first___, toBeSplicedDefinitely[children1_], last___} :>
+        Flatten[{first, children1, last}]
+    };
   ];
 
-  If[$WorkAroundToplevelRowBoxBug,
-
-    children = children //. {
-      BoxNode[RowBox, {children:{___, LeafNode[Token`Newline, _, _], ___}}, _] :> Sequence @@ children
-    };
-
-    children = Replace[children, {
-        InfixNode[CompoundExpression, children1:{___, LeafNode[Token`Newline, _, _], ___}, _] :>
-          Sequence @@ Flatten[wrapToplevelCompoundExpression /@ SplitBy[children1, MatchQ[#, LeafNode[Token`Newline, _, _]]&]]
-      }, {1}]
-
+  If[AnyTrue[children, FailureQ],
+    Throw[SelectFirst[children, FailureQ]]
   ];
 
   ContainerNode[Box, children, <||>]
@@ -64,7 +68,7 @@ wrapToplevelCompoundExpression[ns:{LeafNode[Token`Newline, _, _]..}] := ns
 wrapToplevelCompoundExpression[ns:{___, LeafNode[Token`Semi, _, _], ___}] :=
   Module[{aggregatedChildren},
 
-    aggregatedChildren = DeleteCases[ns, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _]];
+    aggregatedChildren = DeleteCases[ns, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline | Token`Boxes`LineContinuation, _, _] | GroupNode[Comment, _, _]];
 
     If[MatchQ[aggregatedChildren, {___, LeafNode[Token`Semi, _, _]}],
       {InfixNode[CompoundExpression, ns ~Join~ {LeafNode[Token`Fake`ImplicitNull, "", <||>]}, <||>]}
@@ -82,11 +86,28 @@ Module[{children, child},
 
   child = parseBox[box, {}];
 
-  (*
-  BoxNode[RowBox] is INTERNAL, make sure to handle it before it gets returned
-  *)
-  If[MatchQ[child, BoxNode[RowBox, _, _]],
-    children = child[[2, 1]]
+  If[!FreeQ[child, toBeSpliced[_]],
+
+    (*
+    toBeSpliced[] is INTERNAL, make sure to handle it before it gets returned
+    *)
+    If[MatchQ[child, toBeSpliced[_]],
+      children = child[[1]]
+      ,
+      children = {child}
+    ];
+
+    children = children //. {
+      head_[tag_, {first___, toBeSpliced[children1_ /; FreeQ[children1, toBeSpliced[_]]], last___}, data_] :>
+        head[tag, Flatten[{first, reparsePossibleImplicitTimes[tag, children1, data1[Source]], last}], data]
+      ,
+      {first___, toBeSpliced[children1_ /; FreeQ[children1, toBeSpliced[_]]], last___} :>
+        (* Flatten[{first, reparsePossibleImplicitTimes[Toplevel, children1, data1[Source]], last}] *)
+        Flatten[{first, children1, last}]
+      ,
+      {first___, toBeSplicedDefinitely[children1_], last___} :>
+        Flatten[{first, children1, last}]
+    };
     ,
     children = {child}
   ];
@@ -95,21 +116,45 @@ Module[{children, child},
     Throw[SelectFirst[children, FailureQ]]
   ];
 
-  If[$WorkAroundToplevelRowBoxBug,
-
-    children = children //. {
-      BoxNode[RowBox, {children:{___, LeafNode[Token`Newline, _, _], ___}}, _] :> Sequence @@ children
-    };
-
-    children = Replace[children, {
-        InfixNode[CompoundExpression, children1:{___, LeafNode[Token`Newline, _, _], ___}, _] :>
-          Sequence @@ Flatten[wrapToplevelCompoundExpression /@ SplitBy[children1, MatchQ[#, LeafNode[Token`Newline, _, _]]&]]
-      }, {1}]
-
-  ];
-
   ContainerNode[Box, children, <||>]
 ]]
+
+
+reparsePossibleImplicitTimes[Box | Comment, children_, pos_] :=
+  Module[{handledChildren, aggregatedChildren},
+  Block[{$ProbablyImplicitTimes = False},
+
+    handledChildren = children;
+
+    aggregatedChildren = DeleteCases[handledChildren, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _]];
+
+    prbDispatch[aggregatedChildren, handledChildren, Null, pos] /. {toBeSpliced -> toBeSplicedDefinitely}
+  ]]
+
+(*
+Just a line continuation and 1 other thing
+*)
+reparsePossibleImplicitTimes[tag_, children:{LeafNode[Token`Boxes`LineContinuation, _, _], _}, pos_] :=
+  Module[{handledChildren, aggregatedChildren},
+  Block[{$ProbablyImplicitTimes = False},
+
+    handledChildren = children;
+
+    aggregatedChildren = DeleteCases[handledChildren, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _]];
+
+    prbDispatch[aggregatedChildren, handledChildren, Null, pos] /. {toBeSpliced -> toBeSplicedDefinitely}
+  ]]
+
+reparsePossibleImplicitTimes[tag_, children_, pos_] :=
+  Module[{handledChildren, aggregatedChildren},
+  Block[{$ProbablyImplicitTimes = True},
+
+    handledChildren = children;
+
+    aggregatedChildren = DeleteCases[handledChildren, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _]];
+
+    prbDispatch[aggregatedChildren, handledChildren, Null, pos] /. {toBeSpliced -> toBeSplicedDefinitely}
+  ]]
 
 
 
@@ -181,13 +226,17 @@ Module[{handledChildren, aggregatedChildren},
     Throw[SelectFirst[handledChildren, FailureQ]]
   ];
 
-  aggregatedChildren = DeleteCases[handledChildren, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _]];
+  aggregatedChildren = DeleteCases[handledChildren, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline | Token`Boxes`LineContinuation, _, _] | GroupNode[Comment, _, _]];
 
   If[Length[aggregatedChildren] == 1,
-    (*
-    Make sure to return the concrete children
-    *)
-    Throw[BoxNode[RowBox, {handledChildren}, <|Source->pos|>]]
+    If[TrueQ[$PreserveRowBox],
+      Throw[BoxNode[RowBox, {handledChildren}, <|Source -> pos|>]]
+      ,
+      (*
+      Make sure to return the concrete children
+      *)
+      Throw[toBeSpliced[handledChildren]]
+    ]
   ];
   
   prbDispatch[aggregatedChildren, handledChildren, children, pos]
@@ -377,7 +426,9 @@ parseBox[ActionMenuBox[a_, rest___], pos_] :=
 a is a List of Lists
 *)
 parseBox[GridBox[a_, rest___], pos_] :=
-  BoxNode[GridBox, {parseBoxPossibleList[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
+  Block[{$PreserveRowBox = True},
+    BoxNode[GridBox, {parseBoxPossibleList[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
+  ]
 
 parseBox[ItemBox[a_, rest___], pos_] :=
   BoxNode[ItemBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
@@ -615,29 +666,6 @@ parseBox[str:"*", pos_] := LeafNode[Token`Star, str, <|Source -> pos|>]
 
 parseBox[str:"&&", pos_] := LeafNode[Token`AmpAmp, str, <|Source -> pos|>]
 
-parseBox[str:"\[LeftAssociation]", pos_] := LeafNode[Token`LongName`LeftAssociation, str, <|Source -> pos|>]
-
-parseBox[str:"\[RightAssociation]", pos_] := LeafNode[Token`LongName`RightAssociation, str, <|Source -> pos|>]
-
-
-
-
-parseBox[str:"\[Rule]", pos_] := LeafNode[Token`LongName`Rule, str, <|Source -> pos|>]
-
-parseBox[str:"\[RuleDelayed]", pos_] := LeafNode[Token`LongName`RuleDelayed, str, <|Source -> pos|>]
-
-parseBox[str:"\[Equal]", pos_] := LeafNode[Token`LongName`Equal, str, <|Source -> pos|>]
-
-parseBox[str:"\[UndirectedEdge]", pos_] := LeafNode[Token`LongName`UndirectedEdge, str, <|Source -> pos|>]
-
-parseBox[str:"\[DirectedEdge]", pos_] := LeafNode[Token`LongName`DirectedEdge, str, <|Source -> pos|>]
-
-parseBox[str:"\[And]", pos_] := LeafNode[Token`LongName`And, str, <|Source -> pos|>]
-
-parseBox[str:"\[LeftAngleBracket]", pos_] := LeafNode[Token`LongName`LeftAngleBracket, str, <|Source -> pos|>]
-
-parseBox[str:"\[RightAngleBracket]", pos_] := LeafNode[Token`LongName`RightAngleBracket, str, <|Source -> pos|>]
-
 
 parseBox[str:"===", pos_] := LeafNode[Token`EqualEqualEqual, str, <|Source -> pos|>]
 
@@ -657,9 +685,31 @@ parseBox[str:"++", pos_] := LeafNode[Token`PlusPlus, str, <|Source -> pos|>]
 
 parseBox[str:"..", pos_] := LeafNode[Token`DotDot, str, <|Source -> pos|>]
 
+parseBox[str:"/;", pos_] := LeafNode[Token`SlashSemi, str, <|Source -> pos|>]
+
+parseBox[str:"<<", pos_] := LeafNode[Token`LessLess, str, <|Source -> pos|>]
+
+parseBox[str:"??", pos_] := LeafNode[Token`QuestionQuestion, str, <|Source -> pos|>]
+
+parseBox[str:"~", pos_] := LeafNode[Token`Tilde, str, <|Source -> pos|>]
+
+parseBox[str:"::", pos_] := LeafNode[Token`ColonColon, str, <|Source -> pos|>]
+
+parseBox[str:":>", pos_] := LeafNode[Token`ColonGreater, str, <|Source -> pos|>]
+
+parseBox[str:"@*", pos_] := LeafNode[Token`AtStar, str, <|Source -> pos|>]
+
+parseBox[str:"@@@", pos_] := LeafNode[Token`AtAtAt, str, <|Source -> pos|>]
+
+parseBox[str:"~~", pos_] := LeafNode[Token`TildeTilde, str, <|Source -> pos|>]
+
 
 parseBox[str:";;", pos_] := LeafNode[Token`SemiSemi, str, <|Source -> pos|>]
 
+
+(*
+Common symbols that can be short-circuited
+*)
 
 parseBox[str:"a", pos_] := LeafNode[Symbol, str, <|Source -> pos|>]
 
@@ -685,19 +735,9 @@ parseBox[str:"I", pos_] := LeafNode[Symbol, str, <|Source -> pos|>]
 parseBox[str:"N", pos_] := LeafNode[Symbol, str, <|Source -> pos|>]
 
 
-
-parseBox[str:"\[Infinity]", pos_] := LeafNode[Symbol, str, <|Source -> pos|>]
-
-parseBox[str:"\[ImaginaryI]", pos_] := LeafNode[Symbol, str, <|Source -> pos|>]
-
-parseBox[str:"\[Pi]", pos_] := LeafNode[Symbol, str, <|Source -> pos|>]
-
-parseBox[str:"\[ExponentialE]", pos_] := LeafNode[Symbol, str, <|Source -> pos|>]
-
-parseBox[str:"\[Degree]", pos_] := LeafNode[Symbol, str, <|Source -> pos|>]
-
-
-
+(*
+Common whitespace that can be short-circuited
+*)
 parseBox[str:"\n", pos_] := LeafNode[Token`Newline, str, <|Source -> pos|>]
 
 parseBox[str:" ", pos_] := LeafNode[Token`Boxes`MultiWhitespace, str, <|Source -> pos|>]
@@ -734,6 +774,9 @@ parseBox[str:"\[LeftSkeleton]", pos_] := LeafNode[Token`Boxes`LongName`LeftSkele
 parseBox[str:"\[RightSkeleton]", pos_] := LeafNode[Token`Boxes`LongName`RightSkeleton, str, <|Source -> pos|>]
 *)
 
+parseBox[str:"\\\n", pos_] := LeafNode[Token`Boxes`LineContinuation, str, <|Source -> pos|>]
+
+
 
 parseBox[str:"_", pos_] := LeafNode[Token`Under, str, <|Source -> pos|>]
 
@@ -746,7 +789,7 @@ parseBox[str:"_.", pos_] := LeafNode[Token`UnderDot, str, <|Source -> pos|>]
 
 parseBox[str_String, pos_, OptionsPattern[]] :=
 Catch[
-Module[{parsed, data, issues, stringifyMode, oldLeafSrc, len, src, cases, containsQuote},
+Module[{data, issues, stringifyMode, oldLeafSrc, len, src, cases, containsQuote, parsed},
 
   (*
   Bypass calling into ParseLeaf if only whitespace,
@@ -761,11 +804,11 @@ Module[{parsed, data, issues, stringifyMode, oldLeafSrc, len, src, cases, contai
   Which[
     !containsQuote &&
       StringMatchQ[str, (LetterCharacter | "$") ~~ (LetterCharacter | "$" | DigitCharacter)...] && stringifyMode == 0,
-      parsed = LeafNode[Symbol, str, <|Source -> pos|>]
+      Throw[LeafNode[Symbol, str, <|Source -> pos|>]]
     ,
     !containsQuote &&
       StringMatchQ[str, DigitCharacter..] && stringifyMode == 0,
-      parsed = LeafNode[Integer, str, <|Source -> pos|>]
+      Throw[LeafNode[Integer, str, <|Source -> pos|>]]
     ,
     (*
     Handle all of the CompoundNodes
@@ -779,18 +822,18 @@ Module[{parsed, data, issues, stringifyMode, oldLeafSrc, len, src, cases, contai
     !containsQuote && StringContainsQ[str, "_"],
       Which[
         (cases = StringCases[str, RegularExpression["^(_|__|___)([^_]+)$"] :> {"$1", "$2"}]) != {},
-          parsed = CompoundNode[underToOp[cases[[1, 1]]], parseBox[#, pos]& /@ cases[[1]], <|Source -> pos|>]
+          Throw[CompoundNode[underToOp[cases[[1, 1]]], parseBox[#, pos]& /@ cases[[1]], <|Source -> pos|>]]
         ,
         (cases = StringCases[str, RegularExpression["^([^_]+)(_\\.)$"] :> {"$1", "$2"}]) != {},
-          parsed = CompoundNode[PatternOptionalDefault, parseBox[#, pos]& /@ cases[[1]], <|Source -> pos|>]
+          Throw[CompoundNode[PatternOptionalDefault, parseBox[#, pos]& /@ cases[[1]], <|Source -> pos|>]]
         ,
         (cases = StringCases[str, RegularExpression["^([^_]+)(_|__|___)([^_]+)$"] :> {"$1", "$2", "$3"}]) != {},
-          parsed = CompoundNode[underToPatternOp[cases[[1, 2]]], {
+          Throw[CompoundNode[underToPatternOp[cases[[1, 2]]], {
             parseBox[cases[[1, 1]], pos],
-            CompoundNode[underToOp[cases[[1, 2]]], {parseBox[cases[[1, 2]], pos], parseBox[cases[[1, 3]], pos]}, <|Source -> pos|>]}, <|Source -> pos|>]
+            CompoundNode[underToOp[cases[[1, 2]]], {parseBox[cases[[1, 2]], pos], parseBox[cases[[1, 3]], pos]}, <|Source -> pos|>]}, <|Source -> pos|>]]
         ,
         (cases = StringCases[str, RegularExpression["^([^_]+)(_|__|___)$"] :> {"$1", "$2"}]) != {},
-          parsed = CompoundNode[underToPatternOp[cases[[1, 2]]], parseBox[#, pos]& /@ cases[[1]], <|Source -> pos|>]
+          Throw[CompoundNode[underToPatternOp[cases[[1, 2]]], parseBox[#, pos]& /@ cases[[1]], <|Source -> pos|>]]
       ]
     ,
     (*
@@ -803,32 +846,32 @@ Module[{parsed, data, issues, stringifyMode, oldLeafSrc, len, src, cases, contai
     StringStartsQ[str, "#"],
       Which[
         (cases = StringCases[str, RegularExpression["^(##)(\\d+)$"] :> {"$1", "$2"}]) != {},
-          parsed = CompoundNode[SlotSequence, parseBox[#, pos]& /@ cases[[1]], <|Source -> pos|>]
+          Throw[CompoundNode[SlotSequence, parseBox[#, pos]& /@ cases[[1]], <|Source -> pos|>]]
         ,
         (cases = StringCases[str, RegularExpression["^(#)(\\d+)$"] :> {"$1", "$2"}]) != {},
-          parsed = CompoundNode[Slot, parseBox[#, pos]& /@ cases[[1]], <|Source -> pos|>]
+          Throw[CompoundNode[Slot, parseBox[#, pos]& /@ cases[[1]], <|Source -> pos|>]]
         ,
-        (cases = StringCases[str, RegularExpression["^(#)(.*)$"] :> {"$1", "$2"}]) != {},
-          parsed = CompoundNode[Slot, {parseBox[cases[[1, 1]], pos], parseBox[cases[[1, 2]], pos, "StringifyMode" -> 1]}, <|Source -> pos|>]
+        (cases = StringCases[str, RegularExpression["^(#)([a-zA-Z\"].*)$"] :> {"$1", "$2"}]) != {},
+          Throw[CompoundNode[Slot, {parseBox[cases[[1, 1]], pos], parseBox[cases[[1, 2]], pos, "StringifyMode" -> 1]}, <|Source -> pos|>]]
       ]
     ,
     StringStartsQ[str, "%"],
       Which[
         (cases = StringCases[str, RegularExpression["^(%)(\\d+)$"] :> {"$1", "$2"}]) != {},
-          parsed = CompoundNode[Out, parseBox[#, pos]& /@ cases[[1]], <|Source -> pos|>]
+          Throw[CompoundNode[Out, parseBox[#, pos]& /@ cases[[1]], <|Source -> pos|>]]
         ,
         StringMatchQ[str, "%" ~~ "%"..],
-          parsed = LeafNode[Token`PercentPercent, str, <|Source -> pos|>]
+          Throw[LeafNode[Token`PercentPercent, str, <|Source -> pos|>]]
       ]
     ,
     StringStartsQ[str, "'"],
       Which[
         StringMatchQ[str, ("'")..],
-          parsed = LeafNode[Token`Boxes`MultiSingleQuote, str, <|Source -> pos|>]
+          Throw[LeafNode[Token`Boxes`MultiSingleQuote, str, <|Source -> pos|>]]
       ]
     ,
     StringMatchQ[str, $whitespacePat..] && (stringifyMode == 0 || stringifyMode == 2),
-      parsed = LeafNode[Token`Boxes`MultiWhitespace, str, <|Source -> pos|>]
+      Throw[LeafNode[Token`Boxes`MultiWhitespace, str, <|Source -> pos|>]]
     ,
     StringMatchQ[str, Verbatim["*"].. ~~ ")"],
       (*
@@ -836,36 +879,36 @@ Module[{parsed, data, issues, stringifyMode, oldLeafSrc, len, src, cases, contai
 
       TODO: fe bug?
       *)
-      parsed = LeafNode[Token`Boxes`StarCloseParen, str, <|Source -> pos|>]
+      Throw[LeafNode[Token`Boxes`StarCloseParen, str, <|Source -> pos|>]]
     ,
     (*
     Handle the simple case of a string with no backslashes
 
-    Perfectly easy to parse
+    Perfectly easy to parse here
     *)
     containsQuote && StringMatchQ[str, RegularExpression["\"[^\\\\]*\""]],
-      parsed = LeafNode[String, str, <|Source -> pos|>]
-    ,
-    True,
-      parsed = CodeConcreteParseLeaf[str, "StringifyMode" -> stringifyMode];
-      If[FailureQ[parsed],
-        Throw[parsed]
-      ];
-      data = parsed[[3]];
-      data[Source] = pos;
-      (*
-      It's very easy to get UnexpectedCharacter syntax issues when parsing boxes
-      So just ignore them
-      *)
-      issues = Lookup[data, SyntaxIssues, {}];
-      issues = DeleteCases[issues, SyntaxIssue["UnexpectedCharacter", _, _, _]];
-      If[empty[issues],
-        KeyDropFrom[data, SyntaxIssues]
-        ,
-        data[SyntaxIssues] = issues
-      ];
-      parsed[[3]] = data;
+      Throw[LeafNode[String, str, <|Source -> pos|>]]
   ];
+
+  parsed = CodeConcreteParseLeaf[str, "StringifyMode" -> stringifyMode];
+  If[FailureQ[parsed],
+    Throw[parsed]
+  ];
+
+  data = parsed[[3]];
+  data[Source] = pos;
+  (*
+  It's very easy to get UnexpectedCharacter syntax issues when parsing boxes
+  So just ignore them
+  *)
+  issues = Lookup[data, SyntaxIssues, {}];
+  issues = DeleteCases[issues, SyntaxIssue["UnexpectedCharacter", _, _, _]];
+  If[empty[issues],
+    KeyDropFrom[data, SyntaxIssues]
+    ,
+    data[SyntaxIssues] = issues
+  ];
+  parsed[[3]] = data;
 
   parsed
 ]]
