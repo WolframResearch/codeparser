@@ -57,7 +57,7 @@ Precedence`SlashSlash -> {Next, Associativity`NonRight}, (* Precedence[Postfix] 
 added in 12.2:
 ApplyTo
 *)
-Precedence`AtEqual -> {Next, Associativity`Right}, (* Precedence[ApplyTo] == 75 *)
+Precedence`SlashSlashEqual -> {Next, Associativity`Right}, (* Precedence[ApplyTo] == 75 *)
 
 Precedence`LongName`Colon -> {Next, Associativity`NonRight}, (* Precedence[Colon] == 80 *)
 

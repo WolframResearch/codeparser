@@ -2965,6 +2965,14 @@ inline Token Tokenizer::handleSlash(Buffer tokenStartBuf, SourceLocation tokenSt
                     TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
                 }
                     break;
+                case '=': {
+                    
+                    Operator = TOKEN_SLASHSLASHEQUAL; // //=
+                    
+                    TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                    TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+                }
+                    break;
             }
         }
             break;
@@ -3027,14 +3035,6 @@ inline Token Tokenizer::handleAt(Buffer tokenStartBuf, SourceLocation tokenStart
         case '*': {
             
             Operator = TOKEN_ATSTAR; // @*
-            
-            TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-            TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
-        }
-            break;
-        case '=': {
-            
-            Operator = TOKEN_ATEQUAL; // @=
             
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
