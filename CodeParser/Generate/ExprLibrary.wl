@@ -107,7 +107,7 @@ Module[{},
 ]
 
 
-buildExprLibrary[] :=
+generate[] :=
 Catch[
 Module[{targetDir, prog, compLib},
 
