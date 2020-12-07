@@ -531,41 +531,10 @@ public:
 //
 //
 //
-class InsertTextAfterCodeAction : public CodeAction {
-    std::string InsertionText;
-public:
-    
-    InsertTextAfterCodeAction(std::string Label, Source Src, std::string InsertionText) : CodeAction(Label, Src), InsertionText(InsertionText) {}
-
-#if USE_MATHLINK
-    void put(MLINK mlp) const override;
-#endif // USE_MATHLINK
-    
-    void print(std::ostream& s) const override;
-};
-
-//
-//
-//
 class DeleteTextCodeAction : public CodeAction {
 public:
     
     DeleteTextCodeAction(std::string Label, Source Src) : CodeAction(Label, Src) {}
-    
-#if USE_MATHLINK
-    void put(MLINK mlp) const override;
-#endif // USE_MATHLINK
-    
-    void print(std::ostream& s) const override;
-};
-
-//
-//
-//
-class DeleteTriviaCodeAction : public CodeAction {
-public:
-    
-    DeleteTriviaCodeAction(std::string Label, Source Src) : CodeAction(Label, Src) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;

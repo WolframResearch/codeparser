@@ -53,9 +53,7 @@ MakeEncodingIssue
 
 MakeReplaceTextCodeAction
 MakeInsertTextCodeAction
-MakeInsertTextAfterCodeAction
 MakeDeleteTextCodeAction
-MakeDeleteTriviaCodeAction
 
 (*
 SetConcreteParseProgress
@@ -447,14 +445,8 @@ MakeReplaceTextCodeAction[label_String, srcArgs___Integer, replacementText_Strin
 MakeInsertTextCodeAction[label_String, srcArgs___Integer, insertionText_String] :=
 	CodeAction[label, InsertText, <| Source -> $StructureSrcArgs[srcArgs], "InsertionText" -> insertionText |>]
 
-MakeInsertTextAfterCodeAction[label_String, srcArgs___Integer, insertionText_String] :=
-	CodeAction[label, InsertTextAfter, <| Source -> $StructureSrcArgs[srcArgs], "InsertionText" -> insertionText |>]
-
 MakeDeleteTextCodeAction[label_String, srcArgs___Integer] :=
 	CodeAction[label, DeleteText, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-MakeDeleteTriviaCodeAction[label_String, srcArgs___Integer] :=
-	CodeAction[label, DeleteTrivia, <| Source -> $StructureSrcArgs[srcArgs] |>]
 
 
 

@@ -251,38 +251,9 @@ void InsertTextCodeAction::print(std::ostream& s) const {
     s << "]";
 }
 
-void InsertTextAfterCodeAction::print(std::ostream& s) const {
-    
-    s << SYMBOL_CODEPARSER_LIBRARY_MAKEINSERTTEXTAFTERCODEACTION->name() << "[";
-    
-    s << Label;
-    s << ", ";
-    
-    getSource().print(s);
-    s << ", ";
-    
-    s << InsertionText;
-    s << ", ";
-    
-    s << "]";
-}
-
 void DeleteTextCodeAction::print(std::ostream& s) const {
     
     s << SYMBOL_CODEPARSER_LIBRARY_MAKEDELETETEXTCODEACTION->name() << "[";
-    
-    s << Label;
-    s << ", ";
-    
-    getSource().print(s);
-    s << ", ";
-    
-    s << "]";
-}
-
-void DeleteTriviaCodeAction::print(std::ostream& s) const {
-    
-    s << SYMBOL_CODEPARSER_LIBRARY_MAKEDELETETRIVIACODEACTION->name() << "[";
     
     s << Label;
     s << ", ";
@@ -878,39 +849,9 @@ void InsertTextCodeAction::put(MLINK mlp) const {
     }
 }
 
-void InsertTextAfterCodeAction::put(MLINK mlp) const {
-    
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEINSERTTEXTAFTERCODEACTION->name(), static_cast<int>(1 + 4 + 1))) {
-        assert(false);
-    }
-    
-    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Label.c_str()), static_cast<int>(Label.size()))) {
-        assert(false);
-    }
-    
-    Src.put(mlp);
-    
-    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(InsertionText.c_str()), static_cast<int>(InsertionText.size()))) {
-        assert(false);
-    }
-}
-
 void DeleteTextCodeAction::put(MLINK mlp) const {
     
     if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEDELETETEXTCODEACTION->name(), static_cast<int>(1 + 4))) {
-        assert(false);
-    }
-    
-    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Label.c_str()), static_cast<int>(Label.size()))) {
-        assert(false);
-    }
-    
-    Src.put(mlp);
-}
-
-void DeleteTriviaCodeAction::put(MLINK mlp) const {
-    
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEDELETETRIVIACODEACTION->name(), static_cast<int>(1 + 4))) {
         assert(false);
     }
     
