@@ -629,7 +629,7 @@ topLevelChildIssues[InfixNode[CompoundExpression, {
 
 topLevelChildIssues[InfixNode[CompoundExpression, {BinaryNode[Set | SetDelayed, _, _], LeafNode[Token`Semi, _, _], end:_[Except[Token`Fake`ImplicitNull], _, _], ___}, data_], ignored_] := {
 	SyntaxIssue["TopLevel", "Definition does not contain the rest of the ``CompoundExpression``.", "Error",
-		<| Source -> firstToken[end][[3, Key[Source]]],
+		<| Source -> firstExplicitToken[end][[3, Key[Source]]],
 			ConfidenceLevel -> 0.95
 			(*FIXME: wrap parentheses CodeAction*) |>] }
 
@@ -678,7 +678,7 @@ Module[{first, firstSrc, issues},
 	(*
 	Just grab the first token to use
 	*)
-	first = firstToken[node];
+	first = firstExplicitToken[node];
 	firstSrc = first[[3, Key[Source]]];
 
 	Switch[first[[1]],
@@ -708,11 +708,19 @@ Module[{first, firstSrc, issues},
 
 
 
-firstToken[node:_[_, _String, _]] := node
-firstToken[CallNode[first_, ___, _, _]] := firstToken[first]
-firstToken[_[_, {}, _]] := Failure["CannotFindFirstToken", <||>]
-firstToken[_[_, {first_, ___}, _]] := firstToken[first]
+firstExplicitToken[node:_[_, _String, _]] := node
+firstExplicitToken[CallNode[first_, ___, _, _]] := firstExplicitToken[first]
+firstExplicitToken[_[_, {}, _]] := Failure["CannotFindFirstExplicitToken", <||>]
+firstExplicitToken[_[_, ts_List, _]] :=
+	Catch[
+	Module[{explicit},
+		explicit = DeleteCases[ts, LeafNode[Token`Fake`ImplicitOne, _, _]];
+		If[explicit == {},
+			Throw[Failure["CannotFindFirstExplicitToken", <||>]]
+		];
 
+		firstExplicitToken[explicit[[1]]]
+	]]
 
 
 
@@ -1575,7 +1583,7 @@ Module[{head, data, issues, first},
 
 	data = dataIn;
 
-	first = firstToken[groupIn];
+	first = firstExplicitToken[groupIn];
 
 	issues = Lookup[data, AbstractSyntaxIssues, {}];
 
@@ -1596,7 +1604,7 @@ Module[{head, data, issues, first},
 
 	data = dataIn;
 
-	first = firstToken[groupIn];
+	first = firstExplicitToken[groupIn];
 
 	issues = Lookup[data, AbstractSyntaxIssues, {}];
 
@@ -1933,7 +1941,7 @@ Module[{head, part, partData, issues, data, first},
 
 	issues = {};
 
-	first = firstToken[head];
+	first = firstExplicitToken[head];
 
 	AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Unexpected call.", "Error", <|Source->first[[3, Key[Source]]], ConfidenceLevel -> 1.0|>]];
 
@@ -1982,7 +1990,7 @@ Module[{head, part, partData, issues, data, first},
 
 	issues = {};
 
-	first = firstToken[head];
+	first = firstExplicitToken[head];
 
 	AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->first[[3, Key[Source]]], ConfidenceLevel -> 0.95|>]];
 
@@ -2079,7 +2087,7 @@ Module[{head, part, partData, issues, data, first},
 
 	issues = {};
 
-	first = firstToken[head];
+	first = firstExplicitToken[head];
 
 	AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->first[[3, Key[Source]]], ConfidenceLevel -> 0.95|>]];
 
@@ -2154,7 +2162,7 @@ Module[{head, part, partData, issues, data, first},
 
 	issues = {};
 
-	first = firstToken[head];
+	first = firstExplicitToken[head];
 
 	AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source->first[[3, Key[Source]]], ConfidenceLevel -> 0.95|>]];
 
@@ -2192,7 +2200,7 @@ Module[{head, part, partData, data, issues, first},
 			##2 represents a sequence of arguments, so it is wrong to call
 			*)
 			LeafNode[Token`HashHash, _, _] | CompoundNode[SlotSequence, _, _],
-				first = firstToken[head];
+				first = firstExplicitToken[head];
 				AppendTo[issues, SyntaxIssue["StrangeCallSlotSequence", "Unexpected call.", "Error", <|Source->first[[3, Key[Source]]], ConfidenceLevel -> 1.0|>]];
 			,
 			LeafNode[Symbol (* | String *) | Token`Hash | Token`Under | Token`UnderUnder | Token`UnderUnderUnder, _, _] | _CallNode |
@@ -2201,15 +2209,15 @@ Module[{head, part, partData, data, issues, first},
 				Null
 			,
 			LeafNode[Token`Percent | Token`PercentPercent, _, _] | CompoundNode[Out, _, _],
-				first = firstToken[head];
+				first = firstExplicitToken[head];
 				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->first[[3, Key[Source]]], ConfidenceLevel -> 0.95|>]];
 			,
 			LeafNode[Token`LinearSyntaxBlob, _, _],
-				first = firstToken[head];
+				first = firstExplicitToken[head];
 				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Remark", <|Source->first[[3, Key[Source]]], ConfidenceLevel -> 0.95|>]];
 			,
 			PrefixNode[PrefixLinearSyntaxBang, _, _],
-				first = firstToken[head];
+				first = firstExplicitToken[head];
 				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Remark", <|Source->first[[3, Key[Source]]], ConfidenceLevel -> 0.95|>]];
 			,
 			(*
@@ -2226,7 +2234,7 @@ Module[{head, part, partData, data, issues, first},
 				Null
 			,
 			GroupNode[_, _, _],
-				first = firstToken[head];
+				first = firstExplicitToken[head];
 				AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|Source->first[[3, Key[Source]]], ConfidenceLevel -> 0.95|>]];
 			,
 			(*
@@ -2245,7 +2253,7 @@ Module[{head, part, partData, data, issues, first},
 			(*
 			warn about anything else
 			*)
-			first = firstToken[head];
+			first = firstExplicitToken[head];
 			AppendTo[issues, SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|Source->first[[3, Key[Source]]], ConfidenceLevel -> 0.95|>]];
 	];
 
