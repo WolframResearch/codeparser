@@ -1,3 +1,6 @@
+
+If[!MemberQ[$Path, #], PrependTo[$Path, #]]&[DirectoryName[$InputFileName, 3]]
+
 BeginPackage["CodeParser`Generate`Precedence`"]
 
 Begin["`Private`"]

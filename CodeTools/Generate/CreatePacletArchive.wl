@@ -1,3 +1,6 @@
+
+If[!MemberQ[$Path, #], PrependTo[$Path, #]]&[DirectoryName[$InputFileName, 3]]
+
 BeginPackage["CodeTools`Generate`CreatePacletArchive`"]
 
 Begin["`Private`"]
@@ -36,9 +39,16 @@ If[$VersionNumber >= 12.1,
 
 Print[res];
 
+If[!StringQ[res],
+  Quit[1]
+];
+
 Print["Done"]
 )
 
+If[!StringQ[script],
+  Quit[1]
+]
 If[AbsoluteFileName[script] === AbsoluteFileName[$InputFileName],
 generate[]
 ]

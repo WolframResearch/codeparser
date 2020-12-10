@@ -1,3 +1,6 @@
+
+If[!MemberQ[$Path, #], PrependTo[$Path, #]]&[DirectoryName[$InputFileName, 3]]
+
 BeginPackage["CodeParser`Generate`RowBox`"]
 
 Begin["`Private`"]
@@ -794,7 +797,7 @@ If[FailureQ[res],
   Quit[1]
 ];
 
-Print["Done RowBox..."]
+Print["Done RowBox"]
 )
 
 If[AbsoluteFileName[script] === AbsoluteFileName[$InputFileName],

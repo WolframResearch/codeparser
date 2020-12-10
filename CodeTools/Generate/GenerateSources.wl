@@ -51,6 +51,11 @@ If[MissingQ[scriptPosition],
 
 script = $CommandLine[[scriptPosition[[1]] + 1]]
 
+If[!StringQ[script],
+  Print["Cannot proceed; Unsupported script"];
+  Quit[1]
+]
+
 generatedWLDir = FileNameJoin[{buildDir, "generated", "wl"}]
 
 End[]

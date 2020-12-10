@@ -30,8 +30,8 @@ macro(CheckPacletInfo)
       message(WARNING "Bad exit code from PacletInfo script: ${PACLETINFO_RESULT}; Continuing")
     endif()
 
+    message(STATUS "PACLET_VERSION: ${PACLET_VERSION}")
+    
   endif(LOCAL_BUILD)
-
-  message(STATUS "PACLET_VERSION: ${PACLET_VERSION}")
 
 endmacro(CheckPacletInfo)

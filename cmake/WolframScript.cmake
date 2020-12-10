@@ -13,5 +13,5 @@ execute_process(
 )
 
 if(NOT ${SCRIPT_RESULT} EQUAL "0")
-  message(WARNING "Bad exit code from script: ${SCRIPT_RESULT}; Continuing")
+  message(FATAL_ERROR "Bad exit code from script: ${SCRIPT_RESULT}")
 endif()
