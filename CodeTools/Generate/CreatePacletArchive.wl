@@ -43,7 +43,7 @@ If[!StringQ[res],
   Quit[1]
 ];
 
-Print["Done"]
+Print["Done CreatePacletArchive"]
 )
 
 If[!StringQ[script],

@@ -284,6 +284,9 @@ If[FailureQ[res],
 Print["Done ParseletRegistration"]
 )
 
+If[!StringQ[script],
+  Quit[1]
+]
 If[AbsoluteFileName[script] === AbsoluteFileName[$InputFileName],
 generate[]
 ]

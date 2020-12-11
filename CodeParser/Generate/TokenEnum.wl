@@ -546,9 +546,12 @@ If[FailureQ[res],
   Quit[1]
 ];
 
-Print["Done Token"]
+Print["Done TokenEnum"]
 )
 
+If[!StringQ[script],
+  Quit[1]
+]
 If[AbsoluteFileName[script] === AbsoluteFileName[$InputFileName],
 generate[]
 ]

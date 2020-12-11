@@ -85,6 +85,9 @@ If[FailureQ[res],
 Print["Done Precedence"]
 )
 
+If[!StringQ[script],
+  Quit[1]
+]
 If[AbsoluteFileName[script] === AbsoluteFileName[$InputFileName],
 generate[]
 ]

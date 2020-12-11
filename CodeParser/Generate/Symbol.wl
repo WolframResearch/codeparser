@@ -285,6 +285,9 @@ If[FailureQ[res],
 Print["Done Symbol"]
 )
 
+If[!StringQ[script],
+  Quit[1]
+]
 If[AbsoluteFileName[script] === AbsoluteFileName[$InputFileName],
 generate[]
 ]

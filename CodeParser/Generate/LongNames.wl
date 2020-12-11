@@ -569,6 +569,9 @@ If[FailureQ[res],
 Print["Done LongNames"]
 )
 
+If[!StringQ[script],
+  Quit[1]
+]
 If[AbsoluteFileName[script] === AbsoluteFileName[$InputFileName],
 generate[]
 ]

@@ -146,6 +146,9 @@ Module[{targetDir, prog, compLib},
   Print["Done ExprLibrary"]
 ]]
 
+If[!StringQ[script],
+  Quit[1]
+]
 If[AbsoluteFileName[script] === AbsoluteFileName[$InputFileName],
 generate[]
 ]
