@@ -660,5 +660,9 @@ add_custom_command(
 		${PROJECT_SOURCE_DIR}
 )
 
-
-
+install(
+	CODE
+		"execute_process(COMMAND ${CMAKE_COMMAND} -DPACLET_OUTPUT=${PACLET_OUTPUT} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/InstallPaclet.cmake)"
+	COMPONENT
+		paclet
+)
