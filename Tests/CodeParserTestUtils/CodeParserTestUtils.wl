@@ -270,7 +270,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     	Print["version: ", version]
     ];
     Which[
-      version >= 101,
+      version ~versionGreaterEqual~ {1, 1},
             cst = 
        CodeConcreteParse[File[file], 
         ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1, 1, 3, Key[Source], 1]], #[[1, -1, 3, Key[Source], 2]]}],
@@ -279,35 +279,35 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
             If[!empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
             If[!empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing]|>]&)];
       ,
-      version >= 16,
+      version ~versionGreaterEqual~ {0, 16},
             cst = 
        CodeConcreteParse[File[file], 
         ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1, 1, 3, Key[Source], 1]], #[[1, -1, 3, Key[Source], 2]]}]|>]&)];
       ,
-      version >= 15,
+      version ~versionGreaterEqual~ {0, 15},
             cst = 
        ConcreteParseFile[File[file], 
         ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1, 1, 3, Key[Source], 1]], #[[1, -1, 3, Key[Source], 2]]}]|>] &];
       ,
-      version >= 12,
+      version ~versionGreaterEqual~ {0, 12},
       cst = 
        ConcreteParseFile[File[file], 
         HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1, 1, 3, Key[Source], 1]], #[[1, -1, 3, Key[Source], 2]]}]|>] &];
       ,
-     version >= 11,
+     version ~versionGreaterEqual~ {0, 11},
      cst = 
        ConcreteParseFile[file, 
         HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &];
      ,
-     version >= 10,
+     version ~versionGreaterEqual~ {0, 10},
      cst = 
        ConcreteParseFile[file, 
         HoldNode[Hold, Most[#], <|SyntaxIssues -> Last[#]|>] &];
      ,
-     version >= 9,
+     version ~versionGreaterEqual~ {0, 9},
      cst = ConcreteParseFile[file, HoldNode[Hold, #, <||>] &];
      ,
-     IntegerQ[version],
+     True,
      cst = ConcreteParseFile[file, HoldNode[Hold, {##}, <||>] &];
      ];
     
@@ -472,7 +472,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      
      version = convertVersionString[PacletFind["CodeParser"][[1]]["Version"]];
      Which[
-     version >= 101,
+     version ~versionGreaterEqual~ {1, 1},
             cst = 
        CodeConcreteParse[File[file], 
         ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1, 1, 3, Key[Source], 1]], #[[1, -1, 3, Key[Source], 2]]}],
@@ -481,32 +481,32 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
             If[!empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
             If[!empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing]|>]&)];
       ,
-     version >= 16,
+     version ~versionGreaterEqual~ {0, 16},
       cst = 
         CodeConcreteParse[File[file], 
          ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1, 1, 3, Key[Source], 1]], #[[1, -1, 3, Key[Source], 2]]}]|>]&)];
       ,
-     version >= 15,
+     version ~versionGreaterEqual~ {0, 15},
       cst = 
         ConcreteParseFile[File[file], 
          ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1, 1, 3, Key[Source], 1]], #[[1, -1, 3, Key[Source], 2]]}]|>]&];
       ,
-     version >= 12,
+     version ~versionGreaterEqual~ {0, 12},
       cst = 
         ConcreteParseFile[File[file], 
          HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, Source -> {#[[1, 1, 3, Key[Source], 1]], #[[1, -1, 3, Key[Source], 2]]}]|>]&];
       ,
-      version >= 11,
+      version ~versionGreaterEqual~ {0, 11},
       cst = 
         ConcreteParseFile[file, 
          HoldNode[Hold, #[[1]], <|SyntaxIssues -> #[[3]]|>] &];
       ,
-      version >= 10,
+      version ~versionGreaterEqual~ {0, 10},
       cst = 
         ConcreteParseFile[file, 
          HoldNode[Hold, Most[#], <|SyntaxIssues -> Last[#]|>] &];
       ,
-      version >= 9,
+      version ~versionGreaterEqual~ {0, 9},
       cst = ConcreteParseFile[file, HoldNode[Hold, #, <||>] &];
       ,
       True,
@@ -1255,14 +1255,28 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
 
 
 (*
-convert "0.9" to 9
+convert "0.9" to {0, 9}
 *)
-Clear[convertVersionString]
-convertVersionString[s_String /; StringMatchQ[s, "0." ~~ _]] := FromDigits[StringDrop[s, 2]]
-convertVersionString[s_String /; StringMatchQ[s, "0." ~~ _ ~~ _]] := FromDigits[StringDrop[s, 2]]
-convertVersionString[s_String /; StringMatchQ[s, "1." ~~ _]] := 100 + FromDigits[StringDrop[s, 2]]
-convertVersionString[s_String /; StringMatchQ[s, "999"]] := 99900
-convertVersionString[s_String /; StringMatchQ[s, "999.9"]] := 99990
+convertVersionString[s_String] := 
+  FromDigits /@ StringSplit[s, "."]
+
+
+versionGreaterEqual[{___}, {}] := True
+
+versionGreaterEqual[{}, {__}] := False
+
+versionGreaterEqual[{aFirst_, aRest___}, {bFirst_, bRest___}] :=
+  Which[
+    aFirst > bFirst,
+      True
+    ,
+    aFirst < bFirst,
+      False
+    ,
+    True,
+      versionGreaterEqual[{aRest}, {bRest}]
+  ]
+
 
 
 
