@@ -792,8 +792,9 @@ Print["Generating RowBox..."];
 Print["exporting RowBox.wl"];
 res = Export[FileNameJoin[{generatedWLDir, "RowBox.wl"}], Column[rowBoxWL], "String"];
 
+Print[res];
+
 If[FailureQ[res],
-  Print[res];
   Quit[1]
 ];
 

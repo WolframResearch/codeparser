@@ -504,8 +504,9 @@ longNameDefines ~Join~
 Print["exporting LongNames.h"];
 res = Export[FileNameJoin[{generatedCPPIncludeDir, "LongNames.h"}], Column[longNamesCPPHeader], "String"];
 
+Print[res];
+
 If[FailureQ[res],
-  Print[res];
   Quit[1]
 ];
 
@@ -540,8 +541,9 @@ LongNameCodePointToOperatorSource;
 Print["exporting LongNames.cpp"];
 res = Export[FileNameJoin[{generatedCPPSrcDir, "LongNames.cpp"}], Column[longNamesCPPSource], "String"];
 
+Print[res];
+
 If[FailureQ[res],
-  Print[res];
   Quit[1]
 ];
 
@@ -561,8 +563,9 @@ DO NOT MODIFY
 Print["exporting LongNames.wl"];
 res = Export[FileNameJoin[{generatedWLDir, "LongNames.wl"}], Column[longNamesWL], "String"];
 
+Print[res];
+
 If[FailureQ[res],
-  Print[res];
   Quit[1]
 ];
 

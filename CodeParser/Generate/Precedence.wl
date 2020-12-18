@@ -77,8 +77,9 @@ enum Precedence : uint8_t {"} ~Join~
 Print["exporting Precedence.h"];
 res = Export[FileNameJoin[{generatedCPPIncludeDir, "Precedence.h"}], Column[precedenceCPPHeader], "String"];
 
+Print[res];
+
 If[FailureQ[res],
-  Print[res];
   Quit[1]
 ];
 

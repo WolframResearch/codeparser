@@ -164,7 +164,6 @@ generate[] := (
 
 Print["Generating Symbol..."];
 
-
 symbolCPPHeader = {
 "
 //
@@ -215,8 +214,9 @@ SymbolPtr& TokenToSymbol(TokenEnum T);
 Print["exporting Symbol.h"];
 res = Export[FileNameJoin[{generatedCPPIncludeDir, "Symbol.h"}], Column[symbolCPPHeader], "String"];
 
+Print[res];
+
 If[FailureQ[res],
-  Print[res];
   Quit[1]
 ];
 
@@ -277,8 +277,9 @@ Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", t
 Print["exporting Symbol.cpp"];
 res = Export[FileNameJoin[{generatedCPPSrcDir, "Symbol.cpp"}], Column[symbolCPPSource], "String"];
 
+Print[res];
+
 If[FailureQ[res],
-  Print[res];
   Quit[1]
 ];
 

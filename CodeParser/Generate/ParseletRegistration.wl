@@ -181,8 +181,9 @@ extern PrefixToplevelCloserParseletPtr contextSensitivePrefixToplevelCloserParse
 Print["exporting ParseletRegistration.h"];
 res = Export[FileNameJoin[{generatedCPPIncludeDir, "ParseletRegistration.h"}], Column[parseletRegistrationCPPHeader], "String"];
 
+Print[res];
+
 If[FailureQ[res],
-  Print[res];
   Quit[1]
 ];
 
@@ -276,8 +277,9 @@ PrefixToplevelCloserParseletPtr contextSensitivePrefixToplevelCloserParselet(&pr
 Print["exporting ParseletRegistration.cpp"];
 res = Export[FileNameJoin[{generatedCPPSrcDir, "ParseletRegistration.cpp"}], Column[parseletRegistrationCPPSource], "String"];
 
+Print[res];
+
 If[FailureQ[res],
-  Print[res];
   Quit[1]
 ];
 

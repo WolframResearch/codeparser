@@ -318,7 +318,6 @@ generate[] := (
 
 Print["Generating TokenEnum..."];
 
-
 tokenCPPHeader = {
 "
 //
@@ -481,8 +480,9 @@ KeyValueMap[(
 Print["exporting TokenEnum.h"];
 res = Export[FileNameJoin[{generatedCPPIncludeDir, "TokenEnum.h"}], Column[tokenCPPHeader], "String"];
 
+Print[res];
+
 If[FailureQ[res],
-  Print[res];
   Quit[1]
 ];
 
@@ -541,8 +541,9 @@ bool operator!=(TokenEnum a, TokenEnum b) {
 Print["exporting TokenEnum.cpp"];
 res = Export[FileNameJoin[{generatedCPPSrcDir, "TokenEnum.cpp"}], Column[tokenCPPSource], "String"];
 
+Print[res];
+
 If[FailureQ[res],
-  Print[res];
   Quit[1]
 ];
 
