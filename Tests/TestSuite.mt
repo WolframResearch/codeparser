@@ -11,6 +11,7 @@ TestSuite[{
 	"CodeSyntaxQ.mt",
 	"Concrete.mt",
 	"DeclarationName.mt",
+	"Error.mt",
 	"Errors.mt",
 	"File.mt",
 	"LineContinuations.mt",
