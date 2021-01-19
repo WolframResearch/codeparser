@@ -275,8 +275,8 @@ Options[normalizeTokens] = {
 
 normalizeTokens[astIn_, OptionsPattern[]] :=
   Catch[
-  Module[{ast, data, tokStartLocs, simpleLineContinuations, complexLineContinuations,
-    embeddedNewlines, grouped, poss, tuples, mapSpecs, formatOnly, newline, embeddedTabs, groupedSimple},
+  Module[{ast, data, tokStartLocs, simpleLineContinuations, embeddedNewlineStartLocs, complexLineContinuations,
+    embeddedNewlines, grouped, poss, tuples, mapSpecs, formatOnly, newline, embeddedTabs, groupedSimple, tabWidth},
 
     ast = astIn;
 

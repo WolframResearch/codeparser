@@ -2350,7 +2350,7 @@ abstract[BoxNode[b_, children_, data_]] := BoxNode[b, abstract /@ children, data
 
 
 abstractNot2[rand_, notNotTok_, dataIn_] :=
-Module[{notNotData},
+Module[{notNotData, data},
 	
 	notNotData = notNotTok[[3]];
 

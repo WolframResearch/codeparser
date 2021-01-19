@@ -25,7 +25,7 @@ output: a cst
 
 ApplyCodeAction[action:CodeAction[label_, DeleteNode, actionData_], cstIn_, srcPosMapIn_:Null] :=
 Catch[
-Module[{src, originalNodePos, cst, srcPosMap},
+Module[{src, originalNodePos, cst, srcPosMap, parentPos, parent, commaChildren, commaChildrenLength, deletedWasLastNode, leadingCommaPos, trailingCommaPos},
 
   cst = cstIn;
   srcPosMap = srcPosMapIn;
@@ -417,7 +417,7 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
      node = Extract[cst, {originalNodePos}][[1]];
      leafText = node[[2]];
      
-     leafText = StringInsert[leafText, insertionText, srcIntra[[1]] ];
+     leafText = StringInsert[leafText, insertionText, srcIntra[[1]]];
      node[[2]] = leafText;
 
      If[originalNodePos == {},
