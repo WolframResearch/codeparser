@@ -83,7 +83,7 @@ Options[reparseUnterminatedGroupNode] = {
 reparseUnterminatedGroupNode[{tag_, children_, dataIn_}, bytes_List, opts:OptionsPattern[]] :=
 Catch[
 Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str, betterLeaves, convention, test,
-  lineLens, takeSpecsOfLines, poss, tabWidth},
+  takeSpecsOfLines, poss, tabWidth},
 
   If[$Debug,
     Print["reparseUnterminatedGroupNode: ", {{tag, children, dataIn}, bytes, opts}];
@@ -98,13 +98,12 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
     Throw[str]
   ];
 
-  lines = StringSplit[str, "\n", All];
+  (*
+  lines is list of {line characters, newline or "" if end of str with no newline at the end}
+  *)
+  lines = StringCases[str, Shortest[line:___ ~~ newline:("\n" | "\r\n" | "\r" | EndOfString)] :> {line, newline}];
 
-  If[$Debug,
-    Print["lines: ", lines //InputForm];
-  ];
-
-  lines = replaceTabs[#, 1, "\n", tabWidth]& /@ lines;
+  lines = {replaceTabs[#[[1]], 1, #[[2]] /. "" -> "\n", tabWidth], #[[2]]}& /@ lines;
 
   If[$Debug,
     Print["lines: ", lines //InputForm];
@@ -121,13 +120,15 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
       lines = lines[[src[[1, 1]];;src[[2, 1]]]];
     ,
     "SourceCharacterIndex",
-      
-      lineLens = StringLength /@ lines;
 
       (*
       Include the newline at the end
       *)
-      takeSpecsOfLines = {#[[1]] + 1, #[[2]]}& /@ Partition[FoldList[Plus, 0, lineLens + 1], 2, 1];
+      takeSpecsOfLines = {#[[1]] + 1, #[[2]]}& /@ Partition[FoldList[#1 + StringLength[#2[[1]]] + StringLength[#2[[2]]]&, 0, lines], 2, 1];
+
+      If[$Debug,
+        Print["takeSpecsOfLines: ", takeSpecsOfLines];
+      ];
 
       test = (IntervalIntersection[Interval[#], Interval[src]] =!= Interval[])&;
 
@@ -136,15 +137,28 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
       lines = Extract[lines, poss];
   ];
 
-  chunks = Split[lines, !StringMatchQ[#2, chunkPat]&];
+  If[$Debug,
+    Print["lines: ", lines //InputForm];
+  ];
+
+  chunks = Split[lines, !StringMatchQ[#2[[1]], chunkPat]&];
   
+  If[$Debug,
+    Print["chunks: ", chunks //InputForm];
+  ];
+
   firstChunk = chunks[[1]];
   
   lastGoodLineIndex = Length[firstChunk];
   lastGoodLine = firstChunk[[lastGoodLineIndex]];
-  While[lastGoodLine == "",
+  While[lastGoodLine[[1]] == "",
     lastGoodLineIndex--;
     lastGoodLine = firstChunk[[lastGoodLineIndex]];
+  ];
+
+  If[$Debug,
+    Print["lastGoodLineIndex: ", lastGoodLineIndex];
+    Print["lastGoodLine: ", lastGoodLine //InputForm];
   ];
 
   (*
@@ -156,7 +170,7 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
       This will NOT include newline at the end
       FIXME?
       *)
-      betterSrc = { src[[1]], { src[[1, 1]] + lastGoodLineIndex - 1, StringLength[lastGoodLine]+1 } };
+      betterSrc = { src[[1]], { src[[1, 1]] + lastGoodLineIndex - 1, StringLength[lastGoodLine[[1]]]+1 } };
 
       data[Source] = betterSrc;
 
@@ -170,7 +184,7 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
     ,
     "SourceCharacterIndex",
       (*
-      This will include newline at the end
+      This WILL include newline at the end
       FIXME?
       *)
       betterSrc = { src[[1]], takeSpecsOfLines[[poss[[1, 1]] + lastGoodLineIndex - 1, 2]] };
@@ -209,7 +223,7 @@ Options[reparseUnterminatedTokenErrorNode] = {
 reparseUnterminatedTokenErrorNode[{tok_, _, dataIn_}, bytes_List, OptionsPattern[]] :=
 Catch[
 Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str, convention, test,
-  lineLens, takeSpecsOfLines, poss, tabWidth, betterStr},
+  takeSpecsOfLines, poss, tabWidth, betterStr},
 
   convention = OptionValue[SourceConvention];
   tabWidth = OptionValue["TabWidth"];
@@ -220,12 +234,18 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
     Throw[str]
   ];
 
-  lines = StringSplit[str, "\n", All];
+  (*
+  lines is list of {line characters, newline or "" if end of str with no newline at the end}
+  *)
+  lines = StringCases[str, Shortest[line:___ ~~ newline:("\n" | "\r\n" | "\r" | EndOfString)] :> {line, newline}];
 
-  lines = replaceTabs[#, 1, "\n", tabWidth]& /@ lines;
+  lines = {replaceTabs[#[[1]], 1, #[[2]] /. "" -> "\n", tabWidth], #[[2]]}& /@ lines;
+
+  If[$Debug,
+    Print["lines: ", lines //InputForm];
+  ];
 
   data = dataIn;
-
   src = data[Source];
   
   Switch[convention,
@@ -236,13 +256,15 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
       lines = lines[[src[[1, 1]];;src[[2, 1]]]];
     ,
     "SourceCharacterIndex",
-      
-      lineLens = StringLength /@ lines;
 
       (*
       Include the newline at the end
       *)
-      takeSpecsOfLines = {#[[1]] + 1, #[[2]]}& /@ Partition[FoldList[Plus, 0, lineLens + 1], 2, 1];
+      takeSpecsOfLines = {#[[1]] + 1, #[[2]]}& /@ Partition[FoldList[#1 + StringLength[#2[[1]]] + StringLength[#2[[2]]]&, 0, lines], 2, 1];
+
+      If[$Debug,
+        Print["takeSpecsOfLines: ", takeSpecsOfLines];
+      ];
 
       test = (IntervalIntersection[Interval[#], Interval[src]] =!= Interval[])&;
 
@@ -251,15 +273,28 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
       lines = Extract[lines, poss];
   ];
   
-  chunks = Split[lines, !StringMatchQ[#2, chunkPat]&];
+  If[$Debug,
+    Print["lines: ", lines //InputForm];
+  ];
+
+  chunks = Split[lines, !StringMatchQ[#2[[1]], chunkPat]&];
   
+  If[$Debug,
+    Print["chunks: ", chunks //InputForm];
+  ];
+
   firstChunk = chunks[[1]];
   
   lastGoodLineIndex = Length[firstChunk];
   lastGoodLine = firstChunk[[lastGoodLineIndex]];
-  While[lastGoodLine == "",
+  While[lastGoodLine[[1]] == "",
     lastGoodLineIndex--;
     lastGoodLine = firstChunk[[lastGoodLineIndex]];
+  ];
+
+  If[$Debug,
+    Print["lastGoodLineIndex: ", lastGoodLineIndex];
+    Print["lastGoodLine: ", lastGoodLine //InputForm];
   ];
 
   (*
@@ -271,7 +306,7 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
       This will NOT include newline at the end
       FIXME?
       *)
-      betterSrc = { src[[1]], { src[[1, 1]] + lastGoodLineIndex - 1, StringLength[lastGoodLine]+1 } };
+      betterSrc = { src[[1]], { src[[1, 1]] + lastGoodLineIndex - 1, StringLength[lastGoodLine[[1]]]+1 } };
 
       data[Source] = betterSrc;
 
@@ -282,7 +317,7 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
     ,
     "SourceCharacterIndex",
       (*
-      This will include newline at the end
+      This WILL include newline at the end
       FIXME?
       *)
       betterSrc = { src[[1]], takeSpecsOfLines[[poss[[1, 1]] + lastGoodLineIndex - 1, 2]] };
