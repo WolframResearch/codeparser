@@ -36,3 +36,12 @@ On Windows:
 cmake -DMATHEMATICA_INSTALL_DIR="C:/Program Files/Wolfram Research/Mathematica/12.1" ..
 cmake --build . --target paclet
 ```
+
+## Installing
+
+You can install the paclet from CMake:
+```
+cmake --install . --target paclet
+```
+
+This starts a kernel and calls `PacletInstall` with the built .paclet file.
