@@ -41,7 +41,7 @@ cmake --build . --target paclet
 
 You can install the paclet from CMake:
 ```
-cmake --install . --target paclet
+cmake --install . --component paclet
 ```
 
 This starts a kernel and calls `PacletInstall` with the built .paclet file.
