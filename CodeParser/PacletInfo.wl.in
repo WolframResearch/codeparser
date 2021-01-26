@@ -7,7 +7,7 @@ Paclet[
   Creator ->"Brenton Bostick <brenton@wolfram.com>",
   Extensions -> {
     {"Kernel", Root -> "Kernel", Context -> "CodeParser`"},
-    {"Documentation", Language -> "English", MainPage -> "Guides/CodeParser"},
+    {"Documentation", Language->All, MainPage -> "Guides/CodeParser"},
     {"LibraryLink"},
     {"Resource", Root->"Resources",
       Resources -> {
