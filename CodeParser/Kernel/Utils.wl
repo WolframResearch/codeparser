@@ -50,7 +50,7 @@ Needs["CodeParser`"]
 
 
 
-$DefaultNewline = "\n"
+$DefaultNewlineString = "\n"
 
 $DefaultTabWidth = 4
 
@@ -269,7 +269,7 @@ Remove embedded newlines from strings
 *)
 Options[normalizeTokens] = {
   "FormatOnly" -> False,
-  "Newline" :> $DefaultNewline,
+  "NewlineString" :> $DefaultNewlineString,
   "TabWidth" :> $DefaultTabWidth
 }
 
@@ -281,7 +281,7 @@ normalizeTokens[astIn_, OptionsPattern[]] :=
     ast = astIn;
 
     formatOnly = OptionValue["FormatOnly"];
-    newline = OptionValue["Newline"];
+    newline = OptionValue["NewlineString"];
     tabWidth = OptionValue["TabWidth"];
 
     data = ast[[3]];
@@ -481,7 +481,7 @@ normalizeTokens[astIn_, OptionsPattern[]] :=
 
       mapSpecs = Flatten[mapSpecs, 1];
 
-      ast = MapAt[convertEmbeddedNewlines[#, "FormatOnly" -> formatOnly, "Newline" -> newline]&, ast, mapSpecs[[All, 2]]];
+      ast = MapAt[convertEmbeddedNewlines[#, "FormatOnly" -> formatOnly, "NewlineString" -> newline]&, ast, mapSpecs[[All, 2]]];
 
       If[$Debug,
         Print["after EmbeddedNewlines: ", ast];
@@ -515,7 +515,7 @@ normalizeTokens[astIn_, OptionsPattern[]] :=
 
       mapSpecs = Flatten[mapSpecs, 1];
 
-      ast = MapAt[convertEmbeddedTabs[#, "FormatOnly" -> formatOnly, "TabWidth" -> tabWidth, "Newline" -> newline]&, ast, mapSpecs[[All, 2]]];
+      ast = MapAt[convertEmbeddedTabs[#, "FormatOnly" -> formatOnly, "TabWidth" -> tabWidth, "NewlineString" -> newline]&, ast, mapSpecs[[All, 2]]];
 
       If[$Debug,
         Print["after EmbeddedTabs: ", ast];
@@ -695,14 +695,14 @@ so convert \n -> \\n
 
 Options[convertEmbeddedNewlines] = {
   "FormatOnly" -> False,
-  "Newline" :> $DefaultNewline
+  "NewlineString" :> $DefaultNewline
 }
 
 convertEmbeddedNewlines[LeafNode[String, str_, data_], OptionsPattern[]] :=
   Module[{formatOnly, newline, escapedNewline},
 
     formatOnly = OptionValue["FormatOnly"];
-    newline = OptionValue["Newline"];
+    newline = OptionValue["NewlineString"];
 
     If[formatOnly,
       (*
@@ -732,7 +732,7 @@ convertEmbeddedNewlines[n:LeafNode[Token`Comment, str_, data_], opts:OptionsPatt
   Module[{formatOnly, newline},
 
     formatOnly = OptionValue["FormatOnly"];
-    newline = OptionValue["Newline"];
+    newline = OptionValue["NewlineString"];
 
     (*
     Comments cannot be abstracted (they have already been aggregated away)
@@ -774,7 +774,7 @@ convertEmbeddedNewlines[n:LeafNode[Token`Fake`ImplicitNull | Token`Fake`Implicit
 Options[convertEmbeddedTabs] = {
   "FormatOnly" -> False,
   "TabWidth" :> $DefaultTabWidth,
-  "Newline" :> $DefaultNewline
+  "NewlineString" :> $DefaultNewline
 }
 
 convertEmbeddedTabs[LeafNode[String, str_, data_], OptionsPattern[]] :=
@@ -782,7 +782,7 @@ convertEmbeddedTabs[LeafNode[String, str_, data_], OptionsPattern[]] :=
 
     formatOnly = OptionValue["FormatOnly"];
     tabWidth = OptionValue["TabWidth"];
-    newline = OptionValue["Newline"];
+    newline = OptionValue["NewlineString"];
 
     If[formatOnly,
       (*
@@ -819,7 +819,7 @@ convertEmbeddedTabs[n:LeafNode[Token`Comment, str_, data_], opts:OptionsPattern[
 
     formatOnly = OptionValue["FormatOnly"];
     tabWidth = OptionValue["TabWidth"];
-    newline = OptionValue["Newline"];
+    newline = OptionValue["NewlineString"];
 
     If[!formatOnly,
       Throw[n]
