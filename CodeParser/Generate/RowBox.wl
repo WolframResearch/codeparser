@@ -790,7 +790,7 @@ generate[] := (
 Print["Generating RowBox..."];
 
 Print["exporting RowBox.wl"];
-res = Export[FileNameJoin[{generatedWLDir, "RowBox.wl"}], Column[rowBoxWL], "String"];
+res = Export[FileNameJoin[{generatedWLDir, "Kernel", "RowBox.wl"}], Column[rowBoxWL], "String"];
 
 Print[res];
 

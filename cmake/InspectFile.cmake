@@ -33,6 +33,7 @@ endif()
 set(CODE "\
 If[FailureQ[FindFile[\"CodeInspector`\"]], Exit[0]]\;\
 Needs[\"CodeInspector`\"]\;\
+Print[\"Code inspection...\" //OutputForm]\;\
 Print[CodeInspector`CodeInspectSummarize[File[\"${SRC}\"]] //OutputForm]\;\
 Exit[1]\
 ")
