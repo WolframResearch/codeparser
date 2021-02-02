@@ -127,6 +127,7 @@ file(MAKE_DIRECTORY
 	${PROJECT_BINARY_DIR}/paclet/${PACLET}
 	${PROJECT_BINARY_DIR}/generated/cpp/include/
 	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/
+	${PROJECT_BINARY_DIR}/generated/wl/Kernel/
 	${PROJECT_BINARY_DIR}/generated/wl/Resources/Generated/
 )
 
