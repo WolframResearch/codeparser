@@ -620,7 +620,7 @@ prbDispatch[{_, LeafNode[Token`Colon, _, _], _}, handledChildren_, ignored_, pos
 
 epilog = {
 "
-insertImplicitTimes[node_] :=
+insertImplicitTimesAfter[node_] :=
   Switch[node,
     LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _],
       (*
@@ -638,7 +638,7 @@ insertImplicitTimes[node_] :=
       {node}
     ,
     _,
-      {node, LeafNode[Token`Fake`ImplicitTimes, \"\", <||>]}
+      {node, LeafNode[Token`Fake`ImplicitTimes, \"\", <|Source->After[node[[3, Key[Source]]]]|>]}
   ]
 
 
@@ -648,7 +648,7 @@ Make sure to handle both * and implicit Times in the same RowBox
 prbDispatch[{_, LeafNode[Token`Star, _, _], _, ___}, handledChildren_, ignored_, pos_] :=
   Module[{childrenWithImplicitTimes},
 
-    childrenWithImplicitTimes = Flatten[(insertImplicitTimes /@ Most[handledChildren]) ~Join~ {Last[handledChildren]}];
+    childrenWithImplicitTimes = Flatten[(insertImplicitTimesAfter /@ Most[handledChildren]) ~Join~ {Last[handledChildren]}];
 
     (*
     Remove ImplicitTimes from the end
@@ -714,10 +714,10 @@ Anything that is left over is considered implicit Times
 
 Make sure to handle both * and implicit Times in the same RowBox
 *)
-prbDispatch[_, handledChildren_, ignored_, pos_] :=
-  Module[{childrenWithImplicitTimes},
+prbDispatch[_, handledChildren_, ignored_, posIgnored_] :=
+  Module[{childrenWithImplicitTimes, calculatedPos},
 
-    childrenWithImplicitTimes = Flatten[(insertImplicitTimes /@ Most[handledChildren]) ~Join~ {Last[handledChildren]}];
+    childrenWithImplicitTimes = Flatten[(insertImplicitTimesAfter /@ Most[handledChildren]) ~Join~ {Last[handledChildren]}];
 
     (*
     Remove ImplicitTimes from the end
@@ -735,8 +735,23 @@ prbDispatch[_, handledChildren_, ignored_, pos_] :=
         LeafNode[Token`Fake`ImplicitTimes, _, _], ws:LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _]..., s:LeafNode[Token`Star, _, _]
       } :> Sequence[ws, s]];
 
-    InfixNode[Times, childrenWithImplicitTimes, <|Source->Append[pos, 1]|>]
+    calculatedPos = longestPrefix[childrenWithImplicitTimes[[1, 3, Key[Source]]], childrenWithImplicitTimes[[-1, 3, Key[Source]]]];
+
+    (*
+    strip off the trailing 1
+    *)
+    calculatedPos = Most[calculatedPos];
+
+    InfixNode[Times, childrenWithImplicitTimes, <|Source->calculatedPos|>]
   ]
+
+longestPrefix[l1_, l2_] /; Length[l1] > Length[l2] := 
+  longestPrefix[l2, l1]
+
+longestPrefix[l1_, l2_] /; Length[l1] <= Length[l2] := 
+  NestWhile[Most, l1, !MatchQ[l2, {PatternSequence @@ (# ~Join~ {___})}]&]
+
+
 "}
 
 rowBoxWL = {

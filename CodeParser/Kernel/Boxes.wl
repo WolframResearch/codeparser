@@ -44,10 +44,9 @@ Module[{children},
     *)
     children = children //. {
       head_[tag_, {first___, toBeSpliced[children1_ /; FreeQ[children1, toBeSpliced[_]]], last___}, data_] :>
-        head[tag, Flatten[{first, reparsePossibleImplicitTimes[tag, children1, data1[Source]], last}], data]
+        head[tag, Flatten[{first, reparsePossibleImplicitTimes[tag, children1, data[Source]], last}], data]
       ,
       {first___, toBeSpliced[children1_ /; FreeQ[children1, toBeSpliced[_]]], last___} :>
-        (* Flatten[{first, reparsePossibleImplicitTimes[Toplevel, children1, data1[Source]], last}] *)
         Flatten[{first, children1, last}]
       ,
       {first___, toBeSplicedDefinitely[children1_], last___} :>
@@ -99,10 +98,9 @@ Module[{children, child},
 
     children = children //. {
       head_[tag_, {first___, toBeSpliced[children1_ /; FreeQ[children1, toBeSpliced[_]]], last___}, data_] :>
-        head[tag, Flatten[{first, reparsePossibleImplicitTimes[tag, children1, data1[Source]], last}], data]
+        head[tag, Flatten[{first, reparsePossibleImplicitTimes[tag, children1, data[Source]], last}], data]
       ,
       {first___, toBeSpliced[children1_ /; FreeQ[children1, toBeSpliced[_]]], last___} :>
-        (* Flatten[{first, reparsePossibleImplicitTimes[Toplevel, children1, data1[Source]], last}] *)
         Flatten[{first, children1, last}]
       ,
       {first___, toBeSplicedDefinitely[children1_], last___} :>
