@@ -562,10 +562,10 @@ prbDispatch[{_, LeafNode[Token`SemiSemi, _, _], LeafNode[Token`SemiSemi, _, _], 
 (*
 Infix with trailing allowed
 *)
-prbDispatch[{_, ___, LeafNode[Token`Semi, _, _]}, handledChildren_, ignored_, pos_] :=
+prbDispatch[{_, ___, LeafNode[Token`Semi, _, data1_]}, handledChildren_, ignored_, pos_] :=
   Module[{childrenWithImplicitNull},
 
-    childrenWithImplicitNull = handledChildren ~Join~ {LeafNode[Token`Fake`ImplicitNull, \"\", <||>]};
+    childrenWithImplicitNull = handledChildren ~Join~ {LeafNode[Token`Fake`ImplicitNull, \"\", <|Source -> After[data1[Source]]|>]};
 
     (*
     DO NOT COMMIT THIS!!
@@ -573,8 +573,8 @@ prbDispatch[{_, ___, LeafNode[Token`Semi, _, _]}, handledChildren_, ignored_, po
     SEQUENCEREPLACE IS SLOW!!
     *)
     childrenWithImplicitNull = SequenceReplace[childrenWithImplicitNull, {
-        s1:LeafNode[Token`Semi, _, _], ws:(LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _])..., s2:LeafNode[Token`Semi, _, _]
-      } :> Sequence[s1, LeafNode[Token`Fake`ImplicitNull, \"\", <||>], ws, s2]];
+        s1:LeafNode[Token`Semi, _, data2_], ws:(LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _])..., s2:LeafNode[Token`Semi, _, _]
+      } :> Sequence[s1, LeafNode[Token`Fake`ImplicitNull, \"\", <|Source -> After[data2[Source]]|>], ws, s2]];
 
     InfixNode[CompoundExpression, childrenWithImplicitNull, <|Source->pos|>]
   ]
@@ -590,8 +590,8 @@ prbDispatch[{_, LeafNode[Token`Semi, _, _], ___}, handledChildren_, ignored_, po
     SEQUENCEREPLACE IS SLOW!!
     *)
     childrenWithImplicitNull = SequenceReplace[childrenWithImplicitNull, {
-        s1:LeafNode[Token`Semi, _, _], ws:(LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _])..., s2:LeafNode[Token`Semi, _, _]
-      } :> Sequence[s1, LeafNode[Token`Fake`ImplicitNull, \"\", <||>], ws, s2]];
+        s1:LeafNode[Token`Semi, _, data2_], ws:(LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _])..., s2:LeafNode[Token`Semi, _, _]
+      } :> Sequence[s1, LeafNode[Token`Fake`ImplicitNull, \"\", <|Source -> After[data2[Source]]|>], ws, s2]];
 
     InfixNode[CompoundExpression, handledChildren, <|Source->pos|>]
   ]
@@ -599,7 +599,7 @@ prbDispatch[{_, LeafNode[Token`Semi, _, _], ___}, handledChildren_, ignored_, po
 prbDispatch[{_, LeafNode[Token`Comma, _, _], ___}, handledChildren_, ignored_, pos_] :=
   InfixNode[Comma, handledChildren ~Join~
     If[MatchQ[handledChildren[[-1]], LeafNode[Token`Comma, _, _]],
-      { LeafNode[Token`Fake`ImplicitNull, \"\", handledChildren[[-1, 3]]] },
+      { LeafNode[Token`Fake`ImplicitNull, \"\", <|Source->After[handledChildren[[-1, 3, Key[Source]]]]|>] },
       {}], <|Source->pos|>]
 
 (*

@@ -7,7 +7,7 @@ Test[
 	ContainerNode[Box, {
 		PrefixNode[Get, {
 			LeafNode[Token`LessLess, "<<", <|Source -> {1, 1}|>],
-			LeafNode[String, "ExampleData`FunctionWithAssert`", <|Source -> {1, 2}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[String, "ExampleData`FunctionWithAssert`", <|Source -> {1, 2}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20190918-D2P4H5"
 ]
@@ -18,9 +18,9 @@ Test[
 	ContainerNode[Box, {
 		InfixNode[Times, {
 			LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
-			LeafNode[Token`Fake`ImplicitTimes, "", <||>],
+			LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> After[{1, 1}]|>],
 			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 2}|>],
-			LeafNode[Symbol, "b", <|Source -> {1, 3}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[Symbol, "b", <|Source -> {1, 3}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20191015-Q5H2Y6"
 ]
@@ -104,7 +104,7 @@ Test[
 		PrefixNode[Get, {
 			LeafNode[Token`LessLess, "<<", <|Source -> {1, 1}|>],
 			LeafNode[String, "ExampleData`FunctionWithAssert`", <|Source -> {1, 2}|>],
-			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 3}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 3}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20191230-I9W2G5"
 ]
@@ -125,7 +125,7 @@ Test[
 			LeafNode[Token`ColonColon, "::", <|Source -> {1, 4}|>],
 			LeafNode[String, "c", <|Source -> {1, 5}|>],
 			LeafNode[Token`ColonColon, "::", <|Source -> {1, 6}|>],
-			LeafNode[String, "d", <|Source -> {1, 7}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[String, "d", <|Source -> {1, 7}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20191230-K0E3D0"
 ]
@@ -148,10 +148,10 @@ Test[
 				GroupNode[GroupSquare, {
 					LeafNode[Token`OpenSquare, "[", <|Source -> {1, 2, 1, 1, 1, 2}|>],
 					LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 1, 1, 3}|>], 
-      				LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2, 1, 1, 1, 4}|>]}, <||>]}, <|Source -> {1, 2, 1, 1, 1}|>], 
+      				LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2, 1, 1, 1, 4}|>]}, <||>]}, <|Source -> {1, 2, 1, 1}|>], 
   			PrefixNode[DifferentialD, {
   				LeafNode[Token`LongName`DifferentialD, "\[DifferentialD]", <|Source -> {1, 2, 1, 2, 1, 1}|>],
-  				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 2, 1, 2}|>]}, <|Source -> {1, 2, 1, 2, 1}|>]}, <|Source -> {1}|>]}, <||>]
+  				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 2, 1, 2}|>]}, <|Source -> {1, 2, 1, 2}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200126-N4V0N6"
 ]
@@ -170,7 +170,7 @@ Test[
  		BinaryNode[Pattern, {
  			LeafNode[Integer, "1", <|Source -> {1, 1}|>],
  			LeafNode[Token`Colon, ":", <|Source -> {1, 2}|>],
- 			LeafNode[Integer, "2", <|Source -> {1, 3}|>]}, <|Source -> {1}|>]}, <||>]
+ 			LeafNode[Integer, "2", <|Source -> {1, 3}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200616-Y7G7J2"
 ]
@@ -192,7 +192,7 @@ Test[
 	ContainerNode[Box, {
 		PrefixNode[PrefixNot2, {
 			LeafNode[Token`BangBang, "!!", <|Source -> {1, 1}|>],
-			LeafNode[Symbol, "a", <|Source -> {1, 2}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[Symbol, "a", <|Source -> {1, 2}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200616-F1N0C4"
 ]
@@ -204,7 +204,7 @@ Test[
 	ContainerNode[Box, {
 		PrefixNode[Minus, {
 			LeafNode[Token`LongName`Minus, "\[Minus]", <|Source -> {1, 1}|>],
-			LeafNode[Integer, "34", <|Source -> {1, 2}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[Integer, "34", <|Source -> {1, 2}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200617-G4L7A2"
 ]
@@ -217,7 +217,7 @@ Test[
 		BinaryNode[Put, {
 			LeafNode[Integer, "123", <|Source -> {1, 1}|>],
 			LeafNode[Token`GreaterGreater, ">>", <|Source -> {1, 2}|>],
-			LeafNode[String, "tmp", <|Source -> {1, 3}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[String, "tmp", <|Source -> {1, 3}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200617-P0V6A8"
 ]
@@ -232,8 +232,8 @@ Test[
 			LeafNode[Token`Plus, "+", <|Source -> {1, 2}|>],
 			GroupNode[Comment, {
 				LeafNode[Token`Boxes`OpenParenStar, "(*", <|Source -> {1, 3, 1, 1}|>],
-				LeafNode[Token`Boxes`StarCloseParen, "**)", <|Source -> {1, 3, 1, 2}|>]}, <|Source -> {1, 3, 1}|>],
-			LeafNode[Symbol, "b", <|Source -> {1, 4}|>]}, <|Source -> {1}|>]}, <||>]
+				LeafNode[Token`Boxes`StarCloseParen, "**)", <|Source -> {1, 3, 1, 2}|>]}, <|Source -> {1, 3}|>],
+			LeafNode[Symbol, "b", <|Source -> {1, 4}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200617-K6Q4J5"
 ]
@@ -248,7 +248,7 @@ Test[
 			LeafNode[String, " ", <|Source -> {1, 2}|>],
 			LeafNode[String, "15`.", <|Source -> {1, 3}|>],
 			LeafNode[String, " ", <|Source -> {1, 4}|>],
-			LeafNode[Token`Boxes`StarCloseParen, "*)", <|Source -> {1, 5}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[Token`Boxes`StarCloseParen, "*)", <|Source -> {1, 5}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200618-H6K1F2"
 ]
@@ -275,7 +275,7 @@ Test[
 		BinaryNode[Optional, {
 			LeafNode[Token`Under, "_", <|Source -> {1, 1}|>],
 			LeafNode[Token`Colon, ":", <|Source -> {1, 2}|>],
-			LeafNode[Integer, "0", <|Source -> {1, 3}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[Integer, "0", <|Source -> {1, 3}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200619-I7R5A5"
 ]
@@ -289,7 +289,7 @@ Test[
 			LeafNode[Symbol, "x", <|Source -> {1, 1}|>], 
      		LeafNode[Token`Boxes`MultiWhitespace, "\[NonBreakingSpace]", <|Source -> {1, 2}|>], 
      		LeafNode[Token`Plus, "+", <|Source -> {1, 3}|>], 
-     		LeafNode[Symbol, "x", <|Source -> {1, 4}|>]}, <|Source -> {1}|>]}, <||>]
+     		LeafNode[Symbol, "x", <|Source -> {1, 4}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200620-L1I1H4"
 ]
@@ -303,7 +303,7 @@ Test[
 			LeafNode[Symbol, "x", <|Source -> {1, 1}|>], 
      		LeafNode[Token`Boxes`MultiWhitespace, "\[InvisibleSpace]", <|Source -> {1, 2}|>], 
      		LeafNode[Token`Plus, "+", <|Source -> {1, 3}|>], 
-     		LeafNode[Symbol, "x", <|Source -> {1, 4}|>]}, <|Source -> {1}|>]}, <||>]
+     		LeafNode[Symbol, "x", <|Source -> {1, 4}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200621-O0X2J8"
 ]
@@ -317,7 +317,7 @@ Test[
 			LeafNode[Symbol, "x", <|Source -> {1, 1}|>], 
      		LeafNode[Token`Boxes`MultiWhitespace, "\[VeryThinSpace]", <|Source -> {1, 2}|>], 
      		LeafNode[Token`Plus, "+", <|Source -> {1, 3}|>], 
-     		LeafNode[Symbol, "x", <|Source -> {1, 4}|>]}, <|Source -> {1}|>]}, <||>]
+     		LeafNode[Symbol, "x", <|Source -> {1, 4}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200622-S3L3F3"
 ]
@@ -331,7 +331,7 @@ Test[
 			LeafNode[Symbol, "x", <|Source -> {1, 1}|>], 
      		LeafNode[Token`Boxes`MultiWhitespace, "\[NegativeVeryThinSpace]", <|Source -> {1, 2}|>], 
      		LeafNode[Token`Plus, "+", <|Source -> {1, 3}|>], 
-     		LeafNode[Symbol, "x", <|Source -> {1, 4}|>]}, <|Source -> {1}|>]}, <||>]
+     		LeafNode[Symbol, "x", <|Source -> {1, 4}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200623-C7Y4I5"
 ]
@@ -344,7 +344,7 @@ Test[
 		PrefixNode[Get, {
 			LeafNode[Token`LessLess, "<<", <|Source -> {1, 1}|>],
 			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 2}|>],
-			LeafNode[String, "EquationTrekker`", <|Source -> {1, 3}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[String, "EquationTrekker`", <|Source -> {1, 3}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200621-Y6O8Y8"
 ]
@@ -357,7 +357,7 @@ Test[
 		PrefixNode[Get, {
 			LeafNode[Token`LessLess, "<<", <|Source -> {1, 1}|>],
 			LeafNode[String, "EquationTrekker`", <|Source -> {1, 2}|>],
-			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 3}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 3}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200624-U4H7A2"
 ]
@@ -369,7 +369,7 @@ Test[
 	ContainerNode[Box, {
 		PrefixNode[Information, {
 			LeafNode[Token`Question, "?", <|Source -> {1, 1}|>],
-			LeafNode[String, "Join*", <|Source -> {1, 2}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[String, "Join*", <|Source -> {1, 2}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200621-A3S2R0"
 ]
@@ -391,7 +391,7 @@ Test[
 	ContainerNode[Box, {
 		PrefixNode[Information, {
 			LeafNode[Token`Question, "?", <|Source -> {1, 1}|>],
-			LeafNode[String, "Cos[x]", <|Source -> {1, 2}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[String, "Cos[x]", <|Source -> {1, 2}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200622-D2N0F3"
 ]
@@ -409,10 +409,10 @@ Test[
 				GroupNode[GroupSquare, {
 					LeafNode[Token`OpenSquare, "[", <|Source -> {1, 2, 1, 3, 1, 2}|>],
 					LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 3, 1, 3}|>],
-					LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2, 1, 3, 1, 4}|>]}, <||>]}, <|Source -> {1, 2, 1, 3, 1}|>],
+					LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2, 1, 3, 1, 4}|>]}, <||>]}, <|Source -> {1, 2, 1, 3}|>],
 			PrefixNode[DifferentialD, {
 				LeafNode[Token`LongName`DifferentialD, "\[DifferentialD]", <|Source -> {1, 2, 1, 4, 1, 1}|>],
-				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 4, 1, 2}|>]}, <|Source -> {1, 2, 1, 4, 1}|>]}, <|Source -> {1}|>]}, <||>]
+				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 4, 1, 2}|>]}, <|Source -> {1, 2, 1, 4}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200622-H3W5G3"
 ]
@@ -424,7 +424,7 @@ Test[
 	ContainerNode[Box, {
 		GroupMissingOpenerNode[GroupSquare, {
 			LeafNode[Symbol, "f", <|Source -> {1, 1}|>],
-			LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200622-T6Q0P2"
 ]
@@ -436,7 +436,7 @@ Test[
 	ContainerNode[Box, {
 		GroupMissingOpenerNode[List, {
 			LeafNode[Symbol, "f", <|Source -> {1, 1}|>],
-			LeafNode[Token`CloseCurly, "}", <|Source -> {1, 2}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[Token`CloseCurly, "}", <|Source -> {1, 2}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200622-X5F8A2"
 ]
@@ -449,7 +449,7 @@ Test[
 		BinaryNode[TwoWayRule, {
 			LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
 			LeafNode[Token`LongName`TwoWayRule, "\[TwoWayRule]", <|Source -> {1, 2}|>],
-			LeafNode[Symbol, "b", <|Source -> {1, 3}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[Symbol, "b", <|Source -> {1, 3}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200622-U6D8D8"
 ]
@@ -461,7 +461,7 @@ Test[
 	ContainerNode[Box, {
 		PrefixNode[Information, {
 			LeafNode[Token`Question, "?", <|Source -> {1, 1}|>],
-			LeafNode[String, "`*", <|Source -> {1, 2}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[String, "`*", <|Source -> {1, 2}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200623-K0R8R8"
 ]
@@ -486,7 +486,7 @@ Test[
 		InfixNode[MessageName, {
 			LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
 			LeafNode[Token`ColonColon, "::", <|Source -> {1, 2}|>],
-			LeafNode[String, "\"bbb\"", <|Source -> {1, 3}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[String, "\"bbb\"", <|Source -> {1, 3}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200624-U3V8K6"
 ]
@@ -499,7 +499,7 @@ Test[
 		InfixNode[InfixInequality, {
 			LeafNode[Symbol, "x", <|Source -> {1, 1}|>],
 			LeafNode[Token`LongName`VectorGreaterEqual, "\[VectorGreaterEqual]", <|Source -> {1, 2}|>],
-			LeafNode[Symbol, "y", <|Source -> {1, 3}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[Symbol, "y", <|Source -> {1, 3}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200623-Q4M7M9"
 ]
@@ -513,7 +513,7 @@ Test[
 			LeafNode[Token`LongName`CubeRoot, "\[CubeRoot]", <|Source -> {1, 1}|>],
 			PrefixNode[Minus, {
 				LeafNode[Token`Minus, "-", <|Source -> {1, 2, 1, 1}|>],
-				LeafNode[Integer, "1000", <|Source -> {1, 2, 1, 2}|>]}, <|Source -> {1, 2, 1}|>]}, <|Source -> {1}|>]}, <||>]
+				LeafNode[Integer, "1000", <|Source -> {1, 2, 1, 2}|>]}, <|Source -> {1, 2}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200623-D6J5W2"
 ]
@@ -525,7 +525,7 @@ Test[
 	ContainerNode[Box, {
 		PrefixNode[Sqrt, {
 			LeafNode[Token`LongName`Sqrt, "\[Sqrt]", <|Source -> {1, 1}|>],
-			LeafNode[Integer, "3", <|Source -> {1, 2}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[Integer, "3", <|Source -> {1, 2}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200623-J7F4G4"
 ]
@@ -538,7 +538,7 @@ Test[
 		InfixNode[PermutationProduct, {
 			LeafNode[Symbol, "g", <|Source -> {1, 1}|>],
 			LeafNode[Token`LongName`PermutationProduct, "\[PermutationProduct]", <|Source -> {1, 2}|>],
-			LeafNode[Symbol, "gg", <|Source -> {1, 3}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[Symbol, "gg", <|Source -> {1, 3}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200623-I5L6T6"
 ]
@@ -551,7 +551,7 @@ Test[
 		InfixNode[Divisible, {
 			LeafNode[Symbol, "n", <|Source -> {1, 1}|>],
 			LeafNode[Token`LongName`Divides, "\[Divides]", <|Source -> {1, 2}|>],
-			LeafNode[Symbol, "m", <|Source -> {1, 3}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[Symbol, "m", <|Source -> {1, 3}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200623-T3I2Z1"
 ]
@@ -564,7 +564,7 @@ Test[
 		InfixNode[InfixInequality, {
 			LeafNode[Integer, "3", <|Source -> {1, 1}|>],
 			LeafNode[Token`LongName`GreaterSlantEqual, "\[GreaterSlantEqual]", <|Source -> {1, 2}|>],
-			LeafNode[Integer, "4", <|Source -> {1, 3}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[Integer, "4", <|Source -> {1, 3}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200623-S9N6Q5"
 ]
@@ -614,7 +614,7 @@ Test[
 			LeafNode[Token`ColonEqual, ":=", <|Source -> {1, 3}|>],
 			LeafNode[Token`Newline, "\n", <|Source -> {1, 4}|>],
 			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 5}|>],
-			LeafNode[Symbol, "b", <|Source -> {1, 6}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[Symbol, "b", <|Source -> {1, 6}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20201023-H1C3C8"
 ]
@@ -677,11 +677,11 @@ Test[
 	ContainerNode[Box, {
 		InfixNode[Times, {
 			LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
-			LeafNode[Token`Fake`ImplicitTimes, "", <||>],
+			LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> After[{1, 1}]|>],
 			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 2}|>],
 			LeafNode[Symbol, "b", <|Source -> {1, 3}|>],
 			LeafNode[Token`Star, "*", <|Source -> {1, 4}|>],
-			LeafNode[Symbol, "c", <|Source -> {1, 5}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[Symbol, "c", <|Source -> {1, 5}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20201023-I1T9S0"
 ]
@@ -695,9 +695,9 @@ Test[
 			LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
 			LeafNode[Token`Star, "*", <|Source -> {1, 2}|>],
 			LeafNode[Symbol, "b", <|Source -> {1, 3}|>],
-			LeafNode[Token`Fake`ImplicitTimes, "", <||>],
+			LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> After[{1, 3}]|>],
 			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 4}|>],
-			LeafNode[Symbol, "c", <|Source -> {1, 5}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[Symbol, "c", <|Source -> {1, 5}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20201023-W2R0R5"
 ]
@@ -712,7 +712,7 @@ Test[
 			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 2}|>],
 			LeafNode[Token`Star, "*", <|Source -> {1, 3}|>],
 			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 4}|>],
-			LeafNode[Symbol, "b", <|Source -> {1, 5}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[Symbol, "b", <|Source -> {1, 5}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20201023-Q9B1K2"
 ]
@@ -726,13 +726,13 @@ Test[
 	ContainerNode[Box, {
 		InfixNode[Times, {
 			LeafNode[Symbol, "p", <|Source -> {1, 1}|>],
-			LeafNode[Token`Fake`ImplicitTimes, "", <||>],
+			LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> After[{1, 1}]|>],
 			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 2}|>],
 			LeafNode[Symbol, "q", <|Source -> {1, 3}|>],
 			LeafNode[Token`Star, "*", <|Source -> {1, 4}|>],
 			LeafNode[Token`Newline, "\n", <|Source -> {1, 5}|>],
 			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 6}|>],
-			LeafNode[Symbol, "r", <|Source -> {1, 7}|>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[Symbol, "r", <|Source -> {1, 7}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20201023-D5E9D4"
 ]
@@ -746,12 +746,12 @@ Test[
 		InfixNode[CompoundExpression, {
 			LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
 			LeafNode[Token`Semi, ";", <|Source -> {1, 2}|>],
-			LeafNode[Token`Fake`ImplicitNull, "", <||>],
+			LeafNode[Token`Fake`ImplicitNull, "", <|Source -> After[{1, 2}]|>],
 			GroupNode[Comment, {
 				LeafNode[Token`Boxes`OpenParenStar, "(*", <|Source -> {1, 3, 1, 1}|>],
-				LeafNode[Token`Boxes`StarCloseParen, "*)", <|Source -> {1, 3, 1, 2}|>]}, <|Source -> {1, 3, 1}|>],
+				LeafNode[Token`Boxes`StarCloseParen, "*)", <|Source -> {1, 3, 1, 2}|>]}, <|Source -> {1, 3}|>],
 			LeafNode[Token`Semi, ";", <|Source -> {1, 4}|>],
-			LeafNode[Token`Fake`ImplicitNull, "", <||>]}, <|Source -> {1}|>]}, <||>]
+			LeafNode[Token`Fake`ImplicitNull, "", <|Source -> After[{1, 4}]|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20201023-S6K5A5"
 ]
