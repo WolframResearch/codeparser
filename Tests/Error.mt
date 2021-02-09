@@ -28,7 +28,7 @@ TestMatch[
 	CodeConcreteParse["\"\n", SourceConvention -> "LineColumn"]
 	,
 	ContainerNode[String, {
-		ErrorNode[Token`Error`UnterminatedString, "\"\n", <|Source -> {{1, 1}, {1, 2}}|>]}, _]
+		ErrorNode[Token`Error`UnterminatedString, "\"", <|Source -> {{1, 1}, {1, 2}}|>]}, _]
 	,
 	TestID->"Error-20210118-C0F5T5"
 ]
@@ -37,7 +37,7 @@ TestMatch[
 	CodeConcreteParse["\"\r", SourceConvention -> "LineColumn"]
 	,
 	ContainerNode[String, {
-		ErrorNode[Token`Error`UnterminatedString, "\"\r", <|Source -> {{1, 1}, {1, 2}}|>]}, _]
+		ErrorNode[Token`Error`UnterminatedString, "\"", <|Source -> {{1, 1}, {1, 2}}|>]}, _]
 	,
 	TestID->"Error-20210118-R8T2P0"
 ]
@@ -46,7 +46,7 @@ TestMatch[
 	CodeConcreteParse["\"\r\n", SourceConvention -> "LineColumn"]
 	,
 	ContainerNode[String, {
-		ErrorNode[Token`Error`UnterminatedString, "\"\r\n", <|Source -> {{1, 1}, {1, 2}}|>]}, _]
+		ErrorNode[Token`Error`UnterminatedString, "\"", <|Source -> {{1, 1}, {1, 2}}|>]}, _]
 	,
 	TestID->"Error-20210118-T0V9F9"
 ]

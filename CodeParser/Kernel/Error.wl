@@ -313,7 +313,7 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
       (*
       Make sure to drop whatever characters are in the first line, but are before this token
       *)
-      betterStr = StringJoin[Riffle[{StringDrop[firstChunk[[1]], betterSrc[[1, 2]] - 1]} ~Join~ firstChunk[[2;;lastGoodLineIndex]], "\n"]]
+      betterStr = StringJoin[Riffle[{StringDrop[firstChunk[[1, 1]], betterSrc[[1, 2]] - 1]} ~Join~ firstChunk[[2;;lastGoodLineIndex]][[All, 1]], "\n"]]
     ,
     "SourceCharacterIndex",
       (*
