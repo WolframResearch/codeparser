@@ -118,8 +118,15 @@ CheckWolframKernel()
 CheckPacletInfo()
 
 
+#
+# ForceVersionInstall was added in 12.1
+#
+if(NOT ${VERSION_NUMBER} GREATER_EQUAL 1210)
+message(WARNING "VERSION_NUMBER is below 1210; installing paclets via CMake may not work.")
+endif()
+
 if(BUILD_EXPR_LIB)
-if(${VERSION_NUMBER} LESS 1220)
+if(NOT ${VERSION_NUMBER} GREATER_EQUAL 1220)
 set(BUILD_EXPR_LIB OFF)
 message(STATUS "VERSION_NUMBER is below 1220; disabling BUILD_EXPR_LIB")
 endif()
