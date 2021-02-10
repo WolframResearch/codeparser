@@ -72,7 +72,7 @@ freePatterns[NewContextPathNode[_, children_, _]] :=
 
 
 
-walk[CallNode[LeafNode[Symbol, tag: "Module" | "DynamicModule", _], {CallNode[LeafNode[Symbol, "List", _], vars_, _], body_}, _]] :=
+walk[CallNode[LeafNode[Symbol, "Module", _], {CallNode[LeafNode[Symbol, "List", _], vars_, _], body_}, _]] :=
 Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableNames, newScope, bodyOccurring},
 
   Internal`InheritedBlock[{$LexicalScope},
@@ -88,7 +88,38 @@ Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableN
 
     variableNames = #[[2]]& /@ variableSymbols;
 
-    newScope = <| (# -> {tag})& /@ variableNames |>;
+    newScope = <| (# -> {"Module"})& /@ variableNames |>;
+
+    $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
+
+    bodyOccurring = walk[body];
+
+    Scan[add[#, bodyOccurring]&, variableSymbols];
+
+    rhsOccurring ~Join~ Complement[bodyOccurring, variableNames]
+  ]
+]
+
+(*
+DynamicModule can have options
+*)
+walk[CallNode[LeafNode[Symbol, "DynamicModule", _], {CallNode[LeafNode[Symbol, "List", _], vars_, _], body_, ___}, _]] :=
+Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableNames, newScope, bodyOccurring},
+
+  Internal`InheritedBlock[{$LexicalScope},
+
+    variableSymbolsAndRHSOccurring = Replace[vars, {
+      sym:LeafNode[Symbol, _, _] :> {{sym}, {}},
+      CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {lhs:LeafNode[Symbol, _, _], rhs_}, _] :> {{lhs}, walk[rhs]},
+      _ :> {}
+    }, 1];
+
+    variableSymbols = Flatten[variableSymbolsAndRHSOccurring[[All, 1]]];
+    rhsOccurring = Flatten[variableSymbolsAndRHSOccurring[[All, 2]]];
+
+    variableNames = #[[2]]& /@ variableSymbols;
+
+    newScope = <| (# -> {"DynamicModule"})& /@ variableNames |>;
 
     $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
 
