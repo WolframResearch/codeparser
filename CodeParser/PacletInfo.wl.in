@@ -9,9 +9,9 @@ Paclet[
     {"Kernel", Root -> "Kernel", Context -> "CodeParser`"},
     {"Documentation", Language -> All, MainPage -> "Guides/CodeParser"},
     {"LibraryLink"},
-    {"Resource", Root->"Resources",
+    {"Resource", Root -> "Resources",
       Resources -> {
-        {"Collatz","Examples/Collatz.m"},
+        {"Collatz", "Examples/Collatz.m"},
         {"LongNames", "Generated/LongNames.wl"}
       }
     }

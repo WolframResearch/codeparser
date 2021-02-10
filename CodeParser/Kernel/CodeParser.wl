@@ -187,6 +187,28 @@ ContainerNode
 
 
 SyntaxErrorNode
+(*
+
+what is the difference between GroupMissingCloserNode and UnterminatedGroupNode?
+
+
+GroupMissingCloserNode is a parse that has been "recovered" but UnterminatedGroupNode has hit the end of the input
+
+
+Parsing:
+
+{ ) }
+
+gets parsed as GroupMissingCloserNode[ { ] UnexpectedCloser[ ) ] UnexpectedCloser[ } ]
+
+
+But just parsing:
+
+{
+
+gets parsed as UnterminatedGroupNode[ { ]
+
+*)
 GroupMissingCloserNode
 UnterminatedGroupNode
 UnterminatedGroupNeedsReparseNode
