@@ -532,7 +532,7 @@ find_library(MATHLINK_LIB
 	# in version 12.2: ml64i4m has become the (only) official name of the Windows import library
 	# Related issues: RE-514316
 	#
-	NAMES mathlink ml64i4 ml32i4 ML64i4 ml64i4m
+	NAMES mathlink ml64i4 ml32i4 ML32i4 ML64i4 ml64i4m
 	HINTS ${MATHLINK_LIB_DIR}
 )
 
