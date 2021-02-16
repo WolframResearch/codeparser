@@ -525,15 +525,41 @@ target_include_directories(codeparser-lib
 
 if(USE_MATHLINK)
 
-find_library(MATHLINK_LIB
+#
+# Cannot just have all lib names together in a single list
+# because e.g., Linux may have both 32-bit and 64-bit libs present,
+# and 64-bit builds may happen to find the 32-bit version first and fail.
+#
+if(${SYSTEMWORDLENGTH} EQUAL 32)
+
+target_compile_definitions(codeparser-lib PUBLIC MINT_32=1)
+
+set(MATHLINK_LIB_NAMES
+	ml32i4
+	ML32i4
+	ml32i4m
+)
+elseif(${SYSTEMWORDLENGTH} EQUAL 64)
+set(MATHLINK_LIB_NAMES
 	#
 	# mathlink is the mathlink.framework on MacOSX
+	#
+	mathlink
+	ml64i4
+	ML64i4
 	#
 	# in version 12.2: ml64i4m has become the (only) official name of the Windows import library
 	# Related issues: RE-514316
 	#
-	NAMES mathlink ml64i4 ml32i4 ML32i4 ML64i4 ml64i4m
-	HINTS ${MATHLINK_LIB_DIR}
+	ml64i4m
+)
+endif()
+
+find_library(MATHLINK_LIB
+	NAMES
+		${MATHLINK_LIB_NAMES}
+	HINTS
+		${MATHLINK_LIB_DIR}
 )
 
 message(STATUS "MATHLINK_LIB: ${MATHLINK_LIB}")
