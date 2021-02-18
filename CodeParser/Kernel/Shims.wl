@@ -9,8 +9,18 @@ Begin["`Private`"]
 
 
 setupShims[] := (
-  If[$VersionNumber < 12.1,
-    setupStackShim[]
+  Which[
+    $VersionNumber < 12.1,
+      setupStackShim[]
+    ,
+    (*
+    Some weird problem is causing:
+    DataStructure::nods: Stack is not a known DataStructure.
+
+    Fall-back on shims
+    *)
+    FailureQ[Quiet[System`CreateDataStructure["Stack"], {DataStructure::nods}]],
+      setupStackShim[]
   ]
 )
 
