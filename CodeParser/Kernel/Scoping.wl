@@ -80,7 +80,7 @@ Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableN
     variableSymbolsAndRHSOccurring = Replace[vars, {
       sym:LeafNode[Symbol, _, _] :> {{sym}, {}},
       CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {lhs:LeafNode[Symbol, _, _], rhs_}, _] :> {{lhs}, walk[rhs]},
-      _ :> {}
+      _ :> {{}, {}}
     }, 1];
 
     variableSymbols = Flatten[variableSymbolsAndRHSOccurring[[All, 1]]];
@@ -111,7 +111,7 @@ Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableN
     variableSymbolsAndRHSOccurring = Replace[vars, {
       sym:LeafNode[Symbol, _, _] :> {{sym}, {}},
       CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {lhs:LeafNode[Symbol, _, _], rhs_}, _] :> {{lhs}, walk[rhs]},
-      _ :> {}
+      _ :> {{}, {}}
     }, 1];
 
     variableSymbols = Flatten[variableSymbolsAndRHSOccurring[[All, 1]]];
@@ -154,7 +154,7 @@ Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableN
     variableSymbolsAndRHSOccurring = Replace[vars, {
       sym:LeafNode[Symbol, _, _] :> (If[fullyQualifiedSymbolQ[sym] || uppercaseOrDollarSymbolQ[sym], usedHeuristics[sym] = True];{{sym}, {}}),
       CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {lhs:LeafNode[Symbol, _, _], rhs_}, _] :> (usedHeuristics[lhs] = True;{{lhs}, walk[rhs]}),
-      _ :> {}
+      _ :> {{}, {}}
     }, 1];
 
     variableSymbols = Flatten[variableSymbolsAndRHSOccurring[[All, 1]]];
@@ -191,7 +191,7 @@ Module[{paramSymbolsAndRHSOccurring, paramSymbols, rhsOccurring, paramNames, new
 
     paramSymbolsAndRHSOccurring = Replace[vars, {
       CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {lhs:LeafNode[Symbol, _, _], rhs_}, _] :> {{lhs}, walk[rhs]},
-      _ :> {}
+      _ :> {{}, {}}
     }, 1];
 
     paramSymbols = Flatten[paramSymbolsAndRHSOccurring[[All, 1]]];
@@ -223,7 +223,7 @@ Module[{newBody, paramSymbolsAndRHSOccurring, paramSymbols, rhsOccurring, paramN
 
     paramSymbolsAndRHSOccurring = Replace[vars, {
       CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {lhs:LeafNode[Symbol, _, _], rhs_}, _] :> {{lhs}, walk[rhs]},
-      _ :> {}
+      _ :> {{}, {}}
     }, 1];
 
     paramSymbols = Flatten[paramSymbolsAndRHSOccurring[[All, 1]]];
