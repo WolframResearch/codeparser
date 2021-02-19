@@ -695,7 +695,7 @@ so convert \n -> \\n
 
 Options[convertEmbeddedNewlines] = {
   "FormatOnly" -> False,
-  "NewlineString" :> $DefaultNewline
+  "NewlineString" :> $DefaultNewlineString
 }
 
 convertEmbeddedNewlines[LeafNode[String, str_, data_], OptionsPattern[]] :=
@@ -774,7 +774,7 @@ convertEmbeddedNewlines[n:LeafNode[Token`Fake`ImplicitNull | Token`Fake`Implicit
 Options[convertEmbeddedTabs] = {
   "FormatOnly" -> False,
   "TabWidth" :> $DefaultTabWidth,
-  "NewlineString" :> $DefaultNewline
+  "NewlineString" :> $DefaultNewlineString
 }
 
 convertEmbeddedTabs[LeafNode[String, str_, data_], OptionsPattern[]] :=
