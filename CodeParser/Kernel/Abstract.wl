@@ -14,6 +14,7 @@ $AbstractParseProgress
 Begin["`Private`"]
 
 Needs["CodeParser`"]
+Needs["CodeParser`Definitions`"] (* for DefinitionSymbols *)
 Needs["CodeParser`Utils`"]
 Needs["CodeParser`Folds`"]
 Needs["CodeParser`Quirks`"]
@@ -868,23 +869,45 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		(*
 		foo[] := 1+1  at top-level
 
-		insert "Definition" metadata for foo
+		insert "Definitions" metadata for foo
 		
 		*)
-		CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {lhs_ /; !FailureQ[DeclarationName[lhs]], _}, _],
+		CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {_, _}, _] /; DefinitionSymbols[x[[2, 1]]] != {},
 			peek = nodeListStack["Peek"];
-			def = CallNode[LeafNode[Symbol, x[[1, 2]], x[[1, 3]]], x[[2]], <| x[[3]], "Definition" -> DeclarationName[x[[2, 1]]] |> ];
+			def = CallNode[x[[1]], x[[2]], <| x[[3]], "Definitions" -> DefinitionSymbols[x[[2, 1]]] |> ];
 			peek["Push", def];
 		,
 		(*
 		foo[] := 1+1  at top-level ;
 
-		insert "Definition" metadata for foo
+		insert "Definitions" metadata for foo
 		
 		*)
-		CallNode[LeafNode[Symbol, "CompoundExpression", _], { CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {lhs_ /; !FailureQ[DeclarationName[lhs]], _}, _], LeafNode[Symbol, "Null", _] }, _],
+		CallNode[LeafNode[Symbol, "CompoundExpression", _], { CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {_, _}, _] /; DefinitionSymbols[x[[2, 1, 2, 1]]] != {}, LeafNode[Symbol, "Null", _] }, _],
 			peek = nodeListStack["Peek"];
-			def = CallNode[x[[1]], { CallNode[LeafNode[Symbol, x[[2, 1, 1, 2]], x[[2, 1, 1, 3]]], x[[2, 1, 2]], <| x[[2, 1, 3]], "Definition" -> DeclarationName[x[[2, 1, 2, 1]]] |> ], x[[2, 2]] }, x[[3]]];
+			def = CallNode[x[[1]], { CallNode[x[[2, 1, 1]], x[[2, 1, 2]], <| x[[2, 1, 3]], "Definitions" -> DefinitionSymbols[x[[2, 1, 2, 1]]] |> ], x[[2, 2]] }, x[[3]]];
+			peek["Push", def];
+		,
+		(*
+		foo /: foo[] := 1+1  at top-level
+
+		insert "Definitions" metadata for foo
+		
+		*)
+		CallNode[LeafNode[Symbol, "TagSetDelayed", _], {_, _, _}, _] /; DefinitionSymbols[x[[2, 1]]] != {} || DefinitionSymbols[x[[2, 2]]] != {},
+			peek = nodeListStack["Peek"];
+			def = CallNode[LeafNode[Symbol, x[[1, 2]], x[[1, 3]]], x[[2]], <| x[[3]], "Definitions" -> DefinitionSymbols[x[[2, 1]]] ~Join~ DefinitionSymbols[x[[2, 2]]] |> ];
+			peek["Push", def];
+		,
+		(*
+		foo /: foo[] := 1+1  at top-level ;
+
+		insert "Definitions" metadata for foo
+		
+		*)
+		CallNode[LeafNode[Symbol, "CompoundExpression", _], { CallNode[LeafNode[Symbol, "TagSetDelayed", _], {_, _, _}, _] /; DefinitionSymbols[x[[2, 1, 2, 1]]] != {} || DefinitionSymbols[x[[2, 1, 2, 2]]] != {}, LeafNode[Symbol, "Null", _] }, _],
+			peek = nodeListStack["Peek"];
+			def = CallNode[x[[1]], { CallNode[x[[2, 1, 1]], x[[2, 1, 2]], <| x[[2, 1, 3]], "Definitions" -> DefinitionSymbols[x[[2, 1, 2, 1]]] ~Join~ DefinitionSymbols[x[[2, 1, 2, 2]]] |> ], x[[2, 2]] }, x[[3]]];
 			peek["Push", def];
 		,
 		(*

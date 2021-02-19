@@ -1,44 +1,37 @@
 BeginPackage["CodeParser`Definitions`"]
 
+
+DefinitionSymbols
+
+
 Begin["`Private`"]
 
 Needs["CodeParser`"]
 
 
 (*
-
-given an LHS node, determine its declared name
-
-DeclarationName will try to work with concrete syntax, aggregate syntax and abstract syntax
+given an LHS node, determine the symbol that gives the definition
 *)
 
-DeclarationName[LeafNode[Symbol, s_, _]] := s
+DefinitionSymbols[n:LeafNode[Symbol, _, _]] := {n}
 
-DeclarationName[CallNode[LeafNode[Symbol, "HoldPattern", _], {GroupNode[GroupSquare, {_, node_, _}, _]}, _]] := DeclarationName[node]
+DefinitionSymbols[LeafNode[_, _, _]] := {}
 
-DeclarationName[CallNode[LeafNode[Symbol, "Condition", _], {node_, _}, _]] := DeclarationName[node]
-DeclarationName[CallNode[LeafNode[Symbol, "Pattern", _], {_, node_}, _]] := DeclarationName[node]
-DeclarationName[CallNode[LeafNode[Symbol, "PatternTest", _], {node_, _}, _]] := DeclarationName[node]
-DeclarationName[CallNode[LeafNode[Symbol, "HoldPattern", _], {node_}, _]] := DeclarationName[node]
-DeclarationName[CallNode[LeafNode[Symbol, "MessageName", _], _, _]] := "MessageName"
 
-DeclarationName[CallNode[{node_, ___}, _, _]] := DeclarationName[node]
+DefinitionSymbols[CallNode[LeafNode[Symbol, "Condition", _], {node_, _}, _]] := DefinitionSymbols[node]
+DefinitionSymbols[CallNode[LeafNode[Symbol, "Pattern", _], {_, node_}, _]] := DefinitionSymbols[node]
+DefinitionSymbols[CallNode[LeafNode[Symbol, "PatternTest", _], {node_, _}, _]] := DefinitionSymbols[node]
+DefinitionSymbols[CallNode[LeafNode[Symbol, "HoldPattern", _], {node_}, _]] := DefinitionSymbols[node]
+DefinitionSymbols[CallNode[LeafNode[Symbol, "MessageName", _], {node_, _, ___}, _]] := DefinitionSymbols[node]
 
-DeclarationName[CallNode[node_, _, _]] := DeclarationName[node]
+DefinitionSymbols[CallNode[LeafNode[Symbol, "Blank", _], {node_}, _]] := DefinitionSymbols[node]
 
-DeclarationName[BinaryNode[Condition, {node_, _, _}, _]] := DeclarationName[node]
-DeclarationName[BinaryNode[Pattern, {_, _, node_}, _]] := DeclarationName[node]
-DeclarationName[BinaryNode[BinaryAt, {node_, _, _}, _]] := DeclarationName[node]
-DeclarationName[BinaryNode[PatternTest, {node_, _, _}, _]] := DeclarationName[node]
+DefinitionSymbols[CallNode[LeafNode[Symbol, "Alternatives", _], children_, _]] := Flatten[DefinitionSymbols /@ children]
 
-DeclarationName[InfixNode[MessageName, _, _]] := "MessageName"
+DefinitionSymbols[CallNode[node_, _, _]] := DefinitionSymbols[node]
 
-DeclarationName[GroupNode[GroupParen, {_, node_, _}, _]] := DeclarationName[node]
 
-DeclarationName[CompoundNode[PatternBlank, {_, node_}, _]] := DeclarationName[node]
-DeclarationName[CompoundNode[Blank, {_, node_}, _]] := DeclarationName[node]
-
-DeclarationName[args___] := Failure["InternalUnhandled", <|"Function"->DeclarationName, "Arguments"->{args}|>]
+DefinitionSymbols[args___] := Failure["InternalUnhandled", <|"Function"->DefinitionSymbols, "Arguments"->{args}|>]
 
 
 End[]

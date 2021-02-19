@@ -11,13 +11,15 @@ Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
 
 
-ScopingData[ast_] :=
-Module[{},
+ScopingData[astIn_] :=
+Module[{definitions},
 
-  Block[{$LexicalScope, $Data, $ExcludePatternNames, $ConditionPatternNames},
+  ast = astIn;
+
+  Block[{$LexicalScope, $Data, $ExcludePatternNames, $ConditionPatternNames, $Definitions},
   
     (*
-    $LexicalScope is an assoc of names -> decls
+    $LexicalScope is an assoc of name -> scope
     *)
     $LexicalScope = <||>;
 
@@ -35,6 +37,17 @@ Module[{},
     $ConditionPatternNames is a list of names
     *)
     $ConditionPatternNames = {};
+
+
+    definitions = Flatten[Cases[ast, _[_, _, KeyValuePattern["Definitions" -> defs_]] :> defs, Infinity]];
+
+    (*
+    $Definitions is an assoc of name -> symbols
+    *)
+    $Definitions = GroupBy[definitions, #[[2]]&];
+
+    $LexicalScope = <|(# -> {"Defined"})& /@ Keys[$Definitions]|>;
+
 
     walk[ast];
 
@@ -798,9 +811,37 @@ walkCondition[CallNode[head_, children_, _]] :=
 
 walk[sym:LeafNode[Symbol, name_, data_]] :=
 Catch[
-Module[{decls, entry},
+Module[{decls, entry, defs},
 
   decls = Lookup[$LexicalScope, name, {}];
+
+  defs = Lookup[$Definitions, name, {}];
+
+  (*
+  a definition
+  *)
+  If[MemberQ[defs, sym],
+
+    (*
+    Source may have been abstracted away
+    *)
+    If[KeyExistsQ[data, Source],
+
+      entry = Lookup[$Data, name, {}];
+
+      AppendTo[entry,
+        scopingDataObject[
+          data[[Key[Source]]],
+          decls,
+          {"definition"}
+        ]
+      ];
+
+      $Data[name] = entry;
+    ];
+
+    Throw[{name}]
+  ];
 
   If[!empty[decls],
 
