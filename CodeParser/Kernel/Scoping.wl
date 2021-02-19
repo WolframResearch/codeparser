@@ -730,6 +730,61 @@ freePatterns[pat:CallNode[LeafNode[Symbol, "Pattern", _], {LeafNode[Symbol, _, _
   Flatten[{pat} ~Join~ freePatterns[rhs]]
 
 
+walk[CallNode[LeafNode[Symbol, "Slot" | "SlotSequence", _], _, data_]] :=
+Catch[
+Module[{decls, entry},
+
+  decls = Lookup[$LexicalScope, slotName, {}];
+
+  If[!empty[decls],
+
+    (*
+    Source may have been abstracted away
+    *)
+    If[KeyExistsQ[data, Source],
+
+      entry = Lookup[$Data, name, {}];
+
+      AppendTo[entry,
+        scopingDataObject[
+          data[[Key[Source]]],
+          decls,
+          modifiersSet[decls, True]
+        ]
+      ];
+
+      $Data[name] = entry;
+    ];
+
+    Throw[{name}]
+  ];
+
+
+  (*
+  naked Slot
+  *)
+  (*
+  Source may have been abstracted away
+  *)
+  If[KeyExistsQ[data, Source],
+
+    entry = Lookup[$Data, name, {}];
+
+    AppendTo[entry,
+      scopingDataObject[
+        data[[Key[Source]]],
+        decls,
+        {"error"}
+      ]
+    ];
+
+    $Data[name] = entry;
+  ];
+
+  {name}
+]]
+
+
 walk[CallNode[head_, children_, _]] :=
   Flatten[Join[walk[head], walk /@ children]]
 
