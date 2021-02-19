@@ -1179,7 +1179,7 @@ Module[{str, res, leaf, data, exprs, stringifyMode, convention, tabWidth},
 
 
 SafeString::usage = "SafeString[bytes] interprets bytes as UTF-8 and returns a \"safe\" string. \
-Invalid sequences and surrogates are replaced with \[UnknownGlyph] and BOM is replaced with special character \\:e001."
+Invalid sequences and surrogates are replaced with \\[UnknownGlyph] and BOM is replaced with special character \\:e001."
 
 SafeString[bytes:{_Integer...}] :=
 Module[{res},
