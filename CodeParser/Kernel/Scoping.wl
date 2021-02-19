@@ -100,11 +100,14 @@ Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableN
   ]
 ]
 
+
+optPat = CallNode[LeafNode[Symbol, "Rule" | "RuleDelayed", _], {_, _}, _]
+
 (*
 DynamicModule can have options
 *)
-walk[CallNode[LeafNode[Symbol, "DynamicModule", _], {CallNode[LeafNode[Symbol, "List", _], vars_, _], body_, ___}, _]] :=
-Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableNames, newScope, bodyOccurring},
+walk[CallNode[LeafNode[Symbol, "DynamicModule", _], {CallNode[LeafNode[Symbol, "List", _], vars_, _], body_, optSeq:optPat...}, _]] :=
+Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableNames, newScope, bodyOccurring, optOccurring},
 
   Internal`InheritedBlock[{$LexicalScope},
 
@@ -125,9 +128,11 @@ Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableN
 
     bodyOccurring = walk[body];
 
+    optOccurring = Flatten[walk /@ {optSeq}];
+
     Scan[add[#, bodyOccurring]&, variableSymbols];
 
-    rhsOccurring ~Join~ Complement[bodyOccurring, variableNames]
+    rhsOccurring ~Join~ Complement[bodyOccurring, variableNames] ~Join~ optOccurring
   ]
 ]
 
@@ -432,7 +437,10 @@ Module[{paramSymbolsAndTypeOccurring, paramSymbols, paramNames, newScope, bodyOc
 
 iterPat = CallNode[LeafNode[Symbol, "List", _], {LeafNode[Symbol, _, _], _, _ | PatternSequence[], _ | PatternSequence[]} | {_}, _]
 
-walk[CallNode[head:LeafNode[Symbol, tag : "Do" | "Table" | "Sum", _], {body_, iter:iterPat}, _]] :=
+(*
+Do | Table base case
+*)
+walk[CallNode[head:LeafNode[Symbol, tag : "Do" | "Table", _], {body_, iter:iterPat}, _]] :=
 Module[{paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, paramNames, newScope, bodyOccurring},
 
   Internal`InheritedBlock[{$LexicalScope},
@@ -463,10 +471,10 @@ Module[{paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, paramNames, n
   ]
 ]
 
-walk[CallNode[head:LeafNode[Symbol, tag : "Do" | "Table" | "Sum", _], children:{body_, iter:iterPat, iterPat, iterPat...}, _]] :=
+walk[CallNode[head:LeafNode[Symbol, tag : "Do" | "Table", _], {body_, iter:iterPat, iterRestSeq:PatternSequence[iterPat, iterPat...]}, _]] :=
 Module[{newBody, paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, paramNames, newScope, bodyOccurring},
 
-  newBody = CallNode[LeafNode[Symbol, head[[2]], <||>], {body} ~Join~ children[[3;;]], data];
+  newBody = CallNode[LeafNode[Symbol, tag, <||>], {body} ~Join~ {iterRestSeq}, data];
 
   Internal`InheritedBlock[{$LexicalScope},
 
@@ -493,6 +501,79 @@ Module[{newBody, paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, para
     Scan[add[#, bodyOccurring]&, paramSymbols];
 
     iterOccurring ~Join~ Complement[bodyOccurring, paramNames]
+  ]
+]
+
+(*
+Sum base case
+
+Sum can have options
+*)
+walk[CallNode[head:LeafNode[Symbol, "Sum", _], {body_, iter:iterPat, optSeq:optPat...}, _]] :=
+Module[{paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, paramNames, newScope, bodyOccurring, optOccurring},
+
+  Internal`InheritedBlock[{$LexicalScope},
+
+    paramSymbolsAndIterOccurring =
+      Replace[iter[[2]], {
+        {sym:LeafNode[Symbol, _, _], max_} :> {{sym}, walk[max]},
+        {sym:LeafNode[Symbol, _, _], min_, max_} :> {{sym}, walk[min] ~Join~ walk[max]},
+        {sym:LeafNode[Symbol, _, _], min_, max_, d_} :> {{sym}, walk[min] ~Join~ walk[max] ~Join~ walk[d]},
+        {max_} :> {{}, walk[max]},
+        _ :> {{}, {}}
+      }, {0}];
+
+    paramSymbols = paramSymbolsAndIterOccurring[[1]];
+    iterOccurring = paramSymbolsAndIterOccurring[[2]];
+
+    optOccurring = Flatten[walk /@ {optSeq}];
+
+    paramNames = #[[2]]& /@ paramSymbols;
+
+    newScope = <| (# -> {"Sum"})& /@ paramNames |>;
+
+    $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
+
+    bodyOccurring = walk[body];
+
+    Scan[add[#, bodyOccurring]&, paramSymbols];
+
+    iterOccurring ~Join~ Complement[bodyOccurring, paramNames] ~Join~ optOccurring
+  ]
+]
+
+walk[CallNode[head:LeafNode[Symbol, "Sum", _], {body_, iter:iterPat, iterRestSeq:PatternSequence[iterPat, iterPat...], optSeq:optPat...}, _]] :=
+Module[{newBody, paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, paramNames, newScope, bodyOccurring, optOccurring},
+
+  newBody = CallNode[LeafNode[Symbol, head[[2]], <||>], {body} ~Join~ {iterRestSeq}, data];
+
+  Internal`InheritedBlock[{$LexicalScope},
+
+    paramSymbolsAndIterOccurring =
+      Replace[iter[[2]], {
+        {sym:LeafNode[Symbol, _, _], max_} :> {{sym}, walk[max]},
+        {sym:LeafNode[Symbol, _, _], min_, max_} :> {{sym}, walk[min] ~Join~ walk[max]},
+        {sym:LeafNode[Symbol, _, _], min_, max_, d_} :> {{sym}, walk[min] ~Join~ walk[max] ~Join~ walk[d]},
+        {max_} :> {{}, walk[max]},
+        _ :> {{}, {}}
+      }, {0}];
+
+    paramSymbols = paramSymbolsAndIterOccurring[[1]];
+    iterOccurring = paramSymbolsAndIterOccurring[[2]];
+
+    optOccurring = Flatten[walk /@ {optSeq}];
+
+    paramNames = #[[2]]& /@ paramSymbols;
+
+    newScope = <| (# -> {"Sum"})& /@ paramNames |>;
+
+    $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
+
+    bodyOccurring = walk[newBody];
+
+    Scan[add[#, bodyOccurring]&, paramSymbols];
+
+    iterOccurring ~Join~ Complement[bodyOccurring, paramNames] ~Join~ optOccurring
   ]
 ]
 
