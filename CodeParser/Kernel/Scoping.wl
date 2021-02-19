@@ -866,6 +866,9 @@ Module[{decls, entry},
   ]
 ]
 
+walkCondition[LeafNode[_, _, _]] :=
+  {}
+
 
 add[sym:LeafNode[Symbol, name_, data_], True] :=
 Module[{decls, entry},
@@ -932,13 +935,41 @@ freePatterns[UnterminatedGroupNode[_, _, _]] :=
   {}
 
 
+walk[BoxNode[_, children_, _]] :=
+  Flatten[walk /@ children]
+
+freePatterns[BoxNode[_, body_, _]] := 
+  Flatten[freePatterns /@ body]
+
+walkCondition[BoxNode[_, children_, _]] :=
+  Flatten[walkCondition /@ children]
+
+
 
 
 (*
 modifiersSet[decls_, used_]
 *)
-modifiersSet[{___, "Error"}, True] :=
+modifiersSet[{___, "Error"}, _] :=
   {"error"}
+
+(*
+Handle the common case of entering:
+
+foo[a_] :=
+Module[{a},
+  xxx
+]
+
+The pattern and the Module variable have the same name
+
+FIXME: I should probably do more to handle more of these errors: errors of Module variables shadowing patterns
+
+*)
+modifiersSet[{"SetDelayed", "Module" | "Block"}, _] :=
+  {"error"}
+
+
 modifiersSet[{_}, False] :=
   {"unused"}
 modifiersSet[{_}, True] :=
