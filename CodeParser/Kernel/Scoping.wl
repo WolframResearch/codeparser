@@ -189,6 +189,9 @@ uppercaseOrDollarSymbolQ[LeafNode[Symbol, s_, _]] :=
   StringMatchQ[s, RegularExpression["[A-Z\\$].*"]]
 
 
+(*
+With base case
+*)
 walk[CallNode[LeafNode[Symbol, "With", _], {CallNode[LeafNode[Symbol, "List", _], vars_, _], body_}, _]] :=
 Module[{paramSymbolsAndRHSOccurring, paramSymbols, rhsOccurring, paramNames, newScope, bodyOccurring},
 
@@ -216,17 +219,19 @@ Module[{paramSymbolsAndRHSOccurring, paramSymbols, rhsOccurring, paramNames, new
   ]
 ]
 
-walk[CallNode[LeafNode[Symbol, "With", _], children:{
-  CallNode[LeafNode[Symbol, "List", _], vars_, _],
-  CallNode[LeafNode[Symbol, "List", _], _, _],
-  CallNode[LeafNode[Symbol, "List", _], _, _]..., body_}, data_]] :=
+walk[CallNode[LeafNode[Symbol, "With", _], {
+  vars:CallNode[LeafNode[Symbol, "List", _], _, _],
+  varsRestSeq:PatternSequence[
+    CallNode[LeafNode[Symbol, "List", _], _, _],
+    CallNode[LeafNode[Symbol, "List", _], _, _]...],
+  body_}, data_]] :=
 Module[{newBody, paramSymbolsAndRHSOccurring, paramSymbols, rhsOccurring, paramNames, newScope, bodyOccurring},
 
-  newBody = CallNode[LeafNode[Symbol, "With", <||>], children[[2;;-2]] ~Join~ {body}, data];
+  newBody = CallNode[LeafNode[Symbol, "With", <||>], {varsRestSeq} ~Join~ {body}, data];
 
   Internal`InheritedBlock[{$LexicalScope},
 
-    paramSymbolsAndRHSOccurring = Replace[vars, {
+    paramSymbolsAndRHSOccurring = Replace[vars[[2]], {
       CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {lhs:LeafNode[Symbol, _, _], rhs_}, _] :> {{lhs}, walk[rhs]},
       _ :> {{}, {}}
     }, 1];
