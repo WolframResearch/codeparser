@@ -365,8 +365,39 @@ freePatterns[CallNode[LeafNode[Symbol, "TagSetDelayed", _], {LeafNode[Symbol, _,
   freePatterns[rhs]
 
 
-walk[CallNode[LeafNode[Symbol, "Function", _], {paramSymbol:LeafNode[Symbol, "Null", _], body_, PatternSequence[] | _}, _]] :=
-  walk[body]
+walk[CallNode[LeafNode[Symbol, "Function", _], {body_, PatternSequence[] | _}, _]] :=
+Module[{newScope, bodyOccurring},
+
+  Internal`InheritedBlock[{$LexicalScope},
+
+    newScope = <| slotName -> {"Function"} |>;
+
+    $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
+
+    bodyOccurring = walk[body];
+
+    add[paramSymbol, bodyOccurring];
+
+    Complement[bodyOccurring, {slotName}]
+  ]
+]
+
+walk[CallNode[LeafNode[Symbol, "Function", _], {LeafNode[Symbol, "Null", _], body_, PatternSequence[] | _}, _]] :=
+Module[{newScope, bodyOccurring},
+
+  Internal`InheritedBlock[{$LexicalScope},
+
+    newScope = <| slotName -> {"Function"} |>;
+
+    $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
+
+    bodyOccurring = walk[body];
+
+    add[paramSymbol, bodyOccurring];
+
+    Complement[bodyOccurring, {slotName}]
+  ]
+]
 
 walk[CallNode[LeafNode[Symbol, "Function", _], {paramSymbol:LeafNode[Symbol, _, _], body_, PatternSequence[] | _}, _]] :=
 Module[{paramName, newScope, bodyOccurring},
