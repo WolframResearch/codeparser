@@ -797,29 +797,36 @@ walkCondition[CallNode[head_, children_, _]] :=
 
 
 walk[sym:LeafNode[Symbol, name_, data_]] :=
+Catch[
 Module[{decls, entry},
 
   decls = Lookup[$LexicalScope, name, {}];
 
   If[!empty[decls],
 
-    entry = Lookup[$Data, name, {}];
+    (*
+    Source may have been abstracted away
+    *)
+    If[KeyExistsQ[data, Source],
 
-    AppendTo[entry,
-      scopingDataObject[
-        data[[Key[Source]]],
-        decls,
-        modifiersSet[decls, True]
-      ]
+      entry = Lookup[$Data, name, {}];
+
+      AppendTo[entry,
+        scopingDataObject[
+          data[[Key[Source]]],
+          decls,
+          modifiersSet[decls, True]
+        ]
+      ];
+
+      $Data[name] = entry;
     ];
 
-    $Data[name] = entry;
+    Throw[{name}]
+  ];
 
-    {name}
-    ,
-    {}
-  ]
-]
+  {}
+]]
 
 walkCondition[sym:LeafNode[Symbol, name_, data_]] :=
 Module[{decls, entry},
