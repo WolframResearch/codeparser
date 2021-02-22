@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[    110590,       2444]
-NotebookOptionsPosition[     76575,       1826]
-NotebookOutlinePosition[     77045,       1843]
-CellTagsIndexPosition[     77002,       1840]
+NotebookDataLength[    120009,       2679]
+NotebookOptionsPosition[     82590,       1999]
+NotebookOutlinePosition[     83060,       2016]
+CellTagsIndexPosition[     83017,       2013]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -1821,12 +1821,185 @@ work\
 Cell["Fix LinearSyntaxBlob in wrong context", "Text",
  CellID->1421219801,ExpressionUUID->"29498e7d-9a51-45a1-93d1-87ce5442aa84"]
 }, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["1.2", "Section",
+ CellChangeTimes->{{3.822824221714437*^9, 3.822824223655924*^9}},
+ CellID->1563112065,ExpressionUUID->"91dc89df-08ce-4c9b-ba74-97d033092c5c"],
+
+Cell["March 25, 2021", "Text",
+ CellChangeTimes->{{3.822824233793511*^9, 3.822824249038164*^9}, {
+  3.825677249810317*^9, 3.8256772534210787`*^9}},
+ CellID->1652935849,ExpressionUUID->"5cf92cae-a1c1-405c-a6b2-2920fcd36e21"],
+
+Cell["Provide more ASCII approximations for long names", "Text",
+ CellChangeTimes->{{3.8228242562586*^9, 3.822824256805437*^9}, 
+   3.825680140078334*^9},
+ CellID->373638291,ExpressionUUID->"93d11974-3043-486e-abf9-5a7caf723e7c"],
+
+Cell["\<\
+Handle linear syntax as tokens, but they are unsupported
+
+A workflow is removing the \\( \\) from a LinearSyntaxBlob and then \
+tokenizing.\
+\>", "Text",
+ CellID->1591740512,ExpressionUUID->"1dc7f2dd-dd6b-4efb-baf5-a28ca56f9920"],
+
+Cell[">> and >>> should not give top-level lints", "Text",
+ CellID->529034666,ExpressionUUID->"a4f8597b-312b-4137-9cc0-a472e959bbc8"],
+
+Cell["\<\
+Use the source of just the ; when reporting top-level CompoundExpression\
+\>", "Text",
+ CellID->903332882,ExpressionUUID->"31c8f40a-18fc-42ae-8bd3-be4b0833bf93"],
+
+Cell["Add CodeStructuralSyntaxAggQ", "Text",
+ CellID->2031112904,ExpressionUUID->"3a862d5f-069f-45f2-a5e7-111b6c2ee88b"],
+
+Cell["\<\
+Move stray comma handling back to concrete parser and teach -check flag to \
+fail with stray commas\
+\>", "Text",
+ CellID->796759785,ExpressionUUID->"73001319-d776-4c4c-9de8-7a0138667cf8"],
+
+Cell["\<\
+For unexpected characters, display both the actual encoded representation and \
+the escaped form.
+
+This will help with diagnosing problems with invisible characters\
+\>", "Text",
+ CellID->122343007,ExpressionUUID->"e3c202ab-2d4b-4ed2-b446-1df26e109896"],
+
+Cell["\<\
+Add a new Kernel file RowBox.wl that is generated at build-time.
+
+Hard-code more values for parseBox
+
+In the fall-through cases of parseBox, be more efficient with testing \
+different string cases
+
+Remove StringifyMode 3 (passthrough). Just hard-code these cases\
+\>", "Text",
+ CellID->1741268195,ExpressionUUID->"4a7965f5-b514-4a4a-9692-b690b7c7cded"],
+
+Cell["\<\
+Allow \"FileFormat\" -> \"Script\" for ignoring shebang in .wls files\
+\>", "Text",
+ CellID->2062155509,ExpressionUUID->"d7908dd7-584a-4ff1-a2ba-4b1bcd88a70a"],
+
+Cell["Provide better error reporting for \\Alpha]", "Text",
+ CellID->409060830,ExpressionUUID->"8a92ef73-7e76-4ab7-83b1-4c70682ef970"],
+
+Cell["\<\
+Add ScopingData[ast] function for gathering information about scoping \
+constructs\
+\>", "Text",
+ CellID->1705548138,ExpressionUUID->"e000f52b-f922-41a2-a8bf-da12acd734f5"],
+
+Cell["\<\
+Introduce DefinitionSymbols function and start using it
+
+This is a saner function than the older DeclarationName\
+\>", "Text",
+ CellID->535835210,ExpressionUUID->"53207fe2-e1ce-41e3-b138-96d7ecfa6cd9"],
+
+Cell["Update ASCII replacements", "Text",
+ CellID->714315324,ExpressionUUID->"985f2e60-4dfb-4f8a-a038-f05f4b2c9c25"],
+
+Cell["Provide some selectors for CodeAction objects", "Text",
+ CellID->1622915997,ExpressionUUID->"6ebc12d1-6821-4ffa-902a-fd03e1870f0a"],
+
+Cell["\<\
+Move ToInputFormString
+
+Compile` also has a ToInputFormString symbol, so to prevent shadowing messages,
+move CodeParser`ToInputFormString to CodeParser`ToString`ToInputFormString
+and rely on CodeParser`ToString` not being on $ContextPath (unless explicitly \
+loaded, of course)\
+\>", "Text",
+ CellID->1159361032,ExpressionUUID->"0567f020-3891-49e1-bc60-202b9a99eb31"],
+
+Cell["Insert \"FileName\" into CSTs", "Text",
+ CellID->1261735593,ExpressionUUID->"d9319c9f-a115-40dd-900d-767aa262f75a"],
+
+Cell["\<\
+Allow CodeConcreteParse of Cells, Notebooks, CellObjects, and NotebookObjects\
+\
+\>", "Text",
+ CellID->1588140965,ExpressionUUID->"19b8d533-ff10-405f-85b4-8e0e6286f647"],
+
+Cell["\<\
+Lower confidence of package-related issues that are not 100% errors\
+\>", "Text",
+ CellID->800582779,ExpressionUUID->"9c37f701-340f-452b-b6a4-7ed83a7e7fee"],
+
+Cell[CellGroupData[{
+
+Cell["Fixes", "Subsection",
+ CellChangeTimes->{{3.8256802149507723`*^9, 3.8256802156400547`*^9}},
+ CellID->1753847131,ExpressionUUID->"26db4528-5cb7-421a-bf6c-c5e76c8d0c13"],
+
+Cell["\<\
+Fix warning from MSVC: using universal-character-name \\u2423 for \
+\[SpaceIndicator] was technically not correct, since MSVC is setup with a \
+different code page by default\
+\>", "Text",
+ CellID->1020385269,ExpressionUUID->"a991cfd5-c466-4015-b2bd-b82056b84dab"],
+
+Cell["Fix handling #\"foo\"", "Text",
+ CellID->335399491,ExpressionUUID->"7a8c0c44-c7c6-47c5-a380-23542a0f34ab"],
+
+Cell["\<\
+Fix bug 404282, and related issues
+
+CodeConcreteParse[\"\\\"\\r\"] would give messages because the \\r newline \
+was not being handled correctly
+
+Fix that, and also fix issues with \\r\\n newlines where the indices from the \
+SourceCharacterIndex were wrong because of treating \\r\\n as a single source \
+character\
+\>", "Text",
+ CellID->990215763,ExpressionUUID->"37a0ce8f-a5a4-468a-b4ac-ce6a6b2cb844"],
+
+Cell["Handle TernaryTilde at top-level", "Text",
+ CellID->1383442599,ExpressionUUID->"f1c3d5c3-0d1e-49a9-92e4-d3df1cbf8b71"],
+
+Cell["Add UpSet and UpSetDelayed to top-level definitions", "Text",
+ CellID->1064063738,ExpressionUUID->"f0b89659-8e7d-495a-a01d-9ce1cb64e113"],
+
+Cell["\<\
+Syntax such as Attributes[foo] = {HoldAll} is a definition for foo and not \
+for Attributes\
+\>", "Text",
+ CellID->1736581073,ExpressionUUID->"4f4b2daf-f64b-48ac-8788-4b69c0e9a0f0"],
+
+Cell["\<\
+.wl files may be scripts with #! or not, so must handle
+
+In the doc page:
+tutorial/FilesStreamsAndExternalOperations
+
+there is a paragraph that starts:
+
+\"Scripts may be stored either in normal .wl package files or in dedicated \
+.wls script files.\"\
+\>", "Text",
+ CellID->267847534,ExpressionUUID->"b3c4d2c4-b2a6-4134-b85e-636b4e97ac09"],
+
+Cell["\<\
+Fix 406933: specific comment makes CodeParser give messages and go into \
+infinite loop\
+\>", "Text",
+ CellID->911070327,ExpressionUUID->"6e56f2db-798d-44f3-ba13-1e7734c478e6"]
+}, Open  ]]
 }, Open  ]]
 }, Open  ]]
 },
-WindowSize->{866, 796},
-WindowMargins->{{4, Automatic}, {Automatic, 0}},
-FrontEndVersion->"12.2 for Mac OS X x86 (64-bit) (December 3, 2020)",
+WindowSize->{968, 951},
+WindowMargins->{{26, Automatic}, {Automatic, 27}},
+FrontEndVersion->"12.3 for Mac OS X x86 (64-bit) (March 21, 2021)",
 StyleDefinitions->FrontEnd`FileName[{"Wolfram"}, "TutorialPageStyles.nb", 
   CharacterEncoding -> "UTF-8"],
 ExpressionUUID->"5b3bd2fc-9440-4a4b-9d26-285de4d2ac82"
@@ -2443,6 +2616,68 @@ Cell[75481, 1795, 197, 3, 39, "Subsection",ExpressionUUID->"38f94879-65d7-4463-b
 Cell[75681, 1800, 722, 18, 289, "Text",ExpressionUUID->"7afff1bc-87ba-4399-a1da-8b120f7bf30f"],
 Cell[76406, 1820, 129, 1, 23, "Text",ExpressionUUID->"29498e7d-9a51-45a1-93d1-87ce5442aa84",
  CellID->1421219801]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[76584, 1827, 164, 2, 43, "Section",ExpressionUUID->"91dc89df-08ce-4c9b-ba74-97d033092c5c",
+ CellID->1563112065],
+Cell[76751, 1831, 223, 3, 23, "Text",ExpressionUUID->"5cf92cae-a1c1-405c-a6b2-2920fcd36e21",
+ CellID->1652935849],
+Cell[76977, 1836, 229, 3, 23, "Text",ExpressionUUID->"93d11974-3043-486e-abf9-5a7caf723e7c",
+ CellID->373638291],
+Cell[77209, 1841, 239, 6, 81, "Text",ExpressionUUID->"1dc7f2dd-dd6b-4efb-baf5-a28ca56f9920",
+ CellID->1591740512],
+Cell[77451, 1849, 133, 1, 23, "Text",ExpressionUUID->"a4f8597b-312b-4137-9cc0-a472e959bbc8",
+ CellID->529034666],
+Cell[77587, 1852, 171, 3, 23, "Text",ExpressionUUID->"31c8f40a-18fc-42ae-8bd3-be4b0833bf93",
+ CellID->903332882],
+Cell[77761, 1857, 120, 1, 23, "Text",ExpressionUUID->"3a862d5f-069f-45f2-a5e7-111b6c2ee88b",
+ CellID->2031112904],
+Cell[77884, 1860, 198, 4, 23, "Text",ExpressionUUID->"73001319-d776-4c4c-9de8-7a0138667cf8",
+ CellID->796759785],
+Cell[78085, 1866, 263, 6, 81, "Text",ExpressionUUID->"e3c202ab-2d4b-4ed2-b446-1df26e109896",
+ CellID->122343007],
+Cell[78351, 1874, 362, 10, 197, "Text",ExpressionUUID->"4a7965f5-b514-4a4a-9692-b690b7c7cded",
+ CellID->1741268195],
+Cell[78716, 1886, 169, 3, 23, "Text",ExpressionUUID->"d7908dd7-584a-4ff1-a2ba-4b1bcd88a70a",
+ CellID->2062155509],
+Cell[78888, 1891, 134, 1, 23, "Text",ExpressionUUID->"8a92ef73-7e76-4ab7-83b1-4c70682ef970",
+ CellID->409060830],
+Cell[79025, 1894, 182, 4, 23, "Text",ExpressionUUID->"e000f52b-f922-41a2-a8bf-da12acd734f5",
+ CellID->1705548138],
+Cell[79210, 1900, 211, 5, 81, "Text",ExpressionUUID->"53207fe2-e1ce-41e3-b138-96d7ecfa6cd9",
+ CellID->535835210],
+Cell[79424, 1907, 116, 1, 23, "Text",ExpressionUUID->"985f2e60-4dfb-4f8a-a038-f05f4b2c9c25",
+ CellID->714315324],
+Cell[79543, 1910, 137, 1, 23, "Text",ExpressionUUID->"6ebc12d1-6821-4ffa-902a-fd03e1870f0a",
+ CellID->1622915997],
+Cell[79683, 1913, 377, 8, 139, "Text",ExpressionUUID->"0567f020-3891-49e1-bc60-202b9a99eb31",
+ CellID->1159361032],
+Cell[80063, 1923, 121, 1, 23, "Text",ExpressionUUID->"d9319c9f-a115-40dd-900d-767aa262f75a",
+ CellID->1261735593],
+Cell[80187, 1926, 179, 4, 23, "Text",ExpressionUUID->"19b8d533-ff10-405f-85b4-8e0e6286f647",
+ CellID->1588140965],
+Cell[80369, 1932, 166, 3, 23, "Text",ExpressionUUID->"9c37f701-340f-452b-b6a4-7ed83a7e7fee",
+ CellID->800582779],
+Cell[CellGroupData[{
+Cell[80560, 1939, 173, 2, 39, "Subsection",ExpressionUUID->"26db4528-5cb7-421a-bf6c-c5e76c8d0c13",
+ CellID->1753847131],
+Cell[80736, 1943, 274, 5, 40, "Text",ExpressionUUID->"a991cfd5-c466-4015-b2bd-b82056b84dab",
+ CellID->1020385269],
+Cell[81013, 1950, 112, 1, 23, "Text",ExpressionUUID->"7a8c0c44-c7c6-47c5-a380-23542a0f34ab",
+ CellID->335399491],
+Cell[81128, 1953, 414, 10, 156, "Text",ExpressionUUID->"37a0ce8f-a5a4-468a-b4ac-ce6a6b2cb844",
+ CellID->990215763],
+Cell[81545, 1965, 124, 1, 23, "Text",ExpressionUUID->"f1c3d5c3-0d1e-49a9-92e4-d3df1cbf8b71",
+ CellID->1383442599],
+Cell[81672, 1968, 143, 1, 23, "Text",ExpressionUUID->"f0b89659-8e7d-495a-a01d-9ce1cb64e113",
+ CellID->1064063738],
+Cell[81818, 1971, 191, 4, 23, "Text",ExpressionUUID->"4f4b2daf-f64b-48ac-8788-4b69c0e9a0f0",
+ CellID->1736581073],
+Cell[82012, 1977, 349, 11, 226, "Text",ExpressionUUID->"b3c4d2c4-b2a6-4134-b85e-636b4e97ac09",
+ CellID->267847534],
+Cell[82364, 1990, 186, 4, 23, "Text",ExpressionUUID->"6e56f2db-798d-44f3-ba13-1e7734c478e6",
+ CellID->911070327]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]]
