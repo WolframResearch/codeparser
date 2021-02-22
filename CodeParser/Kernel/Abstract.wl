@@ -266,16 +266,27 @@ abstract[TernaryNode[TernaryTilde, {left_, _, middle:InfixNode[Comma, _, _], _, 
 		CallNode[AbstractSyntaxErrorNode[AbstractSyntaxError`CommaTopLevel, abstractedMiddle[[2]], abstractedMiddle[[3]]], {
 			abstract[left], abstract[right]}, data]
 	]
+
 abstract[TernaryNode[TernaryTilde, {left_, _, middle_, _, right_}, data_]] :=
 	CallNode[abstract[middle], {abstract[left], abstract[right]}, data]
 
-abstract[TernaryNode[TagSet, {left_, _, middle_, _, right_}, data_]] :=
+abstract[TernaryNode[TagSet, {left:LeafNode[Symbol, _, _], _, middle_, _, right_}, data_]] :=
 	CallNode[ToNode[TagSet], {abstract[left], abstract[middle], abstract[right]}, data]
-abstract[TernaryNode[TagSetDelayed, {left_, _, middle_, _, right_}, data_]] :=
+
+abstract[TernaryNode[TagSet, {left_, _, middle_, _, right_}, data_]] :=
+	AbstractSyntaxErrorNode[AbstractSyntaxError`TagSetError, {abstract[left], abstract[middle], abstract[right]}, data]
+
+abstract[TernaryNode[TagSetDelayed, {left:LeafNode[Symbol, _, _], _, middle_, _, right_}, data_]] :=
 	CallNode[ToNode[TagSetDelayed], {abstract[left], abstract[middle], abstract[right]}, data]
 
-abstract[TernaryNode[TagUnset, {left_, _, middle_, LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, data_]] :=
+abstract[TernaryNode[TagSetDelayed, {left_, _, middle_, _, right_}, data_]] :=
+	AbstractSyntaxErrorNode[AbstractSyntaxError`TagSetDelayedError, {abstract[left], abstract[middle], abstract[right]}, data]
+
+abstract[TernaryNode[TagUnset, {left:LeafNode[Symbol, _, _], _, middle_, LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, data_]] :=
 	CallNode[ToNode[TagUnset], {abstract[left], abstract[middle]}, data]
+
+abstract[TernaryNode[TagUnset, {left_, _, middle_, _, _}, data_]] :=
+	AbstractSyntaxErrorNode[AbstractSyntaxError`TagUnsetError, {abstract[left], abstract[middle]}, data]
 
 abstract[TernaryNode[Span, {left_, _, middle_, _, right_}, data_]] :=
 	CallNode[ToNode[Span], {abstract[left], abstract[middle], abstract[right]}, data]
@@ -894,9 +905,9 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		insert "Definitions" metadata for foo
 		
 		*)
-		CallNode[LeafNode[Symbol, "TagSetDelayed", _], {_, _, _}, _] /; DefinitionSymbols[x[[2, 1]]] != {} || DefinitionSymbols[x[[2, 2]]] != {},
+		CallNode[LeafNode[Symbol, "TagSet" | "TagSetDelayed", _], {_, _, _}, _] /; DefinitionSymbols[x[[2, 1]]] != {} || DefinitionSymbols[x[[2, 2]]] != {},
 			peek = nodeListStack["Peek"];
-			def = CallNode[LeafNode[Symbol, x[[1, 2]], x[[1, 3]]], x[[2]], <| x[[3]], "Definitions" -> DefinitionSymbols[x[[2, 1]]] ~Join~ DefinitionSymbols[x[[2, 2]]] |> ];
+			def = CallNode[x[[1]], x[[2]], <| x[[3]], "Definitions" -> DefinitionSymbols[x[[2, 1]]] ~Join~ DefinitionSymbols[x[[2, 2]]] |> ];
 			peek["Push", def];
 		,
 		(*
@@ -905,7 +916,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		insert "Definitions" metadata for foo
 		
 		*)
-		CallNode[LeafNode[Symbol, "CompoundExpression", _], { CallNode[LeafNode[Symbol, "TagSetDelayed", _], {_, _, _}, _] /; DefinitionSymbols[x[[2, 1, 2, 1]]] != {} || DefinitionSymbols[x[[2, 1, 2, 2]]] != {}, LeafNode[Symbol, "Null", _] }, _],
+		CallNode[LeafNode[Symbol, "CompoundExpression", _], { CallNode[LeafNode[Symbol, "TagSet" | "TagSetDelayed", _], {_, _, _}, _] /; DefinitionSymbols[x[[2, 1, 2, 1]]] != {} || DefinitionSymbols[x[[2, 1, 2, 2]]] != {}, LeafNode[Symbol, "Null", _] }, _],
 			peek = nodeListStack["Peek"];
 			def = CallNode[x[[1]], { CallNode[x[[2, 1, 1]], x[[2, 1, 2]], <| x[[2, 1, 3]], "Definitions" -> DefinitionSymbols[x[[2, 1, 2, 1]]] ~Join~ DefinitionSymbols[x[[2, 1, 2, 2]]] |> ], x[[2, 2]] }, x[[3]]];
 			peek["Push", def];
