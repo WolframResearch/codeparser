@@ -911,6 +911,28 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 			peek["Push", def];
 		,
 		(*
+		foo[bar[]] ^:= 1+1  at top-level
+
+		insert "Definitions" metadata for foo
+		
+		*)
+		CallNode[LeafNode[Symbol, "UpSet" | "UpSetDelayed", _], {CallNode[_, _, _], _}, _] /; AnyTrue[x[[2, 1, 2]], (DefinitionSymbols[#] != {})&],
+			peek = nodeListStack["Peek"];
+			def = CallNode[x[[1]], x[[2]], <| x[[3]], "Definitions" -> Flatten[DefinitionSymbols /@ x[[2, 1, 2]]] |> ];
+			peek["Push", def];
+		,
+		(*
+		foo[bar[]] ^:= 1+1  at top-level ;
+
+		insert "Definitions" metadata for foo
+		
+		*)
+		CallNode[LeafNode[Symbol, "CompoundExpression", _], { CallNode[LeafNode[Symbol, "UpSet" | "UpSetDelayed", _], {CallNode[_, _, _], _}, _] /; AnyTrue[x[[2, 1, 2, 1, 2]], (DefinitionSymbols[#] != {})&], LeafNode[Symbol, "Null", _] }, _],
+			peek = nodeListStack["Peek"];
+			def = CallNode[x[[1]], { CallNode[x[[2, 1, 1]], x[[2, 1, 2]], <| x[[2, 1, 3]], "Definitions" -> Flatten[DefinitionSymbols /@ x[[2, 1, 2, 1, 2]]] |> ], x[[2, 2]] }, x[[3]]];
+			peek["Push", def];
+		,
+		(*
 		All other expressions
 		*)
 		_,
