@@ -1,4 +1,10 @@
 
+(*
+CodeParser Data file
+
+Do not modify this file directly
+*)
+
 <|
 
 Token`Unknown -> Parselet`InfixNullPointerParselet[],

@@ -1,5 +1,11 @@
 
 (*
+CodeParser Data file
+
+Do not modify this file if located outside of codeparser repo
+*)
+
+(*
 
 Largely derived from documentation:
 

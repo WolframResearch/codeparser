@@ -1,3 +1,10 @@
+
+(*
+CodeParser Data file
+
+Do not modify this file directly
+*)
+
 (*
 
 The token enum
