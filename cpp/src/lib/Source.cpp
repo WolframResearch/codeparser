@@ -151,21 +151,7 @@ bool IssuePtrCompare::operator() (const IssuePtr &L, const IssuePtr &R) const {
 }
 
 
-bool CodeActionPtrCompare::operator() (const CodeActionPtr &L, const CodeActionPtr &R) const {
-    
-    if (L->getSource() < R->getSource()) {
-        return true;
-    }
-    
-    if (L->getLabel() < R->getLabel()) {
-        return true;
-    }
-    
-    return false;
-}
-
-
-Issue::Issue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Val, CodeActionPtrSet Actions) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Val(Val), Actions(std::move(Actions)) {}
+Issue::Issue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Val, CodeActionPtrVector Actions) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Val(Val), Actions(std::move(Actions)) {}
 
 Source Issue::getSource() const {
     return Src;
@@ -202,7 +188,7 @@ bool SyntaxIssue::check() const {
 }
 
 
-ExtraCommaIssue::ExtraCommaIssue(Source Src, CodeActionPtrSet Actions) : SyntaxIssue(SYNTAXISSUETAG_COMMA, "Extra ``,``.", SYNTAXISSUESEVERITY_ERROR, Src, 1.0, std::move(Actions)) {}
+ExtraCommaIssue::ExtraCommaIssue(Source Src, CodeActionPtrVector Actions) : SyntaxIssue(SYNTAXISSUETAG_COMMA, "Extra ``,``.", SYNTAXISSUESEVERITY_ERROR, Src, 1.0, std::move(Actions)) {}
 
 bool ExtraCommaIssue::check() const {
     return false;

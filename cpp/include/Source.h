@@ -15,12 +15,12 @@
 #include <iterator>
 #include <array>
 #include <memory> // for unique_ptr
+#include <vector>
 
 class Issue;
 class CodeAction;
 
 class IssuePtrCompare;
-class CodeActionPtrCompare;
 
 using Buffer = const unsigned char *;
 using MBuffer = unsigned char *;
@@ -28,7 +28,7 @@ using IssuePtr = std::shared_ptr<Issue>;
 using CodeActionPtr = std::unique_ptr<CodeAction>;
 
 using IssuePtrSet = std::set<IssuePtr, IssuePtrCompare>;
-using CodeActionPtrSet = std::set<CodeActionPtr, CodeActionPtrCompare>;
+using CodeActionPtrVector = std::vector<CodeActionPtr>;
 
 //
 //
@@ -436,14 +436,6 @@ public:
 };
 
 //
-// For std::set
-//
-class CodeActionPtrCompare {
-public:
-    bool operator() (const CodeActionPtr &L, const CodeActionPtr &R) const;
-};
-
-//
 //
 //
 class Issue {
@@ -454,9 +446,9 @@ public:
     const SyntaxIssueSeverity Sev;
     const Source Src;
     const double Val;
-    const CodeActionPtrSet Actions;
+    const CodeActionPtrVector Actions;
     
-    Issue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Val, CodeActionPtrSet Actions);
+    Issue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Val, CodeActionPtrVector Actions);
     
     Source getSource() const;
     
@@ -548,7 +540,7 @@ public:
 //
 class SyntaxIssue : public Issue {
 public:
-    SyntaxIssue(SyntaxIssueTag Tag, std::string Msg, SyntaxIssueSeverity Sev, Source Src, double Con, CodeActionPtrSet Actions) : Issue(Tag, Msg, Sev, Src, Con, std::move(Actions)) {}
+    SyntaxIssue(SyntaxIssueTag Tag, std::string Msg, SyntaxIssueSeverity Sev, Source Src, double Con, CodeActionPtrVector Actions) : Issue(Tag, Msg, Sev, Src, Con, std::move(Actions)) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
@@ -564,7 +556,7 @@ public:
 //
 class ExtraCommaIssue : public SyntaxIssue {
 public:
-    ExtraCommaIssue(Source Src, CodeActionPtrSet Actions);
+    ExtraCommaIssue(Source Src, CodeActionPtrVector Actions);
     
     bool check() const override;
 };
@@ -574,7 +566,7 @@ public:
 //
 class FormatIssue : public Issue {
 public:
-    FormatIssue(FormatIssueTag Tag, std::string Msg, FormatIssueSeverity Sev, Source Src, CodeActionPtrSet Actions) : Issue(Tag, Msg, Sev, Src, 0.0, std::move(Actions)) {}
+    FormatIssue(FormatIssueTag Tag, std::string Msg, FormatIssueSeverity Sev, Source Src, CodeActionPtrVector Actions) : Issue(Tag, Msg, Sev, Src, 0.0, std::move(Actions)) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
@@ -590,7 +582,7 @@ public:
 //
 class EncodingIssue : public Issue {
 public:
-    EncodingIssue(EncodingIssueTag Tag, std::string Msg, EncodingIssueSeverity Sev, Source Src, double Con, CodeActionPtrSet Actions) : Issue(Tag, Msg, Sev, Src, Con, std::move(Actions)) {}
+    EncodingIssue(EncodingIssueTag Tag, std::string Msg, EncodingIssueSeverity Sev, Source Src, double Con, CodeActionPtrVector Actions) : Issue(Tag, Msg, Sev, Src, Con, std::move(Actions)) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;

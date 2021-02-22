@@ -284,12 +284,12 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
                 
                 auto suggestion = longNameSuggestion(longNameBufAndLen);
                 
-                CodeActionPtrSet Actions;
+                CodeActionPtrVector Actions;
                 
                 auto it = std::lower_bound(LongNameToCodePointMap_names.begin(), LongNameToCodePointMap_names.end(), longNameStr);
                 auto found = (it != LongNameToCodePointMap_names.end() && *it == longNameStr);
                 if (found) {
-                    Actions.insert(CodeActionPtr(new InsertTextCodeAction("Insert ``]`` to form ``\\[" + suggestion + "]``", Source(currentWLCharacterEndLoc), "]")));
+                    Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert ``]`` to form ``\\[" + suggestion + "]``", Source(currentWLCharacterEndLoc), "]")));
                 }
                 
                 auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\[") + longNameStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
@@ -305,9 +305,9 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
                 // Something like \[*
                 //
                 
-                CodeActionPtrSet Actions;
+                CodeActionPtrVector Actions;
                 
-                Actions.insert(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\\\[" + longNameStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\[" + longNameStr)));
+                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\\\[" + longNameStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\[" + longNameStr)));
                 
                 auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\[") + longNameStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
                 
@@ -367,10 +367,10 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
             
             auto suggestion = longNameSuggestion(longNameBufAndLen);
             
-            CodeActionPtrSet Actions;
+            CodeActionPtrVector Actions;
             
             if (!suggestion.empty()) {
-                Actions.insert(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\[" + suggestion + "]``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\[" + suggestion + "]")));
+                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\[" + suggestion + "]``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\[" + suggestion + "]")));
             }
             
             auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\[") + longNameStr + "]``.", SYNTAXISSUESEVERITY_ERROR, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
@@ -390,10 +390,10 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
             
             auto suggestion = longNameSuggestion(longNameBufAndLen);
             
-            CodeActionPtrSet Actions;
+            CodeActionPtrVector Actions;
             
             if (!suggestion.empty()) {
-                Actions.insert(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\[" + suggestion + "]``", Source(previousBackslashLoc, currentWLCharacterEndLoc), "\\[" + suggestion + "]")));
+                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\[" + suggestion + "]``", Source(previousBackslashLoc, currentWLCharacterEndLoc), "\\[" + suggestion + "]")));
             }
             
             auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDESCAPESEQUENCE, std::string("Unexpected escape sequence: ``\\\\[") + longNameStr + "]``.", SYNTAXISSUESEVERITY_REMARK, Source(previousBackslashLoc, currentWLCharacterEndLoc), 0.33, std::move(Actions)));
@@ -432,10 +432,10 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
         
         auto suggestion = longNameSuggestion(longNameBufAndLen);
         
-        CodeActionPtrSet Actions;
+        CodeActionPtrVector Actions;
         
         if (!suggestion.empty()) {
-            Actions.insert(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\[" + suggestion + "]``", Source(previousBackslashLoc, currentWLCharacterEndLoc), "\\[" + suggestion + "]")));
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\[" + suggestion + "]``", Source(previousBackslashLoc, currentWLCharacterEndLoc), "\\[" + suggestion + "]")));
         }
         
         auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDESCAPESEQUENCE, std::string("Unexpected escape sequence: ``\\\\[") + longNameStr + "]``.", SYNTAXISSUESEVERITY_REMARK, Source(previousBackslashLoc, currentWLCharacterEndLoc), 0.33, std::move(Actions)));
@@ -533,9 +533,9 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
                 auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf);
                 auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.buffer), hexBufAndLen.length());
                 
-                CodeActionPtrSet Actions;
+                CodeActionPtrVector Actions;
                 
-                Actions.insert(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\\\:" + hexStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\:" + hexStr)));
+                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\\\:" + hexStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\:" + hexStr)));
                 
                 auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\:") + hexStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
                 
@@ -640,9 +640,9 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
                 auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf);
                 auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.buffer), hexBufAndLen.length());
                 
-                CodeActionPtrSet Actions;
+                CodeActionPtrVector Actions;
                 
-                Actions.insert(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\\\." + hexStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\." + hexStr)));
+                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\\\." + hexStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\." + hexStr)));
                 
                 auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, "Unrecognized character: ``\\." + hexStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
                 
@@ -745,9 +745,9 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
                 auto octalBufAndLen = BufferAndLength(octalStartBuf, octalEndBuf - octalStartBuf);
                 auto octalStr = std::string(reinterpret_cast<const char *>(octalBufAndLen.buffer), octalBufAndLen.length());
                 
-                CodeActionPtrSet Actions;
+                CodeActionPtrVector Actions;
                 
-                Actions.insert(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\\\" + octalStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\" + octalStr)));
+                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\\\" + octalStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\" + octalStr)));
                 
                 auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\") + octalStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
                 
@@ -852,9 +852,9 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
                 auto hexBufAndLen = BufferAndLength(hexStartBuf, hexEndBuf - hexStartBuf);
                 auto hexStr = std::string(reinterpret_cast<const char *>(hexBufAndLen.buffer), hexBufAndLen.length());
                 
-                CodeActionPtrSet Actions;
+                CodeActionPtrVector Actions;
                 
-                Actions.insert(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\\\|" + hexStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\|" + hexStr)));
+                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\\\|" + hexStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\|" + hexStr)));
                 
                 auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character: ``\\|") + hexStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
                 
@@ -1095,9 +1095,9 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterSta
                 
                 auto curSourceGraphicalStr = alnumRun + "]";
                 
-                CodeActionPtrSet Actions;
+                CodeActionPtrVector Actions;
                 
-                Actions.insert(CodeActionPtr(new InsertTextCodeAction("Insert ``[`` to form ``\\[" + alnumRun + "]``", Source(currentWLCharacterStartLoc.next()), "[")));
+                Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert ``[`` to form ``\\[" + alnumRun + "]``", Source(currentWLCharacterStartLoc.next()), "[")));
                 
                 auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character ``\\") + curSourceGraphicalStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
                 
@@ -1109,10 +1109,10 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterSta
                     
                     auto curSourceGraphicalStr = WLCharacter(escapedChar.to_point()).graphicalString();
                     
-                    CodeActionPtrSet Actions;
+                    CodeActionPtrVector Actions;
                     
-                    Actions.insert(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\[" + curSourceGraphicalStr + "XXX]``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\[" + curSourceGraphicalStr + "XXX]")));
-                    Actions.insert(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\:" + curSourceGraphicalStr + "XXX``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\:" + curSourceGraphicalStr + "XXX")));
+                    Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\[" + curSourceGraphicalStr + "XXX]``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\[" + curSourceGraphicalStr + "XXX]")));
+                    Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\:" + curSourceGraphicalStr + "XXX``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\:" + curSourceGraphicalStr + "XXX")));
                     
                     auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character ``\\") + curSourceGraphicalStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
                     
@@ -1122,9 +1122,9 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterSta
                     
                     auto curSourceGraphicalStr = WLCharacter(escapedChar.to_point()).graphicalString();
                     
-                    CodeActionPtrSet Actions;
+                    CodeActionPtrVector Actions;
                     
-                    Actions.insert(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\[" + curSourceGraphicalStr + "XXX]``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\[" + curSourceGraphicalStr + "XXX]")));
+                    Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\[" + curSourceGraphicalStr + "XXX]``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\[" + curSourceGraphicalStr + "XXX]")));
                     
                     auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character ``\\") + curSourceGraphicalStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
                     
@@ -1137,9 +1137,9 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterSta
             
             auto curSourceGraphicalStr = WLCharacter(escapedChar.to_point()).graphicalString();
             
-            CodeActionPtrSet Actions;
+            CodeActionPtrVector Actions;
             
-            Actions.insert(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\:" + curSourceGraphicalStr + "xxx``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\:" + curSourceGraphicalStr + "xxx")));
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\:" + curSourceGraphicalStr + "xxx``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\:" + curSourceGraphicalStr + "xxx")));
             
             auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character ``\\") + curSourceGraphicalStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
             
@@ -1178,9 +1178,9 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterSta
                 
             } else {
                 
-                CodeActionPtrSet Actions;
+                CodeActionPtrVector Actions;
                 
-                Actions.insert(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\\\" + curSourceGraphicalStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\" + curSourceGraphicalStr)));
+                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\\\" + curSourceGraphicalStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\" + curSourceGraphicalStr)));
                 
                 auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character ``\\") + curSourceGraphicalStr + "``.", SYNTAXISSUESEVERITY_ERROR, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
                 

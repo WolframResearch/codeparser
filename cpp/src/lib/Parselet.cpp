@@ -102,9 +102,9 @@ NodePtr PrefixCommaParselet::parse(Token TokIn, ParserContext Ctxt) const {
         
 #if !NISSUES
         {
-            CodeActionPtrSet Actions;
+            CodeActionPtrVector Actions;
             
-            Actions.insert(CodeActionPtr(new DeleteTextCodeAction("Delete ``,``", TokIn.Src)));
+            Actions.push_back(CodeActionPtr(new DeleteTextCodeAction("Delete ``,``", TokIn.Src)));
             
             auto I = IssuePtr(new ExtraCommaIssue(TokIn.Src, std::move(Actions)));
             
@@ -1317,9 +1317,9 @@ NodePtr CommaParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
             
 #if !NISSUES
                 {
-                    CodeActionPtrSet Actions;
+                    CodeActionPtrVector Actions;
                     
-                    Actions.insert(CodeActionPtr(new DeleteTextCodeAction("Delete ``,``", Tok2.Src)));
+                    Actions.push_back(CodeActionPtr(new DeleteTextCodeAction("Delete ``,``", Tok2.Src)));
                     
                     auto I = IssuePtr(new ExtraCommaIssue(Tok2.Src, std::move(Actions)));
                     
@@ -1346,9 +1346,9 @@ NodePtr CommaParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
                 
 #if !NISSUES
                 {
-                    CodeActionPtrSet Actions;
+                    CodeActionPtrVector Actions;
                     
-                    Actions.insert(CodeActionPtr(new DeleteTextCodeAction("Delete ``,``", TokIn.Src)));
+                    Actions.push_back(CodeActionPtr(new DeleteTextCodeAction("Delete ``,``", TokIn.Src)));
                     
                     auto I = IssuePtr(new ExtraCommaIssue(TokIn.Src, std::move(Actions)));
                     
@@ -1426,9 +1426,9 @@ NodePtr CommaParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
             
 #if !NISSUES
                 {
-                    CodeActionPtrSet Actions;
+                    CodeActionPtrVector Actions;
                     
-                    Actions.insert(CodeActionPtr(new DeleteTextCodeAction("Delete ``,``", Tok2.Src)));
+                    Actions.push_back(CodeActionPtr(new DeleteTextCodeAction("Delete ``,``", Tok2.Src)));
                     
                     auto I = IssuePtr(new ExtraCommaIssue(Tok2.Src, std::move(Actions)));
                     
@@ -1461,9 +1461,9 @@ NodePtr CommaParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
             
 #if !NISSUES
                 {
-                    CodeActionPtrSet Actions;
+                    CodeActionPtrVector Actions;
                     
-                    Actions.insert(CodeActionPtr(new DeleteTextCodeAction("Delete ``,``", Tok1.Src)));
+                    Actions.push_back(CodeActionPtr(new DeleteTextCodeAction("Delete ``,``", Tok1.Src)));
                     
                     auto I = IssuePtr(new ExtraCommaIssue(Tok1.Src, std::move(Actions)));
                     
