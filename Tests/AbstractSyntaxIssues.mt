@@ -170,9 +170,12 @@ TestMatch[
 (*
 NotContiguous:
 *)
+(*
+Not handled by parser any more
 
-
-TestMatch[
+handled by syntax highlighting
+*)
+(*TestMatch[
 	FirstCase[CodeParse[" a[[] ] ", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
@@ -181,7 +184,7 @@ TestMatch[
 	TestID->"AbstractSyntaxIssues-20190520-U1R2G5"
 ]
 
-
+*)
 
 
 
