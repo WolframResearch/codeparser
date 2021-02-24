@@ -12,7 +12,7 @@ Needs["CodeParser`Utils`"]
 
 
 ScopingData[astIn_] :=
-Module[{definitions},
+Module[{ast, definitions},
 
   ast = astIn;
 
@@ -118,6 +118,8 @@ optPat = CallNode[LeafNode[Symbol, "Rule" | "RuleDelayed", _], {_, _}, _]
 
 (*
 DynamicModule can have options
+
+The options have the same scope as the body, they understand the local variables
 *)
 walk[CallNode[LeafNode[Symbol, "DynamicModule", _], {CallNode[LeafNode[Symbol, "List", _], vars_, _], body_, optSeq:optPat...}, _]] :=
 Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableNames, newScope, bodyOccurring, optOccurring},
@@ -266,7 +268,7 @@ Module[{newBody, paramSymbolsAndRHSOccurring, paramSymbols, rhsOccurring, paramN
   ]
 ]
 
-walk[CallNode[LeafNode[Symbol, tag : "SetDelayed" | "UpSetDelayed" | "RuleDelayed", _], {lhs_, rhs_}, _]] :=
+walk[CallNode[LeafNode[Symbol, tag : "SetDelayed" | "RuleDelayed", _], {lhs_, rhs_}, _]] :=
 Module[{patterns, lhsOccurring, patternSymbols, patternAssoc, patternNames, newScope, rhsOccurring, conditionOccurring},
 
   Internal`InheritedBlock[{$LexicalScope},
@@ -317,7 +319,7 @@ Module[{patterns, lhsOccurring, patternSymbols, patternAssoc, patternNames, newS
   ]
 ]
 
-freePatterns[CallNode[LeafNode[Symbol, "SetDelayed" | "UpSetDelayed" | "RuleDelayed", _], {lhs_, rhs_}, _]] := 
+freePatterns[CallNode[LeafNode[Symbol, "SetDelayed" | "RuleDelayed", _], {lhs_, rhs_}, _]] := 
   freePatterns[rhs]
 
 
@@ -378,44 +380,103 @@ freePatterns[CallNode[LeafNode[Symbol, "TagSetDelayed", _], {LeafNode[Symbol, _,
   freePatterns[rhs]
 
 
-walk[CallNode[LeafNode[Symbol, "Function", _], {body_, PatternSequence[] | _}, _]] :=
+walk[CallNode[LeafNode[Symbol, "UpSetDelayed", _], {CallNode[_, children_, _], rhs_}, _]] :=
+Module[{patterns, childrenOccurring, patternSymbols, patternAssoc, patternNames, newScope, rhsOccurring, conditionOccurring},
+
+  Internal`InheritedBlock[{$LexicalScope},
+
+    patterns = Flatten[freePatterns /@ children];
+
+    Internal`InheritedBlock[{$ExcludePatternNames},
+
+      $ExcludePatternNames = $ExcludePatternNames ~Join~ (#[[2, 1, 2]]& /@ patterns);
+
+      childrenOccurring = Flatten[walk /@ children];
+
+      conditionOccurring = Flatten[walkCondition /@ children];
+    ];
+
+    patternSymbols = Replace[patterns, {
+      pat:CallNode[LeafNode[Symbol, "Pattern", _], {sym:LeafNode[Symbol, _, _], _}, _] :> sym
+    }, 1];
+
+    patternAssoc = GroupBy[patternSymbols, #[[2]]&];
+
+    patternNames = Keys[patternAssoc];
+
+    newScope = <| (# -> {"UpSetDelayed"})& /@ patternNames |>;
+
+    $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
+
+    rhsOccurring = walk[rhs];
+
+    KeyValueMap[
+      Function[{name, syms},
+        Which[
+          Length[syms] > 1,
+            (*
+            non-linear pattern, so mark all as used
+            *)
+            Scan[add[#, True]&, syms]
+          ,
+          !MemberQ[$ExcludePatternNames, name],
+            add[syms[[1]], rhsOccurring ~Join~ conditionOccurring]
+        ]
+      ]
+      ,
+      patternAssoc
+    ];
+
+    childrenOccurring ~Join~ Complement[rhsOccurring, patternNames]
+  ]
+]
+
+freePatterns[CallNode[LeafNode[Symbol, "UpSetDelayed", _], {CallNode[_, _, _], rhs_}, _]] := 
+  freePatterns[rhs]
+
+
+walk[CallNode[LeafNode[Symbol, "Function", _], {body_}, _]] :=
 Module[{newScope, bodyOccurring},
 
   Internal`InheritedBlock[{$LexicalScope},
 
-    newScope = <| slotName -> {"Function"} |>;
+    newScope = <| $slotName -> {"Function"} |>;
 
     $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
 
     bodyOccurring = walk[body];
 
-    add[paramSymbol, bodyOccurring];
+    add[$slotName, bodyOccurring];
 
-    Complement[bodyOccurring, {slotName}]
+    Complement[bodyOccurring, {$slotName}]
   ]
 ]
 
-walk[CallNode[LeafNode[Symbol, "Function", _], {LeafNode[Symbol, "Null", _], body_, PatternSequence[] | _}, _]] :=
-Module[{newScope, bodyOccurring},
+walk[CallNode[LeafNode[Symbol, "Function", _], {LeafNode[Symbol, "Null", _], body_, attrs:(PatternSequence[] | _)}, _]] :=
+Module[{newScope, bodyOccurring, attrsOccurring},
 
   Internal`InheritedBlock[{$LexicalScope},
 
-    newScope = <| slotName -> {"Function"} |>;
+    attrsOccurring = Flatten[walk /@ {attrs}];
+
+    newScope = <| $slotName -> {"Function"} |>;
 
     $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
 
     bodyOccurring = walk[body];
 
-    add[paramSymbol, bodyOccurring];
+    add[$slotName, bodyOccurring];
 
-    Complement[bodyOccurring, {slotName}]
+    Complement[bodyOccurring, {$slotName}] ~Join~ attrsOccurring
   ]
 ]
 
-walk[CallNode[LeafNode[Symbol, "Function", _], {paramSymbol:LeafNode[Symbol, _, _], body_, PatternSequence[] | _}, _]] :=
-Module[{paramName, newScope, bodyOccurring},
+walk[CallNode[LeafNode[Symbol, "Function", _], {paramSymbol:LeafNode[Symbol, _, _], body_, attrs:(PatternSequence[] | _)}, _]] :=
+Module[{paramName, newScope, bodyOccurring, attrsOccurring},
 
   Internal`InheritedBlock[{$LexicalScope},
+
+    attrsOccurring = Flatten[walk /@ {attrs}];
 
     paramName = paramSymbol[[2]];
 
@@ -427,14 +488,16 @@ Module[{paramName, newScope, bodyOccurring},
 
     add[paramSymbol, bodyOccurring];
 
-    Complement[bodyOccurring, {paramName}]
+    Complement[bodyOccurring, {paramName}] ~Join~ attrsOccurring
   ]
 ]
 
-walk[CallNode[LeafNode[Symbol, "Function", _], {CallNode[LeafNode[Symbol, "List", _], params:{LeafNode[Symbol, _, _]...}, _], body_, PatternSequence[] | _}, _]] :=
-Module[{paramSymbols, paramNames, newScope, bodyOccurring},
+walk[CallNode[LeafNode[Symbol, "Function", _], {CallNode[LeafNode[Symbol, "List", _], params:{LeafNode[Symbol, _, _]...}, _], body_, attrs:(PatternSequence[] | _)}, _]] :=
+Module[{paramSymbols, paramNames, newScope, bodyOccurring, attrsOccurring},
 
   Internal`InheritedBlock[{$LexicalScope},
+
+    attrsOccurring = Flatten[walk /@ {attrs}];
 
     paramSymbols = Replace[params, {
       sym:LeafNode[Symbol, _, _] :> sym
@@ -450,15 +513,15 @@ Module[{paramSymbols, paramNames, newScope, bodyOccurring},
 
     Scan[add[#, bodyOccurring]&, paramSymbols];
 
-    Complement[bodyOccurring, paramNames]
+    Complement[bodyOccurring, paramNames] ~Join~ attrsOccurring
   ]
 ]
 
 
 compiledFunctionTypePat = CallNode[LeafNode[Symbol, "Typed", _], {LeafNode[Symbol, _, _], _}, _]
 
-walk[CallNode[LeafNode[Symbol, "Function", _], {CallNode[LeafNode[Symbol, "List", _], params:{compiledFunctionTypePat, compiledFunctionTypePat...}, _], body_, PatternSequence[] | _}, _]] :=
-Module[{paramSymbolsAndTypeOccurring, paramSymbols, paramNames, newScope, bodyOccurring},
+walk[CallNode[LeafNode[Symbol, "Function", _], {CallNode[LeafNode[Symbol, "List", _], params:{compiledFunctionTypePat, compiledFunctionTypePat...}, _], body_, attrs:(PatternSequence[] | _)}, _]] :=
+Module[{paramSymbolsAndTypeOccurring, paramSymbols, typeOccurring, paramNames, newScope, bodyOccurring, attrsOccurring},
 
   Internal`InheritedBlock[{$LexicalScope},
 
@@ -469,6 +532,8 @@ Module[{paramSymbolsAndTypeOccurring, paramSymbols, paramNames, newScope, bodyOc
     paramSymbols = Flatten[paramSymbolsAndTypeOccurring[[All, 1]]];
     typeOccurring = Flatten[paramSymbolsAndTypeOccurring[[All, 2]]];
 
+    attrsOccurring = Flatten[walk /@ {attrs}];
+    
     paramNames = #[[2]]& /@ paramSymbols;
 
     newScope = <| (# -> {"Function"})& /@ paramNames |>;
@@ -479,7 +544,7 @@ Module[{paramSymbolsAndTypeOccurring, paramSymbols, paramNames, newScope, bodyOc
 
     Scan[add[#, bodyOccurring]&, paramSymbols];
 
-    typeOccurring ~Join~ Complement[bodyOccurring, paramNames]
+    typeOccurring ~Join~ Complement[bodyOccurring, paramNames] ~Join~ attrsOccurring
   ]
 ]
 
@@ -520,7 +585,7 @@ Module[{paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, paramNames, n
   ]
 ]
 
-walk[CallNode[head:LeafNode[Symbol, tag : "Do" | "Table", _], {body_, iter:iterPat, iterRestSeq:PatternSequence[iterPat, iterPat...]}, _]] :=
+walk[CallNode[head:LeafNode[Symbol, tag : "Do" | "Table", _], {body_, iter:iterPat, iterRestSeq:PatternSequence[iterPat, iterPat...]}, data_]] :=
 Module[{newBody, paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, paramNames, newScope, bodyOccurring},
 
   newBody = CallNode[LeafNode[Symbol, tag, <||>], {body} ~Join~ {iterRestSeq}, data];
@@ -554,11 +619,11 @@ Module[{newBody, paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, para
 ]
 
 (*
-Sum base case
+Sum | ParallelTable base case
 
-Sum can have options
+Sum and ParallelTable can have options
 *)
-walk[CallNode[head:LeafNode[Symbol, "Sum", _], {body_, iter:iterPat, optSeq:optPat...}, _]] :=
+walk[CallNode[head:LeafNode[Symbol, tag : "Sum" | "ParallelTable", _], {body_, iter:iterPat, optSeq:optPat...}, _]] :=
 Module[{paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, paramNames, newScope, bodyOccurring, optOccurring},
 
   Internal`InheritedBlock[{$LexicalScope},
@@ -579,7 +644,7 @@ Module[{paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, paramNames, n
 
     paramNames = #[[2]]& /@ paramSymbols;
 
-    newScope = <| (# -> {"Sum"})& /@ paramNames |>;
+    newScope = <| (# -> {tag})& /@ paramNames |>;
 
     $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
 
@@ -591,7 +656,7 @@ Module[{paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, paramNames, n
   ]
 ]
 
-walk[CallNode[head:LeafNode[Symbol, "Sum", _], {body_, iter:iterPat, iterRestSeq:PatternSequence[iterPat, iterPat...], optSeq:optPat...}, _]] :=
+walk[CallNode[head:LeafNode[Symbol, tag : "Sum" | "ParallelTable", _], {body_, iter:iterPat, iterRestSeq:PatternSequence[iterPat, iterPat...], optSeq:optPat...}, data_]] :=
 Module[{newBody, paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, paramNames, newScope, bodyOccurring, optOccurring},
 
   newBody = CallNode[LeafNode[Symbol, head[[2]], <||>], {body} ~Join~ {iterRestSeq}, data];
@@ -614,7 +679,7 @@ Module[{newBody, paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, para
 
     paramNames = #[[2]]& /@ paramSymbols;
 
-    newScope = <| (# -> {"Sum"})& /@ paramNames |>;
+    newScope = <| (# -> {tag})& /@ paramNames |>;
 
     $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
 
@@ -660,7 +725,7 @@ Module[{paramSymbolsAndRangeOccurring, paramSymbols, rangeOccurring, paramNames,
 compileTypePat = CallNode[LeafNode[Symbol, "List", _], {LeafNode[Symbol, _, _], _, PatternSequence[] | _}, _]
 
 walk[CallNode[LeafNode[Symbol, "Compile", _], {CallNode[LeafNode[Symbol, "List", _], types:{compileTypePat, compileTypePat...}, _], body_, optionsAndPatterns___}, _]] :=
-Module[{paramSymbolsAndTypeOccurring, paramSymbols, typeOccurring, paramNames, newScope, bodyOccurring},
+Module[{paramSymbolsAndTypeOccurring, paramSymbols, typeOccurring, paramNames, newScope, bodyOccurring, optionsAndPatternsOccurring},
 
   Internal`InheritedBlock[{$LexicalScope},
 
@@ -676,6 +741,8 @@ Module[{paramSymbolsAndTypeOccurring, paramSymbols, typeOccurring, paramNames, n
     paramSymbols = Flatten[paramSymbolsAndTypeOccurring[[All, 1]]];
     typeOccurring = Flatten[paramSymbolsAndTypeOccurring[[All, 2]]];
 
+    optionsAndPatternsOccurring = Flatten[walk /@ {optionsAndPatterns}];
+
     paramNames = #[[2]]& /@ paramSymbols;
 
     newScope = <| (# -> {"Compile"})& /@ paramNames |>;
@@ -686,7 +753,7 @@ Module[{paramSymbolsAndTypeOccurring, paramSymbols, typeOccurring, paramNames, n
 
     Scan[add[#, bodyOccurring]&, paramSymbols];
 
-    typeOccurring ~Join~ Complement[bodyOccurring, paramNames]
+    typeOccurring ~Join~ Complement[bodyOccurring, paramNames] ~Join~ optionsAndPatternsOccurring
   ]
 ]
 
@@ -718,9 +785,9 @@ Module[{decls},
 
     decls = Lookup[$LexicalScope, name, {}];
 
-    If[decls != {},
+    If[MatchQ[decls, {___, "SetDelayed" | "RuleDelayed" | "TagSetDelayed" | "UpSetDelayed"}],
       (*
-      If the pattern name is already in scope, then treat this as an error
+      If the pattern name is already bound to another pattern, then treat this as an error
 
       e.g.:
       f[x_] := g[x_]
@@ -747,7 +814,7 @@ walk[CallNode[LeafNode[Symbol, "Slot" | "SlotSequence", _], _, data_]] :=
 Catch[
 Module[{decls, entry},
 
-  decls = Lookup[$LexicalScope, slotName, {}];
+  decls = Lookup[$LexicalScope, $slotName, {}];
 
   If[!empty[decls],
 
@@ -756,7 +823,7 @@ Module[{decls, entry},
     *)
     If[KeyExistsQ[data, Source],
 
-      entry = Lookup[$Data, name, {}];
+      entry = Lookup[$Data, $slotName, {}];
 
       AppendTo[entry,
         scopingDataObject[
@@ -766,10 +833,10 @@ Module[{decls, entry},
         ]
       ];
 
-      $Data[name] = entry;
+      $Data[$slotName] = entry;
     ];
 
-    Throw[{name}]
+    Throw[{$slotName}]
   ];
 
 
@@ -781,7 +848,7 @@ Module[{decls, entry},
   *)
   If[KeyExistsQ[data, Source],
 
-    entry = Lookup[$Data, name, {}];
+    entry = Lookup[$Data, $slotName, {}];
 
     AppendTo[entry,
       scopingDataObject[
@@ -791,18 +858,18 @@ Module[{decls, entry},
       ]
     ];
 
-    $Data[name] = entry;
+    $Data[$slotName] = entry;
   ];
 
-  {name}
+  {$slotName}
 ]]
 
 
 walk[CallNode[head_, children_, _]] :=
   Flatten[Join[walk[head], walk /@ children]]
 
-freePatterns[CallNode[head_, body_, _]] := 
-  Flatten[freePatterns[head] ~Join~ (freePatterns /@ body)]
+freePatterns[CallNode[head_, children_, _]] := 
+  Flatten[freePatterns[head] ~Join~ (freePatterns /@ children)]
 
 walkCondition[CallNode[head_, children_, _]] :=
   Flatten[Join[walkCondition[head], walkCondition /@ children]]
@@ -962,6 +1029,13 @@ freePatterns[ErrorNode[_, _, _]] :=
   {}
 
 
+walk[AbstractSyntaxErrorNode[_, _, _]] :=
+  {}
+
+freePatterns[AbstractSyntaxErrorNode[_, _, _]] := 
+  {}
+
+
 walk[UnterminatedCallNode[_, _, _]] :=
   {}
 
@@ -1007,7 +1081,7 @@ The pattern and the Module variable have the same name
 FIXME: I should probably do more to handle more of these errors: errors of Module variables shadowing patterns
 
 *)
-modifiersSet[{"SetDelayed", "Module" | "Block"}, _] :=
+modifiersSet[{___, "SetDelayed" | "UpsetDelayed" | "RuleDelayed" | "TagSetDelayed" | "UpSetDelayed", "Module" | "Block"}, _] :=
   {"error"}
 
 
