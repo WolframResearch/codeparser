@@ -48,7 +48,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake .. -DMATHEMATICA_INSTALL_DIR="/usr/local/Wolfram/WolframEngine/12.1"
+        cmake .. -DMATHEMATICA_INSTALL_DIR="/usr/local/Wolfram/WolframEngine/12.2"
         cmake --build . --target paclet
 
     - name: Install Paclet
