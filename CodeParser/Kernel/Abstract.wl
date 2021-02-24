@@ -1841,14 +1841,12 @@ abstract parse of a[[2]] returns CallNode[Part, {a, 2}]
 So convert from concrete [[ syntax to abstract Part syntax
 
 *)
-abstractCallNode[CallNode[headIn_, {outer:GroupNode[GroupSquare, {inner:GroupNode[GroupSquare, _, _]}, _]}, dataIn_]] :=
-Module[{head, data, part, innerData, outerData, issues, partData, src},
+abstractCallNode[CallNode[headIn_, {GroupNode[GroupSquare, {inner:GroupNode[GroupSquare, _, _]}, _]}, dataIn_]] :=
+Module[{head, data, part, issues},
 
 	head = headIn;
 	data = dataIn;
 	part = inner;
-	innerData = inner[[3]];
-	outerData = outer[[3]];
 	issues = {};
 
 	Switch[head,
@@ -1910,33 +1908,6 @@ Module[{head, data, part, innerData, outerData, issues, partData, src},
 
 	head = abstract[head];
 	part = abstractGroupNode[part];
-	partData = part[[3]];
-
-	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
-
-	(*
-	Only warn if LineCol style
-	*)
-	If[MatchQ[outerData[[Key[Source]]], {{_Integer, _Integer}, {_Integer, _Integer}}],
-
-		If[outerData[[Key[Source], 1, 2]]+1 != innerData[[Key[Source], 1, 2]],
-			src = {outerData[[Key[Source], 1]], innerData[[Key[Source], 1]]};
-			AppendTo[issues, FormatIssue["NotContiguous", "``Part`` brackets ``[[`` are not contiguous.", "Formatting",
-										<|	Source->src,
-											CodeActions->{CodeAction["DeleteTrivia", DeleteTrivia,
-																<|Source->src|>]},
-											ConfidenceLevel -> 1.0|>]];
-		];
-
-		If[innerData[[Key[Source], 2, 2]]+1 != outerData[[Key[Source], 2, 2]],
-			src = {innerData[[Key[Source], 2]], outerData[[Key[Source], 2]]};
-			AppendTo[issues, FormatIssue["NotContiguous", "``Part`` brackets ``]]`` are not contiguous.", "Formatting",
-										<|	Source->src,
-											CodeActions->{CodeAction["DeleteTrivia", DeleteTrivia, 
-																<|Source->src|>]},
-											ConfidenceLevel -> 1.0|>]];
-		];
-	];
 
 	If[issues != {},
 		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
