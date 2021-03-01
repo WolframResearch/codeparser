@@ -10,6 +10,15 @@ Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
 
 
+
+(*
+provide some selectors for CodeAction objects
+*)
+
+CodeAction[label_, command_, actionData_]["Label"] := label
+
+
+
 ApplyCodeAction[action:CodeAction[label_, command_, actionData_]][cst_] :=
 	ApplyCodeAction[action, cst]
 
@@ -656,7 +665,7 @@ Catch[
   Module[{tok, tokSrc, tokStartCol},
 
     tok = containingToken[textSrc, cst];
-    tokSrc = tok[[3, Key[Source] ]];
+    tokSrc = tok[[3, Key[Source]]];
 
     If[textSrc == tokSrc,
       Throw[textSrc]
