@@ -45,6 +45,8 @@ Nodes
 ToNode
 FromNode
 
+DeclarationName
+
 
 (*
 
