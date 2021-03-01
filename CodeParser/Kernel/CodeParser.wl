@@ -31,8 +31,6 @@ CodeStructuralSyntaxAggQ
 (*
 ToString
 *)
-ToInputFormString
-
 ToFullFormString
 
 ToStandardFormBoxes
