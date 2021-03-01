@@ -568,6 +568,8 @@ Module[{csts, encoding, fulls, bytess, fileFormat, firstLineIsShebang, exts},
     Throw[csts]
   ];
 
+  csts = MapThread[#1[[0]][#1[[1]], #1[[2]], <|#1[[3]], "FileName" -> #2|>]&, {csts, fulls}];
+
   csts =
     MapThread[Function[{cst, bytes},
     
