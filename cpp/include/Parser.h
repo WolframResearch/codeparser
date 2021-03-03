@@ -15,6 +15,25 @@ class Parser;
 
 using ParserPtr = std::unique_ptr<Parser>;
 
+enum FirstLineBehavior {
+    //
+    // Source is a string or something, so if #! is on first line, then do not treat special
+    //
+    FIRSTLINEBEHAVIOR_NOTSCRIPT = 0,
+    
+    //
+    // Source is something like .wl file that is being treated as a script
+    // Or source is .wl file that is NOT being treated as a script
+    // #! may be present, or it might not
+    //
+    FIRSTLINEBEHAVIOR_CHECK = 1,
+    
+    //
+    // Source is a .wls file and there is definitely a #! on first line
+    //
+    FIRSTLINEBEHAVIOR_SCRIPT = 2,
+};
+
 //
 //
 //
@@ -88,10 +107,12 @@ private:
     
     IssuePtrSet Issues;
     
+    void handleFirstLine(FirstLineBehavior firstLineBehavior);
+    
 public:
     Parser();
     
-    void init(bool firstLineIsShebang);
+    void init(FirstLineBehavior firstLineBehavior);
     
     void deinit();
     

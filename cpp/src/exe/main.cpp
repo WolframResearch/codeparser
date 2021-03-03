@@ -30,9 +30,9 @@ enum OutputMode {
 };
 
 
-int readStdIn(APIMode mode, OutputMode outputMode, bool skipFirstLine);
+int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBehavior);
 
-int readFile(std::string file, APIMode mode, OutputMode outputMode, bool firstLineIsShebang);
+int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBehavior);
 
 class ScopedFileBuffer {
 
@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
     auto leaf = false;
     auto outputMode = PRINT;
     auto sourceCharacters = false;
-    auto firstLineIsShebang = false;
+    auto firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
     
     std::string fileInput;
     
@@ -72,6 +72,7 @@ int main(int argc, char *argv[]) {
         if (arg == "-file") {
             
             file = true;
+            firstLineBehavior = FIRSTLINEBEHAVIOR_CHECK;
             
             i++;
             fileInput = std::string(argv[i]);
@@ -100,10 +101,6 @@ int main(int argc, char *argv[]) {
             
             outputMode = CHECK;
             
-        } else if (arg == "-firstLineIsShebang") {
-            
-            firstLineIsShebang = true;
-            
         } else {
             return EXIT_FAILURE;
         }
@@ -113,30 +110,30 @@ int main(int argc, char *argv[]) {
     
     if (file) {
         if (leaf) {
-            result = readFile(fileInput, LEAF, outputMode, firstLineIsShebang);
+            result = readFile(fileInput, LEAF, outputMode, firstLineBehavior);
         } else if (sourceCharacters) {
-            result = readFile(fileInput, SOURCECHARACTERS, outputMode, firstLineIsShebang);
+            result = readFile(fileInput, SOURCECHARACTERS, outputMode, firstLineBehavior);
         } else if (tokenize) {
-            result = readFile(fileInput, TOKENIZE, outputMode, firstLineIsShebang);
+            result = readFile(fileInput, TOKENIZE, outputMode, firstLineBehavior);
         } else {
-            result = readFile(fileInput, EXPRESSION, outputMode, firstLineIsShebang);
+            result = readFile(fileInput, EXPRESSION, outputMode, firstLineBehavior);
         }
     } else {
         if (leaf) {
-            result = readStdIn(LEAF, outputMode, firstLineIsShebang);
+            result = readStdIn(LEAF, outputMode, firstLineBehavior);
         } else if (sourceCharacters) {
-            result = readStdIn(SOURCECHARACTERS, outputMode, firstLineIsShebang);
+            result = readStdIn(SOURCECHARACTERS, outputMode, firstLineBehavior);
         } else if (tokenize) {
-            result = readStdIn(TOKENIZE, outputMode, firstLineIsShebang);
+            result = readStdIn(TOKENIZE, outputMode, firstLineBehavior);
         } else {
-            result = readStdIn(EXPRESSION, outputMode, firstLineIsShebang);
+            result = readStdIn(EXPRESSION, outputMode, firstLineBehavior);
         }
     }
     
     return result;
 }
 
-int readStdIn(APIMode mode, OutputMode outputMode, bool firstLineIsShebang) {
+int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBehavior) {
     
     std::string input;
     std::cout << ">>> ";
@@ -154,7 +151,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, bool firstLineIsShebang) {
         
         auto inputBufAndLen = BufferAndLength(inputStr, input.size());
         
-        TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineIsShebang);
+        TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior);
     
         auto N = TheParserSession->tokenize();
         
@@ -228,7 +225,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, bool firstLineIsShebang) {
         
         auto inputBufAndLen = BufferAndLength(inputStr, input.size());
         
-        TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineIsShebang);
+        TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior);
         
         auto stringifyMode = STRINGIFYMODE_NORMAL;
         
@@ -266,7 +263,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, bool firstLineIsShebang) {
         
         auto inputBufAndLen = BufferAndLength(inputStr, input.size());
         
-        TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineIsShebang);
+        TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior);
         
         auto N = TheParserSession->parseExpressions();
         
@@ -306,7 +303,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, bool firstLineIsShebang) {
     return result;
 }
 
-int readFile(std::string file, APIMode mode, OutputMode outputMode, bool firstLineIsShebang) {
+int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBehavior) {
     
     auto fb = ScopedFileBufferPtr(new ScopedFileBuffer(reinterpret_cast<Buffer>(file.c_str()), file.size()));
 
@@ -339,7 +336,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, bool firstLi
         
         auto fBufAndLen = BufferAndLength(fb->getBuf(), fb->getLen());
         
-        TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineIsShebang);
+        TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior);
         
         auto N = TheParserSession->tokenize();
         
@@ -373,7 +370,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, bool firstLi
         
         auto fBufAndLen = BufferAndLength(fb->getBuf(), fb->getLen());
         
-        TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineIsShebang);
+        TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior);
         
         auto stringifyMode = STRINGIFYMODE_NORMAL;
         
@@ -409,7 +406,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, bool firstLi
         
         auto fBufAndLen = BufferAndLength(fb->getBuf(), fb->getLen());
         
-        TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineIsShebang);
+        TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior);
         
         auto N = TheParserSession->parseExpressions();
         

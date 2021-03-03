@@ -4,6 +4,7 @@
 #include "Node.h" // for NodePtr, Node, etc.
 #include "Source.h" // for BufferAndLength
 #include "ExprLibrary.h" // for expr
+#include "Parser.h" // for FirstLineBehavior
 
 //
 // Despite being mentioned here:
@@ -121,7 +122,7 @@ public:
     
     ~ParserSession();
     
-    void init(BufferAndLength bufAndLen, WolframLibraryData libData, ParserSessionPolicy policy, SourceConvention srcConvention, uint32_t tabWidth, bool firstLineIsShebang);
+    void init(BufferAndLength bufAndLen, WolframLibraryData libData, ParserSessionPolicy policy, SourceConvention srcConvention, uint32_t tabWidth, FirstLineBehavior firstLineBehavior);
     
     void deinit();
     

@@ -314,6 +314,22 @@ If[PacletFind["AST"] != {},
 $DefaultTabWidth = 1
 
 
+(*
+first line behavior may be:
+NotScript:
+Source is a string or something, so if #! is on first line, then do not treat special
+
+Check:
+Source is something like .wl file that is being treated as a script
+Or source is .wl file that is NOT being treated as a script
+#! may be present, or it might not
+
+Script:
+Source is a .wls file and there is definitely a #! on first line
+*)
+firstLineBehaviorPat = NotScript | Check | Script
+
+
 
 (*
 This uses func := func = def idiom and is fast
@@ -352,7 +368,7 @@ Module[{csts},
 
 CodeConcreteParse[ss:{_String, _String...}, opts:OptionsPattern[]] :=
 Catch[
-Module[{csts, bytess, encoding, fileFormat, firstLineIsShebang},
+Module[{csts, bytess, encoding, fileFormat, firstLineBehavior},
 
   encoding = OptionValue[CharacterEncoding];
   fileFormat = OptionValue["FileFormat"];
@@ -364,14 +380,17 @@ Module[{csts, bytess, encoding, fileFormat, firstLineIsShebang},
   bytess = ToCharacterCode[ss, "UTF8"];
 
   Switch[fileFormat,
+    "Package",
+      firstLineBehavior = Check
+    ,
     "Script",
-      firstLineIsShebang = True
+      firstLineBehavior = Script
     ,
     _,
-      firstLineIsShebang = False
+      firstLineBehavior = NotScript
   ];
 
-  csts = concreteParseStringListable[bytess, firstLineIsShebang, opts];
+  csts = concreteParseStringListable[bytess, firstLineBehavior, opts];
 
   If[FailureQ[csts],
     Throw[csts]
@@ -398,7 +417,7 @@ Module[{csts, bytess, encoding, fileFormat, firstLineIsShebang},
 
 Options[concreteParseStringListable] = Options[CodeConcreteParse]
 
-concreteParseStringListable[bytess:{{_Integer...}...}, firstLineIsShebang_, OptionsPattern[]] :=
+concreteParseStringListable[bytess:{{_Integer...}...}, firstLineBehavior:firstLineBehaviorPat, OptionsPattern[]] :=
 Catch[
 Module[{res, convention, container, tabWidth},
 
@@ -425,7 +444,7 @@ Module[{res, convention, container, tabWidth},
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
   Block[{$StructureSrcArgs = parseConvention[convention]},
-  res = libraryFunctionWrapper[concreteParseBytesListableFunc, bytess, convention, tabWidth, Boole[firstLineIsShebang]];
+  res = libraryFunctionWrapper[concreteParseBytesListableFunc, bytess, convention, tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
   ];
 
   $ConcreteParseProgress = 100;
@@ -511,7 +530,7 @@ Module[{csts},
 
 CodeConcreteParse[fs:{File[_String], File[_String]...}, opts:OptionsPattern[]] :=
 Catch[
-Module[{csts, encoding, fulls, bytess, fileFormat, firstLineIsShebang, exts},
+Module[{csts, encoding, fulls, bytess, fileFormat, firstLineBehavior, exts},
 
   encoding = OptionValue[CharacterEncoding];
   fileFormat = OptionValue["FileFormat"];
@@ -533,21 +552,24 @@ Module[{csts, encoding, fulls, bytess, fileFormat, firstLineIsShebang, exts},
   ];
 
   Switch[fileFormat,
+    "Package",
+      firstLineBehavior = Check
+    ,
     "Script",
-      firstLineIsShebang = True
+      firstLineBehavior = Script
     ,
     Automatic,
       exts = FileExtension /@ fs;
       Which[
         AnyTrue[exts, (# == "wls")&],
-          firstLineIsShebang = True
+          firstLineBehavior = Script
         ,
         True,
-          firstLineIsShebang = False
+          firstLineBehavior = Check
       ]
     ,
     _,
-      firstLineIsShebang = False
+      firstLineBehavior = Check
   ];
 
   (*
@@ -558,7 +580,7 @@ Module[{csts, encoding, fulls, bytess, fileFormat, firstLineIsShebang, exts},
   *)
   bytess = (Normal[ReadByteArray[#]] /. EndOfFile -> {})& /@ fulls;
 
-  csts = concreteParseFileListable[bytess, firstLineIsShebang, opts];
+  csts = concreteParseFileListable[bytess, firstLineBehavior, opts];
 
   If[FailureQ[csts],
     If[csts === $Failed,
@@ -592,7 +614,7 @@ Module[{csts, encoding, fulls, bytess, fileFormat, firstLineIsShebang, exts},
 
 Options[concreteParseFileListable] = Options[CodeConcreteParse]
 
-concreteParseFileListable[bytess:{{_Integer...}...}, firstLineIsShebang_, OptionsPattern[]] :=
+concreteParseFileListable[bytess:{{_Integer...}...}, firstLineBehavior:firstLineBehaviorPat, OptionsPattern[]] :=
 Catch[
 Module[{res, convention, container, containerWasAutomatic, tabWidth},
 
@@ -620,7 +642,7 @@ Module[{res, convention, container, containerWasAutomatic, tabWidth},
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
   Block[{$StructureSrcArgs = parseConvention[convention]},
-  res = libraryFunctionWrapper[concreteParseBytesListableFunc, bytess, convention, tabWidth, Boole[firstLineIsShebang]];
+  res = libraryFunctionWrapper[concreteParseBytesListableFunc, bytess, convention, tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
   ];
 
   $ConcreteParseProgress = 100;
@@ -715,7 +737,7 @@ Module[{csts},
 
 CodeConcreteParse[bytess:{{_Integer, _Integer...}...}, opts:OptionsPattern[]] :=
 Catch[
-Module[{csts, encoding, fileFormat, firstLineIsShebang},
+Module[{csts, encoding, fileFormat, firstLineBehavior},
 
   encoding = OptionValue[CharacterEncoding];
   fileFormat = OptionValue["FileFormat"];
@@ -725,14 +747,17 @@ Module[{csts, encoding, fileFormat, firstLineIsShebang},
   ];
 
   Switch[fileFormat,
+    "Package",
+      firstLineBehavior = Check
+    ,
     "Script",
-      firstLineIsShebang = True
+      firstLineBehavior = Script
     ,
     _,
-      firstLineIsShebang = False
+      firstLineBehavior = NotScript
   ];
 
-  csts = concreteParseBytesListable[bytess, firstLineIsShebang, opts];
+  csts = concreteParseBytesListable[bytess, firstLineBehavior, opts];
 
   If[FailureQ[csts],
     Throw[csts]
@@ -761,7 +786,7 @@ Module[{csts, encoding, fileFormat, firstLineIsShebang},
 
 Options[concreteParseBytesListable] = Options[CodeConcreteParse]
 
-concreteParseBytesListable[bytess:{{_Integer...}...}, firstLineIsShebang_, OptionsPattern[]] :=
+concreteParseBytesListable[bytess:{{_Integer...}...}, firstLineBehavior:firstLineBehaviorPat, OptionsPattern[]] :=
 Catch[
 Module[{res, convention, container, tabWidth},
 
@@ -788,7 +813,7 @@ Module[{res, convention, container, tabWidth},
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
   Block[{$StructureSrcArgs = parseConvention[convention]},
-  res = libraryFunctionWrapper[concreteParseBytesListableFunc, bytess, convention, tabWidth, Boole[firstLineIsShebang]];
+  res = libraryFunctionWrapper[concreteParseBytesListableFunc, bytess, convention, tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
   ];
 
   $ConcreteParseProgress = 100;
@@ -915,7 +940,7 @@ Module[{res, bytess, encoding, convention, tabWidth},
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
   Block[{$StructureSrcArgs = parseConvention[convention]},
-  res = libraryFunctionWrapper[tokenizeBytesListableFunc, bytess, convention, tabWidth, Boole[False]];
+  res = libraryFunctionWrapper[tokenizeBytesListableFunc, bytess, convention, tabWidth, firstLineBehaviorToInteger[NotScript]];
   ];
 
   $ConcreteParseProgress = 100;
@@ -957,7 +982,7 @@ Options[tokenizeFileListable] = Options[CodeTokenize]
 
 tokenizeFileListable[fs:{File[_String]...}, OptionsPattern[]] :=
 Catch[
-Module[{encoding, res, fulls, bytess, convention, tabWidth, fileFormat, firstLineIsShebang, exts},
+Module[{encoding, res, fulls, bytess, convention, tabWidth, fileFormat, firstLineBehavior, exts},
 
   encoding = OptionValue[CharacterEncoding];
   convention = OptionValue[SourceConvention];
@@ -974,21 +999,24 @@ Module[{encoding, res, fulls, bytess, convention, tabWidth, fileFormat, firstLin
   ];
 
   Switch[fileFormat,
+    "Package",
+      firstLineBehavior = Check
+    ,
     "Script",
-      firstLineIsShebang = True
+      firstLineBehavior = Script
     ,
     Automatic,
       exts = FileExtension /@ fs;
       Which[
         AnyTrue[exts, (# == "wls")&],
-          firstLineIsShebang = True
+          firstLineBehavior = Script
         ,
         True,
-          firstLineIsShebang = False
+          firstLineBehavior = Check
       ]
     ,
     _,
-      firstLineIsShebang = False
+      firstLineBehavior = Check
   ];
 
   (*
@@ -1004,7 +1032,7 @@ Module[{encoding, res, fulls, bytess, convention, tabWidth, fileFormat, firstLin
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
   Block[{$StructureSrcArgs = parseConvention[convention]},
-  res = libraryFunctionWrapper[tokenizeBytesListableFunc, bytess, convention, tabWidth, Boole[firstLineIsShebang]];
+  res = libraryFunctionWrapper[tokenizeBytesListableFunc, bytess, convention, tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
   ];
 
   $ConcreteParseProgress = 100;
@@ -1061,7 +1089,7 @@ Module[{encoding, res, convention, tabWidth},
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
   Block[{$StructureSrcArgs = parseConvention[convention]},
-  res = libraryFunctionWrapper[tokenizeBytesListableFunc, bytess, convention, tabWidth, Boole[False]];
+  res = libraryFunctionWrapper[tokenizeBytesListableFunc, bytess, convention, tabWidth, firstLineBehaviorToInteger[NotScript]];
   ];
 
   $ConcreteParseProgress = 100;
@@ -1123,7 +1151,7 @@ Module[{str, res, leaf, data, exprs, stringifyMode, convention, tabWidth},
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
   Block[{$StructureSrcArgs = parseConvention[convention]},
-  res = libraryFunctionWrapper[concreteParseLeafFunc, str, stringifyMode, convention, tabWidth, Boole[False]];
+  res = libraryFunctionWrapper[concreteParseLeafFunc, str, stringifyMode, convention, tabWidth, firstLineBehaviorToInteger[NotScript]];
   ];
 
   $ConcreteParseProgress = 100;
@@ -1257,6 +1285,12 @@ Module[{p, m},
 
   m
 ]
+
+
+
+firstLineBehaviorToInteger[NotScript] = 0
+firstLineBehaviorToInteger[Check] = 1
+firstLineBehaviorToInteger[Script] = 2 
 
 
 

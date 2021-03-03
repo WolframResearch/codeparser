@@ -5,71 +5,167 @@
 #include "Parselet.h" // for SymbolParselet, UnderParselet, etc.
 #include "Tokenizer.h" // for Tokenizer
 #include "ParseletRegistration.h"
+#include "ByteDecoder.h" // for ByteDecoder
+#include "ByteBuffer.h" // for ByteBuffer
 
 Parser::Parser() : Issues() {}
 
 Parser::~Parser() {}
 
-void Parser::init(bool firstLineIsShebang) {
+void Parser::init(FirstLineBehavior firstLineBehavior) {
     
     Issues.clear();
     
-    if (!firstLineIsShebang) {
-        return;
-    }
+    handleFirstLine(firstLineBehavior);
+}
+
+void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
     
-    //
-    // Handle the #! shebang
-    //
-    
-    ParserContext Ctxt;
-    
-    auto peek = TheParser->currentToken(Ctxt, TOPLEVEL);
-    
-    if (peek.Tok != TOKEN_HASH) {
-        //
-        // TODO: add to Issues
-        //
-    }
-    
-    TheParser->nextToken(peek);
-    
-    peek = TheParser->currentToken(Ctxt, TOPLEVEL);
-    
-    if (peek.Tok != TOKEN_BANG) {
-        //
-        // TODO: add to Issues
-        //
-    }
-    
-    TheParser->nextToken(peek);
-    
-    while (true) {
-        
-#if !NABORT
-        if (TheParserSession->isAbort()) {
+    switch (firstLineBehavior) {
+        case FIRSTLINEBEHAVIOR_NOTSCRIPT:
+            return;
+        case FIRSTLINEBEHAVIOR_CHECK: {
             
-            break;
-        }
-#endif // !NABORT
-        
-        auto peek = TheParser->currentToken(Ctxt, TOPLEVEL);
-        
-        if (peek.Tok == TOKEN_ENDOFFILE) {
-            break;
-        }
-        
-        if (peek.Tok == TOKEN_TOPLEVELNEWLINE) {
+            //
+            // Handle the optional #! shebang
+            //
+            
+            ParserContext Ctxt;
+            
+            auto peek = TheParser->currentToken(Ctxt, TOPLEVEL);
+            
+            if (peek.Tok != TOKEN_HASH) {
+                
+                // not #!
+                
+                //
+                // reset
+                //
+                TheByteBuffer->buffer = peek.BufLen.buffer;
+                TheByteDecoder->SrcLoc = peek.Src.Start;
+                
+                return;
+            }
             
             TheParser->nextToken(peek);
             
-            break;
+            peek = TheParser->currentToken(Ctxt, TOPLEVEL);
+            
+            if (peek.Tok != TOKEN_BANG) {
+                
+                // not #!
+                
+                //
+                // reset
+                //
+                TheByteBuffer->buffer = peek.BufLen.buffer;
+                TheByteDecoder->SrcLoc = peek.Src.Start;
+                
+                return;
+            }
+            
+            //
+            // Definitely a shebang
+            //
+            
+            TheParser->nextToken(peek);
+            
+            while (true) {
+                
+        #if !NABORT
+                if (TheParserSession->isAbort()) {
+                    
+                    break;
+                }
+        #endif // !NABORT
+                
+                auto peek = TheParser->currentToken(Ctxt, TOPLEVEL);
+                
+                if (peek.Tok == TOKEN_ENDOFFILE) {
+                    break;
+                }
+                
+                if (peek.Tok == TOKEN_TOPLEVELNEWLINE) {
+                    
+                    TheParser->nextToken(peek);
+                    
+                    break;
+                }
+                
+                TheParser->nextToken(peek);
+                
+            } // while (true)
+            
+            //
+            // TODO: if anyone ever asks, then consider providing the shebang as a token
+            // but only after BIGCODEMERGE!!
+            //
         }
-        
-        TheParser->nextToken(peek);
-        
-    } // while (true)
+            break;
+        case FIRSTLINEBEHAVIOR_SCRIPT: {
+            
+            //
+            // Handle the #! shebang
+            //
+            
+            ParserContext Ctxt;
+            
+            auto peek = TheParser->currentToken(Ctxt, TOPLEVEL);
+            
+            if (peek.Tok != TOKEN_HASH) {
+                
+                //
+                // TODO: add to Issues
+                //
+
+                return;
+            }
+            
+            TheParser->nextToken(peek);
+            
+            peek = TheParser->currentToken(Ctxt, TOPLEVEL);
+            
+            if (peek.Tok != TOKEN_BANG) {
+                
+                //
+                // TODO: add to Issues
+                //
+
+                return;
+            }
+            
+            TheParser->nextToken(peek);
+            
+            while (true) {
+                
+        #if !NABORT
+                if (TheParserSession->isAbort()) {
+                    
+                    break;
+                }
+        #endif // !NABORT
+                
+                auto peek = TheParser->currentToken(Ctxt, TOPLEVEL);
+                
+                if (peek.Tok == TOKEN_ENDOFFILE) {
+                    break;
+                }
+                
+                if (peek.Tok == TOKEN_TOPLEVELNEWLINE) {
+                    
+                    TheParser->nextToken(peek);
+                    
+                    break;
+                }
+                
+                TheParser->nextToken(peek);
+                
+            } // while (true)
+        }
+            break;
+    }
 }
+
 
 void Parser::deinit() {
     

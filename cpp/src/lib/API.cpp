@@ -44,7 +44,7 @@ ParserSession::~ParserSession() {
     TheByteBuffer.reset(nullptr);
 }
 
-void ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libData, ParserSessionPolicy policyIn, SourceConvention srcConvention, uint32_t tabWidth, bool firstLineIsShebang) {
+void ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libData, ParserSessionPolicy policyIn, SourceConvention srcConvention, uint32_t tabWidth, FirstLineBehavior firstLineBehavior) {
     
     bufAndLen = bufAndLenIn;
     
@@ -58,7 +58,7 @@ void ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libData
     TheByteDecoder->init(srcConvention, tabWidth);
     TheCharacterDecoder->init(libData);
     TheTokenizer->init();
-    TheParser->init(firstLineIsShebang);
+    TheParser->init(firstLineBehavior);
     
     if (libData) {
         
@@ -521,12 +521,12 @@ DLLEXPORT int ConcreteParseBytes_Listable_LibraryLink(WolframLibraryData libData
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    int mlSkipFirstLine;
-    if (!MLGetInteger(mlp, &mlSkipFirstLine)) {
+    int mlFirstLineBehavior;
+    if (!MLGetInteger(mlp, &mlFirstLineBehavior)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto skipFirstLine = static_cast<bool>(mlSkipFirstLine);
+    auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
     
     if (!MLNewPacket(mlp) ) {
         return LIBRARY_FUNCTION_ERROR;
@@ -541,7 +541,7 @@ DLLEXPORT int ConcreteParseBytes_Listable_LibraryLink(WolframLibraryData libData
         
         auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
         
-        TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth, skipFirstLine);
+        TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth, firstLineBehavior);
         
         auto N = TheParserSession->parseExpressions();
         
@@ -599,12 +599,12 @@ DLLEXPORT int TokenizeBytes_Listable_LibraryLink(WolframLibraryData libData, MLI
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    int mlSkipFirstLine;
-    if (!MLGetInteger(mlp, &mlSkipFirstLine)) {
+    int mlFirstLineBehavior;
+    if (!MLGetInteger(mlp, &mlFirstLineBehavior)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto skipFirstLine = static_cast<bool>(mlSkipFirstLine);
+    auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
     
     if (!MLNewPacket(mlp) ) {
         return LIBRARY_FUNCTION_ERROR;
@@ -619,7 +619,7 @@ DLLEXPORT int TokenizeBytes_Listable_LibraryLink(WolframLibraryData libData, MLI
         
         auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
         
-        TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth, skipFirstLine);
+        TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth, firstLineBehavior);
         
         auto N = TheParserSession->tokenize();
         
@@ -670,12 +670,12 @@ DLLEXPORT int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK ml
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    int mlSkipFirstLine;
-    if (!MLGetInteger(mlp, &mlSkipFirstLine)) {
+    int mlFirstLineBehavior;
+    if (!MLGetInteger(mlp, &mlFirstLineBehavior)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    auto skipFirstLine = static_cast<bool>(mlSkipFirstLine);
+    auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
     
     if (!MLNewPacket(mlp) ) {
         return LIBRARY_FUNCTION_ERROR;
@@ -683,7 +683,7 @@ DLLEXPORT int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK ml
     
     auto bufAndLen = BufferAndLength(inStr->get(), inStr->getByteCount());
     
-    TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth, skipFirstLine);
+    TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth, firstLineBehavior);
     
     auto N = TheParserSession->concreteParseLeaf(static_cast<StringifyMode>(stringifyMode));
     
