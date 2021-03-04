@@ -208,7 +208,7 @@ deparen[l_LeafNode] := l
 
 
 deparen[GroupNode[GroupParen, { _, child:InfixNode[Comma, _, _], _ }, data_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, child, KeyTake[data, keysToTake]]
+	AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, child, data]
 
 deparen[GroupNode[GroupParen, { _, child_, _}, data_]] :=
 	deparen[child]
