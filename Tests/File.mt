@@ -8,6 +8,7 @@ Needs["CodeParserTestUtils`"]
 
 
 Needs["CodeParser`"]
+Needs["CodeParser`ToString`"] (* ToInputFormString *)
 
 
 
@@ -38,7 +39,7 @@ Test[
 			LeafNode[Integer, "1", <|Source -> {{2, 1}, {2, 2}}|>],
 			LeafNode[Token`Plus, "+", <|Source -> {{2, 2}, {2, 3}}|>],
     		LeafNode[Integer, "1", <|Source -> {{2, 3}, {2, 4}}|>] }, <|Source -> {{2, 1}, {2, 4}}|>],
-    	LeafNode[Token`Newline, $systemNewline, <|Source -> {{2, 4}, {3, 1}}|>] }, <|Source -> {{1, 1}, {3, 1}}|>]
+    	LeafNode[Token`Newline, $systemNewline, <|Source -> {{2, 4}, {3, 1}}|>] }, <|Source -> {{1, 1}, {3, 1}}, "FileName" -> sample|>]
 	,
 	TestID->"File-20181230-J0G3I8"
 ]
@@ -92,7 +93,7 @@ TestMatch[
 					LeafNode[Symbol, "A", <|Source -> {{3, 1}, {3, 2}}|>]},
 										<| SyntaxIssues->{
 											EncodingIssue["UnexpectedCarriageReturn", _, _, _],
-											EncodingIssue["UnexpectedCarriageReturn", _, _, _]}, Source -> {{1, 1}, {3, 2}}|>]
+											EncodingIssue["UnexpectedCarriageReturn", _, _, _]}, Source -> {{1, 1}, {3, 2}}, "FileName" -> carriagereturn|>]
 	,
 	TestID->"File-20190422-C6U5B6"
 ]
@@ -104,7 +105,7 @@ cst = CodeConcreteParse[File[carriagereturn2]]
 TestMatch[
 	cst
 	,
-	ContainerNode[File, {LeafNode[String, "\"\r\n123\"", <|Source -> {{1, 1}, {2, 5}}|>]}, <|"EmbeddedNewlines" -> {{1, 1}}, Source -> {{1, 1}, {2, 5}}|>]
+	ContainerNode[File, {LeafNode[String, "\"\r\n123\"", <|Source -> {{1, 1}, {2, 5}}|>]}, <|"EmbeddedNewlines" -> {{1, 1}}, Source -> {{1, 1}, {2, 5}}, "FileName" -> carriagereturn2|>]
 	,
 	TestID->"File-20190606-O8I6M9"
 ]
@@ -130,9 +131,15 @@ TestMatch[
 	ast
 	,
 	ContainerNode[File, {
-		CallNode[LeafNode[Symbol, "BeginPackage", <|Source -> {{2, 1}, {2, 13}}|>], {
-			LeafNode[String, "\"Foo.m`\"", <|Source -> {{2, 14}, {2, 22}}|>]}, <|Source -> {{2, 1}, {2, 23}}|>], 
-		CallNode[LeafNode[Symbol, "EndPackage", <|Source -> {{4, 1}, {4, 11}}|>], {}, <|Source -> {{4, 1}, {4, 13}}|>]}, <|Source -> {{1, 1}, {6, 1}}, AbstractSyntaxIssues -> {SyntaxIssue["Package", "Directive does not have correct syntax.", "Error", _]}|>]
+			CallNode[LeafNode[Symbol, "BeginPackage", <|Source -> {{2, 1}, {2, 13}}|>], {
+				LeafNode[String, "\"Foo.m`\"", <|Source -> {{2, 14}, {2, 22}}|>]}, <|Source -> {{2, 1}, {2, 23}}|>], 
+			CallNode[LeafNode[Symbol, "EndPackage", <|Source -> {{4, 1}, {4, 11}}|>], {}, <|Source -> {{4, 1}, {4, 13}}|>]
+		},
+		<|
+			Source -> {{1, 1}, {6, 1}},
+			"FileName" -> package,
+			AbstractSyntaxIssues -> {SyntaxIssue["Package", "Directive does not have correct syntax.", "Error", _]}
+		|>]
 	,
 	TestID->"File-20190601-E8O7Y2"
 ]
@@ -203,16 +210,23 @@ TestMatch[
 	cst
 	,
 	ContainerNode[File, {
-		BinaryNode[Set, {
-			LeafNode[Symbol, "\.01x", <|Source -> {{1, 1}, {1, 3}}|>],
-			LeafNode[Whitespace, " ", <|Source -> {{1, 3}, {1, 4}}|>],
-			LeafNode[Token`Equal, "=", <|Source -> {{1, 4}, {1, 5}}|>],
-			LeafNode[Whitespace, " ", <|Source -> {{1, 5}, {1, 6}}|>],
-			LeafNode[Integer, "1", <|Source -> {{1, 6}, {1, 7}}|>] }, <|Source -> {{1, 1}, {1, 7}}|>] }, <|SyntaxIssues -> {
+			BinaryNode[Set, {
+				LeafNode[Symbol, "\.01x", <|Source -> {{1, 1}, {1, 3}}|>],
+				LeafNode[Whitespace, " ", <|Source -> {{1, 3}, {1, 4}}|>],
+				LeafNode[Token`Equal, "=", <|Source -> {{1, 4}, {1, 5}}|>],
+				LeafNode[Whitespace, " ", <|Source -> {{1, 5}, {1, 6}}|>],
+				LeafNode[Integer, "1", <|Source -> {{1, 6}, {1, 7}}|>] }, <|Source -> {{1, 1}, {1, 7}}|>]
+		},
+		<|
+			SyntaxIssues -> {
 				(* from CharacterDecoder, strange character in general *)
 				SyntaxIssue["UnexpectedCharacter", "Unexpected character: ``\"\.01\" (\\.01)``.", "Warning", _],
 				(* from Tokenizer, strange letterlike *)
-				SyntaxIssue["UnexpectedLetterlikeCharacter", "Unexpected letterlike character: ``\"\.01\" (\\.01)``.", "Warning", _]}, Source -> {{1, 1}, {1, 7}}|>]
+				SyntaxIssue["UnexpectedLetterlikeCharacter", "Unexpected letterlike character: ``\"\.01\" (\\.01)``.", "Warning", _]},
+			Source -> {{1, 1}, {1, 7}},
+			"FileName" -> strange
+		|>
+	]
 	,
 	TestID->"File-20190602-N5D1B8"
 ]
@@ -227,12 +241,19 @@ TestMatch[
 	cst
 	,
 	ContainerNode[File, {
-		LeafNode[Token`Newline, $systemNewline, <|Source -> {{1, 1}, {2, 1}}|>],
-		LeafNode[String, "\"data\\\\" <> $systemNewline <> "\"", <|Source -> {{2, 1}, {3, 2}}|>],
-		LeafNode[Token`Newline, $systemNewline, <|Source -> {{3, 2}, {4, 1}}|>],
-		LeafNode[Token`Newline, $systemNewline, <|Source -> {{4, 1}, {5, 1}}|>],
-		LeafNode[Symbol, "x", <|Source -> {{5, 1}, {5, 2}}|>],
-		LeafNode[Token`Newline, $systemNewline, <|Source -> {{5, 2}, {6, 1}}|>]}, <|"EmbeddedNewlines" -> {{2, 1}}, Source -> {{1, 1}, {6, 1}}|>]
+			LeafNode[Token`Newline, $systemNewline, <|Source -> {{1, 1}, {2, 1}}|>],
+			LeafNode[String, "\"data\\\\" <> $systemNewline <> "\"", <|Source -> {{2, 1}, {3, 2}}|>],
+			LeafNode[Token`Newline, $systemNewline, <|Source -> {{3, 2}, {4, 1}}|>],
+			LeafNode[Token`Newline, $systemNewline, <|Source -> {{4, 1}, {5, 1}}|>],
+			LeafNode[Symbol, "x", <|Source -> {{5, 1}, {5, 2}}|>],
+			LeafNode[Token`Newline, $systemNewline, <|Source -> {{5, 2}, {6, 1}}|>]
+		},
+		<|
+			"EmbeddedNewlines" -> {{2, 1}},
+			Source -> {{1, 1}, {6, 1}},
+			"FileName" -> strange
+		|>
+	]
 	,
 	TestID->"File-20190804-K7V2D8"
 ]
@@ -251,13 +272,19 @@ TestMatch[
 	cst
 	,
 	ContainerNode[File, {
-		GroupNode[List, {
-			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
-			LeafNode[Token`Newline, $systemNewline, <|Source -> {{1, 2}, {2, 1}}|>],
-			LeafNode[Whitespace, "\t", <|Source -> {{2, 1}, {2, 2}}|>],
-			LeafNode[Integer, "1", <|Source -> {{2, 2}, {2, 3}}|>],
-			LeafNode[Token`CloseCurly, "\\\n}", <|Source -> {{2, 3}, {3, 2}}|>]}, <|Source -> {{1, 1}, {3, 2}}|>]},
-		<|"SimpleLineContinuations" -> {{2, 2}, {2, 3}}, Source -> {{1, 1}, {3, 2}}|>]
+			GroupNode[List, {
+				LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
+				LeafNode[Token`Newline, $systemNewline, <|Source -> {{1, 2}, {2, 1}}|>],
+				LeafNode[Whitespace, "\t", <|Source -> {{2, 1}, {2, 2}}|>],
+				LeafNode[Integer, "1", <|Source -> {{2, 2}, {2, 3}}|>],
+				LeafNode[Token`CloseCurly, "\\\n}", <|Source -> {{2, 3}, {3, 2}}|>]}, <|Source -> {{1, 1}, {3, 2}}|>]
+		},
+		<|
+			"SimpleLineContinuations" -> {{2, 2}, {2, 3}},
+			Source -> {{1, 1}, {3, 2}},
+			"FileName" -> continuation
+		|>
+	]
 	,
 	TestID->"File-20191025-I3T9F3"
 ]

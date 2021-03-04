@@ -23,6 +23,7 @@ $LastFailedExpectedTextReplaced
 Begin["`Private`"]
 
 Needs["CodeParser`"]
+Needs["CodeParser`ToString`"] (* for ToInputFormString *)
 Needs["CodeParser`Utils`"]
 Needs["PacletManager`"]
 
