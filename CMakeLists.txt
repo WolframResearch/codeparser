@@ -688,6 +688,7 @@ set(PACLET_OUTPUT ${PROJECT_BINARY_DIR}/paclet/${PACLET}-${PACLET_VERSION}.pacle
 endif(LOCAL_BUILD)
 
 add_custom_target(paclet
+	ALL
 	DEPENDS
 		${PACLET_OUTPUT}
 )

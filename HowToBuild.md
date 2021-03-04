@@ -13,7 +13,7 @@ cd codeparser
 mkdir build
 cd build
 cmake ..
-cmake --build . --target paclet
+cmake --build .
 ```
 
 The result is a directory named `paclet` that contains the WL package source code and a built CodeParser `.paclet` file for installing.
@@ -27,21 +27,21 @@ Specify `MATHEMATICA_INSTALL_DIR` if you have Mathematica installed in a non-def
 
 ```
 cmake -DMATHEMATICA_INSTALL_DIR=/Applications/Mathematica122.app/Contents/ ..
-cmake --build . --target paclet
+cmake --build .
 ```
 
 On Windows:
 
 ```
 cmake -DMATHEMATICA_INSTALL_DIR="C:/Program Files/Wolfram Research/Mathematica/12.2" ..
-cmake --build . --target paclet
+cmake --build .
 ```
 
 ## Installing
 
 You can install the paclet from CMake:
 ```
-cmake --install . --component paclet
+cmake --install .
 ```
 
 This starts a kernel and calls `PacletInstall` with the built .paclet file.
