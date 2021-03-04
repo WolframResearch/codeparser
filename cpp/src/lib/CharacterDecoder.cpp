@@ -3,7 +3,7 @@
 
 #include "ByteDecoder.h" // for TheByteDecoder
 #include "ByteBuffer.h" // for TheByteBuffer
-#include "Utils.h" // for isUnsupportedLongName, etc.
+#include "Utils.h" // for isMBStrange, etc.
 #include "LongNames.h" // for LongNameToCodePointMap, etc.
 #include "API.h" // for ScopedMLUTF8String
 
@@ -453,21 +453,10 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
 #if !NISSUES
     if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
         
-        auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
-        
         auto longNameBufAndLen = BufferAndLength(longNameStartBuf, longNameEndBuf - longNameStartBuf);
         auto longNameStr = std::string(reinterpret_cast<const char *>(longNameBufAndLen.buffer), longNameBufAndLen.length());
         
-        //
-        // The well-formed, recognized name could still be unsupported or undocumented
-        //
-        if (LongNames::isUnsupportedLongNameCodePoint(point)) {
-            
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNSUPPORTEDCHARACTER, std::string("Unsupported character: ``\\[") + longNameStr + "]``.", SYNTAXISSUESEVERITY_ERROR, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, {}));
-            
-            Issues.insert(std::move(I));
-            
-        } else if (Utils::isMBStrange(point)) {
+        if (Utils::isMBStrange(point)) {
             
             //
             // Just generally strange character is in the code
@@ -479,12 +468,6 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
             auto graphicalStr = c.graphicalString();
             
             auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.85, {}));
-            
-            Issues.insert(std::move(I));
-            
-        } else if (Utils::isUndocumentedLongName(longNameStr)) {
-            
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNDOCUMENTEDCHARACTER, std::string("Undocumented character: ``\\[") + longNameStr + "]``.", SYNTAXISSUESEVERITY_REMARK, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, {}));
             
             Issues.insert(std::move(I));
         }

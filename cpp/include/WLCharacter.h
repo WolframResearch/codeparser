@@ -118,7 +118,6 @@ struct WLCharacter {
     bool isMBStrangeNewline() const;
     bool isMBUninterpretable() const;
     bool isMBControl() const;
-    bool isMBUnsupported() const;
 };
 
 //

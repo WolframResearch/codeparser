@@ -9,7 +9,7 @@
 #include "ByteDecoder.h" // for ByteDecoder
 #include "ByteBuffer.h" // for ByteBuffer
 #include "ByteEncoder.h" // for ByteEncoder
-#include "Utils.h" // for undocumentedLongNames
+#include "Utils.h" // for parseSourceConvention
 
 #include <memory> // for unique_ptr
 #ifdef WINDOWS_MATHLINK
@@ -736,61 +736,6 @@ DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     TheByteDecoder->deinit();
     TheByteBuffer->deinit();
-    
-    return LIBRARY_NO_ERROR;
-}
-
-
-DLLEXPORT int SetupLongNames_LibraryLink(WolframLibraryData libData, MLINK mlp) {
-    
-    int mlLen;
-    
-    if (!MLTestHead(mlp, SYMBOL_LIST->name(), &mlLen)) {
-        return LIBRARY_FUNCTION_ERROR;
-    }
-    
-    auto len = static_cast<size_t>(mlLen);
-    
-    if (len != 1) {
-        return LIBRARY_FUNCTION_ERROR;
-    }
-    
-    if (!MLTestHead(mlp, SYMBOL_LIST->name(), &mlLen)) {
-        return LIBRARY_FUNCTION_ERROR;
-    }
-    
-    len = static_cast<size_t>(mlLen);
-    
-    auto strs = std::vector<ScopedMLStringPtr>();
-    strs.reserve(len);
-    
-    for (size_t i = 0; i < len; i++) {
-        
-        auto str = ScopedMLStringPtr(new ScopedMLString(mlp));
-        if (!str->read()) {
-            return LIBRARY_FUNCTION_ERROR;
-        }
-        
-        strs.push_back(std::move(str));
-    }
-    
-    if (!MLNewPacket(mlp) ) {
-        return LIBRARY_FUNCTION_ERROR;
-    }
-    
-    for (size_t i = 0; i < len; i++) {
-        
-        const auto& str = strs[i];
-        
-        undocumentedLongNames.insert(str->get());
-    }
-    
-    //
-    // I suppose a result is always expected
-    //
-    if (!MLPutSymbol(mlp, SYMBOL_NULL->name())) {
-        return LIBRARY_FUNCTION_ERROR;
-    }
     
     return LIBRARY_NO_ERROR;
 }

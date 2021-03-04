@@ -7,8 +7,6 @@
 #include <string>
 #include <unordered_set> // for unordered_set
 
-extern std::unordered_set<std::string> undocumentedLongNames;
-
 
 std::ostream& set_graphical(std::ostream& stream);
 
@@ -27,8 +25,6 @@ int get_safe_i();
 //
 class Utils {
 public:
-    
-    static bool isUndocumentedLongName(std::string s);
     
     static bool isMBNonCharacter(codepoint point);
     

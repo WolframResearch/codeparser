@@ -158,17 +158,15 @@ importedNotStrangeLetterlikeLongNames = Keys[Select[importedLongNames, #[[1]] ==
 
 importedASCIIReplacements = KeyValueMap[Function[{k, v}, k -> v[[3, Key["ASCIIReplacements"]]]], Select[importedLongNames, KeyExistsQ[#[[3]], "ASCIIReplacements"]&]];
 
-importedPunctuationLongNames = Keys[Select[importedLongNames, #[[1]] === PunctuationCharacter &]];
+importedPunctuationLongNames = Keys[Select[importedLongNames, (#[[1]] === PunctuationCharacter)&]];
 
-importedWhitespaceLongNames = Keys[Select[importedLongNames, #[[1]] === WhitespaceCharacter &]];
+importedWhitespaceLongNames = Keys[Select[importedLongNames, (#[[1]] === WhitespaceCharacter)&]];
 
-importedNewlineLongNames = Keys[Select[importedLongNames, #[[1]] === NewlineCharacter &]];
+importedNewlineLongNames = Keys[Select[importedLongNames, (#[[1]] === NewlineCharacter)&]];
 
-importedUninterpretableLongNames = Keys[Select[importedLongNames, #[[1]] === UninterpretableCharacter &]];
+importedUninterpretableLongNames = Keys[Select[importedLongNames, (#[[1]] === UninterpretableCharacter)&]];
 
-importedUnsupportedLongNames = Keys[Select[importedLongNames, #[[1]] === UnsupportedCharacter &]];
-
-importedRawLongNames = Keys[Select[importedLongNames, #[[1]] === RawCharacter &]];
+importedRawLongNames = Keys[Select[importedLongNames, (#[[1]] === RawCharacter)&]];
 
 
 
@@ -226,7 +224,7 @@ codePointToLongNameMapPoints = {
 "//",
 "//",
 "std::array<codepoint, LONGNAMES_COUNT> CodePointToLongNameMap_points {{"} ~Join~
-  (Row[{toGlobal["CodePoint`LongName`"<>#], ","}] & /@ SortBy[Keys[importedLongNames], longNameToCharacterCode]) ~Join~
+  (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ SortBy[Keys[importedLongNames], longNameToCharacterCode]) ~Join~
   {"}};", ""};
 
 codePointToLongNameMapNames = {
@@ -234,7 +232,7 @@ codePointToLongNameMapNames = {
 "//",
 "//",
 "std::array<std::string, LONGNAMES_COUNT> CodePointToLongNameMap_names {{"} ~Join~
-  (Row[{escapeString[#], ","}] & /@ SortBy[Keys[importedLongNames], longNameToCharacterCode]) ~Join~
+  (Row[{escapeString[#], ","}]& /@ SortBy[Keys[importedLongNames], longNameToCharacterCode]) ~Join~
   {"}};", ""};
 
 rawSet = {
@@ -395,24 +393,6 @@ uninterpretableSource =
     ""
   };
 
-unsupportedSource = 
-  {
-    "//",
-    "//",
-    "//",
-    "std::array<codepoint, UNSUPPORTEDLONGNAMESCODEPOINTS_COUNT> unsupportedLongNameCodePoints {{"} ~Join~
-    (Row[{toGlobal["CodePoint`LongName`"<>#], ","}]& /@ SortBy[importedUnsupportedLongNames, Identity]) ~Join~
-    {"}};", "",
-    "//",
-    "//",
-    "//",
-    "bool LongNames::isUnsupportedLongNameCodePoint(codepoint point) {",
-    "auto it =  std::lower_bound(unsupportedLongNameCodePoints.begin(), unsupportedLongNameCodePoints.end(), point);",
-    "return it != unsupportedLongNameCodePoints.end() && *it == point;",
-    "}",
-    ""
-  };
-
 LongNameCodePointToOperatorSource = 
   {
     "//",
@@ -460,7 +440,6 @@ constexpr size_t MBPUNCTUATIONCODEPOINTS_COUNT = " <> ToString[Length[importedPu
 constexpr size_t MBWHITESPACECODEPOINTS_COUNT = " <> ToString[Length[importedWhitespaceLongNames]] <> ";
 constexpr size_t MBNEWLINECODEPOINTS_COUNT = " <> ToString[Length[mbNewlines]] <> ";
 constexpr size_t MBUNINTERPRETABLECODEPOINTS_COUNT = " <> ToString[Length[importedUninterpretableLongNames]] <> ";
-constexpr size_t UNSUPPORTEDLONGNAMESCODEPOINTS_COUNT = " <> ToString[Length[importedUnsupportedLongNames]] <> ";
 
 extern std::array<std::string, LONGNAMES_COUNT> LongNameToCodePointMap_names;
 extern std::array<codepoint, LONGNAMES_COUNT> LongNameToCodePointMap_points;
@@ -482,8 +461,6 @@ public:
     static bool isMBNewline(codepoint point);
 
     static bool isMBUninterpretable(codepoint point);
-
-    static bool isUnsupportedLongNameCodePoint(codepoint point);
 
     //
     // Is this \\[Raw] something?
@@ -535,7 +512,6 @@ punctuationSource ~Join~
 whitespaceSource ~Join~
 newlineSource ~Join~
 uninterpretableSource ~Join~
-unsupportedSource ~Join~
 LongNameCodePointToOperatorSource;
 
 Print["exporting LongNames.cpp"];

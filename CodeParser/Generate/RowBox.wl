@@ -245,10 +245,10 @@ Infix
 *)
 "} ~Join~
 
-(
+((
 "prbDispatch[{_, LeafNode[" <> ToString[#[[1]]] <> ", _, _], _, ___}, handledChildren_, ignored_, pos_] := \n\
   InfixNode[" <> ToString[#[[2]]] <> ", handledChildren, <|Source->pos|>]
-" & /@ infixOperatorParselets
+")& /@ infixOperatorParselets
 )
 
 
@@ -261,10 +261,10 @@ Binary
 *)
 "} ~Join~
 
-(
+((
 "prbDispatch[{_, LeafNode[" <> ToString[#[[1]]] <> ", _, _], _}, handledChildren_, ignored_, pos_] := \n\
   BinaryNode[" <> ToString[#[[2]]] <> ", handledChildren, <|Source->pos|>]
-" & /@ binaryOperatorParselets
+")& /@ binaryOperatorParselets
 )
 
 

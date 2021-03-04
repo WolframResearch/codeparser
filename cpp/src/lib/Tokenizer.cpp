@@ -192,10 +192,6 @@ Token Tokenizer::nextToken0(NextPolicy policy) {
                 
                 return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                 
-            } else if (c.isMBUnsupported()) {
-                
-                return Token(TOKEN_ERROR_UNSUPPORTEDCHARACTER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
-                
             } else {
                 
                 //

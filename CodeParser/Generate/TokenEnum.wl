@@ -230,7 +230,6 @@ isError[Token`Error`Aborted] = True
 isError[Token`Error`ExpectedOperand] = True
 isError[Token`Error`UnrecognizedDigit] = True
 isError[Token`Error`ExpectedDigit] = True
-isError[Token`Error`UnsupportedCharacter] = True
 isError[Token`Error`InvalidBase] = True
 isError[Token`Error`UnsupportedToken] = True
 isError[Token`Error`UnexpectedCloser] = True

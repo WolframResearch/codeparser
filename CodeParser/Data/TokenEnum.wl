@@ -58,8 +58,8 @@ Token`Error`Aborted -> Next,
 Token`Error`ExpectedOperand -> Next,
 Token`Error`UnrecognizedDigit -> Next,
 Token`Error`ExpectedDigit -> Next,
-Token`Error`UnsupportedCharacter -> Next,
 Token`Error`InvalidBase -> Next,
+Token`Error`UnexpectedCloser -> Next,
 (*
 Unterminated errors
 
@@ -71,7 +71,6 @@ Token`Error`UnterminatedString -> Next,
 Token`Error`UnterminatedFileString -> Next,
 Token`Error`UnterminatedLinearSyntaxBlob -> Next,
 Token`Error`UnsupportedToken -> Next, (*32*)
-Token`Error`UnexpectedCloser -> Next,
 Token`Error`End -> Next,
 
 (* 1 character tokens *)

@@ -7,12 +7,6 @@
 #include <cassert>
 #include <cctype> // for isalnum, isxdigit, isupper, isdigit, isalpha, ispunct, iscntrl with GCC and MSVC
 
-std::unordered_set<std::string> undocumentedLongNames;
-
-bool Utils::isUndocumentedLongName(std::string s) {
-    return undocumentedLongNames.find(s) != undocumentedLongNames.end();
-}
-
 
 #if !NISSUES
 bool Utils::isStrange(codepoint point) {

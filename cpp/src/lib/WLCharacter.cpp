@@ -1,7 +1,7 @@
 
 #include "WLCharacter.h"
 
-#include "Utils.h" // for isUnsupportedLongName
+#include "Utils.h" // for set_safe, etc.
 #include "Source.h" // for SourceCharacer
 #include "LongNames.h" // for CodePointToLongNameMap
 
@@ -480,22 +480,6 @@ bool WLCharacter::isMBStringMeta() const {
     }
 }
 
-bool WLCharacter::isMBUnsupported() const {
-    
-    auto esc = escape();
-    
-    if (esc == ESCAPE_LONGNAME) {
-        
-        auto val = to_point();
-        
-        if (LongNames::isUnsupportedLongNameCodePoint(val)) {
-            return true;
-        }
-    }
-    
-    return false;
-}
-
 //
 // isLetterlikeCharacter is special because it is defined in terms of other categories
 //
@@ -549,10 +533,6 @@ bool WLCharacter::isMBLetterlike() const {
     }
     
     if (isMBUninterpretable()) {
-        return false;
-    }
-    
-    if (isMBUnsupported()) {
         return false;
     }
     

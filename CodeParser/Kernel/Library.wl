@@ -15,10 +15,6 @@ tokenizeBytesListableFunc
 concreteParseLeafFunc
 safeStringFunc
 
-setupLongNamesFunc
-
-SetupLongNames
-
 
 
 (*
@@ -257,8 +253,6 @@ safeStringFunc := (setupLibraries[]; safeStringFunc = loadFunc["SafeString_Libra
 exprTestFunc := (setupLibraries[]; exprTestFunc = loadFunc["ExprTest_LibraryLink", {}, Integer]);
 
 getMetadataFunc := (setupLibraries[]; getMetadataFunc = loadFunc["Get_LibraryLink", {Integer}, Integer]);
-
-setupLongNamesFunc := (setupLibraries[]; setupLongNamesFunc = loadFunc["SetupLongNames_LibraryLink", LinkObject, LinkObject]);
 )
 
 
@@ -493,46 +487,6 @@ Module[{nearest, location, longNamesFile},
 	];
 	nearest[[1]]
 ]]
-
-
-(*
-To be called manually at top-level
-*)
-SetupLongNames[] :=
-Catch[
-Module[{names, documentedNames, undocumentedNames, location, longNamesFile},
-
-	(*
-	lazy initialization of $longNames]
-	*)
-	If[!ListQ[$longNames],
-
-		(*
-		TODO: when targeting 12.1 as a minimum, then use paclet["AssetLocation", "LongNames"]
-		*)
-		location = "Location" /. PacletInformation["CodeParser"];
-
-		longNamesFile = FileNameJoin[{location, "Resources", "Generated", "LongNames.wl"}];
-
-		$longNames = Quiet[Get[longNamesFile], {Get::noopen}];
-		If[FailureQ[$longNames],
-			Throw[{"UndocumentedLongNameFailure"}]
-		];
-	];
-
-	SetDirectory[FileNameJoin[{$InstallationDirectory, "Documentation/English/System/ReferencePages/Characters"}]];
-
-	names = FileNames["*.nb", "", Infinity];
-
-	documentedNames = StringDrop[#, -3] & /@ names;
-
-	undocumentedNames = Complement[$longNames, documentedNames];
-
-	ResetDirectory[];
-
-	libraryFunctionWrapper[setupLongNamesFunc, undocumentedNames]
-]]
-
 
 
 

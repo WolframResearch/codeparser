@@ -126,14 +126,14 @@ TestMatch[
 UnsupportedCharacter:
 *)
 
-TestMatch[
+(*TestMatch[
 	FirstCase[CodeConcreteParse["\\[NumberComma]", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnsupportedCharacter", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-W1X7L2"
-]
+]*)
 
 
 
