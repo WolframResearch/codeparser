@@ -878,6 +878,28 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 			peek["Push", error];
 		,
 		(*
+		Format[a] := b  at top-level
+
+		insert "Definitions" metadata for a
+		
+		*)
+		CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {CallNode[LeafNode[Symbol, "Attributes" | "Format" | "Options", _], {_, ___}, _], _}, _] /; DefinitionSymbols[x[[2, 1, 2, 1]]] != {},
+			peek = nodeListStack["Peek"];
+			def = CallNode[x[[1]], x[[2]], <| x[[3]], "Definitions" -> DefinitionSymbols[x[[2, 1, 2, 1]]] |> ];
+			peek["Push", def];
+		,
+		(*
+		Format[a] := b  at top-level ;
+
+		insert "Definitions" metadata for a
+		
+		*)
+		CallNode[LeafNode[Symbol, "CompoundExpression", _], { CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {CallNode[LeafNode[Symbol, "Attributes" | "Format" | "Options", _], {_, ___}, _], _}, _] /; DefinitionSymbols[x[[2, 1, 2, 1, 2, 1]]] != {}, LeafNode[Symbol, "Null", _] }, _],
+			peek = nodeListStack["Peek"];
+			def = CallNode[x[[1]], { CallNode[x[[2, 1, 1]], x[[2, 1, 2]], <| x[[2, 1, 3]], "Definitions" -> DefinitionSymbols[x[[2, 1, 2, 1, 2, 1]]] |> ], x[[2, 2]] }, x[[3]]];
+			peek["Push", def];
+		,
+		(*
 		foo[] := 1+1  at top-level
 
 		insert "Definitions" metadata for foo
@@ -2303,7 +2325,7 @@ Module[{head, part, partData, data, issues, first},
 
 
 abstractCallNode[CallMissingCloserNode[headIn_, {partIn:GroupMissingCloserNode[GroupSquare, _, _]}, dataIn_]] :=
-Module[{head, part, data, issues},
+Module[{head, part, data, issues, partData},
 	head = headIn;
 	part = partIn;
 	data = dataIn;
@@ -2377,7 +2399,7 @@ abstract[BoxNode[b_, children_, data_]] := BoxNode[b, abstract /@ children, data
 
 
 abstractNot2[rand_, notNotTok_, dataIn_] :=
-Module[{notNotData, data},
+Module[{notNotData, data, issues},
 	
 	notNotData = notNotTok[[3]];
 
