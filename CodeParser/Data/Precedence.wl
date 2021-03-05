@@ -2,7 +2,7 @@
 (*
 CodeParser Data file
 
-Do not modify this file if located outside of codeparser repo
+Do not modify this file directly
 *)
 
 (*
