@@ -489,40 +489,57 @@ Some nodes would be strange at the top-level in a package. For example, 1+1 woul
 (*
 if not active, return no issues
 *)
-topLevelChildIssues[_, False] := {}
+topLevelChildIssues[_, False] :=
+	{}
 
 (*
 Call could be anything
 *)
-topLevelChildIssues[CallNode[_,_,_], True] := {}
+topLevelChildIssues[CallNode[_,_,_], True] :=
+	{}
 
 (*
 probably a declaration
 *)
-topLevelChildIssues[LeafNode[Symbol,_,_], True] := {}
+topLevelChildIssues[LeafNode[Symbol,_,_], True] :=
+	{}
 
 (*
 Side-effecting or calling binary operators
 *)
-topLevelChildIssues[BinaryNode[AddTo | Apply | BinaryAt | BinaryAtAtAt |
-												BinarySlashSlash | Map | Set | SetDelayed |
-												SubtractFrom | Unset | UpSet | UpSetDelayed |
-												Put | PutAppend, _, _], True] := {}
+topLevelChildIssues[
+	BinaryNode[
+		AddTo | Apply | BinaryAt | BinaryAtAtAt |
+			BinarySlashSlash | Map | Set | SetDelayed |
+			SubtractFrom | Unset | UpSet | UpSetDelayed |
+			Put | PutAppend
+		,
+		_
+		,
+		_
+	]
+	,
+	True
+] :=
+	{}
 
 (*
 Side-effecting ternary operators
 *)
-topLevelChildIssues[TernaryNode[TagSet | TagSetDelayed | TagUnset | TernaryTilde, _, _], True] := {}
+topLevelChildIssues[TernaryNode[TagSet | TagSetDelayed | TagUnset | TernaryTilde, _, _], True] :=
+	{}
 
 (*
 Side-effecting prefix operators
 *)
-topLevelChildIssues[PrefixNode[Get | PreDecrement | PreIncrement, _, _], True] := {}
+topLevelChildIssues[PrefixNode[Get | PreDecrement | PreIncrement, _, _], True] :=
+	{}
 
 (*
 Side-effecting postfix operators
 *)
-topLevelChildIssues[PostfixNode[Decrement | Increment, _, _], True] := {}
+topLevelChildIssues[PostfixNode[Decrement | Increment, _, _], True] :=
+	{}
 
 (*
 e.g., list of declarations in StartUp code
@@ -537,27 +554,52 @@ TODO: handle StartUp files as a format
 
 symbolDeclPat = LeafNode[Symbol | String, _, _] | CallNode[LeafNode[Symbol, "Symbol", _], _, _]
 
-topLevelChildIssues[GroupNode[List, {
-	LeafNode[Token`OpenCurly, _, _],
-	symbolDeclPat,
-	LeafNode[Token`CloseCurly, _, _] }, _], True] := {}
+topLevelChildIssues[
+	GroupNode[List, {
+		LeafNode[Token`OpenCurly, _, _],
+		symbolDeclPat,
+		LeafNode[Token`CloseCurly, _, _] }
+		,
+		_
+	]
+	,
+	True
+] :=
+	{}
 
-topLevelChildIssues[GroupNode[List, {
-	LeafNode[Token`OpenCurly, _, _],
-	InfixNode[Comma | CompoundExpression, {
-		PatternSequence[symbolDeclPat, _]..., LeafNode[Token`Fake`ImplicitNull, _, _]}, _],
-	LeafNode[Token`CloseCurly, _, _] }, _], True] := {}
+topLevelChildIssues[
+	GroupNode[List, {
+		LeafNode[Token`OpenCurly, _, _],
+		InfixNode[Comma | CompoundExpression, {
+			PatternSequence[symbolDeclPat, _]..., LeafNode[Token`Fake`ImplicitNull, _, _]}, _],
+		LeafNode[Token`CloseCurly, _, _] }
+		,
+		_
+	]
+	,
+	True
+] :=
+	{}
 
-topLevelChildIssues[GroupNode[List, {
-	LeafNode[Token`OpenCurly, _, _],
-	InfixNode[Comma | CompoundExpression, {
-		PatternSequence[symbolDeclPat, _]..., symbolDeclPat }, _],
-	LeafNode[Token`CloseCurly, _, _] }, _], True] := {}
+topLevelChildIssues[
+	GroupNode[List, {
+		LeafNode[Token`OpenCurly, _, _],
+		InfixNode[Comma | CompoundExpression, {
+			PatternSequence[symbolDeclPat, _]..., symbolDeclPat }, _],
+		LeafNode[Token`CloseCurly, _, _] }
+		,
+		_
+	]
+	,
+	True
+] :=
+	{}
 
 (*
 just assume parens connote intention
 *)
-topLevelChildIssues[GroupNode[GroupParen, _, _], True] := {}
+topLevelChildIssues[GroupNode[GroupParen, _, _], True] :=
+	{}
 
 
 (*
@@ -578,46 +620,126 @@ And then the recursive call would see the $Failed and say fine (because it's a s
 So hard-code the CompoundExpression versions to be able to catch these cases
 
 *)
-topLevelChildIssues[InfixNode[CompoundExpression, {
-												CallNode[_, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
+topLevelChildIssues[
+	InfixNode[CompoundExpression, {
+		CallNode[_, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }
+		,
+		_
+	]
+	,
+	True
+] :=
+	{}
 
-topLevelChildIssues[InfixNode[CompoundExpression, {
-												LeafNode[Symbol, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
+topLevelChildIssues[
+	InfixNode[CompoundExpression, {
+		LeafNode[Symbol, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }
+		,
+		_
+	]
+	,
+	True
+] :=
+	{}
 
-topLevelChildIssues[InfixNode[CompoundExpression, {
-												BinaryNode[AddTo | Apply | BinaryAt | BinaryAtAtAt |
-													BinarySlashSlash | Map | Set | SetDelayed |
-													SubtractFrom | Unset | UpSet | UpSetDelayed |
-													Put | PutAppend, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
+topLevelChildIssues[
+	InfixNode[CompoundExpression, {
+		BinaryNode[AddTo | Apply | BinaryAt | BinaryAtAtAt |
+			BinarySlashSlash | Map | Set | SetDelayed |
+			SubtractFrom | Unset | UpSet | UpSetDelayed |
+			Put | PutAppend, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }
+		,
+		_
+	]
+	,
+	True
+] :=
+	{}
 
-topLevelChildIssues[InfixNode[CompoundExpression, {
-												TernaryNode[TagSet | TagSetDelayed | TernaryTilde, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
+topLevelChildIssues[
+	InfixNode[CompoundExpression, {
+		TernaryNode[TagSet | TagSetDelayed | TernaryTilde, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }
+		,
+		_
+	]
+	,
+	True
+] :=
+	{}
 
-topLevelChildIssues[InfixNode[CompoundExpression, {
-												PrefixNode[Get | PreDecrement | PreIncrement, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
+topLevelChildIssues[
+	InfixNode[CompoundExpression, {
+		PrefixNode[Get | PreDecrement | PreIncrement, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }
+		,
+		_
+	]
+	,
+	True
+] :=
+	{}
 
-topLevelChildIssues[InfixNode[CompoundExpression, {
-												PostfixNode[Decrement | Increment, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
+topLevelChildIssues[
+	InfixNode[CompoundExpression, {
+		PostfixNode[Decrement | Increment, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }
+		,
+		_
+	]
+	,
+	True
+] :=
+	{}
 
-topLevelChildIssues[InfixNode[CompoundExpression, {
-												GroupNode[List, {
-												LeafNode[Token`OpenCurly, _, _], symbolDeclPat,
-												LeafNode[Token`CloseCurly, _, _]}, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
+topLevelChildIssues[
+	InfixNode[CompoundExpression, {
+		GroupNode[List, {
+		LeafNode[Token`OpenCurly, _, _], symbolDeclPat,
+		LeafNode[Token`CloseCurly, _, _]}, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }
+		,
+		_
+	]
+	,
+	True
+] :=
+	{}
 
-topLevelChildIssues[InfixNode[CompoundExpression, {
-												GroupNode[List, {
-												LeafNode[Token`OpenCurly, _, _],
-												InfixNode[Comma | CompoundExpression, { PatternSequence[symbolDeclPat, _]..., LeafNode[Token`Fake`ImplicitNull, _, _] }, _],
-												LeafNode[Token`CloseCurly, _, _]}, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
+topLevelChildIssues[
+	InfixNode[CompoundExpression, {
+		GroupNode[List, {
+		LeafNode[Token`OpenCurly, _, _],
+		InfixNode[Comma | CompoundExpression, { PatternSequence[symbolDeclPat, _]..., LeafNode[Token`Fake`ImplicitNull, _, _] }, _],
+		LeafNode[Token`CloseCurly, _, _]}, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }
+		,
+		_
+	]
+	,
+	True
+] :=
+	{}
 
-topLevelChildIssues[InfixNode[CompoundExpression, {
-												GroupNode[List, {
-												LeafNode[Token`OpenCurly, _, _],
-												InfixNode[Comma | CompoundExpression, { PatternSequence[symbolDeclPat, _]..., symbolDeclPat }, _],
-												LeafNode[Token`CloseCurly, _, _]}, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
+topLevelChildIssues[
+	InfixNode[CompoundExpression, {
+		GroupNode[List, {
+		LeafNode[Token`OpenCurly, _, _],
+		InfixNode[Comma | CompoundExpression, { PatternSequence[symbolDeclPat, _]..., symbolDeclPat }, _],
+		LeafNode[Token`CloseCurly, _, _]}, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }
+		,
+		_
+	]
+	,
+	True
+] :=
+	{}
 
-topLevelChildIssues[InfixNode[CompoundExpression, {
-												GroupNode[GroupParen, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
+topLevelChildIssues[
+	InfixNode[CompoundExpression, {
+		GroupNode[GroupParen, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }
+		,
+		_
+	]
+	,
+	True
+] :=
+	{}
 
 (*
 more specific stuff inside CompoundExpression
@@ -629,57 +751,129 @@ allow a=1;b=2;c=3;
 FIXME: maybe this is too niche
 
 *)
-topLevelChildIssues[InfixNode[CompoundExpression, {
-												PatternSequence[BinaryNode[Set | SetDelayed | Unset, _, _], _LeafNode].., LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
+topLevelChildIssues[
+	InfixNode[CompoundExpression, {
+		PatternSequence[BinaryNode[Set | SetDelayed | Unset, _, _], _LeafNode].., LeafNode[Token`Fake`ImplicitNull, _, _] }
+		,
+		_
+	]
+	,
+	True
+] :=
+	{}
 
-topLevelChildIssues[InfixNode[CompoundExpression, {
-												PatternSequence[LeafNode[Symbol, _, _], _LeafNode].., LeafNode[Token`Fake`ImplicitNull, _, _] }, _], True] := {}
+topLevelChildIssues[
+	InfixNode[CompoundExpression, {
+		PatternSequence[LeafNode[Symbol, _, _], _LeafNode].., LeafNode[Token`Fake`ImplicitNull, _, _] }
+		,
+		_
+	]
+	,
+	True
+] :=
+	{}
 
-topLevelChildIssues[InfixNode[CompoundExpression, {
-												PatternSequence[LeafNode[Symbol, _, _], _LeafNode].., LeafNode[Symbol, _, _] }, _], True] := {}
+topLevelChildIssues[
+	InfixNode[CompoundExpression, {PatternSequence[LeafNode[Symbol, _, _], _LeafNode].., LeafNode[Symbol, _, _] }, _]
+	,
+	True
+] :=
+	{}
 
 
-topLevelChildIssues[InfixNode[CompoundExpression, {BinaryNode[Set | SetDelayed, _, _], LeafNode[Token`Semi, _, _], end:_[Except[Token`Fake`ImplicitNull], _, _], ___}, data_], ignored_] := {
-	SyntaxIssue["TopLevel", "Definition does not contain the rest of the ``CompoundExpression``.", "Error",
-		<| Source -> firstExplicitToken[end][[3, Key[Source]]],
-			ConfidenceLevel -> 0.95
-			(*FIXME: wrap parentheses CodeAction*) |>] }
+topLevelChildIssues[
+	InfixNode[CompoundExpression, {BinaryNode[Set | SetDelayed, _, _], LeafNode[Token`Semi, _, _], end:_[Except[Token`Fake`ImplicitNull], _, _], ___}, data_]
+	,
+	ignored_
+] :=
+	{
+		SyntaxIssue["TopLevel", "Definition does not contain the rest of the ``CompoundExpression``.", "Error",
+			<|
+				Source -> firstExplicitToken[end][[3, Key[Source]]],
+				ConfidenceLevel -> 0.95
+				(*FIXME: wrap parentheses CodeAction*)
+			|>
+		]
+	}
 
-topLevelChildIssues[InfixNode[CompoundExpression, {_, LeafNode[Token`Semi, _, data1_], LeafNode[Token`Fake`ImplicitNull, _, _]}, data_], ignored_] := {
-	SyntaxIssue["TopLevel", "``CompoundExpression`` at top-level. ``;`` may not be needed at top-level.", "Warning",
-		<| Source -> data1[Source],
-			ConfidenceLevel -> 0.75
-			(*FIXME: insert newline CodeAction*) |>] }
+topLevelChildIssues[
+	InfixNode[CompoundExpression, {_, LeafNode[Token`Semi, _, data1_], LeafNode[Token`Fake`ImplicitNull, _, _]}, data_]
+	,
+	ignored_
+] :=
+	{
+		SyntaxIssue["TopLevel", "``CompoundExpression`` at top-level. ``;`` may not be needed at top-level.", "Warning",
+			<|
+				Source -> data1[Source],
+				ConfidenceLevel -> 0.75
+				(*FIXME: insert newline CodeAction*)
+			|>
+		]
+	}
 
-topLevelChildIssues[InfixNode[CompoundExpression, {_, LeafNode[Token`Semi, _, data1_], _, ___}, data_], ignored_] := {
-	SyntaxIssue["TopLevel", "``CompoundExpression`` at top-level. Consider breaking up onto separate lines.", "Warning",
-		<| Source -> data1[Source],
-			ConfidenceLevel -> 0.75
-			(*FIXME: insert newline CodeAction*) |>] }
+topLevelChildIssues[
+	InfixNode[CompoundExpression, {
+		_, LeafNode[Token`Semi, _, data1_], _, ___}
+		,
+		data_
+	]
+	,
+	ignored_
+] :=
+	{
+		SyntaxIssue["TopLevel", "``CompoundExpression`` at top-level. Consider breaking up onto separate lines.", "Warning",
+			<|
+				Source -> data1[Source],
+				ConfidenceLevel -> 0.75
+				(*FIXME: insert newline CodeAction*)
+			|>
+		]
+	}
 
 (*
 Anything else, then warn
 
 Specifically add a DidYouMean for / -> /@
 *)
-topLevelChildIssues[BinaryNode[Divide, {_, LeafNode[Token`Slash, _, slashData_], _}, data_], True] := {
-	SyntaxIssue["TopLevel", "Unexpected expression at top-level.", "Warning",
-		<| Source -> slashData[Source],
-			ConfidenceLevel -> 0.95,
-			CodeActions -> { CodeAction["Replace ``/`` with ``/@``", ReplaceNode,
-									<|	Source->slashData[Source],
-										"ReplacementNode"->LeafNode[Token`SlashAt, "/@", <||>] |>] } |>] }
+topLevelChildIssues[
+	BinaryNode[Divide,
+		{_, LeafNode[Token`Slash, _, slashData_], _}
+		,
+		data_
+	]
+	,
+	True
+] :=
+	{
+		SyntaxIssue["TopLevel", "Unexpected expression at top-level.", "Warning",
+			<|
+				Source -> slashData[Source],
+				ConfidenceLevel -> 0.95,
+				CodeActions -> {
+					CodeAction["Replace ``/`` with ``/@``", ReplaceNode,
+					<|
+						Source->slashData[Source],
+						"ReplacementNode"->LeafNode[Token`SlashAt, "/@", <||>]
+					|>]
+				}
+			|>
+		]
+	}
 
 (*
 No need to issue warning for errors being strange
 *)
-topLevelChildIssues[ErrorNode[_, _, _], True] := {}
+topLevelChildIssues[ErrorNode[_, _, _], True] :=
+	{}
 
-topLevelChildIssues[SyntaxErrorNode[_, _, _], True] := {}
+topLevelChildIssues[SyntaxErrorNode[_, _, _], True] :=
+	{}
 
-topLevelChildIssues[AbstractSyntaxErrorNode[_, _, _], True] := {}
+topLevelChildIssues[AbstractSyntaxErrorNode[_, _, _], True] :=
+	{}
 
-topLevelChildIssues[GroupMissingCloserNode[_, _, _], True] := {}
+topLevelChildIssues[GroupMissingCloserNode[_, _, _], True] :=
+	{}
 
 
 topLevelChildIssues[node:_[_, _, _], True] :=
