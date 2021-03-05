@@ -414,17 +414,19 @@ abstract[PrefixBinaryNode[op_, {_, operand1_, operand2_}, data_]] := CallNode[To
 
 abstract[ContainerNode[tag_, childrenIn_, dataIn_]] :=
 Catch[
-Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node, reportIssues, children},
+Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node, willReportToplevelIssues, reportIssuesBehavior, children},
 
 	children = childrenIn;
 
 	data = dataIn;
 
-	reportIssues = (tag === File);
+	willReportToplevelIssues = (tag === File);
+
+	reportIssuesBehavior = <|"WillReportToplevelIssues" -> willReportToplevelIssues, "ToplevelChildrenLength" -> Length[children]|>;
 
 	issues = {};
 
-	{abstractedChildren, issues1} = abstractTopLevelChildren[children, reportIssues];
+	{abstractedChildren, issues1} = abstractTopLevelChildren[children, reportIssuesBehavior];
 
 	{abstracted, issues2} = abstractTopLevel[abstractedChildren];
 
@@ -455,13 +457,19 @@ Call abstract on children
 But also warn if something strange is at top-level
 
 *)
-abstractTopLevelChildren[children_, reportIssues_] :=
+abstractTopLevelChildren[children_, reportIssuesBehavior_] :=
 Module[{abstractedChildren, issues, issuesMaybe},
 
 	{abstractedChildren, issuesMaybe} =
-		Reap[(
-			Sow[topLevelChildIssues[#, reportIssues]];
-			abstract[#])& /@ children
+		Reap[
+			MapIndexed[
+				Function[{child, idx},
+					Sow[topLevelChildIssues[child, <|reportIssuesBehavior, "ToplevelChildIndex" -> idx[[1]]|>]];
+					abstract[child]
+				]
+				,
+				children
+			]
 			,
 			_
 			,
@@ -489,19 +497,19 @@ Some nodes would be strange at the top-level in a package. For example, 1+1 woul
 (*
 if not active, return no issues
 *)
-topLevelChildIssues[_, False] :=
+topLevelChildIssues[_, KeyValuePattern["WillReportToplevelIssues" -> False]] :=
 	{}
 
 (*
 Call could be anything
 *)
-topLevelChildIssues[CallNode[_,_,_], True] :=
+topLevelChildIssues[CallNode[_,_,_], KeyValuePattern["WillReportToplevelIssues" -> True]] :=
 	{}
 
 (*
 probably a declaration
 *)
-topLevelChildIssues[LeafNode[Symbol,_,_], True] :=
+topLevelChildIssues[LeafNode[Symbol,_,_], KeyValuePattern["WillReportToplevelIssues" -> True]] :=
 	{}
 
 (*
@@ -519,26 +527,26 @@ topLevelChildIssues[
 		_
 	]
 	,
-	True
+	KeyValuePattern["WillReportToplevelIssues" -> True]
 ] :=
 	{}
 
 (*
 Side-effecting ternary operators
 *)
-topLevelChildIssues[TernaryNode[TagSet | TagSetDelayed | TagUnset | TernaryTilde, _, _], True] :=
+topLevelChildIssues[TernaryNode[TagSet | TagSetDelayed | TagUnset | TernaryTilde, _, _], KeyValuePattern["WillReportToplevelIssues" -> True]] :=
 	{}
 
 (*
 Side-effecting prefix operators
 *)
-topLevelChildIssues[PrefixNode[Get | PreDecrement | PreIncrement, _, _], True] :=
+topLevelChildIssues[PrefixNode[Get | PreDecrement | PreIncrement, _, _], KeyValuePattern["WillReportToplevelIssues" -> True]] :=
 	{}
 
 (*
 Side-effecting postfix operators
 *)
-topLevelChildIssues[PostfixNode[Decrement | Increment, _, _], True] :=
+topLevelChildIssues[PostfixNode[Decrement | Increment, _, _], KeyValuePattern["WillReportToplevelIssues" -> True]] :=
 	{}
 
 (*
@@ -563,7 +571,7 @@ topLevelChildIssues[
 		_
 	]
 	,
-	True
+	KeyValuePattern["WillReportToplevelIssues" -> True]
 ] :=
 	{}
 
@@ -577,7 +585,7 @@ topLevelChildIssues[
 		_
 	]
 	,
-	True
+	KeyValuePattern["WillReportToplevelIssues" -> True]
 ] :=
 	{}
 
@@ -591,14 +599,14 @@ topLevelChildIssues[
 		_
 	]
 	,
-	True
+	KeyValuePattern["WillReportToplevelIssues" -> True]
 ] :=
 	{}
 
 (*
 just assume parens connote intention
 *)
-topLevelChildIssues[GroupNode[GroupParen, _, _], True] :=
+topLevelChildIssues[GroupNode[GroupParen, _, _], KeyValuePattern["WillReportToplevelIssues" -> True]] :=
 	{}
 
 
@@ -627,7 +635,7 @@ topLevelChildIssues[
 		_
 	]
 	,
-	True
+	KeyValuePattern["WillReportToplevelIssues" -> True]
 ] :=
 	{}
 
@@ -638,7 +646,7 @@ topLevelChildIssues[
 		_
 	]
 	,
-	True
+	KeyValuePattern["WillReportToplevelIssues" -> True]
 ] :=
 	{}
 
@@ -652,7 +660,7 @@ topLevelChildIssues[
 		_
 	]
 	,
-	True
+	KeyValuePattern["WillReportToplevelIssues" -> True]
 ] :=
 	{}
 
@@ -663,7 +671,7 @@ topLevelChildIssues[
 		_
 	]
 	,
-	True
+	KeyValuePattern["WillReportToplevelIssues" -> True]
 ] :=
 	{}
 
@@ -674,7 +682,7 @@ topLevelChildIssues[
 		_
 	]
 	,
-	True
+	KeyValuePattern["WillReportToplevelIssues" -> True]
 ] :=
 	{}
 
@@ -685,7 +693,7 @@ topLevelChildIssues[
 		_
 	]
 	,
-	True
+	KeyValuePattern["WillReportToplevelIssues" -> True]
 ] :=
 	{}
 
@@ -698,7 +706,7 @@ topLevelChildIssues[
 		_
 	]
 	,
-	True
+	KeyValuePattern["WillReportToplevelIssues" -> True]
 ] :=
 	{}
 
@@ -712,7 +720,7 @@ topLevelChildIssues[
 		_
 	]
 	,
-	True
+	KeyValuePattern["WillReportToplevelIssues" -> True]
 ] :=
 	{}
 
@@ -726,7 +734,7 @@ topLevelChildIssues[
 		_
 	]
 	,
-	True
+	KeyValuePattern["WillReportToplevelIssues" -> True]
 ] :=
 	{}
 
@@ -737,7 +745,7 @@ topLevelChildIssues[
 		_
 	]
 	,
-	True
+	KeyValuePattern["WillReportToplevelIssues" -> True]
 ] :=
 	{}
 
@@ -758,7 +766,7 @@ topLevelChildIssues[
 		_
 	]
 	,
-	True
+	KeyValuePattern["WillReportToplevelIssues" -> True]
 ] :=
 	{}
 
@@ -769,14 +777,14 @@ topLevelChildIssues[
 		_
 	]
 	,
-	True
+	KeyValuePattern["WillReportToplevelIssues" -> True]
 ] :=
 	{}
 
 topLevelChildIssues[
 	InfixNode[CompoundExpression, {PatternSequence[LeafNode[Symbol, _, _], _LeafNode].., LeafNode[Symbol, _, _] }, _]
 	,
-	True
+	KeyValuePattern["WillReportToplevelIssues" -> True]
 ] :=
 	{}
 
@@ -842,7 +850,7 @@ topLevelChildIssues[
 		data_
 	]
 	,
-	True
+	KeyValuePattern["WillReportToplevelIssues" -> True]
 ] :=
 	{
 		SyntaxIssue["TopLevel", "Unexpected expression at top-level.", "Warning",
@@ -863,23 +871,32 @@ topLevelChildIssues[
 (*
 No need to issue warning for errors being strange
 *)
-topLevelChildIssues[ErrorNode[_, _, _], True] :=
+topLevelChildIssues[ErrorNode[_, _, _], KeyValuePattern["WillReportToplevelIssues" -> True]] :=
 	{}
 
-topLevelChildIssues[SyntaxErrorNode[_, _, _], True] :=
+topLevelChildIssues[SyntaxErrorNode[_, _, _], KeyValuePattern["WillReportToplevelIssues" -> True]] :=
 	{}
 
-topLevelChildIssues[AbstractSyntaxErrorNode[_, _, _], True] :=
+topLevelChildIssues[AbstractSyntaxErrorNode[_, _, _], KeyValuePattern["WillReportToplevelIssues" -> True]] :=
 	{}
 
-topLevelChildIssues[GroupMissingCloserNode[_, _, _], True] :=
+topLevelChildIssues[GroupMissingCloserNode[_, _, _], KeyValuePattern["WillReportToplevelIssues" -> True]] :=
 	{}
 
 
-topLevelChildIssues[node:_[_, _, _], True] :=
+topLevelChildIssues[node:_[_, _, _], reportIssuesBehavior:KeyValuePattern["WillReportToplevelIssues" -> True]] :=
+Catch[
 Module[{first, firstSrc, issues},
 
 	issues = {};
+
+	(*
+	If a list or whatever is the only expression in a file, or if it is the last expression in a file,
+	then assume it is "Data" or something and do not complain
+	*)
+	If[reportIssuesBehavior["ToplevelChildIndex"] == reportIssuesBehavior["ToplevelChildrenLength"],
+		Throw[issues]
+	];
 
 	(*
 	Just grab the first token to use
@@ -891,26 +908,30 @@ Module[{first, firstSrc, issues},
 		Token`OpenCurly,
 			AppendTo[issues, SyntaxIssue["TopLevelList", "Unexpected list at top-level.", "Warning",
 				<| Source -> firstSrc,
-				ConfidenceLevel -> 0.75 |>]]
+				ConfidenceLevel -> 0.75 |>]
+			]
 		,
 		Token`LessBar,
 			AppendTo[issues, SyntaxIssue["TopLevelAssociation", "Unexpected association at top-level.", "Warning",
 				<| Source -> firstSrc,
-				ConfidenceLevel -> 0.75 |>]]
+				ConfidenceLevel -> 0.75 |>]
+			]
 		,
 		String,
 			AppendTo[issues, SyntaxIssue["TopLevelString", "Unexpected string at top-level.", "Warning",
 				<| Source -> firstSrc,
-				ConfidenceLevel -> 0.75 |>]]
+				ConfidenceLevel -> 0.75 |>]
+			]
 		,
 		_,
 			AppendTo[issues, SyntaxIssue["TopLevel", "Unexpected expression at top-level.", "Warning",
 				<| Source -> firstSrc,
-				ConfidenceLevel -> 0.95 |>]]
+				ConfidenceLevel -> 0.95 |>]
+			]
 	];
 
 	issues
-]
+]]
 
 
 
