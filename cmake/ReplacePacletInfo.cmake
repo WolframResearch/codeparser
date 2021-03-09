@@ -1,9 +1,9 @@
 
 file(READ ${COPIED_PACLETINFO} filedata)
 
-string(TIMESTAMP DATESTRING_COMMENT "(* Paclet built: %a %d %b %Y %H:%M:%S *)\n")
+string(TIMESTAMP DATESTRING "%a %d %b %Y %H:%M:%S")
 
-string(PREPEND filedata ${DATESTRING_COMMENT})
+string(REGEX REPLACE "BuildDate -> \"\"" "BuildDate -> \"${DATESTRING}\"" filedata ${filedata})
 
 if(LOCAL_BUILD)
 

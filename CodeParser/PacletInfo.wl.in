@@ -5,6 +5,7 @@ Paclet[
   WolframVersion -> "11.0+",
   Description -> "Parse Wolfram Language code.",
   Creator ->"Brenton Bostick <brenton@wolfram.com>",
+  BuildDate -> "",
   Extensions -> {
     {"Kernel", Root -> "Kernel", Context -> "CodeParser`"},
     {"Documentation", Language -> All, MainPage -> "Guides/CodeParser"},
