@@ -1081,7 +1081,7 @@ The pattern and the Module variable have the same name
 FIXME: I should probably do more to handle more of these errors: errors of Module variables shadowing patterns
 
 *)
-modifiersSet[{___, "SetDelayed" | "UpsetDelayed" | "RuleDelayed" | "TagSetDelayed" | "UpSetDelayed", "Module" | "Block"}, _] :=
+modifiersSet[{___, "SetDelayed" | "UpsetDelayed" | "RuleDelayed" | "TagSetDelayed" | "UpSetDelayed", "Module" | "Block" | "With" | "DynamicModule" | "Internal`InheritedBlock"}, _] :=
   {"error"}
 
 
