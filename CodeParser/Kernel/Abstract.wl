@@ -1164,9 +1164,9 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		insert "Definitions" metadata for foo
 		
 		*)
-		CallNode[LeafNode[Symbol, "UpSet" | "UpSetDelayed", _], {CallNode[_, _, _], _}, _] /; AnyTrue[x[[2, 1, 2]], (DefinitionSymbols[#] != {})&],
+		CallNode[LeafNode[Symbol, "UpSet" | "UpSetDelayed", _], {CallNode[_, _, _], _}, _] /; DefinitionSymbols[x[[2, 1, 1]]] != {} || AnyTrue[x[[2, 1, 2]], (DefinitionSymbols[#] != {})&],
 			peek = nodeListStack["Peek"];
-			def = CallNode[x[[1]], x[[2]], <| x[[3]], "Definitions" -> Flatten[DefinitionSymbols /@ x[[2, 1, 2]]] |> ];
+			def = CallNode[x[[1]], x[[2]], <| x[[3]], "Definitions" -> DefinitionSymbols[x[[2, 1, 1]]] ~Join~ Flatten[DefinitionSymbols /@ x[[2, 1, 2]]] |> ];
 			peek["Push", def];
 		,
 		(*
@@ -1175,9 +1175,9 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		insert "Definitions" metadata for foo
 		
 		*)
-		CallNode[LeafNode[Symbol, "CompoundExpression", _], { CallNode[LeafNode[Symbol, "UpSet" | "UpSetDelayed", _], {CallNode[_, _, _], _}, _] /; AnyTrue[x[[2, 1, 2, 1, 2]], (DefinitionSymbols[#] != {})&], LeafNode[Symbol, "Null", _] }, _],
+		CallNode[LeafNode[Symbol, "CompoundExpression", _], { CallNode[LeafNode[Symbol, "UpSet" | "UpSetDelayed", _], {CallNode[_, _, _], _}, _] /; DefinitionSymbols[x[[2, 1, 2, 1, 1]]] != {} || AnyTrue[x[[2, 1, 2, 1, 2]], (DefinitionSymbols[#] != {})&], LeafNode[Symbol, "Null", _] }, _],
 			peek = nodeListStack["Peek"];
-			def = CallNode[x[[1]], { CallNode[x[[2, 1, 1]], x[[2, 1, 2]], <| x[[2, 1, 3]], "Definitions" -> Flatten[DefinitionSymbols /@ x[[2, 1, 2, 1, 2]]] |> ], x[[2, 2]] }, x[[3]]];
+			def = CallNode[x[[1]], { CallNode[x[[2, 1, 1]], x[[2, 1, 2]], <| x[[2, 1, 3]], "Definitions" -> DefinitionSymbols[x[[2, 1, 2, 1, 1]]] ~Join~ Flatten[DefinitionSymbols /@ x[[2, 1, 2, 1, 2]]] |> ], x[[2, 2]] }, x[[3]]];
 			peek["Push", def];
 		,
 		(*

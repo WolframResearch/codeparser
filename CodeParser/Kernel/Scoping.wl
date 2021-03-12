@@ -268,7 +268,7 @@ Module[{newBody, paramSymbolsAndRHSOccurring, paramSymbols, rhsOccurring, paramN
   ]
 ]
 
-walk[CallNode[LeafNode[Symbol, tag : "SetDelayed" | "RuleDelayed", _], {lhs_, rhs_}, _]] :=
+walk[CallNode[LeafNode[Symbol, tag : "SetDelayed" | "RuleDelayed" | "UpSetDelayed", _], {lhs_, rhs_}, _]] :=
 Module[{patterns, lhsOccurring, patternSymbols, patternAssoc, patternNames, newScope, rhsOccurring, conditionOccurring},
 
   Internal`InheritedBlock[{$LexicalScope},
@@ -319,7 +319,7 @@ Module[{patterns, lhsOccurring, patternSymbols, patternAssoc, patternNames, newS
   ]
 ]
 
-freePatterns[CallNode[LeafNode[Symbol, "SetDelayed" | "RuleDelayed", _], {lhs_, rhs_}, _]] := 
+freePatterns[CallNode[LeafNode[Symbol, "SetDelayed" | "RuleDelayed" | "UpSetDelayed", _], {lhs_, rhs_}, _]] := 
   freePatterns[rhs]
 
 
@@ -377,61 +377,6 @@ Module[{tagOccurring, patterns, lhsOccurring, patternSymbols, patternAssoc, patt
 ]
 
 freePatterns[CallNode[LeafNode[Symbol, "TagSetDelayed", _], {LeafNode[Symbol, _, _], lhs_, rhs_}, _]] := 
-  freePatterns[rhs]
-
-
-walk[CallNode[LeafNode[Symbol, "UpSetDelayed", _], {CallNode[_, children_, _], rhs_}, _]] :=
-Module[{patterns, childrenOccurring, patternSymbols, patternAssoc, patternNames, newScope, rhsOccurring, conditionOccurring},
-
-  Internal`InheritedBlock[{$LexicalScope},
-
-    patterns = Flatten[freePatterns /@ children];
-
-    Internal`InheritedBlock[{$ExcludePatternNames},
-
-      $ExcludePatternNames = $ExcludePatternNames ~Join~ (#[[2, 1, 2]]& /@ patterns);
-
-      childrenOccurring = Flatten[walk /@ children];
-
-      conditionOccurring = Flatten[walkCondition /@ children];
-    ];
-
-    patternSymbols = Replace[patterns, {
-      pat:CallNode[LeafNode[Symbol, "Pattern", _], {sym:LeafNode[Symbol, _, _], _}, _] :> sym
-    }, 1];
-
-    patternAssoc = GroupBy[patternSymbols, #[[2]]&];
-
-    patternNames = Keys[patternAssoc];
-
-    newScope = <| (# -> {"UpSetDelayed"})& /@ patternNames |>;
-
-    $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
-
-    rhsOccurring = walk[rhs];
-
-    KeyValueMap[
-      Function[{name, syms},
-        Which[
-          Length[syms] > 1,
-            (*
-            non-linear pattern, so mark all as used
-            *)
-            Scan[add[#, True]&, syms]
-          ,
-          !MemberQ[$ExcludePatternNames, name],
-            add[syms[[1]], rhsOccurring ~Join~ conditionOccurring]
-        ]
-      ]
-      ,
-      patternAssoc
-    ];
-
-    childrenOccurring ~Join~ Complement[rhsOccurring, patternNames]
-  ]
-]
-
-freePatterns[CallNode[LeafNode[Symbol, "UpSetDelayed", _], {CallNode[_, _, _], rhs_}, _]] := 
   freePatterns[rhs]
 
 
@@ -1081,7 +1026,7 @@ The pattern and the Module variable have the same name
 FIXME: I should probably do more to handle more of these errors: errors of Module variables shadowing patterns
 
 *)
-modifiersSet[{___, "SetDelayed" | "UpsetDelayed" | "RuleDelayed" | "TagSetDelayed" | "UpSetDelayed", "Module" | "Block" | "With" | "DynamicModule" | "Internal`InheritedBlock"}, _] :=
+modifiersSet[{___, "SetDelayed" | "RuleDelayed" | "TagSetDelayed" | "UpSetDelayed", "Module" | "Block" | "With" | "DynamicModule" | "Internal`InheritedBlock"}, _] :=
   {"error"}
 
 
