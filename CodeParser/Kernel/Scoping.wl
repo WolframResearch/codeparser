@@ -564,11 +564,11 @@ Module[{newBody, paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, para
 ]
 
 (*
-Sum | ParallelTable base case
+Sum | Product | ParallelTable base case
 
-Sum and ParallelTable can have options
+Sum, Product, and ParallelTable can have options
 *)
-walk[CallNode[head:LeafNode[Symbol, tag : "Sum" | "ParallelTable", _], {body_, iter:iterPat, optSeq:optPat...}, _]] :=
+walk[CallNode[head:LeafNode[Symbol, tag : "Sum" | "Product" | "ParallelTable", _], {body_, iter:iterPat, optSeq:optPat...}, _]] :=
 Module[{paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, paramNames, newScope, bodyOccurring, optOccurring},
 
   Internal`InheritedBlock[{$LexicalScope},
@@ -601,7 +601,7 @@ Module[{paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, paramNames, n
   ]
 ]
 
-walk[CallNode[head:LeafNode[Symbol, tag : "Sum" | "ParallelTable", _], {body_, iter:iterPat, iterRestSeq:PatternSequence[iterPat, iterPat...], optSeq:optPat...}, data_]] :=
+walk[CallNode[head:LeafNode[Symbol, tag : "Sum" | "Product" | "ParallelTable", _], {body_, iter:iterPat, iterRestSeq:PatternSequence[iterPat, iterPat...], optSeq:optPat...}, data_]] :=
 Module[{newBody, paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, paramNames, newScope, bodyOccurring, optOccurring},
 
   newBody = CallNode[LeafNode[Symbol, head[[2]], <||>], {body} ~Join~ {iterRestSeq}, data];
