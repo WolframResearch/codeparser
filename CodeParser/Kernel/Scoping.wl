@@ -639,7 +639,7 @@ Module[{newBody, paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, para
 
 rangePat = CallNode[LeafNode[Symbol, "List", _], {LeafNode[Symbol, _, _], _, _}, _]
 
-walk[CallNode[head:LeafNode[Symbol, "Play", _], {body_, range:rangePat}, _]] :=
+walk[CallNode[head:LeafNode[Symbol, tag : "Play" | "Plot", _], {body_, range:rangePat}, _]] :=
 Module[{paramSymbolsAndRangeOccurring, paramSymbols, rangeOccurring, paramNames, newScope, bodyOccurring},
 
   Internal`InheritedBlock[{$LexicalScope},
@@ -654,7 +654,7 @@ Module[{paramSymbolsAndRangeOccurring, paramSymbols, rangeOccurring, paramNames,
 
     paramNames = #[[2]]& /@ paramSymbols;
 
-    newScope = <| (# -> {"Play"})& /@ paramNames |>;
+    newScope = <| (# -> {tag})& /@ paramNames |>;
 
     $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
 
