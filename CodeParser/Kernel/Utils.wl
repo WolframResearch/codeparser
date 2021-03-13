@@ -564,7 +564,7 @@ So cannot use a regex.
 
 There may also be simple continuations to be removed here.
 
-Since this is only called on strings and comments, then any simple continuations must be external
+Since this is only called on strings, then any simple continuations must be external
 
 *)
 
@@ -642,14 +642,6 @@ removeComplexLineContinuations[LeafNode[String, str_, data_]] :=
 
     LeafNode[String, StringJoin[StringTake[str, takeSpec]], data]
   ]
-
-(*
-for comments, just leave alone
-
-it's not a "real" continuation; it could be the result of ASCII art or something
-*)
-removeComplexLineContinuations[n:LeafNode[Token`Comment, _, _]] :=
-  n
 
 
 (*

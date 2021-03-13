@@ -258,10 +258,16 @@ linearize0[TernaryNode[_, fs_List, _]] :=
 linearize0[QuaternaryNode[_, fs_List, _]] :=
   linearize0 /@ fs
 
+linearize0[ClauseNode[_, fs_List, _]] :=
+  linearize0 /@ fs
+
 linearize0[PrefixNode[_, fs_List, _]] :=
   linearize0 /@ fs
 
 linearize0[PostfixNode[_, fs_List, _]] :=
+  linearize0 /@ fs
+
+linearize0[PrefixBinaryNode[_, fs_List, _]] :=
   linearize0 /@ fs
 
 linearize0[CompoundNode[_, fs_List, _]] :=
@@ -291,6 +297,14 @@ linearize0[CallMissingCloserNode[head_List, fs_List, _]] :=
 linearize0[UnterminatedCallNode[head_List, fs_List, _]] :=
   {linearize0 /@ head, linearize0 /@ fs}
 
+
+(*
+Distribute StartOfLine and EndOfLine data over the fragments of a comment
+*)
+linearize0[LeafNode[Token`Comment, children_List, data_]] :=
+  linearize0 /@ (insertData[#, data, {StartOfLine, EndOfLine}]& /@ children)
+
+
 linearize0[LeafNode[tag_, fs_List, data_]] :=
   linearize0 /@ fs
 
@@ -308,6 +322,14 @@ linearize0[n:FragmentNode[_, _String, _]] :=
 
 linearize0[args___] :=
 	Failure["InternalUnhandled", <|"Function"->linearize0, "Arguments"->{args}|>]
+
+
+
+insertData[FragmentNode[tag_, str_, data1_], data_, keys_] :=
+	FragmentNode[tag, str, <|data1, KeyTake[data, keys]|>]
+
+insertData[args___] :=
+	Failure["InternalUnhandled", <|"Function"->insertData, "Arguments"->{args}|>]
 
 
 

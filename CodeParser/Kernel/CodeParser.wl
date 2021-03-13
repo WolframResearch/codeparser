@@ -120,6 +120,7 @@ InfixInequality
 Comma
 
 MemoizedSetDelayed
+MemoizedUpSetDelayed
 MemoizedTagSetDelayed
 
 (* group symbols *)
@@ -236,6 +237,7 @@ good to have them in a central place
 *)
 QuaternaryNode
 FragmentNode
+ClauseNode
 
 
 
