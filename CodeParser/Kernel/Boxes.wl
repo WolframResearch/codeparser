@@ -17,6 +17,51 @@ Needs["CodeParser`RowBox`"]
 Needs["CodeParser`Utils`"]
 
 
+CodeConcreteParse[nb_NotebookObject] :=
+  CodeConcreteParse[NotebookGet[nb]]
+
+
+CodeConcreteParse[c_CellObject] :=
+  CodeConcreteParse[NotebookRead[c]]
+
+
+CodeConcreteParse[Notebook[cells_, ___]] :=
+Module[{parsed},
+  parsed = MapIndexed[replaceContainerNode[CodeConcreteParse[#1], #2]&, cells];
+  ContainerNode[Notebook, parsed, <||>]
+]
+
+replaceContainerNode[ContainerNode[Cell, children_, data_], pos_] :=
+  CellNode[Cell, children, <|data, Source -> pos|>]
+
+replaceContainerNode[other_, pos_] := other
+
+
+
+CodeConcreteParse[Cell[BoxData[box_], _, ___]] :=
+Catch[
+Module[{parsed},
+  parsed = CodeConcreteParseBox[box];
+  
+  If[FailureQ[parsed],
+    Throw[parsed]
+  ];
+
+  (*
+  just do simple thing for now and reset Box -> Cell
+  FIXME: maybe in the future need to have a wrapper BoxDataNode or something
+  *)
+  parsed[[1]] = Cell;
+  parsed
+]]
+
+CodeConcreteParse[c:Cell[___]] :=
+  Failure["CannotParseCell", <| "Cell" -> c |>]
+
+
+CodeConcreteParse[b_RowBox] :=
+  CodeConcreteParseBox[b]
+
 
 (*
 

@@ -4,6 +4,10 @@ CodeParse
 
 CodeConcreteParse
 
+(*
+CodeConcreteParseBox exists because it is ambiguous whether or not the string "123" is supposed to
+be interpreted as an integer or as a box
+*)
 CodeConcreteParseBox
 
 CodeConcreteParseLeaf
@@ -235,6 +239,7 @@ PackageNode
 ContextNode
 NewContextPathNode
 
+CellNode
 
 (*
 Analysis
