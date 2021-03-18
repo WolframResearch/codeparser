@@ -756,3 +756,139 @@ Test[
 	TestID->"Boxes-20201023-S6K5A5"
 ]
 
+
+
+
+
+(*
+bug 406933
+
+Used to hang
+*)
+Test[
+	TimeConstrained[
+		CodeConcreteParseBox[
+	 		RowBox[{
+	 			RowBox[{"(*",
+	 				RowBox[{":", "History", ":", " ",
+	 					RowBox[{"PolynomialPowerMod", " ", "code", " ", "is", " ", "based", " ",
+	 						"on", " ", "the", " ", "standard", " ", "package", "\n", "   ",
+	 						"Algebra`PolynomialPowerMod`", " ", "originally", " ", "written", " ",
+	 						"in", " ", "1988", " ", "by", " ", "Ilan", " ",
+	 						RowBox[{"Vardi", "."}]
+	 					}]
+	 				}], "\n", "*)"
+	 			}], "\n", "\n"
+	 		}]]
+		,
+		3.0
+	]
+	,
+	ContainerNode[Box, {
+		GroupNode[Comment, {
+			LeafNode[Token`Boxes`OpenParenStar, "(*", <|Source -> {1, 1, 1, 1}|>],
+			BoxNode[RowBox, {{
+				LeafNode[String, ":", <|Source -> {1, 1, 1, 2, 1, 1}|>],
+				LeafNode[String, "History", <|Source -> {1, 1, 1, 2, 1, 2}|>],
+				LeafNode[String, ":", <|Source -> {1, 1, 1, 2, 1, 3}|>],
+				LeafNode[String, " ", <|Source -> {1, 1, 1, 2, 1, 4}|>],
+				BoxNode[RowBox, {{
+					LeafNode[String, "PolynomialPowerMod", <|Source -> {1, 1, 1, 2, 1, 5, 1, 1}|>],
+					LeafNode[String, " ", <|Source -> {1, 1, 1, 2, 1, 5, 1, 2}|>],
+					LeafNode[String, "code", <|Source -> {1, 1, 1, 2, 1, 5, 1, 3}|>],
+					LeafNode[String, " ", <|Source -> {1, 1, 1, 2, 1, 5, 1, 4}|>],
+					LeafNode[String, "is", <|Source -> {1, 1, 1, 2, 1, 5, 1, 5}|>],
+					LeafNode[String, " ", <|Source -> {1, 1, 1, 2, 1, 5, 1, 6}|>],
+					LeafNode[String, "based", <|Source -> {1, 1, 1, 2, 1, 5, 1, 7}|>],
+					LeafNode[String, " ", <|Source -> {1, 1, 1, 2, 1, 5, 1, 8}|>],
+					LeafNode[String, "on", <|Source -> {1, 1, 1, 2, 1, 5, 1, 9}|>],
+					LeafNode[String, " ", <|Source -> {1, 1, 1, 2, 1, 5, 1, 10}|>],
+					LeafNode[String, "the", <|Source -> {1, 1, 1, 2, 1, 5, 1, 11}|>],
+					LeafNode[String, " ", <|Source -> {1, 1, 1, 2, 1, 5, 1, 12}|>],
+					LeafNode[String, "standard", <|Source -> {1, 1, 1, 2, 1, 5, 1, 13}|>],
+					LeafNode[String, " ", <|Source -> {1, 1, 1, 2, 1, 5, 1, 14}|>],
+					LeafNode[String, "package", <|Source -> {1, 1, 1, 2, 1, 5, 1, 15}|>],
+					LeafNode[String, "\n", <|Source -> {1, 1, 1, 2, 1, 5, 1, 16}|>],
+					LeafNode[String, "   ", <|Source -> {1, 1, 1, 2, 1, 5, 1, 17}|>],
+					LeafNode[String, "Algebra`PolynomialPowerMod`", <|Source -> {1, 1, 1, 2, 1, 5, 1, 18}|>],
+					LeafNode[String, " ", <|Source -> {1, 1, 1, 2, 1, 5, 1, 19}|>],
+					LeafNode[String, "originally", <|Source -> {1, 1, 1, 2, 1, 5, 1, 20}|>],
+					LeafNode[String, " ", <|Source -> {1, 1, 1, 2, 1, 5, 1, 21}|>],
+					LeafNode[String, "written", <|Source -> {1, 1, 1, 2, 1, 5, 1, 22}|>],
+					LeafNode[String, " ", <|Source -> {1, 1, 1, 2, 1, 5, 1, 23}|>],
+					LeafNode[String, "in", <|Source -> {1, 1, 1, 2, 1, 5, 1, 24}|>],
+					LeafNode[String, " ", <|Source -> {1, 1, 1, 2, 1, 5, 1, 25}|>],
+					LeafNode[String, "1988", <|Source -> {1, 1, 1, 2, 1, 5, 1, 26}|>],
+					LeafNode[String, " ", <|Source -> {1, 1, 1, 2, 1, 5, 1, 27}|>],
+					LeafNode[String, "by", <|Source -> {1, 1, 1, 2, 1, 5, 1, 28}|>],
+					LeafNode[String, " ", <|Source -> {1, 1, 1, 2, 1, 5, 1, 29}|>],
+					LeafNode[String, "Ilan", <|Source -> {1, 1, 1, 2, 1, 5, 1, 30}|>],
+					LeafNode[String, " ", <|Source -> {1, 1, 1, 2, 1, 5, 1, 31}|>],
+					BoxNode[RowBox, {{
+						LeafNode[String, "Vardi", <|Source -> {1, 1, 1, 2, 1, 5, 1, 32, 1, 1}|>],
+						LeafNode[String, ".", <|Source -> {1, 1, 1, 2, 1, 5, 1, 32, 1, 2}|>]}}, <|Source -> {1, 1, 1, 2, 1, 5, 1, 32}|>]
+				}}, <|Source -> {1, 1, 1, 2, 1, 5}|>]}}, <|Source -> {1, 1, 1, 2}|>],
+				LeafNode[String, "\n", <|Source -> {1, 1, 1, 3}|>],
+				LeafNode[Token`Boxes`StarCloseParen, "*)", <|Source -> {1, 1, 1, 4}|>]
+			}, <|Source -> {1, 1}|>],
+		LeafNode[Token`Newline, "\n", <|Source -> {1, 2}|>],
+		LeafNode[Token`Newline, "\n", <|Source -> {1, 3}|>]}, <||>
+	]
+	,
+	TestID->"Boxes-20210318-D7H2V0"
+]
+
+Test[
+	TimeConstrained[
+		CodeConcreteParseBox[RowBox[{"(*", RowBox[{"a", ":", RowBox[{"b", "\n", "c"}], ":"}], "*)"}]]
+		,
+		3.0
+	]
+	,
+	ContainerNode[Box, {
+		GroupNode[Comment, {
+			LeafNode[Token`Boxes`OpenParenStar, "(*", <|Source -> {1, 1}|>],
+			BoxNode[RowBox, {{
+				LeafNode[String, "a", <|Source -> {1, 2, 1, 1}|>],
+				LeafNode[String, ":", <|Source -> {1, 2, 1, 2}|>],
+				BoxNode[RowBox, {{
+						LeafNode[String, "b", <|Source -> {1, 2, 1, 3, 1, 1}|>],
+						LeafNode[String, "\n", <|Source -> {1, 2, 1, 3, 1, 2}|>],
+						LeafNode[String, "c", <|Source -> {1, 2, 1, 3, 1, 3}|>]
+					}}, <|Source -> {1, 2, 1, 3}|>],
+				LeafNode[String, ":", <|Source -> {1, 2, 1, 4}|>]}}, <|Source -> {1, 2}|>],
+			LeafNode[Token`Boxes`StarCloseParen, "*)", <|Source -> {1, 3}|>]}, <|Source -> {}|>]}, <||>
+	]
+	,
+	TestID->"Boxes-20210318-J9V3J3"
+]
+
+
+
+
+
+(*
+Used to give:
+
+Failure["InternalUnhandled", <|"Function" -> "parseBox", "Arguments" -> HoldForm[{StringJoin["\\[", CodeParser`RowBox`Private`children[[2]]], {1, 2}}]|>]
+*)
+Test[
+	CodeConcreteParseBox[RowBox[{"xx", RowBox[{RowBox[{"\\[", " ", "EntityEnd", " ", "]"}], "."}]}]]
+	,
+	ContainerNode[Box, {BoxNode[
+   RowBox, {{LeafNode[Symbol, "xx", <|Source -> {1, 1}|>], 
+     ErrorNode[Token`Error`UnhandledCharacter, 
+      "\\[", <|Source -> {1, 2}, 
+       SyntaxIssues -> {SyntaxIssue["UnrecognizedCharacter", 
+          "Unrecognized character: ``\\[``.", 
+          "Error", <|Source -> {{1, 1}, {1, 3}}, 
+           ConfidenceLevel -> 1., 
+           CodeActions -> {CodeAction["Replace with ``\\\\[``", 
+              ReplaceText, <|Source -> {{1, 1}, {1, 3}}, 
+               "ReplacementText" -> "\\\\["|>]}|>]}|>]}}, <|
+    Source -> {}|>]}, <||>]
+	,
+	TestID->"Boxes-20210319-W8T8G4"
+]
+
+

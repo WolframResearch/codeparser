@@ -637,6 +637,12 @@ insertImplicitTimesAfter[node_] :=
       *)
       {node}
     ,
+    toBeSpliced[_],
+      (*
+      Do not insert implicit Times after toBeSpliced[_]
+      *)
+      {node}
+    ,
     _,
       {node, LeafNode[Token`Fake`ImplicitTimes, \"\", <|Source->After[node[[3, Key[Source]]]]|>]}
   ]
@@ -673,8 +679,8 @@ prbDispatch[{_, LeafNode[Token`Star, _, _], _, ___}, handledChildren_, ignored_,
 (*
 Something like \\[Alpha
 *)
-prbDispatch[{ErrorNode[Token`Error`UnhandledCharacter, \"\\\\[\", _], _}, handledChildren_, ignored_, pos_] :=
-    parseBox[\"\\\\[\" <> children[[2]], pos]
+prbDispatch[{ErrorNode[Token`Error`UnhandledCharacter, \"\\\\[\", _], rest_}, handledChildren_, ignored_, pos_] :=
+    parseBox[\"\\\\[\" <> rest[[2]], pos]
 
 (*
 if there is an error, then just return the last non-trivia node
@@ -735,7 +741,7 @@ prbDispatch[_, handledChildren_, ignored_, posIgnored_] :=
         LeafNode[Token`Fake`ImplicitTimes, _, _], ws:LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _]..., s:LeafNode[Token`Star, _, _]
       } :> Sequence[ws, s]];
 
-    calculatedPos = longestPrefix[childrenWithImplicitTimes[[1, 3, Key[Source]]], childrenWithImplicitTimes[[-1, 3, Key[Source]]]];
+    calculatedPos = longestPrefix[take[childrenWithImplicitTimes[[1]]], take[childrenWithImplicitTimes[[-1]]]];
 
     (*
     strip off the trailing 1
@@ -744,6 +750,14 @@ prbDispatch[_, handledChildren_, ignored_, posIgnored_] :=
 
     InfixNode[Times, childrenWithImplicitTimes, <|Source->calculatedPos|>]
   ]
+
+
+take[_[_, _, KeyValuePattern[Source -> src_]]] :=
+  src
+
+take[toBeSpliced[children_]] :=
+  longestPrefix[take[children[[1]]], take[children[[-1]]]]
+
 
 longestPrefix[l1_, l2_] /; Length[l1] > Length[l2] := 
   longestPrefix[l2, l1]
