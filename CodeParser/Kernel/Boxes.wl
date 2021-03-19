@@ -32,7 +32,7 @@ Module[{parsed},
 ]
 
 replaceContainerNode[ContainerNode[Cell, children_, data_], pos_] :=
-  CellNode[Cell, children, <|data, Source -> pos|>]
+  CellNode[Cell, children, <|data, CellIndex -> pos|>]
 
 replaceContainerNode[other_, pos_] := other
 

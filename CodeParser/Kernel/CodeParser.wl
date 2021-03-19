@@ -158,7 +158,14 @@ Used in parsing boxes
 Comment
 Metadata
 
+
+(*
+Position-related symbols
+*)
 Intra
+(*After*)
+CellIndex
+
 
 (*
 Used in parsing boxes

@@ -2610,6 +2610,8 @@ abstract[BoxNode[RowBox, {a_}, data_]] := BoxNode[RowBox, {abstract /@ a}, data]
 abstract[BoxNode[b_, children_, data_]] := BoxNode[b, abstract /@ children, data]
 
 
+abstract[CellNode[c_, children_, data_]] := CellNode[c, abstract /@ children, data]
+
 
 
 
