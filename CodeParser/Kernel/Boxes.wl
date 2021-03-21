@@ -1983,7 +1983,7 @@ Module[{opBoxes, nodeBox},
   If[FailureQ[nodeBox],
     Throw[nodeBox]
   ];
-  RowBox[opBoxes ~Join~ nodeBox[[1]] ]
+  RowBox[opBoxes ~Join~ nodeBox[[1]]]
 ]]
 
 (*
@@ -2001,7 +2001,7 @@ Module[{opBoxes, nodeBox},
   If[FailureQ[nodeBox],
     Throw[nodeBox]
   ];
-  RowBox[ {opBoxes} ~Join~ nodeBox[[1]] ]
+  RowBox[ {opBoxes} ~Join~ nodeBox[[1]]]
 ]]
 
 toStandardFormBoxes[GroupNode[op_, nodes_, data_]] :=

@@ -142,7 +142,7 @@ ApplyCodeAction[CodeAction[_, DeleteTriviaNode, actionData_], cst_, srcPosMap_] 
       but this is super slow
       *)
 
-     Delete[cst, srcPosMap[[ Key[ Lookup[actionData, Source] ], 1, 1;;-3]] ]
+     Delete[cst, srcPosMap[[Key[Lookup[actionData, Source]], 1, 1;;-3]]]
 )
 
 ApplyCodeAction[action:CodeAction[label_, DeleteText, actionData_], cstIn_, srcPosMapIn_:Null] :=
@@ -225,7 +225,7 @@ Module[{src, cst, func, trivia, srcPosMap},
   func = SourceMemberQ[src];
     trivia = Cases[cst, LeafNode[Whitespace | Token`Newline | Token`Comment, _, KeyValuePattern[Source -> src_?func]], Infinity];
 
-    Scan[(cst = ApplyCodeAction[CodeAction["delete", DeleteNode, <| Source -> #[[3, Key[Source] ]]|>], cst];)&, trivia];
+    Scan[(cst = ApplyCodeAction[CodeAction["delete", DeleteNode, <| Source -> #[[3, Key[Source]]]|>], cst];)&, trivia];
     cst
 ]]
 
@@ -365,7 +365,7 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
      node = Extract[cst, {originalNodePos}][[1]];
      leafText = node[[2]];
      
-     leafText = StringInsert[leafText, insertionText, srcIntra[[1]] ];
+     leafText = StringInsert[leafText, insertionText, srcIntra[[1]]];
      node[[2]] = leafText;
 
      If[originalNodePos == {},

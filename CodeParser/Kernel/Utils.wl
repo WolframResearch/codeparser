@@ -173,19 +173,23 @@ input: src1:{{line,col}, {line,col}}   src2:{{line,col}, {line,col}}
 
 *)
 
-contiguousQ[srcs_List] := And @@ contiguousQ @@@ Partition[srcs, 2, 1]
+contiguousQ[srcs_List] :=
+  And @@ contiguousQ @@@ Partition[srcs, 2, 1]
 
 (*
 LineCol-style
 *)
-contiguousQ[{{_, _}, {line_, col1_}}, {{line_, col2_}, {_, _}}] := col1 == col2
+contiguousQ[{{_, _}, {line_, col1_}}, {{line_, col2_}, {_, _}}] :=
+  col1 == col2
 
 (*
 Position-style
 *)
-contiguousQ[{most___Integer, idx1_Integer}, {most___Integer, idx2_Integer}] := idx1 + 1 == idx2
+contiguousQ[{most___Integer, idx1_Integer}, {most___Integer, idx2_Integer}] :=
+  idx1 + 1 == idx2
 
-contiguousQ[_, _] := False
+contiguousQ[_, _] :=
+  False
 
 
 
@@ -202,6 +206,7 @@ expandSrc[{{line1_, col1_}, {line2_, col2_}}] :=
 
 intervalTest[{_}] :=
   False
+  
 intervalTest[{int1_, int2_}] := 
    IntervalIntersection[Interval[int1], Interval[int2]] =!= Interval[]
 
@@ -574,7 +579,7 @@ removeComplexLineContinuations[LeafNode[String, str_, data_]] :=
     continuationPoss = Map[
       Function[{newlinePos},
         pos = newlinePos[[1]];
-        onePastLastPos = NestWhile[# - 1 &, pos - 1, # >= 1 && StringTake[str, {#}] == "\\" &];
+        onePastLastPos = NestWhile[(# - 1)&, pos - 1, (# >= 1 && StringTake[str, {#}] == "\\")&];
         backslashCount = pos - onePastLastPos - 1;
         If[OddQ[backslashCount],
           {pos - 1, pos}

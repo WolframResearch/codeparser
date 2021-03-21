@@ -65,7 +65,7 @@ Module[{data, rhs, issues, synthesizedSource},
 
 	issues = Lookup[data, AbstractSyntaxIssues, {}];
 
-	synthesizedSource = {symData[[Key[Source], 1 ]], atData[[Key[Source], 2 ]]};
+	synthesizedSource = {symData[[Key[Source], 1]], atData[[Key[Source], 2]]};
 
 	AppendTo[issues, SyntaxIssue["InfixBinaryAtQuirk", "Unexpected parse.", "Remark", <|Source->synthesizedSource, ConfidenceLevel -> 1.0|>]];
 
