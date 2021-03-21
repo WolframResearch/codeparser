@@ -183,7 +183,7 @@ contiguousQ[{{_, _}, {line_, col1_}}, {{line_, col2_}, {_, _}}] := col1 == col2
 (*
 Position-style
 *)
-contiguousQ[{_Integer..., idx1_Integer}, {_Integer..., idx2_Integer}] := idx1 + 1 == idx2
+contiguousQ[{most___Integer, idx1_Integer}, {most___Integer, idx2_Integer}] := idx1 + 1 == idx2
 
 contiguousQ[_, _] := False
 
