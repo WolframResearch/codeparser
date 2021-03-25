@@ -604,6 +604,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      
      (* occurrences of \[UndirectedEdge] 
      which is confused before 11.2 *)
+     (*
      If[$VersionNumber < 11.2,
       If[MemberQ[{
           prefix <> 
@@ -620,6 +621,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         Throw[f, "Handled"]
         ];
       ];
+      *)
      
      $LastFailedFileIn = fileIn;
      $LastFailedFile = file;
@@ -923,9 +925,15 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      (*
      the files here have weird uses of Begin[] etc and it is hard to use regex to remove the trailing ;
      *)
+     
      If[MemberQ[{
         prefix <> "SystemFiles/Components/RobotTools/Kernel/Menu.m",
         prefix <> "robottools/RobotTools/Kernel/Menu.m",
+
+        prefix <> "CompileUtilities/CompileUtilities/RuntimeChecks/RuntimeChecks.m",
+        prefix <> "SystemFiles/Components/CompileUtilities/RuntimeChecks/RuntimeChecks.m",
+
+        (* 
         
         prefix <> "SystemFiles/Components/Yelp/Kernel/YelpFunctions.m",
         prefix <> "serviceconnections/Yelp/Kernel/YelpFunctions.m",
@@ -952,15 +960,12 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "SystemFiles/Links/JLink/Examples/Part1/Palette.nb",
         prefix <> "SystemFiles/Links/JLink/Examples/Part1/Spirograph.nb",
         prefix <> "SystemFiles/Links/NETLink/Examples/Part1/Windows and Dialogs/AsteroidsGame/AsteroidsGame.nb",
-        
-        prefix <> "CompileUtilities/CompileUtilities/RuntimeChecks/RuntimeChecks.m",
-        prefix <> "SystemFiles/Components/CompileUtilities/RuntimeChecks/RuntimeChecks.m",
 
         prefix <> "TestTools/Legacy/Statistics/NIST/NISTTestTools.m",
         (*
         System`Private`NewContextPath[{"System`"(*, "XXXXXXX"*)}];
         *)
-        prefix <> "Kernel/StartUp/Audio/Internals/Internals.m",
+        prefix <> "Kernel/StartUp/Audio/Internals/Internals.m", *)
         Nothing
         }, fileIn],
       f = Failure["CannotRegexTooWeird", <|"File" -> File[fileIn]|>];
@@ -972,24 +977,9 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       ];
       Throw[f, "Handled"]
       ];
+      
 
       If[MemberQ[{
-        (*
-        broken BeginPackage[] / EndPackage[] or something
-        *)
-        prefix <> "codeanalysis/sources/MSource/CodeAnalysis.m",
-        prefix <> "applications/ControlSystems/auxTest.m",
-        prefix <> "applications/PolynomialControlSystems/PCSauxTest.m",
-        prefix <> "control/auxTest2.m",
-        prefix <> "control/UpdatedCSP/auxTest.m",
-        prefix <> "TestTools/FrontEnd/GrammarTestGenerator.m",
-        prefix <> "SystemFiles/Components/GoogleTextToSpeech/Kernel/GoogleSpeech.m",
-        prefix <> "SystemFiles/Components/IBMTextToSpeech/Kernel/IBMWatsonSTT.m",
-        prefix <> "SystemFiles/Components/IBMTextToSpeech/Kernel/IBMWatsonTTS.m",
-        prefix <> "SystemFiles/Components/MicrosoftTextToSpeech/Kernel/MicrosoftSpeech.m",
-
-        prefix <> "SystemFiles/Links/TravelDirectionsClient/Kernel/TravelDirectionsClientRequests.m",
-        prefix <> "traveldirectionsclient/TravelDirectionsClient/Kernel/TravelDirectionsClientRequests.m",
 
         (*
         System`Private`NewContextPath[LocalObjects`Nodump`defaultContextPath];
@@ -998,6 +988,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "kernel/StartUp/LocalObjects/LocalCache.m",
         prefix <> "kernel/StartUp/LocalObjects/LocalObject.m",
         prefix <> "kernel/StartUp/LocalObjects/LocalSymbol.m",
+
         prefix <> "kernel/StartUp/Persistence/BuildUtilities.m",
         prefix <> "kernel/StartUp/Persistence/Common.m",
         prefix <> "kernel/StartUp/Persistence/InitializationGlobals.m",
@@ -1013,9 +1004,18 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "SystemFiles/Links/FFmpegTools/Kernel/Common.m",
 
         (*
+        BeginPackage[ "FunctionResource`DefinitionNotebook`",
+              { FunctionResource`DefinitionNotebook`Private`$sourceContext }
+        ]
+        *)
+        prefix <>  "SystemFiles/Components/FunctionResource/Kernel/DefinitionNotebook.m",
+
+
+        (*
         Unbalanced directives
         *)
         prefix <> "cudafinancialderivative/CUDAFinancialDerivative/CUDAFinancialDerivative.m",
+
         prefix <> "serviceconnections/ATTSpeech/Kernel/ATTSpeech.m",
         prefix <> "serviceconnections/Automile/Kernel/Automile.m",
         prefix <> "serviceconnections/BingSearch/build/ServiceConnection_BingSearch/Kernel/BingSearch.m",
@@ -1040,6 +1040,17 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "serviceconnections/USAToday/Kernel/USAToday.m",
         prefix <> "serviceconnections/Yandex/Kernel/Yandex.m",
 
+        prefix <> "SystemFiles/Links/DICOMTools/LibraryResources/LibraryLinkUtilities.wl",
+        prefix <> "SystemFiles/Links/FFmpegTools/LibraryResources/LibraryLinkUtilities.wl",
+        prefix <> "SystemFiles/Links/ImageFileTools/LibraryResources/LibraryLinkUtilities.wl",
+        prefix <> "SystemFiles/Links/ITKLink/LibraryResources/LibraryLinkUtilities.wl",
+        prefix <> "SystemFiles/Links/MATTools/LibraryResources/LibraryLinkUtilities.wl",
+        prefix <> "SystemFiles/Links/OpenCVLink/LibraryResources/LibraryLinkUtilities.wl",
+        prefix <> "SystemFiles/Links/PDFTools/LibraryResources/LibraryLinkUtilities.wl",
+        prefix <> "SystemFiles/Links/RAWTools/LibraryResources/LibraryLinkUtilities.wl",
+        prefix <> "SystemFiles/Links/S3Link/LibraryResources/LibraryLinkUtilities.wl",
+        prefix <> "SystemFiles/Links/XMPTools/LibraryResources/LibraryLinkUtilities.wl",
+
         prefix <> "FFmpegTools/FFmpegTools/Kernel/FFmpegTools.m",
         prefix <> "SystemFiles/Links/FFmpegTools/Kernel/FFmpegTools.m",
         prefix <> "SystemFiles/Links/FFmpegTools/Kernel/Audio/Audio.m",
@@ -1052,12 +1063,24 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "SystemFiles/Links/FFmpegTools/Kernel/Video/VideoUtility.m",
         prefix <> "SystemFiles/Links/FFmpegTools/Kernel/Video/VideoWriter.m",
 
-        prefix <> "SystemFiles/Links/FFmpegTools/LibraryResources/LibraryLinkUtilities.wl",
-        prefix <> "SystemFiles/Links/ImageFileTools/LibraryResources/LibraryLinkUtilities.wl",
-        prefix <> "SystemFiles/Links/ITKLink/LibraryResources/LibraryLinkUtilities.wl",
-        prefix <> "SystemFiles/Links/PDFTools/LibraryResources/LibraryLinkUtilities.wl",
-        prefix <> "SystemFiles/Links/RAWTools/LibraryResources/LibraryLinkUtilities.wl",
-        prefix <> "SystemFiles/Links/XMPTools/LibraryResources/LibraryLinkUtilities.wl",
+        prefix <>  "SystemFiles/Links/FFmpegTools/Kernel/Video/EncoderProperties.m",
+
+        (*
+        broken BeginPackage[] / EndPackage[] or something
+        *)
+        (* prefix <> "codeanalysis/sources/MSource/CodeAnalysis.m",
+        prefix <> "applications/ControlSystems/auxTest.m",
+        prefix <> "applications/PolynomialControlSystems/PCSauxTest.m",
+        prefix <> "control/auxTest2.m",
+        prefix <> "control/UpdatedCSP/auxTest.m",
+        prefix <> "TestTools/FrontEnd/GrammarTestGenerator.m",
+        prefix <> "SystemFiles/Components/GoogleTextToSpeech/Kernel/GoogleSpeech.m",
+        prefix <> "SystemFiles/Components/IBMTextToSpeech/Kernel/IBMWatsonSTT.m",
+        prefix <> "SystemFiles/Components/IBMTextToSpeech/Kernel/IBMWatsonTTS.m",
+        prefix <> "SystemFiles/Components/MicrosoftTextToSpeech/Kernel/MicrosoftSpeech.m",
+
+        prefix <> "SystemFiles/Links/TravelDirectionsClient/Kernel/TravelDirectionsClientRequests.m",
+        prefix <> "traveldirectionsclient/TravelDirectionsClient/Kernel/TravelDirectionsClientRequests.m", *)
 
         Nothing
         }, fileIn],
@@ -1075,36 +1098,43 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         (*
         programmatic use of BeginPackage[] / EndPackage[] or something
         *)
-        prefix <> "kernel/StartUp/sysinit.m",
-        prefix <> "SystemFiles/Kernel/SystemResources/MacOSX-x86-64/sysinit.m",
-
-        prefix <> "kernel/StartUp/sysmake.m",
-        
         prefix <> "kernel/StartUp/Convert/Load.m",
         prefix <> "kernel/StartUp/Convert/MathMLConvert.m",
-
         prefix <> "kernel/StartUp/Devices/DeviceAPI/Device.m",
         prefix <> "kernel/StartUp/Messages.m",
         prefix <> "kernel/StartUp/NotebookCompatibility.m",
 
-        prefix <> "AddOns/Applications/UnitTable/Kernel/UnitTable.m",
-        prefix <> "unittable/UnitTable/Kernel/UnitTable.m",
+        prefix <> "kernel/StartUp/sysinit.m",
+        prefix <> "kernel/StartUp/sysmake.m",
+        
+        prefix <> "SystemFiles/Kernel/SystemResources/MacOSX-x86-64/sysinit.m",
 
-        prefix <> "SystemFiles/Components/Chemistry/Kernel/init.wl",
         prefix <> "SystemFiles/Components/Chemistry/Kernel/Chemistry.wl",
         prefix <> "chemistry/Chemistry/Kernel/Chemistry.wl",
+
+        prefix <> "SystemFiles/Links/JLink/Kernel/CallJava.m",
+        prefix <> "jlink/src/Mathematica/Kernel/CallJava.m",
 
         prefix <> "SystemFiles/Components/MUnit/Kernel/TestRun.m",
         prefix <> "munit/MUnit/Kernel/TestRun.m",
 
-        prefix <> "SystemFiles/Components/RobotTools/Kernel/FrontEnd.m",
-        prefix <> "robottools/RobotTools/Kernel/FrontEnd.m",
-        
-        prefix <> "SystemFiles/Links/JLink/Kernel/CallJava.m",
-        prefix <> "jlink/src/Mathematica/Kernel/CallJava.m",
-
         prefix <> "SystemFiles/Links/NETLink/Kernel/CallNET.m",
         prefix <> "netlink/Source/Mathematica/CallNET.m",
+
+        prefix <> "pacletmanager/PacletManager/Notebooks/PublicPacletInstall.wl",
+
+        prefix <> "predictiveinterface/PredictiveInterface/Kernel/PredictiveRuleCompiler.m",
+
+        prefix <> "quantityunits/QuantityUnits/Kernel/QuantityUnits.m",
+
+        prefix <> "SystemFiles/Components/RobotTools/Kernel/FrontEnd.m",
+        prefix <> "robottools/RobotTools/Kernel/FrontEnd.m",
+
+        prefix <> "AddOns/Applications/UnitTable/Kernel/UnitTable.m",
+        prefix <> "unittable/UnitTable/Kernel/UnitTable.m",
+
+        (* 
+        prefix <> "SystemFiles/Components/Chemistry/Kernel/init.wl",
 
         prefix <> "alphasource/CalculateParse/BuildLexicon.m",
         prefix <> "alphasource/CalculateParse/Content/ExamplePage.m",
@@ -1116,13 +1146,13 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "datapaclettools/Compiler/DatabaseCompiler.m",
         prefix <> "datapaclettools/Compiler.m",
         prefix <> "datapaclettools/Repository/Editors.m",
-        prefix <> "datapaclettools/Repository/Interface.m",
+        prefix <> "datapaclettools/Repository/Interface.m", *)
 
-        prefix <> "pacletmanager/PacletManager/Notebooks/PublicPacletInstall.wl",
+        (* 
 
-        prefix <> "predictiveinterface/PredictiveInterface/Kernel/PredictiveRuleCompiler.m",
+        
 
-        prefix <> "quantityunits/QuantityUnits/Kernel/QuantityUnits.m",
+        
 
         prefix <> "entityindex/Tools/GenerateEntityIndex/InputGenerator.m",
         prefix <> "entityindex/Tools/MakeSummaryBoxes/CommonFunctions.m",
@@ -1130,7 +1160,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "entityindex/Tools/SynthesizeEssays/CommonFunctions.m",
         prefix <> "entityindex/Tools/SynthesizeEssays/MakeSummaryBoxes.m",
         prefix <> "entityindex/Tools/SynthesizeEssays/SynthesizeEssays.m",
-        prefix <> "recognizer/RecognizerUtilities.m",
+        prefix <> "recognizer/RecognizerUtilities.m", *)
 
         Nothing
         }, fileIn],
@@ -1144,11 +1174,12 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       Throw[f, "Handled"]
       ];
 
+      (*
       If[MemberQ[{
         (*
         too deep
         *)
-        prefix <> "Documentation/English/System/ExamplePages/SymbolicGeometricTransformations.nb",
+        (* prefix <> "Documentation/English/System/ExamplePages/SymbolicGeometricTransformations.nb", *)
         Nothing
         }, fileIn],
       f = Failure["TooDeep", <|"File" -> File[fileIn]|>];
@@ -1160,13 +1191,15 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       ];
       Throw[f, "Handled"]
       ];
+      *)
 
      (*
      the files here have uses of < - > 
      and it is an older version
      *)
+     (*
      If[MemberQ[{
-        prefix <> "SystemFiles/Components/NeuralNetworks/Inference.m",
+        (* prefix <> "SystemFiles/Components/NeuralNetworks/Inference.m",
         prefix <> "kernel/StartUp/Language/EquationalProof.m",
         prefix <> "kernel/StartUp/Language/TreeObjects.m",
         prefix <> "kernel/StartUp/PlaneGeometry/GeometryConjecture.m",
@@ -1178,7 +1211,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
         prefix <> "NeuralNetworks/NeuralNetworks/Layers/Structural/Transpose.m",
         prefix <> "NeuralNetworks/NeuralNetworks/Types/Inference.m",
         prefix <> "NeuralNetworks/Tests/Formats/Upgrade.m",
-        prefix <> "NeuralNetworks/Tests/Training/CopyNet.m",
+        prefix <> "NeuralNetworks/Tests/Training/CopyNet.m", *)
         Nothing
         }, fileIn],
       f = Failure["OldTwoWayRule", <|"File" -> File[fileIn]|>];
@@ -1190,13 +1223,14 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       ];
       Throw[f, "Handled"]
       ];
+      *)
      
      (*
      
      file has something like  a; ?b   and the kernel and CodeParser disagree
      (CodeParser is correct)
      *)
-     
+     (*
      If[!FreeQ[expected, 
         HoldPattern[Information][_, LongForm -> False]],
       f = Failure["Information?Syntax", <|"File" -> File[fileIn]|>];
@@ -1208,7 +1242,9 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       ];
       Throw[f, "Handled"]
       ];
+      *)
 
+    
      If[MemberQ[{
         (*
         embedded \r\n in a string in linear syntax (so the \r\n is preserved, but we replace \r\n -> \n up above)
@@ -1225,6 +1261,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       ];
       Throw[f, "Handled"]
       ];
+      
      
      $LastFailedFileIn = fileIn;
      $LastFailedFile = file;
