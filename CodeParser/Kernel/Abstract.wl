@@ -270,23 +270,23 @@ abstract[TernaryNode[TernaryTilde, {left_, _, middle:InfixNode[Comma, _, _], _, 
 abstract[TernaryNode[TernaryTilde, {left_, _, middle_, _, right_}, data_]] :=
 	CallNode[abstract[middle], {abstract[left], abstract[right]}, data]
 
-abstract[TernaryNode[TagSet, {left:LeafNode[Symbol, _, _], _, middle_, _, right_}, data_]] :=
+(*
+Allow non-Symbols for left; not a syntax error
+*)
+abstract[TernaryNode[TagSet, {left_, _, middle_, _, right_}, data_]] :=
 	CallNode[ToNode[TagSet], {abstract[left], abstract[middle], abstract[right]}, data]
 
-abstract[TernaryNode[TagSet, {left_, _, middle_, _, right_}, data_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`TagSetError, {abstract[left], abstract[middle], abstract[right]}, data]
-
-abstract[TernaryNode[TagSetDelayed, {left:LeafNode[Symbol, _, _], _, middle_, _, right_}, data_]] :=
+(*
+Allow non-Symbols for left; not a syntax error
+*)
+abstract[TernaryNode[TagSetDelayed, {left_, _, middle_, _, right_}, data_]] :=
 	CallNode[ToNode[TagSetDelayed], {abstract[left], abstract[middle], abstract[right]}, data]
 
-abstract[TernaryNode[TagSetDelayed, {left_, _, middle_, _, right_}, data_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`TagSetDelayedError, {abstract[left], abstract[middle], abstract[right]}, data]
-
-abstract[TernaryNode[TagUnset, {left:LeafNode[Symbol, _, _], _, middle_, LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, data_]] :=
+(*
+Allow non-Symbols for left; not a syntax error
+*)
+abstract[TernaryNode[TagUnset, {left_, _, middle_, LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, data_]] :=
 	CallNode[ToNode[TagUnset], {abstract[left], abstract[middle]}, data]
-
-abstract[TernaryNode[TagUnset, {left_, _, middle_, _, _}, data_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`TagUnsetError, {abstract[left], abstract[middle]}, data]
 
 abstract[TernaryNode[Span, {left_, _, middle_, _, right_}, data_]] :=
 	CallNode[ToNode[Span], {abstract[left], abstract[middle], abstract[right]}, data]
