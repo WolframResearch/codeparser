@@ -27,3 +27,30 @@ Test[
 	,
 	TestID->"Abstract-20210430-D1U9S1"
 ]
+
+
+
+
+
+
+(*
+Bug 409472
+*)
+cst = CodeConcreteParseBox[{RowBox[{"Begin", "[", "\"\<FindMinimumTrek`\>\"", "]"}], "\n", RowBox[{"End", "[", "]"}]}]
+
+agg = CodeParser`Abstract`Aggregate[cst]
+
+Test[
+	CodeParser`Abstract`Abstract[agg]
+	,
+	ContainerNode[Box, {
+		ContextNode[{LeafNode[String, "\"FindMinimumTrek`\"", <|Source -> {1, 1, 3}|>]}, {}, <|Source -> {1} ;; {3}|>]}, <||>]
+	,
+	TestID->"Abstract-20210504-G2K4C0"
+]
+
+
+
+
+
+

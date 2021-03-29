@@ -1002,42 +1002,42 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		BeginPackage["Foo`"]
 		*)
 		CallNode[LeafNode[Symbol, "BeginPackage", _], {LeafNode[String, _?contextQ, _], LeafNode[String, _?contextQ, _] | CallNode[LeafNode[Symbol, "List", <||>], { LeafNode[String, _?contextQ, _]... }, _] | PatternSequence[]}, _],
-			operatorStack["Push", PackageNode[x[[2]], {}, <|Source->{x[[3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
+			operatorStack["Push", PackageNode[x[[2]], {}, <|Source->sourceSpan[sourceStart[x[[3, Key[Source]]]], (*partially constructed Source*)Indeterminate]|>]];
 			nodeListStack["Push", System`CreateDataStructure["Stack"]];
 		,
 		(*
 		BeginPackage["Foo`"] ;
 		*)
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "BeginPackage", _], {LeafNode[String, _?contextQ, _], LeafNode[String, _?contextQ, _] | CallNode[LeafNode[Symbol, "List", <||>], { LeafNode[String, _?contextQ, _]... }, _] | PatternSequence[]}, _], LeafNode[Symbol, "Null", _]}, _],
-			operatorStack["Push", PackageNode[x[[2, 1, 2]], {}, <|Source->{x[[2, 1, 3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
+			operatorStack["Push", PackageNode[x[[2, 1, 2]], {}, <|Source->sourceSpan[sourceStart[x[[2, 1, 3, Key[Source]]]], (*partially constructed Source*)Indeterminate]|>]];
 			nodeListStack["Push", System`CreateDataStructure["Stack"]];
 		,
 		(*
 		Begin["`Private`"]
 		*)
 		CallNode[LeafNode[Symbol, "Begin", _], {LeafNode[String, _?contextQ, _]}, _],
-			operatorStack["Push", ContextNode[x[[2]], {}, <|Source->{x[[3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
+			operatorStack["Push", ContextNode[x[[2]], {}, <|Source->sourceSpan[sourceStart[x[[3, Key[Source]]]], (*partially constructed Source*)Indeterminate]|>]];
 			nodeListStack["Push", System`CreateDataStructure["Stack"]];
 		,
 		(*
 		Begin["`Private`"] ;
 		*)
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "Begin", _], {LeafNode[String, _?contextQ, _]}, _], LeafNode[Symbol, "Null", _]}, _],
-			operatorStack["Push", ContextNode[x[[2, 1, 2]], {}, <|Source->{x[[2, 1, 3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
+			operatorStack["Push", ContextNode[x[[2, 1, 2]], {}, <|Source->sourceSpan[sourceStart[x[[2, 1, 3, Key[Source]]]], (*partially constructed Source*)Indeterminate]|>]];
 			nodeListStack["Push", System`CreateDataStructure["Stack"]];
 		,
 		(*
 		System`Private`NewContextPath[{"Foo`"}]
 		*)
 		CallNode[LeafNode[Symbol, "System`Private`NewContextPath", _], { CallNode[LeafNode[Symbol, "List", <||>], { LeafNode[String, _?contextQ, _]... }, _] }, _],
-			operatorStack["Push", NewContextPathNode[x[[2]], {}, <|Source->{x[[3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
+			operatorStack["Push", NewContextPathNode[x[[2]], {}, <|Source->sourceSpan[sourceStart[x[[3, Key[Source]]]], (*partially constructed Source*)Indeterminate]|>]];
 			nodeListStack["Push", System`CreateDataStructure["Stack"]];
 		,
 		(*
 		System`Private`NewContextPath[{"Foo`"}] ;
 		*)
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "System`Private`NewContextPath", _], { CallNode[LeafNode[Symbol, "List", <||>], { LeafNode[String, _?contextQ, _]... }, _] }, _], LeafNode[Symbol, "Null", _]}, _],
-			operatorStack["Push", NewContextPathNode[x[[2, 1, 2]], {}, <|Source->{x[[2, 1, 3, Key[Source], 1]], (*partially constructed Source*)Indeterminate}|>]];
+			operatorStack["Push", NewContextPathNode[x[[2, 1, 2]], {}, <|Source->sourceSpan[sourceStart[x[[2, 1, 3, Key[Source]]]], (*partially constructed Source*)Indeterminate]|>]];
 			nodeListStack["Push", System`CreateDataStructure["Stack"]];
 		,
 		(*
@@ -1053,7 +1053,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 			currentList = nodeListStack["Pop"];
 			currentOperator[[2]] = Normal[currentList];
 			(* finish constructing Source *)
-			currentOperator[[3, Key[Source], 2]] = x[[3, Key[Source], 2]];
+			currentOperator[[3, Key[Source]]] = sourceSpan[sourceStart[currentOperator[[3, Key[Source]]]], sourceEnd[x[[3, Key[Source]]]]];
 			peek = nodeListStack["Peek"];
 			peek["Push", currentOperator];
 		,
@@ -1070,7 +1070,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 			currentList = nodeListStack["Pop"];
 			currentOperator[[2]] = Normal[currentList];
 			(* finish constructing Source *)
-			currentOperator[[3, Key[Source], 2]] = x[[2, 1, 3, Key[Source], 2]];
+			currentOperator[[3, Key[Source]]] = sourceSpan[sourceStart[currentOperator[[3, Key[Source]]]], sourceEnd[x[[2, 1, 3, Key[Source]]]]];
 			peek = nodeListStack["Peek"];
 			peek["Push", currentOperator];
 		,
@@ -1233,6 +1233,55 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 	{nodeList, issues}
 ]]
 
+
+
+
+(*
+For LineColumn convention, return the start or end
+*)
+sourceStart[{start:{_Integer, _Integer}, {_Integer, _Integer} | Indeterminate}] :=
+  start
+
+sourceEnd[{{_Integer, _Integer}, end:{_Integer, _Integer}}] :=
+  end
+
+sourceSpan[start:{_Integer, _Integer}, end:{_Integer, _Integer} | Indeterminate] :=
+  {start, end}
+
+
+(*
+For SourceCharacterIndex convention, return the start or end
+*)
+sourceStart[{start:_Integer, _Integer}] :=
+  start
+
+sourceEnd[{_Integer, end:_Integer}] :=
+  end
+
+sourceSpan[start:_Integer, end:_Integer] :=
+  {start, end}
+
+
+sourceStart[Span[start_, _]] :=
+  start
+
+sourceEnd[Span[_, end_]] :=
+  end
+
+
+(*
+For other conventions, just return the src
+
+We do not know what to do
+*)
+sourceStart[src_] :=
+  src
+
+sourceEnd[src_] :=
+  src
+
+sourceSpan[start_, end_] :=
+  Span[start, end]
 
 
 
