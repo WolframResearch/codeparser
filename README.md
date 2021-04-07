@@ -30,7 +30,7 @@ Out[2]= ContainerNode[String, {CallNode[LeafNode[Symbol, "Plus", <||>], {LeafNod
 
 ## Setup
 
-CodeParser is included in Mathematica 12.2.
+CodeParser is included in Mathematica 12.2 and above.
 
 For older versions, you can install from the paclet server.
 
