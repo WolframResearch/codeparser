@@ -20,7 +20,7 @@ The result is a directory named `paclet` that contains the WL package source cod
 
 Inside a kernel session you may then install the paclet by evaluating:
 ```
-PacletInstall["/path/to/build/paclet/CodeParser-1.0.paclet"]
+PacletInstall["/path/to/build/paclet/CodeParser-1.3.paclet"]
 ```
 
 Specify `MATHEMATICA_INSTALL_DIR` if you have Mathematica installed in a non-default location:
