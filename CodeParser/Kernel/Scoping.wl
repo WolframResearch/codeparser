@@ -385,7 +385,7 @@ Module[{newScope, bodyOccurring},
 
   Internal`InheritedBlock[{$LexicalScope},
 
-    newScope = <| $slotName -> {"Function"} |>;
+    newScope = <| $slotName -> {"SlotFunction"} |>;
 
     $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
 
@@ -404,7 +404,7 @@ Module[{newScope, bodyOccurring, attrsOccurring},
 
     attrsOccurring = Flatten[walk /@ {attrs}];
 
-    newScope = <| $slotName -> {"Function"} |>;
+    newScope = <| $slotName -> {"SlotFunction"} |>;
 
     $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
 
