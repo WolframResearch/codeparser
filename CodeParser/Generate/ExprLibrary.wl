@@ -34,12 +34,12 @@ Module[{},
     ,
     MetaData[<|"Exported" -> True, "Name" -> Expr`FromInteger64|>
     ]@Function[{Typed[arg1, "Integer64"]},
-      Native`PrimitiveFunction["Integer64ToExpr"][arg1]
+      Compile`Cast[arg1, "Expression"]
     ]
     ,
     MetaData[<|"Exported" -> True, "Name" -> Expr`FromReal64|>
     ]@Function[{Typed[arg1, "Real64"]},
-      Native`PrimitiveFunction["Real64ToExpr"][arg1]
+      Compile`Cast[arg1, "Expression"]
     ]
     ,
     MetaData[<|"Exported" -> True, "Name" -> Expr`MEncodedStringToSymbolExpr|>
