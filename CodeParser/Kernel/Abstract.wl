@@ -821,10 +821,11 @@ topLevelChildIssues[
 	ignored_
 ] :=
 	{
-		SyntaxIssue["TopLevel", "``CompoundExpression`` at top-level. ``;`` may not be needed at top-level.", "Warning",
+		SyntaxIssue["TopLevel", "``CompoundExpression`` at top-level.", "Warning",
 			<|
 				Source -> data1[Source],
-				ConfidenceLevel -> 0.75
+				ConfidenceLevel -> 0.75,
+				"AdditionalDescriptions" -> {"``;`` may not be needed at top-level."}
 				(*FIXME: insert newline CodeAction*)
 			|>
 		]
@@ -840,10 +841,11 @@ topLevelChildIssues[
 	ignored_
 ] :=
 	{
-		SyntaxIssue["TopLevel", "``CompoundExpression`` at top-level. Consider breaking up onto separate lines.", "Warning",
+		SyntaxIssue["TopLevel", "``CompoundExpression`` at top-level.", "Warning",
 			<|
 				Source -> data1[Source],
-				ConfidenceLevel -> 0.75
+				ConfidenceLevel -> 0.75,
+				"AdditionalDescriptions" -> {"Consider breaking up onto separate lines."}
 				(*FIXME: insert newline CodeAction*)
 			|>
 		]
