@@ -292,6 +292,13 @@ abstract[TernaryNode[Span, {left_, _, middle_, _, right_}, data_]] :=
 	CallNode[ToNode[Span], {abstract[left], abstract[middle], abstract[right]}, data]
 
 
+(*
+TernaryOptionalPattern comes from boxes
+*)
+abstract[TernaryNode[TernaryOptionalPattern, {left_, _, middle_, _, right_}, data_]] :=
+	CallNode[ToNode[Optional], {CallNode[ToNode[Pattern], {abstract[left], abstract[middle]}, <||>], abstract[right]}, data]
+
+
 
 
 

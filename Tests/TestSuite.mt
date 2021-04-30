@@ -1,6 +1,7 @@
 (* Wolfram Language Test file *)
 
 TestSuite[{
+	"Abstract.mt",
 	"AbstractSyntaxErrorNodes.mt",
 	"AbstractSyntaxIssues.mt",
 	"Arrows.mt",
