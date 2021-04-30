@@ -2110,6 +2110,16 @@ Module[{abstractedChildren, issues, data},
 ]
 
 
+
+(*
+These boxes are ok to have as head of calls
+
+What is the process for adding boxes to this list?
+
+It's on-demand as case-by-case basis
+*)
+$okCallBoxPat = TemplateBox | InterpretationBox | SubscriptBox | SuperscriptBox
+
 (*
 
 Concrete parse of a[[2]] returns CallNode[a, GroupNode[Square, {GroupNode[Square, {2}]}]]
@@ -2172,7 +2182,7 @@ Module[{head, data, part, issues},
 			(*
 			Now handle boxes
 			*)
-			BoxNode[TemplateBox | InterpretationBox, _, _],
+			BoxNode[$okCallBoxPat, _, _],
 				(* this is fine *)
 				Null
 			,
@@ -2402,7 +2412,7 @@ Module[{head, part, partData, issues, data},
 ]
 
 (* this is fine *)
-abstractCallNode[CallNode[headIn:BoxNode[TemplateBox | InterpretationBox, _, _], {partIn:GroupNode[GroupSquare, _, _]}, dataIn_]] :=
+abstractCallNode[CallNode[headIn:BoxNode[$okCallBoxPat, _, _], {partIn:GroupNode[GroupSquare, _, _]}, dataIn_]] :=
 Module[{head, part, partData, issues, data},
 	head = headIn;
 	part = partIn;
@@ -2518,7 +2528,7 @@ Module[{head, part, partData, data, issues, first},
 			(*
 			Now handle boxes
 			*)
-			BoxNode[TemplateBox | InterpretationBox, _, _],
+			BoxNode[$okCallBoxPat, _, _],
 				(* this is fine *)
 				Null
 			,

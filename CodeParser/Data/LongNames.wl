@@ -40,11 +40,35 @@ FIXME: all of these should be kernel quirks?
 
 
 
+There is possible metadata:
+ASCIIReplacements
+Extra
+Added
+
+ASCIIReplacements:
 ASCII Replacements are derived from:
 unicodetables.h
 https://lexsrv3.nlm.nih.gov/LexSysGroup/Projects/lvg/current/docs/designDoc/UDF/unicode/DefaultTables/symbolTable.html
 
 with some modifications and additions
+
+The order is roughly from more accurate to less accurate.
+
+
+Extra:
+Extra metadata
+
+possible values:
+NotStrange
+
+By default, all longname letterlikes are treated as strange.
+That means that there are various warnings about their usage as letterlikes.
+A small set of longname letterlikes are marked as "NotStrange" because they are commonly used and considered ok
+
+What is the process for marking NotStrange?
+
+case-by-case basis, but odds are, if you are asking about a specific character, then it is ok to mark as NotStrange
+
 
 *)
 
@@ -313,7 +337,7 @@ Range 0x2000
 "Ellipsis" -> {LetterlikeCharacter, 16^^2026, <| "ASCIIReplacements" -> {"..."} |>},
 "LineSeparator" -> {NewlineCharacter, 16^^2028, <| "ASCIIReplacements" -> {"\n"} |>},
 "ParagraphSeparator" -> {NewlineCharacter, 16^^2029, <| "ASCIIReplacements" -> {"\n\n"} |>},
-"Prime" -> {LetterlikeCharacter, 16^^2032, <| "ASCIIReplacements" -> {"'"} |>},
+"Prime" -> {LetterlikeCharacter, 16^^2032, <| "ASCIIReplacements" -> {"'"}, "Extra" -> {"NotStrange"} |>},
 "DoublePrime" -> {LetterlikeCharacter, 16^^2033, <| "ASCIIReplacements" -> {"''", "\""} |>},
 "ReversePrime" -> {LetterlikeCharacter, 16^^2035, <| "ASCIIReplacements" -> {"`"} |>},
 "ReverseDoublePrime" -> {LetterlikeCharacter, 16^^2036, <| "ASCIIReplacements" -> {"``", "\""} |>},
