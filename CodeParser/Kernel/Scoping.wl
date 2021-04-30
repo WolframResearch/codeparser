@@ -1002,6 +1002,31 @@ freePatterns[UnterminatedGroupNode[_, _, _]] :=
   {}
 
 
+(*
+a is a List of boxes
+*)
+walk[BoxNode[RowBox, {a_}, _]] :=
+  Flatten[walk /@ a]
+
+freePatterns[BoxNode[RowBox, {a_}, _]] :=
+  Flatten[freePatterns /@ a]
+
+walkCondition[BoxNode[RowBox, {a_}, _]] :=
+  Flatten[walkCondition /@ a]
+
+(*
+a is a List of Lists
+*)
+walk[BoxNode[GridBox, {a_, ___}, _]] :=
+  Flatten[Map[walk, a, {2}]]
+
+freePatterns[BoxNode[GridBox, {a_, ___}, _]] :=
+  Flatten[Map[freePatterns, a, {2}]]
+
+walkCondition[BoxNode[GridBox, {a_, ___}, _]] :=
+  Flatten[Map[walkCondition, a, {2}]]
+
+
 walk[BoxNode[_, children_, _]] :=
   Flatten[walk /@ children]
 
@@ -1011,6 +1036,18 @@ freePatterns[BoxNode[_, body_, _]] :=
 walkCondition[BoxNode[_, children_, _]] :=
   Flatten[walkCondition /@ children]
 
+
+(*
+Do not touch CodeNode
+*)
+walk[CodeNode[_, _, _]] :=
+  {}
+
+freePatterns[CodeNode[_, _, _]] :=
+  {}
+
+walkCondition[CodeNode[_, _, _]] :=
+  {}
 
 
 

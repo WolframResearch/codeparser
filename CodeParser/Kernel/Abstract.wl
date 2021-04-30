@@ -2624,6 +2624,11 @@ a is a List of boxes
 *)
 abstract[BoxNode[RowBox, {a_}, data_]] := BoxNode[RowBox, {abstract /@ a}, data]
 
+(*
+a is a List of Lists
+*)
+abstract[BoxNode[GridBox, {a_, rest___}, data_]] := BoxNode[GridBox, {Map[abstract, a, {2}]} ~Join~ (abstract /@ {rest}), data]
+
 abstract[BoxNode[b_, children_, data_]] := BoxNode[b, abstract /@ children, data]
 
 
