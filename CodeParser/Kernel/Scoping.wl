@@ -755,7 +755,7 @@ freePatterns[pat:CallNode[LeafNode[Symbol, "Pattern", _], {LeafNode[Symbol, _, _
   Flatten[{pat} ~Join~ freePatterns[rhs]]
 
 
-walk[CallNode[LeafNode[Symbol, "Slot" | "SlotSequence", _], _, data_]] :=
+walk[n:CallNode[LeafNode[Symbol, "Slot" | "SlotSequence", _], _, data_]] :=
 Catch[
 Module[{decls, entry},
 
@@ -774,7 +774,8 @@ Module[{decls, entry},
         scopingDataObject[
           data[[Key[Source]]],
           decls,
-          modifiersSet[decls, True]
+          modifiersSet[decls, True],
+          ToFullFormString[n]
         ]
       ];
 
@@ -799,7 +800,8 @@ Module[{decls, entry},
       scopingDataObject[
         data[[Key[Source]]],
         decls,
-        {"error"}
+        {"error"},
+        ToFullFormString[n]
       ]
     ];
 
@@ -845,7 +847,8 @@ Module[{decls, entry, defs},
         scopingDataObject[
           data[[Key[Source]]],
           decls,
-          {"definition"}
+          {"definition"},
+          name
         ]
       ];
 
@@ -868,7 +871,8 @@ Module[{decls, entry, defs},
         scopingDataObject[
           data[[Key[Source]]],
           decls,
-          modifiersSet[decls, True]
+          modifiersSet[decls, True],
+          name
         ]
       ];
 
@@ -901,13 +905,14 @@ Module[{decls, entry},
 
     So remove previous entries for the same symbol
     *)
-    entry = DeleteCases[entry, scopingDataObject[data[[Key[Source]]], _, _]];
+    entry = DeleteCases[entry, scopingDataObject[data[[Key[Source]]], _, _, _]];
 
     AppendTo[entry,
       scopingDataObject[
         data[[Key[Source]]],
         decls,
-        modifiersSet[decls, True]
+        modifiersSet[decls, True],
+        name
       ]
     ];
 
@@ -934,7 +939,8 @@ Module[{decls, entry},
     scopingDataObject[
       data[[Key[Source]]],
       decls,
-      modifiersSet[decls, True]
+      modifiersSet[decls, True],
+      name
     ]
   ];
 
@@ -952,7 +958,8 @@ Module[{decls, entry},
     scopingDataObject[
       data[[Key[Source]]],
       decls,
-      modifiersSet[decls, MemberQ[occurringScopedNames, name]]
+      modifiersSet[decls, MemberQ[occurringScopedNames, name]],
+      name
     ]
   ];
 
