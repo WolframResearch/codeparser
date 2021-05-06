@@ -269,7 +269,7 @@ TestMatch[
 Make sure that Source is correct
 *)
 TestMatch[
-	FirstCase[CodeConcreteParse["a\\[Prime] + 2", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
+	FirstCase[CodeConcreteParse["a\\[DoublePrime] + 2", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnexpectedLetterlikeCharacter", _, _, KeyValuePattern[Source -> {{1, 2}, {1, 10}}]]}]
@@ -281,7 +281,7 @@ TestMatch[
 Make sure that Source is correct
 *)
 TestMatch[
-	FirstCase[CodeConcreteParse["\\[Prime] + 2", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
+	FirstCase[CodeConcreteParse["\\[DoublePrime] + 2", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnexpectedLetterlikeCharacter", _, _, KeyValuePattern[Source -> {{1, 1}, {1, 9}}]]}]
@@ -293,7 +293,7 @@ TestMatch[
 Make sure that Source is correct
 *)
 TestMatch[
-	FirstCase[CodeConcreteParse["abc\\[Prime] + 2", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
+	FirstCase[CodeConcreteParse["abc\\[DoublePrime] + 2", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnexpectedLetterlikeCharacter", _, _, KeyValuePattern[Source -> {{1, 4}, {1, 12}}]]}]
