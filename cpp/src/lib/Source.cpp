@@ -585,7 +585,7 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
         // if safeFlag, then only call encodeBytes if safe (i.e., no noncharacters)
         //
         
-        if (!Utils::isMBNonCharacter(val)) {
+        if (!(Utils::isBMPNonCharacter(val) && Utils::isNonBMPNonCharacter(val))) {
             
             ByteEncoderState state;
 

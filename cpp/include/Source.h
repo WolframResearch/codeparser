@@ -216,8 +216,10 @@ FormatIssueTag FORMATISSUETAG_INSERTSPACE = "InsertSpace";
 typedef const std::string EncodingIssueTag;
 
 EncodingIssueTag ENCODINGISSUETAG_INVALIDCHARACTERENCODING = "InvalidCharacterEncoding";
+EncodingIssueTag ENCODINGISSUETAG_INVALIDCHARACTERENCODING_SURROGATE = "InvalidCharacterEncodingSurrogate";
 EncodingIssueTag ENCODINGISSUETAG_UNEXPECTEDCARRIAGERETURN = "UnexpectedCarriageReturn";
 EncodingIssueTag ENCODINGISSUETAG_UNEXPECTEDCHARACTER = "UnexpectedCharacter";
+EncodingIssueTag ENCODINGISSUETAG_NONASCIICHARACTER = "NonASCIICharacter";
 
 
 
@@ -240,6 +242,7 @@ FormatIssueSeverity FORMATISSUESEVERITY_FORMATTING = "Formatting";
 
 typedef const std::string EncodingIssueSeverity;
 
+EncodingIssueSeverity ENCODINGISSUESEVERITY_REMARK = "Remark";
 EncodingIssueSeverity ENCODINGISSUESEVERITY_WARNING = "Warning";
 EncodingIssueSeverity ENCODINGISSUESEVERITY_ERROR = "Error";
 EncodingIssueSeverity ENCODINGISSUESEVERITY_FATAL = "Fatal";

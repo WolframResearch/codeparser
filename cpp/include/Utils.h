@@ -26,7 +26,8 @@ int get_safe_i();
 class Utils {
 public:
     
-    static bool isMBNonCharacter(codepoint point);
+    static bool isBMPNonCharacter(codepoint point);
+    static bool isNonBMPNonCharacter(codepoint point);
     
 #if !NISSUES
     static bool isStrange(codepoint point);

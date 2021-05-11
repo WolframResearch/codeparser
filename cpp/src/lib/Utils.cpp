@@ -59,17 +59,17 @@ bool Utils::isMBStrange(codepoint point) {
             //
         case 0x200d:
             return true;
-            //
-            // LINE SEPARATOR
-            //
+//            //
+//            // LINE SEPARATOR
+//            //
 //        case 0x2028:
 //            return true;
-            //
-            // WORD JOINER
-            //
-            // This is the character that is recommended to use for ZERO WIDTH NON-BREAKING SPACE
-            // https://unicode.org/faq/utf_bom.html#bom6
-            //
+//            //
+//            // WORD JOINER
+//            //
+//            // This is the character that is recommended to use for ZERO WIDTH NON-BREAKING SPACE
+//            // https://unicode.org/faq/utf_bom.html#bom6
+//            //
 //        case 0x2060:
 //            return true;
             //
@@ -133,7 +133,19 @@ bool Utils::isMBStrange(codepoint point) {
 //    if (0xe000 <= val && val <= 0xf8ff) {
 //        return true;
 //    }
-
+    
+    if (Utils::isBMPNonCharacter(point)) {
+        return true;
+    }
+    
+    if (point <= 0xffff) {
+        return false;
+    }
+    
+    //
+    // Non-BMP
+    //
+    
     //
     // Plane 15 PUA
     //
@@ -147,11 +159,11 @@ bool Utils::isMBStrange(codepoint point) {
     if (0x100000 <= point && point <= 0x10fffd) {
         return true;
     }
-
-    if (Utils::isMBNonCharacter(point)) {
+    
+    if (Utils::isNonBMPNonCharacter(point)) {
         return true;
     }
-
+    
     return false;
 }
 #endif // !NISSUES
@@ -159,14 +171,26 @@ bool Utils::isMBStrange(codepoint point) {
 //
 // https://en.wikipedia.org/wiki/Universal_Character_Set_characters#Non-characters
 //
-bool Utils::isMBNonCharacter(codepoint point) {
-    
+bool Utils::isBMPNonCharacter(codepoint point) {
+
     switch (point) {
         case 0xfdd0: case 0xfdd1: case 0xfdd2: case 0xfdd3: case 0xfdd4: case 0xfdd5: case 0xfdd6: case 0xfdd7:
         case 0xfdd8: case 0xfdd9: case 0xfdda: case 0xfddb: case 0xfddc: case 0xfddd: case 0xfdde: case 0xfddf:
         case 0xfde0: case 0xfde1: case 0xfde2: case 0xfde3: case 0xfde4: case 0xfde5: case 0xfde6: case 0xfde7:
         case 0xfde8: case 0xfde9: case 0xfdea: case 0xfdeb: case 0xfdec: case 0xfded: case 0xfdee: case 0xfdef:
-        case 0x0fffe: case 0x0ffff:
+        case 0xfffe: case 0xffff:
+            return true;
+        default:
+            return false;
+    }
+}
+
+//
+// https://en.wikipedia.org/wiki/Universal_Character_Set_characters#Non-characters
+//
+bool Utils::isNonBMPNonCharacter(codepoint point) {
+
+    switch (point) {
         case 0x1fffe: case 0x1ffff:
         case 0x2fffe: case 0x2ffff:
         case 0x3fffe: case 0x3ffff:

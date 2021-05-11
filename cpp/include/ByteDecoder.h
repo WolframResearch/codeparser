@@ -83,9 +83,13 @@ private:
     SourceConventionManagerPtr srcConventionManager;
     
     
-    void strange(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, double confidence);
+    void strangeWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, double confidence);
     
-    SourceCharacter invalid(SourceLocation errSrcLoc, NextPolicy policy);
+    void nonASCIIWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, double confidence);
+    
+    SourceCharacter invalidReturn(SourceLocation errSrcLoc, NextPolicy policy);
+    
+    SourceCharacter surrogateReturn(SourceLocation errSrcLoc, NextPolicy policy);
     
 public:
     

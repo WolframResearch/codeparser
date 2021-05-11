@@ -591,16 +591,7 @@ parseBoxPossibleListPossibleDirective[Arrowheads[args___], pos_] := DirectiveNod
 parseBoxPossibleListPossibleDirective[box_, pos_] := parseBox[box, pos]
 
 
-
-
 parseBox["=.", pos_] := LeafNode[Token`Boxes`EqualDot, "=.", <|Source -> pos|>]
-
-
-(*
-Do not add SyntaxIssues saying that \[IndentingNewLine] is strange
-*)
-parseBox["\[IndentingNewLine]", pos_] :=
-  LeafNode[Token`Newline, "\[IndentingNewLine]", <|Source -> pos|>]
 
 
 (*
@@ -832,7 +823,7 @@ parseBox[str:"_.", pos_] := LeafNode[Token`UnderDot, str, <|Source -> pos|>]
 
 parseBox[str_String, pos_, OptionsPattern[]] :=
 Catch[
-Module[{data, issues, stringifyMode, oldLeafSrc, len, src, cases, containsQuote, parsed},
+Module[{data, issues, stringifyMode, oldLeafSrc, len, src, cases, containsQuote, parsed, origSrc},
 
   (*
   Bypass calling into ParseLeaf if only whitespace,
@@ -846,11 +837,23 @@ Module[{data, issues, stringifyMode, oldLeafSrc, len, src, cases, containsQuote,
 
   Which[
     !containsQuote &&
-      StringMatchQ[str, (LetterCharacter | "$") ~~ (LetterCharacter | "$" | DigitCharacter)...] && stringifyMode == 0,
+      (*
+      was originally using:
+      (LetterCharacter | "$") ~~ (LetterCharacter | "$" | DigitCharacter)... 
+
+      but LetterCharacter matches non-ASCII characters:
+      In[8]:= StringMatchQ["\[Alpha]", LetterCharacter]
+
+      Out[8]= True
+
+      and I'm trying to only quickly test for ASCII here.
+      Non-ASCII characters should go through the parser to generate NonASCIICharacter EncodingIssues
+      *)
+      StringMatchQ[str, RegularExpression["[a-zA-Z$][a-zA-Z$0-9]*"]] && stringifyMode == 0,
       Throw[LeafNode[Symbol, str, <|Source -> pos|>]]
     ,
     !containsQuote &&
-      StringMatchQ[str, DigitCharacter..] && stringifyMode == 0,
+      StringMatchQ[str, RegularExpression["[0-9]+"]] && stringifyMode == 0,
       Throw[LeafNode[Integer, str, <|Source -> pos|>]]
     ,
     (*
@@ -939,16 +942,19 @@ Module[{data, issues, stringifyMode, oldLeafSrc, len, src, cases, containsQuote,
   ];
 
   data = parsed[[3]];
-  data[Source] = pos;
   (*
-  It's very easy to get UnexpectedCharacter syntax issues when parsing boxes
-  So just ignore them
+  result of CodeConcreteParseLeaf is using LineColumn-convention
+  but we need to force using Position-convention
+  so just set to pos
   *)
+  origSrc = data[Source];
+  data[Source] = pos;
   issues = Lookup[data, SyntaxIssues, {}];
-  issues = DeleteCases[issues, EncodingIssue["UnexpectedCharacter", _, _, _]];
-  If[empty[issues],
-    KeyDropFrom[data, SyntaxIssues]
-    ,
+  If[!empty[issues],
+    (*
+    also need to force issues to use Position-convention
+    *)
+    issues = replaceWithPositionConvention[#, pos, origSrc]& /@ issues;
     data[SyntaxIssues] = issues
   ];
   parsed[[3]] = data;
@@ -967,7 +973,9 @@ underToPatternOp["___"] = PatternBlankNullSequence
 
 
 (*
-replacePosition[(head:SyntaxIssue|FormatIssue)[tag_, msg_, severity_, dataIn_], pos_, leafSrc_] :=
+Replaces the original LineColumn-convention with Position-convention
+*)
+replaceWithPositionConvention[(head:SyntaxIssue|FormatIssue|EncodingIssue)[tag_, msg_, severity_, dataIn_], pos_, leafSrc_] :=
 Module[{data, actions, newSrc, oldSyntaxIssueSrc},
 
     data = dataIn;
@@ -977,22 +985,23 @@ Module[{data, actions, newSrc, oldSyntaxIssueSrc},
     newSrc = pos;
 
     If[!(oldSyntaxIssueSrc[[1, 2]] == leafSrc[[1, 2]] && oldSyntaxIssueSrc[[2, 2]] == leafSrc[[2, 2]]),
-        (* this is some sub-part of the leaf *)
-        newSrc = newSrc ~Join~ { Intra[oldSyntaxIssueSrc[[1, 2]], oldSyntaxIssueSrc[[2, 2]]] };
+        (*
+        this is some sub-part of the leaf
+        The arguments in Intra[a, b] are appropriate for StringTake et al.
+        *)
+        newSrc = newSrc ~Join~ { Intra[oldSyntaxIssueSrc[[1, 2]], oldSyntaxIssueSrc[[2, 2]]-1] };
     ];
 
     data[Source] = newSrc;
     actions = data[CodeActions];
     If[!empty[actions],
-        actions = replacePosition[#, newSrc]& /@ actions;
+        actions = replaceWithPositionConvention[#, newSrc]& /@ actions;
         data[CodeActions] = actions
     ];
     head[tag, msg, severity, data]
 ]
-*)
 
-(*
-replacePosition[CodeAction[label_, command_, dataIn_], newSrc_] :=
+replaceWithPositionConvention[CodeAction[label_, command_, dataIn_], newSrc_] :=
 Module[{data, src},
     data = dataIn;
 
@@ -1002,7 +1011,6 @@ Module[{data, src},
     data[Source] = src;
     CodeAction[label, command, data]
 ]
-*)
 
 parseBox[args___] := Failure["InternalUnhandled", <|"Function"->"parseBox", "Arguments"->HoldForm[{args}]|>]
 

@@ -72,7 +72,7 @@ void ByteEncoder::encodeBytes(std::ostream& stream, codepoint val, ByteEncoderSt
         // 3 byte UTF-8 sequence
         //
         
-        assert(!Utils::isMBNonCharacter(val));
+        assert(!Utils::isBMPNonCharacter(val));
         assert(val != CODEPOINT_ACTUAL_BOM);
         
         auto firstByte = static_cast<unsigned char>(((val >> 12) & 0x0f) | 0xe0);
@@ -90,7 +90,7 @@ void ByteEncoder::encodeBytes(std::ostream& stream, codepoint val, ByteEncoderSt
         //
         
         assert(val <= 0x10ffff);
-        assert(!Utils::isMBNonCharacter(val));
+        assert(!Utils::isNonBMPNonCharacter(val));
         
         auto firstByte = static_cast<unsigned char>(((val >> 18) & 0x07) | 0xf0);
         auto secondByte = static_cast<unsigned char>(((val >> 12) & 0x3f) | 0x80);

@@ -138,20 +138,20 @@ Test[
  
 box = RowBox[{"\[Integral]", RowBox[{RowBox[{"Sin", "[", "x", "]"}], RowBox[{"\[DifferentialD]", "x"}]}]}]
  
-Test[
+TestMatch[
 	CodeConcreteParseBox[box]
 	,
 	ContainerNode[Box, {
 		PrefixBinaryNode[Integrate, {
-			LeafNode[Token`LongName`Integral, "\[Integral]", <|Source -> {1, 1}|>],
+			LeafNode[Token`LongName`Integral, "\[Integral]", KeyValuePattern[Source -> {1, 1}]],
 			CallNode[{LeafNode[Symbol, "Sin", <|Source -> {1, 2, 1, 1, 1, 1}|>]}, {
 				GroupNode[GroupSquare, {
 					LeafNode[Token`OpenSquare, "[", <|Source -> {1, 2, 1, 1, 1, 2}|>],
 					LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 1, 1, 3}|>], 
       				LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2, 1, 1, 1, 4}|>]}, <||>]}, <|Source -> {1, 2, 1, 1}|>], 
   			PrefixNode[DifferentialD, {
-  				LeafNode[Token`LongName`DifferentialD, "\[DifferentialD]", <|Source -> {1, 2, 1, 2, 1, 1}|>],
-  				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 2, 1, 2}|>]}, <|Source -> {1, 2, 1, 2}|>]}, <|Source -> {}|>]}, <||>]
+  				LeafNode[Token`LongName`DifferentialD, "\[DifferentialD]", KeyValuePattern[Source -> {1, 2, 1, 2, 1, 1}]],
+  				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 2, 1, 2}|>]}, <|Source -> {1, 2, 1, 2}|>]}, <|Source -> {}|>]}, _]
 	,
 	TestID->"Boxes-20200126-N4V0N6"
 ]
@@ -198,13 +198,13 @@ Test[
 ]
 
 
-Test[
+TestMatch[
 	CodeConcreteParseBox[RowBox[{"\[Minus]", "34"}]]
 	,
 	ContainerNode[Box, {
 		PrefixNode[Minus, {
-			LeafNode[Token`LongName`Minus, "\[Minus]", <|Source -> {1, 1}|>],
-			LeafNode[Integer, "34", <|Source -> {1, 2}|>]}, <|Source -> {}|>]}, <||>]
+			LeafNode[Token`LongName`Minus, "\[Minus]", KeyValuePattern[Source -> {1, 1}]],
+			LeafNode[Integer, "34", <|Source -> {1, 2}|>]}, <|Source -> {}|>]}, _]
 	,
 	TestID->"Boxes-20200617-G4L7A2"
 ]
@@ -397,12 +397,12 @@ Test[
 ]
 
 
-Test[
+TestMatch[
 	CodeConcreteParseBox[RowBox[{"\[Integral]", RowBox[{"x", " ", RowBox[{"Cos", "[", "x", "]"}], RowBox[{"\[DifferentialD]", "x"}]}]}]]
 	,
 	ContainerNode[Box, {
 		PrefixBinaryNode[Integrate, {
-			LeafNode[Token`LongName`Integral, "\[Integral]", <|Source -> {1, 1}|>],
+			LeafNode[Token`LongName`Integral, "\[Integral]", KeyValuePattern[Source -> {1, 1}]],
 			LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 1}|>],
 			LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 2, 1, 2}|>],
 			CallNode[{LeafNode[Symbol, "Cos", <|Source -> {1, 2, 1, 3, 1, 1}|>]}, {
@@ -411,8 +411,8 @@ Test[
 					LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 3, 1, 3}|>],
 					LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2, 1, 3, 1, 4}|>]}, <||>]}, <|Source -> {1, 2, 1, 3}|>],
 			PrefixNode[DifferentialD, {
-				LeafNode[Token`LongName`DifferentialD, "\[DifferentialD]", <|Source -> {1, 2, 1, 4, 1, 1}|>],
-				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 4, 1, 2}|>]}, <|Source -> {1, 2, 1, 4}|>]}, <|Source -> {}|>]}, <||>]
+				LeafNode[Token`LongName`DifferentialD, "\[DifferentialD]", KeyValuePattern[Source -> {1, 2, 1, 4, 1, 1}]],
+				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 4, 1, 2}|>]}, <|Source -> {1, 2, 1, 4}|>]}, <|Source -> {}|>]}, _]
 	,
 	TestID->"Boxes-20200622-H3W5G3"
 ]
@@ -442,13 +442,13 @@ Test[
 ]
 
 
-Test[
+TestMatch[
 	CodeConcreteParseBox[RowBox[{"a", "\[TwoWayRule]", "b"}]]
 	,
 	ContainerNode[Box, {
 		BinaryNode[TwoWayRule, {
 			LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
-			LeafNode[Token`LongName`TwoWayRule, "\[TwoWayRule]", <|Source -> {1, 2}|>],
+			LeafNode[Token`LongName`TwoWayRule, "\[TwoWayRule]", KeyValuePattern[Source -> {1, 2}]],
 			LeafNode[Symbol, "b", <|Source -> {1, 3}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200622-U6D8D8"
@@ -492,25 +492,25 @@ Test[
 ]
 
 
-Test[
+TestMatch[
 	CodeConcreteParseBox[RowBox[{"x", "\[VectorGreaterEqual]", "y"}]]
 	,
 	ContainerNode[Box, {
 		InfixNode[InfixInequality, {
 			LeafNode[Symbol, "x", <|Source -> {1, 1}|>],
-			LeafNode[Token`LongName`VectorGreaterEqual, "\[VectorGreaterEqual]", <|Source -> {1, 2}|>],
+			LeafNode[Token`LongName`VectorGreaterEqual, "\[VectorGreaterEqual]", KeyValuePattern[Source -> {1, 2}]],
 			LeafNode[Symbol, "y", <|Source -> {1, 3}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200623-Q4M7M9"
 ]
 
 
-Test[
+TestMatch[
 	CodeConcreteParseBox[RowBox[{"\[CubeRoot]", RowBox[{"-", "1000"}]}]]
 	,
 	ContainerNode[Box, {
 		PrefixNode[CubeRoot, {
-			LeafNode[Token`LongName`CubeRoot, "\[CubeRoot]", <|Source -> {1, 1}|>],
+			LeafNode[Token`LongName`CubeRoot, "\[CubeRoot]", KeyValuePattern[Source -> {1, 1}]],
 			PrefixNode[Minus, {
 				LeafNode[Token`Minus, "-", <|Source -> {1, 2, 1, 1}|>],
 				LeafNode[Integer, "1000", <|Source -> {1, 2, 1, 2}|>]}, <|Source -> {1, 2}|>]}, <|Source -> {}|>]}, <||>]
@@ -519,51 +519,51 @@ Test[
 ]
 
 
-Test[
+TestMatch[
 	CodeConcreteParseBox[RowBox[{"\[Sqrt]", "3"}]]
 	,
 	ContainerNode[Box, {
 		PrefixNode[Sqrt, {
-			LeafNode[Token`LongName`Sqrt, "\[Sqrt]", <|Source -> {1, 1}|>],
+			LeafNode[Token`LongName`Sqrt, "\[Sqrt]", KeyValuePattern[Source -> {1, 1}]],
 			LeafNode[Integer, "3", <|Source -> {1, 2}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200623-J7F4G4"
 ]
 
 
-Test[
+TestMatch[
 	CodeConcreteParseBox[RowBox[{"g", "\[PermutationProduct]", "gg"}]]
 	,
 	ContainerNode[Box, {
 		InfixNode[PermutationProduct, {
 			LeafNode[Symbol, "g", <|Source -> {1, 1}|>],
-			LeafNode[Token`LongName`PermutationProduct, "\[PermutationProduct]", <|Source -> {1, 2}|>],
+			LeafNode[Token`LongName`PermutationProduct, "\[PermutationProduct]", KeyValuePattern[Source -> {1, 2}]],
 			LeafNode[Symbol, "gg", <|Source -> {1, 3}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200623-I5L6T6"
 ]
 
 
-Test[
+TestMatch[
 	CodeConcreteParseBox[RowBox[{"n", "\[Divides]", "m"}]]
 	,
 	ContainerNode[Box, {
 		InfixNode[Divisible, {
 			LeafNode[Symbol, "n", <|Source -> {1, 1}|>],
-			LeafNode[Token`LongName`Divides, "\[Divides]", <|Source -> {1, 2}|>],
+			LeafNode[Token`LongName`Divides, "\[Divides]", KeyValuePattern[Source -> {1, 2}]],
 			LeafNode[Symbol, "m", <|Source -> {1, 3}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200623-T3I2Z1"
 ]
 
 
-Test[
+TestMatch[
 	CodeConcreteParseBox[RowBox[{"3", "\[GreaterSlantEqual]", "4"}]]
 	,
 	ContainerNode[Box, {
 		InfixNode[InfixInequality, {
 			LeafNode[Integer, "3", <|Source -> {1, 1}|>],
-			LeafNode[Token`LongName`GreaterSlantEqual, "\[GreaterSlantEqual]", <|Source -> {1, 2}|>],
+			LeafNode[Token`LongName`GreaterSlantEqual, "\[GreaterSlantEqual]", KeyValuePattern[Source -> {1, 2}]],
 			LeafNode[Integer, "4", <|Source -> {1, 3}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200623-S9N6Q5"
@@ -875,18 +875,28 @@ Failure["InternalUnhandled", <|"Function" -> "parseBox", "Arguments" -> HoldForm
 Test[
 	CodeConcreteParseBox[RowBox[{"xx", RowBox[{RowBox[{"\\[", " ", "EntityEnd", " ", "]"}], "."}]}]]
 	,
-	ContainerNode[Box, {BoxNode[
-   RowBox, {{LeafNode[Symbol, "xx", <|Source -> {1, 1}|>], 
-     ErrorNode[Token`Error`UnhandledCharacter, 
-      "\\[", <|Source -> {1, 2}, 
-       SyntaxIssues -> {SyntaxIssue["UnrecognizedCharacter", 
-          "Unrecognized character: ``\\[``.", 
-          "Error", <|Source -> {{1, 1}, {1, 3}}, 
-           ConfidenceLevel -> 1., 
-           CodeActions -> {CodeAction["Replace with ``\\\\[``", 
-              ReplaceText, <|Source -> {{1, 1}, {1, 3}}, 
-               "ReplacementText" -> "\\\\["|>]}|>]}|>]}}, <|
-    Source -> {}|>]}, <||>]
+	ContainerNode[Box, {
+			BoxNode[RowBox, {{
+				LeafNode[Symbol, "xx", <|Source -> {1, 1}|>],
+				ErrorNode[Token`Error`UnhandledCharacter, "\\[", <|
+					Source -> {1, 2},
+					SyntaxIssues -> {
+						SyntaxIssue["UnrecognizedCharacter", "Unrecognized character: ``\\[``.", "Error", <|
+							Source -> {1, 2},
+							ConfidenceLevel -> 1.,
+							CodeActions -> {
+								CodeAction["Replace with ``\\\\[``", ReplaceText, <|Source -> {1, 2}, "ReplacementText" -> "\\\\["|>]
+							}|>
+						]
+					}
+				|>]
+			}}
+			,
+			<|Source -> {}|>]
+		}
+		,
+		<||>
+	]
 	,
 	TestID->"Boxes-20210319-W8T8G4"
 ]

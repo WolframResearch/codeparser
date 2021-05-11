@@ -358,7 +358,7 @@ TestMatch[
 			LeafNode[Whitespace, "\[InvisibleSpace]", <|Source -> {{1, 2}, {1, 3}}|>],
 			LeafNode[Symbol, "b", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]},
 		<| SyntaxIssues -> {
-			EncodingIssue["UnexpectedCharacter", "Unexpected character: ``\"\[InvisibleSpace]\" (\\[InvisibleSpace])``.", "Warning", <|Source -> {{1, 2}, {1, 3}}, ConfidenceLevel -> 0.75, CodeActions -> _|>],
+			EncodingIssue["NonASCIICharacter", "Non-ASCII character: ``\"\[InvisibleSpace]\" (\\[InvisibleSpace])``.", "Remark", <|Source -> {{1, 2}, {1, 3}}, ConfidenceLevel -> 1.0, CodeActions -> _|>],
 			SyntaxIssue["UnexpectedSpaceCharacter", "Unexpected space character: ``\"\[InvisibleSpace]\" (\\[InvisibleSpace])``.", "Warning", <|Source -> {{1, 2}, {1, 3}}, ConfidenceLevel -> 0.85|>] } |>]
 	,
 	TestID->"SyntaxIssues-20200621-C5B3J2"

@@ -133,12 +133,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             
 #if !NISSUES
             {
-                //
-                // ASCII control character
-                //
-                // Control character being decoded from means a higher confidence
-                //
-                strange(decoded, currentSourceCharacterStartLoc, 0.95);
+                strangeWarning(decoded, currentSourceCharacterStartLoc, 0.95);
             }
 #endif // !NISSUES
             
@@ -194,7 +189,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 // EOF
                 //
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             //
@@ -211,7 +206,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 TheByteBuffer->wasEOF = resetEOF;
                 SrcLoc = resetLoc;
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             // Valid
@@ -222,21 +217,11 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             
 #if !NISSUES
             {
-                double con;
                 if (Utils::isMBStrange(decoded)) {
-                    //
-                    // Just generally strange character is in the code
-                    //
-                    // A strange character being decoded from bytes means a higher confidence
-                    //
-                    
-                    con = 0.95;
-                    
+                    strangeWarning(decoded, currentSourceCharacterStartLoc, 0.95);
                 } else {
-                    con = 0.75;
+                    nonASCIIWarning(decoded, currentSourceCharacterStartLoc, 1.0);
                 }
-                
-                strange(decoded, currentSourceCharacterStartLoc, con);
             }
 #endif // !NISSUES
             
@@ -263,7 +248,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 // EOF
                 //
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             // Continue
@@ -280,7 +265,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 TheByteBuffer->wasEOF = resetEOF;
                 SrcLoc = resetLoc;
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             tmp = TheByteBuffer->nextByte0();
@@ -295,7 +280,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 TheByteBuffer->wasEOF = resetEOF;
                 SrcLoc = resetLoc;
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
                 
             if (!(0x80 <= tmp && tmp <= 0xbf)) {
@@ -308,14 +293,14 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 TheByteBuffer->wasEOF = resetEOF;
                 SrcLoc = resetLoc;
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             // Valid
             
             const auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (tmp & 0x3f));
             
-            if (Utils::isMBNonCharacter(decoded)) {
+            if (Utils::isBMPNonCharacter(decoded) || Utils::isNonBMPNonCharacter(decoded)) {
                 status = UTF8STATUS_NONCHARACTER_OR_BOM;
             }
             
@@ -323,21 +308,11 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             
 #if !NISSUES
             {
-                double con;
                 if (Utils::isMBStrange(decoded)) {
-                    //
-                    // Just generally strange character is in the code
-                    //
-                    // A strange character being decoded from bytes means a higher confidence
-                    //
-                    
-                    con = 0.95;
-                    
+                    strangeWarning(decoded, currentSourceCharacterStartLoc, 0.95);
                 } else {
-                    con = 0.75;
+                    nonASCIIWarning(decoded, currentSourceCharacterStartLoc, 1.0);
                 }
-                
-                strange(decoded, currentSourceCharacterStartLoc, con);
             }
 #endif // !NISSUES
             
@@ -365,7 +340,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 // EOF
                 //
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             // Continue
@@ -382,7 +357,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 TheByteBuffer->wasEOF = resetEOF;
                 SrcLoc = resetLoc;
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             tmp = TheByteBuffer->nextByte0();
@@ -397,7 +372,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 TheByteBuffer->wasEOF = resetEOF;
                 SrcLoc = resetLoc;
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             if (!(0x80 <= tmp && tmp <= 0xbf)) {
@@ -410,7 +385,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 TheByteBuffer->wasEOF = resetEOF;
                 SrcLoc = resetLoc;
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             // Valid
@@ -426,7 +401,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 return SourceCharacter(CODEPOINT_VIRTUAL_BOM);
             }
             
-            if (Utils::isMBNonCharacter(decoded)) {
+            if (Utils::isBMPNonCharacter(decoded) || Utils::isNonBMPNonCharacter(decoded)) {
                 status = UTF8STATUS_NONCHARACTER_OR_BOM;
             }
             
@@ -434,21 +409,11 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             
 #if !NISSUES
             {
-                double con;
                 if (Utils::isMBStrange(decoded)) {
-                    //
-                    // Just generally strange character is in the code
-                    //
-                    // A strange character being decoded from bytes means a higher confidence
-                    //
-                    
-                    con = 0.95;
-                    
+                    strangeWarning(decoded, currentSourceCharacterStartLoc, 0.95);
                 } else {
-                    con = 0.75;
+                    nonASCIIWarning(decoded, currentSourceCharacterStartLoc, 1.0);
                 }
-                
-                strange(decoded, currentSourceCharacterStartLoc, con);
             }
 #endif // !NISSUES
             
@@ -477,7 +442,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 // EOF
                 //
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             // Continue
@@ -489,16 +454,16 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 //
                 // Invalid
                 //
-                // Possibly a surrogate if 0xa0 <= secondByte <= 0xbf
-                //
-                // Related bugs: 376155
-                //
                 
                 TheByteBuffer->buffer = resetBuf;
                 TheByteBuffer->wasEOF = resetEOF;
                 SrcLoc = resetLoc;
                 
-                return invalid(resetLoc, policy);
+                if (0xa0 <= secondByte && secondByte <= 0xbf) {
+                    return surrogateReturn(resetLoc, policy);
+                }
+                
+                return invalidReturn(resetLoc, policy);
             }
             
             tmp = TheByteBuffer->nextByte0();
@@ -513,7 +478,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 TheByteBuffer->wasEOF = resetEOF;
                 SrcLoc = resetLoc;
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
                 
             if (!(0x80 <= tmp && tmp <= 0xbf)) {
@@ -526,14 +491,14 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 TheByteBuffer->wasEOF = resetEOF;
                 SrcLoc = resetLoc;
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             // Valid
             
             const auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (tmp & 0x3f));
             
-            if (Utils::isMBNonCharacter(decoded)) {
+            if (Utils::isBMPNonCharacter(decoded) || Utils::isNonBMPNonCharacter(decoded)) {
                 status = UTF8STATUS_NONCHARACTER_OR_BOM;
             }
             
@@ -541,21 +506,11 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             
 #if !NISSUES
             {
-                double con;
                 if (Utils::isMBStrange(decoded)) {
-                    //
-                    // Just generally strange character is in the code
-                    //
-                    // A strange character being decoded from bytes means a higher confidence
-                    //
-                    
-                    con = 0.95;
-                    
+                    strangeWarning(decoded, currentSourceCharacterStartLoc, 0.95);
                 } else {
-                    con = 0.75;
+                    nonASCIIWarning(decoded, currentSourceCharacterStartLoc, 1.0);
                 }
-                
-                strange(decoded, currentSourceCharacterStartLoc, con);
             }
 #endif // !NISSUES
             
@@ -582,7 +537,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 // EOF
                 //
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             // Continue
@@ -599,7 +554,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 TheByteBuffer->wasEOF = resetEOF;
                 SrcLoc = resetLoc;
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             tmp = TheByteBuffer->nextByte0();
@@ -614,7 +569,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 TheByteBuffer->wasEOF = resetEOF;
                 SrcLoc = resetLoc;
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             // Continue
@@ -631,7 +586,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 TheByteBuffer->wasEOF = resetEOF;
                 SrcLoc = resetLoc;
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             tmp = TheByteBuffer->nextByte0();
@@ -646,7 +601,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 TheByteBuffer->wasEOF = resetEOF;
                 SrcLoc = resetLoc;
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             if (!(0x80 <= tmp && tmp <= 0xbf)) {
@@ -659,7 +614,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 TheByteBuffer->wasEOF = resetEOF;
                 SrcLoc = resetLoc;
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             // Valid
@@ -671,7 +626,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             //
             assert(decoded <= 0x10ffff);
             
-            if (Utils::isMBNonCharacter(decoded)) {
+            if (Utils::isBMPNonCharacter(decoded) || Utils::isNonBMPNonCharacter(decoded)) {
                 status = UTF8STATUS_NONCHARACTER_OR_BOM;
             }
             
@@ -679,21 +634,11 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             
 #if !NISSUES
             {
-                double con;
                 if (Utils::isMBStrange(decoded)) {
-                    //
-                    // Just generally strange character is in the code
-                    //
-                    // A strange character being decoded from bytes means a higher confidence
-                    //
-                    
-                    con = 0.95;
-                    
+                    strangeWarning(decoded, currentSourceCharacterStartLoc, 0.95);
                 } else {
-                    con = 0.75;
+                    nonASCIIWarning(decoded, currentSourceCharacterStartLoc, 1.0);
                 }
-                
-                strange(decoded, currentSourceCharacterStartLoc, con);
             }
 #endif // !NISSUES
             
@@ -720,7 +665,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 // EOF
                 //
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             // Continue
@@ -737,7 +682,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 TheByteBuffer->wasEOF = resetEOF;
                 SrcLoc = resetLoc;
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             tmp = TheByteBuffer->nextByte0();
@@ -752,7 +697,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 TheByteBuffer->wasEOF = resetEOF;
                 SrcLoc = resetLoc;
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             // Continue
@@ -769,7 +714,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 TheByteBuffer->wasEOF = resetEOF;
                 SrcLoc = resetLoc;
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             tmp = TheByteBuffer->nextByte0();
@@ -784,7 +729,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 TheByteBuffer->wasEOF = resetEOF;
                 SrcLoc = resetLoc;
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             if (!(0x80 <= tmp && tmp <= 0xbf)) {
@@ -797,7 +742,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 TheByteBuffer->wasEOF = resetEOF;
                 SrcLoc = resetLoc;
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             // Valid
@@ -809,7 +754,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             //
             assert(decoded <= 0x10ffff);
             
-            if (Utils::isMBNonCharacter(decoded)) {
+            if (Utils::isBMPNonCharacter(decoded) || Utils::isNonBMPNonCharacter(decoded)) {
                 status = UTF8STATUS_NONCHARACTER_OR_BOM;
             }
             
@@ -817,21 +762,11 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             
 #if !NISSUES
             {
-                double con;
                 if (Utils::isMBStrange(decoded)) {
-                    //
-                    // Just generally strange character is in the code
-                    //
-                    // A strange character being decoded from bytes means a higher confidence
-                    //
-                    
-                    con = 0.95;
-                    
+                    strangeWarning(decoded, currentSourceCharacterStartLoc, 0.95);
                 } else {
-                    con = 0.75;
+                    nonASCIIWarning(decoded, currentSourceCharacterStartLoc, 1.0);
                 }
-                
-                strange(decoded, currentSourceCharacterStartLoc, con);
             }
 #endif // !NISSUES
             
@@ -858,7 +793,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 // EOF
                 //
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             // Continue
@@ -875,7 +810,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 TheByteBuffer->wasEOF = resetEOF;
                 SrcLoc = resetLoc;
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             tmp = TheByteBuffer->nextByte0();
@@ -890,7 +825,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 TheByteBuffer->wasEOF = resetEOF;
                 SrcLoc = resetLoc;
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             // Continue
@@ -907,7 +842,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 TheByteBuffer->wasEOF = resetEOF;
                 SrcLoc = resetLoc;
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             tmp = TheByteBuffer->nextByte0();
@@ -922,7 +857,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 TheByteBuffer->wasEOF = resetEOF;
                 SrcLoc = resetLoc;
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             if (!(0x80 <= tmp && tmp <= 0xbf)) {
@@ -935,7 +870,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 TheByteBuffer->wasEOF = resetEOF;
                 SrcLoc = resetLoc;
                 
-                return invalid(resetLoc, policy);
+                return invalidReturn(resetLoc, policy);
             }
             
             // Valid
@@ -947,7 +882,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             //
             assert(decoded <= 0x10ffff);
             
-            if (Utils::isMBNonCharacter(decoded)) {
+            if (Utils::isBMPNonCharacter(decoded) || Utils::isNonBMPNonCharacter(decoded)) {
                 status = UTF8STATUS_NONCHARACTER_OR_BOM;
             }
             
@@ -955,21 +890,11 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             
 #if !NISSUES
             {
-                double con;
                 if (Utils::isMBStrange(decoded)) {
-                    //
-                    // Just generally strange character is in the code
-                    //
-                    // A strange character being decoded from bytes means a higher confidence
-                    //
-                    
-                    con = 0.95;
-                    
+                    strangeWarning(decoded, currentSourceCharacterStartLoc, 0.95);
                 } else {
-                    con = 0.75;
+                    nonASCIIWarning(decoded, currentSourceCharacterStartLoc, 1.0);
                 }
-                
-                strange(decoded, currentSourceCharacterStartLoc, con);
             }
 #endif // !NISSUES
             
@@ -993,7 +918,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             // Invalid
             //
             
-            return invalid(SrcLoc, policy);
+            return invalidReturn(SrcLoc, policy);
         }
             //
             // Not a valid UTF-8 start
@@ -1004,7 +929,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             // Invalid
             //
             
-            return invalid(SrcLoc, policy);
+            return invalidReturn(SrcLoc, policy);
         }
     }
 }
@@ -1029,7 +954,7 @@ SourceCharacter ByteDecoder::currentSourceCharacter(NextPolicy policy) {
 }
 
 
-void ByteDecoder::strange(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, double confidence) {
+void ByteDecoder::strangeWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, double confidence) {
     
     auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
     
@@ -1050,7 +975,70 @@ void ByteDecoder::strange(codepoint decoded, SourceLocation currentSourceCharact
     Issues.insert(std::move(I));
 }
 
-SourceCharacter ByteDecoder::invalid(SourceLocation errSrcLoc, NextPolicy policy) {
+void ByteDecoder::nonASCIIWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, double confidence) {
+    
+    auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+    
+    auto safeEncodedCharStr = SourceCharacter(decoded).safeEncodedCharString();
+    auto graphicalStr = SourceCharacter(decoded).graphicalString();
+    
+    auto Src = Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc);
+    
+    CodeActionPtrVector Actions;
+    Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + graphicalStr + "``", Src, graphicalStr)));
+    
+    for (const auto& r : LongNames::asciiReplacements(decoded)) {
+        Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
+    }
+    
+    auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_NONASCIICHARACTER, "Non-ASCII character: ``\"" + safeEncodedCharStr + "\" (" + graphicalStr + ")``.", ENCODINGISSUESEVERITY_REMARK, Src, confidence, std::move(Actions)));
+    
+    Issues.insert(std::move(I));
+}
+
+//
+// Technically, the 3rd byte was not tested for true surrogate or just invalid UTF-8
+//
+// So for example, this sequence
+// 0xed 0xad 0x00
+//
+// gives the same warning as true surrogte sequence 0xed 0xad 0x80
+//
+// But it results in different text in the warning message.
+//
+// Related bugs: 376155
+//
+SourceCharacter ByteDecoder::surrogateReturn(SourceLocation errSrcLoc, NextPolicy policy) {
+    
+    status = UTF8STATUS_INVALID;
+    
+    srcConventionManager->increment(SrcLoc);
+    
+#if !NISSUES
+    {
+        //
+        // No CodeAction here
+        //
+        
+        auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_INVALIDCHARACTERENCODING_SURROGATE, "Invalid UTF-8 sequence: Probable surrogate", ENCODINGISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0, {}));
+        
+        Issues.insert(std::move(I));
+    }
+#endif // !NISSUES
+    
+    //
+    // Return \[UnknownGlyph] character when there is bad UTF-8 encoding
+    //
+    // http://www.unicode.org/faq/utf_bom.html
+    // Are there any byte sequences that are not generated by a UTF? How should I interpret them?
+    //
+    // Related bugs: 366106, 376155
+    //
+    
+    return SourceCharacter(CODEPOINT_REPLACEMENT_CHARACTER);
+}
+
+SourceCharacter ByteDecoder::invalidReturn(SourceLocation errSrcLoc, NextPolicy policy) {
     
     status = UTF8STATUS_INVALID;
     
