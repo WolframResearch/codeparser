@@ -154,7 +154,7 @@ Quit[1]
 ];
 
 
-importedNotStrangeLetterlikeLongNames = Keys[Select[importedLongNames, #[[1]] === LetterlikeCharacter && MemberQ[Lookup[#[[3]], "Extra", {}], "NotStrange"]&]];
+importedNotStrangeLetterlikeLongNames = Keys[Select[importedLongNames, #[[1]] === LetterlikeCharacter && MemberQ[Lookup[#[[3]], "Extra", {}], "NotStrangeLetterlike"]&]];
 
 importedASCIIReplacements = KeyValueMap[Function[{k, v}, k -> v[[3, Key["ASCIIReplacements"]]]], Select[importedLongNames, KeyExistsQ[#[[3]], "ASCIIReplacements"]&]];
 
