@@ -333,11 +333,24 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
     If[!MatchQ[Last[src], Intra[___]],
       (*
       There is no Intra in the position, so we can just use InsertNode
+
+      This used to be CodeConcreteParseLeaf[insertionText]
+      but there is no guarantee that insertionText is a leaf
       *)
-      insertionNode = CodeConcreteParseLeaf[insertionText];
+      insertionNode = CodeConcreteParse[insertionText];
       If[FailureQ[insertionNode],
         Throw[insertionNode]
       ];
+      (*
+      Look inside the generated node and assume there is only 1 child
+      *)
+      If[Length[insertionNode[[2]]] != 1,
+        Throw[Failure["CannotApplyCodeAction", <|"CodeAction" -> action, "CST" -> cst|>]]
+      ];
+      (*
+      strip off ContainerNode
+      *)
+      insertionNode = insertionNode[[2, 1]];
       cst = ApplyCodeAction[CodeAction[label, InsertNode, <|Source->src, "InsertionNode"->insertionNode|>], cst];
       cst = cleanupIssue[cst, action];
       Throw[cst]
@@ -394,11 +407,24 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
     If[!MatchQ[Last[src], Intra[___]],
       (*
       There is no Intra in the position, so we can just use InsertNode
+
+      This used to be CodeConcreteParseLeaf[insertionText]
+      but there is no guarantee that insertionText is a leaf
       *)
-      insertionNode = CodeConcreteParseLeaf[insertionText];
+      insertionNode = CodeConcreteParse[insertionText];
       If[FailureQ[insertionNode],
         Throw[insertionNode]
       ];
+      (*
+      Look inside the generated node and assume there is only 1 child
+      *)
+      If[Length[insertionNode[[2]]] != 1,
+        Throw[Failure["CannotApplyCodeAction", <|"CodeAction" -> action, "CST" -> cst|>]]
+      ];
+      (*
+      strip off ContainerNode
+      *)
+      insertionNode = insertionNode[[2, 1]];
       cst = ApplyCodeAction[CodeAction[label, InsertNode, <|Source->src, "InsertionNode"->insertionNode|>], cst];
       cst = cleanupIssue[cst, action];
       Throw[cst]
@@ -463,11 +489,24 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
     If[!MatchQ[Last[src], Intra[___]],
       (*
       There is no Intra in the position, so we can just use InsertNode
+
+      This used to be CodeConcreteParseLeaf[insertionText]
+      but there is no guarantee that insertionText is a leaf
       *)
-      insertionNode = CodeConcreteParseLeaf[insertionText];
+      insertionNode = CodeConcreteParse[insertionText];
       If[FailureQ[insertionNode],
         Throw[insertionNode]
       ];
+      (*
+      Look inside the generated node and assume there is only 1 child
+      *)
+      If[Length[insertionNode[[2]]] != 1,
+        Throw[Failure["CannotApplyCodeAction", <|"CodeAction" -> action, "CST" -> cst|>]]
+      ];
+      (*
+      strip off ContainerNode
+      *)
+      insertionNode = insertionNode[[2, 1]];
       cst = ApplyCodeAction[CodeAction[label, InsertNodeAfter, <|Source->src, "InsertionNode"->insertionNode|>], cst];
       cst = cleanupIssue[cst, action];
       Throw[cst]
@@ -571,11 +610,24 @@ Module[{src, originalNodePos, cst, replacementNode, srcInter, srcIntra, replacem
     If[!MatchQ[Last[src], Intra[___]],
       (*
       There is no Intra in the position, so we can just use ReplaceNode
+
+      This used to be CodeConcreteParseLeaf[replacementText]
+      but there is no guarantee that replacementText is a leaf
       *)
-      replacementNode = CodeConcreteParseLeaf[replacementText];
+      replacementNode = CodeConcreteParse[replacementText];
       If[FailureQ[replacementNode],
         Throw[replacementNode]
       ];
+      (*
+      Look inside the generated node and assume there is only 1 child
+      *)
+      If[Length[replacementNode[[2]]] != 1,
+        Throw[Failure["CannotApplyCodeAction", <|"CodeAction" -> action, "CST" -> cst|>]]
+      ];
+      (*
+      strip off ContainerNode
+      *)
+      replacementNode = replacementNode[[2, 1]];
       cst = ApplyCodeAction[CodeAction[label, ReplaceNode, <|Source->src, "ReplacementNode"->replacementNode|>], cst];
       cst = cleanupIssue[cst, action];
       Throw[cst]
