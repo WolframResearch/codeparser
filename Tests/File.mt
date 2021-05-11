@@ -220,7 +220,7 @@ TestMatch[
 		<|
 			SyntaxIssues -> {
 				(* from CharacterDecoder, strange character in general *)
-				SyntaxIssue["UnexpectedCharacter", "Unexpected character: ``\"\.01\" (\\.01)``.", "Warning", _],
+				EncodingIssue["UnexpectedCharacter", "Unexpected character: ``\"\.01\" (\\.01)``.", "Warning", _],
 				(* from Tokenizer, strange letterlike *)
 				SyntaxIssue["UnexpectedLetterlikeCharacter", "Unexpected letterlike character: ``\"\.01\" (\\.01)``.", "Warning", _]},
 			Source -> {{1, 1}, {1, 7}},

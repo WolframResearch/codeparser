@@ -945,7 +945,7 @@ Module[{data, issues, stringifyMode, oldLeafSrc, len, src, cases, containsQuote,
   So just ignore them
   *)
   issues = Lookup[data, SyntaxIssues, {}];
-  issues = DeleteCases[issues, SyntaxIssue["UnexpectedCharacter", _, _, _]];
+  issues = DeleteCases[issues, EncodingIssue["UnexpectedCharacter", _, _, _]];
   If[empty[issues],
     KeyDropFrom[data, SyntaxIssues]
     ,

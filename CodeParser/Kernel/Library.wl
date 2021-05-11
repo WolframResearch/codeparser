@@ -430,7 +430,7 @@ MakeFormatIssue[tag_String, msg_String, severity_String, srcArgs___Integer, conf
 	FormatIssue[tag, msg, severity, <| Source -> $StructureSrcArgs[srcArgs], ConfidenceLevel -> confidence, CodeActions -> {actions} |>]
 
 MakeEncodingIssue[tag_String, msg_String, severity_String, srcArgs___Integer, confidence_Real, actions:CodeAction[_, _, _]..] :=
-	SyntaxIssue[tag, msg, severity, <| Source -> $StructureSrcArgs[srcArgs], ConfidenceLevel -> confidence, CodeActions -> {actions} |>]
+	EncodingIssue[tag, msg, severity, <| Source -> $StructureSrcArgs[srcArgs], ConfidenceLevel -> confidence, CodeActions -> {actions} |>]
 
 
 MakeReplaceTextCodeAction[label_String, srcArgs___Integer, replacementText_String] :=
