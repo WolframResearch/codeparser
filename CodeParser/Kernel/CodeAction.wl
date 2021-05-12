@@ -158,7 +158,7 @@ Module[{src, originalNodePos, cst, srcInter, srcIntra, node, leafText, srcPosMap
     Print["src: ", src];
    ];
 
-  src = expandSource[src, cst];
+  src = expandSourceThatMayHaveOriginatedInLibrary[src, cst];
 
     If[$Debug,
       Print["src: ", src]
@@ -174,7 +174,7 @@ Module[{src, originalNodePos, cst, srcInter, srcIntra, node, leafText, srcPosMap
     ];
 
     (*
-    There is Intra in the position
+    There is Intra in the last position
     *)
     srcInter = Most[src];
     srcIntra = Last[src];
@@ -326,7 +326,15 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
 
   src = Lookup[actionData, Source];
 
-  src = expandSource[src, cst];
+  If[$Debug,
+      Print["src: ", src]
+    ];
+
+  src = expandSourceThatMayHaveOriginatedInLibrary[src, cst];
+
+  If[$Debug,
+      Print["src: ", src]
+    ];
 
     insertionText = actionData["InsertionText"];
 
@@ -351,13 +359,16 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
       strip off ContainerNode
       *)
       insertionNode = insertionNode[[2, 1]];
+      (*
+      FIXME: insertionNode still has LineColumn source from CodeConcreteParse and should be stripped
+      *)
       cst = ApplyCodeAction[CodeAction[label, InsertNode, <|Source->src, "InsertionNode"->insertionNode|>], cst];
       cst = cleanupIssue[cst, action];
       Throw[cst]
     ];
 
     (*
-    There is Intra in the position
+    There is Intra in the last position
     *)
     srcInter = Most[src];
     srcIntra = Last[src];
@@ -400,7 +411,7 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
 
   src = Lookup[actionData, Source];
 
-  src = expandSource[src, cst];
+  src = expandSourceThatMayHaveOriginatedInLibrary[src, cst];
 
     insertionText = actionData["InsertionText"];
 
@@ -425,13 +436,16 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
       strip off ContainerNode
       *)
       insertionNode = insertionNode[[2, 1]];
+      (*
+      FIXME: insertionNode still has LineColumn source from CodeConcreteParse and should be stripped
+      *)
       cst = ApplyCodeAction[CodeAction[label, InsertNode, <|Source->src, "InsertionNode"->insertionNode|>], cst];
       cst = cleanupIssue[cst, action];
       Throw[cst]
     ];
 
     (*
-    There is Intra in the position
+    There is Intra in the last position
     *)
     srcInter = Most[src];
     srcIntra = Last[src];
@@ -479,7 +493,7 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
     Print["src: ", src];
    ];
 
-  src = expandSource[src, cst];
+  src = expandSourceThatMayHaveOriginatedInLibrary[src, cst];
 
     insertionText = actionData["InsertionText"];
     If[$Debug,
@@ -507,13 +521,16 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
       strip off ContainerNode
       *)
       insertionNode = insertionNode[[2, 1]];
+      (*
+      FIXME: insertionNode still has LineColumn source from CodeConcreteParse and should be stripped
+      *)
       cst = ApplyCodeAction[CodeAction[label, InsertNodeAfter, <|Source->src, "InsertionNode"->insertionNode|>], cst];
       cst = cleanupIssue[cst, action];
       Throw[cst]
     ];
 
     (*
-    There is Intra in the position
+    There is Intra in the last position
     *)
     srcInter = Most[src];
     srcIntra = Last[src];
@@ -600,7 +617,7 @@ Module[{src, originalNodePos, cst, replacementNode, srcInter, srcIntra, replacem
     Print["src: ", src];
    ];
 
-  src = expandSource[src, cst];
+  src = expandSourceThatMayHaveOriginatedInLibrary[src, cst];
 
     replacementText = actionData["ReplacementText"];
      If[$Debug,
@@ -628,13 +645,16 @@ Module[{src, originalNodePos, cst, replacementNode, srcInter, srcIntra, replacem
       strip off ContainerNode
       *)
       replacementNode = replacementNode[[2, 1]];
+      (*
+      FIXME: replacementNode still has LineColumn source from CodeConcreteParse and should be stripped
+      *)
       cst = ApplyCodeAction[CodeAction[label, ReplaceNode, <|Source->src, "ReplacementNode"->replacementNode|>], cst];
       cst = cleanupIssue[cst, action];
       Throw[cst]
     ];
 
     (*
-    There is Intra in the position
+    There is Intra in the last position
     *)
     srcInter = Most[src];
     srcIntra = Last[src];
@@ -683,7 +703,7 @@ Module[{issue, cst},
 
   cst = cstIn;
 
-  issue = FirstCase[cst, SyntaxIssue[_, _, _, KeyValuePattern[CodeActions -> actions_ /; MemberQ[actions, action]]],
+  issue = FirstCase[cst, (SyntaxIssue|FormatIssue|EncodingIssue)[_, _, _, KeyValuePattern[CodeActions -> actions_ /; MemberQ[actions, action]]],
             $Failed,
             Infinity];
   
@@ -707,12 +727,19 @@ Module[{issue, cst},
 Find the token that contains the Source
 *)
 containingToken[src_, cst_] :=
-  FirstCase[cst, LeafNode[_, _, KeyValuePattern[Source -> tokSrc_ /; SourceMemberQ[tokSrc, src]]], $Failed, Infinity]
+  FirstCase[cst, (LeafNode|ErrorNode)[_, _, KeyValuePattern[Source -> tokSrc_ /; SourceMemberQ[tokSrc, src]]], $Failed, Infinity]
 
 (*
 convert {{1,23},{1,23}} into {{1,3},{2,14},Intra[21,21]}
+
+the parser library does not have a way of supplying {{1,3},{2,14},Intra[21,21]}
+so it just returns {{1,23},{1,23}} and this needs to be handled here
+
+this is only needed for Sources that come from the native library
+
+Sources that come from WL code should look like {{1,3},{2,14},Intra[21,21]} from the start
 *)
-expandSource[textSrc_, cst_] :=
+expandSourceThatMayHaveOriginatedInLibrary[textSrc:{{_Integer, _Integer}, {_Integer, _Integer}}, cst_] :=
 Catch[
   Module[{tok, tokSrc, tokStartCol},
 
@@ -732,10 +759,18 @@ Catch[
 
     tokStartCol = tokSrc[[1, 2]];
 
-    Append[tokSrc, Intra[textSrc[[1, 2]]-tokStartCol+1, textSrc[[2, 2]]-tokStartCol+1]]
+    Append[tokSrc, Intra[textSrc[[1, 2]]-tokStartCol+1, textSrc[[2, 2]]-tokStartCol+1-1]]
+    (*                                               ^ 1-based *)
+    (*                                                                              ^ 1-based *)
+    (*                                                                                ^ inclusive *)
   ]
 ]
 
+(*
+all other conventions are ignored
+*)
+expandSourceThatMayHaveOriginatedInLibrary[textSrc_, cst_] :=
+  textSrc
 
 
 End[]
