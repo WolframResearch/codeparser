@@ -92,7 +92,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 // No CodeAction here
                 //
                 
-                auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", ENCODINGISSUESEVERITY_ERROR, Source(currentSourceCharacterStartLoc), 1.0, {}));
+                auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", ENCODINGISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc), 1.0, {}));
                 
                 addIssue(std::move(I));
             }

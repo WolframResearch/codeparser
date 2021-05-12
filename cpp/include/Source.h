@@ -231,6 +231,9 @@ EncodingIssueTag ENCODINGISSUETAG_NONASCIICHARACTER = "NonASCIICharacter";
 //
 typedef const std::string SyntaxIssueSeverity;
 
+//
+// for example: unexpected escape sequence
+//
 SyntaxIssueSeverity SYNTAXISSUESEVERITY_REMARK = "Remark";
 SyntaxIssueSeverity SYNTAXISSUESEVERITY_WARNING = "Warning";
 SyntaxIssueSeverity SYNTAXISSUESEVERITY_ERROR = "Error";
@@ -242,9 +245,12 @@ FormatIssueSeverity FORMATISSUESEVERITY_FORMATTING = "Formatting";
 
 typedef const std::string EncodingIssueSeverity;
 
+//
+// for example: non-ASCII character
+//
 EncodingIssueSeverity ENCODINGISSUESEVERITY_REMARK = "Remark";
 EncodingIssueSeverity ENCODINGISSUESEVERITY_WARNING = "Warning";
-EncodingIssueSeverity ENCODINGISSUESEVERITY_ERROR = "Error";
+//EncodingIssueSeverity ENCODINGISSUESEVERITY_ERROR = "Error";
 EncodingIssueSeverity ENCODINGISSUESEVERITY_FATAL = "Fatal";
 
 
