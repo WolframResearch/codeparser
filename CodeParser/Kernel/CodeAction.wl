@@ -34,7 +34,8 @@ output: a cst
 
 ApplyCodeAction[action:CodeAction[label_, DeleteNode, actionData_], cstIn_, srcPosMapIn_:Null] :=
 Catch[
-Module[{src, originalNodePos, cst, srcPosMap, parentPos, parent, commaChildren, commaChildrenLength, deletedWasLastNode, leadingCommaPos, trailingCommaPos},
+Module[{src, originalNodePos, cst, srcPosMap, parentPos, parent, commaChildren, commaChildrenLength,
+  deletedWasLastNode, leadingCommaPos, trailingCommaPos, child},
 
   cst = cstIn;
   srcPosMap = srcPosMapIn;
@@ -72,6 +73,7 @@ Module[{src, originalNodePos, cst, srcPosMap, parentPos, parent, commaChildren, 
       commaChildrenLength = Length[commaChildren];
       deletedWasLastNode = (originalNodePos[[-1]] > commaChildrenLength);
       If[$Debug,
+        Print["commaChildrenLength: ", commaChildrenLength];
         Print["deletedWasLastNode: ", deletedWasLastNode];
       ];
       If[deletedWasLastNode,
@@ -101,6 +103,23 @@ Module[{src, originalNodePos, cst, srcPosMap, parentPos, parent, commaChildren, 
           LeafNode[Token`Comma, _, _],
           cst = Delete[cst, trailingCommaPos];
         ]
+       ];
+
+       (*
+       now also handle the removal of penultimate child of Comma node, where we need to remove the Comma node itself
+
+       If we started with InfixNode[Comma, {a, comma, b}]
+
+       and then we removed b and now have InfixNode[Comma, {a}]
+
+       we need to remove Comma and just have a
+       *)
+       parent = Extract[cst, {parentPos}][[1]];
+       commaChildren = parent[[2]];
+       commaChildrenLength = Length[commaChildren];
+       If[commaChildrenLength == 1,
+        child = commaChildren[[1]];
+        cst = ReplacePart[cst, parentPos -> child];
        ]
       ];
       
