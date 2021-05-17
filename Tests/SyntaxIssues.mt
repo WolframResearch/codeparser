@@ -338,7 +338,7 @@ TestMatch[
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
 	KeyValuePattern[SyntaxIssues -> {
-		EncodingIssue["UnexpectedCarriageReturn", _, "Error", KeyValuePattern[Source -> {{1, 4}, {1, 4}}]]}]
+		EncodingIssue["UnexpectedCarriageReturn", _, "Warning", KeyValuePattern[Source -> {{1, 4}, {1, 4}}]]}]
 	,
 	TestID->"SyntaxIssues-20200413-K2N2U0"
 ]

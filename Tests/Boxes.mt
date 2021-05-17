@@ -881,7 +881,7 @@ Test[
 				ErrorNode[Token`Error`UnhandledCharacter, "\\[", <|
 					Source -> {1, 2},
 					SyntaxIssues -> {
-						SyntaxIssue["UnrecognizedCharacter", "Unrecognized character: ``\\[``.", "Error", <|
+						SyntaxIssue["UnrecognizedCharacter", "Unrecognized character: ``\\[``.", "Fatal", <|
 							Source -> {1, 2},
 							ConfidenceLevel -> 1.,
 							CodeActions -> {

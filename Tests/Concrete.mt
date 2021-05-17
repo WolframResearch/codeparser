@@ -642,7 +642,7 @@ Test[
 	ContainerNode[String, {
 		ErrorNode[Token`Error`UnhandledCharacter, "\\[Alpa]", <|Source -> {{1, 1}, {1, 8}}|>]},
 		<|SyntaxIssues -> {
-			SyntaxIssue["UnrecognizedCharacter", "Unrecognized character: ``\\[Alpa]``.", "Error", <|
+			SyntaxIssue["UnrecognizedCharacter", "Unrecognized character: ``\\[Alpa]``.", "Fatal", <|
 				Source -> {{1, 1}, {1, 8}},
 				ConfidenceLevel -> 1., 
 		     	CodeActions -> {
@@ -796,7 +796,7 @@ Test[
     		LeafNode[Token`Colon, ":", <|Source -> {{1, 3}, {1, 4}}|>], 
     		LeafNode[Symbol, "a", <|Source -> {{1, 4}, {1, 5}}|>]}, <|Source -> {{1, 3}, {1, 5}}|>]}, <|SyntaxIssues -> {
     		
-    	SyntaxIssue["UnrecognizedCharacter", "Unrecognized character ``\\-``.", "Error", <|Source -> {{1, 1}, {1, 3}}, ConfidenceLevel -> 1., CodeActions -> {
+    	SyntaxIssue["UnrecognizedCharacter", "Unrecognized character ``\\-``.", "Fatal", <|Source -> {{1, 1}, {1, 3}}, ConfidenceLevel -> 1., CodeActions -> {
     		CodeAction["Replace with ``\\\\-``", ReplaceText, <|Source -> {{1, 1}, {1, 3}}, "ReplacementText" -> "\\\\-"|>]}|>]}|>]
 	,
 	TestID->"Concrete-20200803-T9A8L2"
