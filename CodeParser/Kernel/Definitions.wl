@@ -17,6 +17,8 @@ given an LHS AST node, determine the symbol that gives the definition
 DefinitionSymbols[n:LeafNode[Symbol, _, _]] := {n}
 
 DefinitionSymbols[LeafNode[_, _, _]] := {}
+DefinitionSymbols[ErrorNode[_, _, _]] := {}
+DefinitionSymbols[AbstractSyntaxErrorNode[_, _, _]] := {}
 
 
 DefinitionSymbols[CallNode[LeafNode[Symbol, "Condition", _], {node_, _}, _]] := DefinitionSymbols[node]
