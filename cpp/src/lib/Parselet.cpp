@@ -1236,50 +1236,52 @@ NodePtr IntegralParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     
     Ctxt.Flag &= ~(PARSER_INSIDE_INTEGRAL);
     
-    LeafSeq Trivia2;
-    
-    Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
-    Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia2);
-    
-    if (!Tok.Tok.isDifferentialD()) {
+    {
+        LeafSeq Trivia2;
         
-        NodeSeq Args(1 + 1 + 1);
-        Args.append(NodePtr(new LeafNode(TokIn)));
-        Args.appendIfNonEmpty(std::move(Trivia1));
-        Args.append(std::move(operand));
+        Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+        Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia2);
         
-        L = NodePtr(new PrefixNode(SYMBOL_INTEGRAL, std::move(Args)));
-        
-    } else {
-        
-        auto variable = prefixParselets[Tok.Tok.value()]->parse(Tok, Ctxt);
-        
-        if (variable->isExpectedOperandError()) {
+        if (!Tok.Tok.isDifferentialD()) {
             
-            //
-            // Reattach the ExpectedOperand Error to the operator for a better experience
-            //
-            
-            auto ProperExpectedOperandError = NodePtr(new ExpectedOperandErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
-            
-            NodeSeq Args(1 + 1 + 1 + 1);
+            NodeSeq Args(1 + 1 + 1);
             Args.append(NodePtr(new LeafNode(TokIn)));
             Args.appendIfNonEmpty(std::move(Trivia1));
             Args.append(std::move(operand));
-            Args.append(std::move(ProperExpectedOperandError));
             
-            auto Error = NodePtr(new PrefixNode(SYMBOL_INTEGRATE, std::move(Args)));
-            return Error;
+            L = NodePtr(new PrefixNode(SYMBOL_INTEGRAL, std::move(Args)));
+            
+        } else {
+            
+            auto variable = prefixParselets[Tok.Tok.value()]->parse(Tok, Ctxt);
+            
+            if (variable->isExpectedOperandError()) {
+                
+                //
+                // Reattach the ExpectedOperand Error to the operator for a better experience
+                //
+                
+                auto ProperExpectedOperandError = NodePtr(new ExpectedOperandErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
+                
+                NodeSeq Args(1 + 1 + 1 + 1);
+                Args.append(NodePtr(new LeafNode(TokIn)));
+                Args.appendIfNonEmpty(std::move(Trivia1));
+                Args.append(std::move(operand));
+                Args.append(std::move(ProperExpectedOperandError));
+                
+                auto Error = NodePtr(new PrefixNode(SYMBOL_INTEGRATE, std::move(Args)));
+                return Error;
+            }
+            
+            NodeSeq Args(1 + 1 + 1 + 1 + 1);
+            Args.append(NodePtr(new LeafNode(TokIn)));
+            Args.appendIfNonEmpty(std::move(Trivia1));
+            Args.append(std::move(operand));
+            Args.appendIfNonEmpty(std::move(Trivia2));
+            Args.append(std::move(variable));
+            
+            L = NodePtr(new PrefixBinaryNode(SYMBOL_INTEGRATE, std::move(Args)));
         }
-        
-        NodeSeq Args(1 + 1 + 1 + 1 + 1);
-        Args.append(NodePtr(new LeafNode(TokIn)));
-        Args.appendIfNonEmpty(std::move(Trivia1));
-        Args.append(std::move(operand));
-        Args.appendIfNonEmpty(std::move(Trivia2));
-        Args.append(std::move(variable));
-        
-        L = NodePtr(new PrefixBinaryNode(SYMBOL_INTEGRATE, std::move(Args)));
     }
     
     return TheParser->infixLoop(std::move(L), CtxtIn);

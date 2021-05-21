@@ -88,7 +88,19 @@ Test[
 
 
 
+(*
+bug 410404
+*)
 
+Test[
+	"\\[Integral] a + 2"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Weird-20210521-W7U9U1"
+]
 
 
 
