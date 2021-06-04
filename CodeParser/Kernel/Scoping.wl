@@ -91,15 +91,18 @@ Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableN
   Internal`InheritedBlock[{$LexicalScope},
 
     variableSymbolsAndRHSOccurring = Replace[vars, {
-      sym:LeafNode[Symbol, _, _] :> {{sym}, {}},
-      CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {lhs:LeafNode[Symbol, _, _], rhs_}, _] :> {{lhs}, walk[rhs]},
+      LeafNode[Symbol, name_, data1_] :> {{{name, data1[Source]}}, {}},
+      (*
+      use the Source of the Set[] itself
+      *)
+      CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {LeafNode[Symbol, name_, _], rhs_}, data1_] :> {{{name, data1[Source]}}, walk[rhs]},
       _ :> {{}, {}}
     }, 1];
 
-    variableSymbols = Flatten[variableSymbolsAndRHSOccurring[[All, 1]]];
-    rhsOccurring = Flatten[variableSymbolsAndRHSOccurring[[All, 2]]];
+    variableSymbols = Flatten[variableSymbolsAndRHSOccurring[[All, 1]], 1];
+    rhsOccurring = Flatten[variableSymbolsAndRHSOccurring[[All, 2]], 1];
 
-    variableNames = #[[2]]& /@ variableSymbols;
+    variableNames = #[[1]]& /@ variableSymbols;
 
     newScope = <| (# -> {"Module"})& /@ variableNames |>;
 
@@ -107,7 +110,7 @@ Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableN
 
     bodyOccurring = walk[body];
 
-    Scan[add[#, bodyOccurring]&, variableSymbols];
+    Scan[add[#[[1]], #[[2]], bodyOccurring]&, variableSymbols];
 
     rhsOccurring ~Join~ Complement[bodyOccurring, variableNames]
   ]
@@ -127,15 +130,15 @@ Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableN
   Internal`InheritedBlock[{$LexicalScope},
 
     variableSymbolsAndRHSOccurring = Replace[vars, {
-      sym:LeafNode[Symbol, _, _] :> {{sym}, {}},
-      CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {lhs:LeafNode[Symbol, _, _], rhs_}, _] :> {{lhs}, walk[rhs]},
+      LeafNode[Symbol, name_, data1_] :> {{{name, data1[Source]}}, {}},
+      CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {LeafNode[Symbol, name_, _], rhs_}, data1_] :> {{{name, data1[Source]}}, walk[rhs]},
       _ :> {{}, {}}
     }, 1];
 
-    variableSymbols = Flatten[variableSymbolsAndRHSOccurring[[All, 1]]];
-    rhsOccurring = Flatten[variableSymbolsAndRHSOccurring[[All, 2]]];
+    variableSymbols = Flatten[variableSymbolsAndRHSOccurring[[All, 1]], 1];
+    rhsOccurring = Flatten[variableSymbolsAndRHSOccurring[[All, 2]], 1];
 
-    variableNames = #[[2]]& /@ variableSymbols;
+    variableNames = #[[1]]& /@ variableSymbols;
 
     newScope = <| (# -> {"DynamicModule"})& /@ variableNames |>;
 
@@ -145,7 +148,7 @@ Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableN
 
     optOccurring = Flatten[walk /@ {optSeq}];
 
-    Scan[add[#, bodyOccurring]&, variableSymbols];
+    Scan[add[#[[1]], #[[2]], bodyOccurring]&, variableSymbols];
 
     rhsOccurring ~Join~ Complement[bodyOccurring, variableNames] ~Join~ optOccurring
   ]
@@ -172,15 +175,15 @@ Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableN
   Internal`InheritedBlock[{$LexicalScope},
 
     variableSymbolsAndRHSOccurring = Replace[vars, {
-      sym:LeafNode[Symbol, _, _] :> (If[fullyQualifiedSymbolQ[sym] || uppercaseOrDollarSymbolQ[sym], usedHeuristics[sym] = True];{{sym}, {}}),
-      CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {lhs:LeafNode[Symbol, _, _], rhs_}, _] :> (usedHeuristics[lhs] = True;{{lhs}, walk[rhs]}),
+      LeafNode[Symbol, name_, data1_] :> (If[fullyQualifiedSymbolQ[sym] || uppercaseOrDollarSymbolQ[sym], usedHeuristics[{name, data1[Source]}] = True];{{{name, data1[Source]}}, {}}),
+      CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {LeafNode[Symbol, name_, _], rhs_}, data1_] :> (usedHeuristics[{name, data1[Source]}] = True;{{{name, data1[Source]}}, walk[rhs]}),
       _ :> {{}, {}}
     }, 1];
 
-    variableSymbols = Flatten[variableSymbolsAndRHSOccurring[[All, 1]]];
-    rhsOccurring = Flatten[variableSymbolsAndRHSOccurring[[All, 2]]];
+    variableSymbols = Flatten[variableSymbolsAndRHSOccurring[[All, 1]], 1];
+    rhsOccurring = Flatten[variableSymbolsAndRHSOccurring[[All, 2]], 1];
 
-    variableNames = #[[2]]& /@ variableSymbols;
+    variableNames = #[[1]]& /@ variableSymbols;
 
     newScope = <| (# -> {tag})& /@ variableNames |>;
 
@@ -188,7 +191,7 @@ Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableN
 
     bodyOccurring = walk[body];
 
-    Scan[add[#, bodyOccurring || Lookup[usedHeuristics, #, False]]&, variableSymbols];
+    Scan[add[#[[1]], #[[2]], bodyOccurring || Lookup[usedHeuristics, #, False]]&, variableSymbols];
 
     rhsOccurring ~Join~ Complement[bodyOccurring, variableNames]
   ]
@@ -213,14 +216,14 @@ Module[{paramSymbolsAndRHSOccurring, paramSymbols, rhsOccurring, paramNames, new
   Internal`InheritedBlock[{$LexicalScope},
 
     paramSymbolsAndRHSOccurring = Replace[vars, {
-      CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {lhs:LeafNode[Symbol, _, _], rhs_}, _] :> {{lhs}, walk[rhs]},
+      CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {LeafNode[Symbol, name_, data1_], rhs_}, _] :> {{{name, data1[Source]}}, walk[rhs]},
       _ :> {{}, {}}
     }, 1];
 
-    paramSymbols = Flatten[paramSymbolsAndRHSOccurring[[All, 1]]];
-    rhsOccurring = Flatten[paramSymbolsAndRHSOccurring[[All, 2]]];
+    paramSymbols = Flatten[paramSymbolsAndRHSOccurring[[All, 1]], 1];
+    rhsOccurring = Flatten[paramSymbolsAndRHSOccurring[[All, 2]], 1];
 
-    paramNames = #[[2]]& /@ paramSymbols;
+    paramNames = #[[1]]& /@ paramSymbols;
 
     newScope = <| (# -> {"With"})& /@ paramNames |>;
 
@@ -228,7 +231,7 @@ Module[{paramSymbolsAndRHSOccurring, paramSymbols, rhsOccurring, paramNames, new
 
     bodyOccurring = walk[body];
 
-    Scan[add[#, bodyOccurring]&, paramSymbols];
+    Scan[add[#[[1]], #[[2]], bodyOccurring]&, paramSymbols];
 
     rhsOccurring ~Join~ Complement[bodyOccurring, paramNames]
   ]
@@ -247,14 +250,14 @@ Module[{newBody, paramSymbolsAndRHSOccurring, paramSymbols, rhsOccurring, paramN
   Internal`InheritedBlock[{$LexicalScope},
 
     paramSymbolsAndRHSOccurring = Replace[vars[[2]], {
-      CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {lhs:LeafNode[Symbol, _, _], rhs_}, _] :> {{lhs}, walk[rhs]},
+      CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {LeafNode[Symbol, name_, data1_], rhs_}, _] :> {{{name, data1[Source]}}, walk[rhs]},
       _ :> {{}, {}}
     }, 1];
 
-    paramSymbols = Flatten[paramSymbolsAndRHSOccurring[[All, 1]]];
-    rhsOccurring = Flatten[paramSymbolsAndRHSOccurring[[All, 2]]];
+    paramSymbols = Flatten[paramSymbolsAndRHSOccurring[[All, 1]], 1];
+    rhsOccurring = Flatten[paramSymbolsAndRHSOccurring[[All, 2]], 1];
 
-    paramNames = #[[2]]& /@ paramSymbols;
+    paramNames = #[[1]]& /@ paramSymbols;
 
     newScope = <| (# -> {"With"})& /@ paramNames |>;
 
@@ -262,7 +265,7 @@ Module[{newBody, paramSymbolsAndRHSOccurring, paramSymbols, rhsOccurring, paramN
 
     bodyOccurring = walk[newBody];
 
-    Scan[add[#, bodyOccurring]&, paramSymbols];
+    Scan[add[#[[1]], #[[2]], bodyOccurring]&, paramSymbols];
 
     rhsOccurring ~Join~ Complement[bodyOccurring, paramNames]
   ]
@@ -285,10 +288,10 @@ Module[{patterns, lhsOccurring, patternSymbols, patternAssoc, patternNames, newS
     ];
 
     patternSymbols = Replace[patterns, {
-      pat:CallNode[LeafNode[Symbol, "Pattern", _], {sym:LeafNode[Symbol, _, _], _}, _] :> sym
+      CallNode[LeafNode[Symbol, "Pattern", _], {LeafNode[Symbol, name_, data1_], _}, _] :> {name, data1[Source]}
     }, 1];
 
-    patternAssoc = GroupBy[patternSymbols, #[[2]]&];
+    patternAssoc = GroupBy[patternSymbols, #[[1]]&];
 
     patternNames = Keys[patternAssoc];
 
@@ -305,10 +308,10 @@ Module[{patterns, lhsOccurring, patternSymbols, patternAssoc, patternNames, newS
             (*
             non-linear pattern, so mark all as used
             *)
-            Scan[add[#, True]&, syms]
+            Scan[add[#[[1]], #[[2]], True]&, syms]
           ,
           !MemberQ[$ExcludePatternNames, name],
-            add[syms[[1]], rhsOccurring ~Join~ conditionOccurring]
+            add[syms[[1, 1]], syms[[1, 2]], rhsOccurring ~Join~ conditionOccurring]
         ]
       ]
       ,
@@ -342,10 +345,10 @@ Module[{tagOccurring, patterns, lhsOccurring, patternSymbols, patternAssoc, patt
     ];
 
     patternSymbols = Replace[patterns, {
-      pat:CallNode[LeafNode[Symbol, "Pattern", _], {sym:LeafNode[Symbol, _, _], _}, _] :> sym
+      CallNode[LeafNode[Symbol, "Pattern", _], {LeafNode[Symbol, name_, data1_], _}, _] :> {name, data1[Source]}
     }, 1];
 
-    patternAssoc = GroupBy[patternSymbols, #[[2]]&];
+    patternAssoc = GroupBy[patternSymbols, #[[1]]&];
 
     patternNames = Keys[patternAssoc];
 
@@ -362,10 +365,10 @@ Module[{tagOccurring, patterns, lhsOccurring, patternSymbols, patternAssoc, patt
             (*
             non-linear pattern, so mark all as used
             *)
-            Scan[add[#, True]&, syms]
+            Scan[add[#[[1]], #[[2]], True]&, syms]
           ,
           !MemberQ[$ExcludePatternNames, name],
-            add[syms[[1]], rhsOccurring ~Join~ conditionOccurring]
+            add[syms[[1, 1]], syms[[1, 2]], rhsOccurring ~Join~ conditionOccurring]
         ]
       ]
       ,
@@ -412,24 +415,22 @@ Module[{newScope, bodyOccurring, attrsOccurring},
   ]
 ]
 
-walk[CallNode[LeafNode[Symbol, "Function", _], {paramSymbol:LeafNode[Symbol, _, _], body_, attrs:(PatternSequence[] | _)}, _]] :=
-Module[{paramName, newScope, bodyOccurring, attrsOccurring},
+walk[CallNode[LeafNode[Symbol, "Function", _], {LeafNode[Symbol, name_, data_], body_, attrs:(PatternSequence[] | _)}, _]] :=
+Module[{newScope, bodyOccurring, attrsOccurring},
 
   Internal`InheritedBlock[{$LexicalScope},
 
     attrsOccurring = Flatten[walk /@ {attrs}];
 
-    paramName = paramSymbol[[2]];
-
-    newScope = <| (paramName -> {"Function"}) |>;
+    newScope = <| (name -> {"Function"}) |>;
 
     $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
 
     bodyOccurring = walk[body];
 
-    add[paramSymbol, bodyOccurring];
+    add[name, data[Source], bodyOccurring];
 
-    Complement[bodyOccurring, {paramName}] ~Join~ attrsOccurring
+    Complement[bodyOccurring, {name}] ~Join~ attrsOccurring
   ]
 ]
 
@@ -441,10 +442,10 @@ Module[{paramSymbols, paramNames, newScope, bodyOccurring, attrsOccurring},
     attrsOccurring = Flatten[walk /@ {attrs}];
 
     paramSymbols = Replace[params, {
-      sym:LeafNode[Symbol, _, _] :> sym
+      LeafNode[Symbol, name_, data1_] :> {name, data1[Source]}
     }, 1];
 
-    paramNames = #[[2]]& /@ paramSymbols;
+    paramNames = #[[1]]& /@ paramSymbols;
 
     newScope = <| (# -> {"Function"})& /@ paramNames |>;
 
@@ -452,7 +453,7 @@ Module[{paramSymbols, paramNames, newScope, bodyOccurring, attrsOccurring},
 
     bodyOccurring = walk[body];
 
-    Scan[add[#, bodyOccurring]&, paramSymbols];
+    Scan[add[#[[1]], #[[2]], bodyOccurring]&, paramSymbols];
 
     Complement[bodyOccurring, paramNames] ~Join~ attrsOccurring
   ]
@@ -467,15 +468,15 @@ Module[{paramSymbolsAndTypeOccurring, paramSymbols, typeOccurring, paramNames, n
   Internal`InheritedBlock[{$LexicalScope},
 
     paramSymbolsAndTypeOccurring = Replace[params, {
-      CallNode[LeafNode[Symbol, "Typed", _], {sym:LeafNode[Symbol, _, _], type_}, _] :> {{sym}, walk[type]}
+      CallNode[LeafNode[Symbol, "Typed", _], {LeafNode[Symbol, name_, data1_], type_}, _] :> {{{name, data1[Source]}}, walk[type]}
     }, 1];
 
-    paramSymbols = Flatten[paramSymbolsAndTypeOccurring[[All, 1]]];
-    typeOccurring = Flatten[paramSymbolsAndTypeOccurring[[All, 2]]];
+    paramSymbols = Flatten[paramSymbolsAndTypeOccurring[[All, 1]], 1];
+    typeOccurring = Flatten[paramSymbolsAndTypeOccurring[[All, 2]], 1];
 
     attrsOccurring = Flatten[walk /@ {attrs}];
     
-    paramNames = #[[2]]& /@ paramSymbols;
+    paramNames = #[[1]]& /@ paramSymbols;
 
     newScope = <| (# -> {"Function"})& /@ paramNames |>;
 
@@ -483,7 +484,7 @@ Module[{paramSymbolsAndTypeOccurring, paramSymbols, typeOccurring, paramNames, n
 
     bodyOccurring = walk[body];
 
-    Scan[add[#, bodyOccurring]&, paramSymbols];
+    Scan[add[#[[1]], #[[2]], bodyOccurring]&, paramSymbols];
 
     typeOccurring ~Join~ Complement[bodyOccurring, paramNames] ~Join~ attrsOccurring
   ]
@@ -502,9 +503,9 @@ Module[{paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, paramNames, n
 
     paramSymbolsAndIterOccurring =
       Replace[iter[[2]], {
-        {sym:LeafNode[Symbol, _, _], max_} :> {{sym}, walk[max]},
-        {sym:LeafNode[Symbol, _, _], min_, max_} :> {{sym}, walk[min] ~Join~ walk[max]},
-        {sym:LeafNode[Symbol, _, _], min_, max_, d_} :> {{sym}, walk[min] ~Join~ walk[max] ~Join~ walk[d]},
+        {LeafNode[Symbol, name_, data1_], max_} :> {{{name, data1[Source]}}, walk[max]},
+        {LeafNode[Symbol, name_, data1_], min_, max_} :> {{{name, data1[Source]}}, walk[min] ~Join~ walk[max]},
+        {LeafNode[Symbol, name_, data1_], min_, max_, d_} :> {{{name, data1[Source]}}, walk[min] ~Join~ walk[max] ~Join~ walk[d]},
         {max_} :> {{}, walk[max]},
         _ :> {{}, {}}
       }, {0}];
@@ -512,7 +513,7 @@ Module[{paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, paramNames, n
     paramSymbols = paramSymbolsAndIterOccurring[[1]];
     iterOccurring = paramSymbolsAndIterOccurring[[2]];
 
-    paramNames = #[[2]]& /@ paramSymbols;
+    paramNames = #[[1]]& /@ paramSymbols;
 
     newScope = <| (# -> {tag})& /@ paramNames |>;
 
@@ -520,7 +521,7 @@ Module[{paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, paramNames, n
 
     bodyOccurring = walk[body];
 
-    Scan[add[#, bodyOccurring]&, paramSymbols];
+    Scan[add[#[[1]], #[[2]], bodyOccurring]&, paramSymbols];
 
     iterOccurring ~Join~ Complement[bodyOccurring, paramNames]
   ]
@@ -535,9 +536,9 @@ Module[{newBody, paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, para
 
     paramSymbolsAndIterOccurring =
       Replace[iter[[2]], {
-        {sym:LeafNode[Symbol, _, _], max_} :> {{sym}, walk[max]},
-        {sym:LeafNode[Symbol, _, _], min_, max_} :> {{sym}, walk[min] ~Join~ walk[max]},
-        {sym:LeafNode[Symbol, _, _], min_, max_, d_} :> {{sym}, walk[min] ~Join~ walk[max] ~Join~ walk[d]},
+        {LeafNode[Symbol, name_, data1_], max_} :> {{{name, data1[Source]}}, walk[max]},
+        {LeafNode[Symbol, name_, data1_], min_, max_} :> {{{name, data1[Source]}}, walk[min] ~Join~ walk[max]},
+        {LeafNode[Symbol, name_, data1_], min_, max_, d_} :> {{{name, data1[Source]}}, walk[min] ~Join~ walk[max] ~Join~ walk[d]},
         {max_} :> {{}, walk[max]},
         _ :> {{}, {}}
       }, {0}];
@@ -545,7 +546,7 @@ Module[{newBody, paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, para
     paramSymbols = paramSymbolsAndIterOccurring[[1]];
     iterOccurring = paramSymbolsAndIterOccurring[[2]];
 
-    paramNames = #[[2]]& /@ paramSymbols;
+    paramNames = #[[1]]& /@ paramSymbols;
 
     newScope = <| (# -> {tag})& /@ paramNames |>;
 
@@ -553,7 +554,7 @@ Module[{newBody, paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, para
 
     bodyOccurring = walk[newBody];
 
-    Scan[add[#, bodyOccurring]&, paramSymbols];
+    Scan[add[#[[1]], #[[2]], bodyOccurring]&, paramSymbols];
 
     iterOccurring ~Join~ Complement[bodyOccurring, paramNames]
   ]
@@ -571,9 +572,9 @@ Module[{paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, paramNames, n
 
     paramSymbolsAndIterOccurring =
       Replace[iter[[2]], {
-        {sym:LeafNode[Symbol, _, _], max_} :> {{sym}, walk[max]},
-        {sym:LeafNode[Symbol, _, _], min_, max_} :> {{sym}, walk[min] ~Join~ walk[max]},
-        {sym:LeafNode[Symbol, _, _], min_, max_, d_} :> {{sym}, walk[min] ~Join~ walk[max] ~Join~ walk[d]},
+        {LeafNode[Symbol, name_, data1_], max_} :> {{{name, data1[Source]}}, walk[max]},
+        {LeafNode[Symbol, name_, data1_], min_, max_} :> {{{name, data1[Source]}}, walk[min] ~Join~ walk[max]},
+        {LeafNode[Symbol, name_, data1_], min_, max_, d_} :> {{{name, data1[Source]}}, walk[min] ~Join~ walk[max] ~Join~ walk[d]},
         {max_} :> {{}, walk[max]},
         _ :> {{}, {}}
       }, {0}];
@@ -583,7 +584,7 @@ Module[{paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, paramNames, n
 
     optOccurring = Flatten[walk /@ {optSeq}];
 
-    paramNames = #[[2]]& /@ paramSymbols;
+    paramNames = #[[1]]& /@ paramSymbols;
 
     newScope = <| (# -> {tag})& /@ paramNames |>;
 
@@ -591,7 +592,7 @@ Module[{paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, paramNames, n
 
     bodyOccurring = walk[body];
 
-    Scan[add[#, bodyOccurring]&, paramSymbols];
+    Scan[add[#[[1]], #[[2]], bodyOccurring]&, paramSymbols];
 
     iterOccurring ~Join~ Complement[bodyOccurring, paramNames] ~Join~ optOccurring
   ]
@@ -606,9 +607,9 @@ Module[{newBody, paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, para
 
     paramSymbolsAndIterOccurring =
       Replace[iter[[2]], {
-        {sym:LeafNode[Symbol, _, _], max_} :> {{sym}, walk[max]},
-        {sym:LeafNode[Symbol, _, _], min_, max_} :> {{sym}, walk[min] ~Join~ walk[max]},
-        {sym:LeafNode[Symbol, _, _], min_, max_, d_} :> {{sym}, walk[min] ~Join~ walk[max] ~Join~ walk[d]},
+        {LeafNode[Symbol, name_, data1_], max_} :> {{{name, data1[Source]}}, walk[max]},
+        {LeafNode[Symbol, name_, data1_], min_, max_} :> {{{name, data1[Source]}}, walk[min] ~Join~ walk[max]},
+        {LeafNode[Symbol, name_, data1_], min_, max_, d_} :> {{{name, data1[Source]}}, walk[min] ~Join~ walk[max] ~Join~ walk[d]},
         {max_} :> {{}, walk[max]},
         _ :> {{}, {}}
       }, {0}];
@@ -618,7 +619,7 @@ Module[{newBody, paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, para
 
     optOccurring = Flatten[walk /@ {optSeq}];
 
-    paramNames = #[[2]]& /@ paramSymbols;
+    paramNames = #[[1]]& /@ paramSymbols;
 
     newScope = <| (# -> {tag})& /@ paramNames |>;
 
@@ -626,7 +627,7 @@ Module[{newBody, paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, para
 
     bodyOccurring = walk[newBody];
 
-    Scan[add[#, bodyOccurring]&, paramSymbols];
+    Scan[add[#[[1]], #[[2]], bodyOccurring]&, paramSymbols];
 
     iterOccurring ~Join~ Complement[bodyOccurring, paramNames] ~Join~ optOccurring
   ]
@@ -642,13 +643,13 @@ Module[{paramSymbolsAndRangeOccurring, paramSymbols, rangeOccurring, paramNames,
 
     paramSymbolsAndRangeOccurring =
       Replace[range[[2]], {
-        {sym:LeafNode[Symbol, _, _], min_, max_} :> {{sym}, walk[min] ~Join~ walk[max]}
+        {LeafNode[Symbol, name_, data1_], min_, max_} :> {{{name, data1[Source]}}, walk[min] ~Join~ walk[max]}
       }, {0}];
 
     paramSymbols = paramSymbolsAndRangeOccurring[[1]];
     rangeOccurring = paramSymbolsAndRangeOccurring[[2]];
 
-    paramNames = #[[2]]& /@ paramSymbols;
+    paramNames = #[[1]]& /@ paramSymbols;
 
     newScope = <| (# -> {tag})& /@ paramNames |>;
 
@@ -656,7 +657,7 @@ Module[{paramSymbolsAndRangeOccurring, paramSymbols, rangeOccurring, paramNames,
 
     bodyOccurring = walk[body];
 
-    Scan[add[#, bodyOccurring]&, paramSymbols];
+    Scan[add[#[[1]], #[[2]], bodyOccurring]&, paramSymbols];
 
     rangeOccurring ~Join~ Complement[bodyOccurring, paramNames]
   ]
@@ -673,18 +674,18 @@ Module[{paramSymbolsAndTypeOccurring, paramSymbols, typeOccurring, paramNames, n
     paramSymbolsAndTypeOccurring =
       Function[{type},
         Replace[type[[2]], {
-          {sym:LeafNode[Symbol, _, _], pattern_} :> {{sym}, walk[pattern]},
-          {sym:LeafNode[Symbol, _, _], pattern_, rank_} :> {{sym}, walk[pattern] ~Join~ walk[rank]},
+          {LeafNode[Symbol, name_, data1_], pattern_} :> {{{name, data1[Source]}}, walk[pattern]},
+          {LeafNode[Symbol, name_, data1_], pattern_, rank_} :> {{{name, data1[Source]}}, walk[pattern] ~Join~ walk[rank]},
           _ :> {{}, {}}
         }, {0}]
       ] /@ types;
 
-    paramSymbols = Flatten[paramSymbolsAndTypeOccurring[[All, 1]]];
-    typeOccurring = Flatten[paramSymbolsAndTypeOccurring[[All, 2]]];
+    paramSymbols = Flatten[paramSymbolsAndTypeOccurring[[All, 1]], 1];
+    typeOccurring = Flatten[paramSymbolsAndTypeOccurring[[All, 2]], 1];
 
     optionsAndPatternsOccurring = Flatten[walk /@ {optionsAndPatterns}];
 
-    paramNames = #[[2]]& /@ paramSymbols;
+    paramNames = #[[1]]& /@ paramSymbols;
 
     newScope = <| (# -> {"Compile"})& /@ paramNames |>;
 
@@ -692,7 +693,7 @@ Module[{paramSymbolsAndTypeOccurring, paramSymbols, typeOccurring, paramNames, n
 
     bodyOccurring = walk[body];
 
-    Scan[add[#, bodyOccurring]&, paramSymbols];
+    Scan[add[#[[1]], #[[2]], bodyOccurring]&, paramSymbols];
 
     typeOccurring ~Join~ Complement[bodyOccurring, paramNames] ~Join~ optionsAndPatternsOccurring
   ]
@@ -924,7 +925,7 @@ walkCondition[LeafNode[_, _, _]] :=
   {}
 
 
-add[sym:LeafNode[Symbol, name_, data_], True] :=
+add[name_, src_, True] :=
 Module[{decls, entry},
 
   decls = Lookup[$LexicalScope, name, {}];
@@ -933,7 +934,7 @@ Module[{decls, entry},
 
   AppendTo[entry,
     scopingDataObject[
-      data[[Key[Source]]],
+      src,
       decls,
       modifiersSet[decls, True],
       name
@@ -943,7 +944,7 @@ Module[{decls, entry},
   $Data[name] = entry;
 ]
 
-add[sym:LeafNode[Symbol, name_, data_], occurringScopedNames_] :=
+add[name_, src_, occurringScopedNames_] :=
 Module[{decls, entry},
 
   decls = Lookup[$LexicalScope, name, {}];
@@ -952,7 +953,7 @@ Module[{decls, entry},
 
   AppendTo[entry,
     scopingDataObject[
-      data[[Key[Source]]],
+      src,
       decls,
       modifiersSet[decls, MemberQ[occurringScopedNames, name]],
       name
