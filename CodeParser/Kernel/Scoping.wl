@@ -391,8 +391,6 @@ Module[{newScope, bodyOccurring},
 
     bodyOccurring = walk[body];
 
-    add[$slotName, bodyOccurring];
-
     Complement[bodyOccurring, {$slotName}]
   ]
 ]
@@ -409,8 +407,6 @@ Module[{newScope, bodyOccurring, attrsOccurring},
     $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
 
     bodyOccurring = walk[body];
-
-    add[$slotName, bodyOccurring];
 
     Complement[bodyOccurring, {$slotName}] ~Join~ attrsOccurring
   ]
