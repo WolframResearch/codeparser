@@ -360,7 +360,7 @@ CodeConcreteParse::usage = "CodeConcreteParse[code] returns a concrete syntax tr
 code can be a string, a file, or a list of bytes."
 
 Options[CodeConcreteParse] = {
-  CharacterEncoding -> "UTF8",
+  CharacterEncoding -> "UTF-8",
   SourceConvention -> "LineColumn",
   "TabWidth" :> $DefaultTabWidth,
   ContainerNode -> Automatic,
@@ -387,11 +387,11 @@ Module[{csts, bytess, encoding, fileFormat, firstLineBehavior},
   encoding = OptionValue[CharacterEncoding];
   fileFormat = OptionValue["FileFormat"];
 
-  If[encoding =!= "UTF8",
+  If[encoding =!= "UTF-8",
     Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
   ];
 
-  bytess = ToCharacterCode[ss, "UTF8"];
+  bytess = ToCharacterCode[ss, "UTF-8"];
 
   Switch[fileFormat,
     "Package",
@@ -481,7 +481,7 @@ CodeParse::usage = "CodeParse[code] returns an abstract syntax tree by interpret
 code can be a string, a file, or a list of bytes."
 
 Options[CodeParse] = {
-  CharacterEncoding -> "UTF8",
+  CharacterEncoding -> "UTF-8",
   SourceConvention -> "LineColumn",
   "TabWidth" :> $DefaultTabWidth,
   ContainerNode -> Automatic,
@@ -549,7 +549,7 @@ Module[{csts, encoding, fulls, bytess, fileFormat, firstLineBehavior, exts},
   encoding = OptionValue[CharacterEncoding];
   fileFormat = OptionValue["FileFormat"];
 
-  If[encoding =!= "UTF8",
+  If[encoding =!= "UTF-8",
     Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
   ];
 
@@ -756,7 +756,7 @@ Module[{csts, encoding, fileFormat, firstLineBehavior},
   encoding = OptionValue[CharacterEncoding];
   fileFormat = OptionValue["FileFormat"];
 
-  If[encoding =!= "UTF8",
+  If[encoding =!= "UTF-8",
     Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
   ];
 
@@ -905,7 +905,7 @@ CodeTokenize::usage = "CodeTokenize[code] returns a list of tokens by interpreti
 code can be a string, a file, or a list of bytes."
 
 Options[CodeTokenize] = {
-  CharacterEncoding -> "UTF8",
+  CharacterEncoding -> "UTF-8",
   SourceConvention -> "LineColumn",
   "TabWidth" :> $DefaultTabWidth,
   "FileFormat" -> Automatic
@@ -943,11 +943,11 @@ Module[{res, bytess, encoding, convention, tabWidth},
   convention = OptionValue[SourceConvention];
   tabWidth = OptionValue["TabWidth"];
 
-  If[encoding =!= "UTF8",
+  If[encoding =!= "UTF-8",
     Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
   ];
 
-  bytess = ToCharacterCode[ss, "UTF8"];
+  bytess = ToCharacterCode[ss, "UTF-8"];
 
   $ConcreteParseProgress = 0;
   $ConcreteParseStart = Now;
@@ -1003,7 +1003,7 @@ Module[{encoding, res, fulls, bytess, convention, tabWidth, fileFormat, firstLin
   tabWidth = OptionValue["TabWidth"];
   fileFormat = OptionValue["FileFormat"];
 
-  If[encoding =!= "UTF8",
+  If[encoding =!= "UTF-8",
     Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
   ];
 
@@ -1094,7 +1094,7 @@ Module[{encoding, res, convention, tabWidth},
   convention = OptionValue[SourceConvention];
   tabWidth = OptionValue["TabWidth"];
 
-  If[encoding =!= "UTF8",
+  If[encoding =!= "UTF-8",
     Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
   ];
 

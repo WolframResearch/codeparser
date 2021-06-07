@@ -74,7 +74,7 @@ But return the opener to make ToString stuff easier
 *)
 
 Options[reparseUnterminatedGroupNode] = {
-  CharacterEncoding -> "UTF8",
+  CharacterEncoding -> "UTF-8",
   SourceConvention -> "LineColumn",
   ContainerNode -> Automatic,
   "TabWidth" :> ("TabWidth" /. Options[CodeConcreteParse])
@@ -214,7 +214,7 @@ Do not return the previous children, because they are useless any way.
 *)
 
 Options[reparseUnterminatedTokenErrorNode] = {
-  CharacterEncoding -> "UTF8",
+  CharacterEncoding -> "UTF-8",
   SourceConvention -> "LineColumn",
   ContainerNode -> Automatic,
   "TabWidth" :> ("TabWidth" /. Options[CodeConcreteParse])
