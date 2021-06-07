@@ -175,7 +175,7 @@ Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableN
   Internal`InheritedBlock[{$LexicalScope},
 
     variableSymbolsAndRHSOccurring = Replace[vars, {
-      LeafNode[Symbol, name_, data1_] :> (If[fullyQualifiedSymbolQ[sym] || uppercaseOrDollarSymbolQ[sym], usedHeuristics[{name, data1[Source]}] = True];{{{name, data1[Source]}}, {}}),
+      LeafNode[Symbol, name_, data1_] :> (If[fullyQualifiedSymbolNameQ[name] || uppercaseOrDollarSymbolNameQ[name], usedHeuristics[{name, data1[Source]}] = True];{{{name, data1[Source]}}, {}}),
       CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {LeafNode[Symbol, name_, _], rhs_}, data1_] :> (usedHeuristics[{name, data1[Source]}] = True;{{{name, data1[Source]}}, walk[rhs]}),
       _ :> {{}, {}}
     }, 1];
@@ -191,7 +191,7 @@ Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableN
 
     bodyOccurring = walk[body];
 
-    Scan[add[#[[1]], #[[2]], bodyOccurring || Lookup[usedHeuristics, #, False]]&, variableSymbols];
+    Scan[add[#[[1]], #[[2]], bodyOccurring || Lookup[usedHeuristics, Key[#], False]]&, variableSymbols];
 
     rhsOccurring ~Join~ Complement[bodyOccurring, variableNames]
   ]
@@ -200,10 +200,10 @@ Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableN
 (*
 if there is a ` anywhere in the symbol, then assume it is fully-qualified
 *)
-fullyQualifiedSymbolQ[LeafNode[Symbol, s_, _]] :=
+fullyQualifiedSymbolNameQ[s_String] :=
   StringContainsQ[s, "`"]
 
-uppercaseOrDollarSymbolQ[LeafNode[Symbol, s_, _]] :=
+uppercaseOrDollarSymbolNameQ[s_String] :=
   StringMatchQ[s, RegularExpression["[A-Z\\$].*"]]
 
 
