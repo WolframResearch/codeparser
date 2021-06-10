@@ -325,9 +325,6 @@ If[PacletFind["AST"] != {},
 
 
 
-$DefaultTabWidth = 1
-
-
 (*
 first line behavior may be:
 NotScript:
@@ -362,9 +359,12 @@ code can be a string, a file, or a list of bytes."
 Options[CodeConcreteParse] = {
   CharacterEncoding -> "UTF-8",
   SourceConvention -> "LineColumn",
-  "TabWidth" :> $DefaultTabWidth,
-  ContainerNode -> Automatic,
-  "FileFormat" -> Automatic
+  "TabWidth" -> 1,
+  "FileFormat" -> Automatic,
+  (*
+  more obscure options
+  *)
+  ContainerNode -> Automatic
 }
 
 CodeConcreteParse[s_String, opts:OptionsPattern[]] :=
@@ -483,9 +483,12 @@ code can be a string, a file, or a list of bytes."
 Options[CodeParse] = {
   CharacterEncoding -> "UTF-8",
   SourceConvention -> "LineColumn",
-  "TabWidth" :> $DefaultTabWidth,
-  ContainerNode -> Automatic,
-  "FileFormat" -> Automatic
+  "TabWidth" -> 1,
+  "FileFormat" -> Automatic,
+  (*
+  more obscure options
+  *)
+  ContainerNode -> Automatic
 }
 
 (*
@@ -907,7 +910,7 @@ code can be a string, a file, or a list of bytes."
 Options[CodeTokenize] = {
   CharacterEncoding -> "UTF-8",
   SourceConvention -> "LineColumn",
-  "TabWidth" :> $DefaultTabWidth,
+  "TabWidth" -> 1,
   "FileFormat" -> Automatic
 }
 
@@ -1141,7 +1144,7 @@ code can be a string."
 Options[CodeConcreteParseLeaf] = {
   "StringifyMode" -> 0,
   SourceConvention -> "LineColumn",
-  "TabWidth" :> $DefaultTabWidth
+  "TabWidth" -> 1
 }
 
 CodeConcreteParseLeaf[str_String, opts:OptionsPattern[]] :=

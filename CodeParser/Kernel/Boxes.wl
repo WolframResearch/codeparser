@@ -17,17 +17,17 @@ Needs["CodeParser`RowBox`"]
 Needs["CodeParser`Utils`"]
 
 
-CodeConcreteParse[nb_NotebookObject] :=
-  CodeConcreteParse[NotebookGet[nb]]
+CodeConcreteParse[nb_NotebookObject, opts:OptionsPattern[]] :=
+  CodeConcreteParse[NotebookGet[nb], opts]
 
 
-CodeConcreteParse[c_CellObject] :=
-  CodeConcreteParse[NotebookRead[c]]
+CodeConcreteParse[c_CellObject, opts:OptionsPattern[]] :=
+  CodeConcreteParse[NotebookRead[c], opts]
 
 
-CodeConcreteParse[Notebook[cells_, ___]] :=
+CodeConcreteParse[Notebook[cells_, ___], opts:OptionsPattern[]] :=
 Module[{parsed},
-  parsed = MapIndexed[replaceContainerNode[CodeConcreteParse[#1], #2]&, cells];
+  parsed = MapIndexed[replaceContainerNode[CodeConcreteParse[#1, opts], #2]&, cells];
   ContainerNode[Notebook, parsed, <||>]
 ]
 
@@ -38,10 +38,10 @@ replaceContainerNode[other_, pos_] := other
 
 
 
-CodeConcreteParse[Cell[BoxData[box_], _, ___]] :=
+CodeConcreteParse[Cell[BoxData[box_], _, ___], opts:OptionsPattern[]] :=
 Catch[
 Module[{parsed},
-  parsed = CodeConcreteParseBox[box];
+  parsed = CodeConcreteParseBox[box, FilterRules[{opts}, Options[CodeConcreteParseBox]]];
   
   If[FailureQ[parsed],
     Throw[parsed]
@@ -55,12 +55,12 @@ Module[{parsed},
   parsed
 ]]
 
-CodeConcreteParse[c:Cell[___]] :=
+CodeConcreteParse[c:Cell[___], opts:OptionsPattern[]] :=
   Failure["CannotParseCell", <| "Cell" -> c |>]
 
 
-CodeConcreteParse[b_RowBox] :=
-  CodeConcreteParseBox[b]
+CodeConcreteParse[b_RowBox, opts:OptionsPattern[]] :=
+  CodeConcreteParseBox[b, FilterRules[{opts}, Options[CodeConcreteParseBox]]]
 
 
 (*
@@ -76,7 +76,7 @@ Do not want to reimplement MakeExpression.
 
 *)
 
-CodeConcreteParseBox[boxs_List] :=
+CodeConcreteParseBox[boxs_List, opts:OptionsPattern[]] :=
 Catch[
 Module[{children},
 
@@ -124,7 +124,7 @@ wrapToplevelCompoundExpression[ns:{___, LeafNode[Token`Semi, _, _], ___}] :=
 wrapToplevelCompoundExpression[ns_] := ns
 
 
-CodeConcreteParseBox[box_] :=
+CodeConcreteParseBox[box_, opts:OptionsPattern[]] :=
 Catch[
 Module[{children, child},
 

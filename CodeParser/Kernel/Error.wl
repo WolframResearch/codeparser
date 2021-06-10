@@ -77,7 +77,7 @@ Options[reparseUnterminatedGroupNode] = {
   CharacterEncoding -> "UTF-8",
   SourceConvention -> "LineColumn",
   ContainerNode -> Automatic,
-  "TabWidth" :> ("TabWidth" /. Options[CodeConcreteParse])
+  "TabWidth" -> 1
 }
 
 reparseUnterminatedGroupNode[{tag_, children_, dataIn_}, bytes_List, opts:OptionsPattern[]] :=
@@ -217,7 +217,7 @@ Options[reparseUnterminatedTokenErrorNode] = {
   CharacterEncoding -> "UTF-8",
   SourceConvention -> "LineColumn",
   ContainerNode -> Automatic,
-  "TabWidth" :> ("TabWidth" /. Options[CodeConcreteParse])
+  "TabWidth" -> 1
 }
 
 reparseUnterminatedTokenErrorNode[{tok_, _, dataIn_}, bytes_List, OptionsPattern[]] :=
