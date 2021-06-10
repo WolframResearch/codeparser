@@ -44,7 +44,14 @@ ParserSession::~ParserSession() {
     TheByteBuffer.reset(nullptr);
 }
 
-void ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libData, ParserSessionPolicy policyIn, SourceConvention srcConvention, uint32_t tabWidth, FirstLineBehavior firstLineBehavior) {
+void ParserSession::init(
+    BufferAndLength bufAndLenIn,
+    WolframLibraryData libData,
+    ParserSessionPolicy policyIn,
+    SourceConvention srcConvention,
+    uint32_t tabWidth,
+    FirstLineBehavior firstLineBehavior,
+    int encodingMode) {
     
     bufAndLen = bufAndLenIn;
     
@@ -55,7 +62,7 @@ void ParserSession::init(BufferAndLength bufAndLenIn, WolframLibraryData libData
     }
     
     TheByteBuffer->init(bufAndLen, libData);
-    TheByteDecoder->init(srcConvention, tabWidth);
+    TheByteDecoder->init(srcConvention, tabWidth, encodingMode);
     TheCharacterDecoder->init(libData);
     TheTokenizer->init();
     TheParser->init(firstLineBehavior);
@@ -541,7 +548,7 @@ DLLEXPORT int ConcreteParseBytes_Listable_LibraryLink(WolframLibraryData libData
         
         auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
         
-        TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth, firstLineBehavior);
+        TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL);
         
         auto N = TheParserSession->parseExpressions();
         
@@ -619,7 +626,7 @@ DLLEXPORT int TokenizeBytes_Listable_LibraryLink(WolframLibraryData libData, MLI
         
         auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
         
-        TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth, firstLineBehavior);
+        TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL);
         
         auto N = TheParserSession->tokenize();
         
@@ -645,7 +652,7 @@ DLLEXPORT int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK ml
     
     auto len = static_cast<size_t>(mlLen);
     
-    if (len != 5) {
+    if (len != 6) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -677,13 +684,18 @@ DLLEXPORT int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK ml
     
     auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
     
+    int encodingMode;
+    if (!MLGetInteger(mlp, &encodingMode)) {
+        return LIBRARY_FUNCTION_ERROR;
+    }
+
     if (!MLNewPacket(mlp) ) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
     auto bufAndLen = BufferAndLength(inStr->get(), inStr->getByteCount());
     
-    TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth, firstLineBehavior);
+    TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth, firstLineBehavior, encodingMode);
     
     auto N = TheParserSession->concreteParseLeaf(static_cast<StringifyMode>(stringifyMode));
     
@@ -730,7 +742,7 @@ DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     //
     // Arbitrarily choose LineColumn convention, but it is not used
     //
-    TheByteDecoder->init(SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheByteDecoder->init(SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, ENCODINGMODE_NORMAL);
     
     bufAndLen.putUTF8String(mlp);
     

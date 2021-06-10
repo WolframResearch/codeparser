@@ -936,7 +936,13 @@ Module[{data, issues, stringifyMode, oldLeafSrc, len, src, cases, containsQuote,
       Throw[LeafNode[String, str, <|Source -> pos|>]]
   ];
 
-  parsed = CodeConcreteParseLeaf[str, "StringifyMode" -> stringifyMode];
+  (*
+  EncodingMode:
+  0: normal (strings, files, bytes)
+  1: boxes
+  Has the effect of disabling NonASCIICharacter issues for boxes
+  *)
+  parsed = CodeConcreteParseLeaf[str, "StringifyMode" -> stringifyMode, "EncodingMode" -> 1];
   If[FailureQ[parsed],
     Throw[parsed]
   ];

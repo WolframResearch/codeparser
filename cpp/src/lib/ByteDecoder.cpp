@@ -5,10 +5,11 @@
 #include "Utils.h" // for isMBNonCharacter, etc.
 #include "CodePoint.h" // for CODEPOINT_REPLACEMENT_CHARACTER, CODEPOINT_CRLF, etc.
 #include "LongNames.h"
+#include "API.h" // for ENCODINGMODE
 
-ByteDecoder::ByteDecoder() : Issues(), status(), srcConventionManager(), lastBuf(), lastLoc(), SrcLoc() {}
+ByteDecoder::ByteDecoder() : Issues(), status(), srcConventionManager(), encodingMode(), lastBuf(), lastLoc(), SrcLoc() {}
 
-void ByteDecoder::init(SourceConvention srcConvention, uint32_t TabWidth) {
+void ByteDecoder::init(SourceConvention srcConvention, uint32_t TabWidth, int encodingModeIn) {
     
     Issues.clear();
     
@@ -30,6 +31,8 @@ void ByteDecoder::init(SourceConvention srcConvention, uint32_t TabWidth) {
     }
     
     SrcLoc = srcConventionManager->newSourceLocation();
+
+    encodingMode = encodingModeIn;
 }
 
 void ByteDecoder::deinit() {
@@ -219,7 +222,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             {
                 if (Utils::isMBStrange(decoded)) {
                     strangeWarning(decoded, currentSourceCharacterStartLoc, 0.95);
-                } else {
+                } else if (encodingMode == ENCODINGMODE_NORMAL) {
                     nonASCIIWarning(decoded, currentSourceCharacterStartLoc, 1.0);
                 }
             }
@@ -310,7 +313,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             {
                 if (Utils::isMBStrange(decoded)) {
                     strangeWarning(decoded, currentSourceCharacterStartLoc, 0.95);
-                } else {
+                } else if (encodingMode == ENCODINGMODE_NORMAL) {
                     nonASCIIWarning(decoded, currentSourceCharacterStartLoc, 1.0);
                 }
             }
@@ -411,7 +414,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             {
                 if (Utils::isMBStrange(decoded)) {
                     strangeWarning(decoded, currentSourceCharacterStartLoc, 0.95);
-                } else {
+                } else if (encodingMode == ENCODINGMODE_NORMAL) {
                     nonASCIIWarning(decoded, currentSourceCharacterStartLoc, 1.0);
                 }
             }
@@ -508,7 +511,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             {
                 if (Utils::isMBStrange(decoded)) {
                     strangeWarning(decoded, currentSourceCharacterStartLoc, 0.95);
-                } else {
+                } else if (encodingMode == ENCODINGMODE_NORMAL) {
                     nonASCIIWarning(decoded, currentSourceCharacterStartLoc, 1.0);
                 }
             }
@@ -636,7 +639,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             {
                 if (Utils::isMBStrange(decoded)) {
                     strangeWarning(decoded, currentSourceCharacterStartLoc, 0.95);
-                } else {
+                } else if (encodingMode == ENCODINGMODE_NORMAL) {
                     nonASCIIWarning(decoded, currentSourceCharacterStartLoc, 1.0);
                 }
             }
@@ -764,7 +767,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             {
                 if (Utils::isMBStrange(decoded)) {
                     strangeWarning(decoded, currentSourceCharacterStartLoc, 0.95);
-                } else {
+                } else if (encodingMode == ENCODINGMODE_NORMAL) {
                     nonASCIIWarning(decoded, currentSourceCharacterStartLoc, 1.0);
                 }
             }
@@ -892,7 +895,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             {
                 if (Utils::isMBStrange(decoded)) {
                     strangeWarning(decoded, currentSourceCharacterStartLoc, 0.95);
-                } else {
+                } else if (encodingMode == ENCODINGMODE_NORMAL) {
                     nonASCIIWarning(decoded, currentSourceCharacterStartLoc, 1.0);
                 }
             }

@@ -88,6 +88,18 @@ enum StringifyMode {
 };
 
 //
+// Different encoding modes
+//
+// Normal
+// Box
+// Has the effect of disabling NonASCIICharacter issues for boxes
+//
+enum EncodingMode {
+    ENCODINGMODE_NORMAL = 0,
+    ENCODINGMODE_BOX = 1,
+};
+
+//
 // Control the behavior of the parser
 //
 enum ParserSessionBits : uint8_t {
@@ -122,7 +134,15 @@ public:
     
     ~ParserSession();
     
-    void init(BufferAndLength bufAndLen, WolframLibraryData libData, ParserSessionPolicy policy, SourceConvention srcConvention, uint32_t tabWidth, FirstLineBehavior firstLineBehavior);
+    void init(
+        BufferAndLength bufAndLen,
+        WolframLibraryData libData,
+        ParserSessionPolicy policy,
+        SourceConvention srcConvention,
+        uint32_t tabWidth,
+        FirstLineBehavior firstLineBehavior,
+        int encodingMode
+    );
     
     void deinit();
     

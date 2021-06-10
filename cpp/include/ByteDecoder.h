@@ -81,6 +81,8 @@ private:
     UTF8Status status;
     
     SourceConventionManagerPtr srcConventionManager;
+
+    int encodingMode;
     
     
     void strangeWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, double confidence);
@@ -101,7 +103,7 @@ public:
     
     ByteDecoder();
     
-    void init(SourceConvention srcConvention, uint32_t TabWidth);
+    void init(SourceConvention srcConvention, uint32_t TabWidth, int encodingMode);
     
     void deinit();
     

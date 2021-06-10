@@ -1141,10 +1141,22 @@ Module[{},
 CodeConcreteParseLeaf::usage = "CodeConcreteParseLeaf[code] returns a LeafNode by interpreting code as a leaf. \
 code can be a string."
 
+(*
+StringifyMode:
+0: normal
+1: symbol segment or a quoted string (RHS of :: or #)
+2: file
+
+EncodingMode:
+0: normal (strings, files, bytes)
+1: boxes
+Has the effect of disabling NonASCIICharacter issues for boxes
+*)
 Options[CodeConcreteParseLeaf] = {
   "StringifyMode" -> 0,
   SourceConvention -> "LineColumn",
-  "TabWidth" -> 1
+  "TabWidth" -> 1,
+  "EncodingMode" -> 0
 }
 
 CodeConcreteParseLeaf[str_String, opts:OptionsPattern[]] :=
@@ -1155,20 +1167,21 @@ Options[concreteParseLeaf] = Options[CodeConcreteParseLeaf]
 
 concreteParseLeaf[strIn_String, OptionsPattern[]] :=
 Catch[
-Module[{str, res, leaf, data, exprs, stringifyMode, convention, tabWidth},
+Module[{str, res, leaf, data, exprs, stringifyMode, convention, tabWidth, encodingMode},
 
   str = strIn;
 
   stringifyMode = OptionValue["StringifyMode"];
   convention = OptionValue[SourceConvention];
   tabWidth = OptionValue["TabWidth"];
+  encodingMode = OptionValue["EncodingMode"];
 
   $ConcreteParseProgress = 0;
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
   Block[{$StructureSrcArgs = parseConvention[convention]},
-  res = libraryFunctionWrapper[concreteParseLeafFunc, str, stringifyMode, convention, tabWidth, firstLineBehaviorToInteger[NotScript]];
+  res = libraryFunctionWrapper[concreteParseLeafFunc, str, stringifyMode, convention, tabWidth, firstLineBehaviorToInteger[NotScript], encodingMode];
   ];
 
   $ConcreteParseProgress = 100;
