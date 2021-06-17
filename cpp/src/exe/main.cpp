@@ -30,9 +30,9 @@ enum OutputMode {
 };
 
 
-int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBehavior);
+int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBehavior, EncodingMode encodingMode);
 
-int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBehavior);
+int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBehavior, EncodingMode encodingMode);
 
 class ScopedFileBuffer {
 
@@ -64,6 +64,7 @@ int main(int argc, char *argv[]) {
     auto outputMode = PRINT;
     auto sourceCharacters = false;
     auto firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
+    auto encodingMode = ENCODINGMODE_NORMAL;
     
     std::string fileInput;
     
@@ -110,30 +111,30 @@ int main(int argc, char *argv[]) {
     
     if (file) {
         if (leaf) {
-            result = readFile(fileInput, LEAF, outputMode, firstLineBehavior);
+            result = readFile(fileInput, LEAF, outputMode, firstLineBehavior, encodingMode);
         } else if (sourceCharacters) {
-            result = readFile(fileInput, SOURCECHARACTERS, outputMode, firstLineBehavior);
+            result = readFile(fileInput, SOURCECHARACTERS, outputMode, firstLineBehavior, encodingMode);
         } else if (tokenize) {
-            result = readFile(fileInput, TOKENIZE, outputMode, firstLineBehavior);
+            result = readFile(fileInput, TOKENIZE, outputMode, firstLineBehavior, encodingMode);
         } else {
-            result = readFile(fileInput, EXPRESSION, outputMode, firstLineBehavior);
+            result = readFile(fileInput, EXPRESSION, outputMode, firstLineBehavior, encodingMode);
         }
     } else {
         if (leaf) {
-            result = readStdIn(LEAF, outputMode, firstLineBehavior);
+            result = readStdIn(LEAF, outputMode, firstLineBehavior, encodingMode);
         } else if (sourceCharacters) {
-            result = readStdIn(SOURCECHARACTERS, outputMode, firstLineBehavior);
+            result = readStdIn(SOURCECHARACTERS, outputMode, firstLineBehavior, encodingMode);
         } else if (tokenize) {
-            result = readStdIn(TOKENIZE, outputMode, firstLineBehavior);
+            result = readStdIn(TOKENIZE, outputMode, firstLineBehavior, encodingMode);
         } else {
-            result = readStdIn(EXPRESSION, outputMode, firstLineBehavior);
+            result = readStdIn(EXPRESSION, outputMode, firstLineBehavior, encodingMode);
         }
     }
     
     return result;
 }
 
-int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBehavior) {
+int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBehavior, EncodingMode encodingMode) {
     
     std::string input;
     std::cout << ">>> ";
@@ -151,7 +152,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
         
         auto inputBufAndLen = BufferAndLength(inputStr, input.size());
         
-        TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior);
+        TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
     
         auto N = TheParserSession->tokenize();
         
@@ -188,7 +189,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
         auto inputBufAndLen = BufferAndLength(inputStr, input.size());
         
         TheByteBuffer->init(inputBufAndLen, libData);
-        TheByteDecoder->init(SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+        TheByteDecoder->init(SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, ENCODINGMODE_NORMAL);
     
         auto N = TheParserSession->listSourceCharacters();
     
@@ -225,7 +226,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
         
         auto inputBufAndLen = BufferAndLength(inputStr, input.size());
         
-        TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior);
+        TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
         
         auto stringifyMode = STRINGIFYMODE_NORMAL;
         
@@ -263,7 +264,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
         
         auto inputBufAndLen = BufferAndLength(inputStr, input.size());
         
-        TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior);
+        TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
         
         auto N = TheParserSession->parseExpressions();
         
@@ -303,7 +304,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
     return result;
 }
 
-int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBehavior) {
+int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBehavior, EncodingMode encodingMode) {
     
     auto fb = ScopedFileBufferPtr(new ScopedFileBuffer(reinterpret_cast<Buffer>(file.c_str()), file.size()));
 
@@ -336,7 +337,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         
         auto fBufAndLen = BufferAndLength(fb->getBuf(), fb->getLen());
         
-        TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior);
+        TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
         
         auto N = TheParserSession->tokenize();
         
@@ -370,7 +371,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         
         auto fBufAndLen = BufferAndLength(fb->getBuf(), fb->getLen());
         
-        TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior);
+        TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, ENCODINGMODE_NORMAL);
         
         auto stringifyMode = STRINGIFYMODE_NORMAL;
         
@@ -406,7 +407,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         
         auto fBufAndLen = BufferAndLength(fb->getBuf(), fb->getLen());
         
-        TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior);
+        TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, ENCODINGMODE_NORMAL);
         
         auto N = TheParserSession->parseExpressions();
         
