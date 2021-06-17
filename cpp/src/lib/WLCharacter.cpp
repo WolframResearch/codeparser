@@ -622,6 +622,20 @@ bool WLCharacter::isMBWhitespace() const {
     
     auto val = to_point();
     
+    //
+    // Handle COMPATIBILITY characters here
+    //
+    // Cannot use LongNames data here, because the long name \[COMPATIBILITYNoBreak] is Unsupported and
+    // LongNames::isMBWhitespace(val) returns false
+    //
+    // But the actual *character* U+F3A2 is whitespace
+    //
+    // Yes, this is a bit messy
+    //
+    if (val == CODEPOINT_LONGNAME_COMPATIBILITYNOBREAK) {
+        return true;
+    }
+    
     return LongNames::isMBWhitespace(val);
 }
 
