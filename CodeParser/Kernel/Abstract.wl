@@ -52,9 +52,24 @@ Module[{agg},
 
 Abstract::usage = "Abstract[agg] returns an abstract syntax tree from an aggregate syntax tree."
 
-Abstract[agg_] :=
+(*
+BatchMode -> True where Begin[] and End[] nodes will be at top-level (e.g., .wl files)
+PackageNodes[] and ContextNodes[] WILL be created
+Issues about unbalanced directives WILL be created
+
+BatchMode -> False otherwise, i.e., where Begin[] and End[] nodes are separate or not easily scanned together (e.g., cells in notebooks)
+PackageNodes[] and ContextNodes[] will NOT be created
+Issues about unbalanced directives will NOT be created
+*)
+Options[Abstract] = {
+	"BatchMode" -> True
+}
+
+Abstract[agg_, opts:OptionsPattern[]] :=
 Block[{$RecursionLimit = Infinity},
-Module[{ast},
+Module[{ast, batchMode},
+
+	batchMode = OptionValue["BatchMode"];
 
 	CodeParser`Abstract`$AbstractParseStart = Now;
 	CodeParser`Abstract`$AbstractParseTime = Quantity[0, "Seconds"];
@@ -70,7 +85,12 @@ Module[{ast},
 	*)
 	ast = normalizeTokens[ast];
 
-	ast = abstract[ast];
+	Block[{$CurrentBatchMode},
+
+		$CurrentBatchMode = batchMode;
+
+		ast = abstract[ast];
+	];
 
 	CodeParser`Abstract`$AbstractParseProgress = 100;
 
@@ -428,8 +448,12 @@ Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node, wi
 	issues = {};
 
 	{abstractedChildren, issues1} = abstractTopLevelChildren[children, reportIssuesBehavior];
-
-	{abstracted, issues2} = abstractTopLevel[abstractedChildren];
+	
+	If[TrueQ[$CurrentBatchMode],
+		{abstracted, issues2} = abstractTopLevel[abstractedChildren];
+		,
+		{abstracted, issues2} = {abstractedChildren, {}}
+	];
 
 	issues = issues1 ~Join~ issues2;
 
