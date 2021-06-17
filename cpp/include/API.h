@@ -91,8 +91,14 @@ enum StringifyMode {
 // Different encoding modes
 //
 // Normal
+// generates issues that you would expect if coming from a file or a string
+//
+//
 // Box
-// Has the effect of disabling NonASCIICharacter issues for boxes
+// Coming from a box, so some issues will be disabled
+// These issues will be disabled:
+// NonASCIICharacters
+// Unexpected newline character: \[IndentingNewLine]
 //
 enum EncodingMode {
     ENCODINGMODE_NORMAL = 0,

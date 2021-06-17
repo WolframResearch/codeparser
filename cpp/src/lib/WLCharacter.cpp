@@ -583,6 +583,17 @@ bool WLCharacter::isMBStrangeNewline() const {
         return false;
     }
     
+    //
+    // FIXME: somehow supply encodingMode to test here
+    //
+    // \[IndentingNewLine] is not strange if coming from boxes
+    //
+//    if (val == CODEPOINT_LONGNAME_INDENTINGNEWLINE) {
+//        if (encodingMode == ENCODINGMODE_BOX) {
+//            return false;
+//        }
+//    }
+    
     return true;
 }
 

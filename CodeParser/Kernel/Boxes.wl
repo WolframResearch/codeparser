@@ -796,6 +796,18 @@ parseBox[str:"\t", pos_] := LeafNode[Token`Boxes`MultiWhitespace, str, <|Source 
 
 
 (*
+This has the added benefit of not generating an UnexpectedNewlineCharacter issue
+
+NOTE: an UnexpectedNewlineCharacter issues is still generated if you call CodeConcreteParseLeaf directly:
+
+CodeConcreteParseLeaf["\[IndentingNewLine]", "EncodingMode" -> 1]
+
+FIXME: fix the behavior of CodeConcreteParseLeaf to generate an issue here
+*)
+parseBox[str:"\[IndentingNewLine]", pos_] := LeafNode[Token`Newline, str, <|Source -> pos|>]
+
+
+(*
 The Front End treats comments as a collection of code, and not a single token
 *)
 parseBox[str:"(*", pos_] := LeafNode[Token`Boxes`OpenParenStar, str, <|Source -> pos|>]
