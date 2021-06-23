@@ -2231,7 +2231,7 @@ What is the process for adding boxes to this list?
 
 It's on-demand as case-by-case basis
 *)
-$okCallBoxPat = TemplateBox | InterpretationBox | SubscriptBox | SuperscriptBox
+$okCallBoxPat = TemplateBox | InterpretationBox | SubscriptBox | SuperscriptBox | StyleBox | NamespaceBox
 
 (*
 
