@@ -2235,7 +2235,7 @@ $okCallBoxPat = TemplateBox | InterpretationBox | SubscriptBox | SuperscriptBox
 
 (*
 
-Concrete parse of a[[2]] returns CallNode[a, GroupNode[Square, {GroupNode[Square, {2}]}]]
+concrete parse of a[[2]] returns CallNode[a, GroupNode[Square, {GroupNode[Square, {2}]}]]
 abstract parse of a[[2]] returns CallNode[Part, {a, 2}]
 
 So convert from concrete [[ syntax to abstract Part syntax
@@ -2270,6 +2270,8 @@ Module[{head, data, part, issues},
 				Null
 			,
 			LeafNode[Token`Percent | Token`PercentPercent, _, _] | CompoundNode[Out, _, _],
+				(*
+				was:
 
 				AppendTo[issues,
 					SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Warning", <|
@@ -2278,6 +2280,13 @@ Module[{head, data, part, issues},
 						"AdditionalSources" -> {last[[3, Key[Source]]]}
 					|>]
 				];
+
+				but % is already scanned in CodeInspector TokenRules, and this just adds more noise
+
+				*)
+
+				(* these are fine *)
+				Null
 			,
 			LeafNode[Token`LinearSyntaxBlob, _, _],
 
@@ -2432,6 +2441,8 @@ Module[{head, part, partData, issues, data},
 
 	issues = {};
 
+	(*
+	was:
 	AppendTo[issues,
 		SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|
 			Source -> first[[3, Key[Source]]],
@@ -2439,6 +2450,9 @@ Module[{head, part, partData, issues, data},
 			"AdditionalSources" -> {last[[3, Key[Source]]]}
 		|>]
 	];
+
+	but % is already scanned in CodeInspector TokenRules, and this just adds more noise
+	*)
 
 	head = abstract[head];
 	part = abstractGroupNode[part];
@@ -2669,6 +2683,8 @@ Module[{head, part, partData, data, issues},
 				Null
 			,
 			LeafNode[Token`Percent | Token`PercentPercent, _, _] | CompoundNode[Out, _, _],
+				(*
+				was:
 
 				AppendTo[issues,
 					SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|
@@ -2677,6 +2693,12 @@ Module[{head, part, partData, data, issues},
 						"AdditionalSources" -> {last[[3, Key[Source]]]}
 					|>]
 				];
+
+				but % is already scanned in CodeInspector TokenRules, and this just adds more noise
+				*)
+
+				(* these are fine *)
+				Null
 			,
 			LeafNode[Token`LinearSyntaxBlob, _, _],
 
