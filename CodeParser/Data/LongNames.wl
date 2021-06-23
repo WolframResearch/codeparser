@@ -350,8 +350,13 @@ Range 0x2000
 "Ellipsis" -> {LetterlikeCharacter, 16^^2026, <| "ASCIIReplacements" -> {"..."} |>},
 "LineSeparator" -> {NewlineCharacter, 16^^2028, <| "ASCIIReplacements" -> {"\n"} |>},
 "ParagraphSeparator" -> {NewlineCharacter, 16^^2029, <| "ASCIIReplacements" -> {"\n\n"} |>},
+(*
+There are MakeExpression rules for interpeting SuperscriptBox["a", "\[Prime]"] as Derivative[1][a]
+
+So in some vague sense, \[Prime] and \[DoublePrime] are not quite as strange as other letterlikes
+*)
 "Prime" -> {LetterlikeCharacter, 16^^2032, <| "ASCIIReplacements" -> {"'"}, "Extra" -> {"NotStrangeLetterlike"} |>},
-"DoublePrime" -> {LetterlikeCharacter, 16^^2033, <| "ASCIIReplacements" -> {"''", "\""} |>},
+"DoublePrime" -> {LetterlikeCharacter, 16^^2033, <| "ASCIIReplacements" -> {"''", "\""}, "Extra" -> {"NotStrangeLetterlike"} |>},
 "ReversePrime" -> {LetterlikeCharacter, 16^^2035, <| "ASCIIReplacements" -> {"`"} |>},
 "ReverseDoublePrime" -> {LetterlikeCharacter, 16^^2036, <| "ASCIIReplacements" -> {"``", "\""} |>},
 "SkeletonIndicator" -> {UninterpretableCharacter, 16^^2043, <| "ASCIIReplacements" -> {"-"} |>},
