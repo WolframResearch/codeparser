@@ -88,6 +88,7 @@ TestMatch[
 	TestID->"AbstractSyntaxIssues-20190520-S6O1O1"
 ]
 
+(*
 TestMatch[
 	FirstCase[CodeParse[" %[] ", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)],
 		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
@@ -96,6 +97,7 @@ TestMatch[
 	,
 	TestID->"AbstractSyntaxIssues-20190520-X5H0W9"
 ]
+*)
 
 TestMatch[
 	FirstCase[CodeParse[" \\!\\(x\\)[] ", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)],

@@ -269,10 +269,10 @@ TestMatch[
 Make sure that Source is correct
 *)
 TestMatch[
-	FirstCase[CodeConcreteParse["a\\[DoublePrime] + 2", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
+	FirstCase[CodeConcreteParse["a\\[Cent] + 2", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnexpectedLetterlikeCharacter", _, _, KeyValuePattern[Source -> {{1, 2}, {1, 16}}]]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnexpectedLetterlikeCharacter", _, _, KeyValuePattern[Source -> {{1, 2}, {1, 9}}]]}]
 	,
 	TestID->"SyntaxIssues-20200405-H2D3M0"
 ]
@@ -281,10 +281,10 @@ TestMatch[
 Make sure that Source is correct
 *)
 TestMatch[
-	FirstCase[CodeConcreteParse["\\[DoublePrime] + 2", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
+	FirstCase[CodeConcreteParse["\\[Cent] + 2", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnexpectedLetterlikeCharacter", _, _, KeyValuePattern[Source -> {{1, 1}, {1, 15}}]]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnexpectedLetterlikeCharacter", _, _, KeyValuePattern[Source -> {{1, 1}, {1, 8}}]]}]
 	,
 	TestID->"SyntaxIssues-20200504-H4U1I4"
 ]
@@ -293,10 +293,10 @@ TestMatch[
 Make sure that Source is correct
 *)
 TestMatch[
-	FirstCase[CodeConcreteParse["abc\\[DoublePrime] + 2", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
+	FirstCase[CodeConcreteParse["abc\\[Cent] + 2", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnexpectedLetterlikeCharacter", _, _, KeyValuePattern[Source -> {{1, 4}, {1, 18}}]]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnexpectedLetterlikeCharacter", _, _, KeyValuePattern[Source -> {{1, 4}, {1, 11}}]]}]
 	,
 	TestID->"SyntaxIssues-20200504-P6Z1C2"
 ]
