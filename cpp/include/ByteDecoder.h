@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Source.h" // for IssuePtr, UTF8Status, etc.
+#include "API.h" // for ENCODINGMODE
 
 #include <set>
 #include <memory> // for unique_ptr
@@ -82,7 +83,7 @@ private:
     
     SourceConventionManagerPtr srcConventionManager;
 
-    int encodingMode;
+    EncodingMode encodingMode;
     
     
     void strangeWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, double confidence);
@@ -103,7 +104,7 @@ public:
     
     ByteDecoder();
     
-    void init(SourceConvention srcConvention, uint32_t TabWidth, int encodingMode);
+    void init(SourceConvention srcConvention, uint32_t TabWidth, EncodingMode encodingMode);
     
     void deinit();
     

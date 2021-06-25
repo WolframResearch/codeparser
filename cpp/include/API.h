@@ -147,7 +147,7 @@ public:
         SourceConvention srcConvention,
         uint32_t tabWidth,
         FirstLineBehavior firstLineBehavior,
-        int encodingMode
+        EncodingMode encodingMode
     );
     
     void deinit();

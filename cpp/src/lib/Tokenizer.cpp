@@ -4,12 +4,15 @@
 #include "CharacterDecoder.h" // for TheCharacterDecoder
 #include "ByteDecoder.h" // for TheByteDecoder
 #include "ByteBuffer.h" // for TheByteBuffer
+#include "LongNames.h" // for CODEPOINT_LONGNAME_COMPATIBILITYNOBREAK
 #include "Utils.h" // for strangeLetterlikeWarning
 
 
-Tokenizer::Tokenizer() : Issues(), EmbeddedNewlines(), EmbeddedTabs() {}
+Tokenizer::Tokenizer() : encodingMode(), Issues(), EmbeddedNewlines(), EmbeddedTabs() {}
 
-void Tokenizer::init() {
+void Tokenizer::init(EncodingMode encodingModeIn) {
+    
+    encodingMode = encodingModeIn;
     
     Issues.clear();
     EmbeddedNewlines.clear();
@@ -3441,7 +3444,28 @@ inline Token Tokenizer::handleMBStrangeWhitespace(Buffer tokenStartBuf, SourceLo
     
 #if !NISSUES
     {
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDSPACECHARACTER, "Unexpected space character: ``\"" + c.safeEncodedCharString() + "\" (" + c.graphicalString() + ")``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.85, {}));
+        CodeActionPtrVector Actions;
+        
+        auto Src = getTokenSource(tokenStartLoc);
+        
+        if (c.to_point() == CODEPOINT_LONGNAME_COMPATIBILITYNOBREAK) {
+            
+            switch (encodingMode) {
+                case ENCODINGMODE_NORMAL: {
+                    Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``\\[COMPATIBILITYNoBreak]`` with ``\\[NoBreak]``", Src, "\\[NoBreak]")));
+                }
+                    break;
+                case ENCODINGMODE_BOX: {
+                    //
+                    // UTF-8 bytes for U+2060
+                    //
+                    Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``\\[COMPATIBILITYNoBreak]`` with ``\\[NoBreak]``", Src, "\xe2\x81\xa0")));
+                }
+                    break;
+            }
+        }
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDSPACECHARACTER, "Unexpected space character: ``\"" + c.safeEncodedCharString() + "\" (" + c.graphicalString() + ")``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.85, std::move(Actions)));
         
         Issues.insert(std::move(I));
     }

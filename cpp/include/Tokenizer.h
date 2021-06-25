@@ -3,6 +3,7 @@
 
 #include "WLCharacter.h" // for WLCharacter
 #include "Token.h" // for Token
+#include "API.h" // for ENCODINGMODE
 
 #include <set>
 #include <memory> // for unique_ptr
@@ -31,6 +32,8 @@ struct NumberTokenizationContext {
 // Tokenizer takes a stream of WL characters and tokenizes them
 //
 class Tokenizer {
+    
+    EncodingMode encodingMode;
     
     IssuePtrSet Issues;
     
@@ -154,7 +157,7 @@ class Tokenizer {
 public:
     Tokenizer();
     
-    void init();
+    void init(EncodingMode encodingMode);
 
     void deinit();
     

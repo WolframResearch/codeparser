@@ -9,7 +9,7 @@
 
 ByteDecoder::ByteDecoder() : Issues(), status(), srcConventionManager(), encodingMode(), lastBuf(), lastLoc(), SrcLoc() {}
 
-void ByteDecoder::init(SourceConvention srcConvention, uint32_t TabWidth, int encodingModeIn) {
+void ByteDecoder::init(SourceConvention srcConvention, uint32_t TabWidth, EncodingMode encodingModeIn) {
     
     Issues.clear();
     

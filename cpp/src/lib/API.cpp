@@ -51,7 +51,7 @@ void ParserSession::init(
     SourceConvention srcConvention,
     uint32_t tabWidth,
     FirstLineBehavior firstLineBehavior,
-    int encodingMode) {
+    EncodingMode encodingMode) {
     
     bufAndLen = bufAndLenIn;
     
@@ -64,7 +64,7 @@ void ParserSession::init(
     TheByteBuffer->init(bufAndLen, libData);
     TheByteDecoder->init(srcConvention, tabWidth, encodingMode);
     TheCharacterDecoder->init(libData);
-    TheTokenizer->init();
+    TheTokenizer->init(encodingMode);
     TheParser->init(firstLineBehavior);
     
     if (libData) {
@@ -684,10 +684,12 @@ DLLEXPORT int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK ml
     
     auto firstLineBehavior = static_cast<FirstLineBehavior>(mlFirstLineBehavior);
     
-    int encodingMode;
-    if (!MLGetInteger(mlp, &encodingMode)) {
+    int mlEncodingMode;
+    if (!MLGetInteger(mlp, &mlEncodingMode)) {
         return LIBRARY_FUNCTION_ERROR;
     }
+    
+    auto encodingMode = static_cast<EncodingMode>(mlEncodingMode);
 
     if (!MLNewPacket(mlp) ) {
         return LIBRARY_FUNCTION_ERROR;
