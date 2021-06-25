@@ -400,9 +400,16 @@ abstract[GroupNode[GroupParen, { _, child_, _}, data_]] :=
 abstract[GroupNode[GroupParen, children_, data_]] :=
 	AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, children[[2;;-2]], data]
 
-(* GroupNode errors *)
+(*
+GroupNode errors
+
+naked [] and naked \[LeftDoubleBracket]\[RightDoubleBracket]
+*)
 abstract[GroupNode[GroupSquare, children_, data_]] :=
 	AbstractSyntaxErrorNode[AbstractSyntaxError`OpenSquare, children, data]
+
+abstract[GroupNode[GroupDoubleBracket, children_, data_]] :=
+	AbstractSyntaxErrorNode[AbstractSyntaxError`LeftDoubleBracket, children, data]
 
 
 
@@ -2857,6 +2864,55 @@ abstract[BoxNode[RowBox, {a_}, data_]] := BoxNode[RowBox, {abstract /@ a}, data]
 a is a List of Lists
 *)
 abstract[BoxNode[GridBox, {a_, rest___}, data_]] := BoxNode[GridBox, {Map[abstract, a, {2}]} ~Join~ (abstract /@ {rest}), data]
+
+(*
+Handle special form of [[x]] in subscript
+
+Keep the [[]] structure un-abstracted
+
+FIXME: when things like SuperscriptBox[] -> Power[] and FractionBox[] -> Divide, then also do SubscriptBox[..., [[]] ] -> Part
+*)
+abstract[
+	BoxNode[
+		SubscriptBox
+		,
+		{a_,
+			GroupNode[GroupSquare, {
+				o1:LeafNode[Token`OpenSquare, _, _],
+				GroupNode[GroupSquare, {
+					o2:LeafNode[Token`OpenSquare, _, _],
+					b_,
+					c2:LeafNode[Token`CloseSquare, _, _]}
+					,
+					data2_
+				],
+				c1:LeafNode[Token`CloseSquare, _, _]}
+				,
+				data1_
+			]
+		}
+		,
+		data_
+	]
+] := BoxNode[SubscriptBox, {abstract[a], GroupNode[GroupSquare, {o1, GroupNode[GroupSquare, {o2, abstract[b], c2}, data2], c1}, data1]}, data]
+
+abstract[
+	BoxNode[
+		SubscriptBox
+		,
+		{a_,
+			GroupNode[GroupDoubleBracket, {
+				o:LeafNode[Token`LongName`LeftDoubleBracket, _, _],
+				b_,
+				c:LeafNode[Token`LongName`RightDoubleBracket, _, _]}
+				,
+				data1_
+			]
+		}
+		,
+		data_
+	]
+] := BoxNode[SubscriptBox, {abstract[a], GroupNode[GroupDoubleBracket, {o, abstract[b], c}, data1]}, data]
 
 abstract[BoxNode[b_, children_, data_]] := BoxNode[b, abstract /@ children, data]
 

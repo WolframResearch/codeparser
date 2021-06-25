@@ -86,6 +86,9 @@ prbDispatch[{LeafNode[Token`LessBar, _, _], ___, LeafNode[Token`BarGreater, _, _
 prbDispatch[{LeafNode[Token`OpenParen, _, _], ___, LeafNode[Token`CloseParen, _, _]}, handledChildren_, ignored_, pos_] :=
   GroupNode[GroupParen, handledChildren, <|Source->pos|>]
 
+prbDispatch[{LeafNode[Token`LongName`LeftDoubleBracket, _, _], ___, LeafNode[Token`LongName`RightDoubleBracket, _, _]}, handledChildren_, ignored_, pos_] :=
+  GroupNode[GroupDoubleBracket, handledChildren, <|Source->pos|>]
+
 prbDispatch[{LeafNode[Token`LongName`LeftAssociation, _, _], ___, LeafNode[Token`LongName`RightAssociation, _, _]}, handledChildren_, ignored_, pos_] :=
   GroupNode[Association, handledChildren, <|Source->pos|>]
 
@@ -170,6 +173,12 @@ prbDispatch[{LeafNode[Token`OpenParen, _, _], ___}, handledChildren_, ignored_, 
 
 prbDispatch[{___, LeafNode[Token`CloseParen, _, _]}, handledChildren_, ignored_, pos_] :=
   GroupMissingOpenerNode[GroupParen, handledChildren, <|Source -> pos|>]
+
+prbDispatch[{LeafNode[Token`LongName`LeftDoubleBracket, _, _], ___}, handledChildren_, ignored_, pos_] :=
+  GroupMissingCloserNode[GroupDoubleBracket, handledChildren, <|Source -> pos|>]
+
+prbDispatch[{___, LeafNode[Token`LongName`RightDoubleBracket, _, _]}, handledChildren_, ignored_, pos_] :=
+  GroupMissingOpenerNode[GroupDoubleBracket, handledChildren, <|Source -> pos|>]
 
 prbDispatch[{LeafNode[Token`LongName`LeftAssociation, _, _], ___}, handledChildren_, ignored_, pos_] :=
   GroupMissingCloserNode[Association, handledChildren, <|Source -> pos|>]
