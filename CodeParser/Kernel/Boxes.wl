@@ -619,6 +619,10 @@ $mbWhitespace = {
 "\[DiscretionaryPageBreakAbove]",
 "\[DiscretionaryPageBreakBelow]",
 "\[AlignmentMarker]"
+(*
+do NOT add \[COMPATIBILITYNoBreak]
+we want to route \[COMPATIBILITYNoBreak] through the actual parser so that issues are generated
+*)
 }
 
 $whitespacePat = Alternatives @@ ({" " | "\t"} ~Join~ $mbWhitespace)
@@ -976,6 +980,10 @@ Module[{data, issues, stringifyMode, oldLeafSrc, len, src, cases, containsQuote,
     data[SyntaxIssues] = issues
   ];
   parsed[[3]] = data;
+
+  If[parsed[[1]] == Whitespace,
+    parsed[[1]] = Token`Boxes`MultiWhitespace
+  ];
 
   parsed
 ]]
