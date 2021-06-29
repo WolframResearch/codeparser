@@ -636,8 +636,8 @@ Module[{newBody, paramSymbolsAndIterOccurring, paramSymbols, iterOccurring, para
 
 rangePat = CallNode[LeafNode[Symbol, "List", _], {LeafNode[Symbol, _, _], _, _}, _]
 
-walk[CallNode[head:LeafNode[Symbol, tag : "Play" | "Plot", _], {body_, range:rangePat}, _]] :=
-Module[{paramSymbolsAndRangeOccurring, paramSymbols, rangeOccurring, paramNames, newScope, bodyOccurring},
+walk[CallNode[head:LeafNode[Symbol, tag : "Play" | "Plot", _], {body_, range:rangePat, optSeq:optPat...}, _]] :=
+Module[{paramSymbolsAndRangeOccurring, paramSymbols, rangeOccurring, paramNames, newScope, bodyOccurring, optOccurring},
 
   Internal`InheritedBlock[{$LexicalScope},
 
@@ -649,6 +649,8 @@ Module[{paramSymbolsAndRangeOccurring, paramSymbols, rangeOccurring, paramNames,
     paramSymbols = paramSymbolsAndRangeOccurring[[1]];
     rangeOccurring = paramSymbolsAndRangeOccurring[[2]];
 
+    optOccurring = Flatten[walk /@ {optSeq}];
+
     paramNames = #[[1]]& /@ paramSymbols;
 
     newScope = <| (# -> {tag})& /@ paramNames |>;
@@ -659,7 +661,7 @@ Module[{paramSymbolsAndRangeOccurring, paramSymbols, rangeOccurring, paramNames,
 
     Scan[add[#[[1]], #[[2]], bodyOccurring]&, paramSymbols];
 
-    rangeOccurring ~Join~ Complement[bodyOccurring, paramNames]
+    rangeOccurring ~Join~ Complement[bodyOccurring, paramNames] ~Join~ optOccurring
   ]
 ]
 
