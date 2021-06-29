@@ -802,7 +802,7 @@ parseBox[str:"\t", pos_] := LeafNode[Token`Boxes`MultiWhitespace, str, <|Source 
 (*
 This has the added benefit of not generating an UnexpectedNewlineCharacter issue
 
-NOTE: an UnexpectedNewlineCharacter issues is still generated if you call CodeConcreteParseLeaf directly:
+NOTE: an UnexpectedNewlineCharacter issue is still generated if you call CodeConcreteParseLeaf directly:
 
 CodeConcreteParseLeaf["\[IndentingNewLine]", "EncodingMode" -> 1]
 
