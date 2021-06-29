@@ -93,9 +93,9 @@ Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableN
     variableSymbolsAndRHSOccurring = Replace[vars, {
       LeafNode[Symbol, name_, data1_] :> {{{name, data1[Source]}}, {}},
       (*
-      use the Source of the Set[] itself
+      This could also be made to use the Source of the Set[] itself but that may be strange
       *)
-      CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {LeafNode[Symbol, name_, _], rhs_}, data1_] :> {{{name, data1[Source]}}, walk[rhs]},
+      CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {LeafNode[Symbol, name_, data2_], rhs_}, data1_] :> {{{name, data2[Source]}}, walk[rhs]},
       _ :> {{}, {}}
     }, 1];
 
@@ -131,7 +131,7 @@ Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableN
 
     variableSymbolsAndRHSOccurring = Replace[vars, {
       LeafNode[Symbol, name_, data1_] :> {{{name, data1[Source]}}, {}},
-      CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {LeafNode[Symbol, name_, _], rhs_}, data1_] :> {{{name, data1[Source]}}, walk[rhs]},
+      CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {LeafNode[Symbol, name_, data2_], rhs_}, data1_] :> {{{name, data2[Source]}}, walk[rhs]},
       _ :> {{}, {}}
     }, 1];
 
@@ -176,7 +176,7 @@ Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableN
 
     variableSymbolsAndRHSOccurring = Replace[vars, {
       LeafNode[Symbol, name_, data1_] :> (If[fullyQualifiedSymbolNameQ[name] || uppercaseOrDollarSymbolNameQ[name], usedHeuristics[{name, data1[Source]}] = True];{{{name, data1[Source]}}, {}}),
-      CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {LeafNode[Symbol, name_, _], rhs_}, data1_] :> (usedHeuristics[{name, data1[Source]}] = True;{{{name, data1[Source]}}, walk[rhs]}),
+      CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {LeafNode[Symbol, name_, data2_], rhs_}, data1_] :> (usedHeuristics[{name, data2[Source]}] = True;{{{name, data2[Source]}}, walk[rhs]}),
       _ :> {{}, {}}
     }, 1];
 
@@ -250,7 +250,7 @@ Module[{newBody, paramSymbolsAndRHSOccurring, paramSymbols, rhsOccurring, paramN
   Internal`InheritedBlock[{$LexicalScope},
 
     paramSymbolsAndRHSOccurring = Replace[vars[[2]], {
-      CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {LeafNode[Symbol, name_, data1_], rhs_}, _] :> {{{name, data1[Source]}}, walk[rhs]},
+      CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {LeafNode[Symbol, name_, data2_], rhs_}, data1_] :> {{{name, data2[Source]}}, walk[rhs]},
       _ :> {{}, {}}
     }, 1];
 
