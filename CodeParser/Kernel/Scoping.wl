@@ -664,7 +664,7 @@ Module[{paramSymbolsAndRangeOccurring, paramSymbols, rangeOccurring, paramNames,
 ]
 
 
-compileTypePat = CallNode[LeafNode[Symbol, "List", _], {LeafNode[Symbol, _, _], _, PatternSequence[] | _}, _]
+compileTypePat = LeafNode[Symbol, _, _] | CallNode[LeafNode[Symbol, "List", _], {LeafNode[Symbol, _, _], Repeated[_, {0, 2}]}, _]
 
 walk[CallNode[LeafNode[Symbol, "Compile", _], {CallNode[LeafNode[Symbol, "List", _], types:{compileTypePat, compileTypePat...}, _], body_, optionsAndPatterns___}, _]] :=
 Module[{paramSymbolsAndTypeOccurring, paramSymbols, typeOccurring, paramNames, newScope, bodyOccurring, optionsAndPatternsOccurring},
@@ -673,9 +673,11 @@ Module[{paramSymbolsAndTypeOccurring, paramSymbols, typeOccurring, paramNames, n
 
     paramSymbolsAndTypeOccurring =
       Function[{type},
-        Replace[type[[2]], {
-          {LeafNode[Symbol, name_, data1_], pattern_} :> {{{name, data1[Source]}}, walk[pattern]},
-          {LeafNode[Symbol, name_, data1_], pattern_, rank_} :> {{{name, data1[Source]}}, walk[pattern] ~Join~ walk[rank]},
+        Replace[type, {
+          LeafNode[Symbol, name_, data1_] :> {{{name, data1[Source]}}, {}},
+          CallNode[LeafNode[Symbol, "List", _], {LeafNode[Symbol, name_, data1_]}, _] :> {{{name, data1[Source]}}, {}},
+          CallNode[LeafNode[Symbol, "List", _], {LeafNode[Symbol, name_, data1_], pattern_}, _] :> {{{name, data1[Source]}}, walk[pattern]},
+          CallNode[LeafNode[Symbol, "List", _], {LeafNode[Symbol, name_, data1_], pattern_, rank_}, _] :> {{{name, data1[Source]}}, walk[pattern] ~Join~ walk[rank]},
           _ :> {{}, {}}
         }, {0}]
       ] /@ types;
