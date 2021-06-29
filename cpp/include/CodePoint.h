@@ -17,6 +17,12 @@ constexpr codepoint CODEPOINT_ACTUAL_DOUBLEQUOTE(0x22);
 constexpr codepoint CODEPOINT_ACTUAL_BACKSLASH(0x5c);
 constexpr codepoint CODEPOINT_DEL(0x7f);
 
+constexpr codepoint CODEPOINT_ZEROWIDTHSPACE(0x200b);
+constexpr codepoint CODEPOINT_FUNCTIONAPPLICATION(0x2061);
+constexpr codepoint CODEPOINT_INVISIBLESEPARATOR(0x2063);
+constexpr codepoint CODEPOINT_INVISIBLEPLUS(0x2064);
+constexpr codepoint CODEPOINT_RULEDELAYED(0x29F4);
+
 //
 // These are the actual WL code points for linear syntax characters
 //

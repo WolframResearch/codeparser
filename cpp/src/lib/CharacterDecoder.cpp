@@ -456,7 +456,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
         auto longNameBufAndLen = BufferAndLength(longNameStartBuf, longNameEndBuf - longNameStartBuf);
         auto longNameStr = std::string(reinterpret_cast<const char *>(longNameBufAndLen.buffer), longNameBufAndLen.length());
         
-        if (Utils::isMBStrange(point)) {
+        if (Utils::isStrange(point)) {
             
             //
             // Just generally strange character is in the code
@@ -467,7 +467,38 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
             
             auto graphicalStr = c.graphicalString();
             
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.85, {}));
+            auto Src = Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
+            
+            CodeActionPtrVector Actions;
+            
+            for (auto& A : Utils::certainCharacterReplacementActions(point, Src, ESCAPE_LONGNAME)) {
+                Actions.push_back(std::move(A));
+            }
+            
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, std::move(Actions)));
+            
+            Issues.insert(std::move(I));
+            
+        } else if (Utils::isMBStrange(point)) {
+            
+            //
+            // Just generally strange character is in the code
+            //
+            auto c = WLCharacter(point, LongNames::isRaw(longNameStr) ? ESCAPE_RAW : ESCAPE_LONGNAME);
+            
+            auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+            
+            auto graphicalStr = c.graphicalString();
+            
+            auto Src = Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
+            
+            CodeActionPtrVector Actions;
+            
+            for (auto& A : Utils::certainCharacterReplacementActions(point, Src, ESCAPE_LONGNAME)) {
+                Actions.push_back(std::move(A));
+            }
+            
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.85, std::move(Actions)));
             
             Issues.insert(std::move(I));
         }
@@ -564,7 +595,15 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
         
         auto graphicalStr = c.graphicalString();
         
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+        auto Src = Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
+        
+        CodeActionPtrVector Actions;
+        
+        for (auto& A : Utils::certainCharacterReplacementActions(point, Src, ESCAPE_4HEX)) {
+            Actions.push_back(std::move(A));
+        }
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, std::move(Actions)));
         
         Issues.insert(std::move(I));
         
@@ -579,7 +618,15 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
         
         auto graphicalStr = c.graphicalString();
         
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.85, {}));
+        auto Src = Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
+        
+        CodeActionPtrVector Actions;
+        
+        for (auto& A : Utils::certainCharacterReplacementActions(point, Src, ESCAPE_4HEX)) {
+            Actions.push_back(std::move(A));
+        }
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.85, std::move(Actions)));
         
         Issues.insert(std::move(I));
     }
@@ -669,7 +716,15 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
         
         auto graphicalStr = c.graphicalString();
         
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+        auto Src = Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
+        
+        CodeActionPtrVector Actions;
+        
+        for (auto& A : Utils::certainCharacterReplacementActions(point, Src, ESCAPE_2HEX)) {
+            Actions.push_back(std::move(A));
+        }
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, std::move(Actions)));
         
         Issues.insert(std::move(I));
         
@@ -684,7 +739,15 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
         
         auto graphicalStr = c.graphicalString();
         
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.85, {}));
+        auto Src = Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
+        
+        CodeActionPtrVector Actions;
+        
+        for (auto& A : Utils::certainCharacterReplacementActions(point, Src, ESCAPE_2HEX)) {
+            Actions.push_back(std::move(A));
+        }
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.85, std::move(Actions)));
         
         Issues.insert(std::move(I));
     };
@@ -775,7 +838,15 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
         
         auto graphicalStr = c.graphicalString();
         
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+        auto Src = Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
+        
+        CodeActionPtrVector Actions;
+        
+        for (auto& A : Utils::certainCharacterReplacementActions(point, Src, ESCAPE_OCTAL)) {
+            Actions.push_back(std::move(A));
+        }
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, std::move(Actions)));
         
         Issues.insert(std::move(I));
         
@@ -790,7 +861,15 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
         
         auto graphicalStr = c.graphicalString();
         
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.85, {}));
+        auto Src = Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
+        
+        CodeActionPtrVector Actions;
+        
+        for (auto& A : Utils::certainCharacterReplacementActions(point, Src, ESCAPE_OCTAL)) {
+            Actions.push_back(std::move(A));
+        }
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.85, std::move(Actions)));
         
         Issues.insert(std::move(I));
     };
@@ -885,7 +964,15 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
         
         auto graphicalStr = c.graphicalString();
         
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.95, {}));
+        auto Src = Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
+        
+        CodeActionPtrVector Actions;
+        
+        for (auto& A : Utils::certainCharacterReplacementActions(point, Src, ESCAPE_6HEX)) {
+            Actions.push_back(std::move(A));
+        }
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, std::move(Actions)));
         
         Issues.insert(std::move(I));
         
@@ -900,7 +987,15 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
         
         auto graphicalStr = c.graphicalString();
         
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc), 0.85, {}));
+        auto Src = Source(currentWLCharacterStartLoc, currentSourceCharacterEndLoc);
+        
+        CodeActionPtrVector Actions;
+        
+        for (auto& A : Utils::certainCharacterReplacementActions(point, Src, ESCAPE_6HEX)) {
+            Actions.push_back(std::move(A));
+        }
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.85, std::move(Actions)));
         
         Issues.insert(std::move(I));
     };

@@ -33,8 +33,6 @@ struct NumberTokenizationContext {
 //
 class Tokenizer {
     
-    EncodingMode encodingMode;
-    
     IssuePtrSet Issues;
     
     std::set<SourceLocation> EmbeddedNewlines;
@@ -157,7 +155,7 @@ class Tokenizer {
 public:
     Tokenizer();
     
-    void init(EncodingMode encodingMode);
+    void init();
 
     void deinit();
     

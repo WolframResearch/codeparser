@@ -64,7 +64,7 @@ void ParserSession::init(
     TheByteBuffer->init(bufAndLen, libData);
     TheByteDecoder->init(srcConvention, tabWidth, encodingMode);
     TheCharacterDecoder->init(libData);
-    TheTokenizer->init(encodingMode);
+    TheTokenizer->init();
     TheParser->init(firstLineBehavior);
     
     if (libData) {

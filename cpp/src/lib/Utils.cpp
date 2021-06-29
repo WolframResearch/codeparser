@@ -44,10 +44,7 @@ bool Utils::isMBStrange(codepoint point) {
     // Individual characters
     //
     switch (point) {
-            //
-            // ZERO WIDTH SPACE
-            //
-        case 0x200b:
+        case CODEPOINT_ZEROWIDTHSPACE:
             return true;
             //
             // ZERO WIDTH NON-JOINER
@@ -72,10 +69,30 @@ bool Utils::isMBStrange(codepoint point) {
 //            //
 //        case 0x2060:
 //            return true;
-            //
-            // FUNCTION APPLICATION
-            //
-        case 0x2061:
+        //
+        // U+2061
+        //
+        case CODEPOINT_FUNCTIONAPPLICATION:
+            return true;
+        //
+        // U+2063
+        //
+        case CODEPOINT_INVISIBLESEPARATOR:
+            return true;
+        //
+        // U+2064
+        //
+        case CODEPOINT_INVISIBLEPLUS:
+            return true;
+        //
+        // U+2192
+        //
+        case CODEPOINT_LONGNAME_RIGHTARROW:
+            return true;
+        //
+        // U+29F4
+        //
+        case CODEPOINT_RULEDELAYED:
             return true;
             //
             // ZERO WIDTH NO-BREAK SPACE
@@ -91,18 +108,18 @@ bool Utils::isMBStrange(codepoint point) {
             //
             return true;
             //
-            // ZERO WIDTH NO-BREAK SPACE
-            //
             // also BOM
             //
-        case 0xe001:
+        case CODEPOINT_VIRTUAL_BOM:
+            return true;
+        case CODEPOINT_LONGNAME_COMPATIBILITYNOBREAK:
             return true;
             //
             // REPLACEMENT CHARACTER
             //
             // This can be the result of badly encoded UTF-8
             //
-        case 0xfffd:
+        case CODEPOINT_REPLACEMENT_CHARACTER:
             return true;
     }
 
@@ -119,18 +136,11 @@ bool Utils::isMBStrange(codepoint point) {
     if (0xd800 <= point && point <= 0xdfff) {
         return true;
     }
-
+    
     //
-    // BMP PUA
+    // TODO: implement isBMPPUAUnassigned
     //
-
-    //
-    // Disable checking BMP PUA for now
-    //
-    // There are a lot of WL-specific characters in the BMP PUA
-    //
-
-//    if (0xe000 <= val && val <= 0xf8ff) {
+//    if (Utils::isBMPPUAUnassigned(point)) {
 //        return true;
 //    }
     
@@ -178,6 +188,7 @@ bool Utils::isBMPNonCharacter(codepoint point) {
         case 0xfdd8: case 0xfdd9: case 0xfdda: case 0xfddb: case 0xfddc: case 0xfddd: case 0xfdde: case 0xfddf:
         case 0xfde0: case 0xfde1: case 0xfde2: case 0xfde3: case 0xfde4: case 0xfde5: case 0xfde6: case 0xfde7:
         case 0xfde8: case 0xfde9: case 0xfdea: case 0xfdeb: case 0xfdec: case 0xfded: case 0xfdee: case 0xfdef:
+            return true;
         case 0xfffe: case 0xffff:
             return true;
         default:
@@ -299,3 +310,67 @@ bool Utils::ifASCIIWLCharacter(unsigned char c, char test) {
 }
 
 
+//
+// Give suggestions for replacing certain characters with other characters:
+//
+// \[COMPATIBILITYNoBreak] -> \[NoBreak]
+// \:2061 -> \[InvisibleApplication]
+// \:2063 -> \[InvisibleComma]
+// \:2064 -> \[ImplicitPlus]
+// \[RightArrow] -> \[Rule]
+// \:29F4 -> \[RuleDelayed]
+// \:200B -> \[InvisibleSpace]
+//
+CodeActionPtrVector Utils::certainCharacterReplacementActions(codepoint point, Source src, EscapeStyle escape) {
+    
+    CodeActionPtrVector Actions;
+    
+    switch (point) {
+        case CODEPOINT_LONGNAME_COMPATIBILITYNOBREAK:
+            //
+            // UTF-8 bytes for U+2060 (\[NoBreak])
+            //
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``\\[COMPATIBILITYNoBreak]`` with ``\\[NoBreak]``", src, (escape == ESCAPE_NONE) ? "\xe2\x81\xa0" : "\\[NoBreak]")));
+            break;
+        case CODEPOINT_LONGNAME_RIGHTARROW:
+            //
+            // UTF-8 bytes for U+F522 (\[Rule])
+            //
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``\\[RightArrow]`` with ``\\[Rule]``", src, (escape == ESCAPE_NONE) ? "\xef\x94\xa2" : "\\[Rule]")));
+            break;
+        case CODEPOINT_RULEDELAYED:
+            //
+            // UTF-8 bytes for U+F51F (\[RuleDelayed])
+            //
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``\\:29F4`` with ``\\[RuleDelayed]``", src, (escape == ESCAPE_NONE) ? "\xef\x94\x9f" : "\\[RuleDelayed]")));
+            break;
+        case CODEPOINT_FUNCTIONAPPLICATION:
+            //
+            // UTF-8 bytes for U+F76D (\[InvisibleApplication])
+            //
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``\\:2061`` with ``\\[InvisibleApplication]``", src, (escape == ESCAPE_NONE) ? "\xef\x9d\xad" : "\\[InvisibleApplication]")));
+            
+            Actions.push_back(CodeActionPtr(new DeleteTextCodeAction("Delete ``\\:2061``", src)));
+            break;
+        case CODEPOINT_INVISIBLESEPARATOR:
+            //
+            // UTF-8 bytes for U+F765 (\[InvisibleComma])
+            //
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``\\:2063`` with ``\\[InvisibleComma]``", src, (escape == ESCAPE_NONE) ? "\xef\x9d\xa5" : "\\[InvisibleComma]")));
+            break;
+        case CODEPOINT_INVISIBLEPLUS:
+            //
+            // UTF-8 bytes for U+F39E (\[ImplicitPlus])
+            //
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``\\:2064`` with ``\\[ImplicitPlus]``", src, (escape == ESCAPE_NONE) ? "\xef\x8e\x9e" : "\\[ImplicitPlus]")));
+            break;
+        case CODEPOINT_ZEROWIDTHSPACE:
+            //
+            // UTF-8 bytes for U+F360 (\[InvisibleSpace])
+            //
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``\\:200B`` with ``\\[InvisibleSpace]``", src, (escape == ESCAPE_NONE) ? "\xef\x8d\xa0" : "\\[InvisibleSpace]")));
+            break;
+    }
+    
+    return Actions;
+}

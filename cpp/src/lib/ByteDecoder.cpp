@@ -967,8 +967,21 @@ void ByteDecoder::strangeWarning(codepoint decoded, SourceLocation currentSource
     auto Src = Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc);
     
     CodeActionPtrVector Actions;
+    
+    auto certainCharacterActions = Utils::certainCharacterReplacementActions(decoded, Src, ESCAPE_NONE);
+    
+    for (auto& A : certainCharacterActions) {
+        Actions.push_back(std::move(A));
+    }
+    
+    //
+    // graphical version
+    //
     Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + graphicalStr + "``", Src, graphicalStr)));
     
+    //
+    // any ASCII replacements
+    //
     for (const auto& r : LongNames::asciiReplacements(decoded)) {
         Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
     }

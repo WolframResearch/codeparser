@@ -46,4 +46,9 @@ public:
     // if c is an ASCII WLCharacter, then compare to test
     //
     static bool ifASCIIWLCharacter(unsigned char c, char test);
+    
+    //
+    //
+    //
+    static CodeActionPtrVector certainCharacterReplacementActions(codepoint point, Source src, EscapeStyle escape);
 };
