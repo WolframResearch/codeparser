@@ -53,6 +53,18 @@ groups = {
 Groups
 
 We want to have Groups before Infix, so that { + } is first handled by Groups, and then Infix
+
+
+
+Unexpected openers and unexpected closers
+
+The structure of unexpected closers in boxes is different than in strings
+
+Unexpected closers in boxes never mate with an opener
+
+So retain the box structure here
+
+GroupMissingOpenerNode is only used in Boxes
 *)
 
 (*
@@ -73,56 +85,229 @@ parseCommentRowBox[RowBox[children_], pos_] :=
 
 parseCommentRowBox[child_String, pos_] :=
   LeafNode[String, child, <|Source -> pos|>]
-  
+
+" <> "
+(*
+Token`OpenSquare
+*)
+
 prbDispatch[{LeafNode[Token`OpenSquare, _, _], ___, LeafNode[Token`CloseSquare, _, _]}, handledChildren_, ignored_, pos_] :=
   GroupNode[GroupSquare, handledChildren, <|Source->pos|>]
+
+(*
+Unexpected openers and unexpected closers
+*)
+prbDispatch[{LeafNode[Token`OpenSquare, _, _], ___}, handledChildren_, ignored_, pos_] :=
+  GroupMissingCloserNode[GroupSquare, handledChildren, <|Source -> pos|>]
+
+prbDispatch[{___, LeafNode[Token`CloseSquare, _, _]}, handledChildren_, ignored_, pos_] :=
+  GroupMissingOpenerNode[GroupSquare, handledChildren, <|Source -> pos|>]
+
+" <> "
+(*
+Token`OpenCurly
+*)
 
 prbDispatch[{LeafNode[Token`OpenCurly, _, _], ___, LeafNode[Token`CloseCurly, _, _]}, handledChildren_, ignored_, pos_] :=
   GroupNode[List, handledChildren, <|Source->pos|>]
 
+(*
+Unexpected openers and unexpected closers
+*)
+prbDispatch[{LeafNode[Token`OpenCurly, _, _], ___}, handledChildren_, ignored_, pos_] :=
+  GroupMissingCloserNode[List, handledChildren, <|Source -> pos|>]
+
+prbDispatch[{___, LeafNode[Token`CloseCurly, _, _]}, handledChildren_, ignored_, pos_] :=
+  GroupMissingOpenerNode[List, handledChildren, <|Source -> pos|>]
+
+" <> "
+(*
+Token`LessBar
+*)
+
 prbDispatch[{LeafNode[Token`LessBar, _, _], ___, LeafNode[Token`BarGreater, _, _]}, handledChildren_, ignored_, pos_] :=
   GroupNode[Association, handledChildren, <|Source->pos|>]
+
+(*
+Unexpected openers and unexpected closers
+*)
+prbDispatch[{LeafNode[Token`LessBar, _, _], ___}, handledChildren_, ignored_, pos_] :=
+  GroupMissingCloserNode[Association, handledChildren, <|Source -> pos|>]
+
+prbDispatch[{___, LeafNode[Token`BarGreater, _, _]}, handledChildren_, ignored_, pos_] :=
+  GroupMissingOpenerNode[Association, handledChildren, <|Source -> pos|>]
+
+" <> "
+(*
+Token`OpenParen
+*)
 
 prbDispatch[{LeafNode[Token`OpenParen, _, _], ___, LeafNode[Token`CloseParen, _, _]}, handledChildren_, ignored_, pos_] :=
   GroupNode[GroupParen, handledChildren, <|Source->pos|>]
 
+(*
+Unexpected openers and unexpected closers
+*)
+prbDispatch[{LeafNode[Token`OpenParen, _, _], ___}, handledChildren_, ignored_, pos_] :=
+  GroupMissingCloserNode[GroupParen, handledChildren, <|Source -> pos|>]
+
+prbDispatch[{___, LeafNode[Token`CloseParen, _, _]}, handledChildren_, ignored_, pos_] :=
+  GroupMissingOpenerNode[GroupParen, handledChildren, <|Source -> pos|>]
+
+" <> "
+(*
+Token`LongName`LeftDoubleBracket
+*)
+
 prbDispatch[{LeafNode[Token`LongName`LeftDoubleBracket, _, _], ___, LeafNode[Token`LongName`RightDoubleBracket, _, _]}, handledChildren_, ignored_, pos_] :=
   GroupNode[GroupDoubleBracket, handledChildren, <|Source->pos|>]
+
+(*
+Unexpected openers and unexpected closers
+*)
+prbDispatch[{LeafNode[Token`LongName`LeftDoubleBracket, _, _], ___}, handledChildren_, ignored_, pos_] :=
+  GroupMissingCloserNode[GroupDoubleBracket, handledChildren, <|Source -> pos|>]
+
+prbDispatch[{___, LeafNode[Token`LongName`RightDoubleBracket, _, _]}, handledChildren_, ignored_, pos_] :=
+  GroupMissingOpenerNode[GroupDoubleBracket, handledChildren, <|Source -> pos|>]
+
+" <> "
+(*
+Token`LongName`LeftAssociation
+*)
 
 prbDispatch[{LeafNode[Token`LongName`LeftAssociation, _, _], ___, LeafNode[Token`LongName`RightAssociation, _, _]}, handledChildren_, ignored_, pos_] :=
   GroupNode[Association, handledChildren, <|Source->pos|>]
 
+(*
+Unexpected openers and unexpected closers
+*)
+prbDispatch[{LeafNode[Token`LongName`LeftAssociation, _, _], ___}, handledChildren_, ignored_, pos_] :=
+  GroupMissingCloserNode[Association, handledChildren, <|Source -> pos|>]
+
+prbDispatch[{___, LeafNode[Token`LongName`RightAssociation, _, _]}, handledChildren_, ignored_, pos_] :=
+  GroupMissingOpenerNode[Association, handledChildren, <|Source -> pos|>]
+
+" <> "
+(*
+Token`LongName`LeftAngleBracket
+*)
+
 prbDispatch[{LeafNode[Token`LongName`LeftAngleBracket, _, _], ___, LeafNode[Token`LongName`RightAngleBracket, _, _]}, handledChildren_, ignored_, pos_] :=
   GroupNode[AngleBracket, handledChildren, <|Source->pos|>]
+
+(*
+Unexpected openers and unexpected closers
+*)
+prbDispatch[{LeafNode[Token`LongName`LeftAngleBracket, _, _], ___}, handledChildren_, ignored_, pos_] :=
+  GroupMissingCloserNode[AngleBracket, handledChildren, <|Source -> pos|>]
+
+prbDispatch[{___, LeafNode[Token`LongName`RightAngleBracket, _, _]}, handledChildren_, ignored_, pos_] :=
+  GroupMissingOpenerNode[AngleBracket, handledChildren, <|Source -> pos|>]
+
+" <> "
+(*
+Token`LongName`LeftBracketingBar
+*)
 
 prbDispatch[{LeafNode[Token`LongName`LeftBracketingBar, _, _], ___, LeafNode[Token`LongName`RightBracketingBar, _, _]}, handledChildren_, ignored_, pos_] :=
   GroupNode[BracketingBar, handledChildren, <|Source->pos|>]
 
+(*
+Unexpected openers and unexpected closers
+*)
+prbDispatch[{LeafNode[Token`LongName`LeftBracketingBar, _, _], ___}, handledChildren_, ignored_, pos_] :=
+  GroupMissingCloserNode[BracketingBar, handledChildren, <|Source -> pos|>]
+
+prbDispatch[{___, LeafNode[Token`LongName`RightBracketingBar, _, _]}, handledChildren_, ignored_, pos_] :=
+  GroupMissingOpenerNode[BracketingBar, handledChildren, <|Source -> pos|>]
+
+" <> "
+(*
+Token`LongName`LeftDoubleBracketingBar
+*)
+
 prbDispatch[{LeafNode[Token`LongName`LeftDoubleBracketingBar, _, _], ___, LeafNode[Token`LongName`RightDoubleBracketingBar, _, _]}, handledChildren_, ignored_, pos_] :=
   GroupNode[DoubleBracketingBar, handledChildren, <|Source->pos|>]
 
+(*
+Unexpected openers and unexpected closers
+*)
+prbDispatch[{LeafNode[Token`LongName`LeftDoubleBracketingBar, _, _], ___}, handledChildren_, ignored_, pos_] :=
+  GroupMissingCloserNode[DoubleBracketingBar, handledChildren, <|Source -> pos|>]
+
+prbDispatch[{___, LeafNode[Token`LongName`RightDoubleBracketingBar, _, _]}, handledChildren_, ignored_, pos_] :=
+  GroupMissingOpenerNode[DoubleBracketingBar, handledChildren, <|Source -> pos|>]
+
+" <> "
+(*
+Token`LongName`LeftCeiling
+*)
+
 prbDispatch[{LeafNode[Token`LongName`LeftCeiling, _, _], ___, LeafNode[Token`LongName`RightCeiling, _, _]}, handledChildren_, ignored_, pos_] :=
   GroupNode[Ceiling, handledChildren, <|Source->pos|>]
+
+(*
+Unexpected openers and unexpected closers
+*)
+prbDispatch[{LeafNode[Token`LongName`LeftCeiling, _, _], ___}, handledChildren_, ignored_, pos_] :=
+  GroupMissingCloserNode[Ceiling, handledChildren, <|Source -> pos|>]
+
+prbDispatch[{___, LeafNode[Token`LongName`RightCeiling, _, _]}, handledChildren_, ignored_, pos_] :=
+  GroupMissingOpenerNode[Ceiling, handledChildren, <|Source -> pos|>]
+
+" <> "
+(*
+Token`LongName`LeftFloor
+*)
 
 prbDispatch[{LeafNode[Token`LongName`LeftFloor, _, _], ___, LeafNode[Token`LongName`RightFloor, _, _]}, handledChildren_, ignored_, pos_] :=
   GroupNode[Floor, handledChildren, <|Source->pos|>]
 
 (*
+Unexpected openers and unexpected closers
+*)
+prbDispatch[{LeafNode[Token`LongName`LeftFloor, _, _], ___}, handledChildren_, ignored_, pos_] :=
+  GroupMissingCloserNode[Floor, handledChildren, <|Source -> pos|>]
+
+prbDispatch[{___, LeafNode[Token`LongName`RightFloor, _, _]}, handledChildren_, ignored_, pos_] :=
+  GroupMissingOpenerNode[Floor, handledChildren, <|Source -> pos|>]
+
+" <> "
+(*
+Token`Boxes`OpenParenStar
+
 Treat comments like groups
 *)
+
 prbDispatch[{LeafNode[Token`Boxes`OpenParenStar, _, _], ___, LeafNode[Token`Boxes`StarCloseParen, _, _]}, handledChildren_, children_, pos_] :=
   Module[{rehandledChildren},
 
     rehandledChildren =
       {LeafNode[Token`Boxes`OpenParenStar, children[[1]], <| Source -> Append[pos, 1] ~Join~ {1} |>]} ~Join~
-      MapIndexed[
-        parseCommentRowBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1)]&, children[[2;;-2]]] ~Join~
+      MapIndexed[parseCommentRowBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1)]&, children[[2;;-2]]] ~Join~
       {LeafNode[Token`Boxes`StarCloseParen, children[[-1]], <| Source -> Append[pos, 1] ~Join~ {Length[children]} |>]};
     
     GroupNode[Comment, rehandledChildren, <|Source->pos|>]
   ]
 
 (*
+Unexpected openers and unexpected closers
+*)
+prbDispatch[{LeafNode[Token`Boxes`OpenParenStar, _, _], ___}, handledChildren_, children_, pos_] :=
+  GroupMissingCloserNode[Comment,
+    {LeafNode[Token`Boxes`OpenParenStar, children[[1]], <| Source -> Append[pos, 1] ~Join~ {1} |>]} ~Join~
+    MapIndexed[parseCommentRowBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1)]&, children[[2;;]]], <|Source->pos|>]
+
+prbDispatch[{___, LeafNode[Token`Boxes`StarCloseParen, _, _]}, handledChildren_, children_, pos_] :=
+  GroupMissingOpenerNode[Comment,
+    MapIndexed[parseCommentRowBox[#1, Append[pos, 1] ~Join~ (#2 + 1 - 1)]&, children[[;;-2]]] ~Join~
+    {LeafNode[Token`Boxes`StarCloseParen, children[[-1]], <| Source -> Append[pos, 1] ~Join~ {Length[children]} |>]}, <|Source->pos|>]
+
+" <> "
+(*
+Token`Boxes`LongName`LeftSkeleton
+
 Treat skeletons like groups
 *)
 (*
@@ -131,8 +316,7 @@ prbDispatch[{LeafNode[Token`Boxes`LongName`LeftSkeleton, _, _], ___, LeafNode[To
 
     rehandledChildren =
       {LeafNode[Token`Boxes`LongName`LeftSkeleton, children[[1]], <| Source -> Append[pos, 1] ~Join~ {1} |>]} ~Join~
-      MapIndexed[
-        parseCommentRowBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1)]&, children[[2;;-2]]] ~Join~
+      MapIndexed[parseCommentRowBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1)]&, children[[2;;-2]]] ~Join~
       {LeafNode[Token`Boxes`LongName`RightSkeleton, children[[-1]], <| Source -> Append[pos, 1] ~Join~ {Length[children]} |>]};
     
     GroupNode[Skeleton, rehandledChildren, <|Source->pos|>]
@@ -141,108 +325,19 @@ prbDispatch[{LeafNode[Token`Boxes`LongName`LeftSkeleton, _, _], ___, LeafNode[To
 
 (*
 Unexpected openers and unexpected closers
-
-The structure of unexpected closers in boxes is different than in strings
-
-Unexpected closers in boxes never mate with an opener
-
-So retain the box structure here
-
-GroupMissingOpenerNode is only used in Boxes
 *)
-prbDispatch[{LeafNode[Token`OpenSquare, _, _], ___}, handledChildren_, ignored_, pos_] :=
-  GroupMissingCloserNode[GroupSquare, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{___, LeafNode[Token`CloseSquare, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupMissingOpenerNode[GroupSquare, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{LeafNode[Token`OpenCurly, _, _], ___}, handledChildren_, ignored_, pos_] :=
-  GroupMissingCloserNode[List, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{___, LeafNode[Token`CloseCurly, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupMissingOpenerNode[List, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{LeafNode[Token`LessBar, _, _], ___}, handledChildren_, ignored_, pos_] :=
-  GroupMissingCloserNode[Association, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{___, LeafNode[Token`BarGreater, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupMissingOpenerNode[Association, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{LeafNode[Token`OpenParen, _, _], ___}, handledChildren_, ignored_, pos_] :=
-  GroupMissingCloserNode[GroupParen, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{___, LeafNode[Token`CloseParen, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupMissingOpenerNode[GroupParen, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{LeafNode[Token`LongName`LeftDoubleBracket, _, _], ___}, handledChildren_, ignored_, pos_] :=
-  GroupMissingCloserNode[GroupDoubleBracket, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{___, LeafNode[Token`LongName`RightDoubleBracket, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupMissingOpenerNode[GroupDoubleBracket, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{LeafNode[Token`LongName`LeftAssociation, _, _], ___}, handledChildren_, ignored_, pos_] :=
-  GroupMissingCloserNode[Association, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{___, LeafNode[Token`LongName`RightAssociation, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupMissingOpenerNode[Association, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{LeafNode[Token`LongName`LeftAngleBracket, _, _], ___}, handledChildren_, ignored_, pos_] :=
-  GroupMissingCloserNode[AngleBracket, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{___, LeafNode[Token`LongName`RightAngleBracket, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupMissingOpenerNode[AngleBracket, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{LeafNode[Token`LongName`LeftBracketingBar, _, _], ___}, handledChildren_, ignored_, pos_] :=
-  GroupMissingCloserNode[BracketingBar, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{___, LeafNode[Token`LongName`RightBracketingBar, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupMissingOpenerNode[BracketingBar, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{LeafNode[Token`LongName`LeftDoubleBracketingBar, _, _], ___}, handledChildren_, ignored_, pos_] :=
-  GroupMissingCloserNode[DoubleBracketingBar, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{___, LeafNode[Token`LongName`RightDoubleBracketingBar, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupMissingOpenerNode[DoubleBracketingBar, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{LeafNode[Token`LongName`LeftCeiling, _, _], ___}, handledChildren_, ignored_, pos_] :=
-  GroupMissingCloserNode[Ceiling, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{___, LeafNode[Token`LongName`RightCeiling, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupMissingOpenerNode[Ceiling, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{LeafNode[Token`LongName`LeftFloor, _, _], ___}, handledChildren_, ignored_, pos_] :=
-  GroupMissingCloserNode[Floor, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{___, LeafNode[Token`LongName`RightFloor, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupMissingOpenerNode[Floor, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{LeafNode[Token`Boxes`OpenParenStar, _, _], ___}, handledChildren_, children_, pos_] :=
-  GroupMissingCloserNode[Comment,
-    {LeafNode[Token`Boxes`OpenParenStar, children[[1]], <| Source -> Append[pos, 1] ~Join~ {1} |>]} ~Join~
-    MapIndexed[
-      parseCommentRowBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1)]&, children[[2;;]]], <|Source->pos|>]
-
-prbDispatch[{___, LeafNode[Token`Boxes`StarCloseParen, _, _]}, handledChildren_, children_, pos_] :=
-  GroupMissingOpenerNode[Comment,
-    MapIndexed[
-      parseCommentRowBox[#1, Append[pos, 1] ~Join~ (#2 + 1 - 1)]&, children[[;;-2]]] ~Join~
-    {LeafNode[Token`Boxes`StarCloseParen, children[[-1]], <| Source -> Append[pos, 1] ~Join~ {Length[children]} |>]}, <|Source->pos|>]
-
 (*
 prbDispatch[{LeafNode[Token`Boxes`LongName`LeftSkeleton, _, _], ___}, handledChildren_, children_, pos_] :=
   GroupMissingCloserNode[Skeleton,
     {LeafNode[Token`Boxes`LongName`LeftSkeleton, children[[1]], <| Source -> Append[pos, 1] ~Join~ {1} |>]} ~Join~
-    MapIndexed[
-      parseCommentRowBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1)]&, children[[2;;]]], <|Source->pos|>]
+    MapIndexed[parseCommentRowBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1)]&, children[[2;;]]], <|Source->pos|>]
 
 prbDispatch[{___, LeafNode[Token`Boxes`LongName`RightSkeleton, _, _]}, handledChildren_, children_, pos_] :=
   GroupMissingOpenerNode[Skeleton,
-    MapIndexed[
-      parseCommentRowBox[#1, Append[pos, 1] ~Join~ (#2 + 1 - 1)]&, children[[;;-2]]] ~Join~
+    MapIndexed[parseCommentRowBox[#1, Append[pos, 1] ~Join~ (#2 + 1 - 1)]&, children[[;;-2]]] ~Join~
     {LeafNode[Token`Boxes`LongName`RightSkeleton, children[[-1]], <| Source -> Append[pos, 1] ~Join~ {Length[children]} |>]}, <|Source->pos|>]
 *)
 "}
-
 
 
 infixOperatorParselets = Cases[normalInfixParselets, Verbatim[Rule][tok_, Parselet`InfixOperatorParselet[_, _, op_]] :> {tok, op}]
