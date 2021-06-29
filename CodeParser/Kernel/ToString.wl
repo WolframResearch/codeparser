@@ -4,6 +4,8 @@ BeginPackage["CodeParser`ToString`"]
 Compile` also has a ToInputFormString symbol, so to prevent shadowing messages,
 move CodeParser`ToInputFormString to CodeParser`ToString`ToInputFormString
 and rely on CodeParser`ToString` not being on $ContextPath (unless explicitly loaded, of course)
+
+CodeParser` must be loaded before Compile` to prevent getting a message
 *)
 ToInputFormString
 
