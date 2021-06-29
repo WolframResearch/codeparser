@@ -646,8 +646,6 @@ parseBox[str:";", pos_] := LeafNode[Token`Semi, str, <|Source -> pos|>]
 
 parseBox[str:"//", pos_] := LeafNode[Token`SlashSlash, str, <|Source -> pos|>]
 
-parseBox[str:"_", pos_] := LeafNode[Token`Under, str, <|Source -> pos|>]
-
 parseBox[str:":=", pos_] := LeafNode[Token`ColonEqual, str, <|Source -> pos|>]
 
 parseBox[str:">", pos_] := LeafNode[Token`Greater, str, <|Source -> pos|>]
