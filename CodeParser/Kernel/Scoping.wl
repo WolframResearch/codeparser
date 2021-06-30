@@ -148,9 +148,9 @@ Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableN
 
     optOccurring = Flatten[walk /@ {optSeq}];
 
-    Scan[add[#[[1]], #[[2]], bodyOccurring]&, variableSymbols];
+    Scan[add[#[[1]], #[[2]], bodyOccurring ~Join~ optOccurring]&, variableSymbols];
 
-    rhsOccurring ~Join~ Complement[bodyOccurring, variableNames] ~Join~ optOccurring
+    rhsOccurring ~Join~ Complement[bodyOccurring ~Join~ optOccurring, variableNames]
   ]
 ]
 
