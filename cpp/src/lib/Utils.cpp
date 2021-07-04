@@ -114,6 +114,11 @@ bool Utils::isMBStrange(codepoint point) {
             return true;
         case CODEPOINT_LONGNAME_COMPATIBILITYNOBREAK:
             return true;
+        //
+        // Yes, we suggest \:2061 -> \[InvisibleApplication], but that is not saying \[InvisibleApplication] is not also strange!
+        //
+        case CODEPOINT_LONGNAME_INVISIBLEAPPLICATION:
+            return true;
             //
             // REPLACEMENT CHARACTER
             //
