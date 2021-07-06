@@ -222,6 +222,10 @@ Token`LongName`DoubleUpArrow -> Parselet`InfixOperatorParselet[Token`LongName`Do
 Token`LongName`DoubleDownArrow -> Parselet`InfixOperatorParselet[Token`LongName`DoubleDownArrow, Precedence`Class`VerticalArrowOperators, DoubleDownArrow],
 Token`LongName`DoubleUpDownArrow -> Parselet`InfixOperatorParselet[Token`LongName`DoubleUpDownArrow, Precedence`Class`VerticalArrowOperators, DoubleUpDownArrow],
 Token`LongName`DownArrowUpArrow -> Parselet`InfixOperatorParselet[Token`LongName`DownArrowUpArrow, Precedence`Class`VerticalArrowOperators, DownArrowUpArrow],
+(*
+itai asking about precedence of "long" arrows:
+https://mail-archive.wolfram.com/archive/l-typeset/2021/Jul00/0000.html
+*)
 Token`LongName`LongLeftArrow -> Parselet`InfixOperatorParselet[Token`LongName`LongLeftArrow, Precedence`Class`VerticalArrowOperators, LongLeftArrow],
 Token`LongName`LongRightArrow -> Parselet`InfixOperatorParselet[Token`LongName`LongRightArrow, Precedence`Class`VerticalArrowOperators, LongRightArrow],
 Token`LongName`LongLeftRightArrow -> Parselet`InfixOperatorParselet[Token`LongName`LongLeftRightArrow, Precedence`Class`VerticalArrowOperators, LongLeftRightArrow],
