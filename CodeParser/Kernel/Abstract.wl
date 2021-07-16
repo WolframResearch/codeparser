@@ -2946,6 +2946,39 @@ abstract[
 	]
 ] := BoxNode[SubscriptBox, {abstract[a], GroupNode[GroupDoubleBracket, {o, abstract[b], c}, data1]}, data]
 
+
+(*
+Handle special form of TagBox[(), Derivative] in superscript
+
+Keep the TagBox[(), Derivative] structure un-abstracted
+
+FIXME: when things like SuperscriptBox[] -> Power[] and FractionBox[] -> Divide, then also do SuperscriptBox[..., TagBox[(), Derivative] ] -> Derivative
+*)
+abstract[
+	BoxNode[
+		SuperscriptBox
+		,
+		{a_,
+			BoxNode[TagBox, {
+				GroupNode[GroupParen, {
+					o:LeafNode[Token`OpenParen, _, _],
+					b_,
+					c:LeafNode[Token`CloseParen, _, _]}
+					,
+					data2_
+				]
+				,
+				t:CodeNode[Null, Derivative, _]}
+				,
+				data1_
+			]
+		}
+		,
+		data_
+	]
+] := BoxNode[SuperscriptBox, {abstract[a], BoxNode[TagBox, {GroupNode[GroupParen, {o, abstract[b], c}, data2], t}, data1]}, data]
+
+
 abstract[BoxNode[b_, children_, data_]] := BoxNode[b, abstract /@ children, data]
 
 
