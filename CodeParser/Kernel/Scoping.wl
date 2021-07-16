@@ -1003,6 +1003,20 @@ freePatterns[UnterminatedGroupNode[_, _, _]] :=
   {}
 
 
+walk[GroupMissingCloserNode[_, _, _]] :=
+  {}
+
+freePatterns[GroupMissingCloserNode[_, _, _]] := 
+  {}
+
+
+walk[GroupMissingOpenerNode[_, _, _]] :=
+  {}
+
+freePatterns[GroupMissingOpenerNode[_, _, _]] := 
+  {}
+
+
 (*
 a is a List of boxes
 *)

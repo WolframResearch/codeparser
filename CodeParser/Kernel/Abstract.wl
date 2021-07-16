@@ -427,6 +427,18 @@ abstract[n:UnterminatedGroupNode[_, _, _]] :=
 
 
 
+(*
+Missing openers
+
+Only possible with boxes
+*)
+
+abstract[GroupMissingOpenerNode[tag_, children_, data_]] :=
+	abstractGroupNode[GroupMissingOpenerNode[tag, children, data]]
+
+
+
+
 abstract[GroupNode[tag_, children_, data_]] :=
 	abstractGroupNode[GroupNode[tag, children, data]]
 
@@ -2227,6 +2239,26 @@ Module[{children, abstractedChildren, issues, data},
 	];
 
 	GroupMissingCloserNode[tag, abstractedChildren, data]
+]
+
+
+abstractGroupNode[GroupMissingOpenerNode[tag_, childrenIn_, dataIn_]] :=
+Module[{children, abstractedChildren, issues, data},
+
+	children = childrenIn;
+	data = dataIn;
+
+	children = children[[;;-2]];
+
+	abstractedChildren = Flatten[selectChildren /@ (abstract /@ children)];
+
+	issues = Lookup[data, AbstractSyntaxIssues, {}];
+
+	If[issues != {},
+		AssociateTo[data, AbstractSyntaxIssues -> issues];
+	];
+
+	GroupMissingOpenerNode[tag, abstractedChildren, data]
 ]
 
 
