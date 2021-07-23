@@ -447,8 +447,13 @@ parseBox[TemplateBox[rest___], pos_] :=
 parseBox[StyleBox[a_, rest___], pos_] :=
   BoxNode[StyleBox, {parseBoxPossibleListPossibleDirective[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
 
-parseBox[FormBox[a_, rest___], pos_] :=
-  BoxNode[FormBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
+(*
+something like TraditionalForm where they are not valid StandardForm boxes
+
+In fact, contents of FormBox can be VERY far away from standard StandardForm boxes
+*)
+parseBox[FormBox[rest___], pos_] :=
+  BoxNode[FormBox, applyCodeNodesToRest[rest], <|Source->pos|>]
 
 parseBox[RasterBox[rest___], pos_] :=
   BoxNode[RasterBox, applyCodeNodesToRest[rest], <|Source->pos|>]
