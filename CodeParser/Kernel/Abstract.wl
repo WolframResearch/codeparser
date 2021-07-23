@@ -2908,7 +2908,9 @@ abstract[
 	BoxNode[
 		SubscriptBox
 		,
-		{a_,
+		{
+			a_
+			,
 			GroupNode[GroupSquare, {
 				o1:LeafNode[Token`OpenSquare, _, _],
 				GroupNode[GroupSquare, {
@@ -2922,6 +2924,8 @@ abstract[
 				,
 				data1_
 			]
+			,
+			___
 		}
 		,
 		data_
@@ -2932,7 +2936,9 @@ abstract[
 	BoxNode[
 		SubscriptBox
 		,
-		{a_,
+		{
+			a_
+			,
 			GroupNode[GroupDoubleBracket, {
 				o:LeafNode[Token`LongName`LeftDoubleBracket, _, _],
 				b_,
@@ -2940,6 +2946,8 @@ abstract[
 				,
 				data1_
 			]
+			,
+			___
 		}
 		,
 		data_
@@ -2952,13 +2960,21 @@ Handle special form of TagBox[(), Derivative] in superscript
 
 Keep the TagBox[(), Derivative] structure un-abstracted
 
+TagBox is considered "easier" than say, FormBox
+
+Contents of TagBox are largely valid boxes
+
 FIXME: when things like SuperscriptBox[] -> Power[] and FractionBox[] -> Divide, then also do SuperscriptBox[..., TagBox[(), Derivative] ] -> Derivative
+
+FIXME: maybe first arg of TagBox should be treated as a CodeNode and not parsed at all
 *)
 abstract[
 	BoxNode[
 		SuperscriptBox
 		,
-		{a_,
+		{
+			a_
+			,
 			BoxNode[TagBox, {
 				GroupNode[GroupParen, {
 					o:LeafNode[Token`OpenParen, _, _],
@@ -2972,6 +2988,8 @@ abstract[
 				,
 				data1_
 			]
+			,
+			___
 		}
 		,
 		data_
