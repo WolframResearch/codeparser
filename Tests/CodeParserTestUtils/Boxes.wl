@@ -416,11 +416,15 @@ exceptions = <|
    "UnconstrainedParameters" -> {{1, 2}},
    "UtilityFunction" -> {{1, 3}, {1, 11}},
    "ValidationSet" -> {{1, 3}, {1, 7}, {2, 3}, {2, 7}},
+   "VideoCombine" -> {{1, 4}},
+   "VideoMap" -> {{3, 1}},
    "$VoiceStyles" -> {{1, 4}, {1, 6}},
 
    (* weird <<>> Skeleton formatting *)
+   "Authentication" -> {{5, 7}},
    "CombinedEntityClass" -> {{5, 2}, {6, 4}},
    "PolyhedronDecomposition" -> {{1, 3}},
+   "SecuredAuthenticationKey" -> {{5, 7}},
    "Shallow" -> {{1, 2}, {2, 4}},
    "ShortestPathFunction" -> {{1, 4}},
    "Skeleton" -> {{1, 2}, {2, 2}},
