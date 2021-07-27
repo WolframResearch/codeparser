@@ -86,13 +86,41 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
                 // Simple escaped characters
                 // \b \f \n \r \t
                 //
-            case 'b':
-                return WLCharacter(CODEPOINT_STRINGMETA_BACKSPACE, ESCAPE_SINGLE);
-            case 'f':
+            case 'b': {
+                
+                auto c = WLCharacter(CODEPOINT_STRINGMETA_BACKSPACE, ESCAPE_SINGLE);
+                
+                auto graphicalStr = c.graphicalString();
+                
+                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
+                
+                auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
+                
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+                
+                Issues.insert(std::move(I));
+                
+                return c;
+            }
+            case 'f': {
                 //
                 // \f is NOT a space character (but inside of strings, it does have special meaning)
                 //
-                return WLCharacter(CODEPOINT_STRINGMETA_FORMFEED, ESCAPE_SINGLE);
+                
+                auto c = WLCharacter(CODEPOINT_STRINGMETA_FORMFEED, ESCAPE_SINGLE);
+                
+                auto graphicalStr = c.graphicalString();
+                
+                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
+                
+                auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
+                
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+                
+                Issues.insert(std::move(I));
+                
+                return c;
+            }
             case 'n':
                 //
                 // \n is NOT a newline character (but inside of strings, it does have special meaning)
@@ -120,10 +148,38 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
                 return WLCharacter(CODEPOINT_STRINGMETA_DOUBLEQUOTE, ESCAPE_SINGLE);
             case '\\':
                 return handleBackslash(escapedBuf, escapedLoc, policy);
-            case '<':
-                return WLCharacter(CODEPOINT_STRINGMETA_OPEN, ESCAPE_SINGLE);
-            case '>':
-                return  WLCharacter(CODEPOINT_STRINGMETA_CLOSE, ESCAPE_SINGLE);
+            case '<': {
+                
+                auto c = WLCharacter(CODEPOINT_STRINGMETA_OPEN, ESCAPE_SINGLE);
+                
+                auto graphicalStr = c.graphicalString();
+                
+                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
+                
+                auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
+                
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected string meta character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+                
+                Issues.insert(std::move(I));
+                
+                return c;
+            }
+            case '>': {
+                
+                auto c = WLCharacter(CODEPOINT_STRINGMETA_CLOSE, ESCAPE_SINGLE);
+                
+                auto graphicalStr = c.graphicalString();
+                
+                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
+                
+                auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
+                
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected string meta character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+                
+                Issues.insert(std::move(I));
+                
+                return c;
+            }
                 //
                 // Linear syntax characters
                 // \! \% \& \( \) \* \+ \/ \@ \^ \_ \` \<space>
