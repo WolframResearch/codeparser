@@ -1467,12 +1467,12 @@ Module[{heldRest, heldChildren},
   With[{heldChildren = heldChildren}, ReleaseHold[TemplateBox @@ heldChildren]]
 ]]
 
-toStandardFormBoxes[BoxNode[FormBox, {a_, rest___}, _]] :=
+toStandardFormBoxes[BoxNode[FormBox, {rest___}, _]] :=
 Catch[
 Module[{heldRest, heldChildren},
   heldRest = Extract[#, {2}, HoldComplete]& /@ {rest};
 
-  With[{aBox = toStandardFormBoxes[a]}, heldChildren = { HoldComplete[aBox] } ~Join~ heldRest];
+  heldChildren = heldRest;
 
   With[{heldChildren = heldChildren}, ReleaseHold[FormBox @@ heldChildren]]
 ]]
