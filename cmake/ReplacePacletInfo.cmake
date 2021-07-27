@@ -5,6 +5,8 @@ string(TIMESTAMP DATESTRING "%a %d %b %Y %H:%M:%S")
 
 string(REGEX REPLACE "BuildDate -> \"[a-zA-Z0-9 :]*\"" "BuildDate -> \"${DATESTRING}\"" filedata ${filedata})
 
+string(REGEX REPLACE "BuildNumber -> \"\"" "BuildNumber -> \"${BUILDNUMBER}\"" filedata ${filedata})
+
 if(LOCAL_BUILD)
 
 string(REGEX REPLACE "Version -> \"[0-9\\.]+\"," "Version -> \"${LOCAL_BUILD_VERSION}\"(* local build *)," filedata ${filedata})
