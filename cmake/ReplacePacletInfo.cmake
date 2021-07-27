@@ -5,7 +5,7 @@ string(TIMESTAMP DATESTRING "%a %d %b %Y %H:%M:%S")
 
 string(REGEX REPLACE "BuildDate -> \"[a-zA-Z0-9 :]*\"" "BuildDate -> \"${DATESTRING}\"" filedata ${filedata})
 
-string(REGEX REPLACE "BuildNumber -> \"\"" "BuildNumber -> \"${BUILDNUMBER}\"" filedata ${filedata})
+string(REGEX REPLACE "BuildNumber -> [0-9]+" "BuildNumber -> ${BUILDNUMBER}" filedata ${filedata})
 
 if(LOCAL_BUILD)
 
