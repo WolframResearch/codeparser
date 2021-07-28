@@ -158,7 +158,7 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
                 
                 auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
                 
-                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected string meta character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected string meta character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}, {"The kernel parses ``\"" + graphicalStr + "\"`` as an empty string."}));
                 
                 Issues.insert(std::move(I));
                 
@@ -174,7 +174,7 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
                 
                 auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
                 
-                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected string meta character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected string meta character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}, {"The kernel parses ``\"" + graphicalStr + "\"`` as an empty string."}));
                 
                 Issues.insert(std::move(I));
                 
