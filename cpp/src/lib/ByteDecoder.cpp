@@ -95,7 +95,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 // No CodeAction here
                 //
                 
-                auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", ENCODINGISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc), 1.0, {}));
+                auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", ENCODINGISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc), 1.0));
                 
                 addIssue(std::move(I));
             }
@@ -1036,7 +1036,7 @@ SourceCharacter ByteDecoder::surrogateReturn(SourceLocation errSrcLoc, NextPolic
         // No CodeAction here
         //
         
-        auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_INVALIDCHARACTERENCODING_SURROGATE, "Invalid UTF-8 sequence: Probable surrogate", ENCODINGISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0, {}));
+        auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_INVALIDCHARACTERENCODING_SURROGATE, "Invalid UTF-8 sequence: Probable surrogate", ENCODINGISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0));
         
         Issues.insert(std::move(I));
     }
@@ -1066,7 +1066,7 @@ SourceCharacter ByteDecoder::invalidReturn(SourceLocation errSrcLoc, NextPolicy 
         // No CodeAction here
         //
         
-        auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_INVALIDCHARACTERENCODING, "Invalid UTF-8 sequence.", ENCODINGISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0, {}));
+        auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_INVALIDCHARACTERENCODING, "Invalid UTF-8 sequence.", ENCODINGISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0));
         
         Issues.insert(std::move(I));
     }

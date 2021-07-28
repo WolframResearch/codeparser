@@ -81,6 +81,7 @@ getMetadataFunc
 Begin["`Private`"]
 
 Needs["CodeParser`"]
+Needs["CodeParser`Utils`"]
 If[$VersionNumber >= 12.1,
 	Needs["CompiledLibrary`"] (* for CompiledLibrary, etc. *)
 ]
@@ -411,26 +412,33 @@ MakeAbstractSyntaxErrorNode[tag_, payload_, srcArgs___] :=
 
 
 
-MakeSyntaxIssue[tag_String, msg_String, severity_String, srcArgs___Integer, confidence_Real] :=
-	SyntaxIssue[tag, msg, severity, <| Source -> $StructureSrcArgs[srcArgs], ConfidenceLevel -> confidence |>]
-
-MakeFormatIssue[tag_String, msg_String, severity_String, srcArgs___Integer, confidence_Real] :=
-	FormatIssue[tag, msg, severity, <| Source -> $StructureSrcArgs[srcArgs], ConfidenceLevel -> confidence |>]
-
-MakeEncodingIssue[tag_String, msg_String, severity_String, srcArgs___Integer, confidence_Real] :=
-	EncodingIssue[tag, msg, severity, <| Source -> $StructureSrcArgs[srcArgs], ConfidenceLevel -> confidence |>]
-
 (*
 Only add CodeActions if there is at least 1
+Only add "AdditionalDescriptions" if there is at least 1
 *)
-MakeSyntaxIssue[tag_String, msg_String, severity_String, srcArgs___Integer, confidence_Real, actions:CodeAction[_, _, _]..] :=
-	SyntaxIssue[tag, msg, severity, <| Source -> $StructureSrcArgs[srcArgs], ConfidenceLevel -> confidence, CodeActions -> {actions} |>]
+MakeSyntaxIssue[tag_String, msg_String, severity_String, srcArgs___Integer, confidence_Real, actions:CodeAction[_, _, _]..., additionalDescs:_String...] :=
+	SyntaxIssue[tag, msg, severity, <|
+		Source -> $StructureSrcArgs[srcArgs],
+		ConfidenceLevel -> confidence,
+		If[empty[{actions}], Sequence @@ {}, CodeActions -> {actions}],
+		If[empty[{additionalDescs}], Sequence @@ {}, "AdditionalDescriptions" -> {additionalDescs}]
+	|>]
 
-MakeFormatIssue[tag_String, msg_String, severity_String, srcArgs___Integer, confidence_Real, actions:CodeAction[_, _, _]..] :=
-	FormatIssue[tag, msg, severity, <| Source -> $StructureSrcArgs[srcArgs], ConfidenceLevel -> confidence, CodeActions -> {actions} |>]
+MakeFormatIssue[tag_String, msg_String, severity_String, srcArgs___Integer, confidence_Real, actions:CodeAction[_, _, _]..., additionalDescs:_String...] :=
+	FormatIssue[tag, msg, severity, <|
+		Source -> $StructureSrcArgs[srcArgs],
+		ConfidenceLevel -> confidence,
+		If[empty[{actions}], Sequence @@ {}, CodeActions -> {actions}],
+		If[empty[{additionalDescs}], Sequence @@ {}, "AdditionalDescriptions" -> {additionalDescs}]
+	|>]
 
-MakeEncodingIssue[tag_String, msg_String, severity_String, srcArgs___Integer, confidence_Real, actions:CodeAction[_, _, _]..] :=
-	EncodingIssue[tag, msg, severity, <| Source -> $StructureSrcArgs[srcArgs], ConfidenceLevel -> confidence, CodeActions -> {actions} |>]
+MakeEncodingIssue[tag_String, msg_String, severity_String, srcArgs___Integer, confidence_Real, actions:CodeAction[_, _, _]..., additionalDescs:_String...] :=
+	EncodingIssue[tag, msg, severity, <|
+		Source -> $StructureSrcArgs[srcArgs],
+		ConfidenceLevel -> confidence,
+		If[empty[{actions}], Sequence @@ {}, CodeActions -> {actions}],
+		If[empty[{additionalDescs}], Sequence @@ {}, "AdditionalDescriptions" -> {additionalDescs}]
+	|>]
 
 
 MakeReplaceTextCodeAction[label_String, srcArgs___Integer, replacementText_String] :=

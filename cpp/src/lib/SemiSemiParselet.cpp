@@ -157,7 +157,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
                     
 #if !NISSUES
                     {
-                        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDIMPLICITTIMES, "Unexpected implicit ``Times`` between ``Spans``.", SYNTAXISSUESEVERITY_WARNING, Tok.Src, 0.75, {}));
+                        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDIMPLICITTIMES, "Unexpected implicit ``Times`` between ``Spans``.", SYNTAXISSUESEVERITY_WARNING, Tok.Src, 0.75));
                         
                         TheParser->addIssue(std::move(I));
                     }
@@ -194,7 +194,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
                 
 #if !NISSUES
                 {
-                    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDIMPLICITTIMES, "Unexpected implicit ``Times`` between ``Spans``.", SYNTAXISSUESEVERITY_WARNING, Tok.Src, 0.75, {}));
+                    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDIMPLICITTIMES, "Unexpected implicit ``Times`` between ``Spans``.", SYNTAXISSUESEVERITY_WARNING, Tok.Src, 0.75));
                     
                     TheParser->addIssue(std::move(I));
                 }

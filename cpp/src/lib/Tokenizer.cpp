@@ -349,7 +349,7 @@ inline Token Tokenizer::handleStrangeWhitespace(Buffer tokenStartBuf, SourceLoca
     
 #if !NISSUES
     {
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDSPACECHARACTER, "Unexpected space character: ``\"" + c.safeEncodedCharString() + "\" (" + c.graphicalString() + ")``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.95, {}));
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDSPACECHARACTER, "Unexpected space character: ``\"" + c.safeEncodedCharString() + "\" (" + c.graphicalString() + ")``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.95));
         
         Issues.insert(std::move(I));
     }
@@ -566,7 +566,7 @@ inline Token Tokenizer::handleSymbol(Buffer tokenStartBuf, SourceLocation tokenS
             // It's hard to keep track of the ` characters, so just report the entire symbol. Oh well
             //
             
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNDOCUMENTEDSLOTSYNTAX, "The name following ``#`` is not documented to allow the **`** character.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.33, {}));
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNDOCUMENTEDSLOTSYNTAX, "The name following ``#`` is not documented to allow the **`** character.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.33));
             
             Issues.insert(std::move(I));
         }
@@ -616,7 +616,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer tokenStartBuf, SourceLo
             // Something like  #$a
             //
             
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNDOCUMENTEDSLOTSYNTAX, "The name following ``#`` is not documented to allow the ``$`` character.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.33, {}));
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNDOCUMENTEDSLOTSYNTAX, "The name following ``#`` is not documented to allow the ``$`` character.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.33));
             
             Issues.insert(std::move(I));
         }
@@ -624,13 +624,13 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer tokenStartBuf, SourceLo
         
         if (c.escape() == ESCAPE_NONE) {
             
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``\"" + c.safeEncodedCharString() + "\" (" + c.graphicalString() + ")``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.85, {}));
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``\"" + c.safeEncodedCharString() + "\" (" + c.graphicalString() + ")``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.85));
             
             TheTokenizer->addIssue(std::move(I));
             
         } else {
             
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.85, {}));
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.85));
             
             TheTokenizer->addIssue(std::move(I));
         }
@@ -639,13 +639,13 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer tokenStartBuf, SourceLo
         
         if (c.escape() == ESCAPE_NONE) {
             
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``\"" + c.safeEncodedCharString() + "\" (" + c.graphicalString() + ")``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.80, {}));
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``\"" + c.safeEncodedCharString() + "\" (" + c.graphicalString() + ")``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.80));
             
             TheTokenizer->addIssue(std::move(I));
             
         } else {
             
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.80, {}));
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.80));
             
             TheTokenizer->addIssue(std::move(I));
         }
@@ -685,7 +685,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer tokenStartBuf, SourceLo
                     // Something like  #$a
                     //
                     
-                    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNDOCUMENTEDSLOTSYNTAX, "The name following ``#`` is not documented to allow the ``$`` character.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.33, {}));
+                    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNDOCUMENTEDSLOTSYNTAX, "The name following ``#`` is not documented to allow the ``$`` character.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.33));
                     
                     Issues.insert(std::move(I));
                 }
@@ -694,13 +694,13 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer tokenStartBuf, SourceLo
                 
                 if (c.escape() == ESCAPE_NONE) {
                     
-                    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``\"" + c.safeEncodedCharString() + "\" (" + c.graphicalString() + ")``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.85, {}));
+                    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``\"" + c.safeEncodedCharString() + "\" (" + c.graphicalString() + ")``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.85));
                     
                     TheTokenizer->addIssue(std::move(I));
                     
                 } else {
                     
-                    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.85, {}));
+                    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.85));
                     
                     TheTokenizer->addIssue(std::move(I));
                 }
@@ -709,13 +709,13 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer tokenStartBuf, SourceLo
                 
                 if (c.escape() == ESCAPE_NONE) {
                     
-                    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``\"" + c.safeEncodedCharString() + "\" (" + c.graphicalString() + ")``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.80, {}));
+                    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``\"" + c.safeEncodedCharString() + "\" (" + c.graphicalString() + ")``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.80));
                     
                     TheTokenizer->addIssue(std::move(I));
                     
                 } else {
                     
-                    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.80, {}));
+                    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.80));
                     
                     TheTokenizer->addIssue(std::move(I));
                 }
@@ -758,7 +758,7 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
         // Something like  #"a"
         //
         
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNDOCUMENTEDSLOTSYNTAX, "The name following ``#`` is not documented to allow the ``\"`` character.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.33, {}));
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNDOCUMENTEDSLOTSYNTAX, "The name following ``#`` is not documented to allow the ``\"`` character.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.33));
         
         Issues.insert(std::move(I));
     }
@@ -3423,7 +3423,7 @@ inline Token Tokenizer::handleMBStrangeNewline(Buffer tokenStartBuf, SourceLocat
     
 #if !NISSUES
     {
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDNEWLINECHARACTER, "Unexpected newline character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.85, {}));
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDNEWLINECHARACTER, "Unexpected newline character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.85));
         
         Issues.insert(std::move(I));
     }
@@ -3441,7 +3441,7 @@ inline Token Tokenizer::handleMBStrangeWhitespace(Buffer tokenStartBuf, SourceLo
     
 #if !NISSUES
     {
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDSPACECHARACTER, "Unexpected space character: ``\"" + c.safeEncodedCharString() + "\" (" + c.graphicalString() + ")``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.85, {}));
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDSPACECHARACTER, "Unexpected space character: ``\"" + c.safeEncodedCharString() + "\" (" + c.graphicalString() + ")``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.85));
         
         Issues.insert(std::move(I));
     }

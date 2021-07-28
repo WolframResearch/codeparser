@@ -96,7 +96,7 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
                 
                 auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
                 
-                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95));
                 
                 Issues.insert(std::move(I));
                 
@@ -115,7 +115,7 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
                 
                 auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
                 
-                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, {}));
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95));
                 
                 Issues.insert(std::move(I));
                 
@@ -377,7 +377,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
         else if (unlikelyEscapeChecking) {
 
             xxx;
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNLIKELYESCAPESEQUENCE, std::string("Unlikely escape sequence: ``\\\\[") + LongNameStr + "``", SYNTAXISSUESEVERITY_REMARK, Source(CharacterStart-1, Loc), 0.33, {}));
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNLIKELYESCAPESEQUENCE, std::string("Unlikely escape sequence: ``\\\\[") + LongNameStr + "``", SYNTAXISSUESEVERITY_REMARK, Source(CharacterStart-1, Loc), 0.33));
 
             Issues.push_back(std::move(I));
         }
@@ -1306,7 +1306,7 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterSta
                 // Do the simple thing: No actions, and report the character with all escaped backslashes now
                 //
                 
-                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character ``\\\\") + curSourceGraphicalStr + "``.", SYNTAXISSUESEVERITY_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, {}));
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNRECOGNIZEDCHARACTER, std::string("Unrecognized character ``\\\\") + curSourceGraphicalStr + "``.", SYNTAXISSUESEVERITY_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0));
                 
                 Issues.insert(std::move(I));
                 

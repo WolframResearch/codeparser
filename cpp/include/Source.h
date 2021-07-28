@@ -29,6 +29,7 @@ using CodeActionPtr = std::unique_ptr<CodeAction>;
 
 using IssuePtrSet = std::set<IssuePtr, IssuePtrCompare>;
 using CodeActionPtrVector = std::vector<CodeActionPtr>;
+using AdditionalDescriptionVector = std::vector<std::string>;
 
 //
 //
@@ -456,8 +457,9 @@ public:
     const Source Src;
     const double Val;
     const CodeActionPtrVector Actions;
+    const AdditionalDescriptionVector AdditionalDescriptions;
     
-    Issue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Val, CodeActionPtrVector Actions);
+    Issue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
     
     Source getSource() const;
     
@@ -549,7 +551,7 @@ public:
 //
 class SyntaxIssue : public Issue {
 public:
-    SyntaxIssue(SyntaxIssueTag Tag, std::string Msg, SyntaxIssueSeverity Sev, Source Src, double Con, CodeActionPtrVector Actions) : Issue(Tag, Msg, Sev, Src, Con, std::move(Actions)) {}
+    SyntaxIssue(SyntaxIssueTag Tag, std::string Msg, SyntaxIssueSeverity Sev, Source Src, double Con, CodeActionPtrVector Actions = {}, AdditionalDescriptionVector AdditionalDescriptions = {}) : Issue(Tag, Msg, Sev, Src, Con, std::move(Actions), AdditionalDescriptions) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
@@ -565,7 +567,7 @@ public:
 //
 class ExtraCommaIssue : public SyntaxIssue {
 public:
-    ExtraCommaIssue(Source Src, CodeActionPtrVector Actions);
+    ExtraCommaIssue(Source Src, CodeActionPtrVector Actions = {}, AdditionalDescriptionVector AdditionalDescriptions = {});
     
     bool check() const override;
 };
@@ -575,7 +577,7 @@ public:
 //
 class FormatIssue : public Issue {
 public:
-    FormatIssue(FormatIssueTag Tag, std::string Msg, FormatIssueSeverity Sev, Source Src, CodeActionPtrVector Actions) : Issue(Tag, Msg, Sev, Src, 0.0, std::move(Actions)) {}
+    FormatIssue(FormatIssueTag Tag, std::string Msg, FormatIssueSeverity Sev, Source Src, CodeActionPtrVector Actions = {}, AdditionalDescriptionVector AdditionalDescriptions = {}) : Issue(Tag, Msg, Sev, Src, 0.0, std::move(Actions), AdditionalDescriptions) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
@@ -591,7 +593,7 @@ public:
 //
 class EncodingIssue : public Issue {
 public:
-    EncodingIssue(EncodingIssueTag Tag, std::string Msg, EncodingIssueSeverity Sev, Source Src, double Con, CodeActionPtrVector Actions) : Issue(Tag, Msg, Sev, Src, Con, std::move(Actions)) {}
+    EncodingIssue(EncodingIssueTag Tag, std::string Msg, EncodingIssueSeverity Sev, Source Src, double Con, CodeActionPtrVector Actions = {}, AdditionalDescriptionVector AdditionalDescriptions = {}) : Issue(Tag, Msg, Sev, Src, Con, std::move(Actions), AdditionalDescriptions) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;

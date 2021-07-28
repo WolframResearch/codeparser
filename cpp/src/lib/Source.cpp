@@ -151,7 +151,7 @@ bool IssuePtrCompare::operator() (const IssuePtr &L, const IssuePtr &R) const {
 }
 
 
-Issue::Issue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Val, CodeActionPtrVector Actions) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Val(Val), Actions(std::move(Actions)) {}
+Issue::Issue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Val(Val), Actions(std::move(Actions)), AdditionalDescriptions(AdditionalDescriptions) {}
 
 Source Issue::getSource() const {
     return Src;
@@ -188,7 +188,7 @@ bool SyntaxIssue::check() const {
 }
 
 
-ExtraCommaIssue::ExtraCommaIssue(Source Src, CodeActionPtrVector Actions) : SyntaxIssue(SYNTAXISSUETAG_COMMA, "Extra ``,``.", SYNTAXISSUESEVERITY_ERROR, Src, 1.0, std::move(Actions)) {}
+ExtraCommaIssue::ExtraCommaIssue(Source Src, CodeActionPtrVector Actions, AdditionalDescriptionVector Descriptions) : SyntaxIssue(SYNTAXISSUETAG_COMMA, "Extra ``,``.", SYNTAXISSUESEVERITY_ERROR, Src, 1.0, std::move(Actions), Descriptions) {}
 
 bool ExtraCommaIssue::check() const {
     return false;
@@ -774,7 +774,7 @@ SourceCharacter::SourceCharacter_iterator SourceCharacter::end() {
 #if USE_MATHLINK
 void SyntaxIssue::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKESYNTAXISSUE->name(), static_cast<int>(3 + 4 + 1 + Actions.size()))) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKESYNTAXISSUE->name(), static_cast<int>(3 + 4 + 1 + Actions.size() + AdditionalDescriptions.size()))) {
         assert(false);
     }
     
@@ -798,6 +798,12 @@ void SyntaxIssue::put(MLINK mlp) const {
     
     for (auto& A : Actions) {
         A->put(mlp);
+    }
+    
+    for (auto& D : AdditionalDescriptions) {
+        if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(D.c_str()), static_cast<int>(D.size()))) {
+            assert(false);
+        }
     }
 }
 
@@ -850,7 +856,7 @@ void DeleteTextCodeAction::put(MLINK mlp) const {
 
 void FormatIssue::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEFORMATISSUE->name(), static_cast<int>(3 + 4 + 1 + Actions.size()))) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEFORMATISSUE->name(), static_cast<int>(3 + 4 + 1 + Actions.size() + AdditionalDescriptions.size()))) {
         assert(false);
     }
     
@@ -874,12 +880,18 @@ void FormatIssue::put(MLINK mlp) const {
     
     for (auto& A : Actions) {
         A->put(mlp);
+    }
+    
+    for (auto& D : AdditionalDescriptions) {
+        if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(D.c_str()), static_cast<int>(D.size()))) {
+            assert(false);
+        }
     }
 }
 
 void EncodingIssue::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEENCODINGISSUE->name(), static_cast<int>(3 + 4 + 1 + Actions.size()))) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEENCODINGISSUE->name(), static_cast<int>(3 + 4 + 1 + Actions.size() + AdditionalDescriptions.size()))) {
         assert(false);
     }
     
@@ -903,6 +915,12 @@ void EncodingIssue::put(MLINK mlp) const {
     
     for (auto& A : Actions) {
         A->put(mlp);
+    }
+    
+    for (auto& D : AdditionalDescriptions) {
+        if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(D.c_str()), static_cast<int>(D.size()))) {
+            assert(false);
+        }
     }
 }
 
