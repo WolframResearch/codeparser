@@ -94,6 +94,7 @@ set(PACLETINFO_IN_SOURCE
 
 set(GENERATED_WL_PACLET_KERNEL_SOURCES
 	${PROJECT_BINARY_DIR}/generated/wl/Kernel/RowBox.wl
+	${PROJECT_BINARY_DIR}/generated/wl/Kernel/TokenEnum.wl
 )
 
 set(GENERATED_WL_PACLET_RESOURCES_SOURCES
@@ -269,6 +270,7 @@ add_custom_command(
 set(GENERATED_TOKENENUM_OUTPUT
 	${PROJECT_BINARY_DIR}/generated/cpp/include/TokenEnum.h
 	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/TokenEnum.cpp
+	${PROJECT_BINARY_DIR}/generated/wl/Kernel/TokenEnum.wl
 )
 
 add_custom_command(
@@ -276,12 +278,15 @@ add_custom_command(
 		${GENERATED_TOKENENUM_OUTPUT}
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/TokenEnum.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
+	COMMAND
+		${CMAKE_COMMAND} -DSRC=${PROJECT_BINARY_DIR}/generated/wl/Kernel/TokenEnum.wl -DCODEPARSER_EXE=${CODEPARSER_EXE} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/InspectFile.cmake
 	DEPENDS
 		${PROJECT_SOURCE_DIR}/CodeParser/Data/TokenEnum.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/TokenEnum.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/Common.wl
 		${PROJECT_SOURCE_DIR}/CodeTools/Generate/GenerateSources.wl
 		${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
+		${PROJECT_SOURCE_DIR}/cmake/InspectFile.cmake
 	VERBATIM
 	WORKING_DIRECTORY
 		${PROJECT_SOURCE_DIR}

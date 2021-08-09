@@ -49,17 +49,17 @@ Order of First appearing here is important.
 During generation, values that are not Next are removed
 *)
 Token`Error`First -> Token`Error`ExpectedEqual,
-Token`Error`UnhandledDot -> Next,
+Token`Error`Number -> Next,
 Token`Error`UnhandledCharacter -> Next,
 Token`Error`ExpectedLetterlike -> Next,
-Token`Error`ExpectedAccuracy -> Next,
-Token`Error`ExpectedExponent -> Next,
 Token`Error`Aborted -> Next,
 Token`Error`ExpectedOperand -> Next,
-Token`Error`UnrecognizedDigit -> Next,
-Token`Error`ExpectedDigit -> Next,
-Token`Error`InvalidBase -> Next,
+Token`Error`ExpectedTag -> Next,
+Token`Error`ExpectedFile -> Next,
 Token`Error`UnexpectedCloser -> Next,
+Token`Buffer5 -> Next,
+Token`Buffer6 -> Next,
+Token`Buffer7 -> Next,
 (*
 Unterminated errors
 

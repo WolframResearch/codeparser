@@ -14,6 +14,7 @@ Begin["`Private`"]
 
 Needs["CodeParser`"]
 Needs["CodeParser`RowBox`"]
+Needs["CodeParser`TokenEnum`"]
 Needs["CodeParser`Utils`"]
 
 
@@ -204,7 +205,7 @@ reparsePossibleImplicitTimes[tag_, children_, pos_] :=
 Options[parseBox] = {
   (*
   0: normal
-  1: symbol segment or a quoted string (RHS of :: or #)
+  1: tag (RHS of :: or #)
   2: file
   *)
   "StringifyMode" -> 0
@@ -1129,15 +1130,15 @@ Module[{res},
 ]]
 
 
-toStandardFormBoxes[LeafNode[Token`Fake`ImplicitNull, _, _]] := Nothing
-
-toStandardFormBoxes[LeafNode[Token`Fake`ImplicitOne, _, _]] := Nothing
-
-toStandardFormBoxes[LeafNode[Token`Fake`ImplicitAll, _, _]] := Nothing
+toStandardFormBoxes[LeafNode[tok_, _, _]] /; tokenIsEmpty[tok] :=
+  Nothing
 
 toStandardFormBoxes[LeafNode[_, str_, _]] :=
   str
 
+
+toStandardFormBoxes[ErrorNode[tok_, _, _]] /; tokenIsEmpty[tok] :=
+  Nothing
 
 toStandardFormBoxes[ErrorNode[_, str_, _]] :=
   str

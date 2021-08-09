@@ -207,12 +207,12 @@ Token Tokenizer::nextToken0(NextPolicy policy) {
 }
 
 
-Token Tokenizer::nextToken0_stringifyAsSymbolSegment() {
+Token Tokenizer::nextToken0_stringifyAsTag() {
     
     auto tokenStartBuf = TheByteBuffer->buffer;
     auto tokenStartLoc = TheByteDecoder->SrcLoc;
     
-    auto policy = INSIDE_STRINGIFY_AS_SYMBOLSEGMENT;
+    auto policy = INSIDE_STRINGIFY_AS_TAG;
     
     auto c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
     
@@ -222,15 +222,15 @@ Token Tokenizer::nextToken0_stringifyAsSymbolSegment() {
             // EndOfFile is special, so invent source
             //
             
-            return Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
+            return Token(TOKEN_ERROR_EXPECTEDTAG, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
         case '\n': case '\r': case CODEPOINT_CRLF:
             //
             // Newline is special, so invent source
             //
             
-            return Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
+            return Token(TOKEN_ERROR_EXPECTEDTAG, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
         default:
-            return handleString_stringifyAsSymbolSegment(tokenStartBuf, tokenStartLoc, c, policy);
+            return handleString_stringifyAsTag(tokenStartBuf, tokenStartLoc, c, policy);
     }
 }
 
@@ -248,7 +248,7 @@ Token Tokenizer::nextToken0_stringifyAsFile() {
     
     switch (c.to_point()) {
         case CODEPOINT_ENDOFFILE:
-            return Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
+            return Token(TOKEN_ERROR_EXPECTEDFILE, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
         case '\n': case '\r': case CODEPOINT_CRLF:
             //
             // Stringifying as a file can span lines
@@ -309,13 +309,13 @@ Token Tokenizer::currentToken(NextPolicy policy) {
 }
 
 
-Token Tokenizer::currentToken_stringifyAsSymbolSegment() {
+Token Tokenizer::currentToken_stringifyAsTag() {
     
     auto resetBuf = TheByteBuffer->buffer;
     auto resetEOF = TheByteBuffer->wasEOF;
     auto resetLoc = TheByteDecoder->SrcLoc;
     
-    auto Tok = nextToken0_stringifyAsSymbolSegment();
+    auto Tok = nextToken0_stringifyAsTag();
     
     TheByteBuffer->buffer = resetBuf;
     TheByteBuffer->wasEOF = resetEOF;
@@ -795,7 +795,7 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
 }
 
 
-inline Token Tokenizer::handleString_stringifyAsSymbolSegment(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
+inline Token Tokenizer::handleString_stringifyAsTag(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
     
     //
     // Nothing to assert
@@ -824,7 +824,7 @@ inline Token Tokenizer::handleString_stringifyAsSymbolSegment(Buffer tokenStartB
     // Something like  a::5
     //
     
-    return Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
+    return Token(TOKEN_ERROR_EXPECTEDTAG, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
 }
 
 
@@ -880,7 +880,7 @@ inline Token Tokenizer::handleString_stringifyAsFile(Buffer tokenStartBuf, Sourc
             // So invent source
             //
             
-            return Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
+            return Token(TOKEN_ERROR_EXPECTEDFILE, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
         }
             break;
     }
@@ -1368,7 +1368,8 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                     
                     c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
                     
-                    return Token(TOKEN_ERROR_EXPECTEDDIGIT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                    // nee TOKEN_ERROR_EXPECTEDDIGIT
+                    return Token(TOKEN_ERROR_NUMBER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                 }
                     break;
                 default: {
@@ -1386,7 +1387,8 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                     
                     c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
                     
-                    return Token(TOKEN_ERROR_UNRECOGNIZEDDIGIT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                    // nee TOKEN_ERROR_UNRECOGNIZEDDIGIT
+                    return Token(TOKEN_ERROR_NUMBER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                 }
             }
             
@@ -1409,7 +1411,8 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                     // Something like  2^^..
                     //
                     
-                    return Token(TOKEN_ERROR_UNHANDLEDDOT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                    // nee TOKEN_ERROR_UNHANDLEDDOT
+                    return Token(TOKEN_ERROR_NUMBER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                 }
                 
                 // Success!
@@ -1424,7 +1427,8 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                     // Something like  2^^.
                     //
                     
-                    return Token(TOKEN_ERROR_UNHANDLEDDOT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                    // nee TOKEN_ERROR_UNHANDLEDDOT
+                    return Token(TOKEN_ERROR_NUMBER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                 }
                 
                 Ctxt.Real = true;
@@ -1587,7 +1591,8 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
                             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
                             
-                            return Token(TOKEN_ERROR_EXPECTEDACCURACY, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                            // nee TOKEN_ERROR_EXPECTEDACCURACY
+                            return Token(TOKEN_ERROR_NUMBER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                         }
                         
                         //
@@ -1685,7 +1690,8 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
                             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
                             
-                            return Token(TOKEN_ERROR_EXPECTEDDIGIT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                            // TOKEN_ERROR_EXPECTEDDIGIT
+                            return Token(TOKEN_ERROR_NUMBER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                         }
                         
                         if (NextChar.isSign()) {
@@ -1697,7 +1703,8 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
                             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
                             
-                            return Token(TOKEN_ERROR_EXPECTEDDIGIT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                            // nee TOKEN_ERROR_EXPECTEDDIGIT
+                            return Token(TOKEN_ERROR_NUMBER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                         }
                         
                         //
@@ -1796,7 +1803,8 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                     
                     c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
                     
-                    return Token(TOKEN_ERROR_EXPECTEDDIGIT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                    // nee TOKEN_ERROR_EXPECTEDDIGIT
+                    return Token(TOKEN_ERROR_NUMBER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                 }
                 
             } // case '.'
@@ -1823,7 +1831,8 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                         
                         c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
                         
-                        return Token(TOKEN_ERROR_EXPECTEDACCURACY, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                        // nee TOKEN_ERROR_EXPECTEDACCURACY
+                        return Token(TOKEN_ERROR_NUMBER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                     }
                 }
                 
@@ -1853,7 +1862,8 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                         
                         c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
                         
-                        return Token(TOKEN_ERROR_EXPECTEDACCURACY, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                        // nee TOKEN_ERROR_EXPECTEDACCURACY
+                        return Token(TOKEN_ERROR_NUMBER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                     }
                 }
                 
@@ -1929,7 +1939,8 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
         TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
         TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
         
-        return Token(TOKEN_ERROR_EXPECTEDEXPONENT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        // TOKEN_ERROR_EXPECTEDEXPONENT
+        return Token(TOKEN_ERROR_NUMBER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
     }
     
     assert(c.isDigit());
@@ -1998,7 +2009,8 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-            return Token(TOKEN_ERROR_EXPECTEDEXPONENT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+            // nee TOKEN_ERROR_EXPECTEDEXPONENT
+            return Token(TOKEN_ERROR_NUMBER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         }
     }
 }
@@ -2014,11 +2026,13 @@ TokenEnum NumberTokenizationContext::computeTok() {
     
     if (InvalidBase) {
         
-        return TOKEN_ERROR_INVALIDBASE;
+        // nee TOKEN_ERROR_INVALIDBASE
+        return TOKEN_ERROR_NUMBER;
         
     } else if (UnrecognizedDigit) {
         
-        return TOKEN_ERROR_UNRECOGNIZEDDIGIT;
+        // nee TOKEN_ERROR_UNRECOGNIZEDDIGIT
+        return TOKEN_ERROR_NUMBER;
         
     } else if (Real) {
         

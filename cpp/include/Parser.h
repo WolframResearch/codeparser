@@ -122,7 +122,7 @@ public:
     
     Token currentToken(ParserContext Ctxt, NextPolicy policy) const;
     
-    Token currentToken_stringifyAsSymbolSegment() const;
+    Token currentToken_stringifyAsTag() const;
     Token currentToken_stringifyAsFile() const;
     
 #if !NISSUES

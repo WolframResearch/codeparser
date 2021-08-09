@@ -68,8 +68,8 @@ using ScopedMLEnvironmentParameterPtr = std::unique_ptr<ScopedMLEnvironmentParam
 // Normal:
 // Tokens are treated normally
 //
-// SymbolSegment:
-// Stringify the next token as a symbol segment:
+// Tag:
+// Stringify the next token as a tag:
 // a::bcd
 // a::"bcd"
 // #abc
@@ -83,7 +83,7 @@ using ScopedMLEnvironmentParameterPtr = std::unique_ptr<ScopedMLEnvironmentParam
 //
 enum StringifyMode {
     STRINGIFYMODE_NORMAL = 0,
-    STRINGIFYMODE_SYMBOLSEGMENT = 1,
+    STRINGIFYMODE_TAG = 1,
     STRINGIFYMODE_FILE = 2,
 };
 

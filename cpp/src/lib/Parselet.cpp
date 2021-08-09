@@ -1690,7 +1690,7 @@ NodePtr ColonColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
     // Special tokenization, so must do parsing here
     //
     
-    auto Tok2 = TheParser->currentToken_stringifyAsSymbolSegment();
+    auto Tok2 = TheParser->currentToken_stringifyAsTag();
     
     TheParser->nextToken(Tok2);
     
@@ -1734,7 +1734,7 @@ NodePtr ColonColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt)
         // Special tokenization, so must do parsing here
         //
     
-        auto Tok2 = TheParser->currentToken_stringifyAsSymbolSegment();
+        auto Tok2 = TheParser->currentToken_stringifyAsTag();
     
         TheParser->nextToken(Tok2);
     

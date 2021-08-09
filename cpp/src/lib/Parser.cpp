@@ -209,9 +209,9 @@ Token Parser::currentToken(ParserContext Ctxt, NextPolicy policy) const {
 }
 
 
-Token Parser::currentToken_stringifyAsSymbolSegment() const {
+Token Parser::currentToken_stringifyAsTag() const {
     
-    return TheTokenizer->currentToken_stringifyAsSymbolSegment();
+    return TheTokenizer->currentToken_stringifyAsTag();
 }
 
 Token Parser::currentToken_stringifyAsFile() const {

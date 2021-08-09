@@ -221,16 +221,13 @@ isCloser[_] = False
 isError[Token`Error`First] = True
 isError[Token`Error`Unknown] = True
 isError[Token`Error`ExpectedEqual] = True
-isError[Token`Error`UnhandledDot] = True
+isError[Token`Error`Number] = True
 isError[Token`Error`UnhandledCharacter] = True
 isError[Token`Error`ExpectedLetterlike] = True
-isError[Token`Error`ExpectedAccuracy] = True
-isError[Token`Error`ExpectedExponent] = True
 isError[Token`Error`Aborted] = True
 isError[Token`Error`ExpectedOperand] = True
-isError[Token`Error`UnrecognizedDigit] = True
-isError[Token`Error`ExpectedDigit] = True
-isError[Token`Error`InvalidBase] = True
+isError[Token`Error`ExpectedTag] = True
+isError[Token`Error`ExpectedFile] = True
 isError[Token`Error`UnsupportedToken] = True
 isError[Token`Error`UnexpectedCloser] = True
 isError[Token`Error`UnterminatedComment] = True
@@ -268,20 +265,25 @@ isTrivia[_] = False
 
 
 
-isEmpty[Token`EndOfFile] = True
-isEmpty[Token`Fake`ImplicitTimes] = True
-isEmpty[Token`Error`Aborted] = True
-isEmpty[Token`Fake`ImplicitNull] = True
-isEmpty[Token`Fake`ImplicitOne] = True
-isEmpty[Token`Fake`ImplicitAll] = True
-isEmpty[Token`Error`ExpectedOperand] = True
-(*
+$isEmptyTokens = {
+  Token`EndOfFile,
+  Token`Fake`ImplicitTimes,
+  Token`Error`Aborted,
+  Token`Fake`ImplicitNull,
+  Token`Fake`ImplicitOne,
+  Token`Fake`ImplicitAll,
+  Token`Error`ExpectedOperand,
+  Token`Error`ExpectedTag,
+  Token`Error`ExpectedFile
+  (*
+  Newlines are not empty
 
-Newlines are not empty
+  Token`ToplevelNewline
+  Token`InternalNewline
+  *)
+}
 
-isEmpty[Token`ToplevelNewline] = True
-isEmpty[Token`InternalNewline] = True
-*)
+isEmpty[tok_ /; MemberQ[$isEmptyTokens, tok]] := True
 
 isEmpty[_] = False
 
@@ -310,7 +312,10 @@ Which[
 ]
 
 
-tokenToSymbolCases = Row[{"case ", toGlobal[#], ".value(): return ", toGlobal[tokenToSymbol[#]], ";"}]& /@ tokens;
+tokenToSymbolCases = Row[{"case ", toGlobal[#], ".value(): return ", toGlobal[tokenToSymbol[#]], ";"}]& /@ tokens
+
+
+tokenIsEmptyCases = Row[{"tokenIsEmpty", "[", ToString[#], "]", " ", "=", " ", "True"}]& /@ $isEmptyTokens
 
 
 generate[] := (
@@ -546,7 +551,43 @@ If[FailureQ[res],
   Quit[1]
 ];
 
-Print["Done TokenEnum"]
+tokenWL = {
+"
+(*
+AUTO GENERATED FILE
+DO NOT MODIFY
+*)
+
+BeginPackage[\"CodeParser`TokenEnum`\"]
+
+tokenIsEmpty
+
+Begin[\"`Private`\"]
+
+Needs[\"CodeParser`\"]
+Needs[\"CodeParser`Utils`\"]
+"} ~Join~
+
+tokenIsEmptyCases ~Join~
+
+{"
+tokenIsEmpty[_] = False
+
+End[]
+
+EndPackage[]
+"};
+
+Print["exporting TokenEnum.wl"];
+res = Export[FileNameJoin[{generatedWLDir, "Kernel", "TokenEnum.wl"}], Column[tokenWL], "String"];
+
+Print[res];
+
+If[FailureQ[res],
+  Quit[1]
+];
+
+Print["Done TokenEnum"];
 )
 
 If[!StringQ[script],

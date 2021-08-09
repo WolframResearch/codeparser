@@ -63,7 +63,7 @@ class Tokenizer {
     SourceCharacter handleFileOpsBrackets(SourceLocation tokenStartLoc, SourceCharacter firstChar, NextPolicy policy, int *handled);
     Token handleString(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
     
-    Token handleString_stringifyAsSymbolSegment(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
+    Token handleString_stringifyAsTag(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
     Token handleString_stringifyAsFile(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter firstChar, NextPolicy policy);
     
     Token handleSymbol(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
@@ -163,12 +163,12 @@ public:
     
     Token nextToken0(NextPolicy policy);
     
-    Token nextToken0_stringifyAsSymbolSegment();
+    Token nextToken0_stringifyAsTag();
     Token nextToken0_stringifyAsFile();
     
     Token currentToken(NextPolicy policy);
     
-    Token currentToken_stringifyAsSymbolSegment();
+    Token currentToken_stringifyAsTag();
     Token currentToken_stringifyAsFile();
 
 #if !NISSUES

@@ -300,8 +300,8 @@ NodePtr ParserSession::concreteParseLeaf0(int mode) {
                 return NodePtr(new LeafNode(Tok));
             }
         }
-        case STRINGIFYMODE_SYMBOLSEGMENT: {
-            auto Tok = TheTokenizer->nextToken0_stringifyAsSymbolSegment();
+        case STRINGIFYMODE_TAG: {
+            auto Tok = TheTokenizer->nextToken0_stringifyAsTag();
             
             if (Tok.Tok.isError()) {
                 return NodePtr(new ErrorNode(Tok));

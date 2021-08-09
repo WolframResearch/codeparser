@@ -574,7 +574,28 @@ prbDispatch[{_, LeafNode[Token`ColonColon, _, _], _, ___}, handledChildren_, chi
             parseBox[#1, Append[pos, 1] ~Join~ (#2 + poss[[1, 1]]-1)]
           ,
           _String,
-            parseBox[#1, Append[pos, 1] ~Join~ (#2 + poss[[1, 1]]-1), \"StringifyMode\" -> 1]
+            Function[{tag},
+              If[!MatchQ[tag, ErrorNode[Token`Error`ExpectedTag, _, _]],
+                (*
+                everything is fine
+                *)
+                tag
+                ,
+                (*
+                something like a::111 but 111 cannot be a tag
+
+                so replace with sequence of ErrorNode (which is empty) and regular LeafNode
+                *)
+                Sequence @@ {
+                  ErrorNode[Token`Error`ExpectedTag, \"\", <| Source -> Before[Append[pos, 1] ~Join~ (#2 + poss[[1, 1]]-1)]|>]
+                  ,
+                  (*
+                  parse again WITHOUT \"StringifyMode\" -> 1
+                  *)
+                  parseBox[#1, Append[pos, 1] ~Join~ (#2 + poss[[1, 1]]-1)]
+                }
+              ]
+            ][parseBox[#1, Append[pos, 1] ~Join~ (#2 + poss[[1, 1]]-1), \"StringifyMode\" -> 1]]
           ,
           _,
             parseBox[#1, Append[pos, 1] ~Join~ (#2 + poss[[1, 1]]-1)]
