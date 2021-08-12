@@ -2,7 +2,15 @@
 Paclet[
   Name -> "CodeParser",
   Version -> "1.3",
-  WolframVersion -> "11.0+",
+  (*
+  CodeParser has source compatibility with 11.0+, but various
+  backward-compatibility issues prevent building with newer versions
+  and running on old versions.
+
+  It is recommended to build with the version that you will be
+  running on.
+  *)
+  WolframVersion -> "12.3+",
   Description -> "Parse Wolfram Language code.",
   Creator -> "Brenton Bostick <brenton@wolfram.com>",
   BuildDate -> "",
