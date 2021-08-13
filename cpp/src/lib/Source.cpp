@@ -543,6 +543,15 @@ std::string SourceCharacter::graphicalString() const {
     return String.str();
 }
 
+std::string SourceCharacter::safeAndGraphicalString() const {
+
+    std::ostringstream String;
+
+    String << "\"" << set_safe << *this << clear_safe << "\" (" << set_graphical << *this << clear_graphical << ")";
+
+    return String.str();
+}
+
 std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
     
     auto graphicalFlag = stream.iword(get_graphical_i()) == 1;

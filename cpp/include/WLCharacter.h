@@ -80,6 +80,8 @@ struct WLCharacter {
     
     std::string graphicalString() const;
     
+    std::string safeAndGraphicalString() const;
+    
     bool isEscaped() const;
     
     

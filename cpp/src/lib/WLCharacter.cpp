@@ -248,6 +248,24 @@ std::string WLCharacter::graphicalString() const {
     return String.str();
 }
 
+std::string WLCharacter::safeAndGraphicalString() const {
+    
+    std::ostringstream String;
+    
+    if (escape() == ESCAPE_NONE) {
+        
+        String << "\"" << set_safe << *this << clear_safe << "\" (" << set_graphical << *this << clear_graphical << ")";
+        
+        return String.str();
+        
+    } else {
+        
+        String << set_safe << *this << clear_safe;
+        
+        return String.str();
+    }
+}
+
 bool WLCharacter::isEscaped() const {
     return escape() != ESCAPE_NONE;
 }

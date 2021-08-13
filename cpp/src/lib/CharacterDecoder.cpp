@@ -527,7 +527,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
             
             CodeActionPtrVector Actions;
             
-            for (auto& A : Utils::certainCharacterReplacementActions(point, Src, ESCAPE_LONGNAME)) {
+            for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
                 Actions.push_back(std::move(A));
             }
             
@@ -550,7 +550,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
             
             CodeActionPtrVector Actions;
             
-            for (auto& A : Utils::certainCharacterReplacementActions(point, Src, ESCAPE_LONGNAME)) {
+            for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
                 Actions.push_back(std::move(A));
             }
             
@@ -655,7 +655,7 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
         
         CodeActionPtrVector Actions;
         
-        for (auto& A : Utils::certainCharacterReplacementActions(point, Src, ESCAPE_4HEX)) {
+        for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
             Actions.push_back(std::move(A));
         }
         
@@ -678,7 +678,7 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
         
         CodeActionPtrVector Actions;
         
-        for (auto& A : Utils::certainCharacterReplacementActions(point, Src, ESCAPE_4HEX)) {
+        for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
             Actions.push_back(std::move(A));
         }
         
@@ -776,7 +776,7 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
         
         CodeActionPtrVector Actions;
         
-        for (auto& A : Utils::certainCharacterReplacementActions(point, Src, ESCAPE_2HEX)) {
+        for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
             Actions.push_back(std::move(A));
         }
         
@@ -799,7 +799,7 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
         
         CodeActionPtrVector Actions;
         
-        for (auto& A : Utils::certainCharacterReplacementActions(point, Src, ESCAPE_2HEX)) {
+        for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
             Actions.push_back(std::move(A));
         }
         
@@ -898,7 +898,7 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
         
         CodeActionPtrVector Actions;
         
-        for (auto& A : Utils::certainCharacterReplacementActions(point, Src, ESCAPE_OCTAL)) {
+        for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
             Actions.push_back(std::move(A));
         }
         
@@ -921,7 +921,7 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
         
         CodeActionPtrVector Actions;
         
-        for (auto& A : Utils::certainCharacterReplacementActions(point, Src, ESCAPE_OCTAL)) {
+        for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
             Actions.push_back(std::move(A));
         }
         
@@ -1024,7 +1024,7 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
         
         CodeActionPtrVector Actions;
         
-        for (auto& A : Utils::certainCharacterReplacementActions(point, Src, ESCAPE_6HEX)) {
+        for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
             Actions.push_back(std::move(A));
         }
         
@@ -1047,7 +1047,7 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
         
         CodeActionPtrVector Actions;
         
-        for (auto& A : Utils::certainCharacterReplacementActions(point, Src, ESCAPE_6HEX)) {
+        for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
             Actions.push_back(std::move(A));
         }
         

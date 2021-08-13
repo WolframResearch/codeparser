@@ -284,6 +284,8 @@ struct SourceCharacter {
     
     std::string graphicalString() const;
     
+    std::string safeAndGraphicalString() const;
+    
     bool isAlphaOrDigit() const;
     
     bool isHex() const;

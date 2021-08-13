@@ -349,7 +349,7 @@ inline Token Tokenizer::handleStrangeWhitespace(Buffer tokenStartBuf, SourceLoca
     
 #if !NISSUES
     {
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDSPACECHARACTER, "Unexpected space character: ``\"" + c.safeEncodedCharString() + "\" (" + c.graphicalString() + ")``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.95));
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDSPACECHARACTER, "Unexpected space character: ``" + c.safeAndGraphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.95));
         
         Issues.insert(std::move(I));
     }
@@ -622,33 +622,15 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer tokenStartBuf, SourceLo
         }
     } else if (c.isStrangeLetterlike()) {
         
-        if (c.escape() == ESCAPE_NONE) {
-            
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``\"" + c.safeEncodedCharString() + "\" (" + c.graphicalString() + ")``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.85));
-            
-            TheTokenizer->addIssue(std::move(I));
-            
-        } else {
-            
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.85));
-            
-            TheTokenizer->addIssue(std::move(I));
-        }
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.safeAndGraphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.85));
+        
+        TheTokenizer->addIssue(std::move(I));
         
     } else if (c.isMBStrangeLetterlike()) {
         
-        if (c.escape() == ESCAPE_NONE) {
-            
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``\"" + c.safeEncodedCharString() + "\" (" + c.graphicalString() + ")``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.80));
-            
-            TheTokenizer->addIssue(std::move(I));
-            
-        } else {
-            
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.80));
-            
-            TheTokenizer->addIssue(std::move(I));
-        }
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.safeAndGraphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.80));
+        
+        TheTokenizer->addIssue(std::move(I));
     }
 #endif // !NISSUES
     
@@ -692,33 +674,15 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer tokenStartBuf, SourceLo
                 
             } else if (c.isStrangeLetterlike()) {
                 
-                if (c.escape() == ESCAPE_NONE) {
-                    
-                    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``\"" + c.safeEncodedCharString() + "\" (" + c.graphicalString() + ")``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.85));
-                    
-                    TheTokenizer->addIssue(std::move(I));
-                    
-                } else {
-                    
-                    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.85));
-                    
-                    TheTokenizer->addIssue(std::move(I));
-                }
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.safeAndGraphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.85));
+                
+                TheTokenizer->addIssue(std::move(I));
                 
             } else if (c.isMBStrangeLetterlike()) {
                 
-                if (c.escape() == ESCAPE_NONE) {
-                    
-                    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``\"" + c.safeEncodedCharString() + "\" (" + c.graphicalString() + ")``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.80));
-                    
-                    TheTokenizer->addIssue(std::move(I));
-                    
-                } else {
-                    
-                    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.80));
-                    
-                    TheTokenizer->addIssue(std::move(I));
-                }
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.safeAndGraphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.80));
+                
+                TheTokenizer->addIssue(std::move(I));
             }
 #endif // !NISSUES
             
@@ -3455,7 +3419,7 @@ inline Token Tokenizer::handleMBStrangeWhitespace(Buffer tokenStartBuf, SourceLo
     
 #if !NISSUES
     {
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDSPACECHARACTER, "Unexpected space character: ``\"" + c.safeEncodedCharString() + "\" (" + c.graphicalString() + ")``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.85));
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDSPACECHARACTER, "Unexpected space character: ``" + c.safeAndGraphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.85));
         
         Issues.insert(std::move(I));
     }

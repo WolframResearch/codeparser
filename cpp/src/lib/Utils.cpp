@@ -326,54 +326,56 @@ bool Utils::ifASCIIWLCharacter(unsigned char c, char test) {
 // \:29F4 -> \[RuleDelayed]
 // \:200B -> \[InvisibleSpace]
 //
-CodeActionPtrVector Utils::certainCharacterReplacementActions(codepoint point, Source src, EscapeStyle escape) {
+CodeActionPtrVector Utils::certainCharacterReplacementActions(WLCharacter c, Source src) {
+    
+    auto graphicalStr = c.graphicalString();
     
     CodeActionPtrVector Actions;
     
-    switch (point) {
+    switch (c.to_point()) {
         case CODEPOINT_LONGNAME_COMPATIBILITYNOBREAK:
             //
             // UTF-8 bytes for U+2060 (\[NoBreak])
             //
-            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``\\[COMPATIBILITYNoBreak]`` with ``\\[NoBreak]``", src, (escape == ESCAPE_NONE) ? "\xe2\x81\xa0" : "\\[NoBreak]")));
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + graphicalStr + "`` with ``\\[NoBreak]``", src, (c.escape() == ESCAPE_NONE) ? "\xe2\x81\xa0" : "\\[NoBreak]")));
             break;
         case CODEPOINT_LONGNAME_RIGHTARROW:
             //
             // UTF-8 bytes for U+F522 (\[Rule])
             //
-            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``\\[RightArrow]`` with ``\\[Rule]``", src, (escape == ESCAPE_NONE) ? "\xef\x94\xa2" : "\\[Rule]")));
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + graphicalStr + "`` with ``\\[Rule]``", src, (c.escape() == ESCAPE_NONE) ? "\xef\x94\xa2" : "\\[Rule]")));
             break;
         case CODEPOINT_RULEDELAYED:
             //
             // UTF-8 bytes for U+F51F (\[RuleDelayed])
             //
-            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``\\:29F4`` with ``\\[RuleDelayed]``", src, (escape == ESCAPE_NONE) ? "\xef\x94\x9f" : "\\[RuleDelayed]")));
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + graphicalStr + "`` with ``\\[RuleDelayed]``", src, (c.escape() == ESCAPE_NONE) ? "\xef\x94\x9f" : "\\[RuleDelayed]")));
             break;
         case CODEPOINT_FUNCTIONAPPLICATION:
             //
             // UTF-8 bytes for U+F76D (\[InvisibleApplication])
             //
-            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``\\:2061`` with ``\\[InvisibleApplication]``", src, (escape == ESCAPE_NONE) ? "\xef\x9d\xad" : "\\[InvisibleApplication]")));
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + graphicalStr + "`` with ``\\[InvisibleApplication]``", src, (c.escape() == ESCAPE_NONE) ? "\xef\x9d\xad" : "\\[InvisibleApplication]")));
             
-            Actions.push_back(CodeActionPtr(new DeleteTextCodeAction("Delete ``\\:2061``", src)));
+            Actions.push_back(CodeActionPtr(new DeleteTextCodeAction("Delete ``" + graphicalStr + "``", src)));
             break;
         case CODEPOINT_INVISIBLESEPARATOR:
             //
             // UTF-8 bytes for U+F765 (\[InvisibleComma])
             //
-            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``\\:2063`` with ``\\[InvisibleComma]``", src, (escape == ESCAPE_NONE) ? "\xef\x9d\xa5" : "\\[InvisibleComma]")));
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + graphicalStr + "`` with ``\\[InvisibleComma]``", src, (c.escape() == ESCAPE_NONE) ? "\xef\x9d\xa5" : "\\[InvisibleComma]")));
             break;
         case CODEPOINT_INVISIBLEPLUS:
             //
             // UTF-8 bytes for U+F39E (\[ImplicitPlus])
             //
-            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``\\:2064`` with ``\\[ImplicitPlus]``", src, (escape == ESCAPE_NONE) ? "\xef\x8e\x9e" : "\\[ImplicitPlus]")));
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + graphicalStr + "`` with ``\\[ImplicitPlus]``", src, (c.escape() == ESCAPE_NONE) ? "\xef\x8e\x9e" : "\\[ImplicitPlus]")));
             break;
         case CODEPOINT_ZEROWIDTHSPACE:
             //
             // UTF-8 bytes for U+F360 (\[InvisibleSpace])
             //
-            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``\\:200B`` with ``\\[InvisibleSpace]``", src, (escape == ESCAPE_NONE) ? "\xef\x8d\xa0" : "\\[InvisibleSpace]")));
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + graphicalStr + "`` with ``\\[InvisibleSpace]``", src, (c.escape() == ESCAPE_NONE) ? "\xef\x8d\xa0" : "\\[InvisibleSpace]")));
             break;
     }
     

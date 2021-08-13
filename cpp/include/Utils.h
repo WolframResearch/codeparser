@@ -50,5 +50,5 @@ public:
     //
     //
     //
-    static CodeActionPtrVector certainCharacterReplacementActions(codepoint point, Source src, EscapeStyle escape);
+    static CodeActionPtrVector certainCharacterReplacementActions(WLCharacter c, Source src);
 };

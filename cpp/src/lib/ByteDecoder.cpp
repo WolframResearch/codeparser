@@ -961,14 +961,16 @@ void ByteDecoder::strangeWarning(codepoint decoded, SourceLocation currentSource
     
     auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
     
-    auto safeEncodedCharStr = SourceCharacter(decoded).safeEncodedCharString();
+    auto safeAndGraphicalStr = SourceCharacter(decoded).safeAndGraphicalString();
     auto graphicalStr = SourceCharacter(decoded).graphicalString();
     
     auto Src = Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc);
     
     CodeActionPtrVector Actions;
     
-    auto certainCharacterActions = Utils::certainCharacterReplacementActions(decoded, Src, ESCAPE_NONE);
+    auto c = WLCharacter(decoded, ESCAPE_NONE);
+    
+    auto certainCharacterActions = Utils::certainCharacterReplacementActions(c, Src);
     
     for (auto& A : certainCharacterActions) {
         Actions.push_back(std::move(A));
@@ -986,7 +988,7 @@ void ByteDecoder::strangeWarning(codepoint decoded, SourceLocation currentSource
         Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
     }
     
-    auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``\"" + safeEncodedCharStr + "\" (" + graphicalStr + ")``.", ENCODINGISSUESEVERITY_WARNING, Src, confidence, std::move(Actions)));
+    auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + safeAndGraphicalStr + "``.", ENCODINGISSUESEVERITY_WARNING, Src, confidence, std::move(Actions)));
     
     Issues.insert(std::move(I));
 }
@@ -995,7 +997,7 @@ void ByteDecoder::nonASCIIWarning(codepoint decoded, SourceLocation currentSourc
     
     auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
     
-    auto safeEncodedCharStr = SourceCharacter(decoded).safeEncodedCharString();
+    auto safeAndGraphicalStr = SourceCharacter(decoded).safeAndGraphicalString();
     auto graphicalStr = SourceCharacter(decoded).graphicalString();
     
     auto Src = Source(currentSourceCharacterStartLoc, currentSourceCharacterEndLoc);
@@ -1007,7 +1009,7 @@ void ByteDecoder::nonASCIIWarning(codepoint decoded, SourceLocation currentSourc
         Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
     }
     
-    auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_NONASCIICHARACTER, "Non-ASCII character: ``\"" + safeEncodedCharStr + "\" (" + graphicalStr + ")``.", ENCODINGISSUESEVERITY_REMARK, Src, confidence, std::move(Actions)));
+    auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_NONASCIICHARACTER, "Non-ASCII character: ``" + safeAndGraphicalStr + "``.", ENCODINGISSUESEVERITY_REMARK, Src, confidence, std::move(Actions)));
     
     Issues.insert(std::move(I));
 }
