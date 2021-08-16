@@ -20,7 +20,7 @@ Number Errors
 Test[
 	CodeTokenize["1.2``->3"]
 	,
-	{ErrorNode[Token`Error`ExpectedAccuracy, "1.2``->", <|Source -> {{1, 1}, {1, 8}}|>], 
+	{ErrorNode[Token`Error`Number, "1.2``->", <|Source -> {{1, 1}, {1, 8}}|>], 
 	LeafNode[Integer, "3", <|Source -> {{1, 8}, {1, 9}}|>]}
 	,
 	TestID->"Tokenize-20181215-Z0H7Y5"

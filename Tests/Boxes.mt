@@ -379,7 +379,7 @@ Test[
 	CodeConcreteParseBox["101101^^2"]
 	,
 	ContainerNode[Box, {
-		ErrorNode[Token`Error`InvalidBase, "101101^^2", <|Source -> {}|>]}, <||>]
+		ErrorNode[Token`Error`Number, "101101^^2", <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20200622-R5K1V9"
 ]

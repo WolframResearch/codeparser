@@ -285,7 +285,7 @@ Test[
 	CodeParse["10^^2.Pi"]
 	,
 	ContainerNode[String, {
-		ErrorNode[Token`Error`UnrecognizedDigit, "10^^2.Pi", <|Source -> {{1, 1}, {1, 9}}|>]}, <||>]
+		ErrorNode[Token`Error`Number, "10^^2.Pi", <|Source -> {{1, 1}, {1, 9}}|>]}, <||>]
 	,
 	TestID->"Parse-20200112-G6X1N0"
 ]
@@ -2377,7 +2377,7 @@ Test[
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "MessageName", <||>], {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
-			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 4}, {1, 4}}|>]},
+			ErrorNode[Token`Error`ExpectedTag, "", <|Source -> {{1, 4}, {1, 4}}|>]},
 			<|Source -> {{1, 1}, {1, 4}}|>]},
 		<||>]
 	,

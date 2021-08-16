@@ -120,7 +120,7 @@ InvalidBase:
 Test[
 	CodeTokenize["37^^2"]
 	,
-	{ErrorNode[Token`Error`InvalidBase, "37^^2", <|Source -> {{1, 1}, {1, 6}}|>]}
+	{ErrorNode[Token`Error`Number, "37^^2", <|Source -> {{1, 1}, {1, 6}}|>]}
 	,
 	TestID->"TokenErrors-20190520-Q9B9R6"
 ]
@@ -139,7 +139,7 @@ ExpectedDigitOrAlpha:
 Test[
 	CodeTokenize["2^^3"]
 	,
-	{ErrorNode[Token`Error`UnrecognizedDigit, "2^^3", <|Source -> {{1, 1}, {1, 5}}|>]}
+	{ErrorNode[Token`Error`Number, "2^^3", <|Source -> {{1, 1}, {1, 5}}|>]}
 	,
 	TestID->"TokenErrors-20190520-B7G4V4"
 ]
@@ -148,7 +148,7 @@ Test[
 Test[
 	CodeTokenize["2^^@"]
 	,
-	{ErrorNode[Token`Error`UnrecognizedDigit, "2^^@", <|Source -> {{1, 1}, {1, 5}}|>]}
+	{ErrorNode[Token`Error`Number, "2^^@", <|Source -> {{1, 1}, {1, 5}}|>]}
 	,
 	TestID->"TokenErrors-20190520-J3Q2S7"
 ]
@@ -164,7 +164,7 @@ Test[
 	CodeTokenize["1.2``->3"]
 	,
 	{
-		ErrorNode[Token`Error`ExpectedAccuracy, "1.2``->", <|Source -> {{1, 1}, {1, 8}}|>],
+		ErrorNode[Token`Error`Number, "1.2``->", <|Source -> {{1, 1}, {1, 8}}|>],
 		LeafNode[Integer, "3", <|Source -> {{1, 8}, {1, 9}}|>]}
 	,
 	TestID->"TokenErrors-20190520-B2J9I4"
@@ -184,7 +184,7 @@ ExpectedExponent:
 Test[
 	CodeTokenize["123*^"]
 	,
-	{ErrorNode[Token`Error`ExpectedExponent, "123*^", <|Source -> {{1, 1}, {1, 6}}|>]}
+	{ErrorNode[Token`Error`Number, "123*^", <|Source -> {{1, 1}, {1, 6}}|>]}
 	,
 	TestID->"TokenErrors-20190520-L1J8C1"
 ]
