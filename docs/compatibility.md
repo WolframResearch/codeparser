@@ -7,6 +7,11 @@
 CodeParser has source compatibility with 11.0+
 
 
+## FrontEnd Compatibility
+
+Any source .wl files that have `(* ::Package::"Tags" *)` or `(* ::Code::Initialization::"Tags" *)` syntax may only be edited with a version 12.3+ FE 
+
+
 ## Runtime Compatibility
 
 Building with Wolfram 11.0+ and running with the same version should always work.
