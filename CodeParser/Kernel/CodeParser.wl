@@ -1,3 +1,5 @@
+(* ::Package::"Tags"-><|"NoVariables" -> <|"Module" -> <|Enabled -> False|>|>|>:: *)
+
 BeginPackage["CodeParser`"]
 
 CodeParse
