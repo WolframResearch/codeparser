@@ -1042,7 +1042,7 @@ Module[{data, src},
     CodeAction[label, command, data]
 ]
 
-parseBox[args___] := Failure["InternalUnhandled", <|"Function"->"parseBox", "Arguments"->HoldForm[{args}]|>]
+parseBox[args___] := Failure["UnrecognizedBox", <|"Box"->{args}|>]
 
 
 removeImplicits[node_] := DeleteCases[node, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity]
