@@ -36,7 +36,7 @@ TEST_F(ByteDecoderTest, Basic1) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     auto c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
@@ -80,7 +80,7 @@ TEST_F(ByteDecoderTest, Basic2) {
     
     const unsigned char arr[] = {'1', '+', 206, 177};
     
-    TheParserSession->init(BufferAndLength(arr, 4), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(arr, 4), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     auto c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
@@ -114,7 +114,10 @@ TEST_F(ByteDecoderTest, Basic2) {
     
     EXPECT_EQ(c, SourceCharacter(CODEPOINT_ENDOFFILE));
     
-    EXPECT_EQ(TheByteDecoder->getIssues().size(), 0u);
+    //
+    // Issue: Non-ASCII character: ``"α" (\[Alpha])``
+    //
+    EXPECT_EQ(TheByteDecoder->getIssues().size(), 1u);
 }
 
 //
@@ -124,7 +127,7 @@ TEST_F(ByteDecoderTest, Basic3) {
     
     const unsigned char arr[] = {'1', '+', 0xE2, 0x9A, 0xA1};
     
-    TheParserSession->init(BufferAndLength(arr, 5), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(arr, 5), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     auto c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
@@ -158,14 +161,17 @@ TEST_F(ByteDecoderTest, Basic3) {
     
     EXPECT_EQ(c, SourceCharacter(CODEPOINT_ENDOFFILE));
     
-    EXPECT_EQ(TheByteDecoder->getIssues().size(), 0u);
+    //
+    // Issue: Non-ASCII character: ``"⚡" (\:26a1)``
+    //
+    EXPECT_EQ(TheByteDecoder->getIssues().size(), 1u);
 }
 
 TEST_F(ByteDecoderTest, Invalid1) {
     
     const unsigned char arr[] = {'1', '+', 0xf8};
     
-    TheParserSession->init(BufferAndLength(arr, 3), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(arr, 3), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     auto c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
@@ -211,7 +217,7 @@ TEST_F(ByteDecoderTest, Invalid2) {
     
     const unsigned char arr[] = {'1', '+', 206};
     
-    TheParserSession->init(BufferAndLength(arr, 3), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(arr, 3), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     auto c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
@@ -255,7 +261,7 @@ TEST_F(ByteDecoderTest, Invalid3) {
     
     const unsigned char arr[] = {'1', '+', 0xE2};
     
-    TheParserSession->init(BufferAndLength(arr, 3), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(arr, 3), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     auto c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
@@ -300,7 +306,7 @@ TEST_F(ByteDecoderTest, Invalid4) {
     
     const unsigned char arr[] = {'1', '+', 0xE2, 0x9A};
     
-    TheParserSession->init(BufferAndLength(arr, 4), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(arr, 4), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     auto c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
@@ -343,7 +349,17 @@ TEST_F(ByteDecoderTest, Invalid4) {
     
     EXPECT_EQ(c, SourceCharacter(CODEPOINT_ENDOFFILE));
     
-    EXPECT_EQ(TheByteDecoder->getIssues().size(), 2u);
+    //
+    // Issue: Invalid UTF-8 sequence
+    //
+    // Actually, 2 issues are created: 1 issue for the 0xE2 byte and 1 issue for the 0x9A byte
+    //
+    // But because these both have the same source location and tag, only one issue is saved
+    //
+    // TODO: it would be nice to have a "byte index" or something inside SourceLocation, so that encoding issues at the same location
+    // can be saved 
+    //
+    EXPECT_EQ(TheByteDecoder->getIssues().size(), 1u);
 }
 
 //
@@ -353,7 +369,7 @@ TEST_F(ByteDecoderTest, Surrogate1) {
     
     const unsigned char arr[] = {'1', '+', 0xed, 0xa0, 0x80};
     
-    TheParserSession->init(BufferAndLength(arr, 5), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(arr, 5), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     auto c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
@@ -409,7 +425,18 @@ TEST_F(ByteDecoderTest, Surrogate1) {
     
     EXPECT_EQ(TheByteBuffer->buffer, arr + 5);
     
-    EXPECT_EQ(TheByteDecoder->getIssues().size(), 3u);
+    //
+    // Issue: Invalid UTF-8 sequence: Probable surrogate
+    // Issue: Invalid UTF-8 sequence
+    //
+    // Actually, 3 issues are created: 1 issue for the 0xED byte, 1 issue for the 0xA0 byte, 1 issue for the 0x80 byte
+    //
+    // But because the last 2 have the same source location and tag, only one issue is saved
+    //
+    // TODO: it would be nice to have a "byte index" or something inside SourceLocation, so that encoding issues at the same location
+    // can be saved 
+    //
+    EXPECT_EQ(TheByteDecoder->getIssues().size(), 2u);
 }
 
 //
@@ -419,7 +446,7 @@ TEST_F(ByteDecoderTest, Surrogate2) {
     
     const unsigned char arr[] = {'1', '+', 0xed, 0xb0, 0x80};
     
-    TheParserSession->init(BufferAndLength(arr, 5), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(arr, 5), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     auto c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
@@ -475,6 +502,17 @@ TEST_F(ByteDecoderTest, Surrogate2) {
     
     EXPECT_EQ(TheByteBuffer->buffer, arr + 5);
     
-    EXPECT_EQ(TheByteDecoder->getIssues().size(), 3u);
+    //
+    // Issue: Invalid UTF-8 sequence: Probable surrogate
+    // Issue: Invalid UTF-8 sequence
+    //
+    // Actually, 3 issues are created: 1 issue for the 0xED byte, 1 issue for the 0xB0 byte, 1 issue for the 0x80 byte
+    //
+    // But because the last 2 have the same source location and tag, only one issue is saved
+    //
+    // TODO: it would be nice to have a "byte index" or something inside SourceLocation, so that encoding issues at the same location
+    // can be saved 
+    //
+    EXPECT_EQ(TheByteDecoder->getIssues().size(), 2u);
 }
 

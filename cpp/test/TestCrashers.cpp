@@ -38,11 +38,11 @@ TEST_F(CrashTest, Crash0_characters) {
     
     auto bufAndLen = BufferAndLength(arr, 3);
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     auto policy = TOPLEVEL;
     
-    auto c = TheCharacterDecoder->currentWLCharacter(policy);
+    auto c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, policy);
     
     EXPECT_EQ(c.to_point(), '1');
     
@@ -53,7 +53,7 @@ TEST_F(CrashTest, Crash0_characters) {
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
     
-    c = TheCharacterDecoder->currentWLCharacter(policy);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, policy);
     
     EXPECT_EQ(c.to_point(), CODEPOINT_ENDOFFILE);
     
@@ -68,7 +68,7 @@ TEST_F(CrashTest, Crash0_tokens) {
     
     auto bufAndLen = BufferAndLength(arr, 3);
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     auto policy = TOPLEVEL;
     
@@ -95,7 +95,7 @@ TEST_F(CrashTest, Crash1) {
     
     auto bufAndLen = BufferAndLength(arr, 7);
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     auto N = TheParserSession->parseExpressions();
     
@@ -134,7 +134,7 @@ TEST_F(CrashTest, Crash2) {
     
     auto bufAndLen = BufferAndLength(arr, 6);
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     auto N = TheParserSession->parseExpressions();
     
@@ -151,7 +151,7 @@ TEST_F(CrashTest, Crash3) {
     
     auto bufAndLen = BufferAndLength(arr, 7);
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     auto N = TheParserSession->parseExpressions();
     
@@ -168,7 +168,7 @@ TEST_F(CrashTest, Crash4) {
     
     auto bufAndLen = BufferAndLength(arr, 17);
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     auto N = TheParserSession->parseExpressions();
     
@@ -185,7 +185,7 @@ TEST_F(CrashTest, Crash5) {
     
     auto bufAndLen = BufferAndLength(arr, 6);
     
-    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_SOURCECHARACTERINDEX, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(bufAndLen, nullptr, INCLUDE_SOURCE, SOURCECONVENTION_SOURCECHARACTERINDEX, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     auto N = TheParserSession->parseExpressions();
     

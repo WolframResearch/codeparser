@@ -42,7 +42,7 @@ TEST_F(TokenizerTest, Bug1) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     SUCCEED();
 }
@@ -56,7 +56,7 @@ TEST_F(TokenizerTest, Bug2) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     auto Tok = TheTokenizer->currentToken(TOPLEVEL);
     
@@ -74,7 +74,7 @@ TEST_F(TokenizerTest, Bug3) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     SUCCEED();
 }
@@ -85,7 +85,7 @@ TEST_F(TokenizerTest, Bug4) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     SUCCEED();
 }
@@ -96,7 +96,7 @@ TEST_F(TokenizerTest, Bug5) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     SUCCEED();
 }
@@ -107,7 +107,7 @@ TEST_F(TokenizerTest, IntegerRealMixup) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     auto Tok1 = TheTokenizer->currentToken(TOPLEVEL);
     
@@ -132,7 +132,7 @@ TEST_F(TokenizerTest, Basic2) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     auto Tok1 = TheTokenizer->currentToken(TOPLEVEL);
     
@@ -163,7 +163,7 @@ TEST_F(TokenizerTest, OldAssert1) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     auto Tok = TheTokenizer->currentToken(TOPLEVEL);
     
@@ -176,7 +176,7 @@ TEST_F(TokenizerTest, Basic3) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     auto Tok = TheTokenizer->currentToken(TOPLEVEL);
     
@@ -204,7 +204,7 @@ TEST_F(TokenizerTest, Basic4) {
     
     const unsigned char arr[] = { 0xff };
     
-    TheParserSession->init(BufferAndLength(arr, 1), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(arr, 1), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     EXPECT_EQ(TheByteDecoder->SrcLoc, SourceLocation(1, 1));
     
@@ -235,7 +235,7 @@ TEST_F(TokenizerTest, Crash1) {
     
     const unsigned char arr[] = { '6', '`', '5', '.', '.' };
     
-    TheParserSession->init(BufferAndLength(arr, 5), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(arr, 5), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     TheTokenizer->currentToken(TOPLEVEL);
     

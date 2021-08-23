@@ -37,30 +37,30 @@ TEST_F(CharacterDecoderTest, Basic1) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
-    auto c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    auto c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('1'));
     
 //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('+'));
     
 //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('2'));
     
 //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter(CODEPOINT_ENDOFFILE));
 }
@@ -71,27 +71,27 @@ TEST_F(CharacterDecoderTest, LongName) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
-    auto c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    auto c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('1'));
     
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('+'));
     
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter(0x03b1, ESCAPE_LONGNAME));
     
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter(CODEPOINT_ENDOFFILE));
 }
@@ -102,30 +102,30 @@ TEST_F(CharacterDecoderTest, 4Hex) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
-    auto c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    auto c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('1'));
     
 //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('+'));
     
 //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter(0x03b1, ESCAPE_4HEX));
     
 //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter(CODEPOINT_ENDOFFILE));
 }
@@ -136,30 +136,30 @@ TEST_F(CharacterDecoderTest, 2Hex) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
-    auto c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    auto c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('1'));
     
 //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('+'));
     
 //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter(242, ESCAPE_2HEX));
     
 //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter(CODEPOINT_ENDOFFILE));
 }
@@ -170,30 +170,30 @@ TEST_F(CharacterDecoderTest, Octal) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
-    auto c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    auto c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('1'));
     
 //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('+'));
     
 //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter(219, ESCAPE_OCTAL));
     
 //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter(CODEPOINT_ENDOFFILE));
 }
@@ -204,30 +204,30 @@ TEST_F(CharacterDecoderTest, 6Hex) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
-    auto c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    auto c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('1'));
     
 //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('+'));
     
 //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter(242, ESCAPE_6HEX));
     
 //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter(CODEPOINT_ENDOFFILE));
 }
@@ -238,30 +238,30 @@ TEST_F(CharacterDecoderTest, Raw) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
-    auto c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    auto c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('1'));
     
 //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('+'));
     
 //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('^', ESCAPE_RAW));
     
 //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter(CODEPOINT_ENDOFFILE));
 }
@@ -272,86 +272,86 @@ TEST_F(CharacterDecoderTest, LongNameError1) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
-    auto c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    auto c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('1'));
     
 //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('+'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('\\'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('['));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('A'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('l'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('p'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('h'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('a'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('+'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('2'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter(CODEPOINT_ENDOFFILE));
 }
@@ -362,86 +362,86 @@ TEST_F(CharacterDecoderTest, LongNameError2) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
-    auto c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    auto c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('1'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('+'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('\\'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('['));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('A'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('l'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('p'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('a'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter(']'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('+'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('2'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter(CODEPOINT_ENDOFFILE));
 }
@@ -452,72 +452,72 @@ TEST_F(CharacterDecoderTest, 4HexError1) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
-    auto c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    auto c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('1'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('+'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('\\'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter(':'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('0'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('3'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('b'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('+'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('1'));
     
     //    TheCharacterDecoder->nextWLCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter(CODEPOINT_ENDOFFILE));
 }
@@ -528,9 +528,9 @@ TEST_F(CharacterDecoderTest, LineContinuation1) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
-    auto c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
+    auto c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, INSIDE_SYMBOL);
     
     EXPECT_EQ(c, WLCharacter('a'));
     
@@ -538,7 +538,7 @@ TEST_F(CharacterDecoderTest, LineContinuation1) {
     
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, INSIDE_SYMBOL);
     
     EXPECT_EQ(c, WLCharacter('b'));
     
@@ -546,7 +546,7 @@ TEST_F(CharacterDecoderTest, LineContinuation1) {
     
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, INSIDE_SYMBOL);
     
     EXPECT_EQ(c, WLCharacter('c'));
     
@@ -554,7 +554,7 @@ TEST_F(CharacterDecoderTest, LineContinuation1) {
     
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, INSIDE_SYMBOL);
     
     EXPECT_EQ(c, WLCharacter('d'));
     
@@ -562,7 +562,7 @@ TEST_F(CharacterDecoderTest, LineContinuation1) {
     
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, INSIDE_SYMBOL);
     
     EXPECT_EQ(c, WLCharacter(CODEPOINT_ENDOFFILE));
 }
@@ -573,33 +573,33 @@ TEST_F(CharacterDecoderTest, LineContinuation2) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
-    auto c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
+    auto c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, INSIDE_SYMBOL);
     
     EXPECT_EQ(c, WLCharacter('a'));
     
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, INSIDE_SYMBOL);
     
     EXPECT_EQ(c, WLCharacter('b'));
     
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, INSIDE_SYMBOL);
     
     EXPECT_EQ(c, WLCharacter('c'));
     
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, INSIDE_SYMBOL);
     
     EXPECT_EQ(c, WLCharacter('d'));
     
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, INSIDE_SYMBOL);
     
     EXPECT_EQ(c, WLCharacter(CODEPOINT_ENDOFFILE));
 }
@@ -610,33 +610,33 @@ TEST_F(CharacterDecoderTest, LineContinuation3) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
-    auto c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
+    auto c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, INSIDE_SYMBOL);
     
     EXPECT_EQ(c, WLCharacter('a'));
     
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, INSIDE_SYMBOL);
     
     EXPECT_EQ(c, WLCharacter('b'));
     
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, INSIDE_SYMBOL);
     
     EXPECT_EQ(c, WLCharacter('c'));
     
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, INSIDE_SYMBOL);
     
     EXPECT_EQ(c, WLCharacter('d'));
     
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(INSIDE_SYMBOL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, INSIDE_SYMBOL);
     
     EXPECT_EQ(c, WLCharacter(CODEPOINT_ENDOFFILE));
 }
@@ -650,27 +650,27 @@ TEST_F(CharacterDecoderTest, UnexpectedEscapeSequence) {
     
     auto str = reinterpret_cast<Buffer>(strIn.c_str());
     
-    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH);
+    TheParserSession->init(BufferAndLength(str, strIn.size()), nullptr, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
-    auto c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    auto c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('"'));
     
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter(0x03b1, ESCAPE_LONGNAME));
     
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter('"'));
     
     TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
     
-    c = TheCharacterDecoder->currentWLCharacter(TOPLEVEL);
+    c = TheCharacterDecoder->currentWLCharacter(TheByteBuffer->buffer, TheByteDecoder->SrcLoc, TOPLEVEL);
     
     EXPECT_EQ(c, WLCharacter(CODEPOINT_ENDOFFILE));
     
