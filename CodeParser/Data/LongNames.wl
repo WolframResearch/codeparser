@@ -344,7 +344,12 @@ Range 0x2000
 "CloseCurlyQuote" -> {PunctuationCharacter, 16^^2019, <| "ASCIIReplacements" -> {"'"}, "Extra" -> {"group"} |>},
 "OpenCurlyDoubleQuote" -> {PunctuationCharacter, 16^^201c, <| "ASCIIReplacements" -> {"\""}, "Extra" -> {"group"} |>},
 "CloseCurlyDoubleQuote" -> {PunctuationCharacter, 16^^201d, <| "ASCIIReplacements" -> {"\""}, "Extra" -> {"group"} |>},
-"Dagger" -> {LetterlikeCharacter, 16^^2020, <||>},
+(*
+There are MakeExpression rules for interpeting SuperscriptBox["a", "\[Dagger]"] as SuperDagger[a]
+
+So in some vague sense, \[Dagger] is not quite as strange as other letterlikes
+*)
+"Dagger" -> {LetterlikeCharacter, 16^^2020, <| "Extra" -> {"NotStrangeLetterlike"} |>},
 "DoubleDagger" -> {LetterlikeCharacter, 16^^2021, <||>},
 "Bullet" -> {LetterlikeCharacter, 16^^2022, <||>},
 "Ellipsis" -> {LetterlikeCharacter, 16^^2026, <| "ASCIIReplacements" -> {"..."} |>},
