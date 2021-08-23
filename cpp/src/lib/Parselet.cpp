@@ -225,7 +225,6 @@ NodePtr SymbolParselet::parse(Token TokIn, ParserContext Ctxt) const {
             
             return contextSensitiveUnderDotParselet->parseContextSensitive(std::move(Args), Tok, Ctxt);
         }
-            break;
         default: {
             
             {
