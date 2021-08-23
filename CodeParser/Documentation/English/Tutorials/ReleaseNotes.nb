@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[    120009,       2679]
-NotebookOptionsPosition[     82590,       1999]
-NotebookOutlinePosition[     83060,       2016]
-CellTagsIndexPosition[     83017,       2013]
+NotebookDataLength[    125637,       2809]
+NotebookOptionsPosition[     86765,       2101]
+NotebookOutlinePosition[     87236,       2118]
+CellTagsIndexPosition[     87193,       2115]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -1994,12 +1994,114 @@ infinite loop\
 \>", "Text",
  CellID->911070327,ExpressionUUID->"6e56f2db-798d-44f3-ba13-1e7734c478e6"]
 }, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["1.3", "Section",
+ CellChangeTimes->{{3.822824221714437*^9, 3.822824223655924*^9}, {
+  3.838716672284525*^9, 3.838716672417585*^9}},
+ CellID->1431183876,ExpressionUUID->"68267a4a-73a8-492a-ae25-c223ce2f13d4"],
+
+Cell["August 30, 2021", "Text",
+ CellChangeTimes->{{3.822824233793511*^9, 3.822824249038164*^9}, {
+  3.825677249810317*^9, 3.8256772534210787`*^9}, {3.8387166767133427`*^9, 
+  3.838716679783908*^9}},
+ CellID->2090557532,ExpressionUUID->"31c598bc-59ba-459c-b351-b7c86a433007"],
+
+Cell["\<\
+Notes on compatibility have been added to docs/compatibility.md\
+\>", "Text",
+ CellChangeTimes->{{3.83871668933077*^9, 3.8387166900471363`*^9}, {
+  3.838720199621459*^9, 3.8387202177192373`*^9}},
+ CellID->1479494259,ExpressionUUID->"bac5e584-79fb-41fb-b866-8fff2ce821fa"],
+
+Cell["\<\
+Introduce BatchMode option for Abstract
+BatchMode -> True where Begin[] and End[] nodes will be at top-level (e.g., \
+.wl files)
+PackageNodes[] and ContextNodes[] WILL be created
+Issues about unbalanced directives WILL be created
+BatchMode -> False otherwise, i.e., where Begin[] and End[] nodes are \
+separate or not easily scanned together (e.g., cells in notebooks)
+PackageNodes[] and ContextNodes[] will NOT be created
+Issues about unbalanced directives will NOT be created\
+\>", "Text",
+ CellChangeTimes->{{3.838720240643715*^9, 3.8387202549641447`*^9}, {
+  3.83872033592412*^9, 3.838720439481142*^9}},
+ CellID->2045703532,ExpressionUUID->"2f96c0be-5b78-49b7-9f92-3871667507ed"],
+
+Cell[CellGroupData[{
+
+Cell["Fixes", "Subsection",
+ CellChangeTimes->{{3.781269317536881*^9, 3.781269334283327*^9}, {
+  3.781269376190691*^9, 3.781269384022949*^9}, {3.781269495145859*^9, 
+  3.781269495474154*^9}},
+ CellID->323480245,ExpressionUUID->"525f65c0-e353-4b77-9741-bdf5ecc573dd"],
+
+Cell["\<\
+Fix 409304: Teach parser about \
+TernaryOptionalPattern\[LineSeparator]TernaryOptionalPattern comes from boxes\
+\
+\>", "Text",
+ CellChangeTimes->{{3.838720240643715*^9, 3.838720273854393*^9}, {
+  3.838720446167656*^9, 3.838720461019815*^9}},
+ CellID->1405446031,ExpressionUUID->"44224081-ad56-4d20-ab75-7030f2d6d706"],
+
+Cell["\<\
+Multi-pronged fix for 409210:
+\\ [Prime] is not strange
+Add SubscriptBox and SuperscriptBox as not strange for head of calls\
+\>", "Text",
+ CellChangeTimes->{{3.838720240643715*^9, 3.8387203200268*^9}, 
+   3.8387204676064672`*^9},
+ CellID->1894754117,ExpressionUUID->"5372af06-f3bb-416f-a0f7-e82e16d3e2fe"],
+
+Cell["Fix 409216: Teach abstract and scoping about GridBox", "Text",
+ CellChangeTimes->{{3.838720240643715*^9, 3.8387202549641447`*^9}, {
+  3.83872033592412*^9, 3.838720357235168*^9}, {3.838720475036128*^9, 
+  3.838720476154642*^9}},
+ CellID->844327208,ExpressionUUID->"6d47a76d-7c56-426c-a705-5abab0d4e226"],
+
+Cell["\<\
+Fix 409472: The abstracting code assumed that the Source was always \
+LineColumn convention, and this was breaking for boxes
+So introduce some functions to handle the different source conventions\
+\>", "Text",
+ CellChangeTimes->{{3.838720240643715*^9, 3.8387202549641447`*^9}, {
+  3.83872033592412*^9, 3.838720370896667*^9}, {3.83872047797129*^9, 
+  3.838720478447359*^9}},
+ CellID->946008884,ExpressionUUID->"a0eeb352-8247-48fe-9396-79fcc7460c12"],
+
+Cell["410337: Fix DefinitionSymbols for errors", "Text",
+ CellChangeTimes->{{3.838720240643715*^9, 3.8387202549641447`*^9}, {
+  3.83872033592412*^9, 3.838720376171126*^9}, {3.8387204828135757`*^9, 
+  3.8387204838693743`*^9}},
+ CellID->2048427159,ExpressionUUID->"1c8a0a3a-64a6-4360-9526-1d15f28d0cd4"],
+
+Cell["\<\
+410404: Fix parsing \\ [Integral] a + 2
+Trivia2 was not scoped properly and was not being cleaned up at the correct \
+time\
+\>", "Text",
+ CellChangeTimes->{{3.838720240643715*^9, 3.8387202549641447`*^9}, {
+  3.83872033592412*^9, 3.838720407205133*^9}, {3.838720485482621*^9, 
+  3.83872048648042*^9}},
+ CellID->686413174,ExpressionUUID->"a5e598e3-0654-4321-a842-025fc8197313"],
+
+Cell["\<\
+Fix 405322: Symbols occurring in options to DynamicModule have same scope as \
+body\
+\>", "Text",
+ CellChangeTimes->{{3.838720240643715*^9, 3.838720252334618*^9}},
+ CellID->768919477,ExpressionUUID->"88d0d556-990d-4179-a189-0f05b2183519"]
+}, Open  ]]
 }, Open  ]]
 }, Open  ]]
 },
 WindowSize->{968, 951},
 WindowMargins->{{26, Automatic}, {Automatic, 27}},
-FrontEndVersion->"12.3 for Mac OS X x86 (64-bit) (March 21, 2021)",
+FrontEndVersion->"13.0 for Mac OS X x86 (64-bit) (August 18, 2021)",
 StyleDefinitions->FrontEnd`FileName[{"Wolfram"}, "TutorialPageStyles.nb", 
   CharacterEncoding -> "UTF-8"],
 ExpressionUUID->"5b3bd2fc-9440-4a4b-9d26-285de4d2ac82"
@@ -2678,6 +2780,34 @@ Cell[82012, 1977, 349, 11, 226, "Text",ExpressionUUID->"b3c4d2c4-b2a6-4134-b85e-
  CellID->267847534],
 Cell[82364, 1990, 186, 4, 23, "Text",ExpressionUUID->"6e56f2db-798d-44f3-ba13-1e7734c478e6",
  CellID->911070327]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[82599, 2000, 213, 3, 43, "Section",ExpressionUUID->"68267a4a-73a8-492a-ae25-c223ce2f13d4",
+ CellID->1431183876],
+Cell[82815, 2005, 275, 4, 23, "Text",ExpressionUUID->"31c598bc-59ba-459c-b351-b7c86a433007",
+ CellID->2090557532],
+Cell[83093, 2011, 281, 5, 23, "Text",ExpressionUUID->"bac5e584-79fb-41fb-b866-8fff2ce821fa",
+ CellID->1479494259],
+Cell[83377, 2018, 693, 13, 214, "Text",ExpressionUUID->"2f96c0be-5b78-49b7-9f92-3871667507ed",
+ CellID->2045703532],
+Cell[CellGroupData[{
+Cell[84095, 2035, 266, 4, 39, "Subsection",ExpressionUUID->"525f65c0-e353-4b77-9741-bdf5ecc573dd",
+ CellID->323480245],
+Cell[84364, 2041, 327, 7, 40, "Text",ExpressionUUID->"44224081-ad56-4d20-ab75-7030f2d6d706",
+ CellID->1405446031],
+Cell[84694, 2050, 316, 7, 81, "Text",ExpressionUUID->"5372af06-f3bb-416f-a0f7-e82e16d3e2fe",
+ CellID->1894754117],
+Cell[85013, 2059, 308, 4, 23, "Text",ExpressionUUID->"6d47a76d-7c56-426c-a705-5abab0d4e226",
+ CellID->844327208],
+Cell[85324, 2065, 458, 8, 69, "Text",ExpressionUUID->"a0eeb352-8247-48fe-9396-79fcc7460c12",
+ CellID->946008884],
+Cell[85785, 2075, 301, 4, 23, "Text",ExpressionUUID->"1c8a0a3a-64a6-4360-9526-1d15f28d0cd4",
+ CellID->2048427159],
+Cell[86089, 2081, 385, 8, 52, "Text",ExpressionUUID->"a5e598e3-0654-4321-a842-025fc8197313",
+ CellID->686413174],
+Cell[86477, 2091, 248, 5, 23, "Text",ExpressionUUID->"88d0d556-990d-4179-a189-0f05b2183519",
+ CellID->768919477]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]]
