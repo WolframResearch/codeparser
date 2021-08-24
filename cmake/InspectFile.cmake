@@ -40,7 +40,7 @@ Exit[1]\
 
 execute_process(
   COMMAND
-    ${WOLFRAMKERNEL} -noinit -noprompt -nopaclet -run ${CODE}
+    ${WOLFRAMKERNEL} -noinit -noprompt -nopaclet -nostartuppaclets -run ${CODE}
   TIMEOUT
     ${BUG349779_TIMEOUT}
 )
