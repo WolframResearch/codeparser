@@ -27,6 +27,7 @@ find_program(CODEPARSER_EXE
 set(PACLET "CodeParser")
 set(WOLFRAMKERNEL ${WOLFRAMKERNEL_DEFAULT} CACHE FILEPATH "Path to WolframKernel")
 set(BUILD_EXE OFF CACHE BOOL "Build executable")
+set(BUILD_TESTS OFF CACHE BOOL "Build tests")
 set(BUILD_EXPR_LIB OFF CACHE BOOL "Build experimental expr library")
 set(USE_MATHLINK ON CACHE BOOL "Use MathLink")
 set(NISSUES OFF CACHE BOOL "NISSUES")
