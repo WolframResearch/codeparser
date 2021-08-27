@@ -32,19 +32,12 @@ Out[2]= ContainerNode[String, {CallNode[LeafNode[Symbol, "Plus", <||>], {LeafNod
 
 CodeParser is included in Mathematica 12.2 and above.
 
-For older versions, you can install from the paclet server.
-
-The minimum version for CodeParser is Mathematica 11.0.
-
-Install CodeParser from the paclet server:
+For older versions, install CodeParser paclet from the public paclet server:
 ```
 PacletInstall["CodeParser"]
 ```
 
-Make sure that the paclet can be found on your system:
-```
-Needs["CodeParser`"]
-```
+[Build and install the CodeParser paclet locally](HowToBuild.md)
 
 
 ## Using CodeParser
@@ -76,4 +69,12 @@ $cpp/src/exe/codeparser
 InfixNode[Plus, {LeafNode[Integer, "1", <|Source->{{1, 2}, {1, 2}}|>], LeafNode[Integer, 1, <|Source->{{1, 3}, {1, 4}}|>]}, <|Source->{{1, 1}, {1, 4}}|>]
 
 >>>
+```
+
+
+## Troubleshooting
+
+Make sure that the CodeParser can be found on your system:
+```
+Needs["CodeParser`"]
 ```
