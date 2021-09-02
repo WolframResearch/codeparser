@@ -112,6 +112,19 @@ enum NextPolicyBits : uint8_t {
     RETURN_TOPLEVELNEWLINE = 0x04,
     
     //
+    // This bit serves 2 purposes:
+    // Complex line continuations
+    // Decrease severity of unexpected characters
+    //
+    // These are exactly what we care about with strings and comments, so use only a single bit for both purposes.
+    //
+    // NOTE: If the set:
+    // {strings, comments}
+    // is ever not exactly the same as the set:
+    // (things that care about complex line continuations and decreased severity of unexpected characters)
+    // then we need to rethink these bits.
+    //
+    // Complex line continuations:
     // Line continuations inside of strings or comments are "complex":
     // Formatting matters
     //
@@ -119,7 +132,12 @@ enum NextPolicyBits : uint8_t {
     // inside or outside of other tokens
     // outside of strings or comments
     //
-    COMPLEX_LINE_CONTINUATIONS = 0x08,
+    //
+    // Decrease severity of unexpected characters:
+    // Outside of strings, \[RightArrow] should be a warning
+    // Inside of strings, \[RightArrow] should be a remark
+    //
+    STRING_OR_COMMENT = 0x08,
     
     //
     // Check for unlikely escape sequences?
@@ -204,6 +222,7 @@ SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDSPACECHARACTER = "UnexpectedSpaceCharact
 SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER = "UnexpectedLetterlikeCharacter";
 SyntaxIssueTag SYNTAXISSUETAG_UNDOCUMENTEDSLOTSYNTAX = "UndocumentedSlotSyntax";
 SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDIMPLICITTIMES = "UnexpectedImplicitTimes";
+SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDDOT = "UnexpectedDot";
 SyntaxIssueTag SYNTAXISSUETAG_COMMA = "Comma";
 
 typedef const std::string FormatIssueTag;

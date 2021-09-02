@@ -244,7 +244,7 @@ TestMatch[
 	FirstCase[CodeConcreteParse["_...", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnexpectedCharacter", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnexpectedDot", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-U2Z6B3"
 ]

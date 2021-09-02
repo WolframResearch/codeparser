@@ -136,7 +136,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             
 #if !NISSUES
             {
-                strangeWarning(decoded, currentSourceCharacterStartLoc, 0.95);
+                strangeWarning(decoded, currentSourceCharacterStartLoc, policy);
             }
 #endif // !NISSUES
             
@@ -221,9 +221,9 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
 #if !NISSUES
             {
                 if (Utils::isMBStrange(decoded)) {
-                    strangeWarning(decoded, currentSourceCharacterStartLoc, 0.95);
+                    strangeWarning(decoded, currentSourceCharacterStartLoc, policy);
                 } else if (encodingMode == ENCODINGMODE_NORMAL) {
-                    nonASCIIWarning(decoded, currentSourceCharacterStartLoc, 1.0);
+                    nonASCIIWarning(decoded, currentSourceCharacterStartLoc);
                 }
             }
 #endif // !NISSUES
@@ -312,9 +312,9 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
 #if !NISSUES
             {
                 if (Utils::isMBStrange(decoded)) {
-                    strangeWarning(decoded, currentSourceCharacterStartLoc, 0.95);
+                    strangeWarning(decoded, currentSourceCharacterStartLoc, policy);
                 } else if (encodingMode == ENCODINGMODE_NORMAL) {
-                    nonASCIIWarning(decoded, currentSourceCharacterStartLoc, 1.0);
+                    nonASCIIWarning(decoded, currentSourceCharacterStartLoc);
                 }
             }
 #endif // !NISSUES
@@ -413,9 +413,9 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
 #if !NISSUES
             {
                 if (Utils::isMBStrange(decoded)) {
-                    strangeWarning(decoded, currentSourceCharacterStartLoc, 0.95);
+                    strangeWarning(decoded, currentSourceCharacterStartLoc, policy);
                 } else if (encodingMode == ENCODINGMODE_NORMAL) {
-                    nonASCIIWarning(decoded, currentSourceCharacterStartLoc, 1.0);
+                    nonASCIIWarning(decoded, currentSourceCharacterStartLoc);
                 }
             }
 #endif // !NISSUES
@@ -510,9 +510,9 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
 #if !NISSUES
             {
                 if (Utils::isMBStrange(decoded)) {
-                    strangeWarning(decoded, currentSourceCharacterStartLoc, 0.95);
+                    strangeWarning(decoded, currentSourceCharacterStartLoc, policy);
                 } else if (encodingMode == ENCODINGMODE_NORMAL) {
-                    nonASCIIWarning(decoded, currentSourceCharacterStartLoc, 1.0);
+                    nonASCIIWarning(decoded, currentSourceCharacterStartLoc);
                 }
             }
 #endif // !NISSUES
@@ -638,9 +638,9 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
 #if !NISSUES
             {
                 if (Utils::isMBStrange(decoded)) {
-                    strangeWarning(decoded, currentSourceCharacterStartLoc, 0.95);
+                    strangeWarning(decoded, currentSourceCharacterStartLoc, policy);
                 } else if (encodingMode == ENCODINGMODE_NORMAL) {
-                    nonASCIIWarning(decoded, currentSourceCharacterStartLoc, 1.0);
+                    nonASCIIWarning(decoded, currentSourceCharacterStartLoc);
                 }
             }
 #endif // !NISSUES
@@ -766,9 +766,9 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
 #if !NISSUES
             {
                 if (Utils::isMBStrange(decoded)) {
-                    strangeWarning(decoded, currentSourceCharacterStartLoc, 0.95);
+                    strangeWarning(decoded, currentSourceCharacterStartLoc, policy);
                 } else if (encodingMode == ENCODINGMODE_NORMAL) {
-                    nonASCIIWarning(decoded, currentSourceCharacterStartLoc, 1.0);
+                    nonASCIIWarning(decoded, currentSourceCharacterStartLoc);
                 }
             }
 #endif // !NISSUES
@@ -894,9 +894,9 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
 #if !NISSUES
             {
                 if (Utils::isMBStrange(decoded)) {
-                    strangeWarning(decoded, currentSourceCharacterStartLoc, 0.95);
+                    strangeWarning(decoded, currentSourceCharacterStartLoc, policy);
                 } else if (encodingMode == ENCODINGMODE_NORMAL) {
-                    nonASCIIWarning(decoded, currentSourceCharacterStartLoc, 1.0);
+                    nonASCIIWarning(decoded, currentSourceCharacterStartLoc);
                 }
             }
 #endif // !NISSUES
@@ -957,7 +957,7 @@ SourceCharacter ByteDecoder::currentSourceCharacter(NextPolicy policy) {
 }
 
 
-void ByteDecoder::strangeWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, double confidence) {
+void ByteDecoder::strangeWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, NextPolicy policy) {
     
     auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
     
@@ -988,12 +988,22 @@ void ByteDecoder::strangeWarning(codepoint decoded, SourceLocation currentSource
         Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
     }
     
-    auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + safeAndGraphicalStr + "``.", ENCODINGISSUESEVERITY_WARNING, Src, confidence, std::move(Actions)));
+    std::string severity;
+    if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
+        //
+        // reduce severity of unexpected characters inside strings or comments
+        //
+        severity = SYNTAXISSUESEVERITY_REMARK;
+    } else {
+        severity = SYNTAXISSUESEVERITY_WARNING;
+    }
+    
+    auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + safeAndGraphicalStr + "``.", severity, Src, 0.95, std::move(Actions)));
     
     Issues.insert(std::move(I));
 }
 
-void ByteDecoder::nonASCIIWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, double confidence) {
+void ByteDecoder::nonASCIIWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc) {
     
     auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
     
@@ -1009,7 +1019,7 @@ void ByteDecoder::nonASCIIWarning(codepoint decoded, SourceLocation currentSourc
         Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
     }
     
-    auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_NONASCIICHARACTER, "Non-ASCII character: ``" + safeAndGraphicalStr + "``.", ENCODINGISSUESEVERITY_REMARK, Src, confidence, std::move(Actions)));
+    auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_NONASCIICHARACTER, "Non-ASCII character: ``" + safeAndGraphicalStr + "``.", ENCODINGISSUESEVERITY_REMARK, Src, 1.0, std::move(Actions)));
     
     Issues.insert(std::move(I));
 }

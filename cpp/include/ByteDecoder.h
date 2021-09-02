@@ -86,9 +86,9 @@ private:
     EncodingMode encodingMode;
     
     
-    void strangeWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, double confidence);
+    void strangeWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, NextPolicy policy);
     
-    void nonASCIIWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, double confidence);
+    void nonASCIIWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc);
     
     SourceCharacter invalidReturn(SourceLocation errSrcLoc, NextPolicy policy);
     

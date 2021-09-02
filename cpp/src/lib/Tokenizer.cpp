@@ -372,7 +372,7 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation token
     
     assert(c.to_point() == '*');
     
-    policy |= COMPLEX_LINE_CONTINUATIONS;
+    policy |= STRING_OR_COMMENT;
     
     auto depth = 1;
     
@@ -728,7 +728,7 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
     }
 #endif // !NISSUES
     
-    policy |= COMPLEX_LINE_CONTINUATIONS;
+    policy |= STRING_OR_COMMENT;
     
     while (true) {
         
@@ -2440,7 +2440,7 @@ inline Token Tokenizer::handleUnder(Buffer tokenStartBuf, SourceLocation tokenSt
                     CodeActionPtrVector Actions;
                     Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(dotLoc), " ")));
                     
-                    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Suspicious syntax.", SYNTAXISSUESEVERITY_ERROR, Source(dotLoc), 0.95, std::move(Actions)));
+                    auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDDOT, "Suspicious syntax.", SYNTAXISSUESEVERITY_ERROR, Source(dotLoc), 0.95, std::move(Actions)));
                     
                     Issues.insert(std::move(I));
                 }
