@@ -2168,25 +2168,25 @@ Module[{processed},
 Collect all of the ' in f'''[x]
 *)
 
-derivativeOrderAndBody[PostfixNode[Derivative, {rand_, _}, data_]] :=
+derivativeOrderAndAbstractedBody[PostfixNode[Derivative, {rand_, _}, data_]] :=
 Module[{order, body},
-	{order, body} = derivativeOrderAndBody[rand];
+	{order, body} = derivativeOrderAndAbstractedBody[rand];
 	{order+1, body}
 ]
 
-derivativeOrderAndBody[node_] :=
+derivativeOrderAndAbstractedBody[node_] :=
 	{0, abstract[node]}
 
 abstractDerivative[PostfixNode[Derivative, {rand_, LeafNode[Token`SingleQuote, _, _]}, data_]] :=
-Module[{order, body},
-	{order, body} = derivativeOrderAndBody[rand];
-	CallNode[CallNode[ToNode[Derivative], {ToNode[order+1]}, <||>], {body}, <||>]
+Module[{order, abstractedBody},
+	{order, abstractedBody} = derivativeOrderAndAbstractedBody[rand];
+	CallNode[CallNode[ToNode[Derivative], {ToNode[order+1]}, <||>], {abstractedBody}, <||>]
 ]
 
 abstractDerivative[PostfixNode[Derivative, {rand_, LeafNode[Token`Boxes`MultiSingleQuote, quoteStr_, _]}, data_]] :=
 Module[{order},
 	order = StringLength[quoteStr];
-	CallNode[CallNode[ToNode[Derivative], {ToNode[order]}, <||>], {rand}, <||>]
+	CallNode[CallNode[ToNode[Derivative], {ToNode[order]}, <||>], {abstract[rand]}, <||>]
 ]
 
 

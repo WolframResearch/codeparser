@@ -105,3 +105,39 @@ TestMatch[
 ]
 
 
+
+
+
+
+
+
+
+(*
+bug 414139
+*)
+
+cst = CodeConcreteParseBox[RowBox[{RowBox[{"Function", "[", RowBox[{"x", ",", RowBox[{"x", "^", "2"}]}], "]"}], "'"}]]
+
+agg = CodeParser`Abstract`Aggregate[cst]
+
+TestMatch[
+	CodeParser`Abstract`Abstract[agg]
+	,
+	ContainerNode[Box, {
+		CallNode[CallNode[LeafNode[Symbol, "Derivative", _], {LeafNode[Integer, "1", _]}, _], {
+			CallNode[LeafNode[Symbol, "Function", _], {
+				LeafNode[Symbol, "x", _],
+				CallNode[LeafNode[Symbol, "Power", _], {
+					LeafNode[Symbol, "x", _],
+					LeafNode[Integer, "2", _]}, _]}, _]}, _]}, _]
+	,
+	TestID->"Abstract-20210908-F9H3D4"
+]
+
+
+
+
+
+
+
+
