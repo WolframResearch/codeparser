@@ -1,5 +1,7 @@
 
 Needs["CodeParser`"]
+Needs["CodeParser`Scoping`"]
+
 
 agg =
 	ContainerNode[Box, {
@@ -52,5 +54,54 @@ Test[
 
 
 
+
+
+
+
+(*
+bug 414131
+*)
+
+cst = 
+  CodeConcreteParseBox[
+   RowBox[{"Timing", "@", 
+     RowBox[{"Do", "[", 
+       RowBox[{RowBox[{RowBox[{"AnnotationValue", "[", 
+             RowBox[{RowBox[{"{", RowBox[{"g", ",", "v"}], "}"}], ",",
+                "VertexWeight"}], "]"}], "=."}], ",", 
+         RowBox[{"{", 
+           RowBox[{"v", ",", RowBox[{"VertexList", "[", "g", "]"}]}], 
+           "}"}]}], "]"}]}]];
+
+agg = CodeParser`Abstract`Aggregate[cst];
+
+ast = CodeParser`Abstract`Abstract[agg];
+
+Test[
+	ScopingData[ast]
+	,
+	{scopingDataObject[{1, 3, 1, 3, 1, 1, 1, 1, 1, 3, 1, 1, 1, 2, 1, 3}, {"Do"}, {}, "v"], scopingDataObject[{1, 3, 1, 3, 1, 3, 1, 2, 1, 1}, {"Do"}, {}, "v"]}
+	,
+	TestID->"Abstract-20210908-W3G8I3"
+]
+
+
+(*
+bug 414131
+*)
+
+cst = CodeConcreteParseBox[RowBox[{"a", "=."}]];
+
+agg = CodeParser`Abstract`Aggregate[cst];
+
+TestMatch[
+	CodeParser`Abstract`Abstract[agg]
+	,
+	ContainerNode[Box, {
+		CallNode[LeafNode[Symbol, "Unset", _], {
+			LeafNode[Symbol, "a", _]}, _]}, _]
+	,
+	TestID->"Abstract-20210908-D4I9W4"
+]
 
 
