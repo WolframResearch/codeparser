@@ -533,7 +533,14 @@ prbDispatch[{_, LeafNode[Token`GreaterGreater, _, _], _}, handledChildren_, chil
   BinaryNode[Put, {
     parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~
       {parseBox[children[[2]], Append[pos, 1] ~Join~ {2}]} ~Join~
-      {parseBox[children[[3]], Append[pos, 1] ~Join~ {3}, \"StringifyMode\" -> 2]}
+      {If[MatchQ[children[[3]], _String],
+        (*
+        only pass in \"StringifyMode\" -> 2 if arg is a String
+        *)
+        parseBox[children[[3]], Append[pos, 1] ~Join~ {3}, \"StringifyMode\" -> 2]
+        ,
+        parseBox[children[[3]], Append[pos, 1] ~Join~ {3}]
+      ]}
     ,
     <|Source->pos|>]
 
@@ -544,7 +551,14 @@ prbDispatch[{_, LeafNode[Token`GreaterGreaterGreater, _, _], _}, handledChildren
   BinaryNode[PutAppend, {
     parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~
       {parseBox[children[[2]], Append[pos, 1] ~Join~ {2}]} ~Join~
-      {parseBox[children[[3]], Append[pos, 1] ~Join~ {3}, \"StringifyMode\" -> 2]}
+      {If[MatchQ[children[[3]], _String],
+        (*
+        only pass in \"StringifyMode\" -> 2 if arg is a String
+        *)
+        parseBox[children[[3]], Append[pos, 1] ~Join~ {3}, \"StringifyMode\" -> 2]
+        ,
+        parseBox[children[[3]], Append[pos, 1] ~Join~ {3}]
+      ]}
     ,
     <|Source->pos|>]
 
@@ -556,7 +570,18 @@ There might be whitespace after the arg, e.g.
 prbDispatch[{LeafNode[Token`LessLess, _, _], _, ___}, handledChildren_, children_, pos_] :=
   PrefixNode[Get, {
     parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~
-      MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1), \"StringifyMode\" -> 2]&, children[[2;;]]]
+      MapIndexed[
+        If[MatchQ[#1, _String],
+          (*
+          only pass in \"StringifyMode\" -> 2 if arg is a String
+          *)
+          parseBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1), \"StringifyMode\" -> 2]
+          ,
+          parseBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1)]
+        ]&
+        ,
+        children[[2;;]]
+      ]
     ,
     <|Source->pos|>]
 

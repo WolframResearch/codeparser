@@ -902,3 +902,73 @@ Test[
 ]
 
 
+
+
+box = 
+  RowBox[{"<<", 
+    InterpretationBox[
+     DynamicModuleBox[{Typeset`open = False}, 
+      TemplateBox[{"String", 
+        StyleBox["\"RegisterMachine`\"", "IconizedCustomName", 
+         StripOnInput -> False], 
+        GridBox[{{RowBox[{TagBox["\"Head: \"", "IconizedLabel"], 
+             "\[InvisibleSpace]", 
+             TagBox["String", "IconizedItem"]}]}, {RowBox[{TagBox[
+              "\"String length: \"", "IconizedLabel"], 
+             "\[InvisibleSpace]", 
+             TagBox["49", "IconizedItem"]}]}, {RowBox[{TagBox[
+              "\"Byte count: \"", "IconizedLabel"], 
+             "\[InvisibleSpace]", TagBox["80", "IconizedItem"]}]}}, 
+         GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+         DefaultBaseStyle -> "Column", 
+         GridBoxItemSize -> {"Columns" -> {{Automatic}}, 
+           "Rows" -> {{Automatic}}}], Dynamic[Typeset`open]}, 
+       "IconizedObject"]], 
+     "VirtualMachine`Machines`Abstract`RegisterMachine`", 
+     SelectWithContents -> True, Selectable -> False]}];
+
+
+(*
+Test doing << foo where foo is a complicated box structure
+*)
+Test[
+	CodeConcreteParseBox[box]
+	,
+	ContainerNode[Box, {PrefixNode[
+   Get, {LeafNode[Token`LessLess, "<<", <|Source -> {1, 1}|>], 
+    BoxNode[
+     InterpretationBox, {CodeNode[Null, 
+       DynamicModuleBox[{Typeset`open = False}, 
+        TemplateBox[{"String", 
+          StyleBox["\"RegisterMachine`\"", "IconizedCustomName", 
+           StripOnInput -> False], 
+          GridBox[{{RowBox[{TagBox["\"Head: \"", "IconizedLabel"], 
+               "\[InvisibleSpace]", 
+               TagBox["String", "IconizedItem"]}]}, {RowBox[{TagBox[
+                "\"String length: \"", "IconizedLabel"], 
+               "\[InvisibleSpace]", 
+               TagBox["49", "IconizedItem"]}]}, {RowBox[{TagBox[
+                "\"Byte count: \"", "IconizedLabel"], 
+               "\[InvisibleSpace]", TagBox["80", "IconizedItem"]}]}}, 
+           GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+           DefaultBaseStyle -> "Column", 
+           GridBoxItemSize -> {"Columns" -> {{Automatic}}, 
+             "Rows" -> {{Automatic}}}], Dynamic[Typeset`open]}, 
+         "IconizedObject"]], <||>], 
+      CodeNode[Null, 
+       "VirtualMachine`Machines`Abstract`RegisterMachine`", <||>], 
+      CodeNode[Null, SelectWithContents -> True, <||>], 
+      CodeNode[Null, 
+       Selectable -> False, <||>]}, <|Source -> {1, 
+        2}|>]}, <|Source -> {}|>]}, <||>]
+	,
+	TestID->"Boxes-20210909-O7R0T0"
+]
+
+
+
+
+
+
+
+
