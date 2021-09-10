@@ -464,13 +464,32 @@ PrefixBinary
 *)
 prbDispatch[{LeafNode[Token`LongName`Integral, _, _], _}, handledChildren_, children_, pos_] :=
   Switch[children,
-    {\"\\[Integral]\", RowBox[{_, ___, RowBox[{\"\\[DifferentialD]\", _}]}]},
+    {\"\\[Integral]\", RowBox[{_, RowBox[{\"\\[DifferentialD]\", _}]}]},
       (*
       Successful match for Integral syntax
+
+      Single argument
       *)
       PrefixBinaryNode[Integrate, {
         LeafNode[Token`LongName`Integral, \"\\[Integral]\", <|Source->Append[pos, 1] ~Join~ {1}|>]} ~Join~
-        MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ {2, 1} ~Join~ (#2 + 1 - 1)]&, children[[2, 1]]], <|Source->pos|>]
+        {parseBox[children[[2, 1, 1]], Append[pos, 1] ~Join~ {2, 1} ~Join~ ({1} + 1 - 1)]} ~Join~
+        {parseBox[children[[2, 1, 2]], Append[pos, 1] ~Join~ {2, 1} ~Join~ ({2} + 1 - 1)]}, <|Source->pos|>
+      ]
+    ,
+    {\"\\[Integral]\", RowBox[{_, _, ___, RowBox[{\"\\[DifferentialD]\", _}]}]},
+      (*
+      Successful match for Integral syntax
+
+      Multiple arguments, treat as implicit Times
+      *)
+      PrefixBinaryNode[Integrate, {
+        LeafNode[Token`LongName`Integral, \"\\[Integral]\", <|Source->Append[pos, 1] ~Join~ {1}|>]} ~Join~
+        (*
+        create a fake RowBox to induce the creation of InfixNode[Times, ...]
+        *)
+        {parseBox[RowBox[children[[2, 1, ;;-2]]], Append[pos, 1] ~Join~ {2}]} ~Join~
+        {parseBox[children[[2, 1, -1]], Append[pos, 1] ~Join~ {2, 1, Length[children[[2, 1]]]}]}, <|Source->pos|>
+      ]
     ,
     _,
       (*
