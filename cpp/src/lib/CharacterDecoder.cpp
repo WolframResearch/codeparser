@@ -549,17 +549,26 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
             
             std::string severity;
             if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
+                
                 //
                 // reduce severity of unexpected characters inside strings or comments
                 //
                 severity = SYNTAXISSUESEVERITY_REMARK;
+                
+            } else if (c.isStrangeWhitespace()) {
+                
+                ;
+                
             } else {
                 severity = SYNTAXISSUESEVERITY_WARNING;
             }
             
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", severity, Src, 0.95, std::move(Actions)));
-            
-            Issues.insert(std::move(I));
+            if (severity != "") {
+                
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", severity, Src, 0.95, std::move(Actions)));
+                
+                Issues.insert(std::move(I));
+            }
             
         } else if (Utils::isMBStrange(point)) {
             
@@ -582,17 +591,26 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
             
             std::string severity;
             if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
+                
                 //
                 // reduce severity of unexpected characters inside strings or comments
                 //
                 severity = SYNTAXISSUESEVERITY_REMARK;
+                
+            } else if (c.isMBStrangeWhitespace()) {
+                
+                ;
+                
             } else {
                 severity = SYNTAXISSUESEVERITY_WARNING;
             }
             
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", severity, Src, 0.85, std::move(Actions)));
-            
-            Issues.insert(std::move(I));
+            if (severity != "") {
+                
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", severity, Src, 0.85, std::move(Actions)));
+                
+                Issues.insert(std::move(I));
+            }
         }
     }
 #endif // !NISSUES
@@ -697,17 +715,25 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
         
         std::string severity;
         if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
+            
             //
             // reduce severity of unexpected characters inside strings or comments
             //
             severity = SYNTAXISSUESEVERITY_REMARK;
+            
+        } else if (c.isStrangeWhitespace()) {
+            
+            ;
+            
         } else {
             severity = SYNTAXISSUESEVERITY_WARNING;
         }
         
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", severity, Src, 0.95, std::move(Actions)));
-        
-        Issues.insert(std::move(I));
+        if (severity != "") {
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", severity, Src, 0.95, std::move(Actions)));
+            
+            Issues.insert(std::move(I));
+        }
         
     } else if (Utils::isMBStrange(point)) {
         //
@@ -730,17 +756,26 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
         
         std::string severity;
         if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
+            
             //
             // reduce severity of unexpected characters inside strings or comments
             //
             severity = SYNTAXISSUESEVERITY_REMARK;
+            
+        } else if (c.isMBStrangeWhitespace()) {
+            
+            ;
+            
         } else {
             severity = SYNTAXISSUESEVERITY_WARNING;
         }
         
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", severity, Src, 0.85, std::move(Actions)));
-        
-        Issues.insert(std::move(I));
+        if (severity != "") {
+            
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", severity, Src, 0.85, std::move(Actions)));
+            
+            Issues.insert(std::move(I));
+        }
     }
 #endif // !NISSUES
     
@@ -838,17 +873,26 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
         
         std::string severity;
         if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
+            
             //
             // reduce severity of unexpected characters inside strings or comments
             //
             severity = SYNTAXISSUESEVERITY_REMARK;
+            
+        } else if (c.isStrangeWhitespace()) {
+            
+            ;
+            
         } else {
             severity = SYNTAXISSUESEVERITY_WARNING;
         }
         
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", severity, Src, 0.95, std::move(Actions)));
-        
-        Issues.insert(std::move(I));
+        if (severity != "") {
+            
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", severity, Src, 0.95, std::move(Actions)));
+            
+            Issues.insert(std::move(I));
+        }
         
     } else if (Utils::isMBStrange(point)) {
         //
@@ -871,17 +915,26 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
         
         std::string severity;
         if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
+            
             //
             // reduce severity of unexpected characters inside strings or comments
             //
             severity = SYNTAXISSUESEVERITY_REMARK;
+            
+        } else if (c.isMBStrangeWhitespace()) {
+            
+            ;
+            
         } else {
             severity = SYNTAXISSUESEVERITY_WARNING;
         }
         
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", severity, Src, 0.85, std::move(Actions)));
-        
-        Issues.insert(std::move(I));
+        if (severity != "") {
+            
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", severity, Src, 0.85, std::move(Actions)));
+            
+            Issues.insert(std::move(I));
+        }
     };
 #endif // !NISSUES
     
@@ -980,17 +1033,26 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
         
         std::string severity;
         if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
+            
             //
             // reduce severity of unexpected characters inside strings or comments
             //
             severity = SYNTAXISSUESEVERITY_REMARK;
+            
+        } else if (c.isStrangeWhitespace()) {
+            
+            ;
+            
         } else {
             severity = SYNTAXISSUESEVERITY_WARNING;
         }
         
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", severity, Src, 0.95, std::move(Actions)));
-        
-        Issues.insert(std::move(I));
+        if (severity != "") {
+            
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", severity, Src, 0.95, std::move(Actions)));
+            
+            Issues.insert(std::move(I));
+        }
         
     } else if (Utils::isMBStrange(point)) {
         //
@@ -1014,16 +1076,26 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
         std::string severity;
         if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
             
+            //
+            // reduce severity of unexpected characters inside strings or comments
+            //
             severity = SYNTAXISSUESEVERITY_REMARK;
+            
+        } else if (c.isMBStrangeWhitespace()) {
+            
+            ;
             
         } else {
             
             severity = SYNTAXISSUESEVERITY_WARNING;
         }
         
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", severity, Src, 0.85, std::move(Actions)));
-        
-        Issues.insert(std::move(I));
+        if (severity != "") {
+            
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", severity, Src, 0.85, std::move(Actions)));
+            
+            Issues.insert(std::move(I));
+        }
     };
 #endif // !NISSUES
     
@@ -1126,17 +1198,26 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
         
         std::string severity;
         if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
+            
             //
             // reduce severity of unexpected characters inside strings or comments
             //
             severity = SYNTAXISSUESEVERITY_REMARK;
+            
+        } else if (c.isStrangeWhitespace()) {
+            
+            ;
+            
         } else {
             severity = SYNTAXISSUESEVERITY_WARNING;
         }
         
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", severity, Src, 0.95, std::move(Actions)));
-        
-        Issues.insert(std::move(I));
+        if (severity != "") {
+            
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", severity, Src, 0.95, std::move(Actions)));
+            
+            Issues.insert(std::move(I));
+        }
         
     } else if (Utils::isMBStrange(point)) {
         //
@@ -1159,17 +1240,26 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
         
         std::string severity;
         if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
+            
             //
             // reduce severity of unexpected characters inside strings or comments
             //
             severity = SYNTAXISSUESEVERITY_REMARK;
+            
+        } else if (c.isMBStrangeWhitespace()) {
+            
+            ;
+            
         } else {
             severity = SYNTAXISSUESEVERITY_WARNING;
         }
         
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", severity, Src, 0.85, std::move(Actions)));
-        
-        Issues.insert(std::move(I));
+        if (severity != "") {
+            
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", severity, Src, 0.85, std::move(Actions)));
+            
+            Issues.insert(std::move(I));
+        }
     };
 #endif // !NISSUES
     

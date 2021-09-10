@@ -990,17 +990,26 @@ void ByteDecoder::strangeWarning(codepoint decoded, SourceLocation currentSource
     
     std::string severity;
     if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
+        
         //
         // reduce severity of unexpected characters inside strings or comments
         //
         severity = SYNTAXISSUESEVERITY_REMARK;
+        
+    } else if (c.isStrangeWhitespace() || c.isMBStrangeWhitespace()) {
+        
+        ;
+        
     } else {
         severity = SYNTAXISSUESEVERITY_WARNING;
     }
     
-    auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + safeAndGraphicalStr + "``.", severity, Src, 0.95, std::move(Actions)));
-    
-    Issues.insert(std::move(I));
+    if (severity != "") {
+        
+        auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + safeAndGraphicalStr + "``.", severity, Src, 0.95, std::move(Actions)));
+        
+        Issues.insert(std::move(I));
+    }
 }
 
 void ByteDecoder::nonASCIIWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc) {
