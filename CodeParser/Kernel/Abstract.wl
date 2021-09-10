@@ -2376,11 +2376,12 @@ Module[{head, data, part, issues},
 					|>]
 				];
 			,
+			PostfixNode[Transpose, _, _],
 			(*
-			PostfixNode[Function | Derivative, _, _],
-			(* these are fine *)
+			a\[Transpose][[2]] is fine
+			*)
 			Null
-			,*)
+			,
 			(*
 			Now handle boxes
 			*)
@@ -2788,11 +2789,12 @@ Module[{head, part, partData, data, issues},
 					|>]
 				];
 			,
-			(*
-			PostfixNode[Function | Derivative, _, _],
-				(* these are fine *)
+			PostfixNode[Transpose, _, _],
+				(*
+				a\[Transpose]\[LeftDoubleBracket]2\[RightDoubleBracket] is fine
+				*)
 				Null
-			,*)
+			,
 			(*
 			Now handle boxes
 			*)
