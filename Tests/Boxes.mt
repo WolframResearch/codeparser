@@ -934,6 +934,7 @@ Test doing << foo where foo is a complicated box structure
 Test[
 	CodeConcreteParseBox[box]
 	,
+With[{evaledData = <||>},
 	ContainerNode[Box, {PrefixNode[
    Get, {LeafNode[Token`LessLess, "<<", <|Source -> {1, 1}|>], 
     BoxNode[
@@ -954,13 +955,14 @@ Test[
            DefaultBaseStyle -> "Column", 
            GridBoxItemSize -> {"Columns" -> {{Automatic}}, 
              "Rows" -> {{Automatic}}}], Dynamic[Typeset`open]}, 
-         "IconizedObject"]], <||>], 
+         "IconizedObject"]], evaledData], 
       CodeNode[Null, 
-       "VirtualMachine`Machines`Abstract`RegisterMachine`", <||>], 
-      CodeNode[Null, SelectWithContents -> True, <||>], 
+       "VirtualMachine`Machines`Abstract`RegisterMachine`", evaledData], 
+      CodeNode[Null, SelectWithContents -> True, evaledData], 
       CodeNode[Null, 
-       Selectable -> False, <||>]}, <|Source -> {1, 
+       Selectable -> False, evaledData]}, <|Source -> {1, 
         2}|>]}, <|Source -> {}|>]}, <||>]
+]
 	,
 	TestID->"Boxes-20210909-O7R0T0"
 ]
