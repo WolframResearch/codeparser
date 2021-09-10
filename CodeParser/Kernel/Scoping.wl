@@ -1017,6 +1017,13 @@ freePatterns[GroupMissingOpenerNode[_, _, _]] :=
   {}
 
 
+walk[CallMissingCloserNode[_, _, _]] :=
+  {}
+
+freePatterns[CallMissingCloserNode[_, _, _]] := 
+  {}
+
+
 (*
 a is a List of boxes
 *)
