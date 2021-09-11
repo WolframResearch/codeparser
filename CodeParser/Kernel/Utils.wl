@@ -527,17 +527,17 @@ Just doing a simple StringReplace with "\\" ~~ ("\n" | "\r\n" | "\r") would be w
 LineColumn convention
 *)
 removeRemainingSimpleLineContinuation[LeafNode[tag_, s_String, data:KeyValuePattern[Source -> {{_ , _}, {_, _}}]]] :=
-  Module[{cases, ws, rest},
+Module[{cases, ws, rest},
 
-    cases = StringCases[s, StartOfString ~~ "\\" ~~ ("\n" | "\r\n" | "\r") ~~ ws : (WhitespaceCharacter ...) ~~ rest___ :> {ws, rest}];
+  cases = StringCases[s, StartOfString ~~ "\\" ~~ ("\n" | "\r\n" | "\r") ~~ ws : (WhitespaceCharacter ...) ~~ rest___ :> {ws, rest}];
 
-    If[cases == {},
-      LeafNode[tag, s, data]
-      ,
-      {ws, rest} = cases[[1]];
-      LeafNode[tag, rest, <|data, Source -> {{data[[Key[Source], 1, 1]] + 1, StringLength[ws] + 1}, data[[Key[Source], 2]]}|>]
-    ]
+  If[cases == {},
+    LeafNode[tag, s, data]
+    ,
+    {ws, rest} = cases[[1]];
+    LeafNode[tag, rest, <|data, Source -> {{data[[Key[Source], 1, 1]] + 1, StringLength[ws] + 1}, data[[Key[Source], 2]]}|>]
   ]
+]
 
 removeRemainingSimpleLineContinuation[LeafNode[tag_, s_String, data_]] :=
   LeafNode[tag, StringReplace[s, StartOfString ~~ "\\" ~~ ("\n" | "\r\n" | "\r") ~~ WhitespaceCharacter... -> ""], data]
@@ -569,79 +569,79 @@ Since this is only called on strings, then any simple continuations must be exte
 *)
 
 removeComplexLineContinuations[LeafNode[String, str_, data_]] :=
-  Module[{continuationPoss, backslashCount, onePastLastPos, pos, takeSpec, i, k},
+Module[{continuationPoss, backslashCount, onePastLastPos, pos, takeSpec, i, k},
 
-    continuationPoss = StringPosition[str, "\n"|"\r"];
+  continuationPoss = StringPosition[str, "\n"|"\r"];
 
-    (*
-    all newlines with an odd number of leading backslashes = line continuations
-    *)
-    continuationPoss = Map[
-      Function[{newlinePos},
-        pos = newlinePos[[1]];
-        onePastLastPos = NestWhile[(# - 1)&, pos - 1, (# >= 1 && StringTake[str, {#}] == "\\")&];
-        backslashCount = pos - onePastLastPos - 1;
-        If[OddQ[backslashCount],
-          {pos - 1, pos}
-          ,
-          Nothing
-        ]
+  (*
+  all newlines with an odd number of leading backslashes = line continuations
+  *)
+  continuationPoss = Map[
+    Function[{newlinePos},
+      pos = newlinePos[[1]];
+      onePastLastPos = NestWhile[(# - 1)&, pos - 1, (# >= 1 && StringTake[str, {#}] == "\\")&];
+      backslashCount = pos - onePastLastPos - 1;
+      If[OddQ[backslashCount],
+        {pos - 1, pos}
+        ,
+        Nothing
       ]
-      ,
-      continuationPoss
-    ];
+    ]
+    ,
+    continuationPoss
+  ];
 
-    (* make sure to include both characters in \r\n *)
-    continuationPoss = Map[
-      Function[{contPos},
-        pos = contPos[[2]];
-        If[StringTake[str, {pos}] == "\r" && pos + 1 <= StringLength[str] && StringTake[str, {pos + 1}] == "\n",
-          {contPos[[1]], pos + 1}
-          ,
-          contPos
-        ]
+  (* make sure to include both characters in \r\n *)
+  continuationPoss = Map[
+    Function[{contPos},
+      pos = contPos[[2]];
+      If[StringTake[str, {pos}] == "\r" && pos + 1 <= StringLength[str] && StringTake[str, {pos + 1}] == "\n",
+        {contPos[[1]], pos + 1}
+        ,
+        contPos
       ]
-      ,
-      continuationPoss
-    ];
+    ]
+    ,
+    continuationPoss
+  ];
 
-    (*
-    if there is a continuation at the start of the token, then this is an external simple continuation and should also be removed
+  (*
+  if there is a continuation at the start of the token, then this is an external simple continuation and should also be removed
 
-    need to scan through trailing whitespace and find any more continuations also
-    *)
-    i = 1;
-    k = 1;
-    While[i <= Length[continuationPoss] && continuationPoss[[i, 1]] == k,
-      k = continuationPoss[[i, 2]];
-      While[k + 1 <= StringLength[str] && MatchQ[StringTake[str, {k + 1}], " " | "\t"],
-        continuationPoss[[i, 2]] = k + 1;
-        k = k + 1;
-      ];
+  need to scan through trailing whitespace and find any more continuations also
+  *)
+  i = 1;
+  k = 1;
+  While[i <= Length[continuationPoss] && continuationPoss[[i, 1]] == k,
+    k = continuationPoss[[i, 2]];
+    While[k + 1 <= StringLength[str] && MatchQ[StringTake[str, {k + 1}], " " | "\t"],
+      continuationPoss[[i, 2]] = k + 1;
       k = k + 1;
-      i = i + 1;
     ];
+    k = k + 1;
+    i = i + 1;
+  ];
 
-    If[$Debug,
-      Print["continuationPoss: ", continuationPoss];
-    ];
+  If[$Debug,
+    Print["continuationPoss: ", continuationPoss];
+  ];
 
-    (*
+  (*
 
-    This used to be:
+  This used to be:
 
-    LeafNode[tag, StringReplacePart[str, "", continuationPoss], data]
+  LeafNode[tag, StringReplacePart[str, "", continuationPoss], data]
 
-    but that is VERY slow for removing substrings
+  but that is VERY slow for removing substrings
 
-    So convert to a Take spec and use StringTake and StringJoin
-    *)
+  So convert to a Take spec and use StringTake and StringJoin
+  *)
 
-    takeSpec = {#[[1, 2]] + 1, #[[2, 1]] - 1}& /@
-      Partition[{{Null, 0}} ~Join~ continuationPoss ~Join~ {{StringLength[str] + 1, Null}}, 2, 1];
+  takeSpec = {#[[1, 2]] + 1, #[[2, 1]] - 1}& /@
+    Partition[{{Null, 0}} ~Join~ continuationPoss ~Join~ {{StringLength[str] + 1, Null}}, 2, 1];
 
-    LeafNode[String, StringJoin[StringTake[str, takeSpec]], data]
-  ]
+  LeafNode[String, StringJoin[StringTake[str, takeSpec]], data]
+]
 
 
 (*
@@ -684,32 +684,32 @@ convertEmbeddedNewlines[LeafNode[String, str_, data_], OptionsPattern[]] :=
   ]
 
 convertEmbeddedNewlines[n:LeafNode[Token`Comment, str_, data_], opts:OptionsPattern[]] :=
-  Catch[
-  Module[{formatOnly, newline},
+Catch[
+Module[{formatOnly, newline},
 
-    formatOnly = OptionValue["FormatOnly"];
-    newline = OptionValue["NewlineString"];
+  formatOnly = OptionValue["FormatOnly"];
+  newline = OptionValue["NewlineString"];
 
-    (*
-    Comments cannot be abstracted (they have already been aggregated away)
+  (*
+  Comments cannot be abstracted (they have already been aggregated away)
 
-    But, e.g. inside linear syntax, we may still have comments with embedded newlines even when we are abstracting
+  But, e.g. inside linear syntax, we may still have comments with embedded newlines even when we are abstracting
 
-    Example:
+  Example:
 
-    \((*
-    *)\)
+  \((*
+  *)\)
 
-    *)
-    If[!formatOnly,
-      Throw[n]
-    ];
+  *)
+  If[!formatOnly,
+    Throw[n]
+  ];
 
-    (*
-    Formatting, so keep embedded, but still canonicalize newline
-    *)
-    LeafNode[Token`Comment, StringReplace[str, {"\r\n" -> newline, "\n" -> newline, "\r" -> newline}], data]
-  ]]
+  (*
+  Formatting, so keep embedded, but still canonicalize newline
+  *)
+  LeafNode[Token`Comment, StringReplace[str, {"\r\n" -> newline, "\n" -> newline, "\r" -> newline}], data]
+]]
 
 (*
 Implicit tokens may erroneously get picked up because they have the same starting location as the token with embedded newlines.
@@ -734,53 +734,13 @@ Options[convertEmbeddedTabs] = {
 }
 
 convertEmbeddedTabs[LeafNode[String, str_, data_], OptionsPattern[]] :=
-  Module[{tabWidth, newline, startingColumn, formatOnly},
+Module[{tabWidth, newline, startingColumn, formatOnly},
 
-    formatOnly = OptionValue["FormatOnly"];
-    tabWidth = OptionValue["TabWidth"];
-    newline = OptionValue["NewlineString"];
+  formatOnly = OptionValue["FormatOnly"];
+  tabWidth = OptionValue["TabWidth"];
+  newline = OptionValue["NewlineString"];
 
-    If[formatOnly,
-      (*
-      Formatting, so render tabs down
-      *)
-      Switch[data,
-        KeyValuePattern[Source -> {{_, _}, {_, _}}],
-          (*
-          LineColumn convention
-          *)
-          startingColumn = data[[Key[Source], 1, 2]];
-          LeafNode[String, replaceTabs[str, startingColumn, newline, tabWidth], data]
-        ,
-        _,
-          (*
-          Any other convention
-
-          replace with " "; we don't know anything about columns
-          *)
-          startingColumn = 0;
-          LeafNode[String, replaceTabs[str, startingColumn, newline, tabWidth], data]
-      ]
-      ,
-      (*
-      Abstracting, so escape tabs
-      *)
-      LeafNode[String, StringReplace[str, "\t" -> "\\t"], data]
-    ]
-  ]
-
-convertEmbeddedTabs[n:LeafNode[Token`Comment, str_, data_], opts:OptionsPattern[]] :=
-  Catch[
-  Module[{tabWidth, newline, startingColumn, formatOnly},
-
-    formatOnly = OptionValue["FormatOnly"];
-    tabWidth = OptionValue["TabWidth"];
-    newline = OptionValue["NewlineString"];
-
-    If[!formatOnly,
-      Throw[n]
-    ];
-
+  If[formatOnly,
     (*
     Formatting, so render tabs down
     *)
@@ -790,7 +750,7 @@ convertEmbeddedTabs[n:LeafNode[Token`Comment, str_, data_], opts:OptionsPattern[
         LineColumn convention
         *)
         startingColumn = data[[Key[Source], 1, 2]];
-        LeafNode[Token`Comment, replaceTabs[str, startingColumn, newline, tabWidth], data]
+        LeafNode[String, replaceTabs[str, startingColumn, newline, tabWidth], data]
       ,
       _,
         (*
@@ -799,9 +759,49 @@ convertEmbeddedTabs[n:LeafNode[Token`Comment, str_, data_], opts:OptionsPattern[
         replace with " "; we don't know anything about columns
         *)
         startingColumn = 0;
-        LeafNode[Token`Comment, replaceTabs[str, startingColumn, newline, tabWidth], data]
+        LeafNode[String, replaceTabs[str, startingColumn, newline, tabWidth], data]
     ]
-  ]]
+    ,
+    (*
+    Abstracting, so escape tabs
+    *)
+    LeafNode[String, StringReplace[str, "\t" -> "\\t"], data]
+  ]
+]
+
+convertEmbeddedTabs[n:LeafNode[Token`Comment, str_, data_], opts:OptionsPattern[]] :=
+Catch[
+Module[{tabWidth, newline, startingColumn, formatOnly},
+
+  formatOnly = OptionValue["FormatOnly"];
+  tabWidth = OptionValue["TabWidth"];
+  newline = OptionValue["NewlineString"];
+
+  If[!formatOnly,
+    Throw[n]
+  ];
+
+  (*
+  Formatting, so render tabs down
+  *)
+  Switch[data,
+    KeyValuePattern[Source -> {{_, _}, {_, _}}],
+      (*
+      LineColumn convention
+      *)
+      startingColumn = data[[Key[Source], 1, 2]];
+      LeafNode[Token`Comment, replaceTabs[str, startingColumn, newline, tabWidth], data]
+    ,
+    _,
+      (*
+      Any other convention
+
+      replace with " "; we don't know anything about columns
+      *)
+      startingColumn = 0;
+      LeafNode[Token`Comment, replaceTabs[str, startingColumn, newline, tabWidth], data]
+  ]
+]]
 
 convertEmbeddedTabs[n:LeafNode[Token`Fake`ImplicitNull | Token`Fake`ImplicitTimes, _, _], OptionsPattern[]] :=
   n

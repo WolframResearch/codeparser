@@ -106,15 +106,15 @@ toInputFormString[ErrorNode[_, str_, _]] :=
 
 
 toInputFormString[BoxNode[RowBox, children_, _]] :=
-	Catch[
-	Module[{nodes, nodeStrs},
-		nodes = children[[1]];
-		nodeStrs = toInputFormString[#]& /@ nodes;
-		If[AnyTrue[nodeStrs, FailureQ],
-			Throw[SelectFirst[nodeStrs, FailureQ]]
-		];
-		StringJoin[Riffle[nodeStrs, " "]]
-	]]
+Catch[
+Module[{nodes, nodeStrs},
+	nodes = children[[1]];
+	nodeStrs = toInputFormString[#]& /@ nodes;
+	If[AnyTrue[nodeStrs, FailureQ],
+		Throw[SelectFirst[nodeStrs, FailureQ]]
+	];
+	StringJoin[Riffle[nodeStrs, " "]]
+]]
 
 toInputFormString[args:BoxNode[box_, children_, _]] :=
 	Failure["CannotConvertBoxesToInputFormString", <|"Function"->ToInputFormString, "Arguments"->HoldForm[{args}]|>]
@@ -283,10 +283,12 @@ Module[{processed},
 	processed = Riffle[nodes, LeafNode[Token`Comma, ",", <||>]];
 
 	toInputFormString[CallNode[LeafNode[Symbol, "Hold", <||>], {
-								GroupNode[GroupSquare, {
-									LeafNode[Token`OpenSquare, "[", <||>] } ~Join~
-									{ InfixNode[Comma, processed, <||>] } ~Join~
-									{ LeafNode[Token`CloseSquare, "]", <||>] }, <||>] }, <||> ]]
+			GroupNode[GroupSquare, {
+				LeafNode[Token`OpenSquare, "[", <||>] } ~Join~
+				{ InfixNode[Comma, processed, <||>] } ~Join~
+				{ LeafNode[Token`CloseSquare, "]", <||>] }, <||>]
+		}, <||>
+	]]
 ]
 
 toInputFormStringButNotToplevelNewlines[ContainerNode[Box, nodes_, data_]] :=

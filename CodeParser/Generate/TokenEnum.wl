@@ -45,7 +45,7 @@ sanity check that all tokens are in order
 cur = -Infinity;
 KeyValueMap[
   If[!TrueQ[#2 >= cur],
-    Print["Token is out of order: ", #1->#2];
+    Print["Token is out of order: ", #1 -> #2];
     Quit[1]
     ,
     cur = #2

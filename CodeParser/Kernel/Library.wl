@@ -141,7 +141,8 @@ $sharedExt =
 	Switch[$OperatingSystem, 
 		"MacOSX", "dylib",
 		"Windows", "dll",
-		_, "so"]
+		_, "so"
+	]
 
 setupLibraries[] :=
 Module[{location, libraryResources},
@@ -322,8 +323,7 @@ Module[{res},
 		Need to specify PageWidth, or else ToString does not do anything with Short
 		Related bugs: ?
 		*)
-		Throw[Failure["LibraryFunctionError",
-			<|
+		Throw[Failure["LibraryFunctionError", <|
 				"ShortResult" -> ToString[Short[res], OutputForm, PageWidth -> 100],
 				(*
 				"ShortArguments" and "Arguments" is really just taking up space to force "FullResult" to be hidden by default
@@ -331,7 +331,8 @@ Module[{res},
 				"ShortArguments" -> ToString[Short[{args}], OutputForm, PageWidth -> 100],
 				"Arguments" -> {args},
 				"FullResult" -> res
-			|>]]
+			|>]
+		]
 	];
 
 	res

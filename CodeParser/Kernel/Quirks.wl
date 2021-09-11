@@ -58,7 +58,12 @@ Module[{},
 
 
 processInfixBinaryAtQuirk[
-	BinaryNode[BinaryAt, {LeafNode[Symbol, symName_, symData_], LeafNode[Token`At, _, atData_], rhsIn_}, _], symName_] /; $Quirks["InfixBinaryAt"] :=
+	BinaryNode[BinaryAt, {
+		LeafNode[Symbol, symName_, symData_],
+		LeafNode[Token`At, _, atData_], rhsIn_}, _]
+	,
+	symName_
+] /; $Quirks["InfixBinaryAt"] :=
 Module[{data, rhs, issues, synthesizedSource},
 
 	rhs = rhsIn;

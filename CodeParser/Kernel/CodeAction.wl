@@ -44,86 +44,86 @@ Module[{src, originalNodePos, cst, srcPosMap, parentPos, parent, commaChildren, 
 
   If[$Debug,
     Print["src: ", src];
-   ];
+  ];
 
-   (*
-      was originally:
-      originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> src]]];
+  (*
+  was originally:
+  originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> src]]];
 
-      but this is super slow
-      *)
-      originalNodePos = If[srcPosMap === Null, Position[cst, src], srcPosMap[src]];
+  but this is super slow
+  *)
+  originalNodePos = If[srcPosMap === Null, Position[cst, src], srcPosMap[src]];
 
-     If[originalNodePos == {},
-      Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->src |>]]
-     ];
-     originalNodePos = Drop[originalNodePos[[1]], -2];
+  If[originalNodePos == {},
+  Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->src |>]]
+  ];
+  originalNodePos = Drop[originalNodePos[[1]], -2];
 
-     cst = Delete[cst, originalNodePos];
+  cst = Delete[cst, originalNodePos];
 
-    (*
-     The DeleteNode command does an extra bit of work, 
-     by cleaning up any surrounding commas
-     *)
+  (*
+  The DeleteNode command does an extra bit of work, 
+  by cleaning up any surrounding commas
+  *)
      
-     If[Length[originalNodePos] > 2,
-      parentPos = Drop[originalNodePos, -2];
-      parent = Extract[cst, {parentPos}][[1]];
-      commaChildren = parent[[2]];
-      commaChildrenLength = Length[commaChildren];
-      deletedWasLastNode = (originalNodePos[[-1]] > commaChildrenLength);
-      If[$Debug,
-        Print["commaChildrenLength: ", commaChildrenLength];
-        Print["deletedWasLastNode: ", deletedWasLastNode];
-      ];
-      If[deletedWasLastNode,
-        (* deletedWasLastNode *)
-       leadingCommaPos = originalNodePos[[;; -2]] ~Join~ {originalNodePos[[-1]] - 1};
-       If[MatchQ[Extract[cst, {leadingCommaPos}][[1]], LeafNode[Token`Comma, _, _]],
+  If[Length[originalNodePos] > 2,
+    parentPos = Drop[originalNodePos, -2];
+    parent = Extract[cst, {parentPos}][[1]];
+    commaChildren = parent[[2]];
+    commaChildrenLength = Length[commaChildren];
+    deletedWasLastNode = (originalNodePos[[-1]] > commaChildrenLength);
+    If[$Debug,
+      Print["commaChildrenLength: ", commaChildrenLength];
+      Print["deletedWasLastNode: ", deletedWasLastNode];
+    ];
+    If[deletedWasLastNode,
+      (* deletedWasLastNode *)
+      leadingCommaPos = originalNodePos[[;; -2]] ~Join~ {originalNodePos[[-1]] - 1};
+      If[MatchQ[Extract[cst, {leadingCommaPos}][[1]], LeafNode[Token`Comma, _, _]],
         cst = Delete[cst, leadingCommaPos]
         ,
         Null
-        ]
-       ,
-        (* NOT deletedWasLastNode *)
-       trailingCommaPos = originalNodePos[[;; -2]] ~Join~ {originalNodePos[[-1]] + 0};
-       If[$Debug,
+      ]
+      ,
+      (* NOT deletedWasLastNode *)
+      trailingCommaPos = originalNodePos[[;; -2]] ~Join~ {originalNodePos[[-1]] + 0};
+      If[$Debug,
         Print["trailingCommaPos: ", trailingCommaPos];
-        ];
-        (* FIXME: advance past Implicit Null of the Comma *)
-        Switch[Extract[cst, {trailingCommaPos}][[1]],
-          (*
-          ErrorNode[Token`Error`InfixImplicitNull, _, _],
-          cst = Delete[cst, trailingCommaPos];
-          If[t
-
-          ]
-          ,
-          *)
-          LeafNode[Token`Comma, _, _],
-          cst = Delete[cst, trailingCommaPos];
-        ]
-       ];
-
-       (*
-       now also handle the removal of penultimate child of Comma node, where we need to remove the Comma node itself
-
-       If we started with InfixNode[Comma, {a, comma, b}]
-
-       and then we removed b and now have InfixNode[Comma, {a}]
-
-       we need to remove Comma and just have a
-       *)
-       parent = Extract[cst, {parentPos}][[1]];
-       commaChildren = parent[[2]];
-       commaChildrenLength = Length[commaChildren];
-       If[commaChildrenLength == 1,
-        child = commaChildren[[1]];
-        cst = ReplacePart[cst, parentPos -> child];
-       ]
       ];
+      (* FIXME: advance past Implicit Null of the Comma *)
+      Switch[Extract[cst, {trailingCommaPos}][[1]],
+        (*
+        LeafNode[Token`Fake`ImplicitNull, _, _],
+        cst = Delete[cst, trailingCommaPos];
+        If[t
+
+        ]
+        ,
+        *)
+        ErrorNode[Token`Error`InfixImplicitNull, _, _],
+        cst = Delete[cst, trailingCommaPos];
+      ]
+    ];
+
+    (*
+    now also handle the removal of penultimate child of Comma node, where we need to remove the Comma node itself
+
+    If we started with InfixNode[Comma, {a, comma, b}]
+
+    and then we removed b and now have InfixNode[Comma, {a}]
+
+    we need to remove Comma and just have a
+    *)
+    parent = Extract[cst, {parentPos}][[1]];
+    commaChildren = parent[[2]];
+    commaChildrenLength = Length[commaChildren];
+    If[commaChildrenLength == 1,
+      child = commaChildren[[1]];
+      cst = ReplacePart[cst, parentPos -> child];
+    ]
+  ];
       
-      cst
+  cst
 ]]
 
 ApplyCodeAction[action:CodeAction[label_, DeleteTriviaNode, actionData_], cstIn_, Null] :=
@@ -134,19 +134,19 @@ Module[{src, originalNodePos, cst},
 
   src = Lookup[actionData, Source];
 
-   (*
-      was originally:
-      originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> src]]];
+  (*
+  was originally:
+  originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> src]]];
 
-      but this is super slow
-      *)
-      originalNodePos = Position[cst, src];
+  but this is super slow
+  *)
+  originalNodePos = Position[cst, src];
 
-     originalNodePos = originalNodePos[[1, 1;;-3]];
+  originalNodePos = originalNodePos[[1, 1;;-3]];
 
-     cst = Delete[cst, originalNodePos];
+  cst = Delete[cst, originalNodePos];
 
-      cst
+  cst
 ]]
 
 (*
@@ -154,14 +154,14 @@ optimized
 *)
 ApplyCodeAction[CodeAction[_, DeleteTriviaNode, actionData_], cst_, srcPosMap_] := (
 
-   (*
-      was originally:
-      originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> src]]];
+  (*
+  was originally:
+  originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> src]]];
 
-      but this is super slow
-      *)
+  but this is super slow
+  *)
 
-     Delete[cst, srcPosMap[[Key[Lookup[actionData, Source]], 1, 1;;-3]]]
+  Delete[cst, srcPosMap[[Key[Lookup[actionData, Source]], 1, 1;;-3]]]
 )
 
 ApplyCodeAction[action:CodeAction[label_, DeleteText, actionData_], cstIn_, srcPosMapIn_:Null] :=
@@ -175,57 +175,57 @@ Module[{src, originalNodePos, cst, srcInter, srcIntra, node, leafText, srcPosMap
 
   If[$Debug,
     Print["src: ", src];
-   ];
+  ];
 
   src = expandSourceThatMayHaveOriginatedInLibrary[src, cst];
 
-    If[$Debug,
-      Print["src: ", src]
-    ];
+  If[$Debug,
+    Print["src: ", src]
+  ];
 
-    If[!MatchQ[Last[src], Intra[___]],
-      (*
-      There is no Intra in the position, so we can just use DeleteNode
-      *)
-      cst = ApplyCodeAction[CodeAction[label, DeleteNode, <|Source->src|>], cst];
-      cst = cleanupIssue[cst, action];
-      Throw[cst]
-    ];
-
+  If[!MatchQ[Last[src], Intra[___]],
     (*
-    There is Intra in the last position
+    There is no Intra in the position, so we can just use DeleteNode
     *)
-    srcInter = Most[src];
-    srcIntra = Last[src];
+    cst = ApplyCodeAction[CodeAction[label, DeleteNode, <|Source->src|>], cst];
+    cst = cleanupIssue[cst, action];
+    Throw[cst]
+  ];
 
-    (*
-    was originally:
-    originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> srcInter]]];
+  (*
+  There is Intra in the last position
+  *)
+  srcInter = Most[src];
+  srcIntra = Last[src];
 
-    but this is super slow
-    *)
-    originalNodePos = If[srcPosMap === Null, Position[cst, srcInter], srcPosMap[srcInter]];
+  (*
+  was originally:
+  originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> srcInter]]];
 
-     If[originalNodePos == {},
-      Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->srcInter |>]]
-     ];
-     originalNodePos = Drop[originalNodePos[[1]], -2];
+  but this is super slow
+  *)
+  originalNodePos = If[srcPosMap === Null, Position[cst, srcInter], srcPosMap[srcInter]];
 
-     node = Extract[cst, {originalNodePos}][[1]];
-     leafText = node[[2]];
-     
-     leafText = StringReplacePart[leafText, "", List @@ srcIntra];
-     node[[2]] = leafText;
+  If[originalNodePos == {},
+    Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->srcInter |>]]
+  ];
+  originalNodePos = Drop[originalNodePos[[1]], -2];
 
-     If[originalNodePos == {},
-      cst = node
-      ,
-      cst = ReplacePart[cst, originalNodePos -> node];
-     ];
+  node = Extract[cst, {originalNodePos}][[1]];
+  leafText = node[[2]];
+  
+  leafText = StringReplacePart[leafText, "", List @@ srcIntra];
+  node[[2]] = leafText;
 
-     cst = cleanupIssue[cst, action];
+  If[originalNodePos == {},
+    cst = node
+    ,
+    cst = ReplacePart[cst, originalNodePos -> node];
+  ];
 
-     cst
+  cst = cleanupIssue[cst, action];
+
+  cst
 ]]
 
 ApplyCodeAction[action:CodeAction[label_, DeleteTrivia, actionData_], cstIn_, srcPosMapIn_:Null] :=
@@ -239,13 +239,14 @@ Module[{src, cst, func, trivia, srcPosMap},
 
   If[$Debug,
     Print["src: ", src];
-   ];
+  ];
 
   func = SourceMemberQ[src];
-    trivia = Cases[cst, LeafNode[Whitespace | Token`Newline | Token`Comment, _, KeyValuePattern[Source -> src_?func]], Infinity];
+  trivia = Cases[cst, LeafNode[Whitespace | Token`Newline | Token`Comment, _, KeyValuePattern[Source -> src_?func]], Infinity];
 
-    Scan[(cst = ApplyCodeAction[CodeAction["delete", DeleteNode, <| Source -> #[[3, Key[Source]]]|>], cst];)&, trivia];
-    cst
+  Scan[(cst = ApplyCodeAction[CodeAction["delete", DeleteNode, <| Source -> #[[3, Key[Source]]]|>], cst];)&, trivia];
+  
+  cst
 ]]
 
 ApplyCodeAction[action:CodeAction[label_, Identity, actionData_], cstIn_, srcPosMapIn_:Null] :=
@@ -259,9 +260,9 @@ Module[{src, cst, srcPosMap},
 
   If[$Debug,
     Print["src: ", src];
-   ];
+  ];
 
-   cst
+  cst
 ]]
 
 ApplyCodeAction[action:CodeAction[label_, InsertNode, actionData_], cstIn_, srcPosMapIn_:Null] :=
@@ -275,28 +276,28 @@ Module[{src, originalNodePos, cst, insertionNode, srcPosMap},
 
   If[$Debug,
     Print["src: ", src];
-   ];
+  ];
 
   insertionNode = actionData["InsertionNode"];
-    If[$Debug,
-      Print["insertionNode: ", insertionNode];
-    ];
+  If[$Debug,
+    Print["insertionNode: ", insertionNode];
+  ];
 
-    (*
-    was originally:
-    originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> src]]];
+  (*
+  was originally:
+  originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> src]]];
 
-    but this is super slow
-    *)
-    originalNodePos = If[srcPosMap === Null, Position[cst, src], srcPosMap[src]];
+  but this is super slow
+  *)
+  originalNodePos = If[srcPosMap === Null, Position[cst, src], srcPosMap[src]];
 
-     If[originalNodePos == {},
-      Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->src |>]]
-     ];
-     originalNodePos = Drop[originalNodePos[[1]], -2];
+  If[originalNodePos == {},
+    Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->src |>]]
+  ];
+  originalNodePos = Drop[originalNodePos[[1]], -2];
 
-    cst = Insert[cst, insertionNode, originalNodePos];
-    cst
+  cst = Insert[cst, insertionNode, originalNodePos];
+  cst
 ]]
 
 ApplyCodeAction[action:CodeAction[label_, InsertNodeAfter, actionData_], cstIn_, srcPosMapIn_:Null] :=
@@ -310,30 +311,30 @@ Module[{src, originalNodePos, cst, insertionNode, insertionNodePos, srcPosMap},
 
   If[$Debug,
     Print["src: ", src];
-   ];
+  ];
 
   insertionNode = actionData["InsertionNode"];
-    If[$Debug,
-      Print["insertionNode: ", insertionNode];
-    ];
+  If[$Debug,
+    Print["insertionNode: ", insertionNode];
+  ];
 
-    (*
-    was originally:
-    originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> src]]];
+  (*
+  was originally:
+  originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> src]]];
 
-    but this is super slow
-    *)
-    originalNodePos = If[srcPosMap === Null, Position[cst, src], srcPosMap[src]];
+  but this is super slow
+  *)
+  originalNodePos = If[srcPosMap === Null, Position[cst, src], srcPosMap[src]];
 
-     If[originalNodePos == {},
-      Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->src |>]]
-     ];
-     originalNodePos = Drop[originalNodePos[[1]], -2];
+  If[originalNodePos == {},
+    Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->src |>]]
+  ];
+  originalNodePos = Drop[originalNodePos[[1]], -2];
 
-     insertionNodePos = Append[Most[originalNodePos], Last[originalNodePos] + 1];
+  insertionNodePos = Append[Most[originalNodePos], Last[originalNodePos] + 1];
 
-    cst = Insert[cst, insertionNode, insertionNodePos];
-    cst
+  cst = Insert[cst, insertionNode, insertionNodePos];
+  cst
 ]]
 
 ApplyCodeAction[action:CodeAction[label_, InsertText, actionData_], cstIn_, srcPosMapIn_:Null] :=
@@ -346,80 +347,80 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
   src = Lookup[actionData, Source];
 
   If[$Debug,
-      Print["src: ", src]
-    ];
+    Print["src: ", src]
+  ];
 
   src = expandSourceThatMayHaveOriginatedInLibrary[src, cst];
 
   If[$Debug,
-      Print["src: ", src]
-    ];
+    Print["src: ", src]
+  ];
 
-    insertionText = actionData["InsertionText"];
+  insertionText = actionData["InsertionText"];
 
-    If[!MatchQ[Last[src], Intra[___]],
-      (*
-      There is no Intra in the position, so we can just use InsertNode
-
-      This used to be CodeConcreteParseLeaf[insertionText]
-      but there is no guarantee that insertionText is a leaf
-      *)
-      insertionNode = CodeConcreteParse[insertionText];
-      If[FailureQ[insertionNode],
-        Throw[insertionNode]
-      ];
-      (*
-      Look inside the generated node and assume there is only 1 child
-      *)
-      If[Length[insertionNode[[2]]] != 1,
-        Throw[Failure["CannotApplyCodeAction", <|"CodeAction" -> action, "CST" -> cst|>]]
-      ];
-      (*
-      strip off ContainerNode
-      *)
-      insertionNode = insertionNode[[2, 1]];
-      (*
-      FIXME: insertionNode still has LineColumn source from CodeConcreteParse and should be stripped
-      *)
-      cst = ApplyCodeAction[CodeAction[label, InsertNode, <|Source->src, "InsertionNode"->insertionNode|>], cst];
-      cst = cleanupIssue[cst, action];
-      Throw[cst]
-    ];
-
+  If[!MatchQ[Last[src], Intra[___]],
     (*
-    There is Intra in the last position
-    *)
-    srcInter = Most[src];
-    srcIntra = Last[src];
+    There is no Intra in the position, so we can just use InsertNode
 
+    This used to be CodeConcreteParseLeaf[insertionText]
+    but there is no guarantee that insertionText is a leaf
+    *)
+    insertionNode = CodeConcreteParse[insertionText];
+    If[FailureQ[insertionNode],
+      Throw[insertionNode]
+    ];
     (*
-    was originally:
-    originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> srcInter]]];
-
-    but this is super slow
+    Look inside the generated node and assume there is only 1 child
     *)
-    originalNodePos = If[srcPosMap === Null, Position[cst, srcInter], srcPosMap[srcInter]];
+    If[Length[insertionNode[[2]]] != 1,
+      Throw[Failure["CannotApplyCodeAction", <|"CodeAction" -> action, "CST" -> cst|>]]
+    ];
+    (*
+    strip off ContainerNode
+    *)
+    insertionNode = insertionNode[[2, 1]];
+    (*
+    FIXME: insertionNode still has LineColumn source from CodeConcreteParse and should be stripped
+    *)
+    cst = ApplyCodeAction[CodeAction[label, InsertNode, <|Source->src, "InsertionNode"->insertionNode|>], cst];
+    cst = cleanupIssue[cst, action];
+    Throw[cst]
+  ];
 
-     If[originalNodePos == {},
-      Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->srcInter |>]]
-     ];
-     originalNodePos = Drop[originalNodePos[[1]], -2];
+  (*
+  There is Intra in the last position
+  *)
+  srcInter = Most[src];
+  srcIntra = Last[src];
 
-     node = Extract[cst, {originalNodePos}][[1]];
-     leafText = node[[2]];
-     
-     leafText = StringInsert[leafText, insertionText, srcIntra[[1]]];
-     node[[2]] = leafText;
+  (*
+  was originally:
+  originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> srcInter]]];
 
-     If[originalNodePos == {},
-      cst = node
-      ,
-      cst = ReplacePart[cst, originalNodePos -> node];
-     ];
+  but this is super slow
+  *)
+  originalNodePos = If[srcPosMap === Null, Position[cst, srcInter], srcPosMap[srcInter]];
 
-     cst = cleanupIssue[cst, action];
+  If[originalNodePos == {},
+    Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->srcInter |>]]
+  ];
+  originalNodePos = Drop[originalNodePos[[1]], -2];
 
-     cst
+  node = Extract[cst, {originalNodePos}][[1]];
+  leafText = node[[2]];
+    
+  leafText = StringInsert[leafText, insertionText, srcIntra[[1]]];
+  node[[2]] = leafText;
+
+  If[originalNodePos == {},
+    cst = node
+    ,
+    cst = ReplacePart[cst, originalNodePos -> node];
+  ];
+
+  cst = cleanupIssue[cst, action];
+
+  cst
 ]]
 
 ApplyCodeAction[action:CodeAction[label_, InsertText, actionData_], cstIn_, srcPosMap_] :=
@@ -432,71 +433,71 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
 
   src = expandSourceThatMayHaveOriginatedInLibrary[src, cst];
 
-    insertionText = actionData["InsertionText"];
+  insertionText = actionData["InsertionText"];
 
-    If[!MatchQ[Last[src], Intra[___]],
-      (*
-      There is no Intra in the position, so we can just use InsertNode
+  If[!MatchQ[Last[src], Intra[___]],
+    (*
+    There is no Intra in the position, so we can just use InsertNode
 
-      This used to be CodeConcreteParseLeaf[insertionText]
-      but there is no guarantee that insertionText is a leaf
-      *)
-      insertionNode = CodeConcreteParse[insertionText];
-      If[FailureQ[insertionNode],
-        Throw[insertionNode]
-      ];
-      (*
-      Look inside the generated node and assume there is only 1 child
-      *)
-      If[Length[insertionNode[[2]]] != 1,
-        Throw[Failure["CannotApplyCodeAction", <|"CodeAction" -> action, "CST" -> cst|>]]
-      ];
-      (*
-      strip off ContainerNode
-      *)
-      insertionNode = insertionNode[[2, 1]];
-      (*
-      FIXME: insertionNode still has LineColumn source from CodeConcreteParse and should be stripped
-      *)
-      cst = ApplyCodeAction[CodeAction[label, InsertNode, <|Source->src, "InsertionNode"->insertionNode|>], cst];
-      cst = cleanupIssue[cst, action];
-      Throw[cst]
+    This used to be CodeConcreteParseLeaf[insertionText]
+    but there is no guarantee that insertionText is a leaf
+    *)
+    insertionNode = CodeConcreteParse[insertionText];
+    If[FailureQ[insertionNode],
+      Throw[insertionNode]
     ];
-
     (*
-    There is Intra in the last position
+    Look inside the generated node and assume there is only 1 child
     *)
-    srcInter = Most[src];
-    srcIntra = Last[src];
-
+    If[Length[insertionNode[[2]]] != 1,
+      Throw[Failure["CannotApplyCodeAction", <|"CodeAction" -> action, "CST" -> cst|>]]
+    ];
     (*
-    was originally:
-    originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> srcInter]]];
-
-    but this is super slow
+    strip off ContainerNode
     *)
-    originalNodePos = srcPosMap[srcInter];
+    insertionNode = insertionNode[[2, 1]];
+    (*
+    FIXME: insertionNode still has LineColumn source from CodeConcreteParse and should be stripped
+    *)
+    cst = ApplyCodeAction[CodeAction[label, InsertNode, <|Source->src, "InsertionNode"->insertionNode|>], cst];
+    cst = cleanupIssue[cst, action];
+    Throw[cst]
+  ];
 
-     If[originalNodePos == {},
-      Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->srcInter |>]]
-     ];
-     originalNodePos = Drop[originalNodePos[[1]], -2];
+  (*
+  There is Intra in the last position
+  *)
+  srcInter = Most[src];
+  srcIntra = Last[src];
 
-     node = Extract[cst, {originalNodePos}][[1]];
-     leafText = node[[2]];
-     
-     leafText = StringInsert[leafText, insertionText, srcIntra[[1]]];
-     node[[2]] = leafText;
+  (*
+  was originally:
+  originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> srcInter]]];
 
-     If[originalNodePos == {},
-      cst = node
-      ,
-      cst = ReplacePart[cst, originalNodePos -> node];
-     ];
+  but this is super slow
+  *)
+  originalNodePos = srcPosMap[srcInter];
 
-     cst = cleanupIssue[cst, action];
+  If[originalNodePos == {},
+    Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->srcInter |>]]
+  ];
+  originalNodePos = Drop[originalNodePos[[1]], -2];
 
-     cst
+  node = Extract[cst, {originalNodePos}][[1]];
+  leafText = node[[2]];
+  
+  leafText = StringInsert[leafText, insertionText, srcIntra[[1]]];
+  node[[2]] = leafText;
+
+  If[originalNodePos == {},
+    cst = node
+    ,
+    cst = ReplacePart[cst, originalNodePos -> node];
+  ];
+
+  cst = cleanupIssue[cst, action];
+
+  cst
 ]]
 
 ApplyCodeAction[action:CodeAction[label_, InsertTextAfter, actionData_], cstIn_, srcPosMapIn_:Null] :=
@@ -510,78 +511,78 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
 
   If[$Debug,
     Print["src: ", src];
-   ];
+  ];
 
   src = expandSourceThatMayHaveOriginatedInLibrary[src, cst];
 
-    insertionText = actionData["InsertionText"];
-    If[$Debug,
-      Print["insertionText: ", insertionText];
-    ];
+  insertionText = actionData["InsertionText"];
+  If[$Debug,
+    Print["insertionText: ", insertionText];
+  ];
 
-    If[!MatchQ[Last[src], Intra[___]],
-      (*
-      There is no Intra in the position, so we can just use InsertNode
-
-      This used to be CodeConcreteParseLeaf[insertionText]
-      but there is no guarantee that insertionText is a leaf
-      *)
-      insertionNode = CodeConcreteParse[insertionText];
-      If[FailureQ[insertionNode],
-        Throw[insertionNode]
-      ];
-      (*
-      Look inside the generated node and assume there is only 1 child
-      *)
-      If[Length[insertionNode[[2]]] != 1,
-        Throw[Failure["CannotApplyCodeAction", <|"CodeAction" -> action, "CST" -> cst|>]]
-      ];
-      (*
-      strip off ContainerNode
-      *)
-      insertionNode = insertionNode[[2, 1]];
-      (*
-      FIXME: insertionNode still has LineColumn source from CodeConcreteParse and should be stripped
-      *)
-      cst = ApplyCodeAction[CodeAction[label, InsertNodeAfter, <|Source->src, "InsertionNode"->insertionNode|>], cst];
-      cst = cleanupIssue[cst, action];
-      Throw[cst]
-    ];
-
+  If[!MatchQ[Last[src], Intra[___]],
     (*
-    There is Intra in the last position
-    *)
-    srcInter = Most[src];
-    srcIntra = Last[src];
+    There is no Intra in the position, so we can just use InsertNode
 
+    This used to be CodeConcreteParseLeaf[insertionText]
+    but there is no guarantee that insertionText is a leaf
+    *)
+    insertionNode = CodeConcreteParse[insertionText];
+    If[FailureQ[insertionNode],
+      Throw[insertionNode]
+    ];
     (*
-    was originally:
-    originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> srcInter]]];
-
-    but this is super slow
+    Look inside the generated node and assume there is only 1 child
     *)
-    originalNodePos = If[srcPosMap === Null, Position[cst, srcInter], srcPosMap[srcInter]];
+    If[Length[insertionNode[[2]]] != 1,
+      Throw[Failure["CannotApplyCodeAction", <|"CodeAction" -> action, "CST" -> cst|>]]
+    ];
+    (*
+    strip off ContainerNode
+    *)
+    insertionNode = insertionNode[[2, 1]];
+    (*
+    FIXME: insertionNode still has LineColumn source from CodeConcreteParse and should be stripped
+    *)
+    cst = ApplyCodeAction[CodeAction[label, InsertNodeAfter, <|Source->src, "InsertionNode"->insertionNode|>], cst];
+    cst = cleanupIssue[cst, action];
+    Throw[cst]
+  ];
 
-     If[originalNodePos == {},
-      Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->srcInter |>]]
-     ];
-     originalNodePos = Drop[originalNodePos[[1]], -2];
+  (*
+  There is Intra in the last position
+  *)
+  srcInter = Most[src];
+  srcIntra = Last[src];
 
-     node = Extract[cst, {originalNodePos}][[1]];
-     leafText = node[[2]];
-     
-     leafText = StringInsert[leafText, insertionText, srcIntra[[1]] + 1];
-     node[[2]] = leafText;
+  (*
+  was originally:
+  originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> srcInter]]];
 
-     If[originalNodePos == {},
-      cst = node
-      ,
-      cst = ReplacePart[cst, originalNodePos -> node];
-     ];
+  but this is super slow
+  *)
+  originalNodePos = If[srcPosMap === Null, Position[cst, srcInter], srcPosMap[srcInter]];
 
-     cst = cleanupIssue[cst, action];
+  If[originalNodePos == {},
+    Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->srcInter |>]]
+  ];
+  originalNodePos = Drop[originalNodePos[[1]], -2];
 
-     cst
+  node = Extract[cst, {originalNodePos}][[1]];
+  leafText = node[[2]];
+  
+  leafText = StringInsert[leafText, insertionText, srcIntra[[1]] + 1];
+  node[[2]] = leafText;
+
+  If[originalNodePos == {},
+    cst = node
+    ,
+    cst = ReplacePart[cst, originalNodePos -> node];
+  ];
+
+  cst = cleanupIssue[cst, action];
+
+  cst
 ]]
 
 ApplyCodeAction[action:CodeAction[label_, ReplaceNode, actionData_], cstIn_, srcPosMapIn_:Null] :=
@@ -595,32 +596,32 @@ Module[{src, originalNodePos, cst, replacementNode, srcPosMap},
 
   If[$Debug,
     Print["src: ", src];
-   ];
+  ];
 
   replacementNode = actionData["ReplacementNode"];
-     If[$Debug,
-      Print["replacementNode: ", replacementNode];
-     ];
+  If[$Debug,
+    Print["replacementNode: ", replacementNode];
+  ];
 
-     (*
-    was originally:
-    originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> src]]];
+  (*
+  was originally:
+  originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> src]]];
 
-    but this is super slow
-    *)
-    originalNodePos = If[srcPosMap === Null, Position[cst, src], srcPosMap[src]];
+  but this is super slow
+  *)
+  originalNodePos = If[srcPosMap === Null, Position[cst, src], srcPosMap[src]];
 
-     If[originalNodePos == {},
-      Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->src |>]]
-     ];
-     originalNodePos = Drop[originalNodePos[[1]], -2];
+  If[originalNodePos == {},
+    Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->src |>]]
+  ];
+  originalNodePos = Drop[originalNodePos[[1]], -2];
 
-     If[originalNodePos == {},
-      cst = replacementNode
-      ,
-      cst = ReplacePart[cst, originalNodePos -> replacementNode];
-     ];
-     cst
+  If[originalNodePos == {},
+    cst = replacementNode
+    ,
+    cst = ReplacePart[cst, originalNodePos -> replacementNode];
+  ];
+  cst
 ]]
 
 ApplyCodeAction[action:CodeAction[label_, ReplaceText, actionData_], cstIn_, srcPosMapIn_:Null] :=
@@ -634,81 +635,81 @@ Module[{src, originalNodePos, cst, replacementNode, srcInter, srcIntra, replacem
 
   If[$Debug,
     Print["src: ", src];
-   ];
+  ];
 
   src = expandSourceThatMayHaveOriginatedInLibrary[src, cst];
 
-    replacementText = actionData["ReplacementText"];
-     If[$Debug,
-      Print["replacementText: ", replacementText];
-     ];
+  replacementText = actionData["ReplacementText"];
+  If[$Debug,
+    Print["replacementText: ", replacementText];
+  ];
 
-    If[!MatchQ[Last[src], Intra[___]],
-      (*
-      There is no Intra in the position, so we can just use ReplaceNode
-
-      This used to be CodeConcreteParseLeaf[replacementText]
-      but there is no guarantee that replacementText is a leaf
-      *)
-      replacementNode = CodeConcreteParse[replacementText];
-      If[FailureQ[replacementNode],
-        Throw[replacementNode]
-      ];
-      (*
-      Look inside the generated node and assume there is only 1 child
-      *)
-      If[Length[replacementNode[[2]]] != 1,
-        Throw[Failure["CannotApplyCodeAction", <|"CodeAction" -> action, "CST" -> cst|>]]
-      ];
-      (*
-      strip off ContainerNode
-      *)
-      replacementNode = replacementNode[[2, 1]];
-      (*
-      FIXME: replacementNode still has LineColumn source from CodeConcreteParse and should be stripped
-      *)
-      cst = ApplyCodeAction[CodeAction[label, ReplaceNode, <|Source->src, "ReplacementNode"->replacementNode|>], cst];
-      cst = cleanupIssue[cst, action];
-      Throw[cst]
-    ];
-
+  If[!MatchQ[Last[src], Intra[___]],
     (*
-    There is Intra in the last position
+    There is no Intra in the position, so we can just use ReplaceNode
+
+    This used to be CodeConcreteParseLeaf[replacementText]
+    but there is no guarantee that replacementText is a leaf
     *)
-    srcInter = Most[src];
-    srcIntra = Last[src];
-
-     (*
-    was originally:
-    originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> srcInter]]];
-
-    but this is super slow
+    replacementNode = CodeConcreteParse[replacementText];
+    If[FailureQ[replacementNode],
+      Throw[replacementNode]
+    ];
+    (*
+    Look inside the generated node and assume there is only 1 child
     *)
-    originalNodePos = If[srcPosMap === Null, Position[cst, srcInter], srcPosMap[srcInter]];
+    If[Length[replacementNode[[2]]] != 1,
+      Throw[Failure["CannotApplyCodeAction", <|"CodeAction" -> action, "CST" -> cst|>]]
+    ];
+    (*
+    strip off ContainerNode
+    *)
+    replacementNode = replacementNode[[2, 1]];
+    (*
+    FIXME: replacementNode still has LineColumn source from CodeConcreteParse and should be stripped
+    *)
+    cst = ApplyCodeAction[CodeAction[label, ReplaceNode, <|Source->src, "ReplacementNode"->replacementNode|>], cst];
+    cst = cleanupIssue[cst, action];
+    Throw[cst]
+  ];
 
-     If[originalNodePos == {},
-      Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->srcInter |>]]
-     ];
-     originalNodePos = Drop[originalNodePos[[1]], -2];
-     If[$Debug,
-      Print["originalNodePos: ", originalNodePos];
-     ];
+  (*
+  There is Intra in the last position
+  *)
+  srcInter = Most[src];
+  srcIntra = Last[src];
 
-     node = Extract[cst, {originalNodePos}][[1]];
-     leafText = node[[2]];
-     
-     leafText = StringReplacePart[leafText, replacementText, List @@ srcIntra];
-     node[[2]] = leafText;
+  (*
+  was originally:
+  originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> srcInter]]];
 
-     If[originalNodePos == {},
-      cst = node
-      ,
-      cst = ReplacePart[cst, originalNodePos -> node];
-     ];
+  but this is super slow
+  *)
+  originalNodePos = If[srcPosMap === Null, Position[cst, srcInter], srcPosMap[srcInter]];
 
-     cst = cleanupIssue[cst, action];
+  If[originalNodePos == {},
+    Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->srcInter |>]]
+  ];
+  originalNodePos = Drop[originalNodePos[[1]], -2];
+  If[$Debug,
+    Print["originalNodePos: ", originalNodePos];
+  ];
 
-     cst
+  node = Extract[cst, {originalNodePos}][[1]];
+  leafText = node[[2]];
+  
+  leafText = StringReplacePart[leafText, replacementText, List @@ srcIntra];
+  node[[2]] = leafText;
+
+  If[originalNodePos == {},
+    cst = node
+    ,
+    cst = ReplacePart[cst, originalNodePos -> node];
+  ];
+
+  cst = cleanupIssue[cst, action];
+
+  cst
 ]]
 
 
@@ -722,9 +723,7 @@ Module[{issue, cst},
 
   cst = cstIn;
 
-  issue = FirstCase[cst, (SyntaxIssue|FormatIssue|EncodingIssue)[_, _, _, KeyValuePattern[CodeActions -> actions_ /; MemberQ[actions, action]]],
-            $Failed,
-            Infinity];
+  issue = FirstCase[cst, (SyntaxIssue|FormatIssue|EncodingIssue)[_, _, _, KeyValuePattern[CodeActions -> actions_ /; MemberQ[actions, action]]], $Failed, Infinity];
   
   If[FailureQ[issue],
     (*
@@ -760,29 +759,29 @@ Sources that come from WL code should look like {{1,3},{2,14},Intra[21,21]} from
 *)
 expandSourceThatMayHaveOriginatedInLibrary[textSrc:{{_Integer, _Integer}, {_Integer, _Integer}}, cst_] :=
 Catch[
-  Module[{tok, tokSrc, tokStartCol},
+Module[{tok, tokSrc, tokStartCol},
 
-    tok = containingToken[textSrc, cst];
-    tokSrc = tok[[3, Key[Source]]];
+  tok = containingToken[textSrc, cst];
+  tokSrc = tok[[3, Key[Source]]];
 
-    If[textSrc == tokSrc,
-      Throw[textSrc]
-    ];
+  If[textSrc == tokSrc,
+    Throw[textSrc]
+  ];
 
-    If[textSrc[[1, 1]] != textSrc[[2, 1]],
-      Throw[$Failed, "Unimplemented"]
-    ];
-    If[textSrc[[1, 1]] != tokSrc[[1, 1]],
-      Throw[$Failed, "Unimplemented"]
-    ];
+  If[textSrc[[1, 1]] != textSrc[[2, 1]],
+    Throw[$Failed, "Unimplemented"]
+  ];
+  If[textSrc[[1, 1]] != tokSrc[[1, 1]],
+    Throw[$Failed, "Unimplemented"]
+  ];
 
-    tokStartCol = tokSrc[[1, 2]];
+  tokStartCol = tokSrc[[1, 2]];
 
-    Append[tokSrc, Intra[textSrc[[1, 2]]-tokStartCol+1, textSrc[[2, 2]]-tokStartCol+1-1]]
-    (*                                               ^ 1-based *)
-    (*                                                                              ^ 1-based *)
-    (*                                                                                ^ inclusive *)
-  ]
+  Append[tokSrc, Intra[textSrc[[1, 2]]-tokStartCol+1, textSrc[[2, 2]]-tokStartCol+1-1]]
+  (*                                               ^ 1-based *)
+  (*                                                                              ^ 1-based *)
+  (*                                                                                ^ inclusive *)
+]
 ]
 
 (*

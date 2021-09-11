@@ -38,24 +38,24 @@ aggregate[l_LeafNode] := l
 Multiple implicit Times tokens may have been inserted when parsing boxes, so remove them here
 *)
 aggregate[InfixNode[Times, children_, data_]] :=
-	Module[{aggregatedChildren},
+Module[{aggregatedChildren},
 
-		aggregatedChildren = aggregate /@ children;
+	aggregatedChildren = aggregate /@ children;
 
-		aggregatedChildren = First /@ Split[aggregatedChildren, (MatchQ[#1, LeafNode[Token`Fake`ImplicitTimes, _, _]] && MatchQ[#2, LeafNode[Token`Fake`ImplicitTimes, _, _]])&];
+	aggregatedChildren = First /@ Split[aggregatedChildren, (MatchQ[#1, LeafNode[Token`Fake`ImplicitTimes, _, _]] && MatchQ[#2, LeafNode[Token`Fake`ImplicitTimes, _, _]])&];
 
-		InfixNode[Times, aggregatedChildren, data]
-	]
+	InfixNode[Times, aggregatedChildren, data]
+]
 
 aggregateButNotToplevelNewlines[InfixNode[Times, children_, data_]] :=
-	Module[{aggregatedChildren},
+Module[{aggregatedChildren},
 
-		aggregatedChildren = aggregate /@ children;
+	aggregatedChildren = aggregate /@ children;
 
-		aggregatedChildren = First /@ Split[aggregatedChildren, (MatchQ[#1, LeafNode[Token`Fake`ImplicitTimes, _, _]] && MatchQ[#2, LeafNode[Token`Fake`ImplicitTimes, _, _]])&];
+	aggregatedChildren = First /@ Split[aggregatedChildren, (MatchQ[#1, LeafNode[Token`Fake`ImplicitTimes, _, _]] && MatchQ[#2, LeafNode[Token`Fake`ImplicitTimes, _, _]])&];
 
-		InfixNode[Times, aggregatedChildren, data]
-	]
+	InfixNode[Times, aggregatedChildren, data]
+]
 
 
 (*

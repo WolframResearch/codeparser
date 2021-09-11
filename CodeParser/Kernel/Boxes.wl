@@ -111,16 +111,16 @@ Module[{children},
 wrapToplevelCompoundExpression[ns:{LeafNode[Token`Newline, _, _]..}] := ns
 
 wrapToplevelCompoundExpression[ns:{___, LeafNode[Token`Semi, _, _], ___}] :=
-  Module[{aggregatedChildren},
+Module[{aggregatedChildren},
 
-    aggregatedChildren = DeleteCases[ns, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline | Token`Boxes`LineContinuation, _, _] | GroupNode[Comment, _, _]];
+  aggregatedChildren = DeleteCases[ns, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline | Token`Boxes`LineContinuation, _, _] | GroupNode[Comment, _, _]];
 
-    If[MatchQ[aggregatedChildren, {___, LeafNode[Token`Semi, _, _]}],
-      {InfixNode[CompoundExpression, ns ~Join~ {LeafNode[Token`Fake`ImplicitNull, "", <||>]}, <||>]}
-      ,
-      {InfixNode[CompoundExpression, ns, <||>]}
-    ]
+  If[MatchQ[aggregatedChildren, {___, LeafNode[Token`Semi, _, _]}],
+    {InfixNode[CompoundExpression, ns ~Join~ {LeafNode[Token`Fake`ImplicitNull, "", <||>]}, <||>]}
+    ,
+    {InfixNode[CompoundExpression, ns, <||>]}
   ]
+]
 
 wrapToplevelCompoundExpression[ns_] := ns
 
@@ -165,40 +165,40 @@ Module[{children, child},
 
 
 reparsePossibleImplicitTimes[Box | Comment, children_, pos_] :=
-  Module[{handledChildren, aggregatedChildren},
-  Block[{$ProbablyImplicitTimes = False},
+Module[{handledChildren, aggregatedChildren},
+Block[{$ProbablyImplicitTimes = False},
 
-    handledChildren = children;
+  handledChildren = children;
 
-    aggregatedChildren = DeleteCases[handledChildren, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _]];
+  aggregatedChildren = DeleteCases[handledChildren, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _]];
 
-    prbDispatch[aggregatedChildren, handledChildren, Null, pos] /. {toBeSpliced -> toBeSplicedDefinitely}
-  ]]
+  prbDispatch[aggregatedChildren, handledChildren, Null, pos] /. {toBeSpliced -> toBeSplicedDefinitely}
+]]
 
 (*
 Just a line continuation and 1 other thing
 *)
 reparsePossibleImplicitTimes[tag_, children:{LeafNode[Token`Boxes`LineContinuation, _, _], _}, pos_] :=
-  Module[{handledChildren, aggregatedChildren},
-  Block[{$ProbablyImplicitTimes = False},
+Module[{handledChildren, aggregatedChildren},
+Block[{$ProbablyImplicitTimes = False},
 
-    handledChildren = children;
+  handledChildren = children;
 
-    aggregatedChildren = DeleteCases[handledChildren, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _]];
+  aggregatedChildren = DeleteCases[handledChildren, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _]];
 
-    prbDispatch[aggregatedChildren, handledChildren, Null, pos] /. {toBeSpliced -> toBeSplicedDefinitely}
-  ]]
+  prbDispatch[aggregatedChildren, handledChildren, Null, pos] /. {toBeSpliced -> toBeSplicedDefinitely}
+]]
 
 reparsePossibleImplicitTimes[tag_, children_, pos_] :=
-  Module[{handledChildren, aggregatedChildren},
-  Block[{$ProbablyImplicitTimes = True},
+Module[{handledChildren, aggregatedChildren},
+Block[{$ProbablyImplicitTimes = True},
 
-    handledChildren = children;
+  handledChildren = children;
 
-    aggregatedChildren = DeleteCases[handledChildren, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _]];
+  aggregatedChildren = DeleteCases[handledChildren, LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _]];
 
-    prbDispatch[aggregatedChildren, handledChildren, Null, pos] /. {toBeSpliced -> toBeSplicedDefinitely}
-  ]]
+  prbDispatch[aggregatedChildren, handledChildren, Null, pos] /. {toBeSpliced -> toBeSplicedDefinitely}
+]]
 
 
 
@@ -1008,38 +1008,38 @@ Replaces the original LineColumn-convention with Position-convention
 replaceWithPositionConvention[(head:SyntaxIssue|FormatIssue|EncodingIssue)[tag_, msg_, severity_, dataIn_], pos_, leafSrc_] :=
 Module[{data, actions, newSrc, oldSyntaxIssueSrc},
 
-    data = dataIn;
+  data = dataIn;
 
-    oldSyntaxIssueSrc = data[Source];
+  oldSyntaxIssueSrc = data[Source];
 
-    newSrc = pos;
+  newSrc = pos;
 
-    If[!(oldSyntaxIssueSrc[[1, 2]] == leafSrc[[1, 2]] && oldSyntaxIssueSrc[[2, 2]] == leafSrc[[2, 2]]),
-        (*
-        this is some sub-part of the leaf
-        The arguments in Intra[a, b] are appropriate for StringTake et al.
-        *)
-        newSrc = newSrc ~Join~ { Intra[oldSyntaxIssueSrc[[1, 2]], oldSyntaxIssueSrc[[2, 2]]-1] };
-    ];
+  If[!(oldSyntaxIssueSrc[[1, 2]] == leafSrc[[1, 2]] && oldSyntaxIssueSrc[[2, 2]] == leafSrc[[2, 2]]),
+      (*
+      this is some sub-part of the leaf
+      The arguments in Intra[a, b] are appropriate for StringTake et al.
+      *)
+      newSrc = newSrc ~Join~ { Intra[oldSyntaxIssueSrc[[1, 2]], oldSyntaxIssueSrc[[2, 2]]-1] };
+  ];
 
-    data[Source] = newSrc;
-    actions = data[CodeActions];
-    If[!empty[actions],
-        actions = replaceWithPositionConvention[#, newSrc]& /@ actions;
-        data[CodeActions] = actions
-    ];
-    head[tag, msg, severity, data]
+  data[Source] = newSrc;
+  actions = data[CodeActions];
+  If[!empty[actions],
+      actions = replaceWithPositionConvention[#, newSrc]& /@ actions;
+      data[CodeActions] = actions
+  ];
+  head[tag, msg, severity, data]
 ]
 
 replaceWithPositionConvention[CodeAction[label_, command_, dataIn_], newSrc_] :=
 Module[{data, src},
-    data = dataIn;
+  data = dataIn;
 
-    src = data[Source];
-    (*src = pos ~Join~ {LineColumn[src]};*)
-    src = newSrc;
-    data[Source] = src;
-    CodeAction[label, command, data]
+  src = data[Source];
+  (*src = pos ~Join~ {LineColumn[src]};*)
+  src = newSrc;
+  data[Source] = src;
+  CodeAction[label, command, data]
 ]
 
 parseBox[args___] := Failure["UnrecognizedBox", <|"Box"->{args}|>]
@@ -1052,38 +1052,38 @@ removeImplicits[node_] := DeleteCases[node, LeafNode[Token`Fake`ImplicitTimes, _
 We want to coalesce runs of whitespace because that is what the FE prefers
 *)
 coalesceWhitespace[node_] :=
-  Module[{poss, runs, coalesced},
+Module[{poss, runs, coalesced},
 
-    poss = Position[node, LeafNode[Whitespace, _, _]];
+  poss = Position[node, LeafNode[Whitespace, _, _]];
 
-    (*
-    runs of Whitespace
-    *)
-    runs = Split[poss, (
-      Length[#1] == Length[#2] &&
-      Most[#1] == Most[#2] &&
-      Last[#1] + 1 == Last[#2])&];
+  (*
+  runs of Whitespace
+  *)
+  runs = Split[poss, (
+    Length[#1] == Length[#2] &&
+    Most[#1] == Most[#2] &&
+    Last[#1] + 1 == Last[#2])&];
 
-    coalesced =
-      Fold[
-        Function[{nodeA, run},
-          (*
-          Delete all but the first whitespace in a run
-          Replace the first whitespace with the coalesced
-          *)
-          ReplacePart[Delete[nodeA, Rest[run]], First[run] -> LeafNode[Token`Boxes`MultiWhitespace, StringJoin[#[[2]]& /@ Extract[node, run]], <||>]]
-        ]
-        ,
-        node
-        ,
+  coalesced =
+    Fold[
+      Function[{nodeA, run},
         (*
-        Earlier positions may affect later positions, so process in reverse order
+        Delete all but the first whitespace in a run
+        Replace the first whitespace with the coalesced
         *)
-        runs // Reverse
-      ];
+        ReplacePart[Delete[nodeA, Rest[run]], First[run] -> LeafNode[Token`Boxes`MultiWhitespace, StringJoin[#[[2]]& /@ Extract[node, run]], <||>]]
+      ]
+      ,
+      node
+      ,
+      (*
+      Earlier positions may affect later positions, so process in reverse order
+      *)
+      runs // Reverse
+    ];
 
-    coalesced
-  ]
+  coalesced
+]
 
 
 ToStandardFormBoxes::usage = "ToStandardFormBoxes[cst] converts cst to a box."
