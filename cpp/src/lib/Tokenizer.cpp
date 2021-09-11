@@ -349,7 +349,15 @@ inline Token Tokenizer::handleStrangeWhitespace(Buffer tokenStartBuf, SourceLoca
     
 #if !NISSUES
     {
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDSPACECHARACTER, "Unexpected space character: ``" + c.safeAndGraphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.95));
+        auto Src = getTokenSource(tokenStartLoc);
+        
+        CodeActionPtrVector Actions;
+        
+        for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
+            Actions.push_back(std::move(A));
+        }
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDSPACECHARACTER, "Unexpected space character: ``" + c.safeAndGraphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.95, std::move(Actions)));
         
         Issues.insert(std::move(I));
     }
@@ -622,13 +630,29 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer tokenStartBuf, SourceLo
         }
     } else if (c.isStrangeLetterlike()) {
         
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.safeAndGraphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.85));
+        auto Src = getTokenSource(charLoc);
+        
+        CodeActionPtrVector Actions;
+        
+        for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
+            Actions.push_back(std::move(A));
+        }
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.safeAndGraphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.85, std::move(Actions)));
         
         TheTokenizer->addIssue(std::move(I));
         
     } else if (c.isMBStrangeLetterlike()) {
         
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.safeAndGraphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.80));
+        auto Src = getTokenSource(charLoc);
+        
+        CodeActionPtrVector Actions;
+        
+        for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
+            Actions.push_back(std::move(A));
+        }
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.safeAndGraphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.80, std::move(Actions)));
         
         TheTokenizer->addIssue(std::move(I));
     }
@@ -674,13 +698,29 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer tokenStartBuf, SourceLo
                 
             } else if (c.isStrangeLetterlike()) {
                 
-                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.safeAndGraphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.85));
+                auto Src = getTokenSource(charLoc);
+                
+                CodeActionPtrVector Actions;
+                
+                for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
+                    Actions.push_back(std::move(A));
+                }
+                
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.safeAndGraphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.85, std::move(Actions)));
                 
                 TheTokenizer->addIssue(std::move(I));
                 
             } else if (c.isMBStrangeLetterlike()) {
                 
-                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.safeAndGraphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(charLoc), 0.80));
+                auto Src = getTokenSource(charLoc);
+                
+                CodeActionPtrVector Actions;
+                
+                for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
+                    Actions.push_back(std::move(A));
+                }
+                
+                auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.safeAndGraphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.80, std::move(Actions)));
                 
                 TheTokenizer->addIssue(std::move(I));
             }
@@ -3401,7 +3441,15 @@ inline Token Tokenizer::handleMBStrangeNewline(Buffer tokenStartBuf, SourceLocat
     
 #if !NISSUES
     {
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDNEWLINECHARACTER, "Unexpected newline character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.85));
+        auto Src = getTokenSource(tokenStartLoc);
+        
+        CodeActionPtrVector Actions;
+        
+        for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
+            Actions.push_back(std::move(A));
+        }
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDNEWLINECHARACTER, "Unexpected newline character: ``" + c.graphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.85, std::move(Actions)));
         
         Issues.insert(std::move(I));
     }
@@ -3419,7 +3467,15 @@ inline Token Tokenizer::handleMBStrangeWhitespace(Buffer tokenStartBuf, SourceLo
     
 #if !NISSUES
     {
-        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDSPACECHARACTER, "Unexpected space character: ``" + c.safeAndGraphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, getTokenSource(tokenStartLoc), 0.85));
+        auto Src = getTokenSource(tokenStartLoc);
+        
+        CodeActionPtrVector Actions;
+        
+        for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
+            Actions.push_back(std::move(A));
+        }
+        
+        auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNEXPECTEDSPACECHARACTER, "Unexpected space character: ``" + c.safeAndGraphicalString() + "``.", SYNTAXISSUESEVERITY_WARNING, Src, 0.85, std::move(Actions)));
         
         Issues.insert(std::move(I));
     }
