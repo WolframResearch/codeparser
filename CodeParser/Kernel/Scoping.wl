@@ -982,6 +982,13 @@ freePatterns[ErrorNode[_, _, _]] :=
   {}
 
 
+walk[SyntaxErrorNode[_, _, _]] :=
+  {}
+
+freePatterns[SyntaxErrorNode[_, _, _]] := 
+  {}
+
+
 walk[AbstractSyntaxErrorNode[_, _, _]] :=
   {}
 
