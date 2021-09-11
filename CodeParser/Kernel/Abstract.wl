@@ -1370,6 +1370,8 @@ abstract[SyntaxErrorNode[SyntaxError`ExpectedTilde, {left_, _, middle_}, data_]]
 abstract[SyntaxErrorNode[SyntaxError`ExpectedSet, {left_, _, middle_}, data_]] :=
 	SyntaxErrorNode[SyntaxError`ExpectedSet, {abstract[left], abstract[middle]}, data]
 
+abstract[SyntaxErrorNode[SyntaxError`OldFESyntax, children_, data_]] :=
+	SyntaxErrorNode[SyntaxError`OldFESyntax, abstract /@ children, data]
 
 
 

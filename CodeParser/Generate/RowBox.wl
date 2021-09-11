@@ -155,6 +155,14 @@ prbDispatch[{LeafNode[Token`OpenParen, _, _], ___, LeafNode[Token`CloseParen, _,
   GroupNode[GroupParen, handledChildren, <|Source->pos|>]
 
 (*
+Strange old FE syntax RowBox[{\"a\", \"(\", \"b\", \")\"}]
+
+Unclear how it was authored
+*)
+prbDispatch[{_, LeafNode[Token`OpenParen, _, _], ___, LeafNode[Token`CloseParen, _, _]}, handledChildren_, ignored_, pos_] :=
+  SyntaxErrorNode[SyntaxError`OldFESyntax, handledChildren, <|Source->pos|>]
+
+(*
 Unexpected openers and unexpected closers
 *)
 prbDispatch[{LeafNode[Token`OpenParen, _, _], ___}, handledChildren_, ignored_, pos_] :=
@@ -794,6 +802,14 @@ prbDispatch[{CompoundNode[PatternBlank | PatternBlankSequence | PatternBlankNull
 
 prbDispatch[{_, LeafNode[Token`Colon, _, _], _}, handledChildren_, ignored_, pos_] :=
   BinaryNode[Pattern, handledChildren, <|Source->pos|>]
+
+(*
+Old FE syntax
+
+Something like RowBox[{RowBox[{\"a_\", \":\"}], \"b\"}]
+*)
+prbDispatch[{BinaryNode[Optional, {CompoundNode[PatternBlank, {_, _}, _], LeafNode[Token`Colon, _, _], ErrorNode[Token`Error`ExpectedOperand, _, _]}, _], _}, handledChildren_, ignored_, pos_] :=
+  SyntaxErrorNode[SyntaxError`OldFESyntax, handledChildren, <|Source->pos|>]
 "}
 
 epilog = {

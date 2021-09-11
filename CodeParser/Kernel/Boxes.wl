@@ -888,12 +888,26 @@ Module[{data, issues, stringifyMode, oldLeafSrc, len, src, cases, containsQuote,
     !containsQuote && StringContainsQ[str, "_"],
       Which[
         (cases = StringCases[str, RegularExpression["^(_|__|___)([^_]+)$"] :> {"$1", "$2"}]) != {},
+          If[StringEndsQ[str, ":"],
+            (*
+            something like "_:"
+            *)
+            Throw[ErrorNode[Token`Error`OldFESyntax, parseBox[#, pos]& /@ cases[[1]], <|Source -> pos|>]]
+          ];
           Throw[CompoundNode[underToOp[cases[[1, 1]]], parseBox[#, pos]& /@ cases[[1]], <|Source -> pos|>]]
         ,
         (cases = StringCases[str, RegularExpression["^([^_]+)(_\\.)$"] :> {"$1", "$2"}]) != {},
           Throw[CompoundNode[PatternOptionalDefault, parseBox[#, pos]& /@ cases[[1]], <|Source -> pos|>]]
         ,
         (cases = StringCases[str, RegularExpression["^([^_]+)(_|__|___)([^_]+)$"] :> {"$1", "$2", "$3"}]) != {},
+          If[StringEndsQ[str, ":"],
+            (*
+            something like "a_:"
+            *)
+            Throw[ErrorNode[Token`Error`OldFESyntax, {
+              parseBox[cases[[1, 1]], pos],
+              CompoundNode[underToOp[cases[[1, 2]]], {parseBox[cases[[1, 2]], pos], parseBox[cases[[1, 3]], pos]}, <|Source -> pos|>]}, <|Source -> pos|>]]
+          ];
           Throw[CompoundNode[underToPatternOp[cases[[1, 2]]], {
             parseBox[cases[[1, 1]], pos],
             CompoundNode[underToOp[cases[[1, 2]]], {parseBox[cases[[1, 2]], pos], parseBox[cases[[1, 3]], pos]}, <|Source -> pos|>]}, <|Source -> pos|>]]
