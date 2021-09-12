@@ -96,25 +96,13 @@ NodePtr PrefixCommaParselet::parse(Token TokIn, ParserContext Ctxt) const {
     //
     // if the input is  f[a@,2]  then we want to return TOKEN_ERROR_EXPECTEDOPERAND
     //
-    // if the input is  f[,2]  then we want to return TOKEN_FAKE_IMPLICITNULL
+    // if the input is  f[,2]  then we want to return TOKEN_ERROR_PREFIXIMPLICITNULL
     //
     if (Ctxt.Prec == PRECEDENCE_LOWEST) {
         
-#if !NISSUES
-        {
-            CodeActionPtrVector Actions;
-            
-            Actions.push_back(CodeActionPtr(new DeleteTextCodeAction("Delete ``,``", TokIn.Src)));
-            
-            auto I = IssuePtr(new ExtraCommaIssue(TokIn.Src, std::move(Actions)));
-            
-            TheParser->addIssue(std::move(I));
-        }
-#endif // !NISSUES
+        auto createdToken = Token(TOKEN_ERROR_PREFIXIMPLICITNULL, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
         
-        auto createdToken = Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
-        
-        auto Left = NodePtr(new LeafNode(createdToken));
+        auto Left = NodePtr(new ErrorNode(createdToken));
         
         return TheParser->infixLoop(std::move(Left), Ctxt);
         
@@ -1316,24 +1304,12 @@ NodePtr CommaParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
             // Something like  a,,
             //
             
-#if !NISSUES
-                {
-                    CodeActionPtrVector Actions;
-                    
-                    Actions.push_back(CodeActionPtr(new DeleteTextCodeAction("Delete ``,``", Tok2.Src)));
-                    
-                    auto I = IssuePtr(new ExtraCommaIssue(Tok2.Src, std::move(Actions)));
-                    
-                    TheParser->addIssue(std::move(I));
-                }
-#endif // !NISSUES
-            
-            auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(lastOperatorToken.BufLen.end), Source(lastOperatorToken.Src.End));
+            auto Implicit = Token(TOKEN_ERROR_INFIXIMPLICITNULL, BufferAndLength(lastOperatorToken.BufLen.end), Source(lastOperatorToken.Src.End));
             
             lastOperatorToken = Tok2;
             
             Args.append(NodePtr(new LeafNode(TokIn)));
-            Args.append(NodePtr(new LeafNode(Implicit)));
+            Args.append(NodePtr(new ErrorNode(Implicit)));
             
         } else {
             
@@ -1345,23 +1321,11 @@ NodePtr CommaParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
                 // Something like  f[1,]
                 //
                 
-#if !NISSUES
-                {
-                    CodeActionPtrVector Actions;
-                    
-                    Actions.push_back(CodeActionPtr(new DeleteTextCodeAction("Delete ``,``", TokIn.Src)));
-                    
-                    auto I = IssuePtr(new ExtraCommaIssue(TokIn.Src, std::move(Actions)));
-                    
-                    TheParser->addIssue(std::move(I));
-                }
-#endif // !NISSUES
-                
                 //
                 // Convert the ExpectedOperand Error to ImplicitNull and reattach to the operator for a better experience
                 //
                 
-                auto ProperImplicitNull = NodePtr(new LeafNode(Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
+                auto ProperImplicitNull = NodePtr(new ErrorNode(Token(TOKEN_ERROR_INFIXIMPLICITNULL, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
                 
                 Args.append(NodePtr(new LeafNode(TokIn)));
                 Args.append(std::move(ProperImplicitNull));
@@ -1425,19 +1389,7 @@ NodePtr CommaParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
             // Something like  a,,
             //
             
-#if !NISSUES
-                {
-                    CodeActionPtrVector Actions;
-                    
-                    Actions.push_back(CodeActionPtr(new DeleteTextCodeAction("Delete ``,``", Tok2.Src)));
-                    
-                    auto I = IssuePtr(new ExtraCommaIssue(Tok2.Src, std::move(Actions)));
-                    
-                    TheParser->addIssue(std::move(I));
-                }
-#endif // !NISSUES
-            
-            auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(lastOperatorToken.BufLen.end), Source(lastOperatorToken.Src.End));
+            auto Implicit = Token(TOKEN_ERROR_INFIXIMPLICITNULL, BufferAndLength(lastOperatorToken.BufLen.end), Source(lastOperatorToken.Src.End));
             
             lastOperatorToken = Tok2;
             
@@ -1447,7 +1399,7 @@ NodePtr CommaParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
             //
             Args.appendIfNonEmpty(std::move(Trivia1));
             Args.append(NodePtr(new LeafNode(Tok1)));
-            Args.append(NodePtr(new LeafNode(Implicit)));
+            Args.append(NodePtr(new ErrorNode(Implicit)));
             
             continue;
         }
@@ -1460,23 +1412,11 @@ NodePtr CommaParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
             // Something like  f[1,2,]
             //
             
-#if !NISSUES
-                {
-                    CodeActionPtrVector Actions;
-                    
-                    Actions.push_back(CodeActionPtr(new DeleteTextCodeAction("Delete ``,``", Tok1.Src)));
-                    
-                    auto I = IssuePtr(new ExtraCommaIssue(Tok1.Src, std::move(Actions)));
-                    
-                    TheParser->addIssue(std::move(I));
-                }
-#endif // !NISSUES
-            
             //
             // Convert the ExpectedOperand Error to ImplicitNull and reattach to the operator for a better experience
             //
             
-            auto ProperImplicitNull = NodePtr(new LeafNode(Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(Tok1.BufLen.end), Source(Tok1.Src.End))));
+            auto ProperImplicitNull = NodePtr(new ErrorNode(Token(TOKEN_ERROR_INFIXIMPLICITNULL, BufferAndLength(Tok1.BufLen.end), Source(Tok1.Src.End))));
             
             //
             // Do not reserve inside loop

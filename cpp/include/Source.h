@@ -584,16 +584,6 @@ public:
 };
 
 //
-// ExtraCommaIssue is special because it is not fatal, but it should return false for check()
-//
-class ExtraCommaIssue : public SyntaxIssue {
-public:
-    ExtraCommaIssue(Source Src, CodeActionPtrVector Actions = {}, AdditionalDescriptionVector AdditionalDescriptions = {});
-    
-    bool check() const override;
-};
-
-//
 //
 //
 class FormatIssue : public Issue {

@@ -777,7 +777,7 @@ prbDispatch[{_, LeafNode[Token`Semi, _, _], ___}, handledChildren_, ignored_, po
 prbDispatch[{_, LeafNode[Token`Comma, _, _], ___}, handledChildren_, ignored_, pos_] :=
   InfixNode[Comma, handledChildren ~Join~
     If[MatchQ[handledChildren[[-1]], LeafNode[Token`Comma, _, _]],
-      { LeafNode[Token`Fake`ImplicitNull, \"\", <|Source->After[handledChildren[[-1, 3, Key[Source]]]]|>] },
+      { ErrorNode[Token`Error`InfixImplicitNull, \"\", <|Source->After[handledChildren[[-1, 3, Key[Source]]]]|>] },
       {}], <|Source->pos|>]
 
 (*

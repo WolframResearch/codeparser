@@ -93,7 +93,7 @@ Module[{src, originalNodePos, cst, srcPosMap, parentPos, parent, commaChildren, 
         (* FIXME: advance past Implicit Null of the Comma *)
         Switch[Extract[cst, {trailingCommaPos}][[1]],
           (*
-          LeafNode[Token`Fake`ImplicitNull, _, _],
+          ErrorNode[Token`Error`InfixImplicitNull, _, _],
           cst = Delete[cst, trailingCommaPos];
           If[t
 

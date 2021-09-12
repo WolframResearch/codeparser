@@ -57,9 +57,11 @@ Token`Error`ExpectedOperand -> Next,
 Token`Error`ExpectedTag -> Next,
 Token`Error`ExpectedFile -> Next,
 Token`Error`UnexpectedCloser -> Next,
+(* implicit  Null  in  f[,2]  *)
+Token`Error`PrefixImplicitNull -> Next,
+(* implicit  Null  in  f[1,]  *)
+Token`Error`InfixImplicitNull -> Next,
 Token`Buffer5 -> Next,
-Token`Buffer6 -> Next,
-Token`Buffer7 -> Next,
 (*
 Unterminated errors
 
@@ -190,7 +192,7 @@ Token`LinearSyntax`BackTick -> Next, (* \` *)
 (* implicit Times operator in  a b  *)
 Token`Fake`ImplicitTimes -> Next,
 
-(* implicit  Null  in  a;  and  f[1,]  *)
+(* implicit  Null  in  a; *)
 Token`Fake`ImplicitNull -> Next,
 (* implicit  1  in  ;;b  *)
 Token`Fake`ImplicitOne -> Next,

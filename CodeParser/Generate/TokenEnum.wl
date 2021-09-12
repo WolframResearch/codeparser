@@ -243,6 +243,8 @@ isError[Token`Error`UnterminatedComment] = True
 isError[Token`Error`UnterminatedString] = True
 isError[Token`Error`UnterminatedFileString] = True
 isError[Token`Error`UnterminatedLinearSyntaxBlob] = True
+isError[Token`Error`PrefixImplicitNull] = True
+isError[Token`Error`InfixImplicitNull] = True
 isError[Token`Error`End] = True
 
 isError[_] = False
@@ -283,7 +285,9 @@ $isEmptyTokens = {
   Token`Fake`ImplicitAll,
   Token`Error`ExpectedOperand,
   Token`Error`ExpectedTag,
-  Token`Error`ExpectedFile
+  Token`Error`ExpectedFile,
+  Token`Error`PrefixImplicitNull,
+  Token`Error`InfixImplicitNull
   (*
   Newlines are not empty
 

@@ -123,7 +123,7 @@ Module[{count},
 ]
 
 (*
-Token`Fake`ImplicitNull does NOT get abstracted because it is handled at its possible parents: Comma and CompoundExpression
+Token`Fake`ImplicitNull, Token`Error`PrefixImplicitNull, and Token`Error`InfixImplicitNull do NOT get abstracted because they are handled at their possible parents: Comma and CompoundExpression
 *)
 
 abstract[LeafNode[Token`Fake`ImplicitOne, _, data_]] := LeafNode[Integer, "1", data]
@@ -628,7 +628,21 @@ topLevelChildIssues[
 topLevelChildIssues[
 	GroupNode[List, {
 		LeafNode[Token`OpenCurly, _, _],
-		InfixNode[Comma | CompoundExpression, {
+		InfixNode[Comma, {
+			PatternSequence[symbolDeclPat, _]..., ErrorNode[Token`Error`InfixImplicitNull, _, _]}, _],
+		LeafNode[Token`CloseCurly, _, _] }
+		,
+		_
+	]
+	,
+	KeyValuePattern["WillReportToplevelIssues" -> True]
+] :=
+	{}
+
+topLevelChildIssues[
+	GroupNode[List, {
+		LeafNode[Token`OpenCurly, _, _],
+		InfixNode[CompoundExpression, {
 			PatternSequence[symbolDeclPat, _]..., LeafNode[Token`Fake`ImplicitNull, _, _]}, _],
 		LeafNode[Token`CloseCurly, _, _] }
 		,
@@ -1988,7 +2002,7 @@ vectorInequalityAffinity[System`VectorGreaterEqual] := True
 
 
 abstractComma[InfixNode[Comma, children_, data_]] :=
-	CallNode[ToNode[Comma], abstract /@ (children /. LeafNode[Token`Fake`ImplicitNull, _, data1_] :> LeafNode[Symbol, "Null", data1]), data]
+	CallNode[ToNode[Comma], abstract /@ (children /. ErrorNode[Token`Error`PrefixImplicitNull | Token`Error`InfixImplicitNull, _, data1_] :> LeafNode[Symbol, "Null", data1]), data]
 
 
 (*
