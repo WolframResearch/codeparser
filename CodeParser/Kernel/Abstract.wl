@@ -2292,7 +2292,7 @@ What is the process for adding boxes to this list?
 
 It's on-demand as case-by-case basis
 *)
-$okCallBoxPat = TemplateBox | InterpretationBox | SubscriptBox | SuperscriptBox | StyleBox | NamespaceBox | OverscriptBox
+$okCallBoxPat = TemplateBox | InterpretationBox | SubscriptBox | SuperscriptBox | StyleBox | NamespaceBox | OverscriptBox | SubsuperscriptBox
 
 (*
 
@@ -2404,6 +2404,16 @@ Module[{head, data, part, issues},
 			BoxNode[$okCallBoxPat, _, _],
 				(* this is fine *)
 				Null
+			,
+			BoxNode[_, _, _],
+				
+				AppendTo[issues,
+					SyntaxIssue["StrangeCall", "Unexpected ``Part`` call: ``" <> ToString[head[[1]]] <> "``.", "Error", <|
+						Source -> first[[3, Key[Source]]],
+						ConfidenceLevel -> 0.95,
+						"AdditionalSources" -> {last[[3, Key[Source]]]}
+					|>]
+				];
 			,
 			_,
 				(*
@@ -2677,6 +2687,37 @@ Module[{head, part, partData, issues, data},
 	CallNode[head, part[[2]], data]
 ]
 
+abstractCallNode[CallNode[headIn:BoxNode[tag_, _, _], {partIn:GroupNode[GroupSquare, {first_, ___, last_}, _]}, dataIn_]] :=
+Module[{head, part, partData, issues, data},
+	head = headIn;
+	part = partIn;
+	data = dataIn;
+
+	issues = {};
+
+	AppendTo[issues,
+		SyntaxIssue["StrangeCall", "Unexpected call: ``" <> ToString[tag] <> "``.", "Error", <|
+			Source -> first[[3, Key[Source]]],
+			ConfidenceLevel -> 0.95,
+			"AdditionalSources" -> {last[[3, Key[Source]]]}
+		|>]
+	];
+
+	head = abstract[head];
+	part = abstractGroupNode[part];
+	partData = part[[3]];
+
+	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+
+	If[issues != {},
+		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+		AssociateTo[data, AbstractSyntaxIssues -> issues];
+	];
+
+	CallNode[head, part[[2]], data]
+]
+
+
 (*
 warn about anything else
 *)
@@ -2817,6 +2858,16 @@ Module[{head, part, partData, data, issues},
 			BoxNode[$okCallBoxPat, _, _],
 				(* this is fine *)
 				Null
+			,
+			BoxNode[_, _, _],
+				AppendTo[issues,
+					SyntaxIssue["StrangeCall", "Unexpected call: ``" <> ToString[head[[1]]] <> "``.", "Error", <|
+						Source -> first[[3, Key[Source]]],
+						ConfidenceLevel -> 0.95,
+						"AdditionalSources" -> {last[[3, Key[Source]]]}
+					|>
+				]
+			];
 			,
 			_,
 			(*
