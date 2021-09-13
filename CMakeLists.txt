@@ -26,6 +26,7 @@ find_program(CODEPARSER_EXE
 
 set(PACLET "CodeParser")
 set(WOLFRAMKERNEL ${WOLFRAMKERNEL_DEFAULT} CACHE FILEPATH "Path to WolframKernel")
+set(BUILD_PACLET ON CACHE BOOL "Build paclet")
 set(BUILD_EXE OFF CACHE BOOL "Build executable")
 set(BUILD_TESTS OFF CACHE BOOL "Build tests")
 set(BUILD_EXPR_LIB OFF CACHE BOOL "Build experimental expr library")
@@ -51,6 +52,7 @@ message(STATUS "BUILDNUMBER: ${BUILDNUMBER}")
 message(STATUS "CMAKE_VERSION: ${CMAKE_VERSION}")
 message(STATUS "PACLET: ${PACLET}")
 message(STATUS "WOLFRAMKERNEL: ${WOLFRAMKERNEL}")
+message(STATUS "BUILD_PACLET: ${BUILD_PACLET}")
 message(STATUS "BUILD_EXE: ${BUILD_EXE}")
 message(STATUS "BUILD_TESTS: ${BUILD_TESTS}")
 message(STATUS "BUILD_EXPR_LIB: ${BUILD_EXPR_LIB}")
@@ -690,6 +692,9 @@ list(APPEND PACLET_SOURCES
 )
 endif()
 
+
+if(BUILD_PACLET)
+
 if(LOCAL_BUILD)
 set(PACLET_OUTPUT ${PROJECT_BINARY_DIR}/paclet/${PACLET}-${LOCAL_BUILD_VERSION}.paclet)
 else(LOCAL_BUILD)
@@ -729,3 +734,5 @@ install(
 	COMPONENT
 		paclet
 )
+
+endif(BUILD_PACLET)
