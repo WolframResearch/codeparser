@@ -2216,15 +2216,13 @@ Module[{nodeBoxes},
 ]]
 
 
-
+(*
+nodes should be a list of strings
+*)
 toStandardFormBoxes[SyntaxErrorNode[tag_, nodes_, data_]] :=
 Catch[
-Module[{nodeBoxes},
-  nodeBoxes = toStandardFormBoxes /@ nodes;
-  If[AnyTrue[nodeBoxes, FailureQ],
-    Throw[SelectFirst[nodeBoxes, FailureQ]]
-  ];
-  RowBox[nodeBoxes]
+Module[{},
+  RowBox[nodes]
 ]]
 
 toStandardFormBoxes[UnterminatedGroupNode[op_, nodes_, data_]] :=

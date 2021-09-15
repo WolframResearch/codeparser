@@ -117,6 +117,11 @@ BinaryAtAtAt
 TernaryTilde
 TernarySlashColon
 
+(*
+Used with boxes
+*)
+InfixTilde
+
 InfixInequality
 
 Comma

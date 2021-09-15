@@ -273,6 +273,8 @@ abstract[InfixNode[CompoundExpression, children_, data_]] := abstractCompoundExp
 
 abstract[InfixNode[MessageName, children_, data_]] := abstractMessageName[InfixNode[MessageName, children[[;;;;2]], data]]
 
+abstract[InfixNode[InfixTilde, children_, data_]] := abstractInfixTilde[InfixNode[InfixTilde, children[[;;;;2]], data]]
+
 abstract[InfixNode[op_, children_ /; OddQ[Length[children]], data_]] :=
 	CallNode[ToNode[op], abstract /@ (processInfixBinaryAtQuirk[#, ToString[op]]& /@ children[[;;;;2]]), data]
 
@@ -312,6 +314,9 @@ abstract[TernaryNode[TagSetDelayed, {left_, _, middle_, _, right_}, data_]] :=
 Allow non-Symbols for left; not a syntax error
 *)
 abstract[TernaryNode[TagUnset, {left_, _, middle_, LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, data_]] :=
+	CallNode[ToNode[TagUnset], {abstract[left], abstract[middle]}, data]
+
+abstract[TernaryNode[TagUnset, {left_, _, middle_, LeafNode[Token`Boxes`EqualDot, _, _]}, data_]] :=
 	CallNode[ToNode[TagUnset], {abstract[left], abstract[middle]}, data]
 
 abstract[TernaryNode[Span, {left_, _, middle_, _, right_}, data_]] :=
@@ -1373,6 +1378,12 @@ abstract[SyntaxErrorNode[SyntaxError`ExpectedSet, {left_, _, middle_}, data_]] :
 abstract[SyntaxErrorNode[SyntaxError`OldFESyntax, children_, data_]] :=
 	SyntaxErrorNode[SyntaxError`OldFESyntax, abstract /@ children, data]
 
+abstract[SyntaxErrorNode[SyntaxError`ExpectedSetOperand1, {left_, _, _, right_}, data_]] :=
+	SyntaxErrorNode[SyntaxError`ExpectedSetOperand1, {abstract[left], abstract[right]}, data]
+
+abstract[SyntaxErrorNode[SyntaxError`ExpectedSetOperand2, {left_, _, middle_, _}, data_]] :=
+	SyntaxErrorNode[SyntaxError`ExpectedSetOperand2, {abstract[left], abstract[middle]}, data]
+
 
 
 
@@ -2207,6 +2218,27 @@ Module[{order},
 
 
 
+(*
+only from boxes
+*)
+
+abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {left_, middle_}, dataIn_]] :=
+	AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {left, middle}, dataIn]
+
+abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {left_, middle_, right_}, dataIn_]] :=
+	CallNode[abstract[middle], {left, abstract[right]}, dataIn]
+
+abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {left_, middle_, right_, rest___}, dataIn_]] :=
+	abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {left, middle, right}, <||>]], rest}, dataIn]]
+
+abstractInfixTilde[InfixNode[InfixTilde, {left_, middle_}, dataIn_]] :=
+	AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {left, middle}, dataIn]
+
+abstractInfixTilde[InfixNode[InfixTilde, {left_, middle_, right_}, dataIn_]] :=
+	abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {abstract[left], middle, right}, dataIn]]
+
+abstractInfixTilde[InfixNode[InfixTilde, {left_, middle_, right_, rest___}, dataIn_]] :=
+	abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {abstractInfixTilde[InfixNode[InfixTilde, {left, middle, right}, <||>]], rest}, dataIn]]
 
 
 

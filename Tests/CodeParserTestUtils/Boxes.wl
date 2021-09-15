@@ -13,7 +13,7 @@ Needs["CodeParser`Utils`"]
 
 parseBoxTest[box_, name_, n_, i_, j_] :=
 Catch[
-Module[{cst, back, diff, sourceStr, agg, inputStr, cst2, agg2, aggToCompare, agg2ToCompare, inputStr2, ast},
+Module[{cst, back, diff, sourceStr, agg, inputStr, cst2, agg2, aggToCompare, agg2Compare, agg2ToCompare, inputStr2, ast},
 
 cst =
   Catch[

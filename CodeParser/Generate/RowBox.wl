@@ -34,10 +34,30 @@ Token`SingleQuote is not used in boxes
 normalInfixParselets = DeleteCases[normalInfixParselets, Token`SingleQuote -> Parselet`PostfixOperatorParselet[Token`SingleQuote, Precedence`SingleQuote, Derivative]]
 
 (*
+Token`Tilde will be handled as Infix
+*)
+normalInfixParselets = DeleteCases[normalInfixParselets, Token`Tilde -> Parselet`TildeParselet[]]
+
+(*
 Token`MultiSingleQuote is used in boxes
 *)
 normalInfixParselets = Append[normalInfixParselets, Token`Boxes`MultiSingleQuote -> Parselet`PostfixOperatorParselet[Token`Boxes`MultiSingleQuote, Precedence`SingleQuote, Derivative]]
 
+(*
+Token`Tilde will be handled as Infix
+*)
+normalInfixParselets = Append[normalInfixParselets, Token`Tilde -> Parselet`InfixOperatorParselet[Token`Tilde, Precedence`Tilde, InfixTilde]]
+
+
+groupParselets = Cases[normalPrefixParselets, Verbatim[Rule][tok_, Parselet`GroupParselet[tok_, op_]] :> {tok, op}]
+
+infixOperatorParselets = Cases[normalInfixParselets, Verbatim[Rule][tok_, Parselet`InfixOperatorParselet[_, _, op_]] :> {tok, op}]
+
+binaryOperatorParselets = Cases[normalInfixParselets, Verbatim[Rule][tok_, Parselet`BinaryOperatorParselet[_, _, op_]] :> {tok, op}]
+
+prefixOperatorParselets = Cases[normalPrefixParselets, Verbatim[Rule][tok_, Parselet`PrefixOperatorParselet[_, _, op_]] :> {tok, op}]
+
+postfixOperatorParselets = Cases[normalInfixParselets, Verbatim[Rule][tok_, Parselet`PostfixOperatorParselet[_, _, op_]] :> {tok, op}]
 
 
 
@@ -63,12 +83,11 @@ Unrecognized LongName
 
 Must be before ] is handled as GroupMissingOpenerNode
 *)
-prbDispatch[{ErrorNode[Token`Error`UnhandledCharacter, \"\\\\[\", _], _, LeafNode[Token`CloseSquare, \"]\", _]}, handledChildren_, children_, pos_] :=
-  parseBox[\"\\\\[\" <> children[[2]] <> \"]\", pos]
+prbDispatch[{ErrorNode[Token`Error`UnhandledCharacter, \"\\\\[\", _], ___, LeafNode[Token`CloseSquare, \"]\", _]}, handledChildren_, children_, pos_] :=
+Module[{},
+  SyntaxErrorNode[SyntaxError`UnhandledCharacter, children, <| Source -> pos |>]
+]
 "}
-
-
-groupParselets = Cases[normalPrefixParselets, Verbatim[Rule][tok_, Parselet`GroupParselet[tok_, op_]] :> {tok, op}]
 
 groups = {
 "
@@ -218,9 +237,6 @@ prbDispatch[{___, LeafNode[Token`Boxes`LongName`RightSkeleton, _, _]}, handledCh
 "}
 
 
-
-infixOperatorParselets = Cases[normalInfixParselets, Verbatim[Rule][tok_, Parselet`InfixOperatorParselet[_, _, op_]] :> {tok, op}]
-
 infix = {
 "
 (*
@@ -235,14 +251,90 @@ With[{tokStr = ToString[#[[1]]], tagStr = ToString[#[[2]]]},
 " <> tokStr <> "
 *)
 
-prbDispatch[{_, LeafNode[" <> tokStr <> ", _, _], _, ___}, handledChildren_, ignored_, pos_] := \n\
+" <>
+If[MemberQ[prefixOperatorParselets[[All, 1]], #[[1]]], "
+(*
+" <> tokStr <> " is also a Prefix operator, so do not handle missing first argument here
+*)
+", "
+(*
+" <> tokStr <> " Missing first rand
+*)
+prbDispatch[pat:{LeafNode[" <> tokStr <> ", _, _], ___}, handledChildren_, ignored_, pos_] :=\n\
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[1]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> Before[pat[[1, 3, Key[Source]]]] |>];
+  prbDispatch[
+    {err} ~Join~
+    pat
+    ,
+    handledChildren[[;;pos1-1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1;;]]
+    ,
+    ignored
+    ,
+    pos
+  ]
+]
+"] <>
+"
+(*
+" <> tokStr <> " Missing second rand
+*)
+prbDispatch[pat:{_, LeafNode[" <> tokStr <> ", _, _], LeafNode[" <> tokStr <> ", _, _], ___}, handledChildren_, ignored_, pos_] :=\n\
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[2]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> After[pat[[2, 3, Key[Source]]]] |>];
+  prbDispatch[
+    pat[[;;2]] ~Join~
+    {err} ~Join~
+    pat[[3;;]]
+    ,
+    handledChildren[[;;pos1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1+1;;]]
+    ,
+    ignored
+    ,
+    pos
+  ]
+]
+
+(*
+" <> tokStr <> " Simple
+*)
+prbDispatch[{_, LeafNode[" <> tokStr <> ", _, _], _}, handledChildren_, ignored_, pos_] :=\n\
   InfixNode[" <> tagStr <> ", handledChildren, <| Source -> pos |>]
+
+(*
+" <> tokStr <> " Catch-all
+*)
+prbDispatch[pat:{_, LeafNode[" <> tokStr <> ", _, _], ___}, handledChildren_, ignored_, pos_] :=\n\
+Module[{ratorsWithNoFollowingRand},
+  ratorsWithNoFollowingRand = Cases[Split[pat[[2;;]], (!MatchQ[#2, LeafNode[" <> tokStr <> ", _, _]])&], {rator_} :> rator];
+  InfixNode[" <> tagStr <> ",
+    Fold[
+      Function[{handled, rator},
+        Insert[
+          handled,
+          ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> After[rator[[3, Key[Source]]]] |>],
+          Position[handledChildren, rator][[1, 1]] + 1
+        ]
+      ]
+      ,
+      handledChildren
+      ,
+      Reverse[ratorsWithNoFollowingRand]
+    ]
+    ,
+    <| Source -> pos |>
+  ]
+]
 "
 ]& /@ infixOperatorParselets
 )
 
-
-binaryOperatorParselets = Cases[normalInfixParselets, Verbatim[Rule][tok_, Parselet`BinaryOperatorParselet[_, _, op_]] :> {tok, op}]
 
 binary = {
 "
@@ -258,7 +350,61 @@ With[{tokStr = ToString[#[[1]]], tagStr = ToString[#[[2]]]},
 " <> tokStr <> "
 *)
 
-prbDispatch[{_, LeafNode[" <> tokStr <> ", _, _], _}, handledChildren_, ignored_, pos_] := \n\
+" <>
+If[MemberQ[prefixOperatorParselets[[All, 1]], #[[1]]], "
+(*
+" <> tokStr <> " is also a Prefix operator, so do not handle missing first argument here
+*)
+", "
+(*
+" <> tokStr <> " Missing first rand
+*)
+prbDispatch[pat:{LeafNode[" <> tokStr <> ", _, _], _}, handledChildren_, ignored_, pos_] :=\n\
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[1]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> Before[pat[[1, 3, Key[Source]]]] |>];
+  prbDispatch[
+    {err} ~Join~
+    pat
+    ,
+    handledChildren[[;;pos1-1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1;;]]
+    ,
+    ignored
+    ,
+    pos
+  ]
+]
+"]
+<>
+"
+(*
+" <> tokStr <> " Missing last rand
+*)
+prbDispatch[pat:{_, LeafNode[" <> tokStr <> ", _, _]}, handledChildren_, ignored_, pos_] :=\n\
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[2]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> After[pat[[2, 3, Key[Source]]]] |>];
+  prbDispatch[
+    pat[[;;2]] ~Join~
+    {err} ~Join~
+    pat[[3;;]]
+    ,
+    handledChildren[[;;pos1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1+1;;]]
+    ,
+    ignored
+    ,
+    pos
+  ]
+]
+
+(*
+" <> tokStr <> " Good
+*)
+prbDispatch[{_, LeafNode[" <> tokStr <> ", _, _], _}, handledChildren_, ignored_, pos_] :=\n\
   BinaryNode[" <> tagStr <> ", handledChildren, <| Source -> pos |>]
 "
 ]& /@ binaryOperatorParselets
@@ -276,34 +422,152 @@ Ternary
 Token`SlashColon
 *)
 
-prbDispatch[{_, LeafNode[Token`SlashColon, _, _], _, LeafNode[Token`ColonEqual, _, _], _}, handledChildren_, ignored_, pos_] :=
-  TernaryNode[TagSetDelayed, handledChildren, <| Source -> pos |>]
+(*
+Token`SlashColon Missing first rand and Syntax error
+*)
+prbDispatch[pat:{LeafNode[Token`SlashColon, _, _], ___}, handledChildren_, ignored_, pos_] :=
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[1]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> Before[pat[[1, 3, Key[Source]]]] |>];
+  prbDispatch[
+    {err} ~Join~
+    pat
+    ,
+    handledChildren[[;;pos1-1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1;;]]
+    ,
+    ignored
+    ,
+    pos
+  ]
+]
 
-prbDispatch[{_, LeafNode[Token`SlashColon, _, _], _, LeafNode[Token`Equal, _, _], _}, handledChildren_, ignored_, pos_] :=
-  TernaryNode[TagSet, handledChildren, <| Source -> pos |>]
+(*
+Token`SlashColon Missing second rand
+*)
+prbDispatch[pat:{_, LeafNode[Token`SlashColon, _, _]}, handledChildren_, ignored_, pos_] :=
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[2]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> After[pat[[2, 3, Key[Source]]]] |>];
+  BinaryNode[TagSet,
+    handledChildren[[;;pos1-1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1;;]]
+    ,
+    <| Source -> pos |>
+  ]
+]
 
+(*
+This is from buggy FE behavior
+
+type in:
+a /: <space> b =.
+
+the box structure is:
+RowBox[{\"a\", \"/:\", \" \", RowBox[{\"b\", \"=.\"}]}]
+
+Related bugs: 414540
+*)
+prbDispatch[pat:{_, LeafNode[Token`SlashColon, _, _], BinaryNode[Unset, _, _]}, handledChildren_, ignored_, pos_] :=
+Module[{pos1, unset},
+  pos1 = Position[handledChildren, pat[[3]]][[1, 1]];
+  TernaryNode[TagUnset,
+    handledChildren[[;;pos1-1]] ~Join~
+    handledChildren[[pos1, 2]] ~Join~
+    handledChildren[[pos1+1;;]]
+    ,
+    <| Source -> pos |>
+  ]
+]
+
+(*
+Token`SlashColon Syntax error
+*)
+prbDispatch[{_, LeafNode[Token`SlashColon, _, _], _}, handledChildren_, ignored_, pos_] :=
+  SyntaxErrorNode[SyntaxError`ExpectedSet, handledChildren, <| Source -> pos |>]
+
+(*
+Token`SlashColon Token`Boxes`EqualDot Good
+*)
 prbDispatch[{_, LeafNode[Token`SlashColon, _, _], _, LeafNode[Token`Boxes`EqualDot, _, _]}, handledChildren_, ignored_, pos_] :=
   TernaryNode[TagUnset, handledChildren, <| Source -> pos |>]
 
 (*
-older style that may be possible?
+Token`SlashColon Syntax error
+
+This can happen with e.g.  a /: b =
+
+Technically should be ExpectedOperand error, but don't put too much effort into ultra-precise errors here
 *)
-(*
-{_, LeafNode[Token`SlashColon, _, _], BinaryNode[Unset, _, _]},
-  xx,
-*)
+prbDispatch[{_, LeafNode[Token`SlashColon, _, _], LeafNode[Token`ColonEqual, _, _], _}, handledChildren_, ignored_, pos_] :=
+  SyntaxErrorNode[SyntaxError`ExpectedSetOperand1, handledChildren, <| Source -> pos |>]
+
+prbDispatch[{_, LeafNode[Token`SlashColon, _, _], LeafNode[Token`Equal, _, _], _}, handledChildren_, ignored_, pos_] :=
+  SyntaxErrorNode[SyntaxError`ExpectedSetOperand1, handledChildren, <| Source -> pos |>]
+
+prbDispatch[{_, LeafNode[Token`SlashColon, _, _], _, LeafNode[Token`ColonEqual, _, _]}, handledChildren_, ignored_, pos_] :=
+  SyntaxErrorNode[SyntaxError`ExpectedSetOperand2, handledChildren, <| Source -> pos |>]
+
+prbDispatch[{_, LeafNode[Token`SlashColon, _, _], _, LeafNode[Token`Equal, _, _]}, handledChildren_, ignored_, pos_] :=
+  SyntaxErrorNode[SyntaxError`ExpectedSetOperand2, handledChildren, <| Source -> pos |>]
 
 
 (*
-Token`Tilde
+Token`SlashColon Token`ColonEqual
 *)
 
-prbDispatch[{_, LeafNode[Token`Tilde, _, _], _, LeafNode[Token`Tilde, _, _], _}, handledChildren_, ignored_, pos_] :=
-  TernaryNode[TernaryTilde, handledChildren, <| Source -> pos |>]
+(*
+Token`SlashColon Token`ColonEqual Missing third rand
+*)
+prbDispatch[pat:{_, LeafNode[Token`SlashColon, _, _], _, LeafNode[Token`ColonEqual, _, _]}, handledChildren_, ignored_, pos_] :=
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[4]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> After[pat[[4, 3, Key[Source]]]] |>];
+  TernaryNode[TagSet,
+    handledChildren[[;;pos1-1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1;;]]
+    ,
+    <| Source -> pos |>
+  ]
+]
+
+(*
+Token`SlashColon Token`ColonEqual Good
+*)
+prbDispatch[{_, LeafNode[Token`SlashColon, _, _], _, LeafNode[Token`ColonEqual, _, _], _}, handledChildren_, ignored_, pos_] :=
+  TernaryNode[TagSetDelayed, handledChildren, <| Source -> pos |>]
+
+
+(*
+Token`SlashColon Token`Equal
+*)
+
+(*
+Token`SlashColon Token`Equal Missing third rand
+*)
+prbDispatch[pat:{_, LeafNode[Token`SlashColon, _, _], _, LeafNode[Token`Equal, _, _]}, handledChildren_, ignored_, pos_] :=
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[4]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> After[pat[[4, 3, Key[Source]]]] |>];
+  TernaryNode[TagSetDelayed,
+    handledChildren[[;;pos1-1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1;;]]
+    ,
+    <| Source -> pos |>
+  ]
+]
+
+(*
+Token`SlashColon Token`Equal Good
+*)
+prbDispatch[{_, LeafNode[Token`SlashColon, _, _], _, LeafNode[Token`Equal, _, _], _}, handledChildren_, ignored_, pos_] :=
+  TernaryNode[TagSet, handledChildren, <| Source -> pos |>]
 "}
 
-
-prefixOperatorParselets = Cases[normalPrefixParselets, Verbatim[Rule][tok_, Parselet`PrefixOperatorParselet[_, _, op_]] :> {tok, op}]
 
 prefix = {
 "
@@ -329,6 +593,10 @@ prefixBinary = {
 "
 (*
 PrefixBinary
+*)
+
+(*
+Token`LongName`Integral
 *)
 prbDispatch[{LeafNode[Token`LongName`Integral, _, _], _}, handledChildren_, children_, pos_] :=
   Switch[children,
@@ -372,8 +640,6 @@ prbDispatch[{LeafNode[Token`LongName`Integral, _, _], _}, handledChildren_, chil
 "}
 
 
-postfixOperatorParselets = Cases[normalInfixParselets, Verbatim[Rule][tok_, Parselet`PostfixOperatorParselet[_, _, op_]] :> {tok, op}]
-
 postfix = {
 "
 (*
@@ -405,42 +671,165 @@ Token`GreaterGreater
 
 >> stringifies its args
 *)
-prbDispatch[{_, LeafNode[Token`GreaterGreater, _, _], _}, handledChildren_, children_, pos_] :=
-  BinaryNode[Put, {
-    parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~
-      {parseBox[children[[2]], Append[pos, 1] ~Join~ {2}]} ~Join~
-      {If[MatchQ[children[[3]], _String],
+
+(*
+Token`GreaterGreater Missing first rand
+*)
+prbDispatch[pat:{LeafNode[Token`GreaterGreater, _, _], _}, handledChildren_, children_, pos_] :=
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[1]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> Before[pat[[1, 3, Key[Source]]]] |>];
+  prbDispatch[
+    {err} ~Join~
+    pat
+    ,
+    handledChildren[[;;pos1-1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1;;]]
+    ,
+    children[[;;pos1-1]] ~Join~
+    {err} ~Join~
+    children[[pos1;;]]
+    ,
+    pos
+  ]
+]
+
+(*
+Token`GreaterGreater Missing last rand
+*)
+prbDispatch[pat:{_, LeafNode[Token`GreaterGreater, _, _]}, handledChildren_, children_, pos_] :=
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[-1]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> After[pat[[-1, 3, Key[Source]]]] |>];
+  prbDispatch[
+    pat ~Join~
+    {err}
+    ,
+    handledChildren[[;;pos1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1+1;;]]
+    ,
+    (*
+    also modify children because we may need to do StringifyMode -> 2 later
+    *)
+    children[[;;pos1]] ~Join~
+    {err} ~Join~
+    children[[pos1+1;;]]
+    ,
+    pos
+  ]
+]
+
+(*
+Token`GreaterGreater Good
+*)
+prbDispatch[pat:{_, LeafNode[Token`GreaterGreater, _, _], _}, handledChildren_, children_, pos_] :=
+Module[{pos1},
+  pos1 = Position[handledChildren, pat[[-1]]][[1, 1]];
+  BinaryNode[Put,
+    handledChildren[[;;pos1-1]] ~Join~
+    {Switch[children[[pos1]],
+      _String,
         (*
         only pass in \"StringifyMode\" -> 2 if arg is a String
         *)
-        parseBox[children[[3]], Append[pos, 1] ~Join~ {3}, \"StringifyMode\" -> 2]
-        ,
-        parseBox[children[[3]], Append[pos, 1] ~Join~ {3}]
-      ]}
+        parseBox[children[[pos1]], Append[pos, 1] ~Join~ {pos1}, \"StringifyMode\" -> 2]
+      ,
+      _ErrorNode,
+        children[[pos1]]
+      ,
+      _,
+        parseBox[children[[pos1]], Append[pos, 1] ~Join~ {pos1}]
+    ]} ~Join~
+    handledChildren[[pos1+1;;]]
     ,
     <| Source -> pos |>
   ]
+]
 
 (*
 Token`GreaterGreaterGreater
 
 >>> stringifies its args
 *)
-prbDispatch[{_, LeafNode[Token`GreaterGreaterGreater, _, _], _}, handledChildren_, children_, pos_] :=
-  BinaryNode[PutAppend, {
-    parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~
-      {parseBox[children[[2]], Append[pos, 1] ~Join~ {2}]} ~Join~
-      {If[MatchQ[children[[3]], _String],
+
+(*
+Token`GreaterGreaterGreater Missing first rand
+*)
+prbDispatch[pat:{LeafNode[Token`GreaterGreaterGreater, _, _], _}, handledChildren_, children_, pos_] :=
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[1]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> Before[pat[[1, 3, Key[Source]]]] |>];
+  prbDispatch[
+    {err} ~Join~
+    pat
+    ,
+    handledChildren[[;;pos1-1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1;;]]
+    ,
+    children[[;;pos1-1]] ~Join~
+    {err} ~Join~
+    children[[pos1;;]]
+    ,
+    pos
+  ]
+]
+
+(*
+Token`GreaterGreaterGreater Missing last rand
+*)
+prbDispatch[pat:{_, LeafNode[Token`GreaterGreaterGreater, _, _]}, handledChildren_, children_, pos_] :=
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[-1]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> After[pat[[-1, 3, Key[Source]]]] |>];
+  prbDispatch[
+    pat ~Join~
+    {err}
+    ,
+    handledChildren[[;;pos1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1+1;;]]
+    ,
+    (*
+    also modify children because we may need to do StringifyMode -> 2 later
+    *)
+    children[[;;pos1]] ~Join~
+    {err} ~Join~
+    children[[pos1+1;;]]
+    ,
+    pos
+  ]
+]
+
+(*
+Token`GreaterGreaterGreater Good
+*)
+prbDispatch[pat:{_, LeafNode[Token`GreaterGreaterGreater, _, _], _}, handledChildren_, children_, pos_] :=
+Module[{pos1},
+  pos1 = Position[handledChildren, pat[[-1]]][[1, 1]];
+  BinaryNode[PutAppend,
+    handledChildren[[;;pos1-1]] ~Join~
+    {Switch[children[[pos1]],
+      _String,
         (*
         only pass in \"StringifyMode\" -> 2 if arg is a String
         *)
-        parseBox[children[[3]], Append[pos, 1] ~Join~ {3}, \"StringifyMode\" -> 2]
-        ,
-        parseBox[children[[3]], Append[pos, 1] ~Join~ {3}]
-      ]}
+        parseBox[children[[pos1]], Append[pos, 1] ~Join~ {pos1}, \"StringifyMode\" -> 2]
+      ,
+      _ErrorNode,
+        children[[pos1]]
+      ,
+      _,
+        parseBox[children[[pos1]], Append[pos, 1] ~Join~ {pos1}]
+    ]} ~Join~
+    handledChildren[[pos1+1;;]]
     ,
     <| Source -> pos |>
   ]
+]
+
 
 (*
 Token`LessLess
@@ -449,6 +838,7 @@ Token`LessLess
 There might be whitespace after the arg, e.g.
 '<' '<' 'f' 'o' 'o' '`' ' ' ' ' ' '
 *)
+
 prbDispatch[{LeafNode[Token`LessLess, _, _], _, ___}, handledChildren_, children_, pos_] :=
   PrefixNode[Get, {
     parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~
@@ -468,12 +858,60 @@ prbDispatch[{LeafNode[Token`LessLess, _, _], _, ___}, handledChildren_, children
     <| Source -> pos |>
   ]
 
+
 (*
 Token`ColonColon
 
 :: stringifies its args
 
 Must actually do work here to stringify the middle
+*)
+
+(*
+Token`ColonColon Missing first rand
+*)
+prbDispatch[pat:{LeafNode[Token`ColonColon, _, _], ___}, handledChildren_, children_, pos_] :=
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[1]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> Before[pat[[1, 3, Key[Source]]]] |>];
+  prbDispatch[
+    {err} ~Join~
+    pat
+    ,
+    handledChildren[[;;pos1-1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1;;]]
+    ,
+    children
+    ,
+    pos
+  ]
+]
+
+(*
+Token`ColonColon Missing second rand
+*)
+prbDispatch[pat:{_, LeafNode[Token`ColonColon, _, _], LeafNode[Token`ColonColon, _, _], ___}, handledChildren_, children_, pos_] :=
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[2]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> After[pat[[2, 3, Key[Source]]]] |>];
+  prbDispatch[
+    pat[[;;2]] ~Join~
+    {err} ~Join~
+    pat[[3;;]]
+    ,
+    handledChildren[[;;pos1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1+1;;]]
+    ,
+    ignored
+    ,
+    pos
+  ]
+]
+
+(*
+Token`ColonColon Good
 *)
 prbDispatch[{_, LeafNode[Token`ColonColon, _, _], _, ___}, handledChildren_, children_, pos_] :=
   Module[{poss, first, rest},
@@ -525,6 +963,7 @@ prbDispatch[{_, LeafNode[Token`ColonColon, _, _], _, ___}, handledChildren_, chi
     ]
   ]
 
+
 (*
 Token`Question
 
@@ -552,14 +991,73 @@ prbDispatch[{LeafNode[Token`QuestionQuestion, _, _], _}, handledChildren_, child
   ]
 
 (*
-Token`Equal
+Token`Equal Token`Dot
 
 Does not have a regular parselet
 *)
 
+(*
+Token`Equal Token`Dot Missing first rand
+*)
+prbDispatch[pat:{LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, handledChildren_, ignored_, pos_] :=
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[1]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> Before[pat[[1, 3, Key[Source]]]] |>];
+  BinaryNode[Unset,
+    handledChildren[[;;pos1-1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1;;]]
+    ,
+    <| Source -> pos |>
+  ]
+]
+
+(*
+Token`Equal Token`Dot Good
+*)
 prbDispatch[{_, LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, handledChildren_, ignored_, pos_] :=
   BinaryNode[Unset, handledChildren, <| Source -> pos |>]
 
+
+(*
+Token`Equal
+*)
+
+(*
+Token`Equal Missing first rand
+*)
+prbDispatch[pat:{LeafNode[Token`Equal, _, _], _}, handledChildren_, ignored_, pos_] :=
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[1]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> Before[pat[[1, 3, Key[Source]]]] |>];
+  BinaryNode[Set,
+    handledChildren[[;;pos1-1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1;;]]
+    ,
+    <| Source -> pos |>
+  ]
+]
+
+(*
+Token`Equal Missing last rand
+*)
+prbDispatch[pat:{_, LeafNode[Token`Equal, _, _]}, handledChildren_, ignored_, pos_] :=
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[-1]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> After[pat[[-1, 3, Key[Source]]]] |>];
+  BinaryNode[Set,
+    handledChildren[[;;pos1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1+1;;]]
+    ,
+    <| Source -> pos |>
+  ]
+]
+
+(*
+Token`Equal Good
+*)
 prbDispatch[{_, LeafNode[Token`Equal, _, _], _}, handledChildren_, ignored_, pos_] :=
   BinaryNode[Set, handledChildren, <| Source -> pos |>]
 
@@ -570,7 +1068,42 @@ Token`ColonEqual
 Does not have a regular parselet
 *)
 
-prbDispatch[{_, LeafNode[Token`ColonEqual, _, _], _}, handledChildren_, ignored_, pos_] := 
+(*
+Token`ColonEqual Missing first rand
+*)
+prbDispatch[pat:{LeafNode[Token`ColonEqual, _, _], _}, handledChildren_, ignored_, pos_] :=
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[1]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> Before[pat[[1, 3, Key[Source]]]] |>];
+  BinaryNode[SetDelayed,
+    handledChildren[[;;pos1-1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1;;]]
+    ,
+    <| Source -> pos |>
+  ]
+]
+
+(*
+Token`ColonEqual Missing last rand
+*)
+prbDispatch[{_, LeafNode[Token`ColonEqual, _, _]}, handledChildren_, ignored_, pos_] :=
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[-1]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> After[pat[[-1, 3, Key[Source]]]] |>];
+  BinaryNode[SetDelayed,
+    handledChildren[[;;pos1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1+1;;]]
+    ,
+    <| Source -> pos |>
+  ]
+]
+
+(*
+Token`ColonEqual Good
+*)
+prbDispatch[{_, LeafNode[Token`ColonEqual, _, _], _}, handledChildren_, ignored_, pos_] :=
   BinaryNode[SetDelayed, handledChildren, <| Source -> pos |>]
 
 
@@ -578,6 +1111,9 @@ prbDispatch[{_, LeafNode[Token`ColonEqual, _, _], _}, handledChildren_, ignored_
 Token`Boxes`EqualDot
 *)
 
+(*
+Token`Boxes`EqualDot Good
+*)
 prbDispatch[{_, LeafNode[Token`Boxes`EqualDot, _, _]}, handledChildren_, ignored_, pos_] :=
   BinaryNode[Unset, handledChildren, <| Source -> pos |>]
 
@@ -635,72 +1171,312 @@ Token`Semi
 *)
 
 (*
-Infix with trailing allowed
+Token`Semi Missing first rand
 *)
-prbDispatch[{_, ___, LeafNode[Token`Semi, _, data1_]}, handledChildren_, ignored_, pos_] :=
-  Module[{childrenWithImplicitNull},
-
-    childrenWithImplicitNull = handledChildren ~Join~ {LeafNode[Token`Fake`ImplicitNull, \"\", <| Source -> After[data1[Source]] |>]};
-
-    (*
-    DO NOT COMMIT THIS!!
-
-    SEQUENCEREPLACE IS SLOW!!
-    *)
-    childrenWithImplicitNull = SequenceReplace[childrenWithImplicitNull, {
-        s1:LeafNode[Token`Semi, _, data2_], ws:(LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _])..., s2:LeafNode[Token`Semi, _, _]
-      } :> Sequence[s1, LeafNode[Token`Fake`ImplicitNull, \"\", <| Source -> After[data2[Source]] |>], ws, s2]];
-
-    InfixNode[CompoundExpression, childrenWithImplicitNull, <| Source -> pos |>]
+prbDispatch[pat:{LeafNode[Token`Semi, _, _], ___}, handledChildren_, ignored_, pos_] :=\n\
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[1]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> Before[pat[[1, 3, Key[Source]]]] |>];
+  prbDispatch[
+    {err} ~Join~
+    pat
+    ,
+    handledChildren[[;;pos1-1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1;;]]
+    ,
+    ignored
+    ,
+    pos
   ]
+]
 
-prbDispatch[{_, LeafNode[Token`Semi, _, _], ___}, handledChildren_, ignored_, pos_] :=
-  Module[{childrenWithImplicitNull},
-
-    childrenWithImplicitNull = handledChildren;
-
-    (*
-    DO NOT COMMIT THIS!!
-
-    SEQUENCEREPLACE IS SLOW!!
-    *)
-    childrenWithImplicitNull = SequenceReplace[childrenWithImplicitNull, {
-        s1:LeafNode[Token`Semi, _, data2_], ws:(LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _])..., s2:LeafNode[Token`Semi, _, _]
-      } :> Sequence[s1, LeafNode[Token`Fake`ImplicitNull, \"\", <| Source -> After[data2[Source]] |>], ws, s2]];
-
-    InfixNode[CompoundExpression, handledChildren, <| Source -> pos |>]
+(*
+Token`Semi Missing second rand
+*)
+prbDispatch[pat:{_, LeafNode[Token`Semi, _, _], LeafNode[Token`Semi, _, _], ___}, handledChildren_, ignored_, pos_] :=\n\
+Module[{pos1, null},
+  pos1 = Position[handledChildren, pat[[2]]][[1, 1]];
+  null = LeafNode[Token`Fake`ImplicitNull, \"\", <| Source -> After[pat[[2, 3, Key[Source]]]] |>];
+  prbDispatch[
+    pat[[;;2]] ~Join~
+    {null} ~Join~
+    pat[[3;;]]
+    ,
+    handledChildren[[;;pos1]] ~Join~
+    {null} ~Join~
+    handledChildren[[pos1+1;;]]
+    ,
+    ignored
+    ,
+    pos
   ]
+]
+
+(*
+Token`Semi Simple
+*)
+prbDispatch[pat:{_, LeafNode[Token`Semi, _, _]}, handledChildren_, ignored_, pos_] :=\n\
+Module[{pos1, null},
+  pos1 = Position[handledChildren, pat[[-1]]][[1, 1]];
+  null = LeafNode[Token`Fake`ImplicitNull, \"\", <| Source -> After[pat[[-1, 3, Key[Source]]]] |>];
+  InfixNode[CompoundExpression,
+    handledChildren ~Join~
+    {null}
+    ,
+    <| Source -> pos |>
+  ]
+]
+
+(*
+Token`Semi Simple
+*)
+prbDispatch[{_, LeafNode[Token`Semi, _, _], _}, handledChildren_, ignored_, pos_] :=\n\
+  InfixNode[CompoundExpression, handledChildren, <| Source -> pos |>]
+
+(*
+Token`Semi Catch-all
+*)
+prbDispatch[pat:{_, LeafNode[Token`Semi, _, _], ___}, handledChildren_, ignored_, pos_] :=\n\
+Module[{ratorsWithNoFollowingRand},
+  ratorsWithNoFollowingRand = Cases[Split[pat[[2;;]], (!MatchQ[#2, LeafNode[Token`Semi, _, _]])&], {rator_} :> rator];
+  InfixNode[CompoundExpression,
+    Fold[
+      Function[{handled, rator},
+        Insert[
+          handled,
+          LeafNode[Token`Fake`ImplicitNull, \"\", <| Source -> After[rator[[3, Key[Source]]]] |>],
+          Position[handledChildren, rator][[1, 1]] + 1
+        ]
+      ]
+      ,
+      handledChildren
+      ,
+      Reverse[ratorsWithNoFollowingRand]
+    ]
+    ,
+    <| Source -> pos |>
+  ]
+]
 
 
 (*
 Token`Comma
 *)
 
-prbDispatch[{_, LeafNode[Token`Comma, _, _], ___}, handledChildren_, ignored_, pos_] :=
-  InfixNode[Comma, handledChildren ~Join~
-    If[MatchQ[handledChildren[[-1]], LeafNode[Token`Comma, _, _]],
-      { ErrorNode[Token`Error`InfixImplicitNull, \"\", <| Source->After[handledChildren[[-1, 3, Key[Source]]]] |>] }
+(*
+Token`Comma Missing first rand
+*)
+prbDispatch[pat:{LeafNode[Token`Comma, _, _], ___}, handledChildren_, ignored_, pos_] :=\n\
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[1]]][[1, 1]];
+  err = ErrorNode[Token`Error`PrefixImplicitNull, \"\", <| Source -> Before[pat[[1, 3, Key[Source]]]] |>];
+  prbDispatch[
+    {err} ~Join~
+    pat
+    ,
+    handledChildren[[;;pos1-1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1;;]]
+    ,
+    ignored
+    ,
+    pos
+  ]
+]
+
+(*
+Token`Comma Missing second rand
+*)
+prbDispatch[pat:{_, LeafNode[Token`Comma, _, _], LeafNode[Token`Comma, _, _], ___}, handledChildren_, ignored_, pos_] :=\n\
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[2]]][[1, 1]];
+  err = ErrorNode[Token`Error`InfixImplicitNull, \"\", <| Source -> After[pat[[2, 3, Key[Source]]]] |>];
+  prbDispatch[
+    pat[[;;2]] ~Join~
+    {err} ~Join~
+    pat[[3;;]]
+    ,
+    handledChildren[[;;pos1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1+1;;]]
+    ,
+    ignored
+    ,
+    pos
+  ]
+]
+
+(*
+Token`Comma Simple
+*)
+prbDispatch[{_, LeafNode[Token`Comma, _, _], _}, handledChildren_, ignored_, pos_] :=\n\
+  InfixNode[Comma, handledChildren, <| Source -> pos |>]
+
+(*
+Token`Comma Catch-all
+*)
+prbDispatch[pat:{_, LeafNode[Token`Comma, _, _], ___}, handledChildren_, ignored_, pos_] :=\n\
+Module[{ratorsWithNoFollowingRand},
+  ratorsWithNoFollowingRand = Cases[Split[pat[[2;;]], (!MatchQ[#2, LeafNode[Token`Comma, _, _]])&], {rator_} :> rator];
+  InfixNode[Comma,
+    Fold[
+      Function[{handled, rator},
+        Insert[
+          handled,
+          ErrorNode[Token`Error`InfixImplicitNull, \"\", <| Source -> After[rator[[3, Key[Source]]]] |>],
+          Position[handledChildren, rator][[1, 1]] + 1
+        ]
+      ]
       ,
-      {}
+      handledChildren
+      ,
+      Reverse[ratorsWithNoFollowingRand]
     ]
     ,
     <| Source -> pos |>
   ]
+]
+
+
+(*
+Token`Colon Token`Colon
+*)
+
+(*
+Token`Colon Token`Colon Missing first rand
+*)
+prbDispatch[pat:{LeafNode[Token`Colon, _, _], _, LeafNode[Token`Colon, _, _], ___}, handledChildren_, ignored_, pos_] :=
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[1]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> Before[pat[[1, 3, Key[Source]]]] |>];
+  prbDispatch[
+    {err} ~Join~
+    pat
+    ,
+    handledChildren[[;;pos1-1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1;;]]
+    ,
+    children
+    ,
+    pos
+  ]
+]
+
+(*
+Token`Colon Token`Colon Missing second rand
+*)
+prbDispatch[pat:{_, LeafNode[Token`Colon, _, _], LeafNode[Token`Colon, _, _], ___}, handledChildren_, ignored_, pos_] :=
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[2]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> After[pat[[2, 3, Key[Source]]]] |>];
+  prbDispatch[
+    pat[[;;2]] ~Join~
+    {err} ~Join~
+    pat[[3;;]]
+    ,
+    handledChildren[[;;pos1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1+1;;]]
+    ,
+    children
+    ,
+    pos
+  ]
+]
+
+(*
+Token`Colon Token`Colon Missing third rand
+*)
+prbDispatch[pat:{_, LeafNode[Token`Colon, _, _], _, LeafNode[Token`Colon, _, _]}, handledChildren_, ignored_, pos_] :=
+(*               ^ first rand                    ^ second rand                 ^ missing third rand *)
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[4]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> After[pat[[4, 3, Key[Source]]]] |>];
+  prbDispatch[
+    pat[[;;4]] ~Join~
+    {err} ~Join~
+    pat[[5;;]]
+    ,
+    handledChildren[[;;pos1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1+1;;]]
+    ,
+    children
+    ,
+    pos
+  ]
+]
+
+(*
+Token`Colon Token`Colon Good
+*)
+prbDispatch[{_, LeafNode[Token`Colon, _, _], _, LeafNode[Token`Colon, _, _], _}, handledChildren_, ignored_, pos_] :=
+  TernaryNode[TernaryOptionalPattern, handledChildren, <| Source -> pos |>]
 
 
 (*
 Token`Colon
 *)
 
-prbDispatch[{_, LeafNode[Token`Colon, _, _], _, LeafNode[Token`Colon, _, _], _}, handledChildren_, ignored_, pos_] :=
-  TernaryNode[TernaryOptionalPattern, handledChildren, <| Source -> pos |>]
+(*
+Token`Colon Missing first rand
+*)
+prbDispatch[pat:{LeafNode[Token`Colon, _, _], _}, handledChildren_, ignored_, pos_] :=
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[1]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> Before[pat[[1, 3, Key[Source]]]] |>];
+  prbDispatch[
+    {err} ~Join~
+    pat
+    ,
+    handledChildren[[;;pos1-1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1;;]]
+    ,
+    children
+    ,
+    pos
+  ]
+]
 
+(*
+Token`Colon Missing last rand
+*)
+prbDispatch[pat:{_, LeafNode[Token`Colon, _, _]}, handledChildren_, ignored_, pos_] :=
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[-1]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> After[pat[[-1, 3, Key[Source]]]] |>];
+  prbDispatch[
+    pat ~Join~
+    {err}
+    ,
+    handledChildren[[;;pos1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1+1;;]]
+    ,
+    children
+    ,
+    pos
+  ]
+]
+
+(*
+Token`Colon Good
+*)
 prbDispatch[{LeafNode[Token`Under | Token`UnderUnder | Token`UnderUnderUnder, _, _], LeafNode[Token`Colon, _, _], _}, handledChildren_, ignored_, pos_] :=
   BinaryNode[Optional, handledChildren, <| Source -> pos |>]
 
+(*
+Token`Colon Good
+*)
 prbDispatch[{CompoundNode[PatternBlank | PatternBlankSequence | PatternBlankNullSequence, _, _], LeafNode[Token`Colon, _, _], _}, handledChildren_, ignored_, pos_] :=
   BinaryNode[Optional, handledChildren, <| Source -> pos |>]
 
+(*
+Token`Colon Good
+*)
 prbDispatch[{_, LeafNode[Token`Colon, _, _], _}, handledChildren_, ignored_, pos_] :=
   BinaryNode[Pattern, handledChildren, <| Source -> pos |>]
 
@@ -748,6 +1524,29 @@ insertImplicitTimesAfter[node_] :=
 
 
 (*
+Token`Star Missing first rand
+*)
+prbDispatch[pat:{LeafNode[Token`Star, _, _], _, ___}, handledChildren_, ignored_, pos_] :=
+Module[{pos1, err},
+  pos1 = Position[handledChildren, pat[[1]]][[1, 1]];
+  err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> Before[pat[[1, 3, Key[Source]]]] |>];
+  prbDispatch[
+    {err} ~Join~
+    pat
+    ,
+    handledChildren[[;;pos1-1]] ~Join~
+    {err} ~Join~
+    handledChildren[[pos1;;]]
+    ,
+    children
+    ,
+    pos
+  ]
+]
+
+(*
+Token`Star
+
 Make sure to handle both * and implicit Times in the same RowBox
 *)
 prbDispatch[{_, LeafNode[Token`Star, _, _], _, ___}, handledChildren_, ignored_, pos_] :=
@@ -779,7 +1578,7 @@ prbDispatch[{_, LeafNode[Token`Star, _, _], _, ___}, handledChildren_, ignored_,
 Something like \\[Alpha
 *)
 prbDispatch[{ErrorNode[Token`Error`UnhandledCharacter, \"\\\\[\", _], rest_}, handledChildren_, ignored_, pos_] :=
-    parseBox[\"\\\\[\" <> rest[[2]], pos]
+  parseBox[\"\\\\[\" <> rest[[2]], pos]
 
 (*
 if there is an error, then just return the last non-trivia node
@@ -858,10 +1657,10 @@ take[toBeSpliced[children_]] :=
   longestPrefix[take[children[[1]]], take[children[[-1]]]]
 
 
-longestPrefix[l1_, l2_] /; Length[l1] > Length[l2] := 
+longestPrefix[l1_, l2_] /; Length[l1] > Length[l2] :=
   longestPrefix[l2, l1]
 
-longestPrefix[l1_, l2_] /; Length[l1] <= Length[l2] := 
+longestPrefix[l1_, l2_] /; Length[l1] <= Length[l2] :=
   NestWhile[Most, l1, !MatchQ[l2, {PatternSequence @@ (# ~Join~ {___})}]&]
 
 

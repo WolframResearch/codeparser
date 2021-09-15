@@ -23,7 +23,7 @@ TestMatch[
 	FirstCase[CodeConcreteParse["\\A", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnrecognizedCharacter", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnhandledCharacter", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-I4Y1N1"
 ]
@@ -32,7 +32,7 @@ TestMatch[
 	FirstCase[CodeConcreteParse["\\G", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnrecognizedCharacter", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnhandledCharacter", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-W6Z9W6"
 ]
@@ -41,7 +41,7 @@ TestMatch[
 	FirstCase[CodeConcreteParse["\\a", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnrecognizedCharacter", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnhandledCharacter", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-E4B2P8"
 ]
@@ -50,7 +50,7 @@ TestMatch[
 	FirstCase[CodeConcreteParse["\\-", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnrecognizedCharacter", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnhandledCharacter", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-K6Z9U4"
 ]
@@ -59,7 +59,7 @@ TestMatch[
 	FirstCase[CodeConcreteParse["\\[A!]", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnrecognizedCharacter", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnhandledCharacter", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-C2N2N9"
 ]
@@ -68,7 +68,7 @@ TestMatch[
 	FirstCase[CodeConcreteParse["\\[!", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnrecognizedCharacter", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnhandledCharacter", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-O9X2M6"
 ]
@@ -77,7 +77,7 @@ TestMatch[
 	FirstCase[CodeConcreteParse["\\[Alpa]", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnrecognizedCharacter", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnhandledCharacter", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-O4J2Z6"
 ]
@@ -86,7 +86,7 @@ TestMatch[
 	FirstCase[CodeConcreteParse["\\:lcdm", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnrecognizedCharacter", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnhandledCharacter", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-B6E6G2"
 ]
@@ -95,7 +95,7 @@ TestMatch[
 	FirstCase[CodeConcreteParse["\\.lc", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnrecognizedCharacter", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnhandledCharacter", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-N9Z2X4"
 ]
@@ -104,7 +104,7 @@ TestMatch[
 	FirstCase[CodeConcreteParse["\\009", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnrecognizedCharacter", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnhandledCharacter", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-Z2J8V4"
 ]
@@ -113,7 +113,7 @@ TestMatch[
 	FirstCase[CodeConcreteParse["\\|lhvbnr", ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
 		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
 	,
-	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnrecognizedCharacter", _, _, _]}]
+	KeyValuePattern[SyntaxIssues -> {SyntaxIssue["UnhandledCharacter", _, _, _]}]
 	,
 	TestID->"SyntaxIssues-20190521-Z6W6P2"
 ]

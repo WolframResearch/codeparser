@@ -87,6 +87,8 @@ struct WLCharacter {
     
     bool isAlpha() const;
     
+    bool isUpper() const;
+    
     bool isDigit() const;
     
     bool isAlphaOrDigit() const;

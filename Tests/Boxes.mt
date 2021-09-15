@@ -180,7 +180,7 @@ TestMatch[
 	CodeConcreteParseBox[RowBox[{"\\[", "Alpa", "]"}]]
 	,
 	ContainerNode[Box, {
-		ErrorNode[Token`Error`UnhandledCharacter, "\\[Alpa]", _]}, <||>]
+		SyntaxErrorNode[SyntaxError`UnhandledCharacter, {"\\[", "Alpa", "]"}, _]}, <||>]
 	,
 	TestID->"Boxes-20200616-H4V3I2"
 ]
@@ -878,27 +878,13 @@ Test[
 	CodeConcreteParseBox[RowBox[{"xx", RowBox[{RowBox[{"\\[", " ", "EntityEnd", " ", "]"}], "."}]}]]
 	,
 	ContainerNode[Box, {
-			BoxNode[RowBox, {{
-				LeafNode[Symbol, "xx", <|Source -> {1, 1}|>],
-				ErrorNode[Token`Error`UnhandledCharacter, "\\[", <|
-					Source -> {1, 2},
-					SyntaxIssues -> {
-						SyntaxIssue["UnrecognizedCharacter", "Unrecognized character: ``\\[``.", "Fatal", <|
-							Source -> {1, 2},
-							ConfidenceLevel -> 1.,
-							CodeActions -> {
-								CodeAction["Replace with ``\\\\[``", ReplaceText, <|Source -> {1, 2}, "ReplacementText" -> "\\\\["|>]
-							}|>
-						]
-					}
-				|>]
-			}}
-			,
-			<|Source -> {}|>]
-		}
-		,
-		<||>
-	]
+		InfixNode[Times, {
+			LeafNode[Symbol, "xx", <|Source -> {1, 1}|>],
+			LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> After[{1, 1}]|>],
+			InfixNode[Dot, {
+				SyntaxErrorNode[SyntaxError`UnhandledCharacter, {"\\[", " ", "EntityEnd", " ", "]"}, <|Source -> {1, 2, 1, 1}|>],
+				LeafNode[Token`Dot, ".", <|Source -> {1, 2, 1, 2}|>],
+				ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> After[{1, 2, 1, 2}]|>]}, <|Source -> {1, 2}|>]}, <|Source -> {}|>]}, <||>]
 	,
 	TestID->"Boxes-20210319-W8T8G4"
 ]
@@ -972,6 +958,50 @@ With[{evaledData = <||>},
 
 
 
+
+
+
+box = RowBox[{"a", "~", "Join", "~", "b", "~", "Join", "~", "c"}]
+
+cst = CodeConcreteParseBox[box]
+
+Test[
+	cst
+	,
+	ContainerNode[Box, {
+		InfixNode[InfixTilde, {
+			LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
+			LeafNode[Token`Tilde, "~", <|Source -> {1, 2}|>],
+			LeafNode[Symbol, "Join", <|Source -> {1, 3}|>],
+			LeafNode[Token`Tilde, "~", <|Source -> {1, 4}|>],
+			LeafNode[Symbol, "b", <|Source -> {1, 5}|>],
+			LeafNode[Token`Tilde, "~", <|Source -> {1, 6}|>],
+			LeafNode[Symbol, "Join", <|Source -> {1, 7}|>],
+			LeafNode[Token`Tilde, "~", <|Source -> {1, 8}|>],
+			LeafNode[Symbol, "c", <|Source -> {1, 9}|>]}, <|Source -> {}|>]}
+		,
+		<||>
+	]
+	,
+	TestID->"Boxes-20210916-E0P0D1"
+]
+
+agg = CodeParser`Abstract`Aggregate[cst]
+
+ast = CodeParser`Abstract`Abstract[agg]
+
+Test[
+	ast
+	,
+	ContainerNode[Box, {
+		CallNode[LeafNode[Symbol, "Join", <|Source -> {1, 7}|>], {
+			CallNode[LeafNode[Symbol, "Join", <|Source -> {1, 3}|>], {
+				LeafNode[Symbol, "a", <|Source -> {1, 1}|>],
+				LeafNode[Symbol, "b", <|Source -> {1, 5}|>]}, <||>],
+			LeafNode[Symbol, "c", <|Source -> {1, 9}|>]}, <|Source -> {}|>]}, <||>]
+	,
+	TestID->"Boxes-20210916-O9X3M0"
+]
 
 
 

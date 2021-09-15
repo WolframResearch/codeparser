@@ -3252,33 +3252,52 @@ inline Token Tokenizer::handleUnhandledBackslash(Buffer tokenStartBuf, SourceLoc
             
             c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
             
-            while (true) {
+            auto wellFormed = false;
+            
+            if (c.isUpper()) {
                 
-                //
-                // No need to check isAbort() inside tokenizer loops
-                //
+                resetBuf = TheByteBuffer->buffer;
+                resetLoc = TheByteDecoder->SrcLoc;
                 
-                if (c.isAlphaOrDigit()) {
+                c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
+                
+                while (true) {
                     
-                    resetBuf = TheByteBuffer->buffer;
-                    resetLoc = TheByteDecoder->SrcLoc;
+                    //
+                    // No need to check isAbort() inside tokenizer loops
+                    //
                     
-                    c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
-                    
-                } else if (c.to_point() == ']') {
-                    
-                    break;
-                    
-                } else {
-                    
-                    TheByteBuffer->buffer = resetBuf;
-                    TheByteDecoder->SrcLoc = resetLoc;
-                    
-                    break;
+                    if (c.isAlphaOrDigit()) {
+                        
+                        resetBuf = TheByteBuffer->buffer;
+                        resetLoc = TheByteDecoder->SrcLoc;
+                        
+                        c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
+                        
+                    } else if (c.to_point() == ']') {
+                        
+                        wellFormed = true;
+                        
+                        break;
+                        
+                    } else {
+                        
+                        TheByteBuffer->buffer = resetBuf;
+                        TheByteDecoder->SrcLoc = resetLoc;
+                        
+                        break;
+                    }
                 }
             }
             
-            return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+            if (wellFormed) {
+                //
+                // More specifically: Unrecognized
+                //
+                return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+            } else {
+                return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+            }
         }
         case ':': {
             
