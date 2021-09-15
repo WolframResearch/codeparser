@@ -14,6 +14,7 @@ related issues: PACMAN-54
 *)
 Block[{Internal`PacletFindFile = Null&},
 Needs["CodeParser`Generate`Common`"];
+Needs["CodeParser`Generate`Symbol`"];
 Needs["CodeTools`Generate`GenerateSources`"];
 ]
 
@@ -23,9 +24,20 @@ normalPrefixParselets = Normal[importedPrefixParselets]
 normalInfixParselets = Normal[importedInfixParselets]
 
 (*
-Token`Star will be handled specially
+Token`Star will be handled specially in the epilog
 *)
 normalInfixParselets = DeleteCases[normalInfixParselets, Token`Star -> Parselet`InfixOperatorParselet[Token`Star, Precedence`Star, Times]]
+
+(*
+Token`SingleQuote is not used in boxes
+*)
+normalInfixParselets = DeleteCases[normalInfixParselets, Token`SingleQuote -> Parselet`PostfixOperatorParselet[Token`SingleQuote, Precedence`SingleQuote, Derivative]]
+
+(*
+Token`MultiSingleQuote is used in boxes
+*)
+normalInfixParselets = Append[normalInfixParselets, Token`Boxes`MultiSingleQuote -> Parselet`PostfixOperatorParselet[Token`Boxes`MultiSingleQuote, Precedence`SingleQuote, Derivative]]
+
 
 
 
@@ -38,13 +50,13 @@ Must be before ] is handled as GroupMissingOpenerNode
 *)
 
 prbDispatch[{_, LeafNode[Token`OpenSquare, _, _], ___, LeafNode[Token`CloseSquare, _, _]}, handledChildren_, ignored_, pos_] :=
-  CallNode[{handledChildren[[1]]}, {GroupNode[GroupSquare, Rest[handledChildren], <||>]}, <|Source->pos|>]
+  CallNode[{handledChildren[[1]]}, {GroupNode[GroupSquare, Rest[handledChildren], <||>]}, <| Source -> pos |>]
 
 prbDispatch[{_, LeafNode[Token`LongName`LeftDoubleBracket, _, _], ___, LeafNode[Token`LongName`RightDoubleBracket, _, _]}, handledChildren_, ignored_, pos_] :=
-  CallNode[{handledChildren[[1]]}, {GroupNode[GroupDoubleBracket, Rest[handledChildren], <||>]}, <|Source->pos|>]
+  CallNode[{handledChildren[[1]]}, {GroupNode[GroupDoubleBracket, Rest[handledChildren], <||>]}, <| Source -> pos |>]
 
 prbDispatch[{_, LeafNode[Token`OpenSquare, _, _], ___}, handledChildren_, ignored_, pos_] :=
-  CallNode[{handledChildren[[1]]}, {GroupMissingCloserNode[GroupSquare, Rest[handledChildren], <||>]}, <|Source->pos|>]
+  CallNode[{handledChildren[[1]]}, {GroupMissingCloserNode[GroupSquare, Rest[handledChildren], <||>]}, <| Source -> pos |>]
 
 (*
 Unrecognized LongName
@@ -55,6 +67,8 @@ prbDispatch[{ErrorNode[Token`Error`UnhandledCharacter, \"\\\\[\", _], _, LeafNod
   parseBox[\"\\\\[\" <> children[[2]] <> \"]\", pos]
 "}
 
+
+groupParselets = Cases[normalPrefixParselets, Verbatim[Rule][tok_, Parselet`GroupParselet[tok_, op_]] :> {tok, op}]
 
 groups = {
 "
@@ -75,84 +89,34 @@ So retain the box structure here
 
 GroupMissingOpenerNode is only used in Boxes
 *)
-
+"} ~Join~
+(
+With[{openerTokStr = ToString[#[[1]]], closerTokStr = StringReplace[ToString[GroupOpenerToCloser[#[[1]]]], "Closer`" -> "Token`"], tagStr = ToString[#[[2]]]},
+"
 (*
-Once inside a comment, then will stay inside a comment
-*)
-parseCommentRowBox[RowBox[children_], pos_] :=
-  Module[{handledChildren},
-
-    handledChildren = children;
-
-    handledChildren = MapIndexed[parseCommentRowBox[#1, Append[pos, 1] ~Join~ #2]&, handledChildren];
-
-    (*
-    toBeSpliced[handledChildren]
-    *)
-    BoxNode[RowBox, {handledChildren}, <|Source->pos|>]
-  ]
-
-parseCommentRowBox[child_String, pos_] :=
-  LeafNode[String, child, <|Source -> pos|>]
-
-" <> "
-(*
-Token`OpenSquare
+" <> openerTokStr <> "
 *)
 
-prbDispatch[{LeafNode[Token`OpenSquare, _, _], ___, LeafNode[Token`CloseSquare, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupNode[GroupSquare, handledChildren, <|Source->pos|>]
+prbDispatch[{LeafNode[" <> openerTokStr <> ", _, _], ___, LeafNode[" <> closerTokStr <> ", _, _]}, handledChildren_, ignored_, pos_] :=
+  GroupNode[" <> tagStr <> ", handledChildren, <| Source -> pos |>]
 
 (*
 Unexpected openers and unexpected closers
 *)
-prbDispatch[{LeafNode[Token`OpenSquare, _, _], ___}, handledChildren_, ignored_, pos_] :=
-  GroupMissingCloserNode[GroupSquare, handledChildren, <|Source -> pos|>]
+prbDispatch[{LeafNode[" <> openerTokStr <> ", _, _], ___}, handledChildren_, ignored_, pos_] :=
+  GroupMissingCloserNode[" <> tagStr <> ", handledChildren, <| Source -> pos |>]
 
-prbDispatch[{___, LeafNode[Token`CloseSquare, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupMissingOpenerNode[GroupSquare, handledChildren, <|Source -> pos|>]
+prbDispatch[{___, LeafNode[" <> closerTokStr <> ", _, _]}, handledChildren_, ignored_, pos_] :=
+  GroupMissingOpenerNode[" <> tagStr <> ", handledChildren, <| Source -> pos |>]
+"
+]& /@ groupParselets
+)
 
-" <> "
+groupsEpilog = {
+"
 (*
-Token`OpenCurly
+Groups Epilog
 *)
-
-prbDispatch[{LeafNode[Token`OpenCurly, _, _], ___, LeafNode[Token`CloseCurly, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupNode[List, handledChildren, <|Source->pos|>]
-
-(*
-Unexpected openers and unexpected closers
-*)
-prbDispatch[{LeafNode[Token`OpenCurly, _, _], ___}, handledChildren_, ignored_, pos_] :=
-  GroupMissingCloserNode[List, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{___, LeafNode[Token`CloseCurly, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupMissingOpenerNode[List, handledChildren, <|Source -> pos|>]
-
-" <> "
-(*
-Token`LessBar
-*)
-
-prbDispatch[{LeafNode[Token`LessBar, _, _], ___, LeafNode[Token`BarGreater, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupNode[Association, handledChildren, <|Source->pos|>]
-
-(*
-Unexpected openers and unexpected closers
-*)
-prbDispatch[{LeafNode[Token`LessBar, _, _], ___}, handledChildren_, ignored_, pos_] :=
-  GroupMissingCloserNode[Association, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{___, LeafNode[Token`BarGreater, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupMissingOpenerNode[Association, handledChildren, <|Source -> pos|>]
-
-" <> "
-(*
-Token`OpenParen
-*)
-
-prbDispatch[{LeafNode[Token`OpenParen, _, _], ___, LeafNode[Token`CloseParen, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupNode[GroupParen, handledChildren, <|Source->pos|>]
 
 (*
 Strange old FE syntax RowBox[{\"a\", \"(\", \"b\", \")\"}]
@@ -160,137 +124,9 @@ Strange old FE syntax RowBox[{\"a\", \"(\", \"b\", \")\"}]
 Unclear how it was authored
 *)
 prbDispatch[{_, LeafNode[Token`OpenParen, _, _], ___, LeafNode[Token`CloseParen, _, _]}, handledChildren_, ignored_, pos_] :=
-  SyntaxErrorNode[SyntaxError`OldFESyntax, handledChildren, <|Source->pos|>]
+  SyntaxErrorNode[SyntaxError`OldFESyntax, handledChildren, <| Source -> pos |>]
 
-(*
-Unexpected openers and unexpected closers
-*)
-prbDispatch[{LeafNode[Token`OpenParen, _, _], ___}, handledChildren_, ignored_, pos_] :=
-  GroupMissingCloserNode[GroupParen, handledChildren, <|Source -> pos|>]
 
-prbDispatch[{___, LeafNode[Token`CloseParen, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupMissingOpenerNode[GroupParen, handledChildren, <|Source -> pos|>]
-
-" <> "
-(*
-Token`LongName`LeftDoubleBracket
-*)
-
-prbDispatch[{LeafNode[Token`LongName`LeftDoubleBracket, _, _], ___, LeafNode[Token`LongName`RightDoubleBracket, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupNode[GroupDoubleBracket, handledChildren, <|Source->pos|>]
-
-(*
-Unexpected openers and unexpected closers
-*)
-prbDispatch[{LeafNode[Token`LongName`LeftDoubleBracket, _, _], ___}, handledChildren_, ignored_, pos_] :=
-  GroupMissingCloserNode[GroupDoubleBracket, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{___, LeafNode[Token`LongName`RightDoubleBracket, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupMissingOpenerNode[GroupDoubleBracket, handledChildren, <|Source -> pos|>]
-
-" <> "
-(*
-Token`LongName`LeftAssociation
-*)
-
-prbDispatch[{LeafNode[Token`LongName`LeftAssociation, _, _], ___, LeafNode[Token`LongName`RightAssociation, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupNode[Association, handledChildren, <|Source->pos|>]
-
-(*
-Unexpected openers and unexpected closers
-*)
-prbDispatch[{LeafNode[Token`LongName`LeftAssociation, _, _], ___}, handledChildren_, ignored_, pos_] :=
-  GroupMissingCloserNode[Association, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{___, LeafNode[Token`LongName`RightAssociation, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupMissingOpenerNode[Association, handledChildren, <|Source -> pos|>]
-
-" <> "
-(*
-Token`LongName`LeftAngleBracket
-*)
-
-prbDispatch[{LeafNode[Token`LongName`LeftAngleBracket, _, _], ___, LeafNode[Token`LongName`RightAngleBracket, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupNode[AngleBracket, handledChildren, <|Source->pos|>]
-
-(*
-Unexpected openers and unexpected closers
-*)
-prbDispatch[{LeafNode[Token`LongName`LeftAngleBracket, _, _], ___}, handledChildren_, ignored_, pos_] :=
-  GroupMissingCloserNode[AngleBracket, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{___, LeafNode[Token`LongName`RightAngleBracket, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupMissingOpenerNode[AngleBracket, handledChildren, <|Source -> pos|>]
-
-" <> "
-(*
-Token`LongName`LeftBracketingBar
-*)
-
-prbDispatch[{LeafNode[Token`LongName`LeftBracketingBar, _, _], ___, LeafNode[Token`LongName`RightBracketingBar, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupNode[BracketingBar, handledChildren, <|Source->pos|>]
-
-(*
-Unexpected openers and unexpected closers
-*)
-prbDispatch[{LeafNode[Token`LongName`LeftBracketingBar, _, _], ___}, handledChildren_, ignored_, pos_] :=
-  GroupMissingCloserNode[BracketingBar, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{___, LeafNode[Token`LongName`RightBracketingBar, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupMissingOpenerNode[BracketingBar, handledChildren, <|Source -> pos|>]
-
-" <> "
-(*
-Token`LongName`LeftDoubleBracketingBar
-*)
-
-prbDispatch[{LeafNode[Token`LongName`LeftDoubleBracketingBar, _, _], ___, LeafNode[Token`LongName`RightDoubleBracketingBar, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupNode[DoubleBracketingBar, handledChildren, <|Source->pos|>]
-
-(*
-Unexpected openers and unexpected closers
-*)
-prbDispatch[{LeafNode[Token`LongName`LeftDoubleBracketingBar, _, _], ___}, handledChildren_, ignored_, pos_] :=
-  GroupMissingCloserNode[DoubleBracketingBar, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{___, LeafNode[Token`LongName`RightDoubleBracketingBar, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupMissingOpenerNode[DoubleBracketingBar, handledChildren, <|Source -> pos|>]
-
-" <> "
-(*
-Token`LongName`LeftCeiling
-*)
-
-prbDispatch[{LeafNode[Token`LongName`LeftCeiling, _, _], ___, LeafNode[Token`LongName`RightCeiling, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupNode[Ceiling, handledChildren, <|Source->pos|>]
-
-(*
-Unexpected openers and unexpected closers
-*)
-prbDispatch[{LeafNode[Token`LongName`LeftCeiling, _, _], ___}, handledChildren_, ignored_, pos_] :=
-  GroupMissingCloserNode[Ceiling, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{___, LeafNode[Token`LongName`RightCeiling, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupMissingOpenerNode[Ceiling, handledChildren, <|Source -> pos|>]
-
-" <> "
-(*
-Token`LongName`LeftFloor
-*)
-
-prbDispatch[{LeafNode[Token`LongName`LeftFloor, _, _], ___, LeafNode[Token`LongName`RightFloor, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupNode[Floor, handledChildren, <|Source->pos|>]
-
-(*
-Unexpected openers and unexpected closers
-*)
-prbDispatch[{LeafNode[Token`LongName`LeftFloor, _, _], ___}, handledChildren_, ignored_, pos_] :=
-  GroupMissingCloserNode[Floor, handledChildren, <|Source -> pos|>]
-
-prbDispatch[{___, LeafNode[Token`LongName`RightFloor, _, _]}, handledChildren_, ignored_, pos_] :=
-  GroupMissingOpenerNode[Floor, handledChildren, <|Source -> pos|>]
-
-" <> "
 (*
 Token`Boxes`OpenParenStar
 
@@ -305,7 +141,7 @@ prbDispatch[{LeafNode[Token`Boxes`OpenParenStar, _, _], ___, LeafNode[Token`Boxe
       MapIndexed[parseCommentRowBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1)]&, children[[2;;-2]]] ~Join~
       {LeafNode[Token`Boxes`StarCloseParen, children[[-1]], <| Source -> Append[pos, 1] ~Join~ {Length[children]} |>]};
     
-    GroupNode[Comment, rehandledChildren, <|Source->pos|>]
+    GroupNode[Comment, rehandledChildren, <| Source -> pos |>]
   ]
 
 (*
@@ -314,12 +150,37 @@ Unexpected openers and unexpected closers
 prbDispatch[{LeafNode[Token`Boxes`OpenParenStar, _, _], ___}, handledChildren_, children_, pos_] :=
   GroupMissingCloserNode[Comment,
     {LeafNode[Token`Boxes`OpenParenStar, children[[1]], <| Source -> Append[pos, 1] ~Join~ {1} |>]} ~Join~
-    MapIndexed[parseCommentRowBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1)]&, children[[2;;]]], <|Source->pos|>]
+    MapIndexed[parseCommentRowBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1)]&, children[[2;;]]]
+    ,
+    <| Source -> pos |>
+  ]
 
 prbDispatch[{___, LeafNode[Token`Boxes`StarCloseParen, _, _]}, handledChildren_, children_, pos_] :=
   GroupMissingOpenerNode[Comment,
     MapIndexed[parseCommentRowBox[#1, Append[pos, 1] ~Join~ (#2 + 1 - 1)]&, children[[;;-2]]] ~Join~
-    {LeafNode[Token`Boxes`StarCloseParen, children[[-1]], <| Source -> Append[pos, 1] ~Join~ {Length[children]} |>]}, <|Source->pos|>]
+    {LeafNode[Token`Boxes`StarCloseParen, children[[-1]], <| Source -> Append[pos, 1] ~Join~ {Length[children]} |>]}
+    ,
+    <| Source -> pos |>
+  ]
+
+(*
+Once inside a comment, then will stay inside a comment
+*)
+parseCommentRowBox[RowBox[children_], pos_] :=
+  Module[{handledChildren},
+
+    handledChildren = children;
+
+    handledChildren = MapIndexed[parseCommentRowBox[#1, Append[pos, 1] ~Join~ #2]&, handledChildren];
+
+    (*
+    toBeSpliced[handledChildren]
+    *)
+    BoxNode[RowBox, {handledChildren}, <| Source -> pos |>]
+  ]
+
+parseCommentRowBox[child_String, pos_] :=
+  LeafNode[String, child, <| Source -> pos |>]
 
 " <> "
 (*
@@ -336,7 +197,7 @@ prbDispatch[{LeafNode[Token`Boxes`LongName`LeftSkeleton, _, _], ___, LeafNode[To
       MapIndexed[parseCommentRowBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1)]&, children[[2;;-2]]] ~Join~
       {LeafNode[Token`Boxes`LongName`RightSkeleton, children[[-1]], <| Source -> Append[pos, 1] ~Join~ {Length[children]} |>]};
     
-    GroupNode[Skeleton, rehandledChildren, <|Source->pos|>]
+    GroupNode[Skeleton, rehandledChildren, <| Source -> pos |>]
   ]
 *)
 
@@ -347,14 +208,15 @@ Unexpected openers and unexpected closers
 prbDispatch[{LeafNode[Token`Boxes`LongName`LeftSkeleton, _, _], ___}, handledChildren_, children_, pos_] :=
   GroupMissingCloserNode[Skeleton,
     {LeafNode[Token`Boxes`LongName`LeftSkeleton, children[[1]], <| Source -> Append[pos, 1] ~Join~ {1} |>]} ~Join~
-    MapIndexed[parseCommentRowBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1)]&, children[[2;;]]], <|Source->pos|>]
+    MapIndexed[parseCommentRowBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1)]&, children[[2;;]]], <| Source -> pos |>]
 
 prbDispatch[{___, LeafNode[Token`Boxes`LongName`RightSkeleton, _, _]}, handledChildren_, children_, pos_] :=
   GroupMissingOpenerNode[Skeleton,
     MapIndexed[parseCommentRowBox[#1, Append[pos, 1] ~Join~ (#2 + 1 - 1)]&, children[[;;-2]]] ~Join~
-    {LeafNode[Token`Boxes`LongName`RightSkeleton, children[[-1]], <| Source -> Append[pos, 1] ~Join~ {Length[children]} |>]}, <|Source->pos|>]
+    {LeafNode[Token`Boxes`LongName`RightSkeleton, children[[-1]], <| Source -> Append[pos, 1] ~Join~ {Length[children]} |>]}, <| Source -> pos |>]
 *)
 "}
+
 
 
 infixOperatorParselets = Cases[normalInfixParselets, Verbatim[Rule][tok_, Parselet`InfixOperatorParselet[_, _, op_]] :> {tok, op}]
@@ -366,10 +228,17 @@ Infix
 *)
 "} ~Join~
 
-((
-"prbDispatch[{_, LeafNode[" <> ToString[#[[1]]] <> ", _, _], _, ___}, handledChildren_, ignored_, pos_] := \n\
-  InfixNode[" <> ToString[#[[2]]] <> ", handledChildren, <|Source->pos|>]
-")& /@ infixOperatorParselets
+(
+With[{tokStr = ToString[#[[1]]], tagStr = ToString[#[[2]]]},
+"
+(*
+" <> tokStr <> "
+*)
+
+prbDispatch[{_, LeafNode[" <> tokStr <> ", _, _], _, ___}, handledChildren_, ignored_, pos_] := \n\
+  InfixNode[" <> tagStr <> ", handledChildren, <| Source -> pos |>]
+"
+]& /@ infixOperatorParselets
 )
 
 
@@ -382,10 +251,17 @@ Binary
 *)
 "} ~Join~
 
-((
-"prbDispatch[{_, LeafNode[" <> ToString[#[[1]]] <> ", _, _], _}, handledChildren_, ignored_, pos_] := \n\
-  BinaryNode[" <> ToString[#[[2]]] <> ", handledChildren, <|Source->pos|>]
-")& /@ binaryOperatorParselets
+(
+With[{tokStr = ToString[#[[1]]], tagStr = ToString[#[[2]]]},
+"
+(*
+" <> tokStr <> "
+*)
+
+prbDispatch[{_, LeafNode[" <> tokStr <> ", _, _], _}, handledChildren_, ignored_, pos_] := \n\
+  BinaryNode[" <> tagStr <> ", handledChildren, <| Source -> pos |>]
+"
+]& /@ binaryOperatorParselets
 )
 
 
@@ -394,14 +270,20 @@ ternary = {
 (*
 Ternary
 *)
+
+
+(*
+Token`SlashColon
+*)
+
 prbDispatch[{_, LeafNode[Token`SlashColon, _, _], _, LeafNode[Token`ColonEqual, _, _], _}, handledChildren_, ignored_, pos_] :=
-  TernaryNode[TagSetDelayed, handledChildren, <|Source->pos|>]
+  TernaryNode[TagSetDelayed, handledChildren, <| Source -> pos |>]
 
 prbDispatch[{_, LeafNode[Token`SlashColon, _, _], _, LeafNode[Token`Equal, _, _], _}, handledChildren_, ignored_, pos_] :=
-  TernaryNode[TagSet, handledChildren, <|Source->pos|>]
+  TernaryNode[TagSet, handledChildren, <| Source -> pos |>]
 
 prbDispatch[{_, LeafNode[Token`SlashColon, _, _], _, LeafNode[Token`Boxes`EqualDot, _, _]}, handledChildren_, ignored_, pos_] :=
-  TernaryNode[TagUnset, handledChildren, <|Source->pos|>]
+  TernaryNode[TagUnset, handledChildren, <| Source -> pos |>]
 
 (*
 older style that may be possible?
@@ -411,58 +293,36 @@ older style that may be possible?
   xx,
 *)
 
+
+(*
+Token`Tilde
+*)
+
 prbDispatch[{_, LeafNode[Token`Tilde, _, _], _, LeafNode[Token`Tilde, _, _], _}, handledChildren_, ignored_, pos_] :=
-  TernaryNode[TernaryTilde, handledChildren, <|Source->pos|>]
+  TernaryNode[TernaryTilde, handledChildren, <| Source -> pos |>]
 "}
 
+
+prefixOperatorParselets = Cases[normalPrefixParselets, Verbatim[Rule][tok_, Parselet`PrefixOperatorParselet[_, _, op_]] :> {tok, op}]
 
 prefix = {
 "
 (*
 Prefix
 *)
-prbDispatch[{LeafNode[Token`Minus, _, _], _}, handledChildren_, ignored_, pos_] :=
-  PrefixNode[Minus, handledChildren, <|Source->pos|>]
+"} ~Join~
+(
+With[{tokStr = ToString[#[[1]]], tagStr = ToString[#[[2]]]},
+"
+(*
+" <> tokStr <> "
+*)
 
-prbDispatch[{LeafNode[Token`LongName`Minus, _, _], _}, handledChildren_, ignored_, pos_] :=
-  PrefixNode[Minus, handledChildren, <|Source->pos|>]
-
-prbDispatch[{LeafNode[Token`Bang, _, _], _}, handledChildren_, ignored_, pos_] :=
-  PrefixNode[Not, handledChildren, <|Source->pos|>]
-
-prbDispatch[{LeafNode[Token`LongName`Not, _, _], _}, handledChildren_, ignored_, pos_] :=
-  PrefixNode[Not, handledChildren, <|Source->pos|>]
-
-prbDispatch[{LeafNode[Token`LongName`DifferentialD, _, _], _}, handledChildren_, ignored_, pos_] :=
-  PrefixNode[DifferentialD, handledChildren, <|Source->pos|>]
-
-prbDispatch[{LeafNode[Token`LongName`CapitalDifferentialD, _, _], _}, handledChildren_, ignored_, pos_] :=
-  PrefixNode[CapitalDifferentialD, handledChildren, <|Source->pos|>]
-
-prbDispatch[{LeafNode[Token`LongName`Del, _, _], _}, handledChildren_, ignored_, pos_] :=
-  PrefixNode[Del, handledChildren, <|Source->pos|>]
-
-prbDispatch[{LeafNode[Token`PlusPlus, _, _], _}, handledChildren_, ignored_, pos_] :=
-  PrefixNode[PreIncrement, handledChildren, <|Source->pos|>]
-
-prbDispatch[{LeafNode[Token`MinusMinus, _, _], _}, handledChildren_, ignored_, pos_] :=
-  PrefixNode[PreDecrement, handledChildren, <|Source->pos|>]
-
-prbDispatch[{LeafNode[Token`Plus, _, _], _}, handledChildren_, ignored_, pos_] :=
-  PrefixNode[Plus, handledChildren, <|Source->pos|>]
-
-prbDispatch[{LeafNode[Token`LongName`Square, _, _], _}, handledChildren_, ignored_, pos_] :=
-  PrefixNode[Square, handledChildren, <|Source->pos|>]
-
-prbDispatch[{LeafNode[Token`BangBang, _, _], _}, handledChildren_, ignored_, pos_] :=
-  PrefixNode[PrefixNot2, handledChildren, <|Source->pos|>]
-
-prbDispatch[{LeafNode[Token`LongName`Sqrt, _, _], _}, handledChildren_, ignored_, pos_] :=
-  PrefixNode[Sqrt, handledChildren, <|Source->pos|>]
-
-prbDispatch[{LeafNode[Token`LongName`CubeRoot, _, _], _}, handledChildren_, ignored_, pos_] :=
-  PrefixNode[CubeRoot, handledChildren, <|Source->pos|>]
-"}
+prbDispatch[{LeafNode[" <> tokStr <> ", _, _], _}, handledChildren_, ignored_, pos_] :=
+  PrefixNode[" <> tagStr <> ", handledChildren, <| Source -> pos |>]
+"
+]& /@ prefixOperatorParselets
+)
 
 
 prefixBinary = {
@@ -479,9 +339,11 @@ prbDispatch[{LeafNode[Token`LongName`Integral, _, _], _}, handledChildren_, chil
       Single argument
       *)
       PrefixBinaryNode[Integrate, {
-        LeafNode[Token`LongName`Integral, \"\\[Integral]\", <|Source->Append[pos, 1] ~Join~ {1}|>]} ~Join~
+        LeafNode[Token`LongName`Integral, \"\\[Integral]\", <| Source -> Append[pos, 1] ~Join~ {1} |>]} ~Join~
         {parseBox[children[[2, 1, 1]], Append[pos, 1] ~Join~ {2, 1} ~Join~ ({1} + 1 - 1)]} ~Join~
-        {parseBox[children[[2, 1, 2]], Append[pos, 1] ~Join~ {2, 1} ~Join~ ({2} + 1 - 1)]}, <|Source->pos|>
+        {parseBox[children[[2, 1, 2]], Append[pos, 1] ~Join~ {2, 1} ~Join~ ({2} + 1 - 1)]}
+        ,
+        <| Source -> pos |>
       ]
     ,
     {\"\\[Integral]\", RowBox[{_, _, ___, RowBox[{\"\\[DifferentialD]\", _}]}]},
@@ -491,69 +353,56 @@ prbDispatch[{LeafNode[Token`LongName`Integral, _, _], _}, handledChildren_, chil
       Multiple arguments, treat as implicit Times
       *)
       PrefixBinaryNode[Integrate, {
-        LeafNode[Token`LongName`Integral, \"\\[Integral]\", <|Source->Append[pos, 1] ~Join~ {1}|>]} ~Join~
+        LeafNode[Token`LongName`Integral, \"\\[Integral]\", <| Source -> Append[pos, 1] ~Join~ {1} |>]} ~Join~
         (*
         create a fake RowBox to induce the creation of InfixNode[Times, ...]
         *)
         {parseBox[RowBox[children[[2, 1, ;;-2]]], Append[pos, 1] ~Join~ {2}]} ~Join~
-        {parseBox[children[[2, 1, -1]], Append[pos, 1] ~Join~ {2, 1, Length[children[[2, 1]]]}]}, <|Source->pos|>
+        {parseBox[children[[2, 1, -1]], Append[pos, 1] ~Join~ {2, 1, Length[children[[2, 1]]]}]}
+        ,
+        <| Source -> pos |>
       ]
     ,
     _,
       (*
       Does not match Integral syntax, so treat as generic RowBox
       *)
-      BoxNode[RowBox, {handledChildren}, <|Source->pos|>]
+      BoxNode[RowBox, {handledChildren}, <| Source -> pos |>]
   ]
 "}
 
+
+postfixOperatorParselets = Cases[normalInfixParselets, Verbatim[Rule][tok_, Parselet`PostfixOperatorParselet[_, _, op_]] :> {tok, op}]
 
 postfix = {
 "
 (*
 Postfix
 *)
-prbDispatch[{_, LeafNode[Token`Amp, _, _]}, handledChildren_, ignored_, pos_] :=
-  PostfixNode[Function, handledChildren, <|Source->pos|>]
+"} ~Join~
+(
+With[{tokStr = ToString[#[[1]]], tagStr = ToString[#[[2]]]},
+"
+(*
+" <> tokStr <> "
+*)
 
-prbDispatch[{_, LeafNode[Token`PlusPlus, _, _]}, handledChildren_, ignored_, pos_] :=
-  PostfixNode[Increment, handledChildren, <|Source->pos|>]
-
-prbDispatch[{_, LeafNode[Token`Bang, _, _]}, handledChildren_, ignored_, pos_] :=
-  PostfixNode[Factorial, handledChildren, <|Source->pos|>]
-
-prbDispatch[{_, LeafNode[Token`SingleQuote, _, _]}, handledChildren_, ignored_, pos_] :=
-  PostfixNode[Derivative, handledChildren, <|Source->pos|>]
-
-prbDispatch[{_, LeafNode[Token`Boxes`MultiSingleQuote, _, _]}, handledChildren_, ignored_, pos_] :=
-  PostfixNode[Derivative, handledChildren, <|Source->pos|>]
-
-prbDispatch[{_, LeafNode[Token`LongName`Transpose, _, _]}, handledChildren_, ignored_, pos_] :=
-  PostfixNode[Transpose, handledChildren, <|Source->pos|>]
-
-prbDispatch[{_, LeafNode[Token`DotDot, _, _]}, handledChildren_, ignored_, pos_] :=
-  PostfixNode[Repeated, handledChildren, <|Source->pos|>]
-
-prbDispatch[{_, LeafNode[Token`LongName`Conjugate, _, _]}, handledChildren_, ignored_, pos_] :=
-  PostfixNode[Conjugate, handledChildren, <|Source->pos|>]
-
-prbDispatch[{_, LeafNode[Token`LongName`ConjugateTranspose, _, _]}, handledChildren_, ignored_, pos_] :=
-  PostfixNode[ConjugateTranspose, handledChildren, <|Source->pos|>]
-
-prbDispatch[{_, LeafNode[Token`MinusMinus, _, _]}, handledChildren_, ignored_, pos_] :=
-  PostfixNode[Decrement, handledChildren, <|Source->pos|>]
-
-prbDispatch[{_, LeafNode[Token`DotDotDot, _, _]}, handledChildren_, ignored_, pos_] :=
-  PostfixNode[RepeatedNull, handledChildren, <|Source->pos|>]
-
-prbDispatch[{_, LeafNode[Token`BangBang, _, _]}, handledChildren_, ignored_, pos_] :=
-  PostfixNode[Factorial2, handledChildren, <|Source->pos|>]
-"}
+prbDispatch[{_, LeafNode[" <> tokStr <> ", _, _]}, handledChildren_, ignored_, pos_] :=
+  PostfixNode[" <> tagStr <> ", handledChildren, <| Source -> pos |>]
+"
+]& /@ postfixOperatorParselets
+)
 
 
 special = {
 "
 (*
+Special
+*)
+
+(*
+Token`GreaterGreater
+
 >> stringifies its args
 *)
 prbDispatch[{_, LeafNode[Token`GreaterGreater, _, _], _}, handledChildren_, children_, pos_] :=
@@ -569,9 +418,12 @@ prbDispatch[{_, LeafNode[Token`GreaterGreater, _, _], _}, handledChildren_, chil
         parseBox[children[[3]], Append[pos, 1] ~Join~ {3}]
       ]}
     ,
-    <|Source->pos|>]
+    <| Source -> pos |>
+  ]
 
 (*
+Token`GreaterGreaterGreater
+
 >>> stringifies its args
 *)
 prbDispatch[{_, LeafNode[Token`GreaterGreaterGreater, _, _], _}, handledChildren_, children_, pos_] :=
@@ -587,9 +439,12 @@ prbDispatch[{_, LeafNode[Token`GreaterGreaterGreater, _, _], _}, handledChildren
         parseBox[children[[3]], Append[pos, 1] ~Join~ {3}]
       ]}
     ,
-    <|Source->pos|>]
+    <| Source -> pos |>
+  ]
 
 (*
+Token`LessLess
+
 << stringifies its args
 There might be whitespace after the arg, e.g.
 '<' '<' 'f' 'o' 'o' '`' ' ' ' ' ' '
@@ -610,9 +465,12 @@ prbDispatch[{LeafNode[Token`LessLess, _, _], _, ___}, handledChildren_, children
         children[[2;;]]
       ]
     ,
-    <|Source->pos|>]
+    <| Source -> pos |>
+  ]
 
 (*
+Token`ColonColon
+
 :: stringifies its args
 
 Must actually do work here to stringify the middle
@@ -660,11 +518,16 @@ prbDispatch[{_, LeafNode[Token`ColonColon, _, _], _, ___}, handledChildren_, chi
           ,
           _,
             parseBox[#1, Append[pos, 1] ~Join~ (#2 + poss[[1, 1]]-1)]
-        ]&, children[[ poss[[1, 1]] ;;]]],
-    <|Source->pos|>]
+        ]&, children[[poss[[1, 1]];;]]
+      ]
+      ,
+      <| Source -> pos |>
+    ]
   ]
 
 (*
+Token`Question
+
 Prefix ? only works with boxes
 *)
 prbDispatch[{LeafNode[Token`Question, _, _], _}, handledChildren_, children_, pos_] :=
@@ -672,9 +535,12 @@ prbDispatch[{LeafNode[Token`Question, _, _], _}, handledChildren_, children_, po
     parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~
       MapIndexed[LeafNode[String, #1, <| Source -> Append[pos, 1] ~Join~ (#2 + 2 - 1) |>]&, children[[2;;]]]
     ,
-    <|Source->pos|>]
+    <| Source -> pos |>
+  ]
 
 (*
+Token`QuestionQuestion
+
 Prefix ?? only works with boxes
 *)
 prbDispatch[{LeafNode[Token`QuestionQuestion, _, _], _}, handledChildren_, children_, pos_] :=
@@ -682,44 +548,55 @@ prbDispatch[{LeafNode[Token`QuestionQuestion, _, _], _}, handledChildren_, child
     parseBox[children[[1]], Append[pos, 1] ~Join~ {1}]} ~Join~
       MapIndexed[LeafNode[String, #1, <| Source -> Append[pos, 1] ~Join~ (#2 + 2 - 1) |>]&, children[[2;;]]]
     ,
-    <|Source->pos|>]
+    <| Source -> pos |>
+  ]
 
 (*
+Token`Equal
+
 Does not have a regular parselet
 *)
+
 prbDispatch[{_, LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, handledChildren_, ignored_, pos_] :=
-  BinaryNode[Unset, handledChildren, <|Source->pos|>]
+  BinaryNode[Unset, handledChildren, <| Source -> pos |>]
 
 prbDispatch[{_, LeafNode[Token`Equal, _, _], _}, handledChildren_, ignored_, pos_] :=
-  BinaryNode[Set, handledChildren, <|Source->pos|>]
+  BinaryNode[Set, handledChildren, <| Source -> pos |>]
+
 
 (*
+Token`ColonEqual
+
 Does not have a regular parselet
 *)
+
 prbDispatch[{_, LeafNode[Token`ColonEqual, _, _], _}, handledChildren_, ignored_, pos_] := 
-  BinaryNode[SetDelayed, handledChildren, <|Source->pos|>]
+  BinaryNode[SetDelayed, handledChildren, <| Source -> pos |>]
+
 
 (*
-
+Token`Boxes`EqualDot
 *)
+
 prbDispatch[{_, LeafNode[Token`Boxes`EqualDot, _, _]}, handledChildren_, ignored_, pos_] :=
-  BinaryNode[Unset, handledChildren, <|Source->pos|>]
+  BinaryNode[Unset, handledChildren, <| Source -> pos |>]
 
 
 (*
-Span
+Token`SemiSemi
 *)
+
 prbDispatch[{_, LeafNode[Token`SemiSemi, _, _], _}, handledChildren_, ignored_, pos_] :=
-  BinaryNode[Span, handledChildren, <|Source->pos|>]
+  BinaryNode[Span, handledChildren, <| Source -> pos |>]
 
 prbDispatch[{_, LeafNode[Token`SemiSemi, _, _]}, handledChildren_, ignored_, pos_] :=
-  BinaryNode[Span, handledChildren ~Join~ {LeafNode[Token`Fake`ImplicitAll, \"\", <||>]}, <|Source->pos|>]
+  BinaryNode[Span, handledChildren ~Join~ {LeafNode[Token`Fake`ImplicitAll, \"\", <||>]}, <| Source -> pos |>]
 
 prbDispatch[{LeafNode[Token`SemiSemi, _, _], _}, handledChildren_, ignored_, pos_] :=
-  BinaryNode[Span, {LeafNode[Token`Fake`ImplicitOne, \"\", <||>]} ~Join~ handledChildren, <|Source->pos|>]
+  BinaryNode[Span, {LeafNode[Token`Fake`ImplicitOne, \"\", <||>]} ~Join~ handledChildren, <| Source -> pos |>]
 
 prbDispatch[{_, LeafNode[Token`SemiSemi, _, _], _, LeafNode[Token`SemiSemi, _, _], _}, handledChildren_, ignored_, pos_] :=
-  TernaryNode[Span, handledChildren, <|Source->pos|>]
+  TernaryNode[Span, handledChildren, <| Source -> pos |>]
 
 (*
 Must actually do work here to insert in the middle
@@ -729,8 +606,12 @@ prbDispatch[{LeafNode[Token`SemiSemi, _, _], LeafNode[Token`SemiSemi, _, _], _},
 
     poss = Position[handledChildren, LeafNode[Token`SemiSemi, _, _]];
 
-    TernaryNode[Span, {LeafNode[Token`Fake`ImplicitOne, \"\", <||>]} ~Join~
-        Insert[handledChildren, LeafNode[Token`Fake`ImplicitAll, \"\", <||>], poss[[1]]+1], <|Source->pos|>]
+    TernaryNode[Span,
+      {LeafNode[Token`Fake`ImplicitOne, \"\", <||>]} ~Join~
+      Insert[handledChildren, LeafNode[Token`Fake`ImplicitAll, \"\", <||>], poss[[1]]+1]
+      ,
+      <| Source -> pos |>
+    ]
   ]
 
 (*
@@ -741,9 +622,17 @@ prbDispatch[{_, LeafNode[Token`SemiSemi, _, _], LeafNode[Token`SemiSemi, _, _], 
 
     poss = Position[handledChildren, LeafNode[Token`SemiSemi, _, _]];
 
-    TernaryNode[Span, Insert[handledChildren, LeafNode[Token`Fake`ImplicitAll, \"\", <||>], poss[[1]]+1], <|Source->pos|>]
+    TernaryNode[Span,
+      Insert[handledChildren, LeafNode[Token`Fake`ImplicitAll, \"\", <||>], poss[[1]]+1]
+      ,
+      <| Source -> pos |>
+    ]
   ]
 
+
+(*
+Token`Semi
+*)
 
 (*
 Infix with trailing allowed
@@ -751,7 +640,7 @@ Infix with trailing allowed
 prbDispatch[{_, ___, LeafNode[Token`Semi, _, data1_]}, handledChildren_, ignored_, pos_] :=
   Module[{childrenWithImplicitNull},
 
-    childrenWithImplicitNull = handledChildren ~Join~ {LeafNode[Token`Fake`ImplicitNull, \"\", <|Source -> After[data1[Source]]|>]};
+    childrenWithImplicitNull = handledChildren ~Join~ {LeafNode[Token`Fake`ImplicitNull, \"\", <| Source -> After[data1[Source]] |>]};
 
     (*
     DO NOT COMMIT THIS!!
@@ -760,9 +649,9 @@ prbDispatch[{_, ___, LeafNode[Token`Semi, _, data1_]}, handledChildren_, ignored
     *)
     childrenWithImplicitNull = SequenceReplace[childrenWithImplicitNull, {
         s1:LeafNode[Token`Semi, _, data2_], ws:(LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _])..., s2:LeafNode[Token`Semi, _, _]
-      } :> Sequence[s1, LeafNode[Token`Fake`ImplicitNull, \"\", <|Source -> After[data2[Source]]|>], ws, s2]];
+      } :> Sequence[s1, LeafNode[Token`Fake`ImplicitNull, \"\", <| Source -> After[data2[Source]] |>], ws, s2]];
 
-    InfixNode[CompoundExpression, childrenWithImplicitNull, <|Source->pos|>]
+    InfixNode[CompoundExpression, childrenWithImplicitNull, <| Source -> pos |>]
   ]
 
 prbDispatch[{_, LeafNode[Token`Semi, _, _], ___}, handledChildren_, ignored_, pos_] :=
@@ -777,31 +666,43 @@ prbDispatch[{_, LeafNode[Token`Semi, _, _], ___}, handledChildren_, ignored_, po
     *)
     childrenWithImplicitNull = SequenceReplace[childrenWithImplicitNull, {
         s1:LeafNode[Token`Semi, _, data2_], ws:(LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _])..., s2:LeafNode[Token`Semi, _, _]
-      } :> Sequence[s1, LeafNode[Token`Fake`ImplicitNull, \"\", <|Source -> After[data2[Source]]|>], ws, s2]];
+      } :> Sequence[s1, LeafNode[Token`Fake`ImplicitNull, \"\", <| Source -> After[data2[Source]] |>], ws, s2]];
 
-    InfixNode[CompoundExpression, handledChildren, <|Source->pos|>]
+    InfixNode[CompoundExpression, handledChildren, <| Source -> pos |>]
   ]
+
+
+(*
+Token`Comma
+*)
 
 prbDispatch[{_, LeafNode[Token`Comma, _, _], ___}, handledChildren_, ignored_, pos_] :=
   InfixNode[Comma, handledChildren ~Join~
     If[MatchQ[handledChildren[[-1]], LeafNode[Token`Comma, _, _]],
-      { ErrorNode[Token`Error`InfixImplicitNull, \"\", <|Source->After[handledChildren[[-1, 3, Key[Source]]]]|>] },
-      {}], <|Source->pos|>]
+      { ErrorNode[Token`Error`InfixImplicitNull, \"\", <| Source->After[handledChildren[[-1, 3, Key[Source]]]] |>] }
+      ,
+      {}
+    ]
+    ,
+    <| Source -> pos |>
+  ]
+
 
 (*
-
+Token`Colon
 *)
+
 prbDispatch[{_, LeafNode[Token`Colon, _, _], _, LeafNode[Token`Colon, _, _], _}, handledChildren_, ignored_, pos_] :=
-  TernaryNode[TernaryOptionalPattern, handledChildren, <|Source->pos|>]
+  TernaryNode[TernaryOptionalPattern, handledChildren, <| Source -> pos |>]
 
 prbDispatch[{LeafNode[Token`Under | Token`UnderUnder | Token`UnderUnderUnder, _, _], LeafNode[Token`Colon, _, _], _}, handledChildren_, ignored_, pos_] :=
-  BinaryNode[Optional, handledChildren, <|Source->pos|>]
+  BinaryNode[Optional, handledChildren, <| Source -> pos |>]
 
 prbDispatch[{CompoundNode[PatternBlank | PatternBlankSequence | PatternBlankNullSequence, _, _], LeafNode[Token`Colon, _, _], _}, handledChildren_, ignored_, pos_] :=
-  BinaryNode[Optional, handledChildren, <|Source->pos|>]
+  BinaryNode[Optional, handledChildren, <| Source -> pos |>]
 
 prbDispatch[{_, LeafNode[Token`Colon, _, _], _}, handledChildren_, ignored_, pos_] :=
-  BinaryNode[Pattern, handledChildren, <|Source->pos|>]
+  BinaryNode[Pattern, handledChildren, <| Source -> pos |>]
 
 (*
 Old FE syntax
@@ -809,11 +710,15 @@ Old FE syntax
 Something like RowBox[{RowBox[{\"a_\", \":\"}], \"b\"}]
 *)
 prbDispatch[{BinaryNode[Optional, {CompoundNode[PatternBlank, {_, _}, _], LeafNode[Token`Colon, _, _], ErrorNode[Token`Error`ExpectedOperand, _, _]}, _], _}, handledChildren_, ignored_, pos_] :=
-  SyntaxErrorNode[SyntaxError`OldFESyntax, handledChildren, <|Source->pos|>]
+  SyntaxErrorNode[SyntaxError`OldFESyntax, handledChildren, <| Source -> pos |>]
 "}
 
 epilog = {
 "
+(*
+Epilog
+*)
+
 insertImplicitTimesAfter[node_] :=
   Switch[node,
     LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _],
@@ -838,7 +743,7 @@ insertImplicitTimesAfter[node_] :=
       {node}
     ,
     _,
-      {node, LeafNode[Token`Fake`ImplicitTimes, \"\", <|Source->After[node[[3, Key[Source]]]]|>]}
+      {node, LeafNode[Token`Fake`ImplicitTimes, \"\", <| Source -> After[node[[3, Key[Source]]]] |>]}
   ]
 
 
@@ -866,7 +771,7 @@ prbDispatch[{_, LeafNode[Token`Star, _, _], _, ___}, handledChildren_, ignored_,
         LeafNode[Token`Fake`ImplicitTimes, _, _], ws:(LeafNode[Token`Boxes`MultiWhitespace | Token`Newline, _, _] | GroupNode[Comment, _, _])..., s:LeafNode[Token`Star, _, _]
       } :> Sequence[ws, s]];
 
-    InfixNode[Times, childrenWithImplicitTimes, <|Source->pos|>]
+    InfixNode[Times, childrenWithImplicitTimes, <| Source -> pos |>]
   ]
 
 
@@ -880,10 +785,10 @@ prbDispatch[{ErrorNode[Token`Error`UnhandledCharacter, \"\\\\[\", _], rest_}, ha
 if there is an error, then just return the last non-trivia node
 *)
 prbDispatch[{_, ErrorNode[Token`Error`UnhandledCharacter, _, _], ___}, handledChildren_, ignored_, pos_] :=
-    BoxNode[RowBox, {handledChildren}, <|Source -> pos|>]
+  BoxNode[RowBox, {handledChildren}, <| Source -> pos |>]
 
 prbDispatch[_, handledChildren_, ignored_, pos_] /; TrueQ[$PreserveRowBox] := (
-  BoxNode[RowBox, {handledChildren}, <|Source -> pos|>]
+  BoxNode[RowBox, {handledChildren}, <| Source -> pos |>]
 )
 
 
@@ -900,8 +805,8 @@ Catch the case of RowBox[{\"a\", \"\\n\", \"b\"}] before hitting the implicit Ti
 Related bugs: 395301
 *)
 prbDispatch[_, handledChildren_ /;
-    !FreeQ[handledChildren, LeafNode[Token`Newline | Token`Boxes`LineContinuation, _, _], 1] &&
-    FreeQ[handledChildren, LeafNode[Token`Star, _, _], 1], ignored_, pos_] /; !TrueQ[$ProbablyImplicitTimes] := (
+  !FreeQ[handledChildren, LeafNode[Token`Newline | Token`Boxes`LineContinuation, _, _], 1] &&
+  FreeQ[handledChildren, LeafNode[Token`Star, _, _], 1], ignored_, pos_] /; !TrueQ[$ProbablyImplicitTimes] := (
   (*
   make sure to return the concrete children
   *)
@@ -942,7 +847,7 @@ prbDispatch[_, handledChildren_, ignored_, posIgnored_] :=
     *)
     calculatedPos = Most[calculatedPos];
 
-    InfixNode[Times, childrenWithImplicitTimes, <|Source->calculatedPos|>]
+    InfixNode[Times, childrenWithImplicitTimes, <| Source -> calculatedPos |>]
   ]
 
 
@@ -983,6 +888,8 @@ Needs[\"CodeParser`Utils`\"]
 calls ~Join~
 
 groups ~Join~
+
+groupsEpilog ~Join~
 
 infix ~Join~
 

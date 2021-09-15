@@ -600,7 +600,7 @@ If[FailureQ[res],
   Quit[1]
 ];
 
-Print["Done TokenEnum"];
+Print["Done TokenEnum"]
 )
 
 If[!StringQ[script],
