@@ -163,7 +163,7 @@ TestMatch[
 				InfixNode[Comma, {
 					LeafNode[Integer, "1", <|Source->{{1, 3}, {1, 4}}|>],
 					LeafNode[Token`Comma, ",", <|Source->{{1, 4}, {1, 5}}|>],
-					LeafNode[Token`Fake`ImplicitNull, "", <|Source->{{1, 5}, {1, 5}}|>],
+					ErrorNode[Token`Error`InfixImplicitNull, "", <|Source->{{1, 5}, {1, 5}}|>],
 					LeafNode[Token`LongName`InvisibleComma, "\\[InvisibleComma]", <|Source->{{1, 5}, {1, 22}}|>],
 					LeafNode[Integer, "2", <|Source->{{1, 22}, {1, 23}}|>]}, <|Source->{{1, 3}, {1, 23}}|>],
 				LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 23}, {1, 24}}|>] }, <|Source -> {{1, 2}, {1, 24}}|>] }, <|Source -> {{1, 1}, {1, 24}}|>] }, _]
