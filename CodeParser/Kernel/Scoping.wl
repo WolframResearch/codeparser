@@ -155,7 +155,8 @@ Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableN
 ]
 
 walk[CallNode[LeafNode[Symbol, tag: "Block" | "Internal`InheritedBlock", _], {CallNode[LeafNode[Symbol, "List", _], vars_, _], body_}, _]] :=
-Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableNames, newScope, bodyOccurring, usedHeuristics},
+Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableNames, newScope, bodyOccurring, usedHeuristics,
+  variableNamesLocalized, variableNamesNotLocalized},
 
   (*
 
@@ -193,7 +194,22 @@ Module[{variableSymbolsAndRHSOccurring, variableSymbols, rhsOccurring, variableN
 
     Scan[add[#[[1]], #[[2]], bodyOccurring || Lookup[usedHeuristics, Key[#], False]]&, variableSymbols];
 
-    rhsOccurring ~Join~ Complement[bodyOccurring, variableNames]
+    (*
+    Actually only filter out occurrences of variable names that are not localized
+
+    In the form:
+    Module[{x}, Block[{x = 2}, x]]
+
+    the x in the Block has actually been localized to x$1234
+
+    I'm not sure if testing for {___, "Module", "Block"} is fully general
+
+    Related bugs: 414554
+    *)
+    variableNamesLocalized = Select[variableNames, MatchQ[Lookup[$LexicalScope, #], {___, "Module", "Block"}]&];
+    variableNamesNotLocalized = Complement[variableNames, variableNamesLocalized];
+
+    rhsOccurring ~Join~ Complement[bodyOccurring, variableNamesNotLocalized]
   ]
 ]
 

@@ -18,6 +18,7 @@ TestSuite[{
 	"LineContinuations.mt",
 	"Parse.mt",
 	"SafeString.mt",
+	"Scoping.mt",
 	"Span.mt",
 	"SyntaxErrorNodes.mt",
 	"SyntaxIssues.mt",
