@@ -35,7 +35,7 @@ Module[{},
 
 	TODO: when targeting v12.2 as a minimum, remove this quirk
 
-	Related bugs: 139531, 160919
+	Related bugs: 57064, 139531, 153875, 160919
 	*)
 	If[$VersionNumber <= 12.1,
 		$Quirks["FlattenTimes"] = True
