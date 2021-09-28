@@ -128,6 +128,17 @@ set(GENERATED_CPP_LIB_SOURCES
 CheckWolframKernel()
 CheckPacletInfo()
 
+#
+# Force re-configure if PacletInfo.wl.in changes, e.g. paclet version is changed and name of .paclet has changed
+#
+set_property(
+	DIRECTORY
+	APPEND
+	PROPERTY
+		CMAKE_CONFIGURE_DEPENDS
+	${PACLETINFO_IN_SOURCE}
+)
+
 
 #
 # ForceVersionInstall was added in 12.1
