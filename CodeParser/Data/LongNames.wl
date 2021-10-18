@@ -1135,7 +1135,7 @@ Range 0xf700
 "ScriptNine" -> {LetterlikeCharacter, 16^^f7f9, <| "ASCIIReplacements" -> {"9"} |>},
 "FirstPage" -> {LetterlikeCharacter, 16^^f7fa, <||>},
 "LastPage" -> {LetterlikeCharacter, 16^^f7fb, <||>},
-"NumberComma" -> {UnsupportedCharacter, 16^^f7fc, <| (*"ASCIIReplacements" -> {","}*) |>},
+"NumberComma" -> {LetterlikeCharacter, 16^^f7fc, <| "ASCIIReplacements" -> {","} |>},
 
 (*
 Range 0xf800
