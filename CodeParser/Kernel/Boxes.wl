@@ -1992,6 +1992,23 @@ Module[{nodeBoxes},
   RowBox[nodeBoxes]
 ]]
 
+
+(*
+Convert back to form that the FE likes
+
+Single RowBox RowBox[{"a", ":", "b", ":", "c"}]
+*)
+toStandardFormBoxes[BinaryNode[Optional, nodes:{BinaryNode[Pattern, _, _], ___}, _]] :=
+Catch[
+Module[{nodeBoxes},
+  nodeBoxes = toStandardFormBoxes /@ (nodes[[1]][[2]] ~Join~ nodes[[2;;]]);
+  If[AnyTrue[nodeBoxes, FailureQ],
+    Throw[SelectFirst[nodeBoxes, FailureQ]]
+  ];
+  RowBox[nodeBoxes]
+]]
+
+
 toStandardFormBoxes[BinaryNode[op_, nodes_, _]] :=
 Catch[
 Module[{nodeBoxes},
@@ -2025,6 +2042,22 @@ Module[{nodeBoxes},
 
   nodeBoxes = {nodeBoxes[[1]], nodeBoxes[[2]], nodeBoxes[[3]], "=."};
 
+  If[AnyTrue[nodeBoxes, FailureQ],
+    Throw[SelectFirst[nodeBoxes, FailureQ]]
+  ];
+  RowBox[nodeBoxes]
+]]
+
+
+(*
+Convert back to form that the FE likes
+
+Single RowBox[{"a", "~", "b", "~", "c", "~", "d", "~", "e"}]
+*)
+toStandardFormBoxes[TernaryNode[TernaryTilde, nodes:{TernaryNode[TernaryTilde, _, _], ___}, _]] :=
+Catch[
+Module[{nodeBoxes},
+  nodeBoxes = toStandardFormBoxes /@ (nodes[[1]][[2]] ~Join~ nodes[[2;;]]);
   If[AnyTrue[nodeBoxes, FailureQ],
     Throw[SelectFirst[nodeBoxes, FailureQ]]
   ];

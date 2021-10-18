@@ -1006,3 +1006,48 @@ Test[
 
 
 
+
+
+
+
+
+
+Test[
+	ToStandardFormBoxes[
+ ContainerNode[
+  Box, {BinaryNode[
+    Optional, {BinaryNode[
+      Pattern, {LeafNode[Symbol, "a", <||>], 
+       LeafNode[Token`Colon, ":", <||>], 
+       LeafNode[Symbol, "b", <||>]}, <||>], 
+     LeafNode[Token`Colon, ":", <||>], 
+     LeafNode[Symbol, "c", <||>]}, <||>]}, <||>]]
+	,
+	RowBox[{"a", ":", "b", ":", "c"}]
+	,
+	TestID->"Boxes-20211019-X1T9N3"
+]
+
+
+Test[
+	ToStandardFormBoxes[
+ ContainerNode[
+  Box, {TernaryNode[
+    TernaryTilde, {TernaryNode[
+      TernaryTilde, {LeafNode[Symbol, "a", <||>], 
+       LeafNode[Token`Tilde, "~", <||>], LeafNode[Symbol, "b", <||>], 
+       LeafNode[Token`Tilde, "~", <||>], 
+       LeafNode[Symbol, "c", <||>]}, <||>], 
+     LeafNode[Token`Tilde, "~", <||>], LeafNode[Symbol, "d", <||>], 
+     LeafNode[Token`Tilde, "~", <||>], 
+     LeafNode[Symbol, "e", <||>]}, <||>]}, <||>]]
+	,
+	RowBox[{"a", "~", "b", "~", "c", "~", "d", "~", "e"}]
+	,
+	TestID->"Boxes-20211019-Y5H1T8"
+]
+
+
+
+
+
