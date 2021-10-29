@@ -398,7 +398,7 @@ Module[{csts, bytess, encoding, fileFormat, firstLineBehavior},
   fileFormat = OptionValue[func, {opts}, "FileFormat"];
 
   If[encoding =!= "UTF-8",
-    Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
+    Throw[Failure["OnlyUTF8Supported", <| "CharacterEncoding" -> encoding |>]]
   ];
 
   bytess = ToCharacterCode[ss, "UTF-8"];
@@ -564,7 +564,7 @@ Module[{csts, encoding, fulls, bytess, fileFormat, firstLineBehavior, exts},
   fileFormat = OptionValue[func, {opts}, "FileFormat"];
 
   If[encoding =!= "UTF-8",
-    Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
+    Throw[Failure["OnlyUTF8Supported", <| "CharacterEncoding" -> encoding |>]]
   ];
 
   (*
@@ -576,7 +576,7 @@ Module[{csts, encoding, fulls, bytess, fileFormat, firstLineBehavior, exts},
   *)
   fulls = FindFile /@ fs;
   If[AnyTrue[fulls, FailureQ],
-    Throw[Failure["FindFileFailed", <|"FileNames"->fs|>]]
+    Throw[Failure["FindFileFailed", <| "FileNames" -> fs |>]]
   ];
 
   Switch[fileFormat,
@@ -614,11 +614,11 @@ Module[{csts, encoding, fulls, bytess, fileFormat, firstLineBehavior, exts},
     If[csts === $Failed,
       Throw[csts]
     ];
-    csts = Failure[csts[[1]], Join[csts[[2]], <|"FileNames"->fs|>]];
+    csts = Failure[csts[[1]], Join[csts[[2]], <| "FileNames" -> fs |>]];
     Throw[csts]
   ];
 
-  csts = MapThread[#1[[0]][#1[[1]], #1[[2]], <|#1[[3]], "FileName" -> #2|>]&, {csts, fulls}];
+  csts = MapThread[#1[[0]][#1[[1]], #1[[2]], <| #1[[3]], "FileName" -> #2 |>]&, {csts, fulls}];
 
   csts =
     MapThread[Function[{cst, bytes},
@@ -771,7 +771,7 @@ Module[{csts, encoding, fileFormat, firstLineBehavior},
   fileFormat = OptionValue[func, {opts}, "FileFormat"];
 
   If[encoding =!= "UTF-8",
-    Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
+    Throw[Failure["OnlyUTF8Supported", <| "CharacterEncoding" -> encoding |>]]
   ];
 
   Switch[fileFormat,
@@ -954,7 +954,7 @@ Module[{res, bytess, encoding, convention, tabWidth},
   tabWidth = OptionValue[func, {opts}, "TabWidth"];
 
   If[encoding =!= "UTF-8",
-    Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
+    Throw[Failure["OnlyUTF8Supported", <| "CharacterEncoding" -> encoding |>]]
   ];
 
   bytess = ToCharacterCode[ss, "UTF-8"];
@@ -1012,12 +1012,12 @@ Module[{encoding, res, fulls, bytess, convention, tabWidth, fileFormat, firstLin
   fileFormat = OptionValue[func, {opts}, "FileFormat"];
 
   If[encoding =!= "UTF-8",
-    Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
+    Throw[Failure["OnlyUTF8Supported", <| "CharacterEncoding" -> encoding |>]]
   ];
 
   fulls = FindFile /@ fs;
   If[AnyTrue[fulls, FailureQ],
-    Throw[Failure["FindFileFailed", <|"FileNames"->fs|>]]
+    Throw[Failure["FindFileFailed", <| "FileNames" -> fs |>]]
   ];
 
   Switch[fileFormat,
@@ -1101,7 +1101,7 @@ Module[{encoding, res, convention, tabWidth},
   tabWidth = OptionValue[func, {opts}, "TabWidth"];
 
   If[encoding =!= "UTF-8",
-    Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
+    Throw[Failure["OnlyUTF8Supported", <| "CharacterEncoding" -> encoding |>]]
   ];
 
   $ConcreteParseProgress = 0;

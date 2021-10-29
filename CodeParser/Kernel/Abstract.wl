@@ -473,7 +473,7 @@ Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node, wi
 
 	willReportToplevelIssues = (tag === File);
 
-	reportIssuesBehavior = <|"WillReportToplevelIssues" -> willReportToplevelIssues, "ToplevelChildrenLength" -> Length[children]|>;
+	reportIssuesBehavior = <| "WillReportToplevelIssues" -> willReportToplevelIssues, "ToplevelChildrenLength" -> Length[children] |>;
 
 	issues = {};
 
@@ -519,7 +519,7 @@ Module[{abstractedChildren, issues, issuesMaybe},
 		Reap[
 			MapIndexed[
 				Function[{child, idx},
-					Sow[topLevelChildIssues[child, <|reportIssuesBehavior, "ToplevelChildIndex" -> idx[[1]]|>]];
+					Sow[topLevelChildIssues[child, <| reportIssuesBehavior, "ToplevelChildIndex" -> idx[[1]] |>]];
 					abstract[child]
 				]
 				,
@@ -1072,42 +1072,42 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		BeginPackage["Foo`"]
 		*)
 		CallNode[LeafNode[Symbol, "BeginPackage", _], {LeafNode[String, _?contextQ, _], LeafNode[String, _?contextQ, _] | CallNode[LeafNode[Symbol, "List", <||>], { LeafNode[String, _?contextQ, _]... }, _] | PatternSequence[]}, _],
-			operatorStack["Push", PackageNode[x[[2]], {}, <|Source->sourceSpan[sourceStart[x[[3, Key[Source]]]], (*partially constructed Source*)Indeterminate]|>]];
+			operatorStack["Push", PackageNode[x[[2]], {}, <| Source -> sourceSpan[sourceStart[x[[3, Key[Source]]]], (*partially constructed Source*)Indeterminate] |>]];
 			nodeListStack["Push", System`CreateDataStructure["Stack"]];
 		,
 		(*
 		BeginPackage["Foo`"] ;
 		*)
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "BeginPackage", _], {LeafNode[String, _?contextQ, _], LeafNode[String, _?contextQ, _] | CallNode[LeafNode[Symbol, "List", <||>], { LeafNode[String, _?contextQ, _]... }, _] | PatternSequence[]}, _], LeafNode[Symbol, "Null", _]}, _],
-			operatorStack["Push", PackageNode[x[[2, 1, 2]], {}, <|Source->sourceSpan[sourceStart[x[[2, 1, 3, Key[Source]]]], (*partially constructed Source*)Indeterminate]|>]];
+			operatorStack["Push", PackageNode[x[[2, 1, 2]], {}, <| Source -> sourceSpan[sourceStart[x[[2, 1, 3, Key[Source]]]], (*partially constructed Source*)Indeterminate] |>]];
 			nodeListStack["Push", System`CreateDataStructure["Stack"]];
 		,
 		(*
 		Begin["`Private`"]
 		*)
 		CallNode[LeafNode[Symbol, "Begin", _], {LeafNode[String, _?contextQ, _]}, _],
-			operatorStack["Push", ContextNode[x[[2]], {}, <|Source->sourceSpan[sourceStart[x[[3, Key[Source]]]], (*partially constructed Source*)Indeterminate]|>]];
+			operatorStack["Push", ContextNode[x[[2]], {}, <| Source -> sourceSpan[sourceStart[x[[3, Key[Source]]]], (*partially constructed Source*)Indeterminate] |>]];
 			nodeListStack["Push", System`CreateDataStructure["Stack"]];
 		,
 		(*
 		Begin["`Private`"] ;
 		*)
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "Begin", _], {LeafNode[String, _?contextQ, _]}, _], LeafNode[Symbol, "Null", _]}, _],
-			operatorStack["Push", ContextNode[x[[2, 1, 2]], {}, <|Source->sourceSpan[sourceStart[x[[2, 1, 3, Key[Source]]]], (*partially constructed Source*)Indeterminate]|>]];
+			operatorStack["Push", ContextNode[x[[2, 1, 2]], {}, <| Source -> sourceSpan[sourceStart[x[[2, 1, 3, Key[Source]]]], (*partially constructed Source*)Indeterminate] |>]];
 			nodeListStack["Push", System`CreateDataStructure["Stack"]];
 		,
 		(*
 		System`Private`NewContextPath[{"Foo`"}]
 		*)
 		CallNode[LeafNode[Symbol, "System`Private`NewContextPath", _], { CallNode[LeafNode[Symbol, "List", <||>], { LeafNode[String, _?contextQ, _]... }, _] }, _],
-			operatorStack["Push", NewContextPathNode[x[[2, 1, 2]], {}, <|Source->sourceSpan[sourceStart[x[[3, Key[Source]]]], (*partially constructed Source*)Indeterminate]|>]];
+			operatorStack["Push", NewContextPathNode[x[[2, 1, 2]], {}, <| Source -> sourceSpan[sourceStart[x[[3, Key[Source]]]], (*partially constructed Source*)Indeterminate] |>]];
 			nodeListStack["Push", System`CreateDataStructure["Stack"]];
 		,
 		(*
 		System`Private`NewContextPath[{"Foo`"}] ;
 		*)
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "System`Private`NewContextPath", _], { CallNode[LeafNode[Symbol, "List", <||>], { LeafNode[String, _?contextQ, _]... }, _] }, _], LeafNode[Symbol, "Null", _]}, _],
-			operatorStack["Push", NewContextPathNode[x[[2, 1, 2, 1, 2]], {}, <|Source->sourceSpan[sourceStart[x[[2, 1, 3, Key[Source]]]], (*partially constructed Source*)Indeterminate]|>]];
+			operatorStack["Push", NewContextPathNode[x[[2, 1, 2, 1, 2]], {}, <| Source -> sourceSpan[sourceStart[x[[2, 1, 3, Key[Source]]]], (*partially constructed Source*)Indeterminate] |>]];
 			nodeListStack["Push", System`CreateDataStructure["Stack"]];
 		,
 		(*
@@ -1280,9 +1280,9 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 			peek = nodeListStack["Peek"];
 			peek["Push", x];
 		]
-	,
-	{i, 1, Length[list]}
-	];
+		,
+		{i, 1, Length[list]}
+	]; (* Do *)
 	If[operatorStack["Length"] != 1,
 		AppendTo[issues, SyntaxIssue["Package", "There are unbalanced directives.", "Error", <| Source -> list[[1, 3, Key[Source]]], ConfidenceLevel -> 0.7 |>]];
 		Throw[{list, issues}];
@@ -1389,7 +1389,7 @@ abstract[SyntaxErrorNode[SyntaxError`ExpectedSetOperand2, {left_, _, middle_, _}
 
 abstract[f_Failure] := f
 
-abstract[args___] := Failure["InternalUnhandled", <|"Function"->abstract, "Arguments"->HoldForm[{args}]|>]
+abstract[args___] := Failure["InternalUnhandled", <| "Function" -> abstract, "Arguments"->HoldForm[{args}] |>]
 
 
 
@@ -2153,7 +2153,7 @@ Module[{data, issues},
 	a::b::c::d
 	*)
 	If[Length[{rest}] > 2,
-		AppendTo[issues, SyntaxIssue["SyntaxUndocumentedMessageName", "This syntax is not documented.", "Error", <|Source->data[Source], ConfidenceLevel -> 1.0|>]];
+		AppendTo[issues, SyntaxIssue["SyntaxUndocumentedMessageName", "This syntax is not documented.", "Error", <| Source -> data[Source], ConfidenceLevel -> 1.0 |>]];
 	];
 	
 	If[issues != {},
@@ -3121,7 +3121,7 @@ Module[{notNotData, data, issues},
 
 	issues = Lookup[data, AbstractSyntaxIssues, {}];
 
-	AppendTo[issues, SyntaxIssue["PrefixNotNot", "Unexpected parse.", "Warning", <|Source->notNotData[Source], ConfidenceLevel -> 1.0|>]];
+	AppendTo[issues, SyntaxIssue["PrefixNotNot", "Unexpected parse.", "Warning", <| Source -> notNotData[Source], ConfidenceLevel -> 1.0 |>]];
 
 	AssociateTo[data, AbstractSyntaxIssues -> issues];
 

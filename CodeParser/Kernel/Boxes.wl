@@ -33,7 +33,7 @@ Module[{parsed},
 ]
 
 replaceContainerNode[ContainerNode[Cell, children_, data_], pos_] :=
-  CellNode[Cell, children, <|data, CellIndex -> pos|>]
+  CellNode[Cell, children, <| data, CellIndex -> pos |>]
 
 replaceContainerNode[other_, pos_] := other
 
@@ -226,7 +226,7 @@ Module[{handledChildren},
     Throw[SelectFirst[handledChildren, FailureQ]]
   ];
 
-  BoxNode[Cell, handledChildren, <|Source->pos|>]
+  BoxNode[Cell, handledChildren, <| Source -> pos |>]
 ]]
 
 parseBox[Cell[rest___], pos_] :=
@@ -287,7 +287,7 @@ Module[{handledChildren, aggregatedChildren},
 
   If[Length[aggregatedChildren] == 1,
     If[TrueQ[$PreserveRowBox],
-      Throw[BoxNode[RowBox, {handledChildren}, <|Source -> pos|>]]
+      Throw[BoxNode[RowBox, {handledChildren}, <| Source -> pos |>]]
       ,
       (*
       Make sure to return the concrete children
@@ -308,10 +308,10 @@ applyCodeNodesToRest[rest___] := List @@ Map[Function[arg, With[{assoc = <||>}, 
 
 
 parseBox[SubscriptBox[a_, b_, rest___], pos_] :=
-  BoxNode[SubscriptBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
+  BoxNode[SubscriptBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <| Source -> pos |>]
 
 parseBox[SuperscriptBox[a_, b_, rest___], pos_] :=
-  BoxNode[SuperscriptBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
+  BoxNode[SuperscriptBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <| Source -> pos |>]
 
 parseBox[SubsuperscriptBox[a_, b_, c_, rest___], pos_] :=
   BoxNode[SubsuperscriptBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]], parseBox[c, Append[pos, 3]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
@@ -320,19 +320,19 @@ parseBox[UnderoverscriptBox[a_, b_, c_, rest___], pos_] :=
   BoxNode[UnderoverscriptBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]], parseBox[c, Append[pos, 3]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
 
 parseBox[FractionBox[a_, b_, rest___], pos_] :=
-  BoxNode[FractionBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
+  BoxNode[FractionBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <| Source -> pos |>]
 
 parseBox[OverscriptBox[a_, b_, rest___], pos_] :=
-  BoxNode[OverscriptBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
+  BoxNode[OverscriptBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <| Source -> pos |>]
 
 parseBox[UnderscriptBox[a_, b_, rest___], pos_] :=
-  BoxNode[UnderscriptBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
+  BoxNode[UnderscriptBox, {parseBox[a, Append[pos, 1]], parseBox[b, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <| Source -> pos |>]
 
 parseBox[SqrtBox[a_, rest___], pos_] :=
-  BoxNode[SqrtBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
+  BoxNode[SqrtBox, {parseBox[a, Append[pos, 1]]} ~Join~ applyCodeNodesToRest[rest], <| Source -> pos |>]
 
 parseBox[RadicalBox[a_, b_, rest___], pos_] :=
-  BoxNode[RadicalBox, {parseBox[a, Append[pos, 1]]} ~Join~ {parseBox[b, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <|Source->pos|>]
+  BoxNode[RadicalBox, {parseBox[a, Append[pos, 1]]} ~Join~ {parseBox[b, Append[pos, 2]]} ~Join~ applyCodeNodesToRest[rest], <| Source -> pos |>]
 
 (*
 FullNotationPalette has something like:
@@ -831,9 +831,9 @@ parseBox[str:"\[IndentingNewLine]", pos_] := LeafNode[Token`Newline, str, <|Sour
 (*
 The Front End treats comments as a collection of code, and not a single token
 *)
-parseBox[str:"(*", pos_] := LeafNode[Token`Boxes`OpenParenStar, str, <|Source -> pos|>]
+parseBox[str:"(*", pos_] := LeafNode[Token`Boxes`OpenParenStar, str, <| Source -> pos |>]
 
-parseBox[str:"*)", pos_] := LeafNode[Token`Boxes`StarCloseParen, str, <|Source -> pos|>]
+parseBox[str:"*)", pos_] := LeafNode[Token`Boxes`StarCloseParen, str, <| Source -> pos |>]
 
 (*
 parseBox[str:"\[LeftSkeleton]", pos_] := LeafNode[Token`Boxes`LongName`LeftSkeleton, str, <|Source -> pos|>]
@@ -841,17 +841,17 @@ parseBox[str:"\[LeftSkeleton]", pos_] := LeafNode[Token`Boxes`LongName`LeftSkele
 parseBox[str:"\[RightSkeleton]", pos_] := LeafNode[Token`Boxes`LongName`RightSkeleton, str, <|Source -> pos|>]
 *)
 
-parseBox[str:"\\\n", pos_] := LeafNode[Token`Boxes`LineContinuation, str, <|Source -> pos|>]
+parseBox[str:"\\\n", pos_] := LeafNode[Token`Boxes`LineContinuation, str, <| Source -> pos |>]
 
 
 
-parseBox[str:"_", pos_] := LeafNode[Token`Under, str, <|Source -> pos|>]
+parseBox[str:"_", pos_] := LeafNode[Token`Under, str, <| Source -> pos |>]
 
-parseBox[str:"__", pos_] := LeafNode[Token`UnderUnder, str, <|Source -> pos|>]
+parseBox[str:"__", pos_] := LeafNode[Token`UnderUnder, str, <| Source -> pos |>]
 
-parseBox[str:"___", pos_] := LeafNode[Token`UnderUnderUnder, str, <|Source -> pos|>]
+parseBox[str:"___", pos_] := LeafNode[Token`UnderUnderUnder, str, <| Source -> pos |>]
 
-parseBox[str:"_.", pos_] := LeafNode[Token`UnderDot, str, <|Source -> pos|>]
+parseBox[str:"_.", pos_] := LeafNode[Token`UnderDot, str, <| Source -> pos |>]
 
 
 parseBox[str_String, pos_, OptionsPattern[]] :=
@@ -883,11 +883,11 @@ Module[{data, issues, stringifyMode, oldLeafSrc, len, src, cases, containsQuote,
       Non-ASCII characters should go through the parser to generate NonASCIICharacter EncodingIssues
       *)
       StringMatchQ[str, RegularExpression["[a-zA-Z$][a-zA-Z$0-9]*"]] && stringifyMode == 0,
-      Throw[LeafNode[Symbol, str, <|Source -> pos|>]]
+      Throw[LeafNode[Symbol, str, <| Source -> pos |>]]
     ,
     !containsQuote &&
       StringMatchQ[str, RegularExpression["[0-9]+"]] && stringifyMode == 0,
-      Throw[LeafNode[Integer, str, <|Source -> pos|>]]
+      Throw[LeafNode[Integer, str, <| Source -> pos |>]]
     ,
     (*
     Handle all of the CompoundNodes
@@ -905,12 +905,12 @@ Module[{data, issues, stringifyMode, oldLeafSrc, len, src, cases, containsQuote,
             (*
             something like "_:"
             *)
-            Throw[ErrorNode[Token`Error`OldFESyntax, parseBox[#, pos]& /@ cases[[1]], <|Source -> pos|>]]
+            Throw[ErrorNode[Token`Error`OldFESyntax, parseBox[#, pos]& /@ cases[[1]], <| Source -> pos |>]]
           ];
-          Throw[CompoundNode[underToOp[cases[[1, 1]]], parseBox[#, pos]& /@ cases[[1]], <|Source -> pos|>]]
+          Throw[CompoundNode[underToOp[cases[[1, 1]]], parseBox[#, pos]& /@ cases[[1]], <| Source -> pos |>]]
         ,
         (cases = StringCases[str, RegularExpression["^([^_]+)(_\\.)$"] :> {"$1", "$2"}]) != {},
-          Throw[CompoundNode[PatternOptionalDefault, parseBox[#, pos]& /@ cases[[1]], <|Source -> pos|>]]
+          Throw[CompoundNode[PatternOptionalDefault, parseBox[#, pos]& /@ cases[[1]], <| Source -> pos |>]]
         ,
         (cases = StringCases[str, RegularExpression["^([^_]+)(_|__|___)([^_]+)$"] :> {"$1", "$2", "$3"}]) != {},
           If[StringEndsQ[str, ":"],
@@ -919,14 +919,14 @@ Module[{data, issues, stringifyMode, oldLeafSrc, len, src, cases, containsQuote,
             *)
             Throw[ErrorNode[Token`Error`OldFESyntax, {
               parseBox[cases[[1, 1]], pos],
-              CompoundNode[underToOp[cases[[1, 2]]], {parseBox[cases[[1, 2]], pos], parseBox[cases[[1, 3]], pos]}, <|Source -> pos|>]}, <|Source -> pos|>]]
+              CompoundNode[underToOp[cases[[1, 2]]], {parseBox[cases[[1, 2]], pos], parseBox[cases[[1, 3]], pos]}, <| Source -> pos |>]}, <| Source -> pos |>]]
           ];
           Throw[CompoundNode[underToPatternOp[cases[[1, 2]]], {
             parseBox[cases[[1, 1]], pos],
-            CompoundNode[underToOp[cases[[1, 2]]], {parseBox[cases[[1, 2]], pos], parseBox[cases[[1, 3]], pos]}, <|Source -> pos|>]}, <|Source -> pos|>]]
+            CompoundNode[underToOp[cases[[1, 2]]], {parseBox[cases[[1, 2]], pos], parseBox[cases[[1, 3]], pos]}, <| Source -> pos |>]}, <| Source -> pos |>]]
         ,
         (cases = StringCases[str, RegularExpression["^([^_]+)(_|__|___)$"] :> {"$1", "$2"}]) != {},
-          Throw[CompoundNode[underToPatternOp[cases[[1, 2]]], parseBox[#, pos]& /@ cases[[1]], <|Source -> pos|>]]
+          Throw[CompoundNode[underToPatternOp[cases[[1, 2]]], parseBox[#, pos]& /@ cases[[1]], <| Source -> pos |>]]
       ]
     ,
     (*
@@ -939,32 +939,32 @@ Module[{data, issues, stringifyMode, oldLeafSrc, len, src, cases, containsQuote,
     StringStartsQ[str, "#"],
       Which[
         (cases = StringCases[str, RegularExpression["^(##)(\\d+)$"] :> {"$1", "$2"}]) != {},
-          Throw[CompoundNode[SlotSequence, parseBox[#, pos]& /@ cases[[1]], <|Source -> pos|>]]
+          Throw[CompoundNode[SlotSequence, parseBox[#, pos]& /@ cases[[1]], <| Source -> pos |>]]
         ,
         (cases = StringCases[str, RegularExpression["^(#)(\\d+)$"] :> {"$1", "$2"}]) != {},
-          Throw[CompoundNode[Slot, parseBox[#, pos]& /@ cases[[1]], <|Source -> pos|>]]
+          Throw[CompoundNode[Slot, parseBox[#, pos]& /@ cases[[1]], <| Source -> pos |>]]
         ,
         (cases = StringCases[str, RegularExpression["^(#)([a-zA-Z\"].*)$"] :> {"$1", "$2"}]) != {},
-          Throw[CompoundNode[Slot, {parseBox[cases[[1, 1]], pos], parseBox[cases[[1, 2]], pos, "StringifyMode" -> 1]}, <|Source -> pos|>]]
+          Throw[CompoundNode[Slot, {parseBox[cases[[1, 1]], pos], parseBox[cases[[1, 2]], pos, "StringifyMode" -> 1]}, <| Source -> pos |>]]
       ]
     ,
     StringStartsQ[str, "%"],
       Which[
         (cases = StringCases[str, RegularExpression["^(%)(\\d+)$"] :> {"$1", "$2"}]) != {},
-          Throw[CompoundNode[Out, parseBox[#, pos]& /@ cases[[1]], <|Source -> pos|>]]
+          Throw[CompoundNode[Out, parseBox[#, pos]& /@ cases[[1]], <| Source -> pos |>]]
         ,
         StringMatchQ[str, "%" ~~ "%"..],
-          Throw[LeafNode[Token`PercentPercent, str, <|Source -> pos|>]]
+          Throw[LeafNode[Token`PercentPercent, str, <| Source -> pos |>]]
       ]
     ,
     StringStartsQ[str, "'"],
       Which[
         StringMatchQ[str, ("'")..],
-          Throw[LeafNode[Token`Boxes`MultiSingleQuote, str, <|Source -> pos|>]]
+          Throw[LeafNode[Token`Boxes`MultiSingleQuote, str, <| Source -> pos |>]]
       ]
     ,
     StringMatchQ[str, $whitespacePat..] && (stringifyMode == 0 || stringifyMode == 2),
-      Throw[LeafNode[Token`Boxes`MultiWhitespace, str, <|Source -> pos|>]]
+      Throw[LeafNode[Token`Boxes`MultiWhitespace, str, <| Source -> pos |>]]
     ,
     StringMatchQ[str, Verbatim["*"].. ~~ ")"],
       (*
@@ -972,7 +972,7 @@ Module[{data, issues, stringifyMode, oldLeafSrc, len, src, cases, containsQuote,
 
       TODO: fe bug?
       *)
-      Throw[LeafNode[Token`Boxes`StarCloseParen, str, <|Source -> pos|>]]
+      Throw[LeafNode[Token`Boxes`StarCloseParen, str, <| Source -> pos |>]]
     ,
     (*
     Handle the simple case of a string with no backslashes
@@ -980,7 +980,7 @@ Module[{data, issues, stringifyMode, oldLeafSrc, len, src, cases, containsQuote,
     Perfectly easy to parse here
     *)
     containsQuote && StringMatchQ[str, RegularExpression["\"[^\\\\]*\""]],
-      Throw[LeafNode[String, str, <|Source -> pos|>]]
+      Throw[LeafNode[String, str, <| Source -> pos |>]]
   ];
 
   (*
@@ -1069,7 +1069,7 @@ Module[{data, src},
   CodeAction[label, command, data]
 ]
 
-parseBox[args___] := Failure["UnrecognizedBox", <|"Box"->{args}|>]
+parseBox[args___] := Failure["UnrecognizedBox", <| "Box" -> {args} |>]
 
 
 removeImplicits[node_] := DeleteCases[node, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity]
@@ -1939,7 +1939,7 @@ Module[{nodeBoxes},
 
 
 toStandardFormBoxes[CodeNode[Null, code_, data_]] :=
-  Failure["CannotConvertToStandardFormBoxes", <|"Node"->CodeNode[Null, code, data]|>]
+  Failure["CannotConvertToStandardFormBoxes", <| "Node" -> CodeNode[Null, code, data] |>]
 
 
 toStandardFormBoxes[l_List] := Map[toStandardFormBoxes, l]
@@ -2302,7 +2302,7 @@ Module[{processed},
 
 toStandardFormBoxes[f_Failure] := f
 
-toStandardFormBoxes[args___] := Failure["InternalUnhandled", <|"Function"->ToStandardFormBoxes, "Arguments"->HoldForm[{args}]|>]
+toStandardFormBoxes[args___] := Failure["InternalUnhandled", <| "Function" -> ToStandardFormBoxes, "Arguments" -> HoldForm[{args}] |>]
 
 
 

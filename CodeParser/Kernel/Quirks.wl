@@ -74,7 +74,7 @@ Module[{data, rhs, issues, synthesizedSource},
 
 	synthesizedSource = {symData[[Key[Source], 1]], atData[[Key[Source], 2]]};
 
-	AppendTo[issues, SyntaxIssue["InfixBinaryAtQuirk", "Unexpected parse.", "Remark", <|Source->synthesizedSource, ConfidenceLevel -> 1.0|>]];
+	AppendTo[issues, SyntaxIssue["InfixBinaryAtQuirk", "Unexpected parse.", "Remark", <| Source -> synthesizedSource, ConfidenceLevel -> 1.0 |>]];
 
 	AssociateTo[data, AbstractSyntaxIssues -> issues];
 

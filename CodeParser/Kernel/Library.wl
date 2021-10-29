@@ -203,7 +203,7 @@ Module[{res, loaded, linkObject},
 		loaded = LibraryFunctionLoad[$CodeParserLib, name, params, ret];
 
 		If[Head[loaded] =!= LibraryFunction,
-			Throw[Failure["LibraryFunctionLoad", <|"Result"->loaded|>]]
+			Throw[Failure["LibraryFunctionLoad", <| "Result" -> loaded |>]]
 		];
 
 		Throw[loaded]
@@ -225,7 +225,7 @@ Module[{res, loaded, linkObject},
 	];
 
 	If[Head[loaded] =!= LibraryFunction,
-		Throw[Failure["LibraryFunctionLoad", <|"Result"->loaded|>]]
+		Throw[Failure["LibraryFunctionLoad",  <| "Result" -> loaded |>]]
 	];
 
 	(*
@@ -284,7 +284,7 @@ Module[{before, after, res, set, first},
 	];
 	set = Complement[after, before];
 	If[Length[set] != 1,
-		Throw[Failure["InternalLinksError", <|"Before"->before, "After"->after|>]]
+		Throw[Failure["InternalLinksError", <| "Before" -> before, "After" -> after |>]]
 	];
 	first = set[[1]];
 	{res, first}
@@ -469,7 +469,7 @@ Module[{nearest, location, longNamesFile},
 	];
 
 	(*
-	lazy initialization of $longNames]
+	lazy initialization of $longNames
 	*)
 	If[!ListQ[$longNames],
 
