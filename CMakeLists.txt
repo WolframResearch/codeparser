@@ -103,6 +103,7 @@ set(GENERATED_WL_PACLET_KERNEL_SOURCES
 
 set(GENERATED_WL_PACLET_RESOURCES_SOURCES
 	${PROJECT_BINARY_DIR}/generated/wl/Resources/Generated/LongNames.wl
+	${PROJECT_BINARY_DIR}/generated/wl/Resources/Generated/Precedence.wl
 )
 
 set(GENERATED_CPP_INCLUDES
@@ -333,14 +334,18 @@ add_custom_command(
 add_custom_command(
 	OUTPUT
 		${PROJECT_BINARY_DIR}/generated/cpp/include/Precedence.h
+		${PROJECT_BINARY_DIR}/generated/wl/Resources/Generated/Precedence.wl
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/Precedence.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
+	COMMAND
+		${CMAKE_COMMAND} -DSRC=${PROJECT_BINARY_DIR}/generated/wl/Resources/Generated/Precedence.wl -DCODEPARSER_EXE=${CODEPARSER_EXE} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/InspectFile.cmake
 	DEPENDS
 		${PROJECT_SOURCE_DIR}/CodeParser/Data/Precedence.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/Precedence.wl
 		${PROJECT_SOURCE_DIR}/CodeParser/Generate/Common.wl
 		${PROJECT_SOURCE_DIR}/CodeTools/Generate/GenerateSources.wl
 		${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
+		${PROJECT_SOURCE_DIR}/cmake/InspectFile.cmake
 	VERBATIM
 	WORKING_DIRECTORY
 		${PROJECT_SOURCE_DIR}

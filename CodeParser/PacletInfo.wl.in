@@ -15,7 +15,8 @@ Paclet[
     {"Resource", Root -> "Resources",
       Resources -> {
         {"Collatz", "Examples/Collatz.m"},
-        {"LongNames", "Generated/LongNames.wl"}
+        {"LongNames", "Generated/LongNames.wl"},
+        {"Precedence", "Generated/Precedence.wl"}
       }
     }
   }

@@ -92,6 +92,29 @@ If[FailureQ[res],
   Quit[1]
 ];
 
+precedenceWL = {
+"
+(*
+AUTO GENERATED FILE
+DO NOT MODIFY
+*)
+
+<|"} ~Join~
+  KeyValueMap[(Row[{#1, " -> ", BitShiftLeft[#2[[1]], 1] + associativityToValue[#2[[2]]], ",", "(* prec: ", #2[[1]], ", assoc: ", #2[[2]], " *)"}])&, enumMap] ~Join~ {
+"Nothing
+|>
+"
+};
+
+Print["exporting Precedence.wl"];
+res = Export[FileNameJoin[{generatedWLDir, "Resources", "Generated", "Precedence.wl"}], Column[precedenceWL], "String"];
+
+Print[res];
+
+If[FailureQ[res],
+  Quit[1]
+];
+
 Print["Done Precedence"]
 )
 
