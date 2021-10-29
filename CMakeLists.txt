@@ -89,6 +89,7 @@ set(STATIC_WL_PACLET_KERNEL_SOURCES
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/CodeParser.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Boxes.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/CodeAction.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Concretify.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Definitions.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Error.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/ExprLibrary.wl
