@@ -12,10 +12,15 @@ Added wl-ast as a Paclet Resource.
 Added notes in README.md about Antivirus problems on Windows.
 
 Added TernaryOperatorsToSymbol
+
 Renamed LinearSyntaxBang->PrefixLinearSyntaxBang
+
 Added PrefixInvisiblePrefixScriptBase
+
 Added PostfixInvisiblePostfixScriptBase
+
 Renamed InfixImplicitPlus->BinaryImplicitPlus
+
 Added BinaryInvisibleTimes
 
 Added WLCharacter
@@ -38,7 +43,6 @@ Added logic to use PacletResources to find wl-ast executable.
 Added ConcreteParse functions and start separating out concrete and abstract parse trees.
 
 Added warning for input like:
-
 ```
 1.2.3
 ```
@@ -46,16 +50,16 @@ Added warning for input like:
 
 ## 0.8 - 4 Feb, 2019
 
-Correct concrete and abstract ' (Derivative) parsing
+Correct concrete and abstract `'` (Derivative) parsing
 
-Abstract parsing errors for a \[DirectedEdge] b \[DirectedEdge] c and a \[UndirectedEdge] b \[UndirectedEdge] c
+Abstract parsing errors for `a \[DirectedEdge] b \[DirectedEdge] c` and `a \[UndirectedEdge] b \[UndirectedEdge] c`
 
-Correctly abstract a \[Divides] b
+Correctly abstract `a \[Divides] b`
 
-Add a stop-gap for parsing large expressions containing + and -
-The concrete syntax tree was originally treating exprs of + and exprs of - as separate infix nodes. And then when abstracted, they would be combined. However, this is a problem for expressions that heavily alternate between + and -, e.g., a + b - c + d - e + f - g ... This would create a deeply nested expression and then the internal call to ToExpression would fail, even though the kernel can parse the originaly expression. The limitation of ToExpression is understood. Introduce a stop-gap that treats a + b - c + d - e + f - g ... as a single infix node, with InternalMinusNode for minus nodes. Eventually when we move to something like LibraryLink / WSTP, then we can move back to separate parse trees for + and -.
+Add a stop-gap for parsing large expressions containing `+` and `-`.
+The concrete syntax tree was originally treating exprs of `+` and exprs of `-` as separate infix nodes. And then when abstracted, they would be combined. However, this is a problem for expressions that heavily alternate between `+` and `-`, e.g., `a + b - c + d - e + f - g ...` This would create a deeply nested expression and then the internal call to ToExpression would fail, even though the kernel can parse the originaly expression. The limitation of ToExpression is understood. Introduce a stop-gap that treats `a + b - c + d - e + f - g ...` as a single infix node, with InternalMinusNode for minus nodes. Eventually when we move to something like LibraryLink / WSTP, then we can move back to separate parse trees for `+` and `-`.
 
-Use FindFile to help with things like ParseFile["Foo\`"]
+Use FindFile to help with things like ``ParseFile["Foo`"]``
 
 Fix more cases for DeclarationName
 
@@ -75,21 +79,21 @@ Make Divide binary instead of infix
 
 Enforce NonASCII restriction on strings and files. This comes from a restriction of RunProcess and will be addressed in a future update.
 
-Preserve the difference between characters providing as byte encoded, and characters provided as \ encoded
-For example, the byte 0x0a and the bytes 0x5c 0x6e both encode the newline character. And there are times where the distinction is important and must be preserved. \ syntax for the newline character cannot be used outside of strings.
+Preserve the difference between characters provided as byte encoded, and characters provided as `\` encoded
+For example, the byte `0x0a` and the bytes `0x5c 0x6e` both encode the newline character. And there are times where the distinction is important and must be preserved. `\` syntax for the newline character cannot be used outside of strings.
 
-Also it is just a bit nicer to preserve the encoding that was provided. One caveat is that \ encoding does canonicalize to one form. For example, \n, \ :000a \ .0a and \012 all encode the newline character. But it is canonicalized to \n. The general pattern for canonicalization is to first prefer the short \x form if possible (e.g., \n \r \t), and then prefer long names \[Name] syntax, and then prefer \:xxxx syntax.
+Also it is just a bit nicer to preserve the encoding that was provided. One caveat is that `\` encoding does canonicalize to one form. For example, `\n`, `\:000a`, `\.0a`, and `\012` all encode the newline character. But it is canonicalized to `\n`. The general pattern for canonicalization is to first prefer the short `\x` form if possible (e.g., `\n` `\r` `\t`), and then prefer long names `\[Name]` syntax, and then prefer `\:xxxx` syntax.
 
 
 ## 0.9 - 1 Apr, 2019
 
 Remove explicit lists of letterlike long names, and add explicit list of uninterpretable long names.
-All valid letterlike characters should work now, and any \:xxxx characters are flagged as strange.
+All valid letterlike characters should work now, and any `\:xxxx` characters are flagged as strange.
 Fill out the other lists of characters.
 All characters should now be categorized (letterlike, operator, space, newline, comma, uninterpretable)
 
-Add >>> operator.
-Properly stringify args after ::, <<, >>, and >>>.
+Add `>>>` operator.
+Properly stringify args after `::`, `<<`, `>>`, and `>>>`.
 
 Attach comments to CST nodes.
 
@@ -99,7 +103,7 @@ Support building with earlier versions of Mathematica. Building with version 11.
 
 Separate SyntaxIssues and AbstractSyntaxIssues.
 
-Allow File[] wrappers to work.
+Allow `File[]` wrappers to work.
 
 Various bug fixes.
 
@@ -108,23 +112,23 @@ Various bug fixes.
 
 Put Source information on link as a packed array.
 
-Properly abstract strings in operators that do their own stringification (::, >>, >>>, <<, #).
+Properly abstract strings in operators that do their own stringification (`::`, `>>`, `>>>`, `<<`, `#`).
 
-Handle parsing #"123" and #a\`b
+Handle parsing `#"123"` and ``#a`b``
 
 Sandbox mode is now respected in the library.
 
-Support abstracting VectorLess, VectorGreater, etc.
+Support abstracting `\[VectorLess]`, `\[VectorGreater]`, etc.
 
 Updated build scripts.
 
 Re-add remarks about invalid UTF-8 sequences.
 
-Add a remark about stray \r characters.
+Add a remark about stray `\r` characters.
 
 Add more ambiguity remarks.
 
-Support abstracting BeginPackage[]/EndPackage[], Begin[]/End[], and BeginStaticAnalysisIgnore[]/EndStaticAnalysisIgnore.
+Support abstracting `BeginPackage[]`/`EndPackage[]`, `Begin[]`/`End[]`, and `BeginStaticAnalysisIgnore[]`/`EndStaticAnalysisIgnore[]`.
 
 Various bug fixes.
 
@@ -146,9 +150,9 @@ Various bug fixes.
 
 Consolidate various atom Nodes into single LeafNode
 
-\ [EmptySet] is not strange.
+`\[EmptySet]` is not strange.
 
-Fixed handling of runs of multiple ;;
+Fixed handling of runs of multiple `;;`
 
 Comments, whitespace, and newlines are now returned in concrete syntax.
 
@@ -158,7 +162,7 @@ Aborts are handled more gracefully.
 
 Handle more operators.
 
-Add CubeRoot character.
+Add `\[CubeRoot]` character.
 
 Various bug fixes.
 
@@ -171,13 +175,13 @@ Add progress monitoring.
 
 Switch to sending MakeLeafNode calls over MathLink, for performance.
 
-Add some missing operators, \ [Colon], \ [CupCap], etc.
+Add some missing operators, `\[Colon]`, `\[CupCap]`, etc.
 
 Other performance improvements.
 
 Add some CodeActions.
 
-Add Did You Mean for /@ for / at top-level
+Add Did You Mean for `/@` for `/` at top-level
 
 Move to using a struct with bitfields for WLCharacter.
 
@@ -189,9 +193,9 @@ Create single nodes for Inequalities and VectorInequalities
 
 Preserve line continuations in concrete syntax
 
-Introduce a token for =. which is needed for box support
+Introduce a token for `=.` which is needed for box support
 
-The characters \" and \\ are mapped into special codes
+The characters `\"` and `\\` are mapped into special codes
 
 Warn about line continuations inside comments
 
@@ -214,19 +218,19 @@ Switch to using unique_ptr implementation.
 
 Work on messages
 
-Simplify handling line continuation of just \r
+Simplify handling line continuation of just `\r`
 
 No need to issue warning for errors being strange
 
-Simplify handling \ at end of file
+Simplify handling `\` at end of file
 
-Return TOKEN_ERROR_EMPTYSTRING at EOF when appropriate
+Return `TOKEN_ERROR_EMPTYSTRING` at `EOF` when appropriate
 
-Prevent SourceManager from advancing past EOF
+Prevent SourceManager from advancing past `EOF`
 
 Do not count SyntaxErrorNodes as being strange at top-level
 
-Do the favor of combining naked \ with next character for better error reporting
+Do the favor of combining naked `\` with next character for better error reporting
 
 Tighter error handling
 
@@ -256,11 +260,11 @@ Distinguish between SyntaxIssues and FormatIssues
 
 Add ConfidenceLevel to issues
 
-Allow :: to work when parsing boxes
+Allow `::` to work when parsing boxes
 
-Allow ? to work when parsing boxes
+Allow `?` to work when parsing boxes
 
-Convert all syntax issues in C++ code to use CondeActions
+Convert all syntax issues in C++ code to use CodeActions
 
 Add LeafSeqNode and NodeSeqNode classes in order to alleviate the need to constantly iterate through vectors
 
@@ -268,11 +272,11 @@ Employ some strategies to reduce copying Tokens so much
 
 Letterlike characters can be strange, or very strange (with higher confidence that it is a problem)
 
-Better error handling for f[1\[Alpa]2]
+Better error handling for `f[1\[Alpa]2]`
 
-Added Intra[] construct for specifying positions within tokens
+Added `Intra[]` construct for specifying positions within tokens
 
-Handle \[Alpa] being parsed as boxes
+Handle `\[Alpa]` being parsed as boxes
 
 Start work to make TokenEnum contain other useful bits
 
@@ -280,7 +284,7 @@ Make sure that SyntaxErrorNodes always have children, and are not just a leaf no
 
 Convert Token errors into appropriate SyntaxErrorNodes when abstracting
 
-Allow e.g., { + } to be parsed correctly as boxes
+Allow e.g., `{ + }` to be parsed correctly as boxes
 
 Revamped the error handling in the parser, so that unexpected closing brackets and unexpected operators do not eat any unnecessary whitespace. Lot of work and kind of ugly. But maybe error handling has to be ugly
 
@@ -288,7 +292,7 @@ Use LongName for making characters graphical, if available
 
 Add check for strange characters
 
-Allow boxes with << to be parsed properly
+Allow boxes with `<<` to be parsed properly
 
 Drop ImplicitNull when converting back to boxes
 
@@ -304,13 +308,13 @@ Introduce AbstractFormatIssues, to allow warning about unneeded line continuatio
 
 Have ScopedIFS manage the data buffer from a file, and pass it to SourceManager
 
-Treat \r\n as a single Newline token
+Treat `\r\n` as a single Newline token
 
 ### Fixes
 
 Fix text mode error found on Windows
 
-Fix bug where \\ in a string, at end of line, on Windows, gave an assert
+Fix bug where `\\` in a string, at end of line, on Windows, gave an assert
 
 Fix ToSourceCharacterString
 
@@ -318,7 +322,7 @@ Fix OptionalDefaultPatternNode
 
 Fix when UnhandledDot can happen
 
-Fix ParseLeaf of <<
+Fix ParseLeaf of `<<`
 
 Fix parsing TagSetDelayed and TagUnset
 
@@ -350,18 +354,20 @@ Remove LOOKAHEAD wrappers
 Update Source of nodes to be half-open. This is a change from earlier versions, where the Source was always inclusive. 
 
 For example, here is the old Source for the integer 123:
-
+```
 In[2]:= ConcreteParseString["123"]
 
 Out[2]= ContainerNode[String, {LeafNode[Integer, 
    "123", <|Source -> {{1, 1}, {1, 3}}|>]}, <||>]
+```
 
 And now here is the new Source:
-
+```
 In[3]:= ConcreteParseString["123"]
 
 Out[3]= ContainerNode[String, {LeafNode[Integer, 
    "123", <|Source -> {{1, 1}, {1, 4}}|>]}, <||>]
+```
 
 This change has a number of nice qualities. It is now easy to determine the length of the token by subtracting the start from the end, and 0-length tokens can now be represented accurately.
 
@@ -380,23 +386,23 @@ FormatIssues now explicitly supply their CodeActions
 Do not complain about unexpected line continuations in comments
 
 Add more operators:
-DoubleRightTee
-DoubleLeftTee
-UpTee
-DownTee
-RoundImplies
-Perpendicular
-etc.
+* DoubleRightTee
+* DoubleLeftTee
+* UpTee
+* DownTee
+* RoundImplies
+* Perpendicular
+* etc.
 
 Disable treating BMP PUA as strange for now
 
-REPLACEMENT CHARACTER 0xfffd is strange, this will allow flagging of bad UTF8 in the linter
+REPLACEMENT CHARACTER `0xfffd` is strange, this will allow flagging of bad UTF-8 in the linter
 
-Introduce \r\n as a single SourceCharacter. This greatly simplifies newline handling.
+Introduce `\r\n` as a single SourceCharacter. This greatly simplifies newline handling.
 
 Standardize on using Whitespace as a token
 
-Require using File[] wrapper
+Require using `File[]` wrapper
 
 Add Listable version of Tokenize
 
@@ -408,29 +414,29 @@ InlinePart longname is unsupported
 
 Bring in several fixes found from fuzz testing
 
-When parsing a - b + c, make sure to give the abstracted Times expression the correct Source.
+When parsing `a - b + c`, make sure to give the abstracted Times expression the correct Source.
 
 Fix implicit Times in boxes by giving it the same Source as the RHS
 
 Fix parsing single-digit precision
 
-Treat prefix !! properly
+Treat prefix `!!` properly
 
-Fix line continuations in # and % tokens
+Fix line continuations in `#` and `%` tokens
 
 Abstract HermitianConjugate into ConjugateTranspose
 
-Handle a-EOF and a/EOF
+Handle `a-EOF` and `a/EOF`
 
 Handle Unicode non-characters and BOM
 
-Fix precedence problem of ++a++ and --a--
+Fix precedence problem of `++a++` and `--a--`
 
 ### Cleanup
 
 Remove unused MissingOpener parts
 
-Do not treat - as separate binary operator from +. Combine - parsing with +.
+Do not treat `-` as separate binary operator from `+`. Combine `-` parsing with `+`.
 
 Do not check for strange characters in comments
 
@@ -440,9 +446,9 @@ Do not check for strange characters in comments
 
 Only load expr lib functions if expr lib exists
 
-Fix assert when parsing U+FEFF
+Fix assert when parsing `U+FEFF` codepoint.
 
-Fix FileExistsQ::fstr that can happen with earlier versions
+Fix `FileExistsQ::fstr` that can happen with earlier versions
 
 
 
@@ -454,7 +460,7 @@ Rename ParseLeaf -> ConcreteParseLeaf
 
 Rename AST -> CodeParser
 
-Add support for System`Private`NewContextPath / System`Private`RestoreContextPath
+Add support for ``System`Private`NewContextPath`` / ``System`Private`RestoreContextPath``
 
 Do better job with ToStandardFormBoxes handling multiple inputs separated by newlines
 
@@ -476,11 +482,11 @@ Make all parsing functions listable
 
 Insert "Definition" metadata for functions
 
-Allow + +a to parse as +a, the same as kernel
+Allow `+ +a` to parse as `+a`, the same as kernel
 
-Change from old syntax CodeParse[str, h] to new Syntax CodeParse[str, ContainerNode -> h]
+Change from old syntax `CodeParse[str, h]` to new syntax `CodeParse[str, ContainerNode -> h]`
 
-Call setupLibraries[] lazily
+Call `setupLibraries[]` lazily
 
 Transition to purely parselet-driven parsing
 
@@ -502,12 +508,11 @@ Cleanup several issues from fuzz testing
 
 
 
-
 ## 1.1 - 30 Sep, 2020
 
 ### API changes
 
-Return a Rational when parsing something like 1\*^-2
+Return a Rational when parsing something like `1\*^-2`
 This returned an Integer before.
 
 Add Token\`PercentPercent as a variable length token
@@ -516,13 +521,13 @@ Add CompoundNode
 
 Add CodeSyntaxQ, CodeSyntaxCSTQ, CodeStructuralSyntaxQ
 
-Add Token`Error`UnterminatedFileString
+Add Token\`Error\`UnterminatedFileString
 
-Add Token`Boxes`CommentContent
+Add Token\`Boxes\`CommentContent
 
 Add UnterminatedTokenErrorNeedsReparseNode
 
-Add Token`Error`UnexpectedCloser
+Add Token\`Error\`UnexpectedCloser
 
 Add GroupMissingOpenerNode (only used in boxes)
 
@@ -553,7 +558,7 @@ Propagate EncodingIssue in a few places
 
 Treat EqualDot as a proper binary operator
 
-Add new |-> operator for Function.
+Add new `|->` operator for Function.
 
 
 ### Performance improvements
@@ -565,15 +570,15 @@ Use results from some profiling to speed up tokenizing numbers.
 
 Dynamically set GroupMissingCloserNeedsReparseNode and UnterminatedTokenErrorNeedsReparseNode while parsing, instead of doing Replace.
 
-Use Normal[ReadByteArray[#]]& instead of Import[#, "Byte"]
+Use `Normal[ReadByteArray[#]]&` instead of `Import[#, "Byte"]`
 
 Remove asserts from aggregate and try to not use local variables when possible
 
 
 ### Error handling
 
-Add better handling for syntax with .. and ... where backtracking is needed
-Examples are 2^^.. and 123\*^2..
+Add better handling for syntax with `..` and `...` where backtracking is needed
+Examples are `2^^..` and `123\*^2..`
 
 Continue parsing numbers with invalid bases or unrecognized digits (because of the base)
 
@@ -608,13 +613,13 @@ Provide more ASCII approximations for long names
 
 Handle linear syntax as tokens, but they are unsupported
 
-A workflow is removing the \( \) from a LinearSyntaxBlob and then tokenizing.
+A workflow is removing the `\( \)` from a LinearSyntaxBlob and then tokenizing.
 
->> and >>> should not give top-level lints
+`>>` and `>>>` should not give top-level lints
 
 Use the source of just the ; when reporting top-level CompoundExpression
 
-Add CodeStructuralSyntaxAggQ
+Add `CodeStructuralSyntaxAggQ`
 
 Move stray comma handling back to concrete parser and teach -check flag to fail with stray commas
 
@@ -630,11 +635,11 @@ In the fall-through cases of parseBox, be more efficient with testing different 
 
 Remove StringifyMode 3 (passthrough). Just hard-code these cases
 
-Allow "FileFormat" -> "Script" for ignoring shebang in .wls files
+Allow `"FileFormat" -> "Script"` for ignoring shebang in .wls files
 
-Provide better error reporting for \Alpha]
+Provide better error reporting for `\Alpha]`
 
-Add ScopingData[ast] function for gathering information about scoping constructs
+Add `ScopingData[ast]` function for gathering information about scoping constructs
 
 Introduce DefinitionSymbols function and start using it
 
@@ -644,13 +649,13 @@ Update ASCII replacements
 
 Provide some selectors for CodeAction objects
 
-Move ToInputFormString
+Move `ToInputFormString`
 
-Compile` also has a ToInputFormString symbol, so to prevent shadowing messages,
-move CodeParser`ToInputFormString to CodeParser`ToString`ToInputFormString
-and rely on CodeParser`ToString` not being on $ContextPath (unless explicitly loaded, of course)
+Compil\` also has a ToInputFormString symbol, so to prevent shadowing messages,
+move CodeParser\`ToInputFormString to CodeParser\`ToString\`ToInputFormString
+and rely on CodeParser\`ToString not being on $ContextPath (unless explicitly loaded, of course)
 
-Insert "FileName" into CSTs
+Insert `"FileName"` into CSTs
 
 Allow CodeConcreteParse of Cells, Notebooks, CellObjects, and NotebookObjects
 
@@ -659,21 +664,21 @@ Lower confidence of package-related issues that are not 100% errors
 
 ### Fixes
 
-Fix warning from MSVC: using universal-character-name \u2423 for \[SpaceIndicator] was technically not correct, since MSVC is setup with a different code page by default
+Fix warning from MSVC: using universal-character-name `\u2423` for `\[SpaceIndicator]` was technically not correct, since MSVC is setup with a different code page by default
 
-Fix handling #"foo"
+Fix handling `#"foo"`
 
 Fix bug 404282, and related issues
 
-CodeConcreteParse["\"\r"] would give messages because the \r newline was not being handled correctly
+`CodeConcreteParse["\"\r"]` would give messages because the `\r` newline was not being handled correctly
 
-Fix that, and also fix issues with \r\n newlines where the indices from the SourceCharacterIndex were wrong because of treating \r\n as a single source character
+Fix that, and also fix issues with `\r\n` newlines where the indices from the SourceCharacterIndex were wrong because of treating `\r\n` as a single source character
 
 Handle TernaryTilde at top-level
 
 Add UpSet and UpSetDelayed to top-level definitions
 
-Syntax such as Attributes[foo] = {HoldAll} is a definition for foo and not for Attributes
+Syntax such as `Attributes[foo] = {HoldAll}` is a definition for foo and not for Attributes
 
 .wl files may be scripts with #! or not, so must handle
 
@@ -692,12 +697,14 @@ Fix 406933: specific comment makes CodeParser give messages and go into infinite
 Notes on compatibility have been added to docs/compatibility.md
 
 Introduce BatchMode option for Abstract
+
 BatchMode -> True where Begin[] and End[] nodes will be at top-level (e.g., .wl files)
-PackageNodes[] and ContextNodes[] WILL be created
-Issues about unbalanced directives WILL be created
+* PackageNodes[] and ContextNodes[] WILL be created
+* Issues about unbalanced directives WILL be created
+
 BatchMode -> False otherwise, i.e., where Begin[] and End[] nodes are separate or not easily scanned together (e.g., cells in notebooks)
-PackageNodes[] and ContextNodes[] will NOT be created
-Issues about unbalanced directives will NOT be created
+* PackageNodes[] and ContextNodes[] will NOT be created
+* Issues about unbalanced directives will NOT be created
 
 
 ### Fixes
@@ -706,7 +713,7 @@ Fix 409304: Teach parser about TernaryOptionalPattern
 TernaryOptionalPattern comes from boxes
 
 Multi-pronged fix for 409210:
-\ [Prime] is not strange
+`\[Prime]` is not strange
 Add SubscriptBox and SuperscriptBox as not strange for head of calls
 
 Fix 409216: Teach abstract and scoping about GridBox
@@ -716,7 +723,7 @@ So introduce some functions to handle the different source conventions
 
 410337: Fix DefinitionSymbols for errors
 
-410404: Fix parsing \ [Integral] a + 2
+410404: Fix parsing `\[Integral] a + 2`
 Trivia2 was not scoped properly and was not being cleaned up at the correct time
 
 Fix 405322: Symbols occurring in options to DynamicModule have same scope as body
@@ -730,7 +737,7 @@ Do not allow PacletManager to participate in finding \`Generate\` files
 
 Do not give UnexpectedCharacter issue if UnexpectedSpaceCharacter is already going to be given
 
-Handle multiple arguments to \[Integral] RowBox as implicit Times
+Handle multiple arguments to `\[Integral]` RowBox as implicit Times
 
 
 Change how implicit Nulls are parsed.
@@ -759,13 +766,13 @@ Handle unrecognized characters
 
 ### Fixes
 
-Fix 414131: =. from boxes was not being abstracted
+Fix 414131: `=.` from boxes was not being abstracted
 
-Fix 414139: ' from boxes was not being abstracted properly
+Fix 414139: `'` from boxes was not being abstracted properly
 
 Fix not handling CallMissingCloserNode in Scoping
 
-Only pass in \"StringifyMode\" -> 2 if arg is a String
+Only pass in `"StringifyMode" -> 2 `if arg is a String
 
 Fix 414554: do not mark Block variable inside of Module as unused
 

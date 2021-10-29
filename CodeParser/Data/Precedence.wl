@@ -35,6 +35,9 @@ Precedence`ColonEqual -> Precedence`Equal, (* Precedence[SetDelayed] == 40 *)
 Precedence`CaretEqual -> Precedence`Equal, (* Precedence[UpSet] == 40 *)
 Precedence`CaretColonEqual -> Precedence`Equal, (* Precedence[UpSetDelayed] == 40 *)
 Precedence`LongName`Function -> Precedence`Equal,
+(*
+Precedence`Fake`EqualDot is used by minifier
+*)
 Precedence`Fake`EqualDot -> Precedence`Equal,
 (*
 added in 12.2:
