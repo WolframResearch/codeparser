@@ -79,6 +79,27 @@ TestMatch[
 ]
 
 
+TestMatch[
+	CodeConcreteParse["\\|110000"]
+	,
+	ContainerNode[String, {
+		ErrorNode[Token`Error`UnhandledCharacter, "\\|110000", <|Source -> {{1, 1}, {1, 9}}|>]
+		}, <||>]
+	,
+	TestID->"Error-20211104-P0L8Y0"
+]
+
+TestMatch[
+	CodeConcreteParse["\\|FFFFFF"]
+	,
+	ContainerNode[String, {
+		ErrorNode[Token`Error`UnhandledCharacter, "\\|FFFFFF", <|Source -> {{1, 1}, {1, 9}}|>]
+		}, <||>]
+	,
+	TestID->"Error-20211104-Q2O1J4"
+]
+
+
 
 
 

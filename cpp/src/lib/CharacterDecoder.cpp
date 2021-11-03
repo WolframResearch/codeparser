@@ -1159,7 +1159,7 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
     }
     
     //
-    // Success!
+    // Well-formed
     //
     
     auto d5 = Utils::toDigit(hexStartBuf[0]);
@@ -1169,6 +1169,18 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
     auto d1 = Utils::toDigit(hexStartBuf[4]);
     auto d0 = Utils::toDigit(hexStartBuf[5]);
     codepoint point = d5 << 20 | d4 << 16 | d3 << 12 | d2 << 8 | d1 << 4 | d0;
+    
+    if (point > 0x10ffff) {
+        
+        TheByteBuffer->buffer = barBuf;
+        TheByteDecoder->SrcLoc = barLoc;
+        
+        return WLCharacter('\\');
+    }
+    
+    //
+    // Success!
+    //
     
     switch (point) {
         case CODEPOINT_ACTUAL_DOUBLEQUOTE:
