@@ -229,6 +229,19 @@ Module[{handledChildren},
   BoxNode[Cell, handledChildren, <|Source->pos|>]
 ]]
 
+parseBox[Cell[rest___], pos_] :=
+Catch[
+Module[{handledChildren},
+
+  handledChildren = applyCodeNodesToRest[rest];
+
+  If[AnyTrue[handledChildren, FailureQ],
+    Throw[SelectFirst[handledChildren, FailureQ]]
+  ];
+
+  BoxNode[Cell, handledChildren, <| Source -> pos |>]
+]]
+
 parseBox[BoxData[a_], pos_] :=
 Catch[
 Module[{handledChildren},
