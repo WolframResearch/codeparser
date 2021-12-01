@@ -239,7 +239,21 @@ Module[{res, loaded, linkObject},
 	*)
 	MathLink`LinkSetPrintFullSymbols[linkObject, True];
 
-	loaded
+	(*
+	give a message and return a failure if called with arguments that do not match pattern
+	*)
+	With[{loaded = loaded},
+        Function[
+            Function[{res},
+                If[MatchQ[res, HoldPattern[LibraryFunction[___]][___]],
+                    Message[LibraryFunction::unevaluated, loaded, {##}];
+                    Failure["Unevaluated", <| "Function" -> loaded, "Arguments" -> {##} |>]
+                    ,
+                    res
+                ]
+            ][loaded[##]]
+        ]
+    ]
 ]]
 
 loadAllFuncs[] := (
