@@ -388,11 +388,14 @@ Module[{csts},
 ]]
 
 CodeConcreteParse[ss:{_String, _String...}, opts:OptionsPattern[]] :=
+  codeConcreteParse[ss, CodeConcreteParse, opts]
+
+codeConcreteParse[ss:{_String, _String...}, func_, opts:OptionsPattern[]] :=
 Catch[
 Module[{csts, bytess, encoding, fileFormat, firstLineBehavior},
 
-  encoding = OptionValue[CharacterEncoding];
-  fileFormat = OptionValue["FileFormat"];
+  encoding = OptionValue[func, {opts}, CharacterEncoding];
+  fileFormat = OptionValue[func, {opts}, "FileFormat"];
 
   If[encoding =!= "UTF-8",
     Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
@@ -411,7 +414,7 @@ Module[{csts, bytess, encoding, fileFormat, firstLineBehavior},
       firstLineBehavior = NotScript
   ];
 
-  csts = concreteParseStringListable[bytess, firstLineBehavior, opts];
+  csts = concreteParseStringListable[bytess, firstLineBehavior, func, opts];
 
   If[FailureQ[csts],
     Throw[csts]
@@ -436,15 +439,13 @@ Module[{csts, bytess, encoding, fileFormat, firstLineBehavior},
 ]]
 
 
-Options[concreteParseStringListable] = Options[CodeConcreteParse]
-
-concreteParseStringListable[bytess:{{_Integer...}...}, firstLineBehavior:firstLineBehaviorPat, OptionsPattern[]] :=
+concreteParseStringListable[bytess:{{_Integer...}...}, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
 Catch[
 Module[{res, convention, container, tabWidth},
 
-  convention = OptionValue[SourceConvention];
-  container = OptionValue[ContainerNode];
-  tabWidth = OptionValue["TabWidth"];
+  convention = OptionValue[func, {opts}, SourceConvention];
+  container = OptionValue[func, {opts}, ContainerNode];
+  tabWidth = OptionValue[func, {opts}, "TabWidth"];
 
   (*
   The <||> will be filled in with Source later
@@ -521,7 +522,7 @@ CodeParse[ss:{_String, _String...}, opts:OptionsPattern[]] :=
 Catch[
 Module[{csts, asts, aggs},
   
-  csts = CodeConcreteParse[ss, opts];
+  csts = codeConcreteParse[ss, CodeParse, opts];
 
   If[FailureQ[csts],
     Throw[csts]
@@ -553,11 +554,14 @@ Module[{csts},
 ]]
 
 CodeConcreteParse[fs:{File[_String], File[_String]...}, opts:OptionsPattern[]] :=
+  codeConcreteParse[fs, CodeConcreteParse, opts]
+
+codeConcreteParse[fs:{File[_String], File[_String]...}, func_, opts:OptionsPattern[]] :=
 Catch[
 Module[{csts, encoding, fulls, bytess, fileFormat, firstLineBehavior, exts},
 
-  encoding = OptionValue[CharacterEncoding];
-  fileFormat = OptionValue["FileFormat"];
+  encoding = OptionValue[func, {opts}, CharacterEncoding];
+  fileFormat = OptionValue[func, {opts}, "FileFormat"];
 
   If[encoding =!= "UTF-8",
     Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
@@ -604,7 +608,7 @@ Module[{csts, encoding, fulls, bytess, fileFormat, firstLineBehavior, exts},
   *)
   bytess = (Normal[ReadByteArray[#]] /. EndOfFile -> {})& /@ fulls;
 
-  csts = concreteParseFileListable[bytess, firstLineBehavior, opts];
+  csts = concreteParseFileListable[bytess, firstLineBehavior, func, opts];
 
   If[FailureQ[csts],
     If[csts === $Failed,
@@ -635,16 +639,13 @@ Module[{csts, encoding, fulls, bytess, fileFormat, firstLineBehavior, exts},
 ]]
 
 
-
-Options[concreteParseFileListable] = Options[CodeConcreteParse]
-
-concreteParseFileListable[bytess:{{_Integer...}...}, firstLineBehavior:firstLineBehaviorPat, OptionsPattern[]] :=
+concreteParseFileListable[bytess:{{_Integer...}...}, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
 Catch[
 Module[{res, convention, container, containerWasAutomatic, tabWidth},
 
-  convention = OptionValue[SourceConvention];
-  container = OptionValue[ContainerNode];
-  tabWidth = OptionValue["TabWidth"];
+  convention = OptionValue[func, {opts}, SourceConvention];
+  container = OptionValue[func, {opts}, ContainerNode];
+  tabWidth = OptionValue[func, {opts}, "TabWidth"];
 
   (*
   The <||> will be filled in with Source later
@@ -729,7 +730,7 @@ CodeParse[fs:{File[_String], File[_String]...}, opts:OptionsPattern[]] :=
 Catch[
 Module[{csts, asts, aggs},
 
-  csts = CodeConcreteParse[fs, opts];
+  csts = codeConcreteParse[fs, CodeParse, opts];
 
   If[FailureQ[csts],
     Throw[csts]
@@ -760,11 +761,14 @@ Module[{csts},
 ]]
 
 CodeConcreteParse[bytess:{{_Integer, _Integer...}...}, opts:OptionsPattern[]] :=
+  codeConcreteParse[bytess, CodeConcreteParse, opts]
+
+codeConcreteParse[bytess:{{_Integer, _Integer...}...}, func_, opts:OptionsPattern[]] :=
 Catch[
 Module[{csts, encoding, fileFormat, firstLineBehavior},
 
-  encoding = OptionValue[CharacterEncoding];
-  fileFormat = OptionValue["FileFormat"];
+  encoding = OptionValue[func, {opts}, CharacterEncoding];
+  fileFormat = OptionValue[func, {opts}, "FileFormat"];
 
   If[encoding =!= "UTF-8",
     Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
@@ -781,7 +785,7 @@ Module[{csts, encoding, fileFormat, firstLineBehavior},
       firstLineBehavior = NotScript
   ];
 
-  csts = concreteParseBytesListable[bytess, firstLineBehavior, opts];
+  csts = concreteParseBytesListable[bytess, firstLineBehavior, func, opts];
 
   If[FailureQ[csts],
     Throw[csts]
@@ -808,15 +812,13 @@ Module[{csts, encoding, fileFormat, firstLineBehavior},
 
 
 
-Options[concreteParseBytesListable] = Options[CodeConcreteParse]
-
-concreteParseBytesListable[bytess:{{_Integer...}...}, firstLineBehavior:firstLineBehaviorPat, OptionsPattern[]] :=
+concreteParseBytesListable[bytess:{{_Integer...}...}, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
 Catch[
 Module[{res, convention, container, tabWidth},
 
-  convention = OptionValue[SourceConvention];
-  container = OptionValue[ContainerNode];
-  tabWidth = OptionValue["TabWidth"];
+  convention = OptionValue[func, {opts}, SourceConvention];
+  container = OptionValue[func, {opts}, ContainerNode];
+  tabWidth = OptionValue[func, {opts}, "TabWidth"];
 
   (*
   The <||> will be filled in with Source later
@@ -874,7 +876,7 @@ CodeParse[bytess:{{_Integer, _Integer...}...}, opts:OptionsPattern[]] :=
 Catch[
 Module[{csts, asts, aggs},
 
-  csts = CodeConcreteParse[bytess, opts];
+  csts = codeConcreteParse[bytess, CodeParse, opts];
 
   If[FailureQ[csts],
     Throw[csts]
@@ -937,21 +939,19 @@ Module[{tokss},
 CodeTokenize[ss:{_String, _String...}, opts:OptionsPattern[]] :=
 Module[{tokss},
 
-  tokss = tokenizeStringListable[ss, opts];
+  tokss = tokenizeStringListable[ss, CodeTokenize, opts];
 
   tokss
 ]
 
 
-Options[tokenizeStringListable] = Options[CodeTokenize]
-
-tokenizeStringListable[ss:{_String...}, OptionsPattern[]] :=
+tokenizeStringListable[ss:{_String...}, func_, opts:OptionsPattern[]] :=
 Catch[
 Module[{res, bytess, encoding, convention, tabWidth},
 
-  encoding = OptionValue[CharacterEncoding];
-  convention = OptionValue[SourceConvention];
-  tabWidth = OptionValue["TabWidth"];
+  encoding = OptionValue[func, {opts}, CharacterEncoding];
+  convention = OptionValue[func, {opts}, SourceConvention];
+  tabWidth = OptionValue[func, {opts}, "TabWidth"];
 
   If[encoding =!= "UTF-8",
     Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
@@ -995,23 +995,21 @@ Module[{tokss},
 CodeTokenize[fs:{File[_String], File[_String]...}, opts:OptionsPattern[]] :=
 Module[{tokss},
 
-  tokss = tokenizeFileListable[fs, opts];
+  tokss = tokenizeFileListable[fs, CodeTokenize, opts];
 
   tokss
 ]
 
 
 
-Options[tokenizeFileListable] = Options[CodeTokenize]
-
-tokenizeFileListable[fs:{File[_String]...}, OptionsPattern[]] :=
+tokenizeFileListable[fs:{File[_String]...}, func_, opts:OptionsPattern[]] :=
 Catch[
 Module[{encoding, res, fulls, bytess, convention, tabWidth, fileFormat, firstLineBehavior, exts},
 
-  encoding = OptionValue[CharacterEncoding];
-  convention = OptionValue[SourceConvention];
-  tabWidth = OptionValue["TabWidth"];
-  fileFormat = OptionValue["FileFormat"];
+  encoding = OptionValue[func, {opts}, CharacterEncoding];
+  convention = OptionValue[func, {opts}, SourceConvention];
+  tabWidth = OptionValue[func, {opts}, "TabWidth"];
+  fileFormat = OptionValue[func, {opts}, "FileFormat"];
 
   If[encoding =!= "UTF-8",
     Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
@@ -1087,22 +1085,20 @@ Module[{tokss},
 CodeTokenize[bytess:{{_Integer, _Integer...}...}, opts:OptionsPattern[]] :=
 Module[{tokss},
 
-  tokss = tokenizeBytesListable[bytess, opts];
+  tokss = tokenizeBytesListable[bytess, CodeTokenize, opts];
 
   tokss
 ]
 
 
 
-Options[tokenizeBytesListable] = Options[CodeTokenize]
-
-tokenizeBytesListable[bytess:{{_Integer...}...}, OptionsPattern[]] :=
+tokenizeBytesListable[bytess:{{_Integer...}...}, func_, opts:OptionsPattern[]] :=
 Catch[
 Module[{encoding, res, convention, tabWidth},
 
-  encoding = OptionValue[CharacterEncoding];
-  convention = OptionValue[SourceConvention];
-  tabWidth = OptionValue["TabWidth"];
+  encoding = OptionValue[func, {opts}, CharacterEncoding];
+  convention = OptionValue[func, {opts}, SourceConvention];
+  tabWidth = OptionValue[func, {opts}, "TabWidth"];
 
   If[encoding =!= "UTF-8",
     Throw[Failure["OnlyUTF8Supported", <|"CharacterEncoding"->encoding|>]]
@@ -1167,21 +1163,19 @@ Options[CodeConcreteParseLeaf] = {
 }
 
 CodeConcreteParseLeaf[str_String, opts:OptionsPattern[]] :=
-	concreteParseLeaf[str, opts]
+	concreteParseLeaf[str, CodeConcreteParseLeaf, opts]
 
 
-Options[concreteParseLeaf] = Options[CodeConcreteParseLeaf]
-
-concreteParseLeaf[strIn_String, OptionsPattern[]] :=
+concreteParseLeaf[strIn_String, func_, opts:OptionsPattern[]] :=
 Catch[
 Module[{str, res, leaf, data, exprs, stringifyMode, convention, tabWidth, encodingMode},
 
   str = strIn;
 
-  stringifyMode = OptionValue["StringifyMode"];
-  convention = OptionValue[SourceConvention];
-  tabWidth = OptionValue["TabWidth"];
-  encodingMode = OptionValue["EncodingMode"];
+  stringifyMode = OptionValue[func, {opts}, "StringifyMode"];
+  convention = OptionValue[func, {opts}, SourceConvention];
+  tabWidth = OptionValue[func, {opts}, "TabWidth"];
+  encodingMode = OptionValue[func, {opts}, "EncodingMode"];
 
   $ConcreteParseProgress = 0;
   $ConcreteParseStart = Now;
