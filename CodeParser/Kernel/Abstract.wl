@@ -1100,14 +1100,14 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		System`Private`NewContextPath[{"Foo`"}]
 		*)
 		CallNode[LeafNode[Symbol, "System`Private`NewContextPath", _], { CallNode[LeafNode[Symbol, "List", <||>], { LeafNode[String, _?contextQ, _]... }, _] }, _],
-			operatorStack["Push", NewContextPathNode[x[[2]], {}, <|Source->sourceSpan[sourceStart[x[[3, Key[Source]]]], (*partially constructed Source*)Indeterminate]|>]];
+			operatorStack["Push", NewContextPathNode[x[[2, 1, 2]], {}, <|Source->sourceSpan[sourceStart[x[[3, Key[Source]]]], (*partially constructed Source*)Indeterminate]|>]];
 			nodeListStack["Push", System`CreateDataStructure["Stack"]];
 		,
 		(*
 		System`Private`NewContextPath[{"Foo`"}] ;
 		*)
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "System`Private`NewContextPath", _], { CallNode[LeafNode[Symbol, "List", <||>], { LeafNode[String, _?contextQ, _]... }, _] }, _], LeafNode[Symbol, "Null", _]}, _],
-			operatorStack["Push", NewContextPathNode[x[[2, 1, 2]], {}, <|Source->sourceSpan[sourceStart[x[[2, 1, 3, Key[Source]]]], (*partially constructed Source*)Indeterminate]|>]];
+			operatorStack["Push", NewContextPathNode[x[[2, 1, 2, 1, 2]], {}, <|Source->sourceSpan[sourceStart[x[[2, 1, 3, Key[Source]]]], (*partially constructed Source*)Indeterminate]|>]];
 			nodeListStack["Push", System`CreateDataStructure["Stack"]];
 		,
 		(*
