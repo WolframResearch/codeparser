@@ -26,5 +26,6 @@ TestSuite[{
 	"Tokenize.mt",
 	"ToNode.mt",
 	"ToString.mt",
+	"Unsafe.mt",
 	"Weird.mt"
 }]

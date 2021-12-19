@@ -1389,6 +1389,8 @@ abstract[SyntaxErrorNode[SyntaxError`ExpectedSetOperand2, {left_, _, middle_, _}
 
 abstract[f_Failure] := f
 
+abstract[m_?MissingQ] := m
+
 abstract[args___] := Failure["InternalUnhandled", <| "Function" -> abstract, "Arguments"->HoldForm[{args}] |>]
 
 

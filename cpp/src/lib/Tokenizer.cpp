@@ -192,6 +192,14 @@ Token Tokenizer::nextToken0(NextPolicy policy) {
                 
                 return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                 
+            } else if (c.to_point() == CODEPOINT_UNSAFE_1_BYTE_SEQUENCE || c.to_point() == CODEPOINT_UNSAFE_2_BYTE_SEQUENCE || c.to_point() == CODEPOINT_UNSAFE_3_BYTE_SEQUENCE) {
+                
+                //
+                // This will be disposed before the user sees it
+                //
+                
+                return Token(TOKEN_ERROR_UNSAFECHARACTERENCODING, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+                
             } else {
                 
                 //
@@ -286,8 +294,6 @@ void Tokenizer::nextToken(Token Tok) {
     TheByteBuffer->wasEOF = (Tok.Tok == TOKEN_ENDOFFILE);
     
     TheByteDecoder->SrcLoc = Tok.Src.End;
-    
-    TheByteDecoder->clearStatus();
 }
 
 
@@ -302,8 +308,6 @@ Token Tokenizer::currentToken(NextPolicy policy) {
     TheByteBuffer->buffer = resetBuf;
     TheByteBuffer->wasEOF = resetEOF;
     TheByteDecoder->SrcLoc = resetLoc;
-    
-    TheByteDecoder->clearStatus();
     
     return Tok;
 }
@@ -321,8 +325,6 @@ Token Tokenizer::currentToken_stringifyAsTag() {
     TheByteBuffer->wasEOF = resetEOF;
     TheByteDecoder->SrcLoc = resetLoc;
     
-    TheByteDecoder->clearStatus();
-    
     return Tok;
 }
 
@@ -337,8 +339,6 @@ Token Tokenizer::currentToken_stringifyAsFile() {
     TheByteBuffer->buffer = resetBuf;
     TheByteBuffer->wasEOF = resetEOF;
     TheByteDecoder->SrcLoc = resetLoc;
-    
-    TheByteDecoder->clearStatus();
     
     return Tok;
 }
@@ -3553,8 +3553,7 @@ Source Tokenizer::getTokenSource(SourceLocation tokStartLoc) const {
 
 BufferAndLength Tokenizer::getTokenBufferAndLength(Buffer tokStartBuf) const {
     auto buf = TheByteBuffer->buffer;
-    auto status = TheByteDecoder->getStatus();
-    return BufferAndLength(tokStartBuf, buf - tokStartBuf, status);
+    return BufferAndLength(tokStartBuf, buf - tokStartBuf);
 }
 
 #if !NISSUES

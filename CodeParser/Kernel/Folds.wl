@@ -184,6 +184,8 @@ Do not descend into CodeNode
 *)
 aggregate[n:CodeNode[_, _, _]] := n
 
+aggregate[m_?MissingQ] := m
+
 aggregate[node_[tag_, children_, data_]] :=
 	node[tag, aggregate /@ children, data]
 

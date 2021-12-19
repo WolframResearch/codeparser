@@ -189,7 +189,7 @@ TEST_F(ByteDecoderTest, Invalid1) {
     
     c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
-    EXPECT_EQ(c, SourceCharacter(CODEPOINT_REPLACEMENT_CHARACTER));
+    EXPECT_EQ(c, SourceCharacter(CODEPOINT_UNSAFE_1_BYTE_SEQUENCE));
     
 //    TheByteDecoder->nextSourceCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheByteDecoder->lastBuf;
@@ -235,7 +235,7 @@ TEST_F(ByteDecoderTest, Invalid2) {
     
     c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
-    EXPECT_EQ(c, SourceCharacter(CODEPOINT_REPLACEMENT_CHARACTER));
+    EXPECT_EQ(c, SourceCharacter(CODEPOINT_UNSAFE_1_BYTE_SEQUENCE));
     
 //    TheByteDecoder->nextSourceCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheByteDecoder->lastBuf;
@@ -280,7 +280,7 @@ TEST_F(ByteDecoderTest, Invalid3) {
     c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
     // from 0xE2 byte
-    EXPECT_EQ(c, SourceCharacter(CODEPOINT_REPLACEMENT_CHARACTER));
+    EXPECT_EQ(c, SourceCharacter(CODEPOINT_UNSAFE_1_BYTE_SEQUENCE));
     
     //    TheByteDecoder->nextSourceCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheByteDecoder->lastBuf;
@@ -325,15 +325,7 @@ TEST_F(ByteDecoderTest, Invalid4) {
     c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
     // from 0xE2 byte
-    EXPECT_EQ(c, SourceCharacter(CODEPOINT_REPLACEMENT_CHARACTER));
-    
-    //    TheByteDecoder->nextSourceCharacter(TOPLEVEL);
-    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-    
-    c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
-    
-    // from 0x9A byte
-    EXPECT_EQ(c, SourceCharacter(CODEPOINT_REPLACEMENT_CHARACTER));
+    EXPECT_EQ(c, SourceCharacter(CODEPOINT_UNSAFE_2_BYTE_SEQUENCE));
     
     //    TheByteDecoder->nextSourceCharacter(TOPLEVEL);
     TheByteBuffer->buffer = TheByteDecoder->lastBuf;
@@ -348,17 +340,7 @@ TEST_F(ByteDecoderTest, Invalid4) {
     c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
     EXPECT_EQ(c, SourceCharacter(CODEPOINT_ENDOFFILE));
-    
-    //
-    // Issue: Invalid UTF-8 sequence
-    //
-    // Actually, 2 issues are created: 1 issue for the 0xE2 byte and 1 issue for the 0x9A byte
-    //
-    // But because these both have the same source location and tag, only one issue is saved
-    //
-    // TODO: it would be nice to have a "byte index" or something inside SourceLocation, so that encoding issues at the same location
-    // can be saved 
-    //
+
     EXPECT_EQ(TheByteDecoder->getIssues().size(), 1u);
 }
 
@@ -392,7 +374,7 @@ TEST_F(ByteDecoderTest, Surrogate1) {
     c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
     // from 0xED byte
-    EXPECT_EQ(c, SourceCharacter(CODEPOINT_REPLACEMENT_CHARACTER));
+    EXPECT_EQ(c, SourceCharacter(CODEPOINT_UNSAFE_3_BYTE_SEQUENCE));
     
     EXPECT_EQ(TheByteBuffer->buffer, arr + 2);
     
@@ -402,41 +384,14 @@ TEST_F(ByteDecoderTest, Surrogate1) {
     c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
     // from 0xA0 byte
-    EXPECT_EQ(c, SourceCharacter(CODEPOINT_REPLACEMENT_CHARACTER));
-    
-    EXPECT_EQ(TheByteBuffer->buffer, arr + 3);
-    
-    //    TheByteDecoder->nextSourceCharacter(TOPLEVEL);
-    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-    
-    c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
-    
-    // from 0x80 byte
-    EXPECT_EQ(c, SourceCharacter(CODEPOINT_REPLACEMENT_CHARACTER));
-    
-    EXPECT_EQ(TheByteBuffer->buffer, arr + 4);
-    
-    //    TheByteDecoder->nextSourceCharacter(TOPLEVEL);
-    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-    
-    c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
-    
     EXPECT_EQ(c, SourceCharacter(CODEPOINT_ENDOFFILE));
     
     EXPECT_EQ(TheByteBuffer->buffer, arr + 5);
     
     //
-    // Issue: Invalid UTF-8 sequence: Probable surrogate
-    // Issue: Invalid UTF-8 sequence
+    // Issue: Invalid UTF-8 sequence: Stray surrogate
     //
-    // Actually, 3 issues are created: 1 issue for the 0xED byte, 1 issue for the 0xA0 byte, 1 issue for the 0x80 byte
-    //
-    // But because the last 2 have the same source location and tag, only one issue is saved
-    //
-    // TODO: it would be nice to have a "byte index" or something inside SourceLocation, so that encoding issues at the same location
-    // can be saved 
-    //
-    EXPECT_EQ(TheByteDecoder->getIssues().size(), 2u);
+    EXPECT_EQ(TheByteDecoder->getIssues().size(), 1u);
 }
 
 //
@@ -469,7 +424,7 @@ TEST_F(ByteDecoderTest, Surrogate2) {
     c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
     // from 0xED byte
-    EXPECT_EQ(c, SourceCharacter(CODEPOINT_REPLACEMENT_CHARACTER));
+    EXPECT_EQ(c, SourceCharacter(CODEPOINT_UNSAFE_3_BYTE_SEQUENCE));
     
     EXPECT_EQ(TheByteBuffer->buffer, arr + 2);
     
@@ -479,40 +434,13 @@ TEST_F(ByteDecoderTest, Surrogate2) {
     c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
     
     // from 0xB0 byte
-    EXPECT_EQ(c, SourceCharacter(CODEPOINT_REPLACEMENT_CHARACTER));
-    
-    EXPECT_EQ(TheByteBuffer->buffer, arr + 3);
-    
-    //    TheByteDecoder->nextSourceCharacter(TOPLEVEL);
-    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-    
-    c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
-    
-    // from 0x80 byte
-    EXPECT_EQ(c, SourceCharacter(CODEPOINT_REPLACEMENT_CHARACTER));
-    
-    EXPECT_EQ(TheByteBuffer->buffer, arr + 4);
-    
-    //    TheByteDecoder->nextSourceCharacter(TOPLEVEL);
-    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-    
-    c = TheByteDecoder->currentSourceCharacter(TOPLEVEL);
-    
     EXPECT_EQ(c, SourceCharacter(CODEPOINT_ENDOFFILE));
     
     EXPECT_EQ(TheByteBuffer->buffer, arr + 5);
     
     //
-    // Issue: Invalid UTF-8 sequence: Probable surrogate
-    // Issue: Invalid UTF-8 sequence
+    // Issue: Invalid UTF-8 sequence: Stray surrogate
     //
-    // Actually, 3 issues are created: 1 issue for the 0xED byte, 1 issue for the 0xB0 byte, 1 issue for the 0x80 byte
-    //
-    // But because the last 2 have the same source location and tag, only one issue is saved
-    //
-    // TODO: it would be nice to have a "byte index" or something inside SourceLocation, so that encoding issues at the same location
-    // can be saved 
-    //
-    EXPECT_EQ(TheByteDecoder->getIssues().size(), 2u);
+    EXPECT_EQ(TheByteDecoder->getIssues().size(), 1u);
 }
 

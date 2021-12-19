@@ -246,6 +246,7 @@ isError[Token`Error`UnterminatedFileString] = True
 isError[Token`Error`UnterminatedLinearSyntaxBlob] = True
 isError[Token`Error`PrefixImplicitNull] = True
 isError[Token`Error`InfixImplicitNull] = True
+isError[Token`Error`UnsafeCharacterEncoding] = True
 isError[Token`Error`End] = True
 
 isError[_] = False

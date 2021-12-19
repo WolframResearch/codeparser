@@ -1,40 +1,58 @@
 
 #include "ByteEncoder.h"
 
-#include "Utils.h" // for isMBNonCharacter
+#include "Utils.h" // for isStraySurrogate
 
 #include <cassert>
 
 size_t ByteEncoder::size(codepoint val) {
-    
-    assert(val >= 0 || val == CODEPOINT_CRLF);
-    
+
     if (val == CODEPOINT_CRLF) {
+
+        return 2;
+    }
+    
+    if (val == CODEPOINT_UNSAFE_1_BYTE_SEQUENCE) {
+        
+        return 1;
+    }
+    
+    if (val == CODEPOINT_UNSAFE_2_BYTE_SEQUENCE) {
         
         return 2;
     }
     
-    if (val <= 0x7f) {
-        
-        return 1;
-        
-    } else if (val <= 0x7ff) {
-        
-        return 2;
-        
-    } else if (val <= 0xffff) {
+    if (val == CODEPOINT_UNSAFE_3_BYTE_SEQUENCE) {
         
         return 3;
+    }
+    
+    assert(val >= 0);
+    
+    if (val <= 0x7f) {
+
+        return 1;
+
+    } else if (val <= 0x7ff) {
+
+        return 2;
+
+    } else if (val <= 0xffff) {
         
+        assert(val != CODEPOINT_BOM);
+        assert(!Utils::isStraySurrogate(val));
+        
+        return 3;
+
     } else {
+        
+        assert(val <= 0x10ffff);
         
         return 4;
     }
 }
 
 void ByteEncoder::encodeBytes(std::ostream& stream, codepoint val, ByteEncoderState *state) {
-    
-    assert((val >= 0 || val == CODEPOINT_CRLF) && "Maybe a WLCharacter was created with incorrect Escape?");
     
     if (val == CODEPOINT_CRLF) {
         
@@ -43,6 +61,24 @@ void ByteEncoder::encodeBytes(std::ostream& stream, codepoint val, ByteEncoderSt
         
         return;
     }
+    
+    //
+    // e.g., GTest was trying to print
+    //
+    if (val == CODEPOINT_UNSAFE_1_BYTE_SEQUENCE || val == CODEPOINT_UNSAFE_2_BYTE_SEQUENCE || val == CODEPOINT_UNSAFE_3_BYTE_SEQUENCE) {
+        
+        //
+        // Print U+FFFD (REPLACEMENT CHARACTER)
+        //
+        
+        stream.put(0xef);
+        stream.put(0xbf);
+        stream.put(0xbd);
+        
+        return;
+    }
+    
+    assert(val >= 0);
     
     if (val <= 0x7f) {
         
@@ -72,8 +108,8 @@ void ByteEncoder::encodeBytes(std::ostream& stream, codepoint val, ByteEncoderSt
         // 3 byte UTF-8 sequence
         //
         
-        assert(!Utils::isBMPNonCharacter(val));
-        assert(val != CODEPOINT_ACTUAL_BOM);
+        assert(val != CODEPOINT_BOM);
+        assert(!Utils::isStraySurrogate(val));
         
         auto firstByte = static_cast<unsigned char>(((val >> 12) & 0x0f) | 0xe0);
         auto secondByte = static_cast<unsigned char>(((val >> 6) & 0x3f) | 0x80);
@@ -90,7 +126,6 @@ void ByteEncoder::encodeBytes(std::ostream& stream, codepoint val, ByteEncoderSt
         //
         
         assert(val <= 0x10ffff);
-        assert(!Utils::isNonBMPNonCharacter(val));
         
         auto firstByte = static_cast<unsigned char>(((val >> 18) & 0x07) | 0xf0);
         auto secondByte = static_cast<unsigned char>(((val >> 12) & 0x3f) | 0x80);
@@ -106,8 +141,6 @@ void ByteEncoder::encodeBytes(std::ostream& stream, codepoint val, ByteEncoderSt
 
 void ByteEncoder::encodeBytes(std::array<unsigned char, 4>& arr, codepoint val, ByteEncoderState *state) {
     
-    assert(val >= 0 || val == CODEPOINT_CRLF);
-    
     if (val == CODEPOINT_CRLF) {
         
         arr[0] = '\r';
@@ -115,6 +148,24 @@ void ByteEncoder::encodeBytes(std::array<unsigned char, 4>& arr, codepoint val, 
         
         return;
     }
+    
+    //
+    // e.g., GTest was trying to print
+    //
+    if (val == CODEPOINT_UNSAFE_1_BYTE_SEQUENCE || val == CODEPOINT_UNSAFE_2_BYTE_SEQUENCE || val == CODEPOINT_UNSAFE_3_BYTE_SEQUENCE) {
+        
+        //
+        // Print U+FFFD (REPLACEMENT CHARACTER)
+        //
+        
+        arr[0] = '\xef';
+        arr[1] = '\xbf';
+        arr[2] = '\xbd';
+        
+        return;
+    }
+    
+    assert(val >= 0);
     
     if (val <= 0x7f) {
         
@@ -143,6 +194,9 @@ void ByteEncoder::encodeBytes(std::array<unsigned char, 4>& arr, codepoint val, 
         //
         // 3 byte UTF-8 sequence
         //
+        
+        assert(val != CODEPOINT_BOM);
+        assert(!Utils::isStraySurrogate(val));
         
         auto firstByte = static_cast<unsigned char>(((val >> 12) & 0x0f) | 0xe0);
         auto secondByte = static_cast<unsigned char>(((val >> 6) & 0x3f) | 0x80);

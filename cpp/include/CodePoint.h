@@ -42,17 +42,11 @@ constexpr codepoint CODEPOINT_LINEARSYNTAX_SLASH(0xf7cc);
 constexpr codepoint CODEPOINT_LINEARSYNTAX_BACKTICK(0xf7cd);
 
 //
-// Nice to have
-//
-constexpr codepoint CODEPOINT_REPLACEMENT_CHARACTER(0xfffd);
-
-//
-// Need a special code point because MathLink does not transmit BOM when it is first character
+// Used because MathLink does not transmit BOM when it is first character
 //
 // Related bugs: 366106
 //
-constexpr codepoint CODEPOINT_ACTUAL_BOM(0xfeff);
-constexpr codepoint CODEPOINT_VIRTUAL_BOM(0xe001);
+constexpr codepoint CODEPOINT_BOM(0xfeff);
 
 //
 // Do the simple thing and have ENDOFFILE be EOF
@@ -92,6 +86,20 @@ constexpr codepoint CODEPOINT_STRINGMETA_TAB(-12);
 // There is a mnemonic here: \r is 13 and CODEPOINT_CRLF is -13
 //
 constexpr codepoint CODEPOINT_CRLF(-13);
+
+//
+// The return value of ByteDecoder with unsafe input:
+// incomplete sequence
+// stray surrogate
+// BOM
+//
+// CODEPOINT_UNSAFE_1_BYTE_SEQUENCE represents unsafe input of 1 byte
+// CODEPOINT_UNSAFE_2_BYTE_SEQUENCE represents unsafe input of 2 bytes
+// CODEPOINT_UNSAFE_3_BYTE_SEQUENCE represents unsafe input of 3 bytes
+//
+constexpr codepoint CODEPOINT_UNSAFE_1_BYTE_SEQUENCE(-14);
+constexpr codepoint CODEPOINT_UNSAFE_2_BYTE_SEQUENCE(-15);
+constexpr codepoint CODEPOINT_UNSAFE_3_BYTE_SEQUENCE(-16);
 
 TokenEnum LongNameCodePointToOperator(codepoint c);
 codepoint LongNameOperatorToCodePoint(TokenEnum t);

@@ -692,22 +692,38 @@ Module[{res, convention, container, containerWasAutomatic, tabWidth},
 
 
 fillinSource[cstIn_] :=
-Module[{cst, children, start, end, data},
+Catch[
+Module[{cst, children, first, last, start, end, data},
 
   cst = cstIn;
 
   children = cst[[2]];
+  
   (* only fill in if there are actually children nodes to grab *)
-  If[children =!= {},
-    start = First[children][[3, Key[Source], 1]];
-    end = Last[children][[3, Key[Source], 2]];
-    data = cst[[3]];
-    AssociateTo[data, Source -> {start, end}];
-    cst[[3]] = data;
+  If[empty[children],
+    Throw[cst]
   ];
 
+  first = First[children];
+
+  If[MissingQ[first],
+    Throw[cst]
+  ];
+
+  last = Last[children];
+
+  If[MissingQ[last],
+    Throw[cst]
+  ];
+
+  start = first[[3, Key[Source], 1]];
+  end = last[[3, Key[Source], 2]];
+  data = cst[[3]];
+  AssociateTo[data, Source -> {start, end}];
+  cst[[3]] = data;
+
   cst
-]
+]]
 
 
 
@@ -1238,8 +1254,9 @@ Module[{str, res, leaf, data, exprs, stringifyMode, convention, tabWidth, encodi
 
 
 
-SafeString::usage = "SafeString[bytes] interprets bytes as UTF-8 and returns a \"safe\" string. \
-Invalid sequences and surrogates are replaced with \\[UnknownGlyph] and BOM is replaced with special character \\:e001."
+SafeString::usage = "SafeString[bytes] interprets bytes as UTF-8 and returns a string of the decoded bytes if it is safe. \
+Otherwise, Missing[\"UnsafeCharacterEncoding\"] is returned. \
+A string is safe if there are no incomplete sequences, stray surrogates, or BOM present."
 
 SafeString[bytes:{_Integer...}] :=
 Module[{res},

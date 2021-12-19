@@ -1,7 +1,7 @@
 
 #include "WLCharacter.h"
 
-#include "Utils.h" // for set_safe, etc.
+#include "Utils.h" // for set_graphical, etc.
 #include "Source.h" // for SourceCharacer
 #include "LongNames.h" // for CodePointToLongNameMap
 
@@ -230,15 +230,6 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
     return stream;
 }
 
-std::string WLCharacter::safeEncodedCharString() const {
-    
-    std::ostringstream String;
-    
-    String << set_safe << *this << clear_safe;
-    
-    return String.str();
-}
-
 std::string WLCharacter::graphicalString() const {
     
     std::ostringstream String;
@@ -254,13 +245,13 @@ std::string WLCharacter::safeAndGraphicalString() const {
     
     if (escape() == ESCAPE_NONE) {
         
-        String << "\"" << set_safe << *this << clear_safe << "\" (" << set_graphical << *this << clear_graphical << ")";
+        String << "\"" << *this << "\" (" << set_graphical << *this << clear_graphical << ")";
         
         return String.str();
         
     } else {
         
-        String << set_safe << *this << clear_safe;
+        String << *this;
         
         return String.str();
     }
@@ -564,6 +555,10 @@ bool WLCharacter::isMBLetterlike() const {
     }
     
     if (isMBUninterpretable()) {
+        return false;
+    }
+    
+    if (val == CODEPOINT_UNSAFE_1_BYTE_SEQUENCE || val == CODEPOINT_UNSAFE_2_BYTE_SEQUENCE || val == CODEPOINT_UNSAFE_3_BYTE_SEQUENCE) {
         return false;
     }
     

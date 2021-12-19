@@ -12,7 +12,6 @@ endif()
 
 set(CPP_TEST_SOURCES
     ${PROJECT_SOURCE_DIR}/cpp/test/TestAPI.cpp
-    ${PROJECT_SOURCE_DIR}/cpp/test/TestBufferAndLength.cpp
     ${PROJECT_SOURCE_DIR}/cpp/test/TestByteDecoder.cpp
     ${PROJECT_SOURCE_DIR}/cpp/test/TestCharacterDecoder.cpp
     ${PROJECT_SOURCE_DIR}/cpp/test/TestNode.cpp

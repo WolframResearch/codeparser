@@ -94,6 +94,10 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
 
   str = SafeString[bytes];
 
+  If[MissingQ[str],
+    Throw[str]
+  ];
+
   If[FailureQ[str],
     Throw[str]
   ];
@@ -230,6 +234,10 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
 
   str = SafeString[bytes];
 
+  If[MissingQ[str],
+    Throw[str]
+  ];
+  
   If[FailureQ[str],
     Throw[str]
   ];

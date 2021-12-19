@@ -495,6 +495,12 @@ bool ListNode::check() const {
 }
 
 
+void MissingBecauseUnsafeCharacterEncodingNode::print(std::ostream& s) const {
+    
+    s << "Missing[\"UnsafeCharacterEncoding\"]";
+}
+
+
 void SourceCharacterNode::print(std::ostream& s) const {
     
     s << SYMBOL_CODEPARSER_LIBRARY_MAKESOURCECHARACTERNODE->name() << "[";
@@ -510,7 +516,7 @@ void SafeStringNode::print(std::ostream& s) const {
     
     s << SYMBOL_CODEPARSER_LIBRARY_MAKESAFESTRINGNODE->name() << "[";
     
-    s << "<<safe string that I'm too lazy to print>>";
+    bufAndLen.printUTF8String(s);
     
     s << "]\n";
 }
@@ -825,6 +831,19 @@ void ListNode::put(MLINK mlp) const {
     }
 }
 
+void MissingBecauseUnsafeCharacterEncodingNode::put(MLINK mlp) const {
+    
+    if (!MLPutFunction(mlp, SYMBOL_MISSING->name(), 1)) {
+        assert(false);
+    }
+    
+    std::string reason = "UnsafeCharacterEncoding";
+    
+    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(reason.c_str()), static_cast<int>(reason.size()))) {
+        assert(false);
+    }
+}
+
 void SourceCharacterNode::put(MLINK mlp) const {
     
     if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKESOURCECHARACTERNODE->name(), static_cast<int>(2))) {
@@ -855,10 +874,9 @@ void SafeStringNode::put(MLINK mlp) const {
         assert(false);
     }
     
-    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(safeBytes.data()), static_cast<int>(safeBytes.size()))) {
+    if (!MLPutUTF8String(mlp, bufAndLen.buffer, static_cast<int>(bufAndLen.length()))) {
         assert(false);
     }
 }
 
 #endif // USE_MATHLINK
-

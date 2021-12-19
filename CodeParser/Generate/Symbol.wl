@@ -102,7 +102,7 @@ Module[{ctxt},
 
 
 symbols = Union[Join[
-    {Blank, BlankSequence, BlankNullSequence, EndOfFile, Integer, Integral, Integrate, Null, Out, Optional, Pattern,
+    {Blank, BlankSequence, BlankNullSequence, EndOfFile, Integer, Integral, Integrate, Missing, Null, Out, Optional, Pattern,
       Rational, Real, Slot, SlotSequence, String, Symbol, TagSet, TagSetDelayed, TagUnset, Unset, Whitespace},
     {CodeParser`Library`MakeLeafNode,
       CodeParser`Library`MakeErrorNode, CodeParser`Library`MakeUnterminatedTokenErrorNeedsReparseNode,

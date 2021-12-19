@@ -135,6 +135,8 @@ public:
     
     ParserSessionPolicy policy;
     
+    bool unsafeCharacterEncodingFlag;
+    
     
     ParserSession();
     
@@ -157,6 +159,7 @@ public:
     Node *tokenize();
     Node *listSourceCharacters();
     Node *concreteParseLeaf(StringifyMode mode);
+    Node *safeString();
     
     void releaseNode(Node *N);
     
@@ -165,6 +168,8 @@ public:
     
     NodePtr handleAbort() const;
 #endif // !NABORT
+    
+    void setUnsafeCharacterEncodingFlag();
 };
 
 extern ParserSessionPtr TheParserSession;

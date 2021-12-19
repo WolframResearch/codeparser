@@ -271,6 +271,18 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     	Print["version: ", version]
     ];
     Which[
+      (*
+      1.5: Missing[] may appear with nodes
+      *)
+      version ~versionGreaterEqual~ {1, 5},
+            cst = 
+       CodeConcreteParse[File[file], 
+        ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, If[MissingQ[#[[1, 1]]] || MissingQ[#[[1, -1]]], Nothing, Source -> {#[[1, 1, 3, Key[Source], 1]], #[[1, -1, 3, Key[Source], 2]]}]],
+            If[!empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
+            If[!empty[#[[4]]], "ComplexLineContinuations" -> #[[4]], Nothing],
+            If[!empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
+            If[!empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing]|>]&)];
+      ,
       version ~versionGreaterEqual~ {1, 1},
             cst = 
        CodeConcreteParse[File[file], 
@@ -473,6 +485,18 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
      
      version = convertVersionString[PacletFind["CodeParser"][[1]]["Version"]];
      Which[
+     (*
+     1.5: Missing[] may appear with nodes
+     *)
+     version ~versionGreaterEqual~ {1, 5},
+            cst = 
+       CodeConcreteParse[File[file], 
+        ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]], If[empty[#[[1]]], Nothing, If[MissingQ[#[[1, 1]]] || MissingQ[#[[1, -1]]], Nothing, Source -> {#[[1, 1, 3, Key[Source], 1]], #[[1, -1, 3, Key[Source], 2]]}]],
+            If[!empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
+            If[!empty[#[[4]]], "ComplexLineContinuations" -> #[[4]], Nothing],
+            If[!empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
+            If[!empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing]|>]&)];
+      ,
      version ~versionGreaterEqual~ {1, 1},
             cst = 
        CodeConcreteParse[File[file], 

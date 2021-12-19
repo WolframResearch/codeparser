@@ -212,7 +212,7 @@ TEST_F(TokenizerTest, Basic4) {
     
     auto Tok = TheTokenizer->currentToken(TOPLEVEL);
     
-    EXPECT_EQ(Tok, Token(TOKEN_SYMBOL, BufferAndLength(arr, 1, UTF8STATUS_INVALID), Source(SourceLocation(1, 1), SourceLocation(1, 2))));
+    EXPECT_EQ(Tok, Token(TOKEN_ERROR_UNSAFECHARACTERENCODING, BufferAndLength(arr, 1), Source(SourceLocation(1, 1), SourceLocation(1, 2))));
     
     EXPECT_EQ(TheByteDecoder->SrcLoc, SourceLocation(1, 1));
     

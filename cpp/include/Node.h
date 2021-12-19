@@ -529,6 +529,20 @@ public:
 //
 //
 //
+class MissingBecauseUnsafeCharacterEncodingNode : public Node {
+public:
+    MissingBecauseUnsafeCharacterEncodingNode() : Node() {}
+    
+#if USE_MATHLINK
+    void put(MLINK mlp) const override;
+#endif // USE_MATHLINK
+    
+    void print(std::ostream&) const override;
+};
+
+//
+//
+//
 class SourceCharacterNode : public Node {
     const SourceCharacter Char;
 public:
@@ -548,12 +562,10 @@ public:
 //
 //
 class SafeStringNode : public Node {
-    std::vector<unsigned char> safeBytes;
+    BufferAndLength bufAndLen;
 public:
     
-    SafeStringNode(std::vector<unsigned char>& safeBytes) : Node(), safeBytes(safeBytes) {}
-    
-    SafeStringNode(std::vector<unsigned char>&& safeBytes) : Node(), safeBytes(std::move(safeBytes)) {}
+    SafeStringNode(BufferAndLength bufAndLen) : Node(), bufAndLen(bufAndLen) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;

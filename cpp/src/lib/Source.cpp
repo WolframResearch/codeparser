@@ -13,119 +13,26 @@
 #include <sstream> // for ostringstream
 
 
-BufferAndLength::BufferAndLength() : buffer(), end(), status() {}
+BufferAndLength::BufferAndLength() : buffer(), end() {}
 
-BufferAndLength::BufferAndLength(Buffer buffer, size_t length, UTF8Status status) : buffer(buffer), end(buffer + length), status(status) {}
+BufferAndLength::BufferAndLength(Buffer buffer, size_t length) : buffer(buffer), end(buffer + length) {}
 
 size_t BufferAndLength::length() const {
     return end - buffer;
 }
 
 void BufferAndLength::printUTF8String(std::ostream& s) const {
-    
-    if (status == UTF8STATUS_NORMAL) {
-        s.write(reinterpret_cast<const char *>(buffer), length());
-        return;
-    }
-    
-    std::string str;
-    
-    auto niceBufAndLen = createNiceBufferAndLength(&str);
-    
-    niceBufAndLen.printUTF8String(s);
+    s.write(reinterpret_cast<const char *>(buffer), length());
 }
 
 #if USE_MATHLINK
 void BufferAndLength::putUTF8String(MLINK mlp) const {
-    
-    if (status == UTF8STATUS_NORMAL) {
-        if (!MLPutUTF8String(mlp, buffer, static_cast<int>(length()))) {
-            assert(false);
-        }
-        
-        return;
+
+    if (!MLPutUTF8String(mlp, buffer, static_cast<int>(length()))) {
+        assert(false);
     }
-    
-    std::string str;
-    
-    auto niceBufAndLen = createNiceBufferAndLength(&str);
-    
-    niceBufAndLen.putUTF8String(mlp);
 }
 #endif // USE_MATHLINK
-
-
-BufferAndLength BufferAndLength::createNiceBufferAndLength(std::string *str) const {
-    
-    //
-    // make new Buffer
-    //
-    
-    auto oldBuf = TheByteBuffer->buffer;
-    auto oldStatus = TheByteDecoder->getStatus();
-    
-    //
-    // This is an error path, so fine to use things like ostringstream
-    // that might be frowned upon in happier paths
-    //
-    std::ostringstream newStrStream;
-    
-    if (status == UTF8STATUS_NONCHARACTER_OR_BOM) {
-        newStrStream << set_graphical;
-    }
-    
-    NextPolicy policy = 0;
-    
-    //
-    // Simulating a new buffer here, so make sure to set both buffer AND wasEOF!
-    //
-    TheByteBuffer->buffer = buffer;
-    TheByteBuffer->wasEOF = false;
-    
-    while (true) {
-        
-        if (TheByteBuffer->buffer == end) {
-            break;
-        }
-        assert(TheByteBuffer->buffer < end);
-        
-        auto c = TheByteDecoder->currentSourceCharacter(policy);
-        assert(!c.isEndOfFile());
-        
-        if (status == UTF8STATUS_NONCHARACTER_OR_BOM) {
-            
-            //
-            // Convert to a WLCharacter to allowing making graphical
-            //
-            
-            newStrStream << WLCharacter(c.to_point());
-            
-        } else {
-            
-            //
-            // It is ok to handle UTF8STATUS_INVALID here because
-            // c is \[UnknownGlyph]
-            //
-            
-            newStrStream << c;
-        }
-        
-        TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-    }
-    
-    TheByteBuffer->buffer = oldBuf;
-    TheByteDecoder->setStatus(oldStatus);
-    
-    *str = newStrStream.str();
-    
-    auto newB = reinterpret_cast<Buffer>(str->c_str());
-    
-    auto newLength = str->size();
-    
-    auto newBufAndLen = BufferAndLength(newB, newLength);
-    
-    return newBufAndLen;
-}
 
 bool operator==(BufferAndLength a, BufferAndLength b) {
     return a.buffer == b.buffer && a.end == b.end;
@@ -518,15 +425,6 @@ bool SourceCharacter::isMBWhitespace() const {
     return LongNames::isMBWhitespace(val);
 }
 
-std::string SourceCharacter::safeEncodedCharString() const {
-    
-    std::ostringstream String;
-    
-    String << set_safe << *this << clear_safe;
-    
-    return String.str();
-}
-
 std::string SourceCharacter::graphicalString() const {
     
     std::ostringstream String;
@@ -540,17 +438,16 @@ std::string SourceCharacter::safeAndGraphicalString() const {
 
     std::ostringstream String;
 
-    String << "\"" << set_safe << *this << clear_safe << "\" (" << set_graphical << *this << clear_graphical << ")";
-
+    String << "\"" << *this << "\" (" << set_graphical << *this << clear_graphical << ")";
+    
     return String.str();
 }
 
 std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
     
     auto graphicalFlag = stream.iword(get_graphical_i()) == 1;
-    auto safeFlag = stream.iword(get_safe_i()) == 1;
     
-    if (!graphicalFlag && !safeFlag) {
+    if (!graphicalFlag) {
 
         if (c.isEndOfFile()) {
             //
@@ -569,36 +466,9 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
 
         return stream;
     }
-    
-    if (safeFlag) {
-
-        if (c.isEndOfFile()) {
-            //
-            // Do not print anything for EOF
-            //
-            return stream;
-        }
-
-        auto val = c.to_point();
-
-        assert(val != CODEPOINT_ASSERTFALSE);
-        
-        //
-        // if safeFlag, then only call encodeBytes if safe (i.e., no noncharacters)
-        //
-        
-        if (!(Utils::isBMPNonCharacter(val) || Utils::isNonBMPNonCharacter(val))) {
-            
-            ByteEncoderState state;
-
-            ByteEncoder::encodeBytes(stream, val, &state);
-
-            return stream;
-        }
-    }
 
     //
-    // Graphical, or noncharacters with safeFlag
+    // Graphical
     //
     
     auto val = c.to_point();
@@ -674,10 +544,10 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
         case '\x98': case '\x99': case '\x9a': case '\x9b': case '\x9c': case '\x9d': case '\x9e': case '\x9f':
             stream << WLCharacter(val, ESCAPE_2HEX);
             break;
-        case CODEPOINT_VIRTUAL_BOM:
-            stream << WLCharacter(CODEPOINT_ACTUAL_BOM, ESCAPE_4HEX);
-            break;
         default:
+            
+            assert(val >= 0);
+            
             if (val > 0xffff) {
                 
                 auto it = std::lower_bound(CodePointToLongNameMap_points.begin(), CodePointToLongNameMap_points.end(), val);

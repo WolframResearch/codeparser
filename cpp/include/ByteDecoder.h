@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "Source.h" // for IssuePtr, UTF8Status, etc.
+#include "Source.h" // for IssuePtr, etc.
 #include "API.h" // for ENCODINGMODE
 
 #include <set>
@@ -79,8 +79,6 @@ private:
     
     IssuePtrSet Issues;
     
-    UTF8Status status;
-    
     SourceConventionManagerPtr srcConventionManager;
 
     EncodingMode encodingMode;
@@ -90,9 +88,21 @@ private:
     
     void nonASCIIWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc);
     
-    SourceCharacter invalidReturn(SourceLocation errSrcLoc, NextPolicy policy);
+    SourceCharacter valid(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, NextPolicy policy);
     
-    SourceCharacter surrogateReturn(SourceLocation errSrcLoc, NextPolicy policy);
+    SourceCharacter validNotStrange(codepoint decoded);
+    
+    SourceCharacter validMB(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, NextPolicy policy);
+    
+    SourceCharacter incomplete1ByteSequence(SourceLocation errSrcLoc, NextPolicy policy);
+    
+    SourceCharacter incomplete2ByteSequence(SourceLocation errSrcLoc, NextPolicy policy);
+    
+    SourceCharacter incomplete3ByteSequence(SourceLocation errSrcLoc, NextPolicy policy);
+    
+    SourceCharacter straySurrogate(SourceLocation errSrcLoc, NextPolicy policy);
+    
+    SourceCharacter bom(SourceLocation errSrcLoc, NextPolicy policy);
     
 public:
     
@@ -122,7 +132,7 @@ public:
     //
     // Also warn about \r line endings
     //
-    // Do not decode invalid sequences or surrogates.
+    // Do not decode unsafe character encodings: incomplete sequences, stray surrogates, or BOM
     //
     SourceCharacter nextSourceCharacter0(NextPolicy policy);
     
@@ -137,12 +147,6 @@ public:
     
     void addIssue(IssuePtr);
 #endif // !NISSUES
-    
-    void setStatus(UTF8Status status);
-    
-    UTF8Status getStatus() const;
-    
-    void clearStatus();
 };
 
 extern ByteDecoderPtr TheByteDecoder;

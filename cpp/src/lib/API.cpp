@@ -26,7 +26,7 @@ ParserSession::ParserSession() : bufAndLen(),
 #if !NABORT
 currentAbortQ(),
 #endif // !NABORT
-policy() {
+policy(), unsafeCharacterEncodingFlag() {
     
     TheByteBuffer = ByteBufferPtr(new ByteBuffer());
     TheByteDecoder = ByteDecoderPtr(new ByteDecoder());
@@ -56,6 +56,8 @@ void ParserSession::init(
     bufAndLen = bufAndLenIn;
     
     policy = policyIn;
+    
+    unsafeCharacterEncodingFlag = false;
     
     if (srcConvention == SOURCECONVENTION_UNKNOWN) {
         return;
@@ -146,6 +148,19 @@ Node *ParserSession::parseExpressions() {
             exprs.push_back(std::move(Expr));
             
         } // while (true)
+        
+        NodePtr Collected = NodePtr(new CollectedExpressionsNode(std::move(exprs)));
+        
+        nodes.push_back(std::move(Collected));
+    }
+    
+    if (unsafeCharacterEncodingFlag) {
+        
+        nodes.clear();
+        
+        std::vector<NodePtr> exprs;
+        
+        exprs.push_back(NodePtr(new MissingBecauseUnsafeCharacterEncodingNode()));
         
         NodePtr Collected = NodePtr(new CollectedExpressionsNode(std::move(exprs)));
         
@@ -255,6 +270,13 @@ Node *ParserSession::tokenize() {
         
     } // while (true)
     
+    if (unsafeCharacterEncodingFlag) {
+        
+        auto N = new MissingBecauseUnsafeCharacterEncodingNode();
+        
+        return N;
+    }
+    
     auto N = new ListNode(std::move(nodes));
     
     return N;
@@ -281,6 +303,13 @@ Node *ParserSession::listSourceCharacters() {
         nodes.push_back(std::move(N));
         
     } // while (true)
+    
+    if (unsafeCharacterEncodingFlag) {
+        
+        auto N = new MissingBecauseUnsafeCharacterEncodingNode();
+        
+        return N;
+    }
     
     auto N = new ListNode(std::move(nodes));
     
@@ -336,6 +365,21 @@ Node *ParserSession::concreteParseLeaf(StringifyMode mode) {
         std::vector<NodePtr> exprs;
         
         auto node = concreteParseLeaf0(mode);
+        
+        exprs.push_back(std::move(node));
+        
+        NodePtr Collected = NodePtr(new CollectedExpressionsNode(std::move(exprs)));
+        
+        nodes.push_back(std::move(Collected));
+    }
+    
+    if (unsafeCharacterEncodingFlag) {
+        
+        nodes.clear();
+        
+        std::vector<NodePtr> exprs;
+        
+        auto node = NodePtr(new MissingBecauseUnsafeCharacterEncodingNode());
         
         exprs.push_back(std::move(node));
         
@@ -414,6 +458,37 @@ Node *ParserSession::concreteParseLeaf(StringifyMode mode) {
     return N;
 }
 
+Node *ParserSession::safeString() {
+    
+    //
+    // read all characters, just to set unsafeCharacterEncoding flag if necessary
+    //
+    while (true) {
+        
+        //
+        // No need to check isAbort() inside tokenizer loops
+        //
+        
+        auto Char = TheByteDecoder->nextSourceCharacter0(TOPLEVEL);
+        
+        if (Char.isEndOfFile()) {
+            break;
+        }
+        
+    } // while (true)
+    
+    if (unsafeCharacterEncodingFlag) {
+        
+        auto N = new MissingBecauseUnsafeCharacterEncodingNode();
+        
+        return N;
+    }
+    
+    auto N = new SafeStringNode(bufAndLen);
+    
+    return N;
+}
+
 //
 // Does the file currently have permission to be read?
 //
@@ -459,6 +534,10 @@ NodePtr ParserSession::handleAbort() const {
     return Aborted;
 }
 #endif // !NABORT
+
+void ParserSession::setUnsafeCharacterEncodingFlag() {
+    unsafeCharacterEncodingFlag = true;
+}
 
 ParserSessionPtr TheParserSession = nullptr;
 
@@ -735,21 +814,17 @@ DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    //
-    // Force this buffer to be UTF8STATUS_INVALID in order to trigger conversion to nice \[UnknownGlyph] characters
-    //
-    auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount(), UTF8STATUS_INVALID);
+    auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
     
-    TheByteBuffer->init(bufAndLen, libData);
-    //
-    // Arbitrarily choose LineColumn convention, but it is not used
-    //
-    TheByteDecoder->init(SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, ENCODINGMODE_NORMAL);
+    TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
-    bufAndLen.putUTF8String(mlp);
+    auto S = TheParserSession->safeString();
     
-    TheByteDecoder->deinit();
-    TheByteBuffer->deinit();
+    S->put(mlp);
+    
+    TheParserSession->releaseNode(S);
+    
+    TheParserSession->deinit();
     
     return LIBRARY_NO_ERROR;
 }

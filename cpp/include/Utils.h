@@ -12,13 +12,7 @@ std::ostream& set_graphical(std::ostream& stream);
 
 std::ostream& clear_graphical(std::ostream& stream);
 
-std::ostream& set_safe(std::ostream& stream);
-
-std::ostream& clear_safe(std::ostream& stream);
-
 int get_graphical_i();
-
-int get_safe_i();
 
 //
 //
@@ -26,8 +20,7 @@ int get_safe_i();
 class Utils {
 public:
     
-    static bool isBMPNonCharacter(codepoint point);
-    static bool isNonBMPNonCharacter(codepoint point);
+    static bool isStraySurrogate(codepoint point);
     
 #if !NISSUES
     static bool isStrange(codepoint point);

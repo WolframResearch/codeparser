@@ -76,8 +76,6 @@ struct WLCharacter {
         return static_cast<EscapeStyle>(escapeBits);
     }
     
-    std::string safeEncodedCharString() const;
-    
     std::string graphicalString() const;
     
     std::string safeAndGraphicalString() const;

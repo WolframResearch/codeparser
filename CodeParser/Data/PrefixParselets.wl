@@ -34,6 +34,7 @@ Token`Error`UnterminatedFileString -> Parselet`PrefixErrorParselet[],
 Token`Error`UnterminatedLinearSyntaxBlob -> Parselet`PrefixErrorParselet[],
 Token`Error`UnsupportedToken -> Parselet`PrefixErrorParselet[],
 Token`Error`UnexpectedCloser -> Parselet`PrefixErrorParselet[],
+Token`Error`UnsafeCharacterEncoding -> Parselet`PrefixErrorParselet[],
 
 
 Token`BarGreater -> Parselet`PrefixCloserParselet[],

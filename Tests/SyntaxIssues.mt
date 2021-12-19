@@ -321,14 +321,14 @@ In[14]:= ToCharacterCode["\[Alpha]", "UTF-8"]
 Out[14]= {206, 177}
 *)
 
-TestMatch[
-	FirstCase[CodeConcreteParse[{206}, ContainerNode -> (ContainerNode[Hold, #[[1]], <|SyntaxIssues -> #[[2]]|>]&)],
-		KeyValuePattern[SyntaxIssues -> _], $Failed, {0, Infinity}]
+Test[
+	CodeConcreteParse[{206}]
 	,
-	<|SyntaxIssues -> {
-		EncodingIssue["InvalidCharacterEncoding", "Invalid UTF-8 sequence.", "Fatal", <|Source -> {{1, 1}, {1, 2}}, ConfidenceLevel -> 1.|>],
-		SyntaxIssue["UnexpectedLetterlikeCharacter", "Unexpected letterlike character: ``\"\[UnknownGlyph]\" (\\[UnknownGlyph])``.", "Warning", <|Source -> {{1, 1}, {1, 2}}, ConfidenceLevel -> 0.8|>]
-		}|>
+	ContainerNode[Byte, {
+		Missing["UnsafeCharacterEncoding"]}
+		,
+		<| SyntaxIssues -> {
+			EncodingIssue["IncompleteSequence", "Incomplete sequence.", "Fatal", <| Source -> {{1, 1}, {1, 2}}, ConfidenceLevel -> 1.0 |>] } |>]
 	,
 	TestID->"SyntaxIssues-20200413-T5W0H7"
 ]

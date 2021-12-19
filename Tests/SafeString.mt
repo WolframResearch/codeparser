@@ -15,7 +15,7 @@ Invalid sequences
 Test[
 	SafeString[{206}]
 	,
-	"\[UnknownGlyph]"
+	Missing["UnsafeCharacterEncoding"]
 	,
 	TestID->"SafeString-20200103-K0M0B9"
 ]
@@ -29,7 +29,7 @@ Test[
 	*)
 	SafeString[{237, 160, 128}]
 	,
-	"\[UnknownGlyph]\[UnknownGlyph]\[UnknownGlyph]"
+	Missing["UnsafeCharacterEncoding"]
 	,
 	TestID->"SafeString-20200103-Z8W9G3"
 ]
@@ -43,7 +43,7 @@ Test[
 	*)
 	SafeString[{237, 176, 128}]
 	,
-	"\[UnknownGlyph]\[UnknownGlyph]\[UnknownGlyph]"
+	Missing["UnsafeCharacterEncoding"]
 	,
 	TestID->"SafeString-20200103-G7F2O6"
 ]
@@ -59,7 +59,7 @@ Test[
 	*)
 	SafeString[{239, 187, 191}]
 	,
-	"\:e001"
+	Missing["UnsafeCharacterEncoding"]
 	,
 	TestID->"SafeString-20200103-V9G4Y6"
 ]

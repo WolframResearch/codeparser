@@ -61,7 +61,7 @@ Token`Error`UnexpectedCloser -> Next,
 Token`Error`PrefixImplicitNull -> Next,
 (* implicit  Null  in  f[1,]  *)
 Token`Error`InfixImplicitNull -> Next,
-Token`Buffer5 -> Next,
+Token`Error`UnsafeCharacterEncoding -> Next,
 (*
 Unterminated errors
 

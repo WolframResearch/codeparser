@@ -32,6 +32,7 @@ Token`Error`UnterminatedFileString -> Parselet`InfixAssertFalseParselet[],
 Token`Error`UnterminatedLinearSyntaxBlob -> Parselet`InfixAssertFalseParselet[],
 Token`Error`UnsupportedToken -> Parselet`InfixAssertFalseParselet[],
 Token`Error`UnexpectedCloser -> Parselet`InfixAssertFalseParselet[],
+Token`Error`UnsafeCharacterEncoding -> Parselet`InfixAssertFalseParselet[],
 
 Token`BarGreater -> Parselet`InfixAssertFalseParselet[],
 Token`CloseCurly -> Parselet`InfixAssertFalseParselet[],

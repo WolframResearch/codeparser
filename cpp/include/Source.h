@@ -34,39 +34,13 @@ using AdditionalDescriptionVector = std::vector<std::string>;
 //
 //
 //
-enum UTF8Status : uint8_t {
-    
-    UTF8STATUS_NORMAL,
-    
-    //
-    // Could be:
-    // invalid first, second, third, or fourth byte
-    // Hit EOF in the middle of a sequence
-    // Surrogate
-    //
-    // It doesn't really matter what the problem is.
-    //
-    // Anything that is invalid gets turned into \[UnknownGlyph]
-    //
-    UTF8STATUS_INVALID,
-    
-    //
-    // Non-characters and BOM is preserved
-    //
-    UTF8STATUS_NONCHARACTER_OR_BOM
-};
-
-//
-//
-//
 struct BufferAndLength {
     
     Buffer buffer;
     Buffer end;
-    UTF8Status status;
     
     BufferAndLength();
-    BufferAndLength(Buffer buffer, size_t length = 0, UTF8Status status = UTF8STATUS_NORMAL);
+    BufferAndLength(Buffer buffer, size_t length = 0);
     
     size_t length() const;
     
@@ -79,7 +53,7 @@ struct BufferAndLength {
     BufferAndLength createNiceBufferAndLength(std::string *str) const;
 };
 
-static_assert((SIZEOF_VOID_P == 8 && sizeof(BufferAndLength) == 24) || (SIZEOF_VOID_P == 4), "Check your assumptions");
+static_assert((SIZEOF_VOID_P == 8 && sizeof(BufferAndLength) == 16) || (SIZEOF_VOID_P == 4), "Check your assumptions");
 
 bool operator==(BufferAndLength a, BufferAndLength b);
 bool operator!=(BufferAndLength a, BufferAndLength b);
@@ -235,8 +209,9 @@ FormatIssueTag FORMATISSUETAG_INSERTSPACE = "InsertSpace";
 
 typedef const std::string EncodingIssueTag;
 
-EncodingIssueTag ENCODINGISSUETAG_INVALIDCHARACTERENCODING = "InvalidCharacterEncoding";
-EncodingIssueTag ENCODINGISSUETAG_INVALIDCHARACTERENCODING_SURROGATE = "InvalidCharacterEncodingSurrogate";
+EncodingIssueTag ENCODINGISSUETAG_INCOMPLETESEQUENCE = "IncompleteSequence";
+EncodingIssueTag ENCODINGISSUETAG_STRAYSURROGATE = "StraySurrogate";
+EncodingIssueTag ENCODINGISSUETAG_BOM = "BOM";
 EncodingIssueTag ENCODINGISSUETAG_UNEXPECTEDCARRIAGERETURN = "UnexpectedCarriageReturn";
 EncodingIssueTag ENCODINGISSUETAG_UNEXPECTEDCHARACTER = "UnexpectedCharacter";
 EncodingIssueTag ENCODINGISSUETAG_NONASCIICHARACTER = "NonASCIICharacter";
@@ -298,8 +273,6 @@ struct SourceCharacter {
     constexpr codepoint to_point() const {
         return val;
     }
-    
-    std::string safeEncodedCharString() const;
     
     std::string graphicalString() const;
     
