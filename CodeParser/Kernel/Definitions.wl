@@ -36,6 +36,8 @@ When scanning over (b|c)[a], we want to treat both b and c as definitions
 *)
 DefinitionSymbols[CallNode[LeafNode[Symbol, "Alternatives", _], children_, _]] := Flatten[DefinitionSymbols /@ children]
 
+DefinitionSymbols[CallNode[LeafNode[Symbol, "List", _], children_, _]] := Flatten[DefinitionSymbols /@ children]
+
 DefinitionSymbols[CallNode[node_, _, _]] := DefinitionSymbols[node]
 
 
