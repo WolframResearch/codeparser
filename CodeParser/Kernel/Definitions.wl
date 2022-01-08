@@ -41,7 +41,7 @@ DefinitionSymbols[CallNode[LeafNode[Symbol, "List", _], children_, _]] := Flatte
 DefinitionSymbols[CallNode[node_, _, _]] := DefinitionSymbols[node]
 
 
-DefinitionSymbols[args___] := Failure["InternalUnhandled", <|"Function"->DefinitionSymbols, "Arguments"->{args}|>]
+DefinitionSymbols[args___] := Failure["InternalUnhandled", <| "Function" -> DefinitionSymbols, "Arguments" -> {args} |>]
 
 
 

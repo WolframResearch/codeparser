@@ -1283,6 +1283,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		,
 		{i, 1, Length[list]}
 	]; (* Do *)
+
 	If[operatorStack["Length"] != 1,
 		AppendTo[issues, SyntaxIssue["Package", "There are unbalanced directives.", "Error", <| Source -> list[[1, 3, Key[Source]]], ConfidenceLevel -> 0.7 |>]];
 		Throw[{list, issues}];
@@ -1387,7 +1388,7 @@ abstract[SyntaxErrorNode[SyntaxError`ExpectedSetOperand2, {left_, _, middle_, _}
 
 
 
-abstract[f_Failure] := f
+abstract[f_?FailureQ] := f
 
 abstract[m_?MissingQ] := m
 

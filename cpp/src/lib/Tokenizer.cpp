@@ -1363,6 +1363,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 }
                     break;
                 case CODEPOINT_ENDOFFILE: {
+                    
                     //
                     // Something like  2^^<EOF>
                     //

@@ -194,7 +194,7 @@ aggregateButNotToplevelNewlines[node_[tag_, children_, data_]] :=
 
 
 
-aggregateButNotToplevelNewlines[arg_] := Failure["bad", <|"function"->"aggregateButNotNewlines", "arguments"->{arg}|>]
+aggregateButNotToplevelNewlines[arg_] := Failure["bad", <| "function" -> "aggregateButNotNewlines", "arguments" -> {arg} |>]
 
 
 
@@ -323,15 +323,15 @@ linearize0[n:FragmentNode[_, _String, _]] :=
   n
 
 linearize0[args___] :=
-	Failure["InternalUnhandled", <|"Function"->linearize0, "Arguments"->{args}|>]
+	Failure["InternalUnhandled", <| "Function" -> linearize0, "Arguments" -> {args} |>]
 
 
 
 insertData[FragmentNode[tag_, str_, data1_], data_, keys_] :=
-	FragmentNode[tag, str, <|data1, KeyTake[data, keys]|>]
+	FragmentNode[tag, str, <| data1, KeyTake[data, keys] |>]
 
 insertData[args___] :=
-	Failure["InternalUnhandled", <|"Function"->insertData, "Arguments"->{args}|>]
+	Failure["InternalUnhandled", <| "Function" -> insertData, "Arguments"->{args} |>]
 
 
 

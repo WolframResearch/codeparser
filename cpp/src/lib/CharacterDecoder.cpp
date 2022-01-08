@@ -270,7 +270,9 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
     
     auto wellFormed = false;
     
+#if !NISSUES
     auto atleast1DigitOrAlpha = false;
+#endif // !NISSUES
     
     //
     // Read at least 1 alnum before entering loop
@@ -279,7 +281,9 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
     //
     if (curSource.isUpper()) {
         
+#if !NISSUES
         atleast1DigitOrAlpha = true;
+#endif // !NISSUES
         
         TheByteBuffer->buffer = TheByteDecoder->lastBuf;
         TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;

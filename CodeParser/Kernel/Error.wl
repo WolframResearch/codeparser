@@ -105,7 +105,7 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
   (*
   lines is list of {line characters, newline or "" if end of str with no newline at the end}
   *)
-  lines = StringCases[str, Shortest[line:___ ~~ newline:("\n" | "\r\n" | "\r" | EndOfString)] :> {line, newline}];
+  lines = StringCases[str, Shortest[line:___ ~~ newline:("\r\n" | "\n" | "\r" | EndOfString)] :> {line, newline}];
 
   lines = {replaceTabs[#[[1]], 1, #[[2]] /. "" -> "\n", tabWidth], #[[2]]}& /@ lines;
 
@@ -245,7 +245,7 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
   (*
   lines is list of {line characters, newline or "" if end of str with no newline at the end}
   *)
-  lines = StringCases[str, Shortest[line:___ ~~ newline:("\n" | "\r\n" | "\r" | EndOfString)] :> {line, newline}];
+  lines = StringCases[str, Shortest[line:___ ~~ newline:("\r\n" | "\n" | "\r" | EndOfString)] :> {line, newline}];
 
   lines = {replaceTabs[#[[1]], 1, #[[2]] /. "" -> "\n", tabWidth], #[[2]]}& /@ lines;
 

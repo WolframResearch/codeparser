@@ -508,6 +508,7 @@ bool WLCharacter::isMBStringMeta() const {
 // basically, if it's not anything else, then it's letterlike
 //
 bool WLCharacter::isMBLetterlike() const {
+    
     auto val = to_point();
     
     //
