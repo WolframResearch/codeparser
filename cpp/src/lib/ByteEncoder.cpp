@@ -71,9 +71,9 @@ void ByteEncoder::encodeBytes(std::ostream& stream, codepoint val, ByteEncoderSt
         // Print U+FFFD (REPLACEMENT CHARACTER)
         //
         
-        stream.put(0xef);
-        stream.put(0xbf);
-        stream.put(0xbd);
+        stream.put('\xef');
+        stream.put('\xbf');
+        stream.put('\xbd');
         
         return;
     }
