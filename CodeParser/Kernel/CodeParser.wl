@@ -361,7 +361,7 @@ setupShims[]
 
 
 CodeConcreteParse::usage = "CodeConcreteParse[code] returns a concrete syntax tree by interpreting code as WL input. \
-code can be a string, a file, or a list of bytes."
+code can be a string, a File, or a list of bytes."
 
 Options[CodeConcreteParse] = {
   CharacterEncoding -> "UTF-8",
@@ -486,7 +486,7 @@ Module[{res, convention, container, tabWidth},
 
 
 CodeParse::usage = "CodeParse[code] returns an abstract syntax tree by interpreting code as WL input. \
-code can be a string, a file, or a list of bytes."
+code can be a string, a File, or a list of bytes."
 
 Options[CodeParse] = {
   CharacterEncoding -> "UTF-8",
@@ -930,7 +930,7 @@ Module[{},
 
 
 CodeTokenize::usage = "CodeTokenize[code] returns a list of tokens by interpreting code as WL input. \
-code can be a string, a file, or a list of bytes."
+code can be a string, a File, or a list of bytes."
 
 Options[CodeTokenize] = {
   CharacterEncoding -> "UTF-8",
