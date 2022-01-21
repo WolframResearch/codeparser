@@ -20,6 +20,9 @@ Call abstract on children
 But also warn if something strange is at top-level
 
 *)
+abstractTopLevelChildren[{missing_?MissingQ}, _] :=
+	{{missing}, {}}
+	
 abstractTopLevelChildren[children_, reportIssuesBehavior_] :=
 Module[{abstractedChildren, issues, issuesMaybe},
 

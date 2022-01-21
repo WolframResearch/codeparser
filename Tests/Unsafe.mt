@@ -44,3 +44,20 @@ Test[
 ]
 
 
+unsafe = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "unsafe1.wl"}]
+
+Test[
+	CodeParse[File[unsafe]]
+	,
+	ContainerNode[File, {
+		Missing["UnsafeCharacterEncoding"]}, <|
+			SyntaxIssues -> {
+				EncodingIssue["IncompleteSequence", "Incomplete sequence.", "Fatal", <|Source -> {{1, 16}, {1, 17}}, ConfidenceLevel -> 1.|>]},
+			"FileName" -> unsafe|>]
+	,
+	TestID->"Unsafe-20220121-L0W6B5"
+]
+
+
+
+

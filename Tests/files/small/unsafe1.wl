@@ -1,0 +1,1 @@
+(* :Copyright: © 1989-1996 by Roman E. Maeder *)
