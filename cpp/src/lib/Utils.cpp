@@ -117,6 +117,13 @@ bool Utils::isMBStrange(codepoint point) {
 //        return true;
 //    }
     
+    //
+    // TODO: implement isBMPNoncharacters
+    //
+//    if (Utils::isBMPNoncharacters(point)) {
+//        return true;
+//    }
+    
     if (point <= 0xffff) {
         return false;
     }
@@ -124,6 +131,13 @@ bool Utils::isMBStrange(codepoint point) {
     //
     // Non-BMP
     //
+    
+    //
+    // TODO: implement isNonBMPNoncharacters
+    //
+//    if (Utils::isNonBMPNoncharacters(point)) {
+//        return true;
+//    }
     
     //
     // Plane 15 PUA

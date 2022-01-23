@@ -59,13 +59,15 @@ Extra:
 Extra metadata
 
 possible values:
-NotStrangeLetterlike
-comparison
-arithmetic
-logical
-group
-System
-Special
+"NotStrangeLetterlike"
+"comparison"
+"arithmetic"
+"logical"
+"group"
+"System"
+"Special"
+
+Values like "group" will be used in the future for generating syntax highlighting definitions.
 
 By default, all longname letterlikes are treated as strange.
 That means that there are various warnings about their usage as letterlikes.
