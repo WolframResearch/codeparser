@@ -112,7 +112,7 @@ PrefixNot2
 
 BinarySlashSlash
 BinaryAt
-BinaryAtAtAt
+System`MapApply
 
 TernaryTilde
 TernarySlashColon

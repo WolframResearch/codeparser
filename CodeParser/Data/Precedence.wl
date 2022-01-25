@@ -331,7 +331,17 @@ Precedence`Postfix`BangBang -> Precedence`Postfix`Bang, (* Precedence[Factorial2
 
 Precedence`AtAt -> {Next, Associativity`Right}, (* Precedence[Apply] == 620 *)
 Precedence`SlashAt -> Precedence`AtAt, (* Precedence[Map] == 620 *)
-Precedence`AtAtAt -> Precedence`AtAt,
+(*
+changed in 13.1:
+@@@
+
+before 13.1:
+a @@@ b parsed as Apply[a, b, {1}]
+
+13.1 onward:
+a @@@ b parses as MapApply[a, b]
+*)
+Precedence`AtAtAt -> Precedence`AtAt, (* Precedence[System`MapApply] == 620 *)
 Precedence`SlashSlashAt -> Precedence`AtAt, (* Precedence[MapAll] == 620 *)
 
 Precedence`Tilde -> {Next, Associativity`NonRight}, (* Precedence[Infix] == 630 *)

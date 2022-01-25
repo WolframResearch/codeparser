@@ -52,6 +52,20 @@ Module[{},
 	Related bugs: 365013
 	*)
 	$Quirks["InfixBinaryAt"] = True;
+
+	(*
+	changed in 13.1:
+	@@@
+
+	In 13.0 and before:
+	a @@@ b parsed as Apply[a, b, {1}]
+
+	In 13.1 and after:
+	a @@@ b parses as MapApply[a, b]
+	*)
+	If[$VersionNumber <= 13.0,
+		$Quirks["OldAtAtAt"] = True
+	];
 ]
 
 

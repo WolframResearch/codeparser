@@ -74,7 +74,7 @@ Token`SlashEqual -> Parselet`BinaryOperatorParselet[Token`SlashEqual, Precedence
 Token`LessMinusGreater -> Parselet`BinaryOperatorParselet[Token`LessMinusGreater, Precedence`LessMinusGreater, System`TwoWayRule],
 Token`SlashSlashAt -> Parselet`BinaryOperatorParselet[Token`SlashSlashAt, Precedence`SlashSlashAt, MapAll],
 Token`At -> Parselet`BinaryOperatorParselet[Token`At, Precedence`At, CodeParser`BinaryAt],
-Token`AtAtAt -> Parselet`BinaryOperatorParselet[Token`AtAtAt, Precedence`AtAtAt, CodeParser`BinaryAtAtAt],
+Token`AtAtAt -> Parselet`BinaryOperatorParselet[Token`AtAtAt, Precedence`AtAtAt, System`MapApply],
 Token`SlashSlash -> Parselet`BinaryOperatorParselet[Token`SlashSlash, Precedence`SlashSlash, CodeParser`BinarySlashSlash],
 Token`Question -> Parselet`BinaryOperatorParselet[Token`Question, Precedence`Infix`Question, PatternTest],
 Token`BarMinusGreater -> Parselet`BinaryOperatorParselet[Token`BarMinusGreater, Precedence`BarMinusGreater, Function],

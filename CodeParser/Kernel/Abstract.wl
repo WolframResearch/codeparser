@@ -210,7 +210,15 @@ abstract[BinaryNode[Divide, { left_, _, right_ }, data_]] := abstractTimes[Binar
 
 abstract[BinaryNode[BinaryAt, {left_, _, right_}, data_]] := CallNode[abstract[left], {abstract[right]}, data]
 
-abstract[BinaryNode[BinaryAtAtAt, {left_, _, right_}, data_]] := CallNode[ToNode[Apply], abstract /@ {left, right, GroupNode[List, { LeafNode[Token`OpenCurly, "{", <||>], ToNode[1], LeafNode[Token`CloseCurly, "}", <||>] }, <||>]}, data]
+abstract[BinaryNode[System`MapApply, {left_, _, right_}, data_]] :=
+Module[{oldAtAtAtQuirk},
+	oldAtAtAtQuirk = Lookup[$Quirks, "OldAtAtAt", False];
+	If[oldAtAtAtQuirk,
+		CallNode[ToNode[Apply], abstract /@ {left, right, GroupNode[List, { LeafNode[Token`OpenCurly, "{", <||>], ToNode[1], LeafNode[Token`CloseCurly, "}", <||>] }, <||>]}, data]
+		,
+		CallNode[ToNode[System`MapApply], abstract /@ {left, right}, data]
+	]
+]
 
 (*
 Make sure to reverse the arguments
@@ -571,11 +579,10 @@ topLevelChildIssues[LeafNode[Symbol,_,_], KeyValuePattern["WillReportToplevelIss
 Side-effecting or calling binary operators
 *)
 topLevelChildIssues[
-	BinaryNode[
-		AddTo | Apply | BinaryAt | BinaryAtAtAt |
-			BinarySlashSlash | Map | Set | SetDelayed |
-			SubtractFrom | Unset | UpSet | UpSetDelayed |
-			Put | PutAppend
+	BinaryNode[AddTo | Apply | BinaryAt | BinarySlashSlash |
+		Map | System`MapApply | Set | SetDelayed |
+		SubtractFrom | Unset | UpSet | UpSetDelayed | Put |
+		PutAppend
 		,
 		_
 		,
@@ -721,10 +728,10 @@ topLevelChildIssues[
 
 topLevelChildIssues[
 	InfixNode[CompoundExpression, {
-		BinaryNode[AddTo | Apply | BinaryAt | BinaryAtAtAt |
-			BinarySlashSlash | Map | Set | SetDelayed |
-			SubtractFrom | Unset | UpSet | UpSetDelayed |
-			Put | PutAppend, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }
+		BinaryNode[AddTo | Apply | BinaryAt | BinarySlashSlash |
+			Map | System`MapApply | Set | SetDelayed |
+			SubtractFrom | Unset | UpSet | UpSetDelayed | Put |
+			PutAppend, _, _], _LeafNode, LeafNode[Token`Fake`ImplicitNull, _, _] }
 		,
 		_
 	]
