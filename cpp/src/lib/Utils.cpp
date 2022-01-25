@@ -70,6 +70,14 @@ bool Utils::isMBStrange(codepoint point) {
 //        case 0x2060:
 //            return true;
         //
+        // Various curly quotes
+        //
+        case CODEPOINT_LONGNAME_OPENCURLYQUOTE:
+        case CODEPOINT_LONGNAME_CLOSECURLYQUOTE:
+        case CODEPOINT_LONGNAME_OPENCURLYDOUBLEQUOTE:
+        case CODEPOINT_LONGNAME_CLOSECURLYDOUBLEQUOTE:
+            return true;
+        //
         // U+2061
         //
         case CODEPOINT_FUNCTIONAPPLICATION:

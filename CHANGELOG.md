@@ -1,6 +1,8 @@
 
 ## 1.6 - XX May, 2022
 
+Various curly quote characters are strange
+
 
 ## 1.5 - 7 Mar, 2022
 
