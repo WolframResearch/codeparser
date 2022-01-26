@@ -397,6 +397,10 @@ Module[{csts, bytess, encoding, fileFormat, firstLineBehavior},
   encoding = OptionValue[func, {opts}, CharacterEncoding];
   fileFormat = OptionValue[func, {opts}, "FileFormat"];
 
+  If[fileFormat === Automatic,
+    fileFormat = "Unknown"
+  ];
+
   If[encoding =!= "UTF-8",
     Throw[Failure["OnlyUTF8Supported", <| "CharacterEncoding" -> encoding |>]]
   ];
@@ -563,6 +567,23 @@ Module[{csts, encoding, fulls, bytess, fileFormat, firstLineBehavior, exts},
   encoding = OptionValue[func, {opts}, CharacterEncoding];
   fileFormat = OptionValue[func, {opts}, "FileFormat"];
 
+  If[fileFormat === Automatic,
+    exts = FileExtension /@ fs;
+    Which[
+      AnyTrue[exts, (# == "wl" || # == "m")&],
+        fileFormat = "Package"
+      ,
+      AnyTrue[exts, (# == "wls")&],
+        fileFormat = "Script"
+      ,
+      AnyTrue[exts, (# == "nb")&],
+        fileFormat = "Notebook"
+      ,
+      True,
+        fileFormat = "Unknown"
+    ]
+  ];
+
   If[encoding =!= "UTF-8",
     Throw[Failure["OnlyUTF8Supported", <| "CharacterEncoding" -> encoding |>]]
   ];
@@ -586,18 +607,8 @@ Module[{csts, encoding, fulls, bytess, fileFormat, firstLineBehavior, exts},
     "Script",
       firstLineBehavior = Script
     ,
-    Automatic,
-      exts = FileExtension /@ fs;
-      Which[
-        AnyTrue[exts, (# == "wls")&],
-          firstLineBehavior = Script
-        ,
-        True,
-          firstLineBehavior = Check
-      ]
-    ,
     _,
-      firstLineBehavior = Check
+      firstLineBehavior = NotScript
   ];
 
   (*
@@ -785,6 +796,10 @@ Module[{csts, encoding, fileFormat, firstLineBehavior},
 
   encoding = OptionValue[func, {opts}, CharacterEncoding];
   fileFormat = OptionValue[func, {opts}, "FileFormat"];
+
+  If[fileFormat === Automatic,
+    fileFormat = "Unknown"
+  ];
 
   If[encoding =!= "UTF-8",
     Throw[Failure["OnlyUTF8Supported", <| "CharacterEncoding" -> encoding |>]]
@@ -1027,6 +1042,23 @@ Module[{encoding, res, fulls, bytess, convention, tabWidth, fileFormat, firstLin
   tabWidth = OptionValue[func, {opts}, "TabWidth"];
   fileFormat = OptionValue[func, {opts}, "FileFormat"];
 
+  If[fileFormat === Automatic,
+    exts = FileExtension /@ fs;
+    Which[
+      AnyTrue[exts, (# == "wl" || # == "m")&],
+        fileFormat = "Package"
+      ,
+      AnyTrue[exts, (# == "wls")&],
+        fileFormat = "Script"
+      ,
+      AnyTrue[exts, (# == "nb")&],
+        fileFormat = "Notebook"
+      ,
+      True,
+        fileFormat = "Unknown"
+    ]
+  ];
+  
   If[encoding =!= "UTF-8",
     Throw[Failure["OnlyUTF8Supported", <| "CharacterEncoding" -> encoding |>]]
   ];
@@ -1043,18 +1075,8 @@ Module[{encoding, res, fulls, bytess, convention, tabWidth, fileFormat, firstLin
     "Script",
       firstLineBehavior = Script
     ,
-    Automatic,
-      exts = FileExtension /@ fs;
-      Which[
-        AnyTrue[exts, (# == "wls")&],
-          firstLineBehavior = Script
-        ,
-        True,
-          firstLineBehavior = Check
-      ]
-    ,
     _,
-      firstLineBehavior = Check
+      firstLineBehavior = NotScript
   ];
 
   (*
