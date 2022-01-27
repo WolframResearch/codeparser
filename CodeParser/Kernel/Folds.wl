@@ -322,6 +322,9 @@ linearize0[n:ErrorNode[_, _String, _]] :=
 linearize0[n:FragmentNode[_, _String, _]] :=
   n
 
+linearize0[m_?MissingQ] :=
+  m
+
 linearize0[args___] :=
 	Failure["InternalUnhandled", <| "Function" -> linearize0, "Arguments" -> {args} |>]
 
