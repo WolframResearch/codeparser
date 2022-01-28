@@ -319,6 +319,7 @@ Needs["CodeParser`Library`"]
 Needs["CodeParser`Quirks`"]
 Needs["CodeParser`Scoping`"]
 Needs["CodeParser`Shims`"]
+Needs["CodeParser`TopLevel`"]
 Needs["CodeParser`ToString`"]
 Needs["CodeParser`Utils`"]
 
