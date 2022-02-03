@@ -1,4 +1,54 @@
 
+## 1.5 - 7 Mar, 2022
+
+Handle out-of-range `\|FFFFFF` notation
+
+parseBox should handle Cell that does not have BoxData
+
+Related fix to 418690: Allow {a, b} = c to parse as having definitions for a and b
+
+Fix 418744 but this was a loose thread and whole sweater unraveled.
+
+Unsafe input will now give Missing["UnsafeCharacterEncoding"] instead of attempting to be repaired
+
+unsafe input is anything with:
+* incomplete sequences
+* stray surrogates
+* BOM
+
+so Missing[] is now a head that may appear in different places with nodes
+
+Add unsafeCharacterEncodingFlag to ParserSession
+
+Remove UTF8Status status field from ByteDecoder
+
+status does not need be kept track of because no repairing is ever attempted
+
+In 13.1, `@@@` is parsed as System\`MapApply
+
+Update file format logic
+
+
+Split "Definitions" metadata into "AdditionalDefinitions"
+```
+foo /: bar[foo]
+```
+will have:
+"Definitions" metadata for foo
+"AdditionalDefinitions" metadata for bar
+
+
+### Fixes
+
+Fix 418240: CodeParse not respecting options set by SetOptions
+
+Fix handling of NumberComma
+
+Was mistakenly being treated as UnsupportedCharacter
+
+Fix 420623: assert with `\<0xa9>`
+
+
 ## 1.4 - 25 Oct, 2021
 
 Reduce severity of unexpected characters inside of strings or comments
