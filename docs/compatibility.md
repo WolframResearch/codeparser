@@ -43,6 +43,7 @@ Make sure that the correct WolframVersion is specified.
 CodeParser uses [LibraryLink](https://reference.wolfram.com/language/guide/LibraryLink.html).
 
 The version of LibraryLink was updated in version 12.1:
+
 | Wolfram version | LibraryLink version |
 | --------------- | ------------------- |
 | 12.0            | 5                   |
@@ -62,6 +63,7 @@ So LibraryLink defines Wolfram version 12.1 as a minimum that can run with libra
 CodeParser uses MathLink.
 
 The mathlink rpath was changed in version 12.1:
+
 | Wolfram version | mathlink rpath                                                           |
 | --------------- | ------------------------------------------------------------------------ |
 | 12.0            | @executable_path/../Frameworks/mathlink.framework/Versions/4.36/mathlink |
