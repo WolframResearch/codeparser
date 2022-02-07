@@ -261,6 +261,9 @@ endforeach()
 # generated srcs
 #
 
+#
+# LongNames files
+#
 add_custom_command(
 	OUTPUT
 		${PROJECT_BINARY_DIR}/generated/cpp/include/LongNames.h
@@ -282,7 +285,9 @@ add_custom_command(
 		${PROJECT_SOURCE_DIR}
 )
 
-
+#
+# TokenEnum files
+#
 set(GENERATED_TOKENENUM_OUTPUT
 	${PROJECT_BINARY_DIR}/generated/cpp/include/TokenEnum.h
 	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/TokenEnum.cpp
@@ -308,7 +313,9 @@ add_custom_command(
 		${PROJECT_SOURCE_DIR}
 )
 
-
+#
+# ParseletRegistration files
+#
 set(GENERATED_PARSELETREGISTRATION_OUTPUT
 	${PROJECT_BINARY_DIR}/generated/cpp/include/ParseletRegistration.h
 	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/ParseletRegistration.cpp
@@ -332,6 +339,9 @@ add_custom_command(
 		${PROJECT_SOURCE_DIR}
 )
 
+#
+# Precedence files
+#
 add_custom_command(
 	OUTPUT
 		${PROJECT_BINARY_DIR}/generated/cpp/include/Precedence.h
@@ -352,6 +362,9 @@ add_custom_command(
 		${PROJECT_SOURCE_DIR}
 )
 
+#
+# RowBox files
+#
 add_custom_command(
 	OUTPUT
 		${PROJECT_BINARY_DIR}/generated/wl/Kernel/RowBox.wl
@@ -372,6 +385,9 @@ add_custom_command(
 		${PROJECT_SOURCE_DIR}
 )
 
+#
+# Symbol files
+#
 add_custom_command(
 	OUTPUT
 		${PROJECT_BINARY_DIR}/generated/cpp/include/Symbol.h
