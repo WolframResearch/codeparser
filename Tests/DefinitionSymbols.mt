@@ -90,7 +90,8 @@ Test[
 			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 7}, {1, 7}}|>]}
 			,
 			<|Source -> {{1, 1}, {1, 7}},
-			"Definitions" -> {LeafNode[Symbol, "a", <|Source -> {{1, 4}, {1, 5}}|>]}|>]}, <||>]
+			"Definitions" -> {},
+			"AdditionalDefinitions" -> {LeafNode[Symbol, "a", <|Source -> {{1, 4}, {1, 5}}|>]}|>]}, <||>]
 	,
 	TestID->"DefinitionSymbols-20210520-S5U4M6"
 ]
@@ -108,14 +109,62 @@ Test[
 			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 11}, {1, 11}}|>]}
 		,
 		<|Source -> {{1, 1}, {1, 11}},
-		"Definitions" -> {LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>]}|>]}, <||>]
+		"Definitions" -> {LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>]},
+		"AdditionalDefinitions" -> {}|>]}, <||>]
 	,
 	TestID->"DefinitionSymbols-20210520-E0Y0T1"
 ] 
 
 
+Test[
+	CodeParse["b[a] ^:= c"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "UpSetDelayed", <||>], {
+			CallNode[LeafNode[Symbol, "b", <|Source -> {{1, 1}, {1, 2}}|>], {
+				LeafNode[Symbol, "a", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>],
+			LeafNode[Symbol, "c", <|Source -> {{1, 10}, {1, 11}}|>]}, <|
+			Source -> {{1, 1}, {1, 11}},
+			"AdditionalDefinitions" -> {LeafNode[Symbol, "b", <|Source -> {{1, 1}, {1, 2}}|>]},
+			"Definitions" -> {LeafNode[Symbol, "a", <|Source -> {{1, 3}, {1, 4}}|>]}|>]}, <||>]
+	,
+	TestID->"DefinitionSymbols-20220207-D9L1A0"
+]
 
+Test[
+	CodeParse["b[a1, a2, a3] ^:= c"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "UpSetDelayed", <||>], {
+			CallNode[LeafNode[Symbol, "b", <|Source -> {{1, 1}, {1, 2}}|>], {
+				LeafNode[Symbol, "a1", <|Source -> {{1, 3}, {1, 5}}|>],
+				LeafNode[Symbol, "a2", <|Source -> {{1, 7}, {1, 9}}|>],
+				LeafNode[Symbol, "a3", <|Source -> {{1, 11}, {1, 13}}|>]}, <|Source -> {{1, 1}, {1, 14}}|>],
+			LeafNode[Symbol, "c", <|Source -> {{1, 19}, {1, 20}}|>]}, <|
+			Source -> {{1, 1}, {1, 20}},
+			"AdditionalDefinitions" -> {LeafNode[Symbol, "b", <|Source -> {{1, 1}, {1, 2}}|>]},
+			"Definitions" -> {
+				LeafNode[Symbol, "a1", <|Source -> {{1, 3}, {1, 5}}|>],
+				LeafNode[Symbol, "a2", <|Source -> {{1, 7}, {1, 9}}|>],
+				LeafNode[Symbol, "a3", <|Source -> {{1, 11}, {1, 13}}|>]}|>]}, <||>]
+	,
+	TestID->"DefinitionSymbols-20220207-V6S2E4"
+]
 
+Test[
+	CodeParse["a /: b[a] := c"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "TagSetDelayed", <||>], {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
+			CallNode[LeafNode[Symbol, "b", <|Source -> {{1, 6}, {1, 7}}|>], {LeafNode[Symbol, "a", <|Source -> {{1, 8}, {1, 9}}|>]}, <|Source -> {{1, 6}, {1, 10}}|>],
+			LeafNode[Symbol, "c", <|Source -> {{1, 14}, {1, 15}}|>]}, <|
+			Source -> {{1, 1}, {1, 15}},
+			"Definitions" -> {LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>]},
+			"AdditionalDefinitions" -> {LeafNode[Symbol, "b", <|Source -> {{1, 6}, {1, 7}}|>]}|>]}, <||>]
+	,
+	TestID->"DefinitionSymbols-20220207-Q6S1B0"
+]
 
 
 
