@@ -123,6 +123,7 @@ If[!StringQ[inputStr],
 
   aggToCompare = agg;
   aggToCompare = convertMultiSingleQuote[aggToCompare];
+  aggToCompare = convertInfixTilde[aggToCompare];
   aggToCompare = flattenChildrenInGroupMissingCloser[aggToCompare];
   aggToCompare = expandEqualDot[aggToCompare];
   aggToCompare = aggToCompare /. {_Association -> <||>};
@@ -265,6 +266,15 @@ convertMultiSingleQuote[agg_] :=
       Nest[PostfixNode[Derivative, {#, LeafNode[Token`SingleQuote, "'", <||>]}, <||>] &, a, StringLength[d]]
   }
 
+convertInfixTilde[agg_] :=
+  agg /. {
+    InfixNode[InfixTilde, {a_, op1_, b_, op2_, c_}, _] :>
+      TernaryNode[TernaryTilde, {a, op1, b, op2, c}, <||>]
+    ,
+    InfixNode[InfixTilde, {a_, op1_, b_, op2_, c_, rest___}, _] :>
+      TernaryNode[TernaryTilde, {TernaryNode[TernaryTilde, {a, op1, b, op2, c}, <||>], rest}, <||>]
+  }
+
 (*
 Clear[cleanupQuestionQuestion]
 cleanupQuestionQuestion[node_] :=
@@ -332,16 +342,18 @@ exceptions = <|
    (* weird empty RowBox[{}] thing *)
    "IncludePods" -> {{1, 2}},
    
-   (* FE bug 379427 with multiple ~ *)
-   "Join" -> {{2, 1}},
-   
    (* Recursion errors from using crazy Dataset typesetting *)
    "NetworkPacketTrace" -> {{2, 2}, {3, 2}},
    
    (* weird StyleBox problem *)
    "PlotMarkers" -> {{3, 3}},
    
-   (* weird -foo- formatting *)
+   (*
+   weird -foo- formatting
+   -ExampleData/Caminandes.mp4-
+   -ExampleData/fish.mp4-
+   -ExampleData/rule30.mp4-
+   *)
    "AnomalyDetection" -> {{1, 2}},
    "AnomalyDetector" -> {{1, 2}, {1, 10}, {2, 2}, {2, 4}, {2, 6}, {3, 2}, {3, 14}},
    "AnomalyDetectorFunction" -> {{1, 2}, {2, 2}},
@@ -352,7 +364,7 @@ exceptions = <|
    "AudioChannelAssignment" -> {{1, 2}, {1, 4}, {2, 3}},
    "AudioChannelCombine" -> {{1, 7}},
    "AudioChannelMix" -> {{1, 3}, {1, 5}},
-   "AudioChannels" -> {{1, 1}, {2, 1}},
+   "AudioChannels" -> {{1, 1}, {2, 1}, {3, 1}},
    "AudioData" -> {{1, 1}},
    "AudioDelay" -> {{1, 1}, {1, 2}, {2, 1}, {2, 2}},
    "AudioDelete" -> {{1, 1}, {1, 2}, {2, 1}, {2, 2}},
@@ -376,7 +388,7 @@ exceptions = <|
    "AudioReplace" -> {{1, 1}, {1, 3}},
    "AudioReverb" -> {{1, 1}, {1, 2}, {2, 1}, {2, 2}},
    "AudioReverse" -> {{1, 3}},
-   "AudioSampleRate" -> {{1, 1}, {2, 2}},
+   "AudioSampleRate" -> {{1, 1}, {2, 2}, {3, 1}},
    "AudioSplit" -> {{1, 1}, {1, 2}, {2, 1}, {2, 2}},
    "AudioTimeStretch" -> {{1, 1}, {1, 4}},
    "AudioTrim" -> {{1, 1}, {1, 3}, {1, 5}, {1, 7}, {1, 9}},
@@ -396,6 +408,8 @@ exceptions = <|
    "GeometricAssertion" -> {{1, 2}, {2, 2}, {3, 2}},
    "GeometricScene" -> {{1, 4}, {2, 2}, {3, 2}},
    "GeometricStep" -> {{1, 2}, {1, 4}},
+   "ImageAspectRatio" -> {{2, 1}},
+   "ImageDimensions" -> {{2, 1}},
    "InverseShortTimeFourier" -> {{1, 2}, {1, 6}},
    "InverseSpectrogram" -> {{1, 6}},
    "InverseWaveletTransform" -> {{3, 5}},
@@ -416,8 +430,9 @@ exceptions = <|
    "UnconstrainedParameters" -> {{1, 2}},
    "UtilityFunction" -> {{1, 3}, {1, 11}},
    "ValidationSet" -> {{1, 3}, {1, 7}, {2, 3}, {2, 7}},
+   "Video" -> {{1, 2}},
    "VideoCombine" -> {{1, 4}},
-   "VideoMap" -> {{3, 1}},
+   "VideoMap" -> {{2, 1}, {3, 1}},
    "$VoiceStyles" -> {{1, 4}, {1, 6}},
 
    (* weird <<>> Skeleton formatting *)
@@ -557,11 +572,6 @@ exceptions = <|
    (* "SmoothKernelDistribution" -> {{5947572171989938388, 0}}, *)
    
    (*
-   RowBox[{"string","."}]
-   *)
-   "Paste" -> {{1, 4}},
-   
-   (*
     bad "{...}"
    *)
    "NetGraph" -> {{1, 8}, {1, 10}},
@@ -570,11 +580,6 @@ exceptions = <|
     bad boxes for a /: b =.
    *)
    "TagUnset" -> {{1, 2}},
-
-   (*
-    weird RowBox[{"-ExampleData/Caminandes.mp4-"}]
-   *)
-   "Video" -> {{1, 2}},
 
    (*
 
