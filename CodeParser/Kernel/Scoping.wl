@@ -1072,6 +1072,119 @@ walkCondition[BoxNode[GridBox, {a_, ___}, _]] :=
   Flatten[Map[walkCondition, a, {2}]]
 
 
+
+(*
+Handle special un-abstracted form of [[x]] in subscript
+*)
+walk[
+	BoxNode[SubscriptBox, {
+    a_,
+    GroupNode[GroupSquare, {
+      _,
+      GroupNode[GroupSquare, {
+        _,
+        b_,
+        _}, _],
+      _}, _],
+    ___}, _]
+] := Flatten[Join[walk[a], walk[b]]]
+
+freePatterns[
+	BoxNode[SubscriptBox, {
+    a_,
+    GroupNode[GroupSquare, {
+      _,
+      GroupNode[GroupSquare, {
+        _,
+        b_,
+        _}, _],
+      _}, _],
+    ___}, _]
+] := Flatten[Join[freePatterns[a], freePatterns[b]]]
+
+walkCondition[
+	BoxNode[SubscriptBox, {
+    a_,
+    GroupNode[GroupSquare, {
+      _,
+      GroupNode[GroupSquare, {
+        _,
+        b_,
+        _}, _],
+      _}, _],
+    ___}, _]
+] := Flatten[Join[walkCondition[a], walkCondition[b]]]
+
+walk[
+	BoxNode[SubscriptBox, {
+    a_,
+    GroupNode[GroupDoubleBracket, {
+      _,
+      b_,
+			_}, _],
+    ___}, _]
+] := Flatten[Join[walk[a], walk[b]]]
+
+freePatterns[
+	BoxNode[SubscriptBox, {
+    a_,
+    GroupNode[GroupDoubleBracket, {
+      _,
+      b_,
+			_}, _],
+    ___}, _]
+] := Flatten[Join[freePatterns[a], freePatterns[b]]]
+
+walkCondition[
+	BoxNode[SubscriptBox, {
+    a_,
+    GroupNode[GroupDoubleBracket, {
+      _,
+      b_,
+			_}, _],
+    ___}, _]
+] := Flatten[Join[walkCondition[a], walkCondition[b]]]
+
+(*
+Handle special un-abstracted form of TagBox[(), Derivative] in superscript
+*)
+walk[
+	BoxNode[SuperscriptBox, {
+    a_,
+    BoxNode[TagBox, {
+      GroupNode[GroupParen, {
+        _,
+        b_,
+        _}, _],
+      CodeNode[Null, Derivative, _]}, _],
+    ___}, _]
+] := Flatten[Join[walk[a], walk[b]]]
+
+freePatterns[
+	BoxNode[SuperscriptBox, {
+    a_,
+    BoxNode[TagBox, {
+      GroupNode[GroupParen, {
+        _,
+        b_,
+        _}, _],
+      CodeNode[Null, Derivative, _]}, _],
+    ___}, _]
+] := Flatten[Join[freePatterns[a], freePatterns[b]]]
+
+walkCondition[
+	BoxNode[SuperscriptBox, {
+    a_,
+    BoxNode[TagBox, {
+      GroupNode[GroupParen, {
+        _,
+        b_,
+        _}, _],
+      CodeNode[Null, Derivative, _]}, _],
+    ___}, _]
+] := Flatten[Join[walkCondition[a], walkCondition[b]]]
+
+
 walk[BoxNode[_, children_, _]] :=
   Flatten[walk /@ children]
 

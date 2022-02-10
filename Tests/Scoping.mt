@@ -24,3 +24,34 @@ Test[
 ]
 
 
+
+
+
+
+box = RowBox[{SuperscriptBox["u", 
+     TagBox[RowBox[{"(", RowBox[{"dx_", ",", "0"}], ")"}], 
+      Derivative]], "\[RuleDelayed]", "a"}];
+
+cst = CodeConcreteParseBox[box];
+
+agg = CodeParser`Abstract`Aggregate[cst];
+
+ast = CodeParser`Abstract`Abstract[agg];
+
+Test[
+	ScopingData[ast]
+	,
+	{scopingDataObject[{1, 1, 2, 1, 1, 2, 1, 1}, {"RuleDelayed"}, {"unused"}, "dx"]}
+	,
+	TestID->"Scoping-20220211-E8N5O8"
+]
+
+
+
+
+
+
+
+
+
+
