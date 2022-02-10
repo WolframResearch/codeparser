@@ -396,6 +396,9 @@ abstract[CallNode[head_, children:{GroupMissingCloserNode[GroupSquare, _, _]}, d
 abstract[CallNode[head_, children:{GroupMissingCloserNode[GroupTypeSpecifier, _, _]}, data_]] :=
   abstractCallNode[CallMissingCloserNode[head, children, data]]
 
+abstract[CallNode[head_, children:{GroupMissingCloserNode[GroupDoubleBracket, _, _]}, data_]] :=
+  abstractCallNode[CallMissingCloserNode[head, children, data]]
+
 (*
 UnterminatedGroupNode does NOT get abstracted
 *)
@@ -405,6 +408,8 @@ abstract[CallNode[head_, children:{UnterminatedGroupNode[GroupSquare, _, _]}, da
 abstract[CallNode[head_, children:{UnterminatedGroupNode[GroupTypeSpecifier, _, _]}, data_]] :=
   abstractCallNode[UnterminatedCallNode[head, children, data]]
 
+abstract[CallNode[head_, children:{UnterminatedGroupNode[GroupDoubleBracket, _, _]}, data_]] :=
+  abstractCallNode[UnterminatedCallNode[head, children, data]]
 
 
 

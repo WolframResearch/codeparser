@@ -84,6 +84,9 @@ prbDispatch[{_, LeafNode[Token`OpenSquare, _, _], ___}, handledChildren_, ignore
 prbDispatch[{_, LeafNode[Token`ColonColonOpenSquare, _, _], ___}, handledChildren_, ignored_, pos_] :=
   CallNode[{handledChildren[[1]]}, {GroupMissingCloserNode[GroupTypeSpecifier, Rest[handledChildren], <||>]}, <| Source -> pos |>]
 
+prbDispatch[{_, LeafNode[Token`LongName`LeftDoubleBracket, _, _], ___}, handledChildren_, ignored_, pos_] :=
+  CallNode[{handledChildren[[1]]}, {GroupMissingCloserNode[GroupDoubleBracket, Rest[handledChildren], <||>]}, <| Source -> pos |>]
+
 (*
 Unrecognized LongName
 
@@ -219,7 +222,7 @@ prbDispatch[{LeafNode[Token`Boxes`LongName`LeftSkeleton, _, _], ___, LeafNode[To
 
     rehandledChildren =
       {LeafNode[Token`Boxes`LongName`LeftSkeleton, children[[1]], <| Source -> Append[pos, 1] ~Join~ {1} |>]} ~Join~
-      MapIndexed[parseCommentRowBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1)]&, children[[2;;-2]]] ~Join~
+      MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1)]&, children[[2;;-2]]] ~Join~
       {LeafNode[Token`Boxes`LongName`RightSkeleton, children[[-1]], <| Source -> Append[pos, 1] ~Join~ {Length[children]} |>]};
     
     GroupNode[Skeleton, rehandledChildren, <| Source -> pos |>]
@@ -233,11 +236,11 @@ Unexpected openers and unexpected closers
 prbDispatch[{LeafNode[Token`Boxes`LongName`LeftSkeleton, _, _], ___}, handledChildren_, children_, pos_] :=
   GroupMissingCloserNode[Skeleton,
     {LeafNode[Token`Boxes`LongName`LeftSkeleton, children[[1]], <| Source -> Append[pos, 1] ~Join~ {1} |>]} ~Join~
-    MapIndexed[parseCommentRowBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1)]&, children[[2;;]]], <| Source -> pos |>]
+    MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1)]&, children[[2;;]]], <| Source -> pos |>]
 
 prbDispatch[{___, LeafNode[Token`Boxes`LongName`RightSkeleton, _, _]}, handledChildren_, children_, pos_] :=
   GroupMissingOpenerNode[Skeleton,
-    MapIndexed[parseCommentRowBox[#1, Append[pos, 1] ~Join~ (#2 + 1 - 1)]&, children[[;;-2]]] ~Join~
+    MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2 + 1 - 1)]&, children[[;;-2]]] ~Join~
     {LeafNode[Token`Boxes`LongName`RightSkeleton, children[[-1]], <| Source -> Append[pos, 1] ~Join~ {Length[children]} |>]}, <| Source -> pos |>]
 *)
 "}
