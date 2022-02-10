@@ -847,6 +847,15 @@ parseBox[str:"\[LeftSkeleton]", pos_] := LeafNode[Token`Boxes`LongName`LeftSkele
 parseBox[str:"\[RightSkeleton]", pos_] := LeafNode[Token`Boxes`LongName`RightSkeleton, str, <|Source -> pos|>]
 *)
 
+(*
+interesting case where sending \( to library would return Token`Error`UnterminatedLinearSyntaxBlob
+
+The FE treats \(\) as a group, so the openers and closers need to be their own tokens
+*)
+parseBox[str:"\\(", pos_] := LeafNode[Token`LinearSyntax`OpenParen, str, <| Source -> pos |>]
+
+parseBox[str:"\\)", pos_] := LeafNode[Token`LinearSyntax`CloseParen, str, <| Source -> pos |>]
+
 parseBox[str:"\\\n", pos_] := LeafNode[Token`Boxes`LineContinuation, str, <| Source -> pos |>]
 
 

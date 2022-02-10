@@ -210,6 +210,43 @@ parseCommentRowBox[RowBox[children_], pos_] :=
 parseCommentRowBox[child_String, pos_] :=
   LeafNode[String, child, <| Source -> pos |>]
 
+
+(*
+Token`LinearSyntax`OpenParen
+
+Treat linear syntax like groups
+*)
+
+prbDispatch[{LeafNode[Token`LinearSyntax`OpenParen, _, _], ___, LeafNode[Token`LinearSyntax`CloseParen, _, _]}, handledChildren_, children_, pos_] :=
+  Module[{rehandledChildren},
+
+    rehandledChildren =
+      {LeafNode[Token`LinearSyntax`OpenParen, children[[1]], <| Source -> Append[pos, 1] ~Join~ {1} |>]} ~Join~
+      MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1)]&, children[[2;;-2]]] ~Join~
+      {LeafNode[Token`LinearSyntax`CloseParen, children[[-1]], <| Source -> Append[pos, 1] ~Join~ {Length[children]} |>]};
+    
+    GroupNode[GroupLinearSyntax, rehandledChildren, <| Source -> pos |>]
+  ]
+
+(*
+Unexpected openers and unexpected closers
+*)
+prbDispatch[{LeafNode[Token`LinearSyntax`OpenParen, _, _], ___}, handledChildren_, children_, pos_] :=
+  GroupMissingCloserNode[GroupLinearSyntax,
+    {LeafNode[Token`LinearSyntax`OpenParen, children[[1]], <| Source -> Append[pos, 1] ~Join~ {1} |>]} ~Join~
+    MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2 + 2 - 1)]&, children[[2;;]]]
+    ,
+    <| Source -> pos |>
+  ]
+
+prbDispatch[{___, LeafNode[Token`LinearSyntax`CloseParen, _, _]}, handledChildren_, children_, pos_] :=
+  GroupMissingOpenerNode[GroupLinearSyntax,
+    MapIndexed[parseBox[#1, Append[pos, 1] ~Join~ (#2 + 1 - 1)]&, children[[;;-2]]] ~Join~
+    {LeafNode[Token`LinearSyntax`CloseParen, children[[-1]], <| Source -> Append[pos, 1] ~Join~ {Length[children]} |>]}
+    ,
+    <| Source -> pos |>
+  ]
+
 " <> "
 (*
 Token`Boxes`LongName`LeftSkeleton

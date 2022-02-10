@@ -154,6 +154,11 @@ GroupTypeSpecifier
 GroupParen
 
 (*
+Used with boxes
+*)
+GroupLinearSyntax
+
+(*
 Shebang
 *)
 
