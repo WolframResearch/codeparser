@@ -59,5 +59,32 @@ Test[
 ]
 
 
+(*
+from bug 420623
+
+unsafe2.wl has bytes:
+
+0x5c 0xa9
+
+0x5c is '\\' backslash character
+
+0xa9 is incomplete UTF-8 sequence
+*)
+unsafe = FileNameJoin[{DirectoryName[$CurrentTestSource], "files", "small", "unsafe2.wl"}]
+
+Test[
+	CodeParse[File[unsafe]]
+	,
+	ContainerNode[File, {
+		Missing["UnsafeCharacterEncoding"]}, <|
+			SyntaxIssues -> {
+				EncodingIssue["IncompleteSequence", "Incomplete sequence.", "Fatal", <|Source -> {{1, 2}, {1, 3}}, ConfidenceLevel -> 1.|>]},
+			"FileName" -> unsafe|>]
+	,
+	TestID->"Unsafe-20220223-W0U9G9"
+]
+
+
+
 
 

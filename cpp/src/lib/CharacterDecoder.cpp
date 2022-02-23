@@ -1510,6 +1510,12 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterSta
             // Do not know what a good suggestion would be for \<EOF>
             //
             
+        } else if (escapedChar.to_point() == CODEPOINT_UNSAFE_1_BYTE_SEQUENCE || escapedChar.to_point() == CODEPOINT_UNSAFE_2_BYTE_SEQUENCE || escapedChar.to_point() == CODEPOINT_UNSAFE_3_BYTE_SEQUENCE) {
+            
+            //
+            // Do not know what a good suggestion would be for \<0xa9>
+            //
+            
         } else {
             
             //
