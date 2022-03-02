@@ -26,6 +26,27 @@ paclet = $CommandLine[[pacletFlagPosition[[1]] + 1]]
 pacletDir = FileNameJoin[{buildDir, "paclet", paclet}]
 
 
+retryFlagPosition = FirstPosition[$CommandLine, "-retry"]
+
+If[!MissingQ[retryFlagPosition],
+  retry = True
+  ,
+  retry = False
+]
+
+If[retry,
+  (*
+  CreatePacletArchive may be slow on RE machines, so allow re-trying if JLink connection timeout is hit
+
+  Set $connectTimeout to some large value and cross fingers (default is 20)
+
+  See: RE-515885
+  *)
+  Needs["JLink`"];
+  JLink`InstallJava`Private`$connectTimeout = 300.0
+]
+
+
 generate[] := (
 
 If[MissingQ[pacletFlagPosition],

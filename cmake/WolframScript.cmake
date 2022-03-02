@@ -27,7 +27,7 @@ message(WARNING "First try: Bad exit code from script: ${SCRIPT_RESULT}; retryin
 
 execute_process(
   COMMAND
-    ${WOLFRAMKERNEL} -script ${SCRIPT} -srcDir ${SRCDIR} -buildDir ${BUILDDIR} -paclet ${PACLET}
+    ${WOLFRAMKERNEL} -retry -script ${SCRIPT} -srcDir ${SRCDIR} -buildDir ${BUILDDIR} -paclet ${PACLET}
   TIMEOUT
     ${BUG349779_TIMEOUT}
   RESULT_VARIABLE
@@ -36,6 +36,8 @@ execute_process(
 
 if(NOT ${SCRIPT_RESULT} EQUAL "0")
 message(FATAL_ERROR "Second try: Bad exit code from script: ${SCRIPT_RESULT}; stopping")
+else()
+message(STATUS "Second try: Success!")
 endif()
 
 endif()
