@@ -1,7 +1,7 @@
 
 Paclet[
   Name -> "CodeParser",
-  Version -> "1.5",
+  Version -> "1.6",
   WolframVersion -> "12.1+",
   Description -> "Parse Wolfram Language code.",
   Creator -> "Brenton Bostick <brenton@wolfram.com>",

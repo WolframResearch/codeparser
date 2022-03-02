@@ -1,4 +1,7 @@
 
+## 1.6 - XX May, 2022
+
+
 ## 1.5 - 7 Mar, 2022
 
 Handle out-of-range `\|FFFFFF` notation
