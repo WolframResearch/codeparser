@@ -21,13 +21,13 @@ macro(CheckPacletInfo)
       WORKING_DIRECTORY
         ${PROJECT_SOURCE_DIR}
       TIMEOUT
-        10
+        60
       RESULT_VARIABLE
         PACLETINFO_RESULT
     )
 
     if(NOT ${PACLETINFO_RESULT} EQUAL "0")
-      message(WARNING "Bad exit code from PacletInfo script: ${PACLETINFO_RESULT}; Continuing")
+      message(FATAL_ERROR "Bad exit code from PacletInfo script: ${PACLETINFO_RESULT}")
     endif()
 
     message(STATUS "PACLET_VERSION: ${PACLET_VERSION}")
