@@ -30,7 +30,7 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
             
             ParserContext Ctxt;
             
-            auto peek = TheParser->currentToken(Ctxt, TOPLEVEL);
+            auto peek = currentToken(Ctxt, TOPLEVEL);
             
             if (peek.Tok != TOKEN_HASH) {
                 
@@ -45,9 +45,9 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
                 return;
             }
             
-            TheParser->nextToken(peek);
+            nextToken(peek);
             
-            peek = TheParser->currentToken(Ctxt, TOPLEVEL);
+            peek = currentToken(Ctxt, TOPLEVEL);
             
             if (peek.Tok != TOKEN_BANG) {
                 
@@ -66,7 +66,7 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
             // Definitely a shebang
             //
             
-            TheParser->nextToken(peek);
+            nextToken(peek);
             
             while (true) {
                 
@@ -77,7 +77,7 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
                 }
         #endif // !NABORT
                 
-                auto peek = TheParser->currentToken(Ctxt, TOPLEVEL);
+                auto peek = currentToken(Ctxt, TOPLEVEL);
                 
                 if (peek.Tok == TOKEN_ENDOFFILE) {
                     break;
@@ -85,12 +85,12 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
                 
                 if (peek.Tok == TOKEN_TOPLEVELNEWLINE) {
                     
-                    TheParser->nextToken(peek);
+                    nextToken(peek);
                     
                     break;
                 }
                 
-                TheParser->nextToken(peek);
+                nextToken(peek);
                 
             } // while (true)
             
@@ -108,7 +108,7 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
             
             ParserContext Ctxt;
             
-            auto peek = TheParser->currentToken(Ctxt, TOPLEVEL);
+            auto peek = currentToken(Ctxt, TOPLEVEL);
             
             if (peek.Tok != TOKEN_HASH) {
                 
@@ -119,9 +119,9 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
                 return;
             }
             
-            TheParser->nextToken(peek);
+            nextToken(peek);
             
-            peek = TheParser->currentToken(Ctxt, TOPLEVEL);
+            peek = currentToken(Ctxt, TOPLEVEL);
             
             if (peek.Tok != TOKEN_BANG) {
                 
@@ -132,7 +132,7 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
                 return;
             }
             
-            TheParser->nextToken(peek);
+            nextToken(peek);
             
             while (true) {
                 
@@ -143,7 +143,7 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
                 }
         #endif // !NABORT
                 
-                auto peek = TheParser->currentToken(Ctxt, TOPLEVEL);
+                auto peek = currentToken(Ctxt, TOPLEVEL);
                 
                 if (peek.Tok == TOKEN_ENDOFFILE) {
                     break;
@@ -151,12 +151,12 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
                 
                 if (peek.Tok == TOKEN_TOPLEVELNEWLINE) {
                     
-                    TheParser->nextToken(peek);
+                    nextToken(peek);
                     
                     break;
                 }
                 
-                TheParser->nextToken(peek);
+                nextToken(peek);
                 
             } // while (true)
         }

@@ -55,7 +55,7 @@ Module[{src, originalNodePos, cst, srcPosMap, parentPos, parent, commaChildren, 
   originalNodePos = If[srcPosMap === Null, Position[cst, src], srcPosMap[src]];
 
   If[originalNodePos == {},
-  Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->src |>]]
+  Throw[Failure["CannotFindNode", <| actionData, "CST" -> cst, "Source" -> src |>]]
   ];
   originalNodePos = Drop[originalNodePos[[1]], -2];
 
@@ -176,7 +176,7 @@ Module[{src, originalNodePos, cst, srcInter, srcIntra, node, leafText, srcPosMap
     (*
     There is no Intra in the position, so we can just use DeleteNode
     *)
-    cst = ApplyCodeAction[CodeAction[label, DeleteNode, <|Source->src|>], cst];
+    cst = ApplyCodeAction[CodeAction[label, DeleteNode, <| Source -> src |>], cst];
     cst = cleanupIssue[cst, action];
     Throw[cst]
   ];
@@ -196,7 +196,7 @@ Module[{src, originalNodePos, cst, srcInter, srcIntra, node, leafText, srcPosMap
   originalNodePos = If[srcPosMap === Null, Position[cst, srcInter], srcPosMap[srcInter]];
 
   If[originalNodePos == {},
-    Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->srcInter |>]]
+    Throw[Failure["CannotFindNode", <| actionData, "CST" -> cst, "Source" -> srcInter |>]]
   ];
   originalNodePos = Drop[originalNodePos[[1]], -2];
 
@@ -239,7 +239,7 @@ Module[{srcs, cst, func, trivia, srcPosMap},
   func = SourceMemberQ[srcs];
   trivia = Cases[cst, LeafNode[Whitespace | Token`Newline | Token`Comment, _, KeyValuePattern[Source -> src_?func]], Infinity];
 
-  Scan[(cst = ApplyCodeAction[CodeAction["delete", DeleteNode, <| Source -> #[[3, Key[Source]]]|>], cst];)&, trivia];
+  Scan[(cst = ApplyCodeAction[CodeAction["delete", DeleteNode, <| Source -> #[[3, Key[Source]]] |>], cst];)&, trivia];
   
   cst
 ]]
@@ -288,7 +288,7 @@ Module[{src, originalNodePos, cst, insertionNode, srcPosMap},
   originalNodePos = If[srcPosMap === Null, Position[cst, src], srcPosMap[src]];
 
   If[originalNodePos == {},
-    Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->src |>]]
+    Throw[Failure["CannotFindNode", <| actionData, "CST" -> cst, "Source" -> src |>]]
   ];
   originalNodePos = Drop[originalNodePos[[1]], -2];
 
@@ -323,7 +323,7 @@ Module[{src, originalNodePos, cst, insertionNode, insertionNodePos, srcPosMap},
   originalNodePos = If[srcPosMap === Null, Position[cst, src], srcPosMap[src]];
 
   If[originalNodePos == {},
-    Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->src |>]]
+    Throw[Failure["CannotFindNode", <| actionData, "CST" -> cst, "Source" -> src |>]]
   ];
   originalNodePos = Drop[originalNodePos[[1]], -2];
 
@@ -369,7 +369,7 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
     Look inside the generated node and assume there is only 1 child
     *)
     If[Length[insertionNode[[2]]] != 1,
-      Throw[Failure["CannotApplyCodeAction", <|"CodeAction" -> action, "CST" -> cst|>]]
+      Throw[Failure["CannotApplyCodeAction", <| "CodeAction" -> action, "CST" -> cst |>]]
     ];
     (*
     strip off ContainerNode
@@ -378,7 +378,7 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
     (*
     FIXME: insertionNode still has LineColumn source from CodeConcreteParse and should be stripped
     *)
-    cst = ApplyCodeAction[CodeAction[label, InsertNode, <|Source->src, "InsertionNode"->insertionNode|>], cst];
+    cst = ApplyCodeAction[CodeAction[label, InsertNode, <| Source -> src, "InsertionNode" -> insertionNode |>], cst];
     cst = cleanupIssue[cst, action];
     Throw[cst]
   ];
@@ -398,7 +398,7 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
   originalNodePos = If[srcPosMap === Null, Position[cst, srcInter], srcPosMap[srcInter]];
 
   If[originalNodePos == {},
-    Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->srcInter |>]]
+    Throw[Failure["CannotFindNode", <| actionData, "CST" -> cst, "Source" -> srcInter |>]]
   ];
   originalNodePos = Drop[originalNodePos[[1]], -2];
 
@@ -446,7 +446,7 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
     Look inside the generated node and assume there is only 1 child
     *)
     If[Length[insertionNode[[2]]] != 1,
-      Throw[Failure["CannotApplyCodeAction", <|"CodeAction" -> action, "CST" -> cst|>]]
+      Throw[Failure["CannotApplyCodeAction", <| "CodeAction" -> action, "CST" -> cst |>]]
     ];
     (*
     strip off ContainerNode
@@ -455,7 +455,7 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
     (*
     FIXME: insertionNode still has LineColumn source from CodeConcreteParse and should be stripped
     *)
-    cst = ApplyCodeAction[CodeAction[label, InsertNode, <|Source->src, "InsertionNode"->insertionNode|>], cst];
+    cst = ApplyCodeAction[CodeAction[label, InsertNode, <| Source -> src, "InsertionNode" -> insertionNode |>], cst];
     cst = cleanupIssue[cst, action];
     Throw[cst]
   ];
@@ -475,7 +475,7 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
   originalNodePos = srcPosMap[srcInter];
 
   If[originalNodePos == {},
-    Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->srcInter |>]]
+    Throw[Failure["CannotFindNode", <| actionData, "CST" -> cst, "Source" -> srcInter |>]]
   ];
   originalNodePos = Drop[originalNodePos[[1]], -2];
 
@@ -531,7 +531,7 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
     Look inside the generated node and assume there is only 1 child
     *)
     If[Length[insertionNode[[2]]] != 1,
-      Throw[Failure["CannotApplyCodeAction", <|"CodeAction" -> action, "CST" -> cst|>]]
+      Throw[Failure["CannotApplyCodeAction", <| "CodeAction" -> action, "CST" -> cst |>]]
     ];
     (*
     strip off ContainerNode
@@ -540,7 +540,7 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
     (*
     FIXME: insertionNode still has LineColumn source from CodeConcreteParse and should be stripped
     *)
-    cst = ApplyCodeAction[CodeAction[label, InsertNodeAfter, <|Source->src, "InsertionNode"->insertionNode|>], cst];
+    cst = ApplyCodeAction[CodeAction[label, InsertNodeAfter, <| Source -> src, "InsertionNode" -> insertionNode |>], cst];
     cst = cleanupIssue[cst, action];
     Throw[cst]
   ];
@@ -560,7 +560,7 @@ Module[{src, originalNodePos, cst, insertionText, insertionNode, srcInter, srcIn
   originalNodePos = If[srcPosMap === Null, Position[cst, srcInter], srcPosMap[srcInter]];
 
   If[originalNodePos == {},
-    Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->srcInter |>]]
+    Throw[Failure["CannotFindNode", <| actionData, "CST" -> cst, "Source" -> srcInter |>]]
   ];
   originalNodePos = Drop[originalNodePos[[1]], -2];
 
@@ -608,7 +608,7 @@ Module[{src, originalNodePos, cst, replacementNode, srcPosMap},
   originalNodePos = If[srcPosMap === Null, Position[cst, src], srcPosMap[src]];
 
   If[originalNodePos == {},
-    Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->src |>]]
+    Throw[Failure["CannotFindNode", <| actionData, "CST" -> cst, "Source" -> src |>]]
   ];
   originalNodePos = Drop[originalNodePos[[1]], -2];
 
@@ -655,7 +655,7 @@ Module[{src, originalNodePos, cst, replacementNode, srcInter, srcIntra, replacem
     Look inside the generated node and assume there is only 1 child
     *)
     If[Length[replacementNode[[2]]] != 1,
-      Throw[Failure["CannotApplyCodeAction", <|"CodeAction" -> action, "CST" -> cst|>]]
+      Throw[Failure["CannotApplyCodeAction", <| "CodeAction" -> action, "CST" -> cst |>]]
     ];
     (*
     strip off ContainerNode
@@ -664,7 +664,7 @@ Module[{src, originalNodePos, cst, replacementNode, srcInter, srcIntra, replacem
     (*
     FIXME: replacementNode still has LineColumn source from CodeConcreteParse and should be stripped
     *)
-    cst = ApplyCodeAction[CodeAction[label, ReplaceNode, <|Source->src, "ReplacementNode"->replacementNode|>], cst];
+    cst = ApplyCodeAction[CodeAction[label, ReplaceNode, <| Source -> src, "ReplacementNode" -> replacementNode |>], cst];
     cst = cleanupIssue[cst, action];
     Throw[cst]
   ];
@@ -684,7 +684,7 @@ Module[{src, originalNodePos, cst, replacementNode, srcInter, srcIntra, replacem
   originalNodePos = If[srcPosMap === Null, Position[cst, srcInter], srcPosMap[srcInter]];
 
   If[originalNodePos == {},
-    Throw[Failure["CannotFindNode", <| actionData, "CST"->cst, "Source"->srcInter |>]]
+    Throw[Failure["CannotFindNode", <| actionData, "CST" -> cst, "Source" -> srcInter |>]]
   ];
   originalNodePos = Drop[originalNodePos[[1]], -2];
   If[$Debug,
@@ -719,7 +719,7 @@ Module[{issue, cst},
 
   cst = cstIn;
 
-  issue = FirstCase[cst, (SyntaxIssue|FormatIssue|EncodingIssue)[_, _, _, KeyValuePattern[CodeActions -> actions_ /; MemberQ[actions, action]]], $Failed, Infinity];
+  issue = FirstCase[cst, (SyntaxIssue | FormatIssue | EncodingIssue)[_, _, _, KeyValuePattern[CodeActions -> actions_ /; MemberQ[actions, action]]], $Failed, Infinity];
   
   If[FailureQ[issue],
     (*
@@ -741,7 +741,7 @@ Module[{issue, cst},
 Find the token that contains the Source
 *)
 containingToken[src_, cst_] :=
-  FirstCase[cst, (LeafNode|ErrorNode)[_, _, KeyValuePattern[Source -> tokSrc_ /; SourceMemberQ[tokSrc, src]]], $Failed, Infinity]
+  FirstCase[cst, (LeafNode | ErrorNode)[_, _, KeyValuePattern[Source -> tokSrc_ /; SourceMemberQ[tokSrc, src]]], $Failed, Infinity]
 
 (*
 convert {{1,23},{1,23}} into {{1,3},{2,14},Intra[21,21]}

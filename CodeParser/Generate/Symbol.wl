@@ -95,7 +95,7 @@ Module[{ctxt},
   If[ctxt == "System`",
     SymbolName[sym]
     ,
-    Context[sym]<>SymbolName[sym]
+    Context[sym] <> SymbolName[sym]
   ]
 ]
 

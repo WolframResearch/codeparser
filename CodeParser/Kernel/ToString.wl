@@ -117,7 +117,7 @@ Module[{nodes, nodeStrs},
 ]]
 
 toInputFormString[args:BoxNode[box_, children_, _]] :=
-	Failure["CannotConvertBoxesToInputFormString", <|"Function"->ToInputFormString, "Arguments"->HoldForm[{args}]|>]
+	Failure["CannotConvertBoxesToInputFormString", <| "Function" -> ToInputFormString, "Arguments" -> HoldForm[{args}] |>]
 
 
 toInputFormString[PrefixNode[op_, nodes_, _]] :=
@@ -316,7 +316,7 @@ Module[{nodeStrs},
 
 toInputFormString[f_Failure] := f
 
-toInputFormString[args___] := Failure["InternalUnhandled", <|"Function"->ToInputFormString, "Arguments"->HoldForm[{args}]|>]
+toInputFormString[args___] := Failure["InternalUnhandled", <| "Function" -> ToInputFormString, "Arguments" -> HoldForm[{args}] |>]
 
 
 
@@ -363,7 +363,7 @@ Catch[
 			str
 		,
 		_,
-			Throw[Failure["InternalUnhandled", <|"Function"->ToFullFormString, "Arguments"->HoldForm[{node}]|>]]
+			Throw[Failure["InternalUnhandled", <| "Function" -> ToFullFormString, "Arguments" -> HoldForm[{node}] |>]]
 	]
 ]
 
@@ -378,7 +378,7 @@ Failure["ErrorNode", <|"Tag"->tag, "String"->str, "Data"->data|>]
 but Failure object usurps the Tag key, so use Token instead
 *)
 toFullFormString[ErrorNode[tok_, str_, data_]] :=
-	Failure["ErrorNode", <|"Token"->tok, "String"->str, "Data"->data|>]
+	Failure["ErrorNode", <| "Token" -> tok, "String" -> str, "Data" -> data |>]
 
 
 (*
@@ -425,7 +425,7 @@ toFullFormString[p:PrefixNode[PrefixLinearSyntaxBang, _, _]] :=
 	ToInputFormString[p]
 
 toFullFormString[args:BoxNode[box_, children_, _]] :=
-	Failure["CannotConvertBoxesToFullForm", <|"Function"->ToFullFormString, "Arguments"->HoldForm[{args}]|>]
+	Failure["CannotConvertBoxesToFullForm", <| "Function" -> ToFullFormString, "Arguments" -> HoldForm[{args}] |>]
 
 
 
@@ -499,7 +499,7 @@ Module[{nodeStrs},
 
 
 
-toFullFormString[n_SyntaxErrorNode] := Failure["SyntaxError", <|"Error"->n|>]
+toFullFormString[n_SyntaxErrorNode] := Failure["SyntaxError", <| "Error" -> n |>]
 
 toFullFormString[f_?FailureQ] := f
 
@@ -629,7 +629,7 @@ toSourceCharacterString[BoxNode[RowBox, children_, _], insideBoxes_] :=
 
 
 toSourceCharacterString[args:BoxNode[box_, children_, _], insideBoxes_] :=
-	Failure["CannotConvertBoxesToSourceCharacterString", <|"Function"->ToSourceCharacterString, "Arguments"->{args}|>]
+	Failure["CannotConvertBoxesToSourceCharacterString", <| "Function" -> ToSourceCharacterString, "Arguments" -> {args} |>]
 
 
 toSourceCharacterString[_[op_, nodes_, data_], insideBoxes_] :=
@@ -644,7 +644,7 @@ Module[{nodeStrs},
 
 toSourceCharacterString[f_?FailureQ, _] := f
 
-toSourceCharacterString[args___] := Failure["InternalUnhandled", <|"Function"->toSourceCharacterString, "Arguments"->{args}|>]
+toSourceCharacterString[args___] := Failure["InternalUnhandled", <| "Function" -> toSourceCharacterString, "Arguments" -> {args} |>]
 
 
 End[]

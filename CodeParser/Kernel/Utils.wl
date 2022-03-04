@@ -162,7 +162,8 @@ Which[
 (*
 Also handle Position Sources
 *)
-SourceMemberQ[{srcInts___Integer}, cursorPos:{_Integer...}] := MatchQ[cursorPos, {srcInts, ___}]
+SourceMemberQ[{srcInts___Integer}, cursorPos:{_Integer...}] :=
+  MatchQ[cursorPos, {srcInts, ___}]
 
 
 
@@ -197,7 +198,7 @@ contiguousQ[_, _] :=
 
 
 expandSrc[{{line_, col1_}, {line_, col2_}}] :=
-  <|line -> {col1, col2}|>
+  <| line -> {col1, col2} |>
 
 expandSrc[{{line1_, col1_}, {line2_, col2_}}] :=
   <|

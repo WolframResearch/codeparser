@@ -812,7 +812,7 @@ SourceCharacter ByteDecoder::currentSourceCharacter(NextPolicy policy) {
 
 void ByteDecoder::strangeWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, NextPolicy policy) {
     
-    auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+    auto currentSourceCharacterEndLoc = SrcLoc;
     
     auto safeAndGraphicalStr = SourceCharacter(decoded).safeAndGraphicalString();
     auto graphicalStr = SourceCharacter(decoded).graphicalString();
@@ -867,7 +867,7 @@ void ByteDecoder::strangeWarning(codepoint decoded, SourceLocation currentSource
 
 void ByteDecoder::nonASCIIWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc) {
     
-    auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
+    auto currentSourceCharacterEndLoc = SrcLoc;
     
     auto safeAndGraphicalStr = SourceCharacter(decoded).safeAndGraphicalString();
     auto graphicalStr = SourceCharacter(decoded).graphicalString();

@@ -24,7 +24,6 @@ Begin["`Private`"]
 Needs["CodeParser`Library`"]
 
 Needs["CompiledLibrary`"]
-Needs["PacletManager`"] (* for PacletInformation *)
 
 
 $exprLib = FileNameJoin[{libraryResources, "expr."<>$sharedExt}]

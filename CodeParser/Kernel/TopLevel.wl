@@ -381,8 +381,8 @@ topLevelChildIssues[
 				CodeActions -> {
 					CodeAction["Replace ``/`` with ``/@``", ReplaceNode,
 					<|
-						Source->slashData[Source],
-						"ReplacementNode"->LeafNode[Token`SlashAt, "/@", <||>]
+						Source -> slashData[Source],
+						"ReplacementNode" -> LeafNode[Token`SlashAt, "/@", <||>]
 					|>]
 				}
 			|>

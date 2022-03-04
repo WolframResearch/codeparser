@@ -50,7 +50,7 @@ Module[{ast, definitions},
     *)
     $Definitions = GroupBy[definitions, #[[2]]&];
 
-    $LexicalScope = <|(# -> {"Defined"})& /@ Keys[$Definitions]|>;
+    $LexicalScope = <| (# -> {"Defined"})& /@ Keys[$Definitions] |>;
 
 
     walk[ast];
