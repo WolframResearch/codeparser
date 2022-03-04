@@ -22,8 +22,7 @@ using CharacterDecoderPtr = std::unique_ptr<CharacterDecoder>;
 // sequences of Source Characters such as \[Alpha] into a single WL character
 //
 class CharacterDecoder {
-    
-    IssuePtrSet Issues;
+private:
     
     std::set<SourceLocation> SimpleLineContinuations;
     std::set<SourceLocation> ComplexLineContinuations;
@@ -91,10 +90,6 @@ public:
     // Postcondition: lastLoc is set to the last value of SrcLoc
     //
     WLCharacter currentWLCharacter(Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy);
-    
-#if !NISSUES
-    IssuePtrSet& getIssues();
-#endif // !NISSUES
     
     std::set<SourceLocation>& getSimpleLineContinuations();
     

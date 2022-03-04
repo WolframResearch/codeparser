@@ -122,6 +122,10 @@ using ParserSessionPolicy = uint8_t;
 // A parser session
 //
 class ParserSession {
+private:
+    
+    IssuePtrSet fatalIssues;
+    IssuePtrSet nonFatalIssues;
     
     BufferAndLength bufAndLen;
     
@@ -170,6 +174,12 @@ public:
 #endif // !NABORT
     
     void setUnsafeCharacterEncodingFlag(UnsafeCharacterEncodingFlag flag);
+    
+#if !NISSUES
+    IssuePtrSet& getIssues();
+
+    void addIssue(IssuePtr);
+#endif // !NISSUES
 };
 
 extern ParserSessionPtr TheParserSession;

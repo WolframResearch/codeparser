@@ -8,13 +8,11 @@
 #include "ByteDecoder.h" // for ByteDecoder
 #include "ByteBuffer.h" // for ByteBuffer
 
-Parser::Parser() : Issues() {}
+Parser::Parser() {}
 
 Parser::~Parser() {}
 
 void Parser::init(FirstLineBehavior firstLineBehavior) {
-    
-    Issues.clear();
     
     handleFirstLine(firstLineBehavior);
 }
@@ -169,7 +167,6 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
 
 void Parser::deinit() {
     
-    Issues.clear();
 }
 
 void Parser::nextToken(Token Tok) {
@@ -218,20 +215,6 @@ Token Parser::currentToken_stringifyAsFile() const {
     
     return TheTokenizer->currentToken_stringifyAsFile();
 }
-
-#if !NISSUES
-IssuePtrSet& Parser::getIssues() {
-    return Issues;
-}
-
-//
-// Only to be used by Parselets
-//
-void Parser::addIssue(IssuePtr I) {
-    Issues.insert(std::move(I));
-}
-#endif // !NISSUES
-
 
 NodePtr Parser::infixLoop(NodePtr Left, ParserContext Ctxt) {
     

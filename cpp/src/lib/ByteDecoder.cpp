@@ -7,11 +7,9 @@
 #include "LongNames.h"
 #include "API.h" // for ENCODINGMODE
 
-ByteDecoder::ByteDecoder() : Issues(), srcConventionManager(), encodingMode(), lastBuf(), lastLoc(), SrcLoc() {}
+ByteDecoder::ByteDecoder() : srcConventionManager(), encodingMode(), lastBuf(), lastLoc(), SrcLoc() {}
 
 void ByteDecoder::init(SourceConvention srcConvention, uint32_t TabWidth, EncodingMode encodingModeIn) {
-    
-    Issues.clear();
     
     lastBuf = nullptr;
     lastLoc = SourceLocation();
@@ -35,7 +33,6 @@ void ByteDecoder::init(SourceConvention srcConvention, uint32_t TabWidth, Encodi
 
 void ByteDecoder::deinit() {
     
-    Issues.clear();
 }
 
 //
@@ -94,7 +91,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 
                 auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", ENCODINGISSUESEVERITY_WARNING, Source(currentSourceCharacterStartLoc), 1.0));
                 
-                addIssue(std::move(I));
+                TheParserSession->addIssue(std::move(I));
             }
 #endif // !NISSUES
             
@@ -864,7 +861,7 @@ void ByteDecoder::strangeWarning(codepoint decoded, SourceLocation currentSource
         
         auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_UNEXPECTEDCHARACTER, "Unexpected character: ``" + safeAndGraphicalStr + "``.", severity, Src, 0.95, std::move(Actions)));
         
-        Issues.insert(std::move(I));
+        TheParserSession->addIssue(std::move(I));
     }
 }
 
@@ -886,7 +883,7 @@ void ByteDecoder::nonASCIIWarning(codepoint decoded, SourceLocation currentSourc
     
     auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_NONASCIICHARACTER, "Non-ASCII character: ``" + safeAndGraphicalStr + "``.", ENCODINGISSUESEVERITY_REMARK, Src, 1.0, std::move(Actions)));
     
-    Issues.insert(std::move(I));
+    TheParserSession->addIssue(std::move(I));
 }
 
 SourceCharacter ByteDecoder::valid(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, NextPolicy policy) {
@@ -938,7 +935,7 @@ SourceCharacter ByteDecoder::incomplete1ByteSequence(SourceLocation errSrcLoc, N
         
         auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_INCOMPLETEUTF8SEQUENCE, "Incomplete UTF-8 sequence.", ENCODINGISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0));
         
-        Issues.insert(std::move(I));
+        TheParserSession->addIssue(std::move(I));
     }
 #endif // !NISSUES
     
@@ -966,7 +963,7 @@ SourceCharacter ByteDecoder::incomplete2ByteSequence(SourceLocation errSrcLoc, N
         
         auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_INCOMPLETEUTF8SEQUENCE, "Incomplete UTF-8 sequence.", ENCODINGISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0));
         
-        Issues.insert(std::move(I));
+        TheParserSession->addIssue(std::move(I));
     }
 #endif // !NISSUES
     
@@ -994,7 +991,7 @@ SourceCharacter ByteDecoder::incomplete3ByteSequence(SourceLocation errSrcLoc, N
         
         auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_INCOMPLETEUTF8SEQUENCE, "Incomplete UTF-8 sequence.", ENCODINGISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0));
         
-        Issues.insert(std::move(I));
+        TheParserSession->addIssue(std::move(I));
     }
 #endif // !NISSUES
     
@@ -1025,7 +1022,7 @@ SourceCharacter ByteDecoder::straySurrogate(SourceLocation errSrcLoc, NextPolicy
         
         auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_STRAYSURROGATE, "Stray surrogate.", ENCODINGISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0));
         
-        Issues.insert(std::move(I));
+        TheParserSession->addIssue(std::move(I));
     }
 #endif // !NISSUES
     
@@ -1053,7 +1050,7 @@ SourceCharacter ByteDecoder::bom(SourceLocation errSrcLoc, NextPolicy policy) {
         
         auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_BOM, "BOM.", ENCODINGISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0));
         
-        Issues.insert(std::move(I));
+        TheParserSession->addIssue(std::move(I));
     }
 #endif // !NISSUES
     
@@ -1061,17 +1058,6 @@ SourceCharacter ByteDecoder::bom(SourceLocation errSrcLoc, NextPolicy policy) {
     
     return SourceCharacter(CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE);
 }
-
-
-#if !NISSUES
-void ByteDecoder::addIssue(IssuePtr I) {
-    Issues.insert(std::move(I));
-}
-
-IssuePtrSet& ByteDecoder::getIssues() {
-    return Issues;
-}
-#endif // !NISSUES
 
 ByteDecoderPtr TheByteDecoder = nullptr;
 

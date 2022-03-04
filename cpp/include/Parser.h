@@ -105,8 +105,6 @@ static_assert(sizeof(ParserContext) == 2, "Check your assumptions");
 class Parser {
 private:
     
-    IssuePtrSet Issues;
-    
     void handleFirstLine(FirstLineBehavior firstLineBehavior);
     
 public:
@@ -124,12 +122,6 @@ public:
     
     Token currentToken_stringifyAsTag() const;
     Token currentToken_stringifyAsFile() const;
-    
-#if !NISSUES
-    IssuePtrSet& getIssues();
-
-    void addIssue(IssuePtr);
-#endif // !NISSUES
     
     NodePtr infixLoop(NodePtr Left, ParserContext Ctxt);
     

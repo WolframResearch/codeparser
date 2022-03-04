@@ -32,8 +32,7 @@ struct NumberTokenizationContext {
 // Tokenizer takes a stream of WL characters and tokenizes them
 //
 class Tokenizer {
-    
-    IssuePtrSet Issues;
+private:
     
     std::set<SourceLocation> EmbeddedNewlines;
     std::set<SourceLocation> EmbeddedTabs;
@@ -170,12 +169,6 @@ public:
     
     Token currentToken_stringifyAsTag();
     Token currentToken_stringifyAsFile();
-
-#if !NISSUES
-    void addIssue(IssuePtr);
-
-    IssuePtrSet& getIssues();
-#endif // !NISSUES
     
     std::set<SourceLocation>& getEmbeddedNewlines();
     

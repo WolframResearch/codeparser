@@ -11,6 +11,8 @@ AdditionalDescriptions for unrecognized long names
 
 Show the parenthesized version of certain replacement characters
 
+Limit fatal errors returned by parser to 10
+
 
 ## 1.5 - 7 Mar, 2022
 

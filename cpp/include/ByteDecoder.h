@@ -77,8 +77,6 @@ class SourceCharacterIndexManager : public SourceConventionManager {
 class ByteDecoder {
 private:
     
-    IssuePtrSet Issues;
-    
     SourceConventionManagerPtr srcConventionManager;
 
     EncodingMode encodingMode;
@@ -141,12 +139,6 @@ public:
     // Postcondition: lastLoc is set to the last value of SrcLoc
     //
     SourceCharacter currentSourceCharacter(NextPolicy policy);
-    
-#if !NISSUES
-    IssuePtrSet& getIssues();
-    
-    void addIssue(IssuePtr);
-#endif // !NISSUES
 };
 
 extern ByteDecoderPtr TheByteDecoder;

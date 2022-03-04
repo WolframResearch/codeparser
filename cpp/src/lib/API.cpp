@@ -22,7 +22,7 @@
 bool validatePath(WolframLibraryData libData, const unsigned char *inStr, size_t len);
 
 
-ParserSession::ParserSession() : bufAndLen(),
+ParserSession::ParserSession() : fatalIssues(), nonFatalIssues(), bufAndLen(),
 #if !NABORT
 currentAbortQ(),
 #endif // !NABORT
@@ -52,6 +52,9 @@ void ParserSession::init(
     uint32_t tabWidth,
     FirstLineBehavior firstLineBehavior,
     EncodingMode encodingMode) {
+    
+    fatalIssues.clear();
+    nonFatalIssues.clear();
     
     bufAndLen = bufAndLenIn;
     
@@ -89,6 +92,9 @@ void ParserSession::init(
 }
 
 void ParserSession::deinit() {
+    
+    fatalIssues.clear();
+    nonFatalIssues.clear();
     
     TheParser->deinit();
     TheTokenizer->deinit();
@@ -170,36 +176,24 @@ Node *ParserSession::parseExpressions() {
     //
     // Now handle the out-of-band expressions, i.e., issues and metadata
     //
-    
-    //
-    // Collect all issues from the various components
-    //
     {
-        IssuePtrSet issues;
-        
 #if !NISSUES
-        auto& ParserIssues = TheParser->getIssues();
-        for (auto& I : ParserIssues) {
-            issues.insert(std::move(I));
+        //
+        // if there are fatal issues, then only send fatal issues
+        //
+        if (!fatalIssues.empty()) {
+            
+            nodes.push_back(NodePtr(new CollectedIssuesNode(std::move(fatalIssues))));
+            
+        } else {
+            
+            nodes.push_back(NodePtr(new CollectedIssuesNode(std::move(nonFatalIssues))));
         }
+#else
         
-        auto& TokenizerIssues = TheTokenizer->getIssues();
-        for (auto& I : TokenizerIssues) {
-            issues.insert(std::move(I));
-        }
+        nodes.push_back(NodePtr(new CollectedIssuesNode()));
         
-        auto& CharacterDecoderIssues = TheCharacterDecoder->getIssues();
-        for (auto& I : CharacterDecoderIssues) {
-            issues.insert(std::move(I));
-        }
-        
-        auto& ByteDecoderIssues = TheByteDecoder->getIssues();
-        for (auto& I : ByteDecoderIssues) {
-            issues.insert(std::move(I));
-        }
 #endif // !NISSUES
-        
-        nodes.push_back(NodePtr(new CollectedIssuesNode(std::move(issues))));
     }
     
     {
@@ -391,32 +385,24 @@ Node *ParserSession::concreteParseLeaf(StringifyMode mode) {
     //
     // Collect all issues from the various components
     //
-    {
-        IssuePtrSet issues;
-        
+    {        
 #if !NISSUES
-        auto& ParserIssues = TheParser->getIssues();
-        for (auto& I : ParserIssues) {
-            issues.insert(std::move(I));
+        //
+        // if there are fatal issues, then only send fatal issues
+        //
+        if (!fatalIssues.empty()) {
+            
+            nodes.push_back(NodePtr(new CollectedIssuesNode(std::move(fatalIssues))));
+            
+        } else {
+            
+            nodes.push_back(NodePtr(new CollectedIssuesNode(std::move(nonFatalIssues))));
         }
+#else
         
-        auto& TokenizerIssues = TheTokenizer->getIssues();
-        for (auto& I : TokenizerIssues) {
-            issues.insert(std::move(I));
-        }
+        nodes.push_back(NodePtr(new CollectedIssuesNode()));
         
-        auto& CharacterDecoderIssues = TheCharacterDecoder->getIssues();
-        for (auto& I : CharacterDecoderIssues) {
-            issues.insert(std::move(I));
-        }
-        
-        auto& ByteDecoderIssues = TheByteDecoder->getIssues();
-        for (auto& I : ByteDecoderIssues) {
-            issues.insert(std::move(I));
-        }
 #endif // !NISSUES
-        
-        nodes.push_back(NodePtr(new CollectedIssuesNode(std::move(issues))));
     }
     
     {
@@ -537,6 +523,30 @@ NodePtr ParserSession::handleAbort() const {
 
 void ParserSession::setUnsafeCharacterEncodingFlag(UnsafeCharacterEncodingFlag flag) {
     unsafeCharacterEncodingFlag = flag;
+}
+
+void ParserSession::addIssue(IssuePtr I) {
+
+    if (I->Sev == ENCODINGISSUESEVERITY_FATAL ||
+        I->Sev == SYNTAXISSUESEVERITY_FATAL) {
+        
+        //
+        // There may be situations where many (1000+) fatal errors are generated.
+        // This has a noticeable impact on time to transfer for something that should be instantaneous.
+        //
+        // If there are, say, 10 fatal errors, then assume that the 11th is not going to give any new information,
+        // and ignore.
+        //
+        if (fatalIssues.size() >= 10) {
+            return;
+        }
+
+        fatalIssues.insert(std::move(I));
+
+    } else {
+
+        nonFatalIssues.insert(std::move(I));
+    }
 }
 
 ParserSessionPtr TheParserSession = nullptr;
