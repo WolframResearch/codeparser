@@ -243,9 +243,6 @@ Related bugs: 206938
 abstract[BinaryNode[PatternTest, {left:BinaryNode[PatternTest, _, _], _, right_}, data_]] :=
 	AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociativePatternTest, {abstract[left], abstract[right]}, data]
 
-abstract[BinaryNode[Unset, {left_, LeafNode[Token`Boxes`EqualDot, _, _]}, data_]] :=
-	CallNode[ToNode[Unset], {abstract[left]}, data]
-
 abstract[BinaryNode[Unset, {left_, LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, data_]] :=
 	CallNode[ToNode[Unset], {abstract[left]}, data]
 
@@ -318,9 +315,6 @@ abstract[TernaryNode[TagSetDelayed, {left_, _, middle_, _, right_}, data_]] :=
 Allow non-Symbols for left; not a syntax error
 *)
 abstract[TernaryNode[TagUnset, {left_, _, middle_, LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, data_]] :=
-	CallNode[ToNode[TagUnset], {abstract[left], abstract[middle]}, data]
-
-abstract[TernaryNode[TagUnset, {left_, _, middle_, LeafNode[Token`Boxes`EqualDot, _, _]}, data_]] :=
 	CallNode[ToNode[TagUnset], {abstract[left], abstract[middle]}, data]
 
 abstract[TernaryNode[Span, {left_, _, middle_, _, right_}, data_]] :=

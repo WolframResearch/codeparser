@@ -489,9 +489,9 @@ prbDispatch[{_, LeafNode[Token`SlashColon, _, _], _}, handledChildren_, ignored_
   SyntaxErrorNode[SyntaxError`ExpectedSet, handledChildren, <| Source -> pos |>]
 
 (*
-Token`SlashColon Token`Boxes`EqualDot Good
+Token`SlashColon Token`Equal Token`Dot Good
 *)
-prbDispatch[{_, LeafNode[Token`SlashColon, _, _], _, LeafNode[Token`Boxes`EqualDot, _, _]}, handledChildren_, ignored_, pos_] :=
+prbDispatch[{_, LeafNode[Token`SlashColon, _, _], _, LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, handledChildren_, ignored_, pos_] :=
   TernaryNode[TagUnset, handledChildren, <| Source -> pos |>]
 
 (*
@@ -1105,17 +1105,6 @@ Token`ColonEqual Good
 *)
 prbDispatch[{_, LeafNode[Token`ColonEqual, _, _], _}, handledChildren_, ignored_, pos_] :=
   BinaryNode[SetDelayed, handledChildren, <| Source -> pos |>]
-
-
-(*
-Token`Boxes`EqualDot
-*)
-
-(*
-Token`Boxes`EqualDot Good
-*)
-prbDispatch[{_, LeafNode[Token`Boxes`EqualDot, _, _]}, handledChildren_, ignored_, pos_] :=
-  BinaryNode[Unset, handledChildren, <| Source -> pos |>]
 
 
 (*

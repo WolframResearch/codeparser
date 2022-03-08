@@ -125,7 +125,6 @@ If[!StringQ[inputStr],
   aggToCompare = convertMultiSingleQuote[aggToCompare];
   aggToCompare = convertInfixTilde[aggToCompare];
   aggToCompare = flattenChildrenInGroupMissingCloser[aggToCompare];
-  aggToCompare = expandEqualDot[aggToCompare];
   aggToCompare = aggToCompare /. {_Association -> <||>};
 
   cst2 = CodeConcreteParse[inputStr];
@@ -308,12 +307,6 @@ flattenChildrenInGroupMissingCloser[node_] := node /. {
 convertedUnterminatedToGroupMissingCloser[node_] := node /. {
   UnterminatedGroupNode[op_, children_, data_] :> GroupMissingCloserNode[op, children, data]
 }
-
-expandEqualDot[agg_] :=
-    agg /. {
-        BinaryNode[Unset, {rand_, LeafNode[Token`Boxes`EqualDot, _, _]}, _] :>
-            BinaryNode[Unset, {rand, LeafNode[Token`Equal, "=", <||>], LeafNode[Token`Dot, ".", <||>]}, <||>]
-    }
 
 
 exceptions = <|

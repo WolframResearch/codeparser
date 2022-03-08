@@ -610,7 +610,11 @@ parseBoxPossibleListPossibleDirective[Arrowheads[args___], pos_] := DirectiveNod
 parseBoxPossibleListPossibleDirective[box_, pos_] := parseBox[box, pos]
 
 
-parseBox["=.", pos_] := LeafNode[Token`Boxes`EqualDot, "=.", <|Source -> pos|>]
+parseBox["=.", pos_] :=
+  Sequence @@ {
+    LeafNode[Token`Equal, "=", <| Source -> pos |>],
+    LeafNode[Token`Dot, ".", <| Source -> pos |>]
+  }
 
 
 (*

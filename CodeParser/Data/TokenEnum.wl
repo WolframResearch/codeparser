@@ -207,11 +207,6 @@ The FE treats  ( *  and  * )  as tokens
 *)
 Token`Boxes`OpenParenStar -> Next,
 
-(*
-The FE treats  =.  as a single token
-*)
-Token`Boxes`EqualDot -> Next,
-
 (* variable length character tokens *)
 (*
 The FE treats  ***** )  as a single token
