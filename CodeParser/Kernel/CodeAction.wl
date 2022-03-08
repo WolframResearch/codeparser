@@ -126,11 +126,12 @@ Module[{src, originalNodePos, cst, srcPosMap, parentPos, parent, commaChildren, 
   cst
 ]]
 
-ApplyCodeAction[action:CodeAction[label_, DeleteTriviaNode, actionData_], cstIn_, Null] :=
+ApplyCodeAction[action:CodeAction[label_, DeleteTriviaNode, actionData_], cstIn_, srcPosMapIn_:Null] :=
 Catch[
-Module[{src, originalNodePos, cst},
+Module[{src, originalNodePos, cst, srcPosMap},
 
   cst = cstIn;
+  srcPosMap = srcPosMapIn;
 
   src = Lookup[actionData, Source];
 
@@ -140,29 +141,17 @@ Module[{src, originalNodePos, cst},
 
   but this is super slow
   *)
-  originalNodePos = Position[cst, src];
+  originalNodePos = If[srcPosMap === Null, Position[cst, src], srcPosMap[src]];
 
-  originalNodePos = originalNodePos[[1, 1;;-3]];
+  If[originalNodePos == {},
+  Throw[Failure["CannotFindNode", <| actionData, "CST" -> cst, "Source" -> src |>]]
+  ];
+  originalNodePos = Drop[originalNodePos[[1]], -2];
 
   cst = Delete[cst, originalNodePos];
 
   cst
 ]]
-
-(*
-optimized
-*)
-ApplyCodeAction[CodeAction[_, DeleteTriviaNode, actionData_], cst_, srcPosMap_] := (
-
-  (*
-  was originally:
-  originalNodePos = Position[cst, _[_, _, KeyValuePattern[Source -> src]]];
-
-  but this is super slow
-  *)
-
-  Delete[cst, srcPosMap[[Key[Lookup[actionData, Source]], 1, 1;;-3]]]
-)
 
 ApplyCodeAction[action:CodeAction[label_, DeleteText, actionData_], cstIn_, srcPosMapIn_:Null] :=
 Catch[
@@ -228,26 +217,33 @@ Module[{src, originalNodePos, cst, srcInter, srcIntra, node, leafText, srcPosMap
   cst
 ]]
 
+(*
+
+DeleteTrivia is buggy and poorly understood
+
+"Sources" is a span, but we do not have a way of representing spans of Position specs
+
 ApplyCodeAction[action:CodeAction[label_, DeleteTrivia, actionData_], cstIn_, srcPosMapIn_:Null] :=
 Catch[
-Module[{src, cst, func, trivia, srcPosMap},
+Module[{srcs, cst, func, trivia, srcPosMap},
 
   cst = cstIn;
   srcPosMap = srcPosMapIn;
 
-  src = Lookup[actionData, Source];
+  srcs = Lookup[actionData, "Sources"];
 
   If[$Debug,
-    Print["src: ", src];
+    Print["srcs: ", srcs];
   ];
 
-  func = SourceMemberQ[src];
+  func = SourceMemberQ[srcs];
   trivia = Cases[cst, LeafNode[Whitespace | Token`Newline | Token`Comment, _, KeyValuePattern[Source -> src_?func]], Infinity];
 
   Scan[(cst = ApplyCodeAction[CodeAction["delete", DeleteNode, <| Source -> #[[3, Key[Source]]]|>], cst];)&, trivia];
   
   cst
 ]]
+*)
 
 ApplyCodeAction[action:CodeAction[label_, Identity, actionData_], cstIn_, srcPosMapIn_:Null] :=
 Catch[
