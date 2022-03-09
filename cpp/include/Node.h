@@ -18,6 +18,15 @@ using NodePtr = std::unique_ptr<Node>;
 using LeafNodePtr = std::unique_ptr<LeafNode>;
 using NodeSeqNodePtr = std::unique_ptr<NodeSeqNode>;
 
+
+enum UnsafeCharacterEncodingFlag {
+    UNSAFECHARACTERENODING_OK = 0,
+    UNSAFECHARACTERENODING_INCOMPLETESEQUENCE = 1,
+    UNSAFECHARACTERENODING_STRAYSURROGATE = 2,
+    UNSAFECHARACTERENODING_BOM = 3,
+};
+
+
 //
 // Used mainly for collecting trivia that has been eaten
 //
@@ -530,8 +539,9 @@ public:
 //
 //
 class MissingBecauseUnsafeCharacterEncodingNode : public Node {
+    UnsafeCharacterEncodingFlag flag;
 public:
-    MissingBecauseUnsafeCharacterEncodingNode() : Node() {}
+    MissingBecauseUnsafeCharacterEncodingNode(UnsafeCharacterEncodingFlag flag) : Node(), flag(flag) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;

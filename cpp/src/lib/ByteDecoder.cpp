@@ -949,7 +949,7 @@ SourceCharacter ByteDecoder::incomplete1ByteSequence(SourceLocation errSrcLoc, N
     // Related bugs: 366106, 376155
     //
     
-    TheParserSession->setUnsafeCharacterEncodingFlag();
+    TheParserSession->setUnsafeCharacterEncodingFlag(UNSAFECHARACTERENODING_INCOMPLETESEQUENCE);
     
     return SourceCharacter(CODEPOINT_UNSAFE_1_BYTE_UTF8_SEQUENCE);
 }
@@ -977,7 +977,7 @@ SourceCharacter ByteDecoder::incomplete2ByteSequence(SourceLocation errSrcLoc, N
     // Related bugs: 366106, 376155
     //
     
-    TheParserSession->setUnsafeCharacterEncodingFlag();
+    TheParserSession->setUnsafeCharacterEncodingFlag(UNSAFECHARACTERENODING_INCOMPLETESEQUENCE);
     
     return SourceCharacter(CODEPOINT_UNSAFE_2_BYTE_UTF8_SEQUENCE);
 }
@@ -1005,7 +1005,7 @@ SourceCharacter ByteDecoder::incomplete3ByteSequence(SourceLocation errSrcLoc, N
     // Related bugs: 366106, 376155
     //
     
-    TheParserSession->setUnsafeCharacterEncodingFlag();
+    TheParserSession->setUnsafeCharacterEncodingFlag(UNSAFECHARACTERENODING_INCOMPLETESEQUENCE);
     
     return SourceCharacter(CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE);
 }
@@ -1036,7 +1036,7 @@ SourceCharacter ByteDecoder::straySurrogate(SourceLocation errSrcLoc, NextPolicy
     // Related bugs: 366106, 376155
     //
     
-    TheParserSession->setUnsafeCharacterEncodingFlag();
+    TheParserSession->setUnsafeCharacterEncodingFlag(UNSAFECHARACTERENODING_STRAYSURROGATE);
     
     return SourceCharacter(CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE);
 }
@@ -1057,7 +1057,7 @@ SourceCharacter ByteDecoder::bom(SourceLocation errSrcLoc, NextPolicy policy) {
     }
 #endif // !NISSUES
     
-    TheParserSession->setUnsafeCharacterEncodingFlag();
+    TheParserSession->setUnsafeCharacterEncodingFlag(UNSAFECHARACTERENODING_BOM);
     
     return SourceCharacter(CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE);
 }

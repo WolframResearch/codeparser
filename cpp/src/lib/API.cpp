@@ -57,7 +57,7 @@ void ParserSession::init(
     
     policy = policyIn;
     
-    unsafeCharacterEncodingFlag = false;
+    unsafeCharacterEncodingFlag = UNSAFECHARACTERENODING_OK;
     
     if (srcConvention == SOURCECONVENTION_UNKNOWN) {
         return;
@@ -154,13 +154,13 @@ Node *ParserSession::parseExpressions() {
         nodes.push_back(std::move(Collected));
     }
     
-    if (unsafeCharacterEncodingFlag) {
+    if (unsafeCharacterEncodingFlag != UNSAFECHARACTERENODING_OK) {
         
         nodes.clear();
         
         std::vector<NodePtr> exprs;
         
-        exprs.push_back(NodePtr(new MissingBecauseUnsafeCharacterEncodingNode()));
+        exprs.push_back(NodePtr(new MissingBecauseUnsafeCharacterEncodingNode(unsafeCharacterEncodingFlag)));
         
         NodePtr Collected = NodePtr(new CollectedExpressionsNode(std::move(exprs)));
         
@@ -270,9 +270,9 @@ Node *ParserSession::tokenize() {
         
     } // while (true)
     
-    if (unsafeCharacterEncodingFlag) {
+    if (unsafeCharacterEncodingFlag != UNSAFECHARACTERENODING_OK) {
         
-        auto N = new MissingBecauseUnsafeCharacterEncodingNode();
+        auto N = new MissingBecauseUnsafeCharacterEncodingNode(unsafeCharacterEncodingFlag);
         
         return N;
     }
@@ -304,9 +304,9 @@ Node *ParserSession::listSourceCharacters() {
         
     } // while (true)
     
-    if (unsafeCharacterEncodingFlag) {
+    if (unsafeCharacterEncodingFlag != UNSAFECHARACTERENODING_OK) {
         
-        auto N = new MissingBecauseUnsafeCharacterEncodingNode();
+        auto N = new MissingBecauseUnsafeCharacterEncodingNode(unsafeCharacterEncodingFlag);
         
         return N;
     }
@@ -373,13 +373,13 @@ Node *ParserSession::concreteParseLeaf(StringifyMode mode) {
         nodes.push_back(std::move(Collected));
     }
     
-    if (unsafeCharacterEncodingFlag) {
+    if (unsafeCharacterEncodingFlag != UNSAFECHARACTERENODING_OK) {
         
         nodes.clear();
         
         std::vector<NodePtr> exprs;
         
-        auto node = NodePtr(new MissingBecauseUnsafeCharacterEncodingNode());
+        auto node = NodePtr(new MissingBecauseUnsafeCharacterEncodingNode(unsafeCharacterEncodingFlag));
         
         exprs.push_back(std::move(node));
         
@@ -477,9 +477,9 @@ Node *ParserSession::safeString() {
         
     } // while (true)
     
-    if (unsafeCharacterEncodingFlag) {
+    if (unsafeCharacterEncodingFlag != UNSAFECHARACTERENODING_OK) {
         
-        auto N = new MissingBecauseUnsafeCharacterEncodingNode();
+        auto N = new MissingBecauseUnsafeCharacterEncodingNode(unsafeCharacterEncodingFlag);
         
         return N;
     }
@@ -535,8 +535,8 @@ NodePtr ParserSession::handleAbort() const {
 }
 #endif // !NABORT
 
-void ParserSession::setUnsafeCharacterEncodingFlag() {
-    unsafeCharacterEncodingFlag = true;
+void ParserSession::setUnsafeCharacterEncodingFlag(UnsafeCharacterEncodingFlag flag) {
+    unsafeCharacterEncodingFlag = flag;
 }
 
 ParserSessionPtr TheParserSession = nullptr;

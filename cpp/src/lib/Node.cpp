@@ -496,8 +496,21 @@ bool ListNode::check() const {
 
 
 void MissingBecauseUnsafeCharacterEncodingNode::print(std::ostream& s) const {
-    
-    s << "Missing[\"UnsafeCharacterEncoding\"]";
+    switch (flag) {
+        case UNSAFECHARACTERENODING_INCOMPLETESEQUENCE:
+            s << "Missing[\"UnsafeCharacterEncoding_IncompleteSequence\"]";
+            break;
+        case UNSAFECHARACTERENODING_STRAYSURROGATE:
+            s << "Missing[\"UnsafeCharacterEncoding_StraySurrogate\"]";
+            break;
+        case UNSAFECHARACTERENODING_BOM:
+            s << "Missing[\"UnsafeCharacterEncoding_BOM\"]";
+            break;
+        default:
+            assert(false);
+            s << "Missing[\"UnsafeCharacterEncoding_UNKNOWN\"]";
+            break;
+    }
 }
 
 
@@ -837,7 +850,23 @@ void MissingBecauseUnsafeCharacterEncodingNode::put(MLINK mlp) const {
         assert(false);
     }
     
-    std::string reason = "UnsafeCharacterEncoding";
+    std::string reason;
+    
+    switch (flag) {
+        case UNSAFECHARACTERENODING_INCOMPLETESEQUENCE:
+            reason = "UnsafeCharacterEncoding_IncompleteSequence";
+            break;
+        case UNSAFECHARACTERENODING_STRAYSURROGATE:
+            reason = "UnsafeCharacterEncoding_StraySurrogate";
+            break;
+        case UNSAFECHARACTERENODING_BOM:
+            reason = "UnsafeCharacterEncoding_BOM";
+            break;
+        default:
+            assert(false);
+            reason = "UnsafeCharacterEncoding_UNKNOWN";
+            break;
+    }
     
     if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(reason.c_str()), static_cast<int>(reason.size()))) {
         assert(false);

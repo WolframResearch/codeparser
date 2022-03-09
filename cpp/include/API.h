@@ -135,7 +135,7 @@ public:
     
     ParserSessionPolicy policy;
     
-    bool unsafeCharacterEncodingFlag;
+    UnsafeCharacterEncodingFlag unsafeCharacterEncodingFlag;
     
     
     ParserSession();
@@ -169,7 +169,7 @@ public:
     NodePtr handleAbort() const;
 #endif // !NABORT
     
-    void setUnsafeCharacterEncodingFlag();
+    void setUnsafeCharacterEncodingFlag(UnsafeCharacterEncodingFlag flag);
 };
 
 extern ParserSessionPtr TheParserSession;

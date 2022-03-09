@@ -325,7 +325,7 @@ Test[
 	CodeConcreteParse[{206}]
 	,
 	ContainerNode[Byte, {
-		Missing["UnsafeCharacterEncoding"]}
+		Missing["UnsafeCharacterEncoding_IncompleteSequence"]}
 		,
 		<| SyntaxIssues -> {
 			EncodingIssue["IncompleteUTF8Sequence", "Incomplete UTF-8 sequence.", "Fatal", <| Source -> {{1, 1}, {1, 2}}, ConfidenceLevel -> 1.0 |>] } |>]
