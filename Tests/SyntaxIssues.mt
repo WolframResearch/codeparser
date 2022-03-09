@@ -328,7 +328,7 @@ Test[
 		Missing["UnsafeCharacterEncoding"]}
 		,
 		<| SyntaxIssues -> {
-			EncodingIssue["IncompleteSequence", "Incomplete sequence.", "Fatal", <| Source -> {{1, 1}, {1, 2}}, ConfidenceLevel -> 1.0 |>] } |>]
+			EncodingIssue["IncompleteUTF8Sequence", "Incomplete UTF-8 sequence.", "Fatal", <| Source -> {{1, 1}, {1, 2}}, ConfidenceLevel -> 1.0 |>] } |>]
 	,
 	TestID->"SyntaxIssues-20200413-T5W0H7"
 ]

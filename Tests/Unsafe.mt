@@ -19,9 +19,9 @@ Test[
 	,
 	ContainerNode[Byte, {Missing[
    "UnsafeCharacterEncoding"]}, <|SyntaxIssues -> {EncodingIssue[
-     "IncompleteSequence", "Incomplete sequence.", 
+     "IncompleteUTF8Sequence", "Incomplete UTF-8 sequence.", 
      "Fatal", <|Source -> {{1, 1}, {1, 2}}, ConfidenceLevel -> 1.|>], 
-    EncodingIssue["IncompleteSequence", "Incomplete sequence.", 
+    EncodingIssue["IncompleteUTF8Sequence", "Incomplete UTF-8 sequence.", 
      "Fatal", <|Source -> {{1, 2}, {1, 3}}, 
       ConfidenceLevel -> 1.|>]}|>]
 	,
@@ -34,9 +34,9 @@ Test[
 	,
 	ContainerNode[Byte, {Missing[
    "UnsafeCharacterEncoding"]}, <|SyntaxIssues -> {EncodingIssue[
-     "IncompleteSequence", "Incomplete sequence.", 
+     "IncompleteUTF8Sequence", "Incomplete UTF-8 sequence.", 
      "Fatal", <|Source -> {{1, 1}, {1, 2}}, ConfidenceLevel -> 1.|>], 
-    EncodingIssue["IncompleteSequence", "Incomplete sequence.", 
+    EncodingIssue["IncompleteUTF8Sequence", "Incomplete UTF-8 sequence.", 
      "Fatal", <|Source -> {{1, 2}, {1, 3}}, 
       ConfidenceLevel -> 1.|>]}|>]
 	,
@@ -52,7 +52,7 @@ Test[
 	ContainerNode[File, {
 		Missing["UnsafeCharacterEncoding"]}, <|
 			SyntaxIssues -> {
-				EncodingIssue["IncompleteSequence", "Incomplete sequence.", "Fatal", <|Source -> {{1, 16}, {1, 17}}, ConfidenceLevel -> 1.|>]},
+				EncodingIssue["IncompleteUTF8Sequence", "Incomplete UTF-8 sequence.", "Fatal", <|Source -> {{1, 16}, {1, 17}}, ConfidenceLevel -> 1.|>]},
 			"FileName" -> unsafe|>]
 	,
 	TestID->"Unsafe-20220121-L0W6B5"
@@ -78,7 +78,7 @@ Test[
 	ContainerNode[File, {
 		Missing["UnsafeCharacterEncoding"]}, <|
 			SyntaxIssues -> {
-				EncodingIssue["IncompleteSequence", "Incomplete sequence.", "Fatal", <|Source -> {{1, 2}, {1, 3}}, ConfidenceLevel -> 1.|>]},
+				EncodingIssue["IncompleteUTF8Sequence", "Incomplete UTF-8 sequence.", "Fatal", <|Source -> {{1, 2}, {1, 3}}, ConfidenceLevel -> 1.|>]},
 			"FileName" -> unsafe|>]
 	,
 	TestID->"Unsafe-20220223-W0U9G9"

@@ -12,17 +12,17 @@ size_t ByteEncoder::size(codepoint val) {
         return 2;
     }
     
-    if (val == CODEPOINT_UNSAFE_1_BYTE_SEQUENCE) {
+    if (val == CODEPOINT_UNSAFE_1_BYTE_UTF8_SEQUENCE) {
         
         return 1;
     }
     
-    if (val == CODEPOINT_UNSAFE_2_BYTE_SEQUENCE) {
+    if (val == CODEPOINT_UNSAFE_2_BYTE_UTF8_SEQUENCE) {
         
         return 2;
     }
     
-    if (val == CODEPOINT_UNSAFE_3_BYTE_SEQUENCE) {
+    if (val == CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE) {
         
         return 3;
     }
@@ -65,7 +65,7 @@ void ByteEncoder::encodeBytes(std::ostream& stream, codepoint val, ByteEncoderSt
     //
     // e.g., GTest was trying to print
     //
-    if (val == CODEPOINT_UNSAFE_1_BYTE_SEQUENCE || val == CODEPOINT_UNSAFE_2_BYTE_SEQUENCE || val == CODEPOINT_UNSAFE_3_BYTE_SEQUENCE) {
+    if (val == CODEPOINT_UNSAFE_1_BYTE_UTF8_SEQUENCE || val == CODEPOINT_UNSAFE_2_BYTE_UTF8_SEQUENCE || val == CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE) {
         
         //
         // Print U+FFFD (REPLACEMENT CHARACTER)
@@ -152,7 +152,7 @@ void ByteEncoder::encodeBytes(std::array<unsigned char, 4>& arr, codepoint val, 
     //
     // e.g., GTest was trying to print
     //
-    if (val == CODEPOINT_UNSAFE_1_BYTE_SEQUENCE || val == CODEPOINT_UNSAFE_2_BYTE_SEQUENCE || val == CODEPOINT_UNSAFE_3_BYTE_SEQUENCE) {
+    if (val == CODEPOINT_UNSAFE_1_BYTE_UTF8_SEQUENCE || val == CODEPOINT_UNSAFE_2_BYTE_UTF8_SEQUENCE || val == CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE) {
         
         //
         // Print U+FFFD (REPLACEMENT CHARACTER)

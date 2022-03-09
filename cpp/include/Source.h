@@ -209,7 +209,7 @@ FormatIssueTag FORMATISSUETAG_INSERTSPACE = "InsertSpace";
 
 typedef const std::string EncodingIssueTag;
 
-EncodingIssueTag ENCODINGISSUETAG_INCOMPLETESEQUENCE = "IncompleteSequence";
+EncodingIssueTag ENCODINGISSUETAG_INCOMPLETEUTF8SEQUENCE = "IncompleteUTF8Sequence";
 EncodingIssueTag ENCODINGISSUETAG_STRAYSURROGATE = "StraySurrogate";
 EncodingIssueTag ENCODINGISSUETAG_BOM = "BOM";
 EncodingIssueTag ENCODINGISSUETAG_UNEXPECTEDCARRIAGERETURN = "UnexpectedCarriageReturn";

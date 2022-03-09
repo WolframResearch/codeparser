@@ -936,7 +936,7 @@ SourceCharacter ByteDecoder::incomplete1ByteSequence(SourceLocation errSrcLoc, N
         // No CodeAction here
         //
         
-        auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_INCOMPLETESEQUENCE, "Incomplete sequence.", ENCODINGISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0));
+        auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_INCOMPLETEUTF8SEQUENCE, "Incomplete UTF-8 sequence.", ENCODINGISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0));
         
         Issues.insert(std::move(I));
     }
@@ -951,7 +951,7 @@ SourceCharacter ByteDecoder::incomplete1ByteSequence(SourceLocation errSrcLoc, N
     
     TheParserSession->setUnsafeCharacterEncodingFlag();
     
-    return SourceCharacter(CODEPOINT_UNSAFE_1_BYTE_SEQUENCE);
+    return SourceCharacter(CODEPOINT_UNSAFE_1_BYTE_UTF8_SEQUENCE);
 }
 
 SourceCharacter ByteDecoder::incomplete2ByteSequence(SourceLocation errSrcLoc, NextPolicy policy) {
@@ -964,7 +964,7 @@ SourceCharacter ByteDecoder::incomplete2ByteSequence(SourceLocation errSrcLoc, N
         // No CodeAction here
         //
         
-        auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_INCOMPLETESEQUENCE, "Incomplete sequence.", ENCODINGISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0));
+        auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_INCOMPLETEUTF8SEQUENCE, "Incomplete UTF-8 sequence.", ENCODINGISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0));
         
         Issues.insert(std::move(I));
     }
@@ -979,7 +979,7 @@ SourceCharacter ByteDecoder::incomplete2ByteSequence(SourceLocation errSrcLoc, N
     
     TheParserSession->setUnsafeCharacterEncodingFlag();
     
-    return SourceCharacter(CODEPOINT_UNSAFE_2_BYTE_SEQUENCE);
+    return SourceCharacter(CODEPOINT_UNSAFE_2_BYTE_UTF8_SEQUENCE);
 }
 
 SourceCharacter ByteDecoder::incomplete3ByteSequence(SourceLocation errSrcLoc, NextPolicy policy) {
@@ -992,7 +992,7 @@ SourceCharacter ByteDecoder::incomplete3ByteSequence(SourceLocation errSrcLoc, N
         // No CodeAction here
         //
         
-        auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_INCOMPLETESEQUENCE, "Incomplete sequence.", ENCODINGISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0));
+        auto I = IssuePtr(new EncodingIssue(ENCODINGISSUETAG_INCOMPLETEUTF8SEQUENCE, "Incomplete UTF-8 sequence.", ENCODINGISSUESEVERITY_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0));
         
         Issues.insert(std::move(I));
     }
@@ -1007,7 +1007,7 @@ SourceCharacter ByteDecoder::incomplete3ByteSequence(SourceLocation errSrcLoc, N
     
     TheParserSession->setUnsafeCharacterEncodingFlag();
     
-    return SourceCharacter(CODEPOINT_UNSAFE_3_BYTE_SEQUENCE);
+    return SourceCharacter(CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE);
 }
 
 //
@@ -1038,7 +1038,7 @@ SourceCharacter ByteDecoder::straySurrogate(SourceLocation errSrcLoc, NextPolicy
     
     TheParserSession->setUnsafeCharacterEncodingFlag();
     
-    return SourceCharacter(CODEPOINT_UNSAFE_3_BYTE_SEQUENCE);
+    return SourceCharacter(CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE);
 }
 
 SourceCharacter ByteDecoder::bom(SourceLocation errSrcLoc, NextPolicy policy) {
@@ -1059,7 +1059,7 @@ SourceCharacter ByteDecoder::bom(SourceLocation errSrcLoc, NextPolicy policy) {
     
     TheParserSession->setUnsafeCharacterEncodingFlag();
     
-    return SourceCharacter(CODEPOINT_UNSAFE_3_BYTE_SEQUENCE);
+    return SourceCharacter(CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE);
 }
 
 

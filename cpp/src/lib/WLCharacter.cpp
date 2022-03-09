@@ -559,7 +559,7 @@ bool WLCharacter::isMBLetterlike() const {
         return false;
     }
     
-    if (val == CODEPOINT_UNSAFE_1_BYTE_SEQUENCE || val == CODEPOINT_UNSAFE_2_BYTE_SEQUENCE || val == CODEPOINT_UNSAFE_3_BYTE_SEQUENCE) {
+    if (val == CODEPOINT_UNSAFE_1_BYTE_UTF8_SEQUENCE || val == CODEPOINT_UNSAFE_2_BYTE_UTF8_SEQUENCE || val == CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE) {
         return false;
     }
     

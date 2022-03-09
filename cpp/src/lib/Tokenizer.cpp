@@ -192,7 +192,7 @@ Token Tokenizer::nextToken0(NextPolicy policy) {
                 
                 return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                 
-            } else if (c.to_point() == CODEPOINT_UNSAFE_1_BYTE_SEQUENCE || c.to_point() == CODEPOINT_UNSAFE_2_BYTE_SEQUENCE || c.to_point() == CODEPOINT_UNSAFE_3_BYTE_SEQUENCE) {
+            } else if (c.to_point() == CODEPOINT_UNSAFE_1_BYTE_UTF8_SEQUENCE || c.to_point() == CODEPOINT_UNSAFE_2_BYTE_UTF8_SEQUENCE || c.to_point() == CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE) {
                 
                 //
                 // This will be disposed before the user sees it

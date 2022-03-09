@@ -93,13 +93,13 @@ constexpr codepoint CODEPOINT_CRLF(-13);
 // stray surrogate
 // BOM
 //
-// CODEPOINT_UNSAFE_1_BYTE_SEQUENCE represents unsafe input of 1 byte
-// CODEPOINT_UNSAFE_2_BYTE_SEQUENCE represents unsafe input of 2 bytes
-// CODEPOINT_UNSAFE_3_BYTE_SEQUENCE represents unsafe input of 3 bytes
+// CODEPOINT_UNSAFE_1_BYTE_UTF8_SEQUENCE represents unsafe input of 1 byte
+// CODEPOINT_UNSAFE_2_BYTE_UTF8_SEQUENCE represents unsafe input of 2 bytes
+// CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE represents unsafe input of 3 bytes
 //
-constexpr codepoint CODEPOINT_UNSAFE_1_BYTE_SEQUENCE(-14);
-constexpr codepoint CODEPOINT_UNSAFE_2_BYTE_SEQUENCE(-15);
-constexpr codepoint CODEPOINT_UNSAFE_3_BYTE_SEQUENCE(-16);
+constexpr codepoint CODEPOINT_UNSAFE_1_BYTE_UTF8_SEQUENCE(-14);
+constexpr codepoint CODEPOINT_UNSAFE_2_BYTE_UTF8_SEQUENCE(-15);
+constexpr codepoint CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE(-16);
 
 TokenEnum LongNameCodePointToOperator(codepoint c);
 codepoint LongNameOperatorToCodePoint(TokenEnum t);
