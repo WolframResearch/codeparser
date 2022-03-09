@@ -7,6 +7,8 @@ Specify "sequence" -> "UTF-8 sequence" in various places
 
 Specify reason for unsafe character encoding
 
+AdditionalDescriptions for unrecognized long names
+
 
 ## 1.5 - 7 Mar, 2022
 

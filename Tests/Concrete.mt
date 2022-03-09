@@ -646,7 +646,8 @@ Test[
 				Source -> {{1, 1}, {1, 8}},
 				ConfidenceLevel -> 1., 
 		     	CodeActions -> {
-		     		CodeAction["Replace with ``\\[Alpha]``", ReplaceText, <|Source -> {{1, 1}, {1, 8}}, "ReplacementText" -> "\\[Alpha]"|>]}|>]}|>]
+		     		CodeAction["Replace with ``\\[Alpha]``", ReplaceText, <|Source -> {{1, 1}, {1, 8}}, "ReplacementText" -> "\\[Alpha]"|>]},
+		     	"AdditionalDescriptions" -> {"``Alpa`` is not a recognized long name."}|>]}|>]
 	,
 	TestID->"Concrete-20200105-L1E1C8"
 ]

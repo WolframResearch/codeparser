@@ -452,7 +452,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
             //
             // More specifically: Unrecognized
             //
-            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\[") + longNameStr + "]``.", SYNTAXISSUESEVERITY_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
+            auto I = IssuePtr(new SyntaxIssue(SYNTAXISSUETAG_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\[") + longNameStr + "]``.", SYNTAXISSUESEVERITY_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions), {"``" + longNameStr + "`` is not a recognized long name."}));
             
             Issues.insert(std::move(I));
             
