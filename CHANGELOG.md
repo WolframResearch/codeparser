@@ -9,6 +9,8 @@ Specify reason for unsafe character encoding
 
 AdditionalDescriptions for unrecognized long names
 
+Show the parenthesized version of certain replacement characters
+
 
 ## 1.5 - 7 Mar, 2022
 

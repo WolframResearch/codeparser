@@ -263,74 +263,81 @@ CodeActionPtrVector Utils::certainCharacterReplacementActions(WLCharacter c, Sou
     switch (c.to_point()) {
         case CODEPOINT_LONGNAME_COMPATIBILITYNOBREAK: {
             
-            auto graphicalStr = c.graphicalString();
+            auto safeAndGraphicalStr1 = c.safeAndGraphicalString();
+            auto safeAndGraphicalStr2 = WLCharacter(CODEPOINT_LONGNAME_NOBREAK).safeAndGraphicalString();
             
             //
             // UTF-8 bytes for U+2060 (\[NoBreak])
             //
-            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + graphicalStr + "`` with ``\\[NoBreak]``", src, (c.escape() == ESCAPE_NONE) ? "\xe2\x81\xa0" : "\\[NoBreak]")));
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + safeAndGraphicalStr1 + "`` with ``" + safeAndGraphicalStr2 + "``", src, (c.escape() == ESCAPE_NONE) ? "\xe2\x81\xa0" : "\\[NoBreak]")));
         }
             break;
         case CODEPOINT_LONGNAME_RIGHTARROW: {
             
-            auto graphicalStr = c.graphicalString();
+            auto safeAndGraphicalStr1 = c.safeAndGraphicalString();
+            auto safeAndGraphicalStr2 = WLCharacter(CODEPOINT_LONGNAME_RULE).safeAndGraphicalString();
             
             //
             // UTF-8 bytes for U+F522 (\[Rule])
             //
-            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + graphicalStr + "`` with ``\\[Rule]``", src, (c.escape() == ESCAPE_NONE) ? "\xef\x94\xa2" : "\\[Rule]")));
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + safeAndGraphicalStr1 + "`` with ``" + safeAndGraphicalStr2 + "``", src, (c.escape() == ESCAPE_NONE) ? "\xef\x94\xa2" : "\\[Rule]")));
         }
             break;
         case CODEPOINT_RULEDELAYED: {
             
-            auto graphicalStr = c.graphicalString();
+            auto safeAndGraphicalStr1 = c.safeAndGraphicalString();
+            auto safeAndGraphicalStr2 = WLCharacter(CODEPOINT_LONGNAME_RULEDELAYED).safeAndGraphicalString();
             
             //
             // UTF-8 bytes for U+F51F (\[RuleDelayed])
             //
-            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + graphicalStr + "`` with ``\\[RuleDelayed]``", src, (c.escape() == ESCAPE_NONE) ? "\xef\x94\x9f" : "\\[RuleDelayed]")));
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + safeAndGraphicalStr1 + "`` with ``" + safeAndGraphicalStr2 + "``", src, (c.escape() == ESCAPE_NONE) ? "\xef\x94\x9f" : "\\[RuleDelayed]")));
         }
             break;
         case CODEPOINT_FUNCTIONAPPLICATION: {
             
-            auto graphicalStr = c.graphicalString();
+            auto safeAndGraphicalStr1 = c.safeAndGraphicalString();
+            auto safeAndGraphicalStr2 = WLCharacter(CODEPOINT_LONGNAME_INVISIBLEAPPLICATION).safeAndGraphicalString();
             
             //
             // UTF-8 bytes for U+F76D (\[InvisibleApplication])
             //
-            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + graphicalStr + "`` with ``\\[InvisibleApplication]``", src, (c.escape() == ESCAPE_NONE) ? "\xef\x9d\xad" : "\\[InvisibleApplication]")));
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + safeAndGraphicalStr1 + "`` with ``" + safeAndGraphicalStr2 + "``", src, (c.escape() == ESCAPE_NONE) ? "\xef\x9d\xad" : "\\[InvisibleApplication]")));
             
-            Actions.push_back(CodeActionPtr(new DeleteTextCodeAction("Delete ``" + graphicalStr + "``", src)));
+            Actions.push_back(CodeActionPtr(new DeleteTextCodeAction("Delete ``" + safeAndGraphicalStr1 + "``", src)));
         }
             break;
         case CODEPOINT_INVISIBLESEPARATOR: {
             
-            auto graphicalStr = c.graphicalString();
+            auto safeAndGraphicalStr1 = c.safeAndGraphicalString();
+            auto safeAndGraphicalStr2 = WLCharacter(CODEPOINT_LONGNAME_INVISIBLECOMMA).safeAndGraphicalString();
             
             //
             // UTF-8 bytes for U+F765 (\[InvisibleComma])
             //
-            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + graphicalStr + "`` with ``\\[InvisibleComma]``", src, (c.escape() == ESCAPE_NONE) ? "\xef\x9d\xa5" : "\\[InvisibleComma]")));
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + safeAndGraphicalStr1 + "`` with ``" + safeAndGraphicalStr2 + "``", src, (c.escape() == ESCAPE_NONE) ? "\xef\x9d\xa5" : "\\[InvisibleComma]")));
         }
             break;
         case CODEPOINT_INVISIBLEPLUS: {
             
-            auto graphicalStr = c.graphicalString();
+            auto safeAndGraphicalStr1 = c.safeAndGraphicalString();
+            auto safeAndGraphicalStr2 = WLCharacter(CODEPOINT_LONGNAME_IMPLICITPLUS).safeAndGraphicalString();
             
             //
             // UTF-8 bytes for U+F39E (\[ImplicitPlus])
             //
-            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + graphicalStr + "`` with ``\\[ImplicitPlus]``", src, (c.escape() == ESCAPE_NONE) ? "\xef\x8e\x9e" : "\\[ImplicitPlus]")));
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + safeAndGraphicalStr1 + "`` with ``" + safeAndGraphicalStr2 + "``", src, (c.escape() == ESCAPE_NONE) ? "\xef\x8e\x9e" : "\\[ImplicitPlus]")));
         }
             break;
         case CODEPOINT_ZEROWIDTHSPACE: {
             
-            auto graphicalStr = c.graphicalString();
+            auto safeAndGraphicalStr1 = c.safeAndGraphicalString();
+            auto safeAndGraphicalStr2 = WLCharacter(CODEPOINT_LONGNAME_INVISIBLESPACE).safeAndGraphicalString();
             
             //
             // UTF-8 bytes for U+F360 (\[InvisibleSpace])
             //
-            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + graphicalStr + "`` with ``\\[InvisibleSpace]``", src, (c.escape() == ESCAPE_NONE) ? "\xef\x8d\xa0" : "\\[InvisibleSpace]")));
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + safeAndGraphicalStr1 + "`` with ``" + safeAndGraphicalStr2 + "``", src, (c.escape() == ESCAPE_NONE) ? "\xef\x8d\xa0" : "\\[InvisibleSpace]")));
         }
             break;
     }
