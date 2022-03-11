@@ -552,6 +552,17 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
                 Actions.push_back(std::move(A));
             }
             
+            //
+            // do not recommend replacing graphical character with literal version
+            //
+            
+            //
+            // any ASCII replacements
+            //
+            for (const auto& r : LongNames::asciiReplacements(point)) {
+                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
+            }
+            
             std::string severity;
             if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
                 
@@ -592,6 +603,17 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
             
             for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
                 Actions.push_back(std::move(A));
+            }
+            
+            //
+            // do not recommend replacing graphical character with literal version
+            //
+            
+            //
+            // any ASCII replacements
+            //
+            for (const auto& r : LongNames::asciiReplacements(point)) {
+                Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
             }
             
             std::string severity;
@@ -718,6 +740,17 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
             Actions.push_back(std::move(A));
         }
         
+        //
+        // do not recommend replacing graphical character with literal version
+        //
+        
+        //
+        // any ASCII replacements
+        //
+        for (const auto& r : LongNames::asciiReplacements(point)) {
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
+        }
+        
         std::string severity;
         if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
             
@@ -757,6 +790,17 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
         
         for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
             Actions.push_back(std::move(A));
+        }
+        
+        //
+        // do not recommend replacing graphical character with literal version
+        //
+        
+        //
+        // any ASCII replacements
+        //
+        for (const auto& r : LongNames::asciiReplacements(point)) {
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
         }
         
         std::string severity;
@@ -876,6 +920,17 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
             Actions.push_back(std::move(A));
         }
         
+        //
+        // do not recommend replacing graphical character with literal version
+        //
+        
+        //
+        // any ASCII replacements
+        //
+        for (const auto& r : LongNames::asciiReplacements(point)) {
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
+        }
+        
         std::string severity;
         if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
             
@@ -916,6 +971,17 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
         
         for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
             Actions.push_back(std::move(A));
+        }
+        
+        //
+        // do not recommend replacing graphical character with literal version
+        //
+        
+        //
+        // any ASCII replacements
+        //
+        for (const auto& r : LongNames::asciiReplacements(point)) {
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
         }
         
         std::string severity;
@@ -1036,6 +1102,17 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
             Actions.push_back(std::move(A));
         }
         
+        //
+        // do not recommend replacing graphical character with literal version
+        //
+        
+        //
+        // any ASCII replacements
+        //
+        for (const auto& r : LongNames::asciiReplacements(point)) {
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
+        }
+        
         std::string severity;
         if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
             
@@ -1076,6 +1153,17 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
         
         for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
             Actions.push_back(std::move(A));
+        }
+        
+        //
+        // do not recommend replacing graphical character with literal version
+        //
+        
+        //
+        // any ASCII replacements
+        //
+        for (const auto& r : LongNames::asciiReplacements(point)) {
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
         }
         
         std::string severity;
@@ -1213,6 +1301,17 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
             Actions.push_back(std::move(A));
         }
         
+        //
+        // do not recommend replacing graphical character with literal version
+        //
+        
+        //
+        // any ASCII replacements
+        //
+        for (const auto& r : LongNames::asciiReplacements(point)) {
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
+        }
+        
         std::string severity;
         if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
             
@@ -1253,6 +1352,17 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
         
         for (auto& A : Utils::certainCharacterReplacementActions(c, Src)) {
             Actions.push_back(std::move(A));
+        }
+        
+        //
+        // do not recommend replacing graphical character with literal version
+        //
+        
+        //
+        // any ASCII replacements
+        //
+        for (const auto& r : LongNames::asciiReplacements(point)) {
+            Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
         }
         
         std::string severity;
