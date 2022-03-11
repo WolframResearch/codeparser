@@ -18,7 +18,7 @@ Test[
 	CodeParse[{16^^E1, 16^^A0, 16^^C0}]
 	,
 	ContainerNode[Byte, {Missing[
-   "UnsafeCharacterEncoding_IncompleteSequence"]}, <|SyntaxIssues -> {EncodingIssue[
+   "UnsafeCharacterEncoding_IncompleteUTF8Sequence"]}, <|SyntaxIssues -> {EncodingIssue[
      "IncompleteUTF8Sequence", "Incomplete UTF-8 sequence.", 
      "Fatal", <|Source -> {{1, 1}, {1, 2}}, ConfidenceLevel -> 1.|>], 
     EncodingIssue["IncompleteUTF8Sequence", "Incomplete UTF-8 sequence.", 
@@ -33,7 +33,7 @@ Test[
 	CodeParse[{16^^C0 , 16^^80}]
 	,
 	ContainerNode[Byte, {Missing[
-   "UnsafeCharacterEncoding_IncompleteSequence"]}, <|SyntaxIssues -> {EncodingIssue[
+   "UnsafeCharacterEncoding_IncompleteUTF8Sequence"]}, <|SyntaxIssues -> {EncodingIssue[
      "IncompleteUTF8Sequence", "Incomplete UTF-8 sequence.", 
      "Fatal", <|Source -> {{1, 1}, {1, 2}}, ConfidenceLevel -> 1.|>], 
     EncodingIssue["IncompleteUTF8Sequence", "Incomplete UTF-8 sequence.", 
@@ -50,7 +50,7 @@ Test[
 	CodeParse[File[unsafe]]
 	,
 	ContainerNode[File, {
-		Missing["UnsafeCharacterEncoding_IncompleteSequence"]}, <|
+		Missing["UnsafeCharacterEncoding_IncompleteUTF8Sequence"]}, <|
 			SyntaxIssues -> {
 				EncodingIssue["IncompleteUTF8Sequence", "Incomplete UTF-8 sequence.", "Fatal", <|Source -> {{1, 16}, {1, 17}}, ConfidenceLevel -> 1.|>]},
 			"FileName" -> unsafe|>]
@@ -76,7 +76,7 @@ Test[
 	CodeParse[File[unsafe]]
 	,
 	ContainerNode[File, {
-		Missing["UnsafeCharacterEncoding_IncompleteSequence"]}, <|
+		Missing["UnsafeCharacterEncoding_IncompleteUTF8Sequence"]}, <|
 			SyntaxIssues -> {
 				EncodingIssue["IncompleteUTF8Sequence", "Incomplete UTF-8 sequence.", "Fatal", <|Source -> {{1, 2}, {1, 3}}, ConfidenceLevel -> 1.|>]},
 			"FileName" -> unsafe|>]

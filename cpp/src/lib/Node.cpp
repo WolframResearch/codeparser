@@ -497,8 +497,8 @@ bool ListNode::check() const {
 
 void MissingBecauseUnsafeCharacterEncodingNode::print(std::ostream& s) const {
     switch (flag) {
-        case UNSAFECHARACTERENODING_INCOMPLETESEQUENCE:
-            s << "Missing[\"UnsafeCharacterEncoding_IncompleteSequence\"]";
+        case UNSAFECHARACTERENODING_INCOMPLETEUTF8SEQUENCE:
+            s << "Missing[\"UnsafeCharacterEncoding_IncompleteUTF8Sequence\"]";
             break;
         case UNSAFECHARACTERENODING_STRAYSURROGATE:
             s << "Missing[\"UnsafeCharacterEncoding_StraySurrogate\"]";
@@ -853,8 +853,8 @@ void MissingBecauseUnsafeCharacterEncodingNode::put(MLINK mlp) const {
     std::string reason;
     
     switch (flag) {
-        case UNSAFECHARACTERENODING_INCOMPLETESEQUENCE:
-            reason = "UnsafeCharacterEncoding_IncompleteSequence";
+        case UNSAFECHARACTERENODING_INCOMPLETEUTF8SEQUENCE:
+            reason = "UnsafeCharacterEncoding_IncompleteUTF8Sequence";
             break;
         case UNSAFECHARACTERENODING_STRAYSURROGATE:
             reason = "UnsafeCharacterEncoding_StraySurrogate";

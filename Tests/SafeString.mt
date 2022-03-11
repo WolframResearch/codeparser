@@ -15,7 +15,7 @@ Invalid sequences
 Test[
 	SafeString[{206}]
 	,
-	Missing["UnsafeCharacterEncoding_IncompleteSequence"]
+	Missing["UnsafeCharacterEncoding_IncompleteUTF8Sequence"]
 	,
 	TestID->"SafeString-20200103-K0M0B9"
 ]
