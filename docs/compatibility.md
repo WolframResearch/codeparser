@@ -23,6 +23,16 @@ Building with the latest Wolfram version is only guaranteed to work back to Wolf
 This is due to various issues including LibraryLink versioning and rpath changes on MacOSX.
 
 
+## C++ Compiler Compatibility
+
+CodeParser uses C++11 features and requires a compiler that can support at least C++11.
+
+
+## Wolfram Compiler Compatibility
+
+The ExprLibrary built by the Wolfram Compiler requires 13.1+.
+
+
 ## Earlier Versions
 
 Wolfram versions before 12.1 must build from sources to use CodeParser.

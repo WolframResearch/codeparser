@@ -78,6 +78,7 @@ set(STATIC_WL_PACLET_KERNEL_SOURCES
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/CodeAction.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Definitions.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Error.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/ExprLibrary.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Folds.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Library.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Node.wl
@@ -150,9 +151,8 @@ message(WARNING "VERSION_NUMBER is below 1210; installing paclets via CMake may 
 endif()
 
 if(BUILD_EXPR_LIB)
-if(NOT ${VERSION_NUMBER} GREATER_EQUAL 1220)
-set(BUILD_EXPR_LIB OFF)
-message(STATUS "VERSION_NUMBER is below 1220; disabling BUILD_EXPR_LIB")
+if(NOT ${VERSION_NUMBER} GREATER_EQUAL 1310)
+message(FATAL_ERROR "VERSION_NUMBER is below 1310; Cannot build ExprLibrary (VERSION_NUMBER is ${VERSION_NUMBER}, BUILD_EXPR_LIB is ${BUILD_EXPR_LIB})")
 endif()
 endif()
 

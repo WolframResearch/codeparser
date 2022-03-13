@@ -1,10 +1,15 @@
 BeginPackage["CodeParser`Library`"]
 
-setupLibraries
+loadFunc
 
 loadAllFuncs
 
 libraryFunctionWrapper
+
+
+libraryResources
+
+$sharedExt
 
 
 (*
@@ -74,40 +79,28 @@ $ConcreteParseStart
 LongNameSuggestion
 
 
-exprTestFunc
-getMetadataFunc
-
 
 Begin["`Private`"]
 
 Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
-If[$VersionNumber >= 12.1,
-	Needs["CompiledLibrary`"] (* for CompiledLibrary, etc. *)
-]
+
 Needs["PacletManager`"] (* for PacletInformation *)
+
+
+
+(*
+TODO: when targeting 12.1 as a minimum, then look into doing paclet["AssetLocation", "LibraryResources"] or similar
+*)
+location = "Location" /. PacletInformation["CodeParser"]
+
+libraryResources = FileNameJoin[{location, "LibraryResources", $SystemID}]
+
 
 
 $CodeParserLib := $CodeParserLib =
 Catch[
 Module[{res},
-	
-	(*
-	If CodeParser was built with an earlier version, then expr lib may not exist
-	*)
-	If[FileExistsQ[$exprLib],
-
-		If[$VersionNumber < 12.2,
-			(*
-			Built with 12.2+, and being used in an earlier version
-
-			NOT SUPPORTED!
-			*)
-			Throw[Failure["CodeParserNativeLibraryVersion", <| "Message" -> "CodeParser native library was built with a newer version and is not backwards-compatible." |>]]
-		];
-
-		LibraryLoad[$exprLib];
-	];
 
 	res = FindLibrary["CodeParser"];
 	If[FailureQ[res],
@@ -115,25 +108,6 @@ Module[{res},
 	];
 	res
 ]]
-
-(*
-$exprLib := $exprLib =
-Catch[
-Module[{res},
-	res = FindLibrary["expr"];
-	If[FailureQ[res],
-		Throw[Failure["ExpressionLibraryNotFound", <||>]]
-	];
-	res
-]]
-*)
-
-$exprLib
-
-$exprCompiledLib
-
-$exprCompiledLibFuns
-
 
 
 
@@ -143,47 +117,6 @@ $sharedExt =
 		"Windows", "dll",
 		_, "so"
 	]
-
-setupLibraries[] :=
-Module[{location, libraryResources},
-	
-	(*
-	TODO: when targeting 12.1 as a minimum, then look into doing paclet["AssetLocation", "LibraryResources"] or similar
-	*)
-	location = "Location" /. PacletInformation["CodeParser"];
-
-	libraryResources = FileNameJoin[{location, "LibraryResources", $SystemID}];
-
-	(*
-	This allows expr lib to be found
-	*)
-	(*
-	PrependTo[$LibraryPath, libraryResources];
-	*)
-
-	$exprLib = FileNameJoin[{libraryResources, "expr."<>$sharedExt}];
-
-	(*
-	If CodeParser was built with an earlier version, then expr lib may not exist
-	*)
-	If[FileExistsQ[$exprLib],
-
-		If[$VersionNumber < 12.2,
-			(*
-			Built with 12.2+, and being used in an earlier version
-
-			NOT SUPPORTED!
-			*)
-			Throw[Failure["CodeParserNativeLibraryVersion", <| "Message" -> "CodeParser native library was built with a newer version and is not backwards-compatible." |>]]
-		];
-
-		$exprCompiledLib = CompiledLibrary`CompiledLibrary[$exprLib];
-
-		$exprCompiledLibFuns = CompiledLibrary`CompiledLibraryLoadFunctions[$exprCompiledLib]
-	]
-]
-
-
 
 
 
@@ -258,17 +191,13 @@ Module[{res, loaded, linkObject},
 
 loadAllFuncs[] := (
 
-concreteParseBytesListableFunc := (setupLibraries[]; concreteParseBytesListableFunc = loadFunc["ConcreteParseBytes_Listable_LibraryLink", LinkObject, LinkObject]);
+concreteParseBytesListableFunc := concreteParseBytesListableFunc = loadFunc["ConcreteParseBytes_Listable_LibraryLink", LinkObject, LinkObject];
 
-tokenizeBytesListableFunc := (setupLibraries[]; tokenizeBytesListableFunc = loadFunc["TokenizeBytes_Listable_LibraryLink", LinkObject, LinkObject]);
+tokenizeBytesListableFunc := tokenizeBytesListableFunc = loadFunc["TokenizeBytes_Listable_LibraryLink", LinkObject, LinkObject];
 
-concreteParseLeafFunc := (setupLibraries[]; concreteParseLeafFunc = loadFunc["ConcreteParseLeaf_LibraryLink", LinkObject, LinkObject]);
+concreteParseLeafFunc := concreteParseLeafFunc = loadFunc["ConcreteParseLeaf_LibraryLink", LinkObject, LinkObject];
 
-safeStringFunc := (setupLibraries[]; safeStringFunc = loadFunc["SafeString_LibraryLink", LinkObject, LinkObject]);
-
-exprTestFunc := (setupLibraries[]; exprTestFunc = loadFunc["ExprTest_LibraryLink", {}, Integer]);
-
-getMetadataFunc := (setupLibraries[]; getMetadataFunc = loadFunc["Get_LibraryLink", {Integer}, Integer]);
+safeStringFunc := safeStringFunc = loadFunc["SafeString_LibraryLink", LinkObject, LinkObject];
 )
 
 

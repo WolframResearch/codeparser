@@ -43,12 +43,18 @@ Module[{},
     ,
     MetaData[<|"Exported" -> True, "Name" -> Expr`FromInteger64|>
     ]@Function[{Typed[arg1, "Integer64"]},
-      Compile`Cast[arg1, "Expression"]
+      (*
+      used to be Compile`Cast
+      *)
+      System`Cast[arg1, "Expression"]
     ]
     ,
     MetaData[<|"Exported" -> True, "Name" -> Expr`FromReal64|>
     ]@Function[{Typed[arg1, "Real64"]},
-      Compile`Cast[arg1, "Expression"]
+      (*
+      used to be Compile`Cast
+      *)
+      System`Cast[arg1, "Expression"]
     ]
     ,
     MetaData[<|"Exported" -> True, "Name" -> Expr`MEncodedStringToSymbolExpr|>
@@ -124,11 +130,6 @@ Catch[
 Module[{targetDir, prog, compLib},
 
   Print["Generating ExprLibrary..."];
-
-  If[$VersionNumber < 12.2,
-    Print["Skipping ExprLibrary"];
-    Throw[Null]
-  ];
 
   targetDir = FileNameJoin[{ buildDir, "paclet", "CodeParser", "LibraryResources", $SystemID }];
 

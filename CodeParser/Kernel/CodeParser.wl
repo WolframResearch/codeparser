@@ -291,10 +291,6 @@ EncodingIssue
 SourceCharacter
 
 
-ExprTest
-
-GetMetadata
-
 
 (*
 Messages
@@ -1330,32 +1326,6 @@ CodeStructuralSyntaxAggQ[agg_] :=
     SyntaxErrorNode |
     GroupMissingCloserNode | UnterminatedGroupNode] &&
   !MemberQ[Lookup[agg[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
-
-
-
-
-
-ExprTest[] :=
-Module[{p, e},
-
-  p = libraryFunctionWrapper[exprTestFunc];
-
-  e = CodeParser`Library`Private`$exprCompiledLibFuns["Expr_FromPointer"][p];
-
-  CodeParser`Library`Private`$exprCompiledLibFuns["Expr_Release"][e];
-
-  e
-]
-
-GetMetadata[expr_] :=
-Module[{p, m},
-
-  p = CodeParser`Library`Private`$exprCompiledLibFuns["Expr_Pointer"][expr];
-
-  m = libraryFunctionWrapper[getMetadataFunc, p];
-
-  m
-]
 
 
 
