@@ -593,6 +593,14 @@ Module[{nodeStrs},
   If[AnyTrue[nodeStrs, FailureQ],
     Throw[SelectFirst[nodeStrs, FailureQ]]
   ];
+  (*
+  will be tempted to do something like:
+
+  StringJoin[Riffle[nodeStrs, $systemNewline]]
+
+  but must remember, this is concrete -> string, so if newlines
+  are needed, they should already be present in concrete
+  *)
   StringJoin[nodeStrs]
 ]]
 
@@ -604,6 +612,14 @@ Module[{nodeStrs},
   If[AnyTrue[nodeStrs, FailureQ],
     Throw[SelectFirst[nodeStrs, FailureQ]]
   ];
+  (*
+  will be tempted to do something like:
+
+  StringJoin[Riffle[nodeStrs, $systemNewline]]
+
+  but must remember, this is concrete -> string, so if newlines
+  are needed, they should already be present in concrete
+  *)
   StringJoin[nodeStrs]
 ]]
 
