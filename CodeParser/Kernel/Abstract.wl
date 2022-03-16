@@ -505,6 +505,9 @@ abstract[SyntaxErrorNode[SyntaxError`ExpectedSet, {left_, _, middle_}, data_]] :
 abstract[SyntaxErrorNode[SyntaxError`OldFESyntax, children_, data_]] :=
 	SyntaxErrorNode[SyntaxError`OldFESyntax, abstract /@ children, data]
 
+abstract[SyntaxErrorNode[SyntaxError`BuggyFESyntax, children_, data_]] :=
+	SyntaxErrorNode[SyntaxError`BuggyFESyntax, abstract /@ children, data]
+
 abstract[SyntaxErrorNode[SyntaxError`ExpectedSetOperand1, {left_, _, _, right_}, data_]] :=
 	SyntaxErrorNode[SyntaxError`ExpectedSetOperand1, {abstract[left], abstract[right]}, data]
 

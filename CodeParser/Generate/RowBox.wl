@@ -1399,6 +1399,18 @@ Module[{pos1, err},
 ]
 
 (*
+Token`Colon Token`Colon Extra rands
+
+The FE treats a:b:c:d as a single RowBox
+
+It is agreed that this is a bug, but it will never be fixed
+
+related bugs: 379318
+*)
+prbDispatch[pat:{_, LeafNode[Token`Colon, _, _], _, LeafNode[Token`Colon, _, _], _, LeafNode[Token`Colon, _, _], ___}, handledChildren_, ignored_, pos_] :=
+  SyntaxErrorNode[SyntaxError`BuggyFESyntax, handledChildren, <| Source -> pos |>]
+
+(*
 Token`Colon Token`Colon Good
 *)
 prbDispatch[{_, LeafNode[Token`Colon, _, _], _, LeafNode[Token`Colon, _, _], _}, handledChildren_, ignored_, pos_] :=
