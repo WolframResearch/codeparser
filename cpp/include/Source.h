@@ -198,6 +198,7 @@ SyntaxIssueTag SYNTAXISSUETAG_UNDOCUMENTEDSLOTSYNTAX = "UndocumentedSlotSyntax";
 SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDIMPLICITTIMES = "UnexpectedImplicitTimes";
 SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDDOT = "UnexpectedDot";
 SyntaxIssueTag SYNTAXISSUETAG_COMMA = "Comma";
+SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDSIGN = "UnexpectedSign";
 
 typedef const std::string FormatIssueTag;
 

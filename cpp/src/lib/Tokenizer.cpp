@@ -1586,6 +1586,31 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                         //
                         
                         sign = true;
+
+#if !NISSUES
+                        {
+                            if (accuracy) {
+
+                                //
+                                // do not warn about 1.2``+3 for now
+                                //
+
+                            } else {
+
+                                auto I = IssuePtr(
+                                    new SyntaxIssue(
+                                        SYNTAXISSUETAG_UNEXPECTEDSIGN,
+                                        "The real number has a ``" + std::string(reinterpret_cast<const char *>(signBuf), 1) + "`` sign in its precision specification.",
+                                        SYNTAXISSUESEVERITY_WARNING,
+                                        Source(signLoc), 0.95,
+                                        {},
+                                        {"This is usually unintentional."}));
+
+                                TheParserSession->addIssue(std::move(I));
+                            }
+                        }
+#endif // !NISSUES
+
                         break;
                     case '.':
                         
@@ -1594,6 +1619,32 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                         //
                         
                         sign = true;
+
+#if !NISSUES
+                        {
+                            if (accuracy) {
+
+                                //
+                                // do not warn about 1.2``+.3 for now
+                                //
+
+                            } else {
+
+                                auto I = IssuePtr(
+                                    new SyntaxIssue(
+                                        SYNTAXISSUETAG_UNEXPECTEDSIGN,
+                                        "The real number has a ``" + std::string(reinterpret_cast<const char *>(signBuf), 1) + "`` sign in its precision specification.",
+                                        SYNTAXISSUESEVERITY_WARNING,
+                                        Source(signLoc),
+                                        0.95,
+                                        {},
+                                        {"This is usually unintentional."}));
+
+                                TheParserSession->addIssue(std::move(I));
+                            }
+                        }
+#endif // !NISSUES
+
                         break;
                     default: {
                         
