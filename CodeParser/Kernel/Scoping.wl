@@ -840,6 +840,17 @@ walkCondition[CallNode[head_, children_, _]] :=
 
 
 
+walk[PrefixNode[PrefixLinearSyntaxBang, _, _]] :=
+  {}
+
+freePatterns[PrefixNode[PrefixLinearSyntaxBang, _, _]] := 
+  {}
+
+walkCondition[PrefixNode[PrefixLinearSyntaxBang, _, _]] :=
+  {}
+
+
+
 walk[sym:LeafNode[Symbol, name_, data_]] :=
 Catch[
 Module[{decls, entry, defs},

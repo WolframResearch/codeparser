@@ -51,6 +51,16 @@ Test[
 
 
 
+ast = CodeParse["foo[] := \\!\\(\\*s\\)"]
+
+Test[
+	ScopingData[ast]
+	,
+	{scopingDataObject[{{1, 1}, {1, 4}}, {"Defined"}, {"definition"}, "foo"]}
+	,
+	TestID->"Scoping-20220316-D3G1W4"
+]
+
 
 
 
