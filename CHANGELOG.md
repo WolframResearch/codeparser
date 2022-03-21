@@ -13,6 +13,16 @@ Show the parenthesized version of certain replacement characters
 
 Limit fatal errors returned by parser to 10
 
+Recommend ASCII replacements for strange characters
+
+Handle `=.` uniformly, from both text and boxes
+
+Warn about signs in precision specification of reals
+
+Handle buggy FE syntax of `a:b:c:d`
+
+linear syntax `\!` is preserved during abstracting, so ScopingData must also handle it
+
 
 ## 1.5 - 7 Mar, 2022
 
