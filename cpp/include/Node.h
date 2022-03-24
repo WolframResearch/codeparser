@@ -12,11 +12,9 @@
 
 class Node;
 class LeafNode;
-class NodeSeqNode;
 
 using NodePtr = std::unique_ptr<Node>;
 using LeafNodePtr = std::unique_ptr<LeafNode>;
-using NodeSeqNodePtr = std::unique_ptr<NodeSeqNode>;
 
 
 enum UnsafeCharacterEncodingFlag {
@@ -222,9 +220,9 @@ class LeafNode : public Node {
     const Token Tok;
 public:
 
-    LeafNode(Token& Tok) : Node(), Tok(Tok) {}
+    LeafNode(const Token& Tok) : Node(), Tok(Tok) {}
 
-    LeafNode(Token&& Tok) : Node(), Tok(std::move(Tok)) {}
+    LeafNode(const Token&& Tok) : Node(), Tok(std::move(Tok)) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
@@ -257,11 +255,11 @@ protected:
     const Token Tok;
 public:
     
-    ErrorNode(Token& Tok) : Node(), Tok(Tok) {
+    ErrorNode(const Token& Tok) : Node(), Tok(Tok) {
         assert(Tok.Tok.isError());
     }
     
-    ErrorNode(Token&& Tok) : Node(), Tok(std::move(Tok)) {
+    ErrorNode(const Token&& Tok) : Node(), Tok(std::move(Tok)) {
         assert(Tok.Tok.isError());
     }
     
@@ -287,11 +285,11 @@ public:
 class ExpectedOperandErrorNode : public ErrorNode {
 public:
     
-    ExpectedOperandErrorNode(Token& Tok) : ErrorNode(Tok) {
+    ExpectedOperandErrorNode(const Token& Tok) : ErrorNode(Tok) {
         assert(Tok.Tok == TOKEN_ERROR_EXPECTEDOPERAND);
     }
     
-    ExpectedOperandErrorNode(Token&& Tok) : ErrorNode(Tok) {
+    ExpectedOperandErrorNode(const Token&& Tok) : ErrorNode(Tok) {
         assert(Tok.Tok == TOKEN_ERROR_EXPECTEDOPERAND);
     }
     
@@ -302,9 +300,9 @@ public:
 
 class UnterminatedTokenErrorNeedsReparseNode : public ErrorNode {
 public:
-    UnterminatedTokenErrorNeedsReparseNode(Token& Tok) : ErrorNode(Tok) {}
+    UnterminatedTokenErrorNeedsReparseNode(const Token& Tok) : ErrorNode(Tok) {}
     
-    UnterminatedTokenErrorNeedsReparseNode(Token&& Tok) : ErrorNode(Tok) {}
+    UnterminatedTokenErrorNeedsReparseNode(const Token&& Tok) : ErrorNode(Tok) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
@@ -557,9 +555,9 @@ class SourceCharacterNode : public Node {
     const SourceCharacter Char;
 public:
     
-    SourceCharacterNode(SourceCharacter& Char) : Node(), Char(Char) {}
+    SourceCharacterNode(const SourceCharacter& Char) : Node(), Char(Char) {}
     
-    SourceCharacterNode(SourceCharacter&& Char) : Node(), Char(std::move(Char)) {}
+    SourceCharacterNode(const SourceCharacter&& Char) : Node(), Char(std::move(Char)) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
