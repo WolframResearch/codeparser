@@ -18,8 +18,28 @@
 #endif // WINDOWS_MATHLINK
 #include <vector>
 #include <set>
+#include <numeric> // for accumulate
 
 bool validatePath(WolframLibraryData libData, const unsigned char *inStr, size_t len);
+
+void NodeContainer::print(std::ostream& s) const {
+    
+    s << "List[";
+    
+    for (auto& NN : N) {
+        NN->print(s);
+        s << ", ";
+    }
+    
+    s << "]";
+}
+
+bool NodeContainer::check() const {
+    
+    auto accum = std::accumulate(N.begin(), N.end(), true, [](bool a, const NodePtr& b){ return a && b->check(); });
+    
+    return accum;
+}
 
 
 ParserSession::ParserSession() : fatalIssues(), nonFatalIssues(), bufAndLen(),
@@ -103,7 +123,7 @@ void ParserSession::deinit() {
     TheByteBuffer->deinit();
 }
 
-Node *ParserSession::parseExpressions() {
+NodeContainer *ParserSession::parseExpressions() {
     
     std::vector<NodePtr> nodes;
     
@@ -230,12 +250,12 @@ Node *ParserSession::parseExpressions() {
         nodes.push_back(NodePtr(new CollectedSourceLocationsNode(std::move(tabs))));
     }
     
-    auto N = new ListNode(std::move(nodes));
+    auto C = new NodeContainer(std::move(nodes));
     
-    return N;
+    return C;
 }
 
-Node *ParserSession::tokenize() {
+NodeContainer *ParserSession::tokenize() {
     
     std::vector<NodePtr> nodes;
     
@@ -266,17 +286,19 @@ Node *ParserSession::tokenize() {
     
     if (unsafeCharacterEncodingFlag != UNSAFECHARACTERENODING_OK) {
         
-        auto N = new MissingBecauseUnsafeCharacterEncodingNode(unsafeCharacterEncodingFlag);
+        nodes.clear();
         
-        return N;
+        auto N = NodePtr(new MissingBecauseUnsafeCharacterEncodingNode(unsafeCharacterEncodingFlag));
+
+        nodes.push_back(std::move(N));
     }
     
-    auto N = new ListNode(std::move(nodes));
+    auto C = new NodeContainer(std::move(nodes));
     
-    return N;
+    return C;
 }
 
-Node *ParserSession::listSourceCharacters() {
+NodeContainer *ParserSession::listSourceCharacters() {
     
     std::vector<NodePtr> nodes;
     
@@ -300,14 +322,16 @@ Node *ParserSession::listSourceCharacters() {
     
     if (unsafeCharacterEncodingFlag != UNSAFECHARACTERENODING_OK) {
         
-        auto N = new MissingBecauseUnsafeCharacterEncodingNode(unsafeCharacterEncodingFlag);
+        nodes.clear();
         
-        return N;
+        auto N = NodePtr(new MissingBecauseUnsafeCharacterEncodingNode(unsafeCharacterEncodingFlag));
+
+        nodes.push_back(std::move(N));
     }
     
-    auto N = new ListNode(std::move(nodes));
+    auto C = new NodeContainer(std::move(nodes));
     
-    return N;
+    return C;
 }
 
 
@@ -348,7 +372,7 @@ NodePtr ParserSession::concreteParseLeaf0(int mode) {
     }
 }
 
-Node *ParserSession::concreteParseLeaf(StringifyMode mode) {
+NodeContainer *ParserSession::concreteParseLeaf(StringifyMode mode) {
     
     std::vector<NodePtr> nodes;
     
@@ -439,12 +463,14 @@ Node *ParserSession::concreteParseLeaf(StringifyMode mode) {
         nodes.push_back(NodePtr(new CollectedSourceLocationsNode(std::move(tabs))));
     }
     
-    auto N = new ListNode(std::move(nodes));
+    auto C = new NodeContainer(std::move(nodes));
     
-    return N;
+    return C;
 }
 
-Node *ParserSession::safeString() {
+NodeContainer *ParserSession::safeString() {
+    
+    std::vector<NodePtr> nodes;
     
     //
     // read all characters, just to set unsafeCharacterEncoding flag if necessary
@@ -463,16 +489,22 @@ Node *ParserSession::safeString() {
         
     } // while (true)
     
+    auto N = NodePtr(new SafeStringNode(bufAndLen));
+    
+    nodes.push_back(std::move(N));
+    
     if (unsafeCharacterEncodingFlag != UNSAFECHARACTERENODING_OK) {
         
-        auto N = new MissingBecauseUnsafeCharacterEncodingNode(unsafeCharacterEncodingFlag);
+        nodes.clear();
         
-        return N;
+        auto N = NodePtr(new MissingBecauseUnsafeCharacterEncodingNode(unsafeCharacterEncodingFlag));
+
+        nodes.push_back(std::move(N));
     }
     
-    auto N = new SafeStringNode(bufAndLen);
+    auto C = new NodeContainer(std::move(nodes));
     
-    return N;
+    return C;
 }
 
 //
@@ -495,8 +527,8 @@ bool validatePath(WolframLibraryData libData, BufferAndLength bufAndLen) {
     return valid;
 }
 
-void ParserSession::releaseNode(Node *N) {
-    delete N;
+void ParserSession::releaseContainer(NodeContainer *C) {
+    delete C;
 }
 
 #if !NABORT
@@ -639,11 +671,11 @@ DLLEXPORT int ConcreteParseBytes_Listable_LibraryLink(WolframLibraryData libData
         
         TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL);
         
-        auto N = TheParserSession->parseExpressions();
+        auto C = TheParserSession->parseExpressions();
         
-        N->put(mlp);
+        C->put(mlp);
         
-        TheParserSession->releaseNode(N);
+        TheParserSession->releaseContainer(C);
         
         TheParserSession->deinit();
     }
@@ -717,11 +749,11 @@ DLLEXPORT int TokenizeBytes_Listable_LibraryLink(WolframLibraryData libData, MLI
         
         TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL);
         
-        auto N = TheParserSession->tokenize();
+        auto C = TheParserSession->tokenize();
         
-        N->put(mlp);
+        C->put(mlp);
         
-        TheParserSession->releaseNode(N);
+        TheParserSession->releaseContainer(C);
         
         TheParserSession->deinit();
     }
@@ -788,11 +820,11 @@ DLLEXPORT int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK ml
     
     TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth, firstLineBehavior, encodingMode);
     
-    auto N = TheParserSession->concreteParseLeaf(static_cast<StringifyMode>(stringifyMode));
+    auto C = TheParserSession->concreteParseLeaf(static_cast<StringifyMode>(stringifyMode));
     
-    N->put(mlp);
+    C->put(mlp);
     
-    TheParserSession->releaseNode(N);
+    TheParserSession->releaseContainer(C);
     
     TheParserSession->deinit();
     
@@ -828,11 +860,11 @@ DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
-    auto S = TheParserSession->safeString();
+    auto C = TheParserSession->safeString();
     
-    S->put(mlp);
+    C->put(mlp);
     
-    TheParserSession->releaseNode(S);
+    TheParserSession->releaseContainer(C);
     
     TheParserSession->deinit();
     
@@ -993,6 +1025,30 @@ ScopedMLLoopbackLink::~ScopedMLLoopbackLink() {
 
 MLINK ScopedMLLoopbackLink::get() {
     return mlp;
+}
+
+
+void NodeContainer::put(MLINK mlp) const {
+    
+    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(N.size()))) {
+        assert(false);
+    }
+    
+    for (auto& NN : N) {
+        
+#if !NABORT
+        //
+        // Check isAbort() inside loops
+        //
+        if (TheParserSession->isAbort()) {
+            
+            TheParserSession->handleAbort();
+            return;
+        }
+#endif // !NABORT
+        
+        NN->put(mlp);
+    }
 }
 
 #endif // USE_MATHLINK

@@ -1278,10 +1278,18 @@ Otherwise, Missing[\"UnsafeCharacterEncoding\"] is returned. \
 A string is safe if there are no incomplete sequences, stray surrogates, or BOM present."
 
 SafeString[bytes:{_Integer...}] :=
-Module[{res},
+Catch[
+Module[{res, safeStr},
   res = libraryFunctionWrapper[safeStringFunc, bytes];
-  res
-]
+
+  If[FailureQ[res],
+    Throw[res]
+  ];
+
+  safeStr = res[[1]];
+
+  safeStr
+]]
 
 
 

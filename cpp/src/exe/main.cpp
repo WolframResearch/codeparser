@@ -154,23 +154,23 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
         
         TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
     
-        auto N = TheParserSession->tokenize();
+        auto C = TheParserSession->tokenize();
         
         switch (outputMode) {
             case PRINT:
-                N->print(std::cout);
+                C->print(std::cout);
                 std::cout << "\n";
                 break;
             case PUT: {
 #if USE_MATHLINK
                 ScopedMLLoopbackLink loop;
-                N->put(loop.get());
+                C->put(loop.get());
 #endif // USE_MATHLINK
             }
                 break;
             case PRINT_DRYRUN: {
                 std::ofstream nullStream;
-                N->print(nullStream);
+                C->print(nullStream);
                 nullStream << "\n";
             }
                 break;
@@ -178,7 +178,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
                 break;
         }
         
-        TheParserSession->releaseNode(N);
+        TheParserSession->releaseContainer(C);
         
         TheParserSession->deinit();
         
@@ -191,23 +191,23 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
         TheByteBuffer->init(inputBufAndLen, libData);
         TheByteDecoder->init(SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, ENCODINGMODE_NORMAL);
     
-        auto N = TheParserSession->listSourceCharacters();
+        auto C = TheParserSession->listSourceCharacters();
     
         switch (outputMode) {
             case PRINT:
-                N->print(std::cout);
+                C->print(std::cout);
                 std::cout << "\n";
                 break;
             case PUT: {
 #if USE_MATHLINK
                 ScopedMLLoopbackLink loop;
-                N->put(loop.get());
+                C->put(loop.get());
 #endif // USE_MATHLINK
             }
                 break;
             case PRINT_DRYRUN: {
                 std::ofstream nullStream;
-                N->print(nullStream);
+                C->print(nullStream);
                 nullStream << "\n";
             }
                 break;
@@ -215,7 +215,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
                 break;
         }
         
-        TheParserSession->releaseNode(N);
+        TheParserSession->releaseContainer(C);
         
         TheByteDecoder->deinit();
         TheByteBuffer->deinit();
@@ -230,23 +230,23 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
         
         auto stringifyMode = STRINGIFYMODE_NORMAL;
         
-        auto N = TheParserSession->concreteParseLeaf(stringifyMode);
+        auto C = TheParserSession->concreteParseLeaf(stringifyMode);
     
         switch (outputMode) {
             case PRINT:
-                N->print(std::cout);
+                C->print(std::cout);
                 std::cout << "\n";
                 break;
             case PUT: {
 #if USE_MATHLINK
                 ScopedMLLoopbackLink loop;
-                N->put(loop.get());
+                C->put(loop.get());
 #endif // USE_MATHLINK
             }
                 break;
             case PRINT_DRYRUN: {
                 std::ofstream nullStream;
-                N->print(nullStream);
+                C->print(nullStream);
                 nullStream << "\n";
             }
                 break;
@@ -254,7 +254,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
                 break;
         }
         
-        TheParserSession->releaseNode(N);
+        TheParserSession->releaseContainer(C);
         
         TheParserSession->deinit();
         
@@ -266,28 +266,28 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
         
         TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
         
-        auto N = TheParserSession->parseExpressions();
+        auto C = TheParserSession->parseExpressions();
         
         switch (outputMode) {
             case PRINT:
-                N->print(std::cout);
+                C->print(std::cout);
                 std::cout << "\n";
                 break;
             case PUT: {
 #if USE_MATHLINK
                 ScopedMLLoopbackLink loop;
-                N->put(loop.get());
+                C->put(loop.get());
 #endif // USE_MATHLINK
             }
                 break;
             case PRINT_DRYRUN: {
                 std::ofstream nullStream;
-                N->print(nullStream);
+                C->print(nullStream);
                 nullStream << "\n";
             }
                 break;
             case CHECK: {
-                if (!N->check()) {
+                if (!C->check()) {
                     result = EXIT_FAILURE;
                 }
             }
@@ -296,7 +296,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
                 break;
         }
         
-        TheParserSession->releaseNode(N);
+        TheParserSession->releaseContainer(C);
         
         TheParserSession->deinit();
     }
@@ -339,23 +339,23 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         
         TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
         
-        auto N = TheParserSession->tokenize();
+        auto C = TheParserSession->tokenize();
         
         switch (outputMode) {
             case PRINT:
-                N->print(std::cout);
+                C->print(std::cout);
                 std::cout << "\n";
                 break;
             case PUT: {
 #if USE_MATHLINK
                 ScopedMLLoopbackLink loop;
-                N->put(loop.get());
+                C->put(loop.get());
 #endif // USE_MATHLINK
             }
                 break;
             case PRINT_DRYRUN: {
                 std::ofstream nullStream;
-                N->print(nullStream);
+                C->print(nullStream);
                 nullStream << "\n";
             }
                 break;
@@ -363,7 +363,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
                 break;
         }
         
-        TheParserSession->releaseNode(N);
+        TheParserSession->releaseContainer(C);
         
         TheParserSession->deinit();
         
@@ -375,23 +375,23 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         
         auto stringifyMode = STRINGIFYMODE_NORMAL;
         
-        auto N = TheParserSession->concreteParseLeaf(stringifyMode);
+        auto C = TheParserSession->concreteParseLeaf(stringifyMode);
     
         switch (outputMode) {
             case PRINT:
-                N->print(std::cout);
+                C->print(std::cout);
                 std::cout << "\n";
                 break;
             case PUT: {
 #if USE_MATHLINK
                 ScopedMLLoopbackLink loop;
-                N->put(loop.get());
+                C->put(loop.get());
 #endif // USE_MATHLINK
             }
                 break;
             case PRINT_DRYRUN: {
                 std::ofstream nullStream;
-                N->print(nullStream);
+                C->print(nullStream);
                 nullStream << "\n";
             }
                 break;
@@ -399,7 +399,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
                 break;
         }
         
-        TheParserSession->releaseNode(N);
+        TheParserSession->releaseContainer(C);
         
         TheParserSession->deinit();
         
@@ -409,37 +409,37 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         
         TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, ENCODINGMODE_NORMAL);
         
-        auto N = TheParserSession->parseExpressions();
+        auto C = TheParserSession->parseExpressions();
         
         switch (outputMode) {
             case PRINT:
-                N->print(std::cout);
+                C->print(std::cout);
                 std::cout << "\n";
                 break;
             case PUT: {
 #if USE_MATHLINK
                 ScopedMLLoopbackLink loop;
-                N->put(loop.get());
+                C->put(loop.get());
 #endif // USE_MATHLINK
             }
                 break;
             case PRINT_DRYRUN: {
                 std::ofstream nullStream;
-                N->print(nullStream);
+                C->print(nullStream);
                 nullStream << "\n";
             }
                 break;
             case NONE:
                 break;
             case CHECK: {
-                if (!N->check()) {
+                if (!C->check()) {
                     result = EXIT_FAILURE;
                 }
             }
                 break;
         }
         
-        TheParserSession->releaseNode(N);
+        TheParserSession->releaseContainer(C);
         
         TheParserSession->deinit();
     }

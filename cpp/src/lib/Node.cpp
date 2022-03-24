@@ -9,6 +9,7 @@
 
 #include <numeric> // for accumulate
 
+
 void NodeSeq::append(NodePtr N) {
     vec.push_back(std::move(N));
 }
@@ -51,7 +52,6 @@ const Node* NodeSeq::last() const {
     
     return LL;
 }
-
 
 void NodeSeq::print(std::ostream& s) const {
     
@@ -475,26 +475,6 @@ void CollectedSourceLocationsNode::print(std::ostream& s) const {
 }
 
 
-void ListNode::print(std::ostream& s) const {
-    
-    s << "List[";
-    
-    for (auto& NN : N) {
-        NN->print(s);
-        s << ", ";
-    }
-    
-    s << "]";
-}
-
-bool ListNode::check() const {
-    
-    auto accum = std::accumulate(N.begin(), N.end(), true, [](bool a, const NodePtr& b){ return a && b->check(); });
-    
-    return accum;
-}
-
-
 void MissingBecauseUnsafeCharacterEncodingNode::print(std::ostream& s) const {
     switch (flag) {
         case UNSAFECHARACTERENODING_INCOMPLETEUTF8SEQUENCE:
@@ -818,29 +798,6 @@ void CollectedSourceLocationsNode::put(MLINK mlp) const {
 #endif // !NABORT
             
         L.putStructured(mlp);
-    }
-}
-
-void ListNode::put(MLINK mlp) const {
-    
-    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(N.size()))) {
-        assert(false);
-    }
-    
-    for (auto& NN : N) {
-        
-#if !NABORT
-        //
-        // Check isAbort() inside loops
-        //
-        if (TheParserSession->isAbort()) {
-            
-            TheParserSession->handleAbort();
-            return;
-        }
-#endif // !NABORT
-        
-        NN->put(mlp);
     }
 }
 

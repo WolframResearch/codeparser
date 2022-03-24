@@ -63,6 +63,23 @@ using ScopedMLEnvironmentParameterPtr = std::unique_ptr<ScopedMLEnvironmentParam
 #endif
 
 //
+//
+//
+class NodeContainer {
+    std::vector<NodePtr> N;
+public:
+    NodeContainer(std::vector<NodePtr> N) : N(std::move(N)) {}
+    
+#if USE_MATHLINK
+    void put(MLINK mlp) const;
+#endif // USE_MATHLINK
+    
+    void print(std::ostream&) const;
+    
+    bool check() const;
+};
+
+//
 // The modes that stringifying could happen in
 //
 // Normal:
@@ -159,13 +176,13 @@ public:
     void deinit();
     
     
-    Node *parseExpressions();
-    Node *tokenize();
-    Node *listSourceCharacters();
-    Node *concreteParseLeaf(StringifyMode mode);
-    Node *safeString();
+    NodeContainer *parseExpressions();
+    NodeContainer *tokenize();
+    NodeContainer *listSourceCharacters();
+    NodeContainer *concreteParseLeaf(StringifyMode mode);
+    NodeContainer *safeString();
     
-    void releaseNode(Node *N);
+    void releaseContainer(NodeContainer *C);
     
 #if !NABORT
     bool isAbort() const;

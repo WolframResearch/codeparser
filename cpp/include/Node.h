@@ -514,23 +514,7 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream&) const override;
-};
 
-//
-//
-//
-class ListNode : public Node {
-    std::vector<NodePtr> N;
-public:
-    ListNode(std::vector<NodePtr> N) : Node(), N(std::move(N)) {}
-    
-#if USE_MATHLINK
-    void put(MLINK mlp) const override;
-#endif // USE_MATHLINK
-    
-    void print(std::ostream&) const override;
-    
-    bool check() const override;
 };
 
 //
