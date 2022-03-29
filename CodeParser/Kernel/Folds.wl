@@ -240,7 +240,7 @@ Module[{deChildren, data},
 
 
 
-linearize[node_] := Flatten[linearize0[node]]
+linearize[node_] := Flatten[{linearize0[node]}]
 
 linearize0[ContainerNode[_, fs_List, _]] :=
   linearize0 /@ fs
