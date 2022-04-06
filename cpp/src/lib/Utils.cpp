@@ -98,6 +98,11 @@ bool Utils::isMBStrange(codepoint point) {
         case CODEPOINT_LONGNAME_RIGHTARROW:
             return true;
         //
+        // U+279D
+        //
+        case CODEPOINT_TRIANGLEHEADEDRIGHTWARDSARROW:
+            return true;
+        //
         // U+29F4
         //
         case CODEPOINT_RULEDELAYED:
@@ -253,6 +258,7 @@ bool Utils::ifASCIIWLCharacter(unsigned char c, char test) {
 // \:2063 -> \[InvisibleComma]
 // \:2064 -> \[ImplicitPlus]
 // \[RightArrow] -> \[Rule]
+// \:279D -> \[Rule]
 // \:29F4 -> \[RuleDelayed]
 // \:200B -> \[InvisibleSpace]
 //
@@ -272,7 +278,12 @@ CodeActionPtrVector Utils::certainCharacterReplacementActions(WLCharacter c, Sou
             Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + safeAndGraphicalStr1 + "`` with ``" + safeAndGraphicalStr2 + "``", src, (c.escape() == ESCAPE_NONE) ? "\xe2\x81\xa0" : "\\[NoBreak]")));
         }
             break;
-        case CODEPOINT_LONGNAME_RIGHTARROW: {
+        case CODEPOINT_LONGNAME_RIGHTARROW:
+            //
+            // U+279D Triangle-Headed Rightwards Arrow being used in place of \[Rule] is seen here:
+            // http://mail-archive.wolfram.com/archive/t-paclets/2022/Mar00/0004.html
+            //
+        case CODEPOINT_TRIANGLEHEADEDRIGHTWARDSARROW: {
             
             auto safeAndGraphicalStr1 = c.safeAndGraphicalString();
             auto safeAndGraphicalStr2 = WLCharacter(CODEPOINT_LONGNAME_RULE).safeAndGraphicalString();
