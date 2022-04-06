@@ -703,7 +703,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		*)
 		CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {CallNode[LeafNode[Symbol, "Attributes" | "Format" | "Options", _], {_, ___}, _], _}, _] /; DefinitionSymbols[x[[2, 1, 2, 1]]] != {},
 			peek = nodeListStack["Peek"];
-			def = CallNode[x[[1]], x[[2]], <| x[[3]], "Definitions" -> DefinitionSymbols[x[[2, 1, 2, 1]]] |> ];
+			def = CallNode[x[[1]], x[[2]], <| x[[3]], "AdditionalDefinitions" -> DefinitionSymbols[x[[2, 1, 2, 1]]] |> ];
 			peek["Push", def];
 		,
 		(*
@@ -714,7 +714,7 @@ Module[{list, nodeListStack , currentList, operatorStack, currentOperator, x, is
 		*)
 		CallNode[LeafNode[Symbol, "CompoundExpression", _], { CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {CallNode[LeafNode[Symbol, "Attributes" | "Format" | "Options", _], {_, ___}, _], _}, _] /; DefinitionSymbols[x[[2, 1, 2, 1, 2, 1]]] != {}, LeafNode[Symbol, "Null", _] }, _],
 			peek = nodeListStack["Peek"];
-			def = CallNode[x[[1]], { CallNode[x[[2, 1, 1]], x[[2, 1, 2]], <| x[[2, 1, 3]], "Definitions" -> DefinitionSymbols[x[[2, 1, 2, 1, 2, 1]]] |> ], x[[2, 2]] }, x[[3]]];
+			def = CallNode[x[[1]], { CallNode[x[[2, 1, 1]], x[[2, 1, 2]], <| x[[2, 1, 3]], "AdditionalDefinitions" -> DefinitionSymbols[x[[2, 1, 2, 1, 2, 1]]] |> ], x[[2, 2]] }, x[[3]]];
 			peek["Push", def];
 		,
 		(*
