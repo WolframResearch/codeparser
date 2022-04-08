@@ -1,93 +1,74 @@
 <?xml version="1.0"?>
-<project name='codeparser' basedir='..'>
+<project name='CodeParser' basedir='..'>
 
-	<property name='component' value='codeparser' />
+	<property name='component' value='CodeParser' />
 	<property name='app.name' value='CodeParser' />
 	<property name='inputDir' value='${basedir}/${app.name}/Documentation' />
+
 	<property environment='env' />
 	<import file='${env.RE_ANTLIBRARY_HOME}/ant-lib.xml' />
 
-	<!--
-		Native libraries (platform-specific)
-	-->
+	<target name='Paclet.CodeParser.init.custom' extensionOf='Paclet.init.custom'>
 
-	<target name='NativeLibrary.codeparser.init.custom' extensionOf='NativeLibrary.init.custom'>
+		<!-- Report to the build monitor, publish artifacts to images-frontend, etc. -->
+		<property name='has-buildmonitor' value='true' />
 
 		<!-- - CMake generates makefiles here -->
-		<property name='build.dir' value='${checkout_directory}${file.separator}${component}${file.separator}build' />
+		<property name='build.dir' location='${checkout_directory}/codeparser/build' />
 
 	</target>
 
-	<target name='NativeLibrary.codeparser.prebuild' extensionOf='NativeLibrary.prebuild'>
+	<target name='Paclet.CodeParser.clean' extensionOf='Paclet.clean'>
 
 		<delete dir='${build.dir}' />
-        <mkdir dir='${build.dir}' />
+		<mkdir dir='${build.dir}' />
 
 	</target>
 
-	<target name='NativeLibrary.codeparser.Unix.execute' extensionOf='NativeLibrary.execute' >
+	<target name='Paclet.CodeParser.execute' extensionOf='Paclet.execute' >
 
-		<exec dir='${build.dir}' executable='${cmake.exe}' failonerror='true'>
+		<local name='MATHLINK_INCLUDE_DIR' />
+		<pathconvert dirsep='/' property='MATHLINK_INCLUDE_DIR'>
+			<path location='${re.build.prerequisites.mathlink_directory}/CompilerAdditions' />
+		</pathconvert>
+
+		<local name='MATHLINK_LIB_DIR' />
+		<pathconvert dirsep='/' property='MATHLINK_LIB_DIR'>
+			<path location='${re.build.prerequisites.mathlink_directory}/CompilerAdditions' />
+		</pathconvert>
+
+		<local name='WOLFRAMLIBRARY_INCLUDE_DIR' />
+		<pathconvert dirsep='/' property='WOLFRAMLIBRARY_INCLUDE_DIR'>
+			<path location='${re.build.prerequisites.runtimelibrary_directory}/${re.build.prerequisites.runtimelibrary.system_id}' />
+		</pathconvert>
+
+		<re-cmake-exec dir='${build.dir}'>
 			<arg line='-DWOLFRAMKERNEL=${mathExe}' />
-			<arg line='-DMATHLINK_INCLUDE_DIR=${checkout_directory}/MathLink/CompilerAdditions' />
-			<arg line='-DMATHLINK_LIB_DIR=${checkout_directory}/MathLink/CompilerAdditions' />
-			<arg line='-DWOLFRAMLIBRARY_INCLUDE_DIR=${checkout_directory}/RuntimeLibrary/${system_id}' />
+			<arg line='-DMATHLINK_INCLUDE_DIR=${MATHLINK_INCLUDE_DIR}' />
+			<arg line='-DMATHLINK_LIB_DIR=${MATHLINK_LIB_DIR}' />
+			<arg line='-DWOLFRAMLIBRARY_INCLUDE_DIR=${WOLFRAMLIBRARY_INCLUDE_DIR}' />
 			<arg line='-DBUILDNUMBER=${env.BUILD_NUMBER}' />
 			<arg line='-G &quot;${env.CMAKE_GENERATOR}&quot;' />
-			<arg value='${checkout_directory}/${component}' />
-        </exec>
+			<arg value='${checkout_directory}/codeparser' />
+		</re-cmake-exec>
 
-		<exec dir='${build.dir}' executable='${cmake.exe}' failonerror='true'>
+		<re-cmake-exec dir='${build.dir}'>
 			<arg line='--build .' />
 			<arg line='--target paclet' />
-        </exec>
+		</re-cmake-exec>
 
 	</target>
 
-	<target name='NativeLibrary.codeparser.postbuild' extensionOf='NativeLibrary.postbuild'>
+	<target name='Paclet.CodeParser.postbuild' extensionOf='Paclet.postbuild'>
+
 		<mkdir dir='${files_directory}/CodeParser' />
 		<copy todir='${files_directory}/CodeParser'>
-			<fileset dir='${build.dir}${file.separator}paclet${file.separator}CodeParser' />
+			<fileset dir='${build.dir}/paclet/CodeParser' />
 		</copy>
-		
-	</target>
 
-	<!--
-		Paclet (all platforms)
-	-->
-
-	<target name='Paclet.codeparser.init.custom' extensionOf='Paclet.init.custom'>
-
-		<!--
-			Prevent Paclet.clean from deleting files_directory,
-			since CopyAndUnarchiveArtifact just put all the paclet
-			files in there....
-		-->
-
-		<property name='keep.files_directory' value='true' />
-
-	</target>
-
-	<target name='Paclet.codeparser.execute' extensionOf='Paclet.execute'>
-
-		<mathematica exe='${mathExe}' fresh='true' quit='true'><![CDATA[
-
-			Print["$Version: ", $Version];
-			Print["$InstallationDirectory: ", $InstallationDirectory];
-
-			Unset[$MessagePrePrint];
-			Needs["PacletManager`"];
-
-			src = FileNameJoin[{AntProperty["files_directory"], "CodeParser"}];
-			dest = FileNameJoin[AntProperty["output_directory"]];
-			PackPaclet[src, dest];
-
-			SetDirectory[dest]
-			If [TrueQ[FileExistsQ[FileNames["CodeParser*.paclet"][[1]]]],
-				Print[FileNames["CodeParser*.paclet"][[1]] " ... OK"],
-				AntFail["Paclet not produced" ]];
-
-		]]></mathematica>
+		<copy todir='${output_directory}'>
+			<fileset dir='${build.dir}/paclet' includes='*.paclet' />
+		</copy>
 
 	</target>
 
