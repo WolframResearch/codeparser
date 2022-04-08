@@ -12,10 +12,10 @@
 
 		<!-- Paclet builds aren't supposed to have a system_id, but these do. -->
 		<required-property name='system_id' />
+		<property name='build_type' value='${system_id}' />
 
 		<!-- Report to the build monitor, publish artifacts to images-frontend, etc. -->
 		<property name='has-buildmonitor' value='true' />
-		<property name='buildmonitor.build_type' value='${system_id}' />
 
 		<!-- - CMake generates makefiles here -->
 		<property name='build.dir' location='${checkout_directory}/CodeParser/build' />
