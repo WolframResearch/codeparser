@@ -18,7 +18,7 @@
 		<property name='buildmonitor.build_type' value='${system_id}' />
 
 		<!-- - CMake generates makefiles here -->
-		<property name='build.dir' location='${checkout_directory}/codeparser/build' />
+		<property name='build.dir' location='${checkout_directory}/CodeParser/build' />
 
 	</target>
 
@@ -53,7 +53,7 @@
 			<arg line='-DWOLFRAMLIBRARY_INCLUDE_DIR=${WOLFRAMLIBRARY_INCLUDE_DIR}' />
 			<arg line='-DBUILDNUMBER=${env.BUILD_NUMBER}' />
 			<arg line='-G &quot;${env.CMAKE_GENERATOR}&quot;' />
-			<arg value='${checkout_directory}/codeparser' />
+			<arg value='${checkout_directory}/CodeParser' />
 		</re-cmake-exec>
 
 		<re-cmake-exec dir='${build.dir}'>
