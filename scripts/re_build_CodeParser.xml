@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<project name='CodeParser' basedir='..'>
+<project name='CodeParser' basedir='..' xmlns:if='ant:if' xmlns:unless='ant:unless'>
 
 	<property name='component' value='CodeParser' />
 	<property name='app.name' value='CodeParser' />
