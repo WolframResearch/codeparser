@@ -840,6 +840,17 @@ walkCondition[CallNode[head_, children_, _]] :=
 
 
 
+walk[CellNode[Cell, children_, _]] :=
+  Flatten[walk /@ children]
+
+freePatterns[CellNode[Cell, children_, _]] := 
+  Flatten[freePatterns /@ children]
+
+walkCondition[CellNode[Cell, children_, _]] :=
+  Flatten[walkCondition /@ children]
+
+
+
 walk[PrefixNode[PrefixLinearSyntaxBang, _, _]] :=
   {}
 

@@ -167,5 +167,14 @@ Test[
 ]
 
 
+ast = BoxNode[SubscriptBox, {
+	LeafNode[Symbol, "\[ScriptCapitalD]", <|Source -> {1, 1, 1}|>],
+	LeafNode[Symbol, "x", <|Source -> {1, 1, 2}|>]}, <|Source -> {1, 1}|>]
 
-
+Test[
+	DefinitionSymbols[ast]
+	,
+	{BoxNode[SubscriptBox, {LeafNode[Symbol, "\[ScriptCapitalD]", <|Source -> {1, 1, 1}|>], LeafNode[Symbol, "x", <|Source -> {1, 1, 2}|>]}, <|Source -> {1, 1}|>]}
+	,
+	TestID->"DefinitionSymbols-20220418-X8C8C7"
+ ]

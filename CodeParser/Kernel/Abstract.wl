@@ -15,6 +15,9 @@ $AggregateParseProgress
 $AbstractParseProgress
 
 
+$CurrentBatchMode
+
+
 Begin["`Private`"]
 
 Needs["CodeParser`"]
@@ -462,7 +465,9 @@ abstract[PrefixBinaryNode[op_, {_, operand1_, operand2_}, data_]] := CallNode[To
 
 abstract[ContainerNode[tag_, childrenIn_, dataIn_]] :=
 Catch[
-Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node, willReportToplevelIssues, reportIssuesBehavior, children},
+Module[{abstracted, issues, issues1, issues2, data,
+	abstractedChildren, node, willReportToplevelIssues,
+	reportIssuesBehavior, children, res},
 
 	children = childrenIn;
 
@@ -476,11 +481,31 @@ Module[{abstracted, issues, issues1, issues2, data, abstractedChildren, node, wi
 
 	{abstractedChildren, issues1} = abstractTopLevelChildren[children, reportIssuesBehavior];
 	
+	(*
+	was:
 	If[TrueQ[$CurrentBatchMode],
-		{abstracted, issues2} = abstractTopLevel[abstractedChildren];
+		res = abstractTopLevel[abstractedChildren];
+
+		If[FailureQ[res],
+			Throw[res]
+		];
+
+		{abstracted, issues2} = res;
 		,
 		{abstracted, issues2} = {abstractedChildren, {}}
 	];
+	but it is important to always run abstractTopLevel, because it supplies information like "Definitions"
+
+	related bugs: 410408
+
+	*)
+	res = abstractTopLevel[abstractedChildren];
+
+	If[FailureQ[res],
+		Throw[res]
+	];
+
+	{abstracted, issues2} = res;
 
 	issues = issues1 ~Join~ issues2;
 
