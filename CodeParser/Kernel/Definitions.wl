@@ -16,7 +16,23 @@ given an LHS AST node, determine the symbol that gives the definition
 
 DefinitionSymbols[n:LeafNode[Symbol, _, _]] := {n}
 
+(*
+this is really a definition for Subscript
+
+adhere to principle of not re-implementing MakeExpression and do not try to refine
+*)
 DefinitionSymbols[n:BoxNode[SubscriptBox, _, _]] := {n}
+
+(*
+this is really a definition for Power, SuperStar, etc.
+
+SuperscriptBox["a", "b"] is a definition for Power
+
+SuperscriptBox["a", "*"] is a definition for SuperStar
+
+adhere to principle of not re-implementing MakeExpression and do not try to refine
+*)
+DefinitionSymbols[n:BoxNode[SuperscriptBox, _, _]] := {n}
 
 
 DefinitionSymbols[LeafNode[_, _, _]] := {}
@@ -41,9 +57,31 @@ Something like a /: (b|c)[a] := d
 
 When scanning over (b|c)[a], we want to treat both b and c as definitions
 *)
-DefinitionSymbols[CallNode[LeafNode[Symbol, "Alternatives", _], children_, _]] := Flatten[DefinitionSymbols /@ children]
+DefinitionSymbols[CallNode[LeafNode[Symbol, "Alternatives", _], children_, _]] :=
+Catch[
+Module[{defs},
 
-DefinitionSymbols[CallNode[LeafNode[Symbol, "List", _], children_, _]] := Flatten[DefinitionSymbols /@ children]
+  defs = DefinitionSymbols /@ children;
+
+  If[AnyTrue[defs, FailureQ],
+    Throw[SelectFirst[defs, FailureQ]]
+  ];
+
+  Flatten[defs]
+]]
+
+DefinitionSymbols[CallNode[LeafNode[Symbol, "List", _], children_, _]] :=
+Catch[
+Module[{defs},
+
+  defs = DefinitionSymbols /@ children;
+
+  If[AnyTrue[defs, FailureQ],
+    Throw[SelectFirst[defs, FailureQ]]
+  ];
+
+  Flatten[defs]
+]]
 
 DefinitionSymbols[CallNode[node_, _, _]] := DefinitionSymbols[node]
 

@@ -11,7 +11,7 @@ TestSuite[{
 	"CodeParser.mt",
 	"CodeSyntaxQ.mt",
 	"Concrete.mt",
-	"DefinitionSymbols.mt",
+	"Definitions.mt",
 	"Error.mt",
 	"Errors.mt",
 	"File.mt",

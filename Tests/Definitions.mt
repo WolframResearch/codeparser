@@ -12,7 +12,7 @@ Test[
 	,
 	{LeafNode[Symbol, "a", <| Source -> {{1, 1}, {1, 2}} |>]}
 	,
-	TestID->"DefinitionSymbols-20181230-C3E7Y2"
+	TestID->"Definitions-20181230-C3E7Y2"
 ]
 
 
@@ -25,7 +25,7 @@ Test[
 	,
 	{LeafNode[Symbol, "a", <| Source -> {{1, 1}, {1, 2}} |> ]}
 	,
-	TestID->"DefinitionSymbols-20181230-V6Q8O6"
+	TestID->"Definitions-20181230-V6Q8O6"
 ]
 
 
@@ -38,7 +38,7 @@ Test[
 	,
 	{LeafNode[Symbol, "a", <| Source -> {{1, 1}, {1, 2}} |>]}
 	,
-	TestID->"DefinitionSymbols-20181230-Z9C5M8"
+	TestID->"Definitions-20181230-Z9C5M8"
 ]
 
 
@@ -53,7 +53,7 @@ Test[
 	,
 	{}
 	,
-	TestID->"DefinitionSymbols-20181230-C8D4W9"
+	TestID->"Definitions-20181230-C8D4W9"
 ]
 
 
@@ -67,7 +67,7 @@ Test[
 	,
 	{ LeafNode[Symbol, "InitializationValue", <| Source -> {{1, 3}, {1, 22}} |>] }
 	,
-	TestID->"DefinitionSymbols-20200218-I1H4I7"
+	TestID->"Definitions-20200218-I1H4I7"
 ]
 
 
@@ -93,7 +93,7 @@ Test[
 			"Definitions" -> {},
 			"AdditionalDefinitions" -> {LeafNode[Symbol, "a", <|Source -> {{1, 4}, {1, 5}}|>]}|>]}, <||>]
 	,
-	TestID->"DefinitionSymbols-20210520-S5U4M6"
+	TestID->"Definitions-20210520-S5U4M6"
 ]
 
 
@@ -112,7 +112,7 @@ Test[
 		"Definitions" -> {LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>]},
 		"AdditionalDefinitions" -> {}|>]}, <||>]
 	,
-	TestID->"DefinitionSymbols-20210520-E0Y0T1"
+	TestID->"Definitions-20210520-E0Y0T1"
 ] 
 
 
@@ -128,7 +128,7 @@ Test[
 			"AdditionalDefinitions" -> {LeafNode[Symbol, "b", <|Source -> {{1, 1}, {1, 2}}|>]},
 			"Definitions" -> {LeafNode[Symbol, "a", <|Source -> {{1, 3}, {1, 4}}|>]}|>]}, <||>]
 	,
-	TestID->"DefinitionSymbols-20220207-D9L1A0"
+	TestID->"Definitions-20220207-D9L1A0"
 ]
 
 Test[
@@ -148,7 +148,7 @@ Test[
 				LeafNode[Symbol, "a2", <|Source -> {{1, 7}, {1, 9}}|>],
 				LeafNode[Symbol, "a3", <|Source -> {{1, 11}, {1, 13}}|>]}|>]}, <||>]
 	,
-	TestID->"DefinitionSymbols-20220207-V6S2E4"
+	TestID->"Definitions-20220207-V6S2E4"
 ]
 
 Test[
@@ -163,7 +163,7 @@ Test[
 			"Definitions" -> {LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>]},
 			"AdditionalDefinitions" -> {LeafNode[Symbol, "b", <|Source -> {{1, 6}, {1, 7}}|>]}|>]}, <||>]
 	,
-	TestID->"DefinitionSymbols-20220207-Q6S1B0"
+	TestID->"Definitions-20220207-Q6S1B0"
 ]
 
 
@@ -176,5 +176,41 @@ Test[
 	,
 	{BoxNode[SubscriptBox, {LeafNode[Symbol, "\[ScriptCapitalD]", <|Source -> {1, 1, 1}|>], LeafNode[Symbol, "x", <|Source -> {1, 1, 2}|>]}, <|Source -> {1, 1}|>]}
 	,
-	TestID->"DefinitionSymbols-20220418-X8C8C7"
+	TestID->"Definitions-20220418-X8C8C7"
  ]
+
+ 
+ 
+ 
+ 
+ 
+ 
+cst = CodeConcreteParseBox[RowBox[{RowBox[{"{", SuperscriptBox["x", "*"], "}"}], "=", "123"}]]
+
+agg = CodeParser`Abstract`Aggregate[cst]
+
+ast = CodeParser`Abstract`Abstract[agg]
+
+Test[
+	ast
+	,
+	ContainerNode[Box, {
+		CallNode[LeafNode[Symbol, "Set", <||>], {
+			CallNode[LeafNode[Symbol, "List", <||>], {
+				BoxNode[SuperscriptBox, {
+					LeafNode[Symbol, "x", <|Source -> {1, 1, 1, 2, 1}|>],
+					LeafNode[Token`Star, "*", <|Source -> {1, 1, 1, 2, 2}|>]}, <|Source -> {1, 1, 1, 2}|>]}, <|Source -> {1, 1}|>],
+			LeafNode[Integer, "123", <|Source -> {1, 3}|>]}, <|Source -> {}, "Definitions" -> {
+			
+				BoxNode[SuperscriptBox, {
+					LeafNode[Symbol, "x", <|Source -> {1, 1, 1, 2, 1}|>],
+					LeafNode[Token`Star, "*", <|Source -> {1, 1, 1, 2, 2}|>]}, <|Source -> {1, 1, 1, 2}|>]
+					
+			}|>]}, <||>]
+	,
+	TestID->"Definitions-20220425-K6O4A8"
+]
+           
+           
+           
+           
