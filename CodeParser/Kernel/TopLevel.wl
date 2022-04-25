@@ -626,8 +626,8 @@ Module[{},
 System`Private`NewContextPath[{"Foo`"}]
 *)
 process[
-	CallNode[LeafNode[Symbol, "System`Private`NewContextPath", _], {
-		CallNode[LeafNode[Symbol, "List", <||>], children:{
+	CallNode[LeafNode[Symbol, "System`Private`NewContextPath", _], children:{
+		CallNode[LeafNode[Symbol, "List", <||>], {
 			LeafNode[String, _?contextQ, _]... }, _] }, data_],
 	operatorStack_,
 	nodeListStack_
