@@ -334,11 +334,12 @@ Module[{first},
 	];
 
 	{
-		SyntaxIssue["TopLevel", "Definition does not contain the end of the ``CompoundExpression``.", "Error",
+		SyntaxIssue["TopLevelDefinitionCompoundExpression", "Definition does not contain the end of the ``CompoundExpression``.", "Error",
 			<|
 				Source -> first[[3, Key[Source]]],
 				ConfidenceLevel -> 0.75,
-				"AdditionalDescriptions" -> {"Consider breaking up onto separate lines."}
+				"AdditionalDescriptions" -> {"Consider breaking up onto separate lines."},
+				"CompoundExpressionSource" -> data[Source]
 				(*FIXME: wrap parentheses CodeAction*)
 			|>
 		]
@@ -373,7 +374,7 @@ topLevelChildIssues[
 	KeyValuePattern["WillReportToplevelIssues" -> True]
 ] :=
 	{
-		SyntaxIssue["TopLevel", "Unexpected expression at top-level.", "Warning",
+		SyntaxIssue["TopLevelExpression", "Unexpected expression at top-level.", "Warning",
 			<|
 				Source -> slashData[Source],
 				ConfidenceLevel -> 0.95,

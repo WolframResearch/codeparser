@@ -16,10 +16,11 @@ Test[
 			LeafNode[Symbol, "$Failed", <|Source -> {{1, 29}, {1, 36}}|>]}, <|Source -> {{1, 1}, {1, 36}}|>]}, <|
 		
 		AbstractSyntaxIssues -> {
-			SyntaxIssue["TopLevel", "Definition does not contain the end of the ``CompoundExpression``.", "Error", <|
+			SyntaxIssue["TopLevelDefinitionCompoundExpression", "Definition does not contain the end of the ``CompoundExpression``.", "Error", <|
 				Source -> {{1, 29}, {1, 36}},
 				ConfidenceLevel -> 0.75,
-				"AdditionalDescriptions" -> {"Consider breaking up onto separate lines."}
+				"AdditionalDescriptions" -> {"Consider breaking up onto separate lines."},
+				"CompoundExpressionSource" -> {{1, 1}, {1, 36}}
 			|>]}
 		|>]
 	,
@@ -107,4 +108,41 @@ End[];"]
 		|>]
 	,
 	TestID->"TopLevel-20220418-C9P1G1"
+]
+
+
+Test[
+	CodeParse["foo[] := 1+1;"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "CompoundExpression", <||>], {
+			CallNode[LeafNode[Symbol, "SetDelayed", <||>], {
+				CallNode[LeafNode[Symbol, "foo", <|Source -> {{1, 1}, {1, 4}}|>], {}, <|Source -> {{1, 1}, {1, 6}}|>],
+				CallNode[LeafNode[Symbol, "Plus", <||>], {
+					LeafNode[Integer, "1", <|Source -> {{1, 10}, {1, 11}}|>],
+					LeafNode[Integer, "1", <|Source -> {{1, 12}, {1, 13}}|>]}, <|Source -> {{1, 10}, {1, 13}}|>]}, <|Source -> {{1, 1}, {1, 13}}, "Definitions" -> {LeafNode[Symbol, "foo", <|Source -> {{1, 1}, {1, 4}}|>]}|>], LeafNode[Symbol, "Null", <|Source -> {{1, 14}, {1, 14}}|>]}, <|Source -> {{1, 1}, {1, 14}}|>]}, <|
+		|>]
+	,
+	TestID->"TopLevel-20220122-L2U7V1"
+]
+
+
+Test[
+	CodeParse["foo[] := 1+1; ;"]
+	,
+	ContainerNode[String, {
+		CallNode[LeafNode[Symbol, "CompoundExpression", <||>], {
+			CallNode[LeafNode[Symbol, "SetDelayed", <||>], {
+				CallNode[LeafNode[Symbol, "foo", <|Source -> {{1, 1}, {1, 4}}|>], {}, <|Source -> {{1, 1}, {1, 6}}|>],
+				CallNode[LeafNode[Symbol, "Plus", <||>], {
+					LeafNode[Integer, "1", <|Source -> {{1, 10}, {1, 11}}|>], LeafNode[Integer, "1", <|Source -> {{1, 12}, {1, 13}}|>]}, <|Source -> {{1, 10}, {1, 13}}|>]}, <|Source -> {{1, 1}, {1, 13}}|>], LeafNode[Symbol, "Null", <|Source -> {{1, 14}, {1, 14}}|>], LeafNode[Symbol, "Null", <|Source -> {{1, 16}, {1, 16}}|>]}, <|Source -> {{1, 1}, {1, 16}}|>]}, <|
+		
+		AbstractSyntaxIssues -> {
+			SyntaxIssue["TopLevelCompoundExpression", "Unexpected ``CompoundExpression`` at top-level.", "Warning", <|
+				Source -> {{1, 1}, {1, 16}},
+				ConfidenceLevel -> 0.95,
+				"AdditionalDescriptions" -> {"Consider breaking up onto separate lines."}|>]}
+		|>]
+	,
+	TestID->"TopLevel-20220122-G7R4U6"
 ]
