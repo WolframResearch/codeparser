@@ -14,14 +14,14 @@ macro(CheckPacletInfo)
     #
     execute_process(
       COMMAND
-        ${WOLFRAMKERNEL} -noinit -noprompt -nopaclet -nostartuppaclets -runfirst Pause[${BUG349779_PAUSE}]\;Print[OutputForm[Version\ /.\ List\ @@\ Get["${PACLETINFO_IN_SOURCE}"]]]\;Exit[]
+        ${WOLFRAMKERNEL} -noinit -noprompt -nopaclet -nostartuppaclets -runfirst Pause[${KERNEL_PAUSE}]\;Print[OutputForm[Version\ /.\ List\ @@\ Get["${PACLETINFO_IN_SOURCE}"]]]\;Exit[]
       OUTPUT_VARIABLE
         PACLET_VERSION
       OUTPUT_STRIP_TRAILING_WHITESPACE
       WORKING_DIRECTORY
         ${PROJECT_SOURCE_DIR}
       TIMEOUT
-        60
+        ${KERNEL_TIMEOUT}
       RESULT_VARIABLE
         PACLETINFO_RESULT
     )

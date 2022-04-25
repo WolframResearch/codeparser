@@ -42,7 +42,7 @@ execute_process(
   COMMAND
     ${WOLFRAMKERNEL} -noinit -noprompt -nopaclet -nostartuppaclets -run ${CODE}
   TIMEOUT
-    ${BUG349779_TIMEOUT}
+    ${KERNEL_TIMEOUT}
 )
 
 message(FATAL_ERROR "File had fatal errors: ${SRC}")

@@ -17,7 +17,7 @@ execute_process(
   COMMAND
     ${WOLFRAMKERNEL} -script ${SCRIPT} -srcDir ${SRCDIR} -buildDir ${BUILDDIR} -paclet ${PACLET}
   TIMEOUT
-    ${BUG349779_TIMEOUT}
+    ${KERNEL_TIMEOUT}
   RESULT_VARIABLE
     SCRIPT_RESULT
 )
@@ -29,7 +29,7 @@ execute_process(
   COMMAND
     ${WOLFRAMKERNEL} -retry -script ${SCRIPT} -srcDir ${SRCDIR} -buildDir ${BUILDDIR} -paclet ${PACLET}
   TIMEOUT
-    ${BUG349779_TIMEOUT}
+    ${KERNEL_TIMEOUT}
   RESULT_VARIABLE
     SCRIPT_RESULT
 )
@@ -52,7 +52,7 @@ execute_process(
   COMMAND
     ${WOLFRAMKERNEL} -script ${SCRIPT} -srcDir ${SRCDIR} -buildDir ${BUILDDIR} -paclet ${PACLET}
   TIMEOUT
-    ${BUG349779_TIMEOUT}
+    ${KERNEL_TIMEOUT}
   RESULT_VARIABLE
     SCRIPT_RESULT
 )

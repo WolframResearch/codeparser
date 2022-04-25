@@ -16,7 +16,7 @@ execute_process(
   COMMAND
     ${WOLFRAMKERNEL} -noinit -noprompt -run ${CODE}
   TIMEOUT
-    ${BUG349779_TIMEOUT}
+    ${KERNEL_TIMEOUT}
   RESULT_VARIABLE
     INSTALL_RESULT
 )
