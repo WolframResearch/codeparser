@@ -5,6 +5,10 @@ ScopingData
 
 scopingDataObject
 
+
+freePatterns
+
+
 Begin["`Private`"]
 
 Needs["CodeParser`"]
