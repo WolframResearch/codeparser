@@ -19,16 +19,6 @@ Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
 
 
-
-$systemNewline =
-Switch[$OperatingSystem,
-	"Windows", "\r\n",
-	_, "\n"
-]
-
-
-
-
 (*
 ToInputFormString is intended for aggregate syntax trees
 *)

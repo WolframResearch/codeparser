@@ -9,14 +9,7 @@ Needs["CodeParserTestUtils`"]
 
 Needs["CodeParser`"]
 Needs["CodeParser`ToString`"] (* ToInputFormString *)
-
-
-
-$systemNewline =
-Switch[$OperatingSystem,
-	"Windows", "\r\n",
-	_, "\n"
-]
+Needs["CodeParser`Utils`"]
 
 
 

@@ -43,11 +43,19 @@ replaceTabs
 tabReplacementFunc
 
 
+$systemNewline
+
 
 Begin["`Private`"]
 
 Needs["CodeParser`"]
 
+
+$systemNewline =
+Switch[$OperatingSystem,
+	"Windows", "\r\n",
+	_, "\n"
+]
 
 
 $DefaultNewlineString = "\n"
