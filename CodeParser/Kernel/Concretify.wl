@@ -876,6 +876,9 @@ Module[{structs},
           MatchQ[c, CallNode[LeafNode[Symbol, "Times", _], {LeafNode[Integer, "-1", _], _}, _]],
             structure[PrefixNode[Minus, #, <||>]&, LeafNode[Token`Minus, "-", <||>], Precedence`Infix`Minus]
           ,
+          MatchQ[c, LeafNode[Integer | Real | Rational, str_ /; StringStartsQ[str, "-"], _]],
+            structure[Identity, LeafNode[Token`Minus, "-", <||>], Precedence`Prefix`Minus]
+          ,
           True,
             structure[Identity, LeafNode[Token`Plus, "+", <||>], Precedence`Infix`Plus]
         ]
@@ -909,10 +912,15 @@ Module[{structs},
             MapThread[
               Function[{structPair, c},
                 Module[{walked},
-                  If[structPair[[1]]["prec"] === Precedence`Infix`Minus,
-                    walked = walk[c[[2, 2]]];
+                  Switch[structPair[[1]]["prec"],
+                    Precedence`Infix`Minus,
+                      walked = walk[c[[2, 2]]];
                     ,
-                    walked = walk[c];
+                    Precedence`Prefix`Minus,
+                      walked = walk[c][[2, 2]];
+                    ,
+                    _,
+                      walked = walk[c]
                   ];
                   {
                     structPair[[1]]["op"]
@@ -955,10 +963,15 @@ Module[{structs},
               {Partition[structs, 2, 1], children[[2 ;; -2]]}
             ] ~Join~ {Last[structs]["op"]} ~Join~ {Function[{c},
           Module[{walked},
-            If[Last[structs]["prec"] === Precedence`Infix`Minus,
-              walked = walk[c[[2, 2]]];
+            Switch[Last[structs]["prec"],
+              Precedence`Infix`Minus,
+                walked = walk[c[[2, 2]]];
               ,
-              walked = walk[c];
+              Precedence`Prefix`Minus,
+                walked = walk[c][[2, 2]];
+              ,
+              _,
+                walked = walk[c]
             ];
             Which[
               precedenceGreater[Last[structs]["prec"], precCTL[walked]],

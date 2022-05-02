@@ -507,3 +507,11 @@ Test[
 	,
 	TestID->"Concretify-20220426-Z8G3B5"
 ]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a - 3"]]]
+    ,
+    "a-3"
+	,
+	TestID->"Concretify-20220501-L0M4X1"
+]
