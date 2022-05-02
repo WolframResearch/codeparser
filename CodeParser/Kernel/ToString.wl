@@ -304,9 +304,10 @@ Module[{nodeStrs},
 
 
 
-toInputFormString[f_Failure] := f
+toInputFormString[f_?FailureQ] := f
 
-toInputFormString[args___] := Failure["InternalUnhandled", <| "Function" -> ToInputFormString, "Arguments" -> HoldForm[{args}] |>]
+toInputFormString[args___] :=
+  Failure["Unhandled", <| "Function" -> toInputFormString, "Arguments" -> HoldForm[{args}] |>]
 
 
 
@@ -353,7 +354,7 @@ Catch[
       str
     ,
     _,
-      Throw[Failure["InternalUnhandled", <| "Function" -> ToFullFormString, "Arguments" -> HoldForm[{node}] |>]]
+      Throw[Failure["Unhandled", <| "Function" -> toFullFormString, "Arguments" -> HoldForm[{node}] |>]]
   ]
 ]
 
@@ -498,13 +499,14 @@ toFullFormString[args___] :=
   Need to specify PageWidth, or else ToString does not do anything with Short
   Related bugs: ?
   *)
-  Failure["InternalUnhandled", <|
+  Failure["Unhandled", <|
     (*
     "Function" and "ShortArguments" is really just taking up space to force "Arguments" to be hidden by default
     *)
-    "Function"->ToFullFormString,
+    "Function" -> ToFullFormString,
     "ShortArguments" -> ToString[Short[{args}], OutputForm, PageWidth -> 100],
-    "Arguments"->{args}|>]
+    "Arguments" -> HoldForm[{args}]
+  |>]
 
 
 
@@ -634,7 +636,8 @@ Module[{nodeStrs},
 
 toSourceCharacterString[f_?FailureQ, _] := f
 
-toSourceCharacterString[args___] := Failure["InternalUnhandled", <| "Function" -> toSourceCharacterString, "Arguments" -> {args} |>]
+toSourceCharacterString[args___] :=
+  Failure["Unhandled", <| "Function" -> toSourceCharacterString, "Arguments" -> HoldForm[{args}] |>]
 
 
 End[]

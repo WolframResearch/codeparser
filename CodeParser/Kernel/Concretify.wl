@@ -1550,8 +1550,11 @@ Module[{struct, ctor, op, prec},
   ]
 ]
 
-walk[a_] :=
-  Failure["Unhandled walk", <| "argument" -> a |>]
+walk[f_?FailureQ] :=
+  f
+
+walk[args___] :=
+  Failure["Unhandled", <| "Function" -> walk, "Arguments" -> HoldForm[{args}] |>]
 
 
 

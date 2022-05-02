@@ -85,7 +85,8 @@ Module[{num, den, e},
 ]]
 
 
-ToNode[args___] := Failure["Unhandled", <| "Function" -> ToNode, "Arguments" -> HoldForm[{args}] |>]
+ToNode[args___] :=
+  Failure["Unhandled", <| "Function" -> ToNode, "Arguments" -> HoldForm[{args}] |>]
 
 
 
@@ -111,7 +112,8 @@ FromNode[LeafNode[Rational, r_, _]] :=
   ToExpression[r]
 
 
-FromNode[args___] := Failure["InternalUnhandled", <| "Function" -> FromNode, "Arguments" -> HoldForm[{args}] |>]
+FromNode[args___] :=
+  Failure["Unhandled", <| "Function" -> FromNode, "Arguments" -> HoldForm[{args}] |>]
 
 
 

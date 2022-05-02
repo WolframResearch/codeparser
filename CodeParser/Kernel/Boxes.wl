@@ -1075,7 +1075,8 @@ Module[{data, src},
   CodeAction[label, command, data]
 ]
 
-parseBox[args___] := Failure["UnrecognizedBox", <| "Box" -> {args} |>]
+parseBox[args___] :=
+  Failure["Unhandled", <| "Function" -> parseBox, "Arguments" -> HoldForm[{args}] |>]
 
 
 removeImplicits[node_] := DeleteCases[node, LeafNode[Token`Fake`ImplicitTimes, _, _], Infinity]
@@ -2308,7 +2309,8 @@ Module[{processed},
 
 toStandardFormBoxes[f_Failure] := f
 
-toStandardFormBoxes[args___] := Failure["InternalUnhandled", <| "Function" -> ToStandardFormBoxes, "Arguments" -> HoldForm[{args}] |>]
+toStandardFormBoxes[args___] :=
+  Failure["Unhandled", <| "Function" -> toStandardFormBoxes, "Arguments" -> HoldForm[{args}] |>]
 
 
 

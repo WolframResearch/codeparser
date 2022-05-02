@@ -546,7 +546,8 @@ abstract[f_?FailureQ] := f
 
 abstract[m_?MissingQ] := m
 
-abstract[args___] := Failure["InternalUnhandled", <| "Function" -> abstract, "Arguments"->HoldForm[{args}] |>]
+abstract[args___] :=
+  Failure["Unhandled", <| "Function" -> abstract, "Arguments" -> HoldForm[{args}] |>]
 
 
 
