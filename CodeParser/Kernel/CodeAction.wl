@@ -20,7 +20,7 @@ CodeAction[label_, command_, actionData_]["Label"] := label
 
 
 ApplyCodeAction[action:CodeAction[label_, command_, actionData_]][cst_] :=
-	ApplyCodeAction[action, cst]
+  ApplyCodeAction[action, cst]
 
 (*
 input: a cst

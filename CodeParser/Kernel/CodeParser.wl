@@ -1159,7 +1159,7 @@ Module[{encoding, res, convention, tabWidth},
   LineContinuation and EmbeddedNewline data is not returned here
   *)
 
-	res
+  res
 ]]
 
 
@@ -1198,7 +1198,7 @@ Options[CodeConcreteParseLeaf] = {
 }
 
 CodeConcreteParseLeaf[str_String, opts:OptionsPattern[]] :=
-	concreteParseLeaf[str, CodeConcreteParseLeaf, opts]
+  concreteParseLeaf[str, CodeConcreteParseLeaf, opts]
 
 
 concreteParseLeaf[strIn_String, func_, opts:OptionsPattern[]] :=
@@ -1296,15 +1296,15 @@ Module[{res, safeStr},
 
 
 CodeSyntaxQ[code_] :=
-  Module[{ast},
-    ast = CodeParse[code];
-    FreeQ[ast,
-      ErrorNode |
-      SyntaxErrorNode | AbstractSyntaxErrorNode |
-      GroupMissingCloserNode | UnterminatedGroupNode |
-      CallMissingCloserNode | UnterminatedCallNode] &&
-    !MemberQ[Lookup[ast[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
-  ]
+Module[{ast},
+  ast = CodeParse[code];
+  FreeQ[ast,
+    ErrorNode |
+    SyntaxErrorNode | AbstractSyntaxErrorNode |
+    GroupMissingCloserNode | UnterminatedGroupNode |
+    CallMissingCloserNode | UnterminatedCallNode] &&
+  !MemberQ[Lookup[ast[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
+]
 
 CodeSyntaxCSTQ[cst_] :=
   FreeQ[cst,
@@ -1314,14 +1314,14 @@ CodeSyntaxCSTQ[cst_] :=
   !MemberQ[Lookup[cst[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
 
 CodeStructuralSyntaxQ[code_] :=
-  Module[{ast},
-    ast = CodeParse[code];
-    FreeQ[ast,
-      SyntaxErrorNode | AbstractSyntaxErrorNode |
-      GroupMissingCloserNode | UnterminatedGroupNode |
-      CallMissingCloserNode | UnterminatedCallNode] &&
-    !MemberQ[Lookup[ast[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
-  ]
+Module[{ast},
+  ast = CodeParse[code];
+  FreeQ[ast,
+    SyntaxErrorNode | AbstractSyntaxErrorNode |
+    GroupMissingCloserNode | UnterminatedGroupNode |
+    CallMissingCloserNode | UnterminatedCallNode] &&
+  !MemberQ[Lookup[ast[[3]], SyntaxIssues, {}], EncodingIssue[_, _, "Fatal", _]]
+]
 
 CodeStructuralSyntaxCSTQ[cst_] :=
   FreeQ[cst,

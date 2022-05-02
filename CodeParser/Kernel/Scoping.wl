@@ -1103,7 +1103,7 @@ walkCondition[BoxNode[GridBox, {a_, ___}, _]] :=
 Handle special un-abstracted form of [[x]] in subscript
 *)
 walk[
-	BoxNode[SubscriptBox, {
+  BoxNode[SubscriptBox, {
     a_,
     GroupNode[GroupSquare, {
       _,
@@ -1116,7 +1116,7 @@ walk[
 ] := Flatten[Join[walk[a], walk[b]]]
 
 freePatterns[
-	BoxNode[SubscriptBox, {
+  BoxNode[SubscriptBox, {
     a_,
     GroupNode[GroupSquare, {
       _,
@@ -1129,7 +1129,7 @@ freePatterns[
 ] := Flatten[Join[freePatterns[a], freePatterns[b]]]
 
 walkCondition[
-	BoxNode[SubscriptBox, {
+  BoxNode[SubscriptBox, {
     a_,
     GroupNode[GroupSquare, {
       _,
@@ -1142,32 +1142,32 @@ walkCondition[
 ] := Flatten[Join[walkCondition[a], walkCondition[b]]]
 
 walk[
-	BoxNode[SubscriptBox, {
+  BoxNode[SubscriptBox, {
     a_,
     GroupNode[GroupDoubleBracket, {
       _,
       b_,
-			_}, _],
+      _}, _],
     ___}, _]
 ] := Flatten[Join[walk[a], walk[b]]]
 
 freePatterns[
-	BoxNode[SubscriptBox, {
+  BoxNode[SubscriptBox, {
     a_,
     GroupNode[GroupDoubleBracket, {
       _,
       b_,
-			_}, _],
+      _}, _],
     ___}, _]
 ] := Flatten[Join[freePatterns[a], freePatterns[b]]]
 
 walkCondition[
-	BoxNode[SubscriptBox, {
+  BoxNode[SubscriptBox, {
     a_,
     GroupNode[GroupDoubleBracket, {
       _,
       b_,
-			_}, _],
+      _}, _],
     ___}, _]
 ] := Flatten[Join[walkCondition[a], walkCondition[b]]]
 
@@ -1175,7 +1175,7 @@ walkCondition[
 Handle special un-abstracted form of TagBox[(), Derivative] in superscript
 *)
 walk[
-	BoxNode[SuperscriptBox, {
+  BoxNode[SuperscriptBox, {
     a_,
     BoxNode[TagBox, {
       GroupNode[GroupParen, {
@@ -1187,7 +1187,7 @@ walk[
 ] := Flatten[Join[walk[a], walk[b]]]
 
 freePatterns[
-	BoxNode[SuperscriptBox, {
+  BoxNode[SuperscriptBox, {
     a_,
     BoxNode[TagBox, {
       GroupNode[GroupParen, {
@@ -1199,7 +1199,7 @@ freePatterns[
 ] := Flatten[Join[freePatterns[a], freePatterns[b]]]
 
 walkCondition[
-	BoxNode[SuperscriptBox, {
+  BoxNode[SuperscriptBox, {
     a_,
     BoxNode[TagBox, {
       GroupNode[GroupParen, {

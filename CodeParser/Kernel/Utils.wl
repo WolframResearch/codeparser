@@ -53,8 +53,8 @@ Needs["CodeParser`"]
 
 $systemNewline =
 Switch[$OperatingSystem,
-	"Windows", "\r\n",
-	_, "\n"
+  "Windows", "\r\n",
+  _, "\n"
 ]
 
 
@@ -65,7 +65,7 @@ $DefaultTabWidth = 4
 
 
 escapeString[s_] :=
-	ToString[s, InputForm, CharacterEncoding -> "ASCII"]
+  ToString[s, InputForm, CharacterEncoding -> "ASCII"]
 
 
 (*
@@ -120,20 +120,20 @@ This does NOT test for membership of ALL srcs
 
 *)
 SourceMemberQ[srcs:{srcPat...}, cursor:srcPat] :=
-	AnyTrue[srcs, SourceMemberQ[#, cursor]&]
+  AnyTrue[srcs, SourceMemberQ[#, cursor]&]
 
 SourceMemberQ[srcs:{srcPat...}, cursor:spanPat] :=
-	AnyTrue[srcs, SourceMemberQ[#, cursor]&]
+  AnyTrue[srcs, SourceMemberQ[#, cursor]&]
 
 
 (*
 test that a cursor Source is a Member of a src Source
 *)
 SourceMemberQ[src:srcPat, {cursor1:spanPat, cursor2:spanPat}] :=
-	SourceMemberQ[src, cursor1] && SourceMemberQ[src, cursor2]
+  SourceMemberQ[src, cursor1] && SourceMemberQ[src, cursor2]
 
 SourceMemberQ[src:srcPat, cursor:spanPat] :=
-	SourceMemberQ[src, cursor]
+  SourceMemberQ[src, cursor]
 
 (*
 Do the actual work
@@ -143,25 +143,25 @@ SourceMemberQ[{{1,3},{2,0}}, {2,4}] => False
 *)
 SourceMemberQ[{{srcLine1_Integer, srcCol1_Integer}, {srcLine2_Integer, srcCol2_Integer}}, {cursorLine_Integer, cursorCol_Integer}] :=
 Which[
-	(* not in-between the lines of the spec, so no *)
-	!(srcLine1 <= cursorLine <= srcLine2),
-		False
-	,
-	(* everything is on 1 line, so now test cols *)
-	cursorLine == srcLine1 == srcLine2,
-		srcCol1 <= cursorCol <= srcCol2
-	,
-	(* on srcLine1, so test that cursor comes after srcCol1 *)
-	cursorLine == srcLine1,
-		srcCol1 <= cursorCol
-	,
-	(* on srcLine2, so test that cursor comes before srcCol2 *)
-	cursorLine == srcLine2,
-		cursorCol <= srcCol2
-	,
-	(* exclusively in-between start and end, so yes *)
-	True,
-		True
+  (* not in-between the lines of the spec, so no *)
+  !(srcLine1 <= cursorLine <= srcLine2),
+    False
+  ,
+  (* everything is on 1 line, so now test cols *)
+  cursorLine == srcLine1 == srcLine2,
+    srcCol1 <= cursorCol <= srcCol2
+  ,
+  (* on srcLine1, so test that cursor comes after srcCol1 *)
+  cursorLine == srcLine1,
+    srcCol1 <= cursorCol
+  ,
+  (* on srcLine2, so test that cursor comes before srcCol2 *)
+  cursorLine == srcLine2,
+    cursorCol <= srcCol2
+  ,
+  (* exclusively in-between start and end, so yes *)
+  True,
+    True
 ]
 
 
@@ -249,260 +249,260 @@ Options[normalizeTokens] = {
 }
 
 normalizeTokens[astIn_, OptionsPattern[]] :=
-  Catch[
-  Module[{ast, data, tokStartLocs, simpleLineContinuations, embeddedNewlineStartLocs, complexLineContinuations,
-    embeddedNewlines, grouped, poss, tuples, mapSpecs, formatOnly, newline, embeddedTabs, groupedSimple, tabWidth},
+Catch[
+Module[{ast, data, tokStartLocs, simpleLineContinuations, embeddedNewlineStartLocs, complexLineContinuations,
+  embeddedNewlines, grouped, poss, tuples, mapSpecs, formatOnly, newline, embeddedTabs, groupedSimple, tabWidth},
 
-    ast = astIn;
+  ast = astIn;
 
-    formatOnly = OptionValue["FormatOnly"];
-    newline = OptionValue["NewlineString"];
-    tabWidth = OptionValue["TabWidth"];
+  formatOnly = OptionValue["FormatOnly"];
+  newline = OptionValue["NewlineString"];
+  tabWidth = OptionValue["TabWidth"];
 
-    data = ast[[3]];
+  data = ast[[3]];
 
-    If[!(KeyExistsQ[data, "SimpleLineContinuations"] ||
-      KeyExistsQ[data, "ComplexLineContinuations"] ||
-      KeyExistsQ[data, "EmbeddedNewlines"] ||
-      KeyExistsQ[data, "EmbeddedTabs"]),
+  If[!(KeyExistsQ[data, "SimpleLineContinuations"] ||
+    KeyExistsQ[data, "ComplexLineContinuations"] ||
+    KeyExistsQ[data, "EmbeddedNewlines"] ||
+    KeyExistsQ[data, "EmbeddedTabs"]),
 
-      Throw[ast]
-    ];
+    Throw[ast]
+  ];
 
-    (*
-    -5 is where LeafNode[xxx, xxx, <|Source->{{1,1},{1,1}}|>] is
+  (*
+  -5 is where LeafNode[xxx, xxx, <|Source->{{1,1},{1,1}}|>] is
 
-    -3 is where LeafNode[xxx, xxx, <||>] is
+  -3 is where LeafNode[xxx, xxx, <||>] is
 
-    There may be LeafNodes in metadata such as SyntaxIssues or AbstractSyntaxIssues, so remove those
-    *)
-    poss = Position[ast, LeafNode[_, _, _], {-5, -3}];
-    poss = Cases[poss, {___Integer}];
+  There may be LeafNodes in metadata such as SyntaxIssues or AbstractSyntaxIssues, so remove those
+  *)
+  poss = Position[ast, LeafNode[_, _, _], {-5, -3}];
+  poss = Cases[poss, {___Integer}];
 
-    tokStartLocs = #[[3, Key[Source], 1]]& /@ Extract[ast, poss];
+  tokStartLocs = #[[3, Key[Source], 1]]& /@ Extract[ast, poss];
 
-    (*
-    Group by starting SourceLocation
-    *)
-    grouped = GroupBy[Transpose[{tokStartLocs, poss}, {2, 1}], #[[1]]&];
+  (*
+  Group by starting SourceLocation
+  *)
+  grouped = GroupBy[Transpose[{tokStartLocs, poss}, {2, 1}], #[[1]]&];
 
-    If[$Debug,
-      Print["grouped: ", grouped];
-    ];
+  If[$Debug,
+    Print["grouped: ", grouped];
+  ];
+  
+  If[KeyExistsQ[data, "SimpleLineContinuations"],
+
+    simpleLineContinuations = data["SimpleLineContinuations"];
+
     
-    If[KeyExistsQ[data, "SimpleLineContinuations"],
+    groupedSimple = grouped;
 
-      simpleLineContinuations = data["SimpleLineContinuations"];
+    (*
+    Filter out multiline strings and multiline comments: they are not simple
+    *)
+    If[KeyExistsQ[data, "EmbeddedNewlines"],
 
-      
-      groupedSimple = grouped;
+      embeddedNewlineStartLocs = data["EmbeddedNewlines"];
 
-      (*
-      Filter out multiline strings and multiline comments: they are not simple
-      *)
-      If[KeyExistsQ[data, "EmbeddedNewlines"],
-
-        embeddedNewlineStartLocs = data["EmbeddedNewlines"];
-
-        KeyDropFrom[groupedSimple, embeddedNewlineStartLocs]
-      ];
-
-      If[KeyExistsQ[data, "ComplexLineContinuations"],
-
-        complexLineContinuations = data["ComplexLineContinuations"];
-
-        KeyDropFrom[groupedSimple, complexLineContinuations]
-      ];
-
-      If[$Debug,
-        Print["groupedSimple: ", groupedSimple];
-      ];
-
-
-      mapSpecs = Map[
-        Function[{contLoc},
-
-          tuples = groupedSimple[contLoc];
-
-          (*
-          The token associated with this location may have been abstracted away and now missing
-          *)
-          If[!MissingQ[tuples],
-
-            tuples
-            ,
-            Nothing
-          ]
-        ]
-        ,
-        simpleLineContinuations
-      ];
-
-      mapSpecs = Flatten[mapSpecs, 1];
-
-      (*
-      There may be more than 1 simple line continuation, so use FixedPoint
-      *)
-      ast = MapAt[FixedPoint[removeSimpleLineContinuation, #]&, ast, mapSpecs[[All, 2]]];
-
-      If[$Debug,
-        Print["after SimpleLineContinuations: ", ast];
-      ];
-
-      If[empty[simpleLineContinuations],
-        KeyDropFrom[data, "SimpleLineContinuations"]
-        ,
-        data["SimpleLineContinuations"] = simpleLineContinuations
-      ];
+      KeyDropFrom[groupedSimple, embeddedNewlineStartLocs]
     ];
 
     If[KeyExistsQ[data, "ComplexLineContinuations"],
 
       complexLineContinuations = data["ComplexLineContinuations"];
 
-      mapSpecs = Map[
-        Function[{contLoc},
-
-          tuples = grouped[contLoc];
-
-          (*
-          The token associated with this location may have been abstracted away and now missing
-          *)
-          If[!MissingQ[tuples],
-
-            tuples
-            ,
-            Nothing
-          ]
-        ]
-        ,
-        complexLineContinuations
-      ];
-
-      mapSpecs = Flatten[mapSpecs, 1];
-
-      ast = MapAt[removeComplexLineContinuations, ast, mapSpecs[[All, 2]]];
-
-      If[$Debug,
-        Print["after ComplexLineContinuations: ", ast];
-      ];
-
-      KeyDropFrom[data, "ComplexLineContinuations"]
+      KeyDropFrom[groupedSimple, complexLineContinuations]
     ];
+
+    If[$Debug,
+      Print["groupedSimple: ", groupedSimple];
+    ];
+
+
+    mapSpecs = Map[
+      Function[{contLoc},
+
+        tuples = groupedSimple[contLoc];
+
+        (*
+        The token associated with this location may have been abstracted away and now missing
+        *)
+        If[!MissingQ[tuples],
+
+          tuples
+          ,
+          Nothing
+        ]
+      ]
+      ,
+      simpleLineContinuations
+    ];
+
+    mapSpecs = Flatten[mapSpecs, 1];
 
     (*
-    Now do a second, more careful check for remaining simple line continuations
-
-    Any remaining simple line continuations 
+    There may be more than 1 simple line continuation, so use FixedPoint
     *)
-    If[KeyExistsQ[data, "SimpleLineContinuations"],
+    ast = MapAt[FixedPoint[removeSimpleLineContinuation, #]&, ast, mapSpecs[[All, 2]]];
 
-      simpleLineContinuations = data["SimpleLineContinuations"];
-
-      mapSpecs = Map[
-        Function[{contLoc},
-
-          tuples = grouped[contLoc];
-
-          (*
-          The token associated with this location may have been processed away and now missing
-          *)
-          If[!MissingQ[tuples],
-            tuples
-            ,
-            Nothing
-          ]
-        ]
-        ,
-        simpleLineContinuations
-      ];
-
-      mapSpecs = Flatten[mapSpecs, 1];
-
-      (*
-      There may be more than 1 simple line continuation, so use FixedPoint
-      *)
-      ast = MapAt[FixedPoint[removeRemainingSimpleLineContinuation, #]&, ast, mapSpecs[[All, 2]]];
-
-      If[$Debug,
-        Print["after RemainingSimpleLineContinuations: ", ast];
-      ];
-
-      KeyDropFrom[data, "SimpleLineContinuations"];
+    If[$Debug,
+      Print["after SimpleLineContinuations: ", ast];
     ];
 
-    If[KeyExistsQ[data, "EmbeddedNewlines"],
+    If[empty[simpleLineContinuations],
+      KeyDropFrom[data, "SimpleLineContinuations"]
+      ,
+      data["SimpleLineContinuations"] = simpleLineContinuations
+    ];
+  ];
 
-      embeddedNewlines = data["EmbeddedNewlines"];
+  If[KeyExistsQ[data, "ComplexLineContinuations"],
 
-      mapSpecs = Map[
-        Function[{newlineLoc},
+    complexLineContinuations = data["ComplexLineContinuations"];
 
-          tuples = grouped[newlineLoc];
+    mapSpecs = Map[
+      Function[{contLoc},
 
-          (*
-          The token associated with this location may have been abstracted away and now missing
-          *)
-          If[!MissingQ[tuples],
+        tuples = grouped[contLoc];
 
-            tuples
-            ,
-            Nothing
-          ]
+        (*
+        The token associated with this location may have been abstracted away and now missing
+        *)
+        If[!MissingQ[tuples],
+
+          tuples
+          ,
+          Nothing
         ]
-        ,
-        embeddedNewlines
-      ];
-
-      mapSpecs = Flatten[mapSpecs, 1];
-
-      ast = MapAt[convertEmbeddedNewlines[#, "FormatOnly" -> formatOnly, "NewlineString" -> newline]&, ast, mapSpecs[[All, 2]]];
-
-      If[$Debug,
-        Print["after EmbeddedNewlines: ", ast];
-      ];
-
-      KeyDropFrom[data, "EmbeddedNewlines"]
+      ]
+      ,
+      complexLineContinuations
     ];
 
-    If[KeyExistsQ[data, "EmbeddedTabs"],
+    mapSpecs = Flatten[mapSpecs, 1];
 
-      embeddedTabs = data["EmbeddedTabs"];
+    ast = MapAt[removeComplexLineContinuations, ast, mapSpecs[[All, 2]]];
 
-      mapSpecs = Map[
-        Function[{newlineLoc},
-
-          tuples = grouped[newlineLoc];
-
-          (*
-          The token associated with this location may have been abstracted away and now missing
-          *)
-          If[!MissingQ[tuples],
-
-            tuples
-            ,
-            Nothing
-          ]
-        ]
-        ,
-        embeddedTabs
-      ];
-
-      mapSpecs = Flatten[mapSpecs, 1];
-
-      ast = MapAt[convertEmbeddedTabs[#, "FormatOnly" -> formatOnly, "TabWidth" -> tabWidth, "NewlineString" -> newline]&, ast, mapSpecs[[All, 2]]];
-
-      If[$Debug,
-        Print["after EmbeddedTabs: ", ast];
-      ];
-      
-      KeyDropFrom[data, "EmbeddedTabs"]
+    If[$Debug,
+      Print["after ComplexLineContinuations: ", ast];
     ];
 
-    ast[[3]] = data;
+    KeyDropFrom[data, "ComplexLineContinuations"]
+  ];
 
-    ast
-  ]]
+  (*
+  Now do a second, more careful check for remaining simple line continuations
+
+  Any remaining simple line continuations 
+  *)
+  If[KeyExistsQ[data, "SimpleLineContinuations"],
+
+    simpleLineContinuations = data["SimpleLineContinuations"];
+
+    mapSpecs = Map[
+      Function[{contLoc},
+
+        tuples = grouped[contLoc];
+
+        (*
+        The token associated with this location may have been processed away and now missing
+        *)
+        If[!MissingQ[tuples],
+          tuples
+          ,
+          Nothing
+        ]
+      ]
+      ,
+      simpleLineContinuations
+    ];
+
+    mapSpecs = Flatten[mapSpecs, 1];
+
+    (*
+    There may be more than 1 simple line continuation, so use FixedPoint
+    *)
+    ast = MapAt[FixedPoint[removeRemainingSimpleLineContinuation, #]&, ast, mapSpecs[[All, 2]]];
+
+    If[$Debug,
+      Print["after RemainingSimpleLineContinuations: ", ast];
+    ];
+
+    KeyDropFrom[data, "SimpleLineContinuations"];
+  ];
+
+  If[KeyExistsQ[data, "EmbeddedNewlines"],
+
+    embeddedNewlines = data["EmbeddedNewlines"];
+
+    mapSpecs = Map[
+      Function[{newlineLoc},
+
+        tuples = grouped[newlineLoc];
+
+        (*
+        The token associated with this location may have been abstracted away and now missing
+        *)
+        If[!MissingQ[tuples],
+
+          tuples
+          ,
+          Nothing
+        ]
+      ]
+      ,
+      embeddedNewlines
+    ];
+
+    mapSpecs = Flatten[mapSpecs, 1];
+
+    ast = MapAt[convertEmbeddedNewlines[#, "FormatOnly" -> formatOnly, "NewlineString" -> newline]&, ast, mapSpecs[[All, 2]]];
+
+    If[$Debug,
+      Print["after EmbeddedNewlines: ", ast];
+    ];
+
+    KeyDropFrom[data, "EmbeddedNewlines"]
+  ];
+
+  If[KeyExistsQ[data, "EmbeddedTabs"],
+
+    embeddedTabs = data["EmbeddedTabs"];
+
+    mapSpecs = Map[
+      Function[{newlineLoc},
+
+        tuples = grouped[newlineLoc];
+
+        (*
+        The token associated with this location may have been abstracted away and now missing
+        *)
+        If[!MissingQ[tuples],
+
+          tuples
+          ,
+          Nothing
+        ]
+      ]
+      ,
+      embeddedTabs
+    ];
+
+    mapSpecs = Flatten[mapSpecs, 1];
+
+    ast = MapAt[convertEmbeddedTabs[#, "FormatOnly" -> formatOnly, "TabWidth" -> tabWidth, "NewlineString" -> newline]&, ast, mapSpecs[[All, 2]]];
+
+    If[$Debug,
+      Print["after EmbeddedTabs: ", ast];
+    ];
+    
+    KeyDropFrom[data, "EmbeddedTabs"]
+  ];
+
+  ast[[3]] = data;
+
+  ast
+]]
 
 
 
@@ -666,33 +666,33 @@ Options[convertEmbeddedNewlines] = {
 }
 
 convertEmbeddedNewlines[LeafNode[String, str_, data_], OptionsPattern[]] :=
-  Module[{formatOnly, newline, escapedNewline},
+Module[{formatOnly, newline, escapedNewline},
 
-    formatOnly = OptionValue["FormatOnly"];
-    newline = OptionValue["NewlineString"];
+  formatOnly = OptionValue["FormatOnly"];
+  newline = OptionValue["NewlineString"];
 
-    If[formatOnly,
-      (*
-      Formatting, so keep embedded, but still canonicalize newline
-      *)
-      LeafNode[String, StringReplace[str, {"\r\n" -> newline, "\n" -> newline, "\r" -> newline}], data]
+  If[formatOnly,
+    (*
+    Formatting, so keep embedded, but still canonicalize newline
+    *)
+    LeafNode[String, StringReplace[str, {"\r\n" -> newline, "\n" -> newline, "\r" -> newline}], data]
+    ,
+    (*
+    Abstracting, so completely escape embedded newlines
+    *)
+    Switch[newline,
+      "\n",
+        escapedNewline = "\\n";
       ,
-      (*
-      Abstracting, so completely escape embedded newlines
-      *)
-      Switch[newline,
-        "\n",
-          escapedNewline = "\\n";
-        ,
-        "\r\n",
-          escapedNewline = "\\r\\n";
-        ,
-        "\r",
-          escapedNewline = "\\r";
-      ];
-      LeafNode[String, StringReplace[str, {"\r\n" -> escapedNewline, "\n" -> escapedNewline, "\r" -> escapedNewline}], data]
-    ]
+      "\r\n",
+        escapedNewline = "\\r\\n";
+      ,
+      "\r",
+        escapedNewline = "\\r";
+    ];
+    LeafNode[String, StringReplace[str, {"\r\n" -> escapedNewline, "\n" -> escapedNewline, "\r" -> escapedNewline}], data]
   ]
+]
 
 convertEmbeddedNewlines[n:LeafNode[Token`Comment, str_, data_], opts:OptionsPattern[]] :=
 Catch[

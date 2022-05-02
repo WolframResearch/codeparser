@@ -687,309 +687,309 @@ infix
 *)
 
 walk[n : CallNode[LeafNode[Symbol, "Times", _], children:{LeafNode[Integer, "-1", _], LeafNode[Integer | Real | Rational, _, _]}, _]] :=
-  Module[{struct, ctor, op},
-    struct = structure[InfixNode[Times, #, <||>]&, LeafNode[Token`Star, "*", <||>], Precedence`Star];
-    ctor = struct["ctor"];
-    op = struct["op"];
-    (* prec = struct["prec"]; *)
-    ctor[Flatten[{children[[1]]} ~Join~ {op} ~Join~ {children[[2]]}]]
-  ]
+Module[{struct, ctor, op},
+  struct = structure[InfixNode[Times, #, <||>]&, LeafNode[Token`Star, "*", <||>], Precedence`Star];
+  ctor = struct["ctor"];
+  op = struct["op"];
+  (* prec = struct["prec"]; *)
+  ctor[Flatten[{children[[1]]} ~Join~ {op} ~Join~ {children[[2]]}]]
+]
 
 walk[n : CallNode[LeafNode[Symbol, "Times", _], children:{LeafNode[Integer, "-1", _], _}, _]] :=
-  Module[{struct, ctor, op, prec},
-    (*
-    treat as prefix -, but only if child is not Integer | Real | Rational
+Module[{struct, ctor, op, prec},
+  (*
+  treat as prefix -, but only if child is not Integer | Real | Rational
 
-    e.g.,
-    -1 2 should stay -1 2
-    *)
-    struct = structure[PrefixNode[Minus, #, <||>]&, LeafNode[Token`Minus, "-", <||>], Precedence`Prefix`Minus];
-    ctor = struct["ctor"];
-    op = struct["op"];
-    prec = struct["prec"];
-    ctor[Flatten[{op, Function[{c},
-      Module[{walked},
-        walked = walk[c];
-        Which[
-          (*
-          allow "-(a+b)" to work
-          *)
-          precedenceGreater[prec, precCTL[walked]],
-            {paren[walked]}
-          ,
-          precedenceEqual[prec, precCTL[walked]],
-            {paren[walked]}
-          ,
-          !okToJuxtapose[prec, firstPrec[walked]],
-            {spaceBefore[walked]}
-          ,
-          True,
-            {walked}
-        ]
+  e.g.,
+  -1 2 should stay -1 2
+  *)
+  struct = structure[PrefixNode[Minus, #, <||>]&, LeafNode[Token`Minus, "-", <||>], Precedence`Prefix`Minus];
+  ctor = struct["ctor"];
+  op = struct["op"];
+  prec = struct["prec"];
+  ctor[Flatten[{op, Function[{c},
+    Module[{walked},
+      walked = walk[c];
+      Which[
+        (*
+        allow "-(a+b)" to work
+        *)
+        precedenceGreater[prec, precCTL[walked]],
+          {paren[walked]}
+        ,
+        precedenceEqual[prec, precCTL[walked]],
+          {paren[walked]}
+        ,
+        !okToJuxtapose[prec, firstPrec[walked]],
+          {spaceBefore[walked]}
+        ,
+        True,
+          {walked}
       ]
-    ][children[[2]]]}]]
-  ]
+    ]
+  ][children[[2]]]}]]
+]
 
 walk[n : CallNode[LeafNode[Symbol, "Times", _], {a_, CallNode[LeafNode[Symbol, "Power", _], {b_, LeafNode[Integer, "-1", _]}, _]}, _]] :=
-  Module[{struct, ctor, op, prec},
-    (*
-    treat as binary /
-    *)
-    struct = structure[BinaryNode[Divide, #, <||>]&, LeafNode[Token`Slash, "/", <||>], Precedence`Slash];
-    ctor = struct["ctor"];
-    op = struct["op"];
-    prec = struct["prec"];
-    ctor[Flatten[{Function[{c},
-          Module[{walked},
-            walked = walk[c];
-            Which[
-              precedenceGreater[prec, precCTL[walked]],
-                paren[walked]
-              ,
-              !okToJuxtapose[lastPrec[walked], prec],
-                spaceAfter[walked]
-              ,
-              True,
-                walked
-            ]
-          ]
-        ][a]} ~Join~ {op} ~Join~ {Function[{c},
+Module[{struct, ctor, op, prec},
+  (*
+  treat as binary /
+  *)
+  struct = structure[BinaryNode[Divide, #, <||>]&, LeafNode[Token`Slash, "/", <||>], Precedence`Slash];
+  ctor = struct["ctor"];
+  op = struct["op"];
+  prec = struct["prec"];
+  ctor[Flatten[{Function[{c},
         Module[{walked},
           walked = walk[c];
           Which[
             precedenceGreater[prec, precCTL[walked]],
               paren[walked]
             ,
-            precedenceEqual[prec, precCTL[walked]],
-              paren[walked]
-            ,
-            !okToJuxtapose[prec, firstPrec[walked]],
-              spaceBefore[walked]
+            !okToJuxtapose[lastPrec[walked], prec],
+              spaceAfter[walked]
             ,
             True,
               walked
           ]
         ]
-      ][b]}]]
-  ]
+      ][a]} ~Join~ {op} ~Join~ {Function[{c},
+      Module[{walked},
+        walked = walk[c];
+        Which[
+          precedenceGreater[prec, precCTL[walked]],
+            paren[walked]
+          ,
+          precedenceEqual[prec, precCTL[walked]],
+            paren[walked]
+          ,
+          !okToJuxtapose[prec, firstPrec[walked]],
+            spaceBefore[walked]
+          ,
+          True,
+            walked
+        ]
+      ]
+    ][b]}]]
+]
 
 walk[n : CallNode[LeafNode[Symbol, "Times", _], children : {_, _, ___}, _]] :=
-  Module[{struct = nodeStructure[n], ctor, op, prec},
-    ctor = struct["ctor"];
-    op = struct["op"];
-    prec = struct["prec"];
-    ctor[
-      Flatten[
-        {Function[{c},
+Module[{struct = nodeStructure[n], ctor, op, prec},
+  ctor = struct["ctor"];
+  op = struct["op"];
+  prec = struct["prec"];
+  ctor[
+    Flatten[
+      {Function[{c},
+            Module[{walked},
+              walked = walk[c];
+              Which[
+                precedenceGreater[prec, precCTL[walked]],
+                  paren[walked]
+                ,
+                (*
+                needs to use the precedenceEqualNoPostfix function, 
+                e.g., to keep "- -2 b" correct, which parses as Times[Times[-1,-2],b]
+                *)
+                precedenceEqual[prec, precCTL[walked]],
+                  paren[walked]
+                ,
+                !okToJuxtapose[lastPrec[walked], prec],
+                  spaceAfter[walk[c]]
+                ,
+                True,
+                  walked
+              ]
+            ]
+          ][First[children]]} ~Join~
+          (
+            Function[{c},
+                Module[{walked},
+                  walked = walk[c];
+                  {
+                    op
+                    ,
+                    Which[
+                      precedenceGreater[prec, precCTL[walked]],
+                        paren[walked]
+                      ,
+                      (*
+                      Needs to use precedenceEqual
+                      to have "a * - - 2 * b" work
+                      *)
+                      precedenceEqual[prec, precCTL[walked]],
+                        paren[walked]
+                      ,
+                      !okToJuxtapose[prec, firstPrec[walked]] && !okToJuxtapose[lastPrec[walked], prec],
+                        spaceBoth[walked]
+                      ,
+                      !okToJuxtapose[prec, firstPrec[walked]],
+                        spaceBefore[walked]
+                      ,
+                      !okToJuxtapose[lastPrec[walked], prec],
+                        spaceAfter[walked]
+                      ,
+                      True,
+                        walked
+                    ]
+                  }
+                ]
+              ] /@ children[[2 ;; -2]]
+          ) ~Join~ (Function[{c},
+          Module[{walked},
+            walked = walk[c];
+            {
+              op
+              ,
+              Which[
+                precedenceGreater[prec, precCTL[walked]],
+                  paren[walked]
+                ,
+                (*
+                Needs to use precedenceEqual
+                to have "a * - - 2" work
+                *)
+                precedenceEqual[prec, precCTL[walked]],
+                  paren[walked]
+                ,
+                !okToJuxtapose[prec, firstPrec[walked]],
+                  spaceBefore[walked]
+                ,
+                True,
+                  walked
+              ]
+            }
+          ]
+        ][Last[children]])
+    ]
+  ]
+]
+
+walk[n : CallNode[LeafNode[Symbol, "Plus", _], children : {_, _, ___}, _]] :=
+Module[{structs},
+  structs =
+    Function[{c},
+        Which[
+          MatchQ[c, CallNode[LeafNode[Symbol, "Times", _], {LeafNode[Integer, "-1", _], LeafNode[Integer | Real | Rational, _, _]}, _]],
+            structure[Identity, LeafNode[Token`Plus, "+", <||>], Precedence`Infix`Plus]
+          ,
+          MatchQ[c, CallNode[LeafNode[Symbol, "Times", _], {LeafNode[Integer, "-1", _], _}, _]],
+            structure[PrefixNode[Minus, #, <||>]&, LeafNode[Token`Minus, "-", <||>], Precedence`Infix`Minus]
+          ,
+          True,
+            structure[Identity, LeafNode[Token`Plus, "+", <||>], Precedence`Infix`Plus]
+        ]
+      ] /@ Rest[children];
+  InfixNode[Plus, #, <||>]&[
+    Flatten[
+      {Function[{c},
               Module[{walked},
                 walked = walk[c];
                 Which[
-                  precedenceGreater[prec, precCTL[walked]],
+                  precedenceLess[precCTR[walked], First[structs]["prec"]],
                     paren[walked]
                   ,
-                  (*
-                  needs to use the precedenceEqualNoPostfix function, 
-                  e.g., to keep "- -2 b" correct, which parses as Times[Times[-1,-2],b]
-                  *)
-                  precedenceEqual[prec, precCTL[walked]],
+                  precedenceEqual[precCTR[walked], First[structs]["prec"]],
                     paren[walked]
                   ,
-                  !okToJuxtapose[lastPrec[walked], prec],
-                    spaceAfter[walk[c]]
+                  precCTR[walked] === Precedence`Prefix`Plus && First[structs]["prec"] === Precedence`Infix`Plus,
+                    (*
+                    allow  Plus[args]+1  to work
+                    *)
+                    paren[walked]
+                  ,
+                  !okToJuxtapose[lastPrec[walked], First[structs]["prec"]],
+                    spaceAfter[walked]
                   ,
                   True,
                     walked
                 ]
               ]
             ][First[children]]} ~Join~
-            (
-              Function[{c},
-                  Module[{walked},
-                    walked = walk[c];
-                    {
-                      op
-                      ,
-                      Which[
-                        precedenceGreater[prec, precCTL[walked]],
-                          paren[walked]
-                        ,
-                        (*
-                        Needs to use precedenceEqual
-                        to have "a * - - 2 * b" work
-                        *)
-                        precedenceEqual[prec, precCTL[walked]],
-                          paren[walked]
-                        ,
-                        !okToJuxtapose[prec, firstPrec[walked]] && !okToJuxtapose[lastPrec[walked], prec],
-                          spaceBoth[walked]
-                        ,
-                        !okToJuxtapose[prec, firstPrec[walked]],
-                          spaceBefore[walked]
-                        ,
-                        !okToJuxtapose[lastPrec[walked], prec],
-                          spaceAfter[walked]
-                        ,
-                        True,
-                          walked
-                      ]
-                    }
-                  ]
-                ] /@ children[[2 ;; -2]]
-            ) ~Join~ (Function[{c},
-            Module[{walked},
-              walked = walk[c];
-              {
-                op
-                ,
-                Which[
-                  precedenceGreater[prec, precCTL[walked]],
-                    paren[walked]
-                  ,
-                  (*
-                  Needs to use precedenceEqual
-                  to have "a * - - 2" work
-                  *)
-                  precedenceEqual[prec, precCTL[walked]],
-                    paren[walked]
-                  ,
-                  !okToJuxtapose[prec, firstPrec[walked]],
-                    spaceBefore[walked]
-                  ,
-                  True,
-                    walked
-                ]
-              }
-            ]
-          ][Last[children]])
-      ]
-    ]
-  ]
-
-walk[n : CallNode[LeafNode[Symbol, "Plus", _], children : {_, _, ___}, _]] :=
-  Module[{structs},
-    structs =
-      Function[{c},
-          Which[
-            MatchQ[c, CallNode[LeafNode[Symbol, "Times", _], {LeafNode[Integer, "-1", _], LeafNode[Integer | Real | Rational, _, _]}, _]],
-              structure[Identity, LeafNode[Token`Plus, "+", <||>], Precedence`Infix`Plus]
-            ,
-            MatchQ[c, CallNode[LeafNode[Symbol, "Times", _], {LeafNode[Integer, "-1", _], _}, _]],
-              structure[PrefixNode[Minus, #, <||>]&, LeafNode[Token`Minus, "-", <||>], Precedence`Infix`Minus]
-            ,
-            True,
-              structure[Identity, LeafNode[Token`Plus, "+", <||>], Precedence`Infix`Plus]
-          ]
-        ] /@ Rest[children];
-    InfixNode[Plus, #, <||>]&[
-      Flatten[
-        {Function[{c},
+            MapThread[
+              Function[{structPair, c},
                 Module[{walked},
-                  walked = walk[c];
-                  Which[
-                    precedenceLess[precCTR[walked], First[structs]["prec"]],
-                      paren[walked]
+                  If[structPair[[1]]["prec"] === Precedence`Infix`Minus,
+                    walked = walk[c[[2, 2]]];
                     ,
-                    precedenceEqual[precCTR[walked], First[structs]["prec"]],
-                      paren[walked]
+                    walked = walk[c];
+                  ];
+                  {
+                    structPair[[1]]["op"]
                     ,
-                    precCTR[walked] === Precedence`Prefix`Plus && First[structs]["prec"] === Precedence`Infix`Plus,
+                    Which[
+                      precedenceGreater[structPair[[1]]["prec"], precCTL[walked]],
+                        paren[walked]
+                      ,
+                      precedenceEqual[structPair[[1]]["prec"], precCTL[walked]],
+                        paren[walked]
+                      ,
                       (*
-                      allow  Plus[args]+1  to work
+                      allow "a - - -2 - b" to work
                       *)
-                      paren[walked]
-                    ,
-                    !okToJuxtapose[lastPrec[walked], First[structs]["prec"]],
-                      spaceAfter[walked]
-                    ,
-                    True,
-                      walked
-                  ]
-                ]
-              ][First[children]]} ~Join~
-              MapThread[
-                Function[{structPair, c},
-                  Module[{walked},
-                    If[structPair[[1]]["prec"] === Precedence`Infix`Minus,
-                      walked = walk[c[[2, 2]]];
+                      precedenceGreaterSpecialMinus[structPair[[1]]["prec"], firstPrec[walked]],
+                        paren[walked]
                       ,
-                      walked = walk[c];
-                    ];
-                    {
-                      structPair[[1]]["op"]
+                      (*
+                      allow  1 - (a b) + 2  to work
+                      *)
+                      structPair[[1]]["prec"] === Precedence`Infix`Minus && precCTL[walked] === Precedence`Star,
+                        paren[walked]
                       ,
-                      Which[
-                        precedenceGreater[structPair[[1]]["prec"], precCTL[walked]],
-                          paren[walked]
-                        ,
-                        precedenceEqual[structPair[[1]]["prec"], precCTL[walked]],
-                          paren[walked]
-                        ,
-                        (*
-                        allow "a - - -2 - b" to work
-                        *)
-                        precedenceGreaterSpecialMinus[structPair[[1]]["prec"], firstPrec[walked]],
-                          paren[walked]
-                        ,
-                        (*
-                        allow  1 - (a b) + 2  to work
-                        *)
-                        structPair[[1]]["prec"] === Precedence`Infix`Minus && precCTL[walked] === Precedence`Star,
-                          paren[walked]
-                        ,
-                        !okToJuxtapose[structPair[[1]]["prec"], firstPrec[walked]] && !okToJuxtapose[lastPrec[walked], structPair[[2]]["prec"]],
-                          spaceBoth[walked]
-                        ,
-                        !okToJuxtapose[structPair[[1]]["prec"], firstPrec[walked]],
-                          spaceBefore[walked]
-                        ,
-                        !okToJuxtapose[lastPrec[walked], structPair[[2]]["prec"]],
-                          spaceAfter[walked]
-                        ,
-                        True,
-                          walked
-                      ]
-                    }
-                  ]
+                      !okToJuxtapose[structPair[[1]]["prec"], firstPrec[walked]] && !okToJuxtapose[lastPrec[walked], structPair[[2]]["prec"]],
+                        spaceBoth[walked]
+                      ,
+                      !okToJuxtapose[structPair[[1]]["prec"], firstPrec[walked]],
+                        spaceBefore[walked]
+                      ,
+                      !okToJuxtapose[lastPrec[walked], structPair[[2]]["prec"]],
+                        spaceAfter[walked]
+                      ,
+                      True,
+                        walked
+                    ]
+                  }
                 ]
-                ,
-                {Partition[structs, 2, 1], children[[2 ;; -2]]}
-              ] ~Join~ {Last[structs]["op"]} ~Join~ {Function[{c},
-            Module[{walked},
-              If[Last[structs]["prec"] === Precedence`Infix`Minus,
-                walked = walk[c[[2, 2]]];
-                ,
-                walked = walk[c];
-              ];
-              Which[
-                precedenceGreater[Last[structs]["prec"], precCTL[walked]],
-                  paren[walked]
-                ,
-                precedenceEqual[Last[structs]["prec"], precCTL[walked]],
-                  paren[walked]
-                ,
-                (*
-                allow "x - Times[y, z]" to work
-                *)
-                precedenceGreaterSpecialMinus2[Last[structs]["prec"], precCTL[walked]],
-                  paren[walked]
-                ,
-                (*
-                allow "a - - -2" to work
-                *)
-                precedenceGreaterSpecialMinus[Last[structs]["prec"], firstPrec[walked]],
-                  paren[walked]
-                ,
-                !okToJuxtapose[Last[structs]["prec"], firstPrec[walked]],
-                  spaceBefore[walked]
-                ,
-                True,
-                  walked
               ]
+              ,
+              {Partition[structs, 2, 1], children[[2 ;; -2]]}
+            ] ~Join~ {Last[structs]["op"]} ~Join~ {Function[{c},
+          Module[{walked},
+            If[Last[structs]["prec"] === Precedence`Infix`Minus,
+              walked = walk[c[[2, 2]]];
+              ,
+              walked = walk[c];
+            ];
+            Which[
+              precedenceGreater[Last[structs]["prec"], precCTL[walked]],
+                paren[walked]
+              ,
+              precedenceEqual[Last[structs]["prec"], precCTL[walked]],
+                paren[walked]
+              ,
+              (*
+              allow "x - Times[y, z]" to work
+              *)
+              precedenceGreaterSpecialMinus2[Last[structs]["prec"], precCTL[walked]],
+                paren[walked]
+              ,
+              (*
+              allow "a - - -2" to work
+              *)
+              precedenceGreaterSpecialMinus[Last[structs]["prec"], firstPrec[walked]],
+                paren[walked]
+              ,
+              !okToJuxtapose[Last[structs]["prec"], firstPrec[walked]],
+                spaceBefore[walked]
+              ,
+              True,
+                walked
             ]
-          ][Last[children]]}
-      ]
+          ]
+        ][Last[children]]}
     ]
   ]
+]
 
 walk[
   n :
@@ -1013,84 +1013,84 @@ walk[
       _
     ]
 ] :=
-  Module[{struct = nodeStructure[n], ctor, op, prec},
-    ctor = struct["ctor"];
-    op = struct["op"];
-    prec = struct["prec"];
-    ctor[
-      Flatten[
-        {Function[{c},
-              Module[{walked},
-                walked = walk[c];
-                Which[
-                  precedenceLess[precCTR[walked], prec],
-                    paren[walked]
-                  ,
-                  precedenceEqual[precCTR[walked], prec],
-                    paren[walked]
-                  ,
-                  !okToJuxtapose[lastPrec[walked], prec],
-                    spaceAfter[walked]
-                  ,
-                  True,
-                    walked
-                ]
-              ]
-            ][First[children]]} ~Join~
-            (
-              Function[{c},
-                  Module[{walked},
-                    walked = walk[c];
-                    {
-                      op
-                      ,
-                      Which[
-                        precedenceGreater[prec, precCTL[walked]],
-                          paren[walked]
-                        ,
-                        precedenceEqual[prec, precCTL[walked]],
-                          paren[walked]
-                        ,
-                        !okToJuxtapose[prec, firstPrec[walked]] && !okToJuxtapose[lastPrec[walked], prec],
-                          spaceBoth[walked]
-                        ,
-                        !okToJuxtapose[prec, firstPrec[walked]],
-                          spaceBefore[walked]
-                        ,
-                        !okToJuxtapose[lastPrec[walked], prec],
-                          spaceAfter[walked]
-                        ,
-                        True,
-                          walked
-                      ]
-                    }
-                  ]
-                ] /@ children[[2 ;; -2]]
-            ) ~Join~ (Function[{c},
+Module[{struct = nodeStructure[n], ctor, op, prec},
+  ctor = struct["ctor"];
+  op = struct["op"];
+  prec = struct["prec"];
+  ctor[
+    Flatten[
+      {Function[{c},
             Module[{walked},
               walked = walk[c];
-              {
-                op
+              Which[
+                precedenceLess[precCTR[walked], prec],
+                  paren[walked]
                 ,
-                Which[
-                  precedenceGreater[prec, precCTL[walked]],
-                    paren[walked]
-                  ,
-                  precedenceEqual[prec, precCTL[walked]],
-                    paren[walked]
-                  ,
-                  !okToJuxtapose[prec, firstPrec[walked]],
-                    spaceBefore[walked]
-                  ,
-                  True,
-                    walked
-                ]
-              }
+                precedenceEqual[precCTR[walked], prec],
+                  paren[walked]
+                ,
+                !okToJuxtapose[lastPrec[walked], prec],
+                  spaceAfter[walked]
+                ,
+                True,
+                  walked
+              ]
             ]
-          ][Last[children]])
-      ]
+          ][First[children]]} ~Join~
+          (
+            Function[{c},
+                Module[{walked},
+                  walked = walk[c];
+                  {
+                    op
+                    ,
+                    Which[
+                      precedenceGreater[prec, precCTL[walked]],
+                        paren[walked]
+                      ,
+                      precedenceEqual[prec, precCTL[walked]],
+                        paren[walked]
+                      ,
+                      !okToJuxtapose[prec, firstPrec[walked]] && !okToJuxtapose[lastPrec[walked], prec],
+                        spaceBoth[walked]
+                      ,
+                      !okToJuxtapose[prec, firstPrec[walked]],
+                        spaceBefore[walked]
+                      ,
+                      !okToJuxtapose[lastPrec[walked], prec],
+                        spaceAfter[walked]
+                      ,
+                      True,
+                        walked
+                    ]
+                  }
+                ]
+              ] /@ children[[2 ;; -2]]
+          ) ~Join~ (Function[{c},
+          Module[{walked},
+            walked = walk[c];
+            {
+              op
+              ,
+              Which[
+                precedenceGreater[prec, precCTL[walked]],
+                  paren[walked]
+                ,
+                precedenceEqual[prec, precCTL[walked]],
+                  paren[walked]
+                ,
+                !okToJuxtapose[prec, firstPrec[walked]],
+                  spaceBefore[walked]
+                ,
+                True,
+                  walked
+              ]
+            }
+          ]
+        ][Last[children]])
     ]
   ]
+]
 
 
 
@@ -1099,134 +1099,162 @@ binary
 *)
 
 walk[n : CallNode[LeafNode[Symbol, "Unset", _], children : {_}, _]] :=
-  Module[{struct = nodeStructure[n], ctor, op, prec},
-    ctor = struct["ctor"];
-    op = struct["op"];
-    prec = struct["prec"];
-    ctor[Flatten[{Function[{c},
-          Module[{walked},
-            walked = walk[c];
-            Which[
-              precedenceGreater[prec, precCTL[walked]],
-                paren[walked]
-              ,
-              !okToJuxtapose[lastPrec[walked], prec],
-                spaceAfter[walked]
-              ,
-              True,
-                walked
-            ]
+Module[{struct = nodeStructure[n], ctor, op, prec},
+  ctor = struct["ctor"];
+  op = struct["op"];
+  prec = struct["prec"];
+  ctor[Flatten[{Function[{c},
+        Module[{walked},
+          walked = walk[c];
+          Which[
+            precedenceGreater[prec, precCTL[walked]],
+              paren[walked]
+            ,
+            !okToJuxtapose[lastPrec[walked], prec],
+              spaceAfter[walked]
+            ,
+            True,
+              walked
           ]
-        ][children[[1]]]} ~Join~ {op}]]
-  ]
+        ]
+      ][children[[1]]]} ~Join~ {op}]]
+]
 
 (*
 handle Pattern specially
 *)
 walk[n : CallNode[LeafNode[Symbol, "Pattern", _], children : {LeafNode[Symbol, _, _], _}, _]] :=
-  Module[{struct = nodeStructure[n], ctor, op, prec},
-    ctor = struct["ctor"];
-    op = struct["op"];
-    prec = struct["prec"];
-    ctor[Flatten[{Function[{c},
-          Module[{walked},
-            walked = walk[c];
-            Which[
-              precedenceGreater[prec, precCTL[walked]],
-                paren[walked]
-              ,
-              !okToJuxtapose[lastPrec[walked], prec],
-                spaceAfter[walked]
-              ,
-              True,
-                walked
-            ]
-          ]
-        ][children[[1]]]} ~Join~ {op} ~Join~ {Function[{c},
+Module[{struct = nodeStructure[n], ctor, op, prec},
+  ctor = struct["ctor"];
+  op = struct["op"];
+  prec = struct["prec"];
+  ctor[Flatten[{Function[{c},
         Module[{walked},
           walked = walk[c];
           Which[
             precedenceGreater[prec, precCTL[walked]],
               paren[walked]
             ,
-            precedenceEqual[prec, precCTL[walked]],
-              paren[walked]
-            ,
-            !okToJuxtapose[prec, firstPrec[walked]],
-              spaceBefore[walked]
+            !okToJuxtapose[lastPrec[walked], prec],
+              spaceAfter[walked]
             ,
             True,
               walked
           ]
         ]
-      ][children[[2]]]}]]
-  ]
+      ][children[[1]]]} ~Join~ {op} ~Join~ {Function[{c},
+      Module[{walked},
+        walked = walk[c];
+        Which[
+          precedenceGreater[prec, precCTL[walked]],
+            paren[walked]
+          ,
+          precedenceEqual[prec, precCTL[walked]],
+            paren[walked]
+          ,
+          !okToJuxtapose[prec, firstPrec[walked]],
+            spaceBefore[walked]
+          ,
+          True,
+            walked
+        ]
+      ]
+    ][children[[2]]]}]]
+]
 
 (*
 handle Optional specially
 *)
 walk[n : CallNode[LeafNode[Symbol, "Optional", _], children : {CallNode[LeafNode[Symbol, "Pattern", _], {LeafNode[Symbol, _, _], _}, _], _}, _]] :=
-  Module[{struct = nodeStructure[n], ctor, op, prec},
-    ctor = struct["ctor"];
-    op = struct["op"];
-    prec = struct["prec"];
-    ctor[Flatten[{Function[{c},
-          Module[{walked},
-            walked = walk[c];
-            Which[
-              precedenceGreater[prec, precCTL[walked]],
-                paren[walked]
-              ,
-              !okToJuxtapose[lastPrec[walked], prec],
-                spaceAfter[walked]
-              ,
-              True,
-                walked
-            ]
-          ]
-        ][children[[1]]]} ~Join~ {op} ~Join~ {Function[{c},
+Module[{struct = nodeStructure[n], ctor, op, prec},
+  ctor = struct["ctor"];
+  op = struct["op"];
+  prec = struct["prec"];
+  ctor[Flatten[{Function[{c},
         Module[{walked},
           walked = walk[c];
           Which[
             precedenceGreater[prec, precCTL[walked]],
               paren[walked]
             ,
-            precedenceEqual[prec, precCTL[walked]],
-              paren[walked]
-            ,
-            !okToJuxtapose[prec, firstPrec[walked]],
-              spaceBefore[walked]
+            !okToJuxtapose[lastPrec[walked], prec],
+              spaceAfter[walked]
             ,
             True,
               walked
           ]
         ]
-      ][children[[2]]]}]]
-  ]
+      ][children[[1]]]} ~Join~ {op} ~Join~ {Function[{c},
+      Module[{walked},
+        walked = walk[c];
+        Which[
+          precedenceGreater[prec, precCTL[walked]],
+            paren[walked]
+          ,
+          precedenceEqual[prec, precCTL[walked]],
+            paren[walked]
+          ,
+          !okToJuxtapose[prec, firstPrec[walked]],
+            spaceBefore[walked]
+          ,
+          True,
+            walked
+        ]
+      ]
+    ][children[[2]]]}]]
+]
 
 (*
 Left associative
 *)
 walk[n : CallNode[LeafNode[Symbol, "Condition" | "PatternTest" | "ReplaceAll" | "ReplaceRepeated", _], children : {_, _}, _]] :=
-  Module[{struct = nodeStructure[n], ctor, op, prec},
-    ctor = struct["ctor"];
-    op = struct["op"];
-    prec = struct["prec"];
-    ctor[Flatten[{Function[{c},
-          Module[{walked},
-            walked = walk[c];
-            Which[
-              precedenceGreater[prec, precCTL[walked]],
-                paren[walked]
-              ,
-              !okToJuxtapose[lastPrec[walked], prec],
-                spaceAfter[walked]
-              ,
-              True,
-                walked
-            ]
+Module[{struct = nodeStructure[n], ctor, op, prec},
+  ctor = struct["ctor"];
+  op = struct["op"];
+  prec = struct["prec"];
+  ctor[Flatten[{Function[{c},
+        Module[{walked},
+          walked = walk[c];
+          Which[
+            precedenceGreater[prec, precCTL[walked]],
+              paren[walked]
+            ,
+            !okToJuxtapose[lastPrec[walked], prec],
+              spaceAfter[walked]
+            ,
+            True,
+              walked
           ]
-        ][children[[1]]]} ~Join~ {op} ~Join~ {Function[{c},
+        ]
+      ][children[[1]]]} ~Join~ {op} ~Join~ {Function[{c},
+      Module[{walked},
+        walked = walk[c];
+        Which[
+          precedenceGreater[prec, precCTL[walked]],
+            paren[walked]
+          ,
+          precedenceEqual[prec, precCTL[walked]],
+            paren[walked]
+          ,
+          !okToJuxtapose[prec, firstPrec[walked]],
+            spaceBefore[walked]
+          ,
+          True,
+            walked
+        ]
+      ]
+    ][children[[2]]]}]]
+]
+  
+(*
+Right associative
+*)
+walk[n : CallNode[LeafNode[Symbol, "AddTo" | "Apply" |  "ApplyTo" | "DivideBy" | "Map" | "MapAll" | "Power" | "Rule" | "RuleDelayed" | "Set" | "SetDelayed" | "SubtractFrom" | "TimesBy" | "TwoWayRule" | "UpSet", _], children : {_, _}, _]] :=
+Module[{struct = nodeStructure[n], ctor, op, prec},
+  ctor = struct["ctor"];
+  op = struct["op"];
+  prec = struct["prec"];
+  ctor[Flatten[{Function[{c},
         Module[{walked},
           walked = walk[c];
           Which[
@@ -1236,57 +1264,29 @@ walk[n : CallNode[LeafNode[Symbol, "Condition" | "PatternTest" | "ReplaceAll" | 
             precedenceEqual[prec, precCTL[walked]],
               paren[walked]
             ,
-            !okToJuxtapose[prec, firstPrec[walked]],
-              spaceBefore[walked]
+            !okToJuxtapose[lastPrec[walked], prec],
+              spaceAfter[walked]
             ,
             True,
               walked
           ]
         ]
-      ][children[[2]]]}]]
-  ]
-  
-(*
-Right associative
-*)
-walk[n : CallNode[LeafNode[Symbol, "AddTo" | "Apply" |  "ApplyTo" | "DivideBy" | "Map" | "MapAll" | "Power" | "Rule" | "RuleDelayed" | "Set" | "SetDelayed" | "SubtractFrom" | "TimesBy" | "TwoWayRule" | "UpSet", _], children : {_, _}, _]] :=
-  Module[{struct = nodeStructure[n], ctor, op, prec},
-    ctor = struct["ctor"];
-    op = struct["op"];
-    prec = struct["prec"];
-    ctor[Flatten[{Function[{c},
-          Module[{walked},
-            walked = walk[c];
-            Which[
-              precedenceGreater[prec, precCTL[walked]],
-                paren[walked]
-              ,
-              precedenceEqual[prec, precCTL[walked]],
-                paren[walked]
-              ,
-              !okToJuxtapose[lastPrec[walked], prec],
-                spaceAfter[walked]
-              ,
-              True,
-                walked
-            ]
-          ]
-        ][children[[1]]]} ~Join~ {op} ~Join~ {Function[{c},
-        Module[{walked},
-          walked = walk[c];
-          Which[
-            precedenceGreater[prec, precCTL[walked]],
-              paren[walked]
-            ,
-            !okToJuxtapose[prec, firstPrec[walked]],
-              spaceBefore[walked]
-            ,
-            True,
-              walked
-          ]
+      ][children[[1]]]} ~Join~ {op} ~Join~ {Function[{c},
+      Module[{walked},
+        walked = walk[c];
+        Which[
+          precedenceGreater[prec, precCTL[walked]],
+            paren[walked]
+          ,
+          !okToJuxtapose[prec, firstPrec[walked]],
+            spaceBefore[walked]
+          ,
+          True,
+            walked
         ]
-      ][children[[2]]]}]]
-  ]
+      ]
+    ][children[[2]]]}]]
+]
 
 
 
@@ -1295,48 +1295,48 @@ postfix
 *)
 
 walk[n : CallNode[CallNode[LeafNode[Symbol, "Derivative", _], {LeafNode[Integer, "1", _]}, _], children : {_}, _]] :=
-  Module[{struct = nodeStructure[n], ctor, op, prec},
-    ctor = struct["ctor"];
-    op = struct["op"];
-    prec = struct["prec"];
-    ctor[Flatten[{Function[{c},
-      Module[{walked},
-        walked = walk[c];
-        Which[
-          precedenceGreater[prec, precCTL[walked]],
-            paren[walked]
-          ,
-          !okToJuxtapose[lastPrec[walked], prec],
-            spaceAfter[walked]
-          ,
-          True,
-            walked
-        ]
+Module[{struct = nodeStructure[n], ctor, op, prec},
+  ctor = struct["ctor"];
+  op = struct["op"];
+  prec = struct["prec"];
+  ctor[Flatten[{Function[{c},
+    Module[{walked},
+      walked = walk[c];
+      Which[
+        precedenceGreater[prec, precCTL[walked]],
+          paren[walked]
+        ,
+        !okToJuxtapose[lastPrec[walked], prec],
+          spaceAfter[walked]
+        ,
+        True,
+          walked
       ]
-    ][children[[1]]], op}]]
-  ]
+    ]
+  ][children[[1]]], op}]]
+]
 
 walk[n : CallNode[LeafNode[Symbol, "Increment" | "Function" | "Factorial" | "Decrement" | "Factorial2" | "Repeated" | "RepeatedNull", _], children : {_}, _]] :=
-  Module[{struct = nodeStructure[n], ctor, op, prec},
-    ctor = struct["ctor"];
-    op = struct["op"];
-    prec = struct["prec"];
-    ctor[Flatten[{Function[{c},
-      Module[{walked},
-        walked = walk[c];
-        Which[
-          precedenceGreater[prec, precCTL[walked]],
-            paren[walked]
-          ,
-          !okToJuxtapose[lastPrec[walked], prec],
-            spaceAfter[walked]
-          ,
-          True,
-            walked
-        ]
+Module[{struct = nodeStructure[n], ctor, op, prec},
+  ctor = struct["ctor"];
+  op = struct["op"];
+  prec = struct["prec"];
+  ctor[Flatten[{Function[{c},
+    Module[{walked},
+      walked = walk[c];
+      Which[
+        precedenceGreater[prec, precCTL[walked]],
+          paren[walked]
+        ,
+        !okToJuxtapose[lastPrec[walked], prec],
+          spaceAfter[walked]
+        ,
+        True,
+          walked
       ]
-    ][children[[1]]], op}]]
-  ]
+    ]
+  ][children[[1]]], op}]]
+]
 
 
 
@@ -1345,51 +1345,51 @@ prefix
 *)
 
 walk[n : CallNode[LeafNode[Symbol, "Plus", _], children : {_}, _]] :=
-  Module[{struct = nodeStructure[n], ctor, op, prec},
-    ctor = struct["ctor"];
-    op = struct["op"];
-    prec = struct["prec"];
-    ctor[Flatten[{op, Function[{c},
-      Module[{walked},
-        walked = walk[c];
-        Which[
-          (*
-          allow "+(a*b)" to work
-          *)
-          precedenceGreater[prec, precCTL[walked]],
-            paren[walked]
-          ,
-          !okToJuxtapose[prec, firstPrec[walked]],
-            spaceBefore[walked]
-          ,
-          True,
-            walked
-        ]
+Module[{struct = nodeStructure[n], ctor, op, prec},
+  ctor = struct["ctor"];
+  op = struct["op"];
+  prec = struct["prec"];
+  ctor[Flatten[{op, Function[{c},
+    Module[{walked},
+      walked = walk[c];
+      Which[
+        (*
+        allow "+(a*b)" to work
+        *)
+        precedenceGreater[prec, precCTL[walked]],
+          paren[walked]
+        ,
+        !okToJuxtapose[prec, firstPrec[walked]],
+          spaceBefore[walked]
+        ,
+        True,
+          walked
       ]
-    ][children[[1]]]}]]
-  ]
+    ]
+  ][children[[1]]]}]]
+]
 
 walk[n : CallNode[LeafNode[Symbol, "PreIncrement" | "Not" | "PreDecrement", _], children : {_}, _]] :=
-  Module[{struct = nodeStructure[n], ctor, op, prec},
-    ctor = struct["ctor"];
-    op = struct["op"];
-    prec = struct["prec"];
-    ctor[Flatten[{op, Function[{c},
-      Module[{walked},
-        walked = walk[c];
-        Which[
-          precedenceGreater[prec, precCTL[walked]],
-            paren[walked]
-          ,
-          !okToJuxtapose[prec, firstPrec[walked]],
-            spaceBefore[walked]
-          ,
-          True,
-            walked
-        ]
+Module[{struct = nodeStructure[n], ctor, op, prec},
+  ctor = struct["ctor"];
+  op = struct["op"];
+  prec = struct["prec"];
+  ctor[Flatten[{op, Function[{c},
+    Module[{walked},
+      walked = walk[c];
+      Which[
+        precedenceGreater[prec, precCTL[walked]],
+          paren[walked]
+        ,
+        !okToJuxtapose[prec, firstPrec[walked]],
+          spaceBefore[walked]
+        ,
+        True,
+          walked
       ]
-    ][children[[1]]]}]]
-  ]
+    ]
+  ][children[[1]]]}]]
+]
 
 
 
@@ -1456,48 +1456,48 @@ walk[n : CallNode[LeafNode[Symbol, "SlotSequence", _], {i:LeafNode[Integer, _, _
 
 
 walk[n : CallNode[head_, {}, _]] :=
-  Module[{struct = nodeStructure[n], ctor, op, prec},
-    ctor = struct["ctor"];
-    op = struct["op"];
-    prec = struct["prec"];
-    CallNode[Flatten[{Function[{h},
-      Module[{walked},
-        walked = walk[h];
-        Which[
-          precedenceLess[precCTR[walked], prec],
-            paren[walked]
-          ,
-          !okToJuxtapose[lastPrec[walked], prec],
-            spaceAfter[walked]
-          ,
-          True,
-            walked
-        ]
+Module[{struct = nodeStructure[n], ctor, op, prec},
+  ctor = struct["ctor"];
+  op = struct["op"];
+  prec = struct["prec"];
+  CallNode[Flatten[{Function[{h},
+    Module[{walked},
+      walked = walk[h];
+      Which[
+        precedenceLess[precCTR[walked], prec],
+          paren[walked]
+        ,
+        !okToJuxtapose[lastPrec[walked], prec],
+          spaceAfter[walked]
+        ,
+        True,
+          walked
       ]
-    ][head]}], Flatten[{square[{}]}], <||>]
-  ]
+    ]
+  ][head]}], Flatten[{square[{}]}], <||>]
+]
 
 walk[n : CallNode[head_, children_, _]] :=
-  Module[{struct = nodeStructure[n], ctor, op, prec},
-    ctor = struct["ctor"];
-    op = struct["op"];
-    prec = struct["prec"];
-    CallNode[Flatten[{Function[{h},
-      Module[{walked},
-        walked = walk[h];
-        Which[
-          precedenceLess[precCTR[walked], prec],
-            paren[walked]
-          ,
-          !okToJuxtapose[lastPrec[walked], prec],
-            spaceAfter[walked]
-          ,
-          True,
-            walked
-        ]
+Module[{struct = nodeStructure[n], ctor, op, prec},
+  ctor = struct["ctor"];
+  op = struct["op"];
+  prec = struct["prec"];
+  CallNode[Flatten[{Function[{h},
+    Module[{walked},
+      walked = walk[h];
+      Which[
+        precedenceLess[precCTR[walked], prec],
+          paren[walked]
+        ,
+        !okToJuxtapose[lastPrec[walked], prec],
+          spaceAfter[walked]
+        ,
+        True,
+          walked
       ]
-    ][head]}], Flatten[{square[{InfixNode[Comma, Riffle[walk /@ children, LeafNode[Token`Comma, ",", <||>]], <||>]}]}], <||>]
-  ]
+    ]
+  ][head]}], Flatten[{square[{InfixNode[Comma, Riffle[walk /@ children, LeafNode[Token`Comma, ",", <||>]], <||>]}]}], <||>]
+]
 
 (*
 concretifying, so need to introduce newlines
@@ -1534,21 +1534,21 @@ walk[NewContextPathNode[{ctxt_}, children_, _]] :=
     {CallNode[{LeafNode[Symbol, "System`Private`RestoreContextPath", <||>]}, {LeafNode[Token`OpenSquare, "[", <||>], LeafNode[Token`CloseSquare, "]", <||>]}, <||>]})
 
 walk[n : LeafNode[tag_, str_, data_]] :=
-  Module[{struct, ctor, op, prec},
-    If[StringStartsQ[str, "-"],
-      (* treat as prefix - *)
-      struct = structure[PrefixNode[Minus, #, <||>]&, LeafNode[Token`Minus, "-", <||>], Precedence`Prefix`Minus];
-      ctor = struct["ctor"];
-      op = struct["op"];
-      prec = struct["prec"];
-      ctor[Flatten[{op, Function[{c},
-        walk[c]
-      ][LeafNode[tag, StringDrop[str, 1], data]]}]]
-      ,
-      (* do nothing *)
-      n
-    ]
+Module[{struct, ctor, op, prec},
+  If[StringStartsQ[str, "-"],
+    (* treat as prefix - *)
+    struct = structure[PrefixNode[Minus, #, <||>]&, LeafNode[Token`Minus, "-", <||>], Precedence`Prefix`Minus];
+    ctor = struct["ctor"];
+    op = struct["op"];
+    prec = struct["prec"];
+    ctor[Flatten[{op, Function[{c},
+      walk[c]
+    ][LeafNode[tag, StringDrop[str, 1], data]]}]]
+    ,
+    (* do nothing *)
+    n
   ]
+]
 
 walk[a_] :=
   Failure["Unhandled walk", <| "argument" -> a |>]

@@ -40,21 +40,21 @@ Multiple implicit Times tokens may have been inserted when parsing boxes, so rem
 aggregate[InfixNode[Times, children_, data_]] :=
 Module[{aggregatedChildren},
 
-	aggregatedChildren = aggregate /@ children;
+  aggregatedChildren = aggregate /@ children;
 
-	aggregatedChildren = First /@ Split[aggregatedChildren, (MatchQ[#1, LeafNode[Token`Fake`ImplicitTimes, _, _]] && MatchQ[#2, LeafNode[Token`Fake`ImplicitTimes, _, _]])&];
+  aggregatedChildren = First /@ Split[aggregatedChildren, (MatchQ[#1, LeafNode[Token`Fake`ImplicitTimes, _, _]] && MatchQ[#2, LeafNode[Token`Fake`ImplicitTimes, _, _]])&];
 
-	InfixNode[Times, aggregatedChildren, data]
+  InfixNode[Times, aggregatedChildren, data]
 ]
 
 aggregateButNotToplevelNewlines[InfixNode[Times, children_, data_]] :=
 Module[{aggregatedChildren},
 
-	aggregatedChildren = aggregate /@ children;
+  aggregatedChildren = aggregate /@ children;
 
-	aggregatedChildren = First /@ Split[aggregatedChildren, (MatchQ[#1, LeafNode[Token`Fake`ImplicitTimes, _, _]] && MatchQ[#2, LeafNode[Token`Fake`ImplicitTimes, _, _]])&];
+  aggregatedChildren = First /@ Split[aggregatedChildren, (MatchQ[#1, LeafNode[Token`Fake`ImplicitTimes, _, _]] && MatchQ[#2, LeafNode[Token`Fake`ImplicitTimes, _, _]])&];
 
-	InfixNode[Times, aggregatedChildren, data]
+  InfixNode[Times, aggregatedChildren, data]
 ]
 
 
@@ -68,68 +68,68 @@ aggregateButNotToplevelNewlines[GroupNode[Comment, _, _]] := Nothing
 
 
 aggregate[CallNode[head_List, children_, data_]] :=
-	CallNode[aggregate[head[[1]]], aggregate /@ children, data]
+  CallNode[aggregate[head[[1]]], aggregate /@ children, data]
 
 aggregateButNotToplevelNewlines[CallNode[head_List, children_, data_]] :=
-	CallNode[aggregate[head[[1]]], aggregate /@ children, data]
+  CallNode[aggregate[head[[1]]], aggregate /@ children, data]
 
 
 
 aggregate[node:CallNode[headIn_, childrenIn_, dataIn_]] :=
-	Failure["InvalidHead", <|
-			"Message" -> "Head is not a list (Possibly calling Aggregate on abstract syntax)",
-			"Function" -> aggregate,
-			"Arguments" -> {node}
-		|>
-	]
+  Failure["InvalidHead", <|
+      "Message" -> "Head is not a list (Possibly calling Aggregate on abstract syntax)",
+      "Function" -> aggregate,
+      "Arguments" -> {node}
+    |>
+  ]
 
 
 aggregate[ContainerNode[File, childrenIn_, dataIn_]] :=
 Catch[
 Module[{children, aggChildren, data},
 
-	children = childrenIn;
-	data = dataIn;
+  children = childrenIn;
+  data = dataIn;
 
-	aggChildren = aggregate /@ children;
+  aggChildren = aggregate /@ children;
 
-	ContainerNode[File, aggChildren, data]
+  ContainerNode[File, aggChildren, data]
 ]]
 
 aggregate[ContainerNode[Box, childrenIn_, dataIn_]] :=
 Catch[
 Module[{children, aggChildren, data},
 
-	children = childrenIn;
-	data = dataIn;
+  children = childrenIn;
+  data = dataIn;
 
-	aggChildren = aggregate /@ children;
+  aggChildren = aggregate /@ children;
 
-	ContainerNode[Box, aggChildren, data]
+  ContainerNode[Box, aggChildren, data]
 ]]
 
 aggregateButNotToplevelNewlines[ContainerNode[Box, childrenIn_, dataIn_]] :=
 Catch[
 Module[{children, aggChildren, data},
 
-	children = childrenIn;
-	data = dataIn;
+  children = childrenIn;
+  data = dataIn;
 
-	aggChildren = aggregateButNotToplevelNewlines /@ children;
+  aggChildren = aggregateButNotToplevelNewlines /@ children;
 
-	ContainerNode[Box, aggChildren, data]
+  ContainerNode[Box, aggChildren, data]
 ]]
 
 aggregate[ContainerNode[Hold, childrenIn_, dataIn_]] :=
 Catch[
 Module[{children, aggChildren, data},
 
-	children = childrenIn;
-	data = dataIn;
+  children = childrenIn;
+  data = dataIn;
 
-	aggChildren = aggregate /@ children;
+  aggChildren = aggregate /@ children;
 
-	ContainerNode[Hold, aggChildren, data]
+  ContainerNode[Hold, aggChildren, data]
 ]]
 
 
@@ -145,38 +145,38 @@ aggregateButNotToplevelNewlines[BoxNode[RowBox, childrenIn_, dataIn_]] :=
 Catch[
 Module[{children, aggChildren, data},
 
-	children = childrenIn;
-	data = dataIn;
+  children = childrenIn;
+  data = dataIn;
 
-	aggChildren = aggregateButNotToplevelNewlines /@ children;
+  aggChildren = aggregateButNotToplevelNewlines /@ children;
 
-	If[MatchQ[aggChildren, {{_}}],
-		(*
-		children is now a single node, so collapse the RowBox
-		*)
-		Throw[aggChildren[[1, 1]]]
-	];
+  If[MatchQ[aggChildren, {{_}}],
+    (*
+    children is now a single node, so collapse the RowBox
+    *)
+    Throw[aggChildren[[1, 1]]]
+  ];
 
-	BoxNode[RowBox, aggChildren, data]
+  BoxNode[RowBox, aggChildren, data]
 ]]
 
 aggregate[BoxNode[RowBox, childrenIn_, dataIn_]] :=
 Catch[
 Module[{children, aggChildren, data},
 
-	children = childrenIn;
-	data = dataIn;
+  children = childrenIn;
+  data = dataIn;
 
-	aggChildren = aggregate /@ children;
+  aggChildren = aggregate /@ children;
 
-	If[MatchQ[aggChildren, {{_}}],
-		(*
-		children is now a single node, so collapse the RowBox
-		*)
-		Throw[aggChildren[[1, 1]]]
-	];
+  If[MatchQ[aggChildren, {{_}}],
+    (*
+    children is now a single node, so collapse the RowBox
+    *)
+    Throw[aggChildren[[1, 1]]]
+  ];
 
-	BoxNode[RowBox, aggChildren, data]
+  BoxNode[RowBox, aggChildren, data]
 ]]
 
 (*
@@ -187,10 +187,10 @@ aggregate[n:CodeNode[_, _, _]] := n
 aggregate[m_?MissingQ] := m
 
 aggregate[node_[tag_, children_, data_]] :=
-	node[tag, aggregate /@ children, data]
+  node[tag, aggregate /@ children, data]
 
 aggregateButNotToplevelNewlines[node_[tag_, children_, data_]] :=
-	node[tag, aggregate /@ children, data]
+  node[tag, aggregate /@ children, data]
 
 
 
@@ -210,32 +210,32 @@ deparen[l_LeafNode] := l
 
 
 deparen[GroupNode[GroupParen, { _, child:InfixNode[Comma, _, _], _ }, data_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, child, data]
+  AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, child, data]
 
 deparen[GroupNode[GroupParen, { _, child_, _}, data_]] :=
-	deparen[child]
+  deparen[child]
 
 deparen[CallNode[head_, children_, dataIn_]] :=
 Catch[
 Module[{deHead, deChildren, data},
 
-	data = dataIn;
+  data = dataIn;
 
-	deHead = deparen[head];
+  deHead = deparen[head];
 
-	deChildren = deparen /@ children;
+  deChildren = deparen /@ children;
 
-	CallNode[deHead, deChildren, data]
+  CallNode[deHead, deChildren, data]
 ]]
 
 deparen[node_[tag_, children_, dataIn_]] :=
 Module[{deChildren, data},
 
-	data = dataIn;
-	
-	deChildren = deparen /@ children;
+  data = dataIn;
+  
+  deChildren = deparen /@ children;
 
-	node[tag, deChildren, data]
+  node[tag, deChildren, data]
 ]
 
 
@@ -326,15 +326,15 @@ linearize0[m_?MissingQ] :=
   m
 
 linearize0[args___] :=
-	Failure["InternalUnhandled", <| "Function" -> linearize0, "Arguments" -> {args} |>]
+  Failure["InternalUnhandled", <| "Function" -> linearize0, "Arguments" -> {args} |>]
 
 
 
 insertData[FragmentNode[tag_, str_, data1_], data_, keys_] :=
-	FragmentNode[tag, str, <| data1, KeyTake[data, keys] |>]
+  FragmentNode[tag, str, <| data1, KeyTake[data, keys] |>]
 
 insertData[args___] :=
-	Failure["InternalUnhandled", <| "Function" -> insertData, "Arguments"->{args} |>]
+  Failure["InternalUnhandled", <| "Function" -> insertData, "Arguments"->{args} |>]
 
 
 

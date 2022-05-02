@@ -35,35 +35,35 @@ Needs["PacletManager`"]
 parseEquivalenceFunction[text_, expectedIgnored_] :=
 Catch[
 Module[{cst, agg, ast, good, expected, actual, str, str1, expectedStr, actualStr},
-	
-	expected = DeleteCases[ToExpression[text, InputForm, Hold], Null];
-	
-	(*
-	Concrete
-	*)
-	cst = CodeConcreteParse[text, ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)];
-	If[FailureQ[cst],
-		Throw[cst]
-	];
-	
-	If[!TrueQ[testLeafNodeOrder[cst]],
-		Throw[OutOfOrder]
-	];
-	
-	str = ToSourceCharacterString[cst];
-	If[!FailureQ[str],
-		actual = DeleteCases[ToExpression[str, InputForm], Null];
-		,
-		actual = $Failed;
-	];
+  
+  expected = DeleteCases[ToExpression[text, InputForm, Hold], Null];
+  
+  (*
+  Concrete
+  *)
+  cst = CodeConcreteParse[text, ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)];
+  If[FailureQ[cst],
+    Throw[cst]
+  ];
+  
+  If[!TrueQ[testLeafNodeOrder[cst]],
+    Throw[OutOfOrder]
+  ];
+  
+  str = ToSourceCharacterString[cst];
+  If[!FailureQ[str],
+    actual = DeleteCases[ToExpression[str, InputForm], Null];
+    ,
+    actual = $Failed;
+  ];
 
   good = SameQ[expected, actual];
   If[good,
     True
     ,
     Throw[unhandled[<|"actualConcrete"->ToString[actual, InputForm, CharacterEncoding -> "PrintableASCII"],
-    					"expectedConcrete"->ToString[expected, InputForm, CharacterEncoding -> "PrintableASCII"],
-    					"str"->ToString[str, InputForm, CharacterEncoding -> "PrintableASCII"]|>]]
+              "expectedConcrete"->ToString[expected, InputForm, CharacterEncoding -> "PrintableASCII"],
+              "str"->ToString[str, InputForm, CharacterEncoding -> "PrintableASCII"]|>]]
   ];
 
   If[$Debug,
@@ -75,46 +75,46 @@ Module[{cst, agg, ast, good, expected, actual, str, str1, expectedStr, actualStr
   (*
   Aggregate
   *)
-	agg = CodeParser`Abstract`Aggregate[cst];
-	
-	str = ToInputFormString[agg];
-	If[!FailureQ[actual],
-		actual = DeleteCases[ToExpression[str, InputForm], Null];
-		,
-		actual = $Failed;
-	];
-	
-	good = SameQ[expected, actual];
-	If[good,
-		True
-		,
-		Throw[unhandled[<|"actualAggregate"->ToString[actual, InputForm], "expectedAggregate"->ToString[expected, InputForm]|>]]
-	];
-	
+  agg = CodeParser`Abstract`Aggregate[cst];
+  
+  str = ToInputFormString[agg];
+  If[!FailureQ[actual],
+    actual = DeleteCases[ToExpression[str, InputForm], Null];
+    ,
+    actual = $Failed;
+  ];
+  
+  good = SameQ[expected, actual];
+  If[good,
+    True
+    ,
+    Throw[unhandled[<|"actualAggregate"->ToString[actual, InputForm], "expectedAggregate"->ToString[expected, InputForm]|>]]
+  ];
+  
   If[$Debug,
     Print["agg concrete expected: ", expected];
     Print["agg concrete actual: ", actual]
   ];
 
-	(*
-	Abstract
-	*)
-	ast = CodeParse[text, ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)];
-	If[FailureQ[ast],
-		Throw[ast]
-	];
-	
-	str1 = ToFullFormString[ast];
-	If[!FailureQ[str1],
-		actual = DeleteCases[ToExpression[str1, InputForm], Null];
-		,
-		actual = $Failed
-	];
-	
-	good = SameQ[expected, actual];
-	If[!good,
-		Throw[unhandled[<|"actualAbstract"->ToString[actual, InputForm], "expectedAbstract"->ToString[expected, InputForm]|>]]
-	];
+  (*
+  Abstract
+  *)
+  ast = CodeParse[text, ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)];
+  If[FailureQ[ast],
+    Throw[ast]
+  ];
+  
+  str1 = ToFullFormString[ast];
+  If[!FailureQ[str1],
+    actual = DeleteCases[ToExpression[str1, InputForm], Null];
+    ,
+    actual = $Failed
+  ];
+  
+  good = SameQ[expected, actual];
+  If[!good,
+    Throw[unhandled[<|"actualAbstract"->ToString[actual, InputForm], "expectedAbstract"->ToString[expected, InputForm]|>]]
+  ];
 
   (*
   Now test agreement
@@ -139,31 +139,31 @@ Module[{cst, agg, ast, good, expected, actual, str, str1, expectedStr, actualStr
   ];
 
 
-	
-	
-	(*
-	FullForm
-	*)
-	
-	If[!FreeQ[ast, LeafNode[Token`LinearSyntaxBlob, _, _]],
-		Throw[True]
-	];
-	
-	expectedStr = ToString[FullForm[expected]];
+  
+  
+  (*
+  FullForm
+  *)
+  
+  If[!FreeQ[ast, LeafNode[Token`LinearSyntaxBlob, _, _]],
+    Throw[True]
+  ];
+  
+  expectedStr = ToString[FullForm[expected]];
 
-	Quiet[
-	 actualStr = ToFullFormString[ast /. {
-	      LeafNode[Real, r_, data_] :> LeafNode[Real, ToString[FullForm[ToExpression[r]]], data],
-	      LeafNode[Rational, r_, data_] :> LeafNode[Rational, ToString[FullForm[ToExpression[r]]], data],
-	      LeafNode[Integer, i_, data_] :> LeafNode[Integer, ToString[FullForm[ToExpression[i]]], data],
-	      LeafNode[String, s_ /; StringStartsQ[s, "\""], data_] :> LeafNode[String, ToString[FullForm[ToExpression[s]]], data],
-	      LeafNode[Symbol, s_, data_] :> LeafNode[Symbol, ToExpression[s, InputForm, Function[xx, ToString[Unevaluated[FullForm[xx]]], {HoldFirst}]], data]}];
-	 ];
+  Quiet[
+   actualStr = ToFullFormString[ast /. {
+        LeafNode[Real, r_, data_] :> LeafNode[Real, ToString[FullForm[ToExpression[r]]], data],
+        LeafNode[Rational, r_, data_] :> LeafNode[Rational, ToString[FullForm[ToExpression[r]]], data],
+        LeafNode[Integer, i_, data_] :> LeafNode[Integer, ToString[FullForm[ToExpression[i]]], data],
+        LeafNode[String, s_ /; StringStartsQ[s, "\""], data_] :> LeafNode[String, ToString[FullForm[ToExpression[s]]], data],
+        LeafNode[Symbol, s_, data_] :> LeafNode[Symbol, ToExpression[s, InputForm, Function[xx, ToString[Unevaluated[FullForm[xx]]], {HoldFirst}]], data]}];
+   ];
 
-	good = SameQ[expectedStr, actualStr];
-	If[!good,
-		Throw[unhandled[<|"actualStr"->actualStr, "expectedStr"->expectedStr|>]]
-	];
+  good = SameQ[expectedStr, actualStr];
+  If[!good,
+    Throw[unhandled[<|"actualStr"->actualStr, "expectedStr"->expectedStr|>]]
+  ];
 
 
 
@@ -226,7 +226,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     ];*)
     
     If[FileType[file] =!= File,
-    	Throw[Failure["NotAFile", <|"File"->fileIn|>], "Handled"]
+      Throw[Failure["NotAFile", <|"File"->fileIn|>], "Handled"]
     ];
     
      If[FileByteCount[file] > limit[[2]],
@@ -271,7 +271,7 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
 
     version = convertVersionString[PacletFind["CodeParser"][[1]]["Version"]];
     If[$Debug,
-    	Print["version: ", version]
+      Print["version: ", version]
     ];
     Which[
       (*
@@ -574,12 +574,12 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
     
     *)
     If[FailureQ[savedFailure],
-    	Throw[savedFailure, "Uncaught"]	
+      Throw[savedFailure, "Uncaught"]
     ];
     
     If[!TrueQ[testLeafNodeOrder[cst]],
-		Throw[OutOfOrder]
-	];
+    Throw[OutOfOrder]
+  ];
     
     tryString = ToSourceCharacterString[cst];
     
@@ -1553,8 +1553,8 @@ Module[{text, f, expected, msgs},
 testLeafNodeOrder[cst_] :=
 Catch[
 Module[{leaves, a, b},
-	leaves = Cases[cst, _LeafNode, Infinity];
-	If[OrderedQ[leaves, OrderedQ[{#1[[3]][Source], #2[[3]][Source]}]&],
+  leaves = Cases[cst, _LeafNode, Infinity];
+  If[OrderedQ[leaves, OrderedQ[{#1[[3]][Source], #2[[3]][Source]}]&],
     Throw[True]
   ];
 

@@ -34,17 +34,17 @@ Aggregate[cst_] :=
 Block[{$RecursionLimit = Infinity},
 Module[{agg},
 
-	CodeParser`Abstract`$AggregateParseStart = Now;
-	CodeParser`Abstract`$AggregateParseTime = Quantity[0, "Seconds"];
+  CodeParser`Abstract`$AggregateParseStart = Now;
+  CodeParser`Abstract`$AggregateParseTime = Quantity[0, "Seconds"];
 
-	CodeParser`Abstract`$AggregateParseProgress = 5;
+  CodeParser`Abstract`$AggregateParseProgress = 5;
 
-	agg = aggregate[cst];
+  agg = aggregate[cst];
 
-	CodeParser`Abstract`$AggregateParseProgress = 100;
-	CodeParser`Abstract`$AggregateParseTime = Now - CodeParser`Abstract`$AggregateParseStart;
+  CodeParser`Abstract`$AggregateParseProgress = 100;
+  CodeParser`Abstract`$AggregateParseTime = Now - CodeParser`Abstract`$AggregateParseStart;
 
-	agg
+  agg
 ]]
 
 
@@ -63,41 +63,41 @@ PackageNodes[] and ContextNodes[] will NOT be created
 Issues about unbalanced directives will NOT be created
 *)
 Options[Abstract] = {
-	"BatchMode" -> True
+  "BatchMode" -> True
 }
 
 Abstract[agg_, opts:OptionsPattern[]] :=
 Block[{$RecursionLimit = Infinity},
 Module[{ast, batchMode},
 
-	batchMode = OptionValue["BatchMode"];
+  batchMode = OptionValue["BatchMode"];
 
-	CodeParser`Abstract`$AbstractParseStart = Now;
-	CodeParser`Abstract`$AbstractParseTime = Quantity[0, "Seconds"];
+  CodeParser`Abstract`$AbstractParseStart = Now;
+  CodeParser`Abstract`$AbstractParseTime = Quantity[0, "Seconds"];
 
-	CodeParser`Abstract`$AbstractParseProgress = 5;
+  CodeParser`Abstract`$AbstractParseProgress = 5;
 
-	ast = agg;
+  ast = agg;
 
-	(*
-	There is some surgery involved with gluing "-" onto numbers and this can screw up removing of line continuations.
+  (*
+  There is some surgery involved with gluing "-" onto numbers and this can screw up removing of line continuations.
 
-	So make sure to normalize tokens BEFORE doing the abstract fold
-	*)
-	ast = normalizeTokens[ast];
+  So make sure to normalize tokens BEFORE doing the abstract fold
+  *)
+  ast = normalizeTokens[ast];
 
-	Block[{$CurrentBatchMode},
+  Block[{$CurrentBatchMode},
 
-		$CurrentBatchMode = batchMode;
+    $CurrentBatchMode = batchMode;
 
-		ast = abstract[ast];
-	];
+    ast = abstract[ast];
+  ];
 
-	CodeParser`Abstract`$AbstractParseProgress = 100;
+  CodeParser`Abstract`$AbstractParseProgress = 100;
 
-	CodeParser`Abstract`$AbstractParseTime = Now - CodeParser`Abstract`$AbstractParseStart;
+  CodeParser`Abstract`$AbstractParseTime = Now - CodeParser`Abstract`$AbstractParseStart;
 
-	ast
+  ast
 ]]
 
 
@@ -116,9 +116,9 @@ abstract[LeafNode[Token`Percent, _, data_]] := CallNode[ToNode[Out], {}, data]
 abstract[LeafNode[Token`PercentPercent, s_, data_]] :=
 Module[{count},
 
-	count = StringCount[s, "%" | "\\.25" | "\\:0025" | "\\|000025" | "\\045" | "\\[RawPercent]"];
+  count = StringCount[s, "%" | "\\.25" | "\\:0025" | "\\|000025" | "\\045" | "\\[RawPercent]"];
 
-	CallNode[ToNode[Out], { ToNode[-count] }, data]
+  CallNode[ToNode[Out], { ToNode[-count] }, data]
 ]
 
 (*
@@ -135,10 +135,10 @@ Symbols, Strings, Integers, Reals, and Rationals just get passed through
 Also, LinearSyntaxBlob just gets passed through
 *)
 abstract[leaf_LeafNode] :=
-	leaf
+  leaf
 
 abstract[n_ErrorNode] :=
-	n
+  n
 
 
 
@@ -174,10 +174,10 @@ abstract[PrefixNode[PrefixNot2, {notNotTok_, rand_}, data_]] := abstractNot2[ran
 FIXME: keep linear syntax for now
 *)
 abstract[PrefixNode[PrefixLinearSyntaxBang, {rator_, rand:LeafNode[Token`LinearSyntaxBlob, _, _]}, data_]] :=
-	PrefixNode[PrefixLinearSyntaxBang, {rator, abstract[rand]}, data]
+  PrefixNode[PrefixLinearSyntaxBang, {rator, abstract[rand]}, data]
 
 abstract[PrefixNode[PrefixLinearSyntaxBang, children_, data_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`LinearSyntaxBang, children, data]
+  AbstractSyntaxErrorNode[AbstractSyntaxError`LinearSyntaxBang, children, data]
 
 (*
 strings may be quoted
@@ -211,12 +211,12 @@ abstract[BinaryNode[BinaryAt, {left_, _, right_}, data_]] := CallNode[abstract[l
 
 abstract[BinaryNode[System`MapApply, {left_, _, right_}, data_]] :=
 Module[{oldAtAtAtQuirk},
-	oldAtAtAtQuirk = Lookup[$Quirks, "OldAtAtAt", False];
-	If[oldAtAtAtQuirk,
-		CallNode[ToNode[Apply], abstract /@ {left, right, GroupNode[List, { LeafNode[Token`OpenCurly, "{", <||>], ToNode[1], LeafNode[Token`CloseCurly, "}", <||>] }, <||>]}, data]
-		,
-		CallNode[ToNode[System`MapApply], abstract /@ {left, right}, data]
-	]
+  oldAtAtAtQuirk = Lookup[$Quirks, "OldAtAtAt", False];
+  If[oldAtAtAtQuirk,
+    CallNode[ToNode[Apply], abstract /@ {left, right, GroupNode[List, { LeafNode[Token`OpenCurly, "{", <||>], ToNode[1], LeafNode[Token`CloseCurly, "}", <||>] }, <||>]}, data]
+    ,
+    CallNode[ToNode[System`MapApply], abstract /@ {left, right}, data]
+  ]
 ]
 
 (*
@@ -232,10 +232,10 @@ abstract[BinaryNode[PutAppend, {left_, _, LeafNode[String, str_, data1_]}, data_
 First arg must be a symbol
 *)
 abstract[BinaryNode[Pattern, {left:LeafNode[Symbol, _, _], _, right_}, data_]] :=
-	CallNode[ToNode[Pattern], {abstract[left], abstract[right]}, data]
+  CallNode[ToNode[Pattern], {abstract[left], abstract[right]}, data]
 
 abstract[BinaryNode[Pattern, {left_, _, right_}, data_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`PatternColonError, {abstract[left], abstract[right]}, data]
+  AbstractSyntaxErrorNode[AbstractSyntaxError`PatternColonError, {abstract[left], abstract[right]}, data]
 
 (*
 Abstract NonAssociative errors
@@ -244,10 +244,10 @@ a ? b ? c being NonAssociative is alluded to being a bug in bug report 206938
 Related bugs: 206938
 *)
 abstract[BinaryNode[PatternTest, {left:BinaryNode[PatternTest, _, _], _, right_}, data_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociativePatternTest, {abstract[left], abstract[right]}, data]
+  AbstractSyntaxErrorNode[AbstractSyntaxError`NonAssociativePatternTest, {abstract[left], abstract[right]}, data]
 
 abstract[BinaryNode[Unset, {left_, LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, data_]] :=
-	CallNode[ToNode[Unset], {abstract[left]}, data]
+  CallNode[ToNode[Unset], {abstract[left]}, data]
 
 abstract[BinaryNode[op_, {left_, _, right_}, data_]] := CallNode[ToNode[op], {abstract[left], abstract[right]}, data]
 
@@ -280,7 +280,7 @@ abstract[InfixNode[MessageName, children_, data_]] := abstractMessageName[InfixN
 abstract[InfixNode[InfixTilde, children_, data_]] := abstractInfixTilde[InfixNode[InfixTilde, children[[;;;;2]], data]]
 
 abstract[InfixNode[op_, children_ /; OddQ[Length[children]], data_]] :=
-	CallNode[ToNode[op], abstract /@ (processInfixBinaryAtQuirk[#, ToString[op]]& /@ children[[;;;;2]]), data]
+  CallNode[ToNode[op], abstract /@ (processInfixBinaryAtQuirk[#, ToString[op]]& /@ children[[;;;;2]]), data]
 
 
 
@@ -294,41 +294,41 @@ handle  a ~f,~ b
 Cannot have  (f,)[a, b]
 *)
 abstract[TernaryNode[TernaryTilde, {left_, _, middle:InfixNode[Comma, _, _], _, right_}, data_]] :=
-	With[{abstractedMiddle = abstract[middle]},
-		CallNode[AbstractSyntaxErrorNode[AbstractSyntaxError`CommaTopLevel, abstractedMiddle[[2]], abstractedMiddle[[3]]], {
-			abstract[left], abstract[right]}, data]
-	]
+With[{abstractedMiddle = abstract[middle]},
+  CallNode[AbstractSyntaxErrorNode[AbstractSyntaxError`CommaTopLevel, abstractedMiddle[[2]], abstractedMiddle[[3]]], {
+    abstract[left], abstract[right]}, data]
+]
 
 abstract[TernaryNode[TernaryTilde, {left_, _, middle_, _, right_}, data_]] :=
-	CallNode[abstract[middle], {abstract[left], abstract[right]}, data]
+  CallNode[abstract[middle], {abstract[left], abstract[right]}, data]
 
 (*
 Allow non-Symbols for left; not a syntax error
 *)
 abstract[TernaryNode[TagSet, {left_, _, middle_, _, right_}, data_]] :=
-	CallNode[ToNode[TagSet], {abstract[left], abstract[middle], abstract[right]}, data]
+  CallNode[ToNode[TagSet], {abstract[left], abstract[middle], abstract[right]}, data]
 
 (*
 Allow non-Symbols for left; not a syntax error
 *)
 abstract[TernaryNode[TagSetDelayed, {left_, _, middle_, _, right_}, data_]] :=
-	CallNode[ToNode[TagSetDelayed], {abstract[left], abstract[middle], abstract[right]}, data]
+  CallNode[ToNode[TagSetDelayed], {abstract[left], abstract[middle], abstract[right]}, data]
 
 (*
 Allow non-Symbols for left; not a syntax error
 *)
 abstract[TernaryNode[TagUnset, {left_, _, middle_, LeafNode[Token`Equal, _, _], LeafNode[Token`Dot, _, _]}, data_]] :=
-	CallNode[ToNode[TagUnset], {abstract[left], abstract[middle]}, data]
+  CallNode[ToNode[TagUnset], {abstract[left], abstract[middle]}, data]
 
 abstract[TernaryNode[Span, {left_, _, middle_, _, right_}, data_]] :=
-	CallNode[ToNode[Span], {abstract[left], abstract[middle], abstract[right]}, data]
+  CallNode[ToNode[Span], {abstract[left], abstract[middle], abstract[right]}, data]
 
 
 (*
 TernaryOptionalPattern comes from boxes
 *)
 abstract[TernaryNode[TernaryOptionalPattern, {left_, _, middle_, _, right_}, data_]] :=
-	CallNode[ToNode[Optional], {CallNode[ToNode[Pattern], {abstract[left], abstract[middle]}, <||>], abstract[right]}, data]
+  CallNode[ToNode[Optional], {CallNode[ToNode[Pattern], {abstract[left], abstract[middle]}, <||>], abstract[right]}, data]
 
 
 
@@ -350,13 +350,13 @@ f \[LeftDoubleBracket] \[RightDoubleBracket]
 *)
 
 abstract[CallNode[op_, children:{ GroupNode[GroupSquare, { _, GroupNode[GroupSquare, _, _], _ }, _] }, data1_]] :=
-	abstractCallNode[CallNode[op, children, data1]]
+  abstractCallNode[CallNode[op, children, data1]]
 
 abstract[CallNode[op_, children:{ GroupNode[GroupSquare, _, _] }, data1_]] :=
-	abstractCallNode[CallNode[op, children, data1]]
+  abstractCallNode[CallNode[op, children, data1]]
 
 abstract[CallNode[op_, children:{ GroupNode[GroupDoubleBracket, _, _] }, data1_]] :=
-	abstractCallNode[CallNode[op, children, data1]]
+  abstractCallNode[CallNode[op, children, data1]]
 
 
 (*
@@ -372,9 +372,9 @@ List[a
 had the same AST:
 
 CallNode[LeafNode[Symbol, "List", <||>], {
-	GroupMissingCloserNode[GroupSquare, {
-		LeafNode[Token`OpenSquare, "[", <||>],
-		LeafNode[Symbol, "a", <||>]}, <||>]}, <||>]
+  GroupMissingCloserNode[GroupSquare, {
+    LeafNode[Token`OpenSquare, "[", <||>],
+    LeafNode[Symbol, "a", <||>]}, <||>]}, <||>]
 
 we need to distinguish these cases, so it makes sense to have special node to say
 
@@ -384,13 +384,13 @@ we need to distinguish these cases, so it makes sense to have special node to sa
 GroupMissingCloserNode gets abstracted
 *)
 abstract[CallNode[head_, children:{GroupMissingCloserNode[GroupSquare, _, _]}, data_]] :=
-	abstractCallNode[CallMissingCloserNode[head, children, data]]
+  abstractCallNode[CallMissingCloserNode[head, children, data]]
 
 (*
 UnterminatedGroupNode does NOT get abstracted
 *)
 abstract[CallNode[head_, children:{UnterminatedGroupNode[GroupSquare, _, _]}, data_]] :=
-	abstractCallNode[UnterminatedCallNode[head, children, data]]
+  abstractCallNode[UnterminatedCallNode[head, children, data]]
 
 
 
@@ -404,13 +404,13 @@ GroupParen
 *)
 
 abstract[GroupNode[GroupParen, { _, child:InfixNode[Comma, _, _], _ }, data_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, { child }, data]
+  AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, { child }, data]
 
 abstract[GroupNode[GroupParen, { _, child_, _}, data_]] :=
-	abstract[child]
+  abstract[child]
 
 abstract[GroupNode[GroupParen, children_, data_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, children[[2;;-2]], data]
+  AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, children[[2;;-2]], data]
 
 (*
 GroupNode errors
@@ -418,10 +418,10 @@ GroupNode errors
 naked [] and naked \[LeftDoubleBracket]\[RightDoubleBracket]
 *)
 abstract[GroupNode[GroupSquare, children_, data_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`OpenSquare, children, data]
+  AbstractSyntaxErrorNode[AbstractSyntaxError`OpenSquare, children, data]
 
 abstract[GroupNode[GroupDoubleBracket, children_, data_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`LeftDoubleBracket, children, data]
+  AbstractSyntaxErrorNode[AbstractSyntaxError`LeftDoubleBracket, children, data]
 
 
 
@@ -430,12 +430,12 @@ Missing closers
 *)
 
 abstract[GroupMissingCloserNode[tag_, children_, data_]] :=
-	abstractGroupNode[GroupMissingCloserNode[tag, children, data]]
+  abstractGroupNode[GroupMissingCloserNode[tag, children, data]]
 
 
 
 abstract[n:UnterminatedGroupNode[_, _, _]] :=
-	n
+  n
 
 
 
@@ -446,13 +446,13 @@ Only possible with boxes
 *)
 
 abstract[GroupMissingOpenerNode[tag_, children_, data_]] :=
-	abstractGroupNode[GroupMissingOpenerNode[tag, children, data]]
+  abstractGroupNode[GroupMissingOpenerNode[tag, children, data]]
 
 
 
 
 abstract[GroupNode[tag_, children_, data_]] :=
-	abstractGroupNode[GroupNode[tag, children, data]]
+  abstractGroupNode[GroupNode[tag, children, data]]
 
 
 
@@ -466,78 +466,78 @@ abstract[PrefixBinaryNode[op_, {_, operand1_, operand2_}, data_]] := CallNode[To
 abstract[ContainerNode[tag_, childrenIn_, dataIn_]] :=
 Catch[
 Module[{abstracted, issues, issues1, issues2, data,
-	abstractedChildren, node, willReportToplevelIssues,
-	reportIssuesBehavior, children, res},
+  abstractedChildren, node, willReportToplevelIssues,
+  reportIssuesBehavior, children, res},
 
-	children = childrenIn;
+  children = childrenIn;
 
-	data = dataIn;
+  data = dataIn;
 
-	willReportToplevelIssues = (tag === File);
+  willReportToplevelIssues = (tag === File);
 
-	reportIssuesBehavior = <| "WillReportToplevelIssues" -> willReportToplevelIssues, "ToplevelChildrenLength" -> Length[children] |>;
+  reportIssuesBehavior = <| "WillReportToplevelIssues" -> willReportToplevelIssues, "ToplevelChildrenLength" -> Length[children] |>;
 
-	issues = {};
+  issues = {};
 
-	{abstractedChildren, issues1} = abstractTopLevelChildren[children, reportIssuesBehavior];
-	
-	(*
-	was:
-	If[TrueQ[$CurrentBatchMode],
-		res = abstractTopLevel[abstractedChildren];
+  {abstractedChildren, issues1} = abstractTopLevelChildren[children, reportIssuesBehavior];
+  
+  (*
+  was:
+  If[TrueQ[$CurrentBatchMode],
+    res = abstractTopLevel[abstractedChildren];
 
-		If[FailureQ[res],
-			Throw[res]
-		];
+    If[FailureQ[res],
+      Throw[res]
+    ];
 
-		{abstracted, issues2} = res;
-		,
-		{abstracted, issues2} = {abstractedChildren, {}}
-	];
-	but it is important to always run abstractTopLevel, because it supplies information like "Definitions"
+    {abstracted, issues2} = res;
+    ,
+    {abstracted, issues2} = {abstractedChildren, {}}
+  ];
+  but it is important to always run abstractTopLevel, because it supplies information like "Definitions"
 
-	related bugs: 410408
+  related bugs: 410408
 
-	*)
-	res = abstractTopLevel[abstractedChildren];
+  *)
+  res = abstractTopLevel[abstractedChildren];
 
-	If[FailureQ[res],
-		Throw[res]
-	];
+  If[FailureQ[res],
+    Throw[res]
+  ];
 
-	{abstracted, issues2} = res;
+  {abstracted, issues2} = res;
 
-	issues = issues1 ~Join~ issues2;
+  issues = issues1 ~Join~ issues2;
 
-	If[issues != {},
-		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
-		AssociateTo[data, AbstractSyntaxIssues -> issues];
-	];
+  If[issues != {},
+    issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+    AssociateTo[data, AbstractSyntaxIssues -> issues];
+  ];
 
-	node = ContainerNode[tag, abstracted, data];
+  node = ContainerNode[tag, abstracted, data];
 
-	node
+  node
 ]]
 
 
 
 abstract[SyntaxErrorNode[SyntaxError`ExpectedTilde, {left_, _, middle_}, data_]] :=
-	SyntaxErrorNode[SyntaxError`ExpectedTilde, {abstract[left], abstract[middle]}, data]
+  SyntaxErrorNode[SyntaxError`ExpectedTilde, {abstract[left], abstract[middle]}, data]
 
 abstract[SyntaxErrorNode[SyntaxError`ExpectedSet, {left_, _, middle_}, data_]] :=
-	SyntaxErrorNode[SyntaxError`ExpectedSet, {abstract[left], abstract[middle]}, data]
+  SyntaxErrorNode[SyntaxError`ExpectedSet, {abstract[left], abstract[middle]}, data]
 
 abstract[SyntaxErrorNode[SyntaxError`OldFESyntax, children_, data_]] :=
-	SyntaxErrorNode[SyntaxError`OldFESyntax, abstract /@ children, data]
+  SyntaxErrorNode[SyntaxError`OldFESyntax, abstract /@ children, data]
 
 abstract[SyntaxErrorNode[SyntaxError`BuggyFESyntax, children_, data_]] :=
-	SyntaxErrorNode[SyntaxError`BuggyFESyntax, abstract /@ children, data]
+  SyntaxErrorNode[SyntaxError`BuggyFESyntax, abstract /@ children, data]
 
 abstract[SyntaxErrorNode[SyntaxError`ExpectedSetOperand1, {left_, _, _, right_}, data_]] :=
-	SyntaxErrorNode[SyntaxError`ExpectedSetOperand1, {abstract[left], abstract[right]}, data]
+  SyntaxErrorNode[SyntaxError`ExpectedSetOperand1, {abstract[left], abstract[right]}, data]
 
 abstract[SyntaxErrorNode[SyntaxError`ExpectedSetOperand2, {left_, _, middle_, _}, data_]] :=
-	SyntaxErrorNode[SyntaxError`ExpectedSetOperand2, {abstract[left], abstract[middle]}, data]
+  SyntaxErrorNode[SyntaxError`ExpectedSetOperand2, {abstract[left], abstract[middle]}, data]
 
 
 
@@ -564,10 +564,10 @@ a::b
 a::"b"
 *)
 abstractSymbolString[str_String /; StringStartsQ[str, "\""]] :=
-	Quiet[ToExpression[str], {Syntax::stresc, Syntax::snthex, Syntax::sntoct1, Syntax::sntoct2, Syntax::snthex32}]
-	
+  Quiet[ToExpression[str], {Syntax::stresc, Syntax::snthex, Syntax::sntoct1, Syntax::sntoct2, Syntax::snthex32}]
+  
 abstractSymbolString[str_String] :=
-	Quiet[ToExpression["\""<>str<>"\""], {Syntax::stresc, Syntax::snthex, Syntax::sntoct1, Syntax::sntoct2, Syntax::snthex32}]
+  Quiet[ToExpression["\""<>str<>"\""], {Syntax::stresc, Syntax::snthex, Syntax::sntoct1, Syntax::sntoct2, Syntax::snthex32}]
 
 (*
 a>>b
@@ -581,35 +581,35 @@ FIXME: once the semantics are completely understood, move this to library
 *)
 abstractFileString[str_String /; StringStartsQ[str, "\""]] :=
 Module[{},
-	Quiet[ToExpression[str], {Syntax::stresc, Syntax::snthex, Syntax::sntoct1, Syntax::sntoct2, Syntax::snthex32}]
+  Quiet[ToExpression[str], {Syntax::stresc, Syntax::snthex, Syntax::sntoct1, Syntax::sntoct2, Syntax::snthex32}]
 ]
 
 abstractFileString[str_String] :=
 Module[{replaced},
 
-	(*
-	convert to the language that is understood by quoted strings, to be given to ToExpression
-	*)
-	replaced = StringReplace[str, {
-			(*
-			single character escapes
-			*)
-			"\\b" -> "\\\\b",
-			"\\f" -> "\\\\f",
-			"\\n" -> "\\\\n",
-			"\\r" -> "\\\\r",
-			"\\t" -> "\\\\t",
-			(*
-			and double quote
-			*)
-			"\"" -> "\\\"",
-			(*
-			and backslash
-			*)
-			"\\" -> "\\\\"
-		}];
+  (*
+  convert to the language that is understood by quoted strings, to be given to ToExpression
+  *)
+  replaced = StringReplace[str, {
+      (*
+      single character escapes
+      *)
+      "\\b" -> "\\\\b",
+      "\\f" -> "\\\\f",
+      "\\n" -> "\\\\n",
+      "\\r" -> "\\\\r",
+      "\\t" -> "\\\\t",
+      (*
+      and double quote
+      *)
+      "\"" -> "\\\"",
+      (*
+      and backslash
+      *)
+      "\\" -> "\\\\"
+    }];
 
-	Quiet[ToExpression["\""<>replaced<>"\""], {Syntax::stresc, Syntax::snthex, Syntax::sntoct1, Syntax::sntoct2, Syntax::snthex32}]
+  Quiet[ToExpression["\""<>replaced<>"\""], {Syntax::stresc, Syntax::snthex, Syntax::sntoct1, Syntax::sntoct2, Syntax::snthex32}]
 ]
 
 
@@ -621,7 +621,7 @@ Module[{replaced},
 
 
 parenthesizedIntegerOrRealQ[GroupNode[GroupParen, { _, child_, _ }, _]] :=
-	parenthesizedIntegerOrRealQ[child]
+  parenthesizedIntegerOrRealQ[child]
 
 parenthesizedIntegerOrRealQ[LeafNode[Integer, _, _]] := True
 parenthesizedIntegerOrRealQ[LeafNode[Real, _, _]] := True
@@ -635,10 +635,10 @@ parenthesizedIntegerOrRealQ[_] := False
 possiblyNegatedZeroQ[LeafNode[Integer, "0", _]] := True
 
 possiblyNegatedZeroQ[GroupNode[GroupParen, { _, child_, _ }, _]] :=
-	possiblyNegatedZeroQ[child]
+  possiblyNegatedZeroQ[child]
 
 possiblyNegatedZeroQ[PrefixNode[Minus, { _, child_}, _]] :=
-	possiblyNegatedZeroQ[child]
+  possiblyNegatedZeroQ[child]
 
 possiblyNegatedZeroQ[_] := False
 
@@ -654,17 +654,17 @@ This can happen with:  a-EOF
 *)
 (*
 negate[node:ErrorNode[Token`Error`ExpectedOperand, _, _], _] :=
-	node
+  node
 *)
 
 negate[LeafNode[Integer, "0", _], data_] :=
-	LeafNode[Integer, "0", data]
+  LeafNode[Integer, "0", data]
 
 negate[LeafNode[Integer, str_, _], data_] :=
-	LeafNode[Integer, "-"<>str, data]
+  LeafNode[Integer, "-"<>str, data]
 
 negate[LeafNode[Real, str_, _], data_] :=
-	LeafNode[Real, "-"<>str, data]
+  LeafNode[Real, "-"<>str, data]
 
 (*
 dig down into parens
@@ -674,13 +674,13 @@ something like  -(1.2)  is still parsed as  -1.2
 TODO: maybe this is a kernel quirk?
 *)
 negate[GroupNode[GroupParen, {_, child_?possiblyNegatedZeroQ, _}, _], data_] :=
-	negate[child, data]
+  negate[child, data]
 
 negate[PrefixNode[Minus, {_, child_?possiblyNegatedZeroQ}, _], data_] :=
-	negate[child, data]
+  negate[child, data]
 
 negate[node_?parenthesizedIntegerOrRealQ, data_] :=
-	negate[node[[2, 2]], data]
+  negate[node[[2, 2]], data]
 
 
 
@@ -694,10 +694,10 @@ This allows these nodes to be merged later e.g., 1-a/b
 *)
 
 negate[InfixNode[Times, children_, _], data_] :=
-	InfixNode[Times, { ToNode[-1], LeafNode[Token`Star, "*", <||>] } ~Join~ children, data]
+  InfixNode[Times, { ToNode[-1], LeafNode[Token`Star, "*", <||>] } ~Join~ children, data]
 
 negate[node_, data_] :=
-	InfixNode[Times, { ToNode[-1], LeafNode[Token`Star, "*", <||>], node }, data]
+  InfixNode[Times, { ToNode[-1], LeafNode[Token`Star, "*", <||>], node }, data]
 
 
 (*
@@ -711,15 +711,15 @@ This can happen with:  a/EOF
 *)
 (*
 reciprocate[node:ErrorNode[Token`Error`ExpectedOperand, _, _], _] :=
-	node
+  node
 *)
 
 reciprocate[node_, data_] :=
-	CallNode[ToNode[Power], {
-		GroupNode[GroupSquare, {
-			LeafNode[Token`OpenSquare, "[", <||>],
-			InfixNode[Comma, { node, LeafNode[Token`Comma, ",", <||>], ToNode[-1] }, <||>],
-			LeafNode[Token`CloseSquare, "]", <||>] }, <||> ] }, data]
+  CallNode[ToNode[Power], {
+    GroupNode[GroupSquare, {
+      LeafNode[Token`OpenSquare, "[", <||>],
+      InfixNode[Comma, { node, LeafNode[Token`Comma, ",", <||>], ToNode[-1] }, <||>],
+      LeafNode[Token`CloseSquare, "]", <||>] }, <||> ] }, data]
 
 
 
@@ -727,12 +727,12 @@ processPlusPair[{LeafNode[Token`Plus | Token`LongName`ImplicitPlus, _, _], rand_
 
 processPlusPair[{LeafNode[Token`Minus | Token`LongName`Minus, _, opData_], rand_}] :=
 Module[{synthesizedData},
-	(*
-	When parsing a - b + c, make sure to give the abstracted Times expression the correct Source.
-	That is, the source of  - b
-	*)
-	synthesizedData = <| Source -> { opData[[Key[Source], 1]], rand[[3, Key[Source], 2]] } |>;
-	negate[rand, synthesizedData]
+  (*
+  When parsing a - b + c, make sure to give the abstracted Times expression the correct Source.
+  That is, the source of  - b
+  *)
+  synthesizedData = <| Source -> { opData[[Key[Source], 1]], rand[[3, Key[Source], 2]] } |>;
+  negate[rand, synthesizedData]
 ]
 
 (*
@@ -755,15 +755,15 @@ TODO: add 365287 to kernel quirks mode
 abstractPlus[InfixNode[Plus, children_, data_]] :=
 Module[{pairs, processedPairs, flattened, processed},
 
-	pairs = Partition[children[[2;;]], 2];
+  pairs = Partition[children[[2;;]], 2];
 
-	processedPairs = processPlusPair /@ pairs;
+  processedPairs = processPlusPair /@ pairs;
 
-	flattened = flattenPrefixPlus /@ ( { children[[1]] } ~Join~ processedPairs);
+  flattened = flattenPrefixPlus /@ ( { children[[1]] } ~Join~ processedPairs);
 
-	processed = processInfixBinaryAtQuirk[#, "Plus"]& /@ flattened;
+  processed = processInfixBinaryAtQuirk[#, "Plus"]& /@ flattened;
 
-	CallNode[ToNode[Plus], abstract /@ processed, data]
+  CallNode[ToNode[Plus], abstract /@ processed, data]
 ]
 
 
@@ -783,70 +783,70 @@ abstractPrefixPlus[rand_, data_] := CallNode[ToNode[Plus], {abstract[rand]}, dat
 abstract syntax of  -a * b / c d \[InvisibleTimes] e \[Times] f  is a single Times expression
 *)
 flattenTimes[nodes_List, data_] :=
-	Module[{flattenTimesQuirk},
+Module[{flattenTimesQuirk},
 
-		flattenTimesQuirk = Lookup[$Quirks, "FlattenTimes", False];
+  flattenTimesQuirk = Lookup[$Quirks, "FlattenTimes", False];
 
-		(
-			Switch[#,
-				(*
-				These rules for PrefixNode illustrate the difference between the FE and kernel
-				Related bugs: 139531
+  (
+    Switch[#,
+      (*
+      These rules for PrefixNode illustrate the difference between the FE and kernel
+      Related bugs: 139531
 
-				TODO: add to kernel quirks mode
-				TODO: add to frontend quirks mode
-				*)
-				PrefixNode[Minus, { _, LeafNode[Integer | Real, _, _] }, _],
-					{negate[#[[2, 2]], data]}
-				,
-				PrefixNode[Minus, { _, _?parenthesizedIntegerOrRealQ }, _],
-					{negate[#[[2, 2]], data]}
-				,
-				PrefixNode[Minus, {_, _}, _],
-					If[flattenTimesQuirk,
-						(*
-						it is possible to have nested prefix Minus, e.g., - - a
-						so must call recursively into flattenTimes
-						*)
-						{ToNode[-1], flattenTimes[{#[[2, 2]]}, data]}
-						,
-						#
-					]
-				,
-				InfixNode[Times, _, _],
-					flattenTimes[#[[2, ;;;;2]], data]
-				,
-				(*
-				This rule for BinaryNode[Divide] illustrates the difference between the FE and kernel
+      TODO: add to kernel quirks mode
+      TODO: add to frontend quirks mode
+      *)
+      PrefixNode[Minus, { _, LeafNode[Integer | Real, _, _] }, _],
+        {negate[#[[2, 2]], data]}
+      ,
+      PrefixNode[Minus, { _, _?parenthesizedIntegerOrRealQ }, _],
+        {negate[#[[2, 2]], data]}
+      ,
+      PrefixNode[Minus, {_, _}, _],
+        If[flattenTimesQuirk,
+          (*
+          it is possible to have nested prefix Minus, e.g., - - a
+          so must call recursively into flattenTimes
+          *)
+          {ToNode[-1], flattenTimes[{#[[2, 2]]}, data]}
+          ,
+          #
+        ]
+      ,
+      InfixNode[Times, _, _],
+        flattenTimes[#[[2, ;;;;2]], data]
+      ,
+      (*
+      This rule for BinaryNode[Divide] illustrates the difference between the FE and kernel
 
-				TODO: add to kernel quirks mode
-				TODO: add to frontend quirks mode
-				*)
-				BinaryNode[Divide, {_, _, _}, _],
-					If[flattenTimesQuirk,
-						flattenTimes[{#[[2, 1]], reciprocate[#[[2, 3]], data]}, data]
-						,
-						#
-					]
-				,
-				_,
-					#
-			]
-		)& /@ nodes
-	]
+      TODO: add to kernel quirks mode
+      TODO: add to frontend quirks mode
+      *)
+      BinaryNode[Divide, {_, _, _}, _],
+        If[flattenTimesQuirk,
+          flattenTimes[{#[[2, 1]], reciprocate[#[[2, 3]], data]}, data]
+          ,
+          #
+        ]
+      ,
+      _,
+        #
+    ]
+  )& /@ nodes
+]
 
 abstractTimes[InfixNode[Times, children_, data_]] :=
 Module[{flattened, processed},
 
-	flattened = Flatten[flattenTimes[children, data]];
+  flattened = Flatten[flattenTimes[children, data]];
 
-	processed = processInfixBinaryAtQuirk[#, "Times"]& /@ flattened;
+  processed = processInfixBinaryAtQuirk[#, "Times"]& /@ flattened;
 
-	CallNode[ToNode[Times], abstract /@ processed, data]
+  CallNode[ToNode[Times], abstract /@ processed, data]
 ]
 
 abstractTimes[BinaryNode[Divide, {left_, right_}, data_]] :=
-	CallNode[ToNode[Times], abstract /@ Flatten[flattenTimes[{left, reciprocate[right, data]}, data]], data]
+  CallNode[ToNode[Times], abstract /@ Flatten[flattenTimes[{left, reciprocate[right, data]}, data]], data]
 
 
 
@@ -859,205 +859,205 @@ Also integrate the newer VectorInequality functionality
 abstractInfixInequality[InfixNode[InfixInequality, children_, data_]] :=
 Module[{processed, first, rator, rand, affinity},
 
-	first = children[[1]];
-	first = abstract[first];
+  first = children[[1]];
+  first = abstract[first];
 
-	processed = { first };
+  processed = { first };
 
-	(*
-	affinity is purposely not True nor False when starting
-	*)
-	Do[
-		rator = children[[i]];
-		rand = children[[i + 1]];
+  (*
+  affinity is purposely not True nor False when starting
+  *)
+  Do[
+    rator = children[[i]];
+    rand = children[[i + 1]];
 
-		rator = inequalityOperatorToSymbol[rator];
-		rand = abstract[rand];
+    rator = inequalityOperatorToSymbol[rator];
+    rand = abstract[rand];
 
-		Which[
-			vectorInequalityAffinity[rator] === False,
-				If[affinity === True,
-					(*
-					affinity is True, so all operators up to now are 1 sub node
-					*)
-					processed = { simplifyInfixInequality[processed, affinity, data], ToNode[rator], rand };
-					,
-					processed = processed ~Join~ {ToNode[rator], rand}
-				];
-				(*
-				affinity is definitely False now
-				*)
-				affinity = False;
-			,
-			vectorInequalityAffinity[rator] === True,
-				If[affinity === False,
-					(*
-					affinity is True, so all operators up to now are 1 sub node
-					*)
-					processed = { simplifyInfixInequality[processed, affinity, data], ToNode[rator], rand }
-					,
-					processed = processed ~Join~ {ToNode[rator], rand}
-				];
-				(*
-				affinity is definitely True now
-				*)
-				affinity = True;
-			,
-			True,
-				processed = processed ~Join~ {ToNode[rator], rand}
-		];
+    Which[
+      vectorInequalityAffinity[rator] === False,
+        If[affinity === True,
+          (*
+          affinity is True, so all operators up to now are 1 sub node
+          *)
+          processed = { simplifyInfixInequality[processed, affinity, data], ToNode[rator], rand };
+          ,
+          processed = processed ~Join~ {ToNode[rator], rand}
+        ];
+        (*
+        affinity is definitely False now
+        *)
+        affinity = False;
+      ,
+      vectorInequalityAffinity[rator] === True,
+        If[affinity === False,
+          (*
+          affinity is True, so all operators up to now are 1 sub node
+          *)
+          processed = { simplifyInfixInequality[processed, affinity, data], ToNode[rator], rand }
+          ,
+          processed = processed ~Join~ {ToNode[rator], rand}
+        ];
+        (*
+        affinity is definitely True now
+        *)
+        affinity = True;
+      ,
+      True,
+        processed = processed ~Join~ {ToNode[rator], rand}
+    ];
 
-		,
-		{i, 2, Length[children], 2}
-	];
+    ,
+    {i, 2, Length[children], 2}
+  ];
 
-	simplifyInfixInequality[processed, affinity, data]
+  simplifyInfixInequality[processed, affinity, data]
 ]
 
 
 simplifyInfixInequality[processed_, affinity_, data_] :=
 Module[{rators, rands},
 
-	rators = processed[[2;;-2;;2]];
-	rands = processed[[1;;-1;;2]];
+  rators = processed[[2;;-2;;2]];
+  rands = processed[[1;;-1;;2]];
 
-	(*
-	Try simple cases of all the same operator first
-	*)
-	Switch[rators,
-		{ToNode[Equal]..},
-			CallNode[ToNode[Equal], rands, data]
-		,
-		{ToNode[Unequal]..},
-			CallNode[ToNode[Unequal], rands, data]
-		,
-		{ToNode[Greater]..},
-			CallNode[ToNode[Greater], rands, data]
-		,
-		{ToNode[Less]..},
-			CallNode[ToNode[Less], rands, data]
-		,
-		{ToNode[GreaterEqual]..},
-			CallNode[ToNode[GreaterEqual], rands, data]
-		,
-		{ToNode[GreaterEqualLess]..},
-			CallNode[ToNode[GreaterEqualLess], rands, data]
-		,
-		{ToNode[GreaterFullEqual]..},
-			CallNode[ToNode[GreaterFullEqual], rands, data]
-		,
-		{ToNode[GreaterGreater]..},
-			CallNode[ToNode[GreaterGreater], rands, data]
-		,
-		{ToNode[GreaterLess]..},
-			CallNode[ToNode[GreaterLess], rands, data]
-		,
-		{ToNode[GreaterTilde]..},
-			CallNode[ToNode[GreaterTilde], rands, data]
-		,
-		{ToNode[LessEqual]..},
-			CallNode[ToNode[LessEqual], rands, data]
-		,
-		{ToNode[LessEqualGreater]..},
-			CallNode[ToNode[LessEqualGreater], rands, data]
-		,
-		{ToNode[LessFullEqual]..},
-			CallNode[ToNode[LessFullEqual], rands, data]
-		,
-		{ToNode[LessGreater]..},
-			CallNode[ToNode[LessGreater], rands, data]
-		,
-		{ToNode[LessLess]..},
-			CallNode[ToNode[LessLess], rands, data]
-		,
-		{ToNode[LessTilde]..},
-			CallNode[ToNode[LessTilde], rands, data]
-		,
-		{ToNode[NestedGreaterGreater]..},
-			CallNode[ToNode[NestedGreaterGreater], rands, data]
-		,
-		{ToNode[NestedLessLess]..},
-			CallNode[ToNode[NestedLessLess], rands, data]
-		,
-		{ToNode[NotGreater]..},
-			CallNode[ToNode[NotGreater], rands, data]
-		,
-		{ToNode[NotGreaterEqual]..},
-			CallNode[ToNode[NotGreaterEqual], rands, data]
-		,
-		{ToNode[NotGreaterFullEqual]..},
-			CallNode[ToNode[NotGreaterFullEqual], rands, data]
-		,
-		{ToNode[NotGreaterGreater]..},
-			CallNode[ToNode[NotGreaterGreater], rands, data]
-		,
-		{ToNode[NotGreaterLess]..},
-			CallNode[ToNode[NotGreaterLess], rands, data]
-		,
-		{ToNode[NotGreaterSlantEqual]..},
-			CallNode[ToNode[NotGreaterSlantEqual], rands, data]
-		,
-		{ToNode[NotGreaterTilde]..},
-			CallNode[ToNode[NotGreaterTilde], rands, data]
-		,
-		{ToNode[NotLess]..},
-			CallNode[ToNode[NotLess], rands, data]
-		,
-		{ToNode[NotLessEqual]..},
-			CallNode[ToNode[NotLessEqual], rands, data]
-		,
-		{ToNode[NotLessFullEqual]..},
-			CallNode[ToNode[NotLessFullEqual], rands, data]
-		,
-		{ToNode[NotLessGreater]..},
-			CallNode[ToNode[NotLessGreater], rands, data]
-		,
-		{ToNode[NotLessLess]..},
-			CallNode[ToNode[NotLessLess], rands, data]
-		,
-		{ToNode[NotLessSlantEqual]..},
-			CallNode[ToNode[NotLessSlantEqual], rands, data]
-		,
-		{ToNode[NotLessTilde]..},
-			CallNode[ToNode[NotLessTilde], rands, data]
-		,
-		{ToNode[NotNestedGreaterGreater]..},
-			CallNode[ToNode[NotNestedGreaterGreater], rands, data]
-		,
-		{ToNode[NotNestedLessLess]..},
-			CallNode[ToNode[NotNestedLessLess], rands, data]
-		,
-		{ToNode[System`VectorLess]..},
-			(*
-			Yes, make sure that it is VectorLess[{a, b, c}] and not VectorLess[a, b, c]
-			*)
-			CallNode[ToNode[System`VectorLess], { CallNode[ToNode[List], rands, <||>] }, data]
-		,
-		{ToNode[System`VectorGreater]..},
-			CallNode[ToNode[System`VectorGreater], { CallNode[ToNode[List], rands, <||>] }, data]
-		,
-		{ToNode[System`VectorLessEqual]..},
-			CallNode[ToNode[System`VectorLessEqual], { CallNode[ToNode[List], rands, <||>] }, data]
-		,
-		{ToNode[System`VectorGreaterEqual]..},
-			CallNode[ToNode[System`VectorGreaterEqual], { CallNode[ToNode[List], rands, <||>] }, data]
-		,
-		_,
-			Which[
-				affinity === True,
-					(*
-					Anything containing a combination inequality and Vector inequality operators is abstracted to VectorInequality
-					Related bugs: 385771
-					*)
-					CallNode[ToNode[Developer`VectorInequality], Riffle[rands, rators], data]
-				,
-				affinity === False,
-					CallNode[ToNode[Inequality], Riffle[rands, rators], data]
-				,
-				True,
-					CallNode[ToNode[Inequality], Riffle[rands, rators], data]
-			]
-	]
+  (*
+  Try simple cases of all the same operator first
+  *)
+  Switch[rators,
+    {ToNode[Equal]..},
+      CallNode[ToNode[Equal], rands, data]
+    ,
+    {ToNode[Unequal]..},
+      CallNode[ToNode[Unequal], rands, data]
+    ,
+    {ToNode[Greater]..},
+      CallNode[ToNode[Greater], rands, data]
+    ,
+    {ToNode[Less]..},
+      CallNode[ToNode[Less], rands, data]
+    ,
+    {ToNode[GreaterEqual]..},
+      CallNode[ToNode[GreaterEqual], rands, data]
+    ,
+    {ToNode[GreaterEqualLess]..},
+      CallNode[ToNode[GreaterEqualLess], rands, data]
+    ,
+    {ToNode[GreaterFullEqual]..},
+      CallNode[ToNode[GreaterFullEqual], rands, data]
+    ,
+    {ToNode[GreaterGreater]..},
+      CallNode[ToNode[GreaterGreater], rands, data]
+    ,
+    {ToNode[GreaterLess]..},
+      CallNode[ToNode[GreaterLess], rands, data]
+    ,
+    {ToNode[GreaterTilde]..},
+      CallNode[ToNode[GreaterTilde], rands, data]
+    ,
+    {ToNode[LessEqual]..},
+      CallNode[ToNode[LessEqual], rands, data]
+    ,
+    {ToNode[LessEqualGreater]..},
+      CallNode[ToNode[LessEqualGreater], rands, data]
+    ,
+    {ToNode[LessFullEqual]..},
+      CallNode[ToNode[LessFullEqual], rands, data]
+    ,
+    {ToNode[LessGreater]..},
+      CallNode[ToNode[LessGreater], rands, data]
+    ,
+    {ToNode[LessLess]..},
+      CallNode[ToNode[LessLess], rands, data]
+    ,
+    {ToNode[LessTilde]..},
+      CallNode[ToNode[LessTilde], rands, data]
+    ,
+    {ToNode[NestedGreaterGreater]..},
+      CallNode[ToNode[NestedGreaterGreater], rands, data]
+    ,
+    {ToNode[NestedLessLess]..},
+      CallNode[ToNode[NestedLessLess], rands, data]
+    ,
+    {ToNode[NotGreater]..},
+      CallNode[ToNode[NotGreater], rands, data]
+    ,
+    {ToNode[NotGreaterEqual]..},
+      CallNode[ToNode[NotGreaterEqual], rands, data]
+    ,
+    {ToNode[NotGreaterFullEqual]..},
+      CallNode[ToNode[NotGreaterFullEqual], rands, data]
+    ,
+    {ToNode[NotGreaterGreater]..},
+      CallNode[ToNode[NotGreaterGreater], rands, data]
+    ,
+    {ToNode[NotGreaterLess]..},
+      CallNode[ToNode[NotGreaterLess], rands, data]
+    ,
+    {ToNode[NotGreaterSlantEqual]..},
+      CallNode[ToNode[NotGreaterSlantEqual], rands, data]
+    ,
+    {ToNode[NotGreaterTilde]..},
+      CallNode[ToNode[NotGreaterTilde], rands, data]
+    ,
+    {ToNode[NotLess]..},
+      CallNode[ToNode[NotLess], rands, data]
+    ,
+    {ToNode[NotLessEqual]..},
+      CallNode[ToNode[NotLessEqual], rands, data]
+    ,
+    {ToNode[NotLessFullEqual]..},
+      CallNode[ToNode[NotLessFullEqual], rands, data]
+    ,
+    {ToNode[NotLessGreater]..},
+      CallNode[ToNode[NotLessGreater], rands, data]
+    ,
+    {ToNode[NotLessLess]..},
+      CallNode[ToNode[NotLessLess], rands, data]
+    ,
+    {ToNode[NotLessSlantEqual]..},
+      CallNode[ToNode[NotLessSlantEqual], rands, data]
+    ,
+    {ToNode[NotLessTilde]..},
+      CallNode[ToNode[NotLessTilde], rands, data]
+    ,
+    {ToNode[NotNestedGreaterGreater]..},
+      CallNode[ToNode[NotNestedGreaterGreater], rands, data]
+    ,
+    {ToNode[NotNestedLessLess]..},
+      CallNode[ToNode[NotNestedLessLess], rands, data]
+    ,
+    {ToNode[System`VectorLess]..},
+      (*
+      Yes, make sure that it is VectorLess[{a, b, c}] and not VectorLess[a, b, c]
+      *)
+      CallNode[ToNode[System`VectorLess], { CallNode[ToNode[List], rands, <||>] }, data]
+    ,
+    {ToNode[System`VectorGreater]..},
+      CallNode[ToNode[System`VectorGreater], { CallNode[ToNode[List], rands, <||>] }, data]
+    ,
+    {ToNode[System`VectorLessEqual]..},
+      CallNode[ToNode[System`VectorLessEqual], { CallNode[ToNode[List], rands, <||>] }, data]
+    ,
+    {ToNode[System`VectorGreaterEqual]..},
+      CallNode[ToNode[System`VectorGreaterEqual], { CallNode[ToNode[List], rands, <||>] }, data]
+    ,
+    _,
+      Which[
+        affinity === True,
+          (*
+          Anything containing a combination inequality and Vector inequality operators is abstracted to VectorInequality
+          Related bugs: 385771
+          *)
+          CallNode[ToNode[Developer`VectorInequality], Riffle[rands, rators], data]
+        ,
+        affinity === False,
+          CallNode[ToNode[Inequality], Riffle[rands, rators], data]
+        ,
+        True,
+          CallNode[ToNode[Inequality], Riffle[rands, rators], data]
+      ]
+  ]
 ]
 
 
@@ -1172,7 +1172,7 @@ vectorInequalityAffinity[System`VectorGreaterEqual] := True
 
 
 abstractComma[InfixNode[Comma, children_, data_]] :=
-	CallNode[ToNode[Comma], abstract /@ (children /. ErrorNode[Token`Error`PrefixImplicitNull | Token`Error`InfixImplicitNull, _, data1_] :> LeafNode[Symbol, "Null", data1]), data]
+  CallNode[ToNode[Comma], abstract /@ (children /. ErrorNode[Token`Error`PrefixImplicitNull | Token`Error`InfixImplicitNull, _, data1_] :> LeafNode[Symbol, "Null", data1]), data]
 
 
 (*
@@ -1181,23 +1181,23 @@ properly abstract and warn about a;b;[]
 abstractCompoundExpression[InfixNode[CompoundExpression, { headIn__, groupIn:GroupNode[GroupSquare, {first_, ___, last_}, _] }, dataIn_]] :=
 Module[{head, data, issues},
 
-	data = dataIn;
+  data = dataIn;
 
-	issues = Lookup[data, AbstractSyntaxIssues, {}];
+  issues = Lookup[data, AbstractSyntaxIssues, {}];
 
-	AppendTo[issues,
-		SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|
-			Source -> first[[3, Key[Source]]],
-			ConfidenceLevel -> 1.0,
-			"AdditionalSources" -> {last[[3, Key[Source]]]}
-		|>]
-	];
+  AppendTo[issues,
+    SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|
+      Source -> first[[3, Key[Source]]],
+      ConfidenceLevel -> 1.0,
+      "AdditionalSources" -> {last[[3, Key[Source]]]}
+    |>]
+  ];
 
-	AssociateTo[data, AbstractSyntaxIssues -> issues];
+  AssociateTo[data, AbstractSyntaxIssues -> issues];
 
-	head = InfixNode[CompoundExpression, Riffle[{headIn}, LeafNode[Token`Semi, ";", <||>]] ~Join~ {LeafNode[Token`Semi, ";", <||>], LeafNode[Token`Fake`ImplicitNull, "", <||>]}, <||>];
+  head = InfixNode[CompoundExpression, Riffle[{headIn}, LeafNode[Token`Semi, ";", <||>]] ~Join~ {LeafNode[Token`Semi, ";", <||>], LeafNode[Token`Fake`ImplicitNull, "", <||>]}, <||>];
 
-	abstract[CallNode[head, { groupIn }, data]]
+  abstract[CallNode[head, { groupIn }, data]]
 ]
 
 (*
@@ -1206,23 +1206,23 @@ properly abstract and warn about a;b;[];c
 abstractCompoundExpression[InfixNode[CompoundExpression, { headIn__, groupIn:GroupNode[GroupSquare, {first_, ___, last_}, _], rest__ }, dataIn_]] :=
 Module[{head, data, issues},
 
-	data = dataIn;
+  data = dataIn;
 
-	issues = Lookup[data, AbstractSyntaxIssues, {}];
+  issues = Lookup[data, AbstractSyntaxIssues, {}];
 
-	AppendTo[issues,
-		SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|
-			Source -> first[[3, Key[Source]]],
-			ConfidenceLevel -> 1.0,
-			"AdditionalSources" -> {last[[3, Key[Source]]]}
-		|>]
-	];
+  AppendTo[issues,
+    SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|
+      Source -> first[[3, Key[Source]]],
+      ConfidenceLevel -> 1.0,
+      "AdditionalSources" -> {last[[3, Key[Source]]]}
+    |>]
+  ];
 
-	AssociateTo[data, AbstractSyntaxIssues -> issues];
+  AssociateTo[data, AbstractSyntaxIssues -> issues];
 
     head = InfixNode[CompoundExpression, Riffle[{headIn}, LeafNode[Token`Semi, ";", <||>]] ~Join~ {LeafNode[Token`Semi, ";", <||>], LeafNode[Token`Fake`ImplicitNull, "", <||>]}, <||>];
 
-	abstract[InfixNode[CompoundExpression, { CallNode[head, { groupIn }, data], LeafNode[Token`Semi, ";", <||>] } ~Join~ Riffle[{rest}, LeafNode[Token`Semi, ";", <||>]], <||>]]
+  abstract[InfixNode[CompoundExpression, { CallNode[head, { groupIn }, data], LeafNode[Token`Semi, ";", <||>] } ~Join~ Riffle[{rest}, LeafNode[Token`Semi, ";", <||>]], <||>]]
 ]
 
 
@@ -1236,13 +1236,13 @@ Module[{head, data, issues},
 
     issues = Lookup[data, AbstractSyntaxIssues, {}];
 
-	AppendTo[issues,
-		SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Error", <|
-			Source -> first[[3, Key[Source]]],
-			ConfidenceLevel -> 1.0,
-			"AdditionalSources" -> {last[[3, Key[Source]]]}
-		|>]
-	];
+  AppendTo[issues,
+    SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Error", <|
+      Source -> first[[3, Key[Source]]],
+      ConfidenceLevel -> 1.0,
+      "AdditionalSources" -> {last[[3, Key[Source]]]}
+    |>]
+  ];
 
     AssociateTo[data, AbstractSyntaxIssues -> issues];
 
@@ -1261,13 +1261,13 @@ Module[{head, data, issues},
 
     issues = Lookup[data, AbstractSyntaxIssues, {}];
 
-	AppendTo[issues,
-		SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Error", <|
-			Source -> first[[3, Key[Source]]],
-			ConfidenceLevel -> 1.0,
-			"AdditionalSources" -> {last[[3, Key[Source]]]}
-		|>]
-	];
+  AppendTo[issues,
+    SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Error", <|
+      Source -> first[[3, Key[Source]]],
+      ConfidenceLevel -> 1.0,
+      "AdditionalSources" -> {last[[3, Key[Source]]]}
+    |>]
+  ];
 
     AssociateTo[data, AbstractSyntaxIssues -> issues];
 
@@ -1281,10 +1281,10 @@ abstractCompoundExpressionChild[LeafNode[Token`Fake`ImplicitNull, _, data_]] :=
     LeafNode[Symbol, "Null", data]
 
 abstractCompoundExpressionChild[c_] :=
-	abstract[c]
+  abstract[c]
 
 abstractCompoundExpression[InfixNode[CompoundExpression, children_, data_]] :=
-	CallNode[ToNode[CompoundExpression], abstractCompoundExpressionChild /@ children, data]
+  CallNode[ToNode[CompoundExpression], abstractCompoundExpressionChild /@ children, data]
 
 
 
@@ -1301,24 +1301,24 @@ abstract syntax MessageName[a, "b"]
 *)
 abstractMessageName[InfixNode[MessageName, {left_, rest__}, dataIn_]] :=
 Module[{data, issues},
-	
-	data = dataIn;
+  
+  data = dataIn;
 
-	issues = {};
+  issues = {};
 
-	(*
-	a::b::c::d
-	*)
-	If[Length[{rest}] > 2,
-		AppendTo[issues, SyntaxIssue["SyntaxUndocumentedMessageName", "This syntax is not documented.", "Error", <| Source -> data[Source], ConfidenceLevel -> 1.0 |>]];
-	];
-	
-	If[issues != {},
-		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
-		AssociateTo[data, AbstractSyntaxIssues -> issues];
-	];
+  (*
+  a::b::c::d
+  *)
+  If[Length[{rest}] > 2,
+    AppendTo[issues, SyntaxIssue["SyntaxUndocumentedMessageName", "This syntax is not documented.", "Error", <| Source -> data[Source], ConfidenceLevel -> 1.0 |>]];
+  ];
+  
+  If[issues != {},
+    issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+    AssociateTo[data, AbstractSyntaxIssues -> issues];
+  ];
 
-	CallNode[ToNode[MessageName], {abstract[left]} ~Join~ (abstractMessageNameChild /@ {rest}), data]
+  CallNode[ToNode[MessageName], {abstract[left]} ~Join~ (abstractMessageNameChild /@ {rest}), data]
 ]
 
 
@@ -1338,9 +1338,9 @@ make sure to reverse children of Divisible
 abstractDivisible[InfixNode[Divisible, children_, data_]] :=
 Module[{processed},
 
-	processed = processInfixBinaryAtQuirk[#, "Divisible"]& /@ children;
+  processed = processInfixBinaryAtQuirk[#, "Divisible"]& /@ children;
 
-	CallNode[ToNode[Divisible], abstract /@ Reverse[processed], data]
+  CallNode[ToNode[Divisible], abstract /@ Reverse[processed], data]
 ]
 
 
@@ -1354,23 +1354,23 @@ Collect all of the ' in f'''[x]
 
 derivativeOrderAndAbstractedBody[PostfixNode[Derivative, {rand_, _}, data_]] :=
 Module[{order, body},
-	{order, body} = derivativeOrderAndAbstractedBody[rand];
-	{order+1, body}
+  {order, body} = derivativeOrderAndAbstractedBody[rand];
+  {order+1, body}
 ]
 
 derivativeOrderAndAbstractedBody[node_] :=
-	{0, abstract[node]}
+  {0, abstract[node]}
 
 abstractDerivative[PostfixNode[Derivative, {rand_, LeafNode[Token`SingleQuote, _, _]}, data_]] :=
 Module[{order, abstractedBody},
-	{order, abstractedBody} = derivativeOrderAndAbstractedBody[rand];
-	CallNode[CallNode[ToNode[Derivative], {ToNode[order+1]}, <||>], {abstractedBody}, <||>]
+  {order, abstractedBody} = derivativeOrderAndAbstractedBody[rand];
+  CallNode[CallNode[ToNode[Derivative], {ToNode[order+1]}, <||>], {abstractedBody}, <||>]
 ]
 
 abstractDerivative[PostfixNode[Derivative, {rand_, LeafNode[Token`Boxes`MultiSingleQuote, quoteStr_, _]}, data_]] :=
 Module[{order},
-	order = StringLength[quoteStr];
-	CallNode[CallNode[ToNode[Derivative], {ToNode[order]}, <||>], {abstract[rand]}, <||>]
+  order = StringLength[quoteStr];
+  CallNode[CallNode[ToNode[Derivative], {ToNode[order]}, <||>], {abstract[rand]}, <||>]
 ]
 
 
@@ -1380,22 +1380,22 @@ only from boxes
 *)
 
 abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {left_, middle_}, dataIn_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {left, middle}, dataIn]
+  AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {left, middle}, dataIn]
 
 abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {left_, middle_, right_}, dataIn_]] :=
-	CallNode[abstract[middle], {left, abstract[right]}, dataIn]
+  CallNode[abstract[middle], {left, abstract[right]}, dataIn]
 
 abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {left_, middle_, right_, rest___}, dataIn_]] :=
-	abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {left, middle, right}, <||>]], rest}, dataIn]]
+  abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {left, middle, right}, <||>]], rest}, dataIn]]
 
 abstractInfixTilde[InfixNode[InfixTilde, {left_, middle_}, dataIn_]] :=
-	AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {left, middle}, dataIn]
+  AbstractSyntaxErrorNode[AbstractSyntaxError`ExpectedTilde, {left, middle}, dataIn]
 
 abstractInfixTilde[InfixNode[InfixTilde, {left_, middle_, right_}, dataIn_]] :=
-	abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {abstract[left], middle, right}, dataIn]]
+  abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {abstract[left], middle, right}, dataIn]]
 
 abstractInfixTilde[InfixNode[InfixTilde, {left_, middle_, right_, rest___}, dataIn_]] :=
-	abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {abstractInfixTilde[InfixNode[InfixTilde, {left, middle, right}, <||>]], rest}, dataIn]]
+  abstractInfixTildeLeftAlreadyAbstracted[InfixNode[InfixTilde, {abstractInfixTilde[InfixNode[InfixTilde, {left, middle, right}, <||>]], rest}, dataIn]]
 
 
 
@@ -1410,21 +1410,21 @@ Fills in Nulls and gives SyntaxIssues for e.g. {1,,2}
 *)
 abstractGroupNode[GroupNode[tag_, childrenIn_, dataIn_]] :=
 Module[{children, abstractedChildren, issues, data},
-	
-	children = childrenIn;
-	data = dataIn;
+  
+  children = childrenIn;
+  data = dataIn;
 
-	children = children[[2;;-2]];
+  children = children[[2;;-2]];
 
-	abstractedChildren = Flatten[selectChildren /@ (abstract /@ children)];
+  abstractedChildren = Flatten[selectChildren /@ (abstract /@ children)];
 
-	issues = Lookup[data, AbstractSyntaxIssues, {}];
+  issues = Lookup[data, AbstractSyntaxIssues, {}];
 
-	If[issues != {},
-		AssociateTo[data, AbstractSyntaxIssues -> issues];
-	];
+  If[issues != {},
+    AssociateTo[data, AbstractSyntaxIssues -> issues];
+  ];
 
-	CallNode[ToNode[tag], abstractedChildren, data]
+  CallNode[ToNode[tag], abstractedChildren, data]
 ]
 
 
@@ -1436,40 +1436,40 @@ selectChildren[n_] := n
 abstractGroupNode[GroupMissingCloserNode[tag_, childrenIn_, dataIn_]] :=
 Module[{children, abstractedChildren, issues, data},
 
-	children = childrenIn;
-	data = dataIn;
+  children = childrenIn;
+  data = dataIn;
 
-	children = children[[2;;]];
+  children = children[[2;;]];
 
-	abstractedChildren = Flatten[selectChildren /@ (abstract /@ children)];
+  abstractedChildren = Flatten[selectChildren /@ (abstract /@ children)];
 
-	issues = Lookup[data, AbstractSyntaxIssues, {}];
+  issues = Lookup[data, AbstractSyntaxIssues, {}];
 
-	If[issues != {},
-		AssociateTo[data, AbstractSyntaxIssues -> issues];
-	];
+  If[issues != {},
+    AssociateTo[data, AbstractSyntaxIssues -> issues];
+  ];
 
-	GroupMissingCloserNode[tag, abstractedChildren, data]
+  GroupMissingCloserNode[tag, abstractedChildren, data]
 ]
 
 
 abstractGroupNode[GroupMissingOpenerNode[tag_, childrenIn_, dataIn_]] :=
 Module[{children, abstractedChildren, issues, data},
 
-	children = childrenIn;
-	data = dataIn;
+  children = childrenIn;
+  data = dataIn;
 
-	children = children[[;;-2]];
+  children = children[[;;-2]];
 
-	abstractedChildren = Flatten[selectChildren /@ (abstract /@ children)];
+  abstractedChildren = Flatten[selectChildren /@ (abstract /@ children)];
 
-	issues = Lookup[data, AbstractSyntaxIssues, {}];
+  issues = Lookup[data, AbstractSyntaxIssues, {}];
 
-	If[issues != {},
-		AssociateTo[data, AbstractSyntaxIssues -> issues];
-	];
+  If[issues != {},
+    AssociateTo[data, AbstractSyntaxIssues -> issues];
+  ];
 
-	GroupMissingOpenerNode[tag, abstractedChildren, data]
+  GroupMissingOpenerNode[tag, abstractedChildren, data]
 ]
 
 
@@ -1494,139 +1494,139 @@ So convert from concrete [[ syntax to abstract Part syntax
 abstractCallNode[CallNode[headIn_, {GroupNode[GroupSquare, {first_, inner:GroupNode[GroupSquare, _, _], last_}, _]}, dataIn_]] :=
 Module[{head, data, part, issues},
 
-	head = headIn;
-	data = dataIn;
-	part = inner;
-	issues = {};
+  head = headIn;
+  data = dataIn;
+  part = inner;
+  issues = {};
 
-	Switch[head,
-			(*
-			feel strongly about ##2[[arg]]
-			##2 represents a sequence of arguments, so it is wrong to call
-			*)
-			LeafNode[Token`HashHash, _, _] | CompoundNode[SlotSequence, _, _],
-				AppendTo[issues,
+  Switch[head,
+      (*
+      feel strongly about ##2[[arg]]
+      ##2 represents a sequence of arguments, so it is wrong to call
+      *)
+      LeafNode[Token`HashHash, _, _] | CompoundNode[SlotSequence, _, _],
+        AppendTo[issues,
 
-					SyntaxIssue["StrangeCallSlotSequence", "Unexpected ``Part`` call.", "Error", <|
-						Source -> first[[3, Key[Source]]],
-						ConfidenceLevel -> 1.0,
-						"AdditionalSources" -> {last[[3, Key[Source]]]}
-					|>]
-				];
-			,
-			LeafNode[Symbol (* | String *) | Token`Hash | Token`Under | Token`UnderUnder | Token`UnderUnderUnder, _, _] | _CallNode |
-				CompoundNode[Blank | BlankSequence | BlankNullSequence | PatternBlank | PatternBlankSequence | PatternBlankNullSequence | Slot (* | SlotSequence *), _, _],
-				(* these are fine *)
-				Null
-			,
-			LeafNode[Token`Percent | Token`PercentPercent, _, _] | CompoundNode[Out, _, _],
-				(*
-				was:
+          SyntaxIssue["StrangeCallSlotSequence", "Unexpected ``Part`` call.", "Error", <|
+            Source -> first[[3, Key[Source]]],
+            ConfidenceLevel -> 1.0,
+            "AdditionalSources" -> {last[[3, Key[Source]]]}
+          |>]
+        ];
+      ,
+      LeafNode[Symbol (* | String *) | Token`Hash | Token`Under | Token`UnderUnder | Token`UnderUnderUnder, _, _] | _CallNode |
+        CompoundNode[Blank | BlankSequence | BlankNullSequence | PatternBlank | PatternBlankSequence | PatternBlankNullSequence | Slot (* | SlotSequence *), _, _],
+        (* these are fine *)
+        Null
+      ,
+      LeafNode[Token`Percent | Token`PercentPercent, _, _] | CompoundNode[Out, _, _],
+        (*
+        was:
 
-				AppendTo[issues,
-					SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Warning", <|
-						Source -> first[[3, Key[Source]]],
-						ConfidenceLevel -> 0.95,
-						"AdditionalSources" -> {last[[3, Key[Source]]]}
-					|>]
-				];
+        AppendTo[issues,
+          SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Warning", <|
+            Source -> first[[3, Key[Source]]],
+            ConfidenceLevel -> 0.95,
+            "AdditionalSources" -> {last[[3, Key[Source]]]}
+          |>]
+        ];
 
-				but % is already scanned in CodeInspector TokenRules, and this just adds more noise
+        but % is already scanned in CodeInspector TokenRules, and this just adds more noise
 
-				*)
+        *)
 
-				(* these are fine *)
-				Null
-			,
-			LeafNode[Token`LinearSyntaxBlob, _, _],
+        (* these are fine *)
+        Null
+      ,
+      LeafNode[Token`LinearSyntaxBlob, _, _],
 
-				AppendTo[issues,
-					SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Remark", <|
-						Source -> first[[3, Key[Source]]],
-						ConfidenceLevel -> 0.95,
-						"AdditionalSources" -> {last[[3, Key[Source]]]}
-					|>]
-				];
-			,
-			PrefixNode[PrefixLinearSyntaxBang, _, _],
+        AppendTo[issues,
+          SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Remark", <|
+            Source -> first[[3, Key[Source]]],
+            ConfidenceLevel -> 0.95,
+            "AdditionalSources" -> {last[[3, Key[Source]]]}
+          |>]
+        ];
+      ,
+      PrefixNode[PrefixLinearSyntaxBang, _, _],
 
-				AppendTo[issues,
-					SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Remark", <|
-						Source -> first[[3, Key[Source]]],
-						ConfidenceLevel -> 0.95,
-						"AdditionalSources" -> {last[[3, Key[Source]]]}
-					|>]
-				];
-			,
-			InfixNode[CompoundExpression, _, _],
-				(* CompoundExpression was already handled *)
-				Null
-			,
-			(*
-			BinaryNode[PatternTest, _, _],
-				(* these are fine *)
-				Null
-			,*)
-			GroupNode[GroupParen | List | Association, _, _],
-				(* these are fine *)
-				Null
-			,
-			GroupNode[_, _, _],
+        AppendTo[issues,
+          SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Remark", <|
+            Source -> first[[3, Key[Source]]],
+            ConfidenceLevel -> 0.95,
+            "AdditionalSources" -> {last[[3, Key[Source]]]}
+          |>]
+        ];
+      ,
+      InfixNode[CompoundExpression, _, _],
+        (* CompoundExpression was already handled *)
+        Null
+      ,
+      (*
+      BinaryNode[PatternTest, _, _],
+        (* these are fine *)
+        Null
+      ,*)
+      GroupNode[GroupParen | List | Association, _, _],
+        (* these are fine *)
+        Null
+      ,
+      GroupNode[_, _, _],
 
-				AppendTo[issues,
-					SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Warning", <|
-						Source -> first[[3, Key[Source]]],
-						ConfidenceLevel -> 0.95,
-						"AdditionalSources" -> {last[[3, Key[Source]]]}
-					|>]
-				];
-			,
-			PostfixNode[Transpose, _, _],
-			(*
-			a\[Transpose][[2]] is fine
-			*)
-			Null
-			,
-			(*
-			Now handle boxes
-			*)
-			BoxNode[$okCallBoxPat, _, _],
-				(* this is fine *)
-				Null
-			,
-			BoxNode[_, _, _],
-				
-				AppendTo[issues,
-					SyntaxIssue["StrangeCall", "Unexpected ``Part`` call: ``" <> ToString[head[[1]]] <> "``.", "Error", <|
-						Source -> first[[3, Key[Source]]],
-						ConfidenceLevel -> 0.95,
-						"AdditionalSources" -> {last[[3, Key[Source]]]}
-					|>]
-				];
-			,
-			_,
-				(*
-				warn about anything else
-				*)
+        AppendTo[issues,
+          SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Warning", <|
+            Source -> first[[3, Key[Source]]],
+            ConfidenceLevel -> 0.95,
+            "AdditionalSources" -> {last[[3, Key[Source]]]}
+          |>]
+        ];
+      ,
+      PostfixNode[Transpose, _, _],
+      (*
+      a\[Transpose][[2]] is fine
+      *)
+      Null
+      ,
+      (*
+      Now handle boxes
+      *)
+      BoxNode[$okCallBoxPat, _, _],
+        (* this is fine *)
+        Null
+      ,
+      BoxNode[_, _, _],
+        
+        AppendTo[issues,
+          SyntaxIssue["StrangeCall", "Unexpected ``Part`` call: ``" <> ToString[head[[1]]] <> "``.", "Error", <|
+            Source -> first[[3, Key[Source]]],
+            ConfidenceLevel -> 0.95,
+            "AdditionalSources" -> {last[[3, Key[Source]]]}
+          |>]
+        ];
+      ,
+      _,
+        (*
+        warn about anything else
+        *)
 
-				AppendTo[issues,
-					SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Error", <|
-						Source -> first[[3, Key[Source]]],
-						ConfidenceLevel -> 0.95,
-						"AdditionalSources" -> {last[[3, Key[Source]]]}
-					|>]
-				];
-	];
+        AppendTo[issues,
+          SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Error", <|
+            Source -> first[[3, Key[Source]]],
+            ConfidenceLevel -> 0.95,
+            "AdditionalSources" -> {last[[3, Key[Source]]]}
+          |>]
+        ];
+  ];
 
-	head = abstract[head];
-	part = abstractGroupNode[part];
+  head = abstract[head];
+  part = abstractGroupNode[part];
 
-	If[issues != {},
-		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
-		AssociateTo[data, AbstractSyntaxIssues -> issues];
-	];
+  If[issues != {},
+    issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+    AssociateTo[data, AbstractSyntaxIssues -> issues];
+  ];
 
-	CallNode[ToNode[Part], {head} ~Join~ part[[2]], data]
+  CallNode[ToNode[Part], {head} ~Join~ part[[2]], data]
 ]
 
 (*
@@ -1643,134 +1643,134 @@ feel strongly about ##2[arg]
 *)
 abstractCallNode[CallNode[headIn:LeafNode[Token`HashHash, _, _] | CompoundNode[SlotSequence, _, _], {partIn:GroupNode[GroupSquare, {first_, ___, last_}, _]}, dataIn_]] :=
 Module[{head, part, partData, issues, data},
-	head = headIn;
-	part = partIn;
-	data = dataIn;
+  head = headIn;
+  part = partIn;
+  data = dataIn;
 
-	issues = {};
+  issues = {};
 
-	AppendTo[issues,
-		SyntaxIssue["StrangeCallSlotSequence", "Unexpected call.", "Error", <|
-			Source -> first[[3, Key[Source]]],
-			ConfidenceLevel -> 1.0,
-			"AdditionalSources" -> {last[[3, Key[Source]]]}
-		|>]
-	];
+  AppendTo[issues,
+    SyntaxIssue["StrangeCallSlotSequence", "Unexpected call.", "Error", <|
+      Source -> first[[3, Key[Source]]],
+      ConfidenceLevel -> 1.0,
+      "AdditionalSources" -> {last[[3, Key[Source]]]}
+    |>]
+  ];
 
-	head = abstract[head];
-	part = abstractGroupNode[part];
-	partData = part[[3]];
+  head = abstract[head];
+  part = abstractGroupNode[part];
+  partData = part[[3]];
 
-	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+  issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
 
-	If[issues != {},
-		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
-		AssociateTo[data, AbstractSyntaxIssues -> issues];
-	];
+  If[issues != {},
+    issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+    AssociateTo[data, AbstractSyntaxIssues -> issues];
+  ];
 
-	CallNode[head, part[[2]], data]
+  CallNode[head, part[[2]], data]
 ]
 
 abstractCallNode[CallNode[headIn:LeafNode[Symbol | String | Token`Hash | Token`Under | Token`UnderUnder | Token`UnderUnderUnder, _, _] | _CallNode |
-			 CompoundNode[Blank | BlankSequence | BlankNullSequence | PatternBlank | PatternBlankSequence | PatternBlankNullSequence | Slot (*| SlotSequence*), _, _], {partIn:GroupNode[GroupSquare, _, _]}, dataIn_]] :=
+       CompoundNode[Blank | BlankSequence | BlankNullSequence | PatternBlank | PatternBlankSequence | PatternBlankNullSequence | Slot (*| SlotSequence*), _, _], {partIn:GroupNode[GroupSquare, _, _]}, dataIn_]] :=
 Module[{head, part, partData, issues, data},
-	head = headIn;
-	part = partIn;
-	data = dataIn;
+  head = headIn;
+  part = partIn;
+  data = dataIn;
 
-	issues = {};
+  issues = {};
 
-	head = abstract[head];
-	part = abstractGroupNode[part];
-	partData = part[[3]];
+  head = abstract[head];
+  part = abstractGroupNode[part];
+  partData = part[[3]];
 
-	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+  issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
 
-	If[issues != {},
-		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
-		AssociateTo[data, AbstractSyntaxIssues -> issues];
-	];
+  If[issues != {},
+    issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+    AssociateTo[data, AbstractSyntaxIssues -> issues];
+  ];
 
-	CallNode[head, part[[2]], data]
+  CallNode[head, part[[2]], data]
 ]
 
 abstractCallNode[CallNode[headIn:LeafNode[Token`Percent | Token`PercentPercent, _, _] | CompoundNode[Out, _, _], {partIn:GroupNode[GroupSquare, {first_, ___, last_}, _]}, dataIn_]] :=
 Module[{head, part, partData, issues, data},
-	head = headIn;
-	part = partIn;
-	data = dataIn;
+  head = headIn;
+  part = partIn;
+  data = dataIn;
 
-	issues = {};
+  issues = {};
 
-	(*
-	was:
-	AppendTo[issues,
-		SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|
-			Source -> first[[3, Key[Source]]],
-			ConfidenceLevel -> 0.95,
-			"AdditionalSources" -> {last[[3, Key[Source]]]}
-		|>]
-	];
+  (*
+  was:
+  AppendTo[issues,
+    SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|
+      Source -> first[[3, Key[Source]]],
+      ConfidenceLevel -> 0.95,
+      "AdditionalSources" -> {last[[3, Key[Source]]]}
+    |>]
+  ];
 
-	but % is already scanned in CodeInspector TokenRules, and this just adds more noise
-	*)
+  but % is already scanned in CodeInspector TokenRules, and this just adds more noise
+  *)
 
-	head = abstract[head];
-	part = abstractGroupNode[part];
-	partData = part[[3]];
+  head = abstract[head];
+  part = abstractGroupNode[part];
+  partData = part[[3]];
 
-	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+  issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
 
-	If[issues != {},
-		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
-		AssociateTo[data, AbstractSyntaxIssues -> issues];
-	];
+  If[issues != {},
+    issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+    AssociateTo[data, AbstractSyntaxIssues -> issues];
+  ];
 
-	CallNode[head, part[[2]], data]
+  CallNode[head, part[[2]], data]
 ]
 
 abstractCallNode[CallNode[headIn:BinaryNode[PatternTest, _, _], {partIn:GroupNode[GroupSquare, _, _]}, dataIn_]] :=
 Module[{head, part, partData, issues, data},
-	head = headIn;
-	part = partIn;
-	data = dataIn;
+  head = headIn;
+  part = partIn;
+  data = dataIn;
 
-	issues = {};
+  issues = {};
 
-	head = abstract[head];
-	part = abstractGroupNode[part];
-	partData = part[[3]];
+  head = abstract[head];
+  part = abstractGroupNode[part];
+  partData = part[[3]];
 
-	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+  issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
 
-	If[issues != {},
-		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
-		AssociateTo[data, AbstractSyntaxIssues -> issues];
-	];
+  If[issues != {},
+    issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+    AssociateTo[data, AbstractSyntaxIssues -> issues];
+  ];
 
-	CallNode[head, part[[2]], data]
+  CallNode[head, part[[2]], data]
 ]
 
 abstractCallNode[CallNode[headIn:InfixNode[CompoundExpression, _, _], {partIn:GroupNode[GroupSquare, _, _]}, dataIn_]] :=
 Module[{head, part, partData, issues, data},
-	head = headIn;
-	part = partIn;
-	data = dataIn;
+  head = headIn;
+  part = partIn;
+  data = dataIn;
 
-	issues = {};
+  issues = {};
 
-	head = abstract[head];
-	part = abstractGroupNode[part];
-	partData = part[[3]];
+  head = abstract[head];
+  part = abstractGroupNode[part];
+  partData = part[[3]];
 
-	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+  issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
 
-	If[issues != {},
-		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
-		AssociateTo[data, AbstractSyntaxIssues -> issues];
-	];
+  If[issues != {},
+    issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+    AssociateTo[data, AbstractSyntaxIssues -> issues];
+  ];
 
-	CallNode[head, part[[2]], data]
+  CallNode[head, part[[2]], data]
 ]
 
 (*
@@ -1780,130 +1780,130 @@ Through[{a, b, c}[1]]
 *)
 abstractCallNode[CallNode[headIn:GroupNode[GroupParen | List | Association, _, _], {partIn:GroupNode[GroupSquare, _, _]}, dataIn_]] :=
 Module[{head, part, partData, issues, data},
-	head = headIn;
-	part = partIn;
-	data = dataIn;
+  head = headIn;
+  part = partIn;
+  data = dataIn;
 
-	issues = {};
+  issues = {};
 
-	head = abstract[head];
-	part = abstractGroupNode[part];
-	partData = part[[3]];
+  head = abstract[head];
+  part = abstractGroupNode[part];
+  partData = part[[3]];
 
-	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+  issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
 
-	If[issues != {},
-		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
-		AssociateTo[data, AbstractSyntaxIssues -> issues];
-	];
+  If[issues != {},
+    issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+    AssociateTo[data, AbstractSyntaxIssues -> issues];
+  ];
 
-	CallNode[head, part[[2]], data]
+  CallNode[head, part[[2]], data]
 ]
 
 abstractCallNode[CallNode[headIn:GroupNode[_, _, _], {partIn:GroupNode[GroupSquare, {first_, ___, last_}, _]}, dataIn_]] :=
 Module[{head, part, partData, issues, data},
-	head = headIn;
-	part = partIn;
-	data = dataIn;
+  head = headIn;
+  part = partIn;
+  data = dataIn;
 
-	issues = {};
+  issues = {};
 
-	AppendTo[issues,
-		SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|
-			Source -> first[[3, Key[Source]]],
-			ConfidenceLevel -> 0.95,
-			"AdditionalSources" -> {last[[3, Key[Source]]]}
-		|>]
-	];
+  AppendTo[issues,
+    SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|
+      Source -> first[[3, Key[Source]]],
+      ConfidenceLevel -> 0.95,
+      "AdditionalSources" -> {last[[3, Key[Source]]]}
+    |>]
+  ];
 
-	head = abstract[head];
-	part = abstractGroupNode[part];
-	partData = part[[3]];
+  head = abstract[head];
+  part = abstractGroupNode[part];
+  partData = part[[3]];
 
-	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+  issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
 
-	If[issues != {},
-		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
-		AssociateTo[data, AbstractSyntaxIssues -> issues];
-	];
+  If[issues != {},
+    issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+    AssociateTo[data, AbstractSyntaxIssues -> issues];
+  ];
 
-	CallNode[head, part[[2]], data]
+  CallNode[head, part[[2]], data]
 ]
 
 (* these are fine *)
 abstractCallNode[CallNode[headIn:PostfixNode[Function | Derivative, _, _], {partIn:GroupNode[GroupSquare, _, _]}, dataIn_]] :=
 Module[{head, part, partData, issues, data},
-	head = headIn;
-	part = partIn;
-	data = dataIn;
+  head = headIn;
+  part = partIn;
+  data = dataIn;
 
-	issues = {};
+  issues = {};
 
-	head = abstract[head];
-	part = abstractGroupNode[part];
-	partData = part[[3]];
+  head = abstract[head];
+  part = abstractGroupNode[part];
+  partData = part[[3]];
 
-	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+  issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
 
-	If[issues != {},
-		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
-		AssociateTo[data, AbstractSyntaxIssues -> issues];
-	];
+  If[issues != {},
+    issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+    AssociateTo[data, AbstractSyntaxIssues -> issues];
+  ];
 
-	CallNode[head, part[[2]], data]
+  CallNode[head, part[[2]], data]
 ]
 
 (* this is fine *)
 abstractCallNode[CallNode[headIn:BoxNode[$okCallBoxPat, _, _], {partIn:GroupNode[GroupSquare, _, _]}, dataIn_]] :=
 Module[{head, part, partData, issues, data},
-	head = headIn;
-	part = partIn;
-	data = dataIn;
+  head = headIn;
+  part = partIn;
+  data = dataIn;
 
-	issues = {};
+  issues = {};
 
-	head = abstract[head];
-	part = abstractGroupNode[part];
-	partData = part[[3]];
+  head = abstract[head];
+  part = abstractGroupNode[part];
+  partData = part[[3]];
 
-	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+  issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
 
-	If[issues != {},
-		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
-		AssociateTo[data, AbstractSyntaxIssues -> issues];
-	];
+  If[issues != {},
+    issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+    AssociateTo[data, AbstractSyntaxIssues -> issues];
+  ];
 
-	CallNode[head, part[[2]], data]
+  CallNode[head, part[[2]], data]
 ]
 
 abstractCallNode[CallNode[headIn:BoxNode[tag_, _, _], {partIn:GroupNode[GroupSquare, {first_, ___, last_}, _]}, dataIn_]] :=
 Module[{head, part, partData, issues, data},
-	head = headIn;
-	part = partIn;
-	data = dataIn;
+  head = headIn;
+  part = partIn;
+  data = dataIn;
 
-	issues = {};
+  issues = {};
 
-	AppendTo[issues,
-		SyntaxIssue["StrangeCall", "Unexpected call: ``" <> ToString[tag] <> "``.", "Error", <|
-			Source -> first[[3, Key[Source]]],
-			ConfidenceLevel -> 0.95,
-			"AdditionalSources" -> {last[[3, Key[Source]]]}
-		|>]
-	];
+  AppendTo[issues,
+    SyntaxIssue["StrangeCall", "Unexpected call: ``" <> ToString[tag] <> "``.", "Error", <|
+      Source -> first[[3, Key[Source]]],
+      ConfidenceLevel -> 0.95,
+      "AdditionalSources" -> {last[[3, Key[Source]]]}
+    |>]
+  ];
 
-	head = abstract[head];
-	part = abstractGroupNode[part];
-	partData = part[[3]];
+  head = abstract[head];
+  part = abstractGroupNode[part];
+  partData = part[[3]];
 
-	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+  issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
 
-	If[issues != {},
-		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
-		AssociateTo[data, AbstractSyntaxIssues -> issues];
-	];
+  If[issues != {},
+    issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+    AssociateTo[data, AbstractSyntaxIssues -> issues];
+  ];
 
-	CallNode[head, part[[2]], data]
+  CallNode[head, part[[2]], data]
 ]
 
 
@@ -1912,32 +1912,32 @@ warn about anything else
 *)
 abstractCallNode[CallNode[headIn_, {partIn:GroupNode[GroupSquare, {first_, ___, last_}, _]}, dataIn_]] :=
 Module[{head, part, partData, issues, data},
-	head = headIn;
-	part = partIn;
-	data = dataIn;
+  head = headIn;
+  part = partIn;
+  data = dataIn;
 
-	issues = {};
+  issues = {};
 
-	AppendTo[issues,
-		SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|
-			Source -> first[[3, Key[Source]]],
-			ConfidenceLevel -> 0.95,
-			"AdditionalSources" -> {last[[3, Key[Source]]]}
-		|>]
-	];
+  AppendTo[issues,
+    SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|
+      Source -> first[[3, Key[Source]]],
+      ConfidenceLevel -> 0.95,
+      "AdditionalSources" -> {last[[3, Key[Source]]]}
+    |>]
+  ];
 
-	head = abstract[head];
-	part = abstractGroupNode[part];
-	partData = part[[3]];
+  head = abstract[head];
+  part = abstractGroupNode[part];
+  partData = part[[3]];
 
-	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+  issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
 
-	If[issues != {},
-		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
-		AssociateTo[data, AbstractSyntaxIssues -> issues];
-	];
+  If[issues != {},
+    issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+    AssociateTo[data, AbstractSyntaxIssues -> issues];
+  ];
 
-	CallNode[head, part[[2]], data]
+  CallNode[head, part[[2]], data]
 ]
 
 (*
@@ -1948,193 +1948,193 @@ abstract parse of a\[LeftDoubleBracket]2\[RightDoubleBracket] returns CallNode[P
 *)
 abstractCallNode[CallNode[headIn_, {partIn:GroupNode[GroupDoubleBracket, {first_, ___, last_}, _]}, dataIn_]] :=
 Module[{head, part, partData, data, issues},
-	head = headIn;
-	part = partIn;
-	data = dataIn;
+  head = headIn;
+  part = partIn;
+  data = dataIn;
 
-	issues = {};
+  issues = {};
 
-	Switch[head,
-			(*
-			feel strongly about ##2[arg]
-			##2 represents a sequence of arguments, so it is wrong to call
-			*)
-			LeafNode[Token`HashHash, _, _] | CompoundNode[SlotSequence, _, _],
+  Switch[head,
+      (*
+      feel strongly about ##2[arg]
+      ##2 represents a sequence of arguments, so it is wrong to call
+      *)
+      LeafNode[Token`HashHash, _, _] | CompoundNode[SlotSequence, _, _],
 
-				AppendTo[issues,
-					SyntaxIssue["StrangeCallSlotSequence", "Unexpected call.", "Error", <|
-						Source -> first[[3, Key[Source]]],
-						ConfidenceLevel -> 1.0,
-						"AdditionalSources" -> {last[[3, Key[Source]]]}
-					|>]
-				];
-			,
-			LeafNode[Symbol (* | String *) | Token`Hash | Token`Under | Token`UnderUnder | Token`UnderUnderUnder, _, _] | _CallNode |
-				CompoundNode[Blank | BlankSequence | BlankNullSequence | PatternBlank | PatternBlankSequence | PatternBlankNullSequence | Slot (* | SlotSequence *), _, _],
-				(* these are fine *)
-				Null
-			,
-			LeafNode[Token`Percent | Token`PercentPercent, _, _] | CompoundNode[Out, _, _],
-				(*
-				was:
+        AppendTo[issues,
+          SyntaxIssue["StrangeCallSlotSequence", "Unexpected call.", "Error", <|
+            Source -> first[[3, Key[Source]]],
+            ConfidenceLevel -> 1.0,
+            "AdditionalSources" -> {last[[3, Key[Source]]]}
+          |>]
+        ];
+      ,
+      LeafNode[Symbol (* | String *) | Token`Hash | Token`Under | Token`UnderUnder | Token`UnderUnderUnder, _, _] | _CallNode |
+        CompoundNode[Blank | BlankSequence | BlankNullSequence | PatternBlank | PatternBlankSequence | PatternBlankNullSequence | Slot (* | SlotSequence *), _, _],
+        (* these are fine *)
+        Null
+      ,
+      LeafNode[Token`Percent | Token`PercentPercent, _, _] | CompoundNode[Out, _, _],
+        (*
+        was:
 
-				AppendTo[issues,
-					SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|
-						Source -> first[[3, Key[Source]]],
-						ConfidenceLevel -> 0.95,
-						"AdditionalSources" -> {last[[3, Key[Source]]]}
-					|>]
-				];
+        AppendTo[issues,
+          SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|
+            Source -> first[[3, Key[Source]]],
+            ConfidenceLevel -> 0.95,
+            "AdditionalSources" -> {last[[3, Key[Source]]]}
+          |>]
+        ];
 
-				but % is already scanned in CodeInspector TokenRules, and this just adds more noise
-				*)
+        but % is already scanned in CodeInspector TokenRules, and this just adds more noise
+        *)
 
-				(* these are fine *)
-				Null
-			,
-			LeafNode[Token`LinearSyntaxBlob, _, _],
+        (* these are fine *)
+        Null
+      ,
+      LeafNode[Token`LinearSyntaxBlob, _, _],
 
-				AppendTo[issues,
-					SyntaxIssue["StrangeCall", "Unexpected call.", "Remark", <|
-						Source -> first[[3, Key[Source]]],
-						ConfidenceLevel -> 0.95,
-						"AdditionalSources" -> {last[[3, Key[Source]]]}
-					|>]
-				];
-			,
-			PrefixNode[PrefixLinearSyntaxBang, _, _],
+        AppendTo[issues,
+          SyntaxIssue["StrangeCall", "Unexpected call.", "Remark", <|
+            Source -> first[[3, Key[Source]]],
+            ConfidenceLevel -> 0.95,
+            "AdditionalSources" -> {last[[3, Key[Source]]]}
+          |>]
+        ];
+      ,
+      PrefixNode[PrefixLinearSyntaxBang, _, _],
 
-				AppendTo[issues,
-					SyntaxIssue["StrangeCall", "Unexpected call.", "Remark", <|
-						Source -> first[[3, Key[Source]]],
-						ConfidenceLevel -> 0.95,
-						"AdditionalSources" -> {last[[3, Key[Source]]]}
-					|>]
-				];
-			,
-			(*
-			BinaryNode[PatternTest, _, _],
-				(* these are fine *)
-				Null
-			,*)
-			InfixNode[CompoundExpression, _, _],
-				(* CompoundExpression was already handled *)
-				Null
-			,
-			GroupNode[GroupParen | List | Association, _, _],
-				(* these are fine *)
-				Null
-			,
-			GroupNode[_, _, _],
+        AppendTo[issues,
+          SyntaxIssue["StrangeCall", "Unexpected call.", "Remark", <|
+            Source -> first[[3, Key[Source]]],
+            ConfidenceLevel -> 0.95,
+            "AdditionalSources" -> {last[[3, Key[Source]]]}
+          |>]
+        ];
+      ,
+      (*
+      BinaryNode[PatternTest, _, _],
+        (* these are fine *)
+        Null
+      ,*)
+      InfixNode[CompoundExpression, _, _],
+        (* CompoundExpression was already handled *)
+        Null
+      ,
+      GroupNode[GroupParen | List | Association, _, _],
+        (* these are fine *)
+        Null
+      ,
+      GroupNode[_, _, _],
 
-				AppendTo[issues,
-					SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|
-						Source -> first[[3, Key[Source]]],
-						ConfidenceLevel -> 0.95,
-						"AdditionalSources" -> {last[[3, Key[Source]]]}
-					|>]
-				];
-			,
-			PostfixNode[Transpose, _, _],
-				(*
-				a\[Transpose]\[LeftDoubleBracket]2\[RightDoubleBracket] is fine
-				*)
-				Null
-			,
-			(*
-			Now handle boxes
-			*)
-			BoxNode[$okCallBoxPat, _, _],
-				(* this is fine *)
-				Null
-			,
-			BoxNode[_, _, _],
-				AppendTo[issues,
-					SyntaxIssue["StrangeCall", "Unexpected call: ``" <> ToString[head[[1]]] <> "``.", "Error", <|
-						Source -> first[[3, Key[Source]]],
-						ConfidenceLevel -> 0.95,
-						"AdditionalSources" -> {last[[3, Key[Source]]]}
-					|>
-				]
-			];
-			,
-			_,
-			(*
-			warn about anything else
-			*)
+        AppendTo[issues,
+          SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|
+            Source -> first[[3, Key[Source]]],
+            ConfidenceLevel -> 0.95,
+            "AdditionalSources" -> {last[[3, Key[Source]]]}
+          |>]
+        ];
+      ,
+      PostfixNode[Transpose, _, _],
+        (*
+        a\[Transpose]\[LeftDoubleBracket]2\[RightDoubleBracket] is fine
+        *)
+        Null
+      ,
+      (*
+      Now handle boxes
+      *)
+      BoxNode[$okCallBoxPat, _, _],
+        (* this is fine *)
+        Null
+      ,
+      BoxNode[_, _, _],
+        AppendTo[issues,
+          SyntaxIssue["StrangeCall", "Unexpected call: ``" <> ToString[head[[1]]] <> "``.", "Error", <|
+            Source -> first[[3, Key[Source]]],
+            ConfidenceLevel -> 0.95,
+            "AdditionalSources" -> {last[[3, Key[Source]]]}
+          |>
+        ]
+      ];
+      ,
+      _,
+      (*
+      warn about anything else
+      *)
 
-			AppendTo[issues,
-				SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|
-					Source -> first[[3, Key[Source]]],
-					ConfidenceLevel -> 0.95,
-					"AdditionalSources" -> {last[[3, Key[Source]]]}
-				|>]
-			];
-	];
+      AppendTo[issues,
+        SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|
+          Source -> first[[3, Key[Source]]],
+          ConfidenceLevel -> 0.95,
+          "AdditionalSources" -> {last[[3, Key[Source]]]}
+        |>]
+      ];
+  ];
 
-	head = abstract[head];
-	part = abstractGroupNode[part];
-	partData = part[[3]];
+  head = abstract[head];
+  part = abstractGroupNode[part];
+  partData = part[[3]];
 
-	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+  issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
 
-	If[issues != {},
-		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
-		AssociateTo[data, AbstractSyntaxIssues -> issues];
-	];
+  If[issues != {},
+    issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+    AssociateTo[data, AbstractSyntaxIssues -> issues];
+  ];
 
-	CallNode[ToNode[Part], {head} ~Join~ (part[[2]]), data]
+  CallNode[ToNode[Part], {head} ~Join~ (part[[2]]), data]
 ]
 
 
 
 abstractCallNode[CallMissingCloserNode[headIn_, {partIn:GroupMissingCloserNode[GroupSquare, _, _]}, dataIn_]] :=
 Module[{head, part, data, issues, partData},
-	head = headIn;
-	part = partIn;
-	data = dataIn;
+  head = headIn;
+  part = partIn;
+  data = dataIn;
 
-	issues = {};
+  issues = {};
 
-	head = abstract[head];
-	
-	part = abstractGroupNode[part];
-	partData = part[[3]];
+  head = abstract[head];
+  
+  part = abstractGroupNode[part];
+  partData = part[[3]];
 
-	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+  issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
 
-	If[issues != {},
-		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
-		AssociateTo[data, AbstractSyntaxIssues -> issues];
-	];
+  If[issues != {},
+    issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+    AssociateTo[data, AbstractSyntaxIssues -> issues];
+  ];
 
-	CallMissingCloserNode[head, part[[2]], data]
+  CallMissingCloserNode[head, part[[2]], data]
 ]
 
 abstractCallNode[UnterminatedCallNode[headIn_, {partIn:UnterminatedGroupNode[GroupSquare, _, _]}, dataIn_]] :=
 Module[{head, part, data, issues},
-	head = headIn;
-	part = partIn;
-	data = dataIn;
+  head = headIn;
+  part = partIn;
+  data = dataIn;
 
-	issues = {};
+  issues = {};
 
-	head = abstract[head];
-	(*
-	part = abstractGroupNode[part];
-	partData = part[[3]];
-	*)
+  head = abstract[head];
+  (*
+  part = abstractGroupNode[part];
+  partData = part[[3]];
+  *)
 
-	(*
-	issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+  (*
+  issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
 
-	If[issues != {},
-		issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
-		AssociateTo[data, AbstractSyntaxIssues -> issues];
-	];
-	*)
+  If[issues != {},
+    issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+    AssociateTo[data, AbstractSyntaxIssues -> issues];
+  ];
+  *)
 
-	UnterminatedCallNode[head, part[[2]], data]
+  UnterminatedCallNode[head, part[[2]], data]
 ]
 
 
@@ -2169,53 +2169,53 @@ Keep the [[]] structure un-abstracted
 FIXME: when things like SuperscriptBox[] -> Power[] and FractionBox[] -> Divide, then also do SubscriptBox[..., [[]] ] -> Part
 *)
 abstract[
-	BoxNode[
-		SubscriptBox
-		,
-		{
-			a_
-			,
-			GroupNode[GroupSquare, {
-				o1:LeafNode[Token`OpenSquare, _, _],
-				GroupNode[GroupSquare, {
-					o2:LeafNode[Token`OpenSquare, _, _],
-					b_,
-					c2:LeafNode[Token`CloseSquare, _, _]}
-					,
-					data2_
-				],
-				c1:LeafNode[Token`CloseSquare, _, _]}
-				,
-				data1_
-			]
-			,
-			___
-		}
-		,
-		data_
-	]
+  BoxNode[
+    SubscriptBox
+    ,
+    {
+      a_
+      ,
+      GroupNode[GroupSquare, {
+        o1:LeafNode[Token`OpenSquare, _, _],
+        GroupNode[GroupSquare, {
+          o2:LeafNode[Token`OpenSquare, _, _],
+          b_,
+          c2:LeafNode[Token`CloseSquare, _, _]}
+          ,
+          data2_
+        ],
+        c1:LeafNode[Token`CloseSquare, _, _]}
+        ,
+        data1_
+      ]
+      ,
+      ___
+    }
+    ,
+    data_
+  ]
 ] := BoxNode[SubscriptBox, {abstract[a], GroupNode[GroupSquare, {o1, GroupNode[GroupSquare, {o2, abstract[b], c2}, data2], c1}, data1]}, data]
 
 abstract[
-	BoxNode[
-		SubscriptBox
-		,
-		{
-			a_
-			,
-			GroupNode[GroupDoubleBracket, {
-				o:LeafNode[Token`LongName`LeftDoubleBracket, _, _],
-				b_,
-				c:LeafNode[Token`LongName`RightDoubleBracket, _, _]}
-				,
-				data1_
-			]
-			,
-			___
-		}
-		,
-		data_
-	]
+  BoxNode[
+    SubscriptBox
+    ,
+    {
+      a_
+      ,
+      GroupNode[GroupDoubleBracket, {
+        o:LeafNode[Token`LongName`LeftDoubleBracket, _, _],
+        b_,
+        c:LeafNode[Token`LongName`RightDoubleBracket, _, _]}
+        ,
+        data1_
+      ]
+      ,
+      ___
+    }
+    ,
+    data_
+  ]
 ] := BoxNode[SubscriptBox, {abstract[a], GroupNode[GroupDoubleBracket, {o, abstract[b], c}, data1]}, data]
 
 
@@ -2233,31 +2233,31 @@ FIXME: when things like SuperscriptBox[] -> Power[] and FractionBox[] -> Divide,
 FIXME: maybe first arg of TagBox should be treated as a CodeNode and not parsed at all
 *)
 abstract[
-	BoxNode[
-		SuperscriptBox
-		,
-		{
-			a_
-			,
-			BoxNode[TagBox, {
-				GroupNode[GroupParen, {
-					o:LeafNode[Token`OpenParen, _, _],
-					b_,
-					c:LeafNode[Token`CloseParen, _, _]}
-					,
-					data2_
-				]
-				,
-				t:CodeNode[Null, Derivative, _]}
-				,
-				data1_
-			]
-			,
-			___
-		}
-		,
-		data_
-	]
+  BoxNode[
+    SuperscriptBox
+    ,
+    {
+      a_
+      ,
+      BoxNode[TagBox, {
+        GroupNode[GroupParen, {
+          o:LeafNode[Token`OpenParen, _, _],
+          b_,
+          c:LeafNode[Token`CloseParen, _, _]}
+          ,
+          data2_
+        ]
+        ,
+        t:CodeNode[Null, Derivative, _]}
+        ,
+        data1_
+      ]
+      ,
+      ___
+    }
+    ,
+    data_
+  ]
 ] := BoxNode[SuperscriptBox, {abstract[a], BoxNode[TagBox, {GroupNode[GroupParen, {o, abstract[b], c}, data2], t}, data1]}, data]
 
 
@@ -2271,20 +2271,20 @@ abstract[CellNode[c_, children_, data_]] := CellNode[c, abstract /@ children, da
 
 abstractNot2[rand_, notNotTok_, dataIn_] :=
 Module[{notNotData, data, issues},
-	
-	notNotData = notNotTok[[3]];
+  
+  notNotData = notNotTok[[3]];
 
-	data = dataIn;
+  data = dataIn;
 
-	issues = Lookup[data, AbstractSyntaxIssues, {}];
+  issues = Lookup[data, AbstractSyntaxIssues, {}];
 
-	AppendTo[issues, SyntaxIssue["PrefixNotNot", "Unexpected parse.", "Warning", <| Source -> notNotData[Source], ConfidenceLevel -> 1.0 |>]];
+  AppendTo[issues, SyntaxIssue["PrefixNotNot", "Unexpected parse.", "Warning", <| Source -> notNotData[Source], ConfidenceLevel -> 1.0 |>]];
 
-	AssociateTo[data, AbstractSyntaxIssues -> issues];
+  AssociateTo[data, AbstractSyntaxIssues -> issues];
 
-	CallNode[LeafNode[Symbol, "Not", <||>], {
-		CallNode[LeafNode[Symbol, "Not", <||>], {
-			abstract[rand]}, <||>]}, data]
+  CallNode[LeafNode[Symbol, "Not", <||>], {
+    CallNode[LeafNode[Symbol, "Not", <||>], {
+      abstract[rand]}, <||>]}, data]
 ]
 
 

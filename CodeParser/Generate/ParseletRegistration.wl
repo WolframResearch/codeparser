@@ -25,11 +25,11 @@ Needs["CodeTools`Generate`GenerateSources`"];
 
 
 KeyValueMap[
-	Function[{k, v},
-		PrefixOperatorToParselet[k] = v;
-	]
-	,
-	importedPrefixParselets
+  Function[{k, v},
+    PrefixOperatorToParselet[k] = v;
+  ]
+  ,
+  importedPrefixParselets
 ]
 
 PrefixOperatorToParselet[_] = Parselet`PrefixUnhandledParselet[]
@@ -37,11 +37,11 @@ PrefixOperatorToParselet[_] = Parselet`PrefixUnhandledParselet[]
 
 
 KeyValueMap[
-	Function[{k, v},
-		InfixOperatorToParselet[k] = v;
-	]
-	,
-	importedInfixParselets
+  Function[{k, v},
+    InfixOperatorToParselet[k] = v;
+  ]
+  ,
+  importedInfixParselets
 ]
 
 InfixOperatorToParselet[_] = Parselet`InfixImplicitTimesParselet[]
