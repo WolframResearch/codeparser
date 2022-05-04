@@ -1004,6 +1004,95 @@ Module[{structs},
   ]
 ]
 
+(*
+handle implicit Null in a;
+*)
+walk[n:CallNode[LeafNode[Symbol, "CompoundExpression", _], children : {_, _, ___}, _]] :=
+Module[{struct = nodeStructure[n], ctor, op, prec},
+  ctor = struct["ctor"];
+  op = struct["op"];
+  prec = struct["prec"];
+  ctor[
+    Flatten[
+      {Function[{c},
+            Module[{walked},
+              walked = walk[c];
+              Which[
+                precedenceLess[precCTR[walked], prec],
+                  paren[walked]
+                ,
+                precedenceEqual[precCTR[walked], prec],
+                  paren[walked]
+                ,
+                !okToJuxtapose[lastPrec[walked], prec],
+                  spaceAfter[walked]
+                ,
+                True,
+                  walked
+              ]
+            ]
+          ][First[children]]} ~Join~
+          (
+            Function[{c},
+                Module[{walked},
+                  walked = walk[c];
+                  {
+                    op
+                    ,
+                    Which[
+                      MatchQ[walked, LeafNode[Symbol, "Null", _]],
+                        spaceAfter[LeafNode[Token`Fake`ImplicitNull, "", <||>]]
+                      ,
+                      precedenceGreater[prec, precCTL[walked]],
+                        paren[walked]
+                      ,
+                      precedenceEqual[prec, precCTL[walked]],
+                        paren[walked]
+                      ,
+                      !okToJuxtapose[prec, firstPrec[walked]] && !okToJuxtapose[lastPrec[walked], prec],
+                        spaceBoth[walked]
+                      ,
+                      !okToJuxtapose[prec, firstPrec[walked]],
+                        spaceBefore[walked]
+                      ,
+                      !okToJuxtapose[lastPrec[walked], prec],
+                        spaceAfter[walked]
+                      ,
+                      True,
+                        walked
+                    ]
+                  }
+                ]
+              ] /@ children[[2 ;; -2]]
+          ) ~Join~ (Function[{c},
+          Module[{walked},
+            walked = walk[c];
+            {
+              op
+              ,
+              Which[
+                MatchQ[walked, LeafNode[Symbol, "Null", _]],
+                  LeafNode[Token`Fake`ImplicitNull, "", <||>]
+                ,
+                precedenceGreater[prec, precCTL[walked]],
+                  paren[walked]
+                ,
+                precedenceEqual[prec, precCTL[walked]],
+                  paren[walked]
+                ,
+                !okToJuxtapose[prec, firstPrec[walked]],
+                  spaceBefore[walked]
+                ,
+                True,
+                  walked
+              ]
+            }
+          ]
+        ][Last[children]])
+    ]
+  ]
+]
+
 walk[
   n :
     CallNode[
@@ -1011,7 +1100,7 @@ walk[
         Symbol
         ,
         "And" | "Or" | "Alternatives" | "Dot" |
-        "CompoundExpression" | "StringJoin" | "RightComposition" |
+        "StringJoin" | "RightComposition" |
         "Composition" | "StringExpression" |
         "NonCommutativeMultiply" | "SameQ" | "UnsameQ" |
         (* inequality *)

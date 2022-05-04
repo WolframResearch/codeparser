@@ -515,3 +515,19 @@ Test[
 	,
 	TestID->"Concretify-20220501-L0M4X1"
 ]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a;Null"]]]
+    ,
+    "a;"
+	,
+	TestID->"Concretify-20220503-C4Q1Y2"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a;Null;Null"]]]
+    ,
+    "a; ;"
+	,
+	TestID->"Concretify-20220503-T9I0B2"
+]
