@@ -23,6 +23,14 @@ Handle buggy FE syntax of `a:b:c:d`
 
 linear syntax `\!` is preserved during abstracting, so ScopingData must also handle it
 
+U+279D Triangle-Headed Rightwards Arrow is strange
+
+Handle SuperscriptBox in DefinitionSymbols
+
+First draft of Concretify
+
+Add new 13.1 FormalScript characters
+
 
 ## 1.5 - 7 Mar, 2022
 
