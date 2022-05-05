@@ -94,6 +94,12 @@ precedenceGreaterSpecialMinus2[
 precedenceGreaterSpecialMinus2[a_, b_] :=
   False
 
+precedenceGreaterSpecialPlus[
+  Precedence`Infix`Plus, Precedence`Prefix`Plus] = True;
+
+precedenceGreaterSpecialPlus[a_, b_] :=
+  False
+
 precedenceMin[a_, b_] :=
   MinimalBy[{a, b}, lookupPrecedence][[1]]
 
@@ -966,6 +972,12 @@ Module[{structs},
                       structPair[[1]]["prec"] === Precedence`Infix`Minus && precCTL[walked] === Precedence`Star,
                         paren[walked]
                       ,
+                      (*
+                      allow "a + (+b)" to work
+                      *)
+                      precedenceGreaterSpecialPlus[Last[structs]["prec"], precCTL[walked]],
+                        paren[walked]
+                      ,
                       !okToJuxtapose[structPair[[1]]["prec"], firstPrec[walked]] && !okToJuxtapose[lastPrec[walked], structPair[[2]]["prec"]],
                         spaceBoth[walked]
                       ,
@@ -1012,6 +1024,12 @@ Module[{structs},
               allow "a - - -2" to work
               *)
               precedenceGreaterSpecialMinus[Last[structs]["prec"], firstPrec[walked]],
+                paren[walked]
+              ,
+              (*
+              allow "a + (+b)" to work
+              *)
+              precedenceGreaterSpecialPlus[Last[structs]["prec"], precCTL[walked]],
                 paren[walked]
               ,
               !okToJuxtapose[Last[structs]["prec"], firstPrec[walked]],

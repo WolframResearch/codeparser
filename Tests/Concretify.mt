@@ -71,7 +71,7 @@ Test[
 Test[
     ToSourceCharacterString[Concretify[CodeParse["a + (+b)"]]]
     ,
-    "a+ +b"
+    "a+(+b)"
 	,
 	TestID->"Concretify-20220308-B8R2W4"
 ]
@@ -79,9 +79,25 @@ Test[
 Test[
 	ToSourceCharacterString[Concretify[CodeParse["Plus[a, b//Plus]"]]]
     ,
-    "a+ +b"
+    "a+(+b)"
 	,
 	TestID->"Concretify-20220308-G4Q5R0"
+]
+
+Test[
+    ToSourceCharacterString[Concretify[CodeParse["a + (+b) + (+c)"]]]
+    ,
+    "a+(+b)+(+c)"
+	,
+	TestID->"Concretify-20220505-O4Y5T8"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["Plus[a, b//Plus, c//Plus]"]]]
+    ,
+    "a+(+b)+(+c)"
+	,
+	TestID->"Concretify-20220505-T9Z0J2"
 ]
 
 Test[
