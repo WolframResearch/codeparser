@@ -37,10 +37,32 @@ lookupPrecedence[prec_] :=
 
 
 Concretify[ast_] :=
-Module[{cst},
+Catch[
+Module[{cst, agg, ast2, astToCompare, ast2ToCompare},
+
   cst = walk[ast];
+
+  If[TrueQ[$DisableSanityChecking],
+    Throw[cst]
+  ];
+
+  (*
+  Sanity Checking
+  *)
+  
+  agg = CodeParser`Abstract`Aggregate[cst];
+
+  ast2 = CodeParser`Abstract`Abstract[agg];
+
+  astToCompare = ast /. _Association -> <||>;
+  ast2ToCompare = ast2 /. _Association -> <||>;
+
+  If[astToCompare =!= ast2ToCompare,
+    Throw[Failure["ConcretifySanityCheckFailed", <||>]]
+  ];
+
   cst
-]
+]]
 
 
 structure[ctor_, _, _]["ctor"] := ctor

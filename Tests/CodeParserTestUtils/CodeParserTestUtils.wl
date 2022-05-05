@@ -19,13 +19,10 @@ $LastFailedExpected
 $LastFailedExpectedText
 $LastFailedExpectedTextReplaced
 
-$LastFailedASTToCompare
-$LastFailedAST2ToCompare
 
 Begin["`Private`"]
 
 Needs["CodeParser`"]
-Needs["CodeParser`Concretify`"]
 Needs["CodeParser`ToString`"] (* for ToInputFormString *)
 Needs["CodeParser`Utils`"]
 Needs["PacletManager`"]
@@ -192,7 +189,7 @@ Options[parseTest] = {"FileNamePrefixPattern" -> "", "FileSizeLimit" -> {0, Infi
 parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
  Module[{prefix, res, cst, agg, ast, expected, errors, f, 
    tmp, text, file, errs, tryString, actual, msgs, textReplaced, version, limit, savedFailure,
-   firstLine, tryCST, tryAST, tryAST2, astToCompare, ast2ToCompare},
+   firstLine},
   Catch[
    
    prefix = OptionValue["FileNamePrefixPattern"];
@@ -1307,63 +1304,6 @@ parseTest[fileIn_String, i_Integer, OptionsPattern[]] :=
       ];
      Throw[f, "Uncaught"]
      ];
-
-
-
-    tryAST = ast;
-
-    tryAST[[1]] = String;
-
-    tryCST = Concretify[tryAST];
-
-    If[$DebugString, Print["Concretify[ast]: ", tryCST]];
-
-    tryString = ToSourceCharacterString[tryCST];
-
-    If[!StringQ[tryString],
-     f = Failure[
-       "Concretify", <|"File" -> File[fileIn], 
-        "tryString" -> tryString|>];
-      If[$Interactive,
-       Print[
-        Style[Row[{"index: ", i, " ", File[fileIn]}], Red]];
-       Print[Style[Row[{"index: ", i, " ", f}], Red]];
-      ];
-     Throw[f, "Uncaught"]
-     ];
-
-    tryAST2 = CodeParse[tryString];
-
-    If[FailureQ[tryAST2],
-
-      If[$Interactive,
-        Print[
-        Style[Row[{"index: ", i, " ", 
-           StringReplace[fileIn, StartOfString ~~ prefix -> ""]}], Red]];
-        Print[Style[Row[{"index: ", i, " ", ast}], Red]];
-      ];
-      Throw[tryAST2, "Uncaught"]
-    ];
-
-    astToCompare = tryAST /. _Association -> <||>;
-    ast2ToCompare = tryAST2 /. _Association -> <||>;
-
-    If[astToCompare =!= ast2ToCompare,
-      $LastFailedFileIn = fileIn;
-      $LastFailedFile = file;
-      $LastFailedActualString = tryString;
-      $LastFailedASTToCompare = astToCompare;
-      $LastFailedAST2ToCompare = ast2ToCompare;
-      f = Failure["AbstractParsingFailure", <|"File" -> File[fileIn]|>];
-      If[$Interactive,
-        Print[
-          Style[Row[{"index: ", i, " ", File[fileIn]}], Bold,
-            Red]];
-        Print[Style[Row[{"index: ", i, " ", f}], Bold, Red]];
-        ];
-      Throw[f, "Uncaught"]
-    ];
-    
     ,
     Null
     ]
