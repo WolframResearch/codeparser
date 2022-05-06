@@ -29,7 +29,7 @@ longNameToHexDigits["RawBackslash"] := "CODEPOINT_STRINGMETA_BACKSLASH"
 longNameToHexDigits["Alpha"] is "0x03b1"
 *)
 longNameToHexDigits[longName_String] :=
-  "0x"<>IntegerString[longNameToCharacterCode[longName], 16, 4]
+  ("0x"<>IntegerString[#, 16, If[# > 16^^FFFF, 6, 4]])&[longNameToCharacterCode[longName]]
 
 
 longNameToCharacterCode[name_] := importedLongNames[name][[2]]

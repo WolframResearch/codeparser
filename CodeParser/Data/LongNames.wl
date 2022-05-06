@@ -1276,6 +1276,66 @@ Range 0xfe00
 (*
 Range 0xff00
 *)
-"UnknownGlyph" -> {LetterlikeCharacter, 16^^fffd, <| "ASCIIReplacements" -> {"?"} |>}
+"UnknownGlyph" -> {LetterlikeCharacter, 16^^fffd, <| "ASCIIReplacements" -> {"?"} |>},
+
+(*
+Range 0x0fa000
+*)
+(*
+added in 13.1:
+FormalScript characters
+*)
+"FormalScriptA" -> {LetterlikeCharacter, 16^^0fa000, <| "ASCIIReplacements" -> {"a"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptB" -> {LetterlikeCharacter, 16^^0fa001, <| "ASCIIReplacements" -> {"b"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptC" -> {LetterlikeCharacter, 16^^0fa002, <| "ASCIIReplacements" -> {"c"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptD" -> {LetterlikeCharacter, 16^^0fa003, <| "ASCIIReplacements" -> {"d"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptE" -> {LetterlikeCharacter, 16^^0fa004, <| "ASCIIReplacements" -> {"e"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptF" -> {LetterlikeCharacter, 16^^0fa005, <| "ASCIIReplacements" -> {"f"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptG" -> {LetterlikeCharacter, 16^^0fa006, <| "ASCIIReplacements" -> {"g"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptH" -> {LetterlikeCharacter, 16^^0fa007, <| "ASCIIReplacements" -> {"h"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptI" -> {LetterlikeCharacter, 16^^0fa008, <| "ASCIIReplacements" -> {"i"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptJ" -> {LetterlikeCharacter, 16^^0fa009, <| "ASCIIReplacements" -> {"j"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptK" -> {LetterlikeCharacter, 16^^0fa00a, <| "ASCIIReplacements" -> {"k"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptL" -> {LetterlikeCharacter, 16^^0fa00b, <| "ASCIIReplacements" -> {"l"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptM" -> {LetterlikeCharacter, 16^^0fa00c, <| "ASCIIReplacements" -> {"m"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptN" -> {LetterlikeCharacter, 16^^0fa00d, <| "ASCIIReplacements" -> {"n"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptO" -> {LetterlikeCharacter, 16^^0fa00e, <| "ASCIIReplacements" -> {"o"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptP" -> {LetterlikeCharacter, 16^^0fa00f, <| "ASCIIReplacements" -> {"p"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptQ" -> {LetterlikeCharacter, 16^^0fa010, <| "ASCIIReplacements" -> {"q"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptR" -> {LetterlikeCharacter, 16^^0fa011, <| "ASCIIReplacements" -> {"r"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptS" -> {LetterlikeCharacter, 16^^0fa012, <| "ASCIIReplacements" -> {"s"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptT" -> {LetterlikeCharacter, 16^^0fa013, <| "ASCIIReplacements" -> {"t"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptU" -> {LetterlikeCharacter, 16^^0fa014, <| "ASCIIReplacements" -> {"u"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptV" -> {LetterlikeCharacter, 16^^0fa015, <| "ASCIIReplacements" -> {"v"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptW" -> {LetterlikeCharacter, 16^^0fa016, <| "ASCIIReplacements" -> {"w"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptX" -> {LetterlikeCharacter, 16^^0fa017, <| "ASCIIReplacements" -> {"x"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptY" -> {LetterlikeCharacter, 16^^0fa018, <| "ASCIIReplacements" -> {"y"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptZ" -> {LetterlikeCharacter, 16^^0fa019, <| "ASCIIReplacements" -> {"z"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalA" -> {LetterlikeCharacter, 16^^0fa01a, <| "ASCIIReplacements" -> {"A"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalB" -> {LetterlikeCharacter, 16^^0fa01b, <| "ASCIIReplacements" -> {"B"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalC" -> {LetterlikeCharacter, 16^^0fa01c, <| "ASCIIReplacements" -> {"C"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalD" -> {LetterlikeCharacter, 16^^0fa01d, <| "ASCIIReplacements" -> {"D"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalE" -> {LetterlikeCharacter, 16^^0fa01e, <| "ASCIIReplacements" -> {"E"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalF" -> {LetterlikeCharacter, 16^^0fa01f, <| "ASCIIReplacements" -> {"F"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalG" -> {LetterlikeCharacter, 16^^0fa020, <| "ASCIIReplacements" -> {"G"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalH" -> {LetterlikeCharacter, 16^^0fa021, <| "ASCIIReplacements" -> {"H"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalI" -> {LetterlikeCharacter, 16^^0fa022, <| "ASCIIReplacements" -> {"I"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalJ" -> {LetterlikeCharacter, 16^^0fa023, <| "ASCIIReplacements" -> {"J"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalK" -> {LetterlikeCharacter, 16^^0fa024, <| "ASCIIReplacements" -> {"K"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalL" -> {LetterlikeCharacter, 16^^0fa025, <| "ASCIIReplacements" -> {"L"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalM" -> {LetterlikeCharacter, 16^^0fa026, <| "ASCIIReplacements" -> {"M"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalN" -> {LetterlikeCharacter, 16^^0fa027, <| "ASCIIReplacements" -> {"N"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalO" -> {LetterlikeCharacter, 16^^0fa028, <| "ASCIIReplacements" -> {"O"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalP" -> {LetterlikeCharacter, 16^^0fa029, <| "ASCIIReplacements" -> {"P"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalQ" -> {LetterlikeCharacter, 16^^0fa02a, <| "ASCIIReplacements" -> {"Q"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalR" -> {LetterlikeCharacter, 16^^0fa02b, <| "ASCIIReplacements" -> {"R"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalS" -> {LetterlikeCharacter, 16^^0fa02c, <| "ASCIIReplacements" -> {"S"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalT" -> {LetterlikeCharacter, 16^^0fa02d, <| "ASCIIReplacements" -> {"T"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalU" -> {LetterlikeCharacter, 16^^0fa02e, <| "ASCIIReplacements" -> {"U"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalV" -> {LetterlikeCharacter, 16^^0fa02f, <| "ASCIIReplacements" -> {"V"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalW" -> {LetterlikeCharacter, 16^^0fa030, <| "ASCIIReplacements" -> {"W"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalX" -> {LetterlikeCharacter, 16^^0fa031, <| "ASCIIReplacements" -> {"X"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalY" -> {LetterlikeCharacter, 16^^0fa032, <| "ASCIIReplacements" -> {"Y"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>},
+"FormalScriptCapitalZ" -> {LetterlikeCharacter, 16^^0fa033, <| "ASCIIReplacements" -> {"Z"}, "Extra" -> {"NotStrangeLetterlike", "System"} |>}
 
 |>
