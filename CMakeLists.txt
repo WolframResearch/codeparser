@@ -86,6 +86,7 @@ endif()
 
 set(STATIC_WL_PACLET_KERNEL_SOURCES
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Abstract.wl
+	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/AbstractCallNode.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/CodeParser.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Boxes.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/CodeAction.wl
