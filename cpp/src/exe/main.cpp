@@ -1,9 +1,5 @@
 
-#include "ByteDecoder.h" // for TheByteDecoder
-#include "ByteBuffer.h" // for TheByteBuffer
-#include "API.h" // for TheParserSession
-
-#include "Source.h" // for MBuffer
+#include "API.h"
 
 #include <memory> // for unique_ptr
 #include <iostream>
@@ -140,7 +136,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
     std::cout << ">>> ";
     std::getline(std::cin, input);
     
-    TheParserSession = ParserSessionPtr(new ParserSession());
+    ParserSessionCreate();
     
     WolframLibraryData libData = nullptr;
     
@@ -150,15 +146,13 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
         
         auto inputStr = reinterpret_cast<Buffer>(input.c_str());
         
-        auto inputBufAndLen = BufferAndLength(inputStr, input.size());
-        
-        TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
+        ParserSessionInit(inputStr, input.size(), libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
     
-        auto C = TheParserSession->tokenize();
+        auto C = ParserSessionTokenize();
         
         switch (outputMode) {
             case PRINT:
-                C->print(std::cout);
+                NodeContainerPrint(C, std::cout);
                 std::cout << "\n";
                 break;
             case PUT: {
@@ -170,7 +164,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
                 break;
             case PRINT_DRYRUN: {
                 std::ofstream nullStream;
-                C->print(nullStream);
+                NodeContainerPrint(C, nullStream);
                 nullStream << "\n";
             }
                 break;
@@ -178,24 +172,22 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
                 break;
         }
         
-        TheParserSession->releaseContainer(C);
+        ParserSessionReleaseContainer(C);
         
-        TheParserSession->deinit();
+        ParserSessionDeinit();
         
     } else if (mode == SOURCECHARACTERS) {
         
         auto inputStr = reinterpret_cast<Buffer>(input.c_str());
         
-        auto inputBufAndLen = BufferAndLength(inputStr, input.size());
-        
-        TheByteBuffer->init(inputBufAndLen, libData);
-        TheByteDecoder->init(SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, ENCODINGMODE_NORMAL);
+        ByteBufferInit(inputStr, input.size(), libData);
+        ByteDecoderInit(SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, ENCODINGMODE_NORMAL);
     
-        auto C = TheParserSession->listSourceCharacters();
+        auto C = ParserSessionListSourceCharacters();
     
         switch (outputMode) {
             case PRINT:
-                C->print(std::cout);
+                NodeContainerPrint(C, std::cout);
                 std::cout << "\n";
                 break;
             case PUT: {
@@ -207,7 +199,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
                 break;
             case PRINT_DRYRUN: {
                 std::ofstream nullStream;
-                C->print(nullStream);
+                NodeContainerPrint(C, nullStream);
                 nullStream << "\n";
             }
                 break;
@@ -215,26 +207,24 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
                 break;
         }
         
-        TheParserSession->releaseContainer(C);
+        ParserSessionReleaseContainer(C);
         
-        TheByteDecoder->deinit();
-        TheByteBuffer->deinit();
+        ByteDecoderDeinit();
+        ByteBufferDeinit();
         
     } else if (mode == LEAF) {
         
         auto inputStr = reinterpret_cast<Buffer>(input.c_str());
         
-        auto inputBufAndLen = BufferAndLength(inputStr, input.size());
-        
-        TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
+        ParserSessionInit(inputStr, input.size(), libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
         
         auto stringifyMode = STRINGIFYMODE_NORMAL;
         
-        auto C = TheParserSession->concreteParseLeaf(stringifyMode);
+        auto C = ParserSessionConcreteParseLeaf(stringifyMode);
     
         switch (outputMode) {
             case PRINT:
-                C->print(std::cout);
+                NodeContainerPrint(C, std::cout);
                 std::cout << "\n";
                 break;
             case PUT: {
@@ -246,7 +236,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
                 break;
             case PRINT_DRYRUN: {
                 std::ofstream nullStream;
-                C->print(nullStream);
+                NodeContainerPrint(C, nullStream);
                 nullStream << "\n";
             }
                 break;
@@ -254,23 +244,21 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
                 break;
         }
         
-        TheParserSession->releaseContainer(C);
+        ParserSessionReleaseContainer(C);
         
-        TheParserSession->deinit();
+        ParserSessionDeinit();
         
     } else {
         
         auto inputStr = reinterpret_cast<Buffer>(input.c_str());
         
-        auto inputBufAndLen = BufferAndLength(inputStr, input.size());
+        ParserSessionInit(inputStr, input.size(), libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
         
-        TheParserSession->init(inputBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
-        
-        auto C = TheParserSession->parseExpressions();
+        auto C = ParserSessionParseExpressions();
         
         switch (outputMode) {
             case PRINT:
-                C->print(std::cout);
+                NodeContainerPrint(C, std::cout);
                 std::cout << "\n";
                 break;
             case PUT: {
@@ -282,12 +270,12 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
                 break;
             case PRINT_DRYRUN: {
                 std::ofstream nullStream;
-                C->print(nullStream);
+                NodeContainerPrint(C, nullStream);
                 nullStream << "\n";
             }
                 break;
             case CHECK: {
-                if (!C->check()) {
+                if (!NodeContainerCheck(C)) {
                     result = EXIT_FAILURE;
                 }
             }
@@ -296,10 +284,12 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
                 break;
         }
         
-        TheParserSession->releaseContainer(C);
+        ParserSessionReleaseContainer(C);
         
-        TheParserSession->deinit();
+        ParserSessionDeinit();
     }
+    
+    ParserSessionDestroy();
     
     return result;
 }
@@ -327,7 +317,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         return EXIT_FAILURE;
     }
     
-    TheParserSession = ParserSessionPtr(new ParserSession());
+    ParserSessionCreate();
     
     WolframLibraryData libData = nullptr;
     
@@ -335,15 +325,13 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
     
     if (mode == TOKENIZE) {
         
-        auto fBufAndLen = BufferAndLength(fb->getBuf(), fb->getLen());
+        ParserSessionInit(fb->getBuf(), fb->getLen(), libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
         
-        TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
-        
-        auto C = TheParserSession->tokenize();
+        auto C = ParserSessionTokenize();
         
         switch (outputMode) {
             case PRINT:
-                C->print(std::cout);
+                NodeContainerPrint(C, std::cout);
                 std::cout << "\n";
                 break;
             case PUT: {
@@ -355,7 +343,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
                 break;
             case PRINT_DRYRUN: {
                 std::ofstream nullStream;
-                C->print(nullStream);
+                NodeContainerPrint(C, nullStream);
                 nullStream << "\n";
             }
                 break;
@@ -363,23 +351,21 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
                 break;
         }
         
-        TheParserSession->releaseContainer(C);
+        ParserSessionReleaseContainer(C);
         
-        TheParserSession->deinit();
+        ParserSessionDeinit();
         
     } else if (mode == LEAF) {
         
-        auto fBufAndLen = BufferAndLength(fb->getBuf(), fb->getLen());
-        
-        TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, ENCODINGMODE_NORMAL);
+        ParserSessionInit(fb->getBuf(), fb->getLen(), libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, ENCODINGMODE_NORMAL);
         
         auto stringifyMode = STRINGIFYMODE_NORMAL;
         
-        auto C = TheParserSession->concreteParseLeaf(stringifyMode);
+        auto C = ParserSessionConcreteParseLeaf(stringifyMode);
     
         switch (outputMode) {
             case PRINT:
-                C->print(std::cout);
+                NodeContainerPrint(C, std::cout);
                 std::cout << "\n";
                 break;
             case PUT: {
@@ -391,7 +377,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
                 break;
             case PRINT_DRYRUN: {
                 std::ofstream nullStream;
-                C->print(nullStream);
+                NodeContainerPrint(C, nullStream);
                 nullStream << "\n";
             }
                 break;
@@ -399,21 +385,19 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
                 break;
         }
         
-        TheParserSession->releaseContainer(C);
+        ParserSessionReleaseContainer(C);
         
-        TheParserSession->deinit();
+        ParserSessionDeinit();
         
     } else {
         
-        auto fBufAndLen = BufferAndLength(fb->getBuf(), fb->getLen());
+        ParserSessionInit(fb->getBuf(), fb->getLen(), libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, ENCODINGMODE_NORMAL);
         
-        TheParserSession->init(fBufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, ENCODINGMODE_NORMAL);
-        
-        auto C = TheParserSession->parseExpressions();
+        auto C = ParserSessionParseExpressions();
         
         switch (outputMode) {
             case PRINT:
-                C->print(std::cout);
+                NodeContainerPrint(C, std::cout);
                 std::cout << "\n";
                 break;
             case PUT: {
@@ -425,26 +409,26 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
                 break;
             case PRINT_DRYRUN: {
                 std::ofstream nullStream;
-                C->print(nullStream);
+                NodeContainerPrint(C, nullStream);
                 nullStream << "\n";
             }
                 break;
             case NONE:
                 break;
             case CHECK: {
-                if (!C->check()) {
+                if (!NodeContainerCheck(C)) {
                     result = EXIT_FAILURE;
                 }
             }
                 break;
         }
         
-        TheParserSession->releaseContainer(C);
+        ParserSessionReleaseContainer(C);
         
-        TheParserSession->deinit();
+        ParserSessionDeinit();
     }
     
-    TheParserSession.reset(nullptr);
+    ParserSessionDestroy();
     
     return result;
 }

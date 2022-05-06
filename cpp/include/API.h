@@ -50,19 +50,6 @@ using ScopedMLStringPtr = std::unique_ptr<ScopedMLString>;
 using ScopedMLEnvironmentParameterPtr = std::unique_ptr<ScopedMLEnvironmentParameter>;
 
 //
-// CMake defines codeparser_lib_EXPORTS
-//
-#ifdef _WIN32
-# ifdef codeparser_lib_EXPORTS
-#   define CODEPARSERLIB_EXPORTED  __declspec( dllexport )
-# else
-#   define CODEPARSERLIB_EXPORTED  __declspec( dllimport )
-# endif
-#else
-# define CODEPARSERLIB_EXPORTED
-#endif
-
-//
 //
 //
 class NodeContainer {
@@ -200,6 +187,38 @@ public:
 };
 
 extern ParserSessionPtr TheParserSession;
+
+
+EXTERN_C DLLEXPORT void ParserSessionCreate();
+EXTERN_C DLLEXPORT void ParserSessionDestroy();
+
+EXTERN_C DLLEXPORT void ParserSessionInit(Buffer buf,
+                                          size_t bufLen,
+                                          WolframLibraryData libData,
+                                          ParserSessionPolicy policy,
+                                          SourceConvention srcConvention,
+                                          uint32_t tabWidth,
+                                          FirstLineBehavior firstLineBehavior,
+                                          EncodingMode encodingMode);
+EXTERN_C DLLEXPORT void ParserSessionDeinit();
+
+EXTERN_C DLLEXPORT NodeContainer *ParserSessionParseExpressions();
+EXTERN_C DLLEXPORT NodeContainer *ParserSessionTokenize();
+EXTERN_C DLLEXPORT NodeContainer *ParserSessionListSourceCharacters();
+EXTERN_C DLLEXPORT NodeContainer *ParserSessionConcreteParseLeaf(StringifyMode mode);
+EXTERN_C DLLEXPORT void ParserSessionReleaseContainer(NodeContainer *C);
+
+EXTERN_C DLLEXPORT void NodeContainerPrint(NodeContainer *C, std::ostream& stream);
+EXTERN_C DLLEXPORT int NodeContainerCheck(NodeContainer *C);
+
+EXTERN_C DLLEXPORT void ByteBufferInit(Buffer buf,
+                                       size_t bufLen,
+                                       WolframLibraryData libData);
+EXTERN_C DLLEXPORT void ByteBufferDeinit();
+
+EXTERN_C DLLEXPORT void ByteDecoderInit(SourceConvention srcConvention, uint32_t TabWidth, EncodingMode encodingMode);
+EXTERN_C DLLEXPORT void ByteDecoderDeinit();
+
 
 
 EXTERN_C DLLEXPORT mint WolframLibrary_getVersion();

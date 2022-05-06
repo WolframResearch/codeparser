@@ -41,6 +41,14 @@ bool NodeContainer::check() const {
     return accum;
 }
 
+void NodeContainerPrint(NodeContainer *C, std::ostream& stream) {
+    C->print(stream);
+}
+
+int NodeContainerCheck(NodeContainer *C) {
+    return C->check();
+}
+
 
 ParserSession::ParserSession() : fatalIssues(), nonFatalIssues(), bufAndLen(),
 #if !NABORT
@@ -581,23 +589,87 @@ void ParserSession::addIssue(IssuePtr I) {
     }
 }
 
+void ParserSessionCreate() {
+    TheParserSession = ParserSessionPtr(new ParserSession());
+}
+
+void ParserSessionDestroy() {
+    TheParserSession.reset(nullptr);
+}
+
+void ParserSessionInit(Buffer buf,
+                      size_t bufLen,
+                      WolframLibraryData libData,
+                      ParserSessionPolicy policy,
+                      SourceConvention srcConvention,
+                      uint32_t tabWidth,
+                      FirstLineBehavior firstLineBehavior,
+                      EncodingMode encodingMode) {
+    BufferAndLength bufAndLen = BufferAndLength(buf, bufLen);
+    TheParserSession->init(bufAndLen, libData, policy, srcConvention, tabWidth, firstLineBehavior, encodingMode);
+}
+
+void ParserSessionDeinit() {
+    TheParserSession->deinit();
+}
+
+NodeContainer *ParserSessionParseExpressions() {
+    return TheParserSession->parseExpressions();
+}
+
+NodeContainer *ParserSessionTokenize() {
+    return TheParserSession->tokenize();
+}
+
+NodeContainer *ParserSessionListSourceCharacters() {
+    return TheParserSession->listSourceCharacters();
+}
+
+NodeContainer *ParserSessionConcreteParseLeaf(StringifyMode mode) {
+    return TheParserSession->concreteParseLeaf(mode);
+}
+
+void ParserSessionReleaseContainer(NodeContainer *C) {
+    TheParserSession->releaseContainer(C);
+}
+
 ParserSessionPtr TheParserSession = nullptr;
 
 
 
+void ByteBufferInit(Buffer buf,
+                    size_t bufLen,
+                    WolframLibraryData libData) {
+    BufferAndLength bufAndLen = BufferAndLength(buf, bufLen);
+    TheByteBuffer->init(bufAndLen, libData);
+}
 
-DLLEXPORT mint WolframLibrary_getVersion() {
+void ByteBufferDeinit() {
+    TheByteBuffer->deinit();
+}
+
+void ByteDecoderInit(SourceConvention srcConvention, uint32_t TabWidth, EncodingMode encodingMode) {
+    TheByteDecoder->init(srcConvention, TabWidth, encodingMode);
+}
+
+void ByteDecoderDeinit() {
+    TheByteDecoder->deinit();
+}
+
+
+
+mint WolframLibrary_getVersion() {
     return WolframLibraryVersion;
 }
 
-DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData) {
+int WolframLibrary_initialize(WolframLibraryData libData) {
     
     TheParserSession = ParserSessionPtr(new ParserSession);
     
     return 0;
 }
 
-DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData) {
+void WolframLibrary_uninitialize(WolframLibraryData libData) {
     
     TheParserSession.reset(nullptr);
 }
@@ -605,7 +677,7 @@ DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData) {
 
 #if USE_MATHLINK
 
-DLLEXPORT int ConcreteParseBytes_Listable_LibraryLink(WolframLibraryData libData, MLINK mlp) {
+int ConcreteParseBytes_Listable_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     int mlLen;
     
@@ -683,7 +755,7 @@ DLLEXPORT int ConcreteParseBytes_Listable_LibraryLink(WolframLibraryData libData
     return LIBRARY_NO_ERROR;
 }
 
-DLLEXPORT int TokenizeBytes_Listable_LibraryLink(WolframLibraryData libData, MLINK mlp) {
+int TokenizeBytes_Listable_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     int mlLen;
     
@@ -761,7 +833,7 @@ DLLEXPORT int TokenizeBytes_Listable_LibraryLink(WolframLibraryData libData, MLI
     return LIBRARY_NO_ERROR;
 }
 
-DLLEXPORT int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
+int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     int mlLen;
     
@@ -833,7 +905,7 @@ DLLEXPORT int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK ml
 
 
 
-DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
+int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     int mlLen;
     
