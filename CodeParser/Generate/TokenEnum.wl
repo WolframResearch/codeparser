@@ -91,8 +91,8 @@ For parser code, there is a distinction between toplevel and internal newlines
 
 But once a token Expr is actually created, just treat them both the same
 *)
-tokenToSymbol[Token`ToplevelNewline] := "Symbol`Token`Newline"
-tokenToSymbol[Token`InternalNewline] := "Symbol`Token`Newline"
+tokenToSymbol[Token`ToplevelNewline] = "Symbol`Token`Newline"
+tokenToSymbol[Token`InternalNewline] = "Symbol`Token`Newline"
 
 (*
 everything else will be Symbol`Token`Foo

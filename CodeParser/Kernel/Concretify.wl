@@ -99,23 +99,17 @@ precedenceLess[a_, b_] :=
 precedenceEqual[a_, b_] :=
   lookupPrecedence[a] == lookupPrecedence[b]
 
-precedenceGreaterSpecialMinus[
-  Precedence`Infix`Minus, Precedence`Prefix`Minus] = True;
+precedenceGreaterSpecialMinus[Precedence`Infix`Minus, Precedence`Prefix`Minus] = True
 
-precedenceGreaterSpecialMinus[a_, b_] :=
-  False
+precedenceGreaterSpecialMinus[a_, b_] = False
 
-precedenceGreaterSpecialMinus2[
-  Precedence`Infix`Minus, Precedence`Star] = True;
+precedenceGreaterSpecialMinus2[Precedence`Infix`Minus, Precedence`Star] = True
 
-precedenceGreaterSpecialMinus2[a_, b_] :=
-  False
+precedenceGreaterSpecialMinus2[a_, b_] = False
 
-precedenceGreaterSpecialPlus[
-  Precedence`Infix`Plus, Precedence`Prefix`Plus] = True;
+precedenceGreaterSpecialPlus[Precedence`Infix`Plus, Precedence`Prefix`Plus] = True
 
-precedenceGreaterSpecialPlus[a_, b_] :=
-  False
+precedenceGreaterSpecialPlus[a_, b_] =  False
 
 precedenceMin[a_, b_] :=
   MinimalBy[{a, b}, lookupPrecedence][[1]]
@@ -130,49 +124,49 @@ nodeStructure[CallNode[LeafNode[Symbol, "Plus", _], {_, _, ___}, _]] =
   structure[InfixNode[Plus, #, <||>]&, LeafNode[Token`Plus, "+", <||>], Precedence`Infix`Plus]
 
 nodeStructure[CallNode[LeafNode[Symbol, "Times", _], {LeafNode[Integer, "-1", _], LeafNode[Integer | Real | Rational, _, _]}, _]] =
-  structure[InfixNode[Times, #, <||>] &, LeafNode[Token`Star, "*", <||>], Precedence`Star]
+  structure[InfixNode[Times, #, <||>]&, LeafNode[Token`Star, "*", <||>], Precedence`Star]
 
 nodeStructure[CallNode[LeafNode[Symbol, "Times", _], {LeafNode[Integer, "-1", _], _}, _]] =
   structure[PrefixNode[Minus, #, <||>]&, LeafNode[Token`Minus, "-", <||>], Precedence`Prefix`Minus]
 
 nodeStructure[CallNode[LeafNode[Symbol, "Times", _], _, _]] = 
-  structure[InfixNode[Times, #, <||>] &, LeafNode[Token`Star, "*", <||>], Precedence`Star]
+  structure[InfixNode[Times, #, <||>]&, LeafNode[Token`Star, "*", <||>], Precedence`Star]
 
 nodeStructure[CallNode[LeafNode[Symbol, "And", _], _, _]] = 
-  structure[InfixNode[And, #, <||>] &, LeafNode[Token`AmpAmp, "&&", <||>], Precedence`AmpAmp]
+  structure[InfixNode[And, #, <||>]&, LeafNode[Token`AmpAmp, "&&", <||>], Precedence`AmpAmp]
 
 nodeStructure[CallNode[LeafNode[Symbol, "Or", _], _, _]] = 
-  structure[InfixNode[Or, #, <||>] &, LeafNode[Token`BarBar, "||", <||>], Precedence`BarBar]
+  structure[InfixNode[Or, #, <||>]&, LeafNode[Token`BarBar, "||", <||>], Precedence`BarBar]
 
 nodeStructure[CallNode[LeafNode[Symbol, "Dot", _], _, _]] = 
-  structure[InfixNode[Dot, #, <||>] &, LeafNode[Token`Dot, ".", <||>], Precedence`Dot]
+  structure[InfixNode[Dot, #, <||>]&, LeafNode[Token`Dot, ".", <||>], Precedence`Dot]
 
 nodeStructure[CallNode[LeafNode[Symbol, "Alternatives", _], _, _]] = 
-  structure[InfixNode[Alternatives, #, <||>] &, LeafNode[Token`Bar, "|", <||>], Precedence`Bar]
+  structure[InfixNode[Alternatives, #, <||>]&, LeafNode[Token`Bar, "|", <||>], Precedence`Bar]
 
 nodeStructure[CallNode[LeafNode[Symbol, "CompoundExpression", _], _, _]] = 
-  structure[InfixNode[CompoundExpression, #, <||>] &, LeafNode[Token`Semi, ";", <||>], Precedence`Semi]
+  structure[InfixNode[CompoundExpression, #, <||>]&, LeafNode[Token`Semi, ";", <||>], Precedence`Semi]
 
 nodeStructure[CallNode[LeafNode[Symbol, "StringJoin", _], _, _]] = 
-  structure[InfixNode[StringJoin, #, <||>] &, LeafNode[Token`LessGreater, "<>", <||>], Precedence`LessGreater]
+  structure[InfixNode[StringJoin, #, <||>]&, LeafNode[Token`LessGreater, "<>", <||>], Precedence`LessGreater]
 
 nodeStructure[CallNode[LeafNode[Symbol, "RightComposition", _], _, _]] = 
-  structure[InfixNode[RightComposition, #, <||>] &, LeafNode[Token`SlashStar, "/*", <||>], Precedence`SlashStar]
+  structure[InfixNode[RightComposition, #, <||>]&, LeafNode[Token`SlashStar, "/*", <||>], Precedence`SlashStar]
 
 nodeStructure[CallNode[LeafNode[Symbol, "Composition", _], _, _]] = 
-  structure[InfixNode[Composition, #, <||>] &, LeafNode[Token`AtStar, "@*", <||>], Precedence`AtStar]
+  structure[InfixNode[Composition, #, <||>]&, LeafNode[Token`AtStar, "@*", <||>], Precedence`AtStar]
 
 nodeStructure[CallNode[LeafNode[Symbol, "StringExpression", _], _, _]] = 
-  structure[InfixNode[StringExpression, #, <||>] &, LeafNode[Token`TildeTilde, "~~", <||>], Precedence`TildeTilde]
+  structure[InfixNode[StringExpression, #, <||>]&, LeafNode[Token`TildeTilde, "~~", <||>], Precedence`TildeTilde]
 
 nodeStructure[CallNode[LeafNode[Symbol, "NonCommutativeMultiply", _], _, _]] =
-   structure[InfixNode[NonCommutativeMultiply, #, <||>] &, LeafNode[Token`StarStar, "**", <||>], Precedence`StarStar]
+   structure[InfixNode[NonCommutativeMultiply, #, <||>]&, LeafNode[Token`StarStar, "**", <||>], Precedence`StarStar]
 
 nodeStructure[CallNode[LeafNode[Symbol, "SameQ", _], _, _]] = 
-  structure[InfixNode[SameQ, #, <||>] &, LeafNode[Token`EqualEqualEqual, "===", <||>], Precedence`EqualEqualEqual]
+  structure[InfixNode[SameQ, #, <||>]&, LeafNode[Token`EqualEqualEqual, "===", <||>], Precedence`EqualEqualEqual]
 
 nodeStructure[CallNode[LeafNode[Symbol, "UnsameQ", _], _, _]] = 
-  structure[InfixNode[UnsameQ, #, <||>] &, LeafNode[Token`EqualBangEqual, "=!=", <||>], Precedence`EqualBangEqual]
+  structure[InfixNode[UnsameQ, #, <||>]&, LeafNode[Token`EqualBangEqual, "=!=", <||>], Precedence`EqualBangEqual]
 
 
 
@@ -331,9 +325,9 @@ Leafs
 
 nodeStructure[n : LeafNode[Symbol, str_, _]] :=
   structure[
-    Failure["Unhandled structure", <|"n" -> n|>]&
+    Failure["Unhandled structure", <| "n" -> n |>]&
     ,
-    Failure["badop", <|"n" -> n|>]
+    Failure["badop", <| "n" -> n |>]
     ,
     If[StringStartsQ[str, "-1"],
       Precedence`Prefix`Minus
@@ -344,9 +338,9 @@ nodeStructure[n : LeafNode[Symbol, str_, _]] :=
 
 nodeStructure[n : LeafNode[Integer, str_, _]] :=
   structure[
-    Failure["Unhandled structure", <|"n" -> n|>]&
+    Failure["Unhandled structure", <| "n" -> n |>]&
     ,
-    Failure["badop", <|"n" -> n|>]
+    Failure["badop", <| "n" -> n |>]
     ,
     If[StringStartsQ[str, "-1"],
       Precedence`Prefix`Minus
@@ -357,9 +351,9 @@ nodeStructure[n : LeafNode[Integer, str_, _]] :=
 
 nodeStructure[n : LeafNode[Real, str_, _]] :=
   structure[
-    Failure["Unhandled structure", <|"n" -> n|>]&
+    Failure["Unhandled structure", <| "n" -> n |>]&
     ,
-    Failure["badop", <|"n" -> n|>]
+    Failure["badop", <| "n" -> n |>]
     ,
     If[StringStartsQ[str, "-1"],
       Precedence`Prefix`Minus
@@ -370,9 +364,9 @@ nodeStructure[n : LeafNode[Real, str_, _]] :=
 
 nodeStructure[n : LeafNode[Rational, str_, _]] :=
   structure[
-    Failure["Unhandled structure", <|"n" -> n|>]&
+    Failure["Unhandled structure", <| "n" -> n |>]&
     ,
-    Failure["badop", <|"n" -> n|>]
+    Failure["badop", <| "n" -> n |>]
     ,
     If[StringStartsQ[str, "-1"],
       Precedence`Prefix`Minus
@@ -382,10 +376,10 @@ nodeStructure[n : LeafNode[Rational, str_, _]] :=
   ]
 
 nodeStructure[n : CallNode[head_, children_, data_]] :=
-  structure[Failure["Unhandled structure", <|"n" -> n|>]&, Failure["badop", <|"a" -> a|>], Precedence`Call]
+  structure[Failure["Unhandled structure", <| "n" -> n |>]&, Failure["badop", <| "n" -> n |>], Precedence`Call]
 
 nodeStructure[a_] :=
-  structure[Failure["Unhandled structure", <|"a" -> a|>]&, Failure["badop", <|"a" -> a|>], Failure["badprec", <|"a" -> a|>]]
+  structure[Failure["Unhandled structure", <| "a" -> a |>]&, Failure["badop", <| "a" -> a |>], Failure["badprec", <| "a" -> a |>]]
 
 
 
@@ -553,28 +547,28 @@ precCTL[PrefixNode[Not, _, _]] = Precedence`Prefix`Bang
 precCTR[PrefixNode[Not, _, _]] = Precedence`Prefix`Bang
 
 precCTL[PostfixNode[Factorial, {first_, ___}, _]] := precedenceMin[precCTL[first], Precedence`Postfix`Bang]
-precCTR[PostfixNode[Factorial, {first_, ___}, _]] := Precedence`Highest
+precCTR[PostfixNode[Factorial, {first_, ___}, _]] = Precedence`Highest
 
 precCTL[PostfixNode[Factorial2, {first_, ___}, _]] := precedenceMin[precCTL[first], Precedence`Postfix`BangBang]
-precCTR[PostfixNode[Factorial2, {first_, ___}, _]] := Precedence`Highest
+precCTR[PostfixNode[Factorial2, {first_, ___}, _]] = Precedence`Highest
 
 precCTL[PostfixNode[Increment, {first_, ___}, _]] := precedenceMin[precCTL[first], Precedence`Postfix`PlusPlus]
-precCTR[PostfixNode[Increment, {first_, ___}, _]] := Precedence`Highest
+precCTR[PostfixNode[Increment, {first_, ___}, _]] = Precedence`Highest
 
 precCTL[PostfixNode[Decrement, {first_, ___}, _]] := precedenceMin[precCTL[first], Precedence`Postfix`MinusMinus]
-precCTR[PostfixNode[Decrement, {first_, ___}, _]] := Precedence`Highest
+precCTR[PostfixNode[Decrement, {first_, ___}, _]] = Precedence`Highest
 
 precCTL[PostfixNode[Function, {first_, ___}, _]] := precedenceMin[precCTL[first], Precedence`Amp]
-precCTR[PostfixNode[Function, {first_, ___}, _]] := Precedence`Highest
+precCTR[PostfixNode[Function, {first_, ___}, _]] = Precedence`Highest
 
 precCTL[PostfixNode[Repeated, {first_, ___}, _]] := precedenceMin[precCTL[first], Precedence`DotDot]
-precCTR[PostfixNode[Repeated, {first_, ___}, _]] := Precedence`Highest
+precCTR[PostfixNode[Repeated, {first_, ___}, _]] = Precedence`Highest
 
 precCTL[PostfixNode[RepeatedNull, {first_, ___}, _]] := precedenceMin[precCTL[first], Precedence`DotDotDot]
-precCTR[PostfixNode[RepeatedNull, {first_, ___}, _]] := Precedence`Highest
+precCTR[PostfixNode[RepeatedNull, {first_, ___}, _]] = Precedence`Highest
 
 precCTL[PostfixNode[Derivative, {first_, ___}, _]] := precedenceMin[precCTL[first], Precedence`SingleQuote]
-precCTR[PostfixNode[Derivative, {first_, ___}, _]] := Precedence`Highest
+precCTR[PostfixNode[Derivative, {first_, ___}, _]] = Precedence`Highest
 
 precCTL[CallNode[{h_}, _, _]] := precedenceMin[precCTL[h], Precedence`Call]
 precCTR[CallNode[{h_}, _, _]] := precedenceMin[precCTR[h], Precedence`Call]
@@ -622,13 +616,12 @@ firstPrec[PostfixNode[_, {first_, ___}, _]] :=
 firstPrec[CallNode[{h_, ___}, _, _]] :=
   firstPrec[h]
 
-firstPrec[GroupNode[_, _, _]] :=
-  Precedence`Highest
+firstPrec[GroupNode[_, _, _]] = Precedence`Highest
 
 firstPrec[ErrorNode[_, _, _]] = Precedence`Lowest
 
 firstPrec[cst_] :=
-  Failure["unhandled firstPrec: ", <|"cst" -> cst|>]
+  Failure["unhandled firstPrec: ", <| "cst" -> cst |>]
 
 
 (*
@@ -665,7 +658,7 @@ lastPrec[GroupNode[_, _, _]] = Precedence`Highest
 lastPrec[ErrorNode[_, _, _]] = Precedence`Lowest
 
 lastPrec[cst_] :=
-  Failure["unhandled lastPrec: ", <|"cst" -> cst|>]
+  Failure["unhandled lastPrec: ", <| "cst" -> cst |>]
 
 
 
@@ -733,7 +726,7 @@ okToJuxtapose[Precedence`Prefix`Minus, Precedence`Prefix`Minus] = False
 okToJuxtapose[Precedence`Prefix`Minus, Precedence`Prefix`MinusMinus] = False
 
 
-okToJuxtapose[a_, b_] := True
+okToJuxtapose[a_, b_] = True
 
 
 

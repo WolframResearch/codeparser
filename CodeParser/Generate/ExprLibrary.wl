@@ -23,17 +23,17 @@ Needs["TypeFramework`"] (* for MetaData *)
 ExprLibraryProgram[] :=
 Module[{},
   Program[{
-    MetaData[<|"Exported" -> True, "Name" -> "Main"|>
+    MetaData[<| "Exported" -> True, "Name" -> "Main" |>
     ]@Function[{},
       True
     ]
     ,
-    MetaData[<|"Exported" -> True, "Name" -> Expr`Length|>
+    MetaData[<| "Exported" -> True, "Name" -> Expr`Length |>
     ]@Function[{Typed[arg1, "Expression"]},
       Length[arg1]
     ]
     ,
-    MetaData[<|"Exported" -> True, "Name" -> Expr`ToInteger64|>
+    MetaData[<| "Exported" -> True, "Name" -> Expr`ToInteger64 |>
     ]@Function[{Typed[arg1, "Expression"]},
       Module[{hand = Native`Handle[]},
         Native`PrimitiveFunction["ExprToInteger64"][hand, arg1];
@@ -41,7 +41,7 @@ Module[{},
       ]
     ]
     ,
-    MetaData[<|"Exported" -> True, "Name" -> Expr`FromInteger64|>
+    MetaData[<| "Exported" -> True, "Name" -> Expr`FromInteger64 |>
     ]@Function[{Typed[arg1, "Integer64"]},
       (*
       used to be Compile`Cast
@@ -57,7 +57,7 @@ Module[{},
       System`Cast[arg1, "Expression"]
     ]
     ,
-    MetaData[<|"Exported" -> True, "Name" -> Expr`MEncodedStringToSymbolExpr|>
+    MetaData[<| "Exported" -> True, "Name" -> Expr`MEncodedStringToSymbolExpr |>
     ]@Function[{Typed[arg1, "MachineInteger"]},
       Module[{cstr, str, sym},
         cstr = Native`BitCast[arg1, "CArray"["UnsignedInteger8"]];
@@ -67,7 +67,7 @@ Module[{},
       ]
     ]
     ,
-    MetaData[<|"Exported" -> True, "Name" -> Expr`BuildExpr|>
+    MetaData[<| "Exported" -> True, "Name" -> Expr`BuildExpr |>
     ]@Function[{Typed[head, "Expression"], Typed[length, "MachineInteger"]},
       Module[{ef},
         ef = Native`PrimitiveFunction["CreateHeaded_IE_E"][length, head];
@@ -75,29 +75,29 @@ Module[{},
       ]
     ]
     ,
-    MetaData[<|"Exported" -> True, "Name" -> Expr`Insert|>
+    MetaData[<| "Exported" -> True, "Name" -> Expr`Insert |>
     ]@Function[{Typed[expr, "Expression"], Typed[index, "MachineInteger"], Typed[part, "Expression"]},
       Native`PrimitiveFunction["SetElement_EIE_Void"][expr, index, part];
       Null
     ]
     ,
-    MetaData[<|"Exported" -> True, "Name" -> Expr`Pointer|>
+    MetaData[<| "Exported" -> True, "Name" -> Expr`Pointer |>
     ]@Function[{Typed[arg1, "Expression"]},
       Native`BitCast[Native`BitCast[arg1, "VoidHandle"], "MachineInteger"]
     ]
     ,
-    MetaData[<|"Exported" -> True, "Name" -> Expr`FromPointer|>
+    MetaData[<| "Exported" -> True, "Name" -> Expr`FromPointer |>
     ]@Function[{Typed[arg1, "MachineInteger"]},
       Native`BitCast[Native`BitCast[arg1, "VoidHandle"], "Expression"]
     ]
     ,
-    MetaData[<|"Exported" -> True, "Name" -> Expr`Release, "MemoryManagement" -> False|>
+    MetaData[<| "Exported" -> True, "Name" -> Expr`Release, "MemoryManagement" -> False|>
     ]@Function[{Typed[arg1, "Expression"]},
       Memory`Release[arg1];
       Null
     ]
     ,
-    MetaData[<|"Exported" -> True, "Name" -> Expr`UTF8BytesToStringExpr|>
+    MetaData[<| "Exported" -> True, "Name" -> Expr`UTF8BytesToStringExpr |>
     ]@Function[{Typed[arg1, "MachineInteger"], Typed[arg2, "MachineInteger"]},
       Module[{cast1},
         cast1 = Native`BitCast[arg1, "CArray"["UnsignedInteger8"]];
@@ -105,7 +105,7 @@ Module[{},
       ]
     ]
     ,
-    MetaData[<|"Exported" -> True, "Name" -> Expr`CStringToIntegerExpr|>
+    MetaData[<| "Exported" -> True, "Name" -> Expr`CStringToIntegerExpr |>
     (*
     used to be:
     {Typed[arg1, "MachineInteger"], Typed[arg2, "MachineInteger"], Typed[arg3, "MBool"]}
