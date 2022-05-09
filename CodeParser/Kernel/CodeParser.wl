@@ -145,6 +145,8 @@ GroupDoubleBracket
 
 GroupSquare
 
+GroupTypeSpecifier
+
 (*BracketingBar*)
 
 (*DoubleBracketingBar*)

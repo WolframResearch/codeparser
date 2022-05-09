@@ -169,6 +169,11 @@ added in 12.2:
 *)
 Token`BarMinusGreater -> Next, (* |-> *)
 Token`SlashSlashEqual -> Next, (* //= *)
+(*
+added in 13.1:
+::[
+*)
+Token`ColonColonOpenSquare -> Next, (* ::[ *)
 
 (* variable length character tokens *)
 Token`PercentPercent -> Next, (* %% *)

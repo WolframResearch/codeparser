@@ -2340,6 +2340,16 @@ inline Token Tokenizer::handleColon(Buffer tokenStartBuf, SourceLocation tokenSt
             
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+            
+            c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
+            
+            if (c.to_point() == '[') {
+                
+                Operator = TOKEN_COLONCOLONOPENSQUARE; // ::[
+                
+                TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
+                TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+            }
         }
             break;
         case '=': {

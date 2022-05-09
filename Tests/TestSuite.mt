@@ -28,6 +28,7 @@ TestSuite[{
 	"ToNode.mt",
 	"TopLevel.mt",
 	"ToString.mt",
+	"TypeSpecifier.mt",
 	"Unsafe.mt",
 	"Weird.mt"
 }]

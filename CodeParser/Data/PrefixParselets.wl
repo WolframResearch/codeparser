@@ -119,6 +119,7 @@ Token`OpenParen -> Parselet`GroupParselet[Token`OpenParen, CodeParser`GroupParen
 Token`OpenSquare -> Parselet`GroupParselet[Token`OpenSquare, CodeParser`GroupSquare],
 Token`OpenCurly -> Parselet`GroupParselet[Token`OpenCurly, List],
 Token`LessBar -> Parselet`GroupParselet[Token`LessBar, Association],
+Token`ColonColonOpenSquare -> Parselet`GroupParselet[Token`ColonColonOpenSquare, CodeParser`GroupTypeSpecifier],
 Token`LongName`LeftAngleBracket -> Parselet`GroupParselet[Token`LongName`LeftAngleBracket, AngleBracket],
 Token`LongName`LeftCeiling -> Parselet`GroupParselet[Token`LongName`LeftCeiling, Ceiling],
 Token`LongName`LeftFloor -> Parselet`GroupParselet[Token`LongName`LeftFloor, Floor],

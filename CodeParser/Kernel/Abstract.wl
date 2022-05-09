@@ -348,6 +348,8 @@ f [ ]
 
 f [ [ ] ]
 
+f ::[ ]
+
 f \[LeftDoubleBracket] \[RightDoubleBracket]
 *)
 
@@ -355,6 +357,9 @@ abstract[CallNode[op_, children:{ GroupNode[GroupSquare, { _, GroupNode[GroupSqu
   abstractCallNode[CallNode[op, children, data1]]
 
 abstract[CallNode[op_, children:{ GroupNode[GroupSquare, _, _] }, data1_]] :=
+  abstractCallNode[CallNode[op, children, data1]]
+
+abstract[CallNode[op_, children:{ GroupNode[GroupTypeSpecifier, _, _] }, data1_]] :=
   abstractCallNode[CallNode[op, children, data1]]
 
 abstract[CallNode[op_, children:{ GroupNode[GroupDoubleBracket, _, _] }, data1_]] :=
@@ -388,10 +393,16 @@ GroupMissingCloserNode gets abstracted
 abstract[CallNode[head_, children:{GroupMissingCloserNode[GroupSquare, _, _]}, data_]] :=
   abstractCallNode[CallMissingCloserNode[head, children, data]]
 
+abstract[CallNode[head_, children:{GroupMissingCloserNode[GroupTypeSpecifier, _, _]}, data_]] :=
+  abstractCallNode[CallMissingCloserNode[head, children, data]]
+
 (*
 UnterminatedGroupNode does NOT get abstracted
 *)
 abstract[CallNode[head_, children:{UnterminatedGroupNode[GroupSquare, _, _]}, data_]] :=
+  abstractCallNode[UnterminatedCallNode[head, children, data]]
+
+abstract[CallNode[head_, children:{UnterminatedGroupNode[GroupTypeSpecifier, _, _]}, data_]] :=
   abstractCallNode[UnterminatedCallNode[head, children, data]]
 
 
@@ -417,10 +428,17 @@ abstract[GroupNode[GroupParen, children_, data_]] :=
 (*
 GroupNode errors
 
-naked [] and naked \[LeftDoubleBracket]\[RightDoubleBracket]
+naked []
+
+naked ::[]
+
+naked \[LeftDoubleBracket]\[RightDoubleBracket]
 *)
 abstract[GroupNode[GroupSquare, children_, data_]] :=
   AbstractSyntaxErrorNode[AbstractSyntaxError`OpenSquare, children, data]
+
+abstract[GroupNode[GroupTypeSpecifier, children_, data_]] :=
+  AbstractSyntaxErrorNode[AbstractSyntaxError`ColonColonOpenSquare, children, data]
 
 abstract[GroupNode[GroupDoubleBracket, children_, data_]] :=
   AbstractSyntaxErrorNode[AbstractSyntaxError`LeftDoubleBracket, children, data]
@@ -1207,6 +1225,57 @@ Module[{head, data, issues},
 properly abstract and warn about a;b;[];c
 *)
 abstractCompoundExpression[InfixNode[CompoundExpression, { headIn__, groupIn:GroupNode[GroupSquare, {first_, ___, last_}, _], rest__ }, dataIn_]] :=
+Module[{head, data, issues},
+
+  data = dataIn;
+
+  issues = Lookup[data, AbstractSyntaxIssues, {}];
+
+  AppendTo[issues,
+    SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|
+      Source -> first[[3, Key[Source]]],
+      ConfidenceLevel -> 1.0,
+      "AdditionalSources" -> {last[[3, Key[Source]]]}
+    |>]
+  ];
+
+  AssociateTo[data, AbstractSyntaxIssues -> issues];
+
+    head = InfixNode[CompoundExpression, Riffle[{headIn}, LeafNode[Token`Semi, ";", <||>]] ~Join~ {LeafNode[Token`Semi, ";", <||>], LeafNode[Token`Fake`ImplicitNull, "", <||>]}, <||>];
+
+  abstract[InfixNode[CompoundExpression, { CallNode[head, { groupIn }, data], LeafNode[Token`Semi, ";", <||>] } ~Join~ Riffle[{rest}, LeafNode[Token`Semi, ";", <||>]], <||>]]
+]
+
+
+(*
+properly abstract and warn about a;b;::[]
+*)
+abstractCompoundExpression[InfixNode[CompoundExpression, { headIn__, groupIn:GroupNode[GroupTypeSpecifier, {first_, ___, last_}, _] }, dataIn_]] :=
+Module[{head, data, issues},
+
+  data = dataIn;
+
+  issues = Lookup[data, AbstractSyntaxIssues, {}];
+
+  AppendTo[issues,
+    SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|
+      Source -> first[[3, Key[Source]]],
+      ConfidenceLevel -> 1.0,
+      "AdditionalSources" -> {last[[3, Key[Source]]]}
+    |>]
+  ];
+
+  AssociateTo[data, AbstractSyntaxIssues -> issues];
+
+  head = InfixNode[CompoundExpression, Riffle[{headIn}, LeafNode[Token`Semi, ";", <||>]] ~Join~ {LeafNode[Token`Semi, ";", <||>], LeafNode[Token`Fake`ImplicitNull, "", <||>]}, <||>];
+
+  abstract[CallNode[head, { groupIn }, data]]
+]
+
+(*
+properly abstract and warn about a;b;::[];c
+*)
+abstractCompoundExpression[InfixNode[CompoundExpression, { headIn__, groupIn:GroupNode[GroupTypeSpecifier, {first_, ___, last_}, _], rest__ }, dataIn_]] :=
 Module[{head, data, issues},
 
   data = dataIn;

@@ -54,6 +54,7 @@ GroupOpenerToCloser[Token`OpenCurly] = Closer`CloseCurly
 GroupOpenerToCloser[Token`LessBar] = Closer`BarGreater
 GroupOpenerToCloser[Token`OpenSquare] = Closer`CloseSquare
 GroupOpenerToCloser[Token`OpenParen] = Closer`CloseParen
+GroupOpenerToCloser[Token`ColonColonOpenSquare] = Closer`CloseSquare
 
 GroupOpenerToCloser[Token`LongName`LeftAngleBracket] = Closer`LongName`RightAngleBracket
 GroupOpenerToCloser[Token`LongName`LeftCeiling] = Closer`LongName`RightCeiling

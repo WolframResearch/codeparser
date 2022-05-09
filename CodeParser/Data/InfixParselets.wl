@@ -437,6 +437,7 @@ Calls
 *)
 Token`OpenSquare -> Parselet`CallParselet[Parselet`GroupParselet[Token`OpenSquare, CodeParser`GroupSquare]],
 Token`LongName`LeftDoubleBracket -> Parselet`CallParselet[Parselet`GroupParselet[Token`LongName`LeftDoubleBracket, CodeParser`GroupDoubleBracket]],
+Token`ColonColonOpenSquare -> Parselet`CallParselet[Parselet`GroupParselet[Token`ColonColonOpenSquare, CodeParser`GroupTypeSpecifier]],
 
 
 

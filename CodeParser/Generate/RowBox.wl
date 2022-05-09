@@ -75,8 +75,14 @@ prbDispatch[{_, LeafNode[Token`OpenSquare, _, _], ___, LeafNode[Token`CloseSquar
 prbDispatch[{_, LeafNode[Token`LongName`LeftDoubleBracket, _, _], ___, LeafNode[Token`LongName`RightDoubleBracket, _, _]}, handledChildren_, ignored_, pos_] :=
   CallNode[{handledChildren[[1]]}, {GroupNode[GroupDoubleBracket, Rest[handledChildren], <||>]}, <| Source -> pos |>]
 
+prbDispatch[{_, LeafNode[Token`ColonColonOpenSquare, _, _], ___, LeafNode[Token`CloseSquare, _, _]}, handledChildren_, ignored_, pos_] :=
+  CallNode[{handledChildren[[1]]}, {GroupNode[GroupTypeSpecifier, Rest[handledChildren], <||>]}, <| Source -> pos |>]
+
 prbDispatch[{_, LeafNode[Token`OpenSquare, _, _], ___}, handledChildren_, ignored_, pos_] :=
   CallNode[{handledChildren[[1]]}, {GroupMissingCloserNode[GroupSquare, Rest[handledChildren], <||>]}, <| Source -> pos |>]
+
+prbDispatch[{_, LeafNode[Token`ColonColonOpenSquare, _, _], ___}, handledChildren_, ignored_, pos_] :=
+  CallNode[{handledChildren[[1]]}, {GroupMissingCloserNode[GroupTypeSpecifier, Rest[handledChildren], <||>]}, <| Source -> pos |>]
 
 (*
 Unrecognized LongName

@@ -31,6 +31,8 @@ First draft of Concretify
 
 Add new 13.1 FormalScript characters
 
+support new 13.1 syntax `"PackedArray"::["Real64"]`
+
 
 ## 1.5 - 7 Mar, 2022
 

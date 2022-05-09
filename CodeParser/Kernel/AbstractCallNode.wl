@@ -480,6 +480,66 @@ Module[{head, part, partData, issues, data},
   CallNode[head, part[[2]], data]
 ]
 
+
+(*
+this is fine
+*)
+abstractCallNode[CallNode[headIn:LeafNode[String, _, _], {partIn:GroupNode[GroupTypeSpecifier, {first_, ___, last_}, _]}, dataIn_]] :=
+Module[{head, part, partData, issues, data},
+  head = headIn;
+  part = partIn;
+  data = dataIn;
+
+  issues = {};
+
+  head = abstract[head];
+  part = abstractGroupNode[part];
+  partData = part[[3]];
+
+  issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+
+  If[issues != {},
+    issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+    AssociateTo[data, AbstractSyntaxIssues -> issues];
+  ];
+
+  CallNode[CallNode[ToNode[System`TypeSpecifier], {head}, <||>], part[[2]], data]
+]
+
+(*
+warn about anything else
+*)
+abstractCallNode[CallNode[headIn_, {partIn:GroupNode[GroupTypeSpecifier, {first_, ___, last_}, _]}, dataIn_]] :=
+Module[{head, part, partData, issues, data},
+  head = headIn;
+  part = partIn;
+  data = dataIn;
+
+  issues = {};
+
+  AppendTo[issues,
+    SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|
+      Source -> first[[3, Key[Source]]],
+      ConfidenceLevel -> 0.95,
+      "AdditionalSources" -> {last[[3, Key[Source]]]}
+    |>]
+  ];
+
+  head = abstract[head];
+  part = abstractGroupNode[part];
+  partData = part[[3]];
+
+  issues = Lookup[partData, AbstractSyntaxIssues, {}] ~Join~ issues;
+
+  If[issues != {},
+    issues = Lookup[data, AbstractSyntaxIssues, {}] ~Join~ issues;
+    AssociateTo[data, AbstractSyntaxIssues -> issues];
+  ];
+
+  CallNode[CallNode[ToNode[System`TypeSpecifier], {head}, <||>], part[[2]], data]
+]
+
+
 (*
 
 Concrete parse of a\[LeftDoubleBracket]2\[RightDoubleBracket] returns CallNode[a, GroupNode[DoubleBracket, {2}]]
