@@ -579,6 +579,12 @@ precCTR[PostfixNode[Derivative, {first_, ___}, _]] := Precedence`Highest
 precCTL[CallNode[{h_}, _, _]] := precedenceMin[precCTL[h], Precedence`Call]
 precCTR[CallNode[{h_}, _, _]] := precedenceMin[precCTR[h], Precedence`Call]
 
+precCTL[PrefixNode[PrefixLinearSyntaxBang, _, _]] = Precedence`LinearSyntax`Bang
+precCTR[PrefixNode[PrefixLinearSyntaxBang, _, _]] = Precedence`LinearSyntax`Bang
+
+precCTL[ErrorNode[_, _, _]] = Precedence`Highest
+precCTR[ErrorNode[_, _, _]] = Precedence`Highest
+
 precCTL[cst_] :=
   Failure["unhandled precCTL: ", <| "cst" -> cst |>]
 
@@ -619,6 +625,8 @@ firstPrec[CallNode[{h_, ___}, _, _]] :=
 firstPrec[GroupNode[_, _, _]] :=
   Precedence`Highest
 
+firstPrec[ErrorNode[_, _, _]] = Precedence`Lowest
+
 firstPrec[cst_] :=
   Failure["unhandled firstPrec: ", <|"cst" -> cst|>]
 
@@ -653,6 +661,8 @@ lastPrec[PrefixNode[_, {___, last_}, _]] :=
 lastPrec[CallNode[_, _, _]] = Precedence`Highest
 
 lastPrec[GroupNode[_, _, _]] = Precedence`Highest
+
+lastPrec[ErrorNode[_, _, _]] = Precedence`Lowest
 
 lastPrec[cst_] :=
   Failure["unhandled lastPrec: ", <|"cst" -> cst|>]
@@ -1708,6 +1718,18 @@ Module[{struct, ctor, op, prec},
     n
   ]
 ]
+
+walk[n:PrefixNode[PrefixLinearSyntaxBang, _, _]] :=
+  n
+
+walk[n:ErrorNode[_, _, _]] :=
+  n
+
+walk[AbstractSyntaxErrorNode[AbstractSyntaxError`CommaTopLevel, children_, _]] :=
+  InfixNode[Comma, Riffle[walk /@ children, LeafNode[Token`Comma, ",", <||>]], <||>]
+
+walk[n:AbstractSyntaxErrorNode[_, _, _]] :=
+  n
 
 walk[f_?FailureQ] :=
   f

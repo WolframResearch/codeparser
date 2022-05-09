@@ -547,3 +547,27 @@ Test[
 	,
 	TestID->"Concretify-20220503-T9I0B2"
 ]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a,"]]]
+    ,
+    "a,Null"
+	,
+	TestID->"Concretify-20220507-Y5P3E3"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["a+"]]]
+    ,
+    "a+"
+	,
+	TestID->"Concretify-20220507-Z6K5G0"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["\!\(\*StyleBox[\"@\", \"foo\"]\)aa"]]]
+    ,
+    "\!\(\*StyleBox[\"@\", \"foo\"]\)*aa"
+	,
+	TestID->"Concretify-20220507-S4K6R1"
+]
