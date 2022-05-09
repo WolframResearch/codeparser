@@ -75,11 +75,18 @@ Module[{cst, agg, ast2, astToCompare, ast2ToCompare, str},
 ]]
 
 
-structure[ctor_, _, _]["ctor"] := ctor
+(*
+try to catch bad args by matching specific patterns here
+*)
+structure[Identity, _, _]["ctor"] = Identity
 
-structure[_, op_, _]["op"] := op
+structure[ctor_Function, _, _]["ctor"] := ctor
 
-structure[_, _, prec_]["prec"] := prec
+structure[_, op_?FailureQ, _]["op"] := op
+
+structure[_, op:_[_, _, _], _]["op"] := op
+
+structure[_, _, prec_Symbol]["prec"] := prec
 
 
 
