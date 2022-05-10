@@ -133,10 +133,23 @@ Unexpected openers and unexpected closers
 *)
 prbDispatch[{LeafNode[" <> openerTokStr <> ", _, _], ___}, handledChildren_, ignored_, pos_] :=
   GroupMissingCloserNode[" <> tagStr <> ", handledChildren, <| Source -> pos |>]
+" <>
 
+If[!(closerTokStr == "Token`CloseSquare" && tagStr == "CodeParser`GroupTypeSpecifier"),
+
+"
 prbDispatch[{___, LeafNode[" <> closerTokStr <> ", _, _]}, handledChildren_, ignored_, pos_] :=
   GroupMissingOpenerNode[" <> tagStr <> ", handledChildren, <| Source -> pos |>]
+",
+
 "
+(*
+skipped
+
+do not generate GroupMissingOpenerNode for GroupTypeSpecifier
+
+f] is assumed to be GroupSquare
+*)"]
 ]& /@ groupParselets
 )
 
