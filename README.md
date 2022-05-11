@@ -92,9 +92,9 @@ In[2]:= CodeParse["1+1"]
 
 During evaluation of In[2]:= LibraryFunction::version: The version number 7 of the library is not consistent with the current or any previous WolframLibraryVersion.
 
-During evaluation of In[2]:= LibraryFunction::initerr: A nonzero error code 7 was returned during the initialization of the library /Users/user/Library/Mathematica/Paclets/Repository/CodeParser-1.4/LibraryResources/MacOSX-x86-64/CodeParser.dylib.
+During evaluation of In[2]:= LibraryFunction::initerr: A nonzero error code 7 was returned during the initialization of the library /Users/user/Library/Mathematica/Paclets/Repository/CodeParser-1.6/LibraryResources/MacOSX-x86-64/CodeParser.dylib.
 
-During evaluation of In[2]:= LibraryFunction::libload: The function ConcreteParseBytes_Listable_LibraryLink was not loaded from the file /Users/user/Library/Mathematica/Paclets/Repository/CodeParser-1.4/LibraryResources/MacOSX-x86-64/CodeParser.dylib.
+During evaluation of In[2]:= LibraryFunction::libload: The function ConcreteParseBytes_Listable_LibraryLink was not loaded from the file /Users/user/Library/Mathematica/Paclets/Repository/CodeParser-1.6/LibraryResources/MacOSX-x86-64/CodeParser.dylib.
 
 Out[2]= $Failed
 ```
