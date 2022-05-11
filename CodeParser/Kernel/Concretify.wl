@@ -65,6 +65,8 @@ Module[{cst, agg, ast2, astToCompare, ast2ToCompare, str},
 
   ast2 = CodeParse[str];
 
+  ast2[[1]] = ast[[1]];
+
   ast2ToCompare = ast2 /. _Association -> <||>;
 
   If[astToCompare =!= ast2ToCompare,
