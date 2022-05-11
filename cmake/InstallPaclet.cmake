@@ -4,7 +4,16 @@ message(FATAL_ERROR "WOLFRAMKERNEL does not exist. WOLFRAMKERNEL: ${WOLFRAMKERNE
 endif()
 
 set(CODE "\
+Check[
 res = PacletInstall[\"${PACLET_OUTPUT}\", ForceVersionInstall -> True]\;
+,
+Print[OutputForm[Row[{\"$VersionNumber: \", NumberForm[$VersionNumber, {2, 1}]}]]]\;
+Print[OutputForm[Row[{\"Paclet WolframVersion: \", \"${PACLET_WOLFRAMVERSION}\"}]]]\;
+Print[OutputForm[Row[{\"To prevent this PacletInstall::compat message, update PacletInfo.wl.in with WolframVersion -> \\\"\", NumberForm[$VersionNumber, {2, 1}] ,\"\\\" and build and install again.\"}]]];
+res
+,
+{PacletInstall::compat}
+]\;
 Print[res //OutputForm]\;
 If[!PacletObjectQ[res],
   Exit[1]
