@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[    119589,       2840]
-NotebookOptionsPosition[    110981,       2658]
-NotebookOutlinePosition[    111709,       2683]
-CellTagsIndexPosition[    111628,       2678]
+NotebookDataLength[    119613,       2840]
+NotebookOptionsPosition[    110993,       2658]
+NotebookOutlinePosition[    111721,       2683]
+CellTagsIndexPosition[    111640,       2678]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -413,7 +413,7 @@ Cell[BoxData[
  CellLabel->"In[21]:=",
  CellID->533549478,ExpressionUUID->"99d2aad8-7775-4bb6-93b7-531d1b32feee"],
 
-Cell["A string representing a file path is treated as code.", "Notes",
+Cell["A string representing a file path is treated as code.", "ExampleText",
  CellChangeTimes->{{3.820748562592911*^9, 3.820748574586866*^9}},
  CellID->1137663494,ExpressionUUID->"b9eaa053-bd94-44f8-a632-c1bcc1ffe4e9"],
 
@@ -520,7 +520,7 @@ Cell[BoxData[
  CellID->1733987793,ExpressionUUID->"a22a9e66-5028-498d-b9fd-75a9f50e4e76"]
 }, Open  ]],
 
-Cell["File paths must use the File wrapper.", "Notes",
+Cell["File paths must use the File wrapper.", "ExampleText",
  CellChangeTimes->{{3.820748628501116*^9, 3.820748636659203*^9}},
  CellID->176434566,ExpressionUUID->"02ccb374-ac3f-4da3-91eb-3d3d5156e98e"],
 
@@ -2659,7 +2659,7 @@ Cell[BoxData[
 WindowSize->{700, 770},
 WindowMargins->{{10, Automatic}, {Automatic, 11}},
 CellContext->"Global`",
-FrontEndVersion->"13.0 for Mac OS X x86 (64-bit) (October 17, 2021)",
+FrontEndVersion->"13.0 for Mac OS X x86 (64-bit) (January 26, 2022)",
 StyleDefinitions->FrontEnd`FileName[{"Wolfram"}, "FunctionPageStyles.nb", 
   CharacterEncoding -> "UTF-8"],
 ExpressionUUID->"0d9016c2-30a2-4bad-885d-a428c35756c5"
@@ -2677,7 +2677,7 @@ CellTagsIndex->{
 *)
 (*CellTagsIndex
 CellTagsIndex->{
- {"ExtendedExamples", 111435, 2671}
+ {"ExtendedExamples", 111447, 2671}
  }
 *)
 (*NotebookFileOutline
@@ -2820,26 +2820,26 @@ Cell[13652, 401, 252, 5, 21, "ExampleSection",ExpressionUUID->"2b139579-d1e5-47e
  CellID->1305812373],
 Cell[13907, 408, 293, 5, 27, "Input",ExpressionUUID->"99d2aad8-7775-4bb6-93b7-531d1b32feee",
  CellID->533549478],
-Cell[14203, 415, 212, 2, 25, "Notes",ExpressionUUID->"b9eaa053-bd94-44f8-a632-c1bcc1ffe4e9",
+Cell[14203, 415, 218, 2, 22, "ExampleText",ExpressionUUID->"b9eaa053-bd94-44f8-a632-c1bcc1ffe4e9",
  CellID->1137663494],
 Cell[CellGroupData[{
-Cell[14440, 421, 417, 7, 27, "Input",ExpressionUUID->"06691baa-7536-4595-bd86-a16fc44d94eb",
+Cell[14446, 421, 417, 7, 27, "Input",ExpressionUUID->"06691baa-7536-4595-bd86-a16fc44d94eb",
  CellID->768608769],
-Cell[14860, 430, 3588, 89, 141, "Output",ExpressionUUID->"a22a9e66-5028-498d-b9fd-75a9f50e4e76",
+Cell[14866, 430, 3588, 89, 141, "Output",ExpressionUUID->"a22a9e66-5028-498d-b9fd-75a9f50e4e76",
  CellID->1733987793]
 }, Open  ]],
-Cell[18463, 522, 195, 2, 25, "Notes",ExpressionUUID->"02ccb374-ac3f-4da3-91eb-3d3d5156e98e",
+Cell[18469, 522, 201, 2, 22, "ExampleText",ExpressionUUID->"02ccb374-ac3f-4da3-91eb-3d3d5156e98e",
  CellID->176434566],
 Cell[CellGroupData[{
-Cell[18683, 528, 397, 8, 27, "Input",ExpressionUUID->"cfc7062e-cc04-4310-afe0-c37c12a60e17",
+Cell[18695, 528, 397, 8, 27, "Input",ExpressionUUID->"cfc7062e-cc04-4310-afe0-c37c12a60e17",
  CellID->2131013955],
-Cell[19083, 538, 91346, 2101, 4173, "Output",ExpressionUUID->"f4fcc3af-0978-455a-a28f-a931e396ad7d",
+Cell[19095, 538, 91346, 2101, 4173, "Output",ExpressionUUID->"f4fcc3af-0978-455a-a28f-a931e396ad7d",
  CellID->2049649132]
 }, Open  ]]
 }, Open  ]],
-Cell[110456, 2643, 257, 5, 70, "ExampleSection",ExpressionUUID->"627af948-3c4b-4a7a-ab2c-0a4f0e48171c",
+Cell[110468, 2643, 257, 5, 33, "ExampleSection",ExpressionUUID->"627af948-3c4b-4a7a-ab2c-0a4f0e48171c",
  CellID->1653164318],
-Cell[110716, 2650, 249, 5, 70, "ExampleSection",ExpressionUUID->"ffb3777e-5cca-4daf-8fd0-c3927d85ae1e",
+Cell[110728, 2650, 249, 5, 21, "ExampleSection",ExpressionUUID->"ffb3777e-5cca-4daf-8fd0-c3927d85ae1e",
  CellID->589267740]
 }, Open  ]]
 }

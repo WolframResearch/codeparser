@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[     80228,       1946]
-NotebookOptionsPosition[     69648,       1720]
-NotebookOutlinePosition[     70375,       1745]
-CellTagsIndexPosition[     70295,       1740]
+NotebookDataLength[     80252,       1946]
+NotebookOptionsPosition[     69660,       1720]
+NotebookOutlinePosition[     70387,       1745]
+CellTagsIndexPosition[     70307,       1740]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -693,7 +693,7 @@ Cell[BoxData[
  CellLabel->"In[27]:=",
  CellID->533549478,ExpressionUUID->"871234fc-3c6f-48a6-85ac-714225cfb41f"],
 
-Cell["A string representing a file path is treated as code.", "Notes",
+Cell["A string representing a file path is treated as code.", "ExampleText",
  CellChangeTimes->{{3.820748562592911*^9, 3.820748574586866*^9}},
  CellID->1137663494,ExpressionUUID->"66ee8b65-7579-402c-a198-f53d2066a8c0"],
 
@@ -805,7 +805,7 @@ Cell[BoxData[
  CellID->1387993580,ExpressionUUID->"374438fc-fb08-4cc6-a77d-21963b2990bf"]
 }, Open  ]],
 
-Cell["File paths must use the File wrapper.", "Notes",
+Cell["File paths must use the File wrapper.", "ExampleText",
  CellChangeTimes->{{3.820748628501116*^9, 3.820748636659203*^9}},
  CellID->176434566,ExpressionUUID->"c9ae0e6e-db04-4afe-95c0-00e7e93add44"],
 
@@ -1721,7 +1721,7 @@ Cell[BoxData[
 WindowSize->{693, 869},
 WindowMargins->{{9, Automatic}, {Automatic, 10}},
 CellContext->"Global`",
-FrontEndVersion->"13.0 for Mac OS X x86 (64-bit) (October 26, 2021)",
+FrontEndVersion->"13.0 for Mac OS X x86 (64-bit) (January 26, 2022)",
 StyleDefinitions->FrontEnd`FileName[{"Wolfram"}, "FunctionPageStyles.nb", 
   CharacterEncoding -> "UTF-8"],
 ExpressionUUID->"fd914755-bbc8-4a88-b5bf-1d885b9b0d3f"
@@ -1739,7 +1739,7 @@ CellTagsIndex->{
 *)
 (*CellTagsIndex
 CellTagsIndex->{
- {"ExtendedExamples", 70101, 1733}
+ {"ExtendedExamples", 70113, 1733}
  }
 *)
 (*NotebookFileOutline
@@ -1926,26 +1926,26 @@ Cell[23578, 681, 252, 5, 33, "ExampleSection",ExpressionUUID->"75f9b953-a265-4fa
  CellID->1305812373],
 Cell[23833, 688, 292, 5, 27, "Input",ExpressionUUID->"871234fc-3c6f-48a6-85ac-714225cfb41f",
  CellID->533549478],
-Cell[24128, 695, 212, 2, 25, "Notes",ExpressionUUID->"66ee8b65-7579-402c-a198-f53d2066a8c0",
+Cell[24128, 695, 218, 2, 22, "ExampleText",ExpressionUUID->"66ee8b65-7579-402c-a198-f53d2066a8c0",
  CellID->1137663494],
 Cell[CellGroupData[{
-Cell[24365, 701, 408, 6, 27, "Input",ExpressionUUID->"0d94797d-6dd1-42be-bd97-cabdf2da279f",
+Cell[24371, 701, 408, 6, 27, "Input",ExpressionUUID->"0d94797d-6dd1-42be-bd97-cabdf2da279f",
  CellID->768608769],
-Cell[24776, 709, 3952, 95, 141, "Output",ExpressionUUID->"374438fc-fb08-4cc6-a77d-21963b2990bf",
+Cell[24782, 709, 3952, 95, 141, "Output",ExpressionUUID->"374438fc-fb08-4cc6-a77d-21963b2990bf",
  CellID->1387993580]
 }, Open  ]],
-Cell[28743, 807, 195, 2, 25, "Notes",ExpressionUUID->"c9ae0e6e-db04-4afe-95c0-00e7e93add44",
+Cell[28749, 807, 201, 2, 22, "ExampleText",ExpressionUUID->"c9ae0e6e-db04-4afe-95c0-00e7e93add44",
  CellID->176434566],
 Cell[CellGroupData[{
-Cell[28963, 813, 389, 8, 27, "Input",ExpressionUUID->"c901961b-276d-4aa5-aeeb-3d457e9f0016",
+Cell[28975, 813, 389, 8, 27, "Input",ExpressionUUID->"c901961b-276d-4aa5-aeeb-3d457e9f0016",
  CellID->2131013955],
-Cell[29355, 823, 39741, 878, 1675, "Output",ExpressionUUID->"f7c7911a-b1b7-4dc3-ab4e-c8b084cc376a",
+Cell[29367, 823, 39741, 878, 1675, "Output",ExpressionUUID->"f7c7911a-b1b7-4dc3-ab4e-c8b084cc376a",
  CellID->1097519553]
 }, Open  ]]
 }, Open  ]],
-Cell[69123, 1705, 257, 5, 70, "ExampleSection",ExpressionUUID->"fce3246d-a97e-43da-8ff5-d58e5dcdae69",
+Cell[69135, 1705, 257, 5, 33, "ExampleSection",ExpressionUUID->"fce3246d-a97e-43da-8ff5-d58e5dcdae69",
  CellID->1653164318],
-Cell[69383, 1712, 249, 5, 70, "ExampleSection",ExpressionUUID->"6f81ec86-d274-4d74-a0d4-1c5ce06429a7",
+Cell[69395, 1712, 249, 5, 21, "ExampleSection",ExpressionUUID->"6f81ec86-d274-4d74-a0d4-1c5ce06429a7",
  CellID->589267740]
 }, Open  ]]
 }
