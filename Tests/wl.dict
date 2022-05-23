@@ -101,6 +101,7 @@ token_lessminusgreater="<->"
 token_slashslashat="//@"
 token_caretcolonequal="^:="
 token_greatergreatergreater=">>>"
+token_coloncolonopensquare="::["
 
 token_linearsyntax_bang="\\!"
 
