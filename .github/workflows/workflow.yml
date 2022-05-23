@@ -55,7 +55,7 @@ jobs:
       # TODO: find a way to specify the name of the paclet file instead of hardcoding.
       run: |
         ls build
-        /usr/bin/wolframscript -code 'PacletInstall["./build/paclet/CodeParser-1.6.paclet"];Exit[]'
+        /usr/bin/wolframscript -code 'PacletInstall["./build/paclet/CodeParser-1.7.paclet"];Exit[]'
         
     - name: Run Tests
       run: |
