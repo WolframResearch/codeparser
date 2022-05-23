@@ -946,7 +946,7 @@ SourceCharacter ByteDecoder::incomplete1ByteSequence(SourceLocation errSrcLoc, N
     // Related bugs: 366106, 376155
     //
     
-    TheParserSession->setUnsafeCharacterEncodingFlag(UNSAFECHARACTERENODING_INCOMPLETEUTF8SEQUENCE);
+    TheParserSession->setUnsafeCharacterEncodingFlag(UNSAFECHARACTERENCODING_INCOMPLETEUTF8SEQUENCE);
     
     return SourceCharacter(CODEPOINT_UNSAFE_1_BYTE_UTF8_SEQUENCE);
 }
@@ -974,7 +974,7 @@ SourceCharacter ByteDecoder::incomplete2ByteSequence(SourceLocation errSrcLoc, N
     // Related bugs: 366106, 376155
     //
     
-    TheParserSession->setUnsafeCharacterEncodingFlag(UNSAFECHARACTERENODING_INCOMPLETEUTF8SEQUENCE);
+    TheParserSession->setUnsafeCharacterEncodingFlag(UNSAFECHARACTERENCODING_INCOMPLETEUTF8SEQUENCE);
     
     return SourceCharacter(CODEPOINT_UNSAFE_2_BYTE_UTF8_SEQUENCE);
 }
@@ -1002,7 +1002,7 @@ SourceCharacter ByteDecoder::incomplete3ByteSequence(SourceLocation errSrcLoc, N
     // Related bugs: 366106, 376155
     //
     
-    TheParserSession->setUnsafeCharacterEncodingFlag(UNSAFECHARACTERENODING_INCOMPLETEUTF8SEQUENCE);
+    TheParserSession->setUnsafeCharacterEncodingFlag(UNSAFECHARACTERENCODING_INCOMPLETEUTF8SEQUENCE);
     
     return SourceCharacter(CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE);
 }
@@ -1033,7 +1033,7 @@ SourceCharacter ByteDecoder::straySurrogate(SourceLocation errSrcLoc, NextPolicy
     // Related bugs: 366106, 376155
     //
     
-    TheParserSession->setUnsafeCharacterEncodingFlag(UNSAFECHARACTERENODING_STRAYSURROGATE);
+    TheParserSession->setUnsafeCharacterEncodingFlag(UNSAFECHARACTERENCODING_STRAYSURROGATE);
     
     return SourceCharacter(CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE);
 }
@@ -1054,7 +1054,7 @@ SourceCharacter ByteDecoder::bom(SourceLocation errSrcLoc, NextPolicy policy) {
     }
 #endif // !NISSUES
     
-    TheParserSession->setUnsafeCharacterEncodingFlag(UNSAFECHARACTERENODING_BOM);
+    TheParserSession->setUnsafeCharacterEncodingFlag(UNSAFECHARACTERENCODING_BOM);
     
     return SourceCharacter(CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE);
 }

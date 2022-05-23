@@ -88,7 +88,7 @@ void ParserSession::init(
     
     policy = policyIn;
     
-    unsafeCharacterEncodingFlag = UNSAFECHARACTERENODING_OK;
+    unsafeCharacterEncodingFlag = UNSAFECHARACTERENCODING_OK;
     
     if (srcConvention == SOURCECONVENTION_UNKNOWN) {
         return;
@@ -188,7 +188,7 @@ NodeContainer *ParserSession::parseExpressions() {
         nodes.push_back(std::move(Collected));
     }
     
-    if (unsafeCharacterEncodingFlag != UNSAFECHARACTERENODING_OK) {
+    if (unsafeCharacterEncodingFlag != UNSAFECHARACTERENCODING_OK) {
         
         nodes.clear();
         
@@ -292,7 +292,7 @@ NodeContainer *ParserSession::tokenize() {
         
     } // while (true)
     
-    if (unsafeCharacterEncodingFlag != UNSAFECHARACTERENODING_OK) {
+    if (unsafeCharacterEncodingFlag != UNSAFECHARACTERENCODING_OK) {
         
         nodes.clear();
         
@@ -328,7 +328,7 @@ NodeContainer *ParserSession::listSourceCharacters() {
         
     } // while (true)
     
-    if (unsafeCharacterEncodingFlag != UNSAFECHARACTERENODING_OK) {
+    if (unsafeCharacterEncodingFlag != UNSAFECHARACTERENCODING_OK) {
         
         nodes.clear();
         
@@ -399,7 +399,7 @@ NodeContainer *ParserSession::concreteParseLeaf(StringifyMode mode) {
         nodes.push_back(std::move(Collected));
     }
     
-    if (unsafeCharacterEncodingFlag != UNSAFECHARACTERENODING_OK) {
+    if (unsafeCharacterEncodingFlag != UNSAFECHARACTERENCODING_OK) {
         
         nodes.clear();
         
@@ -501,7 +501,7 @@ NodeContainer *ParserSession::safeString() {
     
     nodes.push_back(std::move(N));
     
-    if (unsafeCharacterEncodingFlag != UNSAFECHARACTERENODING_OK) {
+    if (unsafeCharacterEncodingFlag != UNSAFECHARACTERENCODING_OK) {
         
         nodes.clear();
         

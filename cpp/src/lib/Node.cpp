@@ -477,13 +477,13 @@ void CollectedSourceLocationsNode::print(std::ostream& s) const {
 
 void MissingBecauseUnsafeCharacterEncodingNode::print(std::ostream& s) const {
     switch (flag) {
-        case UNSAFECHARACTERENODING_INCOMPLETEUTF8SEQUENCE:
+        case UNSAFECHARACTERENCODING_INCOMPLETEUTF8SEQUENCE:
             s << "Missing[\"UnsafeCharacterEncoding_IncompleteUTF8Sequence\"]";
             break;
-        case UNSAFECHARACTERENODING_STRAYSURROGATE:
+        case UNSAFECHARACTERENCODING_STRAYSURROGATE:
             s << "Missing[\"UnsafeCharacterEncoding_StraySurrogate\"]";
             break;
-        case UNSAFECHARACTERENODING_BOM:
+        case UNSAFECHARACTERENCODING_BOM:
             s << "Missing[\"UnsafeCharacterEncoding_BOM\"]";
             break;
         default:
@@ -810,13 +810,13 @@ void MissingBecauseUnsafeCharacterEncodingNode::put(MLINK mlp) const {
     std::string reason;
     
     switch (flag) {
-        case UNSAFECHARACTERENODING_INCOMPLETEUTF8SEQUENCE:
+        case UNSAFECHARACTERENCODING_INCOMPLETEUTF8SEQUENCE:
             reason = "UnsafeCharacterEncoding_IncompleteUTF8Sequence";
             break;
-        case UNSAFECHARACTERENODING_STRAYSURROGATE:
+        case UNSAFECHARACTERENCODING_STRAYSURROGATE:
             reason = "UnsafeCharacterEncoding_StraySurrogate";
             break;
-        case UNSAFECHARACTERENODING_BOM:
+        case UNSAFECHARACTERENCODING_BOM:
             reason = "UnsafeCharacterEncoding_BOM";
             break;
         default:
