@@ -14,7 +14,6 @@ enum APIMode {
     EXPRESSION,
     TOKENIZE,
     LEAF,
-    SOURCECHARACTERS,
 };
 
 enum OutputMode {
@@ -58,7 +57,6 @@ int main(int argc, char *argv[]) {
     auto tokenize = false;
     auto leaf = false;
     auto outputMode = PRINT;
-    auto sourceCharacters = false;
     auto firstLineBehavior = FIRSTLINEBEHAVIOR_NOTSCRIPT;
     auto encodingMode = ENCODINGMODE_NORMAL;
     
@@ -90,10 +88,6 @@ int main(int argc, char *argv[]) {
             
             outputMode = PUT;
             
-        } else if (arg == "-sc") {
-            
-            sourceCharacters = true;
-            
         } else if (arg == "-check") {
             
             outputMode = CHECK;
@@ -108,8 +102,6 @@ int main(int argc, char *argv[]) {
     if (file) {
         if (leaf) {
             result = readFile(fileInput, LEAF, outputMode, firstLineBehavior, encodingMode);
-        } else if (sourceCharacters) {
-            result = readFile(fileInput, SOURCECHARACTERS, outputMode, firstLineBehavior, encodingMode);
         } else if (tokenize) {
             result = readFile(fileInput, TOKENIZE, outputMode, firstLineBehavior, encodingMode);
         } else {
@@ -118,8 +110,6 @@ int main(int argc, char *argv[]) {
     } else {
         if (leaf) {
             result = readStdIn(LEAF, outputMode, firstLineBehavior, encodingMode);
-        } else if (sourceCharacters) {
-            result = readStdIn(SOURCECHARACTERS, outputMode, firstLineBehavior, encodingMode);
         } else if (tokenize) {
             result = readStdIn(TOKENIZE, outputMode, firstLineBehavior, encodingMode);
         } else {
@@ -175,42 +165,6 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
         ParserSessionReleaseContainer(C);
         
         ParserSessionDeinit();
-        
-    } else if (mode == SOURCECHARACTERS) {
-        
-        auto inputStr = reinterpret_cast<Buffer>(input.c_str());
-        
-        ByteBufferInit(inputStr, input.size(), libData);
-        ByteDecoderInit(SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, ENCODINGMODE_NORMAL);
-    
-        auto C = ParserSessionListSourceCharacters();
-    
-        switch (outputMode) {
-            case PRINT:
-                NodeContainerPrint(C, std::cout);
-                std::cout << "\n";
-                break;
-            case PUT: {
-#if USE_MATHLINK
-                ScopedMLLoopbackLink loop;
-                C->put(loop.get());
-#endif // USE_MATHLINK
-            }
-                break;
-            case PRINT_DRYRUN: {
-                std::ofstream nullStream;
-                NodeContainerPrint(C, nullStream);
-                nullStream << "\n";
-            }
-                break;
-            case NONE: case CHECK:
-                break;
-        }
-        
-        ParserSessionReleaseContainer(C);
-        
-        ByteDecoderDeinit();
-        ByteBufferDeinit();
         
     } else if (mode == LEAF) {
         

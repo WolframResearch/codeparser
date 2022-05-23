@@ -304,42 +304,6 @@ NodeContainer *ParserSession::tokenize() {
     return C;
 }
 
-NodeContainer *ParserSession::listSourceCharacters() {
-    
-    std::vector<NodePtr> nodes;
-    
-    while (true) {
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
-        auto Char = TheByteDecoder->nextSourceCharacter0(TOPLEVEL);
-        
-        if (Char.isEndOfFile()) {
-            break;
-        }
-        
-        auto N = NodePtr(new SourceCharacterNode(Char));
-        
-        nodes.push_back(std::move(N));
-        
-    } // while (true)
-    
-    if (unsafeCharacterEncodingFlag != UNSAFECHARACTERENCODING_OK) {
-        
-        nodes.clear();
-        
-        auto N = NodePtr(new MissingBecauseUnsafeCharacterEncodingNode(unsafeCharacterEncodingFlag));
-
-        nodes.push_back(std::move(N));
-    }
-    
-    auto C = new NodeContainer(std::move(nodes));
-    
-    return C;
-}
-
 
 NodePtr ParserSession::concreteParseLeaf0(int mode) {
     
@@ -615,10 +579,6 @@ NodeContainer *ParserSessionParseExpressions() {
 
 NodeContainer *ParserSessionTokenize() {
     return TheParserSession->tokenize();
-}
-
-NodeContainer *ParserSessionListSourceCharacters() {
-    return TheParserSession->listSourceCharacters();
 }
 
 NodeContainer *ParserSessionConcreteParseLeaf(StringifyMode mode) {

@@ -148,7 +148,6 @@ public:
     
     NodeContainer *parseExpressions();
     NodeContainer *tokenize();
-    NodeContainer *listSourceCharacters();
     NodeContainer *concreteParseLeaf(StringifyMode mode);
     NodeContainer *safeString();
     
@@ -184,7 +183,6 @@ EXTERN_C DLLEXPORT void ParserSessionDeinit();
 
 EXTERN_C DLLEXPORT NodeContainer *ParserSessionParseExpressions();
 EXTERN_C DLLEXPORT NodeContainer *ParserSessionTokenize();
-EXTERN_C DLLEXPORT NodeContainer *ParserSessionListSourceCharacters();
 EXTERN_C DLLEXPORT NodeContainer *ParserSessionConcreteParseLeaf(StringifyMode mode);
 EXTERN_C DLLEXPORT void ParserSessionReleaseContainer(NodeContainer *C);
 

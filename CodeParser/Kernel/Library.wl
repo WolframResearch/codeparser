@@ -45,7 +45,6 @@ MakeGroupMissingCloserNode
 MakeUnterminatedGroupNeedsReparseNode
 MakeAbstractSyntaxErrorNode
 
-MakeSourceCharacterNode
 MakeSafeStringNode
 
 MakeSyntaxIssue

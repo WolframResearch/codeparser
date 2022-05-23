@@ -122,7 +122,6 @@ symbols = Union[Join[
             CodeParser`Library`MakeInsertTextAfterCodeAction, CodeParser`Library`MakeSourceCharacterNode, CodeParser`Library`MakeSafeStringNode},
     {CodeParser`InternalInvalid, CodeParser`PatternBlank, CodeParser`PatternBlankSequence,
       CodeParser`PatternBlankNullSequence, CodeParser`PatternOptionalDefault},
-    {CodeParser`SourceCharacter},
     {Token`Newline},
     DownValues[PrefixOperatorToParselet][[All, 2]] /. {
       Parselet`PrefixOperatorParselet[_, _, op_] :> op,

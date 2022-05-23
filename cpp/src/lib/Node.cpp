@@ -437,17 +437,6 @@ void MissingBecauseUnsafeCharacterEncodingNode::print(std::ostream& s) const {
 }
 
 
-void SourceCharacterNode::print(std::ostream& s) const {
-    
-    s << SYMBOL_CODEPARSER_LIBRARY_MAKESOURCECHARACTERNODE->name() << "[";
-    
-    s << SYMBOL_CODEPARSER_SOURCECHARACTER->name() << ", ";
-    
-    s << Char;
-    
-    s << "]\n";
-}
-
 void SafeStringNode::print(std::ostream& s) const {
     
     s << SYMBOL_CODEPARSER_LIBRARY_MAKESAFESTRINGNODE->name() << "[";
@@ -718,30 +707,6 @@ void MissingBecauseUnsafeCharacterEncodingNode::put(MLINK mlp) const {
     }
     
     if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(reason.c_str()), static_cast<int>(reason.size()))) {
-        assert(false);
-    }
-}
-
-void SourceCharacterNode::put(MLINK mlp) const {
-    
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKESOURCECHARACTERNODE->name(), static_cast<int>(2))) {
-        assert(false);
-    }
-    
-    if (!MLPutSymbol(mlp, SYMBOL_CODEPARSER_SOURCECHARACTER->name())) {
-        assert(false);
-    }
-    
-    auto val = Char.to_point();
-    
-    auto S = ByteEncoder::size(val);
-        
-    std::array<unsigned char, 4> Arr;
-    ByteEncoderState state;
-    
-    ByteEncoder::encodeBytes(Arr, val, &state);
-    
-    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Arr.data()), static_cast<int>(S))) {
         assert(false);
     }
 }

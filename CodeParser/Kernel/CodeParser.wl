@@ -295,9 +295,6 @@ FormatIssue
 EncodingIssue
 
 
-SourceCharacter
-
-
 
 (*
 Messages

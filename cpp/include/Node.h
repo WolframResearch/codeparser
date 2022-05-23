@@ -549,24 +549,6 @@ public:
 //
 //
 //
-class SourceCharacterNode : public Node {
-    const SourceCharacter Char;
-public:
-    
-    SourceCharacterNode(const SourceCharacter& Char) : Node(), Char(Char) {}
-    
-    SourceCharacterNode(const SourceCharacter&& Char) : Node(), Char(std::move(Char)) {}
-    
-#if USE_MATHLINK
-    void put(MLINK mlp) const override;
-#endif // USE_MATHLINK
-    
-    void print(std::ostream& s) const override;
-};
-
-//
-//
-//
 class SafeStringNode : public Node {
     BufferAndLength bufAndLen;
 public:
