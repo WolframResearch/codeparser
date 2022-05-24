@@ -263,10 +263,16 @@ public:
     
     ErrorNode(const Token& Tok) : Node(), Tok(Tok) {
         assert(Tok.Tok.isError());
+        assert(!Tok.Tok.isUnterminated());
     }
     
     ErrorNode(const Token&& Tok) : Node(), Tok(std::move(Tok)) {
         assert(Tok.Tok.isError());
+        assert(!Tok.Tok.isUnterminated());
+    }
+    
+    bool isExpectedOperandError() const override {
+        return Tok.Tok == TOKEN_ERROR_EXPECTEDOPERAND;
     }
     
 #if USE_MATHLINK
@@ -288,33 +294,35 @@ public:
     }
 };
 
-class ExpectedOperandErrorNode : public ErrorNode {
+class UnterminatedTokenErrorNeedsReparseNode : public Node {
+protected:
+    const Token Tok;
 public:
-    
-    ExpectedOperandErrorNode(const Token& Tok) : ErrorNode(Tok) {
-        assert(Tok.Tok == TOKEN_ERROR_EXPECTEDOPERAND);
+    UnterminatedTokenErrorNeedsReparseNode(const Token& Tok) : Node(), Tok(Tok) {
+        assert(Tok.Tok.isUnterminated());
     }
     
-    ExpectedOperandErrorNode(const Token&& Tok) : ErrorNode(Tok) {
-        assert(Tok.Tok == TOKEN_ERROR_EXPECTEDOPERAND);
+    UnterminatedTokenErrorNeedsReparseNode(const Token&& Tok) : Node(), Tok(std::move(Tok)) {
+        assert(Tok.Tok.isUnterminated());
     }
-    
-    bool isExpectedOperandError() const override {
-        return true;
-    }
-};
-
-class UnterminatedTokenErrorNeedsReparseNode : public ErrorNode {
-public:
-    UnterminatedTokenErrorNeedsReparseNode(const Token& Tok) : ErrorNode(Tok) {}
-    
-    UnterminatedTokenErrorNeedsReparseNode(const Token&& Tok) : ErrorNode(Tok) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
+    
+    Source getSource() const override {
+        return Tok.Src;
+    }
+    
+    Token lastToken() const override {
+        return Tok;
+    }
+    
+    bool check() const override {
+        return false;
+    }
 };
 
 //

@@ -47,7 +47,7 @@ NodePtr PrefixCloserParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(), Source());
     
-    return NodePtr(new ExpectedOperandErrorNode(createdToken));
+    return NodePtr(new ErrorNode(createdToken));
 }
 
 
@@ -77,7 +77,7 @@ NodePtr PrefixEndOfFileParselet::parse(Token TokIn, ParserContext Ctxt) const {
     
     auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(), Source());
     
-    return NodePtr(new ExpectedOperandErrorNode(createdToken));
+    return NodePtr(new ErrorNode(createdToken));
 }
 
 
@@ -110,7 +110,7 @@ NodePtr PrefixCommaParselet::parse(Token TokIn, ParserContext Ctxt) const {
         
         auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
         
-        auto Left = NodePtr(new ExpectedOperandErrorNode(createdToken));
+        auto Left = NodePtr(new ErrorNode(createdToken));
         
         return Left;
     }
@@ -126,7 +126,7 @@ NodePtr PrefixUnhandledParselet::parse(Token TokIn, ParserContext Ctxt) const {
     //
     Ctxt.Flag &= ~(PARSER_INSIDE_COLON | PARSER_INSIDE_TILDE);
     
-    auto NotPossible = NodePtr(new ExpectedOperandErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start))));
+    auto NotPossible = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start))));
     
     auto I = infixParselets[TokIn.Tok.value()];
     
@@ -281,7 +281,7 @@ NodePtr PrefixOperatorParselet::parse(Token TokIn, ParserContext CtxtIn) const {
             // Reattach the ExpectedOperand Error to the operator for a better experience
             //
             
-            auto ProperExpectedOperandError = NodePtr(new ExpectedOperandErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
+            auto ProperExpectedOperandError = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
             
             NodeSeq Args(1 + 1);
             Args.append(NodePtr(new LeafNode(TokIn)));
@@ -352,7 +352,7 @@ NodePtr BinaryOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext C
             // Reattach the ExpectedOperand Error to the operator for a better experience
             //
             
-            auto ProperExpectedOperandError = NodePtr(new ExpectedOperandErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
+            auto ProperExpectedOperandError = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
             
             NodeSeq Args(1 + 1 + 1);
             Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
@@ -407,7 +407,7 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ct
             // Reattach the ExpectedOperand Error to the operator for a better experience
             //
             
-            auto ProperExpectedOperandError = NodePtr(new ExpectedOperandErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
+            auto ProperExpectedOperandError = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
             
             Args.append(NodePtr(new LeafNode(TokIn)));
             Args.append(std::move(ProperExpectedOperandError));
@@ -496,7 +496,7 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ct
             // Reattach the ExpectedOperand Error to the operator for a better experience
             //
             
-            auto ProperExpectedOperandError = NodePtr(new ExpectedOperandErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(Tok1.BufLen.end), Source(Tok1.Src.End))));
+            auto ProperExpectedOperandError = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(Tok1.BufLen.end), Source(Tok1.Src.End))));
             
             Args.append(std::move(ProperExpectedOperandError));
             
@@ -745,7 +745,7 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
         // Not structurally correct, so return SyntaxErrorNode
         //
         
-        auto ProperExpectedOperandError = NodePtr(new ExpectedOperandErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(FirstTilde.BufLen.end), Source(FirstTilde.Src.End))));
+        auto ProperExpectedOperandError = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(FirstTilde.BufLen.end), Source(FirstTilde.Src.End))));
         
         NodeSeq Args(1 + 1 + 1);
         Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
@@ -803,7 +803,7 @@ NodePtr TildeParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
         // Structurally correct, so return TernaryNode
         //
         
-        auto ProperExpectedOperandError = NodePtr(new ExpectedOperandErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(Tok1.BufLen.end), Source(Tok1.Src.End))));
+        auto ProperExpectedOperandError = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(Tok1.BufLen.end), Source(Tok1.Src.End))));
         
         NodeSeq Args(1 + 1 + 1);
         Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
@@ -860,7 +860,7 @@ NodePtr ColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
             // Reattach the ExpectedOperand Error to the operator for a better experience
             //
             
-            auto ProperExpectedOperandError = NodePtr(new ExpectedOperandErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
+            auto ProperExpectedOperandError = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
             
             NodeSeq Args(1 + 1 + 1);
             Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
@@ -929,7 +929,7 @@ NodePtr ColonParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserCo
         // Reattach the ExpectedOperand Error to the operator for a better experience
         //
         
-        auto ProperExpectedOperandError = NodePtr(new ExpectedOperandErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
+        auto ProperExpectedOperandError = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
         
         NodeSeq Args(1 + 1 + 1);
         Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
@@ -972,7 +972,7 @@ NodePtr SlashColonParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtI
         // Reattach the ExpectedOperand Error to the operator for a better experience
         //
         
-        auto ProperExpectedOperandError = NodePtr(new ExpectedOperandErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
+        auto ProperExpectedOperandError = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
         
         NodeSeq Args(1 + 1 + 1);
         Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
@@ -1095,7 +1095,7 @@ NodePtr EqualParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtIn) co
             // Reattach the ExpectedOperand Error to the operator for a better experience
             //
             
-            auto ProperExpectedOperandError = NodePtr(new ExpectedOperandErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
+            auto ProperExpectedOperandError = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
             
             NodeSeq Args(1 + 1 + 1);
             Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
@@ -1154,7 +1154,7 @@ NodePtr ColonEqualParselet::parse(NodeSeq Left, Token TokIn, ParserContext CtxtI
         // Reattach the ExpectedOperand Error to the operator for a better experience
         //
         
-        auto ProperExpectedOperandError = NodePtr(new ExpectedOperandErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
+        auto ProperExpectedOperandError = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
         
         NodeSeq Args(1 + 1 + 1);
         Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
@@ -1211,7 +1211,7 @@ NodePtr IntegralParselet::parse(Token TokIn, ParserContext CtxtIn) const {
         // Reattach the ExpectedOperand Error to the operator for a better experience
         //
         
-        auto ProperExpectedOperandError = NodePtr(new ExpectedOperandErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
+        auto ProperExpectedOperandError = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
         
         NodeSeq Args(1 + 1);
         Args.append(NodePtr(new LeafNode(TokIn)));
@@ -1248,7 +1248,7 @@ NodePtr IntegralParselet::parse(Token TokIn, ParserContext CtxtIn) const {
                 // Reattach the ExpectedOperand Error to the operator for a better experience
                 //
                 
-                auto ProperExpectedOperandError = NodePtr(new ExpectedOperandErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
+                auto ProperExpectedOperandError = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
                 
                 NodeSeq Args(1 + 1 + 1 + 1);
                 Args.append(NodePtr(new LeafNode(TokIn)));
