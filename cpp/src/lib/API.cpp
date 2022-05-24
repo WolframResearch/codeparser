@@ -55,7 +55,7 @@ ParserSession::ParserSession() : fatalIssues(), nonFatalIssues(), bufAndLen(),
 #if !NABORT
 currentAbortQ(),
 #endif // !NABORT
-policy(), unsafeCharacterEncodingFlag() {
+unsafeCharacterEncodingFlag() {
     
     TheByteBuffer = ByteBufferPtr(new ByteBuffer());
     TheByteDecoder = ByteDecoderPtr(new ByteDecoder());
@@ -76,7 +76,6 @@ ParserSession::~ParserSession() {
 void ParserSession::init(
     BufferAndLength bufAndLenIn,
     WolframLibraryData libData,
-    ParserSessionPolicy policyIn,
     SourceConvention srcConvention,
     uint32_t tabWidth,
     FirstLineBehavior firstLineBehavior,
@@ -86,8 +85,6 @@ void ParserSession::init(
     nonFatalIssues.clear();
     
     bufAndLen = bufAndLenIn;
-    
-    policy = policyIn;
     
     unsafeCharacterEncodingFlag = UNSAFECHARACTERENCODING_OK;
     
@@ -600,13 +597,12 @@ void ParserSessionDestroy() {
 void ParserSessionInit(Buffer buf,
                       size_t bufLen,
                       WolframLibraryData libData,
-                      ParserSessionPolicy policy,
                       SourceConvention srcConvention,
                       uint32_t tabWidth,
                       FirstLineBehavior firstLineBehavior,
                       EncodingMode encodingMode) {
     BufferAndLength bufAndLen = BufferAndLength(buf, bufLen);
-    TheParserSession->init(bufAndLen, libData, policy, srcConvention, tabWidth, firstLineBehavior, encodingMode);
+    TheParserSession->init(bufAndLen, libData, srcConvention, tabWidth, firstLineBehavior, encodingMode);
 }
 
 void ParserSessionDeinit() {
@@ -741,7 +737,7 @@ int ConcreteParseBytes_Listable_LibraryLink(WolframLibraryData libData, MLINK ml
         
         auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
         
-        TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL);
+        TheParserSession->init(bufAndLen, libData, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL);
         
         auto C = TheParserSession->parseExpressions();
         
@@ -819,7 +815,7 @@ int TokenizeBytes_Listable_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         
         auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
         
-        TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL);
+        TheParserSession->init(bufAndLen, libData, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL);
         
         auto C = TheParserSession->tokenize();
         
@@ -890,7 +886,7 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     auto bufAndLen = BufferAndLength(inStr->get(), inStr->getByteCount());
     
-    TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, srcConvention, tabWidth, firstLineBehavior, encodingMode);
+    TheParserSession->init(bufAndLen, libData, srcConvention, tabWidth, firstLineBehavior, encodingMode);
     
     auto C = TheParserSession->concreteParseLeaf(static_cast<StringifyMode>(stringifyMode));
     
@@ -930,7 +926,7 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
     
-    TheParserSession->init(bufAndLen, libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    TheParserSession->init(bufAndLen, libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
     auto C = TheParserSession->safeString();
     

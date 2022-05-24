@@ -115,29 +115,6 @@ bool operator!=(Token a, Token b) {
 
 void Token::print(std::ostream& s) const {
     
-    if ((TheParserSession->policy & INCLUDE_SOURCE) == INCLUDE_SOURCE) {
-        
-        auto& Sym = TokenToSymbol(Tok);
-        
-        s << SYMBOL_CODEPARSER_LIBRARY_MAKELEAFNODE->name() << "[";
-        
-        s << Sym->name();
-        s << ", ";
-        
-        if (!Tok.isEmpty()) {
-            
-            BufLen.printUTF8String(s);
-        }
-        
-        s << ", ";
-        
-        Src.print(s);
-        
-        s << "]";
-        
-        return;
-    }
-    
     auto& Sym = TokenToSymbol(Tok);
     
     s << SYMBOL_CODEPARSER_LIBRARY_MAKELEAFNODE->name() << "[";
@@ -149,6 +126,10 @@ void Token::print(std::ostream& s) const {
         
         BufLen.printUTF8String(s);
     }
+    
+    s << ", ";
+        
+    Src.print(s);
     
     s << "]";
 }

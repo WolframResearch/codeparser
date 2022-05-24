@@ -146,7 +146,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
         
         auto inputStr = reinterpret_cast<Buffer>(input.c_str());
         
-        ParserSessionInit(inputStr, input.size(), libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
+        ParserSessionInit(inputStr, input.size(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
     
         auto C = ParserSessionTokenize();
         
@@ -216,7 +216,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
         
         auto inputStr = reinterpret_cast<Buffer>(input.c_str());
         
-        ParserSessionInit(inputStr, input.size(), libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
+        ParserSessionInit(inputStr, input.size(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
         
         auto stringifyMode = STRINGIFYMODE_NORMAL;
         
@@ -252,7 +252,7 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
         
         auto inputStr = reinterpret_cast<Buffer>(input.c_str());
         
-        ParserSessionInit(inputStr, input.size(), libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
+        ParserSessionInit(inputStr, input.size(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
         
         auto C = ParserSessionParseExpressions();
         
@@ -325,7 +325,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
     
     if (mode == TOKENIZE) {
         
-        ParserSessionInit(fb->getBuf(), fb->getLen(), libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
+        ParserSessionInit(fb->getBuf(), fb->getLen(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
         
         auto C = ParserSessionTokenize();
         
@@ -357,7 +357,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         
     } else if (mode == LEAF) {
         
-        ParserSessionInit(fb->getBuf(), fb->getLen(), libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, ENCODINGMODE_NORMAL);
+        ParserSessionInit(fb->getBuf(), fb->getLen(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, ENCODINGMODE_NORMAL);
         
         auto stringifyMode = STRINGIFYMODE_NORMAL;
         
@@ -391,7 +391,7 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         
     } else {
         
-        ParserSessionInit(fb->getBuf(), fb->getLen(), libData, INCLUDE_SOURCE, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, ENCODINGMODE_NORMAL);
+        ParserSessionInit(fb->getBuf(), fb->getLen(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, ENCODINGMODE_NORMAL);
         
         auto C = ParserSessionParseExpressions();
         

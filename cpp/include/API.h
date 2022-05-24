@@ -109,19 +109,6 @@ enum EncodingMode {
 };
 
 //
-// Control the behavior of the parser
-//
-enum ParserSessionBits : uint8_t {
-    
-    //
-    // Include Source in returned nodes?
-    //
-    INCLUDE_SOURCE = 0x01,
-};
-
-using ParserSessionPolicy = uint8_t;
-
-//
 // A parser session
 //
 class ParserSession {
@@ -140,8 +127,6 @@ public:
     std::function<bool ()> currentAbortQ;
 #endif // !NABORT
     
-    ParserSessionPolicy policy;
-    
     UnsafeCharacterEncodingFlag unsafeCharacterEncodingFlag;
     
     
@@ -152,7 +137,6 @@ public:
     void init(
         BufferAndLength bufAndLen,
         WolframLibraryData libData,
-        ParserSessionPolicy policy,
         SourceConvention srcConvention,
         uint32_t tabWidth,
         FirstLineBehavior firstLineBehavior,
@@ -192,7 +176,6 @@ EXTERN_C DLLEXPORT void ParserSessionDestroy();
 EXTERN_C DLLEXPORT void ParserSessionInit(Buffer buf,
                                           size_t bufLen,
                                           WolframLibraryData libData,
-                                          ParserSessionPolicy policy,
                                           SourceConvention srcConvention,
                                           uint32_t tabWidth,
                                           FirstLineBehavior firstLineBehavior,
