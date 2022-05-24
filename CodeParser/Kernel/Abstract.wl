@@ -546,38 +546,6 @@ Module[{abstracted, issues, issues1, issues2, data,
 
 
 
-abstract[SyntaxErrorNode[SyntaxError`ExpectedTilde, {left_, _, middle_}, data_]] :=
-  SyntaxErrorNode[SyntaxError`ExpectedTilde, {abstract[left], abstract[middle]}, data]
-
-abstract[SyntaxErrorNode[SyntaxError`ExpectedSet, {left_, _, middle_}, data_]] :=
-  SyntaxErrorNode[SyntaxError`ExpectedSet, {abstract[left], abstract[middle]}, data]
-
-abstract[SyntaxErrorNode[SyntaxError`OldFESyntax, children_, data_]] :=
-  SyntaxErrorNode[SyntaxError`OldFESyntax, abstract /@ children, data]
-
-abstract[SyntaxErrorNode[SyntaxError`BuggyFESyntax, children_, data_]] :=
-  SyntaxErrorNode[SyntaxError`BuggyFESyntax, abstract /@ children, data]
-
-abstract[SyntaxErrorNode[SyntaxError`ExpectedSetOperand1, {left_, _, _, right_}, data_]] :=
-  SyntaxErrorNode[SyntaxError`ExpectedSetOperand1, {abstract[left], abstract[right]}, data]
-
-abstract[SyntaxErrorNode[SyntaxError`ExpectedSetOperand2, {left_, _, middle_, _}, data_]] :=
-  SyntaxErrorNode[SyntaxError`ExpectedSetOperand2, {abstract[left], abstract[middle]}, data]
-
-
-
-
-abstract[f_?FailureQ] := f
-
-abstract[m_?MissingQ] := m
-
-abstract[args___] :=
-  Failure["Unhandled", <| "Function" -> abstract, "Arguments" -> HoldForm[{args}] |>]
-
-
-
-
-
 (*
 
 String "a" -> a
@@ -1698,6 +1666,36 @@ Module[{notNotData, data, issues},
 ]
 
 
+
+abstract[SyntaxErrorNode[SyntaxError`ExpectedTilde, {left_, _, middle_}, data_]] :=
+  SyntaxErrorNode[SyntaxError`ExpectedTilde, {abstract[left], abstract[middle]}, data]
+
+abstract[SyntaxErrorNode[SyntaxError`ExpectedSet, {left_, _, middle_}, data_]] :=
+  SyntaxErrorNode[SyntaxError`ExpectedSet, {abstract[left], abstract[middle]}, data]
+
+abstract[SyntaxErrorNode[SyntaxError`OldFESyntax, children_, data_]] :=
+  SyntaxErrorNode[SyntaxError`OldFESyntax, abstract /@ children, data]
+
+abstract[SyntaxErrorNode[SyntaxError`BuggyFESyntax, children_, data_]] :=
+  SyntaxErrorNode[SyntaxError`BuggyFESyntax, abstract /@ children, data]
+
+abstract[SyntaxErrorNode[SyntaxError`ExpectedSetOperand1, {left_, _, _, right_}, data_]] :=
+  SyntaxErrorNode[SyntaxError`ExpectedSetOperand1, {abstract[left], abstract[right]}, data]
+
+abstract[SyntaxErrorNode[SyntaxError`ExpectedSetOperand2, {left_, _, middle_, _}, data_]] :=
+  SyntaxErrorNode[SyntaxError`ExpectedSetOperand2, {abstract[left], abstract[middle]}, data]
+
+
+
+
+abstract[f_?FailureQ] := f
+
+abstract[m_?MissingQ] := m
+
+abstract[args___] :=
+  Failure["Unhandled", <| "Function" -> abstract, "Arguments" -> HoldForm[{args}] |>]
+
+  
 
 End[]
 

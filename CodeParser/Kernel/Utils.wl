@@ -248,6 +248,8 @@ Options[normalizeTokens] = {
   "TabWidth" :> $DefaultTabWidth
 }
 
+normalizeTokens[f_?FailureQ, OptionsPattern[]] := f
+
 normalizeTokens[astIn_, OptionsPattern[]] :=
 Catch[
 Module[{ast, data, tokStartLocs, simpleLineContinuations, embeddedNewlineStartLocs, complexLineContinuations,
