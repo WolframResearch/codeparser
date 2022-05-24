@@ -124,7 +124,7 @@ void Token::print(std::ostream& s) const {
     
     if (!Tok.isEmpty()) {
         
-        BufLen.printUTF8String(s);
+        BufLen.print(s);
     }
     
     s << ", ";

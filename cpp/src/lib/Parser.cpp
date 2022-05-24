@@ -270,7 +270,7 @@ NodePtr Parser::infixLoop(NodePtr Left, ParserContext Ctxt) {
             } else {
                 
                 LeftSeq.append(std::move(Left));
-                LeftSeq.appendIfNonEmpty(std::move(Trivia1));
+                LeftSeq.appendSeq(std::move(Trivia1));
             }
         }
         

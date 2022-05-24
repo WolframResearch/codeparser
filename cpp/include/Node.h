@@ -90,7 +90,9 @@ public:
     
     void append(NodePtr N);
     
-    void appendIfNonEmpty(LeafSeq );
+    void appendSeq(NodeSeq Seq);
+    
+    void appendSeq(LeafSeq Seq);
     
     const Node *first() const;
     const Node *last() const;

@@ -20,12 +20,13 @@ size_t BufferAndLength::length() const {
     return end - buffer;
 }
 
-void BufferAndLength::printUTF8String(std::ostream& s) const {
+void BufferAndLength::print(std::ostream& s) const {
+    
     s.write(reinterpret_cast<const char *>(buffer), length());
 }
 
 #if USE_MATHLINK
-void BufferAndLength::putUTF8String(MLINK mlp) const {
+void BufferAndLength::put(MLINK mlp) const {
 
     if (!MLPutUTF8String(mlp, buffer, static_cast<int>(length()))) {
         assert(false);

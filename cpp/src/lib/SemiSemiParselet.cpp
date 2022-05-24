@@ -110,7 +110,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
         
         NodeSeq Args(1 + Trivia1.size());
         Args.append(std::move(Operand));
-        Args.appendIfNonEmpty(std::move(Trivia1));
+        Args.appendSeq(std::move(Trivia1));
         
         while (true) {
             
@@ -168,7 +168,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
                     //
                     // Could reserve here, if it were possible
                     //
-                    Args.appendIfNonEmpty(std::move(Trivia2));
+                    Args.appendSeq(std::move(Trivia2));
                     Args.append(NodePtr(new LeafNode(ImplicitTimes)));
                     Args.append(std::move(Operand));
                         
@@ -206,7 +206,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
                 // Do not reserve inside loop
                 // Allow default resizing strategy, which is hopefully exponential
                 //
-                Args.appendIfNonEmpty(std::move(Trivia2));
+                Args.appendSeq(std::move(Trivia2));
                 Args.append(NodePtr(new LeafNode(ImplicitTimes)));
                 Args.append(std::move(Operand));
             }
@@ -275,7 +275,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
                     //
                     
                     Args.append(NodePtr(new LeafNode(TokIn)));
-                    Args.appendIfNonEmpty(std::move(Trivia1));
+                    Args.appendSeq(std::move(Trivia1));
                     Args.append(std::move(FirstArg));
                     
                     return NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
@@ -289,7 +289,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
                     //
                     
                     Args.append(NodePtr(new LeafNode(TokIn)));
-                    Args.appendIfNonEmpty(std::move(Trivia1));
+                    Args.appendSeq(std::move(Trivia1));
                     Args.append(std::move(FirstArg));
                     
                     return NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
@@ -320,7 +320,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
                         //
                         
                         Args.append(NodePtr(new LeafNode(TokIn)));
-                        Args.appendIfNonEmpty(std::move(Trivia1));
+                        Args.appendSeq(std::move(Trivia1));
                         Args.append(std::move(FirstArg));
                         
                         return NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
@@ -336,11 +336,11 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
                         auto SecondArg = prefixParselets[FourthTok.Tok.value()]->parse(FourthTok, Ctxt);
                         
                         Args.append(NodePtr(new LeafNode(TokIn)));
-                        Args.appendIfNonEmpty(std::move(Trivia1));
+                        Args.appendSeq(std::move(Trivia1));
                         Args.append(std::move(FirstArg));
-                        Args.appendIfNonEmpty(std::move(Trivia2));
-                        Args.appendIfNonEmpty(std::move(ThirdTokSeq));
-                        Args.appendIfNonEmpty(std::move(Trivia3));
+                        Args.appendSeq(std::move(Trivia2));
+                        Args.appendSeq(std::move(ThirdTokSeq));
+                        Args.appendSeq(std::move(Trivia3));
                         Args.append(std::move(SecondArg));
                         
                         return NodePtr(new TernaryNode(SYMBOL_SPAN, std::move(Args)));
@@ -352,7 +352,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
                     //
                     
                     Args.append(NodePtr(new LeafNode(TokIn)));
-                    Args.appendIfNonEmpty(std::move(Trivia1));
+                    Args.appendSeq(std::move(Trivia1));
                     Args.append(std::move(FirstArg));
                     
                     return NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
@@ -405,9 +405,9 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
                 
                 Args.append(NodePtr(new LeafNode(TokIn)));
                 Args.append(NodePtr(new LeafNode(Implicit)));
-                Args.appendIfNonEmpty(std::move(Trivia1));
-                Args.appendIfNonEmpty(std::move(SecondTokSeq));
-                Args.appendIfNonEmpty(std::move(Trivia2));
+                Args.appendSeq(std::move(Trivia1));
+                Args.appendSeq(std::move(SecondTokSeq));
+                Args.appendSeq(std::move(Trivia2));
                 Args.append(std::move(FirstArg));
                 
                 return NodePtr(new TernaryNode(SYMBOL_SPAN, std::move(Args)));

@@ -70,7 +70,7 @@ NodePtr UnderParselet::parse1(NodePtr Blank, Token Tok, ParserContext Ctxt) cons
                 
                 NodeSeq BlankSeq(1 + Trivia1.size());
                 BlankSeq.append(std::move(Blank));
-                BlankSeq.appendIfNonEmpty(std::move(Trivia1));
+                BlankSeq.appendSeq(std::move(Trivia1));
                 
                 Blank = contextSensitiveColonParselet->parseContextSensitive(std::move(BlankSeq), Tok, Ctxt);
             }

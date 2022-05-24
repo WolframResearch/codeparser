@@ -14,13 +14,20 @@ void NodeSeq::append(NodePtr N) {
     vec.push_back(std::move(N));
 }
 
-void NodeSeq::appendIfNonEmpty(LeafSeq Seq) {
+void NodeSeq::appendSeq(LeafSeq Seq) {
     
     for (auto& L : Seq.vec) {
         vec.push_back(std::move(L));
     }
     
     Seq.moved = true;
+}
+
+void NodeSeq::appendSeq(NodeSeq Seq) {
+    
+    for (auto& N : Seq.vec) {
+        vec.push_back(std::move(N));
+    }
 }
 
 bool NodeSeq::empty() const {
@@ -219,7 +226,7 @@ void LeafNode::print(std::ostream& s) const {
     
     if (!Tok.Tok.isEmpty()) {
         
-        Tok.BufLen.printUTF8String(s);
+        Tok.BufLen.print(s);
     }
     
     s << ", ";
@@ -241,7 +248,7 @@ void ErrorNode::print(std::ostream& s) const {
     
     if (!Tok.Tok.isEmpty()) {
         
-        Tok.BufLen.printUTF8String(s);
+        Tok.BufLen.print(s);
     }
     
     s << ", ";
@@ -263,7 +270,7 @@ void UnterminatedTokenErrorNeedsReparseNode::print(std::ostream& s) const {
     
     if (!Tok.Tok.isEmpty()) {
         
-        Tok.BufLen.printUTF8String(s);
+        Tok.BufLen.print(s);
     }
     
     s << ", ";
@@ -401,7 +408,7 @@ void SafeStringNode::print(std::ostream& s) const {
     
     s << SYMBOL_CODEPARSER_LIBRARY_MAKESAFESTRINGNODE->name() << "[";
     
-    bufAndLen.printUTF8String(s);
+    bufAndLen.print(s);
     
     s << "]\n";
 }
@@ -492,7 +499,7 @@ void LeafNode::put(MLINK mlp) const {
         assert(false);
     }
 
-    Tok.BufLen.putUTF8String(mlp);
+    Tok.BufLen.put(mlp);
     
     Tok.Src.put(mlp);
 }
@@ -509,7 +516,7 @@ void ErrorNode::put(MLINK mlp) const {
         assert(false);
     }
     
-    Tok.BufLen.putUTF8String(mlp);
+    Tok.BufLen.put(mlp);
     
     Tok.Src.put(mlp);
 }
@@ -526,7 +533,7 @@ void UnterminatedTokenErrorNeedsReparseNode::put(MLINK mlp) const {
         assert(false);
     }
     
-    Tok.BufLen.putUTF8String(mlp);
+    Tok.BufLen.put(mlp);
     
     Tok.Src.put(mlp);
 }

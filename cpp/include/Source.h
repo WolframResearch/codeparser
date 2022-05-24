@@ -47,10 +47,10 @@ struct BufferAndLength {
     
     size_t length() const;
     
-    void printUTF8String(std::ostream& s) const;
+    void print(std::ostream& s) const;
     
 #if USE_MATHLINK
-    void putUTF8String(MLINK mlp) const;
+    void put(MLINK mlp) const;
 #endif // USE_MATHLINK
 };
 
