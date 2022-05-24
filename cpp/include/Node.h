@@ -35,8 +35,10 @@ enum UnsafeCharacterEncodingFlag {
 // Used mainly for collecting trivia that has been eaten
 //
 class LeafSeq {
-    std::vector<LeafNodePtr> vec;
 public:
+    
+    std::vector<LeafNodePtr> vec;
+    
     bool moved;
     
     LeafSeq() : vec(), moved(false) {}
@@ -135,10 +137,6 @@ public:
 #endif // USE_MATHLINK
     
     void printChildren(std::ostream& s) const;
-
-    const NodeSeq& getChildrenSafe() const {
-        return Children;
-    }
     
     virtual bool isExpectedOperandError() const {
         return false;
@@ -147,58 +145,6 @@ public:
     virtual bool check() const;
     
     virtual ~Node() {}
-};
-
-//
-// Need to be able to treat a LeafSeq as a Node
-//
-class LeafSeqNode : public Node {
-    LeafSeq Children;
-public:
-    LeafSeqNode(LeafSeq ChildrenIn) : Children(std::move(ChildrenIn)) {
-        
-        //
-        // Children is owned by this LeafSeqNode, so it has been "moved"
-        //
-        // Setting moved here helps to prevent adding LeafSeqs back to the parser queue
-        // when nodes are being released
-        //
-        
-        Children.moved = true;
-    }
-    
-    size_t size() const override;
-    
-    const Node *first() const override;
-    const Node *last() const override;
-    
-#if USE_MATHLINK
-    void put(MLINK mlp) const override;
-#endif // USE_MATHLINK
-    
-    void print(std::ostream& s) const override;
-};
-
-//
-// Need to be able to treat a NodeSeq as a Node
-//
-// For example, when parsing and we already have a NodeSeq Left and
-// need to insert into a NodeSeq of parent node
-//
-class NodeSeqNode : public Node {
-public:
-    NodeSeqNode(NodeSeq Children) : Node(std::move(Children)) {}
-    
-    size_t size() const override;
-    
-    const Node *first() const override;
-    const Node *last() const override;
-    
-#if USE_MATHLINK
-    void put(MLINK mlp) const override;
-#endif // USE_MATHLINK
-    
-    void print(std::ostream& s) const override;
 };
 
 //

@@ -14,10 +14,13 @@ void NodeSeq::append(NodePtr N) {
     vec.push_back(std::move(N));
 }
 
-void NodeSeq::appendIfNonEmpty(LeafSeq L) {
-    if (!L.empty()) {
-        append(NodePtr(new LeafSeqNode(std::move(L))));
+void NodeSeq::appendIfNonEmpty(LeafSeq Seq) {
+    
+    for (auto& L : Seq.vec) {
+        vec.push_back(std::move(L));
     }
+    
+    Seq.moved = true;
 }
 
 bool NodeSeq::empty() const {
@@ -121,9 +124,7 @@ bool LeafSeq::empty() const {
 
 size_t LeafSeq::size() const {
     
-    auto accum = std::accumulate(vec.begin(), vec.end(), static_cast<size_t>(0), [](size_t a, const LeafNodePtr& b){ return a + b->size(); });
-    
-    return accum;
+    return vec.size();
 }
 
 const Node *LeafSeq::first() const {
@@ -190,45 +191,6 @@ bool Node::check() const {
     return Children.check();
 }
 
-
-void LeafSeqNode::print(std::ostream& s) const {
-    
-    Children.print0(s);
-}
-
-size_t LeafSeqNode::size() const {
-    return Children.size();
-}
-
-const Node *LeafSeqNode::first() const {
-    assert(!Children.empty());
-    return Children.first();
-}
-
-const Node *LeafSeqNode::last() const {
-    assert(!Children.empty());
-    return Children.last();
-}
-
-
-size_t NodeSeqNode::size() const {
-    return Children.size();
-}
-
-const Node *NodeSeqNode::first() const {
-    assert(!Children.empty());
-    return Children.first();
-}
-
-const Node *NodeSeqNode::last() const {
-    assert(!Children.empty());
-    return Children.last();
-}
-
-void NodeSeqNode::print(std::ostream& s) const {
-    
-    Children.print0(s);
-}
 
 void OperatorNode::print(std::ostream& s) const {
     
@@ -332,8 +294,6 @@ void CallNode::print(std::ostream& s) const {
 Source CallNode::getSource() const {
     
     const auto& First = Head.first();
-    
-    const auto& Children = getChildrenSafe();
     const auto& Last = Children.last();
     
     auto FirstSrc = First->getSource();
@@ -503,16 +463,6 @@ void LeafSeq::put0(MLINK mlp) const {
 void Node::putChildren(MLINK mlp) const {
     
     Children.put(mlp);
-}
-
-void LeafSeqNode::put(MLINK mlp) const {
-    
-    Children.put0(mlp);
-}
-
-void NodeSeqNode::put(MLINK mlp) const {
-    
-    Children.put0(mlp);
 }
 
 void OperatorNode::put(MLINK mlp) const {

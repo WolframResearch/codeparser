@@ -68,7 +68,7 @@ NodePtr UnderParselet::parse1(NodePtr Blank, Token Tok, ParserContext Ctxt) cons
             
             if ((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
                 
-                NodeSeq BlankSeq(1 + 1);
+                NodeSeq BlankSeq(1 + Trivia1.size());
                 BlankSeq.append(std::move(Blank));
                 BlankSeq.appendIfNonEmpty(std::move(Trivia1));
                 
@@ -89,10 +89,7 @@ NodePtr UnderParselet::parse(Token TokIn, ParserContext Ctxt) const {
     return parse1(std::move(Blank), Tok, Ctxt);
 }
 
-NodePtr UnderParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
-    
-    NodeSeq Args(1 + 1);
-    Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
+NodePtr UnderParselet::parseContextSensitive(NodeSeq Args, Token TokIn, ParserContext Ctxt) const {
     
     auto Blank = parse0(TokIn, Ctxt);
     Args.append(NodePtr(std::move(Blank)));
@@ -123,10 +120,7 @@ NodePtr UnderDotParselet::parse(Token TokIn, ParserContext Ctxt) const {
     return TheParser->infixLoop(std::move(Blank), Ctxt);
 }
 
-NodePtr UnderDotParselet::parseContextSensitive(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
-    
-    NodeSeq Args(1 + 1);
-    Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
+NodePtr UnderDotParselet::parseContextSensitive(NodeSeq Args, Token TokIn, ParserContext Ctxt) const {
     
     auto Blank = parse0(TokIn, Ctxt);
     Args.append(NodePtr(std::move(Blank)));

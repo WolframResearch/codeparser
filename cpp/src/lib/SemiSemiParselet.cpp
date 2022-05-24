@@ -108,7 +108,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
             goto retParse;
         }
         
-        NodeSeq Args(1 + 1);
+        NodeSeq Args(1 + Trivia1.size());
         Args.append(std::move(Operand));
         Args.appendIfNonEmpty(std::move(Trivia1));
         
@@ -219,7 +219,7 @@ retParse:
 }
 
 
-NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
+NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) const {
     
     Ctxt.Prec = PRECEDENCE_SEMISEMI;
     
@@ -246,8 +246,6 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
             
             auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End));
             
-            NodeSeq Args(1 + 1 + 1);
-            Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
             Args.append(NodePtr(new LeafNode(TokIn)));
             Args.append(NodePtr(new LeafNode(Implicit)));
             
@@ -276,8 +274,6 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
                     //     ^ThirdTok
                     //
                     
-                    NodeSeq Args(1 + 1 + 1 + 1);
-                    Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
                     Args.append(NodePtr(new LeafNode(TokIn)));
                     Args.appendIfNonEmpty(std::move(Trivia1));
                     Args.append(std::move(FirstArg));
@@ -292,8 +288,6 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
                     //               ^~~~~~~~~~~~~~~~ThirdTok
                     //
                     
-                    NodeSeq Args(1 + 1 + 1 + 1);
-                    Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
                     Args.append(NodePtr(new LeafNode(TokIn)));
                     Args.appendIfNonEmpty(std::move(Trivia1));
                     Args.append(std::move(FirstArg));
@@ -325,8 +319,6 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
                         //       ^FourthTok
                         //
                         
-                        NodeSeq Args(1 + 1 + 1 + 1);
-                        Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
                         Args.append(NodePtr(new LeafNode(TokIn)));
                         Args.appendIfNonEmpty(std::move(Trivia1));
                         Args.append(std::move(FirstArg));
@@ -343,13 +335,11 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
                         
                         auto SecondArg = prefixParselets[FourthTok.Tok.value()]->parse(FourthTok, Ctxt);
                         
-                        NodeSeq Args(1 + 1 + 1 + 1 + 1 + 1 + 1 + 1);
-                        Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
                         Args.append(NodePtr(new LeafNode(TokIn)));
                         Args.appendIfNonEmpty(std::move(Trivia1));
                         Args.append(std::move(FirstArg));
                         Args.appendIfNonEmpty(std::move(Trivia2));
-                        Args.append(NodePtr(new LeafSeqNode(std::move(ThirdTokSeq))));
+                        Args.appendIfNonEmpty(std::move(ThirdTokSeq));
                         Args.appendIfNonEmpty(std::move(Trivia3));
                         Args.append(std::move(SecondArg));
                         
@@ -361,8 +351,6 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
                     //       ^~FourthTok
                     //
                     
-                    NodeSeq Args(1 + 1 + 1 + 1);
-                    Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
                     Args.append(NodePtr(new LeafNode(TokIn)));
                     Args.appendIfNonEmpty(std::move(Trivia1));
                     Args.append(std::move(FirstArg));
@@ -398,8 +386,6 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
                 
                 auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End));
                 
-                NodeSeq Args(1 + 1 + 1);
-                Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
                 Args.append(NodePtr(new LeafNode(TokIn)));
                 Args.append(NodePtr(new LeafNode(Implicit)));
                 
@@ -417,12 +403,10 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
                 
                 auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End));
                 
-                NodeSeq Args(1 + 1 + 1 + 1 + 1 + 1 + 1);
-                Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
                 Args.append(NodePtr(new LeafNode(TokIn)));
                 Args.append(NodePtr(new LeafNode(Implicit)));
                 Args.appendIfNonEmpty(std::move(Trivia1));
-                Args.append(NodePtr(new LeafSeqNode(std::move(SecondTokSeq))));
+                Args.appendIfNonEmpty(std::move(SecondTokSeq));
                 Args.appendIfNonEmpty(std::move(Trivia2));
                 Args.append(std::move(FirstArg));
                 
@@ -439,8 +423,6 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Left, Token TokIn, ParserContext Ctxt) 
                 
                 auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End));
                 
-                NodeSeq Args(1 + 1 + 1);
-                Args.append(NodePtr(new NodeSeqNode(std::move(Left))));
                 Args.append(NodePtr(new LeafNode(TokIn)));
                 Args.append(NodePtr(new LeafNode(Implicit)));
                 
