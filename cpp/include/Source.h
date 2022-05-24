@@ -3,6 +3,7 @@
 
 #include "TokenEnum.h" // for TokenEnum
 #include "CodePoint.h" // for codepoint
+#include "MyString.h"
 
 #if USE_MATHLINK
 #include "mathlink.h"
@@ -179,74 +180,6 @@ enum SyntaxError : uint8_t {
 
 std::string SyntaxErrorToString(SyntaxError Err);
 
-
-typedef const std::string SyntaxIssueTag;
-
-//
-//
-//
-SyntaxIssueTag SYNTAXISSUETAG_UNHANDLEDCHARACTER = "UnhandledCharacter";
-SyntaxIssueTag SYNTAXISSUETAG_UNSUPPORTEDCHARACTER = "UnsupportedCharacter";
-SyntaxIssueTag SYNTAXISSUETAG_UNDOCUMENTEDCHARACTER = "UndocumentedCharacter";
-SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDESCAPESEQUENCE = "UnexpectedEscapeSequence";
-SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDCHARACTER = "UnexpectedCharacter";
-SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDNEWLINECHARACTER = "UnexpectedNewlineCharacter";
-SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDSPACECHARACTER = "UnexpectedSpaceCharacter";
-SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDLETTERLIKECHARACTER = "UnexpectedLetterlikeCharacter";
-SyntaxIssueTag SYNTAXISSUETAG_UNDOCUMENTEDSLOTSYNTAX = "UndocumentedSlotSyntax";
-SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDIMPLICITTIMES = "UnexpectedImplicitTimes";
-SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDDOT = "UnexpectedDot";
-SyntaxIssueTag SYNTAXISSUETAG_COMMA = "Comma";
-SyntaxIssueTag SYNTAXISSUETAG_UNEXPECTEDSIGN = "UnexpectedSign";
-
-typedef const std::string FormatIssueTag;
-
-//
-// xxx
-//
-FormatIssueTag FORMATISSUETAG_INSERTSPACE = "InsertSpace";
-
-
-typedef const std::string EncodingIssueTag;
-
-EncodingIssueTag ENCODINGISSUETAG_INCOMPLETEUTF8SEQUENCE = "IncompleteUTF8Sequence";
-EncodingIssueTag ENCODINGISSUETAG_STRAYSURROGATE = "StraySurrogate";
-EncodingIssueTag ENCODINGISSUETAG_BOM = "BOM";
-EncodingIssueTag ENCODINGISSUETAG_UNEXPECTEDCARRIAGERETURN = "UnexpectedCarriageReturn";
-EncodingIssueTag ENCODINGISSUETAG_UNEXPECTEDCHARACTER = "UnexpectedCharacter";
-EncodingIssueTag ENCODINGISSUETAG_NONASCIICHARACTER = "NonASCIICharacter";
-
-
-
-//
-// Used to be just SEVERITY_ERROR, etc.,
-// but this was observed:
-// c:\users\brenton\dropbox\wolfram\ast\ast\cpp\include\SyntaxIssue.h(19): warning C4005: 'SEVERITY_ERROR': macro redefinition
-// C:\Program Files (x86)\Windows Kits\10\include\10.0.17763.0\shared\winerror.h(28563): note: see previous definition of 'SEVERITY_ERROR'
-//
-typedef const std::string SyntaxIssueSeverity;
-
-//
-// for example: unexpected escape sequence
-//
-SyntaxIssueSeverity SYNTAXISSUESEVERITY_REMARK = "Remark";
-SyntaxIssueSeverity SYNTAXISSUESEVERITY_WARNING = "Warning";
-SyntaxIssueSeverity SYNTAXISSUESEVERITY_ERROR = "Error";
-SyntaxIssueSeverity SYNTAXISSUESEVERITY_FATAL = "Fatal";
-
-typedef const std::string FormatIssueSeverity;
-
-FormatIssueSeverity FORMATISSUESEVERITY_FORMATTING = "Formatting";
-
-typedef const std::string EncodingIssueSeverity;
-
-//
-// for example: non-ASCII character
-//
-EncodingIssueSeverity ENCODINGISSUESEVERITY_REMARK = "Remark";
-EncodingIssueSeverity ENCODINGISSUESEVERITY_WARNING = "Warning";
-//EncodingIssueSeverity ENCODINGISSUESEVERITY_ERROR = "Error";
-EncodingIssueSeverity ENCODINGISSUESEVERITY_FATAL = "Fatal";
 
 
 //
@@ -445,15 +378,15 @@ public:
 class Issue {
 public:
 
-    const SyntaxIssueTag Tag;
+    MyStringPtr& Tag;
     const std::string Msg;
-    const SyntaxIssueSeverity Sev;
+    MyStringPtr& Sev;
     const Source Src;
     const double Val;
     const CodeActionPtrVector Actions;
     const AdditionalDescriptionVector AdditionalDescriptions;
     
-    Issue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
+    Issue(MyStringPtr& Tag, std::string Msg, MyStringPtr& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
     
     Source getSource() const;
     
@@ -545,7 +478,7 @@ public:
 //
 class SyntaxIssue : public Issue {
 public:
-    SyntaxIssue(SyntaxIssueTag Tag, std::string Msg, SyntaxIssueSeverity Sev, Source Src, double Con, CodeActionPtrVector Actions = {}, AdditionalDescriptionVector AdditionalDescriptions = {}) : Issue(Tag, Msg, Sev, Src, Con, std::move(Actions), AdditionalDescriptions) {}
+    SyntaxIssue(MyStringPtr& Tag, std::string Msg, MyStringPtr& Sev, Source Src, double Con, CodeActionPtrVector Actions = {}, AdditionalDescriptionVector AdditionalDescriptions = {}) : Issue(Tag, Msg, Sev, Src, Con, std::move(Actions), AdditionalDescriptions) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
@@ -561,7 +494,7 @@ public:
 //
 class FormatIssue : public Issue {
 public:
-    FormatIssue(FormatIssueTag Tag, std::string Msg, FormatIssueSeverity Sev, Source Src, CodeActionPtrVector Actions = {}, AdditionalDescriptionVector AdditionalDescriptions = {}) : Issue(Tag, Msg, Sev, Src, 0.0, std::move(Actions), AdditionalDescriptions) {}
+    FormatIssue(MyStringPtr& Tag, std::string Msg, MyStringPtr& Sev, Source Src, CodeActionPtrVector Actions = {}, AdditionalDescriptionVector AdditionalDescriptions = {}) : Issue(Tag, Msg, Sev, Src, 0.0, std::move(Actions), AdditionalDescriptions) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
@@ -577,7 +510,7 @@ public:
 //
 class EncodingIssue : public Issue {
 public:
-    EncodingIssue(EncodingIssueTag Tag, std::string Msg, EncodingIssueSeverity Sev, Source Src, double Con, CodeActionPtrVector Actions = {}, AdditionalDescriptionVector AdditionalDescriptions = {}) : Issue(Tag, Msg, Sev, Src, Con, std::move(Actions), AdditionalDescriptions) {}
+    EncodingIssue(MyStringPtr& Tag, std::string Msg, MyStringPtr& Sev, Source Src, double Con, CodeActionPtrVector Actions = {}, AdditionalDescriptionVector AdditionalDescriptions = {}) : Issue(Tag, Msg, Sev, Src, Con, std::move(Actions), AdditionalDescriptions) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;

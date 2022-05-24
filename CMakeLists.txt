@@ -125,6 +125,7 @@ set(GENERATED_WL_PACLET_RESOURCES_SOURCES
 
 set(GENERATED_CPP_INCLUDES
 	${PROJECT_BINARY_DIR}/generated/cpp/include/LongNames.h
+	${PROJECT_BINARY_DIR}/generated/cpp/include/MyString.h
 	${PROJECT_BINARY_DIR}/generated/cpp/include/ParseletRegistration.h
 	${PROJECT_BINARY_DIR}/generated/cpp/include/Precedence.h
 	${PROJECT_BINARY_DIR}/generated/cpp/include/Symbol.h
@@ -133,6 +134,7 @@ set(GENERATED_CPP_INCLUDES
 
 set(GENERATED_CPP_LIB_SOURCES
 	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/LongNames.cpp
+	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/MyString.cpp
 	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/ParseletRegistration.cpp
 	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/Symbol.cpp
 	${PROJECT_BINARY_DIR}/generated/cpp/src/lib/TokenEnum.cpp
@@ -412,6 +414,25 @@ add_custom_command(
 		${PROJECT_SOURCE_DIR}/CodeTools/Generate/GenerateSources.wl
 		${GENERATED_PARSELETREGISTRATION_OUTPUT}
 		${GENERATED_TOKENENUM_OUTPUT}
+		${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
+	VERBATIM
+	WORKING_DIRECTORY
+		${PROJECT_SOURCE_DIR}
+)
+
+#
+# String files
+#
+add_custom_command(
+	OUTPUT
+		${PROJECT_BINARY_DIR}/generated/cpp/include/MyString.h
+		${PROJECT_BINARY_DIR}/generated/cpp/src/lib/MyString.cpp
+	COMMAND
+		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/String.wl -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
+	DEPENDS
+		${PROJECT_SOURCE_DIR}/CodeParser/Generate/String.wl
+		${PROJECT_SOURCE_DIR}/CodeParser/Generate/Common.wl
+		${PROJECT_SOURCE_DIR}/CodeTools/Generate/GenerateSources.wl
 		${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	VERBATIM
 	WORKING_DIRECTORY

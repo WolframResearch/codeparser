@@ -10,6 +10,7 @@
 #include "ByteBuffer.h" // for ByteBuffer
 #include "ByteEncoder.h" // for ByteEncoder
 #include "Utils.h" // for parseSourceConvention
+#include "MyString.h"
 
 #include <memory> // for unique_ptr
 #ifdef WINDOWS_MATHLINK
@@ -567,8 +568,7 @@ void ParserSession::setUnsafeCharacterEncodingFlag(UnsafeCharacterEncodingFlag f
 
 void ParserSession::addIssue(IssuePtr I) {
 
-    if (I->Sev == ENCODINGISSUESEVERITY_FATAL ||
-        I->Sev == SYNTAXISSUESEVERITY_FATAL) {
+    if (I->Sev == STRING_FATAL) {
         
         //
         // There may be situations where many (1000+) fatal errors are generated.

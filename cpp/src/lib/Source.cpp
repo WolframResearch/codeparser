@@ -49,7 +49,7 @@ bool IssuePtrCompare::operator() (const IssuePtr& L, const IssuePtr& R) const {
         return true;
     }
     
-    if (L->Tag < R->Tag) {
+    if (*L->Tag < *R->Tag) {
         return true;
     }
     
@@ -57,7 +57,7 @@ bool IssuePtrCompare::operator() (const IssuePtr& L, const IssuePtr& R) const {
 }
 
 
-Issue::Issue(std::string Tag, std::string Msg, std::string Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Val(Val), Actions(std::move(Actions)), AdditionalDescriptions(AdditionalDescriptions) {}
+Issue::Issue(MyStringPtr& Tag, std::string Msg, MyStringPtr& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Val(Val), Actions(std::move(Actions)), AdditionalDescriptions(AdditionalDescriptions) {}
 
 Source Issue::getSource() const {
     return Src;
@@ -68,11 +68,13 @@ void SyntaxIssue::print(std::ostream& s) const {
     
     s << SYMBOL_CODEPARSER_LIBRARY_MAKESYNTAXISSUE->name() << "[";
     
-    s << Tag.c_str() << ", ";
+    Tag->print(s);
+    s << ", ";
     
     s << Msg.c_str() << ", ";
     
-    s << Sev.c_str() << ", ";
+    Sev->print(s);
+    s << ", ";
     
     getSource().print(s);
     
@@ -90,7 +92,7 @@ void SyntaxIssue::print(std::ostream& s) const {
 }
 
 bool SyntaxIssue::check() const {
-    return Sev != SYNTAXISSUESEVERITY_FATAL;
+    return Sev != STRING_FATAL;
 }
 
 
@@ -153,11 +155,13 @@ void FormatIssue::print(std::ostream& s) const {
     
     s << SYMBOL_CODEPARSER_LIBRARY_MAKEFORMATISSUE->name() << "[";
     
-    s << Tag.c_str() << ", ";
+    Tag->print(s);
+    s << ", ";
     
     s << Msg.c_str() << ", ";
     
-    s << Sev.c_str() << ", ";
+    Sev->print(s);
+    s << ", ";
     
     getSource().print(s);
     
@@ -180,11 +184,13 @@ void EncodingIssue::print(std::ostream& s) const {
     
     s << SYMBOL_CODEPARSER_LIBRARY_MAKEENCODINGISSUE->name() << "[";
     
-    s << Tag.c_str() << ", ";
+    Tag->print(s);
+    s << ", ";
     
     s << Msg.c_str() << ", ";
     
-    s << Sev.c_str() << ", ";
+    Sev->print(s);
+    s << ", ";
     
     getSource().print(s);
     
@@ -199,7 +205,7 @@ void EncodingIssue::print(std::ostream& s) const {
 }
 
 bool EncodingIssue::check() const {
-    return Sev != ENCODINGISSUESEVERITY_FATAL;
+    return Sev != STRING_FATAL;
 }
 
 
@@ -649,17 +655,13 @@ void SyntaxIssue::put(MLINK mlp) const {
         assert(false);
     }
     
-    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Tag.c_str()), static_cast<int>(Tag.size()))) {
-        assert(false);
-    }
+    Tag->put(mlp);
     
     if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Msg.c_str()), static_cast<int>(Msg.size()))) {
         assert(false);
     }
     
-    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Sev.c_str()), static_cast<int>(Sev.size()))) {
-        assert(false);
-    }
+    Sev->put(mlp);
     
     Src.put(mlp);
     
@@ -731,17 +733,13 @@ void FormatIssue::put(MLINK mlp) const {
         assert(false);
     }
     
-    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Tag.c_str()), static_cast<int>(Tag.size()))) {
-        assert(false);
-    }
+    Tag->put(mlp);
     
     if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Msg.c_str()), static_cast<int>(Msg.size()))) {
         assert(false);
     }
     
-    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Sev.c_str()), static_cast<int>(Sev.size()))) {
-        assert(false);
-    }
+    Sev->put(mlp);
     
     Src.put(mlp);
     
@@ -766,17 +764,13 @@ void EncodingIssue::put(MLINK mlp) const {
         assert(false);
     }
     
-    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Tag.c_str()), static_cast<int>(Tag.size()))) {
-        assert(false);
-    }
+    Tag->put(mlp);
     
     if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Msg.c_str()), static_cast<int>(Msg.size()))) {
         assert(false);
     }
     
-    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Sev.c_str()), static_cast<int>(Sev.size()))) {
-        assert(false);
-    }
+    Sev->put(mlp);
     
     Src.put(mlp);
     
