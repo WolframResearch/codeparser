@@ -98,7 +98,7 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
                 // matched reduced severity of unexpected characters inside strings or comments
                 //
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95));
+                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {}));
                 
                 TheParserSession->addIssue(std::move(I));
                 
@@ -121,7 +121,7 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
                 // matched reduced severity of unexpected characters inside strings or comments
                 //
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95));
+                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {}));
                 
                 TheParserSession->addIssue(std::move(I));
                 
@@ -366,7 +366,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
                     Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert ``]`` to form ``\\[" + suggestion + "]``", Source(currentWLCharacterEndLoc), "]")));
                 }
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\[") + longNameStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
+                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\[") + longNameStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions), {}));
                 
                 TheParserSession->addIssue(std::move(I));
                 
@@ -383,7 +383,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
                 
                 Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\\\[" + longNameStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\[" + longNameStr)));
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\[") + longNameStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
+                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\[") + longNameStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions), {}));
                 
                 TheParserSession->addIssue(std::move(I));
             }
@@ -473,7 +473,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
                 Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\[" + suggestion + "]``", Source(previousBackslashLoc, currentWLCharacterEndLoc), "\\[" + suggestion + "]")));
             }
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDESCAPESEQUENCE, std::string("Unexpected escape sequence: ``\\\\[") + longNameStr + "]``.", STRING_REMARK, Source(previousBackslashLoc, currentWLCharacterEndLoc), 0.33, std::move(Actions)));
+            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDESCAPESEQUENCE, std::string("Unexpected escape sequence: ``\\\\[") + longNameStr + "]``.", STRING_REMARK, Source(previousBackslashLoc, currentWLCharacterEndLoc), 0.33, std::move(Actions), {}));
             
             TheParserSession->addIssue(std::move(I));
         }
@@ -515,7 +515,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
             Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\[" + suggestion + "]``", Source(previousBackslashLoc, currentWLCharacterEndLoc), "\\[" + suggestion + "]")));
         }
         
-        auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDESCAPESEQUENCE, std::string("Unexpected escape sequence: ``\\\\[") + longNameStr + "]``.", STRING_REMARK, Source(previousBackslashLoc, currentWLCharacterEndLoc), 0.33, std::move(Actions)));
+        auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDESCAPESEQUENCE, std::string("Unexpected escape sequence: ``\\\\[") + longNameStr + "]``.", STRING_REMARK, Source(previousBackslashLoc, currentWLCharacterEndLoc), 0.33, std::move(Actions), {}));
         
         TheParserSession->addIssue(std::move(I));
     }
@@ -569,7 +569,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
                 // reduce severity of unexpected characters inside strings or comments
                 //
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, std::move(Actions)));
+                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, std::move(Actions), {}));
                 
                 TheParserSession->addIssue(std::move(I));
                 
@@ -579,7 +579,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
                 
             } else {
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.95, std::move(Actions)));
+                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.95, std::move(Actions), {}));
                 
                 TheParserSession->addIssue(std::move(I));
             }
@@ -621,7 +621,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
                 // reduce severity of unexpected characters inside strings or comments
                 //
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.85, std::move(Actions)));
+                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.85, std::move(Actions), {}));
                 
                 TheParserSession->addIssue(std::move(I));
                 
@@ -631,7 +631,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
                 
             } else {
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.85, std::move(Actions)));
+                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.85, std::move(Actions), {}));
                 
                 TheParserSession->addIssue(std::move(I));
             }
@@ -685,7 +685,7 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
                 
                 Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\\\:" + hexStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\:" + hexStr)));
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\:") + hexStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
+                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\:") + hexStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions), {}));
                 
                 TheParserSession->addIssue(std::move(I));
             }
@@ -754,7 +754,7 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
             // reduce severity of unexpected characters inside strings or comments
             //
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, std::move(Actions)));
+            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, std::move(Actions), {}));
             
             TheParserSession->addIssue(std::move(I));
             
@@ -764,7 +764,7 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
             
         } else {
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.95, std::move(Actions)));
+            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.95, std::move(Actions), {}));
             
             TheParserSession->addIssue(std::move(I));
         }
@@ -805,7 +805,7 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
             // reduce severity of unexpected characters inside strings or comments
             //
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.85, std::move(Actions)));
+            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.85, std::move(Actions), {}));
             
             TheParserSession->addIssue(std::move(I));
             
@@ -815,7 +815,7 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
             
         } else {
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.85, std::move(Actions)));
+            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.85, std::move(Actions), {}));
             
             TheParserSession->addIssue(std::move(I));
         }
@@ -864,7 +864,7 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
                 
                 Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\\\." + hexStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\." + hexStr)));
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, "Unhandled character: ``\\." + hexStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
+                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, "Unhandled character: ``\\." + hexStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions), {}));
                 
                 TheParserSession->addIssue(std::move(I));
             }
@@ -931,7 +931,7 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
             // reduce severity of unexpected characters inside strings or comments
             //
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, std::move(Actions)));
+            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, std::move(Actions), {}));
             
             TheParserSession->addIssue(std::move(I));
             
@@ -941,7 +941,7 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
             
         } else {
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.95, std::move(Actions)));
+            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.95, std::move(Actions), {}));
             
             TheParserSession->addIssue(std::move(I));
         }
@@ -982,7 +982,7 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
             // reduce severity of unexpected characters inside strings or comments
             //
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.85, std::move(Actions)));
+            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.85, std::move(Actions), {}));
             
             TheParserSession->addIssue(std::move(I));
             
@@ -992,7 +992,7 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
             
         } else {
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.85, std::move(Actions)));
+            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.85, std::move(Actions), {}));
             
             TheParserSession->addIssue(std::move(I));
         }
@@ -1041,7 +1041,7 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
                 
                 Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\\\" + octalStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\" + octalStr)));
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\") + octalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
+                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\") + octalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions), {}));
                 
                 TheParserSession->addIssue(std::move(I));
             }
@@ -1109,7 +1109,7 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
             // reduce severity of unexpected characters inside strings or comments
             //
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, std::move(Actions)));
+            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, std::move(Actions), {}));
             
             TheParserSession->addIssue(std::move(I));
             
@@ -1119,7 +1119,7 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
             
         } else {
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.95, std::move(Actions)));
+            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.95, std::move(Actions), {}));
             
             TheParserSession->addIssue(std::move(I));
         }
@@ -1160,7 +1160,7 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
             // reduce severity of unexpected characters inside strings or comments
             //
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.85, std::move(Actions)));
+            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.85, std::move(Actions), {}));
             
             TheParserSession->addIssue(std::move(I));
             
@@ -1170,7 +1170,7 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
             
         } else {
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.85, std::move(Actions)));
+            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.85, std::move(Actions), {}));
             
             TheParserSession->addIssue(std::move(I));
         }
@@ -1220,7 +1220,7 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
                 
                 Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\\\|" + hexStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\|" + hexStr)));
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\|") + hexStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
+                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character: ``\\|") + hexStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions), {}));
                 
                 TheParserSession->addIssue(std::move(I));
             }
@@ -1303,7 +1303,7 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
             // reduce severity of unexpected characters inside strings or comments
             //
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, std::move(Actions)));
+            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, std::move(Actions), {}));
             
             TheParserSession->addIssue(std::move(I));
             
@@ -1313,7 +1313,7 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
             
         } else {
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.95, std::move(Actions)));
+            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.95, std::move(Actions), {}));
             
             TheParserSession->addIssue(std::move(I));
         }
@@ -1354,7 +1354,7 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
             // reduce severity of unexpected characters inside strings or comments
             //
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.85, std::move(Actions)));
+            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.85, std::move(Actions), {}));
             
             TheParserSession->addIssue(std::move(I));
             
@@ -1364,7 +1364,7 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
             
         } else {
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.85, std::move(Actions)));
+            auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_WARNING, Src, 0.85, std::move(Actions), {}));
             
             TheParserSession->addIssue(std::move(I));
         }
@@ -1547,7 +1547,7 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterSta
                 
                 Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert ``[`` to form ``\\[" + alnumRun + "]``", Source(currentWLCharacterStartLoc.next()), "[")));
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character ``\\") + curSourceGraphicalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
+                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character ``\\") + curSourceGraphicalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions), {}));
                 
                 TheParserSession->addIssue(std::move(I));
                 
@@ -1562,7 +1562,7 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterSta
                     Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\[" + curSourceGraphicalStr + "XXX]``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\[" + curSourceGraphicalStr + "XXX]")));
                     Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\:" + curSourceGraphicalStr + "XXX``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\:" + curSourceGraphicalStr + "XXX")));
                     
-                    auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character ``\\") + curSourceGraphicalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
+                    auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character ``\\") + curSourceGraphicalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions), {}));
                     
                     TheParserSession->addIssue(std::move(I));
                     
@@ -1574,7 +1574,7 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterSta
                     
                     Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\[" + curSourceGraphicalStr + "XXX]``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\[" + curSourceGraphicalStr + "XXX]")));
                     
-                    auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character ``\\") + curSourceGraphicalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
+                    auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character ``\\") + curSourceGraphicalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions), {}));
                     
                     TheParserSession->addIssue(std::move(I));
                 }
@@ -1588,7 +1588,7 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterSta
             
             Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\:" + curSourceGraphicalStr + "xxx``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\:" + curSourceGraphicalStr + "xxx")));
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character ``\\") + curSourceGraphicalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
+            auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character ``\\") + curSourceGraphicalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions), {}));
             
             TheParserSession->addIssue(std::move(I));
             
@@ -1625,7 +1625,7 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterSta
                 // Do the simple thing: No actions, and report the character with all escaped backslashes now
                 //
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character ``\\\\") + curSourceGraphicalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0));
+                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character ``\\\\") + curSourceGraphicalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, {}, {}));
                 
                 TheParserSession->addIssue(std::move(I));
                 
@@ -1635,7 +1635,7 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterSta
                 
                 Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``\\\\" + curSourceGraphicalStr + "``", Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), "\\\\" + curSourceGraphicalStr)));
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character ``\\") + curSourceGraphicalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions)));
+                auto I = IssuePtr(new SyntaxIssue(STRING_UNHANDLEDCHARACTER, std::string("Unhandled character ``\\") + curSourceGraphicalStr + "``.", STRING_FATAL, Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc), 1.0, std::move(Actions), {}));
                 
                 TheParserSession->addIssue(std::move(I));
             }

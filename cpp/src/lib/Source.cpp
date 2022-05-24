@@ -57,16 +57,16 @@ bool IssuePtrCompare::operator() (const IssuePtr& L, const IssuePtr& R) const {
 }
 
 
-Issue::Issue(MyStringPtr& Tag, std::string Msg, MyStringPtr& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Val(Val), Actions(std::move(Actions)), AdditionalDescriptions(AdditionalDescriptions) {}
+Issue::Issue(SymbolPtr& MakeSym, MyStringPtr& Tag, std::string Msg, MyStringPtr& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : MakeSym(MakeSym), Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Val(Val), Actions(std::move(Actions)), AdditionalDescriptions(AdditionalDescriptions) {}
 
 Source Issue::getSource() const {
     return Src;
 }
 
 
-void SyntaxIssue::print(std::ostream& s) const {
+void Issue::print(std::ostream& s) const {
     
-    s << SYMBOL_CODEPARSER_LIBRARY_MAKESYNTAXISSUE->name() << "[";
+    s << MakeSym->name() << "[";
     
     Tag->print(s);
     s << ", ";
@@ -91,7 +91,7 @@ void SyntaxIssue::print(std::ostream& s) const {
     s << "]";
 }
 
-bool SyntaxIssue::check() const {
+bool Issue::check() const {
     return Sev != STRING_FATAL;
 }
 
@@ -151,62 +151,6 @@ void DeleteTextCodeAction::print(std::ostream& s) const {
     s << "]";
 }
 
-void FormatIssue::print(std::ostream& s) const {
-    
-    s << SYMBOL_CODEPARSER_LIBRARY_MAKEFORMATISSUE->name() << "[";
-    
-    Tag->print(s);
-    s << ", ";
-    
-    s << Msg.c_str() << ", ";
-    
-    Sev->print(s);
-    s << ", ";
-    
-    getSource().print(s);
-    
-    s << ", ";
-    
-    for (auto& A : Actions) {
-        A->print(s);
-        s << ", ";
-    }
-    
-    s << "]";
-}
-
-bool FormatIssue::check() const {
-    return true;
-}
-
-
-void EncodingIssue::print(std::ostream& s) const {
-    
-    s << SYMBOL_CODEPARSER_LIBRARY_MAKEENCODINGISSUE->name() << "[";
-    
-    Tag->print(s);
-    s << ", ";
-    
-    s << Msg.c_str() << ", ";
-    
-    Sev->print(s);
-    s << ", ";
-    
-    getSource().print(s);
-    
-    s << ", ";
-    
-    for (auto& A : Actions) {
-        A->print(s);
-        s << ", ";
-    }
-    
-    s << "]";
-}
-
-bool EncodingIssue::check() const {
-    return Sev != STRING_FATAL;
-}
 
 
 //
@@ -649,9 +593,9 @@ SourceCharacter::SourceCharacter_iterator SourceCharacter::end() {
 
 
 #if USE_MATHLINK
-void SyntaxIssue::put(MLINK mlp) const {
+void Issue::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKESYNTAXISSUE->name(), static_cast<int>(3 + 4 + 1 + Actions.size() + AdditionalDescriptions.size()))) {
+    if (!MLPutFunction(mlp, MakeSym->name(), static_cast<int>(3 + 4 + 1 + Actions.size() + AdditionalDescriptions.size()))) {
         assert(false);
     }
     
@@ -725,68 +669,6 @@ void DeleteTextCodeAction::put(MLINK mlp) const {
     }
     
     Src.put(mlp);
-}
-
-void FormatIssue::put(MLINK mlp) const {
-    
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEFORMATISSUE->name(), static_cast<int>(3 + 4 + 1 + Actions.size() + AdditionalDescriptions.size()))) {
-        assert(false);
-    }
-    
-    Tag->put(mlp);
-    
-    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Msg.c_str()), static_cast<int>(Msg.size()))) {
-        assert(false);
-    }
-    
-    Sev->put(mlp);
-    
-    Src.put(mlp);
-    
-    if (!MLPutReal(mlp, Val)) {
-        assert(false);
-    }
-    
-    for (auto& A : Actions) {
-        A->put(mlp);
-    }
-    
-    for (auto& D : AdditionalDescriptions) {
-        if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(D.c_str()), static_cast<int>(D.size()))) {
-            assert(false);
-        }
-    }
-}
-
-void EncodingIssue::put(MLINK mlp) const {
-    
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEENCODINGISSUE->name(), static_cast<int>(3 + 4 + 1 + Actions.size() + AdditionalDescriptions.size()))) {
-        assert(false);
-    }
-    
-    Tag->put(mlp);
-    
-    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Msg.c_str()), static_cast<int>(Msg.size()))) {
-        assert(false);
-    }
-    
-    Sev->put(mlp);
-    
-    Src.put(mlp);
-    
-    if (!MLPutReal(mlp, Val)) {
-        assert(false);
-    }
-    
-    for (auto& A : Actions) {
-        A->put(mlp);
-    }
-    
-    for (auto& D : AdditionalDescriptions) {
-        if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(D.c_str()), static_cast<int>(D.size()))) {
-            assert(false);
-        }
-    }
 }
 
 void SourceLocation::put(MLINK mlp) const {

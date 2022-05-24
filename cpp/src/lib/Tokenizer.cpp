@@ -355,7 +355,7 @@ inline Token Tokenizer::handleStrangeWhitespace(Buffer tokenStartBuf, SourceLoca
             Actions.push_back(std::move(A));
         }
         
-        auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDSPACECHARACTER, "Unexpected space character: ``" + c.safeAndGraphicalString() + "``.", STRING_WARNING, Src, 0.95, std::move(Actions)));
+        auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDSPACECHARACTER, "Unexpected space character: ``" + c.safeAndGraphicalString() + "``.", STRING_WARNING, Src, 0.95, std::move(Actions), {}));
         
         TheParserSession->addIssue(std::move(I));
     }
@@ -572,7 +572,7 @@ inline Token Tokenizer::handleSymbol(Buffer tokenStartBuf, SourceLocation tokenS
             // It's hard to keep track of the ` characters, so just report the entire symbol. Oh well
             //
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNDOCUMENTEDSLOTSYNTAX, "The name following ``#`` is not documented to allow the **`** character.", STRING_WARNING, getTokenSource(tokenStartLoc), 0.33));
+            auto I = IssuePtr(new SyntaxIssue(STRING_UNDOCUMENTEDSLOTSYNTAX, "The name following ``#`` is not documented to allow the **`** character.", STRING_WARNING, getTokenSource(tokenStartLoc), 0.33, {}, {}));
             
             TheParserSession->addIssue(std::move(I));
         }
@@ -622,7 +622,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer tokenStartBuf, SourceLo
             // Something like  #$a
             //
             
-            auto I = IssuePtr(new SyntaxIssue(STRING_UNDOCUMENTEDSLOTSYNTAX, "The name following ``#`` is not documented to allow the ``$`` character.", STRING_WARNING, getTokenSource(charLoc), 0.33));
+            auto I = IssuePtr(new SyntaxIssue(STRING_UNDOCUMENTEDSLOTSYNTAX, "The name following ``#`` is not documented to allow the ``$`` character.", STRING_WARNING, getTokenSource(charLoc), 0.33, {}, {}));
             
             TheParserSession->addIssue(std::move(I));
         }
@@ -636,7 +636,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer tokenStartBuf, SourceLo
             Actions.push_back(std::move(A));
         }
         
-        auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.safeAndGraphicalString() + "``.", STRING_WARNING, Src, 0.85, std::move(Actions)));
+        auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.safeAndGraphicalString() + "``.", STRING_WARNING, Src, 0.85, std::move(Actions), {}));
         
         TheParserSession->addIssue(std::move(I));
         
@@ -650,7 +650,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer tokenStartBuf, SourceLo
             Actions.push_back(std::move(A));
         }
         
-        auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.safeAndGraphicalString() + "``.", STRING_WARNING, Src, 0.80, std::move(Actions)));
+        auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.safeAndGraphicalString() + "``.", STRING_WARNING, Src, 0.80, std::move(Actions), {}));
         
         TheParserSession->addIssue(std::move(I));
     }
@@ -689,7 +689,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer tokenStartBuf, SourceLo
                     // Something like  #$a
                     //
                     
-                    auto I = IssuePtr(new SyntaxIssue(STRING_UNDOCUMENTEDSLOTSYNTAX, "The name following ``#`` is not documented to allow the ``$`` character.", STRING_WARNING, getTokenSource(charLoc), 0.33));
+                    auto I = IssuePtr(new SyntaxIssue(STRING_UNDOCUMENTEDSLOTSYNTAX, "The name following ``#`` is not documented to allow the ``$`` character.", STRING_WARNING, getTokenSource(charLoc), 0.33, {}, {}));
                     
                     TheParserSession->addIssue(std::move(I));
                 }
@@ -704,7 +704,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer tokenStartBuf, SourceLo
                     Actions.push_back(std::move(A));
                 }
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.safeAndGraphicalString() + "``.", STRING_WARNING, Src, 0.85, std::move(Actions)));
+                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.safeAndGraphicalString() + "``.", STRING_WARNING, Src, 0.85, std::move(Actions), {}));
                 
                 TheParserSession->addIssue(std::move(I));
                 
@@ -718,7 +718,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer tokenStartBuf, SourceLo
                     Actions.push_back(std::move(A));
                 }
                 
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.safeAndGraphicalString() + "``.", STRING_WARNING, Src, 0.80, std::move(Actions)));
+                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDLETTERLIKECHARACTER, "Unexpected letterlike character: ``" + c.safeAndGraphicalString() + "``.", STRING_WARNING, Src, 0.80, std::move(Actions), {}));
                 
                 TheParserSession->addIssue(std::move(I));
             }
@@ -760,7 +760,7 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
         // Something like  #"a"
         //
         
-        auto I = IssuePtr(new SyntaxIssue(STRING_UNDOCUMENTEDSLOTSYNTAX, "The name following ``#`` is not documented to allow the ``\"`` character.", STRING_WARNING, getTokenSource(tokenStartLoc), 0.33));
+        auto I = IssuePtr(new SyntaxIssue(STRING_UNDOCUMENTEDSLOTSYNTAX, "The name following ``#`` is not documented to allow the ``\"`` character.", STRING_WARNING, getTokenSource(tokenStartLoc), 0.33, {}, {}));
         
         TheParserSession->addIssue(std::move(I));
     }
@@ -1155,7 +1155,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 CodeActionPtrVector Actions;
                 Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(dotLoc), " ")));
                 
-                auto I = IssuePtr(new FormatIssue(STRING_INSERTSPACE, "Suspicious syntax.", STRING_FORMATTING, getTokenSource(dotLoc), std::move(Actions)));
+                auto I = IssuePtr(new FormatIssue(STRING_INSERTSPACE, "Suspicious syntax.", STRING_FORMATTING, getTokenSource(dotLoc), 1.0, std::move(Actions), {}));
                 
                 TheParserSession->addIssue(std::move(I));
             }
@@ -2164,7 +2164,7 @@ inline WLCharacter Tokenizer::handlePossibleFractionalPartPastDot(Buffer tokenSt
                     CodeActionPtrVector Actions;
                     Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert ``*``", Source(dotLoc), "*")));
                     
-                    auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDIMPLICITTIMES, "Suspicious syntax.", STRING_ERROR, Source(dotLoc), 0.99, std::move(Actions)));
+                    auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDIMPLICITTIMES, "Suspicious syntax.", STRING_ERROR, Source(dotLoc), 0.99, std::move(Actions), {}));
                     
                     TheParserSession->addIssue(std::move(I));
                 }
@@ -2186,7 +2186,7 @@ void Tokenizer::backupAndWarn(Buffer resetBuf, SourceLocation resetLoc) {
         CodeActionPtrVector Actions;
         Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(resetLoc), " ")));
         
-        auto I = IssuePtr(new FormatIssue(STRING_INSERTSPACE, "Suspicious syntax.", STRING_FORMATTING, Source(resetLoc), std::move(Actions)));
+        auto I = IssuePtr(new FormatIssue(STRING_INSERTSPACE, "Suspicious syntax.", STRING_FORMATTING, Source(resetLoc), 1.0, std::move(Actions), {}));
         
         TheParserSession->addIssue(std::move(I));
     }
@@ -2541,7 +2541,7 @@ inline Token Tokenizer::handleUnder(Buffer tokenStartBuf, SourceLocation tokenSt
                     CodeActionPtrVector Actions;
                     Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(dotLoc), " ")));
                     
-                    auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDDOT, "Suspicious syntax.", STRING_ERROR, Source(dotLoc), 0.95, std::move(Actions)));
+                    auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDDOT, "Suspicious syntax.", STRING_ERROR, Source(dotLoc), 0.95, std::move(Actions), {}));
                     
                     TheParserSession->addIssue(std::move(I));
                 }
@@ -2719,7 +2719,7 @@ inline Token Tokenizer::handleMinus(Buffer tokenStartBuf, SourceLocation tokenSt
                     CodeActionPtrVector Actions;
                     Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(greaterLoc), " ")));
                     
-                    auto I = IssuePtr(new FormatIssue(STRING_INSERTSPACE, "Put a space between ``-`` and ``>`` to reduce ambiguity", STRING_FORMATTING, Source(greaterLoc), std::move(Actions)));
+                    auto I = IssuePtr(new FormatIssue(STRING_INSERTSPACE, "Put a space between ``-`` and ``>`` to reduce ambiguity", STRING_FORMATTING, Source(greaterLoc), 1.0, std::move(Actions), {}));
                     
                     TheParserSession->addIssue(std::move(I));
                     
@@ -2734,7 +2734,7 @@ inline Token Tokenizer::handleMinus(Buffer tokenStartBuf, SourceLocation tokenSt
                     CodeActionPtrVector Actions;
                     Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(equalLoc), " ")));
                     
-                    auto I = IssuePtr(new FormatIssue(STRING_INSERTSPACE, "Put a space between ``-`` and ``=`` to reduce ambiguity", STRING_FORMATTING, Source(equalLoc), std::move(Actions)));
+                    auto I = IssuePtr(new FormatIssue(STRING_INSERTSPACE, "Put a space between ``-`` and ``=`` to reduce ambiguity", STRING_FORMATTING, Source(equalLoc), 1.0, std::move(Actions), {}));
                     
                     TheParserSession->addIssue(std::move(I));
                 }
@@ -2788,7 +2788,7 @@ inline Token Tokenizer::handleBar(Buffer tokenStartBuf, SourceLocation tokenStar
                     CodeActionPtrVector Actions;
                     Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(equalLoc), " ")));
                     
-                    auto I = IssuePtr(new FormatIssue(STRING_INSERTSPACE, "Put a space between ``>`` and ``=`` to reduce ambiguity", STRING_FORMATTING, Source(equalLoc), std::move(Actions)));
+                    auto I = IssuePtr(new FormatIssue(STRING_INSERTSPACE, "Put a space between ``>`` and ``=`` to reduce ambiguity", STRING_FORMATTING, Source(equalLoc), 1.0, std::move(Actions), {}));
                     
                     TheParserSession->addIssue(std::move(I));
                 }
@@ -3150,7 +3150,7 @@ inline Token Tokenizer::handlePlus(Buffer tokenStartBuf, SourceLocation tokenSta
                     CodeActionPtrVector Actions;
                     Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(loc), " ")));
                     
-                    auto I = IssuePtr(new FormatIssue(STRING_INSERTSPACE, "Put a space between ``+`` and ``=`` to reduce ambiguity", STRING_FORMATTING, Source(loc), std::move(Actions)));
+                    auto I = IssuePtr(new FormatIssue(STRING_INSERTSPACE, "Put a space between ``+`` and ``=`` to reduce ambiguity", STRING_FORMATTING, Source(loc), 1.0, std::move(Actions), {}));
                     
                     TheParserSession->addIssue(std::move(I));
                 }
@@ -3529,7 +3529,7 @@ inline Token Tokenizer::handleMBStrangeNewline(Buffer tokenStartBuf, SourceLocat
             Actions.push_back(std::move(A));
         }
         
-        auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDNEWLINECHARACTER, "Unexpected newline character: ``" + c.graphicalString() + "``.", STRING_WARNING, Src, 0.85, std::move(Actions)));
+        auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDNEWLINECHARACTER, "Unexpected newline character: ``" + c.graphicalString() + "``.", STRING_WARNING, Src, 0.85, std::move(Actions), {}));
         
         TheParserSession->addIssue(std::move(I));
     }
@@ -3555,7 +3555,7 @@ inline Token Tokenizer::handleMBStrangeWhitespace(Buffer tokenStartBuf, SourceLo
             Actions.push_back(std::move(A));
         }
         
-        auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDSPACECHARACTER, "Unexpected space character: ``" + c.safeAndGraphicalString() + "``.", STRING_WARNING, Src, 0.85, std::move(Actions)));
+        auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDSPACECHARACTER, "Unexpected space character: ``" + c.safeAndGraphicalString() + "``.", STRING_WARNING, Src, 0.85, std::move(Actions), {}));
         
         TheParserSession->addIssue(std::move(I));
     }

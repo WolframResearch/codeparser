@@ -89,7 +89,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 // No CodeAction here
                 //
                 
-                auto I = IssuePtr(new EncodingIssue(STRING_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", STRING_WARNING, Source(currentSourceCharacterStartLoc), 1.0));
+                auto I = IssuePtr(new EncodingIssue(STRING_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", STRING_WARNING, Source(currentSourceCharacterStartLoc), 1.0, {}, {}));
                 
                 TheParserSession->addIssue(std::move(I));
             }
@@ -847,7 +847,7 @@ void ByteDecoder::strangeWarning(codepoint decoded, SourceLocation currentSource
         // reduce severity of unexpected characters inside strings or comments
         //
         
-        auto I = IssuePtr(new EncodingIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + safeAndGraphicalStr + "``.", STRING_REMARK, Src, 0.95, std::move(Actions)));
+        auto I = IssuePtr(new EncodingIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + safeAndGraphicalStr + "``.", STRING_REMARK, Src, 0.95, std::move(Actions), {}));
         
         TheParserSession->addIssue(std::move(I));
         
@@ -857,7 +857,7 @@ void ByteDecoder::strangeWarning(codepoint decoded, SourceLocation currentSource
         
     } else {
         
-        auto I = IssuePtr(new EncodingIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + safeAndGraphicalStr + "``.", STRING_WARNING, Src, 0.95, std::move(Actions)));
+        auto I = IssuePtr(new EncodingIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + safeAndGraphicalStr + "``.", STRING_WARNING, Src, 0.95, std::move(Actions), {}));
         
         TheParserSession->addIssue(std::move(I));
     }
@@ -879,7 +879,7 @@ void ByteDecoder::nonASCIIWarning(codepoint decoded, SourceLocation currentSourc
         Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
     }
     
-    auto I = IssuePtr(new EncodingIssue(STRING_NONASCIICHARACTER, "Non-ASCII character: ``" + safeAndGraphicalStr + "``.", STRING_REMARK, Src, 1.0, std::move(Actions)));
+    auto I = IssuePtr(new EncodingIssue(STRING_NONASCIICHARACTER, "Non-ASCII character: ``" + safeAndGraphicalStr + "``.", STRING_REMARK, Src, 1.0, std::move(Actions), {}));
     
     TheParserSession->addIssue(std::move(I));
 }
@@ -931,7 +931,7 @@ SourceCharacter ByteDecoder::incomplete1ByteSequence(SourceLocation errSrcLoc, N
         // No CodeAction here
         //
         
-        auto I = IssuePtr(new EncodingIssue(STRING_INCOMPLETEUTF8SEQUENCE, "Incomplete UTF-8 sequence.", STRING_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0));
+        auto I = IssuePtr(new EncodingIssue(STRING_INCOMPLETEUTF8SEQUENCE, "Incomplete UTF-8 sequence.", STRING_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0, {}, {}));
         
         TheParserSession->addIssue(std::move(I));
     }
@@ -959,7 +959,7 @@ SourceCharacter ByteDecoder::incomplete2ByteSequence(SourceLocation errSrcLoc, N
         // No CodeAction here
         //
         
-        auto I = IssuePtr(new EncodingIssue(STRING_INCOMPLETEUTF8SEQUENCE, "Incomplete UTF-8 sequence.", STRING_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0));
+        auto I = IssuePtr(new EncodingIssue(STRING_INCOMPLETEUTF8SEQUENCE, "Incomplete UTF-8 sequence.", STRING_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0, {}, {}));
         
         TheParserSession->addIssue(std::move(I));
     }
@@ -987,7 +987,7 @@ SourceCharacter ByteDecoder::incomplete3ByteSequence(SourceLocation errSrcLoc, N
         // No CodeAction here
         //
         
-        auto I = IssuePtr(new EncodingIssue(STRING_INCOMPLETEUTF8SEQUENCE, "Incomplete UTF-8 sequence.", STRING_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0));
+        auto I = IssuePtr(new EncodingIssue(STRING_INCOMPLETEUTF8SEQUENCE, "Incomplete UTF-8 sequence.", STRING_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0, {}, {}));
         
         TheParserSession->addIssue(std::move(I));
     }
@@ -1018,7 +1018,7 @@ SourceCharacter ByteDecoder::straySurrogate(SourceLocation errSrcLoc, NextPolicy
         // No CodeAction here
         //
         
-        auto I = IssuePtr(new EncodingIssue(STRING_STRAYSURROGATE, "Stray surrogate.", STRING_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0));
+        auto I = IssuePtr(new EncodingIssue(STRING_STRAYSURROGATE, "Stray surrogate.", STRING_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0, {}, {}));
         
         TheParserSession->addIssue(std::move(I));
     }
@@ -1046,7 +1046,7 @@ SourceCharacter ByteDecoder::bom(SourceLocation errSrcLoc, NextPolicy policy) {
         // No CodeAction here
         //
         
-        auto I = IssuePtr(new EncodingIssue(STRING_BOM, "BOM.", STRING_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0));
+        auto I = IssuePtr(new EncodingIssue(STRING_BOM, "BOM.", STRING_FATAL, Source(errSrcLoc, errSrcLoc.next()), 1.0, {}, {}));
         
         TheParserSession->addIssue(std::move(I));
     }

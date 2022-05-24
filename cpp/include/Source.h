@@ -3,6 +3,7 @@
 
 #include "TokenEnum.h" // for TokenEnum
 #include "CodePoint.h" // for codepoint
+#include "Symbol.h"
 #include "MyString.h"
 
 #if USE_MATHLINK
@@ -377,7 +378,9 @@ public:
 //
 class Issue {
 public:
-
+    
+    SymbolPtr& MakeSym;
+    
     MyStringPtr& Tag;
     const std::string Msg;
     MyStringPtr& Sev;
@@ -386,19 +389,17 @@ public:
     const CodeActionPtrVector Actions;
     const AdditionalDescriptionVector AdditionalDescriptions;
     
-    Issue(MyStringPtr& Tag, std::string Msg, MyStringPtr& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
+    Issue(SymbolPtr& MakeSym, MyStringPtr& Tag, std::string Msg, MyStringPtr& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
     
     Source getSource() const;
     
 #if USE_MATHLINK
-    virtual void put(MLINK mlp) const = 0;
+    void put(MLINK mlp) const;
 #endif // USE_MATHLINK
     
-    virtual void print(std::ostream& s) const = 0;
+    void print(std::ostream& s) const;
     
-    virtual bool check() const = 0;
-    
-    virtual ~Issue() {}
+    bool check() const;
 };
 
 //
@@ -478,15 +479,7 @@ public:
 //
 class SyntaxIssue : public Issue {
 public:
-    SyntaxIssue(MyStringPtr& Tag, std::string Msg, MyStringPtr& Sev, Source Src, double Con, CodeActionPtrVector Actions = {}, AdditionalDescriptionVector AdditionalDescriptions = {}) : Issue(Tag, Msg, Sev, Src, Con, std::move(Actions), AdditionalDescriptions) {}
-    
-#if USE_MATHLINK
-    void put(MLINK mlp) const override;
-#endif // USE_MATHLINK
-
-    void print(std::ostream& s) const override;
-    
-    bool check() const override;
+    SyntaxIssue(MyStringPtr& Tag, std::string Msg, MyStringPtr& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Issue(SYMBOL_CODEPARSER_LIBRARY_MAKESYNTAXISSUE, Tag, Msg, Sev, Src, Val, std::move(Actions), std::move(AdditionalDescriptions)) {}
 };
 
 //
@@ -494,15 +487,7 @@ public:
 //
 class FormatIssue : public Issue {
 public:
-    FormatIssue(MyStringPtr& Tag, std::string Msg, MyStringPtr& Sev, Source Src, CodeActionPtrVector Actions = {}, AdditionalDescriptionVector AdditionalDescriptions = {}) : Issue(Tag, Msg, Sev, Src, 0.0, std::move(Actions), AdditionalDescriptions) {}
-    
-#if USE_MATHLINK
-    void put(MLINK mlp) const override;
-#endif // USE_MATHLINK
-    
-    void print(std::ostream& s) const override;
-    
-    bool check() const override;
+    FormatIssue(MyStringPtr& Tag, std::string Msg, MyStringPtr& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Issue(SYMBOL_CODEPARSER_LIBRARY_MAKEFORMATISSUE, Tag, Msg, Sev, Src, Val, std::move(Actions), std::move(AdditionalDescriptions)) {}
 };
 
 //
@@ -510,13 +495,5 @@ public:
 //
 class EncodingIssue : public Issue {
 public:
-    EncodingIssue(MyStringPtr& Tag, std::string Msg, MyStringPtr& Sev, Source Src, double Con, CodeActionPtrVector Actions = {}, AdditionalDescriptionVector AdditionalDescriptions = {}) : Issue(Tag, Msg, Sev, Src, Con, std::move(Actions), AdditionalDescriptions) {}
-    
-#if USE_MATHLINK
-    void put(MLINK mlp) const override;
-#endif // USE_MATHLINK
-    
-    void print(std::ostream& s) const override;
-    
-    bool check() const override;
+    EncodingIssue(MyStringPtr& Tag, std::string Msg, MyStringPtr& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Issue(SYMBOL_CODEPARSER_LIBRARY_MAKEENCODINGISSUE, Tag, Msg, Sev, Src, Val, std::move(Actions), std::move(AdditionalDescriptions)) {}
 };
