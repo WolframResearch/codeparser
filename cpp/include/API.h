@@ -3,7 +3,6 @@
 
 #include "Node.h" // for NodePtr, Node, etc.
 #include "Source.h" // for BufferAndLength
-#include "ExprLibrary.h" // for expr
 #include "Parser.h" // for FirstLineBehavior
 
 //
@@ -34,7 +33,7 @@
 
 #include <memory> // for unique_ptr
 #include <functional> // for function with GCC and MSVC
-
+#include <cstddef> // for size_t
 
 
 class ParserSession;
@@ -61,7 +60,7 @@ public:
     void put(MLINK mlp) const;
 #endif // USE_MATHLINK
     
-    void print(std::ostream&) const;
+    void print(std::ostream& s) const;
     
     bool check() const;
 };
@@ -180,8 +179,6 @@ public:
     void setUnsafeCharacterEncodingFlag(UnsafeCharacterEncodingFlag flag);
     
 #if !NISSUES
-    IssuePtrSet& getIssues();
-
     void addIssue(IssuePtr);
 #endif // !NISSUES
 };
@@ -237,8 +234,6 @@ EXTERN_C DLLEXPORT int TokenizeBytes_Listable_LibraryLink(WolframLibraryData lib
 EXTERN_C DLLEXPORT int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
 EXTERN_C DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp);
-
-EXTERN_C DLLEXPORT int SetupLongNames_LibraryLink(WolframLibraryData libData, MLINK mlp);
 
 //
 // A UTF8 String from MathLink that has lexical scope

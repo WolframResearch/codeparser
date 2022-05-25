@@ -16,6 +16,7 @@
 #include <array>
 #include <memory> // for unique_ptr
 #include <vector>
+#include <cstddef> // for size_t
 
 class Issue;
 class CodeAction;
@@ -47,10 +48,8 @@ struct BufferAndLength {
     void printUTF8String(std::ostream& s) const;
     
 #if USE_MATHLINK
-    void putUTF8String(MLINK ) const;
+    void putUTF8String(MLINK mlp) const;
 #endif // USE_MATHLINK
-    
-    BufferAndLength createNiceBufferAndLength(std::string *str) const;
 };
 
 static_assert((SIZEOF_VOID_P == 8 && sizeof(BufferAndLength) == 16) || (SIZEOF_VOID_P == 4), "Check your assumptions");
@@ -263,11 +262,11 @@ struct SourceCharacter {
     
     explicit operator int() const noexcept = delete;
     
-    constexpr bool operator==(const SourceCharacter &o) const {
+    constexpr bool operator==(const SourceCharacter& o) const {
         return val == o.val;
     }
     
-    constexpr bool operator!=(const SourceCharacter &o) const {
+    constexpr bool operator!=(const SourceCharacter& o) const {
         return val != o.val;
     }
     
@@ -388,7 +387,7 @@ bool operator<(SourceLocation a, SourceLocation b);
 //
 // For googletest
 //
-void PrintTo(const SourceLocation&, std::ostream*);
+void PrintTo(const SourceLocation& Loc, std::ostream *s);
 
 //
 //
@@ -402,7 +401,7 @@ struct Source {
     
     Source(SourceLocation only);
     
-    Source(size_t ) = delete;
+    Source(size_t coerced) = delete;
     
     Source(SourceLocation start, SourceLocation end);
     
@@ -429,7 +428,7 @@ bool operator<(Source a, Source b);
 //
 // For googletest
 //
-void PrintTo(const Source&, std::ostream*);
+void PrintTo(const Source& Src, std::ostream *s);
 
 
 //
@@ -437,7 +436,7 @@ void PrintTo(const Source&, std::ostream*);
 //
 class IssuePtrCompare {
 public:
-    bool operator() (const IssuePtr &L, const IssuePtr &R) const;
+    bool operator() (const IssuePtr& L, const IssuePtr& R) const;
 };
 
 //
@@ -502,7 +501,7 @@ class ReplaceTextCodeAction : public CodeAction {
 public:
     
     ReplaceTextCodeAction(std::string Label, Source Src, std::string ReplacementText) : CodeAction(Label, Src), ReplacementText(ReplacementText) {}
-
+    
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
 #endif // USE_MATHLINK

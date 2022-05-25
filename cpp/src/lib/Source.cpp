@@ -6,7 +6,6 @@
 #include "ByteBuffer.h" // for ByteBuffer
 #include "Symbol.h" // for SYMBOL_CODEPARSER_LIBRARY_MAKESYNTAXISSUE, etc.
 #include "Utils.h" // for isMBNewline, etc.
-//#include "WLCharacter.h" // for set_graphical
 #include "LongNames.h" // for CodePointToLongNameMap
 
 #include <cctype> // for isalnum, isxdigit, isupper, isdigit, isalpha, ispunct, iscntrl with GCC and MSVC
@@ -44,7 +43,7 @@ bool operator!=(BufferAndLength a, BufferAndLength b) {
 
 
 
-bool IssuePtrCompare::operator() (const IssuePtr &L, const IssuePtr &R) const {
+bool IssuePtrCompare::operator() (const IssuePtr& L, const IssuePtr& R) const {
     
     if (L->getSource() < R->getSource()) {
         return true;
@@ -287,7 +286,7 @@ void SourceLocation::print(std::ostream& s) const {
 //
 // For googletest
 //
-void PrintTo(const SourceLocation& Loc, std::ostream* s) {
+void PrintTo(const SourceLocation& Loc, std::ostream *s) {
     Loc.print(*s);
 }
 
@@ -335,7 +334,7 @@ size_t Source::size() const {
 //
 // For googletest
 //
-void PrintTo(const Source& Src, std::ostream* s) {
+void PrintTo(const Source& Src, std::ostream *s) {
     Src.print(*s);
 }
 

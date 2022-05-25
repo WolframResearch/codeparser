@@ -127,10 +127,10 @@ public:
     
     ~Parser();
 
-    Token eatTrivia(Token firstTok, ParserContext Ctxt, NextPolicy policy, LeafSeq&);
-    Token eatTrivia_stringifyAsFile(Token firstTok, ParserContext Ctxt, LeafSeq&);
-    Token eatTriviaButNotToplevelNewlines(Token firstTok, ParserContext Ctxt, NextPolicy policy, LeafSeq&);
-    Token eatTriviaButNotToplevelNewlines_stringifyAsFile(Token firstTok, ParserContext Ctxt, LeafSeq&);
+    Token eatTrivia(Token firstTok, ParserContext Ctxt, NextPolicy policy, LeafSeq& Args);
+    Token eatTrivia_stringifyAsFile(Token firstTok, ParserContext Ctxt, LeafSeq& Args);
+    Token eatTriviaButNotToplevelNewlines(Token firstTok, ParserContext Ctxt, NextPolicy policy, LeafSeq& Args);
+    Token eatTriviaButNotToplevelNewlines_stringifyAsFile(Token firstTok, ParserContext Ctxt, LeafSeq& Args);
 };
 
 extern ParserPtr TheParser;

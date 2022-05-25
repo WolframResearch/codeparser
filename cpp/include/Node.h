@@ -5,10 +5,16 @@
 #include "Symbol.h" // for SymbolPtr
 #include "Token.h" // for Token
 
+#if USE_MATHLINK
+#include "mathlink.h"
+#undef P
+#endif // USE_MATHLINK
+
 #include <vector>
 #include <set>
 #include <memory> // for unique_ptr
 #include <ostream>
+#include <cstddef> // for size_t
 
 class Node;
 class LeafNode;
@@ -45,13 +51,13 @@ public:
     
     size_t size() const;
     
-    const Node* first() const;
-    const Node* last() const;
+    const Node *first() const;
+    const Node *last() const;
     
-    void append(LeafNodePtr );
+    void append(LeafNodePtr N);
     
 #if USE_MATHLINK
-    void put0(MLINK ) const;
+    void put0(MLINK mlp) const;
 #endif // USE_MATHLINK
     
     void print0(std::ostream& s) const;
@@ -80,22 +86,22 @@ public:
     
     size_t size() const;
     
-    void append(NodePtr );
+    void append(NodePtr N);
     
     void appendIfNonEmpty(LeafSeq );
     
-    const Node* first() const;
-    const Node* last() const;
+    const Node *first() const;
+    const Node *last() const;
     
 #if USE_MATHLINK
-    void put(MLINK ) const;
+    void put(MLINK mlp) const;
     
-    void put0(MLINK ) const;
+    void put0(MLINK mlp) const;
 #endif // USE_MATHLINK
     
-    void print(std::ostream& s ) const;
+    void print(std::ostream& s) const;
     
-    void print0(std::ostream& s ) const;
+    void print0(std::ostream& s) const;
     
     bool check() const;
 };
@@ -111,14 +117,14 @@ public:
     Node() : Children() {}
     Node(NodeSeq Children);
     
-    virtual void print(std::ostream&) const = 0;
+    virtual void print(std::ostream& s) const = 0;
 
     virtual Source getSource() const;
     
     virtual size_t size() const;
     
-    virtual const Node* first() const;
-    virtual const Node* last() const;
+    virtual const Node *first() const;
+    virtual const Node *last() const;
     
     virtual Token lastToken() const;
     
@@ -163,14 +169,14 @@ public:
     
     size_t size() const override;
     
-    const Node* first() const override;
-    const Node* last() const override;
+    const Node *first() const override;
+    const Node *last() const override;
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
 #endif // USE_MATHLINK
     
-    void print(std::ostream&) const override;
+    void print(std::ostream& s) const override;
 };
 
 //
@@ -185,14 +191,14 @@ public:
     
     size_t size() const override;
     
-    const Node* first() const override;
-    const Node* last() const override;
+    const Node *first() const override;
+    const Node *last() const override;
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
 #endif // USE_MATHLINK
     
-    void print(std::ostream&) const override;
+    void print(std::ostream& s) const override;
 };
 
 //
@@ -208,13 +214,13 @@ public:
     void put(MLINK mlp) const override;
 #endif // USE_MATHLINK
     
-    void print(std::ostream&) const override;
+    void print(std::ostream& s) const override;
 };
 
 //
 // Leaf
 //
-// These are Symbols, String, Integers, Reals, etc.
+// These are Symbols, Strings, Integers, Reals, Rationals.
 //
 class LeafNode : public Node {
     const Token Tok;
@@ -228,7 +234,7 @@ public:
     void put(MLINK mlp) const override;
 #endif // USE_MATHLINK
     
-    void print(std::ostream&) const override;
+    void print(std::ostream& s) const override;
     
     Source getSource() const override {
         return Tok.Src;
@@ -267,7 +273,7 @@ public:
     void put(MLINK mlp) const override;
 #endif // USE_MATHLINK
     
-    void print(std::ostream&) const override;
+    void print(std::ostream& s) const override;
     
     Source getSource() const override {
         return Tok.Src;
@@ -308,7 +314,7 @@ public:
     void put(MLINK mlp) const override;
 #endif // USE_MATHLINK
     
-    void print(std::ostream&) const override;
+    void print(std::ostream& s) const override;
 };
 
 //
@@ -385,7 +391,7 @@ public:
     void put(MLINK mlp) const override;
 #endif // USE_MATHLINK
     
-    void print(std::ostream&) const override;
+    void print(std::ostream& s) const override;
     
     Source getSource() const override;
     
@@ -432,7 +438,7 @@ public:
     void put(MLINK mlp) const override;
 #endif // USE_MATHLINK
     
-    void print(std::ostream&) const override;
+    void print(std::ostream& s) const override;
     
     bool check() const override {
         return false;
@@ -479,7 +485,7 @@ public:
     void put(MLINK mlp) const override;
 #endif // USE_MATHLINK
     
-    void print(std::ostream&) const override;
+    void print(std::ostream& s) const override;
     
     bool check() const override;
 };
@@ -496,7 +502,7 @@ public:
     void put(MLINK mlp) const override;
 #endif // USE_MATHLINK
     
-    void print(std::ostream&) const override;
+    void print(std::ostream& s) const override;
     
     bool check() const override;
 };
@@ -513,7 +519,7 @@ public:
     void put(MLINK mlp) const override;
 #endif // USE_MATHLINK
     
-    void print(std::ostream&) const override;
+    void print(std::ostream& s) const override;
 
 };
 
@@ -529,7 +535,7 @@ public:
     void put(MLINK mlp) const override;
 #endif // USE_MATHLINK
     
-    void print(std::ostream&) const override;
+    void print(std::ostream& s) const override;
 };
 
 //
@@ -547,7 +553,7 @@ public:
     void put(MLINK mlp) const override;
 #endif // USE_MATHLINK
     
-    void print(std::ostream&) const override;
+    void print(std::ostream& s) const override;
 };
 
 //
@@ -563,5 +569,5 @@ public:
     void put(MLINK mlp) const override;
 #endif // USE_MATHLINK
     
-    void print(std::ostream&) const override;
+    void print(std::ostream& s) const override;
 };

@@ -7,9 +7,12 @@
 
 #include <set>
 #include <memory> // for unique_ptr
+#include <cstddef> // for size_t
 
 class Tokenizer;
+
 using TokenizerPtr = std::unique_ptr<Tokenizer>;
+
 
 struct NumberTokenizationContext {
     bool InvalidBase;

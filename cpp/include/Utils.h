@@ -6,6 +6,8 @@
 
 #include <string>
 #include <unordered_set> // for unordered_set
+#include <ostream>
+#include <cstdint> // for uint8_t
 
 
 std::ostream& set_graphical(std::ostream& stream);

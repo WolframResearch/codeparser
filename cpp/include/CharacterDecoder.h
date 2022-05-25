@@ -56,7 +56,7 @@ private:
     //
     // Return empty string if no suggestion.
     //
-    std::string longNameSuggestion(BufferAndLength );
+    std::string longNameSuggestion(BufferAndLength input);
     
 public:
     

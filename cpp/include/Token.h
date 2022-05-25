@@ -6,6 +6,7 @@
 
 #include <ostream>
 
+
 //
 //
 //
@@ -18,7 +19,7 @@ struct Token {
     Token();
     Token(TokenEnum Tok, BufferAndLength BufLen, Source Src);
     
-    void print(std::ostream&) const;
+    void print(std::ostream& s) const;
 };
 
 static_assert((SIZEOF_VOID_P == 8 && sizeof(Token) == 40) || (SIZEOF_VOID_P == 4), "Check your assumptions");
@@ -29,4 +30,4 @@ bool operator!=(Token a, Token b);
 //
 // For googletest
 //
-void PrintTo(const Token&, std::ostream*);
+void PrintTo(const Token& T, std::ostream *stream);

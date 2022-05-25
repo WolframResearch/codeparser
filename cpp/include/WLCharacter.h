@@ -46,13 +46,13 @@ struct WLCharacter {
     
     explicit operator int() const noexcept = delete;
     
-    constexpr bool operator==(const WLCharacter &o) const {
+    constexpr bool operator==(const WLCharacter& o) const {
         return valBits == o.valBits &&
             signBit == o.signBit &&
             escapeBits == o.escapeBits;
     }
     
-    constexpr bool operator!=(const WLCharacter &o) const {
+    constexpr bool operator!=(const WLCharacter& o) const {
         return valBits != o.valBits ||
             signBit != o.signBit ||
             escapeBits != o.escapeBits;
@@ -61,7 +61,7 @@ struct WLCharacter {
     //
     // for std::map
     //
-    constexpr bool operator<(const WLCharacter &o) const {
+    constexpr bool operator<(const WLCharacter& o) const {
         return to_point() < o.to_point();
     }
     
@@ -129,9 +129,9 @@ struct WLCharacter {
 static_assert(sizeof(WLCharacter) == 4, "Check your assumptions");
 #endif // __clang__
 
-std::ostream& operator<<(std::ostream& stream, WLCharacter);
+std::ostream& operator<<(std::ostream& stream, WLCharacter c);
     
 //
 // For googletest
 //
-void PrintTo(const WLCharacter&, std::ostream*);
+void PrintTo(const WLCharacter& c, std::ostream *stream);

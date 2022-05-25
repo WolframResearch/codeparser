@@ -142,4 +142,3 @@ public:
 };
 
 extern ByteDecoderPtr TheByteDecoder;
-

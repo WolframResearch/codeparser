@@ -705,6 +705,6 @@ char fromDigit(uint8_t d) {
 //
 // For googletest
 //
-void PrintTo(const WLCharacter& C, std::ostream* stream) {
-    *stream << set_graphical << C << clear_graphical;
+void PrintTo(const WLCharacter& c, std::ostream *stream) {
+    *stream << set_graphical << c << clear_graphical;
 }

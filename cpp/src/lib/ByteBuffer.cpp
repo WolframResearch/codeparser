@@ -69,7 +69,7 @@ unsigned char ByteBuffer::nextByte0() {
                     
                     auto pkt = MLNextPacket(link);
                     if (pkt == RETURNPKT) {
-                        if(!MLNewPacket(link)) {
+                        if (!MLNewPacket(link)) {
                             assert(false);
                         }
                     } else {

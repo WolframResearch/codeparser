@@ -437,7 +437,7 @@ ScopedFileBuffer::ScopedFileBuffer(Buffer inStrIn, size_t inLen) : buf(), len(),
     
     auto inStr = reinterpret_cast<const char *>(inStrIn);
     
-    FILE * file = fopen(inStr, "rb");
+    FILE *file = fopen(inStr, "rb");
     
     if (file == NULL) {
         return;

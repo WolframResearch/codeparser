@@ -31,7 +31,7 @@ size_t NodeSeq::size() const {
     return accum;
 }
 
-const Node* NodeSeq::first() const {
+const Node *NodeSeq::first() const {
     
     auto i = 0;
     
@@ -42,7 +42,7 @@ const Node* NodeSeq::first() const {
     return FF;
 }
 
-const Node* NodeSeq::last() const {
+const Node *NodeSeq::last() const {
     
     auto i = vec.size()-1;
     
@@ -126,7 +126,7 @@ size_t LeafSeq::size() const {
     return accum;
 }
 
-const Node* LeafSeq::first() const {
+const Node *LeafSeq::first() const {
     
     auto F = vec.at(0).get();
     
@@ -135,7 +135,7 @@ const Node* LeafSeq::first() const {
     return FF;
 }
 
-const Node* LeafSeq::last() const {
+const Node *LeafSeq::last() const {
     
     auto L = vec.at(vec.size()-1).get();
     
@@ -164,11 +164,11 @@ size_t Node::size() const {
     return 1;
 }
 
-const Node* Node::first() const {
+const Node *Node::first() const {
     return this;
 }
 
-const Node* Node::last() const {
+const Node *Node::last() const {
     return this;
 }
 
@@ -200,12 +200,12 @@ size_t LeafSeqNode::size() const {
     return Children.size();
 }
 
-const Node* LeafSeqNode::first() const {
+const Node *LeafSeqNode::first() const {
     assert(!Children.empty());
     return Children.first();
 }
 
-const Node* LeafSeqNode::last() const {
+const Node *LeafSeqNode::last() const {
     assert(!Children.empty());
     return Children.last();
 }
@@ -215,12 +215,12 @@ size_t NodeSeqNode::size() const {
     return Children.size();
 }
 
-const Node* NodeSeqNode::first() const {
+const Node *NodeSeqNode::first() const {
     assert(!Children.empty());
     return Children.first();
 }
 
-const Node* NodeSeqNode::last() const {
+const Node *NodeSeqNode::last() const {
     assert(!Children.empty());
     return Children.last();
 }

@@ -1,3 +1,4 @@
+(* ::Package::"Tags"-><|"SuspiciousSessionSymbol" -> <|Enabled -> False|>|>:: *)
 
 If[!MemberQ[$Path, #], PrependTo[$Path, #]]&[DirectoryName[$InputFileName, 3]]
 
@@ -440,6 +441,8 @@ longNamesCPPHeader = {
 #include <array>
 #include <map>
 #include <vector>
+#include <cstddef> // for size_t
+
 
 constexpr size_t LONGNAMES_COUNT = " <> ToString[Length[importedLongNames]] <> ";
 constexpr size_t RAWLONGNAMES_COUNT = " <> ToString[Length[importedRawLongNames]] <> ";

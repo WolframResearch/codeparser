@@ -5,6 +5,8 @@
 
 #include <ostream>
 #include <array>
+#include <cstddef> // for size_t
+
 
 //
 //
@@ -21,7 +23,7 @@ public:
     
     static size_t size(codepoint val);
     
-    static void encodeBytes(std::ostream&, codepoint val, ByteEncoderState *state);
+    static void encodeBytes(std::ostream& s, codepoint val, ByteEncoderState *state);
     
     static void encodeBytes(std::array<unsigned char, 4>& arr, codepoint val, ByteEncoderState *state);
 };

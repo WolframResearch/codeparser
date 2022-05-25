@@ -156,7 +156,7 @@ void Token::print(std::ostream& s) const {
 //
 // For googletest
 //
-void PrintTo(const Token& T, std::ostream* stream) {
+void PrintTo(const Token& T, std::ostream *stream) {
     T.print(*stream);
 }
 

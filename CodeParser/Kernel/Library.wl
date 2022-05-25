@@ -422,7 +422,7 @@ $longNames
 
 LongNameSuggestion[input_String] :=
 Catch[
-Module[{nearest, location, longNamesFile},
+Module[{nearest, longNamesFile},
   If[$Debug,
     Print["input: ", input];
   ];
@@ -431,11 +431,6 @@ Module[{nearest, location, longNamesFile},
   lazy initialization of $longNames
   *)
   If[!ListQ[$longNames],
-
-    (*
-    TODO: when targeting 12.1 as a minimum, then use paclet["AssetLocation", "LongNames"]
-    *)
-    location = "Location" /. PacletInformation["CodeParser"];
 
     longNamesFile = FileNameJoin[{location, "Resources", "Generated", "LongNames.wl"}];
 
