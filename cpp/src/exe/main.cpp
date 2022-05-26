@@ -120,107 +120,112 @@ int main(int argc, char *argv[]) {
 
 int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBehavior, EncodingMode encodingMode) {
     
-    std::string input;
-    std::cout << ">>> ";
-    std::getline(std::cin, input);
-    
-    ParserSessionCreate();
-    
     WolframLibraryData libData = nullptr;
     
     int result = EXIT_SUCCESS;
     
-    if (mode == TOKENIZE) {
+    while (true) {
         
-        auto inputStr = reinterpret_cast<Buffer>(input.c_str());
+        std::string input;
+        std::cout << ">>> ";
+        std::getline(std::cin, input);
         
-        ParserSessionInit(inputStr, input.size(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
-    
-        auto C = ParserSessionTokenize();
+        ParserSessionCreate();
         
-        switch (outputMode) {
-            case PRINT:
-                NodeContainerPrint(C, std::cout);
-                std::cout << "\n";
-                break;
-            case PRINT_DRYRUN: {
-                std::ofstream nullStream;
-                NodeContainerPrint(C, nullStream);
-                nullStream << "\n";
-            }
-                break;
-            case NONE: case CHECK:
-                break;
-        }
+        if (mode == TOKENIZE) {
+            
+            auto inputStr = reinterpret_cast<Buffer>(input.c_str());
+            
+            ParserSessionInit(inputStr, input.size(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
         
-        ParserSessionReleaseContainer(C);
-        
-        ParserSessionDeinit();
-        
-    } else if (mode == LEAF) {
-        
-        auto inputStr = reinterpret_cast<Buffer>(input.c_str());
-        
-        ParserSessionInit(inputStr, input.size(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
-        
-        auto stringifyMode = STRINGIFYMODE_NORMAL;
-        
-        auto C = ParserSessionConcreteParseLeaf(stringifyMode);
-    
-        switch (outputMode) {
-            case PRINT:
-                NodeContainerPrint(C, std::cout);
-                std::cout << "\n";
-                break;
-            case PRINT_DRYRUN: {
-                std::ofstream nullStream;
-                NodeContainerPrint(C, nullStream);
-                nullStream << "\n";
-            }
-                break;
-            case NONE: case CHECK:
-                break;
-        }
-        
-        ParserSessionReleaseContainer(C);
-        
-        ParserSessionDeinit();
-        
-    } else {
-        
-        auto inputStr = reinterpret_cast<Buffer>(input.c_str());
-        
-        ParserSessionInit(inputStr, input.size(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
-        
-        auto C = ParserSessionParseExpressions();
-        
-        switch (outputMode) {
-            case PRINT:
-                NodeContainerPrint(C, std::cout);
-                std::cout << "\n";
-                break;
-            case PRINT_DRYRUN: {
-                std::ofstream nullStream;
-                NodeContainerPrint(C, nullStream);
-                nullStream << "\n";
-            }
-                break;
-            case CHECK: {
-                if (!NodeContainerCheck(C)) {
-                    result = EXIT_FAILURE;
+            auto C = ParserSessionTokenize();
+            
+            switch (outputMode) {
+                case PRINT:
+                    NodeContainerPrint(C, std::cout);
+                    std::cout << "\n";
+                    break;
+                case PRINT_DRYRUN: {
+                    std::ofstream nullStream;
+                    NodeContainerPrint(C, nullStream);
+                    nullStream << "\n";
                 }
+                    break;
+                case NONE: case CHECK:
+                    break;
             }
-                break;
-            case NONE:
-                break;
+            
+            ParserSessionReleaseContainer(C);
+            
+            ParserSessionDeinit();
+            
+        } else if (mode == LEAF) {
+            
+            auto inputStr = reinterpret_cast<Buffer>(input.c_str());
+            
+            ParserSessionInit(inputStr, input.size(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
+            
+            auto stringifyMode = STRINGIFYMODE_NORMAL;
+            
+            auto C = ParserSessionConcreteParseLeaf(stringifyMode);
+        
+            switch (outputMode) {
+                case PRINT:
+                    NodeContainerPrint(C, std::cout);
+                    std::cout << "\n";
+                    break;
+                case PRINT_DRYRUN: {
+                    std::ofstream nullStream;
+                    NodeContainerPrint(C, nullStream);
+                    nullStream << "\n";
+                }
+                    break;
+                case NONE: case CHECK:
+                    break;
+            }
+            
+            ParserSessionReleaseContainer(C);
+            
+            ParserSessionDeinit();
+            
+        } else {
+            
+            auto inputStr = reinterpret_cast<Buffer>(input.c_str());
+            
+            ParserSessionInit(inputStr, input.size(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, encodingMode);
+            
+            auto C = ParserSessionParseExpressions();
+            
+            switch (outputMode) {
+                case PRINT:
+                    NodeContainerPrint(C, std::cout);
+                    std::cout << "\n";
+                    break;
+                case PRINT_DRYRUN: {
+                    std::ofstream nullStream;
+                    NodeContainerPrint(C, nullStream);
+                    nullStream << "\n";
+                }
+                    break;
+                case CHECK: {
+                    if (!NodeContainerCheck(C)) {
+                        result = EXIT_FAILURE;
+                        break;
+                    }
+                }
+                    break;
+                case NONE:
+                    break;
+            }
+            
+            ParserSessionReleaseContainer(C);
+            
+            ParserSessionDeinit();
         }
         
-        ParserSessionReleaseContainer(C);
+        ParserSessionDestroy();
         
-        ParserSessionDeinit();
-    }
-    
-    ParserSessionDestroy();
+    } // while (true)
     
     return result;
 }
