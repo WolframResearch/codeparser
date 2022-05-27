@@ -148,7 +148,7 @@ void MyString::print(std::ostream& s) const {
 
 #if USE_MATHLINK
 void MyString::put(MLINK mlp) const {
-    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Val), Len)) {
+    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Val), static_cast<int>(Len))) {
         assert(false);
     }
 }

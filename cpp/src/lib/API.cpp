@@ -67,6 +67,7 @@ currentAbortQ(),
 #endif // !NABORT
 unsafeCharacterEncodingFlag(),
 bufAndLen(),
+libData(),
 srcConvention(),
 tabWidth(),
 firstLineBehavior(),
