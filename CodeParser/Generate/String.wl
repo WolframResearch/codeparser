@@ -34,11 +34,11 @@ strings = Union[Join[
       "UnexpectedCharacter", "UnexpectedNewlineCharacter",
       "UnexpectedSpaceCharacter", "UnexpectedLetterlikeCharacter",
       "UndocumentedSlotSyntax", "UnexpectedImplicitTimes",
-      "UnexpectedDot", "Comma", "UnexpectedSign"},
+      "UnexpectedDot", "Comma", "UnexpectedSign", "Ambiguous"},
     (*
     FormatIssue Tags
     *)
-    {"InsertSpace"},
+    {"Ambiguous"},
     (*
     EncodingIssue Tags
     *)

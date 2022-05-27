@@ -1156,7 +1156,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 CodeActionPtrVector Actions;
                 Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(dotLoc), " ")));
                 
-                auto I = IssuePtr(new FormatIssue(STRING_INSERTSPACE, "Suspicious syntax.", STRING_FORMATTING, getTokenSource(dotLoc), 1.0, std::move(Actions), {}));
+                auto I = IssuePtr(new FormatIssue(STRING_AMBIGUOUS, "Ambiguous syntax.", STRING_FORMATTING, getTokenSource(dotLoc), 1.0, std::move(Actions), {}));
                 
                 TheParserSession->addIssue(std::move(I));
             }
@@ -2187,7 +2187,7 @@ void Tokenizer::backupAndWarn(Buffer resetBuf, SourceLocation resetLoc) {
         CodeActionPtrVector Actions;
         Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(resetLoc), " ")));
         
-        auto I = IssuePtr(new FormatIssue(STRING_INSERTSPACE, "Suspicious syntax.", STRING_FORMATTING, Source(resetLoc), 1.0, std::move(Actions), {}));
+        auto I = IssuePtr(new FormatIssue(STRING_AMBIGUOUS, "Ambiguous syntax.", STRING_FORMATTING, Source(resetLoc), 1.0, std::move(Actions), {}));
         
         TheParserSession->addIssue(std::move(I));
     }
@@ -2714,13 +2714,27 @@ inline Token Tokenizer::handleMinus(Buffer tokenStartBuf, SourceLocation tokenSt
                     //
                     // Something like  a-->0
                     //
+                    // Was originally just a FormatIssue
+                    //
+                    // But a real-world example was demonstrated and this is now considered a real thing that could happen
+                    //
+                    // https://stash.wolfram.com/projects/WA/repos/alphasource/pull-requests/30963/overview
+                    //
                     
                     auto greaterLoc = afterLoc;
                     
                     CodeActionPtrVector Actions;
+                    //
+                    // HACK: little bit of a hack here
+                    // would like to replace  -->  with  ->
+                    // but the current token is only -- and I would prefer to not read past the > just for this action
+                    //
+                    // So actually just replace the -- with -
+                    //
+                    Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``->``", Source(tokenStartLoc, afterLoc), "-")));
                     Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(greaterLoc), " ")));
                     
-                    auto I = IssuePtr(new FormatIssue(STRING_INSERTSPACE, "Put a space between ``-`` and ``>`` to reduce ambiguity", STRING_FORMATTING, Source(greaterLoc), 1.0, std::move(Actions), {}));
+                    auto I = IssuePtr(new SyntaxIssue(STRING_AMBIGUOUS, "``-->`` is ambiguous syntax.", STRING_ERROR, Source(tokenStartLoc, afterLoc), 0.95, std::move(Actions), {}));
                     
                     TheParserSession->addIssue(std::move(I));
                     
@@ -2735,7 +2749,7 @@ inline Token Tokenizer::handleMinus(Buffer tokenStartBuf, SourceLocation tokenSt
                     CodeActionPtrVector Actions;
                     Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(equalLoc), " ")));
                     
-                    auto I = IssuePtr(new FormatIssue(STRING_INSERTSPACE, "Put a space between ``-`` and ``=`` to reduce ambiguity", STRING_FORMATTING, Source(equalLoc), 1.0, std::move(Actions), {}));
+                    auto I = IssuePtr(new FormatIssue(STRING_AMBIGUOUS, "Put a space between ``--`` and ``=`` to reduce ambiguity", STRING_FORMATTING, Source(equalLoc), 1.0, std::move(Actions), {}));
                     
                     TheParserSession->addIssue(std::move(I));
                 }
@@ -2789,7 +2803,7 @@ inline Token Tokenizer::handleBar(Buffer tokenStartBuf, SourceLocation tokenStar
                     CodeActionPtrVector Actions;
                     Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(equalLoc), " ")));
                     
-                    auto I = IssuePtr(new FormatIssue(STRING_INSERTSPACE, "Put a space between ``>`` and ``=`` to reduce ambiguity", STRING_FORMATTING, Source(equalLoc), 1.0, std::move(Actions), {}));
+                    auto I = IssuePtr(new FormatIssue(STRING_AMBIGUOUS, "Put a space between ``|>`` and ``=`` to reduce ambiguity", STRING_FORMATTING, Source(equalLoc), 1.0, std::move(Actions), {}));
                     
                     TheParserSession->addIssue(std::move(I));
                 }
@@ -3151,7 +3165,7 @@ inline Token Tokenizer::handlePlus(Buffer tokenStartBuf, SourceLocation tokenSta
                     CodeActionPtrVector Actions;
                     Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(loc), " ")));
                     
-                    auto I = IssuePtr(new FormatIssue(STRING_INSERTSPACE, "Put a space between ``+`` and ``=`` to reduce ambiguity", STRING_FORMATTING, Source(loc), 1.0, std::move(Actions), {}));
+                    auto I = IssuePtr(new FormatIssue(STRING_AMBIGUOUS, "Put a space between ``++`` and ``=`` to reduce ambiguity", STRING_FORMATTING, Source(loc), 1.0, std::move(Actions), {}));
                     
                     TheParserSession->addIssue(std::move(I));
                 }
