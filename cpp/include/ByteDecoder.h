@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include "Source.h" // for IssuePtr, etc.
 #include "API.h" // for ENCODINGMODE
 
 #include <set>
@@ -9,8 +8,10 @@
 
 class ByteDecoder;
 class SourceConventionManager;
+
 using ByteDecoderPtr = std::unique_ptr<ByteDecoder>;
 using SourceConventionManagerPtr = std::unique_ptr<SourceConventionManager>;
+
 
 //
 // How to manage advancing through SourceLocations
@@ -37,14 +38,9 @@ public:
 //
 class LineColumnManager : public SourceConventionManager {
     
-    //
-    // Use uint32_t here to match SourceLocation members
-    //
-    uint32_t TabWidth;
-    
 public:
     
-    LineColumnManager(uint32_t TabWidth) : TabWidth(TabWidth) {}
+    LineColumnManager() {}
     
     
     SourceLocation newSourceLocation() override;
@@ -78,13 +74,12 @@ class ByteDecoder {
 private:
     
     SourceConventionManagerPtr srcConventionManager;
-
-    EncodingMode encodingMode;
     
-    
+#if !NISSUES
     void strangeWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, NextPolicy policy);
     
     void nonASCIIWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc);
+#endif // !NISSUES
     
     SourceCharacter valid(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, NextPolicy policy);
     
@@ -112,7 +107,7 @@ public:
     
     ByteDecoder();
     
-    void init(SourceConvention srcConvention, uint32_t TabWidth, EncodingMode encodingMode);
+    void init();
     
     void deinit();
     

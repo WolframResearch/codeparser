@@ -3,23 +3,17 @@
 
 #include "Source.h" // for BufferAndLength
 
-#include "WolframLibrary.h"
-#undef True
-#undef False
-
 #include <memory> // for unique_ptr
 
 class ByteBuffer;
+
 using ByteBufferPtr = std::unique_ptr<ByteBuffer>;
+
 
 //
 // A byte buffer that can return the current byte and advance to the next byte.
 //
 class ByteBuffer {
-    
-    BufferAndLength origBufAndLen;
-    
-    WolframLibraryData libData;
     
 public:
     
@@ -32,7 +26,7 @@ public:
     
     ByteBuffer();
     
-    void init(BufferAndLength bufAndLen, WolframLibraryData libData = nullptr);
+    void init();
     
     void deinit();
     

@@ -185,14 +185,14 @@ int get_graphical_i() {
     return i;
 }
 
-std::ostream& set_graphical(std::ostream& stream) {
-    stream.iword(get_graphical_i()) = 1;
-    return stream;
+std::ostream& set_graphical(std::ostream& s) {
+    s.iword(get_graphical_i()) = 1;
+    return s;
 }
 
-std::ostream& clear_graphical(std::ostream& stream) {
-    stream.iword(get_graphical_i()) = 0;
-    return stream;
+std::ostream& clear_graphical(std::ostream& s) {
+    s.iword(get_graphical_i()) = 0;
+    return s;
 }
 
 
@@ -216,16 +216,6 @@ uint8_t digitLookup[] = {
 
 uint8_t Utils::toDigit(unsigned char val) {
     return digitLookup[val];
-}
-
-SourceConvention Utils::parseSourceConvention(std::string s) {
-    if (s == "LineColumn") {
-        return SOURCECONVENTION_LINECOLUMN;
-    } else if (s == "SourceCharacterIndex") {
-        return SOURCECONVENTION_SOURCECHARACTERINDEX;
-    } else {
-        return SOURCECONVENTION_UNKNOWN;
-    }
 }
 
 

@@ -1,8 +1,13 @@
 
 #pragma once
 
-#include "Source.h" // for IssuePtr
+#include "Source.h" // for SourceLocation
 #include "WLCharacter.h" // for WLCharacter
+
+#if USE_MATHLINK
+#include "mathlink.h"
+#undef P
+#endif // USE_MATHLINK
 
 #include "WolframLibrary.h"
 #undef True
@@ -29,9 +34,6 @@ private:
     std::set<SourceLocation> EmbeddedTabs;
     
     
-    WolframLibraryData libData;
-    
-    
     WLCharacter handleLongName(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer openSquareBuf, SourceLocation openSquareLoc, NextPolicy policy);
     WLCharacter handle2Hex(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer dotBuf, SourceLocation dotLoc, NextPolicy policy);
     WLCharacter handle4Hex(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer colonBuf, SourceLocation colonLoc, NextPolicy policy);
@@ -49,6 +51,7 @@ private:
     
     WLCharacter handleUnhandledEscape(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer unhandledBuf, SourceLocation unhandledLoc, SourceCharacter escapedChar, NextPolicy policy);
     
+#if !NISSUES
     //
     // example:
     // input: Alpa
@@ -56,7 +59,8 @@ private:
     //
     // Return empty string if no suggestion.
     //
-    std::string longNameSuggestion(BufferAndLength input);
+    std::string longNameSuggestion(std::string input);
+#endif // !NISSUES
     
 public:
     
@@ -65,7 +69,7 @@ public:
     
     CharacterDecoder();
     
-    void init(WolframLibraryData libData);
+    void init();
     
     void deinit();
     

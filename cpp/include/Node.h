@@ -2,8 +2,8 @@
 #pragma once
 
 #include "Source.h" // for Source
-#include "Symbol.h" // for SymbolPtr
 #include "Token.h" // for Token
+#include "API.h" // for UnsafeCharacterEncodingFlag
 
 #if USE_MATHLINK
 #include "mathlink.h"
@@ -18,36 +18,36 @@
 
 class Node;
 class LeafNode;
+class Symbol;
 
 using NodePtr = std::unique_ptr<Node>;
 using LeafNodePtr = std::unique_ptr<LeafNode>;
+using SymbolPtr = std::unique_ptr<Symbol>;
 
-
-enum UnsafeCharacterEncodingFlag {
-    UNSAFECHARACTERENCODING_OK = 0,
-    UNSAFECHARACTERENCODING_INCOMPLETEUTF8SEQUENCE = 1,
-    UNSAFECHARACTERENCODING_STRAYSURROGATE = 2,
-    UNSAFECHARACTERENCODING_BOM = 3,
-};
+#if USE_EXPR_LIB
+using expr = void *;
+#endif // USE_EXPR_LIB
 
 
 //
 // Used mainly for collecting trivia that has been eaten
 //
-class LeafSeq {
-public:
-    
-    std::vector<LeafNodePtr> vec;
+class TriviaSeq {
+private:
     
     bool moved;
     
-    LeafSeq() : vec(), moved(false) {}
+    std::vector<LeafNodePtr> vec;
     
-    LeafSeq(LeafSeq&& other) : vec(std::move(other.vec)), moved(false) {
+public:
+    
+    TriviaSeq() : moved(false), vec() {}
+    
+    TriviaSeq(TriviaSeq&& other) : moved(false), vec(std::move(other.vec)) {
         other.moved = true;
     }
     
-    ~LeafSeq();
+    ~TriviaSeq();
     
     bool empty() const;
     
@@ -58,11 +58,8 @@ public:
     
     void append(LeafNodePtr N);
     
-#if USE_MATHLINK
-    void put0(MLINK mlp) const;
-#endif // USE_MATHLINK
     
-    void print0(std::ostream& s) const;
+    friend class NodeSeq;
 };
 
 //
@@ -74,6 +71,7 @@ public:
 // So pass around a structure that contains all of the nodes from the left, including comments and whitespace.
 //
 class NodeSeq {
+private:
     
     std::vector<NodePtr> vec;
     
@@ -92,22 +90,22 @@ public:
     
     void appendSeq(NodeSeq Seq);
     
-    void appendSeq(LeafSeq Seq);
+    void appendSeq(TriviaSeq Seq);
     
     const Node *first() const;
     const Node *last() const;
     
 #if USE_MATHLINK
     void put(MLINK mlp) const;
-    
-    void put0(MLINK mlp) const;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const;
     
-    void print0(std::ostream& s) const;
-    
     bool check() const;
+    
+#if USE_EXPR_LIB
+    expr toExpr() const;
+#endif // USE_EXPR_LIB
 };
 
 //
@@ -115,7 +113,9 @@ public:
 //
 class Node {
 protected:
-    NodeSeq Children;
+    
+    const NodeSeq Children;
+    
 public:
 
     Node() : Children() {}
@@ -134,17 +134,17 @@ public:
     
 #if USE_MATHLINK
     virtual void put(MLINK mlp) const = 0;
-    
-    void putChildren(MLINK mlp) const;
 #endif // USE_MATHLINK
-    
-    void printChildren(std::ostream& s) const;
     
     virtual bool isExpectedOperandError() const {
         return false;
     }
     
     virtual bool check() const;
+    
+#if USE_EXPR_LIB
+    virtual expr toExpr() const = 0;
+#endif // USE_EXPR_LIB
     
     virtual ~Node() {}
 };
@@ -153,16 +153,24 @@ public:
 // Any kind of prefix, postfix, binary, or infix operator
 //
 class OperatorNode : public Node {
-    SymbolPtr& Op;
-    SymbolPtr& MakeSym;
+private:
+    
+    const SymbolPtr& Op;
+    const SymbolPtr& MakeSym;
+    
 public:
-    OperatorNode(SymbolPtr& Op, SymbolPtr& MakeSym, NodeSeq Args) : Node(std::move(Args)), Op(Op), MakeSym(MakeSym) {}
+    
+    OperatorNode(const SymbolPtr& Op, SymbolPtr& MakeSym, NodeSeq Args) : Node(std::move(Args)), Op(Op), MakeSym(MakeSym) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
+    
+#if USE_EXPR_LIB
+    expr toExpr() const override;
+#endif // USE_EXPR_LIB
 };
 
 //
@@ -171,7 +179,10 @@ public:
 // These are Symbols, Strings, Integers, Reals, Rationals.
 //
 class LeafNode : public Node {
+protected:
+    
     const Token Tok;
+    
 public:
 
     LeafNode(const Token& Tok) : Node(), Tok(Tok) {}
@@ -199,14 +210,41 @@ public:
     bool check() const override {
         return true;
     }
+    
+#if USE_EXPR_LIB
+    expr toExpr() const override;
+#endif // USE_EXPR_LIB
+};
+
+//
+// Used for actual back-tracking that is sometimes needed
+//
+class ScopedLeafNode : public LeafNode {
+private:
+    
+    bool moved;
+    
+public:
+
+    ScopedLeafNode(const Token& Tok) : LeafNode(Tok), moved() {}
+
+    ScopedLeafNode(const Token&& Tok) : LeafNode(std::move(Tok)), moved() {}
+    
+    ScopedLeafNode(ScopedLeafNode&& other) : LeafNode(std::move(other.Tok)), moved() {
+        other.moved = true;
+    }
+    
+    ~ScopedLeafNode();
 };
 
 //
 // These are syntax errors similar to LeafNode
 //
 class ErrorNode : public Node {
-protected:
+private:
+    
     const Token Tok;
+    
 public:
     
     ErrorNode(const Token& Tok) : Node(), Tok(Tok) {
@@ -240,12 +278,19 @@ public:
     bool check() const override {
         return false;
     }
+    
+#if USE_EXPR_LIB
+    expr toExpr() const override;
+#endif // USE_EXPR_LIB
 };
 
 class UnterminatedTokenErrorNeedsReparseNode : public Node {
-protected:
+private:
+    
     const Token Tok;
+    
 public:
+    
     UnterminatedTokenErrorNeedsReparseNode(const Token& Tok) : Node(), Tok(Tok) {
         assert(Tok.Tok.isUnterminated());
     }
@@ -271,6 +316,10 @@ public:
     bool check() const override {
         return false;
     }
+    
+#if USE_EXPR_LIB
+    expr toExpr() const override;
+#endif // USE_EXPR_LIB
 };
 
 //
@@ -280,7 +329,8 @@ public:
 //
 class PrefixNode : public OperatorNode {
 public:
-    PrefixNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEPREFIXNODE, std::move(Args)) {}
+    
+    PrefixNode(const SymbolPtr& Op, NodeSeq Args);
 };
 
 //
@@ -290,7 +340,8 @@ public:
 //
 class BinaryNode : public OperatorNode {
 public:
-    BinaryNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEBINARYNODE, std::move(Args)) {}
+    
+    BinaryNode(const SymbolPtr& Op, NodeSeq Args);
 };
 
 //
@@ -300,7 +351,8 @@ public:
 //
 class InfixNode : public OperatorNode {
 public:
-    InfixNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEINFIXNODE, std::move(Args)) {}
+    
+    InfixNode(const SymbolPtr& Op, NodeSeq Args);
 };
 
 //
@@ -310,7 +362,8 @@ public:
 //
 class TernaryNode : public OperatorNode {
 public:
-    TernaryNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKETERNARYNODE, std::move(Args)) {}
+    
+    TernaryNode(const SymbolPtr& Op, NodeSeq Args);
 };
 
 //
@@ -320,7 +373,8 @@ public:
 //
 class PostfixNode : public OperatorNode {
 public:
-    PostfixNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEPOSTFIXNODE, std::move(Args)) {}
+    
+    PostfixNode(const SymbolPtr& Op, NodeSeq Args);
 };
 
 //
@@ -330,7 +384,8 @@ public:
 //
 class PrefixBinaryNode : public OperatorNode {
 public:
-    PrefixBinaryNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEPREFIXBINARYNODE, std::move(Args)) {}
+    
+    PrefixBinaryNode(const SymbolPtr& Op, NodeSeq Args);
 };
 
 //
@@ -339,8 +394,12 @@ public:
 // f[x]
 //
 class CallNode : public Node {
-    NodeSeq Head;
+private:
+    
+    const NodeSeq Head;
+    
 public:
+    
     CallNode(NodeSeq Head, NodeSeq Body) : Node(std::move(Body)), Head(std::move(Head)) {}
     
 #if USE_MATHLINK
@@ -352,6 +411,10 @@ public:
     Source getSource() const override;
     
     virtual bool check() const override;
+    
+#if USE_EXPR_LIB
+    expr toExpr() const override;
+#endif // USE_EXPR_LIB
 };
 
 //
@@ -361,7 +424,8 @@ public:
 //
 class GroupNode : public OperatorNode {
 public:
-    GroupNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEGROUPNODE, std::move(Args)) {}
+    
+    GroupNode(const SymbolPtr& Op, NodeSeq Args);
 };
 
 //
@@ -377,7 +441,8 @@ public:
 //
 class CompoundNode : public OperatorNode {
 public:
-    CompoundNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKECOMPOUNDNODE, std::move(Args)) {}
+    
+    CompoundNode(const SymbolPtr& Op, NodeSeq Args);
 };
 
 //
@@ -386,9 +451,13 @@ public:
 // A syntax error that contains structure.
 //
 class SyntaxErrorNode : public Node {
-    const SyntaxError Err;
+private:
+    
+    const SymbolPtr& Err;
+    
 public:
-    SyntaxErrorNode(SyntaxError Err, NodeSeq Args) : Node(std::move(Args)), Err(Err) {}
+    
+    SyntaxErrorNode(const SymbolPtr& Err, NodeSeq Args) : Node(std::move(Args)), Err(Err) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
@@ -399,6 +468,10 @@ public:
     bool check() const override {
         return false;
     }
+    
+#if USE_EXPR_LIB
+    expr toExpr() const override;
+#endif // USE_EXPR_LIB
 };
 
 //
@@ -408,7 +481,8 @@ public:
 //
 class GroupMissingCloserNode : public OperatorNode {
 public:
-    GroupMissingCloserNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEGROUPMISSINGCLOSERNODE, std::move(Args)) {}
+    
+    GroupMissingCloserNode(const SymbolPtr& Op, NodeSeq Args);
     
     bool check() const override {
         return false;
@@ -422,7 +496,8 @@ public:
 //
 class UnterminatedGroupNeedsReparseNode : public OperatorNode {
 public:
-    UnterminatedGroupNeedsReparseNode(SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_LIBRARY_MAKEUNTERMINATEDGROUPNEEDSREPARSENODE, std::move(Args)) {}
+    
+    UnterminatedGroupNeedsReparseNode(const SymbolPtr& Op, NodeSeq Args);
     
     bool check() const override {
         return false;
@@ -433,8 +508,12 @@ public:
 //
 //
 class CollectedExpressionsNode : public Node {
-    std::vector<NodePtr> Exprs;
+private:
+    
+    const std::vector<NodePtr> Exprs;
+    
 public:
+    
     CollectedExpressionsNode(std::vector<NodePtr> Exprs) : Node(), Exprs(std::move(Exprs)) {}
     
 #if USE_MATHLINK
@@ -444,14 +523,22 @@ public:
     void print(std::ostream& s) const override;
     
     bool check() const override;
+    
+#if USE_EXPR_LIB
+    expr toExpr() const override;
+#endif // USE_EXPR_LIB
 };
 
 //
 //
 //
 class CollectedIssuesNode : public Node {
-    IssuePtrSet Issues;
+private:
+    
+    const IssuePtrSet Issues;
+    
 public:
+    
     CollectedIssuesNode(IssuePtrSet Issues) : Node(), Issues(std::move(Issues)) {}
     
 #if USE_MATHLINK
@@ -461,14 +548,22 @@ public:
     void print(std::ostream& s) const override;
     
     bool check() const override;
+    
+#if USE_EXPR_LIB
+    expr toExpr() const override;
+#endif // USE_EXPR_LIB
 };
 
 //
 //
 //
 class CollectedSourceLocationsNode : public Node {
-    std::set<SourceLocation> SourceLocs;
+private:
+    
+    const std::set<SourceLocation> SourceLocs;
+    
 public:
+    
     CollectedSourceLocationsNode(std::set<SourceLocation> SourceLocs) : Node(), SourceLocs(std::move(SourceLocs)) {}
     
 #if USE_MATHLINK
@@ -476,15 +571,22 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
-
+    
+#if USE_EXPR_LIB
+    expr toExpr() const override;
+#endif // USE_EXPR_LIB
 };
 
 //
 //
 //
 class MissingBecauseUnsafeCharacterEncodingNode : public Node {
-    UnsafeCharacterEncodingFlag flag;
+private:
+    
+    const UnsafeCharacterEncodingFlag flag;
+    
 public:
+    
     MissingBecauseUnsafeCharacterEncodingNode(UnsafeCharacterEncodingFlag flag) : Node(), flag(flag) {}
     
 #if USE_MATHLINK
@@ -492,20 +594,31 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
+    
+#if USE_EXPR_LIB
+    expr toExpr() const override;
+#endif // USE_EXPR_LIB
 };
 
 //
 //
 //
 class SafeStringNode : public Node {
-    BufferAndLength bufAndLen;
+private:
+    
+    const BufferAndLength bufAndLen;
+    
 public:
-    
+
     SafeStringNode(BufferAndLength bufAndLen) : Node(), bufAndLen(bufAndLen) {}
-    
+
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
+
+#if USE_EXPR_LIB
+    expr toExpr() const override;
+#endif // USE_EXPR_LIB
 };

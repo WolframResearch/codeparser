@@ -4,8 +4,6 @@ If[!MemberQ[$Path, #], PrependTo[$Path, #]]&[DirectoryName[$InputFileName, 3]]
 
 BeginPackage["CodeParser`Generate`Symbol`"]
 
-GroupOpenerToCloser
-
 Begin["`Private`"]
 
 (*
@@ -50,40 +48,6 @@ $WorkaroundBug321344 = checkBug321344[];
 Print["Work around Bug 321344: ", $WorkaroundBug321344];
 
 
-
-GroupOpenerToCloser[Token`OpenCurly] = Closer`CloseCurly
-GroupOpenerToCloser[Token`LessBar] = Closer`BarGreater
-GroupOpenerToCloser[Token`OpenSquare] = Closer`CloseSquare
-GroupOpenerToCloser[Token`OpenParen] = Closer`CloseParen
-GroupOpenerToCloser[Token`ColonColonOpenSquare] = Closer`CloseSquare
-
-GroupOpenerToCloser[Token`LongName`LeftAngleBracket] = Closer`LongName`RightAngleBracket
-GroupOpenerToCloser[Token`LongName`LeftCeiling] = Closer`LongName`RightCeiling
-GroupOpenerToCloser[Token`LongName`LeftFloor] = Closer`LongName`RightFloor
-GroupOpenerToCloser[Token`LongName`LeftDoubleBracket] = Closer`LongName`RightDoubleBracket
-GroupOpenerToCloser[Token`LongName`LeftBracketingBar] = Closer`LongName`RightBracketingBar
-GroupOpenerToCloser[Token`LongName`LeftDoubleBracketingBar] = Closer`LongName`RightDoubleBracketingBar
-GroupOpenerToCloser[Token`LongName`LeftAssociation] = Closer`LongName`RightAssociation
-GroupOpenerToCloser[Token`LongName`OpenCurlyQuote] = Closer`LongName`CloseCurlyQuote
-GroupOpenerToCloser[Token`LongName`OpenCurlyDoubleQuote] = Closer`LongName`CloseCurlyDoubleQuote
-
-
-TokenToCloser[Token`CloseCurly] = Closer`CloseCurly
-TokenToCloser[Token`BarGreater] = Closer`BarGreater
-TokenToCloser[Token`CloseSquare] = Closer`CloseSquare
-TokenToCloser[Token`CloseParen] = Closer`CloseParen
-
-TokenToCloser[Token`LongName`RightAngleBracket] = Closer`LongName`RightAngleBracket
-TokenToCloser[Token`LongName`RightCeiling] = Closer`LongName`RightCeiling
-TokenToCloser[Token`LongName`RightFloor] = Closer`LongName`RightFloor
-TokenToCloser[Token`LongName`RightDoubleBracket] = Closer`LongName`RightDoubleBracket
-TokenToCloser[Token`LongName`RightBracketingBar] = Closer`LongName`RightBracketingBar
-TokenToCloser[Token`LongName`RightDoubleBracketingBar] = Closer`LongName`RightDoubleBracketingBar
-TokenToCloser[Token`LongName`RightAssociation] = Closer`LongName`RightAssociation
-TokenToCloser[Token`LongName`CloseCurlyQuote] = Closer`LongName`CloseCurlyQuote
-TokenToCloser[Token`LongName`CloseCurlyDoubleQuote] = Closer`LongName`CloseCurlyDoubleQuote
-
-
 (*
 We want to fully-qualify symbol names over the wire.
 This allows library->kernel traffic to work when CodeParser` is not on $ContextPath.
@@ -104,24 +68,29 @@ Module[{ctxt},
 
 
 symbols = Union[Join[
-    {Blank, BlankSequence, BlankNullSequence, EndOfFile, Integer, Integral, Integrate, Missing, Null, Out, Optional, Pattern,
-      Rational, Real, Slot, SlotSequence, String, Symbol, TagSet, TagSetDelayed, TagUnset, Unset, Whitespace},
-    {CodeParser`Library`MakeLeafNode,
-      CodeParser`Library`MakeErrorNode, CodeParser`Library`MakeUnterminatedTokenErrorNeedsReparseNode,
-      CodeParser`Library`MakePrefixNode,
-      CodeParser`Library`MakeBinaryNode, CodeParser`Library`MakeInfixNode,
-            CodeParser`Library`MakeTernaryNode, CodeParser`Library`MakePostfixNode, CodeParser`Library`MakeCallNode,
-            CodeParser`Library`MakeGroupNode,
-            CodeParser`Library`MakeCompoundNode,
-            CodeParser`Library`MakeSyntaxErrorNode,
-            CodeParser`Library`MakeGroupMissingCloserNode, CodeParser`Library`MakeUnterminatedGroupNeedsReparseNode,
-            CodeParser`Library`MakePrefixBinaryNode,
-            CodeParser`Library`MakeSyntaxIssue, CodeParser`Library`MakeReplaceTextCodeAction, CodeParser`Library`MakeInsertTextCodeAction,
-            CodeParser`Library`MakeFormatIssue, CodeParser`Library`MakeDeleteTextCodeAction, CodeParser`Library`MakeDeleteTriviaCodeAction,
-            CodeParser`Library`MakeEncodingIssue,
-            CodeParser`Library`MakeInsertTextAfterCodeAction, CodeParser`Library`MakeSourceCharacterNode, CodeParser`Library`MakeSafeStringNode},
+    {Blank, BlankSequence, BlankNullSequence, ByteArray,
+      ConfidenceLevel, EndOfFile, EvaluatePacket, Integer, Integral,
+      Integrate, Missing, Null, Out, Optional, Pattern, Rational,
+      Real, Rule, Slot, SlotSequence, String, Symbol, TagSet,
+      TagSetDelayed, TagUnset, Unset, Whitespace},
+    {CodeParser`Source},
+    {CodeParser`LeafNode,
+      CodeParser`ErrorNode, CodeParser`UnterminatedTokenErrorNeedsReparseNode,
+      CodeParser`PrefixNode,
+      CodeParser`BinaryNode, CodeParser`InfixNode,
+      CodeParser`TernaryNode, CodeParser`PostfixNode, CodeParser`CallNode,
+      CodeParser`GroupNode,
+      CodeParser`CompoundNode,
+      CodeParser`SyntaxErrorNode,
+      CodeParser`GroupMissingCloserNode, CodeParser`UnterminatedGroupNeedsReparseNode,
+      CodeParser`PrefixBinaryNode},
+    {CodeParser`SyntaxIssue, CodeParser`FormatIssue, CodeParser`EncodingIssue,
+      CodeParser`ReplaceText, CodeParser`DeleteText, CodeParser`InsertText,
+      CodeParser`CodeActions, CodeParser`CodeAction},
+    {CodeParser`Library`LongNameSuggestion, CodeParser`Library`SetConcreteParseProgress},
     {CodeParser`InternalInvalid, CodeParser`PatternBlank, CodeParser`PatternBlankSequence,
       CodeParser`PatternBlankNullSequence, CodeParser`PatternOptionalDefault},
+    {SyntaxError`ExpectedSet, SyntaxError`ExpectedTilde},
     {Token`Newline},
     DownValues[PrefixOperatorToParselet][[All, 2]] /. {
       Parselet`PrefixOperatorParselet[_, _, op_] :> op,
@@ -185,14 +154,20 @@ symbolCPPHeader = {
 
 #pragma once
 
-#include \"TokenEnum.h\"
-
 #if USE_MATHLINK
 #include \"mathlink.h\"
 #undef P
 #endif // USE_MATHLINK
 
 #include <memory>
+#include <ostream>
+
+#if USE_EXPR_LIB
+using expr = void *;
+#endif // USE_EXPR_LIB
+
+using Buffer = const unsigned char *;
+
 
 //
 // A kernel symbol
@@ -205,17 +180,19 @@ public:
   constexpr Symbol(const char *Name) : Name(Name) {}
   const char *name() const;
 
+  void print(std::ostream& s) const;
+
 #if USE_MATHLINK
   void put(MLINK mlp) const;
 #endif // USE_MATHLINK
+
+#if USE_EXPR_LIB
+expr toExpr() const;
+#endif // USE_EXPR_LIB
 };
 
 using SymbolPtr = std::unique_ptr<Symbol>;
 
-Closer GroupOpenerToCloser(TokenEnum T);
-Closer TokenToCloser(TokenEnum T);
-
-SymbolPtr& TokenToSymbol(TokenEnum T);
 
 //
 // All symbols that are used by CodeParser
@@ -243,10 +220,18 @@ symbolCPPSource = {
 
 #include \"Token.h\"
 
+#if USE_EXPR_LIB
+#include \"ExprLibrary.h\"
+#endif // USE_EXPR_LIB
+
 #include <cassert>
 
 const char *Symbol::name() const {
    return Name;
+}
+
+void Symbol::print(std::ostream& s) const {
+    s << Name;
 }
 
 #if USE_MATHLINK
@@ -256,6 +241,13 @@ void Symbol::put(MLINK mlp) const {
     }
 }
 #endif // USE_MATHLINK
+
+#if USE_EXPR_LIB
+expr Symbol::toExpr() const {
+  return Expr_MEncodedStringToSymbolExpr(Name);
+}
+#endif // USE_EXPR_LIB
+
 "} ~Join~
 
 (If[# === String && $WorkaroundBug321344,
@@ -265,24 +257,6 @@ void Symbol::put(MLINK mlp) const {
   "SymbolPtr SYMBOL_STRING = SymbolPtr(new Symbol(\"String\"));"
   ,
   Row[{"SymbolPtr", " ", toGlobal["Symbol`"<>ToString[#]], " = SymbolPtr(new Symbol(\"", stringifyForTransmitting[#], "\"));"}]]& /@ symbols) ~Join~
-
-{""} ~Join~
-
-{"Closer GroupOpenerToCloser(TokenEnum T) {"} ~Join~
-{"switch (T.value()) {"} ~Join~
-Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal[#[[2]]], ";"}]&, DownValues[GroupOpenerToCloser]] ~Join~
-{"default: assert(false && \"Unhandled token\"); return CLOSER_ASSERTFALSE;",
-"}"} ~Join~
-{"}"} ~Join~
-
-{""} ~Join~
-
-{"Closer TokenToCloser(TokenEnum T) {"} ~Join~
-{"switch (T.value()) {"} ~Join~
-Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal[#[[2]]], ";"}]&, DownValues[TokenToCloser]] ~Join~
-{"default: return CLOSER_ASSERTFALSE;",
-"}"} ~Join~
-{"}"} ~Join~
 
 {""};
 

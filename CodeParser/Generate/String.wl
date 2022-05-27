@@ -143,7 +143,6 @@ bool operator<(MyString a, MyString b) {
 }
 
 void MyString::print(std::ostream& s) const {
-    
     s << Val;
 }
 

@@ -4,17 +4,20 @@
 #include "Utils.h" // for set_graphical, etc.
 #include "Source.h" // for SourceCharacer
 #include "LongNames.h" // for CodePointToLongNameMap
+#include "CodePoint.h" // for CODEPOINT_ASSERTFALSE
 
 #include <cctype> // for isdigit, isalpha, ispunct, iscntrl with GCC and MSVC
 #include <sstream> // for ostringstream
 #include <ostream> // for ostream
+#include <cstddef> // for size_t
+
 
 char fromDigit(uint8_t d);
 
 //
 // Respect the actual escape style
 //
-std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
+std::ostream& operator<<(std::ostream& s, WLCharacter c) {
     
     auto i = c.to_point();
     
@@ -25,76 +28,76 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
     switch (escape) {
         case ESCAPE_NONE:
         case ESCAPE_RAW:
-            stream << SourceCharacter(i);
+            s << SourceCharacter(i);
             break;
         case ESCAPE_SINGLE:
-            stream << SourceCharacter('\\');
+            s << SourceCharacter('\\');
             switch (i) {
                 case CODEPOINT_STRINGMETA_BACKSPACE:
-                    stream << SourceCharacter('b');
+                    s << SourceCharacter('b');
                     break;
                 case CODEPOINT_STRINGMETA_FORMFEED:
-                    stream << SourceCharacter('f');
+                    s << SourceCharacter('f');
                     break;
                 case CODEPOINT_STRINGMETA_LINEFEED:
-                    stream << SourceCharacter('n');
+                    s << SourceCharacter('n');
                     break;
                 case CODEPOINT_STRINGMETA_CARRIAGERETURN:
-                    stream << SourceCharacter('r');
+                    s << SourceCharacter('r');
                     break;
                 case CODEPOINT_STRINGMETA_TAB:
-                    stream << SourceCharacter('t');
+                    s << SourceCharacter('t');
                     break;
                 case CODEPOINT_STRINGMETA_OPEN:
-                    stream << SourceCharacter('<');
+                    s << SourceCharacter('<');
                     break;
                 case CODEPOINT_STRINGMETA_CLOSE:
-                    stream << SourceCharacter('>');
+                    s << SourceCharacter('>');
                     break;
                 case CODEPOINT_STRINGMETA_DOUBLEQUOTE:
-                    stream << SourceCharacter('"');
+                    s << SourceCharacter('"');
                     break;
                 case CODEPOINT_STRINGMETA_BACKSLASH:
-                    stream << SourceCharacter('\\');
+                    s << SourceCharacter('\\');
                     break;
                 case CODEPOINT_LINEARSYNTAX_BANG:
-                    stream << SourceCharacter('!');
+                    s << SourceCharacter('!');
                     break;
                 case CODEPOINT_LINEARSYNTAX_PERCENT:
-                    stream << SourceCharacter('%');
+                    s << SourceCharacter('%');
                     break;
                 case CODEPOINT_LINEARSYNTAX_AMP:
-                    stream << SourceCharacter('&');
+                    s << SourceCharacter('&');
                     break;
                 case CODEPOINT_LINEARSYNTAX_OPENPAREN:
-                    stream << SourceCharacter('(');
+                    s << SourceCharacter('(');
                     break;
                 case CODEPOINT_LINEARSYNTAX_CLOSEPAREN:
-                    stream << SourceCharacter(')');
+                    s << SourceCharacter(')');
                     break;
                 case CODEPOINT_LINEARSYNTAX_STAR:
-                    stream << SourceCharacter('*');
+                    s << SourceCharacter('*');
                     break;
                 case CODEPOINT_LINEARSYNTAX_PLUS:
-                    stream << SourceCharacter('+');
+                    s << SourceCharacter('+');
                     break;
                 case CODEPOINT_LINEARSYNTAX_SLASH:
-                    stream << SourceCharacter('/');
+                    s << SourceCharacter('/');
                     break;
                 case CODEPOINT_LINEARSYNTAX_AT:
-                    stream << SourceCharacter('@');
+                    s << SourceCharacter('@');
                     break;
                 case CODEPOINT_LINEARSYNTAX_CARET:
-                    stream << SourceCharacter('^');
+                    s << SourceCharacter('^');
                     break;
                 case CODEPOINT_LINEARSYNTAX_UNDER:
-                    stream << SourceCharacter('_');
+                    s << SourceCharacter('_');
                     break;
                 case CODEPOINT_LINEARSYNTAX_BACKTICK:
-                    stream << SourceCharacter('`');
+                    s << SourceCharacter('`');
                     break;
                 case CODEPOINT_LINEARSYNTAX_SPACE:
-                    stream << SourceCharacter(' ');
+                    s << SourceCharacter(' ');
                     break;
                 default:
                     assert(false);
@@ -109,12 +112,12 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
             auto idx = it - CodePointToLongNameMap_points.begin();
             auto LongName = CodePointToLongNameMap_names[idx];
             
-            stream << SourceCharacter('\\');
-            stream << SourceCharacter('[');
+            s << SourceCharacter('\\');
+            s << SourceCharacter('[');
             for (size_t idx = 0; idx < LongName.size(); idx++) {
-                stream << SourceCharacter(LongName[idx]);
+                s << SourceCharacter(LongName[idx]);
             }
-            stream << SourceCharacter(']');
+            s << SourceCharacter(']');
         }
             break;
         case ESCAPE_OCTAL: {
@@ -134,10 +137,10 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
             i /= 8;
             int8_t o2 = i % 8;
             
-            stream << SourceCharacter('\\');
-            stream << SourceCharacter(fromDigit(o2));
-            stream << SourceCharacter(fromDigit(o1));
-            stream << SourceCharacter(fromDigit(o0));
+            s << SourceCharacter('\\');
+            s << SourceCharacter(fromDigit(o2));
+            s << SourceCharacter(fromDigit(o1));
+            s << SourceCharacter(fromDigit(o0));
         }
             break;
         case ESCAPE_2HEX: {
@@ -155,10 +158,10 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
             i /= 16;
             int8_t x1 = i % 16;
             
-            stream << SourceCharacter('\\');
-            stream << SourceCharacter('.');
-            stream << SourceCharacter(fromDigit(x1));
-            stream << SourceCharacter(fromDigit(x0));
+            s << SourceCharacter('\\');
+            s << SourceCharacter('.');
+            s << SourceCharacter(fromDigit(x1));
+            s << SourceCharacter(fromDigit(x0));
         }
             break;
         case ESCAPE_4HEX: {
@@ -180,12 +183,12 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
             i /= 16;
             int8_t x3 = i % 16;
             
-            stream << SourceCharacter('\\');
-            stream << SourceCharacter(':');
-            stream << SourceCharacter(fromDigit(x3));
-            stream << SourceCharacter(fromDigit(x2));
-            stream << SourceCharacter(fromDigit(x1));
-            stream << SourceCharacter(fromDigit(x0));
+            s << SourceCharacter('\\');
+            s << SourceCharacter(':');
+            s << SourceCharacter(fromDigit(x3));
+            s << SourceCharacter(fromDigit(x2));
+            s << SourceCharacter(fromDigit(x1));
+            s << SourceCharacter(fromDigit(x0));
         }
             break;
         case ESCAPE_6HEX: {
@@ -211,14 +214,14 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
             i /= 16;
             int8_t x5 = i % 16;
             
-            stream << SourceCharacter('\\');
-            stream << SourceCharacter('|');
-            stream << SourceCharacter(fromDigit(x5));
-            stream << SourceCharacter(fromDigit(x4));
-            stream << SourceCharacter(fromDigit(x3));
-            stream << SourceCharacter(fromDigit(x2));
-            stream << SourceCharacter(fromDigit(x1));
-            stream << SourceCharacter(fromDigit(x0));
+            s << SourceCharacter('\\');
+            s << SourceCharacter('|');
+            s << SourceCharacter(fromDigit(x5));
+            s << SourceCharacter(fromDigit(x4));
+            s << SourceCharacter(fromDigit(x3));
+            s << SourceCharacter(fromDigit(x2));
+            s << SourceCharacter(fromDigit(x1));
+            s << SourceCharacter(fromDigit(x0));
         }
             break;
         default: {
@@ -227,7 +230,7 @@ std::ostream& operator<<(std::ostream& stream, WLCharacter c) {
         }
     }
     
-    return stream;
+    return s;
 }
 
 std::string WLCharacter::graphicalString() const {
@@ -705,6 +708,6 @@ char fromDigit(uint8_t d) {
 //
 // For googletest
 //
-void PrintTo(const WLCharacter& c, std::ostream *stream) {
-    *stream << set_graphical << c << clear_graphical;
+void PrintTo(const WLCharacter& c, std::ostream *s) {
+    *s << set_graphical << c << clear_graphical;
 }

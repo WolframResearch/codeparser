@@ -24,12 +24,6 @@ target_include_directories(codeparser-exe
 	PRIVATE ${WOLFRAMLIBRARY_INCLUDE_DIR}
 )
 
-if(USE_MATHLINK)
-target_include_directories(codeparser-exe
-	PRIVATE ${MATHLINK_INCLUDE_DIR}
-)
-endif()
-
 target_link_libraries(codeparser-exe
 	codeparser-lib
 )
@@ -59,7 +53,6 @@ else(MSVC)
 		PRIVATE -Wextra -Wall -Weffc++ -Wno-unused-parameter -Wno-unused-function -Wno-comment
 	)
 endif(MSVC)
-
 
 
 

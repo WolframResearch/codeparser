@@ -7,16 +7,11 @@ loadAllFuncs
 libraryFunctionWrapper
 
 
-libraryResources
-
-$sharedExt
-
-
 (*
 library functions calling INTO lib
 *)
-concreteParseBytesListableFunc
-tokenizeBytesListableFunc
+concreteParseBytesFunc
+tokenizeBytesFunc
 concreteParseLeafFunc
 safeStringFunc
 
@@ -25,57 +20,15 @@ safeStringFunc
 (*
 library functions coming FROM lib
 *)
-MakeLeafNode
-MakeErrorNode
-MakeUnterminatedTokenErrorNeedsReparseNode
-
-MakePrefixNode
-MakeBinaryNode
-MakeTernaryNode
-MakeInfixNode
-MakePostfixNode
-MakeGroupNode
-MakeCallNode
-MakePrefixBinaryNode
-
-MakeCompoundNode
-
-MakeSyntaxErrorNode
-MakeGroupMissingCloserNode
-MakeUnterminatedGroupNeedsReparseNode
-MakeAbstractSyntaxErrorNode
-
-MakeSafeStringNode
-
-MakeSyntaxIssue
-MakeFormatIssue
-MakeEncodingIssue
-
-MakeReplaceTextCodeAction
-MakeInsertTextCodeAction
-MakeDeleteTextCodeAction
-
+LongNameSuggestion
 (*
 SetConcreteParseProgress
 *)
 
 
-
-(*
-Blocked when returning from library
-*)
-$StructureSrcArgs
-parseConvention
-
-
-
-
 $ConcreteParseProgress
 $ConcreteParseTime
 $ConcreteParseStart
-
-
-LongNameSuggestion
 
 
 
@@ -85,6 +38,13 @@ Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
 
 Needs["PacletManager`"] (* for PacletInformation *)
+
+
+CodeParser::old2 = "ExprLibrary functionality is only supported in versions 13.1+."
+
+CodeParser::notransport = "Neither UseExprLib nor UseMathLink were specified."
+
+CodeParser::bothtransports = "Both UseExprLib and UseMathLink were specified."
 
 
 
@@ -204,17 +164,76 @@ Module[{res, loaded, linkObject},
   ]
 ]]
 
-loadAllFuncs[] := (
 
-concreteParseBytesListableFunc := concreteParseBytesListableFunc = loadFunc["ConcreteParseBytes_Listable_LibraryLink", LinkObject, LinkObject];
 
-tokenizeBytesListableFunc := tokenizeBytesListableFunc = loadFunc["TokenizeBytes_Listable_LibraryLink", LinkObject, LinkObject];
 
-concreteParseLeafFunc := concreteParseLeafFunc = loadFunc["ConcreteParseLeaf_LibraryLink", LinkObject, LinkObject];
+loadAllFuncs[] :=
+Module[{pacletInfo, pacletInfoFile, useExprLib, useMathLink},
 
-safeStringFunc := safeStringFunc = loadFunc["SafeString_LibraryLink", LinkObject, LinkObject];
-)
+  pacletInfoFile = FileNameJoin[{location, "PacletInfo.wl"}];
 
+  Block[{$ContextPath = {"System`"}, $Context = "CodeParser`Library`Private`"},
+    pacletInfo = Get[pacletInfoFile];
+  ];
+
+  {useExprLib, useMathLink} = {UseExprLib, UseMathLink} /. List @@ pacletInfo;
+
+  Which[
+    TrueQ[useExprLib],
+
+      If[TrueQ[useMathLink],
+        Message[CodeParser::bothtransports]
+      ];
+
+      loadExprLibFuncs[];
+
+      concreteParseBytesFunc := concreteParseBytesFunc = fromPointerA @* loadFunc["ConcreteParseBytes_LibraryLink", { {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer }, Integer];
+
+      tokenizeBytesFunc := tokenizeBytesFunc = fromPointerA @* loadFunc["TokenizeBytes_LibraryLink", { {LibraryDataType[ByteArray], "Shared"}, Integer, Integer, Integer }, Integer];
+
+      concreteParseLeafFunc := concreteParseLeafFunc = fromPointerA @* loadFunc["ConcreteParseLeaf_LibraryLink", { "UTF8String", Integer, Integer, Integer, Integer, Integer }, Integer];
+
+      safeStringFunc := safeStringFunc = fromPointerA @* loadFunc["SafeString_LibraryLink", { {LibraryDataType[ByteArray], "Shared"} }, Integer];
+    ,
+    TrueQ[useMathLink],
+      concreteParseBytesFunc := concreteParseBytesFunc = loadFunc["ConcreteParseBytes_LibraryLink", LinkObject, LinkObject];
+
+      tokenizeBytesFunc := tokenizeBytesFunc = loadFunc["TokenizeBytes_LibraryLink", LinkObject, LinkObject];
+
+      concreteParseLeafFunc := concreteParseLeafFunc = loadFunc["ConcreteParseLeaf_LibraryLink", LinkObject, LinkObject];
+
+      safeStringFunc := safeStringFunc = loadFunc["SafeString_LibraryLink", LinkObject, LinkObject];
+    ,
+    True,
+      Message[CodeParser::notransport]
+  ]
+]
+
+
+loadExprLibFuncs[] :=
+Module[{exprLib, exprCompiledLib},
+
+  Needs["CompiledLibrary`"];
+
+  exprLib = FileNameJoin[{libraryResources, "expr."<>$sharedExt}];
+
+  exprCompiledLib = CompiledLibrary`CompiledLibrary[exprLib];
+
+  If[$VersionNumber < 13.1,
+    Message[CodeParser::old2]
+  ];
+
+  $exprCompiledLibFuns = CompiledLibrary`CompiledLibraryLoadFunctions[exprCompiledLib];
+
+  Null
+]
+
+
+fromPointerA[f_?FailureQ] :=
+  f
+
+fromPointerA[res_Integer] :=
+  $exprCompiledLibFuns["Expr_FromPointerA"][res]
 
 
 
@@ -298,8 +317,6 @@ Module[{res},
 
 
 
-
-
 (*
 SetConcreteParseProgress[prog_] := (
   $ConcreteParseProgress = prog;
@@ -308,112 +325,6 @@ SetConcreteParseProgress[prog_] := (
   ];
 )
 *)
-
-
-parseConvention["LineColumn"] = structureSrcArgsLineColumn
-parseConvention["SourceCharacterIndex"] = structureSrcArgsSourceCharacterIndex
-
-
-structureSrcArgsLineColumn[startLine_, startCol_, endLine_, endCol_] := {{startLine, startCol}, {endLine, endCol}}
-
-structureSrcArgsSourceCharacterIndex[startLineIgnored_, startCol_, endLineIgnored_, endCol_] := {startCol, endCol-1}
-
-
-
-
-MakeLeafNode[tag_, payload_, srcArgs___] :=
-  LeafNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-MakeErrorNode[tag_, payload_, srcArgs___] :=
-  ErrorNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-MakeUnterminatedTokenErrorNeedsReparseNode[tag_, payload_, srcArgs___] :=
-  UnterminatedTokenErrorNeedsReparseNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-MakePrefixNode[tag_, payload_, srcArgs___] :=
-  PrefixNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-MakeBinaryNode[tag_, payload_, srcArgs___] :=
-  BinaryNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-MakeTernaryNode[tag_, payload_, srcArgs___] :=
-  TernaryNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-MakeInfixNode[tag_, payload_, srcArgs___] :=
-  InfixNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-MakePostfixNode[tag_, payload_, srcArgs___] :=
-  PostfixNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-MakeGroupNode[tag_, payload_, srcArgs___] :=
-  GroupNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-MakeCallNode[tag_, payload_, srcArgs___] :=
-  CallNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-MakePrefixBinaryNode[tag_, payload_, srcArgs___] :=
-  PrefixBinaryNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-MakeCompoundNode[tag_, payload_, srcArgs___] :=
-  CompoundNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-MakeSyntaxErrorNode[tag_, payload_, srcArgs___] :=
-  SyntaxErrorNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-MakeGroupMissingCloserNode[tag_, payload_, srcArgs___] :=
-  GroupMissingCloserNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-MakeUnterminatedGroupNeedsReparseNode[tag_, payload_, srcArgs___] :=
-  UnterminatedGroupNeedsReparseNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-MakeAbstractSyntaxErrorNode[tag_, payload_, srcArgs___] :=
-  AbstractSyntaxErrorNode[tag, payload, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-
-
-(*
-Only add CodeActions if there is at least 1
-Only add "AdditionalDescriptions" if there is at least 1
-*)
-MakeSyntaxIssue[tag_String, msg_String, severity_String, srcArgs___Integer, confidence_Real, actions:CodeAction[_, _, _]..., additionalDescs:_String...] :=
-  SyntaxIssue[tag, msg, severity, <|
-    Source -> $StructureSrcArgs[srcArgs],
-    ConfidenceLevel -> confidence,
-    If[empty[{actions}], Sequence @@ {}, CodeActions -> {actions}],
-    If[empty[{additionalDescs}], Sequence @@ {}, "AdditionalDescriptions" -> {additionalDescs}]
-  |>]
-
-MakeFormatIssue[tag_String, msg_String, severity_String, srcArgs___Integer, confidence_Real, actions:CodeAction[_, _, _]..., additionalDescs:_String...] :=
-  FormatIssue[tag, msg, severity, <|
-    Source -> $StructureSrcArgs[srcArgs],
-    ConfidenceLevel -> confidence,
-    If[empty[{actions}], Sequence @@ {}, CodeActions -> {actions}],
-    If[empty[{additionalDescs}], Sequence @@ {}, "AdditionalDescriptions" -> {additionalDescs}]
-  |>]
-
-MakeEncodingIssue[tag_String, msg_String, severity_String, srcArgs___Integer, confidence_Real, actions:CodeAction[_, _, _]..., additionalDescs:_String...] :=
-  EncodingIssue[tag, msg, severity, <|
-    Source -> $StructureSrcArgs[srcArgs],
-    ConfidenceLevel -> confidence,
-    If[empty[{actions}], Sequence @@ {}, CodeActions -> {actions}],
-    If[empty[{additionalDescs}], Sequence @@ {}, "AdditionalDescriptions" -> {additionalDescs}]
-  |>]
-
-
-MakeReplaceTextCodeAction[label_String, srcArgs___Integer, replacementText_String] :=
-  CodeAction[label, ReplaceText, <| Source -> $StructureSrcArgs[srcArgs], "ReplacementText" -> replacementText |>]
-
-MakeInsertTextCodeAction[label_String, srcArgs___Integer, insertionText_String] :=
-  CodeAction[label, InsertText, <| Source -> $StructureSrcArgs[srcArgs], "InsertionText" -> insertionText |>]
-
-MakeDeleteTextCodeAction[label_String, srcArgs___Integer] :=
-  CodeAction[label, DeleteText, <| Source -> $StructureSrcArgs[srcArgs] |>]
-
-
-
-
-MakeSafeStringNode[str_] :=
-  str
 
 
 

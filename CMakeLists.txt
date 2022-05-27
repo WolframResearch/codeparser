@@ -29,8 +29,8 @@ set(WOLFRAMKERNEL ${WOLFRAMKERNEL_DEFAULT} CACHE FILEPATH "Path to WolframKernel
 set(BUILD_PACLET ON CACHE BOOL "Build paclet")
 set(BUILD_EXE OFF CACHE BOOL "Build executable")
 set(BUILD_TESTS OFF CACHE BOOL "Build tests")
-set(BUILD_EXPR_LIB OFF CACHE BOOL "Build experimental expr library")
-set(USE_MATHLINK ON CACHE BOOL "Use MathLink")
+set(USE_EXPR_LIB OFF CACHE BOOL "Use experimental expr library for transport")
+set(USE_MATHLINK ON CACHE BOOL "Use MathLink for transport")
 set(NISSUES OFF CACHE BOOL "NISSUES")
 set(NABORT OFF CACHE BOOL "NABORT")
 set(LOCAL_BUILD OFF CACHE BOOL "Local build")
@@ -68,8 +68,11 @@ message(STATUS "WOLFRAMKERNEL: ${WOLFRAMKERNEL}")
 message(STATUS "BUILD_PACLET: ${BUILD_PACLET}")
 message(STATUS "BUILD_EXE: ${BUILD_EXE}")
 message(STATUS "BUILD_TESTS: ${BUILD_TESTS}")
-message(STATUS "BUILD_EXPR_LIB: ${BUILD_EXPR_LIB}")
+message(STATUS "USE_EXPR_LIB: ${USE_EXPR_LIB}")
 message(STATUS "USE_MATHLINK: ${USE_MATHLINK}")
+if(USE_EXPR_LIB AND USE_MATHLINK)
+message(WARNING "Both USE_EXPR_LIB and USE_MATHLINK are ON")
+endif()
 message(STATUS "NISSUES: ${NISSUES}")
 message(STATUS "NABORT: ${NABORT}")
 message(STATUS "LOCAL_BUILD: ${LOCAL_BUILD}")
@@ -93,7 +96,6 @@ set(STATIC_WL_PACLET_KERNEL_SOURCES
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Concretify.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Definitions.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Error.wl
-	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/ExprLibrary.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Folds.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Library.wl
 	${PROJECT_SOURCE_DIR}/CodeParser/Kernel/Node.wl
@@ -164,9 +166,12 @@ if(NOT ${VERSION_NUMBER} GREATER_EQUAL 1210)
 message(WARNING "VERSION_NUMBER is below 1210; ForceVersionInstall was added in 12.1. Installing paclets via CMake may not work. (VERSION_NUMBER is ${VERSION_NUMBER})")
 endif()
 
-if(BUILD_EXPR_LIB)
+if(USE_EXPR_LIB)
+# if(NOT ${VERSION_NUMBER} GREATER_EQUAL 1200)
+# message(FATAL_ERROR "VERSION_NUMBER is below 1200; Expr library uses NumericArrays that were added to LibraryLink in version 12.0. (VERSION_NUMBER is ${VERSION_NUMBER})")
+# endif()
 if(NOT ${VERSION_NUMBER} GREATER_EQUAL 1310)
-message(FATAL_ERROR "VERSION_NUMBER is below 1310; Cannot build ExprLibrary (VERSION_NUMBER is ${VERSION_NUMBER}, BUILD_EXPR_LIB is ${BUILD_EXPR_LIB})")
+message(FATAL_ERROR "VERSION_NUMBER is below 1310; Cannot use Expr library before version 13.1. (VERSION_NUMBER is ${VERSION_NUMBER})")
 endif()
 endif()
 
@@ -443,7 +448,7 @@ add_custom_command(
 #
 # expr lib target
 #
-if(BUILD_EXPR_LIB)
+if(USE_EXPR_LIB)
 
 set(EXPR_LIB ${PROJECT_BINARY_DIR}/paclet/CodeParser/LibraryResources/${SYSTEMID}/expr${CMAKE_SHARED_LIBRARY_SUFFIX})
 
@@ -507,7 +512,7 @@ add_custom_command(
 
 add_dependencies(expr-lib expr-lib-custom)
 
-endif(BUILD_EXPR_LIB)
+endif(USE_EXPR_LIB)
 
 
 
@@ -560,7 +565,7 @@ set(STATIC_CPP_INCLUDES
 	${PROJECT_SOURCE_DIR}/cpp/include/WLCharacter.h
 )
 
-if(BUILD_EXPR_LIB)
+if(USE_EXPR_LIB)
 list(APPEND STATIC_CPP_INCLUDES
 	${PROJECT_SOURCE_DIR}/cpp/include/ExprLibrary.h
 )
@@ -585,12 +590,6 @@ set(STATIC_CPP_LIB_SOURCES
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/Utils.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/WLCharacter.cpp
 )
-
-if(BUILD_EXPR_LIB)
-list(APPEND STATIC_CPP_LIB_SOURCES
-${PROJECT_SOURCE_DIR}/cpp/src/lib/ExprLibrary.cpp
-)
-endif()
 
 
 
@@ -655,7 +654,7 @@ target_link_libraries(codeparser-lib ${MATHLINK_LIB})
 
 endif(USE_MATHLINK)
 
-if(BUILD_EXPR_LIB)
+if(USE_EXPR_LIB)
 target_link_libraries(codeparser-lib expr-lib)
 endif()
 
@@ -718,6 +717,10 @@ if(USE_MATHLINK)
 target_compile_definitions(codeparser-lib PUBLIC USE_MATHLINK=1)
 endif()
 
+if(USE_EXPR_LIB)
+target_compile_definitions(codeparser-lib PUBLIC USE_EXPR_LIB=1)
+endif()
+
 target_compile_definitions(codeparser-lib PUBLIC SIZEOF_VOID_P=${CMAKE_SIZEOF_VOID_P})
 
 
@@ -764,7 +767,7 @@ set(PACLET_SOURCES
 	codeparser-lib
 )
 
-if(BUILD_EXPR_LIB)
+if(USE_EXPR_LIB)
 list(APPEND PACLET_SOURCES
 	expr-lib
 )
@@ -792,7 +795,7 @@ add_custom_command(
 	OUTPUT
 		${PACLET_OUTPUT}
 	COMMAND
-		${CMAKE_COMMAND} -DBUILDNUMBER=${BUILDNUMBER} -DVERSION_NUMBER=${VERSION_NUMBER} -DWOLFRAMLIBRARY_VERSION=${WOLFRAMLIBRARY_VERSION} -DLOCAL_BUILD=${LOCAL_BUILD} -DLOCAL_BUILD_VERSION=${LOCAL_BUILD_VERSION} -DCOPIED_PACLETINFO=${COPIED_PACLETINFO} -P ${PROJECT_SOURCE_DIR}/cmake/ReplacePacletInfo.cmake
+		${CMAKE_COMMAND} -DUSE_EXPR_LIB=${USE_EXPR_LIB} -DUSE_MATHLINK=${USE_MATHLINK} -DBUILDNUMBER=${BUILDNUMBER} -DVERSION_NUMBER=${VERSION_NUMBER} -DWOLFRAMLIBRARY_VERSION=${WOLFRAMLIBRARY_VERSION} -DLOCAL_BUILD=${LOCAL_BUILD} -DLOCAL_BUILD_VERSION=${LOCAL_BUILD_VERSION} -DCOPIED_PACLETINFO=${COPIED_PACLETINFO} -P ${PROJECT_SOURCE_DIR}/cmake/ReplacePacletInfo.cmake
 	COMMAND
 		#
 		# CreatePacletArchive may be slow on RE machines, so allow re-trying if JLink connection timeout is hit

@@ -18,6 +18,11 @@ if(${CODEPARSER_RESULT} EQUAL "0")
 return()
 endif()
 
+if(NOT ${CODEPARSER_RESULT} EQUAL "1")
+message(WARNING "Internal error. CODEPARSER_RESULT: ${CODEPARSER_RESULT}")
+return()
+endif()
+
 #
 # We know there was some problem, so now use CodeInspector to report the problem
 #

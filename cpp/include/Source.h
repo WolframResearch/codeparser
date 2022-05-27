@@ -3,8 +3,6 @@
 
 #include "TokenEnum.h" // for TokenEnum
 #include "CodePoint.h" // for codepoint
-#include "Symbol.h"
-#include "MyString.h"
 
 #if USE_MATHLINK
 #include "mathlink.h"
@@ -22,17 +20,24 @@
 
 class Issue;
 class CodeAction;
-
 class IssuePtrCompare;
+class Symbol;
+class MyString;
 
 using Buffer = const unsigned char *;
 using MBuffer = unsigned char *;
 using IssuePtr = std::shared_ptr<Issue>;
 using CodeActionPtr = std::unique_ptr<CodeAction>;
-
 using IssuePtrSet = std::set<IssuePtr, IssuePtrCompare>;
 using CodeActionPtrVector = std::vector<CodeActionPtr>;
 using AdditionalDescriptionVector = std::vector<std::string>;
+using SymbolPtr = std::unique_ptr<Symbol>;
+using MyStringPtr = std::unique_ptr<MyString>;
+
+#if USE_EXPR_LIB
+using expr = void *;
+#endif // USE_EXPR_LIB
+
 
 //
 //
@@ -52,6 +57,10 @@ struct BufferAndLength {
 #if USE_MATHLINK
     void put(MLINK mlp) const;
 #endif // USE_MATHLINK
+    
+#if USE_EXPR_LIB
+    expr toExpr() const;
+#endif // USE_EXPR_LIB
 };
 
 static_assert((SIZEOF_VOID_P == 8 && sizeof(BufferAndLength) == 16) || (SIZEOF_VOID_P == 4), "Check your assumptions");
@@ -161,27 +170,6 @@ const NextPolicy INSIDE_SLOTSEQUENCE = RETURN_TOPLEVELNEWLINE | INTEGER_SHORT_CI
 
 const NextPolicy INSIDE_OUT = RETURN_TOPLEVELNEWLINE | INTEGER_SHORT_CIRCUIT;
 
-//
-//
-//
-enum SyntaxError : uint8_t {
-    
-    SYNTAXERROR_UNKNOWN,
-    
-    //
-    // Something like  a ~b
-    //
-    SYNTAXERROR_EXPECTEDTILDE,
-    
-    //
-    // Something like  a /: b
-    //
-    SYNTAXERROR_EXPECTEDSET,
-};
-
-std::string SyntaxErrorToString(SyntaxError Err);
-
-
 
 //
 // A single character of source code
@@ -233,11 +221,11 @@ struct SourceCharacter {
     
     
     class SourceCharacter_iterator {
-        
     public:
+        
         size_t size;
         size_t idx;
-        codepoint val;
+        const codepoint val;
         std::array<unsigned char, 4> arr;
         
         SourceCharacter_iterator(codepoint val);
@@ -270,7 +258,6 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter);
 //
 //
 enum SourceConvention {
-    SOURCECONVENTION_UNKNOWN,
     SOURCECONVENTION_LINECOLUMN,
     SOURCECONVENTION_SOURCECHARACTERINDEX
 };
@@ -304,11 +291,13 @@ struct SourceLocation {
     
 #if USE_MATHLINK
     void put(MLINK mlp) const;
-    
-    void putStructured(MLINK mlp) const;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const;
+    
+#if USE_EXPR_LIB
+    expr toExpr() const;
+#endif // USE_EXPR_LIB
 };
 
 static_assert(sizeof(SourceLocation) == 8, "Check your assumptions");
@@ -340,14 +329,16 @@ struct Source {
     Source(SourceLocation start, SourceLocation end);
     
     Source(Source start, Source end);
-
+    
 #if USE_MATHLINK
     void put(MLINK mlp) const;
-    
-    void putStructured(MLINK mlp) const;
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const;
+    
+#if USE_EXPR_LIB
+    expr toExpr() const;
+#endif // USE_EXPR_LIB
     
     size_t size() const;
 };
@@ -370,6 +361,7 @@ void PrintTo(const Source& Src, std::ostream *s);
 //
 class IssuePtrCompare {
 public:
+    
     bool operator() (const IssuePtr& L, const IssuePtr& R) const;
 };
 
@@ -379,19 +371,16 @@ public:
 class Issue {
 public:
     
-    SymbolPtr& MakeSym;
-    
-    MyStringPtr& Tag;
+    const SymbolPtr& MakeSym;
+    const MyStringPtr& Tag;
     const std::string Msg;
-    MyStringPtr& Sev;
+    const MyStringPtr& Sev;
     const Source Src;
     const double Val;
     const CodeActionPtrVector Actions;
     const AdditionalDescriptionVector AdditionalDescriptions;
     
-    Issue(SymbolPtr& MakeSym, MyStringPtr& Tag, std::string Msg, MyStringPtr& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
-    
-    Source getSource() const;
+    Issue(const SymbolPtr& MakeSym, const MyStringPtr& Tag, std::string Msg, const MyStringPtr& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
     
 #if USE_MATHLINK
     void put(MLINK mlp) const;
@@ -400,28 +389,35 @@ public:
     void print(std::ostream& s) const;
     
     bool check() const;
+    
+#if USE_EXPR_LIB
+    expr toExpr() const;
+#endif // USE_EXPR_LIB
 };
+
 
 //
 //
 //
 class CodeAction {
 protected:
+    
     const std::string Label;
-    Source Src;
+    const Source Src;
     
 public:
-    CodeAction(std::string Label, Source Src);
-
-    Source getSource() const;
     
-    const std::string getLabel() const;
+    CodeAction(std::string Label, Source Src);
     
 #if USE_MATHLINK
     virtual void put(MLINK mlp) const = 0;
 #endif // USE_MATHLINK
     
     virtual void print(std::ostream& s) const = 0;
+    
+#if USE_EXPR_LIB
+    virtual expr toExpr() const = 0;
+#endif // USE_EXPR_LIB
     
     virtual ~CodeAction() {}
 };
@@ -431,7 +427,10 @@ public:
 //
 //
 class ReplaceTextCodeAction : public CodeAction {
-    std::string ReplacementText;
+private:
+    
+    const std::string ReplacementText;
+    
 public:
     
     ReplaceTextCodeAction(std::string Label, Source Src, std::string ReplacementText) : CodeAction(Label, Src), ReplacementText(ReplacementText) {}
@@ -441,13 +440,20 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
+    
+#if USE_EXPR_LIB
+    expr toExpr() const override;
+#endif // USE_EXPR_LIB
 };
 
 //
 //
 //
 class InsertTextCodeAction : public CodeAction {
-    std::string InsertionText;
+private:
+    
+    const std::string InsertionText;
+    
 public:
     
     InsertTextCodeAction(std::string Label, Source Src, std::string InsertionText) : CodeAction(Label, Src), InsertionText(InsertionText) {}
@@ -457,6 +463,10 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
+    
+#if USE_EXPR_LIB
+    expr toExpr() const override;
+#endif // USE_EXPR_LIB
 };
 
 //
@@ -472,6 +482,10 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
+    
+#if USE_EXPR_LIB
+    expr toExpr() const override;
+#endif // USE_EXPR_LIB
 };
 
 //
@@ -479,7 +493,8 @@ public:
 //
 class SyntaxIssue : public Issue {
 public:
-    SyntaxIssue(MyStringPtr& Tag, std::string Msg, MyStringPtr& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Issue(SYMBOL_CODEPARSER_LIBRARY_MAKESYNTAXISSUE, Tag, Msg, Sev, Src, Val, std::move(Actions), std::move(AdditionalDescriptions)) {}
+    
+    SyntaxIssue(const MyStringPtr& Tag, std::string Msg, const MyStringPtr& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
 };
 
 //
@@ -487,7 +502,8 @@ public:
 //
 class FormatIssue : public Issue {
 public:
-    FormatIssue(MyStringPtr& Tag, std::string Msg, MyStringPtr& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Issue(SYMBOL_CODEPARSER_LIBRARY_MAKEFORMATISSUE, Tag, Msg, Sev, Src, Val, std::move(Actions), std::move(AdditionalDescriptions)) {}
+    
+    FormatIssue(const MyStringPtr& Tag, std::string Msg, const MyStringPtr& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
 };
 
 //
@@ -495,5 +511,6 @@ public:
 //
 class EncodingIssue : public Issue {
 public:
-    EncodingIssue(MyStringPtr& Tag, std::string Msg, MyStringPtr& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Issue(SYMBOL_CODEPARSER_LIBRARY_MAKEENCODINGISSUE, Tag, Msg, Sev, Src, Val, std::move(Actions), std::move(AdditionalDescriptions)) {}
+    
+    EncodingIssue(const MyStringPtr& Tag, std::string Msg, const MyStringPtr& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
 };

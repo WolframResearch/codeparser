@@ -1,75 +1,7 @@
 
 Needs["CodeParser`"]
 
-(*
-Test the listability of functions
-*)
-
-Test[
-	CodeConcreteParse["1"]
-	,
-	ContainerNode[String, {LeafNode[Integer, "1", <|Source -> {{1, 1}, {1, 2}}|>]}, <||>]
-	,
-	TestID->"CodeParser-20200311-Y8A1B4"
-]
-
-
-Test[
-	CodeConcreteParse[{"1", "2", "3"}]
-	,
-	{
-		ContainerNode[String, {LeafNode[Integer, "1", <|Source -> {{1, 1}, {1, 2}}|>]}, <||>],
-		ContainerNode[String, {LeafNode[Integer, "2", <|Source -> {{1, 1}, {1, 2}}|>]}, <||>],
-		ContainerNode[String, {LeafNode[Integer, "3", <|Source -> {{1, 1}, {1, 2}}|>]}, <||>]}
-	,
-	TestID->"CodeParser-20200311-Y0F4F3"
-]
-
-
-Test[
-	CodeParse["1"]
-	,
-	ContainerNode[String, {LeafNode[Integer, "1", <|Source -> {{1, 1}, {1, 2}}|>]}, <||>]
-	,
-	TestID->"CodeParser-20200311-I4F2P8"
-]
-
-
-Test[
-	CodeParse[{"1", "2", "3"}]
-	,
-	{
-		ContainerNode[String, {LeafNode[Integer, "1", <|Source -> {{1, 1}, {1, 2}}|>]}, <||>],
-		ContainerNode[String, {LeafNode[Integer, "2", <|Source -> {{1, 1}, {1, 2}}|>]}, <||>],
-		ContainerNode[String, {LeafNode[Integer, "3", <|Source -> {{1, 1}, {1, 2}}|>]}, <||>]}
-	,
-	TestID->"CodeParser-20200311-G2W9M2"
-]
-
-
-Test[
-	CodeTokenize["1"]
-	,
-	{LeafNode[Integer, "1", <|Source -> {{1, 1}, {1, 2}}|>]}
-	,
-	TestID->"CodeParser-20200311-G9U8X5"
-]
-
-
-Test[
-	CodeTokenize[{"1", "2", "3"}]
-	,
-	{
-		{LeafNode[Integer, "1", <|Source -> {{1, 1}, {1, 2}}|>]},
-		{LeafNode[Integer, "2", <|Source -> {{1, 1}, {1, 2}}|>]},
-		{LeafNode[Integer, "3", <|Source -> {{1, 1}, {1, 2}}|>]}}
-	,
-	TestID->"CodeParser-20200311-B7G5P8"
-]
-
-
-
-
+Needs["PacletManager`"] (* for PacletInformation *)
 
 
 (*
@@ -78,10 +10,36 @@ Test options
 
 *)
 
-Test[
+
+
+(*
+TODO: when targeting 12.1 as a minimum, then look into doing paclet["AssetLocation", "LibraryResources"] or similar
+*)
+location = "Location" /. PacletInformation["CodeParser"]
+
+pacletInfoFile = FileNameJoin[{location, "PacletInfo.wl"}]
+
+Block[{$ContextPath = {"System`"}, $Context = "Global`"},
+	pacletInfo = Get[pacletInfoFile];
+]
+
+{useExprLib, useMathLink} = {UseExprLib, UseMathLink} /. List @@ pacletInfo;
+
+
+
+
+TestMatch[
 	CodeParse["Plot[f[x,y],{x,0,1},{y,0,1},PlotRange\[Rule]All];", SourceConvention -> "Test"]
 	,
-	ContainerNode[String, {}, <||>]
+	_Failure
+	,
+	Which[
+		useExprLib,
+			{LibraryFunction::unevaluated}
+		,
+		useMathLink,
+			{}
+	]
 	,
 	TestID->"CodeParser-20200312-G4J9U7"
 ]

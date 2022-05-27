@@ -6,6 +6,12 @@
 #include "API.h" // for TheParserSession
 #include "ByteDecoder.h" // for TheByteDecoder
 #include "ByteBuffer.h" // for TheByteBuffer
+#include "Symbol.h"
+#include "MyString.h"
+
+#if USE_EXPR_LIB
+#include "ExprLibrary.h"
+#endif // USE_EXPR_LIB
 
 #include <numeric> // for accumulate
 
@@ -14,12 +20,12 @@ void NodeSeq::append(NodePtr N) {
     vec.push_back(std::move(N));
 }
 
-void NodeSeq::appendSeq(LeafSeq Seq) {
+void NodeSeq::appendSeq(TriviaSeq Seq) {
     
-    for (auto& L : Seq.vec) {
-        vec.push_back(std::move(L));
+    for (auto& T : Seq.vec) {
+        vec.push_back(std::move(T));
     }
-    
+
     Seq.moved = true;
 }
 
@@ -65,19 +71,15 @@ const Node *NodeSeq::last() const {
 
 void NodeSeq::print(std::ostream& s) const {
     
-    s << SYMBOL_LIST->name() << "[";
-    
-    print0(s);
-    
-    s << "]";
-}
-
-void NodeSeq::print0(std::ostream& s) const {
+    SYMBOL_LIST->print(s);
+    s << "[";
     
     for (auto& C : vec) {
         C->print(s);
         s << ", ";
     }
+    
+    s << "]";
 }
 
 bool NodeSeq::check() const {
@@ -88,15 +90,7 @@ bool NodeSeq::check() const {
 }
 
 
-void LeafSeq::print0(std::ostream& s) const {
-    
-    for (auto& C : vec) {
-        C->print(s);
-        s << ", ";
-    }
-}
-
-LeafSeq::~LeafSeq() {
+TriviaSeq::~TriviaSeq() {
     
     if (moved) {
         return;
@@ -121,20 +115,19 @@ LeafSeq::~LeafSeq() {
     TheByteDecoder->SrcLoc = T.Src.Start;
 }
 
-void LeafSeq::append(LeafNodePtr N) {
+void TriviaSeq::append(LeafNodePtr N) {
     vec.push_back(std::move(N));
 }
 
-bool LeafSeq::empty() const {
+bool TriviaSeq::empty() const {
     return vec.empty();
 }
 
-size_t LeafSeq::size() const {
-    
+size_t TriviaSeq::size() const {
     return vec.size();
 }
 
-const Node *LeafSeq::first() const {
+const Node *TriviaSeq::first() const {
     
     auto F = vec.at(0).get();
     
@@ -143,7 +136,7 @@ const Node *LeafSeq::first() const {
     return FF;
 }
 
-const Node *LeafSeq::last() const {
+const Node *TriviaSeq::last() const {
     
     auto L = vec.at(vec.size()-1).get();
     
@@ -189,11 +182,6 @@ Token Node::lastToken() const {
     return Last->lastToken();
 }
 
-void Node::printChildren(std::ostream& s) const {
-    
-    Children.print(s);
-}
-
 bool Node::check() const {
     return Children.check();
 }
@@ -201,12 +189,13 @@ bool Node::check() const {
 
 void OperatorNode::print(std::ostream& s) const {
     
-    s << MakeSym->name() << "[";
+    MakeSym->print(s);
+    s << "[";
     
-    s << Op->name();
+    Op->print(s);
     s << ", ";
     
-    printChildren(s);
+    Children.print(s);
     s << ", ";
     
     getSource().print(s);
@@ -219,21 +208,36 @@ void LeafNode::print(std::ostream& s) const {
     
     auto& Sym = TokenToSymbol(Tok.Tok);
     
-    s << SYMBOL_CODEPARSER_LIBRARY_MAKELEAFNODE->name() << "[";
+    SYMBOL_CODEPARSER_LEAFNODE->print(s);
+    s << "[";
     
     s << Sym->name();
     s << ", ";
     
-    if (!Tok.Tok.isEmpty()) {
-        
-        Tok.BufLen.print(s);
-    }
-    
+    Tok.BufLen.print(s);
     s << ", ";
-        
+    
     Tok.Src.print(s);
     
     s << "]";
+}
+
+
+ScopedLeafNode::~ScopedLeafNode() {
+    
+    if (moved) {
+        return;
+    }
+    
+    //
+    // This node is NOT moved, so destructing this node should have the effect of putting it
+    // in the front of the "queue" to be read again
+    //
+    // Just need to reset the global buffer to the buffer of the token
+    //
+    
+    TheByteBuffer->buffer = Tok.BufLen.buffer;
+    TheByteDecoder->SrcLoc = Tok.Src.Start;
 }
 
 
@@ -241,18 +245,15 @@ void ErrorNode::print(std::ostream& s) const {
     
     auto& Sym = TokenToSymbol(Tok.Tok);
     
-    s << SYMBOL_CODEPARSER_LIBRARY_MAKEERRORNODE->name() << "[";
+    SYMBOL_CODEPARSER_ERRORNODE->print(s);
+    s << "[";
     
     s << Sym->name();
     s << ", ";
     
-    if (!Tok.Tok.isEmpty()) {
-        
-        Tok.BufLen.print(s);
-    }
-    
+    Tok.BufLen.print(s);
     s << ", ";
-        
+    
     Tok.Src.print(s);
     
     s << "]";
@@ -263,37 +264,54 @@ void UnterminatedTokenErrorNeedsReparseNode::print(std::ostream& s) const {
     
     auto& Sym = TokenToSymbol(Tok.Tok);
     
-    s << SYMBOL_CODEPARSER_LIBRARY_MAKEUNTERMINATEDTOKENERRORNEEDSREPARSENODE->name() << "[";
+    SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE->print(s);
+    s << "[";
     
     s << Sym->name();
     s << ", ";
     
-    if (!Tok.Tok.isEmpty()) {
-        
-        Tok.BufLen.print(s);
-    }
-    
+    Tok.BufLen.print(s);
     s << ", ";
-        
+    
     Tok.Src.print(s);
     
     s << "]";
 }
 
 
+PrefixNode::PrefixNode(const SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_PREFIXNODE, std::move(Args)) {}
+
+BinaryNode::BinaryNode(const SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_BINARYNODE, std::move(Args)) {}
+
+InfixNode::InfixNode(const SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_INFIXNODE, std::move(Args)) {}
+
+TernaryNode::TernaryNode(const SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_TERNARYNODE, std::move(Args)) {}
+
+PostfixNode::PostfixNode(const SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_POSTFIXNODE, std::move(Args)) {}
+
+PrefixBinaryNode::PrefixBinaryNode(const SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_PREFIXBINARYNODE, std::move(Args)) {}
+
+GroupNode::GroupNode(const SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_GROUPNODE, std::move(Args)) {}
+
+CompoundNode::CompoundNode(const SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_COMPOUNDNODE, std::move(Args)) {}
+
+GroupMissingCloserNode::GroupMissingCloserNode(const SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE, std::move(Args)) {}
+
+UnterminatedGroupNeedsReparseNode::UnterminatedGroupNeedsReparseNode(const SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_UNTERMINATEDGROUPNEEDSREPARSENODE, std::move(Args)) {}
+
+
 void CallNode::print(std::ostream& s) const {
     
-    auto Src = getSource();
-    
-    s << SYMBOL_CODEPARSER_LIBRARY_MAKECALLNODE->name() << "[";
+    SYMBOL_CODEPARSER_CALLNODE->print(s);
+    s << "[";
     
     Head.print(s);
     s << ", ";
     
-    printChildren(s);
+    Children.print(s);
     s << ", ";
     
-    Src.print(s);
+    getSource().print(s);
     
     s << "]";
 }
@@ -316,25 +334,25 @@ bool CallNode::check() const {
 
 void SyntaxErrorNode::print(std::ostream& s) const {
     
-    auto Src = getSource();
+    SYMBOL_CODEPARSER_SYNTAXERRORNODE->print(s);
+    s << "[";
     
-    s << SYMBOL_CODEPARSER_LIBRARY_MAKESYNTAXERRORNODE->name() << "[";
-    
-    s << SyntaxErrorToString(Err);
+    s << Err->name();
+    s << ", ";
+        
+    Children.print(s);
     s << ", ";
     
-    printChildren(s);
-    s << ", ";
-    
-    Src.print(s);
-    s << ", ";
+    getSource().print(s);
     
     s << "]";
 }
 
+
 void CollectedExpressionsNode::print(std::ostream& s) const {
     
-    s << "List[";
+    SYMBOL_LIST->print(s);
+    s << "[";
     
     for (auto& E : Exprs) {
         E->print(s);
@@ -354,7 +372,8 @@ bool CollectedExpressionsNode::check() const {
 
 void CollectedIssuesNode::print(std::ostream& s) const {
     
-    s << "List[";
+    SYMBOL_LIST->print(s);
+    s << "[";
     
     for (auto& I : Issues) {
         I->print(s);
@@ -374,7 +393,8 @@ bool CollectedIssuesNode::check() const {
 
 void CollectedSourceLocationsNode::print(std::ostream& s) const {
     
-    s << "List[";
+    SYMBOL_LIST->print(s);
+    s << "[";
     
     for (auto& L : SourceLocs) {
         L.print(s);
@@ -385,52 +405,47 @@ void CollectedSourceLocationsNode::print(std::ostream& s) const {
 }
 
 
-void MissingBecauseUnsafeCharacterEncodingNode::print(std::ostream& s) const {
+const MyStringPtr& unsafeCharacterEncodingReason(UnsafeCharacterEncodingFlag flag) {
+    
     switch (flag) {
         case UNSAFECHARACTERENCODING_INCOMPLETEUTF8SEQUENCE:
-            s << "Missing[\"UnsafeCharacterEncoding_IncompleteUTF8Sequence\"]";
-            break;
+            return STRING_UNSAFECHARACTERENCODING_INCOMPLETEUTF8SEQUENCE;
         case UNSAFECHARACTERENCODING_STRAYSURROGATE:
-            s << "Missing[\"UnsafeCharacterEncoding_StraySurrogate\"]";
-            break;
+            return STRING_UNSAFECHARACTERENCODING_STRAYSURROGATE;
         case UNSAFECHARACTERENCODING_BOM:
-            s << "Missing[\"UnsafeCharacterEncoding_BOM\"]";
-            break;
+            return STRING_UNSAFECHARACTERENCODING_BOM;
         default:
             assert(false);
-            s << "Missing[\"UnsafeCharacterEncoding_UNKNOWN\"]";
-            break;
+            return STRING_UNSAFECHARACTERENCODING_UNKNOWN;
     }
+}
+
+void MissingBecauseUnsafeCharacterEncodingNode::print(std::ostream& s) const {
+    
+    auto& reason = unsafeCharacterEncodingReason(flag);
+    
+    SYMBOL_MISSING->print(s);
+    s << "[";
+    
+    reason->print(s);
+    
+    s << "]";
 }
 
 
 void SafeStringNode::print(std::ostream& s) const {
-    
-    s << SYMBOL_CODEPARSER_LIBRARY_MAKESAFESTRINGNODE->name() << "[";
-    
     bufAndLen.print(s);
-    
-    s << "]\n";
 }
-
 
 
 
 #if USE_MATHLINK
-
 void NodeSeq::put(MLINK mlp) const {
-    
-    auto s = size();
-    
-    if(!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(s))) {
+
+    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(vec.size()))) {
         assert(false);
     }
     
-    put0(mlp);
-}
-
-void NodeSeq::put0(MLINK mlp) const {
-    
     for (auto& C : vec) {
         
 #if !NABORT
@@ -438,8 +453,6 @@ void NodeSeq::put0(MLINK mlp) const {
         // Check isAbort() inside loops
         //
         if (TheParserSession->isAbort()) {
-            
-            TheParserSession->handleAbort();
             return;
         }
 #endif // !NABORT
@@ -447,129 +460,136 @@ void NodeSeq::put0(MLINK mlp) const {
         C->put(mlp);
     }
 }
+#endif // USE_MATHLINK
 
-void LeafSeq::put0(MLINK mlp) const {
-    
-    for (auto& C : vec) {
-        
-#if !NABORT
-        //
-        // Check isAbort() inside loops
-        //
-        if (TheParserSession->isAbort()) {
-            
-            TheParserSession->handleAbort();
-            return;
-        }
-#endif // !NABORT
-        
-        C->put(mlp);
-    }
-}
 
-void Node::putChildren(MLINK mlp) const {
-    
-    Children.put(mlp);
-}
-
+#if USE_MATHLINK
 void OperatorNode::put(MLINK mlp) const {
 
-    if(!MLPutFunction(mlp, MakeSym->name(), static_cast<int>(2 + 4))) {
+    if (!MLPutFunction(mlp, MakeSym->name(), 3)) {
         assert(false);
     }
     
-    if(!MLPutSymbol(mlp, Op->name())) {
+    Op->put(mlp);
+    
+    Children.put(mlp);
+    
+    if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1)) {
         assert(false);
     }
-    
-    putChildren(mlp);
     
     getSource().put(mlp);
 }
+#endif // USE_MATHLINK
 
+
+#if USE_MATHLINK
 void LeafNode::put(MLINK mlp) const {
 
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKELEAFNODE->name(), static_cast<int>(2 + 4))) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LEAFNODE->name(), 3)) {
         assert(false);
     }
 
     auto& Sym = TokenToSymbol(Tok.Tok);
 
-    if (!MLPutSymbol(mlp, Sym->name())) {
-        assert(false);
-    }
+    Sym->put(mlp);
 
     Tok.BufLen.put(mlp);
     
+    if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1)) {
+        assert(false);
+    }
+    
     Tok.Src.put(mlp);
 }
+#endif // USE_MATHLINK
 
+
+#if USE_MATHLINK
 void ErrorNode::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEERRORNODE->name(), static_cast<int>(2 + 4))) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_ERRORNODE->name(), 3)) {
         assert(false);
     }
     
     auto& Sym = TokenToSymbol(Tok.Tok);
     
-    if (!MLPutSymbol(mlp, Sym->name())) {
-        assert(false);
-    }
+    Sym->put(mlp);
     
     Tok.BufLen.put(mlp);
     
+    if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1)) {
+        assert(false);
+    }
+    
     Tok.Src.put(mlp);
 }
+#endif // USE_MATHLINK
 
+
+#if USE_MATHLINK
 void UnterminatedTokenErrorNeedsReparseNode::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKEUNTERMINATEDTOKENERRORNEEDSREPARSENODE->name(), static_cast<int>(2 + 4))) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE->name(), 3)) {
         assert(false);
     }
     
     auto& Sym = TokenToSymbol(Tok.Tok);
     
-    if (!MLPutSymbol(mlp, Sym->name())) {
-        assert(false);
-    }
+    Sym->put(mlp);
     
     Tok.BufLen.put(mlp);
     
+    if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1)) {
+        assert(false);
+    }
+    
     Tok.Src.put(mlp);
 }
+#endif // USE_MATHLINK
 
+
+#if USE_MATHLINK
 void CallNode::put(MLINK mlp) const {
     
-    auto Src = getSource();
-    
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKECALLNODE->name(), static_cast<int>(2 + 4))) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_CALLNODE->name(), 3)) {
         assert(false);
     }
-    
+        
     Head.put(mlp);
     
-    putChildren(mlp);
+    Children.put(mlp);
     
-    Src.put(mlp);
+    if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1)) {
+        assert(false);
+    }
+    
+    getSource().put(mlp);
 }
+#endif // USE_MATHLINK
 
+
+#if USE_MATHLINK
 void SyntaxErrorNode::put(MLINK mlp) const {
     
-    auto Src = getSource();
-    
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKESYNTAXERRORNODE->name(), static_cast<int>(2 + 4))) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_SYNTAXERRORNODE->name(), 3)) {
         assert(false);
     }
     
-    if (!MLPutSymbol(mlp, SyntaxErrorToString(Err).c_str())) {
+    Err->put(mlp);
+    
+    Children.put(mlp);
+    
+    if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1)) {
         assert(false);
     }
     
-    putChildren(mlp);
-    
-    Src.put(mlp);
+    getSource().put(mlp);
 }
+#endif // USE_MATHLINK
 
+
+#if USE_MATHLINK
 void CollectedExpressionsNode::put(MLINK mlp) const {
     
     if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(Exprs.size()))) {
@@ -592,7 +612,10 @@ void CollectedExpressionsNode::put(MLINK mlp) const {
         E->put(mlp);
     }
 }
+#endif // USE_MATHLINK
 
+
+#if USE_MATHLINK
 void CollectedIssuesNode::put(MLINK mlp) const {
     
     if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(Issues.size()))) {
@@ -615,7 +638,10 @@ void CollectedIssuesNode::put(MLINK mlp) const {
         I->put(mlp);
     }
 }
+#endif // USE_MATHLINK
 
+
+#if USE_MATHLINK
 void CollectedSourceLocationsNode::put(MLINK mlp) const {
     
     if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(SourceLocs.size()))) {
@@ -635,48 +661,341 @@ void CollectedSourceLocationsNode::put(MLINK mlp) const {
         }
 #endif // !NABORT
             
-        L.putStructured(mlp);
+        L.put(mlp);
     }
 }
+#endif // USE_MATHLINK
 
+
+#if USE_MATHLINK
 void MissingBecauseUnsafeCharacterEncodingNode::put(MLINK mlp) const {
     
     if (!MLPutFunction(mlp, SYMBOL_MISSING->name(), 1)) {
         assert(false);
     }
     
-    std::string reason;
+    auto& reason = unsafeCharacterEncodingReason(flag);
     
-    switch (flag) {
-        case UNSAFECHARACTERENCODING_INCOMPLETEUTF8SEQUENCE:
-            reason = "UnsafeCharacterEncoding_IncompleteUTF8Sequence";
-            break;
-        case UNSAFECHARACTERENCODING_STRAYSURROGATE:
-            reason = "UnsafeCharacterEncoding_StraySurrogate";
-            break;
-        case UNSAFECHARACTERENCODING_BOM:
-            reason = "UnsafeCharacterEncoding_BOM";
-            break;
-        default:
-            assert(false);
-            reason = "UnsafeCharacterEncoding_UNKNOWN";
-            break;
-    }
-    
-    if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(reason.c_str()), static_cast<int>(reason.size()))) {
-        assert(false);
-    }
+    reason->put(mlp);
 }
-
-void SafeStringNode::put(MLINK mlp) const {
-    
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LIBRARY_MAKESAFESTRINGNODE->name(), static_cast<int>(1))) {
-        assert(false);
-    }
-    
-    if (!MLPutUTF8String(mlp, bufAndLen.buffer, static_cast<int>(bufAndLen.length()))) {
-        assert(false);
-    }
-}
-
 #endif // USE_MATHLINK
+
+
+#if USE_MATHLINK
+void SafeStringNode::put(MLINK mlp) const {
+    bufAndLen.put(mlp);
+}
+#endif // USE_MATHLINK
+
+
+
+#if USE_EXPR_LIB
+expr NodeSeq::toExpr() const {
+    
+    auto head = SYMBOL_LIST->toExpr();
+    
+    auto e = Expr_BuildExprA(head, static_cast<int>(vec.size()));
+    
+    for (size_t i = 0; i < vec.size(); i++) {
+        
+#if !NABORT
+        if (TheParserSession->isAbort()) {
+            
+            return TheParserSession->handleAbortExpr();
+        }
+#endif // !NABORT
+        
+        auto& C = vec[i];
+        auto CExpr = C->toExpr();
+        Expr_InsertA(e, i + 1, CExpr);
+    }
+    
+    return e;
+}
+#endif // USE_EXPR_LIB
+
+
+#if USE_EXPR_LIB
+expr OperatorNode::toExpr() const {
+    
+    auto head = MakeSym->toExpr();
+        
+    auto e = Expr_BuildExprA(head, 3);
+    
+    auto OpExpr = Op->toExpr();
+    Expr_InsertA(e, 0 + 1, OpExpr);
+        
+    auto ChildrenExpr = Children.toExpr();
+    Expr_InsertA(e, 1 + 1, ChildrenExpr);
+    
+    {
+        auto head = SYMBOL_ASSOCIATION->toExpr();
+        
+        auto DataExpr = Expr_BuildExprA(head, 1);
+        
+        auto SrcExpr = getSource().toExpr();
+        Expr_InsertA(DataExpr, 0 + 1, SrcExpr);
+        
+        Expr_InsertA(e, 2 + 1, DataExpr);
+    }
+    
+    return e;
+}
+#endif // USE_EXPR_LIB
+
+#if USE_EXPR_LIB
+expr LeafNode::toExpr() const {
+    
+    auto head = SYMBOL_CODEPARSER_LEAFNODE->toExpr();
+    
+    auto e = Expr_BuildExprA(head, 3);
+    
+    auto& Sym = TokenToSymbol(Tok.Tok);
+    
+    auto SymExpr = Sym->toExpr();
+    Expr_InsertA(e, 0 + 1, SymExpr);
+    
+    auto TokBufLenExpr = Tok.BufLen.toExpr();
+    Expr_InsertA(e, 1 + 1, TokBufLenExpr);
+    
+    {
+        auto head = SYMBOL_ASSOCIATION->toExpr();
+        
+        auto DataExpr = Expr_BuildExprA(head, 1);
+        
+        auto SrcExpr = Tok.Src.toExpr();
+        Expr_InsertA(DataExpr, 0 + 1, SrcExpr);
+        
+        Expr_InsertA(e, 2 + 1, DataExpr);
+    }
+    
+    return e;
+}
+#endif // USE_EXPR_LIB
+
+
+#if USE_EXPR_LIB
+expr ErrorNode::toExpr() const {
+    
+    auto head = SYMBOL_CODEPARSER_ERRORNODE->toExpr();
+    
+    auto e = Expr_BuildExprA(head, 3);
+    
+    auto& Sym = TokenToSymbol(Tok.Tok);
+    
+    auto SymExpr = Sym->toExpr();
+    Expr_InsertA(e, 0 + 1, SymExpr);
+    
+    auto TokBufLenExpr = Tok.BufLen.toExpr();
+    Expr_InsertA(e, 1 + 1, TokBufLenExpr);
+    
+    {
+        auto head = SYMBOL_ASSOCIATION->toExpr();
+        
+        auto DataExpr = Expr_BuildExprA(head, 1);
+        
+        auto SrcExpr = Tok.Src.toExpr();
+        Expr_InsertA(DataExpr, 0 + 1, SrcExpr);
+        
+        Expr_InsertA(e, 2 + 1, DataExpr);
+    }
+    
+    return e;
+}
+#endif // USE_EXPR_LIB
+
+
+#if USE_EXPR_LIB
+expr UnterminatedTokenErrorNeedsReparseNode::toExpr() const {
+    
+    auto head = SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE->toExpr();
+    
+    auto e = Expr_BuildExprA(head, 3);
+    
+    auto& Sym = TokenToSymbol(Tok.Tok);
+    
+    auto SymExpr = Sym->toExpr();
+    Expr_InsertA(e, 0 + 1, SymExpr);
+    
+    auto TokBufLenExpr = Tok.BufLen.toExpr();
+    Expr_InsertA(e, 1 + 1, TokBufLenExpr);
+    
+    {
+        auto head = SYMBOL_ASSOCIATION->toExpr();
+        
+        auto DataExpr = Expr_BuildExprA(head, 1);
+        
+        auto SrcExpr = Tok.Src.toExpr();
+        Expr_InsertA(DataExpr, 0 + 1, SrcExpr);
+        
+        Expr_InsertA(e, 2 + 1, DataExpr);
+    }
+    
+    return e;
+}
+#endif // USE_EXPR_LIB
+
+
+#if USE_EXPR_LIB
+expr CallNode::toExpr() const {
+    
+    auto head = SYMBOL_CODEPARSER_CALLNODE->toExpr();
+    
+    auto e = Expr_BuildExprA(head, 3);
+    
+    auto HeadExpr = Head.toExpr();
+    Expr_InsertA(e, 0 + 1, HeadExpr);
+        
+    auto ChildrenExpr = Children.toExpr();
+    Expr_InsertA(e, 1 + 1, ChildrenExpr);
+    
+    {
+        auto head = SYMBOL_ASSOCIATION->toExpr();
+        
+        auto DataExpr = Expr_BuildExprA(head, 1);
+        
+        auto SrcExpr = getSource().toExpr();
+        Expr_InsertA(DataExpr, 0 + 1, SrcExpr);
+        
+        Expr_InsertA(e, 2 + 1, DataExpr);
+    }
+    
+    return e;
+}
+#endif // USE_EXPR_LIB
+
+
+#if USE_EXPR_LIB
+expr SyntaxErrorNode::toExpr() const {
+    
+    auto head = SYMBOL_CODEPARSER_SYNTAXERRORNODE->toExpr();
+    
+    auto e = Expr_BuildExprA(head, 3);
+    
+    auto SymExpr = Err->toExpr();
+    Expr_InsertA(e, 0 + 1, SymExpr);
+    
+    auto ChildrenExpr = Children.toExpr();
+    Expr_InsertA(e, 1 + 1, ChildrenExpr);
+    
+    {
+        auto head = SYMBOL_ASSOCIATION->toExpr();
+        
+        auto DataExpr = Expr_BuildExprA(head, 1);
+        
+        auto SrcExpr = getSource().toExpr();
+        Expr_InsertA(DataExpr, 0 + 1, SrcExpr);
+        
+        Expr_InsertA(e, 2 + 1, DataExpr);
+    }
+    
+    return e;
+}
+#endif // USE_EXPR_LIB
+
+
+#if USE_EXPR_LIB
+expr CollectedExpressionsNode::toExpr() const {
+    
+    auto head = SYMBOL_LIST->toExpr();
+    
+    auto e = Expr_BuildExprA(head, static_cast<int>(Exprs.size()));
+    
+    for (size_t i = 0; i < Exprs.size(); i++) {
+        
+#if !NABORT
+        if (TheParserSession->isAbort()) {
+            
+            return TheParserSession->handleAbortExpr();
+        }
+#endif // !NABORT
+        
+        auto& NN = Exprs[i];
+        auto NExpr = NN->toExpr();
+        Expr_InsertA(e, i + 1, NExpr);
+    }
+    
+    return e;
+}
+#endif // USE_EXPR_LIB
+
+
+#if USE_EXPR_LIB
+expr CollectedIssuesNode::toExpr() const {
+    
+    auto head = SYMBOL_LIST->toExpr();
+    
+    auto e = Expr_BuildExprA(head, static_cast<int>(Issues.size()));
+    
+    int i = 0;
+    for (auto& I : Issues) {
+        
+#if !NABORT
+        if (TheParserSession->isAbort()) {
+            
+            return TheParserSession->handleAbortExpr();
+        }
+#endif // !NABORT
+        
+        auto IExpr = I->toExpr();
+        Expr_InsertA(e, i + 1, IExpr);
+        i++;
+    }
+    
+    return e;
+}
+#endif // USE_EXPR_LIB
+
+
+#if USE_EXPR_LIB
+expr CollectedSourceLocationsNode::toExpr() const {
+    
+    auto head = SYMBOL_LIST->toExpr();
+            
+    auto e = Expr_BuildExprA(head, static_cast<int>(SourceLocs.size()));
+    
+    int i = 0;
+    for (auto& L : SourceLocs) {
+        
+#if !NABORT
+        if (TheParserSession->isAbort()) {
+            
+            return TheParserSession->handleAbortExpr();
+        }
+#endif // !NABORT
+        
+        auto LExpr = L.toExpr();
+        Expr_InsertA(e, i + 1, LExpr);
+        i++;
+    }
+    
+    return e;
+}
+#endif // USE_EXPR_LIB
+
+
+#if USE_EXPR_LIB
+expr MissingBecauseUnsafeCharacterEncodingNode::toExpr() const {
+    
+    auto head = SYMBOL_MISSING->toExpr();
+    
+    auto e = Expr_BuildExprA(head, 1);
+    
+    auto& reason = unsafeCharacterEncodingReason(flag);
+    
+    auto StrExpr = reason->toExpr();
+    Expr_InsertA(e, 0 + 1, StrExpr);
+    
+    return e;
+}
+#endif // USE_EXPR_LIB
+
+
+#if USE_EXPR_LIB
+expr SafeStringNode::toExpr() const {
+    
+    auto e = bufAndLen.toExpr();
+    
+    return e;
+}
+#endif // USE_EXPR_LIB

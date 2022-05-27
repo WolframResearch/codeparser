@@ -1,11 +1,11 @@
 
 #pragma once
 
-#include "Node.h" // for LeafNodePtr, etc.
-#include "Source.h" // for IssuePtr
+#include "Node.h" // for LeafSeq
 #include "Token.h" // for Token
 #include "Precedence.h" // for Precedence
 #include "TokenEnum.h" // for TokenEnum
+#include "API.h" // for FirstLineBehavior
 
 #include <set>
 #include <deque>
@@ -15,24 +15,8 @@ class Parser;
 
 using ParserPtr = std::unique_ptr<Parser>;
 
-enum FirstLineBehavior {
-    //
-    // Source is a string or something, so if #! is on first line, then do not treat special
-    //
-    FIRSTLINEBEHAVIOR_NOTSCRIPT = 0,
-    
-    //
-    // Source is something like .wl file that is being treated as a script
-    // Or source is .wl file that is NOT being treated as a script
-    // #! may be present, or it might not
-    //
-    FIRSTLINEBEHAVIOR_CHECK = 1,
-    
-    //
-    // Source is a .wls file and there is definitely a #! on first line
-    //
-    FIRSTLINEBEHAVIOR_SCRIPT = 2,
-};
+
+
 
 //
 //
@@ -110,7 +94,7 @@ private:
 public:
     Parser();
     
-    void init(FirstLineBehavior firstLineBehavior);
+    void init();
     
     void deinit();
     
@@ -127,10 +111,10 @@ public:
     
     ~Parser();
 
-    Token eatTrivia(Token firstTok, ParserContext Ctxt, NextPolicy policy, LeafSeq& Args);
-    Token eatTrivia_stringifyAsFile(Token firstTok, ParserContext Ctxt, LeafSeq& Args);
-    Token eatTriviaButNotToplevelNewlines(Token firstTok, ParserContext Ctxt, NextPolicy policy, LeafSeq& Args);
-    Token eatTriviaButNotToplevelNewlines_stringifyAsFile(Token firstTok, ParserContext Ctxt, LeafSeq& Args);
+    Token eatTrivia(Token firstTok, ParserContext Ctxt, NextPolicy policy, TriviaSeq& Args);
+    Token eatTrivia_stringifyAsFile(Token firstTok, ParserContext Ctxt, TriviaSeq& Args);
+    Token eatTriviaButNotToplevelNewlines(Token firstTok, ParserContext Ctxt, NextPolicy policy, TriviaSeq& Args);
+    Token eatTriviaButNotToplevelNewlines_stringifyAsFile(Token firstTok, ParserContext Ctxt, TriviaSeq& Args);
 };
 
 extern ParserPtr TheParser;

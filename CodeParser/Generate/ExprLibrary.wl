@@ -1,3 +1,4 @@
+(* ::Package::"Tags"-><|"SuspiciousSessionSymbol" -> <|Enabled -> False|>|>:: *)
 
 If[!MemberQ[$Path, #], PrependTo[$Path, #]]&[DirectoryName[$InputFileName, 3]]
 
@@ -19,46 +20,40 @@ Needs["CodeTools`Generate`GenerateSources`"];
 Needs["Compile`"] (* for Program *)
 Needs["TypeFramework`"] (* for MetaData *)
 
-
 ExprLibraryProgram[] :=
 Module[{},
   Program[{
-    MetaData[<| "Exported" -> True, "Name" -> "Main" |>
-    ]@Function[{},
-      True
-    ]
-    ,
-    MetaData[<| "Exported" -> True, "Name" -> Expr`Length |>
-    ]@Function[{Typed[arg1, "Expression"]},
+    MetaData[<| "Name" -> Expr`Length |>] @
+    Function[{Typed[arg1, "Expression"]},
       Length[arg1]
     ]
     ,
-    MetaData[<| "Exported" -> True, "Name" -> Expr`ToInteger64 |>
-    ]@Function[{Typed[arg1, "Expression"]},
+    MetaData[<| "Name" -> Expr`ToInteger64 |>] @
+    Function[{Typed[arg1, "Expression"]},
       Module[{hand = Native`Handle[]},
         Native`PrimitiveFunction["ExprToInteger64"][hand, arg1];
         Native`Load[hand]
       ]
     ]
     ,
-    MetaData[<| "Exported" -> True, "Name" -> Expr`FromInteger64 |>
-    ]@Function[{Typed[arg1, "Integer64"]},
+    MetaData[<| "Name" -> Expr`FromInteger64 |>] @
+    Function[{Typed[arg1, "Integer64"]},
       (*
       used to be Compile`Cast
       *)
       System`Cast[arg1, "Expression"]
     ]
     ,
-    MetaData[<|"Exported" -> True, "Name" -> Expr`FromReal64|>
-    ]@Function[{Typed[arg1, "Real64"]},
+    MetaData[<| "Name" -> Expr`FromReal64 |>] @
+    Function[{Typed[arg1, "Real64"]},
       (*
       used to be Compile`Cast
       *)
       System`Cast[arg1, "Expression"]
     ]
     ,
-    MetaData[<| "Exported" -> True, "Name" -> Expr`MEncodedStringToSymbolExpr |>
-    ]@Function[{Typed[arg1, "MachineInteger"]},
+    MetaData[<| "Name" -> Expr`MEncodedStringToSymbolExpr |>] @
+    Function[{Typed[arg1, "MachineInteger"]},
       Module[{cstr, str, sym},
         cstr = Native`BitCast[arg1, "CArray"["UnsignedInteger8"]];
         str = String`CloneNew[cstr];
@@ -67,45 +62,70 @@ Module[{},
       ]
     ]
     ,
-    MetaData[<| "Exported" -> True, "Name" -> Expr`BuildExpr |>
-    ]@Function[{Typed[head, "Expression"], Typed[length, "MachineInteger"]},
+    MetaData[<| "Name" -> Expr`BuildExpr |>] @
+    Function[{Typed[head, "Expression"], Typed[length, "MachineInteger"]},
       Module[{ef},
         ef = Native`PrimitiveFunction["CreateHeaded_IE_E"][length, head];
         ef
       ]
     ]
     ,
-    MetaData[<| "Exported" -> True, "Name" -> Expr`Insert |>
-    ]@Function[{Typed[expr, "Expression"], Typed[index, "MachineInteger"], Typed[part, "Expression"]},
+    MetaData[<| "Name" -> Expr`BuildExprA |>] @
+    Function[{Typed[head, "Expression"], Typed[length, "MachineInteger"]},
+      Module[{ef},
+        ef = Native`PrimitiveFunction["CreateHeaded_IE_E"][length, head];
+        Memory`Release[head];
+        ef
+      ]
+    ]
+    ,
+    MetaData[<| "Name" -> Expr`Insert |>] @
+    Function[{Typed[expr, "Expression"], Typed[index, "MachineInteger"], Typed[part, "Expression"]},
       Native`PrimitiveFunction["SetElement_EIE_Void"][expr, index, part];
       Null
     ]
     ,
-    MetaData[<| "Exported" -> True, "Name" -> Expr`Pointer |>
-    ]@Function[{Typed[arg1, "Expression"]},
+    MetaData[<| "Name" -> Expr`InsertA |>] @
+    Function[{Typed[expr, "Expression"], Typed[index, "MachineInteger"], Typed[part, "Expression"]},
+      Native`PrimitiveFunction["SetElement_EIE_Void"][expr, index, part];
+      Memory`Release[part];
+      Null
+    ]
+    ,
+    MetaData[<| "Name" -> Expr`Pointer |>] @
+    Function[{Typed[arg1, "Expression"]},
       Native`BitCast[Native`BitCast[arg1, "VoidHandle"], "MachineInteger"]
     ]
     ,
-    MetaData[<| "Exported" -> True, "Name" -> Expr`FromPointer |>
-    ]@Function[{Typed[arg1, "MachineInteger"]},
+    MetaData[<| "Name" -> Expr`FromPointer |>] @
+    Function[{Typed[arg1, "MachineInteger"]},
       Native`BitCast[Native`BitCast[arg1, "VoidHandle"], "Expression"]
     ]
     ,
-    MetaData[<| "Exported" -> True, "Name" -> Expr`Release, "MemoryManagement" -> False|>
-    ]@Function[{Typed[arg1, "Expression"]},
+    MetaData[<| "Name" -> Expr`FromPointerA |>] @
+    Function[{Typed[arg1, "MachineInteger"]},
+      Module[{e},
+        e = Native`BitCast[Native`BitCast[arg1, "VoidHandle"], "Expression"];
+        Memory`Release[e];
+        e
+      ]
+    ]
+    ,
+    MetaData[<| "Name" -> Expr`Release, "MemoryManagement" -> False |>] @
+    Function[{Typed[arg1, "Expression"]},
       Memory`Release[arg1];
       Null
     ]
     ,
-    MetaData[<| "Exported" -> True, "Name" -> Expr`UTF8BytesToStringExpr |>
-    ]@Function[{Typed[arg1, "MachineInteger"], Typed[arg2, "MachineInteger"]},
+    MetaData[<| "Name" -> Expr`UTF8BytesToStringExpr |>] @
+    Function[{Typed[arg1, "MachineInteger"], Typed[arg2, "MachineInteger"]},
       Module[{cast1},
         cast1 = Native`BitCast[arg1, "CArray"["UnsignedInteger8"]];
         Native`PrimitiveFunction["UTF8BytesToStringExpression"][cast1, arg2]
       ]
     ]
     ,
-    MetaData[<| "Exported" -> True, "Name" -> Expr`CStringToIntegerExpr |>
+    MetaData[<| "Name" -> Expr`CStringToIntegerExpr |>] @
     (*
     used to be:
     {Typed[arg1, "MachineInteger"], Typed[arg2, "MachineInteger"], Typed[arg3, "MBool"]}
@@ -114,11 +134,28 @@ Module[{},
 
     Compile::err: TypeError. Cannot find a definition for the function Native`PrimitiveFunction[CStringToIntegerExpr] that takes arguments with the types CArray[UnsignedInteger8], Integer64 and Integer32.
     *)
-    ]@Function[{Typed[arg1, "MachineInteger"], Typed[arg2, "MachineInteger"], Typed[arg3, "Boolean"]},
+    Function[{Typed[arg1, "MachineInteger"], Typed[arg2, "MachineInteger"], Typed[arg3, "Boolean"]},
       Module[{e, cast1},
         cast1 = Native`BitCast[arg1, "CString"];
         e = Native`PrimitiveFunction["CStringToIntegerExpr"][cast1, arg2, arg3];
         e
+      ]
+    ]
+    ,
+    MetaData[<| "Name" -> Expr`LongNameSuggestion |>] @
+    Function[{Typed[arg1, "Expression"]},
+      Module[{h},
+        h = InertExpression[CodeParser`Library`LongNameSuggestion];
+        InertEvaluate[Construct[h, arg1]]
+      ]
+    ]
+    ,
+    MetaData[<| "Name" -> Expr`StringExprToUTF8Bytes |>] @
+    Function[{Typed[arg1, "Expression"], Typed[arg2, "MachineInteger"], Typed[arg3, "MachineInteger"]},
+      Module[{cast2, cast3},
+        cast2 = Native`BitCast[arg2, "Pointer"["CArray"["UnsignedInteger8"]]];
+        cast3 = Native`BitCast[arg3, "Pointer"["MachineInteger"]];
+        Native`PrimitiveFunction["StringExpressionToUTF8Bytes"][arg1, cast2, cast3]
       ]
     ]
   }]
@@ -127,7 +164,7 @@ Module[{},
 
 generate[] :=
 Catch[
-Module[{targetDir, prog, compLib},
+Module[{targetDir, prog, compLib, compStart, compEnd},
 
   Print["Generating ExprLibrary..."];
 
@@ -135,9 +172,11 @@ Module[{targetDir, prog, compLib},
 
   prog = ExprLibraryProgram[];
 
-  Print["Exporting expr shared library... \[WatchIcon]"];
+  Print["Exporting expr library... \[WatchIcon]"];
 
   Print[];
+
+  compStart = Now;
 
   compLib =
     CompileToLibrary[prog,
@@ -147,7 +186,11 @@ Module[{targetDir, prog, compLib},
       "TraceFunction" -> Print
     ];
 
+  compEnd = Now;
+
   Print["compiled library: ", compLib];
+
+  Print["compiling expr library took: ", ToString[compEnd - compStart]];
 
   If[FailureQ[compLib],
     Quit[1]

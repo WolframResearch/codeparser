@@ -9,6 +9,8 @@ Paclet[
   BuildNumber -> 0,
   BuildWolframVersionNumber -> 0,
   BuildWolframLibraryVersion -> 0,
+  UseExprLib -> False,
+  UseMathLink -> False,
   Updating -> Automatic,
   Extensions -> {
     {"Kernel", Root -> "Kernel", Context -> "CodeParser`"},

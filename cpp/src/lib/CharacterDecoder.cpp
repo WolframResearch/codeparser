@@ -6,17 +6,21 @@
 #include "Utils.h" // for isMBStrange, etc.
 #include "LongNames.h" // for LongNameToCodePointMap, etc.
 #include "API.h" // for ScopedMLUTF8String
+#include "MyString.h"
+#include "Symbol.h"
+
+#if USE_EXPR_LIB
+#include "ExprLibrary.h"
+#endif // USE_EXPR_LIB
 
 
-CharacterDecoder::CharacterDecoder() : SimpleLineContinuations(), ComplexLineContinuations(), EmbeddedTabs(), libData(), lastBuf(), lastLoc() {}
+CharacterDecoder::CharacterDecoder() : SimpleLineContinuations(), ComplexLineContinuations(), EmbeddedTabs(), lastBuf(), lastLoc() {}
 
-void CharacterDecoder::init(WolframLibraryData libDataIn) {
+void CharacterDecoder::init() {
     
     SimpleLineContinuations.clear();
     ComplexLineContinuations.clear();
     EmbeddedTabs.clear();
-    
-    libData = libDataIn;
     
     lastBuf = nullptr;
     lastLoc = SourceLocation();
@@ -88,19 +92,23 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
                 
                 auto c = WLCharacter(CODEPOINT_STRINGMETA_BACKSPACE, ESCAPE_SINGLE);
                 
-                auto graphicalStr = c.graphicalString();
-                
-                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
-                
-                auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
-                
-                //
-                // matched reduced severity of unexpected characters inside strings or comments
-                //
-                
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {}));
-                
-                TheParserSession->addIssue(std::move(I));
+#if !NISSUES
+                {
+                    auto graphicalStr = c.graphicalString();
+                    
+                    auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
+                    
+                    auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
+                    
+                    //
+                    // matched reduced severity of unexpected characters inside strings or comments
+                    //
+                    
+                    auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {}));
+                    
+                    TheParserSession->addIssue(std::move(I));
+                }
+#endif // !NISSUES
                 
                 return c;
             }
@@ -111,19 +119,23 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
                 
                 auto c = WLCharacter(CODEPOINT_STRINGMETA_FORMFEED, ESCAPE_SINGLE);
                 
-                auto graphicalStr = c.graphicalString();
-                
-                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
-                
-                auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
-                
-                //
-                // matched reduced severity of unexpected characters inside strings or comments
-                //
-                
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {}));
-                
-                TheParserSession->addIssue(std::move(I));
+#if !NISSUES
+                {
+                    auto graphicalStr = c.graphicalString();
+                    
+                    auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
+                    
+                    auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
+                    
+                    //
+                    // matched reduced severity of unexpected characters inside strings or comments
+                    //
+                    
+                    auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {}));
+                    
+                    TheParserSession->addIssue(std::move(I));
+                }
+#endif // !NISSUES
                 
                 return c;
             }
@@ -158,19 +170,23 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
                 
                 auto c = WLCharacter(CODEPOINT_STRINGMETA_OPEN, ESCAPE_SINGLE);
                 
-                auto graphicalStr = c.graphicalString();
-                
-                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
-                
-                auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
-                
-                //
-                // matched reduced severity of unexpected characters inside strings or comments
-                //
-                
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected string meta character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {"The kernel parses ``\"" + graphicalStr + "\"`` as an empty string."}));
-                
-                TheParserSession->addIssue(std::move(I));
+#if !NISSUES
+                {
+                    auto graphicalStr = c.graphicalString();
+                    
+                    auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
+                    
+                    auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
+                    
+                    //
+                    // matched reduced severity of unexpected characters inside strings or comments
+                    //
+                    
+                    auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected string meta character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {"The kernel parses ``\"" + graphicalStr + "\"`` as an empty string."}));
+                    
+                    TheParserSession->addIssue(std::move(I));
+                }
+#endif // !NISSUES
                 
                 return c;
             }
@@ -178,19 +194,23 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
                 
                 auto c = WLCharacter(CODEPOINT_STRINGMETA_CLOSE, ESCAPE_SINGLE);
                 
-                auto graphicalStr = c.graphicalString();
-                
-                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
-                
-                auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
-                
-                //
-                // matched reduced severity of unexpected characters inside strings or comments
-                //
-                
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected string meta character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {"The kernel parses ``\"" + graphicalStr + "\"`` as an empty string."}));
-                
-                TheParserSession->addIssue(std::move(I));
+#if !NISSUES
+                {
+                    auto graphicalStr = c.graphicalString();
+                    
+                    auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
+                    
+                    auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
+                    
+                    //
+                    // matched reduced severity of unexpected characters inside strings or comments
+                    //
+                    
+                    auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected string meta character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {"The kernel parses ``\"" + graphicalStr + "\"`` as an empty string."}));
+                    
+                    TheParserSession->addIssue(std::move(I));
+                }
+#endif // !NISSUES
                 
                 return c;
             }
@@ -356,7 +376,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
                 // Make the warning message a little more relevant
                 //
                 
-                auto suggestion = longNameSuggestion(longNameBufAndLen);
+                auto suggestion = longNameSuggestion(longNameStr);
                 
                 CodeActionPtrVector Actions;
                 
@@ -439,7 +459,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
             //
             auto currentWLCharacterEndLoc = longNameEndLoc.next();
             
-            auto suggestion = longNameSuggestion(longNameBufAndLen);
+            auto suggestion = longNameSuggestion(longNameStr);
             
             CodeActionPtrVector Actions;
             
@@ -465,7 +485,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
             
             auto previousBackslashLoc = currentWLCharacterStartLoc.previous();
             
-            auto suggestion = longNameSuggestion(longNameBufAndLen);
+            auto suggestion = longNameSuggestion(longNameStr);
             
             CodeActionPtrVector Actions;
             
@@ -507,7 +527,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
         
         auto previousBackslashLoc = currentWLCharacterStartLoc.previous();
         
-        auto suggestion = longNameSuggestion(longNameBufAndLen);
+        auto suggestion = longNameSuggestion(longNameStr);
         
         CodeActionPtrVector Actions;
         
@@ -614,7 +634,6 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
                 Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace with ``" + LongNames::replacementGraphical(r) + "``", Src, r)));
             }
             
-            std::string severity;
             if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
                 
                 //
@@ -768,6 +787,8 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
             
             TheParserSession->addIssue(std::move(I));
         }
+        
+        
         
     } else if (Utils::isMBStrange(point)) {
         //
@@ -1205,7 +1226,6 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
             //
             
 #if !NISSUES
-            
             if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
                 
                 auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
@@ -1673,49 +1693,68 @@ std::set<SourceLocation>& CharacterDecoder::getEmbeddedTabs() {
 }
 
 
-#if USE_MATHLINK
-
-std::string CharacterDecoder::longNameSuggestion(BufferAndLength input) {
+#if !NISSUES
+#if USE_EXPR_LIB
+std::string CharacterDecoder::longNameSuggestion(std::string input) {
     
-    if (!libData) {
-        return "";
+    auto InputExpr = Expr_UTF8BytesToStringExpr(reinterpret_cast<Buffer>(input.c_str()), input.size());
+    
+    auto e = Expr_LongNameSuggestion(InputExpr);
+    
+    Buffer buffer;
+    size_t len;
+    
+    Expr_StringExprToUTF8Bytes(e, &buffer, reinterpret_cast<mint *>(&len));
+    
+    auto suggestion = std::string(reinterpret_cast<const char *>(buffer), len);
+    
+    Expr_Release(e);
+    
+    return suggestion;
+}
+#elif USE_MATHLINK
+std::string CharacterDecoder::longNameSuggestion(std::string input) {
+    
+    MLINK link = TheParserSession->libData->getMathLink(TheParserSession->libData);
+    
+    if (!MLPutFunction(link, SYMBOL_EVALUATEPACKET->name(), 1)) {
+        assert(false);
     }
     
-    MLINK link = libData->getMathLink(libData);
-    if (!MLPutFunction(link, "EvaluatePacket", 1)) {
+    if (!MLPutFunction(link, SYMBOL_CODEPARSER_LIBRARY_LONGNAMESUGGESTION->name(), 1)) {
         assert(false);
     }
-    if (!MLPutFunction(link, "CodeParser`Library`LongNameSuggestion", 1)) {
+    
+    if (!MLPutUTF8String(link, reinterpret_cast<Buffer>(input.c_str()), static_cast<int>(input.size()))) {
         assert(false);
     }
-    if (!MLPutUTF8String(link, input.buffer, static_cast<int>(input.length()))) {
+    
+    if (!TheParserSession->libData->processMathLink(link)) {
         assert(false);
     }
-    if (!libData->processMathLink(link)) {
-        assert(false);
-    }
+    
     auto pkt = MLNextPacket(link);
     if (pkt == RETURNPKT) {
         
-        ScopedMLUTF8String str(link);
+        ScopedMLString str(link);
         if (!str.read()) {
             assert(false);
         }
         
-        return reinterpret_cast<const char *>(str.get());
+        auto cstr = str.get();
+        
+        auto suggestion = std::string(cstr);
+        
+        return suggestion;
     }
     
     return "";
 }
-
 #else
-
-std::string CharacterDecoder::longNameSuggestion(BufferAndLength input) {
-    
+std::string CharacterDecoder::longNameSuggestion(std::string input) {
     return "";
 }
-
-#endif // USE_MATHLINK
+#endif // USE_EXPR_LIB
+#endif // !NISSUES
 
 CharacterDecoderPtr TheCharacterDecoder = nullptr;
-

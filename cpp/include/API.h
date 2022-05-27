@@ -1,9 +1,7 @@
 
 #pragma once
 
-#include "Node.h" // for NodePtr, Node, etc.
 #include "Source.h" // for BufferAndLength
-#include "Parser.h" // for FirstLineBehavior
 
 //
 // Despite being mentioned here:
@@ -35,26 +33,39 @@
 #include <functional> // for function with GCC and MSVC
 #include <cstddef> // for size_t
 
-
 class ParserSession;
+#if USE_MATHLINK
 class ScopedMLByteArray;
 class ScopedMLUTF8String;
 class ScopedMLString;
 class ScopedMLEnvironmentParameter;
+#endif // USE_MATHLINK
+class Node;
 
 using ParserSessionPtr = std::unique_ptr<ParserSession>;
+using NodePtr = std::unique_ptr<Node>;
+
+#if USE_MATHLINK
 using ScopedMLByteArrayPtr = std::unique_ptr<ScopedMLByteArray>;
 using ScopedMLUTF8StringPtr = std::unique_ptr<ScopedMLUTF8String>;
 using ScopedMLStringPtr = std::unique_ptr<ScopedMLString>;
 using ScopedMLEnvironmentParameterPtr = std::unique_ptr<ScopedMLEnvironmentParameter>;
+#endif // USE_MATHLINK
+
+#if USE_EXPR_LIB
+using expr = void *;
+#endif // USE_EXPR_LIB
+
 
 //
 //
 //
 class NodeContainer {
-    std::vector<NodePtr> N;
 public:
-    NodeContainer(std::vector<NodePtr> N) : N(std::move(N)) {}
+    
+    std::vector<NodePtr> N;
+    
+    NodeContainer(std::vector<NodePtr> N);
     
 #if USE_MATHLINK
     void put(MLINK mlp) const;
@@ -63,7 +74,13 @@ public:
     void print(std::ostream& s) const;
     
     bool check() const;
+    
+#if USE_EXPR_LIB
+    expr toExpr() const;
+#endif // USE_EXPR_LIB
 };
+
+using NodeContainerPtr = NodeContainer *;
 
 //
 // The modes that stringifying could happen in
@@ -108,6 +125,33 @@ enum EncodingMode {
     ENCODINGMODE_BOX = 1,
 };
 
+enum FirstLineBehavior {
+    //
+    // Source is a string or something, so if #! is on first line, then do not treat special
+    //
+    FIRSTLINEBEHAVIOR_NOTSCRIPT = 0,
+    
+    //
+    // Source is something like .wl file that is being treated as a script
+    // Or source is .wl file that is NOT being treated as a script
+    // #! may be present, or it might not
+    //
+    FIRSTLINEBEHAVIOR_CHECK = 1,
+    
+    //
+    // Source is a .wls file and there is definitely a #! on first line
+    //
+    FIRSTLINEBEHAVIOR_SCRIPT = 2,
+};
+
+enum UnsafeCharacterEncodingFlag {
+    UNSAFECHARACTERENCODING_OK = 0,
+    UNSAFECHARACTERENCODING_INCOMPLETEUTF8SEQUENCE = 1,
+    UNSAFECHARACTERENCODING_STRAYSURROGATE = 2,
+    UNSAFECHARACTERENCODING_BOM = 3,
+};
+
+
 //
 // A parser session
 //
@@ -116,8 +160,6 @@ private:
     
     IssuePtrSet fatalIssues;
     IssuePtrSet nonFatalIssues;
-    
-    BufferAndLength bufAndLen;
     
     NodePtr concreteParseLeaf0(int mode);
     
@@ -128,6 +170,13 @@ public:
 #endif // !NABORT
     
     UnsafeCharacterEncodingFlag unsafeCharacterEncodingFlag;
+    
+    BufferAndLength bufAndLen;
+    WolframLibraryData libData;
+    SourceConvention srcConvention;
+    uint32_t tabWidth;
+    FirstLineBehavior firstLineBehavior;
+    EncodingMode encodingMode;
     
     
     ParserSession();
@@ -145,18 +194,22 @@ public:
     
     void deinit();
     
+    NodeContainerPtr parseExpressions();
+    NodeContainerPtr tokenize();
+    NodeContainerPtr concreteParseLeaf(StringifyMode mode);
+    NodeContainerPtr safeString();
     
-    NodeContainer *parseExpressions();
-    NodeContainer *tokenize();
-    NodeContainer *concreteParseLeaf(StringifyMode mode);
-    NodeContainer *safeString();
-    
-    void releaseContainer(NodeContainer *C);
+    void releaseContainer(NodeContainerPtr C);
     
 #if !NABORT
     bool isAbort() const;
     
     NodePtr handleAbort() const;
+    
+#if USE_EXPR_LIB
+    expr handleAbortExpr() const;
+#endif // USE_EXPR_LIB
+    
 #endif // !NABORT
     
     void setUnsafeCharacterEncodingFlag(UnsafeCharacterEncodingFlag flag);
@@ -181,22 +234,13 @@ EXTERN_C DLLEXPORT void ParserSessionInit(Buffer buf,
                                           EncodingMode encodingMode);
 EXTERN_C DLLEXPORT void ParserSessionDeinit();
 
-EXTERN_C DLLEXPORT NodeContainer *ParserSessionParseExpressions();
-EXTERN_C DLLEXPORT NodeContainer *ParserSessionTokenize();
-EXTERN_C DLLEXPORT NodeContainer *ParserSessionConcreteParseLeaf(StringifyMode mode);
-EXTERN_C DLLEXPORT void ParserSessionReleaseContainer(NodeContainer *C);
+EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionParseExpressions();
+EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionTokenize();
+EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionConcreteParseLeaf(StringifyMode mode);
+EXTERN_C DLLEXPORT void ParserSessionReleaseContainer(NodeContainerPtr C);
 
-EXTERN_C DLLEXPORT void NodeContainerPrint(NodeContainer *C, std::ostream& stream);
-EXTERN_C DLLEXPORT int NodeContainerCheck(NodeContainer *C);
-
-EXTERN_C DLLEXPORT void ByteBufferInit(Buffer buf,
-                                       size_t bufLen,
-                                       WolframLibraryData libData);
-EXTERN_C DLLEXPORT void ByteBufferDeinit();
-
-EXTERN_C DLLEXPORT void ByteDecoderInit(SourceConvention srcConvention, uint32_t TabWidth, EncodingMode encodingMode);
-EXTERN_C DLLEXPORT void ByteDecoderDeinit();
-
+EXTERN_C DLLEXPORT void NodeContainerPrint(NodeContainerPtr C, std::ostream& s);
+EXTERN_C DLLEXPORT int NodeContainerCheck(NodeContainerPtr C);
 
 
 EXTERN_C DLLEXPORT mint WolframLibrary_getVersion();
@@ -205,17 +249,31 @@ EXTERN_C DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData);
 
 EXTERN_C DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData);
 
+#if USE_EXPR_LIB
+EXTERN_C DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
+#elif USE_MATHLINK
+EXTERN_C DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK mlp);
+#endif // USE_EXPR_LIB
+
+#if USE_EXPR_LIB
+EXTERN_C DLLEXPORT int TokenizeBytes_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
+#elif USE_MATHLINK
+EXTERN_C DLLEXPORT int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK mlp);
+#endif // USE_EXPR_LIB
+
+#if USE_EXPR_LIB
+EXTERN_C DLLEXPORT int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
+#elif USE_MATHLINK
+EXTERN_C DLLEXPORT int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp);
+#endif // USE_EXPR_LIB
+
+#if USE_EXPR_LIB
+EXTERN_C DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
+#elif USE_MATHLINK
+EXTERN_C DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp);
+#endif // USE_EXPR_LIB
 
 #if USE_MATHLINK
-
-EXTERN_C DLLEXPORT int ConcreteParseBytes_Listable_LibraryLink(WolframLibraryData libData, MLINK mlp);
-
-EXTERN_C DLLEXPORT int TokenizeBytes_Listable_LibraryLink(WolframLibraryData libData, MLINK mlp);
-
-EXTERN_C DLLEXPORT int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp);
-
-EXTERN_C DLLEXPORT int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp);
-
 //
 // A UTF8 String from MathLink that has lexical scope
 //
@@ -237,7 +295,10 @@ public:
     
     size_t getByteCount() const;
 };
+#endif // USE_MATHLINK
 
+
+#if USE_MATHLINK
 //
 // A String from MathLink that has lexical scope
 //
@@ -255,7 +316,10 @@ public:
     
     const char *get() const;
 };
+#endif // USE_MATHLINK
 
+
+#if USE_MATHLINK
 //
 // A Symbol from MathLink that has lexical scope
 //
@@ -273,7 +337,10 @@ public:
     
     const char *get() const;
 };
+#endif // USE_MATHLINK
 
+
+#if USE_MATHLINK
 //
 // A Function from MathLink that has lexical scope
 //
@@ -294,7 +361,10 @@ public:
     
     int getArgCount() const;
 };
+#endif // USE_MATHLINK
 
+
+#if USE_MATHLINK
 //
 // A ByteArray from MathLink that has lexical scope
 //
@@ -317,7 +387,10 @@ public:
     
     size_t getByteCount() const;
 };
+#endif // USE_MATHLINK
 
+
+#if USE_MATHLINK
 //
 // An EnvironmentParameter from MathLink that has lexical scope
 //
@@ -332,7 +405,10 @@ public:
     
     MLEnvironmentParameter get();
 };
+#endif // USE_MATHLINK
 
+
+#if USE_MATHLINK
 //
 // A Loopback Link from MathLink that has lexical scope
 //
@@ -348,5 +424,4 @@ public:
     
     MLINK get();
 };
-
 #endif // USE_MATHLINK

@@ -10,9 +10,9 @@
 #include <cstdint> // for uint8_t
 
 
-std::ostream& set_graphical(std::ostream& stream);
+std::ostream& set_graphical(std::ostream& s);
 
-std::ostream& clear_graphical(std::ostream& stream);
+std::ostream& clear_graphical(std::ostream& s);
 
 int get_graphical_i();
 
@@ -34,8 +34,6 @@ public:
     // Convert val to the digit that it represents
     //
     static uint8_t toDigit(unsigned char val);
-    
-    static SourceConvention parseSourceConvention(std::string s);
     
     //
     // if c is an ASCII WLCharacter, then compare to test

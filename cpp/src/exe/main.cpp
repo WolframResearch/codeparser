@@ -6,9 +6,12 @@
 #include <fstream> // for ofstream
 #include <cstdio> // for rewind
 #include <cstdlib> // for EXIT_SUCCESS
+#include <cstddef> // for size_t
 
 class ScopedFileBuffer;
+
 using ScopedFileBufferPtr = std::unique_ptr<ScopedFileBuffer>;
+
 
 enum APIMode {
     EXPRESSION,
@@ -19,7 +22,6 @@ enum APIMode {
 enum OutputMode {
     NONE,
     PRINT,
-    PUT,
     PRINT_DRYRUN,
     CHECK,
 };
@@ -84,10 +86,6 @@ int main(int argc, char *argv[]) {
             
             outputMode = NONE;
             
-        } else if (arg == "-m") {
-            
-            outputMode = PUT;
-            
         } else if (arg == "-check") {
             
             outputMode = CHECK;
@@ -145,13 +143,6 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
                 NodeContainerPrint(C, std::cout);
                 std::cout << "\n";
                 break;
-            case PUT: {
-#if USE_MATHLINK
-                ScopedMLLoopbackLink loop;
-                C->put(loop.get());
-#endif // USE_MATHLINK
-            }
-                break;
             case PRINT_DRYRUN: {
                 std::ofstream nullStream;
                 NodeContainerPrint(C, nullStream);
@@ -181,13 +172,6 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
                 NodeContainerPrint(C, std::cout);
                 std::cout << "\n";
                 break;
-            case PUT: {
-#if USE_MATHLINK
-                ScopedMLLoopbackLink loop;
-                C->put(loop.get());
-#endif // USE_MATHLINK
-            }
-                break;
             case PRINT_DRYRUN: {
                 std::ofstream nullStream;
                 NodeContainerPrint(C, nullStream);
@@ -214,13 +198,6 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
             case PRINT:
                 NodeContainerPrint(C, std::cout);
                 std::cout << "\n";
-                break;
-            case PUT: {
-#if USE_MATHLINK
-                ScopedMLLoopbackLink loop;
-                C->put(loop.get());
-#endif // USE_MATHLINK
-            }
                 break;
             case PRINT_DRYRUN: {
                 std::ofstream nullStream;
@@ -257,12 +234,6 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
             case PRINT:
                 std::cout << "file open failed\n";
                 break;
-            case PUT: {
-#if USE_MATHLINK
-
-#endif // USE_MATHLINK
-            }
-                break;
             case PRINT_DRYRUN:
                 break;
             case NONE: case CHECK:
@@ -287,13 +258,6 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
             case PRINT:
                 NodeContainerPrint(C, std::cout);
                 std::cout << "\n";
-                break;
-            case PUT: {
-#if USE_MATHLINK
-                ScopedMLLoopbackLink loop;
-                C->put(loop.get());
-#endif // USE_MATHLINK
-            }
                 break;
             case PRINT_DRYRUN: {
                 std::ofstream nullStream;
@@ -322,13 +286,6 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
                 NodeContainerPrint(C, std::cout);
                 std::cout << "\n";
                 break;
-            case PUT: {
-#if USE_MATHLINK
-                ScopedMLLoopbackLink loop;
-                C->put(loop.get());
-#endif // USE_MATHLINK
-            }
-                break;
             case PRINT_DRYRUN: {
                 std::ofstream nullStream;
                 NodeContainerPrint(C, nullStream);
@@ -353,13 +310,6 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
             case PRINT:
                 NodeContainerPrint(C, std::cout);
                 std::cout << "\n";
-                break;
-            case PUT: {
-#if USE_MATHLINK
-                ScopedMLLoopbackLink loop;
-                C->put(loop.get());
-#endif // USE_MATHLINK
-            }
                 break;
             case PRINT_DRYRUN: {
                 std::ofstream nullStream;

@@ -2,7 +2,7 @@
 Needs["CodeParser`"]
 
 Test[
-	SafeString[ToCharacterCode["1+1"]]
+	SafeString[ByteArray[ToCharacterCode["1+1"]]]
 	,
 	"1+1"
 	,
@@ -13,7 +13,7 @@ Test[
 Invalid sequences
 *)
 Test[
-	SafeString[{206}]
+	SafeString[ByteArray[{206}]]
 	,
 	Missing["UnsafeCharacterEncoding_IncompleteUTF8Sequence"]
 	,
@@ -27,7 +27,7 @@ Test[
 	(*
 	UTF-8 for 0xd800
 	*)
-	SafeString[{237, 160, 128}]
+	SafeString[ByteArray[{237, 160, 128}]]
 	,
 	Missing["UnsafeCharacterEncoding_StraySurrogate"]
 	,
@@ -41,7 +41,7 @@ Test[
 	(*
 	UTF-8 for 0xdc00
 	*)
-	SafeString[{237, 176, 128}]
+	SafeString[ByteArray[{237, 176, 128}]]
 	,
 	Missing["UnsafeCharacterEncoding_StraySurrogate"]
 	,
@@ -57,7 +57,7 @@ Test[
 	(*
 	UTF-8 for 0xfeff
 	*)
-	SafeString[{239, 187, 191}]
+	SafeString[ByteArray[{239, 187, 191}]]
 	,
 	Missing["UnsafeCharacterEncoding_BOM"]
 	,

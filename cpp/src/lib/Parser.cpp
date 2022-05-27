@@ -12,9 +12,9 @@ Parser::Parser() {}
 
 Parser::~Parser() {}
 
-void Parser::init(FirstLineBehavior firstLineBehavior) {
+void Parser::init() {
     
-    handleFirstLine(firstLineBehavior);
+    handleFirstLine(TheParserSession->firstLineBehavior);
 }
 
 void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
@@ -234,7 +234,7 @@ NodePtr Parser::infixLoop(NodePtr Left, ParserContext Ctxt) {
         
         NodeSeq LeftSeq;
         {
-            LeafSeq Trivia1;
+            TriviaSeq Trivia1;
             
             token = eatTriviaButNotToplevelNewlines(token, Ctxt, TOPLEVEL, Trivia1);
             
@@ -284,7 +284,7 @@ NodePtr Parser::infixLoop(NodePtr Left, ParserContext Ctxt) {
     return Left;
 }
 
-Token Parser::eatTrivia(Token T, ParserContext Ctxt, NextPolicy policy, LeafSeq& Args) {
+Token Parser::eatTrivia(Token T, ParserContext Ctxt, NextPolicy policy, TriviaSeq& Args) {
     
     while (T.Tok.isTrivia()) {
         
@@ -302,7 +302,7 @@ Token Parser::eatTrivia(Token T, ParserContext Ctxt, NextPolicy policy, LeafSeq&
     return T;
 }
 
-Token Parser::eatTrivia_stringifyAsFile(Token T, ParserContext Ctxt, LeafSeq& Args) {
+Token Parser::eatTrivia_stringifyAsFile(Token T, ParserContext Ctxt, TriviaSeq& Args) {
     
     while (T.Tok.isTrivia()) {
         
@@ -320,7 +320,7 @@ Token Parser::eatTrivia_stringifyAsFile(Token T, ParserContext Ctxt, LeafSeq& Ar
     return T;
 }
 
-Token Parser::eatTriviaButNotToplevelNewlines(Token T, ParserContext Ctxt, NextPolicy policy, LeafSeq& Args) {
+Token Parser::eatTriviaButNotToplevelNewlines(Token T, ParserContext Ctxt, NextPolicy policy, TriviaSeq& Args) {
     
     while (T.Tok.isTriviaButNotToplevelNewline()) {
         
@@ -338,7 +338,7 @@ Token Parser::eatTriviaButNotToplevelNewlines(Token T, ParserContext Ctxt, NextP
     return T;
 }
 
-Token Parser::eatTriviaButNotToplevelNewlines_stringifyAsFile(Token T, ParserContext Ctxt, LeafSeq& Args) {
+Token Parser::eatTriviaButNotToplevelNewlines_stringifyAsFile(Token T, ParserContext Ctxt, TriviaSeq& Args) {
     
     while (T.Tok.isTriviaButNotToplevelNewline()) {
         

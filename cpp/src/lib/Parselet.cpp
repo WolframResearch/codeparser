@@ -2,7 +2,8 @@
 #include "Parselet.h"
 
 #include "API.h" // for ParserSession
-#include "ParseletRegistration.h"
+#include "ParseletRegistration.h" // for infixParselets, etc.
+#include "Symbol.h"
 
 
 NodePtr LeafParselet::parse(Token TokIn, ParserContext Ctxt) const {
@@ -22,6 +23,7 @@ NodePtr PrefixErrorParselet::parse(Token TokIn, ParserContext Ctxt) const {
     TheParser->nextToken(TokIn);
     
     NodePtr Error;
+    
     if (TokIn.Tok.isUnterminated()) {
         Error = NodePtr(new UnterminatedTokenErrorNeedsReparseNode(TokIn));
     } else {
@@ -216,7 +218,7 @@ NodePtr SymbolParselet::parse(Token TokIn, ParserContext Ctxt) const {
         default: {
             
             {
-                LeafSeq Trivia1;
+                TriviaSeq Trivia1;
                 
                 Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, TOPLEVEL, Trivia1);
                 
@@ -259,6 +261,11 @@ NodePtr SymbolParselet::parseContextSensitive(Token TokIn, ParserContext Ctxt) c
 }
 
 
+const SymbolPtr& InfixParselet::getOp() const {
+    return SYMBOL_CODEPARSER_INTERNALINVALID;
+}
+
+
 NodePtr PrefixOperatorParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     
     auto Ctxt = CtxtIn;
@@ -268,7 +275,7 @@ NodePtr PrefixOperatorParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     
     NodePtr Left;
     {
-        LeafSeq Trivia1;
+        TriviaSeq Trivia1;
         
         auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
         Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
@@ -339,7 +346,7 @@ NodePtr BinaryOperatorParselet::parse(NodeSeq Args, Token TokIn, ParserContext C
     
     NodePtr L;
     {
-        LeafSeq Trivia1;
+        TriviaSeq Trivia1;
     
         auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
         Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
@@ -385,7 +392,7 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Args, Token TokIn, ParserContext Ct
     //
     Token OperandLastToken;
     {
-        LeafSeq Trivia2;
+        TriviaSeq Trivia2;
         
         auto Tok2 = TheParser->currentToken(Ctxt, TOPLEVEL);
         Tok2 = TheParser->eatTrivia(Tok2, Ctxt, TOPLEVEL, Trivia2);
@@ -427,7 +434,7 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Args, Token TokIn, ParserContext Ct
         
         auto Tok1 = TheParser->currentToken(Ctxt, TOPLEVEL);
         {
-            LeafSeq Trivia1;
+            TriviaSeq Trivia1;
             
             Tok1 = TheParser->eatTriviaButNotToplevelNewlines(Tok1, Ctxt, TOPLEVEL, Trivia1);
             
@@ -474,7 +481,7 @@ NodePtr InfixOperatorParselet::parse(NodeSeq Args, Token TokIn, ParserContext Ct
         }
         
         
-        LeafSeq Trivia2;
+        TriviaSeq Trivia2;
         
         auto Tok2 = TheParser->currentToken(Ctxt, TOPLEVEL);
         Tok2 = TheParser->eatTrivia(Tok2, Ctxt, TOPLEVEL, Trivia2);
@@ -521,6 +528,8 @@ NodePtr PostfixOperatorParselet::parse(NodeSeq Args, Token TokIn, ParserContext 
 }
 
 
+GroupParselet::GroupParselet(TokenEnum Opener, const SymbolPtr& Op) : Op(Op), Closr(GroupOpenerToCloser(Opener)) {}
+
 NodePtr GroupParselet::parse(Token firstTok, ParserContext CtxtIn) const {
     
     auto OpenerT = firstTok;
@@ -562,7 +571,7 @@ NodePtr GroupParselet::parse(Token firstTok, ParserContext CtxtIn) const {
         }
 #endif // !NABORT
         
-        LeafSeq Trivia1;
+        TriviaSeq Trivia1;
         
         auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
         Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
@@ -715,7 +724,7 @@ NodePtr TildeParselet::parse(NodeSeq Args, Token TokIn, ParserContext CtxtIn) co
     
     TheParser->nextToken(TokIn);
     
-    LeafSeq Trivia1;
+    TriviaSeq Trivia1;
     
     auto FirstTok = TheParser->currentToken(Ctxt, TOPLEVEL);
     FirstTok = TheParser->eatTrivia(FirstTok, Ctxt, TOPLEVEL, Trivia1);
@@ -745,7 +754,7 @@ NodePtr TildeParselet::parse(NodeSeq Args, Token TokIn, ParserContext CtxtIn) co
         return Error;
     }
     
-    LeafSeq Trivia2;
+    TriviaSeq Trivia2;
     
     auto Tok1 = TheParser->currentToken(Ctxt, TOPLEVEL);
     Tok1 = TheParser->eatTrivia(Tok1, Ctxt, TOPLEVEL, Trivia2);
@@ -762,12 +771,12 @@ NodePtr TildeParselet::parse(NodeSeq Args, Token TokIn, ParserContext CtxtIn) co
         Args.appendSeq(std::move(Trivia1));
         Args.append(std::move(Middle));
         
-        auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDTILDE, std::move(Args)));
+        auto Error = NodePtr(new SyntaxErrorNode(SYMBOL_SYNTAXERROR_EXPECTEDTILDE, std::move(Args)));
         
         return Error;
     }
     
-    LeafSeq Trivia3;
+    TriviaSeq Trivia3;
     
     //
     // Reset back to "outside" precedence
@@ -830,7 +839,7 @@ NodePtr ColonParselet::parse(NodeSeq Args, Token TokIn, ParserContext CtxtIn) co
     
     NodePtr Pat;
     {
-        LeafSeq Trivia1;
+        TriviaSeq Trivia1;
         
         auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
         Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
@@ -858,7 +867,7 @@ NodePtr ColonParselet::parse(NodeSeq Args, Token TokIn, ParserContext CtxtIn) co
         
         Pat = NodePtr(new BinaryNode(SYMBOL_PATTERN, std::move(Args)));
         
-        LeafSeq Trivia2;
+        TriviaSeq Trivia2;
         
         Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
         Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, TOPLEVEL, Trivia2);
@@ -895,7 +904,7 @@ NodePtr ColonParselet::parseContextSensitive(NodeSeq Args, Token TokIn, ParserCo
     
     TheParser->nextToken(TokIn);
     
-    LeafSeq Trivia1;
+    TriviaSeq Trivia1;
     
     auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
     Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
@@ -934,7 +943,7 @@ NodePtr SlashColonParselet::parse(NodeSeq Args, Token TokIn, ParserContext CtxtI
     
     TheParser->nextToken(TokIn);
     
-    LeafSeq Trivia1;
+    TriviaSeq Trivia1;
     
     auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
     Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
@@ -956,7 +965,7 @@ NodePtr SlashColonParselet::parse(NodeSeq Args, Token TokIn, ParserContext CtxtI
         return Error;
     }
     
-    LeafSeq Trivia2;
+    TriviaSeq Trivia2;
     
     Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
     Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia2);
@@ -1001,13 +1010,15 @@ NodePtr SlashColonParselet::parse(NodeSeq Args, Token TokIn, ParserContext CtxtI
             Args.appendSeq(std::move(Trivia1));
             Args.append(std::move(Middle));
             
-            auto Error = NodePtr(new SyntaxErrorNode(SYNTAXERROR_EXPECTEDSET, std::move(Args)));
+            auto Error = NodePtr(new SyntaxErrorNode(SYMBOL_SYNTAXERROR_EXPECTEDSET, std::move(Args)));
             
             return Error;
         }
     }
 }
 
+
+EqualParselet::EqualParselet() : BinaryOperatorParselet(TOKEN_EQUAL, PRECEDENCE_EQUAL, SYMBOL_SET) {}
 
 NodePtr EqualParselet::parse(NodeSeq Args, Token TokIn, ParserContext CtxtIn) const {
     
@@ -1018,7 +1029,7 @@ NodePtr EqualParselet::parse(NodeSeq Args, Token TokIn, ParserContext CtxtIn) co
     
     TheParser->nextToken(TokIn);
     
-    LeafSeq Trivia1;
+    TriviaSeq Trivia1;
     
     auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
     Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
@@ -1089,6 +1100,8 @@ NodePtr EqualParselet::parse(NodeSeq Args, Token TokIn, ParserContext CtxtIn) co
 }
 
 
+ColonEqualParselet::ColonEqualParselet() : BinaryOperatorParselet(TOKEN_COLONEQUAL, PRECEDENCE_COLONEQUAL, SYMBOL_SETDELAYED) {}
+
 NodePtr ColonEqualParselet::parse(NodeSeq Args, Token TokIn, ParserContext CtxtIn) const {
     
     NodePtr L;
@@ -1098,7 +1111,7 @@ NodePtr ColonEqualParselet::parse(NodeSeq Args, Token TokIn, ParserContext CtxtI
     
     TheParser->nextToken(TokIn);
     
-    LeafSeq Trivia1;
+    TriviaSeq Trivia1;
     
     auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
     Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
@@ -1155,7 +1168,7 @@ NodePtr IntegralParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     
     TheParser->nextToken(TokIn);
     
-    LeafSeq Trivia1;
+    TriviaSeq Trivia1;
     
     auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
     Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
@@ -1181,7 +1194,7 @@ NodePtr IntegralParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     Ctxt.Flag &= ~(PARSER_INSIDE_INTEGRAL);
     
     {
-        LeafSeq Trivia2;
+        TriviaSeq Trivia2;
         
         Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
         Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia2);
@@ -1247,7 +1260,7 @@ NodePtr CommaParselet::parse(NodeSeq Args, Token TokIn, ParserContext CtxtIn) co
     // Unroll 1 iteration of the loop because we know that TokIn has already been read
     //
     {
-        LeafSeq Trivia2;
+        TriviaSeq Trivia2;
         
         auto Tok2 = TheParser->currentToken(Ctxt, TOPLEVEL);
         Tok2 = TheParser->eatTriviaButNotToplevelNewlines(Tok2, Ctxt, TOPLEVEL, Trivia2);
@@ -1305,7 +1318,7 @@ NodePtr CommaParselet::parse(NodeSeq Args, Token TokIn, ParserContext CtxtIn) co
         }
 #endif // !NABORT
         
-        LeafSeq Trivia1;
+        TriviaSeq Trivia1;
         
         auto Tok1 = TheParser->currentToken(Ctxt, TOPLEVEL);
         Tok1 = TheParser->eatTriviaButNotToplevelNewlines(Tok1, Ctxt, TOPLEVEL, Trivia1);
@@ -1332,7 +1345,7 @@ NodePtr CommaParselet::parse(NodeSeq Args, Token TokIn, ParserContext CtxtIn) co
         
         TheParser->nextToken(Tok1);
         
-        LeafSeq Trivia2;
+        TriviaSeq Trivia2;
         
         auto Tok2 = TheParser->currentToken(Ctxt, TOPLEVEL);
         Tok2 = TheParser->eatTriviaButNotToplevelNewlines(Tok2, Ctxt, TOPLEVEL, Trivia2);
@@ -1397,6 +1410,10 @@ NodePtr CommaParselet::parse(NodeSeq Args, Token TokIn, ParserContext CtxtIn) co
     return TheParser->infixLoop(std::move(L), CtxtIn);
 }
 
+const SymbolPtr& CommaParselet::getOp() const {
+    return SYMBOL_CODEPARSER_COMMA;
+}
+
 
 NodePtr SemiParselet::parse(NodeSeq Args, Token TokIn, ParserContext CtxtIn) const {
     
@@ -1413,7 +1430,7 @@ NodePtr SemiParselet::parse(NodeSeq Args, Token TokIn, ParserContext CtxtIn) con
     // Unroll 1 iteration of the loop because we know that TokIn has already been read
     //
     {
-        LeafSeq Trivia2;
+        TriviaSeq Trivia2;
         
         auto Tok2 = TheParser->currentToken(Ctxt, TOPLEVEL);
         Tok2 = TheParser->eatTriviaButNotToplevelNewlines(Tok2, Ctxt, TOPLEVEL, Trivia2);
@@ -1470,7 +1487,7 @@ NodePtr SemiParselet::parse(NodeSeq Args, Token TokIn, ParserContext CtxtIn) con
         }
 #endif // !NABORT
         
-        LeafSeq Trivia1;
+        TriviaSeq Trivia1;
         
         auto Tok1 = TheParser->currentToken(Ctxt, TOPLEVEL);
         Tok1 = TheParser->eatTriviaButNotToplevelNewlines(Tok1, Ctxt, TOPLEVEL, Trivia1);
@@ -1490,7 +1507,7 @@ NodePtr SemiParselet::parse(NodeSeq Args, Token TokIn, ParserContext CtxtIn) con
         
         TheParser->nextToken(Tok1);
         
-        LeafSeq Trivia2;
+        TriviaSeq Trivia2;
         
         auto Tok2 = TheParser->currentToken(Ctxt, TOPLEVEL);
         Tok2 = TheParser->eatTriviaButNotToplevelNewlines(Tok2, Ctxt, TOPLEVEL, Trivia2);
@@ -1661,7 +1678,7 @@ NodePtr GreaterGreaterParselet::parse(NodeSeq Args, Token TokIn, ParserContext C
     
     TheParser->nextToken(TokIn);
     
-    LeafSeq Trivia1;
+    TriviaSeq Trivia1;
     
     //
     // Special tokenization, so must do parsing here
@@ -1703,7 +1720,7 @@ NodePtr GreaterGreaterGreaterParselet::parse(NodeSeq Args, Token TokIn, ParserCo
     
     TheParser->nextToken(TokIn);
     
-    LeafSeq Trivia1;
+    TriviaSeq Trivia1;
     
     //
     // Special tokenization, so must do parsing here
@@ -1745,7 +1762,7 @@ NodePtr LessLessParselet::parse(Token TokIn, ParserContext CtxtIn) const {
     
     TheParser->nextToken(TokIn);
     
-    LeafSeq Trivia1;
+    TriviaSeq Trivia1;
     
     //
     // Special tokenization, so must do parsing here

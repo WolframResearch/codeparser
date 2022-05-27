@@ -1,17 +1,35 @@
 
 #include "ByteBuffer.h"
 
-ByteBuffer::ByteBuffer() : origBufAndLen(), libData(), buffer(), end(), wasEOF() {}
+#include "API.h" // for TheParserSession
 
-void ByteBuffer::init(BufferAndLength bufAndLenIn, WolframLibraryData libDataIn) {
-  
-    origBufAndLen = bufAndLenIn;
+#if 0
+#ifndef NDEBUG
+#if USE_MATHLINK
+#include "mathlink.h"
+#undef P
+#endif // USE_MATHLINK
+#endif // NDEBUG
+#endif // #if 0
+
+#if 0
+#ifndef NDEBUG
+#include "WolframLibrary.h"
+#undef True
+#undef False
+#endif // NDEBUG
+#endif // #if 0
+
+#include <cstddef> // for size_t
+
+
+ByteBuffer::ByteBuffer() : buffer(), end(), wasEOF() {}
+
+void ByteBuffer::init() {
     
-    buffer = bufAndLenIn.buffer;
+    buffer = TheParserSession->bufAndLen.buffer;
     
-    libData = libDataIn;
-    
-    end = origBufAndLen.end;
+    end = TheParserSession->bufAndLen.end;
     
     wasEOF = false;
 }
@@ -22,7 +40,7 @@ void ByteBuffer::deinit() {}
 
 unsigned char ByteBuffer::nextByte0() {
     
-    assert((origBufAndLen.buffer <= buffer && buffer <= end) && "Fix at call site");
+    assert((TheParserSession->bufAndLen.buffer <= buffer && buffer <= end) && "Fix at call site");
     
 #if 0
 #ifndef NDEBUG
@@ -51,12 +69,14 @@ unsigned char ByteBuffer::nextByte0() {
         
         if (progress != oldProgress) {
             if (libData) {
-#if USE_MATHLINK
+#if USE_EXPR_LIB
+#error
+#elif USE_MATHLINK
                 MLINK link = libData->getMathLink(libData);
-                if (!MLPutFunction(link, "EvaluatePacket", 1)) {
+                if (!MLPutFunction(link, SYMBOL_EVALUATEPACKET->name(), 1)) {
                     assert(false);
                 }
-                if (!MLPutFunction(link, "CodeParser`Library`SetConcreteParseProgress", 1)) {
+                if (!MLPutFunction(link, SYMBOL_CODEPARSER_LIBRARY_SETCONCRETEPARSEPROGRESS->name(), 1)) {
                     assert(false);
                 }
                 if (!MLPutInteger(link, static_cast<int>(progress))) {
@@ -76,7 +96,7 @@ unsigned char ByteBuffer::nextByte0() {
                         assert(false);
                     }
                 }
-#endif // USE_MATHLINK
+#endif // USE_EXPR_LIB
             }
         }
     }
@@ -95,7 +115,7 @@ unsigned char ByteBuffer::nextByte0() {
 
 void ByteBuffer::nextByte() {
     
-    assert((origBufAndLen.buffer <= buffer && buffer <= end) && "Fix at call site");
+    assert((TheParserSession->bufAndLen.buffer <= buffer && buffer <= end) && "Fix at call site");
     
 #if 0
 #ifndef NDEBUG
@@ -107,7 +127,6 @@ void ByteBuffer::nextByte() {
 #endif // #if 0
     
     if (buffer == end) {
-        
         return;
     }
     
@@ -121,12 +140,14 @@ void ByteBuffer::nextByte() {
         
         if (progress != oldProgress) {
             if (libData) {
-#if USE_MATHLINK
+#if USE_EXPR_LIB
+#error
+#elif USE_MATHLINK
                 MLINK link = libData->getMathLink(libData);
-                if (!MLPutFunction(link, "EvaluatePacket", 1)) {
+                if (!MLPutFunction(link, SYMBOL_EVALUATEPACKET->name(), 1)) {
                     assert(false);
                 }
-                if (!MLPutFunction(link, "CodeParser`Library`SetConcreteParseProgress", 1)) {
+                if (!MLPutFunction(link, SYMBOL_CODEPARSER_LIBRARY_SETCONCRETEPARSEPROGRESS->name(), 1)) {
                     assert(false);
                 }
                 if (!MLPutInteger(link, static_cast<int>(progress))) {
@@ -139,14 +160,14 @@ void ByteBuffer::nextByte() {
                     
                     auto pkt = MLNextPacket(link);
                     if (pkt == RETURNPKT) {
-                        if(!MLNewPacket(link)) {
+                        if (!MLNewPacket(link)) {
                             assert(false);
                         }
                     } else {
                         assert(false);
                     }
                 }
-#endif // USE_MATHLINK
+#endif // USE_EXPR_LIB
             }
         }
     }
@@ -156,10 +177,9 @@ void ByteBuffer::nextByte() {
 
 unsigned char ByteBuffer::currentByte() {
     
-    assert((origBufAndLen.buffer <= buffer && buffer <= end) && "Fix at call site");
+    assert((TheParserSession->bufAndLen.buffer <= buffer && buffer <= end) && "Fix at call site");
     
     if (buffer == end) {
-        
         return 0xff;
     }
     

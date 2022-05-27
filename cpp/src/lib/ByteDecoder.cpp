@@ -6,29 +6,29 @@
 #include "CodePoint.h" // for CODEPOINT_CRLF, etc.
 #include "LongNames.h"
 #include "API.h" // for ENCODINGMODE
+#include "MyString.h"
 
-ByteDecoder::ByteDecoder() : srcConventionManager(), encodingMode(), lastBuf(), lastLoc(), SrcLoc() {}
 
-void ByteDecoder::init(SourceConvention srcConvention, uint32_t TabWidth, EncodingMode encodingModeIn) {
+ByteDecoder::ByteDecoder() : srcConventionManager(), lastBuf(), lastLoc(), SrcLoc() {}
+
+void ByteDecoder::init() {
     
     lastBuf = nullptr;
     lastLoc = SourceLocation();
     
-    switch (srcConvention) {
+    switch (TheParserSession->srcConvention) {
         case SOURCECONVENTION_LINECOLUMN:
-            srcConventionManager = SourceConventionManagerPtr(new LineColumnManager(TabWidth));
+            srcConventionManager = SourceConventionManagerPtr(new LineColumnManager());
             break;
         case SOURCECONVENTION_SOURCECHARACTERINDEX:
             srcConventionManager = SourceConventionManagerPtr(new SourceCharacterIndexManager());
             break;
-        case SOURCECONVENTION_UNKNOWN:
+        default:
             assert(false);
             break;
     }
     
     SrcLoc = srcConventionManager->newSourceLocation();
-
-    encodingMode = encodingModeIn;
 }
 
 void ByteDecoder::deinit() {
@@ -59,9 +59,7 @@ void ByteDecoder::deinit() {
 //
 SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
 
-#if !NISSUES
     auto currentSourceCharacterStartLoc = SrcLoc;
-#endif // !NISSUES
     
     auto firstByte = TheByteBuffer->nextByte0();
     
@@ -809,7 +807,7 @@ SourceCharacter ByteDecoder::currentSourceCharacter(NextPolicy policy) {
     return c;
 }
 
-
+#if !NISSUES
 void ByteDecoder::strangeWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, NextPolicy policy) {
     
     auto currentSourceCharacterEndLoc = SrcLoc;
@@ -862,7 +860,9 @@ void ByteDecoder::strangeWarning(codepoint decoded, SourceLocation currentSource
         TheParserSession->addIssue(std::move(I));
     }
 }
+#endif // !NISSUES
 
+#if !NISSUES
 void ByteDecoder::nonASCIIWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc) {
     
     auto currentSourceCharacterEndLoc = SrcLoc;
@@ -883,6 +883,7 @@ void ByteDecoder::nonASCIIWarning(codepoint decoded, SourceLocation currentSourc
     
     TheParserSession->addIssue(std::move(I));
 }
+#endif // !NISSUES
 
 SourceCharacter ByteDecoder::valid(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, NextPolicy policy) {
     
@@ -912,7 +913,7 @@ SourceCharacter ByteDecoder::validMB(codepoint decoded, SourceLocation currentSo
     {
         if (Utils::isMBStrange(decoded)) {
             strangeWarning(decoded, currentSourceCharacterStartLoc, policy);
-        } else if (encodingMode == ENCODINGMODE_NORMAL) {
+        } else if (TheParserSession->encodingMode == ENCODINGMODE_NORMAL) {
             nonASCIIWarning(decoded, currentSourceCharacterStartLoc);
         }
     }
@@ -1060,9 +1061,6 @@ SourceCharacter ByteDecoder::bom(SourceLocation errSrcLoc, NextPolicy policy) {
 ByteDecoderPtr TheByteDecoder = nullptr;
 
 
-
-
-
 void SourceConventionManager::increment(SourceLocation& loc) {
     loc.second++;
 };
@@ -1073,18 +1071,24 @@ SourceLocation LineColumnManager::newSourceLocation() {
 };
 
 void LineColumnManager::newline(SourceLocation& loc) {
+    
     loc.first++;
+    
     loc.second = 1;
 };
 
 void LineColumnManager::windowsNewline(SourceLocation& loc) {
+    
     loc.first++;
+    
     loc.second = 1;
 };
 
 void LineColumnManager::tab(SourceLocation& loc) {
-    auto currentTabStop = TabWidth * ((loc.second - 1) / TabWidth) + 1;
-    loc.second = currentTabStop + TabWidth;
+    
+    auto currentTabStop = TheParserSession->tabWidth * ((loc.second - 1) / TheParserSession->tabWidth) + 1;
+    
+    loc.second = currentTabStop + TheParserSession->tabWidth;
 };
 
 

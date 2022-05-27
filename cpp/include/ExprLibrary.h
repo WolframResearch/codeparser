@@ -1,51 +1,38 @@
 
 #pragma once
 
-#if USE_MATHLINK
-#include "mathlink.h"
-#undef P
-#endif // USE_MATHLINK
-
-#include "WolframLibrary.h"
+#include "WolframLibrary.h" // for mint
 #undef True
 #undef False
 
+#include <cstdint> // for int64_t
+
 using expr = void *;
+using Buffer = const unsigned char *;
 
 
-EXTERN_C mint Expr_Length(expr);
+EXTERN_C expr Expr_FromInteger64(int64_t val);
 
-EXTERN_C int64_t Expr_ToInteger64(expr);
+EXTERN_C expr Expr_FromReal64(double val);
 
-EXTERN_C expr Expr_FromInteger64(int64_t);
+EXTERN_C expr Expr_UTF8BytesToStringExpr(Buffer buf, mint size);
 
-EXTERN_C expr Expr_FromReal64(double);
-
-EXTERN_C expr Expr_MEncodedStringToSymbolExpr(const unsigned char *);
-
-EXTERN_C expr Expr_BuildExpr(expr, mint);
-
-EXTERN_C void Expr_Insert(expr, mint, expr);
-
-EXTERN_C mint Expr_Pointer(expr);
-
-EXTERN_C expr Expr_FromPointer(void *);
-
-EXTERN_C void Expr_Release(expr);
-
-EXTERN_C expr Expr_UTF8BytesToStringExpr(const unsigned char*, mint);
+EXTERN_C expr Expr_MEncodedStringToSymbolExpr(const char *str);
 
 //
-// Will create either a machine integer or a big integer
+// The suffix A means automatically handle releasing reference to head
 //
-EXTERN_C expr Expr_CStringToIntegerExpr(const char*, mint, mbool);
+EXTERN_C expr Expr_BuildExprA(expr head, mint argCount);
 
+//
+// The suffix A means automatically handle releasing reference to arg
+//
+// index is base 1
+//
+EXTERN_C void Expr_InsertA(expr e, mint index, expr arg);
 
+EXTERN_C void Expr_Release(expr e);
 
-#if USE_MATHLINK
+EXTERN_C void Expr_StringExprToUTF8Bytes(expr e, Buffer *buffer, mint *len);
 
-EXTERN_C DLLEXPORT int ExprTest_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
-
-EXTERN_C DLLEXPORT int Get_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
-
-#endif // USE_MATHLINK
+EXTERN_C expr Expr_LongNameSuggestion(expr input);

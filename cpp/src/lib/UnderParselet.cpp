@@ -1,6 +1,7 @@
 
 #include "Parselet.h"
 #include "ParseletRegistration.h" // for contextSensitiveSymbolParselet
+#include "Symbol.h"
 
 NodePtr UnderParselet::parse0(Token TokIn, ParserContext Ctxt) const {
     
@@ -50,7 +51,7 @@ NodePtr UnderParselet::parse0(Token TokIn, ParserContext Ctxt) const {
 NodePtr UnderParselet::parse1(NodePtr Blank, Token Tok, ParserContext Ctxt) const {
     
     {
-        LeafSeq Trivia1;
+        TriviaSeq Trivia1;
         
         Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, TOPLEVEL, Trivia1);
         

@@ -435,7 +435,7 @@ longNamesCPPHeader = {
 
 #pragma once
 
-#include \"CodePoint.h\" // for codepoint
+#include \"CodePoint.h\" // for codepoint, CODEPOINT_STRINGMETA_DOUBLEQUOTE, etc.
 
 #include <string>
 #include <array>

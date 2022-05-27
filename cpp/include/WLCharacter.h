@@ -1,9 +1,12 @@
 
 #pragma once
 
-#include "CodePoint.h" // for CODEPOINT_UNKNOWN
-
 #include <string>
+#include <cstdint> // for uint32_t
+#include <ostream>
+
+using codepoint = int32_t;
+
 
 //
 // The 8 styles of character escapes
@@ -129,9 +132,9 @@ struct WLCharacter {
 static_assert(sizeof(WLCharacter) == 4, "Check your assumptions");
 #endif // __clang__
 
-std::ostream& operator<<(std::ostream& stream, WLCharacter c);
+std::ostream& operator<<(std::ostream& s, WLCharacter c);
     
 //
 // For googletest
 //
-void PrintTo(const WLCharacter& c, std::ostream *stream);
+void PrintTo(const WLCharacter& c, std::ostream *s);

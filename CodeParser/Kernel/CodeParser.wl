@@ -361,6 +361,10 @@ setupShims[]
 
 
 
+(*
+CodeConcreteParse
+*)
+
 CodeConcreteParse::usage = "CodeConcreteParse[code] returns a concrete syntax tree by interpreting code as WL input. \
 code can be a string, a File, or a list of bytes."
 
@@ -375,25 +379,13 @@ Options[CodeConcreteParse] = {
   ContainerNode -> Automatic
 }
 
+
 CodeConcreteParse[s_String, opts:OptionsPattern[]] :=
+  codeConcreteParse[s, CodeConcreteParse, opts]
+
+codeConcreteParse[s_String, func_, opts:OptionsPattern[]] :=
 Catch[
-Module[{csts},
-
-  csts = CodeConcreteParse[{s}, opts];
-
-  If[FailureQ[csts],
-    Throw[csts]
-  ];
-
-  csts[[1]]
-]]
-
-CodeConcreteParse[ss:{_String, _String...}, opts:OptionsPattern[]] :=
-  codeConcreteParse[ss, CodeConcreteParse, opts]
-
-codeConcreteParse[ss:{_String, _String...}, func_, opts:OptionsPattern[]] :=
-Catch[
-Module[{csts, bytess, encoding, fileFormat, firstLineBehavior},
+Module[{cst, bytes, encoding, fileFormat, firstLineBehavior},
 
   encoding = OptionValue[func, {opts}, CharacterEncoding];
   fileFormat = OptionValue[func, {opts}, "FileFormat"];
@@ -406,7 +398,7 @@ Module[{csts, bytess, encoding, fileFormat, firstLineBehavior},
     Throw[Failure["OnlyUTF8Supported", <| "CharacterEncoding" -> encoding |>]]
   ];
 
-  bytess = ToCharacterCode[ss, "UTF-8"];
+  bytes = ByteArray[ToCharacterCode[s, "UTF-8"]];
 
   Switch[fileFormat,
     "Package",
@@ -419,32 +411,57 @@ Module[{csts, bytess, encoding, fileFormat, firstLineBehavior},
       firstLineBehavior = NotScript
   ];
 
-  csts = concreteParseStringListable[bytess, firstLineBehavior, func, opts];
+  cst = concreteParseString[bytes, firstLineBehavior, func, opts];
 
-  If[FailureQ[csts],
-    Throw[csts]
+  If[FailureQ[cst],
+    Throw[cst]
   ];
 
-  csts =
-    MapThread[Function[{cst, bytes},
-      
-        Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+  Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
 
-          UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
-          UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
+    UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
+    UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
 
-          cst
-        ]
-      ]
-      ,
-      {csts, bytess}
-    ];
-
-  csts
+    (
+    (* :!CodeAnalysis::BeginBlock:: *)
+    (* :!CodeAnalysis::Disable::SelfAssignment:: *)
+    cst = cst
+    (* :!CodeAnalysis::EndBlock:: *)
+    );
+  ];
+  
+  cst
 ]]
 
 
-concreteParseStringListable[bytess:{{_Integer...}...}, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
+concreteParseString[{}, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
+Catch[
+Module[{res, convention, container, tabWidth},
+
+  container = OptionValue[func, {opts}, ContainerNode];
+
+  (*
+  The <||> will be filled in with Source later
+  The # here is { {exprs}, {issues}, {simple line conts}, {complex line conts}, {embedded newlines}, {embedded tabs} }
+  *)
+  If[container === Automatic,
+    container = ContainerNode[String, #[[1]],
+      <| If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
+         If[!empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
+         If[!empty[#[[4]]], "ComplexLineContinuations" -> #[[4]], Nothing],
+         If[!empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
+         If[!empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing] |>
+    ]&
+  ];
+
+  res = {{}, {}, {}, {}, {}, {}};
+
+  res = container[res];
+
+  res
+]]
+
+concreteParseString[bytes_ByteArray?ByteArrayQ, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
 Catch[
 Module[{res, convention, container, tabWidth},
 
@@ -470,9 +487,7 @@ Module[{res, convention, container, tabWidth},
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  Block[{$StructureSrcArgs = parseConvention[convention]},
-  res = libraryFunctionWrapper[concreteParseBytesListableFunc, bytess, convention, tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
-  ];
+  res = libraryFunctionWrapper[concreteParseBytesFunc, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -481,103 +496,32 @@ Module[{res, convention, container, tabWidth},
     Throw[res]
   ];
 
-  res = container /@ res;
+  res = container[res];
 
   res
 ]]
 
 
-
-
-
-CodeParse::usage = "CodeParse[code] returns an abstract syntax tree by interpreting code as WL input. \
-code can be a string, a File, or a list of bytes."
-
-Options[CodeParse] = {
-  CharacterEncoding -> "UTF-8",
-  SourceConvention -> "LineColumn",
-  "TabWidth" -> 1,
-  "FileFormat" -> Automatic,
-  (*
-  more obscure options
-  *)
-  ContainerNode -> Automatic
-}
-
-(*
-may return:
-a node
-or Null if input was an empty string
-or something FailureQ if e.g., no permission to run wl-codeparser
-*)
-CodeParse[s_String, opts:OptionsPattern[]] :=
-Catch[
-Module[{asts},
-
-  asts = CodeParse[{s}, opts];
-
-  If[FailureQ[asts],
-    Throw[asts]
-  ];
-
-  asts[[1]]
-]]
-
-CodeParse[ss:{_String, _String...}, opts:OptionsPattern[]] :=
-Catch[
-Module[{csts, asts, aggs},
-  
-  csts = codeConcreteParse[ss, CodeParse, opts];
-
-  If[FailureQ[csts],
-    Throw[csts]
-  ];
-
-  aggs = Aggregate /@ csts;
-
-  asts = Abstract /@ aggs;
-
-  asts
-]]
-
-
-
-
-
-
 CodeConcreteParse[f:File[_String], opts:OptionsPattern[]] :=
+  codeConcreteParse[f, CodeConcreteParse, opts]
+
+codeConcreteParse[f:File[_String], func_, opts:OptionsPattern[]] :=
 Catch[
-Module[{csts},
-
-  csts = CodeConcreteParse[{f}, opts];
-
-  If[FailureQ[csts],
-    Throw[csts]
-  ];
-
-  csts[[1]]
-]]
-
-CodeConcreteParse[fs:{File[_String], File[_String]...}, opts:OptionsPattern[]] :=
-  codeConcreteParse[fs, CodeConcreteParse, opts]
-
-codeConcreteParse[fs:{File[_String], File[_String]...}, func_, opts:OptionsPattern[]] :=
-Catch[
-Module[{csts, encoding, fulls, bytess, fileFormat, firstLineBehavior, exts},
+Module[{cst, encoding, full, bytes, fileFormat, firstLineBehavior, ext},
 
   encoding = OptionValue[func, {opts}, CharacterEncoding];
   fileFormat = OptionValue[func, {opts}, "FileFormat"];
 
   If[fileFormat === Automatic,
-    exts = FileExtension /@ fs;
+    ext = FileExtension[f];
     Which[
-      AnyTrue[exts, (# == "wl" || # == "m")&],
+      ext == "wl" || ext == "m",
         fileFormat = "Package"
       ,
-      AnyTrue[exts, (# == "wls")&],
+      ext == "wls",
         fileFormat = "Script"
       ,
-      AnyTrue[exts, (# == "nb")&],
+      ext == "nb",
         fileFormat = "Notebook"
       ,
       True,
@@ -596,9 +540,9 @@ Module[{csts, encoding, fulls, bytess, fileFormat, firstLineBehavior, exts},
 
   FindFile also fails if in sandbox mode
   *)
-  fulls = FindFile /@ fs;
-  If[AnyTrue[fulls, FailureQ],
-    Throw[Failure["FindFileFailed", <| "FileNames" -> fs |>]]
+  full = FindFile[f];
+  If[Failure[full],
+    Throw[Failure["FindFileFailed", <| "File" -> f |>]]
   ];
 
   Switch[fileFormat,
@@ -614,44 +558,77 @@ Module[{csts, encoding, fulls, bytess, fileFormat, firstLineBehavior, exts},
 
   (*
   Was:
-  bytess = Import[#, "Byte"]& /@ fulls;
+  bytes = Import[full, "Byte"];
 
   but this is slow
   *)
-  bytess = (Normal[ReadByteArray[#]] /. EndOfFile -> {})& /@ fulls;
+  bytes = ReadByteArray[full];
 
-  csts = concreteParseFileListable[bytess, firstLineBehavior, func, opts];
+  cst = concreteParseFile[bytes, firstLineBehavior, func, opts];
 
-  If[FailureQ[csts],
-    If[csts === $Failed,
-      Throw[csts]
+  If[FailureQ[cst],
+    If[cst === $Failed,
+      Throw[cst]
     ];
-    csts = Failure[csts[[1]], Join[csts[[2]], <| "FileNames" -> fs |>]];
-    Throw[csts]
+    cst = Insert[cst, "FileName" -> full, {2, -1}];
+    Throw[cst]
   ];
 
-  csts = MapThread[#1[[0]][#1[[1]], #1[[2]], <| #1[[3]], "FileName" -> #2 |>]&, {csts, fulls}];
+  cst = Insert[cst, "FileName" -> full, {3, -1}];
 
-  csts =
-    MapThread[Function[{cst, bytes},
-    
-        Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+  Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
 
-          UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
-          UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
+    UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
+    UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
 
-          cst
-        ]
-      ]
-      ,
-      {csts, bytess}
-    ];
+    (
+    (* :!CodeAnalysis::BeginBlock:: *)
+    (* :!CodeAnalysis::Disable::SelfAssignment:: *)
+    cst = cst
+    (* :!CodeAnalysis::EndBlock:: *)
+    );
+  ];
 
-  csts
+  cst
 ]]
 
 
-concreteParseFileListable[bytess:{{_Integer...}...}, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
+concreteParseFile[EndOfFile, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
+Catch[
+Module[{res, convention, container, containerWasAutomatic, tabWidth},
+
+  container = OptionValue[func, {opts}, ContainerNode];
+
+  (*
+  The <||> will be filled in with Source later
+  The # here is { {exprs}, {issues}, {simple line conts}, {complex line conts}, {embedded newlines}, {embedded tabs} }
+  *)
+  If[container === Automatic,
+    containerWasAutomatic = True;
+    container = ContainerNode[File, #[[1]],
+      <| If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
+         If[!empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
+         If[!empty[#[[4]]], "ComplexLineContinuations" -> #[[4]], Nothing],
+         If[!empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
+         If[!empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing] |>
+    ]&
+  ];
+
+  res = {{}, {}, {}, {}, {}, {}};
+
+  res = container[res];
+
+  (*
+  Fill in Source for FileNode now
+  *)
+  If[containerWasAutomatic,
+    res = fillinSource[res]
+  ];
+
+  res
+]]
+
+concreteParseFile[bytes_ByteArray?ByteArrayQ, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
 Catch[
 Module[{res, convention, container, containerWasAutomatic, tabWidth},
 
@@ -678,9 +655,7 @@ Module[{res, convention, container, containerWasAutomatic, tabWidth},
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  Block[{$StructureSrcArgs = parseConvention[convention]},
-  res = libraryFunctionWrapper[concreteParseBytesListableFunc, bytess, convention, tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
-  ];
+  res = libraryFunctionWrapper[concreteParseBytesFunc, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -689,18 +664,17 @@ Module[{res, convention, container, containerWasAutomatic, tabWidth},
     Throw[res]
   ];
 
-  res = container /@ res;
+  res = container[res];
 
   (*
   Fill in Source for FileNode now
   *)
   If[containerWasAutomatic,
-    res = fillinSource /@ res
+    res = fillinSource[res]
   ];
 
   res
 ]]
-
 
 
 fillinSource[cstIn_] :=
@@ -738,62 +712,13 @@ Module[{cst, children, first, last, start, end, data},
 ]]
 
 
+CodeConcreteParse[bytes:{_Integer...}, opts:OptionsPattern[]] :=
+  codeConcreteParse[bytes, CodeConcreteParse, opts]
 
 
-
-CodeParse[f:File[_String], opts:OptionsPattern[]] :=
+codeConcreteParse[bytesIn:{_Integer...}, func_, opts:OptionsPattern[]] :=
 Catch[
-Module[{asts},
-
-  asts = CodeParse[{f}, opts];
-
-  If[FailureQ[asts],
-    Throw[asts]
-  ];
-
-  asts[[1]]
-]]
-
-CodeParse[fs:{File[_String], File[_String]...}, opts:OptionsPattern[]] :=
-Catch[
-Module[{csts, asts, aggs},
-
-  csts = codeConcreteParse[fs, CodeParse, opts];
-
-  If[FailureQ[csts],
-    Throw[csts]
-  ];
-
-  aggs = Aggregate /@ csts;
-
-  asts = Abstract /@ aggs;
-
-  asts
-]]
-
-
-
-
-
-CodeConcreteParse[bytes:{_Integer, _Integer...}, opts:OptionsPattern[]] :=
-Catch[
-Module[{csts},
-
-  csts = CodeConcreteParse[{bytes}, opts];
-
-  If[FailureQ[csts],
-    Throw[csts]
-  ];
-
-  csts[[1]]
-]]
-
-CodeConcreteParse[bytess:{{_Integer, _Integer...}...}, opts:OptionsPattern[]] :=
-  codeConcreteParse[bytess, CodeConcreteParse, opts]
-
-codeConcreteParse[bytess:{{_Integer, _Integer...}...}, func_, opts:OptionsPattern[]] :=
-Catch[
-Module[{csts, encoding, fileFormat, firstLineBehavior},
+Module[{cst, encoding, fileFormat, firstLineBehavior, bytes},
 
   encoding = OptionValue[func, {opts}, CharacterEncoding];
   fileFormat = OptionValue[func, {opts}, "FileFormat"];
@@ -817,34 +742,59 @@ Module[{csts, encoding, fileFormat, firstLineBehavior},
       firstLineBehavior = NotScript
   ];
 
-  csts = concreteParseBytesListable[bytess, firstLineBehavior, func, opts];
+  bytes = ByteArray[bytesIn];
 
-  If[FailureQ[csts],
-    Throw[csts]
+  cst = concreteParseBytes[bytes, firstLineBehavior, func, opts];
+
+  If[FailureQ[cst],
+    Throw[cst]
   ];
 
-  csts =
-    MapThread[Function[{cst, bytes},
-      
-        Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+  Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
 
-          UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
-          UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
+    UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
+    UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
 
-          cst
-        ]
+    (
+    (* :!CodeAnalysis::BeginBlock:: *)
+    (* :!CodeAnalysis::Disable::SelfAssignment:: *)
+    cst = cst
+    (* :!CodeAnalysis::EndBlock:: *)
+    );
+  ];
 
-      ]
-      ,
-      {csts, bytess}
-    ];
-
-  csts
+  cst
 ]]
 
 
+concreteParseBytes[{}, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
+Catch[
+Module[{res, container},
 
-concreteParseBytesListable[bytess:{{_Integer...}...}, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
+  container = OptionValue[func, {opts}, ContainerNode];
+
+  (*
+  The <||> will be filled in with Source later
+  The # here is { {exprs}, {issues}, {simple line conts}, {complex line conts}, {embedded newlines}, {embedded tabs} }
+  *)
+  If[container === Automatic,
+    container = ContainerNode[Byte, #[[1]],
+      <| If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
+         If[!empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
+         If[!empty[#[[4]]], "ComplexLineContinuations" -> #[[4]], Nothing],
+         If[!empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
+         If[!empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing] |>
+    ]&
+  ];
+
+  res = {{}, {}, {}, {}, {}, {}};
+
+  res = container[res];
+
+  res
+]]
+
+concreteParseBytes[bytes_ByteArray?ByteArrayQ, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
 Catch[
 Module[{res, convention, container, tabWidth},
 
@@ -870,9 +820,7 @@ Module[{res, convention, container, tabWidth},
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  Block[{$StructureSrcArgs = parseConvention[convention]},
-  res = libraryFunctionWrapper[concreteParseBytesListableFunc, bytess, convention, tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
-  ];
+  res = libraryFunctionWrapper[concreteParseBytesFunc, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -881,69 +829,77 @@ Module[{res, convention, container, tabWidth},
     Throw[res]
   ];
 
-  res = container /@ res;
+  res = container[res];
 
   res
 ]]
 
 
+(*
+CodeParse
+*)
+
+CodeParse::usage = "CodeParse[code] returns an abstract syntax tree by interpreting code as WL input. \
+code can be a string, a File, or a list of bytes."
+
+Options[CodeParse] = {
+  CharacterEncoding -> "UTF-8",
+  SourceConvention -> "LineColumn",
+  "TabWidth" -> 1,
+  "FileFormat" -> Automatic,
+  (*
+  more obscure options
+  *)
+  ContainerNode -> Automatic
+}
 
 
-
-
-CodeParse[bytes:{_Integer, _Integer...}, opts:OptionsPattern[]] :=
+CodeParse[s_String, opts:OptionsPattern[]] :=
 Catch[
-Module[{asts},
+Module[{cst, ast, agg},
+  
+  cst = codeConcreteParse[s, CodeParse, opts];
 
-  asts = CodeParse[{bytes}, opts];
+  agg = Aggregate[cst];
 
-  If[FailureQ[asts],
-    Throw[asts]
-  ];
+  ast = Abstract[agg];
 
-  asts[[1]]
-]]
-
-CodeParse[bytess:{{_Integer, _Integer...}...}, opts:OptionsPattern[]] :=
-Catch[
-Module[{csts, asts, aggs},
-
-  csts = codeConcreteParse[bytess, CodeParse, opts];
-
-  If[FailureQ[csts],
-    Throw[csts]
-  ];
-
-  aggs = Aggregate /@ csts;
-
-  asts = Abstract /@ aggs;
-
-  asts
-]]
-
-
-
-
-
-
-CodeConcreteParse[{}, opts:OptionsPattern[]] :=
-Catch[
-Module[{},
-
-  {}
-]]
-
-CodeParse[{}, opts:OptionsPattern[]] :=
-Catch[
-Module[{},
-
-  {}
+  ast
 ]]
 
 
+CodeParse[f:File[_String], opts:OptionsPattern[]] :=
+Catch[
+Module[{cst, ast, agg},
+
+  cst = codeConcreteParse[f, CodeParse, opts];
+
+  agg = Aggregate[cst];
+
+  ast = Abstract[agg];
+
+  ast
+]]
+
+
+CodeParse[bytes:{_Integer...}, opts:OptionsPattern[]] :=
+Catch[
+Module[{cst, ast, agg},
+
+  cst = codeConcreteParse[bytes, CodeParse, opts];
+
+  agg = Aggregate[cst];
+
+  ast = Abstract[agg];
+
+  ast
+]]
 
 
 
+(*
+CodeTokenize
+*)
 
 CodeTokenize::usage = "CodeTokenize[code] returns a list of tokens by interpreting code as WL input. \
 code can be a string, a File, or a list of bytes."
@@ -955,49 +911,57 @@ Options[CodeTokenize] = {
   "FileFormat" -> Automatic
 }
 
+
 CodeTokenize[s_String, opts:OptionsPattern[]] :=
 Catch[
-Module[{tokss},
+Module[{toks, encoding, bytes},
 
-  tokss = CodeTokenize[{s}, opts];
-
-  If[FailureQ[tokss],
-    Throw[tokss]
-  ];
-
-  tokss[[1]]
-]]
-
-CodeTokenize[ss:{_String, _String...}, opts:OptionsPattern[]] :=
-Module[{tokss},
-
-  tokss = tokenizeStringListable[ss, CodeTokenize, opts];
-
-  tokss
-]
-
-
-tokenizeStringListable[ss:{_String...}, func_, opts:OptionsPattern[]] :=
-Catch[
-Module[{res, bytess, encoding, convention, tabWidth},
-
-  encoding = OptionValue[func, {opts}, CharacterEncoding];
-  convention = OptionValue[func, {opts}, SourceConvention];
-  tabWidth = OptionValue[func, {opts}, "TabWidth"];
+  encoding = OptionValue[CodeTokenize, {opts}, CharacterEncoding];
 
   If[encoding =!= "UTF-8",
     Throw[Failure["OnlyUTF8Supported", <| "CharacterEncoding" -> encoding |>]]
   ];
 
-  bytess = ToCharacterCode[ss, "UTF-8"];
+  bytes = ByteArray[ToCharacterCode[s, "UTF-8"]];
+
+  toks = tokenizeString[bytes, NotScript, CodeTokenize, opts];
+
+  If[FailureQ[toks],
+    Throw[toks]
+  ];
+
+  Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+
+    UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
+    UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
+
+    (
+    (* :!CodeAnalysis::BeginBlock:: *)
+    (* :!CodeAnalysis::Disable::SelfAssignment:: *)
+    toks = toks
+    (* :!CodeAnalysis::EndBlock:: *)
+    );
+  ];
+
+  toks
+]]
+
+
+tokenizeString[{}, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
+  {}
+
+tokenizeString[bytes_ByteArray?ByteArrayQ, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
+Catch[
+Module[{res, convention, tabWidth},
+
+  convention = OptionValue[func, {opts}, SourceConvention];
+  tabWidth = OptionValue[func, {opts}, "TabWidth"];
 
   $ConcreteParseProgress = 0;
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  Block[{$StructureSrcArgs = parseConvention[convention]},
-  res = libraryFunctionWrapper[tokenizeBytesListableFunc, bytess, convention, tabWidth, firstLineBehaviorToInteger[NotScript]];
-  ];
+  res = libraryFunctionWrapper[tokenizeBytesFunc, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -1010,63 +974,39 @@ Module[{res, bytess, encoding, convention, tabWidth},
 ]]
 
 
-
 CodeTokenize[f:File[_String], opts:OptionsPattern[]] :=
 Catch[
-Module[{tokss},
+Module[{toks, encoding, full, bytes, fileFormat,
+  firstLineBehavior, ext},
 
-  tokss = CodeTokenize[{f}, opts];
+  encoding = OptionValue[CodeTokenize, {opts}, CharacterEncoding];
 
-  If[FailureQ[tokss],
-    Throw[tokss]
+  If[encoding =!= "UTF-8",
+    Throw[Failure["OnlyUTF8Supported", <| "CharacterEncoding" -> encoding |>]]
   ];
 
-  tokss[[1]]
-]]
-
-CodeTokenize[fs:{File[_String], File[_String]...}, opts:OptionsPattern[]] :=
-Module[{tokss},
-
-  tokss = tokenizeFileListable[fs, CodeTokenize, opts];
-
-  tokss
-]
-
-
-
-tokenizeFileListable[fs:{File[_String]...}, func_, opts:OptionsPattern[]] :=
-Catch[
-Module[{encoding, res, fulls, bytess, convention, tabWidth, fileFormat, firstLineBehavior, exts},
-
-  encoding = OptionValue[func, {opts}, CharacterEncoding];
-  convention = OptionValue[func, {opts}, SourceConvention];
-  tabWidth = OptionValue[func, {opts}, "TabWidth"];
-  fileFormat = OptionValue[func, {opts}, "FileFormat"];
+  fileFormat = OptionValue[CodeTokenize, {opts}, "FileFormat"];
 
   If[fileFormat === Automatic,
-    exts = FileExtension /@ fs;
+    ext = FileExtension[f];
     Which[
-      AnyTrue[exts, (# == "wl" || # == "m")&],
+      ext == "wl" || ext == "m",
         fileFormat = "Package"
       ,
-      AnyTrue[exts, (# == "wls")&],
+      ext == "wls",
         fileFormat = "Script"
       ,
-      AnyTrue[exts, (# == "nb")&],
+      ext == "nb",
         fileFormat = "Notebook"
       ,
       True,
         fileFormat = "Unknown"
     ]
   ];
-  
-  If[encoding =!= "UTF-8",
-    Throw[Failure["OnlyUTF8Supported", <| "CharacterEncoding" -> encoding |>]]
-  ];
 
-  fulls = FindFile /@ fs;
-  If[AnyTrue[fulls, FailureQ],
-    Throw[Failure["FindFileFailed", <| "FileNames" -> fs |>]]
+  full = FindFile[f];
+  If[FailureQ[full],
+    Throw[Failure["FindFileFailed", <| "File" -> f |>]]
   ];
 
   Switch[fileFormat,
@@ -1080,21 +1020,46 @@ Module[{encoding, res, fulls, bytess, convention, tabWidth, fileFormat, firstLin
       firstLineBehavior = NotScript
   ];
 
-  (*
-  Was:
-  bytess = Import[#, "Byte"]& /@ fulls;
+  bytes = ReadByteArray[full];
 
-  but this is slow
-  *)
-  bytess = (Normal[ReadByteArray[#]] /. EndOfFile -> {})& /@ fulls;
+  toks = tokenizeFile[bytes, firstLineBehavior, CodeTokenize, opts];
+
+  If[FailureQ[toks],
+    Throw[toks]
+  ];
+
+  Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+
+    UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
+    UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
+
+    (
+    (* :!CodeAnalysis::BeginBlock:: *)
+    (* :!CodeAnalysis::Disable::SelfAssignment:: *)
+    toks = toks
+    (* :!CodeAnalysis::EndBlock:: *)
+    );
+  ];
+
+  toks
+]]
+
+
+tokenizeFile[EndOfFile, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
+  {}
+
+tokenizeFile[bytes_ByteArray?ByteArrayQ, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
+Catch[
+Module[{res, convention, tabWidth},
+
+  convention = OptionValue[func, {opts}, SourceConvention];
+  tabWidth = OptionValue[func, {opts}, "TabWidth"];
 
   $ConcreteParseProgress = 0;
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  Block[{$StructureSrcArgs = parseConvention[convention]},
-  res = libraryFunctionWrapper[tokenizeBytesListableFunc, bytess, convention, tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
-  ];
+  res = libraryFunctionWrapper[tokenizeBytesFunc, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -1107,49 +1072,56 @@ Module[{encoding, res, fulls, bytess, convention, tabWidth, fileFormat, firstLin
 ]]
 
 
-
-CodeTokenize[bytes:{_Integer, _Integer...}, opts:OptionsPattern[]] :=
+CodeTokenize[bytesIn:{_Integer...}, opts:OptionsPattern[]] :=
 Catch[
-Module[{tokss},
+Module[{toks, encoding},
 
-  tokss = CodeTokenize[{bytes}, opts];
-
-  If[FailureQ[tokss],
-    Throw[tokss]
-  ];
-
-  tokss[[1]]
-]]
-
-CodeTokenize[bytess:{{_Integer, _Integer...}...}, opts:OptionsPattern[]] :=
-Module[{tokss},
-
-  tokss = tokenizeBytesListable[bytess, CodeTokenize, opts];
-
-  tokss
-]
-
-
-
-tokenizeBytesListable[bytess:{{_Integer...}...}, func_, opts:OptionsPattern[]] :=
-Catch[
-Module[{encoding, res, convention, tabWidth},
-
-  encoding = OptionValue[func, {opts}, CharacterEncoding];
-  convention = OptionValue[func, {opts}, SourceConvention];
-  tabWidth = OptionValue[func, {opts}, "TabWidth"];
+  encoding = OptionValue[CodeTokenize, {opts}, CharacterEncoding];
 
   If[encoding =!= "UTF-8",
     Throw[Failure["OnlyUTF8Supported", <| "CharacterEncoding" -> encoding |>]]
   ];
 
+  bytes = ByteArray[bytesIn];
+
+  toks = tokenizeBytes[bytes, NotScript, CodeTokenize, opts];
+
+  If[FailureQ[toks],
+    Throw[toks]
+  ];
+
+  Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+
+    UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
+    UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
+
+    (
+    (* :!CodeAnalysis::BeginBlock:: *)
+    (* :!CodeAnalysis::Disable::SelfAssignment:: *)
+    toks = toks
+    (* :!CodeAnalysis::EndBlock:: *)
+    );
+  ];
+
+  toks
+]]
+
+
+tokenizeBytes[{}, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
+  {}
+
+tokenizeBytes[bytes_ByteArray?ByteArrayQ, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
+Catch[
+Module[{res, convention, tabWidth},
+
+  convention = OptionValue[func, {opts}, SourceConvention];
+  tabWidth = OptionValue[func, {opts}, "TabWidth"];
+
   $ConcreteParseProgress = 0;
   $ConcreteParseStart = Now;
   $ConcreteParseTime = Quantity[0, "Seconds"];
 
-  Block[{$StructureSrcArgs = parseConvention[convention]},
-  res = libraryFunctionWrapper[tokenizeBytesListableFunc, bytess, convention, tabWidth, firstLineBehaviorToInteger[NotScript]];
-  ];
+  res = libraryFunctionWrapper[tokenizeBytesFunc, bytes, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior]];
 
   $ConcreteParseProgress = 100;
   $ConcreteParseTime = Now - $ConcreteParseStart;
@@ -1157,7 +1129,6 @@ Module[{encoding, res, convention, tabWidth},
   If[FailureQ[res],
     Throw[res]
   ];
-
 
   (*
   LineContinuation and EmbeddedNewline data is not returned here
@@ -1168,17 +1139,9 @@ Module[{encoding, res, convention, tabWidth},
 
 
 
-CodeTokenize[{}, opts:OptionsPattern[]] :=
-Catch[
-Module[{},
-  
-  {}
-]]
-
-
-
-
-
+(*
+CodeConcreteParseLeaf
+*)
 
 CodeConcreteParseLeaf::usage = "CodeConcreteParseLeaf[code] returns a LeafNode by interpreting code as a leaf. \
 code can be a string."
@@ -1205,27 +1168,11 @@ CodeConcreteParseLeaf[str_String, opts:OptionsPattern[]] :=
   concreteParseLeaf[str, CodeConcreteParseLeaf, opts]
 
 
-concreteParseLeaf[strIn_String, func_, opts:OptionsPattern[]] :=
+concreteParseLeaf[str_String, func_, opts:OptionsPattern[]] :=
 Catch[
-Module[{str, res, leaf, data, exprs, stringifyMode, convention, tabWidth, encodingMode},
+Module[{res, leaf, data, exprs},
 
-  str = strIn;
-
-  stringifyMode = OptionValue[func, {opts}, "StringifyMode"];
-  convention = OptionValue[func, {opts}, SourceConvention];
-  tabWidth = OptionValue[func, {opts}, "TabWidth"];
-  encodingMode = OptionValue[func, {opts}, "EncodingMode"];
-
-  $ConcreteParseProgress = 0;
-  $ConcreteParseStart = Now;
-  $ConcreteParseTime = Quantity[0, "Seconds"];
-
-  Block[{$StructureSrcArgs = parseConvention[convention]},
-  res = libraryFunctionWrapper[concreteParseLeafFunc, str, stringifyMode, convention, tabWidth, firstLineBehaviorToInteger[NotScript], encodingMode];
-  ];
-
-  $ConcreteParseProgress = 100;
-  $ConcreteParseTime = Now - $ConcreteParseStart;
+  res = concreteParseLeafString[str, NotScript, CodeConcreteParseLeaf, opts];
 
   If[FailureQ[res],
     Throw[res]
@@ -1234,6 +1181,19 @@ Module[{str, res, leaf, data, exprs, stringifyMode, convention, tabWidth, encodi
   exprs = res[[1]];
 
   leaf = exprs[[1]];
+
+  Block[{UnterminatedGroupNeedsReparseNode, UnterminatedTokenErrorNeedsReparseNode},
+
+    UnterminatedGroupNeedsReparseNode[args___] := reparseUnterminatedGroupNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedGroupNode]]];
+    UnterminatedTokenErrorNeedsReparseNode[args___] := reparseUnterminatedTokenErrorNode[{args}, bytes, FilterRules[{opts}, Options[reparseUnterminatedTokenErrorNode]]];
+
+    (
+    (* :!CodeAnalysis::BeginBlock:: *)
+    (* :!CodeAnalysis::Disable::SelfAssignment:: *)
+    leaf = leaf
+    (* :!CodeAnalysis::EndBlock:: *)
+    );
+  ];
 
   If[!empty[res[[2]]],
     data = leaf[[3]];
@@ -1271,31 +1231,69 @@ Module[{str, res, leaf, data, exprs, stringifyMode, convention, tabWidth, encodi
 ]]
 
 
+concreteParseLeafString[str_String, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
+Catch[
+Module[{res, stringifyMode, convention, tabWidth, encodingMode},
+
+  stringifyMode = OptionValue[func, {opts}, "StringifyMode"];
+  convention = OptionValue[func, {opts}, SourceConvention];
+  tabWidth = OptionValue[func, {opts}, "TabWidth"];
+  encodingMode = OptionValue[func, {opts}, "EncodingMode"];
+
+  $ConcreteParseProgress = 0;
+  $ConcreteParseStart = Now;
+  $ConcreteParseTime = Quantity[0, "Seconds"];
+
+  res = libraryFunctionWrapper[concreteParseLeafFunc, str, stringifyMode, sourceConventionToInteger[convention], tabWidth, firstLineBehaviorToInteger[firstLineBehavior], encodingMode];
+
+  $ConcreteParseProgress = 100;
+  $ConcreteParseTime = Now - $ConcreteParseStart;
+
+  If[FailureQ[res],
+    Throw[res]
+  ];
+
+  res
+]]
 
 
-
-
-
+(*
+SafeString
+*)
 
 SafeString::usage = "SafeString[bytes] interprets bytes as UTF-8 and returns a string of the decoded bytes if it is safe. \
 Otherwise, Missing[\"UnsafeCharacterEncoding\"] is returned. \
 A string is safe if there are no incomplete sequences, stray surrogates, or BOM present."
 
+(*
+ByteArray[{}] returns {}
+*)
+SafeString[{}] :=
+  ""
+
 SafeString[bytes:{_Integer...}] :=
+  SafeString[ByteArray[bytes]]
+
+(*
+ReadByteArray[emptyFile] returns EndOfFile
+*)
+SafeString[EndOfFile] :=
+  ""
+
+SafeString[bytes_ByteArray?ByteArrayQ] :=
 Catch[
-Module[{res, safeStr},
+Module[{res},
+
   res = libraryFunctionWrapper[safeStringFunc, bytes];
 
   If[FailureQ[res],
     Throw[res]
   ];
 
-  safeStr = res[[1]];
+  res = res[[1]];
 
-  safeStr
+  res
 ]]
-
-
 
 
 
@@ -1343,8 +1341,11 @@ CodeStructuralSyntaxAggQ[agg_] :=
 
 firstLineBehaviorToInteger[NotScript] = 0
 firstLineBehaviorToInteger[Check] = 1
-firstLineBehaviorToInteger[Script] = 2 
+firstLineBehaviorToInteger[Script] = 2
 
+
+sourceConventionToInteger["LineColumn"] = 0
+sourceConventionToInteger["SourceCharacterIndex"] = 1
 
 
 End[]

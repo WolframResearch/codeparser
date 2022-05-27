@@ -2,6 +2,7 @@
 #include "Token.h"
 
 #include "API.h" // for TheParserSession
+#include "Symbol.h"
 
 #include <cassert>
 
@@ -79,6 +80,7 @@ Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : BufLen(BufLen)
 
 #ifndef NDEBUG
 bool containsOnlyASCII(BufferAndLength BufLen) {
+    
     for (auto p = BufLen.buffer; p < BufLen.end; p++) {
         auto c = *p;
         //
@@ -88,10 +90,12 @@ bool containsOnlyASCII(BufferAndLength BufLen) {
             return false;
         }
     }
+    
     return true;
 }
 
 bool containsTab(BufferAndLength BufLen) {
+    
     for (auto p = BufLen.buffer; p < BufLen.end; p++) {
         auto c = *p;
         //
@@ -101,6 +105,7 @@ bool containsTab(BufferAndLength BufLen) {
             return true;
         }
     }
+    
     return false;
 }
 #endif // NDEBUG
@@ -117,27 +122,22 @@ void Token::print(std::ostream& s) const {
     
     auto& Sym = TokenToSymbol(Tok);
     
-    s << SYMBOL_CODEPARSER_LIBRARY_MAKELEAFNODE->name() << "[";
+    SYMBOL_CODEPARSER_LEAFNODE->print(s);
+    s << "[";
     
     s << Sym->name();
     s << ", ";
     
-    if (!Tok.isEmpty()) {
-        
-        BufLen.print(s);
-    }
-    
+    BufLen.print(s);
     s << ", ";
-        
-    Src.print(s);
     
+    Src.print(s);
     s << "]";
 }
 
 //
 // For googletest
 //
-void PrintTo(const Token& T, std::ostream *stream) {
-    T.print(*stream);
+void PrintTo(const Token& T, std::ostream *s) {
+    T.print(*s);
 }
-

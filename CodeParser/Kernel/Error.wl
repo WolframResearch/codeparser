@@ -80,7 +80,7 @@ Options[reparseUnterminatedGroupNode] = {
   "TabWidth" -> 1
 }
 
-reparseUnterminatedGroupNode[{tag_, children_, dataIn_}, bytes_List, opts:OptionsPattern[]] :=
+reparseUnterminatedGroupNode[{tag_, children_, dataIn_}, bytes_(*ByteArray or {}*), opts:OptionsPattern[]] :=
 Catch[
 Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str, betterLeaves, convention, test,
   takeSpecsOfLines, poss, tabWidth},
@@ -94,11 +94,11 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
 
   str = SafeString[bytes];
 
-  If[MissingQ[str],
+  If[FailureQ[str],
     Throw[str]
   ];
 
-  If[FailureQ[str],
+  If[MissingQ[str],
     Throw[str]
   ];
 
@@ -224,7 +224,7 @@ Options[reparseUnterminatedTokenErrorNode] = {
   "TabWidth" -> 1
 }
 
-reparseUnterminatedTokenErrorNode[{tok_, _, dataIn_}, bytes_List, OptionsPattern[]] :=
+reparseUnterminatedTokenErrorNode[{tok_, _, dataIn_}, bytes_(*ByteArray or {}*), OptionsPattern[]] :=
 Catch[
 Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodLineIndex, str, convention, test,
   takeSpecsOfLines, poss, tabWidth, betterStr},
@@ -234,11 +234,11 @@ Module[{lines, chunks, src, firstChunk, betterSrc, data, lastGoodLine, lastGoodL
 
   str = SafeString[bytes];
 
-  If[MissingQ[str],
+  If[FailureQ[str],
     Throw[str]
   ];
   
-  If[FailureQ[str],
+  If[MissingQ[str],
     Throw[str]
   ];
 

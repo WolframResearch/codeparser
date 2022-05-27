@@ -159,7 +159,7 @@ parseletRegistrationCPPHeader = {
 
 #pragma once
 
-#include \"TokenEnum.h\"
+#include \"TokenEnum.h\" // for TOKEN_COUNT
 
 #include <array>
 
@@ -174,6 +174,7 @@ using InfixParseletPtr = InfixParselet *;
 using ContextSensitivePrefixParseletPtr = ContextSensitivePrefixParselet *;
 using ContextSensitiveInfixParseletPtr = ContextSensitiveInfixParselet *;
 using PrefixToplevelCloserParseletPtr = PrefixToplevelCloserParselet *;
+
 
 extern std::array<PrefixParseletPtr, TOKEN_COUNT.value()> prefixParselets;
 extern std::array<InfixParseletPtr, TOKEN_COUNT.value()> infixParselets;
@@ -209,6 +210,7 @@ parseletRegistrationCPPSource = {
 
 #include \"Parselet.h\" // for SymbolParselet, UnderParselet, etc.
 #include \"ByteDecoder.h\" // for TheByteDecoder
+#include \"Symbol.h\"
 
 #include <cassert>
 

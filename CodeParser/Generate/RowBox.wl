@@ -15,7 +15,7 @@ related issues: PACMAN-54
 *)
 Block[{Internal`PacletFindFile = Null&},
 Needs["CodeParser`Generate`Common`"];
-Needs["CodeParser`Generate`Symbol`"];
+Needs["CodeParser`Generate`TokenEnum`"];
 Needs["CodeTools`Generate`GenerateSources`"];
 ]
 

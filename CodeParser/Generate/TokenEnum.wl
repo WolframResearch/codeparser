@@ -4,6 +4,8 @@ If[!MemberQ[$Path, #], PrependTo[$Path, #]]&[DirectoryName[$InputFileName, 3]]
 
 BeginPackage["CodeParser`Generate`TokenEnum`"]
 
+GroupOpenerToCloser
+
 tokens
 
 Begin["`Private`"]
@@ -19,6 +21,40 @@ Block[{Internal`PacletFindFile = Null&},
 Needs["CodeParser`Generate`Common`"];
 Needs["CodeTools`Generate`GenerateSources`"];
 ]
+
+
+GroupOpenerToCloser[Token`OpenCurly] = Closer`CloseCurly
+GroupOpenerToCloser[Token`LessBar] = Closer`BarGreater
+GroupOpenerToCloser[Token`OpenSquare] = Closer`CloseSquare
+GroupOpenerToCloser[Token`OpenParen] = Closer`CloseParen
+GroupOpenerToCloser[Token`ColonColonOpenSquare] = Closer`CloseSquare
+
+GroupOpenerToCloser[Token`LongName`LeftAngleBracket] = Closer`LongName`RightAngleBracket
+GroupOpenerToCloser[Token`LongName`LeftCeiling] = Closer`LongName`RightCeiling
+GroupOpenerToCloser[Token`LongName`LeftFloor] = Closer`LongName`RightFloor
+GroupOpenerToCloser[Token`LongName`LeftDoubleBracket] = Closer`LongName`RightDoubleBracket
+GroupOpenerToCloser[Token`LongName`LeftBracketingBar] = Closer`LongName`RightBracketingBar
+GroupOpenerToCloser[Token`LongName`LeftDoubleBracketingBar] = Closer`LongName`RightDoubleBracketingBar
+GroupOpenerToCloser[Token`LongName`LeftAssociation] = Closer`LongName`RightAssociation
+GroupOpenerToCloser[Token`LongName`OpenCurlyQuote] = Closer`LongName`CloseCurlyQuote
+GroupOpenerToCloser[Token`LongName`OpenCurlyDoubleQuote] = Closer`LongName`CloseCurlyDoubleQuote
+
+
+TokenToCloser[Token`CloseCurly] = Closer`CloseCurly
+TokenToCloser[Token`BarGreater] = Closer`BarGreater
+TokenToCloser[Token`CloseSquare] = Closer`CloseSquare
+TokenToCloser[Token`CloseParen] = Closer`CloseParen
+
+TokenToCloser[Token`LongName`RightAngleBracket] = Closer`LongName`RightAngleBracket
+TokenToCloser[Token`LongName`RightCeiling] = Closer`LongName`RightCeiling
+TokenToCloser[Token`LongName`RightFloor] = Closer`LongName`RightFloor
+TokenToCloser[Token`LongName`RightDoubleBracket] = Closer`LongName`RightDoubleBracket
+TokenToCloser[Token`LongName`RightBracketingBar] = Closer`LongName`RightBracketingBar
+TokenToCloser[Token`LongName`RightDoubleBracketingBar] = Closer`LongName`RightDoubleBracketingBar
+TokenToCloser[Token`LongName`RightAssociation] = Closer`LongName`RightAssociation
+TokenToCloser[Token`LongName`CloseCurlyQuote] = Closer`LongName`CloseCurlyQuote
+TokenToCloser[Token`LongName`CloseCurlyDoubleQuote] = Closer`LongName`CloseCurlyDoubleQuote
+
 
 
 If[FailureQ[importedTokenEnumSource],
@@ -347,6 +383,12 @@ tokenCPPHeader = {
 #pragma once
 
 #include <cstdint> // for uint16_t
+#include <memory>
+
+class Symbol;
+
+using SymbolPtr = std::unique_ptr<Symbol>;
+
 
 //
 // All group closers
@@ -480,6 +522,11 @@ bool operator==(TokenEnum a, TokenEnum b);
 
 bool operator!=(TokenEnum a, TokenEnum b);
 
+Closer GroupOpenerToCloser(TokenEnum T);
+Closer TokenToCloser(TokenEnum T);
+
+const SymbolPtr& TokenToSymbol(TokenEnum T);
+
 //
 // All token enums
 //"} ~Join~
@@ -540,7 +587,7 @@ static_assert(TOKEN_ERROR_FIRST.value() == 0x10, \"Check your assumptions\");
 static_assert(TOKEN_ERROR_UNTERMINATEDCOMMENT.value() == 0x1c, \"Check your assumptions\");
 static_assert(TOKEN_ERROR_UNSUPPORTEDTOKEN.value() == 0x20, \"Check your assumptions\");
 "} ~Join~
-{"SymbolPtr& TokenToSymbol(TokenEnum T) {"} ~Join~
+{"const SymbolPtr& TokenToSymbol(TokenEnum T) {"} ~Join~
 {"switch (T.value()) {"} ~Join~
 tokenToSymbolCases ~Join~
 {"default:"} ~Join~
@@ -555,7 +602,26 @@ tokenToSymbolCases ~Join~
 bool operator!=(TokenEnum a, TokenEnum b) {
   return a.value() != b.value();
 }
-"};
+"} ~Join~
+
+{"Closer GroupOpenerToCloser(TokenEnum T) {"} ~Join~
+{"switch (T.value()) {"} ~Join~
+Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal[#[[2]]], ";"}]&, DownValues[GroupOpenerToCloser]] ~Join~
+{"default: assert(false && \"Unhandled token\"); return CLOSER_ASSERTFALSE;",
+"}"} ~Join~
+{"}"} ~Join~
+
+{""} ~Join~
+
+{"Closer TokenToCloser(TokenEnum T) {"} ~Join~
+{"switch (T.value()) {"} ~Join~
+Map[Row[{"case", " ", toGlobal[#[[1, 1, 1]]], ".value():", " ", "return", " ", toGlobal[#[[2]]], ";"}]&, DownValues[TokenToCloser]] ~Join~
+{"default: return CLOSER_ASSERTFALSE;",
+"}"} ~Join~
+{"}"} ~Join~
+
+{""};
+
 
 Print["exporting TokenEnum.cpp"];
 res = Export[FileNameJoin[{generatedCPPSrcDir, "TokenEnum.cpp"}], Column[tokenCPPSource], "String"];
