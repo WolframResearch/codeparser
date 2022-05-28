@@ -260,6 +260,8 @@ NodePtr Parser::parseLoop(NodePtr Left, ParserContext Ctxt) {
             //
             if ((Ctxt.Prec | 0x1) > TokenPrecedence) {
                 
+                Trivia1.reset();
+                
                 break;
             }
             
@@ -274,6 +276,8 @@ NodePtr Parser::parseLoop(NodePtr Left, ParserContext Ctxt) {
                 token = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(last.BufLen.end), Source(last.Src.End));
                 
                 LeftSeq.append(std::move(Left));
+                
+                Trivia1.reset();
                 
             } else {
                 

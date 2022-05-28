@@ -35,19 +35,15 @@ using expr = void *;
 class TriviaSeq {
 private:
     
-    bool moved;
-    
     std::vector<LeafNodePtr> vec;
     
 public:
     
-    TriviaSeq() : moved(false), vec() {}
+    TriviaSeq() : vec() {}
     
-    TriviaSeq(TriviaSeq&& other) : moved(false), vec(std::move(other.vec)) {
-        other.moved = true;
-    }
+    TriviaSeq(TriviaSeq&& other) : vec(std::move(other.vec)) {}
     
-    ~TriviaSeq();
+    void reset();
     
     bool empty() const;
     
@@ -223,19 +219,13 @@ public:
 class ScopedLeafNode : public LeafNode {
 private:
     
-    bool moved;
-    
 public:
 
-    ScopedLeafNode(const Token& Tok) : LeafNode(Tok), moved() {}
-
-    ScopedLeafNode(const Token&& Tok) : LeafNode(std::move(Tok)), moved() {}
+    ScopedLeafNode(const Token& Tok) : LeafNode(Tok) {}
     
-    ScopedLeafNode(ScopedLeafNode&& other) : LeafNode(std::move(other.Tok)), moved() {
-        other.moved = true;
-    }
+    ScopedLeafNode(ScopedLeafNode&& other) : LeafNode(std::move(other.Tok)) {}
     
-    ~ScopedLeafNode();
+    void reset();
 };
 
 //

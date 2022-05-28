@@ -25,8 +25,6 @@ void NodeSeq::appendSeq(TriviaSeq Seq) {
     for (auto& T : Seq.vec) {
         vec.push_back(std::move(T));
     }
-
-    Seq.moved = true;
 }
 
 void NodeSeq::appendSeq(NodeSeq Seq) {
@@ -94,15 +92,8 @@ bool NodeSeq::check() const {
 }
 
 
-TriviaSeq::~TriviaSeq() {
+void TriviaSeq::reset() {
     
-    if (moved) {
-        return;
-    }
-    
-    //
-    // This sequence is NOT moved, so destructing this sequence should have the effect of putting it
-    // in the front of the "queue" to be read again
     //
     // Just need to reset the global buffer to the buffer of the first token in the sequence
     //
@@ -227,15 +218,9 @@ void LeafNode::print(std::ostream& s) const {
 }
 
 
-ScopedLeafNode::~ScopedLeafNode() {
-    
-    if (moved) {
-        return;
-    }
+void ScopedLeafNode::reset() {
     
     //
-    // This node is NOT moved, so destructing this node should have the effect of putting it
-    // in the front of the "queue" to be read again
     //
     // Just need to reset the global buffer to the buffer of the token
     //

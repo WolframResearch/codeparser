@@ -97,6 +97,8 @@ NodePtr SemiSemiParselet::parseInfix(NodeSeq Left, Token TokIn, ParserContext Ct
             // There is only a single ;; and there is no implicit Times
             //
             
+            Trivia1.reset();
+            
             goto retParse;
         }
         
@@ -105,6 +107,8 @@ NodePtr SemiSemiParselet::parseInfix(NodeSeq Left, Token TokIn, ParserContext Ct
             //
             // \[Integral];;x\[DifferentialD]x
             //
+            
+            Trivia1.reset();
             
             goto retParse;
         }
@@ -138,6 +142,8 @@ NodePtr SemiSemiParselet::parseInfix(NodeSeq Left, Token TokIn, ParserContext Ct
                     //
                     
                     Operand = NodePtr(new InfixNode(SYMBOL_TIMES, std::move(Args)));
+                    
+                    Trivia2.reset();
                     
                     goto retParse;
                 }
@@ -250,6 +256,8 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
             Args.append(NodePtr(new LeafNode(TokIn)));
             Args.append(NodePtr(new LeafNode(Implicit)));
             
+            Trivia1.reset();
+            
             return NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
         }
         
@@ -279,6 +287,8 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
                     Args.appendSeq(std::move(Trivia1));
                     Args.append(std::move(SecondTokNode));
                     
+                    Trivia2.reset();
+                    
                     return NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
                 }
                 
@@ -293,6 +303,8 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
                     Args.appendSeq(std::move(Trivia1));
                     Args.append(std::move(SecondTokNode));
                     
+                    Trivia2.reset();
+                    
                     return NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
                 }
                 
@@ -305,7 +317,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
                     //
                     // SCOPED
                     //
-                    auto ThirdTokNode = NodePtr(new ScopedLeafNode(ThirdTok));
+                    ScopedLeafNode ThirdTokNode = ScopedLeafNode(ThirdTok);
                     
                     TriviaSeq Trivia3;
                     
@@ -325,6 +337,10 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
                         Args.appendSeq(std::move(Trivia1));
                         Args.append(std::move(SecondTokNode));
                         
+                        Trivia3.reset();
+                        ThirdTokNode.reset();
+                        Trivia2.reset();
+                        
                         return NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
                     }
                     
@@ -341,7 +357,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
                         Args.appendSeq(std::move(Trivia1));
                         Args.append(std::move(SecondTokNode));
                         Args.appendSeq(std::move(Trivia2));
-                        Args.append(std::move(ThirdTokNode));
+                        Args.append(NodePtr(new LeafNode(ThirdTok)));
                         Args.appendSeq(std::move(Trivia3));
                         Args.append(std::move(FourthTokNode));
                         
@@ -357,8 +373,14 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
                     Args.appendSeq(std::move(Trivia1));
                     Args.append(std::move(SecondTokNode));
                     
+                    Trivia3.reset();
+                    ThirdTokNode.reset();
+                    Trivia2.reset();
+                    
                     return NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
                 }
+                
+                Trivia2.reset();
             }
         }
         
@@ -371,7 +393,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
             //
             // SCOPED
             //
-            auto SecondTokNode = NodePtr(new ScopedLeafNode(SecondTok));
+            ScopedLeafNode SecondTokNode = ScopedLeafNode(SecondTok);
             
             TriviaSeq Trivia2;
             
@@ -392,6 +414,10 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
                 Args.append(NodePtr(new LeafNode(TokIn)));
                 Args.append(NodePtr(new LeafNode(Implicit)));
                 
+                Trivia2.reset();
+                SecondTokNode.reset();
+                Trivia1.reset();
+                
                 return NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
             }
             
@@ -409,7 +435,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
                 Args.append(NodePtr(new LeafNode(TokIn)));
                 Args.append(NodePtr(new LeafNode(Implicit)));
                 Args.appendSeq(std::move(Trivia1));
-                Args.append(std::move(SecondTokNode));
+                Args.append(NodePtr(new LeafNode(SecondTok)));
                 Args.appendSeq(std::move(Trivia2));
                 Args.append(std::move(ThirdTokNode));
                 
@@ -425,6 +451,10 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
             
             Args.append(NodePtr(new LeafNode(TokIn)));
             Args.append(NodePtr(new LeafNode(Implicit)));
+            
+            Trivia2.reset();
+            SecondTokNode.reset();
+            Trivia1.reset();
             
             return NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
         }
