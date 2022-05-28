@@ -78,6 +78,7 @@ private:
 public:
     
     NodeSeq() : vec() {}
+    
     NodeSeq(size_t i) : vec() {
         vec.reserve(i);
     }

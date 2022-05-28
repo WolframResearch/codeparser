@@ -371,10 +371,12 @@ bool SourceCharacter::isWhitespace() const {
     auto val = to_point();
     
     switch (val) {
-        case ' ': case '\t': case '\v': case '\f':
+        case ' ': case '\t': case '\v': case '\f': {
             return true;
-        default:
+        }
+        default: {
             return false;
+        }
     }
 }
 
@@ -441,7 +443,7 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
     auto val = c.to_point();
     
     switch (val) {
-        case CODEPOINT_ENDOFFILE:
+        case CODEPOINT_ENDOFFILE: {
             //
             // Invent something for EOF
             //
@@ -451,43 +453,54 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
             stream << SourceCharacter('F');
             stream << SourceCharacter('>');
             break;
+        }
             //
             // whitespace and newline characters
             //
-        case '\t':
+        case '\t': {
             stream << WLCharacter(CODEPOINT_STRINGMETA_TAB, ESCAPE_SINGLE);
             break;
-        case '\n':
+        }
+        case '\n': {
             stream << WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
             break;
-        case '\r':
+        }
+        case '\r': {
             stream << WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
             break;
-        case CODEPOINT_STRINGMETA_LINEFEED:
+        }
+        case CODEPOINT_STRINGMETA_LINEFEED: {
             stream << WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
             break;
-        case CODEPOINT_STRINGMETA_CARRIAGERETURN:
+        }
+        case CODEPOINT_STRINGMETA_CARRIAGERETURN: {
             stream << WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
             break;
-        case CODEPOINT_STRINGMETA_TAB:
+        }
+        case CODEPOINT_STRINGMETA_TAB: {
             stream << WLCharacter(CODEPOINT_STRINGMETA_TAB, ESCAPE_SINGLE);
             break;
-        case CODEPOINT_STRINGMETA_DOUBLEQUOTE:
+        }
+        case CODEPOINT_STRINGMETA_DOUBLEQUOTE: {
             stream << WLCharacter(CODEPOINT_STRINGMETA_DOUBLEQUOTE, ESCAPE_SINGLE);
             break;
-        case CODEPOINT_STRINGMETA_BACKSLASH:
+        }
+        case CODEPOINT_STRINGMETA_BACKSLASH: {
             stream << WLCharacter(CODEPOINT_STRINGMETA_BACKSLASH, ESCAPE_SINGLE);
             break;
-        case CODEPOINT_CRLF:
+        }
+        case CODEPOINT_CRLF: {
             stream << WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
             stream << WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
             break;
+        }
             //
             // escape
             //
-        case '\x1b':
+        case '\x1b': {
             stream << WLCharacter(CODEPOINT_ESC, ESCAPE_LONGNAME);
             break;
+        }
             //
             // C0 control characters
             //
@@ -508,10 +521,11 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
         case '\x80': case '\x81': case '\x82': case '\x83': case '\x84': case '\x85': case '\x86': case '\x87':
         case '\x88': case '\x89': case '\x8a': case '\x8b': case '\x8c': case '\x8d': case '\x8e': case '\x8f':
         case '\x90': case '\x91': case '\x92': case '\x93': case '\x94': case '\x95': case '\x96': case '\x97':
-        case '\x98': case '\x99': case '\x9a': case '\x9b': case '\x9c': case '\x9d': case '\x9e': case '\x9f':
+        case '\x98': case '\x99': case '\x9a': case '\x9b': case '\x9c': case '\x9d': case '\x9e': case '\x9f': {
             stream << WLCharacter(val, ESCAPE_2HEX);
             break;
-        default:
+        }
+        default: {
             
             assert(val >= 0);
             
@@ -573,6 +587,7 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
                 
                 break;
             }
+        }
     }
     
     return stream;

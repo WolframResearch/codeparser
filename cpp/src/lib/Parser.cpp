@@ -8,6 +8,7 @@
 #include "ByteDecoder.h" // for ByteDecoder
 #include "ByteBuffer.h" // for ByteBuffer
 
+
 Parser::Parser() {}
 
 Parser::~Parser() {}
@@ -20,8 +21,10 @@ void Parser::init() {
 void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
     
     switch (firstLineBehavior) {
-        case FIRSTLINEBEHAVIOR_NOTSCRIPT:
+        case FIRSTLINEBEHAVIOR_NOTSCRIPT: {
+            
             return;
+        }
         case FIRSTLINEBEHAVIOR_CHECK: {
             
             //
@@ -80,6 +83,7 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
                 auto peek = currentToken(Ctxt, TOPLEVEL);
                 
                 if (peek.Tok == TOKEN_ENDOFFILE) {
+                    
                     break;
                 }
                 
@@ -98,8 +102,9 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
             // TODO: if anyone ever asks, then consider providing the shebang as a token
             // but only after BIGCODEMERGE!!
             //
-        }
+            
             break;
+        }
         case FIRSTLINEBEHAVIOR_SCRIPT: {
             
             //
@@ -146,6 +151,7 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
                 auto peek = currentToken(Ctxt, TOPLEVEL);
                 
                 if (peek.Tok == TOKEN_ENDOFFILE) {
+                    
                     break;
                 }
                 
@@ -159,8 +165,9 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
                 nextToken(peek);
                 
             } // while (true)
-        }
+            
             break;
+        }
     }
 }
 
@@ -252,6 +259,7 @@ NodePtr Parser::infixLoop(NodePtr Left, ParserContext Ctxt) {
             //   break;
             //
             if ((Ctxt.Prec | 0x1) > TokenPrecedence) {
+                
                 break;
             }
             

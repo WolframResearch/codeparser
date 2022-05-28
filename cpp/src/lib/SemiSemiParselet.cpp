@@ -421,16 +421,12 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
             //      ^~ThirdTok
             //
             
-            {
-                TriviaSeq Trivia3;
-                
-                auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End));
-                
-                Args.append(NodePtr(new LeafNode(TokIn)));
-                Args.append(NodePtr(new LeafNode(Implicit)));
-                
-                return NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
-            }
+            auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End));
+            
+            Args.append(NodePtr(new LeafNode(TokIn)));
+            Args.append(NodePtr(new LeafNode(Implicit)));
+            
+            return NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
         }
     }
 }

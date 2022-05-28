@@ -17,15 +17,18 @@ void ByteDecoder::init() {
     lastLoc = SourceLocation();
     
     switch (TheParserSession->srcConvention) {
-        case SOURCECONVENTION_LINECOLUMN:
+        case SOURCECONVENTION_LINECOLUMN: {
             srcConventionManager = SourceConventionManagerPtr(new LineColumnManager());
             break;
-        case SOURCECONVENTION_SOURCECHARACTERINDEX:
+        }
+        case SOURCECONVENTION_SOURCECHARACTERINDEX: {
             srcConventionManager = SourceConventionManagerPtr(new SourceCharacterIndexManager());
             break;
-        default:
+        }
+        default: {
             assert(false);
             break;
+        }
     }
     
     SrcLoc = srcConventionManager->newSourceLocation();
@@ -98,19 +101,20 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             //
             // Handle LF also
             //
-        case 0x0a:
+        case 0x0a: {
             
             srcConventionManager->newline(SrcLoc);
             
             return SourceCharacter('\n');
-        case 0x09:
+        }
+        case 0x09: {
             
             // Handle TAB specially
             
             srcConventionManager->tab(SrcLoc);
             
             return SourceCharacter(firstByte);
-            
+        }
             //
             // 1 byte UTF-8 sequence
             //

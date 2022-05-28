@@ -76,6 +76,7 @@ private:
     const PrefixParseletPtr GP;
     
 public:
+    
     CallParselet(PrefixParseletPtr GP) : GP(std::move(GP)) {}
     
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
@@ -262,6 +263,7 @@ private:
     const SymbolPtr& Op;
     
 public:
+    
     BinaryOperatorParselet(TokenEnum Tok, Precedence precedence, const SymbolPtr& Op) : precedence(precedence), Op(Op) {}
     
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
@@ -285,6 +287,7 @@ private:
     const SymbolPtr& Op;
     
 public:
+    
     InfixOperatorParselet(TokenEnum Tok, Precedence precedence, const SymbolPtr& Op) : precedence(precedence), Op(Op) {}
     
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
@@ -308,6 +311,7 @@ private:
     const SymbolPtr& Op;
     
 public:
+    
     PostfixOperatorParselet(TokenEnum Tok, Precedence precedence, const SymbolPtr& Op) : precedence(precedence), Op(Op) {}
     
     NodePtr parse(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
@@ -331,6 +335,7 @@ private:
     const Closer Closr;
     
 public:
+    
     GroupParselet(TokenEnum Opener, const SymbolPtr& Op);
     
     NodePtr parse(Token firstTok, ParserContext Ctxt) const override;

@@ -42,6 +42,7 @@ NodePtr UnderParselet::parse0(Token TokIn, ParserContext Ctxt) const {
         Blank = NodePtr(new CompoundNode(BOp, std::move(Args)));
         
     } else {
+        
         Blank = std::move(Under);
     }
     
@@ -50,31 +51,29 @@ NodePtr UnderParselet::parse0(Token TokIn, ParserContext Ctxt) const {
 
 NodePtr UnderParselet::parse1(NodePtr Blank, Token Tok, ParserContext Ctxt) const {
     
-    {
-        TriviaSeq Trivia1;
+    TriviaSeq Trivia1;
+    
+    Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, TOPLEVEL, Trivia1);
+    
+    //
+    // For something like _:\"\"  when parsing _
+    // ColonFlag == false
+    // the : here is Optional, and so we want to go parse with ColonParselet's parseContextSensitive method
+    //
+    // For something like a:_:\"\"  when parsing _
+    // ColonFlag == true
+    // make sure to not parse the second : here
+    // We are already inside ColonParselet from the first :, and so ColonParselet will also handle the second :
+    //
+    if (Tok.Tok == TOKEN_COLON) {
         
-        Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, TOPLEVEL, Trivia1);
-        
-        //
-        // For something like _:\"\"  when parsing _
-        // ColonFlag == false
-        // the : here is Optional, and so we want to go parse with ColonParselet's parseContextSensitive method
-        //
-        // For something like a:_:\"\"  when parsing _
-        // ColonFlag == true
-        // make sure to not parse the second : here
-        // We are already inside ColonParselet from the first :, and so ColonParselet will also handle the second :
-        //
-        if (Tok.Tok == TOKEN_COLON) {
+        if ((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
             
-            if ((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
-                
-                NodeSeq BlankSeq(1 + Trivia1.size());
-                BlankSeq.append(std::move(Blank));
-                BlankSeq.appendSeq(std::move(Trivia1));
-                
-                Blank = contextSensitiveColonParselet->parseContextSensitive(std::move(BlankSeq), Tok, Ctxt);
-            }
+            NodeSeq BlankSeq(1 + Trivia1.size());
+            BlankSeq.append(std::move(Blank));
+            BlankSeq.appendSeq(std::move(Trivia1));
+            
+            Blank = contextSensitiveColonParselet->parseContextSensitive(std::move(BlankSeq), Tok, Ctxt);
         }
     }
     

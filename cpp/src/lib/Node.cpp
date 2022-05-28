@@ -49,6 +49,8 @@ size_t NodeSeq::size() const {
 
 const Node *NodeSeq::first() const {
     
+    assert(!vec.empty());
+    
     auto i = 0;
     
     auto F = vec.at(i).get();
@@ -59,6 +61,8 @@ const Node *NodeSeq::first() const {
 }
 
 const Node *NodeSeq::last() const {
+    
+    assert(!vec.empty());
     
     auto i = vec.size()-1;
     
@@ -408,15 +412,19 @@ void CollectedSourceLocationsNode::print(std::ostream& s) const {
 const MyStringPtr& unsafeCharacterEncodingReason(UnsafeCharacterEncodingFlag flag) {
     
     switch (flag) {
-        case UNSAFECHARACTERENCODING_INCOMPLETEUTF8SEQUENCE:
+        case UNSAFECHARACTERENCODING_INCOMPLETEUTF8SEQUENCE: {
             return STRING_UNSAFECHARACTERENCODING_INCOMPLETEUTF8SEQUENCE;
-        case UNSAFECHARACTERENCODING_STRAYSURROGATE:
+        }
+        case UNSAFECHARACTERENCODING_STRAYSURROGATE: {
             return STRING_UNSAFECHARACTERENCODING_STRAYSURROGATE;
-        case UNSAFECHARACTERENCODING_BOM:
+        }
+        case UNSAFECHARACTERENCODING_BOM: {
             return STRING_UNSAFECHARACTERENCODING_BOM;
-        default:
+        }
+        default: {
             assert(false);
             return STRING_UNSAFECHARACTERENCODING_UNKNOWN;
+        }
     }
 }
 

@@ -141,18 +141,20 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
             auto C = ParserSessionTokenize();
             
             switch (outputMode) {
-                case PRINT:
+                case PRINT: {
                     NodeContainerPrint(C, std::cout);
                     std::cout << "\n";
                     break;
+                }
                 case PRINT_DRYRUN: {
                     std::ofstream nullStream;
                     NodeContainerPrint(C, nullStream);
                     nullStream << "\n";
+                    break;
                 }
+                case NONE: case CHECK: {
                     break;
-                case NONE: case CHECK:
-                    break;
+                }
             }
             
             ParserSessionReleaseContainer(C);
@@ -170,18 +172,20 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
             auto C = ParserSessionConcreteParseLeaf(stringifyMode);
         
             switch (outputMode) {
-                case PRINT:
+                case PRINT: {
                     NodeContainerPrint(C, std::cout);
                     std::cout << "\n";
                     break;
+                }
                 case PRINT_DRYRUN: {
                     std::ofstream nullStream;
                     NodeContainerPrint(C, nullStream);
                     nullStream << "\n";
+                    break;
                 }
+                case NONE: case CHECK: {
                     break;
-                case NONE: case CHECK:
-                    break;
+                }
             }
             
             ParserSessionReleaseContainer(C);
@@ -197,25 +201,28 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
             auto C = ParserSessionParseExpressions();
             
             switch (outputMode) {
-                case PRINT:
+                case PRINT: {
                     NodeContainerPrint(C, std::cout);
                     std::cout << "\n";
                     break;
+                }
                 case PRINT_DRYRUN: {
                     std::ofstream nullStream;
                     NodeContainerPrint(C, nullStream);
                     nullStream << "\n";
-                }
                     break;
+                }
                 case CHECK: {
                     if (!NodeContainerCheck(C)) {
                         result = EXIT_FAILURE;
                         break;
                     }
+                    
+                    break;
                 }
+                case NONE: {
                     break;
-                case NONE:
-                    break;
+                }
             }
             
             ParserSessionReleaseContainer(C);
@@ -236,13 +243,16 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
 
     if (fb->fail()) {
         switch (outputMode) {
-            case PRINT:
+            case PRINT: {
                 std::cout << "file open failed\n";
                 break;
-            case PRINT_DRYRUN:
+            }
+            case PRINT_DRYRUN: {
                 break;
-            case NONE: case CHECK:
+            }
+            case NONE: case CHECK: {
                 break;
+            }
         }
         return EXIT_FAILURE;
     }
@@ -260,18 +270,20 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         auto C = ParserSessionTokenize();
         
         switch (outputMode) {
-            case PRINT:
+            case PRINT: {
                 NodeContainerPrint(C, std::cout);
                 std::cout << "\n";
                 break;
+            }
             case PRINT_DRYRUN: {
                 std::ofstream nullStream;
                 NodeContainerPrint(C, nullStream);
                 nullStream << "\n";
+                break;
             }
+            case NONE: case CHECK: {
                 break;
-            case NONE: case CHECK:
-                break;
+            }
         }
         
         ParserSessionReleaseContainer(C);
@@ -287,18 +299,20 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         auto C = ParserSessionConcreteParseLeaf(stringifyMode);
     
         switch (outputMode) {
-            case PRINT:
+            case PRINT: {
                 NodeContainerPrint(C, std::cout);
                 std::cout << "\n";
                 break;
+            }
             case PRINT_DRYRUN: {
                 std::ofstream nullStream;
                 NodeContainerPrint(C, nullStream);
                 nullStream << "\n";
+                break;
             }
+            case NONE: case CHECK: {
                 break;
-            case NONE: case CHECK:
-                break;
+            }
         }
         
         ParserSessionReleaseContainer(C);
@@ -312,24 +326,27 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         auto C = ParserSessionParseExpressions();
         
         switch (outputMode) {
-            case PRINT:
+            case PRINT: {
                 NodeContainerPrint(C, std::cout);
                 std::cout << "\n";
                 break;
+            }
             case PRINT_DRYRUN: {
                 std::ofstream nullStream;
                 NodeContainerPrint(C, nullStream);
                 nullStream << "\n";
+                break;
             }
+            case NONE: {
                 break;
-            case NONE:
-                break;
+            }
             case CHECK: {
                 if (!NodeContainerCheck(C)) {
                     result = EXIT_FAILURE;
                 }
-            }
+                
                 break;
+            }
         }
         
         ParserSessionReleaseContainer(C);

@@ -191,6 +191,7 @@ NodeContainerPtr ParserSession::parseExpressions() {
                 Expr = contextSensitivePrefixToplevelCloserParselet->parse(peek, Ctxt);
                 
             } else {
+                
                 Expr = prefixParselets[peek.Tok.value()]->parse(peek, Ctxt);
             }
             

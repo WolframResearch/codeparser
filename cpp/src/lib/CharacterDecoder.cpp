@@ -67,23 +67,29 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
         switch (curSource.to_point()) {
             case '\n':
             case '\r':
-            case CODEPOINT_CRLF:
+            case CODEPOINT_CRLF: {
                 curSource = handleLineContinuation(tokenStartBuf, tokenStartLoc, curSource, policy);
                 //
                 // Do not return
                 // loop around again
                 //
                 continue;
-            case '[':
+            }
+            case '[': {
                 return handleLongName(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
-            case ':':
+            }
+            case ':': {
                 return handle4Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
-            case '.':
+            }
+            case '.': {
                 return handle2Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
-            case '|':
+            }
+            case '|': {
                 return handle6Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
-            case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7':
+            }
+            case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': {
                 return handleOctal(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
+            }
                 //
                 // Simple escaped characters
                 // \b \f \n \r \t
@@ -139,21 +145,24 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
                 
                 return c;
             }
-            case 'n':
+            case 'n': {
                 //
                 // \n is NOT a newline character (but inside of strings, it does have special meaning)
                 //
                 return WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
-            case 'r':
+            }
+            case 'r': {
                 //
                 // \r is NOT a newline character (but inside of strings, it does have special meaning)
                 //
                 return WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
-            case 't':
+            }
+            case 't': {
                 //
                 // \t is NOT a space character (but inside of strings, it does have special meaning)
                 //
                 return WLCharacter(CODEPOINT_STRINGMETA_TAB, ESCAPE_SINGLE);
+            }
                 //
                 // \\ \" \< \>
                 //
@@ -162,10 +171,12 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
                 // https://mathematica.stackexchange.com/questions/105018/what-are-and-delimiters-in-box-expressions
                 // https://stackoverflow.com/q/6065887
                 //
-            case '"':
+            case '"': {
                 return WLCharacter(CODEPOINT_STRINGMETA_DOUBLEQUOTE, ESCAPE_SINGLE);
-            case '\\':
+            }
+            case '\\': {
                 return handleBackslash(escapedBuf, escapedLoc, policy);
+            }
             case '<': {
                 
                 auto c = WLCharacter(CODEPOINT_STRINGMETA_OPEN, ESCAPE_SINGLE);
@@ -218,32 +229,45 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
                 // Linear syntax characters
                 // \! \% \& \( \) \* \+ \/ \@ \^ \_ \` \<space>
                 //
-            case '!':
+            case '!': {
                 return WLCharacter(CODEPOINT_LINEARSYNTAX_BANG, ESCAPE_SINGLE);
-            case '%':
+            }
+            case '%': {
                 return WLCharacter(CODEPOINT_LINEARSYNTAX_PERCENT, ESCAPE_SINGLE);
-            case '&':
+            }
+            case '&': {
                 return WLCharacter(CODEPOINT_LINEARSYNTAX_AMP, ESCAPE_SINGLE);
-            case '(':
+            }
+            case '(': {
                 return WLCharacter(CODEPOINT_LINEARSYNTAX_OPENPAREN, ESCAPE_SINGLE);
-            case ')':
+            }
+            case ')': {
                 return WLCharacter(CODEPOINT_LINEARSYNTAX_CLOSEPAREN, ESCAPE_SINGLE);
-            case '*':
+            }
+            case '*': {
                 return WLCharacter(CODEPOINT_LINEARSYNTAX_STAR, ESCAPE_SINGLE);
-            case '+':
+            }
+            case '+': {
                 return WLCharacter(CODEPOINT_LINEARSYNTAX_PLUS, ESCAPE_SINGLE);
-            case '/':
+            }
+            case '/': {
                 return WLCharacter(CODEPOINT_LINEARSYNTAX_SLASH, ESCAPE_SINGLE);
-            case '@':
+            }
+            case '@': {
                 return WLCharacter(CODEPOINT_LINEARSYNTAX_AT, ESCAPE_SINGLE);
-            case '^':
+            }
+            case '^': {
                 return WLCharacter(CODEPOINT_LINEARSYNTAX_CARET, ESCAPE_SINGLE);
-            case '_':
+            }
+            case '_': {
                 return WLCharacter(CODEPOINT_LINEARSYNTAX_UNDER, ESCAPE_SINGLE);
-            case '`':
+            }
+            case '`': {
                 return WLCharacter(CODEPOINT_LINEARSYNTAX_BACKTICK, ESCAPE_SINGLE);
-            case ' ':
+            }
+            case ' ': {
                 return WLCharacter(CODEPOINT_LINEARSYNTAX_SPACE, ESCAPE_SINGLE);
+            }
                 //
                 // Anything else
                 //
@@ -728,12 +752,14 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
     codepoint point = d3 << 12 | d2 << 8 | d1 << 4 | d0;
     
     switch (point) {
-        case CODEPOINT_ACTUAL_DOUBLEQUOTE:
+        case CODEPOINT_ACTUAL_DOUBLEQUOTE: {
             point = CODEPOINT_STRINGMETA_DOUBLEQUOTE;
             break;
-        case CODEPOINT_ACTUAL_BACKSLASH:
+        }
+        case CODEPOINT_ACTUAL_BACKSLASH: {
             point = CODEPOINT_STRINGMETA_BACKSLASH;
             break;
+        }
     }
     
 #if !NISSUES
@@ -907,12 +933,14 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
     codepoint point = d1 << 4 | d0;
     
     switch (point) {
-        case CODEPOINT_ACTUAL_DOUBLEQUOTE:
+        case CODEPOINT_ACTUAL_DOUBLEQUOTE: {
             point = CODEPOINT_STRINGMETA_DOUBLEQUOTE;
             break;
-        case CODEPOINT_ACTUAL_BACKSLASH:
+        }
+        case CODEPOINT_ACTUAL_BACKSLASH: {
             point = CODEPOINT_STRINGMETA_BACKSLASH;
             break;
+        }
     }
     
 #if !NISSUES
@@ -1085,12 +1113,14 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
     codepoint point = d2 << 6 | d1 << 3 | d0;
     
     switch (point) {
-        case CODEPOINT_ACTUAL_DOUBLEQUOTE:
+        case CODEPOINT_ACTUAL_DOUBLEQUOTE: {
             point = CODEPOINT_STRINGMETA_DOUBLEQUOTE;
             break;
-        case CODEPOINT_ACTUAL_BACKSLASH:
+        }
+        case CODEPOINT_ACTUAL_BACKSLASH: {
             point = CODEPOINT_STRINGMETA_BACKSLASH;
             break;
+        }
     }
     
 #if !NISSUES
@@ -1278,12 +1308,14 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
     //
     
     switch (point) {
-        case CODEPOINT_ACTUAL_DOUBLEQUOTE:
+        case CODEPOINT_ACTUAL_DOUBLEQUOTE: {
             point = CODEPOINT_STRINGMETA_DOUBLEQUOTE;
             break;
-        case CODEPOINT_ACTUAL_BACKSLASH:
+        }
+        case CODEPOINT_ACTUAL_BACKSLASH: {
             point = CODEPOINT_STRINGMETA_BACKSLASH;
             break;
+        }
     }
     
 #if !NISSUES

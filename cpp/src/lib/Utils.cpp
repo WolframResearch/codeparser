@@ -20,14 +20,16 @@ bool Utils::isStrange(codepoint point) {
         case '\x00': case '\x01': case '\x02': case '\x03': case '\x04': case '\x05': case '\x06': case '\x07':
         case '\x08': /*    \x09*/ /*    \x0a*/ case '\x0b': case '\x0c': /*    \x0d*/ case '\x0e': case '\x0f':
         case '\x10': case '\x11': case '\x12': case '\x13': case '\x14': case '\x15': case '\x16': case '\x17':
-        case '\x18': case '\x19': case '\x1a': /*    \x1b*/ case '\x1c': case '\x1d': case '\x1e': case '\x1f':
+        case '\x18': case '\x19': case '\x1a': /*    \x1b*/ case '\x1c': case '\x1d': case '\x1e': case '\x1f': {
             //
             // Make sure to include DEL
             //
         case '\x7f':
             return true;
-        default:
+        }
+        default: {
             return false;
+        }
     }
 }
 
@@ -44,18 +46,21 @@ bool Utils::isMBStrange(codepoint point) {
     // Individual characters
     //
     switch (point) {
-        case CODEPOINT_ZEROWIDTHSPACE:
+        case CODEPOINT_ZEROWIDTHSPACE: {
             return true;
+        }
             //
             // ZERO WIDTH NON-JOINER
             //
-        case 0x200c:
+        case 0x200c: {
             return true;
+        }
             //
             // ZERO WIDTH JOINER
             //
-        case 0x200d:
+        case 0x200d: {
             return true;
+        }
 //            //
 //            // LINE SEPARATOR
 //            //
@@ -75,45 +80,54 @@ bool Utils::isMBStrange(codepoint point) {
         case CODEPOINT_LONGNAME_OPENCURLYQUOTE:
         case CODEPOINT_LONGNAME_CLOSECURLYQUOTE:
         case CODEPOINT_LONGNAME_OPENCURLYDOUBLEQUOTE:
-        case CODEPOINT_LONGNAME_CLOSECURLYDOUBLEQUOTE:
+        case CODEPOINT_LONGNAME_CLOSECURLYDOUBLEQUOTE: {
             return true;
+        }
         //
         // U+2061
         //
-        case CODEPOINT_FUNCTIONAPPLICATION:
+        case CODEPOINT_FUNCTIONAPPLICATION: {
             return true;
+        }
         //
         // U+2063
         //
-        case CODEPOINT_INVISIBLESEPARATOR:
+        case CODEPOINT_INVISIBLESEPARATOR: {
             return true;
+        }
         //
         // U+2064
         //
-        case CODEPOINT_INVISIBLEPLUS:
+        case CODEPOINT_INVISIBLEPLUS: {
             return true;
+        }
         //
         // U+2192
         //
-        case CODEPOINT_LONGNAME_RIGHTARROW:
+        case CODEPOINT_LONGNAME_RIGHTARROW: {
             return true;
+        }
         //
         // U+279D
         //
-        case CODEPOINT_TRIANGLEHEADEDRIGHTWARDSARROW:
+        case CODEPOINT_TRIANGLEHEADEDRIGHTWARDSARROW: {
             return true;
+        }
         //
         // U+29F4
         //
-        case CODEPOINT_RULEDELAYED:
+        case CODEPOINT_RULEDELAYED: {
             return true;
-        case CODEPOINT_LONGNAME_COMPATIBILITYNOBREAK:
+        }
+        case CODEPOINT_LONGNAME_COMPATIBILITYNOBREAK: {
             return true;
+        }
         //
         // Yes, we suggest \:2061 -> \[InvisibleApplication], but that is not saying \[InvisibleApplication] is not also strange!
         //
-        case CODEPOINT_LONGNAME_INVISIBLEAPPLICATION:
+        case CODEPOINT_LONGNAME_INVISIBLEAPPLICATION: {
             return true;
+        }
     }
 
     //
@@ -230,12 +244,14 @@ bool Utils::ifASCIIWLCharacter(unsigned char c, char test) {
     if (std::isalnum(c) || c == ']') {
         return true;
     }
+    
     //
     // there may be a line continuation and so testing against  '^'  may actually involve the bytes  '\' '\n' '^'
     //
     if (c == '\\') {
         return true;
     }
+    
     return c == test;
 }
 
@@ -266,8 +282,9 @@ CodeActionPtrVector Utils::certainCharacterReplacementActions(WLCharacter c, Sou
             // UTF-8 bytes for U+2060 (\[NoBreak])
             //
             Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + safeAndGraphicalStr1 + "`` with ``" + safeAndGraphicalStr2 + "``", src, (c.escape() == ESCAPE_NONE) ? "\xe2\x81\xa0" : "\\[NoBreak]")));
-        }
+            
             break;
+        }
         case CODEPOINT_LONGNAME_RIGHTARROW:
             //
             // U+279D Triangle-Headed Rightwards Arrow being used in place of \[Rule] is seen here:
@@ -282,8 +299,9 @@ CodeActionPtrVector Utils::certainCharacterReplacementActions(WLCharacter c, Sou
             // UTF-8 bytes for U+F522 (\[Rule])
             //
             Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + safeAndGraphicalStr1 + "`` with ``" + safeAndGraphicalStr2 + "``", src, (c.escape() == ESCAPE_NONE) ? "\xef\x94\xa2" : "\\[Rule]")));
-        }
+            
             break;
+        }
         case CODEPOINT_RULEDELAYED: {
             
             auto safeAndGraphicalStr1 = c.safeAndGraphicalString();
@@ -293,8 +311,9 @@ CodeActionPtrVector Utils::certainCharacterReplacementActions(WLCharacter c, Sou
             // UTF-8 bytes for U+F51F (\[RuleDelayed])
             //
             Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + safeAndGraphicalStr1 + "`` with ``" + safeAndGraphicalStr2 + "``", src, (c.escape() == ESCAPE_NONE) ? "\xef\x94\x9f" : "\\[RuleDelayed]")));
-        }
+            
             break;
+        }
         case CODEPOINT_FUNCTIONAPPLICATION: {
             
             auto safeAndGraphicalStr1 = c.safeAndGraphicalString();
@@ -306,8 +325,9 @@ CodeActionPtrVector Utils::certainCharacterReplacementActions(WLCharacter c, Sou
             Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + safeAndGraphicalStr1 + "`` with ``" + safeAndGraphicalStr2 + "``", src, (c.escape() == ESCAPE_NONE) ? "\xef\x9d\xad" : "\\[InvisibleApplication]")));
             
             Actions.push_back(CodeActionPtr(new DeleteTextCodeAction("Delete ``" + safeAndGraphicalStr1 + "``", src)));
-        }
+            
             break;
+        }
         case CODEPOINT_INVISIBLESEPARATOR: {
             
             auto safeAndGraphicalStr1 = c.safeAndGraphicalString();
@@ -317,8 +337,9 @@ CodeActionPtrVector Utils::certainCharacterReplacementActions(WLCharacter c, Sou
             // UTF-8 bytes for U+F765 (\[InvisibleComma])
             //
             Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + safeAndGraphicalStr1 + "`` with ``" + safeAndGraphicalStr2 + "``", src, (c.escape() == ESCAPE_NONE) ? "\xef\x9d\xa5" : "\\[InvisibleComma]")));
-        }
+            
             break;
+        }
         case CODEPOINT_INVISIBLEPLUS: {
             
             auto safeAndGraphicalStr1 = c.safeAndGraphicalString();
@@ -328,8 +349,9 @@ CodeActionPtrVector Utils::certainCharacterReplacementActions(WLCharacter c, Sou
             // UTF-8 bytes for U+F39E (\[ImplicitPlus])
             //
             Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + safeAndGraphicalStr1 + "`` with ``" + safeAndGraphicalStr2 + "``", src, (c.escape() == ESCAPE_NONE) ? "\xef\x8e\x9e" : "\\[ImplicitPlus]")));
-        }
+            
             break;
+        }
         case CODEPOINT_ZEROWIDTHSPACE: {
             
             auto safeAndGraphicalStr1 = c.safeAndGraphicalString();
@@ -339,8 +361,9 @@ CodeActionPtrVector Utils::certainCharacterReplacementActions(WLCharacter c, Sou
             // UTF-8 bytes for U+F360 (\[InvisibleSpace])
             //
             Actions.push_back(CodeActionPtr(new ReplaceTextCodeAction("Replace ``" + safeAndGraphicalStr1 + "`` with ``" + safeAndGraphicalStr2 + "``", src, (c.escape() == ESCAPE_NONE) ? "\xef\x8d\xa0" : "\\[InvisibleSpace]")));
-        }
+            
             break;
+        }
     }
     
     return Actions;

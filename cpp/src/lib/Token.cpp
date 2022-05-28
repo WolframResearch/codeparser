@@ -22,16 +22,18 @@ Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : BufLen(BufLen)
     //
     
     switch (Tok.value()) {
-        case TOKEN_UNKNOWN.value():
+        case TOKEN_UNKNOWN.value(): {
             break;
+        }
             //
             // Both \n and \r\n newlines have a size of 1
             // And other newlines like \[IndentingNewLine] have size > 1
             //
         case TOKEN_TOPLEVELNEWLINE.value():
-        case TOKEN_INTERNALNEWLINE.value():
+        case TOKEN_INTERNALNEWLINE.value(): {
             break;
-        default:
+        }
+        default: {
             
             if (Tok.isEmpty()) {
                 assert((BufLen.length() == 0) ||
@@ -72,7 +74,9 @@ Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : BufLen(BufLen)
                     }
                 }
             }
+            
             break;
+        }
     }
 #endif // NDEBUG
     

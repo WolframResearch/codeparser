@@ -92,6 +92,7 @@ private:
     void handleFirstLine(FirstLineBehavior firstLineBehavior);
     
 public:
+    
     Parser();
     
     void init();
