@@ -223,7 +223,7 @@ Token Parser::currentToken_stringifyAsFile() const {
     return TheTokenizer->currentToken_stringifyAsFile();
 }
 
-NodePtr Parser::infixLoop(NodePtr Left, ParserContext Ctxt) {
+NodePtr Parser::parseLoop(NodePtr Left, ParserContext Ctxt) {
     
     while (true) {
         
@@ -285,7 +285,7 @@ NodePtr Parser::infixLoop(NodePtr Left, ParserContext Ctxt) {
         auto Ctxt2 = Ctxt;
         Ctxt2.Prec = TokenPrecedence;
         
-        Left = I->parse(std::move(LeftSeq), token, Ctxt2);
+        Left = I->parseInfix(std::move(LeftSeq), token, Ctxt2);
         
     } // while
     

@@ -108,7 +108,7 @@ public:
     Token currentToken_stringifyAsTag() const;
     Token currentToken_stringifyAsFile() const;
     
-    NodePtr infixLoop(NodePtr Left, ParserContext Ctxt);
+    NodePtr parseLoop(NodePtr Left, ParserContext Ctxt);
     
     ~Parser();
 

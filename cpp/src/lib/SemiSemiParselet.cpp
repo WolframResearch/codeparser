@@ -72,17 +72,17 @@
 //          ]
 
 
-NodePtr SemiSemiParselet::parse(Token TokIn, ParserContext Ctxt) const {
+NodePtr SemiSemiParselet::parsePrefix(Token TokIn, ParserContext Ctxt) const {
     
     auto Implicit = Token(TOKEN_FAKE_IMPLICITONE, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
     
     NodeSeq Left(1);
     Left.append(NodePtr(new LeafNode(Implicit)));
     
-    return parse(std::move(Left), TokIn, Ctxt);
+    return parseInfix(std::move(Left), TokIn, Ctxt);
 }
 
-NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
+NodePtr SemiSemiParselet::parseInfix(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
     
     auto Operand = parse0(std::move(Left), TokIn, Ctxt);
     {
@@ -154,7 +154,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
                     // Must also handle  a;;!b  where there is an Implicit Times, but only a single Span
                     //
                     
-                    Operand = prefixParselets[Tok.Tok.value()]->parse(Tok, Ctxt);
+                    Operand = prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt);
                     
 #if !NISSUES
                     {
@@ -216,7 +216,7 @@ NodePtr SemiSemiParselet::parse(NodeSeq Left, Token TokIn, ParserContext Ctxt) c
     }
     
 retParse:
-    return TheParser->infixLoop(std::move(Operand), Ctxt);
+    return TheParser->parseLoop(std::move(Operand), Ctxt);
 }
 
 
@@ -260,7 +260,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
             //    ^SecondTok
             //
             
-            auto SecondTokNode = prefixParselets[SecondTok.Tok.value()]->parse(SecondTok, Ctxt);
+            auto SecondTokNode = prefixParselets[SecondTok.Tok.value()]->parsePrefix(SecondTok, Ctxt);
             
             {
                 TriviaSeq Trivia2;
@@ -335,7 +335,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
                         //       ^FourthTok
                         //
                         
-                        auto FourthTokNode = prefixParselets[FourthTok.Tok.value()]->parse(FourthTok, Ctxt);
+                        auto FourthTokNode = prefixParselets[FourthTok.Tok.value()]->parsePrefix(FourthTok, Ctxt);
                         
                         Args.append(NodePtr(new LeafNode(TokIn)));
                         Args.appendSeq(std::move(Trivia1));
@@ -402,7 +402,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
                 //      ^ThirdTok
                 //
                 
-                auto ThirdTokNode = prefixParselets[ThirdTok.Tok.value()]->parse(ThirdTok, Ctxt);
+                auto ThirdTokNode = prefixParselets[ThirdTok.Tok.value()]->parsePrefix(ThirdTok, Ctxt);
                 
                 auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End));
                 
