@@ -224,75 +224,67 @@ Token Parser::currentToken_stringifyAsFile() const {
 }
 
 NodePtr Parser::parseLoop(NodePtr Left, ParserContext Ctxt) {
-    
-    while (true) {
         
 #if !NABORT
-        if (TheParserSession->isAbort()) {
-            
-            return TheParserSession->handleAbort();
-        }
+    if (TheParserSession->isAbort()) {
+        
+        return TheParserSession->handleAbort();
+    }
 #endif // !NABORT
-        
-        auto token = currentToken(Ctxt, TOPLEVEL);
-        
-        InfixParseletPtr I;
-        Precedence TokenPrecedence;
-        
-        NodeSeq LeftSeq;
-        
-        TriviaSeq Trivia1;
-        
-        token = eatTriviaButNotToplevelNewlines(token, Ctxt, TOPLEVEL, Trivia1);
-        
-        I = infixParselets[token.Tok.value()];
-        
-        token = I->processImplicitTimes(token, Ctxt);
-        I = infixParselets[token.Tok.value()];
-        
-        TokenPrecedence = I->getPrecedence(Ctxt);
-        
-        //
-        // if (Ctxt.Prec > TokenPrecedence)
-        //   break;
-        // else if (Ctxt.Prec == TokenPrecedence && Ctxt.Prec.Associativity is NonRight)
-        //   break;
-        //
-        if ((Ctxt.Prec | 0x1) > TokenPrecedence) {
-            
-            Trivia1.reset();
-            
-            break;
-        }
-        
-        if (token.Tok == TOKEN_FAKE_IMPLICITTIMES) {
-            
-            //
-            // Reattach the ImplicitTimes to the operand for a better experience
-            //
-            
-            auto last = Left->lastToken();
-            
-            token = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(last.BufLen.end), Source(last.Src.End));
-            
-            LeftSeq.append(std::move(Left));
-            
-            Trivia1.reset();
-            
-        } else {
-            
-            LeftSeq.append(std::move(Left));
-            LeftSeq.appendSeq(std::move(Trivia1));
-        }
-        
-        auto Ctxt2 = Ctxt;
-        Ctxt2.Prec = TokenPrecedence;
-        
-        Left = I->parseInfix(std::move(LeftSeq), token, Ctxt2);
-        
-    } // while
     
-    return Left;
+    TriviaSeq Trivia1;
+    
+    auto token = currentToken(Ctxt, TOPLEVEL);
+    token = eatTriviaButNotToplevelNewlines(token, Ctxt, TOPLEVEL, Trivia1);
+    
+    auto I = infixParselets[token.Tok.value()];
+    
+    token = I->processImplicitTimes(token, Ctxt);
+    I = infixParselets[token.Tok.value()];
+    
+    auto TokenPrecedence = I->getPrecedence(Ctxt);
+    
+    //
+    // if (Ctxt.Prec > TokenPrecedence)
+    //   break;
+    // else if (Ctxt.Prec == TokenPrecedence && Ctxt.Prec.Associativity is NonRight)
+    //   break;
+    //
+    if ((Ctxt.Prec | 0x1) > TokenPrecedence) {
+            
+        Trivia1.reset();
+        
+        return Left;
+    }
+    
+    NodeSeq LeftSeq;
+    
+    if (token.Tok == TOKEN_FAKE_IMPLICITTIMES) {
+        
+        //
+        // Reattach the ImplicitTimes to the operand for a better experience
+        //
+        
+        auto last = Left->lastToken();
+        
+        token = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(last.BufLen.end), Source(last.Src.End));
+        
+        LeftSeq.append(std::move(Left));
+        
+        Trivia1.reset();
+        
+    } else {
+        
+        LeftSeq.append(std::move(Left));
+        LeftSeq.appendSeq(std::move(Trivia1));
+    }
+    
+    auto Ctxt2 = Ctxt;
+    Ctxt2.Prec = TokenPrecedence;
+    
+    Left = I->parseInfix(std::move(LeftSeq), token, Ctxt2);
+    
+    return parseLoop(std::move(Left), Ctxt);
 }
 
 Token Parser::eatTrivia(Token T, ParserContext Ctxt, NextPolicy policy, TriviaSeq& Args) {

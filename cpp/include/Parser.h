@@ -16,8 +16,6 @@ class Parser;
 using ParserPtr = std::unique_ptr<Parser>;
 
 
-
-
 //
 //
 //
@@ -119,4 +117,3 @@ public:
 };
 
 extern ParserPtr TheParser;
-

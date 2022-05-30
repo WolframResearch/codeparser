@@ -100,6 +100,7 @@ NodePtr UnderParselet::parsePrefix(Token TokIn, ParserContext Ctxt) const {
 NodePtr UnderParselet::parseInfixContextSensitive(NodeSeq Args, Token TokIn, ParserContext Ctxt) const {
     
     auto Blank = parse0(TokIn, Ctxt);
+    
     Args.append(NodePtr(std::move(Blank)));
     
     auto Pat = NodePtr(new CompoundNode(PBOp, std::move(Args)));
@@ -131,6 +132,7 @@ NodePtr UnderDotParselet::parsePrefix(Token TokIn, ParserContext Ctxt) const {
 NodePtr UnderDotParselet::parseInfixContextSensitive(NodeSeq Args, Token TokIn, ParserContext Ctxt) const {
     
     auto Blank = parse0(TokIn, Ctxt);
+    
     Args.append(NodePtr(std::move(Blank)));
     
     auto Pat = NodePtr(new CompoundNode(SYMBOL_CODEPARSER_PATTERNOPTIONALDEFAULT, std::move(Args)));

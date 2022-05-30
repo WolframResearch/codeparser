@@ -286,6 +286,8 @@ private:
     const Precedence precedence;
     const SymbolPtr& Op;
     
+    NodePtr parseLoop(NodeSeq Args, Token OperandLastToken, ParserContext Ctxt) const;
+    
 public:
     
     InfixOperatorParselet(TokenEnum Tok, Precedence precedence, const SymbolPtr& Op) : precedence(precedence), Op(Op) {}
@@ -334,6 +336,8 @@ private:
     const SymbolPtr& Op;
     const Closer Closr;
     
+    NodePtr parseLoop(NodeSeq Args, ParserContext CtxtIn) const;
+    
 public:
     
     GroupParselet(TokenEnum Opener, const SymbolPtr& Op);
@@ -362,6 +366,10 @@ public:
 // multiple inheritance
 //
 class CommaParselet : public InfixParselet {
+private:
+    
+    NodePtr parseLoop(NodeSeq Left, ParserContext Ctxt) const;
+    
 public:
     
     NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
@@ -378,6 +386,10 @@ public:
 // multiple inheritance
 //
 class SemiParselet : public InfixParselet {
+private:
+    
+    NodePtr parseLoop(NodeSeq Args, ParserContext Ctxt) const;
+    
 public:
     
     NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
@@ -402,6 +414,8 @@ private:
     // Parses a single complete Span
     //
     NodePtr parse0(NodeSeq Left, Token firstTok, ParserContext Ctxt) const;
+    
+    NodePtr parseLoop(NodeSeq Args, ParserContext Ctxt) const;
     
 public:
     
@@ -539,6 +553,10 @@ public:
 // a::b
 //
 class ColonColonParselet : public InfixParselet {
+private:
+    
+    NodePtr parseLoop(NodeSeq Args, ParserContext Ctxt) const;
+    
 public:
     
     NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
