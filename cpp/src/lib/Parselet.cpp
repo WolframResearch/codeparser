@@ -284,39 +284,38 @@ NodePtr PrefixOperatorParselet::parsePrefix(Token TokIn, ParserContext CtxtIn) c
     TheParser->nextToken(TokIn);
     
     NodePtr Left;
-    {
-        TriviaSeq Trivia1;
+    
+    TriviaSeq Trivia1;
+    
+    auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+    Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
+    
+    auto Operand = prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt);
+    
+    if (Operand->isExpectedOperandError()) {
         
-        auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
-        Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
+        //
+        // Reattach the ExpectedOperand Error to the operator for a better experience
+        //
         
-        auto Operand = prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt);
+        auto ProperExpectedOperandError = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
         
-        if (Operand->isExpectedOperandError()) {
-            
-            //
-            // Reattach the ExpectedOperand Error to the operator for a better experience
-            //
-            
-            auto ProperExpectedOperandError = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
-            
-            NodeSeq Args(1 + 1);
-            Args.append(NodePtr(new LeafNode(TokIn)));
-            Args.append(std::move(ProperExpectedOperandError));
-            
-            Left = NodePtr(new PrefixNode(Op, std::move(Args)));
-            
-            Trivia1.reset();
-            
-        } else {
-            
-            NodeSeq Args(1 + Trivia1.size() + 1);
-            Args.append(NodePtr(new LeafNode(TokIn)));
-            Args.appendSeq(std::move(Trivia1));
-            Args.append(std::move(Operand));
-            
-            Left = NodePtr(new PrefixNode(Op, std::move(Args)));
-        }
+        NodeSeq Args(1 + 1);
+        Args.append(NodePtr(new LeafNode(TokIn)));
+        Args.append(std::move(ProperExpectedOperandError));
+        
+        Left = NodePtr(new PrefixNode(Op, std::move(Args)));
+        
+        Trivia1.reset();
+        
+    } else {
+        
+        NodeSeq Args(1 + Trivia1.size() + 1);
+        Args.append(NodePtr(new LeafNode(TokIn)));
+        Args.appendSeq(std::move(Trivia1));
+        Args.append(std::move(Operand));
+        
+        Left = NodePtr(new PrefixNode(Op, std::move(Args)));
     }
     
     return TheParser->parseLoop(std::move(Left), CtxtIn);
@@ -365,37 +364,36 @@ NodePtr BinaryOperatorParselet::parseInfix(NodeSeq Args, Token TokIn, ParserCont
     TheParser->nextToken(TokIn);
     
     NodePtr L;
-    {
-        TriviaSeq Trivia1;
     
-        auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
-        Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
-    
-        auto Right = prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt);
-        
-        if (Right->isExpectedOperandError()) {
+    TriviaSeq Trivia1;
 
-            //
-            // Reattach the ExpectedOperand Error to the operator for a better experience
-            //
-            
-            auto ProperExpectedOperandError = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
-            
-            Args.append(NodePtr(new LeafNode(TokIn)));
-            Args.append(std::move(ProperExpectedOperandError));
-            
-            L = NodePtr(new BinaryNode(Op, std::move(Args)));
-            
-            Trivia1.reset();
-            
-        } else {
-            
-            Args.append(NodePtr(new LeafNode(TokIn)));
-            Args.appendSeq(std::move(Trivia1));
-            Args.append(std::move(Right));
-            
-            L = NodePtr(new BinaryNode(Op, std::move(Args)));
-        }
+    auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+    Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
+
+    auto Right = prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt);
+    
+    if (Right->isExpectedOperandError()) {
+
+        //
+        // Reattach the ExpectedOperand Error to the operator for a better experience
+        //
+        
+        auto ProperExpectedOperandError = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
+        
+        Args.append(NodePtr(new LeafNode(TokIn)));
+        Args.append(std::move(ProperExpectedOperandError));
+        
+        L = NodePtr(new BinaryNode(Op, std::move(Args)));
+        
+        Trivia1.reset();
+        
+    } else {
+        
+        Args.append(NodePtr(new LeafNode(TokIn)));
+        Args.appendSeq(std::move(Trivia1));
+        Args.append(std::move(Right));
+        
+        L = NodePtr(new BinaryNode(Op, std::move(Args)));
     }
     
     return TheParser->parseLoop(std::move(L), CtxtIn);
@@ -415,35 +413,34 @@ NodePtr InfixOperatorParselet::parseInfix(NodeSeq Args, Token TokIn, ParserConte
     // Unroll 1 iteration of the loop because we know that TokIn has already been read
     //
     Token OperandLastToken;
-    {
-        TriviaSeq Trivia2;
+    
+    TriviaSeq Trivia2;
+    
+    auto Tok2 = TheParser->currentToken(Ctxt, TOPLEVEL);
+    Tok2 = TheParser->eatTrivia(Tok2, Ctxt, TOPLEVEL, Trivia2);
+    
+    auto Operand = prefixParselets[Tok2.Tok.value()]->parsePrefix(Tok2, Ctxt);
+    
+    OperandLastToken = Operand->lastToken();
+    
+    if (Operand->isExpectedOperandError()) {
         
-        auto Tok2 = TheParser->currentToken(Ctxt, TOPLEVEL);
-        Tok2 = TheParser->eatTrivia(Tok2, Ctxt, TOPLEVEL, Trivia2);
+        //
+        // Reattach the ExpectedOperand Error to the operator for a better experience
+        //
         
-        auto Operand = prefixParselets[Tok2.Tok.value()]->parsePrefix(Tok2, Ctxt);
+        auto ProperExpectedOperandError = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
         
-        OperandLastToken = Operand->lastToken();
+        Args.append(NodePtr(new LeafNode(TokIn)));
+        Args.append(std::move(ProperExpectedOperandError));
         
-        if (Operand->isExpectedOperandError()) {
-            
-            //
-            // Reattach the ExpectedOperand Error to the operator for a better experience
-            //
-            
-            auto ProperExpectedOperandError = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
-            
-            Args.append(NodePtr(new LeafNode(TokIn)));
-            Args.append(std::move(ProperExpectedOperandError));
-            
-            Trivia2.reset();
-            
-        } else {
-            
-            Args.append(NodePtr(new LeafNode(TokIn)));
-            Args.appendSeq(std::move(Trivia2));
-            Args.append(std::move(Operand));
-        }
+        Trivia2.reset();
+        
+    } else {
+        
+        Args.append(NodePtr(new LeafNode(TokIn)));
+        Args.appendSeq(std::move(Trivia2));
+        Args.append(std::move(Operand));
     }
     
     while (true) {
@@ -459,55 +456,54 @@ NodePtr InfixOperatorParselet::parseInfix(NodeSeq Args, Token TokIn, ParserConte
 #endif // !NABORT
         
         auto Tok1 = TheParser->currentToken(Ctxt, TOPLEVEL);
-        {
-            TriviaSeq Trivia1;
+        
+        TriviaSeq Trivia1;
             
-            Tok1 = TheParser->eatTriviaButNotToplevelNewlines(Tok1, Ctxt, TOPLEVEL, Trivia1);
-            
-            auto I = infixParselets[Tok1.Tok.value()];
-            
-            Tok1 = I->processImplicitTimes(Tok1, Ctxt);
-            I = infixParselets[Tok1.Tok.value()];
+        Tok1 = TheParser->eatTriviaButNotToplevelNewlines(Tok1, Ctxt, TOPLEVEL, Trivia1);
+        
+        auto I = infixParselets[Tok1.Tok.value()];
+        
+        Tok1 = I->processImplicitTimes(Tok1, Ctxt);
+        I = infixParselets[Tok1.Tok.value()];
+        
+        //
+        // Cannot just compare tokens
+        //
+        // May be something like  a * b c \[Times] d
+        //
+        // and we want only a single Infix node created
+        //
+        if (I->getOp() != Op) {
             
             //
-            // Cannot just compare tokens
+            // Tok.Tok != TokIn.Tok, so break
             //
-            // May be something like  a * b c \[Times] d
-            //
-            // and we want only a single Infix node created
-            //
-            if (I->getOp() != Op) {
-                
-                //
-                // Tok.Tok != TokIn.Tok, so break
-                //
-                
-                L = NodePtr(new InfixNode(Op, std::move(Args)));
-                
-                Trivia1.reset();
-                
-                break;
-            }
             
-            if (Tok1.Tok == TOKEN_FAKE_IMPLICITTIMES) {
-                
-                //
-                // Reattach the ImplicitTimes to the operand for a better experience
-                //
-                
-                Tok1 = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(OperandLastToken.BufLen.end), Source(OperandLastToken.Src.End));
-                
-                Args.append(NodePtr(new LeafNode(Tok1)));
-                
-                Trivia1.reset();
-                
-            } else {
-                
-                TheParser->nextToken(Tok1);
-                
-                Args.appendSeq(std::move(Trivia1));
-                Args.append(NodePtr(new LeafNode(Tok1)));
-            }
+            L = NodePtr(new InfixNode(Op, std::move(Args)));
+            
+            Trivia1.reset();
+            
+            break;
+        }
+        
+        if (Tok1.Tok == TOKEN_FAKE_IMPLICITTIMES) {
+            
+            //
+            // Reattach the ImplicitTimes to the operand for a better experience
+            //
+            
+            Tok1 = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(OperandLastToken.BufLen.end), Source(OperandLastToken.Src.End));
+            
+            Args.append(NodePtr(new LeafNode(Tok1)));
+            
+            Trivia1.reset();
+            
+        } else {
+            
+            TheParser->nextToken(Tok1);
+            
+            Args.appendSeq(std::move(Trivia1));
+            Args.append(NodePtr(new LeafNode(Tok1)));
         }
         
         
@@ -878,57 +874,56 @@ NodePtr ColonParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtI
     TheParser->nextToken(TokIn);
     
     NodePtr Pat;
-    {
-        TriviaSeq Trivia1;
+    
+    TriviaSeq Trivia1;
+    
+    auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+    Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
+    
+    auto Right = prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt);
+    
+    if (Right->isExpectedOperandError()) {
         
-        auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
-        Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
+        //
+        // Reattach the ExpectedOperand Error to the operator for a better experience
+        //
         
-        auto Right = prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt);
-        
-        if (Right->isExpectedOperandError()) {
-            
-            //
-            // Reattach the ExpectedOperand Error to the operator for a better experience
-            //
-            
-            auto ProperExpectedOperandError = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
-            
-            Args.append(NodePtr(new LeafNode(TokIn)));
-            Args.append(std::move(ProperExpectedOperandError));
-            
-            Trivia1.reset();
-            
-            auto Error = NodePtr(new BinaryNode(SYMBOL_PATTERN, std::move(Args)));
-            return Error;
-        }
+        auto ProperExpectedOperandError = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
         
         Args.append(NodePtr(new LeafNode(TokIn)));
-        Args.appendSeq(std::move(Trivia1));
-        Args.append(std::move(Right));
+        Args.append(std::move(ProperExpectedOperandError));
         
-        Pat = NodePtr(new BinaryNode(SYMBOL_PATTERN, std::move(Args)));
+        Trivia1.reset();
         
-        TriviaSeq Trivia2;
-        
-        Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
-        Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, TOPLEVEL, Trivia2);
-        
-        if (Tok.Tok == TOKEN_COLON) {
-            
-            Ctxt.Flag &= ~(PARSER_INSIDE_COLON);
-            
-            NodeSeq PatSeq(1 + Trivia2.size());
-            PatSeq.append(std::move(Pat));
-            PatSeq.appendSeq(std::move(Trivia2));
-            
-            auto L = parseInfixContextSensitive(std::move(PatSeq), Tok, Ctxt);
-            
-            return L;
-        }
-        
-        Trivia2.reset();
+        auto Error = NodePtr(new BinaryNode(SYMBOL_PATTERN, std::move(Args)));
+        return Error;
     }
+    
+    Args.append(NodePtr(new LeafNode(TokIn)));
+    Args.appendSeq(std::move(Trivia1));
+    Args.append(std::move(Right));
+    
+    Pat = NodePtr(new BinaryNode(SYMBOL_PATTERN, std::move(Args)));
+    
+    TriviaSeq Trivia2;
+    
+    Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+    Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, TOPLEVEL, Trivia2);
+    
+    if (Tok.Tok == TOKEN_COLON) {
+        
+        Ctxt.Flag &= ~(PARSER_INSIDE_COLON);
+        
+        NodeSeq PatSeq(1 + Trivia2.size());
+        PatSeq.append(std::move(Pat));
+        PatSeq.appendSeq(std::move(Trivia2));
+        
+        auto L = parseInfixContextSensitive(std::move(PatSeq), Tok, Ctxt);
+        
+        return L;
+    }
+    
+    Trivia2.reset();
     
     return TheParser->parseLoop(std::move(Pat), CtxtIn);
 }
@@ -1265,57 +1260,55 @@ NodePtr IntegralParselet::parsePrefix(Token TokIn, ParserContext CtxtIn) const {
     
     Ctxt.Flag &= ~(PARSER_INSIDE_INTEGRAL);
     
-    {
-        TriviaSeq Trivia2;
+    TriviaSeq Trivia2;
+    
+    Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+    Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia2);
+    
+    if (!Tok.Tok.isDifferentialD()) {
         
-        Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
-        Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia2);
+        NodeSeq Args(1 + Trivia1.size() + 1);
+        Args.append(NodePtr(new LeafNode(TokIn)));
+        Args.appendSeq(std::move(Trivia1));
+        Args.append(std::move(operand));
         
-        if (!Tok.Tok.isDifferentialD()) {
+        L = NodePtr(new PrefixNode(SYMBOL_INTEGRAL, std::move(Args)));
+        
+        Trivia2.reset();
+        
+    } else {
+        
+        auto variable = prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt);
+        
+        if (variable->isExpectedOperandError()) {
             
-            NodeSeq Args(1 + Trivia1.size() + 1);
+            //
+            // Reattach the ExpectedOperand Error to the operator for a better experience
+            //
+            
+            auto ProperExpectedOperandError = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
+            
+            NodeSeq Args(1 + Trivia1.size() + 1 + 1);
             Args.append(NodePtr(new LeafNode(TokIn)));
             Args.appendSeq(std::move(Trivia1));
             Args.append(std::move(operand));
-            
-            L = NodePtr(new PrefixNode(SYMBOL_INTEGRAL, std::move(Args)));
+            Args.append(std::move(ProperExpectedOperandError));
             
             Trivia2.reset();
             
-        } else {
+            auto Error = NodePtr(new PrefixNode(SYMBOL_INTEGRATE, std::move(Args)));
             
-            auto variable = prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt);
-            
-            if (variable->isExpectedOperandError()) {
-                
-                //
-                // Reattach the ExpectedOperand Error to the operator for a better experience
-                //
-                
-                auto ProperExpectedOperandError = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
-                
-                NodeSeq Args(1 + Trivia1.size() + 1 + 1);
-                Args.append(NodePtr(new LeafNode(TokIn)));
-                Args.appendSeq(std::move(Trivia1));
-                Args.append(std::move(operand));
-                Args.append(std::move(ProperExpectedOperandError));
-                
-                Trivia2.reset();
-                
-                auto Error = NodePtr(new PrefixNode(SYMBOL_INTEGRATE, std::move(Args)));
-                
-                return Error;
-            }
-            
-            NodeSeq Args(1 + Trivia1.size() + 1 + Trivia2.size() + 1);
-            Args.append(NodePtr(new LeafNode(TokIn)));
-            Args.appendSeq(std::move(Trivia1));
-            Args.append(std::move(operand));
-            Args.appendSeq(std::move(Trivia2));
-            Args.append(std::move(variable));
-            
-            L = NodePtr(new PrefixBinaryNode(SYMBOL_INTEGRATE, std::move(Args)));
+            return Error;
         }
+        
+        NodeSeq Args(1 + Trivia1.size() + 1 + Trivia2.size() + 1);
+        Args.append(NodePtr(new LeafNode(TokIn)));
+        Args.appendSeq(std::move(Trivia1));
+        Args.append(std::move(operand));
+        Args.appendSeq(std::move(Trivia2));
+        Args.append(std::move(variable));
+        
+        L = NodePtr(new PrefixBinaryNode(SYMBOL_INTEGRATE, std::move(Args)));
     }
     
     return TheParser->parseLoop(std::move(L), CtxtIn);
@@ -1336,54 +1329,53 @@ NodePtr CommaParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtI
     //
     // Unroll 1 iteration of the loop because we know that TokIn has already been read
     //
-    {
-        TriviaSeq Trivia2;
+    
+    TriviaSeq Trivia2;
+    
+    auto Tok2 = TheParser->currentToken(Ctxt, TOPLEVEL);
+    Tok2 = TheParser->eatTriviaButNotToplevelNewlines(Tok2, Ctxt, TOPLEVEL, Trivia2);
+    
+    if (infixParselets[Tok2.Tok.value()]->getOp() == SYMBOL_CODEPARSER_COMMA) {
         
-        auto Tok2 = TheParser->currentToken(Ctxt, TOPLEVEL);
-        Tok2 = TheParser->eatTriviaButNotToplevelNewlines(Tok2, Ctxt, TOPLEVEL, Trivia2);
+        //
+        // Something like  a,,
+        //
         
-        if (infixParselets[Tok2.Tok.value()]->getOp() == SYMBOL_CODEPARSER_COMMA) {
+        auto Implicit = Token(TOKEN_ERROR_INFIXIMPLICITNULL, BufferAndLength(lastOperatorToken.BufLen.end), Source(lastOperatorToken.Src.End));
+        
+        lastOperatorToken = Tok2;
+        
+        Args.append(NodePtr(new LeafNode(TokIn)));
+        Args.append(NodePtr(new ErrorNode(Implicit)));
+        
+        Trivia2.reset();
+        
+    } else {
+        
+        auto Operand = prefixParselets[Tok2.Tok.value()]->parsePrefix(Tok2, Ctxt);
+        
+        if (Operand->isExpectedOperandError()) {
             
             //
-            // Something like  a,,
+            // Something like  f[1,]
             //
             
-            auto Implicit = Token(TOKEN_ERROR_INFIXIMPLICITNULL, BufferAndLength(lastOperatorToken.BufLen.end), Source(lastOperatorToken.Src.End));
+            //
+            // Convert the ExpectedOperand Error to ImplicitNull and reattach to the operator for a better experience
+            //
             
-            lastOperatorToken = Tok2;
+            auto ProperImplicitNull = NodePtr(new ErrorNode(Token(TOKEN_ERROR_INFIXIMPLICITNULL, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
             
             Args.append(NodePtr(new LeafNode(TokIn)));
-            Args.append(NodePtr(new ErrorNode(Implicit)));
+            Args.append(std::move(ProperImplicitNull));
             
             Trivia2.reset();
             
         } else {
             
-            auto Operand = prefixParselets[Tok2.Tok.value()]->parsePrefix(Tok2, Ctxt);
-            
-            if (Operand->isExpectedOperandError()) {
-                
-                //
-                // Something like  f[1,]
-                //
-                
-                //
-                // Convert the ExpectedOperand Error to ImplicitNull and reattach to the operator for a better experience
-                //
-                
-                auto ProperImplicitNull = NodePtr(new ErrorNode(Token(TOKEN_ERROR_INFIXIMPLICITNULL, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End))));
-                
-                Args.append(NodePtr(new LeafNode(TokIn)));
-                Args.append(std::move(ProperImplicitNull));
-                
-                Trivia2.reset();
-                
-            } else {
-                
-                Args.append(NodePtr(new LeafNode(TokIn)));
-                Args.appendSeq(std::move(Trivia2));
-                Args.append(std::move(Operand));
-            }
+            Args.append(NodePtr(new LeafNode(TokIn)));
+            Args.appendSeq(std::move(Trivia2));
+            Args.append(std::move(Operand));
         }
     }
     
@@ -1516,54 +1508,53 @@ NodePtr SemiParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtIn
     //
     // Unroll 1 iteration of the loop because we know that TokIn has already been read
     //
-    {
-        TriviaSeq Trivia2;
+    
+    TriviaSeq Trivia2;
+    
+    auto Tok2 = TheParser->currentToken(Ctxt, TOPLEVEL);
+    Tok2 = TheParser->eatTriviaButNotToplevelNewlines(Tok2, Ctxt, TOPLEVEL, Trivia2);
+    
+    if (Tok2.Tok == TOKEN_SEMI) {
         
-        auto Tok2 = TheParser->currentToken(Ctxt, TOPLEVEL);
-        Tok2 = TheParser->eatTriviaButNotToplevelNewlines(Tok2, Ctxt, TOPLEVEL, Trivia2);
+        //
+        // Something like  a; ;
+        //
         
-        if (Tok2.Tok == TOKEN_SEMI) {
-            
-            //
-            // Something like  a; ;
-            //
-            
-            auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(lastOperatorToken.BufLen.end), Source(lastOperatorToken.Src.End));
-            
-            lastOperatorToken = Tok2;
-            
-            Args.append(NodePtr(new LeafNode(TokIn)));
-            Args.append(NodePtr(new LeafNode(Implicit)));
-            
-            Trivia2.reset();
-            
-        } else if (Tok2.Tok.isPossibleBeginning()) {
-            
-            auto operand = prefixParselets[Tok2.Tok.value()]->parsePrefix(Tok2, Ctxt);
-            
-            Args.append(NodePtr(new LeafNode(TokIn)));
-            Args.appendSeq(std::move(Trivia2));
-            Args.append(std::move(operand));
-            
-        } else {
-            
-            //
-            // Not beginning of an expression
-            //
-            // For example:  a;&
-            //
-            
-            auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(lastOperatorToken.BufLen.end), Source(lastOperatorToken.Src.End));
-            
-            Args.append(NodePtr(new LeafNode(TokIn)));
-            Args.append(NodePtr(new LeafNode(Implicit)));
-            
-            L = NodePtr(new InfixNode(SYMBOL_COMPOUNDEXPRESSION, std::move(Args)));
-            
-            Trivia2.reset();
-            
-            goto SemiParseletExit;
-        }
+        auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(lastOperatorToken.BufLen.end), Source(lastOperatorToken.Src.End));
+        
+        lastOperatorToken = Tok2;
+        
+        Args.append(NodePtr(new LeafNode(TokIn)));
+        Args.append(NodePtr(new LeafNode(Implicit)));
+        
+        Trivia2.reset();
+        
+    } else if (Tok2.Tok.isPossibleBeginning()) {
+        
+        auto operand = prefixParselets[Tok2.Tok.value()]->parsePrefix(Tok2, Ctxt);
+        
+        Args.append(NodePtr(new LeafNode(TokIn)));
+        Args.appendSeq(std::move(Trivia2));
+        Args.append(std::move(operand));
+        
+    } else {
+        
+        //
+        // Not beginning of an expression
+        //
+        // For example:  a;&
+        //
+        
+        auto Implicit = Token(TOKEN_FAKE_IMPLICITNULL, BufferAndLength(lastOperatorToken.BufLen.end), Source(lastOperatorToken.Src.End));
+        
+        Args.append(NodePtr(new LeafNode(TokIn)));
+        Args.append(NodePtr(new LeafNode(Implicit)));
+        
+        L = NodePtr(new InfixNode(SYMBOL_COMPOUNDEXPRESSION, std::move(Args)));
+        
+        Trivia2.reset();
+        
+        goto SemiParseletExit;
     }
     
     while (true) {
