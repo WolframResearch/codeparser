@@ -23,7 +23,10 @@ NodePtr UnderParselet::parse0(Token TokIn, ParserContext Ctxt) const {
         
         Blank = NodePtr(new CompoundNode(BOp, std::move(Args)));
         
-    } else if (Tok.Tok == TOKEN_ERROR_EXPECTEDLETTERLIKE) {
+        return Blank;
+    }
+    
+    if (Tok.Tok == TOKEN_ERROR_EXPECTEDLETTERLIKE) {
         
         //
         // Something like  _a`
@@ -41,10 +44,10 @@ NodePtr UnderParselet::parse0(Token TokIn, ParserContext Ctxt) const {
         
         Blank = NodePtr(new CompoundNode(BOp, std::move(Args)));
         
-    } else {
-        
-        Blank = std::move(Under);
+        return Blank;
     }
+        
+    Blank = std::move(Under);
     
     return Blank;
 }
@@ -75,15 +78,15 @@ NodePtr UnderParselet::parse1(NodePtr Blank, Token Tok, ParserContext Ctxt) cons
             
             Blank = contextSensitiveColonParselet->parseInfixContextSensitive(std::move(BlankSeq), Tok, Ctxt);
             
-        } else {
-            
-            Trivia1.reset();
+            return TheParser->parseLoop(std::move(Blank), Ctxt);
         }
-        
-    } else {
-        
+            
         Trivia1.reset();
+        
+        return TheParser->parseLoop(std::move(Blank), Ctxt);
     }
+        
+    Trivia1.reset();
     
     return TheParser->parseLoop(std::move(Blank), Ctxt);
 }
