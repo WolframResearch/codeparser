@@ -6,17 +6,17 @@
 #include "Symbol.h"
 
 
-NodePtr LeafParselet::parsePrefix(Token TokIn, ParserContext Ctxt) const {
+NodePtr LeafParselet::parsePrefix(Token TokIn, ParserContext Ctxt, Continuation k) const {
     
     TheParser->nextToken(TokIn);
     
     auto Left = NodePtr(new LeafNode(TokIn));
     
-    return TheParser->parseLoop(std::move(Left), Ctxt);
+    return TheParser->parseLoop(std::move(Left), Ctxt, k);
 }
 
 
-NodePtr PrefixErrorParselet::parsePrefix(Token TokIn, ParserContext Ctxt) const {
+NodePtr PrefixErrorParselet::parsePrefix(Token TokIn, ParserContext Ctxt, Continuation k) const {
     
     assert(TokIn.Tok.isError());
     
@@ -33,11 +33,11 @@ NodePtr PrefixErrorParselet::parsePrefix(Token TokIn, ParserContext Ctxt) const 
         Error = NodePtr(new ErrorNode(TokIn));
     }
     
-    return Error;
+    return k(std::move(Error));
 }
 
 
-NodePtr PrefixCloserParselet::parsePrefix(Token TokIn, ParserContext Ctxt) const {
+NodePtr PrefixCloserParselet::parsePrefix(Token TokIn, ParserContext Ctxt, Continuation k) const {
     
     assert(TokIn.Tok.isCloser());
         
@@ -53,11 +53,12 @@ NodePtr PrefixCloserParselet::parsePrefix(Token TokIn, ParserContext Ctxt) const
     auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(), Source());
     
     auto Error = NodePtr(new ErrorNode(createdToken));
-    return Error;
+    
+    return k(std::move(Error));
 }
 
 
-NodePtr PrefixToplevelCloserParselet::parsePrefix(Token TokIn, ParserContext Ctxt) const {
+NodePtr PrefixToplevelCloserParselet::parsePrefix(Token TokIn, ParserContext Ctxt, Continuation k) const {
     
     assert(TokIn.Tok.isCloser());
     
@@ -68,11 +69,12 @@ NodePtr PrefixToplevelCloserParselet::parsePrefix(Token TokIn, ParserContext Ctx
     TheParser->nextToken(TokIn);
     
     auto Error = NodePtr(new ErrorNode(Token(TOKEN_ERROR_UNEXPECTEDCLOSER, TokIn.BufLen, TokIn.Src)));
-    return Error;
+    
+    return k(std::move(Error));
 }
 
 
-NodePtr PrefixEndOfFileParselet::parsePrefix(Token TokIn, ParserContext Ctxt) const {
+NodePtr PrefixEndOfFileParselet::parsePrefix(Token TokIn, ParserContext Ctxt, Continuation k) const {
     
     //
     // Something like  a+<EOF>
@@ -83,22 +85,24 @@ NodePtr PrefixEndOfFileParselet::parsePrefix(Token TokIn, ParserContext Ctxt) co
     auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(), Source());
     
     auto Error = NodePtr(new ErrorNode(createdToken));
-    return Error;
+    
+    return k(std::move(Error));
 }
 
 
-NodePtr PrefixUnsupportedTokenParselet::parsePrefix(Token TokIn, ParserContext Ctxt) const {
+NodePtr PrefixUnsupportedTokenParselet::parsePrefix(Token TokIn, ParserContext Ctxt, Continuation k) const {
     
     TheParser->nextToken(TokIn);
     
     auto createdToken = Token(TOKEN_ERROR_UNSUPPORTEDTOKEN, TokIn.BufLen, TokIn.Src);
     
     auto Error = NodePtr(new ErrorNode(createdToken));
-    return Error;
+    
+    return k(std::move(Error));
 }
 
 
-NodePtr PrefixCommaParselet::parsePrefix(Token TokIn, ParserContext Ctxt) const {
+NodePtr PrefixCommaParselet::parsePrefix(Token TokIn, ParserContext Ctxt, Continuation k) const {
     
     //
     // if the input is  f[a@,2]  then we want to return TOKEN_ERROR_EXPECTEDOPERAND
@@ -111,17 +115,18 @@ NodePtr PrefixCommaParselet::parsePrefix(Token TokIn, ParserContext Ctxt) const 
         
         auto Left = NodePtr(new ErrorNode(createdToken));
         
-        return TheParser->parseLoop(std::move(Left), Ctxt);
+        return TheParser->parseLoop(std::move(Left), Ctxt, k);
     }
         
     auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
     
     auto Left = NodePtr(new ErrorNode(createdToken));
-    return Left;
+    
+    return k(std::move(Left));
 }
 
 
-NodePtr PrefixUnhandledParselet::parsePrefix(Token TokIn, ParserContext Ctxt) const {
+NodePtr PrefixUnhandledParselet::parsePrefix(Token TokIn, ParserContext Ctxt, Continuation k) const {
     
     assert(!TokIn.Tok.isPossibleBeginning() && "handle at call site");
     
@@ -150,7 +155,7 @@ NodePtr PrefixUnhandledParselet::parsePrefix(Token TokIn, ParserContext Ctxt) co
         // Make sure that the error leaf is with the + and not the |
         //
         
-        return NotPossible;
+        return k(std::move(NotPossible));
     }
     
     //
@@ -164,11 +169,11 @@ NodePtr PrefixUnhandledParselet::parsePrefix(Token TokIn, ParserContext Ctxt) co
     NodeSeq LeftSeq(1);
     LeftSeq.append(std::move(NotPossible));
     
-    return infixParselets[TokIn.Tok.value()]->parseInfix(std::move(LeftSeq), TokIn, Ctxt);
+    return infixParselets[TokIn.Tok.value()]->parseInfix(std::move(LeftSeq), TokIn, Ctxt, k);
 }
 
 
-NodePtr InfixToplevelNewlineParselet::parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
+NodePtr InfixToplevelNewlineParselet::parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt, Continuation k) const {
     
     assert(false);
     
@@ -176,7 +181,7 @@ NodePtr InfixToplevelNewlineParselet::parseInfix(NodeSeq Left, Token firstTok, P
 }
 
 
-NodePtr SymbolParselet::parsePrefix(Token TokIn, ParserContext Ctxt) const {
+NodePtr SymbolParselet::parsePrefix(Token TokIn, ParserContext Ctxt, Continuation k) const {
     
     auto Sym = NodePtr(new LeafNode(TokIn));
     
@@ -194,28 +199,28 @@ NodePtr SymbolParselet::parsePrefix(Token TokIn, ParserContext Ctxt) const {
             NodeSeq Args(1);
             Args.append(std::move(Sym));
             
-            return contextSensitiveUnder1Parselet->parseInfixContextSensitive(std::move(Args), Tok, Ctxt);
+            return contextSensitiveUnder1Parselet->parseInfixContextSensitive(std::move(Args), Tok, Ctxt, k);
         }
         case TOKEN_UNDERUNDER.value(): {
             
             NodeSeq Args(1);
             Args.append(std::move(Sym));
             
-            return contextSensitiveUnder2Parselet->parseInfixContextSensitive(std::move(Args), Tok, Ctxt);
+            return contextSensitiveUnder2Parselet->parseInfixContextSensitive(std::move(Args), Tok, Ctxt, k);
         }
         case TOKEN_UNDERUNDERUNDER.value(): {
             
             NodeSeq Args(1);
             Args.append(std::move(Sym));
             
-            return contextSensitiveUnder3Parselet->parseInfixContextSensitive(std::move(Args), Tok, Ctxt);
+            return contextSensitiveUnder3Parselet->parseInfixContextSensitive(std::move(Args), Tok, Ctxt, k);
         }
         case TOKEN_UNDERDOT.value(): {
             
             NodeSeq Args(1);
             Args.append(std::move(Sym));
             
-            return contextSensitiveUnderDotParselet->parseInfixContextSensitive(std::move(Args), Tok, Ctxt);
+            return contextSensitiveUnderDotParselet->parseInfixContextSensitive(std::move(Args), Tok, Ctxt, k);
         }
         default: {
             
@@ -238,34 +243,35 @@ NodePtr SymbolParselet::parsePrefix(Token TokIn, ParserContext Ctxt) const {
                     NodeSeq Args(1 + Trivia1.size());
                     Args.append(std::move(Sym));
                     Args.appendSeq(std::move(Trivia1));
-                    
-                    Sym = infixParselets[TOKEN_COLON.value()]->parseInfix(std::move(Args), Tok, Ctxt);
-                    
-                    return TheParser->parseLoop(std::move(Sym), Ctxt);
+                    return infixParselets[TOKEN_COLON.value()]->parseInfix(std::move(Args), Tok, Ctxt, [&](NodePtr Sym) {
+                        
+                    return TheParser->parseLoop(std::move(Sym), Ctxt, k);
+                    });
                 }
                     
                 Trivia1.reset();
                 
-                return TheParser->parseLoop(std::move(Sym), Ctxt);
+                return TheParser->parseLoop(std::move(Sym), Ctxt, k);
             }
                 
             Trivia1.reset();
             
-            return TheParser->parseLoop(std::move(Sym), Ctxt);
+            return TheParser->parseLoop(std::move(Sym), Ctxt, k);
         }
     }
     
     assert(false);
+    
     return nullptr;
 }
 
-NodePtr SymbolParselet::parsePrefixContextSensitive(Token TokIn, ParserContext Ctxt) const {
+NodePtr SymbolParselet::parsePrefixContextSensitive(Token TokIn, ParserContext Ctxt, Continuation k) const {
     
     auto Sym = NodePtr(new LeafNode(TokIn));
     
     TheParser->nextToken(TokIn);
     
-    return Sym;
+    return k(std::move(Sym));
 }
 
 
@@ -274,7 +280,7 @@ const SymbolPtr& InfixParselet::getOp() const {
 }
 
 
-NodePtr PrefixOperatorParselet::parsePrefix(Token TokIn, ParserContext CtxtIn) const {
+NodePtr PrefixOperatorParselet::parsePrefix(Token TokIn, ParserContext CtxtIn, Continuation k) const {
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence(Ctxt);
@@ -286,7 +292,7 @@ NodePtr PrefixOperatorParselet::parsePrefix(Token TokIn, ParserContext CtxtIn) c
     auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
     Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
     
-    auto Operand = prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt);
+    return prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt, [&](NodePtr Operand) {
     
     NodePtr Left;
     
@@ -306,7 +312,7 @@ NodePtr PrefixOperatorParselet::parsePrefix(Token TokIn, ParserContext CtxtIn) c
         
         Trivia1.reset();
         
-        return TheParser->parseLoop(std::move(Left), CtxtIn);
+        return TheParser->parseLoop(std::move(Left), CtxtIn, k);
     }
         
     NodeSeq Args(1 + Trivia1.size() + 1);
@@ -316,11 +322,12 @@ NodePtr PrefixOperatorParselet::parsePrefix(Token TokIn, ParserContext CtxtIn) c
     
     Left = NodePtr(new PrefixNode(Op, std::move(Args)));
     
-    return TheParser->parseLoop(std::move(Left), CtxtIn);
+    return TheParser->parseLoop(std::move(Left), CtxtIn, k);
+    });
 }
 
 
-NodePtr InfixImplicitTimesParselet::parseInfix(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
+NodePtr InfixImplicitTimesParselet::parseInfix(NodeSeq Left, Token TokIn, ParserContext Ctxt, Continuation k) const {
     
     assert(false);
     
@@ -346,7 +353,7 @@ Token InfixImplicitTimesParselet::processImplicitTimes(Token TokIn, ParserContex
 }
 
 
-NodePtr InfixAssertFalseParselet::parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const {
+NodePtr InfixAssertFalseParselet::parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt, Continuation k) const {
     
     assert(false);
     
@@ -354,7 +361,7 @@ NodePtr InfixAssertFalseParselet::parseInfix(NodeSeq Left, Token firstTok, Parse
 }
 
 
-NodePtr BinaryOperatorParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtIn) const {
+NodePtr BinaryOperatorParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtIn, Continuation k) const {
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence(Ctxt);
@@ -366,7 +373,7 @@ NodePtr BinaryOperatorParselet::parseInfix(NodeSeq Args, Token TokIn, ParserCont
     auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
     Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
 
-    auto Right = prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt);
+    return prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt, [&](NodePtr Right) {
     
     NodePtr L;
     
@@ -385,7 +392,7 @@ NodePtr BinaryOperatorParselet::parseInfix(NodeSeq Args, Token TokIn, ParserCont
         
         Trivia1.reset();
         
-        return TheParser->parseLoop(std::move(L), CtxtIn);
+        return TheParser->parseLoop(std::move(L), CtxtIn, k);
     }
         
     Args.append(NodePtr(new LeafNode(TokIn)));
@@ -394,11 +401,12 @@ NodePtr BinaryOperatorParselet::parseInfix(NodeSeq Args, Token TokIn, ParserCont
     
     L = NodePtr(new BinaryNode(Op, std::move(Args)));
     
-    return TheParser->parseLoop(std::move(L), CtxtIn);
+    return TheParser->parseLoop(std::move(L), CtxtIn, k);
+    });
 }
 
 
-NodePtr InfixOperatorParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtIn) const {
+NodePtr InfixOperatorParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtIn, Continuation k) const {
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence(Ctxt);
@@ -415,7 +423,7 @@ NodePtr InfixOperatorParselet::parseInfix(NodeSeq Args, Token TokIn, ParserConte
     auto Tok2 = TheParser->currentToken(Ctxt, TOPLEVEL);
     Tok2 = TheParser->eatTrivia(Tok2, Ctxt, TOPLEVEL, Trivia2);
     
-    auto Operand = prefixParselets[Tok2.Tok.value()]->parsePrefix(Tok2, Ctxt);
+    return prefixParselets[Tok2.Tok.value()]->parsePrefix(Tok2, Ctxt, [&](NodePtr Operand) {
     
     OperandLastToken = Operand->lastToken();
     
@@ -432,17 +440,18 @@ NodePtr InfixOperatorParselet::parseInfix(NodeSeq Args, Token TokIn, ParserConte
         
         Trivia2.reset();
         
-        return parseLoop(std::move(Args), OperandLastToken, CtxtIn);
+        return parseLoop(std::move(Args), OperandLastToken, CtxtIn, k);
     }
         
     Args.append(NodePtr(new LeafNode(TokIn)));
     Args.appendSeq(std::move(Trivia2));
     Args.append(std::move(Operand));
     
-    return parseLoop(std::move(Args), OperandLastToken, CtxtIn);
+    return parseLoop(std::move(Args), OperandLastToken, CtxtIn, k);
+    });
 }
 
-NodePtr InfixOperatorParselet::parseLoop(NodeSeq Args, Token OperandLastToken, ParserContext CtxtIn) const {
+NodePtr InfixOperatorParselet::parseLoop(NodeSeq Args, Token OperandLastToken, ParserContext CtxtIn, Continuation k) const {
 
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence(Ctxt);
@@ -470,12 +479,12 @@ NodePtr InfixOperatorParselet::parseLoop(NodeSeq Args, Token OperandLastToken, P
         //
         // Tok.Tok != TokIn.Tok, so break
         //
-
+        
         auto L = NodePtr(new InfixNode(Op, std::move(Args)));
-
+        
         Trivia1.reset();
-
-        return TheParser->parseLoop(std::move(L), CtxtIn);
+        
+        return TheParser->parseLoop(std::move(L), CtxtIn, k);
     }
 
     if (Tok1.Tok == TOKEN_FAKE_IMPLICITTIMES) {
@@ -503,8 +512,8 @@ NodePtr InfixOperatorParselet::parseLoop(NodeSeq Args, Token OperandLastToken, P
     auto Tok2 = TheParser->currentToken(Ctxt, TOPLEVEL);
     Tok2 = TheParser->eatTrivia(Tok2, Ctxt, TOPLEVEL, Trivia2);
 
-    auto Operand = prefixParselets[Tok2.Tok.value()]->parsePrefix(Tok2, Ctxt);
-
+    return prefixParselets[Tok2.Tok.value()]->parsePrefix(Tok2, Ctxt, [&](NodePtr Operand) {
+    
     OperandLastToken = Operand->lastToken();
 
     if (Operand->isExpectedOperandError()) {
@@ -518,8 +527,8 @@ NodePtr InfixOperatorParselet::parseLoop(NodeSeq Args, Token OperandLastToken, P
         Args.append(std::move(ProperExpectedOperandError));
 
         Trivia2.reset();
-
-        return parseLoop(std::move(Args), OperandLastToken, CtxtIn);
+        
+        return parseLoop(std::move(Args), OperandLastToken, CtxtIn, k);
     }
 
     //
@@ -529,11 +538,12 @@ NodePtr InfixOperatorParselet::parseLoop(NodeSeq Args, Token OperandLastToken, P
     Args.appendSeq(std::move(Trivia2));
     Args.append(std::move(Operand));
 
-    return parseLoop(std::move(Args), OperandLastToken, CtxtIn);
+    return parseLoop(std::move(Args), OperandLastToken, CtxtIn, k);
+    });
 }
 
 
-NodePtr PostfixOperatorParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext Ctxt) const {
+NodePtr PostfixOperatorParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext Ctxt, Continuation k) const {
     
     TheParser->nextToken(TokIn);
     
@@ -541,13 +551,13 @@ NodePtr PostfixOperatorParselet::parseInfix(NodeSeq Args, Token TokIn, ParserCon
     
     auto L = NodePtr(new PostfixNode(Op, std::move(Args)));
     
-    return TheParser->parseLoop(std::move(L), Ctxt);
+    return TheParser->parseLoop(std::move(L), Ctxt, k);
 }
 
 
 GroupParselet::GroupParselet(TokenEnum Opener, const SymbolPtr& Op) : Op(Op), Closr(GroupOpenerToCloser(Opener)) {}
 
-NodePtr GroupParselet::parsePrefix(Token firstTok, ParserContext CtxtIn) const {
+NodePtr GroupParselet::parsePrefix(Token firstTok, ParserContext CtxtIn, Continuation k) const {
     
     auto OpenerT = firstTok;
     
@@ -556,10 +566,10 @@ NodePtr GroupParselet::parsePrefix(Token firstTok, ParserContext CtxtIn) const {
     NodeSeq Args(1);
     Args.append(NodePtr(new LeafNode(OpenerT)));
     
-    return parseLoop(std::move(Args), CtxtIn);
+    return parseLoop(std::move(Args), CtxtIn, k);
 }
  
-NodePtr GroupParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
+NodePtr GroupParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn, Continuation k) const {
     
     auto Ctxt = CtxtIn;
     Ctxt.Closr = Closr;
@@ -600,7 +610,7 @@ NodePtr GroupParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
 
         auto group = NodePtr(new GroupNode(Op, std::move(Args)));
 
-        return TheParser->parseLoop(std::move(group), CtxtIn);
+        return TheParser->parseLoop(std::move(group), CtxtIn, k);
     }
     
     if (Tok.Tok.isCloser()) {
@@ -636,7 +646,7 @@ NodePtr GroupParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
             
             Trivia1.reset();
             
-            return TheParser->parseLoop(std::move(group), CtxtIn);
+            return TheParser->parseLoop(std::move(group), CtxtIn, k);
         }
 
         //
@@ -652,7 +662,7 @@ NodePtr GroupParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
         //
         Ctxt.Closr = CLOSER_OPEN;
 
-        auto Error = prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt);
+        return prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt, [&](NodePtr Error) {
 
         Ctxt.Closr = Closr;
 
@@ -662,7 +672,8 @@ NodePtr GroupParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
         Args.appendSeq(std::move(Trivia1));
         Args.append(std::move(Error));
 
-        return parseLoop(std::move(Args), CtxtIn);
+        return parseLoop(std::move(Args), CtxtIn, k);
+        });
     }
 
     if (Tok.Tok == TOKEN_ENDOFFILE) {
@@ -675,15 +686,15 @@ NodePtr GroupParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
 
         Trivia1.reset();
 
-        return TheParser->parseLoop(std::move(group), CtxtIn);
+        return TheParser->parseLoop(std::move(group), CtxtIn, k);
     }
 
     //
     // Handle the expression
     //
 
-    auto Operand = prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt);
-
+    return prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt, [&](NodePtr Operand) {
+    
     //
     // Do not reserve inside loop
     // Allow default resizing strategy, which is hopefully exponential
@@ -695,11 +706,12 @@ NodePtr GroupParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
     Args.appendSeq(std::move(Trivia1));
     Args.append(std::move(Operand));
 
-    return parseLoop(std::move(Args), CtxtIn);
+    return parseLoop(std::move(Args), CtxtIn, k);
+    });
 }
 
 
-NodePtr CallParselet::parseInfix(NodeSeq Head, Token TokIn, ParserContext CtxtIn) const {
+NodePtr CallParselet::parseInfix(NodeSeq Head, Token TokIn, ParserContext CtxtIn, Continuation k) const {
     
     //
     // if we used PRECEDENCE_CALL here, then e.g., a[]?b should technically parse as   a <call> []?b
@@ -708,18 +720,19 @@ NodePtr CallParselet::parseInfix(NodeSeq Head, Token TokIn, ParserContext CtxtIn
     auto Ctxt = CtxtIn;
     Ctxt.Prec = PRECEDENCE_HIGHEST;
     
-    auto Right = GP->parsePrefix(TokIn, Ctxt);
+    return GP->parsePrefix(TokIn, Ctxt, [&](NodePtr Right) {
     
     NodeSeq Args(1);
     Args.append(std::move(Right));
     
     auto L = NodePtr(new CallNode(std::move(Head), std::move(Args)));
     
-    return TheParser->parseLoop(std::move(L), CtxtIn);
+    return TheParser->parseLoop(std::move(L), CtxtIn, k);
+    });
 }
 
 
-NodePtr TildeParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtIn) const {
+NodePtr TildeParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtIn, Continuation k) const {
     
     auto FirstTilde = TokIn;
     
@@ -739,7 +752,7 @@ NodePtr TildeParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtI
     //
     Ctxt.Flag &= ~(PARSER_INSIDE_COLON);
     
-    auto Middle = prefixParselets[FirstTok.Tok.value()]->parsePrefix(FirstTok, Ctxt);
+    return prefixParselets[FirstTok.Tok.value()]->parsePrefix(FirstTok, Ctxt, [&](NodePtr Middle) {
     
     if (Middle->isExpectedOperandError()) {
         
@@ -757,7 +770,8 @@ NodePtr TildeParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtI
         Trivia1.reset();
         
         auto Error = NodePtr(new BinaryNode(SYMBOL_CODEPARSER_TERNARYTILDE, std::move(Args)));
-        return Error;
+        
+        return k(std::move(Error));
     }
     
     TriviaSeq Trivia2;
@@ -780,7 +794,8 @@ NodePtr TildeParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtI
         Trivia2.reset();
         
         auto Error = NodePtr(new SyntaxErrorNode(SYMBOL_SYNTAXERROR_EXPECTEDTILDE, std::move(Args)));
-        return Error;
+        
+        return k(std::move(Error));
     }
     
     TriviaSeq Trivia3;
@@ -796,7 +811,7 @@ NodePtr TildeParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtI
     auto Tok2 = TheParser->currentToken(Ctxt, TOPLEVEL);
     Tok2 = TheParser->eatTrivia(Tok2, Ctxt, TOPLEVEL, Trivia3);
     
-    auto Right = prefixParselets[Tok2.Tok.value()]->parsePrefix(Tok2, Ctxt);
+    return prefixParselets[Tok2.Tok.value()]->parsePrefix(Tok2, Ctxt, [&](NodePtr Right) {
     
     if (Right->isExpectedOperandError()) {
         
@@ -817,7 +832,8 @@ NodePtr TildeParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtI
         Args.append(std::move(ProperExpectedOperandError));
         
         auto Error = NodePtr(new TernaryNode(SYMBOL_CODEPARSER_TERNARYTILDE, std::move(Args)));
-        return Error;
+        
+        return k(std::move(Error));
     }
     
     Args.append(NodePtr(new LeafNode(FirstTilde)));
@@ -830,11 +846,13 @@ NodePtr TildeParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtI
     
     auto L = NodePtr(new TernaryNode(SYMBOL_CODEPARSER_TERNARYTILDE, std::move(Args)));
     
-    return TheParser->parseLoop(std::move(L), CtxtIn);
+    return TheParser->parseLoop(std::move(L), CtxtIn, k);
+    });
+    });
 }
 
 
-NodePtr ColonParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtIn) const {
+NodePtr ColonParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtIn, Continuation k) const {
     
     assert((CtxtIn.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON);
     
@@ -849,7 +867,7 @@ NodePtr ColonParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtI
     auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
     Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
     
-    auto Right = prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt);
+    return prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt, [&](NodePtr Right) {
     
     if (Right->isExpectedOperandError()) {
         
@@ -865,7 +883,8 @@ NodePtr ColonParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtI
         Trivia1.reset();
         
         auto Error = NodePtr(new BinaryNode(SYMBOL_PATTERN, std::move(Args)));
-        return Error;
+        
+        return k(std::move(Error));
     }
     
     Args.append(NodePtr(new LeafNode(TokIn)));
@@ -887,16 +906,17 @@ NodePtr ColonParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtI
         PatSeq.append(std::move(Pat));
         PatSeq.appendSeq(std::move(Trivia2));
         
-        return parseInfixContextSensitive(std::move(PatSeq), Tok, Ctxt);
+        return parseInfixContextSensitive(std::move(PatSeq), Tok, Ctxt, k);
     }
     
     Trivia2.reset();
     
-    return TheParser->parseLoop(std::move(Pat), CtxtIn);
+    return TheParser->parseLoop(std::move(Pat), CtxtIn, k);
+    });
 }
 
 
-NodePtr ColonParselet::parseInfixContextSensitive(NodeSeq Args, Token TokIn, ParserContext CtxtIn) const {
+NodePtr ColonParselet::parseInfixContextSensitive(NodeSeq Args, Token TokIn, ParserContext CtxtIn, Continuation k) const {
     
     //
     // when parsing a in a:b  then ColonFlag is false
@@ -914,7 +934,7 @@ NodePtr ColonParselet::parseInfixContextSensitive(NodeSeq Args, Token TokIn, Par
     auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
     Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
     
-    auto Right = prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt);
+    return prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt, [&](NodePtr Right) {
     
     if (Right->isExpectedOperandError()) {
         
@@ -930,7 +950,8 @@ NodePtr ColonParselet::parseInfixContextSensitive(NodeSeq Args, Token TokIn, Par
         Trivia1.reset();
         
         auto Error = NodePtr(new BinaryNode(SYMBOL_OPTIONAL, std::move(Args)));
-        return Error;
+        
+        return k(std::move(Error));
     }
     
     Args.append(NodePtr(new LeafNode(TokIn)));
@@ -939,11 +960,12 @@ NodePtr ColonParselet::parseInfixContextSensitive(NodeSeq Args, Token TokIn, Par
     
     auto L = NodePtr(new BinaryNode(SYMBOL_OPTIONAL, std::move(Args)));
     
-    return TheParser->parseLoop(std::move(L), CtxtIn);
+    return TheParser->parseLoop(std::move(L), CtxtIn, k);
+    });
 }
 
 
-NodePtr SlashColonParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtIn) const {
+NodePtr SlashColonParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtIn, Continuation k) const {
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = PRECEDENCE_SLASHCOLON;
@@ -955,7 +977,7 @@ NodePtr SlashColonParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext 
     auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
     Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
     
-    auto Middle = prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt);
+    return prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt, [&](NodePtr Middle) {
     
     if (Middle->isExpectedOperandError()) {
         
@@ -971,7 +993,8 @@ NodePtr SlashColonParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext 
         Trivia1.reset();
         
         auto Error = NodePtr(new BinaryNode(SYMBOL_TAGSET, std::move(Args)));
-        return Error;
+        
+        return k(std::move(Error));
     }
     
     TriviaSeq Trivia2;
@@ -989,7 +1012,7 @@ NodePtr SlashColonParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext 
             
             Ctxt.Flag |= PARSER_INSIDE_SLASHCOLON;
             
-            return infixParselets[TOKEN_EQUAL.value()]->parseInfix(std::move(Args), Tok, Ctxt);
+            return infixParselets[TOKEN_EQUAL.value()]->parseInfix(std::move(Args), Tok, Ctxt, k);
         }
         case TOKEN_COLONEQUAL.value(): {
             
@@ -1000,7 +1023,7 @@ NodePtr SlashColonParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext 
             
             Ctxt.Flag |= PARSER_INSIDE_SLASHCOLON;
             
-            return infixParselets[TOKEN_COLONEQUAL.value()]->parseInfix(std::move(Args), Tok, Ctxt);
+            return infixParselets[TOKEN_COLONEQUAL.value()]->parseInfix(std::move(Args), Tok, Ctxt, k);
         }
         default: {
             
@@ -1018,15 +1041,17 @@ NodePtr SlashColonParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext 
             Trivia2.reset();
             
             auto Error = NodePtr(new SyntaxErrorNode(SYMBOL_SYNTAXERROR_EXPECTEDSET, std::move(Args)));
-            return Error;
+            
+            return k(std::move(Error));
         }
     }
+    });
 }
 
 
 EqualParselet::EqualParselet() : BinaryOperatorParselet(TOKEN_EQUAL, PRECEDENCE_EQUAL, SYMBOL_SET) {}
 
-NodePtr EqualParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtIn) const {
+NodePtr EqualParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtIn, Continuation k) const {
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = PRECEDENCE_EQUAL;
@@ -1064,14 +1089,14 @@ NodePtr EqualParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtI
             L = NodePtr(new BinaryNode(SYMBOL_UNSET, std::move(Args)));
         }
         
-        return TheParser->parseLoop(std::move(L), CtxtIn);
+        return TheParser->parseLoop(std::move(L), CtxtIn, k);
     }
         
     auto wasInsideSlashColon = ((Ctxt.Flag & PARSER_INSIDE_SLASHCOLON) == PARSER_INSIDE_SLASHCOLON);
     
     Ctxt.Flag &= ~(PARSER_INSIDE_SLASHCOLON);
     
-    auto Right = prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt);
+    return prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt, [&](NodePtr Right) {
     
     if (Right->isExpectedOperandError()) {
         
@@ -1090,14 +1115,14 @@ NodePtr EqualParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtI
             
             auto Error = NodePtr(new TernaryNode(SYMBOL_TAGSET, std::move(Args)));
             
-            return Error;
+            return k(std::move(Error));
         }
         
         Trivia1.reset();
         
         auto Error = NodePtr(new BinaryNode(SYMBOL_SET, std::move(Args)));
         
-        return Error;
+        return k(std::move(Error));
     }
     
     Args.append(NodePtr(new LeafNode(TokIn)));
@@ -1115,13 +1140,14 @@ NodePtr EqualParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtI
         L = NodePtr(new BinaryNode(SYMBOL_SET, std::move(Args)));
     }
     
-    return TheParser->parseLoop(std::move(L), CtxtIn);
+    return TheParser->parseLoop(std::move(L), CtxtIn, k);
+    });
 }
 
 
 ColonEqualParselet::ColonEqualParselet() : BinaryOperatorParselet(TOKEN_COLONEQUAL, PRECEDENCE_COLONEQUAL, SYMBOL_SETDELAYED) {}
 
-NodePtr ColonEqualParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtIn) const {
+NodePtr ColonEqualParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtIn, Continuation k) const {
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = PRECEDENCE_EQUAL;
@@ -1137,7 +1163,7 @@ NodePtr ColonEqualParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext 
     
     Ctxt.Flag &= ~(PARSER_INSIDE_SLASHCOLON);
     
-    auto Right = prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt);
+    return prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt, [&](NodePtr Right) {
     
     if (Right->isExpectedOperandError()) {
         
@@ -1156,14 +1182,14 @@ NodePtr ColonEqualParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext 
             
             auto Error = NodePtr(new TernaryNode(SYMBOL_TAGSETDELAYED, std::move(Args)));
             
-            return Error;
+            return k(std::move(Error));
         }
         
         Trivia1.reset();
         
         auto Error = NodePtr(new BinaryNode(SYMBOL_SETDELAYED, std::move(Args)));
         
-        return Error;
+        return k(std::move(Error));
     }
     
     Args.append(NodePtr(new LeafNode(TokIn)));
@@ -1181,11 +1207,12 @@ NodePtr ColonEqualParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext 
         L = NodePtr(new BinaryNode(SYMBOL_SETDELAYED, std::move(Args)));
     }
     
-    return TheParser->parseLoop(std::move(L), CtxtIn);
+    return TheParser->parseLoop(std::move(L), CtxtIn, k);
+    });
 }
 
 
-NodePtr IntegralParselet::parsePrefix(Token TokIn, ParserContext CtxtIn) const {
+NodePtr IntegralParselet::parsePrefix(Token TokIn, ParserContext CtxtIn, Continuation k) const {
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = PRECEDENCE_CLASS_INTEGRATIONOPERATORS;
@@ -1198,7 +1225,7 @@ NodePtr IntegralParselet::parsePrefix(Token TokIn, ParserContext CtxtIn) const {
     auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
     Tok = TheParser->eatTrivia(Tok, Ctxt, TOPLEVEL, Trivia1);
     
-    auto operand = prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt);
+    return prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt, [&](NodePtr operand) {
     
     if (operand->isExpectedOperandError()) {
         
@@ -1216,7 +1243,7 @@ NodePtr IntegralParselet::parsePrefix(Token TokIn, ParserContext CtxtIn) const {
         
         auto Error = NodePtr(new PrefixNode(SYMBOL_INTEGRAL, std::move(Args)));
         
-        return Error;
+        return k(std::move(Error));
     }
     
     Ctxt.Flag &= ~(PARSER_INSIDE_INTEGRAL);
@@ -1239,10 +1266,10 @@ NodePtr IntegralParselet::parsePrefix(Token TokIn, ParserContext CtxtIn) const {
         
         Trivia2.reset();
         
-        return TheParser->parseLoop(std::move(L), CtxtIn);
+        return TheParser->parseLoop(std::move(L), CtxtIn, k);
     }
         
-    auto variable = prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt);
+    return prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt, [&](NodePtr variable) {
     
     if (variable->isExpectedOperandError()) {
         
@@ -1262,7 +1289,7 @@ NodePtr IntegralParselet::parsePrefix(Token TokIn, ParserContext CtxtIn) const {
         
         auto Error = NodePtr(new PrefixNode(SYMBOL_INTEGRATE, std::move(Args)));
         
-        return Error;
+        return k(std::move(Error));
     }
     
     NodeSeq Args(1 + Trivia1.size() + 1 + Trivia2.size() + 1);
@@ -1274,11 +1301,13 @@ NodePtr IntegralParselet::parsePrefix(Token TokIn, ParserContext CtxtIn) const {
     
     L = NodePtr(new PrefixBinaryNode(SYMBOL_INTEGRATE, std::move(Args)));
     
-    return TheParser->parseLoop(std::move(L), CtxtIn);
+    return TheParser->parseLoop(std::move(L), CtxtIn, k);
+    });
+    });
 }
 
 
-NodePtr CommaParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtIn) const {
+NodePtr CommaParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtIn, Continuation k) const {
     
     auto lastOperatorToken = TokIn;
     
@@ -1311,10 +1340,10 @@ NodePtr CommaParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtI
         
         Trivia2.reset();
         
-        return parseLoop(std::move(Args), CtxtIn);
+        return parseLoop(std::move(Args), CtxtIn, k);
     }
         
-    auto Operand = prefixParselets[Tok2.Tok.value()]->parsePrefix(Tok2, Ctxt);
+    return prefixParselets[Tok2.Tok.value()]->parsePrefix(Tok2, Ctxt, [&](NodePtr Operand) {
     
     if (Operand->isExpectedOperandError()) {
         
@@ -1333,17 +1362,18 @@ NodePtr CommaParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtI
         
         Trivia2.reset();
         
-        return parseLoop(std::move(Args), CtxtIn);
+        return parseLoop(std::move(Args), CtxtIn, k);
     }
         
     Args.append(NodePtr(new LeafNode(TokIn)));
     Args.appendSeq(std::move(Trivia2));
     Args.append(std::move(Operand));
     
-    return parseLoop(std::move(Args), CtxtIn);
+    return parseLoop(std::move(Args), CtxtIn, k);
+    });
 }
 
-NodePtr CommaParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
+NodePtr CommaParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn, Continuation k) const {
 
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence(Ctxt);
@@ -1361,12 +1391,12 @@ NodePtr CommaParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
     // and we want only a single Infix node created
     //
     if (infixParselets[Tok1.Tok.value()]->getOp() != SYMBOL_CODEPARSER_COMMA) {
-
+        
         auto L = NodePtr(new InfixNode(SYMBOL_CODEPARSER_COMMA, std::move(Args)));
-
+        
         Trivia1.reset();
-
-        return TheParser->parseLoop(std::move(L), CtxtIn);
+        
+        return TheParser->parseLoop(std::move(L), CtxtIn, k);
     }
 
     auto lastOperatorToken = Tok1;
@@ -1402,11 +1432,11 @@ NodePtr CommaParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
 
         Trivia2.reset();
 
-        return parseLoop(std::move(Args), CtxtIn);
+        return parseLoop(std::move(Args), CtxtIn, k);
     }
 
-    auto Operand = prefixParselets[Tok2.Tok.value()]->parsePrefix(Tok2, Ctxt);
-
+    return prefixParselets[Tok2.Tok.value()]->parsePrefix(Tok2, Ctxt, [&](NodePtr Operand) {
+    
     if (Operand->isExpectedOperandError()) {
 
         //
@@ -1428,8 +1458,8 @@ NodePtr CommaParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
         Args.append(std::move(ProperImplicitNull));
 
         Trivia2.reset();
-
-        return parseLoop(std::move(Args), CtxtIn);
+        
+        return parseLoop(std::move(Args), CtxtIn, k);
     }
 
     //
@@ -1441,7 +1471,8 @@ NodePtr CommaParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
     Args.appendSeq(std::move(Trivia2));
     Args.append(std::move(Operand));
 
-    return parseLoop(std::move(Args), CtxtIn);
+    return parseLoop(std::move(Args), CtxtIn, k);
+    });
 }
 
 const SymbolPtr& CommaParselet::getOp() const {
@@ -1449,7 +1480,7 @@ const SymbolPtr& CommaParselet::getOp() const {
 }
 
 
-NodePtr SemiParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtIn) const {
+NodePtr SemiParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtIn, Continuation k) const {
     
     auto lastOperatorToken = TokIn;
     
@@ -1482,18 +1513,19 @@ NodePtr SemiParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtIn
         
         Trivia2.reset();
         
-        return parseLoop(std::move(Args), CtxtIn);
+        return parseLoop(std::move(Args), CtxtIn, k);
     }
     
     if (Tok2.Tok.isPossibleBeginning()) {
         
-        auto operand = prefixParselets[Tok2.Tok.value()]->parsePrefix(Tok2, Ctxt);
+        return prefixParselets[Tok2.Tok.value()]->parsePrefix(Tok2, Ctxt, [&](NodePtr operand) {
         
         Args.append(NodePtr(new LeafNode(TokIn)));
         Args.appendSeq(std::move(Trivia2));
         Args.append(std::move(operand));
         
-        return parseLoop(std::move(Args), CtxtIn);
+        return parseLoop(std::move(Args), CtxtIn, k);
+        });
     }
         
     //
@@ -1511,10 +1543,10 @@ NodePtr SemiParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtIn
     
     Trivia2.reset();
     
-    return TheParser->parseLoop(std::move(L), CtxtIn);
+    return TheParser->parseLoop(std::move(L), CtxtIn, k);
 }
 
-NodePtr SemiParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
+NodePtr SemiParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn, Continuation k) const {
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence(Ctxt);
@@ -1530,7 +1562,7 @@ NodePtr SemiParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
 
         Trivia1.reset();
 
-        return TheParser->parseLoop(std::move(L), CtxtIn);
+        return TheParser->parseLoop(std::move(L), CtxtIn, k);
     }
 
     auto lastOperatorToken = Tok1;
@@ -1566,13 +1598,13 @@ NodePtr SemiParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
 
         Trivia2.reset();
         
-        return parseLoop(std::move(Args), CtxtIn);
+        return parseLoop(std::move(Args), CtxtIn, k);
     }
     
     if (Tok2.Tok.isPossibleBeginning()) {
 
-        auto operand = prefixParselets[Tok2.Tok.value()]->parsePrefix(Tok2, Ctxt);
-
+        return prefixParselets[Tok2.Tok.value()]->parsePrefix(Tok2, Ctxt, [&](NodePtr operand) {
+        
         //
         // Do not reserve inside loop
         // Allow default resizing strategy, which is hopefully exponential
@@ -1582,7 +1614,8 @@ NodePtr SemiParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
         Args.appendSeq(std::move(Trivia2));
         Args.append(std::move(operand));
         
-        return parseLoop(std::move(Args), CtxtIn);
+        return parseLoop(std::move(Args), CtxtIn, k);
+        });
     }
 
     //
@@ -1605,11 +1638,11 @@ NodePtr SemiParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
 
     Trivia2.reset();
 
-    return TheParser->parseLoop(std::move(L), CtxtIn);
+    return TheParser->parseLoop(std::move(L), CtxtIn, k);
 }
 
 
-NodePtr ColonColonParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext Ctxt) const {
+NodePtr ColonColonParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext Ctxt, Continuation k) const {
     
     //
     // Not used here because of the special rules for tokenizing after ::
@@ -1654,10 +1687,10 @@ NodePtr ColonColonParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext 
     Args.append(NodePtr(new LeafNode(TokIn)));
     Args.append(std::move(Operand));
     
-    return parseLoop(std::move(Args), Ctxt);
+    return parseLoop(std::move(Args), Ctxt, k);
 }
 
-NodePtr ColonColonParselet::parseLoop(NodeSeq Args, ParserContext Ctxt) const {
+NodePtr ColonColonParselet::parseLoop(NodeSeq Args, ParserContext Ctxt, Continuation k) const {
 
     auto Tok1 = TheParser->currentToken(Ctxt, TOPLEVEL);
 
@@ -1665,7 +1698,7 @@ NodePtr ColonColonParselet::parseLoop(NodeSeq Args, ParserContext Ctxt) const {
 
         auto L = NodePtr(new InfixNode(SYMBOL_MESSAGENAME, std::move(Args)));
 
-        return TheParser->parseLoop(std::move(L), Ctxt);
+        return TheParser->parseLoop(std::move(L), Ctxt, k);
     }
 
     TheParser->nextToken(Tok1);
@@ -1705,11 +1738,11 @@ NodePtr ColonColonParselet::parseLoop(NodeSeq Args, ParserContext Ctxt) const {
     Args.append(NodePtr(new LeafNode(Tok1)));
     Args.append(std::move(Operand));
 
-    return parseLoop(std::move(Args), Ctxt);
+    return parseLoop(std::move(Args), Ctxt, k);
 }
 
 
-NodePtr GreaterGreaterParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtIn) const {
+NodePtr GreaterGreaterParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtIn, Continuation k) const {
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = PRECEDENCE_GREATERGREATER;
@@ -1753,11 +1786,11 @@ NodePtr GreaterGreaterParselet::parseInfix(NodeSeq Args, Token TokIn, ParserCont
     
     auto L = NodePtr(new BinaryNode(SYMBOL_PUT, std::move(Args)));
     
-    return TheParser->parseLoop(std::move(L), CtxtIn);
+    return TheParser->parseLoop(std::move(L), CtxtIn, k);
 }
 
 
-NodePtr GreaterGreaterGreaterParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtIn) const {
+NodePtr GreaterGreaterGreaterParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext CtxtIn, Continuation k) const {
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = PRECEDENCE_GREATERGREATERGREATER;
@@ -1801,11 +1834,11 @@ NodePtr GreaterGreaterGreaterParselet::parseInfix(NodeSeq Args, Token TokIn, Par
     
     auto L = NodePtr(new BinaryNode(SYMBOL_PUTAPPEND, std::move(Args)));
     
-    return TheParser->parseLoop(std::move(L), CtxtIn);
+    return TheParser->parseLoop(std::move(L), CtxtIn, k);
 }
 
 
-NodePtr LessLessParselet::parsePrefix(Token TokIn, ParserContext CtxtIn) const {
+NodePtr LessLessParselet::parsePrefix(Token TokIn, ParserContext CtxtIn, Continuation k) const {
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = PRECEDENCE_LESSLESS;
@@ -1850,7 +1883,7 @@ NodePtr LessLessParselet::parsePrefix(Token TokIn, ParserContext CtxtIn) const {
     
     auto L = NodePtr(new PrefixNode(SYMBOL_GET, std::move(Args)));
     
-    return TheParser->parseLoop(std::move(L), CtxtIn);
+    return TheParser->parseLoop(std::move(L), CtxtIn, k);
 }
 
 
@@ -1887,7 +1920,7 @@ Token InfixDifferentialDParselet::processImplicitTimes(Token TokIn, ParserContex
 }
 
 
-NodePtr HashParselet::parsePrefix(Token TokIn, ParserContext CtxtIn) const {
+NodePtr HashParselet::parsePrefix(Token TokIn, ParserContext CtxtIn, Continuation k) const {
     
     TheParser->nextToken(TokIn);
     
@@ -1917,11 +1950,11 @@ NodePtr HashParselet::parsePrefix(Token TokIn, ParserContext CtxtIn) const {
         }
     }
     
-    return TheParser->parseLoop(std::move(Slot), CtxtIn);
+    return TheParser->parseLoop(std::move(Slot), CtxtIn, k);
 }
 
 
-NodePtr HashHashParselet::parsePrefix(Token TokIn, ParserContext CtxtIn) const {
+NodePtr HashHashParselet::parsePrefix(Token TokIn, ParserContext CtxtIn, Continuation k) const {
     
     TheParser->nextToken(TokIn);
     
@@ -1950,11 +1983,11 @@ NodePtr HashHashParselet::parsePrefix(Token TokIn, ParserContext CtxtIn) const {
         }
     }
     
-    return TheParser->parseLoop(std::move(SlotSequence), CtxtIn);
+    return TheParser->parseLoop(std::move(SlotSequence), CtxtIn, k);
 }
 
 
-NodePtr PercentParselet::parsePrefix(Token TokIn, ParserContext CtxtIn) const {
+NodePtr PercentParselet::parsePrefix(Token TokIn, ParserContext CtxtIn, Continuation k) const {
     
     TheParser->nextToken(TokIn);
     
@@ -1983,14 +2016,14 @@ NodePtr PercentParselet::parsePrefix(Token TokIn, ParserContext CtxtIn) const {
         }
     }
     
-    return TheParser->parseLoop(std::move(Out), CtxtIn);
+    return TheParser->parseLoop(std::move(Out), CtxtIn, k);
 }
 
-NodePtr PercentPercentParselet::parsePrefix(Token TokIn, ParserContext CtxtIn) const {
+NodePtr PercentPercentParselet::parsePrefix(Token TokIn, ParserContext CtxtIn, Continuation k) const {
     
     TheParser->nextToken(TokIn);
 
     auto Out = NodePtr(new LeafNode(TokIn));
     
-    return TheParser->parseLoop(std::move(Out), CtxtIn);
+    return TheParser->parseLoop(std::move(Out), CtxtIn, k);
 }

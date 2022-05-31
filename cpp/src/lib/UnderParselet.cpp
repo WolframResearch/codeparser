@@ -3,7 +3,7 @@
 #include "ParseletRegistration.h" // for contextSensitiveSymbolParselet
 #include "Symbol.h"
 
-NodePtr UnderParselet::parse0(Token TokIn, ParserContext Ctxt) const {
+NodePtr UnderParselet::parse0(Token TokIn, ParserContext Ctxt, Continuation k) const {
     
     auto Under = NodePtr(new LeafNode(TokIn));
     
@@ -15,7 +15,7 @@ NodePtr UnderParselet::parse0(Token TokIn, ParserContext Ctxt) const {
     
     if (Tok.Tok == TOKEN_SYMBOL) {
         
-        auto Sym2 = contextSensitiveSymbolParselet->parsePrefixContextSensitive(Tok, Ctxt);
+        return contextSensitiveSymbolParselet->parsePrefixContextSensitive(Tok, Ctxt, [&](NodePtr Sym2) {
         
         NodeSeq Args(1 + 1);
         Args.append(std::move(Under));
@@ -23,7 +23,8 @@ NodePtr UnderParselet::parse0(Token TokIn, ParserContext Ctxt) const {
         
         Blank = NodePtr(new CompoundNode(BOp, std::move(Args)));
         
-        return Blank;
+        return k(std::move(Blank));
+        });
     }
     
     if (Tok.Tok == TOKEN_ERROR_EXPECTEDLETTERLIKE) {
@@ -36,7 +37,7 @@ NodePtr UnderParselet::parse0(Token TokIn, ParserContext Ctxt) const {
         
         auto parselet = prefixParselets[Tok.Tok.value()];
         
-        auto ErrorSym2 = parselet->parsePrefix(Tok, Ctxt);
+        return parselet->parsePrefix(Tok, Ctxt, [&](NodePtr ErrorSym2) {
         
         NodeSeq Args(1 + 1);
         Args.append(std::move(Under));
@@ -44,15 +45,16 @@ NodePtr UnderParselet::parse0(Token TokIn, ParserContext Ctxt) const {
         
         Blank = NodePtr(new CompoundNode(BOp, std::move(Args)));
         
-        return Blank;
+        return k(std::move(Blank));
+        });
     }
         
     Blank = std::move(Under);
     
-    return Blank;
+    return k(std::move(Blank));
 }
 
-NodePtr UnderParselet::parse1(NodePtr Blank, Token Tok, ParserContext Ctxt) const {
+NodePtr UnderParselet::parse1(NodePtr Blank, Token Tok, ParserContext Ctxt, Continuation k) const {
     
     TriviaSeq Trivia1;
     
@@ -76,33 +78,35 @@ NodePtr UnderParselet::parse1(NodePtr Blank, Token Tok, ParserContext Ctxt) cons
             BlankSeq.append(std::move(Blank));
             BlankSeq.appendSeq(std::move(Trivia1));
             
-            Blank = contextSensitiveColonParselet->parseInfixContextSensitive(std::move(BlankSeq), Tok, Ctxt);
+            return contextSensitiveColonParselet->parseInfixContextSensitive(std::move(BlankSeq), Tok, Ctxt, [&](NodePtr Blank) {
             
-            return TheParser->parseLoop(std::move(Blank), Ctxt);
+            return TheParser->parseLoop(std::move(Blank), Ctxt, k);
+            });
         }
             
         Trivia1.reset();
         
-        return TheParser->parseLoop(std::move(Blank), Ctxt);
+        return TheParser->parseLoop(std::move(Blank), Ctxt, k);
     }
         
     Trivia1.reset();
     
-    return TheParser->parseLoop(std::move(Blank), Ctxt);
+    return TheParser->parseLoop(std::move(Blank), Ctxt, k);
 }
 
-NodePtr UnderParselet::parsePrefix(Token TokIn, ParserContext Ctxt) const {
+NodePtr UnderParselet::parsePrefix(Token TokIn, ParserContext Ctxt, Continuation k) const {
     
-    auto Blank = parse0(TokIn, Ctxt);
+    return parse0(TokIn, Ctxt, [&](NodePtr Blank) {
     
     auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
     
-    return parse1(std::move(Blank), Tok, Ctxt);
+    return parse1(std::move(Blank), Tok, Ctxt, k);
+    });
 }
 
-NodePtr UnderParselet::parseInfixContextSensitive(NodeSeq Args, Token TokIn, ParserContext Ctxt) const {
+NodePtr UnderParselet::parseInfixContextSensitive(NodeSeq Args, Token TokIn, ParserContext Ctxt, Continuation k) const {
     
-    auto Blank = parse0(TokIn, Ctxt);
+    return parse0(TokIn, Ctxt, [&](NodePtr Blank) {
     
     Args.append(NodePtr(std::move(Blank)));
     
@@ -110,35 +114,38 @@ NodePtr UnderParselet::parseInfixContextSensitive(NodeSeq Args, Token TokIn, Par
     
     auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
     
-    return parse1(std::move(Pat), Tok, Ctxt);
+    return parse1(std::move(Pat), Tok, Ctxt, k);
+    });
 }
 
 
-NodePtr UnderDotParselet::parse0(Token TokIn, ParserContext Ctxt) const {
+NodePtr UnderDotParselet::parse0(Token TokIn, ParserContext Ctxt, Continuation k) const {
     
     auto UnderDot = NodePtr(new LeafNode(TokIn));
     
     TheParser->nextToken(TokIn);
     
-    return UnderDot;
+    return k(std::move(UnderDot));
 }
 
-NodePtr UnderDotParselet::parsePrefix(Token TokIn, ParserContext Ctxt) const {
+NodePtr UnderDotParselet::parsePrefix(Token TokIn, ParserContext Ctxt, Continuation k) const {
     
-    auto Blank = parse0(TokIn, Ctxt);
+    return parse0(TokIn, Ctxt, [&](NodePtr Blank) {
     
     TheParser->nextToken(TokIn);
     
-    return TheParser->parseLoop(std::move(Blank), Ctxt);
+    return TheParser->parseLoop(std::move(Blank), Ctxt, k);
+    });
 }
 
-NodePtr UnderDotParselet::parseInfixContextSensitive(NodeSeq Args, Token TokIn, ParserContext Ctxt) const {
+NodePtr UnderDotParselet::parseInfixContextSensitive(NodeSeq Args, Token TokIn, ParserContext Ctxt, Continuation k) const {
     
-    auto Blank = parse0(TokIn, Ctxt);
+    return parse0(TokIn, Ctxt, [&](NodePtr Blank) {
     
     Args.append(NodePtr(std::move(Blank)));
     
     auto Pat = NodePtr(new CompoundNode(SYMBOL_CODEPARSER_PATTERNOPTIONALDEFAULT, std::move(Args)));
     
-    return TheParser->parseLoop(std::move(Pat), Ctxt);
+    return TheParser->parseLoop(std::move(Pat), Ctxt, k);
+    });
 }

@@ -72,19 +72,19 @@
 //          ]
 
 
-NodePtr SemiSemiParselet::parsePrefix(Token TokIn, ParserContext Ctxt) const {
+NodePtr SemiSemiParselet::parsePrefix(Token TokIn, ParserContext Ctxt, Continuation k) const {
     
     auto Implicit = Token(TOKEN_FAKE_IMPLICITONE, BufferAndLength(TokIn.BufLen.buffer), Source(TokIn.Src.Start));
     
     NodeSeq Left(1);
     Left.append(NodePtr(new LeafNode(Implicit)));
     
-    return parseInfix(std::move(Left), TokIn, Ctxt);
+    return parseInfix(std::move(Left), TokIn, Ctxt, k);
 }
 
-NodePtr SemiSemiParselet::parseInfix(NodeSeq Left, Token TokIn, ParserContext Ctxt) const {
+NodePtr SemiSemiParselet::parseInfix(NodeSeq Left, Token TokIn, ParserContext Ctxt, Continuation k) const {
     
-    auto Operand = parse0(std::move(Left), TokIn, Ctxt);
+    return parse0(std::move(Left), TokIn, Ctxt, [&](NodePtr Operand) {
     
     TriviaSeq Trivia1;
     
@@ -99,7 +99,7 @@ NodePtr SemiSemiParselet::parseInfix(NodeSeq Left, Token TokIn, ParserContext Ct
         
         Trivia1.reset();
         
-        return TheParser->parseLoop(std::move(Operand), Ctxt);
+        return TheParser->parseLoop(std::move(Operand), Ctxt, k);
     }
     
     if (Tok.Tok != TOKEN_SEMISEMI) {
@@ -110,17 +110,18 @@ NodePtr SemiSemiParselet::parseInfix(NodeSeq Left, Token TokIn, ParserContext Ct
         
         Trivia1.reset();
         
-        return TheParser->parseLoop(std::move(Operand), Ctxt);
+        return TheParser->parseLoop(std::move(Operand), Ctxt, k);
     }
     
     NodeSeq Args(1 + Trivia1.size());
     Args.append(std::move(Operand));
     Args.appendSeq(std::move(Trivia1));
     
-    return parseLoop(std::move(Args), Ctxt);
+    return parseLoop(std::move(Args), Ctxt, k);
+    });
 }
 
-NodePtr SemiSemiParselet::parseLoop(NodeSeq Args, ParserContext Ctxt) const {
+NodePtr SemiSemiParselet::parseLoop(NodeSeq Args, ParserContext Ctxt, Continuation k) const {
 
     TriviaSeq Trivia2;
 
@@ -137,7 +138,7 @@ NodePtr SemiSemiParselet::parseLoop(NodeSeq Args, ParserContext Ctxt) const {
 
         Trivia2.reset();
 
-        return TheParser->parseLoop(std::move(Operand), Ctxt);
+        return TheParser->parseLoop(std::move(Operand), Ctxt, k);
     }
 
     if (Tok.Tok != TOKEN_SEMISEMI) {
@@ -152,8 +153,8 @@ NodePtr SemiSemiParselet::parseLoop(NodeSeq Args, ParserContext Ctxt) const {
         // Must also handle  a;;!b  where there is an Implicit Times, but only a single Span
         //
 
-        auto Operand = prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt);
-
+        return prefixParselets[Tok.Tok.value()]->parsePrefix(Tok, Ctxt, [&](NodePtr Operand) {
+        
 #if !NISSUES
         {
             auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDIMPLICITTIMES, "Unexpected implicit ``Times`` between ``Spans``.", STRING_WARNING, Tok.Src, 0.75, {}, {}));
@@ -177,7 +178,8 @@ NodePtr SemiSemiParselet::parseLoop(NodeSeq Args, ParserContext Ctxt) const {
 
         auto Operand2 = NodePtr(new InfixNode(SYMBOL_TIMES, std::move(Args)));
 
-        return TheParser->parseLoop(std::move(Operand2), Ctxt);
+        return TheParser->parseLoop(std::move(Operand2), Ctxt, k);
+        });
     }
 
     //
@@ -189,7 +191,7 @@ NodePtr SemiSemiParselet::parseLoop(NodeSeq Args, ParserContext Ctxt) const {
     NodeSeq Seq(1);
     Seq.append(NodePtr(new LeafNode(Implicit)));
 
-    auto Operand = parse0(std::move(Seq), Tok, Ctxt);
+    return parse0(std::move(Seq), Tok, Ctxt, [&](NodePtr Operand) {
 
 #if !NISSUES
     {
@@ -209,11 +211,12 @@ NodePtr SemiSemiParselet::parseLoop(NodeSeq Args, ParserContext Ctxt) const {
     Args.append(NodePtr(new LeafNode(ImplicitTimes)));
     Args.append(std::move(Operand));
 
-    return parseLoop(std::move(Args), Ctxt);
+    return parseLoop(std::move(Args), Ctxt, k);
+    });
 }
 
 
-NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) const {
+NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt, Continuation k) const {
     
     Ctxt.Prec = PRECEDENCE_SEMISEMI;
     
@@ -245,7 +248,8 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
         Trivia1.reset();
         
         auto Span = NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
-        return Span;
+        
+        return k(std::move(Span));
     }
     
     if (SecondTok.Tok != TOKEN_SEMISEMI) {
@@ -255,7 +259,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
         //    ^SecondTok
         //
         
-        auto SecondTokNode = prefixParselets[SecondTok.Tok.value()]->parsePrefix(SecondTok, Ctxt);
+        return prefixParselets[SecondTok.Tok.value()]->parsePrefix(SecondTok, Ctxt, [&](NodePtr SecondTokNode) {
         
         TriviaSeq Trivia2;
         
@@ -276,7 +280,8 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
             Trivia2.reset();
             
             auto Span = NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
-            return Span;
+            
+            return k(std::move(Span));
         }
         
         if (ThirdTok.Tok != TOKEN_SEMISEMI) {
@@ -293,7 +298,8 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
             Trivia2.reset();
             
             auto Span = NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
-            return Span;
+            
+            return k(std::move(Span));
         }
         
         //
@@ -326,7 +332,8 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
             Trivia2.reset();
             
             auto Span = NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
-            return Span;
+            
+            return k(std::move(Span));
         }
         
         if (FourthTok.Tok != TOKEN_SEMISEMI) {
@@ -336,7 +343,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
             //       ^FourthTok
             //
             
-            auto FourthTokNode = prefixParselets[FourthTok.Tok.value()]->parsePrefix(FourthTok, Ctxt);
+            return prefixParselets[FourthTok.Tok.value()]->parsePrefix(FourthTok, Ctxt, [&](NodePtr FourthTokNode) {
             
             Args.append(NodePtr(new LeafNode(TokIn)));
             Args.appendSeq(std::move(Trivia1));
@@ -347,7 +354,9 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
             Args.append(std::move(FourthTokNode));
             
             auto Span = NodePtr(new TernaryNode(SYMBOL_SPAN, std::move(Args)));
-            return Span;
+            
+            return k(std::move(Span));
+            });
         }
         
         //
@@ -364,7 +373,9 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
         Trivia2.reset();
         
         auto Span = NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
-        return Span;
+        
+        return k(std::move(Span));
+        });
     }
     
     //
@@ -401,7 +412,8 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
         Trivia1.reset();
         
         auto Span = NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
-        return Span;
+        
+        return k(std::move(Span));
     }
     
     if (ThirdTok.Tok != TOKEN_SEMISEMI) {
@@ -411,7 +423,7 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
         //      ^ThirdTok
         //
         
-        auto ThirdTokNode = prefixParselets[ThirdTok.Tok.value()]->parsePrefix(ThirdTok, Ctxt);
+        return prefixParselets[ThirdTok.Tok.value()]->parsePrefix(ThirdTok, Ctxt, [&](NodePtr ThirdTokNode) {
         
         auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, BufferAndLength(TokIn.BufLen.end), Source(TokIn.Src.End));
         
@@ -423,7 +435,9 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
         Args.append(std::move(ThirdTokNode));
         
         auto Span = NodePtr(new TernaryNode(SYMBOL_SPAN, std::move(Args)));
-        return Span;
+        
+        return k(std::move(Span));
+        });
     }
     
     //
@@ -441,5 +455,6 @@ NodePtr SemiSemiParselet::parse0(NodeSeq Args, Token TokIn, ParserContext Ctxt) 
     Trivia1.reset();
     
     auto Span = NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
-    return Span;
+    
+    return k(std::move(Span));
 }
