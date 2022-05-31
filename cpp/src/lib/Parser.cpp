@@ -224,13 +224,6 @@ Token Parser::currentToken_stringifyAsFile() const {
 }
 
 NodePtr Parser::parseLoop(NodePtr Left, ParserContext Ctxt) {
-        
-#if !NABORT
-    if (TheParserSession->isAbort()) {
-        
-        return TheParserSession->handleAbort();
-    }
-#endif // !NABORT
     
     TriviaSeq Trivia1;
     

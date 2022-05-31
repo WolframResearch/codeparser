@@ -447,16 +447,6 @@ NodePtr InfixOperatorParselet::parseLoop(NodeSeq Args, Token OperandLastToken, P
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence(Ctxt);
 
-#if !NABORT
-    //
-    // Check isAbort() inside loops
-    //
-    if (TheParserSession->isAbort()) {
-
-        return TheParserSession->handleAbort();
-    }
-#endif // !NABORT
-
     auto Tok1 = TheParser->currentToken(Ctxt, TOPLEVEL);
 
     TriviaSeq Trivia1;
@@ -587,16 +577,6 @@ NodePtr GroupParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
     // ADDENDUM: Actually, there may be more than 1 "good" node
     // e.g. {1\\2}
     //
-    
-#if !NABORT
-    //
-    // Check isAbort() inside loops
-    //
-    if (TheParserSession->isAbort()) {
-        
-        return TheParserSession->handleAbort();
-    }
-#endif // !NABORT
 
     TriviaSeq Trivia1;
     
@@ -1368,16 +1348,6 @@ NodePtr CommaParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence(Ctxt);
 
-#if !NABORT
-    //
-    // Check isAbort() inside loops
-    //
-    if (TheParserSession->isAbort()) {
-
-        return TheParserSession->handleAbort();
-    }
-#endif // !NABORT
-
     TriviaSeq Trivia1;
 
     auto Tok1 = TheParser->currentToken(Ctxt, TOPLEVEL);
@@ -1549,16 +1519,6 @@ NodePtr SemiParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence(Ctxt);
 
-#if !NABORT
-    //
-    // Check isAbort() inside loops
-    //
-    if (TheParserSession->isAbort()) {
-
-        return TheParserSession->handleAbort();
-    }
-#endif // !NABORT
-
     TriviaSeq Trivia1;
 
     auto Tok1 = TheParser->currentToken(Ctxt, TOPLEVEL);
@@ -1698,16 +1658,6 @@ NodePtr ColonColonParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext 
 }
 
 NodePtr ColonColonParselet::parseLoop(NodeSeq Args, ParserContext Ctxt) const {
-        
-#if !NABORT
-    //
-    // Check isAbort() inside loops
-    //
-    if (TheParserSession->isAbort()) {
-
-        return TheParserSession->handleAbort();
-    }
-#endif // !NABORT
 
     auto Tok1 = TheParser->currentToken(Ctxt, TOPLEVEL);
 

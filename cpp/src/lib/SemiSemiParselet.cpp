@@ -121,16 +121,6 @@ NodePtr SemiSemiParselet::parseInfix(NodeSeq Left, Token TokIn, ParserContext Ct
 }
 
 NodePtr SemiSemiParselet::parseLoop(NodeSeq Args, ParserContext Ctxt) const {
-        
-#if !NABORT
-    //
-    // Check isAbort() inside loops
-    //
-    if (TheParserSession->isAbort()) {
-
-        return TheParserSession->handleAbort();
-    }
-#endif // !NABORT
 
     TriviaSeq Trivia2;
 
