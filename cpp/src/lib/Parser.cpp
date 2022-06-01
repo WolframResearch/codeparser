@@ -252,25 +252,8 @@ NodePtr Parser::parseLoop(NodePtr Left, ParserContext Ctxt, Continuation k) {
     
     NodeSeq LeftSeq;
     
-    if (token.Tok == TOKEN_FAKE_IMPLICITTIMES) {
-        
-        //
-        // Reattach the ImplicitTimes to the operand for a better experience
-        //
-        
-        auto last = Left->lastToken();
-        
-        token = Token(TOKEN_FAKE_IMPLICITTIMES, BufferAndLength(last.BufLen.end), Source(last.Src.End));
-        
-        LeftSeq.append(std::move(Left));
-        
-        Trivia1.reset();
-        
-    } else {
-        
-        LeftSeq.append(std::move(Left));
-        LeftSeq.appendSeq(std::move(Trivia1));
-    }
+    LeftSeq.append(std::move(Left));
+    LeftSeq.appendSeq(std::move(Trivia1));
     
     auto Ctxt2 = Ctxt;
     Ctxt2.Prec = TokenPrecedence;

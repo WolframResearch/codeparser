@@ -135,7 +135,7 @@ Test[
 			CallNode[LeafNode[Symbol, "SetDelayed", <||>], {
 				CallNode[LeafNode[Symbol, "foo", <|Source -> {{1, 1}, {1, 4}}|>], {}, <|Source -> {{1, 1}, {1, 6}}|>],
 				CallNode[LeafNode[Symbol, "Plus", <||>], {
-					LeafNode[Integer, "1", <|Source -> {{1, 10}, {1, 11}}|>], LeafNode[Integer, "1", <|Source -> {{1, 12}, {1, 13}}|>]}, <|Source -> {{1, 10}, {1, 13}}|>]}, <|Source -> {{1, 1}, {1, 13}}|>], LeafNode[Symbol, "Null", <|Source -> {{1, 14}, {1, 14}}|>], LeafNode[Symbol, "Null", <|Source -> {{1, 16}, {1, 16}}|>]}, <|Source -> {{1, 1}, {1, 16}}|>]}, <|
+					LeafNode[Integer, "1", <|Source -> {{1, 10}, {1, 11}}|>], LeafNode[Integer, "1", <|Source -> {{1, 12}, {1, 13}}|>]}, <|Source -> {{1, 10}, {1, 13}}|>]}, <|Source -> {{1, 1}, {1, 13}}|>], LeafNode[Symbol, "Null", <|Source -> {{1, 15}, {1, 15}}|>], LeafNode[Symbol, "Null", <|Source -> {{1, 16}, {1, 16}}|>]}, <|Source -> {{1, 1}, {1, 16}}|>]}, <|
 		
 		AbstractSyntaxIssues -> {
 			SyntaxIssue["TopLevelCompoundExpression", "Unexpected ``CompoundExpression`` at top-level.", "Warning", <|

@@ -177,8 +177,8 @@ TestMatch[
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "List", <||>], {
 			CallNode[LeafNode[Symbol, "Plus", <||>], {
-	    		ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 4}, {1, 4}} |>]},
-	    		<|Source -> {{1, 3}, {1, 4}}|>]},
+	    		ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 5}, {1, 5}}|>]},
+	    		<|Source -> {{1, 3}, {1, 5}}|>]},
 	    	<|Source -> {{1, 1}, {1, 6}}|>] },
 	    <||>]
 	,

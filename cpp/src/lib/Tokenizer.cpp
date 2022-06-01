@@ -266,14 +266,14 @@ Token Tokenizer::nextToken0_stringifyAsTag() {
             // EndOfFile is special, so invent source
             //
             
-            return Token(TOKEN_ERROR_EXPECTEDTAG, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
+            return Token(TOKEN_ERROR_EXPECTEDTAG, tokenStartBuf, tokenStartLoc);
         }
         case '\n': case '\r': case CODEPOINT_CRLF: {
             //
             // Newline is special, so invent source
             //
             
-            return Token(TOKEN_ERROR_EXPECTEDTAG, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
+            return Token(TOKEN_ERROR_EXPECTEDTAG, tokenStartBuf, tokenStartLoc);
         }
         default: {
             return handleString_stringifyAsTag(tokenStartBuf, tokenStartLoc, c, policy);
@@ -295,7 +295,7 @@ Token Tokenizer::nextToken0_stringifyAsFile() {
     
     switch (c.to_point()) {
         case CODEPOINT_ENDOFFILE: {
-            return Token(TOKEN_ERROR_EXPECTEDFILE, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
+            return Token(TOKEN_ERROR_EXPECTEDFILE, tokenStartBuf, tokenStartLoc);
         }
         case '\n': case '\r': case CODEPOINT_CRLF: {
             //
@@ -882,7 +882,7 @@ inline Token Tokenizer::handleString_stringifyAsTag(Buffer tokenStartBuf, Source
     // Something like  a::5
     //
     
-    return Token(TOKEN_ERROR_EXPECTEDTAG, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
+    return Token(TOKEN_ERROR_EXPECTEDTAG, tokenStartBuf, tokenStartLoc);
 }
 
 
@@ -941,7 +941,7 @@ inline Token Tokenizer::handleString_stringifyAsFile(Buffer tokenStartBuf, Sourc
             // So invent source
             //
             
-            return Token(TOKEN_ERROR_EXPECTEDFILE, BufferAndLength(tokenStartBuf), Source(tokenStartLoc));
+            return Token(TOKEN_ERROR_EXPECTEDFILE, tokenStartBuf, tokenStartLoc);
         }
     }
     

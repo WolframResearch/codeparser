@@ -354,8 +354,8 @@ TestMatch[
 	ContainerNode[String, {
 		InfixNode[Times, {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
-			LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> {{1, 2}, {1, 2}}|>],
 			LeafNode[Whitespace, "\[InvisibleSpace]", <|Source -> {{1, 2}, {1, 3}}|>],
+			LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> {{1, 3}, {1, 3}}|>],
 			LeafNode[Symbol, "b", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]},
 		<| SyntaxIssues -> {
 			EncodingIssue["NonASCIICharacter", "Non-ASCII character: ``\"\[InvisibleSpace]\" (\\[InvisibleSpace])``.", "Remark", <|Source -> {{1, 2}, {1, 3}}, ConfidenceLevel -> 1.0, CodeActions -> _|>],

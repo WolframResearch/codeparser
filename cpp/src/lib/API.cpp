@@ -551,7 +551,7 @@ NodePtr ParserSession::handleAbort() const {
     auto buf = TheByteBuffer->buffer;
     auto loc = TheByteDecoder->SrcLoc;
     
-    auto A = Token(TOKEN_ERROR_ABORTED, BufferAndLength(buf), Source(loc));
+    auto A = Token(TOKEN_ERROR_ABORTED, buf, loc);
     
     auto Aborted = NodePtr(new ErrorNode(A));
     

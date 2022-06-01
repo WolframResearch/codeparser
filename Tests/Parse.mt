@@ -3288,8 +3288,20 @@ Test[
 
 
 
-
-
+Test[
+	CodeConcreteParse["a,*b"]
+	,
+	ContainerNode[String, {
+		InfixNode[Comma, {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
+			LeafNode[Token`Comma, ",", <|Source -> {{1, 2}, {1, 3}}|>],
+			InfixNode[Times, {
+				ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>],
+				LeafNode[Token`Star, "*", <|Source -> {{1, 3}, {1, 4}}|>],
+				LeafNode[Symbol, "b", <|Source -> {{1, 4}, {1, 5}}|>]}, <|Source -> {{1, 3}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>]}, <||>]
+	,
+	TestID->"Parse-20220601-I1A2U8"
+]
 
 (*
 make sure Comma is at top-level

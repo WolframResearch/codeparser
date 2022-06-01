@@ -1,6 +1,7 @@
 
 Needs["CodeParser`"]
 Needs["CodeParser`Abstract`"]
+Needs["CodeParser`ToString`"] (* ToInputFormString *)
 
 
 Test[
