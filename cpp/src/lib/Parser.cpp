@@ -223,7 +223,7 @@ Token Parser::currentToken_stringifyAsFile() const {
     return TheTokenizer->currentToken_stringifyAsFile();
 }
 
-NodePtr Parser::parseLoop(NodePtr Left, ParserContext Ctxt, Continuation k) {
+NodePtr Parser::parseLoop(NodePtr Left, ParserContext Ctxt) {
     
     TriviaSeq Trivia1;
     
@@ -247,7 +247,7 @@ NodePtr Parser::parseLoop(NodePtr Left, ParserContext Ctxt, Continuation k) {
             
         Trivia1.reset();
         
-        return k(std::move(Left));
+        return Left;
     }
     
     NodeSeq LeftSeq;
@@ -258,10 +258,9 @@ NodePtr Parser::parseLoop(NodePtr Left, ParserContext Ctxt, Continuation k) {
     auto Ctxt2 = Ctxt;
     Ctxt2.Prec = TokenPrecedence;
     
-    return I->parseInfix(std::move(LeftSeq), token, Ctxt2, [&](NodePtr Left) {
-    
-    return parseLoop(std::move(Left), Ctxt, k);
-    });
+    Left = I->parseInfix(std::move(LeftSeq), token, Ctxt2);
+        
+    return parseLoop(std::move(Left), Ctxt);
 }
 
 Token Parser::eatTrivia(Token T, ParserContext Ctxt, NextPolicy policy, TriviaSeq& Args) {

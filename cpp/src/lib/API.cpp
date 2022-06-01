@@ -188,11 +188,11 @@ NodeContainerPtr ParserSession::parseExpressions() {
             //
             if (peek.Tok.isCloser()) {
                 
-                Expr = contextSensitivePrefixToplevelCloserParselet->parsePrefix(peek, Ctxt, [&](NodePtr Res) { return Res; });
+                Expr = contextSensitivePrefixToplevelCloserParselet->parsePrefix(peek, Ctxt);
                 
             } else {
                 
-                Expr = prefixParselets[peek.Tok.value()]->parsePrefix(peek, Ctxt, [&](NodePtr Res) { return Res; });
+                Expr = prefixParselets[peek.Tok.value()]->parsePrefix(peek, Ctxt);
             }
             
             exprs.push_back(std::move(Expr));

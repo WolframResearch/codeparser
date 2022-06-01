@@ -14,7 +14,6 @@
 class Parser;
 
 using ParserPtr = std::unique_ptr<Parser>;
-using Continuation = std::function<NodePtr(NodePtr)>;
 
 
 //
@@ -107,7 +106,7 @@ public:
     Token currentToken_stringifyAsTag() const;
     Token currentToken_stringifyAsFile() const;
     
-    NodePtr parseLoop(NodePtr Left, ParserContext Ctxt, Continuation k);
+    NodePtr parseLoop(NodePtr Left, ParserContext Ctxt);
     
     ~Parser();
 

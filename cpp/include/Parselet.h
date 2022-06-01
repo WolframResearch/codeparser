@@ -21,7 +21,6 @@ using PrefixParseletPtr = PrefixParselet *;
 using InfixParseletPtr = InfixParselet *;
 using ContextSensitivePrefixParseletPtr = ContextSensitivePrefixParselet *;
 using ContextSensitiveInfixParseletPtr = ContextSensitiveInfixParselet *;
-using Continuation = std::function<NodePtr(NodePtr)>;
 
 
 //
@@ -42,7 +41,7 @@ public:
     //
     // Commonly referred to as NUD method in the literature
     //
-    virtual NodePtr parsePrefix(Token firstTok, ParserContext Ctxt, Continuation k) const = 0;
+    virtual NodePtr parsePrefix(Token firstTok, ParserContext Ctxt) const = 0;
     
     virtual ~PrefixParselet() {}
 };
@@ -56,7 +55,7 @@ public:
     //
     // Commonly referred to as LED method in the literature
     //
-    virtual NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt, Continuation k) const = 0;
+    virtual NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const = 0;
     
     virtual Precedence getPrecedence(ParserContext Ctxt) const = 0;
     
@@ -81,7 +80,7 @@ public:
     
     CallParselet(PrefixParseletPtr GP) : GP(std::move(GP)) {}
     
-    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt) const override {
         return PRECEDENCE_CALL;
@@ -94,7 +93,7 @@ public:
 class ContextSensitivePrefixParselet : virtual public Parselet {
 public:
     
-    virtual NodePtr parsePrefixContextSensitive(Token firstTok, ParserContext Ctxt, Continuation k) const = 0;
+    virtual NodePtr parsePrefixContextSensitive(Token firstTok, ParserContext Ctxt) const = 0;
     
     virtual ~ContextSensitivePrefixParselet() {}
 };
@@ -105,7 +104,7 @@ public:
 class ContextSensitiveInfixParselet : virtual public Parselet {
 public:
     
-    virtual NodePtr parseInfixContextSensitive(NodeSeq Left, Token firstTok, ParserContext Ctxt, Continuation k) const = 0;
+    virtual NodePtr parseInfixContextSensitive(NodeSeq Left, Token firstTok, ParserContext Ctxt) const = 0;
     
     virtual ~ContextSensitiveInfixParselet() {}
 };
@@ -116,7 +115,7 @@ public:
 class LeafParselet : public PrefixParselet {
 public:
     
-    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt) const override;
 };
 
 //
@@ -125,7 +124,7 @@ public:
 class PrefixEndOfFileParselet : public PrefixParselet {
 public:
     
-    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt) const override;
 };
 
 //
@@ -134,7 +133,7 @@ public:
 class PrefixErrorParselet : public PrefixParselet {
 public:
     
-    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt) const override;
 };
 
 //
@@ -143,7 +142,7 @@ public:
 class PrefixCloserParselet : public PrefixParselet {
 public:
     
-    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt) const override;
 };
 
 //
@@ -152,7 +151,7 @@ public:
 class PrefixToplevelCloserParselet : public PrefixParselet {
 public:
     
-    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt) const override;
 };
 
 //
@@ -161,7 +160,7 @@ public:
 class PrefixUnsupportedTokenParselet : public PrefixParselet {
 public:
     
-    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt) const override;
 };
 
 //
@@ -170,7 +169,7 @@ public:
 class PrefixCommaParselet : public PrefixParselet {
 public:
     
-    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt) const override;
 };
 
 //
@@ -179,7 +178,7 @@ public:
 class PrefixUnhandledParselet : public PrefixParselet {
 public:
     
-    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt) const override;
 };
 
 //
@@ -195,7 +194,7 @@ public:
     
     PrefixOperatorParselet(TokenEnum Tok, Precedence precedence, const SymbolPtr& Op) : precedence(precedence), Op(Op) {}
     
-    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt) const override;
     
     virtual Precedence getPrecedence(ParserContext Ctxt) const {
         return precedence;
@@ -208,7 +207,7 @@ public:
 class InfixImplicitTimesParselet : public InfixParselet {
 public:
     
-    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt) const override;
     
@@ -221,7 +220,7 @@ public:
 class InfixAssertFalseParselet : public InfixParselet {
 public:
     
-    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt) const override {
         return PRECEDENCE_LOWEST;
@@ -245,7 +244,7 @@ public:
 class InfixToplevelNewlineParselet : public InfixParselet {
 public:
     
-    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt) const override {
         //
@@ -268,7 +267,7 @@ public:
     
     BinaryOperatorParselet(TokenEnum Tok, Precedence precedence, const SymbolPtr& Op) : precedence(precedence), Op(Op) {}
     
-    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt) const override {
         return precedence;
@@ -288,13 +287,13 @@ private:
     const Precedence precedence;
     const SymbolPtr& Op;
     
-    NodePtr parseLoop(NodeSeq Args, Token OperandLastToken, ParserContext Ctxt, Continuation k) const;
+    NodePtr parseLoop(NodeSeq Args, Token OperandLastToken, ParserContext Ctxt) const;
     
 public:
     
     InfixOperatorParselet(TokenEnum Tok, Precedence precedence, const SymbolPtr& Op) : precedence(precedence), Op(Op) {}
     
-    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt) const override {
         return precedence;
@@ -318,7 +317,7 @@ public:
     
     PostfixOperatorParselet(TokenEnum Tok, Precedence precedence, const SymbolPtr& Op) : precedence(precedence), Op(Op) {}
     
-    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt) const override {
         return precedence;
@@ -338,13 +337,13 @@ private:
     const SymbolPtr& Op;
     const Closer Closr;
     
-    NodePtr parseLoop(NodeSeq Args, ParserContext CtxtIn, Continuation k) const;
+    NodePtr parseLoop(NodeSeq Args, ParserContext CtxtIn) const;
     
 public:
     
     GroupParselet(TokenEnum Opener, const SymbolPtr& Op);
     
-    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt) const override;
 };
 
 
@@ -358,9 +357,9 @@ public:
 class SymbolParselet : public PrefixParselet, public ContextSensitivePrefixParselet {
 public:
     
-    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt) const override;
     
-    NodePtr parsePrefixContextSensitive(Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parsePrefixContextSensitive(Token firstTok, ParserContext Ctxt) const override;
 };
 
 //
@@ -370,11 +369,11 @@ public:
 class CommaParselet : public InfixParselet {
 private:
     
-    NodePtr parseLoop(NodeSeq Left, ParserContext Ctxt, Continuation k) const;
+    NodePtr parseLoop(NodeSeq Left, ParserContext Ctxt) const;
     
 public:
     
-    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt) const override {
         return PRECEDENCE_COMMA;
@@ -390,11 +389,11 @@ public:
 class SemiParselet : public InfixParselet {
 private:
     
-    NodePtr parseLoop(NodeSeq Args, ParserContext Ctxt, Continuation k) const;
+    NodePtr parseLoop(NodeSeq Args, ParserContext Ctxt) const;
     
 public:
     
-    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt) const override {
         return PRECEDENCE_SEMI;
@@ -415,9 +414,9 @@ private:
     //
     // Parses a single complete Span
     //
-    NodePtr parse0(NodeSeq Left, Token firstTok, ParserContext Ctxt, Continuation k) const;
+    NodePtr parse0(NodeSeq Left, Token firstTok, ParserContext Ctxt) const;
     
-    NodePtr parseLoop(NodeSeq Args, ParserContext Ctxt, Continuation k) const;
+    NodePtr parseLoop(NodeSeq Args, ParserContext Ctxt) const;
     
 public:
     
@@ -432,7 +431,7 @@ public:
     //
     // Must also handle  ;;!b  where there is an implicit Times, but only a single Span
     //
-    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt) const override;
     
     //
     // infix
@@ -445,7 +444,7 @@ public:
     //
     // Must also handle  a;;!b  where there is an implicit Times, but only a single Span
     //
-    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt) const override {
         return PRECEDENCE_SEMISEMI;
@@ -460,7 +459,7 @@ public:
 class TildeParselet : public InfixParselet {
 public:
     
-    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt) const override {
         
@@ -484,14 +483,14 @@ public:
     // when parsing a in a:b  then ColonFlag is false
     // when parsing b in a:b  then ColonFlag is true
     //
-    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     //
     // Something like  pattern:optional
     //
     // Called from other parselets
     //
-    NodePtr parseInfixContextSensitive(NodeSeq Left, Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parseInfixContextSensitive(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt) const override {
         return PRECEDENCE_FAKE_OPTIONALCOLON;
@@ -512,7 +511,7 @@ public:
 class SlashColonParselet : public InfixParselet {
 public:
     
-    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt) const override {
         return PRECEDENCE_SLASHCOLON;
@@ -527,7 +526,7 @@ public:
     
     EqualParselet();
     
-    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
 };
 
 //
@@ -538,7 +537,7 @@ public:
     
     ColonEqualParselet();
     
-    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
 };
 
 
@@ -548,7 +547,7 @@ public:
 class IntegralParselet : public PrefixParselet {
 public:
     
-    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt) const override;
 };
 
 //
@@ -557,11 +556,11 @@ public:
 class ColonColonParselet : public InfixParselet {
 private:
     
-    NodePtr parseLoop(NodeSeq Args, ParserContext Ctxt, Continuation k) const;
+    NodePtr parseLoop(NodeSeq Args, ParserContext Ctxt) const;
     
 public:
     
-    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt) const override {
         return PRECEDENCE_COLONCOLON;
@@ -574,7 +573,7 @@ public:
 class GreaterGreaterParselet : public InfixParselet {
 public:
     
-    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt) const override {
         return PRECEDENCE_GREATERGREATER;
@@ -587,7 +586,7 @@ public:
 class GreaterGreaterGreaterParselet : public InfixParselet {
 public:
     
-    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
     
     Precedence getPrecedence(ParserContext Ctxt) const override {
         return PRECEDENCE_GREATERGREATERGREATER;
@@ -600,7 +599,7 @@ public:
 class LessLessParselet : public PrefixParselet {
 public:
     
-    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt) const override;
 };
 
 //
@@ -619,7 +618,7 @@ public:
 class HashParselet : public PrefixParselet {
 public:
     
-    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt) const override;
 };
 
 //
@@ -628,7 +627,7 @@ public:
 class HashHashParselet : public PrefixParselet {
 public:
     
-    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt) const override;
 };
 
 //
@@ -637,7 +636,7 @@ public:
 class PercentParselet : public PrefixParselet {
 public:
     
-    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt) const override;
 };
 
 //
@@ -646,7 +645,7 @@ public:
 class PercentPercentParselet : public PrefixParselet {
 public:
     
-    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parsePrefix(Token firstTok, ParserContext Ctxt) const override;
 };
 
 //
@@ -658,9 +657,9 @@ private:
     const SymbolPtr& BOp;
     const SymbolPtr& PBOp;
     
-    NodePtr parse0(Token TokIn, ParserContext Ctxt, Continuation k) const;
+    NodePtr parse0(Token TokIn, ParserContext Ctxt) const;
     
-    NodePtr parse1(NodePtr Blank, Token Tok, ParserContext Ctxt, Continuation k) const;
+    NodePtr parse1(NodePtr Blank, Token Tok, ParserContext Ctxt) const;
     
 public:
     
@@ -671,7 +670,7 @@ public:
     //
     // Something like  _  or  _a
     //
-    NodePtr parsePrefix(Token TokIn, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parsePrefix(Token TokIn, ParserContext Ctxt) const override;
     
     //
     // infix
@@ -680,7 +679,7 @@ public:
     //
     // Called from other parselets
     //
-    NodePtr parseInfixContextSensitive(NodeSeq Left, Token TokIn, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parseInfixContextSensitive(NodeSeq Left, Token TokIn, ParserContext Ctxt) const override;
 };
 
 //
@@ -689,7 +688,7 @@ public:
 class UnderDotParselet : public PrefixParselet, public ContextSensitiveInfixParselet {
 private:
     
-    NodePtr parse0(Token TokIn, ParserContext Ctxt, Continuation k) const;
+    NodePtr parse0(Token TokIn, ParserContext Ctxt) const;
     
 public:
     
@@ -698,7 +697,7 @@ public:
     //
     // Something like  _.
     //
-    NodePtr parsePrefix(Token TokIn, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parsePrefix(Token TokIn, ParserContext Ctxt) const override;
     
     //
     // infix
@@ -707,5 +706,5 @@ public:
     //
     // Called from other parselets
     //
-    NodePtr parseInfixContextSensitive(NodeSeq Left, Token TokIn, ParserContext Ctxt, Continuation k) const override;
+    NodePtr parseInfixContextSensitive(NodeSeq Left, Token TokIn, ParserContext Ctxt) const override;
 };
