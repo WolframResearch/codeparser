@@ -76,6 +76,8 @@ private:
     
     const PrefixParseletPtr GP;
     
+    NodePtr parse1(NodeSeq Head, NodePtr Operand, ParserContext CtxtIn) const;
+    
 public:
     
     CallParselet(PrefixParseletPtr GP) : GP(std::move(GP)) {}
@@ -190,6 +192,9 @@ private:
     const Precedence precedence;
     const SymbolPtr& Op;
     
+    NodePtr parse1(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
+    NodePtr parse2(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
+    
 public:
     
     PrefixOperatorParselet(TokenEnum Tok, Precedence precedence, const SymbolPtr& Op) : precedence(precedence), Op(Op) {}
@@ -263,6 +268,9 @@ private:
     const Precedence precedence;
     const SymbolPtr& Op;
     
+    NodePtr parse1(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
+    NodePtr parse2(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
+    
 public:
     
     BinaryOperatorParselet(TokenEnum Tok, Precedence precedence, const SymbolPtr& Op) : precedence(precedence), Op(Op) {}
@@ -287,6 +295,7 @@ private:
     const Precedence precedence;
     const SymbolPtr& Op;
     
+    NodePtr parse1(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
     NodePtr parseLoop(NodeSeq Args, Token OperandLastToken, ParserContext Ctxt) const;
     
 public:
@@ -312,6 +321,9 @@ private:
     
     const Precedence precedence;
     const SymbolPtr& Op;
+    
+    NodePtr parse1(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
+    NodePtr parse2(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
     
 public:
     
@@ -369,6 +381,7 @@ public:
 class CommaParselet : public InfixParselet {
 private:
     
+    NodePtr parse1(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
     NodePtr parseLoop(NodeSeq Left, ParserContext Ctxt) const;
     
 public:
@@ -389,6 +402,7 @@ public:
 class SemiParselet : public InfixParselet {
 private:
     
+    NodePtr parse1(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
     NodePtr parseLoop(NodeSeq Args, ParserContext Ctxt) const;
     
 public:
@@ -415,7 +429,10 @@ private:
     // Parses a single complete Span
     //
     NodePtr parse0(NodeSeq Left, Token firstTok, ParserContext Ctxt) const;
-    
+    NodePtr parse1(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
+    NodePtr parse3(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
+    NodePtr parse4(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
+    NodePtr parse5(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
     NodePtr parseLoop(NodeSeq Args, ParserContext Ctxt) const;
     
 public:
@@ -457,6 +474,11 @@ public:
 // It'd be weird if this were an "infix operator"
 //
 class TildeParselet : public InfixParselet {
+private:
+    
+    NodePtr parse1(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
+    NodePtr parse2(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
+    
 public:
     
     NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
@@ -475,6 +497,11 @@ public:
 // Something like  symbol:object  or  pattern:optional
 //
 class ColonParselet : public InfixParselet, public ContextSensitiveInfixParselet {
+private:
+    
+    NodePtr parse1(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
+    NodePtr parse2(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
+    
 public:
     
     //
@@ -509,6 +536,10 @@ public:
 // It'd be weird if this were an "infix operator"
 //
 class SlashColonParselet : public InfixParselet {
+private:
+    
+    NodePtr parse1(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
+    
 public:
     
     NodePtr parseInfix(NodeSeq Left, Token firstTok, ParserContext Ctxt) const override;
@@ -522,6 +553,10 @@ public:
 // a /: b = c  and  a /: b = .  are handled here
 //
 class EqualParselet : public BinaryOperatorParselet {
+private:
+    
+    NodePtr parse1(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
+    
 public:
     
     EqualParselet();
@@ -533,6 +568,10 @@ public:
 // a /: b := c  is handled here
 //
 class ColonEqualParselet : public BinaryOperatorParselet {
+private:
+    
+    NodePtr parse1(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
+    
 public:
     
     ColonEqualParselet();
@@ -545,6 +584,11 @@ public:
 // Something like  \[Integral] f \[DifferentialD] x
 //
 class IntegralParselet : public PrefixParselet {
+private:
+    
+    NodePtr parse1(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
+    NodePtr parse2(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
+    
 public:
     
     NodePtr parsePrefix(Token firstTok, ParserContext Ctxt) const override;
@@ -556,6 +600,7 @@ public:
 class ColonColonParselet : public InfixParselet {
 private:
     
+    NodePtr parse1(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
     NodePtr parseLoop(NodeSeq Args, ParserContext Ctxt) const;
     
 public:
@@ -658,8 +703,10 @@ private:
     const SymbolPtr& PBOp;
     
     NodePtr parse0(Token TokIn, ParserContext Ctxt) const;
-    
     NodePtr parse1(NodePtr Blank, Token Tok, ParserContext Ctxt) const;
+    NodePtr parse2(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
+    NodePtr parse3(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
+    NodePtr parse4(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
     
 public:
     
@@ -689,6 +736,9 @@ class UnderDotParselet : public PrefixParselet, public ContextSensitiveInfixPars
 private:
     
     NodePtr parse0(Token TokIn, ParserContext Ctxt) const;
+    NodePtr parse1(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
+    NodePtr parse2(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const;
+    
     
 public:
     

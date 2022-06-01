@@ -259,7 +259,7 @@ NodePtr Parser::parseLoop(NodePtr Left, ParserContext Ctxt) {
     Ctxt2.Prec = TokenPrecedence;
     
     Left = I->parseInfix(std::move(LeftSeq), token, Ctxt2);
-        
+    
     return parseLoop(std::move(Left), Ctxt);
 }
 

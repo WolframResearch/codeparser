@@ -18,11 +18,7 @@ NodePtr UnderParselet::parse0(Token TokIn, ParserContext Ctxt) const {
         
         auto Sym2 = contextSensitiveSymbolParselet->parsePrefixContextSensitive(Tok, Ctxt);
             
-        Args.append(std::move(Sym2));
-        
-        auto Blank = NodePtr(new CompoundNode(BOp, std::move(Args)));
-        
-        return Blank;
+        return parse2(std::move(Args), std::move(Sym2), Ctxt);
     }
     
     if (Tok.Tok == TOKEN_ERROR_EXPECTEDLETTERLIKE) {
@@ -40,11 +36,7 @@ NodePtr UnderParselet::parse0(Token TokIn, ParserContext Ctxt) const {
         
         auto ErrorSym2 = parselet->parsePrefix(Tok, Ctxt);
             
-        Args.append(std::move(ErrorSym2));
-        
-        auto Blank = NodePtr(new CompoundNode(BOp, std::move(Args)));
-        
-        return Blank;
+        return parse3(std::move(Args), std::move(ErrorSym2), Ctxt);
     }
         
     auto Blank = std::move(Under);
@@ -104,6 +96,29 @@ NodePtr UnderParselet::parseInfixContextSensitive(NodeSeq Args, Token TokIn, Par
     
     auto Blank = parse0(TokIn, CtxtIn);
         
+    return parse4(std::move(Args), std::move(Blank), CtxtIn);
+}
+
+NodePtr UnderParselet::parse2(NodeSeq Args, NodePtr Sym2, ParserContext CtxtIn) const {
+    
+    Args.append(std::move(Sym2));
+    
+    auto Blank = NodePtr(new CompoundNode(BOp, std::move(Args)));
+    
+    return Blank;
+}
+
+NodePtr UnderParselet::parse3(NodeSeq Args, NodePtr ErrorSym2, ParserContext CtxtIn) const {
+    
+    Args.append(std::move(ErrorSym2));
+    
+    auto Blank = NodePtr(new CompoundNode(BOp, std::move(Args)));
+    
+    return Blank;
+}
+
+NodePtr UnderParselet::parse4(NodeSeq Args, NodePtr Blank, ParserContext CtxtIn) const {
+    
     Args.append(NodePtr(std::move(Blank)));
     
     auto Pat = NodePtr(new CompoundNode(PBOp, std::move(Args)));
@@ -134,6 +149,11 @@ NodePtr UnderDotParselet::parseInfixContextSensitive(NodeSeq Args, Token TokIn, 
     
     auto Blank = parse0(TokIn, CtxtIn);
         
+    return parse1(std::move(Args), std::move(Blank), CtxtIn);
+}
+
+NodePtr UnderDotParselet::parse1(NodeSeq Args, NodePtr Blank, ParserContext CtxtIn) const {
+    
     Args.append(NodePtr(std::move(Blank)));
     
     auto Pat = NodePtr(new CompoundNode(SYMBOL_CODEPARSER_PATTERNOPTIONALDEFAULT, std::move(Args)));
