@@ -9,25 +9,27 @@ NodePtr UnderParselet::parse0(Token TokIn, ParserContext Ctxt, Continuation k) c
     
     TheParser->nextToken(TokIn);
     
-    NodePtr Blank;
-    
     auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
     
     if (Tok.Tok == TOKEN_SYMBOL) {
         
-        return contextSensitiveSymbolParselet->parsePrefixContextSensitive(Tok, Ctxt, [&](NodePtr Sym2) {
-        
         NodeSeq Args(1 + 1);
         Args.append(std::move(Under));
+        
+        return contextSensitiveSymbolParselet->parsePrefixContextSensitive(Tok, Ctxt, [&](NodePtr Sym2) {
+        
         Args.append(std::move(Sym2));
         
-        Blank = NodePtr(new CompoundNode(BOp, std::move(Args)));
+        auto Blank = NodePtr(new CompoundNode(BOp, std::move(Args)));
         
         return k(std::move(Blank));
         });
     }
     
     if (Tok.Tok == TOKEN_ERROR_EXPECTEDLETTERLIKE) {
+        
+        NodeSeq Args(1 + 1);
+        Args.append(std::move(Under));
         
         //
         // Something like  _a`
@@ -39,17 +41,15 @@ NodePtr UnderParselet::parse0(Token TokIn, ParserContext Ctxt, Continuation k) c
         
         return parselet->parsePrefix(Tok, Ctxt, [&](NodePtr ErrorSym2) {
         
-        NodeSeq Args(1 + 1);
-        Args.append(std::move(Under));
         Args.append(std::move(ErrorSym2));
         
-        Blank = NodePtr(new CompoundNode(BOp, std::move(Args)));
+        auto Blank = NodePtr(new CompoundNode(BOp, std::move(Args)));
         
         return k(std::move(Blank));
         });
     }
         
-    Blank = std::move(Under);
+    auto Blank = std::move(Under);
     
     return k(std::move(Blank));
 }
@@ -131,8 +131,6 @@ NodePtr UnderDotParselet::parse0(Token TokIn, ParserContext Ctxt, Continuation k
 NodePtr UnderDotParselet::parsePrefix(Token TokIn, ParserContext Ctxt, Continuation k) const {
     
     return parse0(TokIn, Ctxt, [&](NodePtr Blank) {
-    
-    TheParser->nextToken(TokIn);
     
     return TheParser->parseLoop(std::move(Blank), Ctxt, k);
     });
