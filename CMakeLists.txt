@@ -32,6 +32,7 @@ set(BUILD_TESTS OFF CACHE BOOL "Build tests")
 set(TRANSPORT Automatic CACHE STRING "Transport to use")
 set(NISSUES OFF CACHE BOOL "NISSUES")
 set(NABORT OFF CACHE BOOL "NABORT")
+set(NMUSTTAIL ON CACHE BOOL "NMUSTTAIL")
 set(LOCAL_BUILD OFF CACHE BOOL "Local build")
 #
 # Time to pause when starting kernel
@@ -70,6 +71,7 @@ message(STATUS "BUILD_TESTS: ${BUILD_TESTS}")
 message(STATUS "TRANSPORT: ${TRANSPORT}")
 message(STATUS "NISSUES: ${NISSUES}")
 message(STATUS "NABORT: ${NABORT}")
+message(STATUS "NMUSTTAIL: ${NMUSTTAIL}")
 message(STATUS "LOCAL_BUILD: ${LOCAL_BUILD}")
 if(LOCAL_BUILD)
 message(STATUS "Configuring for local build")
@@ -715,6 +717,10 @@ endif()
 
 if(NABORT)
 target_compile_definitions(codeparser-lib PUBLIC NABORT=1)
+endif()
+
+if(NMUSTTAIL)
+target_compile_definitions(codeparser-lib PUBLIC NMUSTTAIL=1)
 endif()
 
 if(${TRANSPORT} STREQUAL MathLink)

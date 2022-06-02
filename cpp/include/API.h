@@ -44,6 +44,13 @@ do { \
 #define HANDLE_ABORT
 #endif // !NABORT
 
+#if !NMUSTTAIL
+#define MUSTTAIL [[clang::musttail]]
+#else
+#define MUSTTAIL
+#endif // !NMUSTTAIL
+
+
 class ParserSession;
 #if USE_MATHLINK
 class ScopedMLByteArray;

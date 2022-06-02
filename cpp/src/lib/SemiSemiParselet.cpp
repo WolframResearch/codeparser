@@ -202,6 +202,7 @@ NodePtr SemiSemiParselet::parseLoop(NodeSeq Args, ParserContext Ctxt) const {
     
     Args.append(std::move(Operand));
     
+    MUSTTAIL
     return parseLoop(std::move(Args), Ctxt);
 }
 

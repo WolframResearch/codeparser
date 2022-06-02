@@ -464,6 +464,7 @@ NodePtr InfixOperatorParselet::parseLoop(NodeSeq Args, Token OperandLastToken, P
 
     Args.append(std::move(Operand));
     
+    MUSTTAIL
     return parseLoop(std::move(Args), OperandLastToken2, CtxtIn);
 }
 
@@ -594,6 +595,7 @@ NodePtr GroupParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
         //
         Args.append(std::move(Error));
         
+        MUSTTAIL
         return parseLoop(std::move(Args), CtxtIn);
     }
 
@@ -619,6 +621,7 @@ NodePtr GroupParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
     //
     Args.append(std::move(Operand));
     
+    MUSTTAIL
     return parseLoop(std::move(Args), CtxtIn);
 }
 
@@ -1213,6 +1216,7 @@ NodePtr CommaParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
         
         Args.append(std::move(Implicit));
         
+        MUSTTAIL
         return parseLoop(std::move(Args), CtxtIn);
     }
     
@@ -1234,11 +1238,13 @@ NodePtr CommaParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
         
         Args.append(std::move(Implicit));
         
+        MUSTTAIL
         return parseLoop(std::move(Args), CtxtIn);
     }
     
     Args.append(std::move(Operand));
     
+    MUSTTAIL
     return parseLoop(std::move(Args), CtxtIn);
 }
 
@@ -1358,6 +1364,7 @@ NodePtr SemiParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
         
         Args.append(NodePtr(new LeafNode(Implicit)));
         
+        MUSTTAIL
         return parseLoop(std::move(Args), CtxtIn);
     }
     
@@ -1367,6 +1374,7 @@ NodePtr SemiParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
         
         Args.append(std::move(operand));
         
+        MUSTTAIL
         return parseLoop(std::move(Args), CtxtIn);
     }
 
@@ -1483,6 +1491,7 @@ NodePtr ColonColonParselet::parseLoop(NodeSeq Args, ParserContext Ctxt) const {
     Args.append(NodePtr(new LeafNode(Tok1)));
     Args.append(std::move(Operand));
     
+    MUSTTAIL
     return parseLoop(std::move(Args), Ctxt);
 }
 
