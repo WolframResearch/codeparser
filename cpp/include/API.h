@@ -33,6 +33,17 @@
 #include <functional> // for function with GCC and MSVC
 #include <cstddef> // for size_t
 
+#if !NABORT
+#define HANDLE_ABORT \
+do { \
+    if (TheParserSession->isAbort()) { \
+        return TheParserSession->handleAbort(); \
+    } \
+} while (0)
+#else
+#define HANDLE_ABORT
+#endif // !NABORT
+
 class ParserSession;
 #if USE_MATHLINK
 class ScopedMLByteArray;

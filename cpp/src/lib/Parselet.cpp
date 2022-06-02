@@ -404,7 +404,12 @@ NodePtr InfixOperatorParselet::parse1(NodeSeq Args, NodePtr Operand, ParserConte
 }
 
 NodePtr InfixOperatorParselet::parseLoop(NodeSeq Args, Token OperandLastToken, ParserContext CtxtIn) const {
-
+    
+    //
+    // Check isAbort() inside loops
+    //
+    HANDLE_ABORT;
+    
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence(Ctxt);
 
@@ -490,6 +495,11 @@ NodePtr GroupParselet::parsePrefix(Token firstTok, ParserContext CtxtIn) const {
 }
  
 NodePtr GroupParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
+    
+    //
+    // Check isAbort() inside loops
+    //
+    HANDLE_ABORT;
     
     auto Ctxt = CtxtIn;
     Ctxt.Closr = Closr;
@@ -1141,7 +1151,12 @@ NodePtr CommaParselet::parse1(NodeSeq Args, NodePtr Operand, ParserContext CtxtI
 }
 
 NodePtr CommaParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
-
+    
+    //
+    // Check isAbort() inside loops
+    //
+    HANDLE_ABORT;
+    
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence(Ctxt);
 
@@ -1296,6 +1311,11 @@ NodePtr SemiParselet::parse1(NodeSeq Args, NodePtr operand, ParserContext CtxtIn
 
 NodePtr SemiParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
     
+    //
+    // Check isAbort() inside loops
+    //
+    HANDLE_ABORT;
+    
     auto Ctxt = CtxtIn;
     Ctxt.Prec = getPrecedence(Ctxt);
 
@@ -1415,7 +1435,12 @@ NodePtr ColonColonParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext 
 }
 
 NodePtr ColonColonParselet::parseLoop(NodeSeq Args, ParserContext Ctxt) const {
-
+    
+    //
+    // Check isAbort() inside loops
+    //
+    HANDLE_ABORT;
+    
     auto Tok1 = TheParser->currentToken(Ctxt, TOPLEVEL);
 
     if (Tok1.Tok != TOKEN_COLONCOLON) {

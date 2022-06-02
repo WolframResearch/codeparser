@@ -122,7 +122,12 @@ NodePtr SemiSemiParselet::parseInfix(NodeSeq Left, Token TokIn, ParserContext Ct
 }
 
 NodePtr SemiSemiParselet::parseLoop(NodeSeq Args, ParserContext Ctxt) const {
-
+    
+    //
+    // Check isAbort() inside loops
+    //
+    HANDLE_ABORT;
+    
     TriviaSeq Trivia2;
     
     auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);

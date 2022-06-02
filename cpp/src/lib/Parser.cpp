@@ -225,6 +225,11 @@ Token Parser::currentToken_stringifyAsFile() const {
 
 NodePtr Parser::parseLoop(NodePtr Left, ParserContext Ctxt) {
     
+    //
+    // Check isAbort() inside loops
+    //
+    HANDLE_ABORT;
+    
     TriviaSeq Trivia1;
     
     auto token = currentToken(Ctxt, TOPLEVEL);
