@@ -182,18 +182,19 @@ NodeContainerPtr ParserSession::parseExpressions() {
                 continue;
             }
             
-            NodePtr Expr;
             //
             // special top-level handling of stray closers
             //
             if (peek.Tok.isCloser()) {
                 
-                Expr = contextSensitivePrefixToplevelCloserParselet->parsePrefix(peek, Ctxt);
+                contextSensitivePrefixToplevelCloserParselet->parsePrefix(peek, Ctxt);
                 
             } else {
                 
-                Expr = prefixParselets[peek.Tok.value()]->parsePrefix(peek, Ctxt);
+                prefixParselets[peek.Tok.value()]->parsePrefix(peek, Ctxt);
             }
+            
+            auto Expr = TheParser->popNode();
             
             exprs.push_back(std::move(Expr));
             

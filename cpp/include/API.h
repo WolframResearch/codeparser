@@ -37,7 +37,9 @@
 #define HANDLE_ABORT \
 do { \
     if (TheParserSession->isAbort()) { \
-        return TheParserSession->handleAbort(); \
+        auto Abort = TheParserSession->handleAbort(); \
+        TheParser->pushNode(std::move(Abort)); \
+        return; \
     } \
 } while (0)
 #else

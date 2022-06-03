@@ -89,6 +89,7 @@ class Parser {
 private:
     
     std::stack<NodeSeq> ArgsStack;
+    std::stack<NodePtr> NodeStack;
     
     void handleFirstLine(FirstLineBehavior firstLineBehavior);
     
@@ -109,7 +110,7 @@ public:
     Token currentToken_stringifyAsTag() const;
     Token currentToken_stringifyAsFile() const;
     
-    NodePtr parseLoop(NodePtr Left, ParserContext Ctxt);
+    void parseLoop(ParserContext Ctxt);
     
     ~Parser();
 
@@ -118,10 +119,13 @@ public:
     Token eatTriviaButNotToplevelNewlines(Token firstTok, ParserContext Ctxt, NextPolicy policy, TriviaSeq& Args);
     Token eatTriviaButNotToplevelNewlines_stringifyAsFile(Token firstTok, ParserContext Ctxt, TriviaSeq& Args);
     
-    
     NodeSeq& pushArgs();
     NodeSeq popArgs();
     NodeSeq& peekArgs();
+    
+    void pushNode(NodePtr N);
+    NodePtr popNode();
+//    NodeSeq& peekArgs();
 };
 
 extern ParserPtr TheParser;

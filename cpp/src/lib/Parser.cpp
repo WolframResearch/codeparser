@@ -223,7 +223,7 @@ Token Parser::currentToken_stringifyAsFile() const {
     return TheTokenizer->currentToken_stringifyAsFile();
 }
 
-NodePtr Parser::parseLoop(NodePtr Left, ParserContext Ctxt) {
+void Parser::parseLoop(ParserContext Ctxt) {
     
     //
     // Check isAbort() inside loops
@@ -252,20 +252,22 @@ NodePtr Parser::parseLoop(NodePtr Left, ParserContext Ctxt) {
             
         Trivia1.reset();
         
-        return Left;
+        return;
     }
+    
+    auto Left1 = TheParser->popNode();
     
     auto& LeftSeq = TheParser->pushArgs();
     
-    LeftSeq.append(std::move(Left));
+    LeftSeq.append(std::move(Left1));
     LeftSeq.appendSeq(std::move(Trivia1));
     
     auto Ctxt2 = Ctxt;
     Ctxt2.Prec = TokenPrecedence;
     
-    Left = I->parseInfix(token, Ctxt2);
+    I->parseInfix(token, Ctxt2);
     
-    return parseLoop(std::move(Left), Ctxt);
+    return parseLoop(Ctxt);
 }
 
 Token Parser::eatTrivia(Token T, ParserContext Ctxt, NextPolicy policy, TriviaSeq& Args) {
@@ -353,6 +355,16 @@ NodeSeq Parser::popArgs() {
 
 NodeSeq& Parser::peekArgs() {
     return ArgsStack.top();
+}
+
+void Parser::pushNode(NodePtr N) {
+    NodeStack.push(std::move(N));
+}
+
+NodePtr Parser::popNode() {
+    auto top = std::move(NodeStack.top());
+    NodeStack.pop();
+    return top;
 }
 
 ParserPtr TheParser = nullptr;
