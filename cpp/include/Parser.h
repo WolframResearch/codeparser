@@ -10,6 +10,7 @@
 #include <set>
 #include <deque>
 #include <memory> // for unique_ptr
+#include <stack>
 
 class Parser;
 
@@ -87,6 +88,8 @@ static_assert(sizeof(ParserContext) == 2, "Check your assumptions");
 class Parser {
 private:
     
+    std::stack<NodeSeq> ArgsStack;
+    
     void handleFirstLine(FirstLineBehavior firstLineBehavior);
     
 public:
@@ -114,6 +117,11 @@ public:
     Token eatTrivia_stringifyAsFile(Token firstTok, ParserContext Ctxt, TriviaSeq& Args);
     Token eatTriviaButNotToplevelNewlines(Token firstTok, ParserContext Ctxt, NextPolicy policy, TriviaSeq& Args);
     Token eatTriviaButNotToplevelNewlines_stringifyAsFile(Token firstTok, ParserContext Ctxt, TriviaSeq& Args);
+    
+    
+    NodeSeq& pushArgs();
+    NodeSeq popArgs();
+    NodeSeq& peekArgs();
 };
 
 extern ParserPtr TheParser;

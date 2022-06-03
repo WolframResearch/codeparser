@@ -13,17 +13,17 @@ NodePtr UnderParselet::parse0(Token TokIn, ParserContext Ctxt) const {
     
     if (Tok.Tok == TOKEN_SYMBOL) {
         
-        NodeSeq Args(1 + 1);
+        auto& Args = TheParser->pushArgs();
         Args.append(std::move(Under));
         
         auto Sym2 = contextSensitiveSymbolParselet->parsePrefixContextSensitive(Tok, Ctxt);
             
-        return parse2(std::move(Args), std::move(Sym2), Ctxt);
+        return parse2(std::move(Sym2), Ctxt);
     }
     
     if (Tok.Tok == TOKEN_ERROR_EXPECTEDLETTERLIKE) {
         
-        NodeSeq Args(1 + 1);
+        auto& Args = TheParser->pushArgs();
         Args.append(std::move(Under));
         
         //
@@ -36,7 +36,7 @@ NodePtr UnderParselet::parse0(Token TokIn, ParserContext Ctxt) const {
         
         auto ErrorSym2 = parselet->parsePrefix(Tok, Ctxt);
             
-        return parse3(std::move(Args), std::move(ErrorSym2), Ctxt);
+        return parse3(std::move(ErrorSym2), Ctxt);
     }
         
     auto Blank = std::move(Under);
@@ -64,11 +64,11 @@ NodePtr UnderParselet::parse1(NodePtr Blank, Token Tok, ParserContext CtxtIn) co
         
         if ((CtxtIn.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
             
-            NodeSeq BlankSeq(1 + Trivia1.size());
+            auto& BlankSeq = TheParser->pushArgs();
             BlankSeq.append(std::move(Blank));
             BlankSeq.appendSeq(std::move(Trivia1));
             
-            auto Blank = contextSensitiveColonParselet->parseInfixContextSensitive(std::move(BlankSeq), Tok, CtxtIn);
+            auto Blank = contextSensitiveColonParselet->parseInfixContextSensitive(Tok, CtxtIn);
                 
             return TheParser->parseLoop(std::move(Blank), CtxtIn);
         }
@@ -92,14 +92,16 @@ NodePtr UnderParselet::parsePrefix(Token TokIn, ParserContext CtxtIn) const {
     return parse1(std::move(Blank), Tok, CtxtIn);
 }
 
-NodePtr UnderParselet::parseInfixContextSensitive(NodeSeq Args, Token TokIn, ParserContext CtxtIn) const {
+NodePtr UnderParselet::parseInfixContextSensitive(Token TokIn, ParserContext CtxtIn) const {
     
     auto Blank = parse0(TokIn, CtxtIn);
         
-    return parse4(std::move(Args), std::move(Blank), CtxtIn);
+    return parse4(std::move(Blank), CtxtIn);
 }
 
-NodePtr UnderParselet::parse2(NodeSeq Args, NodePtr Sym2, ParserContext CtxtIn) const {
+NodePtr UnderParselet::parse2(NodePtr Sym2, ParserContext CtxtIn) const {
+    
+    auto Args = TheParser->popArgs();
     
     Args.append(std::move(Sym2));
     
@@ -108,7 +110,9 @@ NodePtr UnderParselet::parse2(NodeSeq Args, NodePtr Sym2, ParserContext CtxtIn) 
     return Blank;
 }
 
-NodePtr UnderParselet::parse3(NodeSeq Args, NodePtr ErrorSym2, ParserContext CtxtIn) const {
+NodePtr UnderParselet::parse3(NodePtr ErrorSym2, ParserContext CtxtIn) const {
+    
+    auto Args = TheParser->popArgs();
     
     Args.append(std::move(ErrorSym2));
     
@@ -117,7 +121,9 @@ NodePtr UnderParselet::parse3(NodeSeq Args, NodePtr ErrorSym2, ParserContext Ctx
     return Blank;
 }
 
-NodePtr UnderParselet::parse4(NodeSeq Args, NodePtr Blank, ParserContext CtxtIn) const {
+NodePtr UnderParselet::parse4(NodePtr Blank, ParserContext CtxtIn) const {
+    
+    auto Args = TheParser->popArgs();
     
     Args.append(NodePtr(std::move(Blank)));
     
@@ -145,14 +151,16 @@ NodePtr UnderDotParselet::parsePrefix(Token TokIn, ParserContext CtxtIn) const {
     return TheParser->parseLoop(std::move(Blank), CtxtIn);
 }
 
-NodePtr UnderDotParselet::parseInfixContextSensitive(NodeSeq Args, Token TokIn, ParserContext CtxtIn) const {
+NodePtr UnderDotParselet::parseInfixContextSensitive(Token TokIn, ParserContext CtxtIn) const {
     
     auto Blank = parse0(TokIn, CtxtIn);
         
-    return parse1(std::move(Args), std::move(Blank), CtxtIn);
+    return parse1(std::move(Blank), CtxtIn);
 }
 
-NodePtr UnderDotParselet::parse1(NodeSeq Args, NodePtr Blank, ParserContext CtxtIn) const {
+NodePtr UnderDotParselet::parse1(NodePtr Blank, ParserContext CtxtIn) const {
+    
+    auto Args = TheParser->popArgs();
     
     Args.append(NodePtr(std::move(Blank)));
     

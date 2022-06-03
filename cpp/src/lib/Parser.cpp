@@ -255,7 +255,7 @@ NodePtr Parser::parseLoop(NodePtr Left, ParserContext Ctxt) {
         return Left;
     }
     
-    NodeSeq LeftSeq;
+    auto& LeftSeq = TheParser->pushArgs();
     
     LeftSeq.append(std::move(Left));
     LeftSeq.appendSeq(std::move(Trivia1));
@@ -263,7 +263,7 @@ NodePtr Parser::parseLoop(NodePtr Left, ParserContext Ctxt) {
     auto Ctxt2 = Ctxt;
     Ctxt2.Prec = TokenPrecedence;
     
-    Left = I->parseInfix(std::move(LeftSeq), token, Ctxt2);
+    Left = I->parseInfix(token, Ctxt2);
     
     return parseLoop(std::move(Left), Ctxt);
 }
@@ -338,6 +338,21 @@ Token Parser::eatTriviaButNotToplevelNewlines_stringifyAsFile(Token T, ParserCon
     }
     
     return T;
+}
+
+NodeSeq& Parser::pushArgs() {
+    ArgsStack.push(NodeSeq());
+    return ArgsStack.top();
+}
+
+NodeSeq Parser::popArgs() {
+    auto top = std::move(ArgsStack.top());
+    ArgsStack.pop();
+    return top;
+}
+
+NodeSeq& Parser::peekArgs() {
+    return ArgsStack.top();
 }
 
 ParserPtr TheParser = nullptr;
