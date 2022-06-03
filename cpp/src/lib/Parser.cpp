@@ -230,43 +230,51 @@ void Parser::parseLoop(ParserContext Ctxt) {
     //
     HANDLE_ABORT;
     
-    TriviaSeq Trivia1;
-    
-    auto token = currentToken(Ctxt, TOPLEVEL);
-    token = eatTriviaButNotToplevelNewlines(token, Ctxt, TOPLEVEL, Trivia1);
-    
-    auto I = infixParselets[token.Tok.value()];
-    
-    token = I->processImplicitTimes(token, Ctxt);
-    I = infixParselets[token.Tok.value()];
-    
-    auto TokenPrecedence = I->getPrecedence(Ctxt);
-    
-    //
-    // if (Ctxt.Prec > TokenPrecedence)
-    //   break;
-    // else if (Ctxt.Prec == TokenPrecedence && Ctxt.Prec.Associativity is NonRight)
-    //   break;
-    //
-    if ((Ctxt.Prec | 0x1) > TokenPrecedence) {
-            
-        Trivia1.reset();
+    Precedence TokenPrecedence;
+    InfixParseletPtr I;
+    Token token;
+    {
+        TriviaSeq Trivia1;
         
-        return;
+        token = currentToken(Ctxt, TOPLEVEL);
+        token = eatTriviaButNotToplevelNewlines(token, Ctxt, TOPLEVEL, Trivia1);
+        
+        I = infixParselets[token.Tok.value()];
+        
+        token = I->processImplicitTimes(token, Ctxt);
+        I = infixParselets[token.Tok.value()];
+        
+        TokenPrecedence = I->getPrecedence(Ctxt);
+        
+        //
+        // if (Ctxt.Prec > TokenPrecedence)
+        //   break;
+        // else if (Ctxt.Prec == TokenPrecedence && Ctxt.Prec.Associativity is NonRight)
+        //   break;
+        //
+        if ((Ctxt.Prec | 0x1) > TokenPrecedence) {
+                
+            Trivia1.reset();
+            
+            return;
+        }
+        
+        {
+            auto Left1 = TheParser->popNode();
+            
+            auto& LeftSeq = TheParser->pushArgs();
+            
+            LeftSeq.append(std::move(Left1));
+            LeftSeq.appendSeq(std::move(Trivia1));
+        }
     }
-    
-    auto Left1 = TheParser->popNode();
-    
-    auto& LeftSeq = TheParser->pushArgs();
-    
-    LeftSeq.append(std::move(Left1));
-    LeftSeq.appendSeq(std::move(Trivia1));
     
     auto Ctxt2 = Ctxt;
     Ctxt2.Prec = TokenPrecedence;
     
     I->parseInfix(token, Ctxt2);
     
+    MUSTTAIL
     return parseLoop(Ctxt);
 }
 
