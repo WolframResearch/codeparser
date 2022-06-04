@@ -472,7 +472,7 @@ void InfixOperatorParselet::parse1(ParserContext CtxtIn) const {
     return parseLoop(OperandLastToken, CtxtIn);
 }
 
-void InfixOperatorParselet::parseLoop(Token OperandLastToken, ParserContext CtxtIn) const {
+void InfixOperatorParselet::parseLoop(ParserContext CtxtIn) const {
     
     //
     // Check isAbort() inside loops
@@ -540,17 +540,14 @@ void InfixOperatorParselet::parseLoop(Token OperandLastToken, ParserContext Ctxt
     
     prefixParselets[Tok2.Tok.value()]->parsePrefix(Tok2, Ctxt);
     
-    Token OperandLastToken2;
     {
         auto Operand = TheParser->popNode();
-        
-        OperandLastToken2 = Operand->lastToken();
 
         Args.append(std::move(Operand));
     }
     
     MUSTTAIL
-    return parseLoop(OperandLastToken2, CtxtIn);
+    return parseLoop(CtxtIn);
 }
 
 

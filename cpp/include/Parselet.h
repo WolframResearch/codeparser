@@ -295,7 +295,7 @@ private:
     const SymbolPtr& Op;
     
     void parse1(ParserContext CtxtIn) const;
-    void parseLoop(Token OperandLastToken, ParserContext Ctxt) const;
+    void parseLoop(ParserContext Ctxt) const;
     
 public:
     
