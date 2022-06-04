@@ -281,9 +281,7 @@ void SymbolParselet::parsePrefix(Token TokIn, ParserContext Ctxt) const {
                     Args.append(std::move(Sym));
                     Args.appendSeq(std::move(Trivia1));
                     
-                    infixParselets[TOKEN_COLON.value()]->parseInfix(Tok, Ctxt);
-                        
-                    return TheParser->parseLoop(Ctxt);
+                    return infixParselets[TOKEN_COLON.value()]->parseInfix(Tok, Ctxt);
                 }
                     
                 Trivia1.reset();
@@ -965,7 +963,10 @@ void ColonParselet::parse1(ParserContext CtxtIn) const {
         PatSeq.append(std::move(Pat));
         PatSeq.appendSeq(std::move(Trivia2));
         
-        return parseInfixContextSensitive(Tok, Ctxt);
+        parseInfixContextSensitive(Tok, Ctxt);
+        
+//        MUSTTAIL
+        return TheParser->parseLoop(CtxtIn);
     }
     
     Trivia2.reset();

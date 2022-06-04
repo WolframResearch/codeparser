@@ -74,9 +74,7 @@ void UnderParselet::parse1(Token Tok, ParserContext CtxtIn) const {
             BlankSeq.append(std::move(Blank));
             BlankSeq.appendSeq(std::move(Trivia1));
             
-            contextSensitiveColonParselet->parseInfixContextSensitive(Tok, CtxtIn);
-                
-            return TheParser->parseLoop(CtxtIn);
+            return contextSensitiveColonParselet->parseInfixContextSensitive(Tok, CtxtIn);
         }
             
         Trivia1.reset();
