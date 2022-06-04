@@ -223,7 +223,7 @@ Token Parser::currentToken_stringifyAsFile() const {
     return TheTokenizer->currentToken_stringifyAsFile();
 }
 
-void Parser::parseLoop(ParserContext Ctxt) {
+void Parser_parseLoop(ParserContext Ctxt) {
     
     //
     // Check isAbort() inside loops
@@ -236,8 +236,8 @@ void Parser::parseLoop(ParserContext Ctxt) {
     {
         TriviaSeq Trivia1;
         
-        token = currentToken(Ctxt, TOPLEVEL);
-        token = eatTriviaButNotToplevelNewlines(token, Ctxt, TOPLEVEL, Trivia1);
+        token = TheParser->currentToken(Ctxt, TOPLEVEL);
+        token = TheParser->eatTriviaButNotToplevelNewlines(token, Ctxt, TOPLEVEL, Trivia1);
         
         I = infixParselets[token.Tok.value()];
         
@@ -270,10 +270,10 @@ void Parser::parseLoop(ParserContext Ctxt) {
     auto Ctxt2 = Ctxt;
     Ctxt2.Prec = TokenPrecedence;
     
-    I->parseInfix(token, Ctxt2);
+    (I->parseInfix())(I, token, Ctxt2);
     
 //    MUSTTAIL
-    return parseLoop(Ctxt);
+    return Parser_parseLoop(Ctxt);
 }
 
 Token Parser::eatTrivia(Token T, ParserContext Ctxt, NextPolicy policy, TriviaSeq& Args) {

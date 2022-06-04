@@ -187,11 +187,13 @@ NodeContainerPtr ParserSession::parseExpressions() {
             //
             if (peek.Tok.isCloser()) {
                 
-                contextSensitivePrefixToplevelCloserParselet->parsePrefix(peek, Ctxt);
+                PrefixToplevelCloserParselet_parsePrefix(contextSensitivePrefixToplevelCloserParselet, peek, Ctxt);
                 
             } else {
                 
-                prefixParselets[peek.Tok.value()]->parsePrefix(peek, Ctxt);
+                auto P = prefixParselets[peek.Tok.value()];
+                
+                (P->parsePrefix())(P, peek, Ctxt);
             }
             
             auto Expr = TheParser->popNode();

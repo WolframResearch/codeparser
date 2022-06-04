@@ -110,8 +110,6 @@ public:
     Token currentToken_stringifyAsTag() const;
     Token currentToken_stringifyAsFile() const;
     
-    void parseLoop(ParserContext Ctxt);
-    
     ~Parser();
 
     Token eatTrivia(Token firstTok, ParserContext Ctxt, NextPolicy policy, TriviaSeq& Args);
@@ -126,5 +124,8 @@ public:
     void pushNode(NodePtr N);
     NodePtr popNode();
 };
+
+void Parser_parseLoop(ParserContext Ctxt);
+
 
 extern ParserPtr TheParser;
