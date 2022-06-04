@@ -52,7 +52,16 @@ void PrefixCloserParselet::parsePrefix(Token TokIn, ParserContext Ctxt) const {
     // Delay taking the closer until necessary. This allows  { 1 + }  to be parsed as a GroupNode
     //
     
-    auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, TokIn.BufLen.buffer, TokIn.Src.Start);
+    Token createdToken;
+    
+    if (Ctxt.Prec == PRECEDENCE_COMMA) {
+        
+        createdToken = Token(TOKEN_ERROR_INFIXIMPLICITNULL, TokIn.BufLen.buffer, TokIn.Src.Start);
+        
+    } else {
+        
+        createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, TokIn.BufLen.buffer, TokIn.Src.Start);
+    }
     
     auto Error = NodePtr(new ErrorNode(createdToken));
     
@@ -86,7 +95,16 @@ void PrefixEndOfFileParselet::parsePrefix(Token TokIn, ParserContext Ctxt) const
     // Something like  a+<EOF>
     //
     
-    auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, TokIn.BufLen.buffer, TokIn.Src.Start);
+    Token createdToken;
+    
+    if (Ctxt.Prec == PRECEDENCE_COMMA) {
+            
+        createdToken = Token(TOKEN_ERROR_INFIXIMPLICITNULL, TokIn.BufLen.buffer, TokIn.Src.Start);
+        
+    } else {
+        
+        createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, TokIn.BufLen.buffer, TokIn.Src.Start);
+    }
     
     auto Error = NodePtr(new ErrorNode(createdToken));
     
@@ -1334,28 +1352,6 @@ void CommaParselet::parse1(ParserContext CtxtIn) const {
         
         auto& Args = TheParser->peekArgs();
         
-        if (Operand->isExpectedOperandError()) {
-            
-            //
-            // Something like  f[1,]
-            //
-            
-            //
-            // Convert the ExpectedOperand Error to ImplicitNull
-            //
-            
-            auto Tok2 = Operand->lastToken();
-            
-            {
-                auto Implicit = NodePtr(new ErrorNode(Token(TOKEN_ERROR_INFIXIMPLICITNULL, Tok2.BufLen.buffer, Tok2.Src.Start)));
-                
-                Args.append(std::move(Implicit));
-            }
-            
-//            MUSTTAIL
-            return parseLoop(CtxtIn);
-        }
-        
         Args.append(std::move(Operand));
     }
     
@@ -1449,28 +1445,6 @@ void CommaParselet::parseLoop(ParserContext CtxtIn) const {
     
     {
         auto Operand = TheParser->popNode();
-        
-        if (Operand->isExpectedOperandError()) {
-            
-            //
-            // Something like  f[1,2,]
-            //
-
-            //
-            // Convert the ExpectedOperand Error to ImplicitNull
-            //
-            
-            auto Tok2 = Operand->lastToken();
-            
-            {
-                auto Implicit = NodePtr(new ErrorNode(Token(TOKEN_ERROR_INFIXIMPLICITNULL, Tok2.BufLen.buffer, Tok2.Src.Start)));
-                
-                Args.append(std::move(Implicit));
-            }
-            
-    //        MUSTTAIL
-            return parseLoop(CtxtIn);
-        }
         
         Args.append(std::move(Operand));
     }

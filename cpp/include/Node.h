@@ -133,10 +133,6 @@ public:
     virtual void put(MLINK mlp) const = 0;
 #endif // USE_MATHLINK
     
-    virtual bool isExpectedOperandError() const {
-        return false;
-    }
-    
     virtual bool check() const;
     
 #if USE_EXPR_LIB
@@ -246,10 +242,6 @@ public:
     ErrorNode(const Token&& Tok) : Node(), Tok(std::move(Tok)) {
         assert(Tok.Tok.isError());
         assert(!Tok.Tok.isUnterminated());
-    }
-    
-    bool isExpectedOperandError() const override {
-        return Tok.Tok == TOKEN_ERROR_EXPECTEDOPERAND;
     }
     
 #if USE_MATHLINK
