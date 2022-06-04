@@ -277,7 +277,7 @@ void SymbolParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext Ctxt) 
             Args.append(std::move(Sym));
             
 //            MUSTTAIL untangle
-            return (contextSensitiveUnder1Parselet->parseInfixContextSensitive())(contextSensitiveUnder1Parselet, Tok, Ctxt);
+            return (under1Parselet->parseInfixContextSensitive())(under1Parselet, Tok, Ctxt);
         }
         case TOKEN_UNDERUNDER.value(): {
             
@@ -285,7 +285,7 @@ void SymbolParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext Ctxt) 
             Args.append(std::move(Sym));
             
 //            MUSTTAIL untangle
-            return (contextSensitiveUnder2Parselet->parseInfixContextSensitive())(contextSensitiveUnder2Parselet, Tok, Ctxt);
+            return (under2Parselet->parseInfixContextSensitive())(under2Parselet, Tok, Ctxt);
         }
         case TOKEN_UNDERUNDERUNDER.value(): {
             
@@ -293,7 +293,7 @@ void SymbolParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext Ctxt) 
             Args.append(std::move(Sym));
             
 //            MUSTTAIL untangle
-            return (contextSensitiveUnder3Parselet->parseInfixContextSensitive())(contextSensitiveUnder3Parselet, Tok, Ctxt);
+            return (under3Parselet->parseInfixContextSensitive())(under3Parselet, Tok, Ctxt);
         }
         case TOKEN_UNDERDOT.value(): {
             
@@ -301,7 +301,7 @@ void SymbolParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext Ctxt) 
             Args.append(std::move(Sym));
             
 //            MUSTTAIL untangle
-            return (contextSensitiveUnderDotParselet->parseInfixContextSensitive())(contextSensitiveUnderDotParselet, Tok, Ctxt);
+            return (underDotParselet->parseInfixContextSensitive())(underDotParselet, Tok, Ctxt);
         }
         default: {
             
@@ -325,10 +325,8 @@ void SymbolParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext Ctxt) 
                     Args.append(std::move(Sym));
                     Args.appendSeq(std::move(Trivia1));
                     
-                    auto P2 = infixParselets[TOKEN_COLON.value()];
-                    
 //                    MUSTTAIL untangle
-                    return (P2->parseInfix())(P2, Tok, Ctxt);
+                    return ColonParselet_parseInfix(colonParselet, Tok, Ctxt);
                 }
                     
                 Trivia1.reset();
@@ -1222,17 +1220,13 @@ void SlashColonParselet_parse1(ParseletPtr P, ParserContext Ctxt) {
             
             Ctxt.Flag |= PARSER_INSIDE_SLASHCOLON;
             
-            auto P2 = infixParselets[TOKEN_EQUAL.value()];
-            
-            return (P2->parseInfix())(P2, Tok, Ctxt);
+            return EqualParselet_parseInfix(equalParselet, Tok, Ctxt);
         }
         case TOKEN_COLONEQUAL.value(): {
             
             Ctxt.Flag |= PARSER_INSIDE_SLASHCOLON;
             
-            auto P2 = infixParselets[TOKEN_COLONEQUAL.value()];
-            
-            return (P2->parseInfix())(P2, Tok, Ctxt);
+            return ColonEqualParselet_parseInfix(colonEqualParselet, Tok, Ctxt);
         }
         default: {
             

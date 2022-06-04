@@ -906,5 +906,25 @@ Test[
 
 
 
+Test[
+	CodeConcreteParse["f[g[];g[];]"]
+	,
+	XXX
+	,
+	TestID->"Concrete-20220604-E6J3A1"
+]
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

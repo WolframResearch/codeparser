@@ -69,15 +69,15 @@ formatPrefix[Parselet`PrefixCommaParselet[]] := "&prefixCommaParselet"
 
 formatPrefix[Parselet`LeafParselet[]] := "&leafParselet"
 
-formatPrefix[Parselet`SymbolParselet[]] := "&symbolParselet"
+formatPrefix[Parselet`SymbolParselet[]] := "symbolParselet"
 
-formatPrefix[Parselet`UnderParselet[1]] := "&under1Parselet"
+formatPrefix[Parselet`UnderParselet[1]] := "under1Parselet"
 
-formatPrefix[Parselet`UnderParselet[2]] := "&under2Parselet"
+formatPrefix[Parselet`UnderParselet[2]] := "under2Parselet"
 
-formatPrefix[Parselet`UnderParselet[3]] := "&under3Parselet"
+formatPrefix[Parselet`UnderParselet[3]] := "under3Parselet"
 
-formatPrefix[Parselet`UnderDotParselet[]] := "&underDotParselet"
+formatPrefix[Parselet`UnderDotParselet[]] := "underDotParselet"
 
 formatPrefix[Parselet`HashParselet[]] := "new HashParselet()"
 
@@ -116,13 +116,13 @@ formatInfix[Parselet`InfixOperatorParselet[tok_, precedence_, op_]] := "new Infi
 
 formatInfix[Parselet`PostfixOperatorParselet[tok_, precedence_, op_]] := "new PostfixOperatorParselet(" <> toGlobal[tok] <> ", " <> toGlobal[precedence] <> ", " <> "SYMBOL_" <> toGlobal[op] <> ")"
 
-formatInfix[Parselet`ColonParselet[]] := "&colonParselet"
+formatInfix[Parselet`ColonParselet[]] := "colonParselet"
 
 formatInfix[Parselet`CallParselet[groupParselet_]] := "new CallParselet(" <> formatPrefix[groupParselet] <> ")"
 
-formatInfix[Parselet`EqualParselet[]] := "new EqualParselet()"
+formatInfix[Parselet`EqualParselet[]] := "equalParselet"
 
-formatInfix[Parselet`ColonEqualParselet[]] := "new ColonEqualParselet()"
+formatInfix[Parselet`ColonEqualParselet[]] := "colonEqualParselet"
 
 formatInfix[Parselet`TildeParselet[]] := "new TildeParselet()"
 
@@ -165,28 +165,30 @@ parseletRegistrationCPPHeader = {
 
 class PrefixParselet;
 class InfixParselet;
-class ContextSensitivePrefixParselet;
-class ContextSensitiveInfixParselet;
+class SymbolParselet;
+class UnderParselet;
+class UnderDotParselet;
+class ColonParselet;
+class EqualParselet;
+class ColonEqualParselet;
 class PrefixToplevelCloserParselet;
 
 using PrefixParseletPtr = PrefixParselet *;
 using InfixParseletPtr = InfixParselet *;
-using ContextSensitivePrefixParseletPtr = ContextSensitivePrefixParselet *;
-using ContextSensitiveInfixParseletPtr = ContextSensitiveInfixParselet *;
-using PrefixToplevelCloserParseletPtr = PrefixToplevelCloserParselet *;
 
 
 extern std::array<PrefixParseletPtr, TOKEN_COUNT.value()> prefixParselets;
 extern std::array<InfixParseletPtr, TOKEN_COUNT.value()> infixParselets;
 
-extern ContextSensitivePrefixParseletPtr contextSensitiveSymbolParselet;
-extern ContextSensitiveInfixParseletPtr contextSensitiveUnder1Parselet;
-extern ContextSensitiveInfixParseletPtr contextSensitiveUnder2Parselet;
-extern ContextSensitiveInfixParseletPtr contextSensitiveUnder3Parselet;
-extern ContextSensitiveInfixParseletPtr contextSensitiveUnderDotParselet;
-extern ContextSensitiveInfixParseletPtr contextSensitiveColonParselet;
-
-extern PrefixToplevelCloserParseletPtr contextSensitivePrefixToplevelCloserParselet;
+extern SymbolParselet *symbolParselet;
+extern UnderParselet *under1Parselet;
+extern UnderParselet *under2Parselet;
+extern UnderParselet *under3Parselet;
+extern UnderDotParselet *underDotParselet;
+extern ColonParselet *colonParselet;
+extern EqualParselet *equalParselet;
+extern ColonEqualParselet *colonEqualParselet;
+extern PrefixToplevelCloserParselet *prefixToplevelCloserParselet;
 "};
 
 Print["exporting ParseletRegistration.h"];
@@ -214,7 +216,7 @@ parseletRegistrationCPPSource = {
 
 #include <cassert>
 
-auto symbolParselet = SymbolParselet();
+SymbolParselet *symbolParselet = new SymbolParselet();
 
 auto leafParselet = LeafParselet();
 
@@ -224,7 +226,7 @@ auto prefixErrorParselet = PrefixErrorParselet();
 
 auto prefixCloserParselet = PrefixCloserParselet();
 
-auto prefixToplevelCloserParselet = PrefixToplevelCloserParselet();
+PrefixToplevelCloserParselet *prefixToplevelCloserParselet = new PrefixToplevelCloserParselet();
 
 auto prefixUnsupportedTokenParselet = PrefixUnsupportedTokenParselet();
 
@@ -242,17 +244,21 @@ auto semiParselet = SemiParselet();
 
 auto semiSemiParselet = SemiSemiParselet();
 
-auto colonParselet = ColonParselet();
+ColonParselet *colonParselet = new ColonParselet();
+
+EqualParselet *equalParselet = new EqualParselet();
+
+ColonEqualParselet *colonEqualParselet = new ColonEqualParselet();
 
 auto infixDifferentialDParselet = InfixDifferentialDParselet();
 
-auto under1Parselet = UnderParselet(SYMBOL_BLANK, SYMBOL_CODEPARSER_PATTERNBLANK);
+UnderParselet *under1Parselet = new UnderParselet(SYMBOL_BLANK, SYMBOL_CODEPARSER_PATTERNBLANK);
 
-auto under2Parselet = UnderParselet(SYMBOL_BLANKSEQUENCE, SYMBOL_CODEPARSER_PATTERNBLANKSEQUENCE);
+UnderParselet *under2Parselet = new UnderParselet(SYMBOL_BLANKSEQUENCE, SYMBOL_CODEPARSER_PATTERNBLANKSEQUENCE);
 
-auto under3Parselet = UnderParselet(SYMBOL_BLANKNULLSEQUENCE, SYMBOL_CODEPARSER_PATTERNBLANKNULLSEQUENCE);
+UnderParselet *under3Parselet = new UnderParselet(SYMBOL_BLANKNULLSEQUENCE, SYMBOL_CODEPARSER_PATTERNBLANKNULLSEQUENCE);
 
-auto underDotParselet = UnderDotParselet();
+UnderDotParselet *underDotParselet = new UnderDotParselet();
 
 auto squareGroupParselet = GroupParselet(TOKEN_OPENSQUARE, SYMBOL_CODEPARSER_GROUPSQUARE);
 
@@ -275,15 +281,6 @@ std::array<InfixParseletPtr, TOKEN_COUNT.value()> infixParselets {{"} ~Join~
 (Row[{"  ", formatInfix[InfixOperatorToParselet[#]], ", ", "// ", ToString[#]}]& /@ tokensSansCount) ~Join~
 
 {"}};
-
-ContextSensitivePrefixParseletPtr contextSensitiveSymbolParselet(&symbolParselet);
-ContextSensitiveInfixParseletPtr contextSensitiveUnder1Parselet(&under1Parselet);
-ContextSensitiveInfixParseletPtr contextSensitiveUnder2Parselet(&under2Parselet);
-ContextSensitiveInfixParseletPtr contextSensitiveUnder3Parselet(&under3Parselet);
-ContextSensitiveInfixParseletPtr contextSensitiveUnderDotParselet(&underDotParselet);
-ContextSensitiveInfixParseletPtr contextSensitiveColonParselet(&colonParselet);
-
-PrefixToplevelCloserParseletPtr contextSensitivePrefixToplevelCloserParselet(&prefixToplevelCloserParselet);
 "};
 
 Print["exporting ParseletRegistration.cpp"];

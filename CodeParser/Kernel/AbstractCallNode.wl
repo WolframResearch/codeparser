@@ -738,6 +738,10 @@ Module[{head, part, data, issues},
 ]
 
 
+abstractCallNode[args___] :=
+  Failure["Unhandled", <| "Function" -> abstractCallNode, "Arguments" -> HoldForm[{args}] |>]
+
+
 End[]
 
 EndPackage[]

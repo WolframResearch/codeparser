@@ -16,7 +16,7 @@ void UnderParselet_parse0(ParseletPtr P, Token TokIn, ParserContext Ctxt) {
         auto& Args = TheParser->pushArgs();
         Args.append(std::move(Under));
         
-        SymbolParselet_parsePrefixContextSensitive(contextSensitiveSymbolParselet, Tok, Ctxt);
+        SymbolParselet_parsePrefixContextSensitive(symbolParselet, Tok, Ctxt);
         
         return UnderParselet_parse2(P, Ctxt);
     }
@@ -72,7 +72,7 @@ void UnderParselet_parse1(ParseletPtr P, Token Tok, ParserContext CtxtIn) {
             BlankSeq.append(std::move(Blank));
             BlankSeq.appendSeq(std::move(Trivia1));
             
-            return ColonParselet_parseInfixContextSensitive(contextSensitiveColonParselet, Tok, CtxtIn);
+            return ColonParselet_parseInfixContextSensitive(colonParselet, Tok, CtxtIn);
         }
             
         Trivia1.reset();

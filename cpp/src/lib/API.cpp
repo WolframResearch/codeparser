@@ -187,7 +187,7 @@ NodeContainerPtr ParserSession::parseExpressions() {
             //
             if (peek.Tok.isCloser()) {
                 
-                PrefixToplevelCloserParselet_parsePrefix(contextSensitivePrefixToplevelCloserParselet, peek, Ctxt);
+                PrefixToplevelCloserParselet_parsePrefix(prefixToplevelCloserParselet, peek, Ctxt);
                 
             } else {
                 
