@@ -260,8 +260,6 @@ ParseFunction SymbolParselet::parsePrefix() const {
 
 void SymbolParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext Ctxt) {
     
-    auto Sym = NodePtr(new LeafNode(TokIn));
-    
     TheParser->nextToken(TokIn);
     
     auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
@@ -273,74 +271,95 @@ void SymbolParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext Ctxt) 
     switch (Tok.Tok.value()) {
         case TOKEN_UNDER.value(): {
             
-            auto& Args = TheParser->pushArgs();
-            Args.append(std::move(Sym));
+            {
+                auto Sym = NodePtr(new LeafNode(TokIn));
+                
+                auto& Args = TheParser->pushArgs();
+                Args.append(std::move(Sym));
+            }
             
-//            MUSTTAIL untangle
+            MUSTTAIL
             return (under1Parselet->parseInfixContextSensitive())(under1Parselet, Tok, Ctxt);
         }
         case TOKEN_UNDERUNDER.value(): {
             
-            auto& Args = TheParser->pushArgs();
-            Args.append(std::move(Sym));
+            {
+                auto Sym = NodePtr(new LeafNode(TokIn));
+                
+                auto& Args = TheParser->pushArgs();
+                Args.append(std::move(Sym));
+            }
             
-//            MUSTTAIL untangle
+            MUSTTAIL
             return (under2Parselet->parseInfixContextSensitive())(under2Parselet, Tok, Ctxt);
         }
         case TOKEN_UNDERUNDERUNDER.value(): {
             
-            auto& Args = TheParser->pushArgs();
-            Args.append(std::move(Sym));
+            {
+                auto Sym = NodePtr(new LeafNode(TokIn));
+                
+                auto& Args = TheParser->pushArgs();
+                Args.append(std::move(Sym));
+            }
             
-//            MUSTTAIL untangle
+            MUSTTAIL
             return (under3Parselet->parseInfixContextSensitive())(under3Parselet, Tok, Ctxt);
         }
         case TOKEN_UNDERDOT.value(): {
             
-            auto& Args = TheParser->pushArgs();
-            Args.append(std::move(Sym));
+            {
+                auto Sym = NodePtr(new LeafNode(TokIn));
+                
+                auto& Args = TheParser->pushArgs();
+                Args.append(std::move(Sym));
+            }
             
-//            MUSTTAIL untangle
+            MUSTTAIL
             return (underDotParselet->parseInfixContextSensitive())(underDotParselet, Tok, Ctxt);
         }
         default: {
             
-            TriviaSeq Trivia1;
-            
-            Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, TOPLEVEL, Trivia1);
-            
-            //
-            // when parsing a in a:b  then PARSER_INSIDE_COLON bit is 0
-            // when parsing b in a:b  then PARSER_INSIDE_COLON bit is 1
-            //
-            // It is necessary to go to colonParselet->parse here (even though it seems non-contextSensitive)
-            // because in e.g.,  a_*b:f[]  the b is the last node in the Times expression and needs to bind with  :f[]
-            // Parsing  a_*b  completely, and then parsing  :f[]  would be wrong.
-            //
-            if (Tok.Tok == TOKEN_COLON) {
+            {
+                auto Sym = NodePtr(new LeafNode(TokIn));
                 
-                if ((Ctxt.Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
+                TriviaSeq Trivia1;
+                
+                Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, TOPLEVEL, Trivia1);
+                
+                //
+                // when parsing a in a:b  then PARSER_INSIDE_COLON bit is 0
+                // when parsing b in a:b  then PARSER_INSIDE_COLON bit is 1
+                //
+                // It is necessary to go to colonParselet->parse here (even though it seems non-contextSensitive)
+                // because in e.g.,  a_*b:f[]  the b is the last node in the Times expression and needs to bind with  :f[]
+                // Parsing  a_*b  completely, and then parsing  :f[]  would be wrong.
+                //
+                
+                if (Tok.Tok != TOKEN_COLON) {
                     
-                    auto& Args = TheParser->pushArgs();
-                    Args.append(std::move(Sym));
-                    Args.appendSeq(std::move(Trivia1));
+                    Trivia1.reset();
                     
-//                    MUSTTAIL untangle
-                    return ColonParselet_parseInfix(colonParselet, Tok, Ctxt);
+                    TheParser->pushNode(std::move(Sym));
+                    
+                    return Parser_parseLoop(nullptr, Ctxt);
                 }
+                
+                if ((Ctxt.Flag & PARSER_INSIDE_COLON) == PARSER_INSIDE_COLON) {
                     
-                Trivia1.reset();
+                    Trivia1.reset();
+                    
+                    TheParser->pushNode(std::move(Sym));
+                    
+                    return Parser_parseLoop(nullptr, Ctxt);
+                }
                 
-                TheParser->pushNode(std::move(Sym));
-                
-                return Parser_parseLoop(nullptr, Ctxt);
+                auto& Args = TheParser->pushArgs();
+                Args.append(std::move(Sym));
+                Args.appendSeq(std::move(Trivia1));
             }
-                
-            Trivia1.reset();
             
-            TheParser->pushNode(std::move(Sym));
-            
-            return Parser_parseLoop(nullptr, Ctxt);
+            MUSTTAIL
+            return ColonParselet_parseInfix(colonParselet, Tok, Ctxt);
         }
     }
 }
@@ -1087,7 +1106,13 @@ void ColonParselet_parse1(ParseletPtr P, ParserContext CtxtIn) {
         auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
         Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, TOPLEVEL, Trivia2);
         
-        if (Tok.Tok == TOKEN_COLON) {
+        if (Tok.Tok != TOKEN_COLON) {
+            
+            Trivia2.reset();
+            
+            TheParser->pushNode(std::move(Pat));
+            
+        } else {
             
             Ctxt.Flag &= ~(PARSER_INSIDE_COLON);
             
@@ -1096,14 +1121,7 @@ void ColonParselet_parse1(ParseletPtr P, ParserContext CtxtIn) {
             PatSeq.appendSeq(std::move(Trivia2));
             
             ColonParselet_parseInfixContextSensitive(P, Tok, Ctxt);
-            
-    //        MUSTTAIL untangle
-            return Parser_parseLoop(nullptr, CtxtIn);
         }
-        
-        Trivia2.reset();
-        
-        TheParser->pushNode(std::move(Pat));
     }
     
     MUSTTAIL

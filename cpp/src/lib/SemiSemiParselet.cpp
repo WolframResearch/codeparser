@@ -145,30 +145,31 @@ void SemiSemiParselet_parseLoop(ParseletPtr P, ParserContext Ctxt) {
     auto& Args = TheParser->peekArgs();
     
     auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
+    
     {
         TriviaSeq Trivia2;
         
         Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, TOPLEVEL, Trivia2);
+        
+        Args.appendSeq(std::move(Trivia2));
+    }
+    
+    if (!Tok.Tok.isPossibleBeginning()) {
 
-        if (!Tok.Tok.isPossibleBeginning()) {
-
-            //
-            // We are done, so return
-            //
-            
+        //
+        // We are done, so return
+        //
+        
+        {
             auto Args = TheParser->popArgs();
             
             auto Operand = NodePtr(new InfixNode(SYMBOL_TIMES, std::move(Args)));
-
-            Trivia2.reset();
             
             TheParser->pushNode(std::move(Operand));
-            
-//            MUSTTAIL untangle
-            return Parser_parseLoop(nullptr, Ctxt);
         }
         
-        Args.appendSeq(std::move(Trivia2));
+        MUSTTAIL
+        return Parser_parseLoop(nullptr, Ctxt);
     }
     
     if (Tok.Tok != TOKEN_SEMISEMI) {
@@ -393,19 +394,24 @@ void SemiSemiParselet_parse0(ParseletPtr P, Token TokIn, ParserContext Ctxt) {
 
 void SemiSemiParselet_parse3(ParseletPtr P, ParserContext Ctxt) {
     
-    auto SecondTokNode = TheParser->popNode();
-    
     auto& Args = TheParser->peekArgs();
     
-    Args.append(std::move(SecondTokNode));
+    {
+        auto SecondTokNode = TheParser->popNode();
         
-    TriviaSeq Trivia2;
+        Args.append(std::move(SecondTokNode));
+    }
     
-    auto ThirdTok = TheParser->currentToken(Ctxt, TOPLEVEL);
-    ThirdTok = TheParser->eatTriviaButNotToplevelNewlines(ThirdTok, Ctxt, TOPLEVEL, Trivia2);
-    
-    Args.appendSeq(std::move(Trivia2));
+    Token ThirdTok;
+    {
+        TriviaSeq Trivia2;
         
+        ThirdTok = TheParser->currentToken(Ctxt, TOPLEVEL);
+        ThirdTok = TheParser->eatTriviaButNotToplevelNewlines(ThirdTok, Ctxt, TOPLEVEL, Trivia2);
+        
+        Args.appendSeq(std::move(Trivia2));
+    }
+    
     if (!ThirdTok.Tok.isPossibleBeginning()) {
         
         //
@@ -442,37 +448,40 @@ void SemiSemiParselet_parse3(ParseletPtr P, ParserContext Ctxt) {
     // a;;b;;
     //     ^~ThirdTok
     //
-    
-    ScopedLeafNode ThirdTokNode = ScopedLeafNode(ThirdTok);
-    
-    TriviaSeq Trivia3;
-    
-    TheParser->nextToken(ThirdTok);
-    
-    auto FourthTok = TheParser->currentToken(Ctxt, TOPLEVEL);
-    FourthTok = TheParser->eatTriviaButNotToplevelNewlines(FourthTok, Ctxt, TOPLEVEL, Trivia3);
-    
-    if (!FourthTok.Tok.isPossibleBeginning()) {
+    Token FourthTok;
+    {
+        ScopedLeafNode ThirdTokNode = ScopedLeafNode(ThirdTok);
         
-        //
-        // a;;b;;&
-        //       ^FourthTok
-        //
+        TheParser->nextToken(ThirdTok);
         
-        Trivia3.reset();
-        ThirdTokNode.reset();
+        TriviaSeq Trivia3;
         
-        auto Span = NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
+        FourthTok = TheParser->currentToken(Ctxt, TOPLEVEL);
+        FourthTok = TheParser->eatTriviaButNotToplevelNewlines(FourthTok, Ctxt, TOPLEVEL, Trivia3);
         
-        TheParser->popArgs();
-        
-        TheParser->pushNode(std::move(Span));
-        
-        return;
-    }
-    
-    if (FourthTok.Tok != TOKEN_SEMISEMI) {
-        
+        if (!FourthTok.Tok.isPossibleBeginning() || FourthTok.Tok == TOKEN_SEMISEMI) {
+            
+            //
+            // a;;b;;&
+            //       ^FourthTok
+            //
+            //
+            // a;;b;;;;
+            //       ^~FourthTok
+            //
+            
+            Trivia3.reset();
+            ThirdTokNode.reset();
+            
+            auto Span = NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
+            
+            TheParser->popArgs();
+            
+            TheParser->pushNode(std::move(Span));
+            
+            return;
+        }
+            
         //
         // a;;b;;c
         //       ^FourthTok
@@ -480,30 +489,14 @@ void SemiSemiParselet_parse3(ParseletPtr P, ParserContext Ctxt) {
         
         Args.append(NodePtr(new LeafNode(ThirdTok)));
         Args.appendSeq(std::move(Trivia3));
-        
-        auto P2 = prefixParselets[FourthTok.Tok.value()];
-        
-        (P2->parsePrefix())(P2, FourthTok, Ctxt);
-        
-//        MUSTTAIL untangle
-        return SemiSemiParselet_parse5(P, Ctxt);
     }
+
+    auto P2 = prefixParselets[FourthTok.Tok.value()];
     
-    //
-    // a;;b;;;;
-    //       ^~FourthTok
-    //
+    (P2->parsePrefix())(P2, FourthTok, Ctxt);
     
-    Trivia3.reset();
-    ThirdTokNode.reset();
-    
-    auto Span = NodePtr(new BinaryNode(SYMBOL_SPAN, std::move(Args)));
-    
-    TheParser->popArgs();
-    
-    TheParser->pushNode(std::move(Span));
-    
-    return;
+    MUSTTAIL
+    return SemiSemiParselet_parse5(P, Ctxt);
 }
 
 void SemiSemiParselet_parse4(ParseletPtr P, ParserContext CtxtIn) {
