@@ -1860,6 +1860,8 @@ void SemiParselet_parseLoop(ParseletPtr P, ParserContext CtxtIn) {
 
         auto L = NodePtr(new InfixNode(SYMBOL_COMPOUNDEXPRESSION, std::move(Args)));
         
+        TheParser->popArgs();
+        
         TheParser->pushNode(std::move(L));
     }
     

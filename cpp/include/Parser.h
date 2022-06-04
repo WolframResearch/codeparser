@@ -122,9 +122,11 @@ public:
     NodeSeq& pushArgs();
     NodeSeq popArgs();
     NodeSeq& peekArgs();
+    size_t getArgsStackSize();
     
     void pushNode(NodePtr N);
     NodePtr popNode();
+    size_t getNodeStackSize();
 };
 
 void Parser_parseLoop(ParseletPtr Ignored, ParserContext Ctxt);

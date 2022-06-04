@@ -363,6 +363,10 @@ NodeSeq& Parser::peekArgs() {
     return ArgsStack.top();
 }
 
+size_t Parser::getArgsStackSize() {
+    return ArgsStack.size();
+}
+
 void Parser::pushNode(NodePtr N) {
     NodeStack.push(std::move(N));
 }
@@ -371,6 +375,10 @@ NodePtr Parser::popNode() {
     auto top = std::move(NodeStack.top());
     NodeStack.pop();
     return top;
+}
+
+size_t Parser::getNodeStackSize() {
+    return NodeStack.size();
 }
 
 ParserPtr TheParser = nullptr;

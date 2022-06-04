@@ -907,9 +907,20 @@ Test[
 
 
 Test[
-	CodeConcreteParse["f[g[];g[];]"]
+	CodeConcreteParse["f[a;b;]"]
 	,
-	XXX
+	ContainerNode[String, {
+		CallNode[{
+			LeafNode[Symbol, "f", <|Source -> {{1, 1}, {1, 2}}|>]}, {
+			GroupNode[GroupSquare, {
+				LeafNode[Token`OpenSquare, "[", <|Source -> {{1, 2}, {1, 3}}|>],
+				InfixNode[CompoundExpression, {
+					LeafNode[Symbol, "a", <|Source -> {{1, 3}, {1, 4}}|>],
+					LeafNode[Token`Semi, ";", <|Source -> {{1, 4}, {1, 5}}|>], 
+					LeafNode[Symbol, "b", <|Source -> {{1, 5}, {1, 6}}|>],
+					LeafNode[Token`Semi, ";", <|Source -> {{1, 6}, {1, 7}}|>],
+					LeafNode[Token`Fake`ImplicitNull, "", <|Source -> {{1, 7}, {1, 7}}|>]}, <|Source -> {{1, 3}, {1, 7}}|>],
+				LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 7}, {1, 8}}|>]}, <|Source -> {{1, 2}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]}, <||>]
 	,
 	TestID->"Concrete-20220604-E6J3A1"
 ]

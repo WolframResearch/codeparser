@@ -198,6 +198,9 @@ NodeContainerPtr ParserSession::parseExpressions() {
             
             auto Expr = TheParser->popNode();
             
+            assert(TheParser->getArgsStackSize() == 0);
+            assert(TheParser->getNodeStackSize() == 0);
+            
             exprs.push_back(std::move(Expr));
             
         } // while (true)
