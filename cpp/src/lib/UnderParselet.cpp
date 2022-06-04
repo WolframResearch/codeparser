@@ -18,7 +18,6 @@ void UnderParselet_parse0(ParseletPtr P, Token TokIn, ParserContext Ctxt) {
         
         SymbolParselet_parsePrefixContextSensitive(contextSensitiveSymbolParselet, Tok, Ctxt);
         
-//        MUSTTAIL
         return UnderParselet_parse2(P, Ctxt);
     }
     
@@ -37,7 +36,6 @@ void UnderParselet_parse0(ParseletPtr P, Token TokIn, ParserContext Ctxt) {
         
         (P2->parsePrefix())(P2, Tok, Ctxt);
         
-//        MUSTTAIL
         return UnderParselet_parse3(P, Ctxt);
     }
         
@@ -79,12 +77,13 @@ void UnderParselet_parse1(ParseletPtr P, Token Tok, ParserContext CtxtIn) {
             
         Trivia1.reset();
         
-        return Parser_parseLoop(CtxtIn);
+        return Parser_parseLoop(nullptr, CtxtIn);
     }
         
     Trivia1.reset();
     
-    return Parser_parseLoop(CtxtIn);
+//    MUSTTAIL
+    return Parser_parseLoop(nullptr, CtxtIn);
 }
 
 ParseFunction UnderParselet::parsePrefix() const {
@@ -109,7 +108,6 @@ void UnderParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn, Parser
     
     UnderParselet_parse0(P, TokIn, CtxtIn);
     
-//    MUSTTAIL
     return UnderParselet_parse4(P, CtxtIn);
 }
 
@@ -166,7 +164,6 @@ void UnderParselet_parse4(ParseletPtr P, ParserContext CtxtIn) {
         TheParser->pushNode(std::move(Pat));
     }
     
-//    MUSTTAIL
     return UnderParselet_parse1(P, Tok, CtxtIn);
 }
 
@@ -189,8 +186,8 @@ ParseFunction UnderDotParselet::parsePrefix() const {
 void UnderDotParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext CtxtIn) {
     
     UnderDotParselet_parse0(P, TokIn, CtxtIn);
-        
-    return Parser_parseLoop(CtxtIn);
+    
+    return Parser_parseLoop(nullptr, CtxtIn);
 }
 
 ParseFunction UnderDotParselet::parseInfixContextSensitive() const {
@@ -201,22 +198,23 @@ void UnderDotParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn, Par
     
     UnderDotParselet_parse0(P, TokIn, CtxtIn);
     
-//    MUSTTAIL
     return UnderDotParselet_parse1(P, CtxtIn);
 }
 
 void UnderDotParselet_parse1(ParseletPtr P, ParserContext CtxtIn) {
     
-    auto Blank = TheParser->popNode();
-    
-    auto Args = TheParser->popArgs();
-    
-    Args.append(NodePtr(std::move(Blank)));
-    
-    auto Pat = NodePtr(new CompoundNode(SYMBOL_CODEPARSER_PATTERNOPTIONALDEFAULT, std::move(Args)));
-    
-    TheParser->pushNode(std::move(Pat));
-    
-//    MUSTTAIL
-    return Parser_parseLoop(CtxtIn);
+    {
+        auto Blank = TheParser->popNode();
+        
+        auto Args = TheParser->popArgs();
+        
+        Args.append(NodePtr(std::move(Blank)));
+        
+        auto Pat = NodePtr(new CompoundNode(SYMBOL_CODEPARSER_PATTERNOPTIONALDEFAULT, std::move(Args)));
+        
+        TheParser->pushNode(std::move(Pat));
+    }
+        
+    MUSTTAIL
+    return Parser_parseLoop(nullptr, CtxtIn);
 }

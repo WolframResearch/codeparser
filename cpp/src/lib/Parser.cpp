@@ -223,7 +223,7 @@ Token Parser::currentToken_stringifyAsFile() const {
     return TheTokenizer->currentToken_stringifyAsFile();
 }
 
-void Parser_parseLoop(ParserContext Ctxt) {
+void Parser_parseLoop(ParseletPtr Ignored, ParserContext Ctxt) {
     
     //
     // Check isAbort() inside loops
@@ -272,8 +272,8 @@ void Parser_parseLoop(ParserContext Ctxt) {
     
     (I->parseInfix())(I, token, Ctxt2);
     
-//    MUSTTAIL
-    return Parser_parseLoop(Ctxt);
+    MUSTTAIL
+    return Parser_parseLoop(nullptr, Ctxt);
 }
 
 Token Parser::eatTrivia(Token T, ParserContext Ctxt, NextPolicy policy, TriviaSeq& Args) {

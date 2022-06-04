@@ -111,7 +111,7 @@ void SemiSemiParselet_parseInfix(ParseletPtr P, Token TokIn, ParserContext Ctxt)
             
             Trivia1.reset();
             
-            return Parser_parseLoop(Ctxt);
+            return Parser_parseLoop(nullptr, Ctxt);
         }
         
         if (Tok.Tok != TOKEN_SEMISEMI) {
@@ -122,7 +122,7 @@ void SemiSemiParselet_parseInfix(ParseletPtr P, Token TokIn, ParserContext Ctxt)
             
             Trivia1.reset();
             
-            return Parser_parseLoop(Ctxt);
+            return Parser_parseLoop(nullptr, Ctxt);
         }
         
         auto Operand = TheParser->popNode();
@@ -132,7 +132,6 @@ void SemiSemiParselet_parseInfix(ParseletPtr P, Token TokIn, ParserContext Ctxt)
         Args2.appendSeq(std::move(Trivia1));
     }
     
-//    MUSTTAIL
     return SemiSemiParselet_parseLoop(P, Ctxt);
 }
 
@@ -165,8 +164,8 @@ void SemiSemiParselet_parseLoop(ParseletPtr P, ParserContext Ctxt) {
             
             TheParser->pushNode(std::move(Operand));
             
-//            MUSTTAIL
-            return Parser_parseLoop(Ctxt);
+//            MUSTTAIL untangle
+            return Parser_parseLoop(nullptr, Ctxt);
         }
         
         Args.appendSeq(std::move(Trivia2));
@@ -200,7 +199,7 @@ void SemiSemiParselet_parseLoop(ParseletPtr P, ParserContext Ctxt) {
         
         (P2->parsePrefix())(P2, Tok, Ctxt);
         
-//        MUSTTAIL
+        MUSTTAIL
         return SemiSemiParselet_parse1(P, Ctxt);
     }
 
@@ -233,28 +232,30 @@ void SemiSemiParselet_parseLoop(ParseletPtr P, ParserContext Ctxt) {
         Args.append(std::move(Operand));
     }
     
-//    MUSTTAIL
+    MUSTTAIL
     return SemiSemiParselet_parseLoop(P, Ctxt);
 }
 
 void SemiSemiParselet_parse1(ParseletPtr P, ParserContext CtxtIn) {
     
-    auto Operand = TheParser->popNode();
-    
-    auto Args = TheParser->popArgs();
-    
-    Args.append(std::move(Operand));
+    {
+        auto Operand = TheParser->popNode();
+        
+        auto Args = TheParser->popArgs();
+        
+        Args.append(std::move(Operand));
 
-    //
-    // We are done here, so return
-    //
+        //
+        // We are done here, so return
+        //
 
-    auto Operand2 = NodePtr(new InfixNode(SYMBOL_TIMES, std::move(Args)));
+        auto Operand2 = NodePtr(new InfixNode(SYMBOL_TIMES, std::move(Args)));
+        
+        TheParser->pushNode(std::move(Operand2));
+    }
     
-    TheParser->pushNode(std::move(Operand2));
-    
-//    MUSTTAIL
-    return Parser_parseLoop(CtxtIn);
+    MUSTTAIL
+    return Parser_parseLoop(nullptr, CtxtIn);
 }
 
 void SemiSemiParselet_parse0(ParseletPtr P, Token TokIn, ParserContext Ctxt) {
@@ -313,7 +314,6 @@ void SemiSemiParselet_parse0(ParseletPtr P, Token TokIn, ParserContext Ctxt) {
         
         (P2->parsePrefix())(P2, SecondTok, Ctxt);
         
-//        MUSTTAIL
         return SemiSemiParselet_parse3(P, Ctxt);
     }
     
@@ -371,7 +371,6 @@ void SemiSemiParselet_parse0(ParseletPtr P, Token TokIn, ParserContext Ctxt) {
         
         (P2->parsePrefix())(P2, ThirdTok, Ctxt);
         
-//        MUSTTAIL
         return SemiSemiParselet_parse4(P, Ctxt);
     }
     
@@ -486,7 +485,7 @@ void SemiSemiParselet_parse3(ParseletPtr P, ParserContext Ctxt) {
         
         (P2->parsePrefix())(P2, FourthTok, Ctxt);
         
-//        MUSTTAIL
+//        MUSTTAIL untangle
         return SemiSemiParselet_parse5(P, Ctxt);
     }
     

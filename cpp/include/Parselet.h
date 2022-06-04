@@ -5,7 +5,7 @@
 #include "Token.h" // for Token
 
 #include <memory> // for unique_ptr
-#include <functional>
+//#include <functional>
 
 class PrefixParselet;
 class InfixParselet;
@@ -22,7 +22,7 @@ using PrefixParseletPtr = PrefixParselet *;
 using InfixParseletPtr = InfixParselet *;
 using ContextSensitivePrefixParseletPtr = ContextSensitivePrefixParselet *;
 using ContextSensitiveInfixParseletPtr = ContextSensitiveInfixParselet *;
-using ParseFunction = std::function<void(ParseletPtr, Token firstTok, ParserContext Ctxt)>;
+typedef void (*ParseFunction)(ParseletPtr, Token firstTok, ParserContext Ctxt);
 
 //
 // Classes that derive from Parselet are responsible for parsing specific kinds of syntax

@@ -13,8 +13,10 @@
 #include <stack>
 
 class Parser;
+class Parselet;
 
 using ParserPtr = std::unique_ptr<Parser>;
+using ParseletPtr = Parselet *;
 
 
 //
@@ -125,7 +127,7 @@ public:
     NodePtr popNode();
 };
 
-void Parser_parseLoop(ParserContext Ctxt);
+void Parser_parseLoop(ParseletPtr Ignored, ParserContext Ctxt);
 
 
 extern ParserPtr TheParser;
