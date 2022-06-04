@@ -17,7 +17,8 @@ void UnderParselet::parse0(Token TokIn, ParserContext Ctxt) const {
         Args.append(std::move(Under));
         
         contextSensitiveSymbolParselet->parsePrefixContextSensitive(Tok, Ctxt);
-            
+        
+//        MUSTTAIL
         return parse2(Ctxt);
     }
     
@@ -35,7 +36,8 @@ void UnderParselet::parse0(Token TokIn, ParserContext Ctxt) const {
         auto parselet = prefixParselets[Tok.Tok.value()];
         
         parselet->parsePrefix(Tok, Ctxt);
-            
+        
+//        MUSTTAIL
         return parse3(Ctxt);
     }
         
@@ -93,13 +95,15 @@ void UnderParselet::parsePrefix(Token TokIn, ParserContext CtxtIn) const {
         
     auto Tok = TheParser->currentToken(CtxtIn, TOPLEVEL);
     
+    MUSTTAIL
     return parse1(Tok, CtxtIn);
 }
 
 void UnderParselet::parseInfixContextSensitive(Token TokIn, ParserContext CtxtIn) const {
     
     parse0(TokIn, CtxtIn);
-        
+    
+//    MUSTTAIL
     return parse4(CtxtIn);
 }
 
@@ -135,18 +139,22 @@ void UnderParselet::parse3(ParserContext CtxtIn) const {
 
 void UnderParselet::parse4(ParserContext CtxtIn) const {
     
-    auto Blank = TheParser->popNode();
+    Token Tok;
+    {
+        auto Blank = TheParser->popNode();
+
+        auto Args = TheParser->popArgs();
+
+        Args.append(NodePtr(std::move(Blank)));
+
+        auto Pat = NodePtr(new CompoundNode(PBOp, std::move(Args)));
+
+        Tok = TheParser->currentToken(CtxtIn, TOPLEVEL);
+
+        TheParser->pushNode(std::move(Pat));
+    }
     
-    auto Args = TheParser->popArgs();
-    
-    Args.append(NodePtr(std::move(Blank)));
-    
-    auto Pat = NodePtr(new CompoundNode(PBOp, std::move(Args)));
-    
-    auto Tok = TheParser->currentToken(CtxtIn, TOPLEVEL);
-    
-    TheParser->pushNode(std::move(Pat));
-    
+//    MUSTTAIL
     return parse1(Tok, CtxtIn);
 }
 
@@ -172,7 +180,8 @@ void UnderDotParselet::parsePrefix(Token TokIn, ParserContext CtxtIn) const {
 void UnderDotParselet::parseInfixContextSensitive(Token TokIn, ParserContext CtxtIn) const {
     
     parse0(TokIn, CtxtIn);
-        
+    
+//    MUSTTAIL
     return parse1(CtxtIn);
 }
 

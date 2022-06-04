@@ -259,14 +259,12 @@ void Parser::parseLoop(ParserContext Ctxt) {
             return;
         }
         
-        {
-            auto Left1 = TheParser->popNode();
-            
-            auto& LeftSeq = TheParser->pushArgs();
-            
-            LeftSeq.append(std::move(Left1));
-            LeftSeq.appendSeq(std::move(Trivia1));
-        }
+        auto Left1 = TheParser->popNode();
+        
+        auto& LeftSeq = TheParser->pushArgs();
+        
+        LeftSeq.append(std::move(Left1));
+        LeftSeq.appendSeq(std::move(Trivia1));
     }
     
     auto Ctxt2 = Ctxt;
@@ -274,7 +272,7 @@ void Parser::parseLoop(ParserContext Ctxt) {
     
     I->parseInfix(token, Ctxt2);
     
-    MUSTTAIL
+//    MUSTTAIL
     return parseLoop(Ctxt);
 }
 
