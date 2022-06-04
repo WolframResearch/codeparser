@@ -298,10 +298,6 @@ void SymbolParselet::parsePrefix(Token TokIn, ParserContext Ctxt) const {
             return TheParser->parseLoop(Ctxt);
         }
     }
-    
-    assert(false);
-    
-    return;
 }
 
 void SymbolParselet::parsePrefixContextSensitive(Token TokIn, ParserContext Ctxt) const {
@@ -580,11 +576,9 @@ void PostfixOperatorParselet::parseInfix(Token TokIn, ParserContext Ctxt) const 
 
 GroupParselet::GroupParselet(TokenEnum Opener, const SymbolPtr& Op) : Op(Op), Closr(GroupOpenerToCloser(Opener)) {}
 
-void GroupParselet::parsePrefix(Token firstTok, ParserContext CtxtIn) const {
+void GroupParselet::parsePrefix(Token OpenerT, ParserContext CtxtIn) const {
     
-    auto OpenerT = firstTok;
-    
-    TheParser->nextToken(firstTok);
+    TheParser->nextToken(OpenerT);
     
     auto& Args = TheParser->pushArgs();
     Args.append(NodePtr(new LeafNode(OpenerT)));
@@ -1174,13 +1168,11 @@ void EqualParselet::parse1(ParserContext CtxtIn) const {
     auto Ctxt = CtxtIn;
     Ctxt.Prec = PRECEDENCE_EQUAL;
     
-    auto wasInsideSlashColon = ((Ctxt.Flag & PARSER_INSIDE_SLASHCOLON) == PARSER_INSIDE_SLASHCOLON);
-    
     Args.append(std::move(Right));
     
     NodePtr L;
     
-    if (wasInsideSlashColon) {
+    if ((Ctxt.Flag & PARSER_INSIDE_SLASHCOLON) == PARSER_INSIDE_SLASHCOLON) {
         
         L = NodePtr(new TernaryNode(SYMBOL_TAGSET, std::move(Args)));
         
@@ -1233,16 +1225,11 @@ void ColonEqualParselet::parse1(ParserContext CtxtIn) const {
     
     auto Args = TheParser->popArgs();
     
-    auto Ctxt = CtxtIn;
-    Ctxt.Prec = PRECEDENCE_EQUAL;
-    
-    auto wasInsideSlashColon = ((Ctxt.Flag & PARSER_INSIDE_SLASHCOLON) == PARSER_INSIDE_SLASHCOLON);
-    
     Args.append(std::move(Right));
     
     NodePtr L;
     
-    if (wasInsideSlashColon) {
+    if ((CtxtIn.Flag & PARSER_INSIDE_SLASHCOLON) == PARSER_INSIDE_SLASHCOLON) {
         
         L = NodePtr(new TernaryNode(SYMBOL_TAGSETDELAYED, std::move(Args)));
         
@@ -1291,8 +1278,6 @@ void IntegralParselet::parse1(ParserContext CtxtIn) const {
     
     auto Ctxt = CtxtIn;
     Ctxt.Prec = PRECEDENCE_CLASS_INTEGRATIONOPERATORS;
-    Ctxt.Flag |= PARSER_INSIDE_INTEGRAL;
-    Ctxt.Flag &= ~(PARSER_INSIDE_INTEGRAL);
     
     {
         auto operand = TheParser->popNode();

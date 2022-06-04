@@ -125,7 +125,6 @@ public:
     
     void pushNode(NodePtr N);
     NodePtr popNode();
-//    NodeSeq& peekArgs();
 };
 
 extern ParserPtr TheParser;
