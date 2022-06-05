@@ -517,7 +517,7 @@ public:
     }
 };
 
-void SemiSemiParselet_parse0(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void SemiSemiParselet_parse0(ParseletPtr P, ParserContext Ctxt);
 void SemiSemiParselet_parse1(ParseletPtr P, ParserContext CtxtIn);
 void SemiSemiParselet_parse3(ParseletPtr P, ParserContext CtxtIn);
 void SemiSemiParselet_parse4(ParseletPtr P, ParserContext CtxtIn);
@@ -814,7 +814,7 @@ public:
     ParseFunction parseInfixContextSensitive() const override;
 };
 
-void UnderParselet_parse0(ParseletPtr P, Token TokIn, ParserContext Ctxt);
+void UnderParselet_parse0(ParseletPtr P, ParserContext Ctxt);
 void UnderParselet_parse1(ParseletPtr P, ParserContext Ctxt);
 void UnderParselet_parse2(ParseletPtr P, ParserContext CtxtIn);
 void UnderParselet_parse3(ParseletPtr P, ParserContext CtxtIn);
@@ -846,7 +846,6 @@ public:
     ParseFunction parseInfixContextSensitive() const override;
 };
 
-void UnderDotParselet_parse0(ParseletPtr P, Token TokIn, ParserContext Ctxt);
 void UnderDotParselet_parse1(ParseletPtr P, ParserContext CtxtIn);
 void UnderDotParselet_parse2(ParseletPtr P, ParserContext CtxtIn);
 void UnderDotParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext Ctxt);

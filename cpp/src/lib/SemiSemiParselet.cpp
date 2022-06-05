@@ -82,6 +82,7 @@ void SemiSemiParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext Ctxt
     auto Implicit = Token(TOKEN_FAKE_IMPLICITONE, TokIn.BufLen.buffer, TokIn.Src.Start);
     
     auto& Left = TheParser->pushArgs();
+    
     Left.append(NodePtr(new LeafNode(Implicit)));
     
     MUSTTAIL
@@ -95,8 +96,14 @@ ParseFunction SemiSemiParselet::parseInfix() const {
 
 void SemiSemiParselet_parseInfix(ParseletPtr P, Token TokIn, ParserContext Ctxt) {
     
+    auto& Args = TheParser->peekArgs();
+    
+    Args.append(NodePtr(new LeafNode(TokIn)));
+    
+    TheParser->nextToken(TokIn);
+    
 //    xxx;
-    SemiSemiParselet_parse0(P, TokIn, Ctxt);
+    SemiSemiParselet_parse0(P, Ctxt);
             
     return SemiSemiParselet_parse6(P, Ctxt);
 }
@@ -151,6 +158,10 @@ void SemiSemiParselet_parseLoop(ParseletPtr P, ParserContext Ctxt) {
         // Must also handle  a;;!b  where there is an Implicit Times, but only a single Span
         //
         
+        auto ImplicitTimes = Token(TOKEN_FAKE_IMPLICITTIMES, Tok.BufLen.buffer, Tok.Src.Start);
+        
+        Args.append(NodePtr(new LeafNode(ImplicitTimes)));
+        
 #if !NISSUES
         {
             auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDIMPLICITTIMES, "Unexpected implicit ``Times`` between ``Spans``.", STRING_WARNING, Tok.Src, 0.75, {}, {}));
@@ -158,10 +169,6 @@ void SemiSemiParselet_parseLoop(ParseletPtr P, ParserContext Ctxt) {
             TheParserSession->addIssue(std::move(I));
         }
 #endif // !NISSUES
-        
-        auto ImplicitTimes = Token(TOKEN_FAKE_IMPLICITTIMES, Tok.BufLen.buffer, Tok.Src.Start);
-        
-        Args.append(NodePtr(new LeafNode(ImplicitTimes)));
         
         auto P2 = prefixParselets[Tok.Tok.value()];
         
@@ -176,10 +183,9 @@ void SemiSemiParselet_parseLoop(ParseletPtr P, ParserContext Ctxt) {
     // Still within the ;;
     //
 
-    auto Implicit = Token(TOKEN_FAKE_IMPLICITONE, Tok.BufLen.buffer, Tok.Src.Start);
-
-    auto& Seq = TheParser->pushArgs();
-    Seq.append(NodePtr(new LeafNode(Implicit)));
+    auto ImplicitTimes = Token(TOKEN_FAKE_IMPLICITTIMES, Tok.BufLen.buffer, Tok.Src.Start);
+    
+    Args.append(NodePtr(new LeafNode(ImplicitTimes)));
     
 #if !NISSUES
     {
@@ -188,13 +194,19 @@ void SemiSemiParselet_parseLoop(ParseletPtr P, ParserContext Ctxt) {
         TheParserSession->addIssue(std::move(I));
     }
 #endif // !NISSUES
-
-    auto ImplicitTimes = Token(TOKEN_FAKE_IMPLICITTIMES, Tok.BufLen.buffer, Tok.Src.Start);
     
-    Args.append(NodePtr(new LeafNode(ImplicitTimes)));
+    auto& Args2 = TheParser->pushArgs();
+    
+    auto ImplicitOne = Token(TOKEN_FAKE_IMPLICITONE, Tok.BufLen.buffer, Tok.Src.Start);
+    
+    Args2.append(NodePtr(new LeafNode(ImplicitOne)));
+    
+    TheParser->nextToken(Tok);
+    
+    Args2.append(NodePtr(new LeafNode(Tok)));
     
 //    xxx;
-    SemiSemiParselet_parse0(P, Tok, Ctxt);
+    SemiSemiParselet_parse0(P, Ctxt);
     
     MUSTTAIL
     return SemiSemiParselet_parse7(P, Ctxt);
@@ -222,15 +234,15 @@ void SemiSemiParselet_parse1(ParseletPtr P, ParserContext CtxtIn) {
     return Parser_parseLoop(nullptr, CtxtIn);
 }
 
-void SemiSemiParselet_parse0(ParseletPtr P, Token TokIn, ParserContext Ctxt) {
+void SemiSemiParselet_parse0(ParseletPtr P, ParserContext Ctxt) {
     
     auto& Args = TheParser->peekArgs();
     
     Ctxt.Prec = PRECEDENCE_SEMISEMI;
     
-    TheParser->nextToken(TokIn);
+//    TheParser->nextToken(TokIn);
     
-    Args.append(NodePtr(new LeafNode(TokIn)));
+//    Args.append(NodePtr(new LeafNode(TokIn)));
     
     Token SecondTok;
     

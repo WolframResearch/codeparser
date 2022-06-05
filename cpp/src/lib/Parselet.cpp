@@ -260,7 +260,13 @@ ParseFunction SymbolParselet::parsePrefix() const {
 
 void SymbolParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext Ctxt) {
     
-    TheParser->nextToken(TokIn);
+    {
+        auto Sym = NodePtr(new LeafNode(TokIn));
+        
+        TheParser->nextToken(TokIn);
+        
+        TheParser->pushNode(std::move(Sym));
+    }
     
     auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
     
@@ -272,7 +278,7 @@ void SymbolParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext Ctxt) 
         case TOKEN_UNDER.value(): {
             
             {
-                auto Sym = NodePtr(new LeafNode(TokIn));
+                auto Sym = TheParser->popNode();
                 
                 auto& Args = TheParser->pushArgs();
                 Args.append(std::move(Sym));
@@ -284,7 +290,7 @@ void SymbolParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext Ctxt) 
         case TOKEN_UNDERUNDER.value(): {
             
             {
-                auto Sym = NodePtr(new LeafNode(TokIn));
+                auto Sym = TheParser->popNode();
                 
                 auto& Args = TheParser->pushArgs();
                 Args.append(std::move(Sym));
@@ -296,7 +302,7 @@ void SymbolParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext Ctxt) 
         case TOKEN_UNDERUNDERUNDER.value(): {
             
             {
-                auto Sym = NodePtr(new LeafNode(TokIn));
+                auto Sym = TheParser->popNode();
                 
                 auto& Args = TheParser->pushArgs();
                 Args.append(std::move(Sym));
@@ -308,7 +314,7 @@ void SymbolParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext Ctxt) 
         case TOKEN_UNDERDOT.value(): {
             
             {
-                auto Sym = NodePtr(new LeafNode(TokIn));
+                auto Sym = TheParser->popNode();
                 
                 auto& Args = TheParser->pushArgs();
                 Args.append(std::move(Sym));
@@ -320,7 +326,7 @@ void SymbolParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext Ctxt) 
         default: {
             
             {
-                auto Sym = NodePtr(new LeafNode(TokIn));
+                auto Sym = TheParser->popNode();
                 
                 TriviaSeq Trivia1;
                 
@@ -1445,6 +1451,7 @@ void IntegralParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext Ctxt
     Ctxt.Flag |= PARSER_INSIDE_INTEGRAL;
     
     auto& Args = TheParser->pushArgs();
+    
     Args.append(NodePtr(new LeafNode(TokIn)));
     
     TheParser->nextToken(TokIn);

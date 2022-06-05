@@ -3,11 +3,9 @@
 #include "ParseletRegistration.h" // for contextSensitiveSymbolParselet
 #include "Symbol.h"
 
-void UnderParselet_parse0(ParseletPtr P, Token TokIn, ParserContext Ctxt) {
+void UnderParselet_parse0(ParseletPtr P, ParserContext Ctxt) {
     
-    auto Under = NodePtr(new LeafNode(TokIn));
-    
-    TheParser->nextToken(TokIn);
+    auto Under = TheParser->popNode();
     
     auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
     
@@ -40,7 +38,7 @@ void UnderParselet_parse0(ParseletPtr P, Token TokIn, ParserContext Ctxt) {
         
         return UnderParselet_parse3(P, Ctxt);
     }
-        
+    
     auto Blank = std::move(Under);
     
     TheParser->pushNode(std::move(Blank));
@@ -96,8 +94,14 @@ ParseFunction UnderParselet::parsePrefix() const {
 
 void UnderParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext CtxtIn) {
     
+    auto Under = NodePtr(new LeafNode(TokIn));
+    
+    TheParser->nextToken(TokIn);
+    
+    TheParser->pushNode(std::move(Under));
+    
 //    xxx;
-    UnderParselet_parse0(P, TokIn, CtxtIn);
+    UnderParselet_parse0(P, CtxtIn);
     
     return UnderParselet_parse1(P, CtxtIn);
 }
@@ -108,8 +112,14 @@ ParseFunction UnderParselet::parseInfixContextSensitive() const {
 
 void UnderParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn, ParserContext CtxtIn) {
     
+    auto Under = NodePtr(new LeafNode(TokIn));
+    
+    TheParser->nextToken(TokIn);
+    
+    TheParser->pushNode(std::move(Under));
+    
 //    xxx;
-    UnderParselet_parse0(P, TokIn, CtxtIn);
+    UnderParselet_parse0(P, CtxtIn);
     
     return UnderParselet_parse4(P, CtxtIn);
 }
@@ -169,16 +179,16 @@ void UnderParselet_parse4(ParseletPtr P, ParserContext CtxtIn) {
 }
 
 
-void UnderDotParselet_parse0(ParseletPtr P, Token TokIn, ParserContext Ctxt) {
-    
-    auto UnderDot = NodePtr(new LeafNode(TokIn));
-    
-    TheParser->nextToken(TokIn);
-    
-    TheParser->pushNode(std::move(UnderDot));
-    
-    return;
-}
+//void UnderDotParselet_parse0(ParseletPtr P, Token TokIn, ParserContext Ctxt) {
+//
+//    auto UnderDot = NodePtr(new LeafNode(TokIn));
+//
+//    TheParser->nextToken(TokIn);
+//
+//    TheParser->pushNode(std::move(UnderDot));
+//
+//    return;
+//}
 
 ParseFunction UnderDotParselet::parsePrefix() const {
     return UnderDotParselet_parsePrefix;
@@ -186,8 +196,11 @@ ParseFunction UnderDotParselet::parsePrefix() const {
 
 void UnderDotParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext CtxtIn) {
     
-//    xxx;
-    UnderDotParselet_parse0(P, TokIn, CtxtIn);
+    auto UnderDot = NodePtr(new LeafNode(TokIn));
+    
+    TheParser->nextToken(TokIn);
+    
+    TheParser->pushNode(std::move(UnderDot));
     
     return Parser_parseLoop(nullptr, CtxtIn);
 }
@@ -198,8 +211,11 @@ ParseFunction UnderDotParselet::parseInfixContextSensitive() const {
 
 void UnderDotParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn, ParserContext CtxtIn) {
     
-//    xxx;
-    UnderDotParselet_parse0(P, TokIn, CtxtIn);
+    auto UnderDot = NodePtr(new LeafNode(TokIn));
+    
+    TheParser->nextToken(TokIn);
+    
+    TheParser->pushNode(std::move(UnderDot));
     
     return UnderDotParselet_parse1(P, CtxtIn);
 }
