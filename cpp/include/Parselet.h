@@ -415,6 +415,7 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
+void GroupParselet_parse1(ParseletPtr P, ParserContext CtxtIn);
 void GroupParselet_parseLoop(ParseletPtr P, ParserContext CtxtIn);
 void GroupParselet_parsePrefix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
 
@@ -521,6 +522,8 @@ void SemiSemiParselet_parse1(ParseletPtr P, ParserContext CtxtIn);
 void SemiSemiParselet_parse3(ParseletPtr P, ParserContext CtxtIn);
 void SemiSemiParselet_parse4(ParseletPtr P, ParserContext CtxtIn);
 void SemiSemiParselet_parse5(ParseletPtr P, ParserContext CtxtIn);
+void SemiSemiParselet_parse6(ParseletPtr P, ParserContext CtxtIn);
+void SemiSemiParselet_parse7(ParseletPtr P, ParserContext CtxtIn);
 void SemiSemiParselet_parseLoop(ParseletPtr P, ParserContext Ctxt);
 void SemiSemiParselet_parsePrefix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
 void SemiSemiParselet_parseInfix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
@@ -812,7 +815,7 @@ public:
 };
 
 void UnderParselet_parse0(ParseletPtr P, Token TokIn, ParserContext Ctxt);
-void UnderParselet_parse1(ParseletPtr P, Token Tok, ParserContext Ctxt);
+void UnderParselet_parse1(ParseletPtr P, ParserContext Ctxt);
 void UnderParselet_parse2(ParseletPtr P, ParserContext CtxtIn);
 void UnderParselet_parse3(ParseletPtr P, ParserContext CtxtIn);
 void UnderParselet_parse4(ParseletPtr P, ParserContext CtxtIn);

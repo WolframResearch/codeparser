@@ -16,6 +16,7 @@ void UnderParselet_parse0(ParseletPtr P, Token TokIn, ParserContext Ctxt) {
         auto& Args = TheParser->pushArgs();
         Args.append(std::move(Under));
         
+//        xxx;
         SymbolParselet_parsePrefixContextSensitive(symbolParselet, Tok, Ctxt);
         
         return UnderParselet_parse2(P, Ctxt);
@@ -34,6 +35,7 @@ void UnderParselet_parse0(ParseletPtr P, Token TokIn, ParserContext Ctxt) {
         
         auto P2 = prefixParselets[Tok.Tok.value()];
         
+//        xxx;
         (P2->parsePrefix())(P2, Tok, Ctxt);
         
         return UnderParselet_parse3(P, Ctxt);
@@ -46,10 +48,11 @@ void UnderParselet_parse0(ParseletPtr P, Token TokIn, ParserContext Ctxt) {
     return;
 }
 
-void UnderParselet_parse1(ParseletPtr P, Token Tok, ParserContext CtxtIn) {
+void UnderParselet_parse1(ParseletPtr P, ParserContext CtxtIn) {
     
     TriviaSeq Trivia1;
     
+    auto Tok = TheParser->currentToken(CtxtIn, TOPLEVEL);
     Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, CtxtIn, TOPLEVEL, Trivia1);
     
     //
@@ -77,12 +80,13 @@ void UnderParselet_parse1(ParseletPtr P, Token Tok, ParserContext CtxtIn) {
             
         Trivia1.reset();
         
+//        MUSTTAIL probably not doable
         return Parser_parseLoop(nullptr, CtxtIn);
     }
         
     Trivia1.reset();
     
-//    MUSTTAIL
+//    MUSTTAIL probably not doable
     return Parser_parseLoop(nullptr, CtxtIn);
 }
 
@@ -92,12 +96,10 @@ ParseFunction UnderParselet::parsePrefix() const {
 
 void UnderParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext CtxtIn) {
     
+//    xxx;
     UnderParselet_parse0(P, TokIn, CtxtIn);
-        
-    auto Tok = TheParser->currentToken(CtxtIn, TOPLEVEL);
     
-    MUSTTAIL
-    return UnderParselet_parse1(P, Tok, CtxtIn);
+    return UnderParselet_parse1(P, CtxtIn);
 }
 
 ParseFunction UnderParselet::parseInfixContextSensitive() const {
@@ -106,6 +108,7 @@ ParseFunction UnderParselet::parseInfixContextSensitive() const {
 
 void UnderParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn, ParserContext CtxtIn) {
     
+//    xxx;
     UnderParselet_parse0(P, TokIn, CtxtIn);
     
     return UnderParselet_parse4(P, CtxtIn);
@@ -147,7 +150,6 @@ void UnderParselet_parse3(ParseletPtr P, ParserContext CtxtIn) {
 
 void UnderParselet_parse4(ParseletPtr P, ParserContext CtxtIn) {
     
-    Token Tok;
     {
         auto Blank = TheParser->popNode();
 
@@ -159,12 +161,11 @@ void UnderParselet_parse4(ParseletPtr P, ParserContext CtxtIn) {
         
         auto Pat = NodePtr(new CompoundNode(PBOp, std::move(Args)));
 
-        Tok = TheParser->currentToken(CtxtIn, TOPLEVEL);
-
         TheParser->pushNode(std::move(Pat));
     }
     
-    return UnderParselet_parse1(P, Tok, CtxtIn);
+    MUSTTAIL
+    return UnderParselet_parse1(P, CtxtIn);
 }
 
 
@@ -185,6 +186,7 @@ ParseFunction UnderDotParselet::parsePrefix() const {
 
 void UnderDotParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext CtxtIn) {
     
+//    xxx;
     UnderDotParselet_parse0(P, TokIn, CtxtIn);
     
     return Parser_parseLoop(nullptr, CtxtIn);
@@ -196,6 +198,7 @@ ParseFunction UnderDotParselet::parseInfixContextSensitive() const {
 
 void UnderDotParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn, ParserContext CtxtIn) {
     
+//    xxx;
     UnderDotParselet_parse0(P, TokIn, CtxtIn);
     
     return UnderDotParselet_parse1(P, CtxtIn);
