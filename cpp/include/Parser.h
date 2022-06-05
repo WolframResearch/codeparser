@@ -129,7 +129,7 @@ public:
     size_t getNodeStackSize();
 };
 
-void Parser_parseLoop(ParseletPtr Ignored, ParserContext Ctxt);
+void Parser_parseLoop(ParseletPtr Ignored, Token Ignored2, ParserContext Ctxt);
 
 
 extern ParserPtr TheParser;
