@@ -63,8 +63,6 @@ void PrefixCloserParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext 
     //
     // Inside some other parselet that is not GroupParselet
     //
-    // Do not take the closer.
-    // Delay taking the closer until necessary. This allows  { 1 + }  to be parsed as a GroupNode
     //
     
     Token createdToken;
@@ -77,6 +75,12 @@ void PrefixCloserParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext 
         
         createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, TokIn.BufLen.buffer, TokIn.Src.Start);
     }
+    
+    //
+    // Do not take the closer.
+    // Delay taking the closer until necessary. This allows  { 1 + }  to be parsed as a GroupNode
+    //
+    TheParser->currentToken(Ctxt, TOPLEVEL);
     
     auto Error = NodePtr(new ErrorNode(createdToken));
     
@@ -206,6 +210,11 @@ void PrefixUnhandledParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserConte
     {
         auto NotPossible = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, TokIn.BufLen.buffer, TokIn.Src.Start)));
         
+        //
+        // Do not take next token
+        //
+        TheParser->currentToken(Ctxt, TOPLEVEL);
+        
         auto I = infixParselets[TokIn.Tok.value()];
         
         auto TokenPrecedence = I->getPrecedence(Ctxt);
@@ -234,10 +243,9 @@ void PrefixUnhandledParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserConte
         //
         // We want to make EXPECTEDOPERAND the first arg of the Operator node.
         //
-        // Do not take next token
-        //
         
         auto& LeftSeq = TheParser->pushArgs();
+        
         LeftSeq.append(std::move(NotPossible));
     }
 
@@ -719,6 +727,7 @@ void GroupParselet_parsePrefix(ParseletPtr P, Token OpenerT, ParserContext CtxtI
     auto& Args = TheParser->pushArgs();
     Args.append(NodePtr(new LeafNode(OpenerT)));
     
+    MUSTTAIL
     return GroupParselet_parseLoop(P, Token(), CtxtIn);
 }
 
