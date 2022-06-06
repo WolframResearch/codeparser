@@ -220,14 +220,14 @@ Test[
 	CodeConcreteParse["{ a ) }"]
 	,
 	ContainerNode[String, {
-		GroupMissingCloserNode[List, {
+		GroupNode[List, {
 			LeafNode[Token`OpenCurly, "{", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Whitespace, " ", <|Source -> {{1, 2}, {1, 3}}|>],
 			LeafNode[Symbol, "a", <|Source -> {{1, 3}, {1, 4}}|>],
-			LeafNode[Whitespace, " ", <|Source -> {{1, 4}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>],
-		ErrorNode[Token`Error`UnexpectedCloser, ")", <|Source -> {{1, 5}, {1, 6}}|>],
-		LeafNode[Whitespace, " ", <|Source -> {{1, 6}, {1, 7}}|>],
-		ErrorNode[Token`Error`UnexpectedCloser, "}", <|Source -> {{1, 7}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]
+			LeafNode[Whitespace, " ", <|Source -> {{1, 4}, {1, 5}}|>],
+			ErrorNode[Token`Error`UnexpectedCloser, ")", <|Source -> {{1, 5}, {1, 6}}|>],
+			LeafNode[Whitespace, " ", <|Source -> {{1, 6}, {1, 7}}|>],
+			LeafNode[Token`CloseCurly, "}", <|Source -> {{1, 7}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]
 	,
 	TestID->"Concrete-20190717-N8D4U4"
 ]
@@ -920,7 +920,7 @@ Test[
 					LeafNode[Symbol, "b", <|Source -> {{1, 5}, {1, 6}}|>],
 					LeafNode[Token`Semi, ";", <|Source -> {{1, 6}, {1, 7}}|>],
 					LeafNode[Token`Fake`ImplicitNull, "", <|Source -> {{1, 7}, {1, 7}}|>]}, <|Source -> {{1, 3}, {1, 7}}|>],
-				LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 7}, {1, 8}}|>]}, <|Source -> {{1, 2}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]}, <||>]
+				LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 7}, {1, 8}}|>]}, <|Source -> {{1, 2}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]
 	,
 	TestID->"Concrete-20220604-E6J3A1"
 ]

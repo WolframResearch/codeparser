@@ -10,7 +10,7 @@
 #include <set>
 #include <deque>
 #include <memory> // for unique_ptr
-#include <stack>
+#include <vector>
 
 class Parser;
 class Parselet;
@@ -45,14 +45,11 @@ enum ParserContextFlagBits : uint8_t {
     PARSER_INSIDE_INTEGRAL = 0x02,
     
     //
-    // Needs to detect the = or := or =. while parsing
-    //
-    PARSER_INSIDE_SLASHCOLON = 0x04,
-    
-    //
     // Needs to detect the second ~ while parsing
     //
-    PARSER_INSIDE_TILDE = 0x08,
+    PARSER_INSIDE_TILDE = 0x04,
+    
+    // UNUSED = 0x08
 };
 
 using ParserContextFlag = uint8_t;
@@ -67,14 +64,11 @@ struct ParserContext {
     //
     Precedence Prec;
     
-    //
-    // The Closer of the innermost Group being parsed
-    //
-    Closer Closr : 4;
-    
     ParserContextFlag Flag : 4;
     
-    ParserContext() : Prec(PRECEDENCE_LOWEST), Closr(), Flag() {}
+    ParserContext() : Prec(PRECEDENCE_LOWEST), Flag() {}
+    
+    ParserContext(Precedence Prec) : Prec(Prec), Flag() {}
 };
 
 //
@@ -90,8 +84,10 @@ static_assert(sizeof(ParserContext) == 2, "Check your assumptions");
 class Parser {
 private:
     
-    std::stack<NodeSeq> ArgsStack;
-    std::stack<NodePtr> NodeStack;
+    std::vector<NodeSeq> ArgsStack;
+    std::vector<NodePtr> NodeStack;
+    std::vector<ParserContext> ContextStack;
+    std::vector<Closer> GroupStack;
     
     void handleFirstLine(FirstLineBehavior firstLineBehavior);
     
@@ -105,31 +101,41 @@ public:
     
     void nextToken(Token Tok);
     
-    Token nextToken0(ParserContext Ctxt, NextPolicy policy);
+    Token nextToken0(NextPolicy policy);
     
-    Token currentToken(ParserContext Ctxt, NextPolicy policy) const;
+    Token currentToken(NextPolicy policy) const;
     
     Token currentToken_stringifyAsTag() const;
     Token currentToken_stringifyAsFile() const;
-    
-    ~Parser();
 
-    Token eatTrivia(Token firstTok, ParserContext Ctxt, NextPolicy policy, TriviaSeq& Args);
-    Token eatTrivia_stringifyAsFile(Token firstTok, ParserContext Ctxt, TriviaSeq& Args);
-    Token eatTriviaButNotToplevelNewlines(Token firstTok, ParserContext Ctxt, NextPolicy policy, TriviaSeq& Args);
-    Token eatTriviaButNotToplevelNewlines_stringifyAsFile(Token firstTok, ParserContext Ctxt, TriviaSeq& Args);
+    Token eatTrivia(Token firstTok, NextPolicy policy, TriviaSeq& Args);
+    Token eatTrivia_stringifyAsFile(Token firstTok, TriviaSeq& Args);
+    Token eatTriviaButNotToplevelNewlines(Token firstTok, NextPolicy policy, TriviaSeq& Args);
+    Token eatTriviaButNotToplevelNewlines_stringifyAsFile(Token firstTok, TriviaSeq& Args);
     
     NodeSeq& pushArgs();
     NodeSeq popArgs();
     NodeSeq& peekArgs();
-    size_t getArgsStackSize();
+    size_t getArgsStackSize() const;
     
     void pushNode(NodePtr N);
     NodePtr popNode();
-    size_t getNodeStackSize();
+    size_t getNodeStackSize() const;
+    
+    void pushGroup(Closer Closr);
+    void popGroup();
+    size_t getGroupDepth() const;
+    bool checkGroup(Closer Closr) const;
+    
+    ParserContext& topContext();
+    ParserContext& pushFreshContext();
+    ParserContext& pushInheritedContext(Precedence Prec);
+    void popContext();
+    size_t getContextStackSize() const;
+    void clearContextStack();
 };
 
-void Parser_parseLoop(ParseletPtr Ignored, Token Ignored2, ParserContext Ctxt);
+void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2);
 
 
 extern ParserPtr TheParser;

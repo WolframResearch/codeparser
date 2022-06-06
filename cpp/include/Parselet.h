@@ -5,14 +5,11 @@
 #include "Token.h" // for Token
 
 #include <memory> // for unique_ptr
-//#include <functional>
 
 class PrefixParselet;
 class InfixParselet;
 class CallParselet;
 class PostfixParselet;
-class ContextSensitivePrefixParselet;
-class ContextSensitiveInfixParselet;
 class GroupParselet;
 class Parselet;
 class Parser;
@@ -20,9 +17,7 @@ class Parser;
 using ParseletPtr = Parselet *;
 using PrefixParseletPtr = PrefixParselet *;
 using InfixParseletPtr = InfixParselet *;
-using ContextSensitivePrefixParseletPtr = ContextSensitivePrefixParselet *;
-using ContextSensitiveInfixParseletPtr = ContextSensitiveInfixParselet *;
-typedef void (*ParseFunction)(ParseletPtr, Token firstTok, ParserContext Ctxt);
+typedef void (*ParseFunction)(ParseletPtr, Token firstTok);
 
 //
 // Classes that derive from Parselet are responsible for parsing specific kinds of syntax
@@ -58,11 +53,11 @@ public:
     //
     virtual ParseFunction parseInfix() const = 0;
     
-    virtual Precedence getPrecedence(ParserContext Ctxt) const = 0;
+    virtual Precedence getPrecedence() const = 0;
     
     virtual const SymbolPtr& getOp() const;
     
-    virtual Token processImplicitTimes(Token TokIn, ParserContext Ctxt) const {
+    virtual Token processImplicitTimes(Token TokIn) const {
         return TokIn;
     }
     
@@ -87,36 +82,13 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence(ParserContext Ctxt) const override {
+    Precedence getPrecedence() const override {
         return PRECEDENCE_CALL;
     }
 };
 
-void CallParselet_parse1(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void CallParselet_parseInfix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
-
-
-//
-//
-//
-class ContextSensitivePrefixParselet : virtual public Parselet {
-public:
-    
-    virtual ParseFunction parsePrefixContextSensitive() const = 0;
-    
-    virtual ~ContextSensitivePrefixParselet() {}
-};
-
-//
-//
-//
-class ContextSensitiveInfixParselet : virtual public Parselet {
-public:
-    
-    virtual ParseFunction parseInfixContextSensitive() const = 0;
-    
-    virtual ~ContextSensitiveInfixParselet() {}
-};
+void CallParselet_parse1(ParseletPtr P, Token Ignored);
+void CallParselet_parseInfix(ParseletPtr P, Token firstTok);
 
 //
 //
@@ -127,7 +99,7 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void LeafParselet_parsePrefix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void LeafParselet_parsePrefix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -139,7 +111,7 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void PrefixEndOfFileParselet_parsePrefix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void PrefixEndOfFileParselet_parsePrefix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -151,7 +123,7 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void PrefixErrorParselet_parsePrefix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void PrefixErrorParselet_parsePrefix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -163,7 +135,7 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void PrefixCloserParselet_parsePrefix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void PrefixCloserParselet_parsePrefix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -175,7 +147,7 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void PrefixToplevelCloserParselet_parsePrefix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void PrefixToplevelCloserParselet_parsePrefix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -187,7 +159,7 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void PrefixUnsupportedTokenParselet_parsePrefix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void PrefixUnsupportedTokenParselet_parsePrefix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -199,7 +171,7 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void PrefixCommaParselet_parsePrefix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void PrefixCommaParselet_parsePrefix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -211,7 +183,7 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void PrefixUnhandledParselet_parsePrefix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void PrefixUnhandledParselet_parsePrefix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -229,7 +201,7 @@ public:
     
     ParseFunction parsePrefix() const override;
     
-    virtual Precedence getPrecedence(ParserContext Ctxt) const {
+    virtual Precedence getPrecedence() const {
         return precedence;
     }
     
@@ -238,8 +210,8 @@ public:
     }
 };
 
-void PrefixOperatorParselet_parse1(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void PrefixOperatorParselet_parsePrefix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void PrefixOperatorParselet_parse1(ParseletPtr P, Token Ignored);
+void PrefixOperatorParselet_parsePrefix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -250,12 +222,12 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence(ParserContext Ctxt) const override;
+    Precedence getPrecedence() const override;
     
-    Token processImplicitTimes(Token TokIn, ParserContext Ctxt) const override;
+    Token processImplicitTimes(Token TokIn) const override;
 };
 
-void InfixImplicitTimesParselet_parseInfix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void InfixImplicitTimesParselet_parseInfix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -266,12 +238,12 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence(ParserContext Ctxt) const override {
+    Precedence getPrecedence() const override {
         return PRECEDENCE_LOWEST;
     }
 };
 
-void InfixAssertFalseParselet_parseInfix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void InfixAssertFalseParselet_parseInfix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -280,9 +252,9 @@ void InfixAssertFalseParselet_parseInfix(ParseletPtr P, Token firstTok, ParserCo
 class InfixDifferentialDParselet : public InfixImplicitTimesParselet {
 public:
     
-    Precedence getPrecedence(ParserContext Ctxt) const override;
+    Precedence getPrecedence() const override;
     
-    Token processImplicitTimes(Token TokIn, ParserContext Ctxt) const override;
+    Token processImplicitTimes(Token TokIn) const override;
 };
 
 //
@@ -293,7 +265,7 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence(ParserContext Ctxt) const override {
+    Precedence getPrecedence() const override {
         //
         // Do not do Implicit Times across top-level newlines
         //
@@ -301,7 +273,7 @@ public:
     }
 };
 
-void InfixToplevelNewlineParselet_parseInfix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void InfixToplevelNewlineParselet_parseInfix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -319,7 +291,7 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence(ParserContext Ctxt) const override {
+    Precedence getPrecedence() const override {
         return precedence;
     }
     
@@ -328,9 +300,9 @@ public:
     }
 };
 
-void BinaryOperatorParselet_parse1(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void BinaryOperatorParselet_parse2(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void BinaryOperatorParselet_parseInfix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void BinaryOperatorParselet_parse1(ParseletPtr P, Token Ignored);
+void BinaryOperatorParselet_parse2(ParseletPtr P, Token Ignored);
+void BinaryOperatorParselet_parseInfix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -348,7 +320,7 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence(ParserContext Ctxt) const override {
+    Precedence getPrecedence() const override {
         return precedence;
     }
     
@@ -357,9 +329,9 @@ public:
     }
 };
 
-void InfixOperatorParselet_parse1(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void InfixOperatorParselet_parseLoop(ParseletPtr P, Token Ignored, ParserContext Ctxt);
-void InfixOperatorParselet_parseInfix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void InfixOperatorParselet_parse1(ParseletPtr P, Token Ignored);
+void InfixOperatorParselet_parseLoop(ParseletPtr P, Token Ignored);
+void InfixOperatorParselet_parseInfix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -377,7 +349,7 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence(ParserContext Ctxt) const override {
+    Precedence getPrecedence() const override {
         return precedence;
     }
     
@@ -386,9 +358,9 @@ public:
     }
 };
 
-void PostfixOperatorParselet_parse1(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void PostfixOperatorParselet_parse2(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void PostfixOperatorParselet_parseInfix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void PostfixOperatorParselet_parse1(ParseletPtr P, Token Ignored);
+void PostfixOperatorParselet_parse2(ParseletPtr P, Token Ignored);
+void PostfixOperatorParselet_parseInfix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -415,9 +387,9 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void GroupParselet_parse1(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void GroupParselet_parseLoop(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void GroupParselet_parsePrefix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void GroupParselet_parse1(ParseletPtr P, Token Ignored);
+void GroupParselet_parseLoop(ParseletPtr P, Token Ignored);
+void GroupParselet_parsePrefix(ParseletPtr P, Token firstTok);
 
 
 
@@ -428,15 +400,14 @@ void GroupParselet_parsePrefix(ParseletPtr P, Token firstTok, ParserContext Ctxt
 //
 // something like  x  or x_
 //
-class SymbolParselet : public PrefixParselet, public ContextSensitivePrefixParselet {
+class SymbolParselet : public PrefixParselet {
 public:
     
     ParseFunction parsePrefix() const override;
-    ParseFunction parsePrefixContextSensitive() const override;
 };
 
-void SymbolParselet_parsePrefix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
-void SymbolParselet_parsePrefixContextSensitive(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void SymbolParselet_parsePrefix(ParseletPtr P, Token firstTok);
+void SymbolParselet_parsePrefixContextSensitive(ParseletPtr P, Token firstTok);
 
 
 //
@@ -448,16 +419,16 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence(ParserContext Ctxt) const override {
+    Precedence getPrecedence() const override {
         return PRECEDENCE_COMMA;
     }
     
     const SymbolPtr& getOp() const override;
 };
 
-void CommaParselet_parse1(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void CommaParselet_parseLoop(ParseletPtr P, Token Ignored, ParserContext Ctxt);
-void CommaParselet_parseInfix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void CommaParselet_parse1(ParseletPtr P, Token Ignored);
+void CommaParselet_parseLoop(ParseletPtr P, Token Ignored);
+void CommaParselet_parseInfix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -469,14 +440,14 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence(ParserContext Ctxt) const override {
+    Precedence getPrecedence() const override {
         return PRECEDENCE_SEMI;
     }
 };
 
-void SemiParselet_parse1(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void SemiParselet_parseLoop(ParseletPtr P, Token Ignored, ParserContext Ctxt);
-void SemiParselet_parseInfix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void SemiParselet_parse1(ParseletPtr P, Token Ignored);
+void SemiParselet_parseLoop(ParseletPtr P, Token Ignored);
+void SemiParselet_parseInfix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -512,21 +483,20 @@ public:
     //
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence(ParserContext Ctxt) const override {
+    Precedence getPrecedence() const override {
         return PRECEDENCE_SEMISEMI;
     }
 };
 
-void SemiSemiParselet_parse0(ParseletPtr P, Token Ignored, ParserContext Ctxt);
-void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void SemiSemiParselet_parse3(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void SemiSemiParselet_parse4(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void SemiSemiParselet_parse5(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void SemiSemiParselet_parse6(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void SemiSemiParselet_parse7(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void SemiSemiParselet_parseLoop(ParseletPtr P, Token Ignored, ParserContext Ctxt);
-void SemiSemiParselet_parsePrefix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
-void SemiSemiParselet_parseInfix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void SemiSemiParselet_parse0(ParseletPtr P, Token Ignored);
+void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored);
+void SemiSemiParselet_parse3(ParseletPtr P, Token Ignored);
+void SemiSemiParselet_parse4(ParseletPtr P, Token Ignored);
+void SemiSemiParselet_parse6(ParseletPtr P, Token Ignored);
+void SemiSemiParselet_parse7(ParseletPtr P, Token Ignored);
+void SemiSemiParselet_parseLoop(ParseletPtr P, Token Ignored);
+void SemiSemiParselet_parsePrefix(ParseletPtr P, Token firstTok);
+void SemiSemiParselet_parseInfix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -539,25 +509,18 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence(ParserContext Ctxt) const override {
-        
-        if ((Ctxt.Flag & PARSER_INSIDE_TILDE) == PARSER_INSIDE_TILDE) {
-            return PRECEDENCE_LOWEST;
-        }
-        
-        return PRECEDENCE_TILDE;
-    }
+    Precedence getPrecedence() const override;
 };
 
-void TildeParselet_parse1(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void TildeParselet_parse2(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void TildeParselet_parseInfix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void TildeParselet_parse1(ParseletPtr P, Token Ignored);
+void TildeParselet_parse2(ParseletPtr P, Token Ignored);
+void TildeParselet_parseInfix(ParseletPtr P, Token firstTok);
 
 
 //
 // Something like  symbol:object  or  pattern:optional
 //
-class ColonParselet : public InfixParselet, public ContextSensitiveInfixParselet {
+class ColonParselet : public InfixParselet {
 public:
     
     //
@@ -568,22 +531,20 @@ public:
     //
     ParseFunction parseInfix() const override;
     
-    //
-    // Something like  pattern:optional
-    //
-    // Called from other parselets
-    //
-    ParseFunction parseInfixContextSensitive() const override;
-    
-    Precedence getPrecedence(ParserContext Ctxt) const override {
+    Precedence getPrecedence() const override {
         return PRECEDENCE_FAKE_OPTIONALCOLON;
     }
 };
 
-void ColonParselet_parse1(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void ColonParselet_parse2(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void ColonParselet_parseInfix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
-void ColonParselet_parseInfixContextSensitive(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void ColonParselet_parse1(ParseletPtr P, Token Ignored);
+void ColonParselet_parse2(ParseletPtr P, Token Ignored);
+void ColonParselet_parseInfix(ParseletPtr P, Token firstTok);
+//
+// Something like  pattern:optional
+//
+// Called from other parselets
+//
+void ColonParselet_parseInfixContextSensitive(ParseletPtr P, Token firstTok);
 
 
 //
@@ -602,13 +563,13 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence(ParserContext Ctxt) const override {
+    Precedence getPrecedence() const override {
         return PRECEDENCE_SLASHCOLON;
     }
 };
 
-void SlashColonParselet_parse1(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void SlashColonParselet_parseInfix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void SlashColonParselet_parse1(ParseletPtr P, Token Ignored);
+void SlashColonParselet_parseInfix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -622,8 +583,10 @@ public:
     ParseFunction parseInfix() const override;
 };
 
-void EqualParselet_parse1(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void EqualParselet_parseInfix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void EqualParselet_parse1(ParseletPtr P, Token Ignored);
+void EqualParselet_parse2(ParseletPtr P, Token Ignored);
+void EqualParselet_parseInfix(ParseletPtr P, Token firstTok);
+void EqualParselet_parseInfixContextSensitive(ParseletPtr P, Token Ignored);
 
 
 //
@@ -637,8 +600,10 @@ public:
     ParseFunction parseInfix() const override;
 };
 
-void ColonEqualParselet_parse1(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void ColonEqualParselet_parseInfix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void ColonEqualParselet_parse1(ParseletPtr P, Token Ignored);
+void ColonEqualParselet_parse2(ParseletPtr P, Token Ignored);
+void ColonEqualParselet_parseInfix(ParseletPtr P, Token firstTok);
+void ColonEqualParselet_parseInfixContextSensitive(ParseletPtr P, Token firstTok);
 
 
 
@@ -651,9 +616,9 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void IntegralParselet_parse1(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void IntegralParselet_parse2(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void IntegralParselet_parsePrefix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void IntegralParselet_parse1(ParseletPtr P, Token Ignored);
+void IntegralParselet_parse2(ParseletPtr P, Token Ignored);
+void IntegralParselet_parsePrefix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -664,14 +629,14 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence(ParserContext Ctxt) const override {
+    Precedence getPrecedence() const override {
         return PRECEDENCE_COLONCOLON;
     }
 };
 
-void ColonColonParselet_parse1(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void ColonColonParselet_parseLoop(ParseletPtr P, Token Ignored, ParserContext Ctxt);
-void ColonColonParselet_parseInfix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void ColonColonParselet_parse1(ParseletPtr P, Token Ignored);
+void ColonColonParselet_parseLoop(ParseletPtr P, Token Ignored);
+void ColonColonParselet_parseInfix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -682,12 +647,12 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence(ParserContext Ctxt) const override {
+    Precedence getPrecedence() const override {
         return PRECEDENCE_GREATERGREATER;
     }
 };
 
-void GreaterGreaterParselet_parseInfix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void GreaterGreaterParselet_parseInfix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -698,12 +663,12 @@ public:
     
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence(ParserContext Ctxt) const override {
+    Precedence getPrecedence() const override {
         return PRECEDENCE_GREATERGREATERGREATER;
     }
 };
 
-void GreaterGreaterGreaterParselet_parseInfix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void GreaterGreaterGreaterParselet_parseInfix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -715,7 +680,7 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void LessLessParselet_parsePrefix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void LessLessParselet_parsePrefix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -737,7 +702,7 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void HashParselet_parsePrefix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void HashParselet_parsePrefix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -749,7 +714,7 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void HashHashParselet_parsePrefix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void HashHashParselet_parsePrefix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -761,7 +726,7 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void PercentParselet_parsePrefix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void PercentParselet_parsePrefix(ParseletPtr P, Token firstTok);
 
 
 //
@@ -773,13 +738,13 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void PercentPercentParselet_parsePrefix(ParseletPtr P, Token firstTok, ParserContext Ctxt);
+void PercentPercentParselet_parsePrefix(ParseletPtr P, Token firstTok);
 
 
 //
 //
 //
-class UnderParselet : public PrefixParselet, public ContextSensitiveInfixParselet {
+class UnderParselet : public PrefixParselet {
 private:
     
     const SymbolPtr& BOp;
@@ -803,30 +768,27 @@ public:
     // Something like  _  or  _a
     //
     ParseFunction parsePrefix() const override;
-    
-    //
-    // infix
-    //
-    // Something like  a_b
-    //
-    // Called from other parselets
-    //
-    ParseFunction parseInfixContextSensitive() const override;
 };
 
-void UnderParselet_parse0(ParseletPtr P, Token Ignored, ParserContext Ctxt);
-void UnderParselet_parse1(ParseletPtr P, Token Ignored, ParserContext Ctxt);
-void UnderParselet_parse2(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void UnderParselet_parse3(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void UnderParselet_parse4(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void UnderParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext Ctxt);
-void UnderParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn, ParserContext Ctxt);
+void UnderParselet_parse0(ParseletPtr P, Token Ignored);
+void UnderParselet_parse1(ParseletPtr P, Token Ignored);
+void UnderParselet_parse2(ParseletPtr P, Token Ignored);
+void UnderParselet_parse4(ParseletPtr P, Token Ignored);
+void UnderParselet_parsePrefix(ParseletPtr P, Token TokIn);
+//
+// infix
+//
+// Something like  a_b
+//
+// Called from other parselets
+//
+void UnderParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn);
 
 
 //
 //
 //
-class UnderDotParselet : public PrefixParselet, public ContextSensitiveInfixParselet {
+class UnderDotParselet : public PrefixParselet {
 public:
     
     //
@@ -835,18 +797,16 @@ public:
     // Something like  _.
     //
     ParseFunction parsePrefix() const override;
-    
-    //
-    // infix
-    //
-    // Something like  a_.
-    //
-    // Called from other parselets
-    //
-    ParseFunction parseInfixContextSensitive() const override;
 };
 
-void UnderDotParselet_parse1(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void UnderDotParselet_parse2(ParseletPtr P, Token Ignored, ParserContext CtxtIn);
-void UnderDotParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext Ctxt);
-void UnderDotParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn, ParserContext Ctxt);
+void UnderDotParselet_parse1(ParseletPtr P, Token Ignored);
+void UnderDotParselet_parse2(ParseletPtr P, Token Ignored);
+void UnderDotParselet_parsePrefix(ParseletPtr P, Token TokIn);
+//
+// infix
+//
+// Something like  a_.
+//
+// Called from other parselets
+//
+void UnderDotParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn);

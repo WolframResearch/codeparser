@@ -9,11 +9,12 @@
 #include "ByteBuffer.h" // for ByteBuffer
 
 
-Parser::Parser() {}
-
-Parser::~Parser() {}
+Parser::Parser() : ArgsStack(), NodeStack(), ContextStack(), GroupStack() {}
 
 void Parser::init() {
+    
+    clearContextStack();
+    pushFreshContext();
     
     handleFirstLine(TheParserSession->firstLineBehavior);
 }
@@ -33,7 +34,7 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
             
             ParserContext Ctxt;
             
-            auto peek = currentToken(Ctxt, TOPLEVEL);
+            auto peek = currentToken(TOPLEVEL);
             
             if (peek.Tok != TOKEN_HASH) {
                 
@@ -50,7 +51,7 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
             
             nextToken(peek);
             
-            peek = currentToken(Ctxt, TOPLEVEL);
+            peek = currentToken(TOPLEVEL);
             
             if (peek.Tok != TOKEN_BANG) {
                 
@@ -80,7 +81,7 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
                 }
         #endif // !NABORT
                 
-                auto peek = currentToken(Ctxt, TOPLEVEL);
+                auto peek = currentToken(TOPLEVEL);
                 
                 if (peek.Tok == TOKEN_ENDOFFILE) {
                     
@@ -113,7 +114,7 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
             
             ParserContext Ctxt;
             
-            auto peek = currentToken(Ctxt, TOPLEVEL);
+            auto peek = currentToken(TOPLEVEL);
             
             if (peek.Tok != TOKEN_HASH) {
                 
@@ -126,7 +127,7 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
             
             nextToken(peek);
             
-            peek = currentToken(Ctxt, TOPLEVEL);
+            peek = currentToken(TOPLEVEL);
             
             if (peek.Tok != TOKEN_BANG) {
                 
@@ -148,7 +149,7 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
                 }
         #endif // !NABORT
                 
-                auto peek = currentToken(Ctxt, TOPLEVEL);
+                auto peek = currentToken(TOPLEVEL);
                 
                 if (peek.Tok == TOKEN_ENDOFFILE) {
                     
@@ -182,9 +183,10 @@ void Parser::nextToken(Token Tok) {
 }
 
 
-Token Parser::nextToken0(ParserContext Ctxt, NextPolicy policy) {
+Token Parser::nextToken0(NextPolicy policy) {
     
-    auto insideGroup = (Ctxt.Closr != CLOSER_OPEN);
+    auto insideGroup = getGroupDepth() > 0;
+    
     //
     // if insideGroup:
     //   returnInternalNewlineMask is 0b100
@@ -197,9 +199,10 @@ Token Parser::nextToken0(ParserContext Ctxt, NextPolicy policy) {
     return Tok;
 }
 
-Token Parser::currentToken(ParserContext Ctxt, NextPolicy policy) const {
+Token Parser::currentToken(NextPolicy policy) const {
     
-    auto insideGroup = (Ctxt.Closr != CLOSER_OPEN);
+    auto insideGroup = getGroupDepth() > 0;
+    
     //
     // if insideGroup:
     //   returnInternalNewlineMask is 0b100
@@ -223,7 +226,7 @@ Token Parser::currentToken_stringifyAsFile() const {
     return TheTokenizer->currentToken_stringifyAsFile();
 }
 
-void Parser_parseLoop(ParseletPtr Ignored, Token Ignored2, ParserContext Ctxt) {
+void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2) {
     
     //
     // Check isAbort() inside loops
@@ -236,15 +239,15 @@ void Parser_parseLoop(ParseletPtr Ignored, Token Ignored2, ParserContext Ctxt) {
     {
         TriviaSeq Trivia1;
         
-        token = TheParser->currentToken(Ctxt, TOPLEVEL);
-        token = TheParser->eatTriviaButNotToplevelNewlines(token, Ctxt, TOPLEVEL, Trivia1);
+        token = TheParser->currentToken(TOPLEVEL);
+        token = TheParser->eatTriviaButNotToplevelNewlines(token, TOPLEVEL, Trivia1);
         
         I = infixParselets[token.Tok.value()];
         
-        token = I->processImplicitTimes(token, Ctxt);
+        token = I->processImplicitTimes(token);
         I = infixParselets[token.Tok.value()];
         
-        TokenPrecedence = I->getPrecedence(Ctxt);
+        TokenPrecedence = I->getPrecedence();
         
         //
         // if (Ctxt.Prec > TokenPrecedence)
@@ -252,7 +255,7 @@ void Parser_parseLoop(ParseletPtr Ignored, Token Ignored2, ParserContext Ctxt) {
         // else if (Ctxt.Prec == TokenPrecedence && Ctxt.Prec.Associativity is NonRight)
         //   break;
         //
-        if ((Ctxt.Prec | 0x1) > TokenPrecedence) {
+        if ((TheParser->topContext().Prec | 0x1) > TokenPrecedence) {
                 
             Trivia1.reset();
             
@@ -267,17 +270,11 @@ void Parser_parseLoop(ParseletPtr Ignored, Token Ignored2, ParserContext Ctxt) {
         LeftSeq.appendSeq(std::move(Trivia1));
     }
     
-    auto Ctxt2 = Ctxt;
-    Ctxt2.Prec = TokenPrecedence;
-    
-//    xxx;
-    (I->parseInfix())(I, token, Ctxt2);
-    
     MUSTTAIL
-    return Parser_parseLoop(nullptr, Ignored2, Ctxt);
+    return (I->parseInfix())(I, token);
 }
 
-Token Parser::eatTrivia(Token T, ParserContext Ctxt, NextPolicy policy, TriviaSeq& Args) {
+Token Parser::eatTrivia(Token T, NextPolicy policy, TriviaSeq& Args) {
     
     while (T.Tok.isTrivia()) {
         
@@ -289,13 +286,13 @@ Token Parser::eatTrivia(Token T, ParserContext Ctxt, NextPolicy policy, TriviaSe
         
         nextToken(T);
         
-        T = currentToken(Ctxt, policy);
+        T = currentToken(policy);
     }
     
     return T;
 }
 
-Token Parser::eatTrivia_stringifyAsFile(Token T, ParserContext Ctxt, TriviaSeq& Args) {
+Token Parser::eatTrivia_stringifyAsFile(Token T, TriviaSeq& Args) {
     
     while (T.Tok.isTrivia()) {
         
@@ -313,7 +310,7 @@ Token Parser::eatTrivia_stringifyAsFile(Token T, ParserContext Ctxt, TriviaSeq& 
     return T;
 }
 
-Token Parser::eatTriviaButNotToplevelNewlines(Token T, ParserContext Ctxt, NextPolicy policy, TriviaSeq& Args) {
+Token Parser::eatTriviaButNotToplevelNewlines(Token T, NextPolicy policy, TriviaSeq& Args) {
     
     while (T.Tok.isTriviaButNotToplevelNewline()) {
         
@@ -325,13 +322,13 @@ Token Parser::eatTriviaButNotToplevelNewlines(Token T, ParserContext Ctxt, NextP
         
         nextToken(T);
         
-        T = currentToken(Ctxt, policy);
+        T = currentToken(policy);
     }
     
     return T;
 }
 
-Token Parser::eatTriviaButNotToplevelNewlines_stringifyAsFile(Token T, ParserContext Ctxt, TriviaSeq& Args) {
+Token Parser::eatTriviaButNotToplevelNewlines_stringifyAsFile(Token T, TriviaSeq& Args) {
     
     while (T.Tok.isTriviaButNotToplevelNewline()) {
         
@@ -350,36 +347,95 @@ Token Parser::eatTriviaButNotToplevelNewlines_stringifyAsFile(Token T, ParserCon
 }
 
 NodeSeq& Parser::pushArgs() {
-    ArgsStack.push(NodeSeq());
-    return ArgsStack.top();
+    ArgsStack.push_back(NodeSeq());
+    return ArgsStack.back();
 }
 
 NodeSeq Parser::popArgs() {
-    auto top = std::move(ArgsStack.top());
-    ArgsStack.pop();
+    auto top = std::move(ArgsStack.back());
+    ArgsStack.pop_back();
     return top;
 }
 
 NodeSeq& Parser::peekArgs() {
-    return ArgsStack.top();
+    return ArgsStack.back();
 }
 
-size_t Parser::getArgsStackSize() {
+size_t Parser::getArgsStackSize() const {
     return ArgsStack.size();
 }
 
 void Parser::pushNode(NodePtr N) {
-    NodeStack.push(std::move(N));
+    NodeStack.push_back(std::move(N));
 }
 
 NodePtr Parser::popNode() {
-    auto top = std::move(NodeStack.top());
-    NodeStack.pop();
+    auto top = std::move(NodeStack.back());
+    NodeStack.pop_back();
     return top;
 }
 
-size_t Parser::getNodeStackSize() {
+size_t Parser::getNodeStackSize() const {
     return NodeStack.size();
+}
+
+void Parser::pushGroup(Closer Closr) {
+    GroupStack.push_back(Closr);
+}
+
+void Parser::popGroup() {
+    GroupStack.pop_back();
+}
+
+size_t Parser::getGroupDepth() const {
+    return GroupStack.size();
+}
+
+bool Parser::checkGroup(Closer Closr) const {
+    
+    for (auto rit = GroupStack.rbegin(); rit != GroupStack.rend(); rit++) {
+        
+        if (*rit == Closr) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+ParserContext& Parser::topContext() {
+    return ContextStack.back();
+}
+
+ParserContext& Parser::pushFreshContext() {
+    ContextStack.push_back(PRECEDENCE_LOWEST);
+    return ContextStack.back();
+}
+
+ParserContext& Parser::pushInheritedContext(Precedence Prec) {
+    auto& Ctxt = ContextStack.back();
+    auto insideColon = ((Ctxt.Flag & PARSER_INSIDE_COLON) == PARSER_INSIDE_COLON);
+    ContextStack.push_back(Prec);
+    if (insideColon) {
+        auto& Ctxt2 = ContextStack.back();
+        Ctxt2.Flag |= PARSER_INSIDE_COLON;
+        return Ctxt2;
+    }
+    return ContextStack.back();
+}
+
+void Parser::popContext() {
+    ContextStack.pop_back();
+}
+
+size_t Parser::getContextStackSize() const {
+    return ContextStack.size();
+}
+
+void Parser::clearContextStack() {
+    while (!ContextStack.empty()) {
+        ContextStack.pop_back();
+    }
 }
 
 ParserPtr TheParser = nullptr;

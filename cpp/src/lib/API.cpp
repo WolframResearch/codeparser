@@ -167,7 +167,7 @@ NodeContainerPtr ParserSession::parseExpressions() {
             }
 #endif // !NABORT
             
-            auto peek = TheParser->currentToken(Ctxt, TOPLEVEL);
+            auto peek = TheParser->currentToken(TOPLEVEL);
             
             if (peek.Tok == TOKEN_ENDOFFILE) {
                 break;
@@ -187,19 +187,23 @@ NodeContainerPtr ParserSession::parseExpressions() {
             //
             if (peek.Tok.isCloser()) {
                 
-                PrefixToplevelCloserParselet_parsePrefix(prefixToplevelCloserParselet, peek, Ctxt);
+                PrefixToplevelCloserParselet_parsePrefix(prefixToplevelCloserParselet, peek);
                 
             } else {
                 
                 auto P = prefixParselets[peek.Tok.value()];
                 
-                (P->parsePrefix())(P, peek, Ctxt);
+                (P->parsePrefix())(P, peek);
             }
             
             auto Expr = TheParser->popNode();
             
             assert(TheParser->getArgsStackSize() == 0);
             assert(TheParser->getNodeStackSize() == 0);
+            assert(TheParser->getGroupDepth() == 0);
+            assert(TheParser->getContextStackSize() == 1);
+            assert(TheParser->topContext().Prec == PRECEDENCE_LOWEST);
+            assert(TheParser->topContext().Flag == 0);
             
             exprs.push_back(std::move(Expr));
             

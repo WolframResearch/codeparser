@@ -77,7 +77,7 @@ ParseFunction SemiSemiParselet::parsePrefix() const {
     return SemiSemiParselet_parsePrefix;
 }
 
-void SemiSemiParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext Ctxt) {
+void SemiSemiParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
     auto Implicit = Token(TOKEN_FAKE_IMPLICITONE, TokIn.BufLen.buffer, TokIn.Src.Start);
     
@@ -86,7 +86,7 @@ void SemiSemiParselet_parsePrefix(ParseletPtr P, Token TokIn, ParserContext Ctxt
     Left.append(NodePtr(new LeafNode(Implicit)));
     
     MUSTTAIL
-    return SemiSemiParselet_parseInfix(P, TokIn, Ctxt);
+    return SemiSemiParselet_parseInfix(P, TokIn);
 }
 
 
@@ -94,7 +94,7 @@ ParseFunction SemiSemiParselet::parseInfix() const {
     return SemiSemiParselet_parseInfix;
 }
 
-void SemiSemiParselet_parseInfix(ParseletPtr P, Token TokIn, ParserContext Ctxt) {
+void SemiSemiParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
     auto& Args = TheParser->peekArgs();
     
@@ -102,14 +102,16 @@ void SemiSemiParselet_parseInfix(ParseletPtr P, Token TokIn, ParserContext Ctxt)
     
     TheParser->nextToken(TokIn);
     
+    TheParser->pushInheritedContext(PRECEDENCE_SEMISEMI);
+    
 //    xxx;
-    SemiSemiParselet_parse0(P, Token(), Ctxt);
+    SemiSemiParselet_parse0(P, Token());
     
     MUSTTAIL
-    return SemiSemiParselet_parse6(P, Token(), Ctxt);
+    return SemiSemiParselet_parse6(P, Token());
 }
 
-void SemiSemiParselet_parseLoop(ParseletPtr P, Token Ignored, ParserContext Ctxt) {
+void SemiSemiParselet_parseLoop(ParseletPtr P, Token Ignored) {
     
     //
     // Check isAbort() inside loops
@@ -123,8 +125,8 @@ void SemiSemiParselet_parseLoop(ParseletPtr P, Token Ignored, ParserContext Ctxt
     {
         TriviaSeq Trivia2;
         
-        Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
-        Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, TOPLEVEL, Trivia2);
+        Tok = TheParser->currentToken(TOPLEVEL);
+        Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, TOPLEVEL, Trivia2);
         
         Args.appendSeq(std::move(Trivia2));
     }
@@ -143,8 +145,10 @@ void SemiSemiParselet_parseLoop(ParseletPtr P, Token Ignored, ParserContext Ctxt
             TheParser->pushNode(std::move(Operand));
         }
         
+        TheParser->popContext();
+        
         MUSTTAIL
-        return Parser_parseLoop(nullptr, Ignored, Ctxt);
+        return Parser_parseClimb(nullptr, Ignored);
     }
     
     if (Tok.Tok != TOKEN_SEMISEMI) {
@@ -174,10 +178,10 @@ void SemiSemiParselet_parseLoop(ParseletPtr P, Token Ignored, ParserContext Ctxt
         auto P2 = prefixParselets[Tok.Tok.value()];
         
 //        xxx;
-        (P2->parsePrefix())(P2, Tok, Ctxt);
+        (P2->parsePrefix())(P2, Tok);
         
         MUSTTAIL
-        return SemiSemiParselet_parse1(P, Ignored, Ctxt);
+        return SemiSemiParselet_parse1(P, Ignored);
     }
 
     //
@@ -207,13 +211,13 @@ void SemiSemiParselet_parseLoop(ParseletPtr P, Token Ignored, ParserContext Ctxt
     Args2.append(NodePtr(new LeafNode(Tok)));
     
 //    xxx;
-    SemiSemiParselet_parse0(P, Ignored, Ctxt);
+    SemiSemiParselet_parse0(P, Ignored);
     
     MUSTTAIL
-    return SemiSemiParselet_parse7(P, Token(), Ctxt);
+    return SemiSemiParselet_parse7(P, Ignored);
 }
 
-void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored, ParserContext CtxtIn) {
+void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
     
     {
         auto Operand = TheParser->popNode();
@@ -232,22 +236,20 @@ void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored, ParserContext CtxtIn)
     }
     
     MUSTTAIL
-    return Parser_parseLoop(nullptr, Ignored, CtxtIn);
+    return Parser_parseClimb(nullptr, Ignored);
 }
 
-void SemiSemiParselet_parse0(ParseletPtr P, Token Ignored, ParserContext Ctxt) {
+void SemiSemiParselet_parse0(ParseletPtr P, Token Ignored) {
     
     auto& Args = TheParser->peekArgs();
-    
-    Ctxt.Prec = PRECEDENCE_SEMISEMI;
     
     Token SecondTok;
     
     {
         TriviaSeq Trivia1;
         
-        SecondTok = TheParser->currentToken(Ctxt, TOPLEVEL);
-        SecondTok = TheParser->eatTriviaButNotToplevelNewlines(SecondTok, Ctxt, TOPLEVEL, Trivia1);
+        SecondTok = TheParser->currentToken(TOPLEVEL);
+        SecondTok = TheParser->eatTriviaButNotToplevelNewlines(SecondTok, TOPLEVEL, Trivia1);
 
         Args.appendSeq(std::move(Trivia1));
     }
@@ -287,10 +289,10 @@ void SemiSemiParselet_parse0(ParseletPtr P, Token Ignored, ParserContext Ctxt) {
         auto P2 = prefixParselets[SecondTok.Tok.value()];
         
 //        xxx;
-        (P2->parsePrefix())(P2, SecondTok, Ctxt);
+        (P2->parsePrefix())(P2, SecondTok);
         
         MUSTTAIL
-        return SemiSemiParselet_parse3(P, Ignored, Ctxt);
+        return SemiSemiParselet_parse3(P, Ignored);
     }
     
     //
@@ -311,8 +313,8 @@ void SemiSemiParselet_parse0(ParseletPtr P, Token Ignored, ParserContext Ctxt) {
     
     TriviaSeq Trivia2;
     
-    auto ThirdTok = TheParser->currentToken(Ctxt, TOPLEVEL);
-    ThirdTok = TheParser->eatTriviaButNotToplevelNewlines(ThirdTok, Ctxt, TOPLEVEL, Trivia2);
+    auto ThirdTok = TheParser->currentToken(TOPLEVEL);
+    ThirdTok = TheParser->eatTriviaButNotToplevelNewlines(ThirdTok, TOPLEVEL, Trivia2);
     
     if (!ThirdTok.Tok.isPossibleBeginning()) {
         
@@ -346,10 +348,10 @@ void SemiSemiParselet_parse0(ParseletPtr P, Token Ignored, ParserContext Ctxt) {
         auto P2 = prefixParselets[ThirdTok.Tok.value()];
         
 //        xxx;
-        (P2->parsePrefix())(P2, ThirdTok, Ctxt);
+        (P2->parsePrefix())(P2, ThirdTok);
         
 //        MUSTTAIL probably not doable
-        return SemiSemiParselet_parse4(P, Ignored, Ctxt);
+        return SemiSemiParselet_parse4(P, Ignored);
     }
     
     //
@@ -369,7 +371,7 @@ void SemiSemiParselet_parse0(ParseletPtr P, Token Ignored, ParserContext Ctxt) {
     return;
 }
 
-void SemiSemiParselet_parse3(ParseletPtr P, Token Ignored, ParserContext Ctxt) {
+void SemiSemiParselet_parse3(ParseletPtr P, Token Ignored) {
     
     auto& Args = TheParser->peekArgs();
     
@@ -383,8 +385,8 @@ void SemiSemiParselet_parse3(ParseletPtr P, Token Ignored, ParserContext Ctxt) {
     {
         TriviaSeq Trivia2;
         
-        ThirdTok = TheParser->currentToken(Ctxt, TOPLEVEL);
-        ThirdTok = TheParser->eatTriviaButNotToplevelNewlines(ThirdTok, Ctxt, TOPLEVEL, Trivia2);
+        ThirdTok = TheParser->currentToken(TOPLEVEL);
+        ThirdTok = TheParser->eatTriviaButNotToplevelNewlines(ThirdTok, TOPLEVEL, Trivia2);
         
         Args.appendSeq(std::move(Trivia2));
     }
@@ -433,8 +435,8 @@ void SemiSemiParselet_parse3(ParseletPtr P, Token Ignored, ParserContext Ctxt) {
         
         TriviaSeq Trivia3;
         
-        FourthTok = TheParser->currentToken(Ctxt, TOPLEVEL);
-        FourthTok = TheParser->eatTriviaButNotToplevelNewlines(FourthTok, Ctxt, TOPLEVEL, Trivia3);
+        FourthTok = TheParser->currentToken(TOPLEVEL);
+        FourthTok = TheParser->eatTriviaButNotToplevelNewlines(FourthTok, TOPLEVEL, Trivia3);
         
         if (!FourthTok.Tok.isPossibleBeginning() || FourthTok.Tok == TOKEN_SEMISEMI) {
             
@@ -471,13 +473,13 @@ void SemiSemiParselet_parse3(ParseletPtr P, Token Ignored, ParserContext Ctxt) {
     auto P2 = prefixParselets[FourthTok.Tok.value()];
     
 //    xxx;
-    (P2->parsePrefix())(P2, FourthTok, Ctxt);
+    (P2->parsePrefix())(P2, FourthTok);
     
     MUSTTAIL
-    return SemiSemiParselet_parse5(P, Ignored, Ctxt);
+    return SemiSemiParselet_parse4(P, Ignored);
 }
 
-void SemiSemiParselet_parse4(ParseletPtr P, Token Ignored, ParserContext CtxtIn) {
+void SemiSemiParselet_parse4(ParseletPtr P, Token Ignored) {
     
     auto ThirdTokNode = TheParser->popNode();
     
@@ -492,28 +494,13 @@ void SemiSemiParselet_parse4(ParseletPtr P, Token Ignored, ParserContext CtxtIn)
     return;
 }
 
-void SemiSemiParselet_parse5(ParseletPtr P, Token Ignored, ParserContext CtxtIn) {
-    
-    auto FourthTokNode = TheParser->popNode();
-    
-    auto Args = TheParser->popArgs();
-    
-    Args.append(std::move(FourthTokNode));
-    
-    auto Span = NodePtr(new TernaryNode(SYMBOL_SPAN, std::move(Args)));
-    
-    TheParser->pushNode(std::move(Span));
-    
-    return;
-}
-
-void SemiSemiParselet_parse6(ParseletPtr P, Token Ignored, ParserContext Ctxt) {
+void SemiSemiParselet_parse6(ParseletPtr P, Token Ignored) {
     
     {
         TriviaSeq Trivia1;
         
-        auto Tok = TheParser->currentToken(Ctxt, TOPLEVEL);
-        Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, Ctxt, TOPLEVEL, Trivia1);
+        auto Tok = TheParser->currentToken(TOPLEVEL);
+        Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, TOPLEVEL, Trivia1);
         
         if (!Tok.Tok.isPossibleBeginning()) {
             
@@ -523,8 +510,10 @@ void SemiSemiParselet_parse6(ParseletPtr P, Token Ignored, ParserContext Ctxt) {
             
             Trivia1.reset();
             
+            TheParser->popContext();
+            
 //            MUSTTAIL probably not doable
-            return Parser_parseLoop(nullptr, Ignored, Ctxt);
+            return Parser_parseClimb(nullptr, Ignored);
         }
         
         if (Tok.Tok != TOKEN_SEMISEMI) {
@@ -535,8 +524,10 @@ void SemiSemiParselet_parse6(ParseletPtr P, Token Ignored, ParserContext Ctxt) {
             
             Trivia1.reset();
             
+            TheParser->popContext();
+            
 //            MUSTTAIL probably not doable
-            return Parser_parseLoop(nullptr, Ignored, Ctxt);
+            return Parser_parseClimb(nullptr, Ignored);
         }
         
         auto Operand = TheParser->popNode();
@@ -547,10 +538,10 @@ void SemiSemiParselet_parse6(ParseletPtr P, Token Ignored, ParserContext Ctxt) {
     }
     
     MUSTTAIL
-    return SemiSemiParselet_parseLoop(P, Token(), Ctxt);
+    return SemiSemiParselet_parseLoop(P, Token());
 }
 
-void SemiSemiParselet_parse7(ParseletPtr P, Token Ignored, ParserContext Ctxt) {
+void SemiSemiParselet_parse7(ParseletPtr P, Token Ignored) {
     
     {
         auto& Args = TheParser->peekArgs();
@@ -561,5 +552,5 @@ void SemiSemiParselet_parse7(ParseletPtr P, Token Ignored, ParserContext Ctxt) {
     }
     
     MUSTTAIL
-    return SemiSemiParselet_parseLoop(P, Ignored, Ctxt);
+    return SemiSemiParselet_parseLoop(P, Ignored);
 }
