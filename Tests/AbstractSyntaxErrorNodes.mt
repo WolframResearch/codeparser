@@ -154,7 +154,7 @@ TODO: is this a quirk?
 
 *)
 
-TestMatch[
+Test[
 	CodeParse["a ? b ? c"]
 	,
 	ContainerNode[String, {
@@ -162,8 +162,7 @@ TestMatch[
 			CallNode[LeafNode[Symbol, "PatternTest", <||>], {
 				LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
 				LeafNode[Symbol, "b", <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>],
-			LeafNode[Symbol, "c", <|Source -> {{1, 9}, {1, 10}}|>]}, <|Source -> {{1, 1}, {1, 10}}|>] },
-		<||>]
+			LeafNode[Symbol, "c", <|Source -> {{1, 9}, {1, 10}}|>]}, <|Source -> {{1, 1}, {1, 10}}|>] }, <|Source -> {{1, 1}, {1, 10}}|>]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190521-A6K4H1"
 ]
@@ -179,7 +178,7 @@ Test[
 	ContainerNode[String, {
 		AbstractSyntaxErrorNode[AbstractSyntaxError`PatternColonError, {
 			LeafNode[Integer, "1", <|Source -> {{1, 1}, {1, 2}}|>],
-			LeafNode[Integer, "2", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, <||>]
+			LeafNode[Integer, "2", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]
 	,
 	TestID->"AbstractSyntaxErrorNodes-20190521-Z6D6T1"
 ]

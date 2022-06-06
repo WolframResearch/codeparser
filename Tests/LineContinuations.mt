@@ -14,7 +14,7 @@ Test[
 	CodeConcreteParse["\"abc\\\r\ndef\""]
 	,
 	ContainerNode[String, {
-		LeafNode[String, "\"abc\\\r\ndef\"", <|Source -> {{1, 1}, {2, 5}}|>] }, <|"ComplexLineContinuations" -> {{1, 1}}|>]
+		LeafNode[String, "\"abc\\\r\ndef\"", <|Source -> {{1, 1}, {2, 5}}|>] }, <|"ComplexLineContinuations" -> {{1, 1}}, Source -> {{1, 1}, {2, 5}}|>]
 	,
 	TestID->"LineContinuations-20190606-U7J9I3"
 ]
@@ -186,7 +186,7 @@ Test[
 	CodeParse["\"a\\\n\tb\""]
 	,
 	ContainerNode[String, {
-		LeafNode[String, "\"a\\tb\"", <|Source -> {{1, 1}, {2, 4}}|>]}, <||>]
+		LeafNode[String, "\"a\\tb\"", <|Source -> {{1, 1}, {2, 4}}|>]}, <|Source -> {{1, 1}, {2, 4}}|>]
 	,
 	TestID->"LineContinuations-20200803-L8I2C9"
 ]
@@ -203,7 +203,7 @@ Verify that simple continuation is removed and the embedded newline is escaped
 Test[
 	CodeParse["\\\n\"ab\\\\\ncd\""]
 	,
-	ContainerNode[String, {LeafNode[String, "\"ab\\\\\\ncd\"", <|Source -> {{2, 1}, {3, 4}}|>]}, <||>]
+	ContainerNode[String, {LeafNode[String, "\"ab\\\\\\ncd\"", <|Source -> {{2, 1}, {3, 4}}|>]}, <|Source -> {{1, 1}, {3, 4}}|>]
 	,
 	TestID->"LineContinuations-20200804-C5K6X8"
 ]

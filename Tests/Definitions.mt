@@ -91,7 +91,7 @@ Test[
 			,
 			<|Source -> {{1, 1}, {1, 7}},
 			"Definitions" -> {},
-			"AdditionalDefinitions" -> {LeafNode[Symbol, "a", <|Source -> {{1, 4}, {1, 5}}|>]}|>]}, <||>]
+			"AdditionalDefinitions" -> {LeafNode[Symbol, "a", <|Source -> {{1, 4}, {1, 5}}|>]}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]
 	,
 	TestID->"Definitions-20210520-S5U4M6"
 ]
@@ -110,7 +110,7 @@ Test[
 		,
 		<|Source -> {{1, 1}, {1, 11}},
 		"Definitions" -> {LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>]},
-		"AdditionalDefinitions" -> {}|>]}, <||>]
+		"AdditionalDefinitions" -> {}|>]}, <|Source -> {{1, 1}, {1, 11}}|>]
 	,
 	TestID->"Definitions-20210520-E0Y0T1"
 ] 
@@ -123,10 +123,11 @@ Test[
 		CallNode[LeafNode[Symbol, "UpSetDelayed", <||>], {
 			CallNode[LeafNode[Symbol, "b", <|Source -> {{1, 1}, {1, 2}}|>], {
 				LeafNode[Symbol, "a", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>],
-			LeafNode[Symbol, "c", <|Source -> {{1, 10}, {1, 11}}|>]}, <|
-			Source -> {{1, 1}, {1, 11}},
+			LeafNode[Symbol, "c", <|Source -> {{1, 10}, {1, 11}}|>]}, 
+		
+			<| Source -> {{1, 1}, {1, 11}},
 			"AdditionalDefinitions" -> {LeafNode[Symbol, "b", <|Source -> {{1, 1}, {1, 2}}|>]},
-			"Definitions" -> {LeafNode[Symbol, "a", <|Source -> {{1, 3}, {1, 4}}|>]}|>]}, <||>]
+			"Definitions" -> {LeafNode[Symbol, "a", <|Source -> {{1, 3}, {1, 4}}|>]}|>]}, <|Source -> {{1, 1}, {1, 11}}|>]
 	,
 	TestID->"Definitions-20220207-D9L1A0"
 ]
@@ -146,7 +147,7 @@ Test[
 			"Definitions" -> {
 				LeafNode[Symbol, "a1", <|Source -> {{1, 3}, {1, 5}}|>],
 				LeafNode[Symbol, "a2", <|Source -> {{1, 7}, {1, 9}}|>],
-				LeafNode[Symbol, "a3", <|Source -> {{1, 11}, {1, 13}}|>]}|>]}, <||>]
+				LeafNode[Symbol, "a3", <|Source -> {{1, 11}, {1, 13}}|>]}|>]}, <|Source -> {{1, 1}, {1, 20}}|>]
 	,
 	TestID->"Definitions-20220207-V6S2E4"
 ]
@@ -161,7 +162,7 @@ Test[
 			LeafNode[Symbol, "c", <|Source -> {{1, 14}, {1, 15}}|>]}, <|
 			Source -> {{1, 1}, {1, 15}},
 			"Definitions" -> {LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>]},
-			"AdditionalDefinitions" -> {LeafNode[Symbol, "b", <|Source -> {{1, 6}, {1, 7}}|>]}|>]}, <||>]
+			"AdditionalDefinitions" -> {LeafNode[Symbol, "b", <|Source -> {{1, 6}, {1, 7}}|>]}|>]}, <|Source -> {{1, 1}, {1, 15}}|>]
 	,
 	TestID->"Definitions-20220207-Q6S1B0"
 ]

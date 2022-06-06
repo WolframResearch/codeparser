@@ -61,15 +61,13 @@ Test[
 Error
 *)
 
-TestMatch[
+Test[
 	CodeParse["\\[Integral] f \\[DifferentialD]"]
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Integrate", <||>], {
 			LeafNode[Symbol, "f", <|Source -> {{1, 13}, {1, 14}}|>],
-			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 31}, {1, 31}}|>]},
-			<|Source -> {{1, 1}, {1, 31}}|>] },
-		<||>]
+			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 31}, {1, 31}}|>]}, <|Source -> {{1, 1}, {1, 31}}|>] }, <|Source -> {{1, 1}, {1, 31}}|>]
 	,
 	TestID->"Weird-20190601-M2O1W0"
 ]

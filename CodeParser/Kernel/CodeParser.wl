@@ -436,7 +436,7 @@ Module[{cst, bytes, encoding, fileFormat, firstLineBehavior},
 
 concreteParseString[{}, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
 Catch[
-Module[{res, convention, container, tabWidth},
+Module[{res, container, containerWasAutomatic},
 
   container = OptionValue[func, {opts}, ContainerNode];
 
@@ -445,6 +445,7 @@ Module[{res, convention, container, tabWidth},
   The # here is { {exprs}, {issues}, {simple line conts}, {complex line conts}, {embedded newlines}, {embedded tabs} }
   *)
   If[container === Automatic,
+    containerWasAutomatic = True;
     container = ContainerNode[String, #[[1]],
       <| If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
          If[!empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
@@ -458,12 +459,20 @@ Module[{res, convention, container, tabWidth},
 
   res = container[res];
 
+  (*
+  Fill in Source for FileNode now
+  *)
+  If[containerWasAutomatic,
+    res = fillinSource[res]
+  ];
+
   res
 ]]
 
 concreteParseString[bytes_ByteArray?ByteArrayQ, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
 Catch[
-Module[{res, convention, container, tabWidth},
+Module[{res, convention, container, tabWidth,
+  containerWasAutomatic},
 
   convention = OptionValue[func, {opts}, SourceConvention];
   container = OptionValue[func, {opts}, ContainerNode];
@@ -474,6 +483,7 @@ Module[{res, convention, container, tabWidth},
   The # here is { {exprs}, {issues}, {simple line conts}, {complex line conts}, {embedded newlines}, {embedded tabs} }
   *)
   If[container === Automatic,
+    containerWasAutomatic = True;
     container = ContainerNode[String, #[[1]],
       <| If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
          If[!empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
@@ -497,6 +507,13 @@ Module[{res, convention, container, tabWidth},
   ];
 
   res = container[res];
+
+  (*
+  Fill in Source for FileNode now
+  *)
+  If[containerWasAutomatic,
+    res = fillinSource[res]
+  ];
 
   res
 ]]
@@ -595,7 +612,7 @@ Module[{cst, encoding, full, bytes, fileFormat, firstLineBehavior, ext},
 
 concreteParseFile[EndOfFile, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
 Catch[
-Module[{res, convention, container, containerWasAutomatic, tabWidth},
+Module[{res, container, containerWasAutomatic},
 
   container = OptionValue[func, {opts}, ContainerNode];
 
@@ -630,7 +647,8 @@ Module[{res, convention, container, containerWasAutomatic, tabWidth},
 
 concreteParseFile[bytes_ByteArray?ByteArrayQ, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
 Catch[
-Module[{res, convention, container, containerWasAutomatic, tabWidth},
+Module[{res, convention, container, containerWasAutomatic,
+  tabWidth},
 
   convention = OptionValue[func, {opts}, SourceConvention];
   container = OptionValue[func, {opts}, ContainerNode];
@@ -769,7 +787,7 @@ Module[{cst, encoding, fileFormat, firstLineBehavior, bytes},
 
 concreteParseBytes[{}, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
 Catch[
-Module[{res, container},
+Module[{res, container, containerWasAutomatic},
 
   container = OptionValue[func, {opts}, ContainerNode];
 
@@ -778,6 +796,7 @@ Module[{res, container},
   The # here is { {exprs}, {issues}, {simple line conts}, {complex line conts}, {embedded newlines}, {embedded tabs} }
   *)
   If[container === Automatic,
+    containerWasAutomatic = True;
     container = ContainerNode[Byte, #[[1]],
       <| If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
          If[!empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
@@ -791,12 +810,19 @@ Module[{res, container},
 
   res = container[res];
 
+  (*
+  Fill in Source for FileNode now
+  *)
+  If[containerWasAutomatic,
+    res = fillinSource[res]
+  ];
+
   res
 ]]
 
 concreteParseBytes[bytes_ByteArray?ByteArrayQ, firstLineBehavior:firstLineBehaviorPat, func_, opts:OptionsPattern[]] :=
 Catch[
-Module[{res, convention, container, tabWidth},
+Module[{res, convention, container, tabWidth, containerWasAutomatic},
 
   convention = OptionValue[func, {opts}, SourceConvention];
   container = OptionValue[func, {opts}, ContainerNode];
@@ -807,6 +833,7 @@ Module[{res, convention, container, tabWidth},
   The # here is { {exprs}, {issues}, {simple line conts}, {complex line conts}, {embedded newlines}, {embedded tabs} }
   *)
   If[container === Automatic,
+    containerWasAutomatic = True;
     container = ContainerNode[Byte, #[[1]],
       <| If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
          If[!empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
@@ -831,6 +858,13 @@ Module[{res, convention, container, tabWidth},
 
   res = container[res];
 
+  (*
+  Fill in Source for FileNode now
+  *)
+  If[containerWasAutomatic,
+    res = fillinSource[res]
+  ];
+  
   res
 ]]
 
@@ -1074,7 +1108,7 @@ Module[{res, convention, tabWidth},
 
 CodeTokenize[bytesIn:{_Integer...}, opts:OptionsPattern[]] :=
 Catch[
-Module[{toks, encoding},
+Module[{toks, encoding, bytes},
 
   encoding = OptionValue[CodeTokenize, {opts}, CharacterEncoding];
 

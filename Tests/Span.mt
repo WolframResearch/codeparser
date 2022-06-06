@@ -550,7 +550,7 @@ Test[
 				LeafNode[Token`SemiSemi, ";;", <|Source -> {{1, 3}, {1, 5}}|>], 
 				LeafNode[Whitespace, " ", <|Source -> {{1, 5}, {1, 6}}|>],
 				LeafNode[Token`Fake`ImplicitAll, "", <|Source -> {{1, 6}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>],
-			LeafNode[Token`Amp, "&", <|Source -> {{1, 6}, {1, 7}}|>] }, <|Source -> {{1, 1}, {1, 7}}|>] }, <||>]
+			LeafNode[Token`Amp, "&", <|Source -> {{1, 6}, {1, 7}}|>] }, <|Source -> {{1, 1}, {1, 7}}|>] }, <|Source -> {{1, 1}, {1, 7}}|>]
 	,
 	TestID->"Span-20191016-J5K9B8"
 ]

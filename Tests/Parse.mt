@@ -266,7 +266,7 @@ Test[
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Times", <||>], {
 			LeafNode[Real, "2.", <|Source -> {{1, 1}, {1, 3}}|>],
-			LeafNode[Symbol, "Pi", <|Source -> {{1, 3}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>]}, <||>]
+			LeafNode[Symbol, "Pi", <|Source -> {{1, 3}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>]
 	,
 	TestID->"Parse-20200112-B6C6J0"
 ]
@@ -285,7 +285,7 @@ Test[
 	CodeParse["10^^2.Pi"]
 	,
 	ContainerNode[String, {
-		ErrorNode[Token`Error`Number, "10^^2.Pi", <|Source -> {{1, 1}, {1, 9}}|>]}, <||>]
+		ErrorNode[Token`Error`Number, "10^^2.Pi", <|Source -> {{1, 1}, {1, 9}}|>]}, <|Source -> {{1, 1}, {1, 9}}|>]
 	,
 	TestID->"Parse-20200112-G6X1N0"
 ]
@@ -2378,8 +2378,10 @@ Test[
 		CallNode[LeafNode[Symbol, "MessageName", <||>], {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
 			ErrorNode[Token`Error`ExpectedTag, "", <|Source -> {{1, 4}, {1, 4}}|>]},
-			<|Source -> {{1, 1}, {1, 4}}|>]},
-		<||>]
+			<|Source -> {{1, 1}, {1, 4}}|>]}
+		,
+		<|Source -> {{1, 1}, {1, 4}}|>
+	]
 	,
 	TestID->"Parse-20191213-P6S5K2"
 ]
@@ -2485,7 +2487,10 @@ Test[
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
 			CallNode[LeafNode[Symbol, "Power", <||>], {
 				ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>],
-				LeafNode[Integer, "-1", <||>]}, <|Source -> {{1, 1}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 3}}|>]}, <||>]
+				LeafNode[Integer, "-1", <||>]}, <|Source -> {{1, 1}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 3}}|>]}
+		,
+		<|Source -> {{1, 1}, {1, 3}}|>
+	]
 	,
 	TestID->"Parse-20191224-I3Q3E6"
 ]
@@ -2498,7 +2503,10 @@ Test[
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
 			CallNode[LeafNode[Symbol, "Times", <||>], {
 				LeafNode[Integer, "-1", <||>],
-				ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>]}, <|Source -> {{1, 2}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 3}}|>]}, <||>]
+				ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>]}, <|Source -> {{1, 2}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 3}}|>]}
+		,
+		<|Source -> {{1, 1}, {1, 3}}|>
+	]
 	,
 	TestID->"Parse-20191224-Q4A6D4"
 ]
@@ -2509,7 +2517,10 @@ Test[
 	ContainerNode[String, {
 		AbstractSyntaxErrorNode[AbstractSyntaxError`CommaTopLevel, {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
-			LeafNode[Symbol, "b", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, <||>]
+			LeafNode[Symbol, "b", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}
+		,
+		<|Source -> {{1, 1}, {1, 4}}|>
+	]
 	,
 	TestID->"Parse-20191224-O2I9C7"
 ]
@@ -2518,7 +2529,10 @@ Test[
 	CodeParse["()"]
 	,
 	ContainerNode[String, {
-		AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, {}, <|Source -> {{1, 1}, {1, 3}}|>]}, <||>]
+		AbstractSyntaxErrorNode[AbstractSyntaxError`OpenParen, {}, <|Source -> {{1, 1}, {1, 3}}|>]}
+		,
+		<|Source -> {{1, 1}, {1, 3}}|>
+	]
 	,
 	TestID->"Parse-20191224-W2M0H4"
 ]
@@ -2616,7 +2630,10 @@ Test[
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Put", <||>], {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
-			LeafNode[String, "\"b\\\\[Beta]\"", <|Source -> {{1, 4}, {1, 12}}|>]}, <|Source -> {{1, 1}, {1, 12}}|>]}, <||>]
+			LeafNode[String, "\"b\\\\[Beta]\"", <|Source -> {{1, 4}, {1, 12}}|>]}, <|Source -> {{1, 1}, {1, 12}}|>]}
+		,
+		<|Source -> {{1, 1}, {1, 12}}|>
+	]
 	,
 	TestID->"Parse-20200123-O1V2G7"	
 ]
@@ -2627,7 +2644,10 @@ Test[
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Put", <||>], {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
-			LeafNode[String, "\"b\\\\:03b1\"", <|Source -> {{1, 4}, {1, 11}}|>]}, <|Source -> {{1, 1}, {1, 11}}|>]}, <||>]
+			LeafNode[String, "\"b\\\\:03b1\"", <|Source -> {{1, 4}, {1, 11}}|>]}, <|Source -> {{1, 1}, {1, 11}}|>]}
+		,
+		<|Source -> {{1, 1}, {1, 11}}|>
+	]
 	,
 	TestID->"Parse-20200123-X3N6W0"	
 ]
@@ -2706,7 +2726,10 @@ Test[
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Pattern", <||>], {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>], 
-			CallNode[LeafNode[Symbol, "Blank", <||>], {}, <|Source -> {{1, 2}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 3}}|>]}, <||>]
+			CallNode[LeafNode[Symbol, "Blank", <||>], {}, <|Source -> {{1, 2}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 3}}|>]}
+		,
+		<|Source -> {{1, 1}, {1, 3}}|>
+	]
 	,
 	TestID->"Parse-20200308-S7F8E6"
 ]
@@ -2961,7 +2984,10 @@ Test[
 			CallNode[LeafNode[Symbol, "TagUnset", <||>], {
 				LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
 				LeafNode[Symbol, "b", <|Source -> {{1, 6}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 10}}|>], {
-			LeafNode[Symbol, "c", <|Source -> {{1, 13}, {1, 14}}|>]}, <|Source -> {{1, 1}, {1, 14}}|>]}, <||>]
+			LeafNode[Symbol, "c", <|Source -> {{1, 13}, {1, 14}}|>]}, <|Source -> {{1, 1}, {1, 14}}|>]}
+		,
+		<|Source -> {{1, 1}, {1, 14}}|>
+	]
 	,
 	TestID->"Parse-20200320-D5E2I4"
 ]
@@ -2974,7 +3000,10 @@ Test[
 			CallNode[LeafNode[Symbol, "TagUnset", <||>], {
 				LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
 				LeafNode[Symbol, "b", <|Source -> {{1, 6}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 11}}|>], {
-			LeafNode[Symbol, "c", <|Source -> {{1, 14}, {1, 15}}|>]}, <|Source -> {{1, 1}, {1, 15}}|>]}, <||>]
+			LeafNode[Symbol, "c", <|Source -> {{1, 14}, {1, 15}}|>]}, <|Source -> {{1, 1}, {1, 15}}|>]}
+		,
+		<|Source -> {{1, 1}, {1, 15}}|>
+	]
 	,
 	TestID->"Parse-20200322-D5O4E5"
 ]
@@ -2990,10 +3019,13 @@ Test[
 				CallNode[LeafNode[Symbol, "Pattern", <||>], {
 					LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
 					CallNode[LeafNode[Symbol, "Blank", <||>], {}, <|Source -> {{1, 2}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>],
-			LeafNode[Symbol, "b", <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]},
+			LeafNode[Symbol, "b", <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]}
+		,
 		<|SyntaxIssues -> {
 			SyntaxIssue["UnexpectedDot", "Suspicious syntax.", "Error", <|Source -> {{1, 4}, {1, 4}}, ConfidenceLevel -> 0.95, CodeActions -> {
-				CodeAction["Insert space", InsertText, <|Source -> {{1, 4}, {1, 4}}, "InsertionText" -> " "|>]}|>]}|>]
+				CodeAction["Insert space", InsertText, <|Source -> {{1, 4}, {1, 4}}, "InsertionText" -> " "|>]}|>]},
+		Source -> {{1, 1}, {1, 6}}|>
+	]
 	,
 	TestID->"Parse-20200821-Z5I1N7"
 ]
@@ -3006,10 +3038,13 @@ Test[
 			CallNode[LeafNode[Symbol, "Optional", <||>], {
 				CallNode[LeafNode[Symbol, "Pattern", <||>], {
 					LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
-					CallNode[LeafNode[Symbol, "Blank", <||>], {}, <|Source -> {{1, 2}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]},
+					CallNode[LeafNode[Symbol, "Blank", <||>], {}, <|Source -> {{1, 2}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]}
+		,
 		<|SyntaxIssues -> {
 			SyntaxIssue["UnexpectedDot", "Suspicious syntax.", "Error", <|Source -> {{1, 4}, {1, 4}}, ConfidenceLevel -> 0.95, CodeActions -> {
-				CodeAction["Insert space", InsertText, <|Source -> {{1, 4}, {1, 4}}, "InsertionText" -> " "|>]}|>]}|>]
+				CodeAction["Insert space", InsertText, <|Source -> {{1, 4}, {1, 4}}, "InsertionText" -> " "|>]}|>]},
+		Source -> {{1, 1}, {1, 6}}|>
+	]
 	,
 	TestID->"Parse-20200821-F1R5P5"
 ]
@@ -3061,7 +3096,10 @@ Test[
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Slot", <||>], {
-			LeafNode[Integer, "1", <|Source -> {{1, 2}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 3}}|>]}, <||>]
+			LeafNode[Integer, "1", <|Source -> {{1, 2}, {1, 3}}|>]}, <|Source -> {{1, 1}, {1, 3}}|>]}
+		,
+		<|Source -> {{1, 1}, {1, 3}}|>
+	]
 	,
 	TestID->"Parse-20200413-B4O4W8"
 ]
@@ -3071,7 +3109,10 @@ Test[
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Slot", <||>], {
-			LeafNode[String, "\"abc\"", <|Source -> {{1, 2}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>]}, <||>]
+			LeafNode[String, "\"abc\"", <|Source -> {{1, 2}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>]}
+		,
+		<|Source -> {{1, 1}, {1, 5}}|>
+	]
 	,
 	TestID->"Parse-20200413-T5O4Q3"
 ]
@@ -3081,7 +3122,10 @@ Test[
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "SlotSequence", <||>], {
-			LeafNode[Integer, "2", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, <||>]
+			LeafNode[Integer, "2", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}
+		,
+		<|Source -> {{1, 1}, {1, 4}}|>
+	]
 	,
 	TestID->"Parse-20200413-Q5X3J6"
 ]
@@ -3091,7 +3135,10 @@ Test[
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Out", <||>], {
-			LeafNode[Integer, "45", <|Source -> {{1, 2}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, <||>]
+			LeafNode[Integer, "45", <|Source -> {{1, 2}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}
+		,
+		<|Source -> {{1, 1}, {1, 4}}|>
+	]
 	,
 	TestID->"Parse-20200413-L1I2E4"
 ]
@@ -3102,7 +3149,10 @@ Test[
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "MessageName", <||>], {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>], 
-    		LeafNode[String, "\"bcd\"", <|Source -> {{1, 4}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]}, <||>]
+    		LeafNode[String, "\"bcd\"", <|Source -> {{1, 4}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]}
+    	,
+    	<|Source -> {{1, 1}, {1, 7}}|>
+    ]
 	,
 	TestID->"Parse-20200413-G5B7Z1"
 ]
@@ -3112,7 +3162,10 @@ Test[
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Get", <||>], { 
-    		LeafNode[String, "\"a`\"", <|Source -> {{1, 3}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>]}, <||>]
+    		LeafNode[String, "\"a`\"", <|Source -> {{1, 3}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>]}
+    	,
+    	<|Source -> {{1, 1}, {1, 5}}|>
+    ]
 	,
 	TestID->"Parse-20200415-P2Y8P6"
 ]
@@ -3122,7 +3175,10 @@ Test[
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Get", <||>], { 
-    		LeafNode[String, "\"a`\"", <|Source -> {{1, 3}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]}, <||>]
+    		LeafNode[String, "\"a`\"", <|Source -> {{1, 3}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]}
+    	,
+    	<|Source -> {{1, 1}, {1, 7}}|>
+    ]
 	,
 	TestID->"Parse-20200415-I2M5B8"
 ]
@@ -3133,7 +3189,10 @@ Test[
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Put", <||>], {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>], 
-    		LeafNode[String, "\"b\"", <|Source -> {{1, 6}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]}, <||>]
+    		LeafNode[String, "\"b\"", <|Source -> {{1, 6}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]}
+    	,
+    	<|Source -> {{1, 1}, {1, 7}}|>
+    ]
 	,
 	TestID->"Parse-20200415-W4H4K5"
 ]
@@ -3144,7 +3203,10 @@ Test[
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Put", <||>], {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>], 
-    		LeafNode[String, "\"b\"", <|Source -> {{1, 6}, {1, 9}}|>]}, <|Source -> {{1, 1}, {1, 9}}|>]}, <||>]
+    		LeafNode[String, "\"b\"", <|Source -> {{1, 6}, {1, 9}}|>]}, <|Source -> {{1, 1}, {1, 9}}|>]}
+    	,
+    	<|Source -> {{1, 1}, {1, 9}}|>
+    ]
 	,
 	TestID->"Parse-20200415-X7O6E0"
 ]
@@ -3155,7 +3217,10 @@ Test[
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "PutAppend", <||>], {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>], 
-    		LeafNode[String, "\"b\"", <|Source -> {{1, 7}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]}, <||>]
+    		LeafNode[String, "\"b\"", <|Source -> {{1, 7}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]}
+    	,
+    	<|Source -> {{1, 1}, {1, 8}}|>
+    ]
 	,
 	TestID->"Parse-20200415-V0C2F3"
 ]
@@ -3166,7 +3231,10 @@ Test[
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "PutAppend", <||>], {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>], 
-    		LeafNode[String, "\"b\"", <|Source -> {{1, 7}, {1, 10}}|>]}, <|Source -> {{1, 1}, {1, 10}}|>]}, <||>]
+    		LeafNode[String, "\"b\"", <|Source -> {{1, 7}, {1, 10}}|>]}, <|Source -> {{1, 1}, {1, 10}}|>]}
+    	,
+    	<|Source -> {{1, 1}, {1, 10}}|>
+    ]
 	,
 	TestID->"Parse-20200415-N1P8Z5"
 ]
@@ -3187,7 +3255,10 @@ Test[
 	,
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "Get", <||>], {
-			LeafNode[String, "\"[\\\"]\"", <|Source -> {{1, 3}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]}, <||>]
+			LeafNode[String, "\"[\\\"]\"", <|Source -> {{1, 3}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]}
+		,
+		<|Source -> {{1, 1}, {1, 6}}|>
+	]
 	,
 	TestID->"Parse-20200416-L5V7S7"
 ]
@@ -3264,7 +3335,10 @@ Test[
 	CodeParse["\"a\tb\""]
 	,
 	ContainerNode[String, {
-		LeafNode[String, "\"a\\tb\"", <|Source -> {{1, 1}, {1, 6}}|>]}, <||>]
+		LeafNode[String, "\"a\\tb\"", <|Source -> {{1, 1}, {1, 6}}|>]}
+		,
+		<|Source -> {{1, 1}, {1, 6}}|>
+	]
 	,
 	TestID->"Parse-20200803-G3C1P6"
 ]
@@ -3280,7 +3354,7 @@ Test[
 	CodeParse["\\((*\n*)\\)"]
 	,
 	ContainerNode[String, {
-		LeafNode[Token`LinearSyntaxBlob, "\\((*\n*)\\)", <|Source -> {{1, 1}, {2, 5}}|>]}, <||>]
+		LeafNode[Token`LinearSyntaxBlob, "\\((*\n*)\\)", <|Source -> {{1, 1}, {2, 5}}|>]}, <|Source -> {{1, 1}, {2, 5}}|>]
 	,
 	TestID->"Parse-20200803-R4W5C6"
 ]
@@ -3298,7 +3372,7 @@ Test[
 			InfixNode[Times, {
 				ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>],
 				LeafNode[Token`Star, "*", <|Source -> {{1, 3}, {1, 4}}|>],
-				LeafNode[Symbol, "b", <|Source -> {{1, 4}, {1, 5}}|>]}, <|Source -> {{1, 3}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>]}, <||>]
+				LeafNode[Symbol, "b", <|Source -> {{1, 4}, {1, 5}}|>]}, <|Source -> {{1, 3}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>]}, <|Source -> {{1, 1}, {1, 5}}|>]
 	,
 	TestID->"Parse-20220601-I1A2U8"
 ]
@@ -3317,7 +3391,9 @@ Test[
 				CallNode[LeafNode[Symbol, "PatternTest", <||>], {
 					ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 3}, {1, 3}}|>],
 					LeafNode[Symbol, "b", <|Source -> {{1, 4}, {1, 5}}|>]}, <|Source -> {{1, 3}, {1, 5}}|>],
-				LeafNode[Symbol, "c", <|Source -> {{1, 6}, {1, 7}}|>]}, <|Source -> {{1, 3}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]}, <||>]
+				LeafNode[Symbol, "c", <|Source -> {{1, 6}, {1, 7}}|>]}, <|Source -> {{1, 3}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]}
+		,
+		<|Source -> {{1, 1}, {1, 7}}|>]
 	,
 	TestID->"Parse-20200803-X4E2N5"
 ]
@@ -3333,7 +3409,7 @@ Test[
 			LeafNode[Symbol, "Null", <|Source -> {{1, 5}, {1, 5}}|>],
 			LeafNode[Symbol, "Null", <|Source -> {{1, 6}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]}
 		,
-		<||>
+		<|Source -> {{1, 1}, {1, 7}}|>
 	]
 	,
 	TestID->"Parse-20200810-R4E3W9"
@@ -3348,7 +3424,7 @@ Test[
 			LeafNode[Symbol, "Null", <|Source -> {{1, 21}, {1, 21}}|>],
 			LeafNode[Symbol, "Null", <|Source -> {{1, 38}, {1, 38}}|>]}, <|Source -> {{1, 1}, {1, 39}}|>]}
 		,
-		<||>
+		<|Source -> {{1, 1}, {1, 39}}|>
 	]
 	,
 	TestID->"Parse-20200810-F0V6V5"
