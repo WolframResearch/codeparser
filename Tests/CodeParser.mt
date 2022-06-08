@@ -23,7 +23,7 @@ Block[{$ContextPath = {"System`"}, $Context = "Global`"},
 	pacletInfo = Get[pacletInfoFile];
 ]
 
-{useExprLib, useMathLink} = {UseExprLib, UseMathLink} /. List @@ pacletInfo;
+transport = Transport /. List @@ pacletInfo;
 
 
 
@@ -34,10 +34,10 @@ TestMatch[
 	_Failure
 	,
 	Which[
-		useExprLib,
+		transport === "ExprLib",
 			{LibraryFunction::unevaluated}
 		,
-		useMathLink,
+		transport === "MathLink",
 			{}
 	]
 	,
