@@ -405,8 +405,6 @@ NodePtr InfixOperatorParselet::parse1(NodeSeq Args, NodePtr Operand, ParserConte
 
 NodePtr InfixOperatorParselet::parseLoop(NodeSeq Args, Token OperandLastToken, ParserContext CtxtIn) const {
     
-    while (true) {
-    
     //
     // Check isAbort() inside loops
     //
@@ -462,13 +460,11 @@ NodePtr InfixOperatorParselet::parseLoop(NodeSeq Args, Token OperandLastToken, P
     
     auto Operand = prefixParselets[Tok2.Tok.value()]->parsePrefix(Tok2, Ctxt);
         
-    OperandLastToken = Operand->lastToken();
+    auto OperandLastToken2 = Operand->lastToken();
 
     Args.append(std::move(Operand));
     
-    continue;
-    
-    } // while (true)
+    return parseLoop(std::move(Args), OperandLastToken2, CtxtIn);
 }
 
 
@@ -499,8 +495,6 @@ NodePtr GroupParselet::parsePrefix(Token firstTok, ParserContext CtxtIn) const {
 }
  
 NodePtr GroupParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
-    
-    while (true) {
     
     //
     // Check isAbort() inside loops
@@ -600,7 +594,7 @@ NodePtr GroupParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
         //
         Args.append(std::move(Error));
         
-        continue;
+        return parseLoop(std::move(Args), CtxtIn);
     }
 
     if (Tok.Tok == TOKEN_ENDOFFILE) {
@@ -625,9 +619,7 @@ NodePtr GroupParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
     //
     Args.append(std::move(Operand));
     
-    continue;
-        
-    } // while (true)
+    return parseLoop(std::move(Args), CtxtIn);
 }
 
 
@@ -1160,8 +1152,6 @@ NodePtr CommaParselet::parse1(NodeSeq Args, NodePtr Operand, ParserContext CtxtI
 
 NodePtr CommaParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
     
-    while (true) {
-    
     //
     // Check isAbort() inside loops
     //
@@ -1223,7 +1213,7 @@ NodePtr CommaParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
         
         Args.append(std::move(Implicit));
         
-        continue;
+        return parseLoop(std::move(Args), CtxtIn);
     }
     
     auto Operand = prefixParselets[Tok2.Tok.value()]->parsePrefix(Tok2, Ctxt);
@@ -1244,14 +1234,12 @@ NodePtr CommaParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
         
         Args.append(std::move(Implicit));
         
-        continue;
+        return parseLoop(std::move(Args), CtxtIn);
     }
     
     Args.append(std::move(Operand));
     
-    continue;
-        
-    } // while (true)
+    return parseLoop(std::move(Args), CtxtIn);
 }
 
 const SymbolPtr& CommaParselet::getOp() const {
@@ -1323,8 +1311,6 @@ NodePtr SemiParselet::parse1(NodeSeq Args, NodePtr operand, ParserContext CtxtIn
 
 NodePtr SemiParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
     
-    while (true) {
-    
     //
     // Check isAbort() inside loops
     //
@@ -1372,7 +1358,7 @@ NodePtr SemiParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
         
         Args.append(NodePtr(new LeafNode(Implicit)));
         
-        continue;
+        return parseLoop(std::move(Args), CtxtIn);
     }
     
     if (Tok2.Tok.isPossibleBeginning()) {
@@ -1381,7 +1367,7 @@ NodePtr SemiParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
         
         Args.append(std::move(operand));
         
-        continue;
+        return parseLoop(std::move(Args), CtxtIn);
     }
 
     //
@@ -1397,8 +1383,6 @@ NodePtr SemiParselet::parseLoop(NodeSeq Args, ParserContext CtxtIn) const {
     auto L = NodePtr(new InfixNode(SYMBOL_COMPOUNDEXPRESSION, std::move(Args)));
 
     return TheParser->parseLoop(std::move(L), CtxtIn);
-    
-    } // while (true)
 }
 
 
@@ -1452,8 +1436,6 @@ NodePtr ColonColonParselet::parseInfix(NodeSeq Args, Token TokIn, ParserContext 
 
 NodePtr ColonColonParselet::parseLoop(NodeSeq Args, ParserContext Ctxt) const {
     
-    while (true) {
-    
     //
     // Check isAbort() inside loops
     //
@@ -1501,9 +1483,7 @@ NodePtr ColonColonParselet::parseLoop(NodeSeq Args, ParserContext Ctxt) const {
     Args.append(NodePtr(new LeafNode(Tok1)));
     Args.append(std::move(Operand));
     
-    continue;
-    
-    } // while (true)
+    return parseLoop(std::move(Args), Ctxt);
 }
 
 

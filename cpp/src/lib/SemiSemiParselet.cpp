@@ -123,8 +123,6 @@ NodePtr SemiSemiParselet::parseInfix(NodeSeq Left, Token TokIn, ParserContext Ct
 
 NodePtr SemiSemiParselet::parseLoop(NodeSeq Args, ParserContext Ctxt) const {
     
-    while (true) {
-    
     //
     // Check isAbort() inside loops
     //
@@ -204,7 +202,7 @@ NodePtr SemiSemiParselet::parseLoop(NodeSeq Args, ParserContext Ctxt) const {
     
     Args.append(std::move(Operand));
     
-    } // while (true)
+    return parseLoop(std::move(Args), Ctxt);
 }
 
 NodePtr SemiSemiParselet::parse1(NodeSeq Args, NodePtr Operand, ParserContext CtxtIn) const {

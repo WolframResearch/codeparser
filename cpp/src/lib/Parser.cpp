@@ -225,8 +225,6 @@ Token Parser::currentToken_stringifyAsFile() const {
 
 NodePtr Parser::parseLoop(NodePtr Left, ParserContext Ctxt) {
     
-    while (true) {
-    
     //
     // Check isAbort() inside loops
     //
@@ -267,7 +265,7 @@ NodePtr Parser::parseLoop(NodePtr Left, ParserContext Ctxt) {
     
     Left = I->parseInfix(std::move(LeftSeq), token, Ctxt2);
     
-    } // while (true)
+    return parseLoop(std::move(Left), Ctxt);
 }
 
 Token Parser::eatTrivia(Token T, ParserContext Ctxt, NextPolicy policy, TriviaSeq& Args) {
