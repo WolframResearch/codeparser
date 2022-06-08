@@ -29,8 +29,7 @@ set(WOLFRAMKERNEL ${WOLFRAMKERNEL_DEFAULT} CACHE FILEPATH "Path to WolframKernel
 set(BUILD_PACLET ON CACHE BOOL "Build paclet")
 set(BUILD_EXE OFF CACHE BOOL "Build executable")
 set(BUILD_TESTS OFF CACHE BOOL "Build tests")
-set(USE_EXPR_LIB OFF CACHE BOOL "Use experimental expr library for transport")
-set(USE_MATHLINK ON CACHE BOOL "Use MathLink for transport")
+set(TRANSPORT Automatic CACHE STRING "Transport to use")
 set(NISSUES OFF CACHE BOOL "NISSUES")
 set(NABORT OFF CACHE BOOL "NABORT")
 set(LOCAL_BUILD OFF CACHE BOOL "Local build")
@@ -68,11 +67,7 @@ message(STATUS "WOLFRAMKERNEL: ${WOLFRAMKERNEL}")
 message(STATUS "BUILD_PACLET: ${BUILD_PACLET}")
 message(STATUS "BUILD_EXE: ${BUILD_EXE}")
 message(STATUS "BUILD_TESTS: ${BUILD_TESTS}")
-message(STATUS "USE_EXPR_LIB: ${USE_EXPR_LIB}")
-message(STATUS "USE_MATHLINK: ${USE_MATHLINK}")
-if(USE_EXPR_LIB AND USE_MATHLINK)
-message(WARNING "Both USE_EXPR_LIB and USE_MATHLINK are ON")
-endif()
+message(STATUS "TRANSPORT: ${TRANSPORT}")
 message(STATUS "NISSUES: ${NISSUES}")
 message(STATUS "NABORT: ${NABORT}")
 message(STATUS "LOCAL_BUILD: ${LOCAL_BUILD}")
@@ -150,6 +145,15 @@ set(GENERATED_CPP_LIB_SOURCES
 CheckWolframKernel()
 CheckPacletInfo()
 
+if(${TRANSPORT} STREQUAL Automatic)
+if(${VERSION_NUMBER} GREATER_EQUAL 1310)
+set(TRANSPORT ExprLib)
+else()
+set(TRANSPORT MathLink)
+endif()
+message(STATUS "resolved TRANSPORT: ${TRANSPORT}")
+endif()
+
 #
 # Force re-configure if PacletInfo.wl.in changes, e.g. paclet version is changed and name of .paclet has changed
 #
@@ -166,7 +170,7 @@ if(NOT ${VERSION_NUMBER} GREATER_EQUAL 1210)
 message(WARNING "VERSION_NUMBER is below 1210; ForceVersionInstall was added in 12.1. Installing paclets via CMake may not work. (VERSION_NUMBER is ${VERSION_NUMBER})")
 endif()
 
-if(USE_EXPR_LIB)
+if(${TRANSPORT} STREQUAL ExprLib)
 # if(NOT ${VERSION_NUMBER} GREATER_EQUAL 1200)
 # message(FATAL_ERROR "VERSION_NUMBER is below 1200; Expr library uses NumericArrays that were added to LibraryLink in version 12.0. (VERSION_NUMBER is ${VERSION_NUMBER})")
 # endif()
@@ -448,7 +452,7 @@ add_custom_command(
 #
 # expr lib target
 #
-if(USE_EXPR_LIB)
+if(${TRANSPORT} STREQUAL ExprLib)
 
 set(EXPR_LIB ${PROJECT_BINARY_DIR}/paclet/CodeParser/LibraryResources/${SYSTEMID}/expr${CMAKE_SHARED_LIBRARY_SUFFIX})
 
@@ -512,7 +516,7 @@ add_custom_command(
 
 add_dependencies(expr-lib expr-lib-custom)
 
-endif(USE_EXPR_LIB)
+endif(${TRANSPORT} STREQUAL ExprLib)
 
 
 
@@ -536,7 +540,7 @@ if(${WOLFRAMLIBRARY_VERSION} GREATER ${MAX_EXPECTED_WOLFRAMLIBRARY_VERSION})
 message(WARNING "WOLFRAMLIBRARY_VERSION (${WOLFRAMLIBRARY_VERSION}) is greater than max expected value (${MAX_EXPECTED_WOLFRAMLIBRARY_VERSION}); Please make necessary changes")
 endif()
 
-if(USE_MATHLINK)
+if(${TRANSPORT} STREQUAL MathLink)
 
 set(MATHLINK_INCLUDE_DIR ${MATHLINK_INCLUDE_DIR_DEFAULT} CACHE FILEPATH "Path to mathlink.h")
 
@@ -546,7 +550,7 @@ set(MATHLINK_LIB_DIR ${MATHLINK_LIB_DIR_DEFAULT} CACHE FILEPATH "Path to MathLin
 
 message(STATUS "MATHLINK_LIB_DIR: ${MATHLINK_LIB_DIR}")
 
-endif(USE_MATHLINK)
+endif(${TRANSPORT} STREQUAL MathLink)
 
 set(STATIC_CPP_INCLUDES
 	${PROJECT_SOURCE_DIR}/cpp/include/API.h
@@ -565,7 +569,7 @@ set(STATIC_CPP_INCLUDES
 	${PROJECT_SOURCE_DIR}/cpp/include/WLCharacter.h
 )
 
-if(USE_EXPR_LIB)
+if(${TRANSPORT} STREQUAL ExprLib)
 list(APPEND STATIC_CPP_INCLUDES
 	${PROJECT_SOURCE_DIR}/cpp/include/ExprLibrary.h
 )
@@ -609,7 +613,7 @@ target_include_directories(codeparser-lib
 
 
 
-if(USE_MATHLINK)
+if(${TRANSPORT} STREQUAL MathLink)
 
 #
 # Cannot just have all lib names together in a single list
@@ -652,9 +656,9 @@ message(STATUS "MATHLINK_LIB: ${MATHLINK_LIB}")
 
 target_link_libraries(codeparser-lib ${MATHLINK_LIB})
 
-endif(USE_MATHLINK)
+endif(${TRANSPORT} STREQUAL MathLink)
 
-if(USE_EXPR_LIB)
+if(${TRANSPORT} STREQUAL ExprLib)
 target_link_libraries(codeparser-lib expr-lib)
 endif()
 
@@ -713,11 +717,11 @@ if(NABORT)
 target_compile_definitions(codeparser-lib PUBLIC NABORT=1)
 endif()
 
-if(USE_MATHLINK)
+if(${TRANSPORT} STREQUAL MathLink)
 target_compile_definitions(codeparser-lib PUBLIC USE_MATHLINK=1)
 endif()
 
-if(USE_EXPR_LIB)
+if(${TRANSPORT} STREQUAL ExprLib)
 target_compile_definitions(codeparser-lib PUBLIC USE_EXPR_LIB=1)
 endif()
 
@@ -767,7 +771,7 @@ set(PACLET_SOURCES
 	codeparser-lib
 )
 
-if(USE_EXPR_LIB)
+if(${TRANSPORT} STREQUAL ExprLib)
 list(APPEND PACLET_SOURCES
 	expr-lib
 )
@@ -795,7 +799,7 @@ add_custom_command(
 	OUTPUT
 		${PACLET_OUTPUT}
 	COMMAND
-		${CMAKE_COMMAND} -DUSE_EXPR_LIB=${USE_EXPR_LIB} -DUSE_MATHLINK=${USE_MATHLINK} -DBUILDNUMBER=${BUILDNUMBER} -DVERSION_NUMBER=${VERSION_NUMBER} -DWOLFRAMLIBRARY_VERSION=${WOLFRAMLIBRARY_VERSION} -DLOCAL_BUILD=${LOCAL_BUILD} -DLOCAL_BUILD_VERSION=${LOCAL_BUILD_VERSION} -DCOPIED_PACLETINFO=${COPIED_PACLETINFO} -P ${PROJECT_SOURCE_DIR}/cmake/ReplacePacletInfo.cmake
+		${CMAKE_COMMAND} -DTRANSPORT=${TRANSPORT} -DBUILDNUMBER=${BUILDNUMBER} -DVERSION_NUMBER=${VERSION_NUMBER} -DWOLFRAMLIBRARY_VERSION=${WOLFRAMLIBRARY_VERSION} -DLOCAL_BUILD=${LOCAL_BUILD} -DLOCAL_BUILD_VERSION=${LOCAL_BUILD_VERSION} -DCOPIED_PACLETINFO=${COPIED_PACLETINFO} -P ${PROJECT_SOURCE_DIR}/cmake/ReplacePacletInfo.cmake
 	COMMAND
 		#
 		# CreatePacletArchive may be slow on RE machines, so allow re-trying if JLink connection timeout is hit

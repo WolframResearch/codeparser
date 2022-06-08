@@ -42,9 +42,7 @@ Needs["PacletManager`"] (* for PacletInformation *)
 
 CodeParser::old2 = "ExprLibrary functionality is only supported in versions 13.1+."
 
-CodeParser::notransport = "Neither UseExprLib nor UseMathLink were specified."
-
-CodeParser::bothtransports = "Both UseExprLib and UseMathLink were specified."
+CodeParser::notransport = "No transport specified."
 
 
 
@@ -168,7 +166,7 @@ Module[{res, loaded, linkObject},
 
 
 loadAllFuncs[] :=
-Module[{pacletInfo, pacletInfoFile, useExprLib, useMathLink},
+Module[{pacletInfo, pacletInfoFile, transport},
 
   pacletInfoFile = FileNameJoin[{location, "PacletInfo.wl"}];
 
@@ -176,14 +174,10 @@ Module[{pacletInfo, pacletInfoFile, useExprLib, useMathLink},
     pacletInfo = Get[pacletInfoFile];
   ];
 
-  {useExprLib, useMathLink} = {UseExprLib, UseMathLink} /. List @@ pacletInfo;
+  transport = Transport /. List @@ pacletInfo;
 
   Which[
-    TrueQ[useExprLib],
-
-      If[TrueQ[useMathLink],
-        Message[CodeParser::bothtransports]
-      ];
+    transport === "ExprLib",
 
       loadExprLibFuncs[];
 
@@ -195,7 +189,8 @@ Module[{pacletInfo, pacletInfoFile, useExprLib, useMathLink},
 
       safeStringFunc := safeStringFunc = fromPointerA @* loadFunc["SafeString_LibraryLink", { {LibraryDataType[ByteArray], "Shared"} }, Integer];
     ,
-    TrueQ[useMathLink],
+    transport === "MathLink",
+
       concreteParseBytesFunc := concreteParseBytesFunc = loadFunc["ConcreteParseBytes_LibraryLink", LinkObject, LinkObject];
 
       tokenizeBytesFunc := tokenizeBytesFunc = loadFunc["TokenizeBytes_LibraryLink", LinkObject, LinkObject];

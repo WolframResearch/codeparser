@@ -11,21 +11,7 @@ string(REGEX REPLACE "BuildWolframVersionNumber -> [0-9]+" "BuildWolframVersionN
 
 string(REGEX REPLACE "BuildWolframLibraryVersion -> [0-9]+" "BuildWolframLibraryVersion -> ${WOLFRAMLIBRARY_VERSION}" filedata ${filedata})
 
-if(USE_EXPR_LIB)
-set(USE_EXPR_LIB_VAL "True")
-else()
-set(USE_EXPR_LIB_VAL "False")
-endif()
-
-string(REGEX REPLACE "UseExprLib -> [a-zA-Z]+" "UseExprLib -> ${USE_EXPR_LIB_VAL}" filedata ${filedata})
-
-if(USE_MATHLINK)
-set(USE_MATHLINK_VAL "True")
-else()
-set(USE_MATHLINK_VAL "False")
-endif()
-
-string(REGEX REPLACE "UseMathLink -> [a-zA-Z]+" "UseMathLink -> ${USE_MATHLINK_VAL}" filedata ${filedata})
+string(REGEX REPLACE "Transport -> \"[a-zA-Z]*\"" "Transport -> \"${TRANSPORT}\"" filedata ${filedata})
 
 if(LOCAL_BUILD)
 
