@@ -164,7 +164,7 @@ Module[{},
 
 generate[] :=
 Catch[
-Module[{targetDir, prog, compLib, compStart, compEnd},
+Module[{targetDir, prog, compLib, compStart, compEnd, env},
 
   Print["Generating ExprLibrary..."];
 
@@ -178,12 +178,24 @@ Module[{targetDir, prog, compLib, compStart, compEnd},
 
   compStart = Now;
 
+  (*
+  Create a compiler environment that does not load dependent libraries.
+
+  make sure to avoid dependent libraries which may have abort handling
+  *)
+  env = CreateCompilerEnvironment["TypeEnvironmentOptions" -> {"AddLibraries" -> None}];
+  
   compLib =
     CompileToLibrary[prog,
       "LibraryName" -> "expr",
       "EntryFunctionName" -> "Main",
       "TargetDirectory" -> targetDir,
-      "TraceFunction" -> Print
+      "TraceFunction" -> Print,
+      (*
+      Turn off abort handling in the generated library
+      *)
+      "AbortHandling" -> False,
+      CompilerEnvironment -> env
     ];
 
   compEnd = Now;
