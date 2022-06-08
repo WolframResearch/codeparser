@@ -113,6 +113,8 @@ public:
     Token eatTriviaButNotToplevelNewlines(Token firstTok, NextPolicy policy, TriviaSeq& Args);
     Token eatTriviaButNotToplevelNewlines_stringifyAsFile(Token firstTok, TriviaSeq& Args);
     
+    void shift();
+    
     NodeSeq& pushArgs();
     NodeSeq popArgs();
     NodeSeq& peekArgs();

@@ -81,9 +81,11 @@ void SemiSemiParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
     auto Implicit = Token(TOKEN_FAKE_IMPLICITONE, TokIn.BufLen.buffer, TokIn.Src.Start);
     
-    auto& Left = TheParser->pushArgs();
+    TheParser->pushNode(NodePtr(new LeafNode(Implicit)));
     
-    Left.append(NodePtr(new LeafNode(Implicit)));
+    TheParser->pushArgs();
+    
+    TheParser->shift();
     
     MUSTTAIL
     return SemiSemiParselet_parseInfix(P, TokIn);
@@ -200,13 +202,15 @@ void SemiSemiParselet_parseLoop(ParseletPtr P, Token Ignored) {
     }
 #endif // !NISSUES
     
-    auto& Args2 = TheParser->pushArgs();
-    
     auto ImplicitOne = Token(TOKEN_FAKE_IMPLICITONE, Tok.BufLen.buffer, Tok.Src.Start);
     
-    Args2.append(NodePtr(new LeafNode(ImplicitOne)));
+    TheParser->pushNode(NodePtr(new LeafNode(ImplicitOne)));
     
     TheParser->nextToken(Tok);
+    
+    auto& Args2 = TheParser->pushArgs();
+    
+    TheParser->shift();
     
     Args2.append(NodePtr(new LeafNode(Tok)));
     
@@ -530,10 +534,10 @@ void SemiSemiParselet_parse6(ParseletPtr P, Token Ignored) {
             return Parser_parseClimb(nullptr, Ignored);
         }
         
-        auto Operand = TheParser->popNode();
-        
         auto& Args2 = TheParser->pushArgs();
-        Args2.append(std::move(Operand));
+        
+        TheParser->shift();
+        
         Args2.appendSeq(std::move(Trivia1));
     }
     

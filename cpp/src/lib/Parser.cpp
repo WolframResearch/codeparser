@@ -262,11 +262,10 @@ void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2) {
             return;
         }
         
-        auto Left1 = TheParser->popNode();
-        
         auto& LeftSeq = TheParser->pushArgs();
         
-        LeftSeq.append(std::move(Left1));
+        TheParser->shift();
+        
         LeftSeq.appendSeq(std::move(Trivia1));
     }
     
@@ -344,6 +343,12 @@ Token Parser::eatTriviaButNotToplevelNewlines_stringifyAsFile(Token T, TriviaSeq
     }
     
     return T;
+}
+
+void Parser::shift() {
+    auto Operand = TheParser->popNode();
+    auto& Args = ArgsStack.back();
+    Args.append(std::move(Operand));
 }
 
 NodeSeq& Parser::pushArgs() {

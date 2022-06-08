@@ -9,13 +9,9 @@ void UnderParselet_parse0(ParseletPtr P, Token Ignored) {
     
     if (Tok.Tok == TOKEN_SYMBOL) {
         
-        {
-            auto Under = TheParser->popNode();
-            
-            auto& Args = TheParser->pushArgs();
-            
-            Args.append(std::move(Under));
-        }
+        TheParser->pushArgs();
+        
+        TheParser->shift();
         
 //        xxx;
         SymbolParselet_parsePrefixContextSensitive(symbolParselet, Tok);
@@ -26,13 +22,9 @@ void UnderParselet_parse0(ParseletPtr P, Token Ignored) {
     
     if (Tok.Tok == TOKEN_ERROR_EXPECTEDLETTERLIKE) {
         
-        {
-            auto Under = TheParser->popNode();
-            
-            auto& Args = TheParser->pushArgs();
-            
-            Args.append(std::move(Under));
-        }
+        TheParser->pushArgs();
+        
+        TheParser->shift();
         
         //
         // Something like  _a`
@@ -73,10 +65,10 @@ void UnderParselet_parse1(ParseletPtr P, Token Ignored) {
 
         if ((TheParser->topContext().Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
             
-            auto Blank = TheParser->popNode();
-            
             auto& BlankSeq = TheParser->pushArgs();
-            BlankSeq.append(std::move(Blank));
+            
+            TheParser->shift();
+            
             BlankSeq.appendSeq(std::move(Trivia1));
             
 //            MUSTTAIL probably not doable
