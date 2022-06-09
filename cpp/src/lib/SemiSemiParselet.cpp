@@ -98,11 +98,13 @@ ParseFunction SemiSemiParselet::parseInfix() const {
 
 void SemiSemiParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
-    auto& Args = TheParser->peekArgs();
+//    auto& Args = TheParser->peekArgs();
     
-    Args.append(NodePtr(new LeafNode(TokIn)));
+    TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
     
     TheParser->nextToken(TokIn);
+    
+    TheParser->shift();
     
     TheParser->pushInheritedContext(PRECEDENCE_SEMISEMI);
     
@@ -165,9 +167,13 @@ void SemiSemiParselet_parseLoop(ParseletPtr P, Token Ignored) {
         // Must also handle  a;;!b  where there is an Implicit Times, but only a single Span
         //
         
-        auto ImplicitTimes = Token(TOKEN_FAKE_IMPLICITTIMES, Tok.BufLen.buffer, Tok.Src.Start);
+        auto ImplicitTok = Token(TOKEN_FAKE_IMPLICITTIMES, Tok.BufLen.buffer, Tok.Src.Start);
         
-        Args.append(NodePtr(new LeafNode(ImplicitTimes)));
+        TheParser->pushNode(NodePtr(new LeafNode(ImplicitTok)));
+        
+        TheParser->nextToken(ImplicitTok);
+        
+        TheParser->shift();
         
 #if !NISSUES
         {
@@ -190,9 +196,13 @@ void SemiSemiParselet_parseLoop(ParseletPtr P, Token Ignored) {
     // Still within the ;;
     //
 
-    auto ImplicitTimes = Token(TOKEN_FAKE_IMPLICITTIMES, Tok.BufLen.buffer, Tok.Src.Start);
+    auto ImplicitTimesTok = Token(TOKEN_FAKE_IMPLICITTIMES, Tok.BufLen.buffer, Tok.Src.Start);
     
-    Args.append(NodePtr(new LeafNode(ImplicitTimes)));
+    TheParser->pushNode(NodePtr(new LeafNode(ImplicitTimesTok)));
+    
+    TheParser->nextToken(ImplicitTimesTok);
+    
+    TheParser->shift();
     
 #if !NISSUES
     {
@@ -202,17 +212,19 @@ void SemiSemiParselet_parseLoop(ParseletPtr P, Token Ignored) {
     }
 #endif // !NISSUES
     
-    auto ImplicitOne = Token(TOKEN_FAKE_IMPLICITONE, Tok.BufLen.buffer, Tok.Src.Start);
+    auto ImplicitOneTok = Token(TOKEN_FAKE_IMPLICITONE, Tok.BufLen.buffer, Tok.Src.Start);
     
-    TheParser->pushNode(NodePtr(new LeafNode(ImplicitOne)));
+    TheParser->pushNode(NodePtr(new LeafNode(ImplicitOneTok)));
     
-    TheParser->nextToken(Tok);
+    TheParser->nextToken(ImplicitOneTok);
     
     auto& Args2 = TheParser->pushArgs();
     
     TheParser->shift();
     
     Args2.append(NodePtr(new LeafNode(Tok)));
+    
+    TheParser->nextToken(Tok);
     
 //    xxx;
     SemiSemiParselet_parse0(P, Ignored);
