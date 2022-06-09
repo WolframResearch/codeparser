@@ -127,15 +127,15 @@ void UnderParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
 
 void UnderParselet_parse2(ParseletPtr P, Token Ignored) {
     
-    auto Sym2 = TheParser->popNode();
+    auto& Args = TheParser->peekArgs();
     
-    auto Args = TheParser->popArgs();
-    
-    Args.append(std::move(Sym2));
+    TheParser->shift();
     
     auto& BOp = dynamic_cast<UnderParselet *>(P)->getBOp();
     
     auto Blank = NodePtr(new CompoundNode(BOp, std::move(Args)));
+    
+    TheParser->popArgs();
     
     TheParser->pushNode(std::move(Blank));
     
@@ -145,16 +145,16 @@ void UnderParselet_parse2(ParseletPtr P, Token Ignored) {
 void UnderParselet_parse4(ParseletPtr P, Token Ignored) {
     
     {
-        auto Blank = TheParser->popNode();
-
-        auto Args = TheParser->popArgs();
-
-        Args.append(NodePtr(std::move(Blank)));
+        auto& Args = TheParser->peekArgs();
+        
+        TheParser->shift();
         
         auto& PBOp = dynamic_cast<UnderParselet *>(P)->getPBOp();
         
         auto Pat = NodePtr(new CompoundNode(PBOp, std::move(Args)));
-
+        
+        TheParser->popArgs();
+        
         TheParser->pushNode(std::move(Pat));
     }
     
@@ -198,13 +198,13 @@ void UnderDotParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
 void UnderDotParselet_parse1(ParseletPtr P, Token Ignored) {
     
     {
-        auto Blank = TheParser->popNode();
+        auto& Args = TheParser->peekArgs();
         
-        auto Args = TheParser->popArgs();
-        
-        Args.append(NodePtr(std::move(Blank)));
+        TheParser->shift();
         
         auto Pat = NodePtr(new CompoundNode(SYMBOL_CODEPARSER_PATTERNOPTIONALDEFAULT, std::move(Args)));
+        
+        TheParser->popArgs();
         
         TheParser->pushNode(std::move(Pat));
     }
