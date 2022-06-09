@@ -20,6 +20,28 @@ Needs["CodeTools`Generate`GenerateSources`"];
 Needs["Compile`"] (* for Program *)
 Needs["TypeFramework`"] (* for MetaData *)
 
+
+
+(*
+bug 424474: CreateFile is broken
+*)
+checkBug424474[] :=
+Module[{file},
+  
+  file = CreateFile[];
+
+  If[FailureQ[file],
+    Print["CreateFile[] failed"];
+    Quit[1]
+  ];
+
+  DeleteFile[file]
+]
+
+checkBug424474[]
+
+
+
 ExprLibraryProgram[] :=
 Module[{},
   Program[{
