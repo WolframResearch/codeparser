@@ -156,8 +156,6 @@ NodeContainerPtr ParserSession::parseExpressions() {
     {
         std::vector<NodePtr> exprs;
         
-        ParserContext Ctxt;
-        
         while (true) {
             
 #if !NABORT
@@ -201,9 +199,8 @@ NodeContainerPtr ParserSession::parseExpressions() {
             assert(TheParser->getArgsStackSize() == 0);
             assert(TheParser->getNodeStackSize() == 0);
             assert(TheParser->getGroupDepth() == 0);
-            assert(TheParser->getContextStackSize() == 1);
-            assert(TheParser->topContext().Prec == PRECEDENCE_LOWEST);
-            assert(TheParser->topContext().Flag == 0);
+            assert(TheParser->getPrecedenceStackSize() == 1);
+            assert(TheParser->topPrecedence() == PRECEDENCE_LOWEST);
             
             exprs.push_back(std::move(Expr));
             

@@ -113,6 +113,8 @@ public:
 #endif // USE_EXPR_LIB
     
     ColonLHS checkColonLHS() const;
+    
+    bool checkTilde() const;
 };
 
 //

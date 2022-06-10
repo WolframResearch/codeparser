@@ -28,50 +28,6 @@ enum Associativity {
 };
 
 //
-// The ParserContextFlagBits tend to contain context-sensitive bits for parsing
-//
-// Generally the parser is a Pratt parser with 1 token of look-ahead, except in these few cases.
-//
-enum ParserContextFlagBits : uint8_t {
-    
-    //
-    // Needs to detect \[Differential] while parsing
-    //
-    PARSER_INSIDE_INTEGRAL = 0x01,
-    
-    //
-    // Needs to detect the second ~ while parsing
-    //
-    PARSER_INSIDE_TILDE = 0x02,
-};
-
-using ParserContextFlag = uint8_t;
-
-//
-//
-//
-struct ParserContext {
-    
-    //
-    // Precedence of the current operator being parsed
-    //
-    Precedence Prec;
-    
-    ParserContextFlag Flag : 2;
-    
-    ParserContext() : Prec(PRECEDENCE_LOWEST), Flag() {}
-    
-    ParserContext(Precedence Prec) : Prec(Prec), Flag() {}
-};
-
-//
-// Sizes of structs with bit-fields are implementation-dependent
-//
-#ifdef __clang__
-static_assert(sizeof(ParserContext) == 2, "Check your assumptions");
-#endif // __clang__
-
-//
 //
 //
 class Parser {
@@ -79,7 +35,7 @@ private:
     
     std::vector<NodeSeq> ArgsStack;
     std::vector<NodePtr> NodeStack;
-    std::vector<ParserContext> ContextStack;
+    std::vector<Precedence> PrecedenceStack;
     std::vector<Closer> GroupStack;
     
     void handleFirstLine(FirstLineBehavior firstLineBehavior);
@@ -122,11 +78,11 @@ public:
     size_t getGroupDepth() const;
     bool checkGroup(Closer Closr) const;
     
-    ParserContext& topContext();
-    ParserContext& pushContext(Precedence Prec);
-    void popContext();
-    size_t getContextStackSize() const;
-    void clearContextStack();
+    Precedence& topPrecedence();
+    Precedence& pushPrecedence(Precedence Prec);
+    void popPrecedence();
+    size_t getPrecedenceStackSize() const;
+    void clearPrecedenceStack();
     
     bool checkPatternPrecedence() const;
 };

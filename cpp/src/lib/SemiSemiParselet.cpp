@@ -106,7 +106,7 @@ void SemiSemiParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
     TheParser->shift();
     
-    TheParser->pushContext(PRECEDENCE_SEMISEMI);
+    TheParser->pushPrecedence(PRECEDENCE_SEMISEMI);
     
 //    xxx;
     SemiSemiParselet_parse0(P, Token());
@@ -149,7 +149,7 @@ void SemiSemiParselet_parseLoop(ParseletPtr P, Token Ignored) {
             TheParser->pushNode(std::move(Operand));
         }
         
-        TheParser->popContext();
+        TheParser->popPrecedence();
         
         MUSTTAIL
         return Parser_parseClimb(nullptr, Ignored);
@@ -526,7 +526,7 @@ void SemiSemiParselet_parse6(ParseletPtr P, Token Ignored) {
             
             Trivia1.reset();
             
-            TheParser->popContext();
+            TheParser->popPrecedence();
             
 //            MUSTTAIL probably not doable
             return Parser_parseClimb(nullptr, Ignored);
@@ -540,7 +540,7 @@ void SemiSemiParselet_parse6(ParseletPtr P, Token Ignored) {
             
             Trivia1.reset();
             
-            TheParser->popContext();
+            TheParser->popPrecedence();
             
 //            MUSTTAIL probably not doable
             return Parser_parseClimb(nullptr, Ignored);

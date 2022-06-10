@@ -9,12 +9,12 @@
 #include "ByteBuffer.h" // for ByteBuffer
 
 
-Parser::Parser() : ArgsStack(), NodeStack(), ContextStack(), GroupStack() {}
+Parser::Parser() : ArgsStack(), NodeStack(), PrecedenceStack(), GroupStack() {}
 
 void Parser::init() {
     
-    clearContextStack();
-    pushContext(PRECEDENCE_LOWEST);
+    clearPrecedenceStack();
+    pushPrecedence(PRECEDENCE_LOWEST);
     
     handleFirstLine(TheParserSession->firstLineBehavior);
 }
@@ -31,8 +31,6 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
             //
             // Handle the optional #! shebang
             //
-            
-            ParserContext Ctxt;
             
             auto peek = currentToken(TOPLEVEL);
             
@@ -111,8 +109,6 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
             //
             // Handle the #! shebang
             //
-            
-            ParserContext Ctxt;
             
             auto peek = currentToken(TOPLEVEL);
             
@@ -255,7 +251,7 @@ void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2) {
         // else if (Ctxt.Prec == TokenPrecedence && Ctxt.Prec.Associativity is NonRight)
         //   break;
         //
-        if ((TheParser->topContext().Prec | 0x1) > TokenPrecedence) {
+        if ((TheParser->topPrecedence() | 0x1) > TokenPrecedence) {
                 
             Trivia1.reset();
             
@@ -357,12 +353,14 @@ NodeSeq& Parser::pushArgs() {
 }
 
 NodeSeq Parser::popArgs() {
+    assert(!ArgsStack.empty());
     auto top = std::move(ArgsStack.back());
     ArgsStack.pop_back();
     return top;
 }
 
 NodeSeq& Parser::peekArgs() {
+    assert(!ArgsStack.empty());
     return ArgsStack.back();
 }
 
@@ -375,6 +373,7 @@ void Parser::pushNode(NodePtr N) {
 }
 
 NodePtr Parser::popNode() {
+    assert(!NodeStack.empty());
     auto top = std::move(NodeStack.back());
     NodeStack.pop_back();
     return top;
@@ -389,6 +388,7 @@ void Parser::pushGroup(Closer Closr) {
 }
 
 void Parser::popGroup() {
+    assert(!GroupStack.empty());
     GroupStack.pop_back();
 }
 
@@ -408,43 +408,45 @@ bool Parser::checkGroup(Closer Closr) const {
     return false;
 }
 
-ParserContext& Parser::topContext() {
-    return ContextStack.back();
+Precedence& Parser::topPrecedence() {
+    assert(!PrecedenceStack.empty());
+    return PrecedenceStack.back();
 }
 
-ParserContext& Parser::pushContext(Precedence Prec) {
-    ContextStack.push_back(Prec);
-    return ContextStack.back();
+Precedence& Parser::pushPrecedence(Precedence Prec) {
+    PrecedenceStack.push_back(Prec);
+    return PrecedenceStack.back();
 }
 
-void Parser::popContext() {
-    ContextStack.pop_back();
+void Parser::popPrecedence() {
+    assert(!PrecedenceStack.empty());
+    PrecedenceStack.pop_back();
 }
 
-size_t Parser::getContextStackSize() const {
-    return ContextStack.size();
+size_t Parser::getPrecedenceStackSize() const {
+    return PrecedenceStack.size();
 }
 
-void Parser::clearContextStack() {
-    while (!ContextStack.empty()) {
-        ContextStack.pop_back();
+void Parser::clearPrecedenceStack() {
+    while (!PrecedenceStack.empty()) {
+        PrecedenceStack.pop_back();
     }
 }
 
 bool Parser::checkPatternPrecedence() const {
     
-    for (auto rit = ContextStack.rbegin(); rit != ContextStack.rend(); rit++) {
+    for (auto rit = PrecedenceStack.rbegin(); rit != PrecedenceStack.rend(); rit++) {
         
-        auto Ctxt = *rit;
+        auto Prec = *rit;
         
-        if (Ctxt.Prec == PRECEDENCE_FAKE_PATTERNCOLON) {
+        if (Prec == PRECEDENCE_FAKE_PATTERNCOLON) {
             return true;
         }
         
         //
         // reset by a group
         //
-        if (Ctxt.Prec == PRECEDENCE_LOWEST) {
+        if (Prec == PRECEDENCE_LOWEST) {
             return false;
         }
     }

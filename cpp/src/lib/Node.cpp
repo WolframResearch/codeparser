@@ -190,6 +190,53 @@ ColonLHS NodeSeq::checkColonLHS() const {
     return COLONLHS_ERROR;
 }
 
+bool NodeSeq::checkTilde() const {
+    
+    //
+    // work backwards, looking for ~
+    //
+    
+    //
+    // skip any trivia
+    //
+    auto rit = vec.rbegin();
+    for (; rit != vec.rend(); rit++) {
+        
+        auto& N = *rit;
+        
+        if (auto L = dynamic_cast<LeafNode *>(N.get())) {
+            
+            auto Tok = L->getToken();
+            
+            if (Tok.Tok.isTrivia()) {
+                continue;
+            }
+            
+            break;
+        }
+        
+        break;
+    }
+    
+    if (rit == vec.rend()) {
+        assert(false);
+        return COLONLHS_NONE;
+    }
+    
+    auto& N = *rit;
+    
+    if (auto L = dynamic_cast<LeafNode *>(N.get())) {
+        
+        auto Tok = L->getToken();
+        
+        if (Tok.Tok == TOKEN_TILDE) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
 
 void TriviaSeq::reset() {
     
