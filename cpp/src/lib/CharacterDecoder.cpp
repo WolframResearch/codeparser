@@ -1749,11 +1749,11 @@ std::string CharacterDecoder::longNameSuggestion(std::string input) {
     
     MLINK link = TheParserSession->libData->getMathLink(TheParserSession->libData);
     
-    if (!MLPutFunction(link, SYMBOL_EVALUATEPACKET->name(), 1)) {
+    if (!MLPutFunction(link, SYMBOL_EVALUATEPACKET.name(), 1)) {
         assert(false);
     }
     
-    if (!MLPutFunction(link, SYMBOL_CODEPARSER_LIBRARY_LONGNAMESUGGESTION->name(), 1)) {
+    if (!MLPutFunction(link, SYMBOL_CODEPARSER_LIBRARY_LONGNAMESUGGESTION.name(), 1)) {
         assert(false);
     }
     

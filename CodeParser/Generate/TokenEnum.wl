@@ -382,12 +382,10 @@ tokenCPPHeader = {
 
 #pragma once
 
+#include \"Symbol.h\"
+
 #include <cstdint> // for uint16_t
 #include <memory>
-
-class Symbol;
-
-using SymbolPtr = std::unique_ptr<Symbol>;
 
 
 //
@@ -525,7 +523,7 @@ bool operator!=(TokenEnum a, TokenEnum b);
 Closer GroupOpenerToCloser(TokenEnum T);
 Closer TokenToCloser(TokenEnum T);
 
-const SymbolPtr& TokenToSymbol(TokenEnum T);
+const Symbol& TokenToSymbol(TokenEnum T);
 
 //
 // All token enums
@@ -587,7 +585,7 @@ static_assert(TOKEN_ERROR_FIRST.value() == 0x10, \"Check your assumptions\");
 static_assert(TOKEN_ERROR_UNTERMINATEDCOMMENT.value() == 0x1c, \"Check your assumptions\");
 static_assert(TOKEN_ERROR_UNSUPPORTEDTOKEN.value() == 0x20, \"Check your assumptions\");
 "} ~Join~
-{"const SymbolPtr& TokenToSymbol(TokenEnum T) {"} ~Join~
+{"const Symbol& TokenToSymbol(TokenEnum T) {"} ~Join~
 {"switch (T.value()) {"} ~Join~
 tokenToSymbolCases ~Join~
 {"default:"} ~Join~

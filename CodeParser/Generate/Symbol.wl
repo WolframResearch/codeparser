@@ -166,19 +166,26 @@ symbolCPPHeader = {
 using expr = void *;
 #endif // USE_EXPR_LIB
 
-using Buffer = const unsigned char *;
-
 
 //
 // A kernel symbol
 //
 class Symbol {
 
-  const char *Name;
+  char const *Name;
+  const int Id;
 
 public:
-  constexpr Symbol(const char *Name) : Name(Name) {}
-  const char *name() const;
+
+  constexpr Symbol(char const *Name, int Id) : Name(Name), Id(Id) {}
+  
+  constexpr char const *name() const {
+    return Name;
+  }
+
+  constexpr int getId() const {
+    return Id;
+  }
 
   void print(std::ostream& s) const;
 
@@ -187,17 +194,26 @@ public:
 #endif // USE_MATHLINK
 
 #if USE_EXPR_LIB
-expr toExpr() const;
+  expr toExpr() const;
 #endif // USE_EXPR_LIB
 };
 
-using SymbolPtr = std::unique_ptr<Symbol>;
+bool operator==(Symbol a, Symbol b);
+
+bool operator!=(Symbol a, Symbol b);
 
 
 //
 // All symbols that are used by CodeParser
 //"} ~Join~
-(Row[{"extern", " ", "SymbolPtr", " ", toGlobal["Symbol`"<>ToString[#]], ";"}]& /@ symbols) ~Join~
+MapIndexed[
+If[#1 === String && $WorkaroundBug321344,
+  (*
+  handle String specially because of bug 321344
+  *)
+  Row[{"constexpr Symbol", " ", "SYMBOL_STRING", "(", "\"String\"", ",", " ", ToString[#2[[1]]-1], ")", ";"}]
+  ,
+  Row[{"constexpr Symbol", " ", toGlobal["Symbol`"<>ToString[#1]], "(", "\"", stringifyForTransmitting[#1], "\"", ",", " ", ToString[#2[[1]]-1], ")", ";"}]]&, symbols] ~Join~
 {""};
 
 Print["exporting Symbol.h"];
@@ -226,8 +242,12 @@ symbolCPPSource = {
 
 #include <cassert>
 
-const char *Symbol::name() const {
-   return Name;
+bool operator==(Symbol a, Symbol b) {
+  return a.getId() == b.getId();
+}
+
+bool operator!=(Symbol a, Symbol b) {
+  return a.getId() != b.getId();
 }
 
 void Symbol::print(std::ostream& s) const {
@@ -249,14 +269,6 @@ expr Symbol::toExpr() const {
 #endif // USE_EXPR_LIB
 
 "} ~Join~
-
-(If[# === String && $WorkaroundBug321344,
-  (*
-  handle String specially because of bug 321344
-  *)
-  "SymbolPtr SYMBOL_STRING = SymbolPtr(new Symbol(\"String\"));"
-  ,
-  Row[{"SymbolPtr", " ", toGlobal["Symbol`"<>ToString[#]], " = SymbolPtr(new Symbol(\"", stringifyForTransmitting[#], "\"));"}]]& /@ symbols) ~Join~
 
 {""};
 

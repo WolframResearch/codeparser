@@ -79,8 +79,6 @@ stringCPPHeader = {
 using expr = void *;
 #endif // USE_EXPR_LIB
 
-using Buffer = const unsigned char *;
-
 
 //
 //
@@ -88,10 +86,15 @@ using Buffer = const unsigned char *;
 class MyString {
 public:
 
-  const char *Val;
+  char const *Val;
   const size_t Len;
+  const int Id;
 
-  constexpr MyString(const char *Val, size_t Len) : Val(Val), Len(Len) {}
+  constexpr MyString(char const *Val, size_t Len, int Id) : Val(Val), Len(Len), Id(Id) {}
+
+  constexpr int getId() const {
+    return Id;
+  }
 
   void print(std::ostream& s) const;
 
@@ -104,14 +107,16 @@ public:
 #endif // USE_EXPR_LIB
 };
 
-bool operator<(MyString a, MyString b);
+bool operator==(MyString a, MyString b);
 
-using MyStringPtr = std::unique_ptr<MyString>;
+bool operator!=(MyString a, MyString b);
+
+bool operator<(MyString a, MyString b);
 
 //
 // All strings that are used by CodeParser
 //"} ~Join~
-(Row[{"extern", " ", "MyStringPtr", " ", toGlobal["String`"<>#], ";"}]& /@ strings) ~Join~
+MapIndexed[Row[{"constexpr", " ", "MyString", " ", toGlobal["String`"<>#1], "(", "\"", #, "\"", ",", " ", StringLength[#], ",", " ", ToString[#2[[1]]-1], ")", ";"}]&, strings] ~Join~
 {""};
 
 Print["exporting MyString.h"];
@@ -138,6 +143,17 @@ stringCPPSource = {
 
 #include <cassert>
 
+using Buffer = const unsigned char *;
+
+
+bool operator==(MyString a, MyString b) {
+  return a.getId() == b.getId();
+}
+
+bool operator!=(MyString a, MyString b) {
+  return a.getId() != b.getId();
+}
+
 bool operator<(MyString a, MyString b) {
   return a.Val < b.Val;
 }
@@ -160,8 +176,6 @@ expr MyString::toExpr() const {
 }
 #endif // USE_EXPR_LIB
 "} ~Join~
-
-(Row[{"MyStringPtr", " ", toGlobal["String`"<>#], " = MyStringPtr(new MyString(\"", #, "\", ", StringLength[#], "));"}]& /@ strings) ~Join~
 
 {""};
 

@@ -126,10 +126,10 @@ void Token::print(std::ostream& s) const {
     
     auto& Sym = TokenToSymbol(Tok);
     
-    SYMBOL_CODEPARSER_LEAFNODE->print(s);
+    SYMBOL_CODEPARSER_LEAFNODE.print(s);
     s << "[";
     
-    s << Sym->name();
+    s << Sym.name();
     s << ", ";
     
     BufLen.print(s);

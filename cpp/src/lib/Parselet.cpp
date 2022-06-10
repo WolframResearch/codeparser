@@ -340,7 +340,7 @@ void SymbolParselet_parsePrefixContextSensitive(ParseletPtr P, Token TokIn) {
 }
 
 
-const SymbolPtr& InfixParselet::getOp() const {
+const Symbol& InfixParselet::getOp() const {
     return SYMBOL_CODEPARSER_INTERNALINVALID;
 }
 
@@ -649,7 +649,7 @@ void PostfixOperatorParselet_parseInfix(ParseletPtr P, Token TokIn) {
 }
 
 
-GroupParselet::GroupParselet(TokenEnum Opener, const SymbolPtr& Op) : Op(Op), Closr(GroupOpenerToCloser(Opener)) {}
+GroupParselet::GroupParselet(TokenEnum Opener, const Symbol& Op) : Op(Op), Closr(GroupOpenerToCloser(Opener)) {}
 
 ParseFunction GroupParselet::parsePrefix() const {
     return GroupParselet_parsePrefix;
@@ -1737,7 +1737,7 @@ void CommaParselet_parseLoop(ParseletPtr P, Token Ignored) {
     return CommaParselet_parse1(P, Ignored);
 }
 
-const SymbolPtr& CommaParselet::getOp() const {
+const Symbol& CommaParselet::getOp() const {
     return SYMBOL_CODEPARSER_COMMA;
 }
 

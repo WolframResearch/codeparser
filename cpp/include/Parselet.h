@@ -55,7 +55,7 @@ public:
     
     virtual Precedence getPrecedence() const = 0;
     
-    virtual const SymbolPtr& getOp() const;
+    virtual const Symbol& getOp() const;
     
     virtual Token processImplicitTimes(Token TokIn) const {
         return TokIn;
@@ -193,11 +193,11 @@ class PrefixOperatorParselet : public PrefixParselet {
 private:
     
     const Precedence precedence;
-    const SymbolPtr& Op;
+    const Symbol& Op;
     
 public:
     
-    PrefixOperatorParselet(TokenEnum Tok, Precedence precedence, const SymbolPtr& Op) : precedence(precedence), Op(Op) {}
+    PrefixOperatorParselet(TokenEnum Tok, Precedence precedence, const Symbol& Op) : precedence(precedence), Op(Op) {}
     
     ParseFunction parsePrefix() const override;
     
@@ -205,7 +205,7 @@ public:
         return precedence;
     }
     
-    const SymbolPtr& getOp() const {
+    const Symbol& getOp() const {
         return Op;
     }
 };
@@ -283,11 +283,11 @@ class BinaryOperatorParselet : public InfixParselet {
 private:
     
     const Precedence precedence;
-    const SymbolPtr& Op;
+    const Symbol& Op;
     
 public:
     
-    BinaryOperatorParselet(TokenEnum Tok, Precedence precedence, const SymbolPtr& Op) : precedence(precedence), Op(Op) {}
+    BinaryOperatorParselet(TokenEnum Tok, Precedence precedence, const Symbol& Op) : precedence(precedence), Op(Op) {}
     
     ParseFunction parseInfix() const override;
     
@@ -295,7 +295,7 @@ public:
         return precedence;
     }
     
-    const SymbolPtr& getOp() const override {
+    const Symbol& getOp() const override {
         return Op;
     }
 };
@@ -312,11 +312,11 @@ class InfixOperatorParselet : public InfixParselet {
 private:
     
     const Precedence precedence;
-    const SymbolPtr& Op;
+    const Symbol& Op;
     
 public:
     
-    InfixOperatorParselet(TokenEnum Tok, Precedence precedence, const SymbolPtr& Op) : precedence(precedence), Op(Op) {}
+    InfixOperatorParselet(TokenEnum Tok, Precedence precedence, const Symbol& Op) : precedence(precedence), Op(Op) {}
     
     ParseFunction parseInfix() const override;
     
@@ -324,7 +324,7 @@ public:
         return precedence;
     }
     
-    const SymbolPtr& getOp() const override {
+    const Symbol& getOp() const override {
         return Op;
     }
 };
@@ -341,11 +341,11 @@ class PostfixOperatorParselet : public InfixParselet {
 private:
     
     const Precedence precedence;
-    const SymbolPtr& Op;
+    const Symbol& Op;
     
 public:
     
-    PostfixOperatorParselet(TokenEnum Tok, Precedence precedence, const SymbolPtr& Op) : precedence(precedence), Op(Op) {}
+    PostfixOperatorParselet(TokenEnum Tok, Precedence precedence, const Symbol& Op) : precedence(precedence), Op(Op) {}
     
     ParseFunction parseInfix() const override;
     
@@ -353,7 +353,7 @@ public:
         return precedence;
     }
     
-    const SymbolPtr& getOp() const override {
+    const Symbol& getOp() const override {
         return Op;
     }
 };
@@ -369,14 +369,14 @@ void PostfixOperatorParselet_parseInfix(ParseletPtr P, Token firstTok);
 class GroupParselet : public PrefixParselet {
 private:
     
-    const SymbolPtr& Op;
+    const Symbol& Op;
     const Closer Closr;
     
 public:
     
-    GroupParselet(TokenEnum Opener, const SymbolPtr& Op);
+    GroupParselet(TokenEnum Opener, const Symbol& Op);
     
-    const SymbolPtr& getOp() const {
+    const Symbol& getOp() const {
         return Op;
     }
     
@@ -423,7 +423,7 @@ public:
         return PRECEDENCE_COMMA;
     }
     
-    const SymbolPtr& getOp() const override;
+    const Symbol& getOp() const override;
 };
 
 void CommaParselet_parse1(ParseletPtr P, Token Ignored);
@@ -740,18 +740,18 @@ void PercentPercentParselet_parsePrefix(ParseletPtr P, Token firstTok);
 class UnderParselet : public PrefixParselet {
 private:
     
-    const SymbolPtr& BOp;
-    const SymbolPtr& PBOp;
+    const Symbol& BOp;
+    const Symbol& PBOp;
     
 public:
     
-    UnderParselet(const SymbolPtr& BOp, const SymbolPtr& PBOp) : BOp(BOp), PBOp(PBOp) {}
+    UnderParselet(const Symbol& BOp, const Symbol& PBOp) : BOp(BOp), PBOp(PBOp) {}
     
-    const SymbolPtr& getBOp() const {
+    const Symbol& getBOp() const {
         return BOp;
     }
     
-    const SymbolPtr& getPBOp() const {
+    const Symbol& getPBOp() const {
         return PBOp;
     }
     

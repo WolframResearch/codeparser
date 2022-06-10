@@ -31,8 +31,6 @@ using CodeActionPtr = std::unique_ptr<CodeAction>;
 using IssuePtrSet = std::set<IssuePtr, IssuePtrCompare>;
 using CodeActionPtrVector = std::vector<CodeActionPtr>;
 using AdditionalDescriptionVector = std::vector<std::string>;
-using SymbolPtr = std::unique_ptr<Symbol>;
-using MyStringPtr = std::unique_ptr<MyString>;
 
 #if USE_EXPR_LIB
 using expr = void *;
@@ -371,16 +369,16 @@ public:
 class Issue {
 public:
     
-    const SymbolPtr& MakeSym;
-    const MyStringPtr& Tag;
+    const Symbol& MakeSym;
+    const MyString& Tag;
     const std::string Msg;
-    const MyStringPtr& Sev;
+    const MyString& Sev;
     const Source Src;
     const double Val;
     const CodeActionPtrVector Actions;
     const AdditionalDescriptionVector AdditionalDescriptions;
     
-    Issue(const SymbolPtr& MakeSym, const MyStringPtr& Tag, std::string Msg, const MyStringPtr& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
+    Issue(const Symbol& MakeSym, const MyString& Tag, std::string Msg, const MyString& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
     
 #if USE_MATHLINK
     void put(MLINK mlp) const;
@@ -494,7 +492,7 @@ public:
 class SyntaxIssue : public Issue {
 public:
     
-    SyntaxIssue(const MyStringPtr& Tag, std::string Msg, const MyStringPtr& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
+    SyntaxIssue(const MyString& Tag, std::string Msg, const MyString& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
 };
 
 //
@@ -503,7 +501,7 @@ public:
 class FormatIssue : public Issue {
 public:
     
-    FormatIssue(const MyStringPtr& Tag, std::string Msg, const MyStringPtr& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
+    FormatIssue(const MyString& Tag, std::string Msg, const MyString& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
 };
 
 //
@@ -512,5 +510,5 @@ public:
 class EncodingIssue : public Issue {
 public:
     
-    EncodingIssue(const MyStringPtr& Tag, std::string Msg, const MyStringPtr& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
+    EncodingIssue(const MyString& Tag, std::string Msg, const MyString& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
 };

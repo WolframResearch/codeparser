@@ -34,7 +34,7 @@ NodeContainer::NodeContainer(std::vector<NodePtr> N) : N(std::move(N)) {}
 
 void NodeContainer::print(std::ostream& s) const {
     
-    SYMBOL_LIST->print(s);
+    SYMBOL_LIST.print(s);
     s << "[";
     
     for (auto& NN : N) {
@@ -701,7 +701,7 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK m
     
     int mlLen;
         
-    if (!MLTestHead(mlp, SYMBOL_LIST->name(), &mlLen)) {
+    if (!MLTestHead(mlp, SYMBOL_LIST.name(), &mlLen)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -711,7 +711,7 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK m
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (!MLTestHead(mlp, SYMBOL_BYTEARRAY->name(), &mlLen)) {
+    if (!MLTestHead(mlp, SYMBOL_BYTEARRAY.name(), &mlLen)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -812,7 +812,7 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     int mlLen;
         
-    if (!MLTestHead(mlp, SYMBOL_LIST->name(), &mlLen)) {
+    if (!MLTestHead(mlp, SYMBOL_LIST.name(), &mlLen)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -822,7 +822,7 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (!MLTestHead(mlp, SYMBOL_BYTEARRAY->name(), &mlLen)) {
+    if (!MLTestHead(mlp, SYMBOL_BYTEARRAY.name(), &mlLen)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -926,7 +926,7 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     std::string unescaped;
     
-    if (!MLTestHead(mlp, SYMBOL_LIST->name(), &mlLen))  {
+    if (!MLTestHead(mlp, SYMBOL_LIST.name(), &mlLen))  {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -1030,7 +1030,7 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     int mlLen;
     
-    if (!MLTestHead(mlp, SYMBOL_LIST->name(), &mlLen)) {
+    if (!MLTestHead(mlp, SYMBOL_LIST.name(), &mlLen)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -1040,7 +1040,7 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
-    if (!MLTestHead(mlp, SYMBOL_BYTEARRAY->name(), &mlLen)) {
+    if (!MLTestHead(mlp, SYMBOL_BYTEARRAY.name(), &mlLen)) {
         return LIBRARY_FUNCTION_ERROR;
     }
     
@@ -1253,7 +1253,7 @@ MLINK ScopedMLLoopbackLink::get() {
 #if USE_MATHLINK
 void NodeContainer::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(N.size()))) {
+    if (!MLPutFunction(mlp, SYMBOL_LIST.name(), static_cast<int>(N.size()))) {
         assert(false);
     }
     
@@ -1277,7 +1277,7 @@ void NodeContainer::put(MLINK mlp) const {
 #if USE_EXPR_LIB
 expr NodeContainer::toExpr() const {
     
-    auto head = SYMBOL_LIST->toExpr();
+    auto head = SYMBOL_LIST.toExpr();
         
     auto e = Expr_BuildExprA(head, static_cast<int>(N.size()));
     

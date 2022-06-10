@@ -73,7 +73,7 @@ const Node *NodeSeq::last() const {
 
 void NodeSeq::print(std::ostream& s) const {
     
-    SYMBOL_LIST->print(s);
+    SYMBOL_LIST.print(s);
     s << "[";
     
     for (auto& C : vec) {
@@ -141,26 +141,15 @@ ColonLHS NodeSeq::checkColonLHS() const {
         
         auto& Op = C->getOp();
         
-        //
-        // FIXME: convert to switch statement when possible
-        //
-        if (Op == SYMBOL_CODEPARSER_PATTERNBLANK) {
-            return COLONLHS_OPTIONAL;
-        }
-        if (Op == SYMBOL_CODEPARSER_PATTERNBLANKSEQUENCE) {
-            return COLONLHS_OPTIONAL;
-        }
-        if (Op == SYMBOL_CODEPARSER_PATTERNBLANKNULLSEQUENCE) {
-            return COLONLHS_OPTIONAL;
-        }
-        if (Op == SYMBOL_BLANK) {
-            return COLONLHS_OPTIONAL;
-        }
-        if (Op == SYMBOL_BLANKSEQUENCE) {
-            return COLONLHS_OPTIONAL;
-        }
-        if (Op == SYMBOL_BLANKNULLSEQUENCE) {
-            return COLONLHS_OPTIONAL;
+        switch (Op.getId()) {
+            case SYMBOL_CODEPARSER_PATTERNBLANK.getId():
+            case SYMBOL_CODEPARSER_PATTERNBLANKSEQUENCE.getId():
+            case SYMBOL_CODEPARSER_PATTERNBLANKNULLSEQUENCE.getId():
+            case SYMBOL_BLANK.getId():
+            case SYMBOL_BLANKSEQUENCE.getId():
+            case SYMBOL_BLANKNULLSEQUENCE.getId(): {
+                return COLONLHS_OPTIONAL;
+            }
         }
         
         return COLONLHS_ERROR;
@@ -294,10 +283,10 @@ bool Node::check() const {
 
 void OperatorNode::print(std::ostream& s) const {
     
-    MakeSym->print(s);
+    MakeSym.print(s);
     s << "[";
     
-    Op->print(s);
+    Op.print(s);
     s << ", ";
     
     Children.print(s);
@@ -313,10 +302,10 @@ void LeafNode::print(std::ostream& s) const {
     
     auto& Sym = TokenToSymbol(Tok.Tok);
     
-    SYMBOL_CODEPARSER_LEAFNODE->print(s);
+    SYMBOL_CODEPARSER_LEAFNODE.print(s);
     s << "[";
     
-    s << Sym->name();
+    s << Sym.name();
     s << ", ";
     
     Tok.BufLen.print(s);
@@ -344,10 +333,10 @@ void ErrorNode::print(std::ostream& s) const {
     
     auto& Sym = TokenToSymbol(Tok.Tok);
     
-    SYMBOL_CODEPARSER_ERRORNODE->print(s);
+    SYMBOL_CODEPARSER_ERRORNODE.print(s);
     s << "[";
     
-    s << Sym->name();
+    s << Sym.name();
     s << ", ";
     
     Tok.BufLen.print(s);
@@ -363,10 +352,10 @@ void UnterminatedTokenErrorNeedsReparseNode::print(std::ostream& s) const {
     
     auto& Sym = TokenToSymbol(Tok.Tok);
     
-    SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE->print(s);
+    SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE.print(s);
     s << "[";
     
-    s << Sym->name();
+    s << Sym.name();
     s << ", ";
     
     Tok.BufLen.print(s);
@@ -378,30 +367,30 @@ void UnterminatedTokenErrorNeedsReparseNode::print(std::ostream& s) const {
 }
 
 
-PrefixNode::PrefixNode(const SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_PREFIXNODE, std::move(Args)) {}
+PrefixNode::PrefixNode(const Symbol& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_PREFIXNODE, std::move(Args)) {}
 
-BinaryNode::BinaryNode(const SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_BINARYNODE, std::move(Args)) {}
+BinaryNode::BinaryNode(const Symbol& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_BINARYNODE, std::move(Args)) {}
 
-InfixNode::InfixNode(const SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_INFIXNODE, std::move(Args)) {}
+InfixNode::InfixNode(const Symbol& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_INFIXNODE, std::move(Args)) {}
 
-TernaryNode::TernaryNode(const SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_TERNARYNODE, std::move(Args)) {}
+TernaryNode::TernaryNode(const Symbol& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_TERNARYNODE, std::move(Args)) {}
 
-PostfixNode::PostfixNode(const SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_POSTFIXNODE, std::move(Args)) {}
+PostfixNode::PostfixNode(const Symbol& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_POSTFIXNODE, std::move(Args)) {}
 
-PrefixBinaryNode::PrefixBinaryNode(const SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_PREFIXBINARYNODE, std::move(Args)) {}
+PrefixBinaryNode::PrefixBinaryNode(const Symbol& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_PREFIXBINARYNODE, std::move(Args)) {}
 
-GroupNode::GroupNode(const SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_GROUPNODE, std::move(Args)) {}
+GroupNode::GroupNode(const Symbol& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_GROUPNODE, std::move(Args)) {}
 
-CompoundNode::CompoundNode(const SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_COMPOUNDNODE, std::move(Args)) {}
+CompoundNode::CompoundNode(const Symbol& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_COMPOUNDNODE, std::move(Args)) {}
 
-GroupMissingCloserNode::GroupMissingCloserNode(const SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE, std::move(Args)) {}
+GroupMissingCloserNode::GroupMissingCloserNode(const Symbol& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE, std::move(Args)) {}
 
-UnterminatedGroupNeedsReparseNode::UnterminatedGroupNeedsReparseNode(const SymbolPtr& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_UNTERMINATEDGROUPNEEDSREPARSENODE, std::move(Args)) {}
+UnterminatedGroupNeedsReparseNode::UnterminatedGroupNeedsReparseNode(const Symbol& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_UNTERMINATEDGROUPNEEDSREPARSENODE, std::move(Args)) {}
 
 
 void CallNode::print(std::ostream& s) const {
     
-    SYMBOL_CODEPARSER_CALLNODE->print(s);
+    SYMBOL_CODEPARSER_CALLNODE.print(s);
     s << "[";
     
     Head.print(s);
@@ -433,10 +422,10 @@ bool CallNode::check() const {
 
 void SyntaxErrorNode::print(std::ostream& s) const {
     
-    SYMBOL_CODEPARSER_SYNTAXERRORNODE->print(s);
+    SYMBOL_CODEPARSER_SYNTAXERRORNODE.print(s);
     s << "[";
     
-    s << Err->name();
+    s << Err.name();
     s << ", ";
         
     Children.print(s);
@@ -450,7 +439,7 @@ void SyntaxErrorNode::print(std::ostream& s) const {
 
 void CollectedExpressionsNode::print(std::ostream& s) const {
     
-    SYMBOL_LIST->print(s);
+    SYMBOL_LIST.print(s);
     s << "[";
     
     for (auto& E : Exprs) {
@@ -471,7 +460,7 @@ bool CollectedExpressionsNode::check() const {
 
 void CollectedIssuesNode::print(std::ostream& s) const {
     
-    SYMBOL_LIST->print(s);
+    SYMBOL_LIST.print(s);
     s << "[";
     
     for (auto& I : Issues) {
@@ -492,7 +481,7 @@ bool CollectedIssuesNode::check() const {
 
 void CollectedSourceLocationsNode::print(std::ostream& s) const {
     
-    SYMBOL_LIST->print(s);
+    SYMBOL_LIST.print(s);
     s << "[";
     
     for (auto& L : SourceLocs) {
@@ -504,7 +493,7 @@ void CollectedSourceLocationsNode::print(std::ostream& s) const {
 }
 
 
-const MyStringPtr& unsafeCharacterEncodingReason(UnsafeCharacterEncodingFlag flag) {
+const MyString& unsafeCharacterEncodingReason(UnsafeCharacterEncodingFlag flag) {
     
     switch (flag) {
         case UNSAFECHARACTERENCODING_INCOMPLETEUTF8SEQUENCE: {
@@ -527,10 +516,10 @@ void MissingBecauseUnsafeCharacterEncodingNode::print(std::ostream& s) const {
     
     auto& reason = unsafeCharacterEncodingReason(flag);
     
-    SYMBOL_MISSING->print(s);
+    SYMBOL_MISSING.print(s);
     s << "[";
     
-    reason->print(s);
+    reason.print(s);
     
     s << "]";
 }
@@ -545,7 +534,7 @@ void SafeStringNode::print(std::ostream& s) const {
 #if USE_MATHLINK
 void NodeSeq::put(MLINK mlp) const {
 
-    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(vec.size()))) {
+    if (!MLPutFunction(mlp, SYMBOL_LIST.name(), static_cast<int>(vec.size()))) {
         assert(false);
     }
     
@@ -569,15 +558,15 @@ void NodeSeq::put(MLINK mlp) const {
 #if USE_MATHLINK
 void OperatorNode::put(MLINK mlp) const {
 
-    if (!MLPutFunction(mlp, MakeSym->name(), 3)) {
+    if (!MLPutFunction(mlp, MakeSym.name(), 3)) {
         assert(false);
     }
     
-    Op->put(mlp);
+    Op.put(mlp);
     
     Children.put(mlp);
     
-    if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1)) {
+    if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1)) {
         assert(false);
     }
     
@@ -589,17 +578,17 @@ void OperatorNode::put(MLINK mlp) const {
 #if USE_MATHLINK
 void LeafNode::put(MLINK mlp) const {
 
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LEAFNODE->name(), 3)) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_LEAFNODE.name(), 3)) {
         assert(false);
     }
 
     auto& Sym = TokenToSymbol(Tok.Tok);
 
-    Sym->put(mlp);
+    Sym.put(mlp);
 
     Tok.BufLen.put(mlp);
     
-    if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1)) {
+    if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1)) {
         assert(false);
     }
     
@@ -611,17 +600,17 @@ void LeafNode::put(MLINK mlp) const {
 #if USE_MATHLINK
 void ErrorNode::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_ERRORNODE->name(), 3)) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_ERRORNODE.name(), 3)) {
         assert(false);
     }
     
     auto& Sym = TokenToSymbol(Tok.Tok);
     
-    Sym->put(mlp);
+    Sym.put(mlp);
     
     Tok.BufLen.put(mlp);
     
-    if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1)) {
+    if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1)) {
         assert(false);
     }
     
@@ -633,17 +622,17 @@ void ErrorNode::put(MLINK mlp) const {
 #if USE_MATHLINK
 void UnterminatedTokenErrorNeedsReparseNode::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE->name(), 3)) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE.name(), 3)) {
         assert(false);
     }
     
     auto& Sym = TokenToSymbol(Tok.Tok);
     
-    Sym->put(mlp);
+    Sym.put(mlp);
     
     Tok.BufLen.put(mlp);
     
-    if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1)) {
+    if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1)) {
         assert(false);
     }
     
@@ -655,7 +644,7 @@ void UnterminatedTokenErrorNeedsReparseNode::put(MLINK mlp) const {
 #if USE_MATHLINK
 void CallNode::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_CALLNODE->name(), 3)) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_CALLNODE.name(), 3)) {
         assert(false);
     }
         
@@ -663,7 +652,7 @@ void CallNode::put(MLINK mlp) const {
     
     Children.put(mlp);
     
-    if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1)) {
+    if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1)) {
         assert(false);
     }
     
@@ -675,15 +664,15 @@ void CallNode::put(MLINK mlp) const {
 #if USE_MATHLINK
 void SyntaxErrorNode::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_SYNTAXERRORNODE->name(), 3)) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_SYNTAXERRORNODE.name(), 3)) {
         assert(false);
     }
     
-    Err->put(mlp);
+    Err.put(mlp);
     
     Children.put(mlp);
     
-    if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1)) {
+    if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1)) {
         assert(false);
     }
     
@@ -695,7 +684,7 @@ void SyntaxErrorNode::put(MLINK mlp) const {
 #if USE_MATHLINK
 void CollectedExpressionsNode::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(Exprs.size()))) {
+    if (!MLPutFunction(mlp, SYMBOL_LIST.name(), static_cast<int>(Exprs.size()))) {
         assert(false);
     }
     
@@ -721,7 +710,7 @@ void CollectedExpressionsNode::put(MLINK mlp) const {
 #if USE_MATHLINK
 void CollectedIssuesNode::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(Issues.size()))) {
+    if (!MLPutFunction(mlp, SYMBOL_LIST.name(), static_cast<int>(Issues.size()))) {
         assert(false);
     }
     
@@ -747,7 +736,7 @@ void CollectedIssuesNode::put(MLINK mlp) const {
 #if USE_MATHLINK
 void CollectedSourceLocationsNode::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(SourceLocs.size()))) {
+    if (!MLPutFunction(mlp, SYMBOL_LIST.name(), static_cast<int>(SourceLocs.size()))) {
         assert(false);
     }
     
@@ -773,13 +762,13 @@ void CollectedSourceLocationsNode::put(MLINK mlp) const {
 #if USE_MATHLINK
 void MissingBecauseUnsafeCharacterEncodingNode::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_MISSING->name(), 1)) {
+    if (!MLPutFunction(mlp, SYMBOL_MISSING.name(), 1)) {
         assert(false);
     }
     
     auto& reason = unsafeCharacterEncodingReason(flag);
     
-    reason->put(mlp);
+    reason.put(mlp);
 }
 #endif // USE_MATHLINK
 
@@ -795,7 +784,7 @@ void SafeStringNode::put(MLINK mlp) const {
 #if USE_EXPR_LIB
 expr NodeSeq::toExpr() const {
     
-    auto head = SYMBOL_LIST->toExpr();
+    auto head = SYMBOL_LIST.toExpr();
     
     auto e = Expr_BuildExprA(head, static_cast<int>(vec.size()));
     
@@ -821,18 +810,18 @@ expr NodeSeq::toExpr() const {
 #if USE_EXPR_LIB
 expr OperatorNode::toExpr() const {
     
-    auto head = MakeSym->toExpr();
+    auto head = MakeSym.toExpr();
         
     auto e = Expr_BuildExprA(head, 3);
     
-    auto OpExpr = Op->toExpr();
+    auto OpExpr = Op.toExpr();
     Expr_InsertA(e, 0 + 1, OpExpr);
         
     auto ChildrenExpr = Children.toExpr();
     Expr_InsertA(e, 1 + 1, ChildrenExpr);
     
     {
-        auto head = SYMBOL_ASSOCIATION->toExpr();
+        auto head = SYMBOL_ASSOCIATION.toExpr();
         
         auto DataExpr = Expr_BuildExprA(head, 1);
         
@@ -849,20 +838,20 @@ expr OperatorNode::toExpr() const {
 #if USE_EXPR_LIB
 expr LeafNode::toExpr() const {
     
-    auto head = SYMBOL_CODEPARSER_LEAFNODE->toExpr();
+    auto head = SYMBOL_CODEPARSER_LEAFNODE.toExpr();
     
     auto e = Expr_BuildExprA(head, 3);
     
     auto& Sym = TokenToSymbol(Tok.Tok);
     
-    auto SymExpr = Sym->toExpr();
+    auto SymExpr = Sym.toExpr();
     Expr_InsertA(e, 0 + 1, SymExpr);
     
     auto TokBufLenExpr = Tok.BufLen.toExpr();
     Expr_InsertA(e, 1 + 1, TokBufLenExpr);
     
     {
-        auto head = SYMBOL_ASSOCIATION->toExpr();
+        auto head = SYMBOL_ASSOCIATION.toExpr();
         
         auto DataExpr = Expr_BuildExprA(head, 1);
         
@@ -880,20 +869,20 @@ expr LeafNode::toExpr() const {
 #if USE_EXPR_LIB
 expr ErrorNode::toExpr() const {
     
-    auto head = SYMBOL_CODEPARSER_ERRORNODE->toExpr();
+    auto head = SYMBOL_CODEPARSER_ERRORNODE.toExpr();
     
     auto e = Expr_BuildExprA(head, 3);
     
     auto& Sym = TokenToSymbol(Tok.Tok);
     
-    auto SymExpr = Sym->toExpr();
+    auto SymExpr = Sym.toExpr();
     Expr_InsertA(e, 0 + 1, SymExpr);
     
     auto TokBufLenExpr = Tok.BufLen.toExpr();
     Expr_InsertA(e, 1 + 1, TokBufLenExpr);
     
     {
-        auto head = SYMBOL_ASSOCIATION->toExpr();
+        auto head = SYMBOL_ASSOCIATION.toExpr();
         
         auto DataExpr = Expr_BuildExprA(head, 1);
         
@@ -911,20 +900,20 @@ expr ErrorNode::toExpr() const {
 #if USE_EXPR_LIB
 expr UnterminatedTokenErrorNeedsReparseNode::toExpr() const {
     
-    auto head = SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE->toExpr();
+    auto head = SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE.toExpr();
     
     auto e = Expr_BuildExprA(head, 3);
     
     auto& Sym = TokenToSymbol(Tok.Tok);
     
-    auto SymExpr = Sym->toExpr();
+    auto SymExpr = Sym.toExpr();
     Expr_InsertA(e, 0 + 1, SymExpr);
     
     auto TokBufLenExpr = Tok.BufLen.toExpr();
     Expr_InsertA(e, 1 + 1, TokBufLenExpr);
     
     {
-        auto head = SYMBOL_ASSOCIATION->toExpr();
+        auto head = SYMBOL_ASSOCIATION.toExpr();
         
         auto DataExpr = Expr_BuildExprA(head, 1);
         
@@ -942,7 +931,7 @@ expr UnterminatedTokenErrorNeedsReparseNode::toExpr() const {
 #if USE_EXPR_LIB
 expr CallNode::toExpr() const {
     
-    auto head = SYMBOL_CODEPARSER_CALLNODE->toExpr();
+    auto head = SYMBOL_CODEPARSER_CALLNODE.toExpr();
     
     auto e = Expr_BuildExprA(head, 3);
     
@@ -953,7 +942,7 @@ expr CallNode::toExpr() const {
     Expr_InsertA(e, 1 + 1, ChildrenExpr);
     
     {
-        auto head = SYMBOL_ASSOCIATION->toExpr();
+        auto head = SYMBOL_ASSOCIATION.toExpr();
         
         auto DataExpr = Expr_BuildExprA(head, 1);
         
@@ -971,18 +960,18 @@ expr CallNode::toExpr() const {
 #if USE_EXPR_LIB
 expr SyntaxErrorNode::toExpr() const {
     
-    auto head = SYMBOL_CODEPARSER_SYNTAXERRORNODE->toExpr();
+    auto head = SYMBOL_CODEPARSER_SYNTAXERRORNODE.toExpr();
     
     auto e = Expr_BuildExprA(head, 3);
     
-    auto SymExpr = Err->toExpr();
+    auto SymExpr = Err.toExpr();
     Expr_InsertA(e, 0 + 1, SymExpr);
     
     auto ChildrenExpr = Children.toExpr();
     Expr_InsertA(e, 1 + 1, ChildrenExpr);
     
     {
-        auto head = SYMBOL_ASSOCIATION->toExpr();
+        auto head = SYMBOL_ASSOCIATION.toExpr();
         
         auto DataExpr = Expr_BuildExprA(head, 1);
         
@@ -1000,7 +989,7 @@ expr SyntaxErrorNode::toExpr() const {
 #if USE_EXPR_LIB
 expr CollectedExpressionsNode::toExpr() const {
     
-    auto head = SYMBOL_LIST->toExpr();
+    auto head = SYMBOL_LIST.toExpr();
     
     auto e = Expr_BuildExprA(head, static_cast<int>(Exprs.size()));
     
@@ -1026,7 +1015,7 @@ expr CollectedExpressionsNode::toExpr() const {
 #if USE_EXPR_LIB
 expr CollectedIssuesNode::toExpr() const {
     
-    auto head = SYMBOL_LIST->toExpr();
+    auto head = SYMBOL_LIST.toExpr();
     
     auto e = Expr_BuildExprA(head, static_cast<int>(Issues.size()));
     
@@ -1053,7 +1042,7 @@ expr CollectedIssuesNode::toExpr() const {
 #if USE_EXPR_LIB
 expr CollectedSourceLocationsNode::toExpr() const {
     
-    auto head = SYMBOL_LIST->toExpr();
+    auto head = SYMBOL_LIST.toExpr();
             
     auto e = Expr_BuildExprA(head, static_cast<int>(SourceLocs.size()));
     
@@ -1080,13 +1069,13 @@ expr CollectedSourceLocationsNode::toExpr() const {
 #if USE_EXPR_LIB
 expr MissingBecauseUnsafeCharacterEncodingNode::toExpr() const {
     
-    auto head = SYMBOL_MISSING->toExpr();
+    auto head = SYMBOL_MISSING.toExpr();
     
     auto e = Expr_BuildExprA(head, 1);
     
     auto& reason = unsafeCharacterEncodingReason(flag);
     
-    auto StrExpr = reason->toExpr();
+    auto StrExpr = reason.toExpr();
     Expr_InsertA(e, 0 + 1, StrExpr);
     
     return e;

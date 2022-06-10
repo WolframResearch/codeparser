@@ -22,7 +22,6 @@ class Symbol;
 
 using NodePtr = std::unique_ptr<Node>;
 using LeafNodePtr = std::unique_ptr<LeafNode>;
-using SymbolPtr = std::unique_ptr<Symbol>;
 
 #if USE_EXPR_LIB
 using expr = void *;
@@ -159,12 +158,12 @@ public:
 class OperatorNode : public Node {
 private:
     
-    const SymbolPtr& Op;
-    const SymbolPtr& MakeSym;
+    const Symbol& Op;
+    const Symbol& MakeSym;
     
 public:
     
-    OperatorNode(const SymbolPtr& Op, SymbolPtr& MakeSym, NodeSeq Args) : Node(std::move(Args)), Op(Op), MakeSym(MakeSym) {}
+    OperatorNode(const Symbol& Op, const Symbol& MakeSym, NodeSeq Args) : Node(std::move(Args)), Op(Op), MakeSym(MakeSym) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
@@ -176,7 +175,7 @@ public:
     expr toExpr() const override;
 #endif // USE_EXPR_LIB
     
-    const SymbolPtr& getOp() const {
+    const Symbol& getOp() const {
         return Op;
     }
 };
@@ -332,7 +331,7 @@ public:
 class PrefixNode : public OperatorNode {
 public:
     
-    PrefixNode(const SymbolPtr& Op, NodeSeq Args);
+    PrefixNode(const Symbol& Op, NodeSeq Args);
 };
 
 //
@@ -343,7 +342,7 @@ public:
 class BinaryNode : public OperatorNode {
 public:
     
-    BinaryNode(const SymbolPtr& Op, NodeSeq Args);
+    BinaryNode(const Symbol& Op, NodeSeq Args);
 };
 
 //
@@ -354,7 +353,7 @@ public:
 class InfixNode : public OperatorNode {
 public:
     
-    InfixNode(const SymbolPtr& Op, NodeSeq Args);
+    InfixNode(const Symbol& Op, NodeSeq Args);
 };
 
 //
@@ -365,7 +364,7 @@ public:
 class TernaryNode : public OperatorNode {
 public:
     
-    TernaryNode(const SymbolPtr& Op, NodeSeq Args);
+    TernaryNode(const Symbol& Op, NodeSeq Args);
 };
 
 //
@@ -376,7 +375,7 @@ public:
 class PostfixNode : public OperatorNode {
 public:
     
-    PostfixNode(const SymbolPtr& Op, NodeSeq Args);
+    PostfixNode(const Symbol& Op, NodeSeq Args);
 };
 
 //
@@ -387,7 +386,7 @@ public:
 class PrefixBinaryNode : public OperatorNode {
 public:
     
-    PrefixBinaryNode(const SymbolPtr& Op, NodeSeq Args);
+    PrefixBinaryNode(const Symbol& Op, NodeSeq Args);
 };
 
 //
@@ -427,7 +426,7 @@ public:
 class GroupNode : public OperatorNode {
 public:
     
-    GroupNode(const SymbolPtr& Op, NodeSeq Args);
+    GroupNode(const Symbol& Op, NodeSeq Args);
 };
 
 //
@@ -444,7 +443,7 @@ public:
 class CompoundNode : public OperatorNode {
 public:
     
-    CompoundNode(const SymbolPtr& Op, NodeSeq Args);
+    CompoundNode(const Symbol& Op, NodeSeq Args);
 };
 
 //
@@ -455,11 +454,11 @@ public:
 class SyntaxErrorNode : public Node {
 private:
     
-    const SymbolPtr& Err;
+    const Symbol& Err;
     
 public:
     
-    SyntaxErrorNode(const SymbolPtr& Err, NodeSeq Args) : Node(std::move(Args)), Err(Err) {}
+    SyntaxErrorNode(const Symbol& Err, NodeSeq Args) : Node(std::move(Args)), Err(Err) {}
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
@@ -484,7 +483,7 @@ public:
 class GroupMissingCloserNode : public OperatorNode {
 public:
     
-    GroupMissingCloserNode(const SymbolPtr& Op, NodeSeq Args);
+    GroupMissingCloserNode(const Symbol& Op, NodeSeq Args);
     
     bool check() const override {
         return false;
@@ -499,7 +498,7 @@ public:
 class UnterminatedGroupNeedsReparseNode : public OperatorNode {
 public:
     
-    UnterminatedGroupNeedsReparseNode(const SymbolPtr& Op, NodeSeq Args);
+    UnterminatedGroupNeedsReparseNode(const Symbol& Op, NodeSeq Args);
     
     bool check() const override {
         return false;

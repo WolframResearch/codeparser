@@ -64,7 +64,7 @@ bool IssuePtrCompare::operator() (const IssuePtr& L, const IssuePtr& R) const {
         return true;
     }
     
-    if (*L->Tag < *R->Tag) {
+    if (L->Tag < R->Tag) {
         return true;
     }
     
@@ -72,20 +72,20 @@ bool IssuePtrCompare::operator() (const IssuePtr& L, const IssuePtr& R) const {
 }
 
 
-Issue::Issue(const SymbolPtr& MakeSym, const MyStringPtr& Tag, std::string Msg, const MyStringPtr& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : MakeSym(MakeSym), Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Val(Val), Actions(std::move(Actions)), AdditionalDescriptions(AdditionalDescriptions) {}
+Issue::Issue(const Symbol& MakeSym, const MyString& Tag, std::string Msg, const MyString& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : MakeSym(MakeSym), Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Val(Val), Actions(std::move(Actions)), AdditionalDescriptions(AdditionalDescriptions) {}
 
 void Issue::print(std::ostream& s) const {
     
-    MakeSym->print(s);
+    MakeSym.print(s);
     s << "[";
     
-    Tag->print(s);
+    Tag.print(s);
     s << ", ";
     
     s << Msg;
     s << ", ";
     
-    Sev->print(s);
+    Sev.print(s);
     s << ", ";
     
     Src.print(s);
@@ -112,11 +112,11 @@ bool Issue::check() const {
 }
 
 
-SyntaxIssue::SyntaxIssue(const MyStringPtr& Tag, std::string Msg, const MyStringPtr& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Issue(SYMBOL_CODEPARSER_SYNTAXISSUE, Tag, Msg, Sev, Src, Val, std::move(Actions), std::move(AdditionalDescriptions)) {}
+SyntaxIssue::SyntaxIssue(const MyString& Tag, std::string Msg, const MyString& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Issue(SYMBOL_CODEPARSER_SYNTAXISSUE, Tag, Msg, Sev, Src, Val, std::move(Actions), std::move(AdditionalDescriptions)) {}
 
-FormatIssue::FormatIssue(const MyStringPtr& Tag, std::string Msg, const MyStringPtr& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Issue(SYMBOL_CODEPARSER_FORMATISSUE, Tag, Msg, Sev, Src, Val, std::move(Actions), std::move(AdditionalDescriptions)) {}
+FormatIssue::FormatIssue(const MyString& Tag, std::string Msg, const MyString& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Issue(SYMBOL_CODEPARSER_FORMATISSUE, Tag, Msg, Sev, Src, Val, std::move(Actions), std::move(AdditionalDescriptions)) {}
 
-EncodingIssue::EncodingIssue(const MyStringPtr& Tag, std::string Msg, const MyStringPtr& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Issue(SYMBOL_CODEPARSER_ENCODINGISSUE, Tag, Msg, Sev, Src, Val, std::move(Actions), std::move(AdditionalDescriptions)) {}
+EncodingIssue::EncodingIssue(const MyString& Tag, std::string Msg, const MyString& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Issue(SYMBOL_CODEPARSER_ENCODINGISSUE, Tag, Msg, Sev, Src, Val, std::move(Actions), std::move(AdditionalDescriptions)) {}
 
 
 CodeAction::CodeAction(std::string Label, Source Src) : Label(Label), Src(Src) {}
@@ -124,13 +124,13 @@ CodeAction::CodeAction(std::string Label, Source Src) : Label(Label), Src(Src) {
 
 void ReplaceTextCodeAction::print(std::ostream& s) const {
     
-    SYMBOL_CODEPARSER_CODEACTION->print(s);
+    SYMBOL_CODEPARSER_CODEACTION.print(s);
     s << "[";
     
     s << Label;
     s << ", ";
     
-    SYMBOL_CODEPARSER_REPLACETEXT->print(s);
+    SYMBOL_CODEPARSER_REPLACETEXT.print(s);
     s << ", ";
     
     Src.print(s);
@@ -143,13 +143,13 @@ void ReplaceTextCodeAction::print(std::ostream& s) const {
 
 void InsertTextCodeAction::print(std::ostream& s) const {
     
-    SYMBOL_CODEPARSER_CODEACTION->print(s);
+    SYMBOL_CODEPARSER_CODEACTION.print(s);
     s << "[";
     
     s << Label;
     s << ", ";
     
-    SYMBOL_CODEPARSER_INSERTTEXT->print(s);
+    SYMBOL_CODEPARSER_INSERTTEXT.print(s);
     s << ", ";
     
     Src.print(s);
@@ -162,13 +162,13 @@ void InsertTextCodeAction::print(std::ostream& s) const {
 
 void DeleteTextCodeAction::print(std::ostream& s) const {
     
-    SYMBOL_CODEPARSER_CODEACTION->print(s);
+    SYMBOL_CODEPARSER_CODEACTION.print(s);
     s << "[";
     
     s << Label;
     s << ", ";
     
-    SYMBOL_CODEPARSER_DELETETEXT->print(s);
+    SYMBOL_CODEPARSER_DELETETEXT.print(s);
     s << ", ";
     
     Src.print(s);
@@ -637,31 +637,31 @@ SourceCharacter::SourceCharacter_iterator SourceCharacter::end() {
 #if USE_MATHLINK
 void Issue::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, MakeSym->name(), 4)) {
+    if (!MLPutFunction(mlp, MakeSym.name(), 4)) {
         assert(false);
     }
     
-    Tag->put(mlp);
+    Tag.put(mlp);
     
     if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(Msg.c_str()), static_cast<int>(Msg.size()))) {
         assert(false);
     }
     
-    Sev->put(mlp);
+    Sev.put(mlp);
     
     {
-        if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 2 + (Actions.empty() ? 0 : 1) + (AdditionalDescriptions.empty() ? 0 : 1))) {
+        if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 2 + (Actions.empty() ? 0 : 1) + (AdditionalDescriptions.empty() ? 0 : 1))) {
             assert(false);
         }
         
         Src.put(mlp);
         
         {
-            if (!MLPutFunction(mlp, SYMBOL_RULE->name(), 2)) {
+            if (!MLPutFunction(mlp, SYMBOL_RULE.name(), 2)) {
                 assert(false);
             }
             
-            SYMBOL_CONFIDENCELEVEL->put(mlp);
+            SYMBOL_CONFIDENCELEVEL.put(mlp);
             
             if (!MLPutReal(mlp, Val)) {
                 assert(false);
@@ -670,13 +670,13 @@ void Issue::put(MLINK mlp) const {
         
         if (!Actions.empty()) {
             
-            if (!MLPutFunction(mlp, SYMBOL_RULE->name(), 2)) {
+            if (!MLPutFunction(mlp, SYMBOL_RULE.name(), 2)) {
                 assert(false);
             }
             
-            SYMBOL_CODEPARSER_CODEACTIONS->put(mlp);
+            SYMBOL_CODEPARSER_CODEACTIONS.put(mlp);
             
-            if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(Actions.size()))) {
+            if (!MLPutFunction(mlp, SYMBOL_LIST.name(), static_cast<int>(Actions.size()))) {
                 assert(false);
             }
             
@@ -687,13 +687,13 @@ void Issue::put(MLINK mlp) const {
         
         if (!AdditionalDescriptions.empty()) {
             
-            if (!MLPutFunction(mlp, SYMBOL_RULE->name(), 2)) {
+            if (!MLPutFunction(mlp, SYMBOL_RULE.name(), 2)) {
                 assert(false);
             }
             
-            STRING_ADDITIONALDESCRIPTIONS->put(mlp);
+            STRING_ADDITIONALDESCRIPTIONS.put(mlp);
             
-            if (!MLPutFunction(mlp, SYMBOL_LIST->name(), static_cast<int>(AdditionalDescriptions.size()))) {
+            if (!MLPutFunction(mlp, SYMBOL_LIST.name(), static_cast<int>(AdditionalDescriptions.size()))) {
                 assert(false);
             }
             
@@ -710,7 +710,7 @@ void Issue::put(MLINK mlp) const {
 #if USE_MATHLINK
 void ReplaceTextCodeAction::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_CODEACTION->name(), 3)) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_CODEACTION.name(), 3)) {
         assert(false);
     }
     
@@ -718,20 +718,20 @@ void ReplaceTextCodeAction::put(MLINK mlp) const {
         assert(false);
     }
     
-    SYMBOL_CODEPARSER_REPLACETEXT->put(mlp);
+    SYMBOL_CODEPARSER_REPLACETEXT.put(mlp);
     
     {
-        if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 2)) {
+        if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 2)) {
             assert(false);
         }
         
         Src.put(mlp);
         
-        if (!MLPutFunction(mlp, SYMBOL_RULE->name(), 2)) {
+        if (!MLPutFunction(mlp, SYMBOL_RULE.name(), 2)) {
             assert(false);
         }
         
-        STRING_REPLACEMENTTEXT->put(mlp);
+        STRING_REPLACEMENTTEXT.put(mlp);
         
         if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(ReplacementText.c_str()), static_cast<int>(ReplacementText.size()))) {
             assert(false);
@@ -743,7 +743,7 @@ void ReplaceTextCodeAction::put(MLINK mlp) const {
 #if USE_MATHLINK
 void InsertTextCodeAction::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_CODEACTION->name(), 3)) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_CODEACTION.name(), 3)) {
         assert(false);
     }
     
@@ -751,20 +751,20 @@ void InsertTextCodeAction::put(MLINK mlp) const {
         assert(false);
     }
     
-    SYMBOL_CODEPARSER_INSERTTEXT->put(mlp);
+    SYMBOL_CODEPARSER_INSERTTEXT.put(mlp);
     
     {
-        if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 2)) {
+        if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 2)) {
             assert(false);
         }
         
         Src.put(mlp);
         
-        if (!MLPutFunction(mlp, SYMBOL_RULE->name(), 2)) {
+        if (!MLPutFunction(mlp, SYMBOL_RULE.name(), 2)) {
             assert(false);
         }
         
-        STRING_INSERTIONTEXT->put(mlp);
+        STRING_INSERTIONTEXT.put(mlp);
         
         if (!MLPutUTF8String(mlp, reinterpret_cast<Buffer>(InsertionText.c_str()), static_cast<int>(InsertionText.size()))) {
             assert(false);
@@ -776,7 +776,7 @@ void InsertTextCodeAction::put(MLINK mlp) const {
 #if USE_MATHLINK
 void DeleteTextCodeAction::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_CODEACTION->name(), 3)) {
+    if (!MLPutFunction(mlp, SYMBOL_CODEPARSER_CODEACTION.name(), 3)) {
         assert(false);
     }
     
@@ -784,10 +784,10 @@ void DeleteTextCodeAction::put(MLINK mlp) const {
         assert(false);
     }
     
-    SYMBOL_CODEPARSER_DELETETEXT->put(mlp);
+    SYMBOL_CODEPARSER_DELETETEXT.put(mlp);
     
     {
-        if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION->name(), 1)) {
+        if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1)) {
             assert(false);
         }
         
@@ -799,7 +799,7 @@ void DeleteTextCodeAction::put(MLINK mlp) const {
 #if USE_MATHLINK
 void SourceLocation::put(MLINK mlp) const {
 
-    if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 2)) {
+    if (!MLPutFunction(mlp, SYMBOL_LIST.name(), 2)) {
         assert(false);
     }
 
@@ -816,19 +816,19 @@ void SourceLocation::put(MLINK mlp) const {
 #if USE_MATHLINK
 void Source::put(MLINK mlp) const {
     
-    if (!MLPutFunction(mlp, SYMBOL_RULE->name(), 2)) {
+    if (!MLPutFunction(mlp, SYMBOL_RULE.name(), 2)) {
         assert(false);
     }
     
-    SYMBOL_CODEPARSER_SOURCE->put(mlp);
+    SYMBOL_CODEPARSER_SOURCE.put(mlp);
     
     switch (TheParserSession->srcConvention) {
         case SOURCECONVENTION_LINECOLUMN: {
-            if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 2)) {
+            if (!MLPutFunction(mlp, SYMBOL_LIST.name(), 2)) {
                 assert(false);
             }
 
-            if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 2)) {
+            if (!MLPutFunction(mlp, SYMBOL_LIST.name(), 2)) {
                 assert(false);
             }
             
@@ -840,7 +840,7 @@ void Source::put(MLINK mlp) const {
                 assert(false);
             }
             
-            if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 2)) {
+            if (!MLPutFunction(mlp, SYMBOL_LIST.name(), 2)) {
                 assert(false);
             }
             
@@ -855,7 +855,7 @@ void Source::put(MLINK mlp) const {
             break;
         }
         case SOURCECONVENTION_SOURCECHARACTERINDEX: {
-            if (!MLPutFunction(mlp, SYMBOL_LIST->name(), 2)) {
+            if (!MLPutFunction(mlp, SYMBOL_LIST.name(), 2)) {
                 assert(false);
             }
             
@@ -881,21 +881,21 @@ void Source::put(MLINK mlp) const {
 #if USE_EXPR_LIB
 expr Issue::toExpr() const {
     
-    auto head = MakeSym->toExpr();
+    auto head = MakeSym.toExpr();
     
     auto e = Expr_BuildExprA(head, 4);
     
-    auto TagExpr = Tag->toExpr();
+    auto TagExpr = Tag.toExpr();
     Expr_InsertA(e, 0 + 1, TagExpr);
     
     auto MsgExpr = Expr_UTF8BytesToStringExpr(reinterpret_cast<Buffer>(Msg.c_str()), static_cast<int>(Msg.size()));
     Expr_InsertA(e, 1 + 1, MsgExpr);
     
-    auto SevExpr = Sev->toExpr();
+    auto SevExpr = Sev.toExpr();
     Expr_InsertA(e, 2 + 1, SevExpr);
     
     {
-        auto head = SYMBOL_ASSOCIATION->toExpr();
+        auto head = SYMBOL_ASSOCIATION.toExpr();
         
         auto DataExpr = Expr_BuildExprA(head, 2 + (Actions.empty() ? 0 : 1) + (AdditionalDescriptions.empty() ? 0 : 1));
         
@@ -903,11 +903,11 @@ expr Issue::toExpr() const {
         Expr_InsertA(DataExpr, 0 + 1, SrcExpr);
         
         {
-            auto head = SYMBOL_RULE->toExpr();
+            auto head = SYMBOL_RULE.toExpr();
                     
             auto ConfidenceLevelRuleExpr = Expr_BuildExprA(head, 2);
             
-            auto ConfidenceLevelSymExpr = SYMBOL_CONFIDENCELEVEL->toExpr();
+            auto ConfidenceLevelSymExpr = SYMBOL_CONFIDENCELEVEL.toExpr();
             Expr_InsertA(ConfidenceLevelRuleExpr, 0 + 1, ConfidenceLevelSymExpr);
             
             auto ValExpr = Expr_FromReal64(Val);
@@ -920,15 +920,15 @@ expr Issue::toExpr() const {
         
         if (!Actions.empty()) {
             
-            auto head = SYMBOL_RULE->toExpr();
+            auto head = SYMBOL_RULE.toExpr();
                     
             auto CodeActionsRuleExpr = Expr_BuildExprA(head, 2);
             
-            auto CodeActionsSymExpr = SYMBOL_CODEPARSER_CODEACTIONS->toExpr();
+            auto CodeActionsSymExpr = SYMBOL_CODEPARSER_CODEACTIONS.toExpr();
             Expr_InsertA(CodeActionsRuleExpr, 0 + 1, CodeActionsSymExpr);
             
             {
-                auto head = SYMBOL_LIST->toExpr();
+                auto head = SYMBOL_LIST.toExpr();
                         
                 auto CodeActionsListExpr = Expr_BuildExprA(head, static_cast<int>(Actions.size()));
                 
@@ -951,15 +951,15 @@ expr Issue::toExpr() const {
         
         if (!AdditionalDescriptions.empty()) {
             
-            auto head = SYMBOL_RULE->toExpr();
+            auto head = SYMBOL_RULE.toExpr();
                     
             auto AdditionalDescriptionsRuleExpr = Expr_BuildExprA(head, 2);
             
-            auto AdditionalDescriptionsStrExpr = STRING_ADDITIONALDESCRIPTIONS->toExpr();
+            auto AdditionalDescriptionsStrExpr = STRING_ADDITIONALDESCRIPTIONS.toExpr();
             Expr_InsertA(AdditionalDescriptionsRuleExpr, 0 + 1, AdditionalDescriptionsStrExpr);
             
             {
-                auto head = SYMBOL_LIST->toExpr();
+                auto head = SYMBOL_LIST.toExpr();
                         
                 auto AdditionalDescriptionsListExpr = Expr_BuildExprA(head, static_cast<int>(AdditionalDescriptions.size()));
                 
@@ -990,18 +990,18 @@ expr Issue::toExpr() const {
 #if USE_EXPR_LIB
 expr ReplaceTextCodeAction::toExpr() const {
     
-    auto head = SYMBOL_CODEPARSER_CODEACTION->toExpr();
+    auto head = SYMBOL_CODEPARSER_CODEACTION.toExpr();
             
     auto e = Expr_BuildExprA(head, 3);
     
     auto LabelExpr = Expr_UTF8BytesToStringExpr(reinterpret_cast<Buffer>(Label.c_str()), static_cast<int>(Label.size()));
     Expr_InsertA(e, 0 + 1, LabelExpr);
     
-    auto CommandExpr = SYMBOL_CODEPARSER_REPLACETEXT->toExpr();
+    auto CommandExpr = SYMBOL_CODEPARSER_REPLACETEXT.toExpr();
     Expr_InsertA(e, 1 + 1, CommandExpr);
     
     {
-        auto head = SYMBOL_ASSOCIATION->toExpr();
+        auto head = SYMBOL_ASSOCIATION.toExpr();
         
         auto DataExpr = Expr_BuildExprA(head, 2);
         
@@ -1009,11 +1009,11 @@ expr ReplaceTextCodeAction::toExpr() const {
         Expr_InsertA(DataExpr, 0 + 1, SrcExpr);
         
         {
-            auto head = SYMBOL_RULE->toExpr();
+            auto head = SYMBOL_RULE.toExpr();
                     
             auto ReplacementTextRuleExpr = Expr_BuildExprA(head, 2);
             
-            auto ReplacementTextStrExpr = STRING_REPLACEMENTTEXT->toExpr();
+            auto ReplacementTextStrExpr = STRING_REPLACEMENTTEXT.toExpr();
             Expr_InsertA(ReplacementTextRuleExpr, 0 + 1, ReplacementTextStrExpr);
             
             auto ReplacementTextExpr = Expr_UTF8BytesToStringExpr(reinterpret_cast<Buffer>(ReplacementText.c_str()), static_cast<int>(ReplacementText.size()));
@@ -1032,18 +1032,18 @@ expr ReplaceTextCodeAction::toExpr() const {
 #if USE_EXPR_LIB
 expr InsertTextCodeAction::toExpr() const {
     
-    auto head = SYMBOL_CODEPARSER_CODEACTION->toExpr();
+    auto head = SYMBOL_CODEPARSER_CODEACTION.toExpr();
             
     auto e = Expr_BuildExprA(head, 3);
     
     auto LabelExpr = Expr_UTF8BytesToStringExpr(reinterpret_cast<Buffer>(Label.c_str()), static_cast<int>(Label.size()));
     Expr_InsertA(e, 0 + 1, LabelExpr);
     
-    auto CommandExpr = SYMBOL_CODEPARSER_INSERTTEXT->toExpr();
+    auto CommandExpr = SYMBOL_CODEPARSER_INSERTTEXT.toExpr();
     Expr_InsertA(e, 1 + 1, CommandExpr);
     
     {
-        auto head = SYMBOL_ASSOCIATION->toExpr();
+        auto head = SYMBOL_ASSOCIATION.toExpr();
         
         auto DataExpr = Expr_BuildExprA(head, 2);
         
@@ -1051,11 +1051,11 @@ expr InsertTextCodeAction::toExpr() const {
         Expr_InsertA(DataExpr, 0 + 1, SrcExpr);
         
         {
-            auto head = SYMBOL_RULE->toExpr();
+            auto head = SYMBOL_RULE.toExpr();
                     
             auto InsertionTextRuleExpr = Expr_BuildExprA(head, 2);
             
-            auto InsertionTextStrExpr = STRING_INSERTIONTEXT->toExpr();
+            auto InsertionTextStrExpr = STRING_INSERTIONTEXT.toExpr();
             Expr_InsertA(InsertionTextRuleExpr, 0 + 1, InsertionTextStrExpr);
             
             auto InsertionTextExpr = Expr_UTF8BytesToStringExpr(reinterpret_cast<Buffer>(InsertionText.c_str()), static_cast<int>(InsertionText.size()));
@@ -1074,18 +1074,18 @@ expr InsertTextCodeAction::toExpr() const {
 #if USE_EXPR_LIB
 expr DeleteTextCodeAction::toExpr() const {
     
-    auto head = SYMBOL_CODEPARSER_CODEACTION->toExpr();
+    auto head = SYMBOL_CODEPARSER_CODEACTION.toExpr();
             
     auto e = Expr_BuildExprA(head, 3);
     
     auto LabelExpr = Expr_UTF8BytesToStringExpr(reinterpret_cast<Buffer>(Label.c_str()), static_cast<int>(Label.size()));
     Expr_InsertA(e, 0 + 1, LabelExpr);
     
-    auto CommandExpr = SYMBOL_CODEPARSER_DELETETEXT->toExpr();
+    auto CommandExpr = SYMBOL_CODEPARSER_DELETETEXT.toExpr();
     Expr_InsertA(e, 1 + 1, CommandExpr);
     
     {
-        auto head = SYMBOL_ASSOCIATION->toExpr();
+        auto head = SYMBOL_ASSOCIATION.toExpr();
         
         auto DataExpr = Expr_BuildExprA(head, 1);
         
@@ -1102,7 +1102,7 @@ expr DeleteTextCodeAction::toExpr() const {
 #if USE_EXPR_LIB
 expr SourceLocation::toExpr() const {
 
-    auto head = SYMBOL_LIST->toExpr();
+    auto head = SYMBOL_LIST.toExpr();
 
     auto e = Expr_BuildExprA(head, 2);
     
@@ -1119,22 +1119,22 @@ expr SourceLocation::toExpr() const {
 #if USE_EXPR_LIB
 expr Source::toExpr() const {
     
-    auto head = SYMBOL_RULE->toExpr();
+    auto head = SYMBOL_RULE.toExpr();
 
     auto e = Expr_BuildExprA(head, 2);
     
-    auto SourceSymExpr = SYMBOL_CODEPARSER_SOURCE->toExpr();
+    auto SourceSymExpr = SYMBOL_CODEPARSER_SOURCE.toExpr();
     Expr_InsertA(e, 0 + 1, SourceSymExpr);
     
     switch (TheParserSession->srcConvention) {
         case SOURCECONVENTION_LINECOLUMN: {
             
-            auto head = SYMBOL_LIST->toExpr();
+            auto head = SYMBOL_LIST.toExpr();
 
             auto SrcExpr = Expr_BuildExprA(head, 2);
             
             {
-                auto head = SYMBOL_LIST->toExpr();
+                auto head = SYMBOL_LIST.toExpr();
 
                 auto StartExpr = Expr_BuildExprA(head, 2);
                 
@@ -1148,7 +1148,7 @@ expr Source::toExpr() const {
             }
             
             {
-                auto head = SYMBOL_LIST->toExpr();
+                auto head = SYMBOL_LIST.toExpr();
 
                 auto EndExpr = Expr_BuildExprA(head, 2);
                 
@@ -1166,7 +1166,7 @@ expr Source::toExpr() const {
         }
         case SOURCECONVENTION_SOURCECHARACTERINDEX: {
             
-            auto head = SYMBOL_LIST->toExpr();
+            auto head = SYMBOL_LIST.toExpr();
 
             auto SrcExpr = Expr_BuildExprA(head, 2);
             
