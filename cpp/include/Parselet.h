@@ -483,20 +483,19 @@ public:
     //
     ParseFunction parseInfix() const override;
     
+    Token processImplicitTimes(Token TokIn) const override;
+    
     Precedence getPrecedence() const override {
         return PRECEDENCE_SEMISEMI;
     }
 };
 
-void SemiSemiParselet_parse0(ParseletPtr P, Token Ignored);
 void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored);
-void SemiSemiParselet_parse3(ParseletPtr P, Token Ignored);
-void SemiSemiParselet_parse4(ParseletPtr P, Token Ignored);
-void SemiSemiParselet_parse6(ParseletPtr P, Token Ignored);
-void SemiSemiParselet_parse7(ParseletPtr P, Token Ignored);
-void SemiSemiParselet_parseLoop(ParseletPtr P, Token Ignored);
+void SemiSemiParselet_parse2(ParseletPtr P, Token Ignored);
 void SemiSemiParselet_parsePrefix(ParseletPtr P, Token firstTok);
 void SemiSemiParselet_parseInfix(ParseletPtr P, Token firstTok);
+void SemiSemiParselet_parseBinary(ParseletPtr P, Token Ignored);
+void SemiSemiParselet_parseTernary(ParseletPtr P, Token Ignored);
 
 
 //

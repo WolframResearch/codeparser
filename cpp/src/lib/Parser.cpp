@@ -372,6 +372,11 @@ void Parser::pushNode(NodePtr N) {
     NodeStack.push_back(std::move(N));
 }
 
+NodePtr& Parser::topNode() {
+    assert(!NodeStack.empty());
+    return NodeStack.back();
+}
+
 NodePtr Parser::popNode() {
     assert(!NodeStack.empty());
     auto top = std::move(NodeStack.back());

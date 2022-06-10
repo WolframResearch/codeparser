@@ -69,6 +69,7 @@ public:
     NodeSeq& peekArgs();
     size_t getArgsStackSize() const;
     
+    NodePtr& topNode();
     void pushNode(NodePtr N);
     NodePtr popNode();
     size_t getNodeStackSize() const;
