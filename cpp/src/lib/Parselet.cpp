@@ -903,8 +903,6 @@ void TildeParselet_parseInfix(ParseletPtr P, Token TokIn) {
         Args.appendSeq(std::move(Trivia1));
     }
     
-//    auto& Ctxt = TheParser->pushContext(PRECEDENCE_LOWEST);
-//    Ctxt.Flag |= PARSER_INSIDE_TILDE;
     TheParser->pushPrecedence(PRECEDENCE_LOWEST);
     
     auto P2 = prefixParselets[FirstTok.Tok.value()];
@@ -917,8 +915,6 @@ void TildeParselet_parseInfix(ParseletPtr P, Token TokIn) {
 }
 
 void TildeParselet_parse1(ParseletPtr P, Token Ignored) {
-    
-//    assert((TheParser->topContext().Flag & PARSER_INSIDE_TILDE) == PARSER_INSIDE_TILDE);
     
     auto& Args = TheParser->peekArgs();
     
@@ -1513,7 +1509,6 @@ void IntegralParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     auto P2 = prefixParselets[Tok.Tok.value()];
     
     TheParser->pushPrecedence(PRECEDENCE_CLASS_INTEGRATIONOPERATORS);
-//    Ctxt.Flag |= PARSER_INSIDE_INTEGRAL;
     
 //    xxx;
     (P2->parsePrefix())(P2, Tok);
@@ -1523,8 +1518,6 @@ void IntegralParselet_parsePrefix(ParseletPtr P, Token TokIn) {
 }
 
 void IntegralParselet_parse1(ParseletPtr P, Token Ignored) {
-    
-//    assert((TheParser->topContext().Flag & PARSER_INSIDE_INTEGRAL) == PARSER_INSIDE_INTEGRAL);
     
     TheParser->shift();
     
@@ -1540,7 +1533,7 @@ void IntegralParselet_parse1(ParseletPtr P, Token Ignored) {
         Args.appendSeq(std::move(Trivia2));
     }
     
-    if (!Tok.Tok.isDifferentialD()) {
+    if (!(Tok.Tok == TOKEN_LONGNAME_DIFFERENTIALD || Tok.Tok == TOKEN_LONGNAME_CAPITALDIFFERENTIALD)) {
         
         {
             auto L = NodePtr(new PrefixNode(SYMBOL_INTEGRAL, std::move(Args)));
@@ -1612,14 +1605,7 @@ void CommaParselet_parseInfix(ParseletPtr P, Token TokIn) {
         Args.appendSeq(std::move(Trivia2));
     }
     
-    //
-    // Cannot just compare tokens
-    //
-    // May be something like  a,b\[InvisibleComma]c
-    //
-    // and we want only a single Infix node created
-    //
-    if (infixParselets[Tok2.Tok.value()]->getOp() == SYMBOL_CODEPARSER_COMMA) {
+    if (Tok2.Tok == TOKEN_COMMA || Tok2.Tok == TOKEN_LONGNAME_INVISIBLECOMMA) {
         
         //
         // Something like  a,,
@@ -1673,14 +1659,7 @@ void CommaParselet_parseLoop(ParseletPtr P, Token Ignored) {
         Args.appendSeq(std::move(Trivia1));
     }
     
-    //
-    // Cannot just compare tokens
-    //
-    // May be something like  a,b\[InvisibleComma]c
-    //
-    // and we want only a single Infix node created
-    //
-    if (infixParselets[Tok1.Tok.value()]->getOp() != SYMBOL_CODEPARSER_COMMA) {
+    if (!(Tok1.Tok == TOKEN_COMMA || Tok1.Tok == TOKEN_LONGNAME_INVISIBLECOMMA)) {
         
         {
             auto L = NodePtr(new InfixNode(SYMBOL_CODEPARSER_COMMA, std::move(Args)));
@@ -1716,14 +1695,7 @@ void CommaParselet_parseLoop(ParseletPtr P, Token Ignored) {
         Args.appendSeq(std::move(Trivia2));
     }
     
-    //
-    // Cannot just compare tokens
-    //
-    // May be something like  a,b\[InvisibleComma]c
-    //
-    // and we want only a single Infix node created
-    //
-    if (infixParselets[Tok2.Tok.value()]->getOp() == SYMBOL_CODEPARSER_COMMA) {
+    if (Tok2.Tok == TOKEN_COMMA || Tok2.Tok == TOKEN_LONGNAME_INVISIBLECOMMA) {
 
         //
         // Something like  a,,
