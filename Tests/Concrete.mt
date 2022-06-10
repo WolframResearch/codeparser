@@ -925,7 +925,22 @@ Test[
 	TestID->"Concrete-20220604-E6J3A1"
 ]
 
-
+Test[
+	CodeConcreteParse["a; ;3;"]
+	,
+	ContainerNode[String, {
+		InfixNode[CompoundExpression, {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
+			LeafNode[Token`Semi, ";", <|Source -> {{1, 2}, {1, 3}}|>],
+			LeafNode[Whitespace, " ", <|Source -> {{1, 3}, {1, 4}}|>],
+			LeafNode[Token`Fake`ImplicitNull, "", <|Source -> {{1, 4}, {1, 4}}|>],
+			LeafNode[Token`Semi, ";", <|Source -> {{1, 4}, {1, 5}}|>],
+			LeafNode[Integer, "3", <|Source -> {{1, 5}, {1, 6}}|>],
+			LeafNode[Token`Semi, ";", <|Source -> {{1, 6}, {1, 7}}|>],
+			LeafNode[Token`Fake`ImplicitNull, "", <|Source -> {{1, 7}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]}, <|Source -> {{1, 1}, {1, 7}}|>]
+	,
+	TestID->"Concrete-20220611-P4E3J6"
+]
 
 
 

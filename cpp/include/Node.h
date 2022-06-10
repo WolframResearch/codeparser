@@ -19,9 +19,12 @@
 class Node;
 class LeafNode;
 class Symbol;
+class Parselet;
 
 using NodePtr = std::unique_ptr<Node>;
 using LeafNodePtr = std::unique_ptr<LeafNode>;
+using ParseletPtr = Parselet *;
+typedef void (*ParseFunction)(ParseletPtr, Token firstTok);
 
 #if USE_EXPR_LIB
 using expr = void *;
@@ -81,11 +84,17 @@ private:
     
 public:
     
+    ParseFunction F;
+    
+    ParseletPtr P;
+    
     NodeSeq() : vec() {}
     
-    NodeSeq(size_t i) : vec() {
-        vec.reserve(i);
-    }
+//    NodeSeq(size_t i) : vec() {
+//        vec.reserve(i);
+//    }
+    
+    NodeSeq(ParseFunction F, ParseletPtr P) : vec(), F(F), P(P) {}
     
     bool empty() const;
     
@@ -228,14 +237,14 @@ public:
 //
 // Used for actual back-tracking that is sometimes needed
 //
-class ScopedLeafNode : public LeafNode {
+class ResettableLeafNode : public LeafNode {
 private:
     
 public:
 
-    ScopedLeafNode(const Token& Tok) : LeafNode(Tok) {}
+    ResettableLeafNode(const Token& Tok) : LeafNode(Tok) {}
     
-    ScopedLeafNode(ScopedLeafNode&& other) : LeafNode(std::move(other.Tok)) {}
+    ResettableLeafNode(ResettableLeafNode&& other) : LeafNode(std::move(other.Tok)) {}
     
     void reset();
 };

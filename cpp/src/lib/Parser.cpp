@@ -229,9 +229,10 @@ void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2) {
     //
     HANDLE_ABORT;
     
-    Precedence TokenPrecedence;
     InfixParseletPtr I;
     Token token;
+    
+    bool topPrecGreater;
     {
         TriviaSeq Trivia1;
         
@@ -243,7 +244,7 @@ void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2) {
         token = I->processImplicitTimes(token);
         I = infixParselets[token.Tok.value()];
         
-        TokenPrecedence = I->getPrecedence();
+        auto TokenPrecedence = I->getPrecedence();
         
         //
         // if (Ctxt.Prec > TokenPrecedence)
@@ -255,18 +256,49 @@ void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2) {
                 
             Trivia1.reset();
             
-            return;
+            topPrecGreater = true;
+            
+        } else {
+            
+            auto& LeftSeq = TheParser->pushArgs(nullptr, nullptr);
+            
+            TheParser->shift();
+            
+            LeftSeq.appendSeq(std::move(Trivia1));
+            
+            topPrecGreater = false;
         }
+    }
+    
+    if (topPrecGreater) {
         
-        auto& LeftSeq = TheParser->pushArgs();
-        
-        TheParser->shift();
-        
-        LeftSeq.appendSeq(std::move(Trivia1));
+        MUSTTAIL
+        return Parser_tryContinue(Ignored, Ignored2);
     }
     
     MUSTTAIL
     return (I->parseInfix())(I, token);
+}
+
+void Parser_tryContinue(ParseletPtr Ignored, Token Ignored2) {
+    
+    if (TheParser->getArgsStackSize() > 0) {
+        
+        auto& Args = TheParser->peekArgs();
+        
+        auto F = Args.F;
+        
+        auto P = Args.P;
+        
+        assert(F != nullptr);
+        assert(P != nullptr);
+        
+        MUSTTAIL
+        return F(P, Token());
+    }
+    
+    // no call needed here
+    return;
 }
 
 Token Parser::eatTrivia(Token T, NextPolicy policy, TriviaSeq& Args) {
@@ -342,13 +374,14 @@ Token Parser::eatTriviaButNotToplevelNewlines_stringifyAsFile(Token T, TriviaSeq
 }
 
 void Parser::shift() {
-    auto Operand = TheParser->popNode();
+    assert(!ArgsStack.empty());
+    auto Operand = popNode();
     auto& Args = ArgsStack.back();
     Args.append(std::move(Operand));
 }
 
-NodeSeq& Parser::pushArgs() {
-    ArgsStack.push_back(NodeSeq());
+NodeSeq& Parser::pushArgs(ParseFunction F, ParseletPtr P) {
+    ArgsStack.push_back(NodeSeq(F, P));
     return ArgsStack.back();
 }
 

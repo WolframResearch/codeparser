@@ -13,6 +13,10 @@
 
 Token SemiSemiParselet::processImplicitTimes(Token TokIn) const {
     
+    //
+    // SemiSemi was already parsed with look-ahead with the assumption that implicit Times will be handled correctly
+    //
+    
     if (TheParser->getNodeStackSize() > 0) {
     
         auto& N = TheParser->topNode();
@@ -97,14 +101,13 @@ void SemiSemiParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
     TheParser->pushNode(NodePtr(new LeafNode(Implicit)));
     
-    TheParser->pushArgs();
+    TheParser->pushArgs(nullptr, nullptr);
     
     TheParser->shift();
     
     MUSTTAIL
     return SemiSemiParselet_parseInfix(P, TokIn);
 }
-
 
 ParseFunction SemiSemiParselet::parseInfix() const {
     return SemiSemiParselet_parseInfix;
@@ -165,13 +168,15 @@ void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
         //    ^SecondTok
         //
         
+        assert(Args.F == nullptr);
+        assert(Args.P == nullptr);
+        Args.F = SemiSemiParselet_parse2;
+        Args.P = P;
+        
         auto P2 = prefixParselets[SecondTok.Tok.value()];
         
-//        xxx;
-        (P2->parsePrefix())(P2, SecondTok);
-        
-//        MUSTTAIL probably not doable
-        return SemiSemiParselet_parse2(P, Ignored);
+        MUSTTAIL
+        return (P2->parsePrefix())(P2, SecondTok);
     }
     
     //
@@ -179,10 +184,7 @@ void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
     //    ^~SecondTok
     //
     
-    //
-    // SCOPED
-    //
-    ScopedLeafNode SecondTokNode = ScopedLeafNode(SecondTok);
+    ResettableLeafNode SecondTokNode = ResettableLeafNode(SecondTok);
     
     auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, SecondTok.BufLen.buffer, SecondTok.Src.Start);
     
@@ -236,13 +238,15 @@ void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
     
     Args.appendSeq(std::move(Trivia2));
     
+    assert(Args.F == nullptr);
+    assert(Args.P == nullptr);
+    Args.F = SemiSemiParselet_parseTernary;
+    Args.P = P;
+    
     auto P2 = prefixParselets[ThirdTok.Tok.value()];
     
-//        xxx;
-    (P2->parsePrefix())(P2, ThirdTok);
-    
-//        MUSTTAIL probably not doable
-    return SemiSemiParselet_parseTernary(P, Ignored);
+//    MUSTTAIL probably not doable
+    return (P2->parsePrefix())(P2, ThirdTok);
 }
 
 void SemiSemiParselet_parse2(ParseletPtr P, Token Ignored) {
@@ -285,7 +289,7 @@ void SemiSemiParselet_parse2(ParseletPtr P, Token Ignored) {
     //     ^~ThirdTok
     //
     
-    ScopedLeafNode ThirdTokNode = ScopedLeafNode(ThirdTok);
+    ResettableLeafNode ThirdTokNode = ResettableLeafNode(ThirdTok);
     
     TheParser->nextToken(ThirdTok);
     
@@ -339,13 +343,15 @@ void SemiSemiParselet_parse2(ParseletPtr P, Token Ignored) {
     
     Args.appendSeq(std::move(Trivia3));
     
+    assert(Args.F == SemiSemiParselet_parse2);
+//    assert(Args.P == nullptr);
+    Args.F = SemiSemiParselet_parseTernary;
+    Args.P = P;
+    
     auto P2 = prefixParselets[FourthTok.Tok.value()];
     
-//    xxx;
-    (P2->parsePrefix())(P2, FourthTok);
-    
 //    MUSTTAIL probably not doable
-    return SemiSemiParselet_parseTernary(P, Ignored);
+    return (P2->parsePrefix())(P2, FourthTok);
 }
 
 void SemiSemiParselet_parseBinary(ParseletPtr P, Token Ignored) {

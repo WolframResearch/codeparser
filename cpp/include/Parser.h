@@ -17,7 +17,7 @@ class Parselet;
 
 using ParserPtr = std::unique_ptr<Parser>;
 using ParseletPtr = Parselet *;
-
+typedef void (*ParseFunction)(ParseletPtr, Token firstTok);
 
 //
 //
@@ -64,7 +64,7 @@ public:
     
     void shift();
     
-    NodeSeq& pushArgs();
+    NodeSeq& pushArgs(ParseFunction F, ParseletPtr P);
     NodeSeq popArgs();
     NodeSeq& peekArgs();
     size_t getArgsStackSize() const;
@@ -89,6 +89,7 @@ public:
 };
 
 void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2);
+void Parser_tryContinue(ParseletPtr Ignored, Token Ignored2);
 
 
 extern ParserPtr TheParser;

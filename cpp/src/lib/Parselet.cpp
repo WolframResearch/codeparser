@@ -35,20 +35,23 @@ void PrefixErrorParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
     TheParser->nextToken(TokIn);
     
-    NodePtr Error;
-    
-    if (TokIn.Tok.isUnterminated()) {
+    {
+        NodePtr Error;
         
-        Error = NodePtr(new UnterminatedTokenErrorNeedsReparseNode(TokIn));
+        if (TokIn.Tok.isUnterminated()) {
+            
+            Error = NodePtr(new UnterminatedTokenErrorNeedsReparseNode(TokIn));
+            
+        } else {
+            
+            Error = NodePtr(new ErrorNode(TokIn));
+        }
         
-    } else {
-        
-        Error = NodePtr(new ErrorNode(TokIn));
+        TheParser->pushNode(std::move(Error));
     }
     
-    TheParser->pushNode(std::move(Error));
-    
-    return;
+    MUSTTAIL
+    return Parser_tryContinue(nullptr, Token());
 }
 
 
@@ -82,11 +85,14 @@ void PrefixCloserParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     //
     TheParser->currentToken(TOPLEVEL);
     
-    auto Error = NodePtr(new ErrorNode(createdToken));
+    {
+        auto Error = NodePtr(new ErrorNode(createdToken));
+        
+        TheParser->pushNode(std::move(Error));
+    }
     
-    TheParser->pushNode(std::move(Error));
-    
-    return;
+    MUSTTAIL
+    return Parser_tryContinue(nullptr, Token());
 }
 
 
@@ -108,6 +114,7 @@ void PrefixToplevelCloserParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
     TheParser->pushNode(std::move(Error));
     
+    // no call needed here
     return;
 }
 
@@ -133,11 +140,14 @@ void PrefixEndOfFileParselet_parsePrefix(ParseletPtr P, Token TokIn) {
         createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, TokIn.BufLen.buffer, TokIn.Src.Start);
     }
     
-    auto Error = NodePtr(new ErrorNode(createdToken));
+    {
+        auto Error = NodePtr(new ErrorNode(createdToken));
+        
+        TheParser->pushNode(std::move(Error));
+    }
     
-    TheParser->pushNode(std::move(Error));
-    
-    return;
+    MUSTTAIL
+    return Parser_tryContinue(nullptr, Token());
 }
 
 
@@ -151,11 +161,14 @@ void PrefixUnsupportedTokenParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
     auto createdToken = Token(TOKEN_ERROR_UNSUPPORTEDTOKEN, TokIn.BufLen, TokIn.Src);
     
-    auto Error = NodePtr(new ErrorNode(createdToken));
+    {
+        auto Error = NodePtr(new ErrorNode(createdToken));
+        
+        TheParser->pushNode(std::move(Error));
+    }
     
-    TheParser->pushNode(std::move(Error));
-    
-    return;
+    MUSTTAIL
+    return Parser_tryContinue(nullptr, Token());
 }
 
 
@@ -186,11 +199,14 @@ void PrefixCommaParselet_parsePrefix(ParseletPtr P, Token TokIn) {
         
     auto createdToken = Token(TOKEN_ERROR_EXPECTEDOPERAND, TokIn.BufLen.buffer, TokIn.Src.Start);
     
-    auto Left = NodePtr(new ErrorNode(createdToken));
+    {
+        auto Left = NodePtr(new ErrorNode(createdToken));
+        
+        TheParser->pushNode(std::move(Left));
+    }
     
-    TheParser->pushNode(std::move(Left));
-    
-    return;
+    MUSTTAIL
+    return Parser_parseClimb(nullptr, Token());
 }
 
 
@@ -203,9 +219,11 @@ void PrefixUnhandledParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     assert(!TokIn.Tok.isPossibleBeginning() && "handle at call site");
     
     {
-        auto NotPossible = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, TokIn.BufLen.buffer, TokIn.Src.Start)));
-        
-        TheParser->pushNode(std::move(NotPossible));
+        {
+            auto NotPossible = NodePtr(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, TokIn.BufLen.buffer, TokIn.Src.Start)));
+            
+            TheParser->pushNode(std::move(NotPossible));
+        }
         
         //
         // Do not take next token
@@ -230,7 +248,8 @@ void PrefixUnhandledParselet_parsePrefix(ParseletPtr P, Token TokIn) {
             // Make sure that the error leaf is with the + and not the |
             //
             
-            return;
+            MUSTTAIL
+            return Parser_tryContinue(nullptr, Token());
         }
         
         //
@@ -239,7 +258,7 @@ void PrefixUnhandledParselet_parsePrefix(ParseletPtr P, Token TokIn) {
         // We want to make EXPECTEDOPERAND the first arg of the Operator node.
         //
         
-        TheParser->pushArgs();
+        TheParser->pushArgs(nullptr, nullptr);
         
         TheParser->shift();
     }
@@ -286,41 +305,85 @@ void SymbolParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     switch (Tok.Tok.value()) {
         case TOKEN_UNDER.value(): {
             
-            TheParser->pushArgs();
+            //
+            // Something like  a_
+            //
+            
+            TheParser->pushArgs(nullptr, nullptr);
             
             TheParser->shift();
             
+            //
+            // Context-sensitive and OK to build stack
+            //
+            
+            UnderParselet_parseInfixContextSensitive(under1Parselet, Tok);
+            
             MUSTTAIL
-            return UnderParselet_parseInfixContextSensitive(under1Parselet, Tok);
+            return SymbolParselet_parsePatternBlank(under1Parselet, Tok);
         }
         case TOKEN_UNDERUNDER.value(): {
             
-            TheParser->pushArgs();
+            //
+            // Something like  a__
+            //
+            
+            TheParser->pushArgs(nullptr, nullptr);
             
             TheParser->shift();
             
+            //
+            // Context-sensitive and OK to build stack
+            //
+            
+            UnderParselet_parseInfixContextSensitive(under2Parselet, Tok);
+            
             MUSTTAIL
-            return UnderParselet_parseInfixContextSensitive(under2Parselet, Tok);
+            return SymbolParselet_parsePatternBlank(under2Parselet, Tok);
         }
         case TOKEN_UNDERUNDERUNDER.value(): {
             
-            TheParser->pushArgs();
+            //
+            // Something like  a___
+            //
+            
+            TheParser->pushArgs(nullptr, nullptr);
             
             TheParser->shift();
             
+            //
+            // Context-sensitive and OK to build stack
+            //
+            
+            UnderParselet_parseInfixContextSensitive(under3Parselet, Tok);
+            
             MUSTTAIL
-            return UnderParselet_parseInfixContextSensitive(under3Parselet, Tok);
+            return SymbolParselet_parsePatternBlank(under3Parselet, Tok);
         }
         case TOKEN_UNDERDOT.value(): {
             
-            TheParser->pushArgs();
+            //
+            // Something like  a_.
+            //
+            
+            TheParser->pushArgs(nullptr, nullptr);
             
             TheParser->shift();
             
+            //
+            // Context-sensitive and OK to build stack
+            //
+            
+            UnderDotParselet_parseInfixContextSensitive(underDotParselet, Tok);
+            
             MUSTTAIL
-            return UnderDotParselet_parseInfixContextSensitive(underDotParselet, Tok);
+            return SymbolParselet_parsePatternOptionalDefault(underDotParselet, Tok);
         }
         default: {
+            
+            //
+            // Something like  a
+            //
             
             MUSTTAIL
             return Parser_parseClimb(nullptr, Token());
@@ -328,7 +391,18 @@ void SymbolParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     }
 }
 
-void SymbolParselet_parsePrefixContextSensitive(ParseletPtr P, Token TokIn) {
+void SymbolParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
+    
+    //
+    // Something like  _b
+    //                  ^
+    //
+    
+    //
+    // We know we are already in the middle of parsing _
+    //
+    // Just push this symbol
+    //
     
     auto Sym = NodePtr(new LeafNode(TokIn));
     
@@ -336,7 +410,46 @@ void SymbolParselet_parsePrefixContextSensitive(ParseletPtr P, Token TokIn) {
     
     TheParser->pushNode(std::move(Sym));
     
+    // no call needed here
     return;
+}
+
+void SymbolParselet_parsePatternBlank(ParseletPtr P, Token Ignored) {
+    
+    {
+        auto& Args = TheParser->peekArgs();
+        
+        TheParser->shift();
+        
+        auto& PBOp = dynamic_cast<UnderParselet *>(P)->getPBOp();
+        
+        auto Pat = NodePtr(new CompoundNode(PBOp, std::move(Args)));
+        
+        TheParser->popArgs();
+        
+        TheParser->pushNode(std::move(Pat));
+    }
+    
+    MUSTTAIL
+    return Parser_parseClimb(nullptr, Ignored);
+}
+
+void SymbolParselet_parsePatternOptionalDefault(ParseletPtr P, Token Ignored) {
+    
+    {
+        auto& Args = TheParser->peekArgs();
+        
+        TheParser->shift();
+        
+        auto Pat = NodePtr(new CompoundNode(SYMBOL_CODEPARSER_PATTERNOPTIONALDEFAULT, std::move(Args)));
+        
+        TheParser->popArgs();
+        
+        TheParser->pushNode(std::move(Pat));
+    }
+    
+    MUSTTAIL
+    return Parser_parseClimb(nullptr, Ignored);
 }
 
 
@@ -355,7 +468,7 @@ void PrefixOperatorParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
     TheParser->nextToken(TokIn);
     
-    auto& Args = TheParser->pushArgs();
+    auto& Args = TheParser->pushArgs(nullptr, nullptr);
     
     TheParser->shift();
     
@@ -371,13 +484,15 @@ void PrefixOperatorParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
     TheParser->pushPrecedence(dynamic_cast<PrefixOperatorParselet *>(P)->getPrecedence());
     
+    assert(Args.F == nullptr);
+    assert(Args.P == nullptr);
+    Args.F = PrefixOperatorParselet_parse1;
+    Args.P = P;
+    
     auto P2 = prefixParselets[Tok.Tok.value()];
     
-//    xxx;
-    (P2->parsePrefix())(P2, Tok);
-    
     MUSTTAIL
-    return PrefixOperatorParselet_parse1(P, Token());
+    return (P2->parsePrefix())(P2, Tok);
 }
 
 void PrefixOperatorParselet_parse1(ParseletPtr P, Token Ignored) {
@@ -445,6 +560,8 @@ ParseFunction BinaryOperatorParselet::parseInfix() const {
 
 void BinaryOperatorParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
+    auto& Args = TheParser->peekArgs();
+    
     TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
     
     TheParser->nextToken(TokIn);
@@ -458,20 +575,20 @@ void BinaryOperatorParselet_parseInfix(ParseletPtr P, Token TokIn) {
         Tok = TheParser->currentToken(TOPLEVEL);
         Tok = TheParser->eatTrivia(Tok, TOPLEVEL, Trivia1);
         
-        auto& Args = TheParser->peekArgs();
-        
         Args.appendSeq(std::move(Trivia1));
     }
     
     TheParser->pushPrecedence(dynamic_cast<BinaryOperatorParselet *>(P)->getPrecedence());
     
+    assert(Args.F == nullptr);
+    assert(Args.P == nullptr);
+    Args.F = BinaryOperatorParselet_parse1;
+    Args.P = P;
+    
     auto P2 = prefixParselets[Tok.Tok.value()];
     
-//    xxx;
-    (P2->parsePrefix())(P2, Tok);
-    
     MUSTTAIL
-    return BinaryOperatorParselet_parse1(P, Token());
+    return (P2->parsePrefix())(P2, Tok);
 }
 
 void BinaryOperatorParselet_parse1(ParseletPtr P, Token Ignored) {
@@ -501,6 +618,8 @@ ParseFunction InfixOperatorParselet::parseInfix() const {
 
 void InfixOperatorParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
+    auto& Args = TheParser->peekArgs();
+    
     TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
     
     TheParser->nextToken(TokIn);
@@ -518,20 +637,20 @@ void InfixOperatorParselet_parseInfix(ParseletPtr P, Token TokIn) {
         Tok2 = TheParser->currentToken(TOPLEVEL);
         Tok2 = TheParser->eatTrivia(Tok2, TOPLEVEL, Trivia2);
         
-        auto& Args = TheParser->peekArgs();
-        
         Args.appendSeq(std::move(Trivia2));
     }
     
     TheParser->pushPrecedence(dynamic_cast<InfixOperatorParselet *>(P)->getPrecedence());
     
+    assert(Args.F == nullptr);
+    assert(Args.P == nullptr);
+    Args.F = InfixOperatorParselet_parse1;
+    Args.P = P;
+    
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
-//    xxx;
-    (P2->parsePrefix())(P2, Tok2);
-    
     MUSTTAIL
-    return InfixOperatorParselet_parse1(P, Token());
+    return (P2->parsePrefix())(P2, Tok2);
 }
 
 void InfixOperatorParselet_parse1(ParseletPtr P, Token Ignored) {
@@ -593,7 +712,7 @@ void InfixOperatorParselet_parseLoop(ParseletPtr P, Token Ignored) {
         TheParser->popPrecedence();
         
         MUSTTAIL
-        return Parser_parseClimb(nullptr, Token());
+        return Parser_parseClimb(nullptr, Ignored);
     }
     
     TheParser->pushNode(NodePtr(new LeafNode(Tok1)));
@@ -614,11 +733,8 @@ void InfixOperatorParselet_parseLoop(ParseletPtr P, Token Ignored) {
     
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
-//    xxx;
-    (P2->parsePrefix())(P2, Tok2);
-    
     MUSTTAIL
-    return InfixOperatorParselet_parse1(P, Ignored);
+    return (P2->parsePrefix())(P2, Tok2);
 }
 
 
@@ -664,12 +780,15 @@ void GroupParselet_parsePrefix(ParseletPtr P, Token OpenerT) {
     TheParser->pushPrecedence(PRECEDENCE_LOWEST);
     TheParser->pushGroup(GroupOpenerToCloser(OpenerT.Tok));
     
-    TheParser->pushArgs();
+    auto& Args = TheParser->pushArgs(nullptr, nullptr);
     
-    TheParser->shift();
+    assert(Args.F == nullptr);
+    assert(Args.P == nullptr);
+    Args.F = GroupParselet_parse1;
+    Args.P = P;
     
     MUSTTAIL
-    return GroupParselet_parseLoop(P, Token());
+    return GroupParselet_parse1(P, Token());
 }
 
 void GroupParselet_parse1(ParseletPtr P, Token Ignored) {
@@ -812,11 +931,8 @@ void GroupParselet_parseLoop(ParseletPtr P, Token Ignored) {
     
     auto P2 = prefixParselets[Tok.Tok.value()];
     
-//    xxx;
-    (P2->parsePrefix())(P2, Tok);
-    
     MUSTTAIL
-    return GroupParselet_parse1(P, Ignored);
+    return (P2->parsePrefix())(P2, Tok);
 }
 
 
@@ -826,18 +942,22 @@ ParseFunction CallParselet::parseInfix() const {
 
 void CallParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
+    auto& Args = TheParser->peekArgs();
+    
     //
     // if we used PRECEDENCE_CALL here, then e.g., a[]?b should technically parse as   a <call> []?b
     //
     TheParser->pushPrecedence(PRECEDENCE_HIGHEST);
     
+    assert(Args.F == nullptr);
+    assert(Args.P == nullptr);
+    Args.F = CallParselet_parse1;
+    Args.P = P;
+    
     const auto& GP = dynamic_cast<CallParselet *>(P)->getGP();
     
-//    xxx;
-    (GP->parsePrefix())(GP, TokIn);
-    
     MUSTTAIL
-    return CallParselet_parse1(P, Token());
+    return (GP->parsePrefix())(GP, TokIn);
 }
 
 void CallParselet_parse1(ParseletPtr P, Token Ignored) {
@@ -847,7 +967,7 @@ void CallParselet_parse1(ParseletPtr P, Token Ignored) {
         
         auto Head = TheParser->popArgs();
         
-        NodeSeq Args(1);
+        NodeSeq Args;
         Args.append(std::move(Right));
         
         auto L = NodePtr(new CallNode(std::move(Head), std::move(Args)));
@@ -885,6 +1005,8 @@ Precedence TildeParselet::getPrecedence() const {
 
 void TildeParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
+    auto& Args = TheParser->peekArgs();
+    
     TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
     
     TheParser->nextToken(TokIn);
@@ -898,20 +1020,20 @@ void TildeParselet_parseInfix(ParseletPtr P, Token TokIn) {
         FirstTok = TheParser->currentToken(TOPLEVEL);
         FirstTok = TheParser->eatTrivia(FirstTok, TOPLEVEL, Trivia1);
         
-        auto& Args = TheParser->peekArgs();
-        
         Args.appendSeq(std::move(Trivia1));
     }
     
     TheParser->pushPrecedence(PRECEDENCE_LOWEST);
     
+    assert(Args.F == nullptr);
+    assert(Args.P == nullptr);
+    Args.F = TildeParselet_parse1;
+    Args.P = P;
+    
     auto P2 = prefixParselets[FirstTok.Tok.value()];
     
-//    xxx;
-    (P2->parsePrefix())(P2, FirstTok);
-    
     MUSTTAIL
-    return TildeParselet_parse1(P, Token());
+    return (P2->parsePrefix())(P2, FirstTok);
 }
 
 void TildeParselet_parse1(ParseletPtr P, Token Ignored) {
@@ -940,13 +1062,16 @@ void TildeParselet_parse1(ParseletPtr P, Token Ignored) {
         
         TheParser->popPrecedence();
         
-        auto Error = NodePtr(new SyntaxErrorNode(SYMBOL_SYNTAXERROR_EXPECTEDTILDE, std::move(Args)));
+        {
+            auto Error = NodePtr(new SyntaxErrorNode(SYMBOL_SYNTAXERROR_EXPECTEDTILDE, std::move(Args)));
+            
+            TheParser->popArgs();
+            
+            TheParser->pushNode(std::move(Error));
+        }
         
-        TheParser->popArgs();
-        
-        TheParser->pushNode(std::move(Error));
-        
-        return;
+        MUSTTAIL
+        return Parser_tryContinue(nullptr, Ignored);
     }
     
     TheParser->pushNode(NodePtr(new LeafNode(Tok1)));
@@ -971,13 +1096,15 @@ void TildeParselet_parse1(ParseletPtr P, Token Ignored) {
     TheParser->popPrecedence();
     TheParser->pushPrecedence(PRECEDENCE_TILDE);
     
+    assert(Args.F == TildeParselet_parse1);
+    assert(Args.P == P);
+    Args.F = TildeParselet_parse2;
+    Args.P = P;
+    
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
-//    xxx;
-    (P2->parsePrefix())(P2, Tok2);
-    
     MUSTTAIL
-    return TildeParselet_parse2(P, Ignored);
+    return (P2->parsePrefix())(P2, Tok2);
 }
 
 void TildeParselet_parse2(ParseletPtr P, Token Ignored) {
@@ -1039,37 +1166,43 @@ void ColonParselet_parseInfix(ParseletPtr P, Token TokIn) {
             
             TheParser->pushPrecedence(PRECEDENCE_FAKE_PATTERNCOLON);
             
+            assert(Args.F == nullptr);
+            assert(Args.P == nullptr);
+            Args.F = ColonParselet_parsePattern;
+            Args.P = P;
+            
             auto P2 = prefixParselets[Tok.Tok.value()];
             
-        //    xxx;
-            (P2->parsePrefix())(P2, Tok);
-            
             MUSTTAIL
-            return ColonParselet_parsePattern(P, Token());
+            return (P2->parsePrefix())(P2, Tok);
         }
         case COLONLHS_OPTIONAL: {
 
             TheParser->pushPrecedence(PRECEDENCE_FAKE_OPTIONALCOLON);
-
+            
+            assert(Args.F == nullptr);
+            assert(Args.P == nullptr);
+            Args.F = ColonParselet_parseOptional;
+            Args.P = P;
+            
             auto P2 = prefixParselets[Tok.Tok.value()];
 
-        //    xxx;
-            (P2->parsePrefix())(P2, Tok);
-
             MUSTTAIL
-            return ColonParselet_parseOptional(P, Token());
+            return (P2->parsePrefix())(P2, Tok);
         }
         case COLONLHS_ERROR: {
             
             TheParser->pushPrecedence(PRECEDENCE_FAKE_PATTERNCOLON);
             
+            assert(Args.F == nullptr);
+            assert(Args.P == nullptr);
+            Args.F = ColonParselet_parseError;
+            Args.P = P;
+            
             auto P2 = prefixParselets[Tok.Tok.value()];
             
-        //    xxx;
-            (P2->parsePrefix())(P2, Tok);
-            
             MUSTTAIL
-            return ColonParselet_parseError(P, Token());
+            return (P2->parsePrefix())(P2, Tok);
         }
         default: {
             assert(false);
@@ -1139,6 +1272,8 @@ ParseFunction SlashColonParselet::parseInfix() const {
 
 void SlashColonParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
+    auto& Args = TheParser->peekArgs();
+    
     TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
     
     TheParser->nextToken(TokIn);
@@ -1152,20 +1287,20 @@ void SlashColonParselet_parseInfix(ParseletPtr P, Token TokIn) {
         Tok = TheParser->currentToken(TOPLEVEL);
         Tok = TheParser->eatTrivia(Tok, TOPLEVEL, Trivia1);
         
-        auto& Args = TheParser->peekArgs();
-        
         Args.appendSeq(std::move(Trivia1));
     }
     
     TheParser->pushPrecedence(PRECEDENCE_SLASHCOLON);
     
+    assert(Args.F == nullptr);
+    assert(Args.P == nullptr);
+    Args.F = SlashColonParselet_parse1;
+    Args.P = P;
+    
     auto P2 = prefixParselets[Tok.Tok.value()];
     
-//    xxx;
-    (P2->parsePrefix())(P2, Tok);
-    
     MUSTTAIL
-    return SlashColonParselet_parse1(P, Token());
+    return (P2->parsePrefix())(P2, Tok);
 }
 
 void SlashColonParselet_parse1(ParseletPtr P, Token Ignored) {
@@ -1206,13 +1341,16 @@ void SlashColonParselet_parse1(ParseletPtr P, Token Ignored) {
             // a /: b =.
             //
             
-            auto Args = TheParser->popArgs();
+            {
+                auto Args = TheParser->popArgs();
+                
+                auto Error = NodePtr(new SyntaxErrorNode(SYMBOL_SYNTAXERROR_EXPECTEDSET, std::move(Args)));
+                
+                TheParser->pushNode(std::move(Error));
+            }
             
-            auto Error = NodePtr(new SyntaxErrorNode(SYMBOL_SYNTAXERROR_EXPECTEDSET, std::move(Args)));
-            
-            TheParser->pushNode(std::move(Error));
-            
-            return;
+            MUSTTAIL
+            return Parser_parseClimb(nullptr, Ignored);
         }
     }
 }
@@ -1273,13 +1411,15 @@ void EqualParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
     TheParser->pushPrecedence(PRECEDENCE_EQUAL);
     
+    assert(Args.F == nullptr);
+    assert(Args.P == nullptr);
+    Args.F = EqualParselet_parse1;
+    Args.P = P;
+    
     auto P2 = prefixParselets[Tok.Tok.value()];
     
-//    xxx;
-    (P2->parsePrefix())(P2, Tok);
-    
     MUSTTAIL
-    return EqualParselet_parse1(P, Token());
+    return (P2->parsePrefix())(P2, Tok);
 }
 
 void EqualParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
@@ -1331,13 +1471,15 @@ void EqualParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
     
     TheParser->pushPrecedence(PRECEDENCE_EQUAL);
     
+    assert(Args.F == SlashColonParselet_parse1);
+//    assert(Args.P == nullptr);
+    Args.F = EqualParselet_parse2;
+    Args.P = P;
+    
     auto P2 = prefixParselets[Tok.Tok.value()];
     
-//    xxx;
-    (P2->parsePrefix())(P2, Tok);
-    
     MUSTTAIL
-    return EqualParselet_parse2(P, Token());
+    return (P2->parsePrefix())(P2, Tok);
 }
 
 void EqualParselet_parse1(ParseletPtr P, Token Ignored) {
@@ -1405,13 +1547,15 @@ void ColonEqualParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
     TheParser->pushPrecedence(PRECEDENCE_COLONEQUAL);
     
+    assert(Args.F == nullptr);
+    assert(Args.P == nullptr);
+    Args.F = ColonEqualParselet_parse1;
+    Args.P = P;
+    
     auto P2 = prefixParselets[Tok.Tok.value()];
     
-//    xxx;
-    (P2->parsePrefix())(P2, Tok);
-    
     MUSTTAIL
-    return ColonEqualParselet_parse1(P, Token());
+    return (P2->parsePrefix())(P2, Tok);
 }
 
 void ColonEqualParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
@@ -1436,13 +1580,15 @@ void ColonEqualParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
     
     TheParser->pushPrecedence(PRECEDENCE_COLONEQUAL);
     
+    assert(Args.F == SlashColonParselet_parse1);
+//    assert(Args.P == nullptr);
+    Args.F = ColonEqualParselet_parse2;
+    Args.P = P;
+    
     auto P2 = prefixParselets[Tok.Tok.value()];
     
-//    xxx;
-    (P2->parsePrefix())(P2, Tok);
-    
     MUSTTAIL
-    return ColonEqualParselet_parse2(P, Token());
+    return (P2->parsePrefix())(P2, Tok);
 }
 
 void ColonEqualParselet_parse1(ParseletPtr P, Token Ignored) {
@@ -1488,7 +1634,7 @@ ParseFunction IntegralParselet::parsePrefix() const {
 
 void IntegralParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
-    auto& Args = TheParser->pushArgs();
+    auto& Args = TheParser->pushArgs(nullptr, nullptr);
     
     TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
     
@@ -1506,15 +1652,17 @@ void IntegralParselet_parsePrefix(ParseletPtr P, Token TokIn) {
         Args.appendSeq(std::move(Trivia1));
     }
     
-    auto P2 = prefixParselets[Tok.Tok.value()];
-    
     TheParser->pushPrecedence(PRECEDENCE_CLASS_INTEGRATIONOPERATORS);
     
-//    xxx;
-    (P2->parsePrefix())(P2, Tok);
+    assert(Args.F == nullptr);
+    assert(Args.P == nullptr);
+    Args.F = IntegralParselet_parse1;
+    Args.P = P;
+    
+    auto P2 = prefixParselets[Tok.Tok.value()];
     
     MUSTTAIL
-    return IntegralParselet_parse1(P, Token());
+    return (P2->parsePrefix())(P2, Tok);
 }
 
 void IntegralParselet_parse1(ParseletPtr P, Token Ignored) {
@@ -1549,13 +1697,15 @@ void IntegralParselet_parse1(ParseletPtr P, Token Ignored) {
         return Parser_parseClimb(nullptr, Ignored);
     }
     
+    assert(Args.F == IntegralParselet_parse1);
+    assert(Args.P == P);
+    Args.F = IntegralParselet_parse2;
+    Args.P = P;
+    
     auto P2 = prefixParselets[Tok.Tok.value()];
     
-//    xxx;
-    (P2->parsePrefix())(P2, Tok);
-    
     MUSTTAIL
-    return IntegralParselet_parse2(P, Token());
+    return (P2->parsePrefix())(P2, Tok);
 }
 
 void IntegralParselet_parse2(ParseletPtr P, Token Ignored) {
@@ -1613,23 +1763,28 @@ void CommaParselet_parseInfix(ParseletPtr P, Token TokIn) {
         
         TheParser->pushNode(NodePtr(new ErrorNode(Token(TOKEN_ERROR_INFIXIMPLICITNULL, Tok2.BufLen.buffer, Tok2.Src.Start))));
         
-        TheParser->shift();
-        
         TheParser->pushPrecedence(PRECEDENCE_COMMA);
         
+        assert(Args.F == nullptr);
+        assert(Args.P == nullptr);
+        Args.F = CommaParselet_parse1;
+        Args.P = P;
+        
         MUSTTAIL
-        return CommaParselet_parseLoop(P, Token());
+        return CommaParselet_parse1(P, Token());
     }
     
     TheParser->pushPrecedence(PRECEDENCE_COMMA);
     
+    assert(Args.F == nullptr);
+    assert(Args.P == nullptr);
+    Args.F = CommaParselet_parse1;
+    Args.P = P;
+    
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
-//    xxx;
-    (P2->parsePrefix())(P2, Tok2);
-    
     MUSTTAIL
-    return CommaParselet_parse1(P, Token());
+    return (P2->parsePrefix())(P2, Tok2);
 }
 
 void CommaParselet_parse1(ParseletPtr P, Token Ignored) {
@@ -1703,19 +1858,19 @@ void CommaParselet_parseLoop(ParseletPtr P, Token Ignored) {
         
         TheParser->pushNode(NodePtr(new ErrorNode(Token(TOKEN_ERROR_INFIXIMPLICITNULL, Tok2.BufLen.buffer, Tok2.Src.Start))));
         
-        TheParser->shift();
-        
         MUSTTAIL
-        return CommaParselet_parseLoop(P, Ignored);
+        return CommaParselet_parse1(P, Ignored);
     }
+    
+//    assert(Args.F == nullptr);
+//    assert(Args.P == nullptr);
+//    Args.F = CommaParselet_parse1;
+//    Args.P = P;
     
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
-//    xxx;
-    (P2->parsePrefix())(P2, Tok2);
-    
     MUSTTAIL
-    return CommaParselet_parse1(P, Ignored);
+    return (P2->parsePrefix())(P2, Tok2);
 }
 
 const Symbol& CommaParselet::getOp() const {
@@ -1759,25 +1914,34 @@ void SemiParselet_parseInfix(ParseletPtr P, Token TokIn) {
         
         TheParser->pushNode(NodePtr(new LeafNode(Token(TOKEN_FAKE_IMPLICITNULL, Tok2.BufLen.buffer, Tok2.Src.Start))));
         
-        TheParser->shift();
-        
         TheParser->pushPrecedence(PRECEDENCE_SEMI);
         
+        assert(Args.F == nullptr);
+        assert(Args.P == nullptr);
+        Args.F = SemiParselet_parse1;
+        Args.P = P;
+        
         MUSTTAIL
-        return SemiParselet_parseLoop(P, Token());
+        return SemiParselet_parse1(P, Token());
     }
     
     if (Tok2.Tok.isPossibleBeginning()) {
         
+        //
+        // Something like  a;+2
+        //
+        
         TheParser->pushPrecedence(PRECEDENCE_SEMI);
+        
+        assert(Args.F == nullptr);
+        assert(Args.P == nullptr);
+        Args.F = SemiParselet_parse1;
+        Args.P = P;
         
         auto P2 = prefixParselets[Tok2.Tok.value()];
         
-//        xxx;
-        (P2->parsePrefix())(P2, Tok2);
-        
         MUSTTAIL
-        return SemiParselet_parse1(P, Token());
+        return (P2->parsePrefix())(P2, Tok2);
     }
         
     //
@@ -1882,13 +2046,15 @@ void SemiParselet_parseLoop(ParseletPtr P, Token Ignored) {
         
         if (Tok2.Tok.isPossibleBeginning()) {
             
+//            assert(Args.F == nullptr);
+//            assert(Args.P == nullptr);
+//            Args.F = SemiParselet_parse1;
+//            Args.P = P;
+            
             auto P2 = prefixParselets[Tok2.Tok.value()];
             
-//            xxx;
-            (P2->parsePrefix())(P2, Tok2);
-            
             MUSTTAIL
-            return SemiParselet_parse1(P, Ignored);
+            return (P2->parsePrefix())(P2, Tok2);
         }
 
         //
@@ -2181,7 +2347,7 @@ ParseFunction LessLessParselet::parsePrefix() const {
 void LessLessParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
     {
-        auto& Args = TheParser->pushArgs();
+        auto& Args = TheParser->pushArgs(nullptr, nullptr);
         
         TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
         
@@ -2286,7 +2452,7 @@ void HashParselet_parsePrefix(ParseletPtr P, Token TokIn) {
                 
                 TheParser->nextToken(Tok);
                 
-                auto& Args = TheParser->pushArgs();
+                auto& Args = TheParser->pushArgs(nullptr, nullptr);
                 
                 TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
                 
@@ -2336,7 +2502,7 @@ void HashHashParselet_parsePrefix(ParseletPtr P, Token TokIn) {
                 
                 TheParser->nextToken(Tok);
                 
-                auto& Args = TheParser->pushArgs();
+                auto& Args = TheParser->pushArgs(nullptr, nullptr);
                 
                 TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
                 
@@ -2386,7 +2552,7 @@ void PercentParselet_parsePrefix(ParseletPtr P, Token TokIn) {
                 
                 TheParser->nextToken(Tok);
                 
-                auto& Args = TheParser->pushArgs();
+                auto& Args = TheParser->pushArgs(nullptr, nullptr);
                 
                 TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
                 

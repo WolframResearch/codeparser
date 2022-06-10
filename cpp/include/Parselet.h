@@ -398,7 +398,7 @@ void GroupParselet_parsePrefix(ParseletPtr P, Token firstTok);
 //
 
 //
-// something like  x  or x_
+// Something like  x  or x_
 //
 class SymbolParselet : public PrefixParselet {
 public:
@@ -407,7 +407,9 @@ public:
 };
 
 void SymbolParselet_parsePrefix(ParseletPtr P, Token firstTok);
-void SymbolParselet_parsePrefixContextSensitive(ParseletPtr P, Token firstTok);
+void SymbolParselet_parseInfixContextSensitive(ParseletPtr P, Token firstTok);
+void SymbolParselet_parsePatternBlank(ParseletPtr P, Token firstTok);
+void SymbolParselet_parsePatternOptionalDefault(ParseletPtr P, Token firstTok);
 
 
 //
@@ -762,10 +764,10 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void UnderParselet_parse0(ParseletPtr P, Token Ignored);
-void UnderParselet_parse2(ParseletPtr P, Token Ignored);
-void UnderParselet_parse4(ParseletPtr P, Token Ignored);
+void UnderParselet_parseBlank(ParseletPtr P, Token Ignored);
+void UnderParselet_parseBlankContextSensitive(ParseletPtr P, Token Ignored);
 void UnderParselet_parsePrefix(ParseletPtr P, Token TokIn);
+
 //
 // infix
 //
@@ -790,8 +792,6 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void UnderDotParselet_parse1(ParseletPtr P, Token Ignored);
-void UnderDotParselet_parse2(ParseletPtr P, Token Ignored);
 void UnderDotParselet_parsePrefix(ParseletPtr P, Token TokIn);
 //
 // infix

@@ -364,7 +364,7 @@ void LeafNode::print(std::ostream& s) const {
 }
 
 
-void ScopedLeafNode::reset() {
+void ResettableLeafNode::reset() {
     
     //
     //
