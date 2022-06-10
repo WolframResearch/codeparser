@@ -33,23 +33,16 @@ enum Associativity {
 // Generally the parser is a Pratt parser with 1 token of look-ahead, except in these few cases.
 //
 enum ParserContextFlagBits : uint8_t {
-    //
-    // when parsing a in a:b  then PARSER_INSIDE_COLON bit is 0
-    // when parsing b in a:b  then PARSER_INSIDE_COLON bit is 1
-    //
-    PARSER_INSIDE_COLON = 0x01,
     
     //
     // Needs to detect \[Differential] while parsing
     //
-    PARSER_INSIDE_INTEGRAL = 0x02,
+    PARSER_INSIDE_INTEGRAL = 0x01,
     
     //
     // Needs to detect the second ~ while parsing
     //
-    PARSER_INSIDE_TILDE = 0x04,
-    
-    // UNUSED = 0x08
+    PARSER_INSIDE_TILDE = 0x02,
 };
 
 using ParserContextFlag = uint8_t;
@@ -64,7 +57,7 @@ struct ParserContext {
     //
     Precedence Prec;
     
-    ParserContextFlag Flag : 4;
+    ParserContextFlag Flag : 2;
     
     ParserContext() : Prec(PRECEDENCE_LOWEST), Flag() {}
     
@@ -130,11 +123,12 @@ public:
     bool checkGroup(Closer Closr) const;
     
     ParserContext& topContext();
-    ParserContext& pushFreshContext();
-    ParserContext& pushInheritedContext(Precedence Prec);
+    ParserContext& pushContext(Precedence Prec);
     void popContext();
     size_t getContextStackSize() const;
     void clearContextStack();
+    
+    bool checkPatternPrecedence() const;
 };
 
 void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2);

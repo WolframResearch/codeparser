@@ -103,14 +103,14 @@ Test[
 	ContainerNode[String, {
 		CallNode[LeafNode[Symbol, "TagSet", <||>], {
 			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
-			AbstractSyntaxErrorNode[AbstractSyntaxError`PatternColonError, {
+			CallNode[LeafNode[Symbol, "Pattern", <||>], {
 				ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 6}, {1, 6}}|>],
 				LeafNode[Symbol, "b", <|Source -> {{1, 8}, {1, 9}}|>]}, <|Source -> {{1, 6}, {1, 9}}|>],
 			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 11}, {1, 11}}|>]}
 		,
 		<|Source -> {{1, 1}, {1, 11}},
 		"Definitions" -> {LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>]},
-		"AdditionalDefinitions" -> {}|>]}, <|Source -> {{1, 1}, {1, 11}}|>]
+		"AdditionalDefinitions" -> {LeafNode[Symbol, "b", <|Source -> {{1, 8}, {1, 9}}|>]}|>]}, <|Source -> {{1, 1}, {1, 11}}|>]
 	,
 	TestID->"Definitions-20210520-E0Y0T1"
 ] 

@@ -91,6 +91,116 @@ bool NodeSeq::check() const {
     return accum;
 }
 
+ColonLHS NodeSeq::checkColonLHS() const {
+    
+    //
+    // work backwards, looking for a symbol or something that is a pattern
+    //
+    
+    //
+    // skip any trivia
+    //
+    auto rit = vec.rbegin();
+    for (; rit != vec.rend(); rit++) {
+        
+        auto& N = *rit;
+        
+        if (auto L = dynamic_cast<LeafNode *>(N.get())) {
+            
+            auto Tok = L->getToken();
+            
+            if (Tok.Tok.isTrivia()) {
+                continue;
+            }
+            
+            break;
+        }
+        
+        break;
+    }
+    
+    if (rit == vec.rend()) {
+        assert(false);
+        return COLONLHS_NONE;
+    }
+    
+    auto& N = *rit;
+    
+    if (auto B = dynamic_cast<BinaryNode *>(N.get())) {
+        
+        auto& Op = B->getOp();
+        
+        if (Op == SYMBOL_PATTERN) {
+            return COLONLHS_OPTIONAL;
+        }
+        
+        return COLONLHS_ERROR;
+    }
+    
+    if (auto C = dynamic_cast<CompoundNode *>(N.get())) {
+        
+        auto& Op = C->getOp();
+        
+        //
+        // FIXME: convert to switch statement when possible
+        //
+        if (Op == SYMBOL_CODEPARSER_PATTERNBLANK) {
+            return COLONLHS_OPTIONAL;
+        }
+        if (Op == SYMBOL_CODEPARSER_PATTERNBLANKSEQUENCE) {
+            return COLONLHS_OPTIONAL;
+        }
+        if (Op == SYMBOL_CODEPARSER_PATTERNBLANKNULLSEQUENCE) {
+            return COLONLHS_OPTIONAL;
+        }
+        if (Op == SYMBOL_BLANK) {
+            return COLONLHS_OPTIONAL;
+        }
+        if (Op == SYMBOL_BLANKSEQUENCE) {
+            return COLONLHS_OPTIONAL;
+        }
+        if (Op == SYMBOL_BLANKNULLSEQUENCE) {
+            return COLONLHS_OPTIONAL;
+        }
+        
+        return COLONLHS_ERROR;
+    }
+    
+    if (auto L = dynamic_cast<LeafNode *>(N.get())) {
+        
+        auto Tok = L->getToken();
+        
+        switch (Tok.Tok.value()) {
+            case TOKEN_SYMBOL.value(): {
+                return COLONLHS_PATTERN;
+            }
+            case TOKEN_UNDER.value():
+            case TOKEN_UNDERUNDER.value():
+            case TOKEN_UNDERUNDERUNDER.value(): {
+                return COLONLHS_OPTIONAL;
+            }
+            case TOKEN_COLON.value(): {
+                assert(false && "Fix at call site");
+            }
+            default: {
+                return COLONLHS_ERROR;
+            }
+        }
+    }
+    
+    if (auto E = dynamic_cast<ErrorNode *>(N.get())) {
+        
+        //
+        // allow errors to be on LHS of :
+        //
+        // This is a bit confusing. The thinking is that since there is already an error, then we do not need to introduce another error.
+        //
+        return COLONLHS_PATTERN;
+    }
+    
+    return COLONLHS_ERROR;
+}
+
 
 void TriviaSeq::reset() {
     

@@ -531,20 +531,13 @@ public:
     //
     ParseFunction parseInfix() const override;
     
-    Precedence getPrecedence() const override {
-        return PRECEDENCE_FAKE_OPTIONALCOLON;
-    }
+    Precedence getPrecedence() const override;
 };
 
-void ColonParselet_parse1(ParseletPtr P, Token Ignored);
-void ColonParselet_parse2(ParseletPtr P, Token Ignored);
+void ColonParselet_parsePattern(ParseletPtr P, Token Ignored);
+void ColonParselet_parseError(ParseletPtr P, Token Ignored);
+void ColonParselet_parseOptional(ParseletPtr P, Token Ignored);
 void ColonParselet_parseInfix(ParseletPtr P, Token firstTok);
-//
-// Something like  pattern:optional
-//
-// Called from other parselets
-//
-void ColonParselet_parseInfixContextSensitive(ParseletPtr P, Token firstTok);
 
 
 //
@@ -771,7 +764,6 @@ public:
 };
 
 void UnderParselet_parse0(ParseletPtr P, Token Ignored);
-void UnderParselet_parse1(ParseletPtr P, Token Ignored);
 void UnderParselet_parse2(ParseletPtr P, Token Ignored);
 void UnderParselet_parse4(ParseletPtr P, Token Ignored);
 void UnderParselet_parsePrefix(ParseletPtr P, Token TokIn);

@@ -85,6 +85,7 @@ Module[{defs},
 
 DefinitionSymbols[CallNode[node_, _, _]] := DefinitionSymbols[node]
 
+DefinitionSymbols[SyntaxErrorNode[_, _, _]] := {}
 
 DefinitionSymbols[args___] :=
   Failure["Unhandled", <| "Function" -> DefinitionSymbols, "Arguments" -> HoldForm[{args}] |>]

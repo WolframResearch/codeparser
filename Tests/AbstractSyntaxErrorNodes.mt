@@ -176,7 +176,7 @@ Test[
 	CodeParse["1:2"]
 	,
 	ContainerNode[String, {
-		AbstractSyntaxErrorNode[AbstractSyntaxError`PatternColonError, {
+		SyntaxErrorNode[SyntaxError`ExpectedSymbol, {
 			LeafNode[Integer, "1", <|Source -> {{1, 1}, {1, 2}}|>],
 			LeafNode[Integer, "2", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>]
 	,

@@ -106,7 +106,7 @@ void SemiSemiParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
     TheParser->shift();
     
-    TheParser->pushInheritedContext(PRECEDENCE_SEMISEMI);
+    TheParser->pushContext(PRECEDENCE_SEMISEMI);
     
 //    xxx;
     SemiSemiParselet_parse0(P, Token());

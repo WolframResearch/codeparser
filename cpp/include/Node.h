@@ -58,6 +58,15 @@ public:
     friend class NodeSeq;
 };
 
+
+enum ColonLHS {
+    COLONLHS_NONE,
+    COLONLHS_PATTERN,
+    COLONLHS_OPTIONAL,
+    COLONLHS_ERROR
+};
+
+
 //
 // A sequence of Nodes
 //
@@ -103,6 +112,8 @@ public:
 #if USE_EXPR_LIB
     expr toExpr() const;
 #endif // USE_EXPR_LIB
+    
+    ColonLHS checkColonLHS() const;
 };
 
 //
@@ -164,6 +175,10 @@ public:
 #if USE_EXPR_LIB
     expr toExpr() const override;
 #endif // USE_EXPR_LIB
+    
+    const SymbolPtr& getOp() const {
+        return Op;
+    }
 };
 
 //
@@ -249,6 +264,10 @@ public:
 #endif // USE_MATHLINK
     
     void print(std::ostream& s) const override;
+    
+    const Token getToken() const {
+        return Tok;
+    }
     
     Source getSource() const override {
         return Tok.Src;

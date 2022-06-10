@@ -44,49 +44,6 @@ void UnderParselet_parse0(ParseletPtr P, Token Ignored) {
     return;
 }
 
-void UnderParselet_parse1(ParseletPtr P, Token Ignored) {
-
-    TriviaSeq Trivia1;
-
-    auto Tok = TheParser->currentToken(TOPLEVEL);
-    Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, TOPLEVEL, Trivia1);
-
-    //
-    // For something like _:\"\"  when parsing _
-    // ColonFlag == false
-    // the : here is Optional, and so we want to go parse with ColonParselet's parseContextSensitive method
-    //
-    // For something like a:_:\"\"  when parsing _
-    // ColonFlag == true
-    // make sure to not parse the second : here
-    // We are already inside ColonParselet from the first :, and so ColonParselet will also handle the second :
-    //
-    if (Tok.Tok == TOKEN_COLON) {
-
-        if ((TheParser->topContext().Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON) {
-            
-            auto& BlankSeq = TheParser->pushArgs();
-            
-            TheParser->shift();
-            
-            BlankSeq.appendSeq(std::move(Trivia1));
-            
-//            MUSTTAIL probably not doable
-            return ColonParselet_parseInfixContextSensitive(colonParselet, Tok);
-        }
-
-        Trivia1.reset();
-
-//        MUSTTAIL probably not doable
-        return Parser_parseClimb(nullptr, Ignored);
-    }
-
-    Trivia1.reset();
-
-//    MUSTTAIL probably not doable
-    return Parser_parseClimb(nullptr, Ignored);
-}
-
 ParseFunction UnderParselet::parsePrefix() const {
     return UnderParselet_parsePrefix;
 }
@@ -105,7 +62,7 @@ void UnderParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     UnderParselet_parse0(P, Token());
     
     MUSTTAIL
-    return UnderParselet_parse1(P, Token());
+    return Parser_parseClimb(nullptr, Token());
 }
 
 void UnderParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
@@ -159,7 +116,7 @@ void UnderParselet_parse4(ParseletPtr P, Token Ignored) {
     }
     
     MUSTTAIL
-    return UnderParselet_parse1(P, Ignored);
+    return Parser_parseClimb(nullptr, Ignored);
 }
 
 

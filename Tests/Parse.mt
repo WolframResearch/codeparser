@@ -3436,3 +3436,44 @@ Test[
 
 
 
+
+Test[
+	"-3  __C:C_ _"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20220609-J0U9O6"
+]
+
+Test[
+	"1  *__ : 1 3"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20220609-J6X0U9"
+]
+
+Test[
+	"a:2 1/3:_"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20220609-W4W5K5"
+]
+
+Test[
+	" B  ::B  ::C"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Parse-20220609-I2Z8M5"
+]
+

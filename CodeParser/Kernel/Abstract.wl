@@ -229,15 +229,8 @@ abstract[BinaryNode[BinarySlashSlash, {left_, _, right_}, data_]] := CallNode[ab
 abstract[BinaryNode[Put, {left_, _, LeafNode[String, str_, data1_]}, data_]] := CallNode[ToNode[Put], {abstract[left], LeafNode[String, escapeString[abstractFileString[str]], data1]}, data]
 abstract[BinaryNode[PutAppend, {left_, _, LeafNode[String, str_, data1_]}, data_]] := CallNode[ToNode[PutAppend], {abstract[left], LeafNode[String, escapeString[abstractFileString[str]], data1]}, data]
 
-
-(*
-First arg must be a symbol
-*)
-abstract[BinaryNode[Pattern, {left:LeafNode[Symbol, _, _], _, right_}, data_]] :=
-  CallNode[ToNode[Pattern], {abstract[left], abstract[right]}, data]
-
 abstract[BinaryNode[Pattern, {left_, _, right_}, data_]] :=
-  AbstractSyntaxErrorNode[AbstractSyntaxError`PatternColonError, {abstract[left], abstract[right]}, data]
+  CallNode[ToNode[Pattern], {abstract[left], abstract[right]}, data]
 
 (*
 Abstract NonAssociative errors
@@ -1684,6 +1677,9 @@ abstract[SyntaxErrorNode[SyntaxError`ExpectedSetOperand1, {left_, _, _, right_},
 
 abstract[SyntaxErrorNode[SyntaxError`ExpectedSetOperand2, {left_, _, middle_, _}, data_]] :=
   SyntaxErrorNode[SyntaxError`ExpectedSetOperand2, {abstract[left], abstract[middle]}, data]
+
+abstract[SyntaxErrorNode[SyntaxError`ExpectedSymbol, {left_, _, right_}, data_]] :=
+  SyntaxErrorNode[SyntaxError`ExpectedSymbol, {abstract[left], abstract[right]}, data]
 
 
 

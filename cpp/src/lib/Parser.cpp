@@ -14,7 +14,7 @@ Parser::Parser() : ArgsStack(), NodeStack(), ContextStack(), GroupStack() {}
 void Parser::init() {
     
     clearContextStack();
-    pushFreshContext();
+    pushContext(PRECEDENCE_LOWEST);
     
     handleFirstLine(TheParserSession->firstLineBehavior);
 }
@@ -412,20 +412,8 @@ ParserContext& Parser::topContext() {
     return ContextStack.back();
 }
 
-ParserContext& Parser::pushFreshContext() {
-    ContextStack.push_back(PRECEDENCE_LOWEST);
-    return ContextStack.back();
-}
-
-ParserContext& Parser::pushInheritedContext(Precedence Prec) {
-    auto& Ctxt = ContextStack.back();
-    auto insideColon = ((Ctxt.Flag & PARSER_INSIDE_COLON) == PARSER_INSIDE_COLON);
+ParserContext& Parser::pushContext(Precedence Prec) {
     ContextStack.push_back(Prec);
-    if (insideColon) {
-        auto& Ctxt2 = ContextStack.back();
-        Ctxt2.Flag |= PARSER_INSIDE_COLON;
-        return Ctxt2;
-    }
     return ContextStack.back();
 }
 
@@ -441,6 +429,27 @@ void Parser::clearContextStack() {
     while (!ContextStack.empty()) {
         ContextStack.pop_back();
     }
+}
+
+bool Parser::checkPatternPrecedence() const {
+    
+    for (auto rit = ContextStack.rbegin(); rit != ContextStack.rend(); rit++) {
+        
+        auto Ctxt = *rit;
+        
+        if (Ctxt.Prec == PRECEDENCE_FAKE_PATTERNCOLON) {
+            return true;
+        }
+        
+        //
+        // reset by a group
+        //
+        if (Ctxt.Prec == PRECEDENCE_LOWEST) {
+            return false;
+        }
+    }
+    
+    return false;
 }
 
 ParserPtr TheParser = nullptr;

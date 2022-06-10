@@ -322,45 +322,8 @@ void SymbolParselet_parsePrefix(ParseletPtr P, Token TokIn) {
         }
         default: {
             
-            {
-                TriviaSeq Trivia1;
-                
-                Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, TOPLEVEL, Trivia1);
-                
-                //
-                // when parsing a in a:b  then PARSER_INSIDE_COLON bit is 0
-                // when parsing b in a:b  then PARSER_INSIDE_COLON bit is 1
-                //
-                // It is necessary to go to colonParselet->parse here (even though it seems non-contextSensitive)
-                // because in e.g.,  a_*b:f[]  the b is the last node in the Times expression and needs to bind with  :f[]
-                // Parsing  a_*b  completely, and then parsing  :f[]  would be wrong.
-                //
-                
-                if (Tok.Tok != TOKEN_COLON) {
-                    
-                    Trivia1.reset();
-                    
-//                    MUSTTAIL maybe not doable
-                    return Parser_parseClimb(nullptr, Token());
-                }
-                
-                if (((TheParser->topContext().Flag & PARSER_INSIDE_COLON) == PARSER_INSIDE_COLON)) {
-                    
-                    Trivia1.reset();
-                    
-//                    MUSTTAIL maybe not doable
-                    return Parser_parseClimb(nullptr, Token());
-                }
-                
-                auto& Args = TheParser->pushArgs();
-                
-                TheParser->shift();
-                
-                Args.appendSeq(std::move(Trivia1));
-            }
-            
             MUSTTAIL
-            return ColonParselet_parseInfix(colonParselet, Tok);
+            return Parser_parseClimb(nullptr, Token());
         }
     }
 }
@@ -406,7 +369,7 @@ void PrefixOperatorParselet_parsePrefix(ParseletPtr P, Token TokIn) {
         Args.appendSeq(std::move(Trivia1));
     }
     
-    TheParser->pushInheritedContext(dynamic_cast<PrefixOperatorParselet *>(P)->getPrecedence());
+    TheParser->pushContext(dynamic_cast<PrefixOperatorParselet *>(P)->getPrecedence());
     
     auto P2 = prefixParselets[Tok.Tok.value()];
     
@@ -500,7 +463,7 @@ void BinaryOperatorParselet_parseInfix(ParseletPtr P, Token TokIn) {
         Args.appendSeq(std::move(Trivia1));
     }
     
-    TheParser->pushInheritedContext(dynamic_cast<BinaryOperatorParselet *>(P)->getPrecedence());
+    TheParser->pushContext(dynamic_cast<BinaryOperatorParselet *>(P)->getPrecedence());
     
     auto P2 = prefixParselets[Tok.Tok.value()];
     
@@ -560,7 +523,7 @@ void InfixOperatorParselet_parseInfix(ParseletPtr P, Token TokIn) {
         Args.appendSeq(std::move(Trivia2));
     }
     
-    TheParser->pushInheritedContext(dynamic_cast<InfixOperatorParselet *>(P)->getPrecedence());
+    TheParser->pushContext(dynamic_cast<InfixOperatorParselet *>(P)->getPrecedence());
     
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
@@ -698,7 +661,7 @@ void GroupParselet_parsePrefix(ParseletPtr P, Token OpenerT) {
     
     TheParser->nextToken(OpenerT);
     
-    TheParser->pushFreshContext();
+    TheParser->pushContext(PRECEDENCE_LOWEST);
     TheParser->pushGroup(GroupOpenerToCloser(OpenerT.Tok));
     
     TheParser->pushArgs();
@@ -794,11 +757,13 @@ void GroupParselet_parseLoop(ParseletPtr P, Token Ignored) {
             
             auto& Op = dynamic_cast<GroupParselet *>(P)->getOp();
             
-            auto group = NodePtr(new GroupMissingCloserNode(Op, std::move(Args)));
-            
-            TheParser->popArgs();
-            
-            TheParser->pushNode(std::move(group));
+            {
+                auto group = NodePtr(new GroupMissingCloserNode(Op, std::move(Args)));
+                
+                TheParser->popArgs();
+                
+                TheParser->pushNode(std::move(group));
+            }
             
             TheParser->popContext();
             TheParser->popGroup();
@@ -864,7 +829,7 @@ void CallParselet_parseInfix(ParseletPtr P, Token TokIn) {
     //
     // if we used PRECEDENCE_CALL here, then e.g., a[]?b should technically parse as   a <call> []?b
     //
-    TheParser->pushInheritedContext(PRECEDENCE_HIGHEST);
+    TheParser->pushContext(PRECEDENCE_HIGHEST);
     
     const auto& GP = dynamic_cast<CallParselet *>(P)->getGP();
     
@@ -930,7 +895,7 @@ void TildeParselet_parseInfix(ParseletPtr P, Token TokIn) {
         Args.appendSeq(std::move(Trivia1));
     }
     
-    auto& Ctxt = TheParser->pushFreshContext();
+    auto& Ctxt = TheParser->pushContext(PRECEDENCE_LOWEST);
     Ctxt.Flag |= PARSER_INSIDE_TILDE;
     
     auto P2 = prefixParselets[FirstTok.Tok.value()];
@@ -999,7 +964,7 @@ void TildeParselet_parse1(ParseletPtr P, Token Ignored) {
     // Reset back to "outside" precedence
     //
     TheParser->popContext();
-    TheParser->pushInheritedContext(PRECEDENCE_TILDE);
+    TheParser->pushContext(PRECEDENCE_TILDE);
     
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
@@ -1033,9 +998,20 @@ ParseFunction ColonParselet::parseInfix() const {
     return ColonParselet_parseInfix;
 }
 
+Precedence ColonParselet::getPrecedence() const {
+    
+    if (TheParser->checkPatternPrecedence()) {
+        return PRECEDENCE_FAKE_OPTIONALCOLON;
+    }
+    
+    return PRECEDENCE_HIGHEST;
+}
+
 void ColonParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
-    assert((TheParser->topContext().Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON);
+    auto& Args = TheParser->peekArgs();
+    
+    auto colonLHS = Args.checkColonLHS();
     
     TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
     
@@ -1050,96 +1026,90 @@ void ColonParselet_parseInfix(ParseletPtr P, Token TokIn) {
         Tok = TheParser->currentToken(TOPLEVEL);
         Tok = TheParser->eatTrivia(Tok, TOPLEVEL, Trivia1);
         
-        auto& Args = TheParser->peekArgs();
-        
         Args.appendSeq(std::move(Trivia1));
     }
     
-    auto& Ctxt = TheParser->pushInheritedContext(PRECEDENCE_FAKE_PATTERNCOLON);
-    Ctxt.Flag |= PARSER_INSIDE_COLON;
-    
-    auto P2 = prefixParselets[Tok.Tok.value()];
-    
-//    xxx;
-    (P2->parsePrefix())(P2, Tok);
-    
-    MUSTTAIL
-    return ColonParselet_parse1(P, Token());
+    switch (colonLHS) {
+        case COLONLHS_PATTERN: {
+            
+            TheParser->pushContext(PRECEDENCE_FAKE_PATTERNCOLON);
+            
+            auto P2 = prefixParselets[Tok.Tok.value()];
+            
+        //    xxx;
+            (P2->parsePrefix())(P2, Tok);
+            
+            MUSTTAIL
+            return ColonParselet_parsePattern(P, Token());
+        }
+        case COLONLHS_OPTIONAL: {
+
+            TheParser->pushContext(PRECEDENCE_FAKE_OPTIONALCOLON);
+
+            auto P2 = prefixParselets[Tok.Tok.value()];
+
+        //    xxx;
+            (P2->parsePrefix())(P2, Tok);
+
+            MUSTTAIL
+            return ColonParselet_parseOptional(P, Token());
+        }
+        case COLONLHS_ERROR: {
+            
+            TheParser->pushContext(PRECEDENCE_FAKE_PATTERNCOLON);
+            
+            auto P2 = prefixParselets[Tok.Tok.value()];
+            
+        //    xxx;
+            (P2->parsePrefix())(P2, Tok);
+            
+            MUSTTAIL
+            return ColonParselet_parseError(P, Token());
+        }
+        default: {
+            assert(false);
+            break;
+        }
+    }
 }
 
-void ColonParselet_parse1(ParseletPtr P, Token Ignored) {
-    
-    TheParser->popContext();
+void ColonParselet_parsePattern(ParseletPtr P, Token Ignored) {
     
     {
         TheParser->shift();
         
         auto Args = TheParser->popArgs();
         
-        auto Pat = NodePtr(new BinaryNode(SYMBOL_PATTERN, std::move(Args)));
+        auto L = NodePtr(new BinaryNode(SYMBOL_PATTERN, std::move(Args)));
         
-        TheParser->pushNode(std::move(Pat));
-        
-        TriviaSeq Trivia2;
-        
-        auto Tok = TheParser->currentToken(TOPLEVEL);
-        Tok = TheParser->eatTriviaButNotToplevelNewlines(Tok, TOPLEVEL, Trivia2);
-        
-        if (Tok.Tok != TOKEN_COLON) {
-            
-            Trivia2.reset();
-            
-        } else {
-            
-            auto& PatSeq = TheParser->pushArgs();
-            
-            TheParser->shift();
-            
-            PatSeq.appendSeq(std::move(Trivia2));
-            
-//            xxx;
-            ColonParselet_parseInfixContextSensitive(P, Tok);
-        }
+        TheParser->pushNode(std::move(L));
     }
+    
+    TheParser->popContext();
     
     MUSTTAIL
     return Parser_parseClimb(nullptr, Ignored);
 }
 
-void ColonParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
-
-    assert((TheParser->topContext().Flag & PARSER_INSIDE_COLON) != PARSER_INSIDE_COLON);
+void ColonParselet_parseError(ParseletPtr P, Token Ignored) {
     
-    TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
-
-    TheParser->nextToken(TokIn);
-    
-    TheParser->shift();
-
-    Token Tok;
     {
-        TriviaSeq Trivia1;
-
-        Tok = TheParser->currentToken(TOPLEVEL);
-        Tok = TheParser->eatTrivia(Tok, TOPLEVEL, Trivia1);
+        TheParser->shift();
         
-        auto& Args = TheParser->peekArgs();
+        auto Args = TheParser->popArgs();
         
-        Args.appendSeq(std::move(Trivia1));
+        auto Error = NodePtr(new SyntaxErrorNode(SYMBOL_SYNTAXERROR_EXPECTEDSYMBOL, std::move(Args)));
+        
+        TheParser->pushNode(std::move(Error));
     }
-
-    TheParser->pushInheritedContext(PRECEDENCE_FAKE_OPTIONALCOLON);
-
-    auto P2 = prefixParselets[Tok.Tok.value()];
-
-//    xxx;
-    (P2->parsePrefix())(P2, Tok);
-
+    
+    TheParser->popContext();
+    
     MUSTTAIL
-    return ColonParselet_parse2(P, Token());
+    return Parser_parseClimb(nullptr, Ignored);
 }
 
-void ColonParselet_parse2(ParseletPtr P, Token Ignored) {
+void ColonParselet_parseOptional(ParseletPtr P, Token Ignored) {
     
     {
         TheParser->shift();
@@ -1182,7 +1152,7 @@ void SlashColonParselet_parseInfix(ParseletPtr P, Token TokIn) {
         Args.appendSeq(std::move(Trivia1));
     }
     
-    TheParser->pushInheritedContext(PRECEDENCE_SLASHCOLON);
+    TheParser->pushContext(PRECEDENCE_SLASHCOLON);
     
     auto P2 = prefixParselets[Tok.Tok.value()];
     
@@ -1296,7 +1266,7 @@ void EqualParselet_parseInfix(ParseletPtr P, Token TokIn) {
         return Parser_parseClimb(nullptr, Token());
     }
     
-    TheParser->pushInheritedContext(PRECEDENCE_EQUAL);
+    TheParser->pushContext(PRECEDENCE_EQUAL);
     
     auto P2 = prefixParselets[Tok.Tok.value()];
     
@@ -1354,7 +1324,7 @@ void EqualParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
         return Parser_parseClimb(nullptr, Token());
     }
     
-    TheParser->pushInheritedContext(PRECEDENCE_EQUAL);
+    TheParser->pushContext(PRECEDENCE_EQUAL);
     
     auto P2 = prefixParselets[Tok.Tok.value()];
     
@@ -1428,7 +1398,7 @@ void ColonEqualParselet_parseInfix(ParseletPtr P, Token TokIn) {
         Args.appendSeq(std::move(Trivia1));
     }
     
-    TheParser->pushInheritedContext(PRECEDENCE_COLONEQUAL);
+    TheParser->pushContext(PRECEDENCE_COLONEQUAL);
     
     auto P2 = prefixParselets[Tok.Tok.value()];
     
@@ -1459,7 +1429,7 @@ void ColonEqualParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
         Args.appendSeq(std::move(Trivia1));
     }
     
-    TheParser->pushInheritedContext(PRECEDENCE_COLONEQUAL);
+    TheParser->pushContext(PRECEDENCE_COLONEQUAL);
     
     auto P2 = prefixParselets[Tok.Tok.value()];
     
@@ -1533,7 +1503,7 @@ void IntegralParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
     auto P2 = prefixParselets[Tok.Tok.value()];
     
-    auto& Ctxt = TheParser->pushInheritedContext(PRECEDENCE_CLASS_INTEGRATIONOPERATORS);
+    auto& Ctxt = TheParser->pushContext(PRECEDENCE_CLASS_INTEGRATIONOPERATORS);
     Ctxt.Flag |= PARSER_INSIDE_INTEGRAL;
     
 //    xxx;
@@ -1650,13 +1620,13 @@ void CommaParselet_parseInfix(ParseletPtr P, Token TokIn) {
         
         TheParser->shift();
         
-        TheParser->pushInheritedContext(PRECEDENCE_COMMA);
+        TheParser->pushContext(PRECEDENCE_COMMA);
         
         MUSTTAIL
         return CommaParselet_parseLoop(P, Token());
     }
     
-    TheParser->pushInheritedContext(PRECEDENCE_COMMA);
+    TheParser->pushContext(PRECEDENCE_COMMA);
     
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
@@ -1810,7 +1780,7 @@ void SemiParselet_parseInfix(ParseletPtr P, Token TokIn) {
         
         TheParser->shift();
         
-        TheParser->pushInheritedContext(PRECEDENCE_SEMI);
+        TheParser->pushContext(PRECEDENCE_SEMI);
         
         MUSTTAIL
         return SemiParselet_parseLoop(P, Token());
@@ -1818,7 +1788,7 @@ void SemiParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
     if (Tok2.Tok.isPossibleBeginning()) {
         
-        TheParser->pushInheritedContext(PRECEDENCE_SEMI);
+        TheParser->pushContext(PRECEDENCE_SEMI);
         
         auto P2 = prefixParselets[Tok2.Tok.value()];
         
@@ -2026,8 +1996,16 @@ void ColonColonParselet_parseLoop(ParseletPtr P, Token Ignored) {
     
     auto& Args = TheParser->peekArgs();
     
-    auto Tok1 = TheParser->currentToken(TOPLEVEL);
-
+    Token Tok1;
+    {
+        TriviaSeq Trivia2;
+        
+        Tok1 = TheParser->currentToken(TOPLEVEL);
+        Tok1 = TheParser->eatTriviaButNotToplevelNewlines(Tok1, TOPLEVEL, Trivia2);
+        
+        Args.appendSeq(std::move(Trivia2));
+    }
+    
     if (Tok1.Tok != TOKEN_COLONCOLON) {
         
         {

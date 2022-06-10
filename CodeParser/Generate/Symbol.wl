@@ -90,7 +90,7 @@ symbols = Union[Join[
     {CodeParser`Library`LongNameSuggestion, CodeParser`Library`SetConcreteParseProgress},
     {CodeParser`InternalInvalid, CodeParser`PatternBlank, CodeParser`PatternBlankSequence,
       CodeParser`PatternBlankNullSequence, CodeParser`PatternOptionalDefault},
-    {SyntaxError`ExpectedSet, SyntaxError`ExpectedTilde},
+    {SyntaxError`ExpectedSet, SyntaxError`ExpectedTilde, SyntaxError`ExpectedSymbol},
     {Token`Newline},
     DownValues[PrefixOperatorToParselet][[All, 2]] /. {
       Parselet`PrefixOperatorParselet[_, _, op_] :> op,
