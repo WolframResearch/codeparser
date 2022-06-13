@@ -72,7 +72,7 @@ bool IssuePtrCompare::operator() (const IssuePtr& L, const IssuePtr& R) const {
 }
 
 
-Issue::Issue(const Symbol& MakeSym, const MyString& Tag, std::string Msg, const MyString& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : MakeSym(MakeSym), Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Val(Val), Actions(std::move(Actions)), AdditionalDescriptions(AdditionalDescriptions) {}
+Issue::Issue(const Symbol MakeSym, const MyString Tag, std::string Msg, const MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : MakeSym(MakeSym), Tag(Tag), Msg(Msg), Sev(Sev), Src(Src), Val(Val), Actions(std::move(Actions)), AdditionalDescriptions(AdditionalDescriptions) {}
 
 void Issue::print(std::ostream& s) const {
     
@@ -112,11 +112,11 @@ bool Issue::check() const {
 }
 
 
-SyntaxIssue::SyntaxIssue(const MyString& Tag, std::string Msg, const MyString& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Issue(SYMBOL_CODEPARSER_SYNTAXISSUE, Tag, Msg, Sev, Src, Val, std::move(Actions), std::move(AdditionalDescriptions)) {}
+SyntaxIssue::SyntaxIssue(const MyString Tag, std::string Msg, const MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Issue(SYMBOL_CODEPARSER_SYNTAXISSUE, Tag, Msg, Sev, Src, Val, std::move(Actions), std::move(AdditionalDescriptions)) {}
 
-FormatIssue::FormatIssue(const MyString& Tag, std::string Msg, const MyString& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Issue(SYMBOL_CODEPARSER_FORMATISSUE, Tag, Msg, Sev, Src, Val, std::move(Actions), std::move(AdditionalDescriptions)) {}
+FormatIssue::FormatIssue(const MyString Tag, std::string Msg, const MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Issue(SYMBOL_CODEPARSER_FORMATISSUE, Tag, Msg, Sev, Src, Val, std::move(Actions), std::move(AdditionalDescriptions)) {}
 
-EncodingIssue::EncodingIssue(const MyString& Tag, std::string Msg, const MyString& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Issue(SYMBOL_CODEPARSER_ENCODINGISSUE, Tag, Msg, Sev, Src, Val, std::move(Actions), std::move(AdditionalDescriptions)) {}
+EncodingIssue::EncodingIssue(const MyString Tag, std::string Msg, const MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions) : Issue(SYMBOL_CODEPARSER_ENCODINGISSUE, Tag, Msg, Sev, Src, Val, std::move(Actions), std::move(AdditionalDescriptions)) {}
 
 
 CodeAction::CodeAction(std::string Label, Source Src) : Label(Label), Src(Src) {}

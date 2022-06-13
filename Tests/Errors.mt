@@ -258,7 +258,7 @@ Test[
 	CodeConcreteParse["f[a@,2]"]
 	,
 	ContainerNode[String, {
-		CallNode[{LeafNode[Symbol, "f", <|Source -> {{1, 1}, {1, 2}}|>]}, {
+		CallNode[{LeafNode[Symbol, "f", <|Source -> {{1, 1}, {1, 2}}|>]},
 			GroupNode[GroupSquare, {
 				LeafNode[Token`OpenSquare, "[", <|Source -> {{1, 2}, {1, 3}}|>], 
 				InfixNode[Comma, {
@@ -268,7 +268,7 @@ Test[
 				        ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> {{1, 5}, {1, 5}}|>]}, <|Source -> {{1, 3}, {1, 5}}|>],
 				    LeafNode[Token`Comma, ",", <|Source -> {{1, 5}, {1, 6}}|>], 
 				    LeafNode[Integer, "2", <|Source -> {{1, 6}, {1, 7}}|>]}, <|Source -> {{1, 3}, {1, 7}}|>],
-				LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 7}, {1, 8}}|>]}, <|Source -> {{1, 2}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]
+				LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 7}, {1, 8}}|>]}, <|Source -> {{1, 2}, {1, 8}}|>], <|Source -> {{1, 1}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]
 	,
 	TestID->"Errors-20200627-I9S5C6"
 ]

@@ -144,11 +144,11 @@ TestMatch[
 	ContainerNode[Box, {
 		PrefixBinaryNode[Integrate, {
 			LeafNode[Token`LongName`Integral, "\[Integral]", KeyValuePattern[Source -> {1, 1}]],
-			CallNode[{LeafNode[Symbol, "Sin", <|Source -> {1, 2, 1, 1, 1, 1}|>]}, {
+			CallNode[{LeafNode[Symbol, "Sin", <|Source -> {1, 2, 1, 1, 1, 1}|>]},
 				GroupNode[GroupSquare, {
 					LeafNode[Token`OpenSquare, "[", <|Source -> {1, 2, 1, 1, 1, 2}|>],
 					LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 1, 1, 3}|>], 
-      				LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2, 1, 1, 1, 4}|>]}, <||>]}, <|Source -> {1, 2, 1, 1}|>], 
+      				LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2, 1, 1, 1, 4}|>]}, <||>], <|Source -> {1, 2, 1, 1}|>], 
   			PrefixNode[DifferentialD, {
   				LeafNode[Token`LongName`DifferentialD, "\[DifferentialD]", KeyValuePattern[Source -> {1, 2, 1, 2, 1, 1}]],
   				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 2, 1, 2}|>]}, <|Source -> {1, 2, 1, 2}|>]}, <|Source -> {}|>]}, _]
@@ -407,11 +407,11 @@ Test[
 				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 1}|>],
 				LeafNode[Token`Fake`ImplicitTimes, "", <|Source -> After[{1, 2, 1, 1}]|>],
 				LeafNode[Token`Boxes`MultiWhitespace, " ", <|Source -> {1, 2, 1, 2}|>],
-				CallNode[{LeafNode[Symbol, "Cos", <|Source -> {1, 2, 1, 3, 1, 1}|>]}, {
+				CallNode[{LeafNode[Symbol, "Cos", <|Source -> {1, 2, 1, 3, 1, 1}|>]},
 					GroupNode[GroupSquare, {
 						LeafNode[Token`OpenSquare, "[", <|Source -> {1, 2, 1, 3, 1, 2}|>],
 						LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 3, 1, 3}|>],
-						LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2, 1, 3, 1, 4}|>]}, <||>]}, <|Source -> {1, 2, 1, 3}|>]}, <|Source -> {1, 2}|>],
+						LeafNode[Token`CloseSquare, "]", <|Source -> {1, 2, 1, 3, 1, 4}|>]}, <||>], <|Source -> {1, 2, 1, 3}|>]}, <|Source -> {1, 2}|>],
 			PrefixNode[DifferentialD, {
 				LeafNode[Token`LongName`DifferentialD, "\[DifferentialD]", <|Source -> {1, 2, 1, 4, 1, 1}|>],
 				LeafNode[Symbol, "x", <|Source -> {1, 2, 1, 4, 1, 2}|>]}, <|Source -> {1, 2, 1, 4}|>]}, <|Source -> {}|>]}, <||>]

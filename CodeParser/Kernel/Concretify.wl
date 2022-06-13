@@ -1638,7 +1638,7 @@ Module[{struct = nodeStructure[n], ctor, op, prec},
           walked
       ]
     ]
-  ][head]}], Flatten[{square[{}]}], <||>]
+  ][head]}], square[{}], <||>]
 ]
 
 walk[n : CallNode[head_, children_, _]] :=
@@ -1660,7 +1660,7 @@ Module[{struct = nodeStructure[n], ctor, op, prec},
           walked
       ]
     ]
-  ][head]}], Flatten[{square[{InfixNode[Comma, Riffle[walk /@ children, LeafNode[Token`Comma, ",", <||>]], <||>]}]}], <||>]
+  ][head]}], square[{InfixNode[Comma, Riffle[walk /@ children, LeafNode[Token`Comma, ",", <||>]], <||>]}], <||>]
 ]
 
 (*
@@ -1673,27 +1673,27 @@ walk[ContainerNode[type_, children_, _]] :=
 
 walk[PackageNode[{ctxt_}, children_, _]] :=
   Sequence @@ (
-    {CallNode[{LeafNode[Symbol, "BeginPackage", <||>]}, {square[{walk[ctxt]}]}, <||>]} ~Join~
+    {CallNode[{LeafNode[Symbol, "BeginPackage", <||>]}, square[{walk[ctxt]}], <||>]} ~Join~
     (walk /@ children) ~Join~
-    {CallNode[{LeafNode[Symbol, "EndPackage", <||>]}, {square[{}]}, <||>]})
+    {CallNode[{LeafNode[Symbol, "EndPackage", <||>]}, square[{}], <||>]})
 
 walk[PackageNode[{ctxt_, needs_}, children_, _]] :=
   Sequence @@ (
-    {CallNode[{LeafNode[Symbol, "BeginPackage", <||>]}, {square[{InfixNode[Comma, {walk[ctxt], LeafNode[Token`Comma, ",", <||>], LeafNode[Whitespace, " ", <||>], walk[needs]}, <||>]}]}, <||>]} ~Join~
+    {CallNode[{LeafNode[Symbol, "BeginPackage", <||>]}, square[{InfixNode[Comma, {walk[ctxt], LeafNode[Token`Comma, ",", <||>], LeafNode[Whitespace, " ", <||>], walk[needs]}, <||>]}], <||>]} ~Join~
     (walk /@ children) ~Join~
-    {CallNode[{LeafNode[Symbol, "EndPackage", <||>]}, {square[{}]}, <||>]})
+    {CallNode[{LeafNode[Symbol, "EndPackage", <||>]}, square[{}], <||>]})
 
 walk[ContextNode[{ctxt_}, children_, _]] :=
   Sequence @@ (
-    {CallNode[{LeafNode[Symbol, "Begin", <||>]}, {square[{walk[ctxt]}]}, <||>]} ~Join~
+    {CallNode[{LeafNode[Symbol, "Begin", <||>]}, square[{walk[ctxt]}], <||>]} ~Join~
     (walk /@ children) ~Join~
-    {CallNode[{LeafNode[Symbol, "End", <||>]}, {square[{}]}, <||>]})
+    {CallNode[{LeafNode[Symbol, "End", <||>]}, square[{}], <||>]})
 
 walk[NewContextPathNode[{ctxt_}, children_, _]] :=
   Sequence @@ (
-    {CallNode[{LeafNode[Symbol, "System`Private`NewContextPath", <||>]}, {square[{walk[ctxt]}]}, <||>]} ~Join~
+    {CallNode[{LeafNode[Symbol, "System`Private`NewContextPath", <||>]}, square[{walk[ctxt]}], <||>]} ~Join~
     (walk /@ children) ~Join~
-    {CallNode[{LeafNode[Symbol, "System`Private`RestoreContextPath", <||>]}, {square[{}]}, <||>]})
+    {CallNode[{LeafNode[Symbol, "System`Private`RestoreContextPath", <||>]}, square[{}], <||>]})
 
 walk[n : LeafNode[tag_, str_, data_]] :=
 Module[{struct, ctor, op, prec},

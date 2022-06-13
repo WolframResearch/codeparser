@@ -85,8 +85,6 @@ formatPrefix[Parselet`HashHashParselet[]] := "new HashHashParselet()"
 
 formatPrefix[Parselet`PercentParselet[]] := "new PercentParselet()"
 
-formatPrefix[Parselet`PercentPercentParselet[]] := "new PercentPercentParselet()"
-
 formatPrefix[Parselet`LessLessParselet[]] := "new LessLessParselet()"
 
 formatPrefix[Parselet`SemiSemiParselet[]] := "&semiSemiParselet"
@@ -126,7 +124,7 @@ formatInfix[Parselet`ColonEqualParselet[]] := "colonEqualParselet"
 
 formatInfix[Parselet`TildeParselet[]] := "new TildeParselet()"
 
-formatInfix[Parselet`SlashColonParselet[]] := "new SlashColonParselet()"
+formatInfix[Parselet`SlashColonParselet[]] := "slashColonParselet"
 
 formatInfix[Parselet`CommaParselet[]] := "&commaParselet"
 
@@ -169,6 +167,7 @@ class SymbolParselet;
 class UnderParselet;
 class UnderDotParselet;
 class ColonParselet;
+class SlashColonParselet;
 class EqualParselet;
 class ColonEqualParselet;
 class PrefixToplevelCloserParselet;
@@ -186,6 +185,7 @@ extern UnderParselet *under2Parselet;
 extern UnderParselet *under3Parselet;
 extern UnderDotParselet *underDotParselet;
 extern ColonParselet *colonParselet;
+extern SlashColonParselet *slashColonParselet;
 extern EqualParselet *equalParselet;
 extern ColonEqualParselet *colonEqualParselet;
 extern PrefixToplevelCloserParselet *prefixToplevelCloserParselet;
@@ -243,6 +243,8 @@ auto commaParselet = CommaParselet();
 auto semiParselet = SemiParselet();
 
 auto semiSemiParselet = SemiSemiParselet();
+
+SlashColonParselet *slashColonParselet = new SlashColonParselet();
 
 ColonParselet *colonParselet = new ColonParselet();
 

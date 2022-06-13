@@ -190,10 +190,10 @@ Test[
 	,
 	ContainerNode[String, {
 		CallNode[
-			{LeafNode[Symbol, "f", <|Source -> {{1, 1}, {1, 2}}|>]}, {
+			{LeafNode[Symbol, "f", <|Source -> {{1, 1}, {1, 2}}|>]},
 			GroupNode[GroupTypeSpecifier, {
 				LeafNode[Token`ColonColonOpenSquare, "::[", <|Source -> {{1, 2}, {1, 5}}|>],
-				LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 2}, {1, 6}}|>]}, <|Source -> {{1, 1}, {1, 6}}|>]}
+				LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 2}, {1, 6}}|>], <|Source -> {{1, 1}, {1, 6}}|>]}
 		,
 		<|Source -> {{1, 1}, {1, 6}}|>
 	]
@@ -217,7 +217,7 @@ Test[
 	,
 	ContainerNode[Box, {
 		CallNode[
-			{LeafNode[Symbol, "f", <|Source -> {1, 1}|>]}, {
+			{LeafNode[Symbol, "f", <|Source -> {1, 1}|>]},
 			GroupNode[GroupTypeSpecifier, {
 				LeafNode[Token`ColonColonOpenSquare, "::[", <|Source -> {1, 2}|>],
 				InfixNode[Comma, {
@@ -226,7 +226,7 @@ Test[
 					LeafNode[Integer, "2", <|Source -> {1, 3, 1, 3}|>],
 					LeafNode[Token`Comma, ",", <|Source -> {1, 3, 1, 4}|>],
 					LeafNode[Integer, "3", <|Source -> {1, 3, 1, 5}|>]}, <|Source -> {1, 3}|>],
-				LeafNode[Token`CloseSquare, "]", <|Source -> {1, 4}|>]}, <||>]}, <|Source -> {}|>]}, <||>]
+				LeafNode[Token`CloseSquare, "]", <|Source -> {1, 4}|>]}, <||>], <|Source -> {}|>]}, <||>]
 	,
 	TestID->"TypeSpecifier-20220506-G6R6D4"
 ]

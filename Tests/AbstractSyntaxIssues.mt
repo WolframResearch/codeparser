@@ -52,42 +52,6 @@ TestMatch[
 StrangeCall:
 *)
 
-TestMatch[
-	FirstCase[CodeParse["a;b;[]", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)],
-		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["StrangeCall", _, _, _]}]
-	,
-	TestID->"AbstractSyntaxIssues-20190520-T2E6L3"
-]
-
-TestMatch[
-	FirstCase[CodeParse["a;b;[];c", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)],
-		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["StrangeCall", _, _, _]}]
-	,
-	TestID->"AbstractSyntaxIssues-20190520-Z2Y3I1"
-]
-
-TestMatch[
-	FirstCase[CodeParse[" a;b;\[LeftDoubleBracket]\[RightDoubleBracket] ", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)],
-		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["StrangeCall", _, _, _]}]
-	,
-	TestID->"AbstractSyntaxIssues-20190520-P6P7U2"
-]
-
-TestMatch[
-	FirstCase[CodeParse[" a;b;\[LeftDoubleBracket]\[RightDoubleBracket];c ", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)],
-		KeyValuePattern[AbstractSyntaxIssues -> _], $Failed, {0, Infinity}]
-	,
-	KeyValuePattern[AbstractSyntaxIssues -> {SyntaxIssue["StrangeCall", _, _, _]}]
-	,
-	TestID->"AbstractSyntaxIssues-20190520-S6O1O1"
-]
-
 (*
 TestMatch[
 	FirstCase[CodeParse[" %[] ", ContainerNode -> (ContainerNode[Hold, #[[1]], <||>]&)],

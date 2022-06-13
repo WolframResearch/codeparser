@@ -31,7 +31,7 @@ abstract parse of a[[2]] returns CallNode[Part, {a, 2}]
 So convert from concrete [[ syntax to abstract Part syntax
 
 *)
-abstractCallNode[CallNode[headIn_, {GroupNode[GroupSquare, {first_, inner:GroupNode[GroupSquare, _, _], last_}, _]}, dataIn_]] :=
+abstractCallNode[CallNode[headIn_, c:GroupNode[GroupSquare, {first_, inner:GroupNode[GroupSquare, _, _], last_}, _], dataIn_]] :=
 Module[{head, data, part, issues},
 
   head = headIn;
@@ -181,7 +181,7 @@ So convert from concrete [ syntax to abstract Call syntax
 feel strongly about ##2[arg]
 ##2 represents a sequence of arguments, so it is wrong to call
 *)
-abstractCallNode[CallNode[headIn:LeafNode[Token`HashHash, _, _] | CompoundNode[SlotSequence, _, _], {partIn:GroupNode[GroupSquare, {first_, ___, last_}, _]}, dataIn_]] :=
+abstractCallNode[CallNode[headIn:LeafNode[Token`HashHash, _, _] | CompoundNode[SlotSequence, _, _], partIn:GroupNode[GroupSquare, {first_, ___, last_}, _], dataIn_]] :=
 Module[{head, part, partData, issues, data},
   head = headIn;
   part = partIn;
@@ -212,7 +212,7 @@ Module[{head, part, partData, issues, data},
 ]
 
 abstractCallNode[CallNode[headIn:LeafNode[Symbol | String | Token`Hash | Token`Under | Token`UnderUnder | Token`UnderUnderUnder, _, _] | _CallNode |
-       CompoundNode[Blank | BlankSequence | BlankNullSequence | PatternBlank | PatternBlankSequence | PatternBlankNullSequence | Slot (*| SlotSequence*), _, _], {partIn:GroupNode[GroupSquare, _, _]}, dataIn_]] :=
+       CompoundNode[Blank | BlankSequence | BlankNullSequence | PatternBlank | PatternBlankSequence | PatternBlankNullSequence | Slot (*| SlotSequence*), _, _], partIn:GroupNode[GroupSquare, _, _], dataIn_]] :=
 Module[{head, part, partData, issues, data},
   head = headIn;
   part = partIn;
@@ -234,7 +234,7 @@ Module[{head, part, partData, issues, data},
   CallNode[head, part[[2]], data]
 ]
 
-abstractCallNode[CallNode[headIn:LeafNode[Token`Percent | Token`PercentPercent, _, _] | CompoundNode[Out, _, _], {partIn:GroupNode[GroupSquare, {first_, ___, last_}, _]}, dataIn_]] :=
+abstractCallNode[CallNode[headIn:LeafNode[Token`Percent | Token`PercentPercent, _, _] | CompoundNode[Out, _, _], partIn:GroupNode[GroupSquare, {first_, ___, last_}, _], dataIn_]] :=
 Module[{head, part, partData, issues, data},
   head = headIn;
   part = partIn;
@@ -269,7 +269,7 @@ Module[{head, part, partData, issues, data},
   CallNode[head, part[[2]], data]
 ]
 
-abstractCallNode[CallNode[headIn:BinaryNode[PatternTest, _, _], {partIn:GroupNode[GroupSquare, _, _]}, dataIn_]] :=
+abstractCallNode[CallNode[headIn:BinaryNode[PatternTest, _, _], partIn:GroupNode[GroupSquare, _, _], dataIn_]] :=
 Module[{head, part, partData, issues, data},
   head = headIn;
   part = partIn;
@@ -291,7 +291,7 @@ Module[{head, part, partData, issues, data},
   CallNode[head, part[[2]], data]
 ]
 
-abstractCallNode[CallNode[headIn:InfixNode[CompoundExpression, _, _], {partIn:GroupNode[GroupSquare, _, _]}, dataIn_]] :=
+abstractCallNode[CallNode[headIn:InfixNode[CompoundExpression, _, _], partIn:GroupNode[GroupSquare, _, _], dataIn_]] :=
 Module[{head, part, partData, issues, data},
   head = headIn;
   part = partIn;
@@ -318,7 +318,7 @@ these are fine
 List is allowed because this is popular to do:
 Through[{a, b, c}[1]]
 *)
-abstractCallNode[CallNode[headIn:GroupNode[GroupParen | List | Association, _, _], {partIn:GroupNode[GroupSquare, _, _]}, dataIn_]] :=
+abstractCallNode[CallNode[headIn:GroupNode[GroupParen | List | Association, _, _], partIn:GroupNode[GroupSquare, _, _], dataIn_]] :=
 Module[{head, part, partData, issues, data},
   head = headIn;
   part = partIn;
@@ -340,7 +340,7 @@ Module[{head, part, partData, issues, data},
   CallNode[head, part[[2]], data]
 ]
 
-abstractCallNode[CallNode[headIn:GroupNode[_, _, _], {partIn:GroupNode[GroupSquare, {first_, ___, last_}, _]}, dataIn_]] :=
+abstractCallNode[CallNode[headIn:GroupNode[_, _, _], partIn:GroupNode[GroupSquare, {first_, ___, last_}, _], dataIn_]] :=
 Module[{head, part, partData, issues, data},
   head = headIn;
   part = partIn;
@@ -371,7 +371,7 @@ Module[{head, part, partData, issues, data},
 ]
 
 (* these are fine *)
-abstractCallNode[CallNode[headIn:PostfixNode[Function | Derivative, _, _], {partIn:GroupNode[GroupSquare, _, _]}, dataIn_]] :=
+abstractCallNode[CallNode[headIn:PostfixNode[Function | Derivative, _, _], partIn:GroupNode[GroupSquare, _, _], dataIn_]] :=
 Module[{head, part, partData, issues, data},
   head = headIn;
   part = partIn;
@@ -394,7 +394,7 @@ Module[{head, part, partData, issues, data},
 ]
 
 (* this is fine *)
-abstractCallNode[CallNode[headIn:BoxNode[$okCallBoxPat, _, _], {partIn:GroupNode[GroupSquare, _, _]}, dataIn_]] :=
+abstractCallNode[CallNode[headIn:BoxNode[$okCallBoxPat, _, _], partIn:GroupNode[GroupSquare, _, _], dataIn_]] :=
 Module[{head, part, partData, issues, data},
   head = headIn;
   part = partIn;
@@ -416,7 +416,7 @@ Module[{head, part, partData, issues, data},
   CallNode[head, part[[2]], data]
 ]
 
-abstractCallNode[CallNode[headIn:BoxNode[tag_, _, _], {partIn:GroupNode[GroupSquare, {first_, ___, last_}, _]}, dataIn_]] :=
+abstractCallNode[CallNode[headIn:BoxNode[tag_, _, _], partIn:GroupNode[GroupSquare, {first_, ___, last_}, _], dataIn_]] :=
 Module[{head, part, partData, issues, data},
   head = headIn;
   part = partIn;
@@ -450,7 +450,7 @@ Module[{head, part, partData, issues, data},
 (*
 warn about anything else
 *)
-abstractCallNode[CallNode[headIn_, {partIn:GroupNode[GroupSquare, {first_, ___, last_}, _]}, dataIn_]] :=
+abstractCallNode[CallNode[headIn_, partIn:GroupNode[GroupSquare, {first_, ___, last_}, _], dataIn_]] :=
 Module[{head, part, partData, issues, data},
   head = headIn;
   part = partIn;
@@ -484,7 +484,7 @@ Module[{head, part, partData, issues, data},
 (*
 this is fine
 *)
-abstractCallNode[CallNode[headIn:LeafNode[String, _, _], {partIn:GroupNode[GroupTypeSpecifier, {first_, ___, last_}, _]}, dataIn_]] :=
+abstractCallNode[CallNode[headIn:LeafNode[String, _, _], partIn:GroupNode[GroupTypeSpecifier, {first_, ___, last_}, _], dataIn_]] :=
 Module[{head, part, partData, issues, data},
   head = headIn;
   part = partIn;
@@ -509,7 +509,7 @@ Module[{head, part, partData, issues, data},
 (*
 warn about anything else
 *)
-abstractCallNode[CallNode[headIn_, {partIn:GroupNode[GroupTypeSpecifier, {first_, ___, last_}, _]}, dataIn_]] :=
+abstractCallNode[CallNode[headIn_, partIn:GroupNode[GroupTypeSpecifier, {first_, ___, last_}, _], dataIn_]] :=
 Module[{head, part, partData, issues, data},
   head = headIn;
   part = partIn;
@@ -546,7 +546,7 @@ Concrete parse of a\[LeftDoubleBracket]2\[RightDoubleBracket] returns CallNode[a
 abstract parse of a\[LeftDoubleBracket]2\[RightDoubleBracket] returns CallNode[Part, {a, 2}]
 
 *)
-abstractCallNode[CallNode[headIn_, {partIn:GroupNode[GroupDoubleBracket, {first_, ___, last_}, _]}, dataIn_]] :=
+abstractCallNode[CallNode[headIn_, partIn:GroupNode[GroupDoubleBracket, {first_, ___, last_}, _], dataIn_]] :=
 Module[{head, part, partData, data, issues},
   head = headIn;
   part = partIn;
@@ -688,7 +688,7 @@ Module[{head, part, partData, data, issues},
 
 
 
-abstractCallNode[CallMissingCloserNode[headIn_, {partIn:GroupMissingCloserNode[GroupSquare, _, _]}, dataIn_]] :=
+abstractCallNode[CallMissingCloserNode[headIn_, partIn:GroupMissingCloserNode[GroupSquare, _, _], dataIn_]] :=
 Module[{head, part, data, issues, partData},
   head = headIn;
   part = partIn;
@@ -711,7 +711,7 @@ Module[{head, part, data, issues, partData},
   CallMissingCloserNode[head, part[[2]], data]
 ]
 
-abstractCallNode[UnterminatedCallNode[headIn_, {partIn:UnterminatedGroupNode[GroupSquare, _, _]}, dataIn_]] :=
+abstractCallNode[UnterminatedCallNode[headIn_, partIn:UnterminatedGroupNode[GroupSquare, _, _], dataIn_]] :=
 Module[{head, part, data, issues},
   head = headIn;
   part = partIn;

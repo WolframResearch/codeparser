@@ -3,6 +3,7 @@
 
 #include "TokenEnum.h" // for TokenEnum
 #include "CodePoint.h" // for codepoint
+#include "MyString.h"
 
 #if USE_MATHLINK
 #include "mathlink.h"
@@ -21,8 +22,6 @@
 class Issue;
 class CodeAction;
 class IssuePtrCompare;
-class Symbol;
-class MyString;
 
 using Buffer = const unsigned char *;
 using MBuffer = unsigned char *;
@@ -369,16 +368,16 @@ public:
 class Issue {
 public:
     
-    const Symbol& MakeSym;
-    const MyString& Tag;
+    const Symbol MakeSym;
+    const MyString Tag;
     const std::string Msg;
-    const MyString& Sev;
+    const MyString Sev;
     const Source Src;
     const double Val;
     const CodeActionPtrVector Actions;
     const AdditionalDescriptionVector AdditionalDescriptions;
     
-    Issue(const Symbol& MakeSym, const MyString& Tag, std::string Msg, const MyString& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
+    Issue(const Symbol MakeSym, const MyString Tag, std::string Msg, const MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
     
 #if USE_MATHLINK
     void put(MLINK mlp) const;
@@ -492,7 +491,7 @@ public:
 class SyntaxIssue : public Issue {
 public:
     
-    SyntaxIssue(const MyString& Tag, std::string Msg, const MyString& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
+    SyntaxIssue(const MyString Tag, std::string Msg, const MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
 };
 
 //
@@ -501,7 +500,7 @@ public:
 class FormatIssue : public Issue {
 public:
     
-    FormatIssue(const MyString& Tag, std::string Msg, const MyString& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
+    FormatIssue(const MyString Tag, std::string Msg, const MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
 };
 
 //
@@ -510,5 +509,5 @@ public:
 class EncodingIssue : public Issue {
 public:
     
-    EncodingIssue(const MyString& Tag, std::string Msg, const MyString& Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
+    EncodingIssue(const MyString Tag, std::string Msg, const MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
 };

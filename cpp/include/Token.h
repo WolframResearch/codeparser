@@ -19,6 +19,8 @@ struct Token {
     Token();
     Token(TokenEnum Tok, BufferAndLength BufLen, Source Src);
     
+    void reset();
+    
     void print(std::ostream& s) const;
 };
 

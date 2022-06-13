@@ -2086,7 +2086,7 @@ Module[{nodeBoxes},
   RowBox[nodeBoxes]
 ]]
 
-toStandardFormBoxes[CallNode[op_List, { node_ }, data_]] :=
+toStandardFormBoxes[CallNode[op_List, node_, data_]] :=
 Catch[
 Module[{opBoxes, nodeBox},
   opBoxes = toStandardFormBoxes /@ op;
@@ -2104,7 +2104,7 @@ Module[{opBoxes, nodeBox},
 this is a convenience, and is not technically correct
 FIXME: need a way to turn Aggregate syntax into boxes
 *)
-toStandardFormBoxes[CallNode[op_, { node_ }, data_]] :=
+toStandardFormBoxes[CallNode[op_, node_, data_]] :=
 Catch[
 Module[{opBoxes, nodeBox},
   opBoxes = toStandardFormBoxes[op];
@@ -2339,11 +2339,11 @@ Module[{processed},
   
   processed = Riffle[nodes, LeafNode[Token`Comma, ",", <||>]];
 
-  toStandardFormBoxes[CallNode[LeafNode[Symbol, "Hold", <||>], {
+  toStandardFormBoxes[CallNode[LeafNode[Symbol, "Hold", <||>],
                 GroupNode[GroupSquare, {
                   LeafNode[Token`OpenSquare, "[", <||>] } ~Join~
                   { InfixNode[Comma, processed, <||>] } ~Join~
-                  { LeafNode[Token`CloseSquare, "]", <||>] }, <||>] }, <||> ]]
+                  { LeafNode[Token`CloseSquare, "]", <||>] }, <||>], <||> ]]
 ]
 
 

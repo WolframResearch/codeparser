@@ -157,7 +157,7 @@ TestMatch[
 	CodeConcreteParse["f[1,\\[InvisibleComma]2]"]
 	,
 	ContainerNode[String, {
-		CallNode[{ LeafNode[Symbol, "f", <|Source->{{1, 1}, {1, 2}}|>] }, {
+		CallNode[{ LeafNode[Symbol, "f", <|Source->{{1, 1}, {1, 2}}|>] },
 			GroupNode[GroupSquare, {
 				LeafNode[Token`OpenSquare, "[", <|Source->{{1, 2}, {1, 3}}|>],
 				InfixNode[Comma, {
@@ -166,7 +166,7 @@ TestMatch[
 					ErrorNode[Token`Error`InfixImplicitNull, "", <|Source->{{1, 5}, {1, 5}}|>],
 					LeafNode[Token`LongName`InvisibleComma, "\\[InvisibleComma]", <|Source->{{1, 5}, {1, 22}}|>],
 					LeafNode[Integer, "2", <|Source->{{1, 22}, {1, 23}}|>]}, <|Source->{{1, 3}, {1, 23}}|>],
-				LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 23}, {1, 24}}|>] }, <|Source -> {{1, 2}, {1, 24}}|>] }, <|Source -> {{1, 1}, {1, 24}}|>] }, _]
+				LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 23}, {1, 24}}|>] }, <|Source -> {{1, 2}, {1, 24}}|>], <|Source -> {{1, 1}, {1, 24}}|>] }, _]
 	,
 	TestID->"Concrete-20190704-F8G9M5"
 ]
@@ -179,7 +179,7 @@ Test[
 	CodeConcreteParse["f[b : c]"]
 	,
 	ContainerNode[String, {
-			CallNode[{LeafNode[Symbol, "f", <|Source -> {{1, 1}, {1, 2}}|>]}, {
+			CallNode[{LeafNode[Symbol, "f", <|Source -> {{1, 1}, {1, 2}}|>]},
 			GroupNode[GroupSquare, {
 				LeafNode[Token`OpenSquare, "[", <|Source -> {{1, 2}, {1, 3}}|>],
 				BinaryNode[Pattern, {
@@ -188,7 +188,7 @@ Test[
 					LeafNode[Token`Colon, ":", <|Source -> {{1, 5}, {1, 6}}|>],
 					LeafNode[Whitespace, " ", <|Source -> {{1, 6}, {1, 7}}|>],
 					LeafNode[Symbol, "c", <|Source -> {{1, 7}, {1, 8}}|>]}, <|Source -> {{1, 3}, {1, 8}}|>],
-				LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 8}, {1, 9}}|>]}, <|Source -> {{1, 2}, {1, 9}}|>]}, <|Source -> {{1, 1}, {1, 9}}|>] }, <|Source -> {{1, 1}, {1, 9}}|>]
+				LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 8}, {1, 9}}|>]}, <|Source -> {{1, 2}, {1, 9}}|>], <|Source -> {{1, 1}, {1, 9}}|>] }, <|Source -> {{1, 1}, {1, 9}}|>]
 	,
 	TestID->"Concrete-20190709-P9A0T8"
 ]
@@ -209,8 +209,8 @@ Test[
 			GroupMissingCloserNode[GroupParen, {
 				LeafNode[Token`OpenParen, "(", <|Source -> {{1, 3}, {1, 4}}|>],
 				LeafNode[Whitespace, " ", <|Source -> {{1, 4}, {1, 5}}|>],
-				LeafNode[Symbol, "a", <|Source -> {{1, 5}, {1, 6}}|>],
-				LeafNode[Whitespace, " ", <|Source -> {{1, 6}, {1, 7}}|>]}, <|Source -> {{1, 3}, {1, 7}}|>],
+				LeafNode[Symbol, "a", <|Source -> {{1, 5}, {1, 6}}|>]}, <|Source -> {{1, 3}, {1, 6}}|>],
+			LeafNode[Whitespace, " ", <|Source -> {{1, 6}, {1, 7}}|>],
 			LeafNode[Token`CloseCurly, "}", <|Source -> {{1, 7}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>] }, <|Source -> {{1, 1}, {1, 8}}|>]
 	,
 	TestID->"Concrete-20190717-L0P2V0"
@@ -458,8 +458,8 @@ Test[
 				LeafNode[Token`Comment, "(*1*)", <|Source -> {{1, 2}, {1, 7}}|>],
 				LeafNode[Token`Plus, "+", <|Source -> {{1, 7}, {1, 8}}|>],
 				LeafNode[Token`Comment, "(*2*)", <|Source -> {{1, 8}, {1, 13}}|>],
-				LeafNode[Symbol, "b", <|Source -> {{1, 13}, {1, 14}}|>],
-				LeafNode[Token`Comment, "(*3*)", <|Source -> {{1, 14}, {1, 19}}|>]}, <|Source -> {{1, 1}, {1, 19}}|>],
+				LeafNode[Symbol, "b", <|Source -> {{1, 13}, {1, 14}}|>]}, <|Source -> {{1, 1}, {1, 14}}|>],
+			LeafNode[Token`Comment, "(*3*)", <|Source -> {{1, 14}, {1, 19}}|>],
 			LeafNode[Token`Semi, ";", <|Source -> {{1, 19}, {1, 20}}|>],
 			LeafNode[Token`Fake`ImplicitNull, "", <|Source -> {{1, 20}, {1, 20}}|>]}, <|Source -> {{1, 1}, {1, 20}}|>]}
 		,
@@ -501,8 +501,8 @@ TestMatch[
 				LeafNode[Token`Comment, "(*1*)", <|Source -> {{1, 8}, {1, 13}}|>],
 				LeafNode[Token`Comma, ",", <|Source -> {{1, 13}, {1, 14}}|>],
 				LeafNode[Token`Comment, "(*2*)", <|Source -> {{1, 14}, {1, 19}}|>],
-				LeafNode[Symbol, "b", <|Source -> {{1, 19}, {1, 20}}|>],
-				LeafNode[Token`Comment, "(*3*)", <|Source -> {{1, 20}, {1, 25}}|>]}, <|Source -> {{1, 7}, {1, 25}}|>],
+				LeafNode[Symbol, "b", <|Source -> {{1, 19}, {1, 20}}|>]}, <|Source -> {{1, 7}, {1, 20}}|>],
+			LeafNode[Token`Comment, "(*3*)", <|Source -> {{1, 20}, {1, 25}}|>],
 			LeafNode[Token`CloseCurly, "}", <|Source -> {{1, 25}, {1, 26}}|>]}, <|Source -> {{1, 1}, {1, 26}}|>]}
 		,
 		<|Source -> {{1, 1}, {1, 26}}|>
@@ -911,7 +911,7 @@ Test[
 	,
 	ContainerNode[String, {
 		CallNode[{
-			LeafNode[Symbol, "f", <|Source -> {{1, 1}, {1, 2}}|>]}, {
+			LeafNode[Symbol, "f", <|Source -> {{1, 1}, {1, 2}}|>]},
 			GroupNode[GroupSquare, {
 				LeafNode[Token`OpenSquare, "[", <|Source -> {{1, 2}, {1, 3}}|>],
 				InfixNode[CompoundExpression, {
@@ -920,7 +920,7 @@ Test[
 					LeafNode[Symbol, "b", <|Source -> {{1, 5}, {1, 6}}|>],
 					LeafNode[Token`Semi, ";", <|Source -> {{1, 6}, {1, 7}}|>],
 					LeafNode[Token`Fake`ImplicitNull, "", <|Source -> {{1, 7}, {1, 7}}|>]}, <|Source -> {{1, 3}, {1, 7}}|>],
-				LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 7}, {1, 8}}|>]}, <|Source -> {{1, 2}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]
+				LeafNode[Token`CloseSquare, "]", <|Source -> {{1, 7}, {1, 8}}|>]}, <|Source -> {{1, 2}, {1, 8}}|>], <|Source -> {{1, 1}, {1, 8}}|>]}, <|Source -> {{1, 1}, {1, 8}}|>]
 	,
 	TestID->"Concrete-20220604-E6J3A1"
 ]

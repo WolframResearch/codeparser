@@ -16,6 +16,10 @@
 #include <numeric> // for accumulate
 
 
+NodeSeq::NodeSeq(Precedence Prec) : vec(), F(), P(), Prec(Prec) {
+    vec.reserve(4);
+}
+
 void NodeSeq::append(NodePtr N) {
     vec.push_back(std::move(N));
 }
@@ -38,37 +42,18 @@ bool NodeSeq::empty() const {
     return vec.empty();
 }
 
-size_t NodeSeq::size() const {
-    
-    auto accum = std::accumulate(vec.begin(), vec.end(), static_cast<size_t>(0), [](size_t a, const NodePtr& b){ return a + b->size(); });
-    
-    return accum;
-}
+const NodePtr& NodeSeq::first() const {
 
-const Node *NodeSeq::first() const {
-    
     assert(!vec.empty());
     
-    auto i = 0;
-    
-    auto F = vec.at(i).get();
-    
-    auto FF = F->first();
-    
-    return FF;
+    return vec.front();
 }
 
-const Node *NodeSeq::last() const {
-    
+const NodePtr& NodeSeq::last() const {
+
     assert(!vec.empty());
     
-    auto i = vec.size()-1;
-    
-    auto L = vec.at(i).get();
-    
-    auto LL = L->last();
-    
-    return LL;
+    return vec.back();
 }
 
 void NodeSeq::print(std::ostream& s) const {
@@ -128,7 +113,7 @@ ColonLHS NodeSeq::checkColonLHS() const {
     
     if (auto B = dynamic_cast<BinaryNode *>(N.get())) {
         
-        auto& Op = B->getOp();
+        auto Op = B->getOp();
         
         if (Op == SYMBOL_PATTERN) {
             return COLONLHS_OPTIONAL;
@@ -139,7 +124,7 @@ ColonLHS NodeSeq::checkColonLHS() const {
     
     if (auto C = dynamic_cast<CompoundNode *>(N.get())) {
         
-        auto& Op = C->getOp();
+        auto Op = C->getOp();
         
         switch (Op.getId()) {
             case SYMBOL_CODEPARSER_PATTERNBLANK.getId():
@@ -238,6 +223,10 @@ bool NodeSeq::checkTilde() const {
 }
 
 
+TriviaSeq::TriviaSeq() : vec() {
+    vec.reserve(2);
+}
+
 void TriviaSeq::reset() {
     
     //
@@ -264,69 +253,36 @@ bool TriviaSeq::empty() const {
     return vec.empty();
 }
 
-size_t TriviaSeq::size() const {
-    return vec.size();
-}
 
-const Node *TriviaSeq::first() const {
-    
-    auto F = vec.at(0).get();
-    
-    auto FF = F->first();
-    
-    return FF;
-}
+Node::Node() {}
 
-const Node *TriviaSeq::last() const {
-    
-    auto L = vec.at(vec.size()-1).get();
-    
-    auto LL = L->last();
-    
-    return LL;
-}
+Node::~Node() {}
 
 
-Node::Node(NodeSeq ChildrenIn) : Children(std::move(ChildrenIn)) {}
-
-Source Node::getSource() const {
+OperatorNode::OperatorNode(const Symbol Op, const Symbol MakeSym, NodeSeq ChildrenIn) : Node(), Op(Op), MakeSym(MakeSym), Children(std::move(ChildrenIn)) {
     
     assert(!Children.empty());
     
-    auto First = Children.first();
-    auto Last = Children.last();
-    
+    auto& First = Children.first();
+    auto& Last = Children.last();
+
     auto FirstSrc = First->getSource();
     auto LastSrc = Last->getSource();
-    
-    return Source(FirstSrc, LastSrc);
+
+    Src = Source(FirstSrc, LastSrc);
 }
 
-size_t Node::size() const {
-    return 1;
+Symbol OperatorNode::getOp() const {
+    return Op;
 }
 
-const Node *Node::first() const {
-    return this;
+Source OperatorNode::getSource() const {
+    return Src;
 }
 
-const Node *Node::last() const {
-    return this;
-}
-
-Token Node::lastToken() const {
-    
-    assert(!Children.empty());
-    
-    auto Last = Children.last();
-    
-    return Last->lastToken();
-}
-
-bool Node::check() const {
+bool OperatorNode::check() const {
     return Children.check();
 }
-
 
 void OperatorNode::print(std::ostream& s) const {
     
@@ -339,15 +295,29 @@ void OperatorNode::print(std::ostream& s) const {
     Children.print(s);
     s << ", ";
     
-    getSource().print(s);
+    Src.print(s);
     
     s << "]";
 }
 
 
+LeafNode::LeafNode(const Token& Tok) : Node(), Tok(Tok) {}
+
+Source LeafNode::getSource() const {
+    return Tok.Src;
+}
+
+const Token LeafNode::getToken() const {
+    return Tok;
+}
+
+bool LeafNode::check() const {
+    return true;
+}
+
 void LeafNode::print(std::ostream& s) const {
     
-    auto& Sym = TokenToSymbol(Tok.Tok);
+    auto Sym = TokenToSymbol(Tok.Tok);
     
     SYMBOL_CODEPARSER_LEAFNODE.print(s);
     s << "[";
@@ -364,21 +334,31 @@ void LeafNode::print(std::ostream& s) const {
 }
 
 
-void ResettableLeafNode::reset() {
-    
-    //
-    //
-    // Just need to reset the global buffer to the buffer of the token
-    //
-    
-    TheByteBuffer->buffer = Tok.BufLen.buffer;
-    TheByteDecoder->SrcLoc = Tok.Src.Start;
+ErrorNode::ErrorNode(const Token& Tok) : Node(), Tok(Tok) {
+    assert(Tok.Tok.isError());
+    assert(!Tok.Tok.isUnterminated());
 }
 
+ErrorNode::ErrorNode(const Token&& Tok) : Node(), Tok(std::move(Tok)) {
+    assert(Tok.Tok.isError());
+    assert(!Tok.Tok.isUnterminated());
+}
+
+const Token ErrorNode::getToken() const {
+    return Tok;
+}
+
+Source ErrorNode::getSource() const {
+    return Tok.Src;
+}
+
+bool ErrorNode::check() const {
+    return false;
+}
 
 void ErrorNode::print(std::ostream& s) const {
     
-    auto& Sym = TokenToSymbol(Tok.Tok);
+    auto Sym = TokenToSymbol(Tok.Tok);
     
     SYMBOL_CODEPARSER_ERRORNODE.print(s);
     s << "[";
@@ -395,9 +375,25 @@ void ErrorNode::print(std::ostream& s) const {
 }
 
 
+UnterminatedTokenErrorNeedsReparseNode::UnterminatedTokenErrorNeedsReparseNode(const Token& Tok) : Node(), Tok(Tok) {
+    assert(Tok.Tok.isUnterminated());
+}
+
+UnterminatedTokenErrorNeedsReparseNode::UnterminatedTokenErrorNeedsReparseNode(const Token&& Tok) : Node(), Tok(std::move(Tok)) {
+    assert(Tok.Tok.isUnterminated());
+}
+
+Source UnterminatedTokenErrorNeedsReparseNode::getSource() const {
+    return Tok.Src;
+}
+
+bool UnterminatedTokenErrorNeedsReparseNode::check() const {
+    return false;
+}
+
 void UnterminatedTokenErrorNeedsReparseNode::print(std::ostream& s) const {
     
-    auto& Sym = TokenToSymbol(Tok.Tok);
+    auto Sym = TokenToSymbol(Tok.Tok);
     
     SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE.print(s);
     s << "[";
@@ -414,26 +410,52 @@ void UnterminatedTokenErrorNeedsReparseNode::print(std::ostream& s) const {
 }
 
 
-PrefixNode::PrefixNode(const Symbol& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_PREFIXNODE, std::move(Args)) {}
+bool GroupMissingCloserNode::check() const {
+    return false;
+}
 
-BinaryNode::BinaryNode(const Symbol& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_BINARYNODE, std::move(Args)) {}
 
-InfixNode::InfixNode(const Symbol& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_INFIXNODE, std::move(Args)) {}
+bool UnterminatedGroupNeedsReparseNode::check() const {
+    return false;
+}
 
-TernaryNode::TernaryNode(const Symbol& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_TERNARYNODE, std::move(Args)) {}
 
-PostfixNode::PostfixNode(const Symbol& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_POSTFIXNODE, std::move(Args)) {}
+PrefixNode::PrefixNode(const Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_PREFIXNODE, std::move(Args)) {}
 
-PrefixBinaryNode::PrefixBinaryNode(const Symbol& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_PREFIXBINARYNODE, std::move(Args)) {}
+BinaryNode::BinaryNode(const Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_BINARYNODE, std::move(Args)) {}
 
-GroupNode::GroupNode(const Symbol& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_GROUPNODE, std::move(Args)) {}
+InfixNode::InfixNode(const Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_INFIXNODE, std::move(Args)) {}
 
-CompoundNode::CompoundNode(const Symbol& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_COMPOUNDNODE, std::move(Args)) {}
+TernaryNode::TernaryNode(const Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_TERNARYNODE, std::move(Args)) {}
 
-GroupMissingCloserNode::GroupMissingCloserNode(const Symbol& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE, std::move(Args)) {}
+PostfixNode::PostfixNode(const Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_POSTFIXNODE, std::move(Args)) {}
 
-UnterminatedGroupNeedsReparseNode::UnterminatedGroupNeedsReparseNode(const Symbol& Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_UNTERMINATEDGROUPNEEDSREPARSENODE, std::move(Args)) {}
+PrefixBinaryNode::PrefixBinaryNode(const Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_PREFIXBINARYNODE, std::move(Args)) {}
 
+GroupNode::GroupNode(const Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_GROUPNODE, std::move(Args)) {}
+
+CompoundNode::CompoundNode(const Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_COMPOUNDNODE, std::move(Args)) {}
+
+GroupMissingCloserNode::GroupMissingCloserNode(const Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE, std::move(Args)) {}
+
+UnterminatedGroupNeedsReparseNode::UnterminatedGroupNeedsReparseNode(const Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_UNTERMINATEDGROUPNEEDSREPARSENODE, std::move(Args)) {}
+
+
+CallNode::CallNode(NodeSeq HeadIn, NodePtr BodyIn) : Head(std::move(HeadIn)), Body(std::move(BodyIn)) {
+    
+    assert(!Head.empty());
+    
+    const auto& First = Head.first();
+    
+    auto FirstSrc = First->getSource();
+    auto LastSrc = Body->getSource();
+    
+    Src = Source(FirstSrc, LastSrc);
+}
+
+Source CallNode::getSource() const {
+    return Src;
+}
 
 void CallNode::print(std::ostream& s) const {
     
@@ -443,29 +465,39 @@ void CallNode::print(std::ostream& s) const {
     Head.print(s);
     s << ", ";
     
-    Children.print(s);
+    Body->print(s);
     s << ", ";
     
-    getSource().print(s);
+    Src.print(s);
     
     s << "]";
 }
 
-Source CallNode::getSource() const {
+bool CallNode::check() const {
+    return Head.check() && Body->check();
+}
+
+
+SyntaxErrorNode::SyntaxErrorNode(const Symbol Err, NodeSeq ChildrenIn) : Err(Err), Children(std::move(ChildrenIn)) {
     
-    const auto& First = Head.first();
-    const auto& Last = Children.last();
-    
+    assert(!Children.empty());
+
+    auto& First = Children.first();
+    auto& Last = Children.last();
+
     auto FirstSrc = First->getSource();
     auto LastSrc = Last->getSource();
-    
-    return Source(FirstSrc, LastSrc);
+
+    Src = Source(FirstSrc, LastSrc);
 }
 
-bool CallNode::check() const {
-    return Children.check() && Head.check();
+bool SyntaxErrorNode::check() const {
+    return false;
 }
 
+Source SyntaxErrorNode::getSource() const {
+    return Src;
+}
 
 void SyntaxErrorNode::print(std::ostream& s) const {
     
@@ -478,11 +510,13 @@ void SyntaxErrorNode::print(std::ostream& s) const {
     Children.print(s);
     s << ", ";
     
-    getSource().print(s);
+    Src.print(s);
     
     s << "]";
 }
 
+
+CollectedExpressionsNode::CollectedExpressionsNode(std::vector<NodePtr> Exprs) : Node(), Exprs(std::move(Exprs)) {}
 
 void CollectedExpressionsNode::print(std::ostream& s) const {
     
@@ -504,6 +538,15 @@ bool CollectedExpressionsNode::check() const {
     return accum;
 }
 
+Source CollectedExpressionsNode::getSource() const {
+
+    assert(false);
+    
+    return Source();
+}
+
+
+CollectedIssuesNode::CollectedIssuesNode(IssuePtrSet Issues) : Node(), Issues(std::move(Issues)) {}
 
 void CollectedIssuesNode::print(std::ostream& s) const {
     
@@ -525,6 +568,26 @@ bool CollectedIssuesNode::check() const {
     return accum;
 }
 
+Source CollectedIssuesNode::getSource() const {
+    
+    assert(false);
+    
+    return Source();
+}
+
+
+CollectedSourceLocationsNode::CollectedSourceLocationsNode(std::set<SourceLocation> SourceLocs) : Node(), SourceLocs(std::move(SourceLocs)) {}
+
+bool CollectedSourceLocationsNode::check() const {
+    return true;
+}
+
+Source CollectedSourceLocationsNode::getSource() const {
+    
+    assert(false);
+    
+    return Source();
+}
 
 void CollectedSourceLocationsNode::print(std::ostream& s) const {
     
@@ -540,7 +603,7 @@ void CollectedSourceLocationsNode::print(std::ostream& s) const {
 }
 
 
-const MyString& unsafeCharacterEncodingReason(UnsafeCharacterEncodingFlag flag) {
+MyString unsafeCharacterEncodingReason(UnsafeCharacterEncodingFlag flag) {
     
     switch (flag) {
         case UNSAFECHARACTERENCODING_INCOMPLETEUTF8SEQUENCE: {
@@ -559,9 +622,22 @@ const MyString& unsafeCharacterEncodingReason(UnsafeCharacterEncodingFlag flag) 
     }
 }
 
+MissingBecauseUnsafeCharacterEncodingNode::MissingBecauseUnsafeCharacterEncodingNode(UnsafeCharacterEncodingFlag flag) : Node(), flag(flag) {}
+
+Source MissingBecauseUnsafeCharacterEncodingNode::getSource() const {
+    
+    assert(false);
+    
+    return Source();
+}
+
+bool MissingBecauseUnsafeCharacterEncodingNode::check() const {
+    return false;
+}
+
 void MissingBecauseUnsafeCharacterEncodingNode::print(std::ostream& s) const {
     
-    auto& reason = unsafeCharacterEncodingReason(flag);
+    auto reason = unsafeCharacterEncodingReason(flag);
     
     SYMBOL_MISSING.print(s);
     s << "[";
@@ -571,6 +647,19 @@ void MissingBecauseUnsafeCharacterEncodingNode::print(std::ostream& s) const {
     s << "]";
 }
 
+
+SafeStringNode::SafeStringNode(BufferAndLength bufAndLen) : Node(), bufAndLen(bufAndLen) {}
+
+Source SafeStringNode::getSource() const {
+    
+    assert(false);
+    
+    return Source();
+}
+
+bool SafeStringNode::check() const {
+    return true;
+}
 
 void SafeStringNode::print(std::ostream& s) const {
     bufAndLen.print(s);
@@ -617,7 +706,7 @@ void OperatorNode::put(MLINK mlp) const {
         assert(false);
     }
     
-    getSource().put(mlp);
+    Src.put(mlp);
 }
 #endif // USE_MATHLINK
 
@@ -629,7 +718,7 @@ void LeafNode::put(MLINK mlp) const {
         assert(false);
     }
 
-    auto& Sym = TokenToSymbol(Tok.Tok);
+    auto Sym = TokenToSymbol(Tok.Tok);
 
     Sym.put(mlp);
 
@@ -651,7 +740,7 @@ void ErrorNode::put(MLINK mlp) const {
         assert(false);
     }
     
-    auto& Sym = TokenToSymbol(Tok.Tok);
+    auto Sym = TokenToSymbol(Tok.Tok);
     
     Sym.put(mlp);
     
@@ -673,7 +762,7 @@ void UnterminatedTokenErrorNeedsReparseNode::put(MLINK mlp) const {
         assert(false);
     }
     
-    auto& Sym = TokenToSymbol(Tok.Tok);
+    auto Sym = TokenToSymbol(Tok.Tok);
     
     Sym.put(mlp);
     
@@ -697,13 +786,13 @@ void CallNode::put(MLINK mlp) const {
         
     Head.put(mlp);
     
-    Children.put(mlp);
+    Body->put(mlp);
     
     if (!MLPutFunction(mlp, SYMBOL_ASSOCIATION.name(), 1)) {
         assert(false);
     }
     
-    getSource().put(mlp);
+    Src.put(mlp);
 }
 #endif // USE_MATHLINK
 
@@ -723,7 +812,7 @@ void SyntaxErrorNode::put(MLINK mlp) const {
         assert(false);
     }
     
-    getSource().put(mlp);
+    Src.put(mlp);
 }
 #endif // USE_MATHLINK
 
@@ -872,7 +961,7 @@ expr OperatorNode::toExpr() const {
         
         auto DataExpr = Expr_BuildExprA(head, 1);
         
-        auto SrcExpr = getSource().toExpr();
+        auto SrcExpr = Src.toExpr();
         Expr_InsertA(DataExpr, 0 + 1, SrcExpr);
         
         Expr_InsertA(e, 2 + 1, DataExpr);
@@ -889,7 +978,7 @@ expr LeafNode::toExpr() const {
     
     auto e = Expr_BuildExprA(head, 3);
     
-    auto& Sym = TokenToSymbol(Tok.Tok);
+    auto Sym = TokenToSymbol(Tok.Tok);
     
     auto SymExpr = Sym.toExpr();
     Expr_InsertA(e, 0 + 1, SymExpr);
@@ -920,7 +1009,7 @@ expr ErrorNode::toExpr() const {
     
     auto e = Expr_BuildExprA(head, 3);
     
-    auto& Sym = TokenToSymbol(Tok.Tok);
+    auto Sym = TokenToSymbol(Tok.Tok);
     
     auto SymExpr = Sym.toExpr();
     Expr_InsertA(e, 0 + 1, SymExpr);
@@ -951,7 +1040,7 @@ expr UnterminatedTokenErrorNeedsReparseNode::toExpr() const {
     
     auto e = Expr_BuildExprA(head, 3);
     
-    auto& Sym = TokenToSymbol(Tok.Tok);
+    auto Sym = TokenToSymbol(Tok.Tok);
     
     auto SymExpr = Sym.toExpr();
     Expr_InsertA(e, 0 + 1, SymExpr);
@@ -985,15 +1074,15 @@ expr CallNode::toExpr() const {
     auto HeadExpr = Head.toExpr();
     Expr_InsertA(e, 0 + 1, HeadExpr);
         
-    auto ChildrenExpr = Children.toExpr();
-    Expr_InsertA(e, 1 + 1, ChildrenExpr);
+    auto BodyExpr = Body->toExpr();
+    Expr_InsertA(e, 1 + 1, BodyExpr);
     
     {
         auto head = SYMBOL_ASSOCIATION.toExpr();
         
         auto DataExpr = Expr_BuildExprA(head, 1);
         
-        auto SrcExpr = getSource().toExpr();
+        auto SrcExpr = Src.toExpr();
         Expr_InsertA(DataExpr, 0 + 1, SrcExpr);
         
         Expr_InsertA(e, 2 + 1, DataExpr);
@@ -1022,7 +1111,7 @@ expr SyntaxErrorNode::toExpr() const {
         
         auto DataExpr = Expr_BuildExprA(head, 1);
         
-        auto SrcExpr = getSource().toExpr();
+        auto SrcExpr = Src.toExpr();
         Expr_InsertA(DataExpr, 0 + 1, SrcExpr);
         
         Expr_InsertA(e, 2 + 1, DataExpr);

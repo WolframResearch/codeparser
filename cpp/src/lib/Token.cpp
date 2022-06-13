@@ -3,6 +3,8 @@
 
 #include "API.h" // for TheParserSession
 #include "Symbol.h"
+#include "ByteBuffer.h"
+#include "ByteDecoder.h"
 
 #include <cassert>
 
@@ -122,9 +124,21 @@ bool operator!=(Token a, Token b) {
     return a.Tok != b.Tok || a.BufLen != b.BufLen || a.Src != b.Src;
 }
 
+void Token::reset() {
+    
+    //
+    //
+    // Just need to reset the global buffer to the buffer of the token
+    //
+    
+    TheByteBuffer->buffer = BufLen.buffer;
+    
+    TheByteDecoder->SrcLoc = Src.Start;
+}
+
 void Token::print(std::ostream& s) const {
     
-    auto& Sym = TokenToSymbol(Tok);
+    auto Sym = TokenToSymbol(Tok);
     
     SYMBOL_CODEPARSER_LEAFNODE.print(s);
     s << "[";

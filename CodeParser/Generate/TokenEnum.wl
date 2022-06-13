@@ -181,20 +181,29 @@ isPossibleBeginning[Token`BangBang] = True
 Openers
 *)
 isPossibleBeginning[Token`OpenParen] = True
-isPossibleBeginning[Token`OpenSquare] = True
 isPossibleBeginning[Token`OpenCurly] = True
 isPossibleBeginning[Token`LessBar] = True
 isPossibleBeginning[Token`LongName`LeftCeiling] = True
 isPossibleBeginning[Token`LongName`LeftFloor] = True
 isPossibleBeginning[Token`LongName`LeftAngleBracket] = True
-isPossibleBeginning[Token`LongName`LeftDoubleBracket] = True
 isPossibleBeginning[Token`LongName`LeftBracketingBar] = True
 isPossibleBeginning[Token`LongName`LeftDoubleBracketingBar] = True
 isPossibleBeginning[Token`LongName`LeftAssociation] = True
 isPossibleBeginning[Token`LongName`OpenCurlyQuote] = True
 isPossibleBeginning[Token`LongName`OpenCurlyDoubleQuote] = True
+(*
+these openers are Call syntax and NOT possible beginning
 
+isPossibleBeginning[Token`OpenSquare] = True
+isPossibleBeginning[Token`ColonColonOpenSquare] = True
+isPossibleBeginning[Token`LongName`LeftDoubleBracket] = True
+*)
+
+(*
+Prefix linear syntax operators
+*)
 isPossibleBeginning[Token`LinearSyntax`Bang] = True
+
 
 (*
 Integration operators
@@ -386,10 +395,6 @@ tokenCPPHeader = {
 // All group closers
 //
 enum Closer : uint8_t {
-    //
-    // CLOSER_OPEN is used to indicate the lack of a group
-    //
-    CLOSER_OPEN,
     CLOSER_BARGREATER,
     CLOSER_CLOSECURLY,
     CLOSER_CLOSEPAREN,
@@ -506,7 +511,7 @@ bool operator!=(TokenEnum a, TokenEnum b);
 Closer GroupOpenerToCloser(TokenEnum T);
 Closer TokenToCloser(TokenEnum T);
 
-const Symbol& TokenToSymbol(TokenEnum T);
+Symbol TokenToSymbol(TokenEnum T);
 
 //
 // All token enums
@@ -568,7 +573,7 @@ static_assert(TOKEN_ERROR_FIRST.value() == 0x10, \"Check your assumptions\");
 static_assert(TOKEN_ERROR_UNTERMINATEDCOMMENT.value() == 0x1c, \"Check your assumptions\");
 static_assert(TOKEN_ERROR_UNSUPPORTEDTOKEN.value() == 0x20, \"Check your assumptions\");
 "} ~Join~
-{"const Symbol& TokenToSymbol(TokenEnum T) {"} ~Join~
+{"Symbol TokenToSymbol(TokenEnum T) {"} ~Join~
 {"switch (T.value()) {"} ~Join~
 tokenToSymbolCases ~Join~
 {"default:"} ~Join~

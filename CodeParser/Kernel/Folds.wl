@@ -20,7 +20,7 @@ Needs["CodeParser`Utils`"]
 (*
 Remove comments, whitespace, and newlines
 
-Collapse CallNode[{op}, {}] to CallNode[op, {}]
+Collapse CallNode[{op}, xxx] to CallNode[op, xxx]
 
 
 *)
@@ -67,15 +67,15 @@ aggregateButNotToplevelNewlines[GroupNode[Comment, _, _]] := Nothing
 
 
 
-aggregate[CallNode[head_List, children_, data_]] :=
-  CallNode[aggregate[head[[1]]], aggregate /@ children, data]
+aggregate[CallNode[head_List, child_, data_]] :=
+  CallNode[aggregate[head[[1]]], aggregate[child], data]
 
-aggregateButNotToplevelNewlines[CallNode[head_List, children_, data_]] :=
-  CallNode[aggregate[head[[1]]], aggregate /@ children, data]
+aggregateButNotToplevelNewlines[CallNode[head_List, child_, data_]] :=
+  CallNode[aggregate[head[[1]]], aggregate[child], data]
 
 
 
-aggregate[node:CallNode[headIn_, childrenIn_, dataIn_]] :=
+aggregate[node:CallNode[headIn_, childIn_, dataIn_]] :=
   Failure["InvalidHead", <|
       "Message" -> "Head is not a list (Possibly calling Aggregate on abstract syntax)",
       "Function" -> aggregate,
@@ -218,17 +218,17 @@ deparen[GroupNode[GroupParen, { _, child:InfixNode[Comma, _, _], _ }, data_]] :=
 deparen[GroupNode[GroupParen, { _, child_, _}, data_]] :=
   deparen[child]
 
-deparen[CallNode[head_, children_, dataIn_]] :=
+deparen[CallNode[head_, child_, dataIn_]] :=
 Catch[
-Module[{deHead, deChildren, data},
+Module[{deHead, deChild, data},
 
   data = dataIn;
 
   deHead = deparen[head];
 
-  deChildren = deparen /@ children;
+  deChild = deparen[child];
 
-  CallNode[deHead, deChildren, data]
+  CallNode[deHead, deChild, data]
 ]]
 
 deparen[node_[tag_, children_, dataIn_]] :=
@@ -281,8 +281,8 @@ linearize0[CompoundNode[_, fs_List, _]] :=
 linearize0[BoxNode[_, fs_List, _]] :=
   linearize0 /@ fs
 
-linearize0[CallNode[head_List, fs_List, _]] :=
-  {linearize0 /@ head, linearize0 /@ fs}
+linearize0[CallNode[head_List, f_, _]] :=
+  {linearize0 /@ head, linearize0[f]}
 
 linearize0[SyntaxErrorNode[_, fs_List, _]] :=
   linearize0 /@ fs
@@ -299,8 +299,8 @@ linearize0[AbstractSyntaxErrorNode[_, fs_List, _]] :=
 linearize0[CallMissingCloserNode[head_List, fs_List, _]] :=
   {linearize0 /@ head, linearize0 /@ fs}
 
-linearize0[UnterminatedCallNode[head_List, fs_List, _]] :=
-  {linearize0 /@ head, linearize0 /@ fs}
+linearize0[UnterminatedCallNode[head_List, f_, _]] :=
+  {linearize0 /@ head, linearize0[f]}
 
 
 (*

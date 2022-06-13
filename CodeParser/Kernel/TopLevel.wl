@@ -63,7 +63,7 @@ Some nodes would be strange at top-level in a package. For example, 1+1 would be
 *)
 
 
-topLevelChildIssues[CallNode[_, {GroupNode[GroupSquare, {_, GroupNode[GroupSquare, _, _], _}, _]}, data_], KeyValuePattern["WillReportToplevelIssues" -> True]] :=
+topLevelChildIssues[CallNode[_, GroupNode[GroupSquare, {_, GroupNode[GroupSquare, _, _], _}, _], data_], KeyValuePattern["WillReportToplevelIssues" -> True]] :=
   {SyntaxIssue["TopLevelPart", "Unexpected ``Part`` expression at top-level.", "Warning", <|
     Source -> data[Source],
     ConfidenceLevel -> 0.95
@@ -72,7 +72,7 @@ topLevelChildIssues[CallNode[_, {GroupNode[GroupSquare, {_, GroupNode[GroupSquar
 (*
 Call could be anything
 *)
-topLevelChildIssues[CallNode[_, {GroupNode[GroupSquare, _, _]}, _], KeyValuePattern["WillReportToplevelIssues" -> True]] :=
+topLevelChildIssues[CallNode[_, GroupNode[GroupSquare, _, _], _], KeyValuePattern["WillReportToplevelIssues" -> True]] :=
   {}
 
 (*
@@ -381,7 +381,7 @@ topLevelChildIssues[
   KeyValuePattern["WillReportToplevelIssues" -> True]
 ] :=
   {
-    SyntaxIssue["TopLevelExpression", "Unexpected expression at top-level.", "Warning",
+    SyntaxIssue["TopLevelExpression1", "Unexpected expression at top-level.", "Warning",
       <|
         Source -> slashData[Source],
         ConfidenceLevel -> 0.95,

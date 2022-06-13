@@ -35,7 +35,6 @@ private:
     
     std::vector<NodeSeq> ArgsStack;
     std::vector<NodePtr> NodeStack;
-    std::vector<Precedence> PrecedenceStack;
     std::vector<Closer> GroupStack;
     
     void handleFirstLine(FirstLineBehavior firstLineBehavior);
@@ -64,7 +63,7 @@ public:
     
     void shift();
     
-    NodeSeq& pushArgs(ParseFunction F, ParseletPtr P);
+    NodeSeq& pushArgs(Precedence Prec);
     NodeSeq popArgs();
     NodeSeq& peekArgs();
     size_t getArgsStackSize() const;
@@ -79,11 +78,8 @@ public:
     size_t getGroupDepth() const;
     bool checkGroup(Closer Closr) const;
     
-    Precedence& topPrecedence();
-    Precedence& pushPrecedence(Precedence Prec);
-    void popPrecedence();
-    size_t getPrecedenceStackSize() const;
-    void clearPrecedenceStack();
+    Precedence topPrecedence();
+    void setPrecedence(Precedence Prec);
     
     bool checkPatternPrecedence() const;
 };

@@ -9,12 +9,9 @@
 #include "ByteBuffer.h" // for ByteBuffer
 
 
-Parser::Parser() : ArgsStack(), NodeStack(), PrecedenceStack(), GroupStack() {}
+Parser::Parser() : ArgsStack(), NodeStack(), GroupStack() {}
 
 void Parser::init() {
-    
-    clearPrecedenceStack();
-    pushPrecedence(PRECEDENCE_LOWEST);
     
     handleFirstLine(TheParserSession->firstLineBehavior);
 }
@@ -230,9 +227,13 @@ void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2) {
     HANDLE_ABORT;
     
     InfixParseletPtr I;
+    
     Token token;
     
-    bool topPrecGreater;
+    Precedence TokenPrecedence;
+    
+    bool wasGreater;
+    
     {
         TriviaSeq Trivia1;
         
@@ -244,7 +245,7 @@ void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2) {
         token = I->processImplicitTimes(token);
         I = infixParselets[token.Tok.value()];
         
-        auto TokenPrecedence = I->getPrecedence();
+        TokenPrecedence = I->getPrecedence();
         
         //
         // if (Ctxt.Prec > TokenPrecedence)
@@ -252,30 +253,31 @@ void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2) {
         // else if (Ctxt.Prec == TokenPrecedence && Ctxt.Prec.Associativity is NonRight)
         //   break;
         //
+        
         if ((TheParser->topPrecedence() | 0x1) > TokenPrecedence) {
                 
             Trivia1.reset();
             
-            topPrecGreater = true;
+            wasGreater = true;
             
         } else {
             
-            auto& LeftSeq = TheParser->pushArgs(nullptr, nullptr);
+            auto& LeftSeq = TheParser->pushArgs(TokenPrecedence);
             
             TheParser->shift();
             
             LeftSeq.appendSeq(std::move(Trivia1));
             
-            topPrecGreater = false;
+            wasGreater = false;
         }
     }
     
-    if (topPrecGreater) {
-        
+    if (wasGreater) {
+
         MUSTTAIL
         return Parser_tryContinue(Ignored, Ignored2);
     }
-    
+        
     MUSTTAIL
     return (I->parseInfix())(I, token);
 }
@@ -294,7 +296,7 @@ void Parser_tryContinue(ParseletPtr Ignored, Token Ignored2) {
         assert(P != nullptr);
         
         MUSTTAIL
-        return F(P, Token());
+        return F(P, Ignored2);
     }
     
     // no call needed here
@@ -380,8 +382,8 @@ void Parser::shift() {
     Args.append(std::move(Operand));
 }
 
-NodeSeq& Parser::pushArgs(ParseFunction F, ParseletPtr P) {
-    ArgsStack.push_back(NodeSeq(F, P));
+NodeSeq& Parser::pushArgs(Precedence Prec) {
+    ArgsStack.emplace_back(Prec);
     return ArgsStack.back();
 }
 
@@ -446,45 +448,36 @@ bool Parser::checkGroup(Closer Closr) const {
     return false;
 }
 
-Precedence& Parser::topPrecedence() {
-    assert(!PrecedenceStack.empty());
-    return PrecedenceStack.back();
-}
-
-Precedence& Parser::pushPrecedence(Precedence Prec) {
-    PrecedenceStack.push_back(Prec);
-    return PrecedenceStack.back();
-}
-
-void Parser::popPrecedence() {
-    assert(!PrecedenceStack.empty());
-    PrecedenceStack.pop_back();
-}
-
-size_t Parser::getPrecedenceStackSize() const {
-    return PrecedenceStack.size();
-}
-
-void Parser::clearPrecedenceStack() {
-    while (!PrecedenceStack.empty()) {
-        PrecedenceStack.pop_back();
+Precedence Parser::topPrecedence() {
+    if (ArgsStack.empty()) {
+        return PRECEDENCE_LOWEST;
     }
+    return ArgsStack.back().Prec;
+}
+
+void Parser::setPrecedence(Precedence Prec) {
+    assert(!ArgsStack.empty());
+    auto& Args = ArgsStack.back();
+    Args.Prec = Prec;
 }
 
 bool Parser::checkPatternPrecedence() const {
     
-    for (auto rit = PrecedenceStack.rbegin(); rit != PrecedenceStack.rend(); rit++) {
+    for (auto rit = ArgsStack.rbegin(); rit != ArgsStack.rend(); rit++) {
+
+        auto& Args = *rit;
+
+        auto Prec = Args.Prec;
         
-        auto Prec = *rit;
+        if (Prec > PRECEDENCE_FAKE_PATTERNCOLON) {
+            continue;
+        }
         
         if (Prec == PRECEDENCE_FAKE_PATTERNCOLON) {
             return true;
         }
-        
-        //
-        // reset by a group
-        //
-        if (Prec == PRECEDENCE_LOWEST) {
+
+        if (Prec < PRECEDENCE_FAKE_PATTERNCOLON) {
             return false;
         }
     }

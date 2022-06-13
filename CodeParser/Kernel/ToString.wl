@@ -169,23 +169,23 @@ Module[{nodeStrs},
 
 (*
 toInputFormString is intended for aggregate syntax, and aggregate syntax
-only ever has 1 arg for a Call: i.e. CallNode[head, {GroupNode[GroupSquare, {args}]}]
+only ever has 1 arg for a Call: i.e. CallNode[head, GroupNode[GroupSquare, {args}]]
 
 If you see an unevaluated toInputFormString[CallNode[head, {arg1, arg2}]], then
 that is abstract syntax
 *)
-toInputFormString[CallNode[op_, nodes_, data_]] :=
+toInputFormString[CallNode[op_, node_, data_]] :=
 Catch[
-Module[{opStr, nodeStrs},
+Module[{opStr, nodeStr},
   opStr = toInputFormString[op];
   If[FailureQ[opStr],
     Throw[opStr]
   ];
-  nodeStrs = toInputFormString /@ nodes;
-  If[AnyTrue[nodeStrs, FailureQ],
-    Throw[SelectFirst[nodeStrs, FailureQ]]
+  nodeStr = toInputFormString[node];
+  If[FailureQ[nodeStr],
+    Throw[nodeStr]
   ];
-  StringJoin[opStr, nodeStrs]
+  StringJoin[opStr, nodeStr]
 ]]
 
 toInputFormString[GroupNode[op_, nodes_, data_]] :=
@@ -272,13 +272,12 @@ Module[{processed},
   
   processed = Riffle[nodes, LeafNode[Token`Comma, ",", <||>]];
 
-  toInputFormString[CallNode[LeafNode[Symbol, "Hold", <||>], {
+  toInputFormString[CallNode[LeafNode[Symbol, "Hold", <||>],
       GroupNode[GroupSquare, {
         LeafNode[Token`OpenSquare, "[", <||>] } ~Join~
         { InfixNode[Comma, processed, <||>] } ~Join~
-        { LeafNode[Token`CloseSquare, "]", <||>] }, <||>]
-    }, <||>
-  ]]
+        { LeafNode[Token`CloseSquare, "]", <||>] }, <||>], <||>]
+  ]
 ]
 
 toInputFormStringButNotToplevelNewlines[ContainerNode[Box, nodes_, data_]] :=
@@ -542,16 +541,16 @@ toSourceCharacterString[ErrorNode[_, str_, _], insideBoxes_] :=
 
 (*
 toSourceCharacterString is intended for concrete syntax, and concrete syntax
-has a List for the head of a Call: i.e. CallNode[{head}, {GroupNode[GroupSquare, {args}]}]
+has a List for the head of a Call: i.e. CallNode[{head}, GroupNode[GroupSquare, {args}]]
 
 But!
 
 Put in a hack to handle non-List for head of CallNode, because it is convenient
 
 *)
-toSourceCharacterString[CallNode[op_, nodes_, data_], insideBoxes_] :=
+toSourceCharacterString[CallNode[op_, node_, data_], insideBoxes_] :=
 Catch[
-Module[{opStrs, nodeStrs},
+Module[{opStrs, nodeStr},
   If[ListQ[op],
     opStrs = toSourceCharacterString[#, insideBoxes]& /@ op;
     ,
@@ -560,11 +559,11 @@ Module[{opStrs, nodeStrs},
   If[AnyTrue[opStrs, FailureQ],
     Throw[SelectFirst[opStrs, FailureQ]]
   ];
-  nodeStrs = toSourceCharacterString[#, insideBoxes]& /@ nodes;
-  If[AnyTrue[nodeStrs, FailureQ],
-    Throw[SelectFirst[nodeStrs, FailureQ]]
+  nodeStr = toSourceCharacterString[node, insideBoxes];
+  If[FailureQ[nodeStr],
+    Throw[nodeStr]
   ];
-  StringJoin[opStrs, nodeStrs]
+  StringJoin[opStrs, nodeStr]
 ]]
 
 toSourceCharacterString[ContainerNode[Hold, nodesIn_, opts_], insideBoxes_] :=

@@ -346,17 +346,17 @@ f ::[ ]
 f \[LeftDoubleBracket] \[RightDoubleBracket]
 *)
 
-abstract[CallNode[op_, children:{ GroupNode[GroupSquare, { _, GroupNode[GroupSquare, _, _], _ }, _] }, data1_]] :=
-  abstractCallNode[CallNode[op, children, data1]]
+abstract[CallNode[op_, child:GroupNode[GroupSquare, { _, GroupNode[GroupSquare, _, _], _ }, _], data1_]] :=
+  abstractCallNode[CallNode[op, child, data1]]
 
-abstract[CallNode[op_, children:{ GroupNode[GroupSquare, _, _] }, data1_]] :=
-  abstractCallNode[CallNode[op, children, data1]]
+abstract[CallNode[op_, child:GroupNode[GroupSquare, _, _], data1_]] :=
+  abstractCallNode[CallNode[op, child, data1]]
 
-abstract[CallNode[op_, children:{ GroupNode[GroupTypeSpecifier, _, _] }, data1_]] :=
-  abstractCallNode[CallNode[op, children, data1]]
+abstract[CallNode[op_, child:GroupNode[GroupTypeSpecifier, _, _], data1_]] :=
+  abstractCallNode[CallNode[op, child, data1]]
 
-abstract[CallNode[op_, children:{ GroupNode[GroupDoubleBracket, _, _] }, data1_]] :=
-  abstractCallNode[CallNode[op, children, data1]]
+abstract[CallNode[op_, child:GroupNode[GroupDoubleBracket, _, _], data1_]] :=
+  abstractCallNode[CallNode[op, child, data1]]
 
 
 (*
@@ -383,26 +383,26 @@ we need to distinguish these cases, so it makes sense to have special node to sa
 
 GroupMissingCloserNode gets abstracted
 *)
-abstract[CallNode[head_, children:{GroupMissingCloserNode[GroupSquare, _, _]}, data_]] :=
-  abstractCallNode[CallMissingCloserNode[head, children, data]]
+abstract[CallNode[head_, child:GroupMissingCloserNode[GroupSquare, _, _], data_]] :=
+  abstractCallNode[CallMissingCloserNode[head, child, data]]
 
-abstract[CallNode[head_, children:{GroupMissingCloserNode[GroupTypeSpecifier, _, _]}, data_]] :=
-  abstractCallNode[CallMissingCloserNode[head, children, data]]
+abstract[CallNode[head_, child:GroupMissingCloserNode[GroupTypeSpecifier, _, _], data_]] :=
+  abstractCallNode[CallMissingCloserNode[head, child, data]]
 
-abstract[CallNode[head_, children:{GroupMissingCloserNode[GroupDoubleBracket, _, _]}, data_]] :=
-  abstractCallNode[CallMissingCloserNode[head, children, data]]
+abstract[CallNode[head_, child:GroupMissingCloserNode[GroupDoubleBracket, _, _], data_]] :=
+  abstractCallNode[CallMissingCloserNode[head, child, data]]
 
 (*
 UnterminatedGroupNode does NOT get abstracted
 *)
-abstract[CallNode[head_, children:{UnterminatedGroupNode[GroupSquare, _, _]}, data_]] :=
-  abstractCallNode[UnterminatedCallNode[head, children, data]]
+abstract[CallNode[head_, child:UnterminatedGroupNode[GroupSquare, _, _], data_]] :=
+  abstractCallNode[UnterminatedCallNode[head, child, data]]
 
-abstract[CallNode[head_, children:{UnterminatedGroupNode[GroupTypeSpecifier, _, _]}, data_]] :=
-  abstractCallNode[UnterminatedCallNode[head, children, data]]
+abstract[CallNode[head_, child:UnterminatedGroupNode[GroupTypeSpecifier, _, _], data_]] :=
+  abstractCallNode[UnterminatedCallNode[head, child, data]]
 
-abstract[CallNode[head_, children:{UnterminatedGroupNode[GroupDoubleBracket, _, _]}, data_]] :=
-  abstractCallNode[UnterminatedCallNode[head, children, data]]
+abstract[CallNode[head_, child:UnterminatedGroupNode[GroupDoubleBracket, _, _], data_]] :=
+  abstractCallNode[UnterminatedCallNode[head, child, data]]
 
 
 
@@ -702,11 +702,11 @@ reciprocate[node:ErrorNode[Token`Error`ExpectedOperand, _, _], _] :=
 *)
 
 reciprocate[node_, data_] :=
-  CallNode[ToNode[Power], {
+  CallNode[ToNode[Power],
     GroupNode[GroupSquare, {
       LeafNode[Token`OpenSquare, "[", <||>],
       InfixNode[Comma, { node, LeafNode[Token`Comma, ",", <||>], ToNode[-1] }, <||>],
-      LeafNode[Token`CloseSquare, "]", <||>] }, <||> ] }, data]
+      LeafNode[Token`CloseSquare, "]", <||>] }, <||> ], data]
 
 
 
@@ -1161,158 +1161,6 @@ vectorInequalityAffinity[System`VectorGreaterEqual] := True
 abstractComma[InfixNode[Comma, children_, data_]] :=
   CallNode[ToNode[Comma], abstract /@ (children /. ErrorNode[Token`Error`PrefixImplicitNull | Token`Error`InfixImplicitNull, _, data1_] :> LeafNode[Symbol, "Null", data1]), data]
 
-
-(*
-properly abstract and warn about a;b;[]
-*)
-abstractCompoundExpression[InfixNode[CompoundExpression, { headIn__, groupIn:GroupNode[GroupSquare, {first_, ___, last_}, _] }, dataIn_]] :=
-Module[{head, data, issues},
-
-  data = dataIn;
-
-  issues = Lookup[data, AbstractSyntaxIssues, {}];
-
-  AppendTo[issues,
-    SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|
-      Source -> first[[3, Key[Source]]],
-      ConfidenceLevel -> 1.0,
-      "AdditionalSources" -> {last[[3, Key[Source]]]}
-    |>]
-  ];
-
-  AssociateTo[data, AbstractSyntaxIssues -> issues];
-
-  head = InfixNode[CompoundExpression, Riffle[{headIn}, LeafNode[Token`Semi, ";", <||>]] ~Join~ {LeafNode[Token`Semi, ";", <||>], LeafNode[Token`Fake`ImplicitNull, "", <||>]}, <||>];
-
-  abstract[CallNode[head, { groupIn }, data]]
-]
-
-(*
-properly abstract and warn about a;b;[];c
-*)
-abstractCompoundExpression[InfixNode[CompoundExpression, { headIn__, groupIn:GroupNode[GroupSquare, {first_, ___, last_}, _], rest__ }, dataIn_]] :=
-Module[{head, data, issues},
-
-  data = dataIn;
-
-  issues = Lookup[data, AbstractSyntaxIssues, {}];
-
-  AppendTo[issues,
-    SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|
-      Source -> first[[3, Key[Source]]],
-      ConfidenceLevel -> 1.0,
-      "AdditionalSources" -> {last[[3, Key[Source]]]}
-    |>]
-  ];
-
-  AssociateTo[data, AbstractSyntaxIssues -> issues];
-
-    head = InfixNode[CompoundExpression, Riffle[{headIn}, LeafNode[Token`Semi, ";", <||>]] ~Join~ {LeafNode[Token`Semi, ";", <||>], LeafNode[Token`Fake`ImplicitNull, "", <||>]}, <||>];
-
-  abstract[InfixNode[CompoundExpression, { CallNode[head, { groupIn }, data], LeafNode[Token`Semi, ";", <||>] } ~Join~ Riffle[{rest}, LeafNode[Token`Semi, ";", <||>]], <||>]]
-]
-
-
-(*
-properly abstract and warn about a;b;::[]
-*)
-abstractCompoundExpression[InfixNode[CompoundExpression, { headIn__, groupIn:GroupNode[GroupTypeSpecifier, {first_, ___, last_}, _] }, dataIn_]] :=
-Module[{head, data, issues},
-
-  data = dataIn;
-
-  issues = Lookup[data, AbstractSyntaxIssues, {}];
-
-  AppendTo[issues,
-    SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|
-      Source -> first[[3, Key[Source]]],
-      ConfidenceLevel -> 1.0,
-      "AdditionalSources" -> {last[[3, Key[Source]]]}
-    |>]
-  ];
-
-  AssociateTo[data, AbstractSyntaxIssues -> issues];
-
-  head = InfixNode[CompoundExpression, Riffle[{headIn}, LeafNode[Token`Semi, ";", <||>]] ~Join~ {LeafNode[Token`Semi, ";", <||>], LeafNode[Token`Fake`ImplicitNull, "", <||>]}, <||>];
-
-  abstract[CallNode[head, { groupIn }, data]]
-]
-
-(*
-properly abstract and warn about a;b;::[];c
-*)
-abstractCompoundExpression[InfixNode[CompoundExpression, { headIn__, groupIn:GroupNode[GroupTypeSpecifier, {first_, ___, last_}, _], rest__ }, dataIn_]] :=
-Module[{head, data, issues},
-
-  data = dataIn;
-
-  issues = Lookup[data, AbstractSyntaxIssues, {}];
-
-  AppendTo[issues,
-    SyntaxIssue["StrangeCall", "Unexpected call.", "Error", <|
-      Source -> first[[3, Key[Source]]],
-      ConfidenceLevel -> 1.0,
-      "AdditionalSources" -> {last[[3, Key[Source]]]}
-    |>]
-  ];
-
-  AssociateTo[data, AbstractSyntaxIssues -> issues];
-
-    head = InfixNode[CompoundExpression, Riffle[{headIn}, LeafNode[Token`Semi, ";", <||>]] ~Join~ {LeafNode[Token`Semi, ";", <||>], LeafNode[Token`Fake`ImplicitNull, "", <||>]}, <||>];
-
-  abstract[InfixNode[CompoundExpression, { CallNode[head, { groupIn }, data], LeafNode[Token`Semi, ";", <||>] } ~Join~ Riffle[{rest}, LeafNode[Token`Semi, ";", <||>]], <||>]]
-]
-
-
-(*
-properly abstract and warn about a;b;\[LeftDoubleBracket]\[RightDoubleBracket]
-*)
-abstractCompoundExpression[InfixNode[CompoundExpression, { headIn__, groupIn:GroupNode[GroupDoubleBracket, {first_, ___, last_}, _] }, dataIn_]] :=
-Module[{head, data, issues},
-
-    data = dataIn;
-
-    issues = Lookup[data, AbstractSyntaxIssues, {}];
-
-  AppendTo[issues,
-    SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Error", <|
-      Source -> first[[3, Key[Source]]],
-      ConfidenceLevel -> 1.0,
-      "AdditionalSources" -> {last[[3, Key[Source]]]}
-    |>]
-  ];
-
-    AssociateTo[data, AbstractSyntaxIssues -> issues];
-
-    head = InfixNode[CompoundExpression, Riffle[{headIn}, LeafNode[Token`Semi, ";", <||>]] ~Join~ {LeafNode[Token`Semi, ";", <||>], LeafNode[Token`Fake`ImplicitNull, "", <||>]}, <||>];
-
-    abstract[CallNode[head, { groupIn }, data]]
-]
-
-(*
-properly abstract and warn about a;b;\[LeftDoubleBracket]\[RightDoubleBracket];c
-*)
-abstractCompoundExpression[InfixNode[CompoundExpression, { headIn__, groupIn:GroupNode[GroupDoubleBracket, {first_, ___, last_}, _], rest__ }, dataIn_]] :=
-Module[{head, data, issues},
-
-    data = dataIn;
-
-    issues = Lookup[data, AbstractSyntaxIssues, {}];
-
-  AppendTo[issues,
-    SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Error", <|
-      Source -> first[[3, Key[Source]]],
-      ConfidenceLevel -> 1.0,
-      "AdditionalSources" -> {last[[3, Key[Source]]]}
-    |>]
-  ];
-
-    AssociateTo[data, AbstractSyntaxIssues -> issues];
-
-    head = InfixNode[CompoundExpression, Riffle[{headIn}, LeafNode[Token`Semi, ";", <||>]] ~Join~ {LeafNode[Token`Semi, ";", <||>], LeafNode[Token`Fake`ImplicitNull, "", <||>]}, <||>];
-
-    abstract[InfixNode[CompoundExpression, { CallNode[head, { groupIn }, data], LeafNode[Token`Semi, ";", <||>] } ~Join~ Riffle[{rest}, LeafNode[Token`Semi, ";", <||>]], <||>]]
-]
 
 
 abstractCompoundExpressionChild[LeafNode[Token`Fake`ImplicitNull, _, data_]] :=
