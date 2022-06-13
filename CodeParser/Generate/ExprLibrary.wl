@@ -212,6 +212,8 @@ Module[{targetDir, prog, compLib, compStart, compEnd, env},
 
   Print["CreateCompilerEnvironment[] returned"];
 
+  Print["compiler environment: ", env];
+
   Print["CreateCompilerEnvironment[] time: ", ToString[compEnd - compStart]];
 
   Print["Calling CompileToLibrary[]... \[WatchIcon]"];
