@@ -50,15 +50,7 @@ public:
     void append(LeafNodePtr N);
     
     
-    friend class NodeSeq;
-};
-
-
-enum ColonLHS {
-    COLONLHS_NONE,
-    COLONLHS_PATTERN,
-    COLONLHS_OPTIONAL,
-    COLONLHS_ERROR
+    friend class Parser;
 };
 
 
@@ -77,23 +69,9 @@ private:
     
 public:
     
-    ParseFunction F;
-    
-    ParseletPtr P;
-    
-    Precedence Prec;
-    
-    NodeSeq(Precedence Prec);
-    
-//    NodeSeq(ParseFunction F, ParseletPtr P);
+    NodeSeq(size_t Size);
     
     bool empty() const;
-    
-    void append(NodePtr N);
-    
-    void appendSeq(NodeSeq Seq);
-    
-    void appendSeq(TriviaSeq Seq);
     
     const NodePtr& first() const;
     
@@ -111,10 +89,11 @@ public:
     expr toExpr() const;
 #endif // USE_EXPR_LIB
     
-    ColonLHS checkColonLHS() const;
     
-    bool checkTilde() const;
+    friend class Parser;
 };
+
+
 
 //
 // An expression representing a node in the syntax tree

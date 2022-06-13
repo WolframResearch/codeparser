@@ -197,6 +197,7 @@ NodeContainerPtr ParserSession::parseExpressions() {
             auto Expr = TheParser->popNode();
             
             assert(TheParser->getArgsStackSize() == 0);
+            assert(TheParser->getContextStackSize() == 0);
             assert(TheParser->getNodeStackSize() == 0);
             assert(TheParser->getGroupDepth() == 0);
             

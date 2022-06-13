@@ -8,8 +8,13 @@
 #include "ByteDecoder.h" // for ByteDecoder
 #include "ByteBuffer.h" // for ByteBuffer
 
+#include <algorithm>
 
-Parser::Parser() : ArgsStack(), NodeStack(), GroupStack() {}
+
+Context::Context(size_t Index, Precedence Prec) : F(), P(), Index(Index), Prec(Prec) {}
+
+
+Parser::Parser() : ArgsStack(), ContextStack(), NodeStack(), GroupStack() {}
 
 void Parser::init() {
     
@@ -262,11 +267,11 @@ void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2) {
             
         } else {
             
-            auto& LeftSeq = TheParser->pushArgs(TokenPrecedence);
+            TheParser->pushContext(TokenPrecedence);
             
             TheParser->shift();
             
-            LeftSeq.appendSeq(std::move(Trivia1));
+            TheParser->appendArgs(std::move(Trivia1));
             
             wasGreater = false;
         }
@@ -286,11 +291,11 @@ void Parser_tryContinue(ParseletPtr Ignored, Token Ignored2) {
     
     if (TheParser->getArgsStackSize() > 0) {
         
-        auto& Args = TheParser->peekArgs();
+        auto& Ctxt = TheParser->topContext();
         
-        auto F = Args.F;
+        auto F = Ctxt.F;
         
-        auto P = Args.P;
+        auto P = Ctxt.P;
         
         assert(F != nullptr);
         assert(P != nullptr);
@@ -376,31 +381,53 @@ Token Parser::eatTriviaButNotToplevelNewlines_stringifyAsFile(Token T, TriviaSeq
 }
 
 void Parser::shift() {
-    assert(!ArgsStack.empty());
-    auto Operand = popNode();
-    auto& Args = ArgsStack.back();
-    Args.append(std::move(Operand));
+    ArgsStack.push_back(popNode());
 }
 
-NodeSeq& Parser::pushArgs(Precedence Prec) {
-    ArgsStack.emplace_back(Prec);
-    return ArgsStack.back();
+void Parser::pushContext(Precedence Prec) {
+    ContextStack.emplace_back(ArgsStack.size(), Prec);
 }
 
-NodeSeq Parser::popArgs() {
-    assert(!ArgsStack.empty());
-    auto top = std::move(ArgsStack.back());
-    ArgsStack.pop_back();
-    return top;
+NodeSeq Parser::popContext() {
+    
+    assert(!ContextStack.empty());
+    
+    auto Ctxt = ContextStack.back();
+    
+    ContextStack.pop_back();
+    
+    auto Count = ArgsStack.size() - Ctxt.Index;
+    
+    NodeSeq Args(Count);
+    
+    std::move(ArgsStack.begin() + Ctxt.Index, ArgsStack.begin() + ArgsStack.size(), std::back_inserter(Args.vec));
+    
+    ArgsStack.resize(Ctxt.Index);
+
+    return Args;
 }
 
-NodeSeq& Parser::peekArgs() {
-    assert(!ArgsStack.empty());
-    return ArgsStack.back();
+Context& Parser::topContext() {
+    
+    assert(!ContextStack.empty());
+    
+    return ContextStack.back();
+}
+
+void Parser::appendArg(NodePtr N) {
+    ArgsStack.push_back(std::move(N));
+}
+
+void Parser::appendArgs(TriviaSeq Seq) {
+    std::move(Seq.vec.begin(), Seq.vec.end(), std::back_inserter(ArgsStack));
 }
 
 size_t Parser::getArgsStackSize() const {
     return ArgsStack.size();
+}
+
+size_t Parser::getContextStackSize() const {
+    return ContextStack.size();
 }
 
 void Parser::pushNode(NodePtr N) {
@@ -408,14 +435,20 @@ void Parser::pushNode(NodePtr N) {
 }
 
 NodePtr& Parser::topNode() {
+    
     assert(!NodeStack.empty());
+    
     return NodeStack.back();
 }
 
 NodePtr Parser::popNode() {
+    
     assert(!NodeStack.empty());
+    
     auto top = std::move(NodeStack.back());
+    
     NodeStack.pop_back();
+    
     return top;
 }
 
@@ -428,7 +461,9 @@ void Parser::pushGroup(Closer Closr) {
 }
 
 void Parser::popGroup() {
+    
     assert(!GroupStack.empty());
+    
     GroupStack.pop_back();
 }
 
@@ -449,25 +484,25 @@ bool Parser::checkGroup(Closer Closr) const {
 }
 
 Precedence Parser::topPrecedence() {
-    if (ArgsStack.empty()) {
+    if (ContextStack.empty()) {
         return PRECEDENCE_LOWEST;
     }
-    return ArgsStack.back().Prec;
+    return ContextStack.back().Prec;
 }
 
 void Parser::setPrecedence(Precedence Prec) {
-    assert(!ArgsStack.empty());
-    auto& Args = ArgsStack.back();
-    Args.Prec = Prec;
+    assert(!ContextStack.empty());
+    auto& Ctxt = ContextStack.back();
+    Ctxt.Prec = Prec;
 }
 
 bool Parser::checkPatternPrecedence() const {
     
-    for (auto rit = ArgsStack.rbegin(); rit != ArgsStack.rend(); rit++) {
+    for (auto rit = ContextStack.rbegin(); rit != ContextStack.rend(); rit++) {
 
-        auto& Args = *rit;
+        auto& Ctxt = *rit;
 
-        auto Prec = Args.Prec;
+        auto Prec = Ctxt.Prec;
         
         if (Prec > PRECEDENCE_FAKE_PATTERNCOLON) {
             continue;
@@ -484,5 +519,162 @@ bool Parser::checkPatternPrecedence() const {
     
     return false;
 }
+
+ColonLHS Parser::checkColonLHS() const {
+
+    //
+    // work backwards, looking for a symbol or something that is a pattern
+    //
+    
+    if (ArgsStack.empty()) {
+        return COLONLHS_NONE;
+    }
+    
+    //
+    // skip any trivia
+    //
+    auto Ctxt = ContextStack.back();
+    int i;
+    for (i = ArgsStack.size()-1; i >= static_cast<int>(Ctxt.Index); i--) {
+
+        auto& N = ArgsStack[i];
+
+        if (auto L = dynamic_cast<LeafNode *>(N.get())) {
+
+            auto Tok = L->getToken();
+
+            if (Tok.Tok.isTrivia()) {
+                continue;
+            }
+
+            break;
+        }
+
+        break;
+    }
+
+    if (i == static_cast<int>(Ctxt.Index)-1) {
+        assert(false);
+        return COLONLHS_NONE;
+    }
+
+    auto& N = ArgsStack[i];
+
+    if (auto B = dynamic_cast<BinaryNode *>(N.get())) {
+
+        auto Op = B->getOp();
+
+        if (Op == SYMBOL_PATTERN) {
+            return COLONLHS_OPTIONAL;
+        }
+
+        return COLONLHS_ERROR;
+    }
+
+    if (auto C = dynamic_cast<CompoundNode *>(N.get())) {
+
+        auto Op = C->getOp();
+
+        switch (Op.getId()) {
+            case SYMBOL_CODEPARSER_PATTERNBLANK.getId():
+            case SYMBOL_CODEPARSER_PATTERNBLANKSEQUENCE.getId():
+            case SYMBOL_CODEPARSER_PATTERNBLANKNULLSEQUENCE.getId():
+            case SYMBOL_BLANK.getId():
+            case SYMBOL_BLANKSEQUENCE.getId():
+            case SYMBOL_BLANKNULLSEQUENCE.getId(): {
+                return COLONLHS_OPTIONAL;
+            }
+        }
+
+        return COLONLHS_ERROR;
+    }
+
+    if (auto L = dynamic_cast<LeafNode *>(N.get())) {
+
+        auto Tok = L->getToken();
+
+        switch (Tok.Tok.value()) {
+            case TOKEN_SYMBOL.value(): {
+                return COLONLHS_PATTERN;
+            }
+            case TOKEN_UNDER.value():
+            case TOKEN_UNDERUNDER.value():
+            case TOKEN_UNDERUNDERUNDER.value(): {
+                return COLONLHS_OPTIONAL;
+            }
+            case TOKEN_COLON.value(): {
+                assert(false && "Fix at call site");
+            }
+            default: {
+                return COLONLHS_ERROR;
+            }
+        }
+    }
+
+    if (auto E = dynamic_cast<ErrorNode *>(N.get())) {
+
+        //
+        // allow errors to be on LHS of :
+        //
+        // This is a bit confusing. The thinking is that since there is already an error, then we do not need to introduce another error.
+        //
+        return COLONLHS_PATTERN;
+    }
+
+    return COLONLHS_ERROR;
+}
+
+bool Parser::checkTilde() const {
+
+    //
+    // work backwards, looking for ~
+    //
+
+    if (ArgsStack.empty()) {
+        return COLONLHS_NONE;
+    }
+    
+    //
+    // skip any trivia
+    //
+    auto Ctxt = ContextStack.back();
+    int i;
+    for (i = ArgsStack.size()-1; i >= static_cast<int>(Ctxt.Index); i--) {
+
+        auto& N = ArgsStack[i];
+
+        if (auto L = dynamic_cast<LeafNode *>(N.get())) {
+
+            auto Tok = L->getToken();
+
+            if (Tok.Tok.isTrivia()) {
+                continue;
+            }
+
+            break;
+        }
+
+        break;
+    }
+
+    if (i == static_cast<int>(Ctxt.Index)-1) {
+        assert(false);
+        return COLONLHS_NONE;
+    }
+
+    auto& N = ArgsStack[i];
+
+    if (auto L = dynamic_cast<LeafNode *>(N.get())) {
+
+        auto Tok = L->getToken();
+
+        if (Tok.Tok == TOKEN_TILDE) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 
 ParserPtr TheParser = nullptr;

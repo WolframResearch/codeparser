@@ -27,13 +27,35 @@ enum Associativity {
     ASSOCIATIVITY_RIGHT,
 };
 
+struct Context {
+    
+    ParseFunction F;
+
+    ParseletPtr P;
+
+    size_t Index;
+    
+    Precedence Prec;
+    
+    Context(size_t Index, Precedence Prec);
+};
+
+enum ColonLHS {
+    COLONLHS_NONE,
+    COLONLHS_PATTERN,
+    COLONLHS_OPTIONAL,
+    COLONLHS_ERROR
+};
+
 //
 //
 //
 class Parser {
 private:
     
-    std::vector<NodeSeq> ArgsStack;
+    std::vector<NodePtr> ArgsStack;
+    std::vector<Context> ContextStack;
+    
     std::vector<NodePtr> NodeStack;
     std::vector<Closer> GroupStack;
     
@@ -63,9 +85,13 @@ public:
     
     void shift();
     
-    NodeSeq& pushArgs(Precedence Prec);
-    NodeSeq popArgs();
-    NodeSeq& peekArgs();
+    void pushContext(Precedence Prec);
+    NodeSeq popContext();
+    Context& topContext();
+    size_t getContextStackSize() const;
+    
+    void appendArg(NodePtr N);
+    void appendArgs(TriviaSeq T);
     size_t getArgsStackSize() const;
     
     NodePtr& topNode();
@@ -82,6 +108,8 @@ public:
     void setPrecedence(Precedence Prec);
     
     bool checkPatternPrecedence() const;
+    ColonLHS checkColonLHS() const;
+    bool checkTilde() const;
 };
 
 void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2);

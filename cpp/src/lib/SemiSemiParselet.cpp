@@ -101,9 +101,9 @@ ParseFunction SemiSemiParselet::parsePrefix() const {
 
 void SemiSemiParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
-    auto& Args = TheParser->pushArgs(PRECEDENCE_SEMISEMI);
+    TheParser->pushContext(PRECEDENCE_SEMISEMI);
     
-    Args.append(NodePtr(new LeafNode(Token(TOKEN_FAKE_IMPLICITONE, TokIn.BufLen.buffer, TokIn.Src.Start))));
+    TheParser->appendArg(NodePtr(new LeafNode(Token(TOKEN_FAKE_IMPLICITONE, TokIn.BufLen.buffer, TokIn.Src.Start))));
     
     MUSTTAIL
     return SemiSemiParselet_parseInfix(P, TokIn);
@@ -115,9 +115,7 @@ ParseFunction SemiSemiParselet::parseInfix() const {
 
 void SemiSemiParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
-    auto& Args = TheParser->peekArgs();
-    
-    Args.append(NodePtr(new LeafNode(TokIn)));
+    TheParser->appendArg(NodePtr(new LeafNode(TokIn)));
     
     TheParser->nextToken(TokIn);
     
@@ -127,8 +125,6 @@ void SemiSemiParselet_parseInfix(ParseletPtr P, Token TokIn) {
 
 void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
     
-    auto& Args = TheParser->peekArgs();
-    
     Token SecondTok;
     
     {
@@ -137,7 +133,7 @@ void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
         SecondTok = TheParser->currentToken(TOPLEVEL);
         SecondTok = TheParser->eatTriviaButNotToplevelNewlines(SecondTok, TOPLEVEL, Trivia1);
         
-        Args.appendSeq(std::move(Trivia1));
+        TheParser->appendArgs(std::move(Trivia1));
     }
     
     //
@@ -167,10 +163,11 @@ void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
         //    ^SecondTok
         //
         
-        assert(Args.F == nullptr);
-        assert(Args.P == nullptr);
-        Args.F = SemiSemiParselet_parse2;
-        Args.P = P;
+        auto& Ctxt = TheParser->topContext();
+        assert(Ctxt.F == nullptr);
+        assert(Ctxt.P == nullptr);
+        Ctxt.F = SemiSemiParselet_parse2;
+        Ctxt.P = P;
         
         auto P2 = prefixParselets[SecondTok.Tok.value()];
         
@@ -204,9 +201,9 @@ void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
             
             TheParser->shift();
             
-            Args.append(NodePtr(new LeafNode(SecondTok)));
+            TheParser->appendArg(NodePtr(new LeafNode(SecondTok)));
             
-            Args.appendSeq(std::move(Trivia2));
+            TheParser->appendArgs(std::move(Trivia2));
         }
     }
     
@@ -231,10 +228,11 @@ void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
     //      ^ThirdTok
     //
     
-    assert(Args.F == nullptr);
-    assert(Args.P == nullptr);
-    Args.F = SemiSemiParselet_reduceTernary;
-    Args.P = P;
+    auto& Ctxt = TheParser->topContext();
+    assert(Ctxt.F == nullptr);
+    assert(Ctxt.P == nullptr);
+    Ctxt.F = SemiSemiParselet_reduceTernary;
+    Ctxt.P = P;
     
     auto P2 = prefixParselets[ThirdTok.Tok.value()];
     
@@ -243,8 +241,6 @@ void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
 }
 
 void SemiSemiParselet_parse2(ParseletPtr P, Token Ignored) {
-    
-    auto& Args = TheParser->peekArgs();
     
     Token ThirdTok;
     
@@ -279,11 +275,11 @@ void SemiSemiParselet_parse2(ParseletPtr P, Token Ignored) {
                 
                 TheParser->shift();
                 
-                Args.appendSeq(std::move(Trivia2));
+                TheParser->appendArgs(std::move(Trivia2));
                 
-                Args.append(NodePtr(new LeafNode(ThirdTok)));
+                TheParser->appendArg(NodePtr(new LeafNode(ThirdTok)));
                 
-                Args.appendSeq(std::move(Trivia3));
+                TheParser->appendArgs(std::move(Trivia3));
             }
         }
     }
@@ -330,10 +326,11 @@ void SemiSemiParselet_parse2(ParseletPtr P, Token Ignored) {
     //       ^FourthTok
     //
     
-    assert(Args.F == SemiSemiParselet_parse2);
-    assert(Args.P == P);
-    Args.F = SemiSemiParselet_reduceTernary;
-    Args.P = P;
+    auto& Ctxt = TheParser->topContext();
+    assert(Ctxt.F == SemiSemiParselet_parse2);
+    assert(Ctxt.P == P);
+    Ctxt.F = SemiSemiParselet_reduceTernary;
+    Ctxt.P = P;
     
     auto P2 = prefixParselets[FourthTok.Tok.value()];
     
@@ -345,7 +342,7 @@ void SemiSemiParselet_reduceBinary(ParseletPtr P, Token Ignored) {
     
     TheParser->shift();
     
-    TheParser->pushNode(NodePtr(new BinaryNode(SYMBOL_SPAN, TheParser->popArgs())));
+    TheParser->pushNode(NodePtr(new BinaryNode(SYMBOL_SPAN, TheParser->popContext())));
     
     MUSTTAIL
     return Parser_parseClimb(nullptr, Ignored);
@@ -355,7 +352,7 @@ void SemiSemiParselet_reduceTernary(ParseletPtr P, Token Ignored) {
     
     TheParser->shift();
     
-    TheParser->pushNode(NodePtr(new TernaryNode(SYMBOL_SPAN, TheParser->popArgs())));
+    TheParser->pushNode(NodePtr(new TernaryNode(SYMBOL_SPAN, TheParser->popContext())));
     
     MUSTTAIL
     return Parser_parseClimb(nullptr, Ignored);

@@ -16,26 +16,8 @@
 #include <numeric> // for accumulate
 
 
-NodeSeq::NodeSeq(Precedence Prec) : vec(), F(), P(), Prec(Prec) {
-    vec.reserve(4);
-}
-
-void NodeSeq::append(NodePtr N) {
-    vec.push_back(std::move(N));
-}
-
-void NodeSeq::appendSeq(TriviaSeq Seq) {
-    
-    for (auto& T : Seq.vec) {
-        vec.push_back(std::move(T));
-    }
-}
-
-void NodeSeq::appendSeq(NodeSeq Seq) {
-    
-    for (auto& N : Seq.vec) {
-        vec.push_back(std::move(N));
-    }
+NodeSeq::NodeSeq(size_t Size) : vec() {
+    vec.reserve(Size);
 }
 
 bool NodeSeq::empty() const {
@@ -72,154 +54,8 @@ void NodeSeq::print(std::ostream& s) const {
 bool NodeSeq::check() const {
     
     auto accum = std::accumulate(vec.begin(), vec.end(), true, [](bool a, const NodePtr& b){ return a && b->check(); });
-    
+
     return accum;
-}
-
-ColonLHS NodeSeq::checkColonLHS() const {
-    
-    //
-    // work backwards, looking for a symbol or something that is a pattern
-    //
-    
-    //
-    // skip any trivia
-    //
-    auto rit = vec.rbegin();
-    for (; rit != vec.rend(); rit++) {
-        
-        auto& N = *rit;
-        
-        if (auto L = dynamic_cast<LeafNode *>(N.get())) {
-            
-            auto Tok = L->getToken();
-            
-            if (Tok.Tok.isTrivia()) {
-                continue;
-            }
-            
-            break;
-        }
-        
-        break;
-    }
-    
-    if (rit == vec.rend()) {
-        assert(false);
-        return COLONLHS_NONE;
-    }
-    
-    auto& N = *rit;
-    
-    if (auto B = dynamic_cast<BinaryNode *>(N.get())) {
-        
-        auto Op = B->getOp();
-        
-        if (Op == SYMBOL_PATTERN) {
-            return COLONLHS_OPTIONAL;
-        }
-        
-        return COLONLHS_ERROR;
-    }
-    
-    if (auto C = dynamic_cast<CompoundNode *>(N.get())) {
-        
-        auto Op = C->getOp();
-        
-        switch (Op.getId()) {
-            case SYMBOL_CODEPARSER_PATTERNBLANK.getId():
-            case SYMBOL_CODEPARSER_PATTERNBLANKSEQUENCE.getId():
-            case SYMBOL_CODEPARSER_PATTERNBLANKNULLSEQUENCE.getId():
-            case SYMBOL_BLANK.getId():
-            case SYMBOL_BLANKSEQUENCE.getId():
-            case SYMBOL_BLANKNULLSEQUENCE.getId(): {
-                return COLONLHS_OPTIONAL;
-            }
-        }
-        
-        return COLONLHS_ERROR;
-    }
-    
-    if (auto L = dynamic_cast<LeafNode *>(N.get())) {
-        
-        auto Tok = L->getToken();
-        
-        switch (Tok.Tok.value()) {
-            case TOKEN_SYMBOL.value(): {
-                return COLONLHS_PATTERN;
-            }
-            case TOKEN_UNDER.value():
-            case TOKEN_UNDERUNDER.value():
-            case TOKEN_UNDERUNDERUNDER.value(): {
-                return COLONLHS_OPTIONAL;
-            }
-            case TOKEN_COLON.value(): {
-                assert(false && "Fix at call site");
-            }
-            default: {
-                return COLONLHS_ERROR;
-            }
-        }
-    }
-    
-    if (auto E = dynamic_cast<ErrorNode *>(N.get())) {
-        
-        //
-        // allow errors to be on LHS of :
-        //
-        // This is a bit confusing. The thinking is that since there is already an error, then we do not need to introduce another error.
-        //
-        return COLONLHS_PATTERN;
-    }
-    
-    return COLONLHS_ERROR;
-}
-
-bool NodeSeq::checkTilde() const {
-    
-    //
-    // work backwards, looking for ~
-    //
-    
-    //
-    // skip any trivia
-    //
-    auto rit = vec.rbegin();
-    for (; rit != vec.rend(); rit++) {
-        
-        auto& N = *rit;
-        
-        if (auto L = dynamic_cast<LeafNode *>(N.get())) {
-            
-            auto Tok = L->getToken();
-            
-            if (Tok.Tok.isTrivia()) {
-                continue;
-            }
-            
-            break;
-        }
-        
-        break;
-    }
-    
-    if (rit == vec.rend()) {
-        assert(false);
-        return COLONLHS_NONE;
-    }
-    
-    auto& N = *rit;
-    
-    if (auto L = dynamic_cast<LeafNode *>(N.get())) {
-        
-        auto Tok = L->getToken();
-        
-        if (Tok.Tok == TOKEN_TILDE) {
-            return true;
-        }
-    }
-    
-    return false;
 }
 
 
@@ -902,7 +738,7 @@ void MissingBecauseUnsafeCharacterEncodingNode::put(MLINK mlp) const {
         assert(false);
     }
     
-    auto& reason = unsafeCharacterEncodingReason(flag);
+    auto reason = unsafeCharacterEncodingReason(flag);
     
     reason.put(mlp);
 }
@@ -1209,7 +1045,7 @@ expr MissingBecauseUnsafeCharacterEncodingNode::toExpr() const {
     
     auto e = Expr_BuildExprA(head, 1);
     
-    auto& reason = unsafeCharacterEncodingReason(flag);
+    auto reason = unsafeCharacterEncodingReason(flag);
     
     auto StrExpr = reason.toExpr();
     Expr_InsertA(e, 0 + 1, StrExpr);
