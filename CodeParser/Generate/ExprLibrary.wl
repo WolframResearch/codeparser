@@ -186,6 +186,7 @@ Module[{},
 
 generate[] :=
 Catch[
+Catch[
 Module[{targetDir, prog, compLib, compStart, compEnd, env},
 
   Print["Generating ExprLibrary..."];
@@ -194,9 +195,9 @@ Module[{targetDir, prog, compLib, compStart, compEnd, env},
 
   prog = ExprLibraryProgram[];
 
-  Print["Exporting expr library... \[WatchIcon]"];
+  Print["Exporting expr library..."];
 
-  Print[];
+  Print["Calling CreateCompilerEnvironment[]... \[WatchIcon]"];
 
   compStart = Now;
 
@@ -206,7 +207,17 @@ Module[{targetDir, prog, compLib, compStart, compEnd, env},
   make sure to avoid dependent libraries which may have abort handling
   *)
   env = CreateCompilerEnvironment["TypeEnvironmentOptions" -> {"AddLibraries" -> None}];
-  
+
+  compEnd = Now;
+
+  Print["CreateCompilerEnvironment[] returned"];
+
+  Print["CreateCompilerEnvironment[] time: ", ToString[compEnd - compStart]];
+
+  Print["Calling CompileToLibrary[]... \[WatchIcon]"];
+
+  compStart = Now;
+
   compLib =
     CompileToLibrary[prog,
       "LibraryName" -> "expr",
@@ -222,9 +233,11 @@ Module[{targetDir, prog, compLib, compStart, compEnd, env},
 
   compEnd = Now;
 
+  Print["CompileToLibrary[] returned"];
+
   Print["compiled library: ", compLib];
 
-  Print["compiling expr library took: ", ToString[compEnd - compStart]];
+  Print["CompileToLibrary[]: ", ToString[compEnd - compStart]];
 
   If[FailureQ[compLib],
     Quit[1]
@@ -232,6 +245,16 @@ Module[{targetDir, prog, compLib, compStart, compEnd, env},
 
   Print["Done ExprLibrary"]
 ]]
+,
+_
+,
+Function[{value, tag},
+  Print["Uncaught Throw"];
+  Print["value: ", value];
+  Print["tag: ", tag];
+  Quit[1]
+]
+]
 
 If[!StringQ[script],
   Quit[1]
