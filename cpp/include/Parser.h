@@ -33,7 +33,7 @@ struct Context {
 
     ParseletPtr P;
 
-    size_t Index;
+    const size_t Index;
     
     Precedence Prec;
     
@@ -59,6 +59,9 @@ private:
     std::vector<NodePtr> NodeStack;
     std::vector<Closer> GroupStack;
     
+    TriviaSeq trivia1;
+    TriviaSeq trivia2;
+    
     void handleFirstLine(FirstLineBehavior firstLineBehavior);
     
 public:
@@ -78,20 +81,24 @@ public:
     Token currentToken_stringifyAsTag() const;
     Token currentToken_stringifyAsFile() const;
 
+    Token eatTrivia(Token firstTok, NextPolicy policy);
     Token eatTrivia(Token firstTok, NextPolicy policy, TriviaSeq& Args);
+    Token eatTrivia_stringifyAsFile(Token firstTok);
     Token eatTrivia_stringifyAsFile(Token firstTok, TriviaSeq& Args);
+    Token eatTriviaButNotToplevelNewlines(Token firstTok, NextPolicy policy);
     Token eatTriviaButNotToplevelNewlines(Token firstTok, NextPolicy policy, TriviaSeq& Args);
     Token eatTriviaButNotToplevelNewlines_stringifyAsFile(Token firstTok, TriviaSeq& Args);
     
     void shift();
     
-    void pushContext(Precedence Prec);
+    Context& pushContext(Precedence Prec);
+    void pushContextV(Precedence Prec);
     NodeSeq popContext();
     Context& topContext();
     size_t getContextStackSize() const;
     
     void appendArg(NodePtr N);
-    void appendArgs(TriviaSeq T);
+    void appendArgs(TriviaSeq& T);
     size_t getArgsStackSize() const;
     
     NodePtr& topNode();
@@ -110,6 +117,9 @@ public:
     bool checkPatternPrecedence() const;
     ColonLHS checkColonLHS() const;
     bool checkTilde() const;
+    
+    TriviaSeq& getTrivia1();
+    TriviaSeq& getTrivia2();
 };
 
 void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2);

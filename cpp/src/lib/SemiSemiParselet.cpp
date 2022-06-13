@@ -101,7 +101,7 @@ ParseFunction SemiSemiParselet::parsePrefix() const {
 
 void SemiSemiParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
-    TheParser->pushContext(PRECEDENCE_SEMISEMI);
+    TheParser->pushContextV(PRECEDENCE_SEMISEMI);
     
     TheParser->appendArg(NodePtr(new LeafNode(Token(TOKEN_FAKE_IMPLICITONE, TokIn.BufLen.buffer, TokIn.Src.Start))));
     
@@ -125,16 +125,15 @@ void SemiSemiParselet_parseInfix(ParseletPtr P, Token TokIn) {
 
 void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
     
-    Token SecondTok;
+    auto& Trivia1 = TheParser->getTrivia1();
     
-    {
-        TriviaSeq Trivia1;
-        
-        SecondTok = TheParser->currentToken(TOPLEVEL);
-        SecondTok = TheParser->eatTriviaButNotToplevelNewlines(SecondTok, TOPLEVEL, Trivia1);
-        
-        TheParser->appendArgs(std::move(Trivia1));
-    }
+    auto SecondTok = TheParser->currentToken(TOPLEVEL);
+    //
+    // Span should not cross toplevel newlines
+    //
+    SecondTok = TheParser->eatTriviaButNotToplevelNewlines(SecondTok, TOPLEVEL, Trivia1);
+    
+    TheParser->appendArgs(Trivia1);
     
     //
     // a;;
@@ -180,32 +179,15 @@ void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
     //    ^~SecondTok
     //
     
-    Token ThirdTok;
+    TheParser->pushNode(NodePtr(new LeafNode(Token(TOKEN_FAKE_IMPLICITALL, SecondTok.BufLen.buffer, SecondTok.Src.Start))));
     
-    {
-        TheParser->pushNode(NodePtr(new LeafNode(Token(TOKEN_FAKE_IMPLICITALL, SecondTok.BufLen.buffer, SecondTok.Src.Start))));
-        
-        TheParser->nextToken(SecondTok);
-        
-        TriviaSeq Trivia2;
-        
-        ThirdTok = TheParser->currentToken(TOPLEVEL);
-        ThirdTok = TheParser->eatTriviaButNotToplevelNewlines(ThirdTok, TOPLEVEL, Trivia2);
-        
-        if (!ThirdTok.Tok.isPossibleBeginning() || ThirdTok.Tok == TOKEN_SEMISEMI) {
-            
-            Trivia2.reset();
-            SecondTok.reset();
-            
-        } else {
-            
-            TheParser->shift();
-            
-            TheParser->appendArg(NodePtr(new LeafNode(SecondTok)));
-            
-            TheParser->appendArgs(std::move(Trivia2));
-        }
-    }
+    TheParser->nextToken(SecondTok);
+    
+    auto ThirdTok = TheParser->currentToken(TOPLEVEL);
+    //
+    // Span should not cross toplevel newlines
+    //
+    ThirdTok = TheParser->eatTriviaButNotToplevelNewlines(ThirdTok, TOPLEVEL, Trivia1);
     
     if (!ThirdTok.Tok.isPossibleBeginning() || ThirdTok.Tok == TOKEN_SEMISEMI) {
         
@@ -219,6 +201,9 @@ void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
         //      ^~ThirdTok
         //
         
+        Trivia1.reset();
+        SecondTok.reset();
+        
         MUSTTAIL
         return SemiSemiParselet_reduceBinary(P, Ignored);
     }
@@ -227,6 +212,12 @@ void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
     // a;;;;b
     //      ^ThirdTok
     //
+    
+    TheParser->shift();
+    
+    TheParser->appendArg(NodePtr(new LeafNode(SecondTok)));
+    
+    TheParser->appendArgs(Trivia1);
     
     auto& Ctxt = TheParser->topContext();
     assert(Ctxt.F == nullptr);
@@ -242,47 +233,13 @@ void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
 
 void SemiSemiParselet_parse2(ParseletPtr P, Token Ignored) {
     
-    Token ThirdTok;
+    auto& Trivia1 = TheParser->getTrivia1();
     
-    Token FourthTok;
-    
-    {
-        TriviaSeq Trivia2;
-        
-        ThirdTok = TheParser->currentToken(TOPLEVEL);
-        ThirdTok = TheParser->eatTriviaButNotToplevelNewlines(ThirdTok, TOPLEVEL, Trivia2);
-        
-        if (!ThirdTok.Tok.isPossibleBeginning() || ThirdTok.Tok != TOKEN_SEMISEMI) {
-            
-            Trivia2.reset();
-            
-        } else {
-            
-            TheParser->nextToken(ThirdTok);
-            
-            TriviaSeq Trivia3;
-            
-            FourthTok = TheParser->currentToken(TOPLEVEL);
-            FourthTok = TheParser->eatTriviaButNotToplevelNewlines(FourthTok, TOPLEVEL, Trivia3);
-            
-            if (!FourthTok.Tok.isPossibleBeginning() || FourthTok.Tok == TOKEN_SEMISEMI) {
-                
-                Trivia3.reset();
-                ThirdTok.reset();
-                Trivia2.reset();
-                
-            } else {
-                
-                TheParser->shift();
-                
-                TheParser->appendArgs(std::move(Trivia2));
-                
-                TheParser->appendArg(NodePtr(new LeafNode(ThirdTok)));
-                
-                TheParser->appendArgs(std::move(Trivia3));
-            }
-        }
-    }
+    auto ThirdTok = TheParser->currentToken(TOPLEVEL);
+    //
+    // Span should not cross toplevel newlines
+    //
+    ThirdTok = TheParser->eatTriviaButNotToplevelNewlines(ThirdTok, TOPLEVEL, Trivia1);
     
     if (!ThirdTok.Tok.isPossibleBeginning() || ThirdTok.Tok != TOKEN_SEMISEMI) {
         
@@ -296,6 +253,8 @@ void SemiSemiParselet_parse2(ParseletPtr P, Token Ignored) {
         //               ^~~~~~~~~~~~~~~~ThirdTok
         //
         
+        Trivia1.reset();
+        
         MUSTTAIL
         return SemiSemiParselet_reduceBinary(P, Ignored);
     }
@@ -304,6 +263,16 @@ void SemiSemiParselet_parse2(ParseletPtr P, Token Ignored) {
     // a;;b;;
     //     ^~ThirdTok
     //
+    
+    TheParser->nextToken(ThirdTok);
+    
+    auto& Trivia2 = TheParser->getTrivia2();
+    
+    auto FourthTok = TheParser->currentToken(TOPLEVEL);
+    //
+    // Span should not cross toplevel newlines
+    //
+    FourthTok = TheParser->eatTriviaButNotToplevelNewlines(FourthTok, TOPLEVEL, Trivia2);
     
     if (!FourthTok.Tok.isPossibleBeginning() || FourthTok.Tok == TOKEN_SEMISEMI) {
         
@@ -317,6 +286,10 @@ void SemiSemiParselet_parse2(ParseletPtr P, Token Ignored) {
         //       ^~FourthTok
         //
         
+        Trivia2.reset();
+        ThirdTok.reset();
+        Trivia1.reset();
+        
         MUSTTAIL
         return SemiSemiParselet_reduceBinary(P, Ignored);
     }
@@ -325,6 +298,12 @@ void SemiSemiParselet_parse2(ParseletPtr P, Token Ignored) {
     // a;;b;;c
     //       ^FourthTok
     //
+    
+    TheParser->shift();
+    
+    TheParser->appendArgs(Trivia2);
+    TheParser->appendArg(NodePtr(new LeafNode(ThirdTok)));
+    TheParser->appendArgs(Trivia2);
     
     auto& Ctxt = TheParser->topContext();
     assert(Ctxt.F == SemiSemiParselet_parse2);

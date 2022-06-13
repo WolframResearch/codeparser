@@ -14,7 +14,7 @@
 Context::Context(size_t Index, Precedence Prec) : F(), P(), Index(Index), Prec(Prec) {}
 
 
-Parser::Parser() : ArgsStack(), ContextStack(), NodeStack(), GroupStack() {}
+Parser::Parser() : ArgsStack(), ContextStack(), NodeStack(), GroupStack(), trivia1(), trivia2() {}
 
 void Parser::init() {
     
@@ -231,65 +231,50 @@ void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2) {
     //
     HANDLE_ABORT;
     
-    InfixParseletPtr I;
+    auto& Trivia1 = TheParser->getTrivia1();
     
-    Token token;
+    auto token = TheParser->currentToken(TOPLEVEL);
+    //
+    // not in the middle of parsing anything, so toplevel newlines will delimit
+    //
+    token = TheParser->eatTriviaButNotToplevelNewlines(token, TOPLEVEL, Trivia1);
     
-    Precedence TokenPrecedence;
+    auto I = infixParselets[token.Tok.value()];
     
-    bool wasGreater;
+    token = I->processImplicitTimes(token);
     
-    {
-        TriviaSeq Trivia1;
-        
-        token = TheParser->currentToken(TOPLEVEL);
-        token = TheParser->eatTriviaButNotToplevelNewlines(token, TOPLEVEL, Trivia1);
-        
-        I = infixParselets[token.Tok.value()];
-        
-        token = I->processImplicitTimes(token);
-        I = infixParselets[token.Tok.value()];
-        
-        TokenPrecedence = I->getPrecedence();
-        
-        //
-        // if (Ctxt.Prec > TokenPrecedence)
-        //   break;
-        // else if (Ctxt.Prec == TokenPrecedence && Ctxt.Prec.Associativity is NonRight)
-        //   break;
-        //
-        
-        if ((TheParser->topPrecedence() | 0x1) > TokenPrecedence) {
-                
-            Trivia1.reset();
-            
-            wasGreater = true;
-            
-        } else {
-            
-            TheParser->pushContext(TokenPrecedence);
-            
-            TheParser->shift();
-            
-            TheParser->appendArgs(std::move(Trivia1));
-            
-            wasGreater = false;
-        }
-    }
+    I = infixParselets[token.Tok.value()];
     
-    if (wasGreater) {
-
+    auto TokenPrecedence = I->getPrecedence();
+    
+    //
+    // if (Ctxt.Prec > TokenPrecedence)
+    //   break;
+    // else if (Ctxt.Prec == TokenPrecedence && Ctxt.Prec.Associativity is NonRight)
+    //   break;
+    //
+    
+    if ((TheParser->topPrecedence() | 0x1) > TokenPrecedence) {
+        
+        Trivia1.reset();
+        
         MUSTTAIL
         return Parser_tryContinue(Ignored, Ignored2);
     }
-        
+    
+    TheParser->pushContextV(TokenPrecedence);
+    
+    TheParser->shift();
+    
+    TheParser->appendArgs(Trivia1);
+    
     MUSTTAIL
     return (I->parseInfix())(I, token);
 }
 
 void Parser_tryContinue(ParseletPtr Ignored, Token Ignored2) {
     
-    if (TheParser->getArgsStackSize() > 0) {
+    if (TheParser->getContextStackSize() > 0) {
         
         auto& Ctxt = TheParser->topContext();
         
@@ -306,6 +291,24 @@ void Parser_tryContinue(ParseletPtr Ignored, Token Ignored2) {
     
     // no call needed here
     return;
+}
+
+Token Parser::eatTrivia(Token T, NextPolicy policy) {
+    
+    while (T.Tok.isTrivia()) {
+        
+        //
+        // No need to check isAbort() inside tokenizer loops
+        //
+        
+        ArgsStack.push_back(LeafNodePtr(new LeafNode(T)));
+        
+        nextToken(T);
+        
+        T = currentToken(policy);
+    }
+    
+    return T;
 }
 
 Token Parser::eatTrivia(Token T, NextPolicy policy, TriviaSeq& Args) {
@@ -326,6 +329,24 @@ Token Parser::eatTrivia(Token T, NextPolicy policy, TriviaSeq& Args) {
     return T;
 }
 
+Token Parser::eatTrivia_stringifyAsFile(Token T) {
+    
+    while (T.Tok.isTrivia()) {
+        
+        //
+        // No need to check isAbort() inside tokenizer loops
+        //
+        
+        ArgsStack.push_back(LeafNodePtr(new LeafNode(T)));
+        
+        nextToken(T);
+        
+        T = currentToken_stringifyAsFile();
+    }
+    
+    return T;
+}
+
 Token Parser::eatTrivia_stringifyAsFile(Token T, TriviaSeq& Args) {
     
     while (T.Tok.isTrivia()) {
@@ -339,6 +360,24 @@ Token Parser::eatTrivia_stringifyAsFile(Token T, TriviaSeq& Args) {
         nextToken(T);
         
         T = currentToken_stringifyAsFile();
+    }
+    
+    return T;
+}
+
+Token Parser::eatTriviaButNotToplevelNewlines(Token T, NextPolicy policy) {
+    
+    while (T.Tok.isTriviaButNotToplevelNewline()) {
+        
+        //
+        // No need to check isAbort() inside tokenizer loops
+        //
+        
+        ArgsStack.push_back(LeafNodePtr(new LeafNode(T)));
+        
+        nextToken(T);
+        
+        T = currentToken(policy);
     }
     
     return T;
@@ -384,7 +423,12 @@ void Parser::shift() {
     ArgsStack.push_back(popNode());
 }
 
-void Parser::pushContext(Precedence Prec) {
+Context& Parser::pushContext(Precedence Prec) {
+    ContextStack.emplace_back(ArgsStack.size(), Prec);
+    return ContextStack.back();
+}
+
+void Parser::pushContextV(Precedence Prec) {
     ContextStack.emplace_back(ArgsStack.size(), Prec);
 }
 
@@ -392,19 +436,35 @@ NodeSeq Parser::popContext() {
     
     assert(!ContextStack.empty());
     
+    //
+    // get the top Context
+    //
+    
     auto Ctxt = ContextStack.back();
     
     ContextStack.pop_back();
     
+    //
+    // How many args to take?
+    //
+    
     auto Count = ArgsStack.size() - Ctxt.Index;
     
-    NodeSeq Args(Count);
+    NodeSeq ArgsTmp(Count);
     
-    std::move(ArgsStack.begin() + Ctxt.Index, ArgsStack.begin() + ArgsStack.size(), std::back_inserter(Args.vec));
+    //
+    // Move that many Args from back of ArgsStack to ArgsTmp
+    //
+    
+    std::move(ArgsStack.begin() + Ctxt.Index, ArgsStack.begin() + ArgsStack.size(), std::back_inserter(ArgsTmp.vec));
+    
+    //
+    // forget about the moved Args
+    //
     
     ArgsStack.resize(Ctxt.Index);
 
-    return Args;
+    return ArgsTmp;
 }
 
 Context& Parser::topContext() {
@@ -418,8 +478,19 @@ void Parser::appendArg(NodePtr N) {
     ArgsStack.push_back(std::move(N));
 }
 
-void Parser::appendArgs(TriviaSeq Seq) {
+void Parser::appendArgs(TriviaSeq& Seq) {
+    
+    //
+    // Move all trivia from Seq to back of ArgsStack
+    //
+    
     std::move(Seq.vec.begin(), Seq.vec.end(), std::back_inserter(ArgsStack));
+    
+    //
+    // Forget about Seq
+    //
+    
+    Seq.vec.clear();
 }
 
 size_t Parser::getArgsStackSize() const {
@@ -631,7 +702,7 @@ bool Parser::checkTilde() const {
     //
 
     if (ArgsStack.empty()) {
-        return COLONLHS_NONE;
+        return false;
     }
     
     //
@@ -659,7 +730,7 @@ bool Parser::checkTilde() const {
 
     if (i == static_cast<int>(Ctxt.Index)-1) {
         assert(false);
-        return COLONLHS_NONE;
+        return false;
     }
 
     auto& N = ArgsStack[i];
@@ -674,6 +745,15 @@ bool Parser::checkTilde() const {
     }
 
     return false;
+}
+
+
+TriviaSeq& Parser::getTrivia1() {
+    return trivia1;
+}
+
+TriviaSeq& Parser::getTrivia2() {
+    return trivia2;
 }
 
 

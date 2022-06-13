@@ -122,6 +122,8 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
     
     WolframLibraryData libData = nullptr;
     
+    ParserSessionCreate();
+    
     int result = EXIT_SUCCESS;
     
     while (true) {
@@ -129,8 +131,6 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
         std::string input;
         std::cout << ">>> ";
         std::getline(std::cin, input);
-        
-        ParserSessionCreate();
         
         if (mode == TOKENIZE) {
             
@@ -230,9 +230,9 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
             ParserSessionDeinit();
         }
         
-        ParserSessionDestroy();
-        
     } // while (true)
+    
+    ParserSessionDestroy();
     
     return result;
 }
@@ -257,9 +257,9 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         return EXIT_FAILURE;
     }
     
-    ParserSessionCreate();
-    
     WolframLibraryData libData = nullptr;
+    
+    ParserSessionCreate();
     
     int result = EXIT_SUCCESS;
     
@@ -414,4 +414,3 @@ size_t ScopedFileBuffer::getLen() const {
 bool ScopedFileBuffer::fail() const {
     return !inited;
 }
-

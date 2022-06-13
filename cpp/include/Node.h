@@ -100,8 +100,6 @@ public:
 //
 class Node {
 public:
-
-    Node();
     
     virtual ~Node();
     
@@ -133,7 +131,7 @@ private:
     
 public:
     
-    OperatorNode(const Symbol Op, const Symbol MakeSym, NodeSeq Children);
+    OperatorNode(Symbol Op, Symbol MakeSym, NodeSeq Children);
     
     Source getSource() const override;
     
@@ -164,7 +162,7 @@ private:
     
 public:
 
-    LeafNode(const Token& Tok);
+    LeafNode(Token Tok);
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
@@ -174,7 +172,7 @@ public:
     
     Source getSource() const override;
     
-    const Token getToken() const;
+    Token getToken() const;
     
     bool check() const override;
     
@@ -193,9 +191,7 @@ private:
     
 public:
     
-    ErrorNode(const Token& Tok);
-    
-    ErrorNode(const Token&& Tok);
+    ErrorNode(Token Tok);
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
@@ -203,7 +199,7 @@ public:
     
     void print(std::ostream& s) const override;
     
-    const Token getToken() const;
+    Token getToken() const;
     
     Source getSource() const override;
     
@@ -221,9 +217,7 @@ private:
     
 public:
     
-    UnterminatedTokenErrorNeedsReparseNode(const Token& Tok);
-    
-    UnterminatedTokenErrorNeedsReparseNode(const Token&& Tok);
+    UnterminatedTokenErrorNeedsReparseNode(Token Tok);
     
 #if USE_MATHLINK
     void put(MLINK mlp) const override;
@@ -248,7 +242,7 @@ public:
 class PrefixNode : public OperatorNode {
 public:
     
-    PrefixNode(const Symbol Op, NodeSeq Args);
+    PrefixNode(Symbol Op, NodeSeq Args);
 };
 
 //
@@ -259,7 +253,7 @@ public:
 class BinaryNode : public OperatorNode {
 public:
     
-    BinaryNode(const Symbol Op, NodeSeq Args);
+    BinaryNode(Symbol Op, NodeSeq Args);
 };
 
 //
@@ -270,7 +264,7 @@ public:
 class InfixNode : public OperatorNode {
 public:
     
-    InfixNode(const Symbol Op, NodeSeq Args);
+    InfixNode(Symbol Op, NodeSeq Args);
 };
 
 //
@@ -281,7 +275,7 @@ public:
 class TernaryNode : public OperatorNode {
 public:
     
-    TernaryNode(const Symbol Op, NodeSeq Args);
+    TernaryNode(Symbol Op, NodeSeq Args);
 };
 
 //
@@ -292,7 +286,7 @@ public:
 class PostfixNode : public OperatorNode {
 public:
     
-    PostfixNode(const Symbol Op, NodeSeq Args);
+    PostfixNode(Symbol Op, NodeSeq Args);
 };
 
 //
@@ -303,7 +297,7 @@ public:
 class PrefixBinaryNode : public OperatorNode {
 public:
     
-    PrefixBinaryNode(const Symbol Op, NodeSeq Args);
+    PrefixBinaryNode(Symbol Op, NodeSeq Args);
 };
 
 //
@@ -345,7 +339,7 @@ public:
 class GroupNode : public OperatorNode {
 public:
     
-    GroupNode(const Symbol Op, NodeSeq Args);
+    GroupNode(Symbol Op, NodeSeq Args);
 };
 
 //
@@ -362,7 +356,7 @@ public:
 class CompoundNode : public OperatorNode {
 public:
     
-    CompoundNode(const Symbol Op, NodeSeq Args);
+    CompoundNode(Symbol Op, NodeSeq Args);
 };
 
 //
@@ -379,7 +373,7 @@ private:
     
 public:
     
-    SyntaxErrorNode(const Symbol Err, NodeSeq Children);
+    SyntaxErrorNode(Symbol Err, NodeSeq Children);
     
     Source getSource() const override;
     
@@ -404,7 +398,7 @@ public:
 class GroupMissingCloserNode : public OperatorNode {
 public:
     
-    GroupMissingCloserNode(const Symbol Op, NodeSeq Args);
+    GroupMissingCloserNode(Symbol Op, NodeSeq Args);
     
     bool check() const override;
 };
@@ -417,7 +411,7 @@ public:
 class UnterminatedGroupNeedsReparseNode : public OperatorNode {
 public:
     
-    UnterminatedGroupNeedsReparseNode(const Symbol Op, NodeSeq Args);
+    UnterminatedGroupNeedsReparseNode(Symbol Op, NodeSeq Args);
     
     bool check() const override;
 };

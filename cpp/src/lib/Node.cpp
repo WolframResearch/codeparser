@@ -79,6 +79,8 @@ void TriviaSeq::reset() {
     
     TheByteBuffer->buffer = T.BufLen.buffer;
     TheByteDecoder->SrcLoc = T.Src.Start;
+    
+    vec.clear();
 }
 
 void TriviaSeq::append(LeafNodePtr N) {
@@ -90,12 +92,10 @@ bool TriviaSeq::empty() const {
 }
 
 
-Node::Node() {}
-
 Node::~Node() {}
 
 
-OperatorNode::OperatorNode(const Symbol Op, const Symbol MakeSym, NodeSeq ChildrenIn) : Node(), Op(Op), MakeSym(MakeSym), Children(std::move(ChildrenIn)) {
+OperatorNode::OperatorNode(Symbol Op, Symbol MakeSym, NodeSeq ChildrenIn) : Op(Op), MakeSym(MakeSym), Children(std::move(ChildrenIn)) {
     
     assert(!Children.empty());
     
@@ -137,13 +137,13 @@ void OperatorNode::print(std::ostream& s) const {
 }
 
 
-LeafNode::LeafNode(const Token& Tok) : Node(), Tok(Tok) {}
+LeafNode::LeafNode(Token Tok) : Tok(Tok) {}
 
 Source LeafNode::getSource() const {
     return Tok.Src;
 }
 
-const Token LeafNode::getToken() const {
+Token LeafNode::getToken() const {
     return Tok;
 }
 
@@ -170,17 +170,12 @@ void LeafNode::print(std::ostream& s) const {
 }
 
 
-ErrorNode::ErrorNode(const Token& Tok) : Node(), Tok(Tok) {
+ErrorNode::ErrorNode(Token Tok) : Tok(Tok) {
     assert(Tok.Tok.isError());
     assert(!Tok.Tok.isUnterminated());
 }
 
-ErrorNode::ErrorNode(const Token&& Tok) : Node(), Tok(std::move(Tok)) {
-    assert(Tok.Tok.isError());
-    assert(!Tok.Tok.isUnterminated());
-}
-
-const Token ErrorNode::getToken() const {
+Token ErrorNode::getToken() const {
     return Tok;
 }
 
@@ -211,11 +206,7 @@ void ErrorNode::print(std::ostream& s) const {
 }
 
 
-UnterminatedTokenErrorNeedsReparseNode::UnterminatedTokenErrorNeedsReparseNode(const Token& Tok) : Node(), Tok(Tok) {
-    assert(Tok.Tok.isUnterminated());
-}
-
-UnterminatedTokenErrorNeedsReparseNode::UnterminatedTokenErrorNeedsReparseNode(const Token&& Tok) : Node(), Tok(std::move(Tok)) {
+UnterminatedTokenErrorNeedsReparseNode::UnterminatedTokenErrorNeedsReparseNode(Token Tok) : Tok(Tok) {
     assert(Tok.Tok.isUnterminated());
 }
 
@@ -256,25 +247,25 @@ bool UnterminatedGroupNeedsReparseNode::check() const {
 }
 
 
-PrefixNode::PrefixNode(const Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_PREFIXNODE, std::move(Args)) {}
+PrefixNode::PrefixNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_PREFIXNODE, std::move(Args)) {}
 
-BinaryNode::BinaryNode(const Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_BINARYNODE, std::move(Args)) {}
+BinaryNode::BinaryNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_BINARYNODE, std::move(Args)) {}
 
-InfixNode::InfixNode(const Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_INFIXNODE, std::move(Args)) {}
+InfixNode::InfixNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_INFIXNODE, std::move(Args)) {}
 
-TernaryNode::TernaryNode(const Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_TERNARYNODE, std::move(Args)) {}
+TernaryNode::TernaryNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_TERNARYNODE, std::move(Args)) {}
 
-PostfixNode::PostfixNode(const Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_POSTFIXNODE, std::move(Args)) {}
+PostfixNode::PostfixNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_POSTFIXNODE, std::move(Args)) {}
 
-PrefixBinaryNode::PrefixBinaryNode(const Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_PREFIXBINARYNODE, std::move(Args)) {}
+PrefixBinaryNode::PrefixBinaryNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_PREFIXBINARYNODE, std::move(Args)) {}
 
-GroupNode::GroupNode(const Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_GROUPNODE, std::move(Args)) {}
+GroupNode::GroupNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_GROUPNODE, std::move(Args)) {}
 
-CompoundNode::CompoundNode(const Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_COMPOUNDNODE, std::move(Args)) {}
+CompoundNode::CompoundNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_COMPOUNDNODE, std::move(Args)) {}
 
-GroupMissingCloserNode::GroupMissingCloserNode(const Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE, std::move(Args)) {}
+GroupMissingCloserNode::GroupMissingCloserNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_GROUPMISSINGCLOSERNODE, std::move(Args)) {}
 
-UnterminatedGroupNeedsReparseNode::UnterminatedGroupNeedsReparseNode(const Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_UNTERMINATEDGROUPNEEDSREPARSENODE, std::move(Args)) {}
+UnterminatedGroupNeedsReparseNode::UnterminatedGroupNeedsReparseNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_UNTERMINATEDGROUPNEEDSREPARSENODE, std::move(Args)) {}
 
 
 CallNode::CallNode(NodeSeq HeadIn, NodePtr BodyIn) : Head(std::move(HeadIn)), Body(std::move(BodyIn)) {
@@ -314,7 +305,7 @@ bool CallNode::check() const {
 }
 
 
-SyntaxErrorNode::SyntaxErrorNode(const Symbol Err, NodeSeq ChildrenIn) : Err(Err), Children(std::move(ChildrenIn)) {
+SyntaxErrorNode::SyntaxErrorNode(Symbol Err, NodeSeq ChildrenIn) : Err(Err), Children(std::move(ChildrenIn)) {
     
     assert(!Children.empty());
 
@@ -352,7 +343,7 @@ void SyntaxErrorNode::print(std::ostream& s) const {
 }
 
 
-CollectedExpressionsNode::CollectedExpressionsNode(std::vector<NodePtr> Exprs) : Node(), Exprs(std::move(Exprs)) {}
+CollectedExpressionsNode::CollectedExpressionsNode(std::vector<NodePtr> Exprs) : Exprs(std::move(Exprs)) {}
 
 void CollectedExpressionsNode::print(std::ostream& s) const {
     
@@ -382,7 +373,7 @@ Source CollectedExpressionsNode::getSource() const {
 }
 
 
-CollectedIssuesNode::CollectedIssuesNode(IssuePtrSet Issues) : Node(), Issues(std::move(Issues)) {}
+CollectedIssuesNode::CollectedIssuesNode(IssuePtrSet Issues) : Issues(std::move(Issues)) {}
 
 void CollectedIssuesNode::print(std::ostream& s) const {
     
@@ -412,7 +403,7 @@ Source CollectedIssuesNode::getSource() const {
 }
 
 
-CollectedSourceLocationsNode::CollectedSourceLocationsNode(std::set<SourceLocation> SourceLocs) : Node(), SourceLocs(std::move(SourceLocs)) {}
+CollectedSourceLocationsNode::CollectedSourceLocationsNode(std::set<SourceLocation> SourceLocs) : SourceLocs(std::move(SourceLocs)) {}
 
 bool CollectedSourceLocationsNode::check() const {
     return true;
@@ -458,7 +449,7 @@ MyString unsafeCharacterEncodingReason(UnsafeCharacterEncodingFlag flag) {
     }
 }
 
-MissingBecauseUnsafeCharacterEncodingNode::MissingBecauseUnsafeCharacterEncodingNode(UnsafeCharacterEncodingFlag flag) : Node(), flag(flag) {}
+MissingBecauseUnsafeCharacterEncodingNode::MissingBecauseUnsafeCharacterEncodingNode(UnsafeCharacterEncodingFlag flag) : flag(flag) {}
 
 Source MissingBecauseUnsafeCharacterEncodingNode::getSource() const {
     
@@ -484,7 +475,7 @@ void MissingBecauseUnsafeCharacterEncodingNode::print(std::ostream& s) const {
 }
 
 
-SafeStringNode::SafeStringNode(BufferAndLength bufAndLen) : Node(), bufAndLen(bufAndLen) {}
+SafeStringNode::SafeStringNode(BufferAndLength bufAndLen) : bufAndLen(bufAndLen) {}
 
 Source SafeStringNode::getSource() const {
     

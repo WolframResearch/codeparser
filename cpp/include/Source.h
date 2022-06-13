@@ -377,7 +377,7 @@ public:
     const CodeActionPtrVector Actions;
     const AdditionalDescriptionVector AdditionalDescriptions;
     
-    Issue(const Symbol MakeSym, const MyString Tag, std::string Msg, const MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
+    Issue(Symbol MakeSym, MyString Tag, std::string Msg, MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
     
 #if USE_MATHLINK
     void put(MLINK mlp) const;
@@ -491,7 +491,7 @@ public:
 class SyntaxIssue : public Issue {
 public:
     
-    SyntaxIssue(const MyString Tag, std::string Msg, const MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
+    SyntaxIssue(MyString Tag, std::string Msg, MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
 };
 
 //
@@ -500,7 +500,7 @@ public:
 class FormatIssue : public Issue {
 public:
     
-    FormatIssue(const MyString Tag, std::string Msg, const MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
+    FormatIssue(MyString Tag, std::string Msg, MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
 };
 
 //
@@ -509,5 +509,5 @@ public:
 class EncodingIssue : public Issue {
 public:
     
-    EncodingIssue(const MyString Tag, std::string Msg, const MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
+    EncodingIssue(MyString Tag, std::string Msg, MyString Sev, Source Src, double Val, CodeActionPtrVector Actions, AdditionalDescriptionVector AdditionalDescriptions);
 };

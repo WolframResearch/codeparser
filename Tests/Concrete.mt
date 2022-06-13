@@ -942,12 +942,32 @@ Test[
 	TestID->"Concrete-20220611-P4E3J6"
 ]
 
+Test[
+	CodeConcreteParse["a*b\nc"]
+	,
+	ContainerNode[String, {
+		InfixNode[Times, {
+			LeafNode[Symbol, "a", <|Source -> {{1, 1}, {1, 2}}|>],
+			LeafNode[Token`Star, "*", <|Source -> {{1, 2}, {1, 3}}|>],
+			LeafNode[Symbol, "b", <|Source -> {{1, 3}, {1, 4}}|>]}, <|Source -> {{1, 1}, {1, 4}}|>],
+		LeafNode[Token`Newline, "\n", <|Source -> {{1, 4}, {2, 1}}|>],
+		LeafNode[Symbol, "c", <|Source -> {{2, 1}, {2, 2}}|>]}, <|Source -> {{1, 1}, {2, 2}}|>]
+	,
+	TestID->"Concrete-20220614-R7R4U0"
+]
 
-
-
-
-
-
+Test[
+	CodeConcreteParse["1\n-2"]
+	,
+	ContainerNode[String, {
+		LeafNode[Integer, "1", <|Source -> {{1, 1}, {1, 2}}|>],
+		LeafNode[Token`Newline, "\n", <|Source -> {{1, 2}, {2, 1}}|>],
+		PrefixNode[Minus, {
+			LeafNode[Token`Minus, "-", <|Source -> {{2, 1}, {2, 2}}|>],
+			LeafNode[Integer, "2", <|Source -> {{2, 2}, {2, 3}}|>]}, <|Source -> {{2, 1}, {2, 3}}|>]}, <|Source -> {{1, 1}, {2, 3}}|>]
+	,
+	TestID->"Concrete-20220614-Q5X8F8"
+]
 
 
 

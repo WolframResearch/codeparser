@@ -200,6 +200,8 @@ NodeContainerPtr ParserSession::parseExpressions() {
             assert(TheParser->getContextStackSize() == 0);
             assert(TheParser->getNodeStackSize() == 0);
             assert(TheParser->getGroupDepth() == 0);
+            assert(TheParser->getTrivia1().empty());
+            assert(TheParser->getTrivia2().empty());
             
             exprs.push_back(std::move(Expr));
             
@@ -629,6 +631,10 @@ NodeContainerPtr ParserSessionConcreteParseLeaf(StringifyMode mode) {
     return TheParserSession->concreteParseLeaf(mode);
 }
 
+NodeContainerPtr ParserSessionSafeString() {
+    return TheParserSession->safeString();
+}
+
 void ParserSessionReleaseContainer(NodeContainerPtr C) {
     TheParserSession->releaseContainer(C);
 }
@@ -643,13 +649,13 @@ mint WolframLibrary_getVersion() {
 
 int WolframLibrary_initialize(WolframLibraryData libData) {
     
-    TheParserSession = ParserSessionPtr(new ParserSession);
+    ParserSessionCreate();
     
     return 0;
 }
 
 void WolframLibrary_uninitialize(WolframLibraryData libData) {
-    TheParserSession.reset(nullptr);
+    ParserSessionDestroy();
 }
 
 #if USE_EXPR_LIB
@@ -676,15 +682,15 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, mint Ar
     
     auto bufAndLen = BufferAndLength(data, numBytes);
     
-    TheParserSession->init(bufAndLen, libData, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL);
+    ParserSessionInit(bufAndLen.buffer, bufAndLen.length(), libData, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL);
     
-    auto C = TheParserSession->parseExpressions();
+    auto C = ParserSessionParseExpressions();
     
     auto e = C->toExpr();
     
-    TheParserSession->releaseContainer(C);
+    ParserSessionReleaseContainer(C);
     
-    TheParserSession->deinit();
+    ParserSessionDeinit();
     
     libData->numericarrayLibraryFunctions->MNumericArray_disown(bytes);
     
@@ -747,15 +753,15 @@ DLLEXPORT int ConcreteParseBytes_LibraryLink(WolframLibraryData libData, MLINK m
         
     auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
     
-    TheParserSession->init(bufAndLen, libData, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL);
+    ParserSessionInit(bufAndLen.buffer, bufAndLen.length(), libData, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL);
     
-    auto C = TheParserSession->parseExpressions();
+    auto C = ParserSessionParseExpressions();
     
     C->put(mlp);
     
-    TheParserSession->releaseContainer(C);
+    ParserSessionReleaseContainer(C);
     
-    TheParserSession->deinit();
+    ParserSessionDeinit();
     
     return LIBRARY_NO_ERROR;
 }
@@ -787,15 +793,15 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *
     
     auto bufAndLen = BufferAndLength(data, numBytes);
     
-    TheParserSession->init(bufAndLen, libData, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL);
+    ParserSessionInit(bufAndLen.buffer, bufAndLen.length(), libData, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL);
     
-    auto C = TheParserSession->tokenize();
+    auto C = ParserSessionTokenize();
     
     auto e = C->toExpr();
     
-    TheParserSession->releaseContainer(C);
+    ParserSessionReleaseContainer(C);
     
-    TheParserSession->deinit();
+    ParserSessionDeinit();
     
     libData->numericarrayLibraryFunctions->MNumericArray_disown(bytes);
     
@@ -858,15 +864,15 @@ int TokenizeBytes_LibraryLink(WolframLibraryData libData, MLINK mlp) {
         
     auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
     
-    TheParserSession->init(bufAndLen, libData, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL);
+    ParserSessionInit(bufAndLen.buffer, bufAndLen.length(), libData, srcConvention, tabWidth, firstLineBehavior, ENCODINGMODE_NORMAL);
     
-    auto C = TheParserSession->tokenize();
+    auto C = ParserSessionTokenize();
     
     C->put(mlp);
     
-    TheParserSession->releaseContainer(C);
+    ParserSessionReleaseContainer(C);
     
-    TheParserSession->deinit();
+    ParserSessionDeinit();
     
     return LIBRARY_NO_ERROR;
 }
@@ -899,15 +905,15 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, mint Argc, MArgume
     
     auto bufAndLen = BufferAndLength(reinterpret_cast<Buffer>(inStr.c_str()), inStr.size());
     
-    TheParserSession->init(bufAndLen, libData, srcConvention, tabWidth, firstLineBehavior, encodingMode);
+    ParserSessionInit(bufAndLen.buffer, bufAndLen.length(), libData, srcConvention, tabWidth, firstLineBehavior, encodingMode);
     
-    auto C = TheParserSession->concreteParseLeaf(static_cast<StringifyMode>(stringifyMode));
+    auto C = ParserSessionConcreteParseLeaf(static_cast<StringifyMode>(stringifyMode));
     
     auto e = C->toExpr();
     
-    TheParserSession->releaseContainer(C);
+    ParserSessionReleaseContainer(C);
     
-    TheParserSession->deinit();
+    ParserSessionDeinit();
     
     libData->UTF8String_disown(inStrRaw);
     
@@ -974,15 +980,15 @@ int ConcreteParseLeaf_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     auto bufAndLen = BufferAndLength(inStr->get(), inStr->getByteCount());
     
-    TheParserSession->init(bufAndLen, libData, srcConvention, tabWidth, firstLineBehavior, encodingMode);
+    ParserSessionInit(bufAndLen.buffer, bufAndLen.length(), libData, srcConvention, tabWidth, firstLineBehavior, encodingMode);
     
-    auto C = TheParserSession->concreteParseLeaf(static_cast<StringifyMode>(stringifyMode));
+    auto C = ParserSessionConcreteParseLeaf(static_cast<StringifyMode>(stringifyMode));
     
     C->put(mlp);
     
-    TheParserSession->releaseContainer(C);
+    ParserSessionReleaseContainer(C);
     
-    TheParserSession->deinit();
+    ParserSessionDeinit();
     
     return LIBRARY_NO_ERROR;
 }
@@ -1005,15 +1011,15 @@ int SafeString_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Arg
     
     auto bufAndLen = BufferAndLength(data, numBytes);
     
-    TheParserSession->init(bufAndLen, libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    ParserSessionInit(bufAndLen.buffer, bufAndLen.length(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
-    auto C = TheParserSession->safeString();
+    auto C = ParserSessionSafeString();
     
     auto e = C->toExpr();
     
-    TheParserSession->releaseContainer(C);
+    ParserSessionReleaseContainer(C);
     
-    TheParserSession->deinit();
+    ParserSessionDeinit();
     
     libData->numericarrayLibraryFunctions->MNumericArray_disown(bytes);
     
@@ -1057,15 +1063,15 @@ int SafeString_LibraryLink(WolframLibraryData libData, MLINK mlp) {
     
     auto bufAndLen = BufferAndLength(arr->get(), arr->getByteCount());
     
-    TheParserSession->init(bufAndLen, libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
+    ParserSessionInit(bufAndLen.buffer, bufAndLen.length(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, FIRSTLINEBEHAVIOR_NOTSCRIPT, ENCODINGMODE_NORMAL);
     
-    auto C = TheParserSession->safeString();
+    auto C = ParserSessionSafeString();
     
     C->put(mlp);
     
-    TheParserSession->releaseContainer(C);
+    ParserSessionReleaseContainer(C);
     
-    TheParserSession->deinit();
+    ParserSessionDeinit();
     
     return LIBRARY_NO_ERROR;
 }

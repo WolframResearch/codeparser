@@ -257,6 +257,7 @@ EXTERN_C DLLEXPORT void ParserSessionDeinit();
 EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionParseExpressions();
 EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionTokenize();
 EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionConcreteParseLeaf(StringifyMode mode);
+EXTERN_C DLLEXPORT NodeContainerPtr ParserSessionSafeString();
 EXTERN_C DLLEXPORT void ParserSessionReleaseContainer(NodeContainerPtr C);
 
 EXTERN_C DLLEXPORT void NodeContainerPrint(NodeContainerPtr C, std::ostream& s);

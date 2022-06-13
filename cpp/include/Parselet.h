@@ -157,7 +157,7 @@ private:
     
 public:
     
-    PrefixOperatorParselet(TokenEnum Tok, Precedence precedence, const Symbol Op);
+    PrefixOperatorParselet(TokenEnum Tok, Precedence precedence, Symbol Op);
     
     ParseFunction parsePrefix() const override;
     
@@ -225,7 +225,7 @@ private:
     
 public:
     
-    BinaryOperatorParselet(TokenEnum Tok, Precedence precedence, const Symbol Op);
+    BinaryOperatorParselet(TokenEnum Tok, Precedence precedence, Symbol Op);
     
     ParseFunction parseInfix() const override;
     
@@ -246,7 +246,7 @@ private:
     
 public:
     
-    InfixOperatorParselet(TokenEnum Tok, Precedence precedence, const Symbol Op);
+    InfixOperatorParselet(TokenEnum Tok, Precedence precedence, Symbol Op);
     
     ParseFunction parseInfix() const override;
     
@@ -268,7 +268,7 @@ private:
     
 public:
     
-    PostfixOperatorParselet(TokenEnum Tok, Precedence precedence, const Symbol Op);
+    PostfixOperatorParselet(TokenEnum Tok, Precedence precedence, Symbol Op);
     
     ParseFunction parseInfix() const override;
     
@@ -289,7 +289,7 @@ private:
     
 public:
     
-    GroupParselet(TokenEnum Opener, const Symbol Op);
+    GroupParselet(TokenEnum Opener, Symbol Op);
     
     Symbol getOp() const;
     
@@ -546,7 +546,7 @@ private:
     
 public:
     
-    UnderParselet(const Symbol BOp, const Symbol PBOp) : BOp(BOp), PBOp(PBOp) {}
+    UnderParselet(Symbol BOp, Symbol PBOp) : BOp(BOp), PBOp(PBOp) {}
     
     Symbol getBOp() const;
     
