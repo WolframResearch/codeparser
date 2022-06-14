@@ -571,3 +571,29 @@ Test[
 	,
 	TestID->"Concretify-20220507-S4K6R1"
 ]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["
+BeginPackage[\"Foo`\"]
+EndPackage[]
+"]]]
+    ,
+    "\
+BeginPackage[\"Foo`\"]
+EndPackage[]"
+	,
+	TestID->"Concretify-20220614-F0A1F4"
+]
+
+Test[
+	ToSourceCharacterString[Concretify[CodeParse["
+Begin[\"Foo`\"]
+End[]
+"]]]
+    ,
+    "\
+Begin[\"Foo`\"]
+End[]"
+	,
+	TestID->"Concretify-20220614-N4T1I5"
+]
