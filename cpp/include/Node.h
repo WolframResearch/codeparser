@@ -47,7 +47,7 @@ public:
     
     bool empty() const;
     
-    void append(LeafNodePtr N);
+    void append(LeafNode *N);
     
     
     friend class Parser;

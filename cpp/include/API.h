@@ -37,8 +37,7 @@
 #define HANDLE_ABORT \
 do { \
     if (TheParserSession->isAbort()) { \
-        auto Abort = TheParserSession->handleAbort(); \
-        TheParser->pushNode(std::move(Abort)); \
+        TheParser->pushNode(TheParserSession->handleAbort()); \
         return; \
     } \
 } while (0)
@@ -181,7 +180,7 @@ private:
     IssuePtrSet fatalIssues;
     IssuePtrSet nonFatalIssues;
     
-    NodePtr concreteParseLeaf0(int mode);
+    Node *concreteParseLeaf0(int mode);
     
 public:
     
@@ -224,7 +223,7 @@ public:
 #if !NABORT
     bool isAbort() const;
     
-    NodePtr handleAbort() const;
+    Node *handleAbort() const;
     
 #if USE_EXPR_LIB
     expr handleAbortExpr() const;

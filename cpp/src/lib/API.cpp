@@ -173,7 +173,7 @@ NodeContainerPtr ParserSession::parseExpressions() {
             
             if (peek.Tok.isTrivia()) {
                 
-                exprs.push_back(LeafNodePtr(new LeafNode(std::move(peek))));
+                exprs.emplace_back(new LeafNode(peek));
                 
                 TheParser->nextToken(peek);
                 
@@ -303,20 +303,27 @@ NodeContainerPtr ParserSession::tokenize() {
             break;
         }
         
-        NodePtr N;
         if (Tok.Tok.isError()) {
+            
             if (Tok.Tok.isUnterminated()) {
-                N = NodePtr(new UnterminatedTokenErrorNeedsReparseNode(Tok));
+                
+                nodes.emplace_back(new UnterminatedTokenErrorNeedsReparseNode(Tok));
+                
+                TheTokenizer->nextToken(Tok);
+                
             } else {
-                N = NodePtr(new ErrorNode(Tok));
+                
+                nodes.emplace_back(new ErrorNode(Tok));
+                
+                TheTokenizer->nextToken(Tok);
             }
+            
         } else {
-            N = NodePtr(new LeafNode(Tok));
+            
+            nodes.emplace_back(new LeafNode(Tok));
+            
+            TheTokenizer->nextToken(Tok);
         }
-        
-        nodes.push_back(std::move(N));
-        
-        TheTokenizer->nextToken(Tok);
         
     } // while (true)
     
@@ -335,50 +342,73 @@ NodeContainerPtr ParserSession::tokenize() {
 }
 
 
-NodePtr ParserSession::concreteParseLeaf0(int mode) {
+Node *ParserSession::concreteParseLeaf0(int mode) {
     
     switch (mode) {
         case STRINGIFYMODE_NORMAL: {
+            
             auto Tok = TheTokenizer->nextToken0(TOPLEVEL);
             
             if (Tok.Tok.isError()) {
+                
                 if (Tok.Tok.isUnterminated()) {
-                    return NodePtr(new UnterminatedTokenErrorNeedsReparseNode(Tok));
+                    
+                    return new UnterminatedTokenErrorNeedsReparseNode(Tok);
+                    
                 } else {
-                    return NodePtr(new ErrorNode(Tok));
+                    
+                    return new ErrorNode(Tok);
                 }
+                
             } else {
-                return NodePtr(new LeafNode(Tok));
+                
+                return new LeafNode(Tok);
             }
         }
         case STRINGIFYMODE_TAG: {
+            
             auto Tok = TheTokenizer->nextToken0_stringifyAsTag();
             
             if (Tok.Tok.isError()) {
+                
                 if (Tok.Tok.isUnterminated()) {
-                    return NodePtr(new UnterminatedTokenErrorNeedsReparseNode(Tok));
+                    
+                    return new UnterminatedTokenErrorNeedsReparseNode(Tok);
+                    
                 } else {
-                    return NodePtr(new ErrorNode(Tok));
+                    
+                    return new ErrorNode(Tok);
                 }
+                
             } else {
-                return NodePtr(new LeafNode(Tok));
+                
+                return new LeafNode(Tok);
             }
         }
         case STRINGIFYMODE_FILE: {
+            
             auto Tok = TheTokenizer->nextToken0_stringifyAsFile();
             
             if (Tok.Tok.isError()) {
+                
                 if (Tok.Tok.isUnterminated()) {
-                    return NodePtr(new UnterminatedTokenErrorNeedsReparseNode(Tok));
+                    
+                    return new UnterminatedTokenErrorNeedsReparseNode(Tok);
+                    
                 } else {
-                    return NodePtr(new ErrorNode(Tok));
+                    
+                    return new ErrorNode(Tok);
                 }
+                
             } else {
-                return NodePtr(new LeafNode(Tok));
+                
+                return new LeafNode(Tok);
             }
         }
         default: {
+            
             assert(false);
+            
             return nullptr;
         }
     }
@@ -394,9 +424,7 @@ NodeContainerPtr ParserSession::concreteParseLeaf(StringifyMode mode) {
     {
         std::vector<NodePtr> exprs;
         
-        auto node = concreteParseLeaf0(mode);
-        
-        exprs.push_back(std::move(node));
+        exprs.emplace_back(concreteParseLeaf0(mode));
         
         NodePtr Collected = NodePtr(new CollectedExpressionsNode(std::move(exprs)));
         
@@ -554,16 +582,14 @@ bool ParserSession::isAbort() const {
     return currentAbortQ();
 }
 
-NodePtr ParserSession::handleAbort() const {
+Node *ParserSession::handleAbort() const {
     
     auto buf = TheByteBuffer->buffer;
     auto loc = TheByteDecoder->SrcLoc;
     
     auto A = Token(TOKEN_ERROR_ABORTED, buf, loc);
     
-    auto Aborted = NodePtr(new ErrorNode(A));
-    
-    return Aborted;
+    return new ErrorNode(A);
 }
 #endif // !NABORT
 

@@ -103,7 +103,11 @@ void SemiSemiParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
     TheParser->pushContextV(PRECEDENCE_SEMISEMI);
     
-    TheParser->appendArg(NodePtr(new LeafNode(Token(TOKEN_FAKE_IMPLICITONE, TokIn.BufLen.buffer, TokIn.Src.Start))));
+    TheParser->appendArg(new LeafNode(Token(TOKEN_FAKE_IMPLICITONE, TokIn.BufLen.buffer, TokIn.Src.Start)));
+    
+    //
+    // nextToken() is not needed after an implicit token
+    //
     
     MUSTTAIL
     return SemiSemiParselet_parseInfix(P, TokIn);
@@ -147,9 +151,11 @@ void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
         //    ^SecondTok
         //
         
-        auto Implicit = Token(TOKEN_FAKE_IMPLICITALL, SecondTok.BufLen.buffer, SecondTok.Src.Start);
+        TheParser->pushNode(new LeafNode(Token(TOKEN_FAKE_IMPLICITALL, SecondTok.BufLen.buffer, SecondTok.Src.Start)));
         
-        TheParser->pushNode(NodePtr(new LeafNode(Implicit)));
+        //
+        // nextToken() is not needed after an implicit token
+        //
         
         MUSTTAIL
         return SemiSemiParselet_reduceBinary(P, Ignored);
@@ -179,7 +185,11 @@ void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
     //    ^~SecondTok
     //
     
-    TheParser->pushNode(NodePtr(new LeafNode(Token(TOKEN_FAKE_IMPLICITALL, SecondTok.BufLen.buffer, SecondTok.Src.Start))));
+    TheParser->pushNode(new LeafNode(Token(TOKEN_FAKE_IMPLICITALL, SecondTok.BufLen.buffer, SecondTok.Src.Start)));
+    
+    //
+    // nextToken() is not needed after an implicit token
+    //
     
     TheParser->nextToken(SecondTok);
     
@@ -215,7 +225,11 @@ void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
     
     TheParser->shift();
     
-    TheParser->appendArg(NodePtr(new LeafNode(SecondTok)));
+    TheParser->appendArg(new LeafNode(SecondTok));
+    
+    //
+    // nextToken() already handled above
+    //
     
     TheParser->appendArgs(Trivia1);
     
@@ -302,7 +316,13 @@ void SemiSemiParselet_parse2(ParseletPtr P, Token Ignored) {
     TheParser->shift();
     
     TheParser->appendArgs(Trivia2);
-    TheParser->appendArg(NodePtr(new LeafNode(ThirdTok)));
+    
+    TheParser->appendArg(new LeafNode(ThirdTok));
+    
+    //
+    // nextToken() already handled above
+    //
+    
     TheParser->appendArgs(Trivia2);
     
     auto& Ctxt = TheParser->topContext();
@@ -321,7 +341,7 @@ void SemiSemiParselet_reduceBinary(ParseletPtr P, Token Ignored) {
     
     TheParser->shift();
     
-    TheParser->pushNode(NodePtr(new BinaryNode(SYMBOL_SPAN, TheParser->popContext())));
+    TheParser->pushNode(new BinaryNode(SYMBOL_SPAN, TheParser->popContext()));
     
     MUSTTAIL
     return Parser_parseClimb(nullptr, Ignored);
@@ -331,7 +351,7 @@ void SemiSemiParselet_reduceTernary(ParseletPtr P, Token Ignored) {
     
     TheParser->shift();
     
-    TheParser->pushNode(NodePtr(new TernaryNode(SYMBOL_SPAN, TheParser->popContext())));
+    TheParser->pushNode(new TernaryNode(SYMBOL_SPAN, TheParser->popContext()));
     
     MUSTTAIL
     return Parser_parseClimb(nullptr, Ignored);

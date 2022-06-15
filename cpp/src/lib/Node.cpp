@@ -83,8 +83,8 @@ void TriviaSeq::reset() {
     vec.clear();
 }
 
-void TriviaSeq::append(LeafNodePtr N) {
-    vec.push_back(std::move(N));
+void TriviaSeq::append(LeafNode *N) {
+    vec.emplace_back(N);
 }
 
 bool TriviaSeq::empty() const {

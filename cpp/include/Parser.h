@@ -97,12 +97,12 @@ public:
     Context& topContext();
     size_t getContextStackSize() const;
     
-    void appendArg(NodePtr N);
+    void appendArg(Node *N);
     void appendArgs(TriviaSeq& T);
     size_t getArgsStackSize() const;
     
     NodePtr& topNode();
-    void pushNode(NodePtr N);
+    void pushNode(Node *N);
     NodePtr popNode();
     size_t getNodeStackSize() const;
     

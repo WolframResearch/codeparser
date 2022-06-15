@@ -74,12 +74,12 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
             
             while (true) {
                 
-        #if !NABORT
+#if !NABORT
                 if (TheParserSession->isAbort()) {
                     
                     break;
                 }
-        #endif // !NABORT
+#endif // !NABORT
                 
                 auto peek = currentToken(TOPLEVEL);
                 
@@ -140,12 +140,12 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
             
             while (true) {
                 
-        #if !NABORT
+#if !NABORT
                 if (TheParserSession->isAbort()) {
                     
                     break;
                 }
-        #endif // !NABORT
+#endif // !NABORT
                 
                 auto peek = currentToken(TOPLEVEL);
                 
@@ -301,7 +301,7 @@ Token Parser::eatTrivia(Token T, NextPolicy policy) {
         // No need to check isAbort() inside tokenizer loops
         //
         
-        ArgsStack.push_back(LeafNodePtr(new LeafNode(T)));
+        ArgsStack.emplace_back(new LeafNode(T));
         
         nextToken(T);
         
@@ -319,7 +319,7 @@ Token Parser::eatTrivia(Token T, NextPolicy policy, TriviaSeq& Args) {
         // No need to check isAbort() inside tokenizer loops
         //
         
-        Args.append(LeafNodePtr(new LeafNode(T)));
+        Args.append(new LeafNode(T));
         
         nextToken(T);
         
@@ -337,7 +337,7 @@ Token Parser::eatTrivia_stringifyAsFile(Token T) {
         // No need to check isAbort() inside tokenizer loops
         //
         
-        ArgsStack.push_back(LeafNodePtr(new LeafNode(T)));
+        ArgsStack.emplace_back(new LeafNode(T));
         
         nextToken(T);
         
@@ -355,7 +355,7 @@ Token Parser::eatTrivia_stringifyAsFile(Token T, TriviaSeq& Args) {
         // No need to check isAbort() inside tokenizer loops
         //
         
-        Args.append(LeafNodePtr(new LeafNode(T)));
+        Args.append(new LeafNode(T));
         
         nextToken(T);
         
@@ -373,7 +373,7 @@ Token Parser::eatTriviaButNotToplevelNewlines(Token T, NextPolicy policy) {
         // No need to check isAbort() inside tokenizer loops
         //
         
-        ArgsStack.push_back(LeafNodePtr(new LeafNode(T)));
+        ArgsStack.emplace_back(new LeafNode(T));
         
         nextToken(T);
         
@@ -391,7 +391,7 @@ Token Parser::eatTriviaButNotToplevelNewlines(Token T, NextPolicy policy, Trivia
         // No need to check isAbort() inside tokenizer loops
         //
         
-        Args.append(LeafNodePtr(new LeafNode(T)));
+        Args.append(new LeafNode(T));
         
         nextToken(T);
         
@@ -409,7 +409,7 @@ Token Parser::eatTriviaButNotToplevelNewlines_stringifyAsFile(Token T, TriviaSeq
         // No need to check isAbort() inside tokenizer loops
         //
         
-        Args.append(LeafNodePtr(new LeafNode(T)));
+        Args.append(new LeafNode(T));
         
         nextToken(T);
         
@@ -424,7 +424,9 @@ void Parser::shift() {
 }
 
 Context& Parser::pushContext(Precedence Prec) {
+    
     ContextStack.emplace_back(ArgsStack.size(), Prec);
+    
     return ContextStack.back();
 }
 
@@ -474,8 +476,8 @@ Context& Parser::topContext() {
     return ContextStack.back();
 }
 
-void Parser::appendArg(NodePtr N) {
-    ArgsStack.push_back(std::move(N));
+void Parser::appendArg(Node *N) {
+    ArgsStack.emplace_back(N);
 }
 
 void Parser::appendArgs(TriviaSeq& Seq) {
@@ -501,8 +503,8 @@ size_t Parser::getContextStackSize() const {
     return ContextStack.size();
 }
 
-void Parser::pushNode(NodePtr N) {
-    NodeStack.push_back(std::move(N));
+void Parser::pushNode(Node *N) {
+    NodeStack.emplace_back(N);
 }
 
 NodePtr& Parser::topNode() {

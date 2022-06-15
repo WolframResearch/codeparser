@@ -65,7 +65,7 @@ void UnderParselet_parsePrefix(ParseletPtr P, Token TokIn) {
         
         TheParser->nextToken(Tok);
         
-        TheParser->pushNode(NodePtr(new ErrorNode(Tok)));
+        TheParser->pushNode(new ErrorNode(Tok));
         
         MUSTTAIL
         return UnderParselet_reduceBlank(P, TokIn/*ignored*/);
@@ -121,7 +121,7 @@ void UnderParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
         
         TheParser->shift();
         
-        TheParser->pushNode(NodePtr(new ErrorNode(Tok)));
+        TheParser->pushNode(new ErrorNode(Tok));
         
         TheParser->nextToken(Tok);
     
@@ -141,7 +141,7 @@ void UnderParselet_reduceBlank(ParseletPtr P, Token Ignored) {
     
     auto BOp = dynamic_cast<UnderParselet *>(P)->getBOp();
     
-    TheParser->pushNode(NodePtr(new CompoundNode(BOp, TheParser->popContext())));
+    TheParser->pushNode(new CompoundNode(BOp, TheParser->popContext()));
     
     MUSTTAIL
     return Parser_parseClimb(nullptr, Ignored);
@@ -158,7 +158,7 @@ void UnderParselet_reduceBlankContextSensitive(ParseletPtr P, Token Ignored) {
     
     auto BOp = dynamic_cast<UnderParselet *>(P)->getBOp();
     
-    TheParser->pushNode(NodePtr(new CompoundNode(BOp, TheParser->popContext())));
+    TheParser->pushNode(new CompoundNode(BOp, TheParser->popContext()));
     
     // no call needed here
     return;
