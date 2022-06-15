@@ -77,7 +77,7 @@ public:
     ParseFunction parsePrefix() const override;
 };
 
-void LeafParselet_parsePrefix(ParseletPtr P, Token firstTok);
+void LeafParselet_reduceLeaf(ParseletPtr P, Token firstTok);
 
 
 class PrefixEndOfFileParselet : public PrefixParselet {

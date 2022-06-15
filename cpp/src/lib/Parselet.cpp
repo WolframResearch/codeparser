@@ -17,10 +17,10 @@ Symbol InfixParselet::getOp() const {
 
 
 ParseFunction LeafParselet::parsePrefix() const {
-    return LeafParselet_parsePrefix;
+    return LeafParselet_reduceLeaf;
 }
 
-void LeafParselet_parsePrefix(ParseletPtr P, Token TokIn) {
+void LeafParselet_reduceLeaf(ParseletPtr P, Token TokIn) {
     
     TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
     
