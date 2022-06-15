@@ -33,12 +33,12 @@ private:
     std::set<SourceLocation> ComplexLineContinuations;
     std::set<SourceLocation> EmbeddedTabs;
     
-    
     WLCharacter handleLongName(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer openSquareBuf, SourceLocation openSquareLoc, NextPolicy policy);
     WLCharacter handle2Hex(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer dotBuf, SourceLocation dotLoc, NextPolicy policy);
     WLCharacter handle4Hex(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer colonBuf, SourceLocation colonLoc, NextPolicy policy);
     WLCharacter handle6Hex(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer barBuf, SourceLocation barLoc, NextPolicy policy);
     WLCharacter handleOctal(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer firstOctalBuf, SourceLocation firstOctalLoc, NextPolicy policy);
+    WLCharacter handleUncommon(SourceCharacter curSource, Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy);
     
     //
     // Handling line continuations belongs in some layer strictly above CharacterDecoder and below Tokenizer.

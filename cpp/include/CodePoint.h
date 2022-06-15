@@ -83,13 +83,6 @@ constexpr codepoint CODEPOINT_STRINGMETA_CARRIAGERETURN(-11);
 constexpr codepoint CODEPOINT_STRINGMETA_TAB(-12);
 
 //
-// \r\n is a single SourceCharacter
-//
-// There is a mnemonic here: \r is 13 and CODEPOINT_CRLF is -13
-//
-constexpr codepoint CODEPOINT_CRLF(-13);
-
-//
 // The return value of ByteDecoder with unsafe input:
 // incomplete sequence
 // stray surrogate
@@ -102,6 +95,17 @@ constexpr codepoint CODEPOINT_CRLF(-13);
 constexpr codepoint CODEPOINT_UNSAFE_1_BYTE_UTF8_SEQUENCE(-14);
 constexpr codepoint CODEPOINT_UNSAFE_2_BYTE_UTF8_SEQUENCE(-15);
 constexpr codepoint CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE(-16);
+
+//
+// \r\n is a single SourceCharacter
+//
+// -243 is chosen because -243 = 13 (mod 2^8) which is \r
+//
+// so a fast test can be done to check if last 8 bits match 13
+//
+// NOTE: CANNOT HAVE A CODEPOINT AT -499, -755, etc. because these will also test as \r
+//
+constexpr codepoint CODEPOINT_CRLF(-243);
 
 TokenEnum LongNameCodePointToOperator(codepoint c);
 codepoint LongNameOperatorToCodePoint(TokenEnum t);

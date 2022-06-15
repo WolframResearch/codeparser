@@ -42,6 +42,11 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
     
     auto curSource = TheByteDecoder->nextSourceCharacter0(policy);
     
+    if (curSource.to_point() != '\\') {
+        
+        return WLCharacter(curSource.to_point());
+    }
+    
     //
     // Handle \
     //
@@ -49,11 +54,6 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
     //
     
     while (true) {
-        
-        if (curSource.to_point() != '\\') {
-            
-            return WLCharacter(curSource.to_point());
-        }
         
         //
         // There was a \
@@ -64,217 +64,42 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
         
         curSource = TheByteDecoder->nextSourceCharacter0(policy);
     
-        switch (curSource.to_point()) {
+        switch (curSource.to_point() & 0xff) {
+            case '[': {
+                
+                return handleLongName(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
+            }
             case '\n':
-            case '\r':
-            case CODEPOINT_CRLF: {
+            case '\r': {
+                
+                //
+                // this also handles CODEPOINT_CRLF
+                //
+                
                 curSource = handleLineContinuation(tokenStartBuf, tokenStartLoc, curSource, policy);
+                
+                if (curSource.to_point() != '\\') {
+                    
+                    return WLCharacter(curSource.to_point());
+                }
+                
                 //
                 // Do not return
                 // loop around again
                 //
                 continue;
             }
-            case '[': {
-                return handleLongName(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
-            }
-            case ':': {
-                return handle4Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
-            }
-            case '.': {
-                return handle2Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
-            }
-            case '|': {
-                return handle6Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
-            }
             case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': {
+                
                 return handleOctal(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
             }
-                //
-                // Simple escaped characters
-                // \b \f \n \r \t
-                //
-            case 'b': {
+            case ':': {
                 
-                auto c = WLCharacter(CODEPOINT_STRINGMETA_BACKSPACE, ESCAPE_SINGLE);
-                
-#if !NISSUES
-                {
-                    auto graphicalStr = c.graphicalString();
-                    
-                    auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
-                    
-                    auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
-                    
-                    //
-                    // matched reduced severity of unexpected characters inside strings or comments
-                    //
-                    
-                    auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {}));
-                    
-                    TheParserSession->addIssue(std::move(I));
-                }
-#endif // !NISSUES
-                
-                return c;
+                return handle4Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
             }
-            case 'f': {
-                //
-                // \f is NOT a space character (but inside of strings, it does have special meaning)
-                //
-                
-                auto c = WLCharacter(CODEPOINT_STRINGMETA_FORMFEED, ESCAPE_SINGLE);
-                
-#if !NISSUES
-                {
-                    auto graphicalStr = c.graphicalString();
-                    
-                    auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
-                    
-                    auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
-                    
-                    //
-                    // matched reduced severity of unexpected characters inside strings or comments
-                    //
-                    
-                    auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {}));
-                    
-                    TheParserSession->addIssue(std::move(I));
-                }
-#endif // !NISSUES
-                
-                return c;
-            }
-            case 'n': {
-                //
-                // \n is NOT a newline character (but inside of strings, it does have special meaning)
-                //
-                return WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
-            }
-            case 'r': {
-                //
-                // \r is NOT a newline character (but inside of strings, it does have special meaning)
-                //
-                return WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
-            }
-            case 't': {
-                //
-                // \t is NOT a space character (but inside of strings, it does have special meaning)
-                //
-                return WLCharacter(CODEPOINT_STRINGMETA_TAB, ESCAPE_SINGLE);
-            }
-                //
-                // \\ \" \< \>
-                //
-                // String meta characters
-                // What are \< and \> ?
-                // https://mathematica.stackexchange.com/questions/105018/what-are-and-delimiters-in-box-expressions
-                // https://stackoverflow.com/q/6065887
-                //
-            case '"': {
-                return WLCharacter(CODEPOINT_STRINGMETA_DOUBLEQUOTE, ESCAPE_SINGLE);
-            }
-            case '\\': {
-                return handleBackslash(escapedBuf, escapedLoc, policy);
-            }
-            case '<': {
-                
-                auto c = WLCharacter(CODEPOINT_STRINGMETA_OPEN, ESCAPE_SINGLE);
-                
-#if !NISSUES
-                {
-                    auto graphicalStr = c.graphicalString();
-                    
-                    auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
-                    
-                    auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
-                    
-                    //
-                    // matched reduced severity of unexpected characters inside strings or comments
-                    //
-                    
-                    auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected string meta character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {"The kernel parses ``\"" + graphicalStr + "\"`` as an empty string."}));
-                    
-                    TheParserSession->addIssue(std::move(I));
-                }
-#endif // !NISSUES
-                
-                return c;
-            }
-            case '>': {
-                
-                auto c = WLCharacter(CODEPOINT_STRINGMETA_CLOSE, ESCAPE_SINGLE);
-                
-#if !NISSUES
-                {
-                    auto graphicalStr = c.graphicalString();
-                    
-                    auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
-                    
-                    auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
-                    
-                    //
-                    // matched reduced severity of unexpected characters inside strings or comments
-                    //
-                    
-                    auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected string meta character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {"The kernel parses ``\"" + graphicalStr + "\"`` as an empty string."}));
-                    
-                    TheParserSession->addIssue(std::move(I));
-                }
-#endif // !NISSUES
-                
-                return c;
-            }
-                //
-                // Linear syntax characters
-                // \! \% \& \( \) \* \+ \/ \@ \^ \_ \` \<space>
-                //
-            case '!': {
-                return WLCharacter(CODEPOINT_LINEARSYNTAX_BANG, ESCAPE_SINGLE);
-            }
-            case '%': {
-                return WLCharacter(CODEPOINT_LINEARSYNTAX_PERCENT, ESCAPE_SINGLE);
-            }
-            case '&': {
-                return WLCharacter(CODEPOINT_LINEARSYNTAX_AMP, ESCAPE_SINGLE);
-            }
-            case '(': {
-                return WLCharacter(CODEPOINT_LINEARSYNTAX_OPENPAREN, ESCAPE_SINGLE);
-            }
-            case ')': {
-                return WLCharacter(CODEPOINT_LINEARSYNTAX_CLOSEPAREN, ESCAPE_SINGLE);
-            }
-            case '*': {
-                return WLCharacter(CODEPOINT_LINEARSYNTAX_STAR, ESCAPE_SINGLE);
-            }
-            case '+': {
-                return WLCharacter(CODEPOINT_LINEARSYNTAX_PLUS, ESCAPE_SINGLE);
-            }
-            case '/': {
-                return WLCharacter(CODEPOINT_LINEARSYNTAX_SLASH, ESCAPE_SINGLE);
-            }
-            case '@': {
-                return WLCharacter(CODEPOINT_LINEARSYNTAX_AT, ESCAPE_SINGLE);
-            }
-            case '^': {
-                return WLCharacter(CODEPOINT_LINEARSYNTAX_CARET, ESCAPE_SINGLE);
-            }
-            case '_': {
-                return WLCharacter(CODEPOINT_LINEARSYNTAX_UNDER, ESCAPE_SINGLE);
-            }
-            case '`': {
-                return WLCharacter(CODEPOINT_LINEARSYNTAX_BACKTICK, ESCAPE_SINGLE);
-            }
-            case ' ': {
-                return WLCharacter(CODEPOINT_LINEARSYNTAX_SPACE, ESCAPE_SINGLE);
-            }
-                //
-                // Anything else
-                //
-                // Something like \A or \{
-                //
             default: {
-                return handleUnhandledEscape(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, curSource, policy);
+                
+                return handleUncommon(curSource, currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
             }
         } // switch
     } // while (true)
@@ -1734,6 +1559,329 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterSta
     TheByteDecoder->SrcLoc = unhandledLoc;
     
     return WLCharacter('\\');
+}
+
+WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy) {
+    
+    switch (curSource.to_point()) {
+            
+        case '.': {
+            
+            return handle2Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
+        }
+        case '|': {
+            
+            return handle6Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
+        }
+    
+            //
+            // Simple escaped characters
+            // \b \f \n \r \t
+            //
+        case 'b': {
+            
+#if DIAGNOSTICS
+            CharacterDecoder_StringMetaBackspace++;
+#endif // DIAGNOSTICS
+            
+            auto c = WLCharacter(CODEPOINT_STRINGMETA_BACKSPACE, ESCAPE_SINGLE);
+                        
+#if !NISSUES
+            {
+                auto graphicalStr = c.graphicalString();
+                
+                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
+                
+                auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
+                
+                //
+                // matched reduced severity of unexpected characters inside strings or comments
+                //
+                
+                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {}));
+                
+                TheParserSession->addIssue(std::move(I));
+            }
+        #endif // !NISSUES
+                        
+            return c;
+        }
+
+        case 'f': {
+    
+            //
+            // \f is NOT a space character (but inside of strings, it does have special meaning)
+            //
+            
+#if DIAGNOSTICS
+            CharacterDecoder_StringMetaFormFeed++;
+#endif // DIAGNOSTICS
+            
+            auto c = WLCharacter(CODEPOINT_STRINGMETA_FORMFEED, ESCAPE_SINGLE);
+            
+#if !NISSUES
+            {
+                auto graphicalStr = c.graphicalString();
+                
+                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
+                
+                auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
+                
+                //
+                // matched reduced severity of unexpected characters inside strings or comments
+                //
+                
+                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {}));
+                
+                TheParserSession->addIssue(std::move(I));
+            }
+#endif // !NISSUES
+            
+            return c;
+        }
+            
+        case 'n': {
+            //
+            // \n is NOT a newline character (but inside of strings, it does have special meaning)
+            //
+            
+#if DIAGNOSTICS
+            CharacterDecoder_StringMetaLineFeedCount++;
+#endif // DIAGNOSTICS
+            
+            return WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
+        }
+            
+        case 'r': {
+            //
+            // \r is NOT a newline character (but inside of strings, it does have special meaning)
+            //
+            
+#if DIAGNOSTICS
+            CharacterDecoder_StringMetaCarriageReturn++;
+#endif // DIAGNOSTICS
+            
+            return WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
+        }
+            
+        case 't': {
+            //
+            // \t is NOT a space character (but inside of strings, it does have special meaning)
+            //
+            
+#if DIAGNOSTICS
+            CharacterDecoder_StringMetaTab++;
+#endif // DIAGNOSTICS
+            
+            return WLCharacter(CODEPOINT_STRINGMETA_TAB, ESCAPE_SINGLE);
+        }
+            
+        //
+        // \\ \" \< \>
+        //
+        // String meta characters
+        // What are \< and \> ?
+        // https://mathematica.stackexchange.com/questions/105018/what-are-and-delimiters-in-box-expressions
+        // https://stackoverflow.com/q/6065887
+        //
+        case '"': {
+            
+#if DIAGNOSTICS
+            CharacterDecoder_StringMetaDoubleQuoteCount++;
+#endif // DIAGNOSTICS
+            
+            return WLCharacter(CODEPOINT_STRINGMETA_DOUBLEQUOTE, ESCAPE_SINGLE);
+        }
+                
+        case '\\': {
+            
+#if DIAGNOSTICS
+            CharacterDecoder_StringMetaBackslashCount++;
+#endif // DIAGNOSTICS
+            
+            return handleBackslash(escapedBuf, escapedLoc, policy);
+        }
+            
+        case '<': {
+            
+            
+#if DIAGNOSTICS
+            CharacterDecoder_StringMetaOpenCount++;
+#endif // DIAGNOSTICS
+            
+            auto c = WLCharacter(CODEPOINT_STRINGMETA_OPEN, ESCAPE_SINGLE);
+            
+#if !NISSUES
+            {
+                auto graphicalStr = c.graphicalString();
+                
+                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
+                
+                auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
+                
+                //
+                // matched reduced severity of unexpected characters inside strings or comments
+                //
+                
+                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected string meta character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {"The kernel parses ``\"" + graphicalStr + "\"`` as an empty string."}));
+                
+                TheParserSession->addIssue(std::move(I));
+            }
+        #endif // !NISSUES
+            
+            return c;
+        }
+            
+        case '>': {
+            
+#if DIAGNOSTICS
+            CharacterDecoder_StringMetaCloseCount++;
+#endif // DIAGNOSTICS
+            
+            auto c = WLCharacter(CODEPOINT_STRINGMETA_CLOSE, ESCAPE_SINGLE);
+            
+#if !NISSUES
+            {
+                auto graphicalStr = c.graphicalString();
+                
+                auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
+                
+                auto Src = Source(currentWLCharacterStartLoc, currentWLCharacterEndLoc);
+                
+                //
+                // matched reduced severity of unexpected characters inside strings or comments
+                //
+                
+                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDCHARACTER, "Unexpected string meta character: ``" + graphicalStr + "``.", STRING_REMARK, Src, 0.95, {}, {"The kernel parses ``\"" + graphicalStr + "\"`` as an empty string."}));
+                
+                TheParserSession->addIssue(std::move(I));
+            }
+#endif // !NISSUES
+            
+            return c;
+        }
+        //
+        // Linear syntax characters
+        // \! \% \& \( \) \* \+ \/ \@ \^ \_ \` \<space>
+        //
+        case '!': {
+            
+#if DIAGNOSTICS
+            CharacterDecoder_LinearSyntaxBangCount++;
+#endif // DIAGNOSTICS
+            
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_BANG, ESCAPE_SINGLE);
+        }
+        case '%': {
+            
+#if DIAGNOSTICS
+            CharacterDecoder_LinearSyntaxPercentCount++;
+#endif // DIAGNOSTICS
+            
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_PERCENT, ESCAPE_SINGLE);
+        }
+        case '&': {
+        
+#if DIAGNOSTICS
+            CharacterDecoder_LinearSyntaxAmpCount++;
+#endif // DIAGNOSTICS
+            
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_AMP, ESCAPE_SINGLE);
+        }
+        case '(': {
+            
+#if DIAGNOSTICS
+            CharacterDecoder_LinearSyntaxOpenParenCount++;
+#endif // DIAGNOSTICS
+            
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_OPENPAREN, ESCAPE_SINGLE);
+        }
+        case ')': {
+            
+#if DIAGNOSTICS
+            CharacterDecoder_LinearSyntaxCloseParenCount++;
+#endif // DIAGNOSTICS
+            
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_CLOSEPAREN, ESCAPE_SINGLE);
+        }
+        case '*': {
+            
+#if DIAGNOSTICS
+            CharacterDecoder_LinearSyntaxStarCount++;
+#endif // DIAGNOSTICS
+            
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_STAR, ESCAPE_SINGLE);
+        }
+        case '+': {
+            
+#if DIAGNOSTICS
+            CharacterDecoder_LinearSyntaxPlusCount++;
+#endif // DIAGNOSTICS
+            
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_PLUS, ESCAPE_SINGLE);
+        }
+        case '/': {
+            
+#if DIAGNOSTICS
+            CharacterDecoder_LinearSyntaxSlashCount++;
+#endif // DIAGNOSTICS
+            
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_SLASH, ESCAPE_SINGLE);
+        }
+        case '@': {
+            
+#if DIAGNOSTICS
+            CharacterDecoder_LinearSyntaxAtCount++;
+#endif // DIAGNOSTICS
+            
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_AT, ESCAPE_SINGLE);
+        }
+        case '^': {
+            
+#if DIAGNOSTICS
+            CharacterDecoder_LinearSyntaxCaretCount++;
+#endif // DIAGNOSTICS
+            
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_CARET, ESCAPE_SINGLE);
+        }
+        case '_': {
+            
+#if DIAGNOSTICS
+            CharacterDecoder_LinearSyntaxUnderscoreCount++;
+#endif // DIAGNOSTICS
+            
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_UNDER, ESCAPE_SINGLE);
+        }
+        case '`': {
+            
+#if DIAGNOSTICS
+            CharacterDecoder_LinearSyntaxBacktickCount++;
+#endif // DIAGNOSTICS
+            
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_BACKTICK, ESCAPE_SINGLE);
+        }
+        case ' ': {
+            
+#if DIAGNOSTICS
+            CharacterDecoder_LinearSyntaxSpaceCount++;
+#endif // DIAGNOSTICS
+            
+            return WLCharacter(CODEPOINT_LINEARSYNTAX_SPACE, ESCAPE_SINGLE);
+        }
+            //
+            // Anything else
+            //
+            // Something like \A or \{
+            //
+        default: {
+            
+#if DIAGNOSTICS
+            CharacterDecoder_UnhandledCount++;
+#endif // DIAGNOSTICS
+            
+            return handleUnhandledEscape(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, curSource, policy);
+        }
+    }
 }
 
 std::set<SourceLocation>& CharacterDecoder::getSimpleLineContinuations() {
