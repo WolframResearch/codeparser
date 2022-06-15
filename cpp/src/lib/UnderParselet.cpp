@@ -25,9 +25,7 @@ void UnderParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     // Something like  _  or  _a
     //
     
-    TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->pushLeafNodeAndNext(TokIn);
     
     auto Tok = TheParser->currentToken(TOPLEVEL);
     
@@ -83,9 +81,7 @@ void UnderParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
     // Something like  a_b
     //
     
-    TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->pushLeafNodeAndNext(TokIn);
     
     auto Tok = TheParser->currentToken(TOPLEVEL);
     
@@ -177,9 +173,7 @@ void UnderDotParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     // Something like  _.
     //
     
-    TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->pushLeafNodeAndNext(TokIn);
     
     MUSTTAIL
     return Parser_parseClimb(nullptr, TokIn/*ignored*/);
@@ -196,9 +190,7 @@ void UnderDotParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
     //
     // Something like  a_.
     
-    TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->pushLeafNodeAndNext(TokIn);
     
     // no call needed here
     return;

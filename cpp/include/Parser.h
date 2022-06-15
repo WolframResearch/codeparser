@@ -120,6 +120,9 @@ public:
     
     TriviaSeq& getTrivia1();
     TriviaSeq& getTrivia2();
+    
+    void pushLeafNodeAndNext(Token Tok);
+    void appendLeafArgAndNext(Token Tok);
 };
 
 void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2);

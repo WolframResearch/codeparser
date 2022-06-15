@@ -22,9 +22,7 @@ ParseFunction LeafParselet::parsePrefix() const {
 
 void LeafParselet_reduceLeaf(ParseletPtr P, Token TokIn) {
     
-    TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->pushLeafNodeAndNext(TokIn);
     
     MUSTTAIL
     return Parser_parseClimb(nullptr, TokIn/*ignored*/);
@@ -269,9 +267,7 @@ void SymbolParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     // Something like  x  or x_
     //
     
-    TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->pushLeafNodeAndNext(TokIn);
     
     auto Tok = TheParser->currentToken(TOPLEVEL);
     
@@ -381,9 +377,7 @@ void SymbolParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
     // Just push this symbol
     //
     
-    TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->pushLeafNodeAndNext(TokIn);
     
     // no call needed here
     return;
@@ -432,9 +426,7 @@ void PrefixOperatorParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
     assert(dynamic_cast<PrefixOperatorParselet *>(P));
     
-    TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->pushLeafNodeAndNext(TokIn);
     
     auto& Ctxt = TheParser->pushContext(dynamic_cast<PrefixOperatorParselet *>(P)->getPrecedence());
     
@@ -528,9 +520,7 @@ void BinaryOperatorParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
     assert(dynamic_cast<BinaryOperatorParselet *>(P));
     
-    TheParser->appendArg(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->appendLeafArgAndNext(TokIn);
 
     auto Tok = TheParser->currentToken(TOPLEVEL);
     Tok = TheParser->eatTrivia(Tok, TOPLEVEL);
@@ -580,9 +570,7 @@ void InfixOperatorParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
     assert(dynamic_cast<InfixOperatorParselet *>(P));
     
-    TheParser->appendArg(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->appendLeafArgAndNext(TokIn);
     
     //
     // Unroll 1 iteration of the loop because we know that TokIn has already been read
@@ -666,9 +654,7 @@ void InfixOperatorParselet_parseLoop(ParseletPtr P, Token Ignored) {
     
     TheParser->appendArgs(Trivia1);
     
-    TheParser->appendArg(NodePtr(new LeafNode(Tok1)));
-    
-    TheParser->nextToken(Tok1);
+    TheParser->appendLeafArgAndNext(Tok1);
 
     auto Tok2 = TheParser->currentToken(TOPLEVEL);
     Tok2 = TheParser->eatTrivia(Tok2, TOPLEVEL, Trivia1);
@@ -712,9 +698,7 @@ ParseFunction PostfixOperatorParselet::parseInfix() const {
 
 void PostfixOperatorParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
-    TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->pushLeafNodeAndNext(TokIn);
     
     MUSTTAIL
     return PostfixOperatorParselet_reducePostfixOperator(P, TokIn/*Ignored*/);
@@ -751,9 +735,7 @@ ParseFunction GroupParselet::parsePrefix() const {
 
 void GroupParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
-    TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->pushLeafNodeAndNext(TokIn);
     
     TheParser->pushGroup(GroupOpenerToCloser(TokIn.Tok));
     
@@ -802,9 +784,7 @@ void GroupParselet_parseLoop(ParseletPtr P, Token Ignored) {
         
         TheParser->appendArgs(Trivia1);
         
-        TheParser->pushNode(NodePtr(new LeafNode(Tok)));
-        
-        TheParser->nextToken(Tok);
+        TheParser->pushLeafNodeAndNext(Tok);
         
         MUSTTAIL
         return GroupParselet_reduceGroup(P, Ignored);
@@ -987,9 +967,7 @@ void TildeParselet_parseInfix(ParseletPtr P, Token TokIn) {
     // It'd be weird if this were an "infix operator"
     //
     
-    TheParser->appendArg(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->appendLeafArgAndNext(TokIn);
     
     auto FirstTok = TheParser->currentToken(TOPLEVEL);
     FirstTok = TheParser->eatTrivia(FirstTok, TOPLEVEL);
@@ -1035,9 +1013,7 @@ void TildeParselet_parse1(ParseletPtr P, Token Ignored) {
     
     TheParser->appendArgs(Trivia1);
     
-    TheParser->appendArg(NodePtr(new LeafNode(Tok1)));
-    
-    TheParser->nextToken(Tok1);
+    TheParser->appendLeafArgAndNext(Tok1);
 
     auto Tok2 = TheParser->currentToken(TOPLEVEL);
     Tok2 = TheParser->eatTrivia(Tok2, TOPLEVEL, Trivia1);
@@ -1104,9 +1080,7 @@ void ColonParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
     auto colonLHS = TheParser->checkColonLHS();
     
-    TheParser->appendArg(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->appendLeafArgAndNext(TokIn);
     
     auto Tok = TheParser->currentToken(TOPLEVEL);
     Tok = TheParser->eatTrivia(Tok, TOPLEVEL);
@@ -1221,9 +1195,7 @@ void SlashColonParselet_parseInfix(ParseletPtr P, Token TokIn) {
     // It'd be weird if this were an "infix operator"
     //
     
-    TheParser->appendArg(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->appendLeafArgAndNext(TokIn);
     
     auto Tok = TheParser->currentToken(TOPLEVEL);
     Tok = TheParser->eatTrivia(Tok, TOPLEVEL);
@@ -1325,9 +1297,7 @@ ParseFunction EqualParselet::parseInfix() const {
 
 void EqualParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
-    TheParser->appendArg(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->appendLeafArgAndNext(TokIn);
     
     auto Tok = TheParser->currentToken(TOPLEVEL);
     Tok = TheParser->eatTrivia(Tok, TOPLEVEL);
@@ -1341,9 +1311,7 @@ void EqualParselet_parseInfix(ParseletPtr P, Token TokIn) {
         // Spaces to Avoid
         //
         
-        TheParser->pushNode(NodePtr(new LeafNode(Tok)));
-        
-        TheParser->nextToken(Tok);
+        TheParser->pushLeafNodeAndNext(Tok);
         
         MUSTTAIL
         return EqualParselet_reduceUnset(P, TokIn/*Ignored*/);
@@ -1367,9 +1335,7 @@ void EqualParselet_parseInfixTag(ParseletPtr P, Token TokIn) {
     // a /: b = c  and  a /: b = .  are handled here
     //
     
-    TheParser->appendArg(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->appendLeafArgAndNext(TokIn);
     
     auto Tok = TheParser->currentToken(TOPLEVEL);
     Tok = TheParser->eatTrivia(Tok, TOPLEVEL);
@@ -1383,9 +1349,7 @@ void EqualParselet_parseInfixTag(ParseletPtr P, Token TokIn) {
         // Spaces to Avoid
         //
         
-        TheParser->pushNode(NodePtr(new LeafNode(Tok)));
-        
-        TheParser->nextToken(Tok);
+        TheParser->pushLeafNodeAndNext(Tok);
         
         MUSTTAIL
         return EqualParselet_reduceTagUnset(P, TokIn/*Ignored*/);
@@ -1452,9 +1416,7 @@ ParseFunction ColonEqualParselet::parseInfix() const {
 
 void ColonEqualParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
-    TheParser->appendArg(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->appendLeafArgAndNext(TokIn);
     
     auto Tok = TheParser->currentToken(TOPLEVEL);
     Tok = TheParser->eatTrivia(Tok, TOPLEVEL);
@@ -1473,9 +1435,7 @@ void ColonEqualParselet_parseInfix(ParseletPtr P, Token TokIn) {
 
 void ColonEqualParselet_parseInfixTag(ParseletPtr P, Token TokIn) {
     
-    TheParser->appendArg(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->appendLeafArgAndNext(TokIn);
     
     auto Tok = TheParser->currentToken(TOPLEVEL);
     Tok = TheParser->eatTrivia(Tok, TOPLEVEL);
@@ -1525,9 +1485,7 @@ void IntegralParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
     auto& Ctxt = TheParser->pushContext(PRECEDENCE_CLASS_INTEGRATIONOPERATORS);
     
-    TheParser->appendArg(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->appendLeafArgAndNext(TokIn);
     
     auto Tok = TheParser->currentToken(TOPLEVEL);
     Tok = TheParser->eatTrivia(Tok, TOPLEVEL);
@@ -1605,9 +1563,7 @@ ParseFunction CommaParselet::parseInfix() const {
 
 void CommaParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
-    TheParser->appendArg(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->appendLeafArgAndNext(TokIn);
     
     //
     // Unroll 1 iteration of the loop because we know that TokIn has already been read
@@ -1674,9 +1630,7 @@ void CommaParselet_parseLoop(ParseletPtr P, Token Ignored) {
     
     TheParser->appendArgs(Trivia1);
     
-    TheParser->appendArg(NodePtr(new LeafNode(Tok1)));
-    
-    TheParser->nextToken(Tok1);
+    TheParser->appendLeafArgAndNext(Tok1);
 
     auto Tok2 = TheParser->currentToken(TOPLEVEL);
     Tok2 = TheParser->eatTrivia(Tok2, TOPLEVEL, Trivia1);
@@ -1732,9 +1686,7 @@ ParseFunction SemiParselet::parseInfix() const {
 
 void SemiParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
-    TheParser->appendArg(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->appendLeafArgAndNext(TokIn);
     
     //
     // Unroll 1 iteration of the loop because we know that TokIn has already been read
@@ -1834,9 +1786,7 @@ void SemiParselet_parseLoop(ParseletPtr P, Token Ignored) {
     
     TheParser->appendArgs(Trivia1);
     
-    TheParser->appendArg(NodePtr(new LeafNode(Tok1)));
-    
-    TheParser->nextToken(Tok1);
+    TheParser->appendLeafArgAndNext(Tok1);
 
     auto Tok2 = TheParser->currentToken(TOPLEVEL);
     //
@@ -1921,9 +1871,7 @@ void ColonColonParselet_parseInfix(ParseletPtr P, Token TokIn) {
     // a::b
     //
     
-    TheParser->appendArg(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->appendLeafArgAndNext(TokIn);
     
     //
     // Unroll 1 iteration of the loop because we know that TokIn has already been read
@@ -1938,21 +1886,23 @@ void ColonColonParselet_parseInfix(ParseletPtr P, Token TokIn) {
         
         if (Tok2.Tok.isUnterminated()) {
             
-            TheParser->pushNode(NodePtr(new UnterminatedTokenErrorNeedsReparseNode(Tok2)));
+            TheParser->pushNode(new UnterminatedTokenErrorNeedsReparseNode(Tok2));
+            
+            TheParser->nextToken(Tok2);
             
         } else {
             
-            TheParser->pushNode(NodePtr(new ErrorNode(Tok2)));
+            TheParser->pushNode(new ErrorNode(Tok2));
+            
+            TheParser->nextToken(Tok2);
         }
         
     } else {
         
         assert(Tok2.Tok == TOKEN_STRING);
         
-        TheParser->pushNode(NodePtr(new LeafNode(Tok2)));
+        TheParser->pushLeafNodeAndNext(Tok2);
     }
-    
-    TheParser->nextToken(Tok2);
     
     MUSTTAIL
     return ColonColonParselet_parseLoop(P, TokIn/*ignored*/);
@@ -1982,9 +1932,7 @@ void ColonColonParselet_parseLoop(ParseletPtr P, Token Ignored) {
     
     TheParser->appendArgs(Trivia1);
     
-    TheParser->appendArg(NodePtr(new LeafNode(Tok1)));
-    
-    TheParser->nextToken(Tok1);
+    TheParser->appendLeafArgAndNext(Tok1);
     
     //
     // Special tokenization, so must do parsing here
@@ -1995,22 +1943,24 @@ void ColonColonParselet_parseLoop(ParseletPtr P, Token Ignored) {
     if (Tok2.Tok.isError()) {
 
         if (Tok2.Tok.isUnterminated()) {
-
-            TheParser->pushNode(NodePtr(new UnterminatedTokenErrorNeedsReparseNode(Tok2)));
-
+            
+            TheParser->pushNode(new UnterminatedTokenErrorNeedsReparseNode(Tok2));
+            
+            TheParser->nextToken(Tok2);
+            
         } else {
-
-            TheParser->pushNode(NodePtr(new ErrorNode(Tok2)));
+            
+            TheParser->pushNode(new ErrorNode(Tok2));
+            
+            TheParser->nextToken(Tok2);
         }
 
     } else {
 
         assert(Tok2.Tok == TOKEN_STRING);
-
-        TheParser->pushNode(NodePtr(new LeafNode(Tok2)));
+        
+        TheParser->pushLeafNodeAndNext(Tok2);
     }
-    
-    TheParser->nextToken(Tok2);
     
     MUSTTAIL
     return ColonColonParselet_parseLoop(P, Ignored);
@@ -2045,9 +1995,7 @@ void GreaterGreaterParselet_parseInfix(ParseletPtr P, Token TokIn) {
     // Special tokenization, so must do parsing here
     //
     
-    TheParser->appendArg(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->appendLeafArgAndNext(TokIn);
     
     auto Tok = TheParser->currentToken_stringifyAsFile();
     Tok = TheParser->eatTrivia_stringifyAsFile(Tok);
@@ -2056,21 +2004,23 @@ void GreaterGreaterParselet_parseInfix(ParseletPtr P, Token TokIn) {
         
         if (Tok.Tok.isUnterminated()) {
             
-            TheParser->pushNode(NodePtr(new UnterminatedTokenErrorNeedsReparseNode(Tok)));
+            TheParser->pushNode(new UnterminatedTokenErrorNeedsReparseNode(Tok));
+            
+            TheParser->nextToken(Tok);
             
         } else {
             
-            TheParser->pushNode(NodePtr(new ErrorNode(Tok)));
+            TheParser->pushNode(new ErrorNode(Tok));
+            
+            TheParser->nextToken(Tok);
         }
         
     } else {
         
         assert(Tok.Tok == TOKEN_STRING);
         
-        TheParser->pushNode(NodePtr(new LeafNode(Tok)));
+        TheParser->pushLeafNodeAndNext(Tok);
     }
-    
-    TheParser->nextToken(Tok);
     
     MUSTTAIL
     return GreaterGreaterParselet_reducePut(P, TokIn/*Ignored*/);
@@ -2080,7 +2030,7 @@ void GreaterGreaterParselet_reducePut(ParseletPtr P, Token Ignored) {
     
     TheParser->shift();
     
-    TheParser->pushNode(NodePtr(new BinaryNode(SYMBOL_PUT, TheParser->popContext())));
+    TheParser->pushNode(new BinaryNode(SYMBOL_PUT, TheParser->popContext()));
     
     MUSTTAIL
     return Parser_parseClimb(nullptr, Ignored);
@@ -2105,9 +2055,7 @@ void GreaterGreaterGreaterParselet_parseInfix(ParseletPtr P, Token TokIn) {
     // Special tokenization, so must do parsing here
     //
     
-    TheParser->appendArg(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->appendLeafArgAndNext(TokIn);
     
     auto Tok = TheParser->currentToken_stringifyAsFile();
     Tok = TheParser->eatTrivia_stringifyAsFile(Tok);
@@ -2116,21 +2064,23 @@ void GreaterGreaterGreaterParselet_parseInfix(ParseletPtr P, Token TokIn) {
         
         if (Tok.Tok.isUnterminated()) {
             
-            TheParser->pushNode(NodePtr(new UnterminatedTokenErrorNeedsReparseNode(Tok)));
+            TheParser->pushNode(new UnterminatedTokenErrorNeedsReparseNode(Tok));
+            
+            TheParser->nextToken(Tok);
             
         } else {
             
-            TheParser->pushNode(NodePtr(new ErrorNode(Tok)));
+            TheParser->pushNode(new ErrorNode(Tok));
+            
+            TheParser->nextToken(Tok);
         }
             
     } else {
         
         assert(Tok.Tok == TOKEN_STRING);
         
-        TheParser->pushNode(NodePtr(new LeafNode(Tok)));
+        TheParser->pushLeafNodeAndNext(Tok);
     }
-    
-    TheParser->nextToken(Tok);
     
     MUSTTAIL
     return GreaterGreaterGreaterParselet_reducePutAppend(P, TokIn/*Ignored*/);
@@ -2140,7 +2090,7 @@ void GreaterGreaterGreaterParselet_reducePutAppend(ParseletPtr P, Token Ignored)
     
     TheParser->shift();
     
-    TheParser->pushNode(NodePtr(new BinaryNode(SYMBOL_PUTAPPEND, TheParser->popContext())));
+    TheParser->pushNode(new BinaryNode(SYMBOL_PUTAPPEND, TheParser->popContext()));
     
     MUSTTAIL
     return Parser_parseClimb(nullptr, Ignored);
@@ -2163,9 +2113,7 @@ void LessLessParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
     TheParser->pushContextV(PRECEDENCE_HIGHEST);
     
-    TheParser->appendArg(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->appendLeafArgAndNext(TokIn);
     
     auto Tok = TheParser->currentToken_stringifyAsFile();
     Tok = TheParser->eatTrivia_stringifyAsFile(Tok);
@@ -2174,21 +2122,23 @@ void LessLessParselet_parsePrefix(ParseletPtr P, Token TokIn) {
         
         if (Tok.Tok.isUnterminated()) {
             
-            TheParser->pushNode(NodePtr(new UnterminatedTokenErrorNeedsReparseNode(Tok)));
+            TheParser->pushNode(new UnterminatedTokenErrorNeedsReparseNode(Tok));
+            
+            TheParser->nextToken(Tok);
             
         } else {
             
-            TheParser->pushNode(NodePtr(new ErrorNode(Tok)));
+            TheParser->pushNode(new ErrorNode(Tok));
+            
+            TheParser->nextToken(Tok);
         }
         
     } else {
             
         assert(Tok.Tok == TOKEN_STRING);
         
-        TheParser->pushNode(NodePtr(new LeafNode(Tok)));
+        TheParser->pushLeafNodeAndNext(Tok);
     }
-    
-    TheParser->nextToken(Tok);
     
     MUSTTAIL
     return LessLessParselet_reduceGet(P, TokIn/*Ignored*/);
@@ -2198,7 +2148,7 @@ void LessLessParselet_reduceGet(ParseletPtr P, Token Ignored) {
     
     TheParser->shift();
     
-    TheParser->pushNode(NodePtr(new PrefixNode(SYMBOL_GET, TheParser->popContext())));
+    TheParser->pushNode(new PrefixNode(SYMBOL_GET, TheParser->popContext()));
     
     MUSTTAIL
     return Parser_parseClimb(nullptr, Ignored);
@@ -2254,9 +2204,7 @@ void HashParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     // Make sure e.g.  #1a is not parsed as SlotNode["#1a"]
     //
     
-    TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->pushLeafNodeAndNext(TokIn);
     
     auto Tok = TheParser->currentToken(INSIDE_SLOT);
     
@@ -2268,9 +2216,7 @@ void HashParselet_parsePrefix(ParseletPtr P, Token TokIn) {
             
             TheParser->shift();
             
-            TheParser->pushNode(NodePtr(new LeafNode(Tok)));
-            
-            TheParser->nextToken(Tok);
+            TheParser->pushLeafNodeAndNext(Tok);
             
             MUSTTAIL
             return HashParselet_reduceSlot(P, TokIn/*Ignored*/);
@@ -2303,9 +2249,7 @@ void HashHashParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     // Something like  ##  or  ##1
     //
     
-    TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->pushLeafNodeAndNext(TokIn);
     
     auto Tok = TheParser->currentToken(INSIDE_SLOTSEQUENCE);
     
@@ -2316,9 +2260,7 @@ void HashHashParselet_parsePrefix(ParseletPtr P, Token TokIn) {
             
             TheParser->shift();
             
-            TheParser->pushNode(NodePtr(new LeafNode(Tok)));
-            
-            TheParser->nextToken(Tok);
+            TheParser->pushLeafNodeAndNext(Tok);
             
             MUSTTAIL
             return HashHashParselet_reduceSlotSequence(P, TokIn/*ignored*/);
@@ -2354,9 +2296,7 @@ void PercentParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     // Something like  %  or  %1
     //
     
-    TheParser->pushNode(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->pushLeafNodeAndNext(TokIn);
     
     auto Tok = TheParser->currentToken(INSIDE_OUT);
     
@@ -2367,9 +2307,7 @@ void PercentParselet_parsePrefix(ParseletPtr P, Token TokIn) {
             
             TheParser->shift();
             
-            TheParser->pushNode(NodePtr(new LeafNode(Tok)));
-            
-            TheParser->nextToken(Tok);
+            TheParser->pushLeafNodeAndNext(Tok);
             
             MUSTTAIL
             return PercentParselet_reduceOut(P, TokIn/*ignored*/);

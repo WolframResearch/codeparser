@@ -119,9 +119,7 @@ ParseFunction SemiSemiParselet::parseInfix() const {
 
 void SemiSemiParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
-    TheParser->appendArg(NodePtr(new LeafNode(TokIn)));
-    
-    TheParser->nextToken(TokIn);
+    TheParser->appendLeafArgAndNext(TokIn);
     
     MUSTTAIL
     return SemiSemiParselet_parse1(P, TokIn/*ignored*/);

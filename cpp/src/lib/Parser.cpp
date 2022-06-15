@@ -758,5 +758,18 @@ TriviaSeq& Parser::getTrivia2() {
     return trivia2;
 }
 
+void Parser::pushLeafNodeAndNext(Token Tok) {
+    
+    NodeStack.emplace_back(new LeafNode(Tok));
+    
+    TheTokenizer->nextToken(Tok);
+}
+
+void Parser::appendLeafArgAndNext(Token Tok) {
+    
+    ArgsStack.emplace_back(new LeafNode(Tok));
+    
+    TheTokenizer->nextToken(Tok);
+}
 
 ParserPtr TheParser = nullptr;
