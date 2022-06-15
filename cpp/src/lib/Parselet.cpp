@@ -579,6 +579,18 @@ void InfixOperatorParselet_parseInfix(ParseletPtr P, Token TokIn) {
     auto Tok2 = TheParser->currentToken(TOPLEVEL);
     Tok2 = TheParser->eatTrivia(Tok2, TOPLEVEL);
     
+#if !USE_MUSTTAIL
+    auto& Ctxt = TheParser->topContext();
+    assert(Ctxt.F == nullptr);
+    assert(Ctxt.P == nullptr);
+    Ctxt.F = Parser_identity;
+    
+    auto P2 = prefixParselets[Tok2.Tok.value()];
+    
+    (P2->parsePrefix())(P2, Tok2);
+    
+    return InfixOperatorParselet_parseLoop(P, TokIn/*ignored*/);
+#else
     auto& Ctxt = TheParser->topContext();
     assert(Ctxt.F == nullptr);
     assert(Ctxt.P == nullptr);
@@ -589,11 +601,16 @@ void InfixOperatorParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
     MUSTTAIL
     return (P2->parsePrefix())(P2, Tok2);
+#endif // !USE_MUSTTAIL
 }
 
 void InfixOperatorParselet_parseLoop(ParseletPtr P, Token Ignored) {
     
     assert(dynamic_cast<InfixOperatorParselet *>(P));
+    
+#if !USE_MUSTTAIL
+    while (true) {
+#endif // !USE_MUSTTAIL
     
     //
     // Check isAbort() inside loops
@@ -661,10 +678,25 @@ void InfixOperatorParselet_parseLoop(ParseletPtr P, Token Ignored) {
     
     TheParser->appendArgs(Trivia1);
     
+#if !USE_MUSTTAIL
+    auto& Ctxt = TheParser->topContext();
+    assert(Ctxt.F == Parser_identity);
+    
+    auto P2 = prefixParselets[Tok2.Tok.value()];
+        
+    (P2->parsePrefix())(P2, Tok2);
+    
+    } // while (true)
+#else
+    auto& Ctxt = TheParser->topContext();
+    assert(Ctxt.F == InfixOperatorParselet_parseLoop);
+    assert(Ctxt.P == P);
+    
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
     MUSTTAIL
     return (P2->parsePrefix())(P2, Tok2);
+#endif // !USE_MUSTTAIL
 }
 
 void InfixOperatorParselet_reduceInfixOperator(ParseletPtr P, Token Ignored) {
@@ -741,6 +773,13 @@ void GroupParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
     auto& Ctxt = TheParser->pushContext(PRECEDENCE_LOWEST);
     
+#if !USE_MUSTTAIL
+    assert(Ctxt.F == nullptr);
+    assert(Ctxt.P == nullptr);
+    Ctxt.F = Parser_identity;
+    
+    return GroupParselet_parseLoop(P, TokIn/*Ignored*/);
+#else
     assert(Ctxt.F == nullptr);
     assert(Ctxt.P == nullptr);
     Ctxt.F = GroupParselet_parseLoop;
@@ -748,11 +787,16 @@ void GroupParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
     MUSTTAIL
     return GroupParselet_parseLoop(P, TokIn/*Ignored*/);
+#endif // !USE_MUSTTAIL
 }
 
 void GroupParselet_parseLoop(ParseletPtr P, Token Ignored) {
     
     assert(dynamic_cast<GroupParselet *>(P));
+    
+#if !USE_MUSTTAIL
+    while (true) {
+#endif // !USE_MUSTTAIL
     
     //
     // Check isAbort() inside loops
@@ -822,8 +866,14 @@ void GroupParselet_parseLoop(ParseletPtr P, Token Ignored) {
         
         TheParser->appendArgs(Trivia1);
         
+#if !USE_MUSTTAIL
+        PrefixToplevelCloserParselet_parsePrefix(prefixToplevelCloserParselet, Tok);
+        
+        continue;
+#else
         MUSTTAIL
         return PrefixToplevelCloserParselet_parsePrefix(prefixToplevelCloserParselet, Tok);
+#endif
     }
 
     if (Tok.Tok == TOKEN_ENDOFFILE) {
@@ -846,10 +896,25 @@ void GroupParselet_parseLoop(ParseletPtr P, Token Ignored) {
     
     TheParser->appendArgs(Trivia1);
     
+#if !USE_MUSTTAIL
+    auto& Ctxt = TheParser->topContext();
+    assert(Ctxt.F == Parser_identity);
+    
+    auto P2 = prefixParselets[Tok.Tok.value()];
+        
+    (P2->parsePrefix())(P2, Tok);
+    
+    } // while (true)
+#else
+    auto& Ctxt = TheParser->topContext();
+    assert(Ctxt.F == GroupParselet_parseLoop);
+    assert(Ctxt.P == P);
+    
     auto P2 = prefixParselets[Tok.Tok.value()];
     
     MUSTTAIL
     return (P2->parsePrefix())(P2, Tok);
+#endif // !USE_MUSTTAIL
 }
 
 void GroupParselet_reduceGroup(ParseletPtr P, Token Ignored) {
@@ -1580,6 +1645,14 @@ void CommaParselet_parseInfix(ParseletPtr P, Token TokIn) {
         
         TheParser->pushNode(new ErrorNode(Token(TOKEN_ERROR_INFIXIMPLICITNULL, Tok2.BufLen.buffer, Tok2.Src.Start)));
         
+#if !USE_MUSTTAIL
+        auto& Ctxt = TheParser->topContext();
+        assert(Ctxt.F == nullptr);
+        assert(Ctxt.P == nullptr);
+        Ctxt.F = Parser_identity;
+        
+        return CommaParselet_parseLoop(P, TokIn/*ignored*/);
+#else
         auto& Ctxt = TheParser->topContext();
         assert(Ctxt.F == nullptr);
         assert(Ctxt.P == nullptr);
@@ -1588,8 +1661,21 @@ void CommaParselet_parseInfix(ParseletPtr P, Token TokIn) {
         
         MUSTTAIL
         return CommaParselet_parseLoop(P, TokIn/*ignored*/);
+#endif // !USE_MUSTTAIL
     }
     
+#if !USE_MUSTTAIL
+    auto& Ctxt = TheParser->topContext();
+    assert(Ctxt.F == nullptr);
+    assert(Ctxt.P == nullptr);
+    Ctxt.F = Parser_identity;
+    
+    auto P2 = prefixParselets[Tok2.Tok.value()];
+    
+    (P2->parsePrefix())(P2, Tok2);
+    
+    return CommaParselet_parseLoop(P, TokIn/*ignored*/);
+#else
     auto& Ctxt = TheParser->topContext();
     assert(Ctxt.F == nullptr);
     assert(Ctxt.P == nullptr);
@@ -1600,9 +1686,14 @@ void CommaParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
     MUSTTAIL
     return (P2->parsePrefix())(P2, Tok2);
+#endif // !USE_MUSTTAIL
 }
 
 void CommaParselet_parseLoop(ParseletPtr P, Token Ignored) {
+    
+#if !USE_MUSTTAIL
+    while (true) {
+#endif // !USE_MUSTTAIL
     
     //
     // Check isAbort() inside loops
@@ -1645,20 +1736,33 @@ void CommaParselet_parseLoop(ParseletPtr P, Token Ignored) {
         
         TheParser->pushNode(new ErrorNode(Token(TOKEN_ERROR_INFIXIMPLICITNULL, Tok2.BufLen.buffer, Tok2.Src.Start)));
         
+#if !USE_MUSTTAIL
+        continue;
+#else
         MUSTTAIL
         return CommaParselet_parseLoop(P, Ignored);
+#endif // !USE_MUSTTAIL
     }
+        
+#if !USE_MUSTTAIL
+    auto& Ctxt = TheParser->topContext();
+    assert(Ctxt.F == Parser_identity);
     
-//    auto& Ctxt = TheParser->topContext();
-//    assert(Ctxt.F == CommaParselet_parseLoop);
-//    assert(Ctxt.P == P);
-//    Args.F = CommaParselet_parseLoop;
-//    Args.P = P;
+    auto P2 = prefixParselets[Tok2.Tok.value()];
+        
+    (P2->parsePrefix())(P2, Tok2);
+        
+    } // while (true)
+#else
+    auto& Ctxt = TheParser->topContext();
+    assert(Ctxt.F == CommaParselet_parseLoop);
+    assert(Ctxt.P == P);
     
     auto P2 = prefixParselets[Tok2.Tok.value()];
     
     MUSTTAIL
     return (P2->parsePrefix())(P2, Tok2);
+#endif // !USE_MUSTTAIL
 }
 
 void CommaParselet_reduceComma(ParseletPtr P, Token Ignored) {
@@ -1710,14 +1814,25 @@ void SemiParselet_parseInfix(ParseletPtr P, Token TokIn) {
         // nextToken() is not needed after an implicit token
         //
         
+#if !USE_MUSTTAIL
         auto& Ctxt = TheParser->topContext();
         assert(Ctxt.F == nullptr);
         assert(Ctxt.P == nullptr);
+        
+        Ctxt.F = Parser_identity;
+        
+        return SemiParselet_parseLoop(P, TokIn/*ignored*/);
+#else
+        auto& Ctxt = TheParser->topContext();
+        assert(Ctxt.F == nullptr);
+        assert(Ctxt.P == nullptr);
+        
         Ctxt.F = SemiParselet_parseLoop;
         Ctxt.P = P;
         
         MUSTTAIL
         return SemiParselet_parseLoop(P, TokIn/*ignored*/);
+#endif // !USE_MUSTTAIL
     }
     
     if (Tok2.Tok.isPossibleBeginning()) {
@@ -1726,6 +1841,18 @@ void SemiParselet_parseInfix(ParseletPtr P, Token TokIn) {
         // Something like  a;+2
         //
         
+#if !USE_MUSTTAIL
+        auto& Ctxt = TheParser->topContext();
+        assert(Ctxt.F == nullptr);
+        assert(Ctxt.P == nullptr);
+        Ctxt.F = Parser_identity;
+        
+        auto P2 = prefixParselets[Tok2.Tok.value()];
+        
+        (P2->parsePrefix())(P2, Tok2);
+        
+        return SemiParselet_parseLoop(P, TokIn/*ignored*/);
+#else
         auto& Ctxt = TheParser->topContext();
         assert(Ctxt.F == nullptr);
         assert(Ctxt.P == nullptr);
@@ -1736,8 +1863,9 @@ void SemiParselet_parseInfix(ParseletPtr P, Token TokIn) {
         
         MUSTTAIL
         return (P2->parsePrefix())(P2, Tok2);
+#endif // !USE_MUSTTAIL
     }
-        
+    
     //
     // Not beginning of an expression
     //
@@ -1755,6 +1883,10 @@ void SemiParselet_parseInfix(ParseletPtr P, Token TokIn) {
 }
 
 void SemiParselet_parseLoop(ParseletPtr P, Token Ignored) {
+    
+#if !USE_MUSTTAIL
+    while (true) {
+#endif // !USE_MUSTTAIL
     
     //
     // Check isAbort() inside loops
@@ -1808,8 +1940,12 @@ void SemiParselet_parseLoop(ParseletPtr P, Token Ignored) {
         // nextToken() is not needed after an implicit token
         //
         
+#if !USE_MUSTTAIL
+        continue;
+#else
         MUSTTAIL
         return SemiParselet_parseLoop(P, Ignored);
+#endif // !USE_MUSTTAIL
     }
     
     if (Tok2.Tok.isPossibleBeginning()) {
@@ -1818,16 +1954,25 @@ void SemiParselet_parseLoop(ParseletPtr P, Token Ignored) {
         // Something like  a;b;+2
         //
         
-//        auto& Ctxt = TheParser->topContext();
-//        assert(Ctxt.F == SemiParselet_parseLoop);
-//        assert(Ctxt.P == P);
-//        Args.F = SemiParselet_parseLoop;
-//        Args.P = P;
+#if !USE_MUSTTAIL
+        auto& Ctxt = TheParser->topContext();
+        assert(Ctxt.F == Parser_identity);
+        
+        auto P2 = prefixParselets[Tok2.Tok.value()];
+        
+        (P2->parsePrefix())(P2, Tok2);
+        
+        continue;
+#else
+        auto& Ctxt = TheParser->topContext();
+        assert(Ctxt.F == SemiParselet_parseLoop);
+        assert(Ctxt.P == P);
         
         auto P2 = prefixParselets[Tok2.Tok.value()];
         
         MUSTTAIL
         return (P2->parsePrefix())(P2, Tok2);
+#endif // !USE_MUSTTAIL
     }
 
     //
@@ -1844,6 +1989,10 @@ void SemiParselet_parseLoop(ParseletPtr P, Token Ignored) {
     
     MUSTTAIL
     return SemiParselet_reduceCompoundExpression(P, Ignored);
+        
+#if !USE_MUSTTAIL
+    } // while (true)
+#endif // !USE_MUSTTAIL
 }
 
 void SemiParselet_reduceCompoundExpression(ParseletPtr P, Token Ignored) {
@@ -1910,6 +2059,10 @@ void ColonColonParselet_parseInfix(ParseletPtr P, Token TokIn) {
 
 void ColonColonParselet_parseLoop(ParseletPtr P, Token Ignored) {
     
+#if !USE_MUSTTAIL
+    while (true) {
+#endif // !USE_MUSTTAIL
+    
     //
     // Check isAbort() inside loops
     //
@@ -1962,8 +2115,12 @@ void ColonColonParselet_parseLoop(ParseletPtr P, Token Ignored) {
         TheParser->pushLeafNodeAndNext(Tok2);
     }
     
+#if !USE_MUSTTAIL
+    } // while (true)
+#else
     MUSTTAIL
     return ColonColonParselet_parseLoop(P, Ignored);
+#endif // !USE_MUSTTAIL
 }
 
 void ColonColonParselet_reduceMessageName(ParseletPtr P, Token Ignored) {

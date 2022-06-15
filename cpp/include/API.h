@@ -45,11 +45,11 @@ do { \
 #define HANDLE_ABORT
 #endif // !NABORT
 
-#if !NMUSTTAIL
+#if USE_MUSTTAIL
 #define MUSTTAIL [[clang::musttail]]
 #else
 #define MUSTTAIL
-#endif // !NMUSTTAIL
+#endif // USE_MUSTTAIL
 
 
 class ParserSession;

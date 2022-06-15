@@ -275,21 +275,29 @@ void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2) {
 void Parser_tryContinue(ParseletPtr Ignored, Token Ignored2) {
     
     if (TheParser->getContextStackSize() > 0) {
-        
+
         auto& Ctxt = TheParser->topContext();
-        
+
         auto F = Ctxt.F;
-        
+
         auto P = Ctxt.P;
-        
+
+#if !USE_MUSTTAIL
+        assert(F != nullptr);
+#else
         assert(F != nullptr);
         assert(P != nullptr);
+#endif // !USE_MUSTTAIL
         
         MUSTTAIL
         return F(P, Ignored2);
     }
     
     // no call needed here
+    return;
+}
+
+void Parser_identity(ParseletPtr P, Token firstTok) {
     return;
 }
 

@@ -127,6 +127,6 @@ public:
 
 void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2);
 void Parser_tryContinue(ParseletPtr Ignored, Token Ignored2);
-
+void Parser_identity(ParseletPtr P, Token firstTok);
 
 extern ParserPtr TheParser;
