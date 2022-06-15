@@ -303,6 +303,10 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
     
     assert(*openSquareBuf == '[');
     
+#if DIAGNOSTICS
+    CharacterDecoder_LongNameCount++;
+#endif // DIAGNOSTICS
+    
     //
     // Do not write leading \[ or trailing ] to LongName
     //
@@ -443,7 +447,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
 
             Issues.push_back(std::move(I));
         }
-#endif // #if 0
+#endif // 0
 #endif // !NISSUES
         
         TheByteBuffer->buffer = openSquareBuf;
@@ -694,6 +698,10 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
     
     assert(*colonBuf == ':');
     
+#if DIAGNOSTICS
+    CharacterDecoder_4HexCount++;
+#endif // DIAGNOSTICS
+    
     auto hexStartBuf = TheByteBuffer->buffer;
     
     for (auto i = 0; i < 4; i++) {
@@ -877,6 +885,10 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
     
     assert(*dotBuf == '.');
     
+#if DIAGNOSTICS
+    CharacterDecoder_2HexCount++;
+#endif // DIAGNOSTICS
+    
     auto hexStartBuf = TheByteBuffer->buffer;
     
     for (auto i = 0; i < 2; i++) {
@@ -1055,6 +1067,10 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
 WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer firstOctalBuf, SourceLocation firstOctalLoc, NextPolicy policy) {
     
     assert(SourceCharacter(*firstOctalBuf).isOctal());
+    
+#if DIAGNOSTICS
+    CharacterDecoder_OctalCount++;
+#endif // DIAGNOSTICS
     
     auto octalStartBuf = firstOctalBuf;
     
@@ -1235,6 +1251,10 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
 WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer barBuf, SourceLocation barLoc, NextPolicy policy) {
     
     assert(*barBuf == '|');
+    
+#if DIAGNOSTICS
+    CharacterDecoder_6HexCount++;
+#endif // DIAGNOSTICS
     
     auto hexStartBuf = TheByteBuffer->buffer;
     
@@ -1430,6 +1450,10 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
 SourceCharacter CharacterDecoder::handleLineContinuation(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter c, NextPolicy policy) {
     
     assert(c.to_point() == '\n' || c.to_point() == '\r' || c.to_point() == CODEPOINT_CRLF);
+    
+#if DIAGNOSTICS
+    CharacterDecoder_LineContinuationCount++;
+#endif // DIAGNOSTICS
     
     c = TheByteDecoder->currentSourceCharacter(policy);
     

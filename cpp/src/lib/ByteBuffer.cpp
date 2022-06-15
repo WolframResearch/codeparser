@@ -10,7 +10,7 @@
 #undef P
 #endif // USE_MATHLINK
 #endif // NDEBUG
-#endif // #if 0
+#endif // 0
 
 #if 0
 #ifndef NDEBUG
@@ -18,7 +18,7 @@
 #undef True
 #undef False
 #endif // NDEBUG
-#endif // #if 0
+#endif // 0
 
 #include <cstddef> // for size_t
 
@@ -49,7 +49,7 @@ unsigned char ByteBuffer::nextByte0() {
         oldProgress = (100 * (buffer - origBufAndLen.buffer) / origBufAndLen.length());
     }
 #endif // NDEBUG
-#endif // #if 0
+#endif // 0
     
     if (buffer == end) {
         
@@ -101,7 +101,7 @@ unsigned char ByteBuffer::nextByte0() {
         }
     }
 #endif // NDEBUG
-#endif // #if 0
+#endif // 0
     
     //
     // if eof, then force 0xff to be returned
@@ -124,7 +124,7 @@ void ByteBuffer::nextByte() {
         oldProgress = (100 * (buffer - origBufAndLen.buffer) / origBufAndLen.length());
     }
 #endif // NDEBUG
-#endif // #if 0
+#endif // 0
     
     if (buffer == end) {
         return;
@@ -172,7 +172,7 @@ void ByteBuffer::nextByte() {
         }
     }
 #endif // NDEBUG
-#endif // #if 0
+#endif // 0
 }
 
 unsigned char ByteBuffer::currentByte() {

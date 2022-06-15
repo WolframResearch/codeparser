@@ -33,6 +33,7 @@ set(TRANSPORT Automatic CACHE STRING "Transport to use")
 set(NISSUES OFF CACHE BOOL "NISSUES")
 set(NABORT OFF CACHE BOOL "NABORT")
 set(NMUSTTAIL ON CACHE BOOL "NMUSTTAIL")
+set(DIAGNOSTICS OFF CACHE BOOL "DIAGNOSTICS")
 set(LOCAL_BUILD OFF CACHE BOOL "Local build")
 #
 # Time to pause when starting kernel
@@ -72,6 +73,7 @@ message(STATUS "TRANSPORT: ${TRANSPORT}")
 message(STATUS "NISSUES: ${NISSUES}")
 message(STATUS "NABORT: ${NABORT}")
 message(STATUS "NMUSTTAIL: ${NMUSTTAIL}")
+message(STATUS "DIAGNOSTICS: ${DIAGNOSTICS}")
 message(STATUS "LOCAL_BUILD: ${LOCAL_BUILD}")
 if(LOCAL_BUILD)
 message(STATUS "Configuring for local build")
@@ -729,6 +731,10 @@ endif()
 
 if(${TRANSPORT} STREQUAL ExprLib)
 target_compile_definitions(codeparser-lib PUBLIC USE_EXPR_LIB=1)
+endif()
+
+if(DIAGNOSTICS)
+target_compile_definitions(codeparser-lib PUBLIC DIAGNOSTICS=1)
 endif()
 
 target_compile_definitions(codeparser-lib PUBLIC SIZEOF_VOID_P=${CMAKE_SIZEOF_VOID_P})
