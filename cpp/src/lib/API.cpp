@@ -63,9 +63,6 @@ void ParserSessionReleaseContainer(NodeContainerPtr C) {
     TheParserSession->releaseContainer(C);
 }
 
-ParserSessionPtr TheParserSession = nullptr;
-
-
 
 mint WolframLibrary_getVersion() {
     return WolframLibraryVersion;

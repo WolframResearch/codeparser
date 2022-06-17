@@ -536,6 +536,9 @@ void ParserSession::addIssue(IssuePtr I) {
 #endif // !NISSUES
 
 
+ParserSessionPtr TheParserSession = nullptr;
+
+
 //
 // Does the file currently have permission to be read?
 //
