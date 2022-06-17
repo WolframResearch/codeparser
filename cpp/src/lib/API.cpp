@@ -293,10 +293,6 @@ NodeContainerPtr ParserSession::tokenize() {
     
     while (true) {
         
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
         auto Tok = TheTokenizer->currentToken(TOPLEVEL);
         
         if (Tok.Tok == TOKEN_ENDOFFILE) {
@@ -517,10 +513,6 @@ NodeContainerPtr ParserSession::safeString() {
     // read all characters, just to set unsafeCharacterEncoding flag if necessary
     //
     while (true) {
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
         
         auto Char = TheByteDecoder->nextSourceCharacter0(TOPLEVEL);
         

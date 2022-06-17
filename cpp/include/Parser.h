@@ -19,14 +19,6 @@ using ParserPtr = std::unique_ptr<Parser>;
 using ParseletPtr = Parselet *;
 typedef void (*ParseFunction)(ParseletPtr, Token firstTok);
 
-//
-//
-//
-enum Associativity {
-    ASSOCIATIVITY_NONRIGHT,
-    ASSOCIATIVITY_RIGHT,
-};
-
 struct Context {
     
     ParseFunction F;

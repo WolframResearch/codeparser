@@ -172,14 +172,14 @@ using expr = void *;
 //
 class Symbol {
 
-  char const *Name;
+  const char *Name;
   const int Id;
 
 public:
 
-  constexpr Symbol(char const *Name, int Id) : Name(Name), Id(Id) {}
+  constexpr Symbol(const char *Name, int Id) : Name(Name), Id(Id) {}
   
-  constexpr char const *name() const {
+  constexpr const char *name() const {
     return Name;
   }
 
@@ -241,6 +241,7 @@ symbolCPPSource = {
 #endif // USE_EXPR_LIB
 
 #include <cassert>
+
 
 bool operator==(Symbol a, Symbol b) {
   return a.getId() == b.getId();

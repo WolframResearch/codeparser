@@ -279,7 +279,7 @@ public:
 };
 
 //
-// TernaryNode
+// PostfixNode
 //
 // a!
 //

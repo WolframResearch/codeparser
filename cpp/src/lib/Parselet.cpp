@@ -64,7 +64,6 @@ void PrefixCloserParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     //
     // Inside some other parselet that is not GroupParselet
     //
-    //
     
     Token createdToken;
     
@@ -1279,37 +1278,33 @@ void SlashColonParselet_parseInfix(ParseletPtr P, Token TokIn) {
 
 void SlashColonParselet_parse1(ParseletPtr P, Token Ignored) {
     
-    Token Tok;
+    auto& Trivia1 = TheParser->getTrivia1();
     
-    {
-        auto& Trivia1 = TheParser->getTrivia1();
-        
-        Tok = TheParser->currentToken(TOPLEVEL);
-        Tok = TheParser->eatTrivia(Tok, TOPLEVEL, Trivia1);
-        
-        switch (Tok.Tok.value()) {
-            case TOKEN_EQUAL.value(): {
-                
-                TheParser->shift();
-                
-                TheParser->appendArgs(Trivia1);
-                
-                break;
-            }
-            case TOKEN_COLONEQUAL.value(): {
-                
-                TheParser->shift();
-                
-                TheParser->appendArgs(Trivia1);
-                
-                break;
-            }
-            default: {
-                
-                Trivia1.reset();
-                
-                break;
-            }
+    auto Tok = TheParser->currentToken(TOPLEVEL);
+    Tok = TheParser->eatTrivia(Tok, TOPLEVEL, Trivia1);
+    
+    switch (Tok.Tok.value()) {
+        case TOKEN_EQUAL.value(): {
+            
+            TheParser->shift();
+            
+            TheParser->appendArgs(Trivia1);
+            
+            break;
+        }
+        case TOKEN_COLONEQUAL.value(): {
+            
+            TheParser->shift();
+            
+            TheParser->appendArgs(Trivia1);
+            
+            break;
+        }
+        default: {
+            
+            Trivia1.reset();
+            
+            break;
         }
     }
     

@@ -305,10 +305,6 @@ Token Parser::eatTrivia(Token T, NextPolicy policy) {
     
     while (T.Tok.isTrivia()) {
         
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
         ArgsStack.emplace_back(new LeafNode(T));
         
         nextToken(T);
@@ -322,10 +318,6 @@ Token Parser::eatTrivia(Token T, NextPolicy policy) {
 Token Parser::eatTrivia(Token T, NextPolicy policy, TriviaSeq& Args) {
     
     while (T.Tok.isTrivia()) {
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
         
         Args.append(new LeafNode(T));
         
@@ -341,10 +333,6 @@ Token Parser::eatTrivia_stringifyAsFile(Token T) {
     
     while (T.Tok.isTrivia()) {
         
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
         ArgsStack.emplace_back(new LeafNode(T));
         
         nextToken(T);
@@ -358,10 +346,6 @@ Token Parser::eatTrivia_stringifyAsFile(Token T) {
 Token Parser::eatTrivia_stringifyAsFile(Token T, TriviaSeq& Args) {
     
     while (T.Tok.isTrivia()) {
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
         
         Args.append(new LeafNode(T));
         
@@ -377,10 +361,6 @@ Token Parser::eatTriviaButNotToplevelNewlines(Token T, NextPolicy policy) {
     
     while (T.Tok.isTriviaButNotToplevelNewline()) {
         
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
         ArgsStack.emplace_back(new LeafNode(T));
         
         nextToken(T);
@@ -395,10 +375,6 @@ Token Parser::eatTriviaButNotToplevelNewlines(Token T, NextPolicy policy, Trivia
     
     while (T.Tok.isTriviaButNotToplevelNewline()) {
         
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
         Args.append(new LeafNode(T));
         
         nextToken(T);
@@ -412,10 +388,6 @@ Token Parser::eatTriviaButNotToplevelNewlines(Token T, NextPolicy policy, Trivia
 Token Parser::eatTriviaButNotToplevelNewlines_stringifyAsFile(Token T, TriviaSeq& Args) {
     
     while (T.Tok.isTriviaButNotToplevelNewline()) {
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
         
         Args.append(new LeafNode(T));
         

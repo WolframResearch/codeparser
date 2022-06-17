@@ -432,10 +432,6 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation token
     while (true) {
         
         //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
-        //
         // No need to check for comment length
         //
         
@@ -535,10 +531,6 @@ inline Token Tokenizer::handleMBLinearSyntaxBlob(Buffer tokenStartBuf, SourceLoc
     
     while (true) {
         
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
         switch (c.to_point()) {
             case CODEPOINT_LINEARSYNTAX_OPENPAREN: {
                 
@@ -610,10 +602,6 @@ inline Token Tokenizer::handleSymbol(Buffer tokenStartBuf, SourceLocation tokenS
         if (c.to_point() != '`') {
             break;
         }
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
         
 #if !NISSUES
         if ((policy & SLOT_BEHAVIOR_FOR_STRINGS) == SLOT_BEHAVIOR_FOR_STRINGS) {
@@ -713,10 +701,6 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer tokenStartBuf, SourceLo
     c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
     while (true) {
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
         
         if (c.isDigit()) {
             
@@ -821,10 +805,6 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
     policy |= STRING_OR_COMMENT;
     
     while (true) {
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
         
         c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
         
@@ -953,10 +933,6 @@ inline Token Tokenizer::handleString_stringifyAsFile(Buffer tokenStartBuf, Sourc
         }
         
         //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
-        //
         // tutorial/OperatorInputForms
         //
         // File Names
@@ -1032,10 +1008,6 @@ inline SourceCharacter Tokenizer::handleFileOpsBrackets(SourceLocation tokenStar
         if (breakWhile) {
             break;
         }
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
         
         switch (c.to_point()) {
                 //
@@ -2300,10 +2272,6 @@ inline WLCharacter Tokenizer::handleZeros(Buffer tokenStartBuf, SourceLocation t
     
     while (true) {
         
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
         if (c.to_point() != '0') {
             
             break;
@@ -2334,10 +2302,6 @@ inline WLCharacter Tokenizer::handleDigits(Buffer tokenStartBuf, SourceLocation 
     
     while (true) {
         
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
-        
         if (!c.isDigit()) {
             
             break;
@@ -2365,10 +2329,6 @@ inline WLCharacter Tokenizer::handleAlphaOrDigits(Buffer tokenStartBuf, SourceLo
     auto count = 0;
     
     while (true) {
-        
-        //
-        // No need to check isAbort() inside tokenizer loops
-        //
         
         if (!c.isAlphaOrDigit()) {
             break;
@@ -3051,10 +3011,6 @@ inline Token Tokenizer::handlePercent(Buffer tokenStartBuf, SourceLocation token
         
         while (true) {
             
-            //
-            // No need to check isAbort() inside tokenizer loops
-            //
-            
             if (c.to_point() != '%') {
                 
                 break;
@@ -3470,10 +3426,6 @@ inline Token Tokenizer::handleUnhandledBackslash(Buffer tokenStartBuf, SourceLoc
                 
                 while (true) {
                     
-                    //
-                    // No need to check isAbort() inside tokenizer loops
-                    //
-                    
                     if (c.isAlphaOrDigit()) {
                         
                         resetBuf = TheByteBuffer->buffer;
@@ -3519,10 +3471,6 @@ inline Token Tokenizer::handleUnhandledBackslash(Buffer tokenStartBuf, SourceLoc
             
             for (auto i = 0; i < 4; i++) {
                 
-                //
-                // No need to check isAbort() inside tokenizer loops
-                //
-                
                 if (c.isHex()) {
                     
                     resetBuf = TheByteBuffer->buffer;
@@ -3553,10 +3501,6 @@ inline Token Tokenizer::handleUnhandledBackslash(Buffer tokenStartBuf, SourceLoc
             c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
             
             for (auto i = 0; i < 2; i++) {
-                
-                //
-                // No need to check isAbort() inside tokenizer loops
-                //
                 
                 if (c.isHex()) {
                     
@@ -3589,10 +3533,6 @@ inline Token Tokenizer::handleUnhandledBackslash(Buffer tokenStartBuf, SourceLoc
             
             for (auto i = 0; i < 3; i++) {
                 
-                //
-                // No need to check isAbort() inside tokenizer loops
-                //
-                
                 if (c.isOctal()) {
                     
                     resetBuf = TheByteBuffer->buffer;
@@ -3623,10 +3563,6 @@ inline Token Tokenizer::handleUnhandledBackslash(Buffer tokenStartBuf, SourceLoc
             c = TheCharacterDecoder->nextWLCharacter0(tokenStartBuf, tokenStartLoc, policy);
             
             for (auto i = 0; i < 6; i++) {
-                
-                //
-                // No need to check isAbort() inside tokenizer loops
-                //
                 
                 if (c.isHex()) {
                     

@@ -163,10 +163,6 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
         
         while (true) {
             
-            //
-            // No need to check isAbort() inside decoder loops
-            //
-            
             if (curSource.isAlphaOrDigit()) {
                 
                 TheByteBuffer->buffer = TheByteDecoder->lastBuf;
@@ -1393,10 +1389,6 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterSta
             auto wellFormed = false;
             
             while (true) {
-                
-                //
-                // No need to check isAbort() inside decoder loops
-                //
                 
                 if (curSource.isAlphaOrDigit()) {
                     

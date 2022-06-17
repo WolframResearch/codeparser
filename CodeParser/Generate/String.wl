@@ -86,11 +86,11 @@ using expr = void *;
 class MyString {
 public:
 
-  char const *Val;
+  const char *Val;
   const size_t Len;
   const int Id;
 
-  constexpr MyString(char const *Val, size_t Len, int Id) : Val(Val), Len(Len), Id(Id) {}
+  constexpr MyString(const char *Val, size_t Len, int Id) : Val(Val), Len(Len), Id(Id) {}
 
   constexpr int getId() const {
     return Id;
