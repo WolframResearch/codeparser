@@ -176,14 +176,13 @@ void Parser::deinit() {
 }
 
 void Parser::nextToken(Token Tok) {
-    
     TheTokenizer->nextToken(Tok);
 }
 
 
 Token Parser::nextToken0(NextPolicy policy) {
     
-    auto insideGroup = getGroupDepth() > 0;
+    auto insideGroup = !GroupStack.empty();
     
     //
     // if insideGroup:
@@ -215,12 +214,10 @@ Token Parser::currentToken(NextPolicy policy) const {
 
 
 Token Parser::currentToken_stringifyAsTag() const {
-    
     return TheTokenizer->currentToken_stringifyAsTag();
 }
 
 Token Parser::currentToken_stringifyAsFile() const {
-    
     return TheTokenizer->currentToken_stringifyAsFile();
 }
 
@@ -238,6 +235,7 @@ void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2) {
     auto& Trivia1 = TheParser->getTrivia1();
     
     auto token = TheParser->currentToken(TOPLEVEL);
+    
     //
     // not in the middle of parsing anything, so toplevel newlines will delimit
     //
@@ -283,15 +281,9 @@ void Parser_tryContinue(ParseletPtr Ignored, Token Ignored2) {
         auto& Ctxt = TheParser->topContext();
 
         auto F = Ctxt.F;
-
         auto P = Ctxt.P;
 
-#if !USE_MUSTTAIL
-        assert(F != nullptr);
-#else
-        assert(F != nullptr);
-        assert(P != nullptr);
-#endif // !USE_MUSTTAIL
+        assert(F);
         
         MUSTTAIL
         return F(P, Ignored2);

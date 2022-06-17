@@ -75,7 +75,8 @@ ParseFunction SemiSemiParselet::parsePrefix() const {
     return SemiSemiParselet_parsePrefix;
 }
 
-void SemiSemiParselet_parsePrefix(ParseletPtr P, Token TokIn) {
+void SemiSemiParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
+    
 #if !NABORT
     if (TheParserSession->isAbort()) {
         TheParser->pushNode(new AbortNode());
@@ -92,14 +93,15 @@ void SemiSemiParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     //
     
     MUSTTAIL
-    return SemiSemiParselet_parseInfix(P, TokIn);
+    return SemiSemiParselet_parseInfix(Ignored, TokIn);
 }
 
 ParseFunction SemiSemiParselet::parseInfix() const {
     return SemiSemiParselet_parseInfix;
 }
 
-void SemiSemiParselet_parseInfix(ParseletPtr P, Token TokIn) {
+void SemiSemiParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
+    
 #if !NABORT
     if (TheParserSession->isAbort()) {
         TheParser->popContext();
@@ -111,10 +113,11 @@ void SemiSemiParselet_parseInfix(ParseletPtr P, Token TokIn) {
     TheParser->appendLeafArgAndNext(TokIn);
     
     MUSTTAIL
-    return SemiSemiParselet_parse1(P, TokIn/*ignored*/);
+    return SemiSemiParselet_parse1(Ignored, TokIn/*ignored*/);
 }
 
-void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
+void SemiSemiParselet_parse1(ParseletPtr Ignored, Token Ignored2) {
+    
 #if !NABORT
     if (TheParserSession->isAbort()) {
         TheParser->popContext();
@@ -126,6 +129,7 @@ void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
     auto& Trivia1 = TheParser->getTrivia1();
     
     auto SecondTok = TheParser->currentToken(TOPLEVEL);
+    
     //
     // Span should not cross toplevel newlines
     //
@@ -152,7 +156,7 @@ void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
         //
         
         MUSTTAIL
-        return SemiSemiParselet_reduceBinary(P, Ignored);
+        return SemiSemiParselet_reduceBinary(Ignored, Ignored2);
     }
     
     if (SecondTok.Tok != TOKEN_SEMISEMI) {
@@ -164,9 +168,7 @@ void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
         
         auto& Ctxt = TheParser->topContext();
         assert(Ctxt.F == nullptr);
-        assert(Ctxt.P == nullptr);
         Ctxt.F = SemiSemiParselet_parse2;
-        Ctxt.P = P;
         
         auto P2 = prefixParselets[SecondTok.Tok.value()];
         
@@ -188,6 +190,7 @@ void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
     TheParser->nextToken(SecondTok);
     
     auto ThirdTok = TheParser->currentToken(TOPLEVEL);
+    
     //
     // Span should not cross toplevel newlines
     //
@@ -209,7 +212,7 @@ void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
         SecondTok.reset();
         
         MUSTTAIL
-        return SemiSemiParselet_reduceBinary(P, Ignored);
+        return SemiSemiParselet_reduceBinary(Ignored, Ignored2);
     }
     
     //
@@ -229,9 +232,7 @@ void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
     
     auto& Ctxt = TheParser->topContext();
     assert(Ctxt.F == nullptr);
-    assert(Ctxt.P == nullptr);
     Ctxt.F = SemiSemiParselet_reduceTernary;
-    Ctxt.P = P;
     
     auto P2 = prefixParselets[ThirdTok.Tok.value()];
     
@@ -239,7 +240,8 @@ void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
     return (P2->parsePrefix())(P2, ThirdTok);
 }
 
-void SemiSemiParselet_parse2(ParseletPtr P, Token Ignored) {
+void SemiSemiParselet_parse2(ParseletPtr Ignored, Token Ignored2) {
+    
 #if !NABORT
     if (TheParserSession->isAbort()) {
         TheParser->popNode();
@@ -252,6 +254,7 @@ void SemiSemiParselet_parse2(ParseletPtr P, Token Ignored) {
     auto& Trivia1 = TheParser->getTrivia1();
     
     auto ThirdTok = TheParser->currentToken(TOPLEVEL);
+    
     //
     // Span should not cross toplevel newlines
     //
@@ -272,7 +275,7 @@ void SemiSemiParselet_parse2(ParseletPtr P, Token Ignored) {
         Trivia1.reset();
         
         MUSTTAIL
-        return SemiSemiParselet_reduceBinary(P, Ignored);
+        return SemiSemiParselet_reduceBinary(Ignored, Ignored2);
     }
     
     //
@@ -285,6 +288,7 @@ void SemiSemiParselet_parse2(ParseletPtr P, Token Ignored) {
     auto& Trivia2 = TheParser->getTrivia2();
     
     auto FourthTok = TheParser->currentToken(TOPLEVEL);
+    
     //
     // Span should not cross toplevel newlines
     //
@@ -307,7 +311,7 @@ void SemiSemiParselet_parse2(ParseletPtr P, Token Ignored) {
         Trivia1.reset();
         
         MUSTTAIL
-        return SemiSemiParselet_reduceBinary(P, Ignored);
+        return SemiSemiParselet_reduceBinary(Ignored, Ignored2);
     }
         
     //
@@ -329,9 +333,7 @@ void SemiSemiParselet_parse2(ParseletPtr P, Token Ignored) {
     
     auto& Ctxt = TheParser->topContext();
     assert(Ctxt.F == SemiSemiParselet_parse2);
-    assert(Ctxt.P == P);
     Ctxt.F = SemiSemiParselet_reduceTernary;
-    Ctxt.P = P;
     
     auto P2 = prefixParselets[FourthTok.Tok.value()];
     
@@ -339,22 +341,22 @@ void SemiSemiParselet_parse2(ParseletPtr P, Token Ignored) {
     return (P2->parsePrefix())(P2, FourthTok);
 }
 
-void SemiSemiParselet_reduceBinary(ParseletPtr P, Token Ignored) {
+void SemiSemiParselet_reduceBinary(ParseletPtr Ignored, Token Ignored2) {
     
     TheParser->shift();
     
     TheParser->pushNode(new BinaryNode(SYMBOL_SPAN, TheParser->popContext()));
     
     MUSTTAIL
-    return Parser_parseClimb(nullptr, Ignored);
+    return Parser_parseClimb(Ignored, Ignored2);
 }
 
-void SemiSemiParselet_reduceTernary(ParseletPtr P, Token Ignored) {
+void SemiSemiParselet_reduceTernary(ParseletPtr Ignored, Token Ignored2) {
     
     TheParser->shift();
     
     TheParser->pushNode(new TernaryNode(SYMBOL_SPAN, TheParser->popContext()));
     
     MUSTTAIL
-    return Parser_parseClimb(nullptr, Ignored);
+    return Parser_parseClimb(Ignored, Ignored2);
 }

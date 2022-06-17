@@ -25,6 +25,8 @@ void UnderParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     // Something like  _  or  _a
     //
     
+    assert(P);
+    
 #if !NABORT
     if (TheParserSession->isAbort()) {
         TheParser->pushNode(new AbortNode());
@@ -77,7 +79,7 @@ void UnderParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     }
     
     MUSTTAIL
-    return Parser_parseClimb(nullptr, TokIn/*ignored*/);
+    return Parser_parseClimb(P/*ignored*/, TokIn/*ignored*/);
 }
 
 void UnderParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
@@ -87,6 +89,8 @@ void UnderParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
     //
     // Something like  a_b
     //
+    
+    assert(P);
     
 #if !NABORT
     if (TheParserSession->isAbort()) {
@@ -145,6 +149,7 @@ void UnderParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
 
 void UnderParselet_reduceBlank(ParseletPtr P, Token Ignored) {
     
+    assert(P);
     assert(dynamic_cast<UnderParselet *>(P));
     
     TheParser->shift();
@@ -154,7 +159,7 @@ void UnderParselet_reduceBlank(ParseletPtr P, Token Ignored) {
     TheParser->pushNode(new CompoundNode(BOp, TheParser->popContext()));
     
     MUSTTAIL
-    return Parser_parseClimb(nullptr, Ignored);
+    return Parser_parseClimb(P/*ignored*/, Ignored);
 }
 
 //
@@ -162,6 +167,7 @@ void UnderParselet_reduceBlank(ParseletPtr P, Token Ignored) {
 //
 void UnderParselet_reduceBlankContextSensitive(ParseletPtr P, Token Ignored) {
     
+    assert(P);
     assert(dynamic_cast<UnderParselet *>(P));
     
     TheParser->shift();
@@ -179,7 +185,7 @@ ParseFunction UnderDotParselet::parsePrefix() const {
     return UnderDotParselet_parsePrefix;
 }
 
-void UnderDotParselet_parsePrefix(ParseletPtr P, Token TokIn) {
+void UnderDotParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
     
     //
     // prefix
@@ -197,14 +203,14 @@ void UnderDotParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     TheParser->pushLeafNodeAndNext(TokIn);
     
     MUSTTAIL
-    return Parser_parseClimb(nullptr, TokIn/*ignored*/);
+    return Parser_parseClimb(Ignored, TokIn/*ignored*/);
 }
 
 
 //
 // Called from other parselets
 //
-void UnderDotParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
+void UnderDotParselet_parseInfixContextSensitive(ParseletPtr Ignored, Token TokIn) {
     
     //
     // infix
