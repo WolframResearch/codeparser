@@ -664,7 +664,7 @@ ColonLHS Parser::checkColonLHS() const {
         }
     }
 
-    if (auto E = dynamic_cast<ErrorNode *>(N.get())) {
+    if (dynamic_cast<ErrorNode *>(N.get())) {
 
         //
         // allow errors to be on LHS of :

@@ -95,7 +95,7 @@ bool TriviaSeq::empty() const {
 Node::~Node() {}
 
 
-OperatorNode::OperatorNode(Symbol Op, Symbol MakeSym, NodeSeq ChildrenIn) : Op(Op), MakeSym(MakeSym), Children(std::move(ChildrenIn)) {
+OperatorNode::OperatorNode(Symbol Op, Symbol MakeSym, NodeSeq ChildrenIn) : Op(Op), MakeSym(MakeSym), Children(std::move(ChildrenIn)), Src() {
     
     assert(!Children.empty());
     
@@ -268,7 +268,7 @@ GroupMissingCloserNode::GroupMissingCloserNode(Symbol Op, NodeSeq Args) : Operat
 UnterminatedGroupNeedsReparseNode::UnterminatedGroupNeedsReparseNode(Symbol Op, NodeSeq Args) : OperatorNode(Op, SYMBOL_CODEPARSER_UNTERMINATEDGROUPNEEDSREPARSENODE, std::move(Args)) {}
 
 
-CallNode::CallNode(NodeSeq HeadIn, NodePtr BodyIn) : Head(std::move(HeadIn)), Body(std::move(BodyIn)) {
+CallNode::CallNode(NodeSeq HeadIn, NodePtr BodyIn) : Head(std::move(HeadIn)), Body(std::move(BodyIn)), Src() {
     
     assert(!Head.empty());
     
@@ -305,7 +305,7 @@ bool CallNode::check() const {
 }
 
 
-SyntaxErrorNode::SyntaxErrorNode(Symbol Err, NodeSeq ChildrenIn) : Err(Err), Children(std::move(ChildrenIn)) {
+SyntaxErrorNode::SyntaxErrorNode(Symbol Err, NodeSeq ChildrenIn) : Err(Err), Children(std::move(ChildrenIn)), Src() {
     
     assert(!Children.empty());
 
