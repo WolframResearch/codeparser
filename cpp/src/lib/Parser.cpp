@@ -576,7 +576,7 @@ ColonLHS Parser::checkColonLHS() const {
     //
     auto Ctxt = ContextStack.back();
     int i;
-    for (i = ArgsStack.size()-1; i >= static_cast<int>(Ctxt.Index); i--) {
+    for (i = static_cast<int>(ArgsStack.size())-1; i >= static_cast<int>(Ctxt.Index); i--) {
 
         auto& N = ArgsStack[i];
 
@@ -680,7 +680,7 @@ bool Parser::checkTilde() const {
     //
     auto Ctxt = ContextStack.back();
     int i;
-    for (i = ArgsStack.size()-1; i >= static_cast<int>(Ctxt.Index); i--) {
+    for (i = static_cast<int>(ArgsStack.size())-1; i >= static_cast<int>(Ctxt.Index); i--) {
 
         auto& N = ArgsStack[i];
 
