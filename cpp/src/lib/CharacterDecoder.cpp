@@ -63,7 +63,11 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
         auto escapedLoc = TheByteDecoder->SrcLoc;
         
         curSource = TheByteDecoder->nextSourceCharacter0(policy);
-    
+        
+        //
+        // important to mask off 0xff here because CODEPOINT_CRLF is actually multi-byte,
+        // but we can test (CODEPOINT_CRLF & 0xff) which is the same as '\r'
+        //
         switch (curSource.to_point() & 0xff) {
             case '[': {
                 
@@ -89,16 +93,15 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
                 //
                 continue;
             }
-            case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': {
-                
-                return handleOctal(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
-            }
             case ':': {
                 
                 return handle4Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
             }
             default: {
                 
+                //
+                // all other escapes are uncommon and go here
+                //
                 return handleUncommon(curSource, currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
             }
         } // switch
@@ -1564,6 +1567,10 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
         case '|': {
             
             return handle6Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
+        }
+        case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': {
+            
+            return handleOctal(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
         }
     
             //
