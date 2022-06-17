@@ -14,6 +14,7 @@
 #endif // USE_EXPR_LIB
 
 #include <numeric> // for accumulate
+#include <limits>
 
 
 NodeSeq::NodeSeq(size_t Size) : vec() {
