@@ -454,6 +454,14 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
             stream << SourceCharacter('>');
             break;
         }
+        case '\b': {
+            stream << WLCharacter(CODEPOINT_STRINGMETA_BACKSPACE, ESCAPE_SINGLE);
+            break;
+        }
+        case '\f': {
+            stream << WLCharacter(CODEPOINT_STRINGMETA_FORMFEED, ESCAPE_SINGLE);
+            break;
+        }
             //
             // whitespace and newline characters
             //
@@ -494,6 +502,58 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
             stream << WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
             break;
         }
+        case CODEPOINT_LINEARSYNTAX_BANG: {
+            stream << WLCharacter(CODEPOINT_LINEARSYNTAX_BANG, ESCAPE_SINGLE);
+            break;
+        }
+        case CODEPOINT_LINEARSYNTAX_PERCENT: {
+            stream << WLCharacter(CODEPOINT_LINEARSYNTAX_PERCENT, ESCAPE_SINGLE);
+            break;
+        }
+        case CODEPOINT_LINEARSYNTAX_AMP: {
+            stream << WLCharacter(CODEPOINT_LINEARSYNTAX_AMP, ESCAPE_SINGLE);
+            break;
+        }
+        case CODEPOINT_LINEARSYNTAX_OPENPAREN: {
+            stream << WLCharacter(CODEPOINT_LINEARSYNTAX_OPENPAREN, ESCAPE_SINGLE);
+            break;
+        }
+        case CODEPOINT_LINEARSYNTAX_CLOSEPAREN: {
+            stream << WLCharacter(CODEPOINT_LINEARSYNTAX_CLOSEPAREN, ESCAPE_SINGLE);
+            break;
+        }
+        case CODEPOINT_LINEARSYNTAX_STAR: {
+            stream << WLCharacter(CODEPOINT_LINEARSYNTAX_STAR, ESCAPE_SINGLE);
+            break;
+        }
+        case CODEPOINT_LINEARSYNTAX_PLUS: {
+            stream << WLCharacter(CODEPOINT_LINEARSYNTAX_PLUS, ESCAPE_SINGLE);
+            break;
+        }
+        case CODEPOINT_LINEARSYNTAX_SLASH: {
+            stream << WLCharacter(CODEPOINT_LINEARSYNTAX_SLASH, ESCAPE_SINGLE);
+            break;
+        }
+        case CODEPOINT_LINEARSYNTAX_AT: {
+            stream << WLCharacter(CODEPOINT_LINEARSYNTAX_AT, ESCAPE_SINGLE);
+            break;
+        }
+        case CODEPOINT_LINEARSYNTAX_CARET: {
+            stream << WLCharacter(CODEPOINT_LINEARSYNTAX_CARET, ESCAPE_SINGLE);
+            break;
+        }
+        case CODEPOINT_LINEARSYNTAX_UNDER: {
+            stream << WLCharacter(CODEPOINT_LINEARSYNTAX_UNDER, ESCAPE_SINGLE);
+            break;
+        }
+        case CODEPOINT_LINEARSYNTAX_BACKTICK: {
+            stream << WLCharacter(CODEPOINT_LINEARSYNTAX_BACKTICK, ESCAPE_SINGLE);
+            break;
+        }
+        case CODEPOINT_LINEARSYNTAX_SPACE: {
+            stream << WLCharacter(CODEPOINT_LINEARSYNTAX_SPACE, ESCAPE_SINGLE);
+            break;
+        }
             //
             // escape
             //
@@ -505,10 +565,10 @@ std::ostream& operator<<(std::ostream& stream, const SourceCharacter c) {
             // C0 control characters
             //
             //
-            // Skip TAB, LF, CR, and ESC. They are handled above
+            // Skip BS, TAB, LF, FF, CR, and ESC. They are handled above
             //
         case '\x00': case '\x01': case '\x02': case '\x03': case '\x04': case '\x05': case '\x06': case '\x07':
-        case '\x08': /*    \x09*/ /*    \x0a*/ case '\x0b': case '\x0c': /*    \x0d*/ case '\x0e': case '\x0f':
+        /*    \x08*/ /*    \x09*/ /*    \x0a*/ case '\x0b': /*    \x0c*/ /*    \x0d*/ case '\x0e': case '\x0f':
         case '\x10': case '\x11': case '\x12': case '\x13': case '\x14': case '\x15': case '\x16': case '\x17':
         case '\x18': case '\x19': case '\x1a': /*    \x1b*/ case '\x1c': case '\x1d': case '\x1e': case '\x1f':
             //
