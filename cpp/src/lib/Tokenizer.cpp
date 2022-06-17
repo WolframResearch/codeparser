@@ -6,6 +6,7 @@
 #include "ByteBuffer.h" // for TheByteBuffer
 #include "Utils.h" // for strangeLetterlikeWarning
 #include "MyString.h"
+#include "ParserSession.h"
 
 
 Tokenizer::Tokenizer() : EmbeddedNewlines(), EmbeddedTabs() {}

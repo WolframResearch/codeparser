@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "API.h" // for ENCODINGMODE
+#include "Source.h"
 
 #include <set>
 #include <memory> // for unique_ptr

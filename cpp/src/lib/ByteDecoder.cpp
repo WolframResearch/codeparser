@@ -5,8 +5,8 @@
 #include "Utils.h" // for isMBStrange, etc.
 #include "CodePoint.h" // for CODEPOINT_CRLF, etc.
 #include "LongNames.h"
-#include "API.h" // for ENCODINGMODE
 #include "MyString.h"
+#include "ParserSession.h"
 
 
 ByteDecoder::ByteDecoder() : srcConventionManager(), lastBuf(), lastLoc(), SrcLoc() {}

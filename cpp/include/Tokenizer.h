@@ -3,7 +3,6 @@
 
 #include "WLCharacter.h" // for WLCharacter
 #include "Token.h" // for Token
-#include "API.h" // for ENCODINGMODE
 
 #include <set>
 #include <memory> // for unique_ptr

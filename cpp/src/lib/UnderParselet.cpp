@@ -1,8 +1,16 @@
 
 #include "Parselet.h"
+
 #include "ParseletRegistration.h" // for symbolParselet
 #include "Symbol.h"
 #include "Parser.h"
+#include "ParserSession.h"
+
+#if USE_MUSTTAIL
+#define MUSTTAIL [[clang::musttail]]
+#else
+#define MUSTTAIL
+#endif // USE_MUSTTAIL
 
 
 Symbol UnderParselet::getBOp() const {

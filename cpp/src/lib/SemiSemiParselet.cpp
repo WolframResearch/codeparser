@@ -1,10 +1,16 @@
 
 #include "Parselet.h"
 #include "ParseletRegistration.h" // for prefixParselets
-#include "API.h" // for ParserSession
+#include "ParserSession.h"
 #include "Symbol.h"
 #include "MyString.h"
 #include "Parser.h"
+
+#if USE_MUSTTAIL
+#define MUSTTAIL [[clang::musttail]]
+#else
+#define MUSTTAIL
+#endif // USE_MUSTTAIL
 
 //
 // SemiSemiParselet is complicated enough to warrant its own implementation file.

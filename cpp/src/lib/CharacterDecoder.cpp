@@ -5,9 +5,9 @@
 #include "ByteBuffer.h" // for TheByteBuffer
 #include "Utils.h" // for isMBStrange, etc.
 #include "LongNames.h" // for LongNameToCodePointMap, etc.
-#include "API.h" // for ScopedMLUTF8String
 #include "MyString.h"
 #include "Symbol.h"
+#include "ParserSession.h"
 
 #if USE_EXPR_LIB
 #include "ExprLibrary.h"

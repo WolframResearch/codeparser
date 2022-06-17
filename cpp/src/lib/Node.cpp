@@ -3,11 +3,11 @@
 
 #include "Parser.h" // for TheParser
 #include "ByteEncoder.h" // for ByteEncoder
-#include "API.h" // for TheParserSession
 #include "ByteDecoder.h" // for TheByteDecoder
 #include "ByteBuffer.h" // for TheByteBuffer
 #include "Symbol.h"
 #include "MyString.h"
+#include "ParserSession.h"
 
 #if USE_EXPR_LIB
 #include "ExprLibrary.h"
@@ -508,6 +508,36 @@ void SafeStringNode::print(std::ostream& s) const {
 }
 
 
+NodeContainer::NodeContainer(std::vector<NodePtr> N) : N(std::move(N)) {}
+
+void NodeContainer::print(std::ostream& s) const {
+    
+    SYMBOL_LIST.print(s);
+    s << "[";
+    
+    for (auto& NN : N) {
+        NN->print(s);
+        s << ", ";
+    }
+    
+    s << "]";
+}
+
+bool NodeContainer::check() const {
+    
+    auto accum = std::accumulate(N.begin(), N.end(), true, [](bool a, const NodePtr& b){ return a && b->check(); });
+    
+    return accum;
+}
+
+void NodeContainerPrint(NodeContainerPtr C, std::ostream& s) {
+    C->print(s);
+}
+
+int NodeContainerCheck(NodeContainerPtr C) {
+    return C->check();
+}
+
 
 #if USE_MATHLINK
 void NodeSeq::put(MLINK mlp) const {
@@ -732,6 +762,27 @@ void SafeStringNode::put(MLINK mlp) const {
 }
 #endif // USE_MATHLINK
 
+
+#if USE_MATHLINK
+void NodeContainer::put(MLINK mlp) const {
+    
+    if (!MLPutFunction(mlp, SYMBOL_LIST.name(), static_cast<int>(N.size()))) {
+        assert(false);
+    }
+    
+    for (auto& NN : N) {
+        
+#if !NABORT
+        if (TheParserSession->isAbort()) {
+            SYMBOL__ABORTED.put(mlp);
+            continue;
+        }
+#endif // !NABORT
+        
+        NN->put(mlp);
+    }
+}
+#endif // USE_MATHLINK
 
 
 #if USE_EXPR_LIB
@@ -1031,6 +1082,35 @@ expr MissingBecauseUnsafeCharacterEncodingNode::toExpr() const {
 expr SafeStringNode::toExpr() const {
     
     auto e = bufAndLen.toExpr();
+    
+    return e;
+}
+#endif // USE_EXPR_LIB
+
+
+#if USE_EXPR_LIB
+expr NodeContainer::toExpr() const {
+    
+    auto head = SYMBOL_LIST.toExpr();
+        
+    auto e = Expr_BuildExprA(head, static_cast<int>(N.size()));
+    
+    for (size_t i = 0; i < N.size(); i++) {
+        
+        //
+        // Check isAbort() inside loops
+        //
+#if !NABORT
+        if (TheParserSession->isAbort()) {
+            Expr_InsertA(e, i + 1, SYMBOL__ABORTED.toExpr());
+            continue;
+        }
+#endif // !NABORT
+        
+        auto& NN = N[i];
+        auto NExpr = NN->toExpr();
+        Expr_InsertA(e, i + 1, NExpr);
+    }
     
     return e;
 }

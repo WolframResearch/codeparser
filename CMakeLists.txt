@@ -566,6 +566,7 @@ set(STATIC_CPP_INCLUDES
 	${PROJECT_SOURCE_DIR}/cpp/include/Node.h
 	${PROJECT_SOURCE_DIR}/cpp/include/Parselet.h
 	${PROJECT_SOURCE_DIR}/cpp/include/Parser.h
+	${PROJECT_SOURCE_DIR}/cpp/include/ParserSession.h
 	${PROJECT_SOURCE_DIR}/cpp/include/Source.h
 	${PROJECT_SOURCE_DIR}/cpp/include/Token.h
 	${PROJECT_SOURCE_DIR}/cpp/include/Tokenizer.h
@@ -596,6 +597,7 @@ set(STATIC_CPP_LIB_SOURCES
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/Node.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/Parselet.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/Parser.cpp
+	${PROJECT_SOURCE_DIR}/cpp/src/lib/ParserSession.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/SemiSemiParselet.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/Source.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/Token.cpp

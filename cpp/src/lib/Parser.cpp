@@ -1,7 +1,7 @@
 
 #include "Parser.h"
 
-#include "API.h" // for TheParserSession
+#include "ParserSession.h"
 #include "Parselet.h" // for SymbolParselet, UnderParselet, etc.
 #include "Tokenizer.h" // for Tokenizer
 #include "ParseletRegistration.h"
@@ -9,6 +9,12 @@
 #include "ByteBuffer.h" // for ByteBuffer
 
 #include <algorithm>
+
+#if USE_MUSTTAIL
+#define MUSTTAIL [[clang::musttail]]
+#else
+#define MUSTTAIL
+#endif // USE_MUSTTAIL
 
 
 Context::Context(size_t Index, Precedence Prec) : F(), P(), Index(Index), Prec(Prec) {}

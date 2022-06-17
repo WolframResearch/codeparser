@@ -570,3 +570,26 @@ public:
     expr toExpr() const override;
 #endif // USE_EXPR_LIB
 };
+
+//
+//
+//
+class NodeContainer {
+public:
+    
+    std::vector<NodePtr> N;
+    
+    NodeContainer(std::vector<NodePtr> N);
+    
+#if USE_MATHLINK
+    void put(MLINK mlp) const;
+#endif // USE_MATHLINK
+    
+    void print(std::ostream& s) const;
+    
+    bool check() const;
+    
+#if USE_EXPR_LIB
+    expr toExpr() const;
+#endif // USE_EXPR_LIB
+};

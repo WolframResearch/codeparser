@@ -1,7 +1,7 @@
 
 #include "ByteBuffer.h"
 
-#include "API.h" // for TheParserSession
+#include "ParserSession.h"
 
 #if 0
 #ifndef NDEBUG

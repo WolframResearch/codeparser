@@ -8,6 +8,7 @@
 #include "Utils.h" // for isMBNewline, etc.
 #include "LongNames.h" // for CodePointToLongNameMap
 #include "MyString.h"
+#include "ParserSession.h"
 
 #if USE_EXPR_LIB
 #include "ExprLibrary.h"

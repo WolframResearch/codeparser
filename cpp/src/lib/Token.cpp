@@ -1,7 +1,6 @@
 
 #include "Token.h"
 
-#include "API.h" // for TheParserSession
 #include "Symbol.h"
 #include "ByteBuffer.h"
 #include "ByteDecoder.h"

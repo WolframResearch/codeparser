@@ -5,7 +5,6 @@
 #include "Token.h" // for Token
 #include "Precedence.h" // for Precedence
 #include "TokenEnum.h" // for TokenEnum
-#include "API.h" // for FirstLineBehavior
 
 #include <set>
 #include <deque>

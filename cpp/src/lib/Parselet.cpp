@@ -1,10 +1,16 @@
 
 #include "Parselet.h"
 
-#include "API.h" // for ParserSession
 #include "ParseletRegistration.h" // for infixParselets, etc.
 #include "Symbol.h"
 #include "Parser.h"
+#include "ParserSession.h"
+
+#if USE_MUSTTAIL
+#define MUSTTAIL [[clang::musttail]]
+#else
+#define MUSTTAIL
+#endif // USE_MUSTTAIL
 
 
 Token InfixParselet::processImplicitTimes(Token TokIn) const {

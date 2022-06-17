@@ -30,64 +30,12 @@
 #undef False
 
 #include <memory> // for unique_ptr
-#include <functional> // for function with GCC and MSVC
 #include <cstddef> // for size_t
 
-#if USE_MUSTTAIL
-#define MUSTTAIL [[clang::musttail]]
-#else
-#define MUSTTAIL
-#endif // USE_MUSTTAIL
-
-
-class ParserSession;
-#if USE_MATHLINK
-class ScopedMLByteArray;
-class ScopedMLUTF8String;
-class ScopedMLString;
-class ScopedMLEnvironmentParameter;
-#endif // USE_MATHLINK
-class Node;
-
-using ParserSessionPtr = std::unique_ptr<ParserSession>;
-using NodePtr = std::unique_ptr<Node>;
-
-#if USE_MATHLINK
-using ScopedMLByteArrayPtr = std::unique_ptr<ScopedMLByteArray>;
-using ScopedMLUTF8StringPtr = std::unique_ptr<ScopedMLUTF8String>;
-using ScopedMLStringPtr = std::unique_ptr<ScopedMLString>;
-using ScopedMLEnvironmentParameterPtr = std::unique_ptr<ScopedMLEnvironmentParameter>;
-#endif // USE_MATHLINK
-
-#if USE_EXPR_LIB
-using expr = void *;
-#endif // USE_EXPR_LIB
-
-
-//
-//
-//
-class NodeContainer {
-public:
-    
-    std::vector<NodePtr> N;
-    
-    NodeContainer(std::vector<NodePtr> N);
-    
-#if USE_MATHLINK
-    void put(MLINK mlp) const;
-#endif // USE_MATHLINK
-    
-    void print(std::ostream& s) const;
-    
-    bool check() const;
-    
-#if USE_EXPR_LIB
-    expr toExpr() const;
-#endif // USE_EXPR_LIB
-};
+class NodeContainer;
 
 using NodeContainerPtr = NodeContainer *;
+
 
 //
 // The modes that stringifying could happen in
@@ -157,69 +105,6 @@ enum UnsafeCharacterEncodingFlag {
     UNSAFECHARACTERENCODING_STRAYSURROGATE = 2,
     UNSAFECHARACTERENCODING_BOM = 3,
 };
-
-
-//
-// A parser session
-//
-class ParserSession {
-private:
-    
-    IssuePtrSet fatalIssues;
-    IssuePtrSet nonFatalIssues;
-    
-    Node *concreteParseLeaf0(int mode);
-    
-public:
-    
-#if !NABORT
-    std::function<bool ()> currentAbortQ;
-#endif // !NABORT
-    
-    UnsafeCharacterEncodingFlag unsafeCharacterEncodingFlag;
-    
-    BufferAndLength bufAndLen;
-    WolframLibraryData libData;
-    SourceConvention srcConvention;
-    uint32_t tabWidth;
-    FirstLineBehavior firstLineBehavior;
-    EncodingMode encodingMode;
-    
-    
-    ParserSession();
-    
-    ~ParserSession();
-    
-    void init(
-        BufferAndLength bufAndLen,
-        WolframLibraryData libData,
-        SourceConvention srcConvention,
-        uint32_t tabWidth,
-        FirstLineBehavior firstLineBehavior,
-        EncodingMode encodingMode
-    );
-    
-    void deinit();
-    
-    NodeContainerPtr parseExpressions();
-    NodeContainerPtr tokenize();
-    NodeContainerPtr concreteParseLeaf(StringifyMode mode);
-    NodeContainerPtr safeString();
-    
-    void releaseContainer(NodeContainerPtr C);
-    
-#if !NABORT
-    bool isAbort() const;
-#endif // !NABORT
-    
-    void setUnsafeCharacterEncodingFlag(UnsafeCharacterEncodingFlag flag);
-    
-#if !NISSUES
-    void addIssue(IssuePtr);
-#endif // !NISSUES
-};
-
-extern ParserSessionPtr TheParserSession;
 
 
 EXTERN_C DLLEXPORT void ParserSessionCreate();
