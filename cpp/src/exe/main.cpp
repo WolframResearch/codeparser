@@ -1,6 +1,10 @@
 
 #include "API.h"
 
+#if DIAGNOSTICS
+#include "Diagnostics.h"
+#endif // DIAGNOSTICS
+
 #include <memory> // for unique_ptr
 #include <iostream>
 #include <fstream> // for ofstream
@@ -115,68 +119,6 @@ int main(int argc, char *argv[]) {
         }
     }
     
-#if DIAGNOSTICS
-                
-    std::cout << "CharacterDecoder_LineContinuationCount: " << CharacterDecoder_LineContinuationCount << "\n";
-
-    std::cout << "CharacterDecoder_LongNameCount: " << CharacterDecoder_LongNameCount << "\n";
-
-    std::cout << "CharacterDecoder_4HexCount: " << CharacterDecoder_4HexCount << "\n";
-
-    std::cout << "CharacterDecoder_2HexCount: " << CharacterDecoder_2HexCount << "\n";
-
-    std::cout << "CharacterDecoder_6HexCount: " << CharacterDecoder_6HexCount << "\n";
-    
-    std::cout << "CharacterDecoder_OctalCount: " << CharacterDecoder_OctalCount << "\n";
-
-    std::cout << "CharacterDecoder_StringMetaBackspace: " << CharacterDecoder_StringMetaBackspace << "\n";
-
-    std::cout << "CharacterDecoder_StringMetaFormFeed: " << CharacterDecoder_StringMetaFormFeed << "\n";
-
-    std::cout << "CharacterDecoder_StringMetaLineFeedCount: " << CharacterDecoder_StringMetaLineFeedCount << "\n";
-
-    std::cout << "CharacterDecoder_StringMetaCarriageReturn: " << CharacterDecoder_StringMetaCarriageReturn << "\n";
-
-    std::cout << "CharacterDecoder_StringMetaTab: " << CharacterDecoder_StringMetaTab << "\n";
-
-    std::cout << "CharacterDecoder_StringMetaDoubleQuoteCount: " << CharacterDecoder_StringMetaDoubleQuoteCount << "\n";
-
-    std::cout << "CharacterDecoder_StringMetaBackslashCount: " << CharacterDecoder_StringMetaBackslashCount << "\n";
-
-    std::cout << "CharacterDecoder_StringMetaOpenCount: " << CharacterDecoder_StringMetaOpenCount << "\n";
-
-    std::cout << "CharacterDecoder_StringMetaCloseCount: " << CharacterDecoder_StringMetaCloseCount << "\n";
-
-    std::cout << "CharacterDecoder_LinearSyntaxBangCount: " << CharacterDecoder_LinearSyntaxBangCount << "\n";
-
-    std::cout << "CharacterDecoder_LinearSyntaxPercentCount: " << CharacterDecoder_LinearSyntaxPercentCount << "\n";
-
-    std::cout << "CharacterDecoder_LinearSyntaxAmpCount: " << CharacterDecoder_LinearSyntaxAmpCount << "\n";
-
-    std::cout << "CharacterDecoder_LinearSyntaxOpenParenCount: " << CharacterDecoder_LinearSyntaxOpenParenCount << "\n";
-
-    std::cout << "CharacterDecoder_LinearSyntaxCloseParenCount: " << CharacterDecoder_LinearSyntaxCloseParenCount << "\n";
-
-    std::cout << "CharacterDecoder_LinearSyntaxStarCount: " << CharacterDecoder_LinearSyntaxStarCount << "\n";
-
-    std::cout << "CharacterDecoder_LinearSyntaxPlusCount: " << CharacterDecoder_LinearSyntaxPlusCount << "\n";
-
-    std::cout << "CharacterDecoder_LinearSyntaxSlashCount: " << CharacterDecoder_LinearSyntaxSlashCount << "\n";
-
-    std::cout << "CharacterDecoder_LinearSyntaxAtCount: " << CharacterDecoder_LinearSyntaxAtCount << "\n";
-
-    std::cout << "CharacterDecoder_LinearSyntaxCaretCount: " << CharacterDecoder_LinearSyntaxCaretCount << "\n";
-
-    std::cout << "CharacterDecoder_LinearSyntaxUnderscoreCount: " << CharacterDecoder_LinearSyntaxUnderscoreCount << "\n";
-
-    std::cout << "CharacterDecoder_LinearSyntaxBacktickCount: " << CharacterDecoder_LinearSyntaxBacktickCount << "\n";
-    
-    std::cout << "CharacterDecoder_LinearSyntaxSpaceCount: " << CharacterDecoder_LinearSyntaxSpaceCount << "\n";
-
-    std::cout << "CharacterDecoder_UnhandledCount: " << CharacterDecoder_UnhandledCount << "\n";
-    
-#endif // DIAGNOSTICS
-    
     return result;
 }
 
@@ -254,6 +196,10 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
             
             ParserSessionDeinit();
             
+#if DIAGNOSTICS
+            DiagnosticsPrint(std::cout);
+#endif // DIAGNOSTICS
+            
         } else {
             
             auto inputStr = reinterpret_cast<Buffer>(input.c_str());
@@ -290,6 +236,10 @@ int readStdIn(APIMode mode, OutputMode outputMode, FirstLineBehavior firstLineBe
             ParserSessionReleaseContainer(C);
             
             ParserSessionDeinit();
+            
+#if DIAGNOSTICS
+            DiagnosticsPrint(std::cout);
+#endif // DIAGNOSTICS
         }
         
     } // while (true)
@@ -352,6 +302,10 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         
         ParserSessionDeinit();
         
+#if DIAGNOSTICS
+        DiagnosticsPrint(std::cout);
+#endif // DIAGNOSTICS
+        
     } else if (mode == LEAF) {
         
         ParserSessionInit(fb->getBuf(), fb->getLen(), libData, SOURCECONVENTION_LINECOLUMN, DEFAULT_TAB_WIDTH, firstLineBehavior, ENCODINGMODE_NORMAL);
@@ -380,6 +334,10 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         ParserSessionReleaseContainer(C);
         
         ParserSessionDeinit();
+        
+#if DIAGNOSTICS
+        DiagnosticsPrint(std::cout);
+#endif // DIAGNOSTICS
         
     } else {
         
@@ -414,6 +372,10 @@ int readFile(std::string file, APIMode mode, OutputMode outputMode, FirstLineBeh
         ParserSessionReleaseContainer(C);
         
         ParserSessionDeinit();
+        
+#if DIAGNOSTICS
+        DiagnosticsPrint(std::cout);
+#endif // DIAGNOSTICS
     }
     
     ParserSessionDestroy();

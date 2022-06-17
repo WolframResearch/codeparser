@@ -13,6 +13,10 @@
 #include "ExprLibrary.h"
 #endif // USE_EXPR_LIB
 
+#if DIAGNOSTICS
+#include "Diagnostics.h"
+#endif // DIAGNOSTICS
+
 
 CharacterDecoder::CharacterDecoder() : SimpleLineContinuations(), ComplexLineContinuations(), EmbeddedTabs(), lastBuf(), lastLoc() {}
 

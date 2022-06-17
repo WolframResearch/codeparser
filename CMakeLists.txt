@@ -579,6 +579,12 @@ list(APPEND STATIC_CPP_INCLUDES
 )
 endif()
 
+if(${DIAGNOSTICS})
+list(APPEND STATIC_CPP_INCLUDES
+	${PROJECT_SOURCE_DIR}/cpp/include/Diagnostics.h
+)
+endif()
+
 
 
 set(STATIC_CPP_LIB_SOURCES
@@ -599,6 +605,11 @@ set(STATIC_CPP_LIB_SOURCES
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/WLCharacter.cpp
 )
 
+if(${DIAGNOSTICS})
+list(APPEND STATIC_CPP_INCLUDES
+	${PROJECT_SOURCE_DIR}/cpp/src/lib/Diagnostics.cpp
+)
+endif()
 
 
 add_library(codeparser-lib SHARED
