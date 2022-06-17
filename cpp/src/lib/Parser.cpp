@@ -198,7 +198,7 @@ Token Parser::nextToken0(NextPolicy policy) {
 
 Token Parser::currentToken(NextPolicy policy) const {
     
-    auto insideGroup = getGroupDepth() > 0;
+    auto insideGroup = !GroupStack.empty();
     
     //
     // if insideGroup:
