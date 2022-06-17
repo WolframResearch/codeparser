@@ -241,7 +241,7 @@ void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2) {
     //
     // not in the middle of parsing anything, so toplevel newlines will delimit
     //
-    token = TheParser->eatTriviaButNotToplevelNewlines(token, TOPLEVEL, Trivia1);
+    TheParser->eatTriviaButNotToplevelNewlines(token, TOPLEVEL, Trivia1);
     
     auto I = infixParselets[token.Tok.value()];
     
@@ -305,7 +305,7 @@ void Parser_identity(ParseletPtr P, Token firstTok) {
     return;
 }
 
-Token Parser::eatTrivia(Token T, NextPolicy policy) {
+void Parser::eatTrivia(Token& T, NextPolicy policy) {
     
     while (T.Tok.isTrivia()) {
         
@@ -315,11 +315,9 @@ Token Parser::eatTrivia(Token T, NextPolicy policy) {
         
         T = currentToken(policy);
     }
-    
-    return T;
 }
 
-Token Parser::eatTrivia(Token T, NextPolicy policy, TriviaSeq& Args) {
+void Parser::eatTrivia(Token& T, NextPolicy policy, TriviaSeq& Args) {
     
     while (T.Tok.isTrivia()) {
         
@@ -329,11 +327,9 @@ Token Parser::eatTrivia(Token T, NextPolicy policy, TriviaSeq& Args) {
         
         T = currentToken(policy);
     }
-    
-    return T;
 }
 
-Token Parser::eatTrivia_stringifyAsFile(Token T) {
+void Parser::eatTrivia_stringifyAsFile(Token& T) {
     
     while (T.Tok.isTrivia()) {
         
@@ -343,11 +339,9 @@ Token Parser::eatTrivia_stringifyAsFile(Token T) {
         
         T = currentToken_stringifyAsFile();
     }
-    
-    return T;
 }
 
-Token Parser::eatTrivia_stringifyAsFile(Token T, TriviaSeq& Args) {
+void Parser::eatTrivia_stringifyAsFile(Token& T, TriviaSeq& Args) {
     
     while (T.Tok.isTrivia()) {
         
@@ -357,11 +351,9 @@ Token Parser::eatTrivia_stringifyAsFile(Token T, TriviaSeq& Args) {
         
         T = currentToken_stringifyAsFile();
     }
-    
-    return T;
 }
 
-Token Parser::eatTriviaButNotToplevelNewlines(Token T, NextPolicy policy) {
+void Parser::eatTriviaButNotToplevelNewlines(Token& T, NextPolicy policy) {
     
     while (T.Tok.isTriviaButNotToplevelNewline()) {
         
@@ -371,11 +363,9 @@ Token Parser::eatTriviaButNotToplevelNewlines(Token T, NextPolicy policy) {
         
         T = currentToken(policy);
     }
-    
-    return T;
 }
 
-Token Parser::eatTriviaButNotToplevelNewlines(Token T, NextPolicy policy, TriviaSeq& Args) {
+void Parser::eatTriviaButNotToplevelNewlines(Token& T, NextPolicy policy, TriviaSeq& Args) {
     
     while (T.Tok.isTriviaButNotToplevelNewline()) {
         
@@ -385,11 +375,9 @@ Token Parser::eatTriviaButNotToplevelNewlines(Token T, NextPolicy policy, Trivia
         
         T = currentToken(policy);
     }
-    
-    return T;
 }
 
-Token Parser::eatTriviaButNotToplevelNewlines_stringifyAsFile(Token T, TriviaSeq& Args) {
+void Parser::eatTriviaButNotToplevelNewlines_stringifyAsFile(Token& T, TriviaSeq& Args) {
     
     while (T.Tok.isTriviaButNotToplevelNewline()) {
         
@@ -399,8 +387,6 @@ Token Parser::eatTriviaButNotToplevelNewlines_stringifyAsFile(Token T, TriviaSeq
         
         T = currentToken_stringifyAsFile();
     }
-    
-    return T;
 }
 
 void Parser::shift() {

@@ -501,7 +501,8 @@ void PrefixOperatorParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     TheParser->shift();
     
     auto Tok = TheParser->currentToken(TOPLEVEL);
-    Tok = TheParser->eatTrivia(Tok, TOPLEVEL);
+    
+    TheParser->eatTrivia(Tok, TOPLEVEL);
     
     assert(Ctxt.F == nullptr);
     assert(Ctxt.P == nullptr);
@@ -598,7 +599,8 @@ void BinaryOperatorParselet_parseInfix(ParseletPtr P, Token TokIn) {
     TheParser->appendLeafArgAndNext(TokIn);
 
     auto Tok = TheParser->currentToken(TOPLEVEL);
-    Tok = TheParser->eatTrivia(Tok, TOPLEVEL);
+    
+    TheParser->eatTrivia(Tok, TOPLEVEL);
     
     auto& Ctxt = TheParser->topContext();
     assert(Ctxt.F == nullptr);
@@ -659,7 +661,8 @@ void InfixOperatorParselet_parseInfix(ParseletPtr P, Token TokIn) {
     //
     
     auto Tok2 = TheParser->currentToken(TOPLEVEL);
-    Tok2 = TheParser->eatTrivia(Tok2, TOPLEVEL);
+    
+    TheParser->eatTrivia(Tok2, TOPLEVEL);
     
 #if !USE_MUSTTAIL
     auto& Ctxt = TheParser->topContext();
@@ -706,7 +709,7 @@ void InfixOperatorParselet_parseLoop(ParseletPtr P, Token Ignored) {
     auto& Trivia1 = TheParser->getTrivia1();
     
     auto Tok1 = TheParser->currentToken(TOPLEVEL);
-    Tok1 = TheParser->eatTrivia(Tok1, TOPLEVEL, Trivia1);
+    TheParser->eatTrivia(Tok1, TOPLEVEL, Trivia1);
     
     auto I = infixParselets[Tok1.Tok.value()];
 
@@ -723,7 +726,8 @@ void InfixOperatorParselet_parseLoop(ParseletPtr P, Token Ignored) {
         Trivia1.reset();
         
         Tok1 = TheParser->currentToken(TOPLEVEL);
-        Tok1 = TheParser->eatTriviaButNotToplevelNewlines(Tok1, TOPLEVEL, Trivia1);
+        
+        TheParser->eatTriviaButNotToplevelNewlines(Tok1, TOPLEVEL, Trivia1);
         
         I = infixParselets[Tok1.Tok.value()];
         
@@ -760,7 +764,8 @@ void InfixOperatorParselet_parseLoop(ParseletPtr P, Token Ignored) {
     TheParser->appendLeafArgAndNext(Tok1);
 
     auto Tok2 = TheParser->currentToken(TOPLEVEL);
-    Tok2 = TheParser->eatTrivia(Tok2, TOPLEVEL, Trivia1);
+    
+    TheParser->eatTrivia(Tok2, TOPLEVEL, Trivia1);
     
     TheParser->appendArgs(Trivia1);
     
@@ -914,7 +919,8 @@ void GroupParselet_parseLoop(ParseletPtr P, Token Ignored) {
     auto& Trivia1 = TheParser->getTrivia1();
     
     auto Tok = TheParser->currentToken(TOPLEVEL);
-    Tok = TheParser->eatTrivia(Tok, TOPLEVEL, Trivia1);
+    
+    TheParser->eatTrivia(Tok, TOPLEVEL, Trivia1);
     
     if (TokenToCloser(Tok.Tok) == Closr) {
         
@@ -1149,7 +1155,8 @@ void TildeParselet_parseInfix(ParseletPtr P, Token TokIn) {
     TheParser->appendLeafArgAndNext(TokIn);
     
     auto FirstTok = TheParser->currentToken(TOPLEVEL);
-    FirstTok = TheParser->eatTrivia(FirstTok, TOPLEVEL);
+    
+    TheParser->eatTrivia(FirstTok, TOPLEVEL);
     
     TheParser->setPrecedence(PRECEDENCE_LOWEST);
     
@@ -1167,7 +1174,6 @@ void TildeParselet_parseInfix(ParseletPtr P, Token TokIn) {
 
 void TildeParselet_parse1(ParseletPtr P, Token Ignored) {
     
-    Token Tok1;
 #if !NABORT
     if (TheParserSession->isAbort()) {
         TheParser->popNode();
@@ -1179,8 +1185,9 @@ void TildeParselet_parse1(ParseletPtr P, Token Ignored) {
     
     auto& Trivia1 = TheParser->getTrivia1();
     
-    Tok1 = TheParser->currentToken(TOPLEVEL);
-    Tok1 = TheParser->eatTrivia(Tok1, TOPLEVEL, Trivia1);
+    auto Tok1 = TheParser->currentToken(TOPLEVEL);
+    
+    TheParser->eatTrivia(Tok1, TOPLEVEL, Trivia1);
     
     if (Tok1.Tok != TOKEN_TILDE) {
         
@@ -1203,7 +1210,8 @@ void TildeParselet_parse1(ParseletPtr P, Token Ignored) {
     TheParser->appendLeafArgAndNext(Tok1);
 
     auto Tok2 = TheParser->currentToken(TOPLEVEL);
-    Tok2 = TheParser->eatTrivia(Tok2, TOPLEVEL, Trivia1);
+    
+    TheParser->eatTrivia(Tok2, TOPLEVEL, Trivia1);
     
     TheParser->appendArgs(Trivia1);
     
@@ -1278,7 +1286,8 @@ void ColonParselet_parseInfix(ParseletPtr P, Token TokIn) {
     TheParser->appendLeafArgAndNext(TokIn);
     
     auto Tok = TheParser->currentToken(TOPLEVEL);
-    Tok = TheParser->eatTrivia(Tok, TOPLEVEL);
+    
+    TheParser->eatTrivia(Tok, TOPLEVEL);
     
     switch (colonLHS) {
         case COLONLHS_PATTERN: {
@@ -1401,7 +1410,8 @@ void SlashColonParselet_parseInfix(ParseletPtr P, Token TokIn) {
     TheParser->appendLeafArgAndNext(TokIn);
     
     auto Tok = TheParser->currentToken(TOPLEVEL);
-    Tok = TheParser->eatTrivia(Tok, TOPLEVEL);
+    
+    TheParser->eatTrivia(Tok, TOPLEVEL);
     
     auto& Ctxt = TheParser->topContext();
     assert(Ctxt.F == nullptr);
@@ -1428,7 +1438,8 @@ void SlashColonParselet_parse1(ParseletPtr P, Token Ignored) {
     auto& Trivia1 = TheParser->getTrivia1();
     
     auto Tok = TheParser->currentToken(TOPLEVEL);
-    Tok = TheParser->eatTrivia(Tok, TOPLEVEL, Trivia1);
+    
+    TheParser->eatTrivia(Tok, TOPLEVEL, Trivia1);
     
     switch (Tok.Tok.value()) {
         case TOKEN_EQUAL.value(): {
@@ -1514,7 +1525,8 @@ void EqualParselet_parseInfix(ParseletPtr P, Token TokIn) {
     TheParser->appendLeafArgAndNext(TokIn);
     
     auto Tok = TheParser->currentToken(TOPLEVEL);
-    Tok = TheParser->eatTrivia(Tok, TOPLEVEL);
+    
+    TheParser->eatTrivia(Tok, TOPLEVEL);
     
     if (Tok.Tok == TOKEN_DOT) {
         
@@ -1560,7 +1572,8 @@ void EqualParselet_parseInfixTag(ParseletPtr P, Token TokIn) {
     TheParser->appendLeafArgAndNext(TokIn);
     
     auto Tok = TheParser->currentToken(TOPLEVEL);
-    Tok = TheParser->eatTrivia(Tok, TOPLEVEL);
+    
+    TheParser->eatTrivia(Tok, TOPLEVEL);
     
     if (Tok.Tok == TOKEN_DOT) {
         
@@ -1648,7 +1661,8 @@ void ColonEqualParselet_parseInfix(ParseletPtr P, Token TokIn) {
     TheParser->appendLeafArgAndNext(TokIn);
     
     auto Tok = TheParser->currentToken(TOPLEVEL);
-    Tok = TheParser->eatTrivia(Tok, TOPLEVEL);
+    
+    TheParser->eatTrivia(Tok, TOPLEVEL);
     
     auto& Ctxt = TheParser->topContext();
     assert(Ctxt.F == nullptr);
@@ -1674,7 +1688,8 @@ void ColonEqualParselet_parseInfixTag(ParseletPtr P, Token TokIn) {
     TheParser->appendLeafArgAndNext(TokIn);
     
     auto Tok = TheParser->currentToken(TOPLEVEL);
-    Tok = TheParser->eatTrivia(Tok, TOPLEVEL);
+    
+    TheParser->eatTrivia(Tok, TOPLEVEL);
     
     auto& Ctxt = TheParser->topContext();
     assert(Ctxt.F == SlashColonParselet_parse1);
@@ -1731,7 +1746,8 @@ void IntegralParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     TheParser->appendLeafArgAndNext(TokIn);
     
     auto Tok = TheParser->currentToken(TOPLEVEL);
-    Tok = TheParser->eatTrivia(Tok, TOPLEVEL);
+    
+    TheParser->eatTrivia(Tok, TOPLEVEL);
     
     assert(Ctxt.F == nullptr);
     assert(Ctxt.P == nullptr);
@@ -1757,7 +1773,8 @@ void IntegralParselet_parse1(ParseletPtr P, Token Ignored) {
     auto& Trivia1 = TheParser->getTrivia1();
 
     auto Tok = TheParser->currentToken(TOPLEVEL);
-    Tok = TheParser->eatTrivia(Tok, TOPLEVEL, Trivia1);
+    
+    TheParser->eatTrivia(Tok, TOPLEVEL, Trivia1);
     
     if (!(Tok.Tok == TOKEN_LONGNAME_DIFFERENTIALD || Tok.Tok == TOKEN_LONGNAME_CAPITALDIFFERENTIALD)) {
         
@@ -1828,7 +1845,8 @@ void CommaParselet_parseInfix(ParseletPtr P, Token TokIn) {
     //
     
     auto Tok2 = TheParser->currentToken(TOPLEVEL);
-    Tok2 = TheParser->eatTrivia(Tok2, TOPLEVEL);
+    
+    TheParser->eatTrivia(Tok2, TOPLEVEL);
     
     if (Tok2.Tok == TOKEN_COMMA || Tok2.Tok == TOKEN_LONGNAME_INVISIBLECOMMA) {
         
@@ -1900,7 +1918,8 @@ void CommaParselet_parseLoop(ParseletPtr P, Token Ignored) {
     auto& Trivia1 = TheParser->getTrivia1();
 
     auto Tok1 = TheParser->currentToken(TOPLEVEL);
-    Tok1 = TheParser->eatTrivia(Tok1, TOPLEVEL, Trivia1);
+    
+    TheParser->eatTrivia(Tok1, TOPLEVEL, Trivia1);
     
     if (!(Tok1.Tok == TOKEN_COMMA || Tok1.Tok == TOKEN_LONGNAME_INVISIBLECOMMA)) {
         
@@ -1921,7 +1940,8 @@ void CommaParselet_parseLoop(ParseletPtr P, Token Ignored) {
     TheParser->appendLeafArgAndNext(Tok1);
 
     auto Tok2 = TheParser->currentToken(TOPLEVEL);
-    Tok2 = TheParser->eatTrivia(Tok2, TOPLEVEL, Trivia1);
+    
+    TheParser->eatTrivia(Tok2, TOPLEVEL, Trivia1);
     
     TheParser->appendArgs(Trivia1);
     
@@ -2004,7 +2024,7 @@ void SemiParselet_parseInfix(ParseletPtr P, Token TokIn) {
     //
     // CompoundExpression should not cross toplevel newlines
     //
-    Tok2 = TheParser->eatTriviaButNotToplevelNewlines(Tok2, TOPLEVEL);
+    TheParser->eatTriviaButNotToplevelNewlines(Tok2, TOPLEVEL);
     
     if (Tok2.Tok == TOKEN_SEMI) {
         
@@ -2104,7 +2124,8 @@ void SemiParselet_parseLoop(ParseletPtr P, Token Ignored) {
     auto& Trivia1 = TheParser->getTrivia1();
     
     auto Tok1 = TheParser->currentToken(TOPLEVEL);
-    Tok1 = TheParser->eatTrivia(Tok1, TOPLEVEL, Trivia1);
+    
+    TheParser->eatTrivia(Tok1, TOPLEVEL, Trivia1);
     
     if (Tok1.Tok != TOKEN_SEMI) {
         
@@ -2132,7 +2153,7 @@ void SemiParselet_parseLoop(ParseletPtr P, Token Ignored) {
     //
     // CompoundExpression should not cross toplevel newlines
     //
-    Tok2 = TheParser->eatTriviaButNotToplevelNewlines(Tok2, TOPLEVEL, Trivia1);
+    TheParser->eatTriviaButNotToplevelNewlines(Tok2, TOPLEVEL, Trivia1);
     
     TheParser->appendArgs(Trivia1);
     
@@ -2291,7 +2312,8 @@ void ColonColonParselet_parseLoop(ParseletPtr P, Token Ignored) {
     auto& Trivia1 = TheParser->getTrivia1();
     
     auto Tok1 = TheParser->currentToken(TOPLEVEL);
-    Tok1 = TheParser->eatTrivia(Tok1, TOPLEVEL, Trivia1);
+    
+    TheParser->eatTrivia(Tok1, TOPLEVEL, Trivia1);
     
     if (Tok1.Tok != TOKEN_COLONCOLON) {
         
@@ -2383,7 +2405,8 @@ void GreaterGreaterParselet_parseInfix(ParseletPtr P, Token TokIn) {
     TheParser->appendLeafArgAndNext(TokIn);
     
     auto Tok = TheParser->currentToken_stringifyAsFile();
-    Tok = TheParser->eatTrivia_stringifyAsFile(Tok);
+    
+    TheParser->eatTrivia_stringifyAsFile(Tok);
     
     if (Tok.Tok.isError()) {
         
@@ -2451,7 +2474,8 @@ void GreaterGreaterGreaterParselet_parseInfix(ParseletPtr P, Token TokIn) {
     TheParser->appendLeafArgAndNext(TokIn);
     
     auto Tok = TheParser->currentToken_stringifyAsFile();
-    Tok = TheParser->eatTrivia_stringifyAsFile(Tok);
+    
+    TheParser->eatTrivia_stringifyAsFile(Tok);
     
     if (Tok.Tok.isError()) {
         
@@ -2516,7 +2540,8 @@ void LessLessParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     TheParser->appendLeafArgAndNext(TokIn);
     
     auto Tok = TheParser->currentToken_stringifyAsFile();
-    Tok = TheParser->eatTrivia_stringifyAsFile(Tok);
+    
+    TheParser->eatTrivia_stringifyAsFile(Tok);
     
     if (Tok.Tok.isError()) {
         

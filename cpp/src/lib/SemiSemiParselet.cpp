@@ -153,7 +153,7 @@ void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
     //
     // Span should not cross toplevel newlines
     //
-    SecondTok = TheParser->eatTriviaButNotToplevelNewlines(SecondTok, TOPLEVEL, Trivia1);
+    TheParser->eatTriviaButNotToplevelNewlines(SecondTok, TOPLEVEL, Trivia1);
     
     TheParser->appendArgs(Trivia1);
     
@@ -215,7 +215,7 @@ void SemiSemiParselet_parse1(ParseletPtr P, Token Ignored) {
     //
     // Span should not cross toplevel newlines
     //
-    ThirdTok = TheParser->eatTriviaButNotToplevelNewlines(ThirdTok, TOPLEVEL, Trivia1);
+    TheParser->eatTriviaButNotToplevelNewlines(ThirdTok, TOPLEVEL, Trivia1);
     
     if (!ThirdTok.Tok.isPossibleBeginning() || ThirdTok.Tok == TOKEN_SEMISEMI) {
         
@@ -279,7 +279,7 @@ void SemiSemiParselet_parse2(ParseletPtr P, Token Ignored) {
     //
     // Span should not cross toplevel newlines
     //
-    ThirdTok = TheParser->eatTriviaButNotToplevelNewlines(ThirdTok, TOPLEVEL, Trivia1);
+    TheParser->eatTriviaButNotToplevelNewlines(ThirdTok, TOPLEVEL, Trivia1);
     
     if (!ThirdTok.Tok.isPossibleBeginning() || ThirdTok.Tok != TOKEN_SEMISEMI) {
         
@@ -312,7 +312,7 @@ void SemiSemiParselet_parse2(ParseletPtr P, Token Ignored) {
     //
     // Span should not cross toplevel newlines
     //
-    FourthTok = TheParser->eatTriviaButNotToplevelNewlines(FourthTok, TOPLEVEL, Trivia2);
+    TheParser->eatTriviaButNotToplevelNewlines(FourthTok, TOPLEVEL, Trivia2);
     
     if (!FourthTok.Tok.isPossibleBeginning() || FourthTok.Tok == TOKEN_SEMISEMI) {
         

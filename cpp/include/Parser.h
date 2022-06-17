@@ -73,13 +73,13 @@ public:
     Token currentToken_stringifyAsTag() const;
     Token currentToken_stringifyAsFile() const;
 
-    Token eatTrivia(Token firstTok, NextPolicy policy);
-    Token eatTrivia(Token firstTok, NextPolicy policy, TriviaSeq& Args);
-    Token eatTrivia_stringifyAsFile(Token firstTok);
-    Token eatTrivia_stringifyAsFile(Token firstTok, TriviaSeq& Args);
-    Token eatTriviaButNotToplevelNewlines(Token firstTok, NextPolicy policy);
-    Token eatTriviaButNotToplevelNewlines(Token firstTok, NextPolicy policy, TriviaSeq& Args);
-    Token eatTriviaButNotToplevelNewlines_stringifyAsFile(Token firstTok, TriviaSeq& Args);
+    void eatTrivia(Token& firstTok, NextPolicy policy);
+    void eatTrivia(Token& firstTok, NextPolicy policy, TriviaSeq& Args);
+    void eatTrivia_stringifyAsFile(Token& firstTok);
+    void eatTrivia_stringifyAsFile(Token& firstTok, TriviaSeq& Args);
+    void eatTriviaButNotToplevelNewlines(Token& firstTok, NextPolicy policy);
+    void eatTriviaButNotToplevelNewlines(Token& firstTok, NextPolicy policy, TriviaSeq& Args);
+    void eatTriviaButNotToplevelNewlines_stringifyAsFile(Token& firstTok, TriviaSeq& Args);
     
     void shift();
     
