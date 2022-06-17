@@ -571,3 +571,12 @@ Test[
 ]
 
 
+Test[
+	"a ;; b ;; c"
+	,
+	Null
+	,
+	EquivalenceFunction -> parseEquivalenceFunction
+	,
+	TestID->"Span-20220616-S1F8C3"
+]

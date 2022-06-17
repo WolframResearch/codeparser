@@ -321,7 +321,7 @@ void SemiSemiParselet_parse2(ParseletPtr Ignored, Token Ignored2) {
     
     TheParser->shift();
     
-    TheParser->appendArgs(Trivia2);
+    TheParser->appendArgs(Trivia1);
     
     TheParser->appendArg(new LeafNode(ThirdTok));
     
