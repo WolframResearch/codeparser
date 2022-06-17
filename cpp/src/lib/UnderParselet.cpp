@@ -25,6 +25,13 @@ void UnderParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     // Something like  _  or  _a
     //
     
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(P/*ignored*/, TokIn/*ignored*/);
+    }
+#endif // !NABORT
+    
     TheParser->pushLeafNodeAndNext(TokIn);
     
     auto Tok = TheParser->currentToken(TOPLEVEL);
@@ -80,6 +87,13 @@ void UnderParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
     //
     // Something like  a_b
     //
+    
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->pushNode(new AbortNode());
+        return;
+    }
+#endif // !NABORT
     
     TheParser->pushLeafNodeAndNext(TokIn);
     
@@ -173,6 +187,13 @@ void UnderDotParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     // Something like  _.
     //
     
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
+    
     TheParser->pushLeafNodeAndNext(TokIn);
     
     MUSTTAIL
@@ -189,6 +210,13 @@ void UnderDotParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
     // infix
     //
     // Something like  a_.
+    
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->pushNode(new AbortNode());
+        return;
+    }
+#endif // !NABORT
     
     TheParser->pushLeafNodeAndNext(TokIn);
     

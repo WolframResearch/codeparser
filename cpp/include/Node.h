@@ -234,6 +234,26 @@ public:
 #endif // USE_EXPR_LIB
 };
 
+#if !NABORT
+class AbortNode : public Node {
+public:
+    
+#if USE_MATHLINK
+    void put(MLINK mlp) const override;
+#endif // USE_MATHLINK
+    
+    void print(std::ostream& s) const override;
+    
+    Source getSource() const override;
+    
+    bool check() const override;
+    
+#if USE_EXPR_LIB
+    expr toExpr() const override;
+#endif // USE_EXPR_LIB
+};
+#endif // !NABORT
+
 //
 // PrefixNode
 //

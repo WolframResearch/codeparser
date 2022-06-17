@@ -33,18 +33,6 @@
 #include <functional> // for function with GCC and MSVC
 #include <cstddef> // for size_t
 
-#if !NABORT
-#define HANDLE_ABORT \
-do { \
-    if (TheParserSession->isAbort()) { \
-        TheParser->pushNode(TheParserSession->handleAbort()); \
-        return; \
-    } \
-} while (0)
-#else
-#define HANDLE_ABORT
-#endif // !NABORT
-
 #if USE_MUSTTAIL
 #define MUSTTAIL [[clang::musttail]]
 #else
@@ -222,13 +210,6 @@ public:
     
 #if !NABORT
     bool isAbort() const;
-    
-    Node *handleAbort() const;
-    
-#if USE_EXPR_LIB
-    expr handleAbortExpr() const;
-#endif // USE_EXPR_LIB
-    
 #endif // !NABORT
     
     void setUnsafeCharacterEncodingFlag(UnsafeCharacterEncodingFlag flag);

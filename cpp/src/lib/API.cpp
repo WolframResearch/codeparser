@@ -293,6 +293,12 @@ NodeContainerPtr ParserSession::tokenize() {
     
     while (true) {
         
+#if !NABORT
+        if (TheParserSession->isAbort()) {
+            break;
+        }
+#endif // !NABORT
+        
         auto Tok = TheTokenizer->currentToken(TOPLEVEL);
         
         if (Tok.Tok == TOKEN_ENDOFFILE) {
@@ -570,18 +576,8 @@ bool ParserSession::isAbort() const {
     if (!currentAbortQ) {
         return false;
     }
-    
-    return currentAbortQ();
-}
 
-Node *ParserSession::handleAbort() const {
-    
-    auto buf = TheByteBuffer->buffer;
-    auto loc = TheByteDecoder->SrcLoc;
-    
-    auto A = Token(TOKEN_ERROR_ABORTED, buf, loc);
-    
-    return new ErrorNode(A);
+    return currentAbortQ();
 }
 #endif // !NABORT
 
@@ -1280,12 +1276,9 @@ void NodeContainer::put(MLINK mlp) const {
     for (auto& NN : N) {
         
 #if !NABORT
-        //
-        // Check isAbort() inside loops
-        //
         if (TheParserSession->isAbort()) {
-            
-            return;
+            SYMBOL__ABORTED.put(mlp);
+            continue;
         }
 #endif // !NABORT
         
@@ -1303,10 +1296,13 @@ expr NodeContainer::toExpr() const {
     
     for (size_t i = 0; i < N.size(); i++) {
         
+        //
+        // Check isAbort() inside loops
+        //
 #if !NABORT
         if (TheParserSession->isAbort()) {
-            
-            return TheParserSession->handleAbortExpr();
+            Expr_InsertA(e, i + 1, SYMBOL__ABORTED.toExpr());
+            continue;
         }
 #endif // !NABORT
         
@@ -1319,20 +1315,6 @@ expr NodeContainer::toExpr() const {
 }
 #endif // USE_EXPR_LIB
 
-
-#if !NABORT
-#if USE_EXPR_LIB
-expr ParserSession::handleAbortExpr() const {
-    
-    auto Aborted = handleAbort();
-    
-    auto e = Aborted->toExpr();
-    
-    return e;
-}
-#endif // USE_EXPR_LIB
-
-#endif // !NABORT
 
 #if DIAGNOSTICS
 

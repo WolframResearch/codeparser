@@ -491,6 +491,10 @@ Module[{abstracted, issues, issues1, issues2, data,
 
   data = dataIn;
 
+  If[FailureQ[children],
+    Throw[ContainerNode[tag, children, data]]
+  ];
+
   willReportToplevelIssues = (tag === File);
 
   reportIssuesBehavior = <| "WillReportToplevelIssues" -> willReportToplevelIssues, "ToplevelChildrenLength" -> Length[children] |>;

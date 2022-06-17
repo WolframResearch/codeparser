@@ -229,7 +229,11 @@ void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2) {
     //
     // Check isAbort() inside loops
     //
-    HANDLE_ABORT;
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        return Parser_tryContinue(Ignored, Ignored2);
+    }
+#endif // !NABORT
     
     auto& Trivia1 = TheParser->getTrivia1();
     

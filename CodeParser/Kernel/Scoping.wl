@@ -60,6 +60,13 @@ Module[{ast, definitions},
 ]
 
 
+walk[ContainerNode[_, f_?FailureQ, _]] :=
+  {}
+
+freePatterns[ContainerNode[_, f_?FailureQ, _]] :=
+  {}
+
+
 walk[ContainerNode[_, children_, _]] :=
   Flatten[walk /@ children]
 

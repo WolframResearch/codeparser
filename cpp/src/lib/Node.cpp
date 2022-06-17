@@ -237,6 +237,21 @@ void UnterminatedTokenErrorNeedsReparseNode::print(std::ostream& s) const {
 }
 
 
+#if !NABORT
+void AbortNode::print(std::ostream& s) const {
+    SYMBOL__ABORTED.print(s);
+}
+
+Source AbortNode::getSource() const {
+    return Source(SourceLocation(std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max()));
+}
+
+bool AbortNode::check() const {
+    return false;
+}
+#endif // !NABORT
+
+
 bool GroupMissingCloserNode::check() const {
     return false;
 }
@@ -504,11 +519,9 @@ void NodeSeq::put(MLINK mlp) const {
     for (auto& C : vec) {
         
 #if !NABORT
-        //
-        // Check isAbort() inside loops
-        //
         if (TheParserSession->isAbort()) {
-            return;
+            SYMBOL__ABORTED.put(mlp);
+            continue;
         }
 #endif // !NABORT
         
@@ -604,6 +617,16 @@ void UnterminatedTokenErrorNeedsReparseNode::put(MLINK mlp) const {
 #endif // USE_MATHLINK
 
 
+#if !NABORT
+#if USE_MATHLINK
+void AbortNode::put(MLINK mlp) const {
+    
+    SYMBOL__ABORTED.put(mlp);
+}
+#endif // USE_MATHLINK
+#endif // !NABORT
+
+
 #if USE_MATHLINK
 void CallNode::put(MLINK mlp) const {
     
@@ -653,17 +676,6 @@ void CollectedExpressionsNode::put(MLINK mlp) const {
     
     for (auto& E : Exprs) {
         
-#if !NABORT
-        //
-        // Check isAbort() inside loops
-        //
-        if (TheParserSession->isAbort()) {
-            
-            TheParserSession->handleAbort();
-            return;
-        }
-#endif // !NABORT
-        
         E->put(mlp);
     }
 }
@@ -679,17 +691,6 @@ void CollectedIssuesNode::put(MLINK mlp) const {
     
     for (auto& I : Issues) {
         
-#if !NABORT
-        //
-        // Check isAbort() inside loops
-        //
-        if (TheParserSession->isAbort()) {
-            
-            TheParserSession->handleAbort();
-            return;
-        }
-#endif // !NABORT
-        
         I->put(mlp);
     }
 }
@@ -704,17 +705,6 @@ void CollectedSourceLocationsNode::put(MLINK mlp) const {
     }
     
     for (auto& L : SourceLocs) {
-        
-#if !NABORT
-        //
-        // Check isAbort() inside loops
-        //
-        if (TheParserSession->isAbort()) {
-            
-            TheParserSession->handleAbort();
-            return;
-        }
-#endif // !NABORT
             
         L.put(mlp);
     }
@@ -755,8 +745,8 @@ expr NodeSeq::toExpr() const {
         
 #if !NABORT
         if (TheParserSession->isAbort()) {
-            
-            return TheParserSession->handleAbortExpr();
+            Expr_InsertA(e, i + 1, SYMBOL__ABORTED.toExpr());
+            continue;
         }
 #endif // !NABORT
         
@@ -891,6 +881,18 @@ expr UnterminatedTokenErrorNeedsReparseNode::toExpr() const {
 #endif // USE_EXPR_LIB
 
 
+#if !NABORT
+#if USE_EXPR_LIB
+expr AbortNode::toExpr() const {
+    
+    auto e = SYMBOL__ABORTED.toExpr();
+    
+    return e;
+}
+#endif // USE_EXPR_LIB
+#endif // !NABORT
+
+
 #if USE_EXPR_LIB
 expr CallNode::toExpr() const {
     
@@ -958,13 +960,6 @@ expr CollectedExpressionsNode::toExpr() const {
     
     for (size_t i = 0; i < Exprs.size(); i++) {
         
-#if !NABORT
-        if (TheParserSession->isAbort()) {
-            
-            return TheParserSession->handleAbortExpr();
-        }
-#endif // !NABORT
-        
         auto& NN = Exprs[i];
         auto NExpr = NN->toExpr();
         Expr_InsertA(e, i + 1, NExpr);
@@ -985,13 +980,6 @@ expr CollectedIssuesNode::toExpr() const {
     int i = 0;
     for (auto& I : Issues) {
         
-#if !NABORT
-        if (TheParserSession->isAbort()) {
-            
-            return TheParserSession->handleAbortExpr();
-        }
-#endif // !NABORT
-        
         auto IExpr = I->toExpr();
         Expr_InsertA(e, i + 1, IExpr);
         i++;
@@ -1011,13 +999,6 @@ expr CollectedSourceLocationsNode::toExpr() const {
     
     int i = 0;
     for (auto& L : SourceLocs) {
-        
-#if !NABORT
-        if (TheParserSession->isAbort()) {
-            
-            return TheParserSession->handleAbortExpr();
-        }
-#endif // !NABORT
         
         auto LExpr = L.toExpr();
         Expr_InsertA(e, i + 1, LExpr);

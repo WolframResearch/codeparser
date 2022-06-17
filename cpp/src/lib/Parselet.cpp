@@ -37,6 +37,13 @@ void PrefixErrorParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
     assert(TokIn.Tok.isError());
     
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
+    
     if (TokIn.Tok.isUnterminated()) {
         
         TheParser->pushNode(new UnterminatedTokenErrorNeedsReparseNode(TokIn));
@@ -61,6 +68,13 @@ void PrefixCloserParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
     assert(TokIn.Tok.isCloser());
         
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
+    
     //
     // Inside some other parselet that is not GroupParselet
     //
@@ -97,6 +111,13 @@ void PrefixToplevelCloserParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
     assert(TokIn.Tok.isCloser());
     
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
+    
     //
     // if we are at the top, then make sure to take the token and report it
     //
@@ -119,6 +140,13 @@ void PrefixEndOfFileParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     //
     // Something like  a+<EOF>
     //
+    
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
     
     Token createdToken;
     
@@ -143,6 +171,12 @@ ParseFunction PrefixUnsupportedTokenParselet::parsePrefix() const {
 }
 
 void PrefixUnsupportedTokenParselet_parsePrefix(ParseletPtr P, Token TokIn) {
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
     
     TheParser->pushNode(new ErrorNode(Token(TOKEN_ERROR_UNSUPPORTEDTOKEN, TokIn.BufLen, TokIn.Src)));
     
@@ -164,6 +198,13 @@ void PrefixCommaParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     //
     // if the input is  f[,2]  then we want to return TOKEN_ERROR_PREFIXIMPLICITNULL
     //
+    
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
     
     Token createdToken;
     
@@ -190,6 +231,13 @@ ParseFunction PrefixUnhandledParselet::parsePrefix() const {
 void PrefixUnhandledParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
     assert(!TokIn.Tok.isPossibleBeginning() && "handle at call site");
+    
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
     
     TheParser->pushNode(new ErrorNode(Token(TOKEN_ERROR_EXPECTEDOPERAND, TokIn.BufLen.buffer, TokIn.Src.Start)));
     
@@ -265,6 +313,13 @@ void SymbolParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     //
     // Something like  x  or x_
     //
+    
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
     
     TheParser->pushLeafNodeAndNext(TokIn);
     
@@ -370,6 +425,13 @@ void SymbolParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
     //                  ^
     //
     
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->pushNode(new AbortNode());
+        return;
+    }
+#endif // !NABORT
+    
     //
     // We know we are already in the middle of parsing _
     //
@@ -424,6 +486,13 @@ ParseFunction PrefixOperatorParselet::parsePrefix() const {
 void PrefixOperatorParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
     assert(dynamic_cast<PrefixOperatorParselet *>(P));
+    
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(P/*ignored*/, TokIn/*ignored*/);
+    }
+#endif // !NABORT
     
     TheParser->pushLeafNodeAndNext(TokIn);
     
@@ -518,6 +587,13 @@ ParseFunction BinaryOperatorParselet::parseInfix() const {
 void BinaryOperatorParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
     assert(dynamic_cast<BinaryOperatorParselet *>(P));
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->popContext();
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(P/*ignored*/, TokIn/*ignored*/);
+    }
+#endif // !NABORT
     
     TheParser->appendLeafArgAndNext(TokIn);
 
@@ -568,6 +644,13 @@ ParseFunction InfixOperatorParselet::parseInfix() const {
 void InfixOperatorParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
     assert(dynamic_cast<InfixOperatorParselet *>(P));
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->popContext();
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(P/*ignored*/, TokIn/*ignored*/);
+    }
+#endif // !NABORT
     
     TheParser->appendLeafArgAndNext(TokIn);
     
@@ -611,10 +694,14 @@ void InfixOperatorParselet_parseLoop(ParseletPtr P, Token Ignored) {
     while (true) {
 #endif // !USE_MUSTTAIL
     
-    //
-    // Check isAbort() inside loops
-    //
-    HANDLE_ABORT;
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->popNode();
+        TheParser->popContext();
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(P/*ignored*/, Ignored);
+    }
+#endif // !NABORT
     
     auto& Trivia1 = TheParser->getTrivia1();
     
@@ -766,6 +853,13 @@ ParseFunction GroupParselet::parsePrefix() const {
 
 void GroupParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(P/*ignored*/, TokIn/*ignored*/);
+    }
+#endif // !NABORT
+    
     TheParser->pushLeafNodeAndNext(TokIn);
     
     TheParser->pushGroup(GroupOpenerToCloser(TokIn.Tok));
@@ -797,10 +891,15 @@ void GroupParselet_parseLoop(ParseletPtr P, Token Ignored) {
     while (true) {
 #endif // !USE_MUSTTAIL
     
-    //
-    // Check isAbort() inside loops
-    //
-    HANDLE_ABORT;
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->popNode();
+        TheParser->popContext();
+        TheParser->popGroup();
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(P/*ignored*/, Ignored);
+    }
+#endif // !NABORT
     
     //
     // There will only be 1 "good" node (either a LeafNode or a CommaNode)
@@ -983,6 +1082,14 @@ void CallParselet_parseInfix(ParseletPtr P, Token TokIn) {
     
     assert(dynamic_cast<CallParselet *>(P));
     
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->popContext();
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(P/*ignored*/, TokIn/*ignored*/);
+    }
+#endif // !NABORT
+    
     //
     // if we used PRECEDENCE_CALL here, then e.g., a[]?b should technically parse as   a <call> []?b
     //
@@ -1031,6 +1138,14 @@ void TildeParselet_parseInfix(ParseletPtr P, Token TokIn) {
     // It'd be weird if this were an "infix operator"
     //
     
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->popContext();
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
+    
     TheParser->appendLeafArgAndNext(TokIn);
     
     auto FirstTok = TheParser->currentToken(TOPLEVEL);
@@ -1053,6 +1168,14 @@ void TildeParselet_parseInfix(ParseletPtr P, Token TokIn) {
 void TildeParselet_parse1(ParseletPtr P, Token Ignored) {
     
     Token Tok1;
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->popNode();
+        TheParser->popContext();
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, Ignored2);
+    }
+#endif // !NABORT
     
     auto& Trivia1 = TheParser->getTrivia1();
     
@@ -1141,6 +1264,14 @@ void ColonParselet_parseInfix(ParseletPtr P, Token TokIn) {
     //
     // Something like  symbol:object  or  pattern:optional
     //
+    
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->popContext();
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
     
     auto colonLHS = TheParser->checkColonLHS();
     
@@ -1259,6 +1390,14 @@ void SlashColonParselet_parseInfix(ParseletPtr P, Token TokIn) {
     // It'd be weird if this were an "infix operator"
     //
     
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->popContext();
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
+    
     TheParser->appendLeafArgAndNext(TokIn);
     
     auto Tok = TheParser->currentToken(TOPLEVEL);
@@ -1277,6 +1416,14 @@ void SlashColonParselet_parseInfix(ParseletPtr P, Token TokIn) {
 }
 
 void SlashColonParselet_parse1(ParseletPtr P, Token Ignored) {
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->popNode();
+        TheParser->popContext();
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, Ignored2);
+    }
+#endif // !NABORT
     
     auto& Trivia1 = TheParser->getTrivia1();
     
@@ -1356,6 +1503,13 @@ ParseFunction EqualParselet::parseInfix() const {
 }
 
 void EqualParselet_parseInfix(ParseletPtr P, Token TokIn) {
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->popContext();
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
     
     TheParser->appendLeafArgAndNext(TokIn);
     
@@ -1394,6 +1548,14 @@ void EqualParselet_parseInfixTag(ParseletPtr P, Token TokIn) {
     //
     // a /: b = c  and  a /: b = .  are handled here
     //
+    
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->popContext();
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
     
     TheParser->appendLeafArgAndNext(TokIn);
     
@@ -1475,6 +1637,13 @@ ParseFunction ColonEqualParselet::parseInfix() const {
 }
 
 void ColonEqualParselet_parseInfix(ParseletPtr P, Token TokIn) {
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->popContext();
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
     
     TheParser->appendLeafArgAndNext(TokIn);
     
@@ -1494,6 +1663,13 @@ void ColonEqualParselet_parseInfix(ParseletPtr P, Token TokIn) {
 }
 
 void ColonEqualParselet_parseInfixTag(ParseletPtr P, Token TokIn) {
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->popContext();
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
     
     TheParser->appendLeafArgAndNext(TokIn);
     
@@ -1543,6 +1719,13 @@ void IntegralParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     // Something like  \[Integral] f \[DifferentialD] x
     //
     
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
+    
     auto& Ctxt = TheParser->pushContext(PRECEDENCE_CLASS_INTEGRATIONOPERATORS);
     
     TheParser->appendLeafArgAndNext(TokIn);
@@ -1562,6 +1745,14 @@ void IntegralParselet_parsePrefix(ParseletPtr P, Token TokIn) {
 }
 
 void IntegralParselet_parse1(ParseletPtr P, Token Ignored) {
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->popNode();
+        TheParser->popContext();
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, Ignored2);
+    }
+#endif // !NABORT
     
     auto& Trivia1 = TheParser->getTrivia1();
 
@@ -1622,6 +1813,13 @@ ParseFunction CommaParselet::parseInfix() const {
 }
 
 void CommaParselet_parseInfix(ParseletPtr P, Token TokIn) {
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->popContext();
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
     
     TheParser->appendLeafArgAndNext(TokIn);
     
@@ -1690,10 +1888,14 @@ void CommaParselet_parseLoop(ParseletPtr P, Token Ignored) {
     while (true) {
 #endif // !USE_MUSTTAIL
     
-    //
-    // Check isAbort() inside loops
-    //
-    HANDLE_ABORT;
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->popNode();
+        TheParser->popContext();
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, Ignored2);
+    }
+#endif // !NABORT
     
     auto& Trivia1 = TheParser->getTrivia1();
 
@@ -1784,6 +1986,13 @@ ParseFunction SemiParselet::parseInfix() const {
 }
 
 void SemiParselet_parseInfix(ParseletPtr P, Token TokIn) {
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->popContext();
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
     
     TheParser->appendLeafArgAndNext(TokIn);
     
@@ -1883,10 +2092,14 @@ void SemiParselet_parseLoop(ParseletPtr P, Token Ignored) {
     while (true) {
 #endif // !USE_MUSTTAIL
     
-    //
-    // Check isAbort() inside loops
-    //
-    HANDLE_ABORT;
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->popNode();
+        TheParser->popContext();
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, Ignored2);
+    }
+#endif // !NABORT
     
     auto& Trivia1 = TheParser->getTrivia1();
     
@@ -2015,6 +2228,14 @@ void ColonColonParselet_parseInfix(ParseletPtr P, Token TokIn) {
     // a::b
     //
     
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->popContext();
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
+    
     TheParser->appendLeafArgAndNext(TokIn);
     
     //
@@ -2058,10 +2279,14 @@ void ColonColonParselet_parseLoop(ParseletPtr P, Token Ignored) {
     while (true) {
 #endif // !USE_MUSTTAIL
     
-    //
-    // Check isAbort() inside loops
-    //
-    HANDLE_ABORT;
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->popNode();
+        TheParser->popContext();
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, Ignored2);
+    }
+#endif // !NABORT
     
     auto& Trivia1 = TheParser->getTrivia1();
     
@@ -2143,6 +2368,14 @@ void GreaterGreaterParselet_parseInfix(ParseletPtr P, Token TokIn) {
     // a>>b
     //
     
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->popContext();
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
+    
     //
     // Special tokenization, so must do parsing here
     //
@@ -2203,6 +2436,14 @@ void GreaterGreaterGreaterParselet_parseInfix(ParseletPtr P, Token TokIn) {
     // a>>>b
     //
     
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->popContext();
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
+    
     //
     // Special tokenization, so must do parsing here
     //
@@ -2258,6 +2499,13 @@ void LessLessParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     //
     // <<a
     //
+    
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
     
     //
     // Special tokenization, so must do parsing here
@@ -2356,6 +2604,13 @@ void HashParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     // Make sure e.g.  #1a is not parsed as SlotNode["#1a"]
     //
     
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
+    
     TheParser->pushLeafNodeAndNext(TokIn);
     
     auto Tok = TheParser->currentToken(INSIDE_SLOT);
@@ -2400,6 +2655,13 @@ void HashHashParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     //
     // Something like  ##  or  ##1
     //
+    
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
     
     TheParser->pushLeafNodeAndNext(TokIn);
     
@@ -2447,6 +2709,13 @@ void PercentParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     //
     // Something like  %  or  %1
     //
+    
+#if !NABORT
+    if (TheParserSession->isAbort()) {
+        TheParser->pushNode(new AbortNode());
+        return Parser_tryContinue(Ignored, TokIn/*ignored*/);
+    }
+#endif // !NABORT
     
     TheParser->pushLeafNodeAndNext(TokIn);
     

@@ -447,11 +447,11 @@ Module[{res, container, containerWasAutomatic},
   If[container === Automatic,
     containerWasAutomatic = True;
     container = ContainerNode[String, #[[1]],
-      <| If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
-         If[!empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
-         If[!empty[#[[4]]], "ComplexLineContinuations" -> #[[4]], Nothing],
-         If[!empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
-         If[!empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing] |>
+      <| If[!FailureQ[#[[2]]] && !empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
+         If[!FailureQ[#[[3]]] && !empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
+         If[!FailureQ[#[[4]]] && !empty[#[[4]]], "ComplexLineContinuations" -> #[[4]], Nothing],
+         If[!FailureQ[#[[5]]] && !empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
+         If[!FailureQ[#[[6]]] && !empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing] |>
     ]&
   ];
 
@@ -485,11 +485,11 @@ Module[{res, convention, container, tabWidth,
   If[container === Automatic,
     containerWasAutomatic = True;
     container = ContainerNode[String, #[[1]],
-      <| If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
-         If[!empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
-         If[!empty[#[[4]]], "ComplexLineContinuations" -> #[[4]], Nothing],
-         If[!empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
-         If[!empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing] |>
+      <| If[!FailureQ[#[[2]]] && !empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
+         If[!FailureQ[#[[3]]] && !empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
+         If[!FailureQ[#[[4]]] && !empty[#[[4]]], "ComplexLineContinuations" -> #[[4]], Nothing],
+         If[!FailureQ[#[[5]]] && !empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
+         If[!FailureQ[#[[6]]] && !empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing] |>
     ]&
   ];
 
@@ -661,11 +661,11 @@ Module[{res, convention, container, containerWasAutomatic,
   If[container === Automatic,
     containerWasAutomatic = True;
     container = ContainerNode[File, #[[1]],
-      <| If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
-         If[!empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
-         If[!empty[#[[4]]], "ComplexLineContinuations" -> #[[4]], Nothing],
-         If[!empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
-         If[!empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing] |>
+      <| If[!FailureQ[#[[2]]] && !empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
+         If[!FailureQ[#[[3]]] && !empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
+         If[!FailureQ[#[[4]]] && !empty[#[[4]]], "ComplexLineContinuations" -> #[[4]], Nothing],
+         If[!FailureQ[#[[5]]] && !empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
+         If[!FailureQ[#[[6]]] && !empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing] |>
     ]&
   ];
 
@@ -703,6 +703,10 @@ Module[{cst, children, first, last, start, end, data},
 
   children = cst[[2]];
   
+  If[FailureQ[children],
+    Throw[cst]
+  ];
+
   (* only fill in if there are actually children nodes to grab *)
   If[empty[children],
     Throw[cst]
@@ -798,11 +802,11 @@ Module[{res, container, containerWasAutomatic},
   If[container === Automatic,
     containerWasAutomatic = True;
     container = ContainerNode[Byte, #[[1]],
-      <| If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
-         If[!empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
-         If[!empty[#[[4]]], "ComplexLineContinuations" -> #[[4]], Nothing],
-         If[!empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
-         If[!empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing] |>
+      <| If[!FailureQ[#[[2]]] && !empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
+         If[!FailureQ[#[[3]]] && !empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
+         If[!FailureQ[#[[4]]] && !empty[#[[4]]], "ComplexLineContinuations" -> #[[4]], Nothing],
+         If[!FailureQ[#[[5]]] && !empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
+         If[!FailureQ[#[[6]]] && !empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing] |>
     ]&
   ];
 
@@ -835,11 +839,11 @@ Module[{res, convention, container, tabWidth, containerWasAutomatic},
   If[container === Automatic,
     containerWasAutomatic = True;
     container = ContainerNode[Byte, #[[1]],
-      <| If[!empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
-         If[!empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
-         If[!empty[#[[4]]], "ComplexLineContinuations" -> #[[4]], Nothing],
-         If[!empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
-         If[!empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing] |>
+      <| If[!FailureQ[#[[2]]] && !empty[#[[2]]], SyntaxIssues -> #[[2]], Nothing],
+         If[!FailureQ[#[[3]]] && !empty[#[[3]]], "SimpleLineContinuations" -> #[[3]], Nothing],
+         If[!FailureQ[#[[4]]] && !empty[#[[4]]], "ComplexLineContinuations" -> #[[4]], Nothing],
+         If[!FailureQ[#[[5]]] && !empty[#[[5]]], "EmbeddedNewlines" -> #[[5]], Nothing],
+         If[!FailureQ[#[[6]]] && !empty[#[[6]]], "EmbeddedTabs" -> #[[6]], Nothing] |>
     ]&
   ];
 
@@ -1213,6 +1217,10 @@ Module[{res, leaf, data, exprs},
   ];
 
   exprs = res[[1]];
+
+  If[FailureQ[exprs],
+    Throw[exprs]
+  ];
 
   leaf = exprs[[1]];
 

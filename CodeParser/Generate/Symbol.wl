@@ -72,7 +72,7 @@ symbols = Union[Join[
       ConfidenceLevel, EndOfFile, EvaluatePacket, Integer, Integral,
       Integrate, Missing, Null, Out, Optional, Pattern, Rational,
       Real, Rule, Slot, SlotSequence, String, Symbol, TagSet,
-      TagSetDelayed, TagUnset, Unset, Whitespace},
+      TagSetDelayed, TagUnset, Unset, Whitespace, $Aborted},
     {CodeParser`Source},
     {CodeParser`LeafNode,
       CodeParser`ErrorNode, CodeParser`UnterminatedTokenErrorNeedsReparseNode,
