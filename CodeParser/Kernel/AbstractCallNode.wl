@@ -99,8 +99,14 @@ Module[{head, data, part, issues},
       ];
     ,
     InfixNode[CompoundExpression, _, _],
-      (* CompoundExpression was already handled *)
-      Null
+      
+      AppendTo[issues,
+        SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Remark", <|
+          Source -> first[[3, Key[Source]]],
+          ConfidenceLevel -> 0.95,
+          "AdditionalSources" -> {last[[3, Key[Source]]]}
+        |>]
+      ];
     ,
     (*
     BinaryNode[PatternTest, _, _],
@@ -299,6 +305,14 @@ Module[{head, part, partData, issues, data},
 
   issues = {};
 
+  AppendTo[issues,
+    SyntaxIssue["StrangeCall", "Unexpected call.", "Warning", <|
+      Source -> first[[3, Key[Source]]],
+      ConfidenceLevel -> 0.95,
+      "AdditionalSources" -> {last[[3, Key[Source]]]}
+    |>]
+  ];
+  
   head = abstract[head];
   part = abstractGroupNode[part];
   partData = part[[3]];
@@ -618,8 +632,14 @@ Module[{head, part, partData, data, issues},
       Null
     ,*)
     InfixNode[CompoundExpression, _, _],
-      (* CompoundExpression was already handled *)
-      Null
+      
+      AppendTo[issues,
+        SyntaxIssue["StrangeCall", "Unexpected ``Part`` call.", "Remark", <|
+          Source -> first[[3, Key[Source]]],
+          ConfidenceLevel -> 0.95,
+          "AdditionalSources" -> {last[[3, Key[Source]]]}
+        |>]
+      ];
     ,
     GroupNode[GroupParen | List | Association, _, _],
       (* these are fine *)
