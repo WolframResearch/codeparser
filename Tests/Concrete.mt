@@ -273,9 +273,7 @@ Test[
 	      			LeafNode[Token`Fake`ImplicitAll, "", <|Source -> {{1, 11}, {1, 11}}|>]}, <|Source -> {{1, 5}, {1, 11}}|>]}, <|Source -> {{1, 1}, {1, 11}}|>], 
 	  		LeafNode[Token`Amp, "&", <|Source -> {{1, 11}, {1, 12}}|>]}, <|Source -> {{1, 1}, {1, 12}}|>]}
 	  	,
-	  	<|SyntaxIssues -> {
-			SyntaxIssue["UnexpectedImplicitTimes", "Unexpected implicit ``Times`` between ``Spans``.", "Warning", <|Source -> {{1, 5}, {1, 7}}, ConfidenceLevel -> 0.75|>]},
-			Source -> {{1, 1}, {1, 12}}|>]
+	  	<|Source -> {{1, 1}, {1, 12}}|>]
 	,
 	TestID->"Concrete-20190914-U5A2R0"
 ]

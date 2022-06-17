@@ -30,14 +30,6 @@ Token SemiSemiParselet::processImplicitTimes(Token TokIn) const {
             auto Op = B->getOp();
             
             if (Op == SYMBOL_SPAN) {
-            
-#if !NISSUES
-            {
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDIMPLICITTIMES, "Unexpected implicit ``Times`` between ``Spans``.", STRING_WARNING, TokIn.Src, 0.75, {}, {}));
-
-                TheParserSession->addIssue(std::move(I));
-            }
-#endif // !NISSUES
                 
                 return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.BufLen.buffer, TokIn.Src.Start);
             }
@@ -54,14 +46,6 @@ Token SemiSemiParselet::processImplicitTimes(Token TokIn) const {
             auto Op = T->getOp();
             
             if (Op == SYMBOL_SPAN) {
-                
-#if !NISSUES
-            {
-                auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDIMPLICITTIMES, "Unexpected implicit ``Times`` between ``Spans``.", STRING_WARNING, TokIn.Src, 0.75, {}, {}));
-
-                TheParserSession->addIssue(std::move(I));
-            }
-#endif // !NISSUES
                 
                 return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.BufLen.buffer, TokIn.Src.Start);
             }
@@ -83,14 +67,6 @@ Token SemiSemiParselet::processImplicitTimes(Token TokIn) const {
     //
     // no Node, so this means that Args has already started
     //
-    
-#if !NISSUES
-    {
-        auto I = IssuePtr(new SyntaxIssue(STRING_UNEXPECTEDIMPLICITTIMES, "Unexpected implicit ``Times`` between ``Spans``.", STRING_WARNING, TokIn.Src, 0.75, {}, {}));
-
-        TheParserSession->addIssue(std::move(I));
-    }
-#endif // !NISSUES
             
     return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.BufLen.buffer, TokIn.Src.Start);
 }
