@@ -1538,7 +1538,7 @@ prbDispatch[{CompoundNode[PatternBlank | PatternBlankSequence | PatternBlankNull
 (*
 Token`Colon Good
 *)
-prbDispatch[{_, LeafNode[Token`Colon, _, _], _}, handledChildren_, ignored_, pos_] :=
+prbDispatch[{LeafNode[Symbol, _, _], LeafNode[Token`Colon, _, _], _}, handledChildren_, ignored_, pos_] :=
   BinaryNode[Pattern, handledChildren, <| Source -> pos |>]
 
 (*
@@ -1548,6 +1548,14 @@ Something like RowBox[{RowBox[{\"a_\", \":\"}], \"b\"}]
 *)
 prbDispatch[{BinaryNode[Optional, {CompoundNode[PatternBlank, {_, _}, _], LeafNode[Token`Colon, _, _], ErrorNode[Token`Error`ExpectedOperand, _, _]}, _], _}, handledChildren_, ignored_, pos_] :=
   SyntaxErrorNode[SyntaxError`OldFESyntax, handledChildren, <| Source -> pos |>]
+
+(*
+Error
+
+Something like  1:2
+*)
+prbDispatch[{_, LeafNode[Token`Colon, _, _], _}, handledChildren_, ignored_, pos_] :=
+  SyntaxErrorNode[SyntaxError`ExpectedSymbol, handledChildren, <| Source -> pos |>]
 "}
 
 epilog = {
