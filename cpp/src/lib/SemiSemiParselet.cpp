@@ -21,40 +21,40 @@ Token SemiSemiParselet::processImplicitTimes(Token TokIn) const {
     // SemiSemi was already parsed with look-ahead with the assumption that implicit Times will be handled correctly
     //
     
-    if (TheParser->getNodeStackSize() > 0) {
-    
-        auto& N = TheParser->topNode();
+    if (TheParser->getNodeStackSize() == 0) {
         
-        if (auto B = dynamic_cast<BinaryNode *>(N.get())) {
-            
-            auto Op = B->getOp();
-            
-            if (Op == SYMBOL_SPAN) {
+        //
+        // no Node, so this means that Args has already started
+        //
                 
-                return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.BufLen.buffer, TokIn.Src.Start);
-            }
+        return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.BufLen.buffer, TokIn.Src.Start);
+    }
+    
+    auto& N = TheParser->topNode();
+    
+    if (auto B = dynamic_cast<BinaryNode *>(N.get())) {
+        
+        auto Op = B->getOp();
+        
+        if (Op == SYMBOL_SPAN) {
             
-            //
-            // there is a Node, but it is not a Span
-            //
-            
-            return TokIn;
+            return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.BufLen.buffer, TokIn.Src.Start);
         }
         
-        if (auto T = dynamic_cast<TernaryNode *>(N.get())) {
+        //
+        // there is a Node, but it is not a Span
+        //
+        
+        return TokIn;
+    }
+    
+    if (auto T = dynamic_cast<TernaryNode *>(N.get())) {
+        
+        auto Op = T->getOp();
+        
+        if (Op == SYMBOL_SPAN) {
             
-            auto Op = T->getOp();
-            
-            if (Op == SYMBOL_SPAN) {
-                
-                return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.BufLen.buffer, TokIn.Src.Start);
-            }
-            
-            //
-            // there is a Node, but it is not a Span
-            //
-            
-            return TokIn;
+            return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.BufLen.buffer, TokIn.Src.Start);
         }
         
         //
@@ -65,10 +65,10 @@ Token SemiSemiParselet::processImplicitTimes(Token TokIn) const {
     }
     
     //
-    // no Node, so this means that Args has already started
+    // there is a Node, but it is not a Span
     //
-            
-    return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.BufLen.buffer, TokIn.Src.Start);
+    
+    return TokIn;
 }
 
 ParseFunction SemiSemiParselet::parsePrefix() const {
