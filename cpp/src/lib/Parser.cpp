@@ -734,4 +734,16 @@ void Parser::appendLeafArgAndNext(Token Tok) {
     TheTokenizer->nextToken(Tok);
 }
 
+bool Parser::isQuiescent() const {
+    
+    assert(ArgsStack.empty());
+    assert(ContextStack.empty());
+    assert(NodeStack.empty());
+    assert(GroupStack.empty());
+    assert(trivia1.empty());
+    assert(trivia2.empty());
+    
+    return true;
+}
+
 ParserPtr TheParser = nullptr;

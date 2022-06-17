@@ -194,16 +194,9 @@ NodeContainerPtr ParserSession::parseExpressions() {
                 (P->parsePrefix())(P, peek);
             }
             
-            auto Expr = TheParser->popNode();
+            exprs.push_back(TheParser->popNode());
             
-            assert(TheParser->getArgsStackSize() == 0);
-            assert(TheParser->getContextStackSize() == 0);
-            assert(TheParser->getNodeStackSize() == 0);
-            assert(TheParser->getGroupDepth() == 0);
-            assert(TheParser->getTrivia1().empty());
-            assert(TheParser->getTrivia2().empty());
-            
-            exprs.push_back(std::move(Expr));
+            assert(TheParser->isQuiescent());
             
         } // while (true)
         

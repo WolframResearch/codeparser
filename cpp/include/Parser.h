@@ -115,6 +115,8 @@ public:
     
     void pushLeafNodeAndNext(Token Tok);
     void appendLeafArgAndNext(Token Tok);
+    
+    bool isQuiescent() const;
 };
 
 void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2);
