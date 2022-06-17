@@ -140,7 +140,26 @@ void Token::print(std::ostream& s) const {
     
     auto Sym = TokenToSymbol(Tok);
     
-    SYMBOL_CODEPARSER_LEAFNODE.print(s);
+    //
+    // printing the token  123  as LeafNode[Integer, "123", <||>] seems the wrong way around, but it is convenient
+    //
+    
+    if (Tok.isError()) {
+        
+        if (Tok.isUnterminated()) {
+            
+            SYMBOL_CODEPARSER_UNTERMINATEDTOKENERRORNEEDSREPARSENODE.print(s);
+            
+        } else {
+            
+            SYMBOL_CODEPARSER_ERRORNODE.print(s);
+        }
+        
+    } else {
+        
+        SYMBOL_CODEPARSER_LEAFNODE.print(s);
+    }
+    
     s << "[";
     
     s << Sym.name();
