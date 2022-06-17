@@ -14,6 +14,11 @@
 #include <signal.h> // for SIGINT
 #endif // WINDOWS_MATHLINK
 
+#if USE_MATHLINK
+using ScopedMLByteArrayPtr = std::unique_ptr<ScopedMLByteArray>;
+using ScopedMLUTF8StringPtr = std::unique_ptr<ScopedMLUTF8String>;
+using ScopedMLEnvironmentParameterPtr = std::unique_ptr<ScopedMLEnvironmentParameter>;
+#endif // USE_MATHLINK
 
 void ParserSessionCreate() {
     TheParserSession = ParserSessionPtr(new ParserSession());
