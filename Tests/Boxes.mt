@@ -167,7 +167,7 @@ Test[
 	CodeConcreteParseBox[RowBox[{"1", ":", "2"}]]
  	,
  	ContainerNode[Box, {
- 		BinaryNode[Pattern, {
+ 		SyntaxErrorNode[SyntaxError`ExpectedSymbol, {
  			LeafNode[Integer, "1", <|Source -> {1, 1}|>],
  			LeafNode[Token`Colon, ":", <|Source -> {1, 2}|>],
  			LeafNode[Integer, "2", <|Source -> {1, 3}|>]}, <|Source -> {}|>]}, <||>]
