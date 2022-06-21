@@ -1048,6 +1048,19 @@ Test[
 ]
 
 
-
+Test[
+	CodeConcreteParseBox[RowBox[{RowBox[{"g", "[", "]"}], ":="}]]
+	,
+	ContainerNode[Box, {
+		BinaryNode[SetDelayed, {
+			CallNode[{LeafNode[Symbol, "g", <|Source -> {1, 1, 1, 1}|>]},
+				GroupNode[GroupSquare, {
+					LeafNode[Token`OpenSquare, "[", <|Source -> {1, 1, 1, 2}|>],
+					LeafNode[Token`CloseSquare, "]", <|Source -> {1, 1, 1, 3}|>]}, <||>], <|Source -> {1, 1}|>],
+			LeafNode[Token`ColonEqual, ":=", <|Source -> {1, 2}|>],
+			ErrorNode[Token`Error`ExpectedOperand, "", <|Source -> After[{1, 2}]|>]}, <|Source -> {}|>]}, <||>]
+	,
+	TestID->"Boxes-20220618-S1C8B4"
+]
 
 

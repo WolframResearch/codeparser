@@ -964,7 +964,7 @@ Module[{pos1, err},
     {err} ~Join~
     handledChildren[[pos1+1;;]]
     ,
-    ignored
+    children
     ,
     pos
   ]
@@ -1147,7 +1147,7 @@ Module[{pos1, err},
 (*
 Token`ColonEqual Missing last rand
 *)
-prbDispatch[{_, LeafNode[Token`ColonEqual, _, _]}, handledChildren_, ignored_, pos_] :=
+prbDispatch[pat:{_, LeafNode[Token`ColonEqual, _, _]}, handledChildren_, ignored_, pos_] :=
 Module[{pos1, err},
   pos1 = Position[handledChildren, pat[[-1]]][[1, 1]];
   err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> After[pat[[-1, 3, Key[Source]]]] |>];
@@ -1395,7 +1395,7 @@ Token`Colon Token`Colon
 (*
 Token`Colon Token`Colon Missing first rand
 *)
-prbDispatch[pat:{LeafNode[Token`Colon, _, _], _, LeafNode[Token`Colon, _, _], ___}, handledChildren_, ignored_, pos_] :=
+prbDispatch[pat:{LeafNode[Token`Colon, _, _], _, LeafNode[Token`Colon, _, _], ___}, handledChildren_, children_, pos_] :=
 Module[{pos1, err},
   pos1 = Position[handledChildren, pat[[1]]][[1, 1]];
   err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> Before[pat[[1, 3, Key[Source]]]] |>];
@@ -1416,7 +1416,7 @@ Module[{pos1, err},
 (*
 Token`Colon Token`Colon Missing second rand
 *)
-prbDispatch[pat:{_, LeafNode[Token`Colon, _, _], LeafNode[Token`Colon, _, _], ___}, handledChildren_, ignored_, pos_] :=
+prbDispatch[pat:{_, LeafNode[Token`Colon, _, _], LeafNode[Token`Colon, _, _], ___}, handledChildren_, children_, pos_] :=
 Module[{pos1, err},
   pos1 = Position[handledChildren, pat[[2]]][[1, 1]];
   err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> After[pat[[2, 3, Key[Source]]]] |>];
@@ -1438,7 +1438,7 @@ Module[{pos1, err},
 (*
 Token`Colon Token`Colon Missing third rand
 *)
-prbDispatch[pat:{_, LeafNode[Token`Colon, _, _], _, LeafNode[Token`Colon, _, _]}, handledChildren_, ignored_, pos_] :=
+prbDispatch[pat:{_, LeafNode[Token`Colon, _, _], _, LeafNode[Token`Colon, _, _]}, handledChildren_, children_, pos_] :=
 (*               ^ first rand                    ^ second rand                 ^ missing third rand *)
 Module[{pos1, err},
   pos1 = Position[handledChildren, pat[[4]]][[1, 1]];
@@ -1484,7 +1484,7 @@ Token`Colon
 (*
 Token`Colon Missing first rand
 *)
-prbDispatch[pat:{LeafNode[Token`Colon, _, _], _}, handledChildren_, ignored_, pos_] :=
+prbDispatch[pat:{LeafNode[Token`Colon, _, _], _}, handledChildren_, children_, pos_] :=
 Module[{pos1, err},
   pos1 = Position[handledChildren, pat[[1]]][[1, 1]];
   err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> Before[pat[[1, 3, Key[Source]]]] |>];
@@ -1505,7 +1505,7 @@ Module[{pos1, err},
 (*
 Token`Colon Missing last rand
 *)
-prbDispatch[pat:{_, LeafNode[Token`Colon, _, _]}, handledChildren_, ignored_, pos_] :=
+prbDispatch[pat:{_, LeafNode[Token`Colon, _, _]}, handledChildren_, children_, pos_] :=
 Module[{pos1, err},
   pos1 = Position[handledChildren, pat[[-1]]][[1, 1]];
   err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> After[pat[[-1, 3, Key[Source]]]] |>];
@@ -1595,7 +1595,7 @@ insertImplicitTimesAfter[node_] :=
 (*
 Token`Star Missing first rand
 *)
-prbDispatch[pat:{LeafNode[Token`Star, _, _], _, ___}, handledChildren_, ignored_, pos_] :=
+prbDispatch[pat:{LeafNode[Token`Star, _, _], _, ___}, handledChildren_, children_, pos_] :=
 Module[{pos1, err},
   pos1 = Position[handledChildren, pat[[1]]][[1, 1]];
   err = ErrorNode[Token`Error`ExpectedOperand, \"\", <| Source -> Before[pat[[1, 3, Key[Source]]]] |>];
