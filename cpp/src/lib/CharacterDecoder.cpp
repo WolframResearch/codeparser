@@ -68,21 +68,15 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
         
         curSource = TheByteDecoder->nextSourceCharacter0(policy);
         
-        //
-        // important to mask off 0xff here because CODEPOINT_CRLF is actually multi-byte,
-        // but we can test (CODEPOINT_CRLF & 0xff) which is the same as '\r'
-        //
-        switch (curSource.to_point() & 0xff) {
+        switch (curSource.to_point()) {
             case '[': {
                 
                 return handleLongName(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
             }
             case '\n':
-            case '\r': {
+            case '\r':
+            case CODEPOINT_CRLF: {
                 
-                //
-                // this also handles CODEPOINT_CRLF
-                //
                 
                 curSource = handleLineContinuation(tokenStartBuf, tokenStartLoc, curSource, policy);
                 

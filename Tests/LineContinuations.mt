@@ -209,7 +209,30 @@ Test[
 ]
 
 
+(*
+May believe it is ok to:
 
+Try to be clever
+
+reassign CODEPOINT_CRLF to -243
+
+test curSource.to_point() & 0xff against only '\r' because -243 == 13 (mod 2^8)
+
+But there are completely valid multi-byte characters that then get treated as '\r' also
+
+Such as \[CHacek]
+*)
+Test[
+	CodeConcreteParse["\\\[CHacek]"]
+	,
+	ContainerNode[String, {
+		ErrorNode[Token`Error`UnhandledCharacter, "\\\[CHacek]", <|Source -> {{1, 1}, {1, 3}}|>]},
+		
+		<|SyntaxIssues -> {
+			SyntaxIssue["UnhandledCharacter", "Unhandled character ``\\\\\\[CHacek]``.", "Fatal", <|Source -> {{1, 1}, {1, 3}}, ConfidenceLevel -> 1.|>]}, Source -> {{1, 1}, {1, 3}}|>]
+	,
+	TestID->"LineContinuations-20220618-N7N2P7"
+]
 
 
 
