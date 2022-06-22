@@ -100,17 +100,10 @@ bool TriviaSeq::empty() const {
 Node::~Node() {}
 
 
-OperatorNode::OperatorNode(Symbol Op, Symbol MakeSym, NodeSeq ChildrenIn) : Op(Op), MakeSym(MakeSym), Children(std::move(ChildrenIn)), Src() {
+OperatorNode::OperatorNode(Symbol Op, Symbol MakeSym, NodeSeq ChildrenIn) : Op(Op), MakeSym(MakeSym), Children(std::move(ChildrenIn)), Src(Children.first()->getSource(), Children.last()->getSource()) {
     
     assert(!Children.empty());
     
-    auto& First = Children.first();
-    auto& Last = Children.last();
-
-    auto FirstSrc = First->getSource();
-    auto LastSrc = Last->getSource();
-
-    Src = Source(FirstSrc, LastSrc);
 #if DIAGNOSTICS
     Node_OperatorNodeCount++;
 #endif // DIAGNOSTICS
@@ -361,16 +354,10 @@ UnterminatedGroupNeedsReparseNode::UnterminatedGroupNeedsReparseNode(Symbol Op, 
 }
 
 
-CallNode::CallNode(NodeSeq HeadIn, NodePtr BodyIn) : Head(std::move(HeadIn)), Body(std::move(BodyIn)), Src() {
+CallNode::CallNode(NodeSeq HeadIn, NodePtr BodyIn) : Head(std::move(HeadIn)), Body(std::move(BodyIn)), Src(Head.first()->getSource(), Body->getSource()) {
     
     assert(!Head.empty());
     
-    const auto& First = Head.first();
-    
-    auto FirstSrc = First->getSource();
-    auto LastSrc = Body->getSource();
-    
-    Src = Source(FirstSrc, LastSrc);
 #if DIAGNOSTICS
     Node_CallNodeCount++;
 #endif // DIAGNOSTICS
@@ -401,17 +388,10 @@ bool CallNode::check() const {
 }
 
 
-SyntaxErrorNode::SyntaxErrorNode(Symbol Err, NodeSeq ChildrenIn) : Err(Err), Children(std::move(ChildrenIn)), Src() {
+SyntaxErrorNode::SyntaxErrorNode(Symbol Err, NodeSeq ChildrenIn) : Err(Err), Children(std::move(ChildrenIn)), Src(Children.first()->getSource(), Children.last()->getSource()) {
     
     assert(!Children.empty());
 
-    auto& First = Children.first();
-    auto& Last = Children.last();
-
-    auto FirstSrc = First->getSource();
-    auto LastSrc = Last->getSource();
-
-    Src = Source(FirstSrc, LastSrc);
 #if DIAGNOSTICS
     Node_SyntaxErrorNodeCount++;
 #endif // DIAGNOSTICS
