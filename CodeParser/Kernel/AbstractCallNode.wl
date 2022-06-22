@@ -297,7 +297,7 @@ Module[{head, part, partData, issues, data},
   CallNode[head, part[[2]], data]
 ]
 
-abstractCallNode[CallNode[headIn:InfixNode[CompoundExpression, _, _], partIn:GroupNode[GroupSquare, _, _], dataIn_]] :=
+abstractCallNode[CallNode[headIn:InfixNode[CompoundExpression, _, _], partIn:GroupNode[GroupSquare, {first_, ___, last_}, _], dataIn_]] :=
 Module[{head, part, partData, issues, data},
   head = headIn;
   part = partIn;
@@ -312,7 +312,7 @@ Module[{head, part, partData, issues, data},
       "AdditionalSources" -> {last[[3, Key[Source]]]}
     |>]
   ];
-  
+
   head = abstract[head];
   part = abstractGroupNode[part];
   partData = part[[3]];
