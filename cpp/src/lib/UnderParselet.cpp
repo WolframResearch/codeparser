@@ -35,12 +35,12 @@ void UnderParselet_parsePrefix(ParseletPtr P, Token TokIn) {
     
     assert(P);
     
-#if !NABORT
+#if CHECK_ABORT
     if (TheParserSession->isAbort()) {
         TheParser->pushNode(new AbortNode());
         return Parser_tryContinue(P/*ignored*/, TokIn/*ignored*/);
     }
-#endif // !NABORT
+#endif // CHECK_ABORT
     
     TheParser->pushLeafNodeAndNext(TokIn);
     
@@ -100,12 +100,12 @@ void UnderParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
     
     assert(P);
     
-#if !NABORT
+#if CHECK_ABORT
     if (TheParserSession->isAbort()) {
         TheParser->pushNode(new AbortNode());
         return;
     }
-#endif // !NABORT
+#endif // CHECK_ABORT
     
     TheParser->pushLeafNodeAndNext(TokIn);
     
@@ -201,12 +201,12 @@ void UnderDotParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
     // Something like  _.
     //
     
-#if !NABORT
+#if CHECK_ABORT
     if (TheParserSession->isAbort()) {
         TheParser->pushNode(new AbortNode());
         return Parser_tryContinue(Ignored, TokIn/*ignored*/);
     }
-#endif // !NABORT
+#endif // CHECK_ABORT
     
     TheParser->pushLeafNodeAndNext(TokIn);
     
@@ -225,12 +225,12 @@ void UnderDotParselet_parseInfixContextSensitive(ParseletPtr Ignored, Token TokI
     //
     // Something like  a_.
     
-#if !NABORT
+#if CHECK_ABORT
     if (TheParserSession->isAbort()) {
         TheParser->pushNode(new AbortNode());
         return;
     }
-#endif // !NABORT
+#endif // CHECK_ABORT
     
     TheParser->pushLeafNodeAndNext(TokIn);
     

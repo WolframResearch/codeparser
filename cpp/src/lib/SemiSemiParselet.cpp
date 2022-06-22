@@ -83,12 +83,12 @@ ParseFunction SemiSemiParselet::parsePrefix() const {
 
 void SemiSemiParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
     
-#if !NABORT
+#if CHECK_ABORT
     if (TheParserSession->isAbort()) {
         TheParser->pushNode(new AbortNode());
         return Parser_tryContinue(Ignored, TokIn/*ignored*/);
     }
-#endif // !NABORT
+#endif // CHECK_ABORT
     
     TheParser->pushContextV(PRECEDENCE_SEMISEMI);
     
@@ -108,13 +108,13 @@ ParseFunction SemiSemiParselet::parseInfix() const {
 
 void SemiSemiParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
     
-#if !NABORT
+#if CHECK_ABORT
     if (TheParserSession->isAbort()) {
         TheParser->popContext();
         TheParser->pushNode(new AbortNode());
         return Parser_tryContinue(Ignored, TokIn/*ignored*/);
     }
-#endif // !NABORT
+#endif // CHECK_ABORT
     
     TheParser->appendLeafArgAndNext(TokIn);
     
@@ -124,7 +124,7 @@ void SemiSemiParselet_parseInfix(ParseletPtr Ignored, Token TokIn) {
 
 void SemiSemiParselet_parse1(ParseletPtr Ignored, Token Ignored2) {
     
-#if !NABORT
+#if CHECK_ABORT
     if (TheParserSession->isAbort()) {
         TheParser->popContext();
         TheParser->pushNode(new AbortNode());
@@ -248,14 +248,14 @@ void SemiSemiParselet_parse1(ParseletPtr Ignored, Token Ignored2) {
 
 void SemiSemiParselet_parse2(ParseletPtr Ignored, Token Ignored2) {
     
-#if !NABORT
+#if CHECK_ABORT
     if (TheParserSession->isAbort()) {
         TheParser->popNode();
         TheParser->popContext();
         TheParser->pushNode(new AbortNode());
         return Parser_tryContinue(Ignored, Ignored2);
     }
-#endif // !NABORT
+#endif // CHECK_ABORT
     
     auto& Trivia1 = TheParser->getTrivia1();
     

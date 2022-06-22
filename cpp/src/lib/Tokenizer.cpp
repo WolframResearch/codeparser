@@ -13,14 +13,18 @@ Tokenizer::Tokenizer() : EmbeddedNewlines(), EmbeddedTabs() {}
 
 void Tokenizer::init() {
     
+#if COMPUTE_OOB
     EmbeddedNewlines.clear();
     EmbeddedTabs.clear();
+#endif // COMPUTE_OOB
 }
 
 void Tokenizer::deinit() {
     
+#if COMPUTE_OOB
     EmbeddedNewlines.clear();
     EmbeddedTabs.clear();
+#endif // COMPUTE_OOB
 }
 
 // Precondition: buffer is pointing to current token
@@ -391,7 +395,7 @@ inline Token Tokenizer::handleStrangeWhitespace(Buffer tokenStartBuf, SourceLoca
     
     assert(c.isStrangeWhitespace());
     
-#if !NISSUES
+#if CHECK_ISSUES
     {
         auto Src = getTokenSource(tokenStartLoc);
         
@@ -405,7 +409,7 @@ inline Token Tokenizer::handleStrangeWhitespace(Buffer tokenStartBuf, SourceLoca
         
         TheParserSession->addIssue(std::move(I));
     }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
     
     return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
 }
@@ -488,7 +492,9 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation token
             }
             case '\n': case '\r': case CODEPOINT_CRLF: {
                 
+#if COMPUTE_OOB
                 EmbeddedNewlines.insert(tokenStartLoc);
+#endif // COMPUTE_OOB
                 
                 TheByteBuffer->buffer = TheByteDecoder->lastBuf;
                 TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
@@ -499,7 +505,9 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation token
             }
             case '\t': {
                 
+#if COMPUTE_OOB
                 EmbeddedTabs.insert(tokenStartLoc);
+#endif // COMPUTE_OOB
                 
                 TheByteBuffer->buffer = TheByteDecoder->lastBuf;
                 TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
@@ -604,7 +612,7 @@ inline Token Tokenizer::handleSymbol(Buffer tokenStartBuf, SourceLocation tokenS
             break;
         }
         
-#if !NISSUES
+#if CHECK_ISSUES
         if ((policy & SLOT_BEHAVIOR_FOR_STRINGS) == SLOT_BEHAVIOR_FOR_STRINGS) {
             
             //
@@ -617,7 +625,7 @@ inline Token Tokenizer::handleSymbol(Buffer tokenStartBuf, SourceLocation tokenS
             
             TheParserSession->addIssue(std::move(I));
         }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
         
         c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
         
@@ -654,7 +662,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer tokenStartBuf, SourceLo
     
     assert(c.isLetterlike() || c.isMBLetterlike());
     
-#if !NISSUES
+#if CHECK_ISSUES
     if (c.to_point() == '$') {
         
         if ((policy & SLOT_BEHAVIOR_FOR_STRINGS) == SLOT_BEHAVIOR_FOR_STRINGS) {
@@ -695,7 +703,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer tokenStartBuf, SourceLo
         
         TheParserSession->addIssue(std::move(I));
     }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
     
     charLoc = TheByteDecoder->SrcLoc;
     
@@ -717,7 +725,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer tokenStartBuf, SourceLo
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-#if !NISSUES
+#if CHECK_ISSUES
             if (c.to_point() == '$') {
                 
                 if ((policy & SLOT_BEHAVIOR_FOR_STRINGS) == SLOT_BEHAVIOR_FOR_STRINGS) {
@@ -759,7 +767,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer tokenStartBuf, SourceLo
                 
                 TheParserSession->addIssue(std::move(I));
             }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
             
             charLoc = TheByteDecoder->SrcLoc;
             
@@ -790,7 +798,7 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
     
     assert(c.to_point() == '"');
     
-#if !NISSUES
+#if CHECK_ISSUES
     if ((policy & SLOT_BEHAVIOR_FOR_STRINGS) == SLOT_BEHAVIOR_FOR_STRINGS) {
         
         //
@@ -801,7 +809,7 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
         
         TheParserSession->addIssue(std::move(I));
     }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
     
     policy |= STRING_OR_COMMENT;
     
@@ -816,6 +824,7 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
             case CODEPOINT_ENDOFFILE: {
                 return Token(TOKEN_ERROR_UNTERMINATEDSTRING, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
             }
+#if COMPUTE_OOB
             case '\n': case '\r': case CODEPOINT_CRLF: {
                 
                 EmbeddedNewlines.insert(tokenStartLoc);
@@ -828,6 +837,7 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
                 
                 break;
             }
+#endif // COMPUTE_OOB
         }
         
     } // while
@@ -1184,7 +1194,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
         
         if ((policy & INTEGER_SHORT_CIRCUIT) == INTEGER_SHORT_CIRCUIT) {
             
-#if !NISSUES
+#if CHECK_ISSUES
             if (c.to_point() == '.') {
                 
                 //
@@ -1200,7 +1210,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                 
                 TheParserSession->addIssue(std::move(I));
             }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
             
             //
             // Success!
@@ -1644,7 +1654,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                         
                         sign = true;
 
-#if !NISSUES
+#if CHECK_ISSUES
                         {
                             if (accuracy) {
 
@@ -1659,7 +1669,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                                 TheParserSession->addIssue(std::move(I));
                             }
                         }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
 
                         break;
                     }
@@ -1670,7 +1680,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                         //
                         
                         sign = true;
-#if !NISSUES
+#if CHECK_ISSUES
                         {
                             if (accuracy) {
 
@@ -1685,7 +1695,7 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
                                 TheParserSession->addIssue(std::move(I));
                             }
                         }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
                         break;
                     }
                     default: {
@@ -2220,7 +2230,7 @@ inline WLCharacter Tokenizer::handlePossibleFractionalPartPastDot(Buffer tokenSt
                 return c;
             }
             default: {
-#if !NISSUES
+#if CHECK_ISSUES
                 if (c.to_point() == '.') {
                     
                     //
@@ -2234,7 +2244,7 @@ inline WLCharacter Tokenizer::handlePossibleFractionalPartPastDot(Buffer tokenSt
                     
                     TheParserSession->addIssue(std::move(I));
                 }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
                 return c;
             }
         }
@@ -2247,7 +2257,7 @@ inline WLCharacter Tokenizer::handlePossibleFractionalPartPastDot(Buffer tokenSt
         
 void Tokenizer::backupAndWarn(Buffer resetBuf, SourceLocation resetLoc) {
     
-#if !NISSUES
+#if CHECK_ISSUES
     {
         CodeActionPtrVector Actions;
         Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(resetLoc), " ")));
@@ -2256,7 +2266,7 @@ void Tokenizer::backupAndWarn(Buffer resetBuf, SourceLocation resetLoc) {
         
         TheParserSession->addIssue(std::move(I));
     }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
     
     TheByteBuffer->buffer = resetBuf;
     TheByteDecoder->SrcLoc = resetLoc;
@@ -2578,7 +2588,7 @@ inline Token Tokenizer::handleUnder(Buffer tokenStartBuf, SourceLocation tokenSt
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-#if !NISSUES
+#if CHECK_ISSUES
             {
                 auto afterLoc = TheByteDecoder->SrcLoc;
                 
@@ -2606,7 +2616,7 @@ inline Token Tokenizer::handleUnder(Buffer tokenStartBuf, SourceLocation tokenSt
                     TheParserSession->addIssue(std::move(I));
                 }
             }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
             
             break;
         }
@@ -2771,7 +2781,7 @@ inline Token Tokenizer::handleMinus(Buffer tokenStartBuf, SourceLocation tokenSt
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-#if !NISSUES
+#if CHECK_ISSUES
             {
                 auto afterLoc = TheByteDecoder->SrcLoc;
                 
@@ -2822,7 +2832,7 @@ inline Token Tokenizer::handleMinus(Buffer tokenStartBuf, SourceLocation tokenSt
                     TheParserSession->addIssue(std::move(I));
                 }
             }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
             
             break;
         }
@@ -2856,7 +2866,7 @@ inline Token Tokenizer::handleBar(Buffer tokenStartBuf, SourceLocation tokenStar
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-#if !NISSUES
+#if CHECK_ISSUES
             {
                 auto afterLoc = TheByteDecoder->SrcLoc;
                 
@@ -2878,7 +2888,7 @@ inline Token Tokenizer::handleBar(Buffer tokenStartBuf, SourceLocation tokenStar
                     TheParserSession->addIssue(std::move(I));
                 }
             }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
             
             break;
         }
@@ -3231,7 +3241,7 @@ inline Token Tokenizer::handlePlus(Buffer tokenStartBuf, SourceLocation tokenSta
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-#if !NISSUES
+#if CHECK_ISSUES
             {
                 c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
                 
@@ -3251,7 +3261,7 @@ inline Token Tokenizer::handlePlus(Buffer tokenStartBuf, SourceLocation tokenSta
                     TheParserSession->addIssue(std::move(I));
                 }
             }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
             
             break;
         }
@@ -3602,7 +3612,7 @@ inline Token Tokenizer::handleMBStrangeNewline(Buffer tokenStartBuf, SourceLocat
     
     assert(c.isMBStrangeNewline());
     
-#if !NISSUES
+#if CHECK_ISSUES
     {
         auto Src = getTokenSource(tokenStartLoc);
         
@@ -3616,7 +3626,7 @@ inline Token Tokenizer::handleMBStrangeNewline(Buffer tokenStartBuf, SourceLocat
         
         TheParserSession->addIssue(std::move(I));
     }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
     
     //
     // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
@@ -3628,7 +3638,7 @@ inline Token Tokenizer::handleMBStrangeWhitespace(Buffer tokenStartBuf, SourceLo
     
     assert(c.isMBStrangeWhitespace());
     
-#if !NISSUES
+#if CHECK_ISSUES
     {
         auto Src = getTokenSource(tokenStartLoc);
         
@@ -3642,7 +3652,7 @@ inline Token Tokenizer::handleMBStrangeWhitespace(Buffer tokenStartBuf, SourceLo
         
         TheParserSession->addIssue(std::move(I));
     }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
     
     return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
 }

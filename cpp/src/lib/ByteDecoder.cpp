@@ -16,6 +16,7 @@ void ByteDecoder::init() {
     lastBuf = nullptr;
     lastLoc = SourceLocation();
     
+#if COMPUTE_SOURCE
     switch (TheParserSession->srcConvention) {
         case SOURCECONVENTION_LINECOLUMN: {
             srcConventionManager = SourceConventionManagerPtr(new LineColumnManager());
@@ -32,6 +33,7 @@ void ByteDecoder::init() {
     }
     
     SrcLoc = srcConventionManager->newSourceLocation();
+#endif // COMPUTE_SOURCE
 }
 
 void ByteDecoder::deinit() {
@@ -76,14 +78,18 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 
                 TheByteBuffer->nextByte();
                 
+#if COMPUTE_SOURCE
                 srcConventionManager->windowsNewline(SrcLoc);
+#endif // COMPUTE_SOURCE
                 
                 return SourceCharacter(CODEPOINT_CRLF);
             }
             
+#if COMPUTE_SOURCE
             srcConventionManager->newline(SrcLoc);
+#endif // COMPUTE_SOURCE
             
-#if !NISSUES
+#if CHECK_ISSUES
             if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
                 
                 //
@@ -94,7 +100,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 
                 TheParserSession->addIssue(std::move(I));
             }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
             
             return SourceCharacter('\r');
         }
@@ -811,7 +817,6 @@ SourceCharacter ByteDecoder::currentSourceCharacter(NextPolicy policy) {
     return c;
 }
 
-#if !NISSUES
 void ByteDecoder::strangeWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, NextPolicy policy) {
     
     auto currentSourceCharacterEndLoc = SrcLoc;
@@ -864,9 +869,7 @@ void ByteDecoder::strangeWarning(codepoint decoded, SourceLocation currentSource
         TheParserSession->addIssue(std::move(I));
     }
 }
-#endif // !NISSUES
 
-#if !NISSUES
 void ByteDecoder::nonASCIIWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc) {
     
     auto currentSourceCharacterEndLoc = SrcLoc;
@@ -887,17 +890,18 @@ void ByteDecoder::nonASCIIWarning(codepoint decoded, SourceLocation currentSourc
     
     TheParserSession->addIssue(std::move(I));
 }
-#endif // !NISSUES
 
 SourceCharacter ByteDecoder::valid(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, NextPolicy policy) {
     
+#if COMPUTE_SOURCE
     srcConventionManager->increment(SrcLoc);
+#endif // COMPUTE_SOURCE
     
-#if !NISSUES
+#if CHECK_ISSUES
     {
         strangeWarning(decoded, currentSourceCharacterStartLoc, policy);
     }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
     
     return SourceCharacter(decoded);
 }
@@ -911,9 +915,11 @@ SourceCharacter ByteDecoder::validNotStrange(codepoint decoded) {
 
 SourceCharacter ByteDecoder::validMB(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, NextPolicy policy) {
     
+#if COMPUTE_SOURCE
     srcConventionManager->increment(SrcLoc);
+#endif // COMPUTE_SOURCE
     
-#if !NISSUES
+#if CHECK_ISSUES
     {
         if (Utils::isMBStrange(decoded)) {
             strangeWarning(decoded, currentSourceCharacterStartLoc, policy);
@@ -921,16 +927,18 @@ SourceCharacter ByteDecoder::validMB(codepoint decoded, SourceLocation currentSo
             nonASCIIWarning(decoded, currentSourceCharacterStartLoc);
         }
     }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
     
     return SourceCharacter(decoded);
 }
 
 SourceCharacter ByteDecoder::incomplete1ByteSequence(SourceLocation errSrcLoc, NextPolicy policy) {
     
+#if COMPUTE_SOURCE
     srcConventionManager->increment(SrcLoc);
+#endif // COMPUTE_SOURCE
     
-#if !NISSUES
+#if CHECK_ISSUES
     {
         //
         // No CodeAction here
@@ -940,7 +948,7 @@ SourceCharacter ByteDecoder::incomplete1ByteSequence(SourceLocation errSrcLoc, N
         
         TheParserSession->addIssue(std::move(I));
     }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
     
     //
     // http://www.unicode.org/faq/utf_bom.html
@@ -956,9 +964,11 @@ SourceCharacter ByteDecoder::incomplete1ByteSequence(SourceLocation errSrcLoc, N
 
 SourceCharacter ByteDecoder::incomplete2ByteSequence(SourceLocation errSrcLoc, NextPolicy policy) {
     
+#if COMPUTE_SOURCE
     srcConventionManager->increment(SrcLoc);
+#endif // COMPUTE_SOURCE
     
-#if !NISSUES
+#if CHECK_ISSUES
     {
         //
         // No CodeAction here
@@ -968,7 +978,7 @@ SourceCharacter ByteDecoder::incomplete2ByteSequence(SourceLocation errSrcLoc, N
         
         TheParserSession->addIssue(std::move(I));
     }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
     
     //
     // http://www.unicode.org/faq/utf_bom.html
@@ -984,9 +994,11 @@ SourceCharacter ByteDecoder::incomplete2ByteSequence(SourceLocation errSrcLoc, N
 
 SourceCharacter ByteDecoder::incomplete3ByteSequence(SourceLocation errSrcLoc, NextPolicy policy) {
     
+#if COMPUTE_SOURCE
     srcConventionManager->increment(SrcLoc);
+#endif // COMPUTE_SOURCE
     
-#if !NISSUES
+#if CHECK_ISSUES
     {
         //
         // No CodeAction here
@@ -996,7 +1008,7 @@ SourceCharacter ByteDecoder::incomplete3ByteSequence(SourceLocation errSrcLoc, N
         
         TheParserSession->addIssue(std::move(I));
     }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
     
     //
     // http://www.unicode.org/faq/utf_bom.html
@@ -1015,9 +1027,11 @@ SourceCharacter ByteDecoder::incomplete3ByteSequence(SourceLocation errSrcLoc, N
 //
 SourceCharacter ByteDecoder::straySurrogate(SourceLocation errSrcLoc, NextPolicy policy) {
     
+#if COMPUTE_SOURCE
     srcConventionManager->increment(SrcLoc);
+#endif // COMPUTE_SOURCE
     
-#if !NISSUES
+#if CHECK_ISSUES
     {
         //
         // No CodeAction here
@@ -1027,7 +1041,7 @@ SourceCharacter ByteDecoder::straySurrogate(SourceLocation errSrcLoc, NextPolicy
         
         TheParserSession->addIssue(std::move(I));
     }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
     
     //
     // http://www.unicode.org/faq/utf_bom.html
@@ -1043,9 +1057,11 @@ SourceCharacter ByteDecoder::straySurrogate(SourceLocation errSrcLoc, NextPolicy
 
 SourceCharacter ByteDecoder::bom(SourceLocation errSrcLoc, NextPolicy policy) {
 
+#if COMPUTE_SOURCE
     srcConventionManager->increment(SrcLoc);
-
-#if !NISSUES
+#endif // COMPUTE_SOURCE
+    
+#if CHECK_ISSUES
     {
         //
         // No CodeAction here
@@ -1055,7 +1071,7 @@ SourceCharacter ByteDecoder::bom(SourceLocation errSrcLoc, NextPolicy policy) {
         
         TheParserSession->addIssue(std::move(I));
     }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
     
     TheParserSession->setUnsafeCharacterEncodingFlag(UNSAFECHARACTERENCODING_BOM);
     

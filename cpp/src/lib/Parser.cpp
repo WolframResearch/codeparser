@@ -80,12 +80,12 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
             
             while (true) {
                 
-#if !NABORT
+#if CHECK_ABORT
                 if (TheParserSession->isAbort()) {
                     
                     break;
                 }
-#endif // !NABORT
+#endif // CHECK_ABORT
                 
                 auto peek = currentToken(TOPLEVEL);
                 
@@ -146,12 +146,12 @@ void Parser::handleFirstLine(FirstLineBehavior firstLineBehavior) {
             
             while (true) {
                 
-#if !NABORT
+#if CHECK_ABORT
                 if (TheParserSession->isAbort()) {
                     
                     break;
                 }
-#endif // !NABORT
+#endif // CHECK_ABORT
                 
                 auto peek = currentToken(TOPLEVEL);
                 
@@ -232,11 +232,11 @@ void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2) {
     //
     // Check isAbort() inside loops
     //
-#if !NABORT
+#if CHECK_ABORT
     if (TheParserSession->isAbort()) {
         return Parser_tryContinue(Ignored, Ignored2);
     }
-#endif // !NABORT
+#endif // CHECK_ABORT
     
     auto& Trivia1 = TheParser->getTrivia1();
     

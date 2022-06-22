@@ -27,9 +27,7 @@ private:
     
 public:
     
-#if !NABORT
     std::function<bool ()> currentAbortQ;
-#endif // !NABORT
     
     UnsafeCharacterEncodingFlag unsafeCharacterEncodingFlag;
     
@@ -63,15 +61,11 @@ public:
     
     void releaseContainer(NodeContainerPtr C);
     
-#if !NABORT
     bool isAbort() const;
-#endif // !NABORT
     
     void setUnsafeCharacterEncodingFlag(UnsafeCharacterEncodingFlag flag);
     
-#if !NISSUES
     void addIssue(IssuePtr);
-#endif // !NISSUES
 };
 
 extern ParserSessionPtr TheParserSession;

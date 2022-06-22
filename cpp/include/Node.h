@@ -234,7 +234,6 @@ public:
 #endif // USE_EXPR_LIB
 };
 
-#if !NABORT
 class AbortNode : public Node {
 public:
     
@@ -252,7 +251,6 @@ public:
     expr toExpr() const override;
 #endif // USE_EXPR_LIB
 };
-#endif // !NABORT
 
 //
 // PrefixNode

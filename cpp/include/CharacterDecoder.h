@@ -51,7 +51,6 @@ private:
     
     WLCharacter handleUnhandledEscape(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer unhandledBuf, SourceLocation unhandledLoc, SourceCharacter escapedChar, NextPolicy policy);
     
-#if !NISSUES
     //
     // example:
     // input: Alpa
@@ -60,7 +59,6 @@ private:
     // Return empty string if no suggestion.
     //
     std::string longNameSuggestion(std::string input);
-#endif // !NISSUES
     
 public:
     

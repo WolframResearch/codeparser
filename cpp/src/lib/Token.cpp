@@ -7,10 +7,8 @@
 
 #include <cassert>
 
-#ifndef NDEBUG
 bool containsOnlyASCII(BufferAndLength BufLen);
 bool containsTab(BufferAndLength BufLen);
-#endif // NDEBUG
 
 Token::Token() : BufLen(), Src(), Tok() {}
 
@@ -83,7 +81,6 @@ Token::Token(TokenEnum Tok, BufferAndLength BufLen, Source Src) : BufLen(BufLen)
     
 }
 
-#ifndef NDEBUG
 bool containsOnlyASCII(BufferAndLength BufLen) {
     
     for (auto p = BufLen.buffer; p < BufLen.end; p++) {
@@ -113,7 +110,6 @@ bool containsTab(BufferAndLength BufLen) {
     
     return false;
 }
-#endif // NDEBUG
 
 bool operator==(Token a, Token b) {
     return a.Tok == b.Tok && a.BufLen == b.BufLen && a.Src == b.Src;

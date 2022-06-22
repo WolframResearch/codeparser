@@ -24,11 +24,9 @@ public:
     
     static bool isStraySurrogate(codepoint point);
     
-#if !NISSUES
     static bool isStrange(codepoint point);
     
     static bool isMBStrange(codepoint point);
-#endif // !NISSUES
     
     //
     // Convert val to the digit that it represents

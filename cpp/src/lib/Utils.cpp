@@ -8,7 +8,6 @@
 #include <cctype> // for isalnum, isxdigit, isupper, isdigit, isalpha, ispunct, iscntrl with GCC and MSVC
 
 
-#if !NISSUES
 bool Utils::isStrange(codepoint point) {
 
     switch (point) {
@@ -182,7 +181,6 @@ bool Utils::isMBStrange(codepoint point) {
     
     return false;
 }
-#endif // !NISSUES
 
 bool Utils::isStraySurrogate(codepoint point) {
     

@@ -75,11 +75,9 @@ private:
     
     SourceConventionManagerPtr srcConventionManager;
     
-#if !NISSUES
     void strangeWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, NextPolicy policy);
     
     void nonASCIIWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc);
-#endif // !NISSUES
     
     SourceCharacter valid(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, NextPolicy policy);
     

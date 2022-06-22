@@ -238,7 +238,6 @@ void UnterminatedTokenErrorNeedsReparseNode::print(std::ostream& s) const {
 }
 
 
-#if !NABORT
 void AbortNode::print(std::ostream& s) const {
     SYMBOL__ABORTED.print(s);
 }
@@ -250,7 +249,6 @@ Source AbortNode::getSource() const {
 bool AbortNode::check() const {
     return false;
 }
-#endif // !NABORT
 
 
 bool GroupMissingCloserNode::check() const {
@@ -549,12 +547,12 @@ void NodeSeq::put(MLINK mlp) const {
     
     for (auto& C : vec) {
         
-#if !NABORT
+#if CHECK_ABORT
         if (TheParserSession->isAbort()) {
             SYMBOL__ABORTED.put(mlp);
             continue;
         }
-#endif // !NABORT
+#endif // CHECK_ABORT
         
         C->put(mlp);
     }
@@ -648,14 +646,12 @@ void UnterminatedTokenErrorNeedsReparseNode::put(MLINK mlp) const {
 #endif // USE_MATHLINK
 
 
-#if !NABORT
 #if USE_MATHLINK
 void AbortNode::put(MLINK mlp) const {
     
     SYMBOL__ABORTED.put(mlp);
 }
 #endif // USE_MATHLINK
-#endif // !NABORT
 
 
 #if USE_MATHLINK
@@ -773,12 +769,12 @@ void NodeContainer::put(MLINK mlp) const {
     
     for (auto& NN : N) {
         
-#if !NABORT
+#if CHECK_ABORT
         if (TheParserSession->isAbort()) {
             SYMBOL__ABORTED.put(mlp);
             continue;
         }
-#endif // !NABORT
+#endif // CHECK_ABORT
         
         NN->put(mlp);
     }
@@ -795,12 +791,12 @@ expr NodeSeq::toExpr() const {
     
     for (size_t i = 0; i < vec.size(); i++) {
         
-#if !NABORT
+#if CHECK_ABORT
         if (TheParserSession->isAbort()) {
             Expr_InsertA(e, i + 1, SYMBOL__ABORTED.toExpr());
             continue;
         }
-#endif // !NABORT
+#endif // CHECK_ABORT
         
         auto& C = vec[i];
         auto CExpr = C->toExpr();
@@ -933,7 +929,6 @@ expr UnterminatedTokenErrorNeedsReparseNode::toExpr() const {
 #endif // USE_EXPR_LIB
 
 
-#if !NABORT
 #if USE_EXPR_LIB
 expr AbortNode::toExpr() const {
     
@@ -942,7 +937,6 @@ expr AbortNode::toExpr() const {
     return e;
 }
 #endif // USE_EXPR_LIB
-#endif // !NABORT
 
 
 #if USE_EXPR_LIB
@@ -1101,12 +1095,12 @@ expr NodeContainer::toExpr() const {
         //
         // Check isAbort() inside loops
         //
-#if !NABORT
+#if CHECK_ABORT
         if (TheParserSession->isAbort()) {
             Expr_InsertA(e, i + 1, SYMBOL__ABORTED.toExpr());
             continue;
         }
-#endif // !NABORT
+#endif // CHECK_ABORT
         
         auto& NN = N[i];
         auto NExpr = NN->toExpr();

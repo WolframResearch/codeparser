@@ -13,17 +13,7 @@
 bool validatePath(WolframLibraryData libData, const unsigned char *inStr, size_t len);
 
 
-ParserSession::ParserSession() : fatalIssues(), nonFatalIssues(),
-#if !NABORT
-currentAbortQ(),
-#endif // !NABORT
-unsafeCharacterEncodingFlag(),
-bufAndLen(),
-libData(),
-srcConvention(),
-tabWidth(),
-firstLineBehavior(),
-encodingMode() {
+ParserSession::ParserSession() : fatalIssues(), nonFatalIssues(), currentAbortQ(), unsafeCharacterEncodingFlag(), bufAndLen(), libData(), srcConvention(), tabWidth(), firstLineBehavior(), encodingMode() {
     
     TheByteBuffer = ByteBufferPtr(new ByteBuffer());
     TheByteDecoder = ByteDecoderPtr(new ByteDecoder());
@@ -66,24 +56,25 @@ void ParserSession::init(
     TheCharacterDecoder->init();
     TheTokenizer->init();
     TheParser->init();
-    
+        
+#if CHECK_ABORT
     if (libDataIn) {
         
-#if !NABORT
         currentAbortQ = [libDataIn]() {
+            
             //
             // AbortQ() returns a mint
             //
             bool res = libDataIn->AbortQ();
+            
             return res;
         };
-#endif // !NABORT
-    
+        
     } else {
-#if !NABORT
+        
         currentAbortQ = nullptr;
-#endif // !NABORT
     }
+#endif // CHECK_ABORT
 }
 
 void ParserSession::deinit() {
@@ -110,12 +101,12 @@ NodeContainerPtr ParserSession::parseExpressions() {
         
         while (true) {
             
-#if !NABORT
+#if CHECK_ABORT
             if (TheParserSession->isAbort()) {
                 
                 break;
             }
-#endif // !NABORT
+#endif // CHECK_ABORT
             
             auto peek = TheParser->currentToken(TOPLEVEL);
             
@@ -174,7 +165,7 @@ NodeContainerPtr ParserSession::parseExpressions() {
     // Now handle the out-of-band expressions, i.e., issues and metadata
     //
     {
-#if !NISSUES
+#if CHECK_ISSUES
         //
         // if there are fatal issues, then only send fatal issues
         //
@@ -190,9 +181,10 @@ NodeContainerPtr ParserSession::parseExpressions() {
         
         nodes.push_back(NodePtr(new CollectedIssuesNode({})));
         
-#endif // !NISSUES
+#endif // CHECK_ISSUES
     }
     
+#if COMPUTE_OOB
     {
         auto& SimpleLineContinuations = TheCharacterDecoder->getSimpleLineContinuations();
 
@@ -226,6 +218,15 @@ NodeContainerPtr ParserSession::parseExpressions() {
         
         nodes.push_back(NodePtr(new CollectedSourceLocationsNode(std::move(tabs))));
     }
+#else
+    nodes.push_back(NodePtr(new CollectedSourceLocationsNode({})));
+    
+    nodes.push_back(NodePtr(new CollectedSourceLocationsNode({})));
+    
+    nodes.push_back(NodePtr(new CollectedSourceLocationsNode({})));
+    
+    nodes.push_back(NodePtr(new CollectedSourceLocationsNode({})));
+#endif // COMPUTE_OOB
     
     auto C = new NodeContainer(std::move(nodes));
     
@@ -238,11 +239,11 @@ NodeContainerPtr ParserSession::tokenize() {
     
     while (true) {
         
-#if !NABORT
+#if CHECK_ABORT
         if (TheParserSession->isAbort()) {
             break;
         }
-#endif // !NABORT
+#endif // CHECK_ABORT
         
         auto Tok = TheTokenizer->currentToken(TOPLEVEL);
         
@@ -393,7 +394,7 @@ NodeContainerPtr ParserSession::concreteParseLeaf(StringifyMode mode) {
         nodes.push_back(std::move(Collected));
     }
     
-#if !NISSUES
+#if CHECK_ISSUES
     //
     // Collect all issues from the various components
     //
@@ -415,8 +416,9 @@ NodeContainerPtr ParserSession::concreteParseLeaf(StringifyMode mode) {
         
         nodes.push_back(NodePtr(new CollectedIssuesNode({})));
     }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
     
+#if COMPUTE_OOB
     {
         auto& SimpleLineContinuations = TheCharacterDecoder->getSimpleLineContinuations();
         
@@ -450,6 +452,15 @@ NodeContainerPtr ParserSession::concreteParseLeaf(StringifyMode mode) {
         
         nodes.push_back(NodePtr(new CollectedSourceLocationsNode(std::move(tabs))));
     }
+#else
+    nodes.push_back(NodePtr(new CollectedSourceLocationsNode({})));
+    
+    nodes.push_back(NodePtr(new CollectedSourceLocationsNode({})));
+    
+    nodes.push_back(NodePtr(new CollectedSourceLocationsNode({})));
+    
+    nodes.push_back(NodePtr(new CollectedSourceLocationsNode({})));
+#endif // COMPUTE_OOB
     
     auto C = new NodeContainer(std::move(nodes));
     
@@ -495,7 +506,6 @@ void ParserSession::releaseContainer(NodeContainerPtr C) {
     delete C;
 }
 
-#if !NABORT
 bool ParserSession::isAbort() const {
     
     if (!currentAbortQ) {
@@ -504,13 +514,11 @@ bool ParserSession::isAbort() const {
 
     return currentAbortQ();
 }
-#endif // !NABORT
 
 void ParserSession::setUnsafeCharacterEncodingFlag(UnsafeCharacterEncodingFlag flag) {
     unsafeCharacterEncodingFlag = flag;
 }
 
-#if !NISSUES
 void ParserSession::addIssue(IssuePtr I) {
 
     if (I->Sev == STRING_FATAL) {
@@ -533,7 +541,6 @@ void ParserSession::addIssue(IssuePtr I) {
         nonFatalIssues.insert(std::move(I));
     }
 }
-#endif // !NISSUES
 
 
 ParserSessionPtr TheParserSession = nullptr;

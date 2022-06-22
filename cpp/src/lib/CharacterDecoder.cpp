@@ -22,9 +22,11 @@ CharacterDecoder::CharacterDecoder() : SimpleLineContinuations(), ComplexLineCon
 
 void CharacterDecoder::init() {
     
+#if COMPUTE_OOB
     SimpleLineContinuations.clear();
     ComplexLineContinuations.clear();
     EmbeddedTabs.clear();
+#endif // COMPUTE_OOB
     
     lastBuf = nullptr;
     lastLoc = SourceLocation();
@@ -33,9 +35,11 @@ void CharacterDecoder::init() {
 
 void CharacterDecoder::deinit() {
     
+#if COMPUTE_OOB
     SimpleLineContinuations.clear();
     ComplexLineContinuations.clear();
     EmbeddedTabs.clear();
+#endif // COMPUTE_OOB
 }
 
 
@@ -142,9 +146,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
     
     auto wellFormed = false;
     
-#if !NISSUES
     auto atleast1DigitOrAlpha = false;
-#endif // !NISSUES
     
     //
     // Read at least 1 alnum before entering loop
@@ -153,9 +155,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
     //
     if (curSource.isUpper()) {
         
-#if !NISSUES
         atleast1DigitOrAlpha = true;
-#endif // !NISSUES
         
         TheByteBuffer->buffer = TheByteDecoder->lastBuf;
         TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
@@ -207,7 +207,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
         // Not well-formed
         //
         
-#if !NISSUES
+#if CHECK_ISSUES
         if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
             
             auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
@@ -270,7 +270,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
             Issues.push_back(std::move(I));
         }
 #endif // 0
-#endif // !NISSUES
+#endif // CHECK_ISSUES
         
         TheByteBuffer->buffer = openSquareBuf;
         TheByteDecoder->SrcLoc = openSquareLoc;
@@ -299,7 +299,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
         // Unrecognized name
         //
         
-#if !NISSUES
+#if CHECK_ISSUES
         if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
             
             auto longNameEndLoc = TheByteDecoder->SrcLoc;
@@ -347,7 +347,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
             
             TheParserSession->addIssue(std::move(I));
         }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
         
         TheByteBuffer->buffer = openSquareBuf;
         TheByteDecoder->SrcLoc = openSquareLoc;
@@ -359,7 +359,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
     // Success!
     //
     
-#if !NISSUES
+#if CHECK_ISSUES
     if ((policy & ENABLE_UNLIKELY_ESCAPE_CHECKING) == ENABLE_UNLIKELY_ESCAPE_CHECKING) {
         
         //
@@ -389,7 +389,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
         
         TheParserSession->addIssue(std::move(I));
     }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
     
     TheByteBuffer->buffer = TheByteDecoder->lastBuf;
     TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
@@ -397,7 +397,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
     auto idx = it - LongNameToCodePointMap_names.begin();
     auto point = LongNameToCodePointMap_points[idx];
     
-#if !NISSUES
+#if CHECK_ISSUES
     if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
         
         auto longNameBufAndLen = BufferAndLength(longNameStartBuf, longNameEndBuf - longNameStartBuf);
@@ -506,7 +506,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
             }
         }
     }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
     
     if (LongNames::isRaw(longNameStr)) {
         return WLCharacter(point, ESCAPE_RAW);
@@ -543,7 +543,7 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
             // Something like \:z
             //
             
-#if !NISSUES
+#if CHECK_ISSUES
             if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
                 
                 auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
@@ -562,7 +562,7 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
                 
                 TheParserSession->addIssue(std::move(I));
             }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
             
             TheByteBuffer->buffer = colonBuf;
             TheByteDecoder->SrcLoc = colonLoc;
@@ -592,7 +592,7 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
         }
     }
     
-#if !NISSUES
+#if CHECK_ISSUES
     if (Utils::isStrange(point)) {
         //
         // Just generally strange character is in the code
@@ -697,7 +697,7 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
             TheParserSession->addIssue(std::move(I));
         }
     }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
     
     return WLCharacter(point, ESCAPE_4HEX);
 }
@@ -730,7 +730,7 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
             // Something like \.z
             //
             
-#if !NISSUES
+#if CHECK_ISSUES
             if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
                 
                 auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
@@ -749,7 +749,7 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
                 
                 TheParserSession->addIssue(std::move(I));
             }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
             
             TheByteBuffer->buffer = dotBuf;
             TheByteDecoder->SrcLoc = dotLoc;
@@ -777,7 +777,7 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
         }
     }
     
-#if !NISSUES
+#if CHECK_ISSUES
     if (Utils::isStrange(point)) {
         //
         // Just generally strange character is in the code
@@ -880,7 +880,7 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
             TheParserSession->addIssue(std::move(I));
         }
     };
-#endif // !NISSUES
+#endif // CHECK_ISSUES
     
     return WLCharacter(point, ESCAPE_2HEX);
 }
@@ -913,7 +913,7 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
             // Something like \1z
             //
             
-#if !NISSUES
+#if CHECK_ISSUES
             if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
                 
                 auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
@@ -932,7 +932,7 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
                 
                 TheParserSession->addIssue(std::move(I));
             }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
 
             TheByteBuffer->buffer = firstOctalBuf;
             TheByteDecoder->SrcLoc = firstOctalLoc;
@@ -961,7 +961,7 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
         }
     }
     
-#if !NISSUES
+#if CHECK_ISSUES
     if (Utils::isStrange(point)) {
         //
         // Just generally strange character is in the code
@@ -1064,7 +1064,7 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
             TheParserSession->addIssue(std::move(I));
         }
     };
-#endif // !NISSUES
+#endif // CHECK_ISSUES
     
     return WLCharacter(point, ESCAPE_OCTAL);
 }
@@ -1097,7 +1097,7 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
             // Something like \|z
             //
             
-#if !NISSUES
+#if CHECK_ISSUES
             if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
                 
                 auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
@@ -1116,7 +1116,7 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
                 
                 TheParserSession->addIssue(std::move(I));
             }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
 
             TheByteBuffer->buffer = barBuf;
             TheByteDecoder->SrcLoc = barLoc;
@@ -1160,7 +1160,7 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
         }
     }
     
-#if !NISSUES
+#if CHECK_ISSUES
     if (Utils::isStrange(point)) {
         //
         // Just generally strange character is in the code
@@ -1263,7 +1263,7 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
             TheParserSession->addIssue(std::move(I));
         }
     };
-#endif // !NISSUES
+#endif // CHECK_ISSUES
     
     return WLCharacter(point, ESCAPE_6HEX);
 }
@@ -1289,6 +1289,7 @@ SourceCharacter CharacterDecoder::handleLineContinuation(Buffer tokenStartBuf, S
     //
     while (c.isWhitespace()) {
         
+#if COMPUTE_OOB
         if (c.to_point() == '\t') {
             if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
                 
@@ -1305,6 +1306,7 @@ SourceCharacter CharacterDecoder::handleLineContinuation(Buffer tokenStartBuf, S
                 EmbeddedTabs.insert(tokenStartLoc);
             }
         }
+#endif // COMPUTE_OOB
         
         TheByteBuffer->buffer = TheByteDecoder->lastBuf;
         TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
@@ -1312,11 +1314,13 @@ SourceCharacter CharacterDecoder::handleLineContinuation(Buffer tokenStartBuf, S
         c = TheByteDecoder->currentSourceCharacter(policy);
     }
     
+#if COMPUTE_OOB
     if ((policy & STRING_OR_COMMENT) == STRING_OR_COMMENT) {
         ComplexLineContinuations.insert(tokenStartLoc);
     } else {
         SimpleLineContinuations.insert(tokenStartLoc);
     }
+#endif // COMPUTE_OOB
     
     TheByteBuffer->buffer = TheByteDecoder->lastBuf;
     TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
@@ -1327,7 +1331,7 @@ SourceCharacter CharacterDecoder::handleLineContinuation(Buffer tokenStartBuf, S
 
 WLCharacter CharacterDecoder::handleBackslash(Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy) {
     
-#if !NISSUES
+#if CHECK_ISSUES
     //
     // if inside a string, then test whether this \ is the result of the "feature" of
     // converting "\[Alpa]" into "\\[Alpa]", copying that, and then never giving any further warnings
@@ -1352,7 +1356,7 @@ WLCharacter CharacterDecoder::handleBackslash(Buffer escapedBuf, SourceLocation 
         TheByteBuffer->buffer = resetBuf;
         TheByteDecoder->SrcLoc = resetLoc;
     }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
     
     return WLCharacter(CODEPOINT_STRINGMETA_BACKSLASH, ESCAPE_SINGLE);
 }
@@ -1535,7 +1539,7 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterSta
             }
         }
     }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
     
     //
     // Keep these treated as 2 characters. This is how bad escapes are handled in WL strings.
@@ -1583,7 +1587,7 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
             
             auto c = WLCharacter(CODEPOINT_STRINGMETA_BACKSPACE, ESCAPE_SINGLE);
                         
-#if !NISSUES
+#if CHECK_ISSUES
             {
                 auto graphicalStr = c.graphicalString();
                 
@@ -1599,7 +1603,7 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
                 
                 TheParserSession->addIssue(std::move(I));
             }
-        #endif // !NISSUES
+#endif // CHECK_ISSUES
                         
             return c;
         }
@@ -1616,7 +1620,7 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
             
             auto c = WLCharacter(CODEPOINT_STRINGMETA_FORMFEED, ESCAPE_SINGLE);
             
-#if !NISSUES
+#if CHECK_ISSUES
             {
                 auto graphicalStr = c.graphicalString();
                 
@@ -1632,7 +1636,7 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
                 
                 TheParserSession->addIssue(std::move(I));
             }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
             
             return c;
         }
@@ -1708,7 +1712,7 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
             
             auto c = WLCharacter(CODEPOINT_STRINGMETA_OPEN, ESCAPE_SINGLE);
             
-#if !NISSUES
+#if CHECK_ISSUES
             {
                 auto graphicalStr = c.graphicalString();
                 
@@ -1724,7 +1728,7 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
                 
                 TheParserSession->addIssue(std::move(I));
             }
-        #endif // !NISSUES
+#endif // CHECK_ISSUES
             
             return c;
         }
@@ -1737,7 +1741,7 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
             
             auto c = WLCharacter(CODEPOINT_STRINGMETA_CLOSE, ESCAPE_SINGLE);
             
-#if !NISSUES
+#if CHECK_ISSUES
             {
                 auto graphicalStr = c.graphicalString();
                 
@@ -1753,7 +1757,7 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
                 
                 TheParserSession->addIssue(std::move(I));
             }
-#endif // !NISSUES
+#endif // CHECK_ISSUES
             
             return c;
         }
@@ -1894,7 +1898,6 @@ std::set<SourceLocation>& CharacterDecoder::getEmbeddedTabs() {
 }
 
 
-#if !NISSUES
 #if USE_EXPR_LIB
 std::string CharacterDecoder::longNameSuggestion(std::string input) {
     
@@ -1956,6 +1959,5 @@ std::string CharacterDecoder::longNameSuggestion(std::string input) {
     return "";
 }
 #endif // USE_EXPR_LIB
-#endif // !NISSUES
 
 CharacterDecoderPtr TheCharacterDecoder = nullptr;
