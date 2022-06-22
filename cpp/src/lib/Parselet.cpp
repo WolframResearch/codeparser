@@ -760,9 +760,7 @@ void InfixOperatorParselet_parseLoop(ParseletPtr P, Token Ignored) {
 
     auto Tok2 = TheParser->currentToken(TOPLEVEL);
     
-    TheParser->eatTrivia(Tok2, TOPLEVEL, Trivia1);
-    
-    TheParser->appendArgs(Trivia1);
+    TheParser->eatTrivia(Tok2, TOPLEVEL);
     
 #if !USE_MUSTTAIL
     auto& Ctxt = TheParser->topContext();
@@ -1221,9 +1219,7 @@ void TildeParselet_parse1(ParseletPtr Ignored, Token Ignored2) {
 
     auto Tok2 = TheParser->currentToken(TOPLEVEL);
     
-    TheParser->eatTrivia(Tok2, TOPLEVEL, Trivia1);
-    
-    TheParser->appendArgs(Trivia1);
+    TheParser->eatTrivia(Tok2, TOPLEVEL);
     
     //
     // Reset back to "outside" precedence
@@ -1941,9 +1937,7 @@ void CommaParselet_parseLoop(ParseletPtr Ignored, Token Ignored2) {
 
     auto Tok2 = TheParser->currentToken(TOPLEVEL);
     
-    TheParser->eatTrivia(Tok2, TOPLEVEL, Trivia1);
-    
-    TheParser->appendArgs(Trivia1);
+    TheParser->eatTrivia(Tok2, TOPLEVEL);
     
     if (Tok2.Tok == TOKEN_COMMA || Tok2.Tok == TOKEN_LONGNAME_INVISIBLECOMMA) {
 
@@ -2147,9 +2141,7 @@ void SemiParselet_parseLoop(ParseletPtr Ignored, Token Ignored2) {
     //
     // CompoundExpression should not cross toplevel newlines
     //
-    TheParser->eatTriviaButNotToplevelNewlines(Tok2, TOPLEVEL, Trivia1);
-    
-    TheParser->appendArgs(Trivia1);
+    TheParser->eatTriviaButNotToplevelNewlines(Tok2, TOPLEVEL);
     
     if (Tok2.Tok == TOKEN_SEMI) {
 

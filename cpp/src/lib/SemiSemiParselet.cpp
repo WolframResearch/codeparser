@@ -134,18 +134,14 @@ void SemiSemiParselet_parse1(ParseletPtr Ignored, Token Ignored2) {
         TheParser->pushNode(new AbortNode());
         return Parser_tryContinue(Ignored, Ignored2);
     }
-#endif // !NABORT
-    
-    auto& Trivia1 = TheParser->getTrivia1();
+#endif // CHECK_ABORT
     
     auto SecondTok = TheParser->currentToken(TOPLEVEL);
     
     //
     // Span should not cross toplevel newlines
     //
-    TheParser->eatTriviaButNotToplevelNewlines(SecondTok, TOPLEVEL, Trivia1);
-    
-    TheParser->appendArgs(Trivia1);
+    TheParser->eatTriviaButNotToplevelNewlines(SecondTok, TOPLEVEL);
     
     //
     // a;;
@@ -200,6 +196,8 @@ void SemiSemiParselet_parse1(ParseletPtr Ignored, Token Ignored2) {
     TheParser->nextToken(SecondTok);
     
     auto ThirdTok = TheParser->currentToken(TOPLEVEL);
+    
+    auto& Trivia1 = TheParser->getTrivia1();
     
     //
     // Span should not cross toplevel newlines
