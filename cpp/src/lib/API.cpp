@@ -64,6 +64,15 @@ void ParserSessionReleaseContainer(NodeContainerPtr C) {
 }
 
 
+void NodeContainerPrint(NodeContainerPtr C, std::ostream& s) {
+    C->print(s);
+}
+
+int NodeContainerCheck(NodeContainerPtr C) {
+    return C->check();
+}
+
+
 mint WolframLibrary_getVersion() {
     return WolframLibraryVersion;
 }

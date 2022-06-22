@@ -614,14 +614,6 @@ bool NodeContainer::check() const {
     return accum;
 }
 
-void NodeContainerPrint(NodeContainerPtr C, std::ostream& s) {
-    C->print(s);
-}
-
-int NodeContainerCheck(NodeContainerPtr C) {
-    return C->check();
-}
-
 
 #if USE_MATHLINK
 void NodeSeq::put(MLINK mlp) const {
