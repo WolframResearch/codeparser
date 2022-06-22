@@ -43,7 +43,7 @@ public:
     
     virtual Precedence getPrecedence() const = 0;
     
-    virtual Symbol getOp() const;
+    virtual Symbol getOp() const = 0;
     
     virtual Token processImplicitTimes(Token TokIn) const;
     
@@ -65,6 +65,8 @@ public:
     ParseFunction parseInfix() const override;
     
     Precedence getPrecedence() const override;
+    
+    Symbol getOp() const override;
 };
 
 void CallParselet_parseInfix(ParseletPtr P, Token firstTok);
@@ -178,6 +180,8 @@ public:
     Precedence getPrecedence() const override;
     
     Token processImplicitTimes(Token TokIn) const override;
+    
+    Symbol getOp() const override;
 };
 
 void InfixImplicitTimesParselet_parseInfix(ParseletPtr P, Token firstTok);
@@ -189,6 +193,8 @@ public:
     ParseFunction parseInfix() const override;
     
     Precedence getPrecedence() const override;
+    
+    Symbol getOp() const override;
 };
 
 void InfixAssertFalseParselet_parseInfix(ParseletPtr P, Token firstTok);
@@ -212,6 +218,8 @@ public:
     ParseFunction parseInfix() const override;
     
     Precedence getPrecedence() const override;
+    
+    Symbol getOp() const override;
 };
 
 void InfixToplevelNewlineParselet_parseInfix(ParseletPtr P, Token firstTok);
@@ -364,6 +372,8 @@ public:
     ParseFunction parseInfix() const override;
     
     Precedence getPrecedence() const override;
+    
+    Symbol getOp() const override;
 };
 
 void SemiParselet_parseInfix(ParseletPtr P, Token firstTok);
@@ -386,6 +396,8 @@ public:
     Token processImplicitTimes(Token TokIn) const override;
     
     Precedence getPrecedence() const override;
+    
+    Symbol getOp() const override;
 };
 
 void SemiSemiParselet_parsePrefix(ParseletPtr P, Token firstTok);
@@ -402,6 +414,8 @@ public:
     ParseFunction parseInfix() const override;
     
     Precedence getPrecedence() const override;
+    
+    Symbol getOp() const override;
 };
 
 void TildeParselet_parseInfix(ParseletPtr P, Token firstTok);
@@ -416,6 +430,8 @@ public:
     ParseFunction parseInfix() const override;
     
     Precedence getPrecedence() const override;
+    
+    Symbol getOp() const override;
 };
 
 void ColonParselet_parseInfix(ParseletPtr P, Token firstTok);
@@ -430,6 +446,8 @@ public:
     ParseFunction parseInfix() const override;
     
     Precedence getPrecedence() const override;
+    
+    Symbol getOp() const override;
 };
 
 void SlashColonParselet_parseInfix(ParseletPtr P, Token firstTok);
@@ -485,6 +503,8 @@ public:
     ParseFunction parseInfix() const override;
     
     Precedence getPrecedence() const override;
+    
+    Symbol getOp() const override;
 };
 
 void ColonColonParselet_parseInfix(ParseletPtr P, Token firstTok);
@@ -498,6 +518,8 @@ public:
     ParseFunction parseInfix() const override;
     
     Precedence getPrecedence() const override;
+    
+    Symbol getOp() const override;
 };
 
 void GreaterGreaterParselet_parseInfix(ParseletPtr P, Token firstTok);
@@ -510,6 +532,8 @@ public:
     ParseFunction parseInfix() const override;
     
     Precedence getPrecedence() const override;
+    
+    Symbol getOp() const override;
 };
 
 void GreaterGreaterGreaterParselet_parseInfix(ParseletPtr P, Token firstTok);

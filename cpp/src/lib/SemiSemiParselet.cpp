@@ -17,6 +17,10 @@
 // The syntax for ;; is complicated and has a lot of edge cases.
 //
 
+Symbol SemiSemiParselet::getOp() const {
+    return SYMBOL_CODEPARSER_INTERNALINVALID;
+}
+
 Precedence SemiSemiParselet::getPrecedence() const {
     return PRECEDENCE_SEMISEMI;
 }

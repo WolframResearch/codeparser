@@ -17,10 +17,6 @@ Token InfixParselet::processImplicitTimes(Token TokIn) const {
     return TokIn;
 }
 
-Symbol InfixParselet::getOp() const {
-    return SYMBOL_CODEPARSER_INTERNALINVALID;
-}
-
 
 ParseFunction LeafParselet::parsePrefix() const {
     return LeafParselet_reduceLeaf;
@@ -290,6 +286,10 @@ void PrefixUnhandledParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
 }
 
 
+Symbol InfixToplevelNewlineParselet::getOp() const {
+    return SYMBOL_CODEPARSER_INTERNALINVALID;
+}
+
 Precedence InfixToplevelNewlineParselet::getPrecedence() const {
     //
     // Do not do Implicit Times across top-level newlines
@@ -530,6 +530,10 @@ void PrefixOperatorParselet_reducePrefixOperator(ParseletPtr P, Token Ignored) {
 }
 
 
+Symbol InfixImplicitTimesParselet::getOp() const {
+    return SYMBOL_CODEPARSER_INTERNALINVALID;
+}
+
 ParseFunction InfixImplicitTimesParselet::parseInfix() const {
     return InfixImplicitTimesParselet_parseInfix;
 }
@@ -554,6 +558,10 @@ Token InfixImplicitTimesParselet::processImplicitTimes(Token TokIn) const {
     return Token(TOKEN_FAKE_IMPLICITTIMES, TokIn.BufLen.buffer, TokIn.Src.Start);
 }
 
+
+Symbol InfixAssertFalseParselet::getOp() const {
+    return SYMBOL_CODEPARSER_INTERNALINVALID;
+}
 
 Precedence InfixAssertFalseParselet::getPrecedence() const {
     return PRECEDENCE_LOWEST;
@@ -1069,6 +1077,10 @@ void GroupParselet_reduceUnterminatedGroup(ParseletPtr P, Token Ignored) {
 
 CallParselet::CallParselet(PrefixParseletPtr GP) : GP(std::move(GP)) {}
 
+Symbol CallParselet::getOp() const {
+    return SYMBOL_CODEPARSER_INTERNALINVALID;
+}
+
 PrefixParseletPtr CallParselet::getGP() const {
     return GP;
 }
@@ -1118,6 +1130,10 @@ void CallParselet_reduceCall(ParseletPtr Ignored, Token Ignored2) {
     return Parser_parseClimb(Ignored, Ignored2);
 }
 
+
+Symbol TildeParselet::getOp() const {
+    return SYMBOL_CODEPARSER_INTERNALINVALID;
+}
 
 ParseFunction TildeParselet::parseInfix() const {
     return TildeParselet_parseInfix;
@@ -1246,6 +1262,10 @@ void TildeParselet_reduceError(ParseletPtr Ignored, Token Ignored2) {
 }
 
 
+Symbol ColonParselet::getOp() const {
+    return SYMBOL_CODEPARSER_INTERNALINVALID;
+}
+
 ParseFunction ColonParselet::parseInfix() const {
     return ColonParselet_parseInfix;
 }
@@ -1358,6 +1378,10 @@ void ColonParselet_reduceOptional(ParseletPtr Ignored, Token Ignored2) {
     return Parser_parseClimb(Ignored, Ignored2);
 }
 
+
+Symbol SlashColonParselet::getOp() const {
+    return SYMBOL_CODEPARSER_INTERNALINVALID;
+}
 
 Precedence SlashColonParselet::getPrecedence() const {
     return PRECEDENCE_SLASHCOLON;
@@ -1798,6 +1822,10 @@ void IntegralParselet_reduceIntegral(ParseletPtr Ignored, Token Ignored2) {
 }
 
 
+Symbol CommaParselet::getOp() const {
+    return SYMBOL_CODEPARSER_INTERNALINVALID;
+}
+
 Precedence CommaParselet::getPrecedence() const {
     return PRECEDENCE_COMMA;
 }
@@ -1963,10 +1991,10 @@ void CommaParselet_reduceComma(ParseletPtr Ignored, Token Ignored2) {
     return Parser_parseClimb(Ignored, Ignored2);
 }
 
-Symbol CommaParselet::getOp() const {
-    return SYMBOL_CODEPARSER_COMMA;
-}
 
+Symbol SemiParselet::getOp() const {
+    return SYMBOL_CODEPARSER_INTERNALINVALID;
+}
 
 Precedence SemiParselet::getPrecedence() const {
     return PRECEDENCE_SEMI;
@@ -2200,6 +2228,10 @@ void SemiParselet_reduceCompoundExpression(ParseletPtr Ignored, Token Ignored2) 
 }
 
 
+Symbol ColonColonParselet::getOp() const {
+    return SYMBOL_CODEPARSER_INTERNALINVALID;
+}
+
 Precedence ColonColonParselet::getPrecedence() const {
     return PRECEDENCE_COLONCOLON;
 }
@@ -2341,6 +2373,10 @@ void ColonColonParselet_reduceMessageName(ParseletPtr Ignored, Token Ignored2) {
 }
 
 
+Symbol GreaterGreaterParselet::getOp() const {
+    return SYMBOL_CODEPARSER_INTERNALINVALID;
+}
+
 Precedence GreaterGreaterParselet::getPrecedence() const {
     return PRECEDENCE_GREATERGREATER;
 }
@@ -2409,6 +2445,10 @@ void GreaterGreaterParselet_reducePut(ParseletPtr Ignored, Token Ignored2) {
     return Parser_parseClimb(Ignored, Ignored2);
 }
 
+
+Symbol GreaterGreaterGreaterParselet::getOp() const {
+    return SYMBOL_CODEPARSER_INTERNALINVALID;
+}
 
 Precedence GreaterGreaterGreaterParselet::getPrecedence() const {
     return PRECEDENCE_GREATERGREATERGREATER;
