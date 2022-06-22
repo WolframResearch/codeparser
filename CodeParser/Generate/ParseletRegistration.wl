@@ -142,6 +142,7 @@ formatInfix[Parselet`InfixDifferentialDParselet[]] := "&infixDifferentialDParsel
 
 formatInfix[Parselet`InfixToplevelNewlineParselet[]] := "new InfixToplevelNewlineParselet()"
 
+formatInfix[Parselet`TimesParselet[]] := "timesParselet"
 
 
 generate[] := (
@@ -171,6 +172,7 @@ class SlashColonParselet;
 class EqualParselet;
 class ColonEqualParselet;
 class PrefixToplevelCloserParselet;
+class TimesParselet;
 
 using PrefixParseletPtr = PrefixParselet *;
 using InfixParseletPtr = InfixParselet *;
@@ -189,6 +191,7 @@ extern SlashColonParselet *slashColonParselet;
 extern EqualParselet *equalParselet;
 extern ColonEqualParselet *colonEqualParselet;
 extern PrefixToplevelCloserParselet *prefixToplevelCloserParselet;
+extern TimesParselet *timesParselet;
 "};
 
 Print["exporting ParseletRegistration.h"];
@@ -265,6 +268,8 @@ UnderDotParselet *underDotParselet = new UnderDotParselet();
 auto squareGroupParselet = GroupParselet(TOKEN_OPENSQUARE, SYMBOL_CODEPARSER_GROUPSQUARE);
 
 auto doubleBracketGroupParselet = GroupParselet(TOKEN_LONGNAME_LEFTDOUBLEBRACKET, SYMBOL_CODEPARSER_GROUPDOUBLEBRACKET);
+
+TimesParselet *timesParselet = new TimesParselet();
 
 //
 //

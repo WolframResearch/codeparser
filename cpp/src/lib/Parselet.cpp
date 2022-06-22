@@ -726,38 +726,21 @@ void InfixOperatorParselet_parseLoop(ParseletPtr P, Token Ignored) {
     TheParser->eatTrivia(Tok1, TOPLEVEL, Trivia1);
     
     auto I = infixParselets[Tok1.Tok.value()];
-
-    Tok1 = I->processImplicitTimes(Tok1);
-    
-    if (Tok1.Tok == TOKEN_FAKE_IMPLICITTIMES) {
-        
-        //
-        // implicit Times should not cross toplevel newlines
-        //
-        // so reset and try again
-        //
-        
-        Trivia1.reset();
-        
-        Tok1 = TheParser->currentToken(TOPLEVEL);
-        
-        TheParser->eatTriviaButNotToplevelNewlines(Tok1, TOPLEVEL, Trivia1);
-        
-        I = infixParselets[Tok1.Tok.value()];
-        
-        Tok1 = I->processImplicitTimes(Tok1);
-    }
-    
-    I = infixParselets[Tok1.Tok.value()];
     
     auto Op = dynamic_cast<InfixOperatorParselet *>(P)->getOp();
     
     //
     // Cannot just compare tokens
     //
-    // May be something like  a * b c \[Times] d
+    // May be something like  a && b \[And] c
+    //
+    // and && and \[And] are different parselets
     //
     // and we want only a single Infix node created
+    //
+    // FIXME: only create a single parselet for all of the same operators, e.g., && and \[And]
+    //
+    // then just compare parselets directly here
     //
     if (I->getOp() != Op) {
         

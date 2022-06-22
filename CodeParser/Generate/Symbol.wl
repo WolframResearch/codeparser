@@ -118,6 +118,7 @@ symbols = Union[Join[
       Parselet`BinaryOperatorParselet[_, _, op_] :> op,
       Parselet`CallParselet[_] :> Nothing,
       Parselet`InfixOperatorParselet[_, _, op_] :> op,
+      Parselet`TimesParselet[] :> Times,
       Parselet`PostfixOperatorParselet[_, _, op_] :> op,
       Parselet`ColonColonParselet[] :> MessageName,
       Parselet`ColonEqualParselet[] :> SetDelayed,

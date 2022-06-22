@@ -604,6 +604,7 @@ set(STATIC_CPP_LIB_SOURCES
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/ParserSession.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/SemiSemiParselet.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/Source.cpp
+	${PROJECT_SOURCE_DIR}/cpp/src/lib/TimesParselet.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/Token.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/Tokenizer.cpp
 	${PROJECT_SOURCE_DIR}/cpp/src/lib/UnderParselet.cpp

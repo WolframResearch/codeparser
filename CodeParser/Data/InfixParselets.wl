@@ -118,7 +118,7 @@ Token`Minus -> Parselet`InfixOperatorParselet[Token`Minus, Precedence`Infix`Minu
 Token`EqualEqualEqual -> Parselet`InfixOperatorParselet[Token`EqualEqualEqual, Precedence`EqualEqualEqual, SameQ],
 Token`EqualBangEqual -> Parselet`InfixOperatorParselet[Token`EqualBangEqual, Precedence`EqualBangEqual, UnsameQ],
 Token`Plus -> Parselet`InfixOperatorParselet[Token`Plus, Precedence`Infix`Plus, Plus],
-Token`Star -> Parselet`InfixOperatorParselet[Token`Star, Precedence`Star, Times],
+Token`Star -> Parselet`TimesParselet[],
 Token`Dot -> Parselet`InfixOperatorParselet[Token`Dot, Precedence`Dot, Dot],
 Token`StarStar -> Parselet`InfixOperatorParselet[Token`StarStar, Precedence`StarStar, NonCommutativeMultiply],
 Token`AmpAmp -> Parselet`InfixOperatorParselet[Token`AmpAmp, Precedence`AmpAmp, And],
@@ -155,8 +155,8 @@ Token`LongName`NotReverseElement -> Parselet`InfixOperatorParselet[Token`LongNam
 Token`LongName`Distributed -> Parselet`InfixOperatorParselet[Token`LongName`Distributed, Precedence`Class`SetRelations, Distributed],
 
 Token`LongName`ImplicitPlus -> Parselet`InfixOperatorParselet[Token`LongName`ImplicitPlus, Precedence`LongName`ImplicitPlus, Plus],
-Token`LongName`Times -> Parselet`InfixOperatorParselet[Token`LongName`Times, Precedence`LongName`Times, Times],
-Token`LongName`InvisibleTimes -> Parselet`InfixOperatorParselet[Token`LongName`InvisibleTimes, Precedence`LongName`InvisibleTimes, Times],
+Token`LongName`Times -> Parselet`TimesParselet[],
+Token`LongName`InvisibleTimes -> Parselet`TimesParselet[],
 Token`LongName`And -> Parselet`InfixOperatorParselet[Token`LongName`And, Precedence`LongName`And, And],
 Token`LongName`Or -> Parselet`InfixOperatorParselet[Token`LongName`Or, Precedence`LongName`Or, Or],
 Token`LongName`Xor -> Parselet`InfixOperatorParselet[Token`LongName`Xor, Precedence`LongName`Xor, Xor],
@@ -411,7 +411,7 @@ Token`LongName`Colon -> Parselet`InfixOperatorParselet[Token`LongName`Colon, Pre
 Token`LongName`Xnor -> Parselet`InfixOperatorParselet[Token`LongName`Xnor, Precedence`LongName`Xnor, Xnor],
 Token`LongName`Minus -> Parselet`InfixOperatorParselet[Token`LongName`Minus, Precedence`Infix`LongName`Minus, Plus],
 
-Token`Fake`ImplicitTimes -> Parselet`InfixOperatorParselet[Token`Fake`ImplicitTimes, Precedence`Star, Times],
+Token`Fake`ImplicitTimes -> Parselet`TimesParselet[],
 
 
 (*

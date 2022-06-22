@@ -260,6 +260,24 @@ void InfixOperatorParselet_parseLoop(ParseletPtr P, Token Ignored);
 void InfixOperatorParselet_reduceInfixOperator(ParseletPtr P, Token firstTok);
 
 
+//
+//
+//
+class TimesParselet : public InfixParselet {
+public:
+    
+    ParseFunction parseInfix() const override;
+    
+    Precedence getPrecedence() const override;
+    
+    Symbol getOp() const override;
+};
+
+void TimesParselet_parseInfix(ParseletPtr P, Token firstTok);
+void TimesParselet_parseLoop(ParseletPtr P, Token Ignored);
+void TimesParselet_reduceTimes(ParseletPtr P, Token Ignored);
+
+
 class PostfixOperatorParselet : public InfixParselet {
 private:
     
