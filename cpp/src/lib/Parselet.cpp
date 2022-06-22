@@ -281,9 +281,7 @@ void PrefixUnhandledParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
     // We want to make EXPECTEDOPERAND the first arg of the Operator node.
     //
     
-    TheParser->pushContextV(TokenPrecedence);
-    
-    TheParser->shift();
+    TheParser->pushContextAndShift(TokenPrecedence);
 
     auto P2 = infixParselets[TokIn.Tok.value()];
     
@@ -343,9 +341,7 @@ void SymbolParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
             // Something like  a_
             //
             
-            TheParser->pushContextV(PRECEDENCE_HIGHEST);
-            
-            TheParser->shift();
+            TheParser->pushContextAndShift(PRECEDENCE_HIGHEST);
             
             //
             // Context-sensitive and OK to build stack
@@ -362,9 +358,7 @@ void SymbolParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
             // Something like  a__
             //
             
-            TheParser->pushContextV(PRECEDENCE_HIGHEST);
-            
-            TheParser->shift();
+            TheParser->pushContextAndShift(PRECEDENCE_HIGHEST);
             
             //
             // Context-sensitive and OK to build stack
@@ -381,9 +375,7 @@ void SymbolParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
             // Something like  a___
             //
             
-            TheParser->pushContextV(PRECEDENCE_HIGHEST);
-            
-            TheParser->shift();
+            TheParser->pushContextAndShift(PRECEDENCE_HIGHEST);
             
             //
             // Context-sensitive and OK to build stack
@@ -400,9 +392,7 @@ void SymbolParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
             // Something like  a_.
             //
             
-            TheParser->pushContextV(PRECEDENCE_HIGHEST);
-            
-            TheParser->shift();
+            TheParser->pushContextAndShift(PRECEDENCE_HIGHEST);
             
             //
             // Context-sensitive and OK to build stack
@@ -2619,9 +2609,7 @@ void HashParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
         case TOKEN_INTEGER.value():
         case TOKEN_STRING.value(): {
             
-            TheParser->pushContextV(PRECEDENCE_HIGHEST);
-            
-            TheParser->shift();
+            TheParser->pushContextAndShift(PRECEDENCE_HIGHEST);
             
             TheParser->pushLeafNodeAndNext(Tok);
             
@@ -2670,9 +2658,7 @@ void HashHashParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
     switch (Tok.Tok.value()) {
         case TOKEN_INTEGER.value(): {
             
-            TheParser->pushContextV(PRECEDENCE_HIGHEST);
-            
-            TheParser->shift();
+            TheParser->pushContextAndShift(PRECEDENCE_HIGHEST);
             
             TheParser->pushLeafNodeAndNext(Tok);
             
@@ -2724,9 +2710,7 @@ void PercentParselet_parsePrefix(ParseletPtr Ignored, Token TokIn) {
     switch (Tok.Tok.value()) {
         case TOKEN_INTEGER.value(): {
             
-            TheParser->pushContextV(PRECEDENCE_HIGHEST);
-            
-            TheParser->shift();
+            TheParser->pushContextAndShift(PRECEDENCE_HIGHEST);
             
             TheParser->pushLeafNodeAndNext(Tok);
             

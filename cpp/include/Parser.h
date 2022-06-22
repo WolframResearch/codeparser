@@ -84,6 +84,7 @@ public:
     
     Context& pushContext(Precedence Prec);
     void pushContextV(Precedence Prec);
+    void pushContextAndShift(Precedence Prec);
     NodeSeq popContext();
     Context& topContext();
     size_t getContextStackSize() const;

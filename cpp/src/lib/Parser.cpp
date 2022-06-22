@@ -270,9 +270,7 @@ void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2) {
         return Parser_tryContinue(Ignored, Ignored2);
     }
     
-    TheParser->pushContextV(TokenPrecedence);
-    
-    TheParser->shift();
+    TheParser->pushContextAndShift(TokenPrecedence);
     
     TheParser->appendArgs(Trivia1);
     
@@ -400,6 +398,13 @@ Context& Parser::pushContext(Precedence Prec) {
 
 void Parser::pushContextV(Precedence Prec) {
     ContextStack.emplace_back(ArgsStack.size(), Prec);
+}
+
+void Parser::pushContextAndShift(Precedence Prec) {
+    
+    ContextStack.emplace_back(ArgsStack.size(), Prec);
+    
+    ArgsStack.push_back(popNode());
 }
 
 NodeSeq Parser::popContext() {

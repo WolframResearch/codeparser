@@ -52,9 +52,7 @@ void UnderParselet_parsePrefix(ParseletPtr P, Token TokIn) {
         // Something like  _b
         //
         
-        TheParser->pushContextV(PRECEDENCE_HIGHEST);
-        
-        TheParser->shift();
+        TheParser->pushContextAndShift(PRECEDENCE_HIGHEST);
         
         //
         // Context-sensitive and OK to build stack
@@ -74,9 +72,7 @@ void UnderParselet_parsePrefix(ParseletPtr P, Token TokIn) {
         // It's nice to include the error inside of the blank
         //
         
-        TheParser->pushContextV(PRECEDENCE_HIGHEST);
-        
-        TheParser->shift();
+        TheParser->pushContextAndShift(PRECEDENCE_HIGHEST);
         
         TheParser->nextToken(Tok);
         
@@ -117,9 +113,7 @@ void UnderParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
         // Something like  a_b
         //
         
-        TheParser->pushContextV(PRECEDENCE_HIGHEST);
-        
-        TheParser->shift();
+        TheParser->pushContextAndShift(PRECEDENCE_HIGHEST);
         
         //
         // Context-sensitive and OK to build stack
@@ -139,9 +133,7 @@ void UnderParselet_parseInfixContextSensitive(ParseletPtr P, Token TokIn) {
         // It's nice to include the error inside of the blank
         //
         
-        TheParser->pushContextV(PRECEDENCE_HIGHEST);
-        
-        TheParser->shift();
+        TheParser->pushContextAndShift(PRECEDENCE_HIGHEST);
         
         TheParser->pushNode(new ErrorNode(Tok));
         
