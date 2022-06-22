@@ -2,7 +2,7 @@
 
 CodeParser uses a Wolfram Language kernel to generate code at build time and a C++ compiler to compile a native library.
 
-CodeParser uses C++11 features and requires a compiler that can support at least C++11.
+CodeParser uses C++14 features and requires a compiler that can support at least C++14.
 
 CodeParser uses CMake to generate build scripts.
 
