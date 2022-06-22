@@ -31,7 +31,7 @@ Token SemiSemiParselet::processImplicitTimes(Token TokIn) const {
     // SemiSemi was already parsed with look-ahead with the assumption that implicit Times will be handled correctly
     //
     
-    if (TheParser->getNodeStackSize() == 0) {
+    if (TheParser->isNodeStackEmpty()) {
         
         //
         // no Node, so this means that Args has already started

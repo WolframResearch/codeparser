@@ -12,6 +12,14 @@
 #include "Diagnostics.h"
 #endif // DIAGNOSTICS
 
+#include <cstring>
+
+#if USE_MUSTTAIL
+#define MUSTTAIL [[clang::musttail]]
+#else
+#define MUSTTAIL
+#endif // USE_MUSTTAIL
+
 
 Tokenizer::Tokenizer() : EmbeddedNewlines(), EmbeddedTabs() {}
 
@@ -54,156 +62,281 @@ Token Tokenizer::nextToken0(NextPolicy policy) {
     
     switch (c.to_point()) {
         
-        //
-        // all single-byte characters
-        //
-        // most control characters are letterlike
-        // jessef: There may be such a thing as *too* binary-safe...
-        //
-        case '\x00': case '\x01': case '\x02': case '\x03': case '\x04': case '\x05': case '\x06': /*    \x07*/
-        case '\x08': /*    \x09*/ /*    \x0a*/ /*    \x0b*/ /*    \x0c*/ /*    \x0d*/ case '\x0e': case '\x0f':
-        case '\x10': case '\x11': case '\x12': case '\x13': case '\x14': case '\x15': case '\x16': case '\x17':
-        case '\x18': case '\x19': case '\x1a': case '\x1b': case '\x1c': case '\x1d': case '\x1e': case '\x1f':
+        case ',': {
+            
+#if DIAGNOSTICS
+            Tokenizer_CommaCount++;
+#endif // DIAGNOSTICS
+            
+            return Token(TOKEN_COMMA, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        }
         case '$':
         case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M':
-        case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
-        case '`':
-        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm':
-        case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z': {
+        case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z': {
+            
             return handleSymbol(tokenStartBuf, tokenStartLoc, c, policy);
         }
-        case CODEPOINT_BEL: case CODEPOINT_DEL: {
-            return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        case '"': {
+            
+            return handleString(tokenStartBuf, tokenStartLoc, c, policy);
         }
-        case '\t': {
-            return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': {
+            
+            return handleNumber(tokenStartBuf, tokenStartLoc, c, policy);
         }
-        case '\n': case '\r': {
+        case '\n': {
+            
+#if DIAGNOSTICS
+            Tokenizer_NewlineCount++;
+#endif // DIAGNOSTICS
             
             //
             // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
             //
             return Token(TOKEN_INTERNALNEWLINE.t() | (policy & RETURN_TOPLEVELNEWLINE), getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         }
-        case '\v': case '\f': {
-            return handleStrangeWhitespace(tokenStartBuf, tokenStartLoc, c, policy);
-        }
-        case ' ': {
-            return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
-        }
-        case '!': {
-            return handleBang(tokenStartBuf, tokenStartLoc, c, policy);
-        }
-        case '"': {
-            return handleString(tokenStartBuf, tokenStartLoc, c, policy);
-        }
-        case '#': {
-            return handleHash(tokenStartBuf, tokenStartLoc, c, policy);
-        }
-        case '%': {
-            return handlePercent(tokenStartBuf, tokenStartLoc, c, policy);
-        }
-        case '&': {
-            return handleAmp(tokenStartBuf, tokenStartLoc, c, policy);
-        }
-        case '\'': {
-            return Token(TOKEN_SINGLEQUOTE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
-        }
-        case '(': {
-            return handleOpenParen(tokenStartBuf, tokenStartLoc, c, policy);
-        }
-        case ')': {
-            return Token(TOKEN_CLOSEPAREN, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
-        }
-        case '*': {
-            return handleStar(tokenStartBuf, tokenStartLoc, c, policy);
-        }
-        case '+': {
-            return handlePlus(tokenStartBuf, tokenStartLoc, c, policy);
-        }
-        case ',': {
-            return Token(TOKEN_COMMA, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
-        }
-        case '-': {
-            return handleMinus(tokenStartBuf, tokenStartLoc, c, policy);
-        }
-        case '.': {
-            return handleDot(tokenStartBuf, tokenStartLoc, c, policy);
-        }
-        case '/': {
-            return handleSlash(tokenStartBuf, tokenStartLoc, c, policy);
-        }
-        case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': {
-            return handleNumber(tokenStartBuf, tokenStartLoc, c, policy);
-        }
-        case ':': {
-            return handleColon(tokenStartBuf, tokenStartLoc, c, policy);
-        }
-        case ';': {
-            return handleSemi(tokenStartBuf, tokenStartLoc, c, policy);
-        }
-        case '<': {
-            return handleLess(tokenStartBuf, tokenStartLoc, c, policy);
-        }
-        case '=': {
-            return handleEqual(tokenStartBuf, tokenStartLoc, c, policy);
-        }
-        case '>': {
-            return handleGreater(tokenStartBuf, tokenStartLoc, c, policy);
-        }
-        case '?': {
-            return handleQuestion(tokenStartBuf, tokenStartLoc, c, policy);
-        }
-        case '@': {
-            return handleAt(tokenStartBuf, tokenStartLoc, c, policy);
-        }
         case '[': {
+            
+#if DIAGNOSTICS
+            Tokenizer_OpenSquareCount++;
+#endif // DIAGNOSTICS
+            
             return Token(TOKEN_OPENSQUARE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         }
-        case '\\': {
-            return handleUnhandledBackslash(tokenStartBuf, tokenStartLoc, c, policy);
-        }
-        case ']': {
-            return Token(TOKEN_CLOSESQUARE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
-        }
-        case '^': {
-            return handleCaret(tokenStartBuf, tokenStartLoc, c, policy);
-        }
-        case '_': {
-            return handleUnder(tokenStartBuf, tokenStartLoc, c, policy);
-        }
         case '{': {
+            
+#if DIAGNOSTICS
+            Tokenizer_OpenCurlyCount++;
+#endif // DIAGNOSTICS
+            
             return Token(TOKEN_OPENCURLY, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         }
-        case '|': {
-            return handleBar(tokenStartBuf, tokenStartLoc, c, policy);
+        case ' ': {
+            
+#if DIAGNOSTICS
+            Tokenizer_WhitespaceCount++;
+#endif // DIAGNOSTICS
+            
+            return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        }
+        case ']': {
+            
+#if DIAGNOSTICS
+            Tokenizer_CloseSquareCount++;
+#endif // DIAGNOSTICS
+            
+            return Token(TOKEN_CLOSESQUARE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         }
         case '}': {
+            
+#if DIAGNOSTICS
+            Tokenizer_CloseCurlyCount++;
+#endif // DIAGNOSTICS
+            
             return Token(TOKEN_CLOSECURLY, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         }
-        case '~': {
-            return handleTilde(tokenStartBuf, tokenStartLoc, c, policy);
+        case '-': {
+            
+            return handleMinus(tokenStartBuf, tokenStartLoc, c, policy);
         }
         default: {
             
+            return nextToken0_uncommon(tokenStartBuf, tokenStartLoc, c, policy);
+        }
+    }
+}
+
+
+Token Tokenizer::nextToken0_uncommon(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
+            
+    switch (c.to_point()) {
+            
+        //
+        // all single-byte characters
+        //
+        // most control characters are letterlike
+        // jessef: There may be such a thing as *too* binary-safe...
+        //
+        case '`':
+        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm':
+        case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
+        case '\x00': case '\x01': case '\x02': case '\x03': case '\x04': case '\x05': case '\x06': /*    \x07*/
+        case '\x08': /*    \x09*/ /*    \x0a*/ /*    \x0b*/ /*    \x0c*/ /*    \x0d*/ case '\x0e': case '\x0f':
+        case '\x10': case '\x11': case '\x12': case '\x13': case '\x14': case '\x15': case '\x16': case '\x17':
+        case '\x18': case '\x19': case '\x1a': case '\x1b': case '\x1c': case '\x1d': case '\x1e': case '\x1f': {
+            
+            MUSTTAIL
+            return handleSymbol(tokenStartBuf, tokenStartLoc, c, policy);
+        }
+        case CODEPOINT_BEL: case CODEPOINT_DEL: {
+            
+            return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        }
+        case '\t': {
+            
+            return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        }
+        case '\v': case '\f': {
+            
+            MUSTTAIL
+            return handleStrangeWhitespace(tokenStartBuf, tokenStartLoc, c, policy);
+        }
+        case '\r': {
+            
+#if DIAGNOSTICS
+            Tokenizer_NewlineCount++;
+#endif // DIAGNOSTICS
+            
             //
-            // Everything else involving multi-byte characters
+            // Return INTERNALNEWLINE or TOPLEVELNEWLINE, depending on policy
+            //
+            return Token(TOKEN_INTERNALNEWLINE.t() | (policy & RETURN_TOPLEVELNEWLINE), getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        }
+        case '(': {
+            
+            MUSTTAIL
+            return handleOpenParen(tokenStartBuf, tokenStartLoc, c, policy);
+        }
+        case ')': {
+            
+#if DIAGNOSTICS
+            Tokenizer_CloseParenCount++;
+#endif // DIAGNOSTICS
+            
+            return Token(TOKEN_CLOSEPAREN, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        }
+        case '+': {
+            
+            MUSTTAIL
+            return handlePlus(tokenStartBuf, tokenStartLoc, c, policy);
+        }
+        case '^': {
+            
+            MUSTTAIL
+            return handleCaret(tokenStartBuf, tokenStartLoc, c, policy);
+        }
+        case '=': {
+            
+            MUSTTAIL
+            return handleEqual(tokenStartBuf, tokenStartLoc, c, policy);
+        }
+        case ';': {
+            
+            MUSTTAIL
+            return handleSemi(tokenStartBuf, tokenStartLoc, c, policy);
+        }
+        case ':': {
+            
+            MUSTTAIL
+            return handleColon(tokenStartBuf, tokenStartLoc, c, policy);
+        }
+        case '#': {
+            
+            MUSTTAIL
+            return handleHash(tokenStartBuf, tokenStartLoc, c, policy);
+        }
+        case '&': {
+            
+            MUSTTAIL
+            return handleAmp(tokenStartBuf, tokenStartLoc, c, policy);
+        }
+        case '!': {
+            
+            MUSTTAIL
+            return handleBang(tokenStartBuf, tokenStartLoc, c, policy);
+        }
+        case '%': {
+            
+            MUSTTAIL
+            return handlePercent(tokenStartBuf, tokenStartLoc, c, policy);
+        }
+        case '\'': {
+            
+            return Token(TOKEN_SINGLEQUOTE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        }
+        case '*': {
+            
+            MUSTTAIL
+            return handleStar(tokenStartBuf, tokenStartLoc, c, policy);
+        }
+        case '.': {
+            
+            MUSTTAIL
+            return handleDot(tokenStartBuf, tokenStartLoc, c, policy);
+        }
+        case '/': {
+            
+            MUSTTAIL
+            return handleSlash(tokenStartBuf, tokenStartLoc, c, policy);
+        }
+        case '<': {
+            
+            MUSTTAIL
+            return handleLess(tokenStartBuf, tokenStartLoc, c, policy);
+        }
+        case '>': {
+            
+            MUSTTAIL
+            return handleGreater(tokenStartBuf, tokenStartLoc, c, policy);
+        }
+        case '?': {
+            
+            MUSTTAIL
+            return handleQuestion(tokenStartBuf, tokenStartLoc, c, policy);
+        }
+        case '@': {
+            
+            MUSTTAIL
+            return handleAt(tokenStartBuf, tokenStartLoc, c, policy);
+        }
+        case '\\': {
+            
+            MUSTTAIL
+            return handleUnhandledBackslash(tokenStartBuf, tokenStartLoc, c, policy);
+        }
+        case '_': {
+            
+            MUSTTAIL
+            return handleUnder(tokenStartBuf, tokenStartLoc, c, policy);
+        }
+        case '|': {
+            
+            MUSTTAIL
+            return handleBar(tokenStartBuf, tokenStartLoc, c, policy);
+        }
+        case '~': {
+            
+            MUSTTAIL
+            return handleTilde(tokenStartBuf, tokenStartLoc, c, policy);
+        }
+        case CODEPOINT_ENDOFFILE: {
+            
+            return Token(TOKEN_ENDOFFILE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        }
+        case CODEPOINT_LINEARSYNTAX_BANG: {
+            
+            return Token(TOKEN_LINEARSYNTAX_BANG, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        }
+        case CODEPOINT_LINEARSYNTAX_OPENPAREN: {
+            
+            MUSTTAIL
+            return handleMBLinearSyntaxBlob(tokenStartBuf, tokenStartLoc, c, policy);
+        }
+        case CODEPOINT_UNSAFE_1_BYTE_UTF8_SEQUENCE:
+        case CODEPOINT_UNSAFE_2_BYTE_UTF8_SEQUENCE:
+        case CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE: {
+            
+            //
+            // This will be disposed before the user sees it
             //
             
-            if (c.to_point() == CODEPOINT_ENDOFFILE) {
+            return Token(TOKEN_ERROR_UNSAFECHARACTERENCODING, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        }
+        default: {
+            
+            if (c.isMBLinearSyntax()) {
                 
-                return Token(TOKEN_ENDOFFILE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
-                
-            } else if (c.to_point() == CODEPOINT_LINEARSYNTAX_BANG) {
-                
-                return Token(TOKEN_LINEARSYNTAX_BANG, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
-                
-            } else if (c.to_point() == CODEPOINT_LINEARSYNTAX_OPENPAREN) {
-                
-                return handleMBLinearSyntaxBlob(tokenStartBuf, tokenStartLoc, c, policy);
-                
-            } else if (c.isMBLinearSyntax()) {
-                
+                MUSTTAIL
                 return handleNakedMBLinearSyntax(tokenStartBuf, tokenStartLoc, c, policy);
                 
             } else if (c.isMBUninterpretable()) {
@@ -212,6 +345,7 @@ Token Tokenizer::nextToken0(NextPolicy policy) {
                 
             } else if (c.isMBStrangeWhitespace()) {
                 
+                MUSTTAIL
                 return handleMBStrangeWhitespace(tokenStartBuf, tokenStartLoc, c, policy);
                 
             } else if (c.isMBWhitespace()) {
@@ -220,6 +354,7 @@ Token Tokenizer::nextToken0(NextPolicy policy) {
                 
             } else if (c.isMBStrangeNewline()) {
                 
+                MUSTTAIL
                 return handleMBStrangeNewline(tokenStartBuf, tokenStartLoc, c, policy);
                 
             } else if (c.isMBNewline()) {
@@ -231,19 +366,12 @@ Token Tokenizer::nextToken0(NextPolicy policy) {
                 
             } else if (c.isMBPunctuation()) {
                 
+                MUSTTAIL
                 return handleMBPunctuation(tokenStartBuf, tokenStartLoc, c, policy);
                 
             } else if (c.isMBStringMeta()) {
                 
                 return Token(TOKEN_ERROR_UNHANDLEDCHARACTER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
-                
-            } else if (c.to_point() == CODEPOINT_UNSAFE_1_BYTE_UTF8_SEQUENCE || c.to_point() == CODEPOINT_UNSAFE_2_BYTE_UTF8_SEQUENCE || c.to_point() == CODEPOINT_UNSAFE_3_BYTE_UTF8_SEQUENCE) {
-                
-                //
-                // This will be disposed before the user sees it
-                //
-                
-                return Token(TOKEN_ERROR_UNSAFECHARACTERENCODING, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                 
             } else {
                 
@@ -253,6 +381,7 @@ Token Tokenizer::nextToken0(NextPolicy policy) {
                 
                 assert(c.isMBLetterlike());
                 
+                MUSTTAIL
                 return handleSymbol(tokenStartBuf, tokenStartLoc, c, policy);
             }
         }
@@ -271,6 +400,7 @@ Token Tokenizer::nextToken0_stringifyAsTag() {
     
     switch (c.to_point()) {
         case CODEPOINT_ENDOFFILE: {
+            
             //
             // EndOfFile is special, so invent source
             //
@@ -278,13 +408,19 @@ Token Tokenizer::nextToken0_stringifyAsTag() {
             return Token(TOKEN_ERROR_EXPECTEDTAG, tokenStartBuf, tokenStartLoc);
         }
         case '\n': case '\r': case CODEPOINT_CRLF: {
+            
             //
             // Newline is special, so invent source
             //
             
             return Token(TOKEN_ERROR_EXPECTEDTAG, tokenStartBuf, tokenStartLoc);
         }
+        case '"': {
+            
+            return handleString(tokenStartBuf, tokenStartLoc, c, policy);
+        }
         default: {
+            
             return handleString_stringifyAsTag(tokenStartBuf, tokenStartLoc, c, policy);
         }
     }
@@ -304,9 +440,11 @@ Token Tokenizer::nextToken0_stringifyAsFile() {
     
     switch (c.to_point()) {
         case CODEPOINT_ENDOFFILE: {
+            
             return Token(TOKEN_ERROR_EXPECTEDFILE, tokenStartBuf, tokenStartLoc);
         }
         case '\n': case '\r': case CODEPOINT_CRLF: {
+            
             //
             // Stringifying as a file can span lines
             //
@@ -324,6 +462,7 @@ Token Tokenizer::nextToken0_stringifyAsFile() {
             return Token(TOKEN_INTERNALNEWLINE.t() | (policy & RETURN_TOPLEVELNEWLINE), getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         }
         case ' ': case '\t': {
+            
             //
             // There could be space, something like  << abc
             //
@@ -333,7 +472,12 @@ Token Tokenizer::nextToken0_stringifyAsFile() {
             //
             return Token(TOKEN_WHITESPACE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         }
+        case '"': {
+            
+            return handleString(tokenStartBuf, tokenStartLoc, WLCharacter(c.to_point()), policy);
+        }
         default: {
+            
             return handleString_stringifyAsFile(tokenStartBuf, tokenStartLoc, c, policy);
         }
     }
@@ -424,6 +568,8 @@ inline Token Tokenizer::handleStrangeWhitespace(Buffer tokenStartBuf, SourceLoca
 // Comments deal with (**) SourceCharacters
 // Escaped characters do not work
 //
+// Important to process SourceCharacters here: (* \\.28\\.2a *)
+//
 inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter c, NextPolicy policy) {
     
     //
@@ -431,6 +577,8 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation token
     //
     
     assert(c.to_point() == '*');
+    
+    TheByteDecoder->nextSourceCharacter0(policy);
     
 #if DIAGNOSTICS
     Tokenizer_CommentCount++;
@@ -440,7 +588,7 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation token
     
     auto depth = 1;
     
-    c = TheByteDecoder->currentSourceCharacter(policy);
+    c = TheByteDecoder->nextSourceCharacter0(policy);
     
     while (true) {
         
@@ -451,28 +599,20 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation token
         switch (c.to_point()) {
             case '(': {
                 
-                TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-                TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
-                
-                c = TheByteDecoder->currentSourceCharacter(policy);
+                c = TheByteDecoder->nextSourceCharacter0(policy);
                 
                 if (c.to_point() == '*') {
                     
                     depth = depth + 1;
                     
-                    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-                    TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
-                    
-                    c = TheByteDecoder->currentSourceCharacter(policy);
+                    c = TheByteDecoder->nextSourceCharacter0(policy);
                 }
                 
                 break;
             }
             case '*': {
-                TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-                TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
                 
-                c = TheByteDecoder->currentSourceCharacter(policy);
+                c = TheByteDecoder->nextSourceCharacter0(policy);
                 
                 if (c.to_point() == ')') {
                     
@@ -482,20 +622,15 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation token
                     
                     if (depth == 0) {
                         
-                        TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-                        TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
-                        
                         return Token(TOKEN_COMMENT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                     }
                     
-                    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-                    TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
-                    
-                    c = TheByteDecoder->currentSourceCharacter(policy);
+                    c = TheByteDecoder->nextSourceCharacter0(policy);
                 }
                 break;
             }
             case CODEPOINT_ENDOFFILE: {
+                
                 return Token(TOKEN_ERROR_UNTERMINATEDCOMMENT, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
             }
             case '\n': case '\r': case CODEPOINT_CRLF: {
@@ -504,10 +639,7 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation token
                 EmbeddedNewlines.insert(tokenStartLoc);
 #endif // COMPUTE_OOB
                 
-                TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-                TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
-                
-                c = TheByteDecoder->currentSourceCharacter(policy);
+                c = TheByteDecoder->nextSourceCharacter0(policy);
                 
                 break;
             }
@@ -517,19 +649,13 @@ inline Token Tokenizer::handleComment(Buffer tokenStartBuf, SourceLocation token
                 EmbeddedTabs.insert(tokenStartLoc);
 #endif // COMPUTE_OOB
                 
-                TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-                TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
-                
-                c = TheByteDecoder->currentSourceCharacter(policy);
+                c = TheByteDecoder->nextSourceCharacter0(policy);
                 
                 break;
             }
             default: {
                 
-                TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-                TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
-                
-                c = TheByteDecoder->currentSourceCharacter(policy);
+                c = TheByteDecoder->nextSourceCharacter0(policy);
                 
                 break;
             }
@@ -580,6 +706,7 @@ inline Token Tokenizer::handleMBLinearSyntaxBlob(Buffer tokenStartBuf, SourceLoc
                 break;
             }
             case CODEPOINT_ENDOFFILE: {
+                
                 return Token(TOKEN_ERROR_UNTERMINATEDLINEARSYNTAXBLOB, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
             }
             default: {
@@ -663,8 +790,11 @@ inline Token Tokenizer::handleSymbol(Buffer tokenStartBuf, SourceLocation tokenS
     } // while
     
     if ((policy & SLOT_BEHAVIOR_FOR_STRINGS) == SLOT_BEHAVIOR_FOR_STRINGS) {
+        
         return Token(TOKEN_STRING, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        
     } else {
+        
         return Token(TOKEN_SYMBOL, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
     }
 }
@@ -687,6 +817,7 @@ inline WLCharacter Tokenizer::handleSymbolSegment(Buffer tokenStartBuf, SourceLo
             
             TheParserSession->addIssue(std::move(I));
         }
+        
     } else if (c.isStrangeLetterlike()) {
         
         auto Src = getTokenSource(charLoc);
@@ -823,6 +954,98 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
     }
 #endif // CHECK_ISSUES
     
+    Buffer quotPtr = nullptr;
+    bool fast = false;
+    bool terminated = false;
+    
+#if !COMPUTE_OOB && !CHECK_ISSUES && !COMPUTE_SOURCE
+    
+    //
+    // !CHECK_ISSUES (so do not need to warn about strange SourceCharacters)
+    // !COMPUTE_OOB (so do not need to care about embedded newlines or tabs)
+    // !COMPUTE_SOURCE (so do not need to keep track of line and column information)
+    //
+    
+    //
+    // The idea is to use memchr to scan for the next '"' character byte and then just jump to it.
+    //
+    // This is faster than explicitly calling TheCharacterDecoder->nextWLCharacter0 over and over again.
+    //
+    // Diagnostics that count SourceCharacters and WLCharacters will not be accurate inside of fast strings.
+    //
+    
+    quotPtr = static_cast<Buffer>(std::memchr(TheByteBuffer->buffer, '"', TheByteBuffer->end - TheByteBuffer->buffer));
+    
+    if (quotPtr) {
+        
+        if (*(quotPtr - 1) != '\\') {
+            
+            //
+            // first double-quote character is NOT preceded by a backslash character
+            //
+            
+            fast = true;
+            terminated = true;
+            
+        } else {
+            
+            //
+            // there is a backslash character, so fall-through to SLOW
+            //
+            
+            fast = false;
+            terminated = true;
+        }
+        
+    } else {
+        
+        //
+        // unterminated, so fall-through to SLOW
+        //
+        
+        fast = false;
+        terminated = false;
+    }
+    
+#else
+    
+    fast = false;
+    
+#endif // !COMPUTE_OOB && !CHECK_ISSUES && !COMPUTE_SOURCE
+    
+    if (fast) {
+        
+#if DIAGNOSTICS
+        Tokenizer_StringFastCount++;
+#endif // DIAGNOSTICS
+        
+        //
+        // just set buffer to quotPtr + 1
+        //
+        
+        if (terminated) {
+            
+            TheByteBuffer->buffer = quotPtr + 1;
+            
+            return Token(TOKEN_STRING, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+            
+        } else {
+            
+            TheByteBuffer->buffer = TheByteBuffer->end;
+            TheByteBuffer->wasEOF = true;
+            
+            return Token(TOKEN_ERROR_UNTERMINATEDSTRING, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        }
+    }
+    
+    //
+    // SLOW FALL-THROUGH
+    //
+    
+#if DIAGNOSTICS
+        Tokenizer_StringSlowCount++;
+#endif // DIAGNOSTICS
+    
     policy |= STRING_OR_COMMENT;
     
     while (true) {
@@ -831,9 +1054,11 @@ inline Token Tokenizer::handleString(Buffer tokenStartBuf, SourceLocation tokenS
         
         switch (c.to_point()) {
             case '"': {
+                
                 return Token(TOKEN_STRING, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
             }
             case CODEPOINT_ENDOFFILE: {
+                
                 return Token(TOKEN_ERROR_UNTERMINATEDSTRING, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
             }
 #if COMPUTE_OOB
@@ -861,11 +1086,6 @@ inline Token Tokenizer::handleString_stringifyAsTag(Buffer tokenStartBuf, Source
     //
     // Nothing to assert
     //
-    
-    if (c.to_point() == '"') {
-        
-        return handleString(tokenStartBuf, tokenStartLoc, c, policy);
-    }
     
     //
     // magically turn into a string
@@ -899,14 +1119,13 @@ inline Token Tokenizer::handleString_stringifyAsFile(Buffer tokenStartBuf, Sourc
     //
     // Nothing to assert
     //
-    
-    if (c.to_point() == '"') {
-        
-        return handleString(tokenStartBuf, tokenStartLoc, WLCharacter('"'), policy);
-    }
         
     //
     // magically turn into a string
+    //
+    
+    //
+    // sync-up with current character
     //
     
     switch (c.to_point()) {
@@ -922,17 +1141,20 @@ inline Token Tokenizer::handleString_stringifyAsFile(Buffer tokenStartBuf, Sourc
             break;
         }
         case '[': {
-            
+
             // handle matched pairs of [] enclosing any characters other than spaces, tabs, and newlines
-            
+
             int handled;
-            c = handleFileOpsBrackets(tokenStartLoc, c, policy, &handled);
+
+            c = handleFileOpsBrackets(tokenStartBuf, tokenStartLoc, c, policy, &handled);
+
             switch (handled) {
                 case UNTERMINATED_FILESTRING: {
+
                     return Token(TOKEN_ERROR_UNTERMINATEDFILESTRING, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                 }
             }
-            
+
             break;
         }
         default: {
@@ -943,17 +1165,12 @@ inline Token Tokenizer::handleString_stringifyAsFile(Buffer tokenStartBuf, Sourc
             //
             // So invent source
             //
-            
+
             return Token(TOKEN_ERROR_EXPECTEDFILE, tokenStartBuf, tokenStartLoc);
         }
     }
     
-    auto breakWhile = false;
     while (true) {
-        
-        if (breakWhile) {
-            break;
-        }
         
         //
         // tutorial/OperatorInputForms
@@ -976,8 +1193,7 @@ inline Token Tokenizer::handleString_stringifyAsFile(Buffer tokenStartBuf, Sourc
             case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
             case '$': case '`': case '/': case '.': case '\\': case '!': case '-': case '_': case ':': case '*': case '~': case '?': {
                 
-                TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-                TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+                TheByteDecoder->nextSourceCharacter0(policy);
                 
                 c = TheByteDecoder->currentSourceCharacter(policy);
                 
@@ -987,13 +1203,15 @@ inline Token Tokenizer::handleString_stringifyAsFile(Buffer tokenStartBuf, Sourc
                 
                 // handle matched pairs of [] enclosing any characters other than spaces, tabs, and newlines
                 
-                TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-                TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+                TheByteDecoder->nextSourceCharacter0(policy);
                 
                 int handled;
-                c = handleFileOpsBrackets(tokenStartLoc, c, policy, &handled);
+                
+                c = handleFileOpsBrackets(tokenStartBuf, tokenStartLoc, c, policy, &handled);
+                
                 switch (handled) {
                     case UNTERMINATED_FILESTRING: {
+                        
                         return Token(TOKEN_ERROR_UNTERMINATEDFILESTRING, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
                     }
                 }
@@ -1002,35 +1220,30 @@ inline Token Tokenizer::handleString_stringifyAsFile(Buffer tokenStartBuf, Sourc
             }
             default: {
                 
-                breakWhile = true;
-                
-                break;
+                return Token(TOKEN_STRING, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
             }
         }
         
     } // while
-    
-    return Token(TOKEN_STRING, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
 }
 
 
 //
 // Use SourceCharacters here, not WLCharacters
 //
-inline SourceCharacter Tokenizer::handleFileOpsBrackets(SourceLocation tokenStartLoc, SourceCharacter c, NextPolicy policy, int *handled) {
+inline SourceCharacter Tokenizer::handleFileOpsBrackets(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter c, NextPolicy policy, int *handled) {
     
     assert(c.to_point() == '[');
     
-    auto depth = 1;
+    //
+    // sync-up with current character
+    //
     
     c = TheByteDecoder->currentSourceCharacter(policy);
     
-    bool breakWhile = false;
+    auto depth = 1;
+    
     while (true) {
-        
-        if (breakWhile) {
-            break;
-        }
         
         switch (c.to_point()) {
                 //
@@ -1038,9 +1251,6 @@ inline SourceCharacter Tokenizer::handleFileOpsBrackets(SourceLocation tokenStar
                 //
             case ' ': case '\t': case '\v': case '\f':
             case '\n': case '\r': case CODEPOINT_CRLF: {
-                
-                TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-                TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
                 
                 //
                 // Cannot have spaces in the string here, so bail out
@@ -1058,53 +1268,50 @@ inline SourceCharacter Tokenizer::handleFileOpsBrackets(SourceLocation tokenStar
             }
             case '[': {
                 
-                TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-                TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
-                
                 depth = depth + 1;
+                
+                TheByteDecoder->nextSourceCharacter0(policy);
+                
+                c = TheByteDecoder->currentSourceCharacter(policy);
                 
                 break;
             }
             case ']': {
                 
-                TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-                TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
-                
                 depth = depth - 1;
+                
+                TheByteDecoder->nextSourceCharacter0(policy);
+                
+                c = TheByteDecoder->currentSourceCharacter(policy);
                 
                 if (depth == 0) {
                     
-                    breakWhile = true;
+                    *handled = 0;
+                    
+                    return c;
                 }
+                
                 break;
             }
             default: {
                 
                 if (c.isMBWhitespace() || c.isMBNewline()) {
                     
-                    TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-                    TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
-                    
                     *handled = UNTERMINATED_FILESTRING;
                     
                     return c;
-                    
                 }
                 
-                TheByteBuffer->buffer = TheByteDecoder->lastBuf;
-                TheByteDecoder->SrcLoc = TheByteDecoder->lastLoc;
+                TheByteDecoder->nextSourceCharacter0(policy);
+                
+                c = TheByteDecoder->currentSourceCharacter(policy);
                 
                 break;
             }
         }
         
-        c = TheByteDecoder->currentSourceCharacter(policy);
-        
     } // while
     
-    *handled = 0;
-    
-    return c;
 }
 
 
@@ -1755,7 +1962,9 @@ inline Token Tokenizer::handleNumber(Buffer tokenStartBuf, SourceLocation tokenS
             case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': {
                 
                 int count;
+                
                 c = handleDigits(tokenStartBuf, tokenStartLoc, policy, c, &count);
+                
                 if (count > 0) {
                     precOrAccSupplied = true;
                 }
@@ -2205,6 +2414,7 @@ inline WLCharacter Tokenizer::handlePossibleFractionalPart(Buffer tokenStartBuf,
     
     c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
+    MUSTTAIL
     return handlePossibleFractionalPartPastDot(tokenStartBuf, tokenStartLoc, dotBuf, dotLoc, c, base, policy, handled, Ctxt);
 }
 
@@ -2397,11 +2607,10 @@ inline Token Tokenizer::handleColon(Buffer tokenStartBuf, SourceLocation tokenSt
     
     c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
-    auto Operator = TOKEN_COLON; // :
-    
     switch (c.to_point()) {
         case ':': {
-            Operator = TOKEN_COLONCOLON; // ::
+            
+            // ::
             
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
@@ -2410,59 +2619,76 @@ inline Token Tokenizer::handleColon(Buffer tokenStartBuf, SourceLocation tokenSt
             
             if (c.to_point() == '[') {
                 
-                Operator = TOKEN_COLONCOLONOPENSQUARE; // ::[
+                // ::[
                 
                 TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
                 TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+                
+                return Token(TOKEN_COLONCOLONOPENSQUARE, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
             }
             
-            break;
+            return Token(TOKEN_COLONCOLON, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         }
         case '=': {
-            Operator = TOKEN_COLONEQUAL; // :=
+            
+            // :=
             
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-            break;
+            return Token(TOKEN_COLONEQUAL, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         }
         case '>': {
-            Operator = TOKEN_COLONGREATER; // :>
+            
+            // :>
+            
+#if DIAGNOSTICS
+            Tokenizer_ColonGreaterCount++;
+#endif // DIAGNOSTICS
             
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-            break;
+            return Token(TOKEN_COLONGREATER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        }
+        default: {
+            
+            // :
+            
+            return Token(TOKEN_COLON, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         }
     }
-    
-    return Token(Operator, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
 }
 
 inline Token Tokenizer::handleOpenParen(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
     
     assert(c.to_point() == '(');
     
-    auto ParenChar = c;
-    
-    auto Operator = TOKEN_OPENPAREN; // (
-    
-    c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
+    auto secondChar = TheByteDecoder->currentSourceCharacter(policy);
     
     //
     // Comments must start literally with (*
     // Escaped characters do not work
     //
-    if ((ParenChar.to_point() == '(' && ParenChar.escape() == ESCAPE_NONE) &&
-        (c.to_point() == '*' && c.escape() == ESCAPE_NONE)) {
+    if ((c.to_point() == '(' && c.escape() == ESCAPE_NONE) &&
+        (secondChar.to_point() == '*')) {
         
-        TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
-        TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
-        
-        return handleComment(tokenStartBuf, tokenStartLoc, SourceCharacter(c.to_point()), policy);
+        //
+        // secondChar is a SourceCharacter, so cannot MUSTTAIL
+        //
+//        MUSTTAIL
+        return handleComment(tokenStartBuf, tokenStartLoc, secondChar, policy);
     }
     
-    return Token(Operator, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+    //
+    // (
+    //
+    
+#if DIAGNOSTICS
+    Tokenizer_OpenParenCount++;
+#endif // DIAGNOSTICS
+    
+    return Token(TOKEN_OPENPAREN, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
 }
 
 inline Token Tokenizer::handleDot(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy) {
@@ -2480,6 +2706,7 @@ inline Token Tokenizer::handleDot(Buffer tokenStartBuf, SourceLocation tokenStar
     
     if (c.isDigit()) {
         
+        MUSTTAIL
         return handleNumber(tokenStartBuf, tokenStartLoc, firstChar, policy);
     }
     
@@ -2769,8 +2996,6 @@ inline Token Tokenizer::handleMinus(Buffer tokenStartBuf, SourceLocation tokenSt
     
     c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
-    auto Operator = TOKEN_MINUS; // -
-    
     //
     // Do not lex as a number here
     // Makes it easier to handle implicit times later
@@ -2783,16 +3008,20 @@ inline Token Tokenizer::handleMinus(Buffer tokenStartBuf, SourceLocation tokenSt
     switch (c.to_point()) {
         case '>': {
             
-            Operator = TOKEN_MINUSGREATER; // ->
+            // ->
+            
+#if DIAGNOSTICS
+            Tokenizer_MinusGreaterCount++;
+#endif // DIAGNOSTICS
             
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-            break;
+            return Token(TOKEN_MINUSGREATER, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         }
         case '-': {
             
-            Operator = TOKEN_MINUSMINUS; // --
+            // --
             
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
@@ -2850,20 +3079,28 @@ inline Token Tokenizer::handleMinus(Buffer tokenStartBuf, SourceLocation tokenSt
             }
 #endif // CHECK_ISSUES
             
-            break;
+            return Token(TOKEN_MINUSMINUS, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         }
         case '=': {
             
-            Operator = TOKEN_MINUSEQUAL; // -=
+            // -=
             
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-            break;
+            return Token(TOKEN_MINUSEQUAL, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        }
+        default: {
+            
+            // -
+            
+#if DIAGNOSTICS
+            Tokenizer_MinusCount++;
+#endif // DIAGNOSTICS
+            
+            return Token(TOKEN_MINUS, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         }
     }
-    
-    return Token(Operator, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
 }
 
 inline Token Tokenizer::handleBar(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
@@ -3009,17 +3246,23 @@ inline Token Tokenizer::handleHash(Buffer tokenStartBuf, SourceLocation tokenSta
     
     c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
-    auto Operator = TOKEN_HASH; // #
-    
     if (c.to_point() == '#') {
         
-        Operator = TOKEN_HASHHASH; // ##
+        // ##
         
         TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
         TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+        
+        return Token(TOKEN_HASHHASH, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
     }
     
-    return Token(Operator, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+    // #
+    
+#if DIAGNOSTICS
+    Tokenizer_HashCount++;
+#endif // DIAGNOSTICS
+    
+    return Token(TOKEN_HASH, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
 }
 
 inline Token Tokenizer::handlePercent(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
@@ -3060,17 +3303,23 @@ inline Token Tokenizer::handleAmp(Buffer tokenStartBuf, SourceLocation tokenStar
     
     c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
-    auto Operator = TOKEN_AMP; // &
-    
     if (c.to_point() == '&') {
         
-        Operator = TOKEN_AMPAMP; // &&
+        // &&
         
         TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
         TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
+        
+        return Token(TOKEN_AMPAMP, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
     }
     
-    return Token(Operator, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+    // &
+    
+#if DIAGNOSTICS
+    Tokenizer_AmpCount++;
+#endif // DIAGNOSTICS
+    
+    return Token(TOKEN_AMP, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
 }
 
 inline Token Tokenizer::handleSlash(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
@@ -3248,11 +3497,10 @@ inline Token Tokenizer::handlePlus(Buffer tokenStartBuf, SourceLocation tokenSta
     
     c = TheCharacterDecoder->currentWLCharacter(tokenStartBuf, tokenStartLoc, policy);
     
-    auto Operator = TOKEN_PLUS; // +
-    
     switch (c.to_point()) {
         case '+': {
-            Operator = TOKEN_PLUSPLUS; // ++
+            
+            // ++
             
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
@@ -3270,6 +3518,7 @@ inline Token Tokenizer::handlePlus(Buffer tokenStartBuf, SourceLocation tokenSta
                     auto loc = TheByteDecoder->SrcLoc;
                     
                     CodeActionPtrVector Actions;
+                    
                     Actions.push_back(CodeActionPtr(new InsertTextCodeAction("Insert space", Source(loc), " ")));
                     
                     auto I = IssuePtr(new FormatIssue(STRING_AMBIGUOUS, "Put a space between ``++`` and ``=`` to reduce ambiguity", STRING_FORMATTING, Source(loc), 1.0, std::move(Actions), {}));
@@ -3279,19 +3528,28 @@ inline Token Tokenizer::handlePlus(Buffer tokenStartBuf, SourceLocation tokenSta
             }
 #endif // CHECK_ISSUES
             
-            break;
+            return Token(TOKEN_PLUSPLUS, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         }
         case '=': {
-            Operator = TOKEN_PLUSEQUAL; // +=
+            
+            // +=
             
             TheByteBuffer->buffer = TheCharacterDecoder->lastBuf;
             TheByteDecoder->SrcLoc = TheCharacterDecoder->lastLoc;
             
-            break;
+            return Token(TOKEN_PLUSEQUAL, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
+        }
+        default: {
+            
+            // +
+            
+#if DIAGNOSTICS
+            Tokenizer_PlusCount++;
+#endif // DIAGNOSTICS
+            
+            return Token(TOKEN_PLUS, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
         }
     }
-    
-    return Token(Operator, getTokenBufferAndLength(tokenStartBuf), getTokenSource(tokenStartLoc));
 }
 
 inline Token Tokenizer::handleTilde(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy) {
@@ -3729,12 +3987,16 @@ inline Token Tokenizer::handleNakedMBLinearSyntax(Buffer tokenStartBuf, SourceLo
 }
 
 Source Tokenizer::getTokenSource(SourceLocation tokStartLoc) const {
+    
     auto loc = TheByteDecoder->SrcLoc;
+    
     return Source(tokStartLoc, loc);
 }
 
 BufferAndLength Tokenizer::getTokenBufferAndLength(Buffer tokStartBuf) const {
+    
     auto buf = TheByteBuffer->buffer;
+    
     return BufferAndLength(tokStartBuf, buf - tokStartBuf);
 }
 

@@ -66,12 +66,73 @@ void ByteDecoder::deinit() {
 //   U+FEFF                  EF      BB          BF
 //
 SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
+    
+    auto firstByte = TheByteBuffer->currentByte();
+    
+    if (0x20 <= firstByte && firstByte <= 0x7e) {
 
-    auto currentSourceCharacterStartLoc = SrcLoc;
+        //
+        // Valid
+        //
+
+#if DIAGNOSTICS
+        ByteDecoder_PrintableCount++;
+#endif // DIAGNOSTICS
+        
+        TheByteBuffer->nextByte0();
+        
+#if COMPUTE_SOURCE
+        srcConventionManager->increment(SrcLoc);
+#endif // COMPUTE_SOURCE
+        
+        return SourceCharacter(firstByte);
+
+    } else if (firstByte == 0x0a) {
+
+        //
+        // Handle LF specially
+        //
+
+#if DIAGNOSTICS
+        ByteDecoder_LineFeedCount++;
+#endif // DIAGNOSTICS
+        
+        TheByteBuffer->nextByte0();
+        
+#if COMPUTE_SOURCE
+        srcConventionManager->newline(SrcLoc);
+#endif // COMPUTE_SOURCE
+        
+        return SourceCharacter(firstByte);
+
+    } else {
+        
+        return nextSourceCharacter0_uncommon(policy);
+    }
+}
+
+SourceCharacter ByteDecoder::nextSourceCharacter0_uncommon(NextPolicy policy) {
     
     auto firstByte = TheByteBuffer->nextByte0();
     
     switch (firstByte) {
+        case 0x09: {
+
+            //
+            // Handle TAB specially
+            //
+
+#if DIAGNOSTICS
+            ByteDecoder_TabCount++;
+#endif // DIAGNOSTICS
+                
+            
+#if COMPUTE_SOURCE
+            srcConventionManager->tab(SrcLoc);
+#endif // COMPUTE_SOURCE
+            return SourceCharacter(firstByte);
+
+        }
             //
             // Handle CR specially
             //
@@ -103,30 +164,18 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 // No CodeAction here
                 //
                 
-                auto I = IssuePtr(new EncodingIssue(STRING_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", STRING_WARNING, Source(currentSourceCharacterStartLoc), 1.0, {}, {}));
+                //
+                // FIXME: no way to do endOfPreviousLine()
+                //
+                auto currentSourceCharacterStartLoc = SrcLoc;
+                
+                auto I = IssuePtr(new EncodingIssue(STRING_UNEXPECTEDCARRIAGERETURN, "Unexpected ``\\r`` character.", STRING_WARNING, Source(currentSourceCharacterStartLoc, SrcLoc), 1.0, {}, {}));
                 
                 TheParserSession->addIssue(std::move(I));
             }
 #endif // CHECK_ISSUES
             
             return SourceCharacter('\r');
-        }
-            //
-            // Handle LF also
-            //
-        case 0x0a: {
-            
-            srcConventionManager->newline(SrcLoc);
-            
-            return SourceCharacter('\n');
-        }
-        case 0x09: {
-            
-            // Handle TAB specially
-            
-            srcConventionManager->tab(SrcLoc);
-            
-            return SourceCharacter(firstByte);
         }
             //
             // 1 byte UTF-8 sequence
@@ -137,34 +186,15 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
         case 0x18: case 0x19: case 0x1a: case 0x1b: case 0x1c: case 0x1d: case 0x1e: case 0x1f:
         case 0x7f: {
             
-            //
-            // Valid
-            //
-            
-            return valid(firstByte, currentSourceCharacterStartLoc, policy);
-        }
-            
-            //
-            // 1 byte UTF-8 sequence
-            //
-        case 0x20: case 0x21: case 0x22: case 0x23: case 0x24: case 0x25: case 0x26: case 0x27:
-        case 0x28: case 0x29: case 0x2a: case 0x2b: case 0x2c: case 0x2d: case 0x2e: case 0x2f:
-        case 0x30: case 0x31: case 0x32: case 0x33: case 0x34: case 0x35: case 0x36: case 0x37:
-        case 0x38: case 0x39: case 0x3a: case 0x3b: case 0x3c: case 0x3d: case 0x3e: case 0x3f:
-        case 0x40: case 0x41: case 0x42: case 0x43: case 0x44: case 0x45: case 0x46: case 0x47:
-        case 0x48: case 0x49: case 0x4a: case 0x4b: case 0x4c: case 0x4d: case 0x4e: case 0x4f:
-        case 0x50: case 0x51: case 0x52: case 0x53: case 0x54: case 0x55: case 0x56: case 0x57:
-        case 0x58: case 0x59: case 0x5a: case 0x5b: case 0x5c: case 0x5d: case 0x5e: case 0x5f:
-        case 0x60: case 0x61: case 0x62: case 0x63: case 0x64: case 0x65: case 0x66: case 0x67:
-        case 0x68: case 0x69: case 0x6a: case 0x6b: case 0x6c: case 0x6d: case 0x6e: case 0x6f:
-        case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77:
-        case 0x78: case 0x79: case 0x7a: case 0x7b: case 0x7c: case 0x7d: case 0x7e: /*   DEL*/ {
+#if DIAGNOSTICS
+            ByteDecoder_1ByteCount++;
+#endif // DIAGNOSTICS
             
             //
             // Valid
             //
             
-            return validNotStrange(firstByte);
+            return validStrange(firstByte, policy);
         }
             
             //
@@ -221,7 +251,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             
             const auto decoded = (((firstByte & 0x1f) << 6) | (secondByte & 0x3f));
             
-            return validMB(decoded, currentSourceCharacterStartLoc, policy);
+            return validMB(decoded, policy);
         }
             //
             // 3 byte UTF-8 sequence
@@ -310,7 +340,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             
             const auto decoded = (((firstByte & 0x0f) << 12) | ((secondByte & 0x3f) << 6) | (thirdByte & 0x3f));
             
-            return validMB(decoded, currentSourceCharacterStartLoc, policy);
+            return validMB(decoded, policy);
         }
             //
             // 3 byte UTF-8 sequence
@@ -418,7 +448,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
                 return bom(resetLoc, policy);
             }
             
-            return validMB(decoded, currentSourceCharacterStartLoc, policy);
+            return validMB(decoded, policy);
         }
             //
             // 4 byte UTF-8 sequence
@@ -543,7 +573,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             
             const auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((fourthByte & 0x3f)));
             
-            return validMB(decoded, currentSourceCharacterStartLoc, policy);
+            return validMB(decoded, policy);
         }
             //
             // 4 byte UTF-8 sequence
@@ -668,7 +698,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             
             const auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((fourthByte & 0x3f)));
             
-            return validMB(decoded, currentSourceCharacterStartLoc, policy);
+            return validMB(decoded, policy);
         }
             //
             // 4 byte UTF-8 sequence
@@ -793,7 +823,7 @@ SourceCharacter ByteDecoder::nextSourceCharacter0(NextPolicy policy) {
             
             const auto decoded = (((firstByte & 0x07) << 18) | ((secondByte & 0x3f) << 12) | ((thirdByte & 0x3f) << 6) | ((fourthByte & 0x3f)));
             
-            return validMB(decoded, currentSourceCharacterStartLoc, policy);
+            return validMB(decoded, policy);
         }
             //
             // Not a valid UTF-8 start, handle specially
@@ -930,7 +960,7 @@ void ByteDecoder::nonASCIIWarning(codepoint decoded, SourceLocation currentSourc
     TheParserSession->addIssue(std::move(I));
 }
 
-SourceCharacter ByteDecoder::valid(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, NextPolicy policy) {
+inline SourceCharacter ByteDecoder::validStrange(codepoint decoded, NextPolicy policy) {
     
 #if COMPUTE_SOURCE
     srcConventionManager->increment(SrcLoc);
@@ -938,6 +968,8 @@ SourceCharacter ByteDecoder::valid(codepoint decoded, SourceLocation currentSour
     
 #if CHECK_ISSUES
     {
+        auto currentSourceCharacterStartLoc = SrcLoc.previous();
+        
         strangeWarning(decoded, currentSourceCharacterStartLoc, policy);
     }
 #endif // CHECK_ISSUES
@@ -945,14 +977,7 @@ SourceCharacter ByteDecoder::valid(codepoint decoded, SourceLocation currentSour
     return SourceCharacter(decoded);
 }
 
-SourceCharacter ByteDecoder::validNotStrange(codepoint decoded) {
-    
-    srcConventionManager->increment(SrcLoc);
-    
-    return SourceCharacter(decoded);
-}
-
-SourceCharacter ByteDecoder::validMB(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, NextPolicy policy) {
+inline SourceCharacter ByteDecoder::validMB(codepoint decoded, NextPolicy policy) {
     
 #if COMPUTE_SOURCE
     srcConventionManager->increment(SrcLoc);
@@ -960,6 +985,8 @@ SourceCharacter ByteDecoder::validMB(codepoint decoded, SourceLocation currentSo
     
 #if CHECK_ISSUES
     {
+        auto currentSourceCharacterStartLoc = SrcLoc.previous();
+        
         if (Utils::isMBStrange(decoded)) {
             strangeWarning(decoded, currentSourceCharacterStartLoc, policy);
         } else if (TheParserSession->encodingMode == ENCODINGMODE_NORMAL) {

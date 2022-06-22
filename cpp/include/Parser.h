@@ -88,6 +88,7 @@ public:
     NodeSeq popContext();
     Context& topContext();
     size_t getContextStackSize() const;
+    bool isContextStackEmpty() const;
     
     void appendArg(Node *N);
     void appendArgs(TriviaSeq& T);
@@ -97,6 +98,7 @@ public:
     void pushNode(Node *N);
     NodePtr popNode();
     size_t getNodeStackSize() const;
+    bool isNodeStackEmpty() const;
     
     void pushGroup(Closer Closr);
     void popGroup();

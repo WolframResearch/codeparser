@@ -17,6 +17,12 @@
 #include "Diagnostics.h"
 #endif // DIAGNOSTICS
 
+#if USE_MUSTTAIL
+#define MUSTTAIL [[clang::musttail]]
+#else
+#define MUSTTAIL
+#endif // USE_MUSTTAIL
+
 
 CharacterDecoder::CharacterDecoder() : SimpleLineContinuations(), ComplexLineContinuations(), EmbeddedTabs(), lastBuf(), lastLoc() {}
 
@@ -45,9 +51,6 @@ void CharacterDecoder::deinit() {
 
 WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy) {
     
-    auto currentWLCharacterStartBuf = TheByteBuffer->buffer;
-    auto currentWLCharacterStartLoc = TheByteDecoder->SrcLoc;
-    
     auto curSource = TheByteDecoder->nextSourceCharacter0(policy);
     
     if (curSource.to_point() != '\\') {
@@ -74,25 +77,29 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
         auto escapedBuf = TheByteBuffer->buffer;
         auto escapedLoc = TheByteDecoder->SrcLoc;
         
-        curSource = TheByteDecoder->nextSourceCharacter0(policy);
+        curSource = TheByteDecoder->currentSourceCharacter(policy);
         
         switch (curSource.to_point()) {
             case '[': {
                 
-                return handleLongName(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
+                TheByteDecoder->nextSourceCharacter0(policy);
+                
+                MUSTTAIL
+                return handleLongName(escapedBuf, escapedLoc, policy);
             }
             case '\n':
             case '\r':
             case CODEPOINT_CRLF: {
-                
-                
-                curSource = handleLineContinuation(tokenStartBuf, tokenStartLoc, curSource, policy);
-                
+
+                TheByteDecoder->nextSourceCharacter0(policy);
+
+                curSource = handleLineContinuation(tokenStartBuf, tokenStartLoc, policy);
+
                 if (curSource.to_point() != '\\') {
-                    
+
                     return WLCharacter(curSource.to_point());
                 }
-                
+
                 //
                 // Do not return
                 // loop around again
@@ -101,14 +108,19 @@ WLCharacter CharacterDecoder::nextWLCharacter0(Buffer tokenStartBuf, SourceLocat
             }
             case ':': {
                 
-                return handle4Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
+                TheByteDecoder->nextSourceCharacter0(policy);
+                
+                MUSTTAIL
+                return handle4Hex(escapedBuf, escapedLoc, policy);
             }
             default: {
                 
                 //
                 // all other escapes are uncommon and go here
                 //
-                return handleUncommon(curSource, currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
+                
+                MUSTTAIL
+                return handleUncommon(escapedBuf, escapedLoc, policy);
             }
         } // switch
     } // while (true)
@@ -133,7 +145,7 @@ WLCharacter CharacterDecoder::currentWLCharacter(Buffer tokenStartBuf, SourceLoc
     return c;
 }
 
-WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer openSquareBuf, SourceLocation openSquareLoc, NextPolicy policy) {
+WLCharacter CharacterDecoder::handleLongName(Buffer openSquareBuf, SourceLocation openSquareLoc, NextPolicy policy) {
     
     assert(*openSquareBuf == '[');
     
@@ -213,6 +225,8 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
         
 #if CHECK_ISSUES
         if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
+            
+            auto currentWLCharacterStartLoc = openSquareLoc.previous();
             
             auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
             auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
@@ -308,6 +322,8 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
             
             auto longNameEndLoc = TheByteDecoder->SrcLoc;
             
+            auto currentWLCharacterStartLoc = openSquareLoc.previous();
+            
             //
             // Accomodate the ] character
             //
@@ -331,6 +347,8 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
         } else if ((policy & ENABLE_UNLIKELY_ESCAPE_CHECKING) == ENABLE_UNLIKELY_ESCAPE_CHECKING) {
             
             auto longNameEndLoc = TheByteDecoder->SrcLoc;
+            
+            auto currentWLCharacterStartLoc = openSquareLoc.previous();
             
             //
             // Accomodate the ] character
@@ -374,6 +392,8 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
         
         auto longNameEndLoc = TheByteDecoder->SrcLoc;
         
+        auto currentWLCharacterStartLoc = openSquareLoc.previous();
+        
         //
         // Accomodate the ] character
         //
@@ -413,6 +433,8 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
             // Just generally strange character is in the code
             //
             auto c = WLCharacter(point, LongNames::isRaw(longNameStr) ? ESCAPE_RAW : ESCAPE_LONGNAME);
+            
+            auto currentWLCharacterStartLoc = openSquareLoc.previous();
             
             auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
             
@@ -464,6 +486,8 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
             // Just generally strange character is in the code
             //
             auto c = WLCharacter(point, LongNames::isRaw(longNameStr) ? ESCAPE_RAW : ESCAPE_LONGNAME);
+            
+            auto currentWLCharacterStartLoc = openSquareLoc.previous();
             
             auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
             
@@ -520,7 +544,7 @@ WLCharacter CharacterDecoder::handleLongName(Buffer currentWLCharacterStartBuf, 
 }
 
 
-WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer colonBuf, SourceLocation colonLoc, NextPolicy policy) {
+WLCharacter CharacterDecoder::handle4Hex(Buffer colonBuf, SourceLocation colonLoc, NextPolicy policy) {
     
     assert(*colonBuf == ':');
     
@@ -549,6 +573,8 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
             
 #if CHECK_ISSUES
             if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
+                
+                auto currentWLCharacterStartLoc = colonLoc.previous();
                 
                 auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
                 auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
@@ -604,6 +630,8 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
         
         auto c = WLCharacter(point, ESCAPE_4HEX);
         
+        auto currentWLCharacterStartLoc = colonLoc.previous();
+        
         auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
         
         auto graphicalStr = c.graphicalString();
@@ -657,6 +685,8 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
         
         auto c = WLCharacter(point, ESCAPE_4HEX);
         
+        auto currentWLCharacterStartLoc = colonLoc.previous();
+        
         auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
         
         auto graphicalStr = c.graphicalString();
@@ -707,7 +737,7 @@ WLCharacter CharacterDecoder::handle4Hex(Buffer currentWLCharacterStartBuf, Sour
 }
 
 
-WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer dotBuf, SourceLocation dotLoc, NextPolicy policy) {
+WLCharacter CharacterDecoder::handle2Hex(Buffer dotBuf, SourceLocation dotLoc, NextPolicy policy) {
     
     assert(*dotBuf == '.');
     
@@ -736,6 +766,8 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
             
 #if CHECK_ISSUES
             if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
+                
+                auto currentWLCharacterStartLoc = dotLoc.previous();
                 
                 auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
                 auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
@@ -789,6 +821,8 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
         
         auto c = WLCharacter(point, ESCAPE_2HEX);
         
+        auto currentWLCharacterStartLoc = dotLoc.previous();
+        
         auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
         
         auto graphicalStr = c.graphicalString();
@@ -840,6 +874,8 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
         
         auto c = WLCharacter(point, ESCAPE_2HEX);
         
+        auto currentWLCharacterStartLoc = dotLoc.previous();
+        
         auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
         
         auto graphicalStr = c.graphicalString();
@@ -890,7 +926,7 @@ WLCharacter CharacterDecoder::handle2Hex(Buffer currentWLCharacterStartBuf, Sour
 }
 
 
-WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer firstOctalBuf, SourceLocation firstOctalLoc, NextPolicy policy) {
+WLCharacter CharacterDecoder::handleOctal(Buffer firstOctalBuf, SourceLocation firstOctalLoc, NextPolicy policy) {
     
     assert(SourceCharacter(*firstOctalBuf).isOctal());
     
@@ -919,6 +955,8 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
             
 #if CHECK_ISSUES
             if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
+                
+                auto currentWLCharacterStartLoc = firstOctalLoc.previous();
                 
                 auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
                 auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
@@ -973,6 +1011,8 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
         
         auto c = WLCharacter(point, ESCAPE_OCTAL);
         
+        auto currentWLCharacterStartLoc = firstOctalLoc.previous();
+        
         auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
         
         auto graphicalStr = c.graphicalString();
@@ -1024,6 +1064,8 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
         
         auto c = WLCharacter(point, ESCAPE_OCTAL);
         
+        auto currentWLCharacterStartLoc = firstOctalLoc.previous();
+        
         auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
         
         auto graphicalStr = c.graphicalString();
@@ -1074,7 +1116,7 @@ WLCharacter CharacterDecoder::handleOctal(Buffer currentWLCharacterStartBuf, Sou
 }
 
 
-WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer barBuf, SourceLocation barLoc, NextPolicy policy) {
+WLCharacter CharacterDecoder::handle6Hex(Buffer barBuf, SourceLocation barLoc, NextPolicy policy) {
     
     assert(*barBuf == '|');
     
@@ -1103,6 +1145,8 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
             
 #if CHECK_ISSUES
             if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
+                
+                auto currentWLCharacterStartLoc = barLoc.previous();
                 
                 auto currentWLCharacterEndBuf = TheByteBuffer->buffer;
                 auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
@@ -1172,6 +1216,8 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
         
         auto c = WLCharacter(point, ESCAPE_6HEX);
         
+        auto currentWLCharacterStartLoc = barLoc.previous();
+        
         auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
         
         auto graphicalStr = c.graphicalString();
@@ -1223,6 +1269,8 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
         
         auto c = WLCharacter(point, ESCAPE_6HEX);
         
+        auto currentWLCharacterStartLoc = barLoc.previous();
+        
         auto currentSourceCharacterEndLoc = TheByteDecoder->SrcLoc;
         
         auto graphicalStr = c.graphicalString();
@@ -1273,15 +1321,17 @@ WLCharacter CharacterDecoder::handle6Hex(Buffer currentWLCharacterStartBuf, Sour
 }
 
 
-SourceCharacter CharacterDecoder::handleLineContinuation(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter c, NextPolicy policy) {
+SourceCharacter CharacterDecoder::handleLineContinuation(Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy) {
     
-    assert(c.to_point() == '\n' || c.to_point() == '\r' || c.to_point() == CODEPOINT_CRLF);
+    //
+    // nothing to assert here
+    //
     
 #if DIAGNOSTICS
     CharacterDecoder_LineContinuationCount++;
 #endif // DIAGNOSTICS
     
-    c = TheByteDecoder->currentSourceCharacter(policy);
+    auto c = TheByteDecoder->currentSourceCharacter(policy);
     
     //
     // Even though strings preserve the whitespace after a line continuation, and
@@ -1354,7 +1404,7 @@ WLCharacter CharacterDecoder::handleBackslash(Buffer escapedBuf, SourceLocation 
             
             tmpPolicy &= ~ENABLE_CHARACTER_DECODING_ISSUES;
             
-            handleLongName(escapedBuf, escapedLoc, resetBuf, resetLoc, tmpPolicy);
+            handleLongName(resetBuf, resetLoc, tmpPolicy);
         }
         
         TheByteBuffer->buffer = resetBuf;
@@ -1366,7 +1416,7 @@ WLCharacter CharacterDecoder::handleBackslash(Buffer escapedBuf, SourceLocation 
 }
 
 
-WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer unhandledBuf, SourceLocation unhandledLoc, SourceCharacter escapedChar, NextPolicy policy) {
+WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer unhandledBuf, SourceLocation unhandledLoc, NextPolicy policy) {
     
     //
     // Anything else
@@ -1374,12 +1424,18 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterSta
     // Something like  \A
     //
     
-#if !NISSUES
+    auto escapedChar = TheByteDecoder->currentSourceCharacter(policy);
+    
+    TheByteDecoder->nextSourceCharacter0(policy);
+    
+#if CHECK_ISSUES
     //
     // Make the warnings a little more relevant
     //
     
     if ((policy & ENABLE_CHARACTER_DECODING_ISSUES) == ENABLE_CHARACTER_DECODING_ISSUES) {
+        
+        auto currentWLCharacterStartLoc = unhandledLoc.previous();
         
         auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
         
@@ -1562,21 +1618,32 @@ WLCharacter CharacterDecoder::handleUnhandledEscape(Buffer currentWLCharacterSta
     return WLCharacter('\\');
 }
 
-WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy) {
+WLCharacter CharacterDecoder::handleUncommon(Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy) {
+    
+    auto curSource = TheByteDecoder->currentSourceCharacter(policy);
     
     switch (curSource.to_point()) {
             
         case '.': {
             
-            return handle2Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
+            TheByteDecoder->nextSourceCharacter0(policy);
+            
+            MUSTTAIL
+            return handle2Hex(escapedBuf, escapedLoc, policy);
         }
         case '|': {
             
-            return handle6Hex(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
+            TheByteDecoder->nextSourceCharacter0(policy);
+            
+            MUSTTAIL
+            return handle6Hex(escapedBuf, escapedLoc, policy);
         }
         case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': {
             
-            return handleOctal(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, policy);
+            TheByteDecoder->nextSourceCharacter0(policy);
+            
+            MUSTTAIL
+            return handleOctal(escapedBuf, escapedLoc, policy);
         }
     
             //
@@ -1589,11 +1656,15 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
             CharacterDecoder_StringMetaBackspace++;
 #endif // DIAGNOSTICS
             
+            TheByteDecoder->nextSourceCharacter0(policy);
+            
             auto c = WLCharacter(CODEPOINT_STRINGMETA_BACKSPACE, ESCAPE_SINGLE);
                         
 #if CHECK_ISSUES
             {
                 auto graphicalStr = c.graphicalString();
+                
+                auto currentWLCharacterStartLoc = escapedLoc.previous();
                 
                 auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
                 
@@ -1622,11 +1693,15 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
             CharacterDecoder_StringMetaFormFeed++;
 #endif // DIAGNOSTICS
             
+            TheByteDecoder->nextSourceCharacter0(policy);
+            
             auto c = WLCharacter(CODEPOINT_STRINGMETA_FORMFEED, ESCAPE_SINGLE);
             
 #if CHECK_ISSUES
             {
                 auto graphicalStr = c.graphicalString();
+                
+                auto currentWLCharacterStartLoc = escapedLoc.previous();
                 
                 auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
                 
@@ -1654,6 +1729,8 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
             CharacterDecoder_StringMetaLineFeedCount++;
 #endif // DIAGNOSTICS
             
+            TheByteDecoder->nextSourceCharacter0(policy);
+            
             return WLCharacter(CODEPOINT_STRINGMETA_LINEFEED, ESCAPE_SINGLE);
         }
             
@@ -1666,6 +1743,8 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
             CharacterDecoder_StringMetaCarriageReturn++;
 #endif // DIAGNOSTICS
             
+            TheByteDecoder->nextSourceCharacter0(policy);
+            
             return WLCharacter(CODEPOINT_STRINGMETA_CARRIAGERETURN, ESCAPE_SINGLE);
         }
             
@@ -1677,6 +1756,8 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
 #if DIAGNOSTICS
             CharacterDecoder_StringMetaTab++;
 #endif // DIAGNOSTICS
+            
+            TheByteDecoder->nextSourceCharacter0(policy);
             
             return WLCharacter(CODEPOINT_STRINGMETA_TAB, ESCAPE_SINGLE);
         }
@@ -1695,6 +1776,8 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
             CharacterDecoder_StringMetaDoubleQuoteCount++;
 #endif // DIAGNOSTICS
             
+            TheByteDecoder->nextSourceCharacter0(policy);
+            
             return WLCharacter(CODEPOINT_STRINGMETA_DOUBLEQUOTE, ESCAPE_SINGLE);
         }
                 
@@ -1704,21 +1787,27 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
             CharacterDecoder_StringMetaBackslashCount++;
 #endif // DIAGNOSTICS
             
+            TheByteDecoder->nextSourceCharacter0(policy);
+            
+            MUSTTAIL
             return handleBackslash(escapedBuf, escapedLoc, policy);
         }
             
         case '<': {
             
-            
 #if DIAGNOSTICS
             CharacterDecoder_StringMetaOpenCount++;
 #endif // DIAGNOSTICS
+            
+            TheByteDecoder->nextSourceCharacter0(policy);
             
             auto c = WLCharacter(CODEPOINT_STRINGMETA_OPEN, ESCAPE_SINGLE);
             
 #if CHECK_ISSUES
             {
                 auto graphicalStr = c.graphicalString();
+                
+                auto currentWLCharacterStartLoc = escapedLoc.previous();
                 
                 auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
                 
@@ -1743,11 +1832,15 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
             CharacterDecoder_StringMetaCloseCount++;
 #endif // DIAGNOSTICS
             
+            TheByteDecoder->nextSourceCharacter0(policy);
+            
             auto c = WLCharacter(CODEPOINT_STRINGMETA_CLOSE, ESCAPE_SINGLE);
             
 #if CHECK_ISSUES
             {
                 auto graphicalStr = c.graphicalString();
+                
+                auto currentWLCharacterStartLoc = escapedLoc.previous();
                 
                 auto currentWLCharacterEndLoc = TheByteDecoder->SrcLoc;
                 
@@ -1775,6 +1868,8 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
             CharacterDecoder_LinearSyntaxBangCount++;
 #endif // DIAGNOSTICS
             
+            TheByteDecoder->nextSourceCharacter0(policy);
+            
             return WLCharacter(CODEPOINT_LINEARSYNTAX_BANG, ESCAPE_SINGLE);
         }
         case '%': {
@@ -1782,6 +1877,8 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
 #if DIAGNOSTICS
             CharacterDecoder_LinearSyntaxPercentCount++;
 #endif // DIAGNOSTICS
+            
+            TheByteDecoder->nextSourceCharacter0(policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_PERCENT, ESCAPE_SINGLE);
         }
@@ -1791,6 +1888,8 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
             CharacterDecoder_LinearSyntaxAmpCount++;
 #endif // DIAGNOSTICS
             
+            TheByteDecoder->nextSourceCharacter0(policy);
+            
             return WLCharacter(CODEPOINT_LINEARSYNTAX_AMP, ESCAPE_SINGLE);
         }
         case '(': {
@@ -1798,6 +1897,8 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
 #if DIAGNOSTICS
             CharacterDecoder_LinearSyntaxOpenParenCount++;
 #endif // DIAGNOSTICS
+            
+            TheByteDecoder->nextSourceCharacter0(policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_OPENPAREN, ESCAPE_SINGLE);
         }
@@ -1807,6 +1908,8 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
             CharacterDecoder_LinearSyntaxCloseParenCount++;
 #endif // DIAGNOSTICS
             
+            TheByteDecoder->nextSourceCharacter0(policy);
+            
             return WLCharacter(CODEPOINT_LINEARSYNTAX_CLOSEPAREN, ESCAPE_SINGLE);
         }
         case '*': {
@@ -1814,6 +1917,8 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
 #if DIAGNOSTICS
             CharacterDecoder_LinearSyntaxStarCount++;
 #endif // DIAGNOSTICS
+            
+            TheByteDecoder->nextSourceCharacter0(policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_STAR, ESCAPE_SINGLE);
         }
@@ -1823,6 +1928,8 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
             CharacterDecoder_LinearSyntaxPlusCount++;
 #endif // DIAGNOSTICS
             
+            TheByteDecoder->nextSourceCharacter0(policy);
+            
             return WLCharacter(CODEPOINT_LINEARSYNTAX_PLUS, ESCAPE_SINGLE);
         }
         case '/': {
@@ -1830,6 +1937,8 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
 #if DIAGNOSTICS
             CharacterDecoder_LinearSyntaxSlashCount++;
 #endif // DIAGNOSTICS
+            
+            TheByteDecoder->nextSourceCharacter0(policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_SLASH, ESCAPE_SINGLE);
         }
@@ -1839,6 +1948,8 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
             CharacterDecoder_LinearSyntaxAtCount++;
 #endif // DIAGNOSTICS
             
+            TheByteDecoder->nextSourceCharacter0(policy);
+            
             return WLCharacter(CODEPOINT_LINEARSYNTAX_AT, ESCAPE_SINGLE);
         }
         case '^': {
@@ -1846,6 +1957,8 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
 #if DIAGNOSTICS
             CharacterDecoder_LinearSyntaxCaretCount++;
 #endif // DIAGNOSTICS
+            
+            TheByteDecoder->nextSourceCharacter0(policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_CARET, ESCAPE_SINGLE);
         }
@@ -1855,6 +1968,8 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
             CharacterDecoder_LinearSyntaxUnderscoreCount++;
 #endif // DIAGNOSTICS
             
+            TheByteDecoder->nextSourceCharacter0(policy);
+            
             return WLCharacter(CODEPOINT_LINEARSYNTAX_UNDER, ESCAPE_SINGLE);
         }
         case '`': {
@@ -1863,6 +1978,8 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
             CharacterDecoder_LinearSyntaxBacktickCount++;
 #endif // DIAGNOSTICS
             
+            TheByteDecoder->nextSourceCharacter0(policy);
+            
             return WLCharacter(CODEPOINT_LINEARSYNTAX_BACKTICK, ESCAPE_SINGLE);
         }
         case ' ': {
@@ -1870,6 +1987,8 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
 #if DIAGNOSTICS
             CharacterDecoder_LinearSyntaxSpaceCount++;
 #endif // DIAGNOSTICS
+            
+            TheByteDecoder->nextSourceCharacter0(policy);
             
             return WLCharacter(CODEPOINT_LINEARSYNTAX_SPACE, ESCAPE_SINGLE);
         }
@@ -1884,7 +2003,8 @@ WLCharacter CharacterDecoder::handleUncommon(SourceCharacter curSource, Buffer c
             CharacterDecoder_UnhandledCount++;
 #endif // DIAGNOSTICS
             
-            return handleUnhandledEscape(currentWLCharacterStartBuf, currentWLCharacterStartLoc, escapedBuf, escapedLoc, curSource, policy);
+            MUSTTAIL
+            return handleUnhandledEscape(escapedBuf, escapedLoc, policy);
         }
     }
 }

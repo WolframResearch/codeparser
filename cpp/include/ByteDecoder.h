@@ -79,11 +79,9 @@ private:
     
     void nonASCIIWarning(codepoint decoded, SourceLocation currentSourceCharacterStartLoc);
     
-    SourceCharacter valid(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, NextPolicy policy);
+    SourceCharacter validStrange(codepoint decoded, NextPolicy policy);
     
-    SourceCharacter validNotStrange(codepoint decoded);
-    
-    SourceCharacter validMB(codepoint decoded, SourceLocation currentSourceCharacterStartLoc, NextPolicy policy);
+    SourceCharacter validMB(codepoint decoded, NextPolicy policy);
     
     SourceCharacter incomplete1ByteSequence(SourceLocation errSrcLoc, NextPolicy policy);
     
@@ -94,6 +92,8 @@ private:
     SourceCharacter straySurrogate(SourceLocation errSrcLoc, NextPolicy policy);
     
     SourceCharacter bom(SourceLocation errSrcLoc, NextPolicy policy);
+    
+    SourceCharacter nextSourceCharacter0_uncommon(NextPolicy policy);
     
 public:
     

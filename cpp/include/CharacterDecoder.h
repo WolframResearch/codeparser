@@ -33,23 +33,23 @@ private:
     std::set<SourceLocation> ComplexLineContinuations;
     std::set<SourceLocation> EmbeddedTabs;
     
-    WLCharacter handleLongName(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer openSquareBuf, SourceLocation openSquareLoc, NextPolicy policy);
-    WLCharacter handle2Hex(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer dotBuf, SourceLocation dotLoc, NextPolicy policy);
-    WLCharacter handle4Hex(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer colonBuf, SourceLocation colonLoc, NextPolicy policy);
-    WLCharacter handle6Hex(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer barBuf, SourceLocation barLoc, NextPolicy policy);
-    WLCharacter handleOctal(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer firstOctalBuf, SourceLocation firstOctalLoc, NextPolicy policy);
-    WLCharacter handleUncommon(SourceCharacter curSource, Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy);
+    WLCharacter handleLongName(Buffer openSquareBuf, SourceLocation openSquareLoc, NextPolicy policy);
+    WLCharacter handle2Hex(Buffer dotBuf, SourceLocation dotLoc, NextPolicy policy);
+    WLCharacter handle4Hex(Buffer colonBuf, SourceLocation colonLoc, NextPolicy policy);
+    WLCharacter handle6Hex(Buffer barBuf, SourceLocation barLoc, NextPolicy policy);
+    WLCharacter handleOctal(Buffer firstOctalBuf, SourceLocation firstOctalLoc, NextPolicy policy);
+    WLCharacter handleUncommon(Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy);
     
     //
     // Handling line continuations belongs in some layer strictly above CharacterDecoder and below Tokenizer.
     //
     // Some middle layer that deals with "parts" of a token.
     //
-    SourceCharacter handleLineContinuation(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter c, NextPolicy policy);
+    SourceCharacter handleLineContinuation(Buffer tokenStartBuf, SourceLocation tokenStartLoc, NextPolicy policy);
     
     WLCharacter handleBackslash(Buffer escapedBuf, SourceLocation escapedLoc, NextPolicy policy);
     
-    WLCharacter handleUnhandledEscape(Buffer currentWLCharacterStartBuf, SourceLocation currentWLCharacterStartLoc, Buffer unhandledBuf, SourceLocation unhandledLoc, SourceCharacter escapedChar, NextPolicy policy);
+    WLCharacter handleUnhandledEscape(Buffer unhandledBuf, SourceLocation unhandledLoc, NextPolicy policy);
     
     //
     // example:

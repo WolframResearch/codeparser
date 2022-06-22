@@ -1981,8 +1981,20 @@ void CommaParselet_reduceComma(ParseletPtr Ignored, Token Ignored2) {
     
     TheParser->pushNode(new InfixNode(SYMBOL_CODEPARSER_COMMA, TheParser->popContext()));
     
+    //
+    // was:
+    //
+//    MUSTTAIL
+//    return Parser_parseClimb(Ignored, Ignored2);
+    
+    //
+    // but take advantage of fact that Comma has lowest operator precedence and there is nothing a,b,c that will continue that expression
+    //
+    // so call Parser_tryContinue directly
+    //
+    
     MUSTTAIL
-    return Parser_parseClimb(Ignored, Ignored2);
+    return Parser_tryContinue(Ignored, Ignored2);
 }
 
 

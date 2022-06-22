@@ -64,9 +64,7 @@ bool NodeSeq::check() const {
 }
 
 
-TriviaSeq::TriviaSeq() : vec() {
-    vec.reserve(2);
-}
+TriviaSeq::TriviaSeq() : vec() {}
 
 void TriviaSeq::reset() {
     

@@ -213,9 +213,8 @@ Token Parser::currentToken(NextPolicy policy) const {
     //   returnInternalNewlineMask is 0b000
     //
     auto returnInternalNewlineMask = static_cast<uint8_t>(insideGroup) << 2;
-    auto Tok = TheTokenizer->currentToken(policy & ~(returnInternalNewlineMask));
     
-    return Tok;
+    return TheTokenizer->currentToken(policy & ~(returnInternalNewlineMask));
 }
 
 
@@ -280,21 +279,21 @@ void Parser_parseClimb(ParseletPtr Ignored, Token Ignored2) {
 
 void Parser_tryContinue(ParseletPtr Ignored, Token Ignored2) {
     
-    if (TheParser->getContextStackSize() > 0) {
-
-        auto& Ctxt = TheParser->topContext();
-
-        auto F = Ctxt.F;
-        auto P = Ctxt.P;
-
-        assert(F);
+    if (TheParser->isContextStackEmpty()) {
         
-        MUSTTAIL
-        return F(P, Ignored2);
+        // no call needed here
+        return;
     }
+
+    auto& Ctxt = TheParser->topContext();
+
+    auto F = Ctxt.F;
+    auto P = Ctxt.P;
+
+    assert(F);
     
-    // no call needed here
-    return;
+    MUSTTAIL
+    return F(P, Ignored2);
 }
 
 void Parser_identity(ParseletPtr P, Token firstTok) {
@@ -476,6 +475,10 @@ size_t Parser::getContextStackSize() const {
     return ContextStack.size();
 }
 
+bool Parser::isContextStackEmpty() const {
+    return ContextStack.empty();
+}
+
 void Parser::pushNode(Node *N) {
     NodeStack.emplace_back(N);
 }
@@ -500,6 +503,10 @@ NodePtr Parser::popNode() {
 
 size_t Parser::getNodeStackSize() const {
     return NodeStack.size();
+}
+
+bool Parser::isNodeStackEmpty() const {
+    return NodeStack.empty();
 }
 
 void Parser::pushGroup(Closer Closr) {

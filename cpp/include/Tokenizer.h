@@ -39,7 +39,6 @@ private:
     std::set<SourceLocation> EmbeddedNewlines;
     std::set<SourceLocation> EmbeddedTabs;
     
-    
     void backupAndWarn(Buffer resetBuf, SourceLocation resetLoc);
     
     Token handleStrangeWhitespace(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
@@ -61,7 +60,8 @@ private:
     //
     // handle matched pairs of [] enclosing any characters other than spaces, tabs, and newlines
     //
-    SourceCharacter handleFileOpsBrackets(SourceLocation tokenStartLoc, SourceCharacter firstChar, NextPolicy policy, int *handled);
+    SourceCharacter handleFileOpsBrackets(Buffer tokenStartBuf, SourceLocation tokenStartLoc, SourceCharacter firstChar, NextPolicy policy, int *handled);
+    
     Token handleString(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
     
     Token handleString_stringifyAsTag(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter firstChar, NextPolicy policy);
@@ -152,6 +152,7 @@ private:
     
     BufferAndLength getTokenBufferAndLength(Buffer tokStartBuf) const;
     
+    Token nextToken0_uncommon(Buffer tokenStartBuf, SourceLocation tokenStartLoc, WLCharacter c, NextPolicy policy);
     
 public:
     Tokenizer();
@@ -175,7 +176,6 @@ public:
     std::set<SourceLocation>& getEmbeddedNewlines();
     
     std::set<SourceLocation>& getEmbeddedTabs();
-    
 };
 
 extern TokenizerPtr TheTokenizer;
